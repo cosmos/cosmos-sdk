@@ -305,8 +305,7 @@ func (q Keeper) getVotesByVoter(ctx sdk.Context, voter sdk.AccAddress, pageReque
 	return q.voteByVoterIndex.GetPaginated(ctx.KVStore(q.key), voter.Bytes(), pageRequest)
 }
 
-// doTally is a pure function that returns the current tally result of a given
-// proposal, by iterating through all votes.
+// TODO Merge with https://github.com/cosmos/cosmos-sdk/issues/11151
 func (q Keeper) doTally(ctx sdk.Context, p group.Proposal, groupId uint64) (group.TallyResult, error) {
 	it, err := q.voteByProposalIndex.Get(ctx.KVStore(q.key), p.Id)
 	if err != nil {

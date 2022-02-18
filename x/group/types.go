@@ -52,8 +52,8 @@ func (p ThresholdDecisionPolicy) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "threshold")
 	}
 
-	if p.VotingPeriod <= time.Nanosecond {
-		return sdkerrors.Wrap(errors.ErrInvalid, "timeout too small")
+	if p.VotingPeriod == 0 {
+		return sdkerrors.Wrap(errors.ErrInvalid, "voting period cannot be zero")
 	}
 
 	return nil
@@ -132,8 +132,8 @@ func (p PercentageDecisionPolicy) ValidateBasic() error {
 		return sdkerrors.Wrap(errors.ErrInvalid, "percentage must be > 0 and <= 1")
 	}
 
-	if p.VotingPeriod <= time.Nanosecond {
-		return sdkerrors.Wrap(errors.ErrInvalid, "timeout too small")
+	if p.VotingPeriod == 0 {
+		return sdkerrors.Wrap(errors.ErrInvalid, "voting period cannot be 0")
 	}
 
 	return nil

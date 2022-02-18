@@ -1042,20 +1042,6 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			expErr:    true,
 			expErrMsg: "percentage must be > 0 and <= 1",
 		},
-		"percentage decision policy with execPeriod < votingPeriod": {
-			req: &group.MsgCreateGroupPolicy{
-				Admin:    addr1.String(),
-				Metadata: nil,
-				GroupId:  myGroupID,
-			},
-			policy: group.NewPercentageDecisionPolicy(
-				"0.5",
-				time.Second,
-				0,
-			),
-			expErr:    true,
-			expErrMsg: "execution period must be longer than voting period",
-		},
 	}
 	for msg, spec := range specs {
 		spec := spec
@@ -1874,6 +1860,47 @@ func (s *TestSuite) TestVote() {
 				ProposalId: myProposalID,
 				Voter:      addr4.String(),
 				Option:     group.VOTE_OPTION_YES,
+			},
+			expFinalTallyResult: group.TallyResult{
+				YesCount:        "1",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			expProposalStatus: group.PROPOSAL_STATUS_SUBMITTED,
+			expResult:         group.PROPOSAL_RESULT_UNFINALIZED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+			postRun:           func(sdkCtx sdk.Context) {},
+		},
+		"with try exec": {
+			req: &group.MsgVote{
+				ProposalId: myProposalID,
+				Voter:      addr3.String(),
+				Option:     group.VOTE_OPTION_YES,
+				Exec:       group.Exec_EXEC_TRY,
+			},
+			expFinalTallyResult: group.TallyResult{
+				YesCount:        "2",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
+			expResult:         group.PROPOSAL_RESULT_ACCEPTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+			postRun: func(sdkCtx sdk.Context) {
+				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, groupPolicy)
+				s.Require().Contains(fromBalances, sdk.NewInt64Coin("test", 9900))
+				toBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, addr5)
+				s.Require().Contains(toBalances, sdk.NewInt64Coin("test", 100))
+			},
+		},
+		"with try exec, not enough yes votes for proposal to pass": {
+			req: &group.MsgVote{
+				ProposalId: myProposalID,
+				Voter:      addr4.String(),
+				Option:     group.VOTE_OPTION_YES,
+				Exec:       group.Exec_EXEC_TRY,
 			},
 			expFinalTallyResult: group.TallyResult{
 				YesCount:        "1",

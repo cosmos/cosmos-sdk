@@ -720,9 +720,8 @@ func SimulateMsgUpdateGroupPolicyDecisionPolicy(ak group.AccountKeeper,
 		}
 
 		msg, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(acc.Address, groupPolicyBech32, &group.ThresholdDecisionPolicy{
-			Threshold:          fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
-			VotingPeriod:       time.Second * time.Duration(simtypes.RandIntBetween(r, 100, 1000)),
-			MinExecutionPeriod: time.Second * time.Duration(simtypes.RandIntBetween(r, 100, 1000)),
+			Threshold:    fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
+			VotingPeriod: time.Second * time.Duration(simtypes.RandIntBetween(r, 100, 1000)),
 		})
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, err.Error()), nil, err

@@ -624,9 +624,18 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 		return sdk.Context{}, err
 	}
 
+	lastBlockHeight := app.LastBlockHeight()
+	if height > lastBlockHeight {
+		return sdk.Context{},
+			sdkerrors.Wrap(
+				sdkerrors.ErrInvalidHeight,
+				"cannot query with height in the future; please provide a valid height",
+			)
+	}
+
 	// when a client did not provide a query height, manually inject the latest
 	if height == 0 {
-		height = app.LastBlockHeight()
+		height = lastBlockHeight
 	}
 
 	if height <= 1 && prove {
@@ -642,7 +651,7 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 		return sdk.Context{},
 			sdkerrors.Wrapf(
 				sdkerrors.ErrInvalidRequest,
-				"failed to load state at height %d; %s (latest height: %d)", height, err, app.LastBlockHeight(),
+				"failed to load state at height %d; %s (latest height: %d)", height, err, lastBlockHeight,
 			)
 	}
 

@@ -104,6 +104,18 @@ func QueryResult(err error) abci.ResponseQuery {
 	}
 }
 
+// QueryResultWithDebug returns a ResponseQuery from an error. It will try to parse ABCI
+// info from the error. It will use debugErrEncoder if debug parameter is true.
+// Starting from v0.46, this function will be removed, and be replaced by `QueryResult`.
+func QueryResultWithDebug(err error, debug bool) abci.ResponseQuery {
+	space, code, log := ABCIInfo(err, debug)
+	return abci.ResponseQuery{
+		Codespace: space,
+		Code:      code,
+		Log:       log,
+	}
+}
+
 // The debugErrEncoder encodes the error with a stacktrace.
 func debugErrEncoder(err error) string {
 	return fmt.Sprintf("%+v", err)

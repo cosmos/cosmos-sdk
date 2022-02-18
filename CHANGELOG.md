@@ -46,6 +46,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (store) [\#11117](https://github.com/cosmos/cosmos-sdk/pull/11117) Fix data race in store trace component
 
+### Improvements
+
+* [\#9576](https://github.com/cosmos/cosmos-sdk/pull/9576) Add debug error message to query result when enabled
+
 ## [v0.45.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.1) - 2022-02-03
 
 ### Bug Fixes

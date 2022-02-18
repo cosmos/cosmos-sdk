@@ -457,7 +457,7 @@ func (app *BaseApp) Query(_ context.Context, req *abci.QueryRequest) (resp *abci
 	// Ref: https://github.com/cosmos/cosmos-sdk/pull/8039
 	defer func() {
 		if r := recover(); r != nil {
-			resp = queryResult(errorsmod.Wrapf(sdkerrors.ErrPanic, "%v", r), app.trace)
+			res = sdkerrors.QueryResultWithDebug(sdkerrors.Wrapf(sdkerrors.ErrPanic, "%v", r), app.trace)
 		}
 	}()
 
@@ -492,7 +492,7 @@ func (app *BaseApp) Query(_ context.Context, req *abci.QueryRequest) (resp *abci
 
 	path := SplitABCIQueryPath(req.Path)
 	if len(path) == 0 {
-		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"))
+		sdkerrors.QueryResultWithDebug(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), app.trace)
 	}
 
 	switch path[0] {
@@ -510,7 +510,7 @@ func (app *BaseApp) Query(_ context.Context, req *abci.QueryRequest) (resp *abci
 		resp = queryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"), app.trace)
 	}
 
-	return resp, nil
+	return sdkerrors.QueryResultWithDebug(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"), app.trace)
 }
 
 // ListSnapshots implements the ABCI interface. It delegates to app.snapshotManager if set.
@@ -666,7 +666,7 @@ func (app *BaseApp) CheckTx(req *abci.CheckTxRequest) (*abci.CheckTxResponse, er
 
 	gInfo, result, anteEvents, err := app.runTx(mode, req.Tx)
 	if err != nil {
-		return responseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace), nil
+		return sdkerrors.QueryResultWithDebug(err, app.trace)
 	}
 
 	return &abci.CheckTxResponse{
@@ -751,8 +751,9 @@ func (app *BaseApp) PrepareProposal(req *abci.PrepareProposalRequest) (resp *abc
 
 	resp, err = app.prepareProposal(app.prepareProposalState.Context(), req)
 	if err != nil {
-		app.logger.Error("failed to prepare proposal", "height", req.Height, "time", req.Time, "err", err)
-		return &abci.PrepareProposalResponse{Txs: req.Txs}, nil
+		res = sdkerrors.QueryResultWithDebug(gRPCErrorToSDKError(err), app.trace)
+		res.Height = req.Height
+		return res
 	}
 
 	return resp, nil
@@ -1311,7 +1312,7 @@ func handleQueryApp(app *BaseApp, path []string, req *abci.QueryRequest) *abci.Q
 
 			gInfo, res, err := app.Simulate(txBytes)
 			if err != nil {
-				return queryResult(errorsmod.Wrap(err, "failed to simulate tx"), app.trace)
+				return sdkerrors.QueryResultWithDebug(sdkerrors.Wrap(err, "failed to simulate tx"), app.trace)
 			}
 
 			simRes := &sdk.SimulationResponse{
@@ -1321,7 +1322,7 @@ func handleQueryApp(app *BaseApp, path []string, req *abci.QueryRequest) *abci.Q
 
 			bz, err := codec.ProtoMarshalJSON(simRes, app.interfaceRegistry)
 			if err != nil {
-				return queryResult(errorsmod.Wrap(err, "failed to JSON encode simulation response"), app.trace)
+				return sdkerrors.QueryResultWithDebug(sdkerrors.Wrap(err, "failed to JSON encode simulation response"), app.trace)
 			}
 
 			return &abci.QueryResponse{
@@ -1338,12 +1339,12 @@ func handleQueryApp(app *BaseApp, path []string, req *abci.QueryRequest) *abci.Q
 			}
 
 		default:
-			return queryResult(errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query: %s", path), app.trace)
+			return sdkerrors.QueryResultWithDebug(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query: %s", path), app.trace)
 		}
 	}
 
-	return queryResult(
-		errorsmod.Wrap(
+	return sdkerrors.QueryResultWithDebug(
+		sdkerrors.Wrap(
 			sdkerrors.ErrUnknownRequest,
 			"expected second parameter to be either 'simulate' or 'version', neither was present",
 		), app.trace)
@@ -1353,14 +1354,14 @@ func handleQueryStore(app *BaseApp, path []string, req abci.QueryRequest) *abci.
 	// "/store" prefix for store queries
 	queryable, ok := app.cms.(storetypes.Queryable)
 	if !ok {
-		return queryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "multi-store does not support queries"), app.trace)
+		return sdkerrors.QueryResultWithDebug(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "multistore doesn't support queries"), app.trace)
 	}
 
 	req.Path = "/" + strings.Join(path[1:], "/")
 
 	if req.Height <= 1 && req.Prove {
-		return queryResult(
-			errorsmod.Wrap(
+		return sdkerrors.QueryResultWithDebug(
+			sdkerrors.Wrap(
 				sdkerrors.ErrInvalidRequest,
 				"cannot query with proof when height <= 1; please provide a valid height",
 			), app.trace)
@@ -1381,7 +1382,10 @@ func handleQueryStore(app *BaseApp, path []string, req abci.QueryRequest) *abci.
 func handleQueryP2P(app *BaseApp, path []string) *abci.QueryResponse {
 	// "/p2p" prefix for p2p queries
 	if len(path) < 4 {
-		return queryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "path should be p2p filter <addr|id> <parameter>"), app.trace)
+		return sdkerrors.QueryResultWithDebug(
+			sdkerrors.Wrap(
+				sdkerrors.ErrUnknownRequest, "path should be p2p filter <addr|id> <parameter>",
+			), app.trace)
 	}
 
 	var resp *abci.QueryResponse
@@ -1398,39 +1402,25 @@ func handleQueryP2P(app *BaseApp, path []string) *abci.QueryResponse {
 		}
 
 	default:
-		resp = queryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "expected second parameter to be 'filter'"), app.trace)
+		resp = sdkerrors.QueryResultWithDebug(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "expected second parameter to be 'filter'"), app.trace)
 	}
 
 	return resp
 }
 
-// SplitABCIQueryPath splits a string path using the delimiter '/'.
-//
-// e.g. "this/is/funny" becomes []string{"this", "is", "funny"}
-func SplitABCIQueryPath(requestPath string) (path []string) {
-	path = strings.Split(requestPath, "/")
-
-	// first element is empty string
-	if len(path) > 0 && path[0] == "" {
-		path = path[1:]
+func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {
+	// path[0] should be "custom" because "/custom" prefix is required for keeper
+	// queries.
+	//
+	// The QueryRouter routes using path[1]. For example, in the path
+	// "custom/gov/proposal", QueryRouter routes using "gov".
+	if len(path) < 2 || path[1] == "" {
+		return sdkerrors.QueryResultWithDebug(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no route for custom query specified"), app.trace)
 	}
 
-	return path
-}
-
-// FilterPeerByAddrPort filters peers by address/port.
-func (app *BaseApp) FilterPeerByAddrPort(info string) *abci.QueryResponse {
-	if app.addrPeerFilter != nil {
-		return app.addrPeerFilter(info)
-	}
-
-	return &abci.QueryResponse{}
-}
-
-// FilterPeerByID filters peers by node ID.
-func (app *BaseApp) FilterPeerByID(info string) *abci.QueryResponse {
-	if app.idPeerFilter != nil {
-		return app.idPeerFilter(info)
+	querier := app.queryRouter.Route(path[1])
+	if querier == nil {
+		return sdkerrors.QueryResultWithDebug(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "no custom querier found for route %s", path[1]), app.trace)
 	}
 
 	return &abci.QueryResponse{}
@@ -1454,23 +1444,14 @@ func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Con
 func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req *abci.QueryRequest) *abci.QueryResponse {
 	ctx, err := app.CreateQueryContext(req.Height, req.Prove)
 	if err != nil {
-		return queryResult(err, app.trace)
+		return sdkerrors.QueryResultWithDebug(err, app.trace)
 	}
 
 	resp, err := handler(ctx, req)
 	if err != nil {
-		resp = queryResult(gRPCErrorToSDKError(err), app.trace)
-		resp.Height = req.Height
-		return resp
-	}
-
-	return resp
-}
-
-func gRPCErrorToSDKError(err error) error {
-	status, ok := grpcstatus.FromError(err)
-	if !ok {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		res := sdkerrors.QueryResultWithDebug(err, app.trace)
+		res.Height = req.Height
+		return res
 	}
 
 	switch status.Code() {

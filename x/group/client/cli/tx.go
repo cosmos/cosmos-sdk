@@ -651,6 +651,7 @@ Example:
 		},
 	}
 
+	cmd.Flags().String(FlagExec, "", "Set to 1 to try to execute proposal immediately after creation (proposers signatures are considered as Yes votes)")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -770,6 +771,7 @@ Parameters:
 		},
 	}
 
+	cmd.Flags().String(FlagExec, "", "Set to 1 to try to execute proposal immediately after voting")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

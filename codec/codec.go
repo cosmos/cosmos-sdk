@@ -23,27 +23,16 @@ type (
 	BinaryCodec interface {
 		// Marshal returns binary encoding of v.
 		Marshal(o ProtoMarshaler) ([]byte, error)
-		// MustMarshal calls Marshal and panics if error is returned.
-		MustMarshal(o ProtoMarshaler) []byte
-
 		// MarshalLengthPrefixed returns binary encoding of v with bytes length prefix.
 		MarshalLengthPrefixed(o ProtoMarshaler) ([]byte, error)
-		// MustMarshalLengthPrefixed calls MarshalLengthPrefixed and panics if
-		// error is returned.
-		MustMarshalLengthPrefixed(o ProtoMarshaler) []byte
 
 		// Unmarshal parses the data encoded with Marshal method and stores the result
 		// in the value pointed to by v.
 		Unmarshal(bz []byte, ptr ProtoMarshaler) error
-		// MustUnmarshal calls Unmarshal and panics if error is returned.
-		MustUnmarshal(bz []byte, ptr ProtoMarshaler)
 
 		// Unmarshal parses the data encoded with UnmarshalLengthPrefixed method and stores
 		// the result in the value pointed to by v.
 		UnmarshalLengthPrefixed(bz []byte, ptr ProtoMarshaler) error
-		// MustUnmarshalLengthPrefixed calls UnmarshalLengthPrefixed and panics if error
-		// is returned.
-		MustUnmarshalLengthPrefixed(bz []byte, ptr ProtoMarshaler)
 
 		// MarshalInterface is a helper method which will wrap `i` into `Any` for correct
 		// binary interface (de)serialization.
@@ -59,8 +48,6 @@ type (
 	JSONCodec interface {
 		// MarshalJSON returns JSON encoding of v.
 		MarshalJSON(o proto.Message) ([]byte, error)
-		// MustMarshalJSON calls MarshalJSON and panics if error is returned.
-		MustMarshalJSON(o proto.Message) []byte
 		// MarshalInterfaceJSON is a helper method which will wrap `i` into `Any` for correct
 		// JSON interface (de)serialization.
 		MarshalInterfaceJSON(i proto.Message) ([]byte, error)
@@ -72,8 +59,6 @@ type (
 		// UnmarshalJSON parses the data encoded with MarshalJSON method and stores the result
 		// in the value pointed to by v.
 		UnmarshalJSON(bz []byte, ptr proto.Message) error
-		// MustUnmarshalJSON calls Unmarshal and panics if error is returned.
-		MustUnmarshalJSON(bz []byte, ptr proto.Message)
 	}
 
 	// ProtoMarshaler defines an interface a type must implement to serialize itself

@@ -937,7 +937,6 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 
 		s.Run(tc.name, func() {
 			out, err := tc.malleate()
-			fmt.Println("out, err", out, err)
 			s.Require().NoError(err)
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 			txResp := tc.respType.(*sdk.TxResponse)

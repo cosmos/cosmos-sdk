@@ -67,6 +67,21 @@ Note, there are length-prefixed variants of the above functionality and this is
 typically used for when the data needs to be streamed or grouped together
 (e.g. `ResponseDeliverTx.Data`)
 
+#### Authz authorizations
+
+Since the `MsgExec` message type can contain different messages instances, it is important that developers
+add the following code inside the `init` method of their module's `codec.go` file:
+
+```go
+init() {
+    // Register all Amino interfaces and concrete types on the global Amino codec so that this can later be
+    // used to properly serialize x/authz MsgExec instances
+    RegisterLegacyAminoCodec(legacy.Cdc)	
+}
+```
+
+This will allow the `x/authz` module to properly serialize and de-serializes `MsgExec` instances using Amino.
+
 ### Gogoproto
 
 Modules are encouraged to utilize Protobuf encoding for their respective types. In the Cosmos SDK, we use the [Gogoproto](https://github.com/gogo/protobuf) specific implementation of the Protobuf spec that offers speed and DX improvements compared to the official [Google protobuf implementation](https://github.com/protocolbuffers/protobuf).

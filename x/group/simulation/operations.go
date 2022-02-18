@@ -72,7 +72,7 @@ const (
 	WeightMsgUpdateGroupPolicyDecisionPolicy = 5
 	WeightMsgUpdateGroupPolicyMetadata       = 5
 	WeightMsgWithdrawProposal                = 20
-	// WeightMsgCreateGroupWithPolicy           = 100
+	WeightMsgCreateGroupWithPolicy           = 100
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -92,7 +92,7 @@ func WeightedOperations(
 		weightMsgVote                            int
 		weightMsgExec                            int
 		weightMsgWithdrawProposal                int
-		// weightMsgCreateGroupWithPolicy           int
+		weightMsgCreateGroupWithPolicy           int
 	)
 
 	appParams.GetOrGenerate(cdc, OpMsgCreateGroup, &weightMsgCreateGroup, nil,
@@ -105,11 +105,11 @@ func WeightedOperations(
 			weightMsgCreateGroupPolicy = WeightMsgCreateGroupPolicy
 		},
 	)
-	// appParams.GetOrGenerate(cdc, OpMsgCreateGroupWithPolicy, &weightMsgCreateGroupWithPolicy, nil,
-	// 	func(_ *rand.Rand) {
-	// 		weightMsgCreateGroupWithPolicy = WeightMsgCreateGroupWithPolicy
-	// 	},
-	// )
+	appParams.GetOrGenerate(cdc, OpMsgCreateGroupWithPolicy, &weightMsgCreateGroupWithPolicy, nil,
+		func(_ *rand.Rand) {
+			weightMsgCreateGroupWithPolicy = WeightMsgCreateGroupWithPolicy
+		},
+	)
 	appParams.GetOrGenerate(cdc, OpMsgSubmitProposal, &weightMsgSubmitProposal, nil,
 		func(_ *rand.Rand) {
 			weightMsgSubmitProposal = WeightMsgSubmitProposal

@@ -121,34 +121,34 @@ func (suite *SimTestSuite) TestSimulateCreateGroup() {
 	suite.Require().Len(futureOperations, 0)
 }
 
-// func (suite *SimTestSuite) TestSimulateCreateGroupWithPolicy() {
-// 	// setup 1 account
-// 	s := rand.NewSource(1)
-// 	r := rand.New(s)
-// 	accounts := suite.getTestingAccounts(r, 1)
+func (suite *SimTestSuite) TestSimulateCreateGroupWithPolicy() {
+	// setup 1 account
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := suite.getTestingAccounts(r, 1)
 
-// 	// begin a new block
-// 	suite.app.BeginBlock(abci.RequestBeginBlock{
-// 		Header: tmproto.Header{
-// 			Height:  suite.app.LastBlockHeight() + 1,
-// 			AppHash: suite.app.LastCommitID().Hash,
-// 		},
-// 	})
+	// begin a new block
+	suite.app.BeginBlock(abci.RequestBeginBlock{
+		Header: tmproto.Header{
+			Height:  suite.app.LastBlockHeight() + 1,
+			AppHash: suite.app.LastCommitID().Hash,
+		},
+	})
 
-// 	acc := accounts[0]
+	acc := accounts[0]
 
-// 	// execute operation
-// 	op := simulation.SimulateMsgCreateGroupWithPolicy(suite.app.AccountKeeper, suite.app.BankKeeper)
-// 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
-// 	suite.Require().NoError(err)
+	// execute operation
+	op := simulation.SimulateMsgCreateGroupWithPolicy(suite.app.AccountKeeper, suite.app.BankKeeper)
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	suite.Require().NoError(err)
 
-// 	var msg group.MsgCreateGroupWithPolicy
-// 	err = group.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
-// 	suite.Require().NoError(err)
-// 	suite.Require().True(operationMsg.OK)
-// 	suite.Require().Equal(acc.Address.String(), msg.Admin)
-// 	suite.Require().Len(futureOperations, 0)
-// }
+	var msg group.MsgCreateGroupWithPolicy
+	err = group.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.Require().NoError(err)
+	suite.Require().True(operationMsg.OK)
+	suite.Require().Equal(acc.Address.String(), msg.Admin)
+	suite.Require().Len(futureOperations, 0)
+}
 
 func (suite *SimTestSuite) TestSimulateCreateGroupPolicy() {
 	// setup 1 account

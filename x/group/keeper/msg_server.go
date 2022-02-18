@@ -501,6 +501,32 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		return nil, err
 	}
 
+	// Try to execute proposal immediately
+	if req.Exec == group.Exec_EXEC_TRY {
+		// Consider proposers as Yes votes
+		for i := range proposers {
+			ctx.GasMeter().ConsumeGas(gasCostPerIteration, "vote on proposal")
+			_, err = k.Vote(sdk.WrapSDKContext(ctx), &group.MsgVote{
+				ProposalId: id,
+				Voter:      proposers[i],
+				Option:     group.VOTE_OPTION_YES,
+			})
+			if err != nil {
+				return &group.MsgSubmitProposalResponse{ProposalId: id}, sdkerrors.Wrap(err, "The proposal was created but failed on vote")
+			}
+		}
+		// Then try to execute the proposal
+		_, err = k.Exec(sdk.WrapSDKContext(ctx), &group.MsgExec{
+			ProposalId: id,
+			// We consider the first proposer as the MsgExecRequest signer
+			// but that could be revisited (eg using the group policy)
+			Signer: proposers[0],
+		})
+		if err != nil {
+			return &group.MsgSubmitProposalResponse{ProposalId: id}, sdkerrors.Wrap(err, "The proposal was created but failed on exec")
+		}
+	}
+
 	return &group.MsgSubmitProposalResponse{ProposalId: id}, nil
 }
 
@@ -638,6 +664,17 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 	err = ctx.EventManager().EmitTypedEvent(&group.EventVote{ProposalId: id})
 	if err != nil {
 		return nil, err
+	}
+
+	// Try to execute proposal immediately
+	if req.Exec == group.Exec_EXEC_TRY {
+		_, err = k.Exec(sdk.WrapSDKContext(ctx), &group.MsgExec{
+			ProposalId: id,
+			Signer:     voterAddr,
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &group.MsgVoteResponse{}, nil

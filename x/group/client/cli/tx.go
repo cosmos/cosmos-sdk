@@ -630,11 +630,14 @@ Example:
 				return err
 			}
 
+			execStr, _ := cmd.Flags().GetString(FlagExec)
+
 			msg, err := group.NewMsgSubmitProposalRequest(
 				prop.GroupPolicyAddress,
 				prop.Proposers,
 				msgs,
 				prop.Metadata,
+				execFromString(execStr),
 			)
 			if err != nil {
 				return err

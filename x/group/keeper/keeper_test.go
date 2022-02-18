@@ -1473,9 +1473,16 @@ func (s *TestSuite) TestSubmitProposal() {
 	addr1 := addrs[0]
 	addr2 := addrs[1]
 	addr4 := addrs[3]
+	addr5 := addrs[4]
 
 	myGroupID := s.groupID
 	accountAddr := s.groupPolicyAddr
+
+	msgSend := &banktypes.MsgSend{
+		FromAddress: s.groupPolicyAddr.String(),
+		ToAddress:   addr2.String(),
+		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+	}
 
 	policyReq := &group.MsgCreateGroupPolicy{
 		Admin:    addr1.String(),
@@ -1598,6 +1605,51 @@ func (s *TestSuite) TestSubmitProposal() {
 			},
 			msgs:    []sdk.Msg{&testdata.TestMsg{Signers: []string{addr1.String()}}},
 			expErr:  true,
+			postRun: func(sdkCtx sdk.Context) {},
+		},
+		"with try exec": {
+			req: &group.MsgSubmitProposal{
+				Address:   accountAddr.String(),
+				Proposers: []string{addr2.String()},
+				Exec:      group.Exec_EXEC_TRY,
+			},
+			msgs: []sdk.Msg{msgSend},
+			expProposal: group.Proposal{
+				Status: group.PROPOSAL_STATUS_CLOSED,
+				Result: group.PROPOSAL_RESULT_ACCEPTED,
+				FinalTallyResult: group.TallyResult{
+					YesCount:        "2",
+					NoCount:         "0",
+					AbstainCount:    "0",
+					NoWithVetoCount: "0",
+				},
+				ExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+			},
+			postRun: func(sdkCtx sdk.Context) {
+				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, accountAddr)
+				s.Require().Contains(fromBalances, sdk.NewInt64Coin("test", 9900))
+				toBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, addr2)
+				s.Require().Contains(toBalances, sdk.NewInt64Coin("test", 100))
+			},
+		},
+		"with try exec, not enough yes votes for proposal to pass": {
+			req: &group.MsgSubmitProposal{
+				Address:   accountAddr.String(),
+				Proposers: []string{addr5.String()},
+				Exec:      group.Exec_EXEC_TRY,
+			},
+			msgs: []sdk.Msg{msgSend},
+			expProposal: group.Proposal{
+				Status: group.PROPOSAL_STATUS_SUBMITTED,
+				Result: group.PROPOSAL_RESULT_UNFINALIZED,
+				FinalTallyResult: group.TallyResult{
+					YesCount:        "1",
+					NoCount:         "0",
+					AbstainCount:    "0",
+					NoWithVetoCount: "0",
+				},
+				ExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+			},
 			postRun: func(sdkCtx sdk.Context) {},
 		},
 	}

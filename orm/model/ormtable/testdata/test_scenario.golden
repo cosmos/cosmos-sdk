@@ -412,6 +412,38 @@ ITERATOR 0100 -> 0101
   VALID true
   NEXT
   VALID false
+ITERATOR 0100 -> 0101
+  VALID true
+  KEY 010000047ffffffffffffffe616263 1007
+      PK testpb.ExampleTable 4/-2/abc -> {"u32":4,"u64":7,"str":"abc","i64":-2}
+  NEXT
+  VALID true
+  KEY 010000047ffffffffffffffe616264 1007
+      PK testpb.ExampleTable 4/-2/abd -> {"u32":4,"u64":7,"str":"abd","i64":-2}
+  NEXT
+  VALID true
+  KEY 010000047fffffffffffffff616263 1008
+      PK testpb.ExampleTable 4/-1/abc -> {"u32":4,"u64":8,"str":"abc","i64":-1}
+  NEXT
+  VALID true
+  KEY 010000057ffffffffffffffe616264 1008
+      PK testpb.ExampleTable 5/-2/abd -> {"u32":5,"u64":8,"str":"abd","i64":-2}
+  KEY 010000057ffffffffffffffe616264 1008
+      PK testpb.ExampleTable 5/-2/abd -> {"u32":5,"u64":8,"str":"abd","i64":-2}
+  NEXT
+  VALID true
+  NEXT
+  VALID true
+  NEXT
+  VALID true
+  NEXT
+  VALID true
+  NEXT
+  VALID true
+  NEXT
+  VALID true
+  NEXT
+  VALID false
 ITERATOR 010000057ffffffffffffffe61626400 -> 0101
   VALID true
   KEY 010000057ffffffffffffffe616265 1009

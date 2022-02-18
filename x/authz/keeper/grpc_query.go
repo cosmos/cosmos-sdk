@@ -12,6 +12,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 )
@@ -33,17 +34,19 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 	if err != nil {
 		return nil, err
 	}
+
 	ctx := sdk.UnwrapSDKContext(c)
-
-	store := ctx.KVStore(k.storeKey)
-	key := grantStoreKey(grantee, granter, "")
-	authStore := prefix.NewStore(store, key)
-
 	if req.MsgTypeUrl != "" {
-		authorization, expiration := k.GetCleanAuthorization(ctx, grantee, granter, req.MsgTypeUrl)
-		if authorization == nil {
-			return nil, status.Errorf(codes.NotFound, "no authorization found for %s type", req.MsgTypeUrl)
+		grant, found := k.getGrant(ctx, grantStoreKey(grantee, granter, req.MsgTypeUrl))
+		if !found {
+			return nil, sdkerrors.ErrNotFound.Wrapf("authorization not found for %s type", req.MsgTypeUrl)
 		}
+
+		authorization, err := grant.GetAuthorization()
+		if err != nil {
+			return nil, err
+		}
+
 		authorizationAny, err := codectypes.NewAnyWithValue(authorization)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, err.Error())
@@ -51,18 +54,27 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 		return &authz.QueryGrantsResponse{
 			Grants: []*authz.Grant{{
 				Authorization: authorizationAny,
-				Expiration:    expiration,
+				Expiration:    grant.Expiration,
 			}},
 		}, nil
 	}
 
+	store := ctx.KVStore(k.storeKey)
+	key := grantStoreKey(grantee, granter, "")
+	grantsStore := prefix.NewStore(store, key)
+
 	var authorizations []*authz.Grant
-	pageRes, err := query.FilteredPaginate(authStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(grantsStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		auth, err := unmarshalAuthorization(k.cdc, value)
 		if err != nil {
 			return false, err
 		}
-		auth1 := auth.GetAuthorization()
+
+		auth1, err := auth.GetAuthorization()
+		if err != nil {
+			return false, err
+		}
+
 		if accumulate {
 			msg, ok := auth1.(proto.Message)
 			if !ok {
@@ -113,7 +125,11 @@ func (k Keeper) GranterGrants(c context.Context, req *authz.QueryGranterGrantsRe
 			return false, err
 		}
 
-		auth1 := auth.GetAuthorization()
+		auth1, err := auth.GetAuthorization()
+		if err != nil {
+			return false, err
+		}
+
 		if accumulate {
 			any, err := codectypes.NewAnyWithValue(auth1)
 			if err != nil {
@@ -162,12 +178,15 @@ func (k Keeper) GranteeGrants(c context.Context, req *authz.QueryGranteeGrantsRe
 			return false, err
 		}
 
-		granter, g := addressesFromGrantStoreKey(append(GrantKey, key...))
+		granter, g, _ := parseGrantStoreKey(append(GrantKey, key...))
 		if !g.Equals(grantee) {
 			return false, nil
 		}
 
-		auth1 := auth.GetAuthorization()
+		auth1, err := auth.GetAuthorization()
+		if err != nil {
+			return false, err
+		}
 		if accumulate {
 			any, err := codectypes.NewAnyWithValue(auth1)
 			if err != nil {

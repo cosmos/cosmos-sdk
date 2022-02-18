@@ -13,25 +13,26 @@ import (
 //
 // This serves as a transitional step in introducing the new DB interface while maintaining
 // compatibility with existing code that expects the old interface.
-type tmdbAdapter struct {
+type TmdbAdapter struct {
 	dbm.DBReadWriter
 	db dbm.DBConnection
 }
 type tmdbBatchAdapter struct {
-	*tmdbAdapter
+	*TmdbAdapter
 	written bool
 }
 
 var (
-	_ tmdb.DB = (*tmdbAdapter)(nil)
+	_ tmdb.DB = (*TmdbAdapter)(nil)
 )
 
 // ConnectionAsTmdb returns a tmdb.DB which wraps a DBConnection.
-func ConnectionAsTmdb(db dbm.DBConnection) *tmdbAdapter { return &tmdbAdapter{db.ReadWriter(), db} }
+func ConnectionAsTmdb(db dbm.DBConnection) *TmdbAdapter { return &TmdbAdapter{db.ReadWriter(), db} }
 
-func (d *tmdbAdapter) Close() error { return d.db.Close() }
+func (d *TmdbAdapter) Close() error   { d.CloseTx(); return d.db.Close() }
+func (d *TmdbAdapter) CloseTx() error { return d.DBReadWriter.Discard() }
 
-func (d *tmdbAdapter) sync() error {
+func (d *TmdbAdapter) sync() error {
 	err := d.DBReadWriter.Commit()
 	if err != nil {
 		return err
@@ -39,14 +40,14 @@ func (d *tmdbAdapter) sync() error {
 	d.DBReadWriter = d.db.ReadWriter()
 	return nil
 }
-func (d *tmdbAdapter) DeleteSync(k []byte) error {
+func (d *TmdbAdapter) DeleteSync(k []byte) error {
 	err := d.DBReadWriter.Delete(k)
 	if err != nil {
 		return err
 	}
 	return d.sync()
 }
-func (d *tmdbAdapter) SetSync(k, v []byte) error {
+func (d *TmdbAdapter) SetSync(k, v []byte) error {
 	err := d.DBReadWriter.Set(k, v)
 	if err != nil {
 		return err
@@ -54,14 +55,27 @@ func (d *tmdbAdapter) SetSync(k, v []byte) error {
 	return d.sync()
 }
 
-func (d *tmdbAdapter) Iterator(s, e []byte) (tmdb.Iterator, error) {
+func (d *TmdbAdapter) Commit() (uint64, error) {
+	err := d.DBReadWriter.Commit()
+	if err != nil {
+		return 0, err
+	}
+	v, err := d.db.SaveNextVersion()
+	if err != nil {
+		return 0, err
+	}
+	d.DBReadWriter = d.db.ReadWriter()
+	return v, err
+}
+
+func (d *TmdbAdapter) Iterator(s, e []byte) (tmdb.Iterator, error) {
 	it, err := d.DBReadWriter.Iterator(s, e)
 	if err != nil {
 		return nil, err
 	}
 	return DBToStoreIterator(it), nil
 }
-func (d *tmdbAdapter) ReverseIterator(s, e []byte) (tmdb.Iterator, error) {
+func (d *TmdbAdapter) ReverseIterator(s, e []byte) (tmdb.Iterator, error) {
 	it, err := d.DBReadWriter.ReverseIterator(s, e)
 	if err != nil {
 		return nil, err
@@ -70,23 +84,23 @@ func (d *tmdbAdapter) ReverseIterator(s, e []byte) (tmdb.Iterator, error) {
 }
 
 // NewBatch returns a tmdb.Batch which wraps a DBWriter.
-func (d *tmdbAdapter) NewBatch() tmdb.Batch {
+func (d *TmdbAdapter) NewBatch() tmdb.Batch {
 	return &tmdbBatchAdapter{d, false}
 }
-func (d *tmdbAdapter) Print() error             { return nil }
-func (d *tmdbAdapter) Stats() map[string]string { return nil }
+func (d *TmdbAdapter) Print() error             { return nil }
+func (d *TmdbAdapter) Stats() map[string]string { return nil }
 
 func (d *tmdbBatchAdapter) Set(k, v []byte) error {
 	if d.written {
 		return errors.New("Batch already written")
 	}
-	return d.tmdbAdapter.Set(k, v)
+	return d.TmdbAdapter.Set(k, v)
 }
 func (d *tmdbBatchAdapter) Delete(k []byte) error {
 	if d.written {
 		return errors.New("Batch already written")
 	}
-	return d.tmdbAdapter.Delete(k)
+	return d.TmdbAdapter.Delete(k)
 }
 func (d *tmdbBatchAdapter) WriteSync() error {
 	if d.written {

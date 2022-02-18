@@ -251,6 +251,20 @@ message MsgUpdateGroupPolicyMetadataResponse {}
 // Proposals and Voting
 //
 
+// Exec defines modes of execution of a proposal on creation or on new vote.
+enum Exec {
+
+  // An empty value means that there should be a separate
+  // MsgExec request for the proposal to execute.
+  EXEC_UNSPECIFIED = 0;
+
+  // Try to execute the proposal immediately.
+  // If the proposal is not allowed per the DecisionPolicy,
+  // the proposal will still be open and could
+  // be executed at a later point.
+  EXEC_TRY = 1;
+}
+
 // MsgSubmitProposal is the Msg/SubmitProposal request type.
 message MsgSubmitProposal {
   option (cosmos.msg.v1.signer) = "proposers";
@@ -269,6 +283,11 @@ message MsgSubmitProposal {
 
   // messages is a list of `sdk.Msg`s that will be executed if the proposal passes.
   repeated google.protobuf.Any messages = 4;
+
+  // exec defines the mode of execution of the proposal,
+  // whether it should be executed immediately on creation or not.
+  // If so, proposers signatures are considered as Yes votes.
+  Exec exec = 5;
 }
 
 // MsgSubmitProposalResponse is the Msg/SubmitProposal response type.
@@ -304,6 +323,11 @@ message MsgVote {
 
   // metadata is any arbitrary metadata to attached to the vote.
   bytes metadata = 4;
+
+  // exec defines the mode of execution of the proposal,
+  // whether it should be executed immediately on creation or not.
+  // If so, proposers signatures are considered as Yes votes.
+  Exec exec = 5;
 }
 
 // MsgVoteResponse is the Msg/Vote response type.

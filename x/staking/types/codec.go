@@ -17,6 +17,16 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgDelegate{}, "cosmos-sdk/MsgDelegate", nil)
 	cdc.RegisterConcrete(&MsgUndelegate{}, "cosmos-sdk/MsgUndelegate", nil)
 	cdc.RegisterConcrete(&MsgBeginRedelegate{}, "cosmos-sdk/MsgBeginRedelegate", nil)
+	cdc.RegisterConcrete(&StakeAuthorization{}, "cosmos-sdk/StakeAuthorization", nil)
+
+	authz.RegisterConcrete(&MsgDelegate{}, "cosmos-sdk/MsgDelegate")
+	authz.RegisterConcrete(&MsgUndelegate{}, "cosmos-sdk/MsgUndelegate")
+	authz.RegisterConcrete(&MsgBeginRedelegate{}, "cosmos-sdk/MsgBeginRedelegate")
+
+	authz.RegisterInterface((*isStakeAuthorization_Validators)(nil))
+	authz.RegisterConcrete(&StakeAuthorization_AllowList{}, "cosmos-sdk/StakeAuthorization/AllowList")
+	authz.RegisterConcrete(&StakeAuthorization_DenyList{}, "cosmos-sdk/StakeAuthorization/DenyList")
+	authz.RegisterConcrete(&StakeAuthorization{}, "cosmos-sdk/StakeAuthorization")
 }
 
 // RegisterInterfaces registers the x/staking interfaces types with the interface registry

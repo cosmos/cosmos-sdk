@@ -18,6 +18,18 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&GenericAuthorization{}, "cosmos-sdk/GenericAuthorization", nil)
 }
 
+// RegisterInterface registers the given interface type inside this module's LegacyAmino codec
+// so that it can be serialized properly during the serialization of MsgGrant and MsgExec instances
+func RegisterInterface(ptr interface{}) {
+	ModuleCdc.RegisterInterface(ptr, nil)
+}
+
+// RegisterConcrete registers the given concrete type inside this module's LegacyAmino codec
+// so that it can be serialized properly during the serialization of MsgGrant and MsgExec instances
+func RegisterConcrete(o interface{}, name string) {
+	ModuleCdc.RegisterConcrete(o, name, nil)
+}
+
 // RegisterInterfaces registers the interfaces types with the interface registry
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),

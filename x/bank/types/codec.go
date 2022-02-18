@@ -14,6 +14,10 @@ import (
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgSend{}, "cosmos-sdk/MsgSend", nil)
 	cdc.RegisterConcrete(&MsgMultiSend{}, "cosmos-sdk/MsgMultiSend", nil)
+	cdc.RegisterConcrete(&SendAuthorization{}, "cosmos-sdk/SendAuthorization", nil)
+
+	authz.RegisterConcrete(&MsgSend{}, "cosmos-sdk/MsgSend")
+	authz.RegisterConcrete(&SendAuthorization{}, "cosmos-sdk/SendAuthorization")
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {

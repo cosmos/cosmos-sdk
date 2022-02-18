@@ -63,7 +63,6 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 
 	submittedAt := time.Now().UTC()
 	timeout := submittedAt.Add(time.Second * 1).UTC()
-	sec := time.Second
 
 	groupPolicy := &group.GroupPolicyInfo{
 		Address:  accAddr.String(),
@@ -73,9 +72,9 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		Metadata: []byte("policy metadata"),
 	}
 	err := groupPolicy.SetDecisionPolicy(&group.ThresholdDecisionPolicy{
-		Threshold:       "1",
-		VotingPeriod:    time.Second,
-		ExecutionPeriod: &sec,
+		Threshold:          "1",
+		VotingPeriod:       time.Second,
+		MinExecutionPeriod: 0,
 	})
 	s.Require().NoError(err)
 
@@ -97,9 +96,8 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 			AbstainCount:    "0",
 			NoWithVetoCount: "0",
 		},
-		VotingPeriodEnd:    timeout,
-		ExecutionPeriodEnd: &timeout,
-		ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+		VotingPeriodEnd: timeout,
+		ExecutorResult:  group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 	}
 	err = proposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
 		FromAddress: accAddr.String(),
@@ -220,7 +218,6 @@ func (s *GenesisTestSuite) assertProposalsEqual(g *group.Proposal, other *group.
 	require.Equal(g.Result, other.Result)
 	require.Equal(g.FinalTallyResult, other.FinalTallyResult)
 	require.Equal(g.VotingPeriodEnd, other.VotingPeriodEnd)
-	require.Equal(g.ExecutionPeriodEnd, other.ExecutionPeriodEnd)
 	require.Equal(g.ExecutorResult, other.ExecutorResult)
 	require.Equal(g.GetMsgs(), other.GetMsgs())
 }

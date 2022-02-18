@@ -566,7 +566,7 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 		_, err := groupTable.Create(cacheCurCtx.KVStore(key), groupsInfo)
 		s.Require().NoError(err)
 
-		err = groupPolicy.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Second, &sec))
+		err = groupPolicy.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Second, 0))
 		s.Require().NoError(err)
 		err = groupPolicyTable.Create(cacheCurCtx.KVStore(key), groupPolicy)
 		s.Require().NoError(err)

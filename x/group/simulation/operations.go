@@ -284,8 +284,8 @@ func SimulateMsgCreateGroupWithPolicy(ak group.AccountKeeper, bk group.BankKeepe
 
 		members := genGroupMembers(r, accounts)
 		decisionPolicy := &group.ThresholdDecisionPolicy{
-			Threshold: fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
-			Timeout:   time.Second * time.Duration(30*24*60*60),
+			Threshold:    fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
+			VotingPeriod: time.Second * time.Duration(30*24*60*60),
 		}
 
 		msg := &group.MsgCreateGroupWithPolicy{
@@ -343,14 +343,13 @@ func SimulateMsgCreateGroupPolicy(ak group.AccountKeeper, bk group.BankKeeper, k
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroupPolicy, "fee error"), nil, err
 		}
 
-		month := time.Second * 30 * 24 * 60 * 60
 		msg, err := group.NewMsgCreateGroupPolicy(
 			acc.Address,
 			groupID,
 			[]byte(simtypes.RandStringOfLength(r, 10)),
 			&group.ThresholdDecisionPolicy{
-				Threshold: fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
-				Timeout:   time.Second * time.Duration(30*24*60*60),
+				Threshold:    fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
+				VotingPeriod: time.Second * time.Duration(30*24*60*60),
 			},
 		)
 		if err != nil {
@@ -721,8 +720,9 @@ func SimulateMsgUpdateGroupPolicyDecisionPolicy(ak group.AccountKeeper,
 		}
 
 		msg, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(acc.Address, groupPolicyBech32, &group.ThresholdDecisionPolicy{
-			Threshold: fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
-			Timeout:   time.Second * time.Duration(simtypes.RandIntBetween(r, 100, 1000)),
+			Threshold:          fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
+			VotingPeriod:       time.Second * time.Duration(simtypes.RandIntBetween(r, 100, 1000)),
+			MinExecutionPeriod: time.Second * time.Duration(simtypes.RandIntBetween(r, 100, 1000)),
 		})
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, err.Error()), nil, err
@@ -841,11 +841,11 @@ func SimulateMsgWithdrawProposal(ak group.AccountKeeper,
 
 		for _, p := range proposals {
 			if p.Status == group.PROPOSAL_STATUS_SUBMITTED {
-				timeout := p.ExecutionPeriodEnd
+				timeout := p.VotingPeriodEnd
 				proposal = p
 				proposalID = int(p.Id)
-				if timeout != nil && timeout.Before(sdkCtx.BlockTime()) || timeout.Equal(sdkCtx.BlockTime()) {
-					return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "execution period ended: skipping"), nil, nil
+				if timeout.Before(sdkCtx.BlockTime()) || timeout.Equal(sdkCtx.BlockTime()) {
+					return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "voting period ended: skipping"), nil, nil
 				}
 				break
 			}
@@ -960,10 +960,10 @@ func SimulateMsgVote(ak group.AccountKeeper,
 
 		for _, p := range proposals {
 			if p.Status == group.PROPOSAL_STATUS_SUBMITTED {
-				timeout := p.ExecutionPeriodEnd
+				timeout := p.VotingPeriodEnd
 				proposal = p
 				proposalID = int(p.Id)
-				if timeout != nil && timeout.Before(sdkCtx.BlockTime()) || timeout.Equal(sdkCtx.BlockTime()) {
+				if timeout.Before(sdkCtx.BlockTime()) || timeout.Equal(sdkCtx.BlockTime()) {
 					return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "voting period ended: skipping"), nil, nil
 				}
 				break

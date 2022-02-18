@@ -486,10 +486,6 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		VotingPeriodEnd:    ctx.BlockTime().Add(policy.GetVotingPeriod()), // The voting window begins as soon as the proposal is submitted.
 		FinalTallyResult:   group.DefaultTallyResult(),
 	}
-	if execDuration := policy.GetExecutionPeriod(); execDuration != nil {
-		end := ctx.BlockTime().Add(*execDuration)
-		m.ExecutionPeriodEnd = &end
-	}
 
 	if err := m.SetMsgs(msgs); err != nil {
 		return nil, sdkerrors.Wrap(err, "create proposal")

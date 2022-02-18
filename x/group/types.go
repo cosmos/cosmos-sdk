@@ -24,8 +24,12 @@ type DecisionPolicyResult struct {
 type DecisionPolicy interface {
 	codec.ProtoMarshaler
 
+	// GetVotingPeriod returns the duration after proposal submission where
+	// votes are accepted.
 	GetVotingPeriod() time.Duration
-	GetExecutionPeriod() *time.Duration
+	// GetMinExecutionPeriod returns the minimum duration after proposal
+	// submision from which the proposal can be executed. It can return 0.
+	GetMinExecutionPeriod() time.Duration
 	// Allow defines policy-specific logic to allow a proposal to pass or not,
 	// based on its tally result, the group's total power and the time since
 	// the proposal was submitted.
@@ -39,8 +43,8 @@ type DecisionPolicy interface {
 var _ DecisionPolicy = &ThresholdDecisionPolicy{}
 
 // NewThresholdDecisionPolicy creates a threshold DecisionPolicy
-func NewThresholdDecisionPolicy(threshold string, votingPeriod time.Duration) DecisionPolicy {
-	return &ThresholdDecisionPolicy{threshold, votingPeriod}
+func NewThresholdDecisionPolicy(threshold string, votingPeriod time.Duration, minExecutionPeriod time.Duration) DecisionPolicy {
+	return &ThresholdDecisionPolicy{threshold, votingPeriod, minExecutionPeriod}
 }
 
 func (p ThresholdDecisionPolicy) ValidateBasic() error {
@@ -56,7 +60,11 @@ func (p ThresholdDecisionPolicy) ValidateBasic() error {
 }
 
 // Allow allows a proposal to pass when the tally of yes votes equals or exceeds the threshold before the timeout.
-func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower string, _ time.Duration) (DecisionPolicyResult, error) {
+func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error) {
+	if sinceSubmission < p.MinExecutionPeriod {
+		return DecisionPolicyResult{}, errors.ErrUnauthorized.Wrapf("must wait %s after submission before execution, currently at %s", p.MinExecutionPeriod, sinceSubmission)
+	}
+
 	threshold, err := math.NewPositiveDecFromString(p.Threshold)
 	if err != nil {
 		return DecisionPolicyResult{}, err
@@ -111,7 +119,7 @@ func (p *ThresholdDecisionPolicy) Validate(g GroupInfo) error {
 var _ DecisionPolicy = &PercentageDecisionPolicy{}
 
 // NewPercentageDecisionPolicy creates a new percentage DecisionPolicy
-func NewPercentageDecisionPolicy(percentage string, votingPeriod time.Duration, executionPeriod *time.Duration) DecisionPolicy {
+func NewPercentageDecisionPolicy(percentage string, votingPeriod time.Duration, executionPeriod time.Duration) DecisionPolicy {
 	return &PercentageDecisionPolicy{percentage, votingPeriod, executionPeriod}
 }
 
@@ -128,10 +136,6 @@ func (p PercentageDecisionPolicy) ValidateBasic() error {
 		return sdkerrors.Wrap(errors.ErrInvalid, "timeout too small")
 	}
 
-	if p.ExecutionPeriod != nil && *p.ExecutionPeriod < p.VotingPeriod {
-		return sdkerrors.Wrap(errors.ErrInvalid, "execution period must be longer than voting period")
-	}
-
 	return nil
 }
 
@@ -140,7 +144,11 @@ func (p *PercentageDecisionPolicy) Validate(g GroupInfo) error {
 }
 
 // Allow allows a proposal to pass when the tally of yes votes equals or exceeds the percentage threshold before the timeout.
-func (p PercentageDecisionPolicy) Allow(tally TallyResult, totalPower string, _ time.Duration) (DecisionPolicyResult, error) {
+func (p PercentageDecisionPolicy) Allow(tally TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error) {
+	if sinceSubmission < p.MinExecutionPeriod {
+		return DecisionPolicyResult{}, errors.ErrUnauthorized.Wrapf("must wait %s after submission before execution, currently at %s", p.MinExecutionPeriod, sinceSubmission)
+	}
+
 	percentage, err := math.NewPositiveDecFromString(p.Percentage)
 	if err != nil {
 		return DecisionPolicyResult{}, err

@@ -9,8 +9,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// Version represents Cosmovisor version value. Set during build
-var Version string
+// Version represents Cosmovisor version value. Overwritten during build
+var Version = "1.1.0"
 
 // VersionArgs is the strings that indicate a cosmovisor version command.
 var VersionArgs = []string{"version", "--version"}

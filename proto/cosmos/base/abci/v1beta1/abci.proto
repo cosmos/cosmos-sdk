@@ -52,7 +52,7 @@ message TxResponse {
 message ABCIMessageLog {
   option (gogoproto.stringer) = true;
 
-  uint32 msg_index = 1;
+  uint32 msg_index = 1 [(gogoproto.jsontag) = "msg_index"];
   string log       = 2;
 
   // Events contains a slice of Event objects that were emitted during some
@@ -104,7 +104,7 @@ message Result {
 
   // msg_responses contains the Msg handler responses type packed in Anys.
   //
-  // Since: cosmos-sdk 0.45
+  // Since: cosmos-sdk 0.46
   repeated google.protobuf.Any msg_responses = 4;
 }
 
@@ -135,7 +135,7 @@ message TxMsgData {
 
   // msg_responses contains the Msg handler responses packed into Anys.
   //
-  // Since: cosmos-sdk 0.45
+  // Since: cosmos-sdk 0.46
   repeated google.protobuf.Any msg_responses = 2;
 }
 

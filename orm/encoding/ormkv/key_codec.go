@@ -42,6 +42,9 @@ func NewKeyCodec(prefix []byte, messageType protoreflect.MessageType, fieldNames
 	for i := 0; i < n; i++ {
 		nonTerminal := i != n-1
 		field := messageFields.ByName(fieldNames[i])
+		if field == nil {
+			return nil, ormerrors.FieldNotFound.Wrapf("field %s on %s", fieldNames[i], messageType.Descriptor().FullName())
+		}
 		cdc, err := ormfield.GetCodec(field, nonTerminal)
 		if err != nil {
 			return nil, err

@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ProviderDescriptor defines a special constructor type that is defined by
+// ProviderDescriptor defines a special provider type that is defined by
 // reflection. It should be passed as a value to the Provide function.
 // Ex:
 //   option.Provide(ProviderDescriptor{ ... })
@@ -17,10 +17,10 @@ type ProviderDescriptor struct {
 	// Outputs defines the out parameter types to Fn.
 	Outputs []ProviderOutput
 
-	// Fn defines the constructor function.
+	// Fn defines the provider function.
 	Fn func([]reflect.Value) ([]reflect.Value, error)
 
-	// Location defines the source code location to be used for this constructor
+	// Location defines the source code location to be used for this provider
 	// in error messages.
 	Location Location
 }
@@ -44,7 +44,7 @@ func ExtractProviderDescriptor(provider interface{}) (ProviderDescriptor, error)
 		}
 	}
 
-	return expandStructArgsConstructor(rctr)
+	return expandStructArgsProvider(rctr)
 }
 
 func doExtractProviderDescriptor(ctr interface{}) (ProviderDescriptor, error) {
@@ -57,7 +57,7 @@ func doExtractProviderDescriptor(ctr interface{}) (ProviderDescriptor, error) {
 	loc := LocationFromPC(val.Pointer())
 
 	if typ.IsVariadic() {
-		return ProviderDescriptor{}, errors.Errorf("variadic function can't be used as a constructor: %s", loc)
+		return ProviderDescriptor{}, errors.Errorf("variadic function can't be used as a provider: %s", loc)
 	}
 
 	numIn := typ.NumIn()

@@ -163,7 +163,7 @@ func TestQueries(t *testing.T) {
 	// TestAddrs[0] proposes (and deposits) proposals #1 and #2
 	proposal1, err := app.GovKeeper.SubmitProposal(ctx, tp, nil)
 	require.NoError(t, err)
-	deposit1 := v1beta2.NewDeposit(proposal1.ProposalId, TestAddrs[0], oneCoins)
+	deposit1 := v1beta2.NewDeposit(proposal1.Id, TestAddrs[0], oneCoins)
 	depositer1, err := sdk.AccAddressFromBech32(deposit1.Depositor)
 	require.NoError(t, err)
 	_, err = app.GovKeeper.AddDeposit(ctx, deposit1.ProposalId, depositer1, deposit1.Amount)
@@ -173,7 +173,7 @@ func TestQueries(t *testing.T) {
 
 	proposal2, err := app.GovKeeper.SubmitProposal(ctx, tp, nil)
 	require.NoError(t, err)
-	deposit2 := v1beta2.NewDeposit(proposal2.ProposalId, TestAddrs[0], consCoins)
+	deposit2 := v1beta2.NewDeposit(proposal2.Id, TestAddrs[0], consCoins)
 	depositer2, err := sdk.AccAddressFromBech32(deposit2.Depositor)
 	require.NoError(t, err)
 	_, err = app.GovKeeper.AddDeposit(ctx, deposit2.ProposalId, depositer2, deposit2.Amount)
@@ -184,7 +184,7 @@ func TestQueries(t *testing.T) {
 	// TestAddrs[1] proposes (and deposits) on proposal #3
 	proposal3, err := app.GovKeeper.SubmitProposal(ctx, tp, nil)
 	require.NoError(t, err)
-	deposit3 := v1beta2.NewDeposit(proposal3.ProposalId, TestAddrs[1], oneCoins)
+	deposit3 := v1beta2.NewDeposit(proposal3.Id, TestAddrs[1], oneCoins)
 	depositer3, err := sdk.AccAddressFromBech32(deposit3.Depositor)
 	require.NoError(t, err)
 
@@ -194,7 +194,7 @@ func TestQueries(t *testing.T) {
 	proposal3.TotalDeposit = sdk.NewCoins(proposal3.TotalDeposit...).Add(deposit3.Amount...)
 
 	// TestAddrs[1] deposits on proposals #2 & #3
-	deposit4 := v1beta2.NewDeposit(proposal2.ProposalId, TestAddrs[1], depositParams.MinDeposit)
+	deposit4 := v1beta2.NewDeposit(proposal2.Id, TestAddrs[1], depositParams.MinDeposit)
 	depositer4, err := sdk.AccAddressFromBech32(deposit4.Depositor)
 	require.NoError(t, err)
 	_, err = app.GovKeeper.AddDeposit(ctx, deposit4.ProposalId, depositer4, deposit4.Amount)
@@ -205,7 +205,7 @@ func TestQueries(t *testing.T) {
 	votingEndTime := ctx.BlockTime().Add(v1beta2.DefaultPeriod)
 	proposal2.VotingEndTime = &votingEndTime
 
-	deposit5 := v1beta2.NewDeposit(proposal3.ProposalId, TestAddrs[1], depositParams.MinDeposit)
+	deposit5 := v1beta2.NewDeposit(proposal3.Id, TestAddrs[1], depositParams.MinDeposit)
 	depositer5, err := sdk.AccAddressFromBech32(deposit5.Depositor)
 	require.NoError(t, err)
 	_, err = app.GovKeeper.AddDeposit(ctx, deposit5.ProposalId, depositer5, deposit5.Amount)
@@ -220,26 +220,26 @@ func TestQueries(t *testing.T) {
 
 	// check deposits on proposal1 match individual deposits
 
-	deposits := getQueriedDeposits(t, ctx, legacyQuerierCdc, querier, proposal1.ProposalId)
+	deposits := getQueriedDeposits(t, ctx, legacyQuerierCdc, querier, proposal1.Id)
 	require.Len(t, deposits, 1)
 	require.Equal(t, deposit1, deposits[0])
 
-	deposit := getQueriedDeposit(t, ctx, legacyQuerierCdc, querier, proposal1.ProposalId, TestAddrs[0])
+	deposit := getQueriedDeposit(t, ctx, legacyQuerierCdc, querier, proposal1.Id, TestAddrs[0])
 	require.Equal(t, deposit1, deposit)
 
 	// check deposits on proposal2 match individual deposits
-	deposits = getQueriedDeposits(t, ctx, legacyQuerierCdc, querier, proposal2.ProposalId)
+	deposits = getQueriedDeposits(t, ctx, legacyQuerierCdc, querier, proposal2.Id)
 	require.Len(t, deposits, 2)
 	// NOTE order of deposits is determined by the addresses
 	require.Equal(t, deposit2, deposits[0])
 	require.Equal(t, deposit4, deposits[1])
 
 	// check deposits on proposal3 match individual deposits
-	deposits = getQueriedDeposits(t, ctx, legacyQuerierCdc, querier, proposal3.ProposalId)
+	deposits = getQueriedDeposits(t, ctx, legacyQuerierCdc, querier, proposal3.Id)
 	require.Len(t, deposits, 1)
 	require.Equal(t, deposit5, deposits[0])
 
-	deposit = getQueriedDeposit(t, ctx, legacyQuerierCdc, querier, proposal3.ProposalId, TestAddrs[1])
+	deposit = getQueriedDeposit(t, ctx, legacyQuerierCdc, querier, proposal3.Id, TestAddrs[1])
 	require.Equal(t, deposit5, deposit)
 
 	// Only proposal #1 should be in v1beta2.Deposit Period
@@ -254,13 +254,13 @@ func TestQueries(t *testing.T) {
 	checkEqualProposal(t, proposal3, *proposals[1])
 
 	// Addrs[0] votes on proposals #2 & #3
-	vote1 := v1beta2.NewVote(proposal2.ProposalId, TestAddrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes))
-	vote2 := v1beta2.NewVote(proposal3.ProposalId, TestAddrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes))
+	vote1 := v1beta2.NewVote(proposal2.Id, TestAddrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes))
+	vote2 := v1beta2.NewVote(proposal3.Id, TestAddrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes))
 	app.GovKeeper.SetVote(ctx, vote1)
 	app.GovKeeper.SetVote(ctx, vote2)
 
 	// Addrs[1] votes on proposal #3
-	vote3 := v1beta2.NewVote(proposal3.ProposalId, TestAddrs[1], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes))
+	vote3 := v1beta2.NewVote(proposal3.Id, TestAddrs[1], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes))
 	app.GovKeeper.SetVote(ctx, vote3)
 
 	// Test query voted by TestAddrs[0]
@@ -269,15 +269,15 @@ func TestQueries(t *testing.T) {
 	checkEqualProposal(t, proposal3, *proposals[1])
 
 	// Test query votes on v1beta2.Proposal 2
-	votes := getQueriedVotes(t, ctx, legacyQuerierCdc, querier, proposal2.ProposalId, 1, 0)
+	votes := getQueriedVotes(t, ctx, legacyQuerierCdc, querier, proposal2.Id, 1, 0)
 	require.Len(t, votes, 1)
 	checkEqualVotes(t, vote1, votes[0])
 
-	vote := getQueriedVote(t, ctx, legacyQuerierCdc, querier, proposal2.ProposalId, TestAddrs[0])
+	vote := getQueriedVote(t, ctx, legacyQuerierCdc, querier, proposal2.Id, TestAddrs[0])
 	checkEqualVotes(t, vote1, vote)
 
 	// Test query votes on v1beta2.Proposal 3
-	votes = getQueriedVotes(t, ctx, legacyQuerierCdc, querier, proposal3.ProposalId, 1, 0)
+	votes = getQueriedVotes(t, ctx, legacyQuerierCdc, querier, proposal3.Id, 1, 0)
 	require.Len(t, votes, 2)
 	checkEqualVotes(t, vote2, votes[0])
 	checkEqualVotes(t, vote3, votes[1])
@@ -290,20 +290,20 @@ func TestQueries(t *testing.T) {
 
 	// Test query voted by TestAddrs[1]
 	proposals = getQueriedProposals(t, ctx, legacyQuerierCdc, querier, nil, TestAddrs[1], v1beta2.StatusNil, 1, 0)
-	require.Equal(t, proposal3.ProposalId, proposals[0].ProposalId)
+	require.Equal(t, proposal3.Id, proposals[0].Id)
 
 	// Test query deposited by TestAddrs[0]
 	proposals = getQueriedProposals(t, ctx, legacyQuerierCdc, querier, TestAddrs[0], nil, v1beta2.StatusNil, 1, 0)
-	require.Equal(t, proposal1.ProposalId, proposals[0].ProposalId)
+	require.Equal(t, proposal1.Id, proposals[0].Id)
 
 	// Test query deposited by addr2
 	proposals = getQueriedProposals(t, ctx, legacyQuerierCdc, querier, TestAddrs[1], nil, v1beta2.StatusNil, 1, 0)
-	require.Equal(t, proposal2.ProposalId, proposals[0].ProposalId)
-	require.Equal(t, proposal3.ProposalId, proposals[1].ProposalId)
+	require.Equal(t, proposal2.Id, proposals[0].Id)
+	require.Equal(t, proposal3.Id, proposals[1].Id)
 
 	// Test query voted AND deposited by addr1
 	proposals = getQueriedProposals(t, ctx, legacyQuerierCdc, querier, TestAddrs[0], TestAddrs[0], v1beta2.StatusNil, 1, 0)
-	require.Equal(t, proposal2.ProposalId, proposals[0].ProposalId)
+	require.Equal(t, proposal2.Id, proposals[0].Id)
 }
 
 func TestPaginatedVotesQuery(t *testing.T) {
@@ -312,8 +312,8 @@ func TestPaginatedVotesQuery(t *testing.T) {
 	legacyQuerierCdc := app.LegacyAmino()
 
 	proposal := v1beta2.Proposal{
-		ProposalId: 100,
-		Status:     v1beta2.StatusVotingPeriod,
+		Id:     100,
+		Status: v1beta2.StatusVotingPeriod,
 	}
 
 	app.GovKeeper.SetProposal(ctx, proposal)
@@ -334,7 +334,7 @@ func TestPaginatedVotesQuery(t *testing.T) {
 	}
 	for i := range votes {
 		vote := v1beta2.Vote{
-			ProposalId: proposal.ProposalId,
+			ProposalId: proposal.Id,
 			Voter:      genAddr(),
 			Options:    v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes),
 		}
@@ -345,7 +345,7 @@ func TestPaginatedVotesQuery(t *testing.T) {
 	querier := keeper.NewQuerier(app.GovKeeper, legacyQuerierCdc)
 
 	// keeper preserves consistent order for each query, but this is not the insertion order
-	all := getQueriedVotes(t, ctx, legacyQuerierCdc, querier, proposal.ProposalId, 1, 0)
+	all := getQueriedVotes(t, ctx, legacyQuerierCdc, querier, proposal.Id, 1, 0)
 	require.Equal(t, len(all), len(votes))
 
 	type testCase struct {
@@ -379,7 +379,7 @@ func TestPaginatedVotesQuery(t *testing.T) {
 	} {
 		tc := tc
 		t.Run(tc.description, func(t *testing.T) {
-			votes := getQueriedVotes(t, ctx, legacyQuerierCdc, querier, proposal.ProposalId, tc.page, tc.limit)
+			votes := getQueriedVotes(t, ctx, legacyQuerierCdc, querier, proposal.Id, tc.page, tc.limit)
 			require.Equal(t, len(tc.votes), len(votes))
 			for i := range votes {
 				require.Equal(t, tc.votes[i], votes[i])
@@ -415,7 +415,7 @@ func checkEqualVotes(t *testing.T, vote1, vote2 v1beta2.Vote) {
 // +  loc: (*time.Location)(<nil>)
 // + }),
 func checkEqualProposal(t *testing.T, p1, p2 v1beta2.Proposal) {
-	require.Equal(t, p1.ProposalId, p2.ProposalId)
+	require.Equal(t, p1.Id, p2.Id)
 	require.Equal(t, p1.Messages, p2.Messages)
 	require.Equal(t, p1.Status, p2.Status)
 	require.Equal(t, p1.FinalTallyResult, p2.FinalTallyResult)

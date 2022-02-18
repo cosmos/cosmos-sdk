@@ -60,8 +60,7 @@ const (
 // If update group or group policy txn's executed, `SimulateMsgVote` & `SimulateMsgExec` txn's returns `noOp`.
 // That's why we have less weight for update group & group-policy txn's.
 const (
-	WeightMsgCreateGroup                     = 50
-	WeightMsgCreateGroupWithPolicy           = 100
+	WeightMsgCreateGroup                     = 100
 	WeightMsgCreateGroupPolicy               = 50
 	WeightMsgSubmitProposal                  = 90
 	WeightMsgVote                            = 90
@@ -73,6 +72,7 @@ const (
 	WeightMsgUpdateGroupPolicyDecisionPolicy = 5
 	WeightMsgUpdateGroupPolicyMetadata       = 5
 	WeightMsgWithdrawProposal                = 20
+	// WeightMsgCreateGroupWithPolicy           = 100
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -85,7 +85,6 @@ func WeightedOperations(
 		weightMsgUpdateGroupMetadata             int
 		weightMsgUpdateGroupMembers              int
 		weightMsgCreateGroupPolicy               int
-		weightMsgCreateGroupWithPolicy           int
 		weightMsgUpdateGroupPolicyAdmin          int
 		weightMsgUpdateGroupPolicyDecisionPolicy int
 		weightMsgUpdateGroupPolicyMetadata       int
@@ -93,6 +92,7 @@ func WeightedOperations(
 		weightMsgVote                            int
 		weightMsgExec                            int
 		weightMsgWithdrawProposal                int
+		// weightMsgCreateGroupWithPolicy           int
 	)
 
 	appParams.GetOrGenerate(cdc, OpMsgCreateGroup, &weightMsgCreateGroup, nil,
@@ -105,11 +105,11 @@ func WeightedOperations(
 			weightMsgCreateGroupPolicy = WeightMsgCreateGroupPolicy
 		},
 	)
-	appParams.GetOrGenerate(cdc, OpMsgCreateGroupWithPolicy, &weightMsgCreateGroupWithPolicy, nil,
-		func(_ *rand.Rand) {
-			weightMsgCreateGroupWithPolicy = WeightMsgCreateGroupWithPolicy
-		},
-	)
+	// appParams.GetOrGenerate(cdc, OpMsgCreateGroupWithPolicy, &weightMsgCreateGroupWithPolicy, nil,
+	// 	func(_ *rand.Rand) {
+	// 		weightMsgCreateGroupWithPolicy = WeightMsgCreateGroupWithPolicy
+	// 	},
+	// )
 	appParams.GetOrGenerate(cdc, OpMsgSubmitProposal, &weightMsgSubmitProposal, nil,
 		func(_ *rand.Rand) {
 			weightMsgSubmitProposal = WeightMsgSubmitProposal
@@ -179,10 +179,10 @@ func WeightedOperations(
 			weightMsgCreateGroupPolicy,
 			SimulateMsgCreateGroupPolicy(ak, bk, k),
 		),
-		simulation.NewWeightedOperation(
-			weightMsgCreateGroupWithPolicy,
-			SimulateMsgCreateGroupWithPolicy(ak, bk),
-		),
+		// simulation.NewWeightedOperation(
+		// 	weightMsgCreateGroupWithPolicy,
+		// 	SimulateMsgCreateGroupWithPolicy(ak, bk),
+		// ),
 	}
 
 	wPostCreateProposalOps := simulation.WeightedOperations{

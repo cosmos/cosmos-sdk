@@ -860,7 +860,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			loadedGroupRes, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: id})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.req.GroupMetadata, loadedGroupRes.Info.Metadata)
-			s.Assert().Equal(id, loadedGroupRes.Info.GroupId)
+			s.Assert().Equal(id, loadedGroupRes.Info.Id)
 			if spec.req.GroupPolicyAsAdmin {
 				s.Assert().NotEqual(spec.req.Admin, loadedGroupRes.Info.Admin)
 				s.Assert().Equal(groupPolicyAddr, loadedGroupRes.Info.Admin)

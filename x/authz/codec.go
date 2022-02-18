@@ -13,6 +13,9 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgGrant{}, "cosmos-sdk/MsgGrant", nil)
 	cdc.RegisterConcrete(&MsgRevoke{}, "cosmos-sdk/MsgRevoke", nil)
 	cdc.RegisterConcrete(&MsgExec{}, "cosmos-sdk/MsgExec", nil)
+
+	cdc.RegisterInterface((*Authorization)(nil), nil)
+	cdc.RegisterConcrete(&GenericAuthorization{}, "cosmos-sdk/GenericAuthorization", nil)
 }
 
 // RegisterInterfaces registers the interfaces types with the interface registry

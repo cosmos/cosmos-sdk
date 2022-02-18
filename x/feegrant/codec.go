@@ -12,6 +12,11 @@ import (
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgGrantAllowance{}, "cosmos-sdk/MsgGrantAllowance", nil)
 	cdc.RegisterConcrete(&MsgRevokeAllowance{}, "cosmos-sdk/MsgRevokeAllowance", nil)
+
+	cdc.RegisterInterface((*FeeAllowanceI)(nil), nil)
+	cdc.RegisterConcrete(&BasicAllowance{}, "cosmos-sdk/BasicAllowance", nil)
+	cdc.RegisterConcrete(&PeriodicAllowance{}, "cosmos-sdk/PeriodicAllowance", nil)
+	cdc.RegisterConcrete(&AllowedMsgAllowance{}, "cosmos-sdk/AllowedMsgAllowance", nil)
 }
 
 // RegisterInterfaces registers the interfaces types with the interface registry

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/tendermint/tendermint/rpc/coretypes"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -80,6 +81,14 @@ func CheckTendermintError(err error, tx tmtypes.Tx) *sdk.TxResponse {
 	}
 }
 
+func checkTendermintErrorForBroadcast(err error, tx tmtypes.Tx, res *coretypes.ResultBroadcastTxCommit) *sdk.TxResponse {
+	if err == nil || strings.Contains(err.Error(), "transaction encountered error") {
+		return sdk.NewResponseFormatBroadcastTxCommit(res)
+	}
+
+	return CheckTendermintError(err, tx)
+}
+
 // BroadcastTxCommit broadcasts transaction bytes to a Tendermint node and
 // waits for a commit. An error is only returned if there is no RPC node
 // connection or if broadcasting fails.
@@ -94,11 +103,7 @@ func (ctx Context) BroadcastTxCommit(txBytes []byte) (*sdk.TxResponse, error) {
 	}
 
 	res, err := node.BroadcastTxCommit(context.Background(), txBytes)
-	if err == nil || strings.Contains(err.Error(), "transaction encountered error") {
-		return sdk.NewResponseFormatBroadcastTxCommit(res), nil
-	}
-
-	if errRes := CheckTendermintError(err, txBytes); errRes != nil {
+	if errRes := checkTendermintErrorForBroadcast(err, txBytes, res); errRes != nil {
 		return errRes, nil
 	}
 	return sdk.NewResponseFormatBroadcastTxCommit(res), err

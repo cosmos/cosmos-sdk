@@ -326,7 +326,6 @@ message MsgVote {
 
   // exec defines the mode of execution of the proposal,
   // whether it should be executed immediately on creation or not.
-  // If so, proposers signatures are considered as Yes votes.
   Exec exec = 5;
 }
 

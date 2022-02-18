@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
+
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -27,9 +29,7 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/store/streaming"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	storev2 "github.com/cosmos/cosmos-sdk/store/v2"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -234,7 +234,7 @@ func NewSimApp(
 	// initialize stores
 	setNamespaces := func(config *baseapp.StoreParams, ver uint64) error {
 		for _, key := range keys {
-			typ, err := storev2.StoreKeyToType(key)
+			typ, err := storetypes.StoreKeyToType(key)
 			if err != nil {
 				return err
 			}
@@ -243,7 +243,7 @@ func NewSimApp(
 			}
 		}
 		for _, key := range memKeys {
-			typ, err := storev2.StoreKeyToType(key)
+			typ, err := storetypes.StoreKeyToType(key)
 			if err != nil {
 				return err
 			}
@@ -252,7 +252,7 @@ func NewSimApp(
 			}
 		}
 		for _, key := range tkeys {
-			typ, err := storev2.StoreKeyToType(key)
+			typ, err := storetypes.StoreKeyToType(key)
 			if err != nil {
 				return err
 			}
@@ -447,7 +447,7 @@ func NewSimApp(
 	app.mm.RegisterServices(app.configurator)
 
 	// add test gRPC service for testing gRPC queries in isolation
-	testdata.RegisterQueryServer(app.GRPCQueryRouter(), testdata.QueryImpl{})
+	testdata_pulsar.RegisterQueryServer(app.GRPCQueryRouter(), testdata_pulsar.QueryImpl{})
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//

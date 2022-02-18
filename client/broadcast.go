@@ -94,7 +94,7 @@ func (ctx Context) BroadcastTxCommit(txBytes []byte) (*sdk.TxResponse, error) {
 	}
 
 	res, err := node.BroadcastTxCommit(context.Background(), txBytes)
-	if err == nil {
+	if err == nil || strings.Contains(err.Error(), "transaction encountered error") {
 		return sdk.NewResponseFormatBroadcastTxCommit(res), nil
 	}
 

@@ -912,28 +912,24 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 			&sdk.TxResponse{},
 			2,
 		},
-		/* TODO(#10559): This case times out after TM v0.35.
-		   Figure out why and fix it.
-
-				{
-					"should fail with unauthorized msgs",
-					func() (testutil.BufferWriter, error) {
-						args := append(
-							[]string{
-								grantee.String(),
-								"cosmos14cm33pvnrv2497tyt8sp9yavhmw83nwej3m0e8",
-								fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
-								fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter),
-							},
-							commonFlags...,
-						)
-						cmd := cli.NewCmdFeeGrant()
-						return clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+		{
+			"should fail with unauthorized msgs",
+			func() (testutil.BufferWriter, error) {
+				args := append(
+					[]string{
+						grantee.String(),
+						"cosmos14cm33pvnrv2497tyt8sp9yavhmw83nwej3m0e8",
+						fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
+						fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter),
 					},
-					&sdk.TxResponse{},
-					7,
-				},
-		*/
+					commonFlags...,
+				)
+				cmd := cli.NewCmdFeeGrant()
+				return clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			},
+			&sdk.TxResponse{},
+			7,
+		},
 	}
 
 	for _, tc := range cases {
@@ -941,6 +937,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 
 		s.Run(tc.name, func() {
 			out, err := tc.malleate()
+			fmt.Println("out, err", out, err)
 			s.Require().NoError(err)
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 			txResp := tc.respType.(*sdk.TxResponse)

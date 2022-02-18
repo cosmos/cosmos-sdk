@@ -8,31 +8,35 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
-func (k Keeper) Tally(ctx sdk.Context, proposalId uint64, tallyResult *group.TallyResult) error {
+func (k Keeper) Tally(ctx sdk.Context, proposalId uint64) (tallyResult *group.TallyResult, err error) {
 	proposal, err := k.getProposal(ctx, proposalId)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if proposal.Status == group.PROPOSAL_STATUS_ABORTED || proposal.Status != group.PROPOSAL_STATUS_WITHDRAWN {
-		return sdkerrors.Wrap(err, "proposal aborted or withdrawn")
+	if proposal.Status != group.PROPOSAL_STATUS_SUBMITTED {
+		return &proposal.FinalTallyResult, nil
 	}
 
-	// Check if the proposal is already closed.
-	if proposal.Status == group.PROPOSAL_STATUS_ABORTED || proposal.Status != group.PROPOSAL_STATUS_CLOSED {
-		return nil
+	var policyInfo group.GroupPolicyInfo
+	if policyInfo, err = k.getGroupPolicyInfo(ctx, proposal.Address); err != nil {
+		return nil, sdkerrors.Wrap(err, "load group policy")
+	}
+
+	// Ensure that group hasn't been modified since the proposal submission.
+	electorate, err := k.getGroupInfo(ctx, policyInfo.GroupId)
+	if err != nil {
+		return nil, err
+	}
+	if electorate.Version != proposal.GroupVersion {
+		return nil, sdkerrors.Wrap(errors.ErrModified, "group was modified")
 	}
 
 	votesIt, err := k.voteByVoterIndex.Get(ctx.KVStore(k.key), proposalId)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer votesIt.Close()
-
-	var policyInfo group.GroupPolicyInfo
-	if policyInfo, err = k.getGroupPolicyInfo(ctx, proposal.Address); err != nil {
-		return sdkerrors.Wrap(err, "load group policy")
-	}
 
 	for {
 		var vote group.Vote
@@ -44,14 +48,14 @@ func (k Keeper) Tally(ctx sdk.Context, proposalId uint64, tallyResult *group.Tal
 		voterAddr := vote.Voter
 		voter := group.GroupMember{GroupId: policyInfo.GroupId, Member: &group.Member{Address: voterAddr}}
 		if err := k.groupMemberTable.GetOne(ctx.KVStore(k.key), orm.PrimaryKey(&voter), &voter); err != nil {
-			return sdkerrors.Wrapf(err, "address: %s", voterAddr)
+			return nil, sdkerrors.Wrapf(err, "address: %s", voterAddr)
 		}
 
 		err = tallyResult.Add(vote, voter.Member.Weight)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	return tallyResult, nil
 }

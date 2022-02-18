@@ -309,9 +309,7 @@ func (q Keeper) TallyResult(goCtx context.Context, request *group.QueryTallyResu
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	proposalId := request.ProposalId
 
-	var tallyResult *group.TallyResult
-
-	err := q.Tally(ctx, proposalId, tallyResult)
+	tallyResult, err := q.Tally(ctx, proposalId)
 	if err != nil {
 		return nil, err
 	}

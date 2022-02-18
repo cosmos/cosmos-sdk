@@ -7,6 +7,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"sync"
 	"syscall"
 
 	"github.com/gogo/protobuf/proto"
@@ -190,13 +191,29 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	app.voteInfos = req.LastCommitInfo.GetVotes()
 
 	// call the hooks with the BeginBlock messages
+	wg := new(sync.WaitGroup)
+	var halt = false
 	for _, streamingListener := range app.abciListeners {
-		if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
-			app.logger.Error("BeginBlock listening hook failed", "height", req.Header.Height, "err", err)
-			if streamingListener.HaltAppOnDeliveryError() {
-				app.halt()
+		// increment the wait group counter
+		wg.Add(1)
+		streamingListener := streamingListener // https://go.dev/doc/faq#closures_and_goroutines
+		go func() {
+			// decrement the counter when the go routine completes
+			defer wg.Done()
+			if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
+				app.logger.Error("BeginBlock listening hook failed", "height", req.Header.Height, "err", err)
+				if streamingListener.HaltAppOnDeliveryError() {
+					halt = true
+				}
 			}
-		}
+		}()
+	}
+
+	// wait for all the listener calls to finish
+	wg.Wait()
+
+	if halt {
+		app.halt()
 	}
 
 	return res
@@ -218,14 +235,30 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 		res.ConsensusParamUpdates = cp
 	}
 
-	// call the streaming service hooks with the EndBlock messages
+	// call the hooks with the BeginBlock messages
+	wg := new(sync.WaitGroup)
+	var halt = false
 	for _, streamingListener := range app.abciListeners {
-		if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
-			app.logger.Error("EndBlock listening hook failed", "height", req.Height, "err", err)
-			if streamingListener.HaltAppOnDeliveryError() {
-				app.halt()
+		// increment the wait group counter
+		wg.Add(1)
+		streamingListener := streamingListener // https://go.dev/doc/faq#closures_and_goroutines
+		go func() {
+			// decrement the counter when the go routine completes
+			defer wg.Done()
+			if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
+				app.logger.Error("EndBlock listening hook failed", "height", req.Height, "err", err)
+				if streamingListener.HaltAppOnDeliveryError() {
+					halt = true
+				}
 			}
-		}
+		}()
+	}
+
+	// wait for all the listener calls to finish
+	wg.Wait()
+
+	if halt {
+		app.halt()
 	}
 
 	return res
@@ -275,13 +308,30 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 
 	var abciRes abci.ResponseDeliverTx
 	defer func() {
+		// call the hooks with the BeginBlock messages
+		wg := new(sync.WaitGroup)
+		var halt = false
 		for _, streamingListener := range app.abciListeners {
-			if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, abciRes); err != nil {
-				app.logger.Error("DeliverTx listening hook failed", "err", err)
-				if streamingListener.HaltAppOnDeliveryError() {
-					app.halt()
+			// increment the wait group counter
+			wg.Add(1)
+			streamingListener := streamingListener // https://go.dev/doc/faq#closures_and_goroutines
+			go func() {
+				// decrement the counter when the go routine completes
+				defer wg.Done()
+				if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, abciRes); err != nil {
+					app.logger.Error("DeliverTx listening hook failed", "err", err)
+					if streamingListener.HaltAppOnDeliveryError() {
+						halt = true
+					}
 				}
-			}
+			}()
+		}
+
+		// wait for all the listener calls to finish
+		wg.Wait()
+
+		if halt {
+			app.halt()
 		}
 	}()
 
@@ -298,7 +348,6 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 	}
 
 	return abciRes
-
 }
 
 // Commit implements the ABCI interface. It will commit all state that exists in

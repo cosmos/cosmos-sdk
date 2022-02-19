@@ -664,6 +664,68 @@ func parsePath(path string) (storeName string, subpath string, err error) {
 	return storeName, subpath, nil
 }
 
+func (rs *Store) Rollback(version int64) error {
+	if version < 2 {
+		return fmt.Errorf("invalid rollback version %d; must be >= 2", version)
+	}
+
+	prevHeight := rs.lastCommitInfo.GetVersion()
+
+	// Rollback application state to 'version'. We do this by:
+	//
+	// 1. Pruning all stores back till but not including 'version'.
+	// 2. Removing root multi-store version metadata back till but not including
+	// 'version'.
+	// 3. Resetting the root multi-store parameters.
+
+	var pruneVersions []int64
+	for v := prevHeight; v > version; v-- {
+		pruneVersions = append(pruneVersions, v)
+	}
+
+	for key, store := range rs.stores {
+		if store.GetStoreType() == types.StoreTypeIAVL {
+			// If the store is wrapped with an inter-block cache, we must first unwrap
+			// it to get the underlying IAVL store.
+			store = rs.GetCommitKVStore(key)
+
+			if err := store.(*iavl.Store).DeleteVersions(pruneVersions...); err != nil {
+				if errCause := errors.Cause(err); errCause != nil && errCause != iavltree.ErrVersionDoesNotExist {
+					return err
+				}
+			}
+		}
+	}
+
+	batch := rs.db.NewBatch()
+	defer batch.Close()
+
+	setCommitInfo(batch, version, rs.buildCommitInfo(version))
+	setLatestVersion(batch, version)
+
+	// NOTE: We avoid resetting prune heights since if we try to prune a height that
+	// does not exist, it's considered a no-op.
+
+	if err := batch.Write(); err != nil {
+		return fmt.Errorf("failed to batch write store metadata rollback: %w", err)
+	}
+
+	rs.initialVersion = version
+
+	// Loop through all the stores, if it's an IAVL store, then set initial
+	// version on it.
+	for key, store := range rs.stores {
+		if store.GetStoreType() == types.StoreTypeIAVL {
+			// If the store is wrapped with an inter-block cache, we must first unwrap
+			// it to get the underlying IAVL store.
+			store = rs.GetCommitKVStore(key)
+			store.(types.StoreWithInitialVersion).SetInitialVersion(version)
+		}
+	}
+
+	return nil
+}
+
 //---------------------- Snapshotting ------------------
 
 // Snapshot implements snapshottypes.Snapshotter. The snapshot output for a given format must be

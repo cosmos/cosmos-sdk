@@ -18,6 +18,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgUpdateGroupMembers{}, "cosmos-sdk/MsgUpdateGroupMembers", nil)
 	cdc.RegisterConcrete(&MsgUpdateGroupAdmin{}, "cosmos-sdk/MsgUpdateGroupAdmin", nil)
 	cdc.RegisterConcrete(&MsgUpdateGroupMetadata{}, "cosmos-sdk/MsgUpdateGroupMetadata", nil)
+	cdc.RegisterConcrete(&MsgCreateGroupWithPolicy{}, "cosmos-sdk/MsgCreateGroupWithPolicy", nil)
 	cdc.RegisterConcrete(&MsgCreateGroupPolicy{}, "cosmos-sdk/MsgCreateGroupPolicy", nil)
 	cdc.RegisterConcrete(&MsgUpdateGroupPolicyAdmin{}, "cosmos-sdk/MsgUpdateGroupPolicyAdmin", nil)
 	cdc.RegisterConcrete(&MsgUpdateGroupPolicyDecisionPolicy{}, "cosmos-sdk/MsgUpdateGroupPolicyDecisionPolicy", nil)
@@ -34,6 +35,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgUpdateGroupMembers{},
 		&MsgUpdateGroupAdmin{},
 		&MsgUpdateGroupMetadata{},
+		&MsgCreateGroupWithPolicy{},
 		&MsgCreateGroupPolicy{},
 		&MsgUpdateGroupPolicyAdmin{},
 		&MsgUpdateGroupPolicyDecisionPolicy{},

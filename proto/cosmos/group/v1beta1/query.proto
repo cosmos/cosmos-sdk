@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package cosmos.group.v1beta1;
 
+import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/group/v1beta1/types.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
@@ -294,16 +295,16 @@ message QueryGroupsByMemberResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryTallyResultRequest is the Query/Tally request type.
+// QueryTallyResultRequest is the Query/TallyResult request type.
 message QueryTallyResultRequest {
 
   // proposal_id is the unique id of a proposal.
   uint64 proposal_id = 1;
 }
 
-// QueryTallyResultResponse is the Query/Tally response type.
+// QueryTallyResultResponse is the Query/TallyResult response type.
 message QueryTallyResultResponse {
 
   // tally defines the requested tally.
-  TallyResult tally = 1;
+  TallyResult tally = 1 [(gogoproto.nullable) = false];
 }

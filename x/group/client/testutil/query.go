@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -757,11 +758,36 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 
 	member := s.votedMember
 
+	var commonFlags = []string{
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	}
+
+	// create a proposal
+	out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
+		append(
+			[]string{
+				s.createCLIProposal(
+					s.groupPolicies[0].Address, val.Address.String(),
+					s.groupPolicies[0].Address, val.Address.String(),
+					""),
+			},
+			commonFlags...,
+		),
+	)
+	s.Require().NoError(err, out.String())
+
+	var txResp sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+	s.Require().Equal(uint32(0), txResp.Code, out.String())
+	proposalId := s.getProposalIdFromTxResponse(txResp)
+
 	testCases := []struct {
 		name           string
 		args           []string
 		expectErr      bool
-		expTallyResult *group.TallyResult
+		expTallyResult group.TallyResult
 		expectErrMsg   string
 		expectedCode   uint32
 	}{
@@ -772,7 +798,7 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			true,
-			nil,
+			group.TallyResult{},
 			"not found",
 			0,
 		},
@@ -783,8 +809,24 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			true,
-			nil,
+			group.TallyResult{},
 			"strconv.ParseUint: parsing \"\": invalid syntax",
+			0,
+		},
+		{
+			"valid proposal id with no votes",
+			[]string{
+				proposalId,
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			group.TallyResult{
+				YesCount:        "",
+				AbstainCount:    "",
+				NoCount:         "",
+				NoWithVetoCount: "",
+			},
+			"",
 			0,
 		},
 		{
@@ -794,7 +836,7 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			&group.TallyResult{
+			group.TallyResult{
 				YesCount:        member.Weight,
 				AbstainCount:    "0",
 				NoCount:         "0",

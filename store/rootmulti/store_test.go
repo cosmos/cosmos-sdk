@@ -136,6 +136,51 @@ func TestHashStableWithEmptyCommit(t *testing.T) {
 	require.Equal(t, hash, cID.Hash)
 }
 
+func TestRollbackVersion(t *testing.T) {
+	var db dbm.DB = dbm.NewMemDB()
+
+	store := newMultiStoreWithMounts(db, types.PruneNothing)
+	err := store.LoadLatestVersion()
+	require.Nil(t, err)
+
+	// New store has empty last commit.
+	commitID := types.CommitID{}
+	checkStore(t, store, commitID, commitID)
+
+	// ensure we can get stores by name
+	s1 := store.getStoreByName("store1")
+	require.NotNil(t, s1)
+
+	s3 := store.getStoreByName("store3")
+	require.NotNil(t, s3)
+
+	s77 := store.getStoreByName("store77")
+	require.Nil(t, s77)
+
+	// make a few commits and check them
+	nCommits := int64(17)
+	for i := int64(0); i < nCommits; i++ {
+		commitID = store.Commit()
+		expectedCommitID := getExpectedCommitID(store, i+1)
+		checkStore(t, store, expectedCommitID, commitID)
+	}
+
+	// rollback
+	require.NoError(t, store.Rollback(10))
+
+	for i := int64(0); i < 11; i++ {
+		store = newMultiStoreWithMounts(db, types.PruneNothing)
+		err = store.LoadVersion(i)
+		require.Nil(t, err)
+	}
+
+	for i := int64(11); i < 17; i++ {
+		store = newMultiStoreWithMounts(db, types.PruneNothing)
+		err = store.LoadVersion(i)
+		require.Error(t, err)
+	}
+}
+
 func TestMultistoreCommitLoad(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
 	store := newMultiStoreWithMounts(db, types.PruneNothing)

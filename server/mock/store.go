@@ -126,6 +126,10 @@ func (ms multiStore) Snapshot(height uint64, format uint32) (<-chan io.ReadClose
 	panic("not implemented")
 }
 
+func (ms multiStore) Rollback(version int64) error {
+	panic("not implemented")
+}
+
 func (ms multiStore) Restore(
 	height uint64, format uint32, chunks <-chan io.ReadCloser, ready chan<- struct{},
 ) error {

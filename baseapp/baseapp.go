@@ -271,6 +271,10 @@ func (app *BaseApp) LoadVersion(version int64) error {
 	return app.init()
 }
 
+func (app *BaseApp) UnsafeGetCommitMultiStore() sdk.CommitMultiStore {
+	return app.cms
+}
+
 // LastCommitID returns the last CommitID of the multistore.
 func (app *BaseApp) LastCommitID() storetypes.CommitID {
 	return app.cms.LastCommitID()

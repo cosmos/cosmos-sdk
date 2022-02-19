@@ -7,14 +7,17 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/server"
+	svrtypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 
 	legacybech32 "github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
@@ -25,7 +28,7 @@ var (
 )
 
 // Cmd creates a main CLI command
-func Cmd() *cobra.Command {
+func Cmd(ac svrtypes.AppCreator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "debug",
 		Short: "Tool for helping with debugging your application",
@@ -36,6 +39,7 @@ func Cmd() *cobra.Command {
 	cmd.AddCommand(PubkeyRawCmd())
 	cmd.AddCommand(AddrCmd())
 	cmd.AddCommand(RawBytesCmd())
+	cmd.AddCommand(RollbackStateCmd(ac))
 
 	return cmd
 }
@@ -141,7 +145,7 @@ $ %s debug pubkey-raw cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			}
 			pubkeyType = strings.ToLower(pubkeyType)
 			if pubkeyType != "secp256k1" && pubkeyType != "ed25519" {
-				return errors.Wrapf(errors.ErrInvalidType, "invalid pubkey type, expected oneof ed25519 or secp256k1")
+				return errors.Wrapf(sdkerrors.ErrInvalidType, "invalid pubkey type, expected oneof ed25519 or secp256k1")
 			}
 
 			pk, err := getPubKeyFromRawString(args[0], pubkeyType)
@@ -256,6 +260,36 @@ $ %s debug raw-bytes [72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 11
 			}
 			fmt.Printf("%X\n", byteArray)
 			return nil
+		},
+	}
+}
+
+func RollbackStateCmd(ac svrtypes.AppCreator) *cobra.Command {
+	return &cobra.Command{
+		Use:   "rollback-state [height]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Rollback application state to a previous height",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			serverCtx := server.GetServerContextFromCmd(cmd)
+
+			db, err := server.UnsafeOpenDB(serverCtx.Config.RootDir)
+			if err != nil {
+				return err
+			}
+
+			app := ac(serverCtx.Logger, db, nil, serverCtx.Viper)
+			debugApp, ok := app.(svrtypes.DebugApp)
+			if !ok {
+				return errors.New("application does not implement the DebugApp interface")
+			}
+
+			version, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("failed to parse height (%s): %w", args[0], err)
+			}
+
+			cms := debugApp.GetBaseApp().UnsafeGetCommitMultiStore()
+			return cms.Rollback(version)
 		},
 	}
 }

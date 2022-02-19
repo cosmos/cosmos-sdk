@@ -184,6 +184,8 @@ type CommitMultiStore interface {
 
 	// SetIAVLCacheSize sets the cache size of the IAVL tree.
 	SetIAVLCacheSize(size int)
+
+	Rollback(version int64) error
 }
 
 //---------subsp-------------------------------

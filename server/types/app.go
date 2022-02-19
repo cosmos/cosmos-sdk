@@ -62,6 +62,8 @@ type (
 	// ModuleInitFlags takes a start command and adds modules specific init flags.
 	ModuleInitFlags func(startCmd *cobra.Command)
 
+	// DebugApp defines an interface an application can implement in order to
+	// support debugging functionality such as rolling back state.
 	DebugApp interface {
 		GetBaseApp() *baseapp.BaseApp
 	}

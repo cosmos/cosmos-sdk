@@ -700,6 +700,8 @@ func (rs *Store) Rollback(version int64) error {
 	batch := rs.db.NewBatch()
 	defer batch.Close()
 
+	// TODO: Verify that each store's LastCommitID() returns the 'version' we are
+	// rolling back to.
 	setCommitInfo(batch, version, rs.buildCommitInfo(version))
 	setLatestVersion(batch, version)
 

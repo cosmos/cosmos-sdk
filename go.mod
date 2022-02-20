@@ -155,3 +155,5 @@ replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 
 replace github.com/cosmos/cosmos-sdk/db => ./db
+
+retract v0.43.0

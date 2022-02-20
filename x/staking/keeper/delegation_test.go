@@ -177,6 +177,45 @@ func TestUnbondingDelegation(t *testing.T) {
 	require.Equal(t, 0, len(resUnbonds))
 }
 
+// TODO: Document what this test is doing, or add more in-line comments.
+func TestInstantUndelegate(t *testing.T) {
+	_, app, ctx := createTestInput()
+
+	delAddrs := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(10000))
+	valAddrs := simapp.ConvertAddrsToValAddrs(delAddrs)
+
+	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
+	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
+
+	require.NoError(t, simapp.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), startTokens))))
+	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
+
+	// create a validator and a delegator to that validator
+	// note this validator starts not-bonded
+	validator := teststaking.NewValidator(t, valAddrs[0], PKs[0])
+
+	validator, issuedShares := validator.AddTokensFromDel(startTokens)
+	require.Equal(t, startTokens, issuedShares.RoundInt())
+
+	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
+
+	delegation := types.NewDelegation(delAddrs[0], valAddrs[0], issuedShares)
+	app.StakingKeeper.SetDelegation(ctx, delegation)
+
+	bondTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 6)
+
+	oldBal := app.BankKeeper.GetBalance(ctx, delAddrs[0], app.StakingKeeper.BondDenom(ctx))
+
+	res, err := app.StakingKeeper.InstantUndelegate(ctx, delAddrs[0], valAddrs[0], bondTokens.ToDec())
+	require.NoError(t, err)
+
+	require.Equal(t, res, sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), bondTokens)))
+
+	newBal := app.BankKeeper.GetBalance(ctx, delAddrs[0], app.StakingKeeper.BondDenom(ctx))
+
+	require.Equal(t, oldBal.Add(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), bondTokens)), newBal)
+}
+
 func TestUnbondDelegation(t *testing.T) {
 	_, app, ctx := createTestInput()
 

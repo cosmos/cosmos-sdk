@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -32,6 +33,7 @@ type Keeper struct {
 	cdc                codec.BinaryCodec               // App-wide binary codec
 	upgradeHandlers    map[string]types.UpgradeHandler // map of plan name to upgrade handler
 	versionSetter      xp.ProtocolVersionSetter        // implements setting the protocol version field on BaseApp
+	downgradeVerified  bool                            // tells if we've already sanity checked that this binary version isn't being used against an old state.
 }
 
 // NewKeeper constructs an upgrade Keeper which requires the following arguments:
@@ -228,6 +230,26 @@ func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, lastHeight int64) ([]
 	return bz, true
 }
 
+// GetLastCompletedUpgrade returns the last applied upgrade name and height.
+func (k Keeper) GetLastCompletedUpgrade(ctx sdk.Context) (string, int64) {
+	iter := sdk.KVStoreReversePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
+	defer iter.Close()
+	if iter.Valid() {
+		return parseDoneKey(iter.Key()), int64(binary.BigEndian.Uint64(iter.Value()))
+	}
+
+	return "", 0
+}
+
+// parseDoneKey - split upgrade name from the done key
+func parseDoneKey(key []byte) string {
+	if len(key) < 2 {
+		panic(fmt.Sprintf("expected key of length at least %d, got %d", 2, len(key)))
+	}
+
+	return string(key[1:])
+}
+
 // GetDoneHeight returns the height at which the given upgrade was executed
 func (k Keeper) GetDoneHeight(ctx sdk.Context, name string) int64 {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
@@ -409,4 +431,14 @@ type upgradeInfo struct {
 	Height int64 `json:"height,omitempty"`
 	// Height has types.Plan.Height value
 	Info string `json:"info,omitempty"`
+}
+
+// SetDowngradeVerified updates downgradeVerified.
+func (k *Keeper) SetDowngradeVerified(v bool) {
+	k.downgradeVerified = v
+}
+
+// DowngradeVerified returns downgradeVerified.
+func (k Keeper) DowngradeVerified() bool {
+	return k.downgradeVerified
 }

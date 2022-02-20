@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -68,11 +69,11 @@ func Test_runShowCmd(t *testing.T) {
 	})
 
 	path := hd.NewFundraiserParams(1, sdk.CoinType, 0).String()
-	_, err = kb.NewAccount(fakeKeyName1, testutil.TestMnemonic, "", path, hd.Secp256k1)
+	_, err = kb.NewAccount(fakeKeyName1, testdata.TestMnemonic, "", path, hd.Secp256k1)
 	require.NoError(t, err)
 
 	path2 := hd.NewFundraiserParams(1, sdk.CoinType, 1).String()
-	_, err = kb.NewAccount(fakeKeyName2, testutil.TestMnemonic, "", path2, hd.Secp256k1)
+	_, err = kb.NewAccount(fakeKeyName2, testdata.TestMnemonic, "", path2, hd.Secp256k1)
 	require.NoError(t, err)
 
 	// Now try single key

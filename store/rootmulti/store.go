@@ -5,6 +5,7 @@ import (
 	"compress/zlib"
 	"encoding/binary"
 	"fmt"
+	"github.com/tendermint/tendermint/libs/log"
 	"io"
 	"math"
 	"sort"
@@ -46,6 +47,7 @@ const (
 // the CommitMultiStore interface.
 type Store struct {
 	db             dbm.DB
+	logger         log.Logger
 	lastCommitInfo *types.CommitInfo
 	pruningOpts    types.PruningOptions
 	iavlCacheSize  int
@@ -73,16 +75,17 @@ var (
 // store will be created with a PruneNothing pruning strategy by default. After
 // a store is created, KVStores must be mounted and finally LoadLatestVersion or
 // LoadVersion must be called.
-func NewStore(db dbm.DB) *Store {
+func NewStore(db dbm.DB, logger log.Logger) *Store {
 	return &Store{
-		db:            db,
-		pruningOpts:   types.PruneNothing,
+		db:           db,
+		logger:       logger,
+		pruningOpts:  types.PruneNothing,
 		iavlCacheSize: iavl.DefaultIAVLCacheSize,
-		storesParams:  make(map[types.StoreKey]storeParams),
-		stores:        make(map[types.StoreKey]types.CommitKVStore),
-		keysByName:    make(map[string]types.StoreKey),
-		pruneHeights:  make([]int64, 0),
-		listeners:     make(map[types.StoreKey][]types.WriteListener),
+		storesParams: make(map[types.StoreKey]storeParams),
+		stores:       make(map[types.StoreKey]types.CommitKVStore),
+		keysByName:   make(map[string]types.StoreKey),
+		pruneHeights: make([]int64, 0),
+		listeners:    make(map[types.StoreKey][]types.WriteListener),
 	}
 }
 
@@ -385,6 +388,14 @@ func (rs *Store) Commit() types.CommitID {
 
 	rs.lastCommitInfo = commitStores(version, rs.stores)
 
+	var pruneErr error
+	defer func ()  {
+		flushMetadata(rs.db, version, rs.lastCommitInfo, rs.pruneHeights)
+		if pruneErr != nil {
+			panic(pruneErr)
+		}
+	}()
+
 	// Determine if pruneHeight height needs to be added to the list of heights to
 	// be pruned, where pruneHeight = (commitHeight - 1) - KeepRecent.
 	if int64(rs.pruningOpts.KeepRecent) < previousHeight {
@@ -401,10 +412,8 @@ func (rs *Store) Commit() types.CommitID {
 
 	// batch prune if the current height is a pruning interval height
 	if rs.pruningOpts.Interval > 0 && version%int64(rs.pruningOpts.Interval) == 0 {
-		rs.pruneStores()
+		pruneErr = rs.pruneStores()
 	}
-
-	flushMetadata(rs.db, version, rs.lastCommitInfo, rs.pruneHeights)
 
 	return types.CommitID{
 		Version: version,
@@ -414,9 +423,9 @@ func (rs *Store) Commit() types.CommitID {
 
 // pruneStores will batch delete a list of heights from each mounted sub-store.
 // Afterwards, pruneHeights is reset.
-func (rs *Store) pruneStores() {
+func (rs *Store) pruneStores() error {
 	if len(rs.pruneHeights) == 0 {
-		return
+		return nil
 	}
 
 	for key, store := range rs.stores {
@@ -427,13 +436,14 @@ func (rs *Store) pruneStores() {
 
 			if err := store.(*iavl.Store).DeleteVersions(rs.pruneHeights...); err != nil {
 				if errCause := errors.Cause(err); errCause != nil && errCause != iavltree.ErrVersionDoesNotExist {
-					panic(err)
+					return err
 				}
 			}
 		}
 	}
 
 	rs.pruneHeights = make([]int64, 0)
+	return nil
 }
 
 // CacheWrap implements CacheWrapper/Store/CommitStore.
@@ -882,9 +892,9 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		var err error
 
 		if params.initialVersion == 0 {
-			store, err = iavl.LoadStore(db, id, rs.lazyLoading, rs.iavlCacheSize)
+			store, err = iavl.LoadStore(db, rs.logger, key, id, rs.lazyLoading, rs.iavlCacheSize)
 		} else {
-			store, err = iavl.LoadStoreWithInitialVersion(db, id, rs.lazyLoading, params.initialVersion, rs.iavlCacheSize)
+			store, err = iavl.LoadStoreWithInitialVersion(db, rs.logger, key, id, rs.lazyLoading, params.initialVersion, rs.iavlCacheSize)
 		}
 
 		if err != nil {

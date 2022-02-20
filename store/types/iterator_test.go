@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"github.com/tendermint/tendermint/libs/log"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -12,7 +13,7 @@ import (
 
 func newMemTestKVStore(t *testing.T) types.KVStore {
 	db := dbm.NewMemDB()
-	store, err := iavl.LoadStore(db, types.CommitID{}, false, iavl.DefaultIAVLCacheSize)
+	store, err := iavl.LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), types.CommitID{}, false, iavl.DefaultIAVLCacheSize)
 	require.NoError(t, err)
 	return store
 }

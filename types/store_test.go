@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"github.com/tendermint/tendermint/libs/log"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -108,7 +109,7 @@ func (s *storeTestSuite) TestDiffKVStores() {
 
 func (s *storeTestSuite) initTestStores() (types.KVStore, types.KVStore) {
 	db := dbm.NewMemDB()
-	ms := rootmulti.NewStore(db)
+	ms := rootmulti.NewStore(db, log.NewNopLogger())
 
 	key1 := types.NewKVStoreKey("store1")
 	key2 := types.NewKVStoreKey("store2")

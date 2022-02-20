@@ -3,6 +3,7 @@ package iavl
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/iavl"
 )
 
@@ -18,7 +19,7 @@ type (
 	// must be made.
 	Tree interface {
 		Has(key []byte) bool
-		Get(key []byte) (index int64, value []byte)
+		Get(key []byte) []byte
 		Set(key, value []byte) bool
 		Remove(key []byte) ([]byte, bool)
 		SaveVersion() ([]byte, int64, error)
@@ -27,10 +28,11 @@ type (
 		Version() int64
 		Hash() []byte
 		VersionExists(version int64) bool
-		GetVersioned(key []byte, version int64) (int64, []byte)
+		GetVersioned(key []byte, version int64) []byte
 		GetVersionedWithProof(key []byte, version int64) ([]byte, *iavl.RangeProof, error)
 		GetImmutable(version int64) (*iavl.ImmutableTree, error)
 		SetInitialVersion(version uint64)
+		Iterator(start, end []byte, ascending bool) types.Iterator
 	}
 
 	// immutableTree is a simple wrapper around a reference to an iavl.ImmutableTree
@@ -69,9 +71,9 @@ func (it *immutableTree) VersionExists(version int64) bool {
 	return it.Version() == version
 }
 
-func (it *immutableTree) GetVersioned(key []byte, version int64) (int64, []byte) {
+func (it *immutableTree) GetVersioned(key []byte, version int64) []byte {
 	if it.Version() != version {
-		return -1, nil
+		return nil
 	}
 
 	return it.Get(key)

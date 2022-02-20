@@ -97,16 +97,11 @@ func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, 
 }
 
 // record the slash event
-func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
-	h.k.updateValidatorSlashFraction(ctx, valAddr, fraction)
-}
-
-func (h Hooks) BeforeSlashingUnbondingDelegation(ctx sdk.Context, unbondingDelegation stakingtypes.UnbondingDelegation,
-	infractionHeight int64, slashFactor sdk.Dec) {
-}
-
-func (h Hooks) BeforeSlashingRedelegation(ctx sdk.Context, srcValidator stakingtypes.Validator, redelegation stakingtypes.Redelegation,
-	infractionHeight int64, slashFactor sdk.Dec) {
+// distribution only cares about the 'effective slash factor', not the 'actual slash factor'.
+// This is due to {details} of what it wants to be tracking.
+// TODO: Can effective slash factor be calculated in distribution? Would simplify the hook.
+func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, slashHeight int64, slashFactor sdk.Dec, effectiveSlashFactor sdk.Dec) {
+	h.k.updateValidatorSlashFraction(ctx, valAddr, effectiveSlashFactor)
 }
 
 func (h Hooks) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress)                         {}

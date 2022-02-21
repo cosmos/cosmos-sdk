@@ -80,7 +80,8 @@ init() {
 }
 ```
 
-This will allow the `x/authz` module to properly serialize and de-serializes `MsgExec` instances using Amino.
+This will allow the `x/authz` module to properly serialize and de-serializes `MsgExec` instances using Amino, 
+which is required when signing this kind of messages using a Ledger. 
 
 ### Gogoproto
 

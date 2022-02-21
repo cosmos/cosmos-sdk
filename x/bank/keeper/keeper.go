@@ -20,7 +20,6 @@ var _ Keeper = (*BaseKeeper)(nil)
 // between accounts.
 type Keeper interface {
 	SendKeeper
-	WithMintCoinsRestriction(MintingRestrictionFn) BaseKeeper
 
 	InitGenesis(sdk.Context, *types.GenesisState)
 	ExportGenesis(sdk.Context) *types.GenesisState

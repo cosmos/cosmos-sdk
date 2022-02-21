@@ -386,3 +386,7 @@ func openTraceWriter(traceWriterFile string) (w io.Writer, err error) {
 		0666,
 	)
 }
+
+func UnsafeOpenDB(rootDir string) (dbm.DB, error) {
+	return openDB(rootDir)
+}

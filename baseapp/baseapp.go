@@ -244,12 +244,6 @@ func (app *BaseApp) MountStore(key storetypes.StoreKey, typ storetypes.StoreType
 	app.cms.MountStoreWithDB(key, typ, nil)
 }
 
-// CommitStore exposes the commit store for use.
-// Should only be used by advanced users
-func (app *BaseApp) CommitStore() sdk.Store {
-	return app.cms
-}
-
 func (app *BaseApp) SnapshotManager() (*snapshots.Manager, error) {
 	// make sure the snapshot interval is a multiple of the pruning KeepEvery interval
 	if app.snapshotManager != nil {

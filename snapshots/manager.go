@@ -131,6 +131,11 @@ func (m *Manager) List() ([]*types.Snapshot, error) {
 	return m.store.List()
 }
 
+// GetLatest returns the latest snapshot, if any.
+func (m *Manager) GetLatest() (*types.Snapshot, error) {
+	return m.store.GetLatest()
+}
+
 // LoadChunk loads a chunk into a byte slice, mirroring ABCI LoadChunk. It can be called
 // concurrently with other operations. If the chunk does not exist, nil is returned.
 func (m *Manager) LoadChunk(height uint64, format uint32, chunk uint32) ([]byte, error) {

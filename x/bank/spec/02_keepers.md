@@ -61,7 +61,6 @@ Restricted permission to mint per module could be achieved by using baseKeeper w
 // between accounts.
 type Keeper interface {
     SendKeeper
-    WithMintCoinsRestriction(NewRestrictionFn BankMintingRestrictionFn) BaseKeeper 
 
     InitGenesis(sdk.Context, *types.GenesisState)
     ExportGenesis(sdk.Context) *types.GenesisState

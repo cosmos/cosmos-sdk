@@ -40,18 +40,10 @@ func ExecQueryNFT(val *network.Validator, classID, nftID string) (testutil.Buffe
 	return clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 }
 
-func ExecQueryNFTs(val *network.Validator, classID string) (testutil.BufferWriter, error) {
+func ExecQueryNFTs(val *network.Validator, classID, owner string) (testutil.BufferWriter, error) {
 	cmd := cli.GetCmdQueryNFTs()
 	var args []string
-	args = append(args, classID)
-	args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
-	return clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
-}
-
-func ExecQueryNFTsByOwner(val *network.Validator, classID, owner string) (testutil.BufferWriter, error) {
-	cmd := cli.GetCmdQueryNFTs()
-	var args []string
-	args = append(args, classID)
+	args = append(args, fmt.Sprintf("--%s=%s", cli.FlagClassID, classID))
 	args = append(args, fmt.Sprintf("--%s=%s", cli.FlagOwner, owner))
 	args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
 	return clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)

@@ -27,7 +27,7 @@ func (s *MWTestSuite) TestSetPubKey() {
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 	require := s.Require()
 	txHandler := middleware.ComposeMiddlewares(
-		noopTxHandler{},
+		noopTxHandler,
 		middleware.SetPubKeyMiddleware(s.app.AccountKeeper),
 	)
 
@@ -127,7 +127,7 @@ func (s *MWTestSuite) TestSigVerification() {
 	// make block height non-zero to ensure account numbers part of signBytes
 	ctx = ctx.WithBlockHeight(1)
 	txHandler := middleware.ComposeMiddlewares(
-		noopTxHandler{},
+		noopTxHandler,
 		middleware.SetPubKeyMiddleware(s.app.AccountKeeper),
 		middleware.SigVerificationMiddleware(
 			s.app.AccountKeeper,
@@ -239,7 +239,7 @@ func (s *MWTestSuite) TestSigVerification_ExplicitAmino() {
 	gasLimit := testdata.NewTestGasLimit()
 
 	txHandler := middleware.ComposeMiddlewares(
-		noopTxHandler{},
+		noopTxHandler,
 		middleware.SetPubKeyMiddleware(s.app.AccountKeeper),
 		middleware.SigVerificationMiddleware(
 			s.app.AccountKeeper,
@@ -342,7 +342,7 @@ func (s *MWTestSuite) runSigMiddlewares(params types.Params, _ bool, privs ...cr
 	s.Require().NoError(err)
 
 	txHandler := middleware.ComposeMiddlewares(
-		noopTxHandler{},
+		noopTxHandler,
 		middleware.SetPubKeyMiddleware(s.app.AccountKeeper),
 		middleware.SigGasConsumeMiddleware(s.app.AccountKeeper, middleware.DefaultSigVerificationGasConsumer),
 		middleware.SigVerificationMiddleware(
@@ -382,7 +382,7 @@ func (s *MWTestSuite) TestIncrementSequenceMiddleware() {
 	s.Require().NoError(err)
 
 	txHandler := middleware.ComposeMiddlewares(
-		noopTxHandler{},
+		noopTxHandler,
 		middleware.IncrementSequenceMiddleware(s.app.AccountKeeper),
 	)
 

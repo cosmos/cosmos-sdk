@@ -8,7 +8,7 @@ The main endpoint of a Cosmos SDK application is the daemon client, otherwise kn
 
 ## Pre-requisite Readings
 
-- [Anatomy of an SDK application](../basics/app-anatomy.md) {prereq}
+* [Anatomy of an SDK application](../basics/app-anatomy.md) {prereq}
 
 ## `main` function
 
@@ -16,12 +16,12 @@ The full-node client of any Cosmos SDK application is built by running a `main` 
 
 In general, developers will implement the `main.go` function with the following structure:
 
-- First, an [`appCodec`](./encoding.md) is instantiated for the application.
-- Then, the `config` is retrieved and config parameters are set. This mainly involves setting the Bech32 prefixes for [addresses](../basics/accounts.md#addresses).
+* First, an [`appCodec`](./encoding.md) is instantiated for the application.
+* Then, the `config` is retrieved and config parameters are set. This mainly involves setting the Bech32 prefixes for [addresses](../basics/accounts.md#addresses).
   +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/config.go#L13-L24
-- Using [cobra](https://github.com/spf13/cobra), the root command of the full-node client is created. After that, all the custom commands of the application are added using the `AddCommand()` method of `rootCmd`.
-- Add default server commands to `rootCmd` using the `server.AddCommands()` method. These commands are separated from the ones added above since they are standard and defined at Cosmos SDK level. They should be shared by all Cosmos SDK-based applications. They include the most important command: the [`start` command](#start-command).
-- Prepare and execute the `executor`.
+* Using [cobra](https://github.com/spf13/cobra), the root command of the full-node client is created. After that, all the custom commands of the application are added using the `AddCommand()` method of `rootCmd`.
+* Add default server commands to `rootCmd` using the `server.AddCommands()` method. These commands are separated from the ones added above since they are standard and defined at Cosmos SDK level. They should be shared by all Cosmos SDK-based applications. They include the most important command: the [`start` command](#start-command).
+* Prepare and execute the `executor`.
    +++ https://github.com/tendermint/tendermint/blob/v0.34.0-rc6/libs/cli/setup.go#L74-L78
 
 See an example of `main` function from the `simapp` application, the Cosmos SDK's application for demo purposes:

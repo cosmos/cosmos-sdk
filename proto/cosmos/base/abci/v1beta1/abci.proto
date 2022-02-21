@@ -52,7 +52,7 @@ message TxResponse {
 message ABCIMessageLog {
   option (gogoproto.stringer) = true;
 
-  uint32 msg_index = 1;
+  uint32 msg_index = 1 [(gogoproto.jsontag) = "msg_index"];
   string log       = 2;
 
   // Events contains a slice of Event objects that were emitted during some
@@ -104,7 +104,7 @@ message Result {
 
   // msg_responses contains the Msg handler responses type packed in Anys.
   //
-  // Since: cosmos-sdk 0.45
+  // Since: cosmos-sdk 0.46
   repeated google.protobuf.Any msg_responses = 4;
 }
 
@@ -118,7 +118,7 @@ message SimulationResponse {
 // MsgData defines the data returned in a Result object during message
 // execution.
 message MsgData {
-  option deprecated = true;
+  option deprecated           = true;
   option (gogoproto.stringer) = true;
 
   string msg_type = 1;
@@ -135,7 +135,7 @@ message TxMsgData {
 
   // msg_responses contains the Msg handler responses packed into Anys.
   //
-  // Since: cosmos-sdk 0.45
+  // Since: cosmos-sdk 0.46
   repeated google.protobuf.Any msg_responses = 2;
 }
 
@@ -144,13 +144,13 @@ message SearchTxsResult {
   option (gogoproto.stringer) = true;
 
   // Count of all txs
-  uint64 total_count = 1 [(gogoproto.jsontag) = "total_count"];
+  uint64 total_count = 1;
   // Count of txs in current page
   uint64 count = 2;
   // Index of current page, start from 1
-  uint64 page_number = 3 [(gogoproto.jsontag) = "page_number"];
+  uint64 page_number = 3;
   // Count of total pages
-  uint64 page_total = 4 [(gogoproto.jsontag) = "page_total"];
+  uint64 page_total = 4;
   // Max count txs per page
   uint64 limit = 5;
   // List of txs in current page

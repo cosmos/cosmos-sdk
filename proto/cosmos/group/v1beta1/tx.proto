@@ -9,51 +9,59 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/any.proto";
 import "cosmos/group/v1beta1/types.proto";
 
+import "cosmos/msg/v1/msg.proto";
+
 // Msg is the cosmos.group.v1beta1 Msg service.
 service Msg {
 
   // CreateGroup creates a new group with an admin account address, a list of members and some optional metadata.
-  rpc CreateGroup(MsgCreateGroupRequest) returns (MsgCreateGroupResponse);
+  rpc CreateGroup(MsgCreateGroup) returns (MsgCreateGroupResponse);
 
   // UpdateGroupMembers updates the group members with given group id and admin address.
-  rpc UpdateGroupMembers(MsgUpdateGroupMembersRequest) returns (MsgUpdateGroupMembersResponse);
+  rpc UpdateGroupMembers(MsgUpdateGroupMembers) returns (MsgUpdateGroupMembersResponse);
 
   // UpdateGroupAdmin updates the group admin with given group id and previous admin address.
-  rpc UpdateGroupAdmin(MsgUpdateGroupAdminRequest) returns (MsgUpdateGroupAdminResponse);
+  rpc UpdateGroupAdmin(MsgUpdateGroupAdmin) returns (MsgUpdateGroupAdminResponse);
 
   // UpdateGroupMetadata updates the group metadata with given group id and admin address.
-  rpc UpdateGroupMetadata(MsgUpdateGroupMetadataRequest) returns (MsgUpdateGroupMetadataResponse);
+  rpc UpdateGroupMetadata(MsgUpdateGroupMetadata) returns (MsgUpdateGroupMetadataResponse);
 
-  // CreateGroupAccount creates a new group account using given DecisionPolicy.
-  rpc CreateGroupAccount(MsgCreateGroupAccountRequest) returns (MsgCreateGroupAccountResponse);
+  // CreateGroupPolicy creates a new group policy using given DecisionPolicy.
+  rpc CreateGroupPolicy(MsgCreateGroupPolicy) returns (MsgCreateGroupPolicyResponse);
 
-  // UpdateGroupAccountAdmin updates a group account admin.
-  rpc UpdateGroupAccountAdmin(MsgUpdateGroupAccountAdminRequest) returns (MsgUpdateGroupAccountAdminResponse);
+  // CreateGroupWithPolicy creates a new group with policy.
+  rpc CreateGroupWithPolicy(MsgCreateGroupWithPolicy) returns (MsgCreateGroupWithPolicyResponse);
 
-  // UpdateGroupAccountDecisionPolicy allows a group account decision policy to be updated.
-  rpc UpdateGroupAccountDecisionPolicy(MsgUpdateGroupAccountDecisionPolicyRequest)
-      returns (MsgUpdateGroupAccountDecisionPolicyResponse);
+  // UpdateGroupPolicyAdmin updates a group policy admin.
+  rpc UpdateGroupPolicyAdmin(MsgUpdateGroupPolicyAdmin) returns (MsgUpdateGroupPolicyAdminResponse);
 
-  // UpdateGroupAccountMetadata updates a group account metadata.
-  rpc UpdateGroupAccountMetadata(MsgUpdateGroupAccountMetadataRequest) returns (MsgUpdateGroupAccountMetadataResponse);
+  // UpdateGroupPolicyDecisionPolicy allows a group policy's decision policy to be updated.
+  rpc UpdateGroupPolicyDecisionPolicy(MsgUpdateGroupPolicyDecisionPolicy)
+      returns (MsgUpdateGroupPolicyDecisionPolicyResponse);
 
-  // CreateProposal submits a new proposal.
-  rpc CreateProposal(MsgCreateProposalRequest) returns (MsgCreateProposalResponse);
+  // UpdateGroupPolicyMetadata updates a group policy metadata.
+  rpc UpdateGroupPolicyMetadata(MsgUpdateGroupPolicyMetadata) returns (MsgUpdateGroupPolicyMetadataResponse);
+
+  // SubmitProposal submits a new proposal.
+  rpc SubmitProposal(MsgSubmitProposal) returns (MsgSubmitProposalResponse);
+
+  // WithdrawProposal aborts a proposal.
+  rpc WithdrawProposal(MsgWithdrawProposal) returns (MsgWithdrawProposalResponse);
 
   // Vote allows a voter to vote on a proposal.
-  rpc Vote(MsgVoteRequest) returns (MsgVoteResponse);
+  rpc Vote(MsgVote) returns (MsgVoteResponse);
 
   // Exec executes a proposal.
-  rpc Exec(MsgExecRequest) returns (MsgExecResponse);
+  rpc Exec(MsgExec) returns (MsgExecResponse);
 }
 
 //
 // Groups
 //
 
-// MsgCreateGroupRequest is the Msg/CreateGroup request type.
-message MsgCreateGroupRequest {
-
+// MsgCreateGroup is the Msg/CreateGroup request type.
+message MsgCreateGroup {
+  option (cosmos.msg.v1.signer) = "admin";
   // admin is the account address of the group admin.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
@@ -71,8 +79,9 @@ message MsgCreateGroupResponse {
   uint64 group_id = 1;
 }
 
-// MsgUpdateGroupMembersRequest is the Msg/UpdateGroupMembers request type.
-message MsgUpdateGroupMembersRequest {
+// MsgUpdateGroupMembers is the Msg/UpdateGroupMembers request type.
+message MsgUpdateGroupMembers {
+  option (cosmos.msg.v1.signer) = "admin";
 
   // admin is the account address of the group admin.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -88,8 +97,9 @@ message MsgUpdateGroupMembersRequest {
 // MsgUpdateGroupMembersResponse is the Msg/UpdateGroupMembers response type.
 message MsgUpdateGroupMembersResponse {}
 
-// MsgUpdateGroupAdminRequest is the Msg/UpdateGroupAdmin request type.
-message MsgUpdateGroupAdminRequest {
+// MsgUpdateGroupAdmin is the Msg/UpdateGroupAdmin request type.
+message MsgUpdateGroupAdmin {
+  option (cosmos.msg.v1.signer) = "admin";
 
   // admin is the current account address of the group admin.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -104,8 +114,9 @@ message MsgUpdateGroupAdminRequest {
 // MsgUpdateGroupAdminResponse is the Msg/UpdateGroupAdmin response type.
 message MsgUpdateGroupAdminResponse {}
 
-// MsgUpdateGroupMetadataRequest is the Msg/UpdateGroupMetadata request type.
-message MsgUpdateGroupMetadataRequest {
+// MsgUpdateGroupMetadata is the Msg/UpdateGroupMetadata request type.
+message MsgUpdateGroupMetadata {
+  option (cosmos.msg.v1.signer) = "admin";
 
   // admin is the account address of the group admin.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -121,11 +132,13 @@ message MsgUpdateGroupMetadataRequest {
 message MsgUpdateGroupMetadataResponse {}
 
 //
-// Group Accounts
+// Group Policies
 //
 
-// MsgCreateGroupAccountRequest is the Msg/CreateGroupAccount request type.
-message MsgCreateGroupAccountRequest {
+// MsgCreateGroupPolicy is the Msg/CreateGroupPolicy request type.
+message MsgCreateGroupPolicy {
+  option (cosmos.msg.v1.signer) = "admin";
+
   option (gogoproto.goproto_getters) = false;
 
   // admin is the account address of the group admin.
@@ -134,68 +147,105 @@ message MsgCreateGroupAccountRequest {
   // group_id is the unique ID of the group.
   uint64 group_id = 2;
 
-  // metadata is any arbitrary metadata to attached to the group account.
+  // metadata is any arbitrary metadata attached to the group policy.
   bytes metadata = 3;
 
-  // decision_policy specifies the group account's decision policy.
+  // decision_policy specifies the group policy's decision policy.
   google.protobuf.Any decision_policy = 4 [(cosmos_proto.accepts_interface) = "DecisionPolicy"];
 }
 
-// MsgCreateGroupAccountResponse is the Msg/CreateGroupAccount response type.
-message MsgCreateGroupAccountResponse {
+// MsgCreateGroupPolicyResponse is the Msg/CreateGroupPolicy response type.
+message MsgCreateGroupPolicyResponse {
 
-  // address is the account address of the newly created group account.
+  // address is the account address of the newly created group policy.
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// MsgUpdateGroupAccountAdminRequest is the Msg/UpdateGroupAccountAdmin request type.
-message MsgUpdateGroupAccountAdminRequest {
+// MsgUpdateGroupPolicyAdmin is the Msg/UpdateGroupPolicyAdmin request type.
+message MsgUpdateGroupPolicyAdmin {
+  option (cosmos.msg.v1.signer) = "admin";
 
   // admin is the account address of the group admin.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // address is the group account address.
+  // address is the account address of the group policy.
   string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // new_admin is the new group account admin.
+  // new_admin is the new group policy admin.
   string new_admin = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// MsgUpdateGroupAccountAdminResponse is the Msg/UpdateGroupAccountAdmin response type.
-message MsgUpdateGroupAccountAdminResponse {}
+// MsgCreateGroupWithPolicy is the Msg/CreateGroupWithPolicy request type.
+message MsgCreateGroupWithPolicy {
+  option (gogoproto.goproto_getters) = false;
 
-// MsgUpdateGroupAccountDecisionPolicyRequest is the Msg/UpdateGroupAccountDecisionPolicy request type.
-message MsgUpdateGroupAccountDecisionPolicyRequest {
+  // admin is the account address of the group and group policy admin.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // members defines the group members.
+  repeated Member members = 2 [(gogoproto.nullable) = false];
+
+  // group_metadata is any arbitrary metadata attached to the group.
+  bytes group_metadata = 3;
+
+  // group_policy_metadata is any arbitrary metadata attached to the group policy.
+  bytes group_policy_metadata = 4;
+
+  // group_policy_as_admin is a boolean field, if set to true, the group policy account address will be used as group and group policy admin.
+  bool group_policy_as_admin = 5; 
+
+  // decision_policy specifies the group policy's decision policy.
+  google.protobuf.Any decision_policy = 6 [(cosmos_proto.accepts_interface) = "DecisionPolicy"];
+}
+
+// MsgCreateGroupWithPolicyResponse is the Msg/CreateGroupWithPolicy response type.
+message MsgCreateGroupWithPolicyResponse {
+
+  // group_id is the unique ID of the newly created group with policy.
+  uint64 group_id = 1;
+
+  // group_policy_address is the account address of the newly created group policy.
+  string group_policy_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgUpdateGroupPolicyAdminResponse is the Msg/UpdateGroupPolicyAdmin response type.
+message MsgUpdateGroupPolicyAdminResponse {}
+
+// MsgUpdateGroupPolicyDecisionPolicy is the Msg/UpdateGroupPolicyDecisionPolicy request type.
+message MsgUpdateGroupPolicyDecisionPolicy {
+  option (cosmos.msg.v1.signer) = "admin";
+
   option (gogoproto.goproto_getters) = false;
 
   // admin is the account address of the group admin.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // address is the group account address.
+  // address is the account address of group policy.
   string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // decision_policy is the updated group account decision policy.
+  // decision_policy is the updated group policy's decision policy.
   google.protobuf.Any decision_policy = 3 [(cosmos_proto.accepts_interface) = "DecisionPolicy"];
 }
 
-// MsgUpdateGroupAccountDecisionPolicyResponse is the Msg/UpdateGroupAccountDecisionPolicy response type.
-message MsgUpdateGroupAccountDecisionPolicyResponse {}
+// MsgUpdateGroupPolicyDecisionPolicyResponse is the Msg/UpdateGroupPolicyDecisionPolicy response type.
+message MsgUpdateGroupPolicyDecisionPolicyResponse {}
 
-// MsgUpdateGroupAccountMetadataRequest is the Msg/UpdateGroupAccountMetadata request type.
-message MsgUpdateGroupAccountMetadataRequest {
+// MsgUpdateGroupPolicyMetadata is the Msg/UpdateGroupPolicyMetadata request type.
+message MsgUpdateGroupPolicyMetadata {
+  option (cosmos.msg.v1.signer) = "admin";
 
   // admin is the account address of the group admin.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // address is the group account address.
+  // address is the account address of group policy.
   string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // metadata is the updated group account metadata.
+  // metadata is the updated group policy metadata.
   bytes metadata = 3;
 }
 
-// MsgUpdateGroupAccountMetadataResponse is the Msg/UpdateGroupAccountMetadata response type.
-message MsgUpdateGroupAccountMetadataResponse {}
+// MsgUpdateGroupPolicyMetadataResponse is the Msg/UpdateGroupPolicyMetadata response type.
+message MsgUpdateGroupPolicyMetadataResponse {}
 
 //
 // Proposals and Voting
@@ -215,11 +265,13 @@ enum Exec {
   EXEC_TRY = 1;
 }
 
-// MsgCreateProposalRequest is the Msg/CreateProposal request type.
-message MsgCreateProposalRequest {
+// MsgSubmitProposal is the Msg/SubmitProposal request type.
+message MsgSubmitProposal {
+  option (cosmos.msg.v1.signer) = "proposers";
+
   option (gogoproto.goproto_getters) = false;
 
-  // address is the group account address.
+  // address is the account address of group policy.
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // proposers are the account addresses of the proposers.
@@ -229,8 +281,8 @@ message MsgCreateProposalRequest {
   // metadata is any arbitrary metadata to attached to the proposal.
   bytes metadata = 3;
 
-  // msgs is a list of Msgs that will be executed if the proposal passes.
-  repeated google.protobuf.Any msgs = 4;
+  // messages is a list of `sdk.Msg`s that will be executed if the proposal passes.
+  repeated google.protobuf.Any messages = 4;
 
   // exec defines the mode of execution of the proposal,
   // whether it should be executed immediately on creation or not.
@@ -238,23 +290,36 @@ message MsgCreateProposalRequest {
   Exec exec = 5;
 }
 
-// MsgCreateProposalResponse is the Msg/CreateProposal response type.
-message MsgCreateProposalResponse {
+// MsgSubmitProposalResponse is the Msg/SubmitProposal response type.
+message MsgSubmitProposalResponse {
 
   // proposal is the unique ID of the proposal.
   uint64 proposal_id = 1;
 }
 
-// MsgVoteRequest is the Msg/Vote request type.
-message MsgVoteRequest {
+// MsgWithdrawProposal is the Msg/WithdrawProposal request type.
+message MsgWithdrawProposal {
+  // proposal is the unique ID of the proposal.
+  uint64 proposal_id = 1;
+
+  // address is the admin of the group policy or one of the proposer of the proposal.
+  string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgWithdrawProposalResponse is the Msg/WithdrawProposal response type.
+message MsgWithdrawProposalResponse {}
+
+// MsgVote is the Msg/Vote request type.
+message MsgVote {
+  option (cosmos.msg.v1.signer) = "voter";
 
   // proposal is the unique ID of the proposal.
   uint64 proposal_id = 1;
   // voter is the voter account address.
   string voter = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // choice is the voter's choice on the proposal.
-  Choice choice = 3;
+  // option is the voter's choice on the proposal.
+  VoteOption option = 3;
 
   // metadata is any arbitrary metadata to attached to the vote.
   bytes metadata = 4;
@@ -267,8 +332,9 @@ message MsgVoteRequest {
 // MsgVoteResponse is the Msg/Vote response type.
 message MsgVoteResponse {}
 
-// MsgExecRequest is the Msg/Exec request type.
-message MsgExecRequest {
+// MsgExec is the Msg/Exec request type.
+message MsgExec {
+  option (cosmos.msg.v1.signer) = "signer";
 
   // proposal is the unique ID of the proposal.
   uint64 proposal_id = 1;

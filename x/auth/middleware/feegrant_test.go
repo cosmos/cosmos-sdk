@@ -31,7 +31,7 @@ func (s *MWTestSuite) TestDeductFeesNoDelegation() {
 	protoTxCfg := tx.NewTxConfig(codec.NewProtoCodec(app.InterfaceRegistry()), tx.DefaultSignModes)
 
 	txHandler := middleware.ComposeMiddlewares(
-		noopTxHandler{},
+		noopTxHandler,
 		middleware.DeductFeeMiddleware(
 			s.app.AccountKeeper,
 			s.app.BankKeeper,
@@ -216,7 +216,7 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 			ChainID:       chainID,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
-			SignerIndex:   i,
+			PubKey:        p.PubKey(),
 		}
 		signBytes, err := gen.SignModeHandler().GetSignBytes(signMode, signerData, tx.GetTx())
 		if err != nil {

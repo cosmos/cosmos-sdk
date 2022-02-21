@@ -20,12 +20,42 @@ type Dec struct {
 	dec apd.Decimal
 }
 
+func NewPositiveDecFromString(s string) (Dec, error) {
+	d, err := NewDecFromString(s)
+	if err != nil {
+		return Dec{}, errors.ErrInvalidDecString.Wrap(err.Error())
+	}
+	if !d.IsPositive() {
+		return Dec{}, errors.ErrInvalidDecString.Wrapf("expected a positive decimal, got %s", s)
+	}
+	return d, nil
+}
+
+func NewNonNegativeDecFromString(s string) (Dec, error) {
+	d, err := NewDecFromString(s)
+	if err != nil {
+		return Dec{}, errors.ErrInvalidDecString.Wrap(err.Error())
+	}
+	if d.IsNegative() {
+		return Dec{}, errors.ErrInvalidDecString.Wrapf("expected a non-negative decimal, got %s", s)
+	}
+	return d, nil
+}
+
+func (x Dec) IsPositive() bool {
+	return !x.dec.Negative && !x.dec.IsZero()
+}
+
 func NewDecFromString(s string) (Dec, error) {
 	d, _, err := apd.NewFromString(s)
 	if err != nil {
 		return Dec{}, errors.ErrInvalidDecString.Wrap(err.Error())
 	}
 	return Dec{*d}, nil
+}
+
+func (x Dec) String() string {
+	return x.dec.Text('f')
 }
 
 func NewDecFromInt64(x int64) Dec {
@@ -69,6 +99,25 @@ func (x Dec) IsNegative() bool {
 // Add adds x and y
 func Add(x Dec, y Dec) (Dec, error) {
 	return x.Add(y)
+}
+
+var dec128Context = apd.Context{
+	Precision:   34,
+	MaxExponent: apd.MaxExponent,
+	MinExponent: apd.MinExponent,
+	Traps:       apd.DefaultTraps,
+}
+
+// Quo returns a new Dec with value `x/y` (formatted as decimal128, 34 digit precision) without mutating any
+// argument and error if there is an overflow.
+func (x Dec) Quo(y Dec) (Dec, error) {
+	var z Dec
+	_, err := dec128Context.Quo(&z.dec, &x.dec, &y.dec)
+	return z, sdkerrors.Wrap(err, "decimal quotient error")
+}
+
+func (x Dec) IsZero() bool {
+	return x.dec.IsZero()
 }
 
 // SubNonNegative subtracts the value of y from x and returns the result with

@@ -10,6 +10,7 @@ import (
 	"io"
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -328,7 +329,6 @@ func TestMultiStoreRestart(t *testing.T) {
 	db := dbm.NewMemDB()
 	pruning := types.PruningOptions{
 		KeepRecent: 2,
-		KeepEvery:  3,
 		Interval:   1,
 	}
 	multi := newMultiStoreWithMounts(db, pruning)
@@ -487,9 +487,9 @@ func TestMultiStore_Pruning(t *testing.T) {
 	}{
 		{"prune nothing", 10, types.PruneNothing, nil, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
 		{"prune everything", 10, types.PruneEverything, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9}, []int64{10}},
-		{"prune some; no batch", 10, types.NewPruningOptions(2, 3, 1), []int64{1, 2, 4, 5, 7}, []int64{3, 6, 8, 9, 10}},
-		{"prune some; small batch", 10, types.NewPruningOptions(2, 3, 3), []int64{1, 2, 4, 5}, []int64{3, 6, 7, 8, 9, 10}},
-		{"prune some; large batch", 10, types.NewPruningOptions(2, 3, 11), nil, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
+		{"prune some; no batch", 10, types.NewPruningOptions(2, 1), []int64{1, 2, 4, 5, 7}, []int64{3, 6, 8, 9, 10}},
+		{"prune some; small batch", 10, types.NewPruningOptions(2, 3), []int64{1, 2, 4, 5}, []int64{3, 6, 7, 8, 9, 10}},
+		{"prune some; large batch", 10, types.NewPruningOptions(2, 11), nil, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
 	}
 
 	for _, tc := range testCases {
@@ -519,7 +519,7 @@ func TestMultiStore_Pruning(t *testing.T) {
 
 func TestMultiStore_PruningRestart(t *testing.T) {
 	db := dbm.NewMemDB()
-	ms := newMultiStoreWithMounts(db, types.NewPruningOptions(2, 3, 11))
+	ms := newMultiStoreWithMounts(db, types.NewPruningOptions(2, 11))
 	require.NoError(t, ms.LoadLatestVersion())
 
 	// Commit enough to build up heights to prune, where on the next block we should
@@ -533,13 +533,13 @@ func TestMultiStore_PruningRestart(t *testing.T) {
 	// ensure we've persisted the current batch of heights to prune to the store's DB
 	ph, err := getPruningHeights(ms.db)
 	require.NoError(t, err)
-	require.Equal(t, pruneHeights, ph)
+	require.Equal(t, []int64{1, 2, 3, 4, 5, 6, 7}, ph)
 
 	// "restart"
-	ms = newMultiStoreWithMounts(db, types.NewPruningOptions(2, 3, 11))
+	ms = newMultiStoreWithMounts(db, types.NewPruningOptions(2, 11))
 	err = ms.LoadLatestVersion()
 	require.NoError(t, err)
-	require.Equal(t, pruneHeights, ms.pruneHeights)
+	require.Equal(t, []int64{1, 2, 3, 4, 5, 6, 7}, ms.pruneHeights)
 
 	// commit one more block and ensure the heights have been pruned
 	ms.Commit()
@@ -801,6 +801,56 @@ func TestCacheWraps(t *testing.T) {
 
 	cacheWrappedWithListeners := multi.CacheWrapWithListeners(nil, nil)
 	require.IsType(t, cachemulti.Store{}, cacheWrappedWithListeners)
+}
+
+func TestTraceConcurrency(t *testing.T) {
+	db := dbm.NewMemDB()
+	multi := newMultiStoreWithMounts(db, types.PruneNothing)
+	err := multi.LoadLatestVersion()
+	require.NoError(t, err)
+
+	b := &bytes.Buffer{}
+	key := multi.keysByName["store1"]
+	tc := types.TraceContext(map[string]interface{}{"blockHeight": 64})
+
+	multi.SetTracer(b)
+	multi.SetTracingContext(tc)
+
+	cms := multi.CacheMultiStore()
+	store1 := cms.GetKVStore(key)
+	cw := store1.CacheWrapWithTrace(b, tc)
+	_ = cw
+	require.NotNil(t, store1)
+
+	stop := make(chan struct{})
+	stopW := make(chan struct{})
+
+	go func(stop chan struct{}) {
+		for {
+			select {
+			case <-stop:
+				return
+			default:
+				store1.Set([]byte{1}, []byte{1})
+				cms.Write()
+			}
+		}
+	}(stop)
+
+	go func(stop chan struct{}) {
+		for {
+			select {
+			case <-stop:
+				return
+			default:
+				multi.SetTracingContext(tc)
+			}
+		}
+	}(stopW)
+
+	time.Sleep(3 * time.Second)
+	stop <- struct{}{}
+	stopW <- struct{}{}
 }
 
 func BenchmarkMultistoreSnapshot100K(b *testing.B) {

@@ -2,12 +2,12 @@
 
 ## Changelog
 
-- 2020 Feb 15: Initial Draft
-- 2020 Feb 24: Updates to handle messages with interface fields
-- 2020 Apr 27: Convert usages of `oneof` for interfaces to `Any`
-- 2020 May 15: Describe `cosmos_proto` extensions and amino compatibility
-- 2020 Dec 4: Move and rename `MarshalAny` and `UnmarshalAny` into the `codec.Codec` interface.
-- 2021 Feb 24: Remove mentions of `HybridCodec`, which has been abandoned in [#6843](https://github.com/cosmos/cosmos-sdk/pull/6843).
+* 2020 Feb 15: Initial Draft
+* 2020 Feb 24: Updates to handle messages with interface fields
+* 2020 Apr 27: Convert usages of `oneof` for interfaces to `Any`
+* 2020 May 15: Describe `cosmos_proto` extensions and amino compatibility
+* 2020 Dec 4: Move and rename `MarshalAny` and `UnmarshalAny` into the `codec.Codec` interface.
+* 2021 Feb 24: Remove mentions of `HybridCodec`, which has been abandoned in [#6843](https://github.com/cosmos/cosmos-sdk/pull/6843).
 
 ## Status
 
@@ -28,9 +28,9 @@ From the Amino docs:
 
 Amino also aims to have the following goals (not a complete list):
 
-- Binary bytes must be decode-able with a schema.
-- Schema must be upgradeable.
-- The encoder and decoder logic must be reasonably simple.
+* Binary bytes must be decode-able with a schema.
+* Schema must be upgradeable.
+* The encoder and decoder logic must be reasonably simple.
 
 However, we believe that Amino does not fulfill these goals completely and does not fully meet the
 needs of a truly flexible cross-language and multi-client compatible encoding protocol in the Cosmos SDK.
@@ -42,13 +42,13 @@ largely reflected in the performance of simulations and application transaction 
 
 Thus, we need to adopt an encoding protocol that meets the following criteria for state serialization:
 
-- Language agnostic
-- Platform agnostic
-- Rich client support and thriving ecosystem
-- High performance
-- Minimal encoded message size
-- Codegen-based over reflection-based
-- Supports backward and forward compatibility
+* Language agnostic
+* Platform agnostic
+* Rich client support and thriving ecosystem
+* High performance
+* Minimal encoded message size
+* Codegen-based over reflection-based
+* Supports backward and forward compatibility
 
 Note, migrating away from Amino should be viewed as a two-pronged approach, state and client encoding.
 This ADR focuses on state serialization in the Cosmos SDK state machine. A corresponding ADR will be
@@ -62,8 +62,8 @@ applications wishing to continue to use Amino. We will provide this mechanism by
 accept a codec interface, `Marshaler`, instead of a concrete Amino codec. Furthermore, the Cosmos SDK
 will provide two concrete implementations of the `Marshaler` interface: `AminoCodec` and `ProtoCodec`.
 
-- `AminoCodec`: Uses Amino for both binary and JSON encoding.
-- `ProtoCodec`: Uses Protobuf for both binary and JSON encoding.
+* `AminoCodec`: Uses Amino for both binary and JSON encoding.
+* `ProtoCodec`: Uses Protobuf for both binary and JSON encoding.
 
 Modules will use whichever codec that is instantiated in the app. By default, the Cosmos SDK's `simapp`
 instantiates a `ProtoCodec` as the concrete implementation of `Marshaler`, inside the `MakeTestEncodingConfig`
@@ -320,11 +320,11 @@ have been registered properly with Amino).
 
 In order for this functionality to work:
 
-- **all legacy code must use `*codec.LegacyAmino` instead of `*amino.Codec` which is
+* **all legacy code must use `*codec.LegacyAmino` instead of `*amino.Codec` which is
   now a wrapper which properly handles `Any`**
-- **all new code should use `Marshaler` which is compatible with both amino and
+* **all new code should use `Marshaler` which is compatible with both amino and
   protobuf**
-- Also, before v0.39, `codec.LegacyAmino` will be renamed to `codec.LegacyAmino`.
+* Also, before v0.39, `codec.LegacyAmino` will be renamed to `codec.LegacyAmino`.
 
 ### Why Wasn't X Chosen Instead
 
@@ -361,14 +361,14 @@ seamless.
 
 ### Positive
 
-- Significant performance gains.
-- Supports backward and forward type compatibility.
-- Better support for cross-language clients.
+* Significant performance gains.
+* Supports backward and forward type compatibility.
+* Better support for cross-language clients.
 
 ### Negative
 
-- Learning curve required to understand and implement Protobuf messages.
-- Slightly larger message size due to use of `Any`, although this could be offset
+* Learning curve required to understand and implement Protobuf messages.
+* Slightly larger message size due to use of `Any`, although this could be offset
   by a compression layer in the future
 
 ### Neutral

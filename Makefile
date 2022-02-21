@@ -14,6 +14,9 @@ HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf:1.0.0-rc8
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
+# RocksDB is a native dependency, so we don't assume the library is installed.
+# Instead, it must be explicitly enabled and we warn when it is not.
+ENABLE_ROCKSDB ?= false
 
 export GO111MODULE = on
 
@@ -61,6 +64,13 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=sim \
 		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
 			-X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TMVERSION)
 
+ifeq ($(ENABLE_ROCKSDB),true)
+  BUILD_TAGS += rocksdb_build
+  test_tags += rocksdb_build
+else
+  $(warning RocksDB support is disabled; to build and test with RocksDB support, set ENABLE_ROCKSDB=true)
+endif
+
 # DB backend selection
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
@@ -71,6 +81,9 @@ ifeq (badgerdb,$(findstring badgerdb,$(COSMOS_BUILD_OPTIONS)))
 endif
 # handle rocksdb
 ifeq (rocksdb,$(findstring rocksdb,$(COSMOS_BUILD_OPTIONS)))
+  ifneq ($(ENABLE_ROCKSDB),true)
+    $(error Cannot use RocksDB backend unless ENABLE_ROCKSDB=true)
+  endif
   CGO_ENABLED=1
   BUILD_TAGS += rocksdb
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=rocksdb
@@ -132,11 +145,13 @@ mockgen_cmd=go run github.com/golang/mock/mockgen
 mocks: $(MOCKS_DIR)
 	$(mockgen_cmd) -source=client/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
 	$(mockgen_cmd) -package mocks -destination tests/mocks/tendermint_tm_db_DB.go github.com/tendermint/tm-db DB
+	$(mockgen_cmd) -source db/types.go -package mocks -destination tests/mocks/db/types.go
 	$(mockgen_cmd) -source=types/module/module.go -package mocks -destination tests/mocks/types_module_module.go
 	$(mockgen_cmd) -source=types/invariant.go -package mocks -destination tests/mocks/types_invariant.go
 	$(mockgen_cmd) -source=types/router.go -package mocks -destination tests/mocks/types_router.go
 	$(mockgen_cmd) -package mocks -destination tests/mocks/grpc_server.go github.com/gogo/protobuf/grpc Server
 	$(mockgen_cmd) -package mocks -destination tests/mocks/tendermint_tendermint_libs_log_DB.go github.com/tendermint/tendermint/libs/log Logger
+	$(mockgen_cmd) -source=orm/model/ormtable/hooks.go -package ormmocks -destination orm/testing/ormmocks/hooks.go
 .PHONY: mocks
 
 $(MOCKS_DIR):
@@ -184,11 +199,13 @@ godocs:
 build-docs:
 	@cd docs && \
 	while read -r branch path_prefix; do \
-		(git checkout $${branch} && npm install && VUEPRESS_BASE="/$${path_prefix}/" npm run build) ; \
+		echo "building branch $${branch}" ; \
+		(git clean -fdx && git reset --hard && git checkout $${branch} && npm install && VUEPRESS_BASE="/$${path_prefix}/" npm run build) ; \
 		mkdir -p ~/output/$${path_prefix} ; \
 		cp -r .vuepress/dist/* ~/output/$${path_prefix}/ ; \
 		cp ~/output/$${path_prefix}/index.html ~/output ; \
 	done < versions ;
+
 .PHONY: build-docs
 
 ###############################################################################
@@ -204,22 +221,24 @@ TEST_TARGETS := test-unit test-unit-amino test-unit-proto test-ledger-mock test-
 # Test runs-specific rules. To add a new test target, just add
 # a new rule, customise ARGS or TEST_PACKAGES ad libitum, and
 # append the new rule to the TEST_TARGETS list.
-test-unit: ARGS=-tags='cgo ledger test_ledger_mock norace'
-test-unit-amino: ARGS=-tags='ledger test_ledger_mock test_amino norace'
-test-ledger: ARGS=-tags='cgo ledger norace'
-test-ledger-mock: ARGS=-tags='ledger test_ledger_mock norace'
-test-race: ARGS=-race -tags='cgo ledger test_ledger_mock'
+test-unit: test_tags += cgo ledger test_ledger_mock norace
+test-unit-amino: test_tags += ledger test_ledger_mock test_amino norace
+test-ledger: test_tags += cgo ledger norace
+test-ledger-mock: test_tags += ledger test_ledger_mock norace
+test-race: test_tags += cgo ledger test_ledger_mock
+test-race: ARGS=-race
 test-race: TEST_PACKAGES=$(PACKAGES_NOSIMULATION)
 $(TEST_TARGETS): run-tests
 
 # check-* compiles and collects tests without running them
 # note: go test -c doesn't support multiple packages yet (https://github.com/golang/go/issues/15513)
 CHECK_TEST_TARGETS := check-test-unit check-test-unit-amino
-check-test-unit: ARGS=-tags='cgo ledger test_ledger_mock norace'
-check-test-unit-amino: ARGS=-tags='ledger test_ledger_mock test_amino norace'
+check-test-unit: test_tags += cgo ledger test_ledger_mock norace
+check-test-unit-amino: test_tags += ledger test_ledger_mock test_amino norace
 $(CHECK_TEST_TARGETS): EXTRA_ARGS=-run=none
 $(CHECK_TEST_TARGETS): run-tests
 
+ARGS += -tags "$(test_tags)"
 SUB_MODULES = $(shell find . -type f -name 'go.mod' -print0 | xargs -0 -n1 dirname | sort)
 CURRENT_DIR = $(shell pwd)
 run-tests:
@@ -377,7 +396,7 @@ devdoc-update:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=v0.2
+protoVer=v0.3
 protoImageName=tendermintdev/sdk-proto-gen:$(protoVer)
 containerProtoGen=$(PROJECT_NAME)-proto-gen-$(protoVer)
 containerProtoGenAny=$(PROJECT_NAME)-proto-gen-any-$(protoVer)
@@ -484,7 +503,7 @@ localnet-build-dlv:
 
 localnet-build-nodes:
 	$(DOCKER) run --rm -v $(CURDIR)/.testnets:/data cosmossdk/simd \
-    		  testnet init-files --v 4 --starting-ip-address 192.168.10.2 --keyring-backend=test
+			  testnet init-files --v 4 -o /data --starting-ip-address 192.168.10.2 --keyring-backend=test
 	docker-compose up -d
 
 localnet-stop:

@@ -11,7 +11,6 @@ import (
 
 // UniqueKeyCodec is the codec for unique indexes.
 type UniqueKeyCodec struct {
-	tableName    protoreflect.FullName
 	pkFieldOrder []struct {
 		inKey bool
 		i     int
@@ -20,10 +19,20 @@ type UniqueKeyCodec struct {
 	valueCodec *KeyCodec
 }
 
+var _ IndexCodec = &UniqueKeyCodec{}
+
 // NewUniqueKeyCodec creates a new UniqueKeyCodec with an optional prefix for the
 // provided message descriptor, index and primary key fields.
-func NewUniqueKeyCodec(prefix []byte, messageDescriptor protoreflect.MessageDescriptor, indexFields, primaryKeyFields []protoreflect.Name) (*UniqueKeyCodec, error) {
-	keyCodec, err := NewKeyCodec(prefix, messageDescriptor, indexFields)
+func NewUniqueKeyCodec(prefix []byte, messageType protoreflect.MessageType, indexFields, primaryKeyFields []protoreflect.Name) (*UniqueKeyCodec, error) {
+	if len(indexFields) == 0 {
+		return nil, ormerrors.InvalidTableDefinition.Wrapf("index fields are empty")
+	}
+
+	if len(primaryKeyFields) == 0 {
+		return nil, ormerrors.InvalidTableDefinition.Wrapf("primary key fields are empty")
+	}
+
+	keyCodec, err := NewKeyCodec(prefix, messageType, indexFields)
 	if err != nil {
 		return nil, err
 	}
@@ -55,23 +64,20 @@ func NewUniqueKeyCodec(prefix []byte, messageDescriptor protoreflect.MessageDesc
 		}
 	}
 
-	valueCodec, err := NewKeyCodec(nil, messageDescriptor, valueFields)
+	valueCodec, err := NewKeyCodec(nil, messageType, valueFields)
 	if err != nil {
 		return nil, err
 	}
 
 	return &UniqueKeyCodec{
-		tableName:    messageDescriptor.FullName(),
 		pkFieldOrder: pkFieldOrder,
 		keyCodec:     keyCodec,
 		valueCodec:   valueCodec,
 	}, nil
 }
 
-var _ IndexCodec = &UniqueKeyCodec{}
-
 func (u UniqueKeyCodec) DecodeIndexKey(k, v []byte) (indexFields, primaryKey []protoreflect.Value, err error) {
-	ks, err := u.keyCodec.Decode(bytes.NewReader(k))
+	ks, err := u.keyCodec.DecodeKey(bytes.NewReader(k))
 
 	// got prefix key
 	if err == io.EOF {
@@ -85,7 +91,7 @@ func (u UniqueKeyCodec) DecodeIndexKey(k, v []byte) (indexFields, primaryKey []p
 		return ks, nil, err
 	}
 
-	vs, err := u.valueCodec.Decode(bytes.NewReader(v))
+	vs, err := u.valueCodec.DecodeKey(bytes.NewReader(v))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -117,7 +123,7 @@ func (u UniqueKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 	}
 
 	return &IndexKeyEntry{
-		TableName:   u.tableName,
+		TableName:   u.MessageType().Descriptor().FullName(),
 		Fields:      u.keyCodec.fieldNames,
 		IsUnique:    true,
 		IndexValues: idxVals,
@@ -130,7 +136,7 @@ func (u UniqueKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 	if !ok {
 		return nil, nil, ormerrors.BadDecodeEntry
 	}
-	k, err = u.keyCodec.Encode(indexEntry.IndexValues)
+	k, err = u.keyCodec.EncodeKey(indexEntry.IndexValues)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -155,16 +161,44 @@ func (u UniqueKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 		}
 	}
 
-	v, err = u.valueCodec.Encode(values)
+	v, err = u.valueCodec.EncodeKey(values)
 	return k, v, err
 }
 
 func (u UniqueKeyCodec) EncodeKVFromMessage(message protoreflect.Message) (k, v []byte, err error) {
-	_, k, err = u.keyCodec.EncodeFromMessage(message)
+	_, k, err = u.keyCodec.EncodeKeyFromMessage(message)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	_, v, err = u.valueCodec.EncodeFromMessage(message)
+	_, v, err = u.valueCodec.EncodeKeyFromMessage(message)
 	return k, v, err
+}
+
+func (u UniqueKeyCodec) GetFieldNames() []protoreflect.Name {
+	return u.keyCodec.GetFieldNames()
+}
+
+func (u UniqueKeyCodec) GetKeyCodec() *KeyCodec {
+	return u.keyCodec
+}
+
+func (u UniqueKeyCodec) GetValueCodec() *KeyCodec {
+	return u.valueCodec
+}
+
+func (u UniqueKeyCodec) CompareKeys(key1, key2 []protoreflect.Value) int {
+	return u.keyCodec.CompareKeys(key1, key2)
+}
+
+func (u UniqueKeyCodec) EncodeKeyFromMessage(message protoreflect.Message) (keyValues []protoreflect.Value, key []byte, err error) {
+	return u.keyCodec.EncodeKeyFromMessage(message)
+}
+
+func (u UniqueKeyCodec) IsFullyOrdered() bool {
+	return u.keyCodec.IsFullyOrdered()
+}
+
+func (u UniqueKeyCodec) MessageType() protoreflect.MessageType {
+	return u.keyCodec.messageType
 }

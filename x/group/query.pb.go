@@ -10,6 +10,7 @@ import (
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
+	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -121,24 +122,24 @@ func (m *QueryGroupInfoResponse) GetInfo() *GroupInfo {
 	return nil
 }
 
-// QueryGroupAccountInfoRequest is the Query/GroupAccountInfo request type.
-type QueryGroupAccountInfoRequest struct {
-	// address is the account address of the group account.
+// QueryGroupPolicyInfoRequest is the Query/GroupPolicyInfo request type.
+type QueryGroupPolicyInfoRequest struct {
+	// address is the account address of the group policy.
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 }
 
-func (m *QueryGroupAccountInfoRequest) Reset()         { *m = QueryGroupAccountInfoRequest{} }
-func (m *QueryGroupAccountInfoRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryGroupAccountInfoRequest) ProtoMessage()    {}
-func (*QueryGroupAccountInfoRequest) Descriptor() ([]byte, []int) {
+func (m *QueryGroupPolicyInfoRequest) Reset()         { *m = QueryGroupPolicyInfoRequest{} }
+func (m *QueryGroupPolicyInfoRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGroupPolicyInfoRequest) ProtoMessage()    {}
+func (*QueryGroupPolicyInfoRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ae47912b18757b1a, []int{2}
 }
-func (m *QueryGroupAccountInfoRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryGroupPolicyInfoRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryGroupAccountInfoRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryGroupPolicyInfoRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryGroupAccountInfoRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryGroupPolicyInfoRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -148,43 +149,43 @@ func (m *QueryGroupAccountInfoRequest) XXX_Marshal(b []byte, deterministic bool)
 		return b[:n], nil
 	}
 }
-func (m *QueryGroupAccountInfoRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGroupAccountInfoRequest.Merge(m, src)
+func (m *QueryGroupPolicyInfoRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGroupPolicyInfoRequest.Merge(m, src)
 }
-func (m *QueryGroupAccountInfoRequest) XXX_Size() int {
+func (m *QueryGroupPolicyInfoRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryGroupAccountInfoRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGroupAccountInfoRequest.DiscardUnknown(m)
+func (m *QueryGroupPolicyInfoRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGroupPolicyInfoRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryGroupAccountInfoRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryGroupPolicyInfoRequest proto.InternalMessageInfo
 
-func (m *QueryGroupAccountInfoRequest) GetAddress() string {
+func (m *QueryGroupPolicyInfoRequest) GetAddress() string {
 	if m != nil {
 		return m.Address
 	}
 	return ""
 }
 
-// QueryGroupAccountInfoResponse is the Query/GroupAccountInfo response type.
-type QueryGroupAccountInfoResponse struct {
-	// info is the GroupAccountInfo for the group account.
-	Info *GroupAccountInfo `protobuf:"bytes,1,opt,name=info,proto3" json:"info,omitempty"`
+// QueryGroupPolicyInfoResponse is the Query/GroupPolicyInfo response type.
+type QueryGroupPolicyInfoResponse struct {
+	// info is the GroupPolicyInfo for the group policy.
+	Info *GroupPolicyInfo `protobuf:"bytes,1,opt,name=info,proto3" json:"info,omitempty"`
 }
 
-func (m *QueryGroupAccountInfoResponse) Reset()         { *m = QueryGroupAccountInfoResponse{} }
-func (m *QueryGroupAccountInfoResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryGroupAccountInfoResponse) ProtoMessage()    {}
-func (*QueryGroupAccountInfoResponse) Descriptor() ([]byte, []int) {
+func (m *QueryGroupPolicyInfoResponse) Reset()         { *m = QueryGroupPolicyInfoResponse{} }
+func (m *QueryGroupPolicyInfoResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGroupPolicyInfoResponse) ProtoMessage()    {}
+func (*QueryGroupPolicyInfoResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ae47912b18757b1a, []int{3}
 }
-func (m *QueryGroupAccountInfoResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryGroupPolicyInfoResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryGroupAccountInfoResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryGroupPolicyInfoResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryGroupAccountInfoResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryGroupPolicyInfoResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -194,26 +195,26 @@ func (m *QueryGroupAccountInfoResponse) XXX_Marshal(b []byte, deterministic bool
 		return b[:n], nil
 	}
 }
-func (m *QueryGroupAccountInfoResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGroupAccountInfoResponse.Merge(m, src)
+func (m *QueryGroupPolicyInfoResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGroupPolicyInfoResponse.Merge(m, src)
 }
-func (m *QueryGroupAccountInfoResponse) XXX_Size() int {
+func (m *QueryGroupPolicyInfoResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryGroupAccountInfoResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGroupAccountInfoResponse.DiscardUnknown(m)
+func (m *QueryGroupPolicyInfoResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGroupPolicyInfoResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryGroupAccountInfoResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryGroupPolicyInfoResponse proto.InternalMessageInfo
 
-func (m *QueryGroupAccountInfoResponse) GetInfo() *GroupAccountInfo {
+func (m *QueryGroupPolicyInfoResponse) GetInfo() *GroupPolicyInfo {
 	if m != nil {
 		return m.Info
 	}
 	return nil
 }
 
-// QueryGroupMembersRequest is the Query/GroupMembersRequest request type.
+// QueryGroupMembersRequest is the Query/GroupMembers request type.
 type QueryGroupMembersRequest struct {
 	// group_id is the unique ID of the group.
 	GroupId uint64 `protobuf:"varint,1,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
@@ -323,7 +324,7 @@ func (m *QueryGroupMembersResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryGroupsByAdminRequest is the Query/GroupsByAdminRequest request type.
+// QueryGroupsByAdminRequest is the Query/GroupsByAdmin request type.
 type QueryGroupsByAdminRequest struct {
 	// admin is the account address of a group's admin.
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
@@ -433,26 +434,26 @@ func (m *QueryGroupsByAdminResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryGroupAccountsByGroupRequest is the Query/GroupAccountsByGroup request type.
-type QueryGroupAccountsByGroupRequest struct {
-	// group_id is the unique ID of the group account's group.
+// QueryGroupPoliciesByGroupRequest is the Query/GroupPoliciesByGroup request type.
+type QueryGroupPoliciesByGroupRequest struct {
+	// group_id is the unique ID of the group policy's group.
 	GroupId uint64 `protobuf:"varint,1,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
 	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryGroupAccountsByGroupRequest) Reset()         { *m = QueryGroupAccountsByGroupRequest{} }
-func (m *QueryGroupAccountsByGroupRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryGroupAccountsByGroupRequest) ProtoMessage()    {}
-func (*QueryGroupAccountsByGroupRequest) Descriptor() ([]byte, []int) {
+func (m *QueryGroupPoliciesByGroupRequest) Reset()         { *m = QueryGroupPoliciesByGroupRequest{} }
+func (m *QueryGroupPoliciesByGroupRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGroupPoliciesByGroupRequest) ProtoMessage()    {}
+func (*QueryGroupPoliciesByGroupRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ae47912b18757b1a, []int{8}
 }
-func (m *QueryGroupAccountsByGroupRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryGroupPoliciesByGroupRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryGroupAccountsByGroupRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryGroupPoliciesByGroupRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryGroupAccountsByGroupRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryGroupPoliciesByGroupRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -462,52 +463,52 @@ func (m *QueryGroupAccountsByGroupRequest) XXX_Marshal(b []byte, deterministic b
 		return b[:n], nil
 	}
 }
-func (m *QueryGroupAccountsByGroupRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGroupAccountsByGroupRequest.Merge(m, src)
+func (m *QueryGroupPoliciesByGroupRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGroupPoliciesByGroupRequest.Merge(m, src)
 }
-func (m *QueryGroupAccountsByGroupRequest) XXX_Size() int {
+func (m *QueryGroupPoliciesByGroupRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryGroupAccountsByGroupRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGroupAccountsByGroupRequest.DiscardUnknown(m)
+func (m *QueryGroupPoliciesByGroupRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGroupPoliciesByGroupRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryGroupAccountsByGroupRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryGroupPoliciesByGroupRequest proto.InternalMessageInfo
 
-func (m *QueryGroupAccountsByGroupRequest) GetGroupId() uint64 {
+func (m *QueryGroupPoliciesByGroupRequest) GetGroupId() uint64 {
 	if m != nil {
 		return m.GroupId
 	}
 	return 0
 }
 
-func (m *QueryGroupAccountsByGroupRequest) GetPagination() *query.PageRequest {
+func (m *QueryGroupPoliciesByGroupRequest) GetPagination() *query.PageRequest {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-// QueryGroupAccountsByGroupResponse is the Query/GroupAccountsByGroup response type.
-type QueryGroupAccountsByGroupResponse struct {
-	// group_accounts are the group accounts info associated with the provided group.
-	GroupAccounts []*GroupAccountInfo `protobuf:"bytes,1,rep,name=group_accounts,json=groupAccounts,proto3" json:"group_accounts,omitempty"`
+// QueryGroupPoliciesByGroupResponse is the Query/GroupPoliciesByGroup response type.
+type QueryGroupPoliciesByGroupResponse struct {
+	// group_policies are the group policies info associated with the provided group.
+	GroupPolicies []*GroupPolicyInfo `protobuf:"bytes,1,rep,name=group_policies,json=groupPolicies,proto3" json:"group_policies,omitempty"`
 	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryGroupAccountsByGroupResponse) Reset()         { *m = QueryGroupAccountsByGroupResponse{} }
-func (m *QueryGroupAccountsByGroupResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryGroupAccountsByGroupResponse) ProtoMessage()    {}
-func (*QueryGroupAccountsByGroupResponse) Descriptor() ([]byte, []int) {
+func (m *QueryGroupPoliciesByGroupResponse) Reset()         { *m = QueryGroupPoliciesByGroupResponse{} }
+func (m *QueryGroupPoliciesByGroupResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGroupPoliciesByGroupResponse) ProtoMessage()    {}
+func (*QueryGroupPoliciesByGroupResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ae47912b18757b1a, []int{9}
 }
-func (m *QueryGroupAccountsByGroupResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryGroupPoliciesByGroupResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryGroupAccountsByGroupResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryGroupPoliciesByGroupResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryGroupAccountsByGroupResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryGroupPoliciesByGroupResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -517,52 +518,52 @@ func (m *QueryGroupAccountsByGroupResponse) XXX_Marshal(b []byte, deterministic 
 		return b[:n], nil
 	}
 }
-func (m *QueryGroupAccountsByGroupResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGroupAccountsByGroupResponse.Merge(m, src)
+func (m *QueryGroupPoliciesByGroupResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGroupPoliciesByGroupResponse.Merge(m, src)
 }
-func (m *QueryGroupAccountsByGroupResponse) XXX_Size() int {
+func (m *QueryGroupPoliciesByGroupResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryGroupAccountsByGroupResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGroupAccountsByGroupResponse.DiscardUnknown(m)
+func (m *QueryGroupPoliciesByGroupResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGroupPoliciesByGroupResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryGroupAccountsByGroupResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryGroupPoliciesByGroupResponse proto.InternalMessageInfo
 
-func (m *QueryGroupAccountsByGroupResponse) GetGroupAccounts() []*GroupAccountInfo {
+func (m *QueryGroupPoliciesByGroupResponse) GetGroupPolicies() []*GroupPolicyInfo {
 	if m != nil {
-		return m.GroupAccounts
+		return m.GroupPolicies
 	}
 	return nil
 }
 
-func (m *QueryGroupAccountsByGroupResponse) GetPagination() *query.PageResponse {
+func (m *QueryGroupPoliciesByGroupResponse) GetPagination() *query.PageResponse {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-// QueryGroupAccountsByAdminRequest is the Query/GroupAccountsByAdmin request type.
-type QueryGroupAccountsByAdminRequest struct {
-	// admin is the admin address of the group account.
+// QueryGroupPoliciesByAdminRequest is the Query/GroupPoliciesByAdmin request type.
+type QueryGroupPoliciesByAdminRequest struct {
+	// admin is the admin address of the group policy.
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
 	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryGroupAccountsByAdminRequest) Reset()         { *m = QueryGroupAccountsByAdminRequest{} }
-func (m *QueryGroupAccountsByAdminRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryGroupAccountsByAdminRequest) ProtoMessage()    {}
-func (*QueryGroupAccountsByAdminRequest) Descriptor() ([]byte, []int) {
+func (m *QueryGroupPoliciesByAdminRequest) Reset()         { *m = QueryGroupPoliciesByAdminRequest{} }
+func (m *QueryGroupPoliciesByAdminRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGroupPoliciesByAdminRequest) ProtoMessage()    {}
+func (*QueryGroupPoliciesByAdminRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ae47912b18757b1a, []int{10}
 }
-func (m *QueryGroupAccountsByAdminRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryGroupPoliciesByAdminRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryGroupAccountsByAdminRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryGroupPoliciesByAdminRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryGroupAccountsByAdminRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryGroupPoliciesByAdminRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -572,52 +573,52 @@ func (m *QueryGroupAccountsByAdminRequest) XXX_Marshal(b []byte, deterministic b
 		return b[:n], nil
 	}
 }
-func (m *QueryGroupAccountsByAdminRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGroupAccountsByAdminRequest.Merge(m, src)
+func (m *QueryGroupPoliciesByAdminRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGroupPoliciesByAdminRequest.Merge(m, src)
 }
-func (m *QueryGroupAccountsByAdminRequest) XXX_Size() int {
+func (m *QueryGroupPoliciesByAdminRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryGroupAccountsByAdminRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGroupAccountsByAdminRequest.DiscardUnknown(m)
+func (m *QueryGroupPoliciesByAdminRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGroupPoliciesByAdminRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryGroupAccountsByAdminRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryGroupPoliciesByAdminRequest proto.InternalMessageInfo
 
-func (m *QueryGroupAccountsByAdminRequest) GetAdmin() string {
+func (m *QueryGroupPoliciesByAdminRequest) GetAdmin() string {
 	if m != nil {
 		return m.Admin
 	}
 	return ""
 }
 
-func (m *QueryGroupAccountsByAdminRequest) GetPagination() *query.PageRequest {
+func (m *QueryGroupPoliciesByAdminRequest) GetPagination() *query.PageRequest {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-// QueryGroupAccountsByAdminResponse is the Query/GroupAccountsByAdmin response type.
-type QueryGroupAccountsByAdminResponse struct {
-	// group_accounts are the group accounts info with provided admin.
-	GroupAccounts []*GroupAccountInfo `protobuf:"bytes,1,rep,name=group_accounts,json=groupAccounts,proto3" json:"group_accounts,omitempty"`
+// QueryGroupPoliciesByAdminResponse is the Query/GroupPoliciesByAdmin response type.
+type QueryGroupPoliciesByAdminResponse struct {
+	// group_policies are the group policies info with provided admin.
+	GroupPolicies []*GroupPolicyInfo `protobuf:"bytes,1,rep,name=group_policies,json=groupPolicies,proto3" json:"group_policies,omitempty"`
 	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryGroupAccountsByAdminResponse) Reset()         { *m = QueryGroupAccountsByAdminResponse{} }
-func (m *QueryGroupAccountsByAdminResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryGroupAccountsByAdminResponse) ProtoMessage()    {}
-func (*QueryGroupAccountsByAdminResponse) Descriptor() ([]byte, []int) {
+func (m *QueryGroupPoliciesByAdminResponse) Reset()         { *m = QueryGroupPoliciesByAdminResponse{} }
+func (m *QueryGroupPoliciesByAdminResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGroupPoliciesByAdminResponse) ProtoMessage()    {}
+func (*QueryGroupPoliciesByAdminResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ae47912b18757b1a, []int{11}
 }
-func (m *QueryGroupAccountsByAdminResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryGroupPoliciesByAdminResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryGroupAccountsByAdminResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryGroupPoliciesByAdminResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryGroupAccountsByAdminResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryGroupPoliciesByAdminResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -627,26 +628,26 @@ func (m *QueryGroupAccountsByAdminResponse) XXX_Marshal(b []byte, deterministic 
 		return b[:n], nil
 	}
 }
-func (m *QueryGroupAccountsByAdminResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGroupAccountsByAdminResponse.Merge(m, src)
+func (m *QueryGroupPoliciesByAdminResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGroupPoliciesByAdminResponse.Merge(m, src)
 }
-func (m *QueryGroupAccountsByAdminResponse) XXX_Size() int {
+func (m *QueryGroupPoliciesByAdminResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryGroupAccountsByAdminResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGroupAccountsByAdminResponse.DiscardUnknown(m)
+func (m *QueryGroupPoliciesByAdminResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGroupPoliciesByAdminResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryGroupAccountsByAdminResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryGroupPoliciesByAdminResponse proto.InternalMessageInfo
 
-func (m *QueryGroupAccountsByAdminResponse) GetGroupAccounts() []*GroupAccountInfo {
+func (m *QueryGroupPoliciesByAdminResponse) GetGroupPolicies() []*GroupPolicyInfo {
 	if m != nil {
-		return m.GroupAccounts
+		return m.GroupPolicies
 	}
 	return nil
 }
 
-func (m *QueryGroupAccountsByAdminResponse) GetPagination() *query.PageResponse {
+func (m *QueryGroupPoliciesByAdminResponse) GetPagination() *query.PageResponse {
 	if m != nil {
 		return m.Pagination
 	}
@@ -745,26 +746,26 @@ func (m *QueryProposalResponse) GetProposal() *Proposal {
 	return nil
 }
 
-// QueryProposalsByGroupAccountRequest is the Query/ProposalByGroupAccount request type.
-type QueryProposalsByGroupAccountRequest struct {
-	// address is the group account address related to proposals.
+// QueryProposalsByGroupPolicyRequest is the Query/ProposalByGroupPolicy request type.
+type QueryProposalsByGroupPolicyRequest struct {
+	// address is the account address of the group policy related to proposals.
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryProposalsByGroupAccountRequest) Reset()         { *m = QueryProposalsByGroupAccountRequest{} }
-func (m *QueryProposalsByGroupAccountRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryProposalsByGroupAccountRequest) ProtoMessage()    {}
-func (*QueryProposalsByGroupAccountRequest) Descriptor() ([]byte, []int) {
+func (m *QueryProposalsByGroupPolicyRequest) Reset()         { *m = QueryProposalsByGroupPolicyRequest{} }
+func (m *QueryProposalsByGroupPolicyRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryProposalsByGroupPolicyRequest) ProtoMessage()    {}
+func (*QueryProposalsByGroupPolicyRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ae47912b18757b1a, []int{14}
 }
-func (m *QueryProposalsByGroupAccountRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryProposalsByGroupPolicyRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryProposalsByGroupAccountRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryProposalsByGroupPolicyRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryProposalsByGroupAccountRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryProposalsByGroupPolicyRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -774,52 +775,52 @@ func (m *QueryProposalsByGroupAccountRequest) XXX_Marshal(b []byte, deterministi
 		return b[:n], nil
 	}
 }
-func (m *QueryProposalsByGroupAccountRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryProposalsByGroupAccountRequest.Merge(m, src)
+func (m *QueryProposalsByGroupPolicyRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryProposalsByGroupPolicyRequest.Merge(m, src)
 }
-func (m *QueryProposalsByGroupAccountRequest) XXX_Size() int {
+func (m *QueryProposalsByGroupPolicyRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryProposalsByGroupAccountRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryProposalsByGroupAccountRequest.DiscardUnknown(m)
+func (m *QueryProposalsByGroupPolicyRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryProposalsByGroupPolicyRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryProposalsByGroupAccountRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryProposalsByGroupPolicyRequest proto.InternalMessageInfo
 
-func (m *QueryProposalsByGroupAccountRequest) GetAddress() string {
+func (m *QueryProposalsByGroupPolicyRequest) GetAddress() string {
 	if m != nil {
 		return m.Address
 	}
 	return ""
 }
 
-func (m *QueryProposalsByGroupAccountRequest) GetPagination() *query.PageRequest {
+func (m *QueryProposalsByGroupPolicyRequest) GetPagination() *query.PageRequest {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-// QueryProposalsByGroupAccountResponse is the Query/ProposalByGroupAccount response type.
-type QueryProposalsByGroupAccountResponse struct {
-	// proposals are the proposals with given group account.
+// QueryProposalsByGroupPolicyResponse is the Query/ProposalByGroupPolicy response type.
+type QueryProposalsByGroupPolicyResponse struct {
+	// proposals are the proposals with given group policy.
 	Proposals []*Proposal `protobuf:"bytes,1,rep,name=proposals,proto3" json:"proposals,omitempty"`
 	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryProposalsByGroupAccountResponse) Reset()         { *m = QueryProposalsByGroupAccountResponse{} }
-func (m *QueryProposalsByGroupAccountResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryProposalsByGroupAccountResponse) ProtoMessage()    {}
-func (*QueryProposalsByGroupAccountResponse) Descriptor() ([]byte, []int) {
+func (m *QueryProposalsByGroupPolicyResponse) Reset()         { *m = QueryProposalsByGroupPolicyResponse{} }
+func (m *QueryProposalsByGroupPolicyResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryProposalsByGroupPolicyResponse) ProtoMessage()    {}
+func (*QueryProposalsByGroupPolicyResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ae47912b18757b1a, []int{15}
 }
-func (m *QueryProposalsByGroupAccountResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryProposalsByGroupPolicyResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryProposalsByGroupAccountResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryProposalsByGroupPolicyResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryProposalsByGroupAccountResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryProposalsByGroupPolicyResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -829,33 +830,33 @@ func (m *QueryProposalsByGroupAccountResponse) XXX_Marshal(b []byte, determinist
 		return b[:n], nil
 	}
 }
-func (m *QueryProposalsByGroupAccountResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryProposalsByGroupAccountResponse.Merge(m, src)
+func (m *QueryProposalsByGroupPolicyResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryProposalsByGroupPolicyResponse.Merge(m, src)
 }
-func (m *QueryProposalsByGroupAccountResponse) XXX_Size() int {
+func (m *QueryProposalsByGroupPolicyResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryProposalsByGroupAccountResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryProposalsByGroupAccountResponse.DiscardUnknown(m)
+func (m *QueryProposalsByGroupPolicyResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryProposalsByGroupPolicyResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryProposalsByGroupAccountResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryProposalsByGroupPolicyResponse proto.InternalMessageInfo
 
-func (m *QueryProposalsByGroupAccountResponse) GetProposals() []*Proposal {
+func (m *QueryProposalsByGroupPolicyResponse) GetProposals() []*Proposal {
 	if m != nil {
 		return m.Proposals
 	}
 	return nil
 }
 
-func (m *QueryProposalsByGroupAccountResponse) GetPagination() *query.PageResponse {
+func (m *QueryProposalsByGroupPolicyResponse) GetPagination() *query.PageResponse {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-// QueryVoteByProposalVoterResponse is the Query/VoteByProposalVoter request type.
+// QueryVoteByProposalVoterRequest is the Query/VoteByProposalVoter request type.
 type QueryVoteByProposalVoterRequest struct {
 	// proposal_id is the unique ID of a proposal.
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
@@ -956,7 +957,7 @@ func (m *QueryVoteByProposalVoterResponse) GetVote() *Vote {
 	return nil
 }
 
-// QueryVotesByProposalResponse is the Query/VotesByProposal request type.
+// QueryVotesByProposalRequest is the Query/VotesByProposal request type.
 type QueryVotesByProposalRequest struct {
 	// proposal_id is the unique ID of a proposal.
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
@@ -1066,7 +1067,7 @@ func (m *QueryVotesByProposalResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryVotesByVoterResponse is the Query/VotesByVoter request type.
+// QueryVotesByVoterRequest is the Query/VotesByVoter request type.
 type QueryVotesByVoterRequest struct {
 	// voter is a proposal voter account address.
 	Voter string `protobuf:"bytes,1,opt,name=voter,proto3" json:"voter,omitempty"`
@@ -1176,92 +1177,220 @@ func (m *QueryVotesByVoterResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
+// QueryGroupsByMemberRequest is the Query/GroupsByMember request type.
+type QueryGroupsByMemberRequest struct {
+	// address is the group member address.
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryGroupsByMemberRequest) Reset()         { *m = QueryGroupsByMemberRequest{} }
+func (m *QueryGroupsByMemberRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGroupsByMemberRequest) ProtoMessage()    {}
+func (*QueryGroupsByMemberRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ae47912b18757b1a, []int{22}
+}
+func (m *QueryGroupsByMemberRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGroupsByMemberRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGroupsByMemberRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGroupsByMemberRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGroupsByMemberRequest.Merge(m, src)
+}
+func (m *QueryGroupsByMemberRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGroupsByMemberRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGroupsByMemberRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGroupsByMemberRequest proto.InternalMessageInfo
+
+func (m *QueryGroupsByMemberRequest) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+func (m *QueryGroupsByMemberRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryGroupsByMemberResponse is the Query/GroupsByMember response type.
+type QueryGroupsByMemberResponse struct {
+	// groups are the groups info with the provided group member.
+	Groups []*GroupInfo `protobuf:"bytes,1,rep,name=groups,proto3" json:"groups,omitempty"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryGroupsByMemberResponse) Reset()         { *m = QueryGroupsByMemberResponse{} }
+func (m *QueryGroupsByMemberResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGroupsByMemberResponse) ProtoMessage()    {}
+func (*QueryGroupsByMemberResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ae47912b18757b1a, []int{23}
+}
+func (m *QueryGroupsByMemberResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGroupsByMemberResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGroupsByMemberResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGroupsByMemberResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGroupsByMemberResponse.Merge(m, src)
+}
+func (m *QueryGroupsByMemberResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGroupsByMemberResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGroupsByMemberResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGroupsByMemberResponse proto.InternalMessageInfo
+
+func (m *QueryGroupsByMemberResponse) GetGroups() []*GroupInfo {
+	if m != nil {
+		return m.Groups
+	}
+	return nil
+}
+
+func (m *QueryGroupsByMemberResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*QueryGroupInfoRequest)(nil), "cosmos.group.v1beta1.QueryGroupInfoRequest")
 	proto.RegisterType((*QueryGroupInfoResponse)(nil), "cosmos.group.v1beta1.QueryGroupInfoResponse")
-	proto.RegisterType((*QueryGroupAccountInfoRequest)(nil), "cosmos.group.v1beta1.QueryGroupAccountInfoRequest")
-	proto.RegisterType((*QueryGroupAccountInfoResponse)(nil), "cosmos.group.v1beta1.QueryGroupAccountInfoResponse")
+	proto.RegisterType((*QueryGroupPolicyInfoRequest)(nil), "cosmos.group.v1beta1.QueryGroupPolicyInfoRequest")
+	proto.RegisterType((*QueryGroupPolicyInfoResponse)(nil), "cosmos.group.v1beta1.QueryGroupPolicyInfoResponse")
 	proto.RegisterType((*QueryGroupMembersRequest)(nil), "cosmos.group.v1beta1.QueryGroupMembersRequest")
 	proto.RegisterType((*QueryGroupMembersResponse)(nil), "cosmos.group.v1beta1.QueryGroupMembersResponse")
 	proto.RegisterType((*QueryGroupsByAdminRequest)(nil), "cosmos.group.v1beta1.QueryGroupsByAdminRequest")
 	proto.RegisterType((*QueryGroupsByAdminResponse)(nil), "cosmos.group.v1beta1.QueryGroupsByAdminResponse")
-	proto.RegisterType((*QueryGroupAccountsByGroupRequest)(nil), "cosmos.group.v1beta1.QueryGroupAccountsByGroupRequest")
-	proto.RegisterType((*QueryGroupAccountsByGroupResponse)(nil), "cosmos.group.v1beta1.QueryGroupAccountsByGroupResponse")
-	proto.RegisterType((*QueryGroupAccountsByAdminRequest)(nil), "cosmos.group.v1beta1.QueryGroupAccountsByAdminRequest")
-	proto.RegisterType((*QueryGroupAccountsByAdminResponse)(nil), "cosmos.group.v1beta1.QueryGroupAccountsByAdminResponse")
+	proto.RegisterType((*QueryGroupPoliciesByGroupRequest)(nil), "cosmos.group.v1beta1.QueryGroupPoliciesByGroupRequest")
+	proto.RegisterType((*QueryGroupPoliciesByGroupResponse)(nil), "cosmos.group.v1beta1.QueryGroupPoliciesByGroupResponse")
+	proto.RegisterType((*QueryGroupPoliciesByAdminRequest)(nil), "cosmos.group.v1beta1.QueryGroupPoliciesByAdminRequest")
+	proto.RegisterType((*QueryGroupPoliciesByAdminResponse)(nil), "cosmos.group.v1beta1.QueryGroupPoliciesByAdminResponse")
 	proto.RegisterType((*QueryProposalRequest)(nil), "cosmos.group.v1beta1.QueryProposalRequest")
 	proto.RegisterType((*QueryProposalResponse)(nil), "cosmos.group.v1beta1.QueryProposalResponse")
-	proto.RegisterType((*QueryProposalsByGroupAccountRequest)(nil), "cosmos.group.v1beta1.QueryProposalsByGroupAccountRequest")
-	proto.RegisterType((*QueryProposalsByGroupAccountResponse)(nil), "cosmos.group.v1beta1.QueryProposalsByGroupAccountResponse")
+	proto.RegisterType((*QueryProposalsByGroupPolicyRequest)(nil), "cosmos.group.v1beta1.QueryProposalsByGroupPolicyRequest")
+	proto.RegisterType((*QueryProposalsByGroupPolicyResponse)(nil), "cosmos.group.v1beta1.QueryProposalsByGroupPolicyResponse")
 	proto.RegisterType((*QueryVoteByProposalVoterRequest)(nil), "cosmos.group.v1beta1.QueryVoteByProposalVoterRequest")
 	proto.RegisterType((*QueryVoteByProposalVoterResponse)(nil), "cosmos.group.v1beta1.QueryVoteByProposalVoterResponse")
 	proto.RegisterType((*QueryVotesByProposalRequest)(nil), "cosmos.group.v1beta1.QueryVotesByProposalRequest")
 	proto.RegisterType((*QueryVotesByProposalResponse)(nil), "cosmos.group.v1beta1.QueryVotesByProposalResponse")
 	proto.RegisterType((*QueryVotesByVoterRequest)(nil), "cosmos.group.v1beta1.QueryVotesByVoterRequest")
 	proto.RegisterType((*QueryVotesByVoterResponse)(nil), "cosmos.group.v1beta1.QueryVotesByVoterResponse")
+	proto.RegisterType((*QueryGroupsByMemberRequest)(nil), "cosmos.group.v1beta1.QueryGroupsByMemberRequest")
+	proto.RegisterType((*QueryGroupsByMemberResponse)(nil), "cosmos.group.v1beta1.QueryGroupsByMemberResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/group/v1beta1/query.proto", fileDescriptor_ae47912b18757b1a) }
 
 var fileDescriptor_ae47912b18757b1a = []byte{
-	// 900 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0xcf, 0x4f, 0xd4, 0x40,
-	0x14, 0x66, 0x94, 0x9f, 0x0f, 0x51, 0x53, 0x51, 0x97, 0xaa, 0xcb, 0x52, 0x89, 0x12, 0x90, 0x2e,
-	0x2c, 0x91, 0x8d, 0x68, 0x4c, 0xd8, 0x83, 0x84, 0x03, 0x09, 0x96, 0xc4, 0x83, 0x1e, 0x48, 0x77,
-	0xb7, 0xac, 0x1b, 0xdd, 0x76, 0x69, 0xbb, 0x04, 0x62, 0xbc, 0xf9, 0xe3, 0x4a, 0x34, 0x31, 0xd1,
-	0x83, 0x89, 0x7f, 0x80, 0x37, 0x6f, 0xfe, 0x03, 0xde, 0x24, 0x9e, 0x3c, 0x1a, 0xf8, 0x47, 0x4c,
-	0x67, 0x5e, 0xdb, 0xed, 0xee, 0x6c, 0xdb, 0xd5, 0x46, 0x39, 0x91, 0x59, 0xbe, 0xef, 0xbd, 0x6f,
-	0xbe, 0xf7, 0x66, 0xe6, 0xa5, 0x90, 0x29, 0x19, 0x56, 0xcd, 0xb0, 0xb2, 0x15, 0xd3, 0x68, 0xd4,
-	0xb3, 0x3b, 0xf3, 0x45, 0xcd, 0x56, 0xe7, 0xb3, 0xdb, 0x0d, 0xcd, 0xdc, 0x93, 0xeb, 0xa6, 0x61,
-	0x1b, 0xc2, 0x28, 0x43, 0xc8, 0x14, 0x21, 0x23, 0x42, 0xe4, 0xf3, 0xec, 0xbd, 0xba, 0x66, 0x31,
-	0x9e, 0x38, 0x8d, 0x88, 0xa2, 0x6a, 0x69, 0x2c, 0xa0, 0x07, 0xab, 0xab, 0x95, 0xaa, 0xae, 0xda,
-	0x55, 0x43, 0x47, 0xec, 0x18, 0xc3, 0x6e, 0xd2, 0x55, 0x16, 0x13, 0xd2, 0x85, 0x94, 0x83, 0xf3,
-	0xf7, 0x1d, 0xf2, 0x8a, 0x93, 0x68, 0x55, 0xdf, 0x32, 0x14, 0x6d, 0xbb, 0xa1, 0x59, 0xb6, 0x30,
-	0x06, 0x83, 0x34, 0xf9, 0x66, 0xb5, 0x9c, 0x22, 0x19, 0x32, 0xd5, 0xab, 0x0c, 0xd0, 0xf5, 0x6a,
-	0x59, 0x5a, 0x83, 0x0b, 0xad, 0x1c, 0xab, 0x6e, 0xe8, 0x96, 0x26, 0x2c, 0x40, 0x6f, 0x55, 0xdf,
-	0x32, 0x28, 0x61, 0x38, 0x37, 0x2e, 0xf3, 0xf6, 0x26, 0xfb, 0x34, 0x0a, 0x96, 0x14, 0xb8, 0xec,
-	0x87, 0x5b, 0x2e, 0x95, 0x8c, 0x86, 0x6e, 0x37, 0x2b, 0xc9, 0xc1, 0x80, 0x5a, 0x2e, 0x9b, 0x9a,
-	0x65, 0xd1, 0xb8, 0x43, 0x85, 0xd4, 0x8f, 0x2f, 0xb3, 0xae, 0x6d, 0xcb, 0xec, 0x3f, 0x1b, 0xb6,
-	0x59, 0xd5, 0x2b, 0x8a, 0x0b, 0x94, 0x1e, 0xc1, 0x95, 0x0e, 0x31, 0x51, 0xe9, 0x52, 0x40, 0xe9,
-	0xb5, 0x10, 0xa5, 0xcd, 0x6c, 0x26, 0xf8, 0x39, 0xa4, 0xfc, 0xe0, 0x6b, 0x5a, 0xad, 0xa8, 0x99,
-	0x56, 0xb4, 0x6d, 0xc2, 0x3d, 0x00, 0xbf, 0x32, 0xa9, 0x13, 0xc1, 0xc4, 0x4e, 0x19, 0x65, 0xd6,
-	0x17, 0x6e, 0xf6, 0x75, 0xb5, 0xa2, 0x61, 0x58, 0xa5, 0x89, 0x29, 0x7d, 0x22, 0x30, 0xc6, 0xc9,
-	0x8f, 0x1b, 0xbb, 0x0d, 0x03, 0x35, 0xf6, 0x53, 0x8a, 0x64, 0x4e, 0x4e, 0x0d, 0xe7, 0x26, 0x42,
-	0xf6, 0xc6, 0xc8, 0x8a, 0xcb, 0x10, 0x56, 0x38, 0x12, 0xaf, 0x47, 0x4a, 0x64, 0x99, 0x03, 0x1a,
-	0xdf, 0x06, 0x34, 0x5a, 0x85, 0xbd, 0xe5, 0x72, 0xad, 0xaa, 0xbb, 0x26, 0xc9, 0xd0, 0xa7, 0x3a,
-	0xeb, 0xc8, 0x7a, 0x32, 0x58, 0x62, 0xce, 0x7d, 0x24, 0x20, 0xf2, 0x54, 0xa1, 0x75, 0x79, 0xe8,
-	0xa7, 0x1e, 0xb9, 0xce, 0x45, 0xf6, 0x2f, 0xc2, 0x93, 0xb3, 0xed, 0x25, 0x81, 0x4c, 0x5b, 0xdf,
-	0x5a, 0x05, 0xb6, 0xfc, 0x87, 0x2d, 0xf6, 0x95, 0xc0, 0x44, 0x88, 0x0e, 0xf4, 0x6b, 0x0d, 0x4e,
-	0x33, 0x21, 0x2a, 0x02, 0xd0, 0xb7, 0xb8, 0xa7, 0x69, 0xa4, 0xd2, 0x1c, 0x3d, 0x39, 0x17, 0x3f,
-	0x74, 0x70, 0xf1, 0x58, 0xf4, 0x60, 0x27, 0x6b, 0x83, 0xad, 0x78, 0x5c, 0xad, 0xcd, 0xc3, 0x28,
-	0x15, 0xbf, 0x6e, 0x1a, 0x75, 0xc3, 0x52, 0x9f, 0xba, 0x6e, 0x8e, 0xc3, 0x70, 0x1d, 0x7f, 0xf2,
-	0xdb, 0x12, 0xdc, 0x9f, 0x56, 0xcb, 0xd2, 0x06, 0xbe, 0x33, 0x3e, 0xd1, 0xbb, 0x88, 0x07, 0x5d,
-	0x18, 0x5e, 0xc6, 0x69, 0xfe, 0x1e, 0x3d, 0xa6, 0x87, 0x77, 0x6e, 0xc2, 0xab, 0x81, 0xa8, 0x6e,
-	0x8b, 0xe2, 0xc6, 0xff, 0xe2, 0x05, 0x49, 0xac, 0xde, 0x9f, 0x09, 0x4c, 0x86, 0x6b, 0x44, 0x23,
-	0xee, 0xc0, 0x90, 0xbb, 0x31, 0xb7, 0xda, 0x51, 0x4e, 0xf8, 0x84, 0xe4, 0x2a, 0x6c, 0xc2, 0x38,
-	0x95, 0xfb, 0xc0, 0xb0, 0xb5, 0x82, 0x27, 0xda, 0x59, 0x99, 0x71, 0x8b, 0xed, 0x9c, 0xad, 0x1d,
-	0x87, 0x40, 0x75, 0x84, 0x9e, 0x2d, 0x0a, 0x93, 0x14, 0x3c, 0xaf, 0xdc, 0x9c, 0x68, 0x8f, 0x0c,
-	0xbd, 0x0e, 0x18, 0x7b, 0x44, 0xe4, 0x3b, 0xe3, 0x50, 0x14, 0x8a, 0x93, 0x5e, 0x11, 0xb8, 0xe4,
-	0x05, 0xb5, 0x0a, 0x5d, 0x77, 0x6c, 0x62, 0x0d, 0xf0, 0x9e, 0xe0, 0x7c, 0xd3, 0x26, 0x04, 0x77,
-	0x36, 0xc7, 0xdc, 0x72, 0x8b, 0x1e, 0xb6, 0x35, 0x06, 0x4c, 0xae, 0xd8, 0x6f, 0x08, 0x8e, 0x32,
-	0xa8, 0x2d, 0x50, 0x66, 0xaf, 0x8a, 0x24, 0x56, 0x15, 0x13, 0x33, 0xec, 0x9d, 0x3b, 0x3b, 0x04,
-	0x45, 0xfd, 0x77, 0xb7, 0x72, 0xdf, 0x01, 0xfa, 0xa8, 0x30, 0x61, 0x0b, 0x86, 0xbc, 0x29, 0x40,
-	0x98, 0xe1, 0x4b, 0xe0, 0x8e, 0xd5, 0xe2, 0x8d, 0x78, 0x60, 0xdc, 0xec, 0x33, 0x38, 0xdb, 0x7a,
-	0xb5, 0x0b, 0xb9, 0xa8, 0x08, 0xed, 0x23, 0xb4, 0xb8, 0xd0, 0x15, 0x07, 0x93, 0x1b, 0x70, 0xaa,
-	0x79, 0xc2, 0x14, 0xe4, 0xa8, 0x20, 0xc1, 0x51, 0x58, 0xcc, 0xc6, 0xc6, 0x63, 0x42, 0x13, 0x46,
-	0x02, 0x83, 0x99, 0x10, 0x19, 0xa1, 0xe5, 0x51, 0x17, 0xe7, 0xe2, 0x13, 0x30, 0xe7, 0x6b, 0x02,
-	0xa3, 0xbc, 0x21, 0x47, 0x58, 0x8c, 0x69, 0x59, 0xcb, 0x74, 0x26, 0xe6, 0xbb, 0xe6, 0x75, 0x56,
-	0xc2, 0x5c, 0xe8, 0x42, 0x49, 0xc0, 0x8c, 0x7c, 0xd7, 0x3c, 0x54, 0x52, 0x82, 0x41, 0xf7, 0x92,
-	0x12, 0xa6, 0x43, 0x82, 0xb4, 0x5c, 0xa9, 0xe2, 0x4c, 0x2c, 0x2c, 0x26, 0xd9, 0x27, 0x70, 0xb1,
-	0xc3, 0x93, 0x28, 0xdc, 0x8a, 0x11, 0x88, 0xff, 0xd4, 0x8b, 0x4b, 0x7f, 0x42, 0x45, 0x49, 0x2f,
-	0x08, 0x9c, 0xe3, 0x3c, 0x41, 0xc2, 0xcd, 0x90, 0x98, 0x9d, 0x9f, 0x49, 0x71, 0xb1, 0x5b, 0x1a,
-	0xca, 0xd8, 0x85, 0x33, 0x2d, 0x4f, 0x85, 0x30, 0x1f, 0x11, 0xaa, 0xfd, 0x7d, 0x13, 0x73, 0xdd,
-	0x50, 0xfc, 0x13, 0xdf, 0x7c, 0xe7, 0x86, 0x9e, 0x78, 0xce, 0x8b, 0x11, 0x7a, 0xe2, 0x79, 0x97,
-	0x79, 0xe1, 0xee, 0xb7, 0xc3, 0x34, 0x39, 0x38, 0x4c, 0x93, 0x5f, 0x87, 0x69, 0xb2, 0x7f, 0x94,
-	0xee, 0x39, 0x38, 0x4a, 0xf7, 0xfc, 0x3c, 0x4a, 0xf7, 0x3c, 0x9c, 0xac, 0x54, 0xed, 0xc7, 0x8d,
-	0xa2, 0x5c, 0x32, 0x6a, 0xf8, 0xc1, 0x02, 0xff, 0xcc, 0x5a, 0xe5, 0x27, 0xd9, 0x5d, 0xf6, 0x61,
-	0xa4, 0xd8, 0x4f, 0x3f, 0x62, 0x2c, 0xfc, 0x0e, 0x00, 0x00, 0xff, 0xff, 0xbd, 0xd9, 0x5b, 0xcf,
-	0x67, 0x11, 0x00, 0x00,
+	// 1168 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0xdf, 0x6b, 0x1c, 0x55,
+	0x14, 0xce, 0xad, 0x69, 0x93, 0x9c, 0xf4, 0x07, 0x5e, 0x63, 0xd9, 0x8c, 0x65, 0x93, 0x8e, 0xbf,
+	0x4a, 0xd3, 0xcc, 0x64, 0x37, 0x26, 0x9b, 0xb4, 0x2a, 0x66, 0x11, 0x4b, 0xc4, 0x42, 0xba, 0x05,
+	0x41, 0x5f, 0xc2, 0x6c, 0x76, 0xb2, 0x0e, 0x66, 0xe7, 0x6e, 0x67, 0x26, 0xc5, 0x25, 0xec, 0x8b,
+	0xa0, 0xcf, 0x62, 0x41, 0xac, 0x8a, 0x3f, 0x1e, 0x44, 0x04, 0xc1, 0x07, 0x05, 0xc1, 0x3f, 0x40,
+	0xf4, 0x2d, 0xe8, 0x8b, 0x8f, 0x92, 0xf8, 0x87, 0xc8, 0xdc, 0x7b, 0xee, 0xce, 0xcc, 0xe6, 0x66,
+	0x66, 0x56, 0x17, 0x9b, 0xa7, 0x30, 0xb3, 0xe7, 0xdc, 0xf3, 0x7d, 0xdf, 0x39, 0x73, 0xef, 0x77,
+	0x03, 0xb3, 0x5b, 0xcc, 0x6f, 0x31, 0xdf, 0x6c, 0x7a, 0x6c, 0xb7, 0x6d, 0xde, 0x2b, 0xd5, 0xed,
+	0xc0, 0x2a, 0x99, 0x77, 0x77, 0x6d, 0xaf, 0x63, 0xb4, 0x3d, 0x16, 0x30, 0x3a, 0x25, 0x22, 0x0c,
+	0x1e, 0x61, 0x60, 0x84, 0x76, 0xa9, 0xc9, 0x58, 0x73, 0xc7, 0x36, 0xad, 0xb6, 0x63, 0x5a, 0xae,
+	0xcb, 0x02, 0x2b, 0x70, 0x98, 0xeb, 0x8b, 0x1c, 0x4d, 0xbd, 0x6a, 0xd0, 0x69, 0xdb, 0x32, 0xe2,
+	0x2a, 0x46, 0xd4, 0x2d, 0xdf, 0x16, 0xe5, 0x7a, 0x61, 0x6d, 0xab, 0xe9, 0xb8, 0x7c, 0x39, 0x8c,
+	0x9d, 0x16, 0xb1, 0x9b, 0xfc, 0xc9, 0x44, 0x38, 0xfc, 0x41, 0x2f, 0xc3, 0xe3, 0xb7, 0xc3, 0xe4,
+	0x9b, 0x61, 0xa1, 0x75, 0x77, 0x9b, 0xd5, 0xec, 0xbb, 0xbb, 0xb6, 0x1f, 0xd0, 0x69, 0x18, 0xe7,
+	0xc5, 0x37, 0x9d, 0x46, 0x81, 0xcc, 0x92, 0x2b, 0xa3, 0xb5, 0x31, 0xfe, 0xbc, 0xde, 0xd0, 0x6f,
+	0xc1, 0xc5, 0xfe, 0x1c, 0xbf, 0xcd, 0x5c, 0xdf, 0xa6, 0x8b, 0x30, 0xea, 0xb8, 0xdb, 0x8c, 0x27,
+	0x4c, 0x96, 0x67, 0x0c, 0x15, 0x73, 0x23, 0x4a, 0xe3, 0xc1, 0xfa, 0x6d, 0x78, 0x22, 0x5a, 0x6e,
+	0x83, 0xed, 0x38, 0x5b, 0x9d, 0x38, 0x90, 0x32, 0x8c, 0x59, 0x8d, 0x86, 0x67, 0xfb, 0x3e, 0x5f,
+	0x76, 0xa2, 0x5a, 0xf8, 0xfd, 0xc7, 0x79, 0xa9, 0xe9, 0x9a, 0xf8, 0xe5, 0x4e, 0xe0, 0x39, 0x6e,
+	0xb3, 0x26, 0x03, 0xf5, 0x37, 0xe0, 0x92, 0x7a, 0x49, 0xc4, 0xb9, 0x9a, 0xc0, 0xf9, 0x74, 0x0a,
+	0xce, 0x58, 0xb2, 0x40, 0xdb, 0x85, 0x42, 0xb4, 0xf4, 0x2d, 0xbb, 0x55, 0xb7, 0x3d, 0x3f, 0x5b,
+	0x33, 0xfa, 0x0a, 0x40, 0xd4, 0x96, 0xc2, 0x29, 0x5e, 0xf7, 0x19, 0x59, 0x37, 0xec, 0xa1, 0x21,
+	0x46, 0x46, 0x16, 0xdf, 0xb0, 0x9a, 0x36, 0x2e, 0x5b, 0x8b, 0x65, 0xea, 0x5f, 0x11, 0x98, 0x56,
+	0xd4, 0x47, 0x5e, 0x37, 0x60, 0xac, 0x25, 0x5e, 0x15, 0xc8, 0xec, 0x23, 0x57, 0x26, 0xcb, 0x97,
+	0x53, 0xa8, 0x89, 0xe4, 0x9a, 0xcc, 0xa0, 0x37, 0x15, 0x10, 0x9f, 0xcd, 0x84, 0x28, 0x2a, 0x27,
+	0x30, 0xde, 0x4f, 0x60, 0xf4, 0xab, 0x9d, 0xb5, 0x46, 0xcb, 0x71, 0xa5, 0x48, 0x06, 0x9c, 0xb6,
+	0xc2, 0xe7, 0xcc, 0x6e, 0x8a, 0xb0, 0xa1, 0x29, 0xf7, 0x39, 0x01, 0x4d, 0x85, 0x0a, 0xa5, 0xab,
+	0xc0, 0x19, 0xae, 0x91, 0x54, 0x2e, 0x73, 0x78, 0x31, 0x7c, 0x78, 0xb2, 0xbd, 0x47, 0x60, 0xb6,
+	0x6f, 0x6a, 0x1d, 0xdb, 0xaf, 0x8a, 0xc7, 0xff, 0x71, 0xc4, 0x7e, 0x26, 0x70, 0x39, 0x05, 0x07,
+	0xea, 0xf5, 0x1a, 0x9c, 0x17, 0x40, 0xda, 0x18, 0x80, 0xba, 0xe5, 0xfc, 0x98, 0xce, 0x35, 0xe3,
+	0x8b, 0x0f, 0x4f, 0xc4, 0x4f, 0x8e, 0x11, 0xf1, 0x44, 0x8c, 0xe0, 0x71, 0xca, 0x26, 0x27, 0xf1,
+	0x84, 0x2a, 0x5b, 0x81, 0x29, 0x8e, 0x7d, 0xc3, 0x63, 0x6d, 0xe6, 0x5b, 0x3b, 0x52, 0xcc, 0x19,
+	0x98, 0x6c, 0xe3, 0xab, 0x68, 0x28, 0x41, 0xbe, 0x5a, 0x6f, 0xe8, 0x77, 0xf0, 0x88, 0x89, 0x12,
+	0x91, 0xe8, 0x75, 0x18, 0x97, 0x61, 0xb8, 0x13, 0x17, 0xd5, 0x14, 0x7b, 0x99, 0xbd, 0x78, 0xfd,
+	0x4b, 0x02, 0x7a, 0x62, 0x55, 0x39, 0xa0, 0x42, 0x89, 0xff, 0x70, 0x78, 0x0c, 0xad, 0xdb, 0xdf,
+	0x11, 0x78, 0x32, 0x15, 0x22, 0xca, 0xf0, 0x3c, 0x4c, 0x48, 0x5a, 0xb2, 0xd5, 0x59, 0x3a, 0x44,
+	0x09, 0xc3, 0xeb, 0xaf, 0x07, 0x33, 0x1c, 0xed, 0xeb, 0x2c, 0xb0, 0xab, 0x3d, 0xcc, 0xe1, 0x93,
+	0x97, 0xb7, 0xd5, 0xe1, 0x87, 0x75, 0x2f, 0x4c, 0xe0, 0x38, 0x52, 0x3f, 0x2c, 0x1e, 0xa6, 0xd7,
+	0xf0, 0x63, 0x55, 0xd6, 0x44, 0x79, 0x0c, 0x18, 0x0d, 0x83, 0x71, 0x42, 0x34, 0xb5, 0x32, 0x61,
+	0x4a, 0x8d, 0xc7, 0xe9, 0xef, 0x13, 0xf4, 0x13, 0xe1, 0x3b, 0xbf, 0x3a, 0xf0, 0xbc, 0x0e, 0xad,
+	0xff, 0x0f, 0x08, 0xba, 0x90, 0x23, 0x40, 0x90, 0xd9, 0x82, 0x50, 0x4b, 0x36, 0x3d, 0x8d, 0x9a,
+	0x08, 0x1c, 0x5e, 0xb3, 0x3f, 0x24, 0x68, 0x63, 0x10, 0x5b, 0xa2, 0xcd, 0xbd, 0x2e, 0x92, 0x5c,
+	0x5d, 0x1c, 0x9a, 0x60, 0x1f, 0x49, 0xdf, 0x90, 0x04, 0xf5, 0xf0, 0xd5, 0xfa, 0xb8, 0xdf, 0x3a,
+	0xa0, 0x75, 0x3a, 0x01, 0x9b, 0xcc, 0x17, 0x24, 0xee, 0x9e, 0x63, 0xd0, 0x4e, 0x8a, 0xad, 0x29,
+	0x7f, 0xf6, 0x28, 0x9c, 0xe6, 0x08, 0xe9, 0xa7, 0x04, 0x26, 0x7a, 0x85, 0xe8, 0x9c, 0x1a, 0x89,
+	0xf2, 0x36, 0xa2, 0x5d, 0xcb, 0x17, 0x2c, 0xca, 0xeb, 0x8b, 0xef, 0xfe, 0xf1, 0xf7, 0xfd, 0x53,
+	0xf3, 0x74, 0xce, 0x54, 0x5e, 0xa3, 0xd0, 0x40, 0xb9, 0xdb, 0xcc, 0xdc, 0x93, 0x66, 0xaa, 0x4b,
+	0x7f, 0x20, 0x70, 0xa1, 0xef, 0x2c, 0xa5, 0xa5, 0xac, 0xb2, 0x47, 0xae, 0x2b, 0x5a, 0x79, 0x90,
+	0x14, 0xc4, 0xbb, 0xca, 0xf1, 0x2e, 0xd2, 0x52, 0x1a, 0x5e, 0xee, 0x06, 0x3a, 0x08, 0x1b, 0xc7,
+	0xa8, 0x4b, 0xbf, 0x21, 0x70, 0x36, 0x7e, 0x15, 0xa0, 0x46, 0x56, 0xfd, 0xe4, 0x9d, 0x45, 0x33,
+	0x73, 0xc7, 0x23, 0xd8, 0x65, 0x0e, 0x76, 0x81, 0x1a, 0x69, 0x60, 0xf1, 0x4e, 0x11, 0xd7, 0xf7,
+	0x5b, 0x02, 0xe7, 0x12, 0xd6, 0x9b, 0x66, 0x96, 0xee, 0xf3, 0x6d, 0xda, 0x42, 0xfe, 0x04, 0x04,
+	0xbb, 0xc4, 0xc1, 0x9a, 0x74, 0x3e, 0x05, 0xac, 0xbf, 0x59, 0xef, 0x6c, 0x72, 0xa3, 0x17, 0xea,
+	0xda, 0x72, 0xdc, 0x2e, 0xfd, 0x8d, 0xc0, 0x94, 0xca, 0xfd, 0xd2, 0xe5, 0x5c, 0xdd, 0x3d, 0x62,
+	0xdb, 0xb5, 0xca, 0xc0, 0x79, 0x48, 0xe0, 0x25, 0x4e, 0xe0, 0x3a, 0x5d, 0xc9, 0x1c, 0x0d, 0xc7,
+	0xe6, 0x44, 0xc4, 0xef, 0x31, 0xdd, 0x7f, 0x39, 0xca, 0x45, 0xc8, 0x3f, 0x00, 0x97, 0x44, 0x17,
+	0x2a, 0x03, 0xe7, 0x21, 0x97, 0x17, 0x38, 0x97, 0x0a, 0x5d, 0xca, 0xcb, 0x25, 0xd9, 0x94, 0x07,
+	0x04, 0xc6, 0xe5, 0x19, 0x4a, 0xaf, 0xa6, 0x80, 0xe8, 0x3b, 0xf1, 0xb5, 0xb9, 0x5c, 0xb1, 0x08,
+	0xf2, 0x39, 0x0e, 0xd2, 0xa0, 0xd7, 0xd4, 0x20, 0xa5, 0x4f, 0x30, 0xf7, 0x62, 0x26, 0xa2, 0x4b,
+	0xf7, 0x09, 0x5c, 0x54, 0xdb, 0x3c, 0xba, 0x92, 0xa3, 0xba, 0xd2, 0xbc, 0x6a, 0xab, 0xff, 0x22,
+	0x13, 0x59, 0xac, 0x71, 0x16, 0x37, 0xe8, 0x6a, 0x3a, 0x8b, 0x68, 0x62, 0x70, 0x7b, 0x89, 0xed,
+	0x2c, 0xfb, 0x04, 0x1e, 0x53, 0xf8, 0x32, 0xba, 0x94, 0x82, 0xea, 0x78, 0xef, 0xa8, 0x2d, 0x0f,
+	0x9a, 0x86, 0x4c, 0x5e, 0xe5, 0x4c, 0x5e, 0xa6, 0x55, 0x35, 0x93, 0xf0, 0xa4, 0x0f, 0x49, 0xf4,
+	0xba, 0xc1, 0x2d, 0x49, 0xb2, 0x3b, 0xe6, 0x1e, 0x7f, 0xd9, 0xa5, 0x3f, 0x11, 0xb8, 0xd0, 0x67,
+	0xc6, 0x52, 0xb7, 0x78, 0xb5, 0x83, 0x4c, 0xdd, 0xe2, 0x8f, 0xf1, 0x7a, 0x59, 0xb3, 0xcf, 0x0d,
+	0x4b, 0x9c, 0x47, 0xdf, 0x7c, 0x7d, 0x4d, 0xe0, 0x6c, 0xdc, 0x15, 0xa5, 0x6e, 0xf3, 0x0a, 0x4f,
+	0x97, 0xba, 0xcd, 0xab, 0xec, 0x56, 0xd6, 0x77, 0xd0, 0x03, 0x8c, 0x7a, 0xa3, 0xc2, 0xdf, 0x13,
+	0x38, 0x9f, 0x74, 0x22, 0x34, 0xcf, 0xa6, 0x9d, 0xf0, 0x53, 0x5a, 0x69, 0x80, 0x0c, 0x44, 0xbb,
+	0xc2, 0xd1, 0x96, 0xe9, 0x42, 0xd6, 0x3e, 0x2f, 0x0e, 0xa6, 0x68, 0xcc, 0xab, 0x2f, 0xfe, 0x7a,
+	0x50, 0x24, 0xfb, 0x07, 0x45, 0xf2, 0xd7, 0x41, 0x91, 0x7c, 0x70, 0x58, 0x1c, 0xd9, 0x3f, 0x2c,
+	0x8e, 0xfc, 0x79, 0x58, 0x1c, 0x79, 0xf3, 0xa9, 0xa6, 0x13, 0xbc, 0xb5, 0x5b, 0x37, 0xb6, 0x58,
+	0x4b, 0xae, 0x2a, 0xfe, 0xcc, 0xfb, 0x8d, 0xb7, 0xcd, 0x77, 0xc4, 0xa2, 0xf5, 0x33, 0xfc, 0xff,
+	0xa8, 0x8b, 0xff, 0x04, 0x00, 0x00, 0xff, 0xff, 0x7f, 0x70, 0x38, 0xb6, 0x08, 0x16, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1278,26 +1407,28 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// GroupInfo queries group info based on group id.
 	GroupInfo(ctx context.Context, in *QueryGroupInfoRequest, opts ...grpc.CallOption) (*QueryGroupInfoResponse, error)
-	// GroupAccountInfo queries group account info based on group account address.
-	GroupAccountInfo(ctx context.Context, in *QueryGroupAccountInfoRequest, opts ...grpc.CallOption) (*QueryGroupAccountInfoResponse, error)
+	// GroupPolicyInfo queries group policy info based on account address of group policy.
+	GroupPolicyInfo(ctx context.Context, in *QueryGroupPolicyInfoRequest, opts ...grpc.CallOption) (*QueryGroupPolicyInfoResponse, error)
 	// GroupMembers queries members of a group
 	GroupMembers(ctx context.Context, in *QueryGroupMembersRequest, opts ...grpc.CallOption) (*QueryGroupMembersResponse, error)
 	// GroupsByAdmin queries groups by admin address.
 	GroupsByAdmin(ctx context.Context, in *QueryGroupsByAdminRequest, opts ...grpc.CallOption) (*QueryGroupsByAdminResponse, error)
-	// GroupAccountsByGroup queries group accounts by group id.
-	GroupAccountsByGroup(ctx context.Context, in *QueryGroupAccountsByGroupRequest, opts ...grpc.CallOption) (*QueryGroupAccountsByGroupResponse, error)
-	// GroupsByAdmin queries group accounts by admin address.
-	GroupAccountsByAdmin(ctx context.Context, in *QueryGroupAccountsByAdminRequest, opts ...grpc.CallOption) (*QueryGroupAccountsByAdminResponse, error)
+	// GroupPoliciesByGroup queries group policies by group id.
+	GroupPoliciesByGroup(ctx context.Context, in *QueryGroupPoliciesByGroupRequest, opts ...grpc.CallOption) (*QueryGroupPoliciesByGroupResponse, error)
+	// GroupsByAdmin queries group policies by admin address.
+	GroupPoliciesByAdmin(ctx context.Context, in *QueryGroupPoliciesByAdminRequest, opts ...grpc.CallOption) (*QueryGroupPoliciesByAdminResponse, error)
 	// Proposal queries a proposal based on proposal id.
 	Proposal(ctx context.Context, in *QueryProposalRequest, opts ...grpc.CallOption) (*QueryProposalResponse, error)
-	// ProposalsByGroupAccount queries proposals based on group account address.
-	ProposalsByGroupAccount(ctx context.Context, in *QueryProposalsByGroupAccountRequest, opts ...grpc.CallOption) (*QueryProposalsByGroupAccountResponse, error)
+	// ProposalsByGroupPolicy queries proposals based on account address of group policy.
+	ProposalsByGroupPolicy(ctx context.Context, in *QueryProposalsByGroupPolicyRequest, opts ...grpc.CallOption) (*QueryProposalsByGroupPolicyResponse, error)
 	// VoteByProposalVoter queries a vote by proposal id and voter.
 	VoteByProposalVoter(ctx context.Context, in *QueryVoteByProposalVoterRequest, opts ...grpc.CallOption) (*QueryVoteByProposalVoterResponse, error)
 	// VotesByProposal queries a vote by proposal.
 	VotesByProposal(ctx context.Context, in *QueryVotesByProposalRequest, opts ...grpc.CallOption) (*QueryVotesByProposalResponse, error)
 	// VotesByVoter queries a vote by voter.
 	VotesByVoter(ctx context.Context, in *QueryVotesByVoterRequest, opts ...grpc.CallOption) (*QueryVotesByVoterResponse, error)
+	// GroupsByMember queries groups by member address.
+	GroupsByMember(ctx context.Context, in *QueryGroupsByMemberRequest, opts ...grpc.CallOption) (*QueryGroupsByMemberResponse, error)
 }
 
 type queryClient struct {
@@ -1317,9 +1448,9 @@ func (c *queryClient) GroupInfo(ctx context.Context, in *QueryGroupInfoRequest, 
 	return out, nil
 }
 
-func (c *queryClient) GroupAccountInfo(ctx context.Context, in *QueryGroupAccountInfoRequest, opts ...grpc.CallOption) (*QueryGroupAccountInfoResponse, error) {
-	out := new(QueryGroupAccountInfoResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Query/GroupAccountInfo", in, out, opts...)
+func (c *queryClient) GroupPolicyInfo(ctx context.Context, in *QueryGroupPolicyInfoRequest, opts ...grpc.CallOption) (*QueryGroupPolicyInfoResponse, error) {
+	out := new(QueryGroupPolicyInfoResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Query/GroupPolicyInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1344,18 +1475,18 @@ func (c *queryClient) GroupsByAdmin(ctx context.Context, in *QueryGroupsByAdminR
 	return out, nil
 }
 
-func (c *queryClient) GroupAccountsByGroup(ctx context.Context, in *QueryGroupAccountsByGroupRequest, opts ...grpc.CallOption) (*QueryGroupAccountsByGroupResponse, error) {
-	out := new(QueryGroupAccountsByGroupResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Query/GroupAccountsByGroup", in, out, opts...)
+func (c *queryClient) GroupPoliciesByGroup(ctx context.Context, in *QueryGroupPoliciesByGroupRequest, opts ...grpc.CallOption) (*QueryGroupPoliciesByGroupResponse, error) {
+	out := new(QueryGroupPoliciesByGroupResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Query/GroupPoliciesByGroup", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) GroupAccountsByAdmin(ctx context.Context, in *QueryGroupAccountsByAdminRequest, opts ...grpc.CallOption) (*QueryGroupAccountsByAdminResponse, error) {
-	out := new(QueryGroupAccountsByAdminResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Query/GroupAccountsByAdmin", in, out, opts...)
+func (c *queryClient) GroupPoliciesByAdmin(ctx context.Context, in *QueryGroupPoliciesByAdminRequest, opts ...grpc.CallOption) (*QueryGroupPoliciesByAdminResponse, error) {
+	out := new(QueryGroupPoliciesByAdminResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Query/GroupPoliciesByAdmin", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1371,9 +1502,9 @@ func (c *queryClient) Proposal(ctx context.Context, in *QueryProposalRequest, op
 	return out, nil
 }
 
-func (c *queryClient) ProposalsByGroupAccount(ctx context.Context, in *QueryProposalsByGroupAccountRequest, opts ...grpc.CallOption) (*QueryProposalsByGroupAccountResponse, error) {
-	out := new(QueryProposalsByGroupAccountResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Query/ProposalsByGroupAccount", in, out, opts...)
+func (c *queryClient) ProposalsByGroupPolicy(ctx context.Context, in *QueryProposalsByGroupPolicyRequest, opts ...grpc.CallOption) (*QueryProposalsByGroupPolicyResponse, error) {
+	out := new(QueryProposalsByGroupPolicyResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Query/ProposalsByGroupPolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1407,30 +1538,41 @@ func (c *queryClient) VotesByVoter(ctx context.Context, in *QueryVotesByVoterReq
 	return out, nil
 }
 
+func (c *queryClient) GroupsByMember(ctx context.Context, in *QueryGroupsByMemberRequest, opts ...grpc.CallOption) (*QueryGroupsByMemberResponse, error) {
+	out := new(QueryGroupsByMemberResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Query/GroupsByMember", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// GroupInfo queries group info based on group id.
 	GroupInfo(context.Context, *QueryGroupInfoRequest) (*QueryGroupInfoResponse, error)
-	// GroupAccountInfo queries group account info based on group account address.
-	GroupAccountInfo(context.Context, *QueryGroupAccountInfoRequest) (*QueryGroupAccountInfoResponse, error)
+	// GroupPolicyInfo queries group policy info based on account address of group policy.
+	GroupPolicyInfo(context.Context, *QueryGroupPolicyInfoRequest) (*QueryGroupPolicyInfoResponse, error)
 	// GroupMembers queries members of a group
 	GroupMembers(context.Context, *QueryGroupMembersRequest) (*QueryGroupMembersResponse, error)
 	// GroupsByAdmin queries groups by admin address.
 	GroupsByAdmin(context.Context, *QueryGroupsByAdminRequest) (*QueryGroupsByAdminResponse, error)
-	// GroupAccountsByGroup queries group accounts by group id.
-	GroupAccountsByGroup(context.Context, *QueryGroupAccountsByGroupRequest) (*QueryGroupAccountsByGroupResponse, error)
-	// GroupsByAdmin queries group accounts by admin address.
-	GroupAccountsByAdmin(context.Context, *QueryGroupAccountsByAdminRequest) (*QueryGroupAccountsByAdminResponse, error)
+	// GroupPoliciesByGroup queries group policies by group id.
+	GroupPoliciesByGroup(context.Context, *QueryGroupPoliciesByGroupRequest) (*QueryGroupPoliciesByGroupResponse, error)
+	// GroupsByAdmin queries group policies by admin address.
+	GroupPoliciesByAdmin(context.Context, *QueryGroupPoliciesByAdminRequest) (*QueryGroupPoliciesByAdminResponse, error)
 	// Proposal queries a proposal based on proposal id.
 	Proposal(context.Context, *QueryProposalRequest) (*QueryProposalResponse, error)
-	// ProposalsByGroupAccount queries proposals based on group account address.
-	ProposalsByGroupAccount(context.Context, *QueryProposalsByGroupAccountRequest) (*QueryProposalsByGroupAccountResponse, error)
+	// ProposalsByGroupPolicy queries proposals based on account address of group policy.
+	ProposalsByGroupPolicy(context.Context, *QueryProposalsByGroupPolicyRequest) (*QueryProposalsByGroupPolicyResponse, error)
 	// VoteByProposalVoter queries a vote by proposal id and voter.
 	VoteByProposalVoter(context.Context, *QueryVoteByProposalVoterRequest) (*QueryVoteByProposalVoterResponse, error)
 	// VotesByProposal queries a vote by proposal.
 	VotesByProposal(context.Context, *QueryVotesByProposalRequest) (*QueryVotesByProposalResponse, error)
 	// VotesByVoter queries a vote by voter.
 	VotesByVoter(context.Context, *QueryVotesByVoterRequest) (*QueryVotesByVoterResponse, error)
+	// GroupsByMember queries groups by member address.
+	GroupsByMember(context.Context, *QueryGroupsByMemberRequest) (*QueryGroupsByMemberResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -1440,8 +1582,8 @@ type UnimplementedQueryServer struct {
 func (*UnimplementedQueryServer) GroupInfo(ctx context.Context, req *QueryGroupInfoRequest) (*QueryGroupInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GroupInfo not implemented")
 }
-func (*UnimplementedQueryServer) GroupAccountInfo(ctx context.Context, req *QueryGroupAccountInfoRequest) (*QueryGroupAccountInfoResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GroupAccountInfo not implemented")
+func (*UnimplementedQueryServer) GroupPolicyInfo(ctx context.Context, req *QueryGroupPolicyInfoRequest) (*QueryGroupPolicyInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GroupPolicyInfo not implemented")
 }
 func (*UnimplementedQueryServer) GroupMembers(ctx context.Context, req *QueryGroupMembersRequest) (*QueryGroupMembersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GroupMembers not implemented")
@@ -1449,17 +1591,17 @@ func (*UnimplementedQueryServer) GroupMembers(ctx context.Context, req *QueryGro
 func (*UnimplementedQueryServer) GroupsByAdmin(ctx context.Context, req *QueryGroupsByAdminRequest) (*QueryGroupsByAdminResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GroupsByAdmin not implemented")
 }
-func (*UnimplementedQueryServer) GroupAccountsByGroup(ctx context.Context, req *QueryGroupAccountsByGroupRequest) (*QueryGroupAccountsByGroupResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GroupAccountsByGroup not implemented")
+func (*UnimplementedQueryServer) GroupPoliciesByGroup(ctx context.Context, req *QueryGroupPoliciesByGroupRequest) (*QueryGroupPoliciesByGroupResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GroupPoliciesByGroup not implemented")
 }
-func (*UnimplementedQueryServer) GroupAccountsByAdmin(ctx context.Context, req *QueryGroupAccountsByAdminRequest) (*QueryGroupAccountsByAdminResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GroupAccountsByAdmin not implemented")
+func (*UnimplementedQueryServer) GroupPoliciesByAdmin(ctx context.Context, req *QueryGroupPoliciesByAdminRequest) (*QueryGroupPoliciesByAdminResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GroupPoliciesByAdmin not implemented")
 }
 func (*UnimplementedQueryServer) Proposal(ctx context.Context, req *QueryProposalRequest) (*QueryProposalResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Proposal not implemented")
 }
-func (*UnimplementedQueryServer) ProposalsByGroupAccount(ctx context.Context, req *QueryProposalsByGroupAccountRequest) (*QueryProposalsByGroupAccountResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ProposalsByGroupAccount not implemented")
+func (*UnimplementedQueryServer) ProposalsByGroupPolicy(ctx context.Context, req *QueryProposalsByGroupPolicyRequest) (*QueryProposalsByGroupPolicyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProposalsByGroupPolicy not implemented")
 }
 func (*UnimplementedQueryServer) VoteByProposalVoter(ctx context.Context, req *QueryVoteByProposalVoterRequest) (*QueryVoteByProposalVoterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VoteByProposalVoter not implemented")
@@ -1469,6 +1611,9 @@ func (*UnimplementedQueryServer) VotesByProposal(ctx context.Context, req *Query
 }
 func (*UnimplementedQueryServer) VotesByVoter(ctx context.Context, req *QueryVotesByVoterRequest) (*QueryVotesByVoterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VotesByVoter not implemented")
+}
+func (*UnimplementedQueryServer) GroupsByMember(ctx context.Context, req *QueryGroupsByMemberRequest) (*QueryGroupsByMemberResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GroupsByMember not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -1493,20 +1638,20 @@ func _Query_GroupInfo_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_GroupAccountInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryGroupAccountInfoRequest)
+func _Query_GroupPolicyInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGroupPolicyInfoRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).GroupAccountInfo(ctx, in)
+		return srv.(QueryServer).GroupPolicyInfo(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Query/GroupAccountInfo",
+		FullMethod: "/cosmos.group.v1beta1.Query/GroupPolicyInfo",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GroupAccountInfo(ctx, req.(*QueryGroupAccountInfoRequest))
+		return srv.(QueryServer).GroupPolicyInfo(ctx, req.(*QueryGroupPolicyInfoRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1547,38 +1692,38 @@ func _Query_GroupsByAdmin_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_GroupAccountsByGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryGroupAccountsByGroupRequest)
+func _Query_GroupPoliciesByGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGroupPoliciesByGroupRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).GroupAccountsByGroup(ctx, in)
+		return srv.(QueryServer).GroupPoliciesByGroup(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Query/GroupAccountsByGroup",
+		FullMethod: "/cosmos.group.v1beta1.Query/GroupPoliciesByGroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GroupAccountsByGroup(ctx, req.(*QueryGroupAccountsByGroupRequest))
+		return srv.(QueryServer).GroupPoliciesByGroup(ctx, req.(*QueryGroupPoliciesByGroupRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_GroupAccountsByAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryGroupAccountsByAdminRequest)
+func _Query_GroupPoliciesByAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGroupPoliciesByAdminRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).GroupAccountsByAdmin(ctx, in)
+		return srv.(QueryServer).GroupPoliciesByAdmin(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Query/GroupAccountsByAdmin",
+		FullMethod: "/cosmos.group.v1beta1.Query/GroupPoliciesByAdmin",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GroupAccountsByAdmin(ctx, req.(*QueryGroupAccountsByAdminRequest))
+		return srv.(QueryServer).GroupPoliciesByAdmin(ctx, req.(*QueryGroupPoliciesByAdminRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1601,20 +1746,20 @@ func _Query_Proposal_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_ProposalsByGroupAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryProposalsByGroupAccountRequest)
+func _Query_ProposalsByGroupPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryProposalsByGroupPolicyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).ProposalsByGroupAccount(ctx, in)
+		return srv.(QueryServer).ProposalsByGroupPolicy(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Query/ProposalsByGroupAccount",
+		FullMethod: "/cosmos.group.v1beta1.Query/ProposalsByGroupPolicy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).ProposalsByGroupAccount(ctx, req.(*QueryProposalsByGroupAccountRequest))
+		return srv.(QueryServer).ProposalsByGroupPolicy(ctx, req.(*QueryProposalsByGroupPolicyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1673,6 +1818,24 @@ func _Query_VotesByVoter_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GroupsByMember_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGroupsByMemberRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GroupsByMember(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.group.v1beta1.Query/GroupsByMember",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GroupsByMember(ctx, req.(*QueryGroupsByMemberRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.group.v1beta1.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -1682,8 +1845,8 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_GroupInfo_Handler,
 		},
 		{
-			MethodName: "GroupAccountInfo",
-			Handler:    _Query_GroupAccountInfo_Handler,
+			MethodName: "GroupPolicyInfo",
+			Handler:    _Query_GroupPolicyInfo_Handler,
 		},
 		{
 			MethodName: "GroupMembers",
@@ -1694,20 +1857,20 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_GroupsByAdmin_Handler,
 		},
 		{
-			MethodName: "GroupAccountsByGroup",
-			Handler:    _Query_GroupAccountsByGroup_Handler,
+			MethodName: "GroupPoliciesByGroup",
+			Handler:    _Query_GroupPoliciesByGroup_Handler,
 		},
 		{
-			MethodName: "GroupAccountsByAdmin",
-			Handler:    _Query_GroupAccountsByAdmin_Handler,
+			MethodName: "GroupPoliciesByAdmin",
+			Handler:    _Query_GroupPoliciesByAdmin_Handler,
 		},
 		{
 			MethodName: "Proposal",
 			Handler:    _Query_Proposal_Handler,
 		},
 		{
-			MethodName: "ProposalsByGroupAccount",
-			Handler:    _Query_ProposalsByGroupAccount_Handler,
+			MethodName: "ProposalsByGroupPolicy",
+			Handler:    _Query_ProposalsByGroupPolicy_Handler,
 		},
 		{
 			MethodName: "VoteByProposalVoter",
@@ -1720,6 +1883,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "VotesByVoter",
 			Handler:    _Query_VotesByVoter_Handler,
+		},
+		{
+			MethodName: "GroupsByMember",
+			Handler:    _Query_GroupsByMember_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1789,7 +1956,7 @@ func (m *QueryGroupInfoResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryGroupAccountInfoRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryGroupPolicyInfoRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1799,12 +1966,12 @@ func (m *QueryGroupAccountInfoRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryGroupAccountInfoRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryGroupPolicyInfoRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryGroupAccountInfoRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryGroupPolicyInfoRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1819,7 +1986,7 @@ func (m *QueryGroupAccountInfoRequest) MarshalToSizedBuffer(dAtA []byte) (int, e
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryGroupAccountInfoResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryGroupPolicyInfoResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1829,12 +1996,12 @@ func (m *QueryGroupAccountInfoResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryGroupAccountInfoResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryGroupPolicyInfoResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryGroupAccountInfoResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryGroupPolicyInfoResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2034,7 +2201,7 @@ func (m *QueryGroupsByAdminResponse) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryGroupAccountsByGroupRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryGroupPoliciesByGroupRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2044,12 +2211,12 @@ func (m *QueryGroupAccountsByGroupRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryGroupAccountsByGroupRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryGroupPoliciesByGroupRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryGroupAccountsByGroupRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryGroupPoliciesByGroupRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2074,7 +2241,7 @@ func (m *QueryGroupAccountsByGroupRequest) MarshalToSizedBuffer(dAtA []byte) (in
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryGroupAccountsByGroupResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryGroupPoliciesByGroupResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2084,12 +2251,12 @@ func (m *QueryGroupAccountsByGroupResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryGroupAccountsByGroupResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryGroupPoliciesByGroupResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryGroupAccountsByGroupResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryGroupPoliciesByGroupResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2106,10 +2273,10 @@ func (m *QueryGroupAccountsByGroupResponse) MarshalToSizedBuffer(dAtA []byte) (i
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.GroupAccounts) > 0 {
-		for iNdEx := len(m.GroupAccounts) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.GroupPolicies) > 0 {
+		for iNdEx := len(m.GroupPolicies) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.GroupAccounts[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.GroupPolicies[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -2123,7 +2290,7 @@ func (m *QueryGroupAccountsByGroupResponse) MarshalToSizedBuffer(dAtA []byte) (i
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryGroupAccountsByAdminRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryGroupPoliciesByAdminRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2133,12 +2300,12 @@ func (m *QueryGroupAccountsByAdminRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryGroupAccountsByAdminRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryGroupPoliciesByAdminRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryGroupAccountsByAdminRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryGroupPoliciesByAdminRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2165,7 +2332,7 @@ func (m *QueryGroupAccountsByAdminRequest) MarshalToSizedBuffer(dAtA []byte) (in
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryGroupAccountsByAdminResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryGroupPoliciesByAdminResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2175,12 +2342,12 @@ func (m *QueryGroupAccountsByAdminResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryGroupAccountsByAdminResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryGroupPoliciesByAdminResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryGroupAccountsByAdminResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryGroupPoliciesByAdminResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2197,10 +2364,10 @@ func (m *QueryGroupAccountsByAdminResponse) MarshalToSizedBuffer(dAtA []byte) (i
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.GroupAccounts) > 0 {
-		for iNdEx := len(m.GroupAccounts) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.GroupPolicies) > 0 {
+		for iNdEx := len(m.GroupPolicies) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.GroupAccounts[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.GroupPolicies[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -2277,7 +2444,7 @@ func (m *QueryProposalResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryProposalsByGroupAccountRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryProposalsByGroupPolicyRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2287,12 +2454,12 @@ func (m *QueryProposalsByGroupAccountRequest) Marshal() (dAtA []byte, err error)
 	return dAtA[:n], nil
 }
 
-func (m *QueryProposalsByGroupAccountRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryProposalsByGroupPolicyRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryProposalsByGroupAccountRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryProposalsByGroupPolicyRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2319,7 +2486,7 @@ func (m *QueryProposalsByGroupAccountRequest) MarshalToSizedBuffer(dAtA []byte) 
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryProposalsByGroupAccountResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryProposalsByGroupPolicyResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2329,12 +2496,12 @@ func (m *QueryProposalsByGroupAccountResponse) Marshal() (dAtA []byte, err error
 	return dAtA[:n], nil
 }
 
-func (m *QueryProposalsByGroupAccountResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryProposalsByGroupPolicyResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryProposalsByGroupAccountResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryProposalsByGroupPolicyResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2618,6 +2785,97 @@ func (m *QueryVotesByVoterResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryGroupsByMemberRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGroupsByMemberRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGroupsByMemberRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGroupsByMemberResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGroupsByMemberResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGroupsByMemberResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Groups) > 0 {
+		for iNdEx := len(m.Groups) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Groups[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -2654,7 +2912,7 @@ func (m *QueryGroupInfoResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryGroupAccountInfoRequest) Size() (n int) {
+func (m *QueryGroupPolicyInfoRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2667,7 +2925,7 @@ func (m *QueryGroupAccountInfoRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryGroupAccountInfoResponse) Size() (n int) {
+func (m *QueryGroupPolicyInfoResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2751,7 +3009,7 @@ func (m *QueryGroupsByAdminResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryGroupAccountsByGroupRequest) Size() (n int) {
+func (m *QueryGroupPoliciesByGroupRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2767,14 +3025,14 @@ func (m *QueryGroupAccountsByGroupRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryGroupAccountsByGroupResponse) Size() (n int) {
+func (m *QueryGroupPoliciesByGroupResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if len(m.GroupAccounts) > 0 {
-		for _, e := range m.GroupAccounts {
+	if len(m.GroupPolicies) > 0 {
+		for _, e := range m.GroupPolicies {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
@@ -2786,7 +3044,7 @@ func (m *QueryGroupAccountsByGroupResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryGroupAccountsByAdminRequest) Size() (n int) {
+func (m *QueryGroupPoliciesByAdminRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2803,14 +3061,14 @@ func (m *QueryGroupAccountsByAdminRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryGroupAccountsByAdminResponse) Size() (n int) {
+func (m *QueryGroupPoliciesByAdminResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if len(m.GroupAccounts) > 0 {
-		for _, e := range m.GroupAccounts {
+	if len(m.GroupPolicies) > 0 {
+		for _, e := range m.GroupPolicies {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
@@ -2847,7 +3105,7 @@ func (m *QueryProposalResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryProposalsByGroupAccountRequest) Size() (n int) {
+func (m *QueryProposalsByGroupPolicyRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2864,7 +3122,7 @@ func (m *QueryProposalsByGroupAccountRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryProposalsByGroupAccountResponse) Size() (n int) {
+func (m *QueryProposalsByGroupPolicyResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2972,6 +3230,42 @@ func (m *QueryVotesByVoterResponse) Size() (n int) {
 	_ = l
 	if len(m.Votes) > 0 {
 		for _, e := range m.Votes {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryGroupsByMemberRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryGroupsByMemberResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Groups) > 0 {
+		for _, e := range m.Groups {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
@@ -3144,7 +3438,7 @@ func (m *QueryGroupInfoResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryGroupAccountInfoRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryGroupPolicyInfoRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3167,10 +3461,10 @@ func (m *QueryGroupAccountInfoRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGroupAccountInfoRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryGroupPolicyInfoRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGroupAccountInfoRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryGroupPolicyInfoRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3226,7 +3520,7 @@ func (m *QueryGroupAccountInfoRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryGroupAccountInfoResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryGroupPolicyInfoResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3249,10 +3543,10 @@ func (m *QueryGroupAccountInfoResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGroupAccountInfoResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryGroupPolicyInfoResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGroupAccountInfoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryGroupPolicyInfoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3285,7 +3579,7 @@ func (m *QueryGroupAccountInfoResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Info == nil {
-				m.Info = &GroupAccountInfo{}
+				m.Info = &GroupPolicyInfo{}
 			}
 			if err := m.Info.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -3775,7 +4069,7 @@ func (m *QueryGroupsByAdminResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryGroupAccountsByGroupRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryGroupPoliciesByGroupRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3798,10 +4092,10 @@ func (m *QueryGroupAccountsByGroupRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGroupAccountsByGroupRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryGroupPoliciesByGroupRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGroupAccountsByGroupRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryGroupPoliciesByGroupRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3880,7 +4174,7 @@ func (m *QueryGroupAccountsByGroupRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryGroupAccountsByGroupResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryGroupPoliciesByGroupResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3903,15 +4197,15 @@ func (m *QueryGroupAccountsByGroupResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGroupAccountsByGroupResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryGroupPoliciesByGroupResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGroupAccountsByGroupResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryGroupPoliciesByGroupResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GroupAccounts", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field GroupPolicies", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -3938,8 +4232,8 @@ func (m *QueryGroupAccountsByGroupResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.GroupAccounts = append(m.GroupAccounts, &GroupAccountInfo{})
-			if err := m.GroupAccounts[len(m.GroupAccounts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.GroupPolicies = append(m.GroupPolicies, &GroupPolicyInfo{})
+			if err := m.GroupPolicies[len(m.GroupPolicies)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -4000,7 +4294,7 @@ func (m *QueryGroupAccountsByGroupResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryGroupAccountsByAdminRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryGroupPoliciesByAdminRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4023,10 +4317,10 @@ func (m *QueryGroupAccountsByAdminRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGroupAccountsByAdminRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryGroupPoliciesByAdminRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGroupAccountsByAdminRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryGroupPoliciesByAdminRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4118,7 +4412,7 @@ func (m *QueryGroupAccountsByAdminRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryGroupAccountsByAdminResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryGroupPoliciesByAdminResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4141,15 +4435,15 @@ func (m *QueryGroupAccountsByAdminResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGroupAccountsByAdminResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryGroupPoliciesByAdminResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGroupAccountsByAdminResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryGroupPoliciesByAdminResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GroupAccounts", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field GroupPolicies", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -4176,8 +4470,8 @@ func (m *QueryGroupAccountsByAdminResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.GroupAccounts = append(m.GroupAccounts, &GroupAccountInfo{})
-			if err := m.GroupAccounts[len(m.GroupAccounts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.GroupPolicies = append(m.GroupPolicies, &GroupPolicyInfo{})
+			if err := m.GroupPolicies[len(m.GroupPolicies)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -4393,7 +4687,7 @@ func (m *QueryProposalResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryProposalsByGroupAccountRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryProposalsByGroupPolicyRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4416,10 +4710,10 @@ func (m *QueryProposalsByGroupAccountRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryProposalsByGroupAccountRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryProposalsByGroupPolicyRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryProposalsByGroupAccountRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryProposalsByGroupPolicyRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4511,7 +4805,7 @@ func (m *QueryProposalsByGroupAccountRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryProposalsByGroupAccountResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryProposalsByGroupPolicyResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4534,10 +4828,10 @@ func (m *QueryProposalsByGroupAccountResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryProposalsByGroupAccountResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryProposalsByGroupPolicyResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryProposalsByGroupAccountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryProposalsByGroupPolicyResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5221,6 +5515,244 @@ func (m *QueryVotesByVoterResponse) Unmarshal(dAtA []byte) error {
 			}
 			m.Votes = append(m.Votes, &Vote{})
 			if err := m.Votes[len(m.Votes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGroupsByMemberRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGroupsByMemberRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGroupsByMemberRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGroupsByMemberResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGroupsByMemberResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGroupsByMemberResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Groups", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Groups = append(m.Groups, &GroupInfo{})
+			if err := m.Groups[len(m.Groups)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

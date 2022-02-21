@@ -10,7 +10,7 @@ import (
 	v040distr "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	v034gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v034"
 	v036gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v036"
-	v040gov "github.com/cosmos/cosmos-sdk/x/gov/types"
+	v040gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	v036params "github.com/cosmos/cosmos-sdk/x/params/migrations/v036"
 	v040params "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	v038upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/migrations/v038"

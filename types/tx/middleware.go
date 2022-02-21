@@ -22,6 +22,19 @@ type ResponseSimulateTx struct {
 	Result  *sdk.Result
 }
 
+// Request is the tx request type used in middlewares.
+// At least one of Tx or TxBytes must be set. If only TxBytes is set, then
+// Tx will be populated by the TxDecoderMiddleware. If only Tx is set, then
+// some middlewares (such as signature verification) will fail.
+//
+// In practice, the middleware stack is called from {Check,Deliver}Tx, which
+// only passes the TxBytes. Then, the TxDecoderMiddleware decodes the bytes
+// into the Tx field.
+type Request struct {
+	Tx      sdk.Tx
+	TxBytes []byte
+}
+
 // Response is the tx response type used in middlewares.
 type Response struct {
 	GasWanted uint64
@@ -32,12 +45,6 @@ type Response struct {
 	MsgResponses []*codectypes.Any
 	Log          string
 	Events       []abci.Event
-}
-
-// Request is the tx request type used in middlewares.
-type Request struct {
-	Tx      sdk.Tx
-	TxBytes []byte
 }
 
 // RequestCheckTx is the additional request type used in middlewares CheckTx

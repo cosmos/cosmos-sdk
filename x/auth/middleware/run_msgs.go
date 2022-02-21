@@ -2,10 +2,7 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"strings"
-
-	"github.com/tendermint/tendermint/crypto/tmhash"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -50,11 +47,6 @@ func (txh runMsgsTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.
 // Handler does not exist for a given message route. Otherwise, a reference to a
 // Result is returned. The caller must not commit state if an error is returned.
 func (txh runMsgsTxHandler) runMsgs(sdkCtx sdk.Context, msgs []sdk.Msg, txBytes []byte) (tx.Response, error) {
-	// Create a new Context based off of the existing Context with a MultiStore branch
-	// in case message processing fails. At this point, the MultiStore
-	// is a branch of a branch.
-	runMsgCtx, msCache := cacheTxContext(sdkCtx, txBytes)
-
 	// Attempt to execute all messages and only update state if all messages pass
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
 	// Result if any single message fails or does not have a registered Handler.
@@ -72,7 +64,7 @@ func (txh runMsgsTxHandler) runMsgs(sdkCtx sdk.Context, msgs []sdk.Msg, txBytes 
 
 		if handler := txh.msgServiceRouter.Handler(msg); handler != nil {
 			// ADR 031 request type routing
-			msgResult, err = handler(runMsgCtx, msg)
+			msgResult, err = handler(sdkCtx, msg)
 			eventMsgName = sdk.MsgTypeURL(msg)
 		} else if legacyMsg, ok := msg.(legacytx.LegacyMsg); ok {
 			// legacy sdk.Msg routing
@@ -116,31 +108,10 @@ func (txh runMsgsTxHandler) runMsgs(sdkCtx sdk.Context, msgs []sdk.Msg, txBytes 
 		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint32(i), msgResult.Log, msgEvents))
 	}
 
-	msCache.Write()
-
 	return tx.Response{
 		// GasInfo will be populated by the Gas middleware.
 		Log:          strings.TrimSpace(msgLogs.String()),
 		Events:       events.ToABCIEvents(),
 		MsgResponses: msgResponses,
 	}, nil
-}
-
-// cacheTxContext returns a new context based off of the provided context with
-// a branched multi-store.
-func cacheTxContext(sdkCtx sdk.Context, txBytes []byte) (sdk.Context, sdk.CacheMultiStore) {
-	ms := sdkCtx.MultiStore()
-	// TODO: https://github.com/cosmos/cosmos-sdk/issues/2824
-	msCache := ms.CacheMultiStore()
-	if msCache.TracingEnabled() {
-		msCache = msCache.SetTracingContext(
-			sdk.TraceContext(
-				map[string]interface{}{
-					"txHash": fmt.Sprintf("%X", tmhash.Sum(txBytes)),
-				},
-			),
-		).(sdk.CacheMultiStore)
-	}
-
-	return sdkCtx.WithMultiStore(msCache), msCache
 }

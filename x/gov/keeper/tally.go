@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -10,30 +10,30 @@ import (
 
 // Tally iterates over the votes and updates the tally of a proposal based on the voting power of the
 // voters
-func (keeper Keeper) Tally(ctx sdk.Context, proposal types.Proposal) (passes bool, burnDeposits bool, tallyResults types.TallyResult) {
-	results := make(map[types.VoteOption]sdk.Dec)
-	results[types.OptionYes] = sdk.ZeroDec()
-	results[types.OptionAbstain] = sdk.ZeroDec()
-	results[types.OptionNo] = sdk.ZeroDec()
-	results[types.OptionNoWithVeto] = sdk.ZeroDec()
+func (keeper Keeper) Tally(ctx sdk.Context, proposal v1beta2.Proposal) (passes bool, burnDeposits bool, tallyResults v1beta2.TallyResult) {
+	results := make(map[v1beta2.VoteOption]sdk.Dec)
+	results[v1beta2.OptionYes] = sdk.ZeroDec()
+	results[v1beta2.OptionAbstain] = sdk.ZeroDec()
+	results[v1beta2.OptionNo] = sdk.ZeroDec()
+	results[v1beta2.OptionNoWithVeto] = sdk.ZeroDec()
 
 	totalVotingPower := sdk.ZeroDec()
-	currValidators := make(map[string]types.ValidatorGovInfo)
+	currValidators := make(map[string]v1beta2.ValidatorGovInfo)
 
 	// fetch all the bonded validators, insert them into currValidators
 	keeper.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
-		currValidators[validator.GetOperator().String()] = types.NewValidatorGovInfo(
+		currValidators[validator.GetOperator().String()] = v1beta2.NewValidatorGovInfo(
 			validator.GetOperator(),
 			validator.GetBondedTokens(),
 			validator.GetDelegatorShares(),
 			sdk.ZeroDec(),
-			types.WeightedVoteOptions{},
+			v1beta2.WeightedVoteOptions{},
 		)
 
 		return false
 	})
 
-	keeper.IterateVotes(ctx, proposal.ProposalId, func(vote types.Vote) bool {
+	keeper.IterateVotes(ctx, proposal.Id, func(vote v1beta2.Vote) bool {
 		// if validator, just record it in the map
 		voter, err := sdk.AccAddressFromBech32(vote.Voter)
 
@@ -61,7 +61,8 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal types.Proposal) (passes boo
 				votingPower := delegation.GetShares().MulInt(val.BondedTokens).Quo(val.DelegatorShares)
 
 				for _, option := range vote.Options {
-					subPower := votingPower.Mul(option.Weight)
+					weight, _ := sdk.NewDecFromStr(option.Weight)
+					subPower := votingPower.Mul(weight)
 					results[option.Option] = results[option.Option].Add(subPower)
 				}
 				totalVotingPower = totalVotingPower.Add(votingPower)
@@ -84,14 +85,15 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal types.Proposal) (passes boo
 		votingPower := sharesAfterDeductions.MulInt(val.BondedTokens).Quo(val.DelegatorShares)
 
 		for _, option := range val.Vote {
-			subPower := votingPower.Mul(option.Weight)
+			weight, _ := sdk.NewDecFromStr(option.Weight)
+			subPower := votingPower.Mul(weight)
 			results[option.Option] = results[option.Option].Add(subPower)
 		}
 		totalVotingPower = totalVotingPower.Add(votingPower)
 	}
 
 	tallyParams := keeper.GetTallyParams(ctx)
-	tallyResults = types.NewTallyResultFromMap(results)
+	tallyResults = v1beta2.NewTallyResultFromMap(results)
 
 	// TODO: Upgrade the spec to cover all of these cases & remove pseudocode.
 	// If there is no staked coins, the proposal fails
@@ -101,22 +103,25 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal types.Proposal) (passes boo
 
 	// If there is not enough quorum of votes, the proposal fails
 	percentVoting := totalVotingPower.Quo(keeper.sk.TotalBondedTokens(ctx).ToDec())
-	if percentVoting.LT(tallyParams.Quorum) {
-		return false, true, tallyResults
+	quorum, _ := sdk.NewDecFromStr(tallyParams.Quorum)
+	if percentVoting.LT(quorum) {
+		return false, false, tallyResults
 	}
 
 	// If no one votes (everyone abstains), proposal fails
-	if totalVotingPower.Sub(results[types.OptionAbstain]).Equal(sdk.ZeroDec()) {
+	if totalVotingPower.Sub(results[v1beta2.OptionAbstain]).Equal(sdk.ZeroDec()) {
 		return false, false, tallyResults
 	}
 
 	// If more than 1/3 of voters veto, proposal fails
-	if results[types.OptionNoWithVeto].Quo(totalVotingPower).GT(tallyParams.VetoThreshold) {
+	vetoThreshold, _ := sdk.NewDecFromStr(tallyParams.VetoThreshold)
+	if results[v1beta2.OptionNoWithVeto].Quo(totalVotingPower).GT(vetoThreshold) {
 		return false, true, tallyResults
 	}
 
 	// If more than 1/2 of non-abstaining voters vote Yes, proposal passes
-	if results[types.OptionYes].Quo(totalVotingPower.Sub(results[types.OptionAbstain])).GT(tallyParams.Threshold) {
+	threshold, _ := sdk.NewDecFromStr(tallyParams.Threshold)
+	if results[v1beta2.OptionYes].Quo(totalVotingPower.Sub(results[v1beta2.OptionAbstain])).GT(threshold) {
 		return true, false, tallyResults
 	}
 

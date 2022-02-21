@@ -16,7 +16,7 @@ func (s *MWTestSuite) TestValidateBasic() {
 	ctx := s.SetupTest(true) // setup
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
-	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.ValidateBasicMiddleware)
+	txHandler := middleware.ComposeMiddlewares(noopTxHandler, middleware.ValidateBasicMiddleware)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -54,7 +54,7 @@ func (s *MWTestSuite) TestValidateBasic() {
 func (s *MWTestSuite) TestValidateMemo() {
 	ctx := s.SetupTest(true) // setup
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
-	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.ValidateMemoMiddleware(s.app.AccountKeeper))
+	txHandler := middleware.ComposeMiddlewares(noopTxHandler, middleware.ValidateMemoMiddleware(s.app.AccountKeeper))
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -90,7 +90,7 @@ func (s *MWTestSuite) TestConsumeGasForTxSize() {
 	ctx := s.SetupTest(true) // setup
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
-	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.ConsumeTxSizeGasMiddleware(s.app.AccountKeeper))
+	txHandler := middleware.ComposeMiddlewares(noopTxHandler, middleware.ConsumeTxSizeGasMiddleware(s.app.AccountKeeper))
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -174,7 +174,7 @@ func (s *MWTestSuite) TestConsumeGasForTxSize() {
 func (s *MWTestSuite) TestTxHeightTimeoutMiddleware() {
 	ctx := s.SetupTest(true)
 
-	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.TxTimeoutHeightMiddleware)
+	txHandler := middleware.ComposeMiddlewares(noopTxHandler, middleware.TxTimeoutHeightMiddleware)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()

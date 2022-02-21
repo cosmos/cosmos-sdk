@@ -23,6 +23,7 @@ import (
 func testTxHandler(options middleware.TxHandlerOptions) tx.Handler {
 	return middleware.ComposeMiddlewares(
 		middleware.NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
+		middleware.NewTxDecoderMiddleware(options.TxDecoder),
 		middleware.GasTxMiddleware,
 		middleware.RecoveryTxMiddleware,
 		middleware.NewIndexEventsTxMiddleware(options.IndexEvents),
@@ -42,7 +43,7 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	capKeyMainStore := sdk.NewKVStoreKey("main")
 
 	// Create BaseApp.
-	baseApp := bam.NewBaseApp("kvstore", logger, db, decodeTx)
+	baseApp := bam.NewBaseApp("kvstore", logger, db)
 
 	// Set mounts for BaseApp's MultiStore.
 	baseApp.MountStores(capKeyMainStore)
@@ -59,6 +60,7 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 		middleware.TxHandlerOptions{
 			LegacyRouter:     legacyRouter,
 			MsgServiceRouter: middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry),
+			TxDecoder:        decodeTx,
 		},
 	)
 	baseApp.SetTxHandler(txHandler)

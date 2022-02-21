@@ -8,7 +8,7 @@ import "google/protobuf/any.proto";
 import "google/protobuf/duration.proto";
 import "cosmos_proto/cosmos.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1";
 
 option (gogoproto.goproto_stringer_all) = false;
 option (gogoproto.stringer_all)         = false;
@@ -69,9 +69,12 @@ message Deposit {
 message Proposal {
   option (gogoproto.equal) = true;
 
-  uint64                    proposal_id           = 1 [(gogoproto.jsontag) = "id"];
+  uint64                    proposal_id           = 1;
   google.protobuf.Any       content               = 2 [(cosmos_proto.accepts_interface) = "Content"];
   ProposalStatus            status                = 3;
+  // final_tally_result is the final tally result of the proposal. When
+  // querying a proposal via gRPC, this field is not populated until the
+  // proposal's voting period has ended.
   TallyResult               final_tally_result    = 4 [(gogoproto.nullable) = false];
   google.protobuf.Timestamp submit_time           = 5 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
   google.protobuf.Timestamp deposit_end_time      = 6 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
@@ -136,7 +139,7 @@ message Vote {
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.equal)            = false;
 
-  uint64 proposal_id = 1;
+  uint64 proposal_id = 1 [(gogoproto.jsontag) = "id"];
   string voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // Deprecated: Prefer to use `options` instead. This field is set in queries
   // if and only if `len(options) == 1` and that option has weight 1. In all
@@ -168,7 +171,11 @@ message DepositParams {
 message VotingParams {
   //  Length of the voting period.
   google.protobuf.Duration voting_period = 1
-      [(gogoproto.nullable) = false, (gogoproto.stdduration) = true, (gogoproto.jsontag) = "voting_period,omitempty"];
+      [
+        (gogoproto.nullable)    = false,
+        (gogoproto.stdduration) = true,
+        (gogoproto.jsontag)     = "voting_period,omitempty"
+      ];
 }
 
 // TallyParams defines the params for tallying votes on governance proposals.

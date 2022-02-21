@@ -52,7 +52,6 @@ type BaseApp struct { // nolint: maligned
 	queryRouter       sdk.QueryRouter      // router for redirecting query calls
 	grpcQueryRouter   *GRPCQueryRouter     // router for redirecting gRPC query calls
 	interfaceRegistry types.InterfaceRegistry
-	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 
 	txHandler      tx.Handler       // txHandler for {Deliver,Check}Tx and simulations
 	initChainer    sdk.InitChainer  // initialize state with validators and state blob
@@ -137,7 +136,7 @@ type BaseApp struct { // nolint: maligned
 //
 // NOTE: The db is used to store the version number for now.
 func NewBaseApp(
-	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
+	name string, logger log.Logger, db dbm.DB, options ...func(*BaseApp),
 ) *BaseApp {
 	app := &BaseApp{
 		logger:          logger,
@@ -147,7 +146,6 @@ func NewBaseApp(
 		storeLoader:     DefaultStoreLoader,
 		queryRouter:     NewQueryRouter(),
 		grpcQueryRouter: NewGRPCQueryRouter(),
-		txDecoder:       txDecoder,
 		fauxMerkleMode:  false,
 	}
 
@@ -294,15 +292,8 @@ func (app *BaseApp) init() error {
 
 	// make sure the snapshot interval is a multiple of the pruning KeepEvery interval
 	if app.snapshotManager != nil && app.snapshotInterval > 0 {
-		rms, ok := app.cms.(*rootmulti.Store)
-		if !ok {
+		if _, ok := app.cms.(*rootmulti.Store); !ok {
 			return errors.New("state sync snapshots require a rootmulti store")
-		}
-		pruningOpts := rms.GetPruning()
-		if pruningOpts.KeepEvery > 0 && app.snapshotInterval%pruningOpts.KeepEvery != 0 {
-			return fmt.Errorf(
-				"state sync snapshot interval %v must be a multiple of pruning keep every interval %v",
-				app.snapshotInterval, pruningOpts.KeepEvery)
 		}
 	}
 

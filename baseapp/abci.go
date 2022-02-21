@@ -8,7 +8,6 @@ import (
 	"sort"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -18,7 +17,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -137,7 +135,6 @@ func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
 
 // BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
-	defer telemetry.MeasureSince(time.Now(), "abci", "begin_block")
 
 	if app.cms.TracingEnabled() {
 		app.cms.SetTracingContext(sdk.TraceContext(
@@ -174,7 +171,8 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	app.deliverState.ctx = app.deliverState.ctx.
 		WithBlockGasMeter(gasMeter).
-		WithHeaderHash(req.Hash)
+		WithHeaderHash(req.Hash).
+		WithConsensusParams(app.GetConsensusParams(app.deliverState.ctx))
 
 	// we also set block gas meter to checkState in case the application needs to
 	// verify gas consumption during (Re)CheckTx
@@ -203,7 +201,6 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 // EndBlock implements the ABCI interface.
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
-	defer telemetry.MeasureSince(time.Now(), "abci", "end_block")
 
 	if app.deliverState.ms.TracingEnabled() {
 		app.deliverState.ms = app.deliverState.ms.SetTracingContext(nil).(sdk.CacheMultiStore)
@@ -235,7 +232,6 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 // will contain releveant error information. Regardless of tx execution outcome,
 // the ResponseCheckTx will contain relevant gas execution context.
 func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
-	defer telemetry.MeasureSince(time.Now(), "abci", "check_tx")
 
 	var mode runTxMode
 
@@ -250,13 +246,8 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 		panic(fmt.Sprintf("unknown RequestCheckTx type: %s", req.Type))
 	}
 
-	reqTx, err := app.txDecoder(req.Tx)
-	if err != nil {
-		return sdkerrors.ResponseCheckTx(err, 0, 0, app.trace)
-	}
-
 	ctx := app.getContextForTx(mode, req.Tx)
-	res, checkRes, err := app.txHandler.CheckTx(ctx, tx.Request{Tx: reqTx, TxBytes: req.Tx}, tx.RequestCheckTx{Type: req.Type})
+	res, checkRes, err := app.txHandler.CheckTx(ctx, tx.Request{TxBytes: req.Tx}, tx.RequestCheckTx{Type: req.Type})
 	if err != nil {
 		return sdkerrors.ResponseCheckTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
 	}
@@ -275,7 +266,6 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 // Regardless of tx execution outcome, the ResponseDeliverTx will contain relevant
 // gas execution context.
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
-	defer telemetry.MeasureSince(time.Now(), "abci", "deliver_tx")
 
 	var abciRes abci.ResponseDeliverTx
 	defer func() {
@@ -285,14 +275,9 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 			}
 		}
 	}()
-	reqTx, err := app.txDecoder(req.Tx)
-	if err != nil {
-		abciRes = sdkerrors.ResponseDeliverTx(err, 0, 0, app.trace)
-		return abciRes
-	}
 
 	ctx := app.getContextForTx(runTxModeDeliver, req.Tx)
-	res, err := app.txHandler.DeliverTx(ctx, tx.Request{Tx: reqTx, TxBytes: req.Tx})
+	res, err := app.txHandler.DeliverTx(ctx, tx.Request{TxBytes: req.Tx})
 	if err != nil {
 		abciRes = sdkerrors.ResponseDeliverTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
 		return abciRes
@@ -315,7 +300,6 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 // against that height and gracefully halt if it matches the latest committed
 // height.
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
-	defer telemetry.MeasureSince(time.Now(), "abci", "commit")
 
 	header := app.deliverState.ctx.BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
@@ -419,7 +403,6 @@ func (app *BaseApp) snapshot(height int64) {
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
 // implements Queryable.
 func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
-	defer telemetry.MeasureSince(time.Now(), "abci", "query")
 
 	// Add panic recovery for all queries.
 	// ref: https://github.com/cosmos/cosmos-sdk/pull/8039
@@ -666,7 +649,7 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 	// branch the commit-multistore for safety
 	ctx := sdk.NewContext(
 		cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger,
-	).WithMinGasPrices(app.minGasPrices)
+	).WithMinGasPrices(app.minGasPrices).WithBlockHeight(height)
 
 	return ctx, nil
 }
@@ -724,22 +707,6 @@ func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
 	cp := app.GetConsensusParams(app.deliverState.ctx)
 	if cp != nil && cp.Evidence != nil && cp.Evidence.MaxAgeNumBlocks > 0 {
 		retentionHeight = commitHeight - cp.Evidence.MaxAgeNumBlocks
-	}
-
-	// Define the state pruning offset, i.e. the block offset at which the
-	// underlying logical database is persisted to disk.
-	statePruningOffset := int64(app.cms.GetPruning().KeepEvery)
-	if statePruningOffset > 0 {
-		if commitHeight > statePruningOffset {
-			v := commitHeight - (commitHeight % statePruningOffset)
-			retentionHeight = minNonZero(retentionHeight, v)
-		} else {
-			// Hitting this case means we have persisting enabled but have yet to reach
-			// a height in which we persist state, so we return zero regardless of other
-			// conditions. Otherwise, we could end up pruning blocks without having
-			// any state committed to disk.
-			return 0
-		}
 	}
 
 	if app.snapshotInterval > 0 && app.snapshotKeepRecent > 0 {

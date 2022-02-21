@@ -3,6 +3,8 @@ RUN apk add build-base git linux-headers
 WORKDIR /work
 COPY go.mod go.sum /work/
 COPY db/go.mod db/go.sum /work/db/
+COPY errors/go.mod errors/go.sum /work/errors/
+
 RUN go mod download
 COPY ./ /work
 RUN LEDGER_ENABLED=false make clean build

@@ -130,7 +130,13 @@ func TestBuilderWithAux(t *testing.T) {
 	})
 	signBz, err = encCfg.TxConfig.SignModeHandler().GetSignBytes(
 		signing.SignMode_SIGN_MODE_DIRECT,
-		authsigning.SignerData{Address: feepayerAddr.String(), ChainID: chainID, AccountNumber: 11, Sequence: 15, SignerIndex: 1},
+		authsigning.SignerData{
+			Address:       feepayerAddr.String(),
+			ChainID:       chainID,
+			AccountNumber: 11,
+			Sequence:      15,
+			PubKey:        feepayerPk,
+		},
 		w.GetTx(),
 	)
 	require.NoError(t, err)

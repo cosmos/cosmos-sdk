@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -27,8 +28,11 @@ type Factory struct {
 	timeoutHeight      uint64
 	gasAdjustment      float64
 	chainID            string
+	offline            bool
+	generateOnly       bool
 	memo               string
 	fees               sdk.Coins
+	tip                *tx.Tip
 	gasPrices          sdk.DecCoins
 	signMode           signing.SignMode
 	simulateAndExecute bool
@@ -44,6 +48,8 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 		signMode = signing.SignMode_SIGN_MODE_DIRECT
 	case flags.SignModeLegacyAminoJSON:
 		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+	case flags.SignModeDirectAux:
+		signMode = signing.SignMode_SIGN_MODE_DIRECT_AUX
 	}
 
 	accNum, _ := flagSet.GetUint64(flags.FlagAccountNumber)
@@ -60,6 +66,8 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 		accountRetriever:   clientCtx.AccountRetriever,
 		keybase:            clientCtx.Keyring,
 		chainID:            clientCtx.ChainID,
+		offline:            clientCtx.Offline,
+		generateOnly:       clientCtx.GenerateOnly,
 		gas:                gasSetting.Gas,
 		simulateAndExecute: gasSetting.Simulate,
 		accountNumber:      accNum,
@@ -72,6 +80,10 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 
 	feesStr, _ := flagSet.GetString(flags.FlagFees)
 	f = f.WithFees(feesStr)
+
+	tipsStr, _ := flagSet.GetString(flags.FlagTip)
+	tipper, _ := flagSet.GetString(flags.FlagTipper)
+	f = f.WithTips(tipsStr, tipper)
 
 	gasPricesStr, _ := flagSet.GetString(flags.FlagGasPrices)
 	f = f.WithGasPrices(gasPricesStr)
@@ -127,6 +139,20 @@ func (f Factory) WithFees(fees string) Factory {
 	}
 
 	f.fees = parsedFees
+	return f
+}
+
+// WithTips returns a copy of the Factory with an updated tip.
+func (f Factory) WithTips(tip string, tipper string) Factory {
+	parsedTips, err := sdk.ParseCoinsNormalized(tip)
+	if err != nil {
+		panic(err)
+	}
+
+	f.tip = &tx.Tip{
+		Tipper: tipper,
+		Amount: parsedTips,
+	}
 	return f
 }
 
@@ -198,7 +224,11 @@ func (f Factory) WithTimeoutHeight(height uint64) Factory {
 // BuildUnsignedTx builds a transaction to be signed given a set of messages.
 // Once created, the fee, memo, and messages are set.
 func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
-	if f.chainID == "" {
+	if f.offline && f.generateOnly {
+		if f.chainID != "" {
+			return nil, fmt.Errorf("chain ID cannot be used when offline and generate-only flags are set")
+		}
+	} else if f.chainID == "" {
 		return nil, fmt.Errorf("chain ID required but not specified")
 	}
 
@@ -254,12 +284,12 @@ func (f Factory) PrintUnsignedTx(clientCtx client.Context, msgs ...sdk.Msg) erro
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n", GasEstimateResponse{GasEstimate: f.Gas()})
 	}
 
-	tx, err := f.BuildUnsignedTx(msgs...)
+	unsignedTx, err := f.BuildUnsignedTx(msgs...)
 	if err != nil {
 		return err
 	}
 
-	json, err := clientCtx.TxConfig.TxJSONEncoder()(tx.GetTx())
+	json, err := clientCtx.TxConfig.TxJSONEncoder()(unsignedTx.GetTx())
 	if err != nil {
 		return err
 	}

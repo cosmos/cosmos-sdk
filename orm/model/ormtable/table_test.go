@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/orm/types/kv"
+
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -21,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
-	"github.com/cosmos/cosmos-sdk/orm/model/kv"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
@@ -80,7 +81,7 @@ func checkEncodeDecodeEntries(t *testing.T, table ormtable.Table, store kv.Reado
 
 func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backend) {
 	ctx := ormtable.WrapContextDefault(backend)
-	store, err := testpb.NewExampleTableStore(table)
+	store, err := testpb.NewExampleTableTable(table)
 
 	// let's create 10 data items we'll use later and give them indexes
 	data := []*testpb.ExampleTable{
@@ -216,6 +217,19 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	assert.NilError(t, err)
 	assertIteratorItems(it, 0, 1, 2, 3)
 	res := it.PageResponse()
+	assert.Assert(t, res != nil)
+	assert.Equal(t, uint64(10), res.Total)
+	assert.Assert(t, res.NextKey != nil)
+
+	// let's use a default limit
+	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{},
+		ormlist.DefaultLimit(4),
+		ormlist.Paginate(&queryv1beta1.PageRequest{
+			CountTotal: true,
+		}))
+	assert.NilError(t, err)
+	assertIteratorItems(it, 0, 1, 2, 3)
+	res = it.PageResponse()
 	assert.Assert(t, res != nil)
 	assert.Equal(t, uint64(10), res.Total)
 	assert.Assert(t, res.NextKey != nil)
@@ -395,6 +409,13 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
 	assertIteratorItems(it, 0, 2, 6, 10)
+
+	// Let's delete something directly
+	assert.NilError(t, store.Delete(ctx, data[0]))
+	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
+	assert.NilError(t, err)
+	assertIteratorItems(it, 2, 6, 10)
+
 }
 
 func TestRandomTableData(t *testing.T) {

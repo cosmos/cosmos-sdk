@@ -9,14 +9,12 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var (
-	_ cdctypes.UnpackInterfacesMessage = &Grant{}
-)
-
-// NewGrant returns new Grant
-// NOTE: a new grant is considered invalid if the expiration time is after the
-// "current" time - you should assure that before calling this function.
-func NewGrant(a Authorization, expiration time.Time) (Grant, error) {
+// NewGrant returns new Grant. It returns an error if the expiration is before
+// the current block time, which is passed into the `blockTime` arg.
+func NewGrant(blockTime time.Time, a Authorization, expiration time.Time) (Grant, error) {
+	if !expiration.After(blockTime) {
+		return Grant{}, sdkerrors.ErrInvalidRequest.Wrapf("expiration must be after the current block time (%v), got %v", blockTime.Format(time.RFC3339), expiration.Format(time.RFC3339))
+	}
 	g := Grant{
 		Expiration: expiration,
 	}
@@ -34,6 +32,10 @@ func NewGrant(a Authorization, expiration time.Time) (Grant, error) {
 	return g, nil
 }
 
+var (
+	_ cdctypes.UnpackInterfacesMessage = &Grant{}
+)
+
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (g Grant) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 	var authorization Authorization
@@ -41,15 +43,15 @@ func (g Grant) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 }
 
 // GetAuthorization returns the cached value from the Grant.Authorization if present.
-func (g Grant) GetAuthorization() Authorization {
+func (g Grant) GetAuthorization() (Authorization, error) {
 	if g.Authorization == nil {
-		return nil
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "authorization is nil")
 	}
 	a, ok := g.Authorization.GetCachedValue().(Authorization)
 	if !ok {
-		return nil
+		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (Authorization)(nil), g.Authorization.GetCachedValue())
 	}
-	return a
+	return a, nil
 }
 
 func (g Grant) ValidateBasic() error {

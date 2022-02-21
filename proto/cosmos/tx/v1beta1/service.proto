@@ -4,10 +4,8 @@ package cosmos.tx.v1beta1;
 import "google/api/annotations.proto";
 import "cosmos/base/abci/v1beta1/abci.proto";
 import "cosmos/tx/v1beta1/tx.proto";
-import "gogoproto/gogo.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 
-option (gogoproto.goproto_registration) = true;
 option go_package                       = "github.com/cosmos/cosmos-sdk/types/tx";
 
 // Service defines a gRPC service for interacting with transactions.

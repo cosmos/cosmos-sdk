@@ -260,8 +260,8 @@ github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE
 github.com/coinbase/rosetta-sdk-go v0.7.2 h1:uCNrASIyt7rV9bA3gzPG3JDlxVP5v/zLgi01GWngncM=
 github.com/coinbase/rosetta-sdk-go v0.7.2/go.mod h1:wk9dvjZFSZiWSNkFuj3dMleTA1adLFotg5y71PhqKB4=
 github.com/confio/ics23/go v0.6.6/go.mod h1:E45NqnlpxGnpfTWL/xauN7MRwEE28T4Dd4uraToOaKg=
-github.com/confio/ics23/go v0.6.7-0.20220201201850-606d5105384e h1:GhCdFUgGIg9MC3vigJIhubUKE4VAYW6ZyEapsQ3HR6E=
-github.com/confio/ics23/go v0.6.7-0.20220201201850-606d5105384e/go.mod h1:E45NqnlpxGnpfTWL/xauN7MRwEE28T4Dd4uraToOaKg=
+github.com/confio/ics23/go v0.7.0-rc h1:cH2I3xkPE6oD4tP5pmZDAfYq8V7VeXCr98X1MpARTaI=
+github.com/confio/ics23/go v0.7.0-rc/go.mod h1:E45NqnlpxGnpfTWL/xauN7MRwEE28T4Dd4uraToOaKg=
 github.com/consensys/bavard v0.1.8-0.20210406032232-f3452dc9b572/go.mod h1:Bpd0/3mZuaj6Sj+PqrmIquiOKy397AKGThQPaGzNXAQ=
 github.com/consensys/gnark-crypto v0.4.1-0.20210426202927-39ac3d4b3f1f/go.mod h1:815PAHg3wvysy0SyIqanF8gZ0Y1wjk/hrDHD/iT88+Q=
 github.com/containerd/console v1.0.2/go.mod h1:ytZPjGgY2oeTkAONYafi2kSj0aYggsf8acV1PGKCbzQ=

@@ -9,7 +9,7 @@ require (
 	github.com/btcsuite/btcd v0.22.0-beta
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/coinbase/rosetta-sdk-go v0.7.2
-	github.com/confio/ics23/go v0.6.7-0.20220201201850-606d5105384e
+	github.com/confio/ics23/go v0.7.0-rc
 	github.com/cosmos/btcutil v1.0.4
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
 	github.com/cosmos/cosmos-sdk/api v0.1.0-alpha4

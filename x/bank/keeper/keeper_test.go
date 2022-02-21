@@ -1170,7 +1170,7 @@ func (suite *IntegrationTestSuite) TestMintCoinRestrictions() {
 
 	suite.app.AccountKeeper = authkeeper.NewAccountKeeper(
 		suite.app.AppCodec(), suite.app.GetKey(authtypes.StoreKey), suite.app.GetSubspace(authtypes.ModuleName),
-		authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
+		authtypes.ProtoBaseAccount, maccPerms,
 	)
 	suite.app.AccountKeeper.SetModuleAccount(suite.ctx, multiPermAcc)
 

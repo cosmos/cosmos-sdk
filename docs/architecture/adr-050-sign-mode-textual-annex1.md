@@ -14,27 +14,28 @@ This Annex describes value renderers, which are used for displaying values in a 
 
 ## Value Renderers
 
-Value Renderers describe how values of different types should be automatically rendered.
+Value Renderers describe how values of different Protobuf types should be automatically rendered. Value renderers can be formalized as a set of bijective functions `func renderT(value T) string`, where `T` is one of the below Protobuf types on which this spec is defined.
 
-### `number`
+### Protobuf `number`
 
-- Applies to `sdk.Dec`, `sdk.Int`, and other numeric types (`uint64`, etc.)
-- Formatting with `,`s for every three integral digits
-- Ex:
-  `1000` -> `1,000`
-  `1000000.00` -> `1,000,000.00`
+- Applies to numeric integer types (`uint64`, etc.) and their casted types (e.g. in Golang: `sdk.Dec`, `sdk.Int`).
+- Formatting with `'`s for every three integral digits.
+- Usage of `.` to denote the decimal delimitier.
 
-TODO consider `'` as separator?
+### Examples
+
+- sdk.Int, integers: `1000` -> `1'000`
+- sdk.Dec; `1000000.00` -> `1'000'000.00`
 
 ### `coin`
 
-- Applies to `Coin`
-- Denoms are converted to `display` denoms using `Metadata` (if available)
+- Applies to `cosmos.base.v1beta1.Coin`.
+- Denoms are converted to `display` denoms using `Metadata` (if available). **This requires a state query**.
 - Amounts are converted to `display` denom amounts and rendered as `number`s above
 - One space between the denom and amount
 - In the future, IBC denoms could maybe be converted to DID/IIDs, if we can find a robust way for doing this (ex. `cosmos:hub:atom`)
 - Ex:
-  - `1000000000uatom` -> `1,000 atom`
+  - `1000000000uatom` -> `1'000 atom`
 
 ### `type_url`
 
@@ -54,11 +55,11 @@ message MsgSend {
   - `cosmos.bank.v1beta1.MsgSend` -> `bank send coins`
   - `cosmos.gov.v1beta1.MsgVote` -> `governance vote`
 
-### Arrays
+### `repeated`
 
 TODO
 
-### Structs
+### `message`
 
 TODO
 

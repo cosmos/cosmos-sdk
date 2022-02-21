@@ -1,8 +1,9 @@
-# ADR 049: SIGN_MODE_TEXTUAL
+# ADR 050: SIGN_MODE_TEXTUAL
 
 ## Changelog
 
-- Dec 06, 2021: Initial Draft
+- Dec 06, 2021: Initial Draft.
+- Feb 07, 2022: Draft read and concept-ACKed by the Ledget team.
 
 ## Status
 
@@ -426,3 +427,4 @@ Later, this section can optionally list ideas or improvements the author or revi
 - Initial discussion: https://github.com/cosmos/cosmos-sdk/issues/6513
 - Living document used in the working group: https://hackmd.io/fsZAO-TfT0CKmLDtfMcKeA?both
 - Working group meeting notes: https://hackmd.io/7RkGfv_rQAaZzEigUYhcXw
+- Ethereum's "Described Transactions" https://github.com/ethereum/EIPs/pull/4430

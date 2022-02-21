@@ -615,12 +615,6 @@ github.com/openzipkin/zipkin-go v0.2.1/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnh
 github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
-github.com/osmosis-labs/iavl v0.17.3-fast.1.0.20220207021926-5f889f6b44d5 h1:Yxj5CB5vnE2BSWbfWlDFzmyccDQmaFVGTms5RlD2Rgo=
-github.com/osmosis-labs/iavl v0.17.3-fast.1.0.20220207021926-5f889f6b44d5/go.mod h1:lJEOIlsd3sVO0JDyXWIXa9/Ur5FBscP26zJx0KxHjto=
-github.com/osmosis-labs/iavl v0.17.3-fast.4 h1:P6872Aq9Q+X2nCQFMpUb+VCP0rNYZPW5OKa4tTnzR+A=
-github.com/osmosis-labs/iavl v0.17.3-fast.4/go.mod h1:lJEOIlsd3sVO0JDyXWIXa9/Ur5FBscP26zJx0KxHjto=
-github.com/osmosis-labs/iavl v0.17.3-osmo-v1 h1:orHUut98Miu2+bsFiNZJ29B3ogrbiBbQpti94L2w3Z4=
-github.com/osmosis-labs/iavl v0.17.3-osmo-v1/go.mod h1:lJEOIlsd3sVO0JDyXWIXa9/Ur5FBscP26zJx0KxHjto=
 github.com/osmosis-labs/iavl v0.17.3-osmo-v3 h1:q2Qv3+DK52w5b68I96VApHI05jBu7HeQK/YDttKh/jY=
 github.com/osmosis-labs/iavl v0.17.3-osmo-v3/go.mod h1:lJEOIlsd3sVO0JDyXWIXa9/Ur5FBscP26zJx0KxHjto=
 github.com/osmosis-labs/tm-db v0.6.5-0.20210911033928-ba9154613417 h1:otchJDd2SjFWfs7Tse3ULblGcVWqMJ50BE02XCaqXOo=

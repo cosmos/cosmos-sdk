@@ -79,7 +79,7 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 // TotalSupply implements the Query/TotalSupply gRPC method
 func (k BaseKeeper) TotalSupply(ctx context.Context, req *types.QueryTotalSupplyRequest) (*types.QueryTotalSupplyResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	totalSupply, pageRes, err := k.GetPaginatedTotalSupply(sdkCtx, req.Pagination)
+	totalSupply, pageRes, err := k.GetPaginatedTotalSupplyWithOffsets(sdkCtx, req.Pagination)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -98,9 +98,36 @@ func (k BaseKeeper) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest)
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	supply := k.GetSupply(ctx, req.Denom)
+	supply := k.GetSupplyWithOffset(ctx, req.Denom)
 
 	return &types.QuerySupplyOfResponse{Amount: sdk.NewCoin(req.Denom, supply.Amount)}, nil
+}
+
+// TotalSupply implements the Query/TotalSupplyWithoutOffset gRPC method
+func (k BaseKeeper) TotalSupplyWithoutOffset(ctx context.Context, req *types.QueryTotalSupplyWithoutOffsetRequest) (*types.QueryTotalSupplyWithoutOffsetResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	totalSupply, pageRes, err := k.GetPaginatedTotalSupply(sdkCtx, req.Pagination)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryTotalSupplyWithoutOffsetResponse{Supply: totalSupply, Pagination: pageRes}, nil
+}
+
+// SupplyOf implements the Query/SupplyOf gRPC method
+func (k BaseKeeper) SupplyOfWithoutOffset(c context.Context, req *types.QuerySupplyOfWithoutOffsetRequest) (*types.QuerySupplyOfWithoutOffsetResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.Denom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	supply := k.GetSupply(ctx, req.Denom)
+
+	return &types.QuerySupplyOfWithoutOffsetResponse{Amount: sdk.NewCoin(req.Denom, supply.Amount)}, nil
 }
 
 // Params implements the gRPC service handler for querying x/bank parameters.

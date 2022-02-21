@@ -31,6 +31,16 @@ service Query {
     option (google.api.http).get = "/cosmos/bank/v1beta1/supply/{denom}";
   }
 
+  // TotalSupplyWithoutOffset queries the total supply of all coins.
+  rpc TotalSupplyWithoutOffset(QueryTotalSupplyWithoutOffsetRequest) returns (QueryTotalSupplyWithoutOffsetResponse) {
+    option (google.api.http).get = "/cosmos/bank/v1beta1/supply_without_offset";
+  }
+
+  // SupplyOf queries the supply of a single coin.
+  rpc SupplyOfWithoutOffset(QuerySupplyOfWithoutOffsetRequest) returns (QuerySupplyOfWithoutOffsetResponse) {
+    option (google.api.http).get = "/cosmos/bank/v1beta1/supply_without_offset/{denom}";
+  }
+
   // Params queries the parameters of x/bank module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/cosmos/bank/v1beta1/params";
@@ -49,7 +59,7 @@ service Query {
 
 // QueryBalanceRequest is the request type for the Query/Balance RPC method.
 message QueryBalanceRequest {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // address is the address to query balances for.
@@ -67,7 +77,7 @@ message QueryBalanceResponse {
 
 // QueryBalanceRequest is the request type for the Query/AllBalances RPC method.
 message QueryAllBalancesRequest {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // address is the address to query balances for.
@@ -82,7 +92,7 @@ message QueryAllBalancesRequest {
 message QueryAllBalancesResponse {
   // balances is the balances of all the coins.
   repeated cosmos.base.v1beta1.Coin balances = 1
-  [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -91,7 +101,7 @@ message QueryAllBalancesResponse {
 // QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC
 // method.
 message QueryTotalSupplyRequest {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // pagination defines an optional pagination for the request.
@@ -105,7 +115,7 @@ message QueryTotalSupplyRequest {
 message QueryTotalSupplyResponse {
   // supply is the supply of the coins
   repeated cosmos.base.v1beta1.Coin supply = 1
-  [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
   // pagination defines the pagination in the response.
   //
@@ -121,6 +131,43 @@ message QuerySupplyOfRequest {
 
 // QuerySupplyOfResponse is the response type for the Query/SupplyOf RPC method.
 message QuerySupplyOfResponse {
+  // amount is the supply of the coin.
+  cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryTotalSupplyWithoutOffsetRequest is the request type for the Query/TotalSupplyWithoutOffset RPC
+// method.
+message QueryTotalSupplyWithoutOffsetRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // pagination defines an optional pagination for the request.
+  //
+  // Since: cosmos-sdk 0.43
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryTotalSupplyWithoutOffsetResponse is the response type for the Query/TotalSupplyWithoutOffset RPC
+// method
+message QueryTotalSupplyWithoutOffsetResponse {
+  // supply is the supply of the coins
+  repeated cosmos.base.v1beta1.Coin supply = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+
+  // pagination defines the pagination in the response.
+  //
+  // Since: cosmos-sdk 0.43
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QuerySupplyOfWithoutOffsetRequest is the request type for the Query/SupplyOfWithoutOffset RPC method.
+message QuerySupplyOfWithoutOffsetRequest {
+  // denom is the coin denom to query balances for.
+  string denom = 1;
+}
+
+// QuerySupplyOfWithoutOffsetResponse is the response type for the Query/SupplyOfWithoutOffset RPC method.
+message QuerySupplyOfWithoutOffsetResponse {
   // amount is the supply of the coin.
   cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false];
 }

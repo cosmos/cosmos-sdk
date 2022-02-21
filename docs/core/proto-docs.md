@@ -101,8 +101,12 @@
     - [QueryParamsResponse](#cosmos.bank.v1beta1.QueryParamsResponse)
     - [QuerySupplyOfRequest](#cosmos.bank.v1beta1.QuerySupplyOfRequest)
     - [QuerySupplyOfResponse](#cosmos.bank.v1beta1.QuerySupplyOfResponse)
+    - [QuerySupplyOfWithoutOffsetRequest](#cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest)
+    - [QuerySupplyOfWithoutOffsetResponse](#cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse)
     - [QueryTotalSupplyRequest](#cosmos.bank.v1beta1.QueryTotalSupplyRequest)
     - [QueryTotalSupplyResponse](#cosmos.bank.v1beta1.QueryTotalSupplyResponse)
+    - [QueryTotalSupplyWithoutOffsetRequest](#cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest)
+    - [QueryTotalSupplyWithoutOffsetResponse](#cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse)
   
     - [Query](#cosmos.bank.v1beta1.Query)
   
@@ -1268,6 +1272,9 @@ tags are stringified and the log is JSON decoded.
 | `gas_used` | [int64](#int64) |  | Amount of gas consumed by transaction. |
 | `tx` | [google.protobuf.Any](#google.protobuf.Any) |  | The request transaction bytes. |
 | `timestamp` | [string](#string) |  | Time of the previous block. For heights > 1, it's the weighted median of the timestamps of the valid votes in the block.LastCommit. For height == 1, it's genesis time. |
+| `events` | [tendermint.abci.Event](#tendermint.abci.Event) | repeated | Events defines all the events emitted by processing a transaction. Note, these events include those emitted by processing all the messages and those emitted from the ante handler. Whereas Logs contains the events, with additional metadata, emitted only by processing the messages.
+
+Since: cosmos-sdk 0.42.11, 0.44.5, 0.45 |
 
 
 
@@ -1899,6 +1906,36 @@ QuerySupplyOfResponse is the response type for the Query/SupplyOf RPC method.
 
 
 
+<a name="cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest"></a>
+
+### QuerySupplyOfWithoutOffsetRequest
+QuerySupplyOfWithoutOffsetRequest is the request type for the Query/SupplyOfWithoutOffset RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | denom is the coin denom to query balances for. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse"></a>
+
+### QuerySupplyOfWithoutOffsetResponse
+QuerySupplyOfWithoutOffsetResponse is the response type for the Query/SupplyOfWithoutOffset RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | amount is the supply of the coin. |
+
+
+
+
+
+
 <a name="cosmos.bank.v1beta1.QueryTotalSupplyRequest"></a>
 
 ### QueryTotalSupplyRequest
@@ -1935,6 +1972,43 @@ Since: cosmos-sdk 0.43 |
 
 
 
+
+<a name="cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest"></a>
+
+### QueryTotalSupplyWithoutOffsetRequest
+QueryTotalSupplyWithoutOffsetRequest is the request type for the Query/TotalSupplyWithoutOffset RPC
+method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request.
+
+Since: cosmos-sdk 0.43 |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse"></a>
+
+### QueryTotalSupplyWithoutOffsetResponse
+QueryTotalSupplyWithoutOffsetResponse is the response type for the Query/TotalSupplyWithoutOffset RPC
+method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply is the supply of the coins |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response.
+
+Since: cosmos-sdk 0.43 |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -1953,6 +2027,8 @@ Query defines the gRPC querier service.
 | `AllBalances` | [QueryAllBalancesRequest](#cosmos.bank.v1beta1.QueryAllBalancesRequest) | [QueryAllBalancesResponse](#cosmos.bank.v1beta1.QueryAllBalancesResponse) | AllBalances queries the balance of all coins for a single account. | GET|/cosmos/bank/v1beta1/balances/{address}|
 | `TotalSupply` | [QueryTotalSupplyRequest](#cosmos.bank.v1beta1.QueryTotalSupplyRequest) | [QueryTotalSupplyResponse](#cosmos.bank.v1beta1.QueryTotalSupplyResponse) | TotalSupply queries the total supply of all coins. | GET|/cosmos/bank/v1beta1/supply|
 | `SupplyOf` | [QuerySupplyOfRequest](#cosmos.bank.v1beta1.QuerySupplyOfRequest) | [QuerySupplyOfResponse](#cosmos.bank.v1beta1.QuerySupplyOfResponse) | SupplyOf queries the supply of a single coin. | GET|/cosmos/bank/v1beta1/supply/{denom}|
+| `TotalSupplyWithoutOffset` | [QueryTotalSupplyWithoutOffsetRequest](#cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetRequest) | [QueryTotalSupplyWithoutOffsetResponse](#cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse) | TotalSupplyWithoutOffset queries the total supply of all coins. | GET|/cosmos/bank/v1beta1/supply_without_offset|
+| `SupplyOfWithoutOffset` | [QuerySupplyOfWithoutOffsetRequest](#cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetRequest) | [QuerySupplyOfWithoutOffsetResponse](#cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse) | SupplyOf queries the supply of a single coin. | GET|/cosmos/bank/v1beta1/supply_without_offset/{denom}|
 | `Params` | [QueryParamsRequest](#cosmos.bank.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.bank.v1beta1.QueryParamsResponse) | Params queries the parameters of x/bank module. | GET|/cosmos/bank/v1beta1/params|
 | `DenomMetadata` | [QueryDenomMetadataRequest](#cosmos.bank.v1beta1.QueryDenomMetadataRequest) | [QueryDenomMetadataResponse](#cosmos.bank.v1beta1.QueryDenomMetadataResponse) | DenomsMetadata queries the client metadata of a given coin denomination. | GET|/cosmos/bank/v1beta1/denoms_metadata/{denom}|
 | `DenomsMetadata` | [QueryDenomsMetadataRequest](#cosmos.bank.v1beta1.QueryDenomsMetadataRequest) | [QueryDenomsMetadataResponse](#cosmos.bank.v1beta1.QueryDenomsMetadataResponse) | DenomsMetadata queries the client metadata for all registered coin denominations. | GET|/cosmos/bank/v1beta1/denoms_metadata|

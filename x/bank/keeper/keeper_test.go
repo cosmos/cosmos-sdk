@@ -1,12 +1,7 @@
 package keeper_test
 
 import (
-	"context"
-	"crypto/sha256"
-	"encoding/hex"
-	"errors"
 	"fmt"
-	"strings"
 	"testing"
 	"time"
 
@@ -2005,9 +2000,17 @@ func (suite *KeeperTestSuite) getTestMetadata() []banktypes.Metadata {
 	}
 }
 
-func (suite *KeeperTestSuite) TestMintCoinRestrictions() {
-	type BankMintingRestrictionFn func(ctx context.Context, coins sdk.Coins) error
-	require := suite.Require()
+func (suite *IntegrationTestSuite) TestMintCoinRestrictions() {
+	type BankMintingRestrictionFn func(ctx sdk.Context, coins sdk.Coins) error
+
+	maccPerms := simapp.GetMaccPerms()
+	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
+
+	suite.app.AccountKeeper = authkeeper.NewAccountKeeper(
+		suite.app.AppCodec(), suite.app.GetKey(authtypes.StoreKey), suite.app.GetSubspace(authtypes.ModuleName),
+		authtypes.ProtoBaseAccount, maccPerms,
+	)
+	suite.app.AccountKeeper.SetModuleAccount(suite.ctx, multiPermAcc)
 
 	type testCase struct {
 		coinsToTry sdk.Coin
@@ -2021,10 +2024,10 @@ func (suite *KeeperTestSuite) TestMintCoinRestrictions() {
 	}{
 		{
 			"restriction",
-			func(_ context.Context, coins sdk.Coins) error {
+			func(ctx sdk.Context, coins sdk.Coins) error {
 				for _, coin := range coins {
 					if coin.Denom != fooDenom {
-						return fmt.Errorf("Module %s only has perms for minting %s coins, tried minting %s coins", banktypes.ModuleName, fooDenom, coin.Denom)
+						return fmt.Errorf("Module %s only has perms for minting %s coins, tried minting %s coins", types.ModuleName, fooDenom, coin.Denom)
 					}
 				}
 				return nil
@@ -2043,20 +2046,20 @@ func (suite *KeeperTestSuite) TestMintCoinRestrictions() {
 	}
 
 	for _, test := range tests {
-		keeper := suite.bankKeeper.WithMintCoinsRestriction(banktypes.MintingRestrictionFn(test.restrictionFn))
+		suite.app.BankKeeper = keeper.NewBaseKeeper(suite.app.AppCodec(), suite.app.GetKey(types.StoreKey),
+			suite.app.AccountKeeper, suite.app.GetSubspace(types.ModuleName), nil).WithMintCoinsRestriction(keeper.MintingRestrictionFn(test.restrictionFn))
 		for _, testCase := range test.testCases {
 			if testCase.expectPass {
-				suite.mockMintCoins(multiPermAcc)
-				require.NoError(
-					keeper.MintCoins(
+				suite.Require().NoError(
+					suite.app.BankKeeper.MintCoins(
 						suite.ctx,
 						multiPermAcc.Name,
 						sdk.NewCoins(testCase.coinsToTry),
 					),
 				)
 			} else {
-				require.Error(
-					keeper.MintCoins(
+				suite.Require().Error(
+					suite.app.BankKeeper.MintCoins(
 						suite.ctx,
 						multiPermAcc.Name,
 						sdk.NewCoins(testCase.coinsToTry),
@@ -2067,385 +2070,6 @@ func (suite *KeeperTestSuite) TestMintCoinRestrictions() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestIsSendEnabledDenom() {
-	ctx, bankKeeper := suite.ctx, suite.bankKeeper
-	require := suite.Require()
-
-	defaultCoin := "defaultCoin"
-	enabledCoin := "enabledCoin"
-	disabledCoin := "disabledCoin"
-	bankKeeper.DeleteSendEnabled(ctx, defaultCoin)
-	bankKeeper.SetSendEnabled(ctx, enabledCoin, true)
-	bankKeeper.SetSendEnabled(ctx, disabledCoin, false)
-
-	tests := []struct {
-		denom  string
-		exp    bool
-		expDef bool
-	}{
-		{
-			denom:  "defaultCoin",
-			expDef: true,
-		},
-		{
-			denom: enabledCoin,
-			exp:   true,
-		},
-		{
-			denom: disabledCoin,
-			exp:   false,
-		},
-	}
-
-	for _, def := range []bool{true, false} {
-		params := banktypes.Params{DefaultSendEnabled: def}
-		require.NoError(bankKeeper.SetParams(ctx, params))
-
-		for _, tc := range tests {
-			suite.T().Run(fmt.Sprintf("%s default %t", tc.denom, def), func(t *testing.T) {
-				actual := suite.bankKeeper.IsSendEnabledDenom(suite.ctx, tc.denom)
-				exp := tc.exp
-				if tc.expDef {
-					exp = def
-				}
-
-				require.Equal(exp, actual)
-			})
-		}
-	}
-}
-
-func (suite *KeeperTestSuite) TestGetSendEnabledEntry() {
-	ctx, bankKeeper := suite.ctx, suite.bankKeeper
-	require := suite.Require()
-
-	bankKeeper.SetAllSendEnabled(ctx, []*banktypes.SendEnabled{
-		{Denom: "gettruecoin", Enabled: true},
-		{Denom: "getfalsecoin", Enabled: false},
-	})
-
-	tests := []struct {
-		denom string
-		expSE banktypes.SendEnabled
-		expF  bool
-	}{
-		{
-			denom: "missing",
-			expSE: banktypes.SendEnabled{},
-			expF:  false,
-		},
-		{
-			denom: "gettruecoin",
-			expSE: banktypes.SendEnabled{Denom: "gettruecoin", Enabled: true},
-			expF:  true,
-		},
-		{
-			denom: "getfalsecoin",
-			expSE: banktypes.SendEnabled{Denom: "getfalsecoin", Enabled: false},
-			expF:  true,
-		},
-	}
-
-	for _, tc := range tests {
-		suite.T().Run(tc.denom, func(t *testing.T) {
-			actualSE, actualF := bankKeeper.GetSendEnabledEntry(ctx, tc.denom)
-			require.Equal(tc.expF, actualF, "found")
-			require.Equal(tc.expSE, actualSE, "SendEnabled")
-		})
-	}
-}
-
-func (suite *KeeperTestSuite) TestSetSendEnabled() {
-	ctx, bankKeeper := suite.ctx, suite.bankKeeper
-	require := suite.Require()
-
-	tests := []struct {
-		name  string
-		denom string
-		value bool
-	}{
-		{
-			name:  "very short denom true",
-			denom: "f",
-			value: true,
-		},
-		{
-			name:  "very short denom false",
-			denom: "f",
-			value: true,
-		},
-		{
-			name:  "falseFirstCoin false",
-			denom: "falseFirstCoin",
-			value: false,
-		},
-		{
-			name:  "falseFirstCoin true",
-			denom: "falseFirstCoin",
-			value: true,
-		},
-		{
-			name:  "falseFirstCoin true again",
-			denom: "falseFirstCoin",
-			value: true,
-		},
-		{
-			name:  "trueFirstCoin true",
-			denom: "falseFirstCoin",
-			value: false,
-		},
-		{
-			name:  "trueFirstCoin false",
-			denom: "falseFirstCoin",
-			value: false,
-		},
-		{
-			name:  "trueFirstCoin false again",
-			denom: "falseFirstCoin",
-			value: false,
-		},
-	}
-
-	for _, def := range []bool{true, false} {
-		params := banktypes.Params{DefaultSendEnabled: def}
-		require.NoError(bankKeeper.SetParams(ctx, params))
-
-		for _, tc := range tests {
-			suite.T().Run(fmt.Sprintf("%s default %t", tc.name, def), func(t *testing.T) {
-				bankKeeper.SetSendEnabled(ctx, tc.denom, tc.value)
-				actual := bankKeeper.IsSendEnabledDenom(ctx, tc.denom)
-				require.Equal(tc.value, actual)
-			})
-		}
-	}
-}
-
-func (suite *KeeperTestSuite) TestSetAllSendEnabled() {
-	ctx, bankKeeper := suite.ctx, suite.bankKeeper
-	require := suite.Require()
-
-	tests := []struct {
-		name         string
-		sendEnableds []*banktypes.SendEnabled
-	}{
-		{
-			name:         "nil",
-			sendEnableds: nil,
-		},
-		{
-			name:         "empty",
-			sendEnableds: []*banktypes.SendEnabled{},
-		},
-		{
-			name: "one true",
-			sendEnableds: []*banktypes.SendEnabled{
-				{Denom: "aonecoin", Enabled: true},
-			},
-		},
-		{
-			name: "one false",
-			sendEnableds: []*banktypes.SendEnabled{
-				{Denom: "bonecoin", Enabled: false},
-			},
-		},
-		{
-			name: "two true",
-			sendEnableds: []*banktypes.SendEnabled{
-				{Denom: "conecoin", Enabled: true},
-				{Denom: "ctwocoin", Enabled: true},
-			},
-		},
-		{
-			name: "two true false",
-			sendEnableds: []*banktypes.SendEnabled{
-				{Denom: "donecoin", Enabled: true},
-				{Denom: "dtwocoin", Enabled: false},
-			},
-		},
-		{
-			name: "two false true",
-			sendEnableds: []*banktypes.SendEnabled{
-				{Denom: "eonecoin", Enabled: false},
-				{Denom: "etwocoin", Enabled: true},
-			},
-		},
-		{
-			name: "two false",
-			sendEnableds: []*banktypes.SendEnabled{
-				{Denom: "fonecoin", Enabled: false},
-				{Denom: "ftwocoin", Enabled: false},
-			},
-		},
-	}
-
-	for _, def := range []bool{true, false} {
-		params := banktypes.Params{DefaultSendEnabled: def}
-		require.NoError(bankKeeper.SetParams(ctx, params))
-
-		for _, tc := range tests {
-			suite.T().Run(fmt.Sprintf("%s default %t", tc.name, def), func(t *testing.T) {
-				bankKeeper.SetAllSendEnabled(ctx, tc.sendEnableds)
-
-				for _, se := range tc.sendEnableds {
-					actual := bankKeeper.IsSendEnabledDenom(ctx, se.Denom)
-					require.Equal(se.Enabled, actual, se.Denom)
-				}
-			})
-		}
-	}
-}
-
-func (suite *KeeperTestSuite) TestDeleteSendEnabled() {
-	ctx, bankKeeper := suite.ctx, suite.bankKeeper
-	require := suite.Require()
-
-	for _, def := range []bool{true, false} {
-		params := banktypes.Params{DefaultSendEnabled: def}
-		require.NoError(bankKeeper.SetParams(ctx, params))
-		suite.T().Run(fmt.Sprintf("default %t", def), func(t *testing.T) {
-			denom := fmt.Sprintf("somerand%tcoin", !def)
-			bankKeeper.SetSendEnabled(ctx, denom, !def)
-			require.Equal(!def, bankKeeper.IsSendEnabledDenom(ctx, denom))
-			bankKeeper.DeleteSendEnabled(ctx, denom)
-			require.Equal(def, bankKeeper.IsSendEnabledDenom(ctx, denom))
-		})
-	}
-}
-
-func (suite *KeeperTestSuite) TestIterateSendEnabledEntries() {
-	ctx, bankKeeper := suite.ctx, suite.bankKeeper
-	require := suite.Require()
-
-	suite.T().Run("no entries to iterate", func(t *testing.T) {
-		count := 0
-		bankKeeper.IterateSendEnabledEntries(ctx, func(_ string, _ bool) (stop bool) {
-			count++
-			return false
-		})
-
-		require.Equal(0, count)
-	})
-
-	alpha := strings.Split("abcdefghijklmnopqrstuvwxyz", "")
-	denoms := make([]string, len(alpha)*2)
-	for i, l := range alpha {
-		denoms[i*2] = fmt.Sprintf("%sitercointrue", l)
-		denoms[i*2+1] = fmt.Sprintf("%sitercoinfalse", l)
-		bankKeeper.SetSendEnabled(ctx, denoms[i*2], true)
-		bankKeeper.SetSendEnabled(ctx, denoms[i*2+1], false)
-	}
-
-	for _, def := range []bool{true, false} {
-		params := banktypes.Params{DefaultSendEnabled: def}
-		require.NoError(bankKeeper.SetParams(ctx, params))
-
-		var seen []string
-		suite.T().Run(fmt.Sprintf("all denoms have expected values default %t", def), func(t *testing.T) {
-			bankKeeper.IterateSendEnabledEntries(ctx, func(denom string, sendEnabled bool) (stop bool) {
-				seen = append(seen, denom)
-				exp := true
-				if strings.HasSuffix(denom, "false") {
-					exp = false
-				}
-
-				require.Equal(exp, sendEnabled, denom)
-				return false
-			})
-		})
-
-		suite.T().Run(fmt.Sprintf("all denoms were seen default %t", def), func(t *testing.T) {
-			require.ElementsMatch(denoms, seen)
-		})
-	}
-
-	bankKeeper.DeleteSendEnabled(ctx, denoms...)
-
-	suite.T().Run("no entries to iterate again after deleting all of them", func(t *testing.T) {
-		count := 0
-		bankKeeper.IterateSendEnabledEntries(ctx, func(_ string, _ bool) (stop bool) {
-			count++
-			return false
-		})
-
-		require.Equal(0, count)
-	})
-}
-
-func (suite *KeeperTestSuite) TestGetAllSendEnabledEntries() {
-	ctx, bankKeeper := suite.ctx, suite.bankKeeper
-	require := suite.Require()
-
-	suite.T().Run("no entries", func(t *testing.T) {
-		actual := bankKeeper.GetAllSendEnabledEntries(ctx)
-		require.Len(actual, 0)
-	})
-
-	alpha := strings.Split("abcdefghijklmnopqrstuvwxyz", "")
-	denoms := make([]string, len(alpha)*2)
-	for i, l := range alpha {
-		denoms[i*2] = fmt.Sprintf("%sitercointrue", l)
-		denoms[i*2+1] = fmt.Sprintf("%sitercoinfalse", l)
-		bankKeeper.SetSendEnabled(ctx, denoms[i*2], true)
-		bankKeeper.SetSendEnabled(ctx, denoms[i*2+1], false)
-	}
-
-	for _, def := range []bool{true, false} {
-		params := banktypes.Params{DefaultSendEnabled: def}
-		require.NoError(bankKeeper.SetParams(ctx, params))
-
-		var seen []string
-		suite.T().Run(fmt.Sprintf("all denoms have expected values default %t", def), func(t *testing.T) {
-			actual := bankKeeper.GetAllSendEnabledEntries(ctx)
-			for _, se := range actual {
-				seen = append(seen, se.Denom)
-				exp := true
-				if strings.HasSuffix(se.Denom, "false") {
-					exp = false
-				}
-
-				require.Equal(exp, se.Enabled, se.Denom)
-			}
-		})
-
-		suite.T().Run(fmt.Sprintf("all denoms were seen default %t", def), func(t *testing.T) {
-			require.ElementsMatch(denoms, seen)
-		})
-	}
-
-	for _, denom := range denoms {
-		bankKeeper.DeleteSendEnabled(ctx, denom)
-	}
-
-	suite.T().Run("no entries again after deleting all of them", func(t *testing.T) {
-		actual := bankKeeper.GetAllSendEnabledEntries(ctx)
-		require.Len(actual, 0)
-	})
-}
-
-func (suite *KeeperTestSuite) TestSetParams() {
-	ctx, bankKeeper := suite.ctx, suite.bankKeeper
-	require := suite.Require()
-
-	params := banktypes.NewParams(true)
-	params.SendEnabled = []*banktypes.SendEnabled{
-		{Denom: "paramscointrue", Enabled: true},
-		{Denom: "paramscoinfalse", Enabled: false},
-	}
-	require.NoError(bankKeeper.SetParams(ctx, params))
-
-	suite.Run("stored params are as expected", func() {
-		actual := bankKeeper.GetParams(ctx)
-		require.True(actual.DefaultSendEnabled, "DefaultSendEnabled")
-		require.Len(actual.SendEnabled, 0, "SendEnabled") //nolint:staticcheck // we're testing the old way here
-	})
-
-	suite.Run("send enabled params converted to store", func() {
-		actual := bankKeeper.GetAllSendEnabledEntries(ctx)
-		if suite.Assert().Len(actual, 2) {
-			require.Equal("paramscoinfalse", actual[0].Denom, "actual[0].Denom")
-			require.False(actual[0].Enabled, "actual[0].Enabled")
-			require.Equal("paramscointrue", actual[1].Denom, "actual[1].Denom")
-			require.True(actual[1].Enabled, "actual[1].Enabled")
-		}
-	})
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationTestSuite))
 }

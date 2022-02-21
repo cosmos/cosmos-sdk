@@ -83,7 +83,18 @@ When `Tx` is received by the application from the underlying consensus engine (e
 
 ### ValidateBasic
 
-[`sdk.Msg`s](../core/transactions.md#messages) are extracted from `Tx`, and `ValidateBasic`, a method of the `sdk.Msg` interface implemented by the module developer, is run for each one. `ValidateBasic` should include basic **stateless** sanity checks. For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as the account balance of an address.
+Messages ([`sdk.Msg`](../core/transactions.md#messages)) are extracted from transactions (`Tx`). The `ValidateBasic` method of the `sdk.Msg` interface implemented by the module developer is run for each transaction. 
+To discard obviously invalid messages, the BaseApp` type calls the `ValidateBasic` method very early in the processing of the message in the [`CheckTx`](../core/baseapp.md#checktx) and [`DeliverTx`](../core/baseapp.md#delivertx)) transactions.
+`ValidateBasic` can include only **stateless** checks (the checks that do not require access to the state). 
+
+#### Guideline
+
+Gas is not charged when `ValidateBasic` is executed so we recommend only performing all necessary stateless checks to enable middleware operations (for example, parsing the required signer accounts to validate a signature by a middleware) and stateless sanity checks not impacting performance of the CheckTx phase.
+Other validation operations must be performed when [handling a message](../building-modules/msg-services#Validation) in a module Msg Server.
+
+Example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for non-empty addresses and a non-negative coin amount, but does not require knowledge of state such as the account balance of an address.
+
+See also [Msg Service Validation](../building-modules/msg-services.md#Validation).
 
 ### AnteHandler
 

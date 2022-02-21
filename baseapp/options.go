@@ -17,7 +17,7 @@ import (
 
 // SetPruning sets a pruning option on the multistore associated with the app
 func SetPruning(opts sdk.PruningOptions) func(*BaseApp) {
-	return func(bap *BaseApp) { bap.cms.SetPruning(opts) }
+	return func(bapp *BaseApp) { bapp.cms.SetPruning(opts) }
 }
 
 // SetMinGasPrices returns an option that sets the minimum gas prices on the app.
@@ -27,17 +27,17 @@ func SetMinGasPrices(gasPricesStr string) func(*BaseApp) {
 		panic(fmt.Sprintf("invalid minimum gas prices: %v", err))
 	}
 
-	return func(bap *BaseApp) { bap.setMinGasPrices(gasPrices) }
+	return func(bapp *BaseApp) { bapp.setMinGasPrices(gasPrices) }
 }
 
 // SetHaltHeight returns a BaseApp option function that sets the halt block height.
 func SetHaltHeight(blockHeight uint64) func(*BaseApp) {
-	return func(bap *BaseApp) { bap.setHaltHeight(blockHeight) }
+	return func(bapp *BaseApp) { bapp.setHaltHeight(blockHeight) }
 }
 
 // SetHaltTime returns a BaseApp option function that sets the halt block time.
 func SetHaltTime(haltTime uint64) func(*BaseApp) {
-	return func(bap *BaseApp) { bap.setHaltTime(haltTime) }
+	return func(bapp *BaseApp) { bapp.setHaltTime(haltTime) }
 }
 
 // SetMinRetainBlocks returns a BaseApp option function that sets the minimum
@@ -55,6 +55,11 @@ func SetTrace(trace bool) func(*BaseApp) {
 // SetIndexEvents provides a BaseApp option function that sets the events to index.
 func SetIndexEvents(ie []string) func(*BaseApp) {
 	return func(app *BaseApp) { app.setIndexEvents(ie) }
+}
+
+// SetIAVLCacheSize provides a BaseApp option function that sets the size of IAVL cache.
+func SetIAVLCacheSize(size int) func(*BaseApp) {
+	return func(bapp *BaseApp) { bapp.cms.SetIAVLCacheSize(size) }
 }
 
 // SetInterBlockCache provides a BaseApp option function that sets the

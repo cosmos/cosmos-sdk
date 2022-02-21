@@ -9,7 +9,7 @@ import (
 
 // Constants pertaining to a Content object
 const (
-	MaxDescriptionLength int = 5000
+	MaxDescriptionLength int = 10000
 	MaxTitleLength       int = 140
 )
 

@@ -118,8 +118,8 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 		//
 		// NOTE: This should ultimately be removed in favor a more flexible approach
 		// such as delegated fee messages.
-		acc := k.ak.GetAccount(ctx, outAddress)
-		if acc == nil {
+		accExists := k.ak.HasAccount(ctx, outAddress)
+		if !accExists {
 			defer telemetry.IncrCounter(1, "new", "account")
 			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, outAddress))
 		}
@@ -145,8 +145,8 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 	//
 	// NOTE: This should ultimately be removed in favor a more flexible approach
 	// such as delegated fee messages.
-	acc := k.ak.GetAccount(ctx, toAddr)
-	if acc == nil {
+	accExists := k.ak.HasAccount(ctx, toAddr)
+	if !accExists {
 		defer telemetry.IncrCounter(1, "new", "account")
 		k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, toAddr))
 	}

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -1157,6 +1158,75 @@ func (suite *IntegrationTestSuite) getTestMetadata() []types.Metadata {
 			Base:    "utoken",
 			Display: "token",
 		},
+	}
+}
+
+func (suite *IntegrationTestSuite) TestMintCoinRestrictions() {
+	type BankMintingRestrictionFn func(ctx sdk.Context, coins sdk.Coins) error
+
+	maccPerms := simapp.GetMaccPerms()
+	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
+
+	suite.app.AccountKeeper = authkeeper.NewAccountKeeper(
+		suite.app.AppCodec(), suite.app.GetKey(authtypes.StoreKey), suite.app.GetSubspace(authtypes.ModuleName),
+		authtypes.ProtoBaseAccount, maccPerms)
+	suite.app.AccountKeeper.SetModuleAccount(suite.ctx, multiPermAcc)
+
+	type testCase struct {
+		coinsToTry sdk.Coin
+		expectPass bool
+	}
+
+	tests := []struct {
+		name          string
+		restrictionFn BankMintingRestrictionFn
+		testCases     []testCase
+	}{
+		{
+			"restriction",
+			func(ctx sdk.Context, coins sdk.Coins) error {
+				for _, coin := range coins {
+					if coin.Denom != fooDenom {
+						return fmt.Errorf("Module %s only has perms for minting %s coins, tried minting %s coins", types.ModuleName, fooDenom, coin.Denom)
+					}
+				}
+				return nil
+			},
+			[]testCase{
+				{
+					coinsToTry: newFooCoin(100),
+					expectPass: true,
+				},
+				{
+					coinsToTry: newBarCoin(100),
+					expectPass: false,
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		suite.app.BankKeeper = keeper.NewBaseKeeper(suite.app.AppCodec(), suite.app.GetKey(types.StoreKey),
+			suite.app.AccountKeeper, suite.app.GetSubspace(types.ModuleName), nil).WithMintCoinsRestriction(keeper.MintingRestrictionFn(test.restrictionFn))
+		for _, testCase := range test.testCases {
+			if testCase.expectPass {
+				suite.Require().NoError(
+					suite.app.BankKeeper.MintCoins(
+						suite.ctx,
+						multiPermAcc.Name,
+						sdk.NewCoins(testCase.coinsToTry),
+					),
+				)
+			} else {
+				suite.Require().Error(
+					suite.app.BankKeeper.MintCoins(
+						suite.ctx,
+						multiPermAcc.Name,
+						sdk.NewCoins(testCase.coinsToTry),
+					),
+				)
+			}
+		}
 	}
 }
 

@@ -51,18 +51,11 @@ type Keeper interface {
 type BaseKeeper struct {
 	BaseSendKeeper
 
-<<<<<<< HEAD
-	ak         types.AccountKeeper
-	cdc        codec.BinaryCodec
-	storeKey   sdk.StoreKey
-	paramSpace paramtypes.Subspace
-=======
 	ak                     types.AccountKeeper
 	cdc                    codec.BinaryCodec
-	storeKey               storetypes.StoreKey
+	storeKey               sdk.StoreKey
 	paramSpace             paramtypes.Subspace
 	mintCoinsRestrictionFn MintingRestrictionFn
->>>>>>> ea6765995 (feat: Allow to restrict MintCoins from app.go (#10771))
 }
 
 type MintingRestrictionFn func(ctx sdk.Context, coins sdk.Coins) error

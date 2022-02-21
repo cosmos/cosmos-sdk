@@ -14,6 +14,10 @@ import (
 	"testing"
 	"time"
 
+	"google.golang.org/protobuf/proto"
+
+	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
+
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -1813,6 +1817,41 @@ func TestGRPCQuery(t *testing.T) {
 
 	var res testdata.SayHelloResponse
 	err = res.Unmarshal(resQuery.Value)
+	require.NoError(t, err)
+	require.Equal(t, "Hello foo!", res.Greeting)
+}
+
+func TestGRPCQueryPulsar(t *testing.T) {
+	grpcQueryOpt := func(bapp *baseapp.BaseApp) {
+		testdata_pulsar.RegisterQueryServer(
+			bapp.GRPCQueryRouter(),
+			testdata_pulsar.QueryImpl{},
+		)
+	}
+
+	app := setupBaseApp(t, grpcQueryOpt)
+	app.GRPCQueryRouter().SetInterfaceRegistry(codectypes.NewInterfaceRegistry())
+
+	app.InitChain(abci.RequestInitChain{})
+	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	app.Commit()
+
+	req := &testdata_pulsar.SayHelloRequest{Name: "foo"}
+	reqBz, err := proto.Marshal(req)
+	require.NoError(t, err)
+
+	reqQuery := abci.RequestQuery{
+		Data: reqBz,
+		Path: "/testdata.Query/SayHello",
+	}
+
+	resQuery := app.Query(reqQuery)
+
+	require.Equal(t, abci.CodeTypeOK, resQuery.Code, resQuery)
+
+	var res testdata_pulsar.SayHelloResponse
+	err = proto.Unmarshal(resQuery.Value, &res)
 	require.NoError(t, err)
 	require.Equal(t, "Hello foo!", res.Greeting)
 }

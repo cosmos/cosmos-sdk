@@ -46,7 +46,7 @@ message Plan {
 // Deprecated: This legacy proposal is deprecated in favor of Msg-based gov
 // proposals, see MsgSoftwareUpgrade.
 message SoftwareUpgradeProposal {
-  option deprecated = true;
+  option deprecated                   = true;
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
@@ -60,7 +60,7 @@ message SoftwareUpgradeProposal {
 // Deprecated: This legacy proposal is deprecated in favor of Msg-based gov
 // proposals, see MsgCancelUpgrade.
 message CancelSoftwareUpgradeProposal {
-  option deprecated = true;
+  option deprecated                   = true;
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 

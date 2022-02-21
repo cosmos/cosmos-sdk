@@ -199,7 +199,7 @@ func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 		Use:   "cancel-software-upgrade [flags]",
 		Args:  cobra.ExactArgs(0),
 		Short: "Cancel the current software upgrade proposal",
-		Long:  "Submits a proposal to cancel the current software upgrade along. Can also be submitted with an initial deposit and metadata.",
+		Long:  "Submits a proposal to cancel the current software upgrade. Can also be submitted with an initial deposit and metadata.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -217,7 +217,7 @@ func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 				return err
 			}
 
-			var metadata []byte 
+			var metadata []byte
 			metadata, err = cmd.Flags().GetBytesBase64(cli.FlagMetadata)
 			if err != nil {
 				return err

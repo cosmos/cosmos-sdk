@@ -37,6 +37,7 @@ type Keeper struct {
 	versionSetter      xp.ProtocolVersionSetter        // implements setting the protocol version field on BaseApp
 	downgradeVerified  bool                            // tells if we've already sanity checked that this binary version isn't being used against an old state.
 	authKeeper         types.AccountKeeper
+	authority          sdk.AccAddress
 }
 
 // NewKeeper constructs an upgrade Keeper which requires the following arguments:
@@ -45,7 +46,7 @@ type Keeper struct {
 // cdc - the app-wide binary codec
 // homePath - root directory of the application's config
 // vs - the interface implemented by baseapp which allows setting baseapp's protocol version field
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter, authKeeper types.AccountKeeper) Keeper {
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter, authKeeper types.AccountKeeper, authority sdk.AccAddress) Keeper {
 	return Keeper{
 		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,
@@ -54,6 +55,7 @@ func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, 
 		upgradeHandlers:    map[string]types.UpgradeHandler{},
 		versionSetter:      vs,
 		authKeeper:         authKeeper,
+		authority:          authority,
 	}
 }
 

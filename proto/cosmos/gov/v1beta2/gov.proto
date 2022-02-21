@@ -41,15 +41,15 @@ message Deposit {
 
 // Proposal defines the core field members of a governance proposal.
 message Proposal {
-  uint64   id                                = 1;
-  repeated google.protobuf.Any messages               = 2;
-  ProposalStatus               status                 = 3;
+  uint64   id                           = 1;
+  repeated google.protobuf.Any messages = 2;
+  ProposalStatus               status   = 3;
   // final_tally_result is the final tally result of the proposal. When
   // querying a proposal via gRPC, this field is not populated until the
   // proposal's voting period has ended.
-  TallyResult                  final_tally_result     = 4;
-  google.protobuf.Timestamp    submit_time            = 5 [(gogoproto.stdtime) = true];
-  google.protobuf.Timestamp    deposit_end_time       = 6 [(gogoproto.stdtime) = true];
+  TallyResult               final_tally_result        = 4;
+  google.protobuf.Timestamp submit_time               = 5 [(gogoproto.stdtime) = true];
+  google.protobuf.Timestamp deposit_end_time          = 6 [(gogoproto.stdtime) = true];
   repeated cosmos.base.v1beta1.Coin total_deposit     = 7 [(gogoproto.nullable) = false];
   google.protobuf.Timestamp         voting_start_time = 8 [(gogoproto.stdtime) = true];
   google.protobuf.Timestamp         voting_end_time   = 9 [(gogoproto.stdtime) = true];
@@ -99,11 +99,13 @@ message Vote {
 // DepositParams defines the params for deposits on governance proposals.
 message DepositParams {
   //  Minimum deposit for a proposal to enter voting period.
-  repeated cosmos.base.v1beta1.Coin min_deposit = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "min_deposit,omitempty"];
+  repeated cosmos.base.v1beta1.Coin min_deposit = 1
+      [(gogoproto.nullable) = false, (gogoproto.jsontag) = "min_deposit,omitempty"];
 
   //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2
   //  months.
-  google.protobuf.Duration max_deposit_period = 2 [(gogoproto.stdduration) = true, (gogoproto.jsontag) = "max_deposit_period,omitempty"];
+  google.protobuf.Duration max_deposit_period = 2
+      [(gogoproto.stdduration) = true, (gogoproto.jsontag) = "max_deposit_period,omitempty"];
 }
 
 // VotingParams defines the params for voting on governance proposals.

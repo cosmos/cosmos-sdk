@@ -38,6 +38,8 @@ type QueryClient interface {
 	//
 	// Since: cosmos-sdk 0.43
 	ModuleVersions(ctx context.Context, in *QueryModuleVersionsRequest, opts ...grpc.CallOption) (*QueryModuleVersionsResponse, error)
+	// Returns the account with authority to conduct upgrades
+	Authority(ctx context.Context, in *QueryAuthorityRequest, opts ...grpc.CallOption) (*QueryAuthorityResponse, error)
 }
 
 type queryClient struct {
@@ -85,6 +87,15 @@ func (c *queryClient) ModuleVersions(ctx context.Context, in *QueryModuleVersion
 	return out, nil
 }
 
+func (c *queryClient) Authority(ctx context.Context, in *QueryAuthorityRequest, opts ...grpc.CallOption) (*QueryAuthorityResponse, error) {
+	out := new(QueryAuthorityResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.upgrade.v1beta1.Query/Authority", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -105,6 +116,8 @@ type QueryServer interface {
 	//
 	// Since: cosmos-sdk 0.43
 	ModuleVersions(context.Context, *QueryModuleVersionsRequest) (*QueryModuleVersionsResponse, error)
+	// Returns the account with authority to conduct upgrades
+	Authority(context.Context, *QueryAuthorityRequest) (*QueryAuthorityResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -123,6 +136,9 @@ func (UnimplementedQueryServer) UpgradedConsensusState(context.Context, *QueryUp
 }
 func (UnimplementedQueryServer) ModuleVersions(context.Context, *QueryModuleVersionsRequest) (*QueryModuleVersionsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ModuleVersions not implemented")
+}
+func (UnimplementedQueryServer) Authority(context.Context, *QueryAuthorityRequest) (*QueryAuthorityResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Authority not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -209,6 +225,24 @@ func _Query_ModuleVersions_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_Authority_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAuthorityRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Authority(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.upgrade.v1beta1.Query/Authority",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Authority(ctx, req.(*QueryAuthorityRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -231,6 +265,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ModuleVersions",
 			Handler:    _Query_ModuleVersions_Handler,
+		},
+		{
+			MethodName: "Authority",
+			Handler:    _Query_Authority_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

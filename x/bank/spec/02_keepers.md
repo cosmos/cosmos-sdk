@@ -54,6 +54,8 @@ message Output {
 
 The base keeper provides full-permission access: the ability to arbitrary modify any account's balance and mint or burn coins.
 
+Restricted permission to mint per module could be achieved by using baseKeeper with `WithMintCoinsRestriction` to give specific restrictions to mint (e.g. only minting certain denom).
+
 ```go
 // Keeper defines a module interface that facilitates the transfer of coins
 // between accounts.

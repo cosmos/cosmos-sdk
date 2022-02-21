@@ -10,7 +10,7 @@ Recovery middleware is used to add custom panic recovery for Cosmos SDK applicat
 
 More context could be found in the corresponding [ADR-022](../architecture/adr-022-custom-panic-handling.md).
 
-Implementation could be found in the [recovery.go](../../baseapp/recovery.go) file.
+Implementation could be found in the [recovery.go](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/middleware/recovery.go) file.
 
 ## Interface
 

@@ -15,10 +15,12 @@ const (
 	// Do not change chunk size without new snapshot format (must be uniform across nodes)
 	snapshotChunkSize  = uint64(10e6)
 	snapshotBufferSize = int(snapshotChunkSize)
+	// Do not change compression level without new snapshot format (must be uniform across nodes)
+	snapshotCompressionLevel = 7
 )
 
 // StreamWriter set up a stream pipeline to serialize snapshot nodes:
-// ExportNode -> delimited Protobuf -> zlib -> buffer -> chunkWriter -> chan io.ReadCloser
+// Exported Items -> delimited Protobuf -> zlib -> buffer -> chunkWriter -> chan io.ReadCloser
 type StreamWriter struct {
 	chunkWriter *ChunkWriter
 	bufWriter   *bufio.Writer
@@ -30,7 +32,7 @@ type StreamWriter struct {
 func NewStreamWriter(ch chan<- io.ReadCloser) *StreamWriter {
 	chunkWriter := NewChunkWriter(ch, snapshotChunkSize)
 	bufWriter := bufio.NewWriterSize(chunkWriter, snapshotBufferSize)
-	zWriter, err := zlib.NewWriterLevel(bufWriter, 7)
+	zWriter, err := zlib.NewWriterLevel(bufWriter, snapshotCompressionLevel)
 	if err != nil {
 		chunkWriter.CloseWithError(sdkerrors.Wrap(err, "zlib failure"))
 		return nil

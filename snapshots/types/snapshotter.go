@@ -25,7 +25,9 @@ type ExtensionSnapshotter interface {
 	// SnapshotName returns the name of snapshotter, it should be unique in the manager.
 	SnapshotName() string
 
-	// SnapshotFormat returns the default format used to take a snapshot.
+	// SnapshotFormat returns the default format the extension snapshotter use to encode the
+	// payloads when taking a snapshot.
+	// It's defined within the extension, different from the global format for the whole state-sync snapshot.
 	SnapshotFormat() uint32
 
 	// SupportedFormats returns a list of formats it can restore from.

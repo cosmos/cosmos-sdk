@@ -161,6 +161,7 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 
 // protoTxProvider is a type which can provide a proto transaction. It is a
 // workaround to get access to the wrapper TxBuilder's method GetProtoTx().
+// ref: https://github.com/cosmos/cosmos-sdk/issues/10347
 type protoTxProvider interface {
 	GetProtoTx() *txtypes.Tx
 }

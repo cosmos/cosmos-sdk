@@ -154,39 +154,43 @@ func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 
 	// Spawn goroutine to generate snapshot chunks and pass their io.ReadClosers through a channel
 	ch := make(chan io.ReadCloser)
-	go func() {
-		streamWriter := NewStreamWriter(ch)
-		if streamWriter == nil {
-			return
-		}
-		defer streamWriter.Close()
-		if err = m.multistore.Snapshot(height, streamWriter); err != nil {
+	go m.createSnapshot(height, ch)
+
+	return m.store.Save(height, types.CurrentFormat, ch)
+}
+
+// createSnapshot do the heavy work of snapshotting after the validations of request are done
+// the produced chunks are written to the channel.
+func (m *Manager) createSnapshot(height uint64, ch chan<- io.ReadCloser) {
+	streamWriter := NewStreamWriter(ch)
+	if streamWriter == nil {
+		return
+	}
+	defer streamWriter.Close()
+	if err := m.multistore.Snapshot(height, streamWriter); err != nil {
+		streamWriter.CloseWithError(err)
+		return
+	}
+	for _, name := range m.sortedExtensionNames() {
+		extension := m.extensions[name]
+		// write extension metadata
+		err := streamWriter.WriteMsg(&types.SnapshotItem{
+			Item: &types.SnapshotItem_Extension{
+				Extension: &types.SnapshotExtensionMeta{
+					Name:   name,
+					Format: extension.SnapshotFormat(),
+				},
+			},
+		})
+		if err != nil {
 			streamWriter.CloseWithError(err)
 			return
 		}
-		for _, name := range m.sortedExtensionNames() {
-			extension := m.extensions[name]
-			// write extension metadata
-			err := streamWriter.WriteMsg(&types.SnapshotItem{
-				Item: &types.SnapshotItem_Extension{
-					Extension: &types.SnapshotExtensionMeta{
-						Name:   name,
-						Format: extension.SnapshotFormat(),
-					},
-				},
-			})
-			if err != nil {
-				streamWriter.CloseWithError(err)
-				return
-			}
-			if err := extension.Snapshot(height, streamWriter); err != nil {
-				streamWriter.CloseWithError(err)
-				return
-			}
+		if err := extension.Snapshot(height, streamWriter); err != nil {
+			streamWriter.CloseWithError(err)
+			return
 		}
-	}()
-
-	return m.store.Save(height, types.CurrentFormat, ch)
+	}
 }
 
 // List lists snapshots, mirroring ABCI ListSnapshots. It can be concurrent with other operations.
@@ -254,7 +258,7 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 	chDone := make(chan restoreDone, 1)
 
 	go func() {
-		err := m.restore(snapshot, chChunks)
+		err := m.restoreSnapshot(snapshot, chChunks)
 		chDone <- restoreDone{
 			complete: err == nil,
 			err:      err,
@@ -269,8 +273,8 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 	return nil
 }
 
-// restore do the heavy work of snapshot restoration after preliminary checks on request have passed.
-func (m *Manager) restore(snapshot types.Snapshot, chChunks <-chan io.ReadCloser) error {
+// restoreSnapshot do the heavy work of snapshot restoration after preliminary checks on request have passed.
+func (m *Manager) restoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.ReadCloser) error {
 	streamReader, err := NewStreamReader(chChunks)
 	if err != nil {
 		return err

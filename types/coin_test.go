@@ -915,8 +915,8 @@ func (s *coinTestSuite) TestCoins_Validate() {
 }
 
 func (s *coinTestSuite) TestMinMax() {
-	one := math.OneInt()
-	two := math.NewInt(2)
+	one := sdk.OneInt()
+	two := sdk.NewInt(2)
 
 	cases := []struct {
 		name   string
@@ -929,27 +929,15 @@ func (s *coinTestSuite) TestMinMax() {
 		{"zero-one", sdk.Coins{}, sdk.Coins{{testDenom1, one}}, sdk.Coins{}, sdk.Coins{{testDenom1, one}}},
 		{"two-zero", sdk.Coins{{testDenom2, two}}, sdk.Coins{}, sdk.Coins{}, sdk.Coins{{testDenom2, two}}},
 		{"disjoint", sdk.Coins{{testDenom1, one}}, sdk.Coins{{testDenom2, two}}, sdk.Coins{}, sdk.Coins{{testDenom1, one}, {testDenom2, two}}},
-		{
-			"overlap",
-			sdk.Coins{{testDenom1, one}, {testDenom2, two}},
-			sdk.Coins{{testDenom1, two}, {testDenom2, one}},
-			sdk.Coins{{testDenom1, one}, {testDenom2, one}},
-			sdk.Coins{{testDenom1, two}, {testDenom2, two}},
-		},
-		{
-			"one-one",
-			sdk.Coins{{testDenom2, one}},
-			sdk.Coins{{testDenom1, one}},
-			sdk.Coins{},
-			sdk.Coins{{testDenom1, one}, {testDenom2, one}},
-		},
+		{"overlap", sdk.Coins{{testDenom1, one}, {testDenom2, two}}, sdk.Coins{{testDenom1, two}, {testDenom2, one}},
+			sdk.Coins{{testDenom1, one}, {testDenom2, one}}, sdk.Coins{{testDenom1, two}, {testDenom2, two}}},
 	}
 
 	for _, tc := range cases {
 		min := tc.input1.Min(tc.input2)
 		max := tc.input1.Max(tc.input2)
-		s.Require().True(min.Equal(tc.min), tc.name)
-		s.Require().True(max.Equal(tc.max), tc.name)
+		s.Require().True(min.IsEqual(tc.min), tc.name)
+		s.Require().True(max.IsEqual(tc.max), tc.name)
 	}
 }
 

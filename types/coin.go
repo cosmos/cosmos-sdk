@@ -408,82 +408,18 @@ func (coins Coins) SafeSub(coinsB ...Coin) (Coins, bool) {
 	return diff, diff.IsAnyNegative()
 }
 
-// MulInt performs the scalar multiplication of coins with a `multiplier`
-// All coins are multiplied by x
-// e.g.
-// {2A, 3B} * 2 = {4A, 6B}
-// {2A} * 0 panics
-// Note, if IsValid was true on Coins, IsValid stays true.
-func (coins Coins) MulInt(x math.Int) Coins {
-	coins, ok := coins.SafeMulInt(x)
-	if !ok {
-		panic("multiplying by zero is an invalid operation on coins")
-	}
-
-	return coins
-}
-
-// SafeMulInt performs the same arithmetic as MulInt but returns false
-// if the `multiplier` is zero because it makes IsValid return false.
-func (coins Coins) SafeMulInt(x math.Int) (Coins, bool) {
-	if x.IsZero() {
-		return nil, false
-	}
-
-	res := make(Coins, len(coins))
-	for i, coin := range coins {
-		res[i] = NewCoin(coin.Denom, coin.Amount.Mul(x))
-	}
-
-	return res, true
-}
-
-// QuoInt performs the scalar division of coins with a `divisor`
-// All coins are divided by x and truncated.
-// e.g.
-// {2A, 30B} / 2 = {1A, 15B}
-// {2A} / 2 = {1A}
-// {4A} / {8A} = {0A}
-// {2A} / 0 = panics
-// Note, if IsValid was true on Coins, IsValid stays true,
-// unless the `divisor` is greater than the smallest coin amount.
-func (coins Coins) QuoInt(x math.Int) Coins {
-	coins, ok := coins.SafeQuoInt(x)
-	if !ok {
-		panic("dividing by zero is an invalid operation on coins")
-	}
-
-	return coins
-}
-
-// SafeQuoInt performs the same arithmetic as QuoInt but returns an error
-// if the division cannot be done.
-func (coins Coins) SafeQuoInt(x math.Int) (Coins, bool) {
-	if x.IsZero() {
-		return nil, false
-	}
-
-	var res Coins
-	for _, coin := range coins {
-		res = append(res, NewCoin(coin.Denom, coin.Amount.Quo(x)))
-	}
-
-	return res, true
-}
-
 // Max takes two valid Coins inputs and returns a valid Coins result
 // where for every denom D, AmountOf(D) of the result is the maximum
 // of AmountOf(D) of the inputs.  Note that the result might be not
 // be equal to either input. For any valid Coins a, b, and c, the
 // following are always true:
-//
-//	a.IsAllLTE(a.Max(b))
-//	b.IsAllLTE(a.Max(b))
-//	a.IsAllLTE(c) && b.IsAllLTE(c) == a.Max(b).IsAllLTE(c)
-//	a.Add(b...).Equal(a.Min(b).Add(a.Max(b)...))
+//     a.IsAllLTE(a.Max(b))
+//     b.IsAllLTE(a.Max(b))
+//     a.IsAllLTE(c) && b.IsAllLTE(c) == a.Max(b).IsAllLTE(c)
+//     a.Add(b...).IsEqual(a.Min(b).Add(a.Max(b)...))
 //
 // E.g.
-// {1A, 3B, 2C}.Max({4A, 2B, 2C}) == {4A, 3B, 2C}
+// {1A, 3B, 2C}.Max({4A, 2B, 2C} == {4A, 3B, 2C})
 // {2A, 3B}.Max({1B, 4C}) == {2A, 3B, 4C}
 // {1A, 2B}.Max({}) == {1A, 2B}
 func (coins Coins) Max(coinsB Coins) Coins {
@@ -522,14 +458,13 @@ func (coins Coins) Max(coinsB Coins) Coins {
 // of AmountOf(D) of the inputs.  Note that the result might be not
 // be equal to either input. For any valid Coins a, b, and c, the
 // following are always true:
-//
-//	a.Min(b).IsAllLTE(a)
-//	a.Min(b).IsAllLTE(b)
-//	c.IsAllLTE(a) && c.IsAllLTE(b) == c.IsAllLTE(a.Min(b))
-//	a.Add(b...).Equal(a.Min(b).Add(a.Max(b)...))
+//     a.Min(b).IsAllLTE(a)
+//     a.Min(b).IsAllLTE(b)
+//     c.IsAllLTE(a) && c.IsAllLTE(b) == c.IsAllLTE(a.Min(b))
+//     a.Add(b...).IsEqual(a.Min(b).Add(a.Max(b)...))
 //
 // E.g.
-// {1A, 3B, 2C}.Min({4A, 2B, 2C}) == {1A, 2B, 2C}
+// {1A, 3B, 2C}.Min({4A, 2B, 2C} == {1A, 2B, 2C})
 // {2A, 3B}.Min({1B, 4C}) == {1B}
 // {1A, 2B}.Min({3C}) == empty
 //

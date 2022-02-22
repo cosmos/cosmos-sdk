@@ -43,7 +43,7 @@ func NewBaseVestingAccount(baseAccount *authtypes.BaseAccount, originalVesting s
 //
 // CONTRACT: Delegated vesting coins and vestingCoins must be sorted.
 func (bva BaseVestingAccount) LockedCoinsFromVesting(vestingCoins sdk.Coins) sdk.Coins {
-	lockedCoins := vestingCoins.Sub(vestingCoins.Min(bva.DelegatedVesting)...)
+	lockedCoins := vestingCoins.Sub(vestingCoins.Min(bva.DelegatedVesting))
 	if lockedCoins == nil {
 		return sdk.Coins{}
 	}

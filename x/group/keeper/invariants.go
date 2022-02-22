@@ -167,7 +167,6 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 			msg += fmt.Sprintf("error while returning group member iterator for group with ID %d\n%v\n", groupInfo.Id, err)
 			return msg, broken
 		}
-		defer memIt.Close()
 
 		for {
 			_, err = memIt.LoadNext(&groupMember)
@@ -185,6 +184,8 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 				return msg, broken
 			}
 		}
+		memIt.Close()
+
 		groupWeight, err := groupmath.NewNonNegativeDecFromString(groupInfo.GetTotalWeight())
 		if err != nil {
 			msg += fmt.Sprintf("error while parsing non-nengative decimal for group with ID %d\n%v\n", groupInfo.Id, err)
@@ -278,7 +279,6 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, grou
 			msg += fmt.Sprintf("error while returning vote iterator for proposal with ID %d\n%v\n", proposal.Id, err)
 			return msg, broken
 		}
-		defer voteIt.Close()
 
 		for {
 			_, err := voteIt.LoadNext(&vote)
@@ -330,6 +330,7 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, grou
 				}
 			}
 		}
+		voteIt.Close()
 
 		totalProposalVotes, err := proposal.FinalTallyResult.TotalCounts()
 		if err != nil {

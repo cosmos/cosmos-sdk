@@ -5,6 +5,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
+
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -16,11 +18,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestGRPCGatewayRouter(t *testing.T) {
+func TestGRPCQueryRouter(t *testing.T) {
 	qr := baseapp.NewGRPCQueryRouter()
 	interfaceRegistry := testdata.NewTestInterfaceRegistry()
 	qr.SetInterfaceRegistry(interfaceRegistry)
-	testdata.RegisterQueryServer(qr, testdata.QueryImpl{})
+	testdata_pulsar.RegisterQueryServer(qr, testdata_pulsar.QueryImpl{})
 	helper := &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: qr,
 		Ctx:             sdk.Context{}.WithContext(context.Background()),

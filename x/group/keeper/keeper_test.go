@@ -705,6 +705,210 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 	}
 }
 
+func (s *TestSuite) TestCreateGroupWithPolicy() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr3 := addrs[2]
+	addr5 := addrs[4]
+	addr6 := addrs[5]
+
+	members := []group.Member{{
+		Address:  addr5.String(),
+		Weight:   "1",
+		Metadata: nil,
+		AddedAt:  s.blockTime,
+	}, {
+		Address:  addr6.String(),
+		Weight:   "2",
+		Metadata: nil,
+		AddedAt:  s.blockTime,
+	}}
+
+	specs := map[string]struct {
+		req       *group.MsgCreateGroupWithPolicy
+		policy    group.DecisionPolicy
+		expErr    bool
+		expErrMsg string
+	}{
+		"all good": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin:               addr1.String(),
+				Members:             members,
+				GroupMetadata:       nil,
+				GroupPolicyMetadata: nil,
+				GroupPolicyAsAdmin:  false,
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"1",
+				time.Second,
+			),
+		},
+		"group policy as admin is true": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin:               addr1.String(),
+				Members:             members,
+				GroupMetadata:       nil,
+				GroupPolicyMetadata: nil,
+				GroupPolicyAsAdmin:  true,
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"1",
+				time.Second,
+			),
+		},
+		"group metadata too long": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin:               addr1.String(),
+				Members:             members,
+				GroupMetadata:       bytes.Repeat([]byte{1}, 256),
+				GroupPolicyMetadata: nil,
+				GroupPolicyAsAdmin:  false,
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"1",
+				time.Second,
+			),
+			expErr:    true,
+			expErrMsg: "limit exceeded",
+		},
+		"group policy metadata too long": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin:               addr1.String(),
+				Members:             members,
+				GroupMetadata:       nil,
+				GroupPolicyMetadata: bytes.Repeat([]byte{1}, 256),
+				GroupPolicyAsAdmin:  false,
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"1",
+				time.Second,
+			),
+			expErr:    true,
+			expErrMsg: "limit exceeded",
+		},
+		"member metadata too long": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin: addr1.String(),
+				Members: []group.Member{{
+					Address:  addr3.String(),
+					Weight:   "1",
+					Metadata: bytes.Repeat([]byte{1}, 256),
+				}},
+				GroupMetadata:       nil,
+				GroupPolicyMetadata: nil,
+				GroupPolicyAsAdmin:  false,
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"1",
+				time.Second,
+			),
+			expErr:    true,
+			expErrMsg: "limit exceeded",
+		},
+		"zero member weight": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin: addr1.String(),
+				Members: []group.Member{{
+					Address:  addr3.String(),
+					Weight:   "0",
+					Metadata: nil,
+				}},
+				GroupMetadata:       nil,
+				GroupPolicyMetadata: nil,
+				GroupPolicyAsAdmin:  false,
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"1",
+				time.Second,
+			),
+			expErr:    true,
+			expErrMsg: "expected a positive decimal",
+		},
+		"decision policy threshold > total group weight": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin:               addr1.String(),
+				Members:             members,
+				GroupMetadata:       nil,
+				GroupPolicyMetadata: nil,
+				GroupPolicyAsAdmin:  false,
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"10",
+				time.Second,
+			),
+			expErr: false,
+		},
+	}
+
+	for msg, spec := range specs {
+		spec := spec
+		s.Run(msg, func() {
+			err := spec.req.SetDecisionPolicy(spec.policy)
+			s.Require().NoError(err)
+
+			res, err := s.keeper.CreateGroupWithPolicy(s.ctx, spec.req)
+			if spec.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), spec.expErrMsg)
+				return
+			}
+			s.Require().NoError(err)
+			id := res.GroupId
+			groupPolicyAddr := res.GroupPolicyAddress
+
+			// then all data persisted in group
+			loadedGroupRes, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: id})
+			s.Require().NoError(err)
+			s.Assert().Equal(spec.req.GroupMetadata, loadedGroupRes.Info.Metadata)
+			s.Assert().Equal(id, loadedGroupRes.Info.Id)
+			if spec.req.GroupPolicyAsAdmin {
+				s.Assert().NotEqual(spec.req.Admin, loadedGroupRes.Info.Admin)
+				s.Assert().Equal(groupPolicyAddr, loadedGroupRes.Info.Admin)
+			} else {
+				s.Assert().Equal(spec.req.Admin, loadedGroupRes.Info.Admin)
+			}
+
+			// and members are stored as well
+			membersRes, err := s.keeper.GroupMembers(s.ctx, &group.QueryGroupMembersRequest{GroupId: id})
+			s.Require().NoError(err)
+			loadedMembers := membersRes.Members
+			s.Require().Equal(len(members), len(loadedMembers))
+			// we reorder members by address to be able to compare them
+			sort.Slice(members, func(i, j int) bool {
+				addri, err := sdk.AccAddressFromBech32(members[i].Address)
+				s.Require().NoError(err)
+				addrj, err := sdk.AccAddressFromBech32(members[j].Address)
+				s.Require().NoError(err)
+				return bytes.Compare(addri, addrj) < 0
+			})
+			for i := range loadedMembers {
+				s.Assert().Equal(members[i].Metadata, loadedMembers[i].Member.Metadata)
+				s.Assert().Equal(members[i].Address, loadedMembers[i].Member.Address)
+				s.Assert().Equal(members[i].Weight, loadedMembers[i].Member.Weight)
+				s.Assert().Equal(members[i].AddedAt, loadedMembers[i].Member.AddedAt)
+				s.Assert().Equal(id, loadedMembers[i].GroupId)
+			}
+
+			// then all data persisted in group policy
+			groupPolicyRes, err := s.keeper.GroupPolicyInfo(s.ctx, &group.QueryGroupPolicyInfoRequest{Address: groupPolicyAddr})
+			s.Require().NoError(err)
+
+			groupPolicy := groupPolicyRes.Info
+			s.Assert().Equal(groupPolicyAddr, groupPolicy.Address)
+			s.Assert().Equal(id, groupPolicy.GroupId)
+			s.Assert().Equal(spec.req.GroupPolicyMetadata, groupPolicy.Metadata)
+			s.Assert().Equal(spec.policy.(*group.ThresholdDecisionPolicy), groupPolicy.GetDecisionPolicy())
+			if spec.req.GroupPolicyAsAdmin {
+				s.Assert().NotEqual(spec.req.Admin, groupPolicy.Admin)
+				s.Assert().Equal(groupPolicyAddr, groupPolicy.Admin)
+			} else {
+				s.Assert().Equal(spec.req.Admin, groupPolicy.Admin)
+			}
+		})
+	}
+
+}
+
 func (s *TestSuite) TestCreateGroupPolicy() {
 	addrs := s.addrs
 	addr1 := addrs[0]
@@ -1033,6 +1237,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 	groupPolicyAddr, myGroupID, policy := createGroupAndGroupPolicy(admin, s)
 
 	specs := map[string]struct {
+		preRun         func(admin sdk.AccAddress, s *TestSuite) (policyAddr string, groupId uint64, policy group.DecisionPolicy)
 		req            *group.MsgUpdateGroupPolicyDecisionPolicy
 		policy         group.DecisionPolicy
 		expGroupPolicy *group.GroupPolicyInfo
@@ -1077,6 +1282,9 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 			expErr: false,
 		},
 		"correct data with percentage decision policy": {
+			preRun: func(admin sdk.AccAddress, s *TestSuite) (policyAddr string, groupId uint64, policy group.DecisionPolicy) {
+				return createGroupAndGroupPolicy(admin, s)
+			},
 			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
 				Admin:   admin.String(),
 				Address: groupPolicyAddr,
@@ -1087,11 +1295,9 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 			),
 			expGroupPolicy: &group.GroupPolicyInfo{
 				Admin:          admin.String(),
-				Address:        groupPolicyAddr,
-				GroupId:        myGroupID,
 				Metadata:       nil,
-				Version:        3,
 				DecisionPolicy: nil,
+				Version:        2,
 				CreatedAt:      s.blockTime,
 			},
 			expErr: false,
@@ -1099,8 +1305,20 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 	}
 	for msg, spec := range specs {
 		spec := spec
+		policyAddr := groupPolicyAddr
 		err := spec.expGroupPolicy.SetDecisionPolicy(spec.policy)
 		s.Require().NoError(err)
+		if spec.preRun != nil {
+			policyAddr1, groupId, _ := spec.preRun(admin, s)
+			policyAddr = policyAddr1
+
+			// update the expected info with new group policy details
+			spec.expGroupPolicy.Address = policyAddr1
+			spec.expGroupPolicy.GroupId = groupId
+
+			// update req with new group policy addr
+			spec.req.Address = policyAddr1
+		}
 
 		err = spec.req.SetDecisionPolicy(spec.policy)
 		s.Require().NoError(err)
@@ -1113,7 +1331,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 			}
 			s.Require().NoError(err)
 			res, err := s.keeper.GroupPolicyInfo(s.ctx, &group.QueryGroupPolicyInfoRequest{
-				Address: groupPolicyAddr,
+				Address: policyAddr,
 			})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.expGroupPolicy, res.Info)

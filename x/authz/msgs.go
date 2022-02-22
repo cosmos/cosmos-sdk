@@ -1,11 +1,11 @@
 package authz
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -80,7 +80,7 @@ func (msg MsgGrant) GetSignBytes() []byte {
 }
 
 // GetAuthorization returns the cache value from the MsgGrant.Authorization if present.
-func (msg *MsgGrant) GetAuthorization() Authorization {
+func (msg *MsgGrant) GetAuthorization() (Authorization, error) {
 	return msg.Grant.GetAuthorization()
 }
 

@@ -29,12 +29,12 @@ a security break of one account type shouldn't impact the security of other acco
 One initial proposal was extending the address length and
 adding prefixes for different types of addresses.
 
-@ethanfrey explained an alternate approach originally used in <https://github.com/iov-one/weave>:
+@ethanfrey explained an alternate approach originally used in https://github.com/iov-one/weave:
 
 > I spent quite a bit of time thinking about this issue while building weave... The other cosmos Sdk.
 > Basically I define a condition to be a type and format as human readable string with some binary data appended. This condition is hashed into an Address (again at 20 bytes). The use of this prefix makes it impossible to find a preimage for a given address with a different condition (eg ed25519 vs secp256k1).
-> This is explained in depth here <https://weave.readthedocs.io/en/latest/design/permissions.html>
-> And the code is here, look mainly at the top where we process conditions. <https://github.com/iov-one/weave/blob/master/conditions.go>
+> This is explained in depth here https://weave.readthedocs.io/en/latest/design/permissions.html
+> And the code is here, look mainly at the top where we process conditions. https://github.com/iov-one/weave/blob/master/conditions.go
 
 And explained how this approach should be sufficiently collision resistant:
 
@@ -60,7 +60,7 @@ In the issue we discussed various modifications:
 
 ### Requirements
 
-* Support currently used tools - we don't want to break an ecosystem, or add a long adaptation period. Ref: <https://github.com/cosmos/cosmos-sdk/issues/8041>
+* Support currently used tools - we don't want to break an ecosystem, or add a long adaptation period. Ref: https://github.com/cosmos/cosmos-sdk/issues/8041
 * Try to keep the address length small - addresses are widely used in state, both as part of a key and object value.
 
 ### Scope

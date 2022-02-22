@@ -309,9 +309,9 @@ func (q Keeper) getVotesByVoter(ctx sdk.Context, voter sdk.AccAddress, pageReque
 // and returns the tally result without modifying the proposal or any state.
 // TODO Merge with https://github.com/cosmos/cosmos-sdk/issues/11151
 func (q Keeper) Tally(ctx sdk.Context, p group.Proposal, groupId uint64) (group.TallyResult, error) {
-	// If proposal has already been tallied, its status is not submitted, then
-	// we just return the previously stored result.
-	if p.Status != group.PROPOSAL_STATUS_SUBMITTED {
+	// If proposal has already been tallied and updated, then its status is
+	// closed, in which case we just return the previously stored result.
+	if p.Status == group.PROPOSAL_STATUS_CLOSED {
 		return p.FinalTallyResult, nil
 	}
 

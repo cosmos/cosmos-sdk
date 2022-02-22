@@ -2,7 +2,7 @@
 
 ## Changelog
 
-- 17.02.2021: Initial Draft
+* 17.02.2021: Initial Draft
 
 ## Status
 
@@ -18,8 +18,8 @@ When a chain upgrade introduces state-breaking changes inside modules, the curre
 
 This procedure is cumbersome for multiple reasons:
 
-- The procedure takes time. It can take hours to run the `export` command, plus some additional hours to run `InitChain` on the fresh chain using the migrated JSON.
-- The exported JSON file can be heavy (~100MB-1GB), making it difficult to view, edit and transfer, which in turn introduces additional work to solve these problems (such as [streaming genesis](https://github.com/cosmos/cosmos-sdk/issues/6936)).
+* The procedure takes time. It can take hours to run the `export` command, plus some additional hours to run `InitChain` on the fresh chain using the migrated JSON.
+* The exported JSON file can be heavy (~100MB-1GB), making it difficult to view, edit and transfer, which in turn introduces additional work to solve these problems (such as [streaming genesis](https://github.com/cosmos/cosmos-sdk/issues/6936)).
 
 ## Decision
 
@@ -81,7 +81,7 @@ Each module's migration functions are specific to the module's store evolutions,
 
 We introduce a new prefix store in `x/upgrade`'s store. This store will track each module's current version, it can be modelized as a `map[string]uint64` of module name to module ConsensusVersion, and will be used when running the migrations (see next section for details). The key prefix used is `0x1`, and the key/value format is:
 
-```
+```text
 0x2 | {bytes(module_name)} => BigEndian(module_consensus_version)
 ```
 
@@ -116,10 +116,10 @@ A gRPC query endpoint to query the `VersionMap` stored in `x/upgrade`'s state wi
 
 Once all the migration handlers are registered inside the configurator (which happens at startup), running migrations can happen by calling the `RunMigrations` method on `module.Manager`. This function will loop through all modules, and for each module:
 
-- Get the old ConsensusVersion of the module from its `VersionMap` argument (let's call it `M`).
-- Fetch the new ConsensusVersion of the module from the `ConsensusVersion()` method on `AppModule` (call it `N`).
-- If `N>M`, run all registered migrations for the module sequentially `M -> M+1 -> M+2...` until `N`.
-    - There is a special case where there is no ConsensusVersion for the module, as this means that the module has been newly added during the upgrade. In this case, no migration function is run, and the module's current ConsensusVersion is saved to `x/upgrade`'s store.
+* Get the old ConsensusVersion of the module from its `VersionMap` argument (let's call it `M`).
+* Fetch the new ConsensusVersion of the module from the `ConsensusVersion()` method on `AppModule` (call it `N`).
+* If `N>M`, run all registered migrations for the module sequentially `M -> M+1 -> M+2...` until `N`.
+    * There is a special case where there is no ConsensusVersion for the module, as this means that the module has been newly added during the upgrade. In this case, no migration function is run, and the module's current ConsensusVersion is saved to `x/upgrade`'s store.
 
 If a required migration is missing (e.g. if it has not been registered in the `Configurator`), then the `RunMigrations` function will error.
 
@@ -133,8 +133,8 @@ app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgrad
 
 Assuming a chain upgrades at block `n`, the procedure should run as follows:
 
-- the old binary will halt in `BeginBlock` when starting block `N`. In its store, the ConsensusVersions of the old binary's modules are stored.
-- the new binary will start at block `N`. The UpgradeHandler is set in the new binary, so will run at `BeginBlock` of the new binary. Inside `x/upgrade`'s `ApplyUpgrade`, the `VersionMap` will be retrieved from the (old binary's) store, and passed into the `RunMigrations` functon, migrating all module stores in-place before the modules' own `BeginBlock`s.
+* the old binary will halt in `BeginBlock` when starting block `N`. In its store, the ConsensusVersions of the old binary's modules are stored.
+* the new binary will start at block `N`. The UpgradeHandler is set in the new binary, so will run at `BeginBlock` of the new binary. Inside `x/upgrade`'s `ApplyUpgrade`, the `VersionMap` will be retrieved from the (old binary's) store, and passed into the `RunMigrations` functon, migrating all module stores in-place before the modules' own `BeginBlock`s.
 
 ## Consequences
 
@@ -146,22 +146,22 @@ While modules MUST register their migration functions when bumping ConsensusVers
 
 ### Positive
 
-- Perform chain upgrades without manipulating JSON files.
-- While no benchmark has been made yet, it is probable that in-place store migrations will take less time than JSON migrations. The main reason supporting this claim is that both the `simd export` command on the old binary and the `InitChain` function on the new binary will be skipped.
+* Perform chain upgrades without manipulating JSON files.
+* While no benchmark has been made yet, it is probable that in-place store migrations will take less time than JSON migrations. The main reason supporting this claim is that both the `simd export` command on the old binary and the `InitChain` function on the new binary will be skipped.
 
 ### Negative
 
-- Module developers MUST correctly track consensus-breaking changes in their modules. If a consensus-breaking change is introduced in a module without its corresponding `ConsensusVersion()` bump, then the `RunMigrations` function won't detect the migration, and the chain upgrade might be unsuccessful. Documentation should clearly reflect this.
+* Module developers MUST correctly track consensus-breaking changes in their modules. If a consensus-breaking change is introduced in a module without its corresponding `ConsensusVersion()` bump, then the `RunMigrations` function won't detect the migration, and the chain upgrade might be unsuccessful. Documentation should clearly reflect this.
 
 ### Neutral
 
-- The Cosmos SDK will continue to support JSON migrations via the existing `simd export` and `simd migrate` commands.
-- The current ADR does not allow creating, renaming or deleting stores, only modifying existing store keys and values. The Cosmos SDK already has the `StoreLoader` for those operations.
+* The Cosmos SDK will continue to support JSON migrations via the existing `simd export` and `simd migrate` commands.
+* The current ADR does not allow creating, renaming or deleting stores, only modifying existing store keys and values. The Cosmos SDK already has the `StoreLoader` for those operations.
 
 ## Further Discussions
 
 ## References
 
-- Initial discussion: https://github.com/cosmos/cosmos-sdk/discussions/8429
-- Implementation of `ConsensusVersion` and `RunMigrations`: https://github.com/cosmos/cosmos-sdk/pull/8485
-- Issue discussing `x/upgrade` design: https://github.com/cosmos/cosmos-sdk/issues/8514
+* Initial discussion: https://github.com/cosmos/cosmos-sdk/discussions/8429
+* Implementation of `ConsensusVersion` and `RunMigrations`: https://github.com/cosmos/cosmos-sdk/pull/8485
+* Issue discussing `x/upgrade` design: https://github.com/cosmos/cosmos-sdk/issues/8514

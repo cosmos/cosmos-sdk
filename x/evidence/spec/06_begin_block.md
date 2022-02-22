@@ -13,8 +13,8 @@ Tendermint blocks can include
 
 The Cosmos SDK handles two types of evidence inside the ABCI `BeginBlock`:
 
-- `DuplicateVoteEvidence`,
-- `LightClientAttackEvidence`.
+* `DuplicateVoteEvidence`,
+* `LightClientAttackEvidence`.
 
 The evidence module handles these two evidence types the same way. First, the Cosmos SDK converts the Tendermint concrete evidence type to an SDK `Evidence` interface using `Equivocation` as the concrete type.
 
@@ -34,8 +34,8 @@ For some `Equivocation` submitted in `block` to be valid, it must satisfy:
 
 Where:
 
-- `Evidence.Timestamp` is the timestamp in the block at height `Evidence.Height`
-- `block.Timestamp` is the current block timestamp.
+* `Evidence.Timestamp` is the timestamp in the block at height `Evidence.Height`
+* `block.Timestamp` is the current block timestamp.
 
 If valid `Equivocation` evidence is included in a block, the validator's stake is
 reduced (slashed) by `SlashFractionDoubleSign` as defined by the `x/slashing` module

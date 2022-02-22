@@ -467,6 +467,21 @@ Example:
 simd tx group create-group-policy cosmos1.. 1 "AQ==" '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"600s"}' 
 ```
 
+
+#### create-group-with-policy
+
+The `create-group-with-policy` command allows users to create a group which is an aggregation of member accounts with associated weights and an administrator account with decision policy. If the `--group-policy-as-admin` flag is set to `true`, the group policy address becomes the group and group policy admin.
+
+```bash
+simd tx group create-group-with-policy [admin] [group-metadata] [group-policy-metadata] [members-json-file] [decision-policy] [flags]
+```
+
+Example:
+
+```bash
+simd tx group create-group-with-policy cosmos1.. "AQ==" "AQ==" members.json '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"600s"}' 
+```
+
 #### update-group-policy-admin
 
 The `update-group-policy-admin` command allows users to update a group policy admin.
@@ -521,6 +536,20 @@ Example:
 
 ```bash
 simd tx group create-proposal cosmos1.. cosmos1.. msg_tx.json "AQ=="
+```
+
+#### withdraw-proposal
+
+The `withdraw-proposal` command allows users to withdraw a proposal.
+
+```bash
+simd tx group withdraw-proposal [proposal-id] [group-policy-admin-or-proposer]
+```
+
+Example:
+
+```bash
+simd tx group withdraw-proposal 1 cosmos1..
 ```
 
 #### vote 
@@ -695,26 +724,26 @@ Example Output:
 }
 ```
 
-### GroupPolicysByGroup
+### GroupPoliciesByGroup
 
-The `GroupPolicysByGroup` endpoint allows users to query for group policies by group id with pagination flags.
+The `GroupPoliciesByGroup` endpoint allows users to query for group policies by group id with pagination flags.
 
 ```bash
-cosmos.group.v1beta1.Query/GroupPolicysByGroup
+cosmos.group.v1beta1.Query/GroupPoliciesByGroup
 ```
 
 Example:
 
 ```bash
 grpcurl -plaintext \
-    -d '{"group_id":"1"}'  localhost:9090 cosmos.group.v1beta1.Query/GroupPolicysByGroup
+    -d '{"group_id":"1"}'  localhost:9090 cosmos.group.v1beta1.Query/GroupPoliciesByGroup
 ```
 
 Example Output:
 
 ```bash
 {
-  "GroupPolicys": [
+  "GroupPolicies": [
     {
       "address": "cosmos1..",
       "groupId": "1",
@@ -736,26 +765,26 @@ Example Output:
 }
 ```
 
-### GroupPolicysByAdmin
+### GroupPoliciesByAdmin
 
-The `GroupPolicysByAdmin` endpoint allows users to query for group policies by admin account address with pagination flags.
+The `GroupPoliciesByAdmin` endpoint allows users to query for group policies by admin account address with pagination flags.
 
 ```bash
-cosmos.group.v1beta1.Query/GroupPolicysByAdmin
+cosmos.group.v1beta1.Query/GroupPoliciesByAdmin
 ```
 
 Example:
 
 ```bash
 grpcurl -plaintext \
-    -d '{"admin":"cosmos1.."}'  localhost:9090 cosmos.group.v1beta1.Query/GroupPolicysByAdmin
+    -d '{"admin":"cosmos1.."}'  localhost:9090 cosmos.group.v1beta1.Query/GroupPoliciesByAdmin
 ```
 
 Example Output:
 
 ```bash
 {
-  "GroupPolicys": [
+  "GroupPolicies": [
     {
       "address": "cosmos1..",
       "groupId": "1",
@@ -1114,9 +1143,9 @@ Example Output:
 }
 ```
 
-### GroupPolicysByGroup
+### GroupPoliciesByGroup
 
-The `GroupPolicysByGroup` endpoint allows users to query for group policies by group id with pagination flags.
+The `GroupPoliciesByGroup` endpoint allows users to query for group policies by group id with pagination flags.
 
 ```bash
 /cosmos/group/v1beta1/group_policies_by_group/{group_id}
@@ -1165,9 +1194,9 @@ Example Output:
 }
 ```
 
-### GroupPolicysByAdmin
+### GroupPoliciesByAdmin
 
-The `GroupPolicysByAdmin` endpoint allows users to query for group policies by admin account address with pagination flags.
+The `GroupPoliciesByAdmin` endpoint allows users to query for group policies by admin account address with pagination flags.
 
 ```bash
 /cosmos/group/v1beta1/group_policies_by_admin/{admin}

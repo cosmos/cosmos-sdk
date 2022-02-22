@@ -141,6 +141,8 @@ message GetTxResponse {
 
 // GetBlockWithTxsRequest is the request type for the Service.GetBlockWithTxs
 // RPC method.
+//
+// Since: cosmos-sdk 0.45.2
 message GetBlockWithTxsRequest {
   // height is the height of the block to query.
   int64 height = 1;
@@ -149,6 +151,8 @@ message GetBlockWithTxsRequest {
 }
 
 // GetBlockWithTxsResponse is the response type for the Service.GetBlockWithTxs method.
+//
+// Since: cosmos-sdk 0.45.2
 message GetBlockWithTxsResponse {
   // txs are the transactions in the block.
   repeated cosmos.tx.v1beta1.Tx txs = 1;

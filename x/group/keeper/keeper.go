@@ -209,6 +209,9 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 	if config.MaxMetadataLen == 0 {
 		config.MaxMetadataLen = DefaultConfig().MaxMetadataLen
 	}
+	if config.MaxExecutionPeriod == 0 {
+		config.MaxExecutionPeriod = DefaultConfig().MaxExecutionPeriod
+	}
 	k.config = config
 
 	return k

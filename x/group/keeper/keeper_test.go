@@ -1983,6 +1983,24 @@ func (s *TestSuite) TestVote() {
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			postRun:           func(sdkCtx sdk.Context) {},
 		},
+		"reject new votes when final decision is made already": {
+			req: &group.MsgVote{
+				ProposalId: myProposalID,
+				Voter:      addr4.String(),
+				Option:     group.VOTE_OPTION_YES,
+			},
+			doBefore: func(ctx context.Context) {
+				_, err := s.keeper.Vote(ctx, &group.MsgVote{
+					ProposalId: myProposalID,
+					Voter:      addr3.String(),
+					Option:     group.VOTE_OPTION_NO_WITH_VETO,
+					Exec:       1, // Execute the proposal so that its status is final
+				})
+				s.Require().NoError(err)
+			},
+			expErr:  true,
+			postRun: func(sdkCtx sdk.Context) {},
+		},
 		"metadata too long": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
@@ -2058,11 +2076,8 @@ func (s *TestSuite) TestVote() {
 					ProposalId: myProposalID,
 					Voter:      addr3.String(),
 					Option:     group.VOTE_OPTION_YES,
+					Exec:       1, // Execute to close the proposal.
 				})
-				s.Require().NoError(err)
-
-				// Execute to close the proposal.
-				_, err = s.keeper.Exec(ctx, &group.MsgExec{ProposalId: myProposalID, Signer: addr3.String()})
 				s.Require().NoError(err)
 			},
 			expErr:  true,
@@ -2113,9 +2128,8 @@ func (s *TestSuite) TestVote() {
 					addr1,
 					groupPolicy,
 					&group.ThresholdDecisionPolicy{
-						Threshold:          "1",
-						VotingPeriod:       time.Second,
-						MinExecutionPeriod: time.Second,
+						Threshold:    "1",
+						VotingPeriod: time.Second,
 					},
 				)
 				s.Require().NoError(err)
@@ -2204,7 +2218,7 @@ func (s *TestSuite) TestVote() {
 				s.Assert().Equal(group.DefaultTallyResult(), proposal.FinalTallyResult) // Make sure proposal isn't mutated.
 
 				// do a round of tallying
-				tallyResult, err := s.keeper.Tally(sdkCtx, *proposal, myGroupID)
+				tallyResult, err := s.keeper.Tally(sdkCtx, proposal.Id)
 				s.Require().NoError(err)
 
 				s.Assert().Equal(spec.expTallyResult, tallyResult)

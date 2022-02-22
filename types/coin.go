@@ -449,6 +449,8 @@ func (coins Coins) Max(coinsB Coins) Coins {
 // {1A, 3B, 2C}.Min({4A, 2B, 2C} == {1A, 2B, 2C})
 // {2A, 3B}.Min({1B, 4C}) == {1B}
 // {1A, 2B}.Min({3C}) == empty
+//
+// See also DecCoins.Intersect().
 func (coins Coins) Min(coinsB Coins) Coins {
 	min := make([]Coin, 0)
 	for indexA, indexB := 0, 0; indexA < len(coins) && indexB < len(coinsB); {
@@ -471,15 +473,6 @@ func (coins Coins) Min(coinsB Coins) Coins {
 		}
 	}
 	return NewCoins(min...)
-}
-
-// Intersect will return a new set of coins which coinains the minimum Coin
-// for common denoms found in both `coins` and `coinsB`. Identical to Min()
-// method and provided for compatibility with DecCoins. Note that the
-// corresponding Union() alias for Max() will not be provided since it is
-// dangerously confusable with Add().
-func (coins Coins) Intersect(coinsB Coins) Coins {
-	return coins.Min(coinsB)
 }
 
 // IsAllGT returns true if for every denom in coinsB,

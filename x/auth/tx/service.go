@@ -185,22 +185,22 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 		return nil, err
 	}
 
-	var offset, limit int
+	var offset, limit uint64
 	if req.Pagination != nil {
-		offset = int(req.Pagination.Offset)
-		limit = int(req.Pagination.Limit)
+		offset = req.Pagination.Offset
+		limit = req.Pagination.Limit
 	} else {
 		offset = 0
 		limit = pagination.DefaultLimit
 	}
 
 	blockTxs := block.Data.Txs
-	blockTxsLn := len(blockTxs)
+	blockTxsLn := uint64(len(blockTxs))
 	txs := make([]*txtypes.Tx, 0, limit)
 	if offset >= blockTxsLn {
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("out of range: cannot paginate %d txs with offset %d and limit %d", blockTxsLn, offset, limit)
 	}
-	decodeTxAt := func(i int) error {
+	decodeTxAt := func(i uint64) error {
 		tx := blockTxs[i]
 		txb, err := s.clientCtx.TxConfig.TxDecoder()(tx)
 		if err != nil {
@@ -214,13 +214,13 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 		return nil
 	}
 	if req.Pagination != nil && req.Pagination.Reverse {
-		for i, count := offset, 0; i > 0 && count != limit; i, count = i-1, count+1 {
+		for i, count := offset, uint64(0); i > 0 && count != limit; i, count = i-1, count+1 {
 			if err = decodeTxAt(i); err != nil {
 				return nil, err
 			}
 		}
 	} else {
-		for i, count := offset, 0; i < blockTxsLn && count != limit; i, count = i+1, count+1 {
+		for i, count := offset, uint64(0); i < blockTxsLn && count != limit; i, count = i+1, count+1 {
 			if err = decodeTxAt(i); err != nil {
 				return nil, err
 			}
@@ -232,7 +232,7 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 		BlockId: &blockId,
 		Block:   block,
 		Pagination: &pagination.PageResponse{
-			Total: uint64(blockTxsLn),
+			Total: blockTxsLn,
 		},
 	}, nil
 

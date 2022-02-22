@@ -5,23 +5,26 @@ package testpb
 import (
 	context "context"
 
-	ormdb "github.com/cosmos/cosmos-sdk/orm/model/ormdb"
 	ormlist "github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 	ormtable "github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 	ormerrors "github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
 
-type ExampleTableStore interface {
+type ExampleTableTable interface {
 	Insert(ctx context.Context, exampleTable *ExampleTable) error
 	Update(ctx context.Context, exampleTable *ExampleTable) error
 	Save(ctx context.Context, exampleTable *ExampleTable) error
 	Delete(ctx context.Context, exampleTable *ExampleTable) error
 	Has(ctx context.Context, u32 uint32, i64 int64, str string) (found bool, err error)
+	// Get returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
 	Get(ctx context.Context, u32 uint32, i64 int64, str string) (*ExampleTable, error)
 	HasByU64Str(ctx context.Context, u64 uint64, str string) (found bool, err error)
+	// GetByU64Str returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
 	GetByU64Str(ctx context.Context, u64 uint64, str string) (*ExampleTable, error)
 	List(ctx context.Context, prefixKey ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error)
 	ListRange(ctx context.Context, from, to ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error)
+	DeleteBy(ctx context.Context, prefixKey ExampleTableIndexKey) error
+	DeleteRange(ctx context.Context, from, to ExampleTableIndexKey) error
 
 	doNotImplement()
 }
@@ -122,94 +125,110 @@ func (this ExampleTableBzStrIndexKey) WithBzStr(bz []byte, str string) ExampleTa
 	return this
 }
 
-type exampleTableStore struct {
+type exampleTableTable struct {
 	table ormtable.Table
 }
 
-func (this exampleTableStore) Insert(ctx context.Context, exampleTable *ExampleTable) error {
+func (this exampleTableTable) Insert(ctx context.Context, exampleTable *ExampleTable) error {
 	return this.table.Insert(ctx, exampleTable)
 }
 
-func (this exampleTableStore) Update(ctx context.Context, exampleTable *ExampleTable) error {
+func (this exampleTableTable) Update(ctx context.Context, exampleTable *ExampleTable) error {
 	return this.table.Update(ctx, exampleTable)
 }
 
-func (this exampleTableStore) Save(ctx context.Context, exampleTable *ExampleTable) error {
+func (this exampleTableTable) Save(ctx context.Context, exampleTable *ExampleTable) error {
 	return this.table.Save(ctx, exampleTable)
 }
 
-func (this exampleTableStore) Delete(ctx context.Context, exampleTable *ExampleTable) error {
+func (this exampleTableTable) Delete(ctx context.Context, exampleTable *ExampleTable) error {
 	return this.table.Delete(ctx, exampleTable)
 }
 
-func (this exampleTableStore) Has(ctx context.Context, u32 uint32, i64 int64, str string) (found bool, err error) {
+func (this exampleTableTable) Has(ctx context.Context, u32 uint32, i64 int64, str string) (found bool, err error) {
 	return this.table.PrimaryKey().Has(ctx, u32, i64, str)
 }
 
-func (this exampleTableStore) Get(ctx context.Context, u32 uint32, i64 int64, str string) (*ExampleTable, error) {
+func (this exampleTableTable) Get(ctx context.Context, u32 uint32, i64 int64, str string) (*ExampleTable, error) {
 	var exampleTable ExampleTable
 	found, err := this.table.PrimaryKey().Get(ctx, &exampleTable, u32, i64, str)
-	if !found {
+	if err != nil {
 		return nil, err
 	}
-	return &exampleTable, err
+	if !found {
+		return nil, ormerrors.NotFound
+	}
+	return &exampleTable, nil
 }
 
-func (this exampleTableStore) HasByU64Str(ctx context.Context, u64 uint64, str string) (found bool, err error) {
+func (this exampleTableTable) HasByU64Str(ctx context.Context, u64 uint64, str string) (found bool, err error) {
 	return this.table.GetIndexByID(1).(ormtable.UniqueIndex).Has(ctx,
 		u64,
 		str,
 	)
 }
 
-func (this exampleTableStore) GetByU64Str(ctx context.Context, u64 uint64, str string) (*ExampleTable, error) {
+func (this exampleTableTable) GetByU64Str(ctx context.Context, u64 uint64, str string) (*ExampleTable, error) {
 	var exampleTable ExampleTable
 	found, err := this.table.GetIndexByID(1).(ormtable.UniqueIndex).Get(ctx, &exampleTable,
 		u64,
 		str,
 	)
-	if !found {
+	if err != nil {
 		return nil, err
+	}
+	if !found {
+		return nil, ormerrors.NotFound
 	}
 	return &exampleTable, nil
 }
 
-func (this exampleTableStore) List(ctx context.Context, prefixKey ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error) {
-	opts = append(opts, ormlist.Prefix(prefixKey.values()...))
-	it, err := this.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
+func (this exampleTableTable) List(ctx context.Context, prefixKey ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error) {
+	it, err := this.table.GetIndexByID(prefixKey.id()).List(ctx, prefixKey.values(), opts...)
 	return ExampleTableIterator{it}, err
 }
 
-func (this exampleTableStore) ListRange(ctx context.Context, from, to ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error) {
-	opts = append(opts, ormlist.Start(from.values()...), ormlist.End(to.values()...))
-	it, err := this.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
+func (this exampleTableTable) ListRange(ctx context.Context, from, to ExampleTableIndexKey, opts ...ormlist.Option) (ExampleTableIterator, error) {
+	it, err := this.table.GetIndexByID(from.id()).ListRange(ctx, from.values(), to.values(), opts...)
 	return ExampleTableIterator{it}, err
 }
 
-func (this exampleTableStore) doNotImplement() {}
+func (this exampleTableTable) DeleteBy(ctx context.Context, prefixKey ExampleTableIndexKey) error {
+	return this.table.GetIndexByID(prefixKey.id()).DeleteBy(ctx, prefixKey.values()...)
+}
 
-var _ ExampleTableStore = exampleTableStore{}
+func (this exampleTableTable) DeleteRange(ctx context.Context, from, to ExampleTableIndexKey) error {
+	return this.table.GetIndexByID(from.id()).DeleteRange(ctx, from.values(), to.values())
+}
 
-func NewExampleTableStore(db ormdb.ModuleDB) (ExampleTableStore, error) {
+func (this exampleTableTable) doNotImplement() {}
+
+var _ ExampleTableTable = exampleTableTable{}
+
+func NewExampleTableTable(db ormtable.Schema) (ExampleTableTable, error) {
 	table := db.GetTable(&ExampleTable{})
 	if table == nil {
 		return nil, ormerrors.TableNotFound.Wrap(string((&ExampleTable{}).ProtoReflect().Descriptor().FullName()))
 	}
-	return exampleTableStore{table}, nil
+	return exampleTableTable{table}, nil
 }
 
-type ExampleAutoIncrementTableStore interface {
+type ExampleAutoIncrementTableTable interface {
 	Insert(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
 	InsertReturningID(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) (uint64, error)
 	Update(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
 	Save(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
 	Delete(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
 	Has(ctx context.Context, id uint64) (found bool, err error)
+	// Get returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
 	Get(ctx context.Context, id uint64) (*ExampleAutoIncrementTable, error)
 	HasByX(ctx context.Context, x string) (found bool, err error)
+	// GetByX returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
 	GetByX(ctx context.Context, x string) (*ExampleAutoIncrementTable, error)
 	List(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error)
 	ListRange(ctx context.Context, from, to ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error)
+	DeleteBy(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey) error
+	DeleteRange(ctx context.Context, from, to ExampleAutoIncrementTableIndexKey) error
 
 	doNotImplement()
 }
@@ -259,137 +278,149 @@ func (this ExampleAutoIncrementTableXIndexKey) WithX(x string) ExampleAutoIncrem
 	return this
 }
 
-type exampleAutoIncrementTableStore struct {
+type exampleAutoIncrementTableTable struct {
 	table ormtable.AutoIncrementTable
 }
 
-func (this exampleAutoIncrementTableStore) Insert(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error {
+func (this exampleAutoIncrementTableTable) Insert(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error {
 	return this.table.Insert(ctx, exampleAutoIncrementTable)
 }
 
-func (this exampleAutoIncrementTableStore) Update(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error {
+func (this exampleAutoIncrementTableTable) Update(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error {
 	return this.table.Update(ctx, exampleAutoIncrementTable)
 }
 
-func (this exampleAutoIncrementTableStore) Save(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error {
+func (this exampleAutoIncrementTableTable) Save(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error {
 	return this.table.Save(ctx, exampleAutoIncrementTable)
 }
 
-func (this exampleAutoIncrementTableStore) Delete(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error {
+func (this exampleAutoIncrementTableTable) Delete(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error {
 	return this.table.Delete(ctx, exampleAutoIncrementTable)
 }
 
-func (this exampleAutoIncrementTableStore) InsertReturningID(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) (uint64, error) {
+func (this exampleAutoIncrementTableTable) InsertReturningID(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) (uint64, error) {
 	return this.table.InsertReturningID(ctx, exampleAutoIncrementTable)
 }
 
-func (this exampleAutoIncrementTableStore) Has(ctx context.Context, id uint64) (found bool, err error) {
+func (this exampleAutoIncrementTableTable) Has(ctx context.Context, id uint64) (found bool, err error) {
 	return this.table.PrimaryKey().Has(ctx, id)
 }
 
-func (this exampleAutoIncrementTableStore) Get(ctx context.Context, id uint64) (*ExampleAutoIncrementTable, error) {
+func (this exampleAutoIncrementTableTable) Get(ctx context.Context, id uint64) (*ExampleAutoIncrementTable, error) {
 	var exampleAutoIncrementTable ExampleAutoIncrementTable
 	found, err := this.table.PrimaryKey().Get(ctx, &exampleAutoIncrementTable, id)
-	if !found {
+	if err != nil {
 		return nil, err
 	}
-	return &exampleAutoIncrementTable, err
+	if !found {
+		return nil, ormerrors.NotFound
+	}
+	return &exampleAutoIncrementTable, nil
 }
 
-func (this exampleAutoIncrementTableStore) HasByX(ctx context.Context, x string) (found bool, err error) {
+func (this exampleAutoIncrementTableTable) HasByX(ctx context.Context, x string) (found bool, err error) {
 	return this.table.GetIndexByID(1).(ormtable.UniqueIndex).Has(ctx,
 		x,
 	)
 }
 
-func (this exampleAutoIncrementTableStore) GetByX(ctx context.Context, x string) (*ExampleAutoIncrementTable, error) {
+func (this exampleAutoIncrementTableTable) GetByX(ctx context.Context, x string) (*ExampleAutoIncrementTable, error) {
 	var exampleAutoIncrementTable ExampleAutoIncrementTable
 	found, err := this.table.GetIndexByID(1).(ormtable.UniqueIndex).Get(ctx, &exampleAutoIncrementTable,
 		x,
 	)
-	if !found {
+	if err != nil {
 		return nil, err
+	}
+	if !found {
+		return nil, ormerrors.NotFound
 	}
 	return &exampleAutoIncrementTable, nil
 }
 
-func (this exampleAutoIncrementTableStore) List(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error) {
-	opts = append(opts, ormlist.Prefix(prefixKey.values()...))
-	it, err := this.table.GetIndexByID(prefixKey.id()).Iterator(ctx, opts...)
+func (this exampleAutoIncrementTableTable) List(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error) {
+	it, err := this.table.GetIndexByID(prefixKey.id()).List(ctx, prefixKey.values(), opts...)
 	return ExampleAutoIncrementTableIterator{it}, err
 }
 
-func (this exampleAutoIncrementTableStore) ListRange(ctx context.Context, from, to ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error) {
-	opts = append(opts, ormlist.Start(from.values()...), ormlist.End(to.values()...))
-	it, err := this.table.GetIndexByID(from.id()).Iterator(ctx, opts...)
+func (this exampleAutoIncrementTableTable) ListRange(ctx context.Context, from, to ExampleAutoIncrementTableIndexKey, opts ...ormlist.Option) (ExampleAutoIncrementTableIterator, error) {
+	it, err := this.table.GetIndexByID(from.id()).ListRange(ctx, from.values(), to.values(), opts...)
 	return ExampleAutoIncrementTableIterator{it}, err
 }
 
-func (this exampleAutoIncrementTableStore) doNotImplement() {}
+func (this exampleAutoIncrementTableTable) DeleteBy(ctx context.Context, prefixKey ExampleAutoIncrementTableIndexKey) error {
+	return this.table.GetIndexByID(prefixKey.id()).DeleteBy(ctx, prefixKey.values()...)
+}
 
-var _ ExampleAutoIncrementTableStore = exampleAutoIncrementTableStore{}
+func (this exampleAutoIncrementTableTable) DeleteRange(ctx context.Context, from, to ExampleAutoIncrementTableIndexKey) error {
+	return this.table.GetIndexByID(from.id()).DeleteRange(ctx, from.values(), to.values())
+}
 
-func NewExampleAutoIncrementTableStore(db ormdb.ModuleDB) (ExampleAutoIncrementTableStore, error) {
+func (this exampleAutoIncrementTableTable) doNotImplement() {}
+
+var _ ExampleAutoIncrementTableTable = exampleAutoIncrementTableTable{}
+
+func NewExampleAutoIncrementTableTable(db ormtable.Schema) (ExampleAutoIncrementTableTable, error) {
 	table := db.GetTable(&ExampleAutoIncrementTable{})
 	if table == nil {
 		return nil, ormerrors.TableNotFound.Wrap(string((&ExampleAutoIncrementTable{}).ProtoReflect().Descriptor().FullName()))
 	}
-	return exampleAutoIncrementTableStore{table.(ormtable.AutoIncrementTable)}, nil
+	return exampleAutoIncrementTableTable{table.(ormtable.AutoIncrementTable)}, nil
 }
 
 // singleton store
-type ExampleSingletonStore interface {
+type ExampleSingletonTable interface {
 	Get(ctx context.Context) (*ExampleSingleton, error)
 	Save(ctx context.Context, exampleSingleton *ExampleSingleton) error
 }
 
-type exampleSingletonStore struct {
+type exampleSingletonTable struct {
 	table ormtable.Table
 }
 
-var _ ExampleSingletonStore = exampleSingletonStore{}
+var _ ExampleSingletonTable = exampleSingletonTable{}
 
-func (x exampleSingletonStore) Get(ctx context.Context) (*ExampleSingleton, error) {
+func (x exampleSingletonTable) Get(ctx context.Context) (*ExampleSingleton, error) {
 	exampleSingleton := &ExampleSingleton{}
 	_, err := x.table.Get(ctx, exampleSingleton)
 	return exampleSingleton, err
 }
 
-func (x exampleSingletonStore) Save(ctx context.Context, exampleSingleton *ExampleSingleton) error {
+func (x exampleSingletonTable) Save(ctx context.Context, exampleSingleton *ExampleSingleton) error {
 	return x.table.Save(ctx, exampleSingleton)
 }
 
-func NewExampleSingletonStore(db ormdb.ModuleDB) (ExampleSingletonStore, error) {
+func NewExampleSingletonTable(db ormtable.Schema) (ExampleSingletonTable, error) {
 	table := db.GetTable(&ExampleSingleton{})
 	if table == nil {
 		return nil, ormerrors.TableNotFound.Wrap(string((&ExampleSingleton{}).ProtoReflect().Descriptor().FullName()))
 	}
-	return &exampleSingletonStore{table}, nil
+	return &exampleSingletonTable{table}, nil
 }
 
 type TestSchemaStore interface {
-	ExampleTableStore() ExampleTableStore
-	ExampleAutoIncrementTableStore() ExampleAutoIncrementTableStore
-	ExampleSingletonStore() ExampleSingletonStore
+	ExampleTableTable() ExampleTableTable
+	ExampleAutoIncrementTableTable() ExampleAutoIncrementTableTable
+	ExampleSingletonTable() ExampleSingletonTable
 
 	doNotImplement()
 }
 
 type testSchemaStore struct {
-	exampleTable              ExampleTableStore
-	exampleAutoIncrementTable ExampleAutoIncrementTableStore
-	exampleSingleton          ExampleSingletonStore
+	exampleTable              ExampleTableTable
+	exampleAutoIncrementTable ExampleAutoIncrementTableTable
+	exampleSingleton          ExampleSingletonTable
 }
 
-func (x testSchemaStore) ExampleTableStore() ExampleTableStore {
+func (x testSchemaStore) ExampleTableTable() ExampleTableTable {
 	return x.exampleTable
 }
 
-func (x testSchemaStore) ExampleAutoIncrementTableStore() ExampleAutoIncrementTableStore {
+func (x testSchemaStore) ExampleAutoIncrementTableTable() ExampleAutoIncrementTableTable {
 	return x.exampleAutoIncrementTable
 }
 
-func (x testSchemaStore) ExampleSingletonStore() ExampleSingletonStore {
+func (x testSchemaStore) ExampleSingletonTable() ExampleSingletonTable {
 	return x.exampleSingleton
 }
 
@@ -397,25 +428,25 @@ func (testSchemaStore) doNotImplement() {}
 
 var _ TestSchemaStore = testSchemaStore{}
 
-func NewTestSchemaStore(db ormdb.ModuleDB) (TestSchemaStore, error) {
-	exampleTableStore, err := NewExampleTableStore(db)
+func NewTestSchemaStore(db ormtable.Schema) (TestSchemaStore, error) {
+	exampleTableTable, err := NewExampleTableTable(db)
 	if err != nil {
 		return nil, err
 	}
 
-	exampleAutoIncrementTableStore, err := NewExampleAutoIncrementTableStore(db)
+	exampleAutoIncrementTableTable, err := NewExampleAutoIncrementTableTable(db)
 	if err != nil {
 		return nil, err
 	}
 
-	exampleSingletonStore, err := NewExampleSingletonStore(db)
+	exampleSingletonTable, err := NewExampleSingletonTable(db)
 	if err != nil {
 		return nil, err
 	}
 
 	return testSchemaStore{
-		exampleTableStore,
-		exampleAutoIncrementTableStore,
-		exampleSingletonStore,
+		exampleTableTable,
+		exampleAutoIncrementTableTable,
+		exampleSingletonTable,
 	}, nil
 }

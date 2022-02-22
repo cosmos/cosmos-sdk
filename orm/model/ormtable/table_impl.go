@@ -153,9 +153,9 @@ func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, message proto.Mess
 	return writer.Write()
 }
 
-func (t tableImpl) Delete(context context.Context, message proto.Message) error {
+func (t tableImpl) Delete(ctx context.Context, message proto.Message) error {
 	pk := t.PrimaryKeyCodec.GetKeyValues(message.ProtoReflect())
-	return t.DeleteByKey(context, pk)
+	return t.doDelete(ctx, pk)
 }
 
 func (t tableImpl) GetIndex(fields string) Index {
@@ -293,18 +293,17 @@ func (t tableImpl) ExportJSON(context context.Context, writer io.Writer) error {
 		return err
 	}
 
-	return t.doExportJSON(context, writer)
+	return t.doExportJSON(context, writer, true)
 }
 
-func (t tableImpl) doExportJSON(ctx context.Context, writer io.Writer) error {
+func (t tableImpl) doExportJSON(ctx context.Context, writer io.Writer, start bool) error {
 	marshalOptions := protojson.MarshalOptions{
 		UseProtoNames: true,
 		Resolver:      t.typeResolver,
 	}
 
 	var err error
-	it, _ := t.Iterator(ctx)
-	start := true
+	it, _ := t.List(ctx, nil)
 	for {
 		found := it.Next()
 

@@ -80,7 +80,7 @@ func TestMsgGrantAuthorization(t *testing.T) {
 		{"nil granter and grantee address", nil, nil, &banktypes.SendAuthorization{SpendLimit: coinsPos}, time.Now(), false, false},
 		{"nil authorization", granter, grantee, nil, time.Now(), true, false},
 		{"valid test case", granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, time.Now().AddDate(0, 1, 0), false, true},
-		{"past time", granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, time.Now().AddDate(0, 0, -1), false, false},
+		{"past time", granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, time.Now().AddDate(0, 0, -1), true, true},
 	}
 	for i, tc := range tests {
 		msg, err := authz.NewMsgGrant(
@@ -109,9 +109,14 @@ func TestMsgGrantGetAuthorization(t *testing.T) {
 	var err error
 	m.Grant.Authorization, err = cdctypes.NewAnyWithValue(&g)
 	require.NoError(err)
-	require.Equal(m.GetAuthorization(), &g)
+
+	a, err := m.GetAuthorization()
+	require.NoError(err)
+	require.Equal(a, &g)
 
 	g = authz.GenericAuthorization{Msg: "some_type2"}
 	m.SetAuthorization(&g)
-	require.Equal(m.GetAuthorization(), &g)
+	a, err = m.GetAuthorization()
+	require.NoError(err)
+	require.Equal(a, &g)
 }

@@ -9,6 +9,7 @@ import (
 	"math"
 	"sort"
 	"strings"
+	"sync"
 
 	iavltree "github.com/cosmos/iavl"
 	protoio "github.com/gogo/protobuf/io"
@@ -57,8 +58,9 @@ type Store struct {
 	initialVersion int64
 	removalMap     map[types.StoreKey]bool
 
-	traceWriter  io.Writer
-	traceContext types.TraceContext
+	traceWriter       io.Writer
+	traceContext      types.TraceContext
+	traceContextMutex sync.Mutex
 
 	interBlockCache types.MultiStorePersistentCache
 
@@ -329,6 +331,8 @@ func (rs *Store) SetTracer(w io.Writer) types.MultiStore {
 // be overwritten. It is implied that the caller should update the context when
 // necessary between tracing operations. It returns a modified MultiStore.
 func (rs *Store) SetTracingContext(tc types.TraceContext) types.MultiStore {
+	rs.traceContextMutex.Lock()
+	defer rs.traceContextMutex.Unlock()
 	if rs.traceContext != nil {
 		for k, v := range tc {
 			rs.traceContext[k] = v
@@ -338,6 +342,22 @@ func (rs *Store) SetTracingContext(tc types.TraceContext) types.MultiStore {
 	}
 
 	return rs
+}
+
+func (rs *Store) getTracingContext() types.TraceContext {
+	rs.traceContextMutex.Lock()
+	defer rs.traceContextMutex.Unlock()
+
+	if rs.traceContext == nil {
+		return nil
+	}
+
+	ctx := types.TraceContext{}
+	for k, v := range rs.traceContext {
+		ctx[k] = v
+	}
+
+	return ctx
 }
 
 // TracingEnabled returns if tracing is enabled for the MultiStore.
@@ -408,14 +428,7 @@ func (rs *Store) Commit() types.CommitID {
 	// be pruned, where pruneHeight = (commitHeight - 1) - KeepRecent.
 	if int64(rs.pruningOpts.KeepRecent) < previousHeight {
 		pruneHeight := previousHeight - int64(rs.pruningOpts.KeepRecent)
-		// We consider this height to be pruned iff:
-		//
-		// - KeepEvery is zero as that means that all heights should be pruned.
-		// - KeepEvery % (height - KeepRecent) != 0 as that means the height is not
-		// a 'snapshot' height.
-		if rs.pruningOpts.KeepEvery == 0 || pruneHeight%int64(rs.pruningOpts.KeepEvery) != 0 {
-			rs.pruneHeights = append(rs.pruneHeights, pruneHeight)
-		}
+		rs.pruneHeights = append(rs.pruneHeights, pruneHeight)
 	}
 
 	// batch prune if the current height is a pruning interval height
@@ -477,7 +490,7 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	for k, v := range rs.stores {
 		stores[k] = v
 	}
-	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.traceContext, rs.listeners)
+	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.getTracingContext(), rs.listeners)
 }
 
 // CacheMultiStoreWithVersion is analogous to CacheMultiStore except that it
@@ -507,7 +520,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 		}
 	}
 
-	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.traceContext, rs.listeners), nil
+	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.getTracingContext(), rs.listeners), nil
 }
 
 // GetStore returns a mounted Store for a given StoreKey. If the StoreKey does
@@ -539,7 +552,7 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 	store := s.(types.KVStore)
 
 	if rs.TracingEnabled() {
-		store = tracekv.NewStore(store, rs.traceWriter, rs.traceContext)
+		store = tracekv.NewStore(store, rs.traceWriter, rs.getTracingContext())
 	}
 	if rs.ListeningEnabled(key) {
 		store = listenkv.NewStore(store, key, rs.listeners[key])

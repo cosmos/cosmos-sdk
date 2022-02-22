@@ -14,7 +14,7 @@ jobs:
         go-arch: ["amd64", "arm", "arm64"]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.5
+      - uses: actions/setup-go@v2.2.0
         with:
           go-version: 1.17
       - uses: technote-space/get-diff-action@v6.0.1
@@ -35,7 +35,7 @@ jobs:
     container: tendermintdev/docker-tm-db-testing
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.5
+      - uses: actions/setup-go@v2.2.0
         with:
           go-version: 1.17
       - uses: technote-space/get-diff-action@v6.0.1
@@ -58,6 +58,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2.2.0
+        with:
+          go-version: 1.17
       - name: Create a file with all core Cosmos SDK pkgs
         run:  go list ./... > pkgs.txt
       - name: Split pkgs into 4 files
@@ -89,7 +92,7 @@ jobs:
         part: ["00", "01", "02", "03"]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.5
+      - uses: actions/setup-go@v2.2.0
         with:
           go-version: 1.17
       - uses: technote-space/get-diff-action@v6.0.1
@@ -184,7 +187,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.5
+      - uses: actions/setup-go@v2.2.0
         with:
           go-version: 1.17
       - uses: technote-space/get-diff-action@v6.0.1

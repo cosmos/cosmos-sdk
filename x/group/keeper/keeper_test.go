@@ -1629,7 +1629,7 @@ func (s *TestSuite) TestSubmitProposal() {
 				Status: group.PROPOSAL_STATUS_SUBMITTED,
 				Result: group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult: group.TallyResult{
-					YesCount:        "1",
+					YesCount:        "0", // Since tally doesn't pass Allow(), we consider the proposal not final
 					NoCount:         "0",
 					AbstainCount:    "0",
 					NoWithVetoCount: "0",
@@ -1847,7 +1847,7 @@ func (s *TestSuite) TestVote() {
 	specs := map[string]struct {
 		srcCtx            sdk.Context
 		expTallyResult    group.TallyResult // expected after tallying
-		expFinal          bool              // is the tally result final?
+		isFinal           bool              // is the tally result final?
 		req               *group.MsgVote
 		doBefore          func(ctx context.Context)
 		postRun           func(sdkCtx sdk.Context)
@@ -1886,7 +1886,7 @@ func (s *TestSuite) TestVote() {
 				AbstainCount:    "0",
 				NoWithVetoCount: "0",
 			},
-			expFinal:          true,
+			isFinal:           true,
 			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
 			expResult:         group.PROPOSAL_RESULT_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
@@ -2189,13 +2189,13 @@ func (s *TestSuite) TestVote() {
 			s.Assert().Equal(spec.req.Metadata, votesByVoter[0].Metadata)
 			s.Assert().Equal(s.blockTime, votesByVoter[0].SubmitTime)
 
-			// make sure proposal isn't mutated
 			proposalRes, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{
 				ProposalId: spec.req.ProposalId,
 			})
 			s.Require().NoError(err)
+
 			proposal := proposalRes.Proposal
-			if spec.expFinal {
+			if spec.isFinal {
 				s.Assert().Equal(spec.expTallyResult, proposal.FinalTallyResult)
 				s.Assert().Equal(spec.expResult, proposal.Result)
 				s.Assert().Equal(spec.expProposalStatus, proposal.Status)

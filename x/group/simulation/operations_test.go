@@ -287,7 +287,7 @@ func (suite *SimTestSuite) TestWithdrawProposal() {
 			ToAddress:   addr,
 			Amount:      sdk.Coins{sdk.NewInt64Coin("token", 100)},
 		},
-	}, []byte{})
+	}, []byte{}, 0)
 	suite.Require().NoError(err)
 	_, err = suite.app.GroupKeeper.SubmitProposal(ctx, proposalReq)
 	suite.Require().NoError(err)
@@ -354,7 +354,7 @@ func (suite *SimTestSuite) TestSimulateVote() {
 			ToAddress:   addr,
 			Amount:      sdk.Coins{sdk.NewInt64Coin("token", 100)},
 		},
-	}, []byte{})
+	}, []byte{}, 0)
 	suite.Require().NoError(err)
 	_, err = suite.app.GroupKeeper.SubmitProposal(ctx, proposalReq)
 	suite.Require().NoError(err)
@@ -421,7 +421,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 			ToAddress:   addr,
 			Amount:      sdk.Coins{sdk.NewInt64Coin("token", 100)},
 		},
-	}, []byte{})
+	}, []byte{}, 0)
 	suite.Require().NoError(err)
 	proposalRes, err := suite.app.GroupKeeper.SubmitProposal(ctx, proposalReq)
 	suite.Require().NoError(err)

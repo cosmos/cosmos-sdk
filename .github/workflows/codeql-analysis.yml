@@ -21,6 +21,11 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2.3.5
+    - uses: actions/setup-go@v2.2.0
+      with:
+        go-version: 1.17
+    - name: Display go version
+      run: go version
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL

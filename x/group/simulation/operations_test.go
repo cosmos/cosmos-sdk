@@ -431,6 +431,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 		ProposalId: proposalRes.ProposalId,
 		Voter:      addr,
 		Option:     group.VOTE_OPTION_YES,
+		Exec:       1,
 	})
 	suite.Require().NoError(err)
 

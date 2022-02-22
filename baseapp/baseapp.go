@@ -261,7 +261,7 @@ func DefaultStoreLoader(ms sdk.CommitMultiStore) error {
 }
 
 // CommitMultiStore returns the root multi-store.
-// Extension snapshotter use this to read storage.
+// App constructor can use this to access the `cms`.
 func (app *BaseApp) CommitMultiStore() sdk.CommitMultiStore {
 	return app.cms
 }

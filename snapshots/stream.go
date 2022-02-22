@@ -26,7 +26,7 @@ type StreamWriter struct {
 	protoWriter protoio.WriteCloser
 }
 
-// NewStreamWriter set up a stream pipeline to serialize snapshot nodes.
+// NewStreamWriter set up a stream pipeline to serialize snapshot DB records.
 func NewStreamWriter(ch chan<- io.ReadCloser) *StreamWriter {
 	chunkWriter := NewChunkWriter(ch, snapshotChunkSize)
 	bufWriter := bufio.NewWriterSize(chunkWriter, snapshotBufferSize)

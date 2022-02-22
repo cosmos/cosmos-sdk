@@ -87,11 +87,12 @@ func TestMigrateJSON(t *testing.T) {
 		{
 			"deposit_end_time": "2001-09-09T01:46:40Z",
 			"final_tally_result": {
-				"abstain": "0",
-				"no": "0",
-				"no_with_veto": "0",
-				"yes": "0"
+				"abstain_count": "0",
+				"no_count": "0",
+				"no_with_veto_count": "0",
+				"yes_count": "0"
 			},
+			"id": "1",
 			"messages": [
 				{
 					"@type": "/cosmos.gov.v1beta2.MsgExecLegacyContent",
@@ -104,7 +105,6 @@ func TestMigrateJSON(t *testing.T) {
 				}
 			],
 			"metadata": null,
-			"proposal_id": "1",
 			"status": "PROPOSAL_STATUS_DEPOSIT_PERIOD",
 			"submit_time": "2001-09-09T01:46:40Z",
 			"total_deposit": [

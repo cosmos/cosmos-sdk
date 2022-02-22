@@ -376,6 +376,7 @@ func (s *decimalTestSuite) TestPower() {
 		power    uint64
 		expected sdk.Dec
 	}{
+		{sdk.NewDec(100), 0, sdk.OneDec()},                                                 // 10 ^ (0) => 1.0
 		{sdk.OneDec(), 10, sdk.OneDec()},                                                   // 1.0 ^ (10) => 1.0
 		{sdk.NewDecWithPrec(5, 1), 2, sdk.NewDecWithPrec(25, 2)},                           // 0.5 ^ 2 => 0.25
 		{sdk.NewDecWithPrec(2, 1), 2, sdk.NewDecWithPrec(4, 2)},                            // 0.2 ^ 2 => 0.04
@@ -386,7 +387,13 @@ func (s *decimalTestSuite) TestPower() {
 
 	for i, tc := range testCases {
 		res := tc.input.Power(tc.power)
-		s.Require().True(tc.expected.Sub(res).Abs().LTE(sdk.SmallestDec()), "unexpected result for test case %d, input: %v", i, tc.input)
+		s.Require().True(tc.expected.Sub(res).Abs().LTE(sdk.SmallestDec()), "unexpected result for test case %d, normal power, input: %v", i, tc.input)
+
+		mutableInput := tc.input
+		mutableInput.PowerMut(tc.power)
+		s.Require().True(tc.expected.Sub(mutableInput).Abs().LTE(sdk.SmallestDec()),
+			"unexpected result for test case %d, input %v", i, tc.input)
+		s.Require().True(res.Equal(tc.input), "unexpected result for test case %d, mutable power, input: %v", i, tc.input)
 	}
 }
 

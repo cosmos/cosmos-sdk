@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
+	v046 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
@@ -65,7 +65,7 @@ func (q Keeper) Proposals(c context.Context, req *v1beta2.QueryProposalsRequest)
 				return false, err
 			}
 
-			_, matchVoter = q.GetVote(ctx, p.ProposalId, voter)
+			_, matchVoter = q.GetVote(ctx, p.Id, voter)
 		}
 
 		// match depositor (if supplied)
@@ -74,7 +74,7 @@ func (q Keeper) Proposals(c context.Context, req *v1beta2.QueryProposalsRequest)
 			if err != nil {
 				return false, err
 			}
-			_, matchDepositor = q.GetDeposit(ctx, p.ProposalId, depositor)
+			_, matchDepositor = q.GetDeposit(ctx, p.Id, depositor)
 		}
 
 		if matchVoter && matchDepositor && matchStatus {

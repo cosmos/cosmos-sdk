@@ -2,8 +2,8 @@
 
 ## Changelog
 
-- 20.08.2021: Initial draft.
-- 07.12.2021: Update `tx.Handler` interface ([\#10693](https://github.com/cosmos/cosmos-sdk/pull/10693)).
+* 20.08.2021: Initial draft.
+* 07.12.2021: Update `tx.Handler` interface ([\#10693](https://github.com/cosmos/cosmos-sdk/pull/10693)).
 
 ## Status
 
@@ -186,7 +186,7 @@ While BaseApp simply holds a reference to a `tx.Handler`, this `tx.Handler` itse
 
 Then, the app developer can compose multiple middlewares on top on the base `tx.Handler`. Each middleware can run pre-and-post-processing logic around its next middleware, as described in the section above. Conceptually, as an example, given the middlewares `A`, `B`, and `C` and the base `tx.Handler` `H` the stack looks like:
 
-```
+```text
 A.pre
     B.pre
         C.pre
@@ -232,17 +232,17 @@ The middleware-based design builds upon the existing antehandlers design describ
 
 #### Similarities with Antehandlers
 
-- Designed as chaining/composing small modular pieces.
-- Allow code reuse for `{Check,Deliver}Tx` and for `Simulate`.
-- Set up in `app.go`, and easily customizable by app developers.
-- Order is important.
+* Designed as chaining/composing small modular pieces.
+* Allow code reuse for `{Check,Deliver}Tx` and for `Simulate`.
+* Set up in `app.go`, and easily customizable by app developers.
+* Order is important.
 
 #### Differences with Antehandlers
 
-- The Antehandlers are run before `Msg` execution, whereas middlewares can run before and after.
-- The middleware approach uses separate methods for `{Check,Deliver,Simulate}Tx`, whereas the antehandlers pass a `simulate bool` flag and uses the `sdkCtx.Is{Check,Recheck}Tx()` flags to determine in which transaction mode we are.
-- The middleware design lets each middleware hold a reference to the next middleware, whereas the antehandlers pass a `next` argument in the `AnteHandle` method.
-- The middleware design use Go's standard `context.Context`, whereas the antehandlers use `sdk.Context`.
+* The Antehandlers are run before `Msg` execution, whereas middlewares can run before and after.
+* The middleware approach uses separate methods for `{Check,Deliver,Simulate}Tx`, whereas the antehandlers pass a `simulate bool` flag and uses the `sdkCtx.Is{Check,Recheck}Tx()` flags to determine in which transaction mode we are.
+* The middleware design lets each middleware hold a reference to the next middleware, whereas the antehandlers pass a `next` argument in the `AnteHandle` method.
+* The middleware design use Go's standard `context.Context`, whereas the antehandlers use `sdk.Context`.
 
 ## Consequences
 
@@ -281,14 +281,14 @@ This ADR does not introduce any state-machine-, client- or CLI-breaking changes.
 
 ### Positive
 
-- Allow custom logic to be run before an after `Msg` execution. This enables the [tips](https://github.com/cosmos/cosmos-sdk/issues/9406) and [gas refund](https://github.com/cosmos/cosmos-sdk/issues/2150) uses cases, and possibly other ones.
-- Make BaseApp more lightweight, and defer complex logic to small modular components.
-- Separate paths for `{Check,Deliver,Simulate}Tx` with different returns types. This allows for improved readability (replace `if sdkCtx.IsRecheckTx() && !simulate {...}` with separate methods) and more flexibility (e.g. returning a `priority` in `ResponseCheckTx`).
+* Allow custom logic to be run before an after `Msg` execution. This enables the [tips](https://github.com/cosmos/cosmos-sdk/issues/9406) and [gas refund](https://github.com/cosmos/cosmos-sdk/issues/2150) uses cases, and possibly other ones.
+* Make BaseApp more lightweight, and defer complex logic to small modular components.
+* Separate paths for `{Check,Deliver,Simulate}Tx` with different returns types. This allows for improved readability (replace `if sdkCtx.IsRecheckTx() && !simulate {...}` with separate methods) and more flexibility (e.g. returning a `priority` in `ResponseCheckTx`).
 
 ### Negative
 
-- It is hard to understand at first glance the state updates that would occur after a middleware runs given the `sdk.Context` and `tx`. A middleware can have an arbitrary number of nested middleware being called within its function body, each possibly doing some pre- and post-processing before calling the next middleware on the chain. Thus to understand what a middleware is doing, one must also understand what every other middleware further along the chain is also doing, and the order of middlewares matters. This can get quite complicated to understand.
-- API-breaking changes for app developers.
+* It is hard to understand at first glance the state updates that would occur after a middleware runs given the `sdk.Context` and `tx`. A middleware can have an arbitrary number of nested middleware being called within its function body, each possibly doing some pre- and post-processing before calling the next middleware on the chain. Thus to understand what a middleware is doing, one must also understand what every other middleware further along the chain is also doing, and the order of middlewares matters. This can get quite complicated to understand.
+* API-breaking changes for app developers.
 
 ### Neutral
 
@@ -296,8 +296,8 @@ No neutral consequences.
 
 ## Further Discussions
 
-- [#9934](https://github.com/cosmos/cosmos-sdk/discussions/9934) Decomposing BaseApp's other ABCI methods into middlewares.
-- Replace `sdk.Tx` interface with the concrete protobuf Tx type in the `tx.Handler` methods signature.
+* [#9934](https://github.com/cosmos/cosmos-sdk/discussions/9934) Decomposing BaseApp's other ABCI methods into middlewares.
+* Replace `sdk.Tx` interface with the concrete protobuf Tx type in the `tx.Handler` methods signature.
 
 ## Test Cases
 
@@ -307,5 +307,5 @@ For new middlewares, we introduce unit tests. Since middlewares are purposefully
 
 ## References
 
-- Initial discussion: https://github.com/cosmos/cosmos-sdk/issues/9585
-- Implementation: [#9920 BaseApp refactor](https://github.com/cosmos/cosmos-sdk/pull/9920) and [#10028 Antehandlers migration](https://github.com/cosmos/cosmos-sdk/pull/10028)
+* Initial discussion: https://github.com/cosmos/cosmos-sdk/issues/9585
+* Implementation: [#9920 BaseApp refactor](https://github.com/cosmos/cosmos-sdk/pull/9920) and [#10028 Antehandlers migration](https://github.com/cosmos/cosmos-sdk/pull/10028)

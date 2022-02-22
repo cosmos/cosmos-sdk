@@ -52,7 +52,7 @@ message TxResponse {
 message ABCIMessageLog {
   option (gogoproto.stringer) = true;
 
-  uint32 msg_index = 1;
+  uint32 msg_index = 1 [(gogoproto.jsontag) = "msg_index"];
   string log       = 2;
 
   // Events contains a slice of Event objects that were emitted during some

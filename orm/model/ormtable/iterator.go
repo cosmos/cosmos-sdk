@@ -188,7 +188,7 @@ func applyCommonIteratorOptions(iterator Iterator, options *listinternal.Options
 		iterator = &filterIterator{Iterator: iterator, filter: options.Filter}
 	}
 
-	if options.CountTotal || options.Limit != 0 || options.Offset != 0 {
+	if options.CountTotal || options.Limit != 0 || options.Offset != 0 || options.DefaultLimit != 0 {
 		iterator = paginate(iterator, options)
 	}
 

@@ -20,7 +20,7 @@ func TestVotes(t *testing.T) {
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, nil)
 	require.NoError(t, err)
-	proposalID := proposal.ProposalId
+	proposalID := proposal.Id
 
 	var invalidOption v1beta2.VoteOption = 0x10
 

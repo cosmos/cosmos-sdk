@@ -33,7 +33,7 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal v1beta2.Proposal) (passes b
 		return false
 	})
 
-	keeper.IterateVotes(ctx, proposal.ProposalId, func(vote v1beta2.Vote) bool {
+	keeper.IterateVotes(ctx, proposal.Id, func(vote v1beta2.Vote) bool {
 		// if validator, just record it in the map
 		voter, err := sdk.AccAddressFromBech32(vote.Voter)
 

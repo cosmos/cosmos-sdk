@@ -8,14 +8,14 @@ order: 13
 
 ## Prerequisite Readings
 
-- [In-Place Store Migration](../core/upgrade.md) {prereq}
+* [In-Place Store Migration](../core/upgrade.md) {prereq}
 
 ## Consensus Version
 
 Successful upgrades of existing modules require each `AppModule` to implement the function `ConsensusVersion() uint64`.
 
-- The versions must be hard-coded by the module developer.
-- The initial version **must** be set to 1.
+* The versions must be hard-coded by the module developer.
+* The initial version **must** be set to 1.
 
 Consensus versions serve as state-breaking versions of app modules and must be incremented when the module introduces breaking changes.
 

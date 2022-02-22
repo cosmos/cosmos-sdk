@@ -124,21 +124,21 @@ parameter in the list_`
 
 We will use one KVStore `Governance` to store two mappings:
 
-- A mapping from `proposalID|'proposal'` to `Proposal`.
-- A mapping from `proposalID|'addresses'|address` to `Vote`. This mapping allows
+* A mapping from `proposalID|'proposal'` to `Proposal`.
+* A mapping from `proposalID|'addresses'|address` to `Vote`. This mapping allows
   us to query all addresses that voted on the proposal along with their vote by
   doing a range query on `proposalID:addresses`.
 
 For pseudocode purposes, here are the two function we will use to read or write in stores:
 
-- `load(StoreKey, Key)`: Retrieve item stored at key `Key` in store found at key `StoreKey` in the multistore
-- `store(StoreKey, Key, value)`: Write value `Value` at key `Key` in store found at key `StoreKey` in the multistore
+* `load(StoreKey, Key)`: Retrieve item stored at key `Key` in store found at key `StoreKey` in the multistore
+* `store(StoreKey, Key, value)`: Write value `Value` at key `Key` in store found at key `StoreKey` in the multistore
 
 ## Proposal Processing Queue
 
 **Store:**
 
-- `ProposalProcessingQueue`: A queue `queue[proposalID]` containing all the
+* `ProposalProcessingQueue`: A queue `queue[proposalID]` containing all the
   `ProposalIDs` of proposals that reached `MinDeposit`. During each `EndBlock`,
   all the proposals that have reached the end of their voting period are processed.
   To process a finished proposal, the application tallies the votes, computes the

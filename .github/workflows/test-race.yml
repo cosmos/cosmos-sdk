@@ -10,7 +10,7 @@ jobs:
   install-tparse:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-go@v2.1.5
+      - uses: actions/setup-go@v2.2.0
         with:
           go-version: 1.17
       - name: Display go version
@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.5
+      - uses: actions/setup-go@v2.2.0
         with:
           go-version: 1.17
       - uses: technote-space/get-diff-action@v6.0.1
@@ -47,6 +47,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2.2.0
+        with:
+          go-version: 1.17
       - name: Create a file with all core Cosmos SDK pkgs
         run: go list ./... > pkgs.txt
       - name: Split pkgs into 4 files
@@ -78,7 +81,7 @@ jobs:
         part: ["00", "01", "02", "03"]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.5
+      - uses: actions/setup-go@v2.2.0
         with:
           go-version: 1.17
       - uses: technote-space/get-diff-action@v6.0.1

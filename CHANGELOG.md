@@ -129,7 +129,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10868](https://github.com/cosmos/cosmos-sdk/pull/10868), [\#10989](https://github.com/cosmos/cosmos-sdk/pull/10989), [\#11093](https://github.com/cosmos/cosmos-sdk/pull/11093) The Gov keeper accepts now 2 more mandatory arguments, the ServiceMsgRouter and a gov Config including the max metadata length.
 * [\#11124](https://github.com/cosmos/cosmos-sdk/pull/11124) Add `GetAllVersions` to application store
 * (x/authz) [\#10447](https://github.com/cosmos/cosmos-sdk/pull/10447) authz `NewGrant` takes a new argument: block time, to correctly validate expire time.
-
+* (types) [\#11188](https://github.com/cosmos/cosmos-sdk/pull/11188) Nodes with a discrepancy between the `DBBackend` (provided at compile time) and `db-backend` from `config.toml` (or `db_backend` pre-Tendermint v0.35) values must migrate the Cosmos-SDK DBs to the backend type defined in `config.toml`.
 
 ### Client Breaking Changes
 

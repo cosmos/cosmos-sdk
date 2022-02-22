@@ -3,6 +3,7 @@ package tx
 import (
 	"context"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"strings"
 
@@ -178,17 +179,10 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 			"or greater than the current height %d", req.Height, currentHeight)
 	}
 
-	node, err := s.clientCtx.GetNode()
+	blockId, block, err := tmservice.GetProtoBlock(ctx, s.clientCtx, &req.Height)
 	if err != nil {
 		return nil, err
 	}
-
-	blockRes, err := node.Block(ctx, &req.Height)
-	if err != nil {
-		return nil, err
-	}
-	block := blockRes.Block
-	blockId := blockRes.BlockID
 
 	var offset, limit int
 	if req.Pagination != nil {
@@ -199,13 +193,14 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 		limit = pagination.DefaultLimit
 	}
 
-	blockTxsLn := len(block.Txs)
+	blockTxs := block.Data.Txs
+	blockTxsLn := len(blockTxs)
 	txs := make([]*txtypes.Tx, 0, limit)
 	if offset >= blockTxsLn {
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("out of range: cannot paginate %d txs with offset %d and limit %d", blockTxsLn, offset, limit)
 	}
 	decodeTxAt := func(i int) error {
-		tx := block.Txs[i]
+		tx := blockTxs[i]
 		txb, err := s.clientCtx.TxConfig.TxDecoder()(tx)
 		if err != nil {
 			return err
@@ -231,16 +226,10 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 		}
 	}
 
-	protoBlockId := blockId.ToProto()
-	protoBlock, err := block.ToProto()
-	if err != nil {
-		return nil, err
-	}
-
 	return &txtypes.GetBlockWithTxsResponse{
 		Txs:     txs,
-		BlockId: &protoBlockId,
-		Block:   protoBlock,
+		BlockId: &blockId,
+		Block:   block,
 		Pagination: &pagination.PageResponse{
 			Total: uint64(blockTxsLn),
 		},

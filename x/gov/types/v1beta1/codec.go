@@ -2,6 +2,7 @@ package v1beta1
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -47,4 +48,8 @@ func RegisterProposalTypeCodec(o interface{}, name string) {
 
 func init() {
 	RegisterLegacyAminoCodec(types.ModuleCdc.LegacyAmino)
+
+	// Register all Amino interfaces and concrete types on the global Amino codec so that this can later be
+	// used to properly serialize x/authz MsgExec instances
+	RegisterLegacyAminoCodec(legacy.Cdc)
 }

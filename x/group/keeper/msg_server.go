@@ -694,7 +694,7 @@ func (k Keeper) doTallyAndUpdate(ctx sdk.Context, p *group.Proposal, electorate 
 		return err
 	}
 
-	tallyResult, err := k.Tally(ctx, p.Id)
+	tallyResult, err := k.Tally(ctx, *p, policyInfo.GroupId)
 	if err != nil {
 		return err
 	}

@@ -2218,7 +2218,7 @@ func (s *TestSuite) TestVote() {
 				s.Assert().Equal(group.DefaultTallyResult(), proposal.FinalTallyResult) // Make sure proposal isn't mutated.
 
 				// do a round of tallying
-				tallyResult, err := s.keeper.Tally(sdkCtx, proposal.Id)
+				tallyResult, err := s.keeper.Tally(sdkCtx, *proposal, myGroupID)
 				s.Require().NoError(err)
 
 				s.Assert().Equal(spec.expTallyResult, tallyResult)

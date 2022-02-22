@@ -5,13 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	dbm "github.com/tendermint/tm-db"
 )
 
 type utilsTestSuite struct {
@@ -112,67 +108,4 @@ func (s *utilsTestSuite) TestParseTimeBytes() {
 
 	_, err = sdk.ParseTimeBytes([]byte{})
 	s.Require().Error(err)
-}
-
-func (s *utilsTestSuite) TestNewDB() {
-	tests := []struct {
-		testName string
-
-		name        string
-		backendType string
-
-		isGoLevelDB bool
-		isMemDB     bool
-		errContains []string
-	}{
-		{
-			testName:    "unknown backendType gives error",
-			name:        "test-unknown",
-			backendType: "baddbtype",
-			errContains: []string{"could not create", "test-unknown", "unknown", "baddbtype", "goleveldb"},
-		},
-		{
-			testName:    "empty backendType defaults to goleveldb",
-			name:        "test-empty",
-			backendType: "",
-			isGoLevelDB: true,
-		},
-		{
-			testName:    "goleveldb returns a GoLevelDB",
-			name:        "test-goleveldb",
-			backendType: "goleveldb",
-			isGoLevelDB: true,
-		},
-		{
-			testName:    "memdb returns a MemDB",
-			name:        "test-memdb",
-			backendType: "memdb",
-			isMemDB:     true,
-		},
-	}
-
-	for _, tc := range tests {
-		s.T().Run(tc.testName, func(t *testing.T) {
-			dir := t.TempDir()
-			var db dbm.DB
-			var err error
-			require.NotPanics(t, func() {
-				db, err = sdk.NewDB(tc.name, tc.backendType, dir)
-			}, "calling NewDB")
-			if len(tc.errContains) != 0 {
-				require.Error(t, err, "err")
-				for _, exp := range tc.errContains {
-					assert.Contains(t, err.Error(), exp, "err.Error()")
-				}
-			} else {
-				require.NoError(t, err, "err")
-				require.NotNil(t, db, "db")
-				assert.NoError(t, db.Close(), "db.Close()")
-				_, isGoLevelDB := db.(*dbm.GoLevelDB)
-				assert.Equal(t, tc.isGoLevelDB, isGoLevelDB, "isGoLevelDB")
-				_, isMemDB := db.(*dbm.MemDB)
-				assert.Equal(t, tc.isMemDB, isMemDB, "isMemDB")
-			}
-		})
-	}
 }

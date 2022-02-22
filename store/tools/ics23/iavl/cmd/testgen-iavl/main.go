@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
 
 	ics23 "github.com/confio/ics23/go"
 
+	tmproofs "github.com/cosmos/cosmos-sdk/store/internal/proofs"
+	tools "github.com/cosmos/cosmos-sdk/store/tools/ics23"
 	iavlproofs "github.com/cosmos/cosmos-sdk/store/tools/ics23/iavl"
 	"github.com/cosmos/cosmos-sdk/store/tools/ics23/iavl/helpers"
 )
@@ -61,7 +62,7 @@ func main() {
 		return
 	}
 
-	exist, loc, size, err := parseArgs(os.Args)
+	exist, loc, size, err := tools.ParseArgs(os.Args)
 	if err != nil {
 		fmt.Printf("%+v\n", err)
 		fmt.Println("Usage: testgen-iavl [exist|nonexist] [left|right|middle] <size>")
@@ -116,49 +117,13 @@ func main() {
 	fmt.Println(string(out))
 }
 
-func parseArgs(args []string) (exist bool, loc helpers.Where, size int, err error) {
-	if len(args) != 3 && len(args) != 4 {
-		err = fmt.Errorf("Insufficient args")
-		return
-	}
-
-	switch args[1] {
-	case "exist":
-		exist = true
-	case "nonexist":
-		exist = false
-	default:
-		err = fmt.Errorf("Invalid arg: %s", args[1])
-		return
-	}
-
-	switch args[2] {
-	case "left":
-		loc = helpers.Left
-	case "middle":
-		loc = helpers.Middle
-	case "right":
-		loc = helpers.Right
-	default:
-		err = fmt.Errorf("Invalid arg: %s", args[2])
-		return
-	}
-
-	size = 400
-	if len(args) == 4 {
-		size, err = strconv.Atoi(args[3])
-	}
-
-	return
-}
-
 type item struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
 }
 
 func doBatch(args []string) error {
-	size, exist, nonexist, err := parseBatchArgs(args)
+	size, exist, nonexist, err := tools.ParseBatchArgs(args)
 	if err != nil {
 		return err
 	}
@@ -173,7 +138,7 @@ func doBatch(args []string) error {
 	proofs := []*ics23.CommitmentProof{}
 
 	for i := 0; i < exist; i++ {
-		key := []byte(helpers.GetKey(allkeys, helpers.Middle))
+		key := []byte(helpers.GetKey(allkeys, tmproofs.Middle))
 		_, value := tree.Get(key)
 		proof, err := iavlproofs.CreateMembershipProof(tree, key)
 		if err != nil {
@@ -188,7 +153,7 @@ func doBatch(args []string) error {
 	}
 
 	for i := 0; i < nonexist; i++ {
-		key := []byte(helpers.GetNonKey(allkeys, helpers.Middle))
+		key := []byte(helpers.GetNonKey(allkeys, tmproofs.Middle))
 		proof, err := iavlproofs.CreateNonMembershipProof(tree, key)
 		if err != nil {
 			return fmt.Errorf("create proof: %+v", err)
@@ -227,22 +192,4 @@ func doBatch(args []string) error {
 	fmt.Println(string(out))
 
 	return nil
-}
-
-func parseBatchArgs(args []string) (size int, exist int, nonexist int, err error) {
-	if len(args) != 3 {
-		err = fmt.Errorf("Insufficient args")
-		return
-	}
-
-	size, err = strconv.Atoi(args[0])
-	if err != nil {
-		return
-	}
-	exist, err = strconv.Atoi(args[1])
-	if err != nil {
-		return
-	}
-	nonexist, err = strconv.Atoi(args[2])
-	return
 }

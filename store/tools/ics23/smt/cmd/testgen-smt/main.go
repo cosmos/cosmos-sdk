@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
 
 	ics23 "github.com/confio/ics23/go"
+
+	tmproofs "github.com/cosmos/cosmos-sdk/store/internal/proofs"
+	tools "github.com/cosmos/cosmos-sdk/store/tools/ics23"
 	smtproofs "github.com/cosmos/cosmos-sdk/store/tools/ics23/smt"
 	"github.com/cosmos/cosmos-sdk/store/tools/ics23/smt/helpers"
 )
@@ -52,7 +54,7 @@ func main() {
 	}
 
 	if os.Args[1] == "batch" {
-		size, exist, nonexist, err := parseBatchArgs(os.Args[2:])
+		size, exist, nonexist, err := tools.ParseBatchArgs(os.Args[2:])
 		if err != nil {
 			fmt.Printf("%+v\n", err)
 			fmt.Println("Usage: testgen-smt batch [size] [# exist] [# nonexist]")
@@ -66,7 +68,7 @@ func main() {
 		return
 	}
 
-	exist, loc, size, err := parseArgs(os.Args)
+	exist, loc, size, err := tools.ParseArgs(os.Args)
 	if err != nil {
 		fmt.Printf("%+v\n", err)
 		fmt.Println("Usage: testgen-smt [exist|nonexist] [left|right|middle] <size>")
@@ -79,43 +81,7 @@ func main() {
 	}
 }
 
-func parseArgs(args []string) (exist bool, loc helpers.Where, size int, err error) {
-	if len(args) != 3 && len(args) != 4 {
-		err = fmt.Errorf("Insufficient args")
-		return
-	}
-
-	switch args[1] {
-	case "exist":
-		exist = true
-	case "nonexist":
-		exist = false
-	default:
-		err = fmt.Errorf("Invalid arg: %s", args[1])
-		return
-	}
-
-	switch args[2] {
-	case "left":
-		loc = helpers.Left
-	case "middle":
-		loc = helpers.Middle
-	case "right":
-		loc = helpers.Right
-	default:
-		err = fmt.Errorf("Invalid arg: %s", args[2])
-		return
-	}
-
-	size = 400
-	if len(args) == 4 {
-		size, err = strconv.Atoi(args[3])
-	}
-
-	return
-}
-
-func doSingle(exist bool, loc helpers.Where, size int) error {
+func doSingle(exist bool, loc tmproofs.Where, size int) error {
 	tree, preim, err := helpers.BuildTree(size)
 	if err != nil {
 		return err
@@ -169,11 +135,11 @@ type item struct {
 	Value string `json:"value"`
 }
 
-func pickWhere(i int) helpers.Where {
+func pickWhere(i int) tmproofs.Where {
 	if i > 2 {
-		return helpers.Middle
+		return tmproofs.Middle
 	}
-	return helpers.Where(i)
+	return tmproofs.Where(i)
 }
 
 func doBatch(size, exist, nonexist int) error {
@@ -245,22 +211,4 @@ func doBatch(size, exist, nonexist int) error {
 	fmt.Println(string(out))
 
 	return nil
-}
-
-func parseBatchArgs(args []string) (size int, exist int, nonexist int, err error) {
-	if len(args) != 3 {
-		err = fmt.Errorf("Insufficient args")
-		return
-	}
-
-	size, err = strconv.Atoi(args[0])
-	if err != nil {
-		return
-	}
-	exist, err = strconv.Atoi(args[1])
-	if err != nil {
-		return
-	}
-	nonexist, err = strconv.Atoi(args[2])
-	return
 }

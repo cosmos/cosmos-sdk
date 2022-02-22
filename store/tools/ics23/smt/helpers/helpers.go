@@ -12,15 +12,8 @@ import (
 	"sort"
 
 	"github.com/lazyledger/smt"
-)
 
-// Where selects a location for a key - Left, Right, or Middle
-type Where int
-
-const (
-	Left Where = iota
-	Right
-	Middle
+	tmproofs "github.com/cosmos/cosmos-sdk/store/internal/proofs"
 )
 
 // PreimageMap maps each tree path back to its preimage
@@ -110,11 +103,11 @@ func (pim PreimageMap) KeyFor(pathIx int) []byte {
 }
 
 // GetKey this returns a key, on Left/Right/Middle
-func (pim PreimageMap) GetKey(loc Where) []byte {
-	if loc == Left {
+func (pim PreimageMap) GetKey(loc tmproofs.Where) []byte {
+	if loc == tmproofs.Left {
 		return pim.KeyFor(0)
 	}
-	if loc == Right {
+	if loc == tmproofs.Right {
 		return pim.KeyFor(len(pim.paths) - 1)
 	}
 	// select a random index between 1 and len-2
@@ -123,15 +116,15 @@ func (pim PreimageMap) GetKey(loc Where) []byte {
 }
 
 // GetNonKey returns a missing key - Left of all, Right of all, or in the Middle
-func (pim PreimageMap) GetNonKey(loc Where) []byte {
-	if loc == Left {
+func (pim PreimageMap) GetNonKey(loc tmproofs.Where) []byte {
+	if loc == tmproofs.Left {
 		return pim.keys[pim.nonKeys[0].keyIdx]
 	}
-	if loc == Right {
+	if loc == tmproofs.Right {
 		return pim.keys[pim.nonKeys[1].keyIdx]
 	}
 	// otherwise, next to an existing key (copy before mod)
-	key := append([]byte{}, pim.GetKey(Middle)...)
+	key := append([]byte{}, pim.GetKey(tmproofs.Middle)...)
 	key[len(key)-2] = 255
 	key[len(key)-1] = 255
 	return key

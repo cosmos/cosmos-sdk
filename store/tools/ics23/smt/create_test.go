@@ -4,25 +4,26 @@ import (
 	"crypto/sha256"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/store/tools/ics23/smt/helpers"
-
 	ics23 "github.com/confio/ics23/go"
+
+	tmproofs "github.com/cosmos/cosmos-sdk/store/internal/proofs"
+	"github.com/cosmos/cosmos-sdk/store/tools/ics23/smt/helpers"
 )
 
 var numKeys = 50
 var cases = map[string]struct {
 	size int
-	loc  helpers.Where
+	loc  tmproofs.Where
 }{
-	"tiny left":    {size: 10, loc: helpers.Left},
-	"tiny middle":  {size: 10, loc: helpers.Middle},
-	"tiny right":   {size: 10, loc: helpers.Right},
-	"small left":   {size: 100, loc: helpers.Left},
-	"small middle": {size: 100, loc: helpers.Middle},
-	"small right":  {size: 100, loc: helpers.Right},
-	"big left":     {size: 5431, loc: helpers.Left},
-	"big middle":   {size: 5431, loc: helpers.Middle},
-	"big right":    {size: 5431, loc: helpers.Right},
+	"tiny left":    {size: 10, loc: tmproofs.Left},
+	"tiny middle":  {size: 10, loc: tmproofs.Middle},
+	"tiny right":   {size: 10, loc: tmproofs.Right},
+	"small left":   {size: 100, loc: tmproofs.Left},
+	"small middle": {size: 100, loc: tmproofs.Middle},
+	"small right":  {size: 100, loc: tmproofs.Right},
+	"big left":     {size: 5431, loc: tmproofs.Left},
+	"big middle":   {size: 5431, loc: tmproofs.Middle},
+	"big right":    {size: 5431, loc: tmproofs.Right},
 }
 
 func TestCreateMembership(t *testing.T) {

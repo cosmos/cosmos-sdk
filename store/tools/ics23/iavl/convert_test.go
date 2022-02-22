@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"testing"
 
+	tmproofs "github.com/cosmos/cosmos-sdk/store/internal/proofs"
 	"github.com/cosmos/cosmos-sdk/store/tools/ics23/iavl/helpers"
 )
 
 func TestConvertExistence(t *testing.T) {
-	proof, err := helpers.GenerateIavlResult(200, helpers.Middle)
+	proof, err := helpers.GenerateIavlResult(200, tmproofs.Middle)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -13,6 +13,8 @@ import (
 	"github.com/cosmos/iavl"
 	"github.com/tendermint/tendermint/libs/rand"
 	db "github.com/tendermint/tm-db"
+
+	tmproofs "github.com/cosmos/cosmos-sdk/store/internal/proofs"
 )
 
 // IavlResult is the result of one match
@@ -26,7 +28,7 @@ type IavlResult struct {
 // GenerateIavlResult makes a tree of size and returns a range proof for one random element
 //
 // returns a range proof and the root hash of the tree
-func GenerateIavlResult(size int, loc Where) (*IavlResult, error) {
+func GenerateIavlResult(size int, loc tmproofs.Where) (*IavlResult, error) {
 	tree, allkeys, err := BuildTree(size)
 	if err != nil {
 		return nil, err
@@ -54,21 +56,12 @@ func GenerateIavlResult(size int, loc Where) (*IavlResult, error) {
 	return res, nil
 }
 
-// Where selects a location for a key - Left, Right, or Middle
-type Where int
-
-const (
-	Left Where = iota
-	Right
-	Middle
-)
-
 // GetKey this returns a key, on Left/Right/Middle
-func GetKey(allkeys [][]byte, loc Where) []byte {
-	if loc == Left {
+func GetKey(allkeys [][]byte, loc tmproofs.Where) []byte {
+	if loc == tmproofs.Left {
 		return allkeys[0]
 	}
-	if loc == Right {
+	if loc == tmproofs.Right {
 		return allkeys[len(allkeys)-1]
 	}
 	// select a random index between 1 and allkeys-2
@@ -77,11 +70,11 @@ func GetKey(allkeys [][]byte, loc Where) []byte {
 }
 
 // GetNonKey returns a missing key - Left of all, Right of all, or in the Middle
-func GetNonKey(allkeys [][]byte, loc Where) []byte {
-	if loc == Left {
+func GetNonKey(allkeys [][]byte, loc tmproofs.Where) []byte {
+	if loc == tmproofs.Left {
 		return []byte{0, 0, 0, 1}
 	}
-	if loc == Right {
+	if loc == tmproofs.Right {
 		return []byte{0xff, 0xff, 0xff, 0xff}
 	}
 	// otherwise, next to an existing key (copy before mod)

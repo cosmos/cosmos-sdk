@@ -47,7 +47,7 @@ service Service {
 message GetTxsEventRequest {
   // events is the list of transaction event type.
   repeated string events = 1;
-  // pagination defines an pagination for the request.
+  // pagination defines a pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
   OrderBy                               order_by   = 3;
 }
@@ -69,7 +69,7 @@ message GetTxsEventResponse {
   repeated cosmos.tx.v1beta1.Tx txs = 1;
   // tx_responses is the list of queried TxResponses.
   repeated cosmos.base.abci.v1beta1.TxResponse tx_responses = 2;
-  // pagination defines an pagination for the response.
+  // pagination defines a pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 3;
 }
 
@@ -144,6 +144,8 @@ message GetTxResponse {
 message GetBlockWithTxsRequest {
   // height is the height of the block to query.
   int64 height = 1;
+  // pagination defines a pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 // GetBlockWithTxsResponse is the response type for the Service.GetBlockWithTxs method.
@@ -152,4 +154,6 @@ message GetBlockWithTxsResponse {
   repeated cosmos.tx.v1beta1.Tx txs = 1;
   .tendermint.types.BlockID block_id = 2;
   .tendermint.types.Block   block    = 3;
+  // pagination defines a pagination for the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 4;
 }

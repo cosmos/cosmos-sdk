@@ -81,6 +81,25 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &s.txRes))
 	s.Require().Equal(uint32(0), s.txRes.Code)
 
+	out, err = bankcli.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		val.Address,
+		sdk.NewCoins(
+			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1)),
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=2", flags.FlagSequence),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+		fmt.Sprintf("--%s=foobar", flags.FlagNote),
+	)
+	s.Require().NoError(err)
+	var tr sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &tr))
+	s.Require().Equal(uint32(0), tr.Code)
+
 	s.Require().NoError(s.network.WaitForNextBlock())
 	height, err := s.network.LatestHeight()
 	s.Require().NoError(err)
@@ -602,7 +621,10 @@ func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPC() {
 		{"nil request", nil, true, "request cannot be nil"},
 		{"empty request", &tx.GetBlockWithTxsRequest{}, true, "height must not be less than 1 or greater than the current height"},
 		{"bad height", &tx.GetBlockWithTxsRequest{Height: 99999999}, true, "height must not be less than 1 or greater than the current height"},
+		{"bad pagination", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 1000, Limit: 100}}, true, "out of range"},
 		{"good request", &tx.GetBlockWithTxsRequest{Height: s.txHeight}, false, ""},
+		{"with pagination request", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 0, Limit: 1}}, false, ""},
+		{"page all request", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 0, Limit: 100}}, false, ""},
 	}
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
@@ -615,6 +637,9 @@ func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPC() {
 				s.Require().NoError(err)
 				s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
 				s.Require().Equal(grpcRes.Block.Header.Height, tc.req.Height)
+				if tc.req.Pagination != nil {
+					s.Require().LessOrEqual(len(grpcRes.Txs), int(tc.req.Pagination.Limit))
+				}
 			}
 		})
 	}

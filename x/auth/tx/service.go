@@ -190,17 +190,45 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 	block := blockRes.Block
 	blockId := blockRes.BlockID
 
-	txs := make([]*txtypes.Tx, len(block.Txs))
-	for i, tx := range block.Txs {
+	var offset, limit int
+	if req.Pagination != nil {
+		offset = int(req.Pagination.Offset)
+		limit = int(req.Pagination.Limit)
+	} else {
+		offset = 0
+		limit = pagination.DefaultLimit
+	}
+
+	blockTxsLn := len(block.Txs)
+	txs := make([]*txtypes.Tx, 0, limit)
+	if offset >= blockTxsLn {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("out of range: cannot paginate %d txs with offset %d and limit %d", blockTxsLn, offset, limit)
+	}
+	decodeTxAt := func(i int) error {
+		tx := block.Txs[i]
 		txb, err := s.clientCtx.TxConfig.TxDecoder()(tx)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		p, ok := txb.(protoTxProvider)
 		if !ok {
-			return nil, fmt.Errorf("could not cast %T to %T", txb, txtypes.Tx{})
+			return sdkerrors.ErrTxDecode.Wrapf("could not cast %T to %T", txb, txtypes.Tx{})
 		}
-		txs[i] = p.GetProtoTx()
+		txs = append(txs, p.GetProtoTx())
+		return nil
+	}
+	if req.Pagination != nil && req.Pagination.Reverse {
+		for i, count := offset, 0; i > 0 && count != limit; i, count = i-1, count+1 {
+			if err = decodeTxAt(i); err != nil {
+				return nil, err
+			}
+		}
+	} else {
+		for i, count := offset, 0; i < blockTxsLn && count != limit; i, count = i+1, count+1 {
+			if err = decodeTxAt(i); err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	protoBlockId := blockId.ToProto()
@@ -213,6 +241,9 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 		Txs:     txs,
 		BlockId: &protoBlockId,
 		Block:   protoBlock,
+		Pagination: &pagination.PageResponse{
+			Total: uint64(blockTxsLn),
+		},
 	}, nil
 
 }

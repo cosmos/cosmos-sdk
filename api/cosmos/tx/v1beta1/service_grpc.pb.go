@@ -31,6 +31,8 @@ type ServiceClient interface {
 	// GetTxsEvent fetches txs by event.
 	GetTxsEvent(ctx context.Context, in *GetTxsEventRequest, opts ...grpc.CallOption) (*GetTxsEventResponse, error)
 	// GetBlockWithTxs fetches a block with decoded txs.
+	//
+	// Since: cosmos-sdk 0.45.2
 	GetBlockWithTxs(ctx context.Context, in *GetBlockWithTxsRequest, opts ...grpc.CallOption) (*GetBlockWithTxsResponse, error)
 }
 
@@ -100,6 +102,8 @@ type ServiceServer interface {
 	// GetTxsEvent fetches txs by event.
 	GetTxsEvent(context.Context, *GetTxsEventRequest) (*GetTxsEventResponse, error)
 	// GetBlockWithTxs fetches a block with decoded txs.
+	//
+	// Since: cosmos-sdk 0.45.2
 	GetBlockWithTxs(context.Context, *GetBlockWithTxsRequest) (*GetBlockWithTxsResponse, error)
 	mustEmbedUnimplementedServiceServer()
 }

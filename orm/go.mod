@@ -7,6 +7,7 @@ require (
 	github.com/cosmos/cosmos-sdk/api v0.1.0-alpha4
 	github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.2
 	github.com/golang/mock v1.6.0
+	github.com/google/go-cmp v0.5.6
 	github.com/iancoleman/strcase v0.2.0
 	github.com/stretchr/testify v1.7.0
 	github.com/tendermint/tm-db v0.6.6
@@ -30,7 +31,6 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.3-0.20201103224600-674baa8c7fc3 // indirect
 	github.com/google/btree v1.0.0 // indirect
-	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

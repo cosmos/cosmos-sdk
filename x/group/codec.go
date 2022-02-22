@@ -2,6 +2,7 @@ package group
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -18,6 +19,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgUpdateGroupMembers{}, "cosmos-sdk/MsgUpdateGroupMembers", nil)
 	cdc.RegisterConcrete(&MsgUpdateGroupAdmin{}, "cosmos-sdk/MsgUpdateGroupAdmin", nil)
 	cdc.RegisterConcrete(&MsgUpdateGroupMetadata{}, "cosmos-sdk/MsgUpdateGroupMetadata", nil)
+	cdc.RegisterConcrete(&MsgCreateGroupWithPolicy{}, "cosmos-sdk/MsgCreateGroupWithPolicy", nil)
 	cdc.RegisterConcrete(&MsgCreateGroupPolicy{}, "cosmos-sdk/MsgCreateGroupPolicy", nil)
 	cdc.RegisterConcrete(&MsgUpdateGroupPolicyAdmin{}, "cosmos-sdk/MsgUpdateGroupPolicyAdmin", nil)
 	cdc.RegisterConcrete(&MsgUpdateGroupPolicyDecisionPolicy{}, "cosmos-sdk/MsgUpdateGroupPolicyDecisionPolicy", nil)
@@ -34,6 +36,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgUpdateGroupMembers{},
 		&MsgUpdateGroupAdmin{},
 		&MsgUpdateGroupMetadata{},
+		&MsgCreateGroupWithPolicy{},
 		&MsgCreateGroupPolicy{},
 		&MsgUpdateGroupPolicyAdmin{},
 		&MsgUpdateGroupPolicyDecisionPolicy{},
@@ -61,4 +64,8 @@ var (
 
 func init() {
 	RegisterLegacyAminoCodec(amino)
+
+	// Register all Amino interfaces and concrete types on the global Amino codec so that this can later be
+	// used to properly serialize x/authz MsgExec instances
+	RegisterLegacyAminoCodec(legacy.Cdc)
 }

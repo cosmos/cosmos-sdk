@@ -237,66 +237,24 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 		return err
 	}
 
-	// Start an asynchronous snapshot restoration, passing chunks and completion status via channels.
-	chChunks := make(chan io.ReadCloser, chunkBufferSize)
-	chReady := make(chan struct{}, 1)
-	chDone := make(chan restoreDone, 1)
-
-	doRestore := func() error {
-		// check multistore supported format preemptive
-		if snapshot.Format != types.CurrentFormat {
-			return sdkerrors.Wrapf(types.ErrUnknownFormat, "snapshot format %v", snapshot.Format)
-		}
-		if snapshot.Height == 0 {
-			return sdkerrors.Wrap(sdkerrors.ErrLogic, "cannot restore snapshot at height 0")
-		}
-		if snapshot.Height > uint64(math.MaxInt64) {
-			return sdkerrors.Wrapf(types.ErrInvalidMetadata,
-				"snapshot height %v cannot exceed %v", snapshot.Height, int64(math.MaxInt64))
-		}
-
-		// Signal readiness. Must be done before the readers below are set up, since the zlib
-		// reader reads from the stream on initialization, potentially causing deadlocks.
-		if chReady != nil {
-			close(chReady)
-		}
-
-		streamReader, err := NewStreamReader(chChunks)
-		if err != nil {
-			return err
-		}
-		defer streamReader.Close()
-
-		next, err := m.multistore.Restore(snapshot.Height, snapshot.Format, streamReader)
-		if err != nil {
-			return sdkerrors.Wrap(err, "multistore restore")
-		}
-		for {
-			if next.Item == nil {
-				// end of stream
-				break
-			}
-			metadata := next.GetExtension()
-			if metadata == nil {
-				return sdkerrors.Wrapf(sdkerrors.ErrLogic, "unknown snapshot item %T", next.Item)
-			}
-			extension, ok := m.extensions[metadata.Name]
-			if !ok {
-				return sdkerrors.Wrapf(sdkerrors.ErrLogic, "unknown extension snapshotter %s", metadata.Name)
-			}
-			if !IsFormatSupported(extension, metadata.Format) {
-				return sdkerrors.Wrapf(types.ErrUnknownFormat, "format %v for extension %s", metadata.Format, metadata.Name)
-			}
-			next, err = extension.Restore(snapshot.Height, metadata.Format, streamReader)
-			if err != nil {
-				return sdkerrors.Wrapf(err, "extension %s restore", metadata.Name)
-			}
-		}
-		return nil
+	// check multistore supported format preemptive
+	if snapshot.Format != types.CurrentFormat {
+		return sdkerrors.Wrapf(types.ErrUnknownFormat, "snapshot format %v", snapshot.Format)
+	}
+	if snapshot.Height == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrLogic, "cannot restore snapshot at height 0")
+	}
+	if snapshot.Height > uint64(math.MaxInt64) {
+		return sdkerrors.Wrapf(types.ErrInvalidMetadata,
+			"snapshot height %v cannot exceed %v", snapshot.Height, int64(math.MaxInt64))
 	}
 
+	// Start an asynchronous snapshot restoration, passing chunks and completion status via channels.
+	chChunks := make(chan io.ReadCloser, chunkBufferSize)
+	chDone := make(chan restoreDone, 1)
+
 	go func() {
-		err := doRestore()
+		err := m.restore(snapshot, chChunks)
 		chDone <- restoreDone{
 			complete: err == nil,
 			err:      err,
@@ -304,21 +262,46 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 		close(chDone)
 	}()
 
-	// Check for any initial errors from the restore, before any chunks are fed.
-	select {
-	case done := <-chDone:
-		m.endLocked()
-		if done.err != nil {
-			return done.err
-		}
-		return sdkerrors.Wrap(sdkerrors.ErrLogic, "restore ended unexpectedly")
-	case <-chReady:
-	}
-
 	m.chRestore = chChunks
 	m.chRestoreDone = chDone
 	m.restoreChunkHashes = snapshot.Metadata.ChunkHashes
 	m.restoreChunkIndex = 0
+	return nil
+}
+
+// restore do the heavy work of snapshot restoration after preliminary checks on request have passed.
+func (m *Manager) restore(snapshot types.Snapshot, chChunks <-chan io.ReadCloser) error {
+	streamReader, err := NewStreamReader(chChunks)
+	if err != nil {
+		return err
+	}
+	defer streamReader.Close()
+
+	next, err := m.multistore.Restore(snapshot.Height, snapshot.Format, streamReader)
+	if err != nil {
+		return sdkerrors.Wrap(err, "multistore restore")
+	}
+	for {
+		if next.Item == nil {
+			// end of stream
+			break
+		}
+		metadata := next.GetExtension()
+		if metadata == nil {
+			return sdkerrors.Wrapf(sdkerrors.ErrLogic, "unknown snapshot item %T", next.Item)
+		}
+		extension, ok := m.extensions[metadata.Name]
+		if !ok {
+			return sdkerrors.Wrapf(sdkerrors.ErrLogic, "unknown extension snapshotter %s", metadata.Name)
+		}
+		if !IsFormatSupported(extension, metadata.Format) {
+			return sdkerrors.Wrapf(types.ErrUnknownFormat, "format %v for extension %s", metadata.Format, metadata.Name)
+		}
+		next, err = extension.Restore(snapshot.Height, metadata.Format, streamReader)
+		if err != nil {
+			return sdkerrors.Wrapf(err, "extension %s restore", metadata.Name)
+		}
+	}
 	return nil
 }
 

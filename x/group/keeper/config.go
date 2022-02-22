@@ -14,7 +14,7 @@ type Config struct {
 // DefaultConfig returns the default config for group.
 func DefaultConfig() Config {
 	return Config{
-		MaxExecutionPeriod: time.Hour * 24 * 7, // One week.
+		MaxExecutionPeriod: 2 * time.Hour * 24 * 7, // Two weeks.
 		MaxMetadataLen:     255,
 	}
 }

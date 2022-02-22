@@ -18,8 +18,6 @@ var (
 func init() {
 	if len(DBBackend) != 0 {
 		backend = dbm.BackendType(DBBackend)
-	} else {
-		DBBackend = string(backend)
 	}
 }
 
@@ -104,20 +102,15 @@ func NewLevelDB(name, dir string) (db dbm.DB, err error) {
 // 1) Returns an error instead of panicking.
 // 2) Takes in a string for the backend type.
 // 3) If the backendType is an empty string, "goleveldb" is used.
-func NewDB(name, backendType, dir string) (db dbm.DB, err error) {
-	defer func() {
-		r := recover()
-		switch {
-		case r != nil:
-			err = fmt.Errorf("could not create %q db in %s with name %q: %v", backendType, dir, name, r)
-		case err != nil:
-			err = fmt.Errorf("could not create %q db in %s with name %q: %w", backendType, dir, name, err)
-		}
-	}()
+func NewDB(name, backendType, dir string) (dbm.DB, error) {
 	if len(backendType) == 0 {
 		backendType = string(dbm.GoLevelDBBackend)
 	}
-	return dbm.NewDB(name, dbm.BackendType(backendType), dir)
+	db, err := dbm.NewDB(name, dbm.BackendType(backendType), dir)
+	if err != nil {
+		return nil, fmt.Errorf("could not create %q db in %s with type %q: %w", name, dir, backendType, err)
+	}
+	return db, nil
 }
 
 // copy bytes

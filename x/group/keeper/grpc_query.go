@@ -305,17 +305,19 @@ func (q Keeper) getVotesByVoter(ctx sdk.Context, voter sdk.AccAddress, pageReque
 	return q.voteByVoterIndex.GetPaginated(ctx.KVStore(q.key), voter.Bytes(), pageRequest)
 }
 
+// Tally is a function that tallies a proposal by iterating through its votes,
+// and returns the tally result without modifying the proposal or any state.
 // TODO Merge with https://github.com/cosmos/cosmos-sdk/issues/11151
 func (q Keeper) Tally(ctx sdk.Context, p group.Proposal, groupId uint64) (group.TallyResult, error) {
+	// If proposal has already been tallied, its status is not submitted, then
+	// we just return the previously stored result.
+	if p.Status != group.PROPOSAL_STATUS_SUBMITTED {
+		return p.FinalTallyResult, nil
+	}
+
 	it, err := q.voteByProposalIndex.Get(ctx.KVStore(q.key), p.Id)
 	if err != nil {
 		return group.TallyResult{}, err
-	}
-
-	// If proposal has already been tallied, its status is closed, then we just
-	// return the previously stored result.
-	if p.Status == group.PROPOSAL_STATUS_CLOSED {
-		return p.FinalTallyResult, nil
 	}
 
 	tallyResult := group.DefaultTallyResult()

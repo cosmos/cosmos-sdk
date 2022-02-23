@@ -201,7 +201,10 @@ func (b *BadgerDB) Writer() db.DBWriter {
 func (b *BadgerDB) Close() error {
 	b.mtx.Lock()
 	defer b.mtx.Unlock()
-	writeVersionsFile(b.vmgr, filepath.Join(b.db.Opts().Dir, versionsFilename))
+	err := writeVersionsFile(b.vmgr, filepath.Join(b.db.Opts().Dir, versionsFilename))
+	if err != nil {
+		return err
+	}
 	return b.db.Close()
 }
 
@@ -220,7 +223,11 @@ func (b *BadgerDB) save(target uint64) (uint64, error) {
 		return 0, db.ErrOpenTransactions
 	}
 	b.vmgr = b.vmgr.Copy()
-	return b.vmgr.Save(target)
+	v, err := b.vmgr.Save(target)
+	if err != nil {
+		return v, err
+	}
+	return v, writeVersionsFile(b.vmgr, filepath.Join(b.db.Opts().Dir, versionsFilename))
 }
 
 // SaveNextVersion implements DBConnection.
@@ -245,7 +252,7 @@ func (b *BadgerDB) DeleteVersion(target uint64) error {
 	}
 	b.vmgr = b.vmgr.Copy()
 	b.vmgr.Delete(target)
-	return nil
+	return writeVersionsFile(b.vmgr, filepath.Join(b.db.Opts().Dir, versionsFilename))
 }
 
 func (b *BadgerDB) Revert() error {

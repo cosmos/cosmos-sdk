@@ -1,0 +1,35 @@
+syntax = "proto3";
+package cosmos.vesting.v1beta1;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "google/api/annotations.proto";
+import "cosmos/auth/v1beta1/auth.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/auth/vesting/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // VestingAccounts returns all the existing vesting accounts
+  rpc VestingAccounts(QueryVestingAccountsRequest) returns (QueryVestingAccountsResponse) {
+    option (google.api.http).get = "/cosmos/vesting/v1beta1/vesting_accounts";
+  }
+}
+
+// QueryVestingAccountsRequest is the request type for the Query/Accounts RPC method.
+message QueryVestingAccountsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryVestingAccountsResponse is the response type for the Query/Accounts RPC method.
+message QueryVestingAccountsResponse {
+  // accounts are the existing vesting accounts
+  repeated google.protobuf.Any accounts = 1 [(cosmos_proto.accepts_interface) = "VestingAccount"];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+

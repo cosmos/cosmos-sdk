@@ -17,9 +17,9 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/core/appmodule"
-
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
@@ -78,15 +78,17 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	accountKeeper keeper.AccountKeeper
+	accountKeeper authkeeper.AccountKeeper
 	bankKeeper    types.BankKeeper
+	vestingKeeper keeper.VestingKeeper
 }
 
-func NewAppModule(ak keeper.AccountKeeper, bk types.BankKeeper) AppModule {
+func NewAppModule(ak authkeeper.AccountKeeper, bk types.BankKeeper, vk keeper.VestingKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		accountKeeper:  ak,
 		bankKeeper:     bk,
+		vestingKeeper:  vk,
 	}
 }
 
@@ -101,9 +103,20 @@ func (am AppModule) IsAppModule() {}
 // RegisterInvariants performs a no-op; there are no invariants to enforce.
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
+// Deprecated: Route returns the module's message router and handler.
+func (am AppModule) Route() sdk.Route {
+	return sdk.Route{}
+}
+
+// QuerierRoute returns the staking module's querier route name.
+func (AppModule) QuerierRoute() string {
+	return types.QuerierRoute
+}
+
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), NewMsgServerImpl(am.accountKeeper, am.bankKeeper))
+	types.RegisterQueryServer(cfg.QueryServer(), am.vestingKeeper)
 }
 
 // InitGenesis performs a no-op.
@@ -125,15 +138,16 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
+		appmodule.Provide(provideModule),
 	)
 }
 
 type VestingInputs struct {
 	depinject.In
 
-	AccountKeeper keeper.AccountKeeper
+	AccountKeeper authkeeper.AccountKeeper
 	BankKeeper    types.BankKeeper
+	VestingKeeper keeper.VestingKeeper
 }
 
 type VestingOutputs struct {
@@ -142,8 +156,8 @@ type VestingOutputs struct {
 	Module appmodule.AppModule
 }
 
-func ProvideModule(in VestingInputs) VestingOutputs {
-	m := NewAppModule(in.AccountKeeper, in.BankKeeper)
+func provideModule(in VestingInputs) VestingOutputs {
+	m := NewAppModule(in.AccountKeeper, in.BankKeeper, in.VestingKeeper)
 
 	return VestingOutputs{Module: m}
 }

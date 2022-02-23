@@ -8,19 +8,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 type msgServer struct {
-	keeper.AccountKeeper
+	authkeeper.AccountKeeper
 	types.BankKeeper
+	keeper.VestingKeeper
 }
 
 // NewMsgServerImpl returns an implementation of the vesting MsgServer interface,
 // wrapping the corresponding AccountKeeper and BankKeeper.
-func NewMsgServerImpl(k keeper.AccountKeeper, bk types.BankKeeper) types.MsgServer {
+func NewMsgServerImpl(k authkeeper.AccountKeeper, bk types.BankKeeper) types.MsgServer {
 	return &msgServer{AccountKeeper: k, BankKeeper: bk}
 }
 
@@ -30,6 +33,7 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	ak := s.AccountKeeper
 	bk := s.BankKeeper
+	vk := s.VestingKeeper
 
 	if err := bk.IsSendEnabledCoins(ctx, msg.Amount...); err != nil {
 		return nil, err
@@ -64,6 +68,7 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 	}
 
 	ak.SetAccount(ctx, vestingAccount)
+	vk.AddVestingAccount(ctx, to)
 
 	defer func() {
 		telemetry.IncrCounter(1, "new", "account")
@@ -91,6 +96,7 @@ func (s msgServer) CreatePermanentLockedAccount(goCtx context.Context, msg *type
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	ak := s.AccountKeeper
 	bk := s.BankKeeper
+	vk := s.VestingKeeper
 
 	if err := bk.IsSendEnabledCoins(ctx, msg.Amount...); err != nil {
 		return nil, err
@@ -118,6 +124,7 @@ func (s msgServer) CreatePermanentLockedAccount(goCtx context.Context, msg *type
 	vestingAccount := types.NewPermanentLockedAccount(baseAccount, msg.Amount)
 
 	ak.SetAccount(ctx, vestingAccount)
+	vk.AddVestingAccount(ctx, to)
 
 	defer func() {
 		telemetry.IncrCounter(1, "new", "account")
@@ -146,6 +153,7 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 
 	ak := s.AccountKeeper
 	bk := s.BankKeeper
+	vk := s.VestingKeeper
 
 	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
 	if err != nil {
@@ -171,6 +179,7 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 	vestingAccount := types.NewPeriodicVestingAccount(baseAccount, totalCoins.Sort(), msg.StartTime, msg.VestingPeriods)
 
 	ak.SetAccount(ctx, vestingAccount)
+	vk.AddVestingAccount(ctx, to)
 
 	defer func() {
 		telemetry.IncrCounter(1, "new", "account")

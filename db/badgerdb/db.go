@@ -113,6 +113,7 @@ func readVersionsFile(path string) (*versionManager, error) {
 	if err != nil {
 		return nil, err
 	}
+	file.Close()
 	var (
 		versions []uint64
 		lastTs   uint64
@@ -129,6 +130,7 @@ func readVersionsFile(path string) (*versionManager, error) {
 		}
 		if version == 0 { // 0 maps to the latest timestamp
 			lastTs = ts
+			continue
 		}
 		versions = append(versions, version)
 		vmap[version] = ts
@@ -143,12 +145,6 @@ func readVersionsFile(path string) (*versionManager, error) {
 
 // Write version metadata to CSV file
 func writeVersionsFile(vm *versionManager, path string) error {
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0644)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	w := csv.NewWriter(file)
 	rows := [][]string{
 		[]string{"0", strconv.FormatUint(vm.lastTs, 10)},
 	}
@@ -163,6 +159,12 @@ func writeVersionsFile(vm *versionManager, path string) error {
 			strconv.FormatUint(ts, 10),
 		})
 	}
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	w := csv.NewWriter(file)
 	return w.WriteAll(rows)
 }
 

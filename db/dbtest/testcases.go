@@ -140,19 +140,19 @@ func DoTestIterators(t *testing.T, load Loader) {
 	}
 	require.NoError(t, txn.Commit())
 
-	testRange := func(t *testing.T, iter dbm.Iterator, expected []string) {
-		i := 0
-		for ; iter.Next(); i++ {
-			expectedValue := expected[i]
-			value := iter.Value()
-			require.Equal(t, expectedValue, string(value), "i=%v", i)
-		}
-		require.Equal(t, len(expected), i)
-	}
-
 	type testCase struct {
 		start, end []byte
 		expected   []string
+	}
+	testRange := func(t *testing.T, iter dbm.Iterator, tc testCase) {
+		i := 0
+		for ; iter.Next(); i++ {
+			expectedValue := tc.expected[i]
+			value := iter.Value()
+			require.Equal(t, expectedValue, string(value),
+				"i=%v case=[[%x] [%x])", i, tc.start, tc.end)
+		}
+		require.Equal(t, len(tc.expected), i)
 	}
 
 	view := db.Reader()
@@ -165,11 +165,10 @@ func DoTestIterators(t *testing.T, load Loader) {
 		{[]byte{0x00, 0x01}, []byte{0x01}, []string{"0 1", "0 2"}},
 		{nil, []byte{0x01}, []string{"0", "0 0", "0 1", "0 2"}},
 	}
-	for i, tc := range iterCases {
-		t.Logf("Iterator case %d: [%v, %v)", i, tc.start, tc.end)
+	for _, tc := range iterCases {
 		it, err := view.Iterator(tc.start, tc.end)
 		require.NoError(t, err)
-		testRange(t, it, tc.expected)
+		testRange(t, it, tc)
 		it.Close()
 	}
 
@@ -181,11 +180,10 @@ func DoTestIterators(t *testing.T, load Loader) {
 		{[]byte{0x00, 0x01}, []byte{0x01}, []string{"0 2", "0 1"}},
 		{nil, []byte{0x01}, []string{"0 2", "0 1", "0 0", "0"}},
 	}
-	for i, tc := range reverseCases {
-		t.Logf("ReverseIterator case %d: [%v, %v)", i, tc.start, tc.end)
+	for _, tc := range reverseCases {
 		it, err := view.ReverseIterator(tc.start, tc.end)
 		require.NoError(t, err)
-		testRange(t, it, tc.expected)
+		testRange(t, it, tc)
 		it.Close()
 	}
 

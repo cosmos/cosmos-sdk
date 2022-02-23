@@ -19,7 +19,7 @@ type TmdbAdapter struct {
 }
 type tmdbBatchAdapter struct {
 	*TmdbAdapter
-	written bool
+	closed bool
 }
 
 var (
@@ -90,29 +90,26 @@ func (d *TmdbAdapter) NewBatch() tmdb.Batch {
 func (d *TmdbAdapter) Print() error             { return nil }
 func (d *TmdbAdapter) Stats() map[string]string { return nil }
 
+var errClosed = errors.New("batch is closed")
+
 func (d *tmdbBatchAdapter) Set(k, v []byte) error {
-	if d.written {
-		return errors.New("Batch already written")
+	if d.closed {
+		return errClosed
 	}
 	return d.TmdbAdapter.Set(k, v)
 }
 func (d *tmdbBatchAdapter) Delete(k []byte) error {
-	if d.written {
-		return errors.New("Batch already written")
+	if d.closed {
+		return errClosed
 	}
 	return d.TmdbAdapter.Delete(k)
 }
 func (d *tmdbBatchAdapter) WriteSync() error {
-	if d.written {
-		return errors.New("Batch already written")
+	if d.closed {
+		return errClosed
 	}
-	d.written = true
+	d.closed = true
 	return d.sync()
 }
-func (d *tmdbBatchAdapter) Write() error {
-	if d.written {
-		return errors.New("Batch already written")
-	}
-	return d.WriteSync()
-}
-func (d *tmdbBatchAdapter) Close() error { return nil }
+func (d *tmdbBatchAdapter) Write() error { return d.WriteSync() }
+func (d *tmdbBatchAdapter) Close() error { d.closed = true; return nil }

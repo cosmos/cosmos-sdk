@@ -259,9 +259,9 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "not a send authorization"), nil, nil
 		}
 
-		res, _ := sendAuth.Accept(ctx, msg[0])
+		res, err := sendAuth.Accept(ctx, msg[0])
 		if !res.Accept {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "not allowed"), nil, nil
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, nil
 		}
 
 		msgExec := authz.NewMsgExec(granteeAddr, msg)

@@ -373,7 +373,8 @@ func addrToIP(addr net.Addr) net.IP {
 }
 
 func openDB(rootDir string) (dbm.DBConnection, error) {
-	return badgerdb.NewDB(filepath.Join(rootDir, "data"))
+	dir := filepath.Join(rootDir, "data", "application")
+	return badgerdb.NewDB(dir)
 }
 
 func openTraceWriter(traceWriterFile string) (w io.Writer, err error) {

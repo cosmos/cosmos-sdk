@@ -2,16 +2,11 @@ package tmservice
 
 import (
 	"context"
-<<<<<<< HEAD
 
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-=======
-	"github.com/cosmos/cosmos-sdk/client"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"github.com/tendermint/tendermint/rpc/coretypes"
->>>>>>> dd65ef873 (feat: include transactions in QueryBlockByHeight  (#10880))
 )
 
 func getBlock(ctx context.Context, clientCtx client.Context, height *int64) (*ctypes.ResultBlock, error) {

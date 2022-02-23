@@ -162,8 +162,8 @@ For '--pruning' the options are as follows:
 
 default: the last 362880 states are kept, pruning at 10 block intervals
 nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
-everything: 2 latest states will be kept; pruning at 10 block intervals.
-custom: allow pruning options to be manually specified through 'pruning-keep-recent', and 'pruning-interval'
+everything: all saved states will be deleted, storing only the current and previous state; pruning at 10 block intervals
+custom: allow pruning options to be manually specified through 'pruning-keep-recent', 'pruning-keep-every', and 'pruning-interval'
 
 Node halting configurations exist in the form of two flags: '--halt-height' and '--halt-time'. During
 the ABCI Commit phase, the node will check if the current block height is greater than or equal to

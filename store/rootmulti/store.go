@@ -508,12 +508,17 @@ func (rs *Store) Commit() types.CommitID {
 	rs.lastCommitInfo.Timestamp = rs.commitHeader.Time
 	defer rs.flushMetadata(rs.db, version, rs.lastCommitInfo)
 
-	// remove remnants of removed stores
-	for sk := range rs.removalMap {
-		if _, ok := rs.stores[sk]; ok {
-			delete(rs.stores, sk)
-			delete(rs.storesParams, sk)
-			delete(rs.keysByName, sk.Name())
+	// Determine if pruneHeight height needs to be added to the list of heights to
+	// be pruned, where pruneHeight = (commitHeight - 1) - KeepRecent.
+	if rs.pruningOpts.Interval > 0 && int64(rs.pruningOpts.KeepRecent) < previousHeight {
+		pruneHeight := previousHeight - int64(rs.pruningOpts.KeepRecent)
+		// We consider this height to be pruned iff:
+		//
+		// - KeepEvery is zero as that means that all heights should be pruned.
+		// - KeepEvery % (height - KeepRecent) != 0 as that means the height is not
+		// a 'snapshot' height.
+		if rs.pruningOpts.KeepEvery == 0 || pruneHeight%int64(rs.pruningOpts.KeepEvery) != 0 {
+			rs.pruneHeights = append(rs.pruneHeights, pruneHeight)
 		}
 	}
 

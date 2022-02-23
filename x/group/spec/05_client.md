@@ -467,6 +467,21 @@ Example:
 simd tx group create-group-policy cosmos1.. 1 "AQ==" '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"600s"}' 
 ```
 
+
+#### create-group-with-policy
+
+The `create-group-with-policy` command allows users to create a group which is an aggregation of member accounts with associated weights and an administrator account with decision policy. If the `--group-policy-as-admin` flag is set to `true`, the group policy address becomes the group and group policy admin.
+
+```bash
+simd tx group create-group-with-policy [admin] [group-metadata] [group-policy-metadata] [members-json-file] [decision-policy] [flags]
+```
+
+Example:
+
+```bash
+simd tx group create-group-with-policy cosmos1.. "AQ==" "AQ==" members.json '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"600s"}' 
+```
+
 #### update-group-policy-admin
 
 The `update-group-policy-admin` command allows users to update a group policy admin.

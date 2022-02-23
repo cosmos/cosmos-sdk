@@ -233,6 +233,60 @@ func (k Keeper) UpdateGroupMetadata(goCtx context.Context, req *group.MsgUpdateG
 	return &group.MsgUpdateGroupMetadataResponse{}, nil
 }
 
+func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreateGroupWithPolicy) (*group.MsgCreateGroupWithPolicyResponse, error) {
+	groupRes, err := k.CreateGroup(goCtx, &group.MsgCreateGroup{
+		Admin:    req.Admin,
+		Members:  req.Members,
+		Metadata: req.GroupMetadata,
+	})
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "group response")
+	}
+	groupId := groupRes.GroupId
+
+	var groupPolicyAddr sdk.AccAddress
+	groupPolicyRes, err := k.CreateGroupPolicy(goCtx, &group.MsgCreateGroupPolicy{
+		Admin:          req.Admin,
+		GroupId:        groupId,
+		Metadata:       req.GroupPolicyMetadata,
+		DecisionPolicy: req.DecisionPolicy,
+	})
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "group policy response")
+	}
+	policyAddr := groupPolicyRes.Address
+
+	groupPolicyAddr, err = sdk.AccAddressFromBech32(policyAddr)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "group policy address")
+	}
+	groupPolicyAddress := groupPolicyAddr.String()
+
+	if req.GroupPolicyAsAdmin {
+		updateAdminReq := &group.MsgUpdateGroupAdmin{
+			GroupId:  groupId,
+			Admin:    req.Admin,
+			NewAdmin: groupPolicyAddress,
+		}
+		_, err = k.UpdateGroupAdmin(goCtx, updateAdminReq)
+		if err != nil {
+			return nil, err
+		}
+
+		updatePolicyAddressReq := &group.MsgUpdateGroupPolicyAdmin{
+			Admin:    req.Admin,
+			Address:  groupPolicyAddress,
+			NewAdmin: groupPolicyAddress,
+		}
+		_, err = k.UpdateGroupPolicyAdmin(goCtx, updatePolicyAddressReq)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &group.MsgCreateGroupWithPolicyResponse{GroupId: groupId, GroupPolicyAddress: groupPolicyAddress}, nil
+}
+
 func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGroupPolicy) (*group.MsgCreateGroupPolicyResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	admin, err := sdk.AccAddressFromBech32(req.GetAdmin())

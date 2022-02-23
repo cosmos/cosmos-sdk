@@ -18,8 +18,9 @@ import (
 )
 
 const (
-	FlagExec = "exec"
-	ExecTry  = "try"
+	FlagExec               = "exec"
+	ExecTry                = "try"
+	FlagGroupPolicyAsAdmin = "group-policy-as-admin"
 )
 
 // TxCmd returns a root CLI command handler for all x/group transaction commands.
@@ -37,6 +38,7 @@ func TxCmd(name string) *cobra.Command {
 		MsgUpdateGroupAdminCmd(),
 		MsgUpdateGroupMetadataCmd(),
 		MsgUpdateGroupMembersCmd(),
+		MsgCreateGroupWithPolicyCmd(),
 		MsgCreateGroupPolicyCmd(),
 		MsgUpdateGroupPolicyAdminCmd(),
 		MsgUpdateGroupPolicyDecisionPolicyCmd(),
@@ -279,6 +281,106 @@ func MsgUpdateGroupMetadataCmd() *cobra.Command {
 		},
 	}
 
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// MsgCreateGroupWithPolicyCmd creates a CLI command for Msg/CreateGroupWithPolicy.
+func MsgCreateGroupWithPolicyCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use: "create-group-with-policy [admin] [group-metadata] [group-policy-metadata] [members-json-file] [decision-policy]",
+		Short: "Create a group with policy which is an aggregation " +
+			"of member accounts with associated weights, " +
+			"an administrator account and a decision policy. Note, the '--from' flag is " +
+			"ignored as it is implied from [admin].",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Create a group with policy which is an aggregation of member accounts with associated weights,
+an administrator account and decision policy. Note, the '--from' flag is ignored as it is implied from [admin].
+Members accounts can be given through a members JSON file that contains an array of members.
+If group-policy-as-admin flag is set to true, the admin of the newly created group and group policy is set with the group policy address itself.
+
+Example:
+$ %s tx group create-group-with-policy [admin] [group-metadata] [group-policy-metadata] [members-json-file] \
+'{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"1s"}'
+
+where members.json contains:
+
+{
+	"members": [
+		{
+			"address": "addr1",
+			"weight": "1",
+			"metadata": "some metadata"
+		},
+		{
+			"address": "addr2",
+			"weight": "1",
+			"metadata": "some metadata"
+		}
+	]
+}
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.MinimumNArgs(5),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := cmd.Flags().Set(flags.FlagFrom, args[0])
+			if err != nil {
+				return err
+			}
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			groupPolicyAsAdmin, err := cmd.Flags().GetBool(FlagGroupPolicyAsAdmin)
+			if err != nil {
+				return err
+			}
+
+			members, err := parseMembers(clientCtx, args[3])
+			if err != nil {
+				return err
+			}
+
+			groupMetadata, err := base64.StdEncoding.DecodeString(args[1])
+			if err != nil {
+				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "group metadata is malformed, proper base64 string is required")
+			}
+
+			groupPolicyMetadata, err := base64.StdEncoding.DecodeString(args[2])
+			if err != nil {
+				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "group policy metadata is malformed, proper base64 string is required")
+			}
+
+			var policy group.DecisionPolicy
+			if err := clientCtx.Codec.UnmarshalInterfaceJSON([]byte(args[4]), &policy); err != nil {
+				return err
+			}
+
+			msg, err := group.NewMsgCreateGroupWithPolicy(
+				clientCtx.GetFromAddress().String(),
+				members,
+				groupMetadata,
+				groupPolicyMetadata,
+				groupPolicyAsAdmin,
+				policy,
+			)
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return fmt.Errorf("message validation failed: %w", err)
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	cmd.Flags().Bool(FlagGroupPolicyAsAdmin, false, "Sets admin of the newly created group and group policy with group policy address itself when true")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

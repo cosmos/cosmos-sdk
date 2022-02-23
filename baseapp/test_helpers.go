@@ -93,6 +93,7 @@ func (app *BaseApp) NewUncachedContext(isCheckTx bool, header tmproto.Header) sd
 	return sdk.NewContext(multi.CommitAsCacheStore(app.store), header, isCheckTx, app.logger)
 }
 
+// NewContextAt creates a context using a (read-only) store at a given block height.
 func (app *BaseApp) NewContextAt(isCheckTx bool, header tmproto.Header, height int64) (sdk.Context, error) {
 	view, err := app.store.GetVersion(height)
 	if err != nil {

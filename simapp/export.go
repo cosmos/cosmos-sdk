@@ -21,6 +21,9 @@ func (app *SimApp) ExportAppStateAndValidators(
 	return app.ExportAppStateAndValidatorsAt(forZeroHeight, jailAllowedAddrs, 0)
 }
 
+// ExportAppStateAndValidatorsAt exports the application state at a given block
+// height for a genesis file.
+// Passing a height < 1 will export for the latest block height.
 func (app *SimApp) ExportAppStateAndValidatorsAt(
 	forZeroHeight bool, jailAllowedAddrs []string, height int64,
 ) (servertypes.ExportedApp, error) {

@@ -331,9 +331,9 @@ func TestAppStateDeterminism(t *testing.T) {
 			)
 			require.NoError(t, err)
 
-			// if config.Commit {
-			// 	PrintStats(db)//TODO
-			// }
+			if config.Commit {
+				PrintStats(db) //TODO
+			}
 
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash

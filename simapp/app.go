@@ -30,6 +30,7 @@ import (
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/store/streaming"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2"
+	"github.com/cosmos/cosmos-sdk/store/v2/multi"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -232,7 +233,7 @@ func NewSimApp(
 	// not include this key.
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, "testingkey")
 	// initialize stores
-	setNamespaces := func(config *baseapp.StoreParams, ver uint64) error {
+	setNamespaces := func(config *multi.StoreParams, ver uint64) error {
 		for _, key := range keys {
 			typ, err := storetypes.StoreKeyToType(key)
 			if err != nil {

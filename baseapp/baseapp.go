@@ -35,15 +35,13 @@ type (
 	// Enum mode for app.runTx
 	runTxMode uint8
 
-	// StoreParams is an alias for the config parameter type of the CommitMultiStore.
-	StoreParams = multi.StoreParams
 	// StoreOption provides a functional callback to modify StoreParams.
 	// The callback is passed the loaded height as uint64.
 	// This can be used to control how we load the CommitMultiStore from disk. This is useful for
 	// state migration, when loading a datastore written with an older version of the software.
 	// In particular, if a module changed the substore key name (or removed a substore) between
 	// two versions of the software.
-	StoreOption func(*StoreParams, uint64) error
+	StoreOption func(*multi.StoreParams, uint64) error
 
 	// AppOption provides a configuration option for a BaseApp
 	AppOption interface {

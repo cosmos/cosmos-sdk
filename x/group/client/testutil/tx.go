@@ -2166,7 +2166,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 	)
 	require.NoError(err, out.String())
 
-	// create decision policy
+	// create group policy
 	out, err = cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupPolicyCmd(),
 		append(
 			[]string{

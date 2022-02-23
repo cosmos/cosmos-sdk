@@ -129,13 +129,16 @@ func TestBaseAppCreateQueryContext(t *testing.T) {
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
 	app.Commit()
 
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2}})
+	app.Commit()
+
 	testCases := []struct {
 		name   string
 		height int64
 		prove  bool
 		expErr bool
 	}{
-		{"valid height", 1, true, false},
+		{"valid height", 2, true, false},
 		{"future height", 10, true, true},
 		{"negative height, prove=true", -1, true, true},
 		{"negative height, prove=false", -1, false, true},

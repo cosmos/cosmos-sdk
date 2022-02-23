@@ -236,10 +236,6 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 	}
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
-	err := m.beginLocked(opRestore)
-	if err != nil {
-		return err
-	}
 
 	// check multistore supported format preemptive
 	if snapshot.Format != types.CurrentFormat {
@@ -251,6 +247,11 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 	if snapshot.Height > uint64(math.MaxInt64) {
 		return sdkerrors.Wrapf(types.ErrInvalidMetadata,
 			"snapshot height %v cannot exceed %v", snapshot.Height, int64(math.MaxInt64))
+	}
+
+	err := m.beginLocked(opRestore)
+	if err != nil {
+		return err
 	}
 
 	// Start an asynchronous snapshot restoration, passing chunks and completion status via channels.

@@ -2525,8 +2525,8 @@ func (s *TestSuite) TestLeaveGroup() {
 		{
 			"expect error: group not found",
 			&group.MsgLeaveGroup{
-				GroupId:       100000,
-				MemberAddress: member1.String(),
+				GroupId: 100000,
+				Address: member1.String(),
 			},
 			true,
 			"group: not found",
@@ -2535,8 +2535,8 @@ func (s *TestSuite) TestLeaveGroup() {
 		{
 			"expect error: member not part of group",
 			&group.MsgLeaveGroup{
-				GroupId:       groupId,
-				MemberAddress: member4.String(),
+				GroupId: groupId,
+				Address: member4.String(),
 			},
 			true,
 			"not part of group",
@@ -2545,8 +2545,8 @@ func (s *TestSuite) TestLeaveGroup() {
 		{
 			"valid testcase: decision policy is not present",
 			&group.MsgLeaveGroup{
-				GroupId:       res1.GroupId,
-				MemberAddress: member1.String(),
+				GroupId: res1.GroupId,
+				Address: member1.String(),
 			},
 			false,
 			"",
@@ -2555,8 +2555,8 @@ func (s *TestSuite) TestLeaveGroup() {
 		{
 			"valid testcase",
 			&group.MsgLeaveGroup{
-				GroupId:       groupId,
-				MemberAddress: member3.String(),
+				GroupId: groupId,
+				Address: member3.String(),
 			},
 			false,
 			"",
@@ -2565,18 +2565,18 @@ func (s *TestSuite) TestLeaveGroup() {
 		{
 			"valid request: cannot leave group",
 			&group.MsgLeaveGroup{
-				GroupId:       groupId,
-				MemberAddress: member2.String(),
+				GroupId: groupId,
+				Address: member2.String(),
 			},
 			true,
-			"cannot leave group",
+			"should not be greater than the total group weight",
 			0,
 		},
 		{
 			"valid request: can leave group (percentage decision policy)",
 			&group.MsgLeaveGroup{
-				GroupId:       res2.GroupId,
-				MemberAddress: member2.String(),
+				GroupId: res2.GroupId,
+				Address: member2.String(),
 			},
 			false,
 			"",

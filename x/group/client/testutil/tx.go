@@ -2256,7 +2256,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 				commonFlags...,
 			),
 			true,
-			"Leaving the group will break group policy",
+			"should not be greater than the total group weight",
 		},
 	}
 

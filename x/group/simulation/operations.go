@@ -109,6 +109,11 @@ func WeightedOperations(
 			weightMsgCreateGroupPolicy = WeightMsgCreateGroupPolicy
 		},
 	)
+	appParams.GetOrGenerate(cdc, OpMsgLeaveGroup, &weightMsgLeaveGroup, nil,
+		func(_ *rand.Rand) {
+			weightMsgLeaveGroup = WeightMsgLeaveGroup
+		},
+	)
 	appParams.GetOrGenerate(cdc, OpMsgCreateGroupWithPolicy, &weightMsgCreateGroupWithPolicy, nil,
 		func(_ *rand.Rand) {
 			weightMsgCreateGroupWithPolicy = WeightMsgCreateGroupWithPolicy
@@ -159,11 +164,6 @@ func WeightedOperations(
 			weightMsgUpdateGroupPolicyMetadata = WeightMsgUpdateGroupPolicyMetadata
 		},
 	)
-	appParams.GetOrGenerate(cdc, OpMsgLeaveGroup, &weightMsgLeaveGroup, nil,
-		func(_ *rand.Rand) {
-			weightMsgLeaveGroup = WeightMsgLeaveGroup
-		},
-	)
 	appParams.GetOrGenerate(cdc, OpMsgWithdrawProposal, &weightMsgWithdrawProposal, nil,
 		func(_ *rand.Rand) {
 			weightMsgWithdrawProposal = WeightMsgWithdrawProposal
@@ -187,6 +187,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgCreateGroupPolicy,
 			SimulateMsgCreateGroupPolicy(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgLeaveGroup,
+			SimulateMsgLeaveGroup(k, ak, bk),
 		),
 		// simulation.NewWeightedOperation(
 		// 	weightMsgCreateGroupWithPolicy,
@@ -230,10 +234,6 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgUpdateGroupPolicyMetadata,
 			SimulateMsgUpdateGroupPolicyMetadata(ak, bk, k),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgLeaveGroup,
-			SimulateMsgLeaveGroup(k, ak, bk),
 		),
 	}
 
@@ -1123,10 +1123,6 @@ func SimulateMsgLeaveGroup(k keeper.Keeper, ak group.AccountKeeper, bk group.Ban
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, ""), nil, err
 		}
 
-		if groupInfo == nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, ""), nil, nil
-		}
-
 		if policyInfo == nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, "no policy found"), nil, nil
 		}
@@ -1140,20 +1136,15 @@ func SimulateMsgLeaveGroup(k keeper.Keeper, ak group.AccountKeeper, bk group.Ban
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, "no group member found"), nil, nil
 		}
 
-		member, exists := simtypes.FindAccount(accounts, acc.Address)
-		if !exists {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, "not a sim account"), nil, nil
-		}
-
-		spendableCoins := bk.SpendableCoins(sdkCtx, member.Address)
+		spendableCoins := bk.SpendableCoins(sdkCtx, acc.Address)
 		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, "fee error"), nil, err
 		}
 
 		msg := &group.MsgLeaveGroup{
-			MemberAddress: member.Address.String(),
-			GroupId:       groupInfo.Id,
+			Address: acc.Address.String(),
+			GroupId: groupInfo.Id,
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -1165,7 +1156,7 @@ func SimulateMsgLeaveGroup(k keeper.Keeper, ak group.AccountKeeper, bk group.Ban
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
-			member.PrivKey,
+			acc.PrivKey,
 		)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, "unable to generate mock tx"), nil, err
@@ -1177,7 +1168,7 @@ func SimulateMsgLeaveGroup(k keeper.Keeper, ak group.AccountKeeper, bk group.Ban
 				return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, ""), nil, nil
 			}
 
-			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), err.Error()), nil, err
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
@@ -1300,7 +1291,7 @@ func genGroupMembers(r *rand.Rand, accounts []simtypes.Account) []group.Member {
 		return []group.Member{
 			{
 				Address:  accounts[0].Address.String(),
-				Weight:   fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 5)),
+				Weight:   fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
 				Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
 			},
 		}
@@ -1317,7 +1308,7 @@ func genGroupMembers(r *rand.Rand, accounts []simtypes.Account) []group.Member {
 	for i := 0; i < membersLen; i++ {
 		members[i] = group.Member{
 			Address:  accounts[i].Address.String(),
-			Weight:   fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 5)),
+			Weight:   fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
 			Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
 		}
 	}

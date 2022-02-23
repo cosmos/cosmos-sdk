@@ -813,7 +813,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 // LeaveGroup implements the MsgServer/LeaveGroup method.
 func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*group.MsgLeaveGroupResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	_, err := sdk.AccAddressFromBech32(req.MemberAddress)
+	_, err := sdk.AccAddressFromBech32(req.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -830,7 +830,7 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 
 	gm, err := k.getGroupMember(ctx, &group.GroupMember{
 		GroupId: req.GroupId,
-		Member:  &group.Member{Address: req.MemberAddress},
+		Member:  &group.Member{Address: req.Address},
 	})
 	if err != nil {
 		return nil, err
@@ -852,8 +852,13 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 	}
 	defer iter.Close()
 
+	// update group weight and increment group version
+	groupInfo.TotalWeight = updatedWeight.String()
+	groupInfo.Version++
+
 	var groupPolicy group.GroupPolicyInfo
 	for {
+		ctx.GasMeter().ConsumeGas(gasCostPerIteration, "group policy")
 		if _, err := iter.LoadNext(&groupPolicy); err != nil {
 			if errors.ErrORMIteratorDone.Is(err) {
 				break
@@ -863,20 +868,12 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 		}
 
 		policyI := groupPolicy.GetDecisionPolicy()
-		switch policy := policyI.(type) {
-		case *group.ThresholdDecisionPolicy:
-			threshold, err := math.NewNonNegativeDecFromString(policy.Threshold)
-			if err != nil {
-				return nil, err
-			}
+		if policyI == nil {
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("expected %T, got %T", (group.DecisionPolicy)(nil), groupPolicy.DecisionPolicy.GetCachedValue())
+		}
 
-			if threshold.Cmp(updatedWeight) == 1 {
-				return nil, sdkerrors.ErrInvalidRequest.Wrap("cannot leave group. Leaving the group will break group policy.")
-			}
-		case *group.PercentageDecisionPolicy:
-			continue
-		default:
-			return nil, sdkerrors.ErrInvalidRequest.Wrapf("expected %T, got %T", (*group.ThresholdDecisionPolicy)(nil), policy)
+		if err := policyI.Validate(groupInfo); err != nil {
+			return nil, err
 		}
 	}
 
@@ -885,15 +882,13 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 		return nil, sdkerrors.Wrap(err, "group member")
 	}
 
-	// update group weight and increment group version
-	groupInfo.TotalWeight = updatedWeight.String()
-	groupInfo.Version++
 	if err := k.groupTable.Update(ctx.KVStore(k.key), groupInfo.Id, &groupInfo); err != nil {
 		return nil, err
 	}
 
 	ctx.EventManager().EmitTypedEvent(&group.EventLeaveGroup{
 		GroupId: req.GroupId,
+		Address: req.Address,
 	})
 
 	return &group.MsgLeaveGroupResponse{}, nil

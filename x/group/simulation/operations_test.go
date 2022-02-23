@@ -51,6 +51,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}{
 		{simulation.WeightMsgCreateGroup, group.MsgCreateGroup{}.Route(), simulation.TypeMsgCreateGroup},
 		{simulation.WeightMsgCreateGroupPolicy, group.MsgCreateGroupPolicy{}.Route(), simulation.TypeMsgCreateGroupPolicy},
+		{simulation.WeightMsgLeaveGroup, group.MsgLeaveGroup{}.Route(), simulation.TypeMsgLeaveGroup},
 		// {simulation.WeightMsgCreateGroupWithPolicy, group.MsgCreateGroupWithPolicy{}.Route(), simulation.TypeMsgCreateGroupWithPolicy},
 		{simulation.WeightMsgSubmitProposal, group.MsgSubmitProposal{}.Route(), simulation.TypeMsgSubmitProposal},
 		{simulation.WeightMsgSubmitProposal, group.MsgSubmitProposal{}.Route(), simulation.TypeMsgSubmitProposal},
@@ -63,7 +64,6 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		{simulation.WeightMsgUpdateGroupPolicyAdmin, group.MsgUpdateGroupPolicyAdmin{}.Route(), simulation.TypeMsgUpdateGroupPolicyAdmin},
 		{simulation.WeightMsgUpdateGroupPolicyDecisionPolicy, group.MsgUpdateGroupPolicyDecisionPolicy{}.Route(), simulation.TypeMsgUpdateGroupPolicyDecisionPolicy},
 		{simulation.WeightMsgUpdateGroupPolicyMetadata, group.MsgUpdateGroupPolicyMetadata{}.Route(), simulation.TypeMsgUpdateGroupPolicyMetadata},
-		{simulation.WeightMsgLeaveGroup, group.MsgLeaveGroup{}.Route(), simulation.TypeMsgLeaveGroup},
 	}
 
 	for i, w := range weightedOps {

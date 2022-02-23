@@ -846,7 +846,7 @@ Parameters:
 			}
 
 			msg := &group.MsgLeaveGroup{
-				MemberAddress: clientCtx.GetFromAddress().String(),
+				Address: clientCtx.GetFromAddress().String(),
 				GroupId:       groupID,
 			}
 			if err = msg.ValidateBasic(); err != nil {

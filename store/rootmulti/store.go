@@ -402,11 +402,6 @@ func (rs *Store) Commit() types.CommitID {
 		previousHeight = rs.lastCommitInfo.GetVersion()
 		version = previousHeight + 1
 	}
-<<<<<<< HEAD
-=======
-
-	rs.lastCommitInfo = commitStores(version, rs.stores, rs.removalMap)
->>>>>>> 75bcf47f1 (refactor: prune everything (#11177))
 
 	rs.lastCommitInfo = commitStores(version, rs.stores)
 

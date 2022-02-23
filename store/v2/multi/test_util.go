@@ -1,4 +1,4 @@
-package root
+package multi
 
 import (
 	"bytes"

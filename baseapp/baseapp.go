@@ -262,6 +262,7 @@ func DefaultStoreLoader(ms sdk.CommitMultiStore) error {
 
 // CommitMultiStore returns the root multi-store.
 // App constructor can use this to access the `cms`.
+// UNSAFE: only safe to use during app initialization.
 func (app *BaseApp) CommitMultiStore() sdk.CommitMultiStore {
 	return app.cms
 }

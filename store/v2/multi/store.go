@@ -13,6 +13,7 @@ import (
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	prefixdb "github.com/cosmos/cosmos-sdk/db/prefix"
 	util "github.com/cosmos/cosmos-sdk/internal"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -23,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/v2/transient"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	protoio "github.com/gogo/protobuf/io"
 )
 
 var (
@@ -901,9 +903,11 @@ func (tlm *traceListenMixin) wrapTraceListen(store types.KVStore, skey types.Sto
 func (s *Store) GetPruning() types.PruningOptions   { return s.Pruning }
 func (s *Store) SetPruning(po types.PruningOptions) { s.Pruning = po }
 
-func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadCloser, ready chan<- struct{}) error {
-	return nil
+func (rs *Store) Restore(
+	height uint64, format uint32, protoReader protoio.Reader,
+) (snapshottypes.SnapshotItem, error) {
+	return snapshottypes.SnapshotItem{}, nil
 }
-func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, error) {
-	return nil, nil
+func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
+	return nil
 }

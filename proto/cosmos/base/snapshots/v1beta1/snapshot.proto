@@ -39,7 +39,9 @@ message SnapshotStoreItem {
 message SnapshotIAVLItem {
   bytes key     = 1;
   bytes value   = 2;
+  // version is block height
   int64 version = 3;
+  // height is depth of the tree.
   int32 height  = 4;
 }
 

@@ -2,6 +2,9 @@ package tx
 
 import (
 	"context"
+	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"strings"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
@@ -137,6 +140,13 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 	}, nil
 }
 
+// protoTxProvider is a type which can provide a proto transaction. It is a
+// workaround to get access to the wrapper TxBuilder's method GetProtoTx().
+// ref: https://github.com/cosmos/cosmos-sdk/issues/10347
+type protoTxProvider interface {
+	GetProtoTx() *txtypes.Tx
+}
+
 // GetBlockWithTxs returns a block with decoded txs.
 func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWithTxsRequest) (*txtypes.GetBlockWithTxsResponse, error) {
 	if req == nil {
@@ -151,12 +161,7 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 			"or greater than the current height %d", req.Height, currentHeight)
 	}
 
-	node, err := s.clientCtx.GetNode()
-	if err != nil {
-		return nil, err
-	}
-
-	blockID, block, err := cmtservice.GetProtoBlock(ctx, node, &req.Height)
+	blockId, block, err := tmservice.GetProtoBlock(ctx, s.clientCtx, &req.Height)
 	if err != nil {
 		return nil, err
 	}
@@ -167,13 +172,13 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 		limit = req.Pagination.Limit
 	} else {
 		offset = 0
-		limit = query.DefaultLimit
+		limit = pagination.DefaultLimit
 	}
 
 	blockTxs := block.Data.Txs
 	blockTxsLn := uint64(len(blockTxs))
 	txs := make([]*txtypes.Tx, 0, limit)
-	if offset >= blockTxsLn && blockTxsLn != 0 {
+	if offset >= blockTxsLn {
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("out of range: cannot paginate %d txs with offset %d and limit %d", blockTxsLn, offset, limit)
 	}
 	decodeTxAt := func(i uint64) error {
@@ -182,38 +187,38 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 		if err != nil {
 			return err
 		}
-		p, err := txb.(interface{ AsTx() (*txtypes.Tx, error) }).AsTx()
-		if err != nil {
-			return err
+		p, ok := txb.(protoTxProvider)
+		if !ok {
+			return sdkerrors.ErrTxDecode.Wrapf("could not cast %T to %T", txb, txtypes.Tx{})
 		}
-		txs = append(txs, p)
+		txs = append(txs, p.GetProtoTx())
 		return nil
 	}
 	if req.Pagination != nil && req.Pagination.Reverse {
 		for i, count := offset, uint64(0); i > 0 && count != limit; i, count = i-1, count+1 {
 			if err = decodeTxAt(i); err != nil {
-				sdkCtx.Logger().Error("failed to decode tx", "error", err)
+				return nil, err
 			}
 		}
 	} else {
 		for i, count := offset, uint64(0); i < blockTxsLn && count != limit; i, count = i+1, count+1 {
 			if err = decodeTxAt(i); err != nil {
-				sdkCtx.Logger().Error("failed to decode tx", "error", err)
+				return nil, err
 			}
 		}
 	}
 
 	return &txtypes.GetBlockWithTxsResponse{
 		Txs:     txs,
-		BlockId: &blockID,
+		BlockId: &blockId,
 		Block:   block,
-		Pagination: &query.PageResponse{
+		Pagination: &pagination.PageResponse{
 			Total: blockTxsLn,
 		},
 	}, nil
+
 }
 
-// BroadcastTx implements the ServiceServer.BroadcastTx RPC method.
 func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxRequest) (*txtypes.BroadcastTxResponse, error) {
 	return client.TxServiceBroadcast(ctx, s.clientCtx, req)
 }

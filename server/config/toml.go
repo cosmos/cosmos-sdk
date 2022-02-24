@@ -22,13 +22,8 @@ minimum-gas-prices = "{{ .BaseConfig.MinGasPrices }}"
 
 # default: the last 100 states are kept in addition to every 500th state; pruning at 10 block intervals
 # nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
-<<<<<<< HEAD
-# everything: all saved states will be deleted, storing only the current state; pruning at 10 block intervals
-# custom: allow pruning options to be manually specified through 'pruning-keep-recent', 'pruning-keep-every', and 'pruning-interval'
-=======
 # everything: all saved states will be deleted, storing only the current and previous state; pruning at 10 block intervals
-# custom: allow pruning options to be manually specified through 'pruning-keep-recent' and 'pruning-interval'
->>>>>>> 75bcf47f1 (refactor: prune everything (#11177))
+# custom: allow pruning options to be manually specified through 'pruning-keep-recent', 'pruning-keep-every', and 'pruning-interval'
 pruning = "{{ .BaseConfig.Pruning }}"
 
 # These are applied if and only if the pruning strategy is custom.

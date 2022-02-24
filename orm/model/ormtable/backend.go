@@ -37,51 +37,9 @@ type Backend interface {
 	WithHooks(Hooks) Backend
 }
 
-// ReadBackendOptions defines options for creating a ReadBackend.
-// Read context can optionally define two stores - a commitment store
-// that is backed by a merkle tree and an index store that isn't.
-// If the index store is not defined, the commitment store will be
-// used for all operations.
-type ReadBackendOptions struct {
-
-	// CommitmentStoreReader is a reader for the commitment store.
-	CommitmentStoreReader kv.ReadonlyStore
-
-	// IndexStoreReader is an optional reader for the index store.
-	// If it is nil the CommitmentStoreReader will be used.
-	IndexStoreReader kv.ReadonlyStore
-}
-
-type readBackend struct {
-	commitmentReader kv.ReadonlyStore
-	indexReader      kv.ReadonlyStore
-}
-
-func (r readBackend) CommitmentStoreReader() kv.ReadonlyStore {
-	return r.commitmentReader
-}
-
-func (r readBackend) IndexStoreReader() kv.ReadonlyStore {
-	return r.indexReader
-}
-
-func (readBackend) private() {}
-
-// NewReadBackend creates a new ReadBackend.
-func NewReadBackend(options ReadBackendOptions) ReadBackend {
-	indexReader := options.IndexStoreReader
-	if indexReader == nil {
-		indexReader = options.CommitmentStoreReader
-	}
-	return &readBackend{
-		commitmentReader: options.CommitmentStoreReader,
-		indexReader:      indexReader,
-	}
-}
-
 type backend struct {
-	commitmentStore kv.Store
-	indexStore      kv.Store
+	commitmentStore kv.ReadonlyStore
+	indexStore      kv.ReadonlyStore
 	hooks           Hooks
 }
 
@@ -101,11 +59,11 @@ func (c backend) IndexStoreReader() kv.ReadonlyStore {
 }
 
 func (c backend) CommitmentStore() kv.Store {
-	return c.commitmentStore
+	return c.commitmentStore.(kv.Store)
 }
 
 func (c backend) IndexStore() kv.Store {
-	return c.indexStore
+	return c.indexStore.(kv.Store)
 }
 
 func (c backend) Hooks() Hooks {
@@ -120,11 +78,11 @@ func (c backend) Hooks() Hooks {
 type BackendOptions struct {
 
 	// CommitmentStore is the commitment store.
-	CommitmentStore kv.Store
+	CommitmentStore kv.ReadonlyStore
 
 	// IndexStore is the optional index store.
 	// If it is nil the CommitmentStore will be used.
-	IndexStore kv.Store
+	IndexStore kv.ReadonlyStore
 
 	// Hooks are optional hooks into ORM insert, update and delete operations.
 	Hooks Hooks
@@ -155,10 +113,6 @@ type contextKeyType string
 
 var defaultContextKey = contextKeyType("backend")
 
-func getBackendDefault(ctx context.Context) (Backend, error) {
+func getBackendDefault(ctx context.Context) (ReadBackend, error) {
 	return ctx.Value(defaultContextKey).(Backend), nil
-}
-
-func getReadBackendDefault(ctx context.Context) (ReadBackend, error) {
-	return ctx.Value(defaultContextKey).(ReadBackend), nil
 }

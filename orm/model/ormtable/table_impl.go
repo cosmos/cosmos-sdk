@@ -48,7 +48,7 @@ func (t tableImpl) GetIndexByID(id uint32) Index {
 }
 
 func (t tableImpl) Save(ctx context.Context, message proto.Message) error {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func (t tableImpl) Save(ctx context.Context, message proto.Message) error {
 }
 
 func (t tableImpl) Insert(ctx context.Context, message proto.Message) error {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}
@@ -66,7 +66,7 @@ func (t tableImpl) Insert(ctx context.Context, message proto.Message) error {
 }
 
 func (t tableImpl) Update(ctx context.Context, message proto.Message) error {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}
@@ -277,7 +277,7 @@ func (t tableImpl) ValidateJSON(reader io.Reader) error {
 }
 
 func (t tableImpl) ImportJSON(ctx context.Context, reader io.Reader) error {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}
@@ -382,7 +382,7 @@ func (t tableImpl) ID() uint32 {
 }
 
 func (t tableImpl) Has(ctx context.Context, message proto.Message) (found bool, err error) {
-	backend, err := t.getReadBackend(ctx)
+	backend, err := t.getBackend(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -395,7 +395,7 @@ func (t tableImpl) Has(ctx context.Context, message proto.Message) (found bool, 
 // set on the message. Other fields besides the primary key fields will not
 // be used for retrieval.
 func (t tableImpl) Get(ctx context.Context, message proto.Message) (found bool, err error) {
-	backend, err := t.getReadBackend(ctx)
+	backend, err := t.getBackend(ctx)
 	if err != nil {
 		return false, err
 	}

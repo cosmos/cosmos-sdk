@@ -4,7 +4,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"fmt"
 	"math"
+
+	"github.com/cosmos/cosmos-sdk/orm/types/kv"
+
+	"google.golang.org/protobuf/reflect/protoregistry"
+
+	ormv1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
 
 	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
 
@@ -74,17 +81,15 @@ type ModuleDBOptions struct {
 	// will be used
 	JSONValidator func(proto.Message) error
 
-	// GetBackend is the function used to retrieve the table backend.
-	// See ormtable.Options.GetBackend for more details.
-	GetBackend func(context.Context) (ormtable.Backend, error)
-
-	// GetReadBackend is the function used to retrieve a table read backend.
-	// See ormtable.Options.GetReadBackend for more details.
-	GetReadBackend func(context.Context) (ormtable.ReadBackend, error)
+	GetCommitmentStore func(context.Context) (kv.ReadonlyStore, error)
+	GetIndexStore      func(context.Context) (kv.ReadonlyStore, error)
+	GetMemoryStore     func(context.Context) (kv.ReadonlyStore, error)
+	GetTransientStore  func(context.Context) (kv.ReadonlyStore, error)
+	GetHooks           func(context.Context) ormtable.Hooks
 }
 
 // NewModuleDB constructs a ModuleDB instance from the provided schema and options.
-func NewModuleDB(schema ModuleSchema, options ModuleDBOptions) (ModuleDB, error) {
+func NewModuleDB(schema *ormv1alpha1.ModuleSchemaDescriptor, options ModuleDBOptions) (ModuleDB, error) {
 	prefix := schema.Prefix
 	db := &moduleDB{
 		prefix:       prefix,
@@ -92,29 +97,56 @@ func NewModuleDB(schema ModuleSchema, options ModuleDBOptions) (ModuleDB, error)
 		tablesByName: map[protoreflect.FullName]ormtable.Table{},
 	}
 
-	for id, fileDescriptor := range schema.FileDescriptors {
+	fileResolver := options.FileResolver
+	if fileResolver == nil {
+		fileResolver = protoregistry.GlobalFiles
+	}
+
+	for _, entry := range schema.SchemaFile {
+		var getBackend func(ctx context.Context) (ormtable.ReadBackend, error)
+
+		switch entry.StorageType {
+		case ormv1alpha1.StorageType_STORAGE_TYPE_DEFAULT_UNSPECIFIED:
+			if options.GetCommitmentStore == nil || options.GetIndexStore == nil {
+				return nil, fmt.Errorf("cannot use default ORM storage without both an index and commitment store")
+			}
+
+			getBackend = func(ctx context.Context) (ormtable.ReadBackend, error) {
+				commitmentStore, err := options.GetCommitmentStore(ctx)
+				if err != nil {
+					return nil, err
+				}
+
+				indexStore, err := options.GetIndexStore(ctx)
+				if err != nil {
+					return nil, err
+				}
+
+				var hooks ormtable.Hooks
+				if options.GetHooks != nil {
+					hooks = options.GetHooks(ctx)
+				}
+
+				return ormtable.NewBackend()
+			}
+		}
+
+		id := entry.Id
+		fileDescriptor, err := fileResolver.FindFileByPath(entry.ProtoFileName)
+		if err != nil {
+			return nil, err
+		}
+
 		if id == 0 {
 			return nil, ormerrors.InvalidFileDescriptorID.Wrapf("for %s", fileDescriptor.Path())
 		}
 
 		opts := fileDescriptorDBOptions{
-			ID:             id,
-			Prefix:         prefix,
-			TypeResolver:   options.TypeResolver,
-			JSONValidator:  options.JSONValidator,
-			GetBackend:     options.GetBackend,
-			GetReadBackend: options.GetReadBackend,
-		}
-
-		if options.FileResolver != nil {
-			// if a FileResolver is provided, we use that to resolve the file
-			// and not the one provided as a different pinned file descriptor
-			// may have been provided
-			var err error
-			fileDescriptor, err = options.FileResolver.FindFileByPath(fileDescriptor.Path())
-			if err != nil {
-				return nil, err
-			}
+			ID:            id,
+			Prefix:        prefix,
+			TypeResolver:  options.TypeResolver,
+			JSONValidator: options.JSONValidator,
+			GetBackend:    options.GetBackend,
 		}
 
 		fdSchema, err := newFileDescriptorDB(fileDescriptor, opts)

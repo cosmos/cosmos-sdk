@@ -56,15 +56,12 @@ type Options struct {
 	// GetBackend is an optional function which retrieves a Backend from the context.
 	// If it is nil, the default behavior will be to attempt to retrieve a
 	// backend using the method that WrapContextDefault uses. This method
-	// can be used to imlement things like "store keys" which would allow a
+	// can be used to implement things like "store keys" which would allow a
 	// table to only be used with a specific backend and to hide direct
 	// access to the backend other than through the table interface.
-	GetBackend func(context.Context) (Backend, error)
-
-	// GetReadBackend is an optional function which retrieves a ReadBackend from the context.
-	// If it is nil, the default behavior will be to attempt to retrieve a
-	// backend using the method that WrapContextDefault uses.
-	GetReadBackend func(context.Context) (ReadBackend, error)
+	// Mutating operations will attempt to cast ReadBackend to Backend and
+	// will return an error if that fails.
+	GetBackend func(context.Context) (ReadBackend, error)
 }
 
 // TypeResolver is an interface that can be used for the protoreflect.UnmarshalOptions.Resolver option.
@@ -77,10 +74,6 @@ type TypeResolver interface {
 func Build(options Options) (Table, error) {
 	messageDescriptor := options.MessageType.Descriptor()
 
-	getReadBackend := options.GetReadBackend
-	if getReadBackend == nil {
-		getReadBackend = getReadBackendDefault
-	}
 	getBackend := options.GetBackend
 	if getBackend == nil {
 		getBackend = getBackendDefault
@@ -88,9 +81,8 @@ func Build(options Options) (Table, error) {
 
 	table := &tableImpl{
 		primaryKeyIndex: &primaryKeyIndex{
-			indexers:       []indexer{},
-			getBackend:     getBackend,
-			getReadBackend: getReadBackend,
+			indexers:   []indexer{},
+			getBackend: getBackend,
 		},
 		indexes:               []Index{},
 		indexesByFields:       map[fieldnames.FieldNames]concreteIndex{},

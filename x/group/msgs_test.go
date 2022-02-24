@@ -608,7 +608,7 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 			"",
 		},
 		{
-			"valid test case, voting and execuion",
+			"valid test case, voting and execution",
 			func() *group.MsgCreateGroupPolicy {
 				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
 				req, err := group.NewMsgCreateGroupPolicy(admin, 1, []byte("metadata"), policy)

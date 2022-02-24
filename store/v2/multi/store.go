@@ -1,4 +1,4 @@
-package root
+package multi
 
 import (
 	"errors"
@@ -45,8 +45,7 @@ var (
 	substoreMerkleRootKey = []byte{0} // Key for root hashes of Merkle trees
 	dataPrefix            = []byte{1} // Prefix for state mappings
 	indexPrefix           = []byte{2} // Prefix for Store reverse index
-	merkleNodePrefix      = []byte{3} // Prefix for Merkle tree nodes
-	merkleValuePrefix     = []byte{4} // Prefix for Merkle value mappings
+	smtPrefix             = []byte{3} // Prefix for SMT data
 
 	ErrVersionDoesNotExist = errors.New("version does not exist")
 	ErrMaximumHeight       = errors.New("maximum block height reached")
@@ -127,6 +126,8 @@ type viewStore struct {
 }
 
 type viewSubstore struct {
+	root                 *viewStore
+	name                 string
 	dataBucket           dbm.DBReader
 	indexBucket          dbm.DBReader
 	stateCommitmentStore *smt.Store
@@ -494,9 +495,8 @@ func (rs *Store) getSubstore(key string) (*substore, error) {
 	if rootHash != nil {
 		stateCommitmentStore = loadSMT(stateCommitmentRW, rootHash)
 	} else {
-		merkleNodes := prefixdb.NewPrefixReadWriter(stateCommitmentRW, merkleNodePrefix)
-		merkleValues := prefixdb.NewPrefixReadWriter(stateCommitmentRW, merkleValuePrefix)
-		stateCommitmentStore = smt.NewStore(merkleNodes, merkleValues)
+		smtdb := prefixdb.NewPrefixReadWriter(stateCommitmentRW, smtPrefix)
+		stateCommitmentStore = smt.NewStore(smtdb)
 	}
 
 	return &substore{
@@ -773,7 +773,7 @@ func (rs *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			break
 		}
 		// TODO: actual IBC compatible proof. This is a placeholder so unit tests can pass
-		res.ProofOps, err = substore.stateCommitmentStore.GetProof([]byte(storeName + string(res.Key)))
+		res.ProofOps, err = substore.GetProof(res.Key)
 		if err != nil {
 			return sdkerrors.QueryResult(fmt.Errorf("Merkle proof creation failed for key: %v", res.Key), false) //nolint: stylecheck // proper name
 		}
@@ -808,9 +808,8 @@ func (rs *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 }
 
 func loadSMT(stateCommitmentTxn dbm.DBReadWriter, root []byte) *smt.Store {
-	merkleNodes := prefixdb.NewPrefixReadWriter(stateCommitmentTxn, merkleNodePrefix)
-	merkleValues := prefixdb.NewPrefixReadWriter(stateCommitmentTxn, merkleValuePrefix)
-	return smt.LoadStore(merkleNodes, merkleValues, root)
+	smtdb := prefixdb.NewPrefixReadWriter(stateCommitmentTxn, smtPrefix)
+	return smt.LoadStore(smtdb, root)
 }
 
 // Returns closest index and whether it's a match

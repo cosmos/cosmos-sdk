@@ -7401,7 +7401,7 @@ type Proposal struct {
 	// has ended.
 	FinalTallyResult *TallyResult `protobuf:"bytes,10,opt,name=final_tally_result,json=finalTallyResult,proto3" json:"final_tally_result,omitempty"`
 	// timeout is the timestamp before which both voting and execution must be
-	// done. If this timestamp is passed, then the proposal can not be executed
+	// done. If this timestamp is passed, then the proposal cannot be executed
 	// anymore and should be considered pending delete. This timestamp is checked
 	// against the block header's timestamp.
 	Timeout *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=timeout,proto3" json:"timeout,omitempty"`

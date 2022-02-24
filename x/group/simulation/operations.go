@@ -222,6 +222,10 @@ func WeightedOperations(
 			weightMsgUpdateGroupPolicyMetadata,
 			SimulateMsgUpdateGroupPolicyMetadata(ak, bk, k),
 		),
+		simulation.NewWeightedOperation(
+			weightMsgCreateGroupWithPolicy,
+			SimulateMsgCreateGroupWithPolicy(ak, bk),
+		),
 	}
 
 	return append(wPreCreateProposalOps, append(createProposalOps, wPostCreateProposalOps...)...)

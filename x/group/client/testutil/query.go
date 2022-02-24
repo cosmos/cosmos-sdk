@@ -820,12 +820,7 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			group.TallyResult{
-				YesCount:        "",
-				AbstainCount:    "",
-				NoCount:         "",
-				NoWithVetoCount: "",
-			},
+			group.DefaultTallyResult(),
 			"",
 			0,
 		},

@@ -315,7 +315,7 @@ func (q Keeper) TallyResult(goCtx context.Context, request *group.QueryTallyResu
 	}
 
 	if proposal.Status == group.PROPOSAL_STATUS_WITHDRAWN || proposal.Status == group.PROPOSAL_STATUS_ABORTED {
-		return nil, sdkerrors.Wrapf(err, "can't get the tally of a proposal with status %s", proposal.Status)
+		return nil, sdkerrors.Wrapf(errors.ErrInvalid, "can't get the tally of a proposal with status %s", proposal.Status)
 	}
 
 	var policyInfo group.GroupPolicyInfo

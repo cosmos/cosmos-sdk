@@ -3,14 +3,15 @@ package ormv1alpha1
 
 import (
 	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	descriptorpb "google.golang.org/protobuf/types/descriptorpb"
-	io "io"
-	reflect "reflect"
-	sync "sync"
 )
 
 var _ protoreflect.List = (*_TableDescriptor_2_list)(nil)
@@ -638,7 +639,6 @@ var (
 	md_PrimaryKeyDescriptor                protoreflect.MessageDescriptor
 	fd_PrimaryKeyDescriptor_fields         protoreflect.FieldDescriptor
 	fd_PrimaryKeyDescriptor_auto_increment protoreflect.FieldDescriptor
-	fd_PrimaryKeyDescriptor_references     protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -646,7 +646,6 @@ func init() {
 	md_PrimaryKeyDescriptor = File_cosmos_orm_v1alpha1_orm_proto.Messages().ByName("PrimaryKeyDescriptor")
 	fd_PrimaryKeyDescriptor_fields = md_PrimaryKeyDescriptor.Fields().ByName("fields")
 	fd_PrimaryKeyDescriptor_auto_increment = md_PrimaryKeyDescriptor.Fields().ByName("auto_increment")
-	fd_PrimaryKeyDescriptor_references = md_PrimaryKeyDescriptor.Fields().ByName("references")
 }
 
 var _ protoreflect.Message = (*fastReflection_PrimaryKeyDescriptor)(nil)
@@ -726,12 +725,6 @@ func (x *fastReflection_PrimaryKeyDescriptor) Range(f func(protoreflect.FieldDes
 			return
 		}
 	}
-	if x.References != "" {
-		value := protoreflect.ValueOfString(x.References)
-		if !f(fd_PrimaryKeyDescriptor_references, value) {
-			return
-		}
-	}
 }
 
 // Has reports whether a field is populated.
@@ -751,8 +744,6 @@ func (x *fastReflection_PrimaryKeyDescriptor) Has(fd protoreflect.FieldDescripto
 		return x.Fields != ""
 	case "cosmos.orm.v1alpha1.PrimaryKeyDescriptor.auto_increment":
 		return x.AutoIncrement != false
-	case "cosmos.orm.v1alpha1.PrimaryKeyDescriptor.references":
-		return x.References != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.orm.v1alpha1.PrimaryKeyDescriptor"))
@@ -773,8 +764,6 @@ func (x *fastReflection_PrimaryKeyDescriptor) Clear(fd protoreflect.FieldDescrip
 		x.Fields = ""
 	case "cosmos.orm.v1alpha1.PrimaryKeyDescriptor.auto_increment":
 		x.AutoIncrement = false
-	case "cosmos.orm.v1alpha1.PrimaryKeyDescriptor.references":
-		x.References = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.orm.v1alpha1.PrimaryKeyDescriptor"))
@@ -797,9 +786,6 @@ func (x *fastReflection_PrimaryKeyDescriptor) Get(descriptor protoreflect.FieldD
 	case "cosmos.orm.v1alpha1.PrimaryKeyDescriptor.auto_increment":
 		value := x.AutoIncrement
 		return protoreflect.ValueOfBool(value)
-	case "cosmos.orm.v1alpha1.PrimaryKeyDescriptor.references":
-		value := x.References
-		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.orm.v1alpha1.PrimaryKeyDescriptor"))
@@ -824,8 +810,6 @@ func (x *fastReflection_PrimaryKeyDescriptor) Set(fd protoreflect.FieldDescripto
 		x.Fields = value.Interface().(string)
 	case "cosmos.orm.v1alpha1.PrimaryKeyDescriptor.auto_increment":
 		x.AutoIncrement = value.Bool()
-	case "cosmos.orm.v1alpha1.PrimaryKeyDescriptor.references":
-		x.References = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.orm.v1alpha1.PrimaryKeyDescriptor"))
@@ -850,8 +834,6 @@ func (x *fastReflection_PrimaryKeyDescriptor) Mutable(fd protoreflect.FieldDescr
 		panic(fmt.Errorf("field fields of message cosmos.orm.v1alpha1.PrimaryKeyDescriptor is not mutable"))
 	case "cosmos.orm.v1alpha1.PrimaryKeyDescriptor.auto_increment":
 		panic(fmt.Errorf("field auto_increment of message cosmos.orm.v1alpha1.PrimaryKeyDescriptor is not mutable"))
-	case "cosmos.orm.v1alpha1.PrimaryKeyDescriptor.references":
-		panic(fmt.Errorf("field references of message cosmos.orm.v1alpha1.PrimaryKeyDescriptor is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.orm.v1alpha1.PrimaryKeyDescriptor"))
@@ -869,8 +851,6 @@ func (x *fastReflection_PrimaryKeyDescriptor) NewField(fd protoreflect.FieldDesc
 		return protoreflect.ValueOfString("")
 	case "cosmos.orm.v1alpha1.PrimaryKeyDescriptor.auto_increment":
 		return protoreflect.ValueOfBool(false)
-	case "cosmos.orm.v1alpha1.PrimaryKeyDescriptor.references":
-		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.orm.v1alpha1.PrimaryKeyDescriptor"))
@@ -947,10 +927,6 @@ func (x *fastReflection_PrimaryKeyDescriptor) ProtoMethods() *protoiface.Methods
 		if x.AutoIncrement {
 			n += 2
 		}
-		l = len(x.References)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -979,13 +955,6 @@ func (x *fastReflection_PrimaryKeyDescriptor) ProtoMethods() *protoiface.Methods
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.References) > 0 {
-			i -= len(x.References)
-			copy(dAtA[i:], x.References)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.References)))
-			i--
-			dAtA[i] = 0x1a
 		}
 		if x.AutoIncrement {
 			i--
@@ -1105,38 +1074,6 @@ func (x *fastReflection_PrimaryKeyDescriptor) ProtoMethods() *protoiface.Methods
 					}
 				}
 				x.AutoIncrement = bool(v != 0)
-			case 3:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field References", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.References = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -1173,11 +1110,10 @@ func (x *fastReflection_PrimaryKeyDescriptor) ProtoMethods() *protoiface.Methods
 }
 
 var (
-	md_SecondaryIndexDescriptor            protoreflect.MessageDescriptor
-	fd_SecondaryIndexDescriptor_fields     protoreflect.FieldDescriptor
-	fd_SecondaryIndexDescriptor_id         protoreflect.FieldDescriptor
-	fd_SecondaryIndexDescriptor_unique     protoreflect.FieldDescriptor
-	fd_SecondaryIndexDescriptor_references protoreflect.FieldDescriptor
+	md_SecondaryIndexDescriptor        protoreflect.MessageDescriptor
+	fd_SecondaryIndexDescriptor_fields protoreflect.FieldDescriptor
+	fd_SecondaryIndexDescriptor_id     protoreflect.FieldDescriptor
+	fd_SecondaryIndexDescriptor_unique protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -1186,7 +1122,6 @@ func init() {
 	fd_SecondaryIndexDescriptor_fields = md_SecondaryIndexDescriptor.Fields().ByName("fields")
 	fd_SecondaryIndexDescriptor_id = md_SecondaryIndexDescriptor.Fields().ByName("id")
 	fd_SecondaryIndexDescriptor_unique = md_SecondaryIndexDescriptor.Fields().ByName("unique")
-	fd_SecondaryIndexDescriptor_references = md_SecondaryIndexDescriptor.Fields().ByName("references")
 }
 
 var _ protoreflect.Message = (*fastReflection_SecondaryIndexDescriptor)(nil)
@@ -1272,12 +1207,6 @@ func (x *fastReflection_SecondaryIndexDescriptor) Range(f func(protoreflect.Fiel
 			return
 		}
 	}
-	if x.References != "" {
-		value := protoreflect.ValueOfString(x.References)
-		if !f(fd_SecondaryIndexDescriptor_references, value) {
-			return
-		}
-	}
 }
 
 // Has reports whether a field is populated.
@@ -1299,8 +1228,6 @@ func (x *fastReflection_SecondaryIndexDescriptor) Has(fd protoreflect.FieldDescr
 		return x.Id != uint32(0)
 	case "cosmos.orm.v1alpha1.SecondaryIndexDescriptor.unique":
 		return x.Unique != false
-	case "cosmos.orm.v1alpha1.SecondaryIndexDescriptor.references":
-		return x.References != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.orm.v1alpha1.SecondaryIndexDescriptor"))
@@ -1323,8 +1250,6 @@ func (x *fastReflection_SecondaryIndexDescriptor) Clear(fd protoreflect.FieldDes
 		x.Id = uint32(0)
 	case "cosmos.orm.v1alpha1.SecondaryIndexDescriptor.unique":
 		x.Unique = false
-	case "cosmos.orm.v1alpha1.SecondaryIndexDescriptor.references":
-		x.References = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.orm.v1alpha1.SecondaryIndexDescriptor"))
@@ -1350,9 +1275,6 @@ func (x *fastReflection_SecondaryIndexDescriptor) Get(descriptor protoreflect.Fi
 	case "cosmos.orm.v1alpha1.SecondaryIndexDescriptor.unique":
 		value := x.Unique
 		return protoreflect.ValueOfBool(value)
-	case "cosmos.orm.v1alpha1.SecondaryIndexDescriptor.references":
-		value := x.References
-		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.orm.v1alpha1.SecondaryIndexDescriptor"))
@@ -1379,8 +1301,6 @@ func (x *fastReflection_SecondaryIndexDescriptor) Set(fd protoreflect.FieldDescr
 		x.Id = uint32(value.Uint())
 	case "cosmos.orm.v1alpha1.SecondaryIndexDescriptor.unique":
 		x.Unique = value.Bool()
-	case "cosmos.orm.v1alpha1.SecondaryIndexDescriptor.references":
-		x.References = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.orm.v1alpha1.SecondaryIndexDescriptor"))
@@ -1407,8 +1327,6 @@ func (x *fastReflection_SecondaryIndexDescriptor) Mutable(fd protoreflect.FieldD
 		panic(fmt.Errorf("field id of message cosmos.orm.v1alpha1.SecondaryIndexDescriptor is not mutable"))
 	case "cosmos.orm.v1alpha1.SecondaryIndexDescriptor.unique":
 		panic(fmt.Errorf("field unique of message cosmos.orm.v1alpha1.SecondaryIndexDescriptor is not mutable"))
-	case "cosmos.orm.v1alpha1.SecondaryIndexDescriptor.references":
-		panic(fmt.Errorf("field references of message cosmos.orm.v1alpha1.SecondaryIndexDescriptor is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.orm.v1alpha1.SecondaryIndexDescriptor"))
@@ -1428,8 +1346,6 @@ func (x *fastReflection_SecondaryIndexDescriptor) NewField(fd protoreflect.Field
 		return protoreflect.ValueOfUint32(uint32(0))
 	case "cosmos.orm.v1alpha1.SecondaryIndexDescriptor.unique":
 		return protoreflect.ValueOfBool(false)
-	case "cosmos.orm.v1alpha1.SecondaryIndexDescriptor.references":
-		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.orm.v1alpha1.SecondaryIndexDescriptor"))
@@ -1509,10 +1425,6 @@ func (x *fastReflection_SecondaryIndexDescriptor) ProtoMethods() *protoiface.Met
 		if x.Unique {
 			n += 2
 		}
-		l = len(x.References)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -1541,13 +1453,6 @@ func (x *fastReflection_SecondaryIndexDescriptor) ProtoMethods() *protoiface.Met
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.References) > 0 {
-			i -= len(x.References)
-			copy(dAtA[i:], x.References)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.References)))
-			i--
-			dAtA[i] = 0x22
 		}
 		if x.Unique {
 			i--
@@ -1691,38 +1596,6 @@ func (x *fastReflection_SecondaryIndexDescriptor) ProtoMethods() *protoiface.Met
 					}
 				}
 				x.Unique = bool(v != 0)
-			case 4:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field References", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.References = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -2241,8 +2114,15 @@ type PrimaryKeyDescriptor struct {
 	// fields is a comma-separated list of fields in the primary key. Spaces are
 	// not allowed. Supported field types, their encodings, and any applicable constraints
 	// are described below.
-	//   - uint32, uint64 are encoded as big-endian fixed width bytes and support
-	//   sorted iteration.
+	//   - uint32 are encoded as 2,3,4 or 5 bytes using a compact encoding that
+	//     is suitable for sorted iteration (not varint encoding). This type is
+	//     well-suited for small integers.
+	//   - uint64 are encoded as 2,4,6 or 9 bytes using a compact encoding that
+	//     is suitable for sorted iteration (not varint encoding). This type is
+	//     well-suited for small integers such as auto-incrementing sequences.
+	//   - fixed32, fixed64 are encoded as big-endian fixed width bytes and support
+	//   sorted iteration. These types are well-suited for encoding fixed with
+	//   decimals as integers.
 	//   - string's are encoded as raw bytes in terminal key segments and null-terminated
 	//   in non-terminal segments. Null characters are thus forbidden in strings.
 	//   string fields support sorted iteration.
@@ -2251,7 +2131,7 @@ type PrimaryKeyDescriptor struct {
 	//   longer than 255 bytes are unsupported and bytes fields should not
 	//   be assumed to be lexically sorted. If you have a byte array longer than
 	//   255 bytes that you'd like to index, you should consider hashing it first.
-	//   - int32, sint32, int64, sint64 are encoding as fixed width bytes with
+	//   - int32, sint32, int64, sint64, sfixed32, sfixed64 are encoded as fixed width bytes with
 	//   an encoding that enables sorted iteration.
 	//   - google.protobuf.Timestamp and google.protobuf.Duration are encoded
 	//   as 12 bytes using an encoding that enables sorted iteration.
@@ -2269,11 +2149,6 @@ type PrimaryKeyDescriptor struct {
 	// auto-incrementing integer. If this is set to true fields must only
 	// contain one field of that is of type uint64.
 	AutoIncrement bool `protobuf:"varint,2,opt,name=auto_increment,json=autoIncrement,proto3" json:"auto_increment,omitempty"`
-	// references specifies that this primary key references the primary key
-	// of another table. See the documentation for the SecondaryIndexDescriptor.references
-	// field for more details. An additional constraint placed on primary keys
-	// which reference another table is that those references cannot be circular.
-	References string `protobuf:"bytes,3,opt,name=references,proto3" json:"references,omitempty"`
 }
 
 func (x *PrimaryKeyDescriptor) Reset() {
@@ -2310,13 +2185,6 @@ func (x *PrimaryKeyDescriptor) GetAutoIncrement() bool {
 	return false
 }
 
-func (x *PrimaryKeyDescriptor) GetReferences() string {
-	if x != nil {
-		return x.References
-	}
-	return ""
-}
-
 // PrimaryKeyDescriptor describes a table secondary index.
 type SecondaryIndexDescriptor struct {
 	state         protoimpl.MessageState
@@ -2339,15 +2207,6 @@ type SecondaryIndexDescriptor struct {
 	Id uint32 `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
 	// unique specifies that this an unique index.
 	Unique bool `protobuf:"varint,3,opt,name=unique,proto3" json:"unique,omitempty"`
-	// references specifies that this index references another table defined in the same
-	// proto file. Currently references are not support to tables with composite
-	// primary keys, therefore fields must reference one field and its type must
-	// be the same type as the primary key field of the referenced table.
-	// References to tables in defined by different proto files are not supported
-	// to avoid tight coupling of dependencies. Beyond validating that the reference
-	// is valid key constraints are currently not enforced, but references should
-	// be used by clients to perform automatic joins.
-	References string `protobuf:"bytes,4,opt,name=references,proto3" json:"references,omitempty"`
 }
 
 func (x *SecondaryIndexDescriptor) Reset() {
@@ -2389,13 +2248,6 @@ func (x *SecondaryIndexDescriptor) GetUnique() bool {
 		return x.Unique
 	}
 	return false
-}
-
-func (x *SecondaryIndexDescriptor) GetReferences() string {
-	if x != nil {
-		return x.References
-	}
-	return ""
 }
 
 // TableDescriptor describes an ORM singleton table which has at most one instance.
@@ -2489,22 +2341,18 @@ var file_cosmos_orm_v1alpha1_orm_proto_rawDesc = []byte{
 	0x72, 0x6d, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x53, 0x65, 0x63, 0x6f,
 	0x6e, 0x64, 0x61, 0x72, 0x79, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x44, 0x65, 0x73, 0x63, 0x72, 0x69,
 	0x70, 0x74, 0x6f, 0x72, 0x52, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x12, 0x0e, 0x0a, 0x02, 0x69,
-	0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x02, 0x69, 0x64, 0x22, 0x75, 0x0a, 0x14, 0x50,
+	0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x02, 0x69, 0x64, 0x22, 0x55, 0x0a, 0x14, 0x50,
 	0x72, 0x69, 0x6d, 0x61, 0x72, 0x79, 0x4b, 0x65, 0x79, 0x44, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70,
 	0x74, 0x6f, 0x72, 0x12, 0x16, 0x0a, 0x06, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x73, 0x18, 0x01, 0x20,
 	0x01, 0x28, 0x09, 0x52, 0x06, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x73, 0x12, 0x25, 0x0a, 0x0e, 0x61,
 	0x75, 0x74, 0x6f, 0x5f, 0x69, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x18, 0x02, 0x20,
 	0x01, 0x28, 0x08, 0x52, 0x0d, 0x61, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65,
-	0x6e, 0x74, 0x12, 0x1e, 0x0a, 0x0a, 0x72, 0x65, 0x66, 0x65, 0x72, 0x65, 0x6e, 0x63, 0x65, 0x73,
-	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x72, 0x65, 0x66, 0x65, 0x72, 0x65, 0x6e, 0x63,
-	0x65, 0x73, 0x22, 0x7a, 0x0a, 0x18, 0x53, 0x65, 0x63, 0x6f, 0x6e, 0x64, 0x61, 0x72, 0x79, 0x49,
+	0x6e, 0x74, 0x22, 0x5a, 0x0a, 0x18, 0x53, 0x65, 0x63, 0x6f, 0x6e, 0x64, 0x61, 0x72, 0x79, 0x49,
 	0x6e, 0x64, 0x65, 0x78, 0x44, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x12, 0x16,
 	0x0a, 0x06, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06,
 	0x66, 0x69, 0x65, 0x6c, 0x64, 0x73, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01,
 	0x28, 0x0d, 0x52, 0x02, 0x69, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x75, 0x6e, 0x69, 0x71, 0x75, 0x65,
-	0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x06, 0x75, 0x6e, 0x69, 0x71, 0x75, 0x65, 0x12, 0x1e,
-	0x0a, 0x0a, 0x72, 0x65, 0x66, 0x65, 0x72, 0x65, 0x6e, 0x63, 0x65, 0x73, 0x18, 0x04, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x0a, 0x72, 0x65, 0x66, 0x65, 0x72, 0x65, 0x6e, 0x63, 0x65, 0x73, 0x22, 0x25,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x06, 0x75, 0x6e, 0x69, 0x71, 0x75, 0x65, 0x22, 0x25,
 	0x0a, 0x13, 0x53, 0x69, 0x6e, 0x67, 0x6c, 0x65, 0x74, 0x6f, 0x6e, 0x44, 0x65, 0x73, 0x63, 0x72,
 	0x69, 0x70, 0x74, 0x6f, 0x72, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
 	0x0d, 0x52, 0x02, 0x69, 0x64, 0x3a, 0x5e, 0x0a, 0x05, 0x74, 0x61, 0x62, 0x6c, 0x65, 0x12, 0x1f,

@@ -32,14 +32,16 @@ type MsgClient interface {
 	UpdateGroupMetadata(ctx context.Context, in *MsgUpdateGroupMetadata, opts ...grpc.CallOption) (*MsgUpdateGroupMetadataResponse, error)
 	// CreateGroupPolicy creates a new group policy using given DecisionPolicy.
 	CreateGroupPolicy(ctx context.Context, in *MsgCreateGroupPolicy, opts ...grpc.CallOption) (*MsgCreateGroupPolicyResponse, error)
+	// CreateGroupWithPolicy creates a new group with policy.
+	CreateGroupWithPolicy(ctx context.Context, in *MsgCreateGroupWithPolicy, opts ...grpc.CallOption) (*MsgCreateGroupWithPolicyResponse, error)
 	// UpdateGroupPolicyAdmin updates a group policy admin.
 	UpdateGroupPolicyAdmin(ctx context.Context, in *MsgUpdateGroupPolicyAdmin, opts ...grpc.CallOption) (*MsgUpdateGroupPolicyAdminResponse, error)
 	// UpdateGroupPolicyDecisionPolicy allows a group policy's decision policy to be updated.
 	UpdateGroupPolicyDecisionPolicy(ctx context.Context, in *MsgUpdateGroupPolicyDecisionPolicy, opts ...grpc.CallOption) (*MsgUpdateGroupPolicyDecisionPolicyResponse, error)
 	// UpdateGroupPolicyMetadata updates a group policy metadata.
 	UpdateGroupPolicyMetadata(ctx context.Context, in *MsgUpdateGroupPolicyMetadata, opts ...grpc.CallOption) (*MsgUpdateGroupPolicyMetadataResponse, error)
-	// CreateProposal submits a new proposal.
-	CreateProposal(ctx context.Context, in *MsgCreateProposal, opts ...grpc.CallOption) (*MsgCreateProposalResponse, error)
+	// SubmitProposal submits a new proposal.
+	SubmitProposal(ctx context.Context, in *MsgSubmitProposal, opts ...grpc.CallOption) (*MsgSubmitProposalResponse, error)
 	// WithdrawProposal aborts a proposal.
 	WithdrawProposal(ctx context.Context, in *MsgWithdrawProposal, opts ...grpc.CallOption) (*MsgWithdrawProposalResponse, error)
 	// Vote allows a voter to vote on a proposal.
@@ -101,6 +103,15 @@ func (c *msgClient) CreateGroupPolicy(ctx context.Context, in *MsgCreateGroupPol
 	return out, nil
 }
 
+func (c *msgClient) CreateGroupWithPolicy(ctx context.Context, in *MsgCreateGroupWithPolicy, opts ...grpc.CallOption) (*MsgCreateGroupWithPolicyResponse, error) {
+	out := new(MsgCreateGroupWithPolicyResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/CreateGroupWithPolicy", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) UpdateGroupPolicyAdmin(ctx context.Context, in *MsgUpdateGroupPolicyAdmin, opts ...grpc.CallOption) (*MsgUpdateGroupPolicyAdminResponse, error) {
 	out := new(MsgUpdateGroupPolicyAdminResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/UpdateGroupPolicyAdmin", in, out, opts...)
@@ -128,9 +139,9 @@ func (c *msgClient) UpdateGroupPolicyMetadata(ctx context.Context, in *MsgUpdate
 	return out, nil
 }
 
-func (c *msgClient) CreateProposal(ctx context.Context, in *MsgCreateProposal, opts ...grpc.CallOption) (*MsgCreateProposalResponse, error) {
-	out := new(MsgCreateProposalResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/CreateProposal", in, out, opts...)
+func (c *msgClient) SubmitProposal(ctx context.Context, in *MsgSubmitProposal, opts ...grpc.CallOption) (*MsgSubmitProposalResponse, error) {
+	out := new(MsgSubmitProposalResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/SubmitProposal", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -178,14 +189,16 @@ type MsgServer interface {
 	UpdateGroupMetadata(context.Context, *MsgUpdateGroupMetadata) (*MsgUpdateGroupMetadataResponse, error)
 	// CreateGroupPolicy creates a new group policy using given DecisionPolicy.
 	CreateGroupPolicy(context.Context, *MsgCreateGroupPolicy) (*MsgCreateGroupPolicyResponse, error)
+	// CreateGroupWithPolicy creates a new group with policy.
+	CreateGroupWithPolicy(context.Context, *MsgCreateGroupWithPolicy) (*MsgCreateGroupWithPolicyResponse, error)
 	// UpdateGroupPolicyAdmin updates a group policy admin.
 	UpdateGroupPolicyAdmin(context.Context, *MsgUpdateGroupPolicyAdmin) (*MsgUpdateGroupPolicyAdminResponse, error)
 	// UpdateGroupPolicyDecisionPolicy allows a group policy's decision policy to be updated.
 	UpdateGroupPolicyDecisionPolicy(context.Context, *MsgUpdateGroupPolicyDecisionPolicy) (*MsgUpdateGroupPolicyDecisionPolicyResponse, error)
 	// UpdateGroupPolicyMetadata updates a group policy metadata.
 	UpdateGroupPolicyMetadata(context.Context, *MsgUpdateGroupPolicyMetadata) (*MsgUpdateGroupPolicyMetadataResponse, error)
-	// CreateProposal submits a new proposal.
-	CreateProposal(context.Context, *MsgCreateProposal) (*MsgCreateProposalResponse, error)
+	// SubmitProposal submits a new proposal.
+	SubmitProposal(context.Context, *MsgSubmitProposal) (*MsgSubmitProposalResponse, error)
 	// WithdrawProposal aborts a proposal.
 	WithdrawProposal(context.Context, *MsgWithdrawProposal) (*MsgWithdrawProposalResponse, error)
 	// Vote allows a voter to vote on a proposal.
@@ -214,6 +227,9 @@ func (UnimplementedMsgServer) UpdateGroupMetadata(context.Context, *MsgUpdateGro
 func (UnimplementedMsgServer) CreateGroupPolicy(context.Context, *MsgCreateGroupPolicy) (*MsgCreateGroupPolicyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateGroupPolicy not implemented")
 }
+func (UnimplementedMsgServer) CreateGroupWithPolicy(context.Context, *MsgCreateGroupWithPolicy) (*MsgCreateGroupWithPolicyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateGroupWithPolicy not implemented")
+}
 func (UnimplementedMsgServer) UpdateGroupPolicyAdmin(context.Context, *MsgUpdateGroupPolicyAdmin) (*MsgUpdateGroupPolicyAdminResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroupPolicyAdmin not implemented")
 }
@@ -223,8 +239,8 @@ func (UnimplementedMsgServer) UpdateGroupPolicyDecisionPolicy(context.Context, *
 func (UnimplementedMsgServer) UpdateGroupPolicyMetadata(context.Context, *MsgUpdateGroupPolicyMetadata) (*MsgUpdateGroupPolicyMetadataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroupPolicyMetadata not implemented")
 }
-func (UnimplementedMsgServer) CreateProposal(context.Context, *MsgCreateProposal) (*MsgCreateProposalResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateProposal not implemented")
+func (UnimplementedMsgServer) SubmitProposal(context.Context, *MsgSubmitProposal) (*MsgSubmitProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SubmitProposal not implemented")
 }
 func (UnimplementedMsgServer) WithdrawProposal(context.Context, *MsgWithdrawProposal) (*MsgWithdrawProposalResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WithdrawProposal not implemented")
@@ -338,6 +354,24 @@ func _Msg_CreateGroupPolicy_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CreateGroupWithPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateGroupWithPolicy)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateGroupWithPolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.group.v1beta1.Msg/CreateGroupWithPolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateGroupWithPolicy(ctx, req.(*MsgCreateGroupWithPolicy))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Msg_UpdateGroupPolicyAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgUpdateGroupPolicyAdmin)
 	if err := dec(in); err != nil {
@@ -392,20 +426,20 @@ func _Msg_UpdateGroupPolicyMetadata_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_CreateProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgCreateProposal)
+func _Msg_SubmitProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSubmitProposal)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).CreateProposal(ctx, in)
+		return srv.(MsgServer).SubmitProposal(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Msg/CreateProposal",
+		FullMethod: "/cosmos.group.v1beta1.Msg/SubmitProposal",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).CreateProposal(ctx, req.(*MsgCreateProposal))
+		return srv.(MsgServer).SubmitProposal(ctx, req.(*MsgSubmitProposal))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -492,6 +526,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_CreateGroupPolicy_Handler,
 		},
 		{
+			MethodName: "CreateGroupWithPolicy",
+			Handler:    _Msg_CreateGroupWithPolicy_Handler,
+		},
+		{
 			MethodName: "UpdateGroupPolicyAdmin",
 			Handler:    _Msg_UpdateGroupPolicyAdmin_Handler,
 		},
@@ -504,8 +542,8 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_UpdateGroupPolicyMetadata_Handler,
 		},
 		{
-			MethodName: "CreateProposal",
-			Handler:    _Msg_CreateProposal_Handler,
+			MethodName: "SubmitProposal",
+			Handler:    _Msg_SubmitProposal_Handler,
 		},
 		{
 			MethodName: "WithdrawProposal",

@@ -1,17 +1,35 @@
 #!/usr/bin/env bash
 
+#== Requirements ==
+#
+## make sure your `go env GOPATH` is in the `$PATH`
+## Install:
+## + latest buf (v1.0.0-rc11 or later)
+## + protobuf v3
+#
+## All protoc dependencies must be installed not in the module scope
+## currently we must use grpc-gateway v1
+# cd ~
+# go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+# go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+# go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.0
+# go install github.com/cosmos/cosmos-proto/cmd/protoc-gen-go-pulsar@latest
+# go get github.com/regen-network/cosmos-proto@latest # doesn't work in install mode
+
 set -eo pipefail
 
-protoc_gen_gocosmos() {
-  if ! grep "github.com/gogo/protobuf => github.com/regen-network/protobuf" go.mod &>/dev/null ; then
-    echo -e "\tPlease run this command from somewhere inside the cosmos-sdk folder."
-    return 1
-  fi
-
-  go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos@latest 2>/dev/null
+protoc_install_gocosmos() {
+  echo "Installing protobuf gocosmos plugin"
+  # we should use go install, but regen-network/cosmos-proto contains
+  # replace directives. It must not contain directives that would cause
+  # it to be interpreted differently than if it were the main module.
+  # So the command below issues a warning and we are muting it for now.
+  #
+  # Installing plugins must be done outside of the module
+  (go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos@v0.3.1 2> /dev/null)
 }
 
-protoc_gen_gocosmos
+protoc_install_gocosmos
 
 echo "Generating gogo proto code"
 cd proto

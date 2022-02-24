@@ -55,7 +55,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1beta2.MsgSubmitP
 	defer telemetry.IncrCounter(1, types.ModuleName, "proposal")
 
 	proposer, _ := sdk.AccAddressFromBech32(msg.GetProposer())
-	votingStarted, err := k.Keeper.AddDeposit(ctx, proposal.ProposalId, proposer, msg.GetInitialDeposit())
+	votingStarted, err := k.Keeper.AddDeposit(ctx, proposal.Id, proposer, msg.GetInitialDeposit())
 	if err != nil {
 		return nil, err
 	}
@@ -70,14 +70,14 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1beta2.MsgSubmitP
 
 	if votingStarted {
 		submitEvent := sdk.NewEvent(types.EventTypeSubmitProposal,
-			sdk.NewAttribute(types.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.ProposalId)),
+			sdk.NewAttribute(types.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.Id)),
 		)
 
 		ctx.EventManager().EmitEvent(submitEvent)
 	}
 
 	return &v1beta2.MsgSubmitProposalResponse{
-		ProposalId: proposal.ProposalId,
+		ProposalId: proposal.Id,
 	}, nil
 }
 

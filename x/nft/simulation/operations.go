@@ -18,12 +18,12 @@ import (
 )
 
 const (
-	// Simulation operation weights constants
+	// OpWeightMsgSend Simulation operation weights constants
 	OpWeightMsgSend = "op_weight_msg_send"
 )
 
 const (
-	// nft operations weights
+	// WeightSend nft operations weights
 	WeightSend = 100
 )
 

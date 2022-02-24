@@ -3,6 +3,8 @@ package group
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
+
 	proto "github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -23,7 +25,7 @@ func (m MsgCreateGroup) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgCreateGroup) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgCreateGroup.
@@ -46,25 +48,11 @@ func (m MsgCreateGroup) ValidateBasic() error {
 }
 
 func (m MsgCreateGroup) validateMembers() error {
-	index := make(map[string]struct{}, len(m.Members))
-	for i := range m.Members {
-		member := m.Members[i]
-		_, err := sdk.AccAddressFromBech32(member.Address)
-		if err != nil {
-			return sdkerrors.Wrap(err, "address")
-		}
 
-		if _, err := math.NewPositiveDecFromString(member.Weight); err != nil {
-			return sdkerrors.Wrap(err, "weight")
-		}
-
-		addr := member.Address
-		if _, exists := index[addr]; exists {
-			return sdkerrors.Wrapf(errors.ErrDuplicate, "address: %s", addr)
-		}
-		index[addr] = struct{}{}
+	err := validateMembers(m.Members)
+	if err != nil {
+		return err
 	}
-
 	return nil
 }
 
@@ -93,7 +81,7 @@ func (m MsgUpdateGroupAdmin) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupAdmin) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgUpdateGroupAdmin.
@@ -143,7 +131,7 @@ func (m MsgUpdateGroupMetadata) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupMetadata) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgUpdateGroupMetadata.
@@ -185,7 +173,7 @@ func (m MsgUpdateGroupMembers) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupMembers) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
 }
 
 var _ sdk.Msg = &MsgUpdateGroupMembers{}
@@ -224,6 +212,102 @@ func (m *MsgUpdateGroupMembers) GetGroupID() uint64 {
 	return m.GroupId
 }
 
+var _ sdk.Msg = &MsgCreateGroupWithPolicy{}
+var _ types.UnpackInterfacesMessage = MsgCreateGroupWithPolicy{}
+
+// NewMsgCreateGroupWithPolicy creates a new MsgCreateGroupWithPolicy.
+func NewMsgCreateGroupWithPolicy(admin string, members []Member, group_metadata []byte, group_policy_metadata []byte, groupPolicyAsAdmin bool, decisionPolicy DecisionPolicy) (*MsgCreateGroupWithPolicy, error) {
+	m := &MsgCreateGroupWithPolicy{
+		Admin:               admin,
+		Members:             members,
+		GroupMetadata:       group_metadata,
+		GroupPolicyMetadata: group_policy_metadata,
+		GroupPolicyAsAdmin:  groupPolicyAsAdmin,
+	}
+	err := m.SetDecisionPolicy(decisionPolicy)
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (m *MsgCreateGroupWithPolicy) GetDecisionPolicy() DecisionPolicy {
+	decisionPolicy, ok := m.DecisionPolicy.GetCachedValue().(DecisionPolicy)
+	if !ok {
+		return nil
+	}
+	return decisionPolicy
+}
+
+func (m *MsgCreateGroupWithPolicy) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
+	msg, ok := decisionPolicy.(proto.Message)
+	if !ok {
+		return sdkerrors.ErrInvalidType.Wrapf("can't proto marshal %T", msg)
+	}
+	any, err := types.NewAnyWithValue(msg)
+	if err != nil {
+		return err
+	}
+	m.DecisionPolicy = any
+	return nil
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (m MsgCreateGroupWithPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	var decisionPolicy DecisionPolicy
+	return unpacker.UnpackAny(m.DecisionPolicy, &decisionPolicy)
+}
+
+// Route Implements Msg.
+func (m MsgCreateGroupWithPolicy) Route() string {
+	return sdk.MsgTypeURL(&m)
+}
+
+// Type Implements Msg.
+func (m MsgCreateGroupWithPolicy) Type() string {
+	return sdk.MsgTypeURL(&m)
+}
+
+// GetSignBytes Implements Msg.
+func (m MsgCreateGroupWithPolicy) GetSignBytes() []byte {
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
+}
+
+// GetSigners returns the expected signers for a MsgCreateGroupWithPolicy.
+func (m MsgCreateGroupWithPolicy) GetSigners() []sdk.AccAddress {
+	admin, err := sdk.AccAddressFromBech32(m.Admin)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{admin}
+}
+
+// ValidateBasic does a sanity check on the provided data
+func (m MsgCreateGroupWithPolicy) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Admin)
+	if err != nil {
+		return sdkerrors.Wrap(err, "admin")
+	}
+	policy := m.GetDecisionPolicy()
+	if policy == nil {
+		return sdkerrors.Wrap(errors.ErrEmpty, "decision policy")
+	}
+	if err := policy.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "decision policy")
+	}
+
+	return m.validateMembers()
+}
+
+func (m MsgCreateGroupWithPolicy) validateMembers() error {
+
+	err := validateMembers(m.Members)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 var _ sdk.Msg = &MsgCreateGroupPolicy{}
 
 // Route Implements Msg.
@@ -236,7 +320,7 @@ func (m MsgCreateGroupPolicy) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgCreateGroupPolicy) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgCreateGroupPolicy.
@@ -281,7 +365,7 @@ func (m MsgUpdateGroupPolicyAdmin) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupPolicyAdmin) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgUpdateGroupPolicyAdmin.
@@ -356,7 +440,7 @@ func (m MsgUpdateGroupPolicyDecisionPolicy) Type() string {
 
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupPolicyDecisionPolicy) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgUpdateGroupPolicyDecisionPolicy.
@@ -418,7 +502,7 @@ func (m MsgUpdateGroupPolicyMetadata) Type() string { return sdk.MsgTypeURL(&m) 
 
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupPolicyMetadata) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgUpdateGroupPolicyMetadata.
@@ -501,11 +585,11 @@ func (m MsgCreateGroupPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error
 	return unpacker.UnpackAny(m.DecisionPolicy, &decisionPolicy)
 }
 
-var _ sdk.Msg = &MsgCreateProposal{}
+var _ sdk.Msg = &MsgSubmitProposal{}
 
-// NewMsgCreateProposalRequest creates a new MsgCreateProposal.
-func NewMsgCreateProposalRequest(address string, proposers []string, msgs []sdk.Msg, metadata []byte, exec Exec) (*MsgCreateProposal, error) {
-	m := &MsgCreateProposal{
+// NewMsgSubmitProposalRequest creates a new MsgSubmitProposal.
+func NewMsgSubmitProposalRequest(address string, proposers []string, msgs []sdk.Msg, metadata []byte, exec Exec) (*MsgSubmitProposal, error) {
+	m := &MsgSubmitProposal{
 		Address:   address,
 		Proposers: proposers,
 		Metadata:  metadata,
@@ -519,20 +603,20 @@ func NewMsgCreateProposalRequest(address string, proposers []string, msgs []sdk.
 }
 
 // Route Implements Msg.
-func (m MsgCreateProposal) Route() string {
+func (m MsgSubmitProposal) Route() string {
 	return sdk.MsgTypeURL(&m)
 }
 
 // Type Implements Msg.
-func (m MsgCreateProposal) Type() string { return sdk.MsgTypeURL(&m) }
+func (m MsgSubmitProposal) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
-func (m MsgCreateProposal) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+func (m MsgSubmitProposal) GetSignBytes() []byte {
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
 }
 
-// GetSigners returns the expected signers for a MsgCreateProposal.
-func (m MsgCreateProposal) GetSigners() []sdk.AccAddress {
+// GetSigners returns the expected signers for a MsgSubmitProposal.
+func (m MsgSubmitProposal) GetSigners() []sdk.AccAddress {
 	addrs := make([]sdk.AccAddress, len(m.Proposers))
 	for i, proposer := range m.Proposers {
 		addr, err := sdk.AccAddressFromBech32(proposer)
@@ -545,7 +629,7 @@ func (m MsgCreateProposal) GetSigners() []sdk.AccAddress {
 }
 
 // ValidateBasic does a sanity check on the provided data
-func (m MsgCreateProposal) ValidateBasic() error {
+func (m MsgSubmitProposal) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Address)
 	if err != nil {
 		return sdkerrors.Wrap(err, "group policy")
@@ -576,18 +660,18 @@ func (m MsgCreateProposal) ValidateBasic() error {
 }
 
 // SetMsgs packs msgs into Any's
-func (m *MsgCreateProposal) SetMsgs(msgs []sdk.Msg) error {
+func (m *MsgSubmitProposal) SetMsgs(msgs []sdk.Msg) error {
 	anys, err := tx.SetMsgs(msgs)
 	if err != nil {
 		return err
 	}
-	m.Msgs = anys
+	m.Messages = anys
 	return nil
 }
 
-// GetMsgs unpacks m.Msgs Any's into sdk.Msg's
-func (m MsgCreateProposal) GetMsgs() []sdk.Msg {
-	msgs, err := tx.GetMsgs(m.Msgs, "proposal")
+// GetMsgs unpacks m.Messages Any's into sdk.Msg's
+func (m MsgSubmitProposal) GetMsgs() []sdk.Msg {
+	msgs, err := tx.GetMsgs(m.Messages, "proposal")
 	if err != nil {
 		panic(err)
 	}
@@ -595,8 +679,8 @@ func (m MsgCreateProposal) GetMsgs() []sdk.Msg {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m MsgCreateProposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	return tx.UnpackInterfaces(unpacker, m.Msgs)
+func (m MsgSubmitProposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	return tx.UnpackInterfaces(unpacker, m.Messages)
 }
 
 var _ sdk.Msg = &MsgWithdrawProposal{}
@@ -609,7 +693,7 @@ func (m MsgWithdrawProposal) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgWithdrawProposal) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgWithdrawProposal.
@@ -647,7 +731,7 @@ func (m MsgVote) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgVote) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgVote.
@@ -668,11 +752,11 @@ func (m MsgVote) ValidateBasic() error {
 	if m.ProposalId == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
 	}
-	if m.Choice == Choice_CHOICE_UNSPECIFIED {
-		return sdkerrors.Wrap(errors.ErrEmpty, "choice")
+	if m.Option == VOTE_OPTION_UNSPECIFIED {
+		return sdkerrors.Wrap(errors.ErrEmpty, "vote option")
 	}
-	if _, ok := Choice_name[int32(m.Choice)]; !ok {
-		return sdkerrors.Wrap(errors.ErrInvalid, "choice")
+	if _, ok := VoteOption_name[int32(m.Option)]; !ok {
+		return sdkerrors.Wrap(errors.ErrInvalid, "vote option")
 	}
 	return nil
 }
@@ -689,7 +773,7 @@ func (m MsgExec) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgExec) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgExec.
@@ -710,5 +794,28 @@ func (m MsgExec) ValidateBasic() error {
 	if m.ProposalId == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
 	}
+	return nil
+}
+
+func validateMembers(members []Member) error {
+	index := make(map[string]struct{}, len(members))
+	for i := range members {
+		member := members[i]
+		_, err := sdk.AccAddressFromBech32(member.Address)
+		if err != nil {
+			return sdkerrors.Wrap(err, "address")
+		}
+
+		if _, err := math.NewPositiveDecFromString(member.Weight); err != nil {
+			return sdkerrors.Wrap(err, "weight")
+		}
+
+		addr := member.Address
+		if _, exists := index[addr]; exists {
+			return sdkerrors.Wrapf(errors.ErrDuplicate, "address: %s", addr)
+		}
+		index[addr] = struct{}{}
+	}
+
 	return nil
 }

@@ -9,11 +9,7 @@ import (
 	tmprototypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-<<<<<<< HEAD
 	sdk "github.com/cosmos/cosmos-sdk/types"
-=======
-	"github.com/cosmos/cosmos-sdk/baseapp"
->>>>>>> 6324b5aff (fix: reject query with block height in the future (#11222))
 )
 
 func TestGetBlockRentionHeight(t *testing.T) {
@@ -151,23 +147,15 @@ func TestBaseAppCreateQueryContext(t *testing.T) {
 		{"negative height, prove=true", -1, true, true},
 		{"negative height, prove=false", -1, false, true},
 	}
-<<<<<<< HEAD
-	for _, prove := range proves {
-		t.Run(fmt.Sprintf("prove=%t", prove), func(t *testing.T) {
-			sctx, err := app.createQueryContext(-10, true)
-			require.Error(t, err)
-			require.Equal(t, sctx, sdk.Context{})
-=======
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := app.CreateQueryContext(tc.height, tc.prove)
+			_, err := app.createQueryContext(tc.height, tc.prove)
 			if tc.expErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
 			}
->>>>>>> 6324b5aff (fix: reject query with block height in the future (#11222))
 		})
 	}
 }

@@ -1732,7 +1732,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 			"with try exec, not enough yes votes for proposal to pass",
 			append(
 				[]string{
-					ids[3],
+					ids[2],
 					val.Address.String(),
 					"VOTE_OPTION_NO",
 					"",
@@ -1749,7 +1749,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 			"with amino-json",
 			append(
 				[]string{
-					ids[4],
+					ids[3],
 					val.Address.String(),
 					"VOTE_OPTION_YES",
 					"",

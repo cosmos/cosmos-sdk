@@ -535,6 +535,16 @@ func (t TallyResult) TotalCounts() (math.Dec, error) {
 	return totalCounts, nil
 }
 
+// DefaultTallyResult returns a TallyResult with all counts set to 0.
+func DefaultTallyResult() TallyResult {
+	return TallyResult{
+		YesCount:        "0",
+		NoCount:         "0",
+		NoWithVetoCount: "0",
+		AbstainCount:    "0",
+	}
+}
+
 // VoteOptionFromString returns a VoteOption from a string. It returns an error
 // if the string is invalid.
 func VoteOptionFromString(str string) (VoteOption, error) {

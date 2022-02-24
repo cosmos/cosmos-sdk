@@ -10,6 +10,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
@@ -308,7 +309,30 @@ func (q Keeper) TallyResult(goCtx context.Context, request *group.QueryTallyResu
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	proposalId := request.ProposalId
 
-	tallyResult, err := q.Tally(ctx, proposalId)
+	proposal, err := q.getProposal(ctx, proposalId)
+	if err != nil {
+		return nil, err
+	}
+
+	if proposal.Status == group.PROPOSAL_STATUS_WITHDRAWN || proposal.Status == group.PROPOSAL_STATUS_ABORTED {
+		return nil, sdkerrors.Wrapf(err, "can't get the tally of a proposal with status %s", proposal.Status)
+	}
+
+	var policyInfo group.GroupPolicyInfo
+	if policyInfo, err = q.getGroupPolicyInfo(ctx, proposal.Address); err != nil {
+		return nil, sdkerrors.Wrap(err, "load group policy")
+	}
+
+	// Ensure that group hasn't been modified since the proposal submission.
+	electorate, err := q.getGroupInfo(ctx, policyInfo.GroupId)
+	if err != nil {
+		return nil, err
+	}
+	if electorate.Version != proposal.GroupVersion {
+		return nil, sdkerrors.Wrap(errors.ErrModified, "group was modified")
+	}
+
+	tallyResult, err := q.Tally(ctx, proposal, policyInfo.GroupId)
 	if err != nil {
 		return nil, err
 	}

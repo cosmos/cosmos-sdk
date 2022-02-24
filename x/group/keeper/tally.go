@@ -8,52 +8,38 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
-func (k Keeper) Tally(ctx sdk.Context, proposalId uint64) (tallyResult group.TallyResult, err error) {
-	proposal, err := k.getProposal(ctx, proposalId)
+func (q Keeper) Tally(ctx sdk.Context, p group.Proposal, groupId uint64) (group.TallyResult, error) {
+	// If proposal has already been tallied and updated, then its status is
+	// closed, in which case we just return the previously stored result.
+	if p.Status == group.PROPOSAL_STATUS_CLOSED {
+		return p.FinalTallyResult, nil
+	}
+
+	it, err := q.voteByProposalIndex.Get(ctx.KVStore(q.key), p.Id)
 	if err != nil {
 		return group.TallyResult{}, err
 	}
 
-	if proposal.Status != group.PROPOSAL_STATUS_SUBMITTED {
-		return proposal.FinalTallyResult, nil
-	}
+	tallyResult := group.DefaultTallyResult()
 
-	var policyInfo group.GroupPolicyInfo
-	if policyInfo, err = k.getGroupPolicyInfo(ctx, proposal.Address); err != nil {
-		return group.TallyResult{}, sdkerrors.Wrap(err, "load group policy")
-	}
-
-	// Ensure that group hasn't been modified since the proposal submission.
-	electorate, err := k.getGroupInfo(ctx, policyInfo.GroupId)
-	if err != nil {
-		return group.TallyResult{}, err
-	}
-	if electorate.Version != proposal.GroupVersion {
-		return group.TallyResult{}, sdkerrors.Wrap(errors.ErrModified, "group was modified")
-	}
-
-	votesIt, err := k.voteByVoterIndex.Get(ctx.KVStore(k.key), proposalId)
-	if err != nil {
-		return group.TallyResult{}, err
-	}
-	defer votesIt.Close()
-
+	var vote group.Vote
 	for {
-		var vote group.Vote
-		_, err := votesIt.LoadNext(&vote)
+		_, err = it.LoadNext(&vote)
 		if errors.ErrORMIteratorDone.Is(err) {
 			break
 		}
-
-		voterAddr := vote.Voter
-		voter := group.GroupMember{GroupId: policyInfo.GroupId, Member: &group.Member{Address: voterAddr}}
-		if err := k.groupMemberTable.GetOne(ctx.KVStore(k.key), orm.PrimaryKey(&voter), &voter); err != nil {
-			return group.TallyResult{}, sdkerrors.Wrapf(err, "address: %s", voterAddr)
-		}
-
-		err = tallyResult.Add(vote, voter.Member.Weight)
 		if err != nil {
 			return group.TallyResult{}, err
+		}
+
+		var member group.GroupMember
+		err := q.groupMemberTable.GetOne(ctx.KVStore(q.key), orm.PrimaryKey(&group.GroupMember{GroupId: groupId, Member: &group.Member{Address: vote.Voter}}), &member)
+		if err != nil {
+			return group.TallyResult{}, err
+		}
+
+		if err := tallyResult.Add(vote, member.Member.Weight); err != nil {
+			return group.TallyResult{}, sdkerrors.Wrap(err, "add new vote")
 		}
 	}
 

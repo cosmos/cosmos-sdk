@@ -4,13 +4,16 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	legacyproto "github.com/golang/protobuf/proto"
-	"google.golang.org/grpc/encoding"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	legacyproto "github.com/golang/protobuf/proto"
+	"google.golang.org/grpc/encoding"
+	"google.golang.org/protobuf/proto"
+
 	"github.com/gogo/protobuf/jsonpb"
 	gogoproto "github.com/gogo/protobuf/proto"
+
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 // ProtoCodecMarshaler defines an interface for codecs that utilize Protobuf for both
@@ -264,8 +267,9 @@ type grpcProtoCodec struct {
 }
 
 func (g grpcProtoCodec) Marshal(v interface{}) ([]byte, error) {
-	// TODO(fdymylja): maybe this is the correct place to support protov2 types too for gRPC
 	switch m := v.(type) {
+	case proto.Message:
+		return proto.Marshal(m)
 	case ProtoMarshaler:
 		return g.cdc.Marshal(m)
 	case legacyproto.Message:
@@ -276,8 +280,9 @@ func (g grpcProtoCodec) Marshal(v interface{}) ([]byte, error) {
 }
 
 func (g grpcProtoCodec) Unmarshal(data []byte, v interface{}) error {
-	// TODO(fdymylja): maybe this is the correct place to support protov2 types too for gRPC
 	switch m := v.(type) {
+	case proto.Message:
+		return proto.Unmarshal(data, m)
 	case ProtoMarshaler:
 		return g.cdc.Unmarshal(data, m)
 	case legacyproto.Message:

@@ -4,7 +4,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/store/v2/smt"
 )
 
 // RequireProof returns whether proof is required for the subpath.
@@ -25,11 +24,4 @@ func DefaultProofRuntime() (prt *merkle.ProofRuntime) {
 	prt.RegisterOpDecoder(storetypes.ProofOpIAVLCommitment, storetypes.CommitmentOpDecoder)
 	prt.RegisterOpDecoder(storetypes.ProofOpSimpleMerkleCommitment, storetypes.CommitmentOpDecoder)
 	return
-}
-
-// SMTProofRuntime returns a ProofRuntime for sparse merkle trees.
-func SMTProofRuntime() (prt *merkle.ProofRuntime) {
-	prt = merkle.NewProofRuntime()
-	prt.RegisterOpDecoder(smt.ProofType, smt.ProofDecoder)
-	return prt
 }

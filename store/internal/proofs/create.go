@@ -15,25 +15,8 @@ var (
 	ErrEmptyKeyInData = errors.New("data contains empty key")
 )
 
-// TendermintSpec constrains the format from ics23-tendermint (crypto/merkle SimpleProof)
-var TendermintSpec = &ics23.ProofSpec{
-	LeafSpec: &ics23.LeafOp{
-		Prefix:       []byte{0},
-		Hash:         ics23.HashOp_SHA256,
-		PrehashValue: ics23.HashOp_SHA256,
-		Length:       ics23.LengthOp_VAR_PROTO,
-	},
-	InnerSpec: &ics23.InnerSpec{
-		ChildOrder:      []int32{0, 1},
-		MinPrefixLength: 1,
-		MaxPrefixLength: 1,  // fixed prefix + one child
-		ChildSize:       32, // (no length byte)
-		Hash:            ics23.HashOp_SHA256,
-	},
-}
-
 /*
-CreateMembershipProof will produce a CommitmentProof that the given key (and queries value) exists in the iavl tree.
+CreateMembershipProof will produce a CommitmentProof that the given key (and queries value) exists in the map.
 If the key doesn't exist in the tree, this will return an error.
 */
 func CreateMembershipProof(data map[string][]byte, key []byte) (*ics23.CommitmentProof, error) {
@@ -53,7 +36,7 @@ func CreateMembershipProof(data map[string][]byte, key []byte) (*ics23.Commitmen
 }
 
 /*
-CreateNonMembershipProof will produce a CommitmentProof that the given key doesn't exist in the iavl tree.
+CreateNonMembershipProof will produce a CommitmentProof that the given key doesn't exist in the map.
 If the key exists in the tree, this will return an error.
 */
 func CreateNonMembershipProof(data map[string][]byte, key []byte) (*ics23.CommitmentProof, error) {
@@ -111,8 +94,8 @@ func createExistenceProof(data map[string][]byte, key []byte) (*ics23.ExistenceP
 		return nil, fmt.Errorf("cannot make existence proof if key is not in map")
 	}
 
-	_, ics23, _ := sdkmaps.ProofsFromMap(data)
-	proof := ics23[string(key)]
+	_, proofs, _ := sdkmaps.ProofsFromMap(data)
+	proof := proofs[string(key)]
 	if proof == nil {
 		return nil, fmt.Errorf("returned no proof for key")
 	}

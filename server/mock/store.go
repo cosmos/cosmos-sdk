@@ -3,9 +3,15 @@ package mock
 import (
 	"io"
 
+	protoio "github.com/gogo/protobuf/io"
 	dbm "github.com/tendermint/tm-db"
 
+<<<<<<< HEAD
 	store "github.com/cosmos/cosmos-sdk/store/types"
+=======
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+>>>>>>> 7e18e9f1b (feat!: Add hooks to allow app modules to add things to state-sync (#10961))
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -122,13 +128,13 @@ func (ms multiStore) SetInitialVersion(version int64) error {
 	panic("not implemented")
 }
 
-func (ms multiStore) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, error) {
+func (ms multiStore) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	panic("not implemented")
 }
 
 func (ms multiStore) Restore(
-	height uint64, format uint32, chunks <-chan io.ReadCloser, ready chan<- struct{},
-) error {
+	height uint64, format uint32, protoReader protoio.Reader,
+) (snapshottypes.SnapshotItem, error) {
 	panic("not implemented")
 }
 

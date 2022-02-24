@@ -3,12 +3,6 @@ package rootmulti
 import (
 	"bytes"
 	"fmt"
-<<<<<<< HEAD
-	"io"
-	"io/ioutil"
-	"math/rand"
-=======
->>>>>>> 7e18e9f1b (feat!: Add hooks to allow app modules to add things to state-sync (#10961))
 	"testing"
 	"time"
 
@@ -737,82 +731,6 @@ func TestTraceConcurrency(t *testing.T) {
 	stopW <- struct{}{}
 }
 
-<<<<<<< HEAD
-func BenchmarkMultistoreSnapshot100K(b *testing.B) {
-	benchmarkMultistoreSnapshot(b, 10, 10000)
-}
-
-func BenchmarkMultistoreSnapshot1M(b *testing.B) {
-	benchmarkMultistoreSnapshot(b, 10, 100000)
-}
-
-func BenchmarkMultistoreSnapshotRestore100K(b *testing.B) {
-	benchmarkMultistoreSnapshotRestore(b, 10, 10000)
-}
-
-func BenchmarkMultistoreSnapshotRestore1M(b *testing.B) {
-	benchmarkMultistoreSnapshotRestore(b, 10, 100000)
-}
-
-func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
-	b.Skip("Noisy with slow setup time, please see https://github.com/cosmos/cosmos-sdk/issues/8855.")
-
-	b.ReportAllocs()
-	b.StopTimer()
-	source := newMultiStoreWithGeneratedData(dbm.NewMemDB(), stores, storeKeys)
-	version := source.LastCommitID().Version
-	require.EqualValues(b, 1, version)
-	b.StartTimer()
-
-	for i := 0; i < b.N; i++ {
-		target := NewStore(dbm.NewMemDB())
-		for key := range source.stores {
-			target.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
-		}
-		err := target.LoadLatestVersion()
-		require.NoError(b, err)
-		require.EqualValues(b, 0, target.LastCommitID().Version)
-
-		chunks, err := source.Snapshot(uint64(version), snapshottypes.CurrentFormat)
-		require.NoError(b, err)
-		for reader := range chunks {
-			_, err := io.Copy(ioutil.Discard, reader)
-			require.NoError(b, err)
-			err = reader.Close()
-			require.NoError(b, err)
-		}
-	}
-}
-
-func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys uint64) {
-	b.Skip("Noisy with slow setup time, please see https://github.com/cosmos/cosmos-sdk/issues/8855.")
-
-	b.ReportAllocs()
-	b.StopTimer()
-	source := newMultiStoreWithGeneratedData(dbm.NewMemDB(), stores, storeKeys)
-	version := uint64(source.LastCommitID().Version)
-	require.EqualValues(b, 1, version)
-	b.StartTimer()
-
-	for i := 0; i < b.N; i++ {
-		target := NewStore(dbm.NewMemDB())
-		for key := range source.stores {
-			target.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
-		}
-		err := target.LoadLatestVersion()
-		require.NoError(b, err)
-		require.EqualValues(b, 0, target.LastCommitID().Version)
-
-		chunks, err := source.Snapshot(version, snapshottypes.CurrentFormat)
-		require.NoError(b, err)
-		err = target.Restore(version, snapshottypes.CurrentFormat, chunks, nil)
-		require.NoError(b, err)
-		require.Equal(b, source.LastCommitID(), target.LastCommitID())
-	}
-}
-
-=======
->>>>>>> 7e18e9f1b (feat!: Add hooks to allow app modules to add things to state-sync (#10961))
 //-----------------------------------------------------------------------
 // utils
 

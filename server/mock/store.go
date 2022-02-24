@@ -6,12 +6,8 @@ import (
 	protoio "github.com/gogo/protobuf/io"
 	dbm "github.com/tendermint/tm-db"
 
-<<<<<<< HEAD
-	store "github.com/cosmos/cosmos-sdk/store/types"
-=======
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
->>>>>>> 7e18e9f1b (feat!: Add hooks to allow app modules to add things to state-sync (#10961))
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

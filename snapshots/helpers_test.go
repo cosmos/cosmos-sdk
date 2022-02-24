@@ -108,12 +108,6 @@ func (m *mockSnapshotter) Restore(
 		return snapshottypes.SnapshotItem{}, errors.New("already has contents")
 	}
 
-<<<<<<< HEAD
-	m.chunks = [][]byte{}
-	for reader := range chunks {
-		chunk, err := ioutil.ReadAll(reader)
-		if err != nil {
-=======
 	m.items = [][]byte{}
 	for {
 		item := &snapshottypes.SnapshotItem{}
@@ -136,31 +130,17 @@ func (m *mockSnapshotter) Restore(
 func (m *mockSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	for _, item := range m.items {
 		if err := types.WriteExtensionItem(protoWriter, item); err != nil {
->>>>>>> 7e18e9f1b (feat!: Add hooks to allow app modules to add things to state-sync (#10961))
 			return err
 		}
 	}
 	return nil
 }
 
-<<<<<<< HEAD
-func (m *mockSnapshotter) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, error) {
-	if format == 0 {
-		return nil, types.ErrUnknownFormat
-	}
-	ch := make(chan io.ReadCloser, len(m.chunks))
-	for _, chunk := range m.chunks {
-		ch <- ioutil.NopCloser(bytes.NewReader(chunk))
-	}
-	close(ch)
-	return ch, nil
-=======
 func (m *mockSnapshotter) SnapshotFormat() uint32 {
 	return 1
 }
 func (m *mockSnapshotter) SupportedFormats() []uint32 {
 	return []uint32{1}
->>>>>>> 7e18e9f1b (feat!: Add hooks to allow app modules to add things to state-sync (#10961))
 }
 
 // setupBusyManager creates a manager with an empty store that is busy creating a snapshot at height 1.
@@ -205,13 +185,7 @@ func (m *hungSnapshotter) Close() {
 
 func (m *hungSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	<-m.ch
-<<<<<<< HEAD
-	ch := make(chan io.ReadCloser, 1)
-	ch <- ioutil.NopCloser(bytes.NewReader([]byte{}))
-	return ch, nil
-=======
 	return nil
->>>>>>> 7e18e9f1b (feat!: Add hooks to allow app modules to add things to state-sync (#10961))
 }
 
 func (m *hungSnapshotter) Restore(

@@ -5,12 +5,9 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io"
-<<<<<<< HEAD
 	"io/ioutil"
-=======
 	"math"
 	"sort"
->>>>>>> 7e18e9f1b (feat!: Add hooks to allow app modules to add things to state-sync (#10961))
 	"sync"
 
 	"github.com/cosmos/cosmos-sdk/snapshots/types"

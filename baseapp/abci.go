@@ -894,18 +894,19 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.ExtendVoteRequest) (
 		return nil, errors.New("application ExtendVote handler not set")
 	}
 
+	lastBlockHeight := app.LastBlockHeight()
+	if height > lastBlockHeight {
+		return sdk.Context{},
+			sdkerrors.Wrap(
+				sdkerrors.ErrInvalidHeight,
+				"cannot query with height in the future; please provide a valid height",
+			)
+	}
+
 	// when a client did not provide a query height, manually inject the latest
 	lastHeight := app.LastBlockHeight()
 	if height == 0 {
-		height = lastHeight
-	}
-	if height > lastHeight {
-		return sdk.Context{}, sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"cannot query with height %d; last height is %d",
-			height,
-			lastHeight,
-		)
+		height = lastBlockHeight
 	}
 
 	ctx = ctx.
@@ -935,8 +936,11 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.ExtendVoteRequest) (
 
 	resp, err = app.extendVote(ctx, req)
 	if err != nil {
-		app.logger.Error("failed to extend vote", "height", req.Height, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
-		return &abci.ExtendVoteResponse{VoteExtension: []byte{}}, nil
+		return sdk.Context{},
+			sdkerrors.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"failed to load state at height %d; %s (latest height: %d)", height, err, lastBlockHeight,
+			)
 	}
 
 	// branch the commit-multistore for safety

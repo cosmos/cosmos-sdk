@@ -1,16 +1,6 @@
 package baseapp_test
 
 import (
-	"bytes"
-	"context"
-	"crypto/sha256"
-	"encoding/binary"
-	"encoding/hex"
-	"errors"
-	"fmt"
-	"math/rand"
-	"strconv"
-	"strings"
 	"testing"
 	"time"
 
@@ -26,6 +16,10 @@ import (
 	any "github.com/cosmos/gogoproto/types/any"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmprototypes "github.com/tendermint/tendermint/proto/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 
 	coretesting "cosmossdk.io/core/testing"
 	errorsmod "cosmossdk.io/errors"
@@ -2780,7 +2774,11 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 }
 
-func TestBaseAppCreateQueryContextRejectsFutureHeights(t *testing.T) {
+// Test and ensure that invalid block heights always cause errors.
+// See issues:
+// - https://github.com/cosmos/cosmos-sdk/issues/11220
+// - https://github.com/cosmos/cosmos-sdk/issues/7662
+func TestBaseAppCreateQueryContext(t *testing.T) {
 	t.Parallel()
 
 	logger := defaultLogger()
@@ -2788,14 +2786,32 @@ func TestBaseAppCreateQueryContextRejectsFutureHeights(t *testing.T) {
 	name := t.Name()
 	app := NewBaseApp(name, logger, db, nil)
 
-	proves := []bool{
-		false, true,
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
+	app.Commit()
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2}})
+	app.Commit()
+
+	testCases := []struct {
+		name   string
+		height int64
+		prove  bool
+		expErr bool
+	}{
+		{"valid height", 2, true, false},
+		{"future height", 10, true, true},
+		{"negative height, prove=true", -1, true, true},
+		{"negative height, prove=false", -1, false, true},
 	}
-	for _, prove := range proves {
-		t.Run(fmt.Sprintf("prove=%t", prove), func(t *testing.T) {
-			sctx, err := app.createQueryContext(30, true)
-			require.Error(t, err)
-			require.Equal(t, sctx, sdk.Context{})
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := app.createQueryContext(tc.height, tc.prove)
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
 		})
 	}
 }

@@ -1,8 +1,8 @@
 package multi
 
 import (
+	"bytes"
 	"fmt"
-	prefixdb "github.com/cosmos/cosmos-sdk/db/prefix"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -11,7 +11,6 @@ import (
 	protoio "github.com/gogo/protobuf/io"
 	"io"
 	"sort"
-	"strings"
 )
 
 // Snapshot implements snapshottypes.Snapshotter.
@@ -22,13 +21,6 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	if height > uint64(rs.LastCommitID().Version) {
 		return sdkerrors.Wrapf(sdkerrors.ErrLogic, "cannot snapshot future height %v", height)
 	}
-	versions, err := rs.stateDB.Versions()
-	if err != nil {
-		return sdkerrors.Wrapf(err, "error while getting the snapshot versions at height %v", height)
-	}
-	if !versions.Exists(height) {
-		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "cannot find snapshot at height %v", height)
-	}
 
 	// get the saved snapshot at height
 	vs, err := rs.getView(int64(height))
@@ -36,23 +28,17 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 		return sdkerrors.Wrap(err, fmt.Sprintf("error while get the version at height %d", height))
 	}
 
-	// schema keys
-	var sKeys []string
 	// sending the snapshot store schema
+	var storeByteKeys [][]byte
 	for sKey := range vs.schema {
 		if vs.schema[sKey] == storetypes.StoreTypePersistent {
-			sKeys = append(sKeys, sKey)
+			storeByteKeys = append(storeByteKeys, []byte(sKey))
 		}
 	}
 
-	sort.Slice(sKeys, func(i, j int) bool {
-		return strings.Compare(sKeys[i], sKeys[j]) == -1
+	sort.Slice(storeByteKeys, func(i, j int) bool {
+		return bytes.Compare(storeByteKeys[i], storeByteKeys[j]) == -1
 	})
-
-	var storeByteKeys [][]byte
-	for _, sKey := range sKeys {
-		storeByteKeys = append(storeByteKeys, []byte(sKey))
-	}
 
 	err = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
 		Item: &snapshottypes.SnapshotItem_Schema{
@@ -65,8 +51,8 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 		return err
 	}
 
-	for _, sKey := range sKeys {
-		subStore, err := vs.getSubstore(sKey)
+	for _, sKey := range storeByteKeys {
+		subStore, err := vs.getSubstore(string(sKey))
 		if err != nil {
 			return err
 		}
@@ -74,7 +60,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 		err = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
 			Item: &snapshottypes.SnapshotItem_Store{
 				Store: &snapshottypes.SnapshotStoreItem{
-					Name: sKey,
+					Name: string(sKey),
 				},
 			},
 		})
@@ -114,11 +100,7 @@ func (rs *Store) Restore(
 		return snapshottypes.SnapshotItem{}, err
 	}
 
-	versions, err := rs.stateDB.Versions()
-	if err != nil {
-		return snapshottypes.SnapshotItem{}, sdkerrors.Wrapf(err, "error while getting the snapshot versions at height %v", height)
-	}
-	if versions.Count() != 0 {
+	if rs.LastCommitID().Version != 0 {
 		return snapshottypes.SnapshotItem{}, sdkerrors.Wrapf(sdkerrors.ErrLogic, "cannot restore snapshot for non empty store at height %v", height)
 	}
 
@@ -136,19 +118,14 @@ func (rs *Store) Restore(
 
 		switch item := snapshotItem.Item.(type) {
 		case *snapshottypes.SnapshotItem_Schema:
-			if len(rs.schema) != 0 {
-				return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(sdkerrors.ErrLogic, "store schema is not empty")
+			receivedStoreSchema := make(StoreSchema, len(item.Schema.GetKeys()))
+			storeSchemaReceived = true
+			for _, sKey := range item.Schema.GetKeys() {
+				receivedStoreSchema[string(sKey)] = types.StoreTypePersistent
 			}
 
-			storeSchemaReceived = true
-			schemaWriter := prefixdb.NewPrefixWriter(rs.stateTxn, schemaPrefix)
-			sKeys := item.Schema.GetKeys()
-			for _, sKey := range sKeys {
-				rs.schema[string(sKey)] = types.StoreTypePersistent
-				err := schemaWriter.Set(sKey, []byte{byte(types.StoreTypePersistent)})
-				if err != nil {
-					return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "error at set the store schema key values")
-				}
+			if !rs.schema.equal(receivedStoreSchema) {
+				return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(sdkerrors.ErrLogic, "received store schema is not matched with app schema empty")
 			}
 
 		case *snapshottypes.SnapshotItem_Store:
@@ -181,7 +158,7 @@ func (rs *Store) Restore(
 	}
 
 	// commit the all key/values to store
-	_, err = rs.commit(height)
+	_, err := rs.commit(height)
 	if err != nil {
 		return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, fmt.Sprintf("error during commit the store at height %d", height))
 	}

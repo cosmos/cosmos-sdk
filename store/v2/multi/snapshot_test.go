@@ -106,7 +106,6 @@ func TestMultistoreSnapshot_Errors(t *testing.T) {
 			streamWriter := snapshots.NewStreamWriter(chunks)
 			err := store.Snapshot(tc.height, streamWriter)
 			if tc.expectType != nil {
-				fmt.Println(err)
 				assert.True(t, errors.Is(err, tc.expectType))
 			}
 		})
@@ -157,6 +156,7 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 		tc := tc
 		t.Run(fmt.Sprintf("Format %v", tc.format), func(t *testing.T) {
 			chunks := make(chan io.ReadCloser, 100)
+			hashes := []string{}
 			go func() {
 				streamWriter := snapshots.NewStreamWriter(chunks)
 				defer streamWriter.Close()
@@ -164,7 +164,6 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 				err := store.Snapshot(version, streamWriter)
 				require.NoError(t, err)
 			}()
-			hashes := []string{}
 			hasher := sha256.New()
 			for chunk := range chunks {
 				hasher.Reset()
@@ -179,7 +178,7 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 
 func TestMultistoreSnapshotRestore(t *testing.T) {
 	source := newMultiStoreWithGeneratedData(t, memdb.NewDB(), 3, 4)
-	target := newMultiStore(t, memdb.NewDB(), 0)
+	target := newMultiStore(t, memdb.NewDB(), 3)
 	require.Equal(t, source.LastCommitID().Version, int64(1))
 	version := uint64(source.LastCommitID().Version)
 	// check for target store restore

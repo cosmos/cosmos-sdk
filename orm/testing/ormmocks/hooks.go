@@ -5,73 +5,133 @@
 package ormmocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
 	proto "google.golang.org/protobuf/proto"
 )
 
-// MockHooks is a mock of Hooks interface.
-type MockHooks struct {
+// MockValidateHooks is a mock of ValidateHooks interface.
+type MockValidateHooks struct {
 	ctrl     *gomock.Controller
-	recorder *MockHooksMockRecorder
+	recorder *MockValidateHooksMockRecorder
 }
 
-// MockHooksMockRecorder is the mock recorder for MockHooks.
-type MockHooksMockRecorder struct {
-	mock *MockHooks
+// MockValidateHooksMockRecorder is the mock recorder for MockValidateHooks.
+type MockValidateHooksMockRecorder struct {
+	mock *MockValidateHooks
 }
 
-// NewMockHooks creates a new mock instance.
-func NewMockHooks(ctrl *gomock.Controller) *MockHooks {
-	mock := &MockHooks{ctrl: ctrl}
-	mock.recorder = &MockHooksMockRecorder{mock}
+// NewMockValidateHooks creates a new mock instance.
+func NewMockValidateHooks(ctrl *gomock.Controller) *MockValidateHooks {
+	mock := &MockValidateHooks{ctrl: ctrl}
+	mock.recorder = &MockValidateHooksMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockHooks) EXPECT() *MockHooksMockRecorder {
+func (m *MockValidateHooks) EXPECT() *MockValidateHooksMockRecorder {
+	return m.recorder
+}
+
+// ValidateDelete mocks base method.
+func (m *MockValidateHooks) ValidateDelete(arg0 context.Context, arg1 proto.Message) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidateDelete", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ValidateDelete indicates an expected call of ValidateDelete.
+func (mr *MockValidateHooksMockRecorder) ValidateDelete(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateDelete", reflect.TypeOf((*MockValidateHooks)(nil).ValidateDelete), arg0, arg1)
+}
+
+// ValidateInsert mocks base method.
+func (m *MockValidateHooks) ValidateInsert(arg0 context.Context, arg1 proto.Message) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidateInsert", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ValidateInsert indicates an expected call of ValidateInsert.
+func (mr *MockValidateHooksMockRecorder) ValidateInsert(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateInsert", reflect.TypeOf((*MockValidateHooks)(nil).ValidateInsert), arg0, arg1)
+}
+
+// ValidateUpdate mocks base method.
+func (m *MockValidateHooks) ValidateUpdate(ctx context.Context, existing, new proto.Message) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidateUpdate", ctx, existing, new)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ValidateUpdate indicates an expected call of ValidateUpdate.
+func (mr *MockValidateHooksMockRecorder) ValidateUpdate(ctx, existing, new interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateUpdate", reflect.TypeOf((*MockValidateHooks)(nil).ValidateUpdate), ctx, existing, new)
+}
+
+// MockWriteHooks is a mock of WriteHooks interface.
+type MockWriteHooks struct {
+	ctrl     *gomock.Controller
+	recorder *MockWriteHooksMockRecorder
+}
+
+// MockWriteHooksMockRecorder is the mock recorder for MockWriteHooks.
+type MockWriteHooksMockRecorder struct {
+	mock *MockWriteHooks
+}
+
+// NewMockWriteHooks creates a new mock instance.
+func NewMockWriteHooks(ctrl *gomock.Controller) *MockWriteHooks {
+	mock := &MockWriteHooks{ctrl: ctrl}
+	mock.recorder = &MockWriteHooksMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockWriteHooks) EXPECT() *MockWriteHooksMockRecorder {
 	return m.recorder
 }
 
 // OnDelete mocks base method.
-func (m *MockHooks) OnDelete(arg0 proto.Message) error {
+func (m *MockWriteHooks) OnDelete(arg0 context.Context, arg1 proto.Message) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "OnDelete", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
+	m.ctrl.Call(m, "OnDelete", arg0, arg1)
 }
 
 // OnDelete indicates an expected call of OnDelete.
-func (mr *MockHooksMockRecorder) OnDelete(arg0 interface{}) *gomock.Call {
+func (mr *MockWriteHooksMockRecorder) OnDelete(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDelete", reflect.TypeOf((*MockHooks)(nil).OnDelete), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDelete", reflect.TypeOf((*MockWriteHooks)(nil).OnDelete), arg0, arg1)
 }
 
 // OnInsert mocks base method.
-func (m *MockHooks) OnInsert(arg0 proto.Message) error {
+func (m *MockWriteHooks) OnInsert(arg0 context.Context, arg1 proto.Message) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "OnInsert", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
+	m.ctrl.Call(m, "OnInsert", arg0, arg1)
 }
 
 // OnInsert indicates an expected call of OnInsert.
-func (mr *MockHooksMockRecorder) OnInsert(arg0 interface{}) *gomock.Call {
+func (mr *MockWriteHooksMockRecorder) OnInsert(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnInsert", reflect.TypeOf((*MockHooks)(nil).OnInsert), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnInsert", reflect.TypeOf((*MockWriteHooks)(nil).OnInsert), arg0, arg1)
 }
 
 // OnUpdate mocks base method.
-func (m *MockHooks) OnUpdate(existing, new proto.Message) error {
+func (m *MockWriteHooks) OnUpdate(ctx context.Context, existing, new proto.Message) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "OnUpdate", existing, new)
-	ret0, _ := ret[0].(error)
-	return ret0
+	m.ctrl.Call(m, "OnUpdate", ctx, existing, new)
 }
 
 // OnUpdate indicates an expected call of OnUpdate.
-func (mr *MockHooksMockRecorder) OnUpdate(existing, new interface{}) *gomock.Call {
+func (mr *MockWriteHooksMockRecorder) OnUpdate(ctx, existing, new interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnUpdate", reflect.TypeOf((*MockHooks)(nil).OnUpdate), existing, new)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnUpdate", reflect.TypeOf((*MockWriteHooks)(nil).OnUpdate), ctx, existing, new)
 }

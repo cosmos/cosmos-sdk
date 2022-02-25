@@ -2,6 +2,7 @@ package ormtable
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/orm/types/kv"
 )
@@ -180,5 +181,15 @@ type contextKeyType string
 var defaultContextKey = contextKeyType("backend")
 
 func getBackendDefault(ctx context.Context) (ReadBackend, error) {
-	return ctx.Value(defaultContextKey).(ReadBackend), nil
+	value := ctx.Value(defaultContextKey)
+	if value == nil {
+		return nil, fmt.Errorf("can't resolve backend")
+	}
+
+	backend, ok := value.(ReadBackend)
+	if !ok {
+		return nil, fmt.Errorf("expected value of type %T, instead got %T", backend, value)
+	}
+
+	return backend, nil
 }

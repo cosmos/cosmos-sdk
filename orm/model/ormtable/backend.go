@@ -177,5 +177,5 @@ type contextKeyType string
 var defaultContextKey = contextKeyType("backend")
 
 func getBackendDefault(ctx context.Context) (ReadBackend, error) {
-	return ctx.Value(defaultContextKey).(Backend), nil
+	return ctx.Value(defaultContextKey).(ReadBackend), nil
 }

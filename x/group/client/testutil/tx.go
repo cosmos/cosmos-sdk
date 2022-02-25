@@ -36,7 +36,7 @@ type IntegrationTestSuite struct {
 	vote          *group.Vote
 }
 
-const validMetadata = "AQ=="
+const validMetadata = "metadata"
 
 func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
 	return &IntegrationTestSuite{cfg: cfg}
@@ -106,7 +106,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().Equal(uint32(0), txResp.Code, out.String())
 
-	s.group = &group.GroupInfo{Id: 1, Admin: val.Address.String(), Metadata: "1", TotalWeight: "3", Version: 1}
+	s.group = &group.GroupInfo{Id: 1, Admin: val.Address.String(), Metadata: validMetadata, TotalWeight: "3", Version: 1}
 
 	// create 5 group policies
 	for i := 0; i < 5; i++ {

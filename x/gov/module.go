@@ -38,13 +38,11 @@ var (
 type AppModuleBasic struct {
 	cdc                    codec.Codec
 	legacyProposalHandlers []govclient.ProposalHandler // legacy proposal handlers which live in governance cli and rest
-	proposalHandlers       []govclient.ProposalHandler // proposal handlers which live in governance cli and rest
 }
 
 // NewAppModuleBasic creates a new AppModuleBasic object
-func NewAppModuleBasic(proposalHandlers []govclient.ProposalHandler, legacyProposalHandlers []govclient.ProposalHandler) AppModuleBasic {
+func NewAppModuleBasic(legacyProposalHandlers []govclient.ProposalHandler) AppModuleBasic {
 	return AppModuleBasic{
-		proposalHandlers:       proposalHandlers,
 		legacyProposalHandlers: legacyProposalHandlers,
 	}
 }
@@ -93,10 +91,9 @@ func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux 
 
 // GetTxCmd returns the root tx command for the gov module.
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
-	proposalCLIHandlers := getProposalCLIHandlers(a.proposalHandlers)
 	legacyProposalCLIHandlers := getProposalCLIHandlers(a.legacyProposalHandlers)
 
-	return cli.NewTxCmd(proposalCLIHandlers, legacyProposalCLIHandlers)
+	return cli.NewTxCmd(legacyProposalCLIHandlers)
 }
 
 func getProposalCLIHandlers(handlers []govclient.ProposalHandler) []*cobra.Command {

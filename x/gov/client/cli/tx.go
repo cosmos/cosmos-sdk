@@ -52,19 +52,13 @@ var ProposalFlags = []string{
 // "proposal" child commands. These commands are respective
 // to proposal type handlers that are implemented in other modules but are mounted
 // under the governance CLI (eg. parameter change proposals).
-func NewTxCmd(propCmds []*cobra.Command, legacyPropCmds []*cobra.Command) *cobra.Command {
+func NewTxCmd(legacyPropCmds []*cobra.Command) *cobra.Command {
 	govTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Governance transactions subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
-	}
-
-	cmdSubmitProp := NewCmdSubmitProposal()
-	for _, propCmd := range propCmds {
-		flags.AddTxFlagsToCmd(propCmd)
-		cmdSubmitProp.AddCommand(propCmd)
 	}
 
 	cmdSubmitLegacyProp := NewCmdSubmitLegacyProposal()
@@ -77,7 +71,9 @@ func NewTxCmd(propCmds []*cobra.Command, legacyPropCmds []*cobra.Command) *cobra
 		NewCmdDeposit(),
 		NewCmdVote(),
 		NewCmdWeightedVote(),
-		cmdSubmitProp,
+		NewCmdSubmitProposal(),
+
+		// Deprecated
 		cmdSubmitLegacyProp,
 	)
 

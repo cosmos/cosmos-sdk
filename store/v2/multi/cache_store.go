@@ -1,4 +1,4 @@
-package root
+package multi
 
 import (
 	"github.com/cosmos/cosmos-sdk/store/cachekv"

@@ -26,9 +26,9 @@ This module will be used in the Cosmos Hub.
 
 The `supply` functionality:
 
-- passively tracks the total supply of coins within a chain,
-- provides a pattern for modules to hold/interact with `Coins`, and
-- introduces the invariant check to verify a chain's total supply.
+* passively tracks the total supply of coins within a chain,
+* provides a pattern for modules to hold/interact with `Coins`, and
+* introduces the invariant check to verify a chain's total supply.
 
 ### Total Supply
 
@@ -68,10 +68,10 @@ The supply `Keeper` also introduces new wrapper functions for the auth `Keeper`
 and the bank `Keeper` that are related to `ModuleAccount`s in order to be able
 to:
 
-- Get and set `ModuleAccount`s by providing the `Name`.
-- Send coins from and to other `ModuleAccount`s or standard `Account`s
+* Get and set `ModuleAccount`s by providing the `Name`.
+* Send coins from and to other `ModuleAccount`s or standard `Account`s
   (`BaseAccount` or `VestingAccount`) by passing only the `Name`.
-- `Mint` or `Burn` coins for a `ModuleAccount` (restricted to its permissions).
+* `Mint` or `Burn` coins for a `ModuleAccount` (restricted to its permissions).
 
 ### Permissions
 
@@ -83,23 +83,23 @@ permissions to that specific account and perform or not the action.
 
 The available permissions are:
 
-- `Minter`: allows for a module to mint a specific amount of coins.
-- `Burner`: allows for a module to burn a specific amount of coins.
-- `Staking`: allows for a module to delegate and undelegate a specific amount of coins.
+* `Minter`: allows for a module to mint a specific amount of coins.
+* `Burner`: allows for a module to burn a specific amount of coins.
+* `Staking`: allows for a module to delegate and undelegate a specific amount of coins.
 
 ## Contents
 
 1. **[State](01_state.md)**
 2. **[Keepers](02_keepers.md)**
-   - [Common Types](02_keepers.md#common-types)
-   - [BaseKeeper](02_keepers.md#basekeeper)
-   - [SendKeeper](02_keepers.md#sendkeeper)
-   - [ViewKeeper](02_keepers.md#viewkeeper)
+   * [Common Types](02_keepers.md#common-types)
+   * [BaseKeeper](02_keepers.md#basekeeper)
+   * [SendKeeper](02_keepers.md#sendkeeper)
+   * [ViewKeeper](02_keepers.md#viewkeeper)
 3. **[Messages](03_messages.md)**
-   - [MsgSend](03_messages.md#msgsend)
+   * [MsgSend](03_messages.md#msgsend)
 4. **[Events](04_events.md)**
-   - [Handlers](04_events.md#handlers)
+   * [Handlers](04_events.md#handlers)
 5. **[Parameters](05_params.md)**
 6. **[Client](06_client.md)**
-    - [CLI](06_client.md#cli)
-    - [gRPC](06_client.md#grpc)
+    * [CLI](06_client.md#cli)
+    * [gRPC](06_client.md#grpc)

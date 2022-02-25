@@ -4,17 +4,19 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
-
 	queryv1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/query/v1beta1"
-
+	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/listinternal"
-	"github.com/cosmos/cosmos-sdk/orm/model/kv"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
+	"github.com/cosmos/cosmos-sdk/orm/types/kv"
 )
 
 // Iterator defines the interface for iterating over indexes.
+//
+// WARNING: it is generally unsafe to mutate a table while iterating over it.
+// Instead you should do reads and writes separately, or use a helper
+// function like DeleteBy which does this efficiently.
 type Iterator interface {
 
 	// Next advances the iterator and returns true if a valid entry is found.
@@ -186,7 +188,7 @@ func applyCommonIteratorOptions(iterator Iterator, options *listinternal.Options
 		iterator = &filterIterator{Iterator: iterator, filter: options.Filter}
 	}
 
-	if options.CountTotal || options.Limit != 0 || options.Offset != 0 {
+	if options.CountTotal || options.Limit != 0 || options.Offset != 0 || options.DefaultLimit != 0 {
 		iterator = paginate(iterator, options)
 	}
 
@@ -213,6 +215,7 @@ func (i *indexIterator) Next() bool {
 		i.started = true
 	} else {
 		i.iterator.Next()
+		i.indexValues = nil
 	}
 
 	return i.iterator.Valid()

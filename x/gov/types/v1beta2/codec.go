@@ -2,10 +2,10 @@ package v1beta2
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
@@ -31,5 +31,5 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 }
 
 func init() {
-	RegisterLegacyAminoCodec(types.ModuleCdc.LegacyAmino)
+	RegisterLegacyAminoCodec(legacy.Cdc)
 }

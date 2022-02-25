@@ -59,15 +59,6 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	)
 }
 
-var (
-	amino     = codec.NewLegacyAmino()
-	ModuleCdc = codec.NewAminoCodec(amino)
-)
-
 func init() {
-	RegisterLegacyAminoCodec(amino)
-
-	// Register all Amino interfaces and concrete types on the global Amino codec so that this can later be
-	// used to properly serialize x/authz MsgExec instances
 	RegisterLegacyAminoCodec(legacy.Cdc)
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -127,8 +128,9 @@ func (s *TestSuite) TestCreateGroup() {
 		},
 		"group metadata too long": {
 			req: &group.MsgCreateGroup{
-				Admin:   addr1.String(),
-				Members: members,
+				Admin:    addr1.String(),
+				Members:  members,
+				Metadata: strings.Repeat("a", 256),
 			},
 			expErr: true,
 		},
@@ -136,8 +138,9 @@ func (s *TestSuite) TestCreateGroup() {
 			req: &group.MsgCreateGroup{
 				Admin: addr1.String(),
 				Members: []group.Member{{
-					Address: addr3.String(),
-					Weight:  "1",
+					Address:  addr3.String(),
+					Weight:   "1",
+					Metadata: strings.Repeat("a", 256),
 				}},
 			},
 			expErr: true,
@@ -708,6 +711,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 				Admin:              addr1.String(),
 				Members:            members,
 				GroupPolicyAsAdmin: false,
+				GroupMetadata:      strings.Repeat("a", 256),
 			},
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
@@ -718,9 +722,10 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 		},
 		"group policy metadata too long": {
 			req: &group.MsgCreateGroupWithPolicy{
-				Admin:              addr1.String(),
-				Members:            members,
-				GroupPolicyAsAdmin: false,
+				Admin:               addr1.String(),
+				Members:             members,
+				GroupPolicyAsAdmin:  false,
+				GroupPolicyMetadata: strings.Repeat("a", 256),
 			},
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
@@ -733,8 +738,9 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			req: &group.MsgCreateGroupWithPolicy{
 				Admin: addr1.String(),
 				Members: []group.Member{{
-					Address: addr3.String(),
-					Weight:  "1",
+					Address:  addr3.String(),
+					Weight:   "1",
+					Metadata: strings.Repeat("a", 256),
 				}},
 				GroupPolicyAsAdmin: false,
 			},
@@ -918,8 +924,9 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 		},
 		"metadata too long": {
 			req: &group.MsgCreateGroupPolicy{
-				Admin:   addr1.String(),
-				GroupId: myGroupID,
+				Admin:    addr1.String(),
+				GroupId:  myGroupID,
+				Metadata: strings.Repeat("a", 256),
 			},
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
@@ -1419,6 +1426,7 @@ func (s *TestSuite) TestSubmitProposal() {
 			req: &group.MsgSubmitProposal{
 				Address:   accountAddr.String(),
 				Proposers: []string{addr2.String()},
+				Metadata:  strings.Repeat("a", 256),
 			},
 			expErr:  true,
 			postRun: func(sdkCtx sdk.Context) {},
@@ -1890,6 +1898,7 @@ func (s *TestSuite) TestVote() {
 				ProposalId: myProposalID,
 				Voter:      addr4.String(),
 				Option:     group.VOTE_OPTION_NO,
+				Metadata:   strings.Repeat("a", 256),
 			},
 			expErr:  true,
 			postRun: func(sdkCtx sdk.Context) {},

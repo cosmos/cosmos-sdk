@@ -101,6 +101,8 @@ func NewBackend(options BackendOptions) Backend {
 	}
 }
 
+type BackendResolver func(context.Context) (ReadBackend, error)
+
 // WrapContextDefault performs the default wrapping of a backend in a context.
 // This should be used primarily for testing purposes and production code
 // should use some other framework specific wrapping (for instance using

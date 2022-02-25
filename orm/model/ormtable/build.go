@@ -1,7 +1,6 @@
 package ormtable
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
@@ -53,7 +52,7 @@ type Options struct {
 	// will be used
 	JSONValidator func(proto.Message) error
 
-	// GetBackend is an optional function which retrieves a Backend from the context.
+	// BackendResolver is an optional function which retrieves a Backend from the context.
 	// If it is nil, the default behavior will be to attempt to retrieve a
 	// backend using the method that WrapContextDefault uses. This method
 	// can be used to implement things like "store keys" which would allow a
@@ -61,7 +60,7 @@ type Options struct {
 	// access to the backend other than through the table interface.
 	// Mutating operations will attempt to cast ReadBackend to Backend and
 	// will return an error if that fails.
-	GetBackend func(context.Context) (ReadBackend, error)
+	BackendResolver BackendResolver
 }
 
 // TypeResolver is an interface that can be used for the protoreflect.UnmarshalOptions.Resolver option.
@@ -74,15 +73,15 @@ type TypeResolver interface {
 func Build(options Options) (Table, error) {
 	messageDescriptor := options.MessageType.Descriptor()
 
-	getBackend := options.GetBackend
-	if getBackend == nil {
-		getBackend = getBackendDefault
+	backendResolver := options.BackendResolver
+	if backendResolver == nil {
+		backendResolver = getBackendDefault
 	}
 
 	table := &tableImpl{
 		primaryKeyIndex: &primaryKeyIndex{
 			indexers:   []indexer{},
-			getBackend: getBackend,
+			getBackend: backendResolver,
 		},
 		indexes:               []Index{},
 		indexesByFields:       map[fieldnames.FieldNames]concreteIndex{},
@@ -205,7 +204,7 @@ func Build(options Options) (Table, error) {
 				UniqueKeyCodec: uniqCdc,
 				fields:         idxFields,
 				primaryKey:     pkIndex,
-				getReadBackend: getReadBackend,
+				getReadBackend: backendResolver,
 			}
 			table.uniqueIndexesByFields[idxFields] = uniqIdx
 			index = uniqIdx
@@ -223,7 +222,7 @@ func Build(options Options) (Table, error) {
 				IndexKeyCodec:  idxCdc,
 				fields:         idxFields,
 				primaryKey:     pkIndex,
-				getReadBackend: getReadBackend,
+				getReadBackend: backendResolver,
 			}
 
 			// non-unique indexes can sometimes be named by several sub-lists of

@@ -4,10 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
-	"fmt"
 	"math"
-
-	"github.com/cosmos/cosmos-sdk/orm/types/kv"
 
 	"google.golang.org/protobuf/reflect/protoregistry"
 
@@ -81,11 +78,7 @@ type ModuleDBOptions struct {
 	// will be used
 	JSONValidator func(proto.Message) error
 
-	GetCommitmentStore func(context.Context) (kv.ReadonlyStore, error)
-	GetIndexStore      func(context.Context) (kv.ReadonlyStore, error)
-	GetMemoryStore     func(context.Context) (kv.ReadonlyStore, error)
-	GetTransientStore  func(context.Context) (kv.ReadonlyStore, error)
-	GetHooks           func(context.Context) ormtable.Hooks
+	GetBackendResolver func(ormv1alpha1.StorageType) (ormtable.BackendResolver, error)
 }
 
 // NewModuleDB constructs a ModuleDB instance from the provided schema and options.
@@ -103,32 +96,9 @@ func NewModuleDB(schema *ormv1alpha1.ModuleSchemaDescriptor, options ModuleDBOpt
 	}
 
 	for _, entry := range schema.SchemaFile {
-		var getBackend func(ctx context.Context) (ormtable.ReadBackend, error)
-
-		switch entry.StorageType {
-		case ormv1alpha1.StorageType_STORAGE_TYPE_DEFAULT_UNSPECIFIED:
-			if options.GetCommitmentStore == nil || options.GetIndexStore == nil {
-				return nil, fmt.Errorf("cannot use default ORM storage without both an index and commitment store")
-			}
-
-			getBackend = func(ctx context.Context) (ormtable.ReadBackend, error) {
-				commitmentStore, err := options.GetCommitmentStore(ctx)
-				if err != nil {
-					return nil, err
-				}
-
-				indexStore, err := options.GetIndexStore(ctx)
-				if err != nil {
-					return nil, err
-				}
-
-				var hooks ormtable.Hooks
-				if options.GetHooks != nil {
-					hooks = options.GetHooks(ctx)
-				}
-
-				return ormtable.NewBackend()
-			}
+		backendResolver, err := options.GetBackendResolver(entry.StorageType)
+		if err != nil {
+			return nil, err
 		}
 
 		id := entry.Id
@@ -142,11 +112,11 @@ func NewModuleDB(schema *ormv1alpha1.ModuleSchemaDescriptor, options ModuleDBOpt
 		}
 
 		opts := fileDescriptorDBOptions{
-			ID:            id,
-			Prefix:        prefix,
-			TypeResolver:  options.TypeResolver,
-			JSONValidator: options.JSONValidator,
-			GetBackend:    options.GetBackend,
+			ID:              id,
+			Prefix:          prefix,
+			TypeResolver:    options.TypeResolver,
+			JSONValidator:   options.JSONValidator,
+			BackendResolver: backendResolver,
 		}
 
 		fdSchema, err := newFileDescriptorDB(fileDescriptor, opts)

@@ -33,17 +33,61 @@ type Backend interface {
 	// ValidateHooks returns a ValidateHooks instance or nil.
 	ValidateHooks() ValidateHooks
 
-	// WithValidateHooks returns a copy of this backend with the provided hooks.
+	// WithValidateHooks returns a copy of this backend with the provided validate hooks.
 	WithValidateHooks(ValidateHooks) Backend
 
+	// WriteHooks returns a WriteHooks instance of nil.
 	WriteHooks() WriteHooks
 
+	// WithWriteHooks returns a copy of this backend with the provided write hooks.
 	WithWriteHooks(WriteHooks) Backend
 }
 
+// ReadBackendOptions defines options for creating a ReadBackend.
+// Read context can optionally define two stores - a commitment store
+// that is backed by a merkle tree and an index store that isn't.
+// If the index store is not defined, the commitment store will be
+// used for all operations.
+type ReadBackendOptions struct {
+
+	// CommitmentStoreReader is a reader for the commitment store.
+	CommitmentStoreReader kv.ReadonlyStore
+
+	// IndexStoreReader is an optional reader for the index store.
+	// If it is nil the CommitmentStoreReader will be used.
+	IndexStoreReader kv.ReadonlyStore
+}
+
+type readBackend struct {
+	commitmentReader kv.ReadonlyStore
+	indexReader      kv.ReadonlyStore
+}
+
+func (r readBackend) CommitmentStoreReader() kv.ReadonlyStore {
+	return r.commitmentReader
+}
+
+func (r readBackend) IndexStoreReader() kv.ReadonlyStore {
+	return r.indexReader
+}
+
+func (readBackend) private() {}
+
+// NewReadBackend creates a new ReadBackend.
+func NewReadBackend(options ReadBackendOptions) ReadBackend {
+	indexReader := options.IndexStoreReader
+	if indexReader == nil {
+		indexReader = options.CommitmentStoreReader
+	}
+	return &readBackend{
+		commitmentReader: options.CommitmentStoreReader,
+		indexReader:      indexReader,
+	}
+}
+
 type backend struct {
-	commitmentStore kv.ReadonlyStore
-	indexStore      kv.ReadonlyStore
+	commitmentStore kv.Store
+	indexStore      kv.Store
 	validateHooks   ValidateHooks
 	writeHooks      WriteHooks
 }
@@ -77,11 +121,11 @@ func (c backend) IndexStoreReader() kv.ReadonlyStore {
 }
 
 func (c backend) CommitmentStore() kv.Store {
-	return c.commitmentStore.(kv.Store)
+	return c.commitmentStore
 }
 
 func (c backend) IndexStore() kv.Store {
-	return c.indexStore.(kv.Store)
+	return c.indexStore
 }
 
 // BackendOptions defines options for creating a Backend.
@@ -92,11 +136,11 @@ func (c backend) IndexStore() kv.Store {
 type BackendOptions struct {
 
 	// CommitmentStore is the commitment store.
-	CommitmentStore kv.ReadonlyStore
+	CommitmentStore kv.Store
 
 	// IndexStore is the optional index store.
 	// If it is nil the CommitmentStore will be used.
-	IndexStore kv.ReadonlyStore
+	IndexStore kv.Store
 
 	// ValidateHooks are optional hooks into ORM insert, update and delete operations.
 	ValidateHooks ValidateHooks

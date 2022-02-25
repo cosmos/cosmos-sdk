@@ -66,6 +66,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/authz) [\#10714](https://github.com/cosmos/cosmos-sdk/pull/10714) Add support for pruning expired authorizations
 * [\#10015](https://github.com/cosmos/cosmos-sdk/pull/10015) ADR-040: ICS-23 proofs for SMT store
 * [\#11240](https://github.com/cosmos/cosmos-sdk/pull/11240) Replace various modules `ModuleCdc` with the global `legacy.Cdc`
+* [\#10794](https://github.com/cosmos/cosmos-sdk/pull/10794) ADR-040: Add State Sync to V2 Store
 
 ### API Breaking Changes
 

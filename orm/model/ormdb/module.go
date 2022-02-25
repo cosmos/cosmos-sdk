@@ -67,6 +67,8 @@ type ModuleDBOptions struct {
 	// will be used
 	JSONValidator func(proto.Message) error
 
+	// GetBackendResolver returns a backend resolver for the requested storage
+	// type or an error if this type of storage isn't supported.
 	GetBackendResolver func(ormv1alpha1.StorageType) (ormtable.BackendResolver, error)
 }
 

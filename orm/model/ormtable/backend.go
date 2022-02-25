@@ -162,6 +162,9 @@ func NewBackend(options BackendOptions) Backend {
 	}
 }
 
+// BackendResolver resolves a backend from the context or returns an error.
+// Callers should type cast the returned ReadBackend to Backend to test whether
+// the backend is writable.
 type BackendResolver func(context.Context) (ReadBackend, error)
 
 // WrapContextDefault performs the default wrapping of a backend in a context.

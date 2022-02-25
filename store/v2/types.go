@@ -59,6 +59,13 @@ var (
 
 	AssertValidKey   = v1.AssertValidKey
 	AssertValidValue = v1.AssertValidValue
+
+	CommitmentOpDecoder = v1.CommitmentOpDecoder
+	ProofOpFromMap      = v1.ProofOpFromMap
+
+	ProofOpSMTCommitment          = v1.ProofOpSMTCommitment
+	ProofOpSimpleMerkleCommitment = v1.ProofOpSimpleMerkleCommitment
+	NewSmtCommitmentOp            = v1.NewSmtCommitmentOp
 )
 
 // MultiStore defines a minimal interface for accessing root state.

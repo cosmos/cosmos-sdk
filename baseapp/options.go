@@ -206,7 +206,7 @@ func (app *BaseApp) SetSnapshotStore(snapshotStore *snapshots.Store) {
 		app.snapshotManager = nil
 		return
 	}
-	app.snapshotManager = snapshots.NewManager(snapshotStore, app.store)
+	app.snapshotManager = snapshots.NewManager(snapshotStore, app.store, nil)
 }
 
 // SetSnapshotInterval sets the snapshot interval.

@@ -26,6 +26,8 @@ type viewStore struct {
 }
 
 type viewSubstore struct {
+	root                 *viewStore
+	name                 string
 	dataBucket           dbm.DBReader
 	indexBucket          dbm.DBReader
 	stateCommitmentStore *smt.Store
@@ -134,6 +136,21 @@ func (st *viewSubstore) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) t
 
 func (st *viewSubstore) CacheWrapWithListeners(storeKey types.StoreKey, listeners []types.WriteListener) types.CacheWrap {
 	return cachekv.NewStore(listenkv.NewStore(st, storeKey, listeners))
+}
+
+func (s *viewStore) getMerkleRoots() (ret map[string][]byte, err error) {
+	ret = map[string][]byte{}
+	for key, _ := range s.schema {
+		sub, has := s.substoreCache[key]
+		if !has {
+			sub, err = s.getSubstore(key)
+			if err != nil {
+				return
+			}
+		}
+		ret[key] = sub.stateCommitmentStore.Root()
+	}
+	return
 }
 
 func (store *Store) getView(version int64) (ret *viewStore, err error) {

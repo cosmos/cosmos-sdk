@@ -401,7 +401,7 @@ func TestPruning(t *testing.T) {
 	}{
 		{types.PruningOptions{2, 10}, []uint64{8, 9, 10}},
 		{types.PruningOptions{0, 10}, []uint64{10}},
-		{types.PruneEverything, []uint64{10}},
+		{types.PruneEverything, []uint64{8, 9, 10}},
 		{types.PruneNothing, []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
 	}
 

@@ -45,7 +45,7 @@ type CLIProposal struct {
 	GroupPolicyAddress string
 	// Messages defines an array of sdk.Msgs proto-JSON-encoded as Anys.
 	Messages  []json.RawMessage
-	Metadata  []byte
+	Metadata  string
 	Proposers []string
 }
 

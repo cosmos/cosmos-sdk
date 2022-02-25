@@ -180,7 +180,7 @@ func (s *IntegrationTestSuite) TestQueryGroupMembers() {
 					Member: &group.Member{
 						Address:  val.Address.String(),
 						Weight:   "3",
-						Metadata: []byte{1},
+						Metadata: "1",
 					},
 				},
 			},

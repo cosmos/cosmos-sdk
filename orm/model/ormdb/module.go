@@ -25,17 +25,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
 
-// ModuleSchema describes the ORM schema for a module.
-type ModuleSchema struct {
-	// FileDescriptors are the file descriptors that contain ORM tables to use in this schema.
-	// Each file descriptor must have an unique non-zero uint32 ID associated with it.
-	FileDescriptors map[uint32]protoreflect.FileDescriptor
-
-	// Prefix is an optional prefix to prepend to all keys. It is recommended
-	// to leave it empty.
-	Prefix []byte
-}
-
 // ModuleDB defines the ORM database type to be used by modules.
 type ModuleDB interface {
 	ormtable.Schema
@@ -96,9 +85,13 @@ func NewModuleDB(schema *ormv1alpha1.ModuleSchemaDescriptor, options ModuleDBOpt
 	}
 
 	for _, entry := range schema.SchemaFile {
-		backendResolver, err := options.GetBackendResolver(entry.StorageType)
-		if err != nil {
-			return nil, err
+		var backendResolver ormtable.BackendResolver
+		var err error
+		if options.GetBackendResolver != nil {
+			backendResolver, err = options.GetBackendResolver(entry.StorageType)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		id := entry.Id

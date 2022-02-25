@@ -8,11 +8,12 @@ import (
 	"strings"
 	"testing"
 
+	ormv1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
+
 	"github.com/golang/mock/gomock"
 
 	"github.com/cosmos/cosmos-sdk/orm/testing/ormmocks"
 
-	"google.golang.org/protobuf/reflect/protoreflect"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
 
@@ -28,9 +29,12 @@ import (
 // These tests use a simulated bank keeper. Addresses and balances use
 // string and uint64 types respectively for simplicity.
 
-var TestBankSchema = ormdb.ModuleSchema{
-	FileDescriptors: map[uint32]protoreflect.FileDescriptor{
-		1: testpb.File_testpb_bank_proto,
+var TestBankSchema = &ormv1alpha1.ModuleSchemaDescriptor{
+	SchemaFile: []*ormv1alpha1.ModuleSchemaDescriptor_FileEntry{
+		{
+			Id:            1,
+			ProtoFileName: testpb.File_testpb_bank_proto.Path(),
+		},
 	},
 }
 

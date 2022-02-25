@@ -23,7 +23,7 @@ type autoIncrementTable struct {
 }
 
 func (t autoIncrementTable) InsertReturningID(ctx context.Context, message proto.Message) (newId uint64, err error) {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -32,7 +32,7 @@ func (t autoIncrementTable) InsertReturningID(ctx context.Context, message proto
 }
 
 func (t autoIncrementTable) Save(ctx context.Context, message proto.Message) error {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func (t autoIncrementTable) Save(ctx context.Context, message proto.Message) err
 }
 
 func (t autoIncrementTable) Insert(ctx context.Context, message proto.Message) error {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func (t autoIncrementTable) Insert(ctx context.Context, message proto.Message) e
 }
 
 func (t autoIncrementTable) Update(ctx context.Context, message proto.Message) error {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func (t autoIncrementTable) ValidateJSON(reader io.Reader) error {
 }
 
 func (t autoIncrementTable) ImportJSON(ctx context.Context, reader io.Reader) error {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}

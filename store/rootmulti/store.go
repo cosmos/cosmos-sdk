@@ -87,11 +87,6 @@ func (rs *Store) GetPruning() types.PruningOptions {
 	return rs.pruningOpts
 }
 
-// GetStores will return the stores
-func (rs *Store) GetStores() map[types.StoreKey]types.CommitKVStore {
-	return rs.stores
-}
-
 // SetPruning sets the pruning strategy on the root store and all the sub-stores.
 // Note, calling SetPruning on the root store prior to LoadVersion or
 // LoadLatestVersion performs a no-op as the stores aren't mounted yet.

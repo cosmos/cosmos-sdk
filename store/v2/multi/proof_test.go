@@ -51,7 +51,7 @@ func TestVerifySMTStoreProof(t *testing.T) {
 
 func TestVerifyMultiStoreQueryProof(t *testing.T) {
 	db := memdb.NewDB()
-	store, err := NewStore(db, simpleStoreConfig(t))
+	store, err := NewStore(db, storeParams1(t))
 	require.NoError(t, err)
 
 	substore := store.GetKVStore(skey_1)
@@ -95,7 +95,7 @@ func TestVerifyMultiStoreQueryProof(t *testing.T) {
 
 func TestVerifyMultiStoreQueryProofAbsence(t *testing.T) {
 	db := memdb.NewDB()
-	store, err := NewStore(db, simpleStoreConfig(t))
+	store, err := NewStore(db, storeParams1(t))
 	require.NoError(t, err)
 
 	substore := store.GetKVStore(skey_1)

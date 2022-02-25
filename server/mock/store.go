@@ -3,12 +3,10 @@ package mock
 import (
 	"io"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/v2"
 	protoio "github.com/gogo/protobuf/io"
-	dbm "github.com/tendermint/tm-db"
 
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -82,16 +80,6 @@ func (ms multiStore) SetInitialVersion(version uint64) error {
 	panic("not implemented")
 }
 
-func (ms multiStore) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, error) {
-	panic("not implemented")
-}
-
-func (ms multiStore) Restore(
-	height uint64, format uint32, chunks <-chan io.ReadCloser, ready chan<- struct{},
-) error {
-	panic("not implemented")
-}
-
 func (ms multiStore) GetVersion(int64) (storetypes.MultiStore, error) {
 	panic("not implemented")
 }
@@ -101,6 +89,8 @@ func (ms multiStore) GetAllVersions() []int {
 }
 
 func (ms multiStore) Close() error {
+	panic("not implemented")
+}
 
 func (ms multiStore) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	panic("not implemented")

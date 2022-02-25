@@ -59,6 +59,8 @@ func (vs *viewStore) getSubstore(key string) (*viewSubstore, error) {
 		return nil, err
 	}
 	return &viewSubstore{
+		root:                 vs,
+		name:                 key,
 		dataBucket:           prefixdb.NewPrefixReader(stateR, dataPrefix),
 		indexBucket:          prefixdb.NewPrefixReader(stateR, indexPrefix),
 		stateCommitmentStore: loadSMT(dbm.ReaderAsReadWriter(stateCommitmentR), rootHash),

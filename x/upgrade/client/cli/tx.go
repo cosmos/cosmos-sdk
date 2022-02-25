@@ -1,22 +1,16 @@
 package cli
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/version"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
@@ -36,89 +30,6 @@ func GetTxCmd() *cobra.Command {
 		Use:   types.ModuleName,
 		Short: "Upgrade transaction subcommands",
 	}
-
-	return cmd
-}
-
-// NewCmdSubmitUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
-func NewCmdSubmitUpgradeProposal() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "software-upgrade [proposal_json_file] [flags]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Submit a software upgrade proposal",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Submit a software upgrade along with an initial deposit.
-Upgrade plan, metadata and deposit are defined in a JSON file.
-Please specify a unique name and height for the upgrade to take effect.
-You may include info to reference a binary download link, in a format compatible with: https://github.com/cosmos/cosmos-sdk/tree/master/cosmovisor
-
-Example:
-$ %s tx gov submit-proposal software-upgrade path/to/proposal.json
-
-Where proposal.json contains:
-
-{
-	"plan": [
-		{
-			"name": "upgrade name",
-			"height": "123...",
-			"info": "a7fb1..."
-		}
-	],
-	"metadata: "4pIMOgIGx1vZGU=", // base64-encoded metadata
-	"deposit": "10stake"
-}
-`, version.AppName,
-			),
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			upgradePlan, metadata, deposit, err := parseSubmitSoftwareUpgradeProposal(clientCtx.Codec, args[0])
-			if err != nil {
-				return err
-			}
-
-			noValidate, err := cmd.Flags().GetBool(FlagNoValidate)
-			if err != nil {
-				return err
-			}
-			if !noValidate {
-				var daemonName string
-				if daemonName, err = cmd.Flags().GetString(FlagDaemonName); err != nil {
-					return err
-				}
-				var planInfo *plan.Info
-				if planInfo, err = plan.ParseInfo(upgradePlan.Info); err != nil {
-					return err
-				}
-				if err = planInfo.ValidateFull(daemonName); err != nil {
-					return err
-				}
-			}
-
-			authority := authtypes.NewModuleAddress(govtypes.ModuleName)
-
-			msgs := []sdk.Msg{
-				&types.MsgSoftwareUpgrade{
-					Authority: authority.String(),
-					Plan:      *upgradePlan,
-				},
-			}
-
-			msg, err := v1beta2.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), metadata)
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-	cmd.Flags().Bool(FlagNoValidate, false, "Skip validation of the upgrade info")
-	cmd.Flags().String(FlagDaemonName, getDefaultDaemonName(), "The name of the executable being upgraded (for upgrade-info validation). Default is the DAEMON_NAME env var if set, or else this executable")
 
 	return cmd
 }
@@ -189,59 +100,6 @@ func NewCmdSubmitLegacyUpgradeProposal() *cobra.Command {
 	cmd.Flags().String(FlagUpgradeInfo, "", "Info for the upgrade plan such as new version download urls, etc.")
 	cmd.Flags().Bool(FlagNoValidate, false, "Skip validation of the upgrade info")
 	cmd.Flags().String(FlagDaemonName, getDefaultDaemonName(), "The name of the executable being upgraded (for upgrade-info validation). Default is the DAEMON_NAME env var if set, or else this executable")
-
-	return cmd
-}
-
-// NewCmdSubmitCancelUpgradeProposal implements a command handler for submitting a software upgrade cancel proposal transaction.
-func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "cancel-software-upgrade [flags]",
-		Args:  cobra.ExactArgs(0),
-		Short: "Cancel the current software upgrade proposal",
-		Long:  "Submits a proposal to cancel the current software upgrade. Can also be submitted with an initial deposit and metadata.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-			from := clientCtx.GetFromAddress()
-
-			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)
-			if err != nil {
-				return err
-			}
-
-			deposit, err := sdk.ParseCoinsNormalized(depositStr)
-			if err != nil {
-				return err
-			}
-
-			var metadata []byte
-			metadata, err = cmd.Flags().GetBytesBase64(cli.FlagMetadata)
-			if err != nil {
-				return err
-			}
-
-			authority := authtypes.NewModuleAddress(govtypes.ModuleName)
-
-			msgs := []sdk.Msg{
-				&types.MsgCancelUpgrade{
-					Authority: authority.String(),
-				},
-			}
-
-			msg, err := v1beta2.NewMsgSubmitProposal(msgs, deposit, from.String(), metadata)
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-
-	cmd.Flags().BytesBase64(cli.FlagMetadata, []byte{}, "base64 encoded metadata associated with the cancel upgrade proposal")
-	cmd.Flags().String(cli.FlagDeposit, "", "deposit for the proposal")
 
 	return cmd
 }

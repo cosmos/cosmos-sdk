@@ -1,4 +1,4 @@
-package root
+package multi
 
 import (
 	"crypto/sha256"
@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/snapshots"
 	"io"
 	"math/rand"
 	"sort"
@@ -93,19 +94,19 @@ func TestMultistoreSnapshot_Errors(t *testing.T) {
 	store := newMultiStoreWithBasicData(t, memdb.NewDB(), 4)
 	testcases := map[string]struct {
 		height     uint64
-		format     uint32
 		expectType error
 	}{
-		"0 height":       {0, snapshottypes.CurrentFormat, nil},
-		"0 format":       {1, 0, snapshottypes.ErrUnknownFormat},
-		"unknown format": {1, 9, snapshottypes.ErrUnknownFormat},
+		"0 height": {0, snapshottypes.ErrInvalidSnapshotVersion},
+		"1 height": {1, nil},
 	}
 	for name, tc := range testcases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			_, err := store.Snapshot(tc.height, tc.format)
-			require.Error(t, err)
+			chunks := make(chan io.ReadCloser)
+			streamWriter := snapshots.NewStreamWriter(chunks)
+			err := store.Snapshot(tc.height, streamWriter)
 			if tc.expectType != nil {
+				fmt.Println(err)
 				assert.True(t, errors.Is(err, tc.expectType))
 			}
 		})
@@ -115,9 +116,9 @@ func TestMultistoreSnapshot_Errors(t *testing.T) {
 func TestMultistoreRestore_Errors(t *testing.T) {
 	store := newMultiStoreWithBasicData(t, memdb.NewDB(), 4)
 	testcases := map[string]struct {
-		height     uint64
-		format     uint32
-		expectType error
+		height          uint64
+		format          uint32
+		expectErrorType error
 	}{
 		"0 height":       {0, snapshottypes.CurrentFormat, nil},
 		"0 format":       {1, 0, snapshottypes.ErrUnknownFormat},
@@ -126,10 +127,10 @@ func TestMultistoreRestore_Errors(t *testing.T) {
 	for name, tc := range testcases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			err := store.Restore(tc.height, tc.format, nil, nil)
+			_, err := store.Restore(tc.height, tc.format, nil)
 			require.Error(t, err)
-			if tc.expectType != nil {
-				assert.True(t, errors.Is(err, tc.expectType))
+			if tc.expectErrorType != nil {
+				assert.True(t, errors.Is(err, tc.expectErrorType))
 			}
 		})
 	}
@@ -144,19 +145,25 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 		chunkHashes []string
 	}{
 		{1, []string{
-			"28b9dd52156e7c46f42d6c2b390350be3c635a54446f6a6a553e1a6ecca5efca",
+			"b0635a30d94d56b6cd1073fbfa109fa90b194d0ff2397659b00934c844a1f6fb",
 			"8c32e05f312cf2dee6b7d2bdb41e1a2bb2372697f25504e676af1718245d8b63",
 			"05dfef0e32c34ef3900300f9de51f228d7fb204fa8f4e4d0d1529f083d122029",
 			"77d30aeeb427b0bdcedf3639adde1e822c15233d652782e171125280875aa492",
 			"c00c3801da889ea4370f0e647ffe1e291bd47f500e2a7269611eb4cc198b993f",
-			"3af4440d732225317644fa814dd8c0fb52adb7bf9046631af092af2c8cf9b512",
+			"6d565eb28776631f3e3e764decd53436c3be073a8a01fa5434afd539f9ae6eda[/",
 		}},
 	}
 	for _, tc := range testcases {
 		tc := tc
 		t.Run(fmt.Sprintf("Format %v", tc.format), func(t *testing.T) {
-			chunks, err := store.Snapshot(version, tc.format)
-			require.NoError(t, err)
+			chunks := make(chan io.ReadCloser, 100)
+			go func() {
+				streamWriter := snapshots.NewStreamWriter(chunks)
+				defer streamWriter.Close()
+				require.NotNil(t, streamWriter)
+				err := store.Snapshot(version, streamWriter)
+				require.NoError(t, err)
+			}()
 			hashes := []string{}
 			hasher := sha256.New()
 			for chunk := range chunks {
@@ -178,12 +185,19 @@ func TestMultistoreSnapshotRestore(t *testing.T) {
 	// check for target store restore
 	require.Equal(t, target.LastCommitID().Version, int64(0))
 
-	chunks, err := source.Snapshot(version, snapshottypes.CurrentFormat)
+	chunks := make(chan io.ReadCloser, 100)
+	go func() {
+		streamWriter := snapshots.NewStreamWriter(chunks)
+		require.NotNil(t, streamWriter)
+		defer streamWriter.Close()
+		err := source.Snapshot(version, streamWriter)
+		require.NoError(t, err)
+	}()
+
+	streamReader, err := snapshots.NewStreamReader(chunks)
 	require.NoError(t, err)
-	ready := make(chan struct{})
-	err = target.Restore(version, snapshottypes.CurrentFormat, chunks, ready)
+	_, err = target.Restore(version, snapshottypes.CurrentFormat, streamReader)
 	require.NoError(t, err)
-	assert.EqualValues(t, struct{}{}, <-ready)
 
 	assert.Equal(t, source.LastCommitID(), target.LastCommitID())
 
@@ -195,18 +209,19 @@ func TestMultistoreSnapshotRestore(t *testing.T) {
 		require.Equal(t, sourceSubStore, targetSubStore)
 	}
 
-	// checking snapshot restore for store with existing saved version
-	target2 := newMultiStoreWithBasicData(t, memdb.NewDB(), 0)
-	ready2 := make(chan struct{})
-	err = target2.Restore(version, snapshottypes.CurrentFormat, chunks, ready2)
-	require.Error(t, err)
-
 	// checking snapshot restoring for store with existed schema and without existing versions
 	target3 := newMultiStore(t, memdb.NewDB(), 4)
-	ready3 := make(chan struct{})
-	chunks, err = source.Snapshot(version, snapshottypes.CurrentFormat)
+	chunks3 := make(chan io.ReadCloser, 100)
+	go func() {
+		streamWriter3 := snapshots.NewStreamWriter(chunks3)
+		require.NotNil(t, streamWriter3)
+		defer streamWriter3.Close()
+		err := source.Snapshot(version, streamWriter3)
+		require.NoError(t, err)
+	}()
+	streamReader3, err := snapshots.NewStreamReader(chunks3)
 	require.NoError(t, err)
-	err = target3.Restore(version, snapshottypes.CurrentFormat, chunks, ready3)
+	_, err = target3.Restore(version, snapshottypes.CurrentFormat, streamReader3)
 	require.Error(t, err)
 }
 
@@ -241,8 +256,13 @@ func benchmarkMultistoreSnapshot(b *testing.B, stores int, storeKeys uint64) {
 		target := newMultiStore(nil, memdb.NewDB(), stores)
 		require.EqualValues(b, 0, target.LastCommitID().Version)
 
-		chunks, err := source.Snapshot(uint64(version), snapshottypes.CurrentFormat)
-		require.NoError(b, err)
+		chunks := make(chan io.ReadCloser)
+		go func() {
+			streamWriter := snapshots.NewStreamWriter(chunks)
+			require.NotNil(b, streamWriter)
+			err := source.Snapshot(uint64(version), streamWriter)
+			require.NoError(b, err)
+		}()
 		for reader := range chunks {
 			_, err := io.Copy(io.Discard, reader)
 			require.NoError(b, err)
@@ -266,11 +286,18 @@ func benchmarkMultistoreSnapshotRestore(b *testing.B, stores int, storeKeys uint
 		target := newMultiStore(nil, memdb.NewDB(), stores)
 		require.EqualValues(b, 0, target.LastCommitID().Version)
 
-		chunks, err := source.Snapshot(version, snapshottypes.CurrentFormat)
+		chunks := make(chan io.ReadCloser)
+		go func() {
+			writer := snapshots.NewStreamWriter(chunks)
+			require.NotNil(b, writer)
+			err := source.Snapshot(version, writer)
+			require.NoError(b, err)
+		}()
+
+		reader, err := snapshots.NewStreamReader(chunks)
 		require.NoError(b, err)
-		err = target.Restore(version, snapshottypes.CurrentFormat, chunks, nil)
+		_, err = target.Restore(version, snapshottypes.CurrentFormat, reader)
 		require.NoError(b, err)
 		require.Equal(b, source.LastCommitID(), target.LastCommitID())
 	}
 }
-

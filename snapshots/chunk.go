@@ -1,10 +1,7 @@
 package snapshots
 
 import (
-	"bufio"
-	"compress/zlib"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	protoio "github.com/gogo/protobuf/io"
 	"io"
 	"math"
 
@@ -182,45 +179,4 @@ func ValidRestoreHeight(format uint32, height uint64) error {
 	}
 
 	return nil
-}
-
-// SetupExportStreamPipeline returns setup for snapshot export stream pipeline
-func SetupExportStreamPipeline(ch chan io.ReadCloser) (*ChunkWriter, *bufio.Writer, *zlib.Writer, protoio.WriteCloser, error) {
-	var (
-		snapshotChunkSize  = uint64(10e6)
-		snapshotBufferSize = int(snapshotChunkSize)
-	)
-
-	// Set up a stream pipeline to serialize snapshot nodes:
-	// Export KV Item -> delimited Protobuf -> zlib -> buffer -> chunkWriter -> chan io.ReadCloser
-	chunkWriter := NewChunkWriter(ch, snapshotChunkSize)
-	bufWriter := bufio.NewWriterSize(chunkWriter, snapshotBufferSize)
-	// zlib compression levels:  https://www.euccas.me/zlib/#zlib_compression_levels
-	// zlib default compression level 6
-	// level 0 :  no compression and fastest
-	// ....
-	// level 7 : average compression and average speed
-	// ...
-	// level 9 : highest compression and speed is slower
-	zWriter, err := zlib.NewWriterLevel(bufWriter, 7)
-	if err != nil {
-		chunkWriter.CloseWithError(sdkerrors.Wrap(err, "zlib failure"))
-		return nil, nil, nil, nil, err
-	}
-	protoWriter := protoio.NewDelimitedWriter(zWriter)
-
-	return chunkWriter, bufWriter, zWriter, protoWriter, nil
-}
-
-// SetupRestoreStreamPipeline return setup for snapshot restore pipiline
-func SetupRestoreStreamPipeline(chunks <-chan io.ReadCloser) (*ChunkReader, io.ReadCloser, protoio.ReadCloser, error) {
-	var snapshotMaxItemSize = int(64e6) // SDK has no key/value size limit, so we set an arbitrary limit
-	// chan io.ReadCloser -> chunkReader -> zlib -> delimited Protobuf -> Exported KV Item
-	chunkReader := NewChunkReader(chunks)
-	zReader, err := zlib.NewReader(chunkReader)
-	if err != nil {
-		return nil, nil, nil, sdkerrors.Wrap(err, "zlib failure")
-	}
-	protoReader := protoio.NewDelimitedReader(zReader, snapshotMaxItemSize)
-	return chunkReader, zReader, protoReader, nil
 }

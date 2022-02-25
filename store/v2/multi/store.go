@@ -13,7 +13,6 @@ import (
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	prefixdb "github.com/cosmos/cosmos-sdk/db/prefix"
 	util "github.com/cosmos/cosmos-sdk/internal"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -125,6 +124,8 @@ type viewStore struct {
 }
 
 type viewSubstore struct {
+	root                 *viewStore
+	name                 string
 	dataBucket           dbm.DBReader
 	indexBucket          dbm.DBReader
 	stateCommitmentStore *smt.Store
@@ -895,12 +896,3 @@ func (tlm *traceListenMixin) wrapTraceListen(store types.KVStore, skey types.Sto
 
 func (s *Store) GetPruning() types.PruningOptions   { return s.Pruning }
 func (s *Store) SetPruning(po types.PruningOptions) { s.Pruning = po }
-
-func (rs *Store) Restore(
-	height uint64, format uint32, protoReader protoio.Reader,
-) (snapshottypes.SnapshotItem, error) {
-	return snapshottypes.SnapshotItem{}, nil
-}
-func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
-	return nil
-}

@@ -471,12 +471,11 @@ func TestAddGrantPeriodicVestingAcc_FullSlash(t *testing.T) {
 	bacc, _ := initBaseAccount()
 	origCoins := c(stake(100))
 	pva := types.NewPeriodicVestingAccount(bacc, origCoins, now.Unix(), periods)
-	addr := pva.GetAddress()
 
 	// simulate all 100stake lost to slashing
 	pva.DelegatedVesting = c(stake(100))
 
-	// Nothing locked at now+150 since all unvested lost to slashign
+	// Nothing locked at now+150 since all unvested lost to slashing
 	require.Equal(t, int64(0), pva.LockedCoins(ctx.WithBlockTime(now.Add(150*time.Second))).AmountOf(stakeDenom).Int64())
 
 	// Add a new grant of 50stake
@@ -484,22 +483,8 @@ func TestAddGrantPeriodicVestingAcc_FullSlash(t *testing.T) {
 	pva.AddGrant(ctx, app.StakingKeeper, now.Add(500*time.Second).Unix(), []types.Period{{Length: 50, Amount: newGrant}}, newGrant)
 	app.AccountKeeper.SetAccount(ctx, pva)
 
-	// The new 50 are locked at now+150
-	require.Equal(t, int64(50), pva.LockedCoins(ctx.WithBlockTime(now.Add(150*time.Second))).AmountOf(stakeDenom).Int64())
-
-	// fund the vesting account with new grant (old has vested and transferred out)
-	ctx = ctx.WithBlockTime(now.Add(500 * time.Second))
-	err := simapp.FundAccount(app.BankKeeper, ctx, addr, newGrant)
-	require.NoError(t, err)
-	require.Equal(t, int64(50), app.BankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
-
-	// we should not be able to transfer the new grant out until it has vested
-	_, _, dest := testdata.KeyTestPubAddr()
-	err = app.BankKeeper.SendCoins(ctx, addr, dest, c(stake(1)))
-	require.Error(t, err)
-	ctx = ctx.WithBlockTime(now.Add(600 * time.Second))
-	err = app.BankKeeper.SendCoins(ctx, addr, dest, newGrant)
-	require.NoError(t, err)
+	// Only 10 of the new grant locked, since 40 fell into the "hole" of slashed-vested
+	require.Equal(t, int64(10), pva.LockedCoins(ctx.WithBlockTime(now.Add(150*time.Second))).AmountOf(stakeDenom).Int64())
 }
 
 func TestGetVestedCoinsPeriodicVestingAcc(t *testing.T) {

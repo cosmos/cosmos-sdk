@@ -376,18 +376,10 @@ func (pva *PeriodicVestingAccount) AddGrant(ctx sdk.Context, sk StakingKeeper, g
 	oldDelegated := pva.DelegatedVesting.Add(pva.DelegatedFree...)
 	slashed := oldDelegated.Sub(coinsMin(oldDelegated, delegated))
 
-	// We need to remember the unvested funds eaten by slashing.
-	// We do this by removing these funds from the last vesting.
-	unvestedSlashed := coinsMin(slashed, pva.OriginalVesting)
-	if !unvestedSlashed.IsZero() {
-		newOrigVesting := pva.OriginalVesting.Sub(unvestedSlashed)
-		newStart, newEnd, newPeriods := ConjunctPeriods(pva.GetStartTime(), pva.GetStartTime(), pva.GetVestingPeriods(),
-			[]Period{{Length: 1, Amount: newOrigVesting}})
-		pva.OriginalVesting = newOrigVesting
-		pva.StartTime = newStart
-		pva.EndTime = newEnd
-		pva.VestingPeriods = newPeriods
-	}
+	// rebase the DV+DF by capping slashed at the current unvested amount
+	unvested := pva.GetVestingCoins(ctx.BlockTime())
+	newSlashed := coinsMin(unvested, slashed)
+	newTotalDelegated := delegated.Add(newSlashed...)
 
 	// modify vesting schedule for the new grant
 	newStart, newEnd, newPeriods := DisjunctPeriods(pva.StartTime, grantStartTime,
@@ -397,10 +389,10 @@ func (pva *PeriodicVestingAccount) AddGrant(ctx sdk.Context, sk StakingKeeper, g
 	pva.VestingPeriods = newPeriods
 	pva.OriginalVesting = pva.OriginalVesting.Add(grantCoins...)
 
-	// cap DV at the current unvested amount, DF rounds out to current delegated
-	unvested := pva.GetVestingCoins(ctx.BlockTime())
-	pva.DelegatedVesting = coinsMin(delegated, unvested)
-	pva.DelegatedFree = delegated.Sub(pva.DelegatedVesting)
+	// cap DV at the current unvested amount, DF rounds out to newTotalDelegated
+	unvested2 := pva.GetVestingCoins(ctx.BlockTime())
+	pva.DelegatedVesting = coinsMin(newTotalDelegated, unvested2)
+	pva.DelegatedFree = newTotalDelegated.Sub(pva.DelegatedVesting)
 }
 
 // Delayed Vesting Account

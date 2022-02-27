@@ -72,7 +72,7 @@ type AminoUnpacker struct {
 	Cdc *amino.Codec
 }
 
-var _ AnyUnpacker = AminoUnpacker{}
+var _ AnyUnpacker = AminoUnpacker{} // nolint: exhaustivestruct
 
 func (a AminoUnpacker) UnpackAny(any *Any, iface interface{}) error {
 	ac := any.compat
@@ -109,7 +109,7 @@ type AminoPacker struct {
 	Cdc *amino.Codec
 }
 
-var _ AnyUnpacker = AminoPacker{}
+var _ AnyUnpacker = AminoPacker{} // nolint: exhaustivestruct
 
 func (a AminoPacker) UnpackAny(any *Any, _ interface{}) error {
 	err := UnpackInterfaces(any.cachedValue, a)
@@ -130,7 +130,7 @@ type AminoJSONUnpacker struct {
 	Cdc *amino.Codec
 }
 
-var _ AnyUnpacker = AminoJSONUnpacker{}
+var _ AnyUnpacker = AminoJSONUnpacker{} // nolint: exhaustivestruct
 
 func (a AminoJSONUnpacker) UnpackAny(any *Any, iface interface{}) error {
 	ac := any.compat
@@ -167,7 +167,7 @@ type AminoJSONPacker struct {
 	Cdc *amino.Codec
 }
 
-var _ AnyUnpacker = AminoJSONPacker{}
+var _ AnyUnpacker = AminoJSONPacker{} // nolint: exhaustivestruct
 
 func (a AminoJSONPacker) UnpackAny(any *Any, _ interface{}) error {
 	err := UnpackInterfaces(any.cachedValue, a)
@@ -187,7 +187,7 @@ type ProtoJSONPacker struct {
 	JSONPBMarshaler *jsonpb.Marshaler
 }
 
-var _ AnyUnpacker = ProtoJSONPacker{}
+var _ AnyUnpacker = ProtoJSONPacker{} // nolint: exhaustivestruct
 
 func (a ProtoJSONPacker) UnpackAny(any *Any, _ interface{}) error {
 	if any == nil {

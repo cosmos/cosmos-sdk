@@ -21,7 +21,7 @@ func DefaultGenesisState() *GenesisState {
 	return &GenesisState{}
 }
 
-var _ cdctypes.UnpackInterfacesMessage = GenesisState{}
+var _ cdctypes.UnpackInterfacesMessage = GenesisState{} // nolint: exhaustivestruct
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (data GenesisState) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {

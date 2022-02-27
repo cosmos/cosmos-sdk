@@ -13,7 +13,7 @@ import (
 // signModeDirectHandler defines the SIGN_MODE_DIRECT SignModeHandler
 type signModeDirectHandler struct{}
 
-var _ signing.SignModeHandler = signModeDirectHandler{} // nolint: exhaustivestruct
+var _ signing.SignModeHandler = signModeDirectHandler{}
 
 // DefaultMode implements SignModeHandler.DefaultMode
 func (signModeDirectHandler) DefaultMode() signingtypes.SignMode {

@@ -6,6 +6,8 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -18,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var (
@@ -33,7 +34,7 @@ var (
 // This is where apps can define their own PubKey
 type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
 
-var _ tx.Handler = setPubKeyTxHandler{}
+var _ tx.Handler = setPubKeyTxHandler{} // nolint: exhaustivestruct
 
 type setPubKeyTxHandler struct {
 	ak   AccountKeeper
@@ -150,7 +151,7 @@ func (spkm setPubKeyTxHandler) SimulateTx(ctx context.Context, req tx.Request) (
 	return spkm.next.SimulateTx(ctx, req)
 }
 
-var _ tx.Handler = validateSigCountTxHandler{}
+var _ tx.Handler = validateSigCountTxHandler{} // nolint: exhaustivestruct
 
 type validateSigCountTxHandler struct {
 	ak   AccountKeeper
@@ -286,7 +287,7 @@ func ConsumeMultisignatureVerificationGas(
 	return nil
 }
 
-var _ tx.Handler = sigGasConsumeTxHandler{}
+var _ tx.Handler = sigGasConsumeTxHandler{} // nolint: exhaustivestruct
 
 type sigGasConsumeTxHandler struct {
 	ak             AccountKeeper
@@ -385,7 +386,7 @@ func (sgcm sigGasConsumeTxHandler) SimulateTx(ctx context.Context, req tx.Reques
 	return sgcm.next.SimulateTx(ctx, req)
 }
 
-var _ tx.Handler = sigVerificationTxHandler{}
+var _ tx.Handler = sigVerificationTxHandler{} // nolint: exhaustivestruct
 
 type sigVerificationTxHandler struct {
 	ak              AccountKeeper
@@ -537,7 +538,7 @@ func (svd sigVerificationTxHandler) SimulateTx(ctx context.Context, req tx.Reque
 	return svd.next.SimulateTx(ctx, req)
 }
 
-var _ tx.Handler = incrementSequenceTxHandler{}
+var _ tx.Handler = incrementSequenceTxHandler{} // nolint: exhaustivestruct
 
 type incrementSequenceTxHandler struct {
 	ak   AccountKeeper

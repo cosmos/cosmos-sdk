@@ -19,7 +19,7 @@ const (
 	TypeEquivocation  = "equivocation"
 )
 
-var _ exported.Evidence = &Equivocation{}
+var _ exported.Evidence = &Equivocation{} // nolint: exhaustivestruct
 
 // Route returns the Evidence Handler route for an Equivocation type.
 func (e *Equivocation) Route() string { return RouteEquivocation }

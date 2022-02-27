@@ -197,7 +197,7 @@ func ParseABCILogs(logs string) (res ABCIMessageLogs, err error) {
 	return res, err
 }
 
-var _, _ codectypes.UnpackInterfacesMessage = SearchTxsResult{}, TxResponse{}
+var _, _ codectypes.UnpackInterfacesMessage = SearchTxsResult{}, TxResponse{} // nolint: exhaustivestruct
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 //

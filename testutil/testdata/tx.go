@@ -80,7 +80,7 @@ func (msg *TestMsg) ValidateBasic() error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgCreateDog{}
+var _ sdk.Msg = &MsgCreateDog{} // nolint: exhaustivestruct
 
 func (msg *MsgCreateDog) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{} }
 func (msg *MsgCreateDog) ValidateBasic() error         { return nil }

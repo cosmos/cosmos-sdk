@@ -6,7 +6,7 @@ import (
 )
 
 // Implements StakingHooks interface
-var _ types.StakingHooks = Keeper{}
+var _ types.StakingHooks = Keeper{} // nolint: exhaustivestruct
 
 // AfterValidatorCreated - call hook if registered
 func (k Keeper) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error {

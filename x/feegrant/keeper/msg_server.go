@@ -21,7 +21,7 @@ func NewMsgServerImpl(k Keeper) feegrant.MsgServer {
 	}
 }
 
-var _ feegrant.MsgServer = msgServer{}
+var _ feegrant.MsgServer = msgServer{} // nolint: exhaustivestruct
 
 // GrantAllowance grants an allowance from the granter's funds to be used by the grantee.
 func (k msgServer) GrantAllowance(goCtx context.Context, msg *feegrant.MsgGrantAllowance) (*feegrant.MsgGrantAllowanceResponse, error) {

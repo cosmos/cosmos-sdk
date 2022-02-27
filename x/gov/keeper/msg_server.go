@@ -12,8 +12,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 type msgServer struct {
@@ -26,7 +26,7 @@ func NewMsgServerImpl(keeper Keeper) v1.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
-var _ v1.MsgServer = msgServer{}
+var _ v1.MsgServer = msgServer{} // nolint: exhaustivestruct
 
 func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitProposal) (*v1.MsgSubmitProposalResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -218,7 +218,7 @@ func NewLegacyMsgServerImpl(govAcct string, v1Server v1.MsgServer) v1beta1.MsgSe
 	return &legacyMsgServer{govAcct: govAcct, server: v1Server}
 }
 
-var _ v1beta1.MsgServer = legacyMsgServer{}
+var _ v1beta1.MsgServer = legacyMsgServer{} // nolint: exhaustivestruct
 
 func (k legacyMsgServer) SubmitProposal(goCtx context.Context, msg *v1beta1.MsgSubmitProposal) (*v1beta1.MsgSubmitProposalResponse, error) {
 	contentMsg, err := v1.NewLegacyContent(msg.GetContent(), k.govAcct)

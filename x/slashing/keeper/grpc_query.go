@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ types.QueryServer = Keeper{} // nolint: exhaustivestruct
 
 func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	if req == nil {

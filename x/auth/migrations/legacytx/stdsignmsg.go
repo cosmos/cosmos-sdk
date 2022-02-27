@@ -5,7 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ types.UnpackInterfacesMessage = StdSignMsg{}
+var _ types.UnpackInterfacesMessage = StdSignMsg{} // nolint: exhaustivestruct
 
 // StdSignMsg is a convenience structure for passing along a Msg with the other
 // requirements for a StdSignDoc before it is signed. For use in the CLI.

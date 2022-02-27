@@ -119,4 +119,4 @@ func (f fileDescriptorDB) EncodeEntry(entry ormkv.Entry) (k, v []byte, err error
 	return table.EncodeEntry(entry)
 }
 
-var _ ormkv.EntryCodec = fileDescriptorDB{}
+var _ ormkv.EntryCodec = fileDescriptorDB{} // nolint: exhaustivestruct

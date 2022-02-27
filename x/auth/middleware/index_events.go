@@ -25,7 +25,7 @@ func NewIndexEventsTxMiddleware(indexEvents map[string]struct{}) tx.Middleware {
 	}
 }
 
-var _ tx.Handler = indexEventsTxHandler{}
+var _ tx.Handler = indexEventsTxHandler{} // nolint: exhaustivestruct
 
 // CheckTx implements tx.Handler.CheckTx method.
 func (txh indexEventsTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {

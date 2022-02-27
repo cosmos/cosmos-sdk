@@ -37,7 +37,7 @@ func (pc MockParamChange) SimValue() simtypes.SimValFn {
 }
 
 // make sure that the MockParamChange satisfied the ParamChange interface
-var _ simtypes.ParamChange = MockParamChange{}
+var _ simtypes.ParamChange = MockParamChange{} // nolint: exhaustivestruct
 
 func TestSimulateParamChangeProposalContent(t *testing.T) {
 	s := rand.NewSource(1)

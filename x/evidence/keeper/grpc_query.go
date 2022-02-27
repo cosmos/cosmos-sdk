@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ types.QueryServer = Keeper{} // nolint: exhaustivestruct
 
 // Evidence implements the Query/Evidence gRPC method
 func (k Keeper) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*types.QueryEvidenceResponse, error) {

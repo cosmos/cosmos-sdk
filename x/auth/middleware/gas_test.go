@@ -94,7 +94,7 @@ type customTxHandler struct {
 	fn func(context.Context, tx.Request) (tx.Response, error)
 }
 
-var _ tx.Handler = customTxHandler{}
+var _ tx.Handler = customTxHandler{} // nolint: exhaustivestruct
 
 func (h customTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
 	return h.fn(ctx, req)

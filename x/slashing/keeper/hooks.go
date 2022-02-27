@@ -49,7 +49,7 @@ type Hooks struct {
 	k Keeper
 }
 
-var _ types.StakingHooks = Hooks{}
+var _ types.StakingHooks = Hooks{} // nolint: exhaustivestruct
 
 // Return the wrapper struct
 func (k Keeper) Hooks() Hooks {

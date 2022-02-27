@@ -20,7 +20,7 @@ func NewSeqCodec(messageType protoreflect.MessageType, prefix []byte) *SeqCodec 
 	return &SeqCodec{messageType: messageType.Descriptor().FullName(), prefix: prefix}
 }
 
-var _ EntryCodec = &SeqCodec{}
+var _ EntryCodec = &SeqCodec{} // nolint: exhaustivestruct
 
 func (s SeqCodec) DecodeEntry(k, v []byte) (Entry, error) {
 	if !bytes.Equal(k, s.prefix) {

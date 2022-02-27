@@ -126,4 +126,4 @@ func (b *batchStoreWriter) append(entry *batchWriterEntry) {
 	b.curBuf = append(b.curBuf, entry)
 }
 
-var _ Backend = &batchIndexCommitmentWriter{}
+var _ Backend = &batchIndexCommitmentWriter{} // nolint: exhaustivestruct

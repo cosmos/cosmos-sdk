@@ -37,7 +37,7 @@ type DecisionPolicy interface {
 }
 
 // Implements DecisionPolicy Interface
-var _ DecisionPolicy = &ThresholdDecisionPolicy{}
+var _ DecisionPolicy = &ThresholdDecisionPolicy{} // nolint: exhaustivestruct
 
 // NewThresholdDecisionPolicy creates a threshold DecisionPolicy
 func NewThresholdDecisionPolicy(threshold string, votingPeriod time.Duration, minExecutionPeriod time.Duration) DecisionPolicy {
@@ -139,7 +139,7 @@ func (p *ThresholdDecisionPolicy) Validate(g GroupInfo, config Config) error {
 }
 
 // Implements DecisionPolicy Interface
-var _ DecisionPolicy = &PercentageDecisionPolicy{}
+var _ DecisionPolicy = &PercentageDecisionPolicy{} // nolint: exhaustivestruct
 
 // NewPercentageDecisionPolicy creates a new percentage DecisionPolicy
 func NewPercentageDecisionPolicy(percentage string, votingPeriod time.Duration, executionPeriod time.Duration) DecisionPolicy {
@@ -223,7 +223,7 @@ func (p PercentageDecisionPolicy) Allow(tally TallyResult, totalPower string, si
 	return DecisionPolicyResult{Allow: false, Final: false}, nil
 }
 
-var _ orm.Validateable = GroupPolicyInfo{}
+var _ orm.Validateable = GroupPolicyInfo{} // nolint: exhaustivestruct
 
 // NewGroupPolicyInfo creates a new GroupPolicyInfo instance
 func NewGroupPolicyInfo(address sdk.AccAddress, group uint64, admin sdk.AccAddress, metadata string,
@@ -396,7 +396,7 @@ func (v Vote) PrimaryKeyFields() []interface{} {
 	return []interface{}{v.ProposalId, addr.Bytes()}
 }
 
-var _ orm.Validateable = Vote{}
+var _ orm.Validateable = Vote{} // nolint: exhaustivestruct
 
 func (v Vote) ValidateBasic() error {
 

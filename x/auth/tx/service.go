@@ -3,9 +3,10 @@ package tx
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"strings"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/golang/protobuf/proto" // nolint: staticcheck
@@ -39,7 +40,7 @@ func NewTxServer(clientCtx client.Context, simulate baseAppSimulateFn, interface
 	}
 }
 
-var _ txtypes.ServiceServer = txServer{}
+var _ txtypes.ServiceServer = txServer{} // nolint: exhaustivestruct
 
 const (
 	eventFormat = "{eventType}.{eventAttribute}={value}"

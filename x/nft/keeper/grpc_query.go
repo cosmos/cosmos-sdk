@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
-var _ nft.QueryServer = Keeper{}
+var _ nft.QueryServer = Keeper{} // nolint: exhaustivestruct
 
 // Balance return the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
 func (k Keeper) Balance(goCtx context.Context, r *nft.QueryBalanceRequest) (*nft.QueryBalanceResponse, error) {

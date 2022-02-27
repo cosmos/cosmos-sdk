@@ -16,7 +16,7 @@ func NewSoftwareUpgradeProposal(title, description string, plan Plan) gov.Conten
 }
 
 // Implements Proposal Interface
-var _ gov.Content = &SoftwareUpgradeProposal{}
+var _ gov.Content = &SoftwareUpgradeProposal{} // nolint: exhaustivestruct
 
 func init() {
 	gov.RegisterProposalType(ProposalTypeSoftwareUpgrade)
@@ -46,7 +46,7 @@ func NewCancelSoftwareUpgradeProposal(title, description string) gov.Content {
 }
 
 // Implements Proposal Interface
-var _ gov.Content = &CancelSoftwareUpgradeProposal{}
+var _ gov.Content = &CancelSoftwareUpgradeProposal{} // nolint: exhaustivestruct
 
 func (csup *CancelSoftwareUpgradeProposal) GetTitle() string       { return csup.Title }
 func (csup *CancelSoftwareUpgradeProposal) GetDescription() string { return csup.Description }

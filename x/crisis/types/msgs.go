@@ -7,7 +7,7 @@ import (
 )
 
 // ensure Msg interface compliance at compile time
-var _ sdk.Msg = &MsgVerifyInvariant{}
+var _ sdk.Msg = &MsgVerifyInvariant{} // nolint: exhaustivestruct
 
 // NewMsgVerifyInvariant creates a new MsgVerifyInvariant object
 //nolint:interfacer

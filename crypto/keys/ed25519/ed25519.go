@@ -34,8 +34,8 @@ const (
 	keyType = "ed25519"
 )
 
-var _ cryptotypes.PrivKey = &PrivKey{}
-var _ codec.AminoMarshaler = &PrivKey{}
+var _ cryptotypes.PrivKey = &PrivKey{}  // nolint: exhaustivestruct
+var _ codec.AminoMarshaler = &PrivKey{} // nolint: exhaustivestruct
 
 // Bytes returns the privkey byte format.
 func (privKey *PrivKey) Bytes() []byte {
@@ -150,8 +150,8 @@ func GenPrivKeyFromSecret(secret []byte) *PrivKey {
 
 //-------------------------------------
 
-var _ cryptotypes.PubKey = &PubKey{}
-var _ codec.AminoMarshaler = &PubKey{}
+var _ cryptotypes.PubKey = &PubKey{}   // nolint: exhaustivestruct
+var _ codec.AminoMarshaler = &PubKey{} // nolint: exhaustivestruct
 
 // Address is the SHA256-20 of the raw pubkey bytes.
 // It doesn't implement ADR-28 addresses and it must not be used

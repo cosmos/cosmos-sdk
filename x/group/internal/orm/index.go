@@ -19,7 +19,7 @@ type indexer interface {
 	OnUpdate(store sdk.KVStore, rowID RowID, newValue, oldValue interface{}) error
 }
 
-var _ Index = &MultiKeyIndex{}
+var _ Index = &MultiKeyIndex{} // nolint: exhaustivestruct
 
 // MultiKeyIndex is an index where multiple entries can point to the same underlying object as opposite to a unique index
 // where only one entry is allowed.

@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
 
-var _ types.UnpackInterfacesMessage = GenesisState{}
+var _ types.UnpackInterfacesMessage = GenesisState{} // nolint: exhaustivestruct
 
 // NewGenesisState creates a new genesis state for the evidence module.
 func NewGenesisState(e []exported.Evidence) *GenesisState {

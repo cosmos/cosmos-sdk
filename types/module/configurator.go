@@ -55,7 +55,7 @@ func NewConfigurator(cdc codec.Codec, msgServer grpc.Server, queryServer grpc.Se
 	}
 }
 
-var _ Configurator = configurator{}
+var _ Configurator = configurator{} // nolint: exhaustivestruct
 
 // MsgServer implements the Configurator.MsgServer method
 func (c configurator) MsgServer() grpc.Server {

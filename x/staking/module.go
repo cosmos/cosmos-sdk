@@ -38,7 +38,7 @@ type AppModuleBasic struct {
 	cdc codec.Codec
 }
 
-var _ module.AppModuleBasic = AppModuleBasic{}
+var _ module.AppModuleBasic = AppModuleBasic{} // nolint: exhaustivestruct
 
 // Name returns the staking module's name.
 func (AppModuleBasic) Name() string {

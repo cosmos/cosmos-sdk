@@ -30,7 +30,7 @@ type MultiSignatureData struct {
 	Signatures []SignatureData
 }
 
-var _, _ SignatureData = &SingleSignatureData{}, &MultiSignatureData{}
+var _, _ SignatureData = &SingleSignatureData{}, &MultiSignatureData{} // nolint: exhaustivestruct
 
 func (m *SingleSignatureData) isSignatureData() {}
 func (m *MultiSignatureData) isSignatureData()  {}

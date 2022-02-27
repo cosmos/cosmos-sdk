@@ -682,7 +682,7 @@ func (m *IndexModel) Swap(i, j int) {
 	m.data[j] = x
 }
 
-var _ sort.Interface = &IndexModel{}
+var _ sort.Interface = &IndexModel{} // nolint: exhaustivestruct
 
 func TestJSONExportImport(t *testing.T) {
 	table, err := ormtable.Build(ormtable.Options{

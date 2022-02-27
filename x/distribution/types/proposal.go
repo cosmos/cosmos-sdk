@@ -14,7 +14,7 @@ const (
 )
 
 // Assert CommunityPoolSpendProposal implements govtypes.Content at compile-time
-var _ govtypes.Content = &CommunityPoolSpendProposal{}
+var _ govtypes.Content = &CommunityPoolSpendProposal{} // nolint: exhaustivestruct
 
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeCommunityPoolSpend)

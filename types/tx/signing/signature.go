@@ -86,7 +86,7 @@ func SignatureDataFromProto(descData *SignatureDescriptor_Data) SignatureData {
 	}
 }
 
-var _, _ codectypes.UnpackInterfacesMessage = &SignatureDescriptors{}, &SignatureDescriptor{}
+var _, _ codectypes.UnpackInterfacesMessage = &SignatureDescriptors{}, &SignatureDescriptor{} // nolint: exhaustivestruct
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (sds *SignatureDescriptors) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {

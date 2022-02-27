@@ -15,7 +15,7 @@ import (
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
-var _ types.GovHooks = &MockGovHooksReceiver{}
+var _ types.GovHooks = &MockGovHooksReceiver{} // nolint: exhaustivestruct
 
 // GovHooks event hooks for governance proposal object (noalias)
 type MockGovHooksReceiver struct {

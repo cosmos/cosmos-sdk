@@ -19,7 +19,7 @@ type UniqueKeyCodec struct {
 	valueCodec *KeyCodec
 }
 
-var _ IndexCodec = &UniqueKeyCodec{}
+var _ IndexCodec = &UniqueKeyCodec{} // nolint: exhaustivestruct
 
 // NewUniqueKeyCodec creates a new UniqueKeyCodec with an optional prefix for the
 // provided message descriptor, index and primary key fields.

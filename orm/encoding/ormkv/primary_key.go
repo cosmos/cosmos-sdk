@@ -17,7 +17,7 @@ type PrimaryKeyCodec struct {
 	unmarshalOptions proto.UnmarshalOptions
 }
 
-var _ IndexCodec = &PrimaryKeyCodec{}
+var _ IndexCodec = &PrimaryKeyCodec{} // nolint: exhaustivestruct
 
 // NewPrimaryKeyCodec creates a new PrimaryKeyCodec for the provided msg and
 // fields, with an optional prefix and unmarshal options.
@@ -33,7 +33,7 @@ func NewPrimaryKeyCodec(prefix []byte, msgType protoreflect.MessageType, fieldNa
 	}, nil
 }
 
-var _ IndexCodec = PrimaryKeyCodec{}
+var _ IndexCodec = PrimaryKeyCodec{} // nolint: exhaustivestruct
 
 func (p PrimaryKeyCodec) DecodeIndexKey(k, _ []byte) (indexFields, primaryKey []protoreflect.Value, err error) {
 	indexFields, err = p.DecodeKey(bytes.NewReader(k))

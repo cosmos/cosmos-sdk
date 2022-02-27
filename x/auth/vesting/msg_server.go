@@ -25,7 +25,7 @@ func NewMsgServerImpl(k keeper.AccountKeeper, bk types.BankKeeper) types.MsgServ
 	return &msgServer{AccountKeeper: k, BankKeeper: bk}
 }
 
-var _ types.MsgServer = msgServer{}
+var _ types.MsgServer = msgServer{} // nolint: exhaustivestruct
 
 func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCreateVestingAccount) (*types.MsgCreateVestingAccountResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

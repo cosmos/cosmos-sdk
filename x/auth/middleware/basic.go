@@ -3,6 +3,8 @@ package middleware
 import (
 	"context"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -12,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 type validateBasicTxHandler struct {
@@ -30,7 +31,7 @@ func ValidateBasicMiddleware(txh tx.Handler) tx.Handler {
 	}
 }
 
-var _ tx.Handler = validateBasicTxHandler{}
+var _ tx.Handler = validateBasicTxHandler{} // nolint: exhaustivestruct
 
 // validateBasicTxMsgs executes basic validator calls for messages.
 func validateBasicTxMsgs(msgs []sdk.Msg) error {
@@ -92,7 +93,7 @@ func (txh validateBasicTxHandler) SimulateTx(ctx context.Context, req tx.Request
 	return txh.next.SimulateTx(ctx, req)
 }
 
-var _ tx.Handler = txTimeoutHeightTxHandler{}
+var _ tx.Handler = txTimeoutHeightTxHandler{} // nolint: exhaustivestruct
 
 type txTimeoutHeightTxHandler struct {
 	next tx.Handler
@@ -167,7 +168,7 @@ func ValidateMemoMiddleware(ak AccountKeeper) tx.Middleware {
 	}
 }
 
-var _ tx.Handler = validateMemoTxHandler{}
+var _ tx.Handler = validateMemoTxHandler{} // nolint: exhaustivestruct
 
 func (vmm validateMemoTxHandler) checkForValidMemo(ctx context.Context, tx sdk.Tx) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -216,7 +217,7 @@ func (vmm validateMemoTxHandler) SimulateTx(ctx context.Context, req tx.Request)
 	return vmm.next.SimulateTx(ctx, req)
 }
 
-var _ tx.Handler = consumeTxSizeGasTxHandler{}
+var _ tx.Handler = consumeTxSizeGasTxHandler{} // nolint: exhaustivestruct
 
 type consumeTxSizeGasTxHandler struct {
 	ak   AccountKeeper

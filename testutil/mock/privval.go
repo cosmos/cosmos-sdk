@@ -12,7 +12,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
-var _ tmtypes.PrivValidator = PV{}
+var _ tmtypes.PrivValidator = PV{} // nolint: exhaustivestruct
 
 // MockPV implements PrivValidator without any safety or persistence.
 // Only use it for testing.

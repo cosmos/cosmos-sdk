@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-var _ types.UnpackInterfacesMessage = GenesisState{}
+var _ types.UnpackInterfacesMessage = GenesisState{} // nolint: exhaustivestruct
 
 // RandomGenesisAccountsFn defines the function required to generate custom account types
 type RandomGenesisAccountsFn func(simState *module.SimulationState) GenesisAccounts

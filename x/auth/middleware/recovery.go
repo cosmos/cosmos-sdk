@@ -21,7 +21,7 @@ func RecoveryTxMiddleware(txh tx.Handler) tx.Handler {
 	return recoveryTxHandler{next: txh}
 }
 
-var _ tx.Handler = recoveryTxHandler{}
+var _ tx.Handler = recoveryTxHandler{} // nolint: exhaustivestruct
 
 // CheckTx implements tx.Handler.CheckTx method.
 func (txh recoveryTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (res tx.Response, resCheckTx tx.ResponseCheckTx, err error) {

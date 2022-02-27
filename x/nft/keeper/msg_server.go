@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
-var _ nft.MsgServer = Keeper{}
+var _ nft.MsgServer = Keeper{} // nolint: exhaustivestruct
 
 // Send implement Send method of the types.MsgServer.
 func (k Keeper) Send(goCtx context.Context, msg *nft.MsgSend) (*nft.MsgSendResponse, error) {

@@ -16,7 +16,7 @@ type SignModeHandlerMap struct {
 	signModeHandlers map[signing.SignMode]SignModeHandler
 }
 
-var _ SignModeHandler = SignModeHandlerMap{}
+var _ SignModeHandler = SignModeHandlerMap{} // nolint: exhaustivestruct
 
 // NewSignModeHandlerMap returns a new SignModeHandlerMap with the provided defaultMode and handlers
 func NewSignModeHandlerMap(defaultMode signing.SignMode, handlers []SignModeHandler) SignModeHandlerMap {

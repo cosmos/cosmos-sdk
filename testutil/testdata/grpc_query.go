@@ -11,7 +11,7 @@ import (
 
 type QueryImpl struct{}
 
-var _ QueryServer = QueryImpl{}
+var _ QueryServer = QueryImpl{} // nolint: exhaustivestruct
 
 func (e QueryImpl) TestAny(_ context.Context, request *TestAnyRequest) (*TestAnyResponse, error) {
 	animal, ok := request.AnyAnimal.GetCachedValue().(Animal)
@@ -39,14 +39,14 @@ func (e QueryImpl) SayHello(_ context.Context, request *SayHelloRequest) (*SayHe
 	return &SayHelloResponse{Greeting: greeting}, nil
 }
 
-var _ types.UnpackInterfacesMessage = &TestAnyRequest{}
+var _ types.UnpackInterfacesMessage = &TestAnyRequest{} // nolint: exhaustivestruct
 
 func (m *TestAnyRequest) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var animal Animal
 	return unpacker.UnpackAny(m.AnyAnimal, &animal)
 }
 
-var _ types.UnpackInterfacesMessage = &TestAnyResponse{}
+var _ types.UnpackInterfacesMessage = &TestAnyResponse{} // nolint: exhaustivestruct
 
 func (m *TestAnyResponse) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return m.HasAnimal.UnpackInterfaces(unpacker)

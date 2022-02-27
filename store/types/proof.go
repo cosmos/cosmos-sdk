@@ -31,7 +31,7 @@ type CommitmentOp struct {
 	Proof *ics23.CommitmentProof
 }
 
-var _ merkle.ProofOperator = CommitmentOp{}
+var _ merkle.ProofOperator = CommitmentOp{} // nolint: exhaustivestruct
 
 func NewIavlCommitmentOp(key []byte, proof *ics23.CommitmentProof) CommitmentOp {
 	return CommitmentOp{

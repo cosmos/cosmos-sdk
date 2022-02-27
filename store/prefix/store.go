@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-var _ types.KVStore = Store{}
+var _ types.KVStore = Store{} // nolint: exhaustivestruct
 
 // Store is similar with tendermint/tendermint/libs/db/prefix_db
 // both gives access only to the limited subset of the store

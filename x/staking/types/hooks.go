@@ -5,7 +5,7 @@ import (
 )
 
 // combine multiple staking hooks, all hook functions are run in array sequence
-var _ StakingHooks = &MultiStakingHooks{}
+var _ StakingHooks = &MultiStakingHooks{} // nolint: exhaustivestruct
 
 type MultiStakingHooks []StakingHooks
 

@@ -31,7 +31,7 @@ type Store struct {
 	listeners map[types.StoreKey][]types.WriteListener
 }
 
-var _ types.CacheMultiStore = Store{}
+var _ types.CacheMultiStore = Store{} // nolint: exhaustivestruct
 
 // NewFromKVStore creates a new Store object from a mapping of store keys to
 // CacheWrapper objects and a KVStore as the database. Each CacheWrapper store

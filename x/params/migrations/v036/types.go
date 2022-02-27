@@ -34,7 +34,7 @@ const (
 )
 
 // Assert ParameterChangeProposal implements v036gov.Content at compile-time
-var _ v036gov.Content = ParameterChangeProposal{}
+var _ v036gov.Content = ParameterChangeProposal{} // nolint: exhaustivestruct
 
 // ParameterChangeProposal defines a proposal which contains multiple parameter
 // changes.

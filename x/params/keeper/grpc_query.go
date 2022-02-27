@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
-var _ proposal.QueryServer = Keeper{}
+var _ proposal.QueryServer = Keeper{} // nolint: exhaustivestruct
 
 // Params returns subspace params
 func (k Keeper) Params(c context.Context, req *proposal.QueryParamsRequest) (*proposal.QueryParamsResponse, error) {

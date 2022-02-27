@@ -19,7 +19,7 @@ type MsgServiceRouter struct {
 	routes            map[string]MsgServiceHandler
 }
 
-var _ gogogrpc.Server = &MsgServiceRouter{}
+var _ gogogrpc.Server = &MsgServiceRouter{} // nolint: exhaustivestruct
 
 // NewMsgServiceRouter creates a new MsgServiceRouter.
 func NewMsgServiceRouter(registry codectypes.InterfaceRegistry) *MsgServiceRouter {

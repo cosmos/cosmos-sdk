@@ -64,7 +64,7 @@ type AccountKeeper struct {
 	addressCdc address.Codec
 }
 
-var _ AccountKeeperI = &AccountKeeper{}
+var _ AccountKeeperI = &AccountKeeper{} // nolint: exhaustivestruct
 
 // NewAccountKeeper returns a new AccountKeeperI that uses go-amino to
 // (binary) encode and decode concrete sdk.Accounts.

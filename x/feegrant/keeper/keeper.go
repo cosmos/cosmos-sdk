@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/tendermint/tendermint/libs/log"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,7 +23,7 @@ type Keeper struct {
 	authKeeper feegrant.AccountKeeper
 }
 
-var _ middleware.FeegrantKeeper = &Keeper{}
+var _ middleware.FeegrantKeeper = &Keeper{} // nolint: exhaustivestruct
 
 // NewKeeper creates a fee grant Keeper
 func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak feegrant.AccountKeeper) Keeper {

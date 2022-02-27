@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-var _ types.KVStore = Store{}
+var _ types.KVStore = Store{} // nolint: exhaustivestruct
 
 // Wrapper type for dbm.Db with implementation of KVStore
 type Store struct {

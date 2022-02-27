@@ -89,7 +89,7 @@ func NewGenesisState(
 	}
 }
 
-var _ v036gov.Content = CommunityPoolSpendProposal{}
+var _ v036gov.Content = CommunityPoolSpendProposal{} // nolint: exhaustivestruct
 
 // GetTitle returns the title of a community pool spend proposal.
 func (csp CommunityPoolSpendProposal) GetTitle() string { return csp.Title }

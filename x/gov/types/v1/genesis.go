@@ -56,7 +56,7 @@ func ValidateGenesis(data *GenesisState) error {
 	return nil
 }
 
-var _ types.UnpackInterfacesMessage = GenesisState{}
+var _ types.UnpackInterfacesMessage = GenesisState{} // nolint: exhaustivestruct
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (data GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {

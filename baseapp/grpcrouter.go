@@ -30,7 +30,7 @@ type serviceData struct {
 	handler     interface{}
 }
 
-var _ gogogrpc.Server = &GRPCQueryRouter{}
+var _ gogogrpc.Server = &GRPCQueryRouter{} // nolint: exhaustivestruct
 
 // NewGRPCQueryRouter creates a new GRPCQueryRouter
 func NewGRPCQueryRouter() *GRPCQueryRouter {

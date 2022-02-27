@@ -262,4 +262,4 @@ func (i indexIterator) Close() {
 
 func (indexIterator) doNotImplement() {}
 
-var _ Iterator = &indexIterator{}
+var _ Iterator = &indexIterator{} // nolint: exhaustivestruct

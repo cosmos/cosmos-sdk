@@ -17,7 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
-var _ authz.QueryServer = Keeper{}
+var _ authz.QueryServer = Keeper{} // nolint: exhaustivestruct
 
 // Authorizations implements the Query/Grants gRPC method.
 func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz.QueryGrantsResponse, error) {
@@ -56,6 +56,7 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 				Authorization: authorizationAny,
 				Expiration:    grant.Expiration,
 			}},
+			Pagination: nil,
 		}, nil
 	}
 

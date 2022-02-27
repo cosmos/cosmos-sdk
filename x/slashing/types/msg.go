@@ -12,7 +12,7 @@ const (
 )
 
 // verify interface at compile time
-var _ sdk.Msg = &MsgUnjail{}
+var _ sdk.Msg = &MsgUnjail{} // nolint: exhaustivestruct
 
 // NewMsgUnjail creates a new MsgUnjail instance
 //nolint:interfacer

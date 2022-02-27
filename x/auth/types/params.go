@@ -26,7 +26,7 @@ var (
 	KeySigVerifyCostSecp256k1 = []byte("SigVerifyCostSecp256k1")
 )
 
-var _ paramtypes.ParamSet = &Params{}
+var _ paramtypes.ParamSet = &Params{} // nolint: exhaustivestruct
 
 // NewParams creates a new Params object
 func NewParams(

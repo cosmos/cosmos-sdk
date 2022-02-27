@@ -12,7 +12,7 @@ const (
 	TypeMsgMultiSend = "multisend"
 )
 
-var _ sdk.Msg = &MsgSend{}
+var _ sdk.Msg = &MsgSend{} // nolint: exhaustivestruct
 
 // NewMsgSend - construct a msg to send coins from one account to another.
 //nolint:interfacer
@@ -58,7 +58,7 @@ func (msg MsgSend) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{fromAddress}
 }
 
-var _ sdk.Msg = &MsgMultiSend{}
+var _ sdk.Msg = &MsgMultiSend{} // nolint: exhaustivestruct
 
 // NewMsgMultiSend - construct arbitrary multi-in, multi-out send msg.
 func NewMsgMultiSend(in []Input, out []Output) *MsgMultiSend {

@@ -17,7 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ baseapp.StreamingService = &StreamingService{}
+var _ baseapp.StreamingService = &StreamingService{} // nolint: exhaustivestruct
 
 // StreamingService is a concrete implementation of StreamingService that writes state changes out to files
 type StreamingService struct {

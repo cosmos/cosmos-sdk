@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-var _ tx.Handler = txPriorityHandler{}
+var _ tx.Handler = txPriorityHandler{} // nolint: exhaustivestruct
 
 type txPriorityHandler struct {
 	next tx.Handler

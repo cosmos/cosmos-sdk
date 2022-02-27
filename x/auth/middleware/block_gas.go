@@ -17,7 +17,7 @@ func ConsumeBlockGasMiddleware(txh tx.Handler) tx.Handler {
 	return consumeBlockGasHandler{next: txh}
 }
 
-var _ tx.Handler = consumeBlockGasHandler{}
+var _ tx.Handler = consumeBlockGasHandler{} // nolint: exhaustivestruct
 
 // CheckTx implements tx.Handler.CheckTx method.
 func (cbgh consumeBlockGasHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (res tx.Response, resCheckTx tx.ResponseCheckTx, err error) {

@@ -236,4 +236,4 @@ func (t *autoIncrementTable) GetTable(message proto.Message) Table {
 	return nil
 }
 
-var _ AutoIncrementTable = &autoIncrementTable{}
+var _ AutoIncrementTable = &autoIncrementTable{} // nolint: exhaustivestruct

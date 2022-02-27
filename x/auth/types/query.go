@@ -7,4 +7,4 @@ func (m *QueryAccountResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker)
 	return unpacker.UnpackAny(m.Account, &account)
 }
 
-var _ codectypes.UnpackInterfacesMessage = &QueryAccountResponse{}
+var _ codectypes.UnpackInterfacesMessage = &QueryAccountResponse{} // nolint: exhaustivestruct

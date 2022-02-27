@@ -92,4 +92,4 @@ func (dsa Store) CacheWrapWithListeners(storeKey types.StoreKey, listeners []typ
 }
 
 // dbm.DB implements KVStore so we can CacheKVStore it.
-var _ types.KVStore = Store{}
+var _ types.KVStore = Store{} // nolint: exhaustivestruct

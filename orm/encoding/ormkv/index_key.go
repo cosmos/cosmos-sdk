@@ -15,7 +15,7 @@ type IndexKeyCodec struct {
 	pkFieldOrder []int
 }
 
-var _ IndexCodec = &IndexKeyCodec{}
+var _ IndexCodec = &IndexKeyCodec{} // nolint: exhaustivestruct
 
 // NewIndexKeyCodec creates a new IndexKeyCodec with an optional prefix for the
 // provided message descriptor, index and primary key fields.

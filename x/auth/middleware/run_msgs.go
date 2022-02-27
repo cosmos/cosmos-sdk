@@ -23,7 +23,7 @@ func NewRunMsgsTxHandler(msr *MsgServiceRouter, legacyRouter sdk.Router) tx.Hand
 	}
 }
 
-var _ tx.Handler = runMsgsTxHandler{}
+var _ tx.Handler = runMsgsTxHandler{} // nolint: exhaustivestruct
 
 // CheckTx implements tx.Handler.CheckTx method.
 func (txh runMsgsTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {

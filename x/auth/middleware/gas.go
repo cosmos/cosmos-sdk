@@ -25,7 +25,7 @@ func GasTxMiddleware(txh tx.Handler) tx.Handler {
 	return gasTxHandler{next: txh}
 }
 
-var _ tx.Handler = gasTxHandler{}
+var _ tx.Handler = gasTxHandler{} // nolint: exhaustivestruct
 
 // CheckTx implements tx.Handler.CheckTx.
 func (txh gasTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {

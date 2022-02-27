@@ -6,7 +6,7 @@ import (
 )
 
 // Implements GovHooks interface
-var _ types.GovHooks = Keeper{}
+var _ types.GovHooks = Keeper{} // nolint: exhaustivestruct
 
 // AfterProposalSubmission - call hook if registered
 func (keeper Keeper) AfterProposalSubmission(ctx sdk.Context, proposalID uint64) {

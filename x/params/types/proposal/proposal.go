@@ -15,7 +15,7 @@ const (
 )
 
 // Assert ParameterChangeProposal implements govtypes.Content at compile-time
-var _ govtypes.Content = &ParameterChangeProposal{}
+var _ govtypes.Content = &ParameterChangeProposal{} // nolint: exhaustivestruct
 
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeChange)

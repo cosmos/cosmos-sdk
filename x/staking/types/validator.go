@@ -35,7 +35,7 @@ var (
 	BondStatusBonded      = BondStatus_name[int32(Bonded)]
 )
 
-var _ ValidatorI = Validator{}
+var _ ValidatorI = Validator{} // nolint: exhaustivestruct
 
 // NewValidator constructs a new Validator
 //nolint:interfacer

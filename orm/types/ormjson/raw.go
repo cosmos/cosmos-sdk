@@ -39,7 +39,7 @@ type readCloserWrapper struct {
 
 func (r readCloserWrapper) Close() error { return nil }
 
-var _ ReadSource = rawMessageSource{}
+var _ ReadSource = rawMessageSource{} // nolint: exhaustivestruct
 
 // RawMessageTarget is a WriteTarget wrapping a raw JSON map.
 type RawMessageTarget struct {
@@ -76,4 +76,4 @@ func (r rawWriter) Close() error {
 	return nil
 }
 
-var _ WriteTarget = &RawMessageTarget{}
+var _ WriteTarget = &RawMessageTarget{} // nolint: exhaustivestruct

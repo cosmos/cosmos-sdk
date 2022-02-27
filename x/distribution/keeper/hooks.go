@@ -11,7 +11,7 @@ type Hooks struct {
 	k Keeper
 }
 
-var _ stakingtypes.StakingHooks = Hooks{}
+var _ stakingtypes.StakingHooks = Hooks{} // nolint: exhaustivestruct
 
 // Create new distribution hooks
 func (k Keeper) Hooks() Hooks { return Hooks{k} }

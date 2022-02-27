@@ -18,7 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
-var _ group.MsgServer = Keeper{}
+var _ group.MsgServer = Keeper{} // nolint: exhaustivestruct
 
 // TODO: Revisit this once we have propoer gas fee framework.
 // Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054, https://github.com/cosmos/cosmos-sdk/discussions/9072

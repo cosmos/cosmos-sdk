@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 )
 
-var _ sdk.Msg = &MsgCreateGroup{}
+var _ sdk.Msg = &MsgCreateGroup{} // nolint: exhaustivestruct
 
 // Route Implements Msg.
 func (m MsgCreateGroup) Route() string { return sdk.MsgTypeURL(&m) }
@@ -69,7 +69,7 @@ func (m Member) ValidateBasic() error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgUpdateGroupAdmin{}
+var _ sdk.Msg = &MsgUpdateGroupAdmin{} // nolint: exhaustivestruct
 
 // Route Implements Msg.
 func (m MsgUpdateGroupAdmin) Route() string {
@@ -119,7 +119,7 @@ func (m *MsgUpdateGroupAdmin) GetGroupID() uint64 {
 	return m.GroupId
 }
 
-var _ sdk.Msg = &MsgUpdateGroupMetadata{}
+var _ sdk.Msg = &MsgUpdateGroupMetadata{} // nolint: exhaustivestruct
 
 // Route Implements Msg.
 func (m MsgUpdateGroupMetadata) Route() string {
@@ -161,7 +161,7 @@ func (m *MsgUpdateGroupMetadata) GetGroupID() uint64 {
 	return m.GroupId
 }
 
-var _ sdk.Msg = &MsgUpdateGroupMembers{}
+var _ sdk.Msg = &MsgUpdateGroupMembers{} // nolint: exhaustivestruct
 
 // Route Implements Msg.
 func (m MsgUpdateGroupMembers) Route() string {
@@ -176,7 +176,7 @@ func (m MsgUpdateGroupMembers) GetSignBytes() []byte {
 	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
 }
 
-var _ sdk.Msg = &MsgUpdateGroupMembers{}
+var _ sdk.Msg = &MsgUpdateGroupMembers{} // nolint: exhaustivestruct
 
 // GetSigners returns the expected signers for a MsgUpdateGroupMembers.
 func (m MsgUpdateGroupMembers) GetSigners() []sdk.AccAddress {
@@ -212,8 +212,8 @@ func (m *MsgUpdateGroupMembers) GetGroupID() uint64 {
 	return m.GroupId
 }
 
-var _ sdk.Msg = &MsgCreateGroupWithPolicy{}
-var _ types.UnpackInterfacesMessage = MsgCreateGroupWithPolicy{}
+var _ sdk.Msg = &MsgCreateGroupWithPolicy{}                      // nolint: exhaustivestruct
+var _ types.UnpackInterfacesMessage = MsgCreateGroupWithPolicy{} // nolint: exhaustivestruct
 
 // NewMsgCreateGroupWithPolicy creates a new MsgCreateGroupWithPolicy.
 func NewMsgCreateGroupWithPolicy(admin string, members []Member, group_metadata string, group_policy_metadata string, groupPolicyAsAdmin bool, decisionPolicy DecisionPolicy) (*MsgCreateGroupWithPolicy, error) {
@@ -308,7 +308,7 @@ func (m MsgCreateGroupWithPolicy) validateMembers() error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgCreateGroupPolicy{}
+var _ sdk.Msg = &MsgCreateGroupPolicy{} // nolint: exhaustivestruct
 
 // Route Implements Msg.
 func (m MsgCreateGroupPolicy) Route() string {
@@ -353,7 +353,7 @@ func (m MsgCreateGroupPolicy) ValidateBasic() error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgUpdateGroupPolicyAdmin{}
+var _ sdk.Msg = &MsgUpdateGroupPolicyAdmin{} // nolint: exhaustivestruct
 
 // Route Implements Msg.
 func (m MsgUpdateGroupPolicyAdmin) Route() string {
@@ -400,8 +400,8 @@ func (m MsgUpdateGroupPolicyAdmin) ValidateBasic() error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgUpdateGroupPolicyDecisionPolicy{}
-var _ types.UnpackInterfacesMessage = MsgUpdateGroupPolicyDecisionPolicy{}
+var _ sdk.Msg = &MsgUpdateGroupPolicyDecisionPolicy{}                      // nolint: exhaustivestruct
+var _ types.UnpackInterfacesMessage = MsgUpdateGroupPolicyDecisionPolicy{} // nolint: exhaustivestruct
 
 func NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin sdk.AccAddress, address sdk.AccAddress, decisionPolicy DecisionPolicy) (*MsgUpdateGroupPolicyDecisionPolicy, error) {
 	m := &MsgUpdateGroupPolicyDecisionPolicy{
@@ -490,7 +490,7 @@ func (m MsgUpdateGroupPolicyDecisionPolicy) UnpackInterfaces(unpacker types.AnyU
 	return unpacker.UnpackAny(m.DecisionPolicy, &decisionPolicy)
 }
 
-var _ sdk.Msg = &MsgUpdateGroupPolicyMetadata{}
+var _ sdk.Msg = &MsgUpdateGroupPolicyMetadata{} // nolint: exhaustivestruct
 
 // Route Implements Msg.
 func (m MsgUpdateGroupPolicyMetadata) Route() string {
@@ -529,8 +529,8 @@ func (m MsgUpdateGroupPolicyMetadata) ValidateBasic() error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgCreateGroupPolicy{}
-var _ types.UnpackInterfacesMessage = MsgCreateGroupPolicy{}
+var _ sdk.Msg = &MsgCreateGroupPolicy{}                      // nolint: exhaustivestruct
+var _ types.UnpackInterfacesMessage = MsgCreateGroupPolicy{} // nolint: exhaustivestruct
 
 // NewMsgCreateGroupPolicy creates a new MsgCreateGroupPolicy.
 func NewMsgCreateGroupPolicy(admin sdk.AccAddress, group uint64, metadata string, decisionPolicy DecisionPolicy) (*MsgCreateGroupPolicy, error) {
@@ -585,7 +585,7 @@ func (m MsgCreateGroupPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error
 	return unpacker.UnpackAny(m.DecisionPolicy, &decisionPolicy)
 }
 
-var _ sdk.Msg = &MsgSubmitProposal{}
+var _ sdk.Msg = &MsgSubmitProposal{} // nolint: exhaustivestruct
 
 // NewMsgSubmitProposalRequest creates a new MsgSubmitProposal.
 func NewMsgSubmitProposalRequest(address string, proposers []string, msgs []sdk.Msg, metadata string, exec Exec) (*MsgSubmitProposal, error) {
@@ -683,7 +683,7 @@ func (m MsgSubmitProposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return tx.UnpackInterfaces(unpacker, m.Messages)
 }
 
-var _ sdk.Msg = &MsgWithdrawProposal{}
+var _ sdk.Msg = &MsgWithdrawProposal{} // nolint: exhaustivestruct
 
 // Route Implements Msg.
 func (m MsgWithdrawProposal) Route() string { return sdk.MsgTypeURL(&m) }
@@ -719,7 +719,7 @@ func (m MsgWithdrawProposal) ValidateBasic() error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgVote{}
+var _ sdk.Msg = &MsgVote{} // nolint: exhaustivestruct
 
 // Route Implements Msg.
 func (m MsgVote) Route() string {
@@ -761,7 +761,7 @@ func (m MsgVote) ValidateBasic() error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgExec{}
+var _ sdk.Msg = &MsgExec{} // nolint: exhaustivestruct
 
 // Route Implements Msg.
 func (m MsgExec) Route() string {

@@ -21,7 +21,7 @@ type StdTxBuilder struct {
 }
 
 // ensure interface implementation
-var _ client.TxBuilder = &StdTxBuilder{}
+var _ client.TxBuilder = &StdTxBuilder{} // nolint: exhaustivestruct
 
 // GetTx implements TxBuilder.GetTx
 func (s *StdTxBuilder) GetTx() authsigning.Tx {
@@ -87,7 +87,7 @@ type StdTxConfig struct {
 	Cdc *codec.LegacyAmino
 }
 
-var _ client.TxConfig = StdTxConfig{}
+var _ client.TxConfig = StdTxConfig{} // nolint: exhaustivestruct
 
 // NewTxBuilder implements TxConfig.NewTxBuilder
 func (s StdTxConfig) NewTxBuilder() client.TxBuilder {

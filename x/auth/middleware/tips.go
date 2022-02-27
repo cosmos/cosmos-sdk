@@ -21,7 +21,7 @@ func NewTipMiddleware(bankKeeper types.BankKeeper) tx.Middleware {
 	}
 }
 
-var _ tx.Handler = tipsTxHandler{}
+var _ tx.Handler = tipsTxHandler{} // nolint: exhaustivestruct
 
 // CheckTx implements tx.Handler.CheckTx.
 func (txh tipsTxHandler) CheckTx(ctx context.Context, req tx.Request, checkTx tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {

@@ -25,4 +25,4 @@ func (q QueryImpl) TestAny(_ context.Context, request *TestAnyRequest) (*TestAny
 	}}, nil
 }
 
-var _ QueryServer = QueryImpl{}
+var _ QueryServer = QueryImpl{} // nolint: exhaustivestruct

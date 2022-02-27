@@ -136,4 +136,4 @@ func (s *SeqEntry) String() string {
 	return fmt.Sprintf("SEQ %s %d", s.TableName, s.Value)
 }
 
-var _, _, _ Entry = &PrimaryKeyEntry{}, &IndexKeyEntry{}, &SeqEntry{}
+var _, _, _ Entry = &PrimaryKeyEntry{}, &IndexKeyEntry{}, &SeqEntry{} // nolint: exhaustivestruct

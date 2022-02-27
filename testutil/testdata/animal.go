@@ -25,7 +25,7 @@ func (d Dog) Greet() string {
 	return fmt.Sprintf("Roof, my name is %s", d.Name)
 }
 
-var _ types.UnpackInterfacesMessage = HasAnimal{}
+var _ types.UnpackInterfacesMessage = HasAnimal{} // nolint: exhaustivestruct
 
 func (m HasAnimal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var animal Animal
@@ -36,7 +36,7 @@ type HasAnimalI interface {
 	TheAnimal() Animal
 }
 
-var _ HasAnimalI = &HasAnimal{}
+var _ HasAnimalI = &HasAnimal{} // nolint: exhaustivestruct
 
 func (m HasAnimal) TheAnimal() Animal {
 	return m.Animal.GetCachedValue().(Animal)
@@ -46,13 +46,13 @@ type HasHasAnimalI interface {
 	TheHasAnimal() HasAnimalI
 }
 
-var _ HasHasAnimalI = &HasHasAnimal{}
+var _ HasHasAnimalI = &HasHasAnimal{} // nolint: exhaustivestruct
 
 func (m HasHasAnimal) TheHasAnimal() HasAnimalI {
 	return m.HasAnimal.GetCachedValue().(HasAnimalI)
 }
 
-var _ types.UnpackInterfacesMessage = HasHasAnimal{}
+var _ types.UnpackInterfacesMessage = HasHasAnimal{} // nolint: exhaustivestruct
 
 func (m HasHasAnimal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var animal HasAnimalI
@@ -63,13 +63,13 @@ type HasHasHasAnimalI interface {
 	TheHasHasAnimal() HasHasAnimalI
 }
 
-var _ HasHasAnimalI = &HasHasAnimal{}
+var _ HasHasAnimalI = &HasHasAnimal{} // nolint: exhaustivestruct
 
 func (m HasHasHasAnimal) TheHasHasAnimal() HasHasAnimalI {
 	return m.HasHasAnimal.GetCachedValue().(HasHasAnimalI)
 }
 
-var _ types.UnpackInterfacesMessage = HasHasHasAnimal{}
+var _ types.UnpackInterfacesMessage = HasHasHasAnimal{} // nolint: exhaustivestruct
 
 func (m HasHasHasAnimal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var animal HasHasAnimalI

@@ -4,11 +4,13 @@ import (
 	gocontext "context"
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
-	proto "github.com/gogo/protobuf/proto"
-	"google.golang.org/grpc/encoding"
 	"reflect"
 	"strconv"
+
+	proto "github.com/gogo/protobuf/proto"
+	"google.golang.org/grpc/encoding"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -21,7 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-var _ gogogrpc.ClientConn = Context{}
+var _ gogogrpc.ClientConn = Context{} // nolint: exhaustivestruct
 
 // fallBackCodec is used by Context in case Codec is not set.
 // it can process every gRPC type, except the ones which contain

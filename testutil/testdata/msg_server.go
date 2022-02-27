@@ -6,7 +6,7 @@ import (
 
 type MsgServerImpl struct{}
 
-var _ MsgServer = MsgServerImpl{}
+var _ MsgServer = MsgServerImpl{} // nolint: exhaustivestruct
 
 // CreateDog implements the MsgServer interface.
 func (m MsgServerImpl) CreateDog(_ context.Context, msg *MsgCreateDog) (*MsgCreateDogResponse, error) {

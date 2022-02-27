@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-var _ tx.Handler = mempoolFeeTxHandler{}
+var _ tx.Handler = mempoolFeeTxHandler{} // nolint: exhaustivestruct
 
 type mempoolFeeTxHandler struct {
 	next tx.Handler
@@ -78,7 +78,7 @@ func (txh mempoolFeeTxHandler) SimulateTx(ctx context.Context, req tx.Request) (
 	return txh.next.SimulateTx(ctx, req)
 }
 
-var _ tx.Handler = deductFeeTxHandler{}
+var _ tx.Handler = deductFeeTxHandler{} // nolint: exhaustivestruct
 
 type deductFeeTxHandler struct {
 	accountKeeper  AccountKeeper

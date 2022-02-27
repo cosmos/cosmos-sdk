@@ -13,7 +13,7 @@ import (
 )
 
 // Implements Delegation interface
-var _ DelegationI = Delegation{}
+var _ DelegationI = Delegation{} // nolint: exhaustivestruct
 
 // String implements the Stringer interface for a DVPair object.
 func (dv DVPair) String() string {

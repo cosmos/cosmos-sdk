@@ -138,7 +138,7 @@ func (t debugStore) Delete(key []byte) error {
 	return nil
 }
 
-var _ kv.Store = &debugStore{}
+var _ kv.Store = &debugStore{} // nolint: exhaustivestruct
 
 type debugIterator struct {
 	iterator  kv.Iterator
@@ -186,7 +186,7 @@ func (d debugIterator) Close() error {
 	return d.iterator.Close()
 }
 
-var _ kv.Iterator = &debugIterator{}
+var _ kv.Iterator = &debugIterator{} // nolint: exhaustivestruct
 
 // EntryCodecDebugger is a Debugger instance that uses an EntryCodec and Print
 // function for debugging.

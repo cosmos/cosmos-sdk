@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-var _ v1.QueryServer = Keeper{}
+var _ v1.QueryServer = Keeper{} // nolint: exhaustivestruct
 
 // Proposal returns proposal details based on ProposalID
 func (q Keeper) Proposal(c context.Context, req *v1.QueryProposalRequest) (*v1.QueryProposalResponse, error) {
@@ -280,7 +280,7 @@ func (q Keeper) TallyResult(c context.Context, req *v1.QueryTallyResultRequest) 
 	return &v1.QueryTallyResultResponse{Tally: &tallyResult}, nil
 }
 
-var _ v1beta1.QueryServer = legacyQueryServer{}
+var _ v1beta1.QueryServer = legacyQueryServer{} // nolint: exhaustivestruct
 
 type legacyQueryServer struct {
 	keeper Keeper

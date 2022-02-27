@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-var _ types.QueryServer = AccountKeeper{}
+var _ types.QueryServer = AccountKeeper{} // nolint: exhaustivestruct
 
 func (ak AccountKeeper) Accounts(c context.Context, req *types.QueryAccountsRequest) (*types.QueryAccountsResponse, error) {
 	if req == nil {

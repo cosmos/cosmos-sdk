@@ -18,7 +18,7 @@ type Querier struct {
 	Keeper
 }
 
-var _ types.QueryServer = Querier{}
+var _ types.QueryServer = Querier{} // nolint: exhaustivestruct
 
 // Validators queries all validators that match the given status
 func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest) (*types.QueryValidatorsResponse, error) {

@@ -12,7 +12,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
-var _ cryptotypes.PrivKey = &PrivKey{}
+var _ cryptotypes.PrivKey = &PrivKey{} // nolint: exhaustivestruct
 
 func TestSKSuite(t *testing.T) {
 	suite.Run(t, new(SKSuite))

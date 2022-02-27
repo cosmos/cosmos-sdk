@@ -170,7 +170,7 @@ const (
 )
 
 // Implements Content Interface
-var _ Content = &TextProposal{}
+var _ Content = &TextProposal{} // nolint: exhaustivestruct
 
 // NewTextProposal creates a text proposal Content
 func NewTextProposal(title, description string) Content {

@@ -4,7 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
-var _ types.UnpackInterfacesMessage = GenesisState{}
+var _ types.UnpackInterfacesMessage = GenesisState{} // nolint: exhaustivestruct
 
 // NewGenesisState creates new GenesisState object
 func NewGenesisState(entries []Grant) *GenesisState {

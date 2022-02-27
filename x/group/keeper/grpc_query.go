@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
-var _ group.QueryServer = Keeper{}
+var _ group.QueryServer = Keeper{} // nolint: exhaustivestruct
 
 func (q Keeper) GroupInfo(goCtx context.Context, request *group.QueryGroupInfoRequest) (*group.QueryGroupInfoResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

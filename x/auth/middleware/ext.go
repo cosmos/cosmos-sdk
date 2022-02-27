@@ -29,7 +29,7 @@ func RejectExtensionOptionsMiddleware(txh tx.Handler) tx.Handler {
 	}
 }
 
-var _ tx.Handler = rejectExtensionOptionsTxHandler{}
+var _ tx.Handler = rejectExtensionOptionsTxHandler{} // nolint: exhaustivestruct
 
 func checkExtOpts(tx sdk.Tx) error {
 	if hasExtOptsTx, ok := tx.(HasExtensionOptionsTx); ok {

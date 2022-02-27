@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,11 +18,11 @@ const TypeMsgCreatePermanentLockedAccount = "msg_create_permanent_locked_account
 // TypeMsgCreatePeriodicVestingAccount defines the type value for a MsgCreateVestingAccount.
 const TypeMsgCreatePeriodicVestingAccount = "msg_create_periodic_vesting_account"
 
-var _ sdk.Msg = &MsgCreateVestingAccount{}
+var _ sdk.Msg = &MsgCreateVestingAccount{} // nolint: exhaustivestruct
 
-var _ sdk.Msg = &MsgCreatePermanentLockedAccount{}
+var _ sdk.Msg = &MsgCreatePermanentLockedAccount{} // nolint: exhaustivestruct
 
-var _ sdk.Msg = &MsgCreatePeriodicVestingAccount{}
+var _ sdk.Msg = &MsgCreatePeriodicVestingAccount{} // nolint: exhaustivestruct
 
 // NewMsgCreateVestingAccount returns a reference to a new MsgCreateVestingAccount.
 //nolint:interfacer

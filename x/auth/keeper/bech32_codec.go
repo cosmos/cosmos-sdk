@@ -11,7 +11,7 @@ type bech32Codec struct {
 	bech32Prefix string
 }
 
-var _ address.Codec = &bech32Codec{}
+var _ address.Codec = &bech32Codec{} // nolint: exhaustivestruct
 
 func newBech32Codec(prefix string) bech32Codec {
 	return bech32Codec{prefix}

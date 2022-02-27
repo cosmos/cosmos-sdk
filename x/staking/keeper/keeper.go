@@ -3,8 +3,9 @@ package keeper
 import (
 	"fmt"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/tendermint/tendermint/libs/log"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,10 +14,10 @@ import (
 )
 
 // Implements ValidatorSet interface
-var _ types.ValidatorSet = Keeper{}
+var _ types.ValidatorSet = Keeper{} // nolint: exhaustivestruct
 
 // Implements DelegationSet interface
-var _ types.DelegationSet = Keeper{}
+var _ types.DelegationSet = Keeper{} // nolint: exhaustivestruct
 
 // keeper of the staking store
 type Keeper struct {

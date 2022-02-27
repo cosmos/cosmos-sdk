@@ -267,7 +267,7 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 	return cc, cms.Write
 }
 
-var _ context.Context = Context{}
+var _ context.Context = Context{} // nolint: exhaustivestruct
 
 // ContextKey defines a type alias for a stdlib Context key.
 type ContextKey string

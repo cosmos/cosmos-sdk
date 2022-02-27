@@ -17,8 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ cryptotypes.PrivKey = &PrivKey{}
-var _ codec.AminoMarshaler = &PrivKey{}
+var _ cryptotypes.PrivKey = &PrivKey{}  // nolint: exhaustivestruct
+var _ codec.AminoMarshaler = &PrivKey{} // nolint: exhaustivestruct
 
 const (
 	PrivKeySize = 32
@@ -138,8 +138,8 @@ func GenPrivKeyFromSecret(secret []byte) *PrivKey {
 
 //-------------------------------------
 
-var _ cryptotypes.PubKey = &PubKey{}
-var _ codec.AminoMarshaler = &PubKey{}
+var _ cryptotypes.PubKey = &PubKey{}   // nolint: exhaustivestruct
+var _ codec.AminoMarshaler = &PubKey{} // nolint: exhaustivestruct
 
 // PubKeySize is comprised of 32 bytes for one field element
 // (the x-coordinate), plus one byte for the parity of the y-coordinate.

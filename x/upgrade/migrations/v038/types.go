@@ -114,7 +114,7 @@ func NewSoftwareUpgradeProposal(title, description string, plan Plan) v036gov.Co
 }
 
 // Implements Proposal Interface
-var _ v036gov.Content = SoftwareUpgradeProposal{}
+var _ v036gov.Content = SoftwareUpgradeProposal{} // nolint: exhaustivestruct
 
 func (sup SoftwareUpgradeProposal) GetTitle() string       { return sup.Title }
 func (sup SoftwareUpgradeProposal) GetDescription() string { return sup.Description }
@@ -145,7 +145,7 @@ func NewCancelSoftwareUpgradeProposal(title, description string) v036gov.Content
 }
 
 // Implements Proposal Interface
-var _ v036gov.Content = CancelSoftwareUpgradeProposal{}
+var _ v036gov.Content = CancelSoftwareUpgradeProposal{} // nolint: exhaustivestruct
 
 func (sup CancelSoftwareUpgradeProposal) GetTitle() string       { return sup.Title }
 func (sup CancelSoftwareUpgradeProposal) GetDescription() string { return sup.Description }

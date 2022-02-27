@@ -61,8 +61,8 @@ func (i indexKeyIndex) ListRange(ctx context.Context, from, to []interface{}, op
 	return rangeIterator(backend.IndexStoreReader(), backend, i, i.KeyCodec, from, to, options)
 }
 
-var _ indexer = &indexKeyIndex{}
-var _ Index = &indexKeyIndex{}
+var _ indexer = &indexKeyIndex{} // nolint: exhaustivestruct
+var _ Index = &indexKeyIndex{}   // nolint: exhaustivestruct
 
 func (i indexKeyIndex) doNotImplement() {}
 

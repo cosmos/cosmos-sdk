@@ -241,4 +241,4 @@ func (p primaryKeyIndex) deleteByIterator(ctx context.Context, it Iterator) erro
 	return writer.Write()
 }
 
-var _ UniqueIndex = &primaryKeyIndex{}
+var _ UniqueIndex = &primaryKeyIndex{} // nolint: exhaustivestruct

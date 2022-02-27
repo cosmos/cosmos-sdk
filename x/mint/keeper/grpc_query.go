@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ types.QueryServer = Keeper{} // nolint: exhaustivestruct
 
 // Params returns params of the mint module.
 func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {

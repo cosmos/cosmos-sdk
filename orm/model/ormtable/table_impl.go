@@ -414,8 +414,8 @@ func (t tableImpl) Get(ctx context.Context, message proto.Message) (found bool, 
 	return t.primaryKeyIndex.get(backend, message, keyValues)
 }
 
-var _ Table = &tableImpl{}
-var _ Schema = &tableImpl{}
+var _ Table = &tableImpl{}  // nolint: exhaustivestruct
+var _ Schema = &tableImpl{} // nolint: exhaustivestruct
 
 type saveMode int
 

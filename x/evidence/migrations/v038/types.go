@@ -65,7 +65,7 @@ type GenesisState struct {
 }
 
 // Assert interface implementation.
-var _ Evidence = Equivocation{}
+var _ Evidence = Equivocation{} // nolint: exhaustivestruct
 
 // Equivocation implements the Evidence interface and defines evidence of double
 // signing misbehavior.

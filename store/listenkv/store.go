@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-var _ types.KVStore = &Store{}
+var _ types.KVStore = &Store{} // nolint: exhaustivestruct
 
 // Store implements the KVStore interface with listening enabled.
 // Operations are traced on each core KVStore call and written to any of the

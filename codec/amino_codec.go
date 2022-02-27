@@ -10,7 +10,7 @@ type AminoCodec struct {
 	*LegacyAmino
 }
 
-var _ Codec = &AminoCodec{}
+var _ Codec = &AminoCodec{} // nolint: exhaustivestruct
 
 // NewAminoCodec returns a reference to a new AminoCodec
 func NewAminoCodec(codec *LegacyAmino) *AminoCodec {

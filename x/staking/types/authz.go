@@ -11,6 +11,7 @@ import (
 const gasCostPerIteration = uint64(10)
 
 // Normalized Msg type URLs
+// nolint: exhaustivestruct
 var (
 	_ authz.Authorization = &StakeAuthorization{}
 )

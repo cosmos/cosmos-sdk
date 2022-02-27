@@ -1,8 +1,9 @@
 package authz
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 
 	"github.com/gogo/protobuf/proto"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
+// nolint: exhaustivestruct
 var (
 	_ sdk.Msg = &MsgGrant{}
 	_ sdk.Msg = &MsgRevoke{}

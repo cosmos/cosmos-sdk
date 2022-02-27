@@ -10,6 +10,7 @@ const (
 	TypeMsgSend = "send"
 )
 
+// nolint: exhaustivestruct
 var (
 	_ sdk.Msg = &MsgSend{}
 )

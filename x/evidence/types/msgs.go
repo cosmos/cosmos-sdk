@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 
 	"github.com/gogo/protobuf/proto"
@@ -17,6 +18,7 @@ const (
 	TypeMsgSubmitEvidence = "submit_evidence"
 )
 
+// nolint: exhaustivestruct
 var (
 	_ sdk.Msg                       = &MsgSubmitEvidence{}
 	_ types.UnpackInterfacesMessage = MsgSubmitEvidence{}

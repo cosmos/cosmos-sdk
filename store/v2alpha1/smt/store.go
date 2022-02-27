@@ -13,6 +13,7 @@ import (
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
+// nolint: exhaustivestruct
 var (
 	_ types.BasicKVStore = (*Store)(nil)
 	_ smt.MapStore       = (dbMapStore{})

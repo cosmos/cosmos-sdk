@@ -2,6 +2,7 @@ package v1beta1
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 
 	"github.com/gogo/protobuf/proto"
@@ -21,6 +22,7 @@ const (
 	TypeMsgSubmitProposal = "submit_proposal"
 )
 
+// nolint: exhaustivestruct
 var (
 	_, _, _, _ sdk.Msg                            = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}
 	_          codectypes.UnpackInterfacesMessage = &MsgSubmitProposal{}

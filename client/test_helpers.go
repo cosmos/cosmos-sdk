@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// nolint: exhaustivestruct
 var (
 	_ AccountRetriever = TestAccountRetriever{}
 	_ Account          = TestAccount{}

@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
+// nolint: exhaustivestruct
 var (
 	_, _ sdk.Msg            = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
 	_, _ legacytx.LegacyMsg = &MsgGrantAllowance{}, &MsgRevokeAllowance{} // For amino support.

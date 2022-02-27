@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// nolint: exhaustivestruct
 var (
 	_ Indexable       = &PrimaryKeyTable{}
 	_ TableExportable = &PrimaryKeyTable{}

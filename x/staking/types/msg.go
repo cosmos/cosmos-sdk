@@ -17,6 +17,7 @@ const (
 	TypeMsgBeginRedelegate = "begin_redelegate"
 )
 
+// nolint: exhaustivestruct
 var (
 	_ sdk.Msg                            = &MsgCreateValidator{}
 	_ codectypes.UnpackInterfacesMessage = (*MsgCreateValidator)(nil)

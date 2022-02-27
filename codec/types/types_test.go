@@ -35,6 +35,7 @@ type TestI interface {
 // concrete type.
 type FakeDog struct{}
 
+// nolint: exhaustivestruct
 var (
 	_ proto.Message   = &FakeDog{}
 	_ testdata.Animal = &FakeDog{}

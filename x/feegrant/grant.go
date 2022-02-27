@@ -8,6 +8,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// nolint: exhaustivestruct
 var (
 	_ types.UnpackInterfacesMessage = &Grant{}
 )

@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// nolint: exhaustivestruct
 var (
 	_ Indexable       = &AutoUInt64Table{}
 	_ TableExportable = &AutoUInt64Table{}

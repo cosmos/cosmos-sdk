@@ -21,6 +21,7 @@ type QueryServiceTestHelper struct {
 	Ctx sdk.Context
 }
 
+// nolint: exhaustivestruct
 var (
 	_ gogogrpc.Server     = &QueryServiceTestHelper{}
 	_ gogogrpc.ClientConn = &QueryServiceTestHelper{}

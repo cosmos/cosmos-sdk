@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
+// nolint: exhaustivestruct
 var (
 	_ Indexable       = &table{}
 	_ TableExportable = &table{}

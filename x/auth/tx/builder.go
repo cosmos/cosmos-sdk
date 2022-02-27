@@ -33,6 +33,7 @@ type wrapper struct {
 	txBodyHasUnknownNonCriticals bool
 }
 
+// nolint: exhaustivestruct
 var (
 	_ authsigning.Tx                   = &wrapper{}
 	_ client.TxBuilder                 = &wrapper{}

@@ -32,6 +32,7 @@ func NewGrant(blockTime time.Time, a Authorization, expiration time.Time) (Grant
 	return g, nil
 }
 
+// nolint: exhaustivestruct
 var (
 	_ cdctypes.UnpackInterfacesMessage = &Grant{}
 )

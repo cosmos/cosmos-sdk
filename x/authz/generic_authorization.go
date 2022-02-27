@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// nolint: exhaustivestruct
 var (
 	_ Authorization = &GenericAuthorization{}
 )

@@ -19,9 +19,10 @@ const (
 	OpWeightMsgRevokeAllowance = "op_weight_msg_grant_revoke_allowance"
 )
 
+// nolint: exhaustivestruct
 var (
-	TypeMsgGrantAllowance  = sdk.MsgTypeURL(&feegrant.MsgGrantAllowance{})  // nolint: exhaustivestruct
-	TypeMsgRevokeAllowance = sdk.MsgTypeURL(&feegrant.MsgRevokeAllowance{}) // nolint: exhaustivestruct
+	TypeMsgGrantAllowance  = sdk.MsgTypeURL(&feegrant.MsgGrantAllowance{})
+	TypeMsgRevokeAllowance = sdk.MsgTypeURL(&feegrant.MsgRevokeAllowance{})
 )
 
 func WeightedOperations(

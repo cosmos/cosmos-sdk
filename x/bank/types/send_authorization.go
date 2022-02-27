@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
+// nolint: exhaustivestruct
 var (
 	_ authz.Authorization = &SendAuthorization{}
 )

@@ -15,6 +15,8 @@ import (
 	"github.com/tendermint/crypto/bcrypt"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
+	"github.com/cosmos/go-bip39"
+
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto"
@@ -23,7 +25,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/go-bip39"
 )
 
 // Backend options for Keyring
@@ -46,7 +47,7 @@ const (
 )
 
 var (
-	_                          Keyring = &keystore{}
+	_                          Keyring = &keystore{} // nolint: exhaustivestruct
 	maxPassphraseEntryAttempts         = 3
 )
 

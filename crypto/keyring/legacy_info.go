@@ -27,6 +27,7 @@ type LegacyInfo interface {
 	GetAlgo() hd.PubKeyType
 }
 
+// nolint: exhaustivestruct
 var (
 	_ LegacyInfo = &legacyLocalInfo{}
 	_ LegacyInfo = &legacyLedgerInfo{}

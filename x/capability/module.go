@@ -24,10 +24,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/capability/types"
 )
 
+// nolint: exhaustivestruct
 var (
-	_ module.AppModule           = AppModule{}      // nolint: exhaustivestruct
-	_ module.AppModuleBasic      = AppModuleBasic{} // nolint: exhaustivestruct
-	_ module.AppModuleSimulation = AppModule{}      // nolint: exhaustivestruct
+	_ module.AppModule           = AppModule{}
+	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ module.AppModuleSimulation = AppModule{}
 )
 
 // ----------------------------------------------------------------------------

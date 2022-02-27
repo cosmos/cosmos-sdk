@@ -18,9 +18,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
+// nolint: exhaustivestruct
 var (
-	_ module.AppModule      = AppModule{}      // nolint: exhaustivestruct
-	_ module.AppModuleBasic = AppModuleBasic{} // nolint: exhaustivestruct
+	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the sub-vesting

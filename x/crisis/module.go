@@ -21,9 +21,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
+// nolint: exhaustivestruct
 var (
-	_ module.AppModule      = AppModule{}      // nolint: exhaustivestruct
-	_ module.AppModuleBasic = AppModuleBasic{} // nolint: exhaustivestruct
+	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
 // Module init related flags

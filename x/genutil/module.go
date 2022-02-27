@@ -18,9 +18,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
+// nolint: exhaustivestruct
 var (
-	_ module.AppModuleGenesis = AppModule{}      // nolint: exhaustivestruct
-	_ module.AppModuleBasic   = AppModuleBasic{} // nolint: exhaustivestruct
+	_ module.AppModuleGenesis = AppModule{}
+	_ module.AppModuleBasic   = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the genutil module.

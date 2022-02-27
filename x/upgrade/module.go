@@ -23,9 +23,10 @@ func init() {
 	types.RegisterLegacyAminoCodec(codec.NewLegacyAmino())
 }
 
+// nolint: exhaustivestruct
 var (
-	_ module.AppModule      = AppModule{}      // nolint: exhaustivestruct
-	_ module.AppModuleBasic = AppModuleBasic{} // nolint: exhaustivestruct
+	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
 // AppModuleBasic implements the sdk.AppModuleBasic interface

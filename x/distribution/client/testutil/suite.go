@@ -26,7 +26,7 @@ type IntegrationTestSuite struct {
 }
 
 func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
+	return &IntegrationTestSuite{cfg: cfg} // nolint: exhaustivestruct
 }
 
 // SetupSuite creates a new network for _each_ integration test. We create a new

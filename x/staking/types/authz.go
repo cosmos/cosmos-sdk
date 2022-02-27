@@ -139,11 +139,11 @@ func validateAndBech32fy(allowed []sdk.ValAddress, denied []sdk.ValAddress) ([]s
 func normalizeAuthzType(authzType AuthorizationType) (string, error) {
 	switch authzType {
 	case AuthorizationType_AUTHORIZATION_TYPE_DELEGATE:
-		return sdk.MsgTypeURL(&MsgDelegate{}), nil
+		return sdk.MsgTypeURL(&MsgDelegate{}), nil // nolint: exhaustivestruct
 	case AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE:
-		return sdk.MsgTypeURL(&MsgUndelegate{}), nil
+		return sdk.MsgTypeURL(&MsgUndelegate{}), nil // nolint: exhaustivestruct
 	case AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE:
-		return sdk.MsgTypeURL(&MsgBeginRedelegate{}), nil
+		return sdk.MsgTypeURL(&MsgBeginRedelegate{}), nil // nolint: exhaustivestruct
 	default:
 		return "", sdkerrors.ErrInvalidType.Wrapf("unknown authorization type %T", authzType)
 	}

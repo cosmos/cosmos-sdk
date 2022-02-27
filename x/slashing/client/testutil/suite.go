@@ -23,7 +23,7 @@ type IntegrationTestSuite struct {
 }
 
 func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
+	return &IntegrationTestSuite{cfg: cfg} // nolint: exhaustivestruct
 }
 
 // SetupSuite executes bootstrapping logic before all the tests, i.e. once before

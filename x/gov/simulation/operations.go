@@ -20,6 +20,7 @@ import (
 var initialProposalID = uint64(100000000000000)
 
 // Governance message types and routes
+// nolint: exhaustivestruct
 var (
 	TypeMsgDeposit        = sdk.MsgTypeURL(&v1.MsgDeposit{})
 	TypeMsgVote           = sdk.MsgTypeURL(&v1.MsgVote{})

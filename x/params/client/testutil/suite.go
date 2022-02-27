@@ -20,7 +20,7 @@ type IntegrationTestSuite struct {
 }
 
 func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
+	return &IntegrationTestSuite{cfg: cfg} // nolint: exhaustivestruct
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {

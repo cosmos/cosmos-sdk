@@ -24,6 +24,7 @@ import (
 var initialGroupID = uint64(100000000000000)
 
 // group message types
+// nolint: exhaustivestruct
 var (
 	TypeMsgCreateGroup                     = sdk.MsgTypeURL(&group.MsgCreateGroup{})
 	TypeMsgUpdateGroupMembers              = sdk.MsgTypeURL(&group.MsgUpdateGroupMembers{})
@@ -597,7 +598,10 @@ func SimulateMsgUpdateGroupMembers(ak group.AccountKeeper,
 
 		members := genGroupMembers(r, accounts)
 		ctx := sdk.UnwrapSDKContext(sdkCtx)
-		res, err := k.GroupMembers(ctx, &group.QueryGroupMembersRequest{GroupId: groupID})
+		res, err := k.GroupMembers(ctx, &group.QueryGroupMembersRequest{
+			GroupId:    groupID,
+			Pagination: nil,
+		})
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupMembers, "group members"), nil, err
 		}
@@ -1225,7 +1229,10 @@ func randomGroupPolicy(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 	}
 	groupID := groupInfo.Id
 
-	result, err := k.GroupPoliciesByGroup(sdk.WrapSDKContext(ctx), &group.QueryGroupPoliciesByGroupRequest{GroupId: groupID})
+	result, err := k.GroupPoliciesByGroup(sdk.WrapSDKContext(ctx), &group.QueryGroupPoliciesByGroupRequest{
+		GroupId:    groupID,
+		Pagination: nil,
+	})
 	if err != nil {
 		return groupInfo, nil, simtypes.Account{}, nil, err
 	}
@@ -1248,7 +1255,8 @@ func randomGroupPolicy(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 func randomMember(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 	ctx context.Context, accounts []simtypes.Account, groupID uint64) (acc simtypes.Account, account authtypes.AccountI, err error) {
 	res, err := k.GroupMembers(ctx, &group.QueryGroupMembersRequest{
-		GroupId: groupID,
+		GroupId:    groupID,
+		Pagination: nil,
 	})
 	if err != nil {
 		return simtypes.Account{}, nil, err

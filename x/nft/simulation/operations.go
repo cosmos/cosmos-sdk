@@ -28,7 +28,7 @@ const (
 )
 
 var (
-	TypeMsgSend = sdk.MsgTypeURL(&nft.MsgSend{})
+	TypeMsgSend = sdk.MsgTypeURL(&nft.MsgSend{}) // nolint: exhaustivestruct
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights

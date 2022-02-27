@@ -46,7 +46,7 @@ type IntegrationTestSuite struct {
 }
 
 func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
+	return &IntegrationTestSuite{cfg: cfg} // nolint: exhaustivestruct
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
@@ -427,7 +427,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmdByHash() {
 			"happy case",
 			[]string{txRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
-			sdk.MsgTypeURL(&banktypes.MsgSend{}),
+			sdk.MsgTypeURL(&banktypes.MsgSend{}), // nolint: exhaustivestruct
 		},
 	}
 

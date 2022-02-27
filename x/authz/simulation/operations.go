@@ -21,9 +21,9 @@ import (
 
 // authz message types
 var (
-	TypeMsgGrant  = sdk.MsgTypeURL(&authz.MsgGrant{})
-	TypeMsgRevoke = sdk.MsgTypeURL(&authz.MsgRevoke{})
-	TypeMsgExec   = sdk.MsgTypeURL(&authz.MsgExec{})
+	TypeMsgGrant  = sdk.MsgTypeURL(&authz.MsgGrant{})  // nolint: exhaustivestruct
+	TypeMsgRevoke = sdk.MsgTypeURL(&authz.MsgRevoke{}) // nolint: exhaustivestruct
+	TypeMsgExec   = sdk.MsgTypeURL(&authz.MsgExec{})   // nolint: exhaustivestruct
 )
 
 // Simulation operation weights constants
@@ -142,7 +142,7 @@ func SimulateMsgGrant(ak authz.AccountKeeper, bk authz.BankKeeper, _ keeper.Keep
 func generateRandomAuthorization(r *rand.Rand, spendLimit sdk.Coins) authz.Authorization {
 	authorizations := make([]authz.Authorization, 2)
 	authorizations[0] = banktype.NewSendAuthorization(spendLimit)
-	authorizations[1] = authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktype.MsgSend{}))
+	authorizations[1] = authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktype.MsgSend{})) // nolint: exhaustivestruct
 
 	return authorizations[r.Intn(len(authorizations))]
 }

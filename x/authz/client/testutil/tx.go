@@ -33,7 +33,7 @@ type IntegrationTestSuite struct {
 }
 
 func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
+	return &IntegrationTestSuite{cfg: cfg} // nolint: exhaustivestruct
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
@@ -140,8 +140,8 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 var typeMsgSend = bank.SendAuthorization{}.MsgTypeURL()
-var typeMsgVote = sdk.MsgTypeURL(&govv1.MsgVote{})
-var typeMsgSubmitProposal = sdk.MsgTypeURL(&govv1.MsgSubmitProposal{})
+var typeMsgVote = sdk.MsgTypeURL(&govv1.MsgVote{})                     // nolint: exhaustivestruct
+var typeMsgSubmitProposal = sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}) // nolint: exhaustivestruct
 
 func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 	val := s.network.Validators[0]

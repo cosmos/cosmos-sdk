@@ -29,7 +29,7 @@ type IntegrationTestSuite struct {
 }
 
 func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
+	return &IntegrationTestSuite{cfg: cfg} // nolint: exhaustivestruct
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
@@ -87,7 +87,7 @@ func (s *IntegrationTestSuite) TestGenTxCmd() {
 	msgs := tx.GetMsgs()
 	s.Require().Len(msgs, 1)
 
-	s.Require().Equal(sdk.MsgTypeURL(&types.MsgCreateValidator{}), sdk.MsgTypeURL(msgs[0]))
+	s.Require().Equal(sdk.MsgTypeURL(&types.MsgCreateValidator{}), sdk.MsgTypeURL(msgs[0])) // nolint: exhaustivestruct
 	s.Require().True(val.Address.Equals(msgs[0].GetSigners()[0]))
 	s.Require().Equal(amount, msgs[0].(*types.MsgCreateValidator).Value)
 	s.Require().NoError(tx.ValidateBasic())

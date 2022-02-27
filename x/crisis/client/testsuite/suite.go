@@ -81,7 +81,7 @@ func (s *IntegrationTestSuite) TestNewMsgVerifyInvariantTxCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{},
+			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
 		},
 	}
 

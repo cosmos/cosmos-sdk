@@ -412,7 +412,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{},
+			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
 		},
 		{
 			"chain-id shouldn't be used with offline and generate-only flags",
@@ -429,7 +429,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 				fmt.Sprintf("--%s=true", flags.FlagOffline),
 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 			},
-			true, 0, &sdk.TxResponse{},
+			true, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
 		},
 		{
 			"not enough fees",
@@ -446,7 +446,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 			},
 			false,
 			sdkerrors.ErrInsufficientFee.ABCICode(),
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 		},
 		{
 			"not enough gas",
@@ -464,7 +464,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 			},
 			false,
 			sdkerrors.ErrOutOfGas.ABCICode(),
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 		},
 	}
 

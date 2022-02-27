@@ -460,7 +460,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			&sdk.TxResponse{}, 0,
+			&sdk.TxResponse{}, 0, // nolint: exhaustivestruct
 			false,
 		},
 		{
@@ -473,7 +473,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			&sdk.TxResponse{}, 0,
+			&sdk.TxResponse{}, 0, // nolint: exhaustivestruct
 			false,
 		},
 		{
@@ -487,7 +487,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 			},
-			&sdk.TxResponse{}, 0,
+			&sdk.TxResponse{}, 0, // nolint: exhaustivestruct
 			false,
 		},
 	}
@@ -614,7 +614,7 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			},
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 			false,
 		},
@@ -628,7 +628,7 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 			},
-			&sdk.TxResponse{}, 0,
+			&sdk.TxResponse{}, 0, // nolint: exhaustivestruct
 			false,
 		},
 	}

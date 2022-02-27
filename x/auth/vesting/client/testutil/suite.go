@@ -61,7 +61,7 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 			},
 			expectErr:    false,
 			expectedCode: 0,
-			respType:     &sdk.TxResponse{},
+			respType:     &sdk.TxResponse{}, // nolint: exhaustivestruct
 		},
 		"create a delayed vesting account": {
 			args: []string{
@@ -76,7 +76,7 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 			},
 			expectErr:    false,
 			expectedCode: 0,
-			respType:     &sdk.TxResponse{},
+			respType:     &sdk.TxResponse{}, // nolint: exhaustivestruct
 		},
 		"invalid address": {
 			args: []string{
@@ -87,7 +87,7 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 			},
 			expectErr:    true,
 			expectedCode: 0,
-			respType:     &sdk.TxResponse{},
+			respType:     &sdk.TxResponse{}, // nolint: exhaustivestruct
 		},
 		"invalid coins": {
 			args: []string{
@@ -98,7 +98,7 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 			},
 			expectErr:    true,
 			expectedCode: 0,
-			respType:     &sdk.TxResponse{},
+			respType:     &sdk.TxResponse{}, // nolint: exhaustivestruct
 		},
 		"invalid end time": {
 			args: []string{
@@ -109,7 +109,7 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 			},
 			expectErr:    true,
 			expectedCode: 0,
-			respType:     &sdk.TxResponse{},
+			respType:     &sdk.TxResponse{}, // nolint: exhaustivestruct
 		},
 	}
 
@@ -167,7 +167,7 @@ func (s *IntegrationTestSuite) TestNewMsgCreatePermanentLockedAccountCmd() {
 			},
 			expectErr:    false,
 			expectedCode: 0,
-			respType:     &sdk.TxResponse{},
+			respType:     &sdk.TxResponse{}, // nolint: exhaustivestruct
 		},
 		"invalid address": {
 			args: []string{
@@ -178,7 +178,7 @@ func (s *IntegrationTestSuite) TestNewMsgCreatePermanentLockedAccountCmd() {
 			},
 			expectErr:    true,
 			expectedCode: 0,
-			respType:     &sdk.TxResponse{},
+			respType:     &sdk.TxResponse{}, // nolint: exhaustivestruct
 		},
 		"invalid coins": {
 			args: []string{
@@ -189,7 +189,7 @@ func (s *IntegrationTestSuite) TestNewMsgCreatePermanentLockedAccountCmd() {
 			},
 			expectErr:    true,
 			expectedCode: 0,
-			respType:     &sdk.TxResponse{},
+			respType:     &sdk.TxResponse{}, // nolint: exhaustivestruct
 		},
 	}
 

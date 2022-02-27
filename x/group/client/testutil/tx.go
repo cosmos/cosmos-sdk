@@ -106,7 +106,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	)
 
 	s.Require().NoError(err, out.String())
-	var txResp = sdk.TxResponse{}
+	var txResp = sdk.TxResponse{} // nolint: exhaustivestruct
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().Equal(uint32(0), txResp.Code, out.String())
 
@@ -275,7 +275,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -291,7 +291,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -432,7 +432,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAdmin() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -448,7 +448,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAdmin() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -533,7 +533,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMetadata() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -549,7 +549,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMetadata() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -636,7 +636,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -656,7 +656,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -770,7 +770,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -788,7 +788,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -807,7 +807,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -955,7 +955,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -971,7 +971,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -988,7 +988,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1004,7 +1004,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 			),
 			true,
 			"key not found",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1020,7 +1020,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 			),
 			true,
 			"group policy metadata: limit exceeded",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1036,7 +1036,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 			),
 			true,
 			"not found",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1052,7 +1052,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 			),
 			true,
 			"expected a positive decimal",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1068,7 +1068,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 			),
 			true,
 			"percentage must be > 0 and <= 1",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 	}
@@ -1125,7 +1125,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyAdmin() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1141,7 +1141,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyAdmin() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1156,7 +1156,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyAdmin() {
 			),
 			true,
 			"key not found",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1171,7 +1171,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyAdmin() {
 			),
 			true,
 			"load group policy: not found",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 	}
@@ -1228,7 +1228,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1243,7 +1243,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1259,7 +1259,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1274,7 +1274,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			),
 			true,
 			"key not found",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1289,7 +1289,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			),
 			true,
 			"load group policy: not found",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1304,7 +1304,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			),
 			true,
 			"expected a positive decimal",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1319,7 +1319,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			),
 			true,
 			"percentage must be > 0 and <= 1",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 	}
@@ -1376,7 +1376,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1392,7 +1392,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1407,7 +1407,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 			),
 			true,
 			"group policy metadata: limit exceeded",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1422,7 +1422,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 			),
 			true,
 			"key not found",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1437,7 +1437,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 			),
 			true,
 			"load group policy: not found",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 	}
@@ -1494,7 +1494,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1512,7 +1512,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1529,7 +1529,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1547,7 +1547,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1709,7 +1709,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1726,7 +1726,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1743,7 +1743,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1760,7 +1760,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1900,7 +1900,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1914,7 +1914,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 			),
 			true,
 			"cannot withdraw a proposal with the status of PROPOSAL_STATUS_WITHDRAWN",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1928,7 +1928,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 			),
 			true,
 			"not found",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1942,7 +1942,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 			),
 			true,
 			"invalid syntax",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{
@@ -1956,7 +1956,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 			),
 			true,
 			"key not found",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 	}
@@ -2078,7 +2078,7 @@ func (s *IntegrationTestSuite) TestTxExec() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{},
+			&sdk.TxResponse{}, // nolint: exhaustivestruct
 			0,
 		},
 		{

@@ -480,7 +480,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{},
+			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
 		},
 		{
 			"valid transaction (with commission)",
@@ -492,7 +492,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{},
+			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
 		},
 	}
 
@@ -544,7 +544,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{},
+			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
 		},
 	}
 
@@ -599,7 +599,7 @@ func (s *IntegrationTestSuite) TestNewSetWithdrawAddrCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{},
+			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
 		},
 	}
 
@@ -654,7 +654,7 @@ func (s *IntegrationTestSuite) TestNewFundCommunityPoolCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{},
+			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
 		},
 	}
 
@@ -741,7 +741,7 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{},
+			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
 		},
 	}
 

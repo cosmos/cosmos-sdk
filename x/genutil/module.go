@@ -19,8 +19,8 @@ import (
 )
 
 var (
-	_ module.AppModuleGenesis = AppModule{}
-	_ module.AppModuleBasic   = AppModuleBasic{}
+	_ module.AppModuleGenesis = AppModule{}      // nolint: exhaustivestruct
+	_ module.AppModuleBasic   = AppModuleBasic{} // nolint: exhaustivestruct
 )
 
 // AppModuleBasic defines the basic application module used by the genutil module.

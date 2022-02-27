@@ -28,9 +28,9 @@ const (
 )
 
 var (
-	_ module.AppModule           = AppModule{}
-	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModule{}
+	_ module.AppModule           = AppModule{}      // nolint: exhaustivestruct
+	_ module.AppModuleBasic      = AppModuleBasic{} // nolint: exhaustivestruct
+	_ module.AppModuleSimulation = AppModule{}      // nolint: exhaustivestruct
 )
 
 // AppModuleBasic defines the basic application module used by the staking module.

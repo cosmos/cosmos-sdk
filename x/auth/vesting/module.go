@@ -19,8 +19,8 @@ import (
 )
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModule      = AppModule{}      // nolint: exhaustivestruct
+	_ module.AppModuleBasic = AppModuleBasic{} // nolint: exhaustivestruct
 )
 
 // AppModuleBasic defines the basic application module used by the sub-vesting

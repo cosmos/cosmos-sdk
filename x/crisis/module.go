@@ -22,8 +22,8 @@ import (
 )
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModule      = AppModule{}      // nolint: exhaustivestruct
+	_ module.AppModuleBasic = AppModuleBasic{} // nolint: exhaustivestruct
 )
 
 // Module init related flags

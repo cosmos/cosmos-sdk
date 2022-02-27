@@ -1,3 +1,4 @@
+// nolint: exhaustivestruct
 package v1
 
 import (

@@ -31,6 +31,7 @@ var (
 
 // ParamKeyTable - Key declaration for parameters
 func ParamKeyTable() paramtypes.KeyTable {
+	// nolint: exhaustivestruct
 	return paramtypes.NewKeyTable(
 		paramtypes.NewParamSetPair(ParamStoreKeyDepositParams, DepositParams{}, validateDepositParams),
 		paramtypes.NewParamSetPair(ParamStoreKeyVotingParams, VotingParams{}, validateVotingParams),

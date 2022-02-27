@@ -415,6 +415,7 @@ func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 	return nil
 }
 
+// nolint: exhaustivestruct
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cryptocodec.RegisterCrypto(cdc)
 	cdc.RegisterInterface((*v038auth.GenesisAccount)(nil), nil)

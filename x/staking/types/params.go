@@ -50,7 +50,7 @@ var _ paramtypes.ParamSet = (*Params)(nil)
 
 // ParamTable for staking module
 func ParamKeyTable() paramtypes.KeyTable {
-	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
+	return paramtypes.NewKeyTable().RegisterParamSet(&Params{}) // nolint: exhaustivestruct
 }
 
 // NewParams creates a new Params instance

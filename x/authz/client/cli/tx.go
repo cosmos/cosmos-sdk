@@ -61,7 +61,7 @@ func NewCmdGrantAuthorization() *cobra.Command {
 Examples:
  $ %s tx %s grant cosmos1skjw.. send %s --spend-limit=1000stake --from=cosmos1skl..
  $ %s tx %s grant cosmos1skjw.. generic --msg-type=/cosmos.gov.v1.MsgVote --from=cosmos1sk..
-	`, version.AppName, authz.ModuleName, bank.SendAuthorization{}.MsgTypeURL(), version.AppName, authz.ModuleName),
+	`, version.AppName, authz.ModuleName, bank.SendAuthorization{}.MsgTypeURL(), version.AppName, authz.ModuleName), // nolint: exhaustivestruct
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -185,7 +185,7 @@ func NewCmdRevokeAuthorization() *cobra.Command {
 			fmt.Sprintf(`revoke authorization from a granter to a grantee:
 Example:
  $ %s tx %s revoke cosmos1skj.. %s --from=cosmos1skj..
-			`, version.AppName, authz.ModuleName, bank.SendAuthorization{}.MsgTypeURL()),
+			`, version.AppName, authz.ModuleName, bank.SendAuthorization{}.MsgTypeURL()), // nolint: exhaustivestruct
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {

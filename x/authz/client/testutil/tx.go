@@ -139,7 +139,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-var typeMsgSend = bank.SendAuthorization{}.MsgTypeURL()
+var typeMsgSend = bank.SendAuthorization{}.MsgTypeURL()                // nolint: exhaustivestruct
 var typeMsgVote = sdk.MsgTypeURL(&govv1.MsgVote{})                     // nolint: exhaustivestruct
 var typeMsgSubmitProposal = sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}) // nolint: exhaustivestruct
 

@@ -170,6 +170,7 @@ func ErrEmptyValue(codespace string) error {
 	return fmt.Errorf("parameter value is empty")
 }
 
+// nolint: exhaustivestruct
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(ParameterChangeProposal{}, "cosmos-sdk/ParameterChangeProposal", nil)
 }

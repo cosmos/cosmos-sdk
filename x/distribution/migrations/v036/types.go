@@ -131,6 +131,7 @@ func (csp CommunityPoolSpendProposal) String() string {
 	return b.String()
 }
 
+// nolint: exhaustivestruct
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(CommunityPoolSpendProposal{}, "cosmos-sdk/CommunityPoolSpendProposal", nil)
 }

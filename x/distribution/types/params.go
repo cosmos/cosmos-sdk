@@ -19,7 +19,7 @@ var (
 
 // ParamKeyTable returns the parameter key table.
 func ParamKeyTable() paramtypes.KeyTable {
-	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
+	return paramtypes.NewKeyTable().RegisterParamSet(&Params{}) // nolint: exhaustivestruct
 }
 
 // DefaultParams returns default distribution parameters

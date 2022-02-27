@@ -14,6 +14,7 @@ var (
 
 // type declaration for parameters
 func ParamKeyTable() paramtypes.KeyTable {
+	// nolint: exhaustivestruct
 	return paramtypes.NewKeyTable(
 		paramtypes.NewParamSetPair(ParamStoreKeyConstantFee, sdk.Coin{}, validateConstantFee),
 	)

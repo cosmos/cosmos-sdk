@@ -12,6 +12,7 @@ import (
 // or provider their own when the existing validation functions do not suite their
 // needs.
 func ConsensusParamsKeyTable() KeyTable {
+	// nolint: exhaustivestruct
 	return NewKeyTable(
 		NewParamSetPair(
 			baseapp.ParamStoreKeyBlockParams, tmproto.BlockParams{}, baseapp.ValidateBlockParams,

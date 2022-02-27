@@ -74,7 +74,7 @@ func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
 				g.Grants[0].UnpackInterfaces(val.ClientCtx.InterfaceRegistry)
 				auth, err := g.Grants[0].GetAuthorization()
 				require.NoError(err)
-				require.Equal(auth.MsgTypeURL(), banktypes.SendAuthorization{}.MsgTypeURL())
+				require.Equal(auth.MsgTypeURL(), banktypes.SendAuthorization{}.MsgTypeURL()) // nolint: exhaustivestruct
 			}
 		})
 	}

@@ -61,7 +61,7 @@ Basic Usage:
 	}
 
 	func ParamKeyTable() params.KeyTable {
-		return params.NewKeyTable().RegisterParamSet(&MyParams{})
+		return params.NewKeyTable().RegisterParamSet(&MyParams{}) // nolint: exhaustivestruct
 	}
 
 4. Have the module accept a Subspace in the constructor and set the KeyTable (if necessary):

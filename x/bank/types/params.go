@@ -24,7 +24,7 @@ var (
 
 // ParamKeyTable for bank module.
 func ParamKeyTable() paramtypes.KeyTable {
-	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
+	return paramtypes.NewKeyTable().RegisterParamSet(&Params{}) // nolint: exhaustivestruct
 }
 
 // NewParams creates a new parameter configuration for the bank module

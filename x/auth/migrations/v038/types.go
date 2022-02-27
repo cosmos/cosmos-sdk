@@ -521,6 +521,7 @@ func ValidateGenAccounts(genAccounts GenesisAccounts) error {
 	return nil
 }
 
+// nolint: exhaustivestruct
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cryptocodec.RegisterCrypto(cdc)
 	cdc.RegisterInterface((*GenesisAccount)(nil), nil)

@@ -8,7 +8,7 @@ import (
 
 // MigrateCommand migrates key information from legacy keybase to OS secret store.
 func MigrateCommand() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "migrate",
 		Short: "Migrate keys from amino to proto serialization format",
 		Long: `Migrate keys from Amino to Protocol Buffers records.

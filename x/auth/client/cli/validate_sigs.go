@@ -14,7 +14,7 @@ import (
 )
 
 func GetValidateSignaturesCommand() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "validate-signatures [file]",
 		Short: "validate transactions signatures",
 		Long: `Print the addresses that must sign the transaction, those who have already

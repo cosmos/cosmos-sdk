@@ -261,7 +261,7 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 
 // add server commands
 func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator types.AppCreator, appExport types.AppExporter, addStartFlags types.ModuleInitFlags) {
-	tendermintCmd := &cobra.Command{
+	tendermintCmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "tendermint",
 		Short: "Tendermint subcommands",
 	}

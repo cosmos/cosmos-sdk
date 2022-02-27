@@ -26,7 +26,7 @@ const (
 
 // GetTxCmd returns the transaction commands for this module
 func GetTxCmd() *cobra.Command {
-	feegrantTxCmd := &cobra.Command{
+	feegrantTxCmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:                        feegrant.ModuleName,
 		Short:                      "Feegrant transactions subcommands",
 		Long:                       "Grant and revoke fee allowance for a grantee by a granter",
@@ -45,7 +45,7 @@ func GetTxCmd() *cobra.Command {
 
 // NewCmdFeeGrant returns a CLI command handler for creating a MsgGrantAllowance transaction.
 func NewCmdFeeGrant() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "grant [granter_key_or_address] [grantee]",
 		Short: "Grant Fee allowance to an address",
 		Long: strings.TrimSpace(
@@ -182,7 +182,7 @@ Examples:
 
 // NewCmdRevokeFeegrant returns a CLI command handler for creating a MsgRevokeAllowance transaction.
 func NewCmdRevokeFeegrant() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "revoke [granter] [grantee]",
 		Short: "revoke fee-grant",
 		Long: strings.TrimSpace(

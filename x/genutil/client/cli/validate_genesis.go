@@ -16,7 +16,7 @@ const chainUpgradeGuide = "https://docs.cosmos.network/master/migrations/chain-u
 
 // ValidateGenesisCmd takes a genesis file, and makes sure that it is valid.
 func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
-	return &cobra.Command{
+	return &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "validate-genesis [file]",
 		Args:  cobra.RangeArgs(0, 1),
 		Short: "validates the genesis file at the default location or at the location passed as an arg",

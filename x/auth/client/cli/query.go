@@ -31,7 +31,7 @@ const (
 
 // GetQueryCmd returns the transaction commands for this module
 func GetQueryCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the auth module",
 		DisableFlagParsing:         true,
@@ -51,7 +51,7 @@ func GetQueryCmd() *cobra.Command {
 
 // QueryParamsCmd returns the command handler for evidence parameter querying.
 func QueryParamsCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "params",
 		Short: "Query the current auth parameters",
 		Args:  cobra.NoArgs,
@@ -83,7 +83,7 @@ $ <appd> query auth params
 // GetAccountCmd returns a query account that will display the state of the
 // account at a given address.
 func GetAccountCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "account [address]",
 		Short: "Query for account by address",
 		Args:  cobra.ExactArgs(1),
@@ -114,7 +114,7 @@ func GetAccountCmd() *cobra.Command {
 
 // GetAccountsCmd returns a query command that will display a list of accounts
 func GetAccountsCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "accounts",
 		Short: "Query all the accounts",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -146,7 +146,7 @@ func GetAccountsCmd() *cobra.Command {
 
 // QueryAllModuleAccountsCmd returns a list of all the existing module accounts with their account information and permissions
 func QueryModuleAccountsCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "module-accounts",
 		Short: "Query all module accounts",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -173,7 +173,7 @@ func QueryModuleAccountsCmd() *cobra.Command {
 
 // QueryTxsByEventsCmd returns a command to search through transactions by events.
 func QueryTxsByEventsCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "txs",
 		Short: "Query for paginated transactions that match a set of events",
 		Long: strings.TrimSpace(
@@ -244,7 +244,7 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 
 // QueryTxCmd implements the default command for a tx query.
 func QueryTxCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "tx --type=[hash|acc_seq|signature] [hash|acc_seq|signature]",
 		Short: "Query for a transaction by hash, \"<addr>/<seq>\" combination or comma-separated signatures in a committed block",
 		Long: strings.TrimSpace(fmt.Sprintf(`

@@ -71,7 +71,7 @@ func (bo bech32Output) String() string {
 
 // ParseKeyStringCommand parses an address from hex to bech32 and vice versa.
 func ParseKeyStringCommand() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "parse <hex-or-bech32-address>",
 		Short: "Parse address from hex to bech32 and vice versa",
 		Long: `Convert and print to stdout key addresses and fingerprints from

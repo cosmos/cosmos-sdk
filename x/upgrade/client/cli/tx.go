@@ -26,7 +26,7 @@ const (
 
 // GetTxCmd returns the transaction commands for this module
 func GetTxCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   types.ModuleName,
 		Short: "Upgrade transaction subcommands",
 	}
@@ -37,7 +37,7 @@ func GetTxCmd() *cobra.Command {
 // NewCmdSubmitLegacyUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
 // Deprecated: please use NewCmdSubmitUpgradeProposal instead.
 func NewCmdSubmitLegacyUpgradeProposal() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "legacy-software-upgrade [name] (--upgrade-height [height]) (--upgrade-info [info]) [flags]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Submit a software upgrade proposal",
@@ -107,7 +107,7 @@ func NewCmdSubmitLegacyUpgradeProposal() *cobra.Command {
 // NewCmdSubmitLegacyCancelUpgradeProposal implements a command handler for submitting a software upgrade cancel proposal transaction.
 // Deprecated: please use NewCmdSubmitCancelUpgradeProposal instead.
 func NewCmdSubmitLegacyCancelUpgradeProposal() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "legacy-cancel-software-upgrade [flags]",
 		Args:  cobra.ExactArgs(0),
 		Short: "Cancel the current software upgrade proposal",

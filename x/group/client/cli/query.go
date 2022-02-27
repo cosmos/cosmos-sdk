@@ -3,15 +3,16 @@ package cli
 import (
 	"strconv"
 
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/spf13/cobra"
 )
 
 // QueryCmd returns the cli query commands for the group module.
 func QueryCmd(name string) *cobra.Command {
-	queryCmd := &cobra.Command{
+	queryCmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:                        name,
 		Short:                      "Querying commands for the group module",
 		DisableFlagParsing:         true,
@@ -40,7 +41,7 @@ func QueryCmd(name string) *cobra.Command {
 
 // QueryGroupsByMemberCmd creates a CLI command for Query/GroupsByMember.
 func QueryGroupsByMemberCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "groups-by-member [address]",
 		Short: "Query for groups by member address with pagination flags",
 		Args:  cobra.ExactArgs(1),
@@ -69,7 +70,7 @@ func QueryGroupsByMemberCmd() *cobra.Command {
 
 // QueryGroupInfoCmd creates a CLI command for Query/GroupInfo.
 func QueryGroupInfoCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "group-info [id]",
 		Short: "Query for group info by group id",
 		Args:  cobra.ExactArgs(1),
@@ -104,7 +105,7 @@ func QueryGroupInfoCmd() *cobra.Command {
 
 // QueryGroupPolicyInfoCmd creates a CLI command for Query/GroupPolicyInfo.
 func QueryGroupPolicyInfoCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "group-policy-info [group-policy-account]",
 		Short: "Query for group policy info by account address of group policy",
 		Args:  cobra.ExactArgs(1),
@@ -134,7 +135,7 @@ func QueryGroupPolicyInfoCmd() *cobra.Command {
 
 // QueryGroupMembersCmd creates a CLI command for Query/GroupMembers.
 func QueryGroupMembersCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "group-members [id]",
 		Short: "Query for group members by group id with pagination flags",
 		Args:  cobra.ExactArgs(1),
@@ -175,7 +176,7 @@ func QueryGroupMembersCmd() *cobra.Command {
 
 // QueryGroupsByAdminCmd creates a CLI command for Query/GroupsByAdmin.
 func QueryGroupsByAdminCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "groups-by-admin [admin]",
 		Short: "Query for groups by admin account address with pagination flags",
 		Args:  cobra.ExactArgs(1),
@@ -211,7 +212,7 @@ func QueryGroupsByAdminCmd() *cobra.Command {
 
 // QueryGroupPoliciesByGroupCmd creates a CLI command for Query/GroupPoliciesByGroup.
 func QueryGroupPoliciesByGroupCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "group-policies-by-group [group-id]",
 		Short: "Query for group policies by group id with pagination flags",
 		Args:  cobra.ExactArgs(1),
@@ -252,7 +253,7 @@ func QueryGroupPoliciesByGroupCmd() *cobra.Command {
 
 // QueryGroupPoliciesByAdminCmd creates a CLI command for Query/GroupPoliciesByAdmin.
 func QueryGroupPoliciesByAdminCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "group-policies-by-admin [admin]",
 		Short: "Query for group policies by admin account address with pagination flags",
 		Args:  cobra.ExactArgs(1),
@@ -288,7 +289,7 @@ func QueryGroupPoliciesByAdminCmd() *cobra.Command {
 
 // QueryProposalCmd creates a CLI command for Query/Proposal.
 func QueryProposalCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "proposal [id]",
 		Short: "Query for proposal by id",
 		Args:  cobra.ExactArgs(1),
@@ -323,7 +324,7 @@ func QueryProposalCmd() *cobra.Command {
 
 // QueryProposalsByGroupPolicyCmd creates a CLI command for Query/ProposalsByGroupPolicy.
 func QueryProposalsByGroupPolicyCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "proposals-by-group-policy [group-policy-account]",
 		Short: "Query for proposals by account address of group policy with pagination flags",
 		Args:  cobra.ExactArgs(1),
@@ -359,7 +360,7 @@ func QueryProposalsByGroupPolicyCmd() *cobra.Command {
 
 // QueryVoteByProposalVoterCmd creates a CLI command for Query/VoteByProposalVoter.
 func QueryVoteByProposalVoterCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "vote [proposal-id] [voter]",
 		Short: "Query for vote by proposal id and voter account address",
 		Args:  cobra.ExactArgs(2),
@@ -395,7 +396,7 @@ func QueryVoteByProposalVoterCmd() *cobra.Command {
 
 // QueryVotesByProposalCmd creates a CLI command for Query/VotesByProposal.
 func QueryVotesByProposalCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "votes-by-proposal [proposal-id]",
 		Short: "Query for votes by proposal id with pagination flags",
 		Args:  cobra.ExactArgs(1),
@@ -471,7 +472,7 @@ func QueryTallyResultCmd() *cobra.Command {
 
 // QueryVotesByVoterCmd creates a CLI command for Query/VotesByVoter.
 func QueryVotesByVoterCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "votes-by-voter [voter]",
 		Short: "Query for votes by voter account address with pagination flags",
 		Args:  cobra.ExactArgs(1),

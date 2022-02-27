@@ -51,7 +51,7 @@ var ProposalFlags = []string{
 // to proposal type handlers that are implemented in other modules but are mounted
 // under the governance CLI (eg. parameter change proposals).
 func NewTxCmd(legacyPropCmds []*cobra.Command) *cobra.Command {
-	govTxCmd := &cobra.Command{
+	govTxCmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:                        types.ModuleName,
 		Short:                      "Governance transactions subcommands",
 		DisableFlagParsing:         true,
@@ -80,7 +80,7 @@ func NewTxCmd(legacyPropCmds []*cobra.Command) *cobra.Command {
 
 // NewCmdSubmitProposal implements submitting a proposal transaction command.
 func NewCmdSubmitProposal() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "submit-proposal",
 		Short: "Submit a proposal along with some messages and metadata",
 		Args:  cobra.ExactArgs(1),
@@ -138,7 +138,7 @@ Where proposal.json contains:
 // NewCmdSubmitLegacyProposal implements submitting a proposal transaction command.
 // Deprecated: please use NewCmdSubmitProposal instead.
 func NewCmdSubmitLegacyProposal() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "submit-legacy-proposal",
 		Short: "Submit a legacy proposal along with an initial deposit",
 		Long: strings.TrimSpace(
@@ -202,7 +202,7 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 
 // NewCmdDeposit implements depositing tokens for an active proposal.
 func NewCmdDeposit() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "deposit [proposal-id] [deposit]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Deposit tokens for an active proposal",
@@ -250,7 +250,7 @@ $ %s tx gov deposit 1 10stake --from mykey
 
 // NewCmdVote implements creating a new vote command.
 func NewCmdVote() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "vote [proposal-id] [option]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Vote for an active proposal, options: yes/no/no_with_veto/abstain",
@@ -304,7 +304,7 @@ $ %s tx gov vote 1 yes --from mykey
 
 // NewCmdWeightedVote implements creating a new weighted vote command.
 func NewCmdWeightedVote() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "weighted-vote [proposal-id] [weighted-options]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Vote for an active proposal, options: yes/no/no_with_veto/abstain",

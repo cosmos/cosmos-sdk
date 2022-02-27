@@ -16,7 +16,7 @@ import (
 
 // GetQueryCmd returns the cli query commands for this module
 func GetQueryCmd() *cobra.Command {
-	authorizationQueryCmd := &cobra.Command{
+	authorizationQueryCmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:                        authz.ModuleName,
 		Short:                      "Querying commands for the authz module",
 		Long:                       "",
@@ -36,7 +36,7 @@ func GetQueryCmd() *cobra.Command {
 
 // GetCmdQueryGrants implements the query authorization command.
 func GetCmdQueryGrants() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "grants [granter-addr] [grantee-addr] [msg-type-url]?",
 		Args:  cobra.RangeArgs(2, 3),
 		Short: "query grants for a granter-grantee pair and optionally a msg-type-url",
@@ -95,7 +95,7 @@ $ %s query %s grants cosmos1skjw.. cosmos1skjwj.. %s
 }
 
 func GetQueryGranterGrants() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "granter-grants [granter-addr]",
 		Args:  cobra.ExactArgs(1),
 		Short: "query authorization grants granted by granter",
@@ -143,7 +143,7 @@ $ %s q %s granter-grants cosmos1skj..
 }
 
 func GetQueryGranteeGrants() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "grantee-grants [grantee-addr]",
 		Args:  cobra.ExactArgs(1),
 		Short: "query authorization grants granted to a grantee",

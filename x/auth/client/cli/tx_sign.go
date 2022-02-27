@@ -23,7 +23,7 @@ const (
 
 // GetSignBatchCommand returns the transaction sign-batch command.
 func GetSignBatchCommand() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "sign-batch [file]",
 		Short: "Sign transaction batch files",
 		Long: `Sign batch files of transactions generated with --generate-only.
@@ -164,7 +164,7 @@ func setOutputFile(cmd *cobra.Command) (func(), error) {
 
 // GetSignCommand returns the transaction sign command.
 func GetSignCommand() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "sign [file]",
 		Short: "Sign a transaction generated offline",
 		Long: `Sign a transaction created with the --generate-only flag.

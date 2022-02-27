@@ -31,7 +31,7 @@ type BroadcastReq struct {
 
 // GetSignCommand returns the sign command
 func GetMultiSignCommand() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "multisign [file] [name] [[signature]...]",
 		Short: "Generate multisig signatures for transactions generated offline",
 		Long: strings.TrimSpace(
@@ -210,7 +210,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 }
 
 func GetMultiSignBatchCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "multisign-batch [file] [name] [[signature-file]...]",
 		Short: "Assemble multisig transactions in batch from batch signatures",
 		Long: strings.TrimSpace(

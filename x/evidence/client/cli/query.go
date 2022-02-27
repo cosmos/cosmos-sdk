@@ -18,7 +18,7 @@ import (
 // GetQueryCmd returns the CLI command with all evidence module query commands
 // mounted.
 func GetQueryCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   types.ModuleName,
 		Short: "Query for evidence by hash or for all (paginated) submitted evidence",
 		Long: strings.TrimSpace(

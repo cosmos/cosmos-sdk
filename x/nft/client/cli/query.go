@@ -22,7 +22,7 @@ const (
 
 // GetQueryCmd returns the cli query commands for this module
 func GetQueryCmd() *cobra.Command {
-	nftQueryCmd := &cobra.Command{
+	nftQueryCmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:                        nft.ModuleName,
 		Short:                      "Querying commands for the nft module",
 		Long:                       "",
@@ -45,7 +45,7 @@ func GetQueryCmd() *cobra.Command {
 
 // GetCmdQueryClass implements the query class command.
 func GetCmdQueryClass() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:     "class [class-id]",
 		Args:    cobra.ExactArgs(1),
 		Short:   "query an NFT class based on its id",
@@ -71,7 +71,7 @@ func GetCmdQueryClass() *cobra.Command {
 
 // GetCmdQueryClasses implements the query classes command.
 func GetCmdQueryClasses() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:     "classes",
 		Short:   "query all NFT classes",
 		Example: fmt.Sprintf(`$ %s query %s classes`, version.AppName, nft.ModuleName),
@@ -101,7 +101,7 @@ func GetCmdQueryClasses() *cobra.Command {
 
 // GetCmdQueryNFT implements the query nft command.
 func GetCmdQueryNFT() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:     "nft [class-id] [nft-id]",
 		Args:    cobra.ExactArgs(2),
 		Short:   "query an NFT based on its class and id.",
@@ -128,7 +128,7 @@ func GetCmdQueryNFT() *cobra.Command {
 
 // GetCmdQueryNFTs implements the query nft command.
 func GetCmdQueryNFTs() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "nfts",
 		Short: "query all NFTs of a given class or owner address.",
 		Long: strings.TrimSpace(
@@ -197,7 +197,7 @@ $ %s query %s nfts <class-id> --owner=<owner>
 
 // GetCmdQueryOwner implements the query owner command.
 func GetCmdQueryOwner() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:     "owner [class-id] [nft-id]",
 		Args:    cobra.ExactArgs(2),
 		Short:   "query the owner of the NFT based on its class and id.",
@@ -224,7 +224,7 @@ func GetCmdQueryOwner() *cobra.Command {
 
 // GetCmdQueryBalance implements the query balance command.
 func GetCmdQueryBalance() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:     "balance [owner] [class-id]",
 		Args:    cobra.ExactArgs(2),
 		Short:   "query the number of NFTs of a given class owned by the owner.",
@@ -251,7 +251,7 @@ func GetCmdQueryBalance() *cobra.Command {
 
 // GetCmdQuerySupply implements the query supply command.
 func GetCmdQuerySupply() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:     "supply [class-id]",
 		Args:    cobra.ExactArgs(1),
 		Short:   "query the number of nft based on the class.",

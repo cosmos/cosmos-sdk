@@ -12,7 +12,7 @@ import (
 
 // GetQueryCmd returns the cli query commands for the minting module.
 func GetQueryCmd() *cobra.Command {
-	mintingQueryCmd := &cobra.Command{
+	mintingQueryCmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the minting module",
 		DisableFlagParsing:         true,
@@ -32,7 +32,7 @@ func GetQueryCmd() *cobra.Command {
 // GetCmdQueryParams implements a command to return the current minting
 // parameters.
 func GetCmdQueryParams() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "params",
 		Short: "Query the current minting parameters",
 		Args:  cobra.NoArgs,
@@ -62,7 +62,7 @@ func GetCmdQueryParams() *cobra.Command {
 // GetCmdQueryInflation implements a command to return the current minting
 // inflation value.
 func GetCmdQueryInflation() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "inflation",
 		Short: "Query the current minting inflation value",
 		Args:  cobra.NoArgs,
@@ -92,7 +92,7 @@ func GetCmdQueryInflation() *cobra.Command {
 // GetCmdQueryAnnualProvisions implements a command to return the current minting
 // annual provisions value.
 func GetCmdQueryAnnualProvisions() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "annual-provisions",
 		Short: "Query the current minting annual provisions value",
 		Args:  cobra.NoArgs,

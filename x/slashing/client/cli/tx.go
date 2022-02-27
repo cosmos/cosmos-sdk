@@ -12,7 +12,7 @@ import (
 
 // NewTxCmd returns a root CLI command handler for all x/slashing transaction commands.
 func NewTxCmd() *cobra.Command {
-	slashingTxCmd := &cobra.Command{
+	slashingTxCmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:                        types.ModuleName,
 		Short:                      "Slashing transaction subcommands",
 		DisableFlagParsing:         true,
@@ -25,7 +25,7 @@ func NewTxCmd() *cobra.Command {
 }
 
 func NewUnjailTxCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "unjail",
 		Args:  cobra.NoArgs,
 		Short: "unjail validator previously jailed for downtime",

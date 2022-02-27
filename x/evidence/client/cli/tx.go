@@ -13,7 +13,7 @@ import (
 // Evidence types and Handlers while having the ability to create and sign txs
 // containing them all from a single root command.
 func GetTxCmd(childCmds []*cobra.Command) *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:                        types.ModuleName,
 		Short:                      "Evidence transaction subcommands",
 		DisableFlagParsing:         true,
@@ -35,7 +35,7 @@ func GetTxCmd(childCmds []*cobra.Command) *cobra.Command {
 // All concrete evidence submission child command handlers should be registered
 // under this command.
 func SubmitEvidenceCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "submit",
 		Short: "Submit arbitrary evidence of misbehavior",
 	}

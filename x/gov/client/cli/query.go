@@ -19,7 +19,7 @@ import (
 // GetQueryCmd returns the cli query commands for this module
 func GetQueryCmd() *cobra.Command {
 	// Group gov queries under a subcommand
-	govQueryCmd := &cobra.Command{
+	govQueryCmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the governance module",
 		DisableFlagParsing:         true,
@@ -45,7 +45,7 @@ func GetQueryCmd() *cobra.Command {
 
 // GetCmdQueryProposal implements the query proposal command.
 func GetCmdQueryProposal() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "proposal [proposal-id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query details of a single proposal",
@@ -93,7 +93,7 @@ $ %s query gov proposal 1
 // GetCmdQueryProposals implements a query proposals command. Command to Get a
 // Proposal Information.
 func GetCmdQueryProposals() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "proposals",
 		Short: "Query proposals with optional filters",
 		Long: strings.TrimSpace(
@@ -181,7 +181,7 @@ $ %s query gov proposals --page=2 --limit=100
 // GetCmdQueryVote implements the query proposal vote command. Command to Get a
 // Proposal Information.
 func GetCmdQueryVote() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "vote [proposal-id] [voter-addr]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Query details of a single vote",
@@ -255,7 +255,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 
 // GetCmdQueryVotes implements the command to query for proposal votes.
 func GetCmdQueryVotes() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "votes [proposal-id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query votes on a proposal",
@@ -339,7 +339,7 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 // GetCmdQueryDeposit implements the query proposal deposit command. Command to
 // get a specific Deposit Information
 func GetCmdQueryDeposit() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "deposit [proposal-id] [depositer-addr]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Query details of a deposit",
@@ -394,7 +394,7 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 
 // GetCmdQueryDeposits implements the command to query for proposal deposits.
 func GetCmdQueryDeposits() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "deposits [proposal-id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query deposits on a proposal",
@@ -457,7 +457,7 @@ $ %s query gov deposits 1
 
 // GetCmdQueryTally implements the command to query for proposal tally result.
 func GetCmdQueryTally() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "tally [proposal-id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Get the tally of a proposal vote",
@@ -514,7 +514,7 @@ $ %s query gov tally 1
 
 // GetCmdQueryParams implements the query params command.
 func GetCmdQueryParams() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "params",
 		Short: "Query the parameters of the governance process",
 		Long: strings.TrimSpace(
@@ -577,7 +577,7 @@ $ %s query gov params
 
 // GetCmdQueryParam implements the query param command.
 func GetCmdQueryParam() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "param [param-type]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query the parameters (voting|tallying|deposit) of the governance process",
@@ -631,7 +631,7 @@ $ %s query gov param deposit
 
 // GetCmdQueryProposer implements the query proposer command.
 func GetCmdQueryProposer() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "proposer [proposal-id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query the proposer of a governance proposal",

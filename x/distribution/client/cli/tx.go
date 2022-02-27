@@ -28,7 +28,7 @@ const (
 
 // NewTxCmd returns a root CLI command handler for all x/distribution transaction commands.
 func NewTxCmd() *cobra.Command {
-	distTxCmd := &cobra.Command{
+	distTxCmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:                        types.ModuleName,
 		Short:                      "Distribution transactions subcommands",
 		DisableFlagParsing:         true,
@@ -78,7 +78,7 @@ func newSplitAndApply(
 func NewWithdrawRewardsCmd() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "withdraw-rewards [validator-addr]",
 		Short: "Withdraw rewards from a given delegation address, and optionally withdraw validator commission if the delegation address given is a validator operator",
 		Long: strings.TrimSpace(
@@ -121,7 +121,7 @@ $ %s tx distribution withdraw-rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 
 }
 
 func NewWithdrawAllRewardsCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "withdraw-all-rewards",
 		Short: "withdraw all delegations rewards for a delegator",
 		Long: strings.TrimSpace(
@@ -186,7 +186,7 @@ $ %[1]s tx distribution withdraw-all-rewards --from mykey
 func NewSetWithdrawAddrCmd() *cobra.Command {
 	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "set-withdraw-addr [withdraw-addr]",
 		Short: "change the default withdraw address for rewards associated with an address",
 		Long: strings.TrimSpace(
@@ -222,7 +222,7 @@ $ %s tx distribution set-withdraw-addr %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 }
 
 func NewFundCommunityPoolCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "fund-community-pool [amount]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Funds the community pool with the specified amount",
@@ -261,7 +261,7 @@ $ %s tx distribution fund-community-pool 100uatom --from mykey
 func GetCmdSubmitProposal() *cobra.Command {
 	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "community-pool-spend [proposal-file]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Submit a community pool spend proposal",

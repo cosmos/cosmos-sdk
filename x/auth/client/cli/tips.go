@@ -15,7 +15,7 @@ import (
 )
 
 func GetAuxToFeeCommand() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "aux-to-fee <aux_signed_tx.json>",
 		Short: "includes the aux signer data in the tx, broadcast the tx, and sends the tip amount to the broadcaster",
 		Args:  cobra.ExactArgs(1),

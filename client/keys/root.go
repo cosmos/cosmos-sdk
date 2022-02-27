@@ -10,7 +10,7 @@ import (
 // Commands registers a sub-tree of commands to interact with
 // local private key storage.
 func Commands(defaultNodeHome string) *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "keys",
 		Short: "Manage your application's keys",
 		Long: `Keyring management commands. These keys may be in any format supported by the

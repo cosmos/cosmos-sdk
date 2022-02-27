@@ -23,7 +23,7 @@ const (
 
 // ExportCmd dumps app state to JSON.
 func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "export",
 		Short: "Export state to JSON",
 		RunE: func(cmd *cobra.Command, args []string) error {

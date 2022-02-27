@@ -13,7 +13,7 @@ import (
 
 // GetBroadcastCommand returns the tx broadcast command.
 func GetBroadcastCommand() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "broadcast [file_path]",
 		Short: "Broadcast transactions generated offline",
 		Long: strings.TrimSpace(`Broadcast transactions created with the --generate-only

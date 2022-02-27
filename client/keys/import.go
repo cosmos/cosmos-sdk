@@ -12,7 +12,7 @@ import (
 
 // ImportKeyCommand imports private keys from a keyfile.
 func ImportKeyCommand() *cobra.Command {
-	return &cobra.Command{
+	return &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "import <name> <keyfile>",
 		Short: "Import private keys into the local keybase",
 		Long:  "Import a ASCII armored private key into the local keybase.",

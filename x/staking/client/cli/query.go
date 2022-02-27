@@ -16,7 +16,7 @@ import (
 
 // GetQueryCmd returns the cli query commands for this module
 func GetQueryCmd() *cobra.Command {
-	stakingQueryCmd := &cobra.Command{
+	stakingQueryCmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the staking module",
 		DisableFlagParsing:         true,
@@ -48,7 +48,7 @@ func GetQueryCmd() *cobra.Command {
 func GetCmdQueryValidator() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "validator [validator-addr]",
 		Short: "Query a validator",
 		Long: strings.TrimSpace(
@@ -90,7 +90,7 @@ $ %s query staking validator %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 
 // GetCmdQueryValidators implements the query all validators command.
 func GetCmdQueryValidators() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "validators",
 		Short: "Query for all validators",
 		Args:  cobra.NoArgs,
@@ -136,7 +136,7 @@ $ %s query staking validators
 func GetCmdQueryValidatorUnbondingDelegations() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "unbonding-delegations-from [validator-addr]",
 		Short: "Query all unbonding delegatations from a validator",
 		Long: strings.TrimSpace(
@@ -191,7 +191,7 @@ $ %s query staking unbonding-delegations-from %s1gghjut3ccd8ay0zduzj64hwre2fxs9l
 func GetCmdQueryValidatorRedelegations() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "redelegations-from [validator-addr]",
 		Short: "Query all outgoing redelegatations from a validator",
 		Long: strings.TrimSpace(
@@ -246,7 +246,7 @@ func GetCmdQueryDelegation() *cobra.Command {
 	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "delegation [delegator-addr] [validator-addr]",
 		Short: "Query a delegation based on address and validator address",
 		Long: strings.TrimSpace(
@@ -300,7 +300,7 @@ $ %s query staking delegation %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p %s1gghju
 func GetCmdQueryDelegations() *cobra.Command {
 	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "delegations [delegator-addr]",
 		Short: "Query all delegations made by one delegator",
 		Long: strings.TrimSpace(
@@ -355,7 +355,7 @@ $ %s query staking delegations %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 func GetCmdQueryValidatorDelegations() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "delegations-to [validator-addr]",
 		Short: "Query all delegations made to one validator",
 		Long: strings.TrimSpace(
@@ -411,7 +411,7 @@ func GetCmdQueryUnbondingDelegation() *cobra.Command {
 	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "unbonding-delegation [delegator-addr] [validator-addr]",
 		Short: "Query an unbonding-delegation record based on delegator and validator address",
 		Long: strings.TrimSpace(
@@ -465,7 +465,7 @@ $ %s query staking unbonding-delegation %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9
 func GetCmdQueryUnbondingDelegations() *cobra.Command {
 	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "unbonding-delegations [delegator-addr]",
 		Short: "Query all unbonding-delegations records for one delegator",
 		Long: strings.TrimSpace(
@@ -521,7 +521,7 @@ func GetCmdQueryRedelegation() *cobra.Command {
 	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "redelegation [delegator-addr] [src-validator-addr] [dst-validator-addr]",
 		Short: "Query a redelegation record based on delegator and a source and destination validator address",
 		Long: strings.TrimSpace(
@@ -581,7 +581,7 @@ $ %s query staking redelegation %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p %s1l2r
 func GetCmdQueryRedelegations() *cobra.Command {
 	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "redelegations [delegator-addr]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query all redelegations records for one delegator",
@@ -633,7 +633,7 @@ $ %s query staking redelegation %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 
 // GetCmdQueryHistoricalInfo implements the historical info query command
 func GetCmdQueryHistoricalInfo() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "historical-info [height]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query historical info at given height",
@@ -675,7 +675,7 @@ $ %s query staking historical-info 5
 
 // GetCmdQueryPool implements the pool query command.
 func GetCmdQueryPool() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "pool",
 		Args:  cobra.NoArgs,
 		Short: "Query the current staking pool values",
@@ -711,7 +711,7 @@ $ %s query staking pool
 
 // GetCmdQueryParams implements the params query command.
 func GetCmdQueryParams() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "params",
 		Args:  cobra.NoArgs,
 		Short: "Query the current staking parameters information",

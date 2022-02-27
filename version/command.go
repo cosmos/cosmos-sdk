@@ -13,7 +13,7 @@ const flagLong = "long"
 
 // NewVersionCommand returns a CLI command to interactively print the application binary version information.
 func NewVersionCommand() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "version",
 		Short: "Print the application binary version information",
 		RunE: func(cmd *cobra.Command, _ []string) error {

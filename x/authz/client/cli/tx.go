@@ -33,7 +33,7 @@ const (
 
 // GetTxCmd returns the transaction commands for this module
 func GetTxCmd() *cobra.Command {
-	AuthorizationTxCmd := &cobra.Command{
+	AuthorizationTxCmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:                        authz.ModuleName,
 		Short:                      "Authorization transactions subcommands",
 		Long:                       "Authorize and revoke access to execute transactions on behalf of your address",
@@ -52,7 +52,7 @@ func GetTxCmd() *cobra.Command {
 }
 
 func NewCmdGrantAuthorization() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "grant <grantee> <authorization_type=\"send\"|\"generic\"|\"delegate\"|\"unbond\"|\"redelegate\"> --from <granter>",
 		Short: "Grant authorization to an address",
 		Long: strings.TrimSpace(
@@ -178,7 +178,7 @@ Examples:
 }
 
 func NewCmdRevokeAuthorization() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "revoke [grantee] [msg-type-url] --from=[granter]",
 		Short: "revoke authorization",
 		Long: strings.TrimSpace(
@@ -211,7 +211,7 @@ Example:
 }
 
 func NewCmdExecAuthorization() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "exec [tx-json-file] --from [grantee]",
 		Short: "execute tx on behalf of granter account",
 		Long: strings.TrimSpace(

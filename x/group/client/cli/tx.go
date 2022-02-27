@@ -23,7 +23,7 @@ const (
 
 // TxCmd returns a root CLI command handler for all x/group transaction commands.
 func TxCmd(name string) *cobra.Command {
-	txCmd := &cobra.Command{
+	txCmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:                        name,
 		Short:                      "Group transaction subcommands",
 		DisableFlagParsing:         true,
@@ -52,7 +52,7 @@ func TxCmd(name string) *cobra.Command {
 
 // MsgCreateGroupCmd creates a CLI command for Msg/CreateGroup.
 func MsgCreateGroupCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use: "create-group [admin] [metadata] [members-json-file]",
 		Short: "Create a group which is an aggregation " +
 			"of member accounts with associated weights and " +
@@ -123,7 +123,7 @@ Where members.json contains:
 
 // MsgUpdateGroupMembersCmd creates a CLI command for Msg/UpdateGroupMembers.
 func MsgUpdateGroupMembersCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "update-group-members [admin] [group-id] [members-json-file]",
 		Short: "Update a group's members. Set a member's weight to \"0\" to delete it.",
 		Long: strings.TrimSpace(
@@ -196,7 +196,7 @@ Set a member's weight to "0" to delete it.
 
 // MsgUpdateGroupAdminCmd creates a CLI command for Msg/UpdateGroupAdmin.
 func MsgUpdateGroupAdminCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "update-group-admin [admin] [group-id] [new-admin]",
 		Short: "Update a group's admin",
 		Args:  cobra.ExactArgs(3),
@@ -236,7 +236,7 @@ func MsgUpdateGroupAdminCmd() *cobra.Command {
 
 // MsgUpdateGroupMetadataCmd creates a CLI command for Msg/UpdateGroupMetadata.
 func MsgUpdateGroupMetadataCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "update-group-metadata [admin] [group-id] [metadata]",
 		Short: "Update a group's metadata",
 		Args:  cobra.ExactArgs(3),
@@ -276,7 +276,7 @@ func MsgUpdateGroupMetadataCmd() *cobra.Command {
 
 // MsgCreateGroupWithPolicyCmd creates a CLI command for Msg/CreateGroupWithPolicy.
 func MsgCreateGroupWithPolicyCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use: "create-group-with-policy [admin] [group-metadata] [group-policy-metadata] [members-json-file] [decision-policy]",
 		Short: "Create a group with policy which is an aggregation " +
 			"of member accounts with associated weights, " +
@@ -366,7 +366,7 @@ where members.json contains:
 
 // MsgCreateGroupPolicyCmd creates a CLI command for Msg/CreateGroupPolicy.
 func MsgCreateGroupPolicyCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use: "create-group-policy [admin] [group-id] [metadata] [decision-policy]",
 		Short: "Create a group policy which is an account " +
 			"associated with a group and a decision policy. " +
@@ -432,7 +432,7 @@ Ex: '{"@type":"/cosmos.group.v1.PercentageDecisionPolicy", "percentage":"0.5", "
 
 // MsgUpdateGroupPolicyAdminCmd creates a CLI command for Msg/UpdateGroupPolicyAdmin.
 func MsgUpdateGroupPolicyAdminCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "update-group-policy-admin [admin] [group-policy-account] [new-admin]",
 		Short: "Update a group policy admin",
 		Args:  cobra.ExactArgs(3),
@@ -467,7 +467,7 @@ func MsgUpdateGroupPolicyAdminCmd() *cobra.Command {
 
 // MsgUpdateGroupPolicyDecisionPolicyCmd creates a CLI command for Msg/UpdateGroupPolicyDecisionPolicy.
 func MsgUpdateGroupPolicyDecisionPolicyCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "update-group-policy-decision-policy [admin] [group-policy-account] [decision-policy]",
 		Short: "Update a group policy's decision policy",
 		Args:  cobra.ExactArgs(3),
@@ -516,7 +516,7 @@ func MsgUpdateGroupPolicyDecisionPolicyCmd() *cobra.Command {
 
 // MsgUpdateGroupPolicyMetadataCmd creates a CLI command for Msg/MsgUpdateGroupPolicyMetadata.
 func MsgUpdateGroupPolicyMetadataCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "update-group-policy-metadata [admin] [group-policy-account] [new-metadata]",
 		Short: "Update a group policy metadata",
 		Args:  cobra.ExactArgs(3),
@@ -551,7 +551,7 @@ func MsgUpdateGroupPolicyMetadataCmd() *cobra.Command {
 
 // MsgSubmitProposalCmd creates a CLI command for Msg/SubmitProposal.
 func MsgSubmitProposalCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "submit-proposal [proposal_json_file]",
 		Short: "Submit a new proposal",
 		Long: fmt.Sprintf(`Submit a new proposal.
@@ -628,7 +628,7 @@ Example:
 
 // MsgWithdrawProposalCmd creates a CLI command for Msg/WithdrawProposal.
 func MsgWithdrawProposalCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "withdraw-proposal [proposal-id] [group-policy-admin-or-proposer]",
 		Short: "Withdraw a submitted proposal",
 		Long: `Withdraw a submitted proposal.
@@ -679,7 +679,7 @@ Parameters:
 
 // MsgVoteCmd creates a CLI command for Msg/Vote.
 func MsgVoteCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "vote [proposal-id] [voter] [vote-option] [metadata]",
 		Short: "Vote on a proposal",
 		Long: `Vote on a proposal.
@@ -746,7 +746,7 @@ Parameters:
 
 // MsgExecCmd creates a CLI command for Msg/MsgExec.
 func MsgExecCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "exec [proposal-id]",
 		Short: "Execute a proposal",
 		Args:  cobra.ExactArgs(1),

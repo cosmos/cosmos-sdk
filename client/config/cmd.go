@@ -16,7 +16,7 @@ import (
 // Cmd returns a CLI command to interactively create an application CLI
 // config file.
 func Cmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "config <key> [value]",
 		Short: "Create or query an application CLI configuration file",
 		RunE:  runConfigCmd,

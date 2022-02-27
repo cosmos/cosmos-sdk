@@ -15,7 +15,7 @@ import (
 // GetQueryCmd returns the cli query commands for this module
 func GetQueryCmd() *cobra.Command {
 	// Group slashing queries under a subcommand
-	slashingQueryCmd := &cobra.Command{
+	slashingQueryCmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the slashing module",
 		DisableFlagParsing:         true,
@@ -35,7 +35,7 @@ func GetQueryCmd() *cobra.Command {
 
 // GetCmdQuerySigningInfo implements the command to query signing info.
 func GetCmdQuerySigningInfo() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "signing-info [validator-conspub]",
 		Short: "Query a validator's signing information",
 		Long: strings.TrimSpace(`Use a validators' consensus public key to find the signing-info for that validator:
@@ -73,7 +73,7 @@ $ <appd> query slashing signing-info '{"@type":"/cosmos.crypto.ed25519.PubKey","
 
 // GetCmdQuerySigningInfos implements the command to query signing infos.
 func GetCmdQuerySigningInfos() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "signing-infos",
 		Short: "Query signing information of all validators",
 		Long: strings.TrimSpace(`signing infos of validators:
@@ -111,7 +111,7 @@ $ <appd> query slashing signing-infos
 
 // GetCmdQueryParams implements a command to fetch slashing parameters.
 func GetCmdQueryParams() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "params",
 		Short: "Query the current slashing parameters",
 		Args:  cobra.NoArgs,

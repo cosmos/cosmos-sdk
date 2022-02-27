@@ -13,7 +13,7 @@ import (
 // RosettaCommand builds the rosetta root command given
 // a protocol buffers serializer/deserializer
 func RosettaCommand(ir codectypes.InterfaceRegistry, cdc codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "rosetta",
 		Short: "spin up a rosetta server",
 		RunE: func(cmd *cobra.Command, args []string) error {

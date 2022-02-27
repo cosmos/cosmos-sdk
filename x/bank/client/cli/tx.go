@@ -12,7 +12,7 @@ import (
 
 // NewTxCmd returns a root CLI command handler for all x/bank transaction commands.
 func NewTxCmd() *cobra.Command {
-	txCmd := &cobra.Command{
+	txCmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:                        types.ModuleName,
 		Short:                      "Bank transaction subcommands",
 		DisableFlagParsing:         true,
@@ -27,7 +27,7 @@ func NewTxCmd() *cobra.Command {
 
 // NewSendTxCmd returns a CLI command handler for creating a MsgSend transaction.
 func NewSendTxCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use: "send [from_key_or_address] [to_address] [amount]",
 		Short: `Send funds from one account to another. Note, the'--from' flag is
 ignored as it is implied from [from_key_or_address].`,

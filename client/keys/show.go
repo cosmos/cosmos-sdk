@@ -31,7 +31,7 @@ const (
 
 // ShowKeysCmd shows key information for a given key name.
 func ShowKeysCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "show [name_or_address [name_or_address...]]",
 		Short: "Retrieve key information by name or address",
 		Long: `Display keys details. If multiple names or addresses are provided,

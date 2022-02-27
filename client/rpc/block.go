@@ -14,7 +14,7 @@ import (
 
 // BlockCommand returns the verified block data for a given heights
 func BlockCommand() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "block [height]",
 		Short: "Get verified data for the block at given height",
 		Args:  cobra.MaximumNArgs(1),

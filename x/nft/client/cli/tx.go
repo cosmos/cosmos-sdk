@@ -15,7 +15,7 @@ import (
 
 // GetTxCmd returns the transaction commands for this module
 func GetTxCmd() *cobra.Command {
-	nftTxCmd := &cobra.Command{
+	nftTxCmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:                        nft.ModuleName,
 		Short:                      "nft transactions subcommands",
 		Long:                       "Provides the most common nft logic for upper-level applications, compatible with Ethereum's erc721 contract",
@@ -32,7 +32,7 @@ func GetTxCmd() *cobra.Command {
 }
 
 func NewCmdSend() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "send [class-id] [nft-id] [receiver] --from [sender]",
 		Args:  cobra.ExactArgs(3),
 		Short: "transfer ownership of nft",

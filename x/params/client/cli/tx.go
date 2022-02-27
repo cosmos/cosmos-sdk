@@ -18,7 +18,7 @@ import (
 // NewSubmitParamChangeProposalTxCmd returns a CLI command handler for creating
 // a parameter change proposal governance transaction.
 func NewSubmitParamChangeProposalTxCmd() *cobra.Command {
-	return &cobra.Command{
+	return &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "param-change [proposal-file]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Submit a parameter change proposal",

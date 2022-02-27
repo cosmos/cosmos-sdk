@@ -13,7 +13,7 @@ import (
 // GetEncodeCommand returns the encode command to take a JSONified transaction and turn it into
 // Amino-serialized bytes
 func GetEncodeCommand() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "encode [file]",
 		Short: "Encode transactions generated offline",
 		Long: `Encode transactions created with the --generate-only flag and signed with the sign command.

@@ -26,7 +26,7 @@ var (
 
 // Cmd creates a main CLI command
 func Cmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "debug",
 		Short: "Tool for helping with debugging your application",
 		RunE:  client.ValidateCmd,
@@ -48,7 +48,7 @@ func getPubKeyFromString(ctx client.Context, pkstr string) (cryptotypes.PubKey, 
 }
 
 func PubkeyCmd() *cobra.Command {
-	return &cobra.Command{
+	return &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "pubkey [pubkey]",
 		Short: "Decode a pubkey from proto JSON",
 		Long: fmt.Sprintf(`Decode a pubkey from proto JSON and display it's address.
@@ -123,7 +123,7 @@ func getPubKeyFromRawString(pkstr string, keytype string) (cryptotypes.PubKey, e
 }
 
 func PubkeyRawCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "pubkey-raw [pubkey] -t [{ed25519, secp256k1}]",
 		Short: "Decode a ED25519 or secp256k1 pubkey from hex, base64, or bech32",
 		Long: fmt.Sprintf(`Decode a pubkey from hex, base64, or bech32.
@@ -190,7 +190,7 @@ $ %s debug pubkey-raw cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 }
 
 func AddrCmd() *cobra.Command {
-	return &cobra.Command{
+	return &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "addr [address]",
 		Short: "Convert an address between hex and bech32",
 		Long: fmt.Sprintf(`Convert an address between hex encoding and bech32.
@@ -231,7 +231,7 @@ $ %s debug addr cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 }
 
 func RawBytesCmd() *cobra.Command {
-	return &cobra.Command{
+	return &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "raw-bytes [raw-bytes]",
 		Short: "Convert raw bytes output (eg. [10 21 13 255]) to hex",
 		Long: fmt.Sprintf(`Convert raw-bytes to hex.

@@ -10,7 +10,7 @@ const flagListNames = "list-names"
 
 // ListKeysCmd lists all keys in the key store.
 func ListKeysCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "list",
 		Short: "List all keys",
 		Long: `Return a list of all public keys stored by this key manager

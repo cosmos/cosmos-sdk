@@ -13,7 +13,7 @@ import (
 
 // NewTxCmd returns a root CLI command handler for all x/crisis transaction commands.
 func NewTxCmd() *cobra.Command {
-	txCmd := &cobra.Command{
+	txCmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:                        types.ModuleName,
 		Short:                      "Crisis transactions subcommands",
 		DisableFlagParsing:         true,
@@ -29,7 +29,7 @@ func NewTxCmd() *cobra.Command {
 // NewMsgVerifyInvariantTxCmd returns a CLI command handler for creating a
 // MsgVerifyInvariant transaction.
 func NewMsgVerifyInvariantTxCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "invariant-broken [module-name] [invariant-route]",
 		Short: "Submit proof that an invariant broken to halt the chain",
 		Args:  cobra.ExactArgs(2),

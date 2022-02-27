@@ -13,7 +13,7 @@ import (
 
 // RenameKeyCommand renames a key from the key store.
 func RenameKeyCommand() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "rename <old_name> <new_name>",
 		Short: "Rename an existing key",
 		Long: `Rename a key from the Keybase backend.

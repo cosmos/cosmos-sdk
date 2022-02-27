@@ -18,7 +18,7 @@ import (
 
 // ShowNodeIDCmd - ported from Tendermint, dump node ID to stdout
 func ShowNodeIDCmd() *cobra.Command {
-	return &cobra.Command{
+	return &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "show-node-id",
 		Short: "Show this node's ID",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -71,7 +71,7 @@ func ShowValidatorCmd() *cobra.Command {
 
 // ShowAddressCmd - show this node's validator address
 func ShowAddressCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "show-address",
 		Short: "Shows this node's tendermint validator consensus address",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -93,7 +93,7 @@ func ShowAddressCmd() *cobra.Command {
 
 // VersionCmd prints tendermint and ABCI version numbers.
 func VersionCmd() *cobra.Command {
-	return &cobra.Command{
+	return &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "version",
 		Short: "Print tendermint libraries' version",
 		Long: `Print protocols' and libraries' version numbers
@@ -123,7 +123,7 @@ against which this app has been compiled.
 
 // UnsafeResetAllCmd - extension of the tendermint command, resets initialization
 func UnsafeResetAllCmd() *cobra.Command {
-	return &cobra.Command{
+	return &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "unsafe-reset-all",
 		Short: "Resets the blockchain database, removes address book files, and resets data/priv_validator_state.json to the genesis state",
 		RunE: func(cmd *cobra.Command, args []string) error {

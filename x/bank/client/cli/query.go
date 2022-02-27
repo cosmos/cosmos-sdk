@@ -21,7 +21,7 @@ const (
 // provided clientCtx should have, at a minimum, a verifier, Tendermint RPC client,
 // and marshaler set.
 func GetQueryCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the bank module",
 		DisableFlagParsing:         true,
@@ -39,7 +39,7 @@ func GetQueryCmd() *cobra.Command {
 }
 
 func GetBalancesCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "balances [address]",
 		Short: "Query for account balances by address",
 		Long: strings.TrimSpace(
@@ -103,7 +103,7 @@ Example:
 
 // GetCmdDenomsMetadata defines the cobra command to query client denomination metadata.
 func GetCmdDenomsMetadata() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "denom-metadata",
 		Short: "Query the client metadata for coin denominations",
 		Long: strings.TrimSpace(
@@ -156,7 +156,7 @@ To query for the client metadata of a specific coin denomination use:
 }
 
 func GetCmdQueryTotalSupply() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "total",
 		Short: "Query the total supply of coins of the chain",
 		Args:  cobra.NoArgs,

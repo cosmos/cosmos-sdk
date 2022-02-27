@@ -18,7 +18,7 @@ const (
 
 // ExportKeyCommand exports private keys from the key store.
 func ExportKeyCommand() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "export <name>",
 		Short: "Export private keys",
 		Long: `Export a private key from the local keyring in ASCII-armored encrypted format.

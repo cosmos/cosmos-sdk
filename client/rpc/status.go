@@ -33,7 +33,7 @@ type resultStatus struct {
 
 // StatusCommand returns the command to return the status of the network.
 func StatusCommand() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "status",
 		Short: "Query remote node for status",
 		RunE: func(cmd *cobra.Command, _ []string) error {

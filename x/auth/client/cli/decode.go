@@ -15,7 +15,7 @@ const flagHex = "hex"
 // GetDecodeCommand returns the decode command to take serialized bytes and turn
 // it into a JSON-encoded transaction.
 func GetDecodeCommand() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "decode [protobuf-byte-string]",
 		Short: "Decode a binary encoded transaction string",
 		Args:  cobra.ExactArgs(1),

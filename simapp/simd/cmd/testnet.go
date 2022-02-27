@@ -86,7 +86,7 @@ func addTestnetFlagsToCmd(cmd *cobra.Command) {
 // NewTestnetCmd creates a root testnet command with subcommands to run an in-process testnet or initialize
 // validator configuration files for running a multi-validator testnet in a separate process
 func NewTestnetCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator) *cobra.Command {
-	testnetCmd := &cobra.Command{
+	testnetCmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:                        "testnet",
 		Short:                      "subcommands for starting or configuring local testnets",
 		DisableFlagParsing:         true,
@@ -102,7 +102,7 @@ func NewTestnetCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBala
 
 // get cmd to initialize all files for tendermint testnet and application
 func testnetInitFilesCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator) *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "init-files",
 		Short: "Initialize config directories & files for a multi-validator testnet running locally via separate processes (e.g. Docker Compose or similar)",
 		Long: `init-files will setup "v" number of directories and populate each with
@@ -152,7 +152,7 @@ Example:
 
 // get cmd to start multi validator in-process testnet
 func testnetStartCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "start",
 		Short: "Launch an in-process multi-validator testnet",
 		Long: `testnet will launch an in-process multi-validator testnet,

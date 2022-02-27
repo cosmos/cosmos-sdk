@@ -11,7 +11,7 @@ import (
 
 // NewQueryCmd returns a root CLI command handler for all x/params query commands.
 func NewQueryCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the params module",
 		DisableFlagParsing:         true,
@@ -27,7 +27,7 @@ func NewQueryCmd() *cobra.Command {
 // NewQuerySubspaceParamsCmd returns a CLI command handler for querying subspace
 // parameters managed by the x/params module.
 func NewQuerySubspaceParamsCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "subspace [subspace] [key]",
 		Short: "Query for raw parameters by subspace and key",
 		Args:  cobra.ExactArgs(2),

@@ -22,7 +22,7 @@ const (
 
 // GetTxCmd returns vesting module's transaction commands.
 func GetTxCmd() *cobra.Command {
-	txCmd := &cobra.Command{
+	txCmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:                        types.ModuleName,
 		Short:                      "Vesting transaction subcommands",
 		DisableFlagParsing:         true,
@@ -42,7 +42,7 @@ func GetTxCmd() *cobra.Command {
 // NewMsgCreateVestingAccountCmd returns a CLI command handler for creating a
 // MsgCreateVestingAccount transaction.
 func NewMsgCreateVestingAccountCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "create-vesting-account [to_address] [amount] [end_time]",
 		Short: "Create a new vesting account funded with an allocation of tokens.",
 		Long: `Create a new vesting account funded with an allocation of tokens. The
@@ -88,7 +88,7 @@ timestamp.`,
 // NewMsgCreatePermanentLockedAccountCmd returns a CLI command handler for creating a
 // MsgCreatePermanentLockedAccount transaction.
 func NewMsgCreatePermanentLockedAccountCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "create-permanent-locked-account [to_address] [amount]",
 		Short: "Create a new permanently locked account funded with an allocation of tokens.",
 		Long: `Create a new account funded with an allocation of permanently locked tokens. These
@@ -134,7 +134,7 @@ type InputPeriod struct {
 // NewMsgCreatePeriodicVestingAccountCmd returns a CLI command handler for creating a
 // MsgCreatePeriodicVestingAccountCmd transaction.
 func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "create-periodic-vesting-account [to_address] [periods_json_file]",
 		Short: "Create a new vesting account funded with an allocation of tokens.",
 		Long: `A sequence of coins and period length in seconds. Periods are sequential, in that the duration of of a period only starts at the end of the previous period. The duration of the first period starts upon account creation. For instance, the following periods.json file shows 20 "test" coins vesting 30 days apart from each other.

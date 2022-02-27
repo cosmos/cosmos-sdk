@@ -15,7 +15,7 @@ import (
 
 // GetQueryCmd returns the cli query commands for this module
 func GetQueryCmd() *cobra.Command {
-	feegrantQueryCmd := &cobra.Command{
+	feegrantQueryCmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:                        feegrant.ModuleName,
 		Short:                      "Querying commands for the feegrant module",
 		DisableFlagParsing:         true,
@@ -34,7 +34,7 @@ func GetQueryCmd() *cobra.Command {
 
 // GetCmdQueryFeeGrant returns cmd to query for a grant between granter and grantee.
 func GetCmdQueryFeeGrant() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "grant [granter] [grantee]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Query details of a single grant",
@@ -83,7 +83,7 @@ $ %s query feegrant grant [granter] [grantee]
 
 // GetCmdQueryFeeGrantsByGrantee returns cmd to query for all grants for a grantee.
 func GetCmdQueryFeeGrantsByGrantee() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "grants [grantee]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query all grants of a grantee",
@@ -132,7 +132,7 @@ $ %s query feegrant grants [grantee]
 
 // GetCmdQueryFeeGrantsByGranter returns cmd to query for all grants by a granter.
 func GetCmdQueryFeeGrantsByGranter() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "grants [granter]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query all grants by a granter",

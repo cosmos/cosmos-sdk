@@ -85,7 +85,7 @@ const (
 
 // LineBreak can be included in a command list to provide a blank line
 // to help with readability
-var LineBreak = &cobra.Command{Run: func(*cobra.Command, []string) {}}
+var LineBreak = &cobra.Command{Run: func(*cobra.Command, []string) {}} // nolint: exhaustivestruct
 
 // AddQueryFlagsToCmd adds common flags to a module query command.
 func AddQueryFlagsToCmd(cmd *cobra.Command) {

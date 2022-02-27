@@ -20,10 +20,11 @@ import (
 )
 
 // authz message types
+// nolint: exhaustivestruct
 var (
-	TypeMsgGrant  = sdk.MsgTypeURL(&authz.MsgGrant{})  // nolint: exhaustivestruct
-	TypeMsgRevoke = sdk.MsgTypeURL(&authz.MsgRevoke{}) // nolint: exhaustivestruct
-	TypeMsgExec   = sdk.MsgTypeURL(&authz.MsgExec{})   // nolint: exhaustivestruct
+	TypeMsgGrant  = sdk.MsgTypeURL(&authz.MsgGrant{})
+	TypeMsgRevoke = sdk.MsgTypeURL(&authz.MsgRevoke{})
+	TypeMsgExec   = sdk.MsgTypeURL(&authz.MsgExec{})
 )
 
 // Simulation operation weights constants

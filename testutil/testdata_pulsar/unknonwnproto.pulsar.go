@@ -4,20 +4,18 @@ package testdata_pulsar
 import (
 	binary "encoding/binary"
 	fmt "fmt"
-	io "io"
-	math "math"
-	reflect "reflect"
-	sort "sort"
-	sync "sync"
-
 	runtime "github.com/cosmos/cosmos-proto/runtime"
+	v1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/tx/v1beta1"
 	_ "github.com/gogo/protobuf/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	anypb "google.golang.org/protobuf/types/known/anypb"
-
-	v1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/tx/v1beta1"
+	io "io"
+	math "math"
+	reflect "reflect"
+	sort "sort"
+	sync "sync"
 )
 
 var (

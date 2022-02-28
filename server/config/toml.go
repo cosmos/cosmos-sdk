@@ -79,7 +79,7 @@ iavl-cache-size = {{ .BaseConfig.IAVLCacheSize }}
 # An empty string indicates that a fallback will be used.
 # First fallback is the deprecated compile-time types.DBBackend value.
 # Second fallback (if the types.DBBackend also isn't set), is the db-backend value set in Tendermint's config.toml.
-app-db-backend = {{ .BaseConfig.AppDBBackend }}
+app-db-backend = "{{ .BaseConfig.AppDBBackend }}"
 
 ###############################################################################
 ###                         Telemetry Configuration                         ###

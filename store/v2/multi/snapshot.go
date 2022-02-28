@@ -107,9 +107,12 @@ func (rs *Store) Restore(
 	var subStore *substore
 	var storeSchemaReceived = false
 
+	var snapshotItem snapshottypes.SnapshotItem
+
+loop:
 	for {
-		snapshotItem := &snapshottypes.SnapshotItem{}
-		err := protoReader.ReadMsg(snapshotItem)
+		snapshotItem = snapshottypes.SnapshotItem{}
+		err := protoReader.ReadMsg(&snapshotItem)
 		if err == io.EOF {
 			break
 		} else if err != nil {
@@ -153,15 +156,15 @@ func (rs *Store) Restore(
 			subStore.Set(item.KV.Key, item.KV.Value)
 
 		default:
-			return *snapshotItem, nil
+			break loop
 		}
 	}
 
 	// commit the all key/values to store
 	_, err := rs.commit(height)
 	if err != nil {
-		return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, fmt.Sprintf("error during commit the store at height %d", height))
+		return snapshotItem, sdkerrors.Wrap(err, fmt.Sprintf("error during commit the store at height %d", height))
 	}
 
-	return snapshottypes.SnapshotItem{}, nil
+	return snapshotItem, nil
 }

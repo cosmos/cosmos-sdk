@@ -804,7 +804,7 @@ func (suite *SimTestSuite) TestSimulateLeaveGroup() {
 	suite.Require().NoError(err)
 
 	var msg group.MsgLeaveGroup
-	err = group.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	err = legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(groupRes.GroupId, msg.GroupId)

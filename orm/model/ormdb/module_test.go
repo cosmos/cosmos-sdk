@@ -3,9 +3,14 @@ package ormdb_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/golang/mock/gomock"
+
+	"github.com/cosmos/cosmos-sdk/orm/testing/ormmocks"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"gotest.tools/v3/assert"
@@ -15,6 +20,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormdb"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+	"github.com/cosmos/cosmos-sdk/orm/testing/ormtest"
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
 )
 
 // These tests use a simulated bank keeper. Addresses and balances use
@@ -27,12 +35,20 @@ var TestBankSchema = ormdb.ModuleSchema{
 }
 
 type keeper struct {
-	balanceTable             ormtable.Table
-	balanceAddressDenomIndex ormtable.UniqueIndex
-	balanceDenomIndex        ormtable.Index
+	store testpb.BankStore
+}
 
-	supplyTable      ormtable.Table
-	supplyDenomIndex ormtable.UniqueIndex
+func NewKeeper(db ormdb.ModuleDB) (Keeper, error) {
+	store, err := testpb.NewBankStore(db)
+	return keeper{store}, err
+}
+
+type Keeper interface {
+	Send(ctx context.Context, from, to, denom string, amount uint64) error
+	Mint(ctx context.Context, acct, denom string, amount uint64) error
+	Burn(ctx context.Context, acct, denom string, amount uint64) error
+	Balance(ctx context.Context, acct, denom string) (uint64, error)
+	Supply(ctx context.Context, denom string) (uint64, error)
 }
 
 func (k keeper) Send(ctx context.Context, from, to, denom string, amount uint64) error {
@@ -45,14 +61,18 @@ func (k keeper) Send(ctx context.Context, from, to, denom string, amount uint64)
 }
 
 func (k keeper) Mint(ctx context.Context, acct, denom string, amount uint64) error {
-	supply := &testpb.Supply{Denom: denom}
-	_, err := k.supplyTable.Get(ctx, supply)
-	if err != nil {
+	supply, err := k.store.SupplyTable().Get(ctx, denom)
+	if err != nil && !ormerrors.IsNotFound(err) {
 		return err
 	}
 
-	supply.Amount = supply.Amount + amount
-	err = k.supplyTable.Save(ctx, supply)
+	if supply == nil {
+		supply = &testpb.Supply{Denom: denom, Amount: amount}
+	} else {
+		supply.Amount = supply.Amount + amount
+	}
+
+	err = k.store.SupplyTable().Save(ctx, supply)
 	if err != nil {
 		return err
 	}
@@ -61,14 +81,10 @@ func (k keeper) Mint(ctx context.Context, acct, denom string, amount uint64) err
 }
 
 func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) error {
-	supply := &testpb.Supply{Denom: denom}
-	found, err := k.supplyTable.Get(ctx, supply)
+	supplyStore := k.store.SupplyTable()
+	supply, err := supplyStore.Get(ctx, denom)
 	if err != nil {
 		return err
-	}
-
-	if !found {
-		return fmt.Errorf("no supply for %s", denom)
 	}
 
 	if amount > supply.Amount {
@@ -78,9 +94,9 @@ func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) err
 	supply.Amount = supply.Amount - amount
 
 	if supply.Amount == 0 {
-		err = k.supplyTable.Delete(ctx, supply)
+		err = supplyStore.Delete(ctx, supply)
 	} else {
-		err = k.supplyTable.Save(ctx, supply)
+		err = supplyStore.Save(ctx, supply)
 	}
 	if err != nil {
 		return err
@@ -90,37 +106,53 @@ func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) err
 }
 
 func (k keeper) Balance(ctx context.Context, acct, denom string) (uint64, error) {
-	balance := &testpb.Balance{Address: acct, Denom: denom}
-	_, err := k.balanceTable.Get(ctx, balance)
+	balance, err := k.store.BalanceTable().Get(ctx, acct, denom)
+	if err != nil {
+		if ormerrors.IsNotFound(err) {
+			return 0, nil
+		}
+
+		return 0, err
+	}
 	return balance.Amount, err
 }
 
 func (k keeper) Supply(ctx context.Context, denom string) (uint64, error) {
-	supply := &testpb.Supply{Denom: denom}
-	_, err := k.supplyTable.Get(ctx, supply)
+	supply, err := k.store.SupplyTable().Get(ctx, denom)
+	if supply == nil {
+		if ormerrors.IsNotFound(err) {
+			return 0, nil
+		}
+
+		return 0, err
+	}
 	return supply.Amount, err
 }
 
 func (k keeper) addBalance(ctx context.Context, acct, denom string, amount uint64) error {
-	balance := &testpb.Balance{Address: acct, Denom: denom}
-	_, err := k.balanceTable.Get(ctx, balance)
-	if err != nil {
+	balance, err := k.store.BalanceTable().Get(ctx, acct, denom)
+	if err != nil && !ormerrors.IsNotFound(err) {
 		return err
 	}
 
-	balance.Amount = balance.Amount + amount
-	return k.balanceTable.Save(ctx, balance)
+	if balance == nil {
+		balance = &testpb.Balance{
+			Address: acct,
+			Denom:   denom,
+			Amount:  amount,
+		}
+	} else {
+		balance.Amount = balance.Amount + amount
+	}
+
+	return k.store.BalanceTable().Save(ctx, balance)
 }
 
 func (k keeper) safeSubBalance(ctx context.Context, acct, denom string, amount uint64) error {
-	balance := &testpb.Balance{Address: acct, Denom: denom}
-	found, err := k.balanceTable.Get(ctx, balance)
+	balanceStore := k.store.BalanceTable()
+	balance, err := balanceStore.Get(ctx, acct, denom)
 	if err != nil {
 		return err
-	}
-
-	if !found {
-		return fmt.Errorf("acct %x has no balance for %s", acct, denom)
 	}
 
 	if amount > balance.Amount {
@@ -130,23 +162,10 @@ func (k keeper) safeSubBalance(ctx context.Context, acct, denom string, amount u
 	balance.Amount = balance.Amount - amount
 
 	if balance.Amount == 0 {
-		return k.balanceTable.Delete(ctx, balance)
+		return balanceStore.Delete(ctx, balance)
 	} else {
-		return k.balanceTable.Save(ctx, balance)
+		return balanceStore.Save(ctx, balance)
 	}
-}
-
-func newKeeper(db ormdb.ModuleDB) keeper {
-	k := keeper{
-		balanceTable: db.GetTable(&testpb.Balance{}),
-		supplyTable:  db.GetTable(&testpb.Supply{}),
-	}
-
-	k.balanceAddressDenomIndex = k.balanceTable.GetUniqueIndex("address,denom")
-	k.balanceDenomIndex = k.balanceTable.GetIndex("denom")
-	k.supplyDenomIndex = k.supplyTable.GetUniqueIndex("denom")
-
-	return k
 }
 
 func TestModuleDB(t *testing.T) {
@@ -154,22 +173,18 @@ func TestModuleDB(t *testing.T) {
 	db, err := ormdb.NewModuleDB(TestBankSchema, ormdb.ModuleDBOptions{})
 	assert.NilError(t, err)
 	debugBuf := &strings.Builder{}
-	store := testkv.NewDebugBackend(
-		testkv.NewSharedMemBackend(),
+	backend := ormtest.NewMemoryBackend()
+	ctx := ormtable.WrapContextDefault(testkv.NewDebugBackend(
+		backend,
 		&testkv.EntryCodecDebugger{
 			EntryCodec: db,
 			Print:      func(s string) { debugBuf.WriteString(s + "\n") },
 		},
-	)
-	ctx := ormtable.WrapContextDefault(store)
+	))
 
 	// create keeper
-	k := newKeeper(db)
-	assert.Assert(t, k.balanceTable != nil)
-	assert.Assert(t, k.balanceAddressDenomIndex != nil)
-	assert.Assert(t, k.balanceDenomIndex != nil)
-	assert.Assert(t, k.supplyTable != nil)
-	assert.Assert(t, k.supplyDenomIndex != nil)
+	k, err := NewKeeper(db)
+	assert.NilError(t, err)
 
 	// mint coins
 	denom := "foo"
@@ -206,7 +221,7 @@ func TestModuleDB(t *testing.T) {
 	golden.Assert(t, debugBuf.String(), "bank_scenario.golden")
 
 	// check decode & encode
-	it, err := store.CommitmentStore().Iterator(nil, nil)
+	it, err := backend.CommitmentStore().Iterator(nil, nil)
 	assert.NilError(t, err)
 	for it.Valid() {
 		entry, err := db.DecodeEntry(it.Key(), it.Value())
@@ -217,4 +232,104 @@ func TestModuleDB(t *testing.T) {
 		assert.Assert(t, bytes.Equal(v, it.Value()))
 		it.Next()
 	}
+
+	// check JSON
+	target := ormjson.NewRawMessageTarget()
+	assert.NilError(t, db.DefaultJSON(target))
+	rawJson, err := target.JSON()
+	assert.NilError(t, err)
+	golden.Assert(t, string(rawJson), "default_json.golden")
+
+	target = ormjson.NewRawMessageTarget()
+	assert.NilError(t, db.ExportJSON(ctx, target))
+	rawJson, err = target.JSON()
+	assert.NilError(t, err)
+
+	goodJSON := `{
+  "testpb.Supply": []
+}`
+	source, err := ormjson.NewRawMessageSource(json.RawMessage(goodJSON))
+	assert.NilError(t, err)
+	assert.NilError(t, db.ValidateJSON(source))
+	assert.NilError(t, db.ImportJSON(ormtable.WrapContextDefault(ormtest.NewMemoryBackend()), source))
+
+	badJSON := `{
+  "testpb.Balance": 5,
+  "testpb.Supply": {}
+}
+`
+	source, err = ormjson.NewRawMessageSource(json.RawMessage(badJSON))
+	assert.NilError(t, err)
+	assert.ErrorIs(t, db.ValidateJSON(source), ormerrors.JSONValidationError)
+
+	backend2 := ormtest.NewMemoryBackend()
+	ctx2 := ormtable.WrapContextDefault(backend2)
+	source, err = ormjson.NewRawMessageSource(rawJson)
+	assert.NilError(t, err)
+	assert.NilError(t, db.ValidateJSON(source))
+	assert.NilError(t, db.ImportJSON(ctx2, source))
+	testkv.AssertBackendsEqual(t, backend, backend2)
+}
+
+func TestHooks(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	db, err := ormdb.NewModuleDB(TestBankSchema, ormdb.ModuleDBOptions{})
+	assert.NilError(t, err)
+	validateHooks := ormmocks.NewMockValidateHooks(ctrl)
+	writeHooks := ormmocks.NewMockWriteHooks(ctrl)
+	ctx := ormtable.WrapContextDefault(ormtest.NewMemoryBackend().
+		WithValidateHooks(validateHooks).
+		WithWriteHooks(writeHooks))
+	k, err := NewKeeper(db)
+	assert.NilError(t, err)
+
+	denom := "foo"
+	acct1 := "bob"
+	acct2 := "sally"
+
+	validateHooks.EXPECT().ValidateInsert(gomock.Any(), ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 10}))
+	validateHooks.EXPECT().ValidateInsert(gomock.Any(), ormmocks.Eq(&testpb.Supply{Denom: denom, Amount: 10}))
+	writeHooks.EXPECT().OnInsert(gomock.Any(), ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 10}))
+	writeHooks.EXPECT().OnInsert(gomock.Any(), ormmocks.Eq(&testpb.Supply{Denom: denom, Amount: 10}))
+	assert.NilError(t, k.Mint(ctx, acct1, denom, 10))
+
+	validateHooks.EXPECT().ValidateUpdate(
+		gomock.Any(),
+		ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 10}),
+		ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 5}),
+	)
+	validateHooks.EXPECT().ValidateInsert(
+		gomock.Any(),
+		ormmocks.Eq(&testpb.Balance{Address: acct2, Denom: denom, Amount: 5}),
+	)
+	writeHooks.EXPECT().OnUpdate(
+		gomock.Any(),
+		ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 10}),
+		ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 5}),
+	)
+	writeHooks.EXPECT().OnInsert(
+		gomock.Any(),
+		ormmocks.Eq(&testpb.Balance{Address: acct2, Denom: denom, Amount: 5}),
+	)
+	assert.NilError(t, k.Send(ctx, acct1, acct2, denom, 5))
+
+	validateHooks.EXPECT().ValidateUpdate(
+		gomock.Any(),
+		ormmocks.Eq(&testpb.Supply{Denom: denom, Amount: 10}),
+		ormmocks.Eq(&testpb.Supply{Denom: denom, Amount: 5}),
+	)
+	validateHooks.EXPECT().ValidateDelete(
+		gomock.Any(),
+		ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 5}),
+	)
+	writeHooks.EXPECT().OnUpdate(
+		gomock.Any(),
+		ormmocks.Eq(&testpb.Supply{Denom: denom, Amount: 10}),
+		ormmocks.Eq(&testpb.Supply{Denom: denom, Amount: 5}),
+	)
+	writeHooks.EXPECT().OnDelete(
+		gomock.Any(),
+		ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 5}),
+	)
+	assert.NilError(t, k.Burn(ctx, acct1, denom, 5))
 }

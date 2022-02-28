@@ -7,10 +7,10 @@ import (
 )
 
 type simpleProvider struct {
-	provider *ProviderDescriptor
-	called   bool
-	values   []reflect.Value
-	scope    Scope
+	provider  *ProviderDescriptor
+	called    bool
+	values    []reflect.Value
+	moduleKey *moduleKey
 }
 
 type simpleResolver struct {
@@ -28,7 +28,7 @@ func (s *simpleResolver) describeLocation() string {
 
 func (s *simpleProvider) resolveValues(ctr *container) ([]reflect.Value, error) {
 	if !s.called {
-		values, err := ctr.call(s.provider, s.scope)
+		values, err := ctr.call(s.provider, s.moduleKey)
 		if err != nil {
 			return nil, err
 		}
@@ -39,7 +39,7 @@ func (s *simpleProvider) resolveValues(ctr *container) ([]reflect.Value, error) 
 	return s.values, nil
 }
 
-func (s *simpleResolver) resolve(c *container, _ Scope, caller Location) (reflect.Value, error) {
+func (s *simpleResolver) resolve(c *container, _ *moduleKey, caller Location) (reflect.Value, error) {
 	// Log
 	c.logf("Providing %v from %s to %s", s.typ, s.node.provider.Location, caller.Name())
 

@@ -1,4 +1,4 @@
-package root
+package multi
 
 import (
 	"errors"
@@ -13,6 +13,7 @@ import (
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	prefixdb "github.com/cosmos/cosmos-sdk/db/prefix"
 	util "github.com/cosmos/cosmos-sdk/internal"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -23,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/v2/transient"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	protoio "github.com/gogo/protobuf/io"
 )
 
 var (
@@ -43,8 +45,7 @@ var (
 	substoreMerkleRootKey = []byte{0} // Key for root hashes of Merkle trees
 	dataPrefix            = []byte{1} // Prefix for state mappings
 	indexPrefix           = []byte{2} // Prefix for Store reverse index
-	merkleNodePrefix      = []byte{3} // Prefix for Merkle tree nodes
-	merkleValuePrefix     = []byte{4} // Prefix for Merkle value mappings
+	smtPrefix             = []byte{3} // Prefix for SMT data
 
 	ErrVersionDoesNotExist = errors.New("version does not exist")
 	ErrMaximumHeight       = errors.New("maximum block height reached")
@@ -125,6 +126,8 @@ type viewStore struct {
 }
 
 type viewSubstore struct {
+	root                 *viewStore
+	name                 string
 	dataBucket           dbm.DBReader
 	indexBucket          dbm.DBReader
 	stateCommitmentStore *smt.Store
@@ -492,9 +495,8 @@ func (rs *Store) getSubstore(key string) (*substore, error) {
 	if rootHash != nil {
 		stateCommitmentStore = loadSMT(stateCommitmentRW, rootHash)
 	} else {
-		merkleNodes := prefixdb.NewPrefixReadWriter(stateCommitmentRW, merkleNodePrefix)
-		merkleValues := prefixdb.NewPrefixReadWriter(stateCommitmentRW, merkleValuePrefix)
-		stateCommitmentStore = smt.NewStore(merkleNodes, merkleValues)
+		smtdb := prefixdb.NewPrefixReadWriter(stateCommitmentRW, smtPrefix)
+		stateCommitmentStore = smt.NewStore(smtdb)
 	}
 
 	return &substore{
@@ -521,35 +523,40 @@ func (s *Store) Commit() types.CommitID {
 	// Substores read-lock this mutex; lock to prevent racey invalidation of underlying txns
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
+
 	// Determine the target version
 	versions, err := s.stateDB.Versions()
 	if err != nil {
 		panic(err)
 	}
+
 	target := versions.Last() + 1
 	if target > math.MaxInt64 {
 		panic(ErrMaximumHeight)
 	}
+
 	// Fast forward to initial version if needed
 	if s.InitialVersion != 0 && target < s.InitialVersion {
 		target = s.InitialVersion
 	}
+
 	cid, err := s.commit(target)
 	if err != nil {
 		panic(err)
 	}
+
 	// Prune if necessary
 	previous := cid.Version - 1
-	if s.Pruning.KeepEvery != 1 && s.Pruning.Interval != 0 && cid.Version%int64(s.Pruning.Interval) == 0 {
+	if s.Pruning.Interval != 0 && cid.Version%int64(s.Pruning.Interval) == 0 {
 		// The range of newly prunable versions
 		lastPrunable := previous - int64(s.Pruning.KeepRecent)
 		firstPrunable := lastPrunable - int64(s.Pruning.Interval)
+
 		for version := firstPrunable; version <= lastPrunable; version++ {
-			if s.Pruning.KeepEvery == 0 || version%int64(s.Pruning.KeepEvery) != 0 {
-				s.stateDB.DeleteVersion(uint64(version))
-				if s.StateCommitmentDB != nil {
-					s.StateCommitmentDB.DeleteVersion(uint64(version))
-				}
+			s.stateDB.DeleteVersion(uint64(version))
+
+			if s.StateCommitmentDB != nil {
+				s.StateCommitmentDB.DeleteVersion(uint64(version))
 			}
 		}
 	}
@@ -766,7 +773,7 @@ func (rs *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			break
 		}
 		// TODO: actual IBC compatible proof. This is a placeholder so unit tests can pass
-		res.ProofOps, err = substore.stateCommitmentStore.GetProof([]byte(storeName + string(res.Key)))
+		res.ProofOps, err = substore.GetProof(res.Key)
 		if err != nil {
 			return sdkerrors.QueryResult(fmt.Errorf("Merkle proof creation failed for key: %v", res.Key), false) //nolint: stylecheck // proper name
 		}
@@ -801,9 +808,8 @@ func (rs *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 }
 
 func loadSMT(stateCommitmentTxn dbm.DBReadWriter, root []byte) *smt.Store {
-	merkleNodes := prefixdb.NewPrefixReadWriter(stateCommitmentTxn, merkleNodePrefix)
-	merkleValues := prefixdb.NewPrefixReadWriter(stateCommitmentTxn, merkleValuePrefix)
-	return smt.LoadStore(merkleNodes, merkleValues, root)
+	smtdb := prefixdb.NewPrefixReadWriter(stateCommitmentTxn, smtPrefix)
+	return smt.LoadStore(smtdb, root)
 }
 
 // Returns closest index and whether it's a match
@@ -897,9 +903,11 @@ func (tlm *traceListenMixin) wrapTraceListen(store types.KVStore, skey types.Sto
 func (s *Store) GetPruning() types.PruningOptions   { return s.Pruning }
 func (s *Store) SetPruning(po types.PruningOptions) { s.Pruning = po }
 
-func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadCloser, ready chan<- struct{}) error {
-	return nil
+func (rs *Store) Restore(
+	height uint64, format uint32, protoReader protoio.Reader,
+) (snapshottypes.SnapshotItem, error) {
+	return snapshottypes.SnapshotItem{}, nil
 }
-func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, error) {
-	return nil, nil
+func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
+	return nil
 }

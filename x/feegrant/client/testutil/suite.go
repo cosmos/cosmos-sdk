@@ -752,7 +752,7 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 
 	// granted fee allowance for an account which is not in state and creating
 	// any tx with it by using --fee-account shouldn't fail
-	out, err := govtestutil.MsgSubmitProposal(val.ClientCtx, grantee.String(),
+	out, err := govtestutil.MsgSubmitLegacyProposal(val.ClientCtx, grantee.String(),
 		"Text Proposal", "No desc", govv1beta1.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
 	)
@@ -892,7 +892,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 		{
 			"valid proposal tx",
 			func() (testutil.BufferWriter, error) {
-				return govtestutil.MsgSubmitProposal(val.ClientCtx, grantee.String(),
+				return govtestutil.MsgSubmitLegacyProposal(val.ClientCtx, grantee.String(),
 					"Text Proposal", "No desc", govv1beta1.ProposalTypeText,
 					fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
 					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))).String()),
@@ -912,28 +912,24 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 			&sdk.TxResponse{},
 			2,
 		},
-		/* TODO(#10559): This case times out after TM v0.35.
-		   Figure out why and fix it.
-
-				{
-					"should fail with unauthorized msgs",
-					func() (testutil.BufferWriter, error) {
-						args := append(
-							[]string{
-								grantee.String(),
-								"cosmos14cm33pvnrv2497tyt8sp9yavhmw83nwej3m0e8",
-								fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
-								fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter),
-							},
-							commonFlags...,
-						)
-						cmd := cli.NewCmdFeeGrant()
-						return clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+		{
+			"should fail with unauthorized msgs",
+			func() (testutil.BufferWriter, error) {
+				args := append(
+					[]string{
+						grantee.String(),
+						"cosmos14cm33pvnrv2497tyt8sp9yavhmw83nwej3m0e8",
+						fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
+						fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter),
 					},
-					&sdk.TxResponse{},
-					7,
-				},
-		*/
+					commonFlags...,
+				)
+				cmd := cli.NewCmdFeeGrant()
+				return clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			},
+			&sdk.TxResponse{},
+			7,
+		},
 	}
 
 	for _, tc := range cases {

@@ -2,7 +2,7 @@
 
 ## Changelog
 
-- 2020 March 27: Initial Draft
+* 2020 March 27: Initial Draft
 
 ## Status
 

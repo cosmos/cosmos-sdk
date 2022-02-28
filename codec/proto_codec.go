@@ -7,6 +7,10 @@ import (
 	"fmt"
 	"google.golang.org/protobuf/encoding/protojson"
 
+	legacyproto "github.com/golang/protobuf/proto"
+	"google.golang.org/grpc/encoding"
+	"google.golang.org/protobuf/proto"
+
 	"github.com/gogo/protobuf/jsonpb"
 	gogoproto "github.com/gogo/protobuf/proto"
 	protov2 "google.golang.org/protobuf/proto"
@@ -269,6 +273,48 @@ func (pc *ProtoCodec) UnpackAny(any *types.Any, iface interface{}) error {
 // InterfaceRegistry returns InterfaceRegistry
 func (pc *ProtoCodec) InterfaceRegistry() types.InterfaceRegistry {
 	return pc.interfaceRegistry
+}
+
+// GRPCCodec returns the gRPC Codec for this specific ProtoCodec
+func (pc *ProtoCodec) GRPCCodec() encoding.Codec {
+	return &grpcProtoCodec{cdc: pc}
+}
+
+var errUnknownProtoType = errors.New("codec: unknown proto type") // sentinel error
+
+// grpcProtoCodec is the implementation of the gRPC proto codec.
+type grpcProtoCodec struct {
+	cdc *ProtoCodec
+}
+
+func (g grpcProtoCodec) Marshal(v interface{}) ([]byte, error) {
+	switch m := v.(type) {
+	case proto.Message:
+		return proto.Marshal(m)
+	case ProtoMarshaler:
+		return g.cdc.Marshal(m)
+	case legacyproto.Message:
+		return legacyproto.Marshal(m)
+	default:
+		return nil, fmt.Errorf("%w: cannot marshal type %T", errUnknownProtoType, v)
+	}
+}
+
+func (g grpcProtoCodec) Unmarshal(data []byte, v interface{}) error {
+	switch m := v.(type) {
+	case proto.Message:
+		return proto.Unmarshal(data, m)
+	case ProtoMarshaler:
+		return g.cdc.Unmarshal(data, m)
+	case legacyproto.Message:
+		return legacyproto.Unmarshal(data, m)
+	default:
+		return fmt.Errorf("%w: cannot unmarshal type %T", errUnknownProtoType, v)
+	}
+}
+
+func (g grpcProtoCodec) Name() string {
+	return "cosmos-sdk-grpc-codec"
 }
 
 func assertNotNil(i interface{}) error {

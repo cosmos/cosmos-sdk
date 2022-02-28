@@ -1,3 +1,4 @@
+//go:build norace
 // +build norace
 
 package grpc_test
@@ -5,6 +6,7 @@ package grpc_test
 import (
 	"context"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"testing"
 	"time"
 
@@ -60,6 +62,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.conn, err = grpc.Dial(
 		val0.AppConfig.GRPC.Address,
 		grpc.WithInsecure(), // Or else we get "no transport security set"
+		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(s.app.InterfaceRegistry()).GRPCCodec())),
 	)
 	s.Require().NoError(err)
 }

@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/bank/v1beta1/bank.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
@@ -19,6 +20,8 @@ service Msg {
 
 // MsgSend represents a message to send coins from one account to another.
 message MsgSend {
+  option (cosmos.msg.v1.signer) = "from_address";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -33,6 +36,8 @@ message MsgSendResponse {}
 
 // MsgMultiSend represents an arbitrary multi-in, multi-out send message.
 message MsgMultiSend {
+  option (cosmos.msg.v1.signer) = "inputs";
+
   option (gogoproto.equal) = false;
 
   repeated Input  inputs  = 1 [(gogoproto.nullable) = false];

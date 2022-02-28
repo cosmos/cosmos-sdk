@@ -23,7 +23,7 @@ const (
 )
 
 // NewProposal creates a new Proposal instance
-func NewProposal(messages []sdk.Msg, id uint64, submitTime, depositEndTime time.Time) (Proposal, error) {
+func NewProposal(messages []sdk.Msg, id uint64, metadata []byte, submitTime, depositEndTime time.Time) (Proposal, error) {
 
 	msgs, err := sdktx.SetMsgs(messages)
 	if err != nil {
@@ -33,8 +33,9 @@ func NewProposal(messages []sdk.Msg, id uint64, submitTime, depositEndTime time.
 	tally := EmptyTallyResult()
 
 	p := Proposal{
-		ProposalId:       id,
+		Id:               id,
 		Messages:         msgs,
+		Metadata:         metadata,
 		Status:           StatusDepositPeriod,
 		FinalTallyResult: &tally,
 		SubmitTime:       &submitTime,
@@ -64,7 +65,7 @@ func (p Proposals) String() string {
 	out := "ID - (Status) [Type] Title\n"
 	for _, prop := range p {
 		out += fmt.Sprintf("%d - %s\n",
-			prop.ProposalId, prop.Status)
+			prop.Id, prop.Status)
 	}
 	return strings.TrimSpace(out)
 }

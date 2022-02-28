@@ -2,8 +2,8 @@
 
 ## Changelog
 
-- 2020/08/18: Initial version
-- 2021/01/15: Analysis and algorithm update
+* 2020/08/18: Initial version
+* 2021/01/15: Analysis and algorithm update
 
 ## Status
 
@@ -53,15 +53,15 @@ This disqualifies the initial proposal.
 
 In the issue we discussed various modifications:
 
-+ Choice of the hash function.
-+ Move the prefix out of the hash function: `keyTypePrefix + sha256(keybytes)[:20]` [post-hash-prefix-proposal].
-+ Use double hashing: `sha256(keyTypePrefix + sha256(keybytes)[:20])`.
-+ Increase to keybytes hash slice from 20 byte to 32 or 40 bytes. We concluded that 32 bytes, produced by a good hash functions is future secure.
+* Choice of the hash function.
+* Move the prefix out of the hash function: `keyTypePrefix + sha256(keybytes)[:20]` [post-hash-prefix-proposal].
+* Use double hashing: `sha256(keyTypePrefix + sha256(keybytes)[:20])`.
+* Increase to keybytes hash slice from 20 byte to 32 or 40 bytes. We concluded that 32 bytes, produced by a good hash functions is future secure.
 
 ### Requirements
 
-+ Support currently used tools - we don't want to break an ecosystem, or add a long adaptation period. Ref: https://github.com/cosmos/cosmos-sdk/issues/8041
-+ Try to keep the address length small - addresses are widely used in state, both as part of a key and object value.
+* Support currently used tools - we don't want to break an ecosystem, or add a long adaptation period. Ref: https://github.com/cosmos/cosmos-sdk/issues/8041
+* Try to keep the address length small - addresses are widely used in state, both as part of a key and object value.
 
 ### Scope
 
@@ -82,8 +82,8 @@ We define the following account types, for which we define the address function:
 Currently (Jan 2021), the only officially supported Cosmos SDK user accounts are `secp256k1` basic accounts and legacy amino multisig.
 They are used in existing Cosmos SDK zones. They use the following address formats:
 
-- secp256k1: `ripemd160(sha256(pk_bytes))[:20]`
-- legacy amino multisig: `sha256(aminoCdc.Marshal(pk))[:20]`
+* secp256k1: `ripemd160(sha256(pk_bytes))[:20]`
+* legacy amino multisig: `sha256(aminoCdc.Marshal(pk))[:20]`
 
 We don't want to change existing addresses. So the addresses for these two key types will remain the same.
 
@@ -118,8 +118,8 @@ We use the `address.Hash` function for generating addresses for all accounts rep
 
 * simple public keys: `address.Hash(keyType, pubkey)`
 
-+ aggregated keys (eg: BLS): `address.Hash(keyType, aggregatedPubKey)`
-+ modules: `address.Hash("module", moduleName)`
+* aggregated keys (eg: BLS): `address.Hash(keyType, aggregatedPubKey)`
+* modules: `address.Hash("module", moduleName)`
 
 ### Composed Addresses
 
@@ -196,13 +196,13 @@ func Module(moduleName string, key []byte) []byte{
 
 **Example**  A lending BTC pool address would be:
 
-```
+```go
 btcPool := address.Module("lending", btc.Addrress()})
 ```
 
 If we want to create an address for a module account depending on more than one key, we can concatenate them:
 
-```
+```go
 btcAtomAMM := address.Module("amm", btc.Addrress() + atom.Address()})
 ```
 
@@ -220,7 +220,7 @@ Note: `Module` is a special case of the more general _derived_ address, where we
 
 **Example**  For a cosmwasm smart-contract address we could use the following construction:
 
-```
+```go
 smartContractAddr := Derived(Module("cosmwasm", smartContractsNamespace), []{smartContractKey})
 ```
 
@@ -252,21 +252,21 @@ This ADR is compatible with what was committed and directly supported in the Cos
 
 ### Positive
 
-- a simple algorithm for generating addresses for new public keys, complex accounts and modules
-- the algorithm generalizes _native composed keys_
-- increased security and collision resistance of addresses
-- the approach is extensible for future use-cases - one can use other address types, as long as they don't conflict with the address length specified here (20 or 32 bytes).
-- support new account types.
+* a simple algorithm for generating addresses for new public keys, complex accounts and modules
+* the algorithm generalizes _native composed keys_
+* increased security and collision resistance of addresses
+* the approach is extensible for future use-cases - one can use other address types, as long as they don't conflict with the address length specified here (20 or 32 bytes).
+* support new account types.
 
 ### Negative
 
-- addresses do not communicate key type, a prefixed approach would have done this
-- addresses are 60% longer and will consume more storage space
-- requires a refactor of KVStore store keys to handle variable length addresses
+* addresses do not communicate key type, a prefixed approach would have done this
+* addresses are 60% longer and will consume more storage space
+* requires a refactor of KVStore store keys to handle variable length addresses
 
 ### Neutral
 
-- protobuf message names are used as key type prefixes
+* protobuf message names are used as key type prefixes
 
 ## Further Discussions
 
@@ -280,50 +280,50 @@ End of Dec 2020 we had a session with [Alan Szepieniec](https://scholar.google.b
 
 Alan general observations:
 
-+ we don’t need 2-preimage resistance
-+ we need 32bytes address space for collision resistance
-+ when an attacker can control an input for object with an address then we have a problem with birthday attack
-+ there is an issue with smart-contracts for hashing
-+ sha2 mining can be use to breaking address pre-image
+* we don’t need 2-preimage resistance
+* we need 32bytes address space for collision resistance
+* when an attacker can control an input for object with an address then we have a problem with birthday attack
+* there is an issue with smart-contracts for hashing
+* sha2 mining can be use to breaking address pre-image
 
 Hashing algorithm
 
-+ any attack breaking blake3 will break blake2
-+ Alan is pretty confident about the current security analysis of the blake hash algorithm. It was a finalist, and the author is well known in security analysis.
+* any attack breaking blake3 will break blake2
+* Alan is pretty confident about the current security analysis of the blake hash algorithm. It was a finalist, and the author is well known in security analysis.
 
 Algorithm:
 
-+ Alan recommends to hash the prefix: `address(pub_key) = hash(hash(key_type) + pub_key)[:32]`, main benefits:
-    + we are free to user arbitrary long prefix names
-    + we still don’t risk collisions
-    + switch tables
-+ discussion about penalization -> about adding prefix post hash
-+ Aaron asked about post hash prefixes (`address(pub_key) = key_type + hash(pub_key)`) and differences. Alan noted that this approach has longer address space and it’s stronger.
+* Alan recommends to hash the prefix: `address(pub_key) = hash(hash(key_type) + pub_key)[:32]`, main benefits:
+    * we are free to user arbitrary long prefix names
+    * we still don’t risk collisions
+    * switch tables
+* discussion about penalization -> about adding prefix post hash
+* Aaron asked about post hash prefixes (`address(pub_key) = key_type + hash(pub_key)`) and differences. Alan noted that this approach has longer address space and it’s stronger.
 
 Algorithm for complex / composed keys:
 
-+ merging tree like addresses with same algorithm are fine
+* merging tree like addresses with same algorithm are fine
 
 Module addresses: Should module addresses have different size to differentiate it?
 
-+ we will need to set a pre-image prefix for module addresse to keept them in 32-byte space: `hash(hash('module') + module_key)`
-+ Aaron observation: we already need to deal with variable length (to not break secp256k1 keys).
+* we will need to set a pre-image prefix for module addresse to keept them in 32-byte space: `hash(hash('module') + module_key)`
+* Aaron observation: we already need to deal with variable length (to not break secp256k1 keys).
 
 Discssion about arithmetic hash function for ZKP
 
-+ Posseidon / Rescue
-+ Problem: much bigger risk because we don’t know much techniques and history of crypto-analysis of arithmetic constructions. It’s still a new ground and area of active research.
+* Posseidon / Rescue
+* Problem: much bigger risk because we don’t know much techniques and history of crypto-analysis of arithmetic constructions. It’s still a new ground and area of active research.
 
 Post quantum signature size
 
-+ Alan suggestion: Falcon: speed / size ration - very good.
-+ Aaron - should we think about it?
+* Alan suggestion: Falcon: speed / size ration - very good.
+* Aaron - should we think about it?
   Alan: based on early extrapolation this thing will get able to break EC cryptography in 2050 . But that’s a lot of uncertainty. But there is magic happening with recurions / linking / simulation and that can speedup the progress.
 
 Other ideas
 
-+ Let’s say we use same key and two different address algorithms for 2 different use cases. Is it still safe to use it? Alan: if we want to hide the public key (which is not our use case), then it’s less secure but there are fixes.
+* Let’s say we use same key and two different address algorithms for 2 different use cases. Is it still safe to use it? Alan: if we want to hide the public key (which is not our use case), then it’s less secure but there are fixes.
 
 ### References
 
-+ [Notes](https://hackmd.io/_NGWI4xZSbKzj1BkCqyZMw)
+* [Notes](https://hackmd.io/_NGWI4xZSbKzj1BkCqyZMw)

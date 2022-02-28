@@ -2,22 +2,13 @@ package v1beta2
 
 import (
 	"fmt"
-
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-)
-
-// Governance message types and routes
-const (
-	TypeMsgDeposit        = "deposit"
-	TypeMsgVote           = "vote"
-	TypeMsgVoteWeighted   = "weighted_vote"
-	TypeMsgSubmitProposal = "submit_proposal"
-	TypeMsgSignal         = "signal"
 )
 
 var (
@@ -27,10 +18,11 @@ var (
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
 //nolint:interfacer
-func NewMsgSubmitProposal(messages []sdk.Msg, initialDeposit sdk.Coins, proposer string) (*MsgSubmitProposal, error) {
+func NewMsgSubmitProposal(messages []sdk.Msg, initialDeposit sdk.Coins, proposer string, metadata []byte) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
 		InitialDeposit: initialDeposit,
 		Proposer:       proposer,
+		Metadata:       metadata,
 	}
 
 	anys, err := sdktx.SetMsgs(messages)
@@ -51,7 +43,7 @@ func (m *MsgSubmitProposal) GetMsgs() ([]sdk.Msg, error) {
 func (m MsgSubmitProposal) Route() string { return types.RouterKey }
 
 // Type implements Msg
-func (m MsgSubmitProposal) Type() string { return TypeMsgSubmitProposal }
+func (m MsgSubmitProposal) Type() string { return sdk.MsgTypeURL(&m) }
 
 // ValidateBasic implements Msg
 func (m MsgSubmitProposal) ValidateBasic() error {
@@ -68,11 +60,10 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, deposit.String())
 	}
 
-	// Empty messages are not allowed
-	// TODO: ValidateBasic should check that either metadata or length is non nil
-	// if m.Messages == nil || len(m.Messages) == 0 {
-	// 	return ErrNoProposalMsgs
-	// }
+	// Check that either metadata or Msgs length is non nil.
+	if len(m.Messages) == 0 && len(m.Metadata) == 0 {
+		return sdkerrors.Wrap(types.ErrNoProposalMsgs, "either metadata or Msgs length must be non-nil")
+	}
 
 	msgs, err := m.GetMsgs()
 	if err != nil {
@@ -91,7 +82,7 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 
 // GetSignBytes implements Msg
 func (m MsgSubmitProposal) GetSignBytes() []byte {
-	bz := types.ModuleCdc.MustMarshalJSON(&m)
+	bz := legacy.Cdc.MustMarshalJSON(&m)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -116,7 +107,7 @@ func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins
 func (msg MsgDeposit) Route() string { return types.RouterKey }
 
 // Type implements Msg
-func (msg MsgDeposit) Type() string { return TypeMsgDeposit }
+func (msg MsgDeposit) Type() string { return sdk.MsgTypeURL(&msg) }
 
 // ValidateBasic implements Msg
 func (msg MsgDeposit) ValidateBasic() error {
@@ -136,7 +127,7 @@ func (msg MsgDeposit) ValidateBasic() error {
 
 // GetSignBytes implements Msg
 func (msg MsgDeposit) GetSignBytes() []byte {
-	bz := types.ModuleCdc.MustMarshalJSON(&msg)
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -156,7 +147,7 @@ func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption) *Msg
 func (msg MsgVote) Route() string { return types.RouterKey }
 
 // Type implements Msg
-func (msg MsgVote) Type() string { return TypeMsgVote }
+func (msg MsgVote) Type() string { return sdk.MsgTypeURL(&msg) }
 
 // ValidateBasic implements Msg
 func (msg MsgVote) ValidateBasic() error {
@@ -172,7 +163,7 @@ func (msg MsgVote) ValidateBasic() error {
 
 // GetSignBytes implements Msg
 func (msg MsgVote) GetSignBytes() []byte {
-	bz := types.ModuleCdc.MustMarshalJSON(&msg)
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -192,7 +183,7 @@ func NewMsgVoteWeighted(voter sdk.AccAddress, proposalID uint64, options Weighte
 func (msg MsgVoteWeighted) Route() string { return types.RouterKey }
 
 // Type implements Msg
-func (msg MsgVoteWeighted) Type() string { return TypeMsgVoteWeighted }
+func (msg MsgVoteWeighted) Type() string { return sdk.MsgTypeURL(&msg) }
 
 // ValidateBasic implements Msg
 func (msg MsgVoteWeighted) ValidateBasic() error {
@@ -233,7 +224,7 @@ func (msg MsgVoteWeighted) ValidateBasic() error {
 
 // GetSignBytes implements Msg
 func (msg MsgVoteWeighted) GetSignBytes() []byte {
-	bz := types.ModuleCdc.MustMarshalJSON(&msg)
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 

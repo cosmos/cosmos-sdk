@@ -56,6 +56,13 @@ var (
 	KVStoreReversePrefixIterator = v1.KVStoreReversePrefixIterator
 
 	NewStoreKVPairWriteListener = v1.NewStoreKVPairWriteListener
+
+	ProofOpSMTCommitment          = v1.ProofOpSMTCommitment
+	ProofOpSimpleMerkleCommitment = v1.ProofOpSimpleMerkleCommitment
+
+	CommitmentOpDecoder = v1.CommitmentOpDecoder
+	ProofOpFromMap      = v1.ProofOpFromMap
+	NewSmtCommitmentOp  = v1.NewSmtCommitmentOp
 )
 
 // BasicMultiStore defines a minimal interface for accessing root state.

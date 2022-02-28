@@ -1,6 +1,7 @@
 package debug
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"strconv"
@@ -9,9 +10,18 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
+
+	legacybech32 "github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
+)
+
+var (
+	flagPubkeyType = "type"
 )
 
 // Cmd creates a main CLI command
@@ -23,6 +33,7 @@ func Cmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(PubkeyCmd())
+	cmd.AddCommand(PubkeyRawCmd())
 	cmd.AddCommand(AddrCmd())
 	cmd.AddCommand(RawBytesCmd())
 
@@ -57,6 +68,125 @@ $ %s debug pubkey '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AurroA7jvfP
 			return nil
 		},
 	}
+}
+
+func bytesToPubkey(bz []byte, keytype string) (cryptotypes.PubKey, bool) {
+	if keytype == "ed25519" {
+		if len(bz) == ed25519.PubKeySize {
+			return &ed25519.PubKey{Key: bz}, true
+		}
+	}
+
+	if len(bz) == secp256k1.PubKeySize {
+		return &secp256k1.PubKey{Key: bz}, true
+	}
+	return nil, false
+}
+
+// getPubKeyFromRawString returns a PubKey (PubKeyEd25519 or PubKeySecp256k1) by attempting
+// to decode the pubkey string from hex, base64, and finally bech32. If all
+// encodings fail, an error is returned.
+func getPubKeyFromRawString(pkstr string, keytype string) (cryptotypes.PubKey, error) {
+	// Try hex decoding
+	bz, err := hex.DecodeString(pkstr)
+	if err == nil {
+		pk, ok := bytesToPubkey(bz, keytype)
+		if ok {
+			return pk, nil
+		}
+	}
+
+	bz, err = base64.StdEncoding.DecodeString(pkstr)
+	if err == nil {
+		pk, ok := bytesToPubkey(bz, keytype)
+		if ok {
+			return pk, nil
+		}
+	}
+
+	pk, err := legacybech32.UnmarshalPubKey(legacybech32.AccPK, pkstr)
+	if err == nil {
+		return pk, nil
+	}
+
+	pk, err = legacybech32.UnmarshalPubKey(legacybech32.ValPK, pkstr)
+	if err == nil {
+		return pk, nil
+	}
+
+	pk, err = legacybech32.UnmarshalPubKey(legacybech32.ConsPK, pkstr)
+	if err == nil {
+		return pk, nil
+	}
+
+	return nil, fmt.Errorf("pubkey '%s' invalid; expected hex, base64, or bech32 of correct size", pkstr)
+}
+
+func PubkeyRawCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pubkey-raw [pubkey] -t [{ed25519, secp256k1}]",
+		Short: "Decode a ED25519 or secp256k1 pubkey from hex, base64, or bech32",
+		Long: fmt.Sprintf(`Decode a pubkey from hex, base64, or bech32.
+Example:
+$ %s debug pubkey-raw TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCBieSB0aGlz
+$ %s debug pubkey-raw cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
+			`, version.AppName, version.AppName),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			pubkeyType, err := cmd.Flags().GetString(flagPubkeyType)
+			if err != nil {
+				return err
+			}
+			pubkeyType = strings.ToLower(pubkeyType)
+			if pubkeyType != "secp256k1" && pubkeyType != "ed25519" {
+				return errors.Wrapf(errors.ErrInvalidType, "invalid pubkey type, expected oneof ed25519 or secp256k1")
+			}
+
+			pk, err := getPubKeyFromRawString(args[0], pubkeyType)
+			if err != nil {
+				return err
+			}
+
+			var consensusPub string
+			edPK, ok := pk.(*ed25519.PubKey)
+			if ok && pubkeyType == "ed25519" {
+				consensusPub, err = legacybech32.MarshalPubKey(legacybech32.ConsPK, edPK)
+				if err != nil {
+					return err
+				}
+
+				cmd.Printf("Hex: %X\n", edPK.Key)
+			}
+			cmd.Println("Parsed key as", pk.Type())
+
+			pubKeyJSONBytes, err := clientCtx.LegacyAmino.MarshalJSON(pk)
+			if err != nil {
+				return err
+			}
+			accPub, err := legacybech32.MarshalPubKey(legacybech32.AccPK, pk)
+			if err != nil {
+				return err
+			}
+			valPub, err := legacybech32.MarshalPubKey(legacybech32.ValPK, pk)
+			if err != nil {
+				return err
+			}
+			cmd.Println("Address:", pk.Address())
+			cmd.Println("JSON (base64):", string(pubKeyJSONBytes))
+			cmd.Println("Bech32 Acc:", accPub)
+			cmd.Println("Bech32 Validator Operator:", valPub)
+			if pubkeyType == "ed25519" {
+
+				cmd.Println("Bech32 Validator Consensus:", consensusPub)
+			}
+
+			return nil
+		},
+	}
+	cmd.Flags().StringP(flagPubkeyType, "t", "ed25519", "Pubkey type to decode (oneof secp256k1, ed25519)")
+	return cmd
 }
 
 func AddrCmd() *cobra.Command {

@@ -125,7 +125,7 @@ func (rs *Store) Restore(
 			}
 
 			if !rs.schema.equal(receivedStoreSchema) {
-				return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(sdkerrors.ErrLogic, "received store schema is not matched with app schema empty")
+				return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(sdkerrors.ErrLogic, "received schema does not match app schema")
 			}
 
 		case *snapshottypes.SnapshotItem_Store:
@@ -153,7 +153,7 @@ func (rs *Store) Restore(
 			subStore.Set(item.KV.Key, item.KV.Value)
 
 		default:
-			return snapshottypes.SnapshotItem{}, sdkerrors.Wrapf(sdkerrors.ErrLogic, "unknown snapshot item %T", item)
+			return *snapshotItem, nil
 		}
 	}
 

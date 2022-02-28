@@ -16,6 +16,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -347,6 +348,18 @@ func WaitForQuitSignals() ErrorCode {
 	return ErrorCode{Code: int(sig.(syscall.Signal)) + 128}
 }
 
+// GetAppDBBackend gets the backend type to use for the application DBs.
+func GetAppDBBackend(opts types.AppOptions) dbm.BackendType {
+	rv := cast.ToString(opts.Get("app-db-backend"))
+	if len(rv) == 0 {
+		rv = sdk.DBBackend
+	}
+	if len(rv) == 0 {
+		rv = cast.ToString(opts.Get("db-backend"))
+	}
+	return dbm.BackendType(rv)
+}
+
 func skipInterface(iface net.Interface) bool {
 	if iface.Flags&net.FlagUp == 0 {
 		return true // interface down
@@ -371,9 +384,9 @@ func addrToIP(addr net.Addr) net.IP {
 	return ip
 }
 
-func openDB(rootDir, backendType string) (dbm.DB, error) {
+func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
 	dataDir := filepath.Join(rootDir, "data")
-	return dbm.NewDB("application", dbm.BackendType(backendType), dataDir)
+	return dbm.NewDB("application", backendType, dataDir)
 }
 
 func openTraceWriter(traceWriterFile string) (w io.Writer, err error) {

@@ -75,6 +75,10 @@ index-events = [{{ range .BaseConfig.IndexEvents }}{{ printf "%q, " . }}{{end}}]
 # Default cache size is 50mb.
 iavl-cache-size = {{ .BaseConfig.IAVLCacheSize }}
 
+# AppDBBackend defines the database backend type to use for the application and snapshots DBs.
+# An empty string indicates that DBs will have the same type as defined the config.toml's db-backend value.
+app-db-backend = {{ .BaseConfig.AppDBBackend }}
+
 ###############################################################################
 ###                         Telemetry Configuration                         ###
 ###############################################################################

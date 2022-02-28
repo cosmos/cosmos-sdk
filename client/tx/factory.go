@@ -1,6 +1,10 @@
 package tx
 
 import (
+	"errors"
+	"fmt"
+	"os"
+
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -195,11 +199,7 @@ func (f Factory) WithTimeoutHeight(height uint64) Factory {
 // BuildUnsignedTx builds a transaction to be signed given a set of messages.
 // Once created, the fee, memo, and messages are set.
 func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
-	if f.offline && f.generateOnly {
-		if f.chainID != "" {
-			return nil, fmt.Errorf("chain ID cannot be used when offline and generate-only flags are set")
-		}
-	} else if f.chainID == "" {
+	if f.chainID == "" {
 		return nil, fmt.Errorf("chain ID required but not specified")
 	}
 
@@ -280,22 +280,16 @@ func (f Factory) BuildSimTx(msgs ...sdk.Msg) ([]byte, error) {
 	// use the first element from the list of keys in order to generate a valid
 	// pubkey that supports multiple algorithms
 
-	var (
-		ok bool
-		pk cryptotypes.PubKey = &secp256k1.PubKey{} // use default public key type
-	)
+	var pk cryptotypes.PubKey = &secp256k1.PubKey{} // use default public key type
 
 	if f.keybase != nil {
-		records, _ := f.keybase.List()
-		if len(records) == 0 {
-			return nil, errors.New("cannot build signature for simulation, key records slice is empty")
+		infos, _ := f.keybase.List()
+		if len(infos) == 0 {
+			return nil, errors.New("cannot build signature for simulation, key infos slice is empty")
 		}
 
-		// take the first record just for simulation purposes
-		pk, ok = records[0].PubKey.GetCachedValue().(cryptotypes.PubKey)
-		if !ok {
-			return nil, errors.New("cannot build signature for simulation, failed to convert proto Any to public key")
-		}
+		// take the first info record just for simulation purposes
+		pk = infos[0].GetPubKey()
 	}
 
 	// Create an empty signature literal as the ante handler will populate with a

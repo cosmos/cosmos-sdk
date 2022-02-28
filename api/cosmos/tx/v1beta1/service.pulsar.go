@@ -5909,6 +5909,8 @@ func (x *GetTxResponse) GetTxResponse() *v1beta11.TxResponse {
 
 // GetBlockWithTxsRequest is the request type for the Service.GetBlockWithTxs
 // RPC method.
+//
+// Since: cosmos-sdk 0.45.2
 type GetBlockWithTxsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -5955,6 +5957,8 @@ func (x *GetBlockWithTxsRequest) GetPagination() *v1beta1.PageRequest {
 }
 
 // GetBlockWithTxsResponse is the response type for the Service.GetBlockWithTxs method.
+//
+// Since: cosmos-sdk 0.45.2
 type GetBlockWithTxsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

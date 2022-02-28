@@ -811,9 +811,16 @@ func (rs *Store) Restore(
 	// a SnapshotStoreItem, telling us which store to import into. The following items will contain
 	// SnapshotNodeItem (i.e. ExportNode) until we reach the next SnapshotStoreItem or EOF.
 	var importer *iavltree.Importer
+	var snapshotItem snapshottypes.SnapshotItem
+loop:
 	for {
+<<<<<<< HEAD
 		item := &types.SnapshotItem{}
 		err := protoReader.ReadMsg(item)
+=======
+		snapshotItem = snapshottypes.SnapshotItem{}
+		err := protoReader.ReadMsg(&snapshotItem)
+>>>>>>> 41bd879ac (fix: rootmulti's Restore don't return the next unknown item as expected (#11286))
 		if err == io.EOF {
 			break
 		} else if err != nil {
@@ -867,7 +874,11 @@ func (rs *Store) Restore(
 			}
 
 		default:
+<<<<<<< HEAD
 			return sdkerrors.Wrapf(sdkerrors.ErrLogic, "unknown snapshot item %T", item)
+=======
+			break loop
+>>>>>>> 41bd879ac (fix: rootmulti's Restore don't return the next unknown item as expected (#11286))
 		}
 	}
 
@@ -880,7 +891,11 @@ func (rs *Store) Restore(
 	}
 
 	flushMetadata(rs.db, int64(height), rs.buildCommitInfo(int64(height)), []int64{})
+<<<<<<< HEAD
 	return rs.LoadLatestVersion()
+=======
+	return snapshotItem, rs.LoadLatestVersion()
+>>>>>>> 41bd879ac (fix: rootmulti's Restore don't return the next unknown item as expected (#11286))
 }
 
 func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams) (types.CommitKVStore, error) {

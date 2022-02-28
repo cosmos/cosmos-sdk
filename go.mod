@@ -14,7 +14,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
 	github.com/cosmos/cosmos-sdk/api v0.1.0-alpha5
 	github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1
-	github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.2
+	github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.3
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.17.3
 	github.com/cosmos/ledger-cosmos-go v0.11.1

@@ -286,8 +286,8 @@ github.com/cosmos/cosmos-proto v1.0.0-alpha7 h1:yqYUOHF2jopwZh4dVQp3xgqwftE5/2hk
 github.com/cosmos/cosmos-proto v1.0.0-alpha7/go.mod h1:dosO4pSAbJF8zWCzCoTWP7nNsjcvSUBQmniFxDg5daw=
 github.com/cosmos/cosmos-sdk/api v0.1.0-alpha5 h1:UlK7NOHGlEbvbDTCM0cN7BJN6hhqeXZIuLv6KapFYTc=
 github.com/cosmos/cosmos-sdk/api v0.1.0-alpha5/go.mod h1:gZu6sOu2vl4Fd7I+BjDSx2bxndwPgFLGfOegek3SQQo=
-github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.2 h1:bBglNlra8ZHb4dmbEE8V85ihLA+DkriSm7tcx6x/JWo=
-github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.2/go.mod h1:Gi7pzVRnvZ1N16JAXpLADzng0ePoE7YeEHaULSFB2Ts=
+github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.3 h1:Ep7FHNViVwwGnwLFEPewZYsyN2CJNVMmMvFmtNQtbnw=
+github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.3/go.mod h1:HFea93YKmoMJ/mNKtkSeJZDtyJ4inxBsUK928KONcqo=
 github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d/go.mod h1:tSxLoYXyBmiFeKpvmq4dzayMdCjCnu8uqmCysIGBT2Y=
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
 github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4xuwvCdJw=

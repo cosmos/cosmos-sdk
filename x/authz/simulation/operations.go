@@ -260,8 +260,12 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 		}
 
 		_, err = sendAuth.Accept(ctx, msg[0])
-		if sdkerrors.ErrInsufficientFunds.Is(err) {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, nil
+		if err != nil {
+			if sdkerrors.ErrInsufficientFunds.Is(err) {
+				return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, nil
+			} else {
+				return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
+			}
 		}
 
 		msgExec := authz.NewMsgExec(granteeAddr, msg)

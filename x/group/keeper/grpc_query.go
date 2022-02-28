@@ -340,7 +340,7 @@ func (q Keeper) Tally(ctx sdk.Context, p group.Proposal, groupId uint64) (group.
 
 		switch {
 		case sdkerrors.ErrNotFound.Is(err):
-			// If the member left the group after voting, then we don't skip the
+			// If the member left the group after voting, then we simply skip the
 			// vote.
 			continue
 		case err != nil:

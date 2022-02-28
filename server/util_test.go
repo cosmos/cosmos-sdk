@@ -466,7 +466,7 @@ func TestGetAppDBBackend(t *testing.T) {
 			name:   "nothing set",
 			dbBack: "",
 			opts:   mapGetter{},
-			exp:    dbm.BackendType(""),
+			exp:    dbm.GoLevelDBBackend,
 		},
 
 		{

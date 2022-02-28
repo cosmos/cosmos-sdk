@@ -357,7 +357,10 @@ func GetAppDBBackend(opts types.AppOptions) dbm.BackendType {
 	if len(rv) == 0 {
 		rv = cast.ToString(opts.Get("db-backend"))
 	}
-	return dbm.BackendType(rv)
+	if len(rv) != 0 {
+		return dbm.BackendType(rv)
+	}
+	return dbm.GoLevelDBBackend
 }
 
 func skipInterface(iface net.Interface) bool {

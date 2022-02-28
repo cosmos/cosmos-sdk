@@ -97,9 +97,8 @@ func TestCalculateGas(t *testing.T) {
 
 func TestBuildSimTx(t *testing.T) {
 	txCfg := NewTestTxConfig()
-	encCfg := simapp.MakeTestEncodingConfig()
 
-	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encCfg.Codec)
+	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil)
 	require.NoError(t, err)
 
 	path := hd.CreateHDPath(118, 0, 0).String()
@@ -123,8 +122,7 @@ func TestBuildSimTx(t *testing.T) {
 }
 
 func TestBuildUnsignedTx(t *testing.T) {
-	encCfg := simapp.MakeTestEncodingConfig()
-	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encCfg.Codec)
+	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil)
 	require.NoError(t, err)
 
 	path := hd.CreateHDPath(118, 0, 0).String()

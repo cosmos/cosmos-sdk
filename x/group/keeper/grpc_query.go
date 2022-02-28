@@ -333,8 +333,18 @@ func (q Keeper) Tally(ctx sdk.Context, p group.Proposal, groupId uint64) (group.
 		}
 
 		var member group.GroupMember
-		err := q.groupMemberTable.GetOne(ctx.KVStore(q.key), orm.PrimaryKey(&group.GroupMember{GroupId: groupId, Member: &group.Member{Address: vote.Voter}}), &member)
-		if err != nil {
+		err := q.groupMemberTable.GetOne(ctx.KVStore(q.key), orm.PrimaryKey(&group.GroupMember{
+			GroupId: groupId,
+			Member:  &group.Member{Address: vote.Voter},
+		}), &member)
+
+		switch {
+		case sdkerrors.ErrNotFound.Is(err):
+			// If the member left the group after voting, then we don't skip the
+			// vote.
+			continue
+		case err != nil:
+			// For any other errors, we stop and return the error.
 			return group.TallyResult{}, err
 		}
 

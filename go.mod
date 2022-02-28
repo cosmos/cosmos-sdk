@@ -59,6 +59,8 @@ require (
 	sigs.k8s.io/yaml v1.3.0
 )
 
+require gotest.tools/v3 v3.1.0
+
 require (
 	cloud.google.com/go v0.99.0 // indirect
 	cloud.google.com/go/storage v1.14.0 // indirect

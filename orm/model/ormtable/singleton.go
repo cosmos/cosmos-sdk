@@ -60,7 +60,7 @@ func (t singleton) ImportJSON(ctx context.Context, reader io.Reader) error {
 		return err
 	}
 
-	return t.save(backend, msg, saveModeDefault)
+	return t.save(ctx, backend, msg, saveModeDefault)
 }
 
 func (t singleton) ExportJSON(ctx context.Context, writer io.Writer) error {

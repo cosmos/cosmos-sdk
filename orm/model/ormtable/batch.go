@@ -62,7 +62,9 @@ func flushWrites(store kv.Store, writer *batchStoreWriter) error {
 
 func flushBuf(store kv.Store, writes []*batchWriterEntry) error {
 	for _, write := range writes {
-		if !write.delete {
+		if write.hookCall != nil {
+			write.hookCall()
+		} else if !write.delete {
 			err := store.Set(write.key, write.value)
 			if err != nil {
 				return err
@@ -73,6 +75,7 @@ func flushBuf(store kv.Store, writes []*batchWriterEntry) error {
 				return err
 			}
 		}
+
 	}
 	return nil
 }
@@ -89,6 +92,7 @@ func (w *batchIndexCommitmentWriter) Close() {
 type batchWriterEntry struct {
 	key, value []byte
 	delete     bool
+	hookCall   func()
 }
 
 type batchStoreWriter struct {
@@ -107,6 +111,10 @@ func (b *batchStoreWriter) Set(key, value []byte) error {
 func (b *batchStoreWriter) Delete(key []byte) error {
 	b.append(&batchWriterEntry{key: key, delete: true})
 	return nil
+}
+
+func (w *batchIndexCommitmentWriter) enqueueHook(f func()) {
+	w.indexWriter.append(&batchWriterEntry{hookCall: f})
 }
 
 func (b *batchStoreWriter) append(entry *batchWriterEntry) {

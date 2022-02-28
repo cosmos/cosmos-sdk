@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Cdc defines a global generic sealed Amino codec to be used throughout sdk. It
@@ -15,6 +16,7 @@ var Cdc = codec.NewLegacyAmino()
 func init() {
 	cryptocodec.RegisterCrypto(Cdc)
 	codec.RegisterEvidences(Cdc)
+	sdk.RegisterLegacyAminoCodec(Cdc)
 }
 
 // PrivKeyFromBytes unmarshals private key bytes and returns a PrivKey

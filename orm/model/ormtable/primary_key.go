@@ -127,7 +127,7 @@ func (p primaryKeyIndex) doDelete(ctx context.Context, primaryKeyValues []protor
 		return nil
 	}
 
-	err = p.doDeleteWithWriteBatch(backend, writer, pk, msg)
+	err = p.doDeleteWithWriteBatch(ctx, backend, writer, pk, msg)
 	if err != nil {
 		return err
 	}
@@ -135,9 +135,9 @@ func (p primaryKeyIndex) doDelete(ctx context.Context, primaryKeyValues []protor
 	return writer.Write()
 }
 
-func (p primaryKeyIndex) doDeleteWithWriteBatch(backend Backend, writer *batchIndexCommitmentWriter, primaryKeyBz []byte, message proto.Message) error {
-	if hooks := backend.Hooks(); hooks != nil {
-		err := hooks.OnDelete(message)
+func (p primaryKeyIndex) doDeleteWithWriteBatch(ctx context.Context, backend Backend, writer *batchIndexCommitmentWriter, primaryKeyBz []byte, message proto.Message) error {
+	if hooks := backend.ValidateHooks(); hooks != nil {
+		err := hooks.ValidateDelete(ctx, message)
 		if err != nil {
 			return err
 		}
@@ -157,6 +157,12 @@ func (p primaryKeyIndex) doDeleteWithWriteBatch(backend Backend, writer *batchIn
 		if err != nil {
 			return err
 		}
+	}
+
+	if writeHooks := backend.WriteHooks(); writeHooks != nil {
+		writer.enqueueHook(func() {
+			writeHooks.OnDelete(ctx, message)
+		})
 	}
 
 	return nil
@@ -209,7 +215,7 @@ func (p primaryKeyIndex) deleteByIterator(ctx context.Context, it Iterator) erro
 			return err
 		}
 
-		err = p.doDeleteWithWriteBatch(backend, writer, pkBz, msg)
+		err = p.doDeleteWithWriteBatch(ctx, backend, writer, pkBz, msg)
 		if err != nil {
 			return err
 		}

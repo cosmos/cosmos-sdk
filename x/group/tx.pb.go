@@ -1156,9 +1156,8 @@ type MsgVote struct {
 	Option VoteOption `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.group.v1beta1.VoteOption" json:"option,omitempty"`
 	// metadata is any arbitrary metadata to attached to the vote.
 	Metadata []byte `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
-	// exec defines the mode of execution of the proposal,
-	// whether it should be executed immediately on creation or not.
-	// If so, proposers signatures are considered as Yes votes.
+	// exec defines whether the proposal should be executed
+	// immediately after voting or not.
 	Exec Exec `protobuf:"varint,5,opt,name=exec,proto3,enum=cosmos.group.v1beta1.Exec" json:"exec,omitempty"`
 }
 

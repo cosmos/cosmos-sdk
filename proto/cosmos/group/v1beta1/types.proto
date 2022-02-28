@@ -49,7 +49,7 @@ message ThresholdDecisionPolicy {
   // where members can start sending MsgExec. This means that the window for
   // sending a MsgExec transaction is:
   // `[ submission + min_execution_period ; submission + voting_period + max_execution_period]`
-  // where max_execution_period is a app-specific config, defined in the keeper.
+  // where max_execution_period is an app-specific config, defined in the keeper.
   // If not set, min_execution_period will default to 0.
   google.protobuf.Duration min_execution_period = 3 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }

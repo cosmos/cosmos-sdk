@@ -6,11 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-<<<<<<< HEAD
-=======
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
->>>>>>> e65719060 (fix: remove hardcoded pubkey from tx simulation (#11282))
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
@@ -194,8 +191,6 @@ func (f Factory) WithTimeoutHeight(height uint64) Factory {
 	f.timeoutHeight = height
 	return f
 }
-<<<<<<< HEAD
-=======
 
 // BuildUnsignedTx builds a transaction to be signed given a set of messages.
 // Once created, the fee, memo, and messages are set.
@@ -350,4 +345,3 @@ func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
 
 	return fc, nil
 }
->>>>>>> e65719060 (fix: remove hardcoded pubkey from tx simulation (#11282))

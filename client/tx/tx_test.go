@@ -247,15 +247,6 @@ func TestSign(t *testing.T) {
 		},
 
 		/**** test double sign Direct mode
-<<<<<<< HEAD
-		  signing transaction with more than 2 signers should fail in DIRECT mode ****/
-		{"direct: should fail to append a signature with different mode",
-			txfDirect, txb, from1, false, []cryptotypes.PubKey{}, nil},
-		{"direct: should fail to sign multi-signers tx",
-			txfDirect, txb2, from1, false, []cryptotypes.PubKey{}, nil},
-		{"direct: should fail to overwrite multi-signers tx",
-			txfDirect, txb2, from1, true, []cryptotypes.PubKey{}, nil},
-=======
 		  signing transaction with 2 or more DIRECT signers should fail in DIRECT mode ****/
 		{
 			"direct: should  append a DIRECT signature with existing AMINO",
@@ -289,7 +280,6 @@ func TestSign(t *testing.T) {
 			[]cryptotypes.PubKey{pubKey1},
 			nil,
 		},
->>>>>>> e65719060 (fix: remove hardcoded pubkey from tx simulation (#11282))
 	}
 	var prevSigs []signingtypes.SignatureV2
 	for _, tc := range testCases {

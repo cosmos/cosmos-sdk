@@ -3,14 +3,16 @@ package multi
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"sort"
+
+	protoio "github.com/gogo/protobuf/io"
+
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	types "github.com/cosmos/cosmos-sdk/store/v2"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	protoio "github.com/gogo/protobuf/io"
-	"io"
-	"sort"
 )
 
 // Snapshot implements snapshottypes.Snapshotter.

@@ -23,7 +23,7 @@ func createTestInterfaceRegistry() types.InterfaceRegistry {
 	return interfaceRegistry
 }
 
-func TestProtoMarsharlInterface(t *testing.T) {
+func TestProtoMarshalInterface(t *testing.T) {
 	cdc := codec.NewProtoCodec(createTestInterfaceRegistry())
 	m := interfaceMarshaler{cdc.MarshalInterface, cdc.UnmarshalInterface}
 	testInterfaceMarshaling(require.New(t), m, false)

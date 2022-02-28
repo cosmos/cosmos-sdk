@@ -118,12 +118,8 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				if err != nil {
 					return fmt.Errorf("error getting account from keybase: %w", err)
 				}
-				multisigKey, err := txFactory.Keybase().KeyByAddress(multisigAddr)
-				if err != nil {
-					return err
-				}
 				err = authclient.SignTxWithSignerAddress(
-					txFactory, clientCtx, multisigAddr, multisigKey.Name, txBuilder, clientCtx.Offline, true)
+					txFactory, clientCtx, multisigAddr, clientCtx.GetFromName(), txBuilder, clientCtx.Offline, true)
 				if err != nil {
 					return err
 				}
@@ -237,6 +233,11 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+		from, _ := cmd.Flags().GetString(flags.FlagFrom)
+		_, fromName, _, err := client.GetFromFields(txF.Keybase(), from, clientCtx.GenerateOnly)
+		if err != nil {
+			return fmt.Errorf("error getting account from keybase: %w", err)
+		}
 
 		overwrite, _ := f.GetBool(flagOverwrite)
 		if multisig != "" {
@@ -244,12 +245,8 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return fmt.Errorf("error getting account from keybase: %w", err)
 			}
-			multisigKey, err := txFactory.Keybase().KeyByAddress(multisigAddr)
-			if err != nil {
-				return err
-			}
 			err = authclient.SignTxWithSignerAddress(
-				txF, clientCtx, multisigAddr, multisigKey.Name, txBuilder, clientCtx.Offline, overwrite)
+				txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline, overwrite)
 			if err != nil {
 				return err
 			}

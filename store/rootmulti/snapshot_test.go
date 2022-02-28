@@ -182,6 +182,14 @@ func TestMultistoreSnapshotRestore(t *testing.T) {
 	target := newMultiStoreWithMixedMounts(dbm.NewMemDB())
 	version := uint64(source.LastCommitID().Version)
 	require.EqualValues(t, 3, version)
+	dummyExtensionItem := snapshottypes.SnapshotItem{
+		Item: &snapshottypes.SnapshotItem_Extension{
+			Extension: &snapshottypes.SnapshotExtensionMeta{
+				Name:   "test",
+				Format: 1,
+			},
+		},
+	}
 
 	chunks := make(chan io.ReadCloser, 100)
 	go func() {
@@ -190,12 +198,16 @@ func TestMultistoreSnapshotRestore(t *testing.T) {
 		defer streamWriter.Close()
 		err := source.Snapshot(version, streamWriter)
 		require.NoError(t, err)
+		// write an extension metadata
+		err = streamWriter.WriteMsg(&dummyExtensionItem)
+		require.NoError(t, err)
 	}()
 
 	streamReader, err := snapshots.NewStreamReader(chunks)
 	require.NoError(t, err)
-	_, err = target.Restore(version, snapshottypes.CurrentFormat, streamReader)
+	nextItem, err := target.Restore(version, snapshottypes.CurrentFormat, streamReader)
 	require.NoError(t, err)
+	require.Equal(t, *dummyExtensionItem.GetExtension(), *nextItem.GetExtension())
 
 	assert.Equal(t, source.LastCommitID(), target.LastCommitID())
 	for key, sourceStore := range source.GetStores() {

@@ -207,7 +207,6 @@ func (s *MWTestSuite) TestSigVerification_ExplicitAmino() {
 
 	// Set up TxConfig.
 	aminoCdc := legacy.Cdc
-	aminoCdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	aminoCdc.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
 
 	// We're using TestMsg amino encoding in some tests, so register it here.

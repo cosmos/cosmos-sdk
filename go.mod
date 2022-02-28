@@ -12,7 +12,7 @@ require (
 	github.com/confio/ics23/go v0.7.0-rc
 	github.com/cosmos/btcutil v1.0.4
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
-	github.com/cosmos/cosmos-sdk/api v0.1.0-alpha4
+	github.com/cosmos/cosmos-sdk/api v0.1.0-alpha5
 	github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1
 	github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.2
 	github.com/cosmos/go-bip39 v1.0.0
@@ -33,7 +33,7 @@ require (
 	github.com/improbable-eng/grpc-web v0.15.0
 	github.com/jhump/protoreflect v1.12.0
 	github.com/lazyledger/smt v0.2.1-0.20210709230900-03ea40719554
-	github.com/magiconair/properties v1.8.5
+	github.com/magiconair/properties v1.8.6
 	github.com/mattn/go-isatty v0.0.14
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.12.1

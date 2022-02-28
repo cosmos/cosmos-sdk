@@ -8,7 +8,7 @@ An invariant is a property of the application that should always be true. In the
 
 ## Pre-requisite Readings
 
-- [Keepers](./keeper.md) {prereq}
+* [Keepers](./keeper.md) {prereq}
 
 ## Implementing `Invariant`s
 

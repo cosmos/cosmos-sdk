@@ -3,7 +3,7 @@ package ormtable
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/orm/model/kv"
+	"github.com/cosmos/cosmos-sdk/orm/types/kv"
 )
 
 // ReadBackend defines the type used for read-only ORM operations.
@@ -30,8 +30,15 @@ type Backend interface {
 	// otherwise it the commitment store.
 	IndexStore() kv.Store
 
-	// Hooks returns a Hooks instance or nil.
-	Hooks() Hooks
+	// ValidateHooks returns a ValidateHooks instance or nil.
+	ValidateHooks() ValidateHooks
+
+	// WithValidateHooks returns a copy of this backend with the provided hooks.
+	WithValidateHooks(ValidateHooks) Backend
+
+	WriteHooks() WriteHooks
+
+	WithWriteHooks(WriteHooks) Backend
 }
 
 // ReadBackendOptions defines options for creating a ReadBackend.
@@ -79,7 +86,26 @@ func NewReadBackend(options ReadBackendOptions) ReadBackend {
 type backend struct {
 	commitmentStore kv.Store
 	indexStore      kv.Store
-	hooks           Hooks
+	validateHooks   ValidateHooks
+	writeHooks      WriteHooks
+}
+
+func (c backend) ValidateHooks() ValidateHooks {
+	return c.validateHooks
+}
+
+func (c backend) WithValidateHooks(hooks ValidateHooks) Backend {
+	c.validateHooks = hooks
+	return c
+}
+
+func (c backend) WriteHooks() WriteHooks {
+	return c.writeHooks
+}
+
+func (c backend) WithWriteHooks(hooks WriteHooks) Backend {
+	c.writeHooks = hooks
+	return c
 }
 
 func (backend) private() {}
@@ -100,10 +126,6 @@ func (c backend) IndexStore() kv.Store {
 	return c.indexStore
 }
 
-func (c backend) Hooks() Hooks {
-	return c.hooks
-}
-
 // BackendOptions defines options for creating a Backend.
 // Context can optionally define two stores - a commitment store
 // that is backed by a merkle tree and an index store that isn't.
@@ -118,8 +140,10 @@ type BackendOptions struct {
 	// If it is nil the CommitmentStore will be used.
 	IndexStore kv.Store
 
-	// Hooks are optional hooks into ORM insert, update and delete operations.
-	Hooks Hooks
+	// ValidateHooks are optional hooks into ORM insert, update and delete operations.
+	ValidateHooks ValidateHooks
+
+	WriteHooks WriteHooks
 }
 
 // NewBackend creates a new Backend.
@@ -131,7 +155,8 @@ func NewBackend(options BackendOptions) Backend {
 	return &backend{
 		commitmentStore: options.CommitmentStore,
 		indexStore:      indexStore,
-		hooks:           options.Hooks,
+		validateHooks:   options.ValidateHooks,
+		writeHooks:      options.WriteHooks,
 	}
 }
 

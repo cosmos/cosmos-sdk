@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/model/kv"
+	"github.com/cosmos/cosmos-sdk/orm/types/kv"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
 
@@ -28,7 +28,7 @@ func (t autoIncrementTable) InsertReturningID(ctx context.Context, message proto
 		return 0, err
 	}
 
-	return t.save(backend, message, saveModeInsert)
+	return t.save(ctx, backend, message, saveModeInsert)
 }
 
 func (t autoIncrementTable) Save(ctx context.Context, message proto.Message) error {
@@ -37,7 +37,7 @@ func (t autoIncrementTable) Save(ctx context.Context, message proto.Message) err
 		return err
 	}
 
-	_, err = t.save(backend, message, saveModeDefault)
+	_, err = t.save(ctx, backend, message, saveModeDefault)
 	return err
 }
 
@@ -47,7 +47,7 @@ func (t autoIncrementTable) Insert(ctx context.Context, message proto.Message) e
 		return err
 	}
 
-	_, err = t.save(backend, message, saveModeInsert)
+	_, err = t.save(ctx, backend, message, saveModeInsert)
 	return err
 }
 
@@ -57,11 +57,11 @@ func (t autoIncrementTable) Update(ctx context.Context, message proto.Message) e
 		return err
 	}
 
-	_, err = t.save(backend, message, saveModeUpdate)
+	_, err = t.save(ctx, backend, message, saveModeUpdate)
 	return err
 }
 
-func (t *autoIncrementTable) save(backend Backend, message proto.Message, mode saveMode) (newId uint64, err error) {
+func (t *autoIncrementTable) save(ctx context.Context, backend Backend, message proto.Message, mode saveMode) (newId uint64, err error) {
 	messageRef := message.ProtoReflect()
 	val := messageRef.Get(t.autoIncField).Uint()
 	writer := newBatchIndexCommitmentWriter(backend)
@@ -87,7 +87,7 @@ func (t *autoIncrementTable) save(backend Backend, message proto.Message, mode s
 		mode = saveModeUpdate
 	}
 
-	return newId, t.tableImpl.doSave(writer, message, mode)
+	return newId, t.tableImpl.doSave(ctx, writer, message, mode)
 }
 
 func (t *autoIncrementTable) curSeqValue(kv kv.ReadonlyStore) (uint64, error) {
@@ -125,7 +125,7 @@ func (t autoIncrementTable) ValidateJSON(reader io.Reader) error {
 		messageRef := message.ProtoReflect()
 		id := messageRef.Get(t.autoIncField).Uint()
 		if id > maxID {
-			return fmt.Errorf("invalid ID %d, expected a value <= %d", id, maxID)
+			return fmt.Errorf("invalid ID %d, expected a value <= %d, the highest sequence number", id, maxID)
 		}
 
 		if t.customJSONValidator != nil {
@@ -148,17 +148,17 @@ func (t autoIncrementTable) ImportJSON(ctx context.Context, reader io.Reader) er
 		if id == 0 {
 			// we don't have an ID in the JSON, so we call Save to insert and
 			// generate one
-			_, err = t.save(backend, message, saveModeInsert)
+			_, err = t.save(ctx, backend, message, saveModeInsert)
 			return err
 		} else {
 			if id > maxID {
-				return fmt.Errorf("invalid ID %d, expected a value <= %d", id, maxID)
+				return fmt.Errorf("invalid ID %d, expected a value <= %d, the highest sequence number", id, maxID)
 			}
 			// we do have an ID and calling Save will fail because it expects
 			// either no ID or SAVE_MODE_UPDATE. So instead we drop one level
 			// down and insert using tableImpl which doesn't know about
 			// auto-incrementing IDs
-			return t.tableImpl.save(backend, message, saveModeInsert)
+			return t.tableImpl.save(ctx, backend, message, saveModeInsert)
 		}
 	})
 }
@@ -213,21 +213,20 @@ func (t autoIncrementTable) ExportJSON(ctx context.Context, writer io.Writer) er
 		return err
 	}
 
-	bz, err := json.Marshal(seq)
-	if err != nil {
-		return err
-	}
-	_, err = writer.Write(bz)
-	if err != nil {
-		return err
+	start := true
+	if seq != 0 {
+		start = false
+		bz, err := json.Marshal(seq)
+		if err != nil {
+			return err
+		}
+		_, err = writer.Write(bz)
+		if err != nil {
+			return err
+		}
 	}
 
-	_, err = writer.Write([]byte(",\n"))
-	if err != nil {
-		return err
-	}
-
-	return t.doExportJSON(ctx, writer)
+	return t.doExportJSON(ctx, writer, start)
 }
 
 func (t *autoIncrementTable) GetTable(message proto.Message) Table {

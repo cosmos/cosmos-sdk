@@ -12,7 +12,7 @@ A state machine is a computer science concept whereby a machine can have multipl
 
 Given a state S and a transaction T, the state machine will return a new state S'.
 
-```
+```text
 +--------+                 +--------+
 |        |                 |        |
 |   S    +---------------->+   S'   |
@@ -22,7 +22,7 @@ Given a state S and a transaction T, the state machine will return a new state S
 
 In practice, the transactions are bundled in blocks to make the process more efficient. Given a state S and a block of transactions B, the state machine will return a new state S'.
 
-```
+```text
 +--------+                              +--------+
 |        |                              |        |
 |   S    +----------------------------> |   S'   |
@@ -38,7 +38,7 @@ The Cosmos SDK gives developers maximum flexibility to define the state of their
 
 Thanks to the Cosmos SDK, developers just have to define the state machine, and [*Tendermint*](https://tendermint.com/docs/introduction/what-is-tendermint.html) will handle replication over the network for them.
 
-```
+```text
                 ^  +-------------------------------+  ^
                 |  |                               |  |   Built with Cosmos SDK
                 |  |  State-machine = Application  |  |
@@ -62,7 +62,7 @@ The Tendermint [consensus algorithm](https://docs.tendermint.com/v0.34/introduct
 
 Tendermint passes transactions to the application through an interface called the [ABCI](https://docs.tendermint.com/v0.34/spec/abci/), which the application must implement.
 
-```
+```text
               +---------------------+
               |                     |
               |     Application     |
@@ -84,9 +84,9 @@ Note that **Tendermint only handles transaction bytes**. It has no knowledge of 
 
 Here are the most important messages of the ABCI:
 
-- `CheckTx`: When a transaction is received by Tendermint Core, it is passed to the application to check if a few basic requirements are met. `CheckTx` is used to protect the mempool of full-nodes against spam transactions. A special handler called the [`AnteHandler`](../basics/gas-fees.md#antehandler) is used to execute a series of validation steps such as checking for sufficient fees and validating the signatures. If the checks are valid, the transaction is added to the [mempool](https://docs.tendermint.com/v0.34/tendermint-core/mempool.html#mempool) and relayed to peer nodes. Note that transactions are not processed (i.e. no modification of the state occurs) with `CheckTx` since they have not been included in a block yet.
-- `DeliverTx`: When a [valid block](https://docs.tendermint.com/v0.34/spec/blockchain/blockchain.html#validation) is received by Tendermint Core, each transaction in the block is passed to the application via `DeliverTx` in order to be processed. It is during this stage that the state transitions occur. The `AnteHandler` executes again along with the actual [`Msg` service](../building-modules/msg-services.md) RPC for each message in the transaction.
-- `BeginBlock`/`EndBlock`: These messages are executed at the beginning and the end of each block, whether the block contains transaction or not. It is useful to trigger automatic execution of logic. Proceed with caution though, as computationally expensive loops could slow down your blockchain, or even freeze it if the loop is infinite.
+* `CheckTx`: When a transaction is received by Tendermint Core, it is passed to the application to check if a few basic requirements are met. `CheckTx` is used to protect the mempool of full-nodes against spam transactions. A special handler called the [`AnteHandler`](../basics/gas-fees.md#antehandler) is used to execute a series of validation steps such as checking for sufficient fees and validating the signatures. If the checks are valid, the transaction is added to the [mempool](https://docs.tendermint.com/v0.34/tendermint-core/mempool.html#mempool) and relayed to peer nodes. Note that transactions are not processed (i.e. no modification of the state occurs) with `CheckTx` since they have not been included in a block yet.
+* `DeliverTx`: When a [valid block](https://docs.tendermint.com/v0.34/spec/blockchain/blockchain.html#validation) is received by Tendermint Core, each transaction in the block is passed to the application via `DeliverTx` in order to be processed. It is during this stage that the state transitions occur. The `AnteHandler` executes again along with the actual [`Msg` service](../building-modules/msg-services.md) RPC for each message in the transaction.
+* `BeginBlock`/`EndBlock`: These messages are executed at the beginning and the end of each block, whether the block contains transaction or not. It is useful to trigger automatic execution of logic. Proceed with caution though, as computationally expensive loops could slow down your blockchain, or even freeze it if the loop is infinite.
 
 Find a more detailed view of the ABCI methods from the [Tendermint docs](https://docs.tendermint.com/v0.34/spec/abci/abci.html#overview).
 

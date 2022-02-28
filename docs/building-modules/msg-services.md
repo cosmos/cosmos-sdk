@@ -8,8 +8,8 @@ A Protobuf `Msg` service processes [messages](./messages-and-queries.md#messages
 
 ## Pre-requisite Readings
 
-- [Module Manager](./module-manager.md) {prereq}
-- [Messages and Queries](./messages-and-queries.md) {prereq}
+* [Module Manager](./module-manager.md) {prereq}
+* [Messages and Queries](./messages-and-queries.md) {prereq}
 
 ## Implementation of a module `Msg` service
 
@@ -56,7 +56,7 @@ After the validation is successful, the `msgServer` method uses the [`keeper`](.
 
 Before returning, `msgServer` methods generally emit one or more [events](../core/events.md) by using the `EventManager` held in the `ctx`. Use the new `EmitTypedEvent` function that uses protobuf-based event types:
 
-```
+```go
 ctx.EventManager().EmitTypedEvent(
 	&group.EventABC{Key1: Value1,  Key2, Value2})
 ```
@@ -99,9 +99,9 @@ Here is the typical structure of a `handler` function:
 
 Let us break it down:
 
-- The [`LegacyMsg`](./messages-and-queries.md#messages) is the actual object being processed.
-- The [`Context`](../core/context.md) contains all the necessary information needed to process the `msg`, as well as a branch of the latest state. If the `msg` is successfully processed, the branched version of the state contained in the `ctx` will be written to the main state (branch).
-- The `*Result` returned to `BaseApp` contains (among other things) information on the execution of the `handler` and [events](../core/events.md).
+* The [`LegacyMsg`](./messages-and-queries.md#messages) is the actual object being processed.
+* The [`Context`](../core/context.md) contains all the necessary information needed to process the `msg`, as well as a branch of the latest state. If the `msg` is successfully processed, the branched version of the state contained in the `ctx` will be written to the main state (branch).
+* The `*Result` returned to `BaseApp` contains (among other things) information on the execution of the `handler` and [events](../core/events.md).
 
 Module `handler`s are typically implemented in a `./handler.go` file inside the module's folder. The [module manager](./module-manager.md) is used to add the module's `handler`s to the
 [application's `router`](../core/baseapp.md#message-routing) via the `Route()` method. Typically,

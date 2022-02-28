@@ -22,15 +22,14 @@ const DefaultConfigTemplate = `# This is a TOML config file.
 # specified in this config (e.g. 0.25token1;0.0001token2).
 minimum-gas-prices = "{{ .BaseConfig.MinGasPrices }}"
 
-# default: the last 100 states are kept in addition to every 500th state; pruning at 10 block intervals
+# default: the last 362880 states are kept, pruning at 10 block intervals
 # nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
-# everything: all saved states will be deleted, storing only the current state; pruning at 10 block intervals
-# custom: allow pruning options to be manually specified through 'pruning-keep-recent', 'pruning-keep-every', and 'pruning-interval'
+# everything: all saved states will be deleted, storing only the current and previous state; pruning at 10 block intervals
+# custom: allow pruning options to be manually specified through 'pruning-keep-recent' and 'pruning-interval'
 pruning = "{{ .BaseConfig.Pruning }}"
 
 # These are applied if and only if the pruning strategy is custom.
 pruning-keep-recent = "{{ .BaseConfig.PruningKeepRecent }}"
-pruning-keep-every = "{{ .BaseConfig.PruningKeepEvery }}"
 pruning-interval = "{{ .BaseConfig.PruningInterval }}"
 
 # HaltHeight contains a non-zero block height at which a node will gracefully
@@ -202,7 +201,7 @@ enable-unsafe-cors = {{ .GRPCWeb.EnableUnsafeCORS }}
 [state-sync]
 
 # snapshot-interval specifies the block interval at which local state sync snapshots are
-# taken (0 to disable). Must be a multiple of pruning-keep-every.
+# taken (0 to disable).
 snapshot-interval = {{ .StateSync.SnapshotInterval }}
 
 # snapshot-keep-recent specifies the number of recent snapshots to keep and serve (0 to keep all).

@@ -56,7 +56,7 @@ type Store struct {
 2. Iteration efficiently returns the sorted elements within the range
 3. Each tree version is immutable and can be retrieved even after a commit(depending on the pruning settings)
 
-Specification and implementation of IAVL tree can be found in [https://github.com/tendermint/iavl].
+Specification and implementation of IAVL tree can be found in https://github.com/tendermint/iavl.
 
 ## GasKV
 

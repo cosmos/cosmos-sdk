@@ -31,7 +31,6 @@ type BaseConfig struct {
 
 	Pruning           string `mapstructure:"pruning"`
 	PruningKeepRecent string `mapstructure:"pruning-keep-recent"`
-	PruningKeepEvery  string `mapstructure:"pruning-keep-every"`
 	PruningInterval   string `mapstructure:"pruning-interval"`
 
 	// HaltHeight contains a non-zero block height at which a node will gracefully
@@ -207,7 +206,6 @@ func DefaultConfig() *Config {
 			InterBlockCache:   true,
 			Pruning:           storetypes.PruningOptionDefault,
 			PruningKeepRecent: "0",
-			PruningKeepEvery:  "0",
 			PruningInterval:   "0",
 			MinRetainBlocks:   0,
 			IndexEvents:       make([]string, 0),
@@ -265,7 +263,6 @@ func GetConfig(v *viper.Viper) Config {
 			InterBlockCache:   v.GetBool("inter-block-cache"),
 			Pruning:           v.GetString("pruning"),
 			PruningKeepRecent: v.GetString("pruning-keep-recent"),
-			PruningKeepEvery:  v.GetString("pruning-keep-every"),
 			PruningInterval:   v.GetString("pruning-interval"),
 			HaltHeight:        v.GetUint64("halt-height"),
 			HaltTime:          v.GetUint64("halt-time"),
@@ -320,6 +317,11 @@ func GetConfig(v *viper.Viper) Config {
 func (c Config) ValidateBasic() error {
 	if c.BaseConfig.MinGasPrices == "" {
 		return sdkerrors.ErrAppConfig.Wrap("set min gas price in app.toml or flag or env variable")
+	}
+	if c.Pruning == storetypes.PruningOptionEverything && c.StateSync.SnapshotInterval > 0 {
+		return sdkerrors.ErrAppConfig.Wrapf(
+			"cannot enable state sync snapshots with '%s' pruning setting", storetypes.PruningOptionEverything,
+		)
 	}
 
 	return nil

@@ -611,15 +611,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 	if proposal.Status != group.PROPOSAL_STATUS_SUBMITTED {
 		return nil, sdkerrors.Wrap(errors.ErrInvalid, "proposal not open for voting")
 	}
-	votingPeriodEndGogo, err := gogotypes.TimestampProto(proposal.VotingPeriodEnd)
-	if err != nil {
-		return nil, err
-	}
-	votingPeriodEnd, err := gogotypes.TimestampFromProto(votingPeriodEndGogo)
-	if err != nil {
-		return nil, err
-	}
-	if votingPeriodEnd.Before(ctx.BlockTime()) || votingPeriodEnd.Equal(ctx.BlockTime()) {
+	if proposal.VotingPeriodEnd.Before(ctx.BlockTime()) || proposal.VotingPeriodEnd.Equal(ctx.BlockTime()) {
 		return nil, sdkerrors.Wrap(errors.ErrExpired, "voting period has ended already")
 	}
 

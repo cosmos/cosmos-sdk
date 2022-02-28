@@ -608,9 +608,20 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 			"",
 		},
 		{
-			"valid test case, voting and execution",
+			"valid test case, voting and execution, empty min exec period",
 			func() *group.MsgCreateGroupPolicy {
 				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
+				req, err := group.NewMsgCreateGroupPolicy(admin, 1, []byte("metadata"), policy)
+				require.NoError(t, err)
+				return req
+			},
+			false,
+			"",
+		},
+		{
+			"valid test case, voting and execution, non-empty min exec period",
+			func() *group.MsgCreateGroupPolicy {
+				policy := group.NewThresholdDecisionPolicy("1", time.Second, time.Minute)
 				req, err := group.NewMsgCreateGroupPolicy(admin, 1, []byte("metadata"), policy)
 				require.NoError(t, err)
 				return req

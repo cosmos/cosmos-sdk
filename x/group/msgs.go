@@ -809,7 +809,7 @@ func (m MsgLeaveGroup) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg
 func (m MsgLeaveGroup) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgLeaveGroup

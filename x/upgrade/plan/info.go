@@ -60,7 +60,7 @@ func ResolveInfo(infoStr string, requireChecksum bool) (string, error) {
 func ParseInfoJSON(infoJSON string) (*Info, error) {
 	var planInfo Info
 	if err := json.Unmarshal(conv.UnsafeStrToBytes(infoJSON), &planInfo); err != nil {
-		return nil, fmt.Errorf("could not parse plan info json: %v", err)
+		return nil, fmt.Errorf("could not parse plan info json: %w", err)
 	}
 	return &planInfo, nil
 }
@@ -104,7 +104,7 @@ func (m BinaryDownloadURLMap) ValidateBasic() error {
 			return fmt.Errorf("invalid os/arch format in key \"%s\"", key)
 		}
 		if _, err := neturl.Parse(val); err != nil {
-			return fmt.Errorf("invalid url \"%s\" in binaries[%s]: %v", val, key, err)
+			return fmt.Errorf("invalid url \"%s\" in binaries[%s]: %w", val, key, err)
 		}
 	}
 
@@ -115,7 +115,7 @@ func (m BinaryDownloadURLMap) ValidateBasic() error {
 func (m BinaryDownloadURLMap) ValidateAllURLsHaveChecksum() error {
 	for key, val := range m {
 		if err := ValidateIsURLWithChecksum(val); err != nil {
-			return fmt.Errorf("invalid url \"%s\" in binaries[%s]: %v", val, key, err)
+			return fmt.Errorf("invalid url \"%s\" in binaries[%s]: %w", val, key, err)
 		}
 	}
 	return nil

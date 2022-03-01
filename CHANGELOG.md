@@ -49,6 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (store) [\#11177](https://github.com/cosmos/cosmos-sdk/pull/11177) Update the prune `everything` strategy to store the last two heights.
 * (store) [\#11117](https://github.com/cosmos/cosmos-sdk/pull/11117) Fix data race in store trace component
+* (x/authz) [\#11252](https://github.com/cosmos/cosmos-sdk/pull/11252) Allow insufficient funds error for authz simulation
 
 ### Improvements
 
@@ -61,16 +62,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (grpc) [\#10985](https://github.com/cosmos/cosmos-sdk/pull/10992) The `/cosmos/tx/v1beta1/txs/{hash}` endpoint returns a 404 when a tx does not exist.
 * [\#10990](https://github.com/cosmos/cosmos-sdk/pull/10990) Fixes missing `iavl-cache-size` config parsing in `GetConfig` method.
-<<<<<<< HEAD
 * [#11222](https://github.com/cosmos/cosmos-sdk/pull/11222) reject query with block height in the future
-=======
-* (crypto) [#11027] Remove dependency on Tendermint core for xsalsa20symmetric.
-* (x/authz) [\#10447](https://github.com/cosmos/cosmos-sdk/pull/10447) Fix authz `NewGrant` expiration check.
-* (x/authz) [\#10633](https://github.com/cosmos/cosmos-sdk/pull/10633) Fixed authorization not found error when executing message.
-* [#11222](https://github.com/cosmos/cosmos-sdk/pull/11222) reject query with block height in the future
-* [#11229](https://github.com/cosmos/cosmos-sdk/pull/11229) Handled the error message of `transaction encountered error` from tendermint.
-* (x/authz) [\#11252](https://github.com/cosmos/cosmos-sdk/pull/11252) Allow insufficient funds error for authz simulation
->>>>>>> a426780e7 (fix: x/authz allow insufficient funds error (#11252))
 
 ### Improvements
 

@@ -611,7 +611,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 	if proposal.Status != group.PROPOSAL_STATUS_SUBMITTED {
 		return nil, sdkerrors.Wrap(errors.ErrInvalid, "proposal not open for voting")
 	}
-	if proposal.VotingPeriodEnd.Before(ctx.BlockTime()) || proposal.VotingPeriodEnd.Equal(ctx.BlockTime()) {
+	if ctx.BlockTime().After(proposal.VotingPeriodEnd) {
 		return nil, sdkerrors.Wrap(errors.ErrExpired, "voting period has ended already")
 	}
 

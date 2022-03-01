@@ -95,7 +95,9 @@ func AddQueryFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().Int64(FlagHeight, 0, "Use a specific height to query state at (this can error if the node is pruning state)")
 	cmd.Flags().StringP(tmcli.OutputFlag, "o", "text", "Output format (text|json)")
 
-	cmd.MarkFlagRequired(FlagChainID)
+	if err := cmd.MarkFlagRequired(FlagChainID); err != nil {
+		panic(fmt.Sprintf("can't mark the flag %q required: %v", FlagChainID, err))
+	}
 }
 
 // AddTxFlagsToCmd adds common flags to a module tx command.

@@ -89,9 +89,7 @@ func Test_runExportCmd(t *testing.T) {
 			// create a key
 			kb, err := keyring.New(sdk.KeyringServiceName(), tc.keyringBackend, kbHome, bufio.NewReader(mockInBuf), cdc)
 			require.NoError(t, err)
-			t.Cleanup(func() {
-				kb.Delete("keyname1") // nolint:errcheck
-			})
+			t.Cleanup(cleanupKeys(t, kb, "keyname1"))
 
 			path := sdk.GetConfig().GetFullBIP44Path()
 			_, err = kb.NewAccount("keyname1", testdata.TestMnemonic, "", path, hd.Secp256k1)

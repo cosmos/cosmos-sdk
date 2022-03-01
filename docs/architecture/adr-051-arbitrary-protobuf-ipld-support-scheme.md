@@ -1,4 +1,4 @@
-# ADR-050: Arbitrary Protobuf IPLD Support Scheme
+# ADR-051: Arbitrary Protobuf IPLD Support Scheme
 
 ## Changelog
 

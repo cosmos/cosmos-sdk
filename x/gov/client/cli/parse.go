@@ -19,17 +19,41 @@ type legacyProposal struct {
 	Deposit     string
 }
 
+func (p legacyProposal) validate() error {
+	if p.Type == "" {
+		return fmt.Errorf("proposal type is required")
+	}
+
+	if p.Title == "" {
+		return fmt.Errorf("proposal title is required")
+	}
+
+	if p.Description == "" {
+		return fmt.Errorf("proposal description is required")
+	}
+	return nil
+}
+
 func parseSubmitLegacyProposalFlags(fs *pflag.FlagSet) (*legacyProposal, error) {
 	proposal := &legacyProposal{}
 	proposalFile, _ := fs.GetString(FlagProposal)
 
 	if proposalFile == "" {
 		proposalType, _ := fs.GetString(FlagProposalType)
+		title, _ := fs.GetString(FlagTitle)
+		description, _ := fs.GetString(FlagDescription)
+		if proposalType == "" && title == "" && description == "" {
+			return nil, fmt.Errorf("one of the --proposal or (--title, --description and --type) flags are required")
+		}
 
 		proposal.Title, _ = fs.GetString(FlagTitle)
 		proposal.Description, _ = fs.GetString(FlagDescription)
 		proposal.Type = govutils.NormalizeProposalType(proposalType)
 		proposal.Deposit, _ = fs.GetString(FlagDeposit)
+		if err := proposal.validate(); err != nil {
+			return nil, err
+		}
+
 		return proposal, nil
 	}
 
@@ -46,6 +70,10 @@ func parseSubmitLegacyProposalFlags(fs *pflag.FlagSet) (*legacyProposal, error) 
 
 	err = json.Unmarshal(contents, proposal)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := proposal.validate(); err != nil {
 		return nil, err
 	}
 

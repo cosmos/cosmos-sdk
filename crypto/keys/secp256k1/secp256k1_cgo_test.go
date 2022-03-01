@@ -4,7 +4,6 @@
 package secp256k1
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/magiconair/properties/assert"
@@ -36,7 +35,7 @@ func TestPrivKeySecp256k1SignVerify(t *testing.T) {
 			require.NotNil(t, got)
 
 			pub := tt.privKey.PubKey()
-			assert.Equal(t, tt.wantVerifyPasses, pub.VerifyBytes(msg, got))
+			assert.Equal(t, tt.wantVerifyPasses, pub.VerifySignature(msg, got))
 		})
 	}
 }

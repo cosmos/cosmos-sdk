@@ -197,6 +197,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10990](https://github.com/cosmos/cosmos-sdk/pull/10990) Fixes missing `iavl-cache-size` config parsing in `GetConfig` method.
 * (crypto) [#11027] Remove dependency on Tendermint core for xsalsa20symmetric.
 * (x/authz) [\#10447](https://github.com/cosmos/cosmos-sdk/pull/10447) Fix authz `NewGrant` expiration check.
+* (crypto) [\#11298](https://github.com/cosmos/cosmos-sdk/pull/11298) Fic cgo secp signature verification and update libscep256k1 library. 
 
 ### State Machine Breaking
 

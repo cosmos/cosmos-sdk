@@ -247,11 +247,18 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, nil
 		}
 
+<<<<<<< HEAD
 		if targetGrant.Authorization.TypeUrl == fmt.Sprintf("/%s", proto.MessageName(&banktype.SendAuthorization{})) {
 			sendAuthorization := targetGrant.GetAuthorization().(*banktype.SendAuthorization)
 			if sendAuthorization.SpendLimit.IsAllLT(coins) {
 				return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "over spend limit"), nil, nil
 			}
+=======
+		msg := []sdk.Msg{banktype.NewMsgSend(granterAddr, granteeAddr, coins)}
+		authorization, err := targetGrant.GetAuthorization()
+		if err != nil {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
+>>>>>>> a426780e7 (fix: x/authz allow insufficient funds error (#11252))
 		}
 
 		granterspendableCoins := bk.SpendableCoins(ctx, granterAddr)
@@ -259,16 +266,31 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "insufficient funds"), nil, nil
 		}
 
+<<<<<<< HEAD
+=======
+		_, err = sendAuth.Accept(ctx, msg[0])
+		if err != nil {
+			if sdkerrors.ErrInsufficientFunds.Is(err) {
+				return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, nil
+			} else {
+				return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
+			}
+		}
+
+		msgExec := authz.NewMsgExec(granteeAddr, msg)
+>>>>>>> a426780e7 (fix: x/authz allow insufficient funds error (#11252))
 		granteeSpendableCoins := bk.SpendableCoins(ctx, granteeAddr)
 		fees, err := simtypes.RandomFees(r, ctx, granteeSpendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "fee error"), nil, err
 		}
 
+<<<<<<< HEAD
 		msg := authz.NewMsgExec(granteeAddr, []sdk.Msg{banktype.NewMsgSend(granterAddr, granteeAddr, coins)})
+=======
+>>>>>>> a426780e7 (fix: x/authz allow insufficient funds error (#11252))
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
 		granteeAcc := ak.GetAccount(ctx, granteeAddr)
-
 		tx, err := helpers.GenTx(
 			txCfg,
 			[]sdk.Msg{&msg},

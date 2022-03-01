@@ -298,8 +298,6 @@ func printCreate(cmd *cobra.Command, k *keyring.Record, showMnemonic bool, mnemo
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {
-			msg := "failed to print mnemonic"
-
 			if _, err := fmt.Fprintf(
 				cmd.ErrOrStderr(),
 				`
@@ -309,7 +307,7 @@ func printCreate(cmd *cobra.Command, k *keyring.Record, showMnemonic bool, mnemo
 				%s
 				
 				`, mnemonic); err != nil {
-				return fmt.Errorf("%s: %v", msg, err)
+				return fmt.Errorf("failed to print mnemonic: %v", err)
 			}
 		}
 	case OutputFormatJSON:

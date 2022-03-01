@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"encoding/base64"
 	"fmt"
 	"strconv"
 	"strings"
@@ -12,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/group"
 )
@@ -104,15 +102,10 @@ Where members.json contains:
 				return err
 			}
 
-			metadata, err := base64.StdEncoding.DecodeString(args[1])
-			if err != nil {
-				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "metadata is malformed, proper base64 string is required")
-			}
-
 			msg := &group.MsgCreateGroup{
 				Admin:    clientCtx.GetFromAddress().String(),
 				Members:  members,
-				Metadata: metadata,
+				Metadata: args[1],
 			}
 			if err = msg.ValidateBasic(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
@@ -262,14 +255,9 @@ func MsgUpdateGroupMetadataCmd() *cobra.Command {
 				return err
 			}
 
-			b, err := base64.StdEncoding.DecodeString(args[2])
-			if err != nil {
-				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "metadata is malformed, proper base64 string is required")
-			}
-
 			msg := &group.MsgUpdateGroupMetadata{
 				Admin:    clientCtx.GetFromAddress().String(),
-				Metadata: b,
+				Metadata: args[2],
 				GroupId:  groupID,
 			}
 			if err = msg.ValidateBasic(); err != nil {
@@ -345,16 +333,6 @@ where members.json contains:
 				return err
 			}
 
-			groupMetadata, err := base64.StdEncoding.DecodeString(args[1])
-			if err != nil {
-				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "group metadata is malformed, proper base64 string is required")
-			}
-
-			groupPolicyMetadata, err := base64.StdEncoding.DecodeString(args[2])
-			if err != nil {
-				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "group policy metadata is malformed, proper base64 string is required")
-			}
-
 			var policy group.DecisionPolicy
 			if err := clientCtx.Codec.UnmarshalInterfaceJSON([]byte(args[4]), &policy); err != nil {
 				return err
@@ -363,8 +341,8 @@ where members.json contains:
 			msg, err := group.NewMsgCreateGroupWithPolicy(
 				clientCtx.GetFromAddress().String(),
 				members,
-				groupMetadata,
-				groupPolicyMetadata,
+				args[1],
+				args[2],
 				groupPolicyAsAdmin,
 				policy,
 			)
@@ -429,15 +407,10 @@ Ex: '{"@type":"/cosmos.group.v1beta1.PercentageDecisionPolicy", "percentage":"0.
 				return err
 			}
 
-			b, err := base64.StdEncoding.DecodeString(args[2])
-			if err != nil {
-				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "metadata is malformed, proper base64 string is required")
-			}
-
 			msg, err := group.NewMsgCreateGroupPolicy(
 				clientCtx.GetFromAddress(),
 				groupID,
-				b,
+				args[2],
 				policy,
 			)
 			if err != nil {
@@ -557,15 +530,10 @@ func MsgUpdateGroupPolicyMetadataCmd() *cobra.Command {
 				return err
 			}
 
-			b, err := base64.StdEncoding.DecodeString(args[2])
-			if err != nil {
-				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "metadata is malformed, proper base64 string is required")
-			}
-
 			msg := &group.MsgUpdateGroupPolicyMetadata{
 				Admin:    clientCtx.GetFromAddress().String(),
 				Address:  args[1],
-				Metadata: b,
+				Metadata: args[2],
 			}
 			if err = msg.ValidateBasic(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
@@ -748,18 +716,13 @@ Parameters:
 				return err
 			}
 
-			b, err := base64.StdEncoding.DecodeString(args[3])
-			if err != nil {
-				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "metadata is malformed, proper base64 string is required")
-			}
-
 			execStr, _ := cmd.Flags().GetString(FlagExec)
 
 			msg := &group.MsgVote{
 				ProposalId: proposalID,
 				Voter:      args[1],
 				Option:     voteOption,
-				Metadata:   b,
+				Metadata:   args[3],
 				Exec:       execFromString(execStr),
 			}
 			if err != nil {

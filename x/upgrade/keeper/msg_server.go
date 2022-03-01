@@ -25,9 +25,8 @@ var _ types.MsgServer = msgServer{}
 
 // SoftwareUpgrade implements the Msg/SoftwareUpgrade Msg service.
 func (k msgServer) SoftwareUpgrade(goCtx context.Context, req *types.MsgSoftwareUpgrade) (*types.MsgSoftwareUpgradeResponse, error) {
-	govAcct := k.authKeeper.GetModuleAddress(gov.ModuleName).String()
-	if govAcct != req.Authority {
-		return nil, errors.Wrapf(gov.ErrInvalidSigner, "expected %s got %s", govAcct, req.Authority)
+	if k.authority.String() != req.Authority {
+		return nil, errors.Wrapf(gov.ErrInvalidSigner, "expected %s got %s", k.authority.String(), req.Authority)
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -41,9 +40,8 @@ func (k msgServer) SoftwareUpgrade(goCtx context.Context, req *types.MsgSoftware
 
 // CancelUpgrade implements the Msg/CancelUpgrade Msg service.
 func (k msgServer) CancelUpgrade(goCtx context.Context, req *types.MsgCancelUpgrade) (*types.MsgCancelUpgradeResponse, error) {
-	govAcct := k.authKeeper.GetModuleAddress(gov.ModuleName).String()
-	if govAcct != req.Authority {
-		return nil, errors.Wrapf(gov.ErrInvalidSigner, "expected %s got %s", govAcct, req.Authority)
+	if k.authority.String() != req.Authority {
+		return nil, errors.Wrapf(gov.ErrInvalidSigner, "expected %s got %s", k.authority.String(), req.Authority)
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)

@@ -27,10 +27,10 @@ const (
 	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagProposalType = "type"
 	// Deprecated: only used for v1beta1 legacy proposals.
-	FlagDeposit      = "deposit"
-	flagVoter        = "voter"
-	flagDepositor    = "depositor"
-	flagStatus       = "status"
+	FlagDeposit   = "deposit"
+	flagVoter     = "voter"
+	flagDepositor = "depositor"
+	flagStatus    = "status"
 	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagProposal = "proposal"
 )

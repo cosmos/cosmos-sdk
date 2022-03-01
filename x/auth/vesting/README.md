@@ -255,42 +255,30 @@ this case, no coins can be transferred until the one year anniversary where
 half become transferrable, then one twelfth of the remainder each month
 thereafter.
 
+Since the commands to stake and unstake tokens do not specify the character
+of the funds to use (i.e. locked, vested, etc.), vesting accounts use a policy
+to determine how bonded and unbonding tokens are distributed. To determine
+the amount that is available for transfer (the only question most vesting
+accounts face), the policy is to maximize the number available for transfer
+by maximizing the locked tokens used for delegation. Slashing looks like
+tokens which remain forever bonded, and thus reduce the number of actual
+bonded and unbonded tokens which are encumbered to prevent transfer. This
+is the policy followed by all vesting accounts.
+
+But for clawback accounts, we distinguish between the encumbrance that is
+enforced preventing transfer and the right of the funder to retrieve the
+unvested amount from the account. The latter is not reduced by slashing,
+though slashing might limit the number of tokens which can be retrieved.
+
 Additional grants may be added to an existing `ClawbackVestingAccount` with
 their own schedule. Additional grants must come from the same account that
 provided the initial grant that created the account.
 
 Staking rewards are automatically added as such an additional grant following
 the current vesting schedule, with amounts scaled proportionally. (Staking
-rewards are given an immediate unlocking schedule.)
-
-Since the commands to stake and unstake tokens do not specify the character
-of the funds to use (i.e. locked, vested, etc.), vesting accounts use a policy
-to determine how bonded and unbonding tokens are distributed. To determine
-the amount that is available for transfer (the only question most vesting
-accounts face), the policy is to maximize the number available for transfer
-by maximizing the locked tokens used for delegation. But at clawback time,
-we reverse the policy and minimize the number of unvested tokens that are
-in delegation, transferring the maximum number of unbonded tokens. Slashing is
-therefore interpreted to affect vested tokens first.
-
-Rewards also maximize the number of vested tokens that are considered to be
-delegated, thus maximizing the amount of future rewards that are already
-vested.
-
-For instance, suppose we have a vesting grant of 400 staking tokens, vesting
-monthly ofer 4 years, and we are 18 months into the schedule, so 150 have
-vested. There are 370 tokens total owned by the account: 210 in the account
-balance plus 160 delegated. The 30 missing tokens could have been vested tokns
-that were transferred out, or delegated tokens that got slashed. If we wanted
-to transfer tokens, we'd consider all of the 150 vested tokens to be in the
-account balance, so 150 would be available for transfer. However, if a
-clawback of the 250 unvested tokens occcurred, the 210 tokens in the balance
-would be removed, plus 40 delegated tokens. If instead the account received a
-staking reward of 12 tokens, we'd similarly consider only 40 (25%) of the
-delegated tokens to be unvested, so 120 (75%) would be vested. Of the reward
-then, 9 tokens (75%) would be immediately vested, and 3 (25%) would be
-unvested, vesting in even amounts over the next 30 months, i.e. 0.1 tokens per
-month.
+rewards are given an immediate unlocking schedule.) The proportion follows
+the policy used to determine which tokens may be transferred - staked tokens
+prefer to be unvested first.
 
 ### Delayed/Discrete Vesting Accounts
 

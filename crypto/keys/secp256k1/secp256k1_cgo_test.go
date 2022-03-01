@@ -4,6 +4,7 @@
 package secp256k1
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/magiconair/properties/assert"

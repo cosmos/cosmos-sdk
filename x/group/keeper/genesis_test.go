@@ -69,7 +69,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		GroupId:  1,
 		Admin:    accAddr.String(),
 		Version:  1,
-		Metadata: []byte("policy metadata"),
+		Metadata: "policy metadata",
 	}
 	err := groupPolicy.SetDecisionPolicy(&group.ThresholdDecisionPolicy{
 		Threshold:    "1",
@@ -80,7 +80,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 	proposal := &group.Proposal{
 		Id:                 1,
 		Address:            accAddr.String(),
-		Metadata:           []byte("proposal metadata"),
+		Metadata:           "proposal metadata",
 		GroupVersion:       1,
 		GroupPolicyVersion: 1,
 		Proposers: []string{
@@ -107,8 +107,8 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 
 	genesisState := &group.GenesisState{
 		GroupSeq:       2,
-		Groups:         []*group.GroupInfo{{Id: 1, Admin: accAddr.String(), Metadata: []byte("1"), Version: 1, TotalWeight: "1"}, {Id: 2, Admin: accAddr.String(), Metadata: []byte("2"), Version: 2, TotalWeight: "2"}},
-		GroupMembers:   []*group.GroupMember{{GroupId: 1, Member: &group.Member{Address: memberAddr.String(), Weight: "1", Metadata: []byte("member metadata")}}, {GroupId: 2, Member: &group.Member{Address: memberAddr.String(), Weight: "2", Metadata: []byte("member metadata")}}},
+		Groups:         []*group.GroupInfo{{Id: 1, Admin: accAddr.String(), Metadata: "1", Version: 1, TotalWeight: "1"}, {Id: 2, Admin: accAddr.String(), Metadata: "2", Version: 2, TotalWeight: "2"}},
+		GroupMembers:   []*group.GroupMember{{GroupId: 1, Member: &group.Member{Address: memberAddr.String(), Weight: "1", Metadata: "member metadata"}}, {GroupId: 2, Member: &group.Member{Address: memberAddr.String(), Weight: "2", Metadata: "member metadata"}}},
 		GroupPolicySeq: 1,
 		GroupPolicies:  []*group.GroupPolicyInfo{groupPolicy},
 		ProposalSeq:    1,

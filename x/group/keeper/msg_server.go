@@ -873,8 +873,8 @@ func (k Keeper) doAuthenticated(ctx sdk.Context, req authNGroupReq, action actio
 
 // assertMetadataLength returns an error if given metadata length
 // is greater than a pre-defined maxMetadataLen.
-func (k Keeper) assertMetadataLength(metadata []byte, description string) error {
-	if metadata != nil && uint64(len(metadata)) > k.config.MaxMetadataLen {
+func (k Keeper) assertMetadataLength(metadata string, description string) error {
+	if metadata != "" && uint64(len(metadata)) > k.config.MaxMetadataLen {
 		return sdkerrors.Wrapf(errors.ErrMaxLimit, description)
 	}
 	return nil

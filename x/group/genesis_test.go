@@ -27,7 +27,7 @@ func TestGenesisStateValidate(t *testing.T) {
 		GroupId:  1,
 		Admin:    accAddr.String(),
 		Version:  1,
-		Metadata: []byte("policy metadata"),
+		Metadata: "policy metadata",
 	}
 	err := groupPolicy.SetDecisionPolicy(&ThresholdDecisionPolicy{
 		Threshold: "1",
@@ -41,7 +41,7 @@ func TestGenesisStateValidate(t *testing.T) {
 		GroupId:  1,
 		Admin:    accAddr.String(),
 		Version:  1,
-		Metadata: []byte("policy metadata"),
+		Metadata: "policy metadata",
 	}
 	err = groupPolicy2.SetDecisionPolicy(&ThresholdDecisionPolicy{
 		Threshold: "1",
@@ -52,7 +52,7 @@ func TestGenesisStateValidate(t *testing.T) {
 	proposal := &Proposal{
 		Id:                 1,
 		Address:            accAddr.String(),
-		Metadata:           []byte("proposal metadata"),
+		Metadata:           "proposal metadata",
 		GroupVersion:       1,
 		GroupPolicyVersion: 1,
 		Proposers: []string{
@@ -86,8 +86,8 @@ func TestGenesisStateValidate(t *testing.T) {
 			"valid genesisState",
 			GenesisState{
 				GroupSeq:       2,
-				Groups:         []*GroupInfo{{Id: 1, Admin: accAddr.String(), Metadata: []byte("1"), Version: 1, TotalWeight: "1"}, {Id: 2, Admin: accAddr.String(), Metadata: []byte("2"), Version: 2, TotalWeight: "2"}},
-				GroupMembers:   []*GroupMember{{GroupId: 1, Member: &Member{Address: memberAddr.String(), Weight: "1", Metadata: []byte("member metadata")}}, {GroupId: 2, Member: &Member{Address: memberAddr.String(), Weight: "2", Metadata: []byte("member metadata")}}},
+				Groups:         []*GroupInfo{{Id: 1, Admin: accAddr.String(), Metadata: "1", Version: 1, TotalWeight: "1"}, {Id: 2, Admin: accAddr.String(), Metadata: "2", Version: 2, TotalWeight: "2"}},
+				GroupMembers:   []*GroupMember{{GroupId: 1, Member: &Member{Address: memberAddr.String(), Weight: "1", Metadata: "member metadata"}}, {GroupId: 2, Member: &Member{Address: memberAddr.String(), Weight: "2", Metadata: "member metadata"}}},
 				GroupPolicySeq: 1,
 				GroupPolicies:  []*GroupPolicyInfo{groupPolicy},
 				ProposalSeq:    1,
@@ -108,7 +108,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          0,
 						Admin:       accAddr.String(),
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
 					},
@@ -123,7 +123,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          1,
 						Admin:       "invalid admin",
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
 					},
@@ -138,7 +138,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          1,
 						Admin:       accAddr.String(),
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     0,
 						TotalWeight: "1",
 					},
@@ -153,7 +153,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          1,
 						Admin:       accAddr.String(),
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "-1",
 					},
@@ -168,7 +168,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          1,
 						Admin:       accAddr.String(),
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
 					},
@@ -179,7 +179,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						GroupId:  1,
 						Admin:    accAddr.String(),
 						Version:  1,
-						Metadata: []byte("policy metadata"),
+						Metadata: "policy metadata",
 					},
 				},
 			},
@@ -192,7 +192,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          1,
 						Admin:       accAddr.String(),
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
 					},
@@ -203,7 +203,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						GroupId:  1,
 						Admin:    "invalid admin",
 						Version:  1,
-						Metadata: []byte("policy metadata"),
+						Metadata: "policy metadata",
 					},
 				},
 			},
@@ -216,7 +216,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          1,
 						Admin:       accAddr.String(),
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
 					},
@@ -227,7 +227,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						GroupId:  0,
 						Admin:    accAddr.String(),
 						Version:  1,
-						Metadata: []byte("policy metadata"),
+						Metadata: "policy metadata",
 					},
 				},
 			},
@@ -240,7 +240,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          1,
 						Admin:       accAddr.String(),
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
 					},
@@ -251,7 +251,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						GroupId:  1,
 						Admin:    accAddr.String(),
 						Version:  0,
-						Metadata: []byte("policy metadata"),
+						Metadata: "policy metadata",
 					},
 				},
 			},
@@ -264,7 +264,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          1,
 						Admin:       accAddr.String(),
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
 					},
@@ -275,7 +275,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						GroupId:        1,
 						Admin:          accAddr.String(),
 						Version:        1,
-						Metadata:       []byte("policy metadata"),
+						Metadata:       "policy metadata",
 						DecisionPolicy: groupPolicy2.DecisionPolicy,
 					},
 				},
@@ -289,7 +289,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          1,
 						Admin:       accAddr.String(),
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
 					},
@@ -299,7 +299,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						GroupId: 0,
 						Member: &Member{
 							Address: memberAddr.String(),
-							Weight:  "1", Metadata: []byte("member metadata"),
+							Weight:  "1", Metadata: "member metadata",
 						},
 					},
 				},
@@ -313,7 +313,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          1,
 						Admin:       accAddr.String(),
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
 					},
@@ -323,7 +323,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						GroupId: 1,
 						Member: &Member{
 							Address: "invalid address",
-							Weight:  "1", Metadata: []byte("member metadata"),
+							Weight:  "1", Metadata: "member metadata",
 						},
 					},
 				},
@@ -337,7 +337,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          1,
 						Admin:       accAddr.String(),
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
 					},
@@ -347,7 +347,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						GroupId: 1,
 						Member: &Member{
 							Address: memberAddr.String(),
-							Weight:  "-1", Metadata: []byte("member metadata"),
+							Weight:  "-1", Metadata: "member metadata",
 						},
 					},
 				},
@@ -361,7 +361,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          1,
 						Admin:       accAddr.String(),
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
 					},
@@ -373,7 +373,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:                 0,
 						Address:            accAddr.String(),
-						Metadata:           []byte("proposal metadata"),
+						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 1,
 					},
@@ -388,7 +388,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          1,
 						Admin:       accAddr.String(),
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
 					},
@@ -400,7 +400,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:                 1,
 						Address:            "invalid address",
-						Metadata:           []byte("proposal metadata"),
+						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 1,
 					},
@@ -415,7 +415,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          1,
 						Admin:       accAddr.String(),
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
 					},
@@ -427,7 +427,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:                 1,
 						Address:            accAddr.String(),
-						Metadata:           []byte("proposal metadata"),
+						Metadata:           "proposal metadata",
 						GroupVersion:       0,
 						GroupPolicyVersion: 1,
 					},
@@ -442,7 +442,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          1,
 						Admin:       accAddr.String(),
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
 					},
@@ -454,7 +454,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:                 1,
 						Address:            accAddr.String(),
-						Metadata:           []byte("proposal metadata"),
+						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 0,
 					},
@@ -469,7 +469,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          1,
 						Admin:       accAddr.String(),
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
 					},
@@ -481,7 +481,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:                 1,
 						Address:            accAddr.String(),
-						Metadata:           []byte("proposal metadata"),
+						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 1,
 						Proposers: []string{
@@ -508,7 +508,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          1,
 						Admin:       accAddr.String(),
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
 					},
@@ -520,7 +520,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:                 1,
 						Address:            accAddr.String(),
-						Metadata:           []byte("proposal metadata"),
+						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 1,
 						Proposers: []string{
@@ -547,7 +547,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          1,
 						Admin:       accAddr.String(),
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
 					},
@@ -559,7 +559,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:                 1,
 						Address:            accAddr.String(),
-						Metadata:           []byte("proposal metadata"),
+						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 1,
 						Proposers: []string{
@@ -586,7 +586,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          1,
 						Admin:       accAddr.String(),
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
 					},
@@ -598,7 +598,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:                 1,
 						Address:            accAddr.String(),
-						Metadata:           []byte("proposal metadata"),
+						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 1,
 						Proposers: []string{
@@ -625,7 +625,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          1,
 						Admin:       accAddr.String(),
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
 					},
@@ -654,7 +654,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          1,
 						Admin:       accAddr.String(),
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
 					},
@@ -683,7 +683,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          1,
 						Admin:       accAddr.String(),
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
 					},
@@ -712,7 +712,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Id:          1,
 						Admin:       accAddr.String(),
-						Metadata:    []byte("1"),
+						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
 					},

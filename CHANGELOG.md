@@ -213,6 +213,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/authz) [\#10633](https://github.com/cosmos/cosmos-sdk/pull/10633) Fixed authorization not found error when executing message.
 * [#11222](https://github.com/cosmos/cosmos-sdk/pull/11222) reject query with block height in the future
 * [#11229](https://github.com/cosmos/cosmos-sdk/pull/11229) Handled the error message of `transaction encountered error` from tendermint.
+* (x/authz) [\#11252](https://github.com/cosmos/cosmos-sdk/pull/11252) Allow insufficient funds error for authz simulation
 
 ### State Machine Breaking
 

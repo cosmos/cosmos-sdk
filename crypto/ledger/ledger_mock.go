@@ -1,3 +1,4 @@
+//go:build ledger && test_ledger_mock
 // +build ledger,test_ledger_mock
 
 package ledger
@@ -15,7 +16,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	csecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -46,7 +47,7 @@ func (mock LedgerSECP256K1Mock) GetPublicKeySECP256K1(derivationPath []uint32) (
 		return nil, errors.New("Invalid derivation path")
 	}
 
-	seed, err := bip39.NewSeedWithErrorChecking(testutil.TestMnemonic, "")
+	seed, err := bip39.NewSeedWithErrorChecking(testdata.TestMnemonic, "")
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +89,7 @@ func (mock LedgerSECP256K1Mock) GetAddressPubKeySECP256K1(derivationPath []uint3
 
 func (mock LedgerSECP256K1Mock) SignSECP256K1(derivationPath []uint32, message []byte) ([]byte, error) {
 	path := hd.NewParams(derivationPath[0], derivationPath[1], derivationPath[2], derivationPath[3] != 0, derivationPath[4])
-	seed, err := bip39.NewSeedWithErrorChecking(testutil.TestMnemonic, "")
+	seed, err := bip39.NewSeedWithErrorChecking(testdata.TestMnemonic, "")
 	if err != nil {
 		return nil, err
 	}

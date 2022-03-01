@@ -13,6 +13,7 @@ type AccountKeeper interface {
 
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
 	GetAllAccounts(ctx sdk.Context) []types.AccountI
+	HasAccount(ctx sdk.Context, addr sdk.AccAddress) bool
 	SetAccount(ctx sdk.Context, acc types.AccountI)
 
 	IterateAccounts(ctx sdk.Context, process func(types.AccountI) bool)

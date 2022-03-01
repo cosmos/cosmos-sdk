@@ -2040,8 +2040,10 @@ func (s *TestSuite) TestVote() {
 					addr1,
 					groupPolicy,
 					&group.ThresholdDecisionPolicy{
-						Threshold:    "1",
-						VotingPeriod: time.Second,
+						Threshold: "1",
+						Windows: &group.DecisionPolicyWindows{
+							VotingPeriod: time.Second,
+						},
 					},
 				)
 				s.Require().NoError(err)

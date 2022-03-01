@@ -41,7 +41,11 @@ var _ DecisionPolicy = &ThresholdDecisionPolicy{}
 
 // NewThresholdDecisionPolicy creates a threshold DecisionPolicy
 func NewThresholdDecisionPolicy(threshold string, votingPeriod time.Duration, minExecutionPeriod time.Duration) DecisionPolicy {
-	return &ThresholdDecisionPolicy{threshold, votingPeriod, minExecutionPeriod}
+	return &ThresholdDecisionPolicy{threshold, &DecisionPolicyWindows{votingPeriod, minExecutionPeriod}}
+}
+
+func (p ThresholdDecisionPolicy) GetVotingPeriod() time.Duration {
+	return p.Windows.VotingPeriod
 }
 
 func (p ThresholdDecisionPolicy) ValidateBasic() error {
@@ -49,7 +53,7 @@ func (p ThresholdDecisionPolicy) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "threshold")
 	}
 
-	if p.VotingPeriod == 0 {
+	if p.Windows == nil || p.Windows.VotingPeriod == 0 {
 		return sdkerrors.Wrap(errors.ErrInvalid, "voting period cannot be zero")
 	}
 
@@ -58,8 +62,8 @@ func (p ThresholdDecisionPolicy) ValidateBasic() error {
 
 // Allow allows a proposal to pass when the tally of yes votes equals or exceeds the threshold before the timeout.
 func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error) {
-	if sinceSubmission < p.MinExecutionPeriod {
-		return DecisionPolicyResult{}, errors.ErrUnauthorized.Wrapf("must wait %s after submission before execution, currently at %s", p.MinExecutionPeriod, sinceSubmission)
+	if sinceSubmission < p.Windows.MinExecutionPeriod {
+		return DecisionPolicyResult{}, errors.ErrUnauthorized.Wrapf("must wait %s after submission before execution, currently at %s", p.Windows.MinExecutionPeriod, sinceSubmission)
 	}
 
 	threshold, err := math.NewPositiveDecFromString(p.Threshold)
@@ -117,7 +121,11 @@ var _ DecisionPolicy = &PercentageDecisionPolicy{}
 
 // NewPercentageDecisionPolicy creates a new percentage DecisionPolicy
 func NewPercentageDecisionPolicy(percentage string, votingPeriod time.Duration, executionPeriod time.Duration) DecisionPolicy {
-	return &PercentageDecisionPolicy{percentage, votingPeriod, executionPeriod}
+	return &PercentageDecisionPolicy{percentage, &DecisionPolicyWindows{votingPeriod, executionPeriod}}
+}
+
+func (p PercentageDecisionPolicy) GetVotingPeriod() time.Duration {
+	return p.Windows.VotingPeriod
 }
 
 func (p PercentageDecisionPolicy) ValidateBasic() error {
@@ -129,7 +137,7 @@ func (p PercentageDecisionPolicy) ValidateBasic() error {
 		return sdkerrors.Wrap(errors.ErrInvalid, "percentage must be > 0 and <= 1")
 	}
 
-	if p.VotingPeriod == 0 {
+	if p.Windows == nil || p.Windows.VotingPeriod == 0 {
 		return sdkerrors.Wrap(errors.ErrInvalid, "voting period cannot be 0")
 	}
 
@@ -142,8 +150,8 @@ func (p *PercentageDecisionPolicy) Validate(g GroupInfo) error {
 
 // Allow allows a proposal to pass when the tally of yes votes equals or exceeds the percentage threshold before the timeout.
 func (p PercentageDecisionPolicy) Allow(tally TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error) {
-	if sinceSubmission < p.MinExecutionPeriod {
-		return DecisionPolicyResult{}, errors.ErrUnauthorized.Wrapf("must wait %s after submission before execution, currently at %s", p.MinExecutionPeriod, sinceSubmission)
+	if sinceSubmission < p.Windows.MinExecutionPeriod {
+		return DecisionPolicyResult{}, errors.ErrUnauthorized.Wrapf("must wait %s after submission before execution, currently at %s", p.Windows.MinExecutionPeriod, sinceSubmission)
 	}
 
 	percentage, err := math.NewPositiveDecFromString(p.Percentage)

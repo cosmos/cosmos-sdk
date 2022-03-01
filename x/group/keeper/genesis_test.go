@@ -72,8 +72,10 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		Metadata: "policy metadata",
 	}
 	err := groupPolicy.SetDecisionPolicy(&group.ThresholdDecisionPolicy{
-		Threshold:    "1",
-		VotingPeriod: time.Second,
+		Threshold: "1",
+		Windows: &group.DecisionPolicyWindows{
+			VotingPeriod: time.Second,
+		},
 	})
 	s.Require().NoError(err)
 

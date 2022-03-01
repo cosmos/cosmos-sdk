@@ -30,8 +30,10 @@ func TestGenesisStateValidate(t *testing.T) {
 		Metadata: "policy metadata",
 	}
 	err := groupPolicy.SetDecisionPolicy(&ThresholdDecisionPolicy{
-		Threshold:    "1",
-		VotingPeriod: time.Second,
+		Threshold: "1",
+		Windows: &DecisionPolicyWindows{
+			VotingPeriod: time.Second,
+		},
 	})
 	require.NoError(t, err)
 
@@ -44,8 +46,10 @@ func TestGenesisStateValidate(t *testing.T) {
 		Metadata: "policy metadata",
 	}
 	err = groupPolicy2.SetDecisionPolicy(&ThresholdDecisionPolicy{
-		Threshold:    "1",
-		VotingPeriod: 0,
+		Threshold: "1",
+		Windows: &DecisionPolicyWindows{
+			VotingPeriod: 0,
+		},
 	})
 	require.NoError(t, err)
 

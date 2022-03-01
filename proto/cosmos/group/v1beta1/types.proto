@@ -41,17 +41,8 @@ message ThresholdDecisionPolicy {
   // threshold is the minimum weighted sum of yes votes that must be met or exceeded for a proposal to succeed.
   string threshold = 1;
 
-  // voting_period is the duration from submission of a proposal to the end of voting period
-  // Within this times votes can be submitted with MsgVote.
-  google.protobuf.Duration voting_period = 2 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
-
-  // min_execution_period is the minimum duration after the proposal submission
-  // where members can start sending MsgExec. This means that the window for
-  // sending a MsgExec transaction is:
-  // `[ submission + min_execution_period ; submission + voting_period + max_execution_period]`
-  // where max_execution_period is an app-specific config, defined in the keeper.
-  // If not set, min_execution_period will default to 0.
-  google.protobuf.Duration min_execution_period = 3 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+  // windows defines the different windows for voting and execution.
+  DecisionPolicyWindows windows = 2;
 }
 
 // PercentageDecisionPolicy implements the DecisionPolicy interface
@@ -61,9 +52,15 @@ message PercentageDecisionPolicy {
   // percentage is the minimum percentage the weighted sum of yes votes must meet for a proposal to succeed.
   string percentage = 1;
 
+  // windows defines the different windows for voting and execution.
+  DecisionPolicyWindows windows = 2;
+}
+
+// DecisionPolicyWindows defines the different windows for voting and execution.
+message DecisionPolicyWindows {
   // voting_period is the duration from submission of a proposal to the end of voting period
   // Within this times votes can be submitted with MsgVote.
-  google.protobuf.Duration voting_period = 2 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+  google.protobuf.Duration voting_period = 1 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 
   // min_execution_period is the minimum duration after the proposal submission
   // where members can start sending MsgExec. This means that the window for
@@ -71,7 +68,7 @@ message PercentageDecisionPolicy {
   // `[ submission + min_execution_period ; submission + voting_period + max_execution_period]`
   // where max_execution_period is a app-specific config, defined in the keeper.
   // If not set, min_execution_period will default to 0.
-  google.protobuf.Duration min_execution_period = 3 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+  google.protobuf.Duration min_execution_period = 2 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
 // VoteOption enumerates the valid vote options for a given proposal.

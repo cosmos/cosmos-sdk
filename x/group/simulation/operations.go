@@ -284,8 +284,10 @@ func SimulateMsgCreateGroupWithPolicy(ak group.AccountKeeper, bk group.BankKeepe
 
 		members := genGroupMembers(r, accounts)
 		decisionPolicy := &group.ThresholdDecisionPolicy{
-			Threshold:    fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
-			VotingPeriod: time.Second * time.Duration(30*24*60*60),
+			Threshold: fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
+			Windows: &group.DecisionPolicyWindows{
+				VotingPeriod: time.Second * time.Duration(30*24*60*60),
+			},
 		}
 
 		msg := &group.MsgCreateGroupWithPolicy{
@@ -348,8 +350,10 @@ func SimulateMsgCreateGroupPolicy(ak group.AccountKeeper, bk group.BankKeeper, k
 			groupID,
 			simtypes.RandStringOfLength(r, 10),
 			&group.ThresholdDecisionPolicy{
-				Threshold:    fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
-				VotingPeriod: time.Second * time.Duration(30*24*60*60),
+				Threshold: fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * time.Duration(30*24*60*60),
+				},
 			},
 		)
 		if err != nil {
@@ -720,8 +724,10 @@ func SimulateMsgUpdateGroupPolicyDecisionPolicy(ak group.AccountKeeper,
 		}
 
 		msg, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(acc.Address, groupPolicyBech32, &group.ThresholdDecisionPolicy{
-			Threshold:    fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
-			VotingPeriod: time.Second * time.Duration(simtypes.RandIntBetween(r, 100, 1000)),
+			Threshold: fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
+			Windows: &group.DecisionPolicyWindows{
+				VotingPeriod: time.Second * time.Duration(simtypes.RandIntBetween(r, 100, 1000)),
+			},
 		})
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, err.Error()), nil, err

@@ -156,7 +156,7 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 	store, err := snapshots.NewStore(db.NewMemDB(), tempdir)
 	require.NoError(t, err)
 	hung := newHungSnapshotter()
-	mgr := snapshots.NewManager(store, hung, nil)
+	mgr := snapshots.NewManager(store, hung)
 
 	go func() {
 		_, err := mgr.Create(1)

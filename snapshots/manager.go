@@ -61,7 +61,16 @@ type Manager struct {
 }
 
 // NewManager creates a new manager.
-func NewManager(store *Store, multistore types.Snapshotter, extensions map[string]types.ExtensionSnapshotter) *Manager {
+func NewManager(store *Store, multistore types.Snapshotter) *Manager {
+	return &Manager{
+		store:      store,
+		multistore: multistore,
+		extensions: make(map[string]types.ExtensionSnapshotter),
+	}
+}
+
+// NewManagerWithExtensions creates a new manager.
+func NewManagerWithExtensions(store *Store, multistore types.Snapshotter, extensions map[string]types.ExtensionSnapshotter) *Manager {
 	return &Manager{
 		store:      store,
 		multistore: multistore,

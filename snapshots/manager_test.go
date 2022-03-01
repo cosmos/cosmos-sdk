@@ -13,7 +13,7 @@ import (
 
 func TestManager_List(t *testing.T) {
 	store := setupStore(t)
-	manager := snapshots.NewManager(store, nil, nil)
+	manager := snapshots.NewManager(store, nil)
 
 	mgrList, err := manager.List()
 	require.NoError(t, err)
@@ -32,7 +32,7 @@ func TestManager_List(t *testing.T) {
 
 func TestManager_LoadChunk(t *testing.T) {
 	store := setupStore(t)
-	manager := snapshots.NewManager(store, nil, nil)
+	manager := snapshots.NewManager(store, nil)
 
 	// Existing chunk should return body
 	chunk, err := manager.LoadChunk(2, 1, 1)
@@ -62,7 +62,7 @@ func TestManager_Take(t *testing.T) {
 		items: items,
 	}
 	expectChunks := snapshotItems(items)
-	manager := snapshots.NewManager(store, snapshotter, nil)
+	manager := snapshots.NewManager(store, snapshotter)
 
 	// nil manager should return error
 	_, err := (*snapshots.Manager)(nil).Create(1)
@@ -98,7 +98,7 @@ func TestManager_Take(t *testing.T) {
 
 func TestManager_Prune(t *testing.T) {
 	store := setupStore(t)
-	manager := snapshots.NewManager(store, nil, nil)
+	manager := snapshots.NewManager(store, nil)
 
 	pruned, err := manager.Prune(2)
 	require.NoError(t, err)
@@ -117,7 +117,7 @@ func TestManager_Prune(t *testing.T) {
 func TestManager_Restore(t *testing.T) {
 	store := setupStore(t)
 	target := &mockSnapshotter{}
-	manager := snapshots.NewManager(store, target, nil)
+	manager := snapshots.NewManager(store, target)
 
 	expectItems := [][]byte{
 		{1, 2, 3},

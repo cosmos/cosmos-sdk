@@ -1312,11 +1312,11 @@ func TestRewards(t *testing.T) {
 	addr := va.GetAddress()
 	app.AccountKeeper.SetAccount(ctx, va)
 
-	// fund the vesting account with 300 stake lost to transfer
+	// fund the vesting account with 300stake lost to transfer
 	err := simapp.FundAccount(app.BankKeeper, ctx, addr, c(stake(3700)))
 	require.NoError(t, err)
 	require.Equal(t, int64(3700), app.BankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
-	ctx = ctx.WithBlockTime(now.Add(350 * time.Second))
+	ctx = ctx.WithBlockTime(now.Add(650 * time.Second))
 
 	// delegate 1600
 	shares, err := app.StakingKeeper.Delegate(ctx, addr, sdk.NewInt(1600), stakingtypes.Unbonded, val, true)
@@ -1324,20 +1324,22 @@ func TestRewards(t *testing.T) {
 	require.Equal(t, sdk.NewInt(1600), shares.TruncateInt())
 	require.Equal(t, int64(2100), app.BankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
 	va = app.AccountKeeper.GetAccount(ctx, addr).(*types.ClawbackVestingAccount)
+	require.Equal(t, int64(1000), va.GetVestingCoins(ctx.BlockTime()).AmountOf(stakeDenom).Int64())
 
 	// distribute a reward of 120stake
 	err = simapp.FundAccount(app.BankKeeper, ctx, addr, c(stake(120)))
 	require.NoError(t, err)
 	va.PostReward(ctx, c(stake(120)), app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
+
+	// With 1600 delegated, 1000 unvested, reward should be 75 unvested
 	va = app.AccountKeeper.GetAccount(ctx, addr).(*types.ClawbackVestingAccount)
-	require.Equal(t, int64(4030), va.OriginalVesting.AmountOf(stakeDenom).Int64())
+	require.Equal(t, int64(4075), va.OriginalVesting.AmountOf(stakeDenom).Int64())
 	require.Equal(t, 8, len(va.VestingPeriods))
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 6; i++ {
 		require.Equal(t, int64(500), va.VestingPeriods[i].Amount.AmountOf(stakeDenom).Int64())
 	}
-	for i := 3; i < 8; i++ {
-		require.Equal(t, int64(506), va.VestingPeriods[i].Amount.AmountOf(stakeDenom).Int64())
-	}
+	require.Equal(t, int64(537), va.VestingPeriods[6].Amount.AmountOf(stakeDenom).Int64())
+	require.Equal(t, int64(538), va.VestingPeriods[7].Amount.AmountOf(stakeDenom).Int64())
 }
 
 func TestRewards_PostSlash(t *testing.T) {

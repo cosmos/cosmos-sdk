@@ -706,22 +706,6 @@ func (va *ClawbackVestingAccount) AddGrant(ctx sdk.Context, sk StakingKeeper, gr
 	newSlashed := coinsMin(slashed, unvested)
 	newDelegated := delegated.Add(newSlashed...)
 
-	/*
-		// Absorb the slashed amount by eliminating the tail of the vesting and lockup schedules
-		unvestedSlashed := coinsMin(slashed, va.OriginalVesting)
-		if !unvestedSlashed.IsZero() {
-			newOrigVesting := va.OriginalVesting.Sub(unvestedSlashed)
-			cutoffPeriods := []Period{{Length: 1, Amount: newOrigVesting}}
-			start := va.GetStartTime()
-			_, newLockupEnd, newLockupPeriods := ConjunctPeriods(start, start, va.LockupPeriods, cutoffPeriods)
-			_, newVestingEnd, newVestingPeriods := ConjunctPeriods(start, start, va.VestingPeriods, cutoffPeriods)
-			va.OriginalVesting = newOrigVesting
-			va.EndTime = max64(newLockupEnd, newVestingEnd)
-			va.LockupPeriods = newLockupPeriods
-			va.VestingPeriods = newVestingPeriods
-		}
-	*/
-
 	// modify schedules for the new grant
 	newLockupStart, newLockupEnd, newLockupPeriods := DisjunctPeriods(va.StartTime, grantStartTime, va.LockupPeriods, grantLockupPeriods)
 	newVestingStart, newVestingEnd, newVestingPeriods := DisjunctPeriods(va.StartTime, grantStartTime,
@@ -955,8 +939,8 @@ func scaleCoins(coins sdk.Coins, scale sdk.Dec) sdk.Coins {
 	return scaledCoins
 }
 
-// minInt returns the minumum of its arguments.
-func minInt(a, b sdk.Int) sdk.Int {
+// intMin returns the minumum of its arguments.
+func intMin(a, b sdk.Int) sdk.Int {
 	if a.GT(b) {
 		return b
 	}
@@ -985,18 +969,16 @@ func (va ClawbackVestingAccount) PostReward(ctx sdk.Context, reward sdk.Coins, a
 	// Find current split of account balance on staking axis
 	bonded := sk.GetDelegatorBonded(ctx, va.GetAddress())
 	unbonding := sk.GetDelegatorUnbonding(ctx, va.GetAddress())
-	unbonded := bk.GetBalance(ctx, va.GetAddress(), bondDenom).Amount
-	total := bonded.Add(unbonding).Add(unbonded)
-	total = total.Sub(minInt(total, reward.AmountOf(bondDenom))) // look at pre-reward total
+	delegated := bonded.Add(unbonding)
 
-	// Adjust vested/unvested for the actual amount in the account (transfers, slashing)
-	// preferring them to be unvested
-	unvested = minInt(unvested, total) // may have been reduced by slashing
-	vested = total.Sub(unvested)
+	// discover what has been slashed and remove from delegated amount
+	oldDelegated := va.DelegatedVesting.AmountOf(bondDenom).Add(va.DelegatedFree.AmountOf(bondDenom))
+	slashed := oldDelegated.Sub(intMin(oldDelegated, delegated))
+	delegated = delegated.Sub(intMin(delegated, slashed))
 
-	// Now restrict to just the bonded tokens, preferring them to be vested
-	vested = minInt(vested, bonded)
-	unvested = bonded.Sub(vested)
+	// Prefer delegated tokens to be unvested
+	unvested = intMin(unvested, delegated)
+	vested = delegated.Sub(unvested)
 
 	// Compute the unvested amount of reward and add to vesting schedule
 	if unvested.IsZero() {

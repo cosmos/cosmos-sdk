@@ -325,7 +325,7 @@ func NewSimApp(
 		),
 	)
 	// set the governance module account as the authority for conducting upgrades
-	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp, app.AccountKeeper, authtypes.NewModuleAddress(govtypes.ModuleName))
+	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp, authtypes.NewModuleAddress(govtypes.ModuleName))
 	app.NFTKeeper = nftkeeper.NewKeeper(keys[nftkeeper.StoreKey], appCodec, app.AccountKeeper, app.BankKeeper)
 
 	// create evidence keeper with router

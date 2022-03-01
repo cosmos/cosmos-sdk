@@ -66,6 +66,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10018](https://github.com/cosmos/cosmos-sdk/pull/10018) Strict boolean argument parsing: cosmovisor will fail if user will not set correctly a boolean variable. Correct values are: "true", "false", "" (not setting) - all case not sensitive.
 * [\#10036](https://github.com/cosmos/cosmos-sdk/pull/10036) Improve logs when downloading the binary.
 * [\#10217](https://github.com/cosmos/cosmos-sdk/pull/10217) Replacing logging to use zerolog.
+* [\#10464](https://github.com/cosmos/cosmos-sdk/issues/10464) Reuse functionality and validation from the `x/upgrade` module and clean up duplicated logic.
 
 ### CLI Breaking
 

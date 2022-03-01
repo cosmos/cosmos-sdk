@@ -39,7 +39,7 @@ message MsgSubmitProposal {
   repeated cosmos.base.v1beta1.Coin initial_deposit = 2 [(gogoproto.nullable) = false];
   string                            proposer        = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // metadata is any arbitrary metadata attached to the proposal.
-  bytes metadata = 4;
+  string metadata = 4;
 }
 
 // MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.

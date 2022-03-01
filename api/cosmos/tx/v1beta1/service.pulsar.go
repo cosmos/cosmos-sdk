@@ -3,17 +3,19 @@ package txv1beta1
 
 import (
 	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
 	runtime "github.com/cosmos/cosmos-proto/runtime"
-	v1beta11 "github.com/cosmos/cosmos-sdk/api/cosmos/base/abci/v1beta1"
-	v1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/query/v1beta1"
-	types "github.com/cosmos/cosmos-sdk/api/tendermint/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	io "io"
-	reflect "reflect"
-	sync "sync"
+
+	v1beta11 "github.com/cosmos/cosmos-sdk/api/cosmos/base/abci/v1beta1"
+	v1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/query/v1beta1"
+	types "github.com/cosmos/cosmos-sdk/api/tendermint/types"
 )
 
 var _ protoreflect.List = (*_GetTxsEventRequest_1_list)(nil)
@@ -5909,6 +5911,8 @@ func (x *GetTxResponse) GetTxResponse() *v1beta11.TxResponse {
 
 // GetBlockWithTxsRequest is the request type for the Service.GetBlockWithTxs
 // RPC method.
+//
+// Since: cosmos-sdk 0.45.2
 type GetBlockWithTxsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -5955,6 +5959,8 @@ func (x *GetBlockWithTxsRequest) GetPagination() *v1beta1.PageRequest {
 }
 
 // GetBlockWithTxsResponse is the response type for the Service.GetBlockWithTxs method.
+//
+// Since: cosmos-sdk 0.45.2
 type GetBlockWithTxsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

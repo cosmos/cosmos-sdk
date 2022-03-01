@@ -4,12 +4,13 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func TestQueryGroupsByMember(t *testing.T) {
@@ -27,9 +28,8 @@ func TestQueryGroupsByMember(t *testing.T) {
 		{Address: addrs[2].String(), Weight: "1"}, {Address: addrs[3].String(), Weight: "2"},
 	}
 	_, err := app.GroupKeeper.CreateGroup(sdkCtx, &group.MsgCreateGroup{
-		Admin:    addrs[0].String(),
-		Members:  members,
-		Metadata: nil,
+		Admin:   addrs[0].String(),
+		Members: members,
 	})
 	require.NoError(t, err)
 
@@ -37,9 +37,8 @@ func TestQueryGroupsByMember(t *testing.T) {
 		{Address: addrs[3].String(), Weight: "1"}, {Address: addrs[4].String(), Weight: "2"},
 	}
 	_, err = app.GroupKeeper.CreateGroup(sdkCtx, &group.MsgCreateGroup{
-		Admin:    addrs[1].String(),
-		Members:  members,
-		Metadata: nil,
+		Admin:   addrs[1].String(),
+		Members: members,
 	})
 	require.NoError(t, err)
 

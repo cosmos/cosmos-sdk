@@ -111,8 +111,8 @@ func (x *fastReflection_Member) Range(f func(protoreflect.FieldDescriptor, proto
 			return
 		}
 	}
-	if len(x.Metadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.Metadata)
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
 		if !f(fd_Member_metadata, value) {
 			return
 		}
@@ -143,7 +143,7 @@ func (x *fastReflection_Member) Has(fd protoreflect.FieldDescriptor) bool {
 	case "cosmos.group.v1beta1.Member.weight":
 		return x.Weight != ""
 	case "cosmos.group.v1beta1.Member.metadata":
-		return len(x.Metadata) != 0
+		return x.Metadata != ""
 	case "cosmos.group.v1beta1.Member.added_at":
 		return x.AddedAt != nil
 	default:
@@ -167,7 +167,7 @@ func (x *fastReflection_Member) Clear(fd protoreflect.FieldDescriptor) {
 	case "cosmos.group.v1beta1.Member.weight":
 		x.Weight = ""
 	case "cosmos.group.v1beta1.Member.metadata":
-		x.Metadata = nil
+		x.Metadata = ""
 	case "cosmos.group.v1beta1.Member.added_at":
 		x.AddedAt = nil
 	default:
@@ -194,7 +194,7 @@ func (x *fastReflection_Member) Get(descriptor protoreflect.FieldDescriptor) pro
 		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.Member.metadata":
 		value := x.Metadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.Member.added_at":
 		value := x.AddedAt
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
@@ -223,7 +223,7 @@ func (x *fastReflection_Member) Set(fd protoreflect.FieldDescriptor, value proto
 	case "cosmos.group.v1beta1.Member.weight":
 		x.Weight = value.Interface().(string)
 	case "cosmos.group.v1beta1.Member.metadata":
-		x.Metadata = value.Bytes()
+		x.Metadata = value.Interface().(string)
 	case "cosmos.group.v1beta1.Member.added_at":
 		x.AddedAt = value.Message().Interface().(*timestamppb.Timestamp)
 	default:
@@ -275,7 +275,7 @@ func (x *fastReflection_Member) NewField(fd protoreflect.FieldDescriptor) protor
 	case "cosmos.group.v1beta1.Member.weight":
 		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.Member.metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.Member.added_at":
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
@@ -545,7 +545,7 @@ func (x *fastReflection_Member) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -555,25 +555,23 @@ func (x *fastReflection_Member) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Metadata = append(x.Metadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.Metadata == nil {
-					x.Metadata = []byte{}
-				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 4:
 				if wireType != 2 {
@@ -2236,8 +2234,8 @@ func (x *fastReflection_GroupInfo) Range(f func(protoreflect.FieldDescriptor, pr
 			return
 		}
 	}
-	if len(x.Metadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.Metadata)
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
 		if !f(fd_GroupInfo_metadata, value) {
 			return
 		}
@@ -2280,7 +2278,7 @@ func (x *fastReflection_GroupInfo) Has(fd protoreflect.FieldDescriptor) bool {
 	case "cosmos.group.v1beta1.GroupInfo.admin":
 		return x.Admin != ""
 	case "cosmos.group.v1beta1.GroupInfo.metadata":
-		return len(x.Metadata) != 0
+		return x.Metadata != ""
 	case "cosmos.group.v1beta1.GroupInfo.version":
 		return x.Version != uint64(0)
 	case "cosmos.group.v1beta1.GroupInfo.total_weight":
@@ -2308,7 +2306,7 @@ func (x *fastReflection_GroupInfo) Clear(fd protoreflect.FieldDescriptor) {
 	case "cosmos.group.v1beta1.GroupInfo.admin":
 		x.Admin = ""
 	case "cosmos.group.v1beta1.GroupInfo.metadata":
-		x.Metadata = nil
+		x.Metadata = ""
 	case "cosmos.group.v1beta1.GroupInfo.version":
 		x.Version = uint64(0)
 	case "cosmos.group.v1beta1.GroupInfo.total_weight":
@@ -2339,7 +2337,7 @@ func (x *fastReflection_GroupInfo) Get(descriptor protoreflect.FieldDescriptor) 
 		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.GroupInfo.metadata":
 		value := x.Metadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.GroupInfo.version":
 		value := x.Version
 		return protoreflect.ValueOfUint64(value)
@@ -2374,7 +2372,7 @@ func (x *fastReflection_GroupInfo) Set(fd protoreflect.FieldDescriptor, value pr
 	case "cosmos.group.v1beta1.GroupInfo.admin":
 		x.Admin = value.Interface().(string)
 	case "cosmos.group.v1beta1.GroupInfo.metadata":
-		x.Metadata = value.Bytes()
+		x.Metadata = value.Interface().(string)
 	case "cosmos.group.v1beta1.GroupInfo.version":
 		x.Version = value.Uint()
 	case "cosmos.group.v1beta1.GroupInfo.total_weight":
@@ -2434,7 +2432,7 @@ func (x *fastReflection_GroupInfo) NewField(fd protoreflect.FieldDescriptor) pro
 	case "cosmos.group.v1beta1.GroupInfo.admin":
 		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.GroupInfo.metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.GroupInfo.version":
 		return protoreflect.ValueOfUint64(uint64(0))
 	case "cosmos.group.v1beta1.GroupInfo.total_weight":
@@ -2711,7 +2709,7 @@ func (x *fastReflection_GroupInfo) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -2721,25 +2719,23 @@ func (x *fastReflection_GroupInfo) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Metadata = append(x.Metadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.Metadata == nil {
-					x.Metadata = []byte{}
-				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 4:
 				if wireType != 0 {
@@ -3452,8 +3448,8 @@ func (x *fastReflection_GroupPolicyInfo) Range(f func(protoreflect.FieldDescript
 			return
 		}
 	}
-	if len(x.Metadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.Metadata)
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
 		if !f(fd_GroupPolicyInfo_metadata, value) {
 			return
 		}
@@ -3498,7 +3494,7 @@ func (x *fastReflection_GroupPolicyInfo) Has(fd protoreflect.FieldDescriptor) bo
 	case "cosmos.group.v1beta1.GroupPolicyInfo.admin":
 		return x.Admin != ""
 	case "cosmos.group.v1beta1.GroupPolicyInfo.metadata":
-		return len(x.Metadata) != 0
+		return x.Metadata != ""
 	case "cosmos.group.v1beta1.GroupPolicyInfo.version":
 		return x.Version != uint64(0)
 	case "cosmos.group.v1beta1.GroupPolicyInfo.decision_policy":
@@ -3528,7 +3524,7 @@ func (x *fastReflection_GroupPolicyInfo) Clear(fd protoreflect.FieldDescriptor) 
 	case "cosmos.group.v1beta1.GroupPolicyInfo.admin":
 		x.Admin = ""
 	case "cosmos.group.v1beta1.GroupPolicyInfo.metadata":
-		x.Metadata = nil
+		x.Metadata = ""
 	case "cosmos.group.v1beta1.GroupPolicyInfo.version":
 		x.Version = uint64(0)
 	case "cosmos.group.v1beta1.GroupPolicyInfo.decision_policy":
@@ -3562,7 +3558,7 @@ func (x *fastReflection_GroupPolicyInfo) Get(descriptor protoreflect.FieldDescri
 		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.GroupPolicyInfo.metadata":
 		value := x.Metadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.GroupPolicyInfo.version":
 		value := x.Version
 		return protoreflect.ValueOfUint64(value)
@@ -3599,7 +3595,7 @@ func (x *fastReflection_GroupPolicyInfo) Set(fd protoreflect.FieldDescriptor, va
 	case "cosmos.group.v1beta1.GroupPolicyInfo.admin":
 		x.Admin = value.Interface().(string)
 	case "cosmos.group.v1beta1.GroupPolicyInfo.metadata":
-		x.Metadata = value.Bytes()
+		x.Metadata = value.Interface().(string)
 	case "cosmos.group.v1beta1.GroupPolicyInfo.version":
 		x.Version = value.Uint()
 	case "cosmos.group.v1beta1.GroupPolicyInfo.decision_policy":
@@ -3666,7 +3662,7 @@ func (x *fastReflection_GroupPolicyInfo) NewField(fd protoreflect.FieldDescripto
 	case "cosmos.group.v1beta1.GroupPolicyInfo.admin":
 		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.GroupPolicyInfo.metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.GroupPolicyInfo.version":
 		return protoreflect.ValueOfUint64(uint64(0))
 	case "cosmos.group.v1beta1.GroupPolicyInfo.decision_policy":
@@ -3994,7 +3990,7 @@ func (x *fastReflection_GroupPolicyInfo) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -4004,25 +4000,23 @@ func (x *fastReflection_GroupPolicyInfo) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Metadata = append(x.Metadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.Metadata == nil {
-					x.Metadata = []byte{}
-				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 5:
 				if wireType != 0 {
@@ -4359,8 +4353,8 @@ func (x *fastReflection_Proposal) Range(f func(protoreflect.FieldDescriptor, pro
 			return
 		}
 	}
-	if len(x.Metadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.Metadata)
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
 		if !f(fd_Proposal_metadata, value) {
 			return
 		}
@@ -4445,7 +4439,7 @@ func (x *fastReflection_Proposal) Has(fd protoreflect.FieldDescriptor) bool {
 	case "cosmos.group.v1beta1.Proposal.address":
 		return x.Address != ""
 	case "cosmos.group.v1beta1.Proposal.metadata":
-		return len(x.Metadata) != 0
+		return x.Metadata != ""
 	case "cosmos.group.v1beta1.Proposal.proposers":
 		return len(x.Proposers) != 0
 	case "cosmos.group.v1beta1.Proposal.submit_time":
@@ -4487,7 +4481,7 @@ func (x *fastReflection_Proposal) Clear(fd protoreflect.FieldDescriptor) {
 	case "cosmos.group.v1beta1.Proposal.address":
 		x.Address = ""
 	case "cosmos.group.v1beta1.Proposal.metadata":
-		x.Metadata = nil
+		x.Metadata = ""
 	case "cosmos.group.v1beta1.Proposal.proposers":
 		x.Proposers = nil
 	case "cosmos.group.v1beta1.Proposal.submit_time":
@@ -4532,7 +4526,7 @@ func (x *fastReflection_Proposal) Get(descriptor protoreflect.FieldDescriptor) p
 		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.Proposal.metadata":
 		value := x.Metadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.Proposal.proposers":
 		if len(x.Proposers) == 0 {
 			return protoreflect.ValueOfList(&_Proposal_4_list{})
@@ -4594,7 +4588,7 @@ func (x *fastReflection_Proposal) Set(fd protoreflect.FieldDescriptor, value pro
 	case "cosmos.group.v1beta1.Proposal.address":
 		x.Address = value.Interface().(string)
 	case "cosmos.group.v1beta1.Proposal.metadata":
-		x.Metadata = value.Bytes()
+		x.Metadata = value.Interface().(string)
 	case "cosmos.group.v1beta1.Proposal.proposers":
 		lv := value.List()
 		clv := lv.(*_Proposal_4_list)
@@ -4700,7 +4694,7 @@ func (x *fastReflection_Proposal) NewField(fd protoreflect.FieldDescriptor) prot
 	case "cosmos.group.v1beta1.Proposal.address":
 		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.Proposal.metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.Proposal.proposers":
 		list := []string{}
 		return protoreflect.ValueOfList(&_Proposal_4_list{list: &list})
@@ -5089,7 +5083,7 @@ func (x *fastReflection_Proposal) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -5099,25 +5093,23 @@ func (x *fastReflection_Proposal) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Metadata = append(x.Metadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.Metadata == nil {
-					x.Metadata = []byte{}
-				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 4:
 				if wireType != 2 {
@@ -6137,8 +6129,8 @@ func (x *fastReflection_Vote) Range(f func(protoreflect.FieldDescriptor, protore
 			return
 		}
 	}
-	if len(x.Metadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.Metadata)
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
 		if !f(fd_Vote_metadata, value) {
 			return
 		}
@@ -6171,7 +6163,7 @@ func (x *fastReflection_Vote) Has(fd protoreflect.FieldDescriptor) bool {
 	case "cosmos.group.v1beta1.Vote.option":
 		return x.Option != 0
 	case "cosmos.group.v1beta1.Vote.metadata":
-		return len(x.Metadata) != 0
+		return x.Metadata != ""
 	case "cosmos.group.v1beta1.Vote.submit_time":
 		return x.SubmitTime != nil
 	default:
@@ -6197,7 +6189,7 @@ func (x *fastReflection_Vote) Clear(fd protoreflect.FieldDescriptor) {
 	case "cosmos.group.v1beta1.Vote.option":
 		x.Option = 0
 	case "cosmos.group.v1beta1.Vote.metadata":
-		x.Metadata = nil
+		x.Metadata = ""
 	case "cosmos.group.v1beta1.Vote.submit_time":
 		x.SubmitTime = nil
 	default:
@@ -6227,7 +6219,7 @@ func (x *fastReflection_Vote) Get(descriptor protoreflect.FieldDescriptor) proto
 		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
 	case "cosmos.group.v1beta1.Vote.metadata":
 		value := x.Metadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.Vote.submit_time":
 		value := x.SubmitTime
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
@@ -6258,7 +6250,7 @@ func (x *fastReflection_Vote) Set(fd protoreflect.FieldDescriptor, value protore
 	case "cosmos.group.v1beta1.Vote.option":
 		x.Option = (VoteOption)(value.Enum())
 	case "cosmos.group.v1beta1.Vote.metadata":
-		x.Metadata = value.Bytes()
+		x.Metadata = value.Interface().(string)
 	case "cosmos.group.v1beta1.Vote.submit_time":
 		x.SubmitTime = value.Message().Interface().(*timestamppb.Timestamp)
 	default:
@@ -6314,7 +6306,7 @@ func (x *fastReflection_Vote) NewField(fd protoreflect.FieldDescriptor) protoref
 	case "cosmos.group.v1beta1.Vote.option":
 		return protoreflect.ValueOfEnum(0)
 	case "cosmos.group.v1beta1.Vote.metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.Vote.submit_time":
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
@@ -6595,7 +6587,7 @@ func (x *fastReflection_Vote) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -6605,25 +6597,23 @@ func (x *fastReflection_Vote) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Metadata = append(x.Metadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.Metadata == nil {
-					x.Metadata = []byte{}
-				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 5:
 				if wireType != 2 {
@@ -6958,7 +6948,7 @@ type Member struct {
 	// weight is the member's voting weight that should be greater than 0.
 	Weight string `protobuf:"bytes,2,opt,name=weight,proto3" json:"weight,omitempty"`
 	// metadata is any arbitrary metadata to attached to the member.
-	Metadata []byte `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// added_at is a timestamp specifying when a member was added.
 	AddedAt *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=added_at,json=addedAt,proto3" json:"added_at,omitempty"`
 }
@@ -6997,11 +6987,11 @@ func (x *Member) GetWeight() string {
 	return ""
 }
 
-func (x *Member) GetMetadata() []byte {
+func (x *Member) GetMetadata() string {
 	if x != nil {
 		return x.Metadata
 	}
-	return nil
+	return ""
 }
 
 func (x *Member) GetAddedAt() *timestamppb.Timestamp {
@@ -7153,7 +7143,7 @@ type GroupInfo struct {
 	// admin is the account address of the group's admin.
 	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
 	// metadata is any arbitrary metadata to attached to the group.
-	Metadata []byte `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// version is used to track changes to a group's membership structure that
 	// would break existing proposals. Whenever any members weight is changed,
 	// or any member is added or removed this version is incremented and will
@@ -7199,11 +7189,11 @@ func (x *GroupInfo) GetAdmin() string {
 	return ""
 }
 
-func (x *GroupInfo) GetMetadata() []byte {
+func (x *GroupInfo) GetMetadata() string {
 	if x != nil {
 		return x.Metadata
 	}
-	return nil
+	return ""
 }
 
 func (x *GroupInfo) GetVersion() uint64 {
@@ -7286,7 +7276,7 @@ type GroupPolicyInfo struct {
 	// admin is the account address of the group admin.
 	Admin string `protobuf:"bytes,3,opt,name=admin,proto3" json:"admin,omitempty"`
 	// metadata is any arbitrary metadata to attached to the group policy.
-	Metadata []byte `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata string `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// version is used to track changes to a group's GroupPolicyInfo structure that
 	// would create a different result on a running proposal.
 	Version uint64 `protobuf:"varint,5,opt,name=version,proto3" json:"version,omitempty"`
@@ -7337,11 +7327,11 @@ func (x *GroupPolicyInfo) GetAdmin() string {
 	return ""
 }
 
-func (x *GroupPolicyInfo) GetMetadata() []byte {
+func (x *GroupPolicyInfo) GetMetadata() string {
 	if x != nil {
 		return x.Metadata
 	}
-	return nil
+	return ""
 }
 
 func (x *GroupPolicyInfo) GetVersion() uint64 {
@@ -7379,7 +7369,7 @@ type Proposal struct {
 	// address is the account address of group policy.
 	Address string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
 	// metadata is any arbitrary metadata to attached to the proposal.
-	Metadata []byte `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// proposers are the account addresses of the proposers.
 	Proposers []string `protobuf:"bytes,4,rep,name=proposers,proto3" json:"proposers,omitempty"`
 	// submit_time is a timestamp specifying when a proposal was submitted.
@@ -7445,11 +7435,11 @@ func (x *Proposal) GetAddress() string {
 	return ""
 }
 
-func (x *Proposal) GetMetadata() []byte {
+func (x *Proposal) GetMetadata() string {
 	if x != nil {
 		return x.Metadata
 	}
-	return nil
+	return ""
 }
 
 func (x *Proposal) GetProposers() []string {
@@ -7599,7 +7589,7 @@ type Vote struct {
 	// option is the voter's choice on the proposal.
 	Option VoteOption `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.group.v1beta1.VoteOption" json:"option,omitempty"`
 	// metadata is any arbitrary metadata to attached to the vote.
-	Metadata []byte `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata string `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// submit_time is the timestamp when the vote was submitted.
 	SubmitTime *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=submit_time,json=submitTime,proto3" json:"submit_time,omitempty"`
 }
@@ -7645,11 +7635,11 @@ func (x *Vote) GetOption() VoteOption {
 	return VoteOption_VOTE_OPTION_UNSPECIFIED
 }
 
-func (x *Vote) GetMetadata() []byte {
+func (x *Vote) GetMetadata() string {
 	if x != nil {
 		return x.Metadata
 	}
-	return nil
+	return ""
 }
 
 func (x *Vote) GetSubmitTime() *timestamppb.Timestamp {
@@ -7680,7 +7670,7 @@ var file_cosmos_group_v1beta1_types_proto_rawDesc = []byte{
 	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x61, 0x64, 0x64,
 	0x72, 0x65, 0x73, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x77, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x02,
 	0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x77, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x1a, 0x0a, 0x08,
-	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08,
+	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08,
 	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x3f, 0x0a, 0x08, 0x61, 0x64, 0x64, 0x65,
 	0x64, 0x5f, 0x61, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f,
 	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d,
@@ -7713,7 +7703,7 @@ var file_cosmos_group_v1beta1_types_proto_rawDesc = []byte{
 	0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
 	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
 	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x1a, 0x0a,
-	0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52,
+	0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52,
 	0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x65, 0x72,
 	0x73, 0x69, 0x6f, 0x6e, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73,
 	0x69, 0x6f, 0x6e, 0x12, 0x21, 0x0a, 0x0c, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x77, 0x65, 0x69,
@@ -7738,7 +7728,7 @@ var file_cosmos_group_v1beta1_types_proto_rawDesc = []byte{
 	0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2,
 	0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
 	0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x1a,
-	0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c,
+	0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09,
 	0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x65,
 	0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x76, 0x65, 0x72,
 	0x73, 0x69, 0x6f, 0x6e, 0x12, 0x51, 0x0a, 0x0f, 0x64, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e,
@@ -7757,7 +7747,7 @@ var file_cosmos_group_v1beta1_types_proto_rawDesc = []byte{
 	0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
 	0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07,
 	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64,
-	0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64,
+	0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64,
 	0x61, 0x74, 0x61, 0x12, 0x36, 0x0a, 0x09, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x65, 0x72, 0x73,
 	0x18, 0x04, 0x20, 0x03, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d,
 	0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
@@ -7818,7 +7808,7 @@ var file_cosmos_group_v1beta1_types_proto_rawDesc = []byte{
 	0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x56, 0x6f, 0x74,
 	0x65, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x06, 0x6f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12,
 	0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28,
-	0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x45, 0x0a, 0x0b, 0x73,
+	0x09, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x45, 0x0a, 0x0b, 0x73,
 	0x75, 0x62, 0x6d, 0x69, 0x74, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b,
 	0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
 	0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x08, 0xc8, 0xde,

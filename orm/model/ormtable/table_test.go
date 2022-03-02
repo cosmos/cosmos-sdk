@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	dbm "github.com/tendermint/tm-db"
+
 	"github.com/cosmos/cosmos-sdk/orm/types/kv"
 
 	"google.golang.org/protobuf/proto"
@@ -694,4 +696,17 @@ func protoValuesToInterfaces(ks []protoreflect.Value) []interface{} {
 	}
 
 	return values
+}
+
+func TestReadonly(t *testing.T) {
+	table, err := ormtable.Build(ormtable.Options{
+		MessageType: (&testpb.ExampleTable{}).ProtoReflect().Type(),
+	})
+	assert.NilError(t, err)
+	readBackend := ormtable.NewReadBackend(ormtable.ReadBackendOptions{
+		CommitmentStoreReader: dbm.NewMemDB(),
+		IndexStoreReader:      dbm.NewMemDB(),
+	})
+	ctx := ormtable.WrapContextDefault(readBackend)
+	assert.ErrorIs(t, ormerrors.ReadOnly, table.Insert(ctx, &testpb.ExampleTable{}))
 }

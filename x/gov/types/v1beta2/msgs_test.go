@@ -128,7 +128,7 @@ func TestMsgVoteWeighted(t *testing.T) {
 }
 
 func TestMsgSubmitProposal_ValidateBasic(t *testing.T) {
-	metadata := []byte{42}
+	metadata := "metadata"
 	// Valid msg
 	msg1, err := v1beta2.NewLegacyContent(v1beta1.NewTextProposal("Title", "description"), addrs[0].String())
 	require.NoError(t, err)
@@ -141,14 +141,14 @@ func TestMsgSubmitProposal_ValidateBasic(t *testing.T) {
 		proposer       string
 		initialDeposit sdk.Coins
 		messages       []sdk.Msg
-		metadata       []byte
+		metadata       string
 		expErr         bool
 	}{
 		{"invalid addr", "", coinsPos, []sdk.Msg{msg1}, metadata, true},
-		{"empty msgs and metadata", addrs[0].String(), coinsPos, nil, nil, true},
+		{"empty msgs and metadata", addrs[0].String(), coinsPos, nil, "", true},
 		{"invalid msg", addrs[0].String(), coinsPos, []sdk.Msg{msg1, msg2}, metadata, true},
 		{"valid with no Msg", addrs[0].String(), coinsPos, nil, metadata, false},
-		{"valid with no metadata", addrs[0].String(), coinsPos, []sdk.Msg{msg1}, nil, false},
+		{"valid with no metadata", addrs[0].String(), coinsPos, []sdk.Msg{msg1}, "", false},
 		{"valid with everything", addrs[0].String(), coinsPos, []sdk.Msg{msg1}, metadata, false},
 	}
 
@@ -166,7 +166,7 @@ func TestMsgSubmitProposal_ValidateBasic(t *testing.T) {
 // this tests that Amino JSON MsgSubmitProposal.GetSignBytes() still works with Content as Any using the ModuleCdc
 func TestMsgSubmitProposal_GetSignBytes(t *testing.T) {
 	proposal := []sdk.Msg{v1beta2.NewMsgVote(addrs[0], 1, v1beta2.OptionYes)}
-	msg, err := v1beta2.NewMsgSubmitProposal(proposal, sdk.NewCoins(), sdk.AccAddress{}.String(), nil)
+	msg, err := v1beta2.NewMsgSubmitProposal(proposal, sdk.NewCoins(), sdk.AccAddress{}.String(), "")
 	require.NoError(t, err)
 	var bz []byte
 	require.NotPanics(t, func() {

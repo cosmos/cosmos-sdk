@@ -295,7 +295,7 @@ func NewSimApp(
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(keys[authzkeeper.StoreKey], appCodec, app.msgSvcRouter, app.AccountKeeper)
 
-	groupConfig := groupkeeper.DefaultConfig()
+	groupConfig := group.DefaultConfig()
 	/*
 		Example of setting group params:
 		groupConfig.MaxMetadataLen = 1000

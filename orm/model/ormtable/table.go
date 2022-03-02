@@ -60,8 +60,8 @@ type Table interface {
 	// Save saves the provided entry in the store either inserting it or
 	// updating it if needed.
 	//
-	// If store implement the Hooks interface, the appropriate OnInsert or
-	// OnUpdate hook method will be called.
+	// If store implement the ValidateHooks interface, the appropriate ValidateInsert or
+	// ValidateUpdate hook method will be called.
 	//
 	// Save attempts to be atomic with respect to the underlying store,
 	// meaning that either the full save operation is written or the store is
@@ -81,7 +81,7 @@ type Table interface {
 	// if one exists. Other fields besides the primary key fields will not
 	// be used for retrieval.
 	//
-	// If store implement the Hooks interface, the OnDelete hook method will
+	// If store implement the ValidateHooks interface, the ValidateDelete hook method will
 	// be called.
 	//
 	// Delete attempts to be atomic with respect to the underlying store,

@@ -1,10 +1,7 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
-
-	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -227,6 +224,10 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "no grant found"), nil, nil
 		}
 
+		if targetGrant.Expiration.Before(ctx.BlockHeader().Time) {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "grant expired"), nil, nil
+		}
+
 		grantee, ok := simtypes.FindAccount(accs, granteeAddr)
 		if !ok {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "Account not found"), nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "grantee account not found")
@@ -236,42 +237,43 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "Account not found"), nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "granter account not found")
 		}
 
-		if targetGrant.Expiration.Before(ctx.BlockHeader().Time) {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "grant expired"), nil, nil
-		}
-
-		coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(int64(simtypes.RandIntBetween(r, 100, 1000000)))))
+		granterspendableCoins := bk.SpendableCoins(ctx, granterAddr)
+		coins := simtypes.RandSubsetCoins(r, granterspendableCoins)
 
 		// Check send_enabled status of each sent coin denom
 		if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, nil
 		}
 
-		if targetGrant.Authorization.TypeUrl == fmt.Sprintf("/%s", proto.MessageName(&banktype.SendAuthorization{})) {
-			sendAuthorization := targetGrant.GetAuthorization().(*banktype.SendAuthorization)
-			if sendAuthorization.SpendLimit.IsAllLT(coins) {
-				return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "over spend limit"), nil, nil
+		msg := []sdk.Msg{banktype.NewMsgSend(granterAddr, granteeAddr, coins)}
+		authorization := targetGrant.GetAuthorization()
+
+		sendAuth, ok := authorization.(*banktype.SendAuthorization)
+		if !ok {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "not a send authorization"), nil, nil
+		}
+
+		_, err := sendAuth.Accept(ctx, msg[0])
+		if err != nil {
+			if sdkerrors.ErrInsufficientFunds.Is(err) {
+				return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, nil
+			} else {
+				return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
 			}
 		}
 
-		granterspendableCoins := bk.SpendableCoins(ctx, granterAddr)
-		if granterspendableCoins.IsAllLTE(coins) {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "insufficient funds"), nil, nil
-		}
-
+		msgExec := authz.NewMsgExec(granteeAddr, msg)
 		granteeSpendableCoins := bk.SpendableCoins(ctx, granteeAddr)
 		fees, err := simtypes.RandomFees(r, ctx, granteeSpendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "fee error"), nil, err
 		}
 
-		msg := authz.NewMsgExec(granteeAddr, []sdk.Msg{banktype.NewMsgSend(granterAddr, granteeAddr, coins)})
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
 		granteeAcc := ak.GetAccount(ctx, granteeAddr)
-
 		tx, err := helpers.GenTx(
 			txCfg,
-			[]sdk.Msg{&msg},
+			[]sdk.Msg{&msgExec},
 			fees,
 			helpers.DefaultGenTxGas,
 			chainID,
@@ -288,10 +290,10 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
 		}
 
-		err = msg.UnpackInterfaces(cdc)
+		err = msgExec.UnpackInterfaces(cdc)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "unmarshal error"), nil, err
 		}
-		return simtypes.NewOperationMsg(&msg, true, "success", nil), nil, nil
+		return simtypes.NewOperationMsg(&msgExec, true, "success", nil), nil, nil
 	}
 }

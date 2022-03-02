@@ -847,7 +847,7 @@ Parameters:
 
 			msg := &group.MsgLeaveGroup{
 				Address: clientCtx.GetFromAddress().String(),
-				GroupId:       groupID,
+				GroupId: groupID,
 			}
 			if err = msg.ValidateBasic(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)

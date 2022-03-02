@@ -204,7 +204,7 @@ func SimulateMsgRevoke(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Kee
 
 		_, _, err = app.SimDeliver(txCfg.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "unable to execute tx: authz/simulations/operations:207"), nil, err
 		}
 
 		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, nil

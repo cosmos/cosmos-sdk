@@ -159,9 +159,6 @@ func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, auth
 		return err
 	}
 
-	bz := k.cdc.MustMarshal(&grant)
-	store.Set(skey, bz)
-
 	var oldExp *time.Time
 	if oldGrant, found := k.getGrant(ctx, skey); found {
 		oldExp = oldGrant.Expiration
@@ -176,6 +173,9 @@ func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, auth
 			return err
 		}
 	}
+
+	bz := k.cdc.MustMarshal(&grant)
+	store.Set(skey, bz)
 
 	return ctx.EventManager().EmitTypedEvent(&authz.EventGrant{
 		MsgTypeUrl: authorization.MsgTypeURL(),
@@ -352,7 +352,7 @@ func (keeper Keeper) removeFromGrantQueue(ctx sdk.Context, grantKey []byte, gran
 	key := GrantQueueKey(expiration, granter, grantee)
 	bz := store.Get(key)
 	if bz == nil {
-		return sdkerrors.ErrLogic.Wrap("grant key not found")
+		return sdkerrors.ErrLogic.Wrap("can't remove grant from the expire queue, grant key not found")
 	}
 
 	var queueItem authz.GrantQueueItem

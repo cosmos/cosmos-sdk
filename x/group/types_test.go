@@ -9,6 +9,105 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestThresholdDecisionPolicyValidate(t *testing.T) {
+	g := group.GroupInfo{
+		TotalWeight: "10",
+	}
+	config := group.DefaultConfig()
+	testCases := []struct {
+		name   string
+		policy group.ThresholdDecisionPolicy
+		expErr bool
+	}{
+
+		{
+			"threshold bigger than total weight",
+			group.ThresholdDecisionPolicy{
+				Threshold: "12",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second,
+				},
+			},
+			true,
+		},
+		{
+			"min exec period too big",
+			group.ThresholdDecisionPolicy{
+				Threshold: "5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod:       time.Second,
+					MinExecutionPeriod: time.Hour * 24 * 30,
+				},
+			},
+			true,
+		},
+		{
+			"all good",
+			group.ThresholdDecisionPolicy{
+				Threshold: "5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod:       time.Hour,
+					MinExecutionPeriod: time.Hour * 24,
+				},
+			},
+			false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.policy.Validate(g, config)
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestPercentageDecisionPolicyValidate(t *testing.T) {
+	g := group.GroupInfo{}
+	config := group.DefaultConfig()
+	testCases := []struct {
+		name   string
+		policy group.PercentageDecisionPolicy
+		expErr bool
+	}{
+		{
+			"min exec period too big",
+			group.PercentageDecisionPolicy{
+				Percentage: "0.5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod:       time.Second,
+					MinExecutionPeriod: time.Hour * 24 * 30,
+				},
+			},
+			true,
+		},
+		{
+			"all good",
+			group.PercentageDecisionPolicy{
+				Percentage: "0.5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod:       time.Hour,
+					MinExecutionPeriod: time.Hour * 24,
+				},
+			},
+			false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.policy.Validate(g, config)
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestPercentageDecisionPolicyAllow(t *testing.T) {
 	testCases := []struct {
 		name           string

@@ -33,7 +33,7 @@ type DecisionPolicy interface {
 	Allow(tallyResult TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error)
 
 	ValidateBasic() error
-	Validate(g GroupInfo) error
+	Validate(g GroupInfo, config Config) error
 }
 
 // Implements DecisionPolicy Interface
@@ -101,7 +101,7 @@ func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower strin
 }
 
 // Validate returns an error if policy threshold is greater than the total group weight
-func (p *ThresholdDecisionPolicy) Validate(g GroupInfo) error {
+func (p *ThresholdDecisionPolicy) Validate(g GroupInfo, config Config) error {
 	threshold, err := math.NewPositiveDecFromString(p.Threshold)
 	if err != nil {
 		return sdkerrors.Wrap(err, "threshold")
@@ -112,6 +112,9 @@ func (p *ThresholdDecisionPolicy) Validate(g GroupInfo) error {
 	}
 	if threshold.Cmp(totalWeight) > 0 {
 		return sdkerrors.Wrapf(errors.ErrInvalid, "policy threshold %s should not be greater than the total group weight %s", p.Threshold, g.TotalWeight)
+	}
+	if p.Windows.MinExecutionPeriod > p.Windows.VotingPeriod+config.MaxExecutionPeriod {
+		return sdkerrors.Wrap(errors.ErrInvalid, "min_execution_period should be smaller than voting_period + max_execution_period")
 	}
 	return nil
 }
@@ -144,7 +147,10 @@ func (p PercentageDecisionPolicy) ValidateBasic() error {
 	return nil
 }
 
-func (p *PercentageDecisionPolicy) Validate(g GroupInfo) error {
+func (p *PercentageDecisionPolicy) Validate(g GroupInfo, config Config) error {
+	if p.Windows.MinExecutionPeriod > p.Windows.VotingPeriod+config.MaxExecutionPeriod {
+		return sdkerrors.Wrap(errors.ErrInvalid, "min_execution_period should be smaller than voting_period + max_execution_period")
+	}
 	return nil
 }
 

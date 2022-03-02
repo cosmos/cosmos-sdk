@@ -404,7 +404,7 @@ func SimulateMsgSubmitProposal(ak group.AccountKeeper, bk group.BankKeeper, k ke
 
 		// Return a no-op if we know the proposal cannot be created
 		policy := groupPolicy.GetDecisionPolicy()
-		err = policy.Validate(*g)
+		err = policy.Validate(*g, group.DefaultConfig())
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgSubmitProposal, ""), nil, nil
 		}
@@ -826,7 +826,7 @@ func SimulateMsgWithdrawProposal(ak group.AccountKeeper,
 		ctx := sdk.WrapSDKContext(sdkCtx)
 
 		policy := groupPolicy.GetDecisionPolicy()
-		err = policy.Validate(*g)
+		err = policy.Validate(*g, group.DefaultConfig())
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, err.Error()), nil, nil
 		}

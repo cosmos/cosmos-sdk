@@ -467,7 +467,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 	}
 
 	// Prevent proposal that can not succeed.
-	err = policy.Validate(g)
+	err = policy.Validate(g, k.config)
 	if err != nil {
 		return nil, err
 	}

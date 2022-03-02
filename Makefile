@@ -65,8 +65,8 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=sim \
 			-X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TMVERSION)
 
 ifeq ($(ENABLE_ROCKSDB),true)
-  BUILD_TAGS += rocksdb_build
-  test_tags += rocksdb_build
+  BUILD_TAGS += rocksdb
+  test_tags += rocksdb
 else
   $(warning RocksDB support is disabled; to build and test with RocksDB support, set ENABLE_ROCKSDB=true)
 endif

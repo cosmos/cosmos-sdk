@@ -125,6 +125,7 @@ func TestMigrateJSON(t *testing.T) {
 	},
 	"votes": [
 		{
+			"metadata": "",
 			"options": [
 				{
 					"option": "VOTE_OPTION_ABSTAIN",
@@ -135,6 +136,7 @@ func TestMigrateJSON(t *testing.T) {
 			"voter": "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
 		},
 		{
+			"metadata": "",
 			"options": [
 				{
 					"option": "VOTE_OPTION_NO",

@@ -255,7 +255,7 @@ func SimulateMsgCreateGroup(ak group.AccountKeeper, bk group.BankKeeper) simtype
 		}
 
 		members := genGroupMembers(r, accounts)
-		msg := &group.MsgCreateGroup{Admin: accAddr, Members: members, Metadata: []byte(simtypes.RandStringOfLength(r, 10))}
+		msg := &group.MsgCreateGroup{Admin: accAddr, Members: members, Metadata: simtypes.RandStringOfLength(r, 10)}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
@@ -304,8 +304,8 @@ func SimulateMsgCreateGroupWithPolicy(ak group.AccountKeeper, bk group.BankKeepe
 		msg := &group.MsgCreateGroupWithPolicy{
 			Admin:               accAddr,
 			Members:             members,
-			GroupMetadata:       []byte(simtypes.RandStringOfLength(r, 10)),
-			GroupPolicyMetadata: []byte(simtypes.RandStringOfLength(r, 10)),
+			GroupMetadata:       simtypes.RandStringOfLength(r, 10),
+			GroupPolicyMetadata: simtypes.RandStringOfLength(r, 10),
 			GroupPolicyAsAdmin:  r.Float32() < 0.5,
 		}
 		msg.SetDecisionPolicy(decisionPolicy)
@@ -359,7 +359,7 @@ func SimulateMsgCreateGroupPolicy(ak group.AccountKeeper, bk group.BankKeeper, k
 		msg, err := group.NewMsgCreateGroupPolicy(
 			acc.Address,
 			groupID,
-			[]byte(simtypes.RandStringOfLength(r, 10)),
+			simtypes.RandStringOfLength(r, 10),
 			&group.ThresholdDecisionPolicy{
 				Threshold: fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
 				Timeout:   time.Second * time.Duration(30*24*60*60),
@@ -437,7 +437,7 @@ func SimulateMsgSubmitProposal(ak group.AccountKeeper, bk group.BankKeeper, k ke
 		msg := group.MsgSubmitProposal{
 			Address:   groupPolicyAddr,
 			Proposers: []string{acc.Address.String()},
-			Metadata:  []byte(simtypes.RandStringOfLength(r, 10)),
+			Metadata:  simtypes.RandStringOfLength(r, 10),
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -544,7 +544,7 @@ func SimulateMsgUpdateGroupMetadata(ak group.AccountKeeper, bk group.BankKeeper,
 		msg := group.MsgUpdateGroupMetadata{
 			GroupId:  groupID,
 			Admin:    account.GetAddress().String(),
-			Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
+			Metadata: simtypes.RandStringOfLength(r, 10),
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -785,7 +785,7 @@ func SimulateMsgUpdateGroupPolicyMetadata(ak group.AccountKeeper,
 		msg := group.MsgUpdateGroupPolicyMetadata{
 			Admin:    acc.Address.String(),
 			Address:  groupPolicyAddr,
-			Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
+			Metadata: simtypes.RandStringOfLength(r, 10),
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -1007,7 +1007,7 @@ func SimulateMsgVote(ak group.AccountKeeper,
 			ProposalId: uint64(proposalID),
 			Voter:      acc.Address.String(),
 			Option:     group.VOTE_OPTION_YES,
-			Metadata:   []byte(simtypes.RandStringOfLength(r, 10)),
+			Metadata:   simtypes.RandStringOfLength(r, 10),
 		}
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
@@ -1291,8 +1291,8 @@ func genGroupMembers(r *rand.Rand, accounts []simtypes.Account) []group.Member {
 		return []group.Member{
 			{
 				Address:  accounts[0].Address.String(),
-				Weight:   fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
-				Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
+				Weight:   fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 5)),
+				Metadata: simtypes.RandStringOfLength(r, 10),
 			},
 		}
 	}
@@ -1308,8 +1308,8 @@ func genGroupMembers(r *rand.Rand, accounts []simtypes.Account) []group.Member {
 	for i := 0; i < membersLen; i++ {
 		members[i] = group.Member{
 			Address:  accounts[i].Address.String(),
-			Weight:   fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
-			Metadata: []byte(simtypes.RandStringOfLength(r, 10)),
+			Weight:   fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 5)),
+			Metadata: simtypes.RandStringOfLength(r, 10),
 		}
 	}
 

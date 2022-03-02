@@ -219,8 +219,8 @@ func (x *fastReflection_MsgSubmitProposal) Range(f func(protoreflect.FieldDescri
 			return
 		}
 	}
-	if len(x.Metadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.Metadata)
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
 		if !f(fd_MsgSubmitProposal_metadata, value) {
 			return
 		}
@@ -247,7 +247,7 @@ func (x *fastReflection_MsgSubmitProposal) Has(fd protoreflect.FieldDescriptor) 
 	case "cosmos.gov.v1beta2.MsgSubmitProposal.proposer":
 		return x.Proposer != ""
 	case "cosmos.gov.v1beta2.MsgSubmitProposal.metadata":
-		return len(x.Metadata) != 0
+		return x.Metadata != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1beta2.MsgSubmitProposal"))
@@ -271,7 +271,7 @@ func (x *fastReflection_MsgSubmitProposal) Clear(fd protoreflect.FieldDescriptor
 	case "cosmos.gov.v1beta2.MsgSubmitProposal.proposer":
 		x.Proposer = ""
 	case "cosmos.gov.v1beta2.MsgSubmitProposal.metadata":
-		x.Metadata = nil
+		x.Metadata = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1beta2.MsgSubmitProposal"))
@@ -305,7 +305,7 @@ func (x *fastReflection_MsgSubmitProposal) Get(descriptor protoreflect.FieldDesc
 		return protoreflect.ValueOfString(value)
 	case "cosmos.gov.v1beta2.MsgSubmitProposal.metadata":
 		value := x.Metadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1beta2.MsgSubmitProposal"))
@@ -337,7 +337,7 @@ func (x *fastReflection_MsgSubmitProposal) Set(fd protoreflect.FieldDescriptor, 
 	case "cosmos.gov.v1beta2.MsgSubmitProposal.proposer":
 		x.Proposer = value.Interface().(string)
 	case "cosmos.gov.v1beta2.MsgSubmitProposal.metadata":
-		x.Metadata = value.Bytes()
+		x.Metadata = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1beta2.MsgSubmitProposal"))
@@ -396,7 +396,7 @@ func (x *fastReflection_MsgSubmitProposal) NewField(fd protoreflect.FieldDescrip
 	case "cosmos.gov.v1beta2.MsgSubmitProposal.proposer":
 		return protoreflect.ValueOfString("")
 	case "cosmos.gov.v1beta2.MsgSubmitProposal.metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1beta2.MsgSubmitProposal"))
@@ -714,7 +714,7 @@ func (x *fastReflection_MsgSubmitProposal) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -724,25 +724,23 @@ func (x *fastReflection_MsgSubmitProposal) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Metadata = append(x.Metadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.Metadata == nil {
-					x.Metadata = []byte{}
-				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -4860,7 +4858,7 @@ type MsgSubmitProposal struct {
 	InitialDeposit []*v1beta1.Coin `protobuf:"bytes,2,rep,name=initial_deposit,json=initialDeposit,proto3" json:"initial_deposit,omitempty"`
 	Proposer       string          `protobuf:"bytes,3,opt,name=proposer,proto3" json:"proposer,omitempty"`
 	// metadata is any arbitrary metadata attached to the proposal.
-	Metadata []byte `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata string `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
 }
 
 func (x *MsgSubmitProposal) Reset() {
@@ -4904,11 +4902,11 @@ func (x *MsgSubmitProposal) GetProposer() string {
 	return ""
 }
 
-func (x *MsgSubmitProposal) GetMetadata() []byte {
+func (x *MsgSubmitProposal) GetMetadata() string {
 	if x != nil {
 		return x.Metadata
 	}
-	return nil
+	return ""
 }
 
 // MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.
@@ -5287,7 +5285,7 @@ var file_cosmos_gov_v1beta2_tx_proto_rawDesc = []byte{
 	0x65, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69,
 	0x6e, 0x67, 0x52, 0x08, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x65, 0x72, 0x12, 0x1a, 0x0a, 0x08,
-	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08,
+	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08,
 	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x3a, 0x0d, 0x82, 0xe7, 0xb0, 0x2a, 0x08, 0x70,
 	0x72, 0x6f, 0x70, 0x6f, 0x73, 0x65, 0x72, 0x22, 0x3c, 0x0a, 0x19, 0x4d, 0x73, 0x67, 0x53, 0x75,
 	0x62, 0x6d, 0x69, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70,

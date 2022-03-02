@@ -216,7 +216,7 @@ var _ sdk.Msg = &MsgCreateGroupWithPolicy{}
 var _ types.UnpackInterfacesMessage = MsgCreateGroupWithPolicy{}
 
 // NewMsgCreateGroupWithPolicy creates a new MsgCreateGroupWithPolicy.
-func NewMsgCreateGroupWithPolicy(admin string, members []Member, group_metadata []byte, group_policy_metadata []byte, groupPolicyAsAdmin bool, decisionPolicy DecisionPolicy) (*MsgCreateGroupWithPolicy, error) {
+func NewMsgCreateGroupWithPolicy(admin string, members []Member, group_metadata string, group_policy_metadata string, groupPolicyAsAdmin bool, decisionPolicy DecisionPolicy) (*MsgCreateGroupWithPolicy, error) {
 	m := &MsgCreateGroupWithPolicy{
 		Admin:               admin,
 		Members:             members,
@@ -533,7 +533,7 @@ var _ sdk.Msg = &MsgCreateGroupPolicy{}
 var _ types.UnpackInterfacesMessage = MsgCreateGroupPolicy{}
 
 // NewMsgCreateGroupPolicy creates a new MsgCreateGroupPolicy.
-func NewMsgCreateGroupPolicy(admin sdk.AccAddress, group uint64, metadata []byte, decisionPolicy DecisionPolicy) (*MsgCreateGroupPolicy, error) {
+func NewMsgCreateGroupPolicy(admin sdk.AccAddress, group uint64, metadata string, decisionPolicy DecisionPolicy) (*MsgCreateGroupPolicy, error) {
 	m := &MsgCreateGroupPolicy{
 		Admin:    admin.String(),
 		GroupId:  group,
@@ -554,7 +554,7 @@ func (m *MsgCreateGroupPolicy) GetGroupID() uint64 {
 	return m.GroupId
 }
 
-func (m *MsgCreateGroupPolicy) GetMetadata() []byte {
+func (m *MsgCreateGroupPolicy) GetMetadata() string {
 	return m.Metadata
 }
 
@@ -588,7 +588,7 @@ func (m MsgCreateGroupPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error
 var _ sdk.Msg = &MsgSubmitProposal{}
 
 // NewMsgSubmitProposalRequest creates a new MsgSubmitProposal.
-func NewMsgSubmitProposalRequest(address string, proposers []string, msgs []sdk.Msg, metadata []byte, exec Exec) (*MsgSubmitProposal, error) {
+func NewMsgSubmitProposalRequest(address string, proposers []string, msgs []sdk.Msg, metadata string, exec Exec) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
 		Address:   address,
 		Proposers: proposers,

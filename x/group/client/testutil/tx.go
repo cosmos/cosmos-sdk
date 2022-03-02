@@ -36,7 +36,7 @@ type IntegrationTestSuite struct {
 	vote          *group.Vote
 }
 
-const validMetadata = "AQ=="
+const validMetadata = "metadata"
 
 func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
 	return &IntegrationTestSuite{cfg: cfg}
@@ -106,7 +106,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().Equal(uint32(0), txResp.Code, out.String())
 
-	s.group = &group.GroupInfo{Id: 1, Admin: val.Address.String(), Metadata: []byte{1}, TotalWeight: "3", Version: 1}
+	s.group = &group.GroupInfo{Id: 1, Admin: val.Address.String(), Metadata: validMetadata, TotalWeight: "3", Version: 1}
 
 	// create 5 group policies
 	for i := 0; i < 5; i++ {
@@ -289,7 +289,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 			append(
 				[]string{
 					val.Address.String(),
-					"AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ==",
+					strings.Repeat("a", 256),
 					"",
 				},
 				commonFlags...,
@@ -541,7 +541,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMetadata() {
 				[]string{
 					val.Address.String(),
 					strconv.FormatUint(s.group.Id, 10),
-					"AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ==",
+					strings.Repeat("a", 256),
 				},
 				commonFlags...,
 			),
@@ -798,7 +798,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 			append(
 				[]string{
 					val.Address.String(),
-					"AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ==",
+					strings.Repeat("a", 256),
 					validMetadata,
 					validMembersFile.Name(),
 					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"timeout\":\"1s\"}",
@@ -817,7 +817,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 				[]string{
 					val.Address.String(),
 					validMetadata,
-					"AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ==",
+					strings.Repeat("a", 256),
 					validMembersFile.Name(),
 					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"timeout\":\"1s\"}",
 					fmt.Sprintf("--%s=%v", client.FlagGroupPolicyAsAdmin, false),
@@ -2294,7 +2294,7 @@ func (s *IntegrationTestSuite) createCLIProposal(groupPolicyAddress, proposer, s
 	p := client.CLIProposal{
 		GroupPolicyAddress: groupPolicyAddress,
 		Messages:           []json.RawMessage{msgJSON},
-		Metadata:           bz,
+		Metadata:           metadata,
 		Proposers:          []string{proposer},
 	}
 

@@ -52,9 +52,8 @@ func (s *TestSuite) SetupTest() {
 		{Address: s.addrs[4].String(), Weight: "1"}, {Address: s.addrs[1].String(), Weight: "2"},
 	}
 	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
-		Admin:    s.addrs[0].String(),
-		Members:  members,
-		Metadata: nil,
+		Admin:   s.addrs[0].String(),
+		Members: members,
 	})
 	s.Require().NoError(err)
 	s.groupID = groupRes.GroupId
@@ -64,9 +63,8 @@ func (s *TestSuite) SetupTest() {
 		time.Second,
 	)
 	policyReq := &group.MsgCreateGroupPolicy{
-		Admin:    s.addrs[0].String(),
-		GroupId:  s.groupID,
-		Metadata: nil,
+		Admin:   s.addrs[0].String(),
+		GroupId: s.groupID,
 	}
 	err = policyReq.SetDecisionPolicy(policy)
 	s.Require().NoError(err)
@@ -90,15 +88,13 @@ func (s *TestSuite) TestCreateGroup() {
 	addr6 := addrs[5]
 
 	members := []group.Member{{
-		Address:  addr5.String(),
-		Weight:   "1",
-		Metadata: nil,
-		AddedAt:  s.blockTime,
+		Address: addr5.String(),
+		Weight:  "1",
+		AddedAt: s.blockTime,
 	}, {
-		Address:  addr6.String(),
-		Weight:   "2",
-		Metadata: nil,
-		AddedAt:  s.blockTime,
+		Address: addr6.String(),
+		Weight:  "2",
+		AddedAt: s.blockTime,
 	}}
 
 	expGroups := []*group.GroupInfo{
@@ -107,7 +103,6 @@ func (s *TestSuite) TestCreateGroup() {
 			Version:     1,
 			Admin:       addr1.String(),
 			TotalWeight: "3",
-			Metadata:    nil,
 			CreatedAt:   s.blockTime,
 		},
 		{
@@ -115,7 +110,6 @@ func (s *TestSuite) TestCreateGroup() {
 			Version:     1,
 			Admin:       addr1.String(),
 			TotalWeight: "3",
-			Metadata:    nil,
 			CreatedAt:   s.blockTime,
 		},
 	}
@@ -127,9 +121,8 @@ func (s *TestSuite) TestCreateGroup() {
 	}{
 		"all good": {
 			req: &group.MsgCreateGroup{
-				Admin:    addr1.String(),
-				Members:  members,
-				Metadata: nil,
+				Admin:   addr1.String(),
+				Members: members,
 			},
 			expGroups: expGroups,
 		},
@@ -137,7 +130,7 @@ func (s *TestSuite) TestCreateGroup() {
 			req: &group.MsgCreateGroup{
 				Admin:    addr1.String(),
 				Members:  members,
-				Metadata: bytes.Repeat([]byte{1}, 256),
+				Metadata: strings.Repeat("a", 256),
 			},
 			expErr: true,
 		},
@@ -147,9 +140,8 @@ func (s *TestSuite) TestCreateGroup() {
 				Members: []group.Member{{
 					Address:  addr3.String(),
 					Weight:   "1",
-					Metadata: bytes.Repeat([]byte{1}, 256),
+					Metadata: strings.Repeat("a", 256),
 				}},
-				Metadata: nil,
 			},
 			expErr: true,
 		},
@@ -157,11 +149,9 @@ func (s *TestSuite) TestCreateGroup() {
 			req: &group.MsgCreateGroup{
 				Admin: addr1.String(),
 				Members: []group.Member{{
-					Address:  addr3.String(),
-					Weight:   "0",
-					Metadata: nil,
+					Address: addr3.String(),
+					Weight:  "0",
 				}},
-				Metadata: nil,
 			},
 			expErr: true,
 		},
@@ -239,17 +229,15 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 	addr4 := addrs[3]
 
 	members := []group.Member{{
-		Address:  addr1.String(),
-		Weight:   "1",
-		Metadata: nil,
-		AddedAt:  s.blockTime,
+		Address: addr1.String(),
+		Weight:  "1",
+		AddedAt: s.blockTime,
 	}}
 	oldAdmin := addr2.String()
 	newAdmin := addr3.String()
 	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
-		Admin:    oldAdmin,
-		Members:  members,
-		Metadata: nil,
+		Admin:   oldAdmin,
+		Members: members,
 	})
 	s.Require().NoError(err)
 	groupID := groupRes.GroupId
@@ -267,7 +255,6 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 			expStored: &group.GroupInfo{
 				Id:          groupID,
 				Admin:       newAdmin,
-				Metadata:    nil,
 				TotalWeight: "1",
 				Version:     2,
 				CreatedAt:   s.blockTime,
@@ -283,7 +270,6 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 			expStored: &group.GroupInfo{
 				Id:          groupID,
 				Admin:       oldAdmin,
-				Metadata:    nil,
 				TotalWeight: "1",
 				Version:     1,
 				CreatedAt:   s.blockTime,
@@ -299,7 +285,6 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 			expStored: &group.GroupInfo{
 				Id:          groupID,
 				Admin:       oldAdmin,
-				Metadata:    nil,
 				TotalWeight: "1",
 				Version:     1,
 				CreatedAt:   s.blockTime,
@@ -339,14 +324,12 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 	}{
 		"with correct admin": {
 			req: &group.MsgUpdateGroupMetadata{
-				GroupId:  groupID,
-				Admin:    oldAdmin,
-				Metadata: []byte{1, 2, 3},
+				GroupId: groupID,
+				Admin:   oldAdmin,
 			},
 			expStored: &group.GroupInfo{
 				Id:          groupID,
 				Admin:       oldAdmin,
-				Metadata:    []byte{1, 2, 3},
 				TotalWeight: "3",
 				Version:     2,
 				CreatedAt:   s.blockTime,
@@ -354,15 +337,13 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 		},
 		"with wrong admin": {
 			req: &group.MsgUpdateGroupMetadata{
-				GroupId:  groupID,
-				Admin:    addr3.String(),
-				Metadata: []byte{1, 2, 3},
+				GroupId: groupID,
+				Admin:   addr3.String(),
 			},
 			expErr: true,
 			expStored: &group.GroupInfo{
 				Id:          groupID,
 				Admin:       oldAdmin,
-				Metadata:    nil,
 				TotalWeight: "1",
 				Version:     1,
 				CreatedAt:   s.blockTime,
@@ -370,15 +351,13 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 		},
 		"with unknown groupid": {
 			req: &group.MsgUpdateGroupMetadata{
-				GroupId:  999,
-				Admin:    oldAdmin,
-				Metadata: []byte{1, 2, 3},
+				GroupId: 999,
+				Admin:   oldAdmin,
 			},
 			expErr: true,
 			expStored: &group.GroupInfo{
 				Id:          groupID,
 				Admin:       oldAdmin,
-				Metadata:    nil,
 				TotalWeight: "1",
 				Version:     1,
 				CreatedAt:   s.blockTime,
@@ -415,16 +394,14 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 	member1 := addr5.String()
 	member2 := addr6.String()
 	members := []group.Member{{
-		Address:  member1,
-		Weight:   "1",
-		Metadata: nil,
+		Address: member1,
+		Weight:  "1",
 	}}
 
 	myAdmin := addr4.String()
 	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
-		Admin:    myAdmin,
-		Members:  members,
-		Metadata: nil,
+		Admin:   myAdmin,
+		Members: members,
 	})
 	s.Require().NoError(err)
 	groupID := groupRes.GroupId
@@ -440,15 +417,13 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				GroupId: groupID,
 				Admin:   myAdmin,
 				MemberUpdates: []group.Member{{
-					Address:  member2,
-					Weight:   "2",
-					Metadata: nil,
+					Address: member2,
+					Weight:  "2",
 				}},
 			},
 			expGroup: &group.GroupInfo{
 				Id:          groupID,
 				Admin:       myAdmin,
-				Metadata:    nil,
 				TotalWeight: "3",
 				Version:     2,
 				CreatedAt:   s.blockTime,
@@ -456,17 +431,15 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			expMembers: []*group.GroupMember{
 				{
 					Member: &group.Member{
-						Address:  member2,
-						Weight:   "2",
-						Metadata: nil,
+						Address: member2,
+						Weight:  "2",
 					},
 					GroupId: groupID,
 				},
 				{
 					Member: &group.Member{
-						Address:  member1,
-						Weight:   "1",
-						Metadata: nil,
+						Address: member1,
+						Weight:  "1",
 					},
 					GroupId: groupID,
 				},
@@ -477,15 +450,13 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				GroupId: groupID,
 				Admin:   myAdmin,
 				MemberUpdates: []group.Member{{
-					Address:  member1,
-					Weight:   "2",
-					Metadata: []byte{1, 2, 3},
+					Address: member1,
+					Weight:  "2",
 				}},
 			},
 			expGroup: &group.GroupInfo{
 				Id:          groupID,
 				Admin:       myAdmin,
-				Metadata:    nil,
 				TotalWeight: "2",
 				Version:     2,
 				CreatedAt:   s.blockTime,
@@ -494,9 +465,8 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				{
 					GroupId: groupID,
 					Member: &group.Member{
-						Address:  member1,
-						Weight:   "2",
-						Metadata: []byte{1, 2, 3},
+						Address: member1,
+						Weight:  "2",
 					},
 				},
 			},
@@ -513,7 +483,6 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			expGroup: &group.GroupInfo{
 				Id:          groupID,
 				Admin:       myAdmin,
-				Metadata:    nil,
 				TotalWeight: "1",
 				Version:     2,
 				CreatedAt:   s.blockTime,
@@ -534,21 +503,18 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				Admin:   myAdmin,
 				MemberUpdates: []group.Member{
 					{
-						Address:  member1,
-						Weight:   "0",
-						Metadata: nil,
+						Address: member1,
+						Weight:  "0",
 					},
 					{
-						Address:  member2,
-						Weight:   "1",
-						Metadata: nil,
+						Address: member2,
+						Weight:  "1",
 					},
 				},
 			},
 			expGroup: &group.GroupInfo{
 				Id:          groupID,
 				Admin:       myAdmin,
-				Metadata:    nil,
 				TotalWeight: "1",
 				Version:     2,
 				CreatedAt:   s.blockTime,
@@ -556,9 +522,8 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			expMembers: []*group.GroupMember{{
 				GroupId: groupID,
 				Member: &group.Member{
-					Address:  member2,
-					Weight:   "1",
-					Metadata: nil,
+					Address: member2,
+					Weight:  "1",
 				},
 			}},
 		},
@@ -567,15 +532,13 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				GroupId: groupID,
 				Admin:   myAdmin,
 				MemberUpdates: []group.Member{{
-					Address:  member1,
-					Weight:   "0",
-					Metadata: nil,
+					Address: member1,
+					Weight:  "0",
 				}},
 			},
 			expGroup: &group.GroupInfo{
 				Id:          groupID,
 				Admin:       myAdmin,
-				Metadata:    nil,
 				TotalWeight: "0",
 				Version:     2,
 				CreatedAt:   s.blockTime,
@@ -587,16 +550,14 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				GroupId: groupID,
 				Admin:   myAdmin,
 				MemberUpdates: []group.Member{{
-					Address:  addr4.String(),
-					Weight:   "0",
-					Metadata: nil,
+					Address: addr4.String(),
+					Weight:  "0",
 				}},
 			},
 			expErr: true,
 			expGroup: &group.GroupInfo{
 				Id:          groupID,
 				Admin:       myAdmin,
-				Metadata:    nil,
 				TotalWeight: "1",
 				Version:     1,
 				CreatedAt:   s.blockTime,
@@ -604,9 +565,8 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			expMembers: []*group.GroupMember{{
 				GroupId: groupID,
 				Member: &group.Member{
-					Address:  member1,
-					Weight:   "1",
-					Metadata: nil,
+					Address: member1,
+					Weight:  "1",
 				},
 			}},
 		},
@@ -615,16 +575,14 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				GroupId: groupID,
 				Admin:   addr3.String(),
 				MemberUpdates: []group.Member{{
-					Address:  member1,
-					Weight:   "2",
-					Metadata: nil,
+					Address: member1,
+					Weight:  "2",
 				}},
 			},
 			expErr: true,
 			expGroup: &group.GroupInfo{
 				Id:          groupID,
 				Admin:       myAdmin,
-				Metadata:    nil,
 				TotalWeight: "1",
 				Version:     1,
 				CreatedAt:   s.blockTime,
@@ -642,16 +600,14 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				GroupId: 999,
 				Admin:   myAdmin,
 				MemberUpdates: []group.Member{{
-					Address:  member1,
-					Weight:   "2",
-					Metadata: nil,
+					Address: member1,
+					Weight:  "2",
 				}},
 			},
 			expErr: true,
 			expGroup: &group.GroupInfo{
 				Id:          groupID,
 				Admin:       myAdmin,
-				Metadata:    nil,
 				TotalWeight: "1",
 				Version:     1,
 				CreatedAt:   s.blockTime,
@@ -705,15 +661,203 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 	}
 }
 
+func (s *TestSuite) TestCreateGroupWithPolicy() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr3 := addrs[2]
+	addr5 := addrs[4]
+	addr6 := addrs[5]
+
+	members := []group.Member{{
+		Address: addr5.String(),
+		Weight:  "1",
+		AddedAt: s.blockTime,
+	}, {
+		Address: addr6.String(),
+		Weight:  "2",
+		AddedAt: s.blockTime,
+	}}
+
+	specs := map[string]struct {
+		req       *group.MsgCreateGroupWithPolicy
+		policy    group.DecisionPolicy
+		expErr    bool
+		expErrMsg string
+	}{
+		"all good": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin:              addr1.String(),
+				Members:            members,
+				GroupPolicyAsAdmin: false,
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"1",
+				time.Second,
+			),
+		},
+		"group policy as admin is true": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin:              addr1.String(),
+				Members:            members,
+				GroupPolicyAsAdmin: true,
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"1",
+				time.Second,
+			),
+		},
+		"group metadata too long": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin:              addr1.String(),
+				Members:            members,
+				GroupPolicyAsAdmin: false,
+				GroupMetadata:      strings.Repeat("a", 256),
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"1",
+				time.Second,
+			),
+			expErr:    true,
+			expErrMsg: "limit exceeded",
+		},
+		"group policy metadata too long": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin:               addr1.String(),
+				Members:             members,
+				GroupPolicyAsAdmin:  false,
+				GroupPolicyMetadata: strings.Repeat("a", 256),
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"1",
+				time.Second,
+			),
+			expErr:    true,
+			expErrMsg: "limit exceeded",
+		},
+		"member metadata too long": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin: addr1.String(),
+				Members: []group.Member{{
+					Address:  addr3.String(),
+					Weight:   "1",
+					Metadata: strings.Repeat("a", 256),
+				}},
+				GroupPolicyAsAdmin: false,
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"1",
+				time.Second,
+			),
+			expErr:    true,
+			expErrMsg: "limit exceeded",
+		},
+		"zero member weight": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin: addr1.String(),
+				Members: []group.Member{{
+					Address: addr3.String(),
+					Weight:  "0",
+				}},
+				GroupPolicyAsAdmin: false,
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"1",
+				time.Second,
+			),
+			expErr:    true,
+			expErrMsg: "expected a positive decimal",
+		},
+		"decision policy threshold > total group weight": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin:              addr1.String(),
+				Members:            members,
+				GroupPolicyAsAdmin: false,
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"10",
+				time.Second,
+			),
+			expErr: false,
+		},
+	}
+
+	for msg, spec := range specs {
+		spec := spec
+		s.Run(msg, func() {
+			err := spec.req.SetDecisionPolicy(spec.policy)
+			s.Require().NoError(err)
+
+			res, err := s.keeper.CreateGroupWithPolicy(s.ctx, spec.req)
+			if spec.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), spec.expErrMsg)
+				return
+			}
+			s.Require().NoError(err)
+			id := res.GroupId
+			groupPolicyAddr := res.GroupPolicyAddress
+
+			// then all data persisted in group
+			loadedGroupRes, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: id})
+			s.Require().NoError(err)
+			s.Assert().Equal(spec.req.GroupMetadata, loadedGroupRes.Info.Metadata)
+			s.Assert().Equal(id, loadedGroupRes.Info.Id)
+			if spec.req.GroupPolicyAsAdmin {
+				s.Assert().NotEqual(spec.req.Admin, loadedGroupRes.Info.Admin)
+				s.Assert().Equal(groupPolicyAddr, loadedGroupRes.Info.Admin)
+			} else {
+				s.Assert().Equal(spec.req.Admin, loadedGroupRes.Info.Admin)
+			}
+
+			// and members are stored as well
+			membersRes, err := s.keeper.GroupMembers(s.ctx, &group.QueryGroupMembersRequest{GroupId: id})
+			s.Require().NoError(err)
+			loadedMembers := membersRes.Members
+			s.Require().Equal(len(members), len(loadedMembers))
+			// we reorder members by address to be able to compare them
+			sort.Slice(members, func(i, j int) bool {
+				addri, err := sdk.AccAddressFromBech32(members[i].Address)
+				s.Require().NoError(err)
+				addrj, err := sdk.AccAddressFromBech32(members[j].Address)
+				s.Require().NoError(err)
+				return bytes.Compare(addri, addrj) < 0
+			})
+			for i := range loadedMembers {
+				s.Assert().Equal(members[i].Metadata, loadedMembers[i].Member.Metadata)
+				s.Assert().Equal(members[i].Address, loadedMembers[i].Member.Address)
+				s.Assert().Equal(members[i].Weight, loadedMembers[i].Member.Weight)
+				s.Assert().Equal(members[i].AddedAt, loadedMembers[i].Member.AddedAt)
+				s.Assert().Equal(id, loadedMembers[i].GroupId)
+			}
+
+			// then all data persisted in group policy
+			groupPolicyRes, err := s.keeper.GroupPolicyInfo(s.ctx, &group.QueryGroupPolicyInfoRequest{Address: groupPolicyAddr})
+			s.Require().NoError(err)
+
+			groupPolicy := groupPolicyRes.Info
+			s.Assert().Equal(groupPolicyAddr, groupPolicy.Address)
+			s.Assert().Equal(id, groupPolicy.GroupId)
+			s.Assert().Equal(spec.req.GroupPolicyMetadata, groupPolicy.Metadata)
+			s.Assert().Equal(spec.policy.(*group.ThresholdDecisionPolicy), groupPolicy.GetDecisionPolicy())
+			if spec.req.GroupPolicyAsAdmin {
+				s.Assert().NotEqual(spec.req.Admin, groupPolicy.Admin)
+				s.Assert().Equal(groupPolicyAddr, groupPolicy.Admin)
+			} else {
+				s.Assert().Equal(spec.req.Admin, groupPolicy.Admin)
+			}
+		})
+	}
+
+}
+
 func (s *TestSuite) TestCreateGroupPolicy() {
 	addrs := s.addrs
 	addr1 := addrs[0]
 	addr4 := addrs[3]
 
 	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
-		Admin:    addr1.String(),
-		Members:  nil,
-		Metadata: nil,
+		Admin:   addr1.String(),
+		Members: nil,
 	})
 	s.Require().NoError(err)
 	myGroupID := groupRes.GroupId
@@ -726,9 +870,8 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 	}{
 		"all good": {
 			req: &group.MsgCreateGroupPolicy{
-				Admin:    addr1.String(),
-				Metadata: nil,
-				GroupId:  myGroupID,
+				Admin:   addr1.String(),
+				GroupId: myGroupID,
 			},
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
@@ -737,9 +880,8 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 		},
 		"all good with percentage decision policy": {
 			req: &group.MsgCreateGroupPolicy{
-				Admin:    addr1.String(),
-				Metadata: nil,
-				GroupId:  myGroupID,
+				Admin:   addr1.String(),
+				GroupId: myGroupID,
 			},
 			policy: group.NewPercentageDecisionPolicy(
 				"0.5",
@@ -748,9 +890,8 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 		},
 		"decision policy threshold > total group weight": {
 			req: &group.MsgCreateGroupPolicy{
-				Admin:    addr1.String(),
-				Metadata: nil,
-				GroupId:  myGroupID,
+				Admin:   addr1.String(),
+				GroupId: myGroupID,
 			},
 			policy: group.NewThresholdDecisionPolicy(
 				"10",
@@ -759,9 +900,8 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 		},
 		"group id does not exists": {
 			req: &group.MsgCreateGroupPolicy{
-				Admin:    addr1.String(),
-				Metadata: nil,
-				GroupId:  9999,
+				Admin:   addr1.String(),
+				GroupId: 9999,
 			},
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
@@ -772,9 +912,8 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 		},
 		"admin not group admin": {
 			req: &group.MsgCreateGroupPolicy{
-				Admin:    addr4.String(),
-				Metadata: nil,
-				GroupId:  myGroupID,
+				Admin:   addr4.String(),
+				GroupId: myGroupID,
 			},
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
@@ -786,8 +925,8 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 		"metadata too long": {
 			req: &group.MsgCreateGroupPolicy{
 				Admin:    addr1.String(),
-				Metadata: []byte(strings.Repeat("a", 256)),
 				GroupId:  myGroupID,
+				Metadata: strings.Repeat("a", 256),
 			},
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
@@ -798,9 +937,8 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 		},
 		"percentage decision policy with negative value": {
 			req: &group.MsgCreateGroupPolicy{
-				Admin:    addr1.String(),
-				Metadata: nil,
-				GroupId:  myGroupID,
+				Admin:   addr1.String(),
+				GroupId: myGroupID,
 			},
 			policy: group.NewPercentageDecisionPolicy(
 				"-0.5",
@@ -811,9 +949,8 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 		},
 		"percentage decision policy with value greater than 1": {
 			req: &group.MsgCreateGroupPolicy{
-				Admin:    addr1.String(),
-				Metadata: nil,
-				GroupId:  myGroupID,
+				Admin:   addr1.String(),
+				GroupId: myGroupID,
 			},
 			policy: group.NewPercentageDecisionPolicy(
 				"2",
@@ -882,7 +1019,6 @@ func (s *TestSuite) TestUpdateGroupPolicyAdmin() {
 				Admin:          admin.String(),
 				Address:        groupPolicyAddr,
 				GroupId:        myGroupID,
-				Metadata:       nil,
 				Version:        2,
 				DecisionPolicy: nil,
 				CreatedAt:      s.blockTime,
@@ -899,7 +1035,6 @@ func (s *TestSuite) TestUpdateGroupPolicyAdmin() {
 				Admin:          admin.String(),
 				Address:        groupPolicyAddr,
 				GroupId:        myGroupID,
-				Metadata:       nil,
 				Version:        2,
 				DecisionPolicy: nil,
 				CreatedAt:      s.blockTime,
@@ -916,7 +1051,6 @@ func (s *TestSuite) TestUpdateGroupPolicyAdmin() {
 				Admin:          newAdmin.String(),
 				Address:        groupPolicyAddr,
 				GroupId:        myGroupID,
-				Metadata:       nil,
 				Version:        2,
 				DecisionPolicy: nil,
 				CreatedAt:      s.blockTime,
@@ -960,42 +1094,37 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 	}{
 		"with wrong admin": {
 			req: &group.MsgUpdateGroupPolicyMetadata{
-				Admin:    addr5.String(),
-				Address:  groupPolicyAddr,
-				Metadata: []byte("hello"),
+				Admin:   addr5.String(),
+				Address: groupPolicyAddr,
 			},
 			expGroupPolicy: &group.GroupPolicyInfo{},
 			expErr:         true,
 		},
 		"with wrong group policy": {
 			req: &group.MsgUpdateGroupPolicyMetadata{
-				Admin:    admin.String(),
-				Address:  addr5.String(),
-				Metadata: []byte("hello"),
+				Admin:   admin.String(),
+				Address: addr5.String(),
 			},
 			expGroupPolicy: &group.GroupPolicyInfo{},
 			expErr:         true,
 		},
 		"with comment too long": {
 			req: &group.MsgUpdateGroupPolicyMetadata{
-				Admin:    admin.String(),
-				Address:  addr5.String(),
-				Metadata: []byte(strings.Repeat("a", 256)),
+				Admin:   admin.String(),
+				Address: addr5.String(),
 			},
 			expGroupPolicy: &group.GroupPolicyInfo{},
 			expErr:         true,
 		},
 		"correct data": {
 			req: &group.MsgUpdateGroupPolicyMetadata{
-				Admin:    admin.String(),
-				Address:  groupPolicyAddr,
-				Metadata: []byte("hello"),
+				Admin:   admin.String(),
+				Address: groupPolicyAddr,
 			},
 			expGroupPolicy: &group.GroupPolicyInfo{
 				Admin:          admin.String(),
 				Address:        groupPolicyAddr,
 				GroupId:        myGroupID,
-				Metadata:       []byte("hello"),
 				Version:        2,
 				DecisionPolicy: nil,
 				CreatedAt:      s.blockTime,
@@ -1070,7 +1199,6 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 				Admin:          admin.String(),
 				Address:        groupPolicyAddr,
 				GroupId:        myGroupID,
-				Metadata:       nil,
 				Version:        2,
 				DecisionPolicy: nil,
 				CreatedAt:      s.blockTime,
@@ -1091,7 +1219,6 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 			),
 			expGroupPolicy: &group.GroupPolicyInfo{
 				Admin:          admin.String(),
-				Metadata:       nil,
 				DecisionPolicy: nil,
 				Version:        2,
 				CreatedAt:      s.blockTime,
@@ -1141,9 +1268,8 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 
 	admin := addr2
 	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
-		Admin:    admin.String(),
-		Members:  nil,
-		Metadata: nil,
+		Admin:   admin.String(),
+		Members: nil,
 	})
 	s.Require().NoError(err)
 	myGroupID := groupRes.GroupId
@@ -1167,9 +1293,8 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 	expectAccs := make([]*group.GroupPolicyInfo, count)
 	for i := range expectAccs {
 		req := &group.MsgCreateGroupPolicy{
-			Admin:    admin.String(),
-			Metadata: nil,
-			GroupId:  myGroupID,
+			Admin:   admin.String(),
+			GroupId: myGroupID,
 		}
 		err := req.SetDecisionPolicy(policies[i])
 		s.Require().NoError(err)
@@ -1179,7 +1304,6 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 		expectAcc := &group.GroupPolicyInfo{
 			Address:   res.Address,
 			Admin:     admin.String(),
-			Metadata:  nil,
 			GroupId:   myGroupID,
 			Version:   uint64(1),
 			CreatedAt: s.blockTime,
@@ -1246,9 +1370,8 @@ func (s *TestSuite) TestSubmitProposal() {
 	}
 
 	policyReq := &group.MsgCreateGroupPolicy{
-		Admin:    addr1.String(),
-		GroupId:  myGroupID,
-		Metadata: nil,
+		Admin:   addr1.String(),
+		GroupId: myGroupID,
 	}
 	policy := group.NewThresholdDecisionPolicy(
 		"100",
@@ -1302,15 +1425,14 @@ func (s *TestSuite) TestSubmitProposal() {
 		"metadata too long": {
 			req: &group.MsgSubmitProposal{
 				Address:   accountAddr.String(),
-				Metadata:  bytes.Repeat([]byte{1}, 256),
 				Proposers: []string{addr2.String()},
+				Metadata:  strings.Repeat("a", 256),
 			},
 			expErr:  true,
 			postRun: func(sdkCtx sdk.Context) {},
 		},
 		"group policy required": {
 			req: &group.MsgSubmitProposal{
-				Metadata:  nil,
 				Proposers: []string{addr2.String()},
 			},
 			expErr:  true,
@@ -1351,7 +1473,6 @@ func (s *TestSuite) TestSubmitProposal() {
 		"admin that is not a group member can not create proposal": {
 			req: &group.MsgSubmitProposal{
 				Address:   accountAddr.String(),
-				Metadata:  nil,
 				Proposers: []string{addr1.String()},
 			},
 			expErr:  true,
@@ -1360,7 +1481,6 @@ func (s *TestSuite) TestSubmitProposal() {
 		"reject msgs that are not authz by group policy": {
 			req: &group.MsgSubmitProposal{
 				Address:   accountAddr.String(),
-				Metadata:  nil,
 				Proposers: []string{addr2.String()},
 			},
 			msgs:    []sdk.Msg{&testdata.TestMsg{Signers: []string{addr1.String()}}},
@@ -1555,9 +1675,8 @@ func (s *TestSuite) TestVote() {
 		{Address: addr3.String(), Weight: "2", AddedAt: s.blockTime},
 	}
 	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
-		Admin:    addr1.String(),
-		Members:  members,
-		Metadata: nil,
+		Admin:   addr1.String(),
+		Members: members,
 	})
 	s.Require().NoError(err)
 	myGroupID := groupRes.GroupId
@@ -1567,9 +1686,8 @@ func (s *TestSuite) TestVote() {
 		time.Duration(2),
 	)
 	policyReq := &group.MsgCreateGroupPolicy{
-		Admin:    addr1.String(),
-		GroupId:  myGroupID,
-		Metadata: nil,
+		Admin:   addr1.String(),
+		GroupId: myGroupID,
 	}
 	err = policyReq.SetDecisionPolicy(policy)
 	s.Require().NoError(err)
@@ -1584,7 +1702,6 @@ func (s *TestSuite) TestVote() {
 
 	req := &group.MsgSubmitProposal{
 		Address:   accountAddr,
-		Metadata:  nil,
 		Proposers: []string{addr4.String()},
 		Messages:  nil,
 	}
@@ -1780,8 +1897,8 @@ func (s *TestSuite) TestVote() {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
 				Voter:      addr4.String(),
-				Metadata:   bytes.Repeat([]byte{1}, 256),
 				Option:     group.VOTE_OPTION_NO,
+				Metadata:   strings.Repeat("a", 256),
 			},
 			expErr:  true,
 			postRun: func(sdkCtx sdk.Context) {},
@@ -1882,9 +1999,8 @@ func (s *TestSuite) TestVote() {
 			},
 			doBefore: func(ctx context.Context) {
 				_, err = s.keeper.UpdateGroupMetadata(ctx, &group.MsgUpdateGroupMetadata{
-					GroupId:  myGroupID,
-					Admin:    addr1.String(),
-					Metadata: []byte{1, 2, 3},
+					GroupId: myGroupID,
+					Admin:   addr1.String(),
 				})
 				s.Require().NoError(err)
 			},
@@ -2094,9 +2210,8 @@ func (s *TestSuite) TestExecProposal() {
 
 				// then modify group
 				_, err := s.keeper.UpdateGroupMetadata(ctx, &group.MsgUpdateGroupMetadata{
-					Admin:    addr1.String(),
-					GroupId:  s.groupID,
-					Metadata: []byte{1, 2, 3},
+					Admin:   addr1.String(),
+					GroupId: s.groupID,
 				})
 				s.Require().NoError(err)
 				return myProposalID
@@ -2109,9 +2224,8 @@ func (s *TestSuite) TestExecProposal() {
 			setupProposal: func(ctx context.Context) uint64 {
 				myProposalID := submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
 				_, err := s.keeper.UpdateGroupPolicyMetadata(ctx, &group.MsgUpdateGroupPolicyMetadata{
-					Admin:    addr1.String(),
-					Address:  s.groupPolicyAddr.String(),
-					Metadata: []byte("group policy modified before tally"),
+					Admin:   addr1.String(),
+					Address: s.groupPolicyAddr.String(),
 				})
 				s.Require().NoError(err)
 				return myProposalID
@@ -2213,7 +2327,6 @@ func submitProposal(
 	proposalReq := &group.MsgSubmitProposal{
 		Address:   s.groupPolicyAddr.String(),
 		Proposers: proposers,
-		Metadata:  nil,
 	}
 	err := proposalReq.SetMsgs(msgs)
 	s.Require().NoError(err)
@@ -2243,17 +2356,15 @@ func createGroupAndGroupPolicy(
 	s *TestSuite,
 ) (string, uint64, group.DecisionPolicy) {
 	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
-		Admin:    admin.String(),
-		Members:  nil,
-		Metadata: nil,
+		Admin:   admin.String(),
+		Members: nil,
 	})
 	s.Require().NoError(err)
 
 	myGroupID := groupRes.GroupId
 	groupPolicy := &group.MsgCreateGroupPolicy{
-		Admin:    admin.String(),
-		GroupId:  myGroupID,
-		Metadata: nil,
+		Admin:   admin.String(),
+		GroupId: myGroupID,
 	}
 
 	policy := group.NewThresholdDecisionPolicy(

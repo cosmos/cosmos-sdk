@@ -39,7 +39,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
 				Members: []group.Member{
-					group.Member{
+					{
 						Address: "invalid address",
 					},
 				},
@@ -52,7 +52,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
 				Members: []group.Member{
-					group.Member{
+					{
 						Address: member1.String(),
 						Weight:  "-1",
 					},
@@ -66,7 +66,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
 				Members: []group.Member{
-					group.Member{
+					{
 						Address: member1.String(),
 						Weight:  "0",
 					},
@@ -80,15 +80,15 @@ func TestMsgCreateGroup(t *testing.T) {
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
 				Members: []group.Member{
-					group.Member{
+					{
 						Address:  member1.String(),
 						Weight:   "1",
-						Metadata: []byte("metadata"),
+						Metadata: "metadata",
 					},
-					group.Member{
+					{
 						Address:  member1.String(),
 						Weight:   "1",
-						Metadata: []byte("metadata"),
+						Metadata: "metadata",
 					},
 				},
 			},
@@ -100,10 +100,10 @@ func TestMsgCreateGroup(t *testing.T) {
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
 				Members: []group.Member{
-					group.Member{
+					{
 						Address:  member1.String(),
 						Weight:   "1",
-						Metadata: []byte("metadata"),
+						Metadata: "metadata",
 					},
 				},
 			},
@@ -124,15 +124,15 @@ func TestMsgCreateGroup(t *testing.T) {
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
 				Members: []group.Member{
-					group.Member{
+					{
 						Address:  member1.String(),
 						Weight:   "1",
-						Metadata: []byte("metadata"),
+						Metadata: "metadata",
 					},
-					group.Member{
+					{
 						Address:  member2.String(),
 						Weight:   "1",
-						Metadata: []byte("metadata"),
+						Metadata: "metadata",
 					},
 				},
 			},
@@ -255,7 +255,7 @@ func TestMsgUpdateGroupMetadata(t *testing.T) {
 			&group.MsgUpdateGroupMetadata{
 				GroupId:  1,
 				Admin:    admin.String(),
-				Metadata: []byte("metadata"),
+				Metadata: "metadata",
 			},
 			false,
 			"",
@@ -314,10 +314,10 @@ func TestMsgUpdateGroupMembers(t *testing.T) {
 				GroupId: 1,
 				Admin:   admin.String(),
 				MemberUpdates: []group.Member{
-					group.Member{
+					{
 						Address:  member1.String(),
 						Weight:   "1",
-						Metadata: []byte("metadata"),
+						Metadata: "metadata",
 					},
 				},
 			},
@@ -330,10 +330,10 @@ func TestMsgUpdateGroupMembers(t *testing.T) {
 				GroupId: 1,
 				Admin:   admin.String(),
 				MemberUpdates: []group.Member{
-					group.Member{
+					{
 						Address:  member1.String(),
 						Weight:   "0",
-						Metadata: []byte("metadata"),
+						Metadata: "metadata",
 					},
 				},
 			},
@@ -351,6 +351,185 @@ func TestMsgUpdateGroupMembers(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, tc.msg.Type(), sdk.MsgTypeURL(&group.MsgUpdateGroupMembers{}))
+			}
+		})
+	}
+}
+
+func TestMsgCreateGroupWithPolicy(t *testing.T) {
+	testCases := []struct {
+		name   string
+		msg    func() *group.MsgCreateGroupWithPolicy
+		expErr bool
+		errMsg string
+	}{
+		{
+			"invalid admin address",
+			func() *group.MsgCreateGroupWithPolicy {
+				admin := "admin"
+				policy := group.NewThresholdDecisionPolicy("1", time.Second)
+				members := []group.Member{
+					{
+						Address:  member1.String(),
+						Weight:   "1",
+						Metadata: "metadata",
+					},
+				}
+				req, err := group.NewMsgCreateGroupWithPolicy(admin, members, "group_metadata", "group_policy_metadata", false, policy)
+				require.NoError(t, err)
+				return req
+			},
+			true,
+			"admin: decoding bech32 failed",
+		},
+		{
+			"invalid member address",
+			func() *group.MsgCreateGroupWithPolicy {
+				policy := group.NewThresholdDecisionPolicy("1", time.Second)
+				members := []group.Member{
+					{
+						Address:  "invalid_address",
+						Weight:   "1",
+						Metadata: "metadata",
+					},
+				}
+				req, err := group.NewMsgCreateGroupWithPolicy(admin.String(), members, "group_metadata", "group_policy_metadata", false, policy)
+				require.NoError(t, err)
+				return req
+			},
+			true,
+			"address: decoding bech32 failed",
+		},
+		{
+			"negative member's weight not allowed",
+			func() *group.MsgCreateGroupWithPolicy {
+				policy := group.NewThresholdDecisionPolicy("1", time.Second)
+				members := []group.Member{
+					{
+						Address:  member1.String(),
+						Weight:   "-1",
+						Metadata: "metadata",
+					},
+				}
+				req, err := group.NewMsgCreateGroupWithPolicy(admin.String(), members, "group_metadata", "group_policy_metadata", false, policy)
+				require.NoError(t, err)
+				return req
+			},
+			true,
+			"expected a positive decimal",
+		},
+		{
+			"zero member's weight not allowed",
+			func() *group.MsgCreateGroupWithPolicy {
+				policy := group.NewThresholdDecisionPolicy("1", time.Second)
+				members := []group.Member{
+					{
+						Address:  member1.String(),
+						Weight:   "0",
+						Metadata: "metadata",
+					},
+				}
+				req, err := group.NewMsgCreateGroupWithPolicy(admin.String(), members, "group_metadata", "group_policy_metadata", false, policy)
+				require.NoError(t, err)
+				return req
+			},
+			true,
+			"expected a positive decimal",
+		},
+		{
+			"duplicate member not allowed",
+			func() *group.MsgCreateGroupWithPolicy {
+				policy := group.NewThresholdDecisionPolicy("1", time.Second)
+				members := []group.Member{
+					{
+						Address:  member1.String(),
+						Weight:   "1",
+						Metadata: "metadata",
+					},
+					{
+						Address:  member1.String(),
+						Weight:   "1",
+						Metadata: "metadata",
+					},
+				}
+				req, err := group.NewMsgCreateGroupWithPolicy(admin.String(), members, "group_metadata", "group_policy_metadata", false, policy)
+				require.NoError(t, err)
+				return req
+			},
+			true,
+			"duplicate value",
+		},
+		{
+			"invalid threshold policy",
+			func() *group.MsgCreateGroupWithPolicy {
+				policy := group.NewThresholdDecisionPolicy("-1", time.Second)
+				members := []group.Member{
+					{
+						Address:  member1.String(),
+						Weight:   "1",
+						Metadata: "metadata",
+					},
+				}
+				req, err := group.NewMsgCreateGroupWithPolicy(admin.String(), members, "group_metadata", "group_policy_metadata", false, policy)
+				require.NoError(t, err)
+				return req
+			},
+			true,
+			"expected a positive decimal",
+		},
+		{
+			"valid test case with single member",
+			func() *group.MsgCreateGroupWithPolicy {
+				policy := group.NewThresholdDecisionPolicy("1", time.Second)
+				members := []group.Member{
+					{
+						Address:  member1.String(),
+						Weight:   "1",
+						Metadata: "metadata",
+					},
+				}
+				req, err := group.NewMsgCreateGroupWithPolicy(admin.String(), members, "group_metadata", "group_policy_metadata", false, policy)
+				require.NoError(t, err)
+				return req
+			},
+			false,
+			"",
+		},
+		{
+			"valid test case with multiple members",
+			func() *group.MsgCreateGroupWithPolicy {
+				policy := group.NewThresholdDecisionPolicy("1", time.Second)
+				members := []group.Member{
+					{
+						Address:  member1.String(),
+						Weight:   "1",
+						Metadata: "metadata",
+					},
+					{
+						Address:  member2.String(),
+						Weight:   "1",
+						Metadata: "metadata",
+					},
+				}
+				req, err := group.NewMsgCreateGroupWithPolicy(admin.String(), members, "group_metadata", "group_policy_metadata", false, policy)
+				require.NoError(t, err)
+				return req
+			},
+			false,
+			"",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := tc.msg()
+			err := msg.ValidateBasic()
+			if tc.expErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.errMsg)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgCreateGroupWithPolicy{}))
 			}
 		})
 	}
@@ -388,7 +567,7 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 			"invalid threshold policy",
 			func() *group.MsgCreateGroupPolicy {
 				policy := group.NewThresholdDecisionPolicy("-1", time.Second)
-				req, err := group.NewMsgCreateGroupPolicy(admin, 1, []byte("metadata"), policy)
+				req, err := group.NewMsgCreateGroupPolicy(admin, 1, "metadata", policy)
 				require.NoError(t, err)
 				return req
 			},
@@ -399,7 +578,7 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 			"valid test case",
 			func() *group.MsgCreateGroupPolicy {
 				policy := group.NewThresholdDecisionPolicy("1", time.Second)
-				req, err := group.NewMsgCreateGroupPolicy(admin, 1, []byte("metadata"), policy)
+				req, err := group.NewMsgCreateGroupPolicy(admin, 1, "metadata", policy)
 				require.NoError(t, err)
 				return req
 			},
@@ -410,7 +589,7 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 			"invalid percentage decision policy with zero value",
 			func() *group.MsgCreateGroupPolicy {
 				percentagePolicy := group.NewPercentageDecisionPolicy("0", time.Second)
-				req, err := group.NewMsgCreateGroupPolicy(admin, 1, []byte("metadata"), percentagePolicy)
+				req, err := group.NewMsgCreateGroupPolicy(admin, 1, "metadata", percentagePolicy)
 				require.NoError(t, err)
 				return req
 			},
@@ -421,7 +600,7 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 			"invalid percentage decision policy with negative value",
 			func() *group.MsgCreateGroupPolicy {
 				percentagePolicy := group.NewPercentageDecisionPolicy("-0.2", time.Second)
-				req, err := group.NewMsgCreateGroupPolicy(admin, 1, []byte("metadata"), percentagePolicy)
+				req, err := group.NewMsgCreateGroupPolicy(admin, 1, "metadata", percentagePolicy)
 				require.NoError(t, err)
 				return req
 			},
@@ -432,7 +611,7 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 			"invalid percentage decision policy with value greater than 1",
 			func() *group.MsgCreateGroupPolicy {
 				percentagePolicy := group.NewPercentageDecisionPolicy("2", time.Second)
-				req, err := group.NewMsgCreateGroupPolicy(admin, 1, []byte("metadata"), percentagePolicy)
+				req, err := group.NewMsgCreateGroupPolicy(admin, 1, "metadata", percentagePolicy)
 				require.NoError(t, err)
 				return req
 			},
@@ -443,7 +622,7 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 			"valid test case with percentage decision policy",
 			func() *group.MsgCreateGroupPolicy {
 				percentagePolicy := group.NewPercentageDecisionPolicy("0.5", time.Second)
-				req, err := group.NewMsgCreateGroupPolicy(admin, 1, []byte("metadata"), percentagePolicy)
+				req, err := group.NewMsgCreateGroupPolicy(admin, 1, "metadata", percentagePolicy)
 				require.NoError(t, err)
 				return req
 			},
@@ -668,7 +847,7 @@ func TestMsgUpdateGroupPolicyMetadata(t *testing.T) {
 			&group.MsgUpdateGroupPolicyMetadata{
 				Admin:    admin.String(),
 				Address:  member1.String(),
-				Metadata: []byte("metadata"),
+				Metadata: "metadata",
 			},
 			false,
 			"",

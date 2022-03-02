@@ -1,4 +1,4 @@
-package v045
+package v046
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
-// MigrateStore performs in-place store migrations from v0.44 to v0.45. The
+// MigrateStore performs in-place store migrations from v0.45 to v0.46. The
 // migration includes:
 //
 // - pruning expired authorizations

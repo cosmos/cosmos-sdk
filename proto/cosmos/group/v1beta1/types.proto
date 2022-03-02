@@ -21,7 +21,7 @@ message Member {
   string weight = 2;
 
   // metadata is any arbitrary metadata to attached to the member.
-  bytes metadata = 3;
+  string metadata = 3;
 
   // added_at is a timestamp specifying when a member was added.
   google.protobuf.Timestamp added_at = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
@@ -88,7 +88,7 @@ message GroupInfo {
   string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // metadata is any arbitrary metadata to attached to the group.
-  bytes metadata = 3;
+  string metadata = 3;
 
   // version is used to track changes to a group's membership structure that
   // would break existing proposals. Whenever any members weight is changed,
@@ -128,7 +128,7 @@ message GroupPolicyInfo {
   string admin = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // metadata is any arbitrary metadata to attached to the group policy.
-  bytes metadata = 4;
+  string metadata = 4;
 
   // version is used to track changes to a group's GroupPolicyInfo structure that
   // would create a different result on a running proposal.
@@ -155,7 +155,7 @@ message Proposal {
   string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // metadata is any arbitrary metadata to attached to the proposal.
-  bytes metadata = 3;
+  string metadata = 3;
 
   // proposers are the account addresses of the proposers.
   repeated string proposers = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -282,7 +282,7 @@ message Vote {
   VoteOption option = 3;
 
   // metadata is any arbitrary metadata to attached to the vote.
-  bytes metadata = 4;
+  string metadata = 4;
 
   // submit_time is the timestamp when the vote was submitted.
   google.protobuf.Timestamp submit_time = 5 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];

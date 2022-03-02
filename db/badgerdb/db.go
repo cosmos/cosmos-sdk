@@ -368,14 +368,34 @@ func (tx *badgerWriter) Set(key, value []byte) error {
 	if err := dbutil.ValidateKv(key, value); err != nil {
 		return err
 	}
-	return tx.txn.Set(key, value)
+	err := tx.txn.Set(key, value)
+	if errors.Is(err, badger.ErrTxnTooBig) {
+		err = tx.Commit()
+		if err != nil {
+			return err
+		}
+		newtx := tx.db.ReadWriter().(*badgerWriter)
+		*tx = *newtx
+		err = tx.txn.Set(key, value)
+	}
+	return err
 }
 
 func (tx *badgerWriter) Delete(key []byte) error {
 	if len(key) == 0 {
 		return db.ErrKeyEmpty
 	}
-	return tx.txn.Delete(key)
+	err := tx.txn.Delete(key)
+	if errors.Is(err, badger.ErrTxnTooBig) {
+		err = tx.Commit()
+		if err != nil {
+			return err
+		}
+		newtx := tx.db.ReadWriter().(*badgerWriter)
+		*tx = *newtx
+		err = tx.txn.Delete(key)
+	}
+	return err
 }
 
 func (tx *badgerWriter) Commit() (err error) {

@@ -829,7 +829,7 @@ func MsgLeaveGroupCmd() *cobra.Command {
 Parameters:
 		   group-id: unique id of the group
 		   member-address: account address of the group member
-		   Note, the'--from' flag is
+		   Note, the '--from' flag is
 				ignored as it is implied from [member-address]
 		`,
 		Args: cobra.ExactArgs(2),

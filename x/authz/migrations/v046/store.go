@@ -43,7 +43,8 @@ func addExpiredGrantsIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.
 			grantsStore.Delete(grantsIter.Key())
 		} else {
 			granter, grantee, msgType := ParseGrantKey(grantsIter.Key())
-			key := GrantQueueKey(grant.Expiration, granter, grantee)
+			// before 0.46 expiration was not a pointer, so now it's safe to dereference
+			key := GrantQueueKey(*grant.Expiration, granter, grantee)
 
 			queueItem, ok := queueItems[conv.UnsafeBytesToStr(key)]
 			if !ok {

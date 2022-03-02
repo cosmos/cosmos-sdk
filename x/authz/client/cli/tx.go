@@ -160,7 +160,9 @@ Examples:
 				return fmt.Errorf("invalid authorization type, %s", args[1])
 			}
 
-			msg, err := authz.NewMsgGrant(clientCtx.GetFromAddress(), grantee, authorization, time.Unix(exp, 0))
+			e := time.Unix(exp, 0)
+			// TODO: update flag
+			msg, err := authz.NewMsgGrant(clientCtx.GetFromAddress(), grantee, authorization, &e)
 			if err != nil {
 				return err
 			}

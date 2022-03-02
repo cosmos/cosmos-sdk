@@ -94,6 +94,9 @@ message Vote {
   string voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   reserved 3;
   repeated WeightedVoteOption options = 4;
+
+  // metadata is any  arbitrary metadata to attached to the vote.
+  string metadata = 5;
 }
 
 // DepositParams defines the params for deposits on governance proposals.

@@ -208,7 +208,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.votedMember = &group.Member{
 		Address:  val.Address.String(),
 		Weight:   memberWeight,
-		Metadata: []byte(validMetadata),
+		Metadata: validMetadata,
 	}
 }
 

@@ -35,6 +35,7 @@ const (
 	ProposalTableSeqPrefix           byte = 0x31
 	ProposalByGroupPolicyIndexPrefix byte = 0x32
 	ProposalByProposerIndexPrefix    byte = 0x33
+	ProposalsByVotingPeriodEndPrefix byte = 0x34
 
 	// Vote Table
 	VoteTablePrefix           byte = 0x40
@@ -66,6 +67,7 @@ type Keeper struct {
 	proposalTable              orm.AutoUInt64Table
 	proposalByGroupPolicyIndex orm.Index
 	proposalByProposerIndex    orm.Index
+	ProposalsByVotingPeriodEnd orm.Index
 
 	// Vote Table
 	voteTable           orm.PrimaryKeyTable
@@ -177,6 +179,13 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 			r[i] = addr.Bytes()
 		}
 		return r, nil
+	}, []byte{})
+	if err != nil {
+		panic(err.Error())
+	}
+	k.ProposalsByVotingPeriodEnd, err = orm.NewIndex(proposalTable, ProposalsByVotingPeriodEndPrefix, func(value interface{}) ([]interface{}, error) {
+		votingPeriodEnd := value.(*group.Proposal).VotingPeriodEnd
+		return []interface{}{sdk.FormatTimeBytes(votingPeriodEnd)}, nil
 	}, []byte{})
 	if err != nil {
 		panic(err.Error())

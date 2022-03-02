@@ -7659,6 +7659,11 @@ type DecisionPolicyWindows struct {
 	// `[ submission + min_execution_period ; submission + voting_period + max_execution_period]`
 	// where max_execution_period is a app-specific config, defined in the keeper.
 	// If not set, min_execution_period will default to 0.
+	//
+	// Please make sure to set a `min_execution_period` that is smaller than
+	// `voting_period + max_execution_period`, or else the above execution window
+	// is empty, meaning that all proposals created with this decision policy
+	// won't be able to be executed.
 	MinExecutionPeriod *durationpb.Duration `protobuf:"bytes,2,opt,name=min_execution_period,json=minExecutionPeriod,proto3" json:"min_execution_period,omitempty"`
 }
 

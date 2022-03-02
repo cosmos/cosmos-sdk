@@ -29,7 +29,6 @@ type viewSubstore struct {
 	root                 *viewStore
 	name                 string
 	dataBucket           dbm.DBReader
-	indexBucket          dbm.DBReader
 	stateCommitmentStore *smt.Store
 }
 
@@ -62,7 +61,6 @@ func (vs *viewStore) getSubstore(key string) (*viewSubstore, error) {
 		root:                 vs,
 		name:                 key,
 		dataBucket:           prefixdb.NewPrefixReader(stateR, dataPrefix),
-		indexBucket:          prefixdb.NewPrefixReader(stateR, indexPrefix),
 		stateCommitmentStore: loadSMT(dbm.ReaderAsReadWriter(stateCommitmentR), rootHash),
 	}, nil
 }

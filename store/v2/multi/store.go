@@ -114,7 +114,6 @@ type substore struct {
 	root                 *Store
 	name                 string
 	dataBucket           dbm.DBReadWriter
-	indexBucket          dbm.DBReadWriter
 	stateCommitmentStore *smt.Store
 }
 
@@ -493,7 +492,6 @@ func (rs *Store) getSubstore(key string) (*substore, error) {
 		root:                 rs,
 		name:                 key,
 		dataBucket:           prefixdb.NewPrefixReadWriter(stateRW, dataPrefix),
-		indexBucket:          prefixdb.NewPrefixReadWriter(stateRW, indexPrefix),
 		stateCommitmentStore: stateCommitmentStore,
 	}, nil
 }
@@ -504,7 +502,6 @@ func (s *substore) refresh(rootHash []byte) {
 	stateRW := prefixdb.NewPrefixReadWriter(s.root.stateTxn, pfx)
 	stateCommitmentRW := prefixdb.NewPrefixReadWriter(s.root.stateCommitmentTxn, pfx)
 	s.dataBucket = prefixdb.NewPrefixReadWriter(stateRW, dataPrefix)
-	s.indexBucket = prefixdb.NewPrefixReadWriter(stateRW, indexPrefix)
 	s.stateCommitmentStore = loadSMT(stateCommitmentRW, rootHash)
 }
 

@@ -1,7 +1,6 @@
 package multi
 
 import (
-	"crypto/sha256"
 	"io"
 	"sync"
 
@@ -47,21 +46,14 @@ func (s *substore) Set(key, value []byte) {
 		panic(err)
 	}
 	s.stateCommitmentStore.Set(key, value)
-	khash := sha256.Sum256(key)
-	err = s.indexBucket.Set(khash[:], key)
-	if err != nil {
-		panic(err)
-	}
 }
 
 // Delete implements KVStore.
 func (s *substore) Delete(key []byte) {
-	khash := sha256.Sum256(key)
 	s.root.mtx.Lock()
 	defer s.root.mtx.Unlock()
 
 	s.stateCommitmentStore.Delete(key)
-	_ = s.indexBucket.Delete(khash[:])
 	_ = s.dataBucket.Delete(key)
 }
 

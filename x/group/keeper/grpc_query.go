@@ -319,6 +319,7 @@ func (q Keeper) Tally(ctx sdk.Context, p group.Proposal, groupId uint64) (group.
 	if err != nil {
 		return group.TallyResult{}, err
 	}
+	defer it.Close()
 
 	tallyResult := group.DefaultTallyResult()
 

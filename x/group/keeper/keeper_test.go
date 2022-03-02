@@ -2338,19 +2338,19 @@ func (s *TestSuite) TestLeaveGroup() {
 			{
 				Address:  member1.String(),
 				Weight:   "1",
-				Metadata: []byte("metadata"),
+				Metadata: "metadata",
 				AddedAt:  s.sdkCtx.BlockTime(),
 			},
 			{
 				Address:  member2.String(),
 				Weight:   "2",
-				Metadata: []byte("metadata"),
+				Metadata: "metadata",
 				AddedAt:  s.sdkCtx.BlockTime(),
 			},
 			{
 				Address:  member3.String(),
 				Weight:   "3",
-				Metadata: []byte("metadata"),
+				Metadata: "metadata",
 				AddedAt:  s.sdkCtx.BlockTime(),
 			},
 		},
@@ -2364,7 +2364,7 @@ func (s *TestSuite) TestLeaveGroup() {
 			{
 				Address:  member1.String(),
 				Weight:   "1",
-				Metadata: []byte("metadata"),
+				Metadata: "metadata",
 				AddedAt:  s.sdkCtx.BlockTime(),
 			},
 		},
@@ -2378,13 +2378,13 @@ func (s *TestSuite) TestLeaveGroup() {
 			{
 				Address:  member1.String(),
 				Weight:   "1",
-				Metadata: []byte("metadata"),
+				Metadata: "metadata",
 				AddedAt:  s.sdkCtx.BlockTime(),
 			},
 			{
 				Address:  member2.String(),
 				Weight:   "2",
-				Metadata: []byte("metadata"),
+				Metadata: "metadata",
 				AddedAt:  s.sdkCtx.BlockTime(),
 			},
 		},
@@ -2395,7 +2395,7 @@ func (s *TestSuite) TestLeaveGroup() {
 	groupPolicy := &group.MsgCreateGroupPolicy{
 		Admin:    admin.String(),
 		GroupId:  res.GroupId,
-		Metadata: []byte("metadata"),
+		Metadata: "metadata",
 	}
 	policy := group.NewThresholdDecisionPolicy(
 		"3",
@@ -2411,7 +2411,7 @@ func (s *TestSuite) TestLeaveGroup() {
 	groupPolicy = &group.MsgCreateGroupPolicy{
 		Admin:    admin3.String(),
 		GroupId:  res2.GroupId,
-		Metadata: []byte("metadata"),
+		Metadata: "metadata",
 	}
 	pPolicy := &group.PercentageDecisionPolicy{
 		Percentage: "0.5",

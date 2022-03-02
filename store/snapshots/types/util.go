@@ -1,15 +1,15 @@
 package types
 
 import (
-	protoio "github.com/cosmos/gogoproto/io"
+	protoio "github.com/gogo/protobuf/io"
 )
 
-// WriteExtensionPayload writes an extension payload for current extension snapshotter.
-func WriteExtensionPayload(protoWriter protoio.Writer, payload []byte) error {
+// WriteExtensionItem writes an item payload for current extention snapshotter.
+func WriteExtensionItem(protoWriter protoio.Writer, item []byte) error {
 	return protoWriter.WriteMsg(&SnapshotItem{
 		Item: &SnapshotItem_ExtensionPayload{
 			ExtensionPayload: &SnapshotExtensionPayload{
-				Payload: payload,
+				Payload: item,
 			},
 		},
 	})

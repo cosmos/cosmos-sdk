@@ -3,13 +3,12 @@ package mock
 import (
 	"io"
 
-	protoio "github.com/cosmos/gogoproto/io"
+	protoio "github.com/gogo/protobuf/io"
+	dbm "github.com/tendermint/tm-db"
 
-	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/store/metrics"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	store "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ storetypes.MultiStore = multiStore{}
@@ -156,10 +155,6 @@ func (ms multiStore) Snapshot(height uint64, protoWriter protoio.Writer) error {
 func (ms multiStore) Restore(
 	height uint64, format uint32, protoReader protoio.Reader,
 ) (snapshottypes.SnapshotItem, error) {
-	panic("not implemented")
-}
-
-func (ms multiStore) RollbackToVersion(version int64) error {
 	panic("not implemented")
 }
 

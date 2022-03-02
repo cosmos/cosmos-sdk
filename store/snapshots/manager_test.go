@@ -68,15 +68,10 @@ func TestManager_Take(t *testing.T) {
 		{7, 8, 9},
 	}
 	snapshotter := &mockSnapshotter{
-		items:         items,
-		prunedHeights: make(map[int64]struct{}),
+		items: items,
 	}
-	extSnapshotter := newExtSnapshotter(10)
-
-	expectChunks := snapshotItems(items, extSnapshotter)
-	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
-	err := manager.RegisterExtensions(extSnapshotter)
-	require.NoError(t, err)
+	expectChunks := snapshotItems(items)
+	manager := snapshots.NewManager(store, snapshotter)
 
 	// nil manager should return error
 	_, err = (*snapshots.Manager)(nil).Create(1)
@@ -98,7 +93,7 @@ func TestManager_Take(t *testing.T) {
 		Height: 5,
 		Format: snapshotter.SnapshotFormat(),
 		Chunks: 1,
-		Hash:   []uint8{0xc5, 0xf7, 0xfe, 0xea, 0xd3, 0x4d, 0x3e, 0x87, 0xff, 0x41, 0xa2, 0x27, 0xfa, 0xcb, 0x38, 0x17, 0xa, 0x5, 0xeb, 0x27, 0x4e, 0x16, 0x5e, 0xf3, 0xb2, 0x8b, 0x47, 0xd1, 0xe6, 0x94, 0x7e, 0x8b},
+		Hash:   []uint8{0xcd, 0x17, 0x9e, 0x7f, 0x28, 0xb6, 0x82, 0x90, 0xc7, 0x25, 0xf3, 0x42, 0xac, 0x65, 0x73, 0x50, 0xaa, 0xa0, 0x10, 0x5c, 0x40, 0x8c, 0xd5, 0x1, 0xed, 0x82, 0xb5, 0xca, 0x8b, 0xe0, 0x83, 0xa2},
 		Metadata: types.Metadata{
 			ChunkHashes: checksums(expectChunks),
 		},
@@ -151,7 +146,7 @@ func TestManager_Restore(t *testing.T) {
 		{7, 8, 9},
 	}
 
-	chunks := snapshotItems(expectItems, newExtSnapshotter(10))
+	chunks := snapshotItems(expectItems)
 
 	// Restore errors on invalid format
 	err = manager.Restore(types.Snapshot{
@@ -214,14 +209,6 @@ func TestManager_Restore(t *testing.T) {
 	}
 
 	assert.Equal(t, expectItems, target.items)
-	assert.Equal(t, 10, len(extSnapshotter.state))
-
-	// The snapshot is saved in local snapshot store
-	snapshots, err := store.List()
-	require.NoError(t, err)
-	snapshot := snapshots[0]
-	require.Equal(t, uint64(3), snapshot.Height)
-	require.Equal(t, types.CurrentFormat, snapshot.Format)
 
 	// Starting a new restore should fail now, because the target already has contents.
 	err = manager.Restore(types.Snapshot{

@@ -1,8 +1,7 @@
 package rootmulti
 
 import (
-	"crypto/sha256"
-	"errors"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"math"
@@ -14,23 +13,22 @@ import (
 	protoio "github.com/cosmos/gogoproto/io"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	iavltree "github.com/cosmos/iavl"
+	protoio "github.com/gogo/protobuf/io"
+	gogotypes "github.com/gogo/protobuf/types"
+	"github.com/pkg/errors"
+	abci "github.com/tendermint/tendermint/abci/types"
+	dbm "github.com/tendermint/tm-db"
 
-	corestore "cosmossdk.io/core/store"
-	coretesting "cosmossdk.io/core/testing"
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/store/cachemulti"
-	dbm "cosmossdk.io/store/db"
-	"cosmossdk.io/store/dbadapter"
-	"cosmossdk.io/store/iavl"
-	"cosmossdk.io/store/listenkv"
-	"cosmossdk.io/store/mem"
-	"cosmossdk.io/store/metrics"
-	"cosmossdk.io/store/pruning"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	"cosmossdk.io/store/tracekv"
-	"cosmossdk.io/store/transient"
-	"cosmossdk.io/store/types"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/store/cachemulti"
+	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/iavl"
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
+	"github.com/cosmos/cosmos-sdk/store/mem"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/transient"
+	"github.com/cosmos/cosmos-sdk/store/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -161,9 +159,9 @@ func (rs *Store) GetCommitKVStore(key types.StoreKey) types.CommitKVStore {
 	return rs.stores[key]
 }
 
-// StoreKeysByName returns mapping storeNames -> StoreKeys
-func (rs *Store) StoreKeysByName() map[string]types.StoreKey {
-	return rs.keysByName
+// GetStores returns mounted stores
+func (rs *Store) GetStores() map[types.StoreKey]types.CommitKVStore {
+	return rs.stores
 }
 
 // LoadLatestVersionAndUpgrade implements CommitMultiStore
@@ -697,47 +695,6 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 	return store
 }
 
-func (rs *Store) handlePruning(version int64) error {
-	pruneHeight := rs.pruningManager.GetPruningHeight(version)
-	rs.logger.Debug("prune start", "height", version)
-	defer rs.logger.Debug("prune end", "height", version)
-	return rs.PruneStores(pruneHeight)
-}
-
-// PruneStores prunes all history up to the specific height of the multi store.
-func (rs *Store) PruneStores(pruningHeight int64) (err error) {
-	if pruningHeight <= 0 {
-		rs.logger.Debug("pruning skipped, height is less than or equal to 0")
-		return nil
-	}
-
-	rs.logger.Debug("pruning store", "heights", pruningHeight)
-
-	for key, store := range rs.stores {
-		rs.logger.Debug("pruning store", "key", key) // Also log store.name (a private variable)?
-
-		// If the store is wrapped with an inter-block cache, we must first unwrap
-		// it to get the underlying IAVL store.
-		if store.GetStoreType() != types.StoreTypeIAVL {
-			continue
-		}
-
-		store = rs.GetCommitKVStore(key)
-
-		err := store.(*iavl.Store).DeleteVersionsTo(pruningHeight)
-		if err == nil {
-			continue
-		}
-
-		if errors.Is(err, iavltree.ErrVersionDoesNotExist) {
-			return err
-		}
-
-		rs.logger.Error("failed to prune store", "key", key, "err", err)
-	}
-	return nil
-}
-
 // GetStoreByName performs a lookup of a StoreKey given a store name typically
 // provided in a path. The StoreKey is then used to perform a lookup and return
 // a Store. If the Store is wrapped in an inter-block cache, it will be unwrapped
@@ -849,10 +806,10 @@ func parsePath(path string) (storeName, subpath string, err error) {
 // TestMultistoreSnapshot_Checksum test.
 func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	if height == 0 {
-		return errorsmod.Wrap(types.ErrLogic, "cannot snapshot height 0")
+		return sdkerrors.Wrap(sdkerrors.ErrLogic, "cannot snapshot height 0")
 	}
-	if height > uint64(GetLatestVersion(rs.db)) {
-		return errorsmod.Wrapf(types.ErrLogic, "cannot snapshot future height %v", height)
+	if height > uint64(rs.LastCommitID().Version) {
+		return sdkerrors.Wrapf(sdkerrors.ErrLogic, "cannot snapshot future height %v", height)
 	}
 
 	// Collect stores to snapshot (only IAVL stores are supported)
@@ -870,7 +827,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 			// Non-persisted stores shouldn't be snapshotted
 			continue
 		default:
-			return errorsmod.Wrapf(types.ErrLogic,
+			return sdkerrors.Wrapf(sdkerrors.ErrLogic,
 				"don't know how to snapshot store %q of type %T", key.Name(), store)
 		}
 	}
@@ -883,58 +840,44 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	// and the following messages contain a SnapshotNode (i.e. an ExportNode). Store changes
 	// are demarcated by new SnapshotStore items.
 	for _, store := range stores {
-		rs.logger.Debug("starting snapshot", "store", store.name, "height", height)
 		exporter, err := store.Export(int64(height))
 		if err != nil {
-			rs.logger.Error("snapshot failed; exporter error", "store", store.name, "err", err)
+			return err
+		}
+		defer exporter.Close()
+		err = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
+			Item: &snapshottypes.SnapshotItem_Store{
+				Store: &snapshottypes.SnapshotStoreItem{
+					Name: store.name,
+				},
+			},
+		})
+		if err != nil {
 			return err
 		}
 
-		err = func() error {
-			defer exporter.Close()
-
-			err := protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
-				Item: &snapshottypes.SnapshotItem_Store{
-					Store: &snapshottypes.SnapshotStoreItem{
-						Name: store.name,
+		for {
+			node, err := exporter.Next()
+			if err == iavltree.ExportDone {
+				break
+			} else if err != nil {
+				return err
+			}
+			err = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
+				Item: &snapshottypes.SnapshotItem_IAVL{
+					IAVL: &snapshottypes.SnapshotIAVLItem{
+						Key:     node.Key,
+						Value:   node.Value,
+						Height:  int32(node.Height),
+						Version: node.Version,
 					},
 				},
 			})
 			if err != nil {
-				rs.logger.Error("snapshot failed; item store write failed", "store", store.name, "err", err)
 				return err
 			}
-
-			nodeCount := 0
-			for {
-				node, err := exporter.Next()
-				if errors.Is(err, iavltree.ErrorExportDone) {
-					rs.logger.Debug("snapshot Done", "store", store.name, "nodeCount", nodeCount)
-					break
-				} else if err != nil {
-					return err
-				}
-				err = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
-					Item: &snapshottypes.SnapshotItem_IAVL{
-						IAVL: &snapshottypes.SnapshotIAVLItem{
-							Key:     node.Key,
-							Value:   node.Value,
-							Height:  int32(node.Height),
-							Version: node.Version,
-						},
-					},
-				})
-				if err != nil {
-					return err
-				}
-				nodeCount++
-			}
-
-			return nil
-		}()
-		if err != nil {
-			return err
 		}
+		exporter.Close()
 	}
 
 	return nil
@@ -954,10 +897,10 @@ loop:
 	for {
 		snapshotItem = snapshottypes.SnapshotItem{}
 		err := protoReader.ReadMsg(&snapshotItem)
-		if errors.Is(err, io.EOF) {
+		if err == io.EOF {
 			break
 		} else if err != nil {
-			return snapshottypes.SnapshotItem{}, errorsmod.Wrap(err, "invalid protobuf message")
+			return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "invalid protobuf message")
 		}
 
 		switch item := snapshotItem.Item.(type) {
@@ -965,17 +908,17 @@ loop:
 			if importer != nil {
 				err = importer.Commit()
 				if err != nil {
-					return snapshottypes.SnapshotItem{}, errorsmod.Wrap(err, "IAVL commit failed")
+					return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "IAVL commit failed")
 				}
 				importer.Close()
 			}
 			store, ok := rs.GetStoreByName(item.Store.Name).(*iavl.Store)
 			if !ok || store == nil {
-				return snapshottypes.SnapshotItem{}, errorsmod.Wrapf(types.ErrLogic, "cannot import into non-IAVL store %q", item.Store.Name)
+				return snapshottypes.SnapshotItem{}, sdkerrors.Wrapf(sdkerrors.ErrLogic, "cannot import into non-IAVL store %q", item.Store.Name)
 			}
 			importer, err = store.Import(int64(height))
 			if err != nil {
-				return snapshottypes.SnapshotItem{}, errorsmod.Wrap(err, "import failed")
+				return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "import failed")
 			}
 			defer importer.Close()
 			// Importer height must reflect the node height (which usually matches the block height, but not always)
@@ -983,11 +926,10 @@ loop:
 
 		case *snapshottypes.SnapshotItem_IAVL:
 			if importer == nil {
-				rs.logger.Error("failed to restore; received IAVL node item before store item")
-				return snapshottypes.SnapshotItem{}, errorsmod.Wrap(types.ErrLogic, "received IAVL node item before store item")
+				return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(sdkerrors.ErrLogic, "received IAVL node item before store item")
 			}
 			if item.IAVL.Height > math.MaxInt8 {
-				return snapshottypes.SnapshotItem{}, errorsmod.Wrapf(types.ErrLogic, "node height %v cannot exceed %v",
+				return snapshottypes.SnapshotItem{}, sdkerrors.Wrapf(sdkerrors.ErrLogic, "node height %v cannot exceed %v",
 					item.IAVL.Height, math.MaxInt8)
 			}
 			node := &iavltree.ExportNode{
@@ -1006,7 +948,7 @@ loop:
 			}
 			err := importer.Add(node)
 			if err != nil {
-				return snapshottypes.SnapshotItem{}, errorsmod.Wrap(err, "IAVL node import failed")
+				return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "IAVL node import failed")
 			}
 
 		default:
@@ -1017,12 +959,12 @@ loop:
 	if importer != nil {
 		err := importer.Commit()
 		if err != nil {
-			return snapshottypes.SnapshotItem{}, errorsmod.Wrap(err, "IAVL commit failed")
+			return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "IAVL commit failed")
 		}
 		importer.Close()
 	}
 
-	rs.flushMetadata(rs.db, int64(height), rs.buildCommitInfo(int64(height)))
+	flushMetadata(rs.db, int64(height), rs.buildCommitInfo(int64(height)), []int64{})
 	return snapshotItem, rs.LoadLatestVersion()
 }
 

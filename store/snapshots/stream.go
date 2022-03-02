@@ -5,10 +5,10 @@ import (
 	"compress/zlib"
 	"io"
 
-	protoio "github.com/cosmos/gogoproto/io"
-	"github.com/cosmos/gogoproto/proto"
+	protoio "github.com/gogo/protobuf/io"
+	"github.com/gogo/protobuf/proto"
 
-	"cosmossdk.io/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -34,7 +34,7 @@ func NewStreamWriter(ch chan<- io.ReadCloser) *StreamWriter {
 	bufWriter := bufio.NewWriterSize(chunkWriter, snapshotBufferSize)
 	zWriter, err := zlib.NewWriterLevel(bufWriter, snapshotCompressionLevel)
 	if err != nil {
-		chunkWriter.CloseWithError(errors.Wrap(err, "zlib failure"))
+		chunkWriter.CloseWithError(sdkerrors.Wrap(err, "zlib failure"))
 		return nil
 	}
 	protoWriter := protoio.NewDelimitedWriter(zWriter)
@@ -54,6 +54,10 @@ func (sw *StreamWriter) WriteMsg(msg proto.Message) error {
 // Close implements io.Closer interface
 func (sw *StreamWriter) Close() error {
 	if err := sw.protoWriter.Close(); err != nil {
+		sw.chunkWriter.CloseWithError(err)
+		return err
+	}
+	if err := sw.zWriter.Close(); err != nil {
 		sw.chunkWriter.CloseWithError(err)
 		return err
 	}
@@ -82,7 +86,7 @@ func NewStreamReader(chunks <-chan io.ReadCloser) (*StreamReader, error) {
 	chunkReader := NewChunkReader(chunks)
 	zReader, err := zlib.NewReader(chunkReader)
 	if err != nil {
-		return nil, errors.Wrap(err, "zlib failure")
+		return nil, sdkerrors.Wrap(err, "zlib failure")
 	}
 	protoReader := protoio.NewDelimitedReader(zReader, snapshotMaxItemSize)
 	return &StreamReader{
@@ -99,15 +103,7 @@ func (sr *StreamReader) ReadMsg(msg proto.Message) error {
 
 // Close implements io.Closer interface
 func (sr *StreamReader) Close() error {
-	var err error
-	if err1 := sr.protoReader.Close(); err1 != nil {
-		err = err1
-	}
-	if err2 := sr.zReader.Close(); err2 != nil {
-		err = err2
-	}
-	if err3 := sr.chunkReader.Close(); err3 != nil {
-		err = err3
-	}
-	return err
+	sr.protoReader.Close()
+	sr.zReader.Close()
+	return sr.chunkReader.Close()
 }

@@ -82,7 +82,7 @@ func (k Keeper) GetNFT(ctx sdk.Context, classID, nftID string) (nft.NFT, bool) {
 	store := k.getNFTStore(ctx, classID)
 	bz := store.Get([]byte(nftID))
 	if len(bz) == 0 {
-		return nft.NFT{}, false
+		return nft.NFT{}, false // nolint: exhaustivestruct
 	}
 	var nft nft.NFT
 	k.cdc.MustUnmarshal(bz, &nft)

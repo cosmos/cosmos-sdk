@@ -12,7 +12,7 @@ func (k Keeper) GetHistoricalInfo(ctx sdk.Context, height int64) (types.Historic
 
 	value := store.Get(key)
 	if value == nil {
-		return types.HistoricalInfo{}, false
+		return types.HistoricalInfo{}, false // nolint: exhaustivestruct
 	}
 
 	return types.MustUnmarshalHistoricalInfo(k.cdc, value), true

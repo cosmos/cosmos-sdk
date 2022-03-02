@@ -256,7 +256,7 @@ func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) (types.Metad
 
 	bz := store.Get(conv.UnsafeStrToBytes(denom))
 	if bz == nil {
-		return types.Metadata{}, false
+		return types.Metadata{}, false // nolint: exhaustivestruct
 	}
 
 	var metadata types.Metadata

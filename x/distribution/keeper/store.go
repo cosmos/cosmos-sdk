@@ -316,7 +316,7 @@ func (k Keeper) GetValidatorSlashEvent(ctx sdk.Context, val sdk.ValAddress, heig
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(types.GetValidatorSlashEventKey(val, height, period))
 	if b == nil {
-		return types.ValidatorSlashEvent{}, false
+		return types.ValidatorSlashEvent{}, false // nolint: exhaustivestruct
 	}
 	k.cdc.MustUnmarshal(b, &event)
 	return event, true

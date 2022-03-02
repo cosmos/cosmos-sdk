@@ -60,7 +60,7 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 func RandomValidator(r *rand.Rand, keeper Keeper, ctx sdk.Context) (val types.Validator, ok bool) {
 	vals := keeper.GetAllValidators(ctx)
 	if len(vals) == 0 {
-		return types.Validator{}, false
+		return types.Validator{}, false // nolint: exhaustivestruct
 	}
 
 	i := r.Intn(len(vals))

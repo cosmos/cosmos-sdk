@@ -98,7 +98,7 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (v1.Proposa
 
 	bz := store.Get(types.ProposalKey(proposalID))
 	if bz == nil {
-		return v1.Proposal{}, false
+		return v1.Proposal{}, false // nolint: exhaustivestruct
 	}
 
 	var proposal v1.Proposal

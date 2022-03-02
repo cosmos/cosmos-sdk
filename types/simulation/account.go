@@ -60,7 +60,7 @@ func FindAccount(accs []Account, address sdk.Address) (Account, bool) {
 		}
 	}
 
-	return Account{}, false
+	return Account{}, false // nolint: exhaustivestruct
 }
 
 // RandomFees returns a random fee by selecting a random coin denomination and

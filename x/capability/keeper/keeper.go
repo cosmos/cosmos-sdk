@@ -186,7 +186,7 @@ func (k Keeper) GetOwners(ctx sdk.Context, index uint64) (types.CapabilityOwners
 	// get owners for index from persistent store
 	ownerBytes := prefixStore.Get(indexKey)
 	if ownerBytes == nil {
-		return types.CapabilityOwners{}, false
+		return types.CapabilityOwners{}, false // nolint: exhaustivestruct
 	}
 	var owners types.CapabilityOwners
 	k.cdc.MustUnmarshal(ownerBytes, &owners)

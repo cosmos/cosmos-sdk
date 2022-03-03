@@ -271,7 +271,7 @@ func (k Keeper) IterateVPEndProposals(ctx sdk.Context, cb func(proposal group.Pr
 func (k Keeper) UpdateTallyOfVPEndProposals(ctx sdk.Context) error {
 	k.IterateVPEndProposals(ctx, func(proposal group.Proposal) (stop bool) {
 
-		policyInfo, err := k.GetGroupPolicyInfo(ctx, proposal.Address)
+		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.Address)
 		if err != nil {
 			return true
 		}

@@ -439,7 +439,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		return nil, err
 	}
 
-	policyAcc, err := k.GetGroupPolicyInfo(ctx, req.Address)
+	policyAcc, err := k.getGroupPolicyInfo(ctx, req.Address)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "load group policy")
 	}
@@ -547,7 +547,7 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawPr
 	}
 
 	var policyInfo group.GroupPolicyInfo
-	if policyInfo, err = k.GetGroupPolicyInfo(ctx, proposal.Address); err != nil {
+	if policyInfo, err = k.getGroupPolicyInfo(ctx, proposal.Address); err != nil {
 		return nil, sdkerrors.Wrap(err, "load group policy")
 	}
 
@@ -618,7 +618,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 	var policyInfo group.GroupPolicyInfo
 
 	// Ensure that group policy hasn't been modified since the proposal submission.
-	if policyInfo, err = k.GetGroupPolicyInfo(ctx, proposal.Address); err != nil {
+	if policyInfo, err = k.getGroupPolicyInfo(ctx, proposal.Address); err != nil {
 		return nil, sdkerrors.Wrap(err, "load group policy")
 	}
 	if proposal.GroupPolicyVersion != policyInfo.Version {
@@ -722,7 +722,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 	}
 
 	var policyInfo group.GroupPolicyInfo
-	if policyInfo, err = k.GetGroupPolicyInfo(ctx, proposal.Address); err != nil {
+	if policyInfo, err = k.getGroupPolicyInfo(ctx, proposal.Address); err != nil {
 		return nil, sdkerrors.Wrap(err, "load group policy")
 	}
 
@@ -804,7 +804,7 @@ type groupPolicyActionFn func(m *group.GroupPolicyInfo) error
 // doUpdateGroupPolicy first makes sure that the group policy admin initiated the group policy update,
 // before performing the group policy update and emitting an event.
 func (k Keeper) doUpdateGroupPolicy(ctx sdk.Context, groupPolicy string, admin string, action groupPolicyActionFn, note string) error {
-	groupPolicyInfo, err := k.GetGroupPolicyInfo(ctx, groupPolicy)
+	groupPolicyInfo, err := k.getGroupPolicyInfo(ctx, groupPolicy)
 	if err != nil {
 		return sdkerrors.Wrap(err, "load group policy")
 	}

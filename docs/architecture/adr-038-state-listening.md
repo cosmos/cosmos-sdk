@@ -224,6 +224,9 @@ type ABCIListener interface {
 	ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
 	// HaltAppOnDeliveryError whether or not to halt the application when delivery of massages fails
 	// in ListenBeginBlock, ListenEndBlock, ListenDeliverTx. Setting this to `false` will give fire-and-forget semantics.
+	// When `true`, the app will gracefully halt and stop the running node. Uncommitted blocks will
+	// be replayed to all listeners when the node restarts and all successful listeners that received data
+	// prior to the halt will receive duplicate data.
 	HaltAppOnDeliveryError() bool
 }
 
@@ -265,15 +268,32 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	...
 
-	// Call the streaming service hooks with the BeginBlock messages
-	for _, listener := range app.abciListeners {
-		if err := listener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
-			app.logger.Error("ListenBeginBlock listening hook failed", "err", err)
-			if listener.HaltAppOnDeliveryError() {
-				app.halt()
-			}
+	// call the hooks with the BeginBlock messages
+	wg := new(sync.WaitGroup)
+	for _, streamingListener := range app.abciListeners {
+		streamingListener := streamingListener // https://go.dev/doc/faq#closures_and_goroutines
+		if streamingListener.HaltAppOnDeliveryError() {
+			// increment the wait group counter
+			wg.Add(1)
+			go func() {
+				// decrement the counter when the go routine completes
+				defer wg.Done()
+				if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
+					app.logger.Error("BeginBlock listening hook failed", "height", req.Header.Height, "err", err)
+					app.halt()
+				}
+			}()
+		} else {
+			// fire and forget semantics
+			go func() {
+				if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
+					app.logger.Error("BeginBlock listening hook failed", "height", req.Header.Height, "err", err)
+				}
+			}()
 		}
 	}
+	// wait for all the listener calls to finish
+	wg.Wait()
 
 	return res
 }
@@ -285,14 +305,31 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	...
 
 	// Call the streaming service hooks with the EndBlock messages
-	for _, listener := range app.abciListeners {
-		if err := listener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
-			app.logger.Error("ListenEndBlock listening hook failed", "err", err)
-			if listener.HaltAppOnDeliveryError() {
-				app.halt()
-			}
+	wg := new(sync.WaitGroup)
+	for _, streamingListener := range app.abciListeners {
+		streamingListener := streamingListener // https://go.dev/doc/faq#closures_and_goroutines
+		if streamingListener.HaltAppOnDeliveryError() {
+			// increment the wait group counter
+			wg.Add(1)
+			go func() {
+				// decrement the counter when the go routine completes
+				defer wg.Done()
+				if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
+					app.logger.Error("EndBlock listening hook failed", "height", req.Height, "err", err)
+					app.halt()
+				}
+			}()
+		} else {
+			// fire and forget semantics
+			go func() {
+				if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
+					app.logger.Error("EndBlock listening hook failed", "height", req.Height, "err", err)
+				}
+			}()
 		}
 	}
+	// wait for all the listener calls to finish
+	wg.Wait()
 
 	return res
 }
@@ -303,14 +340,32 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 	
 	var abciRes abci.ResponseDeliverTx
 	defer func() {
+		// call the hooks with the BeginBlock messages
+		wg := new(sync.WaitGroup)
 		for _, streamingListener := range app.abciListeners {
-			if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, abciRes); err != nil {
-				app.logger.Error("DeliverTx listening hook failed", "err", err)
-				if streamingListener.HaltAppOnDeliveryError() {
-					app.halt()
-				}
+			streamingListener := streamingListener // https://go.dev/doc/faq#closures_and_goroutines
+			if streamingListener.HaltAppOnDeliveryError() {
+				// increment the wait group counter
+				wg.Add(1)
+				go func() {
+					// decrement the counter when the go routine completes
+					defer wg.Done()
+					if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, abciRes); err != nil {
+						app.logger.Error("DeliverTx listening hook failed", "err", err)
+						app.halt()
+					}
+				}()
+			} else {
+				// fire and forget semantics
+				go func() {
+					if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, abciRes); err != nil {
+						app.logger.Error("DeliverTx listening hook failed", "err", err)
+					}
+				}()
 			}
 		}
+		// wait for all the listener calls to finish
+		wg.Wait()
 	}()
 	
 	...

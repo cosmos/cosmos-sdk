@@ -77,7 +77,7 @@ func addDatePtr(t *time.Time, months, days int) *time.Time {
 func TestMsgGrantAuthorization(t *testing.T) {
 	now := time.Now()
 	tests := []struct {
-		title            string
+		name             string
 		granter, grantee sdk.AccAddress
 		authorization    authz.Authorization
 		expiration       *time.Time
@@ -96,23 +96,24 @@ func TestMsgGrantAuthorization(t *testing.T) {
 			granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, addDatePtr(&now, 1, 0), false, true},
 		{"valid test case with nil expire time",
 			granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, nil, false, true},
-		{"past expire time should fail",
-			granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, addDatePtr(&now, 0, -1), true, true},
+		// we don't access the block time / nor time.Now, so we don't know if it's in the past at this level.
+		{"past expire time should not fail",
+			granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, addDatePtr(&now, 0, -1), false, true},
 	}
-	for i, tc := range tests {
+	for _, tc := range tests {
 		msg, err := authz.NewMsgGrant(
 			tc.granter, tc.grantee, tc.authorization, tc.expiration,
 		)
 		if !tc.expectErr {
-			require.NoError(t, err)
+			require.NoError(t, err, "test: %v", tc.name)
 		} else {
-			require.Error(t, err)
+			require.Error(t, err, "test: %v", tc.name)
 			continue
 		}
 		if tc.valBasic {
-			require.NoError(t, msg.ValidateBasic(), "test: %v", i)
+			require.NoError(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {
-			require.Error(t, msg.ValidateBasic(), "test: %v", i)
+			require.Error(t, msg.ValidateBasic(), "test: %v", tc.name)
 		}
 	}
 }

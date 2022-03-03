@@ -2141,6 +2141,68 @@ func (s *TestSuite) TestVote() {
 			spec.postRun(sdkCtx)
 		})
 	}
+
+	s.T().Log("test tally result should not take into account the member who left the group")
+	require := s.Require()
+	members = []group.Member{
+		{Address: addr2.String(), Weight: "3", AddedAt: s.blockTime},
+		{Address: addr3.String(), Weight: "2", AddedAt: s.blockTime},
+		{Address: addr4.String(), Weight: "1", AddedAt: s.blockTime},
+	}
+	reqCreate := &group.MsgCreateGroupWithPolicy{
+		Admin:         addr1.String(),
+		Members:       members,
+		GroupMetadata: "metadata",
+	}
+
+	policy = group.NewThresholdDecisionPolicy(
+		"4",
+		time.Duration(10),
+		0,
+	)
+	require.NoError(reqCreate.SetDecisionPolicy(policy))
+	result, err := s.keeper.CreateGroupWithPolicy(s.ctx, reqCreate)
+	require.NoError(err)
+	require.NotNil(result)
+
+	policyAddr := result.GroupPolicyAddress
+	groupID := result.GroupId
+	reqProposal := &group.MsgSubmitProposal{
+		Address:   policyAddr,
+		Proposers: []string{addr4.String()},
+	}
+	require.NoError(reqProposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
+		FromAddress: policyAddr,
+		ToAddress:   addr5.String(),
+		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+	}}))
+
+	resSubmitProposal, err := s.keeper.SubmitProposal(s.ctx, reqProposal)
+	require.NoError(err)
+	require.NotNil(resSubmitProposal)
+	proposalID := resSubmitProposal.ProposalId
+
+	for _, voter := range []string{addr4.String(), addr3.String(), addr2.String()} {
+		_, err := s.keeper.Vote(s.ctx,
+			&group.MsgVote{ProposalId: proposalID, Voter: voter, Option: group.VOTE_OPTION_YES},
+		)
+		require.NoError(err)
+	}
+
+	qProposals, err := s.keeper.Proposal(s.ctx, &group.QueryProposalRequest{
+		ProposalId: proposalID,
+	})
+	require.NoError(err)
+
+	tallyResult, err := s.keeper.Tally(s.sdkCtx, *qProposals.Proposal, groupID)
+	require.NoError(err)
+
+	_, err = s.keeper.LeaveGroup(s.ctx, &group.MsgLeaveGroup{Address: addr4.String(), GroupId: groupID})
+	require.NoError(err)
+
+	tallyResult1, err := s.keeper.Tally(s.sdkCtx, *qProposals.Proposal, groupID)
+	require.NoError(err)
+	require.NotEqual(tallyResult.String(), tallyResult1.String())
 }
 
 func (s *TestSuite) TestExecProposal() {
@@ -2434,6 +2496,7 @@ func (s *TestSuite) TestLeaveGroup() {
 	policy := group.NewThresholdDecisionPolicy(
 		"3",
 		time.Hour,
+		time.Hour,
 	)
 	require.NoError(groupPolicy.SetDecisionPolicy(policy))
 	require.NoError(err)
@@ -2449,7 +2512,7 @@ func (s *TestSuite) TestLeaveGroup() {
 	}
 	pPolicy := &group.PercentageDecisionPolicy{
 		Percentage: "0.5",
-		Timeout:    time.Hour,
+		Windows:    &group.DecisionPolicyWindows{VotingPeriod: time.Hour},
 	}
 	require.NoError(groupPolicy.SetDecisionPolicy(pPolicy))
 	require.NoError(err)

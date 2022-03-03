@@ -855,7 +855,7 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 			return nil, sdkerrors.ErrInvalidRequest.Wrapf("expected %T, got %T", (group.DecisionPolicy)(nil), groupPolicy.DecisionPolicy.GetCachedValue())
 		}
 
-		if err := policyI.Validate(groupInfo); err != nil {
+		if err := policyI.Validate(groupInfo, k.config); err != nil {
 			return nil, err
 		}
 	}

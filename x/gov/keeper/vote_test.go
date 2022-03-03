@@ -21,10 +21,11 @@ func TestVotes(t *testing.T) {
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, "")
 	require.NoError(t, err)
 	proposalID := proposal.Id
+	metadata := "metadata"
 
 	var invalidOption v1beta2.VoteOption = 0x10
 
-	require.Error(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), ""), "proposal not on voting period")
+	require.Error(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), metadata), "proposal not on voting period")
 	require.Error(t, app.GovKeeper.AddVote(ctx, 10, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), ""), "invalid proposal ID")
 
 	proposal.Status = v1beta2.StatusVotingPeriod
@@ -33,7 +34,7 @@ func TestVotes(t *testing.T) {
 	require.Error(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], v1beta2.NewNonSplitVoteOption(invalidOption), ""), "invalid option")
 
 	// Test first vote
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionAbstain), ""))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionAbstain), metadata))
 	vote, found := app.GovKeeper.GetVote(ctx, proposalID, addrs[0])
 	require.True(t, found)
 	require.Equal(t, addrs[0].String(), vote.Voter)

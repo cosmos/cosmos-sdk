@@ -18,8 +18,9 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 	if proposal.Status != v1beta2.StatusVotingPeriod {
 		return sdkerrors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
 	}
-	if metadata != "" && uint64(len(metadata)) > keeper.config.MaxMetadataLen {
-		return types.ErrMetadataTooLong.Wrapf("got metadata with length %d", len(metadata))
+	err := keeper.assertMetadataLength(metadata)
+	if err != nil {
+		return err
 	}
 
 	for _, option := range options {

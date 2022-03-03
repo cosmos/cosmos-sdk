@@ -3,7 +3,6 @@ package prefix
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
@@ -90,23 +89,16 @@ func (s Store) Delete(key []byte) {
 // Implements KVStore
 // Check https://github.com/tendermint/tendermint/blob/master/libs/db/prefix_db.go#L106
 func (s Store) Iterator(start, end []byte) types.Iterator {
-	fmt.Printf("prefix\n")
-
 	newstart := cloneAppend(s.prefix, start)
-	fmt.Printf("STORE newstart %v\n", newstart)
+
 	var newend []byte
 	if end == nil {
-		fmt.Printf("STORE end nil\n")
-
 		newend = cpIncr(s.prefix)
 	} else {
-		fmt.Printf("STORE end not nil\n")
-
 		newend = cloneAppend(s.prefix, end)
 	}
 
 	iter := s.parent.Iterator(newstart, newend)
-	fmt.Printf("STORE iter %v\n", iter)
 
 	return newPrefixIterator(s.prefix, start, end, iter)
 }

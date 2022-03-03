@@ -203,8 +203,6 @@ func (st *Store) DeleteVersions(versions ...int64) error {
 
 // Implements types.KVStore.
 func (st *Store) Iterator(start, end []byte) types.Iterator {
-	fmt.Printf("IAVL")
-
 	var iTree *iavl.ImmutableTree
 
 	switch tree := st.tree.(type) {

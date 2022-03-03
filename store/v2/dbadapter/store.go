@@ -1,7 +1,6 @@
 package dbadapter
 
 import (
-	"fmt"
 	"io"
 
 	dbm "github.com/cosmos/cosmos-sdk/db"
@@ -56,8 +55,6 @@ func (dsa Store) Delete(key []byte) {
 
 // Iterator wraps the underlying DB's Iterator method panicing on error.
 func (dsa Store) Iterator(start, end []byte) types.Iterator {
-	fmt.Printf("v2 dbadapter\n")
-
 	iter, err := dsa.DB.Iterator(start, end)
 	if err != nil {
 		panic(err)

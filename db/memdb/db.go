@@ -239,7 +239,6 @@ func (tx *dbWriter) Delete(key []byte) error {
 // Iterator implements DBReader.
 // Takes out a read-lock on the database until the iterator is closed.
 func (tx *dbTxn) Iterator(start, end []byte) (db.Iterator, error) {
-	fmt.Printf("memdb\n")
 	if tx.btree == nil {
 		return nil, db.ErrTransactionClosed
 	}

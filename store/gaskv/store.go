@@ -1,7 +1,6 @@
 package gaskv
 
 import (
-	"fmt"
 	"io"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
@@ -72,7 +71,6 @@ func (gs *Store) Delete(key []byte) {
 // incurs a flat gas cost for seeking to the first key/value pair and a variable
 // gas cost based on the current value's length if the iterator is valid.
 func (gs *Store) Iterator(start, end []byte) types.Iterator {
-	fmt.Printf("GASKV")
 	return gs.iterator(start, end, true)
 }
 
@@ -101,18 +99,13 @@ func (gs *Store) CacheWrapWithListeners(_ types.StoreKey, _ []types.WriteListene
 
 func (gs *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 	var parent types.Iterator
-	fmt.Printf("GASKV iterator %v\n", ascending)
 	if ascending {
 		parent = gs.parent.Iterator(start, end)
-
 	} else {
 		parent = gs.parent.ReverseIterator(start, end)
 	}
-	fmt.Printf("GASKV iterator parent%v\n", parent)
 
 	gi := newGasIterator(gs.gasMeter, gs.gasConfig, parent)
-	fmt.Printf("GASKV iterator newGasIterator %v\n", gi)
-
 	gi.(*gasIterator).consumeSeekGas()
 
 	return gi

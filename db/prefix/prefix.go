@@ -3,8 +3,6 @@
 package prefix
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/db"
 )
 
@@ -79,8 +77,6 @@ func (pdb prefixR) Has(key []byte) (bool, error) {
 
 // Iterator implements DBReader.
 func (pdb prefixR) Iterator(start, end []byte) (db.Iterator, error) {
-	fmt.Printf("prefixR\n")
-
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, db.ErrKeyEmpty
 	}
@@ -148,8 +144,6 @@ func (pdb prefixRW) Has(key []byte) (bool, error) {
 
 // Iterator implements DBReadWriter.
 func (pdb prefixRW) Iterator(start, end []byte) (db.Iterator, error) {
-	fmt.Printf("prefixRW\n")
-
 	return NewPrefixReader(pdb.db, pdb.prefix).Iterator(start, end)
 }
 

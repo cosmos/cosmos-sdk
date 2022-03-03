@@ -1,7 +1,6 @@
 package listenkv
 
 import (
-	"fmt"
 	"io"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
@@ -55,8 +54,6 @@ func (s *Store) Has(key []byte) bool {
 // Iterator implements the KVStore interface. It delegates the Iterator call
 // the to the parent KVStore.
 func (s *Store) Iterator(start, end []byte) types.Iterator {
-	fmt.Printf("listenkv\n")
-
 	return s.iterator(start, end, true)
 }
 

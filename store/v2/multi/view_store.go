@@ -2,7 +2,6 @@ package multi
 
 import (
 	"errors"
-	"fmt"
 	"io"
 
 	dbm "github.com/cosmos/cosmos-sdk/db"
@@ -52,8 +51,6 @@ func (s *viewSubstore) Delete(key []byte) {
 
 // Iterator implements KVStore.
 func (s *viewSubstore) Iterator(start, end []byte) types.Iterator {
-	fmt.Printf("viewSubstore\n")
-
 	iter, err := s.dataBucket.Iterator(start, end)
 	if err != nil {
 		panic(err)

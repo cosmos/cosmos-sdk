@@ -2,7 +2,6 @@ package cachekv
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"sort"
 	"sync"
@@ -166,8 +165,6 @@ func (store *Store) CacheWrapWithListeners(storeKey types.StoreKey, listeners []
 
 // Iterator implements types.KVStore.
 func (store *Store) Iterator(start, end []byte) types.Iterator {
-	fmt.Printf("cachekv\n")
-
 	return store.iterator(start, end, true)
 }
 
@@ -187,13 +184,9 @@ func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 	} else {
 		parent = store.parent.ReverseIterator(start, end)
 	}
-	fmt.Printf("cachekv parent %v\n", parent)
 
 	store.dirtyItems(start, end)
-	fmt.Printf("cachekv after dirtyItems\n")
-
 	cache = newMemIterator(start, end, store.sortedCache, store.deleted, ascending)
-	fmt.Printf("cachekv after cache\n")
 
 	return newCacheMergeIterator(parent, cache, ascending)
 }
@@ -280,10 +273,7 @@ const (
 
 // Constructs a slice of dirty items, to use w/ memIterator.
 func (store *Store) dirtyItems(start, end []byte) {
-	fmt.Printf("dirtyItems \n")
 	startStr, endStr := conv.UnsafeBytesToStr(start), conv.UnsafeBytesToStr(end)
-	fmt.Printf("UnsafeBytesToStr \n")
-
 	if startStr > endStr {
 		// Nothing to do here.
 		return
@@ -304,10 +294,7 @@ func (store *Store) dirtyItems(start, end []byte) {
 				unsorted = append(unsorted, &kv.Pair{Key: []byte(key), Value: cacheValue.value})
 			}
 		}
-		fmt.Printf("BEFORE clearUnsortedCacheSubset\n")
 		store.clearUnsortedCacheSubset(unsorted, stateUnsorted)
-		fmt.Printf("RETURN 1\n")
-
 		return
 	}
 
@@ -333,13 +320,10 @@ func (store *Store) dirtyItems(start, end []byte) {
 
 	kvL := make([]*kv.Pair, 0)
 	for i := startIndex; i <= endIndex; i++ {
-		fmt.Printf("LOOP 2\n")
-
 		key := strL[i]
 		cacheValue := store.cache[key]
 		kvL = append(kvL, &kv.Pair{Key: []byte(key), Value: cacheValue.value})
 	}
-	fmt.Printf("END dirty \n")
 
 	// kvL was already sorted so pass it in as is.
 	store.clearUnsortedCacheSubset(kvL, stateAlreadySorted)
@@ -356,33 +340,21 @@ func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair, sortState sort
 			delete(store.unsortedCache, conv.UnsafeBytesToStr(kv.Key))
 		}
 	}
-	fmt.Printf("clearUnsortedCacheSubset 1 \n")
 
 	if sortState == stateUnsorted {
 		sort.Slice(unsorted, func(i, j int) bool {
 			return bytes.Compare(unsorted[i].Key, unsorted[j].Key) < 0
 		})
 	}
-	fmt.Printf("clearUnsortedCacheSubset 2 \n")
 
 	for _, item := range unsorted {
-		fmt.Printf("clearUnsortedCacheSubset loop \n")
-
 		if item.Value == nil {
 			// deleted element, tracked by store.deleted
 			// setting arbitrary value
-			fmt.Printf("clearUnsortedCacheSubset loop set 1 \n")
-
 			store.sortedCache.Set(item.Key, []byte{})
-			fmt.Printf("clearUnsortedCacheSubset loop set continue \n")
-
 			continue
 		}
-		fmt.Printf("clearUnsortedCacheSubset loop set 2 \n")
-
 		err := store.sortedCache.Set(item.Key, item.Value)
-		fmt.Printf("clearUnsortedCacheSubset loop set 3 \n")
-
 		if err != nil {
 			panic(err)
 		}

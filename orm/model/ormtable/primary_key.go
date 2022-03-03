@@ -3,6 +3,8 @@ package ormtable
 import (
 	"context"
 
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+
 	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
 
 	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
@@ -18,14 +20,13 @@ import (
 // primaryKeyIndex defines an UniqueIndex for the primary key.
 type primaryKeyIndex struct {
 	*ormkv.PrimaryKeyCodec
-	fields         fieldnames.FieldNames
-	indexers       []indexer
-	getBackend     func(context.Context) (Backend, error)
-	getReadBackend func(context.Context) (ReadBackend, error)
+	fields     fieldnames.FieldNames
+	indexers   []indexer
+	getBackend func(context.Context) (ReadBackend, error)
 }
 
 func (p primaryKeyIndex) List(ctx context.Context, prefixKey []interface{}, options ...ormlist.Option) (Iterator, error) {
-	backend, err := p.getReadBackend(ctx)
+	backend, err := p.getBackend(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +35,7 @@ func (p primaryKeyIndex) List(ctx context.Context, prefixKey []interface{}, opti
 }
 
 func (p primaryKeyIndex) ListRange(ctx context.Context, from, to []interface{}, options ...ormlist.Option) (Iterator, error) {
-	backend, err := p.getReadBackend(ctx)
+	backend, err := p.getBackend(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +46,7 @@ func (p primaryKeyIndex) ListRange(ctx context.Context, from, to []interface{}, 
 func (p primaryKeyIndex) doNotImplement() {}
 
 func (p primaryKeyIndex) Has(ctx context.Context, key ...interface{}) (found bool, err error) {
-	backend, err := p.getReadBackend(ctx)
+	backend, err := p.getBackend(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -63,7 +64,7 @@ func (p primaryKeyIndex) has(backend ReadBackend, values []protoreflect.Value) (
 }
 
 func (p primaryKeyIndex) Get(ctx context.Context, message proto.Message, values ...interface{}) (found bool, err error) {
-	backend, err := p.getReadBackend(ctx)
+	backend, err := p.getBackend(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -102,8 +103,21 @@ func (p primaryKeyIndex) DeleteRange(ctx context.Context, from, to []interface{}
 	return p.deleteByIterator(ctx, it)
 }
 
-func (p primaryKeyIndex) doDelete(ctx context.Context, primaryKeyValues []protoreflect.Value) error {
+func (p primaryKeyIndex) getWriteBackend(ctx context.Context) (Backend, error) {
 	backend, err := p.getBackend(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if writeBackend, ok := backend.(Backend); ok {
+		return writeBackend, nil
+	}
+
+	return nil, ormerrors.ReadOnly
+}
+
+func (p primaryKeyIndex) doDelete(ctx context.Context, primaryKeyValues []protoreflect.Value) error {
+	backend, err := p.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}
@@ -127,7 +141,7 @@ func (p primaryKeyIndex) doDelete(ctx context.Context, primaryKeyValues []protor
 		return nil
 	}
 
-	err = p.doDeleteWithWriteBatch(backend, writer, pk, msg)
+	err = p.doDeleteWithWriteBatch(ctx, backend, writer, pk, msg)
 	if err != nil {
 		return err
 	}
@@ -135,9 +149,9 @@ func (p primaryKeyIndex) doDelete(ctx context.Context, primaryKeyValues []protor
 	return writer.Write()
 }
 
-func (p primaryKeyIndex) doDeleteWithWriteBatch(backend Backend, writer *batchIndexCommitmentWriter, primaryKeyBz []byte, message proto.Message) error {
-	if hooks := backend.Hooks(); hooks != nil {
-		err := hooks.OnDelete(message)
+func (p primaryKeyIndex) doDeleteWithWriteBatch(ctx context.Context, backend Backend, writer *batchIndexCommitmentWriter, primaryKeyBz []byte, message proto.Message) error {
+	if hooks := backend.ValidateHooks(); hooks != nil {
+		err := hooks.ValidateDelete(ctx, message)
 		if err != nil {
 			return err
 		}
@@ -157,6 +171,12 @@ func (p primaryKeyIndex) doDeleteWithWriteBatch(backend Backend, writer *batchIn
 		if err != nil {
 			return err
 		}
+	}
+
+	if writeHooks := backend.WriteHooks(); writeHooks != nil {
+		writer.enqueueHook(func() {
+			writeHooks.OnDelete(ctx, message)
+		})
 	}
 
 	return nil
@@ -184,7 +204,7 @@ func (p primaryKeyIndex) Fields() string {
 }
 
 func (p primaryKeyIndex) deleteByIterator(ctx context.Context, it Iterator) error {
-	backend, err := p.getBackend(ctx)
+	backend, err := p.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}
@@ -209,7 +229,7 @@ func (p primaryKeyIndex) deleteByIterator(ctx context.Context, it Iterator) erro
 			return err
 		}
 
-		err = p.doDeleteWithWriteBatch(backend, writer, pkBz, msg)
+		err = p.doDeleteWithWriteBatch(ctx, backend, writer, pkBz, msg)
 		if err != nil {
 			return err
 		}

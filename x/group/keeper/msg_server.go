@@ -233,6 +233,60 @@ func (k Keeper) UpdateGroupMetadata(goCtx context.Context, req *group.MsgUpdateG
 	return &group.MsgUpdateGroupMetadataResponse{}, nil
 }
 
+func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreateGroupWithPolicy) (*group.MsgCreateGroupWithPolicyResponse, error) {
+	groupRes, err := k.CreateGroup(goCtx, &group.MsgCreateGroup{
+		Admin:    req.Admin,
+		Members:  req.Members,
+		Metadata: req.GroupMetadata,
+	})
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "group response")
+	}
+	groupId := groupRes.GroupId
+
+	var groupPolicyAddr sdk.AccAddress
+	groupPolicyRes, err := k.CreateGroupPolicy(goCtx, &group.MsgCreateGroupPolicy{
+		Admin:          req.Admin,
+		GroupId:        groupId,
+		Metadata:       req.GroupPolicyMetadata,
+		DecisionPolicy: req.DecisionPolicy,
+	})
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "group policy response")
+	}
+	policyAddr := groupPolicyRes.Address
+
+	groupPolicyAddr, err = sdk.AccAddressFromBech32(policyAddr)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "group policy address")
+	}
+	groupPolicyAddress := groupPolicyAddr.String()
+
+	if req.GroupPolicyAsAdmin {
+		updateAdminReq := &group.MsgUpdateGroupAdmin{
+			GroupId:  groupId,
+			Admin:    req.Admin,
+			NewAdmin: groupPolicyAddress,
+		}
+		_, err = k.UpdateGroupAdmin(goCtx, updateAdminReq)
+		if err != nil {
+			return nil, err
+		}
+
+		updatePolicyAddressReq := &group.MsgUpdateGroupPolicyAdmin{
+			Admin:    req.Admin,
+			Address:  groupPolicyAddress,
+			NewAdmin: groupPolicyAddress,
+		}
+		_, err = k.UpdateGroupPolicyAdmin(goCtx, updatePolicyAddressReq)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &group.MsgCreateGroupWithPolicyResponse{GroupId: groupId, GroupPolicyAddress: groupPolicyAddress}, nil
+}
+
 func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGroupPolicy) (*group.MsgCreateGroupPolicyResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	admin, err := sdk.AccAddressFromBech32(req.GetAdmin())
@@ -413,15 +467,10 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 	}
 
 	// Prevent proposal that can not succeed.
-	err = policy.Validate(g)
+	err = policy.Validate(g, k.config)
 	if err != nil {
 		return nil, err
 	}
-
-	// Define proposal timout.
-	// The voting window begins as soon as the proposal is submitted.
-	timeout := policy.GetTimeout()
-	window := timeout
 
 	m := &group.Proposal{
 		Id:                 k.proposalTable.Sequence().PeekNextVal(ctx.KVStore(k.key)),
@@ -434,14 +483,10 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 		Status:             group.PROPOSAL_STATUS_SUBMITTED,
 		ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
-		Timeout:            ctx.BlockTime().Add(window),
-		FinalTallyResult: group.TallyResult{
-			YesCount:        "0",
-			NoCount:         "0",
-			AbstainCount:    "0",
-			NoWithVetoCount: "0",
-		},
+		VotingPeriodEnd:    ctx.BlockTime().Add(policy.GetVotingPeriod()), // The voting window begins as soon as the proposal is submitted.
+		FinalTallyResult:   group.DefaultTallyResult(),
 	}
+
 	if err := m.SetMsgs(msgs); err != nil {
 		return nil, sdkerrors.Wrap(err, "create proposal")
 	}
@@ -470,6 +515,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 				return &group.MsgSubmitProposalResponse{ProposalId: id}, sdkerrors.Wrap(err, "The proposal was created but failed on vote")
 			}
 		}
+
 		// Then try to execute the proposal
 		_, err = k.Exec(sdk.WrapSDKContext(ctx), &group.MsgExec{
 			ProposalId: id,
@@ -565,15 +611,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 	if proposal.Status != group.PROPOSAL_STATUS_SUBMITTED {
 		return nil, sdkerrors.Wrap(errors.ErrInvalid, "proposal not open for voting")
 	}
-	proposalTimeout, err := gogotypes.TimestampProto(proposal.Timeout)
-	if err != nil {
-		return nil, err
-	}
-	votingPeriodEnd, err := gogotypes.TimestampFromProto(proposalTimeout)
-	if err != nil {
-		return nil, err
-	}
-	if votingPeriodEnd.Before(ctx.BlockTime()) || votingPeriodEnd.Equal(ctx.BlockTime()) {
+	if ctx.BlockTime().After(proposal.VotingPeriodEnd) {
 		return nil, sdkerrors.Wrap(errors.ErrExpired, "voting period has ended already")
 	}
 
@@ -609,23 +647,11 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 		Metadata:   metadata,
 		SubmitTime: ctx.BlockTime(),
 	}
-	if err := proposal.FinalTallyResult.Add(newVote, voter.Member.Weight); err != nil {
-		return nil, sdkerrors.Wrap(err, "add new vote")
-	}
 
 	// The ORM will return an error if the vote already exists,
 	// making sure than a voter hasn't already voted.
 	if err := k.voteTable.Create(ctx.KVStore(k.key), &newVote); err != nil {
 		return nil, sdkerrors.Wrap(err, "store vote")
-	}
-
-	// Run tally with new votes to close early.
-	if err := doTally(ctx, &proposal, electorate, policyInfo); err != nil {
-		return nil, err
-	}
-
-	if err = k.proposalTable.Update(ctx.KVStore(k.key), id, &proposal); err != nil {
-		return nil, err
 	}
 
 	err = ctx.EventManager().EmitTypedEvent(&group.EventVote{ProposalId: id})
@@ -647,8 +673,9 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 	return &group.MsgVoteResponse{}, nil
 }
 
-// doTally updates the proposal status and tally if necessary based on the group policy's decision policy.
-func doTally(ctx sdk.Context, p *group.Proposal, electorate group.GroupInfo, policyInfo group.GroupPolicyInfo) error {
+// doTallyAndUpdate performs a tally, and updates the proposal's
+// `FinalTallyResult` field only if the tally is final.
+func (k Keeper) doTallyAndUpdate(ctx sdk.Context, p *group.Proposal, electorate group.GroupInfo, policyInfo group.GroupPolicyInfo) error {
 	policy := policyInfo.GetDecisionPolicy()
 	pSubmittedAt, err := gogotypes.TimestampProto(p.SubmitTime)
 	if err != nil {
@@ -658,16 +685,25 @@ func doTally(ctx sdk.Context, p *group.Proposal, electorate group.GroupInfo, pol
 	if err != nil {
 		return err
 	}
-	switch result, err := policy.Allow(p.FinalTallyResult, electorate.TotalWeight, ctx.BlockTime().Sub(submittedAt)); {
+
+	tallyResult, err := k.Tally(ctx, *p, policyInfo.GroupId)
+	if err != nil {
+		return err
+	}
+
+	switch result, err := policy.Allow(tallyResult, electorate.TotalWeight, ctx.BlockTime().Sub(submittedAt)); {
 	case err != nil:
 		return sdkerrors.Wrap(err, "policy execution")
 	case result.Allow && result.Final:
+		p.FinalTallyResult = tallyResult
 		p.Result = group.PROPOSAL_RESULT_ACCEPTED
 		p.Status = group.PROPOSAL_STATUS_CLOSED
 	case !result.Allow && result.Final:
+		p.FinalTallyResult = tallyResult
 		p.Result = group.PROPOSAL_RESULT_REJECTED
 		p.Status = group.PROPOSAL_STATUS_CLOSED
 	}
+
 	return nil
 }
 
@@ -716,7 +752,8 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 			proposal.Status = group.PROPOSAL_STATUS_ABORTED
 			return storeUpdates()
 		}
-		if err := doTally(ctx, &proposal, electorate, policyInfo); err != nil {
+
+		if err := k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo); err != nil {
 			return nil, err
 		}
 	}
@@ -836,8 +873,8 @@ func (k Keeper) doAuthenticated(ctx sdk.Context, req authNGroupReq, action actio
 
 // assertMetadataLength returns an error if given metadata length
 // is greater than a pre-defined maxMetadataLen.
-func (k Keeper) assertMetadataLength(metadata []byte, description string) error {
-	if metadata != nil && uint64(len(metadata)) > k.config.MaxMetadataLen {
+func (k Keeper) assertMetadataLength(metadata string, description string) error {
+	if metadata != "" && uint64(len(metadata)) > k.config.MaxMetadataLen {
 		return sdkerrors.Wrapf(errors.ErrMaxLimit, description)
 	}
 	return nil

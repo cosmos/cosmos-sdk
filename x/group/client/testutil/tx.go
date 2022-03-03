@@ -36,7 +36,7 @@ type IntegrationTestSuite struct {
 	vote          *group.Vote
 }
 
-const validMetadata = "AQ=="
+const validMetadata = "metadata"
 
 func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
 	return &IntegrationTestSuite{cfg: cfg}
@@ -106,7 +106,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().Equal(uint32(0), txResp.Code, out.String())
 
-	s.group = &group.GroupInfo{Id: 1, Admin: val.Address.String(), Metadata: []byte{1}, TotalWeight: "3", Version: 1}
+	s.group = &group.GroupInfo{Id: 1, Admin: val.Address.String(), Metadata: validMetadata, TotalWeight: "3", Version: 1}
 
 	// create 5 group policies
 	for i := 0; i < 5; i++ {
@@ -120,7 +120,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 					val.Address.String(),
 					"1",
 					validMetadata,
-					fmt.Sprintf("{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"%d\", \"timeout\":\"30000s\"}", threshold),
+					fmt.Sprintf("{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"%d\", \"windows\":{\"voting_period\":\"30000s\"}}", threshold),
 				},
 				commonFlags...,
 			),
@@ -140,7 +140,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				val.Address.String(),
 				"1",
 				validMetadata,
-				fmt.Sprintf("{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"%f\", \"timeout\":\"30000s\"}", percentage),
+				fmt.Sprintf("{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"%f\", \"windows\":{\"voting_period\":\"30000s\"}}", percentage),
 			},
 			commonFlags...,
 		),
@@ -289,7 +289,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 			append(
 				[]string{
 					val.Address.String(),
-					"AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ==",
+					strings.Repeat("a", 256),
 					"",
 				},
 				commonFlags...,
@@ -541,7 +541,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMetadata() {
 				[]string{
 					val.Address.String(),
 					strconv.FormatUint(s.group.Id, 10),
-					"AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ==",
+					strings.Repeat("a", 256),
 				},
 				commonFlags...,
 			),
@@ -694,6 +694,216 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+
+	var commonFlags = []string{
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	}
+
+	validMembers := fmt.Sprintf(`{"members": [{
+		"address": "%s",
+		  "weight": "1",
+		  "metadata": "%s"
+	}]}`, val.Address.String(), validMetadata)
+	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
+
+	invalidMembersAddress := `{"members": [{
+	  "address": "",
+	  "weight": "1"
+	}]}`
+	invalidMembersAddressFile := testutil.WriteToNewTempFile(s.T(), invalidMembersAddress)
+
+	invalidMembersWeight := fmt.Sprintf(`{"members": [{
+		"address": "%s",
+		  "weight": "0"
+	}]}`, val.Address.String())
+	invalidMembersWeightFile := testutil.WriteToNewTempFile(s.T(), invalidMembersWeight)
+
+	invalidMembersMetadata := fmt.Sprintf(`{"members": [{
+		"address": "%s",
+		  "weight": "1",
+		  "metadata": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ=="
+	}]}`, val.Address.String())
+	invalidMembersMetadataFile := testutil.WriteToNewTempFile(s.T(), invalidMembersMetadata)
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		expectErrMsg string
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"correct data",
+			append(
+				[]string{
+					val.Address.String(),
+					validMetadata,
+					validMetadata,
+					validMembersFile.Name(),
+					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
+					fmt.Sprintf("--%s=%v", client.FlagGroupPolicyAsAdmin, false),
+				},
+				commonFlags...,
+			),
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"group-policy-as-admin is true",
+			append(
+				[]string{
+					val.Address.String(),
+					validMetadata,
+					validMetadata,
+					validMembersFile.Name(),
+					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
+					fmt.Sprintf("--%s=%v", client.FlagGroupPolicyAsAdmin, true),
+				},
+				commonFlags...,
+			),
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"with amino-json",
+			append(
+				[]string{
+					val.Address.String(),
+					validMetadata,
+					validMetadata,
+					validMembersFile.Name(),
+					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
+					fmt.Sprintf("--%s=%v", client.FlagGroupPolicyAsAdmin, false),
+					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+				},
+				commonFlags...,
+			),
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"group metadata too long",
+			append(
+				[]string{
+					val.Address.String(),
+					strings.Repeat("a", 256),
+					validMetadata,
+					validMembersFile.Name(),
+					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
+					fmt.Sprintf("--%s=%v", client.FlagGroupPolicyAsAdmin, false),
+				},
+				commonFlags...,
+			),
+			true,
+			"group metadata: limit exceeded",
+			nil,
+			0,
+		},
+		{
+			"group policy metadata too long",
+			append(
+				[]string{
+					val.Address.String(),
+					validMetadata,
+					strings.Repeat("a", 256),
+					validMembersFile.Name(),
+					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
+					fmt.Sprintf("--%s=%v", client.FlagGroupPolicyAsAdmin, false),
+				},
+				commonFlags...,
+			),
+			true,
+			"group policy metadata: limit exceeded",
+			nil,
+			0,
+		},
+		{
+			"invalid members address",
+			append(
+				[]string{
+					val.Address.String(),
+					validMetadata,
+					validMetadata,
+					invalidMembersAddressFile.Name(),
+					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
+					fmt.Sprintf("--%s=%v", client.FlagGroupPolicyAsAdmin, false),
+				},
+				commonFlags...,
+			),
+			true,
+			"message validation failed: address: empty address string is not allowed",
+			nil,
+			0,
+		},
+		{
+			"invalid members weight",
+			append(
+				[]string{
+					val.Address.String(),
+					validMetadata,
+					validMetadata,
+					invalidMembersWeightFile.Name(),
+					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
+					fmt.Sprintf("--%s=%v", client.FlagGroupPolicyAsAdmin, false),
+				},
+				commonFlags...,
+			),
+			true,
+			"expected a positive decimal, got 0: invalid decimal string",
+			nil,
+			0,
+		},
+		{
+			"members metadata too long",
+			append(
+				[]string{
+					val.Address.String(),
+					validMetadata,
+					validMetadata,
+					invalidMembersMetadataFile.Name(),
+					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
+					fmt.Sprintf("--%s=%v", client.FlagGroupPolicyAsAdmin, false),
+				},
+				commonFlags...,
+			),
+			true,
+			"member metadata: limit exceeded",
+			nil,
+			0,
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := client.MsgCreateGroupWithPolicyCmd()
+
+			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Contains(out.String(), tc.expectErrMsg)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 	val := s.network.Validators[0]
 	wrongAdmin := s.network.Validators[1].Address
@@ -722,7 +932,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 					val.Address.String(),
 					fmt.Sprintf("%v", groupID),
 					validMetadata,
-					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"timeout\":\"1s\"}",
+					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
 				},
 				commonFlags...,
 			),
@@ -738,7 +948,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 					val.Address.String(),
 					fmt.Sprintf("%v", groupID),
 					validMetadata,
-					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"0.5\", \"timeout\":\"1s\"}",
+					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"0.5\", \"windows\":{\"voting_period\":\"1s\"}}",
 				},
 				commonFlags...,
 			),
@@ -754,7 +964,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 					val.Address.String(),
 					fmt.Sprintf("%v", groupID),
 					validMetadata,
-					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"timeout\":\"1s\"}",
+					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
 				commonFlags...,
@@ -771,7 +981,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 					wrongAdmin.String(),
 					fmt.Sprintf("%v", groupID),
 					validMetadata,
-					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"timeout\":\"1s\"}",
+					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
 				},
 				commonFlags...,
 			),
@@ -787,7 +997,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 					val.Address.String(),
 					fmt.Sprintf("%v", groupID),
 					strings.Repeat("a", 500),
-					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"timeout\":\"1s\"}",
+					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
 				},
 				commonFlags...,
 			),
@@ -803,7 +1013,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 					val.Address.String(),
 					"10",
 					validMetadata,
-					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"timeout\":\"1s\"}",
+					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
 				},
 				commonFlags...,
 			),
@@ -819,7 +1029,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 					val.Address.String(),
 					fmt.Sprintf("%v", groupID),
 					validMetadata,
-					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"-0.5\", \"timeout\":\"1s\"}",
+					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"-0.5\", \"windows\":{\"voting_period\":\"1s\"}}",
 				},
 				commonFlags...,
 			),
@@ -835,7 +1045,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 					val.Address.String(),
 					fmt.Sprintf("%v", groupID),
 					validMetadata,
-					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"2\", \"timeout\":\"1s\"}",
+					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"2\", \"windows\":{\"voting_period\":\"1s\"}}",
 				},
 				commonFlags...,
 			),
@@ -995,7 +1205,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 				[]string{
 					groupPolicy.Admin,
 					groupPolicy.Address,
-					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"timeout\":\"40000s\"}",
+					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"40000s\"}}",
 				},
 				commonFlags...,
 			),
@@ -1010,7 +1220,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 				[]string{
 					groupPolicy.Admin,
 					groupPolicy.Address,
-					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"0.5\", \"timeout\":\"40000s\"}",
+					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"0.5\", \"windows\":{\"voting_period\":\"40000s\"}}",
 				},
 				commonFlags...,
 			),
@@ -1025,7 +1235,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 				[]string{
 					groupPolicy.Admin,
 					groupPolicy.Address,
-					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"timeout\":\"50000s\"}",
+					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"50000s\"}}",
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
 				commonFlags...,
@@ -1041,7 +1251,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 				[]string{
 					newAdmin.String(),
 					groupPolicy.Address,
-					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"timeout\":\"1s\"}",
+					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
 				},
 				commonFlags...,
 			),
@@ -1056,7 +1266,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 				[]string{
 					groupPolicy.Admin,
 					newAdmin.String(),
-					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"timeout\":\"1s\"}",
+					"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
 				},
 				commonFlags...,
 			),
@@ -1071,7 +1281,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 				[]string{
 					groupPolicy.Admin,
 					groupPolicy.Address,
-					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"-0.5\", \"timeout\":\"1s\"}",
+					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"-0.5\", \"windows\":{\"voting_period\":\"1s\"}}",
 				},
 				commonFlags...,
 			),
@@ -1086,7 +1296,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 				[]string{
 					groupPolicy.Admin,
 					groupPolicy.Address,
-					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"2\", \"timeout\":\"40000s\"}",
+					"{\"@type\":\"/cosmos.group.v1beta1.PercentageDecisionPolicy\", \"percentage\":\"2\", \"windows\":{\"voting_period\":\"40000s\"}}",
 				},
 				commonFlags...,
 			),
@@ -1915,7 +2125,7 @@ func (s *IntegrationTestSuite) createCLIProposal(groupPolicyAddress, proposer, s
 	p := client.CLIProposal{
 		GroupPolicyAddress: groupPolicyAddress,
 		Messages:           []json.RawMessage{msgJSON},
-		Metadata:           bz,
+		Metadata:           metadata,
 		Proposers:          []string{proposer},
 	}
 

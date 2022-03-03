@@ -72,12 +72,6 @@ message PrimaryKeyDescriptor {
   // auto-incrementing integer. If this is set to true fields must only
   // contain one field of that is of type uint64.
   bool auto_increment = 2;
-
-  // references specifies that this primary key references the primary key
-  // of another table. See the documentation for the SecondaryIndexDescriptor.references
-  // field for more details. An additional constraint placed on primary keys
-  // which reference another table is that those references cannot be circular.
-  string references = 3;
 }
 
 // PrimaryKeyDescriptor describes a table secondary index.
@@ -101,16 +95,6 @@ message SecondaryIndexDescriptor {
 
   // unique specifies that this an unique index.
   bool unique = 3;
-
-  // references specifies that this index references another table defined in the same
-  // proto file. Currently references are not support to tables with composite
-  // primary keys, therefore fields must reference one field and its type must
-  // be the same type as the primary key field of the referenced table.
-  // References to tables in defined by different proto files are not supported
-  // to avoid tight coupling of dependencies. Beyond validating that the reference
-  // is valid key constraints are currently not enforced, but references should
-  // be used by clients to perform automatic joins.
-  string references = 4;
 }
 
 // TableDescriptor describes an ORM singleton table which has at most one instance.

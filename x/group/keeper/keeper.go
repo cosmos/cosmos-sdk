@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authmiddleware "github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
@@ -238,4 +239,39 @@ func (k Keeper) MaxMetadataLength() uint64 { return k.config.MaxMetadataLen }
 // GetGroupSequence returns the current value of the group table sequence
 func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
 	return k.groupTable.Sequence().CurVal(ctx.KVStore(k.key))
+}
+
+func (k Keeper) UpdateProposal(ctx sdk.Context, proposal group.Proposal) error {
+	if err := k.proposalTable.Update(ctx.KVStore(k.key), proposal.Id, &proposal); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (k Keeper) IterateVPEndProposals(ctx sdk.Context, timeBytes []byte, cb func(proposal group.Proposal) (stop bool)) error {
+	it, _ := k.ProposalsByVotingPeriodEnd.Get(ctx.KVStore(k.key), sdk.PrefixEndBytes(timeBytes))
+	var proposal group.Proposal
+	defer it.Close()
+
+	for {
+		_, err := it.LoadNext(&proposal)
+		if errors.ErrORMIteratorDone.Is(err) {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		// check whether the proposal status is submitted.
+		if proposal.Status != group.PROPOSAL_STATUS_SUBMITTED {
+			continue
+		}
+
+		if cb(proposal) {
+			break
+		}
+	}
+
+	return nil
 }

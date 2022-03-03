@@ -35,7 +35,7 @@ func (q Keeper) getGroupInfo(ctx sdk.Context, id uint64) (group.GroupInfo, error
 
 func (q Keeper) GroupPolicyInfo(goCtx context.Context, request *group.QueryGroupPolicyInfoRequest) (*group.QueryGroupPolicyInfoResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	groupPolicyInfo, err := q.getGroupPolicyInfo(ctx, request.Address)
+	groupPolicyInfo, err := q.GetGroupPolicyInfo(ctx, request.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (q Keeper) GroupPolicyInfo(goCtx context.Context, request *group.QueryGroup
 	return &group.QueryGroupPolicyInfoResponse{Info: &groupPolicyInfo}, nil
 }
 
-func (q Keeper) getGroupPolicyInfo(ctx sdk.Context, accountAddress string) (group.GroupPolicyInfo, error) {
+func (q Keeper) GetGroupPolicyInfo(ctx sdk.Context, accountAddress string) (group.GroupPolicyInfo, error) {
 	var obj group.GroupPolicyInfo
 	return obj, q.groupPolicyTable.GetOne(ctx.KVStore(q.key), orm.PrimaryKey(&group.GroupPolicyInfo{Address: accountAddress}), &obj)
 }
@@ -377,7 +377,7 @@ func (q Keeper) UpdateTallyOfVPEndProposals(ctx sdk.Context) error {
 		}
 
 		var policyInfo group.GroupPolicyInfo
-		if policyInfo, err = q.getGroupPolicyInfo(ctx, proposal.Address); err != nil {
+		if policyInfo, err = q.GetGroupPolicyInfo(ctx, proposal.Address); err != nil {
 			return err
 		}
 

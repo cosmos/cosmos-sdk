@@ -288,14 +288,8 @@ $ %s tx gov vote 1 yes --from mykey
 				return err
 			}
 
-			var msg *v1beta2.MsgVote
-
 			// Build vote message and run basic validation
-			if metadata != "" {
-				msg = v1beta2.NewMsgVote(from, proposalID, byteVoteOption, metadata)
-			} else {
-				msg = v1beta2.NewMsgVote(from, proposalID, byteVoteOption, "")
-			}
+			msg := v1beta2.NewMsgVote(from, proposalID, byteVoteOption, metadata)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -349,15 +343,8 @@ $ %s tx gov weighted-vote 1 yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05 --from
 				return err
 			}
 
-			var msg *v1beta2.MsgVoteWeighted
-
 			// Build vote message and run basic validation
-			if metadata != "" {
-				msg = v1beta2.NewMsgVoteWeighted(from, proposalID, options, metadata)
-			} else {
-				msg = v1beta2.NewMsgVoteWeighted(from, proposalID, options, "")
-			}
-
+			msg := v1beta2.NewMsgVoteWeighted(from, proposalID, options, metadata)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

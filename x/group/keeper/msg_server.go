@@ -691,17 +691,22 @@ func (k Keeper) doTallyAndUpdate(ctx sdk.Context, p *group.Proposal, electorate 
 		return err
 	}
 
-	switch result, err := policy.Allow(tallyResult, electorate.TotalWeight, ctx.BlockTime().Sub(submittedAt)); {
+	result, err := policy.Allow(tallyResult, electorate.TotalWeight, ctx.BlockTime().Sub(submittedAt))
+	switch {
 	case err != nil:
 		return sdkerrors.Wrap(err, "policy execution")
-	case result.Allow && result.Final:
+	case result.Final:
+		if err := k.pruneVotes(ctx, p.Id); err != nil {
+			return err
+		}
 		p.FinalTallyResult = tallyResult
-		p.Result = group.PROPOSAL_RESULT_ACCEPTED
-		p.Status = group.PROPOSAL_STATUS_CLOSED
-	case !result.Allow && result.Final:
-		p.FinalTallyResult = tallyResult
-		p.Result = group.PROPOSAL_RESULT_REJECTED
-		p.Status = group.PROPOSAL_STATUS_CLOSED
+		if result.Allow {
+			p.Result = group.PROPOSAL_RESULT_ACCEPTED
+			p.Status = group.PROPOSAL_STATUS_CLOSED
+		} else {
+			p.Result = group.PROPOSAL_RESULT_REJECTED
+			p.Status = group.PROPOSAL_STATUS_CLOSED
+		}
 	}
 
 	return nil

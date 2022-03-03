@@ -266,12 +266,23 @@ func (k Keeper) iterateVPEndProposals(ctx sdk.Context, before time.Time, cb func
 	return nil
 }
 
-// pruneProposal deletes a proposal from state, as well as all its votes.
+// pruneProposal deletes a proposal from state.
 func (k Keeper) pruneProposal(ctx sdk.Context, p group.Proposal) error {
 	store := ctx.KVStore(k.key)
 
-	// Delete all proposal votes.
-	it, err := k.voteByProposalIndex.Get(store, p.Id)
+	err := k.proposalTable.Delete(store, p.Id)
+	if err != nil {
+		return err
+	}
+
+	k.Logger(ctx).Debug(fmt.Sprintf("Pruned proposal %d", p.Id))
+	return nil
+}
+
+// pruneVotes prunes all votes for a proposal from state.
+func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
+	store := ctx.KVStore(k.key)
+	it, err := k.voteByProposalIndex.Get(store, proposalID)
 	if err != nil {
 		return err
 	}
@@ -293,13 +304,6 @@ func (k Keeper) pruneProposal(ctx sdk.Context, p group.Proposal) error {
 		}
 	}
 
-	// Delete proposal itself.
-	err = k.proposalTable.Delete(store, p.Id)
-	if err != nil {
-		return err
-	}
-
-	k.Logger(ctx).Debug(fmt.Sprintf("Deleted proposal %d", p.Id))
 	return nil
 }
 

@@ -220,6 +220,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#11222](https://github.com/cosmos/cosmos-sdk/pull/11222) reject query with block height in the future
 * [#11229](https://github.com/cosmos/cosmos-sdk/pull/11229) Handled the error message of `transaction encountered error` from tendermint.
 * (x/authz) [\#11252](https://github.com/cosmos/cosmos-sdk/pull/11252) Allow insufficient funds error for authz simulation
+* (cli) [\#11313](https://github.com/cosmos/cosmos-sdk/pull/11313) Fixes `--gas auto` when executing CLI transactions in `--generate-only` mode
 
 ### State Machine Breaking
 

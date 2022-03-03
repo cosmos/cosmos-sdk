@@ -25,8 +25,8 @@ var _ types.MsgServer = msgServer{}
 
 // SoftwareUpgrade implements the Msg/SoftwareUpgrade Msg service.
 func (k msgServer) SoftwareUpgrade(goCtx context.Context, req *types.MsgSoftwareUpgrade) (*types.MsgSoftwareUpgradeResponse, error) {
-	if k.authority.String() != req.Authority {
-		return nil, errors.Wrapf(gov.ErrInvalidSigner, "expected %s got %s", k.authority.String(), req.Authority)
+	if k.authority != req.Authority {
+		return nil, errors.Wrapf(gov.ErrInvalidSigner, "expected %s got %s", k.authority, req.Authority)
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -40,21 +40,12 @@ func (k msgServer) SoftwareUpgrade(goCtx context.Context, req *types.MsgSoftware
 
 // CancelUpgrade implements the Msg/CancelUpgrade Msg service.
 func (k msgServer) CancelUpgrade(goCtx context.Context, req *types.MsgCancelUpgrade) (*types.MsgCancelUpgradeResponse, error) {
-	if k.authority.String() != req.Authority {
-		return nil, errors.Wrapf(gov.ErrInvalidSigner, "expected %s got %s", k.authority.String(), req.Authority)
+	if k.authority != req.Authority {
+		return nil, errors.Wrapf(gov.ErrInvalidSigner, "expected %s got %s", k.authority, req.Authority)
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	store := ctx.KVStore(k.storeKey)
-
-	// clear any old IBC state stored by previous plan
-	_, found := k.GetUpgradePlan(ctx)
-	if !found {
-		return nil, errors.Wrapf(errors.ErrNotFound, "no plan is currently scheduled")
-	}
-
-	store.Delete(types.PlanKey())
+	k.ClearUpgradePlan(ctx)
 
 	return &types.MsgCancelUpgradeResponse{}, nil
 }

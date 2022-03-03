@@ -104,7 +104,7 @@ func TestMigrateJSON(t *testing.T) {
 					}
 				}
 			],
-			"metadata": null,
+			"metadata": "",
 			"status": "PROPOSAL_STATUS_DEPOSIT_PERIOD",
 			"submit_time": "2001-09-09T01:46:40Z",
 			"total_deposit": [

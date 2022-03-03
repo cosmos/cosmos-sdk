@@ -37,7 +37,7 @@ func TestNestedAnys(t *testing.T) {
 	testProposal := v1beta1.NewTextProposal("Proposal", "testing proposal")
 	msgContent, err := v1beta2.NewLegacyContent(testProposal, "cosmos1govacct")
 	require.NoError(t, err)
-	proposal, err := v1beta2.NewProposal([]sdk.Msg{msgContent}, 1, nil, time.Now(), time.Now())
+	proposal, err := v1beta2.NewProposal([]sdk.Msg{msgContent}, 1, "", time.Now(), time.Now())
 	require.NoError(t, err)
 
 	require.Equal(t, "TODO Fix panic here", proposal.String())

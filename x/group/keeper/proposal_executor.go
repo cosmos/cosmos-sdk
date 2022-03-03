@@ -11,6 +11,16 @@ import (
 // doExecuteMsgs routes the messages to the registered handlers. Messages are limited to those that require no authZ or
 // by the account of group policy only. Otherwise this gives access to other peoples accounts as the sdk ant handler is bypassed
 func (s Keeper) doExecuteMsgs(ctx sdk.Context, router *authmiddleware.MsgServiceRouter, proposal group.Proposal, groupPolicyAcc sdk.AccAddress) ([]sdk.Result, error) {
+	// Ensure it's not too late to execute the messages.
+	// After https://github.com/cosmos/cosmos-sdk/issues/11245, proposals should
+	// be pruned automatically, so this function should not even be called, as
+	// the proposal doesn't exist in state. For sanity check, we can still keep
+	// this simple and cheap check.
+	expiryDate := proposal.VotingPeriodEnd.Add(s.config.MaxExecutionPeriod)
+	if expiryDate.Before(ctx.BlockTime()) {
+		return nil, grouperrors.ErrExpired.Wrapf("proposal expired on %s", expiryDate)
+	}
+
 	msgs := proposal.GetMsgs()
 
 	results := make([]sdk.Result, len(msgs))

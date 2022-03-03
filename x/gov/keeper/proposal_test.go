@@ -101,7 +101,7 @@ func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
 
 			if i%2 == 0 {
 				d := v1beta2.NewDeposit(proposalID, addr1, nil)
-				v := v1beta2.NewVote(proposalID, addr1, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes))
+				v := v1beta2.NewVote(proposalID, addr1, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), "")
 				suite.app.GovKeeper.SetDeposit(suite.ctx, d)
 				suite.app.GovKeeper.SetVote(suite.ctx, v)
 			}

@@ -4076,10 +4076,12 @@ type SnapshotIAVLItem struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Key     []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	Value   []byte `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
-	Version int64  `protobuf:"varint,3,opt,name=version,proto3" json:"version,omitempty"`
-	Height  int32  `protobuf:"varint,4,opt,name=height,proto3" json:"height,omitempty"`
+	Key   []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Value []byte `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	// version is block height
+	Version int64 `protobuf:"varint,3,opt,name=version,proto3" json:"version,omitempty"`
+	// height is depth of the tree.
+	Height int32 `protobuf:"varint,4,opt,name=height,proto3" json:"height,omitempty"`
 }
 
 func (x *SnapshotIAVLItem) Reset() {

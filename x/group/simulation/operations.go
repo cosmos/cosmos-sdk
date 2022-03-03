@@ -298,7 +298,9 @@ func SimulateMsgCreateGroupWithPolicy(ak group.AccountKeeper, bk group.BankKeepe
 		members := genGroupMembers(r, accounts)
 		decisionPolicy := &group.ThresholdDecisionPolicy{
 			Threshold: fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
-			Timeout:   time.Second * time.Duration(30*24*60*60),
+			Windows: &group.DecisionPolicyWindows{
+				VotingPeriod: time.Second * time.Duration(30*24*60*60),
+			},
 		}
 
 		msg := &group.MsgCreateGroupWithPolicy{
@@ -362,7 +364,9 @@ func SimulateMsgCreateGroupPolicy(ak group.AccountKeeper, bk group.BankKeeper, k
 			simtypes.RandStringOfLength(r, 10),
 			&group.ThresholdDecisionPolicy{
 				Threshold: fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
-				Timeout:   time.Second * time.Duration(30*24*60*60),
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * time.Duration(30*24*60*60),
+				},
 			},
 		)
 		if err != nil {
@@ -413,7 +417,7 @@ func SimulateMsgSubmitProposal(ak group.AccountKeeper, bk group.BankKeeper, k ke
 
 		// Return a no-op if we know the proposal cannot be created
 		policy := groupPolicy.GetDecisionPolicy()
-		err = policy.Validate(*g)
+		err = policy.Validate(*g, group.DefaultConfig())
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgSubmitProposal, ""), nil, nil
 		}
@@ -733,7 +737,9 @@ func SimulateMsgUpdateGroupPolicyDecisionPolicy(ak group.AccountKeeper,
 
 		msg, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(acc.Address, groupPolicyBech32, &group.ThresholdDecisionPolicy{
 			Threshold: fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
-			Timeout:   time.Second * time.Duration(simtypes.RandIntBetween(r, 100, 1000)),
+			Windows: &group.DecisionPolicyWindows{
+				VotingPeriod: time.Second * time.Duration(simtypes.RandIntBetween(r, 100, 1000)),
+			},
 		})
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, err.Error()), nil, err
@@ -832,7 +838,7 @@ func SimulateMsgWithdrawProposal(ak group.AccountKeeper,
 		ctx := sdk.WrapSDKContext(sdkCtx)
 
 		policy := groupPolicy.GetDecisionPolicy()
-		err = policy.Validate(*g)
+		err = policy.Validate(*g, group.DefaultConfig())
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, err.Error()), nil, nil
 		}
@@ -852,7 +858,7 @@ func SimulateMsgWithdrawProposal(ak group.AccountKeeper,
 
 		for _, p := range proposals {
 			if p.Status == group.PROPOSAL_STATUS_SUBMITTED {
-				timeout := p.Timeout
+				timeout := p.VotingPeriodEnd
 				proposal = p
 				proposalID = int(p.Id)
 				if timeout.Before(sdkCtx.BlockTime()) || timeout.Equal(sdkCtx.BlockTime()) {
@@ -971,7 +977,7 @@ func SimulateMsgVote(ak group.AccountKeeper,
 
 		for _, p := range proposals {
 			if p.Status == group.PROPOSAL_STATUS_SUBMITTED {
-				timeout := p.Timeout
+				timeout := p.VotingPeriodEnd
 				proposal = p
 				proposalID = int(p.Id)
 				if timeout.Before(sdkCtx.BlockTime()) || timeout.Equal(sdkCtx.BlockTime()) {
@@ -1044,27 +1050,27 @@ func SimulateMsgExec(ak group.AccountKeeper,
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		_, groupPolicy, acc, account, err := randomGroupPolicy(r, k, ak, sdkCtx, accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgExec, ""), nil, err
+			return simtypes.NoOpMsg(TypeMsgExec, TypeMsgExec, ""), nil, err
 		}
 		if groupPolicy == nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgExec, "no group policy found"), nil, nil
+			return simtypes.NoOpMsg(TypeMsgExec, TypeMsgExec, "no group policy found"), nil, nil
 		}
 		groupPolicyAddr := groupPolicy.Address
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
 		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgExec, "fee error"), nil, err
+			return simtypes.NoOpMsg(TypeMsgExec, TypeMsgExec, "fee error"), nil, err
 		}
 
 		ctx := sdk.WrapSDKContext(sdkCtx)
 		proposalsResult, err := k.ProposalsByGroupPolicy(ctx, &group.QueryProposalsByGroupPolicyRequest{Address: groupPolicyAddr})
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgExec, "fail to query group info"), nil, err
+			return simtypes.NoOpMsg(TypeMsgExec, TypeMsgExec, "fail to query group info"), nil, err
 		}
 		proposals := proposalsResult.GetProposals()
 		if len(proposals) == 0 {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgExec, "no proposals found"), nil, nil
+			return simtypes.NoOpMsg(TypeMsgExec, TypeMsgExec, "no proposals found"), nil, nil
 		}
 
 		proposalID := -1
@@ -1078,7 +1084,7 @@ func SimulateMsgExec(ak group.AccountKeeper,
 
 		// return no-op if no proposal found
 		if proposalID == -1 {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgExec, "no proposals found"), nil, nil
+			return simtypes.NoOpMsg(TypeMsgExec, TypeMsgExec, "no proposals found"), nil, nil
 		}
 
 		msg := group.MsgExec{

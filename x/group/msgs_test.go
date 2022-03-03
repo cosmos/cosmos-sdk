@@ -367,7 +367,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 			"invalid admin address",
 			func() *group.MsgCreateGroupWithPolicy {
 				admin := "admin"
-				policy := group.NewThresholdDecisionPolicy("1", time.Second)
+				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
 				members := []group.Member{
 					{
 						Address:  member1.String(),
@@ -385,7 +385,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 		{
 			"invalid member address",
 			func() *group.MsgCreateGroupWithPolicy {
-				policy := group.NewThresholdDecisionPolicy("1", time.Second)
+				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
 				members := []group.Member{
 					{
 						Address:  "invalid_address",
@@ -403,7 +403,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 		{
 			"negative member's weight not allowed",
 			func() *group.MsgCreateGroupWithPolicy {
-				policy := group.NewThresholdDecisionPolicy("1", time.Second)
+				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
 				members := []group.Member{
 					{
 						Address:  member1.String(),
@@ -421,7 +421,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 		{
 			"zero member's weight not allowed",
 			func() *group.MsgCreateGroupWithPolicy {
-				policy := group.NewThresholdDecisionPolicy("1", time.Second)
+				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
 				members := []group.Member{
 					{
 						Address:  member1.String(),
@@ -439,7 +439,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 		{
 			"duplicate member not allowed",
 			func() *group.MsgCreateGroupWithPolicy {
-				policy := group.NewThresholdDecisionPolicy("1", time.Second)
+				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
 				members := []group.Member{
 					{
 						Address:  member1.String(),
@@ -462,7 +462,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 		{
 			"invalid threshold policy",
 			func() *group.MsgCreateGroupWithPolicy {
-				policy := group.NewThresholdDecisionPolicy("-1", time.Second)
+				policy := group.NewThresholdDecisionPolicy("-1", time.Second, 0)
 				members := []group.Member{
 					{
 						Address:  member1.String(),
@@ -480,7 +480,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 		{
 			"valid test case with single member",
 			func() *group.MsgCreateGroupWithPolicy {
-				policy := group.NewThresholdDecisionPolicy("1", time.Second)
+				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
 				members := []group.Member{
 					{
 						Address:  member1.String(),
@@ -498,7 +498,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 		{
 			"valid test case with multiple members",
 			func() *group.MsgCreateGroupWithPolicy {
-				policy := group.NewThresholdDecisionPolicy("1", time.Second)
+				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
 				members := []group.Member{
 					{
 						Address:  member1.String(),
@@ -566,7 +566,7 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 		{
 			"invalid threshold policy",
 			func() *group.MsgCreateGroupPolicy {
-				policy := group.NewThresholdDecisionPolicy("-1", time.Second)
+				policy := group.NewThresholdDecisionPolicy("-1", time.Second, 0)
 				req, err := group.NewMsgCreateGroupPolicy(admin, 1, "metadata", policy)
 				require.NoError(t, err)
 				return req
@@ -575,9 +575,53 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 			"expected a positive decimal",
 		},
 		{
-			"valid test case",
+			"invalid voting period",
 			func() *group.MsgCreateGroupPolicy {
-				policy := group.NewThresholdDecisionPolicy("1", time.Second)
+				policy := group.NewThresholdDecisionPolicy("-1", time.Duration(0), 0)
+				req, err := group.NewMsgCreateGroupPolicy(admin, 1, "metadata", policy)
+				require.NoError(t, err)
+				return req
+			},
+			true,
+			"expected a positive decimal",
+		},
+		{
+			"invalid execution period",
+			func() *group.MsgCreateGroupPolicy {
+				policy := group.NewThresholdDecisionPolicy("-1", time.Minute, 0)
+				req, err := group.NewMsgCreateGroupPolicy(admin, 1, "metadata", policy)
+				require.NoError(t, err)
+				return req
+			},
+			true,
+			"expected a positive decimal",
+		},
+		{
+			"valid test case, only voting period",
+			func() *group.MsgCreateGroupPolicy {
+				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
+				req, err := group.NewMsgCreateGroupPolicy(admin, 1, "metadata", policy)
+				require.NoError(t, err)
+				return req
+			},
+			false,
+			"",
+		},
+		{
+			"valid test case, voting and execution, empty min exec period",
+			func() *group.MsgCreateGroupPolicy {
+				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
+				req, err := group.NewMsgCreateGroupPolicy(admin, 1, "metadata", policy)
+				require.NoError(t, err)
+				return req
+			},
+			false,
+			"",
+		},
+		{
+			"valid test case, voting and execution, non-empty min exec period",
+			func() *group.MsgCreateGroupPolicy {
+				policy := group.NewThresholdDecisionPolicy("1", time.Second, time.Minute)
 				req, err := group.NewMsgCreateGroupPolicy(admin, 1, "metadata", policy)
 				require.NoError(t, err)
 				return req
@@ -588,7 +632,7 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 		{
 			"invalid percentage decision policy with zero value",
 			func() *group.MsgCreateGroupPolicy {
-				percentagePolicy := group.NewPercentageDecisionPolicy("0", time.Second)
+				percentagePolicy := group.NewPercentageDecisionPolicy("0", time.Second, 0)
 				req, err := group.NewMsgCreateGroupPolicy(admin, 1, "metadata", percentagePolicy)
 				require.NoError(t, err)
 				return req
@@ -599,7 +643,7 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 		{
 			"invalid percentage decision policy with negative value",
 			func() *group.MsgCreateGroupPolicy {
-				percentagePolicy := group.NewPercentageDecisionPolicy("-0.2", time.Second)
+				percentagePolicy := group.NewPercentageDecisionPolicy("-0.2", time.Second, 0)
 				req, err := group.NewMsgCreateGroupPolicy(admin, 1, "metadata", percentagePolicy)
 				require.NoError(t, err)
 				return req
@@ -610,7 +654,7 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 		{
 			"invalid percentage decision policy with value greater than 1",
 			func() *group.MsgCreateGroupPolicy {
-				percentagePolicy := group.NewPercentageDecisionPolicy("2", time.Second)
+				percentagePolicy := group.NewPercentageDecisionPolicy("2", time.Second, 0)
 				req, err := group.NewMsgCreateGroupPolicy(admin, 1, "metadata", percentagePolicy)
 				require.NoError(t, err)
 				return req
@@ -621,7 +665,7 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 		{
 			"valid test case with percentage decision policy",
 			func() *group.MsgCreateGroupPolicy {
-				percentagePolicy := group.NewPercentageDecisionPolicy("0.5", time.Second)
+				percentagePolicy := group.NewPercentageDecisionPolicy("0.5", time.Second, 0)
 				req, err := group.NewMsgCreateGroupPolicy(admin, 1, "metadata", percentagePolicy)
 				require.NoError(t, err)
 				return req
@@ -647,23 +691,23 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 }
 
 func TestMsgUpdateGroupPolicyDecisionPolicy(t *testing.T) {
-	validPolicy := group.NewThresholdDecisionPolicy("1", time.Second)
+	validPolicy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
 	msg1, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member1, validPolicy)
 	require.NoError(t, err)
 
-	invalidPolicy := group.NewThresholdDecisionPolicy("-1", time.Second)
+	invalidPolicy := group.NewThresholdDecisionPolicy("-1", time.Second, 0)
 	msg2, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member2, invalidPolicy)
 	require.NoError(t, err)
 
-	validPercentagePolicy := group.NewPercentageDecisionPolicy("0.7", time.Second)
+	validPercentagePolicy := group.NewPercentageDecisionPolicy("0.7", time.Second, 0)
 	msg3, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member3, validPercentagePolicy)
 	require.NoError(t, err)
 
-	invalidPercentagePolicy := group.NewPercentageDecisionPolicy("-0.1", time.Second)
+	invalidPercentagePolicy := group.NewPercentageDecisionPolicy("-0.1", time.Second, 0)
 	msg4, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member4, invalidPercentagePolicy)
 	require.NoError(t, err)
 
-	invalidPercentagePolicy2 := group.NewPercentageDecisionPolicy("2", time.Second)
+	invalidPercentagePolicy2 := group.NewPercentageDecisionPolicy("2", time.Second, 0)
 	msg5, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member5, invalidPercentagePolicy2)
 	require.NoError(t, err)
 

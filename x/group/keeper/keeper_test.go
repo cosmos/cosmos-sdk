@@ -61,6 +61,7 @@ func (s *TestSuite) SetupTest() {
 	policy := group.NewThresholdDecisionPolicy(
 		"2",
 		time.Second,
+		0,
 	)
 	policyReq := &group.MsgCreateGroupPolicy{
 		Admin:   s.addrs[0].String(),
@@ -693,6 +694,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
 				time.Second,
+				0,
 			),
 		},
 		"group policy as admin is true": {
@@ -704,6 +706,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
 				time.Second,
+				0,
 			),
 		},
 		"group metadata too long": {
@@ -716,6 +719,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
 				time.Second,
+				0,
 			),
 			expErr:    true,
 			expErrMsg: "limit exceeded",
@@ -730,6 +734,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
 				time.Second,
+				0,
 			),
 			expErr:    true,
 			expErrMsg: "limit exceeded",
@@ -747,6 +752,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
 				time.Second,
+				0,
 			),
 			expErr:    true,
 			expErrMsg: "limit exceeded",
@@ -763,6 +769,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
 				time.Second,
+				0,
 			),
 			expErr:    true,
 			expErrMsg: "expected a positive decimal",
@@ -776,6 +783,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			policy: group.NewThresholdDecisionPolicy(
 				"10",
 				time.Second,
+				0,
 			),
 			expErr: false,
 		},
@@ -876,6 +884,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
 				time.Second,
+				0,
 			),
 		},
 		"all good with percentage decision policy": {
@@ -886,6 +895,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			policy: group.NewPercentageDecisionPolicy(
 				"0.5",
 				time.Second,
+				0,
 			),
 		},
 		"decision policy threshold > total group weight": {
@@ -896,6 +906,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			policy: group.NewThresholdDecisionPolicy(
 				"10",
 				time.Second,
+				0,
 			),
 		},
 		"group id does not exists": {
@@ -906,6 +917,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
 				time.Second,
+				0,
 			),
 			expErr:    true,
 			expErrMsg: "not found",
@@ -918,6 +930,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
 				time.Second,
+				0,
 			),
 			expErr:    true,
 			expErrMsg: "not group admin",
@@ -931,6 +944,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
 				time.Second,
+				0,
 			),
 			expErr:    true,
 			expErrMsg: "limit exceeded",
@@ -943,6 +957,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			policy: group.NewPercentageDecisionPolicy(
 				"-0.5",
 				time.Second,
+				0,
 			),
 			expErr:    true,
 			expErrMsg: "expected a positive decimal",
@@ -955,6 +970,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			policy: group.NewPercentageDecisionPolicy(
 				"2",
 				time.Second,
+				0,
 			),
 			expErr:    true,
 			expErrMsg: "percentage must be > 0 and <= 1",
@@ -1194,6 +1210,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 			policy: group.NewThresholdDecisionPolicy(
 				"2",
 				time.Duration(2)*time.Second,
+				0,
 			),
 			expGroupPolicy: &group.GroupPolicyInfo{
 				Admin:          admin.String(),
@@ -1216,6 +1233,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 			policy: group.NewPercentageDecisionPolicy(
 				"0.5",
 				time.Duration(2)*time.Second,
+				0,
 			),
 			expGroupPolicy: &group.GroupPolicyInfo{
 				Admin:          admin.String(),
@@ -1278,14 +1296,17 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 		group.NewThresholdDecisionPolicy(
 			"1",
 			time.Second,
+			0,
 		),
 		group.NewThresholdDecisionPolicy(
 			"10",
 			time.Second,
+			0,
 		),
 		group.NewPercentageDecisionPolicy(
 			"0.5",
 			time.Second,
+			0,
 		),
 	}
 
@@ -1376,6 +1397,7 @@ func (s *TestSuite) TestSubmitProposal() {
 	policy := group.NewThresholdDecisionPolicy(
 		"100",
 		time.Second,
+		0,
 	)
 	err := policyReq.SetDecisionPolicy(policy)
 	s.Require().NoError(err)
@@ -1523,7 +1545,7 @@ func (s *TestSuite) TestSubmitProposal() {
 				Status: group.PROPOSAL_STATUS_SUBMITTED,
 				Result: group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult: group.TallyResult{
-					YesCount:        "1",
+					YesCount:        "0", // Since tally doesn't pass Allow(), we consider the proposal not final
 					NoCount:         "0",
 					AbstainCount:    "0",
 					NoWithVetoCount: "0",
@@ -1562,7 +1584,7 @@ func (s *TestSuite) TestSubmitProposal() {
 			s.Assert().Equal(spec.expProposal.Result, proposal.Result)
 			s.Assert().Equal(spec.expProposal.FinalTallyResult, proposal.FinalTallyResult)
 			s.Assert().Equal(spec.expProposal.ExecutorResult, proposal.ExecutorResult)
-			s.Assert().Equal(s.blockTime.Add(time.Second), proposal.Timeout)
+			s.Assert().Equal(s.blockTime.Add(time.Second), proposal.VotingPeriodEnd)
 
 			if spec.msgs == nil { // then empty list is ok
 				s.Assert().Len(proposal.GetMsgs(), 0)
@@ -1684,6 +1706,7 @@ func (s *TestSuite) TestVote() {
 	policy := group.NewThresholdDecisionPolicy(
 		"2",
 		time.Duration(2),
+		0,
 	)
 	policyReq := &group.MsgCreateGroupPolicy{
 		Admin:   addr1.String(),
@@ -1732,23 +1755,19 @@ func (s *TestSuite) TestVote() {
 	s.Assert().Equal(uint64(1), proposals[0].GroupPolicyVersion)
 	s.Assert().Equal(group.PROPOSAL_STATUS_SUBMITTED, proposals[0].Status)
 	s.Assert().Equal(group.PROPOSAL_RESULT_UNFINALIZED, proposals[0].Result)
-	s.Assert().Equal(group.TallyResult{
-		YesCount:        "0",
-		NoCount:         "0",
-		AbstainCount:    "0",
-		NoWithVetoCount: "0",
-	}, proposals[0].FinalTallyResult)
+	s.Assert().Equal(group.DefaultTallyResult(), proposals[0].FinalTallyResult)
 
 	specs := map[string]struct {
-		srcCtx              sdk.Context
-		expFinalTallyResult group.TallyResult
-		req                 *group.MsgVote
-		doBefore            func(ctx context.Context)
-		postRun             func(sdkCtx sdk.Context)
-		expProposalStatus   group.ProposalStatus
-		expResult           group.ProposalResult
-		expExecutorResult   group.ProposalExecutorResult
-		expErr              bool
+		srcCtx            sdk.Context
+		expTallyResult    group.TallyResult // expected after tallying
+		isFinal           bool              // is the tally result final?
+		req               *group.MsgVote
+		doBefore          func(ctx context.Context)
+		postRun           func(sdkCtx sdk.Context)
+		expProposalStatus group.ProposalStatus         // expected after tallying
+		expResult         group.ProposalResult         // expected after tallying
+		expExecutorResult group.ProposalExecutorResult // expected after tallying
+		expErr            bool
 	}{
 		"vote yes": {
 			req: &group.MsgVote{
@@ -1756,7 +1775,7 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr4.String(),
 				Option:     group.VOTE_OPTION_YES,
 			},
-			expFinalTallyResult: group.TallyResult{
+			expTallyResult: group.TallyResult{
 				YesCount:        "1",
 				NoCount:         "0",
 				AbstainCount:    "0",
@@ -1774,12 +1793,13 @@ func (s *TestSuite) TestVote() {
 				Option:     group.VOTE_OPTION_YES,
 				Exec:       group.Exec_EXEC_TRY,
 			},
-			expFinalTallyResult: group.TallyResult{
+			expTallyResult: group.TallyResult{
 				YesCount:        "2",
 				NoCount:         "0",
 				AbstainCount:    "0",
 				NoWithVetoCount: "0",
 			},
+			isFinal:           true,
 			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
 			expResult:         group.PROPOSAL_RESULT_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
@@ -1797,7 +1817,7 @@ func (s *TestSuite) TestVote() {
 				Option:     group.VOTE_OPTION_YES,
 				Exec:       group.Exec_EXEC_TRY,
 			},
-			expFinalTallyResult: group.TallyResult{
+			expTallyResult: group.TallyResult{
 				YesCount:        "1",
 				NoCount:         "0",
 				AbstainCount:    "0",
@@ -1814,7 +1834,7 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr4.String(),
 				Option:     group.VOTE_OPTION_NO,
 			},
-			expFinalTallyResult: group.TallyResult{
+			expTallyResult: group.TallyResult{
 				YesCount:        "0",
 				NoCount:         "1",
 				AbstainCount:    "0",
@@ -1831,7 +1851,7 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr4.String(),
 				Option:     group.VOTE_OPTION_ABSTAIN,
 			},
-			expFinalTallyResult: group.TallyResult{
+			expTallyResult: group.TallyResult{
 				YesCount:        "0",
 				NoCount:         "0",
 				AbstainCount:    "1",
@@ -1848,7 +1868,7 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr4.String(),
 				Option:     group.VOTE_OPTION_NO_WITH_VETO,
 			},
-			expFinalTallyResult: group.TallyResult{
+			expTallyResult: group.TallyResult{
 				YesCount:        "0",
 				NoCount:         "0",
 				AbstainCount:    "0",
@@ -1865,7 +1885,7 @@ func (s *TestSuite) TestVote() {
 				Voter:      addr3.String(),
 				Option:     group.VOTE_OPTION_YES,
 			},
-			expFinalTallyResult: group.TallyResult{
+			expTallyResult: group.TallyResult{
 				YesCount:        "2",
 				NoCount:         "0",
 				AbstainCount:    "0",
@@ -1887,6 +1907,7 @@ func (s *TestSuite) TestVote() {
 					ProposalId: myProposalID,
 					Voter:      addr3.String(),
 					Option:     group.VOTE_OPTION_NO_WITH_VETO,
+					Exec:       1, // Execute the proposal so that its status is final
 				})
 				s.Require().NoError(err)
 			},
@@ -1947,7 +1968,7 @@ func (s *TestSuite) TestVote() {
 			expErr:  true,
 			postRun: func(sdkCtx sdk.Context) {},
 		},
-		"on timeout": {
+		"on voting period end": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
 				Voter:      addr4.String(),
@@ -1968,6 +1989,7 @@ func (s *TestSuite) TestVote() {
 					ProposalId: myProposalID,
 					Voter:      addr3.String(),
 					Option:     group.VOTE_OPTION_YES,
+					Exec:       1, // Execute to close the proposal.
 				})
 				s.Require().NoError(err)
 			},
@@ -2019,7 +2041,9 @@ func (s *TestSuite) TestVote() {
 					groupPolicy,
 					&group.ThresholdDecisionPolicy{
 						Threshold: "1",
-						Timeout:   time.Second,
+						Windows: &group.DecisionPolicyWindows{
+							VotingPeriod: time.Second,
+						},
 					},
 				)
 				s.Require().NoError(err)
@@ -2093,16 +2117,26 @@ func (s *TestSuite) TestVote() {
 			s.Assert().Equal(spec.req.Metadata, votesByVoter[0].Metadata)
 			s.Assert().Equal(s.blockTime, votesByVoter[0].SubmitTime)
 
-			// and proposal is updated
 			proposalRes, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{
 				ProposalId: spec.req.ProposalId,
 			})
 			s.Require().NoError(err)
+
 			proposal := proposalRes.Proposal
-			s.Assert().Equal(spec.expFinalTallyResult, proposal.FinalTallyResult)
-			s.Assert().Equal(spec.expResult, proposal.Result)
-			s.Assert().Equal(spec.expProposalStatus, proposal.Status)
-			s.Assert().Equal(spec.expExecutorResult, proposal.ExecutorResult)
+			if spec.isFinal {
+				s.Assert().Equal(spec.expTallyResult, proposal.FinalTallyResult)
+				s.Assert().Equal(spec.expResult, proposal.Result)
+				s.Assert().Equal(spec.expProposalStatus, proposal.Status)
+				s.Assert().Equal(spec.expExecutorResult, proposal.ExecutorResult)
+			} else {
+				s.Assert().Equal(group.DefaultTallyResult(), proposal.FinalTallyResult) // Make sure proposal isn't mutated.
+
+				// do a round of tallying
+				tallyResult, err := s.keeper.Tally(sdkCtx, *proposal, myGroupID)
+				s.Require().NoError(err)
+
+				s.Assert().Equal(spec.expTallyResult, tallyResult)
+			}
 
 			spec.postRun(sdkCtx)
 		})
@@ -2562,6 +2596,7 @@ func createGroupAndGroupPolicy(
 	policy := group.NewThresholdDecisionPolicy(
 		"1",
 		time.Second,
+		0,
 	)
 	err = groupPolicy.SetDecisionPolicy(policy)
 	s.Require().NoError(err)

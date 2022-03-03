@@ -260,11 +260,6 @@ func (k Keeper) IterateVPEndProposals(ctx sdk.Context, cb func(proposal group.Pr
 			return err
 		}
 
-		// check whether the proposal status is submitted.
-		if proposal.Status != group.PROPOSAL_STATUS_SUBMITTED {
-			continue
-		}
-
 		if cb(proposal) {
 			break
 		}

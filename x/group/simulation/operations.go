@@ -171,18 +171,18 @@ func WeightedOperations(
 	}
 
 	wPreCreateProposalOps := simulation.WeightedOperations{
-		simulation.NewWeightedOperation(
-			weightMsgCreateGroup,
-			SimulateMsgCreateGroup(ak, bk),
-		),
+		// simulation.NewWeightedOperation(
+		// 	weightMsgCreateGroup,
+		// 	SimulateMsgCreateGroup(ak, bk),
+		// ),
 		simulation.NewWeightedOperation(
 			weightMsgCreateGroupPolicy,
 			SimulateMsgCreateGroupPolicy(ak, bk, k),
 		),
-		// simulation.NewWeightedOperation(
-		// 	weightMsgCreateGroupWithPolicy,
-		// 	SimulateMsgCreateGroupWithPolicy(ak, bk),
-		// ),
+		simulation.NewWeightedOperation(
+			weightMsgCreateGroupWithPolicy,
+			SimulateMsgCreateGroupWithPolicy(ak, bk),
+		),
 	}
 
 	wPostCreateProposalOps := simulation.WeightedOperations{
@@ -222,10 +222,10 @@ func WeightedOperations(
 			weightMsgUpdateGroupPolicyMetadata,
 			SimulateMsgUpdateGroupPolicyMetadata(ak, bk, k),
 		),
-		simulation.NewWeightedOperation(
-			weightMsgCreateGroupWithPolicy,
-			SimulateMsgCreateGroupWithPolicy(ak, bk),
-		),
+		// simulation.NewWeightedOperation(
+		// 	weightMsgCreateGroupWithPolicy,
+		// 	SimulateMsgCreateGroupWithPolicy(ak, bk),
+		// ),
 	}
 
 	return append(wPreCreateProposalOps, append(createProposalOps, wPostCreateProposalOps...)...)
@@ -391,13 +391,13 @@ func SimulateMsgSubmitProposal(ak group.AccountKeeper, bk group.BankKeeper, k ke
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		g, groupPolicy, _, _, err := randomGroupPolicy(r, k, ak, sdkCtx, accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgSubmitProposal, ""), nil, err
+			return simtypes.NoOpMsg("ERR", TypeMsgSubmitProposal, ""), nil, err
 		}
 		if g == nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgSubmitProposal, "no group found"), nil, nil
+			return simtypes.NoOpMsg("NOGROUP", TypeMsgSubmitProposal, "no group found"), nil, nil
 		}
 		if groupPolicy == nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgSubmitProposal, "no group policy found"), nil, nil
+			return simtypes.NoOpMsg("NOGROUP po", TypeMsgSubmitProposal, "no group policy found"), nil, nil
 		}
 		groupID := g.Id
 		groupPolicyAddr := groupPolicy.Address

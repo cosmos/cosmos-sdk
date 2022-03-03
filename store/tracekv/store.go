@@ -3,6 +3,7 @@ package tracekv
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
@@ -81,6 +82,8 @@ func (tkv *Store) Has(key []byte) bool {
 // Iterator implements the KVStore interface. It delegates the Iterator call
 // the to the parent KVStore.
 func (tkv *Store) Iterator(start, end []byte) types.Iterator {
+	fmt.Printf("tracekv\n")
+
 	return tkv.iterator(start, end, true)
 }
 

@@ -2,6 +2,7 @@ package orm
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -86,10 +87,16 @@ func (i MultiKeyIndex) Has(store sdk.KVStore, key interface{}) (bool, error) {
 func (i MultiKeyIndex) Get(store sdk.KVStore, searchKey interface{}) (Iterator, error) {
 	pStore := prefix.NewStore(store, []byte{i.prefix})
 	encodedKey, err := keyPartBytes(searchKey, false)
+	fmt.Printf("INDEX GET %v\n", encodedKey)
 	if err != nil {
+		fmt.Printf("ERR %v\n", err)
 		return nil, err
 	}
+	s, e := PrefixRange(encodedKey)
+	fmt.Printf("INDEX prefix range %v %v\n", s, e)
+
 	it := pStore.Iterator(PrefixRange(encodedKey))
+	fmt.Printf("INDEX IT %v\n", it)
 	return indexIterator{store: store, it: it, rowGetter: i.rowGetter, indexKey: i.indexKey}, nil
 }
 

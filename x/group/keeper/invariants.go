@@ -152,7 +152,11 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 	}
 	defer groupIt.Close()
 
+	j := 0
 	for {
+		j++
+		fmt.Printf("LOADNEXT GROUP %d\n", j)
+
 		membersWeight, err := groupmath.NewNonNegativeDecFromString("0")
 		if err != nil {
 			msg += fmt.Sprintf("error while parsing positive dec zero for group member\n%v\n", err)
@@ -162,13 +166,20 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 		if errors.ErrORMIteratorDone.Is(err) {
 			break
 		}
+		fmt.Printf("BEFORE MEMIT\n")
 		memIt, err := groupMemberByGroupIndex.Get(ctx.KVStore(key), groupInfo.Id)
+		fmt.Printf("AFTER MEMIT %v\n", err)
+
 		if err != nil {
 			msg += fmt.Sprintf("error while returning group member iterator for group with ID %d\n%v\n", groupInfo.Id, err)
 			return msg, broken
 		}
+		defer memIt.Close()
 
+		i := 0
 		for {
+			i++
+			fmt.Printf("LOADNEXT MEMIT %d\n", i)
 			_, err = memIt.LoadNext(&groupMember)
 			if errors.ErrORMIteratorDone.Is(err) {
 				break
@@ -184,7 +195,7 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 				return msg, broken
 			}
 		}
-		memIt.Close()
+		fmt.Printf("CLOSE MEMIT\n\n")
 
 		groupWeight, err := groupmath.NewNonNegativeDecFromString(groupInfo.GetTotalWeight())
 		if err != nil {
@@ -198,6 +209,7 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 			break
 		}
 	}
+	fmt.Printf("RETURN\n")
 	return msg, broken
 }
 

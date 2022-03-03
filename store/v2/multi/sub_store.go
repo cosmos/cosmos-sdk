@@ -2,6 +2,7 @@ package multi
 
 import (
 	"crypto/sha256"
+	"fmt"
 	"io"
 	"sync"
 
@@ -83,6 +84,8 @@ func (it *contentsIterator) Close() error {
 
 // Iterator implements KVStore.
 func (s *substore) Iterator(start, end []byte) types.Iterator {
+	fmt.Printf("v2 multi\n")
+
 	iter, err := s.dataBucket.Iterator(start, end)
 	if err != nil {
 		panic(err)

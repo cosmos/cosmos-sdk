@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"fmt"
 	"io"
 
 	dbm "github.com/tendermint/tm-db"
@@ -185,6 +186,8 @@ func (kv kvStore) Gas(meter sdk.GasMeter, config sdk.GasConfig) sdk.KVStore {
 }
 
 func (kv kvStore) Iterator(start, end []byte) sdk.Iterator {
+	fmt.Printf("mock\n")
+
 	panic("not implemented")
 }
 

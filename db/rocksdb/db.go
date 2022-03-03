@@ -431,6 +431,8 @@ func (tx *dbWriter) Discard() error {
 
 // Iterator implements DBReader.
 func (tx *dbTxn) Iterator(start, end []byte) (db.Iterator, error) {
+	fmt.Printf("dbTxn\n")
+
 	if tx.txn == nil {
 		return nil, db.ErrTransactionClosed
 	}

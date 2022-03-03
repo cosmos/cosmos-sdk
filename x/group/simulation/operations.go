@@ -72,7 +72,7 @@ const (
 	WeightMsgUpdateGroupPolicyDecisionPolicy = 5
 	WeightMsgUpdateGroupPolicyMetadata       = 5
 	WeightMsgWithdrawProposal                = 20
-	WeightMsgCreateGroupWithPolicy           = 4
+	WeightMsgCreateGroupWithPolicy           = 50
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights

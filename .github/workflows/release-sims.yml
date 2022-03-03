@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: |
           make build
 
@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, install-runsim]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
         with:
           path: ~/go/bin

@@ -221,7 +221,7 @@ func (suite *SimTestSuite) TestSimulateSubmitProposal() {
 		Admin:   acc.Address.String(),
 		GroupId: groupRes.GroupId,
 	}
-	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
 	suite.Require().NoError(err)
 	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
@@ -275,7 +275,7 @@ func (suite *SimTestSuite) TestWithdrawProposal() {
 		Admin:   addr,
 		GroupId: groupRes.GroupId,
 	}
-	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
 	suite.Require().NoError(err)
 	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
@@ -342,7 +342,7 @@ func (suite *SimTestSuite) TestSimulateVote() {
 		GroupId:  groupRes.GroupId,
 		Metadata: "",
 	}
-	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
 	suite.Require().NoError(err)
 	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
@@ -408,7 +408,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 		Admin:   addr,
 		GroupId: groupRes.GroupId,
 	}
-	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
 	suite.Require().NoError(err)
 	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
@@ -430,6 +430,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 		ProposalId: proposalRes.ProposalId,
 		Voter:      addr,
 		Option:     group.VOTE_OPTION_YES,
+		Exec:       1,
 	})
 	suite.Require().NoError(err)
 
@@ -607,7 +608,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyAdmin() {
 		Admin:   acc.Address.String(),
 		GroupId: groupRes.GroupId,
 	}
-	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
 	suite.Require().NoError(err)
 	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
@@ -660,7 +661,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyDecisionPolicy() {
 		Admin:   acc.Address.String(),
 		GroupId: groupRes.GroupId,
 	}
-	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
 	suite.Require().NoError(err)
 	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
@@ -713,7 +714,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyMetadata() {
 		Admin:   acc.Address.String(),
 		GroupId: groupRes.GroupId,
 	}
-	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour))
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
 	suite.Require().NoError(err)
 	groupPolicyRes, err := suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)

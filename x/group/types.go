@@ -24,18 +24,28 @@ type DecisionPolicyResult struct {
 type DecisionPolicy interface {
 	codec.ProtoMarshaler
 
+	// GetVotingPeriod returns the duration after proposal submission where
+	// votes are accepted.
+	GetVotingPeriod() time.Duration
+	// Allow defines policy-specific logic to allow a proposal to pass or not,
+	// based on its tally result, the group's total power and the time since
+	// the proposal was submitted.
+	Allow(tallyResult TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error)
+
 	ValidateBasic() error
-	GetTimeout() time.Duration
-	Allow(tallyResult TallyResult, totalPower string, votingDuration time.Duration) (DecisionPolicyResult, error)
-	Validate(g GroupInfo) error
+	Validate(g GroupInfo, config Config) error
 }
 
 // Implements DecisionPolicy Interface
 var _ DecisionPolicy = &ThresholdDecisionPolicy{}
 
 // NewThresholdDecisionPolicy creates a threshold DecisionPolicy
-func NewThresholdDecisionPolicy(threshold string, timeout time.Duration) DecisionPolicy {
-	return &ThresholdDecisionPolicy{threshold, timeout}
+func NewThresholdDecisionPolicy(threshold string, votingPeriod time.Duration, minExecutionPeriod time.Duration) DecisionPolicy {
+	return &ThresholdDecisionPolicy{threshold, &DecisionPolicyWindows{votingPeriod, minExecutionPeriod}}
+}
+
+func (p ThresholdDecisionPolicy) GetVotingPeriod() time.Duration {
+	return p.Windows.VotingPeriod
 }
 
 func (p ThresholdDecisionPolicy) ValidateBasic() error {
@@ -43,19 +53,17 @@ func (p ThresholdDecisionPolicy) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "threshold")
 	}
 
-	timeout := p.Timeout
-
-	if timeout <= time.Nanosecond {
-		return sdkerrors.Wrap(errors.ErrInvalid, "timeout")
+	if p.Windows == nil || p.Windows.VotingPeriod == 0 {
+		return sdkerrors.Wrap(errors.ErrInvalid, "voting period cannot be zero")
 	}
+
 	return nil
 }
 
 // Allow allows a proposal to pass when the tally of yes votes equals or exceeds the threshold before the timeout.
-func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower string, votingDuration time.Duration) (DecisionPolicyResult, error) {
-	timeout := p.Timeout
-	if timeout <= votingDuration {
-		return DecisionPolicyResult{Allow: false, Final: true}, nil
+func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error) {
+	if sinceSubmission < p.Windows.MinExecutionPeriod {
+		return DecisionPolicyResult{}, errors.ErrUnauthorized.Wrapf("must wait %s after submission before execution, currently at %s", p.Windows.MinExecutionPeriod, sinceSubmission)
 	}
 
 	threshold, err := math.NewPositiveDecFromString(p.Threshold)
@@ -93,7 +101,7 @@ func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower strin
 }
 
 // Validate returns an error if policy threshold is greater than the total group weight
-func (p *ThresholdDecisionPolicy) Validate(g GroupInfo) error {
+func (p *ThresholdDecisionPolicy) Validate(g GroupInfo, config Config) error {
 	threshold, err := math.NewPositiveDecFromString(p.Threshold)
 	if err != nil {
 		return sdkerrors.Wrap(err, "threshold")
@@ -105,6 +113,9 @@ func (p *ThresholdDecisionPolicy) Validate(g GroupInfo) error {
 	if threshold.Cmp(totalWeight) > 0 {
 		return sdkerrors.Wrapf(errors.ErrInvalid, "policy threshold %s should not be greater than the total group weight %s", p.Threshold, g.TotalWeight)
 	}
+	if p.Windows.MinExecutionPeriod > p.Windows.VotingPeriod+config.MaxExecutionPeriod {
+		return sdkerrors.Wrap(errors.ErrInvalid, "min_execution_period should be smaller than voting_period + max_execution_period")
+	}
 	return nil
 }
 
@@ -112,8 +123,12 @@ func (p *ThresholdDecisionPolicy) Validate(g GroupInfo) error {
 var _ DecisionPolicy = &PercentageDecisionPolicy{}
 
 // NewPercentageDecisionPolicy creates a new percentage DecisionPolicy
-func NewPercentageDecisionPolicy(percentage string, timeout time.Duration) DecisionPolicy {
-	return &PercentageDecisionPolicy{percentage, timeout}
+func NewPercentageDecisionPolicy(percentage string, votingPeriod time.Duration, executionPeriod time.Duration) DecisionPolicy {
+	return &PercentageDecisionPolicy{percentage, &DecisionPolicyWindows{votingPeriod, executionPeriod}}
+}
+
+func (p PercentageDecisionPolicy) GetVotingPeriod() time.Duration {
+	return p.Windows.VotingPeriod
 }
 
 func (p PercentageDecisionPolicy) ValidateBasic() error {
@@ -125,22 +140,24 @@ func (p PercentageDecisionPolicy) ValidateBasic() error {
 		return sdkerrors.Wrap(errors.ErrInvalid, "percentage must be > 0 and <= 1")
 	}
 
-	timeout := p.Timeout
-	if timeout <= time.Nanosecond {
-		return sdkerrors.Wrap(errors.ErrInvalid, "timeout")
+	if p.Windows == nil || p.Windows.VotingPeriod == 0 {
+		return sdkerrors.Wrap(errors.ErrInvalid, "voting period cannot be 0")
+	}
+
+	return nil
+}
+
+func (p *PercentageDecisionPolicy) Validate(g GroupInfo, config Config) error {
+	if p.Windows.MinExecutionPeriod > p.Windows.VotingPeriod+config.MaxExecutionPeriod {
+		return sdkerrors.Wrap(errors.ErrInvalid, "min_execution_period should be smaller than voting_period + max_execution_period")
 	}
 	return nil
 }
 
-func (p *PercentageDecisionPolicy) Validate(g GroupInfo) error {
-	return nil
-}
-
 // Allow allows a proposal to pass when the tally of yes votes equals or exceeds the percentage threshold before the timeout.
-func (p PercentageDecisionPolicy) Allow(tally TallyResult, totalPower string, votingDuration time.Duration) (DecisionPolicyResult, error) {
-	timeout := p.Timeout
-	if timeout <= votingDuration {
-		return DecisionPolicyResult{Allow: false, Final: true}, nil
+func (p PercentageDecisionPolicy) Allow(tally TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error) {
+	if sinceSubmission < p.Windows.MinExecutionPeriod {
+		return DecisionPolicyResult{}, errors.ErrUnauthorized.Wrapf("must wait %s after submission before execution, currently at %s", p.Windows.MinExecutionPeriod, sinceSubmission)
 	}
 
 	percentage, err := math.NewPositiveDecFromString(p.Percentage)
@@ -533,6 +550,16 @@ func (t TallyResult) TotalCounts() (math.Dec, error) {
 		return math.Dec{}, err
 	}
 	return totalCounts, nil
+}
+
+// DefaultTallyResult returns a TallyResult with all counts set to 0.
+func DefaultTallyResult() TallyResult {
+	return TallyResult{
+		YesCount:        "0",
+		NoCount:         "0",
+		NoWithVetoCount: "0",
+		AbstainCount:    "0",
+	}
 }
 
 // VoteOptionFromString returns a VoteOption from a string. It returns an error

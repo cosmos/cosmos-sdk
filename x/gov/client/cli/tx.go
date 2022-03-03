@@ -30,6 +30,7 @@ const (
 	flagVoter     = "voter"
 	flagDepositor = "depositor"
 	flagStatus    = "status"
+	flagMetadata  = "metadata"
 	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagProposal = "proposal"
 )
@@ -283,13 +284,19 @@ $ %s tx gov vote 1 yes --from mykey
 				return err
 			}
 
+			metadata, err := cmd.Flags().GetString(flagMetadata)
+			if err != nil {
+				return err
+			}
+
 			// Build vote message and run basic validation
-			msg := v1beta2.NewMsgVote(from, proposalID, byteVoteOption)
+			msg := v1beta2.NewMsgVote(from, proposalID, byteVoteOption, metadata)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
+	cmd.Flags().String(flagMetadata, "", "Specify metadata of the vote")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -332,12 +339,18 @@ $ %s tx gov weighted-vote 1 yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05 --from
 				return err
 			}
 
+			metadata, err := cmd.Flags().GetString(flagMetadata)
+			if err != nil {
+				return err
+			}
+
 			// Build vote message and run basic validation
-			msg := v1beta2.NewMsgVoteWeighted(from, proposalID, options)
+			msg := v1beta2.NewMsgVoteWeighted(from, proposalID, options, metadata)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
+	cmd.Flags().String(flagMetadata, "", "Specify metadata of the weighted vote")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

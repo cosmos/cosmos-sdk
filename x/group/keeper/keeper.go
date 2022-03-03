@@ -250,10 +250,13 @@ func (k Keeper) UpdateProposal(ctx sdk.Context, proposal group.Proposal) error {
 }
 
 func (k Keeper) IterateVPEndProposals(ctx sdk.Context, timeBytes []byte, cb func(proposal group.Proposal) (stop bool)) error {
-	it, _ := k.ProposalsByVotingPeriodEnd.Get(ctx.KVStore(k.key), sdk.PrefixEndBytes(timeBytes))
-	var proposal group.Proposal
+	it, err := k.ProposalsByVotingPeriodEnd.Get(ctx.KVStore(k.key), sdk.PrefixEndBytes(timeBytes))
+	if err != nil {
+		return err
+	}
 	defer it.Close()
 
+	var proposal group.Proposal
 	for {
 		_, err := it.LoadNext(&proposal)
 		if errors.ErrORMIteratorDone.Is(err) {

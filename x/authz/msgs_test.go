@@ -68,21 +68,36 @@ func TestMsgRevokeAuthorization(t *testing.T) {
 	}
 }
 
+// add time interval to a time object and returns a pointer
+func addDatePtr(t *time.Time, months, days int) *time.Time {
+	t2 := t.AddDate(0, months, days)
+	return &t2
+}
+
 func TestMsgGrantAuthorization(t *testing.T) {
+	now := time.Now()
 	tests := []struct {
 		title            string
 		granter, grantee sdk.AccAddress
 		authorization    authz.Authorization
-		expiration       time.Time
+		expiration       *time.Time
 		expectErr        bool
-		expectPass       bool
+		valBasic         bool
 	}{
-		{"nil granter address", nil, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, time.Now(), false, false},
-		{"nil grantee address", granter, nil, &banktypes.SendAuthorization{SpendLimit: coinsPos}, time.Now(), false, false},
-		{"nil granter and grantee address", nil, nil, &banktypes.SendAuthorization{SpendLimit: coinsPos}, time.Now(), false, false},
-		{"nil authorization", granter, grantee, nil, time.Now(), true, false},
-		{"valid test case", granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, time.Now().AddDate(0, 1, 0), false, true},
-		{"past time", granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, time.Now().AddDate(0, 0, -1), true, true},
+		{"nil granter address",
+			nil, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, &now, false, false},
+		{"nil grantee address",
+			granter, nil, &banktypes.SendAuthorization{SpendLimit: coinsPos}, &now, false, false},
+		{"nil granter and grantee address",
+			nil, nil, &banktypes.SendAuthorization{SpendLimit: coinsPos}, &now, false, false},
+		{"nil authorization should fail",
+			granter, grantee, nil, &now, true, false},
+		{"valid test case",
+			granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, addDatePtr(&now, 1, 0), false, true},
+		{"valid test case with nil expire time",
+			granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, nil, false, true},
+		{"past expire time should fail",
+			granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, addDatePtr(&now, 0, -1), true, true},
 	}
 	for i, tc := range tests {
 		msg, err := authz.NewMsgGrant(
@@ -91,9 +106,10 @@ func TestMsgGrantAuthorization(t *testing.T) {
 		if !tc.expectErr {
 			require.NoError(t, err)
 		} else {
+			require.Error(t, err)
 			continue
 		}
-		if tc.expectPass {
+		if tc.valBasic {
 			require.NoError(t, msg.ValidateBasic(), "test: %v", i)
 		} else {
 			require.Error(t, msg.ValidateBasic(), "test: %v", i)
@@ -126,20 +142,21 @@ func TestMsgGrantGetAuthorization(t *testing.T) {
 func TestAminoJSON(t *testing.T) {
 	tx := legacytx.StdTx{}
 	var msg legacytx.LegacyMsg
-	someDate := time.Date(1, 1, 1, 1, 1, 1, 1, time.UTC)
+	blockTime := time.Date(1, 1, 1, 1, 1, 1, 1, time.UTC)
+	expiresAt := blockTime.Add(time.Hour)
 	msgSend := banktypes.MsgSend{FromAddress: "cosmos1ghi", ToAddress: "cosmos1jkl"}
 	typeURL := sdk.MsgTypeURL(&msgSend)
 	msgSendAny, err := cdctypes.NewAnyWithValue(&msgSend)
 	require.NoError(t, err)
-	grant, err := authz.NewGrant(someDate, authz.NewGenericAuthorization(typeURL), someDate.Add(time.Hour))
+	grant, err := authz.NewGrant(blockTime, authz.NewGenericAuthorization(typeURL), &expiresAt)
 	require.NoError(t, err)
-	sendGrant, err := authz.NewGrant(someDate, banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))), someDate.Add(time.Hour))
+	sendGrant, err := authz.NewGrant(blockTime, banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))), &expiresAt)
 	require.NoError(t, err)
 	valAddr, err := sdk.ValAddressFromBech32("cosmosvaloper1xcy3els9ua75kdm783c3qu0rfa2eples6eavqq")
 	require.NoError(t, err)
 	stakingAuth, err := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{valAddr}, nil, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, &sdk.Coin{Denom: "stake", Amount: sdk.NewInt(1000)})
 	require.NoError(t, err)
-	delegateGrant, err := authz.NewGrant(someDate, stakingAuth, someDate.Add(time.Hour))
+	delegateGrant, err := authz.NewGrant(blockTime, stakingAuth, nil)
 	require.NoError(t, err)
 
 	// Amino JSON encoding has changed in authz since v0.46.
@@ -166,7 +183,7 @@ func TestAminoJSON(t *testing.T) {
 	msg = &authz.MsgGrant{Granter: "cosmos1abc", Grantee: "cosmos1def", Grant: delegateGrant}
 	tx.Msgs = []sdk.Msg{msg}
 	require.Equal(t,
-		`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgGrant","value":{"grant":{"authorization":{"type":"cosmos-sdk/StakeAuthorization","value":{"Validators":{"type":"cosmos-sdk/StakeAuthorization/AllowList","value":{"allow_list":{"address":["cosmosvaloper1xcy3els9ua75kdm783c3qu0rfa2eples6eavqq"]}}},"authorization_type":1,"max_tokens":{"amount":"1000","denom":"stake"}}},"expiration":"0001-01-01T02:01:01.000000001Z"},"grantee":"cosmos1def","granter":"cosmos1abc"}}],"sequence":"1","timeout_height":"1"}`,
+		`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgGrant","value":{"grant":{"authorization":{"type":"cosmos-sdk/StakeAuthorization","value":{"Validators":{"type":"cosmos-sdk/StakeAuthorization/AllowList","value":{"allow_list":{"address":["cosmosvaloper1xcy3els9ua75kdm783c3qu0rfa2eples6eavqq"]}}},"authorization_type":1,"max_tokens":{"amount":"1000","denom":"stake"}}}},"grantee":"cosmos1def","granter":"cosmos1abc"}}],"sequence":"1","timeout_height":"1"}`,
 		string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msg}, "memo", nil)),
 	)
 

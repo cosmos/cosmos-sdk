@@ -241,8 +241,10 @@ func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
 	return k.groupTable.Sequence().CurVal(ctx.KVStore(k.key))
 }
 
-func (k Keeper) IterateVPEndProposals(ctx sdk.Context, timeBytes []byte, cb func(proposal group.Proposal) (stop bool)) error {
+func (k Keeper) IterateVPEndProposals(ctx sdk.Context, cb func(proposal group.Proposal) (stop bool)) error {
+	timeBytes := sdk.FormatTimeBytes(ctx.BlockTime())
 	it, err := k.ProposalsByVotingPeriodEnd.Get(ctx.KVStore(k.key), sdk.PrefixEndBytes(timeBytes))
+
 	if err != nil {
 		return err
 	}
@@ -272,7 +274,7 @@ func (k Keeper) IterateVPEndProposals(ctx sdk.Context, timeBytes []byte, cb func
 }
 
 func (k Keeper) UpdateTallyOfVPEndProposals(ctx sdk.Context) error {
-	k.IterateVPEndProposals(ctx, sdk.FormatTimeBytes(ctx.BlockTime()), func(proposal group.Proposal) (stop bool) {
+	k.IterateVPEndProposals(ctx, func(proposal group.Proposal) (stop bool) {
 
 		policyInfo, err := k.GetGroupPolicyInfo(ctx, proposal.Address)
 		if err != nil {

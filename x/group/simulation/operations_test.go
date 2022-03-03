@@ -782,7 +782,7 @@ func (suite *SimTestSuite) TestSimulateLeaveGroup() {
 		GroupId:  groupRes.GroupId,
 		Metadata: "",
 	}
-	require.NoError(accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("3", time.Hour)))
+	require.NoError(accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("3", time.Hour, time.Hour)))
 	_, err = suite.app.GroupKeeper.CreateGroupPolicy(ctx, accountReq)
 	require.NoError(err)
 

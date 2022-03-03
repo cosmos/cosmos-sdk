@@ -55,7 +55,7 @@ message Proposal {
   google.protobuf.Timestamp         voting_end_time   = 9 [(gogoproto.stdtime) = true];
 
   // metadata is any arbitrary metadata attached to the proposal.
-  bytes metadata = 10;
+  string metadata = 10;
 }
 
 // ProposalStatus enumerates the valid statuses of a proposal.

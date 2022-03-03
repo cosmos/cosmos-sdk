@@ -2,6 +2,7 @@ package ormtable
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/orm/types/kv"
 )
@@ -33,11 +34,13 @@ type Backend interface {
 	// ValidateHooks returns a ValidateHooks instance or nil.
 	ValidateHooks() ValidateHooks
 
-	// WithValidateHooks returns a copy of this backend with the provided hooks.
+	// WithValidateHooks returns a copy of this backend with the provided validate hooks.
 	WithValidateHooks(ValidateHooks) Backend
 
+	// WriteHooks returns a WriteHooks instance of nil.
 	WriteHooks() WriteHooks
 
+	// WithWriteHooks returns a copy of this backend with the provided write hooks.
 	WithWriteHooks(WriteHooks) Backend
 }
 
@@ -160,6 +163,11 @@ func NewBackend(options BackendOptions) Backend {
 	}
 }
 
+// BackendResolver resolves a backend from the context or returns an error.
+// Callers should type cast the returned ReadBackend to Backend to test whether
+// the backend is writable.
+type BackendResolver func(context.Context) (ReadBackend, error)
+
 // WrapContextDefault performs the default wrapping of a backend in a context.
 // This should be used primarily for testing purposes and production code
 // should use some other framework specific wrapping (for instance using
@@ -172,10 +180,16 @@ type contextKeyType string
 
 var defaultContextKey = contextKeyType("backend")
 
-func getBackendDefault(ctx context.Context) (Backend, error) {
-	return ctx.Value(defaultContextKey).(Backend), nil
-}
+func getBackendDefault(ctx context.Context) (ReadBackend, error) {
+	value := ctx.Value(defaultContextKey)
+	if value == nil {
+		return nil, fmt.Errorf("can't resolve backend")
+	}
 
-func getReadBackendDefault(ctx context.Context) (ReadBackend, error) {
-	return ctx.Value(defaultContextKey).(ReadBackend), nil
+	backend, ok := value.(ReadBackend)
+	if !ok {
+		return nil, fmt.Errorf("expected value of type %T, instead got %T", backend, value)
+	}
+
+	return backend, nil
 }

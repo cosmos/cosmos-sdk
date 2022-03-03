@@ -111,8 +111,8 @@ func (x *fastReflection_Member) Range(f func(protoreflect.FieldDescriptor, proto
 			return
 		}
 	}
-	if len(x.Metadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.Metadata)
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
 		if !f(fd_Member_metadata, value) {
 			return
 		}
@@ -143,7 +143,7 @@ func (x *fastReflection_Member) Has(fd protoreflect.FieldDescriptor) bool {
 	case "cosmos.group.v1beta1.Member.weight":
 		return x.Weight != ""
 	case "cosmos.group.v1beta1.Member.metadata":
-		return len(x.Metadata) != 0
+		return x.Metadata != ""
 	case "cosmos.group.v1beta1.Member.added_at":
 		return x.AddedAt != nil
 	default:
@@ -167,7 +167,7 @@ func (x *fastReflection_Member) Clear(fd protoreflect.FieldDescriptor) {
 	case "cosmos.group.v1beta1.Member.weight":
 		x.Weight = ""
 	case "cosmos.group.v1beta1.Member.metadata":
-		x.Metadata = nil
+		x.Metadata = ""
 	case "cosmos.group.v1beta1.Member.added_at":
 		x.AddedAt = nil
 	default:
@@ -194,7 +194,7 @@ func (x *fastReflection_Member) Get(descriptor protoreflect.FieldDescriptor) pro
 		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.Member.metadata":
 		value := x.Metadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.Member.added_at":
 		value := x.AddedAt
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
@@ -223,7 +223,7 @@ func (x *fastReflection_Member) Set(fd protoreflect.FieldDescriptor, value proto
 	case "cosmos.group.v1beta1.Member.weight":
 		x.Weight = value.Interface().(string)
 	case "cosmos.group.v1beta1.Member.metadata":
-		x.Metadata = value.Bytes()
+		x.Metadata = value.Interface().(string)
 	case "cosmos.group.v1beta1.Member.added_at":
 		x.AddedAt = value.Message().Interface().(*timestamppb.Timestamp)
 	default:
@@ -275,7 +275,7 @@ func (x *fastReflection_Member) NewField(fd protoreflect.FieldDescriptor) protor
 	case "cosmos.group.v1beta1.Member.weight":
 		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.Member.metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.Member.added_at":
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
@@ -545,7 +545,7 @@ func (x *fastReflection_Member) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -555,25 +555,23 @@ func (x *fastReflection_Member) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Metadata = append(x.Metadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.Metadata == nil {
-					x.Metadata = []byte{}
-				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 4:
 				if wireType != 2 {
@@ -1143,14 +1141,14 @@ func (x *fastReflection_Members) ProtoMethods() *protoiface.Methods {
 var (
 	md_ThresholdDecisionPolicy           protoreflect.MessageDescriptor
 	fd_ThresholdDecisionPolicy_threshold protoreflect.FieldDescriptor
-	fd_ThresholdDecisionPolicy_timeout   protoreflect.FieldDescriptor
+	fd_ThresholdDecisionPolicy_windows   protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_group_v1beta1_types_proto_init()
 	md_ThresholdDecisionPolicy = File_cosmos_group_v1beta1_types_proto.Messages().ByName("ThresholdDecisionPolicy")
 	fd_ThresholdDecisionPolicy_threshold = md_ThresholdDecisionPolicy.Fields().ByName("threshold")
-	fd_ThresholdDecisionPolicy_timeout = md_ThresholdDecisionPolicy.Fields().ByName("timeout")
+	fd_ThresholdDecisionPolicy_windows = md_ThresholdDecisionPolicy.Fields().ByName("windows")
 }
 
 var _ protoreflect.Message = (*fastReflection_ThresholdDecisionPolicy)(nil)
@@ -1224,9 +1222,9 @@ func (x *fastReflection_ThresholdDecisionPolicy) Range(f func(protoreflect.Field
 			return
 		}
 	}
-	if x.Timeout != nil {
-		value := protoreflect.ValueOfMessage(x.Timeout.ProtoReflect())
-		if !f(fd_ThresholdDecisionPolicy_timeout, value) {
+	if x.Windows != nil {
+		value := protoreflect.ValueOfMessage(x.Windows.ProtoReflect())
+		if !f(fd_ThresholdDecisionPolicy_windows, value) {
 			return
 		}
 	}
@@ -1247,8 +1245,8 @@ func (x *fastReflection_ThresholdDecisionPolicy) Has(fd protoreflect.FieldDescri
 	switch fd.FullName() {
 	case "cosmos.group.v1beta1.ThresholdDecisionPolicy.threshold":
 		return x.Threshold != ""
-	case "cosmos.group.v1beta1.ThresholdDecisionPolicy.timeout":
-		return x.Timeout != nil
+	case "cosmos.group.v1beta1.ThresholdDecisionPolicy.windows":
+		return x.Windows != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.ThresholdDecisionPolicy"))
@@ -1267,8 +1265,8 @@ func (x *fastReflection_ThresholdDecisionPolicy) Clear(fd protoreflect.FieldDesc
 	switch fd.FullName() {
 	case "cosmos.group.v1beta1.ThresholdDecisionPolicy.threshold":
 		x.Threshold = ""
-	case "cosmos.group.v1beta1.ThresholdDecisionPolicy.timeout":
-		x.Timeout = nil
+	case "cosmos.group.v1beta1.ThresholdDecisionPolicy.windows":
+		x.Windows = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.ThresholdDecisionPolicy"))
@@ -1288,8 +1286,8 @@ func (x *fastReflection_ThresholdDecisionPolicy) Get(descriptor protoreflect.Fie
 	case "cosmos.group.v1beta1.ThresholdDecisionPolicy.threshold":
 		value := x.Threshold
 		return protoreflect.ValueOfString(value)
-	case "cosmos.group.v1beta1.ThresholdDecisionPolicy.timeout":
-		value := x.Timeout
+	case "cosmos.group.v1beta1.ThresholdDecisionPolicy.windows":
+		value := x.Windows
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
@@ -1313,8 +1311,8 @@ func (x *fastReflection_ThresholdDecisionPolicy) Set(fd protoreflect.FieldDescri
 	switch fd.FullName() {
 	case "cosmos.group.v1beta1.ThresholdDecisionPolicy.threshold":
 		x.Threshold = value.Interface().(string)
-	case "cosmos.group.v1beta1.ThresholdDecisionPolicy.timeout":
-		x.Timeout = value.Message().Interface().(*durationpb.Duration)
+	case "cosmos.group.v1beta1.ThresholdDecisionPolicy.windows":
+		x.Windows = value.Message().Interface().(*DecisionPolicyWindows)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.ThresholdDecisionPolicy"))
@@ -1335,11 +1333,11 @@ func (x *fastReflection_ThresholdDecisionPolicy) Set(fd protoreflect.FieldDescri
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_ThresholdDecisionPolicy) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.ThresholdDecisionPolicy.timeout":
-		if x.Timeout == nil {
-			x.Timeout = new(durationpb.Duration)
+	case "cosmos.group.v1beta1.ThresholdDecisionPolicy.windows":
+		if x.Windows == nil {
+			x.Windows = new(DecisionPolicyWindows)
 		}
-		return protoreflect.ValueOfMessage(x.Timeout.ProtoReflect())
+		return protoreflect.ValueOfMessage(x.Windows.ProtoReflect())
 	case "cosmos.group.v1beta1.ThresholdDecisionPolicy.threshold":
 		panic(fmt.Errorf("field threshold of message cosmos.group.v1beta1.ThresholdDecisionPolicy is not mutable"))
 	default:
@@ -1357,8 +1355,8 @@ func (x *fastReflection_ThresholdDecisionPolicy) NewField(fd protoreflect.FieldD
 	switch fd.FullName() {
 	case "cosmos.group.v1beta1.ThresholdDecisionPolicy.threshold":
 		return protoreflect.ValueOfString("")
-	case "cosmos.group.v1beta1.ThresholdDecisionPolicy.timeout":
-		m := new(durationpb.Duration)
+	case "cosmos.group.v1beta1.ThresholdDecisionPolicy.windows":
+		m := new(DecisionPolicyWindows)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
@@ -1433,8 +1431,8 @@ func (x *fastReflection_ThresholdDecisionPolicy) ProtoMethods() *protoiface.Meth
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.Timeout != nil {
-			l = options.Size(x.Timeout)
+		if x.Windows != nil {
+			l = options.Size(x.Windows)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
@@ -1466,8 +1464,8 @@ func (x *fastReflection_ThresholdDecisionPolicy) ProtoMethods() *protoiface.Meth
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.Timeout != nil {
-			encoded, err := options.Marshal(x.Timeout)
+		if x.Windows != nil {
+			encoded, err := options.Marshal(x.Windows)
 			if err != nil {
 				return protoiface.MarshalOutput{
 					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1570,7 +1568,7 @@ func (x *fastReflection_ThresholdDecisionPolicy) ProtoMethods() *protoiface.Meth
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Timeout", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Windows", wireType)
 				}
 				var msglen int
 				for shift := uint(0); ; shift += 7 {
@@ -1597,10 +1595,10 @@ func (x *fastReflection_ThresholdDecisionPolicy) ProtoMethods() *protoiface.Meth
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.Timeout == nil {
-					x.Timeout = &durationpb.Duration{}
+				if x.Windows == nil {
+					x.Windows = &DecisionPolicyWindows{}
 				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Timeout); err != nil {
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Windows); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -1642,14 +1640,14 @@ func (x *fastReflection_ThresholdDecisionPolicy) ProtoMethods() *protoiface.Meth
 var (
 	md_PercentageDecisionPolicy            protoreflect.MessageDescriptor
 	fd_PercentageDecisionPolicy_percentage protoreflect.FieldDescriptor
-	fd_PercentageDecisionPolicy_timeout    protoreflect.FieldDescriptor
+	fd_PercentageDecisionPolicy_windows    protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_group_v1beta1_types_proto_init()
 	md_PercentageDecisionPolicy = File_cosmos_group_v1beta1_types_proto.Messages().ByName("PercentageDecisionPolicy")
 	fd_PercentageDecisionPolicy_percentage = md_PercentageDecisionPolicy.Fields().ByName("percentage")
-	fd_PercentageDecisionPolicy_timeout = md_PercentageDecisionPolicy.Fields().ByName("timeout")
+	fd_PercentageDecisionPolicy_windows = md_PercentageDecisionPolicy.Fields().ByName("windows")
 }
 
 var _ protoreflect.Message = (*fastReflection_PercentageDecisionPolicy)(nil)
@@ -1723,9 +1721,9 @@ func (x *fastReflection_PercentageDecisionPolicy) Range(f func(protoreflect.Fiel
 			return
 		}
 	}
-	if x.Timeout != nil {
-		value := protoreflect.ValueOfMessage(x.Timeout.ProtoReflect())
-		if !f(fd_PercentageDecisionPolicy_timeout, value) {
+	if x.Windows != nil {
+		value := protoreflect.ValueOfMessage(x.Windows.ProtoReflect())
+		if !f(fd_PercentageDecisionPolicy_windows, value) {
 			return
 		}
 	}
@@ -1746,8 +1744,8 @@ func (x *fastReflection_PercentageDecisionPolicy) Has(fd protoreflect.FieldDescr
 	switch fd.FullName() {
 	case "cosmos.group.v1beta1.PercentageDecisionPolicy.percentage":
 		return x.Percentage != ""
-	case "cosmos.group.v1beta1.PercentageDecisionPolicy.timeout":
-		return x.Timeout != nil
+	case "cosmos.group.v1beta1.PercentageDecisionPolicy.windows":
+		return x.Windows != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.PercentageDecisionPolicy"))
@@ -1766,8 +1764,8 @@ func (x *fastReflection_PercentageDecisionPolicy) Clear(fd protoreflect.FieldDes
 	switch fd.FullName() {
 	case "cosmos.group.v1beta1.PercentageDecisionPolicy.percentage":
 		x.Percentage = ""
-	case "cosmos.group.v1beta1.PercentageDecisionPolicy.timeout":
-		x.Timeout = nil
+	case "cosmos.group.v1beta1.PercentageDecisionPolicy.windows":
+		x.Windows = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.PercentageDecisionPolicy"))
@@ -1787,8 +1785,8 @@ func (x *fastReflection_PercentageDecisionPolicy) Get(descriptor protoreflect.Fi
 	case "cosmos.group.v1beta1.PercentageDecisionPolicy.percentage":
 		value := x.Percentage
 		return protoreflect.ValueOfString(value)
-	case "cosmos.group.v1beta1.PercentageDecisionPolicy.timeout":
-		value := x.Timeout
+	case "cosmos.group.v1beta1.PercentageDecisionPolicy.windows":
+		value := x.Windows
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
@@ -1812,8 +1810,8 @@ func (x *fastReflection_PercentageDecisionPolicy) Set(fd protoreflect.FieldDescr
 	switch fd.FullName() {
 	case "cosmos.group.v1beta1.PercentageDecisionPolicy.percentage":
 		x.Percentage = value.Interface().(string)
-	case "cosmos.group.v1beta1.PercentageDecisionPolicy.timeout":
-		x.Timeout = value.Message().Interface().(*durationpb.Duration)
+	case "cosmos.group.v1beta1.PercentageDecisionPolicy.windows":
+		x.Windows = value.Message().Interface().(*DecisionPolicyWindows)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.PercentageDecisionPolicy"))
@@ -1834,11 +1832,11 @@ func (x *fastReflection_PercentageDecisionPolicy) Set(fd protoreflect.FieldDescr
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_PercentageDecisionPolicy) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1beta1.PercentageDecisionPolicy.timeout":
-		if x.Timeout == nil {
-			x.Timeout = new(durationpb.Duration)
+	case "cosmos.group.v1beta1.PercentageDecisionPolicy.windows":
+		if x.Windows == nil {
+			x.Windows = new(DecisionPolicyWindows)
 		}
-		return protoreflect.ValueOfMessage(x.Timeout.ProtoReflect())
+		return protoreflect.ValueOfMessage(x.Windows.ProtoReflect())
 	case "cosmos.group.v1beta1.PercentageDecisionPolicy.percentage":
 		panic(fmt.Errorf("field percentage of message cosmos.group.v1beta1.PercentageDecisionPolicy is not mutable"))
 	default:
@@ -1856,8 +1854,8 @@ func (x *fastReflection_PercentageDecisionPolicy) NewField(fd protoreflect.Field
 	switch fd.FullName() {
 	case "cosmos.group.v1beta1.PercentageDecisionPolicy.percentage":
 		return protoreflect.ValueOfString("")
-	case "cosmos.group.v1beta1.PercentageDecisionPolicy.timeout":
-		m := new(durationpb.Duration)
+	case "cosmos.group.v1beta1.PercentageDecisionPolicy.windows":
+		m := new(DecisionPolicyWindows)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
@@ -1932,8 +1930,8 @@ func (x *fastReflection_PercentageDecisionPolicy) ProtoMethods() *protoiface.Met
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.Timeout != nil {
-			l = options.Size(x.Timeout)
+		if x.Windows != nil {
+			l = options.Size(x.Windows)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
@@ -1965,8 +1963,8 @@ func (x *fastReflection_PercentageDecisionPolicy) ProtoMethods() *protoiface.Met
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.Timeout != nil {
-			encoded, err := options.Marshal(x.Timeout)
+		if x.Windows != nil {
+			encoded, err := options.Marshal(x.Windows)
 			if err != nil {
 				return protoiface.MarshalOutput{
 					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2069,7 +2067,7 @@ func (x *fastReflection_PercentageDecisionPolicy) ProtoMethods() *protoiface.Met
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Timeout", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Windows", wireType)
 				}
 				var msglen int
 				for shift := uint(0); ; shift += 7 {
@@ -2096,10 +2094,524 @@ func (x *fastReflection_PercentageDecisionPolicy) ProtoMethods() *protoiface.Met
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.Timeout == nil {
-					x.Timeout = &durationpb.Duration{}
+				if x.Windows == nil {
+					x.Windows = &DecisionPolicyWindows{}
 				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Timeout); err != nil {
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Windows); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_DecisionPolicyWindows                      protoreflect.MessageDescriptor
+	fd_DecisionPolicyWindows_voting_period        protoreflect.FieldDescriptor
+	fd_DecisionPolicyWindows_min_execution_period protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_group_v1beta1_types_proto_init()
+	md_DecisionPolicyWindows = File_cosmos_group_v1beta1_types_proto.Messages().ByName("DecisionPolicyWindows")
+	fd_DecisionPolicyWindows_voting_period = md_DecisionPolicyWindows.Fields().ByName("voting_period")
+	fd_DecisionPolicyWindows_min_execution_period = md_DecisionPolicyWindows.Fields().ByName("min_execution_period")
+}
+
+var _ protoreflect.Message = (*fastReflection_DecisionPolicyWindows)(nil)
+
+type fastReflection_DecisionPolicyWindows DecisionPolicyWindows
+
+func (x *DecisionPolicyWindows) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_DecisionPolicyWindows)(x)
+}
+
+func (x *DecisionPolicyWindows) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_DecisionPolicyWindows_messageType fastReflection_DecisionPolicyWindows_messageType
+var _ protoreflect.MessageType = fastReflection_DecisionPolicyWindows_messageType{}
+
+type fastReflection_DecisionPolicyWindows_messageType struct{}
+
+func (x fastReflection_DecisionPolicyWindows_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_DecisionPolicyWindows)(nil)
+}
+func (x fastReflection_DecisionPolicyWindows_messageType) New() protoreflect.Message {
+	return new(fastReflection_DecisionPolicyWindows)
+}
+func (x fastReflection_DecisionPolicyWindows_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_DecisionPolicyWindows
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_DecisionPolicyWindows) Descriptor() protoreflect.MessageDescriptor {
+	return md_DecisionPolicyWindows
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_DecisionPolicyWindows) Type() protoreflect.MessageType {
+	return _fastReflection_DecisionPolicyWindows_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_DecisionPolicyWindows) New() protoreflect.Message {
+	return new(fastReflection_DecisionPolicyWindows)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_DecisionPolicyWindows) Interface() protoreflect.ProtoMessage {
+	return (*DecisionPolicyWindows)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_DecisionPolicyWindows) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.VotingPeriod != nil {
+		value := protoreflect.ValueOfMessage(x.VotingPeriod.ProtoReflect())
+		if !f(fd_DecisionPolicyWindows_voting_period, value) {
+			return
+		}
+	}
+	if x.MinExecutionPeriod != nil {
+		value := protoreflect.ValueOfMessage(x.MinExecutionPeriod.ProtoReflect())
+		if !f(fd_DecisionPolicyWindows_min_execution_period, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_DecisionPolicyWindows) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.group.v1beta1.DecisionPolicyWindows.voting_period":
+		return x.VotingPeriod != nil
+	case "cosmos.group.v1beta1.DecisionPolicyWindows.min_execution_period":
+		return x.MinExecutionPeriod != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.DecisionPolicyWindows"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.DecisionPolicyWindows does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DecisionPolicyWindows) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.group.v1beta1.DecisionPolicyWindows.voting_period":
+		x.VotingPeriod = nil
+	case "cosmos.group.v1beta1.DecisionPolicyWindows.min_execution_period":
+		x.MinExecutionPeriod = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.DecisionPolicyWindows"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.DecisionPolicyWindows does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_DecisionPolicyWindows) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.group.v1beta1.DecisionPolicyWindows.voting_period":
+		value := x.VotingPeriod
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "cosmos.group.v1beta1.DecisionPolicyWindows.min_execution_period":
+		value := x.MinExecutionPeriod
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.DecisionPolicyWindows"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.DecisionPolicyWindows does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DecisionPolicyWindows) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.group.v1beta1.DecisionPolicyWindows.voting_period":
+		x.VotingPeriod = value.Message().Interface().(*durationpb.Duration)
+	case "cosmos.group.v1beta1.DecisionPolicyWindows.min_execution_period":
+		x.MinExecutionPeriod = value.Message().Interface().(*durationpb.Duration)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.DecisionPolicyWindows"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.DecisionPolicyWindows does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DecisionPolicyWindows) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.group.v1beta1.DecisionPolicyWindows.voting_period":
+		if x.VotingPeriod == nil {
+			x.VotingPeriod = new(durationpb.Duration)
+		}
+		return protoreflect.ValueOfMessage(x.VotingPeriod.ProtoReflect())
+	case "cosmos.group.v1beta1.DecisionPolicyWindows.min_execution_period":
+		if x.MinExecutionPeriod == nil {
+			x.MinExecutionPeriod = new(durationpb.Duration)
+		}
+		return protoreflect.ValueOfMessage(x.MinExecutionPeriod.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.DecisionPolicyWindows"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.DecisionPolicyWindows does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_DecisionPolicyWindows) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.group.v1beta1.DecisionPolicyWindows.voting_period":
+		m := new(durationpb.Duration)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "cosmos.group.v1beta1.DecisionPolicyWindows.min_execution_period":
+		m := new(durationpb.Duration)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.DecisionPolicyWindows"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.DecisionPolicyWindows does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_DecisionPolicyWindows) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.DecisionPolicyWindows", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_DecisionPolicyWindows) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DecisionPolicyWindows) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_DecisionPolicyWindows) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_DecisionPolicyWindows) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*DecisionPolicyWindows)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.VotingPeriod != nil {
+			l = options.Size(x.VotingPeriod)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.MinExecutionPeriod != nil {
+			l = options.Size(x.MinExecutionPeriod)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*DecisionPolicyWindows)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.MinExecutionPeriod != nil {
+			encoded, err := options.Marshal(x.MinExecutionPeriod)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if x.VotingPeriod != nil {
+			encoded, err := options.Marshal(x.VotingPeriod)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*DecisionPolicyWindows)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DecisionPolicyWindows: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DecisionPolicyWindows: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VotingPeriod", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.VotingPeriod == nil {
+					x.VotingPeriod = &durationpb.Duration{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.VotingPeriod); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MinExecutionPeriod", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.MinExecutionPeriod == nil {
+					x.MinExecutionPeriod = &durationpb.Duration{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.MinExecutionPeriod); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -2168,7 +2680,7 @@ func (x *GroupInfo) ProtoReflect() protoreflect.Message {
 }
 
 func (x *GroupInfo) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[4]
+	mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2236,8 +2748,8 @@ func (x *fastReflection_GroupInfo) Range(f func(protoreflect.FieldDescriptor, pr
 			return
 		}
 	}
-	if len(x.Metadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.Metadata)
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
 		if !f(fd_GroupInfo_metadata, value) {
 			return
 		}
@@ -2280,7 +2792,7 @@ func (x *fastReflection_GroupInfo) Has(fd protoreflect.FieldDescriptor) bool {
 	case "cosmos.group.v1beta1.GroupInfo.admin":
 		return x.Admin != ""
 	case "cosmos.group.v1beta1.GroupInfo.metadata":
-		return len(x.Metadata) != 0
+		return x.Metadata != ""
 	case "cosmos.group.v1beta1.GroupInfo.version":
 		return x.Version != uint64(0)
 	case "cosmos.group.v1beta1.GroupInfo.total_weight":
@@ -2308,7 +2820,7 @@ func (x *fastReflection_GroupInfo) Clear(fd protoreflect.FieldDescriptor) {
 	case "cosmos.group.v1beta1.GroupInfo.admin":
 		x.Admin = ""
 	case "cosmos.group.v1beta1.GroupInfo.metadata":
-		x.Metadata = nil
+		x.Metadata = ""
 	case "cosmos.group.v1beta1.GroupInfo.version":
 		x.Version = uint64(0)
 	case "cosmos.group.v1beta1.GroupInfo.total_weight":
@@ -2339,7 +2851,7 @@ func (x *fastReflection_GroupInfo) Get(descriptor protoreflect.FieldDescriptor) 
 		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.GroupInfo.metadata":
 		value := x.Metadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.GroupInfo.version":
 		value := x.Version
 		return protoreflect.ValueOfUint64(value)
@@ -2374,7 +2886,7 @@ func (x *fastReflection_GroupInfo) Set(fd protoreflect.FieldDescriptor, value pr
 	case "cosmos.group.v1beta1.GroupInfo.admin":
 		x.Admin = value.Interface().(string)
 	case "cosmos.group.v1beta1.GroupInfo.metadata":
-		x.Metadata = value.Bytes()
+		x.Metadata = value.Interface().(string)
 	case "cosmos.group.v1beta1.GroupInfo.version":
 		x.Version = value.Uint()
 	case "cosmos.group.v1beta1.GroupInfo.total_weight":
@@ -2434,7 +2946,7 @@ func (x *fastReflection_GroupInfo) NewField(fd protoreflect.FieldDescriptor) pro
 	case "cosmos.group.v1beta1.GroupInfo.admin":
 		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.GroupInfo.metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.GroupInfo.version":
 		return protoreflect.ValueOfUint64(uint64(0))
 	case "cosmos.group.v1beta1.GroupInfo.total_weight":
@@ -2711,7 +3223,7 @@ func (x *fastReflection_GroupInfo) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -2721,25 +3233,23 @@ func (x *fastReflection_GroupInfo) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Metadata = append(x.Metadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.Metadata == nil {
-					x.Metadata = []byte{}
-				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 4:
 				if wireType != 0 {
@@ -2885,7 +3395,7 @@ func (x *GroupMember) ProtoReflect() protoreflect.Message {
 }
 
 func (x *GroupMember) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[5]
+	mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3378,7 +3888,7 @@ func (x *GroupPolicyInfo) ProtoReflect() protoreflect.Message {
 }
 
 func (x *GroupPolicyInfo) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[6]
+	mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3452,8 +3962,8 @@ func (x *fastReflection_GroupPolicyInfo) Range(f func(protoreflect.FieldDescript
 			return
 		}
 	}
-	if len(x.Metadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.Metadata)
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
 		if !f(fd_GroupPolicyInfo_metadata, value) {
 			return
 		}
@@ -3498,7 +4008,7 @@ func (x *fastReflection_GroupPolicyInfo) Has(fd protoreflect.FieldDescriptor) bo
 	case "cosmos.group.v1beta1.GroupPolicyInfo.admin":
 		return x.Admin != ""
 	case "cosmos.group.v1beta1.GroupPolicyInfo.metadata":
-		return len(x.Metadata) != 0
+		return x.Metadata != ""
 	case "cosmos.group.v1beta1.GroupPolicyInfo.version":
 		return x.Version != uint64(0)
 	case "cosmos.group.v1beta1.GroupPolicyInfo.decision_policy":
@@ -3528,7 +4038,7 @@ func (x *fastReflection_GroupPolicyInfo) Clear(fd protoreflect.FieldDescriptor) 
 	case "cosmos.group.v1beta1.GroupPolicyInfo.admin":
 		x.Admin = ""
 	case "cosmos.group.v1beta1.GroupPolicyInfo.metadata":
-		x.Metadata = nil
+		x.Metadata = ""
 	case "cosmos.group.v1beta1.GroupPolicyInfo.version":
 		x.Version = uint64(0)
 	case "cosmos.group.v1beta1.GroupPolicyInfo.decision_policy":
@@ -3562,7 +4072,7 @@ func (x *fastReflection_GroupPolicyInfo) Get(descriptor protoreflect.FieldDescri
 		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.GroupPolicyInfo.metadata":
 		value := x.Metadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.GroupPolicyInfo.version":
 		value := x.Version
 		return protoreflect.ValueOfUint64(value)
@@ -3599,7 +4109,7 @@ func (x *fastReflection_GroupPolicyInfo) Set(fd protoreflect.FieldDescriptor, va
 	case "cosmos.group.v1beta1.GroupPolicyInfo.admin":
 		x.Admin = value.Interface().(string)
 	case "cosmos.group.v1beta1.GroupPolicyInfo.metadata":
-		x.Metadata = value.Bytes()
+		x.Metadata = value.Interface().(string)
 	case "cosmos.group.v1beta1.GroupPolicyInfo.version":
 		x.Version = value.Uint()
 	case "cosmos.group.v1beta1.GroupPolicyInfo.decision_policy":
@@ -3666,7 +4176,7 @@ func (x *fastReflection_GroupPolicyInfo) NewField(fd protoreflect.FieldDescripto
 	case "cosmos.group.v1beta1.GroupPolicyInfo.admin":
 		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.GroupPolicyInfo.metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.GroupPolicyInfo.version":
 		return protoreflect.ValueOfUint64(uint64(0))
 	case "cosmos.group.v1beta1.GroupPolicyInfo.decision_policy":
@@ -3994,7 +4504,7 @@ func (x *fastReflection_GroupPolicyInfo) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -4004,25 +4514,23 @@ func (x *fastReflection_GroupPolicyInfo) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Metadata = append(x.Metadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.Metadata == nil {
-					x.Metadata = []byte{}
-				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 5:
 				if wireType != 0 {
@@ -4259,7 +4767,7 @@ var (
 	fd_Proposal_status               protoreflect.FieldDescriptor
 	fd_Proposal_result               protoreflect.FieldDescriptor
 	fd_Proposal_final_tally_result   protoreflect.FieldDescriptor
-	fd_Proposal_timeout              protoreflect.FieldDescriptor
+	fd_Proposal_voting_period_end    protoreflect.FieldDescriptor
 	fd_Proposal_executor_result      protoreflect.FieldDescriptor
 	fd_Proposal_messages             protoreflect.FieldDescriptor
 )
@@ -4277,7 +4785,7 @@ func init() {
 	fd_Proposal_status = md_Proposal.Fields().ByName("status")
 	fd_Proposal_result = md_Proposal.Fields().ByName("result")
 	fd_Proposal_final_tally_result = md_Proposal.Fields().ByName("final_tally_result")
-	fd_Proposal_timeout = md_Proposal.Fields().ByName("timeout")
+	fd_Proposal_voting_period_end = md_Proposal.Fields().ByName("voting_period_end")
 	fd_Proposal_executor_result = md_Proposal.Fields().ByName("executor_result")
 	fd_Proposal_messages = md_Proposal.Fields().ByName("messages")
 }
@@ -4291,7 +4799,7 @@ func (x *Proposal) ProtoReflect() protoreflect.Message {
 }
 
 func (x *Proposal) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[7]
+	mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4359,8 +4867,8 @@ func (x *fastReflection_Proposal) Range(f func(protoreflect.FieldDescriptor, pro
 			return
 		}
 	}
-	if len(x.Metadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.Metadata)
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
 		if !f(fd_Proposal_metadata, value) {
 			return
 		}
@@ -4407,9 +4915,9 @@ func (x *fastReflection_Proposal) Range(f func(protoreflect.FieldDescriptor, pro
 			return
 		}
 	}
-	if x.Timeout != nil {
-		value := protoreflect.ValueOfMessage(x.Timeout.ProtoReflect())
-		if !f(fd_Proposal_timeout, value) {
+	if x.VotingPeriodEnd != nil {
+		value := protoreflect.ValueOfMessage(x.VotingPeriodEnd.ProtoReflect())
+		if !f(fd_Proposal_voting_period_end, value) {
 			return
 		}
 	}
@@ -4445,7 +4953,7 @@ func (x *fastReflection_Proposal) Has(fd protoreflect.FieldDescriptor) bool {
 	case "cosmos.group.v1beta1.Proposal.address":
 		return x.Address != ""
 	case "cosmos.group.v1beta1.Proposal.metadata":
-		return len(x.Metadata) != 0
+		return x.Metadata != ""
 	case "cosmos.group.v1beta1.Proposal.proposers":
 		return len(x.Proposers) != 0
 	case "cosmos.group.v1beta1.Proposal.submit_time":
@@ -4460,8 +4968,8 @@ func (x *fastReflection_Proposal) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.Result != 0
 	case "cosmos.group.v1beta1.Proposal.final_tally_result":
 		return x.FinalTallyResult != nil
-	case "cosmos.group.v1beta1.Proposal.timeout":
-		return x.Timeout != nil
+	case "cosmos.group.v1beta1.Proposal.voting_period_end":
+		return x.VotingPeriodEnd != nil
 	case "cosmos.group.v1beta1.Proposal.executor_result":
 		return x.ExecutorResult != 0
 	case "cosmos.group.v1beta1.Proposal.messages":
@@ -4487,7 +4995,7 @@ func (x *fastReflection_Proposal) Clear(fd protoreflect.FieldDescriptor) {
 	case "cosmos.group.v1beta1.Proposal.address":
 		x.Address = ""
 	case "cosmos.group.v1beta1.Proposal.metadata":
-		x.Metadata = nil
+		x.Metadata = ""
 	case "cosmos.group.v1beta1.Proposal.proposers":
 		x.Proposers = nil
 	case "cosmos.group.v1beta1.Proposal.submit_time":
@@ -4502,8 +5010,8 @@ func (x *fastReflection_Proposal) Clear(fd protoreflect.FieldDescriptor) {
 		x.Result = 0
 	case "cosmos.group.v1beta1.Proposal.final_tally_result":
 		x.FinalTallyResult = nil
-	case "cosmos.group.v1beta1.Proposal.timeout":
-		x.Timeout = nil
+	case "cosmos.group.v1beta1.Proposal.voting_period_end":
+		x.VotingPeriodEnd = nil
 	case "cosmos.group.v1beta1.Proposal.executor_result":
 		x.ExecutorResult = 0
 	case "cosmos.group.v1beta1.Proposal.messages":
@@ -4532,7 +5040,7 @@ func (x *fastReflection_Proposal) Get(descriptor protoreflect.FieldDescriptor) p
 		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.Proposal.metadata":
 		value := x.Metadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.Proposal.proposers":
 		if len(x.Proposers) == 0 {
 			return protoreflect.ValueOfList(&_Proposal_4_list{})
@@ -4557,8 +5065,8 @@ func (x *fastReflection_Proposal) Get(descriptor protoreflect.FieldDescriptor) p
 	case "cosmos.group.v1beta1.Proposal.final_tally_result":
 		value := x.FinalTallyResult
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.group.v1beta1.Proposal.timeout":
-		value := x.Timeout
+	case "cosmos.group.v1beta1.Proposal.voting_period_end":
+		value := x.VotingPeriodEnd
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	case "cosmos.group.v1beta1.Proposal.executor_result":
 		value := x.ExecutorResult
@@ -4594,7 +5102,7 @@ func (x *fastReflection_Proposal) Set(fd protoreflect.FieldDescriptor, value pro
 	case "cosmos.group.v1beta1.Proposal.address":
 		x.Address = value.Interface().(string)
 	case "cosmos.group.v1beta1.Proposal.metadata":
-		x.Metadata = value.Bytes()
+		x.Metadata = value.Interface().(string)
 	case "cosmos.group.v1beta1.Proposal.proposers":
 		lv := value.List()
 		clv := lv.(*_Proposal_4_list)
@@ -4611,8 +5119,8 @@ func (x *fastReflection_Proposal) Set(fd protoreflect.FieldDescriptor, value pro
 		x.Result = (ProposalResult)(value.Enum())
 	case "cosmos.group.v1beta1.Proposal.final_tally_result":
 		x.FinalTallyResult = value.Message().Interface().(*TallyResult)
-	case "cosmos.group.v1beta1.Proposal.timeout":
-		x.Timeout = value.Message().Interface().(*timestamppb.Timestamp)
+	case "cosmos.group.v1beta1.Proposal.voting_period_end":
+		x.VotingPeriodEnd = value.Message().Interface().(*timestamppb.Timestamp)
 	case "cosmos.group.v1beta1.Proposal.executor_result":
 		x.ExecutorResult = (ProposalExecutorResult)(value.Enum())
 	case "cosmos.group.v1beta1.Proposal.messages":
@@ -4655,11 +5163,11 @@ func (x *fastReflection_Proposal) Mutable(fd protoreflect.FieldDescriptor) proto
 			x.FinalTallyResult = new(TallyResult)
 		}
 		return protoreflect.ValueOfMessage(x.FinalTallyResult.ProtoReflect())
-	case "cosmos.group.v1beta1.Proposal.timeout":
-		if x.Timeout == nil {
-			x.Timeout = new(timestamppb.Timestamp)
+	case "cosmos.group.v1beta1.Proposal.voting_period_end":
+		if x.VotingPeriodEnd == nil {
+			x.VotingPeriodEnd = new(timestamppb.Timestamp)
 		}
-		return protoreflect.ValueOfMessage(x.Timeout.ProtoReflect())
+		return protoreflect.ValueOfMessage(x.VotingPeriodEnd.ProtoReflect())
 	case "cosmos.group.v1beta1.Proposal.messages":
 		if x.Messages == nil {
 			x.Messages = []*anypb.Any{}
@@ -4700,7 +5208,7 @@ func (x *fastReflection_Proposal) NewField(fd protoreflect.FieldDescriptor) prot
 	case "cosmos.group.v1beta1.Proposal.address":
 		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.Proposal.metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.Proposal.proposers":
 		list := []string{}
 		return protoreflect.ValueOfList(&_Proposal_4_list{list: &list})
@@ -4718,7 +5226,7 @@ func (x *fastReflection_Proposal) NewField(fd protoreflect.FieldDescriptor) prot
 	case "cosmos.group.v1beta1.Proposal.final_tally_result":
 		m := new(TallyResult)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.group.v1beta1.Proposal.timeout":
+	case "cosmos.group.v1beta1.Proposal.voting_period_end":
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.group.v1beta1.Proposal.executor_result":
@@ -4832,8 +5340,8 @@ func (x *fastReflection_Proposal) ProtoMethods() *protoiface.Methods {
 			l = options.Size(x.FinalTallyResult)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.Timeout != nil {
-			l = options.Size(x.Timeout)
+		if x.VotingPeriodEnd != nil {
+			l = options.Size(x.VotingPeriodEnd)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.ExecutorResult != 0 {
@@ -4895,8 +5403,8 @@ func (x *fastReflection_Proposal) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x60
 		}
-		if x.Timeout != nil {
-			encoded, err := options.Marshal(x.Timeout)
+		if x.VotingPeriodEnd != nil {
+			encoded, err := options.Marshal(x.VotingPeriodEnd)
 			if err != nil {
 				return protoiface.MarshalOutput{
 					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -5089,7 +5597,7 @@ func (x *fastReflection_Proposal) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -5099,25 +5607,23 @@ func (x *fastReflection_Proposal) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Metadata = append(x.Metadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.Metadata == nil {
-					x.Metadata = []byte{}
-				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 4:
 				if wireType != 2 {
@@ -5301,7 +5807,7 @@ func (x *fastReflection_Proposal) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 11:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Timeout", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VotingPeriodEnd", wireType)
 				}
 				var msglen int
 				for shift := uint(0); ; shift += 7 {
@@ -5328,10 +5834,10 @@ func (x *fastReflection_Proposal) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.Timeout == nil {
-					x.Timeout = &timestamppb.Timestamp{}
+				if x.VotingPeriodEnd == nil {
+					x.VotingPeriodEnd = &timestamppb.Timestamp{}
 				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Timeout); err != nil {
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.VotingPeriodEnd); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -5449,7 +5955,7 @@ func (x *TallyResult) ProtoReflect() protoreflect.Message {
 }
 
 func (x *TallyResult) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[8]
+	mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6063,7 +6569,7 @@ func (x *Vote) ProtoReflect() protoreflect.Message {
 }
 
 func (x *Vote) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[9]
+	mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6137,8 +6643,8 @@ func (x *fastReflection_Vote) Range(f func(protoreflect.FieldDescriptor, protore
 			return
 		}
 	}
-	if len(x.Metadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.Metadata)
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
 		if !f(fd_Vote_metadata, value) {
 			return
 		}
@@ -6171,7 +6677,7 @@ func (x *fastReflection_Vote) Has(fd protoreflect.FieldDescriptor) bool {
 	case "cosmos.group.v1beta1.Vote.option":
 		return x.Option != 0
 	case "cosmos.group.v1beta1.Vote.metadata":
-		return len(x.Metadata) != 0
+		return x.Metadata != ""
 	case "cosmos.group.v1beta1.Vote.submit_time":
 		return x.SubmitTime != nil
 	default:
@@ -6197,7 +6703,7 @@ func (x *fastReflection_Vote) Clear(fd protoreflect.FieldDescriptor) {
 	case "cosmos.group.v1beta1.Vote.option":
 		x.Option = 0
 	case "cosmos.group.v1beta1.Vote.metadata":
-		x.Metadata = nil
+		x.Metadata = ""
 	case "cosmos.group.v1beta1.Vote.submit_time":
 		x.SubmitTime = nil
 	default:
@@ -6227,7 +6733,7 @@ func (x *fastReflection_Vote) Get(descriptor protoreflect.FieldDescriptor) proto
 		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
 	case "cosmos.group.v1beta1.Vote.metadata":
 		value := x.Metadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.Vote.submit_time":
 		value := x.SubmitTime
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
@@ -6258,7 +6764,7 @@ func (x *fastReflection_Vote) Set(fd protoreflect.FieldDescriptor, value protore
 	case "cosmos.group.v1beta1.Vote.option":
 		x.Option = (VoteOption)(value.Enum())
 	case "cosmos.group.v1beta1.Vote.metadata":
-		x.Metadata = value.Bytes()
+		x.Metadata = value.Interface().(string)
 	case "cosmos.group.v1beta1.Vote.submit_time":
 		x.SubmitTime = value.Message().Interface().(*timestamppb.Timestamp)
 	default:
@@ -6314,7 +6820,7 @@ func (x *fastReflection_Vote) NewField(fd protoreflect.FieldDescriptor) protoref
 	case "cosmos.group.v1beta1.Vote.option":
 		return protoreflect.ValueOfEnum(0)
 	case "cosmos.group.v1beta1.Vote.metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.Vote.submit_time":
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
@@ -6595,7 +7101,7 @@ func (x *fastReflection_Vote) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -6605,25 +7111,23 @@ func (x *fastReflection_Vote) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Metadata = append(x.Metadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.Metadata == nil {
-					x.Metadata = []byte{}
-				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 5:
 				if wireType != 2 {
@@ -6958,7 +7462,7 @@ type Member struct {
 	// weight is the member's voting weight that should be greater than 0.
 	Weight string `protobuf:"bytes,2,opt,name=weight,proto3" json:"weight,omitempty"`
 	// metadata is any arbitrary metadata to attached to the member.
-	Metadata []byte `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// added_at is a timestamp specifying when a member was added.
 	AddedAt *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=added_at,json=addedAt,proto3" json:"added_at,omitempty"`
 }
@@ -6997,11 +7501,11 @@ func (x *Member) GetWeight() string {
 	return ""
 }
 
-func (x *Member) GetMetadata() []byte {
+func (x *Member) GetMetadata() string {
 	if x != nil {
 		return x.Metadata
 	}
-	return nil
+	return ""
 }
 
 func (x *Member) GetAddedAt() *timestamppb.Timestamp {
@@ -7056,9 +7560,8 @@ type ThresholdDecisionPolicy struct {
 
 	// threshold is the minimum weighted sum of yes votes that must be met or exceeded for a proposal to succeed.
 	Threshold string `protobuf:"bytes,1,opt,name=threshold,proto3" json:"threshold,omitempty"`
-	// timeout is the duration from submission of a proposal to the end of voting period
-	// Within this times votes and exec messages can be submitted.
-	Timeout *durationpb.Duration `protobuf:"bytes,2,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	// windows defines the different windows for voting and execution.
+	Windows *DecisionPolicyWindows `protobuf:"bytes,2,opt,name=windows,proto3" json:"windows,omitempty"`
 }
 
 func (x *ThresholdDecisionPolicy) Reset() {
@@ -7088,9 +7591,9 @@ func (x *ThresholdDecisionPolicy) GetThreshold() string {
 	return ""
 }
 
-func (x *ThresholdDecisionPolicy) GetTimeout() *durationpb.Duration {
+func (x *ThresholdDecisionPolicy) GetWindows() *DecisionPolicyWindows {
 	if x != nil {
-		return x.Timeout
+		return x.Windows
 	}
 	return nil
 }
@@ -7103,9 +7606,8 @@ type PercentageDecisionPolicy struct {
 
 	// percentage is the minimum percentage the weighted sum of yes votes must meet for a proposal to succeed.
 	Percentage string `protobuf:"bytes,1,opt,name=percentage,proto3" json:"percentage,omitempty"`
-	// timeout is the duration from submission of a proposal to the end of voting period
-	// Within these times votes and exec messages can be submitted.
-	Timeout *durationpb.Duration `protobuf:"bytes,2,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	// windows defines the different windows for voting and execution.
+	Windows *DecisionPolicyWindows `protobuf:"bytes,2,opt,name=windows,proto3" json:"windows,omitempty"`
 }
 
 func (x *PercentageDecisionPolicy) Reset() {
@@ -7135,9 +7637,66 @@ func (x *PercentageDecisionPolicy) GetPercentage() string {
 	return ""
 }
 
-func (x *PercentageDecisionPolicy) GetTimeout() *durationpb.Duration {
+func (x *PercentageDecisionPolicy) GetWindows() *DecisionPolicyWindows {
 	if x != nil {
-		return x.Timeout
+		return x.Windows
+	}
+	return nil
+}
+
+// DecisionPolicyWindows defines the different windows for voting and execution.
+type DecisionPolicyWindows struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// voting_period is the duration from submission of a proposal to the end of voting period
+	// Within this times votes can be submitted with MsgVote.
+	VotingPeriod *durationpb.Duration `protobuf:"bytes,1,opt,name=voting_period,json=votingPeriod,proto3" json:"voting_period,omitempty"`
+	// min_execution_period is the minimum duration after the proposal submission
+	// where members can start sending MsgExec. This means that the window for
+	// sending a MsgExec transaction is:
+	// `[ submission + min_execution_period ; submission + voting_period + max_execution_period]`
+	// where max_execution_period is a app-specific config, defined in the keeper.
+	// If not set, min_execution_period will default to 0.
+	//
+	// Please make sure to set a `min_execution_period` that is smaller than
+	// `voting_period + max_execution_period`, or else the above execution window
+	// is empty, meaning that all proposals created with this decision policy
+	// won't be able to be executed.
+	MinExecutionPeriod *durationpb.Duration `protobuf:"bytes,2,opt,name=min_execution_period,json=minExecutionPeriod,proto3" json:"min_execution_period,omitempty"`
+}
+
+func (x *DecisionPolicyWindows) Reset() {
+	*x = DecisionPolicyWindows{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DecisionPolicyWindows) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DecisionPolicyWindows) ProtoMessage() {}
+
+// Deprecated: Use DecisionPolicyWindows.ProtoReflect.Descriptor instead.
+func (*DecisionPolicyWindows) Descriptor() ([]byte, []int) {
+	return file_cosmos_group_v1beta1_types_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *DecisionPolicyWindows) GetVotingPeriod() *durationpb.Duration {
+	if x != nil {
+		return x.VotingPeriod
+	}
+	return nil
+}
+
+func (x *DecisionPolicyWindows) GetMinExecutionPeriod() *durationpb.Duration {
+	if x != nil {
+		return x.MinExecutionPeriod
 	}
 	return nil
 }
@@ -7153,7 +7712,7 @@ type GroupInfo struct {
 	// admin is the account address of the group's admin.
 	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
 	// metadata is any arbitrary metadata to attached to the group.
-	Metadata []byte `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// version is used to track changes to a group's membership structure that
 	// would break existing proposals. Whenever any members weight is changed,
 	// or any member is added or removed this version is incremented and will
@@ -7168,7 +7727,7 @@ type GroupInfo struct {
 func (x *GroupInfo) Reset() {
 	*x = GroupInfo{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[4]
+		mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7182,7 +7741,7 @@ func (*GroupInfo) ProtoMessage() {}
 
 // Deprecated: Use GroupInfo.ProtoReflect.Descriptor instead.
 func (*GroupInfo) Descriptor() ([]byte, []int) {
-	return file_cosmos_group_v1beta1_types_proto_rawDescGZIP(), []int{4}
+	return file_cosmos_group_v1beta1_types_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GroupInfo) GetId() uint64 {
@@ -7199,11 +7758,11 @@ func (x *GroupInfo) GetAdmin() string {
 	return ""
 }
 
-func (x *GroupInfo) GetMetadata() []byte {
+func (x *GroupInfo) GetMetadata() string {
 	if x != nil {
 		return x.Metadata
 	}
-	return nil
+	return ""
 }
 
 func (x *GroupInfo) GetVersion() uint64 {
@@ -7242,7 +7801,7 @@ type GroupMember struct {
 func (x *GroupMember) Reset() {
 	*x = GroupMember{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[5]
+		mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7256,7 +7815,7 @@ func (*GroupMember) ProtoMessage() {}
 
 // Deprecated: Use GroupMember.ProtoReflect.Descriptor instead.
 func (*GroupMember) Descriptor() ([]byte, []int) {
-	return file_cosmos_group_v1beta1_types_proto_rawDescGZIP(), []int{5}
+	return file_cosmos_group_v1beta1_types_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GroupMember) GetGroupId() uint64 {
@@ -7286,7 +7845,7 @@ type GroupPolicyInfo struct {
 	// admin is the account address of the group admin.
 	Admin string `protobuf:"bytes,3,opt,name=admin,proto3" json:"admin,omitempty"`
 	// metadata is any arbitrary metadata to attached to the group policy.
-	Metadata []byte `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata string `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// version is used to track changes to a group's GroupPolicyInfo structure that
 	// would create a different result on a running proposal.
 	Version uint64 `protobuf:"varint,5,opt,name=version,proto3" json:"version,omitempty"`
@@ -7299,7 +7858,7 @@ type GroupPolicyInfo struct {
 func (x *GroupPolicyInfo) Reset() {
 	*x = GroupPolicyInfo{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[6]
+		mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7313,7 +7872,7 @@ func (*GroupPolicyInfo) ProtoMessage() {}
 
 // Deprecated: Use GroupPolicyInfo.ProtoReflect.Descriptor instead.
 func (*GroupPolicyInfo) Descriptor() ([]byte, []int) {
-	return file_cosmos_group_v1beta1_types_proto_rawDescGZIP(), []int{6}
+	return file_cosmos_group_v1beta1_types_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GroupPolicyInfo) GetAddress() string {
@@ -7337,11 +7896,11 @@ func (x *GroupPolicyInfo) GetAdmin() string {
 	return ""
 }
 
-func (x *GroupPolicyInfo) GetMetadata() []byte {
+func (x *GroupPolicyInfo) GetMetadata() string {
 	if x != nil {
 		return x.Metadata
 	}
-	return nil
+	return ""
 }
 
 func (x *GroupPolicyInfo) GetVersion() uint64 {
@@ -7379,7 +7938,7 @@ type Proposal struct {
 	// address is the account address of group policy.
 	Address string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
 	// metadata is any arbitrary metadata to attached to the proposal.
-	Metadata []byte `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// proposers are the account addresses of the proposers.
 	Proposers []string `protobuf:"bytes,4,rep,name=proposers,proto3" json:"proposers,omitempty"`
 	// submit_time is a timestamp specifying when a proposal was submitted.
@@ -7400,11 +7959,12 @@ type Proposal struct {
 	// via gRPC, this field is not populated until the proposal's voting period
 	// has ended.
 	FinalTallyResult *TallyResult `protobuf:"bytes,10,opt,name=final_tally_result,json=finalTallyResult,proto3" json:"final_tally_result,omitempty"`
-	// timeout is the timestamp before which both voting and execution must be
-	// done. If this timestamp is passed, then the proposal cannot be executed
-	// anymore and should be considered pending delete. This timestamp is checked
-	// against the block header's timestamp.
-	Timeout *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	// voting_period_end is the timestamp before which voting must be done.
+	// Unless a successfull MsgExec is called before (to execute a proposal whose
+	// tally is successful before the voting period ends), tallying will be done
+	// at this point, and the `final_tally_result`, as well
+	// as `status` and `result` fields will be accordingly updated.
+	VotingPeriodEnd *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=voting_period_end,json=votingPeriodEnd,proto3" json:"voting_period_end,omitempty"`
 	// executor_result is the final result based on the votes and election rule. Initial value is NotRun.
 	ExecutorResult ProposalExecutorResult `protobuf:"varint,12,opt,name=executor_result,json=executorResult,proto3,enum=cosmos.group.v1beta1.ProposalExecutorResult" json:"executor_result,omitempty"`
 	// messages is a list of Msgs that will be executed if the proposal passes.
@@ -7414,7 +7974,7 @@ type Proposal struct {
 func (x *Proposal) Reset() {
 	*x = Proposal{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[7]
+		mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7428,7 +7988,7 @@ func (*Proposal) ProtoMessage() {}
 
 // Deprecated: Use Proposal.ProtoReflect.Descriptor instead.
 func (*Proposal) Descriptor() ([]byte, []int) {
-	return file_cosmos_group_v1beta1_types_proto_rawDescGZIP(), []int{7}
+	return file_cosmos_group_v1beta1_types_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Proposal) GetId() uint64 {
@@ -7445,11 +8005,11 @@ func (x *Proposal) GetAddress() string {
 	return ""
 }
 
-func (x *Proposal) GetMetadata() []byte {
+func (x *Proposal) GetMetadata() string {
 	if x != nil {
 		return x.Metadata
 	}
-	return nil
+	return ""
 }
 
 func (x *Proposal) GetProposers() []string {
@@ -7501,9 +8061,9 @@ func (x *Proposal) GetFinalTallyResult() *TallyResult {
 	return nil
 }
 
-func (x *Proposal) GetTimeout() *timestamppb.Timestamp {
+func (x *Proposal) GetVotingPeriodEnd() *timestamppb.Timestamp {
 	if x != nil {
-		return x.Timeout
+		return x.VotingPeriodEnd
 	}
 	return nil
 }
@@ -7541,7 +8101,7 @@ type TallyResult struct {
 func (x *TallyResult) Reset() {
 	*x = TallyResult{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[8]
+		mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7555,7 +8115,7 @@ func (*TallyResult) ProtoMessage() {}
 
 // Deprecated: Use TallyResult.ProtoReflect.Descriptor instead.
 func (*TallyResult) Descriptor() ([]byte, []int) {
-	return file_cosmos_group_v1beta1_types_proto_rawDescGZIP(), []int{8}
+	return file_cosmos_group_v1beta1_types_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *TallyResult) GetYesCount() string {
@@ -7599,7 +8159,7 @@ type Vote struct {
 	// option is the voter's choice on the proposal.
 	Option VoteOption `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.group.v1beta1.VoteOption" json:"option,omitempty"`
 	// metadata is any arbitrary metadata to attached to the vote.
-	Metadata []byte `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata string `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// submit_time is the timestamp when the vote was submitted.
 	SubmitTime *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=submit_time,json=submitTime,proto3" json:"submit_time,omitempty"`
 }
@@ -7607,7 +8167,7 @@ type Vote struct {
 func (x *Vote) Reset() {
 	*x = Vote{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[9]
+		mi := &file_cosmos_group_v1beta1_types_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7621,7 +8181,7 @@ func (*Vote) ProtoMessage() {}
 
 // Deprecated: Use Vote.ProtoReflect.Descriptor instead.
 func (*Vote) Descriptor() ([]byte, []int) {
-	return file_cosmos_group_v1beta1_types_proto_rawDescGZIP(), []int{9}
+	return file_cosmos_group_v1beta1_types_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *Vote) GetProposalId() uint64 {
@@ -7645,11 +8205,11 @@ func (x *Vote) GetOption() VoteOption {
 	return VoteOption_VOTE_OPTION_UNSPECIFIED
 }
 
-func (x *Vote) GetMetadata() []byte {
+func (x *Vote) GetMetadata() string {
 	if x != nil {
 		return x.Metadata
 	}
-	return nil
+	return ""
 }
 
 func (x *Vote) GetSubmitTime() *timestamppb.Timestamp {
@@ -7680,7 +8240,7 @@ var file_cosmos_group_v1beta1_types_proto_rawDesc = []byte{
 	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x61, 0x64, 0x64,
 	0x72, 0x65, 0x73, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x77, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x02,
 	0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x77, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x1a, 0x0a, 0x08,
-	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08,
+	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08,
 	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x3f, 0x0a, 0x08, 0x61, 0x64, 0x64, 0x65,
 	0x64, 0x5f, 0x61, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f,
 	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d,
@@ -7690,195 +8250,209 @@ var file_cosmos_group_v1beta1_types_proto_rawDesc = []byte{
 	0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67,
 	0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x65, 0x6d,
 	0x62, 0x65, 0x72, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x07, 0x6d, 0x65, 0x6d, 0x62, 0x65,
-	0x72, 0x73, 0x22, 0x8a, 0x01, 0x0a, 0x17, 0x54, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64,
+	0x72, 0x73, 0x22, 0x92, 0x01, 0x0a, 0x17, 0x54, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64,
 	0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x12, 0x1c,
 	0x0a, 0x09, 0x74, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x09, 0x74, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x12, 0x3d, 0x0a, 0x07,
-	0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e,
-	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
-	0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x98, 0xdf,
-	0x1f, 0x01, 0x52, 0x07, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x3a, 0x12, 0xca, 0xb4, 0x2d,
+	0x09, 0x52, 0x09, 0x74, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x12, 0x45, 0x0a, 0x07,
+	0x77, 0x69, 0x6e, 0x64, 0x6f, 0x77, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2b, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2e, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c,
+	0x69, 0x63, 0x79, 0x57, 0x69, 0x6e, 0x64, 0x6f, 0x77, 0x73, 0x52, 0x07, 0x77, 0x69, 0x6e, 0x64,
+	0x6f, 0x77, 0x73, 0x3a, 0x12, 0xca, 0xb4, 0x2d, 0x0e, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f,
+	0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x22, 0x95, 0x01, 0x0a, 0x18, 0x50, 0x65, 0x72, 0x63,
+	0x65, 0x6e, 0x74, 0x61, 0x67, 0x65, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f,
+	0x6c, 0x69, 0x63, 0x79, 0x12, 0x1e, 0x0a, 0x0a, 0x70, 0x65, 0x72, 0x63, 0x65, 0x6e, 0x74, 0x61,
+	0x67, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x70, 0x65, 0x72, 0x63, 0x65, 0x6e,
+	0x74, 0x61, 0x67, 0x65, 0x12, 0x45, 0x0a, 0x07, 0x77, 0x69, 0x6e, 0x64, 0x6f, 0x77, 0x73, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67,
+	0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x44, 0x65, 0x63,
+	0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x57, 0x69, 0x6e, 0x64, 0x6f,
+	0x77, 0x73, 0x52, 0x07, 0x77, 0x69, 0x6e, 0x64, 0x6f, 0x77, 0x73, 0x3a, 0x12, 0xca, 0xb4, 0x2d,
 	0x0e, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x22,
-	0x8d, 0x01, 0x0a, 0x18, 0x50, 0x65, 0x72, 0x63, 0x65, 0x6e, 0x74, 0x61, 0x67, 0x65, 0x44, 0x65,
-	0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x12, 0x1e, 0x0a, 0x0a,
-	0x70, 0x65, 0x72, 0x63, 0x65, 0x6e, 0x74, 0x61, 0x67, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x0a, 0x70, 0x65, 0x72, 0x63, 0x65, 0x6e, 0x74, 0x61, 0x67, 0x65, 0x12, 0x3d, 0x0a, 0x07,
-	0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e,
-	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
-	0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x98, 0xdf,
-	0x1f, 0x01, 0x52, 0x07, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x3a, 0x12, 0xca, 0xb4, 0x2d,
-	0x0e, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x22,
-	0xe9, 0x01, 0x0a, 0x09, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x0e, 0x0a,
-	0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x12, 0x2e, 0x0a,
-	0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
-	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x1a, 0x0a,
-	0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52,
-	0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x65, 0x72,
-	0x73, 0x69, 0x6f, 0x6e, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73,
-	0x69, 0x6f, 0x6e, 0x12, 0x21, 0x0a, 0x0c, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x77, 0x65, 0x69,
-	0x67, 0x68, 0x74, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x74, 0x6f, 0x74, 0x61, 0x6c,
-	0x57, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x43, 0x0a, 0x0a, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65,
-	0x64, 0x5f, 0x61, 0x74, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f,
-	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d,
-	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01,
-	0x52, 0x09, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x41, 0x74, 0x22, 0x5e, 0x0a, 0x0b, 0x47,
-	0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x12, 0x19, 0x0a, 0x08, 0x67, 0x72,
-	0x6f, 0x75, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x67, 0x72,
-	0x6f, 0x75, 0x70, 0x49, 0x64, 0x12, 0x34, 0x0a, 0x06, 0x6d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67,
-	0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x65, 0x6d,
-	0x62, 0x65, 0x72, 0x52, 0x06, 0x6d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x22, 0xe8, 0x02, 0x0a, 0x0f,
-	0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x49, 0x6e, 0x66, 0x6f, 0x12,
-	0x32, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72,
-	0x65, 0x73, 0x73, 0x12, 0x19, 0x0a, 0x08, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x69, 0x64, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x64, 0x12, 0x2e,
-	0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2,
-	0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x1a,
-	0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c,
-	0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x65,
-	0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x76, 0x65, 0x72,
-	0x73, 0x69, 0x6f, 0x6e, 0x12, 0x51, 0x0a, 0x0f, 0x64, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e,
-	0x5f, 0x70, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e,
-	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
-	0x41, 0x6e, 0x79, 0x42, 0x12, 0xca, 0xb4, 0x2d, 0x0e, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f,
-	0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x52, 0x0e, 0x64, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f,
-	0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x12, 0x43, 0x0a, 0x0a, 0x63, 0x72, 0x65, 0x61, 0x74,
-	0x65, 0x64, 0x5f, 0x61, 0x74, 0x18, 0x07, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f,
+	0xb8, 0x01, 0x0a, 0x15, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69,
+	0x63, 0x79, 0x57, 0x69, 0x6e, 0x64, 0x6f, 0x77, 0x73, 0x12, 0x48, 0x0a, 0x0d, 0x76, 0x6f, 0x74,
+	0x69, 0x6e, 0x67, 0x5f, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x19, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
+	0x75, 0x66, 0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x08, 0xc8, 0xde, 0x1f,
+	0x00, 0x98, 0xdf, 0x1f, 0x01, 0x52, 0x0c, 0x76, 0x6f, 0x74, 0x69, 0x6e, 0x67, 0x50, 0x65, 0x72,
+	0x69, 0x6f, 0x64, 0x12, 0x55, 0x0a, 0x14, 0x6d, 0x69, 0x6e, 0x5f, 0x65, 0x78, 0x65, 0x63, 0x75,
+	0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x19, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x62, 0x75, 0x66, 0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x08, 0xc8, 0xde,
+	0x1f, 0x00, 0x98, 0xdf, 0x1f, 0x01, 0x52, 0x12, 0x6d, 0x69, 0x6e, 0x45, 0x78, 0x65, 0x63, 0x75,
+	0x74, 0x69, 0x6f, 0x6e, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x22, 0xe9, 0x01, 0x0a, 0x09, 0x47,
+	0x72, 0x6f, 0x75, 0x70, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69,
+	0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
+	0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18,
+	0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x21,
+	0x0a, 0x0c, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x77, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x05,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x57, 0x65, 0x69, 0x67, 0x68,
+	0x74, 0x12, 0x43, 0x0a, 0x0a, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x5f, 0x61, 0x74, 0x18,
+	0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
+	0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x09, 0x63, 0x72, 0x65,
+	0x61, 0x74, 0x65, 0x64, 0x41, 0x74, 0x22, 0x5e, 0x0a, 0x0b, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d,
+	0x65, 0x6d, 0x62, 0x65, 0x72, 0x12, 0x19, 0x0a, 0x08, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x69,
+	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x64,
+	0x12, 0x34, 0x0a, 0x06, 0x6d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x1c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x52, 0x06,
+	0x6d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x22, 0xe8, 0x02, 0x0a, 0x0f, 0x47, 0x72, 0x6f, 0x75, 0x70,
+	0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x32, 0x0a, 0x07, 0x61, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d,
+	0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53,
+	0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x19,
+	0x0a, 0x08, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04,
+	0x52, 0x07, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x64, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d,
+	0x69, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69,
+	0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74,
+	0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x65, 0x74,
+	0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e,
+	0x18, 0x05, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12,
+	0x51, 0x0a, 0x0f, 0x64, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x70, 0x6f, 0x6c, 0x69,
+	0x63, 0x79, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
+	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x42, 0x12,
+	0xca, 0xb4, 0x2d, 0x0e, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69,
+	0x63, 0x79, 0x52, 0x0e, 0x64, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69,
+	0x63, 0x79, 0x12, 0x43, 0x0a, 0x0a, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x5f, 0x61, 0x74,
+	0x18, 0x07, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
+	0x6d, 0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x09, 0x63, 0x72,
+	0x65, 0x61, 0x74, 0x65, 0x64, 0x41, 0x74, 0x3a, 0x08, 0x88, 0xa0, 0x1f, 0x00, 0xe8, 0xa0, 0x1f,
+	0x01, 0x22, 0xf4, 0x05, 0x0a, 0x08, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x0e,
+	0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x12, 0x32,
+	0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42,
+	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x36,
+	0x0a, 0x09, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x65, 0x72, 0x73, 0x18, 0x04, 0x20, 0x03, 0x28,
+	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x09, 0x70, 0x72, 0x6f,
+	0x70, 0x6f, 0x73, 0x65, 0x72, 0x73, 0x12, 0x45, 0x0a, 0x0b, 0x73, 0x75, 0x62, 0x6d, 0x69, 0x74,
+	0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f,
 	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69,
 	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f,
-	0x01, 0x52, 0x09, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x41, 0x74, 0x3a, 0x08, 0x88, 0xa0,
-	0x1f, 0x00, 0xe8, 0xa0, 0x1f, 0x01, 0x22, 0xe2, 0x05, 0x0a, 0x08, 0x50, 0x72, 0x6f, 0x70, 0x6f,
-	0x73, 0x61, 0x6c, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52,
-	0x02, 0x69, 0x64, 0x12, 0x32, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07,
-	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64,
-	0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64,
-	0x61, 0x74, 0x61, 0x12, 0x36, 0x0a, 0x09, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x65, 0x72, 0x73,
-	0x18, 0x04, 0x20, 0x03, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
-	0x52, 0x09, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x65, 0x72, 0x73, 0x12, 0x45, 0x0a, 0x0b, 0x73,
-	0x75, 0x62, 0x6d, 0x69, 0x74, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
-	0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x08, 0xc8, 0xde,
-	0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x0a, 0x73, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x54, 0x69,
-	0x6d, 0x65, 0x12, 0x23, 0x0a, 0x0d, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x76, 0x65, 0x72, 0x73,
-	0x69, 0x6f, 0x6e, 0x18, 0x06, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0c, 0x67, 0x72, 0x6f, 0x75, 0x70,
-	0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x30, 0x0a, 0x14, 0x67, 0x72, 0x6f, 0x75, 0x70,
-	0x5f, 0x70, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x5f, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18,
-	0x07, 0x20, 0x01, 0x28, 0x04, 0x52, 0x12, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69,
-	0x63, 0x79, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x3c, 0x0a, 0x06, 0x73, 0x74, 0x61,
-	0x74, 0x75, 0x73, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x24, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52,
-	0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x3c, 0x0a, 0x06, 0x72, 0x65, 0x73, 0x75, 0x6c,
-	0x74, 0x18, 0x09, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x24, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50,
-	0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x52, 0x06, 0x72,
-	0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x55, 0x0a, 0x12, 0x66, 0x69, 0x6e, 0x61, 0x6c, 0x5f, 0x74,
-	0x61, 0x6c, 0x6c, 0x79, 0x5f, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x18, 0x0a, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x21, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70,
-	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x54, 0x61, 0x6c, 0x6c, 0x79, 0x52, 0x65,
-	0x73, 0x75, 0x6c, 0x74, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x10, 0x66, 0x69, 0x6e, 0x61,
-	0x6c, 0x54, 0x61, 0x6c, 0x6c, 0x79, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x3e, 0x0a, 0x07,
-	0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e,
+	0x01, 0x52, 0x0a, 0x73, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x23, 0x0a,
+	0x0d, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x06,
+	0x20, 0x01, 0x28, 0x04, 0x52, 0x0c, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x56, 0x65, 0x72, 0x73, 0x69,
+	0x6f, 0x6e, 0x12, 0x30, 0x0a, 0x14, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x70, 0x6f, 0x6c, 0x69,
+	0x63, 0x79, 0x5f, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x07, 0x20, 0x01, 0x28, 0x04,
+	0x52, 0x12, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x56, 0x65, 0x72,
+	0x73, 0x69, 0x6f, 0x6e, 0x12, 0x3c, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x08,
+	0x20, 0x01, 0x28, 0x0e, 0x32, 0x24, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72,
+	0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x72, 0x6f, 0x70,
+	0x6f, 0x73, 0x61, 0x6c, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74,
+	0x75, 0x73, 0x12, 0x3c, 0x0a, 0x06, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x18, 0x09, 0x20, 0x01,
+	0x28, 0x0e, 0x32, 0x24, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75,
+	0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73,
+	0x61, 0x6c, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x52, 0x06, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74,
+	0x12, 0x55, 0x0a, 0x12, 0x66, 0x69, 0x6e, 0x61, 0x6c, 0x5f, 0x74, 0x61, 0x6c, 0x6c, 0x79, 0x5f,
+	0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x2e, 0x54, 0x61, 0x6c, 0x6c, 0x79, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x42,
+	0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x10, 0x66, 0x69, 0x6e, 0x61, 0x6c, 0x54, 0x61, 0x6c, 0x6c,
+	0x79, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x50, 0x0a, 0x11, 0x76, 0x6f, 0x74, 0x69, 0x6e,
+	0x67, 0x5f, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x5f, 0x65, 0x6e, 0x64, 0x18, 0x0b, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x08,
+	0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x0f, 0x76, 0x6f, 0x74, 0x69, 0x6e, 0x67,
+	0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x45, 0x6e, 0x64, 0x12, 0x55, 0x0a, 0x0f, 0x65, 0x78, 0x65,
+	0x63, 0x75, 0x74, 0x6f, 0x72, 0x5f, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x18, 0x0c, 0x20, 0x01,
+	0x28, 0x0e, 0x32, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75,
+	0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73,
+	0x61, 0x6c, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74,
+	0x52, 0x0e, 0x65, 0x78, 0x65, 0x63, 0x75, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74,
+	0x12, 0x30, 0x0a, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x18, 0x0d, 0x20, 0x03,
+	0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67,
+	0x65, 0x73, 0x3a, 0x04, 0x88, 0xa0, 0x1f, 0x00, 0x22, 0x9d, 0x01, 0x0a, 0x0b, 0x54, 0x61, 0x6c,
+	0x6c, 0x79, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x1b, 0x0a, 0x09, 0x79, 0x65, 0x73, 0x5f,
+	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x79, 0x65, 0x73,
+	0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x23, 0x0a, 0x0d, 0x61, 0x62, 0x73, 0x74, 0x61, 0x69, 0x6e,
+	0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x61, 0x62,
+	0x73, 0x74, 0x61, 0x69, 0x6e, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x19, 0x0a, 0x08, 0x6e, 0x6f,
+	0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6e, 0x6f,
+	0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x2b, 0x0a, 0x12, 0x6e, 0x6f, 0x5f, 0x77, 0x69, 0x74, 0x68,
+	0x5f, 0x76, 0x65, 0x74, 0x6f, 0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x0f, 0x6e, 0x6f, 0x57, 0x69, 0x74, 0x68, 0x56, 0x65, 0x74, 0x6f, 0x43, 0x6f, 0x75,
+	0x6e, 0x74, 0x3a, 0x04, 0x88, 0xa0, 0x1f, 0x00, 0x22, 0xf4, 0x01, 0x0a, 0x04, 0x56, 0x6f, 0x74,
+	0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x5f, 0x69, 0x64,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0a, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c,
+	0x49, 0x64, 0x12, 0x2e, 0x0a, 0x05, 0x76, 0x6f, 0x74, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x76, 0x6f, 0x74,
+	0x65, 0x72, 0x12, 0x38, 0x0a, 0x06, 0x6f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x0e, 0x32, 0x20, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75,
+	0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x56, 0x6f, 0x74, 0x65, 0x4f, 0x70,
+	0x74, 0x69, 0x6f, 0x6e, 0x52, 0x06, 0x6f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x1a, 0x0a, 0x08,
+	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08,
+	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x45, 0x0a, 0x0b, 0x73, 0x75, 0x62, 0x6d,
+	0x69, 0x74, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e,
 	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
 	0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90,
-	0xdf, 0x1f, 0x01, 0x52, 0x07, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x12, 0x55, 0x0a, 0x0f,
-	0x65, 0x78, 0x65, 0x63, 0x75, 0x74, 0x6f, 0x72, 0x5f, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x18,
-	0x0c, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67,
-	0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x72, 0x6f,
-	0x70, 0x6f, 0x73, 0x61, 0x6c, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x73,
-	0x75, 0x6c, 0x74, 0x52, 0x0e, 0x65, 0x78, 0x65, 0x63, 0x75, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x73,
-	0x75, 0x6c, 0x74, 0x12, 0x30, 0x0a, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x18,
-	0x0d, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x08, 0x6d, 0x65, 0x73,
-	0x73, 0x61, 0x67, 0x65, 0x73, 0x3a, 0x04, 0x88, 0xa0, 0x1f, 0x00, 0x22, 0x9d, 0x01, 0x0a, 0x0b,
-	0x54, 0x61, 0x6c, 0x6c, 0x79, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x1b, 0x0a, 0x09, 0x79,
-	0x65, 0x73, 0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08,
-	0x79, 0x65, 0x73, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x23, 0x0a, 0x0d, 0x61, 0x62, 0x73, 0x74,
-	0x61, 0x69, 0x6e, 0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x0c, 0x61, 0x62, 0x73, 0x74, 0x61, 0x69, 0x6e, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x19, 0x0a,
-	0x08, 0x6e, 0x6f, 0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x07, 0x6e, 0x6f, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x2b, 0x0a, 0x12, 0x6e, 0x6f, 0x5f, 0x77,
-	0x69, 0x74, 0x68, 0x5f, 0x76, 0x65, 0x74, 0x6f, 0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x04,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x6e, 0x6f, 0x57, 0x69, 0x74, 0x68, 0x56, 0x65, 0x74, 0x6f,
-	0x43, 0x6f, 0x75, 0x6e, 0x74, 0x3a, 0x04, 0x88, 0xa0, 0x1f, 0x00, 0x22, 0xf4, 0x01, 0x0a, 0x04,
-	0x56, 0x6f, 0x74, 0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c,
-	0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0a, 0x70, 0x72, 0x6f, 0x70, 0x6f,
-	0x73, 0x61, 0x6c, 0x49, 0x64, 0x12, 0x2e, 0x0a, 0x05, 0x76, 0x6f, 0x74, 0x65, 0x72, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05,
-	0x76, 0x6f, 0x74, 0x65, 0x72, 0x12, 0x38, 0x0a, 0x06, 0x6f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18,
-	0x03, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x20, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67,
-	0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x56, 0x6f, 0x74,
-	0x65, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x06, 0x6f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12,
-	0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28,
-	0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x45, 0x0a, 0x0b, 0x73,
-	0x75, 0x62, 0x6d, 0x69, 0x74, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
-	0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x08, 0xc8, 0xde,
-	0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x0a, 0x73, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x54, 0x69,
-	0x6d, 0x65, 0x2a, 0x8f, 0x01, 0x0a, 0x0a, 0x56, 0x6f, 0x74, 0x65, 0x4f, 0x70, 0x74, 0x69, 0x6f,
-	0x6e, 0x12, 0x1b, 0x0a, 0x17, 0x56, 0x4f, 0x54, 0x45, 0x5f, 0x4f, 0x50, 0x54, 0x49, 0x4f, 0x4e,
-	0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x13,
-	0x0a, 0x0f, 0x56, 0x4f, 0x54, 0x45, 0x5f, 0x4f, 0x50, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x59, 0x45,
-	0x53, 0x10, 0x01, 0x12, 0x17, 0x0a, 0x13, 0x56, 0x4f, 0x54, 0x45, 0x5f, 0x4f, 0x50, 0x54, 0x49,
-	0x4f, 0x4e, 0x5f, 0x41, 0x42, 0x53, 0x54, 0x41, 0x49, 0x4e, 0x10, 0x02, 0x12, 0x12, 0x0a, 0x0e,
-	0x56, 0x4f, 0x54, 0x45, 0x5f, 0x4f, 0x50, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x4e, 0x4f, 0x10, 0x03,
-	0x12, 0x1c, 0x0a, 0x18, 0x56, 0x4f, 0x54, 0x45, 0x5f, 0x4f, 0x50, 0x54, 0x49, 0x4f, 0x4e, 0x5f,
-	0x4e, 0x4f, 0x5f, 0x57, 0x49, 0x54, 0x48, 0x5f, 0x56, 0x45, 0x54, 0x4f, 0x10, 0x04, 0x1a, 0x04,
-	0x88, 0xa3, 0x1e, 0x00, 0x2a, 0xae, 0x01, 0x0a, 0x0e, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61,
-	0x6c, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x1f, 0x0a, 0x1b, 0x50, 0x52, 0x4f, 0x50, 0x4f,
-	0x53, 0x41, 0x4c, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45,
-	0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x1d, 0x0a, 0x19, 0x50, 0x52, 0x4f, 0x50,
-	0x4f, 0x53, 0x41, 0x4c, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x53, 0x55, 0x42, 0x4d,
-	0x49, 0x54, 0x54, 0x45, 0x44, 0x10, 0x01, 0x12, 0x1a, 0x0a, 0x16, 0x50, 0x52, 0x4f, 0x50, 0x4f,
-	0x53, 0x41, 0x4c, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x43, 0x4c, 0x4f, 0x53, 0x45,
-	0x44, 0x10, 0x02, 0x12, 0x1b, 0x0a, 0x17, 0x50, 0x52, 0x4f, 0x50, 0x4f, 0x53, 0x41, 0x4c, 0x5f,
-	0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x41, 0x42, 0x4f, 0x52, 0x54, 0x45, 0x44, 0x10, 0x03,
-	0x12, 0x1d, 0x0a, 0x19, 0x50, 0x52, 0x4f, 0x50, 0x4f, 0x53, 0x41, 0x4c, 0x5f, 0x53, 0x54, 0x41,
-	0x54, 0x55, 0x53, 0x5f, 0x57, 0x49, 0x54, 0x48, 0x44, 0x52, 0x41, 0x57, 0x4e, 0x10, 0x04, 0x1a,
-	0x04, 0x88, 0xa3, 0x1e, 0x00, 0x2a, 0x94, 0x01, 0x0a, 0x0e, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73,
-	0x61, 0x6c, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x1f, 0x0a, 0x1b, 0x50, 0x52, 0x4f, 0x50,
-	0x4f, 0x53, 0x41, 0x4c, 0x5f, 0x52, 0x45, 0x53, 0x55, 0x4c, 0x54, 0x5f, 0x55, 0x4e, 0x53, 0x50,
-	0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x1f, 0x0a, 0x1b, 0x50, 0x52, 0x4f,
-	0x50, 0x4f, 0x53, 0x41, 0x4c, 0x5f, 0x52, 0x45, 0x53, 0x55, 0x4c, 0x54, 0x5f, 0x55, 0x4e, 0x46,
-	0x49, 0x4e, 0x41, 0x4c, 0x49, 0x5a, 0x45, 0x44, 0x10, 0x01, 0x12, 0x1c, 0x0a, 0x18, 0x50, 0x52,
-	0x4f, 0x50, 0x4f, 0x53, 0x41, 0x4c, 0x5f, 0x52, 0x45, 0x53, 0x55, 0x4c, 0x54, 0x5f, 0x41, 0x43,
-	0x43, 0x45, 0x50, 0x54, 0x45, 0x44, 0x10, 0x02, 0x12, 0x1c, 0x0a, 0x18, 0x50, 0x52, 0x4f, 0x50,
-	0x4f, 0x53, 0x41, 0x4c, 0x5f, 0x52, 0x45, 0x53, 0x55, 0x4c, 0x54, 0x5f, 0x52, 0x45, 0x4a, 0x45,
-	0x43, 0x54, 0x45, 0x44, 0x10, 0x03, 0x1a, 0x04, 0x88, 0xa3, 0x1e, 0x00, 0x2a, 0xba, 0x01, 0x0a,
-	0x16, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x6f,
-	0x72, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x28, 0x0a, 0x24, 0x50, 0x52, 0x4f, 0x50, 0x4f,
-	0x53, 0x41, 0x4c, 0x5f, 0x45, 0x58, 0x45, 0x43, 0x55, 0x54, 0x4f, 0x52, 0x5f, 0x52, 0x45, 0x53,
-	0x55, 0x4c, 0x54, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10,
-	0x00, 0x12, 0x24, 0x0a, 0x20, 0x50, 0x52, 0x4f, 0x50, 0x4f, 0x53, 0x41, 0x4c, 0x5f, 0x45, 0x58,
-	0x45, 0x43, 0x55, 0x54, 0x4f, 0x52, 0x5f, 0x52, 0x45, 0x53, 0x55, 0x4c, 0x54, 0x5f, 0x4e, 0x4f,
-	0x54, 0x5f, 0x52, 0x55, 0x4e, 0x10, 0x01, 0x12, 0x24, 0x0a, 0x20, 0x50, 0x52, 0x4f, 0x50, 0x4f,
-	0x53, 0x41, 0x4c, 0x5f, 0x45, 0x58, 0x45, 0x43, 0x55, 0x54, 0x4f, 0x52, 0x5f, 0x52, 0x45, 0x53,
-	0x55, 0x4c, 0x54, 0x5f, 0x53, 0x55, 0x43, 0x43, 0x45, 0x53, 0x53, 0x10, 0x02, 0x12, 0x24, 0x0a,
-	0x20, 0x50, 0x52, 0x4f, 0x50, 0x4f, 0x53, 0x41, 0x4c, 0x5f, 0x45, 0x58, 0x45, 0x43, 0x55, 0x54,
-	0x4f, 0x52, 0x5f, 0x52, 0x45, 0x53, 0x55, 0x4c, 0x54, 0x5f, 0x46, 0x41, 0x49, 0x4c, 0x55, 0x52,
-	0x45, 0x10, 0x03, 0x1a, 0x04, 0x88, 0xa3, 0x1e, 0x00, 0x42, 0xdc, 0x01, 0x0a, 0x18, 0x63, 0x6f,
-	0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x0a, 0x54, 0x79, 0x70, 0x65, 0x73, 0x50, 0x72, 0x6f,
-	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x42, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
-	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73,
-	0x64, 0x6b, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x67, 0x72,
-	0x6f, 0x75, 0x70, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x67, 0x72, 0x6f, 0x75,
-	0x70, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x47, 0x58, 0xaa, 0x02,
-	0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x56, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x47,
-	0x72, 0x6f, 0x75, 0x70, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x20, 0x43,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x5c, 0x56, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea,
-	0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x3a,
-	0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0xdf, 0x1f, 0x01, 0x52, 0x0a, 0x73, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x2a,
+	0x8f, 0x01, 0x0a, 0x0a, 0x56, 0x6f, 0x74, 0x65, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x1b,
+	0x0a, 0x17, 0x56, 0x4f, 0x54, 0x45, 0x5f, 0x4f, 0x50, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x55, 0x4e,
+	0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x13, 0x0a, 0x0f, 0x56,
+	0x4f, 0x54, 0x45, 0x5f, 0x4f, 0x50, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x59, 0x45, 0x53, 0x10, 0x01,
+	0x12, 0x17, 0x0a, 0x13, 0x56, 0x4f, 0x54, 0x45, 0x5f, 0x4f, 0x50, 0x54, 0x49, 0x4f, 0x4e, 0x5f,
+	0x41, 0x42, 0x53, 0x54, 0x41, 0x49, 0x4e, 0x10, 0x02, 0x12, 0x12, 0x0a, 0x0e, 0x56, 0x4f, 0x54,
+	0x45, 0x5f, 0x4f, 0x50, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x4e, 0x4f, 0x10, 0x03, 0x12, 0x1c, 0x0a,
+	0x18, 0x56, 0x4f, 0x54, 0x45, 0x5f, 0x4f, 0x50, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x4e, 0x4f, 0x5f,
+	0x57, 0x49, 0x54, 0x48, 0x5f, 0x56, 0x45, 0x54, 0x4f, 0x10, 0x04, 0x1a, 0x04, 0x88, 0xa3, 0x1e,
+	0x00, 0x2a, 0xae, 0x01, 0x0a, 0x0e, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x53, 0x74,
+	0x61, 0x74, 0x75, 0x73, 0x12, 0x1f, 0x0a, 0x1b, 0x50, 0x52, 0x4f, 0x50, 0x4f, 0x53, 0x41, 0x4c,
+	0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46,
+	0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x1d, 0x0a, 0x19, 0x50, 0x52, 0x4f, 0x50, 0x4f, 0x53, 0x41,
+	0x4c, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x53, 0x55, 0x42, 0x4d, 0x49, 0x54, 0x54,
+	0x45, 0x44, 0x10, 0x01, 0x12, 0x1a, 0x0a, 0x16, 0x50, 0x52, 0x4f, 0x50, 0x4f, 0x53, 0x41, 0x4c,
+	0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x43, 0x4c, 0x4f, 0x53, 0x45, 0x44, 0x10, 0x02,
+	0x12, 0x1b, 0x0a, 0x17, 0x50, 0x52, 0x4f, 0x50, 0x4f, 0x53, 0x41, 0x4c, 0x5f, 0x53, 0x54, 0x41,
+	0x54, 0x55, 0x53, 0x5f, 0x41, 0x42, 0x4f, 0x52, 0x54, 0x45, 0x44, 0x10, 0x03, 0x12, 0x1d, 0x0a,
+	0x19, 0x50, 0x52, 0x4f, 0x50, 0x4f, 0x53, 0x41, 0x4c, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53,
+	0x5f, 0x57, 0x49, 0x54, 0x48, 0x44, 0x52, 0x41, 0x57, 0x4e, 0x10, 0x04, 0x1a, 0x04, 0x88, 0xa3,
+	0x1e, 0x00, 0x2a, 0x94, 0x01, 0x0a, 0x0e, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52,
+	0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x1f, 0x0a, 0x1b, 0x50, 0x52, 0x4f, 0x50, 0x4f, 0x53, 0x41,
+	0x4c, 0x5f, 0x52, 0x45, 0x53, 0x55, 0x4c, 0x54, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49,
+	0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x1f, 0x0a, 0x1b, 0x50, 0x52, 0x4f, 0x50, 0x4f, 0x53,
+	0x41, 0x4c, 0x5f, 0x52, 0x45, 0x53, 0x55, 0x4c, 0x54, 0x5f, 0x55, 0x4e, 0x46, 0x49, 0x4e, 0x41,
+	0x4c, 0x49, 0x5a, 0x45, 0x44, 0x10, 0x01, 0x12, 0x1c, 0x0a, 0x18, 0x50, 0x52, 0x4f, 0x50, 0x4f,
+	0x53, 0x41, 0x4c, 0x5f, 0x52, 0x45, 0x53, 0x55, 0x4c, 0x54, 0x5f, 0x41, 0x43, 0x43, 0x45, 0x50,
+	0x54, 0x45, 0x44, 0x10, 0x02, 0x12, 0x1c, 0x0a, 0x18, 0x50, 0x52, 0x4f, 0x50, 0x4f, 0x53, 0x41,
+	0x4c, 0x5f, 0x52, 0x45, 0x53, 0x55, 0x4c, 0x54, 0x5f, 0x52, 0x45, 0x4a, 0x45, 0x43, 0x54, 0x45,
+	0x44, 0x10, 0x03, 0x1a, 0x04, 0x88, 0xa3, 0x1e, 0x00, 0x2a, 0xba, 0x01, 0x0a, 0x16, 0x50, 0x72,
+	0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x6f, 0x72, 0x52, 0x65,
+	0x73, 0x75, 0x6c, 0x74, 0x12, 0x28, 0x0a, 0x24, 0x50, 0x52, 0x4f, 0x50, 0x4f, 0x53, 0x41, 0x4c,
+	0x5f, 0x45, 0x58, 0x45, 0x43, 0x55, 0x54, 0x4f, 0x52, 0x5f, 0x52, 0x45, 0x53, 0x55, 0x4c, 0x54,
+	0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x24,
+	0x0a, 0x20, 0x50, 0x52, 0x4f, 0x50, 0x4f, 0x53, 0x41, 0x4c, 0x5f, 0x45, 0x58, 0x45, 0x43, 0x55,
+	0x54, 0x4f, 0x52, 0x5f, 0x52, 0x45, 0x53, 0x55, 0x4c, 0x54, 0x5f, 0x4e, 0x4f, 0x54, 0x5f, 0x52,
+	0x55, 0x4e, 0x10, 0x01, 0x12, 0x24, 0x0a, 0x20, 0x50, 0x52, 0x4f, 0x50, 0x4f, 0x53, 0x41, 0x4c,
+	0x5f, 0x45, 0x58, 0x45, 0x43, 0x55, 0x54, 0x4f, 0x52, 0x5f, 0x52, 0x45, 0x53, 0x55, 0x4c, 0x54,
+	0x5f, 0x53, 0x55, 0x43, 0x43, 0x45, 0x53, 0x53, 0x10, 0x02, 0x12, 0x24, 0x0a, 0x20, 0x50, 0x52,
+	0x4f, 0x50, 0x4f, 0x53, 0x41, 0x4c, 0x5f, 0x45, 0x58, 0x45, 0x43, 0x55, 0x54, 0x4f, 0x52, 0x5f,
+	0x52, 0x45, 0x53, 0x55, 0x4c, 0x54, 0x5f, 0x46, 0x41, 0x49, 0x4c, 0x55, 0x52, 0x45, 0x10, 0x03,
+	0x1a, 0x04, 0x88, 0xa3, 0x1e, 0x00, 0x42, 0xdc, 0x01, 0x0a, 0x18, 0x63, 0x6f, 0x6d, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x42, 0x0a, 0x54, 0x79, 0x70, 0x65, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
+	0x01, 0x5a, 0x42, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f,
+	0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x67, 0x72, 0x6f, 0x75, 0x70,
+	0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x47, 0x58, 0xaa, 0x02, 0x14, 0x43, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0xca, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x47, 0x72, 0x6f, 0x75,
+	0x70, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x20, 0x43, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x5c, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x16, 0x43,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x3a, 0x3a, 0x56, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -7894,7 +8468,7 @@ func file_cosmos_group_v1beta1_types_proto_rawDescGZIP() []byte {
 }
 
 var file_cosmos_group_v1beta1_types_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_cosmos_group_v1beta1_types_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_cosmos_group_v1beta1_types_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_cosmos_group_v1beta1_types_proto_goTypes = []interface{}{
 	(VoteOption)(0),                  // 0: cosmos.group.v1beta1.VoteOption
 	(ProposalStatus)(0),              // 1: cosmos.group.v1beta1.ProposalStatus
@@ -7904,39 +8478,42 @@ var file_cosmos_group_v1beta1_types_proto_goTypes = []interface{}{
 	(*Members)(nil),                  // 5: cosmos.group.v1beta1.Members
 	(*ThresholdDecisionPolicy)(nil),  // 6: cosmos.group.v1beta1.ThresholdDecisionPolicy
 	(*PercentageDecisionPolicy)(nil), // 7: cosmos.group.v1beta1.PercentageDecisionPolicy
-	(*GroupInfo)(nil),                // 8: cosmos.group.v1beta1.GroupInfo
-	(*GroupMember)(nil),              // 9: cosmos.group.v1beta1.GroupMember
-	(*GroupPolicyInfo)(nil),          // 10: cosmos.group.v1beta1.GroupPolicyInfo
-	(*Proposal)(nil),                 // 11: cosmos.group.v1beta1.Proposal
-	(*TallyResult)(nil),              // 12: cosmos.group.v1beta1.TallyResult
-	(*Vote)(nil),                     // 13: cosmos.group.v1beta1.Vote
-	(*timestamppb.Timestamp)(nil),    // 14: google.protobuf.Timestamp
-	(*durationpb.Duration)(nil),      // 15: google.protobuf.Duration
-	(*anypb.Any)(nil),                // 16: google.protobuf.Any
+	(*DecisionPolicyWindows)(nil),    // 8: cosmos.group.v1beta1.DecisionPolicyWindows
+	(*GroupInfo)(nil),                // 9: cosmos.group.v1beta1.GroupInfo
+	(*GroupMember)(nil),              // 10: cosmos.group.v1beta1.GroupMember
+	(*GroupPolicyInfo)(nil),          // 11: cosmos.group.v1beta1.GroupPolicyInfo
+	(*Proposal)(nil),                 // 12: cosmos.group.v1beta1.Proposal
+	(*TallyResult)(nil),              // 13: cosmos.group.v1beta1.TallyResult
+	(*Vote)(nil),                     // 14: cosmos.group.v1beta1.Vote
+	(*timestamppb.Timestamp)(nil),    // 15: google.protobuf.Timestamp
+	(*durationpb.Duration)(nil),      // 16: google.protobuf.Duration
+	(*anypb.Any)(nil),                // 17: google.protobuf.Any
 }
 var file_cosmos_group_v1beta1_types_proto_depIdxs = []int32{
-	14, // 0: cosmos.group.v1beta1.Member.added_at:type_name -> google.protobuf.Timestamp
+	15, // 0: cosmos.group.v1beta1.Member.added_at:type_name -> google.protobuf.Timestamp
 	4,  // 1: cosmos.group.v1beta1.Members.members:type_name -> cosmos.group.v1beta1.Member
-	15, // 2: cosmos.group.v1beta1.ThresholdDecisionPolicy.timeout:type_name -> google.protobuf.Duration
-	15, // 3: cosmos.group.v1beta1.PercentageDecisionPolicy.timeout:type_name -> google.protobuf.Duration
-	14, // 4: cosmos.group.v1beta1.GroupInfo.created_at:type_name -> google.protobuf.Timestamp
-	4,  // 5: cosmos.group.v1beta1.GroupMember.member:type_name -> cosmos.group.v1beta1.Member
-	16, // 6: cosmos.group.v1beta1.GroupPolicyInfo.decision_policy:type_name -> google.protobuf.Any
-	14, // 7: cosmos.group.v1beta1.GroupPolicyInfo.created_at:type_name -> google.protobuf.Timestamp
-	14, // 8: cosmos.group.v1beta1.Proposal.submit_time:type_name -> google.protobuf.Timestamp
-	1,  // 9: cosmos.group.v1beta1.Proposal.status:type_name -> cosmos.group.v1beta1.ProposalStatus
-	2,  // 10: cosmos.group.v1beta1.Proposal.result:type_name -> cosmos.group.v1beta1.ProposalResult
-	12, // 11: cosmos.group.v1beta1.Proposal.final_tally_result:type_name -> cosmos.group.v1beta1.TallyResult
-	14, // 12: cosmos.group.v1beta1.Proposal.timeout:type_name -> google.protobuf.Timestamp
-	3,  // 13: cosmos.group.v1beta1.Proposal.executor_result:type_name -> cosmos.group.v1beta1.ProposalExecutorResult
-	16, // 14: cosmos.group.v1beta1.Proposal.messages:type_name -> google.protobuf.Any
-	0,  // 15: cosmos.group.v1beta1.Vote.option:type_name -> cosmos.group.v1beta1.VoteOption
-	14, // 16: cosmos.group.v1beta1.Vote.submit_time:type_name -> google.protobuf.Timestamp
-	17, // [17:17] is the sub-list for method output_type
-	17, // [17:17] is the sub-list for method input_type
-	17, // [17:17] is the sub-list for extension type_name
-	17, // [17:17] is the sub-list for extension extendee
-	0,  // [0:17] is the sub-list for field type_name
+	8,  // 2: cosmos.group.v1beta1.ThresholdDecisionPolicy.windows:type_name -> cosmos.group.v1beta1.DecisionPolicyWindows
+	8,  // 3: cosmos.group.v1beta1.PercentageDecisionPolicy.windows:type_name -> cosmos.group.v1beta1.DecisionPolicyWindows
+	16, // 4: cosmos.group.v1beta1.DecisionPolicyWindows.voting_period:type_name -> google.protobuf.Duration
+	16, // 5: cosmos.group.v1beta1.DecisionPolicyWindows.min_execution_period:type_name -> google.protobuf.Duration
+	15, // 6: cosmos.group.v1beta1.GroupInfo.created_at:type_name -> google.protobuf.Timestamp
+	4,  // 7: cosmos.group.v1beta1.GroupMember.member:type_name -> cosmos.group.v1beta1.Member
+	17, // 8: cosmos.group.v1beta1.GroupPolicyInfo.decision_policy:type_name -> google.protobuf.Any
+	15, // 9: cosmos.group.v1beta1.GroupPolicyInfo.created_at:type_name -> google.protobuf.Timestamp
+	15, // 10: cosmos.group.v1beta1.Proposal.submit_time:type_name -> google.protobuf.Timestamp
+	1,  // 11: cosmos.group.v1beta1.Proposal.status:type_name -> cosmos.group.v1beta1.ProposalStatus
+	2,  // 12: cosmos.group.v1beta1.Proposal.result:type_name -> cosmos.group.v1beta1.ProposalResult
+	13, // 13: cosmos.group.v1beta1.Proposal.final_tally_result:type_name -> cosmos.group.v1beta1.TallyResult
+	15, // 14: cosmos.group.v1beta1.Proposal.voting_period_end:type_name -> google.protobuf.Timestamp
+	3,  // 15: cosmos.group.v1beta1.Proposal.executor_result:type_name -> cosmos.group.v1beta1.ProposalExecutorResult
+	17, // 16: cosmos.group.v1beta1.Proposal.messages:type_name -> google.protobuf.Any
+	0,  // 17: cosmos.group.v1beta1.Vote.option:type_name -> cosmos.group.v1beta1.VoteOption
+	15, // 18: cosmos.group.v1beta1.Vote.submit_time:type_name -> google.protobuf.Timestamp
+	19, // [19:19] is the sub-list for method output_type
+	19, // [19:19] is the sub-list for method input_type
+	19, // [19:19] is the sub-list for extension type_name
+	19, // [19:19] is the sub-list for extension extendee
+	0,  // [0:19] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_group_v1beta1_types_proto_init() }
@@ -7994,7 +8571,7 @@ func file_cosmos_group_v1beta1_types_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_types_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GroupInfo); i {
+			switch v := v.(*DecisionPolicyWindows); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8006,7 +8583,7 @@ func file_cosmos_group_v1beta1_types_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_types_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GroupMember); i {
+			switch v := v.(*GroupInfo); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8018,7 +8595,7 @@ func file_cosmos_group_v1beta1_types_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_types_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GroupPolicyInfo); i {
+			switch v := v.(*GroupMember); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8030,7 +8607,7 @@ func file_cosmos_group_v1beta1_types_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_types_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Proposal); i {
+			switch v := v.(*GroupPolicyInfo); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8042,7 +8619,7 @@ func file_cosmos_group_v1beta1_types_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_types_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*TallyResult); i {
+			switch v := v.(*Proposal); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8054,6 +8631,18 @@ func file_cosmos_group_v1beta1_types_proto_init() {
 			}
 		}
 		file_cosmos_group_v1beta1_types_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*TallyResult); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_group_v1beta1_types_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Vote); i {
 			case 0:
 				return &v.state
@@ -8072,7 +8661,7 @@ func file_cosmos_group_v1beta1_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_group_v1beta1_types_proto_rawDesc,
 			NumEnums:      4,
-			NumMessages:   10,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

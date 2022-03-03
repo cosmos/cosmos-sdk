@@ -26,7 +26,6 @@ const (
 	FlagDescription = "description"
 	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagProposalType = "type"
-	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagDeposit   = "deposit"
 	flagVoter     = "voter"
 	flagDepositor = "depositor"
@@ -51,7 +50,7 @@ var ProposalFlags = []string{
 // it contains a slice of "proposal" child commands. These commands are respective
 // to proposal type handlers that are implemented in other modules but are mounted
 // under the governance CLI (eg. parameter change proposals).
-func NewTxCmd(propCmds []*cobra.Command) *cobra.Command {
+func NewTxCmd(legacyPropCmds []*cobra.Command) *cobra.Command {
 	govTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Governance transactions subcommands",
@@ -61,7 +60,7 @@ func NewTxCmd(propCmds []*cobra.Command) *cobra.Command {
 	}
 
 	cmdSubmitLegacyProp := NewCmdSubmitLegacyProposal()
-	for _, propCmd := range propCmds {
+	for _, propCmd := range legacyPropCmds {
 		flags.AddTxFlagsToCmd(propCmd)
 		cmdSubmitLegacyProp.AddCommand(propCmd)
 	}
@@ -71,6 +70,8 @@ func NewTxCmd(propCmds []*cobra.Command) *cobra.Command {
 		NewCmdVote(),
 		NewCmdWeightedVote(),
 		NewCmdSubmitProposal(),
+
+		// Deprecated
 		cmdSubmitLegacyProp,
 	)
 

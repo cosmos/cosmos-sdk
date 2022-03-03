@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -10,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authmiddleware "github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
@@ -35,6 +37,7 @@ const (
 	ProposalTableSeqPrefix           byte = 0x31
 	ProposalByGroupPolicyIndexPrefix byte = 0x32
 	ProposalByProposerIndexPrefix    byte = 0x33
+	ProposalsByVotingPeriodEndPrefix byte = 0x34
 
 	// Vote Table
 	VoteTablePrefix           byte = 0x40
@@ -66,6 +69,7 @@ type Keeper struct {
 	proposalTable              orm.AutoUInt64Table
 	proposalByGroupPolicyIndex orm.Index
 	proposalByProposerIndex    orm.Index
+	ProposalsByVotingPeriodEnd orm.Index
 
 	// Vote Table
 	voteTable           orm.PrimaryKeyTable
@@ -181,6 +185,13 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 	if err != nil {
 		panic(err.Error())
 	}
+	k.ProposalsByVotingPeriodEnd, err = orm.NewIndex(proposalTable, ProposalsByVotingPeriodEndPrefix, func(value interface{}) ([]interface{}, error) {
+		votingPeriodEnd := value.(*group.Proposal).VotingPeriodEnd
+		return []interface{}{sdk.FormatTimeBytes(votingPeriodEnd)}, nil
+	}, []byte{})
+	if err != nil {
+		panic(err.Error())
+	}
 	k.proposalTable = *proposalTable
 
 	// Vote Table
@@ -223,10 +234,87 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", group.ModuleName))
 }
 
-// MaxMetadataLength returns the max length of the metadata bytes field for various entities within the group module.
-func (k Keeper) MaxMetadataLength() uint64 { return k.config.MaxMetadataLen }
-
 // GetGroupSequence returns the current value of the group table sequence
 func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
 	return k.groupTable.Sequence().CurVal(ctx.KVStore(k.key))
+}
+
+// TODO merge with https://github.com/cosmos/cosmos-sdk/pull/11310
+func (k Keeper) iterateVPEndProposals(ctx sdk.Context, before time.Time, cb func(proposal group.Proposal) (bool, error)) error {
+	it, _ := k.ProposalsByVotingPeriodEnd.Get(ctx.KVStore(k.key), sdk.PrefixEndBytes(sdk.FormatTimeBytes(before)))
+	var proposal group.Proposal
+	defer it.Close()
+
+	for {
+		_, err := it.LoadNext(&proposal)
+		if errors.ErrORMIteratorDone.Is(err) {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		stop, err := cb(proposal)
+		if err != nil {
+			return err
+		}
+		if stop {
+			break
+		}
+	}
+
+	return nil
+}
+
+// pruneProposal deletes a proposal from state, as well as all its votes.
+func (k Keeper) pruneProposal(ctx sdk.Context, p group.Proposal) error {
+	store := ctx.KVStore(k.key)
+
+	// Delete all proposal votes.
+	it, err := k.voteByProposalIndex.Get(store, p.Id)
+	if err != nil {
+		return err
+	}
+	defer it.Close()
+
+	var vote group.Vote
+	for {
+		_, err = it.LoadNext(&vote)
+		if errors.ErrORMIteratorDone.Is(err) {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		err = k.voteTable.Delete(store, &vote)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Delete proposal itself.
+	err = k.proposalTable.Delete(store, p.Id)
+	if err != nil {
+		return err
+	}
+
+	k.Logger(ctx).Debug(fmt.Sprintf("Deleted proposal %d", p.Id))
+	return nil
+}
+
+// PruneProposals prunes all proposals and votes that are expired, i.e. whose
+// `voting_period + max_execution_period` is greater than the current block
+// time.
+func (k Keeper) PruneProposals(ctx sdk.Context) error {
+	k.iterateVPEndProposals(ctx, ctx.BlockTime().Add(-k.config.MaxExecutionPeriod), func(proposal group.Proposal) (bool, error) {
+		err := k.pruneProposal(ctx, proposal)
+		if err != nil {
+			return true, err
+		}
+
+		return false, nil
+	})
+
+	return nil
 }

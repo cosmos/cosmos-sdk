@@ -727,7 +727,16 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 	}
 
 	storeUpdates := func() (*group.MsgExecResponse, error) {
-		if err := k.proposalTable.Update(ctx.KVStore(k.key), id, &proposal); err != nil {
+		store := ctx.KVStore(k.key)
+
+		// If proposal has successfully run, delete it from state.
+		if proposal.ExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
+			if err := k.pruneProposal(ctx, proposal); err != nil {
+				return nil, err
+			}
+		}
+
+		if err := k.proposalTable.Update(store, id, &proposal); err != nil {
 			return nil, err
 		}
 		return &group.MsgExecResponse{}, nil
@@ -785,7 +794,10 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 		return nil, err
 	}
 
-	err = ctx.EventManager().EmitTypedEvent(&group.EventExec{ProposalId: id})
+	err = ctx.EventManager().EmitTypedEvent(&group.EventExec{
+		ProposalId: id,
+		Result:     proposal.ExecutorResult,
+	})
 	if err != nil {
 		return nil, err
 	}

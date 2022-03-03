@@ -3,6 +3,7 @@ syntax = "proto3";
 package cosmos.group.v1beta1;
 
 import "cosmos_proto/cosmos.proto";
+import "cosmos/group/v1beta1/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/group";
 
@@ -60,4 +61,7 @@ message EventExec {
 
   // proposal_id is the unique ID of the proposal.
   uint64 proposal_id = 1;
+
+  // result is the proposal execution result.
+  ProposalExecutorResult result = 2;
 }

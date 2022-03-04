@@ -755,9 +755,11 @@ func (rs *Store) Restore(
 	// a SnapshotStoreItem, telling us which store to import into. The following items will contain
 	// SnapshotNodeItem (i.e. ExportNode) until we reach the next SnapshotStoreItem or EOF.
 	var importer *iavltree.Importer
+	var snapshotItem snapshottypes.SnapshotItem
+loop:
 	for {
-		snapshotItem := &snapshottypes.SnapshotItem{}
-		err := protoReader.ReadMsg(snapshotItem)
+		snapshotItem = snapshottypes.SnapshotItem{}
+		err := protoReader.ReadMsg(&snapshotItem)
 		if err == io.EOF {
 			break
 		} else if err != nil {
@@ -811,8 +813,7 @@ func (rs *Store) Restore(
 			}
 
 		default:
-			// pass back the unrecognized item.
-			return *snapshotItem, nil
+			break loop
 		}
 	}
 
@@ -825,7 +826,7 @@ func (rs *Store) Restore(
 	}
 
 	flushMetadata(rs.db, int64(height), rs.buildCommitInfo(int64(height)), []int64{})
-	return snapshottypes.SnapshotItem{}, rs.LoadLatestVersion()
+	return snapshotItem, rs.LoadLatestVersion()
 }
 
 func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams) (types.CommitKVStore, error) {
@@ -903,6 +904,30 @@ func (rs *Store) buildCommitInfo(version int64) *types.CommitInfo {
 		Version:    version,
 		StoreInfos: storeInfos,
 	}
+}
+
+// RollbackToVersion delete the versions after `target` and update the latest version.
+func (rs *Store) RollbackToVersion(target int64) int64 {
+	if target < 0 {
+		panic("Negative rollback target")
+	}
+	current := getLatestVersion(rs.db)
+	if target >= current {
+		return current
+	}
+	for ; current > target; current-- {
+		rs.pruneHeights = append(rs.pruneHeights, current)
+	}
+	rs.pruneStores()
+
+	// update latest height
+	bz, err := gogotypes.StdInt64Marshal(current)
+	if err != nil {
+		panic(err)
+	}
+
+	rs.db.Set([]byte(latestVersionKey), bz)
+	return current
 }
 
 type storeParams struct {

@@ -11,9 +11,10 @@ import (
 )
 
 // SubmitProposal create new proposal given an array of messages
-func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadata []byte) (v1beta2.Proposal, error) {
-	if metadata != nil && uint64(len(metadata)) > keeper.config.MaxMetadataLen {
-		return v1beta2.Proposal{}, types.ErrMetadataTooLong.Wrapf("got metadata with length %d", len(metadata))
+func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadata string) (v1beta2.Proposal, error) {
+	err := keeper.assertMetadataLength(metadata)
+	if err != nil {
+		return v1beta2.Proposal{}, err
 	}
 
 	// Will hold a comma-separated string of all Msg type URLs.

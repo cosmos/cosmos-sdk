@@ -2,6 +2,7 @@ package v1beta2
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,7 +19,7 @@ var (
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
 //nolint:interfacer
-func NewMsgSubmitProposal(messages []sdk.Msg, initialDeposit sdk.Coins, proposer string, metadata []byte) (*MsgSubmitProposal, error) {
+func NewMsgSubmitProposal(messages []sdk.Msg, initialDeposit sdk.Coins, proposer string, metadata string) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
 		InitialDeposit: initialDeposit,
 		Proposer:       proposer,
@@ -139,8 +140,8 @@ func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
 
 // NewMsgVote creates a message to cast a vote on an active proposal
 //nolint:interfacer
-func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption) *MsgVote {
-	return &MsgVote{proposalID, voter.String(), option}
+func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption, metadata string) *MsgVote {
+	return &MsgVote{proposalID, voter.String(), option, metadata}
 }
 
 // Route implements Msg
@@ -175,8 +176,8 @@ func (msg MsgVote) GetSigners() []sdk.AccAddress {
 
 // NewMsgVoteWeighted creates a message to cast a vote on an active proposal
 //nolint:interfacer
-func NewMsgVoteWeighted(voter sdk.AccAddress, proposalID uint64, options WeightedVoteOptions) *MsgVoteWeighted {
-	return &MsgVoteWeighted{proposalID, voter.String(), options}
+func NewMsgVoteWeighted(voter sdk.AccAddress, proposalID uint64, options WeightedVoteOptions, metadata string) *MsgVoteWeighted {
+	return &MsgVoteWeighted{proposalID, voter.String(), options, metadata}
 }
 
 // Route implements Msg

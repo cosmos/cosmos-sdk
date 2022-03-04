@@ -45,6 +45,7 @@ func (m mockContext) Invoke(grpcCtx gocontext.Context, method string, req, reply
 
 	return nil
 }
+
 func (mockContext) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
 	panic("not implemented")
 }
@@ -96,6 +97,14 @@ func TestCalculateGas(t *testing.T) {
 
 func TestBuildSimTx(t *testing.T) {
 	txCfg := NewTestTxConfig()
+	encCfg := simapp.MakeTestEncodingConfig()
+
+	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encCfg.Codec)
+	require.NoError(t, err)
+
+	path := hd.CreateHDPath(118, 0, 0).String()
+	_, _, err = kb.NewMnemonic("test_key1", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	require.NoError(t, err)
 
 	txf := tx.Factory{}.
 		WithTxConfig(txCfg).
@@ -104,7 +113,8 @@ func TestBuildSimTx(t *testing.T) {
 		WithFees("50stake").
 		WithMemo("memo").
 		WithChainID("test-chain").
-		WithSignMode(txCfg.SignModeHandler().DefaultMode())
+		WithSignMode(txCfg.SignModeHandler().DefaultMode()).
+		WithKeybase(kb)
 
 	msg := banktypes.NewMsgSend(sdk.AccAddress("from"), sdk.AccAddress("to"), nil)
 	bz, err := txf.BuildSimTx(msg)
@@ -113,13 +123,23 @@ func TestBuildSimTx(t *testing.T) {
 }
 
 func TestBuildUnsignedTx(t *testing.T) {
+	encCfg := simapp.MakeTestEncodingConfig()
+	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encCfg.Codec)
+	require.NoError(t, err)
+
+	path := hd.CreateHDPath(118, 0, 0).String()
+
+	_, _, err = kb.NewMnemonic("test_key1", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	require.NoError(t, err)
+
 	txf := tx.Factory{}.
 		WithTxConfig(NewTestTxConfig()).
 		WithAccountNumber(50).
 		WithSequence(23).
 		WithFees("50stake").
 		WithMemo("memo").
-		WithChainID("test-chain")
+		WithChainID("test-chain").
+		WithKeybase(kb)
 
 	msg := banktypes.NewMsgSend(sdk.AccAddress("from"), sdk.AccAddress("to"), nil)
 	tx, err := txf.BuildUnsignedTx(msg)
@@ -138,8 +158,8 @@ func TestSign(t *testing.T) {
 	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encCfg.Codec)
 	requireT.NoError(err)
 
-	var from1 = "test_key1"
-	var from2 = "test_key2"
+	from1 := "test_key1"
+	from2 := "test_key2"
 
 	// create a new key using a mnemonic generator and test if we can reuse seed to recreate that account
 	_, seed, err := kb.NewMnemonic(from1, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
@@ -192,37 +212,81 @@ func TestSign(t *testing.T) {
 		expectedPKs  []cryptotypes.PubKey
 		matchingSigs []int // if not nil, check matching signature against old ones.
 	}{
-		{"should fail if txf without keyring",
-			txfNoKeybase, txb, from1, true, nil, nil},
-		{"should fail for non existing key",
-			txfAmino, txb, "unknown", true, nil, nil},
-		{"amino: should succeed with keyring",
-			txfAmino, txbSimple, from1, true, []cryptotypes.PubKey{pubKey1}, nil},
-		{"direct: should succeed with keyring",
-			txfDirect, txbSimple, from1, true, []cryptotypes.PubKey{pubKey1}, nil},
+		{
+			"should fail if txf without keyring",
+			txfNoKeybase, txb, from1, true, nil, nil,
+		},
+		{
+			"should fail for non existing key",
+			txfAmino, txb, "unknown", true, nil, nil,
+		},
+		{
+			"amino: should succeed with keyring",
+			txfAmino, txbSimple, from1, true,
+			[]cryptotypes.PubKey{pubKey1},
+			nil,
+		},
+		{
+			"direct: should succeed with keyring",
+			txfDirect, txbSimple, from1, true,
+			[]cryptotypes.PubKey{pubKey1},
+			nil,
+		},
 
 		/**** test double sign Amino mode ****/
-		{"amino: should sign multi-signers tx",
-			txfAmino, txb, from1, true, []cryptotypes.PubKey{pubKey1}, nil},
-		{"amino: should append a second signature and not overwrite",
-			txfAmino, txb, from2, false, []cryptotypes.PubKey{pubKey1, pubKey2}, []int{0, 0}},
-		{"amino: should overwrite a signature",
-			txfAmino, txb, from2, true, []cryptotypes.PubKey{pubKey2}, []int{1, 0}},
+		{
+			"amino: should sign multi-signers tx",
+			txfAmino, txb, from1, true,
+			[]cryptotypes.PubKey{pubKey1},
+			nil,
+		},
+		{
+			"amino: should append a second signature and not overwrite",
+			txfAmino, txb, from2, false,
+			[]cryptotypes.PubKey{pubKey1, pubKey2},
+			[]int{0, 0},
+		},
+		{
+			"amino: should overwrite a signature",
+			txfAmino, txb, from2, true,
+			[]cryptotypes.PubKey{pubKey2},
+			[]int{1, 0},
+		},
 
 		/**** test double sign Direct mode
 		  signing transaction with 2 or more DIRECT signers should fail in DIRECT mode ****/
-		{"direct: should  append a DIRECT signature with existing AMINO",
+		{
+			"direct: should  append a DIRECT signature with existing AMINO",
 			// txb already has 1 AMINO signature
-			txfDirect, txb, from1, false, []cryptotypes.PubKey{pubKey2, pubKey1}, nil},
-		{"direct: should add single DIRECT sig in multi-signers tx",
-			txfDirect, txb2, from1, false, []cryptotypes.PubKey{pubKey1}, nil},
-		{"direct: should fail to append 2nd DIRECT sig in multi-signers tx",
-			txfDirect, txb2, from2, false, []cryptotypes.PubKey{}, nil},
-		{"amino: should append 2nd AMINO sig in multi-signers tx with 1 DIRECT sig",
+			txfDirect, txb, from1, false,
+			[]cryptotypes.PubKey{pubKey2, pubKey1},
+			nil,
+		},
+		{
+			"direct: should add single DIRECT sig in multi-signers tx",
+			txfDirect, txb2, from1, false,
+			[]cryptotypes.PubKey{pubKey1},
+			nil,
+		},
+		{
+			"direct: should fail to append 2nd DIRECT sig in multi-signers tx",
+			txfDirect, txb2, from2, false,
+			[]cryptotypes.PubKey{},
+			nil,
+		},
+		{
+			"amino: should append 2nd AMINO sig in multi-signers tx with 1 DIRECT sig",
 			// txb2 already has 1 DIRECT signature
-			txfAmino, txb2, from2, false, []cryptotypes.PubKey{}, nil},
-		{"direct: should overwrite multi-signers tx with DIRECT sig",
-			txfDirect, txb2, from1, true, []cryptotypes.PubKey{pubKey1}, nil},
+			txfAmino, txb2, from2, false,
+			[]cryptotypes.PubKey{},
+			nil,
+		},
+		{
+			"direct: should overwrite multi-signers tx with DIRECT sig",
+			txfDirect, txb2, from1, true,
+			[]cryptotypes.PubKey{pubKey1},
+			nil,
+		},
 	}
 
 	var prevSigs []signingtypes.SignatureV2

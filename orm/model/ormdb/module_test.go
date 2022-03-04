@@ -8,11 +8,12 @@ import (
 	"strings"
 	"testing"
 
+	ormv1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
+
 	"github.com/golang/mock/gomock"
 
 	"github.com/cosmos/cosmos-sdk/orm/testing/ormmocks"
 
-	"google.golang.org/protobuf/reflect/protoreflect"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
 
@@ -28,9 +29,12 @@ import (
 // These tests use a simulated bank keeper. Addresses and balances use
 // string and uint64 types respectively for simplicity.
 
-var TestBankSchema = ormdb.ModuleSchema{
-	FileDescriptors: map[uint32]protoreflect.FileDescriptor{
-		1: testpb.File_testpb_bank_proto,
+var TestBankSchema = &ormv1alpha1.ModuleSchemaDescriptor{
+	SchemaFile: []*ormv1alpha1.ModuleSchemaDescriptor_FileEntry{
+		{
+			Id:            1,
+			ProtoFileName: testpb.File_testpb_bank_proto.Path(),
+		},
 	},
 }
 
@@ -332,4 +336,34 @@ func TestHooks(t *testing.T) {
 		ormmocks.Eq(&testpb.Balance{Address: acct1, Denom: denom, Amount: 5}),
 	)
 	assert.NilError(t, k.Burn(ctx, acct1, denom, 5))
+}
+
+func TestGetBackendResolver(t *testing.T) {
+	backend := ormtest.NewMemoryBackend()
+	getResolver := func(storageType ormv1alpha1.StorageType) (ormtable.BackendResolver, error) {
+		switch storageType {
+		case ormv1alpha1.StorageType_STORAGE_TYPE_MEMORY:
+			return func(ctx context.Context) (ormtable.ReadBackend, error) {
+				return backend, nil
+			}, nil
+		default:
+			return nil, fmt.Errorf("storage type %s unsupported", storageType)
+		}
+	}
+	_, err := ormdb.NewModuleDB(TestBankSchema, ormdb.ModuleDBOptions{
+		GetBackendResolver: getResolver,
+	})
+	assert.ErrorContains(t, err, "unsupported")
+
+	_, err = ormdb.NewModuleDB(&ormv1alpha1.ModuleSchemaDescriptor{SchemaFile: []*ormv1alpha1.ModuleSchemaDescriptor_FileEntry{
+		{
+			Id:            1,
+			ProtoFileName: testpb.File_testpb_bank_proto.Path(),
+			StorageType:   ormv1alpha1.StorageType_STORAGE_TYPE_MEMORY,
+		},
+	},
+	}, ormdb.ModuleDBOptions{
+		GetBackendResolver: getResolver,
+	})
+	assert.NilError(t, err)
 }

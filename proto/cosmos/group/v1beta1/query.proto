@@ -303,7 +303,6 @@ message QueryTallyResultRequest {
 
 // QueryTallyResultResponse is the Query/TallyResult response type.
 message QueryTallyResultResponse {
-
   // tally defines the requested tally.
   TallyResult tally = 1 [(gogoproto.nullable) = false];
 }

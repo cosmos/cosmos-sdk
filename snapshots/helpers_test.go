@@ -17,7 +17,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -74,12 +73,12 @@ func snapshotItems(items [][]byte) [][]byte {
 		zWriter, _ := zlib.NewWriterLevel(bufWriter, 7)
 		protoWriter := protoio.NewDelimitedWriter(zWriter)
 		for _, item := range items {
-			types.WriteExtensionItem(protoWriter, item)
+			_ = types.WriteExtensionItem(protoWriter, item)
 		}
-		protoWriter.Close()
-		zWriter.Close()
-		bufWriter.Flush()
-		chunkWriter.Close()
+		_ = protoWriter.Close()
+		_ = zWriter.Close()
+		_ = bufWriter.Flush()
+		_ = chunkWriter.Close()
 	}()
 
 	var chunks [][]byte
@@ -90,6 +89,7 @@ func snapshotItems(items [][]byte) [][]byte {
 		}
 		chunks = append(chunks, chunk)
 	}
+
 	return chunks
 }
 
@@ -99,31 +99,31 @@ type mockSnapshotter struct {
 
 func (m *mockSnapshotter) Restore(
 	height uint64, format uint32, protoReader protoio.Reader,
-) (snapshottypes.SnapshotItem, error) {
+) (types.SnapshotItem, error) {
 	if format == 0 {
-		return snapshottypes.SnapshotItem{}, types.ErrUnknownFormat
+		return types.SnapshotItem{}, types.ErrUnknownFormat
 	}
 	if m.items != nil {
-		return snapshottypes.SnapshotItem{}, errors.New("already has contents")
+		return types.SnapshotItem{}, errors.New("already has contents")
 	}
 
 	m.items = [][]byte{}
 	for {
-		item := &snapshottypes.SnapshotItem{}
+		item := &types.SnapshotItem{}
 		err := protoReader.ReadMsg(item)
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "invalid protobuf message")
+			return types.SnapshotItem{}, sdkerrors.Wrap(err, "invalid protobuf message")
 		}
 		payload := item.GetExtensionPayload()
 		if payload == nil {
-			return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "invalid protobuf message")
+			return types.SnapshotItem{}, sdkerrors.Wrap(err, "invalid protobuf message")
 		}
 		m.items = append(m.items, payload.Payload)
 	}
 
-	return snapshottypes.SnapshotItem{}, nil
+	return types.SnapshotItem{}, nil
 }
 
 func (m *mockSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
@@ -189,6 +189,6 @@ func (m *hungSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) er
 
 func (m *hungSnapshotter) Restore(
 	height uint64, format uint32, protoReader protoio.Reader,
-) (snapshottypes.SnapshotItem, error) {
+) (types.SnapshotItem, error) {
 	panic("not implemented")
 }

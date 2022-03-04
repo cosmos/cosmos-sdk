@@ -1563,7 +1563,6 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
-				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
 				fmt.Sprintf("--%s=true", flags.FlagAux),
 			},
 			expectErrAux: true,
@@ -1600,7 +1599,6 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
-				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
 				fmt.Sprintf("--%s=true", flags.FlagAux),
 			},
 			feePayerArgs: []string{
@@ -1619,7 +1617,6 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
-				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
 				fmt.Sprintf("--%s=true", flags.FlagAux),
 			},
 			feePayerArgs: []string{
@@ -1637,7 +1634,6 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdk.NewInt(0)},
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
-				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
 				fmt.Sprintf("--%s=true", flags.FlagAux),
 			},
 			feePayerArgs: []string{
@@ -1656,7 +1652,6 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
-				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
 				fmt.Sprintf("--%s=true", flags.FlagAux),
 			},
 			feePayerArgs: []string{
@@ -1674,7 +1669,6 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
-				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
 				fmt.Sprintf("--%s=true", flags.FlagAux),
 			},
 			feePayerArgs: []string{
@@ -1685,23 +1679,24 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			},
 		},
 		{
-			name:     "wrong tipper address: error",
+			name:     "chain-id mismatch: error",
 			tipper:   tipper,
 			feePayer: feePayer,
 			tip:      tip,
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
-				fmt.Sprintf("--%s=%s", flags.FlagTipper, "foobar"),
 				fmt.Sprintf("--%s=true", flags.FlagAux),
 			},
-			expectErrAux: true,
+			expectErrAux: false,
 			feePayerArgs: []string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagChainID, "foobar"),
 			},
+			expectErrBroadCast: true,
 		},
 		{
 			name:     "wrong denom in tip: error",
@@ -1711,7 +1706,6 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagTip, "1000wrongDenom"),
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
-				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
 				fmt.Sprintf("--%s=true", flags.FlagAux),
 			},
 			feePayerArgs: []string{
@@ -1731,7 +1725,6 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
-				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
 				fmt.Sprintf("--%s=true", flags.FlagAux),
 			},
 			feePayerArgs: []string{
@@ -1769,15 +1762,20 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 					tc.feePayerArgs...,
 				)
 
-				var txRes sdk.TxResponse
-				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
-
 				if tc.expectErrBroadCast {
 					require.Error(err)
 				} else if tc.errMsg != "" {
+					require.NoError(err)
+
+					var txRes sdk.TxResponse
+					s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
+
 					require.Contains(txRes.RawLog, tc.errMsg)
 				} else {
 					require.NoError(err)
+
+					var txRes sdk.TxResponse
+					s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
 
 					s.Require().Equal(uint32(0), txRes.Code)
 					s.Require().NotNil(int64(0), txRes.Height)

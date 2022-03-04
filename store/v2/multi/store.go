@@ -678,16 +678,16 @@ func (rs *Store) CacheWrap() types.CacheMultiStore {
 	return newCacheStore(rs)
 }
 
-// GetAllVersions implements CommitMultiStore.
+// GetAllVersions returns all available versions.
 // https://github.com/cosmos/cosmos-sdk/pull/11124
-func (rs *Store) GetAllVersions() []int {
+func (rs *Store) GetAllVersions() []uint64 {
 	vs, err := rs.stateDB.Versions()
 	if err != nil {
 		panic(err)
 	}
-	var ret []int
+	var ret []uint64
 	for it := vs.Iterator(); it.Next(); {
-		ret = append(ret, int(it.Value()))
+		ret = append(ret, it.Value())
 	}
 	return ret
 }

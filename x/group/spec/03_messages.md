@@ -132,7 +132,7 @@ The messages that are part of this proposal won't be executed if:
 
 ## Msg/LeaveGroup
 
-The `MsgLeaveGroup` allows group member to leave the group.
+The `MsgLeaveGroup` allows group member to leave a group.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/a635fd78663d04c5de23f4d032e5a3abea1b005a/proto/cosmos/group/v1beta1/tx.proto#L352-L361
 

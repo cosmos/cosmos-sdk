@@ -44,6 +44,7 @@ func TxCmd(name string) *cobra.Command {
 		MsgSubmitProposalCmd(),
 		MsgVoteCmd(),
 		MsgExecCmd(),
+		MsgLeaveGroupCmd(),
 	)
 
 	return txCmd
@@ -768,6 +769,49 @@ func MsgExecCmd() *cobra.Command {
 				return err
 			}
 
+			if err = msg.ValidateBasic(); err != nil {
+				return fmt.Errorf("message validation failed: %w", err)
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// MsgLeaveGroupCmd creates a CLI command for Msg/LeaveGroup.
+func MsgLeaveGroupCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "leave-group [member-address] [group-id]",
+		Short: "remove member from the group",
+		Long: ` remove member from the group
+
+Parameters:
+		   group-id: unique id of the group
+		   member-address: account address of the group member
+		   Note, the '--from' flag is
+				ignored as it is implied from [member-address]
+		`,
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Flags().Set(flags.FlagFrom, args[0])
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			groupID, err := strconv.ParseUint(args[1], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			msg := &group.MsgLeaveGroup{
+				Address: clientCtx.GetFromAddress().String(),
+				GroupId: groupID,
+			}
 			if err = msg.ValidateBasic(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
 			}

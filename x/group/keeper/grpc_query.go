@@ -323,15 +323,6 @@ func (q Keeper) TallyResult(goCtx context.Context, request *group.QueryTallyResu
 		return nil, sdkerrors.Wrap(err, "load group policy")
 	}
 
-	// Ensure that group hasn't been modified since the proposal submission.
-	electorate, err := q.getGroupInfo(ctx, policyInfo.GroupId)
-	if err != nil {
-		return nil, err
-	}
-	if electorate.Version != proposal.GroupVersion {
-		return nil, sdkerrors.Wrap(errors.ErrModified, "group was modified")
-	}
-
 	tallyResult, err := q.Tally(ctx, proposal, policyInfo.GroupId)
 	if err != nil {
 		return nil, err

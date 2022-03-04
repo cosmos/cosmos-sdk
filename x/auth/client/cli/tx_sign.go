@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
@@ -240,10 +241,15 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		}
 
 		overwrite, _ := f.GetBool(flagOverwrite)
+		var multisigAddr sdk.AccAddress
 		if multisig != "" {
-			multisigAddr, _, _, err := client.GetFromFields(txFactory.Keybase(), multisig, clientCtx.GenerateOnly)
-			if err != nil {
-				return fmt.Errorf("error getting account from keybase: %w", err)
+			if multisigAddr, err = sdk.AccAddressFromBech32(multisig); err != nil {
+				if err != nil {
+					multisigAddr, _, _, err = client.GetFromFields(txFactory.Keybase(), multisig, clientCtx.GenerateOnly)
+					if err != nil {
+						return fmt.Errorf("error getting account from keybase: %w", err)
+					}
+				}
 			}
 			err = authclient.SignTxWithSignerAddress(
 				txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline, overwrite)

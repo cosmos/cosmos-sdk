@@ -829,42 +829,13 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 		return nil, err
 	}
 
-	iter, err := k.getGroupPoliciesByGroup(ctx, req.GroupId, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer iter.Close()
-
-	// update group weight and increment group version
-	groupInfo.TotalWeight = updatedWeight.String()
-	groupInfo.Version++
-
-	var groupPolicy group.GroupPolicyInfo
-	for {
-		ctx.GasMeter().ConsumeGas(gasCostPerIteration, "group policy")
-		if _, err := iter.LoadNext(&groupPolicy); err != nil {
-			if errors.ErrORMIteratorDone.Is(err) {
-				break
-			}
-
-			return nil, err
-		}
-
-		policyI := groupPolicy.GetDecisionPolicy()
-		if policyI == nil {
-			return nil, sdkerrors.ErrInvalidRequest.Wrapf("expected %T, got %T", (group.DecisionPolicy)(nil), groupPolicy.DecisionPolicy.GetCachedValue())
-		}
-
-		if err := policyI.Validate(groupInfo, k.config); err != nil {
-			return nil, err
-		}
-	}
-
 	// delete group member in the groupMemberTable.
 	if err := k.groupMemberTable.Delete(ctx.KVStore(k.key), gm); err != nil {
 		return nil, sdkerrors.Wrap(err, "group member")
 	}
 
+	// update group weight
+	groupInfo.TotalWeight = updatedWeight.String()
 	if err := k.groupTable.Update(ctx.KVStore(k.key), groupInfo.Id, &groupInfo); err != nil {
 		return nil, err
 	}

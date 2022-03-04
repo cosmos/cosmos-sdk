@@ -1170,10 +1170,6 @@ func SimulateMsgLeaveGroup(k keeper.Keeper, ak group.AccountKeeper, bk group.Ban
 
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			if strings.Contains(err.Error(), "should not be greater than the total group weight") {
-				return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, err.Error()), nil, nil
-			}
-
 			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), err.Error()), nil, err
 		}
 

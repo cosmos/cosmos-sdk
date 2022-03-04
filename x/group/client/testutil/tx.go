@@ -2246,7 +2246,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 			"is not part of group",
 		},
 		{
-			"error: cannot leave group (breaks policy threshold)",
+			"error: can leave group policy threshold is more than group weight",
 			append(
 				[]string{
 					members[1],
@@ -2255,8 +2255,8 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 				},
 				commonFlags...,
 			),
-			true,
-			"should not be greater than the total group weight",
+			false,
+			"",
 		},
 	}
 

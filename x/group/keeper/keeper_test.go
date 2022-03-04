@@ -2560,7 +2560,7 @@ func (s *TestSuite) TestLeaveGroup() {
 			0,
 		},
 		{
-			"valid testcase",
+			"valid testcase: threshold decision policy",
 			&group.MsgLeaveGroup{
 				GroupId: groupId,
 				Address: member3.String(),
@@ -2570,14 +2570,14 @@ func (s *TestSuite) TestLeaveGroup() {
 			2,
 		},
 		{
-			"valid request: cannot leave group",
+			"valid request: can leave group policy threshold more than group weight",
 			&group.MsgLeaveGroup{
 				GroupId: groupId,
 				Address: member2.String(),
 			},
-			true,
-			"should not be greater than the total group weight",
-			0,
+			false,
+			"",
+			1,
 		},
 		{
 			"valid request: can leave group (percentage decision policy)",

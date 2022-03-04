@@ -139,4 +139,3 @@ The `MsgLeaveGroup` allows group member to leave the group.
 It's expecting to fail if:
 
 * the group member is not part of the group.
-* group weight updates that breaks decision policy.

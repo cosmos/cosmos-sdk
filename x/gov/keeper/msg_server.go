@@ -114,7 +114,7 @@ func (k msgServer) Vote(goCtx context.Context, msg *v1beta2.MsgVote) (*v1beta2.M
 	if accErr != nil {
 		return nil, accErr
 	}
-	err := k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, v1beta2.NewNonSplitVoteOption(msg.Option))
+	err := k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, v1beta2.NewNonSplitVoteOption(msg.Option), msg.Metadata)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +144,7 @@ func (k msgServer) VoteWeighted(goCtx context.Context, msg *v1beta2.MsgVoteWeigh
 	if accErr != nil {
 		return nil, accErr
 	}
-	err := k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, msg.Options)
+	err := k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, msg.Options, msg.Metadata)
 	if err != nil {
 		return nil, err
 	}

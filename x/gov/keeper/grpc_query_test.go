@@ -190,7 +190,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 				for i := 0; i < 5; i++ {
 					govAddress := app.GovKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 					testProposal := []sdk.Msg{
-						v1beta2.NewMsgVote(govAddress, uint64(i), v1beta2.OptionYes),
+						v1beta2.NewMsgVote(govAddress, uint64(i), v1beta2.OptionYes, ""),
 					}
 					proposal, err := app.GovKeeper.SubmitProposal(ctx, testProposal, "")
 					suite.Require().NotEmpty(proposal)
@@ -269,7 +269,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 			func() {
 				testProposals[1].Status = v1beta2.StatusVotingPeriod
 				app.GovKeeper.SetProposal(ctx, *testProposals[1])
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, testProposals[1].Id, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionAbstain)))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, testProposals[1].Id, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionAbstain), ""))
 
 				req = &v1beta2.QueryProposalsRequest{
 					Voter: addrs[0].String(),
@@ -384,7 +384,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 			func() {
 				proposal.Status = v1beta2.StatusVotingPeriod
 				app.GovKeeper.SetProposal(ctx, proposal)
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionAbstain)))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionAbstain), ""))
 
 				req = &v1beta2.QueryVoteRequest{
 					ProposalId: proposal.Id,
@@ -495,8 +495,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 				accAddr2, err2 := sdk.AccAddressFromBech32(votes[1].Voter)
 				suite.Require().NoError(err1)
 				suite.Require().NoError(err2)
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, accAddr1, votes[0].Options))
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, accAddr2, votes[1].Options))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, accAddr1, votes[0].Options, ""))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, accAddr2, votes[1].Options, ""))
 
 				req = &v1beta2.QueryVotesRequest{
 					ProposalId: proposal.Id,
@@ -596,8 +596,8 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVotes() {
 				accAddr2, err2 := sdk.AccAddressFromBech32(votes[1].Voter)
 				suite.Require().NoError(err1)
 				suite.Require().NoError(err2)
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, accAddr1, v1beta2.NewNonSplitVoteOption(v1beta2.OptionAbstain)))
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, accAddr2, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, accAddr1, v1beta2.NewNonSplitVoteOption(v1beta2.OptionAbstain), ""))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, accAddr2, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), ""))
 
 				req = &v1beta1.QueryVotesRequest{
 					ProposalId: proposal.Id,
@@ -1055,9 +1055,9 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 				proposal.Status = v1beta2.StatusVotingPeriod
 				app.GovKeeper.SetProposal(ctx, proposal)
 
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)))
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, addrs[1], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)))
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, addrs[2], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), ""))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, addrs[1], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), ""))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, addrs[2], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), ""))
 
 				req = &v1beta2.QueryTallyResultRequest{ProposalId: proposal.Id}
 

@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
 )
 
@@ -1018,7 +1019,12 @@ func (s *TestSuite) TestUpdateGroupPolicyAdmin() {
 	addr5 := addrs[4]
 
 	admin, newAdmin := addr1, addr2
-	groupPolicyAddr, myGroupID, policy := createGroupAndGroupPolicy(admin, s)
+	policy := group.NewThresholdDecisionPolicy(
+		"1",
+		time.Second,
+		0,
+	)
+	groupPolicyAddr, myGroupID := s.createGroupAndGroupPolicy(admin, nil, policy)
 
 	specs := map[string]struct {
 		req            *group.MsgUpdateGroupPolicyAdmin
@@ -1101,7 +1107,12 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 	addr5 := addrs[4]
 
 	admin := addr1
-	groupPolicyAddr, myGroupID, policy := createGroupAndGroupPolicy(admin, s)
+	policy := group.NewThresholdDecisionPolicy(
+		"1",
+		time.Second,
+		0,
+	)
+	groupPolicyAddr, myGroupID := s.createGroupAndGroupPolicy(admin, nil, policy)
 
 	specs := map[string]struct {
 		req            *group.MsgUpdateGroupPolicyMetadata
@@ -1175,10 +1186,15 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 	addr5 := addrs[4]
 
 	admin := addr1
-	groupPolicyAddr, myGroupID, policy := createGroupAndGroupPolicy(admin, s)
+	policy := group.NewThresholdDecisionPolicy(
+		"1",
+		time.Second,
+		0,
+	)
+	groupPolicyAddr, myGroupID := s.createGroupAndGroupPolicy(admin, nil, policy)
 
 	specs := map[string]struct {
-		preRun         func(admin sdk.AccAddress, s *TestSuite) (policyAddr string, groupId uint64, policy group.DecisionPolicy)
+		preRun         func(admin sdk.AccAddress) (policyAddr string, groupId uint64)
 		req            *group.MsgUpdateGroupPolicyDecisionPolicy
 		policy         group.DecisionPolicy
 		expGroupPolicy *group.GroupPolicyInfo
@@ -1223,8 +1239,8 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 			expErr: false,
 		},
 		"correct data with percentage decision policy": {
-			preRun: func(admin sdk.AccAddress, s *TestSuite) (policyAddr string, groupId uint64, policy group.DecisionPolicy) {
-				return createGroupAndGroupPolicy(admin, s)
+			preRun: func(admin sdk.AccAddress) (string, uint64) {
+				return s.createGroupAndGroupPolicy(admin, nil, policy)
 			},
 			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
 				Admin:   admin.String(),
@@ -1250,7 +1266,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 		err := spec.expGroupPolicy.SetDecisionPolicy(spec.policy)
 		s.Require().NoError(err)
 		if spec.preRun != nil {
-			policyAddr1, groupId, _ := spec.preRun(admin, s)
+			policyAddr1, groupId := spec.preRun(admin)
 			policyAddr = policyAddr1
 
 			// update the expected info with new group policy details
@@ -2419,115 +2435,79 @@ func (s *TestSuite) TestExecProposal() {
 
 func (s *TestSuite) TestLeaveGroup() {
 	addrs := simapp.AddTestAddrsIncremental(s.app, s.sdkCtx, 7, sdk.NewInt(3000000))
-	admin := addrs[0]
+	admin1 := addrs[0]
 	member1 := addrs[1]
 	member2 := addrs[2]
 	member3 := addrs[3]
 	member4 := addrs[4]
 	admin2 := addrs[5]
 	admin3 := addrs[6]
-
 	require := s.Require()
-	res, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
-		Admin: admin.String(),
-		Members: []group.Member{
-			{
-				Address:  member1.String(),
-				Weight:   "1",
-				Metadata: "metadata",
-				AddedAt:  s.sdkCtx.BlockTime(),
-			},
-			{
-				Address:  member2.String(),
-				Weight:   "2",
-				Metadata: "metadata",
-				AddedAt:  s.sdkCtx.BlockTime(),
-			},
-			{
-				Address:  member3.String(),
-				Weight:   "3",
-				Metadata: "metadata",
-				AddedAt:  s.sdkCtx.BlockTime(),
-			},
-		},
-	})
-	require.NoError(err)
-	require.NotNil(res)
 
-	res1, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
-		Admin: admin2.String(),
-		Members: []group.Member{
-			{
-				Address:  member1.String(),
-				Weight:   "1",
-				Metadata: "metadata",
-				AddedAt:  s.sdkCtx.BlockTime(),
-			},
+	members := []group.Member{
+		{
+			Address:  member1.String(),
+			Weight:   "1",
+			Metadata: "metadata",
+			AddedAt:  s.sdkCtx.BlockTime(),
 		},
-	})
-	require.NoError(err)
-	require.NotNil(res1)
-
-	res2, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
-		Admin: admin3.String(),
-		Members: []group.Member{
-			{
-				Address:  member1.String(),
-				Weight:   "1",
-				Metadata: "metadata",
-				AddedAt:  s.sdkCtx.BlockTime(),
-			},
-			{
-				Address:  member2.String(),
-				Weight:   "2",
-				Metadata: "metadata",
-				AddedAt:  s.sdkCtx.BlockTime(),
-			},
+		{
+			Address:  member2.String(),
+			Weight:   "2",
+			Metadata: "metadata",
+			AddedAt:  s.sdkCtx.BlockTime(),
 		},
-	})
-	require.NoError(err)
-	require.NotNil(res2)
-
-	groupPolicy := &group.MsgCreateGroupPolicy{
-		Admin:    admin.String(),
-		GroupId:  res.GroupId,
-		Metadata: "metadata",
+		{
+			Address:  member3.String(),
+			Weight:   "3",
+			Metadata: "metadata",
+			AddedAt:  s.sdkCtx.BlockTime(),
+		},
 	}
 	policy := group.NewThresholdDecisionPolicy(
 		"3",
 		time.Hour,
 		time.Hour,
 	)
-	require.NoError(groupPolicy.SetDecisionPolicy(policy))
-	require.NoError(err)
+	_, groupID1 := s.createGroupAndGroupPolicy(admin1, members, policy)
 
-	policyRes, err := s.keeper.CreateGroupPolicy(s.ctx, groupPolicy)
-	require.NoError(err)
-	require.NotNil(policyRes)
-
-	groupPolicy = &group.MsgCreateGroupPolicy{
-		Admin:    admin3.String(),
-		GroupId:  res2.GroupId,
-		Metadata: "metadata",
+	members = []group.Member{
+		{
+			Address:  member1.String(),
+			Weight:   "1",
+			Metadata: "metadata",
+			AddedAt:  s.sdkCtx.BlockTime(),
+		},
 	}
-	pPolicy := &group.PercentageDecisionPolicy{
+	_, groupID2 := s.createGroupAndGroupPolicy(admin2, members, nil)
+
+	members = []group.Member{
+		{
+			Address:  member1.String(),
+			Weight:   "1",
+			Metadata: "metadata",
+			AddedAt:  s.sdkCtx.BlockTime(),
+		},
+		{
+			Address:  member2.String(),
+			Weight:   "2",
+			Metadata: "metadata",
+			AddedAt:  s.sdkCtx.BlockTime(),
+		},
+	}
+	policy = &group.PercentageDecisionPolicy{
 		Percentage: "0.5",
 		Windows:    &group.DecisionPolicyWindows{VotingPeriod: time.Hour},
 	}
-	require.NoError(groupPolicy.SetDecisionPolicy(pPolicy))
-	require.NoError(err)
 
-	policyRes1, err := s.keeper.CreateGroupPolicy(s.ctx, groupPolicy)
-	require.NoError(err)
-	require.NotNil(policyRes1)
-
-	groupId := res.GroupId
+	_, groupID3 := s.createGroupAndGroupPolicy(admin3, members, policy)
 	testCases := []struct {
 		name           string
 		req            *group.MsgLeaveGroup
 		expErr         bool
 		errMsg         string
 		expMembersSize int
+		memberWeight   math.Dec
 	}{
 		{
 			"expect error: group not found",
@@ -2538,61 +2518,75 @@ func (s *TestSuite) TestLeaveGroup() {
 			true,
 			"group: not found",
 			0,
+			math.NewDecFromInt64(0),
 		},
 		{
 			"expect error: member not part of group",
 			&group.MsgLeaveGroup{
-				GroupId: groupId,
+				GroupId: groupID1,
 				Address: member4.String(),
 			},
 			true,
 			"not part of group",
 			0,
+			math.NewDecFromInt64(0),
 		},
 		{
 			"valid testcase: decision policy is not present",
 			&group.MsgLeaveGroup{
-				GroupId: res1.GroupId,
+				GroupId: groupID2,
 				Address: member1.String(),
 			},
 			false,
 			"",
 			0,
+			math.NewDecFromInt64(1),
 		},
 		{
 			"valid testcase: threshold decision policy",
 			&group.MsgLeaveGroup{
-				GroupId: groupId,
+				GroupId: groupID1,
 				Address: member3.String(),
 			},
 			false,
 			"",
 			2,
+			math.NewDecFromInt64(3),
 		},
 		{
 			"valid request: can leave group policy threshold more than group weight",
 			&group.MsgLeaveGroup{
-				GroupId: groupId,
+				GroupId: groupID1,
 				Address: member2.String(),
 			},
 			false,
 			"",
 			1,
+			math.NewDecFromInt64(2),
 		},
 		{
 			"valid request: can leave group (percentage decision policy)",
 			&group.MsgLeaveGroup{
-				GroupId: res2.GroupId,
+				GroupId: groupID3,
 				Address: member2.String(),
 			},
 			false,
 			"",
 			1,
+			math.NewDecFromInt64(2),
 		},
 	}
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
+			var groupWeight1 math.Dec
+			if !tc.expErr {
+				groupRes, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: tc.req.GroupId})
+				require.NoError(err)
+				groupWeight1, err = math.NewNonNegativeDecFromString(groupRes.Info.TotalWeight)
+				require.NoError(err)
+			}
+
 			res, err := s.keeper.LeaveGroup(s.ctx, tc.req)
 			if tc.expErr {
 				require.Error(err)
@@ -2605,6 +2599,15 @@ func (s *TestSuite) TestLeaveGroup() {
 				})
 				require.NoError(err)
 				require.Len(res.Members, tc.expMembersSize)
+
+				groupRes, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: tc.req.GroupId})
+				require.NoError(err)
+				groupWeight2, err := math.NewNonNegativeDecFromString(groupRes.Info.TotalWeight)
+				require.NoError(err)
+
+				rWeight, err := groupWeight1.Sub(tc.memberWeight)
+				require.NoError(err)
+				require.Equal(rWeight.Cmp(groupWeight2), 0)
 			}
 		})
 	}
@@ -2640,32 +2643,31 @@ func submitProposalAndVote(
 	return myProposalID
 }
 
-func createGroupAndGroupPolicy(
+func (s *TestSuite) createGroupAndGroupPolicy(
 	admin sdk.AccAddress,
-	s *TestSuite,
-) (string, uint64, group.DecisionPolicy) {
+	members []group.Member,
+	policy group.DecisionPolicy,
+) (policyAddr string, groupID uint64) {
 	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:   admin.String(),
-		Members: nil,
+		Members: members,
 	})
 	s.Require().NoError(err)
 
-	myGroupID := groupRes.GroupId
+	groupID = groupRes.GroupId
 	groupPolicy := &group.MsgCreateGroupPolicy{
 		Admin:   admin.String(),
-		GroupId: myGroupID,
+		GroupId: groupID,
 	}
 
-	policy := group.NewThresholdDecisionPolicy(
-		"1",
-		time.Second,
-		0,
-	)
-	err = groupPolicy.SetDecisionPolicy(policy)
-	s.Require().NoError(err)
+	if policy != nil {
+		err = groupPolicy.SetDecisionPolicy(policy)
+		s.Require().NoError(err)
 
-	groupPolicyRes, err := s.keeper.CreateGroupPolicy(s.ctx, groupPolicy)
-	s.Require().NoError(err)
+		groupPolicyRes, err := s.keeper.CreateGroupPolicy(s.ctx, groupPolicy)
+		s.Require().NoError(err)
+		policyAddr = groupPolicyRes.Address
+	}
 
-	return groupPolicyRes.Address, myGroupID, policy
+	return policyAddr, groupID
 }

@@ -72,7 +72,7 @@ const (
 	WeightMsgUpdateGroupPolicyDecisionPolicy = 5
 	WeightMsgUpdateGroupPolicyMetadata       = 5
 	WeightMsgWithdrawProposal                = 20
-	WeightMsgCreateGroupWithPolicy           = 100
+	WeightMsgCreateGroupWithPolicy           = 50
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -179,10 +179,10 @@ func WeightedOperations(
 			weightMsgCreateGroupPolicy,
 			SimulateMsgCreateGroupPolicy(ak, bk, k),
 		),
-		// simulation.NewWeightedOperation(
-		// 	weightMsgCreateGroupWithPolicy,
-		// 	SimulateMsgCreateGroupWithPolicy(ak, bk),
-		// ),
+		simulation.NewWeightedOperation(
+			weightMsgCreateGroupWithPolicy,
+			SimulateMsgCreateGroupWithPolicy(ak, bk),
+		),
 	}
 
 	wPostCreateProposalOps := simulation.WeightedOperations{

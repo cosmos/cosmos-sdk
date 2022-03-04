@@ -53,7 +53,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}{
 		{simulation.WeightMsgCreateGroup, group.MsgCreateGroup{}.Route(), simulation.TypeMsgCreateGroup},
 		{simulation.WeightMsgCreateGroupPolicy, group.MsgCreateGroupPolicy{}.Route(), simulation.TypeMsgCreateGroupPolicy},
-		// {simulation.WeightMsgCreateGroupWithPolicy, group.MsgCreateGroupWithPolicy{}.Route(), simulation.TypeMsgCreateGroupWithPolicy},
+		{simulation.WeightMsgCreateGroupWithPolicy, group.MsgCreateGroupWithPolicy{}.Route(), simulation.TypeMsgCreateGroupWithPolicy},
 		{simulation.WeightMsgSubmitProposal, group.MsgSubmitProposal{}.Route(), simulation.TypeMsgSubmitProposal},
 		{simulation.WeightMsgSubmitProposal, group.MsgSubmitProposal{}.Route(), simulation.TypeMsgSubmitProposal},
 		{simulation.WeightMsgWithdrawProposal, group.MsgWithdrawProposal{}.Route(), simulation.TypeMsgWithdrawProposal},

@@ -34,7 +34,7 @@ type IntegrationTestSuite struct {
 	groupPolicies []*group.GroupPolicyInfo
 	proposal      *group.Proposal
 	vote          *group.Vote
-	votedMember   *group.Member
+	voter         *group.Member
 }
 
 const validMetadata = "metadata"
@@ -205,7 +205,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &voteRes))
 	s.vote = voteRes.Vote
 
-	s.votedMember = &group.Member{
+	s.voter = &group.Member{
 		Address:  val.Address.String(),
 		Weight:   memberWeight,
 		Metadata: validMetadata,

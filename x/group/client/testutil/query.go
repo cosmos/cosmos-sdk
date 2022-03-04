@@ -756,7 +756,7 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
-	member := s.votedMember
+	member := s.voter
 
 	var commonFlags = []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),

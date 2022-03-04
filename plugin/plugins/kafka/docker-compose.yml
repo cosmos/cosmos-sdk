@@ -2,7 +2,7 @@
 version: '2'
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.0.0
+    image: confluentinc/cp-zookeeper:7.0.1
     hostname: zookeeper
     container_name: zookeeper
     ports:
@@ -12,7 +12,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   broker:
-    image: confluentinc/cp-server:7.0.0
+    image: confluentinc/cp-server:7.0.1
     hostname: broker
     container_name: broker
     depends_on:
@@ -41,7 +41,7 @@ services:
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
 
   schema-registry:
-    image: confluentinc/cp-schema-registry:7.0.0
+    image: confluentinc/cp-schema-registry:7.0.1
     hostname: schema-registry
     container_name: schema-registry
     depends_on:
@@ -65,7 +65,6 @@ services:
     environment:
       CONNECT_BOOTSTRAP_SERVERS: 'broker:29092'
       CONNECT_REST_ADVERTISED_HOST_NAME: connect
-      CONNECT_REST_PORT: 8083
       CONNECT_GROUP_ID: compose-connect-group
       CONNECT_CONFIG_STORAGE_TOPIC: docker-connect-configs
       CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
@@ -78,14 +77,14 @@ services:
       CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
       CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
       # CLASSPATH required due to CC-2422
-      CLASSPATH: /usr/share/java/monitoring-interceptors/monitoring-interceptors-7.0.0.jar
+      CLASSPATH: /usr/share/java/monitoring-interceptors/monitoring-interceptors-7.0.1.jar
       CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
       CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
       CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components"
       CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
 
   control-center:
-    image: confluentinc/cp-enterprise-control-center:7.0.0
+    image: confluentinc/cp-enterprise-control-center:7.0.1
     hostname: control-center
     container_name: control-center
     depends_on:
@@ -108,7 +107,7 @@ services:
       PORT: 9021
 
   ksqldb-server:
-    image: confluentinc/cp-ksqldb-server:7.0.0
+    image: confluentinc/cp-ksqldb-server:7.0.1
     hostname: ksqldb-server
     container_name: ksqldb-server
     depends_on:
@@ -131,7 +130,7 @@ services:
       KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: 'true'
 
   ksqldb-cli:
-    image: confluentinc/cp-ksqldb-cli:7.0.0
+    image: confluentinc/cp-ksqldb-cli:7.0.1
     container_name: ksqldb-cli
     depends_on:
       - broker
@@ -141,7 +140,7 @@ services:
     tty: true
 
   ksql-datagen:
-    image: confluentinc/ksqldb-examples:7.0.0
+    image: confluentinc/ksqldb-examples:7.0.1
     hostname: ksql-datagen
     container_name: ksql-datagen
     depends_on:
@@ -163,7 +162,7 @@ services:
       STREAMS_SCHEMA_REGISTRY_PORT: 8081
 
   rest-proxy:
-    image: confluentinc/cp-kafka-rest:7.0.0
+    image: confluentinc/cp-kafka-rest:7.0.1
     depends_on:
       - broker
       - schema-registry

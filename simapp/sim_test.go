@@ -3,6 +3,7 @@ package simapp
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/cosmos/cosmos-sdk/plugin"
@@ -12,7 +13,6 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 	"math/rand"
 	"os"
-	"path/filepath"
 	"runtime/debug"
 	"strings"
 	"testing"
@@ -47,9 +47,17 @@ import (
 	kafkaservice "github.com/cosmos/cosmos-sdk/plugin/plugins/kafka/service"
 )
 
+var (
+	StateListeningPlugin string
+	HaltAppOnDeliveryError bool
+)
+
 // Get flags every time the simulator is run
 func init() {
 	GetSimulatorFlags()
+	// State listening flags
+	flag.StringVar(&StateListeningPlugin, "StateListeningPlugin", "", "State listening plugin name")
+	flag.BoolVar(&HaltAppOnDeliveryError, "HaltAppOnDeliveryError", true, "Halt app when state listeners fail")
 }
 
 type StoreKeysPrefixes struct {
@@ -322,17 +330,102 @@ func TestAppStateDeterminism(t *testing.T) {
 				logger = log.NewNopLogger()
 			}
 
-			appOpts := loadAppOptions()
-			enabledPlugins := cast.ToStringSlice(appOpts.Get(fmt.Sprintf("%s.%s", plugin.PLUGINS_TOML_KEY, plugin.PLUGINS_ENABLED_TOML_KEY)))
-			for _, p := range enabledPlugins {
-				if kafkaplugin.PLUGIN_NAME == p {
-					prepKafkaTopics(appOpts)
-					break
-				}
+			db := dbm.NewMemDB()
+			app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, MakeTestEncodingConfig(), EmptyAppOptions{}, interBlockCacheOpt())
+
+			fmt.Printf(
+				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
+				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
+			)
+
+			_, _, err := simulation.SimulateFromSeed(
+				t,
+				os.Stdout,
+				app.BaseApp,
+				AppStateFn(app.AppCodec(), app.SimulationManager()),
+				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
+				SimulationOperations(app, app.AppCodec(), config),
+				app.ModuleAccountAddrs(),
+				config,
+				app.AppCodec(),
+			)
+			require.NoError(t, err)
+
+			if config.Commit {
+				PrintStats(db)
+			}
+
+			appHash := app.LastCommitID().Hash
+			appHashList[j] = appHash
+
+			if j != 0 {
+				require.Equal(
+					t, string(appHashList[0]), string(appHashList[j]),
+					"non-determinism in seed %d: %d/%d, attempt: %d/%d\n", config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
+				)
+			}
+		}
+	}
+}
+
+// TODO: Make another test for the fuzzer itself, which just has noOp txs
+// and doesn't depend on the application.
+func TestAppStateDeterminismWithStateListening(t *testing.T) {
+	if !FlagEnabledValue {
+		t.Skip("skipping application simulation")
+	}
+
+	if StateListeningPlugin == "" {
+		t.Skip("state listening plugin flag not provided: -StateListeningPlugin=name")
+	}
+
+	config := NewConfigFromFlags()
+	config.InitialBlockHeight = 1
+	config.ExportParamsPath = ""
+	config.OnOperation = false
+	config.AllInvariants = false
+	config.ChainID = helpers.SimAppChainID
+
+	numSeeds := 3
+	numTimesToRunPerSeed := 5
+	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
+
+	// State listening plugin config
+	appOpts := loadAppOptions()
+	key := fmt.Sprintf("%s.%s", plugin.PLUGINS_TOML_KEY, plugin.PLUGINS_ENABLED_TOML_KEY)
+	enabledPlugins := cast.ToStringSlice(appOpts.Get(key))
+	for _, p := range enabledPlugins {
+		// Kafka plugin topic configuration
+		if kafkaplugin.PLUGIN_NAME == p {
+			prepKafkaTopics(appOpts)
+			break
+		}
+	}
+
+	for i := 0; i < numSeeds; i++ {
+		config.Seed = rand.Int63()
+
+		for j := 0; j < numTimesToRunPerSeed; j++ {
+			var logger log.Logger
+			if FlagVerboseValue {
+				logger = log.TestingLogger()
+			} else {
+				logger = log.NewNopLogger()
 			}
 
 			db := dbm.NewMemDB()
-			app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, MakeTestEncodingConfig(), appOpts, interBlockCacheOpt())
+			app := NewSimApp(
+				logger,
+				db,
+				nil,
+				true,
+				map[int64]bool{},
+				DefaultNodeHome,
+				FlagPeriodValue,
+				MakeTestEncodingConfig(),
+				appOpts,
+				interBlockCacheOpt(),
+			)
 
 			fmt.Printf(
 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
@@ -371,14 +464,36 @@ func TestAppStateDeterminism(t *testing.T) {
 
 func loadAppOptions() types.AppOptions {
 	// load plugin config
-	usrHomeDir, _ := os.UserHomeDir()
-	confFile := filepath.Join(usrHomeDir, "app.toml")
+	keys := make([]string, 0) // leave empty to listen to all store keys
+	m := make(map[string]interface{})
+	m["plugins.on"] = true
+	m["plugins.enabled"] = []string{StateListeningPlugin}
+	m["plugins.dir"] = ""
+	// file plugin
+	m["plugins.streaming.file.keys"] = keys
+	m["plugins.streaming.file.write_dir"] = ""
+	m["plugins.streaming.file.prefix"] = ""
+	m["plugins.streaming.file.halt_app_on_delivery_error"] = HaltAppOnDeliveryError
+	// trace plugin
+	m["plugins.streaming.trace.keys"] = keys
+	m["plugins.streaming.trace.print_data_to_stdout"] = false
+	m["plugins.streaming.trace.halt_app_on_delivery_error"] = HaltAppOnDeliveryError
+	// kafka plugin
+	m["plugins.streaming.kafka.keys"] = keys
+	m["plugins.streaming.kafka.topic_prefix"] = "sim"
+	m["plugins.streaming.kafka.flush_timeout_ms"] = 5000
+	m["plugins.streaming.kafka.halt_app_on_delivery_error"] = HaltAppOnDeliveryError
+	// Kafka plugin producer
+	m["plugins.streaming.kafka.producer.bootstrap_servers"] = "localhost:9092"
+	m["plugins.streaming.kafka.producer.client_id"] = "may-app-id"
+	m["plugins.streaming.kafka.producer.acks"] = "all"
+	m["plugins.streaming.kafka.producer.enable_idempotence"] = true
+
 	vpr := viper.New()
-	vpr.SetConfigFile(confFile)
-	err := vpr.ReadInConfig()
-	if err != nil {
-		tmos.Exit(err.Error())
+	for key, value := range m {
+		vpr.SetDefault(key, value)
 	}
+
 	return vpr
 }
 

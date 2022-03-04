@@ -259,6 +259,9 @@ endif
 
 .PHONY: run-tests test test-all $(TEST_TARGETS)
 
+# Sim tests with state listening plugins enabled
+include sim-state-listening.mk
+
 test-sim-nondeterminism:
 	@echo "Running non-determinism test..."
 	@go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -Enabled=true \

@@ -5,106 +5,17 @@ This plugin demonstrates how to listen to state changes of individual `KVStores`
 
 
 <!-- TOC -->
-  - [Dependencies](#dependencies)
-  - [Running the plugin](#running-the-plugin)
   - [Plugin design](#plugin-design)
     - [Channel-Based producer](#channel-based-producer)
     - [Delivery Report handler](#delivery-report-handler)
     - [Message serde](#message-serde)
+    - [Example configuration](#example-configuration)
+  - [Testing the plugin](#testing-the-plugin)
   - [Confluent Platform](#confluent-platform)
     - [Docker](#docker)
     - [Schema Registry](#schema-registry)
     - [KSQL examples](#ksql-examples)
-
-
-
-## Dependencies
-
-To test and run the examples, you must have `docker` and `docker-compose` installed on your system. Use the links below for installation instructions.
-
-* [Docker](https://www.docker.com/get-started)
-* [Docker Compose]
-
-
-## Running the plugin
-
-The plugin has been hooked up to run with `test-sim-nondeterminism` task. For a lighter test you can run `./plugin/plugins/kafka/service/service_test.go`. The [KSQ examples](#ksql-examples) below will work with both test scenarios.
-
-1. Spin up the docker images of the Confluent Platform following the instructions in the [Confluent Platform](#confluent-platform) section. Once the docker images are up and running you'll be able to access the platform on [localhost:9021](localhost:9021).
-2. Copy the content below to `~/app.toml`.
-
-    ```
-    # app.toml
-   
-    ...
-   
-    ###############################################################################
-    ###                      Plugin system configuration                        ###
-    ###############################################################################
     
-    [plugins]
-    
-    # turn the plugin system, as a whole, on or off
-    on = true
-    
-    # List of plugin names to enable from the plugin/plugins/*
-    enabled = ["kafka"]
-    
-    # The directory to load non-preloaded plugins from; defaults to ./plugin/plugins
-    dir = ""
-    
-    # a mapping of plugin-specific streaming service parameters, mapped to their pluginFileName
-    [plugins.streaming]
-    
-    # maximum amount of time the BaseApp will await positive acknowledgement of message receipt from all streaming services
-    # in milliseconds
-    global_ack_wait_limit = 2000
-    
-    ###############################################################################
-    ###                       Kafka Plugin configuration                        ###
-    ###############################################################################
-    
-    # The specific parameters for the Kafka streaming service plugin
-    [plugins.streaming.kafka]
-    
-    # List of store keys we want to expose for this streaming service.
-    keys = []
-    
-    # Optional topic prefix for the topic(s) where data will be stored
-    topic_prefix = "block"
-    
-    # Flush and wait for outstanding messages and requests to complete delivery. (milliseconds)
-    flush_timeout_ms = 1500
-    
-    # Whether or not to halt the application when plugin fails to deliver message(s).
-    halt_app_on_delivery_error = true
-    
-    # Producer configuration properties.
-    # The plugin uses confluent-kafka-go which is a lightweight wrapper around librdkafka.
-    # For a full list of producer configuration properties
-    # see https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
-    [plugins.streaming.kafka.producer]
-    
-    # Initial list of brokers as a comma seperated list of broker host or host:port[, host:port[,...]]
-    bootstrap_servers = "localhost:9092"
-    
-    # Client identifier
-    client_id = "my-app-id"
-    
-    # This field indicates the number of acknowledgements the leader
-    # broker must receive from ISR brokers before responding to the request
-    acks = "all"
-    
-    # When set to true, the producer will ensure that messages
-    # are successfully produced exactly once and in the original produce order.
-    # The following configuration properties are adjusted automatically (if not modified by the user)
-    # when idempotence is enabled: max.in.flight.requests.per.connection=5 (must be less than or equal to 5),
-    # retries=INT32_MAX (must be greater than 0), acks=all, queuing.strategy=fifo.
-    # Producer instantation will fail if user-supplied configuration is incompatible.
-    enable_idempotence = true
-    ```
-3. Run `make test-sim-nondeterminism` and wait for the tests to finish.
-4. Go to the [KSQ examples](#ksql-examples) section and go through the examples.
 
 
 ## Plugin design
@@ -191,17 +102,104 @@ Example:
 }
 ```
 
+### Example configuration
+
+Below is an example of how to configure the Kafka plugin.
+```
+# app.toml
+
+...
+
+###############################################################################
+###                      Plugin system configuration                        ###
+###############################################################################
+
+[plugins]
+
+# turn the plugin system, as a whole, on or off
+on = true
+
+# List of plugin names to enable from the plugin/plugins/*
+enabled = ["kafka"]
+
+# The directory to load non-preloaded plugins from; defaults to ./plugin/plugins
+dir = ""
+
+# a mapping of plugin-specific streaming service parameters, mapped to their pluginFileName
+[plugins.streaming]
+
+# maximum amount of time the BaseApp will await positive acknowledgement of message receipt from all streaming services
+# in milliseconds
+global_ack_wait_limit = 2000
+
+###############################################################################
+###                       Kafka Plugin configuration                        ###
+###############################################################################
+
+# The specific parameters for the Kafka streaming service plugin
+[plugins.streaming.kafka]
+
+# List of store keys we want to expose for this streaming service.
+keys = []
+
+# Optional topic prefix for the topic(s) where data will be stored
+topic_prefix = "block"
+
+# Flush and wait for outstanding messages and requests to complete delivery. (milliseconds)
+flush_timeout_ms = 1500
+
+# Whether or not to halt the application when plugin fails to deliver message(s).
+halt_app_on_delivery_error = true
+
+# Producer configuration properties.
+# The plugin uses confluent-kafka-go which is a lightweight wrapper around librdkafka.
+# For a full list of producer configuration properties
+# see https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
+[plugins.streaming.kafka.producer]
+
+# Initial list of brokers as a comma seperated list of broker host or host:port[, host:port[,...]]
+bootstrap_servers = "localhost:9092"
+
+# Client identifier
+client_id = "my-app-id"
+
+# This field indicates the number of acknowledgements the leader
+# broker must receive from ISR brokers before responding to the request
+acks = "all"
+
+# When set to true, the producer will ensure that messages
+# are successfully produced exactly once and in the original produce order.
+# The following configuration properties are adjusted automatically (if not modified by the user)
+# when idempotence is enabled: max.in.flight.requests.per.connection=5 (must be less than or equal to 5),
+# retries=INT32_MAX (must be greater than 0), acks=all, queuing.strategy=fifo.
+# Producer instantation will fail if user-supplied configuration is incompatible.
+enable_idempotence = true
+```
+
+## Testing the plugin
+
+Non-determinism testing has been set up to run with the Kafka plugin.
+
+To execute the tests, run:
+```
+make test-sim-nondeterminism-state-listening-kafka
+```
+
 ## Confluent Platform
+
+If you're interested in viewing or querying events stored in kafka you can stand up the Confluent Platform stack with docker.
+
+*Visit the Confluent Platform [docs](https://docs.confluent.io/platform/current/quickstart/ce-docker-quickstart.html) for up to date docker instructions.*
 
 ### Docker
 
 Spin up Confluent Platform.
 ```
-cd .../cosmos-sdk/plugin/plugins/kafka/docker-compose.yml
+docker-compose -f plugin/plugins/kafka/docker-compose.yml up -d
 ```
 
+You should see something like this:
 ```
-docker-compose up -d
 Creating network "kafka_default" with the default driver
 Creating zookeeper ... done
 Creating broker    ... done
@@ -217,6 +215,10 @@ Creating control-center  ... done
 Check status
 ```
 docker-compose ps
+```
+
+You should see something like this:
+```
      Name                    Command               State                       Ports                     
 ---------------------------------------------------------------------------------------------------------
 broker            /etc/confluent/docker/run        Up      0.0.0.0:9092->9092/tcp, 0.0.0.0:9101->9101/tcp
@@ -229,13 +231,6 @@ rest-proxy        /etc/confluent/docker/run        Up      0.0.0.0:8082->8082/tc
 schema-registry   /etc/confluent/docker/run        Up      0.0.0.0:8081->8081/tcp                        
 zookeeper         /etc/confluent/docker/run        Up      0.0.0.0:2181->2181/tcp, 2888/tcp, 3888/tcp  
 ```
-
-
-
-### Schema Registry
-
-Because `golang` lacks support to be able to register Protobuf messages with the schema registry, one needs to generate the Java code from the proto messages and use the [KafkaProtobufSerializer.java](https://github.com/confluentinc/schema-registry/blob/master/protobuf-serializer/src/main/java/io/confluent/kafka/serializers/protobuf/KafkaProtobufSerializer.java) to automatically register them. The Java libraries make this process exctreamly easy. Take a look [here](https://docs.confluent.io/platform/current/schema-registry/serdes-develop/serdes-protobuf.html) fro an example of how this is achived.
-
 
 ### KSQL examples
 
@@ -312,5 +307,10 @@ Result:
   "VALUE": "CiAvY29zbW9zLmF1dGgudjFiZXRhMS5CYXNlQWNjb3VudBJ8Ci1jb3Ntb3MxcXBzbmRsM3lzbnByazBlZmRhdDYzZHY0OTlmcTU0dXR0eWdncGsSRgofL2Nvc21vcy5jcnlwdG8uc2VjcDI1NmsxLlB1YktleRIjCiECcyIkZHE6G+gkK2TJEjko3LjNFgZ4Fmfu90jDkjlbojcYygEgAQ=="
 }
 ```
+
+### Schema Registry
+
+Because `golang` lacks support to be able to register Protobuf messages with the schema registry, one needs to generate the Java code from the proto messages and use the [KafkaProtobufSerializer.java](https://github.com/confluentinc/schema-registry/blob/master/protobuf-serializer/src/main/java/io/confluent/kafka/serializers/protobuf/KafkaProtobufSerializer.java) to automatically register them. The Java libraries make this process exctreamly easy. Take a look [here](https://docs.confluent.io/platform/current/schema-registry/serdes-develop/serdes-protobuf.html) fro an example of how this is achived.
+
 
 Check out the [docs](https://docs.ksqldb.io/en/latest/) and this [post](https://www.confluent.io/blog/ksqldb-0-15-reads-more-message-keys-supports-more-data-types/) for more complex examples and a deeper understanding of KSQL.

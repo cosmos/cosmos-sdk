@@ -241,9 +241,8 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		}
 
 		overwrite, _ := f.GetBool(flagOverwrite)
-		var multisigAddr sdk.AccAddress
 		if multisig != "" {
-			multisigAddr, err = sdk.AccAddressFromBech32(multisig)
+			multisigAddr, err := sdk.AccAddressFromBech32(multisig)
 			if err != nil {
 				// Bech32 decode error, maybe it's a name, we try to fetch from keyring
 				multisigAddr, _, _, err = client.GetFromFields(txFactory.Keybase(), multisig, clientCtx.GenerateOnly)

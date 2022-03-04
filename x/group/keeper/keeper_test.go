@@ -1489,7 +1489,7 @@ func (s *TestSuite) TestSubmitProposal() {
 				Address:   bigThresholdAddr,
 				Proposers: []string{addr2.String()},
 			},
-			expErr:  true,
+			expErr:  false,
 			postRun: func(sdkCtx sdk.Context) {},
 		},
 		"only group members can create a proposal": {

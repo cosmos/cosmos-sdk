@@ -186,6 +186,10 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 		g.TotalWeight = totalWeight.String()
 		g.Version++
 
+		if err := k.validateDecisionPolicies(ctx, *g); err != nil {
+			return err
+		}
+
 		return k.groupTable.Update(ctx.KVStore(k.key), g.Id, g)
 	}
 
@@ -315,6 +319,11 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGro
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "not group admin")
 	}
 
+	err = policy.Validate(g, k.config)
+	if err != nil {
+		return nil, err
+	}
+
 	// Generate account address of group policy.
 	var accountAddr sdk.AccAddress
 	// loop here in the rare case of a collision
@@ -387,7 +396,17 @@ func (k Keeper) UpdateGroupPolicyDecisionPolicy(goCtx context.Context, req *grou
 	policy := req.GetDecisionPolicy()
 
 	action := func(groupPolicy *group.GroupPolicyInfo) error {
-		err := groupPolicy.SetDecisionPolicy(policy)
+		g, err := k.getGroupInfo(ctx, groupPolicy.GroupId)
+		if err != nil {
+			return err
+		}
+
+		err = policy.Validate(g, k.config)
+		if err != nil {
+			return err
+		}
+
+		err = groupPolicy.SetDecisionPolicy(policy)
 		if err != nil {
 			return err
 		}
@@ -841,6 +860,10 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 		return nil, err
 	}
 
+	if err := k.validateDecisionPolicies(ctx, groupInfo); err != nil {
+		return nil, err
+	}
+
 	ctx.EventManager().EmitTypedEvent(&group.EventLeaveGroup{
 		GroupId: req.GroupId,
 		Address: req.Address,
@@ -951,9 +974,9 @@ func (k Keeper) assertMetadataLength(metadata string, description string) error 
 	return nil
 }
 
-// validateGroupPolicies loops through all policies from the group, and calls
-// each of the Validate() method.
-func (k Keeper) validateGroupPolicies(ctx sdk.Context, g group.GroupInfo) error {
+// validateDecisionPolicies loops through all decision policies from the group,
+// and calls each of their Validate() method.
+func (k Keeper) validateDecisionPolicies(ctx sdk.Context, g group.GroupInfo) error {
 	it, err := k.groupPolicyByGroupIndex.Get(ctx.KVStore(k.key), g.Id)
 	if err != nil {
 		return err

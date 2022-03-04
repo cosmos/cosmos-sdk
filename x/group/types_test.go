@@ -9,6 +9,105 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestThresholdDecisionPolicyValidate(t *testing.T) {
+	g := group.GroupInfo{
+		TotalWeight: "10",
+	}
+	config := group.DefaultConfig()
+	testCases := []struct {
+		name   string
+		policy group.ThresholdDecisionPolicy
+		expErr bool
+	}{
+
+		{
+			"threshold bigger than total weight",
+			group.ThresholdDecisionPolicy{
+				Threshold: "12",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second,
+				},
+			},
+			true,
+		},
+		{
+			"min exec period too big",
+			group.ThresholdDecisionPolicy{
+				Threshold: "5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod:       time.Second,
+					MinExecutionPeriod: time.Hour * 24 * 30,
+				},
+			},
+			true,
+		},
+		{
+			"all good",
+			group.ThresholdDecisionPolicy{
+				Threshold: "5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod:       time.Hour,
+					MinExecutionPeriod: time.Hour * 24,
+				},
+			},
+			false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.policy.Validate(g, config)
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestPercentageDecisionPolicyValidate(t *testing.T) {
+	g := group.GroupInfo{}
+	config := group.DefaultConfig()
+	testCases := []struct {
+		name   string
+		policy group.PercentageDecisionPolicy
+		expErr bool
+	}{
+		{
+			"min exec period too big",
+			group.PercentageDecisionPolicy{
+				Percentage: "0.5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod:       time.Second,
+					MinExecutionPeriod: time.Hour * 24 * 30,
+				},
+			},
+			true,
+		},
+		{
+			"all good",
+			group.PercentageDecisionPolicy{
+				Percentage: "0.5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod:       time.Hour,
+					MinExecutionPeriod: time.Hour * 24,
+				},
+			},
+			false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.policy.Validate(g, config)
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestPercentageDecisionPolicyAllow(t *testing.T) {
 	testCases := []struct {
 		name           string
@@ -17,12 +116,15 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 		totalPower     string
 		votingDuration time.Duration
 		result         group.DecisionPolicyResult
+		expErr         bool
 	}{
 		{
 			"YesCount percentage > decision policy percentage",
 			&group.PercentageDecisionPolicy{
 				Percentage: "0.5",
-				Timeout:    time.Second * 100,
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
 			},
 			&group.TallyResult{
 				YesCount:        "2",
@@ -36,12 +138,15 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				Allow: true,
 				Final: true,
 			},
+			false,
 		},
 		{
 			"YesCount percentage == decision policy percentage",
 			&group.PercentageDecisionPolicy{
 				Percentage: "0.5",
-				Timeout:    time.Second * 100,
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
 			},
 			&group.TallyResult{
 				YesCount:        "2",
@@ -55,12 +160,15 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				Allow: true,
 				Final: true,
 			},
+			false,
 		},
 		{
 			"YesCount percentage < decision policy percentage",
 			&group.PercentageDecisionPolicy{
 				Percentage: "0.5",
-				Timeout:    time.Second * 100,
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
 			},
 			&group.TallyResult{
 				YesCount:        "1",
@@ -74,12 +182,15 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				Allow: false,
 				Final: false,
 			},
+			false,
 		},
 		{
 			"sum percentage (YesCount + undecided votes percentage) < decision policy percentage",
 			&group.PercentageDecisionPolicy{
 				Percentage: "0.5",
-				Timeout:    time.Second * 100,
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
 			},
 			&group.TallyResult{
 				YesCount:        "1",
@@ -93,12 +204,15 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				Allow: false,
 				Final: true,
 			},
+			false,
 		},
 		{
 			"sum percentage = decision policy percentage",
 			&group.PercentageDecisionPolicy{
 				Percentage: "0.5",
-				Timeout:    time.Second * 100,
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
 			},
 			&group.TallyResult{
 				YesCount:        "1",
@@ -112,12 +226,15 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				Allow: false,
 				Final: false,
 			},
+			false,
 		},
 		{
 			"sum percentage > decision policy percentage",
 			&group.PercentageDecisionPolicy{
 				Percentage: "0.5",
-				Timeout:    time.Second * 100,
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
 			},
 			&group.TallyResult{
 				YesCount:        "1",
@@ -131,12 +248,16 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				Allow: false,
 				Final: false,
 			},
+			false,
 		},
 		{
-			"decision policy timeout <= voting duration",
+			"time since submission < min execution period",
 			&group.PercentageDecisionPolicy{
 				Percentage: "0.5",
-				Timeout:    time.Second * 10,
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod:       time.Second * 10,
+					MinExecutionPeriod: time.Minute,
+				},
 			},
 			&group.TallyResult{
 				YesCount:        "2",
@@ -146,17 +267,19 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 			},
 			"3",
 			time.Duration(time.Second * 50),
-			group.DecisionPolicyResult{
-				Allow: false,
-				Final: true,
-			},
+			group.DecisionPolicyResult{},
+			true,
 		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			policyResult, err := tc.policy.Allow(*tc.tally, tc.totalPower, tc.votingDuration)
-			require.NoError(t, err)
-			require.Equal(t, tc.result, policyResult)
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.result, policyResult)
+			}
 		})
 	}
 }
@@ -169,12 +292,15 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 		totalPower     string
 		votingDuration time.Duration
 		result         group.DecisionPolicyResult
+		expErr         bool
 	}{
 		{
 			"YesCount >= threshold decision policy",
 			&group.ThresholdDecisionPolicy{
 				Threshold: "3",
-				Timeout:   time.Second * 100,
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
 			},
 			&group.TallyResult{
 				YesCount:        "3",
@@ -188,12 +314,15 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				Allow: true,
 				Final: true,
 			},
+			false,
 		},
 		{
 			"YesCount < threshold decision policy",
 			&group.ThresholdDecisionPolicy{
 				Threshold: "3",
-				Timeout:   time.Second * 100,
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
 			},
 			&group.TallyResult{
 				YesCount:        "1",
@@ -207,12 +336,15 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				Allow: false,
 				Final: false,
 			},
+			false,
 		},
 		{
 			"sum votes < threshold decision policy",
 			&group.ThresholdDecisionPolicy{
 				Threshold: "3",
-				Timeout:   time.Second * 100,
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
 			},
 			&group.TallyResult{
 				YesCount:        "1",
@@ -226,12 +358,15 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				Allow: false,
 				Final: true,
 			},
+			false,
 		},
 		{
 			"sum votes >= threshold decision policy",
 			&group.ThresholdDecisionPolicy{
 				Threshold: "3",
-				Timeout:   time.Second * 100,
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
 			},
 			&group.TallyResult{
 				YesCount:        "1",
@@ -245,12 +380,16 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				Allow: false,
 				Final: false,
 			},
+			false,
 		},
 		{
-			"decision policy timeout <= voting duration",
+			"time since submission < min execution period",
 			&group.ThresholdDecisionPolicy{
 				Threshold: "3",
-				Timeout:   time.Second * 10,
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod:       time.Second * 10,
+					MinExecutionPeriod: time.Minute,
+				},
 			},
 			&group.TallyResult{
 				YesCount:        "3",
@@ -264,13 +403,18 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				Allow: false,
 				Final: true,
 			},
+			true,
 		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			policyResult, err := tc.policy.Allow(*tc.tally, tc.totalPower, tc.votingDuration)
-			require.NoError(t, err)
-			require.Equal(t, tc.result, policyResult)
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.result, policyResult)
+			}
 		})
 	}
 }

@@ -159,8 +159,8 @@ func (x *fastReflection_MsgCreateGroup) Range(f func(protoreflect.FieldDescripto
 			return
 		}
 	}
-	if len(x.Metadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.Metadata)
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
 		if !f(fd_MsgCreateGroup_metadata, value) {
 			return
 		}
@@ -185,7 +185,7 @@ func (x *fastReflection_MsgCreateGroup) Has(fd protoreflect.FieldDescriptor) boo
 	case "cosmos.group.v1beta1.MsgCreateGroup.members":
 		return len(x.Members) != 0
 	case "cosmos.group.v1beta1.MsgCreateGroup.metadata":
-		return len(x.Metadata) != 0
+		return x.Metadata != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroup"))
@@ -207,7 +207,7 @@ func (x *fastReflection_MsgCreateGroup) Clear(fd protoreflect.FieldDescriptor) {
 	case "cosmos.group.v1beta1.MsgCreateGroup.members":
 		x.Members = nil
 	case "cosmos.group.v1beta1.MsgCreateGroup.metadata":
-		x.Metadata = nil
+		x.Metadata = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroup"))
@@ -235,7 +235,7 @@ func (x *fastReflection_MsgCreateGroup) Get(descriptor protoreflect.FieldDescrip
 		return protoreflect.ValueOfList(listValue)
 	case "cosmos.group.v1beta1.MsgCreateGroup.metadata":
 		value := x.Metadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroup"))
@@ -263,7 +263,7 @@ func (x *fastReflection_MsgCreateGroup) Set(fd protoreflect.FieldDescriptor, val
 		clv := lv.(*_MsgCreateGroup_2_list)
 		x.Members = *clv.list
 	case "cosmos.group.v1beta1.MsgCreateGroup.metadata":
-		x.Metadata = value.Bytes()
+		x.Metadata = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroup"))
@@ -313,7 +313,7 @@ func (x *fastReflection_MsgCreateGroup) NewField(fd protoreflect.FieldDescriptor
 		list := []*Member{}
 		return protoreflect.ValueOfList(&_MsgCreateGroup_2_list{list: &list})
 	case "cosmos.group.v1beta1.MsgCreateGroup.metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroup"))
@@ -575,7 +575,7 @@ func (x *fastReflection_MsgCreateGroup) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -585,25 +585,23 @@ func (x *fastReflection_MsgCreateGroup) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Metadata = append(x.Metadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.Metadata == nil {
-					x.Metadata = []byte{}
-				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -2986,8 +2984,8 @@ func (x *fastReflection_MsgUpdateGroupMetadata) Range(f func(protoreflect.FieldD
 			return
 		}
 	}
-	if len(x.Metadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.Metadata)
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
 		if !f(fd_MsgUpdateGroupMetadata_metadata, value) {
 			return
 		}
@@ -3012,7 +3010,7 @@ func (x *fastReflection_MsgUpdateGroupMetadata) Has(fd protoreflect.FieldDescrip
 	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.group_id":
 		return x.GroupId != uint64(0)
 	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.metadata":
-		return len(x.Metadata) != 0
+		return x.Metadata != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMetadata"))
@@ -3034,7 +3032,7 @@ func (x *fastReflection_MsgUpdateGroupMetadata) Clear(fd protoreflect.FieldDescr
 	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.group_id":
 		x.GroupId = uint64(0)
 	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.metadata":
-		x.Metadata = nil
+		x.Metadata = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMetadata"))
@@ -3059,7 +3057,7 @@ func (x *fastReflection_MsgUpdateGroupMetadata) Get(descriptor protoreflect.Fiel
 		return protoreflect.ValueOfUint64(value)
 	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.metadata":
 		value := x.Metadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMetadata"))
@@ -3085,7 +3083,7 @@ func (x *fastReflection_MsgUpdateGroupMetadata) Set(fd protoreflect.FieldDescrip
 	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.group_id":
 		x.GroupId = value.Uint()
 	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.metadata":
-		x.Metadata = value.Bytes()
+		x.Metadata = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMetadata"))
@@ -3130,7 +3128,7 @@ func (x *fastReflection_MsgUpdateGroupMetadata) NewField(fd protoreflect.FieldDe
 	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.group_id":
 		return protoreflect.ValueOfUint64(uint64(0))
 	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMetadata"))
@@ -3363,7 +3361,7 @@ func (x *fastReflection_MsgUpdateGroupMetadata) ProtoMethods() *protoiface.Metho
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -3373,25 +3371,23 @@ func (x *fastReflection_MsgUpdateGroupMetadata) ProtoMethods() *protoiface.Metho
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Metadata = append(x.Metadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.Metadata == nil {
-					x.Metadata = []byte{}
-				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -3878,8 +3874,8 @@ func (x *fastReflection_MsgCreateGroupPolicy) Range(f func(protoreflect.FieldDes
 			return
 		}
 	}
-	if len(x.Metadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.Metadata)
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
 		if !f(fd_MsgCreateGroupPolicy_metadata, value) {
 			return
 		}
@@ -3910,7 +3906,7 @@ func (x *fastReflection_MsgCreateGroupPolicy) Has(fd protoreflect.FieldDescripto
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.group_id":
 		return x.GroupId != uint64(0)
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.metadata":
-		return len(x.Metadata) != 0
+		return x.Metadata != ""
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.decision_policy":
 		return x.DecisionPolicy != nil
 	default:
@@ -3934,7 +3930,7 @@ func (x *fastReflection_MsgCreateGroupPolicy) Clear(fd protoreflect.FieldDescrip
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.group_id":
 		x.GroupId = uint64(0)
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.metadata":
-		x.Metadata = nil
+		x.Metadata = ""
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.decision_policy":
 		x.DecisionPolicy = nil
 	default:
@@ -3961,7 +3957,7 @@ func (x *fastReflection_MsgCreateGroupPolicy) Get(descriptor protoreflect.FieldD
 		return protoreflect.ValueOfUint64(value)
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.metadata":
 		value := x.Metadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.decision_policy":
 		value := x.DecisionPolicy
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
@@ -3990,7 +3986,7 @@ func (x *fastReflection_MsgCreateGroupPolicy) Set(fd protoreflect.FieldDescripto
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.group_id":
 		x.GroupId = value.Uint()
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.metadata":
-		x.Metadata = value.Bytes()
+		x.Metadata = value.Interface().(string)
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.decision_policy":
 		x.DecisionPolicy = value.Message().Interface().(*anypb.Any)
 	default:
@@ -4042,7 +4038,7 @@ func (x *fastReflection_MsgCreateGroupPolicy) NewField(fd protoreflect.FieldDesc
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.group_id":
 		return protoreflect.ValueOfUint64(uint64(0))
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.decision_policy":
 		m := new(anypb.Any)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
@@ -4296,7 +4292,7 @@ func (x *fastReflection_MsgCreateGroupPolicy) ProtoMethods() *protoiface.Methods
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -4306,25 +4302,23 @@ func (x *fastReflection_MsgCreateGroupPolicy) ProtoMethods() *protoiface.Methods
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Metadata = append(x.Metadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.Metadata == nil {
-					x.Metadata = []byte{}
-				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 4:
 				if wireType != 2 {
@@ -5514,14 +5508,14 @@ func (x *fastReflection_MsgCreateGroupWithPolicy) Range(f func(protoreflect.Fiel
 			return
 		}
 	}
-	if len(x.GroupMetadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.GroupMetadata)
+	if x.GroupMetadata != "" {
+		value := protoreflect.ValueOfString(x.GroupMetadata)
 		if !f(fd_MsgCreateGroupWithPolicy_group_metadata, value) {
 			return
 		}
 	}
-	if len(x.GroupPolicyMetadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.GroupPolicyMetadata)
+	if x.GroupPolicyMetadata != "" {
+		value := protoreflect.ValueOfString(x.GroupPolicyMetadata)
 		if !f(fd_MsgCreateGroupWithPolicy_group_policy_metadata, value) {
 			return
 		}
@@ -5558,9 +5552,9 @@ func (x *fastReflection_MsgCreateGroupWithPolicy) Has(fd protoreflect.FieldDescr
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.members":
 		return len(x.Members) != 0
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_metadata":
-		return len(x.GroupMetadata) != 0
+		return x.GroupMetadata != ""
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_policy_metadata":
-		return len(x.GroupPolicyMetadata) != 0
+		return x.GroupPolicyMetadata != ""
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_policy_as_admin":
 		return x.GroupPolicyAsAdmin != false
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.decision_policy":
@@ -5586,9 +5580,9 @@ func (x *fastReflection_MsgCreateGroupWithPolicy) Clear(fd protoreflect.FieldDes
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.members":
 		x.Members = nil
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_metadata":
-		x.GroupMetadata = nil
+		x.GroupMetadata = ""
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_policy_metadata":
-		x.GroupPolicyMetadata = nil
+		x.GroupPolicyMetadata = ""
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_policy_as_admin":
 		x.GroupPolicyAsAdmin = false
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.decision_policy":
@@ -5620,10 +5614,10 @@ func (x *fastReflection_MsgCreateGroupWithPolicy) Get(descriptor protoreflect.Fi
 		return protoreflect.ValueOfList(listValue)
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_metadata":
 		value := x.GroupMetadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_policy_metadata":
 		value := x.GroupPolicyMetadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_policy_as_admin":
 		value := x.GroupPolicyAsAdmin
 		return protoreflect.ValueOfBool(value)
@@ -5657,9 +5651,9 @@ func (x *fastReflection_MsgCreateGroupWithPolicy) Set(fd protoreflect.FieldDescr
 		clv := lv.(*_MsgCreateGroupWithPolicy_2_list)
 		x.Members = *clv.list
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_metadata":
-		x.GroupMetadata = value.Bytes()
+		x.GroupMetadata = value.Interface().(string)
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_policy_metadata":
-		x.GroupPolicyMetadata = value.Bytes()
+		x.GroupPolicyMetadata = value.Interface().(string)
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_policy_as_admin":
 		x.GroupPolicyAsAdmin = value.Bool()
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.decision_policy":
@@ -5722,9 +5716,9 @@ func (x *fastReflection_MsgCreateGroupWithPolicy) NewField(fd protoreflect.Field
 		list := []*Member{}
 		return protoreflect.ValueOfList(&_MsgCreateGroupWithPolicy_2_list{list: &list})
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_policy_metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_policy_as_admin":
 		return protoreflect.ValueOfBool(false)
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.decision_policy":
@@ -6033,7 +6027,7 @@ func (x *fastReflection_MsgCreateGroupWithPolicy) ProtoMethods() *protoiface.Met
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field GroupMetadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -6043,31 +6037,29 @@ func (x *fastReflection_MsgCreateGroupWithPolicy) ProtoMethods() *protoiface.Met
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.GroupMetadata = append(x.GroupMetadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.GroupMetadata == nil {
-					x.GroupMetadata = []byte{}
-				}
+				x.GroupMetadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 4:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field GroupPolicyMetadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -6077,25 +6069,23 @@ func (x *fastReflection_MsgCreateGroupWithPolicy) ProtoMethods() *protoiface.Met
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.GroupPolicyMetadata = append(x.GroupPolicyMetadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.GroupPolicyMetadata == nil {
-					x.GroupPolicyMetadata = []byte{}
-				}
+				x.GroupPolicyMetadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 5:
 				if wireType != 0 {
@@ -8023,8 +8013,8 @@ func (x *fastReflection_MsgUpdateGroupPolicyMetadata) Range(f func(protoreflect.
 			return
 		}
 	}
-	if len(x.Metadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.Metadata)
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
 		if !f(fd_MsgUpdateGroupPolicyMetadata_metadata, value) {
 			return
 		}
@@ -8049,7 +8039,7 @@ func (x *fastReflection_MsgUpdateGroupPolicyMetadata) Has(fd protoreflect.FieldD
 	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.address":
 		return x.Address != ""
 	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.metadata":
-		return len(x.Metadata) != 0
+		return x.Metadata != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata"))
@@ -8071,7 +8061,7 @@ func (x *fastReflection_MsgUpdateGroupPolicyMetadata) Clear(fd protoreflect.Fiel
 	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.address":
 		x.Address = ""
 	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.metadata":
-		x.Metadata = nil
+		x.Metadata = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata"))
@@ -8096,7 +8086,7 @@ func (x *fastReflection_MsgUpdateGroupPolicyMetadata) Get(descriptor protoreflec
 		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.metadata":
 		value := x.Metadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata"))
@@ -8122,7 +8112,7 @@ func (x *fastReflection_MsgUpdateGroupPolicyMetadata) Set(fd protoreflect.FieldD
 	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.address":
 		x.Address = value.Interface().(string)
 	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.metadata":
-		x.Metadata = value.Bytes()
+		x.Metadata = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata"))
@@ -8167,7 +8157,7 @@ func (x *fastReflection_MsgUpdateGroupPolicyMetadata) NewField(fd protoreflect.F
 	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.address":
 		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata"))
@@ -8416,7 +8406,7 @@ func (x *fastReflection_MsgUpdateGroupPolicyMetadata) ProtoMethods() *protoiface
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -8426,25 +8416,23 @@ func (x *fastReflection_MsgUpdateGroupPolicyMetadata) ProtoMethods() *protoiface
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Metadata = append(x.Metadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.Metadata == nil {
-					x.Metadata = []byte{}
-				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -9030,8 +9018,8 @@ func (x *fastReflection_MsgSubmitProposal) Range(f func(protoreflect.FieldDescri
 			return
 		}
 	}
-	if len(x.Metadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.Metadata)
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
 		if !f(fd_MsgSubmitProposal_metadata, value) {
 			return
 		}
@@ -9068,7 +9056,7 @@ func (x *fastReflection_MsgSubmitProposal) Has(fd protoreflect.FieldDescriptor) 
 	case "cosmos.group.v1beta1.MsgSubmitProposal.proposers":
 		return len(x.Proposers) != 0
 	case "cosmos.group.v1beta1.MsgSubmitProposal.metadata":
-		return len(x.Metadata) != 0
+		return x.Metadata != ""
 	case "cosmos.group.v1beta1.MsgSubmitProposal.messages":
 		return len(x.Messages) != 0
 	case "cosmos.group.v1beta1.MsgSubmitProposal.exec":
@@ -9094,7 +9082,7 @@ func (x *fastReflection_MsgSubmitProposal) Clear(fd protoreflect.FieldDescriptor
 	case "cosmos.group.v1beta1.MsgSubmitProposal.proposers":
 		x.Proposers = nil
 	case "cosmos.group.v1beta1.MsgSubmitProposal.metadata":
-		x.Metadata = nil
+		x.Metadata = ""
 	case "cosmos.group.v1beta1.MsgSubmitProposal.messages":
 		x.Messages = nil
 	case "cosmos.group.v1beta1.MsgSubmitProposal.exec":
@@ -9126,7 +9114,7 @@ func (x *fastReflection_MsgSubmitProposal) Get(descriptor protoreflect.FieldDesc
 		return protoreflect.ValueOfList(listValue)
 	case "cosmos.group.v1beta1.MsgSubmitProposal.metadata":
 		value := x.Metadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.MsgSubmitProposal.messages":
 		if len(x.Messages) == 0 {
 			return protoreflect.ValueOfList(&_MsgSubmitProposal_4_list{})
@@ -9163,7 +9151,7 @@ func (x *fastReflection_MsgSubmitProposal) Set(fd protoreflect.FieldDescriptor, 
 		clv := lv.(*_MsgSubmitProposal_2_list)
 		x.Proposers = *clv.list
 	case "cosmos.group.v1beta1.MsgSubmitProposal.metadata":
-		x.Metadata = value.Bytes()
+		x.Metadata = value.Interface().(string)
 	case "cosmos.group.v1beta1.MsgSubmitProposal.messages":
 		lv := value.List()
 		clv := lv.(*_MsgSubmitProposal_4_list)
@@ -9227,7 +9215,7 @@ func (x *fastReflection_MsgSubmitProposal) NewField(fd protoreflect.FieldDescrip
 		list := []string{}
 		return protoreflect.ValueOfList(&_MsgSubmitProposal_2_list{list: &list})
 	case "cosmos.group.v1beta1.MsgSubmitProposal.metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.MsgSubmitProposal.messages":
 		list := []*anypb.Any{}
 		return protoreflect.ValueOfList(&_MsgSubmitProposal_4_list{list: &list})
@@ -9515,7 +9503,7 @@ func (x *fastReflection_MsgSubmitProposal) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -9525,25 +9513,23 @@ func (x *fastReflection_MsgSubmitProposal) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Metadata = append(x.Metadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.Metadata == nil {
-					x.Metadata = []byte{}
-				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 4:
 				if wireType != 2 {
@@ -10963,8 +10949,8 @@ func (x *fastReflection_MsgVote) Range(f func(protoreflect.FieldDescriptor, prot
 			return
 		}
 	}
-	if len(x.Metadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.Metadata)
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
 		if !f(fd_MsgVote_metadata, value) {
 			return
 		}
@@ -10997,7 +10983,7 @@ func (x *fastReflection_MsgVote) Has(fd protoreflect.FieldDescriptor) bool {
 	case "cosmos.group.v1beta1.MsgVote.option":
 		return x.Option != 0
 	case "cosmos.group.v1beta1.MsgVote.metadata":
-		return len(x.Metadata) != 0
+		return x.Metadata != ""
 	case "cosmos.group.v1beta1.MsgVote.exec":
 		return x.Exec != 0
 	default:
@@ -11023,7 +11009,7 @@ func (x *fastReflection_MsgVote) Clear(fd protoreflect.FieldDescriptor) {
 	case "cosmos.group.v1beta1.MsgVote.option":
 		x.Option = 0
 	case "cosmos.group.v1beta1.MsgVote.metadata":
-		x.Metadata = nil
+		x.Metadata = ""
 	case "cosmos.group.v1beta1.MsgVote.exec":
 		x.Exec = 0
 	default:
@@ -11053,7 +11039,7 @@ func (x *fastReflection_MsgVote) Get(descriptor protoreflect.FieldDescriptor) pr
 		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
 	case "cosmos.group.v1beta1.MsgVote.metadata":
 		value := x.Metadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.MsgVote.exec":
 		value := x.Exec
 		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
@@ -11084,7 +11070,7 @@ func (x *fastReflection_MsgVote) Set(fd protoreflect.FieldDescriptor, value prot
 	case "cosmos.group.v1beta1.MsgVote.option":
 		x.Option = (VoteOption)(value.Enum())
 	case "cosmos.group.v1beta1.MsgVote.metadata":
-		x.Metadata = value.Bytes()
+		x.Metadata = value.Interface().(string)
 	case "cosmos.group.v1beta1.MsgVote.exec":
 		x.Exec = (Exec)(value.Enum())
 	default:
@@ -11137,7 +11123,7 @@ func (x *fastReflection_MsgVote) NewField(fd protoreflect.FieldDescriptor) proto
 	case "cosmos.group.v1beta1.MsgVote.option":
 		return protoreflect.ValueOfEnum(0)
 	case "cosmos.group.v1beta1.MsgVote.metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.MsgVote.exec":
 		return protoreflect.ValueOfEnum(0)
 	default:
@@ -11407,7 +11393,7 @@ func (x *fastReflection_MsgVote) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -11417,25 +11403,23 @@ func (x *fastReflection_MsgVote) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Metadata = append(x.Metadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.Metadata == nil {
-					x.Metadata = []byte{}
-				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 5:
 				if wireType != 0 {
@@ -12748,7 +12732,7 @@ type MsgCreateGroup struct {
 	// members defines the group members.
 	Members []*Member `protobuf:"bytes,2,rep,name=members,proto3" json:"members,omitempty"`
 	// metadata is any arbitrary metadata to attached to the group.
-	Metadata []byte `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 }
 
 func (x *MsgCreateGroup) Reset() {
@@ -12785,11 +12769,11 @@ func (x *MsgCreateGroup) GetMembers() []*Member {
 	return nil
 }
 
-func (x *MsgCreateGroup) GetMetadata() []byte {
+func (x *MsgCreateGroup) GetMetadata() string {
 	if x != nil {
 		return x.Metadata
 	}
-	return nil
+	return ""
 }
 
 // MsgCreateGroupResponse is the Msg/CreateGroup response type.
@@ -13005,7 +12989,7 @@ type MsgUpdateGroupMetadata struct {
 	// group_id is the unique ID of the group.
 	GroupId uint64 `protobuf:"varint,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
 	// metadata is the updated group's metadata.
-	Metadata []byte `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 }
 
 func (x *MsgUpdateGroupMetadata) Reset() {
@@ -13042,11 +13026,11 @@ func (x *MsgUpdateGroupMetadata) GetGroupId() uint64 {
 	return 0
 }
 
-func (x *MsgUpdateGroupMetadata) GetMetadata() []byte {
+func (x *MsgUpdateGroupMetadata) GetMetadata() string {
 	if x != nil {
 		return x.Metadata
 	}
-	return nil
+	return ""
 }
 
 // MsgUpdateGroupMetadataResponse is the Msg/UpdateGroupMetadata response type.
@@ -13087,7 +13071,7 @@ type MsgCreateGroupPolicy struct {
 	// group_id is the unique ID of the group.
 	GroupId uint64 `protobuf:"varint,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
 	// metadata is any arbitrary metadata attached to the group policy.
-	Metadata []byte `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// decision_policy specifies the group policy's decision policy.
 	DecisionPolicy *anypb.Any `protobuf:"bytes,4,opt,name=decision_policy,json=decisionPolicy,proto3" json:"decision_policy,omitempty"`
 }
@@ -13126,11 +13110,11 @@ func (x *MsgCreateGroupPolicy) GetGroupId() uint64 {
 	return 0
 }
 
-func (x *MsgCreateGroupPolicy) GetMetadata() []byte {
+func (x *MsgCreateGroupPolicy) GetMetadata() string {
 	if x != nil {
 		return x.Metadata
 	}
-	return nil
+	return ""
 }
 
 func (x *MsgCreateGroupPolicy) GetDecisionPolicy() *anypb.Any {
@@ -13243,9 +13227,9 @@ type MsgCreateGroupWithPolicy struct {
 	// members defines the group members.
 	Members []*Member `protobuf:"bytes,2,rep,name=members,proto3" json:"members,omitempty"`
 	// group_metadata is any arbitrary metadata attached to the group.
-	GroupMetadata []byte `protobuf:"bytes,3,opt,name=group_metadata,json=groupMetadata,proto3" json:"group_metadata,omitempty"`
+	GroupMetadata string `protobuf:"bytes,3,opt,name=group_metadata,json=groupMetadata,proto3" json:"group_metadata,omitempty"`
 	// group_policy_metadata is any arbitrary metadata attached to the group policy.
-	GroupPolicyMetadata []byte `protobuf:"bytes,4,opt,name=group_policy_metadata,json=groupPolicyMetadata,proto3" json:"group_policy_metadata,omitempty"`
+	GroupPolicyMetadata string `protobuf:"bytes,4,opt,name=group_policy_metadata,json=groupPolicyMetadata,proto3" json:"group_policy_metadata,omitempty"`
 	// group_policy_as_admin is a boolean field, if set to true, the group policy account address will be used as group and group policy admin.
 	GroupPolicyAsAdmin bool `protobuf:"varint,5,opt,name=group_policy_as_admin,json=groupPolicyAsAdmin,proto3" json:"group_policy_as_admin,omitempty"`
 	// decision_policy specifies the group policy's decision policy.
@@ -13286,18 +13270,18 @@ func (x *MsgCreateGroupWithPolicy) GetMembers() []*Member {
 	return nil
 }
 
-func (x *MsgCreateGroupWithPolicy) GetGroupMetadata() []byte {
+func (x *MsgCreateGroupWithPolicy) GetGroupMetadata() string {
 	if x != nil {
 		return x.GroupMetadata
 	}
-	return nil
+	return ""
 }
 
-func (x *MsgCreateGroupWithPolicy) GetGroupPolicyMetadata() []byte {
+func (x *MsgCreateGroupWithPolicy) GetGroupPolicyMetadata() string {
 	if x != nil {
 		return x.GroupPolicyMetadata
 	}
-	return nil
+	return ""
 }
 
 func (x *MsgCreateGroupWithPolicy) GetGroupPolicyAsAdmin() bool {
@@ -13480,7 +13464,7 @@ type MsgUpdateGroupPolicyMetadata struct {
 	// address is the account address of group policy.
 	Address string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
 	// metadata is the updated group policy metadata.
-	Metadata []byte `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 }
 
 func (x *MsgUpdateGroupPolicyMetadata) Reset() {
@@ -13517,11 +13501,11 @@ func (x *MsgUpdateGroupPolicyMetadata) GetAddress() string {
 	return ""
 }
 
-func (x *MsgUpdateGroupPolicyMetadata) GetMetadata() []byte {
+func (x *MsgUpdateGroupPolicyMetadata) GetMetadata() string {
 	if x != nil {
 		return x.Metadata
 	}
-	return nil
+	return ""
 }
 
 // MsgUpdateGroupPolicyMetadataResponse is the Msg/UpdateGroupPolicyMetadata response type.
@@ -13563,7 +13547,7 @@ type MsgSubmitProposal struct {
 	// Proposers signatures will be counted as yes votes.
 	Proposers []string `protobuf:"bytes,2,rep,name=proposers,proto3" json:"proposers,omitempty"`
 	// metadata is any arbitrary metadata to attached to the proposal.
-	Metadata []byte `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// messages is a list of `sdk.Msg`s that will be executed if the proposal passes.
 	Messages []*anypb.Any `protobuf:"bytes,4,rep,name=messages,proto3" json:"messages,omitempty"`
 	// exec defines the mode of execution of the proposal,
@@ -13606,11 +13590,11 @@ func (x *MsgSubmitProposal) GetProposers() []string {
 	return nil
 }
 
-func (x *MsgSubmitProposal) GetMetadata() []byte {
+func (x *MsgSubmitProposal) GetMetadata() string {
 	if x != nil {
 		return x.Metadata
 	}
-	return nil
+	return ""
 }
 
 func (x *MsgSubmitProposal) GetMessages() []*anypb.Any {
@@ -13750,7 +13734,7 @@ type MsgVote struct {
 	// option is the voter's choice on the proposal.
 	Option VoteOption `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.group.v1beta1.VoteOption" json:"option,omitempty"`
 	// metadata is any arbitrary metadata to attached to the vote.
-	Metadata []byte `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata string `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// exec defines whether the proposal should be executed
 	// immediately after voting or not.
 	Exec Exec `protobuf:"varint,5,opt,name=exec,proto3,enum=cosmos.group.v1beta1.Exec" json:"exec,omitempty"`
@@ -13797,11 +13781,11 @@ func (x *MsgVote) GetOption() VoteOption {
 	return VoteOption_VOTE_OPTION_UNSPECIFIED
 }
 
-func (x *MsgVote) GetMetadata() []byte {
+func (x *MsgVote) GetMetadata() string {
 	if x != nil {
 		return x.Metadata
 	}
-	return nil
+	return ""
 }
 
 func (x *MsgVote) GetExec() Exec {
@@ -13934,7 +13918,7 @@ var file_cosmos_group_v1beta1_tx_proto_rawDesc = []byte{
 	0x32, 0x1c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e,
 	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x42, 0x04,
 	0xc8, 0xde, 0x1f, 0x00, 0x52, 0x07, 0x6d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x12, 0x1a, 0x0a,
-	0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52,
+	0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52,
 	0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05,
 	0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x33, 0x0a, 0x16, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61,
 	0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
@@ -13973,7 +13957,7 @@ var file_cosmos_group_v1beta1_tx_proto_rawDesc = []byte{
 	0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x19, 0x0a, 0x08, 0x67, 0x72, 0x6f, 0x75, 0x70,
 	0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x67, 0x72, 0x6f, 0x75, 0x70,
 	0x49, 0x64, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03,
-	0x20, 0x01, 0x28, 0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x3a, 0x0a,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x3a, 0x0a,
 	0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x20, 0x0a, 0x1e, 0x4d, 0x73,
 	0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x74, 0x61,
 	0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xe0, 0x01, 0x0a,
@@ -13984,7 +13968,7 @@ var file_cosmos_group_v1beta1_tx_proto_rawDesc = []byte{
 	0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x19, 0x0a, 0x08, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x69,
 	0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x64,
 	0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x51, 0x0a, 0x0f,
+	0x28, 0x09, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x51, 0x0a, 0x0f,
 	0x64, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x70, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x18,
 	0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x42, 0x12, 0xca, 0xb4, 0x2d,
@@ -14018,10 +14002,10 @@ var file_cosmos_group_v1beta1_tx_proto_rawDesc = []byte{
 	0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x65,
 	0x6d, 0x62, 0x65, 0x72, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x07, 0x6d, 0x65, 0x6d, 0x62,
 	0x65, 0x72, 0x73, 0x12, 0x25, 0x0a, 0x0e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x6d, 0x65, 0x74,
-	0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0d, 0x67, 0x72, 0x6f,
+	0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0d, 0x67, 0x72, 0x6f,
 	0x75, 0x70, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x32, 0x0a, 0x15, 0x67, 0x72,
 	0x6f, 0x75, 0x70, 0x5f, 0x70, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x5f, 0x6d, 0x65, 0x74, 0x61, 0x64,
-	0x61, 0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x13, 0x67, 0x72, 0x6f, 0x75, 0x70,
+	0x61, 0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x13, 0x67, 0x72, 0x6f, 0x75, 0x70,
 	0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x31,
 	0x0a, 0x15, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x70, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x5f, 0x61,
 	0x73, 0x5f, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x08, 0x52, 0x12, 0x67,
@@ -14069,7 +14053,7 @@ var file_cosmos_group_v1beta1_tx_proto_rawDesc = []byte{
 	0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72,
 	0x69, 0x6e, 0x67, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x1a, 0x0a, 0x08,
-	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08,
+	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08,
 	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x61,
 	0x64, 0x6d, 0x69, 0x6e, 0x22, 0x26, 0x0a, 0x24, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74,
 	0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x4d, 0x65, 0x74, 0x61,
@@ -14081,7 +14065,7 @@ var file_cosmos_group_v1beta1_tx_proto_rawDesc = []byte{
 	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x1c, 0x0a, 0x09, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73,
 	0x65, 0x72, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x09, 0x52, 0x09, 0x70, 0x72, 0x6f, 0x70, 0x6f,
 	0x73, 0x65, 0x72, 0x73, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
-	0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
 	0x12, 0x30, 0x0a, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x18, 0x04, 0x20, 0x03,
 	0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67,
@@ -14112,7 +14096,7 @@ var file_cosmos_group_v1beta1_tx_proto_rawDesc = []byte{
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65,
 	0x74, 0x61, 0x31, 0x2e, 0x56, 0x6f, 0x74, 0x65, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x06,
 	0x6f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61,
-	0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61,
+	0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61,
 	0x74, 0x61, 0x12, 0x2e, 0x0a, 0x04, 0x65, 0x78, 0x65, 0x63, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0e,
 	0x32, 0x1a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e,
 	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x45, 0x78, 0x65, 0x63, 0x52, 0x04, 0x65, 0x78,

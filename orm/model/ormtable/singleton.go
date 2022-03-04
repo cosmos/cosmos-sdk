@@ -44,7 +44,7 @@ func (t singleton) ValidateJSON(reader io.Reader) error {
 }
 
 func (t singleton) ImportJSON(ctx context.Context, reader io.Reader) error {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}

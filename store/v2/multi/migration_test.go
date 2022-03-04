@@ -79,13 +79,26 @@ func TestMigrationV2(t *testing.T) {
 			if testCase.emptyStore {
 				// check the empty store
 				require.Nil(t, v2StoreKVStore.Get([]byte("temp_data")))
-				require.Equal(t, v2Store.LastCommitID().Version, v1Store.LastCommitID().Version)
 			} else {
 				require.Equal(t, v2StoreKVStore.Get([]byte("temp_data")), []byte("one"))
-				require.Equal(t, v2Store.LastCommitID().Version, v1Store.LastCommitID().Version)
 			}
+			require.Equal(t, v2Store.LastCommitID().Version, v1Store.LastCommitID().Version)
 		}
 		err = v2Store.Close()
 		require.NoError(t, err)
 	}
+}
+
+func TestMigrateV2ForEmptyStore(t *testing.T) {
+	// setup a rootmulti store
+	db := dbm.NewMemDB()
+	v1Store := rootmulti.NewStore(db)
+	err := v1Store.LoadLatestVersion()
+	require.Nil(t, err)
+	db2 := memdb.NewDB()
+	storeConfig := DefaultStoreConfig()
+	// migrating the iavl store (v1) to smt store (v2)
+	v2Store, err := MigrateV2(v1Store, db2, storeConfig)
+	require.NoError(t, err)
+	require.Equal(t, v2Store.LastCommitID(), v1Store.LastCommitID())
 }

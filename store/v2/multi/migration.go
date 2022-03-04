@@ -17,18 +17,19 @@ func MigrateV2(rootMultiStore *v1Store.Store, store2db dbm.DBConnection, storeCo
 		name string
 	}
 	var stores []namedStore
-	for key := range rootMultiStore.GetStores() {
-		switch store := rootMultiStore.GetCommitKVStore(key).(type) {
+	for _, storeKey := range rootMultiStore.GetStoreNames() {
+		keyName := storeKey.Name()
+		switch store := rootMultiStore.GetStoreByName(keyName).(type) {
 		case *iavl.Store:
-			err := storeConfig.RegisterSubstore(key.Name(), types.StoreTypePersistent)
+			err := storeConfig.RegisterSubstore(keyName, types.StoreTypePersistent)
 			if err != nil {
 				return nil, err
 			}
-			stores = append(stores, namedStore{name: key.Name(), Store: store})
+			stores = append(stores, namedStore{name: keyName, Store: store})
 		case *transient.Store, *mem.Store:
 			continue
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic, "don't know how to migrate store %q of type %T", key.Name(), store)
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic, "don't know how to migrate store %q of type %T", keyName, store)
 		}
 	}
 

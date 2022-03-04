@@ -210,7 +210,8 @@ func TestMultistoreSnapshotRestore(t *testing.T) {
 	require.Equal(t, *dummyExtensionItem.GetExtension(), *nextItem.GetExtension())
 
 	assert.Equal(t, source.LastCommitID(), target.LastCommitID())
-	for key, sourceStore := range source.GetStores() {
+	for _, key := range source.GetStoreNames() {
+		sourceStore := source.GetStoreByName(key.Name()).(types.CommitKVStore)
 		targetStore := target.GetStoreByName(key.Name()).(types.CommitKVStore)
 		switch sourceStore.GetStoreType() {
 		case types.StoreTypeTransient:
@@ -234,7 +235,7 @@ func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
 
 	for i := 0; i < b.N; i++ {
 		target := rootmulti.NewStore(dbm.NewMemDB())
-		for key := range source.GetStores() {
+		for _, key := range source.GetStoreNames() {
 			target.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
 		}
 		err := target.LoadLatestVersion()
@@ -269,7 +270,7 @@ func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys ui
 
 	for i := 0; i < b.N; i++ {
 		target := rootmulti.NewStore(dbm.NewMemDB())
-		for key := range source.GetStores() {
+		for _, key := range source.GetStoreNames() {
 			target.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
 		}
 		err := target.LoadLatestVersion()

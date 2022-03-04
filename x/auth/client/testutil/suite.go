@@ -981,7 +981,7 @@ func (s *IntegrationTestSuite) TestSignWithMultisig() {
 	addr1, err := account1.GetAddress()
 	s.Require().NoError(err)
 
-	// Create a multisig address that is not in the keyring.
+	// Create an address that is not in the keyring, will be used to simulate `--multisig`
 	multisig := "cosmos1hd6fsrvnz6qkp87s3u86ludegq97agxsdkwzyh"
 	multisigAddr, err := sdk.AccAddressFromBech32(multisig)
 	s.Require().NoError(err)
@@ -1004,7 +1004,10 @@ func (s *IntegrationTestSuite) TestSignWithMultisig() {
 	// Save multi tx to file
 	multiGeneratedTx2File := testutil.WriteToNewTempFile(s.T(), multisigTx.String())
 
-	// Sign using multisig
+	// Sign using multisig. We're signing a tx on behalf of the multisig address,
+	// even though the tx signer is NOT the multisig address. This is fine though,
+	// as the main point of this test is to test the `--multisig` flag with an address
+	// that is not in the keyring.
 	_, _ = TxSignExec(val1.ClientCtx, addr1, multiGeneratedTx2File.Name(), "--multisig", multisigAddr.String())
 	s.Require().NoError(err)
 }

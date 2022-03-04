@@ -2173,7 +2173,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 				val.Address.String(),
 				"4",
 				"AQ==",
-				"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"3\", \"timeout\":\"30000s\"}",
+				"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"3\", \"windows\":{\"voting_period\":\"1s\"}}",
 			},
 			commonFlags...,
 		),

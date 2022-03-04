@@ -68,6 +68,7 @@ message MsgVote {
   uint64     proposal_id = 1 [(gogoproto.jsontag) = "proposal_id"];
   string     voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   VoteOption option      = 3;
+  string     metadata    = 4;
 }
 
 // MsgVoteResponse defines the Msg/Vote response type.
@@ -80,6 +81,7 @@ message MsgVoteWeighted {
   uint64                      proposal_id = 1 [(gogoproto.jsontag) = "proposal_id"];
   string                      voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated WeightedVoteOption options     = 3;
+  string                      metadata    = 4;
 }
 
 // MsgVoteWeightedResponse defines the Msg/VoteWeighted response type.

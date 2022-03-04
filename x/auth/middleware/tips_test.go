@@ -93,7 +93,7 @@ func (s *MWTestSuite) TestTips() {
 			ctx, accts := s.setupAcctsForTips(ctx)
 			tipper, feePayer := accts[0], accts[1]
 
-			msg = govtypes.NewMsgVote(tipper.acc.GetAddress(), 1, govtypes.OptionYes)
+			msg = govtypes.NewMsgVote(tipper.acc.GetAddress(), 1, govtypes.OptionYes, "")
 
 			auxSignerData := s.mkTipperAuxSignerData(tipper.priv, msg, tc.tip, signing.SignMode_SIGN_MODE_DIRECT_AUX, tipper.accNum, 0, ctx.ChainID())
 			feePayerTxBuilder := s.mkFeePayerTxBuilder(s.clientCtx, auxSignerData, feePayer.priv, signing.SignMode_SIGN_MODE_DIRECT, tx.Fee{Amount: tc.fee, GasLimit: tc.gasLimit}, feePayer.accNum, 0, ctx.ChainID())

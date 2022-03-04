@@ -981,24 +981,10 @@ func (s *IntegrationTestSuite) TestSignWithMultisig() {
 	addr1, err := account1.GetAddress()
 	s.Require().NoError(err)
 
-	// Create a dummy multisig address
-	dummyMultisig := "cosmos1hd6fsrvnz6qkp87s3u86ludegq97agxsdkwzyh"
-	dummyMultisigAddr, err := sdk.AccAddressFromBech32(dummyMultisig)
-	s.Require().NoError(err)
-
-	// Send coins from validator to dummy multisig.
-	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
-	s.Require().NoError(s.network.WaitForNextBlock())
-	_, err = s.createBankMsg(
-		val1, dummyMultisigAddr,
-		sdk.NewCoins(sendTokens),
-	)
-	s.Require().NoError(err)
-
-	// Generate multisig transaction with dummy multisig address.
-	dummyMultisigTx, err := bankcli.MsgSendExec(
+	// Generate multisig transaction.
+	multisigTx, err := bankcli.MsgSendExec(
 		val1.ClientCtx,
-		dummyMultisigAddr,
+		val1.Address,
 		val1.Address,
 		sdk.NewCoins(
 			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
@@ -1010,11 +996,11 @@ func (s *IntegrationTestSuite) TestSignWithMultisig() {
 	)
 	s.Require().NoError(err)
 
-	// Save dummy multi tx to file
-	multiGeneratedTx2File := testutil.WriteToNewTempFile(s.T(), dummyMultisigTx.String())
+	// Save multisig tx to file
+	multiGeneratedTx2File := testutil.WriteToNewTempFile(s.T(), multisigTx.String())
 
-	// Sign with dummy multisig account
-	_, _ = TxSignExec(val1.ClientCtx, addr1, multiGeneratedTx2File.Name(), "--multisig", dummyMultisigAddr.String())
+	// Sign using multisig
+	_, _ = TxSignExec(val1.ClientCtx, addr1, multiGeneratedTx2File.Name(), "--multisig", val1.Address.String())
 	s.Require().NoError(err)
 }
 

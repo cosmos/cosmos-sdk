@@ -797,6 +797,43 @@ func (m MsgExec) ValidateBasic() error {
 	return nil
 }
 
+var _ sdk.Msg = &MsgLeaveGroup{}
+
+// Route Implements Msg
+func (m MsgLeaveGroup) Route() string {
+	return sdk.MsgTypeURL(&m)
+}
+
+// Type Implements Msg
+func (m MsgLeaveGroup) Type() string { return sdk.MsgTypeURL(&m) }
+
+// GetSignBytes Implements Msg
+func (m MsgLeaveGroup) GetSignBytes() []byte {
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
+}
+
+// GetSigners returns the expected signers for a MsgLeaveGroup
+func (m MsgLeaveGroup) GetSigners() []sdk.AccAddress {
+	signer, err := sdk.AccAddressFromBech32(m.Address)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{signer}
+}
+
+// ValidateBasic does a sanity check on the provided data
+func (m MsgLeaveGroup) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Address)
+	if err != nil {
+		return sdkerrors.Wrap(err, "group member")
+	}
+
+	if m.GroupId == 0 {
+		return sdkerrors.Wrap(errors.ErrEmpty, "group-id")
+	}
+	return nil
+}
+
 func validateMembers(members []Member) error {
 	index := make(map[string]struct{}, len(members))
 	for i := range members {

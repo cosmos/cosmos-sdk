@@ -99,7 +99,7 @@ func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower strin
 	if err != nil {
 		return DecisionPolicyResult{}, err
 	}
-	// maxYesCount is the max number of yes count, i.e the current yes count
+	// maxYesCount is the max potential number of yes count, i.e the current yes count
 	// plus all undecided count (supposing they all vote yes).
 	maxYesCount, err := yesCount.Add(undecided)
 	if err != nil {

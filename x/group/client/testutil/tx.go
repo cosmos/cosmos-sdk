@@ -2165,13 +2165,16 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 		),
 	)
 	require.NoError(err, out.String())
+	var txResp sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+	groupID := s.getGroupIdFromTxResponse(txResp)
 
 	// create group policy
 	out, err = cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupPolicyCmd(),
 		append(
 			[]string{
 				val.Address.String(),
-				"4",
+				groupID,
 				"AQ==",
 				"{\"@type\":\"/cosmos.group.v1beta1.ThresholdDecisionPolicy\", \"threshold\":\"3\", \"windows\":{\"voting_period\":\"1s\"}}",
 			},
@@ -2180,7 +2183,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 	)
 	require.NoError(err, out.String())
 
-	out, err = cli.ExecTestCLICmd(clientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"4", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	out, err = cli.ExecTestCLICmd(clientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{groupID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	require.NoError(err, out.String())
 	require.NotNil(out)
 	var resp group.QueryGroupPoliciesByGroupResponse
@@ -2198,7 +2201,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 			append(
 				[]string{
 					"address",
-					"4",
+					groupID,
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				},
 				commonFlags...,
@@ -2224,7 +2227,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 			append(
 				[]string{
 					members[2],
-					"4",
+					groupID,
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[2]),
 				},
 				commonFlags...,
@@ -2237,7 +2240,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 			append(
 				[]string{
 					members[2],
-					"4",
+					groupID,
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[2]),
 				},
 				commonFlags...,
@@ -2246,11 +2249,11 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 			"is not part of group",
 		},
 		{
-			"error: can leave group policy threshold is more than group weight",
+			"can leave group policy threshold is more than group weight",
 			append(
 				[]string{
 					members[1],
-					"4",
+					groupID,
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[1]),
 				},
 				commonFlags...,
@@ -2275,6 +2278,21 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 			}
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) getGroupIdFromTxResponse(txResp sdk.TxResponse) string {
+	s.Require().Greater(len(txResp.Logs), 0)
+	s.Require().NotNil(txResp.Logs[0].Events)
+	events := txResp.Logs[0].Events
+	createProposalEvent, _ := sdk.TypedEventToEvent(&group.EventCreateGroup{})
+
+	for _, e := range events {
+		if e.Type == createProposalEvent.Type {
+			return strings.ReplaceAll(e.Attributes[0].Value, "\"", "")
+		}
+	}
+
+	return ""
 }
 
 // createCLIProposal writes a CLI proposal with a MsgSend to a file. Returns

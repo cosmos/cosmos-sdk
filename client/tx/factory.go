@@ -276,7 +276,14 @@ func (f Factory) PrintUnsignedTx(clientCtx client.Context, msgs ...sdk.Msg) erro
 			return errors.New("cannot estimate gas in offline mode")
 		}
 
-		_, adjusted, err := CalculateGas(clientCtx, f, msgs...)
+		// Prepare TxFactory with acc & seq numbers as CalculateGas requires
+		// account and sequence numbers to be set
+		preparedTxf, err := f.Prepare(clientCtx)
+		if err != nil {
+			return err
+		}
+
+		_, adjusted, err := CalculateGas(clientCtx, preparedTxf, msgs...)
 		if err != nil {
 			return err
 		}

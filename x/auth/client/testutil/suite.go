@@ -981,7 +981,12 @@ func (s *IntegrationTestSuite) TestSignWithMultisig() {
 	addr1, err := account1.GetAddress()
 	s.Require().NoError(err)
 
-	// Generate multisig transaction.
+	// Create a multisig address that is not in the keyring.
+	multisig := "cosmos1hd6fsrvnz6qkp87s3u86ludegq97agxsdkwzyh"
+	multisigAddr, err := sdk.AccAddressFromBech32(multisig)
+	s.Require().NoError(err)
+
+	// Generate a transaction for testing --multisig with an address not in the keyring.
 	multisigTx, err := bankcli.MsgSendExec(
 		val1.ClientCtx,
 		val1.Address,
@@ -996,11 +1001,11 @@ func (s *IntegrationTestSuite) TestSignWithMultisig() {
 	)
 	s.Require().NoError(err)
 
-	// Save multisig tx to file
+	// Save multi tx to file
 	multiGeneratedTx2File := testutil.WriteToNewTempFile(s.T(), multisigTx.String())
 
 	// Sign using multisig
-	_, _ = TxSignExec(val1.ClientCtx, addr1, multiGeneratedTx2File.Name(), "--multisig", val1.Address.String())
+	_, _ = TxSignExec(val1.ClientCtx, addr1, multiGeneratedTx2File.Name(), "--multisig", multisigAddr.String())
 	s.Require().NoError(err)
 }
 

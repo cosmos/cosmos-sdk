@@ -69,9 +69,9 @@ message Deposit {
 message Proposal {
   option (gogoproto.equal) = true;
 
-  uint64                    proposal_id           = 1;
-  google.protobuf.Any       content               = 2 [(cosmos_proto.accepts_interface) = "Content"];
-  ProposalStatus            status                = 3;
+  uint64              proposal_id = 1;
+  google.protobuf.Any content     = 2 [(cosmos_proto.accepts_interface) = "Content"];
+  ProposalStatus      status      = 3;
   // final_tally_result is the final tally result of the proposal. When
   // querying a proposal via gRPC, this field is not populated until the
   // proposal's voting period has ended.
@@ -171,11 +171,7 @@ message DepositParams {
 message VotingParams {
   //  Length of the voting period.
   google.protobuf.Duration voting_period = 1
-      [
-        (gogoproto.nullable)    = false,
-        (gogoproto.stdduration) = true,
-        (gogoproto.jsontag)     = "voting_period,omitempty"
-      ];
+      [(gogoproto.nullable) = false, (gogoproto.stdduration) = true, (gogoproto.jsontag) = "voting_period,omitempty"];
 }
 
 // TallyParams defines the params for tallying votes on governance proposals.

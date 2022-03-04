@@ -297,7 +297,6 @@ message QueryGroupsByMemberResponse {
 
 // QueryTallyResultRequest is the Query/TallyResult request type.
 message QueryTallyResultRequest {
-
   // proposal_id is the unique id of a proposal.
   uint64 proposal_id = 1;
 }

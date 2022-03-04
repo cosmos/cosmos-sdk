@@ -59,22 +59,24 @@ func TestMsgDeposit(t *testing.T) {
 
 // test ValidateBasic for MsgVote
 func TestMsgVote(t *testing.T) {
+	metadata := "metadata"
 	tests := []struct {
 		proposalID uint64
 		voterAddr  sdk.AccAddress
 		option     v1beta2.VoteOption
+		metadata   string
 		expectPass bool
 	}{
-		{0, addrs[0], v1beta2.OptionYes, true},
-		{0, sdk.AccAddress{}, v1beta2.OptionYes, false},
-		{0, addrs[0], v1beta2.OptionNo, true},
-		{0, addrs[0], v1beta2.OptionNoWithVeto, true},
-		{0, addrs[0], v1beta2.OptionAbstain, true},
-		{0, addrs[0], v1beta2.VoteOption(0x13), false},
+		{0, addrs[0], v1beta2.OptionYes, metadata, true},
+		{0, sdk.AccAddress{}, v1beta2.OptionYes, "", false},
+		{0, addrs[0], v1beta2.OptionNo, metadata, true},
+		{0, addrs[0], v1beta2.OptionNoWithVeto, "", true},
+		{0, addrs[0], v1beta2.OptionAbstain, "", true},
+		{0, addrs[0], v1beta2.VoteOption(0x13), "", false},
 	}
 
 	for i, tc := range tests {
-		msg := v1beta2.NewMsgVote(tc.voterAddr, tc.proposalID, tc.option)
+		msg := v1beta2.NewMsgVote(tc.voterAddr, tc.proposalID, tc.option, tc.metadata)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", i)
 		} else {
@@ -85,40 +87,42 @@ func TestMsgVote(t *testing.T) {
 
 // test ValidateBasic for MsgVoteWeighted
 func TestMsgVoteWeighted(t *testing.T) {
+	metadata := "metadata"
 	tests := []struct {
 		proposalID uint64
 		voterAddr  sdk.AccAddress
 		options    v1beta2.WeightedVoteOptions
+		metadata   string
 		expectPass bool
 	}{
-		{0, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), true},
-		{0, sdk.AccAddress{}, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), false},
-		{0, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionNo), true},
-		{0, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionNoWithVeto), true},
-		{0, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionAbstain), true},
+		{0, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), metadata, true},
+		{0, sdk.AccAddress{}, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), "", false},
+		{0, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionNo), "", true},
+		{0, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionNoWithVeto), "", true},
+		{0, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionAbstain), "", true},
 		{0, addrs[0], v1beta2.WeightedVoteOptions{ // weight sum > 1
 			v1beta2.NewWeightedVoteOption(v1beta2.OptionYes, sdk.NewDec(1)),
 			v1beta2.NewWeightedVoteOption(v1beta2.OptionAbstain, sdk.NewDec(1)),
-		}, false},
+		}, "", false},
 		{0, addrs[0], v1beta2.WeightedVoteOptions{ // duplicate option
 			v1beta2.NewWeightedVoteOption(v1beta2.OptionYes, sdk.NewDecWithPrec(5, 1)),
 			v1beta2.NewWeightedVoteOption(v1beta2.OptionYes, sdk.NewDecWithPrec(5, 1)),
-		}, false},
+		}, "", false},
 		{0, addrs[0], v1beta2.WeightedVoteOptions{ // zero weight
 			v1beta2.NewWeightedVoteOption(v1beta2.OptionYes, sdk.NewDec(0)),
-		}, false},
+		}, "", false},
 		{0, addrs[0], v1beta2.WeightedVoteOptions{ // negative weight
 			v1beta2.NewWeightedVoteOption(v1beta2.OptionYes, sdk.NewDec(-1)),
-		}, false},
-		{0, addrs[0], v1beta2.WeightedVoteOptions{}, false},
-		{0, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.VoteOption(0x13)), false},
+		}, "", false},
+		{0, addrs[0], v1beta2.WeightedVoteOptions{}, "", false},
+		{0, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.VoteOption(0x13)), "", false},
 		{0, addrs[0], v1beta2.WeightedVoteOptions{ // weight sum <1
 			v1beta2.NewWeightedVoteOption(v1beta2.OptionYes, sdk.NewDecWithPrec(5, 1)),
-		}, false},
+		}, "", false},
 	}
 
 	for i, tc := range tests {
-		msg := v1beta2.NewMsgVoteWeighted(tc.voterAddr, tc.proposalID, tc.options)
+		msg := v1beta2.NewMsgVoteWeighted(tc.voterAddr, tc.proposalID, tc.options, tc.metadata)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", i)
 		} else {
@@ -165,7 +169,7 @@ func TestMsgSubmitProposal_ValidateBasic(t *testing.T) {
 
 // this tests that Amino JSON MsgSubmitProposal.GetSignBytes() still works with Content as Any using the ModuleCdc
 func TestMsgSubmitProposal_GetSignBytes(t *testing.T) {
-	proposal := []sdk.Msg{v1beta2.NewMsgVote(addrs[0], 1, v1beta2.OptionYes)}
+	proposal := []sdk.Msg{v1beta2.NewMsgVote(addrs[0], 1, v1beta2.OptionYes, "")}
 	msg, err := v1beta2.NewMsgSubmitProposal(proposal, sdk.NewCoins(), sdk.AccAddress{}.String(), "")
 	require.NoError(t, err)
 	var bz []byte

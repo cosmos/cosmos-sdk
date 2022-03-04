@@ -254,13 +254,13 @@ func TestQueries(t *testing.T) {
 	checkEqualProposal(t, proposal3, *proposals[1])
 
 	// Addrs[0] votes on proposals #2 & #3
-	vote1 := v1beta2.NewVote(proposal2.Id, TestAddrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes))
-	vote2 := v1beta2.NewVote(proposal3.Id, TestAddrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes))
+	vote1 := v1beta2.NewVote(proposal2.Id, TestAddrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), "")
+	vote2 := v1beta2.NewVote(proposal3.Id, TestAddrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), "")
 	app.GovKeeper.SetVote(ctx, vote1)
 	app.GovKeeper.SetVote(ctx, vote2)
 
 	// Addrs[1] votes on proposal #3
-	vote3 := v1beta2.NewVote(proposal3.Id, TestAddrs[1], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes))
+	vote3 := v1beta2.NewVote(proposal3.Id, TestAddrs[1], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), "")
 	app.GovKeeper.SetVote(ctx, vote3)
 
 	// Test query voted by TestAddrs[0]

@@ -39,6 +39,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* (x/upgrade) [\#11116](https://github.com/cosmos/cosmos-sdk/pull/11116) `MsgSoftwareUpgrade` and  has been added to support v1beta2 msgs-based gov proposals.
+* [\#11308](https://github.com/cosmos/cosmos-sdk/pull/11308) Added a mandatory metadata field to Vote in x/gov v1beta2.
 * [\#10977](https://github.com/cosmos/cosmos-sdk/pull/10977) Now every cosmos message protobuf definition must be extended with a ``cosmos.msg.v1.signer`` option to signal the signer fields in a language agnostic way.
 * [\#10710](https://github.com/cosmos/cosmos-sdk/pull/10710) Chain-id shouldn't be required for creating a transaction with both --generate-only and --offline flags.
 * [\#10703](https://github.com/cosmos/cosmos-sdk/pull/10703) Create a new grantee account, if the grantee of an authorization does not exist.
@@ -66,6 +68,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/authz) [\#10714](https://github.com/cosmos/cosmos-sdk/pull/10714) Add support for pruning expired authorizations
 * [\#10015](https://github.com/cosmos/cosmos-sdk/pull/10015) ADR-040: ICS-23 proofs for SMT store
 * [\#11240](https://github.com/cosmos/cosmos-sdk/pull/11240) Replace various modules `ModuleCdc` with the global `legacy.Cdc`
+* [#11179](https://github.com/cosmos/cosmos-sdk/pull/11179) Add state rollback command.
 * [\#10794](https://github.com/cosmos/cosmos-sdk/pull/10794) ADR-040: Add State Sync to V2 Store
 
 ### API Breaking Changes
@@ -150,6 +153,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9780](https://github.com/cosmos/cosmos-sdk/pull/9780) Use sigs.k8s.io for yaml, which might lead to minor YAML output changes
 * [\#10625](https://github.com/cosmos/cosmos-sdk/pull/10625) Rename `--fee-account` CLI flag to `--fee-granter`
 * [\#10684](https://github.com/cosmos/cosmos-sdk/pull/10684) Rename `edit-validator` command's `--moniker` flag to `--new-moniker`
+* [\#11116](https://github.com/cosmos/cosmos-sdk/pull/11116) `software-upgrade` and `cancel-software-upgrade` gov proposal commands have changed to `legacy-software-upgrade` and `legacy-cancel-software-upgrade`.
 
 ### Improvements
 
@@ -215,6 +219,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#11222](https://github.com/cosmos/cosmos-sdk/pull/11222) reject query with block height in the future
 * [#11229](https://github.com/cosmos/cosmos-sdk/pull/11229) Handled the error message of `transaction encountered error` from tendermint.
 * (x/authz) [\#11252](https://github.com/cosmos/cosmos-sdk/pull/11252) Allow insufficient funds error for authz simulation
+* (cli) [\#11313](https://github.com/cosmos/cosmos-sdk/pull/11313) Fixes `--gas auto` when executing CLI transactions in `--generate-only` mode
 
 ### State Machine Breaking
 

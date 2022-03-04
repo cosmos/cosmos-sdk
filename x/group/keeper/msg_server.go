@@ -185,6 +185,7 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 		// Update group in the groupTable.
 		g.TotalWeight = totalWeight.String()
 		g.Version++
+
 		return k.groupTable.Update(ctx.KVStore(k.key), g.Id, g)
 	}
 
@@ -877,5 +878,33 @@ func (k Keeper) assertMetadataLength(metadata string, description string) error 
 	if metadata != "" && uint64(len(metadata)) > k.config.MaxMetadataLen {
 		return sdkerrors.Wrapf(errors.ErrMaxLimit, description)
 	}
+	return nil
+}
+
+// validateGroupPolicies loops through all policies from the group, and calls
+// each of the Validate() method.
+func (k Keeper) validateGroupPolicies(ctx sdk.Context, g group.GroupInfo) error {
+	it, err := k.groupPolicyByGroupIndex.Get(ctx.KVStore(k.key), g.Id)
+	if err != nil {
+		return err
+	}
+	defer it.Close()
+
+	var groupPolicy group.GroupPolicyInfo
+	for {
+		_, err = it.LoadNext(&groupPolicy)
+		if errors.ErrORMIteratorDone.Is(err) {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		err = groupPolicy.DecisionPolicy.GetCachedValue().(group.DecisionPolicy).Validate(g, k.config)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

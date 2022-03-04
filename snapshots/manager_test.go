@@ -139,13 +139,13 @@ func TestManager_Restore(t *testing.T) {
 	require.ErrorIs(t, err, types.ErrUnknownFormat)
 
 	// Restore errors on no chunks
-	err = manager.Restore(types.Snapshot{Height: 3, Format: 1, Hash: []byte{1, 2, 3}})
+	err = manager.Restore(types.Snapshot{Height: 3, Format: types.CurrentFormat, Hash: []byte{1, 2, 3}})
 	require.Error(t, err)
 
 	// Restore errors on chunk and chunkhashes mismatch
 	err = manager.Restore(types.Snapshot{
 		Height:   3,
-		Format:   1,
+		Format:   types.CurrentFormat,
 		Hash:     []byte{1, 2, 3},
 		Chunks:   4,
 		Metadata: types.Metadata{ChunkHashes: checksums(chunks)},
@@ -155,7 +155,7 @@ func TestManager_Restore(t *testing.T) {
 	// Starting a restore works
 	err = manager.Restore(types.Snapshot{
 		Height:   3,
-		Format:   1,
+		Format:   types.CurrentFormat,
 		Hash:     []byte{1, 2, 3},
 		Chunks:   1,
 		Metadata: types.Metadata{ChunkHashes: checksums(chunks)},
@@ -190,7 +190,7 @@ func TestManager_Restore(t *testing.T) {
 	// Starting a new restore should fail now, because the target already has contents.
 	err = manager.Restore(types.Snapshot{
 		Height:   3,
-		Format:   1,
+		Format:   types.CurrentFormat,
 		Hash:     []byte{1, 2, 3},
 		Chunks:   3,
 		Metadata: types.Metadata{ChunkHashes: checksums(chunks)},
@@ -203,7 +203,7 @@ func TestManager_Restore(t *testing.T) {
 	target.items = nil
 	err = manager.Restore(types.Snapshot{
 		Height:   3,
-		Format:   1,
+		Format:   types.CurrentFormat,
 		Hash:     []byte{1, 2, 3},
 		Chunks:   1,
 		Metadata: types.Metadata{ChunkHashes: checksums(chunks)},

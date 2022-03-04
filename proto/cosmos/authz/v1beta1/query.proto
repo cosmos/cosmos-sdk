@@ -24,7 +24,7 @@ service Query {
   }
 
   // GranteeGrants returns a list of `GrantAuthorization` by grantee.
-  // 
+  //
   // Since: cosmos-sdk 0.46
   rpc GranteeGrants(QueryGranteeGrantsRequest) returns (QueryGranteeGrantsResponse) {
     option (google.api.http).get = "/cosmos/authz/v1beta1/grants/grantee/{grantee}";

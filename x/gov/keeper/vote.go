@@ -10,13 +10,17 @@ import (
 )
 
 // AddVote adds a vote on a specific proposal
-func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, options v1beta2.WeightedVoteOptions) error {
+func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, options v1beta2.WeightedVoteOptions, metadata string) error {
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
 		return sdkerrors.Wrapf(types.ErrUnknownProposal, "%d", proposalID)
 	}
 	if proposal.Status != v1beta2.StatusVotingPeriod {
 		return sdkerrors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
+	}
+	err := keeper.assertMetadataLength(metadata)
+	if err != nil {
+		return err
 	}
 
 	for _, option := range options {
@@ -25,7 +29,7 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 		}
 	}
 
-	vote := v1beta2.NewVote(proposalID, voterAddr, options)
+	vote := v1beta2.NewVote(proposalID, voterAddr, options, metadata)
 	keeper.SetVote(ctx, vote)
 
 	// called after a vote on a proposal is cast

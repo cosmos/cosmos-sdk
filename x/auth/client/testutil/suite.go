@@ -971,6 +971,53 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
+func (s *IntegrationTestSuite) TestSignWithMultisig() {
+	val1 := s.network.Validators[0]
+
+	// Generate a account for signing.
+	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
+	s.Require().NoError(err)
+
+	addr1, err := account1.GetAddress()
+	s.Require().NoError(err)
+
+	// Create a dummy multisig address
+	dummyMultisig := "cosmos1hd6fsrvnz6qkp87s3u86ludegq97agxsdkwzyh"
+	dummyMultisigAddr, err := sdk.AccAddressFromBech32(dummyMultisig)
+	s.Require().NoError(err)
+
+	// Send coins from validator to dummy multisig.
+	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
+	s.Require().NoError(s.network.WaitForNextBlock())
+	_, err = s.createBankMsg(
+		val1, dummyMultisigAddr,
+		sdk.NewCoins(sendTokens),
+	)
+	s.Require().NoError(err)
+
+	// Generate multisig transaction with dummy multisig address.
+	dummyMultisigTx, err := bankcli.MsgSendExec(
+		val1.ClientCtx,
+		dummyMultisigAddr,
+		val1.Address,
+		sdk.NewCoins(
+			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+	)
+	s.Require().NoError(err)
+
+	// Save dummy multi tx to file
+	multiGeneratedTx2File := testutil.WriteToNewTempFile(s.T(), dummyMultisigTx.String())
+
+	// Sign with dummy multisig account
+	_, _ = TxSignExec(val1.ClientCtx, addr1, multiGeneratedTx2File.Name(), "--multisig", dummyMultisigAddr.String())
+	s.Require().NoError(err)
+}
+
 func (s *IntegrationTestSuite) TestCLIMultisign() {
 	val1 := s.network.Validators[0]
 
@@ -982,10 +1029,6 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	s.Require().NoError(err)
 
 	multisigRecord, err := val1.ClientCtx.Keyring.Key("multi")
-	s.Require().NoError(err)
-
-	dummyMultisig := "cosmos1hd6fsrvnz6qkp87s3u86ludegq97agxsdkwzyh"
-	dummyMultisigAddr, err := sdk.AccAddressFromBech32(dummyMultisig)
 	s.Require().NoError(err)
 
 	addr, err := multisigRecord.GetAddress()
@@ -1010,14 +1053,6 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	s.Require().NoError(err)
 	s.Require().True(sendTokens.Amount.Equal(balRes.Balances.AmountOf(s.cfg.BondDenom)))
 
-	// Send coins from validator to dummy multisig.
-	s.Require().NoError(s.network.WaitForNextBlock())
-	_, err = s.createBankMsg(
-		val1, dummyMultisigAddr,
-		sdk.NewCoins(sendTokens),
-	)
-	s.Require().NoError(err)
-
 	// Generate multisig transaction.
 	multiGeneratedTx, err := bankcli.MsgSendExec(
 		val1.ClientCtx,
@@ -1033,26 +1068,8 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	)
 	s.Require().NoError(err)
 
-	// Generate multisig transaction with dummy multisig address.
-	dummyMultisigTx, err := bankcli.MsgSendExec(
-		val1.ClientCtx,
-		dummyMultisigAddr,
-		val1.Address,
-		sdk.NewCoins(
-			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
-		),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-	)
-	s.Require().NoError(err)
-
 	// Save tx to file
 	multiGeneratedTxFile := testutil.WriteToNewTempFile(s.T(), multiGeneratedTx.String())
-
-	// Save dummy multi tx to file
-	multiGeneratedTx2File := testutil.WriteToNewTempFile(s.T(), dummyMultisigTx.String())
 
 	addr1, err := account1.GetAddress()
 	s.Require().NoError(err)
@@ -1070,10 +1087,6 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	s.Require().NoError(err)
 
 	sign2File := testutil.WriteToNewTempFile(s.T(), account2Signature.String())
-
-	// Sign with dummy multisig account
-	_, _ = TxSignExec(val1.ClientCtx, addr1, multiGeneratedTx2File.Name(), "--multisig", dummyMultisigAddr.String())
-	s.Require().NoError(err)
 
 	// Does not work in offline mode.
 	_, err = TxMultiSignExec(val1.ClientCtx, multisigRecord.Name, multiGeneratedTxFile.Name(), "--offline", sign1File.Name(), sign2File.Name())

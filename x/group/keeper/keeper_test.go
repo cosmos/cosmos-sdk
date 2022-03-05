@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/x/group/module"
 )
@@ -1021,7 +1022,12 @@ func (s *TestSuite) TestUpdateGroupPolicyAdmin() {
 	addr5 := addrs[4]
 
 	admin, newAdmin := addr1, addr2
-	groupPolicyAddr, myGroupID, policy := createGroupAndGroupPolicy(admin, s)
+	policy := group.NewThresholdDecisionPolicy(
+		"1",
+		time.Second,
+		0,
+	)
+	groupPolicyAddr, myGroupID := s.createGroupAndGroupPolicy(admin, nil, policy)
 
 	specs := map[string]struct {
 		req            *group.MsgUpdateGroupPolicyAdmin
@@ -1104,7 +1110,12 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 	addr5 := addrs[4]
 
 	admin := addr1
-	groupPolicyAddr, myGroupID, policy := createGroupAndGroupPolicy(admin, s)
+	policy := group.NewThresholdDecisionPolicy(
+		"1",
+		time.Second,
+		0,
+	)
+	groupPolicyAddr, myGroupID := s.createGroupAndGroupPolicy(admin, nil, policy)
 
 	specs := map[string]struct {
 		req            *group.MsgUpdateGroupPolicyMetadata
@@ -1178,10 +1189,15 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 	addr5 := addrs[4]
 
 	admin := addr1
-	groupPolicyAddr, myGroupID, policy := createGroupAndGroupPolicy(admin, s)
+	policy := group.NewThresholdDecisionPolicy(
+		"1",
+		time.Second,
+		0,
+	)
+	groupPolicyAddr, myGroupID := s.createGroupAndGroupPolicy(admin, nil, policy)
 
 	specs := map[string]struct {
-		preRun         func(admin sdk.AccAddress, s *TestSuite) (policyAddr string, groupId uint64, policy group.DecisionPolicy)
+		preRun         func(admin sdk.AccAddress) (policyAddr string, groupId uint64)
 		req            *group.MsgUpdateGroupPolicyDecisionPolicy
 		policy         group.DecisionPolicy
 		expGroupPolicy *group.GroupPolicyInfo
@@ -1226,8 +1242,8 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 			expErr: false,
 		},
 		"correct data with percentage decision policy": {
-			preRun: func(admin sdk.AccAddress, s *TestSuite) (policyAddr string, groupId uint64, policy group.DecisionPolicy) {
-				return createGroupAndGroupPolicy(admin, s)
+			preRun: func(admin sdk.AccAddress) (string, uint64) {
+				return s.createGroupAndGroupPolicy(admin, nil, policy)
 			},
 			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
 				Admin:   admin.String(),
@@ -1253,7 +1269,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 		err := spec.expGroupPolicy.SetDecisionPolicy(spec.policy)
 		s.Require().NoError(err)
 		if spec.preRun != nil {
-			policyAddr1, groupId, _ := spec.preRun(admin, s)
+			policyAddr1, groupId := spec.preRun(admin)
 			policyAddr = policyAddr1
 
 			// update the expected info with new group policy details
@@ -2144,6 +2160,68 @@ func (s *TestSuite) TestVote() {
 			spec.postRun(sdkCtx)
 		})
 	}
+
+	s.T().Log("test tally result should not take into account the member who left the group")
+	require := s.Require()
+	members = []group.Member{
+		{Address: addr2.String(), Weight: "3", AddedAt: s.blockTime},
+		{Address: addr3.String(), Weight: "2", AddedAt: s.blockTime},
+		{Address: addr4.String(), Weight: "1", AddedAt: s.blockTime},
+	}
+	reqCreate := &group.MsgCreateGroupWithPolicy{
+		Admin:         addr1.String(),
+		Members:       members,
+		GroupMetadata: "metadata",
+	}
+
+	policy = group.NewThresholdDecisionPolicy(
+		"4",
+		time.Duration(10),
+		0,
+	)
+	require.NoError(reqCreate.SetDecisionPolicy(policy))
+	result, err := s.keeper.CreateGroupWithPolicy(s.ctx, reqCreate)
+	require.NoError(err)
+	require.NotNil(result)
+
+	policyAddr := result.GroupPolicyAddress
+	groupID := result.GroupId
+	reqProposal := &group.MsgSubmitProposal{
+		Address:   policyAddr,
+		Proposers: []string{addr4.String()},
+	}
+	require.NoError(reqProposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
+		FromAddress: policyAddr,
+		ToAddress:   addr5.String(),
+		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+	}}))
+
+	resSubmitProposal, err := s.keeper.SubmitProposal(s.ctx, reqProposal)
+	require.NoError(err)
+	require.NotNil(resSubmitProposal)
+	proposalID := resSubmitProposal.ProposalId
+
+	for _, voter := range []string{addr4.String(), addr3.String(), addr2.String()} {
+		_, err := s.keeper.Vote(s.ctx,
+			&group.MsgVote{ProposalId: proposalID, Voter: voter, Option: group.VOTE_OPTION_YES},
+		)
+		require.NoError(err)
+	}
+
+	qProposals, err := s.keeper.Proposal(s.ctx, &group.QueryProposalRequest{
+		ProposalId: proposalID,
+	})
+	require.NoError(err)
+
+	tallyResult, err := s.keeper.Tally(s.sdkCtx, *qProposals.Proposal, groupID)
+	require.NoError(err)
+
+	_, err = s.keeper.LeaveGroup(s.ctx, &group.MsgLeaveGroup{Address: addr4.String(), GroupId: groupID})
+	require.NoError(err)
+
+	tallyResult1, err := s.keeper.Tally(s.sdkCtx, *qProposals.Proposal, groupID)
+	require.NoError(err)
+	require.NotEqual(tallyResult.String(), tallyResult1.String())
 }
 
 func (s *TestSuite) TestExecProposal() {
@@ -2474,6 +2552,186 @@ func (s *TestSuite) TestVPEndProposals() {
 	}
 }
 
+func (s *TestSuite) TestLeaveGroup() {
+	addrs := simapp.AddTestAddrsIncremental(s.app, s.sdkCtx, 7, sdk.NewInt(3000000))
+	admin1 := addrs[0]
+	member1 := addrs[1]
+	member2 := addrs[2]
+	member3 := addrs[3]
+	member4 := addrs[4]
+	admin2 := addrs[5]
+	admin3 := addrs[6]
+	require := s.Require()
+
+	members := []group.Member{
+		{
+			Address:  member1.String(),
+			Weight:   "1",
+			Metadata: "metadata",
+			AddedAt:  s.sdkCtx.BlockTime(),
+		},
+		{
+			Address:  member2.String(),
+			Weight:   "2",
+			Metadata: "metadata",
+			AddedAt:  s.sdkCtx.BlockTime(),
+		},
+		{
+			Address:  member3.String(),
+			Weight:   "3",
+			Metadata: "metadata",
+			AddedAt:  s.sdkCtx.BlockTime(),
+		},
+	}
+	policy := group.NewThresholdDecisionPolicy(
+		"3",
+		time.Hour,
+		time.Hour,
+	)
+	_, groupID1 := s.createGroupAndGroupPolicy(admin1, members, policy)
+
+	members = []group.Member{
+		{
+			Address:  member1.String(),
+			Weight:   "1",
+			Metadata: "metadata",
+			AddedAt:  s.sdkCtx.BlockTime(),
+		},
+	}
+	_, groupID2 := s.createGroupAndGroupPolicy(admin2, members, nil)
+
+	members = []group.Member{
+		{
+			Address:  member1.String(),
+			Weight:   "1",
+			Metadata: "metadata",
+			AddedAt:  s.sdkCtx.BlockTime(),
+		},
+		{
+			Address:  member2.String(),
+			Weight:   "2",
+			Metadata: "metadata",
+			AddedAt:  s.sdkCtx.BlockTime(),
+		},
+	}
+	policy = &group.PercentageDecisionPolicy{
+		Percentage: "0.5",
+		Windows:    &group.DecisionPolicyWindows{VotingPeriod: time.Hour},
+	}
+
+	_, groupID3 := s.createGroupAndGroupPolicy(admin3, members, policy)
+	testCases := []struct {
+		name           string
+		req            *group.MsgLeaveGroup
+		expErr         bool
+		errMsg         string
+		expMembersSize int
+		memberWeight   math.Dec
+	}{
+		{
+			"expect error: group not found",
+			&group.MsgLeaveGroup{
+				GroupId: 100000,
+				Address: member1.String(),
+			},
+			true,
+			"group: not found",
+			0,
+			math.NewDecFromInt64(0),
+		},
+		{
+			"expect error: member not part of group",
+			&group.MsgLeaveGroup{
+				GroupId: groupID1,
+				Address: member4.String(),
+			},
+			true,
+			"not part of group",
+			0,
+			math.NewDecFromInt64(0),
+		},
+		{
+			"valid testcase: decision policy is not present",
+			&group.MsgLeaveGroup{
+				GroupId: groupID2,
+				Address: member1.String(),
+			},
+			false,
+			"",
+			0,
+			math.NewDecFromInt64(1),
+		},
+		{
+			"valid testcase: threshold decision policy",
+			&group.MsgLeaveGroup{
+				GroupId: groupID1,
+				Address: member3.String(),
+			},
+			false,
+			"",
+			2,
+			math.NewDecFromInt64(3),
+		},
+		{
+			"valid request: can leave group policy threshold more than group weight",
+			&group.MsgLeaveGroup{
+				GroupId: groupID1,
+				Address: member2.String(),
+			},
+			false,
+			"",
+			1,
+			math.NewDecFromInt64(2),
+		},
+		{
+			"valid request: can leave group (percentage decision policy)",
+			&group.MsgLeaveGroup{
+				GroupId: groupID3,
+				Address: member2.String(),
+			},
+			false,
+			"",
+			1,
+			math.NewDecFromInt64(2),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			var groupWeight1 math.Dec
+			if !tc.expErr {
+				groupRes, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: tc.req.GroupId})
+				require.NoError(err)
+				groupWeight1, err = math.NewNonNegativeDecFromString(groupRes.Info.TotalWeight)
+				require.NoError(err)
+			}
+
+			res, err := s.keeper.LeaveGroup(s.ctx, tc.req)
+			if tc.expErr {
+				require.Error(err)
+				require.Contains(err.Error(), tc.errMsg)
+			} else {
+				require.NoError(err)
+				require.NotNil(res)
+				res, err := s.keeper.GroupMembers(s.ctx, &group.QueryGroupMembersRequest{
+					GroupId: tc.req.GroupId,
+				})
+				require.NoError(err)
+				require.Len(res.Members, tc.expMembersSize)
+
+				groupRes, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: tc.req.GroupId})
+				require.NoError(err)
+				groupWeight2, err := math.NewNonNegativeDecFromString(groupRes.Info.TotalWeight)
+				require.NoError(err)
+
+				rWeight, err := groupWeight1.Sub(tc.memberWeight)
+				require.NoError(err)
+				require.Equal(rWeight.Cmp(groupWeight2), 0)
+			}
+		})
+	}
+}
+
 func submitProposal(
 	ctx context.Context, s *TestSuite, msgs []sdk.Msg,
 	proposers []string) uint64 {
@@ -2504,32 +2762,31 @@ func submitProposalAndVote(
 	return myProposalID
 }
 
-func createGroupAndGroupPolicy(
+func (s *TestSuite) createGroupAndGroupPolicy(
 	admin sdk.AccAddress,
-	s *TestSuite,
-) (string, uint64, group.DecisionPolicy) {
+	members []group.Member,
+	policy group.DecisionPolicy,
+) (policyAddr string, groupID uint64) {
 	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:   admin.String(),
-		Members: nil,
+		Members: members,
 	})
 	s.Require().NoError(err)
 
-	myGroupID := groupRes.GroupId
+	groupID = groupRes.GroupId
 	groupPolicy := &group.MsgCreateGroupPolicy{
 		Admin:   admin.String(),
-		GroupId: myGroupID,
+		GroupId: groupID,
 	}
 
-	policy := group.NewThresholdDecisionPolicy(
-		"1",
-		time.Second,
-		0,
-	)
-	err = groupPolicy.SetDecisionPolicy(policy)
-	s.Require().NoError(err)
+	if policy != nil {
+		err = groupPolicy.SetDecisionPolicy(policy)
+		s.Require().NoError(err)
 
-	groupPolicyRes, err := s.keeper.CreateGroupPolicy(s.ctx, groupPolicy)
-	s.Require().NoError(err)
+		groupPolicyRes, err := s.keeper.CreateGroupPolicy(s.ctx, groupPolicy)
+		s.Require().NoError(err)
+		policyAddr = groupPolicyRes.Address
+	}
 
-	return groupPolicyRes.Address, myGroupID, policy
+	return policyAddr, groupID
 }

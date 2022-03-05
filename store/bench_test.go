@@ -47,7 +47,7 @@ type counts struct {
 	delete int
 }
 
-func generateSampledPercentages() []percentages {
+func generateGradedPercentages() []percentages {
 	var sampledPercentages []percentages
 	sampleX := percentages{has: 2, get: 55, set: 40, delete: 3}
 	sampledPercentages = append(sampledPercentages, sampleX)
@@ -65,6 +65,15 @@ func generateSampledPercentages() []percentages {
 		}
 	}
 	return sampledPercentages
+}
+
+func generateExtremePercentages() []percentages {
+	return []percentages{
+		{100, 0, 0, 0},
+		{0, 100, 0, 0},
+		{0, 0, 100, 0},
+		{0, 0, 0, 100},
+	}
 }
 
 type benchmark struct {
@@ -314,7 +323,7 @@ func prepareStore(b *testing.B, version int, dbType tmdb.BackendType, committedV
 
 func runSuite(b *testing.B, version int, dbBackendTypes []tmdb.BackendType, dir string) {
 	// run randomized operations subbenchmarks for various scenarios
-	sampledPercentages := generateSampledPercentages()
+	sampledPercentages := generateGradedPercentages()
 	benchmarks := generateBenchmarks(dbBackendTypes, sampledPercentages, nil)
 	for _, bm := range benchmarks {
 		db, err := newDB(version, bm.name, bm.dbType, dir)

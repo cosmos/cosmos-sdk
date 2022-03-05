@@ -243,7 +243,7 @@ func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
 
 func (k Keeper) IterateVPEndProposals(ctx sdk.Context, cb func(proposal group.Proposal) (stop bool)) error {
 	timeBytes := sdk.FormatTimeBytes(ctx.BlockTime())
-	it, err := k.ProposalsByVotingPeriodEnd.Get(ctx.KVStore(k.key), sdk.PrefixEndBytes(timeBytes))
+	it, err := k.ProposalsByVotingPeriodEnd.PrefixScan(ctx.KVStore(k.key), nil, timeBytes)
 
 	if err != nil {
 		return err

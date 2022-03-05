@@ -362,12 +362,11 @@ func runSuite(b *testing.B, version int, dbBackendTypes []tmdb.BackendType, dir 
 }
 
 func BenchmarkLoadStoreV1(b *testing.B) {
-	dbBackendTypes := []tmdb.BackendType{tmdb.GoLevelDBBackend, tmdb.RocksDBBackend, tmdb.BadgerDBBackend}
-	// dbBackendTypes := []tmdb.BackendType{tmdb.RocksDBBackend, tmdb.BadgerDBBackend}
+	dbBackendTypes := []tmdb.BackendType{tmdb.BadgerDBBackend}
 	runSuite(b, 1, dbBackendTypes, b.TempDir())
 }
 
 func BenchmarkLoadStoreV2(b *testing.B) {
-	dbBackendTypes := []tmdb.BackendType{tmdb.RocksDBBackend, tmdb.BadgerDBBackend}
+	dbBackendTypes := []tmdb.BackendType{tmdb.BadgerDBBackend}
 	runSuite(b, 2, dbBackendTypes, b.TempDir())
 }

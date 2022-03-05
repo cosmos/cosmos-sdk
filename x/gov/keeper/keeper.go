@@ -197,3 +197,12 @@ func (keeper Keeper) InactiveProposalQueueIterator(ctx sdk.Context, endTime time
 	store := ctx.KVStore(keeper.storeKey)
 	return store.Iterator(types.InactiveProposalQueuePrefix, sdk.PrefixEndBytes(types.InactiveProposalByTimeKey(endTime)))
 }
+
+// assertMetadataLength returns an error if given metadata length
+// is greater than a pre-defined maxMetadataLen.
+func (k Keeper) assertMetadataLength(metadata string) error {
+	if metadata != "" && uint64(len(metadata)) > k.config.MaxMetadataLen {
+		return types.ErrMetadataTooLong.Wrapf("got metadata with length %d", len(metadata))
+	}
+	return nil
+}

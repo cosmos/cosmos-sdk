@@ -2385,7 +2385,7 @@ func (s *TestSuite) TestVPEndProposals() {
 	}{
 		"tally updated after voting power end": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				return submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+				return submitProposal(sdkCtx, s, []sdk.Msg{msgSend}, proposers)
 			},
 			admin:    proposers[0],
 			newCtx:   ctx.WithBlockTime(now.Add(votingPeriod).Add(time.Hour)),

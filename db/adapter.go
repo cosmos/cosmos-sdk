@@ -18,6 +18,5 @@ func (readerRWAdapter) Delete([]byte) error {
 }
 
 func (rw readerRWAdapter) Commit() error {
-	rw.Discard()
-	return nil
+	return rw.Discard()
 }

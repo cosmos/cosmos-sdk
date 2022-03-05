@@ -154,9 +154,6 @@ replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 
-// TODO Remove once proper fix is merged: https://github.com/Zondax/hid/pull/5
-github.com/zondax/hid => github.com/itsdevbear/hid v0.9.1-0.20220302052558-a59c1e68c29a
-
 replace github.com/cosmos/cosmos-sdk/db => ./db
 
 retract v0.43.0

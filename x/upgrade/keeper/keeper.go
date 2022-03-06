@@ -167,12 +167,17 @@ func (k Keeper) getModuleVersion(ctx sdk.Context, name string) (uint64, bool) {
 // ScheduleUpgrade will also write the upgraded client to the upgraded client path
 // if an upgraded client is specified in the plan
 func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
-	if err := plan.ValidateBasic(); err != nil {
-		return err
-	}
-
 	if plan.Height <= ctx.BlockHeight() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "upgrade cannot be scheduled in the past")
+	}
+
+	return k.ScheduleUpgradeNoHeightCheck(ctx, plan)
+}
+
+// ScheduleUpgradeNoHeightCheck schedules the upgrade without a height check
+func (k Keeper) ScheduleUpgradeNoHeightCheck(ctx sdk.Context, plan types.Plan) error {
+	if err := plan.ValidateBasic(); err != nil {
+		return err
 	}
 
 	if k.GetDoneHeight(ctx, plan.Name) != 0 {

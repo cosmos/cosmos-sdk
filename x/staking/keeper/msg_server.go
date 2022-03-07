@@ -218,6 +218,12 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 		)
 	}
 
+	if msg.Amount.Amount.GTE(validator.MinSelfDelegation) {
+		return nil, sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "minimum delegation threshold not met: got %s, expected %s", msg.Amount.Amount, validator.MinSelfDelegation,
+		)
+	}
+
 	// NOTE: source funds are always unbonded
 	newShares, err := k.Keeper.Delegate(ctx, delegatorAddress, msg.Amount.Amount, types.Unbonded, validator, true)
 	if err != nil {

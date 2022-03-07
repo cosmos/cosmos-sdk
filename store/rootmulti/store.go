@@ -1049,73 +1049,27 @@ func (rs *Store) buildCommitInfo(version int64) *types.CommitInfo {
 }
 
 // RollbackToVersion delete the versions after `target` and update the latest version.
-func (rs *Store) RollbackToVersion(target int64) error {
-	if target <= 0 {
-		return fmt.Errorf("invalid rollback height target: %d", target)
+func (rs *Store) RollbackToVersion(target int64) int64 {
+	if target < 0 {
+		panic("Negative rollback target")
 	}
-
-	for key, store := range rs.stores {
-		if store.GetStoreType() == types.StoreTypeIAVL {
-			// If the store is wrapped with an inter-block cache, we must first unwrap
-			// it to get the underlying IAVL store.
-			store = rs.GetCommitKVStore(key)
-			err := store.(*iavl.Store).LoadVersionForOverwriting(target)
-			if err != nil {
-				return err
-			}
-		}
+	current := getLatestVersion(rs.db)
+	if target >= current {
+		return current
 	}
+	for ; current > target; current-- {
+		rs.pruneHeights = append(rs.pruneHeights, current)
+	}
+	rs.pruneStores()
 
-	rs.flushMetadata(rs.db, target, rs.buildCommitInfo(target))
-
-	return rs.LoadLatestVersion()
-}
-
-// SetCommitHeader sets the commit block header of the store.
-func (rs *Store) SetCommitHeader(h cmtproto.Header) {
-	rs.commitHeader = h
-}
-
-// GetCommitInfo attempts to retrieve CommitInfo for a given version/height. It
-// will return an error if no CommitInfo exists, we fail to unmarshal the record
-// or if we cannot retrieve the object from the DB.
-func (rs *Store) GetCommitInfo(ver int64) (*types.CommitInfo, error) {
-	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, ver)
-
-	bz, err := rs.db.Get([]byte(cInfoKey))
+	// update latest height
+	bz, err := gogotypes.StdInt64Marshal(current)
 	if err != nil {
-		return nil, errorsmod.Wrap(err, "failed to get commit info")
-	} else if bz == nil {
-		return nil, errors.New("no commit info found")
+		panic(err)
 	}
 
-	cInfo := &types.CommitInfo{}
-	if err = cInfo.Unmarshal(bz); err != nil {
-		return nil, errorsmod.Wrap(err, "failed unmarshal commit info")
-	}
-
-	return cInfo, nil
-}
-
-func (rs *Store) flushMetadata(db corestore.KVStoreWithBatch, version int64, cInfo *types.CommitInfo) {
-	rs.logger.Debug("flushing metadata", "height", version)
-	batch := db.NewBatch()
-	defer func() {
-		_ = batch.Close()
-	}()
-
-	if cInfo != nil {
-		flushCommitInfo(batch, version, cInfo)
-	} else {
-		rs.logger.Debug("commitInfo is nil, not flushed", "height", version)
-	}
-
-	flushLatestVersion(batch, version)
-
-	if err := batch.WriteSync(); err != nil {
-		panic(fmt.Errorf("error on batch write %w", err))
-	}
-	rs.logger.Debug("flushing metadata finished", "height", version)
+	rs.db.Set([]byte(latestVersionKey), bz)
+	return current
 }
 
 type storeParams struct {

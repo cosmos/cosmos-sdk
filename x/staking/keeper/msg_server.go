@@ -56,6 +56,11 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 		)
 	}
 
+	//Uses GT instead of GTE for consistency with other MinSelfDelegation checks
+	if msg.Value.Amount.GT(msg.MinSelfDelegation) {
+		return nil, types.ErrSelfDelegationBelowMinimum
+	}
+
 	if _, err := msg.Description.EnsureLength(); err != nil {
 		return nil, err
 	}
@@ -215,12 +220,6 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 	if msg.Amount.Denom != bondDenom {
 		return nil, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", msg.Amount.Denom, bondDenom,
-		)
-	}
-
-	if msg.Amount.Amount.GTE(validator.MinSelfDelegation) {
-		return nil, sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest, "minimum delegation threshold not met: got %s, expected %s", msg.Amount.Amount, validator.MinSelfDelegation,
 		)
 	}
 

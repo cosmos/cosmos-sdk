@@ -37,7 +37,7 @@ func SnapshotCmd(ac svrtypes.AppCreator) *cobra.Command {
 				return nil
 			}
 
-			// sm.Create(height uint64)
+			sm.Create(uint64(debugApp.GetBaseApp().LastBlockHeight()))
 
 			return nil
 		},
@@ -108,7 +108,7 @@ func ListSnapshotCmd(ac svrtypes.AppCreator) *cobra.Command {
 
 			sm, err := debugApp.GetBaseApp().SnapshotManager()
 			if err != nil {
-				return nil
+				return err
 			}
 
 			sh := []uint64{}

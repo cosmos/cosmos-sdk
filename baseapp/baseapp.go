@@ -244,6 +244,10 @@ func (app *BaseApp) MountStore(key storetypes.StoreKey, typ storetypes.StoreType
 	app.cms.MountStoreWithDB(key, typ, nil)
 }
 
+func (app *BaseApp) UnsafeGetCommitMultiStore() sdk.CommitMultiStore {
+	return app.cms
+}
+
 func (app *BaseApp) SnapshotManager() (*snapshots.Manager, error) {
 	// make sure the snapshot interval is a multiple of the pruning KeepEvery interval
 	if app.snapshotManager != nil {

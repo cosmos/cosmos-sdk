@@ -4,6 +4,7 @@ package server
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"runtime/pprof"
@@ -18,6 +19,7 @@ import (
 	"github.com/tendermint/tendermint/rpc/client/local"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -297,13 +299,22 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			WithChainID(genDoc.ChainID)
 
 		if config.GRPC.Enable {
+			_, port, err := net.SplitHostPort(config.GRPC.Address)
+			if err != nil {
+				return err
+			}
+			grpcAddress := fmt.Sprintf("127.0.0.1:%s", port)
 			// If grpc is enabled, configure grpc client for grpc gateway.
-			grpcClient, err := grpc.Dial(config.GRPC.Address, grpc.WithInsecure())
+			grpcClient, err := grpc.Dial(
+				grpcAddress,
+				grpc.WithTransportCredentials(insecure.NewCredentials()),
+				grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec())),
+			)
 			if err != nil {
 				return err
 			}
 			clientCtx = clientCtx.WithGRPCClient(grpcClient)
-			ctx.Logger.Debug("grpc client assigned to client context", "target", config.GRPC.Address)
+			ctx.Logger.Debug("grpc client assigned to client context", "target", grpcAddress)
 		}
 
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))

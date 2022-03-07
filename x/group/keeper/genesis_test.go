@@ -73,7 +73,9 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 	}
 	err := groupPolicy.SetDecisionPolicy(&group.ThresholdDecisionPolicy{
 		Threshold: "1",
-		Timeout:   time.Second,
+		Windows: &group.DecisionPolicyWindows{
+			VotingPeriod: time.Second,
+		},
 	})
 	s.Require().NoError(err)
 
@@ -95,8 +97,8 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 			AbstainCount:    "0",
 			NoWithVetoCount: "0",
 		},
-		Timeout:        timeout,
-		ExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+		VotingPeriodEnd: timeout,
+		ExecutorResult:  group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 	}
 	err = proposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
 		FromAddress: accAddr.String(),
@@ -216,7 +218,7 @@ func (s *GenesisTestSuite) assertProposalsEqual(g *group.Proposal, other *group.
 	require.Equal(g.Status, other.Status)
 	require.Equal(g.Result, other.Result)
 	require.Equal(g.FinalTallyResult, other.FinalTallyResult)
-	require.Equal(g.Timeout, other.Timeout)
+	require.Equal(g.VotingPeriodEnd, other.VotingPeriodEnd)
 	require.Equal(g.ExecutorResult, other.ExecutorResult)
 	require.Equal(g.GetMsgs(), other.GetMsgs())
 }

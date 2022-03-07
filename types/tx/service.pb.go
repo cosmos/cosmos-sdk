@@ -553,6 +553,8 @@ func (m *GetTxResponse) GetTxResponse() *types.TxResponse {
 
 // GetBlockWithTxsRequest is the request type for the Service.GetBlockWithTxs
 // RPC method.
+//
+// Since: cosmos-sdk 0.45.2
 type GetBlockWithTxsRequest struct {
 	// height is the height of the block to query.
 	Height int64 `protobuf:"varint,1,opt,name=height,proto3" json:"height,omitempty"`
@@ -608,6 +610,8 @@ func (m *GetBlockWithTxsRequest) GetPagination() *query.PageRequest {
 }
 
 // GetBlockWithTxsResponse is the response type for the Service.GetBlockWithTxs method.
+//
+// Since: cosmos-sdk 0.45.2
 type GetBlockWithTxsResponse struct {
 	// txs are the transactions in the block.
 	Txs     []*Tx           `protobuf:"bytes,1,rep,name=txs,proto3" json:"txs,omitempty"`

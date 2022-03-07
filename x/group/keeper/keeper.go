@@ -241,7 +241,7 @@ func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
 	return k.groupTable.Sequence().CurVal(ctx.KVStore(k.key))
 }
 
-func (k Keeper) IterateVPEndProposals(ctx sdk.Context, cb func(proposal group.Proposal) (stop bool)) error {
+func (k Keeper) iterateProposalsByVPEnd(ctx sdk.Context, cb func(proposal group.Proposal) (stop bool)) error {
 	timeBytes := sdk.FormatTimeBytes(ctx.BlockTime())
 	it, err := k.ProposalsByVotingPeriodEnd.PrefixScan(ctx.KVStore(k.key), nil, timeBytes)
 
@@ -269,14 +269,19 @@ func (k Keeper) IterateVPEndProposals(ctx sdk.Context, cb func(proposal group.Pr
 }
 
 func (k Keeper) UpdateTallyOfVPEndProposals(ctx sdk.Context) error {
-	k.IterateVPEndProposals(ctx, func(proposal group.Proposal) (stop bool) {
+	k.iterateProposalsByVPEnd(ctx, func(proposal group.Proposal) (stop bool) {
 
 		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.Address)
 		if err != nil {
 			return true
 		}
 
-		tallyRes, err := k.Tally(ctx, proposal, policyInfo.GroupId)
+		electorate, err := k.getGroupInfo(ctx, policyInfo.GroupId)
+		if err != nil {
+			return true
+		}
+
+		err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo)
 		if err != nil {
 			return true
 		}
@@ -287,10 +292,7 @@ func (k Keeper) UpdateTallyOfVPEndProposals(ctx sdk.Context) error {
 			}
 			return nil
 		}
-
-		proposal.FinalTallyResult = tallyRes
 		err = storeUpdates()
-
 		return err != nil
 	})
 

@@ -2454,36 +2454,44 @@ func (s *TestSuite) TestVPEndProposals() {
 	proposers := []string{addr2.String()}
 
 	specs := map[string]struct {
-		preRun     func(sdkCtx sdk.Context) uint64
-		proposalId uint64
-		admin      string
-		expErrMsg  string
-		newCtx     sdk.Context
-		tallyRes   group.TallyResult
+		preRun            func(sdkCtx sdk.Context) uint64
+		proposalId        uint64
+		admin             string
+		expErrMsg         string
+		newCtx            sdk.Context
+		tallyRes          group.TallyResult
+		expStatus         group.ProposalStatus
+		expExecutorResult group.ProposalResult
 	}{
 		"tally updated after voting power end": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				return submitProposal(sdkCtx, s, []sdk.Msg{msgSend}, proposers)
 			},
-			admin:    proposers[0],
-			newCtx:   ctx.WithBlockTime(now.Add(votingPeriod).Add(time.Hour)),
-			tallyRes: group.DefaultTallyResult(),
+			admin:             proposers[0],
+			newCtx:            ctx.WithBlockTime(now.Add(votingPeriod).Add(time.Hour)),
+			tallyRes:          group.DefaultTallyResult(),
+			expStatus:         group.PROPOSAL_STATUS_SUBMITTED,
+			expExecutorResult: group.PROPOSAL_RESULT_UNFINALIZED,
 		},
 		"tally within voting period": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				return submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 			},
-			admin:    proposers[0],
-			newCtx:   ctx,
-			tallyRes: group.DefaultTallyResult(),
+			admin:             proposers[0],
+			newCtx:            ctx,
+			tallyRes:          group.DefaultTallyResult(),
+			expStatus:         group.PROPOSAL_STATUS_SUBMITTED,
+			expExecutorResult: group.PROPOSAL_RESULT_UNFINALIZED,
 		},
 		"tally within voting period(with votes)": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				return submitProposalAndVote(s.ctx, s, []sdk.Msg{msgSend}, proposers, group.VOTE_OPTION_YES)
 			},
-			admin:    proposers[0],
-			newCtx:   ctx,
-			tallyRes: group.DefaultTallyResult(),
+			admin:             proposers[0],
+			newCtx:            ctx,
+			tallyRes:          group.DefaultTallyResult(),
+			expStatus:         group.PROPOSAL_STATUS_SUBMITTED,
+			expExecutorResult: group.PROPOSAL_RESULT_UNFINALIZED,
 		},
 		"tally after voting period(with votes)": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -2497,6 +2505,8 @@ func (s *TestSuite) TestVPEndProposals() {
 				NoWithVetoCount: "0",
 				AbstainCount:    "0",
 			},
+			expStatus:         group.PROPOSAL_STATUS_CLOSED,
+			expExecutorResult: group.PROPOSAL_RESULT_ACCEPTED,
 		},
 		"tally of closed proposal": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -2509,9 +2519,11 @@ func (s *TestSuite) TestVPEndProposals() {
 				s.Require().NoError(err)
 				return pId
 			},
-			admin:    proposers[0],
-			newCtx:   ctx,
-			tallyRes: group.DefaultTallyResult(),
+			admin:             proposers[0],
+			newCtx:            ctx,
+			tallyRes:          group.DefaultTallyResult(),
+			expStatus:         group.PROPOSAL_STATUS_WITHDRAWN,
+			expExecutorResult: group.PROPOSAL_RESULT_UNFINALIZED,
 		},
 		"tally of closed proposal (with votes)": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -2524,9 +2536,11 @@ func (s *TestSuite) TestVPEndProposals() {
 				s.Require().NoError(err)
 				return pId
 			},
-			admin:    proposers[0],
-			newCtx:   ctx,
-			tallyRes: group.DefaultTallyResult(),
+			admin:             proposers[0],
+			newCtx:            ctx,
+			tallyRes:          group.DefaultTallyResult(),
+			expStatus:         group.PROPOSAL_STATUS_WITHDRAWN,
+			expExecutorResult: group.PROPOSAL_RESULT_UNFINALIZED,
 		},
 	}
 
@@ -2548,6 +2562,8 @@ func (s *TestSuite) TestVPEndProposals() {
 
 			s.Require().NoError(err)
 			s.Require().Equal(resp.GetProposal().FinalTallyResult, spec.tallyRes)
+			s.Require().Equal(resp.GetProposal().Status, spec.expStatus)
+			s.Require().Equal(resp.GetProposal().Result, spec.expExecutorResult)
 		})
 	}
 }

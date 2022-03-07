@@ -6,5 +6,7 @@ import (
 )
 
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
-	k.UpdateTallyOfVPEndProposals(ctx)
+	if err := k.UpdateTallyOfVPEndProposals(ctx); err != nil {
+		panic(err)
+	}
 }

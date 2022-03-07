@@ -893,6 +893,30 @@ func (rs *Store) buildCommitInfo(version int64) *types.CommitInfo {
 	}
 }
 
+// RollbackToVersion delete the versions after `target` and update the latest version.
+func (rs *Store) RollbackToVersion(target int64) int64 {
+	if target < 0 {
+		panic("Negative rollback target")
+	}
+	current := getLatestVersion(rs.db)
+	if target >= current {
+		return current
+	}
+	for ; current > target; current-- {
+		rs.pruneHeights = append(rs.pruneHeights, current)
+	}
+	rs.pruneStores()
+
+	// update latest height
+	bz, err := gogotypes.StdInt64Marshal(current)
+	if err != nil {
+		panic(err)
+	}
+
+	rs.db.Set([]byte(latestVersionKey), bz)
+	return current
+}
+
 type storeParams struct {
 	key            types.StoreKey
 	db             dbm.DB

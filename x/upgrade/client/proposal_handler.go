@@ -5,5 +5,5 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
 )
 
-var ProposalHandler = govclient.NewProposalHandler(cli.NewCmdSubmitUpgradeProposal)
-var CancelProposalHandler = govclient.NewProposalHandler(cli.NewCmdSubmitCancelUpgradeProposal)
+var LegacyProposalHandler = govclient.NewProposalHandler(cli.NewCmdSubmitLegacyUpgradeProposal)
+var LegacyCancelProposalHandler = govclient.NewProposalHandler(cli.NewCmdSubmitLegacyCancelUpgradeProposal)

@@ -104,7 +104,7 @@ func TestMigrateJSON(t *testing.T) {
 					}
 				}
 			],
-			"metadata": null,
+			"metadata": "",
 			"status": "PROPOSAL_STATUS_DEPOSIT_PERIOD",
 			"submit_time": "2001-09-09T01:46:40Z",
 			"total_deposit": [
@@ -125,6 +125,7 @@ func TestMigrateJSON(t *testing.T) {
 	},
 	"votes": [
 		{
+			"metadata": "",
 			"options": [
 				{
 					"option": "VOTE_OPTION_ABSTAIN",
@@ -135,6 +136,7 @@ func TestMigrateJSON(t *testing.T) {
 			"voter": "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
 		},
 		{
+			"metadata": "",
 			"options": [
 				{
 					"option": "VOTE_OPTION_NO",

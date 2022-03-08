@@ -1,15 +1,15 @@
 // Since: cosmos-sdk 0.46
 syntax = "proto3";
-package cosmos.gov.v1beta2;
+package cosmos.gov.v1;
 
 import "cosmos/base/v1beta1/coin.proto";
-import "cosmos/gov/v1beta2/gov.proto";
+import "cosmos/gov/v1/gov.proto";
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/any.proto";
 import "cosmos/msg/v1/msg.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2";
+option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1";
 
 // Msg defines the gov Msg service.
 service Msg {

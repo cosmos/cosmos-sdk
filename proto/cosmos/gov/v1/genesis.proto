@@ -1,11 +1,11 @@
 // Since: cosmos-sdk 0.46
 syntax = "proto3";
 
-package cosmos.gov.v1beta2;
+package cosmos.gov.v1;
 
-import "cosmos/gov/v1beta2/gov.proto";
+import "cosmos/gov/v1/gov.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2";
+option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1";
 
 // GenesisState defines the gov module's genesis state.
 message GenesisState {

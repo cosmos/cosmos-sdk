@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             (unknown)
-// source: cosmos/group/v1beta1/tx.proto
+// source: cosmos/group/v1/tx.proto
 
-package groupv1beta1
+package groupv1
 
 import (
 	context "context"
@@ -62,7 +62,7 @@ func NewMsgClient(cc grpc.ClientConnInterface) MsgClient {
 
 func (c *msgClient) CreateGroup(ctx context.Context, in *MsgCreateGroup, opts ...grpc.CallOption) (*MsgCreateGroupResponse, error) {
 	out := new(MsgCreateGroupResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/CreateGroup", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Msg/CreateGroup", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (c *msgClient) CreateGroup(ctx context.Context, in *MsgCreateGroup, opts ..
 
 func (c *msgClient) UpdateGroupMembers(ctx context.Context, in *MsgUpdateGroupMembers, opts ...grpc.CallOption) (*MsgUpdateGroupMembersResponse, error) {
 	out := new(MsgUpdateGroupMembersResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/UpdateGroupMembers", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Msg/UpdateGroupMembers", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (c *msgClient) UpdateGroupMembers(ctx context.Context, in *MsgUpdateGroupMe
 
 func (c *msgClient) UpdateGroupAdmin(ctx context.Context, in *MsgUpdateGroupAdmin, opts ...grpc.CallOption) (*MsgUpdateGroupAdminResponse, error) {
 	out := new(MsgUpdateGroupAdminResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/UpdateGroupAdmin", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Msg/UpdateGroupAdmin", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (c *msgClient) UpdateGroupAdmin(ctx context.Context, in *MsgUpdateGroupAdmi
 
 func (c *msgClient) UpdateGroupMetadata(ctx context.Context, in *MsgUpdateGroupMetadata, opts ...grpc.CallOption) (*MsgUpdateGroupMetadataResponse, error) {
 	out := new(MsgUpdateGroupMetadataResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/UpdateGroupMetadata", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Msg/UpdateGroupMetadata", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +98,7 @@ func (c *msgClient) UpdateGroupMetadata(ctx context.Context, in *MsgUpdateGroupM
 
 func (c *msgClient) CreateGroupPolicy(ctx context.Context, in *MsgCreateGroupPolicy, opts ...grpc.CallOption) (*MsgCreateGroupPolicyResponse, error) {
 	out := new(MsgCreateGroupPolicyResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/CreateGroupPolicy", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Msg/CreateGroupPolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func (c *msgClient) CreateGroupPolicy(ctx context.Context, in *MsgCreateGroupPol
 
 func (c *msgClient) CreateGroupWithPolicy(ctx context.Context, in *MsgCreateGroupWithPolicy, opts ...grpc.CallOption) (*MsgCreateGroupWithPolicyResponse, error) {
 	out := new(MsgCreateGroupWithPolicyResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/CreateGroupWithPolicy", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Msg/CreateGroupWithPolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func (c *msgClient) CreateGroupWithPolicy(ctx context.Context, in *MsgCreateGrou
 
 func (c *msgClient) UpdateGroupPolicyAdmin(ctx context.Context, in *MsgUpdateGroupPolicyAdmin, opts ...grpc.CallOption) (*MsgUpdateGroupPolicyAdminResponse, error) {
 	out := new(MsgUpdateGroupPolicyAdminResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/UpdateGroupPolicyAdmin", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Msg/UpdateGroupPolicyAdmin", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func (c *msgClient) UpdateGroupPolicyAdmin(ctx context.Context, in *MsgUpdateGro
 
 func (c *msgClient) UpdateGroupPolicyDecisionPolicy(ctx context.Context, in *MsgUpdateGroupPolicyDecisionPolicy, opts ...grpc.CallOption) (*MsgUpdateGroupPolicyDecisionPolicyResponse, error) {
 	out := new(MsgUpdateGroupPolicyDecisionPolicyResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/UpdateGroupPolicyDecisionPolicy", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Msg/UpdateGroupPolicyDecisionPolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +134,7 @@ func (c *msgClient) UpdateGroupPolicyDecisionPolicy(ctx context.Context, in *Msg
 
 func (c *msgClient) UpdateGroupPolicyMetadata(ctx context.Context, in *MsgUpdateGroupPolicyMetadata, opts ...grpc.CallOption) (*MsgUpdateGroupPolicyMetadataResponse, error) {
 	out := new(MsgUpdateGroupPolicyMetadataResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/UpdateGroupPolicyMetadata", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Msg/UpdateGroupPolicyMetadata", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +143,7 @@ func (c *msgClient) UpdateGroupPolicyMetadata(ctx context.Context, in *MsgUpdate
 
 func (c *msgClient) SubmitProposal(ctx context.Context, in *MsgSubmitProposal, opts ...grpc.CallOption) (*MsgSubmitProposalResponse, error) {
 	out := new(MsgSubmitProposalResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/SubmitProposal", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Msg/SubmitProposal", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +152,7 @@ func (c *msgClient) SubmitProposal(ctx context.Context, in *MsgSubmitProposal, o
 
 func (c *msgClient) WithdrawProposal(ctx context.Context, in *MsgWithdrawProposal, opts ...grpc.CallOption) (*MsgWithdrawProposalResponse, error) {
 	out := new(MsgWithdrawProposalResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/WithdrawProposal", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Msg/WithdrawProposal", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func (c *msgClient) WithdrawProposal(ctx context.Context, in *MsgWithdrawProposa
 
 func (c *msgClient) Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOption) (*MsgVoteResponse, error) {
 	out := new(MsgVoteResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/Vote", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Msg/Vote", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +170,7 @@ func (c *msgClient) Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOpti
 
 func (c *msgClient) Exec(ctx context.Context, in *MsgExec, opts ...grpc.CallOption) (*MsgExecResponse, error) {
 	out := new(MsgExecResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/Exec", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Msg/Exec", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +179,7 @@ func (c *msgClient) Exec(ctx context.Context, in *MsgExec, opts ...grpc.CallOpti
 
 func (c *msgClient) LeaveGroup(ctx context.Context, in *MsgLeaveGroup, opts ...grpc.CallOption) (*MsgLeaveGroupResponse, error) {
 	out := new(MsgLeaveGroupResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/LeaveGroup", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Msg/LeaveGroup", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -290,7 +290,7 @@ func _Msg_CreateGroup_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Msg/CreateGroup",
+		FullMethod: "/cosmos.group.v1.Msg/CreateGroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).CreateGroup(ctx, req.(*MsgCreateGroup))
@@ -308,7 +308,7 @@ func _Msg_UpdateGroupMembers_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Msg/UpdateGroupMembers",
+		FullMethod: "/cosmos.group.v1.Msg/UpdateGroupMembers",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).UpdateGroupMembers(ctx, req.(*MsgUpdateGroupMembers))
@@ -326,7 +326,7 @@ func _Msg_UpdateGroupAdmin_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Msg/UpdateGroupAdmin",
+		FullMethod: "/cosmos.group.v1.Msg/UpdateGroupAdmin",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).UpdateGroupAdmin(ctx, req.(*MsgUpdateGroupAdmin))
@@ -344,7 +344,7 @@ func _Msg_UpdateGroupMetadata_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Msg/UpdateGroupMetadata",
+		FullMethod: "/cosmos.group.v1.Msg/UpdateGroupMetadata",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).UpdateGroupMetadata(ctx, req.(*MsgUpdateGroupMetadata))
@@ -362,7 +362,7 @@ func _Msg_CreateGroupPolicy_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Msg/CreateGroupPolicy",
+		FullMethod: "/cosmos.group.v1.Msg/CreateGroupPolicy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).CreateGroupPolicy(ctx, req.(*MsgCreateGroupPolicy))
@@ -380,7 +380,7 @@ func _Msg_CreateGroupWithPolicy_Handler(srv interface{}, ctx context.Context, de
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Msg/CreateGroupWithPolicy",
+		FullMethod: "/cosmos.group.v1.Msg/CreateGroupWithPolicy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).CreateGroupWithPolicy(ctx, req.(*MsgCreateGroupWithPolicy))
@@ -398,7 +398,7 @@ func _Msg_UpdateGroupPolicyAdmin_Handler(srv interface{}, ctx context.Context, d
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Msg/UpdateGroupPolicyAdmin",
+		FullMethod: "/cosmos.group.v1.Msg/UpdateGroupPolicyAdmin",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).UpdateGroupPolicyAdmin(ctx, req.(*MsgUpdateGroupPolicyAdmin))
@@ -416,7 +416,7 @@ func _Msg_UpdateGroupPolicyDecisionPolicy_Handler(srv interface{}, ctx context.C
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Msg/UpdateGroupPolicyDecisionPolicy",
+		FullMethod: "/cosmos.group.v1.Msg/UpdateGroupPolicyDecisionPolicy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).UpdateGroupPolicyDecisionPolicy(ctx, req.(*MsgUpdateGroupPolicyDecisionPolicy))
@@ -434,7 +434,7 @@ func _Msg_UpdateGroupPolicyMetadata_Handler(srv interface{}, ctx context.Context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Msg/UpdateGroupPolicyMetadata",
+		FullMethod: "/cosmos.group.v1.Msg/UpdateGroupPolicyMetadata",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).UpdateGroupPolicyMetadata(ctx, req.(*MsgUpdateGroupPolicyMetadata))
@@ -452,7 +452,7 @@ func _Msg_SubmitProposal_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Msg/SubmitProposal",
+		FullMethod: "/cosmos.group.v1.Msg/SubmitProposal",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).SubmitProposal(ctx, req.(*MsgSubmitProposal))
@@ -470,7 +470,7 @@ func _Msg_WithdrawProposal_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Msg/WithdrawProposal",
+		FullMethod: "/cosmos.group.v1.Msg/WithdrawProposal",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).WithdrawProposal(ctx, req.(*MsgWithdrawProposal))
@@ -488,7 +488,7 @@ func _Msg_Vote_Handler(srv interface{}, ctx context.Context, dec func(interface{
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Msg/Vote",
+		FullMethod: "/cosmos.group.v1.Msg/Vote",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).Vote(ctx, req.(*MsgVote))
@@ -506,7 +506,7 @@ func _Msg_Exec_Handler(srv interface{}, ctx context.Context, dec func(interface{
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Msg/Exec",
+		FullMethod: "/cosmos.group.v1.Msg/Exec",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).Exec(ctx, req.(*MsgExec))
@@ -524,7 +524,7 @@ func _Msg_LeaveGroup_Handler(srv interface{}, ctx context.Context, dec func(inte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Msg/LeaveGroup",
+		FullMethod: "/cosmos.group.v1.Msg/LeaveGroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).LeaveGroup(ctx, req.(*MsgLeaveGroup))
@@ -536,7 +536,7 @@ func _Msg_LeaveGroup_Handler(srv interface{}, ctx context.Context, dec func(inte
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Msg_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "cosmos.group.v1beta1.Msg",
+	ServiceName: "cosmos.group.v1.Msg",
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -597,5 +597,5 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "cosmos/group/v1beta1/tx.proto",
+	Metadata: "cosmos/group/v1/tx.proto",
 }

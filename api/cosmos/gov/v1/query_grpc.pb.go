@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             (unknown)
-// source: cosmos/gov/v1beta2/query.proto
+// source: cosmos/gov/v1/query.proto
 
-package govv1beta2
+package govv1
 
 import (
 	context "context"
@@ -50,7 +50,7 @@ func NewQueryClient(cc grpc.ClientConnInterface) QueryClient {
 
 func (c *queryClient) Proposal(ctx context.Context, in *QueryProposalRequest, opts ...grpc.CallOption) (*QueryProposalResponse, error) {
 	out := new(QueryProposalResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta2.Query/Proposal", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1.Query/Proposal", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (c *queryClient) Proposal(ctx context.Context, in *QueryProposalRequest, op
 
 func (c *queryClient) Proposals(ctx context.Context, in *QueryProposalsRequest, opts ...grpc.CallOption) (*QueryProposalsResponse, error) {
 	out := new(QueryProposalsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta2.Query/Proposals", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1.Query/Proposals", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func (c *queryClient) Proposals(ctx context.Context, in *QueryProposalsRequest, 
 
 func (c *queryClient) Vote(ctx context.Context, in *QueryVoteRequest, opts ...grpc.CallOption) (*QueryVoteResponse, error) {
 	out := new(QueryVoteResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta2.Query/Vote", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1.Query/Vote", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (c *queryClient) Vote(ctx context.Context, in *QueryVoteRequest, opts ...gr
 
 func (c *queryClient) Votes(ctx context.Context, in *QueryVotesRequest, opts ...grpc.CallOption) (*QueryVotesResponse, error) {
 	out := new(QueryVotesResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta2.Query/Votes", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1.Query/Votes", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (c *queryClient) Votes(ctx context.Context, in *QueryVotesRequest, opts ...
 
 func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error) {
 	out := new(QueryParamsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta2.Query/Params", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1.Query/Params", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 
 func (c *queryClient) Deposit(ctx context.Context, in *QueryDepositRequest, opts ...grpc.CallOption) (*QueryDepositResponse, error) {
 	out := new(QueryDepositResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta2.Query/Deposit", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1.Query/Deposit", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func (c *queryClient) Deposit(ctx context.Context, in *QueryDepositRequest, opts
 
 func (c *queryClient) Deposits(ctx context.Context, in *QueryDepositsRequest, opts ...grpc.CallOption) (*QueryDepositsResponse, error) {
 	out := new(QueryDepositsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta2.Query/Deposits", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1.Query/Deposits", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (c *queryClient) Deposits(ctx context.Context, in *QueryDepositsRequest, op
 
 func (c *queryClient) TallyResult(ctx context.Context, in *QueryTallyResultRequest, opts ...grpc.CallOption) (*QueryTallyResultResponse, error) {
 	out := new(QueryTallyResultResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta2.Query/TallyResult", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1.Query/TallyResult", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +194,7 @@ func _Query_Proposal_Handler(srv interface{}, ctx context.Context, dec func(inte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.gov.v1beta2.Query/Proposal",
+		FullMethod: "/cosmos.gov.v1.Query/Proposal",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Proposal(ctx, req.(*QueryProposalRequest))
@@ -212,7 +212,7 @@ func _Query_Proposals_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.gov.v1beta2.Query/Proposals",
+		FullMethod: "/cosmos.gov.v1.Query/Proposals",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Proposals(ctx, req.(*QueryProposalsRequest))
@@ -230,7 +230,7 @@ func _Query_Vote_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.gov.v1beta2.Query/Vote",
+		FullMethod: "/cosmos.gov.v1.Query/Vote",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Vote(ctx, req.(*QueryVoteRequest))
@@ -248,7 +248,7 @@ func _Query_Votes_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.gov.v1beta2.Query/Votes",
+		FullMethod: "/cosmos.gov.v1.Query/Votes",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Votes(ctx, req.(*QueryVotesRequest))
@@ -266,7 +266,7 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.gov.v1beta2.Query/Params",
+		FullMethod: "/cosmos.gov.v1.Query/Params",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Params(ctx, req.(*QueryParamsRequest))
@@ -284,7 +284,7 @@ func _Query_Deposit_Handler(srv interface{}, ctx context.Context, dec func(inter
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.gov.v1beta2.Query/Deposit",
+		FullMethod: "/cosmos.gov.v1.Query/Deposit",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Deposit(ctx, req.(*QueryDepositRequest))
@@ -302,7 +302,7 @@ func _Query_Deposits_Handler(srv interface{}, ctx context.Context, dec func(inte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.gov.v1beta2.Query/Deposits",
+		FullMethod: "/cosmos.gov.v1.Query/Deposits",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Deposits(ctx, req.(*QueryDepositsRequest))
@@ -320,7 +320,7 @@ func _Query_TallyResult_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.gov.v1beta2.Query/TallyResult",
+		FullMethod: "/cosmos.gov.v1.Query/TallyResult",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).TallyResult(ctx, req.(*QueryTallyResultRequest))
@@ -332,7 +332,7 @@ func _Query_TallyResult_Handler(srv interface{}, ctx context.Context, dec func(i
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Query_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "cosmos.gov.v1beta2.Query",
+	ServiceName: "cosmos.gov.v1.Query",
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -369,5 +369,5 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "cosmos/gov/v1beta2/query.proto",
+	Metadata: "cosmos/gov/v1/query.proto",
 }

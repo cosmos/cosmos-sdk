@@ -1,17 +1,17 @@
 syntax = "proto3";
 
-package cosmos.group.v1beta1;
+package cosmos.group.v1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/group";
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/any.proto";
-import "cosmos/group/v1beta1/types.proto";
+import "cosmos/group/v1/types.proto";
 
 import "cosmos/msg/v1/msg.proto";
 
-// Msg is the cosmos.group.v1beta1 Msg service.
+// Msg is the cosmos.group.v1 Msg service.
 service Msg {
 
   // CreateGroup creates a new group with an admin account address, a list of members and some optional metadata.

@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             (unknown)
-// source: cosmos/gov/v1beta2/tx.proto
+// source: cosmos/gov/v1/tx.proto
 
-package govv1beta2
+package govv1
 
 import (
 	context "context"
@@ -45,7 +45,7 @@ func NewMsgClient(cc grpc.ClientConnInterface) MsgClient {
 
 func (c *msgClient) SubmitProposal(ctx context.Context, in *MsgSubmitProposal, opts ...grpc.CallOption) (*MsgSubmitProposalResponse, error) {
 	out := new(MsgSubmitProposalResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta2.Msg/SubmitProposal", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1.Msg/SubmitProposal", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func (c *msgClient) SubmitProposal(ctx context.Context, in *MsgSubmitProposal, o
 
 func (c *msgClient) ExecLegacyContent(ctx context.Context, in *MsgExecLegacyContent, opts ...grpc.CallOption) (*MsgExecLegacyContentResponse, error) {
 	out := new(MsgExecLegacyContentResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta2.Msg/ExecLegacyContent", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1.Msg/ExecLegacyContent", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (c *msgClient) ExecLegacyContent(ctx context.Context, in *MsgExecLegacyCont
 
 func (c *msgClient) Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOption) (*MsgVoteResponse, error) {
 	out := new(MsgVoteResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta2.Msg/Vote", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1.Msg/Vote", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (c *msgClient) Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOpti
 
 func (c *msgClient) VoteWeighted(ctx context.Context, in *MsgVoteWeighted, opts ...grpc.CallOption) (*MsgVoteWeightedResponse, error) {
 	out := new(MsgVoteWeightedResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta2.Msg/VoteWeighted", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1.Msg/VoteWeighted", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (c *msgClient) VoteWeighted(ctx context.Context, in *MsgVoteWeighted, opts 
 
 func (c *msgClient) Deposit(ctx context.Context, in *MsgDeposit, opts ...grpc.CallOption) (*MsgDepositResponse, error) {
 	out := new(MsgDepositResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta2.Msg/Deposit", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1.Msg/Deposit", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +148,7 @@ func _Msg_SubmitProposal_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.gov.v1beta2.Msg/SubmitProposal",
+		FullMethod: "/cosmos.gov.v1.Msg/SubmitProposal",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).SubmitProposal(ctx, req.(*MsgSubmitProposal))
@@ -166,7 +166,7 @@ func _Msg_ExecLegacyContent_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.gov.v1beta2.Msg/ExecLegacyContent",
+		FullMethod: "/cosmos.gov.v1.Msg/ExecLegacyContent",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).ExecLegacyContent(ctx, req.(*MsgExecLegacyContent))
@@ -184,7 +184,7 @@ func _Msg_Vote_Handler(srv interface{}, ctx context.Context, dec func(interface{
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.gov.v1beta2.Msg/Vote",
+		FullMethod: "/cosmos.gov.v1.Msg/Vote",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).Vote(ctx, req.(*MsgVote))
@@ -202,7 +202,7 @@ func _Msg_VoteWeighted_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.gov.v1beta2.Msg/VoteWeighted",
+		FullMethod: "/cosmos.gov.v1.Msg/VoteWeighted",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).VoteWeighted(ctx, req.(*MsgVoteWeighted))
@@ -220,7 +220,7 @@ func _Msg_Deposit_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.gov.v1beta2.Msg/Deposit",
+		FullMethod: "/cosmos.gov.v1.Msg/Deposit",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).Deposit(ctx, req.(*MsgDeposit))
@@ -232,7 +232,7 @@ func _Msg_Deposit_Handler(srv interface{}, ctx context.Context, dec func(interfa
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Msg_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "cosmos.gov.v1beta2.Msg",
+	ServiceName: "cosmos.gov.v1.Msg",
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -257,5 +257,5 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "cosmos/gov/v1beta2/tx.proto",
+	Metadata: "cosmos/gov/v1/tx.proto",
 }

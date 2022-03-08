@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             (unknown)
-// source: cosmos/group/v1beta1/query.proto
+// source: cosmos/group/v1/query.proto
 
-package groupv1beta1
+package groupv1
 
 import (
 	context "context"
@@ -60,7 +60,7 @@ func NewQueryClient(cc grpc.ClientConnInterface) QueryClient {
 
 func (c *queryClient) GroupInfo(ctx context.Context, in *QueryGroupInfoRequest, opts ...grpc.CallOption) (*QueryGroupInfoResponse, error) {
 	out := new(QueryGroupInfoResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Query/GroupInfo", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Query/GroupInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (c *queryClient) GroupInfo(ctx context.Context, in *QueryGroupInfoRequest, 
 
 func (c *queryClient) GroupPolicyInfo(ctx context.Context, in *QueryGroupPolicyInfoRequest, opts ...grpc.CallOption) (*QueryGroupPolicyInfoResponse, error) {
 	out := new(QueryGroupPolicyInfoResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Query/GroupPolicyInfo", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Query/GroupPolicyInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func (c *queryClient) GroupPolicyInfo(ctx context.Context, in *QueryGroupPolicyI
 
 func (c *queryClient) GroupMembers(ctx context.Context, in *QueryGroupMembersRequest, opts ...grpc.CallOption) (*QueryGroupMembersResponse, error) {
 	out := new(QueryGroupMembersResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Query/GroupMembers", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Query/GroupMembers", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (c *queryClient) GroupMembers(ctx context.Context, in *QueryGroupMembersReq
 
 func (c *queryClient) GroupsByAdmin(ctx context.Context, in *QueryGroupsByAdminRequest, opts ...grpc.CallOption) (*QueryGroupsByAdminResponse, error) {
 	out := new(QueryGroupsByAdminResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Query/GroupsByAdmin", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Query/GroupsByAdmin", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func (c *queryClient) GroupsByAdmin(ctx context.Context, in *QueryGroupsByAdminR
 
 func (c *queryClient) GroupPoliciesByGroup(ctx context.Context, in *QueryGroupPoliciesByGroupRequest, opts ...grpc.CallOption) (*QueryGroupPoliciesByGroupResponse, error) {
 	out := new(QueryGroupPoliciesByGroupResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Query/GroupPoliciesByGroup", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Query/GroupPoliciesByGroup", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func (c *queryClient) GroupPoliciesByGroup(ctx context.Context, in *QueryGroupPo
 
 func (c *queryClient) GroupPoliciesByAdmin(ctx context.Context, in *QueryGroupPoliciesByAdminRequest, opts ...grpc.CallOption) (*QueryGroupPoliciesByAdminResponse, error) {
 	out := new(QueryGroupPoliciesByAdminResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Query/GroupPoliciesByAdmin", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Query/GroupPoliciesByAdmin", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func (c *queryClient) GroupPoliciesByAdmin(ctx context.Context, in *QueryGroupPo
 
 func (c *queryClient) Proposal(ctx context.Context, in *QueryProposalRequest, opts ...grpc.CallOption) (*QueryProposalResponse, error) {
 	out := new(QueryProposalResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Query/Proposal", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Query/Proposal", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (c *queryClient) Proposal(ctx context.Context, in *QueryProposalRequest, op
 
 func (c *queryClient) ProposalsByGroupPolicy(ctx context.Context, in *QueryProposalsByGroupPolicyRequest, opts ...grpc.CallOption) (*QueryProposalsByGroupPolicyResponse, error) {
 	out := new(QueryProposalsByGroupPolicyResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Query/ProposalsByGroupPolicy", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Query/ProposalsByGroupPolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func (c *queryClient) ProposalsByGroupPolicy(ctx context.Context, in *QueryPropo
 
 func (c *queryClient) VoteByProposalVoter(ctx context.Context, in *QueryVoteByProposalVoterRequest, opts ...grpc.CallOption) (*QueryVoteByProposalVoterResponse, error) {
 	out := new(QueryVoteByProposalVoterResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Query/VoteByProposalVoter", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Query/VoteByProposalVoter", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +141,7 @@ func (c *queryClient) VoteByProposalVoter(ctx context.Context, in *QueryVoteByPr
 
 func (c *queryClient) VotesByProposal(ctx context.Context, in *QueryVotesByProposalRequest, opts ...grpc.CallOption) (*QueryVotesByProposalResponse, error) {
 	out := new(QueryVotesByProposalResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Query/VotesByProposal", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Query/VotesByProposal", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func (c *queryClient) VotesByProposal(ctx context.Context, in *QueryVotesByPropo
 
 func (c *queryClient) VotesByVoter(ctx context.Context, in *QueryVotesByVoterRequest, opts ...grpc.CallOption) (*QueryVotesByVoterResponse, error) {
 	out := new(QueryVotesByVoterResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Query/VotesByVoter", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Query/VotesByVoter", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +159,7 @@ func (c *queryClient) VotesByVoter(ctx context.Context, in *QueryVotesByVoterReq
 
 func (c *queryClient) GroupsByMember(ctx context.Context, in *QueryGroupsByMemberRequest, opts ...grpc.CallOption) (*QueryGroupsByMemberResponse, error) {
 	out := new(QueryGroupsByMemberResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Query/GroupsByMember", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Query/GroupsByMember", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +168,7 @@ func (c *queryClient) GroupsByMember(ctx context.Context, in *QueryGroupsByMembe
 
 func (c *queryClient) TallyResult(ctx context.Context, in *QueryTallyResultRequest, opts ...grpc.CallOption) (*QueryTallyResultResponse, error) {
 	out := new(QueryTallyResultResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Query/TallyResult", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Query/TallyResult", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -274,7 +274,7 @@ func _Query_GroupInfo_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Query/GroupInfo",
+		FullMethod: "/cosmos.group.v1.Query/GroupInfo",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).GroupInfo(ctx, req.(*QueryGroupInfoRequest))
@@ -292,7 +292,7 @@ func _Query_GroupPolicyInfo_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Query/GroupPolicyInfo",
+		FullMethod: "/cosmos.group.v1.Query/GroupPolicyInfo",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).GroupPolicyInfo(ctx, req.(*QueryGroupPolicyInfoRequest))
@@ -310,7 +310,7 @@ func _Query_GroupMembers_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Query/GroupMembers",
+		FullMethod: "/cosmos.group.v1.Query/GroupMembers",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).GroupMembers(ctx, req.(*QueryGroupMembersRequest))
@@ -328,7 +328,7 @@ func _Query_GroupsByAdmin_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Query/GroupsByAdmin",
+		FullMethod: "/cosmos.group.v1.Query/GroupsByAdmin",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).GroupsByAdmin(ctx, req.(*QueryGroupsByAdminRequest))
@@ -346,7 +346,7 @@ func _Query_GroupPoliciesByGroup_Handler(srv interface{}, ctx context.Context, d
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Query/GroupPoliciesByGroup",
+		FullMethod: "/cosmos.group.v1.Query/GroupPoliciesByGroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).GroupPoliciesByGroup(ctx, req.(*QueryGroupPoliciesByGroupRequest))
@@ -364,7 +364,7 @@ func _Query_GroupPoliciesByAdmin_Handler(srv interface{}, ctx context.Context, d
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Query/GroupPoliciesByAdmin",
+		FullMethod: "/cosmos.group.v1.Query/GroupPoliciesByAdmin",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).GroupPoliciesByAdmin(ctx, req.(*QueryGroupPoliciesByAdminRequest))
@@ -382,7 +382,7 @@ func _Query_Proposal_Handler(srv interface{}, ctx context.Context, dec func(inte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Query/Proposal",
+		FullMethod: "/cosmos.group.v1.Query/Proposal",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Proposal(ctx, req.(*QueryProposalRequest))
@@ -400,7 +400,7 @@ func _Query_ProposalsByGroupPolicy_Handler(srv interface{}, ctx context.Context,
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Query/ProposalsByGroupPolicy",
+		FullMethod: "/cosmos.group.v1.Query/ProposalsByGroupPolicy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).ProposalsByGroupPolicy(ctx, req.(*QueryProposalsByGroupPolicyRequest))
@@ -418,7 +418,7 @@ func _Query_VoteByProposalVoter_Handler(srv interface{}, ctx context.Context, de
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Query/VoteByProposalVoter",
+		FullMethod: "/cosmos.group.v1.Query/VoteByProposalVoter",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).VoteByProposalVoter(ctx, req.(*QueryVoteByProposalVoterRequest))
@@ -436,7 +436,7 @@ func _Query_VotesByProposal_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Query/VotesByProposal",
+		FullMethod: "/cosmos.group.v1.Query/VotesByProposal",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).VotesByProposal(ctx, req.(*QueryVotesByProposalRequest))
@@ -454,7 +454,7 @@ func _Query_VotesByVoter_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Query/VotesByVoter",
+		FullMethod: "/cosmos.group.v1.Query/VotesByVoter",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).VotesByVoter(ctx, req.(*QueryVotesByVoterRequest))
@@ -472,7 +472,7 @@ func _Query_GroupsByMember_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Query/GroupsByMember",
+		FullMethod: "/cosmos.group.v1.Query/GroupsByMember",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).GroupsByMember(ctx, req.(*QueryGroupsByMemberRequest))
@@ -490,7 +490,7 @@ func _Query_TallyResult_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.group.v1beta1.Query/TallyResult",
+		FullMethod: "/cosmos.group.v1.Query/TallyResult",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).TallyResult(ctx, req.(*QueryTallyResultRequest))
@@ -502,7 +502,7 @@ func _Query_TallyResult_Handler(srv interface{}, ctx context.Context, dec func(i
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Query_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "cosmos.group.v1beta1.Query",
+	ServiceName: "cosmos.group.v1.Query",
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -559,5 +559,5 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "cosmos/group/v1beta1/query.proto",
+	Metadata: "cosmos/group/v1/query.proto",
 }

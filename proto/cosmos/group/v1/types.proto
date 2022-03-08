@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package cosmos.group.v1beta1;
+package cosmos.group.v1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/group";
 

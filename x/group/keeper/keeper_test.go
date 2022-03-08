@@ -1422,8 +1422,9 @@ func (s *TestSuite) TestSubmitProposal() {
 	bigThresholdAddr := bigThresholdRes.Address
 
 	defaultProposal := group.Proposal{
-		Status: group.PROPOSAL_STATUS_SUBMITTED,
-		Result: group.PROPOSAL_RESULT_UNFINALIZED,
+		Address: accountAddr.String(),
+		Status:  group.PROPOSAL_STATUS_SUBMITTED,
+		Result:  group.PROPOSAL_RESULT_UNFINALIZED,
 		FinalTallyResult: group.TallyResult{
 			YesCount:        "0",
 			NoCount:         "0",
@@ -1484,12 +1485,19 @@ func (s *TestSuite) TestSubmitProposal() {
 			expErr:  true,
 			postRun: func(sdkCtx sdk.Context) {},
 		},
-		"impossible case: decision policy threshold > total group weight": {
+		"decision policy threshold > total group weight": {
 			req: &group.MsgSubmitProposal{
 				Address:   bigThresholdAddr,
 				Proposers: []string{addr2.String()},
 			},
-			expErr:  true,
+			expErr: false,
+			expProposal: group.Proposal{
+				Address:          bigThresholdAddr,
+				Status:           group.PROPOSAL_STATUS_SUBMITTED,
+				Result:           group.PROPOSAL_RESULT_UNFINALIZED,
+				FinalTallyResult: group.DefaultTallyResult(),
+				ExecutorResult:   group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+			},
 			postRun: func(sdkCtx sdk.Context) {},
 		},
 		"only group members can create a proposal": {
@@ -1533,8 +1541,9 @@ func (s *TestSuite) TestSubmitProposal() {
 			},
 			msgs: []sdk.Msg{msgSend},
 			expProposal: group.Proposal{
-				Status: group.PROPOSAL_STATUS_CLOSED,
-				Result: group.PROPOSAL_RESULT_ACCEPTED,
+				Address: accountAddr.String(),
+				Status:  group.PROPOSAL_STATUS_CLOSED,
+				Result:  group.PROPOSAL_RESULT_ACCEPTED,
 				FinalTallyResult: group.TallyResult{
 					YesCount:        "2",
 					NoCount:         "0",
@@ -1558,8 +1567,9 @@ func (s *TestSuite) TestSubmitProposal() {
 			},
 			msgs: []sdk.Msg{msgSend},
 			expProposal: group.Proposal{
-				Status: group.PROPOSAL_STATUS_SUBMITTED,
-				Result: group.PROPOSAL_RESULT_UNFINALIZED,
+				Address: accountAddr.String(),
+				Status:  group.PROPOSAL_STATUS_SUBMITTED,
+				Result:  group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult: group.TallyResult{
 					YesCount:        "0", // Since tally doesn't pass Allow(), we consider the proposal not final
 					NoCount:         "0",
@@ -1590,7 +1600,7 @@ func (s *TestSuite) TestSubmitProposal() {
 			s.Require().NoError(err)
 			proposal := proposalRes.Proposal
 
-			s.Assert().Equal(accountAddr.String(), proposal.Address)
+			s.Assert().Equal(spec.expProposal.Address, proposal.Address)
 			s.Assert().Equal(spec.req.Metadata, proposal.Metadata)
 			s.Assert().Equal(spec.req.Proposers, proposal.Proposers)
 			s.Assert().Equal(s.blockTime, proposal.SubmitTime)

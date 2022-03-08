@@ -34,6 +34,7 @@ type IntegrationTestSuite struct {
 	groupPolicies []*group.GroupPolicyInfo
 	proposal      *group.Proposal
 	vote          *group.Vote
+	voter         *group.Member
 }
 
 const validMetadata = "metadata"
@@ -78,17 +79,18 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
+	memberWeight := "3"
 	// create a group
 	validMembers := fmt.Sprintf(`
 	{
 		"members": [
 			{
 				"address": "%s",
-				"weight": "3",
+				"weight": "%s",
 				"metadata": "%s"
 			}
 		]
-	}`, val.Address.String(), validMetadata)
+	}`, val.Address.String(), memberWeight, validMetadata)
 	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
 	out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateGroupCmd(),
 		append(
@@ -202,6 +204,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	var voteRes group.QueryVoteByProposalVoterResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &voteRes))
 	s.vote = voteRes.Vote
+
+	s.voter = &group.Member{
+		Address:  val.Address.String(),
+		Weight:   memberWeight,
+		Metadata: validMetadata,
+	}
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -1657,7 +1665,9 @@ func (s *IntegrationTestSuite) TestTxVote() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
-	for i := 0; i < 2; i++ {
+	ids := make([]string, 4)
+
+	for i := 0; i < 4; i++ {
 		out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
 			append(
 				[]string{
@@ -1670,6 +1680,11 @@ func (s *IntegrationTestSuite) TestTxVote() {
 			),
 		)
 		s.Require().NoError(err, out.String())
+
+		var txResp sdk.TxResponse
+		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+		s.Require().Equal(uint32(0), txResp.Code, out.String())
+		ids[i] = s.getProposalIdFromTxResponse(txResp)
 	}
 
 	testCases := []struct {
@@ -1684,7 +1699,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 			"correct data",
 			append(
 				[]string{
-					"2",
+					ids[0],
 					val.Address.String(),
 					"VOTE_OPTION_YES",
 					"",
@@ -1700,7 +1715,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 			"with try exec",
 			append(
 				[]string{
-					"7",
+					ids[1],
 					val.Address.String(),
 					"VOTE_OPTION_YES",
 					"",
@@ -1717,7 +1732,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 			"with try exec, not enough yes votes for proposal to pass",
 			append(
 				[]string{
-					"8",
+					ids[2],
 					val.Address.String(),
 					"VOTE_OPTION_NO",
 					"",
@@ -1734,7 +1749,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 			"with amino-json",
 			append(
 				[]string{
-					"5",
+					ids[3],
 					val.Address.String(),
 					"VOTE_OPTION_YES",
 					"",

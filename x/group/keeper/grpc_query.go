@@ -305,54 +305,30 @@ func (q Keeper) getVotesByVoter(ctx sdk.Context, voter sdk.AccAddress, pageReque
 	return q.voteByVoterIndex.GetPaginated(ctx.KVStore(q.key), voter.Bytes(), pageRequest)
 }
 
-// Tally is a function that tallies a proposal by iterating through its votes,
-// and returns the tally result without modifying the proposal or any state.
-// TODO Merge with https://github.com/cosmos/cosmos-sdk/issues/11151
-func (q Keeper) Tally(ctx sdk.Context, p group.Proposal, groupId uint64) (group.TallyResult, error) {
-	// If proposal has already been tallied and updated, then its status is
-	// closed, in which case we just return the previously stored result.
-	if p.Status == group.PROPOSAL_STATUS_CLOSED {
-		return p.FinalTallyResult, nil
-	}
+func (q Keeper) TallyResult(goCtx context.Context, request *group.QueryTallyResultRequest) (*group.QueryTallyResultResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	proposalId := request.ProposalId
 
-	it, err := q.voteByProposalIndex.Get(ctx.KVStore(q.key), p.Id)
+	proposal, err := q.getProposal(ctx, proposalId)
 	if err != nil {
-		return group.TallyResult{}, err
-	}
-	defer it.Close()
-
-	tallyResult := group.DefaultTallyResult()
-
-	var vote group.Vote
-	for {
-		_, err = it.LoadNext(&vote)
-		if errors.ErrORMIteratorDone.Is(err) {
-			break
-		}
-		if err != nil {
-			return group.TallyResult{}, err
-		}
-
-		var member group.GroupMember
-		err := q.groupMemberTable.GetOne(ctx.KVStore(q.key), orm.PrimaryKey(&group.GroupMember{
-			GroupId: groupId,
-			Member:  &group.Member{Address: vote.Voter},
-		}), &member)
-
-		switch {
-		case sdkerrors.ErrNotFound.Is(err):
-			// If the member left the group after voting, then we simply skip the
-			// vote.
-			continue
-		case err != nil:
-			// For any other errors, we stop and return the error.
-			return group.TallyResult{}, err
-		}
-
-		if err := tallyResult.Add(vote, member.Member.Weight); err != nil {
-			return group.TallyResult{}, sdkerrors.Wrap(err, "add new vote")
-		}
+		return nil, err
 	}
 
-	return tallyResult, nil
+	if proposal.Status == group.PROPOSAL_STATUS_WITHDRAWN || proposal.Status == group.PROPOSAL_STATUS_ABORTED {
+		return nil, sdkerrors.Wrapf(errors.ErrInvalid, "can't get the tally of a proposal with status %s", proposal.Status)
+	}
+
+	var policyInfo group.GroupPolicyInfo
+	if policyInfo, err = q.getGroupPolicyInfo(ctx, proposal.Address); err != nil {
+		return nil, sdkerrors.Wrap(err, "load group policy")
+	}
+
+	tallyResult, err := q.Tally(ctx, proposal, policyInfo.GroupId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &group.QueryTallyResultResponse{
+		Tally: tallyResult,
+	}, nil
 }

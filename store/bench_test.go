@@ -201,32 +201,22 @@ func runDeterministicOperations(b *testing.B, s store, values [][]byte, c counts
 	}
 }
 
-func RunRvert(b *testing.B, version int, dbType tmdb.BackendType, committedValues [][]byte, uncommittedValues [][]byte) {
-	dir := fmt.Sprintf("testdbs/v%d", version)
-	dbName := fmt.Sprintf("reverttest-%s", dbType)
-	db, err := newDB(version, dbName, tmdb.RocksDBBackend, dir)
-	require.NoError(b, err)
-	s, err := newStore(version, db, nil, cacheSize)
-	require.NoError(b, err)
-	for i, v := range committedValues {
-		s.Set(createKey(i), v)
-	}
-	_ = s.Commit()
-
-	b.ResetTimer()
+func RunRvert(b *testing.B, s store, db interface{}, uncommittedValues [][]byte) {
 	for i := 0; i < b.N; i++ {
 		// Key, value pairs changed but not committed
 		for i, v := range uncommittedValues {
 			s.Set(createKey(i), v)
 		}
 
+		b.ResetTimer()
 		switch t := s.(type) {
 		case *storev1.Store:
-			s, err = newStore(1, db, nil, cacheSize) // This shall revert to the last commitID
+			_, err := newStore(1, db, nil, cacheSize) // This shall revert to the last commitID
 			require.NoError(b, err)
 		case *storeV2:
 			require.NoError(b, t.Close())
-			s, err = newStore(2, db, nil, 0) // This shall revert to the last commitID
+			_, err := newStore(2, db, nil, 0) // This shall revert to the last commitID
+			require.NoError(b, err)
 		default:
 			panic("not supported store type")
 		}
@@ -307,12 +297,19 @@ func newStore(version int, dbBackend interface{}, cID *types.CommitID, cacheSize
 	return nil, fmt.Errorf("unsupported version")
 }
 
-func prepareStore(s store, values [][]byte) (store, types.CommitID) {
-	for i, v := range values {
+func prepareStore(b *testing.B, version int, dbType tmdb.BackendType, committedValues [][]byte) (store, interface{}) {
+	dir := fmt.Sprintf("testdbs/v%d", version)
+	dbName := fmt.Sprintf("reverttest-%s", dbType)
+	db, err := newDB(version, dbName, dbType, dir)
+	require.NoError(b, err)
+	s, err := newStore(version, db, nil, cacheSize)
+	require.NoError(b, err)
+	for i, v := range committedValues {
 		s.Set(createKey(i), v)
 	}
-	cID := s.Commit()
-	return s, cID
+	_ = s.Commit()
+
+	return s, db
 }
 
 func runSuite(b *testing.B, version int, dbBackendTypes []tmdb.BackendType, dir string) {
@@ -348,8 +345,9 @@ func runSuite(b *testing.B, version int, dbBackendTypes []tmdb.BackendType, dir 
 	committedValues := prepareValues()
 	uncommittedValues := prepareValues()
 	for _, dbType := range dbBackendTypes {
+		s, db := prepareStore(b, version, dbType, committedValues)
 		b.Run(fmt.Sprintf("v%d-%s-revert", version, dbType), func(sub *testing.B) {
-			RunRvert(sub, version, dbType, committedValues, uncommittedValues)
+			RunRvert(sub, s, db, uncommittedValues)
 		})
 	}
 }

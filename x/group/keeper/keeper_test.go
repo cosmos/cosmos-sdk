@@ -2452,6 +2452,187 @@ func (s *TestSuite) TestExecProposal() {
 	}
 }
 
+func (s *TestSuite) TestExecPrunedProposals() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr2 := addrs[1]
+
+	msgSend1 := &banktypes.MsgSend{
+		FromAddress: s.groupPolicyAddr.String(),
+		ToAddress:   addr2.String(),
+		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+	}
+	msgSend2 := &banktypes.MsgSend{
+		FromAddress: s.groupPolicyAddr.String(),
+		ToAddress:   addr2.String(),
+		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 10001)},
+	}
+	proposers := []string{addr2.String()}
+	specs := map[string]struct {
+		srcBlockTime      time.Time
+		setupProposal     func(ctx context.Context) uint64
+		expErr            bool
+		expErrMsg         string
+		expProposalStatus group.ProposalStatus
+		expProposalResult group.ProposalResult
+		expExecutorResult group.ProposalExecutorResult
+		expBalance        bool
+		expFromBalances   sdk.Coin
+		expToBalances     sdk.Coin
+	}{
+		"proposal pruned after executor result success": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend1}
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
+			},
+			expErrMsg:         "load proposal: not found",
+			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
+			expProposalResult: group.PROPOSAL_RESULT_ACCEPTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+			expBalance:        true,
+			expFromBalances:   sdk.NewInt64Coin("test", 9900),
+			expToBalances:     sdk.NewInt64Coin("test", 100),
+		},
+		"proposal with multiple messages pruned when executed with result success": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend1, msgSend1}
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
+			},
+			expErrMsg:         "load proposal: not found",
+			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
+			expProposalResult: group.PROPOSAL_RESULT_ACCEPTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+			expBalance:        true,
+			expFromBalances:   sdk.NewInt64Coin("test", 9800),
+			expToBalances:     sdk.NewInt64Coin("test", 200),
+		},
+		"proposal not pruned when not executed and rejected": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend1}
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_NO)
+			},
+			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
+			expProposalResult: group.PROPOSAL_RESULT_REJECTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+		},
+		"open proposal is not pruned which must not fail ": {
+			setupProposal: func(ctx context.Context) uint64 {
+				return submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
+			},
+			expProposalStatus: group.PROPOSAL_STATUS_SUBMITTED,
+			expProposalResult: group.PROPOSAL_RESULT_UNFINALIZED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+		},
+		"proposal not pruned with group modified before tally": {
+			setupProposal: func(ctx context.Context) uint64 {
+				myProposalID := submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
+
+				// then modify group
+				_, err := s.keeper.UpdateGroupMetadata(ctx, &group.MsgUpdateGroupMetadata{
+					Admin:   addr1.String(),
+					GroupId: s.groupID,
+				})
+				s.Require().NoError(err)
+				return myProposalID
+			},
+			expProposalStatus: group.PROPOSAL_STATUS_ABORTED,
+			expProposalResult: group.PROPOSAL_RESULT_UNFINALIZED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+		},
+		"proposal not pruned with group policy modified before tally": {
+			setupProposal: func(ctx context.Context) uint64 {
+				myProposalID := submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
+				_, err := s.keeper.UpdateGroupPolicyMetadata(ctx, &group.MsgUpdateGroupPolicyMetadata{
+					Admin:   addr1.String(),
+					Address: s.groupPolicyAddr.String(),
+				})
+				s.Require().NoError(err)
+				return myProposalID
+			},
+			expProposalStatus: group.PROPOSAL_STATUS_ABORTED,
+			expProposalResult: group.PROPOSAL_RESULT_UNFINALIZED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+		},
+		"proposal exists when rollback all msg updates on failure": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend1, msgSend2}
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
+			},
+			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
+			expProposalResult: group.PROPOSAL_RESULT_ACCEPTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_FAILURE,
+		},
+		"pruned when proposal is executable when failed before": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend2}
+				myProposalID := submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
+
+				_, err := s.keeper.Exec(ctx, &group.MsgExec{Signer: addr1.String(), ProposalId: myProposalID})
+				s.Require().NoError(err)
+				sdkCtx := sdk.UnwrapSDKContext(ctx)
+				s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+
+				return myProposalID
+			},
+			expErrMsg:         "load proposal: not found",
+			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
+			expProposalResult: group.PROPOSAL_RESULT_ACCEPTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+		},
+	}
+	for msg, spec := range specs {
+		spec := spec
+		s.Run(msg, func() {
+			sdkCtx, _ := s.sdkCtx.CacheContext()
+			ctx := sdk.WrapSDKContext(sdkCtx)
+			proposalID := spec.setupProposal(ctx)
+
+			if !spec.srcBlockTime.IsZero() {
+				sdkCtx = sdkCtx.WithBlockTime(spec.srcBlockTime)
+			}
+
+			ctx = sdk.WrapSDKContext(sdkCtx)
+			_, err := s.keeper.Exec(ctx, &group.MsgExec{Signer: addr1.String(), ProposalId: proposalID})
+			if spec.expErr {
+				s.Require().Error(err)
+				return
+			}
+			s.Require().NoError(err)
+
+			if spec.expExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
+				_, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
+				s.Require().Contains(err.Error(), spec.expErrMsg)
+
+			} else {
+				// proposal is updated
+				res, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
+				s.Require().NoError(err)
+				proposal := res.Proposal
+				s.Require().Equal("", spec.expErrMsg)
+
+				exp := group.ProposalResult_name[int32(spec.expProposalResult)]
+				got := group.ProposalResult_name[int32(proposal.Result)]
+				s.Assert().Equal(exp, got)
+
+				exp = group.ProposalStatus_name[int32(spec.expProposalStatus)]
+				got = group.ProposalStatus_name[int32(proposal.Status)]
+				s.Assert().Equal(exp, got)
+
+				exp = group.ProposalExecutorResult_name[int32(spec.expExecutorResult)]
+				got = group.ProposalExecutorResult_name[int32(proposal.ExecutorResult)]
+				s.Assert().Equal(exp, got)
+			}
+
+			if spec.expBalance {
+				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, s.groupPolicyAddr)
+				s.Require().Contains(fromBalances, spec.expFromBalances)
+				toBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, addr2)
+				s.Require().Contains(toBalances, spec.expToBalances)
+			}
+		})
+	}
+}
+
 func (s *TestSuite) TestLeaveGroup() {
 	addrs := simapp.AddTestAddrsIncremental(s.app, s.sdkCtx, 7, sdk.NewInt(3000000))
 	admin1 := addrs[0]

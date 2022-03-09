@@ -8,6 +8,8 @@ import (
 	"io"
 	"math"
 
+	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
+
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
@@ -20,8 +22,9 @@ import (
 type tableImpl struct {
 	*primaryKeyIndex
 	indexes               []Index
-	indexesByFields       map[fieldNames]concreteIndex
-	uniqueIndexesByFields map[fieldNames]UniqueIndex
+	indexesByFields       map[fieldnames.FieldNames]concreteIndex
+	uniqueIndexesByFields map[fieldnames.FieldNames]UniqueIndex
+	indexesById           map[uint32]Index
 	entryCodecsById       map[uint32]ormkv.EntryCodec
 	tablePrefix           []byte
 	tableId               uint32
@@ -29,40 +32,55 @@ type tableImpl struct {
 	customJSONValidator   func(message proto.Message) error
 }
 
+func (t *tableImpl) GetTable(message proto.Message) Table {
+	if message.ProtoReflect().Descriptor().FullName() == t.MessageType().Descriptor().FullName() {
+		return t
+	}
+	return nil
+}
+
+func (t tableImpl) PrimaryKey() UniqueIndex {
+	return t.primaryKeyIndex
+}
+
+func (t tableImpl) GetIndexByID(id uint32) Index {
+	return t.indexesById[id]
+}
+
 func (t tableImpl) Save(ctx context.Context, message proto.Message) error {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}
 
-	return t.save(backend, message, saveModeDefault)
+	return t.save(ctx, backend, message, saveModeDefault)
 }
 
 func (t tableImpl) Insert(ctx context.Context, message proto.Message) error {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}
 
-	return t.save(backend, message, saveModeInsert)
+	return t.save(ctx, backend, message, saveModeInsert)
 }
 
 func (t tableImpl) Update(ctx context.Context, message proto.Message) error {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}
 
-	return t.save(backend, message, saveModeUpdate)
+	return t.save(ctx, backend, message, saveModeUpdate)
 }
 
-func (t tableImpl) save(backend Backend, message proto.Message, mode saveMode) error {
+func (t tableImpl) save(ctx context.Context, backend Backend, message proto.Message, mode saveMode) error {
 	writer := newBatchIndexCommitmentWriter(backend)
 	defer writer.Close()
-	return t.doSave(writer, message, mode)
+	return t.doSave(ctx, writer, message, mode)
 }
 
-func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, message proto.Message, mode saveMode) error {
+func (t tableImpl) doSave(ctx context.Context, writer *batchIndexCommitmentWriter, message proto.Message, mode saveMode) error {
 	mref := message.ProtoReflect()
 	pkValues, pk, err := t.EncodeKeyFromMessage(mref)
 	if err != nil {
@@ -80,8 +98,8 @@ func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, message proto.Mess
 			return ormerrors.PrimaryKeyConstraintViolation.Wrapf("%q:%+v", mref.Descriptor().FullName(), pkValues)
 		}
 
-		if hooks := writer.Hooks(); hooks != nil {
-			err = hooks.OnUpdate(existing, message)
+		if validateHooks := writer.ValidateHooks(); validateHooks != nil {
+			err = validateHooks.ValidateUpdate(ctx, existing, message)
 			if err != nil {
 				return err
 			}
@@ -91,8 +109,8 @@ func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, message proto.Mess
 			return ormerrors.NotFoundOnUpdate.Wrapf("%q", mref.Descriptor().FullName())
 		}
 
-		if hooks := writer.Hooks(); hooks != nil {
-			err = hooks.OnInsert(message)
+		if validateHooks := writer.ValidateHooks(); validateHooks != nil {
+			err = validateHooks.ValidateInsert(ctx, message)
 			if err != nil {
 				return err
 			}
@@ -122,6 +140,11 @@ func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, message proto.Mess
 			}
 
 		}
+		if writeHooks := writer.WriteHooks(); writeHooks != nil {
+			writer.enqueueHook(func() {
+				writeHooks.OnInsert(ctx, message)
+			})
+		}
 	} else {
 		existingMref := existing.ProtoReflect()
 		for _, idx := range t.indexers {
@@ -130,22 +153,27 @@ func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, message proto.Mess
 				return err
 			}
 		}
+		if writeHooks := writer.WriteHooks(); writeHooks != nil {
+			writer.enqueueHook(func() {
+				writeHooks.OnUpdate(ctx, existing, message)
+			})
+		}
 	}
 
 	return writer.Write()
 }
 
-func (t tableImpl) Delete(context context.Context, message proto.Message) error {
+func (t tableImpl) Delete(ctx context.Context, message proto.Message) error {
 	pk := t.PrimaryKeyCodec.GetKeyValues(message.ProtoReflect())
-	return t.DeleteByKey(context, pk)
+	return t.doDelete(ctx, pk)
 }
 
 func (t tableImpl) GetIndex(fields string) Index {
-	return t.indexesByFields[commaSeparatedFieldNames(fields)]
+	return t.indexesByFields[fieldnames.CommaSeparatedFieldNames(fields)]
 }
 
 func (t tableImpl) GetUniqueIndex(fields string) UniqueIndex {
-	return t.uniqueIndexesByFields[commaSeparatedFieldNames(fields)]
+	return t.uniqueIndexesByFields[fieldnames.CommaSeparatedFieldNames(fields)]
 }
 
 func (t tableImpl) Indexes() []Index {
@@ -259,13 +287,13 @@ func (t tableImpl) ValidateJSON(reader io.Reader) error {
 }
 
 func (t tableImpl) ImportJSON(ctx context.Context, reader io.Reader) error {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}
 
 	return t.decodeJson(reader, func(message proto.Message) error {
-		return t.save(backend, message, saveModeDefault)
+		return t.save(ctx, backend, message, saveModeDefault)
 	})
 }
 
@@ -275,18 +303,17 @@ func (t tableImpl) ExportJSON(context context.Context, writer io.Writer) error {
 		return err
 	}
 
-	return t.doExportJSON(context, writer)
+	return t.doExportJSON(context, writer, true)
 }
 
-func (t tableImpl) doExportJSON(ctx context.Context, writer io.Writer) error {
+func (t tableImpl) doExportJSON(ctx context.Context, writer io.Writer, start bool) error {
 	marshalOptions := protojson.MarshalOptions{
 		UseProtoNames: true,
 		Resolver:      t.typeResolver,
 	}
 
 	var err error
-	it, _ := t.Iterator(ctx)
-	start := true
+	it, _ := t.List(ctx, nil)
 	for {
 		found := it.Next()
 
@@ -349,7 +376,7 @@ func (t tableImpl) EncodeEntry(entry ormkv.Entry) (k, v []byte, err error) {
 	case *ormkv.PrimaryKeyEntry:
 		return t.PrimaryKeyCodec.EncodeEntry(entry)
 	case *ormkv.IndexKeyEntry:
-		idx, ok := t.indexesByFields[fieldsFromNames(entry.Fields)]
+		idx, ok := t.indexesByFields[fieldnames.FieldsFromNames(entry.Fields)]
 		if !ok {
 			return nil, nil, ormerrors.BadDecodeEntry.Wrapf("can't find index with fields %s", entry.Fields)
 		}
@@ -364,7 +391,31 @@ func (t tableImpl) ID() uint32 {
 	return t.tableId
 }
 
+func (t tableImpl) Has(ctx context.Context, message proto.Message) (found bool, err error) {
+	backend, err := t.getBackend(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	keyValues := t.primaryKeyIndex.PrimaryKeyCodec.GetKeyValues(message.ProtoReflect())
+	return t.primaryKeyIndex.has(backend, keyValues)
+}
+
+// Get retrieves the message if one exists for the primary key fields
+// set on the message. Other fields besides the primary key fields will not
+// be used for retrieval.
+func (t tableImpl) Get(ctx context.Context, message proto.Message) (found bool, err error) {
+	backend, err := t.getBackend(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	keyValues := t.primaryKeyIndex.PrimaryKeyCodec.GetKeyValues(message.ProtoReflect())
+	return t.primaryKeyIndex.get(backend, message, keyValues)
+}
+
 var _ Table = &tableImpl{}
+var _ Schema = &tableImpl{}
 
 type saveMode int
 

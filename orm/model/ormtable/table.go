@@ -17,7 +17,17 @@ import (
 // systems, for instance to enable backwards compatibility when a major
 // migration needs to be performed.
 type View interface {
-	UniqueIndex
+	Index
+
+	// Has returns true if there is an entity in the table with the same
+	// primary key as message. Other fields besides the primary key fields will not
+	// be used for retrieval.
+	Has(ctx context.Context, message proto.Message) (found bool, err error)
+
+	// Get retrieves the message if one exists for the primary key fields
+	// set on the message. Other fields besides the primary key fields will not
+	// be used for retrieval.
+	Get(ctx context.Context, message proto.Message) (found bool, err error)
 
 	// GetIndex returns the index referenced by the provided fields if
 	// one exists or nil. Note that some concrete indexes can be retrieved by
@@ -31,6 +41,12 @@ type View interface {
 
 	// Indexes returns all the concrete indexes for the table.
 	Indexes() []Index
+
+	// GetIndexByID returns the index with the provided ID or nil.
+	GetIndexByID(id uint32) Index
+
+	// PrimaryKey returns the primary key unique index.
+	PrimaryKey() UniqueIndex
 }
 
 // Table is an abstract interface around a concrete table. Table instances
@@ -44,8 +60,8 @@ type Table interface {
 	// Save saves the provided entry in the store either inserting it or
 	// updating it if needed.
 	//
-	// If store implement the Hooks interface, the appropriate OnInsert or
-	// OnUpdate hook method will be called.
+	// If store implement the ValidateHooks interface, the appropriate ValidateInsert or
+	// ValidateUpdate hook method will be called.
 	//
 	// Save attempts to be atomic with respect to the underlying store,
 	// meaning that either the full save operation is written or the store is
@@ -54,22 +70,24 @@ type Table interface {
 
 	// Insert inserts the provided entry in the store and fails if there is
 	// an unique key violation. See Save for more details on behavior.
-	Insert(context context.Context, message proto.Message) error
+	Insert(ctx context.Context, message proto.Message) error
 
 	// Update updates the provided entry in the store and fails if an entry
 	// with a matching primary key does not exist. See Save for more details
 	// on behavior.
-	Update(context context.Context, message proto.Message) error
+	Update(ctx context.Context, message proto.Message) error
 
-	// Delete deletes the entry with the provided primary key from the store.
+	// Delete deletes the entry with the with primary key fields set on message
+	// if one exists. Other fields besides the primary key fields will not
+	// be used for retrieval.
 	//
-	// If store implement the Hooks interface, the OnDelete hook method will
+	// If store implement the ValidateHooks interface, the ValidateDelete hook method will
 	// be called.
 	//
 	// Delete attempts to be atomic with respect to the underlying store,
 	// meaning that either the full save operation is written or the store is
 	// left unchanged, unless there is an error with the underlying store.
-	Delete(context context.Context, message proto.Message) error
+	Delete(ctx context.Context, message proto.Message) error
 
 	// DefaultJSON returns default JSON that can be used as a template for
 	// genesis files.
@@ -110,4 +128,23 @@ type Table interface {
 
 	// ID is the ID of this table within the schema of its FileDescriptor.
 	ID() uint32
+
+	Schema
+}
+
+// Schema is an interface for things that contain tables and can encode and
+// decode kv-store pairs.
+type Schema interface {
+	ormkv.EntryCodec
+
+	// GetTable returns the table for the provided message type or nil.
+	GetTable(message proto.Message) Table
+}
+
+type AutoIncrementTable interface {
+	Table
+
+	// InsertReturningID inserts the provided entry in the store and returns the newly
+	// generated ID for the message or an error.
+	InsertReturningID(ctx context.Context, message proto.Message) (newId uint64, err error)
 }

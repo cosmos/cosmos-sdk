@@ -36,7 +36,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1beta2.MsgSubmitP
 		return nil, err
 	}
 
-	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs)
+	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1beta2.MsgSubmitP
 	defer telemetry.IncrCounter(1, types.ModuleName, "proposal")
 
 	proposer, _ := sdk.AccAddressFromBech32(msg.GetProposer())
-	votingStarted, err := k.Keeper.AddDeposit(ctx, proposal.ProposalId, proposer, msg.GetInitialDeposit())
+	votingStarted, err := k.Keeper.AddDeposit(ctx, proposal.Id, proposer, msg.GetInitialDeposit())
 	if err != nil {
 		return nil, err
 	}
@@ -70,14 +70,14 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1beta2.MsgSubmitP
 
 	if votingStarted {
 		submitEvent := sdk.NewEvent(types.EventTypeSubmitProposal,
-			sdk.NewAttribute(types.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.ProposalId)),
+			sdk.NewAttribute(types.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.Id)),
 		)
 
 		ctx.EventManager().EmitEvent(submitEvent)
 	}
 
 	return &v1beta2.MsgSubmitProposalResponse{
-		ProposalId: proposal.ProposalId,
+		ProposalId: proposal.Id,
 	}, nil
 }
 
@@ -114,7 +114,7 @@ func (k msgServer) Vote(goCtx context.Context, msg *v1beta2.MsgVote) (*v1beta2.M
 	if accErr != nil {
 		return nil, accErr
 	}
-	err := k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, v1beta2.NewNonSplitVoteOption(msg.Option))
+	err := k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, v1beta2.NewNonSplitVoteOption(msg.Option), msg.Metadata)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +144,7 @@ func (k msgServer) VoteWeighted(goCtx context.Context, msg *v1beta2.MsgVoteWeigh
 	if accErr != nil {
 		return nil, accErr
 	}
-	err := k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, msg.Options)
+	err := k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, msg.Options, msg.Metadata)
 	if err != nil {
 		return nil, err
 	}
@@ -230,6 +230,7 @@ func (k legacyMsgServer) SubmitProposal(goCtx context.Context, msg *v1beta1.MsgS
 		[]sdk.Msg{contentMsg},
 		msg.InitialDeposit,
 		msg.Proposer,
+		"",
 	)
 	if err != nil {
 		return nil, err

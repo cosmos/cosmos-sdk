@@ -29,7 +29,7 @@ The governance module emits the following events:
 | message             | action              | submit_proposal |
 | message             | sender              | {senderAddress} |
 
-- [0] Event only emitted if the voting period starts during the submission.
+* [0] Event only emitted if the voting period starts during the submission.
 
 ### MsgVote
 
@@ -62,4 +62,4 @@ The governance module emits the following events:
 | message              | action              | deposit         |
 | message              | sender              | {senderAddress} |
 
-- [0] Event only emitted if the voting period starts during the submission.
+* [0] Event only emitted if the voting period starts during the submission.

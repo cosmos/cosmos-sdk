@@ -18,39 +18,38 @@ func TestVotes(t *testing.T) {
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 5, sdk.NewInt(30000000))
 
 	tp := TestProposal
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, "")
 	require.NoError(t, err)
-	proposalID := proposal.ProposalId
+	proposalID := proposal.Id
+	metadata := "metadata"
 
 	var invalidOption v1beta2.VoteOption = 0x10
 
-	require.Error(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)), "proposal not on voting period")
-	require.Error(t, app.GovKeeper.AddVote(ctx, 10, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)), "invalid proposal ID")
+	require.Error(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), metadata), "proposal not on voting period")
+	require.Error(t, app.GovKeeper.AddVote(ctx, 10, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), ""), "invalid proposal ID")
 
 	proposal.Status = v1beta2.StatusVotingPeriod
 	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.Error(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], v1beta2.NewNonSplitVoteOption(invalidOption)), "invalid option")
+	require.Error(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], v1beta2.NewNonSplitVoteOption(invalidOption), ""), "invalid option")
 
 	// Test first vote
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionAbstain)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionAbstain), metadata))
 	vote, found := app.GovKeeper.GetVote(ctx, proposalID, addrs[0])
 	require.True(t, found)
 	require.Equal(t, addrs[0].String(), vote.Voter)
 	require.Equal(t, proposalID, vote.ProposalId)
 	require.True(t, len(vote.Options) == 1)
 	require.Equal(t, v1beta2.OptionAbstain, vote.Options[0].Option)
-	require.Equal(t, v1beta2.OptionAbstain, vote.Option)
 
 	// Test change of vote
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), ""))
 	vote, found = app.GovKeeper.GetVote(ctx, proposalID, addrs[0])
 	require.True(t, found)
 	require.Equal(t, addrs[0].String(), vote.Voter)
 	require.Equal(t, proposalID, vote.ProposalId)
 	require.True(t, len(vote.Options) == 1)
 	require.Equal(t, v1beta2.OptionYes, vote.Options[0].Option)
-	require.Equal(t, v1beta2.OptionYes, vote.Option)
 
 	// Test second vote
 	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], v1beta2.WeightedVoteOptions{
@@ -58,7 +57,7 @@ func TestVotes(t *testing.T) {
 		v1beta2.NewWeightedVoteOption(v1beta2.OptionNo, sdk.NewDecWithPrec(30, 2)),
 		v1beta2.NewWeightedVoteOption(v1beta2.OptionAbstain, sdk.NewDecWithPrec(5, 2)),
 		v1beta2.NewWeightedVoteOption(v1beta2.OptionNoWithVeto, sdk.NewDecWithPrec(5, 2)),
-	}))
+	}, ""))
 	vote, found = app.GovKeeper.GetVote(ctx, proposalID, addrs[1])
 	require.True(t, found)
 	require.Equal(t, addrs[1].String(), vote.Voter)
@@ -72,7 +71,6 @@ func TestVotes(t *testing.T) {
 	require.Equal(t, vote.Options[1].Weight, sdk.NewDecWithPrec(30, 2).String())
 	require.Equal(t, vote.Options[2].Weight, sdk.NewDecWithPrec(5, 2).String())
 	require.Equal(t, vote.Options[3].Weight, sdk.NewDecWithPrec(5, 2).String())
-	require.Equal(t, v1beta2.OptionEmpty, vote.Option)
 
 	// Test vote iterator
 	// NOTE order of deposits is determined by the addresses
@@ -90,5 +88,4 @@ func TestVotes(t *testing.T) {
 	require.Equal(t, votes[1].Options[1].Weight, sdk.NewDecWithPrec(30, 2).String())
 	require.Equal(t, votes[1].Options[2].Weight, sdk.NewDecWithPrec(5, 2).String())
 	require.Equal(t, votes[1].Options[3].Weight, sdk.NewDecWithPrec(5, 2).String())
-	require.Equal(t, v1beta2.OptionEmpty, vote.Option)
 }

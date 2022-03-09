@@ -7,6 +7,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -27,7 +30,8 @@ func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 	home := t.TempDir()
 	clientCtx := client.Context{}.
 		WithHomeDir(home).
-		WithViper("")
+		WithViper("").
+		WithCodec(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()))
 
 	clientCtx.Viper.BindEnv(nodeEnv)
 	if envVar != "" {

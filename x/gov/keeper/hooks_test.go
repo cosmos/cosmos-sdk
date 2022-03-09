@@ -64,7 +64,7 @@ func TestHooks(t *testing.T) {
 	require.False(t, govHooksReceiver.AfterProposalVotingPeriodEndedValid)
 
 	tp := TestProposal
-	_, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	_, err := app.GovKeeper.SubmitProposal(ctx, tp, "")
 	require.NoError(t, err)
 	require.True(t, govHooksReceiver.AfterProposalSubmissionValid)
 
@@ -75,15 +75,15 @@ func TestHooks(t *testing.T) {
 
 	require.True(t, govHooksReceiver.AfterProposalFailedMinDepositValid)
 
-	p2, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	p2, err := app.GovKeeper.SubmitProposal(ctx, tp, "")
 	require.NoError(t, err)
 
-	activated, err := app.GovKeeper.AddDeposit(ctx, p2.ProposalId, addrs[0], minDeposit)
+	activated, err := app.GovKeeper.AddDeposit(ctx, p2.Id, addrs[0], minDeposit)
 	require.True(t, activated)
 	require.NoError(t, err)
 	require.True(t, govHooksReceiver.AfterProposalDepositValid)
 
-	err = app.GovKeeper.AddVote(ctx, p2.ProposalId, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes))
+	err = app.GovKeeper.AddVote(ctx, p2.Id, addrs[0], v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), "")
 	require.NoError(t, err)
 	require.True(t, govHooksReceiver.AfterProposalVoteValid)
 

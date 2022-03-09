@@ -41,6 +41,8 @@ type Keeper struct {
 
 	// Msg server router
 	router *middleware.MsgServiceRouter
+
+	config types.Config
 }
 
 // NewKeeper returns a governance keeper. It handles:
@@ -54,6 +56,7 @@ func NewKeeper(
 	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace types.ParamSubspace,
 	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper,
 	legacyRouter v1beta1.Router, router *middleware.MsgServiceRouter,
+	config types.Config,
 ) Keeper {
 
 	// ensure governance module account is set
@@ -66,6 +69,11 @@ func NewKeeper(
 	// could create invalid or non-deterministic behavior.
 	legacyRouter.Seal()
 
+	// If MaxMetadataLen not set by app developer, set to default value.
+	if config.MaxMetadataLen == 0 {
+		config.MaxMetadataLen = types.DefaultConfig().MaxMetadataLen
+	}
+
 	return Keeper{
 		storeKey:     key,
 		paramSpace:   paramSpace,
@@ -75,6 +83,7 @@ func NewKeeper(
 		cdc:          cdc,
 		legacyRouter: legacyRouter,
 		router:       router,
+		config:       config,
 	}
 }
 
@@ -187,4 +196,13 @@ func (keeper Keeper) ActiveProposalQueueIterator(ctx sdk.Context, endTime time.T
 func (keeper Keeper) InactiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(keeper.storeKey)
 	return store.Iterator(types.InactiveProposalQueuePrefix, sdk.PrefixEndBytes(types.InactiveProposalByTimeKey(endTime)))
+}
+
+// assertMetadataLength returns an error if given metadata length
+// is greater than a pre-defined maxMetadataLen.
+func (k Keeper) assertMetadataLength(metadata string) error {
+	if metadata != "" && uint64(len(metadata)) > k.config.MaxMetadataLen {
+		return types.ErrMetadataTooLong.Wrapf("got metadata with length %d", len(metadata))
+	}
+	return nil
 }

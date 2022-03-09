@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"net"
 	"time"
 
@@ -16,7 +17,10 @@ import (
 
 // StartGRPCServer starts a gRPC server on the given address.
 func StartGRPCServer(clientCtx client.Context, app types.Application, address string) (*grpc.Server, error) {
-	grpcSrv := grpc.NewServer()
+	grpcSrv := grpc.NewServer(
+		grpc.ForceServerCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
+	)
+
 	app.RegisterGRPCServer(grpcSrv)
 	// reflection allows consumers to build dynamic clients that can write
 	// to any cosmos-sdk application without relying on application packages at compile time

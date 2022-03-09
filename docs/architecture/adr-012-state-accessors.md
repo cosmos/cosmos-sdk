@@ -2,7 +2,7 @@
 
 ## Changelog
 
-- 2019 Sep 04: Initial draft
+* 2019 Sep 04: Initial draft
 
 ## Context
 
@@ -125,9 +125,9 @@ Where the `key` argument in core method is typed.
 
 Some of the properties of the accessor types are:
 
-- State access happens only when a function which takes a `Context` as an argument is invoked
-- Accessor type structs give rights to access the state only that the struct is referring, no other
-- Marshalling/Unmarshalling happens implicitly within the core methods
+* State access happens only when a function which takes a `Context` as an argument is invoked
+* Accessor type structs give rights to access the state only that the struct is referring, no other
+* Marshalling/Unmarshalling happens implicitly within the core methods
 
 ## Status
 
@@ -137,19 +137,19 @@ Proposed
 
 ### Positive
 
-- Serialization will be done automatically
-- Shorter code size, less boilerplate, better UX
-- References to the state can be transferred safely
-- Explicit scope of accessing
+* Serialization will be done automatically
+* Shorter code size, less boilerplate, better UX
+* References to the state can be transferred safely
+* Explicit scope of accessing
 
 ### Negative
 
-- Serialization format will be hidden
-- Different architecture from the current, but the use of accessor types can be opt-in
-- Type-specific types (e.g. `Boolean` and `Integer`) have to be defined manually
+* Serialization format will be hidden
+* Different architecture from the current, but the use of accessor types can be opt-in
+* Type-specific types (e.g. `Boolean` and `Integer`) have to be defined manually
 
 ### Neutral
 
 ## References
 
-- [#4554](https://github.com/cosmos/cosmos-sdk/issues/4554)
+* [#4554](https://github.com/cosmos/cosmos-sdk/issues/4554)

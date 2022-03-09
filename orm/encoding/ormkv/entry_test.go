@@ -19,7 +19,7 @@ func TestPrimaryKeyEntry(t *testing.T) {
 		Key:       encodeutil.ValuesOf(uint32(1), "abc"),
 		Value:     &testpb.ExampleTable{I32: -1},
 	}
-	assert.Equal(t, `PK testpb.ExampleTable 1/"abc" -> i32:-1`, entry.String())
+	assert.Equal(t, `PK testpb.ExampleTable 1/abc -> {"i32":-1}`, entry.String())
 	assert.Equal(t, aFullName, entry.GetTableName())
 
 	// prefix key
@@ -28,7 +28,7 @@ func TestPrimaryKeyEntry(t *testing.T) {
 		Key:       encodeutil.ValuesOf(uint32(1), "abc"),
 		Value:     nil,
 	}
-	assert.Equal(t, `PK testpb.ExampleTable 1/"abc" -> _`, entry.String())
+	assert.Equal(t, `PK testpb.ExampleTable 1/abc -> _`, entry.String())
 	assert.Equal(t, aFullName, entry.GetTableName())
 }
 
@@ -40,7 +40,7 @@ func TestIndexKeyEntry(t *testing.T) {
 		IndexValues: encodeutil.ValuesOf(uint32(10), int32(-1), "abc"),
 		PrimaryKey:  encodeutil.ValuesOf("abc", int32(-1)),
 	}
-	assert.Equal(t, `IDX testpb.ExampleTable u32/i32/str : 10/-1/"abc" -> "abc"/-1`, entry.String())
+	assert.Equal(t, `IDX testpb.ExampleTable u32/i32/str : 10/-1/abc -> abc/-1`, entry.String())
 	assert.Equal(t, aFullName, entry.GetTableName())
 
 	entry = &ormkv.IndexKeyEntry{
@@ -50,7 +50,7 @@ func TestIndexKeyEntry(t *testing.T) {
 		IndexValues: encodeutil.ValuesOf(uint32(10)),
 		PrimaryKey:  encodeutil.ValuesOf("abc", int32(-1)),
 	}
-	assert.Equal(t, `UNIQ testpb.ExampleTable u32 : 10 -> "abc"/-1`, entry.String())
+	assert.Equal(t, `UNIQ testpb.ExampleTable u32 : 10 -> abc/-1`, entry.String())
 	assert.Equal(t, aFullName, entry.GetTableName())
 
 	// prefix key
@@ -70,6 +70,6 @@ func TestIndexKeyEntry(t *testing.T) {
 		IsUnique:    true,
 		IndexValues: encodeutil.ValuesOf("abc", int32(1)),
 	}
-	assert.Equal(t, `UNIQ testpb.ExampleTable str/i32 : "abc"/1 -> _`, entry.String())
+	assert.Equal(t, `UNIQ testpb.ExampleTable str/i32 : abc/1 -> _`, entry.String())
 	assert.Equal(t, aFullName, entry.GetTableName())
 }

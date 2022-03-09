@@ -11,6 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
@@ -21,6 +23,8 @@ type KeeperTestSuite struct {
 	homeDir string
 	app     *simapp.SimApp
 	ctx     sdk.Context
+	msgSrvr types.MsgServer
+	addrs   []sdk.AccAddress
 }
 
 func (s *KeeperTestSuite) SetupTest() {
@@ -28,6 +32,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	homeDir := filepath.Join(s.T().TempDir(), "x_upgrade_keeper_test")
 	app.UpgradeKeeper = keeper.NewKeeper( // recreate keeper in order to use a custom home path
 		make(map[int64]bool), app.GetKey(types.StoreKey), app.AppCodec(), homeDir, app.BaseApp,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	s.T().Log("home dir:", homeDir)
 	s.homeDir = homeDir
@@ -36,6 +41,8 @@ func (s *KeeperTestSuite) SetupTest() {
 		Time:   time.Now(),
 		Height: 10,
 	})
+	s.msgSrvr = keeper.NewMsgServerImpl(s.app.UpgradeKeeper)
+	s.addrs = simapp.AddTestAddrsIncremental(app, s.ctx, 1, sdk.NewInt(30000000))
 }
 
 func (s *KeeperTestSuite) TestReadUpgradeInfoFromDisk() {
@@ -230,6 +237,45 @@ func (s *KeeperTestSuite) TestMigrations() {
 	s.app.UpgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
 	vm := s.app.UpgradeKeeper.GetModuleVersionMap(s.ctx)
 	s.Require().Equal(vmBefore["bank"]+1, vm["bank"])
+}
+
+func (s *KeeperTestSuite) TestLastCompletedUpgrade() {
+	keeper := s.app.UpgradeKeeper
+	require := s.Require()
+
+	s.T().Log("verify empty name if applied upgrades are empty")
+	name, height := keeper.GetLastCompletedUpgrade(s.ctx)
+	require.Equal("", name)
+	require.Equal(int64(0), height)
+
+	keeper.SetUpgradeHandler("test0", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		return vm, nil
+	})
+
+	keeper.ApplyUpgrade(s.ctx, types.Plan{
+		Name:   "test0",
+		Height: 10,
+	})
+
+	s.T().Log("verify valid upgrade name and height")
+	name, height = keeper.GetLastCompletedUpgrade(s.ctx)
+	require.Equal("test0", name)
+	require.Equal(int64(10), height)
+
+	keeper.SetUpgradeHandler("test1", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		return vm, nil
+	})
+
+	newCtx := s.ctx.WithBlockHeight(15)
+	keeper.ApplyUpgrade(newCtx, types.Plan{
+		Name:   "test1",
+		Height: 15,
+	})
+
+	s.T().Log("verify valid upgrade name and height with multiple upgrades")
+	name, height = keeper.GetLastCompletedUpgrade(newCtx)
+	require.Equal("test1", name)
+	require.Equal(int64(15), height)
 }
 
 func TestKeeperTestSuite(t *testing.T) {

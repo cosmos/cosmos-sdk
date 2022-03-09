@@ -8,8 +8,8 @@ Modules generally handle a subset of the state and, as such, they need to define
 
 ## Pre-requisite Readings
 
-- [Module Manager](./module-manager.md) {prereq}
-- [Keepers](./keeper.md) {prereq}
+* [Module Manager](./module-manager.md) {prereq}
+* [Keepers](./keeper.md) {prereq}
 
 ## Type Definition
 

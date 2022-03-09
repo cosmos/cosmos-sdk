@@ -8,8 +8,8 @@ There are multiple ways to interact with a node: using the CLI, using gRPC or us
 
 ## Pre-requisite Readings
 
-- [gRPC, REST and Tendermint Endpoints](../core/grpc_rest.md) {prereq}
-- [Running a Node](./run-node.md) {prereq}
+* [gRPC, REST and Tendermint Endpoints](../core/grpc_rest.md) {prereq}
+* [Running a Node](./run-node.md) {prereq}
 
 ## Using the CLI
 
@@ -54,9 +54,9 @@ The Protobuf ecosystem developed tools for different use cases, including code-g
 
 Since the code generation library largely depends on your own tech stack, we will only present three alternatives:
 
-- `grpcurl` for generic debugging and testing,
-- programmatically via Go,
-- CosmJS for JavaScript/TypeScript developers.
+* `grpcurl` for generic debugging and testing,
+* programmatically via Go,
+* CosmJS for JavaScript/TypeScript developers.
 
 ### grpcurl
 
@@ -116,6 +116,7 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/cosmos/cosmo-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
@@ -129,8 +130,11 @@ func queryState() error {
     // Create a connection to the gRPC server.
     grpcConn := grpc.Dial(
         "127.0.0.1:9090", // your gRPC server address.
-        grpc.WithInsecure(), // The Cosmos SDK doesn't support any transport security mechanism.
-    )
+        grpc.WithInsecure(), // The Cosmos SDK doesn't support any transport security mechanism. 
+        // This instantiates a general gRPC codec which handles proto bytes. We pass in a nil interface registry
+        // if the request/response types contain interface instead of 'nil' you should pass the application specific codec.
+		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(nil).GRPCCodec())),
+	)
     defer grpcConn.Close()
 
     // This creates a gRPC client to query the x/bank service.

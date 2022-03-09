@@ -3,12 +3,11 @@ package config_test
 import (
 	"bytes"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"io"
 	"os"
 	"testing"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
 	"github.com/stretchr/testify/require"
 

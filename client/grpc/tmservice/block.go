@@ -2,11 +2,9 @@ package tmservice
 
 import (
 	"context"
-
+	"github.com/cosmos/cosmos-sdk/client"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/tendermint/tendermint/rpc/coretypes"
-
-	"github.com/cosmos/cosmos-sdk/client"
 )
 
 func getBlock(ctx context.Context, clientCtx client.Context, height *int64) (*coretypes.ResultBlock, error) {

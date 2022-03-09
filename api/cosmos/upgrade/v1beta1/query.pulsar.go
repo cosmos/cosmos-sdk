@@ -4463,6 +4463,8 @@ func (x *QueryModuleVersionsResponse) GetModuleVersions() []*ModuleVersion {
 }
 
 // QueryAuthorityRequest is the request type for Query/Authority
+//
+// Since: cosmos-sdk 0.46
 type QueryAuthorityRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -4490,6 +4492,8 @@ func (*QueryAuthorityRequest) Descriptor() ([]byte, []int) {
 }
 
 // QueryAuthorityResponse is the response type for Query/Authority
+//
+// Since: cosmos-sdk 0.46
 type QueryAuthorityResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

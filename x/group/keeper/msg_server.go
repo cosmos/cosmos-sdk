@@ -739,11 +739,12 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 			if err := k.pruneProposal(ctx, proposal); err != nil {
 				return nil, err
 			}
+		} else {
+			if err := k.proposalTable.Update(store, id, &proposal); err != nil {
+				return nil, err
+			}
 		}
 
-		if err := k.proposalTable.Update(store, id, &proposal); err != nil {
-			return nil, err
-		}
 		return &group.MsgExecResponse{}, nil
 	}
 

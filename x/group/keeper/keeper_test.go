@@ -2276,6 +2276,7 @@ func (s *TestSuite) TestExecProposal() {
 				s.Require().NoError(err)
 				return myProposalID
 			},
+			expErr:            true, // since proposal is pruned after a successful MsgExec
 			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
 			expProposalResult: group.PROPOSAL_RESULT_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
@@ -2328,22 +2329,25 @@ func (s *TestSuite) TestExecProposal() {
 			}
 			s.Require().NoError(err)
 
-			// and proposal is updated
-			res, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
-			s.Require().NoError(err)
-			proposal := res.Proposal
+			if !(spec.expExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS) {
 
-			exp := group.ProposalResult_name[int32(spec.expProposalResult)]
-			got := group.ProposalResult_name[int32(proposal.Result)]
-			s.Assert().Equal(exp, got)
+				// and proposal is updated
+				res, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
+				s.Require().NoError(err)
+				proposal := res.Proposal
 
-			exp = group.ProposalStatus_name[int32(spec.expProposalStatus)]
-			got = group.ProposalStatus_name[int32(proposal.Status)]
-			s.Assert().Equal(exp, got)
+				exp := group.ProposalResult_name[int32(spec.expProposalResult)]
+				got := group.ProposalResult_name[int32(proposal.Result)]
+				s.Assert().Equal(exp, got)
 
-			exp = group.ProposalExecutorResult_name[int32(spec.expExecutorResult)]
-			got = group.ProposalExecutorResult_name[int32(proposal.ExecutorResult)]
-			s.Assert().Equal(exp, got)
+				exp = group.ProposalStatus_name[int32(spec.expProposalStatus)]
+				got = group.ProposalStatus_name[int32(proposal.Status)]
+				s.Assert().Equal(exp, got)
+
+				exp = group.ProposalExecutorResult_name[int32(spec.expExecutorResult)]
+				got = group.ProposalExecutorResult_name[int32(proposal.ExecutorResult)]
+				s.Assert().Equal(exp, got)
+			}
 
 			if spec.expBalance {
 				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, s.groupPolicyAddr)

@@ -3,14 +3,15 @@ package upgradev1beta1
 
 import (
 	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	io "io"
-	reflect "reflect"
-	sync "sync"
 )
 
 var (
@@ -4463,6 +4464,8 @@ func (x *QueryModuleVersionsResponse) GetModuleVersions() []*ModuleVersion {
 }
 
 // QueryAuthorityRequest is the request type for Query/Authority
+//
+// Since: cosmos-sdk 0.46
 type QueryAuthorityRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -4490,6 +4493,8 @@ func (*QueryAuthorityRequest) Descriptor() ([]byte, []int) {
 }
 
 // QueryAuthorityResponse is the response type for Query/Authority
+//
+// Since: cosmos-sdk 0.46
 type QueryAuthorityResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

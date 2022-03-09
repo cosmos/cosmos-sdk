@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package example;
+
+import "cosmos/app/v1alpha1/module.proto";
+import "cosmos/msg/v1/msg.proto";
+
+message Module {
+  option (cosmos.app.v1alpha1.module) = {
+    go_import: "github.com/cosmos/cosmos-sdk/core/internal/example"
+    use_package: {
+      name: "example"
+    }
+  };
+}
+
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+
+  rpc RegisterName(MsgRegisterName) returns (MsgRegisterNameResponse);
+}
+
+message MsgRegisterName {
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string sender = 1;
+  string name = 2;
+}
+
+message MsgRegisterNameResponse {}
+
+service Query {
+  rpc Name(NameRequest) returns (NameResponse);
+}
+
+message NameRequest {
+  string name = 1;
+}
+
+message NameResponse {
+  NameInfo info = 1;
+}
+
+message NameInfo {
+  string owner = 1;
+  int64 registered_height = 2;
+}
+
+message EventRegisterName {
+  string name = 1;
+  string owner = 2;
+}

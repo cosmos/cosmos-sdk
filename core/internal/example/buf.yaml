@@ -1,0 +1,6 @@
+version: v1
+deps:
+  - buf.build/cosmos/cosmos-proto
+  - buf.build/cosmos/gogo-proto
+  - buf.build/googleapis/googleapis
+  - buf.build/cosmos/cosmos-sdk

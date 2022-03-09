@@ -8,6 +8,12 @@ import "google/protobuf/descriptor.proto";
 // We need this right now because gogoproto codegen needs to import the extension.
 option go_package = "github.com/cosmos/cosmos-sdk/types/msgservice";
 
+extend google.protobuf.ServiceOptions {
+  // service indicates that the service is a Msg service and that requests
+  // should be routed through transactions rather than gRPC.
+  repeated bool service = 11110001;
+}
+
 extend google.protobuf.MessageOptions {
   // signer must be used in cosmos messages in order
   // to signal to external clients which fields in a

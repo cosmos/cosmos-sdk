@@ -194,3 +194,17 @@ func (d DB) Index(primaryKey []protoreflect.Value, value proto.Message, deleted 
 		return d.gormDb.Error
 	}
 }
+
+// AutoMigrate updates the table definitions in the database with new versions
+// of the underlying protobuf messages. Indexers which use dynamic protobuf
+// messages (i.e. dynamicpb) should make sure to listen for changes in schema
+// descriptors in the underlying store and use these new schema descriptors
+// after this point in order for AutoMigrate to work correctly. AutoMigrate
+// should generally be called at the moment a schema descriptor change event
+// is received.
+func (d *DB) AutoMigrate() error {
+	// currently auto-migrate naively clears the list of message codecs
+	// and will auto-migrate each table each time a new message is indexed
+	d.migratedMsgCodecs = map[protoreflect.FullName]*messageCodec{}
+	return nil
+}

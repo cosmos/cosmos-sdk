@@ -68,7 +68,7 @@ type Keeper struct {
 	proposalTable              orm.AutoUInt64Table
 	proposalByGroupPolicyIndex orm.Index
 	proposalByProposerIndex    orm.Index
-	ProposalsByVotingPeriodEnd orm.Index
+	proposalsByVotingPeriodEnd orm.Index
 
 	// Vote Table
 	voteTable           orm.PrimaryKeyTable
@@ -184,7 +184,7 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 	if err != nil {
 		panic(err.Error())
 	}
-	k.ProposalsByVotingPeriodEnd, err = orm.NewIndex(proposalTable, ProposalsByVotingPeriodEndPrefix, func(value interface{}) ([]interface{}, error) {
+	k.proposalsByVotingPeriodEnd, err = orm.NewIndex(proposalTable, ProposalsByVotingPeriodEndPrefix, func(value interface{}) ([]interface{}, error) {
 		votingPeriodEnd := value.(*group.Proposal).VotingPeriodEnd
 		return []interface{}{sdk.FormatTimeBytes(votingPeriodEnd)}, nil
 	}, []byte{})
@@ -241,9 +241,9 @@ func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
 	return k.groupTable.Sequence().CurVal(ctx.KVStore(k.key))
 }
 
-func (k Keeper) iterateProposalsByVPEnd(ctx sdk.Context, cb func(proposal group.Proposal) (stop bool)) error {
+func (k Keeper) iterateProposalsByVPEnd(ctx sdk.Context, cb func(proposal group.Proposal) (bool, error)) error {
 	timeBytes := sdk.FormatTimeBytes(ctx.BlockTime())
-	it, err := k.ProposalsByVotingPeriodEnd.PrefixScan(ctx.KVStore(k.key), nil, timeBytes)
+	it, err := k.proposalsByVotingPeriodEnd.PrefixScan(ctx.KVStore(k.key), nil, timeBytes)
 
 	if err != nil {
 		return err
@@ -260,8 +260,12 @@ func (k Keeper) iterateProposalsByVPEnd(ctx sdk.Context, cb func(proposal group.
 			return err
 		}
 
-		if cb(proposal) {
+		stop, err := cb(proposal)
+		if stop {
 			break
+		}
+		if err != nil {
+			return err
 		}
 	}
 
@@ -269,31 +273,28 @@ func (k Keeper) iterateProposalsByVPEnd(ctx sdk.Context, cb func(proposal group.
 }
 
 func (k Keeper) UpdateTallyOfVPEndProposals(ctx sdk.Context) error {
-	k.iterateProposalsByVPEnd(ctx, func(proposal group.Proposal) (stop bool) {
+	k.iterateProposalsByVPEnd(ctx, func(proposal group.Proposal) (bool, error) {
 
 		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.Address)
 		if err != nil {
-			return true
+			return true, err
 		}
 
 		electorate, err := k.getGroupInfo(ctx, policyInfo.GroupId)
 		if err != nil {
-			return true
+			return true, err
 		}
 
 		err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo)
 		if err != nil {
-			return true
+			return true, err
 		}
 
-		storeUpdates := func() error {
-			if err := k.proposalTable.Update(ctx.KVStore(k.key), proposal.Id, &proposal); err != nil {
-				return err
-			}
-			return nil
+		if err := k.proposalTable.Update(ctx.KVStore(k.key), proposal.Id, &proposal); err != nil {
+			return true, err
 		}
-		err = storeUpdates()
-		return err != nil
+
+		return false, nil
 	})
 
 	return nil

@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"strings"
@@ -19,7 +18,7 @@ import (
 
 func (suite *KeeperTestSuite) TestGetSetProposal() {
 	tp := TestProposal
-	proposal, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, tp, nil)
+	proposal, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, tp, "")
 	suite.Require().NoError(err)
 	proposalID := proposal.Id
 	suite.app.GovKeeper.SetProposal(suite.ctx, proposal)
@@ -31,7 +30,7 @@ func (suite *KeeperTestSuite) TestGetSetProposal() {
 
 func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
 	tp := TestProposal
-	proposal, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, tp, nil)
+	proposal, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, tp, "")
 	suite.Require().NoError(err)
 
 	suite.Require().Nil(proposal.VotingStartTime)
@@ -62,21 +61,21 @@ func (suite *KeeperTestSuite) TestSubmitProposal() {
 	testCases := []struct {
 		content     v1beta1.Content
 		authority   string
-		metadata    []byte
+		metadata    string
 		expectedErr error
 	}{
-		{&tp, govAcct, nil, nil},
+		{&tp, govAcct, "", nil},
 		// Keeper does not check the validity of title and description, no error
-		{&v1beta1.TextProposal{Title: "", Description: "description"}, govAcct, nil, nil},
-		{&v1beta1.TextProposal{Title: strings.Repeat("1234567890", 100), Description: "description"}, govAcct, nil, nil},
-		{&v1beta1.TextProposal{Title: "title", Description: ""}, govAcct, nil, nil},
-		{&v1beta1.TextProposal{Title: "title", Description: strings.Repeat("1234567890", 1000)}, govAcct, nil, nil},
+		{&v1beta1.TextProposal{Title: "", Description: "description"}, govAcct, "", nil},
+		{&v1beta1.TextProposal{Title: strings.Repeat("1234567890", 100), Description: "description"}, govAcct, "", nil},
+		{&v1beta1.TextProposal{Title: "title", Description: ""}, govAcct, "", nil},
+		{&v1beta1.TextProposal{Title: "title", Description: strings.Repeat("1234567890", 1000)}, govAcct, "", nil},
 		// error when metadata is too long (>10000)
-		{&tp, govAcct, bytes.Repeat([]byte{42}, 10001), types.ErrMetadataTooLong},
+		{&tp, govAcct, strings.Repeat("a", 100001), types.ErrMetadataTooLong},
 		// error when signer is not gov acct
-		{&tp, randomAddr.String(), nil, types.ErrInvalidSigner},
+		{&tp, randomAddr.String(), "", types.ErrInvalidSigner},
 		// error only when invalid route
-		{&invalidProposalRoute{}, govAcct, nil, types.ErrNoProposalHandlerExists},
+		{&invalidProposalRoute{}, govAcct, "", types.ErrNoProposalHandlerExists},
 	}
 
 	for i, tc := range testCases {
@@ -95,14 +94,14 @@ func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
 
 	for _, s := range status {
 		for i := 0; i < 50; i++ {
-			p, err := v1beta2.NewProposal(TestProposal, proposalID, nil, time.Now(), time.Now())
+			p, err := v1beta2.NewProposal(TestProposal, proposalID, "", time.Now(), time.Now())
 			suite.Require().NoError(err)
 
 			p.Status = s
 
 			if i%2 == 0 {
 				d := v1beta2.NewDeposit(proposalID, addr1, nil)
-				v := v1beta2.NewVote(proposalID, addr1, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes))
+				v := v1beta2.NewVote(proposalID, addr1, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), "")
 				suite.app.GovKeeper.SetDeposit(suite.ctx, d)
 				suite.app.GovKeeper.SetVote(suite.ctx, v)
 			}

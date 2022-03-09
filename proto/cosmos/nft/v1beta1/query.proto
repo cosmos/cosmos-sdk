@@ -24,7 +24,8 @@ service Query {
     option (google.api.http).get = "/cosmos/nft/v1beta1/supply/{class_id}";
   }
 
-  // NFTs queries all NFTs of a given class or owner,choose at least one of the two, similar to tokenByIndex in ERC721Enumerable
+  // NFTs queries all NFTs of a given class or owner,choose at least one of the two, similar to tokenByIndex in
+  // ERC721Enumerable
   rpc NFTs(QueryNFTsRequest) returns (QueryNFTsResponse) {
     option (google.api.http).get = "/cosmos/nft/v1beta1/nfts";
   }

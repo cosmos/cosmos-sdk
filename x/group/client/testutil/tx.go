@@ -1453,15 +1453,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 	}
 }
 
-// TestTxCreateProposal tests submitting proposal.
-//
-// Please don't rename this to TestTxSubmitProposal. It will redefine the order
-// of the tests being run in this file with `go test`, and will mess up the
-// proposal ids in other tests (e.g. voting or Exec tests).
-// This is a headache, but requires a bigger refactor of all tests in this file
-// so that each one is independent.
-// https://github.com/cosmos/cosmos-sdk/issues/11168
-func (s *IntegrationTestSuite) TestTxCreateProposal() {
+func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -1998,6 +1990,7 @@ func (s *IntegrationTestSuite) getProposalIdFromTxResponse(txResp sdk.TxResponse
 func (s *IntegrationTestSuite) TestTxExec() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
+	require := s.Require()
 
 	var commonFlags = []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -2005,8 +1998,9 @@ func (s *IntegrationTestSuite) TestTxExec() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
+	var proposalIDs []string
 	// create proposals and vote
-	for i := 3; i <= 4; i++ {
+	for i := 0; i < 2; i++ {
 		out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
 			append(
 				[]string{
@@ -2019,8 +2013,12 @@ func (s *IntegrationTestSuite) TestTxExec() {
 				commonFlags...,
 			),
 		)
-		s.Require().NoError(err, out.String())
-		fmt.Println(out.String())
+		require.NoError(err, out.String())
+
+		var txResp sdk.TxResponse
+		require.NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+		require.Equal(uint32(0), txResp.Code, out.String())
+		proposalIDs = append(proposalIDs, s.getProposalIdFromTxResponse(txResp))
 
 		out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgVoteCmd(),
 			append(
@@ -2033,7 +2031,7 @@ func (s *IntegrationTestSuite) TestTxExec() {
 				commonFlags...,
 			),
 		)
-		s.Require().NoError(err, out.String())
+		require.NoError(err, out.String())
 	}
 
 	testCases := []struct {
@@ -2044,25 +2042,25 @@ func (s *IntegrationTestSuite) TestTxExec() {
 		respType     proto.Message
 		expectedCode uint32
 	}{
-		// {
-		// 	"correct data",
-		// 	append(
-		// 		[]string{
-		// 			"3",
-		// 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-		// 		},
-		// 		commonFlags...,
-		// 	),
-		// 	false,
-		// 	"",
-		// 	&sdk.TxResponse{},
-		// 	0,
-		// },
+		{
+			"correct data",
+			append(
+				[]string{
+					proposalIDs[0],
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				},
+				commonFlags...,
+			),
+			false,
+			"",
+			&sdk.TxResponse{},
+			0,
+		},
 		{
 			"with amino-json",
 			append(
 				[]string{
-					"4",
+					proposalIDs[1],
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
@@ -2073,34 +2071,34 @@ func (s *IntegrationTestSuite) TestTxExec() {
 			&sdk.TxResponse{},
 			0,
 		},
-		// {
-		// 	"invalid proposal id",
-		// 	append(
-		// 		[]string{
-		// 			"abcd",
-		// 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-		// 		},
-		// 		commonFlags...,
-		// 	),
-		// 	true,
-		// 	"invalid syntax",
-		// 	nil,
-		// 	0,
-		// },
-		// {
-		// 	"proposal not found",
-		// 	append(
-		// 		[]string{
-		// 			"1234",
-		// 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-		// 		},
-		// 		commonFlags...,
-		// 	),
-		// 	true,
-		// 	"proposal: not found",
-		// 	nil,
-		// 	0,
-		// },
+		{
+			"invalid proposal id",
+			append(
+				[]string{
+					"abcd",
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				},
+				commonFlags...,
+			),
+			true,
+			"invalid syntax",
+			nil,
+			0,
+		},
+		{
+			"proposal not found",
+			append(
+				[]string{
+					"1234",
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				},
+				commonFlags...,
+			),
+			true,
+			"proposal: not found",
+			nil,
+			0,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -2111,13 +2109,13 @@ func (s *IntegrationTestSuite) TestTxExec() {
 
 			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				s.Require().Contains(out.String(), tc.expectErrMsg)
+				require.Contains(out.String(), tc.expectErrMsg)
 			} else {
-				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				require.NoError(err, out.String())
+				require.NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				require.Equal(tc.expectedCode, txResp.Code, out.String())
 			}
 		})
 	}

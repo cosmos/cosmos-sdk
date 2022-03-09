@@ -74,14 +74,23 @@ func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower strin
 	if err != nil {
 		return DecisionPolicyResult{}, err
 	}
-	if yesCount.Cmp(threshold) >= 0 {
-		return DecisionPolicyResult{Allow: true, Final: true}, nil
-	}
 
 	totalPowerDec, err := math.NewNonNegativeDecFromString(totalPower)
 	if err != nil {
 		return DecisionPolicyResult{}, err
 	}
+
+	// the real threshold of the policy is `min(threshold,total_weight)`. If
+	// the group member weights changes (member leaving, member weight update)
+	// and the threshold doesn't, we can end up with threshold > total_weight.
+	// In this case, as long as everyone votes yes (in which case
+	// `yesCount`==`realThreshold`), then the proposal still passes.
+	realThreshold := min(threshold, totalPowerDec)
+
+	if yesCount.Cmp(realThreshold) >= 0 {
+		return DecisionPolicyResult{Allow: true, Final: true}, nil
+	}
+
 	totalCounts, err := tallyResult.TotalCounts()
 	if err != nil {
 		return DecisionPolicyResult{}, err
@@ -90,29 +99,39 @@ func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower strin
 	if err != nil {
 		return DecisionPolicyResult{}, err
 	}
-	sum, err := yesCount.Add(undecided)
+	// maxYesCount is the max potential number of yes count, i.e the current yes count
+	// plus all undecided count (supposing they all vote yes).
+	maxYesCount, err := yesCount.Add(undecided)
 	if err != nil {
 		return DecisionPolicyResult{}, err
 	}
-	if sum.Cmp(threshold) < 0 {
+
+	if maxYesCount.Cmp(realThreshold) < 0 {
 		return DecisionPolicyResult{Allow: false, Final: true}, nil
 	}
 	return DecisionPolicyResult{Allow: false, Final: false}, nil
 }
 
-// Validate returns an error if policy threshold is greater than the total group weight
+func min(a, b math.Dec) math.Dec {
+	if a.Cmp(b) < 0 {
+		return a
+	}
+	return b
+}
+
+// Validate validates the policy against the group. Note that the threshold
+// can actually be greater than the group's total weight: in the Allow method
+// we check the tally weight against `min(threshold,total_weight)`.
 func (p *ThresholdDecisionPolicy) Validate(g GroupInfo, config Config) error {
-	threshold, err := math.NewPositiveDecFromString(p.Threshold)
+	_, err := math.NewPositiveDecFromString(p.Threshold)
 	if err != nil {
 		return sdkerrors.Wrap(err, "threshold")
 	}
-	totalWeight, err := math.NewNonNegativeDecFromString(g.TotalWeight)
+	_, err = math.NewNonNegativeDecFromString(g.TotalWeight)
 	if err != nil {
 		return sdkerrors.Wrap(err, "group total weight")
 	}
-	if threshold.Cmp(totalWeight) > 0 {
-		return sdkerrors.Wrapf(errors.ErrInvalid, "policy threshold %s should not be greater than the total group weight %s", p.Threshold, g.TotalWeight)
-	}
+
 	if p.Windows.MinExecutionPeriod > p.Windows.VotingPeriod+config.MaxExecutionPeriod {
 		return sdkerrors.Wrap(errors.ErrInvalid, "min_execution_period should be smaller than voting_period + max_execution_period")
 	}

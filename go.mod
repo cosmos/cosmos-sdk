@@ -69,4 +69,4 @@ replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 
 replace github.com/tendermint/tm-db => github.com/osmosis-labs/tm-db v0.6.5-0.20210911033928-ba9154613417
 
-replace github.com/cosmos/iavl => github.com/osmosis-labs/iavl v0.17.3-osmo-v4
+replace github.com/cosmos/iavl => github.com/osmosis-labs/iavl v0.17.3-osmo-v5

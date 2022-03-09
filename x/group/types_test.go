@@ -19,17 +19,6 @@ func TestThresholdDecisionPolicyValidate(t *testing.T) {
 		policy group.ThresholdDecisionPolicy
 		expErr bool
 	}{
-
-		{
-			"threshold bigger than total weight",
-			group.ThresholdDecisionPolicy{
-				Threshold: "12",
-				Windows: &group.DecisionPolicyWindows{
-					VotingPeriod: time.Second,
-				},
-			},
-			true,
-		},
 		{
 			"min exec period too big",
 			group.ThresholdDecisionPolicy{
@@ -297,13 +286,13 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 		{
 			"YesCount >= threshold decision policy",
 			&group.ThresholdDecisionPolicy{
-				Threshold: "3",
+				Threshold: "2",
 				Windows: &group.DecisionPolicyWindows{
 					VotingPeriod: time.Second * 100,
 				},
 			},
 			&group.TallyResult{
-				YesCount:        "3",
+				YesCount:        "2",
 				NoCount:         "0",
 				AbstainCount:    "0",
 				NoWithVetoCount: "0",
@@ -319,7 +308,7 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 		{
 			"YesCount < threshold decision policy",
 			&group.ThresholdDecisionPolicy{
-				Threshold: "3",
+				Threshold: "2",
 				Windows: &group.DecisionPolicyWindows{
 					VotingPeriod: time.Second * 100,
 				},
@@ -339,20 +328,42 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 			false,
 		},
 		{
-			"sum votes < threshold decision policy",
+			"YesCount == group total weight < threshold",
 			&group.ThresholdDecisionPolicy{
-				Threshold: "3",
+				Threshold: "20",
 				Windows: &group.DecisionPolicyWindows{
 					VotingPeriod: time.Second * 100,
 				},
 			},
 			&group.TallyResult{
-				YesCount:        "1",
+				YesCount:        "3",
 				NoCount:         "0",
 				AbstainCount:    "0",
 				NoWithVetoCount: "0",
 			},
-			"2",
+			"3",
+			time.Duration(time.Second * 50),
+			group.DecisionPolicyResult{
+				Allow: true,
+				Final: true,
+			},
+			false,
+		},
+		{
+			"maxYesCount < threshold decision policy",
+			&group.ThresholdDecisionPolicy{
+				Threshold: "2",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "0",
+				NoCount:         "1",
+				AbstainCount:    "1",
+				NoWithVetoCount: "0",
+			},
+			"3",
 			time.Duration(time.Second * 50),
 			group.DecisionPolicyResult{
 				Allow: false,
@@ -361,16 +372,16 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 			false,
 		},
 		{
-			"sum votes >= threshold decision policy",
+			"maxYesCount >= threshold decision policy",
 			&group.ThresholdDecisionPolicy{
-				Threshold: "3",
+				Threshold: "2",
 				Windows: &group.DecisionPolicyWindows{
 					VotingPeriod: time.Second * 100,
 				},
 			},
 			&group.TallyResult{
-				YesCount:        "1",
-				NoCount:         "0",
+				YesCount:        "0",
+				NoCount:         "1",
 				AbstainCount:    "0",
 				NoWithVetoCount: "0",
 			},

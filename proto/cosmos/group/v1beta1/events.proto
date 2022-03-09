@@ -65,3 +65,13 @@ message EventExec {
   // result is the proposal execution result.
   ProposalExecutorResult result = 2;
 }
+
+// EventLeaveGroup is an event emitted when group member leaves the group.
+message EventLeaveGroup {
+
+  // group_id is the unique ID of the group.
+  uint64 group_id = 1;
+
+  // address is the account address of the group member.
+  string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}

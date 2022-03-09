@@ -78,7 +78,7 @@ func ShowAddressCmd() *cobra.Command {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config
 
-			privValidator, err := pvm.LoadFilePV(cfg.PrivValidator.Key, cfg.PrivValidator.State)
+			privValidator, err := pvm.LoadFilePV(cfg.PrivValidator.KeyFile(), cfg.PrivValidator.StateFile())
 			if err != nil {
 				return err
 			}

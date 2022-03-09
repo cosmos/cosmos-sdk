@@ -1008,8 +1008,8 @@ func (s *IntegrationTestSuite) TestSignWithMultisig() {
 	// even though the tx signer is NOT the multisig address. This is fine though,
 	// as the main point of this test is to test the `--multisig` flag with an address
 	// that is not in the keyring.
-	_, _ = TxSignExec(val1.ClientCtx, addr1, multiGeneratedTx2File.Name(), "--multisig", multisigAddr.String())
-	s.Require().NoError(err)
+	_, err = TxSignExec(val1.ClientCtx, addr1, multiGeneratedTx2File.Name(), "--multisig", multisigAddr.String())
+	s.Require().Contains(err.Error(), "tx intended signer does not match the given signer")
 }
 
 func (s *IntegrationTestSuite) TestCLIMultisign() {

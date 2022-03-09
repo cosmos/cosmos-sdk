@@ -2018,12 +2018,13 @@ func (s *IntegrationTestSuite) TestTxExec() {
 		var txResp sdk.TxResponse
 		require.NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 		require.Equal(uint32(0), txResp.Code, out.String())
-		proposalIDs = append(proposalIDs, s.getProposalIdFromTxResponse(txResp))
+		proposalID := s.getProposalIdFromTxResponse(txResp)
+		proposalIDs = append(proposalIDs, proposalID)
 
 		out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgVoteCmd(),
 			append(
 				[]string{
-					fmt.Sprintf("%d", i),
+					proposalID,
 					val.Address.String(),
 					"VOTE_OPTION_YES",
 					"",

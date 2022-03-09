@@ -3,19 +3,17 @@ package types
 
 import (
 	fmt "fmt"
-	io "io"
-	reflect "reflect"
-	sync "sync"
-
 	runtime "github.com/cosmos/cosmos-proto/runtime"
+	crypto "github.com/cosmos/cosmos-sdk/api/tendermint/crypto"
+	version "github.com/cosmos/cosmos-sdk/api/tendermint/version"
 	_ "github.com/gogo/protobuf/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
-
-	crypto "github.com/cosmos/cosmos-sdk/api/tendermint/crypto"
-	version "github.com/cosmos/cosmos-sdk/api/tendermint/version"
+	io "io"
+	reflect "reflect"
+	sync "sync"
 )
 
 var (

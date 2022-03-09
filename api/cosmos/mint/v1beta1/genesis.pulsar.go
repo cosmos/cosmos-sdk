@@ -3,15 +3,14 @@ package mintv1beta1
 
 import (
 	fmt "fmt"
-	io "io"
-	reflect "reflect"
-	sync "sync"
-
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/gogo/protobuf/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	io "io"
+	reflect "reflect"
+	sync "sync"
 )
 
 var (
@@ -549,7 +548,7 @@ type GenesisState struct {
 
 	// minter is a space for holding current inflation information.
 	Minter *Minter `protobuf:"bytes,1,opt,name=minter,proto3" json:"minter,omitempty"`
-	// params defines all the parameters of the module.
+	// params defines all the paramaters of the module.
 	Params *Params `protobuf:"bytes,2,opt,name=params,proto3" json:"params,omitempty"`
 }
 

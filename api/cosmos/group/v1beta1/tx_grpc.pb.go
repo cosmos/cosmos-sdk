@@ -32,6 +32,8 @@ type MsgClient interface {
 	UpdateGroupMetadata(ctx context.Context, in *MsgUpdateGroupMetadata, opts ...grpc.CallOption) (*MsgUpdateGroupMetadataResponse, error)
 	// CreateGroupPolicy creates a new group policy using given DecisionPolicy.
 	CreateGroupPolicy(ctx context.Context, in *MsgCreateGroupPolicy, opts ...grpc.CallOption) (*MsgCreateGroupPolicyResponse, error)
+	// CreateGroupWithPolicy creates a new group with policy.
+	CreateGroupWithPolicy(ctx context.Context, in *MsgCreateGroupWithPolicy, opts ...grpc.CallOption) (*MsgCreateGroupWithPolicyResponse, error)
 	// UpdateGroupPolicyAdmin updates a group policy admin.
 	UpdateGroupPolicyAdmin(ctx context.Context, in *MsgUpdateGroupPolicyAdmin, opts ...grpc.CallOption) (*MsgUpdateGroupPolicyAdminResponse, error)
 	// UpdateGroupPolicyDecisionPolicy allows a group policy's decision policy to be updated.
@@ -46,6 +48,8 @@ type MsgClient interface {
 	Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOption) (*MsgVoteResponse, error)
 	// Exec executes a proposal.
 	Exec(ctx context.Context, in *MsgExec, opts ...grpc.CallOption) (*MsgExecResponse, error)
+	// LeaveGroup allows a group member to leave the group.
+	LeaveGroup(ctx context.Context, in *MsgLeaveGroup, opts ...grpc.CallOption) (*MsgLeaveGroupResponse, error)
 }
 
 type msgClient struct {
@@ -95,6 +99,15 @@ func (c *msgClient) UpdateGroupMetadata(ctx context.Context, in *MsgUpdateGroupM
 func (c *msgClient) CreateGroupPolicy(ctx context.Context, in *MsgCreateGroupPolicy, opts ...grpc.CallOption) (*MsgCreateGroupPolicyResponse, error) {
 	out := new(MsgCreateGroupPolicyResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/CreateGroupPolicy", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) CreateGroupWithPolicy(ctx context.Context, in *MsgCreateGroupWithPolicy, opts ...grpc.CallOption) (*MsgCreateGroupWithPolicyResponse, error) {
+	out := new(MsgCreateGroupWithPolicyResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/CreateGroupWithPolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -164,6 +177,15 @@ func (c *msgClient) Exec(ctx context.Context, in *MsgExec, opts ...grpc.CallOpti
 	return out, nil
 }
 
+func (c *msgClient) LeaveGroup(ctx context.Context, in *MsgLeaveGroup, opts ...grpc.CallOption) (*MsgLeaveGroupResponse, error) {
+	out := new(MsgLeaveGroupResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1beta1.Msg/LeaveGroup", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -178,6 +200,8 @@ type MsgServer interface {
 	UpdateGroupMetadata(context.Context, *MsgUpdateGroupMetadata) (*MsgUpdateGroupMetadataResponse, error)
 	// CreateGroupPolicy creates a new group policy using given DecisionPolicy.
 	CreateGroupPolicy(context.Context, *MsgCreateGroupPolicy) (*MsgCreateGroupPolicyResponse, error)
+	// CreateGroupWithPolicy creates a new group with policy.
+	CreateGroupWithPolicy(context.Context, *MsgCreateGroupWithPolicy) (*MsgCreateGroupWithPolicyResponse, error)
 	// UpdateGroupPolicyAdmin updates a group policy admin.
 	UpdateGroupPolicyAdmin(context.Context, *MsgUpdateGroupPolicyAdmin) (*MsgUpdateGroupPolicyAdminResponse, error)
 	// UpdateGroupPolicyDecisionPolicy allows a group policy's decision policy to be updated.
@@ -192,6 +216,8 @@ type MsgServer interface {
 	Vote(context.Context, *MsgVote) (*MsgVoteResponse, error)
 	// Exec executes a proposal.
 	Exec(context.Context, *MsgExec) (*MsgExecResponse, error)
+	// LeaveGroup allows a group member to leave the group.
+	LeaveGroup(context.Context, *MsgLeaveGroup) (*MsgLeaveGroupResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -214,6 +240,9 @@ func (UnimplementedMsgServer) UpdateGroupMetadata(context.Context, *MsgUpdateGro
 func (UnimplementedMsgServer) CreateGroupPolicy(context.Context, *MsgCreateGroupPolicy) (*MsgCreateGroupPolicyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateGroupPolicy not implemented")
 }
+func (UnimplementedMsgServer) CreateGroupWithPolicy(context.Context, *MsgCreateGroupWithPolicy) (*MsgCreateGroupWithPolicyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateGroupWithPolicy not implemented")
+}
 func (UnimplementedMsgServer) UpdateGroupPolicyAdmin(context.Context, *MsgUpdateGroupPolicyAdmin) (*MsgUpdateGroupPolicyAdminResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroupPolicyAdmin not implemented")
 }
@@ -234,6 +263,9 @@ func (UnimplementedMsgServer) Vote(context.Context, *MsgVote) (*MsgVoteResponse,
 }
 func (UnimplementedMsgServer) Exec(context.Context, *MsgExec) (*MsgExecResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Exec not implemented")
+}
+func (UnimplementedMsgServer) LeaveGroup(context.Context, *MsgLeaveGroup) (*MsgLeaveGroupResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LeaveGroup not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -334,6 +366,24 @@ func _Msg_CreateGroupPolicy_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).CreateGroupPolicy(ctx, req.(*MsgCreateGroupPolicy))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_CreateGroupWithPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateGroupWithPolicy)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateGroupWithPolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.group.v1beta1.Msg/CreateGroupWithPolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateGroupWithPolicy(ctx, req.(*MsgCreateGroupWithPolicy))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -464,6 +514,24 @@ func _Msg_Exec_Handler(srv interface{}, ctx context.Context, dec func(interface{
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_LeaveGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgLeaveGroup)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).LeaveGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.group.v1beta1.Msg/LeaveGroup",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).LeaveGroup(ctx, req.(*MsgLeaveGroup))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -492,6 +560,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_CreateGroupPolicy_Handler,
 		},
 		{
+			MethodName: "CreateGroupWithPolicy",
+			Handler:    _Msg_CreateGroupWithPolicy_Handler,
+		},
+		{
 			MethodName: "UpdateGroupPolicyAdmin",
 			Handler:    _Msg_UpdateGroupPolicyAdmin_Handler,
 		},
@@ -518,6 +590,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Exec",
 			Handler:    _Msg_Exec_Handler,
+		},
+		{
+			MethodName: "LeaveGroup",
+			Handler:    _Msg_LeaveGroup_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

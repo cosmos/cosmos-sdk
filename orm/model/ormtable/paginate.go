@@ -11,6 +11,9 @@ import (
 func paginate(it Iterator, options *listinternal.Options) Iterator {
 	offset := int(options.Offset)
 	limit := int(options.Limit)
+	if limit == 0 {
+		limit = int(options.DefaultLimit)
+	}
 
 	i := 0
 	if offset != 0 {

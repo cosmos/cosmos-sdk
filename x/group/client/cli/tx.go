@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"encoding/base64"
 	"fmt"
 	"strconv"
 	"strings"
@@ -12,14 +11,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
 const (
-	FlagExec = "exec"
-	ExecTry  = "try"
+	FlagExec               = "exec"
+	ExecTry                = "try"
+	FlagGroupPolicyAsAdmin = "group-policy-as-admin"
 )
 
 // TxCmd returns a root CLI command handler for all x/group transaction commands.
@@ -37,6 +36,7 @@ func TxCmd(name string) *cobra.Command {
 		MsgUpdateGroupAdminCmd(),
 		MsgUpdateGroupMetadataCmd(),
 		MsgUpdateGroupMembersCmd(),
+		MsgCreateGroupWithPolicyCmd(),
 		MsgCreateGroupPolicyCmd(),
 		MsgUpdateGroupPolicyAdminCmd(),
 		MsgUpdateGroupPolicyDecisionPolicyCmd(),
@@ -44,6 +44,7 @@ func TxCmd(name string) *cobra.Command {
 		MsgSubmitProposalCmd(),
 		MsgVoteCmd(),
 		MsgExecCmd(),
+		MsgLeaveGroupCmd(),
 	)
 
 	return txCmd
@@ -102,15 +103,10 @@ Where members.json contains:
 				return err
 			}
 
-			metadata, err := base64.StdEncoding.DecodeString(args[1])
-			if err != nil {
-				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "metadata is malformed, proper base64 string is required")
-			}
-
 			msg := &group.MsgCreateGroup{
 				Admin:    clientCtx.GetFromAddress().String(),
 				Members:  members,
-				Metadata: metadata,
+				Metadata: args[1],
 			}
 			if err = msg.ValidateBasic(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
@@ -260,14 +256,9 @@ func MsgUpdateGroupMetadataCmd() *cobra.Command {
 				return err
 			}
 
-			b, err := base64.StdEncoding.DecodeString(args[2])
-			if err != nil {
-				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "metadata is malformed, proper base64 string is required")
-			}
-
 			msg := &group.MsgUpdateGroupMetadata{
 				Admin:    clientCtx.GetFromAddress().String(),
-				Metadata: b,
+				Metadata: args[2],
 				GroupId:  groupID,
 			}
 			if err = msg.ValidateBasic(); err != nil {
@@ -278,6 +269,96 @@ func MsgUpdateGroupMetadataCmd() *cobra.Command {
 		},
 	}
 
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// MsgCreateGroupWithPolicyCmd creates a CLI command for Msg/CreateGroupWithPolicy.
+func MsgCreateGroupWithPolicyCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use: "create-group-with-policy [admin] [group-metadata] [group-policy-metadata] [members-json-file] [decision-policy]",
+		Short: "Create a group with policy which is an aggregation " +
+			"of member accounts with associated weights, " +
+			"an administrator account and a decision policy. Note, the '--from' flag is " +
+			"ignored as it is implied from [admin].",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Create a group with policy which is an aggregation of member accounts with associated weights,
+an administrator account and decision policy. Note, the '--from' flag is ignored as it is implied from [admin].
+Members accounts can be given through a members JSON file that contains an array of members.
+If group-policy-as-admin flag is set to true, the admin of the newly created group and group policy is set with the group policy address itself.
+
+Example:
+$ %s tx group create-group-with-policy [admin] [group-metadata] [group-policy-metadata] [members-json-file] \
+'{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"1s"}'
+
+where members.json contains:
+
+{
+	"members": [
+		{
+			"address": "addr1",
+			"weight": "1",
+			"metadata": "some metadata"
+		},
+		{
+			"address": "addr2",
+			"weight": "1",
+			"metadata": "some metadata"
+		}
+	]
+}
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.MinimumNArgs(5),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := cmd.Flags().Set(flags.FlagFrom, args[0])
+			if err != nil {
+				return err
+			}
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			groupPolicyAsAdmin, err := cmd.Flags().GetBool(FlagGroupPolicyAsAdmin)
+			if err != nil {
+				return err
+			}
+
+			members, err := parseMembers(clientCtx, args[3])
+			if err != nil {
+				return err
+			}
+
+			var policy group.DecisionPolicy
+			if err := clientCtx.Codec.UnmarshalInterfaceJSON([]byte(args[4]), &policy); err != nil {
+				return err
+			}
+
+			msg, err := group.NewMsgCreateGroupWithPolicy(
+				clientCtx.GetFromAddress().String(),
+				members,
+				args[1],
+				args[2],
+				groupPolicyAsAdmin,
+				policy,
+			)
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return fmt.Errorf("message validation failed: %w", err)
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	cmd.Flags().Bool(FlagGroupPolicyAsAdmin, false, "Sets admin of the newly created group and group policy with group policy address itself when true")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -327,15 +408,10 @@ Ex: '{"@type":"/cosmos.group.v1beta1.PercentageDecisionPolicy", "percentage":"0.
 				return err
 			}
 
-			b, err := base64.StdEncoding.DecodeString(args[2])
-			if err != nil {
-				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "metadata is malformed, proper base64 string is required")
-			}
-
 			msg, err := group.NewMsgCreateGroupPolicy(
 				clientCtx.GetFromAddress(),
 				groupID,
-				b,
+				args[2],
 				policy,
 			)
 			if err != nil {
@@ -455,15 +531,10 @@ func MsgUpdateGroupPolicyMetadataCmd() *cobra.Command {
 				return err
 			}
 
-			b, err := base64.StdEncoding.DecodeString(args[2])
-			if err != nil {
-				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "metadata is malformed, proper base64 string is required")
-			}
-
 			msg := &group.MsgUpdateGroupPolicyMetadata{
 				Admin:    clientCtx.GetFromAddress().String(),
 				Address:  args[1],
-				Metadata: b,
+				Metadata: args[2],
 			}
 			if err = msg.ValidateBasic(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
@@ -646,18 +717,13 @@ Parameters:
 				return err
 			}
 
-			b, err := base64.StdEncoding.DecodeString(args[3])
-			if err != nil {
-				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "metadata is malformed, proper base64 string is required")
-			}
-
 			execStr, _ := cmd.Flags().GetString(FlagExec)
 
 			msg := &group.MsgVote{
 				ProposalId: proposalID,
 				Voter:      args[1],
 				Option:     voteOption,
-				Metadata:   b,
+				Metadata:   args[3],
 				Exec:       execFromString(execStr),
 			}
 			if err != nil {
@@ -703,6 +769,49 @@ func MsgExecCmd() *cobra.Command {
 				return err
 			}
 
+			if err = msg.ValidateBasic(); err != nil {
+				return fmt.Errorf("message validation failed: %w", err)
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// MsgLeaveGroupCmd creates a CLI command for Msg/LeaveGroup.
+func MsgLeaveGroupCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "leave-group [member-address] [group-id]",
+		Short: "remove member from the group",
+		Long: ` remove member from the group
+
+Parameters:
+		   group-id: unique id of the group
+		   member-address: account address of the group member
+		   Note, the '--from' flag is
+				ignored as it is implied from [member-address]
+		`,
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Flags().Set(flags.FlagFrom, args[0])
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			groupID, err := strconv.ParseUint(args[1], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			msg := &group.MsgLeaveGroup{
+				Address: clientCtx.GetFromAddress().String(),
+				GroupId: groupID,
+			}
 			if err = msg.ValidateBasic(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
 			}

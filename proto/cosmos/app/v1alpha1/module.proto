@@ -5,14 +5,14 @@ package cosmos.app.v1alpha1;
 import "google/protobuf/descriptor.proto";
 
 extend google.protobuf.MessageOptions {
-  // is_module indicates that this proto type is a config object for an app module
+  // module indicates that this proto type is a config object for an app module
   // and optionally provides other descriptive information about the module.
   // It is recommended that a new module config object and go module is versioned
   // for every state machine breaking version of a module. The recommended
   // pattern for doing this is to put module config objects in a separate proto
   // package from the API they expose. Ex: the cosmos.group.v1 API would be
   // exposed by module configs cosmos.group.module.v1, cosmos.group.module.v2, etc.
-  ModuleDescriptor is_module = 57193479;
+  ModuleDescriptor module = 57193479;
 }
 
 // ModuleDescriptor describes an app module.

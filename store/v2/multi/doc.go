@@ -16,4 +16,4 @@
 // of a key's (non)existence within the substore SMT, and a proof of the substore's existence within the
 // MultiStore (using the Merkle map proof spec (TendermintSpec)).
 
-package root
+package multi

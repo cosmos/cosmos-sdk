@@ -4,6 +4,7 @@ import "context"
 
 type Gas = uint64
 
+// Meter represents a gas meter.
 type Meter interface {
 	GasConsumed() Gas
 	GasConsumedToLimit() Gas
@@ -16,6 +17,7 @@ type Meter interface {
 	String() string
 }
 
+// GetMeter returns the current transaction-level gas meter.
 func GetMeter(ctx context.Context) Meter {
 	panic("TODO")
 }

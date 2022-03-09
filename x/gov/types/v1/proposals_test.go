@@ -1,4 +1,4 @@
-package v1beta2_test
+package v1_test
 
 import (
 	"fmt"
@@ -9,13 +9,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 func TestProposalStatus_Format(t *testing.T) {
-	statusDepositPeriod, _ := v1beta2.ProposalStatusFromString("PROPOSAL_STATUS_DEPOSIT_PERIOD")
+	statusDepositPeriod, _ := v1.ProposalStatusFromString("PROPOSAL_STATUS_DEPOSIT_PERIOD")
 	tests := []struct {
-		pt                   v1beta2.ProposalStatus
+		pt                   v1.ProposalStatus
 		sprintFArgs          string
 		expectedStringOutput string
 	}{
@@ -35,9 +35,9 @@ func TestNestedAnys(t *testing.T) {
 	// TODO https://github.com/cosmos/cosmos-sdk/issues/10965
 	t.Skip()
 	testProposal := v1beta1.NewTextProposal("Proposal", "testing proposal")
-	msgContent, err := v1beta2.NewLegacyContent(testProposal, "cosmos1govacct")
+	msgContent, err := v1.NewLegacyContent(testProposal, "cosmos1govacct")
 	require.NoError(t, err)
-	proposal, err := v1beta2.NewProposal([]sdk.Msg{msgContent}, 1, "", time.Now(), time.Now())
+	proposal, err := v1.NewProposal([]sdk.Msg{msgContent}, 1, "", time.Now(), time.Now())
 	require.NoError(t, err)
 
 	require.Equal(t, "TODO Fix panic here", proposal.String())

@@ -3,17 +3,15 @@ package example
 
 import (
 	fmt "fmt"
-	io "io"
-	reflect "reflect"
-	sync "sync"
-
 	runtime "github.com/cosmos/cosmos-proto/runtime"
+	_ "github.com/cosmos/cosmos-sdk/api/cosmos/app/v1alpha1"
+	_ "github.com/cosmos/cosmos-sdk/api/cosmos/msg/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-
-	_ "github.com/cosmos/cosmos-sdk/api/cosmos/app/v1alpha1"
-	_ "github.com/cosmos/cosmos-sdk/api/cosmos/msg/v1"
+	io "io"
+	reflect "reflect"
+	sync "sync"
 )
 
 var (
@@ -1213,25 +1211,25 @@ func (x *fastReflection_MsgRegisterNameResponse) ProtoMethods() *protoiface.Meth
 }
 
 var (
-	md_NameRequest      protoreflect.MessageDescriptor
-	fd_NameRequest_name protoreflect.FieldDescriptor
+	md_QueryNameRequest      protoreflect.MessageDescriptor
+	fd_QueryNameRequest_name protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_example_proto_init()
-	md_NameRequest = File_example_proto.Messages().ByName("NameRequest")
-	fd_NameRequest_name = md_NameRequest.Fields().ByName("name")
+	md_QueryNameRequest = File_example_proto.Messages().ByName("QueryNameRequest")
+	fd_QueryNameRequest_name = md_QueryNameRequest.Fields().ByName("name")
 }
 
-var _ protoreflect.Message = (*fastReflection_NameRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_QueryNameRequest)(nil)
 
-type fastReflection_NameRequest NameRequest
+type fastReflection_QueryNameRequest QueryNameRequest
 
-func (x *NameRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_NameRequest)(x)
+func (x *QueryNameRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryNameRequest)(x)
 }
 
-func (x *NameRequest) slowProtoReflect() protoreflect.Message {
+func (x *QueryNameRequest) slowProtoReflect() protoreflect.Message {
 	mi := &file_example_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1243,43 +1241,43 @@ func (x *NameRequest) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_NameRequest_messageType fastReflection_NameRequest_messageType
-var _ protoreflect.MessageType = fastReflection_NameRequest_messageType{}
+var _fastReflection_QueryNameRequest_messageType fastReflection_QueryNameRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryNameRequest_messageType{}
 
-type fastReflection_NameRequest_messageType struct{}
+type fastReflection_QueryNameRequest_messageType struct{}
 
-func (x fastReflection_NameRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_NameRequest)(nil)
+func (x fastReflection_QueryNameRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryNameRequest)(nil)
 }
-func (x fastReflection_NameRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_NameRequest)
+func (x fastReflection_QueryNameRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryNameRequest)
 }
-func (x fastReflection_NameRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_NameRequest
+func (x fastReflection_QueryNameRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryNameRequest
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_NameRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_NameRequest
+func (x *fastReflection_QueryNameRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryNameRequest
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_NameRequest) Type() protoreflect.MessageType {
-	return _fastReflection_NameRequest_messageType
+func (x *fastReflection_QueryNameRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryNameRequest_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_NameRequest) New() protoreflect.Message {
-	return new(fastReflection_NameRequest)
+func (x *fastReflection_QueryNameRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryNameRequest)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_NameRequest) Interface() protoreflect.ProtoMessage {
-	return (*NameRequest)(x)
+func (x *fastReflection_QueryNameRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryNameRequest)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -1287,10 +1285,10 @@ func (x *fastReflection_NameRequest) Interface() protoreflect.ProtoMessage {
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_NameRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_QueryNameRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Name != "" {
 		value := protoreflect.ValueOfString(x.Name)
-		if !f(fd_NameRequest_name, value) {
+		if !f(fd_QueryNameRequest_name, value) {
 			return
 		}
 	}
@@ -1307,15 +1305,15 @@ func (x *fastReflection_NameRequest) Range(f func(protoreflect.FieldDescriptor, 
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_NameRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_QueryNameRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "example.NameRequest.name":
+	case "example.QueryNameRequest.name":
 		return x.Name != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.NameRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.QueryNameRequest"))
 		}
-		panic(fmt.Errorf("message example.NameRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message example.QueryNameRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1325,15 +1323,15 @@ func (x *fastReflection_NameRequest) Has(fd protoreflect.FieldDescriptor) bool {
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_NameRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_QueryNameRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "example.NameRequest.name":
+	case "example.QueryNameRequest.name":
 		x.Name = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.NameRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.QueryNameRequest"))
 		}
-		panic(fmt.Errorf("message example.NameRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message example.QueryNameRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1343,16 +1341,16 @@ func (x *fastReflection_NameRequest) Clear(fd protoreflect.FieldDescriptor) {
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_NameRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryNameRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "example.NameRequest.name":
+	case "example.QueryNameRequest.name":
 		value := x.Name
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.NameRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.QueryNameRequest"))
 		}
-		panic(fmt.Errorf("message example.NameRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message example.QueryNameRequest does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -1366,15 +1364,15 @@ func (x *fastReflection_NameRequest) Get(descriptor protoreflect.FieldDescriptor
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_NameRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_QueryNameRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "example.NameRequest.name":
+	case "example.QueryNameRequest.name":
 		x.Name = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.NameRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.QueryNameRequest"))
 		}
-		panic(fmt.Errorf("message example.NameRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message example.QueryNameRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1388,40 +1386,40 @@ func (x *fastReflection_NameRequest) Set(fd protoreflect.FieldDescriptor, value 
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_NameRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryNameRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "example.NameRequest.name":
-		panic(fmt.Errorf("field name of message example.NameRequest is not mutable"))
+	case "example.QueryNameRequest.name":
+		panic(fmt.Errorf("field name of message example.QueryNameRequest is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.NameRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.QueryNameRequest"))
 		}
-		panic(fmt.Errorf("message example.NameRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message example.QueryNameRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_NameRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryNameRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "example.NameRequest.name":
+	case "example.QueryNameRequest.name":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.NameRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.QueryNameRequest"))
 		}
-		panic(fmt.Errorf("message example.NameRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message example.QueryNameRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_NameRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_QueryNameRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in example.NameRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in example.QueryNameRequest", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -1429,7 +1427,7 @@ func (x *fastReflection_NameRequest) WhichOneof(d protoreflect.OneofDescriptor) 
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_NameRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_QueryNameRequest) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -1440,7 +1438,7 @@ func (x *fastReflection_NameRequest) GetUnknown() protoreflect.RawFields {
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_NameRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_QueryNameRequest) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -1452,7 +1450,7 @@ func (x *fastReflection_NameRequest) SetUnknown(fields protoreflect.RawFields) {
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_NameRequest) IsValid() bool {
+func (x *fastReflection_QueryNameRequest) IsValid() bool {
 	return x != nil
 }
 
@@ -1462,9 +1460,9 @@ func (x *fastReflection_NameRequest) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_NameRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_QueryNameRequest) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*NameRequest)
+		x := input.Message.Interface().(*QueryNameRequest)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1490,7 +1488,7 @@ func (x *fastReflection_NameRequest) ProtoMethods() *protoiface.Methods {
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*NameRequest)
+		x := input.Message.Interface().(*QueryNameRequest)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1527,7 +1525,7 @@ func (x *fastReflection_NameRequest) ProtoMethods() *protoiface.Methods {
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*NameRequest)
+		x := input.Message.Interface().(*QueryNameRequest)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1559,10 +1557,10 @@ func (x *fastReflection_NameRequest) ProtoMethods() *protoiface.Methods {
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: NameRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryNameRequest: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: NameRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryNameRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -1633,25 +1631,25 @@ func (x *fastReflection_NameRequest) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_NameResponse      protoreflect.MessageDescriptor
-	fd_NameResponse_info protoreflect.FieldDescriptor
+	md_QueryNameResponse      protoreflect.MessageDescriptor
+	fd_QueryNameResponse_info protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_example_proto_init()
-	md_NameResponse = File_example_proto.Messages().ByName("NameResponse")
-	fd_NameResponse_info = md_NameResponse.Fields().ByName("info")
+	md_QueryNameResponse = File_example_proto.Messages().ByName("QueryNameResponse")
+	fd_QueryNameResponse_info = md_QueryNameResponse.Fields().ByName("info")
 }
 
-var _ protoreflect.Message = (*fastReflection_NameResponse)(nil)
+var _ protoreflect.Message = (*fastReflection_QueryNameResponse)(nil)
 
-type fastReflection_NameResponse NameResponse
+type fastReflection_QueryNameResponse QueryNameResponse
 
-func (x *NameResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_NameResponse)(x)
+func (x *QueryNameResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryNameResponse)(x)
 }
 
-func (x *NameResponse) slowProtoReflect() protoreflect.Message {
+func (x *QueryNameResponse) slowProtoReflect() protoreflect.Message {
 	mi := &file_example_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1663,43 +1661,43 @@ func (x *NameResponse) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_NameResponse_messageType fastReflection_NameResponse_messageType
-var _ protoreflect.MessageType = fastReflection_NameResponse_messageType{}
+var _fastReflection_QueryNameResponse_messageType fastReflection_QueryNameResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryNameResponse_messageType{}
 
-type fastReflection_NameResponse_messageType struct{}
+type fastReflection_QueryNameResponse_messageType struct{}
 
-func (x fastReflection_NameResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_NameResponse)(nil)
+func (x fastReflection_QueryNameResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryNameResponse)(nil)
 }
-func (x fastReflection_NameResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_NameResponse)
+func (x fastReflection_QueryNameResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryNameResponse)
 }
-func (x fastReflection_NameResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_NameResponse
+func (x fastReflection_QueryNameResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryNameResponse
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_NameResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_NameResponse
+func (x *fastReflection_QueryNameResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryNameResponse
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_NameResponse) Type() protoreflect.MessageType {
-	return _fastReflection_NameResponse_messageType
+func (x *fastReflection_QueryNameResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryNameResponse_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_NameResponse) New() protoreflect.Message {
-	return new(fastReflection_NameResponse)
+func (x *fastReflection_QueryNameResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryNameResponse)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_NameResponse) Interface() protoreflect.ProtoMessage {
-	return (*NameResponse)(x)
+func (x *fastReflection_QueryNameResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryNameResponse)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -1707,10 +1705,10 @@ func (x *fastReflection_NameResponse) Interface() protoreflect.ProtoMessage {
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_NameResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_QueryNameResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Info != nil {
 		value := protoreflect.ValueOfMessage(x.Info.ProtoReflect())
-		if !f(fd_NameResponse_info, value) {
+		if !f(fd_QueryNameResponse_info, value) {
 			return
 		}
 	}
@@ -1727,15 +1725,15 @@ func (x *fastReflection_NameResponse) Range(f func(protoreflect.FieldDescriptor,
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_NameResponse) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_QueryNameResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "example.NameResponse.info":
+	case "example.QueryNameResponse.info":
 		return x.Info != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.NameResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.QueryNameResponse"))
 		}
-		panic(fmt.Errorf("message example.NameResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message example.QueryNameResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1745,15 +1743,15 @@ func (x *fastReflection_NameResponse) Has(fd protoreflect.FieldDescriptor) bool 
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_NameResponse) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_QueryNameResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "example.NameResponse.info":
+	case "example.QueryNameResponse.info":
 		x.Info = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.NameResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.QueryNameResponse"))
 		}
-		panic(fmt.Errorf("message example.NameResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message example.QueryNameResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1763,16 +1761,16 @@ func (x *fastReflection_NameResponse) Clear(fd protoreflect.FieldDescriptor) {
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_NameResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryNameResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "example.NameResponse.info":
+	case "example.QueryNameResponse.info":
 		value := x.Info
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.NameResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.QueryNameResponse"))
 		}
-		panic(fmt.Errorf("message example.NameResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message example.QueryNameResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -1786,15 +1784,15 @@ func (x *fastReflection_NameResponse) Get(descriptor protoreflect.FieldDescripto
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_NameResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_QueryNameResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "example.NameResponse.info":
+	case "example.QueryNameResponse.info":
 		x.Info = value.Message().Interface().(*NameInfo)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.NameResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.QueryNameResponse"))
 		}
-		panic(fmt.Errorf("message example.NameResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message example.QueryNameResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1808,44 +1806,44 @@ func (x *fastReflection_NameResponse) Set(fd protoreflect.FieldDescriptor, value
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_NameResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryNameResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "example.NameResponse.info":
+	case "example.QueryNameResponse.info":
 		if x.Info == nil {
 			x.Info = new(NameInfo)
 		}
 		return protoreflect.ValueOfMessage(x.Info.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.NameResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.QueryNameResponse"))
 		}
-		panic(fmt.Errorf("message example.NameResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message example.QueryNameResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_NameResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryNameResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "example.NameResponse.info":
+	case "example.QueryNameResponse.info":
 		m := new(NameInfo)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.NameResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: example.QueryNameResponse"))
 		}
-		panic(fmt.Errorf("message example.NameResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message example.QueryNameResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_NameResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_QueryNameResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in example.NameResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in example.QueryNameResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -1853,7 +1851,7 @@ func (x *fastReflection_NameResponse) WhichOneof(d protoreflect.OneofDescriptor)
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_NameResponse) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_QueryNameResponse) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -1864,7 +1862,7 @@ func (x *fastReflection_NameResponse) GetUnknown() protoreflect.RawFields {
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_NameResponse) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_QueryNameResponse) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -1876,7 +1874,7 @@ func (x *fastReflection_NameResponse) SetUnknown(fields protoreflect.RawFields) 
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_NameResponse) IsValid() bool {
+func (x *fastReflection_QueryNameResponse) IsValid() bool {
 	return x != nil
 }
 
@@ -1886,9 +1884,9 @@ func (x *fastReflection_NameResponse) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_NameResponse) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_QueryNameResponse) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*NameResponse)
+		x := input.Message.Interface().(*QueryNameResponse)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1914,7 +1912,7 @@ func (x *fastReflection_NameResponse) ProtoMethods() *protoiface.Methods {
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*NameResponse)
+		x := input.Message.Interface().(*QueryNameResponse)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1958,7 +1956,7 @@ func (x *fastReflection_NameResponse) ProtoMethods() *protoiface.Methods {
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*NameResponse)
+		x := input.Message.Interface().(*QueryNameResponse)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1990,10 +1988,10 @@ func (x *fastReflection_NameResponse) ProtoMethods() *protoiface.Methods {
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: NameResponse: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryNameResponse: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: NameResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryNameResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -3025,6 +3023,9 @@ func (x *fastReflection_EventRegisterName) ProtoMethods() *protoiface.Methods {
 // 	protoc        (unknown)
 // source: example.proto
 
+// package example provides a very simple example module for registering
+// a name with an owner.
+
 const (
 	// Verify that this generated code is sufficiently up-to-date.
 	_ = protoimpl.EnforceVersion(20 - protoimpl.MinVersion)
@@ -3127,7 +3128,7 @@ func (*MsgRegisterNameResponse) Descriptor() ([]byte, []int) {
 	return file_example_proto_rawDescGZIP(), []int{2}
 }
 
-type NameRequest struct {
+type QueryNameRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -3135,8 +3136,8 @@ type NameRequest struct {
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 }
 
-func (x *NameRequest) Reset() {
-	*x = NameRequest{}
+func (x *QueryNameRequest) Reset() {
+	*x = QueryNameRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_example_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -3144,25 +3145,25 @@ func (x *NameRequest) Reset() {
 	}
 }
 
-func (x *NameRequest) String() string {
+func (x *QueryNameRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*NameRequest) ProtoMessage() {}
+func (*QueryNameRequest) ProtoMessage() {}
 
-// Deprecated: Use NameRequest.ProtoReflect.Descriptor instead.
-func (*NameRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use QueryNameRequest.ProtoReflect.Descriptor instead.
+func (*QueryNameRequest) Descriptor() ([]byte, []int) {
 	return file_example_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *NameRequest) GetName() string {
+func (x *QueryNameRequest) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-type NameResponse struct {
+type QueryNameResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -3170,8 +3171,8 @@ type NameResponse struct {
 	Info *NameInfo `protobuf:"bytes,1,opt,name=info,proto3" json:"info,omitempty"`
 }
 
-func (x *NameResponse) Reset() {
-	*x = NameResponse{}
+func (x *QueryNameResponse) Reset() {
+	*x = QueryNameResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_example_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -3179,18 +3180,18 @@ func (x *NameResponse) Reset() {
 	}
 }
 
-func (x *NameResponse) String() string {
+func (x *QueryNameResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*NameResponse) ProtoMessage() {}
+func (*QueryNameResponse) ProtoMessage() {}
 
-// Deprecated: Use NameResponse.ProtoReflect.Descriptor instead.
-func (*NameResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use QueryNameResponse.ProtoReflect.Descriptor instead.
+func (*QueryNameResponse) Descriptor() ([]byte, []int) {
 	return file_example_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *NameResponse) GetInfo() *NameInfo {
+func (x *QueryNameResponse) GetInfo() *NameInfo {
 	if x != nil {
 		return x.Info
 	}
@@ -3302,41 +3303,42 @@ var file_example_proto_rawDesc = []byte{
 	0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e,
 	0x61, 0x6d, 0x65, 0x3a, 0x0b, 0x82, 0xe7, 0xb0, 0x2a, 0x06, 0x73, 0x65, 0x6e, 0x64, 0x65, 0x72,
 	0x22, 0x19, 0x0a, 0x17, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x4e,
-	0x61, 0x6d, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x21, 0x0a, 0x0b, 0x4e,
-	0x61, 0x6d, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61,
-	0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x22, 0x35,
-	0x0a, 0x0c, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x25,
-	0x0a, 0x04, 0x69, 0x6e, 0x66, 0x6f, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x11, 0x2e, 0x65,
-	0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x4e, 0x61, 0x6d, 0x65, 0x49, 0x6e, 0x66, 0x6f, 0x52,
-	0x04, 0x69, 0x6e, 0x66, 0x6f, 0x22, 0x4d, 0x0a, 0x08, 0x4e, 0x61, 0x6d, 0x65, 0x49, 0x6e, 0x66,
-	0x6f, 0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x2b, 0x0a, 0x11, 0x72, 0x65, 0x67, 0x69, 0x73,
-	0x74, 0x65, 0x72, 0x65, 0x64, 0x5f, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x03, 0x52, 0x10, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x65, 0x64, 0x48, 0x65,
-	0x69, 0x67, 0x68, 0x74, 0x22, 0x3d, 0x0a, 0x11, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x67,
-	0x69, 0x73, 0x74, 0x65, 0x72, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d,
-	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x14, 0x0a,
-	0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x77,
-	0x6e, 0x65, 0x72, 0x32, 0x59, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x4a, 0x0a, 0x0c, 0x52, 0x65,
-	0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x18, 0x2e, 0x65, 0x78, 0x61,
-	0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72,
-	0x4e, 0x61, 0x6d, 0x65, 0x1a, 0x20, 0x2e, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x4d,
-	0x73, 0x67, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x06, 0x8a, 0xe7, 0xb0, 0x2a, 0x01, 0x01, 0x32, 0x3c,
-	0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x33, 0x0a, 0x04, 0x4e, 0x61, 0x6d, 0x65, 0x12,
-	0x14, 0x2e, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x15, 0x2e, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e,
-	0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x8b, 0x01, 0x0a,
-	0x0b, 0x63, 0x6f, 0x6d, 0x2e, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x42, 0x0c, 0x45, 0x78,
-	0x61, 0x6d, 0x70, 0x6c, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x32, 0x67, 0x69,
-	0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x63, 0x6f, 0x72, 0x65, 0x2f,
-	0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65,
-	0xa2, 0x02, 0x03, 0x45, 0x58, 0x58, 0xaa, 0x02, 0x07, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65,
-	0xca, 0x02, 0x07, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0xe2, 0x02, 0x13, 0x45, 0x78, 0x61,
-	0x6d, 0x70, 0x6c, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
-	0xea, 0x02, 0x07, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x61, 0x6d, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x26, 0x0a, 0x10, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
+	0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e,
+	0x61, 0x6d, 0x65, 0x22, 0x3a, 0x0a, 0x11, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4e, 0x61, 0x6d, 0x65,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x25, 0x0a, 0x04, 0x69, 0x6e, 0x66, 0x6f,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x11, 0x2e, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65,
+	0x2e, 0x4e, 0x61, 0x6d, 0x65, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x04, 0x69, 0x6e, 0x66, 0x6f, 0x22,
+	0x4d, 0x0a, 0x08, 0x4e, 0x61, 0x6d, 0x65, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x14, 0x0a, 0x05, 0x6f,
+	0x77, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65,
+	0x72, 0x12, 0x2b, 0x0a, 0x11, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x65, 0x64, 0x5f,
+	0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x10, 0x72, 0x65,
+	0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x65, 0x64, 0x48, 0x65, 0x69, 0x67, 0x68, 0x74, 0x22, 0x3d,
+	0x0a, 0x11, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x4e,
+	0x61, 0x6d, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x32, 0x59, 0x0a,
+	0x03, 0x4d, 0x73, 0x67, 0x12, 0x4a, 0x0a, 0x0c, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72,
+	0x4e, 0x61, 0x6d, 0x65, 0x12, 0x18, 0x2e, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x4d,
+	0x73, 0x67, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x4e, 0x61, 0x6d, 0x65, 0x1a, 0x20,
+	0x2e, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x67, 0x69,
+	0x73, 0x74, 0x65, 0x72, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x1a, 0x06, 0x8a, 0xe7, 0xb0, 0x2a, 0x01, 0x01, 0x32, 0x46, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x12, 0x3d, 0x0a, 0x04, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x19, 0x2e, 0x65, 0x78, 0x61, 0x6d,
+	0x70, 0x6c, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x1a, 0x1a, 0x2e, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x42, 0x8b, 0x01, 0x0a, 0x0b, 0x63, 0x6f, 0x6d, 0x2e, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65,
+	0x42, 0x0c, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01,
+	0x5a, 0x32, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x63,
+	0x6f, 0x72, 0x65, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x65, 0x78, 0x61,
+	0x6d, 0x70, 0x6c, 0x65, 0xa2, 0x02, 0x03, 0x45, 0x58, 0x58, 0xaa, 0x02, 0x07, 0x45, 0x78, 0x61,
+	0x6d, 0x70, 0x6c, 0x65, 0xca, 0x02, 0x07, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0xe2, 0x02,
+	0x13, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x07, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x62, 0x06,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -3356,17 +3358,17 @@ var file_example_proto_goTypes = []interface{}{
 	(*Module)(nil),                  // 0: example.Module
 	(*MsgRegisterName)(nil),         // 1: example.MsgRegisterName
 	(*MsgRegisterNameResponse)(nil), // 2: example.MsgRegisterNameResponse
-	(*NameRequest)(nil),             // 3: example.NameRequest
-	(*NameResponse)(nil),            // 4: example.NameResponse
+	(*QueryNameRequest)(nil),        // 3: example.QueryNameRequest
+	(*QueryNameResponse)(nil),       // 4: example.QueryNameResponse
 	(*NameInfo)(nil),                // 5: example.NameInfo
 	(*EventRegisterName)(nil),       // 6: example.EventRegisterName
 }
 var file_example_proto_depIdxs = []int32{
-	5, // 0: example.NameResponse.info:type_name -> example.NameInfo
+	5, // 0: example.QueryNameResponse.info:type_name -> example.NameInfo
 	1, // 1: example.Msg.RegisterName:input_type -> example.MsgRegisterName
-	3, // 2: example.Query.Name:input_type -> example.NameRequest
+	3, // 2: example.Query.Name:input_type -> example.QueryNameRequest
 	2, // 3: example.Msg.RegisterName:output_type -> example.MsgRegisterNameResponse
-	4, // 4: example.Query.Name:output_type -> example.NameResponse
+	4, // 4: example.Query.Name:output_type -> example.QueryNameResponse
 	3, // [3:5] is the sub-list for method output_type
 	1, // [1:3] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
@@ -3417,7 +3419,7 @@ func file_example_proto_init() {
 			}
 		}
 		file_example_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*NameRequest); i {
+			switch v := v.(*QueryNameRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3429,7 +3431,7 @@ func file_example_proto_init() {
 			}
 		}
 		file_example_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*NameResponse); i {
+			switch v := v.(*QueryNameResponse); i {
 			case 0:
 				return &v.state
 			case 1:

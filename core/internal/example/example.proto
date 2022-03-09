@@ -34,14 +34,14 @@ message MsgRegisterName {
 message MsgRegisterNameResponse {}
 
 service Query {
-  rpc Name(NameRequest) returns (NameResponse);
+  rpc Name(QueryNameRequest) returns (QueryNameResponse);
 }
 
-message NameRequest {
+message QueryNameRequest {
   string name = 1;
 }
 
-message NameResponse {
+message QueryNameResponse {
   NameInfo info = 1;
 }
 

@@ -22,6 +22,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MsgClient interface {
+	// RegisterName registers some arbitrary name with the signer of the
+	// transaction as the name's owner.
 	RegisterName(ctx context.Context, in *MsgRegisterName, opts ...grpc.CallOption) (*MsgRegisterNameResponse, error)
 }
 
@@ -46,6 +48,8 @@ func (c *msgClient) RegisterName(ctx context.Context, in *MsgRegisterName, opts 
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
 type MsgServer interface {
+	// RegisterName registers some arbitrary name with the signer of the
+	// transaction as the name's owner.
 	RegisterName(context.Context, *MsgRegisterName) (*MsgRegisterNameResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
@@ -108,7 +112,7 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type QueryClient interface {
-	Name(ctx context.Context, in *NameRequest, opts ...grpc.CallOption) (*NameResponse, error)
+	Name(ctx context.Context, in *QueryNameRequest, opts ...grpc.CallOption) (*QueryNameResponse, error)
 }
 
 type queryClient struct {
@@ -119,8 +123,8 @@ func NewQueryClient(cc grpc.ClientConnInterface) QueryClient {
 	return &queryClient{cc}
 }
 
-func (c *queryClient) Name(ctx context.Context, in *NameRequest, opts ...grpc.CallOption) (*NameResponse, error) {
-	out := new(NameResponse)
+func (c *queryClient) Name(ctx context.Context, in *QueryNameRequest, opts ...grpc.CallOption) (*QueryNameResponse, error) {
+	out := new(QueryNameResponse)
 	err := c.cc.Invoke(ctx, "/example.Query/Name", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -132,7 +136,7 @@ func (c *queryClient) Name(ctx context.Context, in *NameRequest, opts ...grpc.Ca
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
 type QueryServer interface {
-	Name(context.Context, *NameRequest) (*NameResponse, error)
+	Name(context.Context, *QueryNameRequest) (*QueryNameResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -140,7 +144,7 @@ type QueryServer interface {
 type UnimplementedQueryServer struct {
 }
 
-func (UnimplementedQueryServer) Name(context.Context, *NameRequest) (*NameResponse, error) {
+func (UnimplementedQueryServer) Name(context.Context, *QueryNameRequest) (*QueryNameResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Name not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
@@ -157,7 +161,7 @@ func RegisterQueryServer(s grpc.ServiceRegistrar, srv QueryServer) {
 }
 
 func _Query_Name_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NameRequest)
+	in := new(QueryNameRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -169,7 +173,7 @@ func _Query_Name_Handler(srv interface{}, ctx context.Context, dec func(interfac
 		FullMethod: "/example.Query/Name",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).Name(ctx, req.(*NameRequest))
+		return srv.(QueryServer).Name(ctx, req.(*QueryNameRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

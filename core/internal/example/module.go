@@ -20,9 +20,10 @@ import (
 var pinnedProtoImage embed.FS
 
 func init() {
+	// register the module with the app-wiring dependency injection framework
 	module.Register(&Module{}, pinnedProtoImage,
 		module.Provide(func(inputs Inputs) *app.Handler {
-			s := server{
+			s := keeper{
 				kvStoreKey:       inputs.KVStoreKey,
 				blockInfoService: inputs.BlockInfoService,
 			}
@@ -35,6 +36,7 @@ func init() {
 	)
 }
 
+// the module's dependency injection inputs
 type Inputs struct {
 	container.In
 
@@ -42,7 +44,7 @@ type Inputs struct {
 	BlockInfoService blockinfo.Service
 }
 
-type server struct {
+type keeper struct {
 	kvStoreKey       *store.KVStoreKey
 	blockInfoService blockinfo.Service
 }
@@ -55,7 +57,7 @@ func nameInfoKey(name string) []byte {
 	return append([]byte{nameInfoPrefix}, name...)
 }
 
-func (s server) RegisterName(ctx context.Context, msg *MsgRegisterName) (*MsgRegisterNameResponse, error) {
+func (s keeper) RegisterName(ctx context.Context, msg *MsgRegisterName) (*MsgRegisterNameResponse, error) {
 	kvStore := s.kvStoreKey.Open(ctx)
 	key := nameInfoKey(msg.Name)
 	if kvStore.Has(key) {
@@ -79,7 +81,7 @@ func (s server) RegisterName(ctx context.Context, msg *MsgRegisterName) (*MsgReg
 	return &MsgRegisterNameResponse{}, err
 }
 
-func (s server) Name(ctx context.Context, request *NameRequest) (*NameResponse, error) {
+func (s keeper) Name(ctx context.Context, request *QueryNameRequest) (*QueryNameResponse, error) {
 	kvStore := s.kvStoreKey.Open(ctx)
 	key := nameInfoKey(request.Name)
 	bz := kvStore.Get(key)
@@ -93,11 +95,11 @@ func (s server) Name(ctx context.Context, request *NameRequest) (*NameResponse, 
 		return nil, err
 	}
 
-	return &NameResponse{Info: &info}, nil
+	return &QueryNameResponse{Info: &info}, nil
 }
 
-func (s server) mustEmbedUnimplementedMsgServer()   {}
-func (s server) mustEmbedUnimplementedQueryServer() {}
+func (s keeper) mustEmbedUnimplementedMsgServer()   {}
+func (s keeper) mustEmbedUnimplementedQueryServer() {}
 
-var _ MsgServer = server{}
-var _ QueryServer = server{}
+var _ MsgServer = keeper{}
+var _ QueryServer = keeper{}

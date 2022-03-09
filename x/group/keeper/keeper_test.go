@@ -1595,27 +1595,29 @@ func (s *TestSuite) TestSubmitProposal() {
 			s.Require().NoError(err)
 			id := res.ProposalId
 
-			// then all data persisted
-			proposalRes, err := s.keeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: id})
-			s.Require().NoError(err)
-			proposal := proposalRes.Proposal
+			if !(spec.expProposal.ExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS) {
+				// then all data persisted
+				proposalRes, err := s.keeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: id})
+				s.Require().NoError(err)
+				proposal := proposalRes.Proposal
 
-			s.Assert().Equal(spec.expProposal.Address, proposal.Address)
-			s.Assert().Equal(spec.req.Metadata, proposal.Metadata)
-			s.Assert().Equal(spec.req.Proposers, proposal.Proposers)
-			s.Assert().Equal(s.blockTime, proposal.SubmitTime)
-			s.Assert().Equal(uint64(1), proposal.GroupVersion)
-			s.Assert().Equal(uint64(1), proposal.GroupPolicyVersion)
-			s.Assert().Equal(spec.expProposal.Status, proposal.Status)
-			s.Assert().Equal(spec.expProposal.Result, proposal.Result)
-			s.Assert().Equal(spec.expProposal.FinalTallyResult, proposal.FinalTallyResult)
-			s.Assert().Equal(spec.expProposal.ExecutorResult, proposal.ExecutorResult)
-			s.Assert().Equal(s.blockTime.Add(time.Second), proposal.VotingPeriodEnd)
+				s.Assert().Equal(spec.expProposal.Address, proposal.Address)
+				s.Assert().Equal(spec.req.Metadata, proposal.Metadata)
+				s.Assert().Equal(spec.req.Proposers, proposal.Proposers)
+				s.Assert().Equal(s.blockTime, proposal.SubmitTime)
+				s.Assert().Equal(uint64(1), proposal.GroupVersion)
+				s.Assert().Equal(uint64(1), proposal.GroupPolicyVersion)
+				s.Assert().Equal(spec.expProposal.Status, proposal.Status)
+				s.Assert().Equal(spec.expProposal.Result, proposal.Result)
+				s.Assert().Equal(spec.expProposal.FinalTallyResult, proposal.FinalTallyResult)
+				s.Assert().Equal(spec.expProposal.ExecutorResult, proposal.ExecutorResult)
+				s.Assert().Equal(s.blockTime.Add(time.Second), proposal.VotingPeriodEnd)
 
-			if spec.msgs == nil { // then empty list is ok
-				s.Assert().Len(proposal.GetMsgs(), 0)
-			} else {
-				s.Assert().Equal(spec.msgs, proposal.GetMsgs())
+				if spec.msgs == nil { // then empty list is ok
+					s.Assert().Len(proposal.GetMsgs(), 0)
+				} else {
+					s.Assert().Equal(spec.msgs, proposal.GetMsgs())
+				}
 			}
 
 			spec.postRun(s.sdkCtx)
@@ -2102,66 +2104,69 @@ func (s *TestSuite) TestVote() {
 			s.Require().NoError(err)
 
 			s.Require().NoError(err)
-			// vote is stored and all data persisted
-			res, err := s.keeper.VoteByProposalVoter(ctx, &group.QueryVoteByProposalVoterRequest{
-				ProposalId: spec.req.ProposalId,
-				Voter:      spec.req.Voter,
-			})
-			s.Require().NoError(err)
-			loaded := res.Vote
-			s.Assert().Equal(spec.req.ProposalId, loaded.ProposalId)
-			s.Assert().Equal(spec.req.Voter, loaded.Voter)
-			s.Assert().Equal(spec.req.Option, loaded.Option)
-			s.Assert().Equal(spec.req.Metadata, loaded.Metadata)
-			s.Assert().Equal(s.blockTime, loaded.SubmitTime)
 
-			// query votes by proposal
-			votesByProposalRes, err := s.keeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{
-				ProposalId: spec.req.ProposalId,
-			})
-			s.Require().NoError(err)
-			votesByProposal := votesByProposalRes.Votes
-			s.Require().Equal(1, len(votesByProposal))
-			vote := votesByProposal[0]
-			s.Assert().Equal(spec.req.ProposalId, vote.ProposalId)
-			s.Assert().Equal(spec.req.Voter, vote.Voter)
-			s.Assert().Equal(spec.req.Option, vote.Option)
-			s.Assert().Equal(spec.req.Metadata, vote.Metadata)
-			s.Assert().Equal(s.blockTime, vote.SubmitTime)
+			if !(spec.expExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS) {
+				// vote is stored and all data persisted
+				res, err := s.keeper.VoteByProposalVoter(ctx, &group.QueryVoteByProposalVoterRequest{
+					ProposalId: spec.req.ProposalId,
+					Voter:      spec.req.Voter,
+				})
+				s.Require().NoError(err)
+				loaded := res.Vote
+				s.Assert().Equal(spec.req.ProposalId, loaded.ProposalId)
+				s.Assert().Equal(spec.req.Voter, loaded.Voter)
+				s.Assert().Equal(spec.req.Option, loaded.Option)
+				s.Assert().Equal(spec.req.Metadata, loaded.Metadata)
+				s.Assert().Equal(s.blockTime, loaded.SubmitTime)
 
-			// query votes by voter
-			voter := spec.req.Voter
-			votesByVoterRes, err := s.keeper.VotesByVoter(ctx, &group.QueryVotesByVoterRequest{
-				Voter: voter,
-			})
-			s.Require().NoError(err)
-			votesByVoter := votesByVoterRes.Votes
-			s.Require().Equal(1, len(votesByVoter))
-			s.Assert().Equal(spec.req.ProposalId, votesByVoter[0].ProposalId)
-			s.Assert().Equal(voter, votesByVoter[0].Voter)
-			s.Assert().Equal(spec.req.Option, votesByVoter[0].Option)
-			s.Assert().Equal(spec.req.Metadata, votesByVoter[0].Metadata)
-			s.Assert().Equal(s.blockTime, votesByVoter[0].SubmitTime)
+				// query votes by proposal
+				votesByProposalRes, err := s.keeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{
+					ProposalId: spec.req.ProposalId,
+				})
+				s.Require().NoError(err)
+				votesByProposal := votesByProposalRes.Votes
+				s.Require().Equal(1, len(votesByProposal))
+				vote := votesByProposal[0]
+				s.Assert().Equal(spec.req.ProposalId, vote.ProposalId)
+				s.Assert().Equal(spec.req.Voter, vote.Voter)
+				s.Assert().Equal(spec.req.Option, vote.Option)
+				s.Assert().Equal(spec.req.Metadata, vote.Metadata)
+				s.Assert().Equal(s.blockTime, vote.SubmitTime)
 
-			proposalRes, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{
-				ProposalId: spec.req.ProposalId,
-			})
-			s.Require().NoError(err)
+				// query votes by voter
+				voter := spec.req.Voter
+				votesByVoterRes, err := s.keeper.VotesByVoter(ctx, &group.QueryVotesByVoterRequest{
+					Voter: voter,
+				})
+				s.Require().NoError(err)
+				votesByVoter := votesByVoterRes.Votes
+				s.Require().Equal(1, len(votesByVoter))
+				s.Assert().Equal(spec.req.ProposalId, votesByVoter[0].ProposalId)
+				s.Assert().Equal(voter, votesByVoter[0].Voter)
+				s.Assert().Equal(spec.req.Option, votesByVoter[0].Option)
+				s.Assert().Equal(spec.req.Metadata, votesByVoter[0].Metadata)
+				s.Assert().Equal(s.blockTime, votesByVoter[0].SubmitTime)
 
-			proposal := proposalRes.Proposal
-			if spec.isFinal {
-				s.Assert().Equal(spec.expTallyResult, proposal.FinalTallyResult)
-				s.Assert().Equal(spec.expResult, proposal.Result)
-				s.Assert().Equal(spec.expProposalStatus, proposal.Status)
-				s.Assert().Equal(spec.expExecutorResult, proposal.ExecutorResult)
-			} else {
-				s.Assert().Equal(group.DefaultTallyResult(), proposal.FinalTallyResult) // Make sure proposal isn't mutated.
-
-				// do a round of tallying
-				tallyResult, err := s.keeper.Tally(sdkCtx, *proposal, myGroupID)
+				proposalRes, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{
+					ProposalId: spec.req.ProposalId,
+				})
 				s.Require().NoError(err)
 
-				s.Assert().Equal(spec.expTallyResult, tallyResult)
+				proposal := proposalRes.Proposal
+				if spec.isFinal {
+					s.Assert().Equal(spec.expTallyResult, proposal.FinalTallyResult)
+					s.Assert().Equal(spec.expResult, proposal.Result)
+					s.Assert().Equal(spec.expProposalStatus, proposal.Status)
+					s.Assert().Equal(spec.expExecutorResult, proposal.ExecutorResult)
+				} else {
+					s.Assert().Equal(group.DefaultTallyResult(), proposal.FinalTallyResult) // Make sure proposal isn't mutated.
+
+					// do a round of tallying
+					tallyResult, err := s.keeper.Tally(sdkCtx, *proposal, myGroupID)
+					s.Require().NoError(err)
+
+					s.Assert().Equal(spec.expTallyResult, tallyResult)
+				}
 			}
 
 			spec.postRun(sdkCtx)

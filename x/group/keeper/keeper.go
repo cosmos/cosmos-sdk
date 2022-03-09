@@ -261,8 +261,11 @@ func (k Keeper) iterateProposalsByVPEnd(ctx sdk.Context, cb func(proposal group.
 		}
 
 		stop, err := cb(proposal)
-		if stop {
+		if err != nil {
 			return err
+		}
+		if stop {
+			break
 		}
 	}
 

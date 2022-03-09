@@ -2,7 +2,9 @@ package store
 
 import dbm "github.com/tendermint/tm-db"
 
+// KVStore describes the basic interface for interacting with key-value stores.
 type KVStore interface {
+
 	// Get returns nil iff key doesn't exist. Panics on nil key.
 	Get(key []byte) []byte
 

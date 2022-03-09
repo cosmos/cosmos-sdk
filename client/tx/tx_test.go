@@ -136,8 +136,7 @@ func TestBuildUnsignedTx(t *testing.T) {
 		WithSequence(23).
 		WithFees("50stake").
 		WithMemo("memo").
-		WithChainID("test-chain").
-		WithKeybase(kb)
+		WithChainID("test-chain")
 
 	msg := banktypes.NewMsgSend(sdk.AccAddress("from"), sdk.AccAddress("to"), nil)
 	tx, err := tx.BuildUnsignedTx(txf, msg)
@@ -187,6 +186,7 @@ func TestSign(t *testing.T) {
 		WithSignMode(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	msg1 := banktypes.NewMsgSend(info1.GetAddress(), sdk.AccAddress("to"), nil)
 	msg2 := banktypes.NewMsgSend(info2.GetAddress(), sdk.AccAddress("to"), nil)
+
 	txb, err := tx.BuildUnsignedTx(txfNoKeybase, msg1, msg2)
 	requireT.NoError(err)
 	txb2, err := tx.BuildUnsignedTx(txfNoKeybase, msg1, msg2)
@@ -245,43 +245,29 @@ func TestSign(t *testing.T) {
 		},
 
 		/**** test double sign Direct mode
-		  signing transaction with 2 or more DIRECT signers should fail in DIRECT mode ****/
+		  signing transaction with more than 2 signers should fail in DIRECT mode ****/
 		{
-			"direct: should  append a DIRECT signature with existing AMINO",
-			// txb already has 1 AMINO signature
+			"direct: should fail to append a signature with different mode",
 			txfDirect, txb, from1, false,
-			[]cryptotypes.PubKey{pubKey2, pubKey1},
+			[]cryptotypes.PubKey{},
 			nil,
 		},
 		{
-			"direct: should add single DIRECT sig in multi-signers tx",
+			"direct: should fail to sign multi-signers tx",
 			txfDirect, txb2, from1, false,
-			[]cryptotypes.PubKey{pubKey1},
-			nil,
-		},
-		{
-			"direct: should fail to append 2nd DIRECT sig in multi-signers tx",
-			txfDirect, txb2, from2, false,
 			[]cryptotypes.PubKey{},
 			nil,
 		},
 		{
-			"amino: should append 2nd AMINO sig in multi-signers tx with 1 DIRECT sig",
-			// txb2 already has 1 DIRECT signature
-			txfAmino, txb2, from2, false,
-			[]cryptotypes.PubKey{},
-			nil,
-		},
-		{
-			"direct: should overwrite multi-signers tx with DIRECT sig",
+			"direct: should fail to overwrite multi-signers tx",
 			txfDirect, txb2, from1, true,
-			[]cryptotypes.PubKey{pubKey1},
+			[]cryptotypes.PubKey{},
 			nil,
 		},
 	}
 	var prevSigs []signingtypes.SignatureV2
 	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(tc.name, func(_ *testing.T) {
 			err = tx.Sign(tc.txf, tc.from, tc.txb, tc.overwrite)
 			if len(tc.expectedPKs) == 0 {
 				requireT.Error(err)

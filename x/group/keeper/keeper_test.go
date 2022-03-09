@@ -2452,7 +2452,7 @@ func (s *TestSuite) TestExecProposal() {
 	}
 }
 
-func (s *TestSuite) TestExecPrunedProposals() {
+func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 	addrs := s.addrs
 	addr1 := addrs[0]
 	addr2 := addrs[1]
@@ -2473,12 +2473,7 @@ func (s *TestSuite) TestExecPrunedProposals() {
 		setupProposal     func(ctx context.Context) uint64
 		expErr            bool
 		expErrMsg         string
-		expProposalStatus group.ProposalStatus
-		expProposalResult group.ProposalResult
 		expExecutorResult group.ProposalExecutorResult
-		expBalance        bool
-		expFromBalances   sdk.Coin
-		expToBalances     sdk.Coin
 	}{
 		"proposal pruned after executor result success": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2486,12 +2481,7 @@ func (s *TestSuite) TestExecPrunedProposals() {
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 			},
 			expErrMsg:         "load proposal: not found",
-			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
-			expProposalResult: group.PROPOSAL_RESULT_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
-			expBalance:        true,
-			expFromBalances:   sdk.NewInt64Coin("test", 9900),
-			expToBalances:     sdk.NewInt64Coin("test", 100),
 		},
 		"proposal with multiple messages pruned when executed with result success": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -2499,28 +2489,19 @@ func (s *TestSuite) TestExecPrunedProposals() {
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 			},
 			expErrMsg:         "load proposal: not found",
-			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
-			expProposalResult: group.PROPOSAL_RESULT_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
-			expBalance:        true,
-			expFromBalances:   sdk.NewInt64Coin("test", 9800),
-			expToBalances:     sdk.NewInt64Coin("test", 200),
 		},
 		"proposal not pruned when not executed and rejected": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_NO)
 			},
-			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
-			expProposalResult: group.PROPOSAL_RESULT_REJECTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
 		"open proposal is not pruned which must not fail ": {
 			setupProposal: func(ctx context.Context) uint64 {
 				return submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
 			},
-			expProposalStatus: group.PROPOSAL_STATUS_SUBMITTED,
-			expProposalResult: group.PROPOSAL_RESULT_UNFINALIZED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
 		"proposal not pruned with group modified before tally": {
@@ -2535,8 +2516,6 @@ func (s *TestSuite) TestExecPrunedProposals() {
 				s.Require().NoError(err)
 				return myProposalID
 			},
-			expProposalStatus: group.PROPOSAL_STATUS_ABORTED,
-			expProposalResult: group.PROPOSAL_RESULT_UNFINALIZED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
 		"proposal not pruned with group policy modified before tally": {
@@ -2549,8 +2528,6 @@ func (s *TestSuite) TestExecPrunedProposals() {
 				s.Require().NoError(err)
 				return myProposalID
 			},
-			expProposalStatus: group.PROPOSAL_STATUS_ABORTED,
-			expProposalResult: group.PROPOSAL_RESULT_UNFINALIZED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
 		"proposal exists when rollback all msg updates on failure": {
@@ -2558,8 +2535,6 @@ func (s *TestSuite) TestExecPrunedProposals() {
 				msgs := []sdk.Msg{msgSend1, msgSend2}
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 			},
-			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
-			expProposalResult: group.PROPOSAL_RESULT_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_FAILURE,
 		},
 		"pruned when proposal is executable when failed before": {
@@ -2575,8 +2550,6 @@ func (s *TestSuite) TestExecPrunedProposals() {
 				return myProposalID
 			},
 			expErrMsg:         "load proposal: not found",
-			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
-			expProposalResult: group.PROPOSAL_RESULT_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 		},
 	}
@@ -2600,34 +2573,24 @@ func (s *TestSuite) TestExecPrunedProposals() {
 			s.Require().NoError(err)
 
 			if spec.expExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
+				// Make sure proposal is deleted from state
 				_, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
 				s.Require().Contains(err.Error(), spec.expErrMsg)
+				res, err := s.keeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{ProposalId: proposalID})
+				s.Require().NoError(err)
+				s.Require().Empty(res.GetVotes())
 
 			} else {
-				// proposal is updated
+				// Check that proposal and votes exists
 				res, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
 				s.Require().NoError(err)
-				proposal := res.Proposal
+				_, err = s.keeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{ProposalId: res.Proposal.Id})
+				s.Require().NoError(err)
 				s.Require().Equal("", spec.expErrMsg)
 
-				exp := group.ProposalResult_name[int32(spec.expProposalResult)]
-				got := group.ProposalResult_name[int32(proposal.Result)]
+				exp := group.ProposalExecutorResult_name[int32(spec.expExecutorResult)]
+				got := group.ProposalExecutorResult_name[int32(res.Proposal.ExecutorResult)]
 				s.Assert().Equal(exp, got)
-
-				exp = group.ProposalStatus_name[int32(spec.expProposalStatus)]
-				got = group.ProposalStatus_name[int32(proposal.Status)]
-				s.Assert().Equal(exp, got)
-
-				exp = group.ProposalExecutorResult_name[int32(spec.expExecutorResult)]
-				got = group.ProposalExecutorResult_name[int32(proposal.ExecutorResult)]
-				s.Assert().Equal(exp, got)
-			}
-
-			if spec.expBalance {
-				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, s.groupPolicyAddr)
-				s.Require().Contains(fromBalances, spec.expFromBalances)
-				toBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, addr2)
-				s.Require().Contains(toBalances, spec.expToBalances)
 			}
 		})
 	}

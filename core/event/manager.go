@@ -12,6 +12,7 @@ type Manager interface {
 	EmitLegacy(eventType string, attrs ...LegacyEventAttribute) error
 }
 
+// LegacyEventAttribute is a legacy (untyped) event attribute.
 type LegacyEventAttribute struct {
 	Key, Value string
 }

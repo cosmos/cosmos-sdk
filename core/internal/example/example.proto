@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+// package example provides a very simple example module for registering
+// a name with an owner.
 package example;
 
 import "cosmos/app/v1alpha1/module.proto";
@@ -17,6 +19,8 @@ message Module {
 service Msg {
   option (cosmos.msg.v1.service) = true;
 
+  // RegisterName registers some arbitrary name with the signer of the
+  // transaction as the name's owner.
   rpc RegisterName(MsgRegisterName) returns (MsgRegisterNameResponse);
 }
 

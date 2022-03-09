@@ -40,6 +40,8 @@ func (h *Handler) RegisterService(desc *grpc.ServiceDesc, impl interface{}) {
 	panic("implement me")
 }
 
+// ServiceImpl describes a gRPC service implementation to be registered with
+// grpc.ServiceRegistrar.
 type ServiceImpl struct {
 	Desc *grpc.ServiceDesc
 	Impl interface{}

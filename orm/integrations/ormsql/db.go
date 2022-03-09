@@ -171,7 +171,11 @@ func (d DB) getMessageCodec(message proto.Message) (*messageCodec, error) {
 	return cdc, err
 }
 
-func (d DB) Index(key []protoreflect.Value, value proto.Message, deleted bool) error {
+// Index inserts, updates or deletes the entry with the provided primary key and
+// value based on whether the entry exists or not and the deleted flag.
+// It is designed to be used with either ADR-038 and the ORM EntryCodec or
+// ORM WriteHooks.
+func (d DB) Index(primaryKey []protoreflect.Value, value proto.Message, deleted bool) error {
 	if !deleted {
 		d.save(value)
 		return d.gormDb.Error
@@ -181,7 +185,7 @@ func (d DB) Index(key []protoreflect.Value, value proto.Message, deleted bool) e
 			return err
 		}
 
-		cond, err := cdc.deletionClause(key)
+		cond, err := cdc.deletionClause(primaryKey)
 		if err != nil {
 			return err
 		}

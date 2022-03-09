@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 )
 
-func TestMessageCodec(t *testing.T) {
+func TestDB(t *testing.T) {
 	gormDb, err := gorm.Open(sqlite.Open("file:test.sqlite"), &gorm.Config{})
 	assert.NilError(t, err)
 	sch := NewDB(gormDb, DBOptions{})

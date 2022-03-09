@@ -4,9 +4,6 @@ import (
 	"testing"
 
 	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
-
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gotest.tools/v3/assert"
@@ -17,16 +14,7 @@ import (
 func TestMessageCodec(t *testing.T) {
 	gormDb, err := gorm.Open(sqlite.Open("file:test.sqlite"), &gorm.Config{})
 	assert.NilError(t, err)
-	sch := db{
-		gormDb: gormDb,
-		schema: &schema{
-			jsonMarshalOptions:   protojson.MarshalOptions{},
-			jsonUnmarshalOptions: protojson.UnmarshalOptions{},
-			resolver:             protoregistry.GlobalTypes,
-			messageCodecs:        map[protoreflect.FullName]*messageCodec{},
-		},
-		migratedMsgCodecs: map[protoreflect.FullName]*messageCodec{},
-	}
+	sch := NewDB(gormDb, DBOptions{})
 
 	x := &testpb.ExampleTable{U32: 7, I32: 4,
 		Map:      map[string]uint32{"abc": 4},

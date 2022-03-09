@@ -2,6 +2,8 @@ package ormsql
 
 import (
 	"fmt"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/reflect/protoregistry"
 	"reflect"
 
 	"google.golang.org/protobuf/proto"
@@ -9,13 +11,44 @@ import (
 	"gorm.io/gorm"
 )
 
-type db struct {
+// DB wraps a gorm.DB instance with methods for indexing and querying
+// ORM messages. Schema migration is handled automatically by gorm's
+// auto-migration functionality. Indexers should use the ORM's
+// EntryCodec functionality together with ADR-038 or ORM WriteHooks
+// to listen for changes to the ORM state store, and then call the Index
+// method to index those changes in the SQL database.
+type DB struct {
 	gormDb            *gorm.DB
 	schema            *schema
 	migratedMsgCodecs map[protoreflect.FullName]*messageCodec
 }
 
-func (d db) save(message proto.Message) db {
+type DBOptions struct {
+	JsonMarshalOptions   protojson.MarshalOptions
+	JsonUnmarshalOptions protojson.UnmarshalOptions
+	MessageTypeResolver  protoregistry.MessageTypeResolver
+}
+
+// NewDB constructs a new DB instance.
+func NewDB(gormDb *gorm.DB, options DBOptions) *DB {
+	resolver := options.MessageTypeResolver
+	if resolver == nil {
+		resolver = protoregistry.GlobalTypes
+	}
+
+	return &DB{
+		gormDb: gormDb,
+		schema: &schema{
+			jsonMarshalOptions:   options.JsonMarshalOptions,
+			jsonUnmarshalOptions: options.JsonUnmarshalOptions,
+			resolver:             resolver,
+			messageCodecs:        map[protoreflect.FullName]*messageCodec{},
+		},
+		migratedMsgCodecs: map[protoreflect.FullName]*messageCodec{},
+	}
+}
+
+func (d DB) save(message proto.Message) DB {
 	cdc, err := d.getMessageCodec(message)
 	if err != nil {
 		d.gormDb.Error = err
@@ -32,7 +65,7 @@ func (d db) save(message proto.Message) db {
 
 var protoMessageType = reflect.TypeOf((*proto.Message)(nil)).Elem()
 
-func (d db) Where(query interface{}, args ...interface{}) db {
+func (d DB) Where(query interface{}, args ...interface{}) DB {
 	if protoMsg, ok := query.(proto.Message); ok {
 		cdc, err := d.getMessageCodec(protoMsg)
 		if err != nil {
@@ -52,7 +85,7 @@ func (d db) Where(query interface{}, args ...interface{}) db {
 	return d
 }
 
-func (d db) Find(dest interface{}, args ...interface{}) db {
+func (d DB) Find(dest interface{}, args ...interface{}) DB {
 	typ := reflect.TypeOf(dest).Elem()
 	if typ.Kind() != reflect.Slice {
 		d.gormDb.Error = fmt.Errorf("expected a slice, got %T", dest)
@@ -95,7 +128,7 @@ func (d db) Find(dest interface{}, args ...interface{}) db {
 	return d
 }
 
-func (d db) First(message proto.Message) db {
+func (d DB) First(message proto.Message) DB {
 	msgCdc, err := d.schema.messageCodecForType(message.ProtoReflect().Type())
 	if err != nil {
 		d.gormDb.Error = err
@@ -112,11 +145,11 @@ func (d db) First(message proto.Message) db {
 	return d
 }
 
-func (d db) Error() error {
+func (d DB) Error() error {
 	return d.gormDb.Error
 }
 
-func (d db) getMessageCodec(message proto.Message) (*messageCodec, error) {
+func (d DB) getMessageCodec(message proto.Message) (*messageCodec, error) {
 	if cdc, ok := d.migratedMsgCodecs[message.ProtoReflect().Descriptor().FullName()]; ok {
 		return cdc, nil
 	}
@@ -138,7 +171,7 @@ func (d db) getMessageCodec(message proto.Message) (*messageCodec, error) {
 	return cdc, err
 }
 
-func (d db) Index(key []protoreflect.Value, value proto.Message, deleted bool) error {
+func (d DB) Index(key []protoreflect.Value, value proto.Message, deleted bool) error {
 	if !deleted {
 		d.save(value)
 		return d.gormDb.Error

@@ -4,6 +4,8 @@ name: Sims
 on:
   schedule:
     - cron: "* */2 * * *"
+  release:
+    types: [published]
 
 jobs:
   build:

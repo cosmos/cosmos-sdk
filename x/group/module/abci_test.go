@@ -21,15 +21,17 @@ func TestPruning(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(30000000))
+	addr1 := addrs[0]
 	addr2 := addrs[1]
+	addr3 := addrs[2]
 
 	// Initial group, group policy and balance setup
 	members := []group.Member{
-		{Address: addrs[0].String(), Weight: "1"}, {Address: addrs[1].String(), Weight: "2"},
+		{Address: addr1.String(), Weight: "1"}, {Address: addr2.String(), Weight: "2"},
 	}
 
 	groupRes, err := app.GroupKeeper.CreateGroup(ctx, &group.MsgCreateGroup{
-		Admin:   addrs[0].String(),
+		Admin:   addr1.String(),
 		Members: members,
 	})
 
@@ -43,7 +45,7 @@ func TestPruning(t *testing.T) {
 	)
 
 	policyReq := &group.MsgCreateGroupPolicy{
-		Admin:   addrs[0].String(),
+		Admin:   addr1.String(),
 		GroupId: groupID,
 	}
 
@@ -61,11 +63,6 @@ func TestPruning(t *testing.T) {
 		ToAddress:   addr2.String(),
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 	}
-	msgSend2 := &banktypes.MsgSend{
-		FromAddress: groupPolicyAddr.String(),
-		ToAddress:   addr2.String(),
-		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 10001)},
-	}
 	proposers := []string{addr2.String()}
 
 	specs := map[string]struct {
@@ -80,8 +77,11 @@ func TestPruning(t *testing.T) {
 				msgs := []sdk.Msg{msgSend1}
 				pID, err := submitProposalAndVote(ctx, app, msgs, proposers, group.VOTE_OPTION_YES, groupPolicyAddr)
 				require.NoError(t, err)
-				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Signer: addrs[2].String(), ProposalId: pID})
+				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Signer: addr3.String(), ProposalId: pID})
 				require.NoError(t, err)
+				sdkCtx := sdk.UnwrapSDKContext(ctx)
+				require.NoError(t, testutil.FundAccount(app.BankKeeper, sdkCtx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+
 				return pID
 			},
 			expErrMsg:         "load proposal: not found",
@@ -92,8 +92,11 @@ func TestPruning(t *testing.T) {
 				msgs := []sdk.Msg{msgSend1, msgSend1}
 				pID, err := submitProposalAndVote(ctx, app, msgs, proposers, group.VOTE_OPTION_YES, groupPolicyAddr)
 				require.NoError(t, err)
-				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Signer: addrs[2].String(), ProposalId: pID})
+				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Signer: addr3.String(), ProposalId: pID})
 				require.NoError(t, err)
+				sdkCtx := sdk.UnwrapSDKContext(ctx)
+				require.NoError(t, testutil.FundAccount(app.BankKeeper, sdkCtx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+
 				return pID
 			},
 			expErrMsg:         "load proposal: not found",
@@ -104,8 +107,11 @@ func TestPruning(t *testing.T) {
 				msgs := []sdk.Msg{msgSend1}
 				pID, err := submitProposalAndVote(ctx, app, msgs, proposers, group.VOTE_OPTION_NO, groupPolicyAddr)
 				require.NoError(t, err)
-				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Signer: addrs[2].String(), ProposalId: pID})
+				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Signer: addr3.String(), ProposalId: pID})
 				require.NoError(t, err)
+				sdkCtx := sdk.UnwrapSDKContext(ctx)
+				require.NoError(t, testutil.FundAccount(app.BankKeeper, sdkCtx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+
 				return pID
 			},
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
@@ -114,8 +120,11 @@ func TestPruning(t *testing.T) {
 			setupProposal: func(ctx context.Context) uint64 {
 				pID, err := submitProposal(ctx, app, []sdk.Msg{msgSend1}, proposers, groupPolicyAddr)
 				require.NoError(t, err)
-				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Signer: addrs[2].String(), ProposalId: pID})
+				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Signer: addr3.String(), ProposalId: pID})
 				require.NoError(t, err)
+				sdkCtx := sdk.UnwrapSDKContext(ctx)
+				require.NoError(t, testutil.FundAccount(app.BankKeeper, sdkCtx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+
 				return pID
 			},
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
@@ -125,19 +134,22 @@ func TestPruning(t *testing.T) {
 				pID, err := submitProposal(ctx, app, []sdk.Msg{msgSend1}, proposers, groupPolicyAddr)
 				require.NoError(t, err)
 				_, err = app.GroupKeeper.UpdateGroupPolicyMetadata(ctx, &group.MsgUpdateGroupPolicyMetadata{
-					Admin:   addrs[0].String(),
+					Admin:   addr1.String(),
 					Address: groupPolicyAddr.String(),
 				})
 				require.NoError(t, err)
-				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Signer: addrs[2].String(), ProposalId: pID})
+				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Signer: addr3.String(), ProposalId: pID})
 				require.NoError(t, err)
+				sdkCtx := sdk.UnwrapSDKContext(ctx)
+				require.NoError(t, testutil.FundAccount(app.BankKeeper, sdkCtx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+
 				return pID
 			},
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
 		"pruned when proposal is executable when failed before": {
 			setupProposal: func(ctx context.Context) uint64 {
-				msgs := []sdk.Msg{msgSend2}
+				msgs := []sdk.Msg{msgSend1}
 				pID, err := submitProposalAndVote(ctx, app, msgs, proposers, group.VOTE_OPTION_YES, groupPolicyAddr)
 				require.NoError(t, err)
 				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Signer: addrs[2].String(), ProposalId: pID})
@@ -158,6 +170,7 @@ func TestPruning(t *testing.T) {
 			if spec.expExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
 				// Make sure proposal is deleted from state
 				_, err = app.GroupKeeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
+				require.Contains(t, err.Error(), spec.expErrMsg)
 				res, err := app.GroupKeeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{ProposalId: proposalID})
 				require.NoError(t, err)
 				require.Empty(t, res.GetVotes())

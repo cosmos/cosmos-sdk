@@ -75,6 +75,7 @@ func migrateStoreWeightedVotes(store sdk.KVStore, cdc codec.BinaryCodec) error {
 // migration includes:
 //
 // - Change addresses to be length-prefixed.
+// - Change all legacy votes to ADR-037 weighted votes.
 func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
 	migratePrefixProposalAddress(store, types.DepositsKeyPrefix)

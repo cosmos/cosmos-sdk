@@ -42,13 +42,13 @@ An implementation example can be found in `simapp` package.
 
 To run Rosetta in your application CLI, use the following command:
 
-```
+```sh
 appd rosetta --help
 ```
 
 To test and run Rosetta API endpoints for applications that are running and exposed, use the following command:
 
-```
+```sh
 appd rosetta
      --blockchain "your application name (ex: gaia)"
      --network "your chain identifier (ex: testnet-1)"

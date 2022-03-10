@@ -160,10 +160,10 @@ var (
 	// Examples: not DB domain error, file writing etc...
 	ErrIO = Register(RootCodespace, 39, "Internal IO error")
 
+	// ErrAppConfig defines an error occurred if min-gas-prices field in BaseConfig is empty.
+	ErrAppConfig = Register(RootCodespace, 40, "error in app.toml")
+
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
 	ErrPanic = errorsmod.ErrPanic
-
-	// ErrAppConfig defines an error occurred if min-gas-prices field in BaseConfig is empty.
-	ErrAppConfig = Register(RootCodespace, 40, "error in app.toml")
 )

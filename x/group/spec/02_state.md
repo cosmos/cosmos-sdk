@@ -41,28 +41,28 @@ The `groupMemberTable` is a primary key table and its `PrimaryKey` is given by
 `groupMemberByMemberIndex` allows to retrieve group members by member address:
 `0x12 | len([]byte(member.Address)) | []byte(member.Address) | PrimaryKey -> []byte()`.
 
-## Group Account Table
+## Group Policy Table
 
-The `groupAccountTable` stores `GroupAccountInfo`: `0x20 | len([]byte(Address)) | []byte(Address) -> ProtocolBuffer(GroupAccountInfo)`.
+The `groupPolicyTable` stores `GroupPolicyInfo`: `0x20 | len([]byte(Address)) | []byte(Address) -> ProtocolBuffer(GroupPolicyInfo)`.
 
-The `groupAccountTable` is a primary key table and its `PrimaryKey` is given by
+The `groupPolicyTable` is a primary key table and its `PrimaryKey` is given by
 `len([]byte(Address)) | []byte(Address)` which is used by the following indexes.
 
-### groupAccountSeq
+### groupPolicySeq
 
-The value of `groupAccountSeq` is incremented when creating a new group account and is used to generate the new group account `Address`:
+The value of `groupPolicySeq` is incremented when creating a new group policy and is used to generate the new group policy account `Address`:
 `0x21 | 0x1 -> BigEndian`.
 
 The second `0x1` corresponds to the ORM `sequenceStorageKey`.
 
-### groupAccountByGroupIndex
+### groupPolicyByGroupIndex
 
-`groupAccountByGroupIndex` allows to retrieve group accounts by group id:
+`groupPolicyByGroupIndex` allows to retrieve group policies by group id:
 `0x22 | BigEndian(GroupId) | PrimaryKey -> []byte()`.
 
-### groupAccountByAdminIndex
+### groupPolicyByAdminIndex
 
-`groupAccountByAdminIndex` allows to retrieve group accounts by admin address:
+`groupPolicyByAdminIndex` allows to retrieve group policies by admin address:
 `0x23 | len([]byte(Address)) | []byte(Address) | PrimaryKey -> []byte()`.
 
 ## Proposal Table
@@ -75,9 +75,9 @@ The value of `proposalSeq` is incremented when creating a new proposal and corre
 
 The second `0x1` corresponds to the ORM `sequenceStorageKey`.
 
-### proposalByGroupAccountIndex
+### proposalByGroupPolicyIndex
 
-`proposalByGroupAccountIndex` allows to retrieve proposals by group account address:
+`proposalByGroupPolicyIndex` allows to retrieve proposals by group policy account address:
 `0x32 | len([]byte(account.Address)) | []byte(account.Address) | BigEndian(ProposalId) -> []byte()`.
 
 ### proposalByProposerIndex

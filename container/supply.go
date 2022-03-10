@@ -21,7 +21,7 @@ func (s supplyResolver) addNode(provider *simpleProvider, _ int) error {
 	return duplicateDefinitionError(s.typ, provider.provider.Location, s.loc.String())
 }
 
-func (s supplyResolver) resolve(c *container, _ Scope, caller Location) (reflect.Value, error) {
+func (s supplyResolver) resolve(c *container, _ *moduleKey, caller Location) (reflect.Value, error) {
 	c.logf("Supplying %v from %s to %s", s.typ, s.loc, caller.Name())
 	return s.value, nil
 }

@@ -40,18 +40,18 @@ total_weight: "3"
 version: "1"
 ```
 
-#### group-account-info
+#### group-policy-info
 
-The `group-account-info` command allows users to query for group account info by group account address.
+The `group-policy-info` command allows users to query for group policy info by account address of group policy .
 
 ```bash
-simd query group group-account-info [group-account] [flags]
+simd query group group-policy-info [group-policy-account] [flags]
 ```
 
 Example:
 
 ```bash
-simd query group group-account-info cosmos1..
+simd query group group-policy-info cosmos1..
 ```
 
 Example Output:
@@ -134,24 +134,24 @@ pagination:
   total: "2"
 ```
 
-#### group-accounts-by-group
+#### group-policies-by-group
 
-The `group-accounts-by-group` command allows users to query for group accounts by group id with pagination flags.
+The `group-policies-by-group` command allows users to query for group policies by group id with pagination flags.
 
 ```bash
-simd query group group-accounts-by-group [group-id] [flags]
+simd query group group-policies-by-group [group-id] [flags]
 ```
 
 Example:
 
 ```bash
-simd query group group-accounts-by-group 1 
+simd query group group-policies-by-group 1 
 ```
 
 Example Output:
 
 ```bash
-group_accounts:
+group_policies:
 - address: cosmos1..
   admin: cosmos1..
   decision_policy:
@@ -175,24 +175,24 @@ pagination:
   total: "2"
 ```
 
-#### group-accounts-by-admin
+#### group-policies-by-admin
 
-The `group-accounts-by-admin` command allows users to query for group accounts by admin account address with pagination flags.
+The `group-policies-by-admin` command allows users to query for group policies by admin account address with pagination flags.
 
 ```bash
-simd query group group-accounts-by-admin [admin] [flags]
+simd query group group-policies-by-admin [admin] [flags]
 ```
 
 Example:
 
 ```bash
-simd query group group-accounts-by-admin cosmos1..
+simd query group group-policies-by-admin cosmos1..
 ```
 
 Example Output:
 
 ```bash
-group_accounts:
+group_policies:
 - address: cosmos1..
   admin: cosmos1..
   decision_policy:
@@ -236,7 +236,7 @@ Example Output:
 proposal:
   address: cosmos1..
   executor_result: EXECUTOR_RESULT_NOT_RUN
-  group_account_version: "1"
+  group_policy_version: "1"
   group_version: "1"
   metadata: AQ==
   msgs:
@@ -260,18 +260,18 @@ proposal:
     yes_count: "0"
 ```
 
-#### proposals-by-group-account
+#### proposals-by-group-policy
 
-The `proposals-by-group-account` command allows users to query for proposals by group account address with pagination flags.
+The `proposals-by-group-policy` command allows users to query for proposals by account address of group policy with pagination flags.
 
 ```bash
-simd query group proposals-by-group-account [group-account] [flags]
+simd query group proposals-by-group-policy [group-policy-account] [flags]
 ```
 
 Example:
 
 ```bash
-simd query group proposals-by-group-account cosmos1..
+simd query group proposals-by-group-policy cosmos1..
 ```
 
 Example Output:
@@ -283,7 +283,7 @@ pagination:
 proposals:
 - address: cosmos1..
   executor_result: EXECUTOR_RESULT_NOT_RUN
-  group_account_version: "1"
+  group_policy_version: "1"
   group_version: "1"
   metadata: AQ==
   msgs:
@@ -453,60 +453,75 @@ Example:
 simd tx group update-group-metadata cosmos1.. 1 "AQ=="
 ```
 
-#### create-group-account
+#### create-group-policy
 
-The `create-group-account` command allows users to create a group account which is an account associated with a group and a decision policy. 
+The `create-group-policy` command allows users to create a group policy which is an account associated with a group and a decision policy. 
 
 ```bash
-simd tx group create-group-account [admin] [group-id] [metadata] [decision-policy] [flags]
+simd tx group create-group-policy [admin] [group-id] [metadata] [decision-policy] [flags]
 ```
 
 Example:
 
 ```bash
-simd tx group create-group-account cosmos1.. 1 "AQ==" '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"600s"}' 
+simd tx group create-group-policy cosmos1.. 1 "AQ==" '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"600s"}' 
 ```
 
-#### update-group-account-admin
 
-The `update-group-account-admin` command allows users to update a group account admin.
+#### create-group-with-policy
 
-```bash
-simd tx group update-group-account-admin [admin] [group-account] [new-admin] [flags]
-```
-
-Example:
+The `create-group-with-policy` command allows users to create a group which is an aggregation of member accounts with associated weights and an administrator account with decision policy. If the `--group-policy-as-admin` flag is set to `true`, the group policy address becomes the group and group policy admin.
 
 ```bash
-simd tx group update-group-account-admin cosmos1.. cosmos1.. cosmos1..
-```
-
-#### update-group-account-metadata
-
-The `update-group-account-metadata` command allows users to update a group account metadata.
-
-```bash
-simd tx group update-group-account-metadata [admin] [group-account] [new-metadata] [flags]
+simd tx group create-group-with-policy [admin] [group-metadata] [group-policy-metadata] [members-json-file] [decision-policy] [flags]
 ```
 
 Example:
 
 ```bash
-simd tx group update-group-account-metadata cosmos1.. cosmos1.. "AQ=="
+simd tx group create-group-with-policy cosmos1.. "AQ==" "AQ==" members.json '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"600s"}' 
 ```
 
-#### update-group-account-policy
+#### update-group-policy-admin
 
-The `update-group-account-policy` command allows users to update a group account decision policy.
+The `update-group-policy-admin` command allows users to update a group policy admin.
 
 ```bash
-simd  tx group update-group-account-policy [admin] [group-account] [decision-policy] [flags]
+simd tx group update-group-policy-admin [admin] [group-policy-account] [new-admin] [flags]
 ```
 
 Example:
 
 ```bash
-simd tx group update-group-account-policy cosmos1.. cosmos1.. '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"2", "timeout":"1000s"}' 
+simd tx group update-group-policy-admin cosmos1.. cosmos1.. cosmos1..
+```
+
+#### update-group-policy-metadata
+
+The `update-group-policy-metadata` command allows users to update a group policy metadata.
+
+```bash
+simd tx group update-group-policy-metadata [admin] [group-policy-account] [new-metadata] [flags]
+```
+
+Example:
+
+```bash
+simd tx group update-group-policy-metadata cosmos1.. cosmos1.. "AQ=="
+```
+
+#### update-group-policy-decision-policy
+
+The `update-group-policy-decision-policy` command allows users to update a group policy's decision policy.
+
+```bash
+simd  tx group update-group-policy-decision-policy [admin] [group-policy-account] [decision-policy] [flags]
+```
+
+Example:
+
+```bash
+simd tx group update-group-policy-decision-policy cosmos1.. cosmos1.. '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"2", "timeout":"1000s"}' 
 ```
 
 #### create-proposal
@@ -514,13 +529,27 @@ simd tx group update-group-account-policy cosmos1.. cosmos1.. '{"@type":"/cosmos
 The `create-proposal` command allows users to submit a new proposal.
 
 ```bash
-simd tx group create-proposal [group-account] [proposer[,proposer]*] [msg_tx_json_file] [metadata] [flags]
+simd tx group create-proposal [group-policy-account] [proposer[,proposer]*] [msg_tx_json_file] [metadata] [flags]
 ```
 
 Example:
 
 ```bash
 simd tx group create-proposal cosmos1.. cosmos1.. msg_tx.json "AQ=="
+```
+
+#### withdraw-proposal
+
+The `withdraw-proposal` command allows users to withdraw a proposal.
+
+```bash
+simd tx group withdraw-proposal [proposal-id] [group-policy-admin-or-proposer]
+```
+
+Example:
+
+```bash
+simd tx group withdraw-proposal 1 cosmos1..
 ```
 
 #### vote 
@@ -550,6 +579,21 @@ Example:
 ```bash
 simd tx group exec 1
 ```
+
+#### leave-group
+
+The `leave-group` command allows group member to leave the group.
+
+```bash
+simd tx group leave-group [member-address] [group-id]
+```
+
+Example:
+
+```bash
+simd tx group leave-group cosmos1... 1
+```
+
 
 ## gRPC
 
@@ -584,19 +628,19 @@ Example Output:
 }
 ```
 
-### GroupAccountInfo
+### GroupPolicyInfo
 
-The `GroupAccountInfo` endpoint allows users to query for group account info by group account address.
+The `GroupPolicyInfo` endpoint allows users to query for group policy info by account address of group policy.
 
 ```bash
-cosmos.group.v1beta1.Query/GroupAccountInfo
+cosmos.group.v1beta1.Query/GroupPolicyInfo
 ```
 
 Example:
 
 ```bash
 grpcurl -plaintext \
-    -d '{"address":"cosmos1.."}'  localhost:9090 cosmos.group.v1beta1.Query/GroupAccountInfo
+    -d '{"address":"cosmos1.."}'  localhost:9090 cosmos.group.v1beta1.Query/GroupPolicyInfo
 ```
 
 Example Output:
@@ -695,26 +739,26 @@ Example Output:
 }
 ```
 
-### GroupAccountsByGroup
+### GroupPoliciesByGroup
 
-The `GroupAccountsByGroup` endpoint allows users to query for group accounts by group id with pagination flags.
+The `GroupPoliciesByGroup` endpoint allows users to query for group policies by group id with pagination flags.
 
 ```bash
-cosmos.group.v1beta1.Query/GroupAccountsByGroup
+cosmos.group.v1beta1.Query/GroupPoliciesByGroup
 ```
 
 Example:
 
 ```bash
 grpcurl -plaintext \
-    -d '{"group_id":"1"}'  localhost:9090 cosmos.group.v1beta1.Query/GroupAccountsByGroup
+    -d '{"group_id":"1"}'  localhost:9090 cosmos.group.v1beta1.Query/GroupPoliciesByGroup
 ```
 
 Example Output:
 
 ```bash
 {
-  "groupAccounts": [
+  "GroupPolicies": [
     {
       "address": "cosmos1..",
       "groupId": "1",
@@ -736,26 +780,26 @@ Example Output:
 }
 ```
 
-### GroupAccountsByAdmin
+### GroupPoliciesByAdmin
 
-The `GroupAccountsByAdmin` endpoint allows users to query for group accounts by admin account address with pagination flags.
+The `GroupPoliciesByAdmin` endpoint allows users to query for group policies by admin account address with pagination flags.
 
 ```bash
-cosmos.group.v1beta1.Query/GroupAccountsByAdmin
+cosmos.group.v1beta1.Query/GroupPoliciesByAdmin
 ```
 
 Example:
 
 ```bash
 grpcurl -plaintext \
-    -d '{"admin":"cosmos1.."}'  localhost:9090 cosmos.group.v1beta1.Query/GroupAccountsByAdmin
+    -d '{"admin":"cosmos1.."}'  localhost:9090 cosmos.group.v1beta1.Query/GroupPoliciesByAdmin
 ```
 
 Example Output:
 
 ```bash
 {
-  "groupAccounts": [
+  "GroupPolicies": [
     {
       "address": "cosmos1..",
       "groupId": "1",
@@ -804,7 +848,7 @@ Example Output:
     ],
     "submittedAt": "2021-12-17T07:06:26.310638964Z",
     "groupVersion": "1",
-    "groupAccountVersion": "1",
+    "GroupPolicyVersion": "1",
     "status": "STATUS_SUBMITTED",
     "result": "RESULT_UNFINALIZED",
     "voteState": {
@@ -822,19 +866,19 @@ Example Output:
 }
 ```
 
-### ProposalsByGroupAccount
+### ProposalsByGroupPolicy
 
-The `ProposalsByGroupAccount` endpoint allows users to query for proposals by group account address with pagination flags.
+The `ProposalsByGroupPolicy` endpoint allows users to query for proposals by account address of group policy with pagination flags.
 
 ```bash
-cosmos.group.v1beta1.Query/ProposalsByGroupAccount
+cosmos.group.v1beta1.Query/ProposalsByGroupPolicy
 ```
 
 Example:
 
 ```bash
 grpcurl -plaintext \
-    -d '{"address":"cosmos1.."}'  localhost:9090 cosmos.group.v1beta1.Query/ProposalsByGroupAccount
+    -d '{"address":"cosmos1.."}'  localhost:9090 cosmos.group.v1beta1.Query/ProposalsByGroupPolicy
 ```
 
 Example Output:
@@ -850,7 +894,7 @@ Example Output:
       ],
       "submittedAt": "2021-12-17T08:03:27.099649352Z",
       "groupVersion": "1",
-      "groupAccountVersion": "1",
+      "GroupPolicyVersion": "1",
       "status": "STATUS_CLOSED",
       "result": "RESULT_ACCEPTED",
       "voteState": {
@@ -998,18 +1042,18 @@ Example Output:
 }
 ```
 
-### GroupAccountInfo
+### GroupPolicyInfo
 
-The `GroupAccountInfo` endpoint allows users to query for group account info by group account address.
+The `GroupPolicyInfo` endpoint allows users to query for group policy info by account address of group policy.
 
 ```bash
-/cosmos/group/v1beta1/group_account_info/{address}
+/cosmos/group/v1beta1/group_policy_info/{address}
 ```
 
 Example:
 
 ```bash
-curl localhost:1317/cosmos/group/v1beta1/group_account_info/cosmos1..
+curl localhost:1317/cosmos/group/v1beta1/group_policy_info/cosmos1..
 ```
 
 Example Output:
@@ -1114,25 +1158,25 @@ Example Output:
 }
 ```
 
-### GroupAccountsByGroup
+### GroupPoliciesByGroup
 
-The `GroupAccountsByGroup` endpoint allows users to query for group accounts by group id with pagination flags.
+The `GroupPoliciesByGroup` endpoint allows users to query for group policies by group id with pagination flags.
 
 ```bash
-/cosmos/group/v1beta1/group_accounts_by_group/{group_id}
+/cosmos/group/v1beta1/group_policies_by_group/{group_id}
 ```
 
 Example:
 
 ```bash
-curl localhost:1317/cosmos/group/v1beta1/group_accounts_by_group/1
+curl localhost:1317/cosmos/group/v1beta1/group_policies_by_group/1
 ```
 
 Example Output:
 
 ```bash
 {
-  "group_accounts": [
+  "group_policies": [
     {
       "address": "cosmos1..",
       "group_id": "1",
@@ -1165,25 +1209,25 @@ Example Output:
 }
 ```
 
-### GroupAccountsByAdmin
+### GroupPoliciesByAdmin
 
-The `GroupAccountsByAdmin` endpoint allows users to query for group accounts by admin account address with pagination flags.
+The `GroupPoliciesByAdmin` endpoint allows users to query for group policies by admin account address with pagination flags.
 
 ```bash
-/cosmos/group/v1beta1/group_accounts_by_admin/{admin}
+/cosmos/group/v1beta1/group_policies_by_admin/{admin}
 ```
 
 Example:
 
 ```bash
-curl localhost:1317/cosmos/group/v1beta1/group_accounts_by_admin/cosmos1..
+curl localhost:1317/cosmos/group/v1beta1/group_policies_by_admin/cosmos1..
 ```
 
 Example Output:
 
 ```bash
 {
-  "group_accounts": [
+  "group_policies": [
     {
       "address": "cosmos1..",
       "group_id": "1",
@@ -1242,7 +1286,7 @@ Example Output:
     ],
     "submitted_at": "2021-12-17T07:06:26.310638964Z",
     "group_version": "1",
-    "group_account_version": "1",
+    "group_policy_version": "1",
     "status": "STATUS_SUBMITTED",
     "result": "RESULT_UNFINALIZED",
     "vote_state": {
@@ -1270,18 +1314,18 @@ Example Output:
 }
 ```
 
-### ProposalsByGroupAccount
+### ProposalsByGroupPolicy
 
-The `ProposalsByGroupAccount` endpoint allows users to query for proposals by group account address with pagination flags.
+The `ProposalsByGroupPolicy` endpoint allows users to query for proposals by account address of group policy with pagination flags.
 
 ```bash
-/cosmos/group/v1beta1/proposals_by_group_account/{address}
+/cosmos/group/v1beta1/proposals_by_group_policy/{address}
 ```
 
 Example:
 
 ```bash
-curl localhost:1317/cosmos/group/v1beta1/proposals_by_group_account/cosmos1..
+curl localhost:1317/cosmos/group/v1beta1/proposals_by_group_policy/cosmos1..
 ```
 
 Example Output:
@@ -1298,7 +1342,7 @@ Example Output:
       ],
       "submitted_at": "2021-12-17T08:03:27.099649352Z",
       "group_version": "1",
-      "group_account_version": "1",
+      "group_policy_version": "1",
       "status": "STATUS_CLOSED",
       "result": "RESULT_ACCEPTED",
       "vote_state": {

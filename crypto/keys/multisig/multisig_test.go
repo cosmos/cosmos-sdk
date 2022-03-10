@@ -124,7 +124,7 @@ func TestVerifyMultisignature(t *testing.T) {
 			func(require *require.Assertions) {
 				k := 2
 				signingIndices := []int{0, 3, 1}
-				pubKeys, sigs := generatePubKeysAndSignatures(5, msg)
+				pubKeys, sigs := generatePubKeysAndSignatures(8, msg)
 				pk = kmultisig.NewLegacyAminoPubKey(k, pubKeys)
 				sig = multisig.NewMultisig(len(pubKeys))
 				signBytesFn := func(mode signing.SignMode) ([]byte, error) { return msg, nil }

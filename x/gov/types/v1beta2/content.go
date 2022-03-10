@@ -1,27 +1,38 @@
 package v1beta2
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	"fmt"
 
-// Copied over from /x/gov/types/keys.go to avoid circular imports
-const (
-	ModuleName = "gov"
+	"github.com/gogo/protobuf/proto"
 
-	RouterKey = ModuleName
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-// Content defines an interface that a proposal must implement. It contains
-// information such as the title and description along with the type and routing
-// information for the appropriate handler to process the proposal. Content can
-// have additional fields, which will handled by a proposal's Handler.
-type Content interface {
-	GetTitle() string
-	GetDescription() string
-	ProposalRoute() string
-	ProposalType() string
-	ValidateBasic() error
-	String() string
+// NewLegacyContent creates a new MsgExecLegacyContent from a legacy Content
+// interface.
+func NewLegacyContent(content v1beta1.Content, authority string) (*MsgExecLegacyContent, error) {
+	msg, ok := content.(proto.Message)
+	if !ok {
+		return nil, fmt.Errorf("%T does not implement proto.Message", content)
+	}
+
+	any, err := codectypes.NewAnyWithValue(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewMsgExecLegacyContent(any, authority), nil
 }
 
-// Handler defines a function that handles a proposal after it has passed the
-// governance process.
-type Handler func(ctx sdk.Context, content Content) error
+// LegacyContentFromMessage extracts the legacy Content interface from a
+// MsgExecLegacyContent.
+func LegacyContentFromMessage(msg *MsgExecLegacyContent) (v1beta1.Content, error) {
+	content, ok := msg.Content.GetCachedValue().(v1beta1.Content)
+	if !ok {
+		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (*v1beta1.Content)(nil), msg.Content.GetCachedValue())
+	}
+
+	return content, nil
+}

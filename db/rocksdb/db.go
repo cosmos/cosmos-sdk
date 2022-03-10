@@ -11,9 +11,9 @@ import (
 	"sync"
 	"sync/atomic"
 
-	dbm "github.com/cosmos/cosmos-sdk/db"
+	"github.com/cosmos/cosmos-sdk/db"
 	dbutil "github.com/cosmos/cosmos-sdk/db/internal"
-	"github.com/tecbot/gorocksdb"
+	"github.com/cosmos/gorocksdb"
 )
 
 var (
@@ -22,10 +22,10 @@ var (
 )
 
 var (
-	_ dbm.DBConnection = (*RocksDB)(nil)
-	_ dbm.DBReader     = (*dbTxn)(nil)
-	_ dbm.DBWriter     = (*dbWriter)(nil)
-	_ dbm.DBReadWriter = (*dbWriter)(nil)
+	_ db.DBConnection = (*RocksDB)(nil)
+	_ db.DBReader     = (*dbTxn)(nil)
+	_ db.DBWriter     = (*dbWriter)(nil)
+	_ db.DBReadWriter = (*dbWriter)(nil)
 )
 
 // RocksDB is a connection to a RocksDB key-value database.
@@ -35,7 +35,7 @@ type dbManager struct {
 	current *dbConnection
 	dir     string
 	opts    dbOptions
-	vmgr    *dbm.VersionManager
+	vmgr    *db.VersionManager
 	mtx     sync.RWMutex
 	// Track open DBWriters
 	openWriters int32
@@ -129,7 +129,7 @@ func (mgr *dbManager) checkpointsDir() string {
 }
 
 // Reads directory for checkpoints files
-func readVersions(dir string) (*dbm.VersionManager, error) {
+func readVersions(dir string) (*db.VersionManager, error) {
 	files, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
@@ -142,18 +142,18 @@ func readVersions(dir string) (*dbm.VersionManager, error) {
 		}
 		versions = append(versions, version)
 	}
-	return dbm.NewVersionManager(versions), nil
+	return db.NewVersionManager(versions), nil
 }
 
 func (mgr *dbManager) checkpointPath(version uint64) (string, error) {
 	dbPath := filepath.Join(mgr.checkpointsDir(), fmt.Sprintf(checkpointFileFormat, version))
 	if stat, err := os.Stat(dbPath); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			err = dbm.ErrVersionDoesNotExist
+			err = db.ErrVersionDoesNotExist
 		}
 		return "", err
 	} else if !stat.IsDir() {
-		return "", dbm.ErrVersionDoesNotExist
+		return "", db.ErrVersionDoesNotExist
 	}
 	return dbPath, nil
 }
@@ -178,7 +178,7 @@ func (mgr *dbManager) openCheckpoint(version uint64) (*dbConnection, error) {
 	return db, nil
 }
 
-func (mgr *dbManager) Reader() dbm.DBReader {
+func (mgr *dbManager) Reader() db.DBReader {
 	mgr.mtx.RLock()
 	defer mgr.mtx.RUnlock()
 	return &dbTxn{
@@ -189,22 +189,22 @@ func (mgr *dbManager) Reader() dbm.DBReader {
 	}
 }
 
-func (mgr *dbManager) ReaderAt(version uint64) (dbm.DBReader, error) {
+func (mgr *dbManager) ReaderAt(version uint64) (db.DBReader, error) {
 	mgr.mtx.RLock()
 	defer mgr.mtx.RUnlock()
-	db, err := mgr.openCheckpoint(version)
+	d, err := mgr.openCheckpoint(version)
 	if err != nil {
 		return nil, err
 	}
 
 	return &dbTxn{
-		txn:     db.TransactionBegin(mgr.opts.wo, mgr.opts.txo, nil),
+		txn:     d.TransactionBegin(mgr.opts.wo, mgr.opts.txo, nil),
 		mgr:     mgr,
 		version: version,
 	}, nil
 }
 
-func (mgr *dbManager) ReadWriter() dbm.DBReadWriter {
+func (mgr *dbManager) ReadWriter() db.DBReadWriter {
 	mgr.mtx.RLock()
 	defer mgr.mtx.RUnlock()
 	atomic.AddInt32(&mgr.openWriters, 1)
@@ -214,14 +214,14 @@ func (mgr *dbManager) ReadWriter() dbm.DBReadWriter {
 	}}
 }
 
-func (mgr *dbManager) Writer() dbm.DBWriter {
+func (mgr *dbManager) Writer() db.DBWriter {
 	mgr.mtx.RLock()
 	defer mgr.mtx.RUnlock()
 	atomic.AddInt32(&mgr.openWriters, 1)
 	return mgr.newRocksDBBatch()
 }
 
-func (mgr *dbManager) Versions() (dbm.VersionSet, error) {
+func (mgr *dbManager) Versions() (db.VersionSet, error) {
 	mgr.mtx.RLock()
 	defer mgr.mtx.RUnlock()
 	return mgr.vmgr, nil
@@ -235,7 +235,7 @@ func (mgr *dbManager) SaveNextVersion() (uint64, error) {
 // SaveVersion implements DBConnection.
 func (mgr *dbManager) SaveVersion(target uint64) error {
 	if target == 0 {
-		return dbm.ErrInvalidVersion
+		return db.ErrInvalidVersion
 	}
 	_, err := mgr.save(target)
 	return err
@@ -245,7 +245,7 @@ func (mgr *dbManager) save(target uint64) (uint64, error) {
 	mgr.mtx.Lock()
 	defer mgr.mtx.Unlock()
 	if mgr.openWriters > 0 {
-		return 0, dbm.ErrOpenTransactions
+		return 0, db.ErrOpenTransactions
 	}
 	newVmgr := mgr.vmgr.Copy()
 	target, err := newVmgr.Save(target)
@@ -267,7 +267,7 @@ func (mgr *dbManager) save(target uint64) (uint64, error) {
 
 func (mgr *dbManager) DeleteVersion(ver uint64) error {
 	if mgr.cpCache.has(ver) {
-		return dbm.ErrOpenTransactions
+		return db.ErrOpenTransactions
 	}
 	mgr.mtx.Lock()
 	defer mgr.mtx.Unlock()
@@ -284,7 +284,7 @@ func (mgr *dbManager) Revert() (err error) {
 	mgr.mtx.RLock()
 	defer mgr.mtx.RUnlock()
 	if mgr.openWriters > 0 {
-		return dbm.ErrOpenTransactions
+		return db.ErrOpenTransactions
 	}
 	// Close current connection and replace it with a checkpoint (created from the last checkpoint)
 	mgr.current.Close()
@@ -341,10 +341,10 @@ func (mgr *dbManager) Stats() map[string]string {
 // Get implements DBReader.
 func (tx *dbTxn) Get(key []byte) ([]byte, error) {
 	if tx.txn == nil {
-		return nil, dbm.ErrTransactionClosed
+		return nil, db.ErrTransactionClosed
 	}
 	if len(key) == 0 {
-		return nil, dbm.ErrKeyEmpty
+		return nil, db.ErrKeyEmpty
 	}
 	res, err := tx.txn.Get(tx.mgr.opts.ro, key)
 	if err != nil {
@@ -356,10 +356,10 @@ func (tx *dbTxn) Get(key []byte) ([]byte, error) {
 // Get implements DBReader.
 func (tx *dbWriter) Get(key []byte) ([]byte, error) {
 	if tx.txn == nil {
-		return nil, dbm.ErrTransactionClosed
+		return nil, db.ErrTransactionClosed
 	}
 	if len(key) == 0 {
-		return nil, dbm.ErrKeyEmpty
+		return nil, db.ErrKeyEmpty
 	}
 	res, err := tx.txn.GetForUpdate(tx.mgr.opts.ro, key)
 	if err != nil {
@@ -380,7 +380,7 @@ func (tx *dbTxn) Has(key []byte) (bool, error) {
 // Set implements DBWriter.
 func (tx *dbWriter) Set(key []byte, value []byte) error {
 	if tx.txn == nil {
-		return dbm.ErrTransactionClosed
+		return db.ErrTransactionClosed
 	}
 	if err := dbutil.ValidateKv(key, value); err != nil {
 		return err
@@ -391,17 +391,17 @@ func (tx *dbWriter) Set(key []byte, value []byte) error {
 // Delete implements DBWriter.
 func (tx *dbWriter) Delete(key []byte) error {
 	if tx.txn == nil {
-		return dbm.ErrTransactionClosed
+		return db.ErrTransactionClosed
 	}
 	if len(key) == 0 {
-		return dbm.ErrKeyEmpty
+		return db.ErrKeyEmpty
 	}
 	return tx.txn.Delete(key)
 }
 
 func (tx *dbWriter) Commit() (err error) {
 	if tx.txn == nil {
-		return dbm.ErrTransactionClosed
+		return db.ErrTransactionClosed
 	}
 	defer func() { err = dbutil.CombineErrors(err, tx.Discard(), "Discard also failed") }()
 	err = tx.txn.Commit()
@@ -430,24 +430,24 @@ func (tx *dbWriter) Discard() error {
 }
 
 // Iterator implements DBReader.
-func (tx *dbTxn) Iterator(start, end []byte) (dbm.Iterator, error) {
+func (tx *dbTxn) Iterator(start, end []byte) (db.Iterator, error) {
 	if tx.txn == nil {
-		return nil, dbm.ErrTransactionClosed
+		return nil, db.ErrTransactionClosed
 	}
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, dbm.ErrKeyEmpty
+		return nil, db.ErrKeyEmpty
 	}
 	itr := tx.txn.NewIterator(tx.mgr.opts.ro)
 	return newRocksDBIterator(itr, start, end, false), nil
 }
 
 // ReverseIterator implements DBReader.
-func (tx *dbTxn) ReverseIterator(start, end []byte) (dbm.Iterator, error) {
+func (tx *dbTxn) ReverseIterator(start, end []byte) (db.Iterator, error) {
 	if tx.txn == nil {
-		return nil, dbm.ErrTransactionClosed
+		return nil, db.ErrTransactionClosed
 	}
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, dbm.ErrKeyEmpty
+		return nil, db.ErrKeyEmpty
 	}
 	itr := tx.txn.NewIterator(tx.mgr.opts.ro)
 	return newRocksDBIterator(itr, start, end, true), nil

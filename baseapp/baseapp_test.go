@@ -14,6 +14,10 @@ import (
 	"testing"
 	"time"
 
+	"google.golang.org/protobuf/proto"
+
+	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
+
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -137,6 +141,7 @@ func testTxHandler(options middleware.TxHandlerOptions, customTxHandlerMiddlewar
 		middleware.RecoveryTxMiddleware,
 		middleware.NewIndexEventsTxMiddleware(options.IndexEvents),
 		middleware.ValidateBasicMiddleware,
+		middleware.ConsumeBlockGasMiddleware,
 		CustomTxHandlerMiddleware(customTxHandlerMiddleware),
 	)
 }
@@ -183,7 +188,6 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 	app := setupBaseApp(t, append(options,
 		baseapp.SetSnapshotStore(snapshotStore),
 		baseapp.SetSnapshotInterval(snapshotInterval),
-		baseapp.SetPruning(sdk.PruningOptions{KeepEvery: 1}),
 		routerOpt)...)
 
 	app.InitChain(abci.RequestInitChain{})
@@ -479,7 +483,6 @@ func TestLoadVersionPruning(t *testing.T) {
 	logger := log.NewNopLogger()
 	pruningOptions := storetypes.PruningOptions{
 		KeepRecent: 2,
-		KeepEvery:  3,
 		Interval:   1,
 	}
 	pruningOpt := baseapp.SetPruning(pruningOptions)
@@ -1792,6 +1795,7 @@ func TestGRPCQuery(t *testing.T) {
 	}
 
 	app := setupBaseApp(t, grpcQueryOpt)
+	app.GRPCQueryRouter().SetInterfaceRegistry(codectypes.NewInterfaceRegistry())
 
 	app.InitChain(abci.RequestInitChain{})
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
@@ -1813,6 +1817,41 @@ func TestGRPCQuery(t *testing.T) {
 
 	var res testdata.SayHelloResponse
 	err = res.Unmarshal(resQuery.Value)
+	require.NoError(t, err)
+	require.Equal(t, "Hello foo!", res.Greeting)
+}
+
+func TestGRPCQueryPulsar(t *testing.T) {
+	grpcQueryOpt := func(bapp *baseapp.BaseApp) {
+		testdata_pulsar.RegisterQueryServer(
+			bapp.GRPCQueryRouter(),
+			testdata_pulsar.QueryImpl{},
+		)
+	}
+
+	app := setupBaseApp(t, grpcQueryOpt)
+	app.GRPCQueryRouter().SetInterfaceRegistry(codectypes.NewInterfaceRegistry())
+
+	app.InitChain(abci.RequestInitChain{})
+	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	app.Commit()
+
+	req := &testdata_pulsar.SayHelloRequest{Name: "foo"}
+	reqBz, err := proto.Marshal(req)
+	require.NoError(t, err)
+
+	reqQuery := abci.RequestQuery{
+		Data: reqBz,
+		Path: "/testdata.Query/SayHello",
+	}
+
+	resQuery := app.Query(reqQuery)
+
+	require.Equal(t, abci.CodeTypeOK, resQuery.Code, resQuery)
+
+	var res testdata_pulsar.SayHelloResponse
+	err = proto.Unmarshal(resQuery.Value, &res)
 	require.NoError(t, err)
 	require.Equal(t, "Hello foo!", res.Greeting)
 }
@@ -1878,8 +1917,8 @@ func TestListSnapshots(t *testing.T) {
 		s.Metadata = nil
 	}
 	assert.Equal(t, abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{
-		{Height: 4, Format: 1, Chunks: 2},
-		{Height: 2, Format: 1, Chunks: 1},
+		{Height: 4, Format: snapshottypes.CurrentFormat, Chunks: 2},
+		{Height: 2, Format: snapshottypes.CurrentFormat, Chunks: 1},
 	}}, resp)
 }
 
@@ -1893,13 +1932,13 @@ func TestLoadSnapshotChunk(t *testing.T) {
 		chunk       uint32
 		expectEmpty bool
 	}{
-		"Existing snapshot": {2, 1, 1, false},
-		"Missing height":    {100, 1, 1, true},
-		"Missing format":    {2, 2, 1, true},
-		"Missing chunk":     {2, 1, 9, true},
-		"Zero height":       {0, 1, 1, true},
+		"Existing snapshot": {2, snapshottypes.CurrentFormat, 1, false},
+		"Missing height":    {100, snapshottypes.CurrentFormat, 1, true},
+		"Missing format":    {2, 3, 1, true},
+		"Missing chunk":     {2, snapshottypes.CurrentFormat, 9, true},
+		"Zero height":       {0, snapshottypes.CurrentFormat, 1, true},
 		"Zero format":       {2, 0, 1, true},
-		"Zero chunk":        {2, 1, 0, false},
+		"Zero chunk":        {2, snapshottypes.CurrentFormat, 0, false},
 	}
 	for name, tc := range testcases {
 		tc := tc
@@ -1937,13 +1976,13 @@ func TestOfferSnapshot_Errors(t *testing.T) {
 			Height: 1, Format: 9, Chunks: 3, Hash: hash, Metadata: metadata,
 		}, abci.ResponseOfferSnapshot_REJECT_FORMAT},
 		"incorrect chunk count": {&abci.Snapshot{
-			Height: 1, Format: 1, Chunks: 2, Hash: hash, Metadata: metadata,
+			Height: 1, Format: snapshottypes.CurrentFormat, Chunks: 2, Hash: hash, Metadata: metadata,
 		}, abci.ResponseOfferSnapshot_REJECT},
 		"no chunks": {&abci.Snapshot{
-			Height: 1, Format: 1, Chunks: 0, Hash: hash, Metadata: metadata,
+			Height: 1, Format: snapshottypes.CurrentFormat, Chunks: 0, Hash: hash, Metadata: metadata,
 		}, abci.ResponseOfferSnapshot_REJECT},
 		"invalid metadata serialization": {&abci.Snapshot{
-			Height: 1, Format: 1, Chunks: 0, Hash: hash, Metadata: []byte{3, 1, 4},
+			Height: 1, Format: snapshottypes.CurrentFormat, Chunks: 0, Hash: hash, Metadata: []byte{3, 1, 4},
 		}, abci.ResponseOfferSnapshot_REJECT},
 	}
 	for name, tc := range testcases {

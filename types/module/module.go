@@ -230,6 +230,7 @@ type Manager struct {
 	OrderExportGenesis []string
 	OrderBeginBlockers []string
 	OrderEndBlockers   []string
+	OrderMigrations    []string
 }
 
 // NewManager creates a new Manager object
@@ -253,26 +254,33 @@ func NewManager(modules ...AppModule) *Manager {
 
 // SetOrderInitGenesis sets the order of init genesis calls
 func (m *Manager) SetOrderInitGenesis(moduleNames ...string) {
-	m.checkForgottenModules("SetOrderInitGenesis", moduleNames)
+	m.assertNoForgottenModules("SetOrderInitGenesis", moduleNames)
 	m.OrderInitGenesis = moduleNames
 }
 
 // SetOrderExportGenesis sets the order of export genesis calls
 func (m *Manager) SetOrderExportGenesis(moduleNames ...string) {
-	m.checkForgottenModules("SetOrderExportGenesis", moduleNames)
+	m.assertNoForgottenModules("SetOrderExportGenesis", moduleNames)
 	m.OrderExportGenesis = moduleNames
 }
 
 // SetOrderBeginBlockers sets the order of set begin-blocker calls
 func (m *Manager) SetOrderBeginBlockers(moduleNames ...string) {
-	m.checkForgottenModules("SetOrderBeginBlockers", moduleNames)
+	m.assertNoForgottenModules("SetOrderBeginBlockers", moduleNames)
 	m.OrderBeginBlockers = moduleNames
 }
 
 // SetOrderEndBlockers sets the order of set end-blocker calls
 func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
-	m.checkForgottenModules("SetOrderEndBlockers", moduleNames)
+	m.assertNoForgottenModules("SetOrderEndBlockers", moduleNames)
 	m.OrderEndBlockers = moduleNames
+}
+
+// SetOrderMigrations sets the order of migrations to be run. If not set
+// then migrations will be run with an order defined in `DefaultMigrationsOrder`.
+func (m *Manager) SetOrderMigrations(moduleNames ...string) {
+	m.assertNoForgottenModules("SetOrderMigrations", moduleNames)
+	m.OrderMigrations = moduleNames
 }
 
 // RegisterInvariants registers all module invariants
@@ -345,24 +353,29 @@ func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) map[string
 	return genesisData
 }
 
-// checkForgottenModules checks that we didn't forget any modules in the
+// assertNoForgottenModules checks that we didn't forget any modules in the
 // SetOrder* functions.
-func (m *Manager) checkForgottenModules(setOrderFnName string, moduleNames []string) {
-	setOrderMap := map[string]struct{}{}
+func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []string) {
+	ms := make(map[string]bool)
 	for _, m := range moduleNames {
-		setOrderMap[m] = struct{}{}
+		ms[m] = true
 	}
-
-	if len(setOrderMap) != len(m.Modules) {
-		panic(fmt.Sprintf("got %d modules in the module manager, but %d modules in %s", len(m.Modules), len(setOrderMap), setOrderFnName))
+	var missing []string
+	for m := range m.Modules {
+		if !ms[m] {
+			missing = append(missing, m)
+		}
+	}
+	if len(missing) != 0 {
+		panic(fmt.Sprintf(
+			"%s: all modules must be defined when setting SetOrderMigrations, missing: %v", setOrderFnName, missing))
 	}
 }
 
 // MigrationHandler is the migration function that each module registers.
 type MigrationHandler func(sdk.Context) error
 
-// VersionMap is a map of moduleName -> version, where version denotes the
-// version from which we should perform the migration for each module.
+// VersionMap is a map of moduleName -> version
 type VersionMap map[string]uint64
 
 // RunMigrations performs in-place store migrations for all modules. This
@@ -388,6 +401,9 @@ type VersionMap map[string]uint64
 //      because it was not in the previous x/upgrade's store), then run
 //      `InitGenesis` on that module.
 // - return the `updatedVM` to be persisted in the x/upgrade's store.
+//
+// Migrations are run in an order defined by `Manager.OrderMigrations` or (if not set) defined by
+// `DefaultMigrationsOrder` function.
 //
 // As an app developer, if you wish to skip running InitGenesis for your new
 // module "foo", you need to manually pass a `fromVM` argument to this function
@@ -415,19 +431,13 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
 	}
-
-	updatedVM := make(VersionMap)
-	// for deterministic iteration order
-	// (as some migrations depend on other modules
-	// and the order of executing migrations matters)
-	// TODO: make the order user-configurable?
-	sortedModNames := make([]string, 0, len(m.Modules))
-	for key := range m.Modules {
-		sortedModNames = append(sortedModNames, key)
+	var modules = m.OrderMigrations
+	if modules == nil {
+		modules = DefaultMigrationsOrder(m.ModuleNames())
 	}
-	sort.Strings(sortedModNames)
 
-	for _, moduleName := range sortedModNames {
+	updatedVM := VersionMap{}
+	for _, moduleName := range modules {
 		module := m.Modules[moduleName]
 		fromVersion, exists := fromVM[moduleName]
 		toVersion := module.ConsensusVersion()
@@ -513,4 +523,36 @@ func (m *Manager) GetVersionMap() VersionMap {
 	}
 
 	return vermap
+}
+
+// ModuleNames returns list of all module names, without any particular order.
+func (m *Manager) ModuleNames() []string {
+	ms := make([]string, len(m.Modules))
+	i := 0
+	for m := range m.Modules {
+		ms[i] = m
+		i++
+	}
+	return ms
+}
+
+// DefaultMigrationsOrder returns a default migrations order: ascending alphabetical by module name,
+// except x/auth which will run last, see:
+// https://github.com/cosmos/cosmos-sdk/issues/10591
+func DefaultMigrationsOrder(modules []string) []string {
+	const authName = "auth"
+	out := make([]string, 0, len(modules))
+	hasAuth := false
+	for _, m := range modules {
+		if m == authName {
+			hasAuth = true
+		} else {
+			out = append(out, m)
+		}
+	}
+	sort.Strings(out)
+	if hasAuth {
+		out = append(out, authName)
+	}
+	return out
 }

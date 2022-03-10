@@ -8,10 +8,10 @@ jobs:
   goreleaser:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: actions/setup-go@v2.1.5
+      - uses: actions/setup-go@v3
         with:
           go-version: 1.17
       # get 'v*.*.*' part from 'cosmovisor/v*.*.*' and save to $GITHUB_ENV
@@ -26,7 +26,8 @@ jobs:
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
-          version: latest
+          # stick to version v0.179.0(https://github.com/cosmos/cosmos-sdk/issues/11125)
+          version: v0.179.0
           args: release --rm-dist --skip-validate
           workdir: cosmovisor
         env:

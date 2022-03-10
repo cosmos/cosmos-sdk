@@ -10,17 +10,17 @@ A group is simply an aggregation of accounts with associated weights. It is not
 an account and doesn't have a balance. It doesn't in and of itself have any
 sort of voting or decision weight. It does have an "administrator" which has
 the ability to add, remove and update members in the group. Note that a
-group account could be an administrator of a group.
+group policy account could be an administrator of a group.
 
-## Group Account
+## Group Policy
 
-A group account is an account associated with a group and a decision policy.
-Group accounts are abstracted from groups because a single group may have
+A group policy is an account associated with a group and a decision policy.
+Group policies are abstracted from groups because a single group may have
 multiple decision policies for different types of actions. Managing group
 membership separately from decision policies results in the least overhead
 and keeps membership consistent across different policies. The pattern that
-is recommended is to have a single master group account for a given group,
-and then to create separate group accounts with different decision policies
+is recommended is to have a single master group policy for a given group,
+and then to create separate group policies with different decision policies
 and delegate the desired permissions from the master account to
 those "sub-accounts" using the `x/authz` module.
 
@@ -43,7 +43,7 @@ this decision policy, abstain and veto are simply treated as no's.
 
 ## Proposal
 
-Any member of a group can submit a proposal for a group account to decide upon.
+Any member of a group can submit a proposal for a group policy account to decide upon.
 A proposal consists of a set of messages that will be executed if the proposal
 passes as well as any metadata associated with the proposal.
 
@@ -69,6 +69,6 @@ could be executed later on.
 ### Changing Group Membership
 
 In the current implementation, changing a group's membership (adding or removing members or changing their weight)
-will cause all existing proposals for group accounts linked to this group
+will cause all existing proposals for group policy accounts linked to this group
 to be invalidated. They will simply fail if someone calls `Msg/Exec` and will
 eventually be garbage collected.

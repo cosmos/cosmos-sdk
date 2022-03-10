@@ -18,20 +18,20 @@ func TestIndexKeyCodec(t *testing.T) {
 		idxPartCdc := testutil.TestKeyCodecGen(1, 5).Draw(t, "idxPartCdc").(testutil.TestKeyCodec)
 		pkCodec := testutil.TestKeyCodecGen(1, 5).Draw(t, "pkCdc").(testutil.TestKeyCodec)
 		prefix := rapid.SliceOfN(rapid.Byte(), 0, 5).Draw(t, "prefix").([]byte)
-		desc := (&testpb.A{}).ProtoReflect().Descriptor()
+		messageType := (&testpb.ExampleTable{}).ProtoReflect().Type()
 		indexKeyCdc, err := ormkv.NewIndexKeyCodec(
 			prefix,
-			desc,
+			messageType,
 			idxPartCdc.Codec.GetFieldNames(),
 			pkCodec.Codec.GetFieldNames(),
 		)
 		assert.NilError(t, err)
 		for i := 0; i < 100; i++ {
-			a := testutil.GenA.Draw(t, fmt.Sprintf("a%d", i)).(*testpb.A)
-			key := indexKeyCdc.GetValues(a.ProtoReflect())
-			pk := pkCodec.Codec.GetValues(a.ProtoReflect())
+			a := testutil.GenA.Draw(t, fmt.Sprintf("a%d", i)).(*testpb.ExampleTable)
+			key := indexKeyCdc.GetKeyValues(a.ProtoReflect())
+			pk := pkCodec.Codec.GetKeyValues(a.ProtoReflect())
 			idx1 := &ormkv.IndexKeyEntry{
-				TableName:   desc.FullName(),
+				TableName:   messageType.Descriptor().FullName(),
 				Fields:      indexKeyCdc.GetFieldNames(),
 				IsUnique:    false,
 				IndexValues: key,
@@ -48,16 +48,16 @@ func TestIndexKeyCodec(t *testing.T) {
 			entry2, err := indexKeyCdc.DecodeEntry(k, v)
 			assert.NilError(t, err)
 			idx2 := entry2.(*ormkv.IndexKeyEntry)
-			assert.Equal(t, 0, indexKeyCdc.CompareValues(idx1.IndexValues, idx2.IndexValues))
-			assert.Equal(t, 0, pkCodec.Codec.CompareValues(idx1.PrimaryKey, idx2.PrimaryKey))
+			assert.Equal(t, 0, indexKeyCdc.CompareKeys(idx1.IndexValues, idx2.IndexValues))
+			assert.Equal(t, 0, pkCodec.Codec.CompareKeys(idx1.PrimaryKey, idx2.PrimaryKey))
 			assert.Equal(t, false, idx2.IsUnique)
-			assert.Equal(t, desc.FullName(), idx2.TableName)
+			assert.Equal(t, messageType.Descriptor().FullName(), idx2.TableName)
 			assert.DeepEqual(t, idx1.Fields, idx2.Fields)
 
 			idxFields, pk2, err := indexKeyCdc.DecodeIndexKey(k, v)
 			assert.NilError(t, err)
-			assert.Equal(t, 0, indexKeyCdc.CompareValues(key, idxFields))
-			assert.Equal(t, 0, pkCodec.Codec.CompareValues(pk, pk2))
+			assert.Equal(t, 0, indexKeyCdc.CompareKeys(key, idxFields))
+			assert.Equal(t, 0, pkCodec.Codec.CompareKeys(pk, pk2))
 		}
 	})
 }

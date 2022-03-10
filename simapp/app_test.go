@@ -28,6 +28,7 @@ import (
 	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	group "github.com/cosmos/cosmos-sdk/x/group/module"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
@@ -105,7 +106,7 @@ func TestRunMigrations(t *testing.T) {
 	testCases := []struct {
 		name         string
 		moduleName   string
-		forVersion   uint64
+		fromVersion  uint64
 		expRegErr    bool // errors while registering migration
 		expRegErrMsg string
 		expRunErr    bool // errors while running migration
@@ -133,7 +134,7 @@ func TestRunMigrations(t *testing.T) {
 			false, "", false, "", 1,
 		},
 		{
-			"cannot register migration handler for same module & forVersion",
+			"cannot register migration handler for same module & fromVersion",
 			"bank", 1,
 			true, "another migration for module bank and version 1 already exists: internal logic error", false, "", 0,
 		},
@@ -150,8 +151,8 @@ func TestRunMigrations(t *testing.T) {
 			called := 0
 
 			if tc.moduleName != "" {
-				// Register migration for module from version `forVersion` to `forVersion+1`.
-				err = app.configurator.RegisterMigration(tc.moduleName, tc.forVersion, func(sdk.Context) error {
+				// Register migration for module from version `fromVersion` to `fromVersion+1`.
+				err = app.configurator.RegisterMigration(tc.moduleName, tc.fromVersion, func(sdk.Context) error {
 					called++
 
 					return nil
@@ -179,6 +180,7 @@ func TestRunMigrations(t *testing.T) {
 					"distribution": distribution.AppModule{}.ConsensusVersion(),
 					"slashing":     slashing.AppModule{}.ConsensusVersion(),
 					"gov":          gov.AppModule{}.ConsensusVersion(),
+					"group":        group.AppModule{}.ConsensusVersion(),
 					"params":       params.AppModule{}.ConsensusVersion(),
 					"upgrade":      upgrade.AppModule{}.ConsensusVersion(),
 					"vesting":      vesting.AppModule{}.ConsensusVersion(),

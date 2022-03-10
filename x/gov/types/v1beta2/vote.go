@@ -17,8 +17,8 @@ const (
 
 // NewVote creates a new Vote instance
 //nolint:interfacer
-func NewVote(proposalID uint64, voter sdk.AccAddress, options WeightedVoteOptions) Vote {
-	return Vote{ProposalId: proposalID, Voter: voter.String(), Options: options}
+func NewVote(proposalID uint64, voter sdk.AccAddress, options WeightedVoteOptions, metadata string) Vote {
+	return Vote{ProposalId: proposalID, Voter: voter.String(), Options: options, Metadata: metadata}
 }
 
 // Empty returns whether a vote is empty.
@@ -76,6 +76,15 @@ func (w *WeightedVoteOption) IsValid() bool {
 // NewNonSplitVoteOption creates a single option vote with weight 1
 func NewNonSplitVoteOption(option VoteOption) WeightedVoteOptions {
 	return WeightedVoteOptions{{option, sdk.NewDec(1).String()}}
+}
+
+// ValidWeightedVoteOption returns true if the sub vote is valid and false otherwise.
+func ValidWeightedVoteOption(option WeightedVoteOption) bool {
+	weight, err := sdk.NewDecFromStr(option.Weight)
+	if err != nil || !weight.IsPositive() || weight.GT(sdk.NewDec(1)) {
+		return false
+	}
+	return ValidVoteOption(option.Option)
 }
 
 // WeightedVoteOptions describes array of WeightedVoteOptions

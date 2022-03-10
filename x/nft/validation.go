@@ -1,7 +1,7 @@
 package nft
 
 import (
-	fmt "fmt"
+	"fmt"
 	"regexp"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

@@ -11,13 +11,13 @@ import (
 
 // SeqCodec is the codec for auto-incrementing uint64 primary key sequences.
 type SeqCodec struct {
-	tableName protoreflect.FullName
-	prefix    []byte
+	messageType protoreflect.FullName
+	prefix      []byte
 }
 
 // NewSeqCodec creates a new SeqCodec.
-func NewSeqCodec(tableName protoreflect.FullName, prefix []byte) *SeqCodec {
-	return &SeqCodec{tableName: tableName, prefix: prefix}
+func NewSeqCodec(messageType protoreflect.MessageType, prefix []byte) *SeqCodec {
+	return &SeqCodec{messageType: messageType.Descriptor().FullName(), prefix: prefix}
 }
 
 var _ EntryCodec = &SeqCodec{}
@@ -33,7 +33,7 @@ func (s SeqCodec) DecodeEntry(k, v []byte) (Entry, error) {
 	}
 
 	return &SeqEntry{
-		TableName: s.tableName,
+		TableName: s.messageType,
 		Value:     x,
 	}, nil
 }
@@ -44,7 +44,7 @@ func (s SeqCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 		return nil, nil, ormerrors.BadDecodeEntry
 	}
 
-	if seqEntry.TableName != s.tableName {
+	if seqEntry.TableName != s.messageType {
 		return nil, nil, ormerrors.BadDecodeEntry
 	}
 

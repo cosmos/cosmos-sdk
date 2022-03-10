@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.5
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
         with:
           go-version: 1.17
       - name: Display go version
@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/setup-go@v2.1.5
+      - uses: actions/setup-go@v3
         with:
           go-version: 1.17
       - name: Display go version
@@ -40,13 +40,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, install-runsim]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.5
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
         with:
           go-version: 1.17
       - name: Display go version
         run: go version
-      - uses: technote-space/get-diff-action@v5
+      - uses: technote-space/get-diff-action@v6.0.1
         with:
           PATTERNS: |
             **/**.go
@@ -66,13 +66,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, install-runsim]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.5
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
         with:
           go-version: 1.17
       - name: Display go version
         run: go version
-      - uses: technote-space/get-diff-action@v5
+      - uses: technote-space/get-diff-action@v6.0.1
         with:
           SUFFIX_FILTER: |
             **/**.go
@@ -94,13 +94,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, install-runsim]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.5
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
         with:
           go-version: 1.17
       - name: Display go version
         run: go version
-      - uses: technote-space/get-diff-action@v5
+      - uses: technote-space/get-diff-action@v6.0.1
         with:
           SUFFIX_FILTER: |
             **/**.go
@@ -122,13 +122,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, install-runsim]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.5
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
         with:
           go-version: 1.17
       - name: Display go version
         run: go version
-      - uses: technote-space/get-diff-action@v5
+      - uses: technote-space/get-diff-action@v6.0.1
         with:
           SUFFIX_FILTER: |
             **/**.go

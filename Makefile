@@ -46,6 +46,10 @@ ifeq ($(LEDGER_ENABLED),true)
   endif
 endif
 
+ifeq (secp,$(findstring secp,$(COSMOS_BUILD_OPTIONS)))
+  build_tags += libsecp256k1_sdk
+endif
+
 whitespace :=
 whitespace += $(whitespace)
 comma := ,

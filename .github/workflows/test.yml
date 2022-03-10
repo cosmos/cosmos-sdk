@@ -6,6 +6,10 @@ on:
   push:
     branches:
       - master
+
+permissions:
+  contents: read
+  
 jobs:
   cleanup-runs:
     runs-on: ubuntu-latest

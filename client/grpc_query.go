@@ -32,7 +32,8 @@ var fallBackCodec = codec.NewProtoCodec(failingInterfaceRegistry{})
 func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply interface{}, opts ...grpc.CallOption) (err error) {
 	// Two things can happen here:
 	// 1. either we're broadcasting a Tx, in which call we call Tendermint's broadcast endpoint directly,
-	// 2. or we are querying for state, in which case we call ABCI's Query.
+	// 2-1. or we are querying for state, in which case we call grpc if grpc client set.
+	// 2-2. or we are querying for state, in which case we call ABCI's Query if grpc client not set.
 
 	// In both cases, we don't allow empty request args (it will panic unexpectedly).
 	if reflect.ValueOf(req).IsNil() {
@@ -55,6 +56,12 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 		return err
 	}
 
+	if ctx.GRPCClient != nil {
+		// Case 2-1. Invoke grpc.
+		return ctx.GRPCClient.Invoke(grpcCtx, method, req, reply, opts...)
+	}
+
+	// Case 2-2. Querying state via abci query.
 	reqBz, err := ctx.gRPCCodec().Marshal(req)
 	if err != nil {
 		return err

@@ -74,8 +74,8 @@ The full specification can be found at [Celestia](https://github.com/celestiaorg
 
 - The SMT consists of a binary Merkle tree, constructed in the same fashion as described in [Certificate Transparency (RFC-6962)](https://tools.ietf.org/html/rfc6962), but using as the hashing function SHA-2-256 as defined in [FIPS 180-4](https://doi.org/10.6028/NIST.FIPS.180-4).
 - Leaves and internal nodes are hashed differently: the one-byte `0x00` is prepended for leaf nodes while `0x01` is prepended for internal nodes.
-- Default values are given to leaf nodes with empty leaves.
-- While the above rule is sufficient to pre-compute the values of intermediate nodes that are roots of empty subtrees, a further simplification is to extend this default value to all nodes that are roots of empty subtrees. The 32-byte zero is used as the default value. This rule takes precedence over the above one.
+- Empty leafs have value set to empty bytes (`[]byte{}`).
+- While the above rule is sufficient to pre-compute the values of intermediate nodes that are roots of empty subtrees, a further simplification is to pre-define a value of empty sub-trees without creating that subtrees. Empty subtree of height n is compressed to a node with [value](https://github.com/celestiaorg/smt/blob/6e634fe4424005b4bce55a56a7a559412b4152b3/treehasher.go#L18) of k zero bytes (`[]byte{0, 0, ..., 0}`), where k is a byte length of the hash function range. For sha256, `k = 256 / 8 = 32`. 
 - An internal node that is the root of a subtree that contains exactly one non-empty leaf is replaced by that leaf's leaf node.
 
 ### Snapshots for storage sync and state versioning

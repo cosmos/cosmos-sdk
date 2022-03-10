@@ -52,10 +52,9 @@ There are two types of fee allowances present at the moment:
 
 ## AllowedMsgAllowance
 
-`AllowedMsgAllowance` is a fee allowance which can be any of `BasicFeeAllowance`, `PeriodicAllowance` but restricted only to the allowed messages mentioned by the granter.
+`AllowedMsgAllowance` is a fee allowance, it can be any of `BasicFeeAllowance`, `PeriodicAllowance` but restricted only to the allowed messages mentioned by the granter.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/691032b8be0f7539ec99f8882caecefc51f33d1f/proto/cosmos/feegrant/v1beta1/feegrant.proto#L55-L65
-
 
 * `allowance` is either `BasicAllowance` or `PeriodicAllowance`.
 

@@ -14,7 +14,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
-func TestProposalsByVPEnd(t *testing.T) {
+func TestEndBlocker(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 4, types.NewInt(30000000))

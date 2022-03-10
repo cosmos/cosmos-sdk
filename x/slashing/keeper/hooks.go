@@ -77,3 +77,5 @@ func (h Hooks) BeforeDelegationRemoved(_ sdk.Context, _ sdk.AccAddress, _ sdk.Va
 func (h Hooks) AfterDelegationModified(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress)        {}
 func (h Hooks) BeforeValidatorSlashed(_ sdk.Context, _ sdk.ValAddress, _ int64, _ sdk.Dec, _ sdk.Dec) {
 }
+func (h Hooks) AfterValidatorSlashed(_ sdk.Context, _ sdk.ValAddress, _ int64, _ sdk.Dec, _ sdk.Dec) {
+}

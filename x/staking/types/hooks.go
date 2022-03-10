@@ -61,3 +61,8 @@ func (h MultiStakingHooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.V
 		h[i].BeforeValidatorSlashed(ctx, valAddr, infractionHeight, slashFactor, effectiveSlashFactor)
 	}
 }
+func (h MultiStakingHooks) AfterValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, infractionHeight int64, slashFactor sdk.Dec, effectiveSlashFactor sdk.Dec) {
+	for i := range h {
+		h[i].AfterValidatorSlashed(ctx, valAddr, infractionHeight, slashFactor, effectiveSlashFactor)
+	}
+}

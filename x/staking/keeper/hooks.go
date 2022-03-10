@@ -77,3 +77,10 @@ func (k Keeper) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, 
 		k.hooks.BeforeValidatorSlashed(ctx, valAddr, slashHeight, slashFactor, effectiveSlashFactor)
 	}
 }
+
+// AfterValidatorSlashed - call hook if registered
+func (k Keeper) AfterValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, slashHeight int64, slashFactor sdk.Dec, effectiveSlashFactor sdk.Dec) {
+	if k.hooks != nil {
+		k.hooks.AfterValidatorSlashed(ctx, valAddr, slashHeight, slashFactor, effectiveSlashFactor)
+	}
+}

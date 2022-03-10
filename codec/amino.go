@@ -61,11 +61,11 @@ func MustMarshalJSONIndent(cdc *LegacyAmino, obj interface{}) []byte {
 	return bz
 }
 
-// RegisterAminoMsg first checks that the msgName is <=40 chars
-// (else this would break ledger nano signing: https://github.com/cosmos/cosmos-sdk/issues/10870)
-// and then registers the concrete msg type with amino
+// RegisterAminoMsg first checks that the msgName is <40 chars
+// (else this would break ledger nano signing: https://github.com/cosmos/cosmos-sdk/issues/10870),
+// then registers the concrete msg type with amino.
 func RegisterAminoMsg(cdc *LegacyAmino, msg interface{}, msgName string) {
-	if len(msgName) > 40 {
+	if len(msgName) > 39 {
 		panic(fmt.Errorf("msg name %s is too long to be registered with amino", msgName))
 	}
 	cdc.RegisterConcrete(msg, msgName, nil)

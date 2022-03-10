@@ -136,10 +136,10 @@ func (m *mockSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) er
 }
 
 func (m *mockSnapshotter) SnapshotFormat() uint32 {
-	return 1
+	return snapshottypes.CurrentFormat
 }
 func (m *mockSnapshotter) SupportedFormats() []uint32 {
-	return []uint32{1}
+	return []uint32{snapshottypes.CurrentFormat}
 }
 
 // setupBusyManager creates a manager with an empty store that is busy creating a snapshot at height 1.

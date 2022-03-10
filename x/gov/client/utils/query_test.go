@@ -88,12 +88,12 @@ func TestGetPaginatedVotes(t *testing.T) {
 	acc2 := make(sdk.AccAddress, 20)
 	acc2[0] = 2
 	acc1Msgs := []sdk.Msg{
-		v1beta2.NewMsgVote(acc1, 0, v1beta2.OptionYes),
-		v1beta2.NewMsgVote(acc1, 0, v1beta2.OptionYes),
+		v1beta2.NewMsgVote(acc1, 0, v1beta2.OptionYes, ""),
+		v1beta2.NewMsgVote(acc1, 0, v1beta2.OptionYes, ""),
 	}
 	acc2Msgs := []sdk.Msg{
-		v1beta2.NewMsgVote(acc2, 0, v1beta2.OptionYes),
-		v1beta2.NewMsgVoteWeighted(acc2, 0, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)),
+		v1beta2.NewMsgVote(acc2, 0, v1beta2.OptionYes, ""),
+		v1beta2.NewMsgVoteWeighted(acc2, 0, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), ""),
 	}
 	for _, tc := range []testCase{
 		{
@@ -105,8 +105,8 @@ func TestGetPaginatedVotes(t *testing.T) {
 				acc2Msgs[:1],
 			},
 			votes: []v1beta2.Vote{
-				v1beta2.NewVote(0, acc1, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)),
-				v1beta2.NewVote(0, acc2, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes))},
+				v1beta2.NewVote(0, acc1, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), ""),
+				v1beta2.NewVote(0, acc2, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), "")},
 		},
 		{
 			description: "2MsgPerTx1Chunk",
@@ -117,8 +117,8 @@ func TestGetPaginatedVotes(t *testing.T) {
 				acc2Msgs,
 			},
 			votes: []v1beta2.Vote{
-				v1beta2.NewVote(0, acc1, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)),
-				v1beta2.NewVote(0, acc1, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)),
+				v1beta2.NewVote(0, acc1, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), ""),
+				v1beta2.NewVote(0, acc1, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), ""),
 			},
 		},
 		{
@@ -130,8 +130,8 @@ func TestGetPaginatedVotes(t *testing.T) {
 				acc2Msgs,
 			},
 			votes: []v1beta2.Vote{
-				v1beta2.NewVote(0, acc2, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)),
-				v1beta2.NewVote(0, acc2, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)),
+				v1beta2.NewVote(0, acc2, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), ""),
+				v1beta2.NewVote(0, acc2, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), ""),
 			},
 		},
 		{
@@ -141,7 +141,7 @@ func TestGetPaginatedVotes(t *testing.T) {
 			msgs: [][]sdk.Msg{
 				acc1Msgs[:1],
 			},
-			votes: []v1beta2.Vote{v1beta2.NewVote(0, acc1, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes))},
+			votes: []v1beta2.Vote{v1beta2.NewVote(0, acc1, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes), "")},
 		},
 		{
 			description: "InvalidPage",

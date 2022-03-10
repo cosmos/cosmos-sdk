@@ -18,8 +18,8 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(Plan{}, "cosmos-sdk/Plan", nil)
 	cdc.RegisterConcrete(&SoftwareUpgradeProposal{}, "cosmos-sdk/SoftwareUpgradeProposal", nil)
 	cdc.RegisterConcrete(&CancelSoftwareUpgradeProposal{}, "cosmos-sdk/CancelSoftwareUpgradeProposal", nil)
-	cdc.RegisterConcrete(&MsgSoftwareUpgrade{}, "cosmos-sdk/MsgSoftwareUpgrade", nil)
-	cdc.RegisterConcrete(&MsgCancelUpgrade{}, "cosmos-sdk/MsgCancelUpgrade", nil)
+	codec.RegisterAminoMsg(cdc, &MsgSoftwareUpgrade{}, "cosmos-sdk/MsgSoftwareUpgrade")
+	codec.RegisterAminoMsg(cdc, &MsgCancelUpgrade{}, "cosmos-sdk/MsgCancelUpgrade")
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {

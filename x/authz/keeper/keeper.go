@@ -257,11 +257,10 @@ func (k Keeper) IterateGrants(ctx sdk.Context,
 func (k Keeper) ExportGenesis(ctx sdk.Context) *authz.GenesisState {
 	var entries []authz.GrantAuthorization
 	k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
-		exp := grant.Expiration
 		entries = append(entries, authz.GrantAuthorization{
 			Granter:       granter.String(),
 			Grantee:       grantee.String(),
-			Expiration:    exp,
+			Expiration:    grant.Expiration,
 			Authorization: grant.Authorization,
 		})
 		return false

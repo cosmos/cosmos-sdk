@@ -407,6 +407,8 @@ func (m *QueryModuleVersionsResponse) GetModuleVersions() []*ModuleVersion {
 }
 
 // QueryAuthorityRequest is the request type for Query/Authority
+//
+// Since: cosmos-sdk 0.46
 type QueryAuthorityRequest struct {
 }
 
@@ -444,6 +446,8 @@ func (m *QueryAuthorityRequest) XXX_DiscardUnknown() {
 var xxx_messageInfo_QueryAuthorityRequest proto.InternalMessageInfo
 
 // QueryAuthorityResponse is the response type for Query/Authority
+//
+// Since: cosmos-sdk 0.46
 type QueryAuthorityResponse struct {
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 }

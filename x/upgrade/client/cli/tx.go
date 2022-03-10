@@ -11,13 +11,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const (
-	FlagUpgradeHeight    = "upgrade-height"
+	// Deprecated: only used for v1beta1 legacy proposals.
+	FlagUpgradeHeight = "upgrade-height"
+	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagUpgradeInfo      = "upgrade-info"
 	FlagNoValidate       = "no-validate"
 	FlagNoValidateInfoCS = "no-validate-info-checksum"
@@ -36,10 +38,11 @@ func GetTxCmd() *cobra.Command {
 	return cmd
 }
 
-// NewCmdSubmitUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
-func NewCmdSubmitUpgradeProposal() *cobra.Command {
+// NewCmdSubmitLegacyUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
+// Deprecated: please use NewCmdSubmitUpgradeProposal instead.
+func NewCmdSubmitLegacyUpgradeProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "software-upgrade [name] (--upgrade-height [height]) (--upgrade-info [info]) [flags]",
+		Use:   "legacy-software-upgrade [name] (--upgrade-height [height]) (--upgrade-info [info]) [flags]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Submit a software upgrade proposal",
 		Long: "Submit a software upgrade along with an initial deposit.\n" +
@@ -95,7 +98,7 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 				return err
 			}
 
-			msg, err := gov.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := v1beta1.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
 				return err
 			}
@@ -118,10 +121,11 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 	return cmd
 }
 
-// NewCmdSubmitCancelUpgradeProposal implements a command handler for submitting a software upgrade cancel proposal transaction.
-func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
+// NewCmdSubmitLegacyCancelUpgradeProposal implements a command handler for submitting a software upgrade cancel proposal transaction.
+// Deprecated: please use NewCmdSubmitCancelUpgradeProposal instead.
+func NewCmdSubmitLegacyCancelUpgradeProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "cancel-software-upgrade [flags]",
+		Use:   "legacy-cancel-software-upgrade [flags]",
 		Args:  cobra.ExactArgs(0),
 		Short: "Cancel the current software upgrade proposal",
 		Long:  "Cancel a software upgrade along with an initial deposit.",
@@ -154,7 +158,7 @@ func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 
 			content := types.NewCancelSoftwareUpgradeProposal(title, description)
 
-			msg, err := gov.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := v1beta1.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
 				return err
 			}
@@ -170,32 +174,6 @@ func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 	cmd.MarkFlagRequired(cli.FlagDescription)
 
 	return cmd
-}
-
-func parseArgsToContent(cmd *cobra.Command, name string) (gov.Content, error) {
-	title, err := cmd.Flags().GetString(cli.FlagTitle)
-	if err != nil {
-		return nil, err
-	}
-
-	description, err := cmd.Flags().GetString(cli.FlagDescription)
-	if err != nil {
-		return nil, err
-	}
-
-	height, err := cmd.Flags().GetInt64(FlagUpgradeHeight)
-	if err != nil {
-		return nil, err
-	}
-
-	info, err := cmd.Flags().GetString(FlagUpgradeInfo)
-	if err != nil {
-		return nil, err
-	}
-
-	plan := types.Plan{Name: name, Height: height, Info: info}
-	content := types.NewSoftwareUpgradeProposal(title, description, plan)
-	return content, nil
 }
 
 // getDefaultDaemonName gets the default name to use for the daemon.

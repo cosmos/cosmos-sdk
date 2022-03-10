@@ -129,3 +129,13 @@ The messages that are part of this proposal won't be executed if:
 * the proposal has not been accepted.
 * the proposal status is not closed.
 * the proposal has already been successfully executed.
+
+## Msg/LeaveGroup
+
+The `MsgLeaveGroup` allows group member to leave a group.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/a635fd78663d04c5de23f4d032e5a3abea1b005a/proto/cosmos/group/v1beta1/tx.proto#L352-L361
+
+It's expecting to fail if:
+
+* the group member is not part of the group.

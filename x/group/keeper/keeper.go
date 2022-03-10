@@ -74,10 +74,10 @@ type Keeper struct {
 
 	router *authmiddleware.MsgServiceRouter
 
-	config Config
+	config group.Config
 }
 
-func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddleware.MsgServiceRouter, accKeeper group.AccountKeeper, config Config) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddleware.MsgServiceRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
 	k := Keeper{
 		key:       storeKey,
 		router:    router,
@@ -207,7 +207,10 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 	k.voteTable = *voteTable
 
 	if config.MaxMetadataLen == 0 {
-		config.MaxMetadataLen = DefaultConfig().MaxMetadataLen
+		config.MaxMetadataLen = group.DefaultConfig().MaxMetadataLen
+	}
+	if config.MaxExecutionPeriod == 0 {
+		config.MaxExecutionPeriod = group.DefaultConfig().MaxExecutionPeriod
 	}
 	k.config = config
 

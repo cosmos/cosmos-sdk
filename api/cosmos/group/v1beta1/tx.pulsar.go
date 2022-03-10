@@ -159,8 +159,8 @@ func (x *fastReflection_MsgCreateGroup) Range(f func(protoreflect.FieldDescripto
 			return
 		}
 	}
-	if len(x.Metadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.Metadata)
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
 		if !f(fd_MsgCreateGroup_metadata, value) {
 			return
 		}
@@ -185,7 +185,7 @@ func (x *fastReflection_MsgCreateGroup) Has(fd protoreflect.FieldDescriptor) boo
 	case "cosmos.group.v1beta1.MsgCreateGroup.members":
 		return len(x.Members) != 0
 	case "cosmos.group.v1beta1.MsgCreateGroup.metadata":
-		return len(x.Metadata) != 0
+		return x.Metadata != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroup"))
@@ -207,7 +207,7 @@ func (x *fastReflection_MsgCreateGroup) Clear(fd protoreflect.FieldDescriptor) {
 	case "cosmos.group.v1beta1.MsgCreateGroup.members":
 		x.Members = nil
 	case "cosmos.group.v1beta1.MsgCreateGroup.metadata":
-		x.Metadata = nil
+		x.Metadata = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroup"))
@@ -235,7 +235,7 @@ func (x *fastReflection_MsgCreateGroup) Get(descriptor protoreflect.FieldDescrip
 		return protoreflect.ValueOfList(listValue)
 	case "cosmos.group.v1beta1.MsgCreateGroup.metadata":
 		value := x.Metadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroup"))
@@ -263,7 +263,7 @@ func (x *fastReflection_MsgCreateGroup) Set(fd protoreflect.FieldDescriptor, val
 		clv := lv.(*_MsgCreateGroup_2_list)
 		x.Members = *clv.list
 	case "cosmos.group.v1beta1.MsgCreateGroup.metadata":
-		x.Metadata = value.Bytes()
+		x.Metadata = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroup"))
@@ -313,7 +313,7 @@ func (x *fastReflection_MsgCreateGroup) NewField(fd protoreflect.FieldDescriptor
 		list := []*Member{}
 		return protoreflect.ValueOfList(&_MsgCreateGroup_2_list{list: &list})
 	case "cosmos.group.v1beta1.MsgCreateGroup.metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgCreateGroup"))
@@ -575,7 +575,7 @@ func (x *fastReflection_MsgCreateGroup) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -585,25 +585,23 @@ func (x *fastReflection_MsgCreateGroup) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Metadata = append(x.Metadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.Metadata == nil {
-					x.Metadata = []byte{}
-				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -2986,8 +2984,8 @@ func (x *fastReflection_MsgUpdateGroupMetadata) Range(f func(protoreflect.FieldD
 			return
 		}
 	}
-	if len(x.Metadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.Metadata)
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
 		if !f(fd_MsgUpdateGroupMetadata_metadata, value) {
 			return
 		}
@@ -3012,7 +3010,7 @@ func (x *fastReflection_MsgUpdateGroupMetadata) Has(fd protoreflect.FieldDescrip
 	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.group_id":
 		return x.GroupId != uint64(0)
 	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.metadata":
-		return len(x.Metadata) != 0
+		return x.Metadata != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMetadata"))
@@ -3034,7 +3032,7 @@ func (x *fastReflection_MsgUpdateGroupMetadata) Clear(fd protoreflect.FieldDescr
 	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.group_id":
 		x.GroupId = uint64(0)
 	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.metadata":
-		x.Metadata = nil
+		x.Metadata = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMetadata"))
@@ -3059,7 +3057,7 @@ func (x *fastReflection_MsgUpdateGroupMetadata) Get(descriptor protoreflect.Fiel
 		return protoreflect.ValueOfUint64(value)
 	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.metadata":
 		value := x.Metadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMetadata"))
@@ -3085,7 +3083,7 @@ func (x *fastReflection_MsgUpdateGroupMetadata) Set(fd protoreflect.FieldDescrip
 	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.group_id":
 		x.GroupId = value.Uint()
 	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.metadata":
-		x.Metadata = value.Bytes()
+		x.Metadata = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMetadata"))
@@ -3130,7 +3128,7 @@ func (x *fastReflection_MsgUpdateGroupMetadata) NewField(fd protoreflect.FieldDe
 	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.group_id":
 		return protoreflect.ValueOfUint64(uint64(0))
 	case "cosmos.group.v1beta1.MsgUpdateGroupMetadata.metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupMetadata"))
@@ -3363,7 +3361,7 @@ func (x *fastReflection_MsgUpdateGroupMetadata) ProtoMethods() *protoiface.Metho
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -3373,25 +3371,23 @@ func (x *fastReflection_MsgUpdateGroupMetadata) ProtoMethods() *protoiface.Metho
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Metadata = append(x.Metadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.Metadata == nil {
-					x.Metadata = []byte{}
-				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -3878,8 +3874,8 @@ func (x *fastReflection_MsgCreateGroupPolicy) Range(f func(protoreflect.FieldDes
 			return
 		}
 	}
-	if len(x.Metadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.Metadata)
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
 		if !f(fd_MsgCreateGroupPolicy_metadata, value) {
 			return
 		}
@@ -3910,7 +3906,7 @@ func (x *fastReflection_MsgCreateGroupPolicy) Has(fd protoreflect.FieldDescripto
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.group_id":
 		return x.GroupId != uint64(0)
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.metadata":
-		return len(x.Metadata) != 0
+		return x.Metadata != ""
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.decision_policy":
 		return x.DecisionPolicy != nil
 	default:
@@ -3934,7 +3930,7 @@ func (x *fastReflection_MsgCreateGroupPolicy) Clear(fd protoreflect.FieldDescrip
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.group_id":
 		x.GroupId = uint64(0)
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.metadata":
-		x.Metadata = nil
+		x.Metadata = ""
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.decision_policy":
 		x.DecisionPolicy = nil
 	default:
@@ -3961,7 +3957,7 @@ func (x *fastReflection_MsgCreateGroupPolicy) Get(descriptor protoreflect.FieldD
 		return protoreflect.ValueOfUint64(value)
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.metadata":
 		value := x.Metadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.decision_policy":
 		value := x.DecisionPolicy
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
@@ -3990,7 +3986,7 @@ func (x *fastReflection_MsgCreateGroupPolicy) Set(fd protoreflect.FieldDescripto
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.group_id":
 		x.GroupId = value.Uint()
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.metadata":
-		x.Metadata = value.Bytes()
+		x.Metadata = value.Interface().(string)
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.decision_policy":
 		x.DecisionPolicy = value.Message().Interface().(*anypb.Any)
 	default:
@@ -4042,7 +4038,7 @@ func (x *fastReflection_MsgCreateGroupPolicy) NewField(fd protoreflect.FieldDesc
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.group_id":
 		return protoreflect.ValueOfUint64(uint64(0))
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.MsgCreateGroupPolicy.decision_policy":
 		m := new(anypb.Any)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
@@ -4296,7 +4292,7 @@ func (x *fastReflection_MsgCreateGroupPolicy) ProtoMethods() *protoiface.Methods
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -4306,25 +4302,23 @@ func (x *fastReflection_MsgCreateGroupPolicy) ProtoMethods() *protoiface.Methods
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Metadata = append(x.Metadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.Metadata == nil {
-					x.Metadata = []byte{}
-				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 4:
 				if wireType != 2 {
@@ -5514,14 +5508,14 @@ func (x *fastReflection_MsgCreateGroupWithPolicy) Range(f func(protoreflect.Fiel
 			return
 		}
 	}
-	if len(x.GroupMetadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.GroupMetadata)
+	if x.GroupMetadata != "" {
+		value := protoreflect.ValueOfString(x.GroupMetadata)
 		if !f(fd_MsgCreateGroupWithPolicy_group_metadata, value) {
 			return
 		}
 	}
-	if len(x.GroupPolicyMetadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.GroupPolicyMetadata)
+	if x.GroupPolicyMetadata != "" {
+		value := protoreflect.ValueOfString(x.GroupPolicyMetadata)
 		if !f(fd_MsgCreateGroupWithPolicy_group_policy_metadata, value) {
 			return
 		}
@@ -5558,9 +5552,9 @@ func (x *fastReflection_MsgCreateGroupWithPolicy) Has(fd protoreflect.FieldDescr
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.members":
 		return len(x.Members) != 0
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_metadata":
-		return len(x.GroupMetadata) != 0
+		return x.GroupMetadata != ""
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_policy_metadata":
-		return len(x.GroupPolicyMetadata) != 0
+		return x.GroupPolicyMetadata != ""
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_policy_as_admin":
 		return x.GroupPolicyAsAdmin != false
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.decision_policy":
@@ -5586,9 +5580,9 @@ func (x *fastReflection_MsgCreateGroupWithPolicy) Clear(fd protoreflect.FieldDes
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.members":
 		x.Members = nil
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_metadata":
-		x.GroupMetadata = nil
+		x.GroupMetadata = ""
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_policy_metadata":
-		x.GroupPolicyMetadata = nil
+		x.GroupPolicyMetadata = ""
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_policy_as_admin":
 		x.GroupPolicyAsAdmin = false
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.decision_policy":
@@ -5620,10 +5614,10 @@ func (x *fastReflection_MsgCreateGroupWithPolicy) Get(descriptor protoreflect.Fi
 		return protoreflect.ValueOfList(listValue)
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_metadata":
 		value := x.GroupMetadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_policy_metadata":
 		value := x.GroupPolicyMetadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_policy_as_admin":
 		value := x.GroupPolicyAsAdmin
 		return protoreflect.ValueOfBool(value)
@@ -5657,9 +5651,9 @@ func (x *fastReflection_MsgCreateGroupWithPolicy) Set(fd protoreflect.FieldDescr
 		clv := lv.(*_MsgCreateGroupWithPolicy_2_list)
 		x.Members = *clv.list
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_metadata":
-		x.GroupMetadata = value.Bytes()
+		x.GroupMetadata = value.Interface().(string)
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_policy_metadata":
-		x.GroupPolicyMetadata = value.Bytes()
+		x.GroupPolicyMetadata = value.Interface().(string)
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_policy_as_admin":
 		x.GroupPolicyAsAdmin = value.Bool()
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.decision_policy":
@@ -5722,9 +5716,9 @@ func (x *fastReflection_MsgCreateGroupWithPolicy) NewField(fd protoreflect.Field
 		list := []*Member{}
 		return protoreflect.ValueOfList(&_MsgCreateGroupWithPolicy_2_list{list: &list})
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_policy_metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.group_policy_as_admin":
 		return protoreflect.ValueOfBool(false)
 	case "cosmos.group.v1beta1.MsgCreateGroupWithPolicy.decision_policy":
@@ -6033,7 +6027,7 @@ func (x *fastReflection_MsgCreateGroupWithPolicy) ProtoMethods() *protoiface.Met
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field GroupMetadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -6043,31 +6037,29 @@ func (x *fastReflection_MsgCreateGroupWithPolicy) ProtoMethods() *protoiface.Met
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.GroupMetadata = append(x.GroupMetadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.GroupMetadata == nil {
-					x.GroupMetadata = []byte{}
-				}
+				x.GroupMetadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 4:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field GroupPolicyMetadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -6077,25 +6069,23 @@ func (x *fastReflection_MsgCreateGroupWithPolicy) ProtoMethods() *protoiface.Met
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.GroupPolicyMetadata = append(x.GroupPolicyMetadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.GroupPolicyMetadata == nil {
-					x.GroupPolicyMetadata = []byte{}
-				}
+				x.GroupPolicyMetadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 5:
 				if wireType != 0 {
@@ -8023,8 +8013,8 @@ func (x *fastReflection_MsgUpdateGroupPolicyMetadata) Range(f func(protoreflect.
 			return
 		}
 	}
-	if len(x.Metadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.Metadata)
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
 		if !f(fd_MsgUpdateGroupPolicyMetadata_metadata, value) {
 			return
 		}
@@ -8049,7 +8039,7 @@ func (x *fastReflection_MsgUpdateGroupPolicyMetadata) Has(fd protoreflect.FieldD
 	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.address":
 		return x.Address != ""
 	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.metadata":
-		return len(x.Metadata) != 0
+		return x.Metadata != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata"))
@@ -8071,7 +8061,7 @@ func (x *fastReflection_MsgUpdateGroupPolicyMetadata) Clear(fd protoreflect.Fiel
 	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.address":
 		x.Address = ""
 	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.metadata":
-		x.Metadata = nil
+		x.Metadata = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata"))
@@ -8096,7 +8086,7 @@ func (x *fastReflection_MsgUpdateGroupPolicyMetadata) Get(descriptor protoreflec
 		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.metadata":
 		value := x.Metadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata"))
@@ -8122,7 +8112,7 @@ func (x *fastReflection_MsgUpdateGroupPolicyMetadata) Set(fd protoreflect.FieldD
 	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.address":
 		x.Address = value.Interface().(string)
 	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.metadata":
-		x.Metadata = value.Bytes()
+		x.Metadata = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata"))
@@ -8167,7 +8157,7 @@ func (x *fastReflection_MsgUpdateGroupPolicyMetadata) NewField(fd protoreflect.F
 	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.address":
 		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata.metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadata"))
@@ -8416,7 +8406,7 @@ func (x *fastReflection_MsgUpdateGroupPolicyMetadata) ProtoMethods() *protoiface
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -8426,25 +8416,23 @@ func (x *fastReflection_MsgUpdateGroupPolicyMetadata) ProtoMethods() *protoiface
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Metadata = append(x.Metadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.Metadata == nil {
-					x.Metadata = []byte{}
-				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -9030,8 +9018,8 @@ func (x *fastReflection_MsgSubmitProposal) Range(f func(protoreflect.FieldDescri
 			return
 		}
 	}
-	if len(x.Metadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.Metadata)
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
 		if !f(fd_MsgSubmitProposal_metadata, value) {
 			return
 		}
@@ -9068,7 +9056,7 @@ func (x *fastReflection_MsgSubmitProposal) Has(fd protoreflect.FieldDescriptor) 
 	case "cosmos.group.v1beta1.MsgSubmitProposal.proposers":
 		return len(x.Proposers) != 0
 	case "cosmos.group.v1beta1.MsgSubmitProposal.metadata":
-		return len(x.Metadata) != 0
+		return x.Metadata != ""
 	case "cosmos.group.v1beta1.MsgSubmitProposal.messages":
 		return len(x.Messages) != 0
 	case "cosmos.group.v1beta1.MsgSubmitProposal.exec":
@@ -9094,7 +9082,7 @@ func (x *fastReflection_MsgSubmitProposal) Clear(fd protoreflect.FieldDescriptor
 	case "cosmos.group.v1beta1.MsgSubmitProposal.proposers":
 		x.Proposers = nil
 	case "cosmos.group.v1beta1.MsgSubmitProposal.metadata":
-		x.Metadata = nil
+		x.Metadata = ""
 	case "cosmos.group.v1beta1.MsgSubmitProposal.messages":
 		x.Messages = nil
 	case "cosmos.group.v1beta1.MsgSubmitProposal.exec":
@@ -9126,7 +9114,7 @@ func (x *fastReflection_MsgSubmitProposal) Get(descriptor protoreflect.FieldDesc
 		return protoreflect.ValueOfList(listValue)
 	case "cosmos.group.v1beta1.MsgSubmitProposal.metadata":
 		value := x.Metadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.MsgSubmitProposal.messages":
 		if len(x.Messages) == 0 {
 			return protoreflect.ValueOfList(&_MsgSubmitProposal_4_list{})
@@ -9163,7 +9151,7 @@ func (x *fastReflection_MsgSubmitProposal) Set(fd protoreflect.FieldDescriptor, 
 		clv := lv.(*_MsgSubmitProposal_2_list)
 		x.Proposers = *clv.list
 	case "cosmos.group.v1beta1.MsgSubmitProposal.metadata":
-		x.Metadata = value.Bytes()
+		x.Metadata = value.Interface().(string)
 	case "cosmos.group.v1beta1.MsgSubmitProposal.messages":
 		lv := value.List()
 		clv := lv.(*_MsgSubmitProposal_4_list)
@@ -9227,7 +9215,7 @@ func (x *fastReflection_MsgSubmitProposal) NewField(fd protoreflect.FieldDescrip
 		list := []string{}
 		return protoreflect.ValueOfList(&_MsgSubmitProposal_2_list{list: &list})
 	case "cosmos.group.v1beta1.MsgSubmitProposal.metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.MsgSubmitProposal.messages":
 		list := []*anypb.Any{}
 		return protoreflect.ValueOfList(&_MsgSubmitProposal_4_list{list: &list})
@@ -9515,7 +9503,7 @@ func (x *fastReflection_MsgSubmitProposal) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -9525,25 +9513,23 @@ func (x *fastReflection_MsgSubmitProposal) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Metadata = append(x.Metadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.Metadata == nil {
-					x.Metadata = []byte{}
-				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 4:
 				if wireType != 2 {
@@ -10963,8 +10949,8 @@ func (x *fastReflection_MsgVote) Range(f func(protoreflect.FieldDescriptor, prot
 			return
 		}
 	}
-	if len(x.Metadata) != 0 {
-		value := protoreflect.ValueOfBytes(x.Metadata)
+	if x.Metadata != "" {
+		value := protoreflect.ValueOfString(x.Metadata)
 		if !f(fd_MsgVote_metadata, value) {
 			return
 		}
@@ -10997,7 +10983,7 @@ func (x *fastReflection_MsgVote) Has(fd protoreflect.FieldDescriptor) bool {
 	case "cosmos.group.v1beta1.MsgVote.option":
 		return x.Option != 0
 	case "cosmos.group.v1beta1.MsgVote.metadata":
-		return len(x.Metadata) != 0
+		return x.Metadata != ""
 	case "cosmos.group.v1beta1.MsgVote.exec":
 		return x.Exec != 0
 	default:
@@ -11023,7 +11009,7 @@ func (x *fastReflection_MsgVote) Clear(fd protoreflect.FieldDescriptor) {
 	case "cosmos.group.v1beta1.MsgVote.option":
 		x.Option = 0
 	case "cosmos.group.v1beta1.MsgVote.metadata":
-		x.Metadata = nil
+		x.Metadata = ""
 	case "cosmos.group.v1beta1.MsgVote.exec":
 		x.Exec = 0
 	default:
@@ -11053,7 +11039,7 @@ func (x *fastReflection_MsgVote) Get(descriptor protoreflect.FieldDescriptor) pr
 		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
 	case "cosmos.group.v1beta1.MsgVote.metadata":
 		value := x.Metadata
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	case "cosmos.group.v1beta1.MsgVote.exec":
 		value := x.Exec
 		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
@@ -11084,7 +11070,7 @@ func (x *fastReflection_MsgVote) Set(fd protoreflect.FieldDescriptor, value prot
 	case "cosmos.group.v1beta1.MsgVote.option":
 		x.Option = (VoteOption)(value.Enum())
 	case "cosmos.group.v1beta1.MsgVote.metadata":
-		x.Metadata = value.Bytes()
+		x.Metadata = value.Interface().(string)
 	case "cosmos.group.v1beta1.MsgVote.exec":
 		x.Exec = (Exec)(value.Enum())
 	default:
@@ -11137,7 +11123,7 @@ func (x *fastReflection_MsgVote) NewField(fd protoreflect.FieldDescriptor) proto
 	case "cosmos.group.v1beta1.MsgVote.option":
 		return protoreflect.ValueOfEnum(0)
 	case "cosmos.group.v1beta1.MsgVote.metadata":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	case "cosmos.group.v1beta1.MsgVote.exec":
 		return protoreflect.ValueOfEnum(0)
 	default:
@@ -11407,7 +11393,7 @@ func (x *fastReflection_MsgVote) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -11417,25 +11403,23 @@ func (x *fastReflection_MsgVote) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Metadata = append(x.Metadata[:0], dAtA[iNdEx:postIndex]...)
-				if x.Metadata == nil {
-					x.Metadata = []byte{}
-				}
+				x.Metadata = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 5:
 				if wireType != 0 {
@@ -12671,6 +12655,830 @@ func (x *fastReflection_MsgExecResponse) ProtoMethods() *protoiface.Methods {
 	}
 }
 
+var (
+	md_MsgLeaveGroup          protoreflect.MessageDescriptor
+	fd_MsgLeaveGroup_address  protoreflect.FieldDescriptor
+	fd_MsgLeaveGroup_group_id protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_group_v1beta1_tx_proto_init()
+	md_MsgLeaveGroup = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgLeaveGroup")
+	fd_MsgLeaveGroup_address = md_MsgLeaveGroup.Fields().ByName("address")
+	fd_MsgLeaveGroup_group_id = md_MsgLeaveGroup.Fields().ByName("group_id")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgLeaveGroup)(nil)
+
+type fastReflection_MsgLeaveGroup MsgLeaveGroup
+
+func (x *MsgLeaveGroup) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgLeaveGroup)(x)
+}
+
+func (x *MsgLeaveGroup) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[26]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgLeaveGroup_messageType fastReflection_MsgLeaveGroup_messageType
+var _ protoreflect.MessageType = fastReflection_MsgLeaveGroup_messageType{}
+
+type fastReflection_MsgLeaveGroup_messageType struct{}
+
+func (x fastReflection_MsgLeaveGroup_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgLeaveGroup)(nil)
+}
+func (x fastReflection_MsgLeaveGroup_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgLeaveGroup)
+}
+func (x fastReflection_MsgLeaveGroup_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgLeaveGroup
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgLeaveGroup) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgLeaveGroup
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgLeaveGroup) Type() protoreflect.MessageType {
+	return _fastReflection_MsgLeaveGroup_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgLeaveGroup) New() protoreflect.Message {
+	return new(fastReflection_MsgLeaveGroup)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgLeaveGroup) Interface() protoreflect.ProtoMessage {
+	return (*MsgLeaveGroup)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgLeaveGroup) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Address != "" {
+		value := protoreflect.ValueOfString(x.Address)
+		if !f(fd_MsgLeaveGroup_address, value) {
+			return
+		}
+	}
+	if x.GroupId != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.GroupId)
+		if !f(fd_MsgLeaveGroup_group_id, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgLeaveGroup) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.group.v1beta1.MsgLeaveGroup.address":
+		return x.Address != ""
+	case "cosmos.group.v1beta1.MsgLeaveGroup.group_id":
+		return x.GroupId != uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgLeaveGroup"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgLeaveGroup does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgLeaveGroup) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.group.v1beta1.MsgLeaveGroup.address":
+		x.Address = ""
+	case "cosmos.group.v1beta1.MsgLeaveGroup.group_id":
+		x.GroupId = uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgLeaveGroup"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgLeaveGroup does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgLeaveGroup) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.group.v1beta1.MsgLeaveGroup.address":
+		value := x.Address
+		return protoreflect.ValueOfString(value)
+	case "cosmos.group.v1beta1.MsgLeaveGroup.group_id":
+		value := x.GroupId
+		return protoreflect.ValueOfUint64(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgLeaveGroup"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgLeaveGroup does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgLeaveGroup) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.group.v1beta1.MsgLeaveGroup.address":
+		x.Address = value.Interface().(string)
+	case "cosmos.group.v1beta1.MsgLeaveGroup.group_id":
+		x.GroupId = value.Uint()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgLeaveGroup"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgLeaveGroup does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgLeaveGroup) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.group.v1beta1.MsgLeaveGroup.address":
+		panic(fmt.Errorf("field address of message cosmos.group.v1beta1.MsgLeaveGroup is not mutable"))
+	case "cosmos.group.v1beta1.MsgLeaveGroup.group_id":
+		panic(fmt.Errorf("field group_id of message cosmos.group.v1beta1.MsgLeaveGroup is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgLeaveGroup"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgLeaveGroup does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgLeaveGroup) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.group.v1beta1.MsgLeaveGroup.address":
+		return protoreflect.ValueOfString("")
+	case "cosmos.group.v1beta1.MsgLeaveGroup.group_id":
+		return protoreflect.ValueOfUint64(uint64(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgLeaveGroup"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgLeaveGroup does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgLeaveGroup) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgLeaveGroup", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgLeaveGroup) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgLeaveGroup) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgLeaveGroup) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgLeaveGroup) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgLeaveGroup)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Address)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.GroupId != 0 {
+			n += 1 + runtime.Sov(uint64(x.GroupId))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgLeaveGroup)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.GroupId != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.GroupId))
+			i--
+			dAtA[i] = 0x10
+		}
+		if len(x.Address) > 0 {
+			i -= len(x.Address)
+			copy(dAtA[i:], x.Address)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Address)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgLeaveGroup)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgLeaveGroup: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgLeaveGroup: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Address = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field GroupId", wireType)
+				}
+				x.GroupId = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.GroupId |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgLeaveGroupResponse protoreflect.MessageDescriptor
+)
+
+func init() {
+	file_cosmos_group_v1beta1_tx_proto_init()
+	md_MsgLeaveGroupResponse = File_cosmos_group_v1beta1_tx_proto.Messages().ByName("MsgLeaveGroupResponse")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgLeaveGroupResponse)(nil)
+
+type fastReflection_MsgLeaveGroupResponse MsgLeaveGroupResponse
+
+func (x *MsgLeaveGroupResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgLeaveGroupResponse)(x)
+}
+
+func (x *MsgLeaveGroupResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[27]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgLeaveGroupResponse_messageType fastReflection_MsgLeaveGroupResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgLeaveGroupResponse_messageType{}
+
+type fastReflection_MsgLeaveGroupResponse_messageType struct{}
+
+func (x fastReflection_MsgLeaveGroupResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgLeaveGroupResponse)(nil)
+}
+func (x fastReflection_MsgLeaveGroupResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgLeaveGroupResponse)
+}
+func (x fastReflection_MsgLeaveGroupResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgLeaveGroupResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgLeaveGroupResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgLeaveGroupResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgLeaveGroupResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgLeaveGroupResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgLeaveGroupResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgLeaveGroupResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgLeaveGroupResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgLeaveGroupResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgLeaveGroupResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgLeaveGroupResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgLeaveGroupResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgLeaveGroupResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgLeaveGroupResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgLeaveGroupResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgLeaveGroupResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgLeaveGroupResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgLeaveGroupResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgLeaveGroupResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgLeaveGroupResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgLeaveGroupResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgLeaveGroupResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgLeaveGroupResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgLeaveGroupResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgLeaveGroupResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgLeaveGroupResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1beta1.MsgLeaveGroupResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.group.v1beta1.MsgLeaveGroupResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgLeaveGroupResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1beta1.MsgLeaveGroupResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgLeaveGroupResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgLeaveGroupResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgLeaveGroupResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgLeaveGroupResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgLeaveGroupResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgLeaveGroupResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgLeaveGroupResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgLeaveGroupResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgLeaveGroupResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -12748,7 +13556,7 @@ type MsgCreateGroup struct {
 	// members defines the group members.
 	Members []*Member `protobuf:"bytes,2,rep,name=members,proto3" json:"members,omitempty"`
 	// metadata is any arbitrary metadata to attached to the group.
-	Metadata []byte `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 }
 
 func (x *MsgCreateGroup) Reset() {
@@ -12785,11 +13593,11 @@ func (x *MsgCreateGroup) GetMembers() []*Member {
 	return nil
 }
 
-func (x *MsgCreateGroup) GetMetadata() []byte {
+func (x *MsgCreateGroup) GetMetadata() string {
 	if x != nil {
 		return x.Metadata
 	}
-	return nil
+	return ""
 }
 
 // MsgCreateGroupResponse is the Msg/CreateGroup response type.
@@ -13005,7 +13813,7 @@ type MsgUpdateGroupMetadata struct {
 	// group_id is the unique ID of the group.
 	GroupId uint64 `protobuf:"varint,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
 	// metadata is the updated group's metadata.
-	Metadata []byte `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 }
 
 func (x *MsgUpdateGroupMetadata) Reset() {
@@ -13042,11 +13850,11 @@ func (x *MsgUpdateGroupMetadata) GetGroupId() uint64 {
 	return 0
 }
 
-func (x *MsgUpdateGroupMetadata) GetMetadata() []byte {
+func (x *MsgUpdateGroupMetadata) GetMetadata() string {
 	if x != nil {
 		return x.Metadata
 	}
-	return nil
+	return ""
 }
 
 // MsgUpdateGroupMetadataResponse is the Msg/UpdateGroupMetadata response type.
@@ -13087,7 +13895,7 @@ type MsgCreateGroupPolicy struct {
 	// group_id is the unique ID of the group.
 	GroupId uint64 `protobuf:"varint,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
 	// metadata is any arbitrary metadata attached to the group policy.
-	Metadata []byte `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// decision_policy specifies the group policy's decision policy.
 	DecisionPolicy *anypb.Any `protobuf:"bytes,4,opt,name=decision_policy,json=decisionPolicy,proto3" json:"decision_policy,omitempty"`
 }
@@ -13126,11 +13934,11 @@ func (x *MsgCreateGroupPolicy) GetGroupId() uint64 {
 	return 0
 }
 
-func (x *MsgCreateGroupPolicy) GetMetadata() []byte {
+func (x *MsgCreateGroupPolicy) GetMetadata() string {
 	if x != nil {
 		return x.Metadata
 	}
-	return nil
+	return ""
 }
 
 func (x *MsgCreateGroupPolicy) GetDecisionPolicy() *anypb.Any {
@@ -13243,9 +14051,9 @@ type MsgCreateGroupWithPolicy struct {
 	// members defines the group members.
 	Members []*Member `protobuf:"bytes,2,rep,name=members,proto3" json:"members,omitempty"`
 	// group_metadata is any arbitrary metadata attached to the group.
-	GroupMetadata []byte `protobuf:"bytes,3,opt,name=group_metadata,json=groupMetadata,proto3" json:"group_metadata,omitempty"`
+	GroupMetadata string `protobuf:"bytes,3,opt,name=group_metadata,json=groupMetadata,proto3" json:"group_metadata,omitempty"`
 	// group_policy_metadata is any arbitrary metadata attached to the group policy.
-	GroupPolicyMetadata []byte `protobuf:"bytes,4,opt,name=group_policy_metadata,json=groupPolicyMetadata,proto3" json:"group_policy_metadata,omitempty"`
+	GroupPolicyMetadata string `protobuf:"bytes,4,opt,name=group_policy_metadata,json=groupPolicyMetadata,proto3" json:"group_policy_metadata,omitempty"`
 	// group_policy_as_admin is a boolean field, if set to true, the group policy account address will be used as group and group policy admin.
 	GroupPolicyAsAdmin bool `protobuf:"varint,5,opt,name=group_policy_as_admin,json=groupPolicyAsAdmin,proto3" json:"group_policy_as_admin,omitempty"`
 	// decision_policy specifies the group policy's decision policy.
@@ -13286,18 +14094,18 @@ func (x *MsgCreateGroupWithPolicy) GetMembers() []*Member {
 	return nil
 }
 
-func (x *MsgCreateGroupWithPolicy) GetGroupMetadata() []byte {
+func (x *MsgCreateGroupWithPolicy) GetGroupMetadata() string {
 	if x != nil {
 		return x.GroupMetadata
 	}
-	return nil
+	return ""
 }
 
-func (x *MsgCreateGroupWithPolicy) GetGroupPolicyMetadata() []byte {
+func (x *MsgCreateGroupWithPolicy) GetGroupPolicyMetadata() string {
 	if x != nil {
 		return x.GroupPolicyMetadata
 	}
-	return nil
+	return ""
 }
 
 func (x *MsgCreateGroupWithPolicy) GetGroupPolicyAsAdmin() bool {
@@ -13480,7 +14288,7 @@ type MsgUpdateGroupPolicyMetadata struct {
 	// address is the account address of group policy.
 	Address string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
 	// metadata is the updated group policy metadata.
-	Metadata []byte `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 }
 
 func (x *MsgUpdateGroupPolicyMetadata) Reset() {
@@ -13517,11 +14325,11 @@ func (x *MsgUpdateGroupPolicyMetadata) GetAddress() string {
 	return ""
 }
 
-func (x *MsgUpdateGroupPolicyMetadata) GetMetadata() []byte {
+func (x *MsgUpdateGroupPolicyMetadata) GetMetadata() string {
 	if x != nil {
 		return x.Metadata
 	}
-	return nil
+	return ""
 }
 
 // MsgUpdateGroupPolicyMetadataResponse is the Msg/UpdateGroupPolicyMetadata response type.
@@ -13563,7 +14371,7 @@ type MsgSubmitProposal struct {
 	// Proposers signatures will be counted as yes votes.
 	Proposers []string `protobuf:"bytes,2,rep,name=proposers,proto3" json:"proposers,omitempty"`
 	// metadata is any arbitrary metadata to attached to the proposal.
-	Metadata []byte `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// messages is a list of `sdk.Msg`s that will be executed if the proposal passes.
 	Messages []*anypb.Any `protobuf:"bytes,4,rep,name=messages,proto3" json:"messages,omitempty"`
 	// exec defines the mode of execution of the proposal,
@@ -13606,11 +14414,11 @@ func (x *MsgSubmitProposal) GetProposers() []string {
 	return nil
 }
 
-func (x *MsgSubmitProposal) GetMetadata() []byte {
+func (x *MsgSubmitProposal) GetMetadata() string {
 	if x != nil {
 		return x.Metadata
 	}
-	return nil
+	return ""
 }
 
 func (x *MsgSubmitProposal) GetMessages() []*anypb.Any {
@@ -13750,7 +14558,7 @@ type MsgVote struct {
 	// option is the voter's choice on the proposal.
 	Option VoteOption `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.group.v1beta1.VoteOption" json:"option,omitempty"`
 	// metadata is any arbitrary metadata to attached to the vote.
-	Metadata []byte `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata string `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// exec defines whether the proposal should be executed
 	// immediately after voting or not.
 	Exec Exec `protobuf:"varint,5,opt,name=exec,proto3,enum=cosmos.group.v1beta1.Exec" json:"exec,omitempty"`
@@ -13797,11 +14605,11 @@ func (x *MsgVote) GetOption() VoteOption {
 	return VoteOption_VOTE_OPTION_UNSPECIFIED
 }
 
-func (x *MsgVote) GetMetadata() []byte {
+func (x *MsgVote) GetMetadata() string {
 	if x != nil {
 		return x.Metadata
 	}
-	return nil
+	return ""
 }
 
 func (x *MsgVote) GetExec() Exec {
@@ -13911,6 +14719,79 @@ func (*MsgExecResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{25}
 }
 
+// MsgLeaveGroup is the Msg/LeaveGroup request type.
+type MsgLeaveGroup struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// address is the account address of the group member.
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	// group_id is the unique ID of the group.
+	GroupId uint64 `protobuf:"varint,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+}
+
+func (x *MsgLeaveGroup) Reset() {
+	*x = MsgLeaveGroup{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[26]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgLeaveGroup) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgLeaveGroup) ProtoMessage() {}
+
+// Deprecated: Use MsgLeaveGroup.ProtoReflect.Descriptor instead.
+func (*MsgLeaveGroup) Descriptor() ([]byte, []int) {
+	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *MsgLeaveGroup) GetAddress() string {
+	if x != nil {
+		return x.Address
+	}
+	return ""
+}
+
+func (x *MsgLeaveGroup) GetGroupId() uint64 {
+	if x != nil {
+		return x.GroupId
+	}
+	return 0
+}
+
+// MsgLeaveGroupResponse is the Msg/LeaveGroup response type.
+type MsgLeaveGroupResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *MsgLeaveGroupResponse) Reset() {
+	*x = MsgLeaveGroupResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_group_v1beta1_tx_proto_msgTypes[27]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgLeaveGroupResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgLeaveGroupResponse) ProtoMessage() {}
+
+// Deprecated: Use MsgLeaveGroupResponse.ProtoReflect.Descriptor instead.
+func (*MsgLeaveGroupResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_group_v1beta1_tx_proto_rawDescGZIP(), []int{27}
+}
+
 var File_cosmos_group_v1beta1_tx_proto protoreflect.FileDescriptor
 
 var file_cosmos_group_v1beta1_tx_proto_rawDesc = []byte{
@@ -13934,7 +14815,7 @@ var file_cosmos_group_v1beta1_tx_proto_rawDesc = []byte{
 	0x32, 0x1c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e,
 	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x42, 0x04,
 	0xc8, 0xde, 0x1f, 0x00, 0x52, 0x07, 0x6d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x12, 0x1a, 0x0a,
-	0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52,
+	0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52,
 	0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05,
 	0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x33, 0x0a, 0x16, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61,
 	0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
@@ -13973,7 +14854,7 @@ var file_cosmos_group_v1beta1_tx_proto_rawDesc = []byte{
 	0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x19, 0x0a, 0x08, 0x67, 0x72, 0x6f, 0x75, 0x70,
 	0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x67, 0x72, 0x6f, 0x75, 0x70,
 	0x49, 0x64, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03,
-	0x20, 0x01, 0x28, 0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x3a, 0x0a,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x3a, 0x0a,
 	0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x20, 0x0a, 0x1e, 0x4d, 0x73,
 	0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x74, 0x61,
 	0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xe0, 0x01, 0x0a,
@@ -13984,7 +14865,7 @@ var file_cosmos_group_v1beta1_tx_proto_rawDesc = []byte{
 	0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x19, 0x0a, 0x08, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x69,
 	0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x64,
 	0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x51, 0x0a, 0x0f,
+	0x28, 0x09, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x51, 0x0a, 0x0f,
 	0x64, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x70, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x18,
 	0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x42, 0x12, 0xca, 0xb4, 0x2d,
@@ -14018,10 +14899,10 @@ var file_cosmos_group_v1beta1_tx_proto_rawDesc = []byte{
 	0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x65,
 	0x6d, 0x62, 0x65, 0x72, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x07, 0x6d, 0x65, 0x6d, 0x62,
 	0x65, 0x72, 0x73, 0x12, 0x25, 0x0a, 0x0e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x6d, 0x65, 0x74,
-	0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0d, 0x67, 0x72, 0x6f,
+	0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0d, 0x67, 0x72, 0x6f,
 	0x75, 0x70, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x32, 0x0a, 0x15, 0x67, 0x72,
 	0x6f, 0x75, 0x70, 0x5f, 0x70, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x5f, 0x6d, 0x65, 0x74, 0x61, 0x64,
-	0x61, 0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x13, 0x67, 0x72, 0x6f, 0x75, 0x70,
+	0x61, 0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x13, 0x67, 0x72, 0x6f, 0x75, 0x70,
 	0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x31,
 	0x0a, 0x15, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x70, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x5f, 0x61,
 	0x73, 0x5f, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x08, 0x52, 0x12, 0x67,
@@ -14069,7 +14950,7 @@ var file_cosmos_group_v1beta1_tx_proto_rawDesc = []byte{
 	0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72,
 	0x69, 0x6e, 0x67, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x1a, 0x0a, 0x08,
-	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08,
+	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08,
 	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x61,
 	0x64, 0x6d, 0x69, 0x6e, 0x22, 0x26, 0x0a, 0x24, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74,
 	0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x4d, 0x65, 0x74, 0x61,
@@ -14081,7 +14962,7 @@ var file_cosmos_group_v1beta1_tx_proto_rawDesc = []byte{
 	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x1c, 0x0a, 0x09, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73,
 	0x65, 0x72, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x09, 0x52, 0x09, 0x70, 0x72, 0x6f, 0x70, 0x6f,
 	0x73, 0x65, 0x72, 0x73, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
-	0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
 	0x12, 0x30, 0x0a, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x18, 0x04, 0x20, 0x03,
 	0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67,
@@ -14112,7 +14993,7 @@ var file_cosmos_group_v1beta1_tx_proto_rawDesc = []byte{
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65,
 	0x74, 0x61, 0x31, 0x2e, 0x56, 0x6f, 0x74, 0x65, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x06,
 	0x6f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61,
-	0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61,
+	0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61,
 	0x74, 0x61, 0x12, 0x2e, 0x0a, 0x04, 0x65, 0x78, 0x65, 0x63, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0e,
 	0x32, 0x1a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e,
 	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x45, 0x78, 0x65, 0x63, 0x52, 0x04, 0x65, 0x78,
@@ -14125,120 +15006,134 @@ var file_cosmos_group_v1beta1_tx_proto_rawDesc = []byte{
 	0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
 	0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x3a,
 	0x0b, 0x82, 0xe7, 0xb0, 0x2a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x22, 0x11, 0x0a, 0x0f,
-	0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x2a,
-	0x2a, 0x0a, 0x04, 0x45, 0x78, 0x65, 0x63, 0x12, 0x14, 0x0a, 0x10, 0x45, 0x58, 0x45, 0x43, 0x5f,
-	0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x0c, 0x0a,
-	0x08, 0x45, 0x58, 0x45, 0x43, 0x5f, 0x54, 0x52, 0x59, 0x10, 0x01, 0x32, 0xf0, 0x0b, 0x0a, 0x03,
-	0x4d, 0x73, 0x67, 0x12, 0x61, 0x0a, 0x0b, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f,
-	0x75, 0x70, 0x12, 0x24, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75,
-	0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65,
-	0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x1a, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
-	0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x76, 0x0a, 0x12, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
-	0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x12, 0x2b, 0x2e, 0x63,
+	0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x6c, 0x0a, 0x0d, 0x4d, 0x73, 0x67, 0x4c, 0x65, 0x61, 0x76, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70,
+	0x12, 0x32, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x61, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x12, 0x19, 0x0a, 0x08, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x69, 0x64,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x64, 0x3a,
+	0x0c, 0x82, 0xe7, 0xb0, 0x2a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x17, 0x0a,
+	0x15, 0x4d, 0x73, 0x67, 0x4c, 0x65, 0x61, 0x76, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x2a, 0x2a, 0x0a, 0x04, 0x45, 0x78, 0x65, 0x63, 0x12, 0x14,
+	0x0a, 0x10, 0x45, 0x58, 0x45, 0x43, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49,
+	0x45, 0x44, 0x10, 0x00, 0x12, 0x0c, 0x0a, 0x08, 0x45, 0x58, 0x45, 0x43, 0x5f, 0x54, 0x52, 0x59,
+	0x10, 0x01, 0x32, 0xd0, 0x0c, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x61, 0x0a, 0x0b, 0x43, 0x72,
+	0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x12, 0x24, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x1a,
+	0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
+	0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x76, 0x0a,
+	0x12, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x6d, 0x62,
+	0x65, 0x72, 0x73, 0x12, 0x2b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f,
+	0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70,
+	0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73,
+	0x1a, 0x33, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74,
+	0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x70, 0x0a, 0x10, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47,
+	0x72, 0x6f, 0x75, 0x70, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x29, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41,
+	0x64, 0x6d, 0x69, 0x6e, 0x1a, 0x31, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72,
+	0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55,
+	0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x79, 0x0a, 0x13, 0x55, 0x70, 0x64, 0x61, 0x74,
+	0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x2c,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47,
+	0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x1a, 0x34, 0x2e, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65,
 	0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f,
-	0x75, 0x70, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x1a, 0x33, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d,
-	0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x70,
-	0x0a, 0x10, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x64, 0x6d,
-	0x69, 0x6e, 0x12, 0x29, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75,
-	0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64,
-	0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x1a, 0x31, 0x2e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62,
-	0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72,
-	0x6f, 0x75, 0x70, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x79, 0x0a, 0x13, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d,
-	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x75, 0x70, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x73, 0x0a, 0x11, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75,
+	0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x12, 0x2a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
 	0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d,
-	0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x74,
-	0x61, 0x64, 0x61, 0x74, 0x61, 0x1a, 0x34, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67,
-	0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67,
-	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x74, 0x61, 0x64,
-	0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x73, 0x0a, 0x11, 0x43,
-	0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79,
-	0x12, 0x2a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e,
+	0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c,
+	0x69, 0x63, 0x79, 0x1a, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f,
+	0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72,
+	0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x7f, 0x0a, 0x15, 0x43, 0x72, 0x65, 0x61, 0x74,
+	0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x57, 0x69, 0x74, 0x68, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79,
+	0x12, 0x2e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e,
 	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74,
-	0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x1a, 0x32, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f,
-	0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x7f, 0x0a, 0x15, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x57,
-	0x69, 0x74, 0x68, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x12, 0x2e, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x57,
-	0x69, 0x74, 0x68, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x1a, 0x36, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x57,
-	0x69, 0x74, 0x68, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x12, 0x82, 0x01, 0x0a, 0x16, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75,
-	0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x2f, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f,
-	0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x1a, 0x37, 0x2e,
+	0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x57, 0x69, 0x74, 0x68, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79,
+	0x1a, 0x36, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74,
+	0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x57, 0x69, 0x74, 0x68, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x82, 0x01, 0x0a, 0x16, 0x55, 0x70, 0x64,
+	0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x41, 0x64,
+	0x6d, 0x69, 0x6e, 0x12, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f,
+	0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70,
+	0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x41,
+	0x64, 0x6d, 0x69, 0x6e, 0x1a, 0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72,
+	0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55,
+	0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79,
+	0x41, 0x64, 0x6d, 0x69, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x9d, 0x01,
+	0x0a, 0x1f, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c,
+	0x69, 0x63, 0x79, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63,
+	0x79, 0x12, 0x38, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61,
+	0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x44, 0x65, 0x63,
+	0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x1a, 0x40, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75,
+	0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50,
+	0x6f, 0x6c, 0x69, 0x63, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x8b, 0x01,
+	0x0a, 0x19, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c,
+	0x69, 0x63, 0x79, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x32, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75,
+	0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x1a,
+	0x3a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
+	0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x4d, 0x65, 0x74, 0x61, 0x64,
+	0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6a, 0x0a, 0x0e, 0x53,
+	0x75, 0x62, 0x6d, 0x69, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x27, 0x2e,
 	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62,
-	0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72,
-	0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x9d, 0x01, 0x0a, 0x1f, 0x55, 0x70, 0x64, 0x61, 0x74,
-	0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x44, 0x65, 0x63, 0x69,
-	0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x12, 0x38, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70,
-	0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f,
-	0x6c, 0x69, 0x63, 0x79, 0x1a, 0x40, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72,
-	0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55,
-	0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79,
-	0x44, 0x65, 0x63, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x8b, 0x01, 0x0a, 0x19, 0x55, 0x70, 0x64, 0x61, 0x74,
-	0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x4d, 0x65, 0x74, 0x61,
-	0x64, 0x61, 0x74, 0x61, 0x12, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72,
-	0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55,
-	0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79,
-	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x1a, 0x3a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
-	0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f,
-	0x6c, 0x69, 0x63, 0x79, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6a, 0x0a, 0x0e, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x50, 0x72,
-	0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x50, 0x72,
+	0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x1a, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
 	0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73,
-	0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x1a,
-	0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74,
-	0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x70, 0x0a, 0x10, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x50, 0x72, 0x6f, 0x70,
-	0x6f, 0x73, 0x61, 0x6c, 0x12, 0x29, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72,
-	0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x57,
-	0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x1a,
-	0x31, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72,
-	0x61, 0x77, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x4c, 0x0a, 0x04, 0x56, 0x6f, 0x74, 0x65, 0x12, 0x1d, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2e, 0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x1a, 0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x4c, 0x0a, 0x04, 0x45, 0x78, 0x65, 0x63, 0x12, 0x1d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x70, 0x0a, 0x10, 0x57, 0x69, 0x74, 0x68, 0x64,
+	0x72, 0x61, 0x77, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x29, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x50, 0x72,
+	0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x1a, 0x31, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73,
+	0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61,
+	0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4c, 0x0a, 0x04, 0x56, 0x6f, 0x74,
+	0x65, 0x12, 0x1d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65,
+	0x1a, 0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4c, 0x0a, 0x04, 0x45, 0x78, 0x65, 0x63, 0x12,
+	0x1d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x1a, 0x25,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5e, 0x0a, 0x0a, 0x4c, 0x65, 0x61, 0x76, 0x65, 0x47, 0x72,
+	0x6f, 0x75, 0x70, 0x12, 0x23, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f,
+	0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x4c, 0x65,
+	0x61, 0x76, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x1a, 0x2b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
 	0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
-	0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x1a, 0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d,
-	0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0xd9,
-	0x01, 0x0a, 0x18, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72,
-	0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x07, 0x54, 0x78, 0x50,
-	0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x42, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
-	0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f,
-	0x67, 0x72, 0x6f, 0x75, 0x70, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x67, 0x72,
-	0x6f, 0x75, 0x70, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x47, 0x58,
-	0xaa, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x2e,
-	0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x5c, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02,
-	0x20, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x5c, 0x56, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
-	0x61, 0xea, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x47, 0x72, 0x6f, 0x75,
-	0x70, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x4d, 0x73, 0x67, 0x4c, 0x65, 0x61, 0x76, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0xd9, 0x01, 0x0a, 0x18, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x42, 0x67,
+	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x61, 0x70, 0x69, 0x2f,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2f, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x3b, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0xa2, 0x02, 0x03, 0x43, 0x47, 0x58, 0xaa, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02,
+	0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x5c, 0x56, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x20, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x47,
+	0x72, 0x6f, 0x75, 0x70, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42,
+	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x3a, 0x3a, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -14254,7 +15149,7 @@ func file_cosmos_group_v1beta1_tx_proto_rawDescGZIP() []byte {
 }
 
 var file_cosmos_group_v1beta1_tx_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_cosmos_group_v1beta1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
+var file_cosmos_group_v1beta1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
 var file_cosmos_group_v1beta1_tx_proto_goTypes = []interface{}{
 	(Exec)(0),                                          // 0: cosmos.group.v1beta1.Exec
 	(*MsgCreateGroup)(nil),                             // 1: cosmos.group.v1beta1.MsgCreateGroup
@@ -14283,20 +15178,22 @@ var file_cosmos_group_v1beta1_tx_proto_goTypes = []interface{}{
 	(*MsgVoteResponse)(nil),                            // 24: cosmos.group.v1beta1.MsgVoteResponse
 	(*MsgExec)(nil),                                    // 25: cosmos.group.v1beta1.MsgExec
 	(*MsgExecResponse)(nil),                            // 26: cosmos.group.v1beta1.MsgExecResponse
-	(*Member)(nil),                                     // 27: cosmos.group.v1beta1.Member
-	(*anypb.Any)(nil),                                  // 28: google.protobuf.Any
-	(VoteOption)(0),                                    // 29: cosmos.group.v1beta1.VoteOption
+	(*MsgLeaveGroup)(nil),                              // 27: cosmos.group.v1beta1.MsgLeaveGroup
+	(*MsgLeaveGroupResponse)(nil),                      // 28: cosmos.group.v1beta1.MsgLeaveGroupResponse
+	(*Member)(nil),                                     // 29: cosmos.group.v1beta1.Member
+	(*anypb.Any)(nil),                                  // 30: google.protobuf.Any
+	(VoteOption)(0),                                    // 31: cosmos.group.v1beta1.VoteOption
 }
 var file_cosmos_group_v1beta1_tx_proto_depIdxs = []int32{
-	27, // 0: cosmos.group.v1beta1.MsgCreateGroup.members:type_name -> cosmos.group.v1beta1.Member
-	27, // 1: cosmos.group.v1beta1.MsgUpdateGroupMembers.member_updates:type_name -> cosmos.group.v1beta1.Member
-	28, // 2: cosmos.group.v1beta1.MsgCreateGroupPolicy.decision_policy:type_name -> google.protobuf.Any
-	27, // 3: cosmos.group.v1beta1.MsgCreateGroupWithPolicy.members:type_name -> cosmos.group.v1beta1.Member
-	28, // 4: cosmos.group.v1beta1.MsgCreateGroupWithPolicy.decision_policy:type_name -> google.protobuf.Any
-	28, // 5: cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy.decision_policy:type_name -> google.protobuf.Any
-	28, // 6: cosmos.group.v1beta1.MsgSubmitProposal.messages:type_name -> google.protobuf.Any
+	29, // 0: cosmos.group.v1beta1.MsgCreateGroup.members:type_name -> cosmos.group.v1beta1.Member
+	29, // 1: cosmos.group.v1beta1.MsgUpdateGroupMembers.member_updates:type_name -> cosmos.group.v1beta1.Member
+	30, // 2: cosmos.group.v1beta1.MsgCreateGroupPolicy.decision_policy:type_name -> google.protobuf.Any
+	29, // 3: cosmos.group.v1beta1.MsgCreateGroupWithPolicy.members:type_name -> cosmos.group.v1beta1.Member
+	30, // 4: cosmos.group.v1beta1.MsgCreateGroupWithPolicy.decision_policy:type_name -> google.protobuf.Any
+	30, // 5: cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicy.decision_policy:type_name -> google.protobuf.Any
+	30, // 6: cosmos.group.v1beta1.MsgSubmitProposal.messages:type_name -> google.protobuf.Any
 	0,  // 7: cosmos.group.v1beta1.MsgSubmitProposal.exec:type_name -> cosmos.group.v1beta1.Exec
-	29, // 8: cosmos.group.v1beta1.MsgVote.option:type_name -> cosmos.group.v1beta1.VoteOption
+	31, // 8: cosmos.group.v1beta1.MsgVote.option:type_name -> cosmos.group.v1beta1.VoteOption
 	0,  // 9: cosmos.group.v1beta1.MsgVote.exec:type_name -> cosmos.group.v1beta1.Exec
 	1,  // 10: cosmos.group.v1beta1.Msg.CreateGroup:input_type -> cosmos.group.v1beta1.MsgCreateGroup
 	3,  // 11: cosmos.group.v1beta1.Msg.UpdateGroupMembers:input_type -> cosmos.group.v1beta1.MsgUpdateGroupMembers
@@ -14311,21 +15208,23 @@ var file_cosmos_group_v1beta1_tx_proto_depIdxs = []int32{
 	21, // 20: cosmos.group.v1beta1.Msg.WithdrawProposal:input_type -> cosmos.group.v1beta1.MsgWithdrawProposal
 	23, // 21: cosmos.group.v1beta1.Msg.Vote:input_type -> cosmos.group.v1beta1.MsgVote
 	25, // 22: cosmos.group.v1beta1.Msg.Exec:input_type -> cosmos.group.v1beta1.MsgExec
-	2,  // 23: cosmos.group.v1beta1.Msg.CreateGroup:output_type -> cosmos.group.v1beta1.MsgCreateGroupResponse
-	4,  // 24: cosmos.group.v1beta1.Msg.UpdateGroupMembers:output_type -> cosmos.group.v1beta1.MsgUpdateGroupMembersResponse
-	6,  // 25: cosmos.group.v1beta1.Msg.UpdateGroupAdmin:output_type -> cosmos.group.v1beta1.MsgUpdateGroupAdminResponse
-	8,  // 26: cosmos.group.v1beta1.Msg.UpdateGroupMetadata:output_type -> cosmos.group.v1beta1.MsgUpdateGroupMetadataResponse
-	10, // 27: cosmos.group.v1beta1.Msg.CreateGroupPolicy:output_type -> cosmos.group.v1beta1.MsgCreateGroupPolicyResponse
-	13, // 28: cosmos.group.v1beta1.Msg.CreateGroupWithPolicy:output_type -> cosmos.group.v1beta1.MsgCreateGroupWithPolicyResponse
-	14, // 29: cosmos.group.v1beta1.Msg.UpdateGroupPolicyAdmin:output_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyAdminResponse
-	16, // 30: cosmos.group.v1beta1.Msg.UpdateGroupPolicyDecisionPolicy:output_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicyResponse
-	18, // 31: cosmos.group.v1beta1.Msg.UpdateGroupPolicyMetadata:output_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadataResponse
-	20, // 32: cosmos.group.v1beta1.Msg.SubmitProposal:output_type -> cosmos.group.v1beta1.MsgSubmitProposalResponse
-	22, // 33: cosmos.group.v1beta1.Msg.WithdrawProposal:output_type -> cosmos.group.v1beta1.MsgWithdrawProposalResponse
-	24, // 34: cosmos.group.v1beta1.Msg.Vote:output_type -> cosmos.group.v1beta1.MsgVoteResponse
-	26, // 35: cosmos.group.v1beta1.Msg.Exec:output_type -> cosmos.group.v1beta1.MsgExecResponse
-	23, // [23:36] is the sub-list for method output_type
-	10, // [10:23] is the sub-list for method input_type
+	27, // 23: cosmos.group.v1beta1.Msg.LeaveGroup:input_type -> cosmos.group.v1beta1.MsgLeaveGroup
+	2,  // 24: cosmos.group.v1beta1.Msg.CreateGroup:output_type -> cosmos.group.v1beta1.MsgCreateGroupResponse
+	4,  // 25: cosmos.group.v1beta1.Msg.UpdateGroupMembers:output_type -> cosmos.group.v1beta1.MsgUpdateGroupMembersResponse
+	6,  // 26: cosmos.group.v1beta1.Msg.UpdateGroupAdmin:output_type -> cosmos.group.v1beta1.MsgUpdateGroupAdminResponse
+	8,  // 27: cosmos.group.v1beta1.Msg.UpdateGroupMetadata:output_type -> cosmos.group.v1beta1.MsgUpdateGroupMetadataResponse
+	10, // 28: cosmos.group.v1beta1.Msg.CreateGroupPolicy:output_type -> cosmos.group.v1beta1.MsgCreateGroupPolicyResponse
+	13, // 29: cosmos.group.v1beta1.Msg.CreateGroupWithPolicy:output_type -> cosmos.group.v1beta1.MsgCreateGroupWithPolicyResponse
+	14, // 30: cosmos.group.v1beta1.Msg.UpdateGroupPolicyAdmin:output_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyAdminResponse
+	16, // 31: cosmos.group.v1beta1.Msg.UpdateGroupPolicyDecisionPolicy:output_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyDecisionPolicyResponse
+	18, // 32: cosmos.group.v1beta1.Msg.UpdateGroupPolicyMetadata:output_type -> cosmos.group.v1beta1.MsgUpdateGroupPolicyMetadataResponse
+	20, // 33: cosmos.group.v1beta1.Msg.SubmitProposal:output_type -> cosmos.group.v1beta1.MsgSubmitProposalResponse
+	22, // 34: cosmos.group.v1beta1.Msg.WithdrawProposal:output_type -> cosmos.group.v1beta1.MsgWithdrawProposalResponse
+	24, // 35: cosmos.group.v1beta1.Msg.Vote:output_type -> cosmos.group.v1beta1.MsgVoteResponse
+	26, // 36: cosmos.group.v1beta1.Msg.Exec:output_type -> cosmos.group.v1beta1.MsgExecResponse
+	28, // 37: cosmos.group.v1beta1.Msg.LeaveGroup:output_type -> cosmos.group.v1beta1.MsgLeaveGroupResponse
+	24, // [24:38] is the sub-list for method output_type
+	10, // [10:24] is the sub-list for method input_type
 	10, // [10:10] is the sub-list for extension type_name
 	10, // [10:10] is the sub-list for extension extendee
 	0,  // [0:10] is the sub-list for field type_name
@@ -14650,6 +15549,30 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 				return nil
 			}
 		}
+		file_cosmos_group_v1beta1_tx_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgLeaveGroup); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_group_v1beta1_tx_proto_msgTypes[27].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgLeaveGroupResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -14657,7 +15580,7 @@ func file_cosmos_group_v1beta1_tx_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_group_v1beta1_tx_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   26,
+			NumMessages:   28,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

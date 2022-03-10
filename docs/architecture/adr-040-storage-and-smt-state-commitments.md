@@ -127,11 +127,13 @@ Currently, a module can access a store only through `sdk.Context`. We add the fo
 
 ```
 type StoreAccess inteface {
-    KVStore(key []byte) KVStore  // the existing method in sdk.Context, reads and writes to combined store (SS & SC) in combined namespace.
+    KVStore(key []byte) KVStore  // the existing method in sdk.Context, reads and writes both to SS & SC stores in a combined namespace.
     SCStore(key []byte) KVStore  // reads and writes only to the SC in reserved SC namespace
     SSStore(key []byte) KVStore  // reads and writes only to the SS in reserved SS namespace
 }
 ```
+
+`KVStore`, `SCStore` an `SSStore` will operate in a distinct namespace and will be registered as a separate store in the MultiStore object. So, the records in each store will not collide (Eg: `KVStore(a).Set(k, v)` won't collide with `SSStore(a).Set(k, v)`).
 
 The `KVStore(key)` will provide an access to the combined `SS` and `SC` store:
 

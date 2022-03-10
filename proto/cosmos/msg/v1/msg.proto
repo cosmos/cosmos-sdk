@@ -11,7 +11,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/types/msgservice";
 extend google.protobuf.ServiceOptions {
   // service indicates that the service is a Msg service and that requests
   // should be routed through transactions rather than gRPC.
-  repeated bool service = 11110001;
+  bool service = 11110000;
 }
 
 extend google.protobuf.MessageOptions {

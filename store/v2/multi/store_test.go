@@ -222,19 +222,25 @@ func TestCommit(t *testing.T) {
 		// Adding one record changes the hash
 		s1 := store.GetKVStore(skey_1)
 		s1.Set([]byte{0}, []byte{0})
-		idOne := store.Commit()
-		require.Equal(t, idNew.Version+1, idOne.Version)
-		require.NotEqual(t, idNew.Hash, idOne.Hash)
+		id := store.Commit()
+		require.Equal(t, idNew.Version+1, id.Version)
+		require.NotEqual(t, idNew.Hash, id.Hash)
 
 		// Hash of emptied store is same as new store
 		s1.Delete([]byte{0})
-		idEmptied := store.Commit()
-		require.Equal(t, idNew.Hash, idEmptied.Hash)
+		id = store.Commit()
+		require.Equal(t, idNew.Hash, id.Hash)
 
-		previd := idOne
+		// We can set and delete the same key within a transaction
+		s1.Set([]byte("might"), []byte("delete"))
+		s1.Delete([]byte("might"))
+		id = store.Commit()
+		require.Equal(t, idNew.Hash, id.Hash)
+
+		previd := id
 		for i := byte(1); i < 5; i++ {
 			s1.Set([]byte{i}, []byte{i})
-			id := store.Commit()
+			id = store.Commit()
 			lastid := store.LastCommitID()
 			require.Equal(t, id.Hash, lastid.Hash)
 			require.Equal(t, id.Version, lastid.Version)

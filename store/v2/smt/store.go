@@ -30,7 +30,7 @@ var (
 // Store Implements types.BasicKVStore.
 type Store struct {
 	tree   *smt.SparseMerkleTree
-	values dbm.DBReadWriter
+	values dbm.DBReader
 	// Map hashed keys back to preimage
 	preimages dbm.DBReadWriter
 }

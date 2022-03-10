@@ -2446,7 +2446,7 @@ func (s *TestSuite) TestExecProposal() {
 	}
 }
 
-func (s *TestSuite) TestVPEndProposals() {
+func (s *TestSuite) TestProposalsByVPEnd() {
 	addrs := s.addrs
 	addr2 := addrs[1]
 	groupPolicy := s.groupPolicyAddr

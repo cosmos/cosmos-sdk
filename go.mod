@@ -16,7 +16,7 @@ require (
 	github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1
 	github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.2
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/iavl v0.17.3
+	github.com/cosmos/iavl v0.18.0
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/gogo/gateway v1.1.0

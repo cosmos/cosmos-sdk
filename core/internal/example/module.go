@@ -3,7 +3,8 @@ package example
 import (
 	"context"
 	"embed"
-
+	"fmt"
+	"github.com/cosmos/cosmos-sdk/core/extension"
 	"github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -28,6 +29,8 @@ func init() {
 				blockInfoService: inputs.BlockInfoService,
 			}
 
+			inputs.ExtResolver.Register(&msgRegisterNameValidator{})
+
 			h := app.NewHandler()
 			RegisterMsgServer(h, s)
 			RegisterQueryServer(h, s)
@@ -42,6 +45,22 @@ type Inputs struct {
 
 	KVStoreKey       *store.KVStoreKey
 	BlockInfoService blockinfo.Service
+	ExtResolver      extension.Resolver
+}
+
+// implement ValidateBasic
+type msgRegisterNameValidator struct{ *MsgRegisterName }
+
+func (m msgRegisterNameValidator) ValidateBasic() error {
+	if m.Sender == "" {
+		return fmt.Errorf("missing signer")
+	}
+
+	if m.Name == "" {
+		return fmt.Errorf("missing signer")
+	}
+
+	return nil
 }
 
 type keeper struct {
@@ -57,6 +76,7 @@ func nameInfoKey(name string) []byte {
 	return append([]byte{nameInfoPrefix}, name...)
 }
 
+// implement MsgServer
 func (s keeper) RegisterName(ctx context.Context, msg *MsgRegisterName) (*MsgRegisterNameResponse, error) {
 	kvStore := s.kvStoreKey.Open(ctx)
 	key := nameInfoKey(msg.Name)
@@ -81,6 +101,7 @@ func (s keeper) RegisterName(ctx context.Context, msg *MsgRegisterName) (*MsgReg
 	return &MsgRegisterNameResponse{}, err
 }
 
+// implement QueryServer
 func (s keeper) Name(ctx context.Context, request *QueryNameRequest) (*QueryNameResponse, error) {
 	kvStore := s.kvStoreKey.Open(ctx)
 	key := nameInfoKey(request.Name)

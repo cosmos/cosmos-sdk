@@ -818,7 +818,7 @@ func (s *IntegrationTestSuite) TestSignWithMultisig() {
 	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
 	s.Require().NoError(err)
 
-	addr1, err := account1.GetAddress()
+	addr1 := account1.GetAddress()
 	s.Require().NoError(err)
 
 	// Create an address that is not in the keyring, will be used to simulate `--multisig`

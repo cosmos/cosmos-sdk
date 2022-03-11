@@ -185,6 +185,11 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 		// Update group in the groupTable.
 		g.TotalWeight = totalWeight.String()
 		g.Version++
+
+		if err := k.validateDecisionPolicies(ctx, *g); err != nil {
+			return err
+		}
+
 		return k.groupTable.Update(ctx.KVStore(k.key), g.Id, g)
 	}
 
@@ -314,6 +319,11 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGro
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "not group admin")
 	}
 
+	err = policy.Validate(g, k.config)
+	if err != nil {
+		return nil, err
+	}
+
 	// Generate account address of group policy.
 	var accountAddr sdk.AccAddress
 	// loop here in the rare case of a collision
@@ -386,7 +396,17 @@ func (k Keeper) UpdateGroupPolicyDecisionPolicy(goCtx context.Context, req *grou
 	policy := req.GetDecisionPolicy()
 
 	action := func(groupPolicy *group.GroupPolicyInfo) error {
-		err := groupPolicy.SetDecisionPolicy(policy)
+		g, err := k.getGroupInfo(ctx, groupPolicy.GroupId)
+		if err != nil {
+			return err
+		}
+
+		err = policy.Validate(g, k.config)
+		if err != nil {
+			return err
+		}
+
+		err = groupPolicy.SetDecisionPolicy(policy)
 		if err != nil {
 			return err
 		}
@@ -793,6 +813,80 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 	return res, nil
 }
 
+// LeaveGroup implements the MsgServer/LeaveGroup method.
+func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*group.MsgLeaveGroupResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	_, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	groupInfo, err := k.getGroupInfo(ctx, req.GroupId)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "group")
+	}
+
+	groupWeight, err := math.NewNonNegativeDecFromString(groupInfo.TotalWeight)
+	if err != nil {
+		return nil, err
+	}
+
+	gm, err := k.getGroupMember(ctx, &group.GroupMember{
+		GroupId: req.GroupId,
+		Member:  &group.Member{Address: req.Address},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	memberWeight, err := math.NewNonNegativeDecFromString(gm.Member.Weight)
+	if err != nil {
+		return nil, err
+	}
+
+	updatedWeight, err := math.SubNonNegative(groupWeight, memberWeight)
+	if err != nil {
+		return nil, err
+	}
+
+	// delete group member in the groupMemberTable.
+	if err := k.groupMemberTable.Delete(ctx.KVStore(k.key), gm); err != nil {
+		return nil, sdkerrors.Wrap(err, "group member")
+	}
+
+	// update group weight
+	groupInfo.TotalWeight = updatedWeight.String()
+	if err := k.groupTable.Update(ctx.KVStore(k.key), groupInfo.Id, &groupInfo); err != nil {
+		return nil, err
+	}
+
+	if err := k.validateDecisionPolicies(ctx, groupInfo); err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitTypedEvent(&group.EventLeaveGroup{
+		GroupId: req.GroupId,
+		Address: req.Address,
+	})
+
+	return &group.MsgLeaveGroupResponse{}, nil
+}
+
+func (k Keeper) getGroupMember(ctx sdk.Context, member *group.GroupMember) (*group.GroupMember, error) {
+	var groupMember group.GroupMember
+	switch err := k.groupMemberTable.GetOne(ctx.KVStore(k.key),
+		orm.PrimaryKey(member), &groupMember); {
+	case err == nil:
+		break
+	case sdkerrors.ErrNotFound.Is(err):
+		return nil, sdkerrors.ErrNotFound.Wrapf("%s is not part of group %d", member.Member.Address, member.GroupId)
+	default:
+		return nil, err
+	}
+
+	return &groupMember, nil
+}
+
 type authNGroupReq interface {
 	GetGroupID() uint64
 	GetAdmin() string
@@ -877,5 +971,33 @@ func (k Keeper) assertMetadataLength(metadata string, description string) error 
 	if metadata != "" && uint64(len(metadata)) > k.config.MaxMetadataLen {
 		return sdkerrors.Wrapf(errors.ErrMaxLimit, description)
 	}
+	return nil
+}
+
+// validateDecisionPolicies loops through all decision policies from the group,
+// and calls each of their Validate() method.
+func (k Keeper) validateDecisionPolicies(ctx sdk.Context, g group.GroupInfo) error {
+	it, err := k.groupPolicyByGroupIndex.Get(ctx.KVStore(k.key), g.Id)
+	if err != nil {
+		return err
+	}
+	defer it.Close()
+
+	var groupPolicy group.GroupPolicyInfo
+	for {
+		_, err = it.LoadNext(&groupPolicy)
+		if errors.ErrORMIteratorDone.Is(err) {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		err = groupPolicy.DecisionPolicy.GetCachedValue().(group.DecisionPolicy).Validate(g, k.config)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

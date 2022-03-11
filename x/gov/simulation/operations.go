@@ -301,7 +301,7 @@ func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k kee
 		}
 
 		option := randomVotingOption(r)
-		msg := v1beta2.NewMsgVote(simAccount.Address, proposalID, option)
+		msg := v1beta2.NewMsgVote(simAccount.Address, proposalID, option, "")
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
@@ -354,7 +354,7 @@ func operationSimulateMsgVoteWeighted(ak types.AccountKeeper, bk types.BankKeepe
 		}
 
 		options := randomWeightedVotingOptions(r)
-		msg := v1beta2.NewMsgVoteWeighted(simAccount.Address, proposalID, options)
+		msg := v1beta2.NewMsgVoteWeighted(simAccount.Address, proposalID, options, "")
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())

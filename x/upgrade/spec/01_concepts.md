@@ -76,23 +76,19 @@ will ensure these `StoreUpgrades` takes place only in planned upgrade handler.
 
 ## Proposal
 
-Typically, a `Plan` is proposed and submitted through governance via a `SoftwareUpgradeProposal`.
+Typically, a `Plan` is proposed and submitted through governance via a proposal
+containing a `MsgSoftwareUpgrade` message.
 This proposal prescribes to the standard governance process. If the proposal passes,
 the `Plan`, which targets a specific `Handler`, is persisted and scheduled. The
 upgrade can be delayed or hastened by updating the `Plan.Height` in a new proposal.
 
-```go
-type SoftwareUpgradeProposal struct {
-  Title       string
-  Description string
-  Plan        Plan
-}
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/08ddb217c176abe31c96af9d5f6c4c6fc645c4d4/proto/cosmos/upgrade/v1beta1/tx.proto#L19-L28
 
 ### Cancelling Upgrade Proposals
 
-Upgrade proposals can be cancelled. There exists a `CancelSoftwareUpgrade` proposal
-type, which can be voted on and passed and will remove the scheduled upgrade `Plan`.
+Upgrade proposals can be cancelled. There exists a gov-enabled `MsgCancelUpgrade`
+message type, which can be embedded in a proposal, voted on and, if passed, will
+remove the scheduled upgrade `Plan`.
 Of course this requires that the upgrade was known to be a bad idea well before the
 upgrade itself, to allow time for a vote.
 
@@ -101,6 +97,6 @@ If such a possibility is desired, the upgrade height is to be
 upgrade proposal. The `SafetyDelta` is the time available from the success of an
 upgrade proposal and the realization it was a bad idea (due to external social consensus).
 
-A `CancelSoftwareUpgrade` proposal can also be made while the original
-`SoftwareUpgradeProposal` is still being voted upon, as long as the `VotingPeriod`
-ends after the `SoftwareUpgradeProposal`.
+A `MsgCancelUpgrade` proposal can also be made while the original
+`MsgSoftwareUpgrade` proposal is still being voted upon, as long as the `VotingPeriod`
+ends after the `MsgSoftwareUpgrade` proposal.

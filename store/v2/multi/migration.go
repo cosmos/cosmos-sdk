@@ -10,14 +10,14 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// MigrateV2 will migrate the state from iavl to smt
-func MigrateV2(rootMultiStore *v1Store.Store, store2db dbm.DBConnection, storeConfig StoreConfig) (*Store, error) {
+// MigrateFromV1 will migrate the state from iavl to smt
+func MigrateFromV1(rootMultiStore *v1Store.Store, store2db dbm.DBConnection, storeConfig StoreConfig) (*Store, error) {
 	type namedStore struct {
 		*iavl.Store
 		name string
 	}
 	var stores []namedStore
-	for _, storeKey := range rootMultiStore.GetStoreNames() {
+	for _, storeKey := range rootMultiStore.StoreKeysByName() {
 		keyName := storeKey.Name()
 		switch store := rootMultiStore.GetStoreByName(keyName).(type) {
 		case *iavl.Store:

@@ -3,14 +3,15 @@ package multi
 import (
 	"encoding/binary"
 	"fmt"
+	"math/rand"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/db/memdb"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/stretchr/testify/require"
 	dbm "github.com/tendermint/tm-db"
-	"math/rand"
-	"testing"
 )
 
 func TestMigrationV2(t *testing.T) {
@@ -71,7 +72,7 @@ func TestMigrationV2(t *testing.T) {
 		db2 := memdb.NewDB()
 		storeConfig := DefaultStoreConfig()
 		// migrating the iavl store (v1) to smt store (v2)
-		v2Store, err := MigrateV2(v1Store, db2, storeConfig)
+		v2Store, err := MigrateFromV1(v1Store, db2, storeConfig)
 		require.NoError(t, err)
 
 		for _, key := range keys {
@@ -89,6 +90,7 @@ func TestMigrationV2(t *testing.T) {
 	}
 }
 
+// TestMigrateV2ForEmptyStore checking empty store migration
 func TestMigrateV2ForEmptyStore(t *testing.T) {
 	// setup a rootmulti store
 	db := dbm.NewMemDB()
@@ -98,7 +100,7 @@ func TestMigrateV2ForEmptyStore(t *testing.T) {
 	db2 := memdb.NewDB()
 	storeConfig := DefaultStoreConfig()
 	// migrating the iavl store (v1) to smt store (v2)
-	v2Store, err := MigrateV2(v1Store, db2, storeConfig)
+	v2Store, err := MigrateFromV1(v1Store, db2, storeConfig)
 	require.NoError(t, err)
 	require.Equal(t, v2Store.LastCommitID(), v1Store.LastCommitID())
 }

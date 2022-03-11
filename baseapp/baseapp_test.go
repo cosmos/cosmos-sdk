@@ -28,6 +28,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/snapshots"
@@ -106,10 +107,10 @@ func newBaseApp(name string, options ...func(*baseapp.BaseApp)) *baseapp.BaseApp
 func registerTestCodec(cdc *codec.LegacyAmino) {
 	// register test types
 	cdc.RegisterConcrete(&txTest{}, "cosmos-sdk/baseapp/txTest", nil)
-	codec.RegisterAminoMsg(cdc, &msgCounter{}, "cosmos-sdk/baseapp/msgCounter")
-	codec.RegisterAminoMsg(cdc, &msgCounter2{}, "cosmos-sdk/baseapp/msgCounter2")
-	codec.RegisterAminoMsg(cdc, &msgKeyValue{}, "cosmos-sdk/baseapp/msgKeyValue")
-	codec.RegisterAminoMsg(cdc, &msgNoRoute{}, "cosmos-sdk/baseapp/msgNoRoute")
+	legacy.RegisterAminoMsg(cdc, &msgCounter{}, "cosmos-sdk/baseapp/msgCounter")
+	legacy.RegisterAminoMsg(cdc, &msgCounter2{}, "cosmos-sdk/baseapp/msgCounter2")
+	legacy.RegisterAminoMsg(cdc, &msgKeyValue{}, "cosmos-sdk/baseapp/msgKeyValue")
+	legacy.RegisterAminoMsg(cdc, &msgNoRoute{}, "cosmos-sdk/baseapp/msgNoRoute")
 }
 
 // aminoTxEncoder creates a amino TxEncoder for testing purposes.
@@ -1369,7 +1370,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 		newCdc := codec.NewLegacyAmino()
 		sdk.RegisterLegacyAminoCodec(newCdc) // register Tx, Msg
 		registerTestCodec(newCdc)
-		codec.RegisterAminoMsg(newCdc, &msgNoDecode{}, "cosmos-sdk/baseapp/msgNoDecode")
+		legacy.RegisterAminoMsg(newCdc, &msgNoDecode{}, "cosmos-sdk/baseapp/msgNoDecode")
 
 		txBytes, err := newCdc.Marshal(tx)
 		require.NoError(t, err)

@@ -1,10 +1,11 @@
-package codec_test
+package legacy_test
 
 import (
 	"strings"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/stretchr/testify/require"
 )
@@ -26,7 +27,7 @@ func TestRegisterAminoMsg(t *testing.T) {
 	}
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			fn := func() { codec.RegisterAminoMsg(cdc, &testdata.TestMsg{}, tc.msgName) }
+			fn := func() { legacy.RegisterAminoMsg(cdc, &testdata.TestMsg{}, tc.msgName) }
 			if tc.expPanic {
 				require.Panics(t, fn)
 			} else {

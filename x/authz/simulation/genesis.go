@@ -10,7 +10,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 // genGrant returns a slice of authorization grants.
@@ -33,7 +33,7 @@ func genGrant(r *rand.Rand, accounts []simtypes.Account, genT time.Time) []authz
 func generateRandomGrant(r *rand.Rand) *codectypes.Any {
 	authorizations := make([]*codectypes.Any, 2)
 	authorizations[0] = newAnyAuthorization(banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))))
-	authorizations[1] = newAnyAuthorization(authz.NewGenericAuthorization(sdk.MsgTypeURL(&v1beta2.MsgSubmitProposal{})))
+	authorizations[1] = newAnyAuthorization(authz.NewGenericAuthorization(sdk.MsgTypeURL(&v1.MsgSubmitProposal{})))
 
 	return authorizations[r.Intn(len(authorizations))]
 }

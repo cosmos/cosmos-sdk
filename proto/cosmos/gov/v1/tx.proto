@@ -1,0 +1,100 @@
+// Since: cosmos-sdk 0.46
+syntax = "proto3";
+package cosmos.gov.v1;
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/gov/v1/gov.proto";
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/any.proto";
+import "cosmos/msg/v1/msg.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1";
+
+// Msg defines the gov Msg service.
+service Msg {
+  // SubmitProposal defines a method to create new proposal given a content.
+  rpc SubmitProposal(MsgSubmitProposal) returns (MsgSubmitProposalResponse);
+
+  // ExecLegacyContent defines a Msg to be in included in a MsgSubmitProposal
+  // to execute a legacy content-based proposal.
+  rpc ExecLegacyContent(MsgExecLegacyContent) returns (MsgExecLegacyContentResponse);
+
+  // Vote defines a method to add a vote on a specific proposal.
+  rpc Vote(MsgVote) returns (MsgVoteResponse);
+
+  // VoteWeighted defines a method to add a weighted vote on a specific proposal.
+  rpc VoteWeighted(MsgVoteWeighted) returns (MsgVoteWeightedResponse);
+
+  // Deposit defines a method to add deposit on a specific proposal.
+  rpc Deposit(MsgDeposit) returns (MsgDepositResponse);
+}
+
+// MsgSubmitProposal defines an sdk.Msg type that supports submitting arbitrary
+// proposal Content.
+message MsgSubmitProposal {
+  option (cosmos.msg.v1.signer) = "proposer";
+
+  repeated google.protobuf.Any messages             = 1;
+  repeated cosmos.base.v1beta1.Coin initial_deposit = 2 [(gogoproto.nullable) = false];
+  string                            proposer        = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // metadata is any arbitrary metadata attached to the proposal.
+  string metadata = 4;
+}
+
+// MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.
+message MsgSubmitProposalResponse {
+  uint64 proposal_id = 1;
+}
+
+// MsgExecLegacyContent is used to wrap the legacy content field into a message.
+// This ensures backwards compatibility with v1beta1.MsgSubmitProposal.
+message MsgExecLegacyContent {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // content is the proposal's content.
+  google.protobuf.Any content = 1 [(cosmos_proto.accepts_interface) = "Content"];
+  // authority must be the gov module address.
+  string authority = 2;
+}
+
+// MsgExecLegacyContentResponse defines the Msg/ExecLegacyContent response type.
+message MsgExecLegacyContentResponse {}
+
+// MsgVote defines a message to cast a vote.
+message MsgVote {
+  option (cosmos.msg.v1.signer) = "voter";
+
+  uint64     proposal_id = 1 [(gogoproto.jsontag) = "proposal_id"];
+  string     voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  VoteOption option      = 3;
+  string     metadata    = 4;
+}
+
+// MsgVoteResponse defines the Msg/Vote response type.
+message MsgVoteResponse {}
+
+// MsgVoteWeighted defines a message to cast a vote.
+message MsgVoteWeighted {
+  option (cosmos.msg.v1.signer) = "voter";
+
+  uint64                      proposal_id = 1 [(gogoproto.jsontag) = "proposal_id"];
+  string                      voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated WeightedVoteOption options     = 3;
+  string                      metadata    = 4;
+}
+
+// MsgVoteWeightedResponse defines the Msg/VoteWeighted response type.
+message MsgVoteWeightedResponse {}
+
+// MsgDeposit defines a message to submit a deposit to an existing proposal.
+message MsgDeposit {
+  option (cosmos.msg.v1.signer) = "depositor";
+
+  uint64   proposal_id                     = 1 [(gogoproto.jsontag) = "proposal_id"];
+  string   depositor                       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+}
+
+// MsgDepositResponse defines the Msg/Deposit response type.
+message MsgDepositResponse {}

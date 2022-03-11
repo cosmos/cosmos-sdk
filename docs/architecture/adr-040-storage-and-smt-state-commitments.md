@@ -135,7 +135,7 @@ type StoreAccess inteface {
 
 `KVStore`, `SCStore` an `SSStore` will operate in a distinct namespace and will be registered as a separate store in the MultiStore object. So, the records in each store will not collide (Eg: `KVStore(a).Set(k, v)` won't collide with `SSStore(a).Set(k, v)`).
 
-The `KVStore(key)` will provide an access to the combined `SS` and `SC` store:
+`KVStore(key)` will provide access to the combined `SS` and `SC` store:
 
 - `Get` will return `SS` value
 - `Has` will return true if value key is present in `SS`
@@ -209,17 +209,17 @@ NOTE: modules will be able to use a special commitment and their own DBs. For ex
 
 Cosmos SDK users should be only concerned about the module interface, which currently relies on the `KVStore`. We don't change this interface, so the proposed store/v2 is 100% compatible with existing modules.
 
-The new `MultiStore` and supporting types are implemented in `store/v2` package to provide Cosmos SDK users the choice to use the new store or the old IAVL based on.
+The new `MultiStore` and supporting types are implemented in `store/v2` package to provide Cosmos SDK users the choice to use the new store or the old IAVL-based store.
 
 #### Merkle Proofs and IBC
 
-IBC v1.0 Merkle proof are influenced by the MultiStore design: they consists of two elements (`["<store-key>", "<record-key>"]`), with each key corresponding to a separate proof. `<record-key>` is a key in a substore identified by `<store-key>`. The x/ibc module implementation requires that the `<store-key>` is not empty and assumes that the proofs are broken down according to the [ICS-23 specs](https://github.com/cosmos/ibc-go/blob/f7051429e1cf833a6f65d51e6c3df1609290a549/modules/core/23-commitment/types/merkle.go#L17).  
+The IBC v1.0 Merkle proof is influenced by the MultiStore design: it is a path of two elements (`["<store-key>", "<record-key>"]`), with each key corresponding to a separate sub-proof. `<record-key>` is a key in a substore identified by `<store-key>`. The x/ibc module implementation requires that the `<store-key>` is not empty and assumes that the proofs are broken down according to the [ICS-23 specs](https://github.com/cosmos/ibc-go/blob/f7051429e1cf833a6f65d51e6c3df1609290a549/modules/core/23-commitment/types/merkle.go#L17).  
 IBC verification has two steps: firstly we make a standard Merkle proof verification for the `<record-key>`. In the second step, we hash the the `<store-key>` with the root hash of the first step and validate it against the App Hash.
 
-IBC client is configured with a proof spec to know how to hash individual elements on the path. 
-SMT IBC proof spec is required to support the IBC client.
+The IBC client is configured with a proof spec that defines how to hash individual elements on a proof path. 
+An IBC proof spec for the SMT is required to support the IBC client.
 
-The x/ibc module client hardcodes the `"ibc"` as the `<store-key>` (IBC store-key component proof could be omitted if a "no-op" spec was defined in the x/ibc client).
+The x/ibc module client hardcodes `"ibc"` as the `<store-key>` (IBC store-key component proof could be omitted if a "no-op" spec was defined in the x/ibc client).
 Breaking this behavior would severely impact the Cosmos ecosystem which already widely adopts the IBC module. Requesting an update of the IBC module across the chains is a time consuming effort and not easily feasible.
 We want to support ICS-23 for all modules. This means that all modules must use a separate SMT instance.
 This functionality is preserved in the `MultiStore` implementation.
@@ -228,7 +228,7 @@ This functionality is preserved in the `MultiStore` implementation.
 
 We consider a compression of prefix keys by creating a mapping from module key to an integer, and serializing the integer using varint coding. Varint coding assures that different values don't have common byte prefix. For Merkle Proofs we can't use prefix compression - so it should only apply for the `SS` keys. Moreover, the prefix compression should be only applied for the module namespace. More precisely:
 
-- each module has it's own namespace;
+- each module has its own namespace;
 - when accessing a module namespace we create a KVStore with embedded prefix;
 - that prefix will be compressed only when accessing and managing `SS`.
 

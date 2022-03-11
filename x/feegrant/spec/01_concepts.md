@@ -20,6 +20,7 @@ There are two types of fee allowances present at the moment:
 
 * `BasicAllowance`
 * `PeriodicAllowance`
+* `AllowedMsgAllowance`
 
 ## BasicAllowance
 
@@ -48,6 +49,16 @@ There are two types of fee allowances present at the moment:
 * `period_can_spend` is the number of coins left to be spent before the period_reset time.
 
 * `period_reset` keeps track of when a next period reset should happen.
+
+## AllowedMsgAllowance
+
+`AllowedMsgAllowance` is a fee allowance, it can be any of `BasicFeeAllowance`, `PeriodicAllowance` but restricted only to the allowed messages mentioned by the granter.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/691032b8be0f7539ec99f8882caecefc51f33d1f/proto/cosmos/feegrant/v1beta1/feegrant.proto#L55-L65
+
+* `allowance` is either `BasicAllowance` or `PeriodicAllowance`.
+
+* `allowed_messages` is array of messages allowed to execute the given allowance.
 
 ## FeeGranter flag
 

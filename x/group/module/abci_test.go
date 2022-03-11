@@ -17,7 +17,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
-func TestEndBlocker(t *testing.T) {
+func TestEndBlockerPruning(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(30000000))
@@ -75,7 +75,7 @@ func TestEndBlocker(t *testing.T) {
 		"proposal pruned after executor result success": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
-				pID, err := submitProposalAndVote(ctx, app, msgs, proposers, group.VOTE_OPTION_YES, groupPolicyAddr)
+				pID, err := submitProposalAndVote(app, ctx, msgs, proposers, groupPolicyAddr, group.VOTE_OPTION_YES)
 				require.NoError(t, err)
 				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Signer: addr3.String(), ProposalId: pID})
 				require.NoError(t, err)
@@ -90,7 +90,7 @@ func TestEndBlocker(t *testing.T) {
 		"proposal with multiple messages pruned when executed with result success": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1, msgSend1}
-				pID, err := submitProposalAndVote(ctx, app, msgs, proposers, group.VOTE_OPTION_YES, groupPolicyAddr)
+				pID, err := submitProposalAndVote(app, ctx, msgs, proposers, groupPolicyAddr, group.VOTE_OPTION_YES)
 				require.NoError(t, err)
 				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Signer: addr3.String(), ProposalId: pID})
 				require.NoError(t, err)
@@ -105,7 +105,7 @@ func TestEndBlocker(t *testing.T) {
 		"proposal not pruned when not executed and rejected": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
-				pID, err := submitProposalAndVote(ctx, app, msgs, proposers, group.VOTE_OPTION_NO, groupPolicyAddr)
+				pID, err := submitProposalAndVote(app, ctx, msgs, proposers, groupPolicyAddr, group.VOTE_OPTION_NO)
 				require.NoError(t, err)
 				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Signer: addr3.String(), ProposalId: pID})
 				require.NoError(t, err)
@@ -118,7 +118,7 @@ func TestEndBlocker(t *testing.T) {
 		},
 		"open proposal is not pruned which must not fail ": {
 			setupProposal: func(ctx context.Context) uint64 {
-				pID, err := submitProposal(ctx, app, []sdk.Msg{msgSend1}, proposers, groupPolicyAddr)
+				pID, err := submitProposal(app, ctx, []sdk.Msg{msgSend1}, proposers, groupPolicyAddr)
 				require.NoError(t, err)
 				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Signer: addr3.String(), ProposalId: pID})
 				require.NoError(t, err)
@@ -131,7 +131,7 @@ func TestEndBlocker(t *testing.T) {
 		},
 		"proposal not pruned with group policy modified before tally": {
 			setupProposal: func(ctx context.Context) uint64 {
-				pID, err := submitProposal(ctx, app, []sdk.Msg{msgSend1}, proposers, groupPolicyAddr)
+				pID, err := submitProposal(app, ctx, []sdk.Msg{msgSend1}, proposers, groupPolicyAddr)
 				require.NoError(t, err)
 				_, err = app.GroupKeeper.UpdateGroupPolicyMetadata(ctx, &group.MsgUpdateGroupPolicyMetadata{
 					Admin:   addr1.String(),
@@ -150,7 +150,7 @@ func TestEndBlocker(t *testing.T) {
 		"pruned when proposal is executable when failed before": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
-				pID, err := submitProposalAndVote(ctx, app, msgs, proposers, group.VOTE_OPTION_YES, groupPolicyAddr)
+				pID, err := submitProposalAndVote(app, ctx, msgs, proposers, groupPolicyAddr, group.VOTE_OPTION_YES)
 				require.NoError(t, err)
 				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Signer: addrs[2].String(), ProposalId: pID})
 				require.NoError(t, err)
@@ -191,26 +191,186 @@ func TestEndBlocker(t *testing.T) {
 
 }
 
-func submitProposalAndVote(
-	ctx context.Context, app *simapp.SimApp, msgs []sdk.Msg,
-	proposers []string, voteOption group.VoteOption, groupPolicyAddr sdk.AccAddress) (uint64, error) {
-	myProposalID, err := submitProposal(ctx, app, msgs, proposers, groupPolicyAddr)
-	if err != nil {
-		return 0, err
+func TestEndBlocker(t *testing.T) {
+	app := simapp.Setup(t, false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	addrs := simapp.AddTestAddrsIncremental(app, ctx, 4, sdk.NewInt(30000000))
+
+	// Initial group, group policy and balance setup
+	members := []group.Member{
+		{Address: addrs[1].String(), Weight: "1"}, {Address: addrs[2].String(), Weight: "2"},
 	}
-	_, err = app.GroupKeeper.Vote(ctx, &group.MsgVote{
-		ProposalId: myProposalID,
-		Voter:      proposers[0],
-		Option:     voteOption,
+
+	groupRes, err := app.GroupKeeper.CreateGroup(ctx, &group.MsgCreateGroup{
+		Admin:   addrs[0].String(),
+		Members: members,
 	})
-	if err != nil {
-		return 0, err
+
+	require.NoError(t, err)
+	groupID := groupRes.GroupId
+
+	policy := group.NewThresholdDecisionPolicy(
+		"2",
+		time.Second,
+		0,
+	)
+
+	policyReq := &group.MsgCreateGroupPolicy{
+		Admin:   addrs[0].String(),
+		GroupId: groupID,
 	}
-	return myProposalID, nil
+
+	err = policyReq.SetDecisionPolicy(policy)
+	require.NoError(t, err)
+	policyRes, err := app.GroupKeeper.CreateGroupPolicy(ctx, policyReq)
+	require.NoError(t, err)
+
+	groupPolicyAddr, err := sdk.AccAddressFromBech32(policyRes.Address)
+	require.NoError(t, err)
+
+	votingPeriod := policy.GetVotingPeriod()
+	now := time.Now()
+
+	msgSend := &banktypes.MsgSend{
+		FromAddress: groupPolicyAddr.String(),
+		ToAddress:   addrs[3].String(),
+		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+	}
+
+	proposers := []string{addrs[2].String()}
+
+	specs := map[string]struct {
+		preRun            func(sdkCtx sdk.Context) uint64
+		proposalId        uint64
+		admin             string
+		expErrMsg         string
+		newCtx            sdk.Context
+		tallyRes          group.TallyResult
+		expStatus         group.ProposalStatus
+		expExecutorResult group.ProposalResult
+	}{
+		"tally updated after voting power end": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				pId, err := submitProposal(app, sdkCtx, []sdk.Msg{msgSend}, proposers, groupPolicyAddr)
+				require.NoError(t, err)
+				return pId
+			},
+			admin:             proposers[0],
+			newCtx:            ctx.WithBlockTime(now.Add(votingPeriod).Add(time.Hour)),
+			tallyRes:          group.DefaultTallyResult(),
+			expStatus:         group.PROPOSAL_STATUS_SUBMITTED,
+			expExecutorResult: group.PROPOSAL_RESULT_UNFINALIZED,
+		},
+		"tally within voting period": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				pId, err := submitProposal(app, sdkCtx, []sdk.Msg{msgSend}, proposers, groupPolicyAddr)
+				require.NoError(t, err)
+
+				return pId
+			},
+			admin:             proposers[0],
+			newCtx:            ctx,
+			tallyRes:          group.DefaultTallyResult(),
+			expStatus:         group.PROPOSAL_STATUS_SUBMITTED,
+			expExecutorResult: group.PROPOSAL_RESULT_UNFINALIZED,
+		},
+		"tally within voting period(with votes)": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				pId, err := submitProposalAndVote(app, ctx, []sdk.Msg{msgSend}, proposers, groupPolicyAddr, group.VOTE_OPTION_YES)
+				require.NoError(t, err)
+
+				return pId
+			},
+			admin:             proposers[0],
+			newCtx:            ctx,
+			tallyRes:          group.DefaultTallyResult(),
+			expStatus:         group.PROPOSAL_STATUS_SUBMITTED,
+			expExecutorResult: group.PROPOSAL_RESULT_UNFINALIZED,
+		},
+		"tally after voting period(with votes)": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				pId, err := submitProposalAndVote(app, ctx, []sdk.Msg{msgSend}, proposers, groupPolicyAddr, group.VOTE_OPTION_YES)
+				require.NoError(t, err)
+
+				return pId
+			},
+			admin:  proposers[0],
+			newCtx: ctx.WithBlockTime(now.Add(votingPeriod).Add(time.Hour)),
+			tallyRes: group.TallyResult{
+				YesCount:        "2",
+				NoCount:         "0",
+				NoWithVetoCount: "0",
+				AbstainCount:    "0",
+			},
+			expStatus:         group.PROPOSAL_STATUS_CLOSED,
+			expExecutorResult: group.PROPOSAL_RESULT_ACCEPTED,
+		},
+		"tally of closed proposal": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				pId, err := submitProposal(app, sdkCtx, []sdk.Msg{msgSend}, proposers, groupPolicyAddr)
+				require.NoError(t, err)
+
+				_, err = app.GroupKeeper.WithdrawProposal(ctx, &group.MsgWithdrawProposal{
+					ProposalId: pId,
+					Address:    groupPolicyAddr.String(),
+				})
+
+				require.NoError(t, err)
+				return pId
+			},
+			admin:             proposers[0],
+			newCtx:            ctx,
+			tallyRes:          group.DefaultTallyResult(),
+			expStatus:         group.PROPOSAL_STATUS_WITHDRAWN,
+			expExecutorResult: group.PROPOSAL_RESULT_UNFINALIZED,
+		},
+		"tally of closed proposal (with votes)": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				pId, err := submitProposalAndVote(app, ctx, []sdk.Msg{msgSend}, proposers, groupPolicyAddr, group.VOTE_OPTION_YES)
+				require.NoError(t, err)
+
+				_, err = app.GroupKeeper.WithdrawProposal(ctx, &group.MsgWithdrawProposal{
+					ProposalId: pId,
+					Address:    groupPolicyAddr.String(),
+				})
+
+				require.NoError(t, err)
+				return pId
+			},
+			admin:             proposers[0],
+			newCtx:            ctx,
+			tallyRes:          group.DefaultTallyResult(),
+			expStatus:         group.PROPOSAL_STATUS_WITHDRAWN,
+			expExecutorResult: group.PROPOSAL_RESULT_UNFINALIZED,
+		},
+	}
+
+	for msg, spec := range specs {
+		t.Run(msg, func(t *testing.T) {
+			spec := spec
+			pId := spec.preRun(ctx)
+
+			module.EndBlocker(spec.newCtx, app.GroupKeeper)
+			resp, err := app.GroupKeeper.Proposal(spec.newCtx, &group.QueryProposalRequest{
+				ProposalId: pId,
+			})
+
+			if spec.expErrMsg != "" {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), spec.expErrMsg)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, resp.GetProposal().FinalTallyResult, spec.tallyRes)
+			require.Equal(t, resp.GetProposal().Status, spec.expStatus)
+			require.Equal(t, resp.GetProposal().Result, spec.expExecutorResult)
+		})
+	}
 }
 
 func submitProposal(
-	ctx context.Context, app *simapp.SimApp, msgs []sdk.Msg,
+	app *simapp.SimApp, ctx context.Context, msgs []sdk.Msg,
 	proposers []string, groupPolicyAddr sdk.AccAddress) (uint64, error) {
 	proposalReq := &group.MsgSubmitProposal{
 		Address:   groupPolicyAddr.String(),
@@ -227,4 +387,22 @@ func submitProposal(
 	}
 
 	return proposalRes.ProposalId, nil
+}
+
+func submitProposalAndVote(
+	app *simapp.SimApp, ctx context.Context, msgs []sdk.Msg,
+	proposers []string, groupPolicyAddr sdk.AccAddress, voteOption group.VoteOption) (uint64, error) {
+	myProposalID, err := submitProposal(app, ctx, msgs, proposers, groupPolicyAddr)
+	if err != nil {
+		return 0, err
+	}
+	_, err = app.GroupKeeper.Vote(ctx, &group.MsgVote{
+		ProposalId: myProposalID,
+		Voter:      proposers[0],
+		Option:     voteOption,
+	})
+	if err != nil {
+		return 0, err
+	}
+	return myProposalID, nil
 }

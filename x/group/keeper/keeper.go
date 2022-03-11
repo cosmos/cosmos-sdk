@@ -267,15 +267,15 @@ func (k Keeper) iterateVPEndProposals(ctx sdk.Context, before time.Time, cb func
 }
 
 // pruneProposal deletes a proposal from state.
-func (k Keeper) pruneProposal(ctx sdk.Context, p group.Proposal) error {
+func (k Keeper) pruneProposal(ctx sdk.Context, proposalID uint64) error {
 	store := ctx.KVStore(k.key)
 
-	err := k.proposalTable.Delete(store, p.Id)
+	err := k.proposalTable.Delete(store, proposalID)
 	if err != nil {
 		return err
 	}
 
-	k.Logger(ctx).Debug(fmt.Sprintf("Pruned proposal %d", p.Id))
+	k.Logger(ctx).Debug(fmt.Sprintf("Pruned proposal %d", proposalID))
 	return nil
 }
 
@@ -307,12 +307,12 @@ func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
 	return nil
 }
 
-// PruneProposals prunes all proposals and votes that are expired, i.e. whose
+// PruneProposals prunes all proposals that are expired, i.e. whose
 // `voting_period + max_execution_period` is greater than the current block
 // time.
 func (k Keeper) PruneProposals(ctx sdk.Context) error {
 	k.iterateVPEndProposals(ctx, ctx.BlockTime().Add(-k.config.MaxExecutionPeriod), func(proposal group.Proposal) (bool, error) {
-		err := k.pruneProposal(ctx, proposal)
+		err := k.pruneProposal(ctx, proposal.Id)
 		if err != nil {
 			return true, err
 		}

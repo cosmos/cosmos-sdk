@@ -155,4 +155,9 @@ replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 
 replace github.com/cosmos/cosmos-sdk/db => ./db
 
+// Fix for building on Mac Big Sur (or earlier)
+// Related to https://github.com/Zondax/hid/issues/4
+//        and https://github.com/cosmos/cosmos-sdk/issues/11364
+replace github.com/zondax/hid => github.com/zondax/hid v0.9.0
+
 retract v0.43.0

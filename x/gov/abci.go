@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 // EndBlocker called every block, process inflation, update validator set.
@@ -18,7 +18,7 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	logger := keeper.Logger(ctx)
 
 	// delete dead proposals from store and returns theirs deposits. A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
-	keeper.IterateInactiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal v1beta2.Proposal) bool {
+	keeper.IterateInactiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal v1.Proposal) bool {
 		keeper.DeleteProposal(ctx, proposal.Id)
 		keeper.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
 
@@ -44,7 +44,7 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	})
 
 	// fetch active proposals whose voting periods have ended (are passed the block time)
-	keeper.IterateActiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal v1beta2.Proposal) bool {
+	keeper.IterateActiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal v1.Proposal) bool {
 		var tagValue, logMsg string
 
 		passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
@@ -80,7 +80,7 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 			// `err == nil` when all handlers passed.
 			// Or else, `idx` and `err` are populated with the msg index and error.
 			if err == nil {
-				proposal.Status = v1beta2.StatusPassed
+				proposal.Status = v1.StatusPassed
 				tagValue = types.AttributeValueProposalPassed
 				logMsg = "passed"
 
@@ -93,12 +93,12 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 				// write state to the underlying multi-store
 				writeCache()
 			} else {
-				proposal.Status = v1beta2.StatusFailed
+				proposal.Status = v1.StatusFailed
 				tagValue = types.AttributeValueProposalFailed
 				logMsg = fmt.Sprintf("passed, but msg %d (%s) failed on execution: %s", idx, sdk.MsgTypeURL(msg), err)
 			}
 		} else {
-			proposal.Status = v1beta2.StatusRejected
+			proposal.Status = v1.StatusRejected
 			tagValue = types.AttributeValueProposalRejected
 			logMsg = "rejected"
 		}

@@ -19,7 +19,6 @@ require (
 	github.com/cosmos/iavl v0.18.0
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
-	github.com/ethereum/go-ethereum v1.10.13
 	github.com/gogo/gateway v1.1.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/mock v1.6.0

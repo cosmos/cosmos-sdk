@@ -2,9 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be found in
 // the LICENSE file.
 
-//go:build !gofuzz && cgo
-// +build !gofuzz,cgo
-
 package secp256k1
 
 import (
@@ -13,7 +10,6 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"encoding/hex"
-	"errors"
 	"io"
 	"testing"
 )
@@ -25,8 +21,8 @@ func generateKeyPair() (pubkey, privkey []byte) {
 	if err != nil {
 		panic(err)
 	}
+	pubkey = elliptic.Marshal(S256(), key.X, key.Y)
 
-	pubkey = elliptic.Marshal(S256(), key.X, key.Y) //nolint:staticcheck // crypto will be refactored soon.
 	privkey = make([]byte, 32)
 	blob := key.D.Bytes()
 	copy(privkey[32-len(blob):], blob)
@@ -52,8 +48,7 @@ func randSig() []byte {
 // tests for malleability
 // highest bit of signature ECDSA s value must be 0, in the 33th byte
 func compactSigCheck(t *testing.T, sig []byte) {
-	t.Helper()
-	b := int(sig[32])
+	var b = int(sig[32])
 	if b < 0 {
 		t.Errorf("highest bit is negative: %d", b)
 	}
@@ -94,7 +89,7 @@ func TestInvalidRecoveryID(t *testing.T) {
 	sig, _ := Sign(msg, seckey)
 	sig[64] = 99
 	_, err := RecoverPubkey(msg, sig)
-	if !errors.Is(err, ErrInvalidRecoveryID) {
+	if err != ErrInvalidRecoveryID {
 		t.Fatalf("got %q, want %q", err, ErrInvalidRecoveryID)
 	}
 }
@@ -150,7 +145,6 @@ func TestRandomMessagesWithRandomKeys(t *testing.T) {
 }
 
 func signAndRecoverWithRandomMessages(t *testing.T, keys func() ([]byte, []byte)) {
-	t.Helper()
 	for i := 0; i < TestCount; i++ {
 		pubkey1, seckey := keys()
 		msg := csprngEntropy(32)
@@ -228,10 +222,7 @@ func BenchmarkSign(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, err := Sign(msg, seckey)
-		if err != nil {
-			panic(err)
-		}
+		Sign(msg, seckey)
 	}
 }
 
@@ -242,9 +233,6 @@ func BenchmarkRecover(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, err := RecoverPubkey(msg, sig)
-		if err != nil {
-			panic(err)
-		}
+		RecoverPubkey(msg, sig)
 	}
 }

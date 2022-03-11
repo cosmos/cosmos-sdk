@@ -29,7 +29,7 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// nolint // this nolint lets us use this file in its original and unmodified form.
+
 package secp256k1
 
 import (
@@ -108,12 +108,12 @@ func (bitCurve *BitCurve) IsOnCurve(x, y *big.Int) bool {
 // TODO: double check if the function is okay
 // affineFromJacobian reverses the Jacobian transform. See the comment at the
 // top of the file.
-func (bitCurve *BitCurve) affineFromJacobian(x, y, z *big.Int) (xOut, yOut *big.Int) {
+func (BitCurve *BitCurve) affineFromJacobian(x, y, z *big.Int) (xOut, yOut *big.Int) {
 	if z.Sign() == 0 {
 		return new(big.Int), new(big.Int)
 	}
 
-	zinv := new(big.Int).ModInverse(z, bitCurve.P)
+	zinv := new(big.Int).ModInverse(z, BitCurve.P)
 	zinvsq := new(big.Int).Mul(zinv, zinv)
 
 	xOut = new(big.Int).Mul(x, zinvsq)
@@ -125,7 +125,7 @@ func (bitCurve *BitCurve) affineFromJacobian(x, y, z *big.Int) (xOut, yOut *big.
 }
 
 // Add returns the sum of (x1,y1) and (x2,y2)
-func (bitCurve *BitCurve) Add(x1, y1, x2, y2 *big.Int) (*big.Int, *big.Int) {
+func (BitCurve *BitCurve) Add(x1, y1, x2, y2 *big.Int) (*big.Int, *big.Int) {
 	// If one point is at infinity, return the other point.
 	// Adding the point at infinity to any point will preserve the other point.
 	if x1.Sign() == 0 && y1.Sign() == 0 {
@@ -136,9 +136,9 @@ func (bitCurve *BitCurve) Add(x1, y1, x2, y2 *big.Int) (*big.Int, *big.Int) {
 	}
 	z := new(big.Int).SetInt64(1)
 	if x1.Cmp(x2) == 0 && y1.Cmp(y2) == 0 {
-		return bitCurve.affineFromJacobian(bitCurve.doubleJacobian(x1, y1, z))
+		return BitCurve.affineFromJacobian(BitCurve.doubleJacobian(x1, y1, z))
 	}
-	return bitCurve.affineFromJacobian(bitCurve.addJacobian(x1, y1, z, x2, y2, z))
+	return BitCurve.affineFromJacobian(BitCurve.addJacobian(x1, y1, z, x2, y2, z))
 }
 
 // addJacobian takes two points in Jacobian coordinates, (x1, y1, z1) and

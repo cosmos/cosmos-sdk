@@ -5,6 +5,8 @@ import (
 	"io"
 	"strings"
 
+	iavl2 "github.com/tendermint/iavl"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/crypto/tmhash"
@@ -17,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/store/types"
+	pkgerrors "github.com/pkg/errors"
 )
 
 const (
@@ -31,6 +34,7 @@ type Store struct {
 	db           dbm.DB
 	lastCommitID types.CommitID
 	pruningOpts  types.PruningOptions
+	pruneHeights []int64
 	storesParams map[types.StoreKey]storeParams
 	stores       map[types.StoreKey]types.CommitStore
 	keysByName   map[string]types.StoreKey
@@ -50,7 +54,52 @@ func NewStore(db dbm.DB) *Store {
 		storesParams: make(map[types.StoreKey]storeParams),
 		stores:       make(map[types.StoreKey]types.CommitStore),
 		keysByName:   make(map[string]types.StoreKey),
+		pruneHeights: make([]int64, 0),
 	}
+}
+
+// RollbackToVersion delete the versions after `target` and update the latest version.
+func (rs *Store) RollbackToVersion(target int64) int64 {
+	if target < 0 {
+		panic("Negative rollback target")
+	}
+	current := getLatestVersion(rs.db)
+	if target >= current {
+		return current
+	}
+	for ; current > target; current-- {
+		rs.pruneHeights = append(rs.pruneHeights, current)
+	}
+	rs.pruneStores()
+
+	// update latest height
+	latestBytes, _ := cdc.MarshalBinaryLengthPrefixed(current)
+	rs.db.Set([]byte(latestVersionKey), latestBytes)
+	return current
+}
+
+// pruneStores will batch delete a list of heights from each mounted sub-store.
+// Afterwards, pruneHeights is reset.
+func (rs *Store) pruneStores() {
+	if len(rs.pruneHeights) == 0 {
+		return
+	}
+
+	for key, store := range rs.stores {
+		if store.GetStoreType() == types.StoreTypeIAVL {
+			// If the store is wrapped with an inter-block cache, we must first unwrap
+			// it to get the underlying IAVL store.
+			store = rs.GetCommitKVStore(key)
+
+			if err := store.(*iavl.Store).DeleteVersions(rs.pruneHeights...); err != nil {
+				if errCause := pkgerrors.Cause(err); errCause != nil && errCause != iavl2.ErrVersionDoesNotExist {
+					panic(err)
+				}
+			}
+		}
+	}
+
+	rs.pruneHeights = make([]int64, 0)
 }
 
 // Implements CommitMultiStore

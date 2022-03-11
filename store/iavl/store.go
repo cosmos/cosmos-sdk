@@ -99,6 +99,18 @@ func (st *Store) GetImmutable(version int64) (*Store, error) {
 	}, nil
 }
 
+// DeleteVersions deletes a series of versions from the MutableTree. An error
+// is returned if any single version is invalid or the delete fails. All writes
+// happen in a single batch with a single commit.
+func (st *Store) DeleteVersions(versions ...int64) error {
+	for _, version := range versions {
+		if err := st.tree.DeleteVersion(version); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Implements Committer.
 func (st *Store) Commit() types.CommitID {
 	// Save a new version.

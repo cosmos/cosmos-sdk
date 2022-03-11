@@ -36,6 +36,8 @@ const (
 	DefaultEnableDefaultFeeSuggest = false
 	// DefaultSuggestDenom defines the default denom for fee suggestion
 	DefaultSuggestDenom = "uatom"
+	// DefaultSuggestPrices defines the default list of prices to suggest
+	DefaultSuggestPrices = "0.0uatom"
 )
 
 // configuration flags
@@ -50,6 +52,7 @@ const (
 	FlagEnableDefaultFeeSuggest = "enable-default-fee-suggest"
 	FlagSuggestGas              = "suggest-gas"
 	FlagSuggestDenom            = "suggest-denom"
+	FlagSuggestPrices           = "suggest-prices"
 )
 
 // Config defines the configuration of the rosetta server
@@ -192,6 +195,15 @@ func FromFlags(flags *pflag.FlagSet) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	suggestPrices, err := flags.GetString(FlagSuggestPrices)
+	if err != nil {
+		return nil, err
+	}
+	prices, err := sdk.ParseDecCoins(suggestPrices)
+	if err != nil {
+		return nil, err
+	}
+
 	conf := &Config{
 		Blockchain:              blockchain,
 		Network:                 network,
@@ -203,6 +215,7 @@ func FromFlags(flags *pflag.FlagSet) (*Config, error) {
 		EnableDefaultFeeSuggest: enableDefaultFeeSuggest,
 		SuggestGas:              suggestGas,
 		DefaultSuggestDenom:     suggestDenom,
+		SuggestPrices:           prices,
 	}
 	err = conf.validate()
 	if err != nil {
@@ -246,4 +259,5 @@ func SetFlags(flags *pflag.FlagSet) {
 	flags.Bool(FlagEnableDefaultFeeSuggest, DefaultEnableDefaultFeeSuggest, "enable fee suggestion")
 	flags.Int(FlagSuggestGas, clientflags.DefaultGasLimit, "default gas for fee suggestion")
 	flags.String(FlagSuggestDenom, DefaultSuggestDenom, "default denom to suggest fee")
+	flags.String(FlagSuggestPrices, DefaultSuggestPrices, "default prices to suggest fee")
 }

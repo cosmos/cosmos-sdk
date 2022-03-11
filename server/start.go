@@ -4,6 +4,7 @@ package server
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"runtime/pprof"
@@ -25,6 +26,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	crgserver "github.com/cosmos/cosmos-sdk/server/rosetta/lib/server"
+	"google.golang.org/grpc/encoding"
+	"google.golang.org/grpc/encoding/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -300,6 +303,25 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		clientCtx := clientCtx.
 			WithHomeDir(home).
 			WithChainID(genDoc.ChainID)
+
+		if config.GRPC.Enable {
+			_, port, err := net.SplitHostPort(config.GRPC.Address)
+			if err != nil {
+				return err
+			}
+			grpcAddress := fmt.Sprintf("127.0.0.1:%s", port)
+			// If grpc is enabled, configure grpc client for grpc gateway.
+			grpcClient, err := grpc.Dial(
+				grpcAddress,
+				grpc.WithInsecure(),
+				grpc.WithDefaultCallOptions(grpc.ForceCodec(encoding.GetCodec(proto.Name))),
+			)
+			if err != nil {
+				return err
+			}
+			clientCtx = clientCtx.WithGRPCClient(grpcClient)
+			ctx.Logger.Debug("grpc client assigned to client context", "target", grpcAddress)
+		}
 
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))
 		app.RegisterAPIRoutes(apiSrv, config.API)

@@ -179,7 +179,7 @@ func (m *PeriodicAllowance) GetPeriodReset() time.Time {
 
 // AllowedMsgAllowance creates allowance only for specified message types.
 type AllowedMsgAllowance struct {
-	// allowance can be any of basic and filtered fee allowance.
+	// allowance can be any of basic and periodic fee allowance.
 	Allowance *types1.Any `protobuf:"bytes,1,opt,name=allowance,proto3" json:"allowance,omitempty"`
 	// allowed_messages are the messages for which the grantee has the access.
 	AllowedMessages []string `protobuf:"bytes,2,rep,name=allowed_messages,json=allowedMessages,proto3" json:"allowed_messages,omitempty"`
@@ -224,7 +224,7 @@ type Grant struct {
 	Granter string `protobuf:"bytes,1,opt,name=granter,proto3" json:"granter,omitempty"`
 	// grantee is the address of the user being granted an allowance of another user's funds.
 	Grantee string `protobuf:"bytes,2,opt,name=grantee,proto3" json:"grantee,omitempty"`
-	// allowance can be any of basic and filtered fee allowance.
+	// allowance can be any of basic, periodic, allowed fee allowance.
 	Allowance *types1.Any `protobuf:"bytes,3,opt,name=allowance,proto3" json:"allowance,omitempty"`
 }
 

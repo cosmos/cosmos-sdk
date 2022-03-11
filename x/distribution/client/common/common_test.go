@@ -1,16 +1,16 @@
 package common
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func TestQueryDelegationRewardsAddrValidation(t *testing.T) {
-	clientCtx := client.Context{}.WithLegacyAmino(types.ModuleCdc.LegacyAmino)
+	clientCtx := client.Context{}.WithLegacyAmino(legacy.Cdc)
 
 	type args struct {
 		delAddr string

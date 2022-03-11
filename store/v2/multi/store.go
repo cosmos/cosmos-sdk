@@ -521,23 +521,19 @@ func (s *Store) Commit() types.CommitID {
 	// Substores read-lock this mutex; lock to prevent racey invalidation of underlying txns
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
-
 	// Determine the target version
 	versions, err := s.stateDB.Versions()
 	if err != nil {
 		panic(err)
 	}
-
 	target := versions.Last() + 1
 	if target > math.MaxInt64 {
 		panic(ErrMaximumHeight)
 	}
-
 	// Fast forward to initial version if needed
 	if s.InitialVersion != 0 && target < s.InitialVersion {
 		target = s.InitialVersion
 	}
-
 	cid, err := s.commit(target)
 	if err != nil {
 		panic(err)
@@ -900,10 +896,3 @@ func (tlm *traceListenMixin) wrapTraceListen(store types.KVStore, skey types.Sto
 
 func (s *Store) GetPruning() types.PruningOptions   { return s.Pruning }
 func (s *Store) SetPruning(po types.PruningOptions) { s.Pruning = po }
-
-func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadCloser, ready chan<- struct{}) error {
-	return nil
-}
-func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, error) {
-	return nil, nil
-}

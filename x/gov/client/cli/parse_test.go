@@ -13,8 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -85,7 +85,7 @@ func TestParseSubmitProposal(t *testing.T) {
 	banktypes.RegisterInterfaces(interfaceRegistry)
 	stakingtypes.RegisterInterfaces(interfaceRegistry)
 	v1beta1.RegisterInterfaces(interfaceRegistry)
-	v1beta2.RegisterInterfaces(interfaceRegistry)
+	v1.RegisterInterfaces(interfaceRegistry)
 	expectedMetadata := []byte{42}
 
 	okJSON := testutil.WriteToNewTempFile(t, fmt.Sprintf(`
@@ -104,7 +104,7 @@ func TestParseSubmitProposal(t *testing.T) {
 			"amount":{"denom": "stake","amount": "10"}
 		},
 		{
-			"@type": "/cosmos.gov.v1beta2.MsgExecLegacyContent",
+			"@type": "/cosmos.gov.v1.MsgExecLegacyContent",
 			"authority": "%s",
 			"content": {
 				"@type": "/cosmos.gov.v1beta1.TextProposal",
@@ -132,7 +132,7 @@ func TestParseSubmitProposal(t *testing.T) {
 	msgs, metadata, deposit, err := parseSubmitProposal(cdc, okJSON.Name())
 	require.NoError(t, err, "unexpected error")
 	require.Equal(t, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(1000))), deposit)
-	require.Equal(t, expectedMetadata, metadata)
+	require.Equal(t, base64.StdEncoding.EncodeToString(expectedMetadata), metadata)
 	require.Len(t, msgs, 3)
 	msg1, ok := msgs[0].(*banktypes.MsgSend)
 	require.True(t, ok)
@@ -144,7 +144,7 @@ func TestParseSubmitProposal(t *testing.T) {
 	require.Equal(t, addr.String(), msg2.DelegatorAddress)
 	require.Equal(t, addr.String(), msg2.ValidatorAddress)
 	require.Equal(t, sdk.NewCoin("stake", sdk.NewInt(10)), msg2.Amount)
-	msg3, ok := msgs[2].(*v1beta2.MsgExecLegacyContent)
+	msg3, ok := msgs[2].(*v1.MsgExecLegacyContent)
 	require.True(t, ok)
 	require.Equal(t, addr.String(), msg3.Authority)
 	textProp, ok := msg3.Content.GetCachedValue().(*v1beta1.TextProposal)

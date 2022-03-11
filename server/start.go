@@ -4,6 +4,7 @@ package server
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"runtime/pprof"
@@ -18,6 +19,7 @@ import (
 	"github.com/tendermint/tendermint/rpc/client/local"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -83,7 +85,7 @@ For '--pruning' the options are as follows:
 
 default: the last 362880 states are kept, pruning at 10 block intervals
 nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
-everything: all saved states will be deleted, storing only the current state; pruning at 10 block intervals
+everything: all saved states will be deleted, storing only the current and previous state; pruning at 10 block intervals
 custom: allow pruning options to be manually specified through 'pruning-keep-recent' and 'pruning-interval'
 
 Node halting configurations exist in the form of two flags: '--halt-height' and '--halt-time'. During
@@ -295,6 +297,25 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		clientCtx := clientCtx.
 			WithHomeDir(home).
 			WithChainID(genDoc.ChainID)
+
+		if config.GRPC.Enable {
+			_, port, err := net.SplitHostPort(config.GRPC.Address)
+			if err != nil {
+				return err
+			}
+			grpcAddress := fmt.Sprintf("127.0.0.1:%s", port)
+			// If grpc is enabled, configure grpc client for grpc gateway.
+			grpcClient, err := grpc.Dial(
+				grpcAddress,
+				grpc.WithTransportCredentials(insecure.NewCredentials()),
+				grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec())),
+			)
+			if err != nil {
+				return err
+			}
+			clientCtx = clientCtx.WithGRPCClient(grpcClient)
+			ctx.Logger.Debug("grpc client assigned to client context", "target", grpcAddress)
+		}
 
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))
 		app.RegisterAPIRoutes(apiSrv, config.API)

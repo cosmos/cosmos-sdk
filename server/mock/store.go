@@ -134,6 +134,10 @@ func (ms multiStore) Restore(
 	panic("not implemented")
 }
 
+func (ms multiStore) RollbackToVersion(version int64) error {
+	panic("not implemented")
+}
+
 var _ sdk.KVStore = kvStore{}
 
 type kvStore struct {

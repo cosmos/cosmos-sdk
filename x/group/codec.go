@@ -52,7 +52,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 
 	registry.RegisterInterface(
-		"cosmos.group.v1beta1.DecisionPolicy",
+		"cosmos.group.v1.DecisionPolicy",
 		(*DecisionPolicy)(nil),
 		&ThresholdDecisionPolicy{},
 		&PercentageDecisionPolicy{},

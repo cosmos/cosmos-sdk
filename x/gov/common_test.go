@@ -11,8 +11,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 )
@@ -25,8 +25,8 @@ var (
 )
 
 // mkTestLegacyContent creates a MsgExecLegacyContent for testing purposes.
-func mkTestLegacyContent(t *testing.T) *v1beta2.MsgExecLegacyContent {
-	msgContent, err := v1beta2.NewLegacyContent(TestProposal, authtypes.NewModuleAddress(types.ModuleName).String())
+func mkTestLegacyContent(t *testing.T) *v1.MsgExecLegacyContent {
+	msgContent, err := v1.NewLegacyContent(TestProposal, authtypes.NewModuleAddress(types.ModuleName).String())
 	require.NoError(t, err)
 
 	return msgContent

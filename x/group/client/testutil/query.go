@@ -315,7 +315,6 @@ func (s *IntegrationTestSuite) TestQueryGroupPolicyInfo() {
 			cmd := client.QueryGroupPolicyInfoCmd()
 
 			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			s.Require().NotNil(nil)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {

@@ -57,9 +57,9 @@ message ExtensionOptionsTieredTx {
 }
 ```
 
-The value of `tier` is just the index to the `tiers` parameter list.
+The value of `tier` is just the index to the `tiers` parameter list.
 
-We also change the semantic of existing `fee` field of `Tx`, instead of charging user the exact `fee` amount, we treat it as a fee cap, while the actual amount of fee charged is decided dynamically. If the `fee` is smaller than dynamic one, the transaction won't be included in current block and ideally should stay in the mempool until the consensus gas price drop. The mempool can eventually prune old transactions.
+We also change the semantic of existing `fee` field of `Tx`, instead of charging user the exact `fee` amount, we treat it as a fee cap, while the actual amount of fee charged is decided dynamically. If the `fee` is smaller than dynamic one, the transaction won't be included in current block and ideally should stay in the mempool until the consensus gas price drop. The mempool can eventually prune old transactions.
 
 ### Tx Prioritization
 
@@ -93,7 +93,7 @@ def adjust_gas_price(gas_price, parent_gas_used, tier):
 
 Ideally we should reserve block segments for each tier, so the lower tiered transactions won't be completely squeezed out by higher tier transactions, which will force user to use higher tier, and the system degraded to a single tier.
 
-We need help from tendermint to implement that. (TODO Is the current proposed `ABCI++` spec support this usage?)
+We need help from tendermint to implement this.
 
 ## Implementation
 
@@ -184,7 +184,7 @@ If attacker spam with lower tier transactions, user can mitigate by sending high
 
 ### Negative
 
-- Wallets & tools need to update to support the new `tier` parameter, and semantic changed `gasPriceCap` field.
+- Wallets & tools need to update to support the new `tier` parameter, and semantic of `fee` field is changed.
 
 ### Neutral
 

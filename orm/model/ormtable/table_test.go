@@ -67,7 +67,7 @@ func TestScenario(t *testing.T) {
 	checkEncodeDecodeEntries(t, table, store.IndexStoreReader())
 }
 
-func TestImportedMessageIndex(t *testing.T) {
+func TestImportedMessageIterator(t *testing.T) {
 	table, err := ormtable.Build(ormtable.Options{
 		MessageType: (&testpb.ExampleTimestamp{}).ProtoReflect().Type(),
 	})

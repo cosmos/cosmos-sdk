@@ -12,7 +12,7 @@ import (
 )
 
 func TestDB(t *testing.T) {
-	gormDb, err := gorm.Open(sqlite.Open("file:test.sqlite"), &gorm.Config{})
+	gormDb, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	assert.NilError(t, err)
 	sch := NewDB(gormDb, DBOptions{})
 

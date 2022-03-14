@@ -239,34 +239,8 @@ func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
 	return k.groupTable.Sequence().CurVal(ctx.KVStore(k.key))
 }
 
-func (k Keeper) iterateVPEndProposals(ctx sdk.Context, before time.Time, cb func(proposal group.Proposal) (bool, error)) error {
-	it, _ := k.proposalsByVotingPeriodEnd.Get(ctx.KVStore(k.key), sdk.PrefixEndBytes(sdk.FormatTimeBytes(before)))
-	var proposal group.Proposal
-	defer it.Close()
-
-	for {
-		_, err := it.LoadNext(&proposal)
-		if errors.ErrORMIteratorDone.Is(err) {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
-		stop, err := cb(proposal)
-		if err != nil {
-			return err
-		}
-		if stop {
-			break
-		}
-	}
-
-	return nil
-}
-
-func (k Keeper) iterateProposalsByVPEnd(ctx sdk.Context, cb func(proposal group.Proposal) (bool, error)) error {
-	timeBytes := sdk.FormatTimeBytes(ctx.BlockTime())
+func (k Keeper) iterateProposalsByVPEnd(ctx sdk.Context, before time.Time, cb func(proposal group.Proposal) (bool, error)) error {
+	timeBytes := sdk.FormatTimeBytes(before)
 	it, err := k.proposalsByVotingPeriodEnd.PrefixScan(ctx.KVStore(k.key), nil, timeBytes)
 
 	if err != nil {
@@ -341,7 +315,7 @@ func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
 // `voting_period + max_execution_period` is greater than the current block
 // time.
 func (k Keeper) PruneProposals(ctx sdk.Context) error {
-	k.iterateVPEndProposals(ctx, ctx.BlockTime().Add(-k.config.MaxExecutionPeriod), func(proposal group.Proposal) (bool, error) {
+	k.iterateProposalsByVPEnd(ctx, ctx.BlockTime().Add(-k.config.MaxExecutionPeriod), func(proposal group.Proposal) (bool, error) {
 		err := k.pruneProposal(ctx, proposal.Id)
 		if err != nil {
 			return true, err
@@ -354,7 +328,7 @@ func (k Keeper) PruneProposals(ctx sdk.Context) error {
 }
 
 func (k Keeper) UpdateTallyOfVPEndProposals(ctx sdk.Context) error {
-	k.iterateProposalsByVPEnd(ctx, func(proposal group.Proposal) (bool, error) {
+	k.iterateProposalsByVPEnd(ctx, ctx.BlockTime(), func(proposal group.Proposal) (bool, error) {
 
 		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.Address)
 		if err != nil {

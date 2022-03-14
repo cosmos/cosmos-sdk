@@ -36,6 +36,10 @@ func ValuesOf(values ...interface{}) []protoreflect.Value {
 	n := len(values)
 	res := make([]protoreflect.Value, n)
 	for i := 0; i < n; i++ {
+		switch values[i].(type) {
+		case protoreflect.ProtoMessage:
+			values[i] = values[i].(protoreflect.ProtoMessage).ProtoReflect()
+		}
 		res[i] = protoreflect.ValueOf(values[i])
 	}
 	return res

@@ -756,7 +756,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 
 		// If proposal has successfully run, delete it from state.
 		if proposal.ExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
-			if err := k.pruneProposal(ctx, proposal); err != nil {
+			if err := k.pruneProposal(ctx, proposal.Id); err != nil {
 				return nil, err
 			}
 		} else {

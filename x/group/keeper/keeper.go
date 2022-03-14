@@ -69,7 +69,7 @@ type Keeper struct {
 	proposalTable              orm.AutoUInt64Table
 	proposalByGroupPolicyIndex orm.Index
 	proposalByProposerIndex    orm.Index
-	ProposalsByVotingPeriodEnd orm.Index
+	proposalsByVotingPeriodEnd orm.Index
 
 	// Vote Table
 	voteTable           orm.PrimaryKeyTable
@@ -185,7 +185,7 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 	if err != nil {
 		panic(err.Error())
 	}
-	k.ProposalsByVotingPeriodEnd, err = orm.NewIndex(proposalTable, ProposalsByVotingPeriodEndPrefix, func(value interface{}) ([]interface{}, error) {
+	k.proposalsByVotingPeriodEnd, err = orm.NewIndex(proposalTable, ProposalsByVotingPeriodEndPrefix, func(value interface{}) ([]interface{}, error) {
 		votingPeriodEnd := value.(*group.Proposal).VotingPeriodEnd
 		return []interface{}{sdk.FormatTimeBytes(votingPeriodEnd)}, nil
 	}, []byte{})
@@ -239,9 +239,8 @@ func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
 	return k.groupTable.Sequence().CurVal(ctx.KVStore(k.key))
 }
 
-// TODO merge with https://github.com/cosmos/cosmos-sdk/pull/11310
 func (k Keeper) iterateVPEndProposals(ctx sdk.Context, before time.Time, cb func(proposal group.Proposal) (bool, error)) error {
-	it, _ := k.ProposalsByVotingPeriodEnd.Get(ctx.KVStore(k.key), sdk.PrefixEndBytes(sdk.FormatTimeBytes(before)))
+	it, _ := k.proposalsByVotingPeriodEnd.Get(ctx.KVStore(k.key), sdk.PrefixEndBytes(sdk.FormatTimeBytes(before)))
 	var proposal group.Proposal
 	defer it.Close()
 
@@ -266,16 +265,47 @@ func (k Keeper) iterateVPEndProposals(ctx sdk.Context, before time.Time, cb func
 	return nil
 }
 
+func (k Keeper) iterateProposalsByVPEnd(ctx sdk.Context, cb func(proposal group.Proposal) (bool, error)) error {
+	timeBytes := sdk.FormatTimeBytes(ctx.BlockTime())
+	it, err := k.proposalsByVotingPeriodEnd.PrefixScan(ctx.KVStore(k.key), nil, timeBytes)
+
+	if err != nil {
+		return err
+	}
+	defer it.Close()
+
+	var proposal group.Proposal
+	for {
+		_, err := it.LoadNext(&proposal)
+		if errors.ErrORMIteratorDone.Is(err) {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		stop, err := cb(proposal)
+		if err != nil {
+			return err
+		}
+		if stop {
+			break
+		}
+	}
+
+	return nil
+}
+
 // pruneProposal deletes a proposal from state.
-func (k Keeper) pruneProposal(ctx sdk.Context, p group.Proposal) error {
+func (k Keeper) pruneProposal(ctx sdk.Context, proposalID uint64) error {
 	store := ctx.KVStore(k.key)
 
-	err := k.proposalTable.Delete(store, p.Id)
+	err := k.proposalTable.Delete(store, proposalID)
 	if err != nil {
 		return err
 	}
 
-	k.Logger(ctx).Debug(fmt.Sprintf("Pruned proposal %d", p.Id))
+	k.Logger(ctx).Debug(fmt.Sprintf("Pruned proposal %d", proposalID))
 	return nil
 }
 
@@ -307,13 +337,41 @@ func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
 	return nil
 }
 
-// PruneProposals prunes all proposals and votes that are expired, i.e. whose
+// PruneProposals prunes all proposals that are expired, i.e. whose
 // `voting_period + max_execution_period` is greater than the current block
 // time.
 func (k Keeper) PruneProposals(ctx sdk.Context) error {
 	k.iterateVPEndProposals(ctx, ctx.BlockTime().Add(-k.config.MaxExecutionPeriod), func(proposal group.Proposal) (bool, error) {
-		err := k.pruneProposal(ctx, proposal)
+		err := k.pruneProposal(ctx, proposal.Id)
 		if err != nil {
+			return true, err
+		}
+
+		return false, nil
+	})
+
+	return nil
+}
+
+func (k Keeper) UpdateTallyOfVPEndProposals(ctx sdk.Context) error {
+	k.iterateProposalsByVPEnd(ctx, func(proposal group.Proposal) (bool, error) {
+
+		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.Address)
+		if err != nil {
+			return true, err
+		}
+
+		electorate, err := k.getGroupInfo(ctx, policyInfo.GroupId)
+		if err != nil {
+			return true, err
+		}
+
+		err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo)
+		if err != nil {
+			return true, err
+		}
+
+		if err := k.proposalTable.Update(ctx.KVStore(k.key), proposal.Id, &proposal); err != nil {
 			return true, err
 		}
 

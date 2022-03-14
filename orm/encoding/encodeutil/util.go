@@ -36,6 +36,9 @@ func ValuesOf(values ...interface{}) []protoreflect.Value {
 	n := len(values)
 	res := make([]protoreflect.Value, n)
 	for i := 0; i < n; i++ {
+		// we catch the case of proto messages here and call ProtoReflect.
+		// this allows us to use imported messages, such as timestamppb.Timestamp
+		// in iterators.
 		switch values[i].(type) {
 		case protoreflect.ProtoMessage:
 			values[i] = values[i].(protoreflect.ProtoMessage).ProtoReflect()

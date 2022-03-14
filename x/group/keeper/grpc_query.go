@@ -21,7 +21,7 @@ func (q Keeper) GroupInfo(goCtx context.Context, request *group.QueryGroupInfoRe
 	groupID := request.GroupId
 	groupInfo, err := q.getGroupInfo(ctx, groupID)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(err, "group")
 	}
 
 	return &group.QueryGroupInfoResponse{Info: &groupInfo}, nil
@@ -37,7 +37,7 @@ func (q Keeper) GroupPolicyInfo(goCtx context.Context, request *group.QueryGroup
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	groupPolicyInfo, err := q.getGroupPolicyInfo(ctx, request.Address)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(err, "group policy")
 	}
 
 	return &group.QueryGroupPolicyInfoResponse{Info: &groupPolicyInfo}, nil

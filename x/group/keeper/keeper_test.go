@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
+	"github.com/cosmos/cosmos-sdk/x/group/module"
 )
 
 type TestSuite struct {
@@ -31,6 +32,7 @@ type TestSuite struct {
 	addrs           []sdk.AccAddress
 	groupID         uint64
 	groupPolicyAddr sdk.AccAddress
+	policy          group.DecisionPolicy
 	keeper          keeper.Keeper
 	blockTime       time.Time
 }
@@ -72,6 +74,7 @@ func (s *TestSuite) SetupTest() {
 	s.Require().NoError(err)
 	policyRes, err := s.keeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
+	s.policy = policy
 	addr, err := sdk.AccAddressFromBech32(policyRes.Address)
 	s.Require().NoError(err)
 	s.groupPolicyAddr = addr
@@ -2439,6 +2442,138 @@ func (s *TestSuite) TestExecProposal() {
 				toBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, addr2)
 				s.Require().Contains(toBalances, spec.expToBalances)
 			}
+		})
+	}
+}
+
+func (s *TestSuite) TestProposalsByVPEnd() {
+	addrs := s.addrs
+	addr2 := addrs[1]
+	groupPolicy := s.groupPolicyAddr
+
+	votingPeriod := s.policy.GetVotingPeriod()
+	ctx := s.sdkCtx
+	now := time.Now()
+
+	msgSend := &banktypes.MsgSend{
+		FromAddress: s.groupPolicyAddr.String(),
+		ToAddress:   addr2.String(),
+		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+	}
+
+	proposers := []string{addr2.String()}
+
+	specs := map[string]struct {
+		preRun            func(sdkCtx sdk.Context) uint64
+		proposalId        uint64
+		admin             string
+		expErrMsg         string
+		newCtx            sdk.Context
+		tallyRes          group.TallyResult
+		expStatus         group.ProposalStatus
+		expExecutorResult group.ProposalResult
+	}{
+		"tally updated after voting power end": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				return submitProposal(sdkCtx, s, []sdk.Msg{msgSend}, proposers)
+			},
+			admin:             proposers[0],
+			newCtx:            ctx.WithBlockTime(now.Add(votingPeriod).Add(time.Hour)),
+			tallyRes:          group.DefaultTallyResult(),
+			expStatus:         group.PROPOSAL_STATUS_SUBMITTED,
+			expExecutorResult: group.PROPOSAL_RESULT_UNFINALIZED,
+		},
+		"tally within voting period": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				return submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+			},
+			admin:             proposers[0],
+			newCtx:            ctx,
+			tallyRes:          group.DefaultTallyResult(),
+			expStatus:         group.PROPOSAL_STATUS_SUBMITTED,
+			expExecutorResult: group.PROPOSAL_RESULT_UNFINALIZED,
+		},
+		"tally within voting period(with votes)": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				return submitProposalAndVote(s.ctx, s, []sdk.Msg{msgSend}, proposers, group.VOTE_OPTION_YES)
+			},
+			admin:             proposers[0],
+			newCtx:            ctx,
+			tallyRes:          group.DefaultTallyResult(),
+			expStatus:         group.PROPOSAL_STATUS_SUBMITTED,
+			expExecutorResult: group.PROPOSAL_RESULT_UNFINALIZED,
+		},
+		"tally after voting period(with votes)": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				return submitProposalAndVote(s.ctx, s, []sdk.Msg{msgSend}, proposers, group.VOTE_OPTION_YES)
+			},
+			admin:  proposers[0],
+			newCtx: ctx.WithBlockTime(now.Add(votingPeriod).Add(time.Hour)),
+			tallyRes: group.TallyResult{
+				YesCount:        "2",
+				NoCount:         "0",
+				NoWithVetoCount: "0",
+				AbstainCount:    "0",
+			},
+			expStatus:         group.PROPOSAL_STATUS_CLOSED,
+			expExecutorResult: group.PROPOSAL_RESULT_ACCEPTED,
+		},
+		"tally of closed proposal": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				pId := submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+				_, err := s.keeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
+					ProposalId: pId,
+					Address:    groupPolicy.String(),
+				})
+
+				s.Require().NoError(err)
+				return pId
+			},
+			admin:             proposers[0],
+			newCtx:            ctx,
+			tallyRes:          group.DefaultTallyResult(),
+			expStatus:         group.PROPOSAL_STATUS_WITHDRAWN,
+			expExecutorResult: group.PROPOSAL_RESULT_UNFINALIZED,
+		},
+		"tally of closed proposal (with votes)": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				pId := submitProposalAndVote(s.ctx, s, []sdk.Msg{msgSend}, proposers, group.VOTE_OPTION_YES)
+				_, err := s.keeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
+					ProposalId: pId,
+					Address:    groupPolicy.String(),
+				})
+
+				s.Require().NoError(err)
+				return pId
+			},
+			admin:             proposers[0],
+			newCtx:            ctx,
+			tallyRes:          group.DefaultTallyResult(),
+			expStatus:         group.PROPOSAL_STATUS_WITHDRAWN,
+			expExecutorResult: group.PROPOSAL_RESULT_UNFINALIZED,
+		},
+	}
+
+	for msg, spec := range specs {
+		spec := spec
+		s.Run(msg, func() {
+			pId := spec.preRun(s.sdkCtx)
+
+			module.EndBlocker(spec.newCtx, s.keeper)
+			resp, err := s.keeper.Proposal(spec.newCtx, &group.QueryProposalRequest{
+				ProposalId: pId,
+			})
+
+			if spec.expErrMsg != "" {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), spec.expErrMsg)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().Equal(resp.GetProposal().FinalTallyResult, spec.tallyRes)
+			s.Require().Equal(resp.GetProposal().Status, spec.expStatus)
+			s.Require().Equal(resp.GetProposal().Result, spec.expExecutorResult)
 		})
 	}
 }

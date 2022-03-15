@@ -167,6 +167,7 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 			msg += fmt.Sprintf("error while returning group member iterator for group with ID %d\n%v\n", groupInfo.Id, err)
 			return msg, broken
 		}
+		defer memIt.Close()
 
 		for {
 			_, err = memIt.LoadNext(&groupMember)
@@ -184,7 +185,6 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 				return msg, broken
 			}
 		}
-		memIt.Close()
 
 		groupWeight, err := groupmath.NewNonNegativeDecFromString(groupInfo.GetTotalWeight())
 		if err != nil {

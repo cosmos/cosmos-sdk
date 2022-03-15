@@ -7,13 +7,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 // ConvertToLegacyProposal takes a new proposal and attempts to convert it to the
 // legacy proposal format. This conversion is best effort. New proposal types that
 // don't have a legacy message will return a "nil" content.
-func ConvertToLegacyProposal(proposal v1beta2.Proposal) (v1beta1.Proposal, error) {
+func ConvertToLegacyProposal(proposal v1.Proposal) (v1beta1.Proposal, error) {
 	var err error
 	legacyProposal := v1beta1.Proposal{
 		ProposalId:   proposal.Id,
@@ -47,9 +47,9 @@ func ConvertToLegacyProposal(proposal v1beta2.Proposal) (v1beta1.Proposal, error
 		return v1beta1.Proposal{}, err
 	}
 	for _, msg := range msgs {
-		if legacyMsg, ok := msg.(*v1beta2.MsgExecLegacyContent); ok {
+		if legacyMsg, ok := msg.(*v1.MsgExecLegacyContent); ok {
 			// check that the content struct can be unmarshalled
-			_, err := v1beta2.LegacyContentFromMessage(legacyMsg)
+			_, err := v1.LegacyContentFromMessage(legacyMsg)
 			if err != nil {
 				return v1beta1.Proposal{}, err
 			}
@@ -59,7 +59,7 @@ func ConvertToLegacyProposal(proposal v1beta2.Proposal) (v1beta1.Proposal, error
 	return legacyProposal, nil
 }
 
-func ConvertToLegacyTallyResult(tally *v1beta2.TallyResult) (v1beta1.TallyResult, error) {
+func ConvertToLegacyTallyResult(tally *v1.TallyResult) (v1beta1.TallyResult, error) {
 	yes, ok := types.NewIntFromString(tally.YesCount)
 	if !ok {
 		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert yes tally string (%s) to int", tally.YesCount)
@@ -85,7 +85,7 @@ func ConvertToLegacyTallyResult(tally *v1beta2.TallyResult) (v1beta1.TallyResult
 	}, nil
 }
 
-func ConvertToLegacyVote(vote v1beta2.Vote) (v1beta1.Vote, error) {
+func ConvertToLegacyVote(vote v1.Vote) (v1beta1.Vote, error) {
 	options, err := ConvertToLegacyVoteOptions(vote.Options)
 	if err != nil {
 		return v1beta1.Vote{}, err
@@ -97,7 +97,7 @@ func ConvertToLegacyVote(vote v1beta2.Vote) (v1beta1.Vote, error) {
 	}, nil
 }
 
-func ConvertToLegacyVoteOptions(voteOptions []*v1beta2.WeightedVoteOption) ([]v1beta1.WeightedVoteOption, error) {
+func ConvertToLegacyVoteOptions(voteOptions []*v1.WeightedVoteOption) ([]v1beta1.WeightedVoteOption, error) {
 	options := make([]v1beta1.WeightedVoteOption, len(voteOptions))
 	for i, option := range voteOptions {
 		weight, err := types.NewDecFromStr(option.Weight)
@@ -112,7 +112,7 @@ func ConvertToLegacyVoteOptions(voteOptions []*v1beta2.WeightedVoteOption) ([]v1
 	return options, nil
 }
 
-func ConvertToLegacyDeposit(deposit *v1beta2.Deposit) v1beta1.Deposit {
+func ConvertToLegacyDeposit(deposit *v1.Deposit) v1beta1.Deposit {
 	return v1beta1.Deposit{
 		ProposalId: deposit.ProposalId,
 		Depositor:  deposit.Depositor,
@@ -120,10 +120,10 @@ func ConvertToLegacyDeposit(deposit *v1beta2.Deposit) v1beta1.Deposit {
 	}
 }
 
-func convertToNewDeposits(oldDeps v1beta1.Deposits) v1beta2.Deposits {
-	newDeps := make([]*v1beta2.Deposit, len(oldDeps))
+func convertToNewDeposits(oldDeps v1beta1.Deposits) v1.Deposits {
+	newDeps := make([]*v1.Deposit, len(oldDeps))
 	for i, oldDep := range oldDeps {
-		newDeps[i] = &v1beta2.Deposit{
+		newDeps[i] = &v1.Deposit{
 			ProposalId: oldDep.ProposalId,
 			Depositor:  oldDep.Depositor,
 			Amount:     oldDep.Amount,
@@ -133,27 +133,27 @@ func convertToNewDeposits(oldDeps v1beta1.Deposits) v1beta2.Deposits {
 	return newDeps
 }
 
-func convertToNewVotes(oldVotes v1beta1.Votes) (v1beta2.Votes, error) {
-	newVotes := make([]*v1beta2.Vote, len(oldVotes))
+func convertToNewVotes(oldVotes v1beta1.Votes) (v1.Votes, error) {
+	newVotes := make([]*v1.Vote, len(oldVotes))
 	for i, oldVote := range oldVotes {
-		var newWVOs []*v1beta2.WeightedVoteOption
+		var newWVOs []*v1.WeightedVoteOption
 
 		// We deprecated Vote.Option in v043. However, it might still be set.
 		// - if only Options is set, or both Option & Options are set, we read from Options,
 		// - if Options is not set, and Option is set, we read from Option,
 		// - if none are set, we throw error.
 		if oldVote.Options != nil {
-			newWVOs = make([]*v1beta2.WeightedVoteOption, len(oldVote.Options))
+			newWVOs = make([]*v1.WeightedVoteOption, len(oldVote.Options))
 			for j, oldWVO := range oldVote.Options {
-				newWVOs[j] = v1beta2.NewWeightedVoteOption(v1beta2.VoteOption(oldWVO.Option), oldWVO.Weight)
+				newWVOs[j] = v1.NewWeightedVoteOption(v1.VoteOption(oldWVO.Option), oldWVO.Weight)
 			}
 		} else if oldVote.Option != v1beta1.OptionEmpty {
-			newWVOs = v1beta2.NewNonSplitVoteOption(v1beta2.VoteOption(oldVote.Option))
+			newWVOs = v1.NewNonSplitVoteOption(v1.VoteOption(oldVote.Option))
 		} else {
 			return nil, fmt.Errorf("vote does not have neither Options nor Option")
 		}
 
-		newVotes[i] = &v1beta2.Vote{
+		newVotes[i] = &v1.Vote{
 			ProposalId: oldVote.ProposalId,
 			Voter:      oldVote.Voter,
 			Options:    newWVOs,
@@ -163,42 +163,42 @@ func convertToNewVotes(oldVotes v1beta1.Votes) (v1beta2.Votes, error) {
 	return newVotes, nil
 }
 
-func convertToNewDepParams(oldDepParams v1beta1.DepositParams) v1beta2.DepositParams {
-	return v1beta2.DepositParams{
+func convertToNewDepParams(oldDepParams v1beta1.DepositParams) v1.DepositParams {
+	return v1.DepositParams{
 		MinDeposit:       oldDepParams.MinDeposit,
 		MaxDepositPeriod: &oldDepParams.MaxDepositPeriod,
 	}
 }
 
-func convertToNewVotingParams(oldVoteParams v1beta1.VotingParams) v1beta2.VotingParams {
-	return v1beta2.VotingParams{
+func convertToNewVotingParams(oldVoteParams v1beta1.VotingParams) v1.VotingParams {
+	return v1.VotingParams{
 		VotingPeriod: &oldVoteParams.VotingPeriod,
 	}
 }
 
-func convertToNewTallyParams(oldTallyParams v1beta1.TallyParams) v1beta2.TallyParams {
-	return v1beta2.TallyParams{
+func convertToNewTallyParams(oldTallyParams v1beta1.TallyParams) v1.TallyParams {
+	return v1.TallyParams{
 		Quorum:        oldTallyParams.Quorum.String(),
 		Threshold:     oldTallyParams.Threshold.String(),
 		VetoThreshold: oldTallyParams.VetoThreshold.String(),
 	}
 }
 
-func convertToNewProposal(oldProp v1beta1.Proposal) (v1beta2.Proposal, error) {
-	msg, err := v1beta2.NewLegacyContent(oldProp.GetContent(), authtypes.NewModuleAddress(ModuleName).String())
+func convertToNewProposal(oldProp v1beta1.Proposal) (v1.Proposal, error) {
+	msg, err := v1.NewLegacyContent(oldProp.GetContent(), authtypes.NewModuleAddress(ModuleName).String())
 	if err != nil {
-		return v1beta2.Proposal{}, err
+		return v1.Proposal{}, err
 	}
 	msgAny, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
-		return v1beta2.Proposal{}, err
+		return v1.Proposal{}, err
 	}
 
-	return v1beta2.Proposal{
+	return v1.Proposal{
 		Id:       oldProp.ProposalId,
 		Messages: []*codectypes.Any{msgAny},
-		Status:   v1beta2.ProposalStatus(oldProp.Status),
-		FinalTallyResult: &v1beta2.TallyResult{
+		Status:   v1.ProposalStatus(oldProp.Status),
+		FinalTallyResult: &v1.TallyResult{
 			YesCount:        oldProp.FinalTallyResult.Yes.String(),
 			NoCount:         oldProp.FinalTallyResult.No.String(),
 			AbstainCount:    oldProp.FinalTallyResult.Abstain.String(),
@@ -212,8 +212,8 @@ func convertToNewProposal(oldProp v1beta1.Proposal) (v1beta2.Proposal, error) {
 	}, nil
 }
 
-func convertToNewProposals(oldProps v1beta1.Proposals) (v1beta2.Proposals, error) {
-	newProps := make([]*v1beta2.Proposal, len(oldProps))
+func convertToNewProposals(oldProps v1beta1.Proposals) (v1.Proposals, error) {
+	newProps := make([]*v1.Proposal, len(oldProps))
 	for i, oldProp := range oldProps {
 		p, err := convertToNewProposal(oldProp)
 		if err != nil {

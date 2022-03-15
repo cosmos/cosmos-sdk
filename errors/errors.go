@@ -244,6 +244,7 @@ func (e *wrappedError) Unwrap() error {
 	return e.parent
 }
 
+// GRPCStatus gets the gRPC status from the wrapped error or returns an unknown gRPC status.
 func (e *wrappedError) GRPCStatus() *grpcstatus.Status {
 	w := e.Cause()
 	for {

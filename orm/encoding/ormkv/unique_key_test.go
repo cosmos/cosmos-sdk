@@ -3,6 +3,8 @@ package ormkv_test
 import (
 	"bytes"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	"testing"
 
 	"gotest.tools/v3/assert"
@@ -59,4 +61,10 @@ func TestUniqueKeyCodec(t *testing.T) {
 			assert.Equal(t, 0, pkCodec.Codec.CompareKeys(pk, pk2))
 		}
 	})
+}
+
+func TestTrivialUnique(t *testing.T) {
+	_, err := ormkv.NewUniqueKeyCodec(nil, (&testpb.ExampleTable{}).ProtoReflect().Type(),
+		[]protoreflect.Name{"u32", "str"}, []protoreflect.Name{"str", "u32"})
+	assert.ErrorIs(t, err, ormerrors.InvalidTableDefinition)
 }

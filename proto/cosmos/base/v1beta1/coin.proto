@@ -41,3 +41,11 @@ message IntProto {
 message DecProto {
   string dec = 1 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "Dec", (gogoproto.nullable) = false];
 }
+
+// ProtoDecCoins is useful to serialize/deserialize a standalone `DecCoins`,
+// or include a `repeated ProtoDecCoins` in a message.
+// But normally to include a `DecCoins` in message, just use the `repeated DecCoin`.
+message ProtoDecCoins {
+  repeated DecCoin coins = 1
+      [(gogoproto.castrepeated) = "DecCoins", (gogoproto.nullable) = false];
+}

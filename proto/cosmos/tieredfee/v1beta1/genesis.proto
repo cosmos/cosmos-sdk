@@ -1,0 +1,20 @@
+syntax = "proto3";
+package cosmos.tieredfee.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/tieredfee/v1beta1/tieredfee.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/tieredfee/types";
+
+// GenesisState defines the tieredfee module's genesis state.
+message GenesisState {
+  // params defines all the paramaters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
+
+  // the block gas used by last block
+  uint64 parent_gas_used = 2;
+
+  // the current consensus gas prices for all tiers
+  repeated cosmos.base.v1beta1.ProtoDecCoins gas_prices = 3;
+}

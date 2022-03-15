@@ -95,6 +95,20 @@ func NewDecWithPrec(i, prec int64) Dec {
 	}
 }
 
+// create a new Dec from integer assuming whole number
+func NewDecFromUint64(i uint64) Dec {
+	return NewDecFromUint64WithPrec(i, 0)
+}
+
+// create a new Dec from integer with decimal place at prec
+// CONTRACT: prec <= Precision
+func NewDecFromUint64WithPrec(i uint64, prec int64) Dec {
+	return Dec{
+		new(big.Int).Mul(new(big.Int).SetUint64(i), precisionMultiplier(prec)),
+	}
+
+}
+
 // create a new Dec from big integer assuming whole numbers
 // CONTRACT: prec <= Precision
 func NewDecFromBigInt(i *big.Int) Dec {

@@ -1,0 +1,54 @@
+syntax = "proto3";
+package cosmos.tieredfee.v1beta1;
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/tieredfee/v1beta1/tieredfee.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/tieredfee/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Params returns params of tieredfee module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/cosmos/tieredfee/v1beta1/params";
+  }
+
+  // GasPrices returns the current gas prices for all tiers
+  rpc GasPrices(QueryGasPricesRequest) returns (QueryGasPricesResponse) {
+    option (google.api.http).get = "/cosmos/tieredfee/v1beta1/gas_prices";
+  }
+
+  // BlockGasUsed returns the current recorded block gas used.
+  rpc BlockGasUsed(QueryBlockGasUsedRequest) returns (QueryBlockGasUsedResponse) {
+    option (google.api.http).get = "/cosmos/tieredfee/v1beta1/block_gas_used";
+  }
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {
+}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  Params params = 1;
+}
+
+// QueryGasPricesRequest is the request type for the Query/GasPrices RPC method.
+message QueryGasPricesRequest {
+}
+
+
+// QueryGasPricesResponse is the request type for the Query/GasPrices RPC method.
+message QueryGasPricesResponse {
+  repeated cosmos.base.v1beta1.ProtoDecCoins gas_prices = 1;
+}
+
+// QueryBlockGasUsedRequest is the request type for the Query/BlockGasUsed RPC method.
+message QueryBlockGasUsedRequest {
+}
+
+// QueryBlockGasUsedResponse is the request type for the Query/BlockGasUsed RPC method.
+message QueryBlockGasUsedResponse {
+  uint64 gas_used = 1;
+}

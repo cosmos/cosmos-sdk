@@ -1,0 +1,33 @@
+syntax = "proto3";
+package cosmos.tieredfee.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/tieredfee/types";
+
+message TierParams {
+    // priority in tendermint mempool
+    int64 priority = 1;
+    repeated cosmos.base.v1beta1.DecCoin initial_gas_price = 2
+        [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+    // the target saturation of block
+    uint64 parent_gas_target = 3;
+    // decides the change speed
+    uint32 change_denominator = 4;
+    // optional lower bound of the price adjustment
+    repeated cosmos.base.v1beta1.DecCoin min_gas_price = 5
+        [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+    // optional upper bound of the price adjustment
+    repeated cosmos.base.v1beta1.DecCoin max_gas_price = 6
+        [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+}
+
+message Params {
+    option (gogoproto.goproto_stringer)       = false;
+    repeated TierParams tiers = 1 [(gogoproto.nullable) = false];
+}
+
+message ExtensionOptionTieredTx {
+  uint32 fee_tier = 1;
+}

@@ -90,6 +90,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	tieredfee "github.com/cosmos/cosmos-sdk/x/tieredfee"
+	tieredfeekeeper "github.com/cosmos/cosmos-sdk/x/tieredfee/keeper"
+	tieredfeetypes "github.com/cosmos/cosmos-sdk/x/tieredfee/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
@@ -129,6 +132,7 @@ var (
 		groupmodule.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		nftmodule.AppModuleBasic{},
+		tieredfee.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -183,6 +187,7 @@ type SimApp struct {
 	FeeGrantKeeper   feegrantkeeper.Keeper
 	GroupKeeper      groupkeeper.Keeper
 	NFTKeeper        nftkeeper.Keeper
+	TieredFeeKeeper  tieredfeekeeper.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -224,7 +229,7 @@ func NewSimApp(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, capabilitytypes.StoreKey,
-		authzkeeper.StoreKey, nftkeeper.StoreKey, group.StoreKey,
+		authzkeeper.StoreKey, nftkeeper.StoreKey, group.StoreKey, tieredfeetypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	// NOTE: The testingkey is just mounted for testing purposes. Actual applications should
@@ -327,6 +332,8 @@ func NewSimApp(
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	app.NFTKeeper = nftkeeper.NewKeeper(keys[nftkeeper.StoreKey], appCodec, app.AccountKeeper, app.BankKeeper)
 
+	app.TieredFeeKeeper = tieredfeekeeper.NewKeeper(appCodec, keys[tieredfeetypes.StoreKey], app.GetSubspace(tieredfeetypes.ModuleName))
+
 	// create evidence keeper with router
 	evidenceKeeper := evidencekeeper.NewKeeper(
 		appCodec, keys[evidencetypes.StoreKey], &app.StakingKeeper, app.SlashingKeeper,
@@ -364,6 +371,7 @@ func NewSimApp(
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		nftmodule.NewAppModule(appCodec, app.NFTKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		tieredfee.NewAppModule(appCodec, app.TieredFeeKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -376,7 +384,7 @@ func NewSimApp(
 		evidencetypes.ModuleName, stakingtypes.ModuleName,
 		authtypes.ModuleName, banktypes.ModuleName, govtypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName,
 		authz.ModuleName, feegrant.ModuleName, nft.ModuleName, group.ModuleName,
-		paramstypes.ModuleName, vestingtypes.ModuleName,
+		paramstypes.ModuleName, vestingtypes.ModuleName, tieredfeetypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
 		crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName,
@@ -385,6 +393,7 @@ func NewSimApp(
 		genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
 		feegrant.ModuleName, nft.ModuleName, group.ModuleName,
 		paramstypes.ModuleName, upgradetypes.ModuleName, vestingtypes.ModuleName,
+		tieredfeetypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -399,6 +408,7 @@ func NewSimApp(
 		genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
 		feegrant.ModuleName, nft.ModuleName, group.ModuleName,
 		paramstypes.ModuleName, upgradetypes.ModuleName, vestingtypes.ModuleName,
+		tieredfeetypes.ModuleName,
 	)
 
 	// Uncomment if you want to set a custom migration order here.
@@ -461,16 +471,18 @@ func (app *SimApp) setTxHandler(txConfig client.TxConfig, indexEventsStr []strin
 		indexEvents[e] = struct{}{}
 	}
 	txHandler, err := authmiddleware.NewDefaultTxHandler(authmiddleware.TxHandlerOptions{
-		Debug:            app.Trace(),
-		IndexEvents:      indexEvents,
-		LegacyRouter:     app.legacyRouter,
-		MsgServiceRouter: app.msgSvcRouter,
-		AccountKeeper:    app.AccountKeeper,
-		BankKeeper:       app.BankKeeper,
-		FeegrantKeeper:   app.FeeGrantKeeper,
-		SignModeHandler:  txConfig.SignModeHandler(),
-		SigGasConsumer:   authmiddleware.DefaultSigVerificationGasConsumer,
-		TxDecoder:        txConfig.TxDecoder(),
+		Debug:                  app.Trace(),
+		IndexEvents:            indexEvents,
+		LegacyRouter:           app.legacyRouter,
+		MsgServiceRouter:       app.msgSvcRouter,
+		AccountKeeper:          app.AccountKeeper,
+		BankKeeper:             app.BankKeeper,
+		FeegrantKeeper:         app.FeeGrantKeeper,
+		SignModeHandler:        txConfig.SignModeHandler(),
+		SigGasConsumer:         authmiddleware.DefaultSigVerificationGasConsumer,
+		TxDecoder:              txConfig.TxDecoder(),
+		ExtensionOptionChecker: tieredfeetypes.CheckExtensionOption,
+		TxFeeChecker:           app.TieredFeeKeeper.CheckTxFee,
 	})
 	if err != nil {
 		panic(err)
@@ -633,6 +645,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(slashingtypes.ModuleName)
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govv1.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)
+	paramsKeeper.Subspace(tieredfeetypes.ModuleName)
 
 	return paramsKeeper
 }

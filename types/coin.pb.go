@@ -194,17 +194,64 @@ func (m *DecProto) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DecProto proto.InternalMessageInfo
 
+// ProtoDecCoins is useful to serialize/deserialize a standalone `DecCoins`,
+// or include a `repeated ProtoDecCoins` in a message.
+// But normally to include a `DecCoins` in message, just use the `repeated DecCoin`.
+type ProtoDecCoins struct {
+	Coins DecCoins `protobuf:"bytes,1,rep,name=coins,proto3,castrepeated=DecCoins" json:"coins"`
+}
+
+func (m *ProtoDecCoins) Reset()      { *m = ProtoDecCoins{} }
+func (*ProtoDecCoins) ProtoMessage() {}
+func (*ProtoDecCoins) Descriptor() ([]byte, []int) {
+	return fileDescriptor_189a96714eafc2df, []int{4}
+}
+func (m *ProtoDecCoins) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ProtoDecCoins) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ProtoDecCoins.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ProtoDecCoins) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProtoDecCoins.Merge(m, src)
+}
+func (m *ProtoDecCoins) XXX_Size() int {
+	return m.Size()
+}
+func (m *ProtoDecCoins) XXX_DiscardUnknown() {
+	xxx_messageInfo_ProtoDecCoins.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ProtoDecCoins proto.InternalMessageInfo
+
+func (m *ProtoDecCoins) GetCoins() DecCoins {
+	if m != nil {
+		return m.Coins
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*Coin)(nil), "cosmos.base.v1beta1.Coin")
 	proto.RegisterType((*DecCoin)(nil), "cosmos.base.v1beta1.DecCoin")
 	proto.RegisterType((*IntProto)(nil), "cosmos.base.v1beta1.IntProto")
 	proto.RegisterType((*DecProto)(nil), "cosmos.base.v1beta1.DecProto")
+	proto.RegisterType((*ProtoDecCoins)(nil), "cosmos.base.v1beta1.ProtoDecCoins")
 }
 
 func init() { proto.RegisterFile("cosmos/base/v1beta1/coin.proto", fileDescriptor_189a96714eafc2df) }
 
 var fileDescriptor_189a96714eafc2df = []byte{
-	// 286 bytes of a gzipped FileDescriptorProto
+	// 331 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4b, 0xce, 0x2f, 0xce,
 	0xcd, 0x2f, 0xd6, 0x4f, 0x4a, 0x2c, 0x4e, 0xd5, 0x2f, 0x33, 0x4c, 0x4a, 0x2d, 0x49, 0x34, 0xd4,
 	0x4f, 0xce, 0xcf, 0xcc, 0xd3, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x86, 0xc8, 0xeb, 0x81,
@@ -217,12 +264,15 @@ var fileDescriptor_189a96714eafc2df = []byte{
 	0x05, 0xf2, 0x8c, 0x4a, 0x11, 0x5c, 0xec, 0x2e, 0xa9, 0xc9, 0xe4, 0x98, 0xec, 0x92, 0x9a, 0x8c,
 	0x64, 0xb2, 0x4b, 0x6a, 0x32, 0x9a, 0xc9, 0xe6, 0x5c, 0x1c, 0x9e, 0x79, 0x25, 0x01, 0xe0, 0x20,
 	0xd0, 0xe6, 0x62, 0xce, 0xcc, 0x2b, 0x81, 0x18, 0x8c, 0xcf, 0x6d, 0x20, 0x55, 0x20, 0x8d, 0x2e,
-	0xa9, 0xc9, 0x70, 0x8d, 0x29, 0xa9, 0xc9, 0xe8, 0x1a, 0x31, 0xad, 0x06, 0xa9, 0x72, 0x72, 0xb9,
-	0xf1, 0x50, 0x8e, 0xa1, 0xe1, 0x91, 0x1c, 0xc3, 0x89, 0x47, 0x72, 0x8c, 0x17, 0x1e, 0xc9, 0x31,
-	0x3e, 0x78, 0x24, 0xc7, 0x38, 0xe1, 0xb1, 0x1c, 0xc3, 0x85, 0xc7, 0x72, 0x0c, 0x37, 0x1e, 0xcb,
-	0x31, 0x44, 0x29, 0xa5, 0x67, 0x96, 0x64, 0x94, 0x26, 0xe9, 0x25, 0xe7, 0xe7, 0x42, 0x43, 0x17,
-	0x4a, 0xe9, 0x16, 0xa7, 0x64, 0xeb, 0x97, 0x54, 0x16, 0xa4, 0x16, 0x27, 0xb1, 0x81, 0xc3, 0xdb,
-	0x18, 0x10, 0x00, 0x00, 0xff, 0xff, 0x33, 0x9a, 0x20, 0xf6, 0xd7, 0x01, 0x00, 0x00,
+	0xa9, 0xc9, 0x70, 0x8d, 0x29, 0xa9, 0xc9, 0xe8, 0x1a, 0x31, 0xad, 0x06, 0xa9, 0x52, 0x0a, 0xe5,
+	0xe2, 0x05, 0xeb, 0x82, 0x7a, 0xa8, 0x58, 0xc8, 0x85, 0x8b, 0x15, 0x14, 0x0f, 0xc5, 0x12, 0x8c,
+	0x0a, 0xcc, 0x1a, 0xdc, 0x46, 0x32, 0x7a, 0x58, 0x62, 0x42, 0x0f, 0xaa, 0xda, 0x49, 0x00, 0x64,
+	0xfa, 0xaa, 0xfb, 0xf2, 0x1c, 0x30, 0xed, 0x41, 0x10, 0xcd, 0x4e, 0x2e, 0x37, 0x1e, 0xca, 0x31,
+	0x34, 0x3c, 0x92, 0x63, 0x38, 0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4,
+	0x18, 0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58, 0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x86, 0x28, 0xa5,
+	0xf4, 0xcc, 0x92, 0x8c, 0xd2, 0x24, 0xbd, 0xe4, 0xfc, 0x5c, 0x68, 0xa4, 0x41, 0x29, 0xdd, 0xe2,
+	0x94, 0x6c, 0xfd, 0x92, 0xca, 0x82, 0xd4, 0xe2, 0x24, 0x36, 0x70, 0x34, 0x1a, 0x03, 0x02, 0x00,
+	0x00, 0xff, 0xff, 0xe9, 0x86, 0x83, 0x44, 0x2e, 0x02, 0x00, 0x00,
 }
 
 func (this *Coin) Equal(that interface{}) bool {
@@ -425,6 +475,43 @@ func (m *DecProto) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *ProtoDecCoins) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ProtoDecCoins) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ProtoDecCoins) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Coins) > 0 {
+		for iNdEx := len(m.Coins) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Coins[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintCoin(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintCoin(dAtA []byte, offset int, v uint64) int {
 	offset -= sovCoin(v)
 	base := offset
@@ -485,6 +572,21 @@ func (m *DecProto) Size() (n int) {
 	_ = l
 	l = m.Dec.Size()
 	n += 1 + l + sovCoin(uint64(l))
+	return n
+}
+
+func (m *ProtoDecCoins) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Coins) > 0 {
+		for _, e := range m.Coins {
+			l = e.Size()
+			n += 1 + l + sovCoin(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -870,6 +972,90 @@ func (m *DecProto) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Dec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCoin(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthCoin
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ProtoDecCoins) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCoin
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ProtoDecCoins: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ProtoDecCoins: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Coins", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCoin
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCoin
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCoin
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Coins = append(m.Coins, DecCoin{})
+			if err := m.Coins[len(m.Coins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

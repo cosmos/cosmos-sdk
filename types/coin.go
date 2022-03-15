@@ -572,18 +572,28 @@ func (coins Coins) IsAnyGT(coinsB Coins) bool {
 // NOTE: IsAnyGTE operates under the invariant that both coin sets are sorted
 // by denominations and there exists no zero coins.
 func (coins Coins) IsAnyGTE(coinsB Coins) bool {
+	coin := coins.FirstGTECoin(coinsB)
+	if coin != nil {
+		return true
+	}
+	return false
+}
+
+// FirstGTECoin returns the first coin whose amount is greater than or equal to coinsB.
+// return nil if there's none.
+func (coins Coins) FirstGTECoin(coinsB Coins) *Coin {
 	if len(coinsB) == 0 {
-		return false
+		return nil
 	}
 
 	for _, coin := range coins {
 		amt := coinsB.AmountOf(coin.Denom)
 		if coin.Amount.GTE(amt) && !amt.IsZero() {
-			return true
+			return &coin
 		}
 	}
 
-	return false
+	return nil
 }
 
 // IsZero returns true if there are no coins or all coins are zero.
@@ -838,4 +848,8 @@ func ParseCoinsNormalized(coinStr string) (Coins, error) {
 		return Coins{}, err
 	}
 	return NormalizeCoins(coins), nil
+}
+
+func (coins ProtoDecCoins) String() string {
+	return coins.Coins.String()
 }

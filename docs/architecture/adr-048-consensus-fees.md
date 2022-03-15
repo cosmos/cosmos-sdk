@@ -1,4 +1,4 @@
-# ADR 048: Consensus Gas Price
+# ADR 048: Multi Tire Gas Price System
 
 ## Changelog
 
@@ -53,11 +53,11 @@ We need to allow user to specify the tier of service for the transaction, to sup
 
 ```protobuf
 message ExtensionOptionsTieredTx {
-  uint32 tier = 1
+  uint32 fee_tier = 1
 }
 ```
 
-The value of `tier` is just the index to the `tiers` parameter list.
+The value of `fee_tier` is just the index to the `tiers` parameter list.
 
 We also change the semantic of existing `fee` field of `Tx`, instead of charging user the exact `fee` amount, we treat it as a fee cap, while the actual amount of fee charged is decided dynamically. If the `fee` is smaller than dynamic one, the transaction won't be included in current block and ideally should stay in the mempool until the consensus gas price drop. The mempool can eventually prune old transactions.
 

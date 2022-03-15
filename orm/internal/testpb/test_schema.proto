@@ -92,3 +92,15 @@ message ExampleSingleton {
   string foo = 1;
   int32  bar = 2;
 }
+
+message ExampleTimestamp {
+  option (cosmos.orm.v1alpha1.table) = {
+    id: 4
+    primary_key: {fields: "id" auto_increment: true}
+    index: {id: 1 fields: "ts"}
+  };
+
+  uint64 id = 1;
+  string name = 2;
+  google.protobuf.Timestamp ts = 3;
+}

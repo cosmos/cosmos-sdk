@@ -1,0 +1,49 @@
+syntax = "proto3";
+package cosmos.base.tendermint.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "google/api/annotations.proto";
+import "tendermint/p2p/types.proto";
+import "tendermint/types/block.proto";
+import "tendermint/types/types.proto";
+import "tendermint/version/types.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/tmservice";
+
+message BlockMeta {
+  .tendermint.types.BlockID block_id   = 1 [(gogoproto.customname) = "BlockID", (gogoproto.nullable) = false];
+  int64   block_size = 2;
+  Header  header     = 3 [(gogoproto.nullable) = false];
+  int64   num_txs    = 4;
+}
+
+// Header defines the structure of a Tendermint block header.
+message Header {
+  // basic block info
+  .tendermint.version.Consensus version  = 1 [(gogoproto.nullable) = false];
+  string                       chain_id = 2 [(gogoproto.customname) = "ChainID"];
+  int64                        height   = 3;
+  google.protobuf.Timestamp    time     = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+
+  // prev block info
+  .tendermint.types.BlockID last_block_id = 5 [(gogoproto.nullable) = false];
+
+  // hashes of block data
+  bytes last_commit_hash = 6; // commit from validators from the last block
+  bytes data_hash        = 7; // transactions
+
+  // hashes from the app output from the prev block
+  bytes validators_hash      = 8;  // validators for the current block
+  bytes next_validators_hash = 9;  // validators for the next block
+  bytes consensus_hash       = 10; // consensus params for current block
+  bytes app_hash             = 11; // state after txs from the previous block
+  bytes last_results_hash    = 12; // root hash of all results from the txs from the previous block
+
+  // consensus info
+  bytes  evidence_hash    = 13; // evidence included in the block
+  string proposer_address = 14; // original proposer of the block
+}

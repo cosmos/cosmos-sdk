@@ -236,6 +236,13 @@ func NewSimApp(
 
 	pluginsOnKey := fmt.Sprintf("%s.%s", plugin.PLUGINS_TOML_KEY, plugin.PLUGINS_ON_TOML_KEY)
 	if cast.ToBool(appOpts.Get(pluginsOnKey)) {
+		// set the global wait limit for state streaming plugins
+		pluginsStreamingKey := fmt.Sprintf("%s.%s", plugin.PLUGINS_TOML_KEY, plugin.STREAMING_TOML_KEY)
+		globalWaitLimitKey := fmt.Sprintf("%s.%s", pluginsStreamingKey, plugin.GLOBAL_WAIT_LIMIT_TOML_KEY)
+		globalWaitLimit := cast.ToDuration(appOpts.Get(globalWaitLimitKey))
+		if globalWaitLimit > 0 {
+			bApp.SetGlobalWaitLimit(globalWaitLimit)
+		}
 		// this loads the preloaded and any plugins found in `plugins.dir`
 		// if their names match those in the `plugins.enabled` list.
 		pluginLoader, err := loader.NewPluginLoader(appOpts, logger)

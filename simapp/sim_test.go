@@ -469,6 +469,7 @@ func loadAppOptions() types.AppOptions {
 	m["plugins.on"] = true
 	m["plugins.enabled"] = []string{StateListeningPlugin}
 	m["plugins.dir"] = ""
+	m["plugins.streaming.global_wait_limit"] = 120
 	// file plugin
 	m["plugins.streaming.file.keys"] = keys
 	m["plugins.streaming.file.write_dir"] = ""

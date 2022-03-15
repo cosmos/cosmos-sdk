@@ -11,8 +11,8 @@ import (
 // STREAMING_TOML_KEY is the top-level TOML key for configuring streaming service plugins
 const STREAMING_TOML_KEY = "streaming"
 
-// GLOBAL_ACK_WAIT_LIMIT_TOML_KEY is the TOML key for configuring the global ack wait limit
-const GLOBAL_ACK_WAIT_LIMIT_TOML_KEY = "global_ack_wait_limit"
+// GLOBAL_WAIT_LIMIT_TOML_KEY is the TOML key for configuring the global wait limit
+const GLOBAL_WAIT_LIMIT_TOML_KEY = "global_wait_limit"
 
 // StateStreamingPlugin interface for plugins that load a baseapp.StreamingService implementation from a plugin onto a baseapp.BaseApp
 type StateStreamingPlugin interface {

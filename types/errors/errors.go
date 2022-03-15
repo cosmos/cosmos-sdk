@@ -1,17 +1,14 @@
-//Package errors provides a shared set of errors for use in the SDK,
-//aliases functionality in the github.com/cosmos/cosmos-sdk/errors module
-//that used to be in this package, and provides some helpers for converting
-//errors to ABCI response code.
-//
-//New code should generally import github.com/cosmos/cosmos-sdk/errors directly
-//and define a custom set of errors in custom codespace, rather than importing
-//this package.
 package errors
 
 import (
 	errorsmod "github.com/cosmos/cosmos-sdk/errors"
 )
 
+// Type Aliases to errors module
+//
+// Deprecated: functionality of this package has been moved to it's own module:
+//    github.com/cosmos/cosmos-sdk
+// Please use the above module instead of this package.
 var (
 	SuccessABCICode    = errorsmod.SuccessABCICode
 	ABCIInfo           = errorsmod.ABCIInfo
@@ -28,9 +25,11 @@ var (
 	AssertNil          = errorsmod.AssertNil
 )
 
-type (
-	Error = errorsmod.Error
-)
+// Error type alias for errorsmod.Error
+//
+// Deprecated: the type has been moved to github.com/cosmos/cosmos-sdk
+// module. Please use the above module instead of this package.
+type Error = errorsmod.Error
 
 // RootCodespace is the codespace for all errors defined in this package
 const RootCodespace = "sdk"

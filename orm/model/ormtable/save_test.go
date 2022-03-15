@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -59,23 +58,7 @@ func (s *suite) IUpdate(a gocuke.DocString) {
 }
 
 func (s *suite) ExpectAError(a string) {
-	assert.ErrorIs(s, s.err, s.toError(a), s.err.Error())
-}
-
-func (s *suite) toError(str string) error {
-	switch str {
-	case "already exists":
-		return ormerrors.AlreadyExists
-	case "not found":
-		return ormerrors.NotFound
-	case "constraint violation":
-		return ormerrors.ConstraintViolation
-	case "unique key violation":
-		return ormerrors.UniqueKeyViolation
-	default:
-		s.Fatalf("missing case for error %s", str)
-		return nil
-	}
+	assert.ErrorContains(s, s.err, a)
 }
 
 func (s *suite) ExpectGrpcErrorCode(a string) {

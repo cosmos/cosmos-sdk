@@ -2,8 +2,8 @@ name: "CodeQL"
 
 on:
   pull_request:
-      paths:
-        - "**.go"
+      # paths:
+        # - "**.go"
 
 jobs:
   analyze:

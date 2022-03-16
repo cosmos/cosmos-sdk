@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
 	github.com/cosmos/cosmos-sdk/api v0.1.0-alpha5
-	github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.3
+	github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.4
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.5.7
 	github.com/iancoleman/strcase v0.2.0
@@ -49,5 +49,3 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )
-
-replace github.com/cosmos/cosmos-sdk/errors => ../errors

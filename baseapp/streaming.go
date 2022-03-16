@@ -23,7 +23,7 @@ type ABCIListener interface {
 	// the application has been configured to send messages to ListenBeginBlock, ListenEndBlock, ListenDeliverTx
 	// in fire-and-forget fashion.
 	//
-	// This Behavior is controlled by a corresponding app config setting.
+	// This behavior is controlled by a corresponding app config setting.
 	HaltAppOnDeliveryError() bool
 }
 

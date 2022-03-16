@@ -59,7 +59,7 @@ func (s queryServer) GetLatestBlock(ctx context.Context, _ *GetLatestBlockReques
 
 	return &GetLatestBlockResponse{
 		BlockId: &protoBlockID,
-		Block:   protoBlock,
+		Block:   convertBlock(protoBlock),
 	}, nil
 }
 
@@ -78,9 +78,10 @@ func (s queryServer) GetBlockByHeight(ctx context.Context, req *GetBlockByHeight
 	if err != nil {
 		return nil, err
 	}
+
 	return &GetBlockByHeightResponse{
 		BlockId: &protoBlockID,
-		Block:   protoBlock,
+		Block:   convertBlock(protoBlock),
 	}, nil
 }
 

@@ -261,6 +261,17 @@ func (app *BaseApp) SetStreamingService(s StreamingService) {
 }
 ```
 
+We will add a new method to the `BaseApp` that is used to configure a global wait limit. The global wait limit will be used as
+a fallback to prevent the node from stalling only when `HaltAppOnDeliveryError == true` to interrupt long-running
+or indefinite blocking listener goroutines.
+
+```go
+func (app *BaseApp) SetGlobalWaitLimit(t time.Duration) {
+	app.globalWaitLimit = t
+}
+```
+
+
 We will also modify the `BeginBlock`, `EndBlock`, and `DeliverTx` methods to pass ABCI requests and responses to any streaming service hooks registered
 with the `BaseApp`.
 
@@ -613,6 +624,7 @@ e.g.
     enabled = ["list", "of", "plugin", "names", "to", "enable"]
     dir = "the directory to load non-preloaded plugins from; defaults to "
     [plugins.streaming] # a mapping of plugin-specific streaming service parameters, mapped to their plugin name
+        global_wait_limit = 120 # Prevent long-running listners from blocking listener WaitGroup when `halt_app_on_delivery_error = true` (seconds)
         [plugins.streaming.file] # the specific parameters for the file streaming service plugin
             keys = ["list", "of", "store", "keys", "we", "want", "to", "expose", "for", "this", "streaming", "service"]
             write_dir = "path to the write directory"

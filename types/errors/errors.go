@@ -7,7 +7,7 @@ import (
 // Type Aliases to errors module
 //
 // Deprecated: functionality of this package has been moved to it's own module:
-//    github.com/cosmos/cosmos-sdk
+//    github.com/cosmos/cosmos-sdk/errors
 // Please use the above module instead of this package.
 var (
 	SuccessABCICode    = errorsmod.SuccessABCICode
@@ -27,7 +27,7 @@ var (
 
 // Error type alias for errorsmod.Error
 //
-// Deprecated: the type has been moved to github.com/cosmos/cosmos-sdk
+// Deprecated: the type has been moved to github.com/cosmos/cosmos-sdk/errors
 // module. Please use the above module instead of this package.
 type Error = errorsmod.Error
 

@@ -290,7 +290,7 @@ If group-policy-as-admin flag is set to true, the admin of the newly created gro
 
 Example:
 $ %s tx group create-group-with-policy [admin] [group-metadata] [group-policy-metadata] [members-json-file] \
-'{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"1s"}'
+'{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"1s"}'
 
 where members.json contains:
 
@@ -378,10 +378,10 @@ Note, the '--from' flag is ignored as it is implied from [admin].
 
 Example:
 $ %s tx group create-group-policy [admin] [group-id] [metadata] \
-'{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"1s"}'
+'{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"1s"}'
 
 Here, we can use percentage decision policy when needed, where 0 < percentage <= 1.
-Ex: '{"@type":"/cosmos.group.v1beta1.PercentageDecisionPolicy", "percentage":"0.5", "timeout":"1s"}'
+Ex: '{"@type":"/cosmos.group.v1.PercentageDecisionPolicy", "percentage":"0.5", "timeout":"1s"}'
 `,
 				version.AppName,
 			),

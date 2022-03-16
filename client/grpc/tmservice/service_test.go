@@ -84,6 +84,7 @@ func (s IntegrationTestSuite) TestQueryLatestBlock() {
 	s.Require().NoError(err)
 	var blockInfoRes tmservice.GetLatestBlockResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &blockInfoRes))
+	s.Require().Contains(blockInfoRes.Block.Header.ProposerAddress, "cosmosvaloper")
 }
 
 func (s IntegrationTestSuite) TestQueryBlockByHeight() {
@@ -95,6 +96,7 @@ func (s IntegrationTestSuite) TestQueryBlockByHeight() {
 	s.Require().NoError(err)
 	var blockInfoRes tmservice.GetBlockByHeightResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &blockInfoRes))
+	s.Require().Contains(blockInfoRes.Block.Header.ProposerAddress, "cosmosvaloper")
 }
 
 func (s IntegrationTestSuite) TestQueryLatestValidatorSet() {

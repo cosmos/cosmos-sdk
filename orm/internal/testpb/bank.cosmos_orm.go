@@ -4,23 +4,15 @@ package testpb
 
 import (
 	context "context"
-	ormlist "github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 	ormtable "github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 	ormerrors "github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
 
 type BalanceTable interface {
-	Insert(ctx context.Context, balance *Balance) error
-	Update(ctx context.Context, balance *Balance) error
-	Save(ctx context.Context, balance *Balance) error
-	Delete(ctx context.Context, balance *Balance) error
+	ormtable.GenericTable[*Balance, BalanceIndexKey]
 	Has(ctx context.Context, address string, denom string) (found bool, err error)
 	// Get returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
 	Get(ctx context.Context, address string, denom string) (*Balance, error)
-	List(ctx context.Context, prefixKey BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
-	ListRange(ctx context.Context, from, to BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
-	DeleteBy(ctx context.Context, prefixKey BalanceIndexKey) error
-	DeleteRange(ctx context.Context, from, to BalanceIndexKey) error
 
 	doNotImplement()
 }
@@ -36,8 +28,7 @@ func (i BalanceIterator) Value() (*Balance, error) {
 }
 
 type BalanceIndexKey interface {
-	id() uint32
-	values() []interface{}
+	ormtable.GenericIndexKey
 	balanceIndexKey()
 }
 
@@ -48,9 +39,9 @@ type BalanceAddressDenomIndexKey struct {
 	vs []interface{}
 }
 
-func (x BalanceAddressDenomIndexKey) id() uint32            { return 0 }
-func (x BalanceAddressDenomIndexKey) values() []interface{} { return x.vs }
-func (x BalanceAddressDenomIndexKey) balanceIndexKey()      {}
+func (x BalanceAddressDenomIndexKey) IndexId() uint32          { return 0 }
+func (x BalanceAddressDenomIndexKey) KeyValues() []interface{} { return x.vs }
+func (x BalanceAddressDenomIndexKey) balanceIndexKey()         {}
 
 func (this BalanceAddressDenomIndexKey) WithAddress(address string) BalanceAddressDenomIndexKey {
 	this.vs = []interface{}{address}
@@ -66,9 +57,9 @@ type BalanceDenomIndexKey struct {
 	vs []interface{}
 }
 
-func (x BalanceDenomIndexKey) id() uint32            { return 1 }
-func (x BalanceDenomIndexKey) values() []interface{} { return x.vs }
-func (x BalanceDenomIndexKey) balanceIndexKey()      {}
+func (x BalanceDenomIndexKey) IndexId() uint32          { return 1 }
+func (x BalanceDenomIndexKey) KeyValues() []interface{} { return x.vs }
+func (x BalanceDenomIndexKey) balanceIndexKey()         {}
 
 func (this BalanceDenomIndexKey) WithDenom(denom string) BalanceDenomIndexKey {
 	this.vs = []interface{}{denom}
@@ -76,32 +67,16 @@ func (this BalanceDenomIndexKey) WithDenom(denom string) BalanceDenomIndexKey {
 }
 
 type balanceTable struct {
-	table ormtable.Table
-}
-
-func (this balanceTable) Insert(ctx context.Context, balance *Balance) error {
-	return this.table.Insert(ctx, balance)
-}
-
-func (this balanceTable) Update(ctx context.Context, balance *Balance) error {
-	return this.table.Update(ctx, balance)
-}
-
-func (this balanceTable) Save(ctx context.Context, balance *Balance) error {
-	return this.table.Save(ctx, balance)
-}
-
-func (this balanceTable) Delete(ctx context.Context, balance *Balance) error {
-	return this.table.Delete(ctx, balance)
+	ormtable.GenericTable[*Balance, BalanceIndexKey]
 }
 
 func (this balanceTable) Has(ctx context.Context, address string, denom string) (found bool, err error) {
-	return this.table.PrimaryKey().Has(ctx, address, denom)
+	return this.DynamicTable().PrimaryKey().Has(ctx, address, denom)
 }
 
 func (this balanceTable) Get(ctx context.Context, address string, denom string) (*Balance, error) {
 	var balance Balance
-	found, err := this.table.PrimaryKey().Get(ctx, &balance, address, denom)
+	found, err := this.DynamicTable().PrimaryKey().Get(ctx, &balance, address, denom)
 	if err != nil {
 		return nil, err
 	}
@@ -109,24 +84,6 @@ func (this balanceTable) Get(ctx context.Context, address string, denom string) 
 		return nil, ormerrors.NotFound
 	}
 	return &balance, nil
-}
-
-func (this balanceTable) List(ctx context.Context, prefixKey BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error) {
-	it, err := this.table.GetIndexByID(prefixKey.id()).List(ctx, prefixKey.values(), opts...)
-	return BalanceIterator{it}, err
-}
-
-func (this balanceTable) ListRange(ctx context.Context, from, to BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error) {
-	it, err := this.table.GetIndexByID(from.id()).ListRange(ctx, from.values(), to.values(), opts...)
-	return BalanceIterator{it}, err
-}
-
-func (this balanceTable) DeleteBy(ctx context.Context, prefixKey BalanceIndexKey) error {
-	return this.table.GetIndexByID(prefixKey.id()).DeleteBy(ctx, prefixKey.values()...)
-}
-
-func (this balanceTable) DeleteRange(ctx context.Context, from, to BalanceIndexKey) error {
-	return this.table.GetIndexByID(from.id()).DeleteRange(ctx, from.values(), to.values())
 }
 
 func (this balanceTable) doNotImplement() {}
@@ -138,21 +95,14 @@ func NewBalanceTable(db ormtable.Schema) (BalanceTable, error) {
 	if table == nil {
 		return nil, ormerrors.TableNotFound.Wrap(string((&Balance{}).ProtoReflect().Descriptor().FullName()))
 	}
-	return balanceTable{table}, nil
+	return balanceTable{ormtable.NewGenericTable[*Balance, BalanceIndexKey](table)}, nil
 }
 
 type SupplyTable interface {
-	Insert(ctx context.Context, supply *Supply) error
-	Update(ctx context.Context, supply *Supply) error
-	Save(ctx context.Context, supply *Supply) error
-	Delete(ctx context.Context, supply *Supply) error
+	ormtable.GenericTable[*Supply, SupplyIndexKey]
 	Has(ctx context.Context, denom string) (found bool, err error)
 	// Get returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
 	Get(ctx context.Context, denom string) (*Supply, error)
-	List(ctx context.Context, prefixKey SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error)
-	ListRange(ctx context.Context, from, to SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error)
-	DeleteBy(ctx context.Context, prefixKey SupplyIndexKey) error
-	DeleteRange(ctx context.Context, from, to SupplyIndexKey) error
 
 	doNotImplement()
 }
@@ -168,8 +118,7 @@ func (i SupplyIterator) Value() (*Supply, error) {
 }
 
 type SupplyIndexKey interface {
-	id() uint32
-	values() []interface{}
+	ormtable.GenericIndexKey
 	supplyIndexKey()
 }
 
@@ -180,9 +129,9 @@ type SupplyDenomIndexKey struct {
 	vs []interface{}
 }
 
-func (x SupplyDenomIndexKey) id() uint32            { return 0 }
-func (x SupplyDenomIndexKey) values() []interface{} { return x.vs }
-func (x SupplyDenomIndexKey) supplyIndexKey()       {}
+func (x SupplyDenomIndexKey) IndexId() uint32          { return 0 }
+func (x SupplyDenomIndexKey) KeyValues() []interface{} { return x.vs }
+func (x SupplyDenomIndexKey) supplyIndexKey()          {}
 
 func (this SupplyDenomIndexKey) WithDenom(denom string) SupplyDenomIndexKey {
 	this.vs = []interface{}{denom}
@@ -190,32 +139,16 @@ func (this SupplyDenomIndexKey) WithDenom(denom string) SupplyDenomIndexKey {
 }
 
 type supplyTable struct {
-	table ormtable.Table
-}
-
-func (this supplyTable) Insert(ctx context.Context, supply *Supply) error {
-	return this.table.Insert(ctx, supply)
-}
-
-func (this supplyTable) Update(ctx context.Context, supply *Supply) error {
-	return this.table.Update(ctx, supply)
-}
-
-func (this supplyTable) Save(ctx context.Context, supply *Supply) error {
-	return this.table.Save(ctx, supply)
-}
-
-func (this supplyTable) Delete(ctx context.Context, supply *Supply) error {
-	return this.table.Delete(ctx, supply)
+	ormtable.GenericTable[*Supply, SupplyIndexKey]
 }
 
 func (this supplyTable) Has(ctx context.Context, denom string) (found bool, err error) {
-	return this.table.PrimaryKey().Has(ctx, denom)
+	return this.DynamicTable().PrimaryKey().Has(ctx, denom)
 }
 
 func (this supplyTable) Get(ctx context.Context, denom string) (*Supply, error) {
 	var supply Supply
-	found, err := this.table.PrimaryKey().Get(ctx, &supply, denom)
+	found, err := this.DynamicTable().PrimaryKey().Get(ctx, &supply, denom)
 	if err != nil {
 		return nil, err
 	}
@@ -223,24 +156,6 @@ func (this supplyTable) Get(ctx context.Context, denom string) (*Supply, error) 
 		return nil, ormerrors.NotFound
 	}
 	return &supply, nil
-}
-
-func (this supplyTable) List(ctx context.Context, prefixKey SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error) {
-	it, err := this.table.GetIndexByID(prefixKey.id()).List(ctx, prefixKey.values(), opts...)
-	return SupplyIterator{it}, err
-}
-
-func (this supplyTable) ListRange(ctx context.Context, from, to SupplyIndexKey, opts ...ormlist.Option) (SupplyIterator, error) {
-	it, err := this.table.GetIndexByID(from.id()).ListRange(ctx, from.values(), to.values(), opts...)
-	return SupplyIterator{it}, err
-}
-
-func (this supplyTable) DeleteBy(ctx context.Context, prefixKey SupplyIndexKey) error {
-	return this.table.GetIndexByID(prefixKey.id()).DeleteBy(ctx, prefixKey.values()...)
-}
-
-func (this supplyTable) DeleteRange(ctx context.Context, from, to SupplyIndexKey) error {
-	return this.table.GetIndexByID(from.id()).DeleteRange(ctx, from.values(), to.values())
 }
 
 func (this supplyTable) doNotImplement() {}
@@ -252,7 +167,7 @@ func NewSupplyTable(db ormtable.Schema) (SupplyTable, error) {
 	if table == nil {
 		return nil, ormerrors.TableNotFound.Wrap(string((&Supply{}).ProtoReflect().Descriptor().FullName()))
 	}
-	return supplyTable{table}, nil
+	return supplyTable{ormtable.NewGenericTable[*Supply, SupplyIndexKey](table)}, nil
 }
 
 type BankStore interface {

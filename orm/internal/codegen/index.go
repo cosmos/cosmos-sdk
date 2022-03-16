@@ -12,8 +12,7 @@ func (t tableGen) genIndexKeys() {
 
 	// interface that all keys must adhere to
 	t.P("type ", t.indexKeyInterfaceName(), " interface {")
-	t.P("id() uint32")
-	t.P("values() []interface{}")
+	t.P(ormTablePkg.Ident("GenericIndexKey"))
 	t.P(t.param(t.indexKeyInterfaceName()), "()")
 	t.P("}")
 	t.P()
@@ -117,8 +116,8 @@ func (t tableGen) genIndex(fields string, id uint32, isPrimaryKey bool) {
 
 func (t tableGen) genIndexInterfaceMethods(id uint32, indexStructName string) {
 	funPrefix := fmt.Sprintf("func (x %s) ", indexStructName)
-	t.P(funPrefix, "id() uint32 {return ", id, "}")
-	t.P(funPrefix, "values() []interface{} {return x.vs}")
+	t.P(funPrefix, "IndexId() uint32 {return ", id, "}")
+	t.P(funPrefix, "KeyValues() []interface{} {return x.vs}")
 	t.P(funPrefix, t.param(t.indexKeyInterfaceName()), "() {}")
 	t.P()
 }

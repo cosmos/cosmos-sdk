@@ -2608,6 +2608,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// BlockMeta is tendermint type BlockMeta
 type BlockMeta struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -2667,6 +2668,7 @@ func (x *BlockMeta) GetNumTxs() int64 {
 	return 0
 }
 
+// Block is tendermint type Block
 type Block struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

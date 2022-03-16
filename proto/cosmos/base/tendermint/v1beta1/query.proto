@@ -4,7 +4,6 @@ package cosmos.base.tendermint.v1beta1;
 import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
 import "tendermint/p2p/types.proto";
-import "tendermint/types/block.proto";
 import "tendermint/types/types.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/tendermint/v1beta1/types.proto";
@@ -86,7 +85,7 @@ message GetBlockByHeightRequest {
 // GetBlockByHeightResponse is the response type for the Query/GetBlockByHeight RPC method.
 message GetBlockByHeightResponse {
   .tendermint.types.BlockID block_id = 1;
-  Block   block    = 2;
+  Block                     block    = 2;
 }
 
 // GetLatestBlockRequest is the request type for the Query/GetLatestBlock RPC method.
@@ -95,7 +94,7 @@ message GetLatestBlockRequest {}
 // GetLatestBlockResponse is the response type for the Query/GetLatestBlock RPC method.
 message GetLatestBlockResponse {
   .tendermint.types.BlockID block_id = 1;
-  Block   block    = 2;
+  Block                     block    = 2;
 }
 
 // GetSyncingRequest is the request type for the Query/GetSyncing RPC method.

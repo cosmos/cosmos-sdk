@@ -14054,7 +14054,8 @@ type MsgCreateGroupWithPolicy struct {
 	GroupMetadata string `protobuf:"bytes,3,opt,name=group_metadata,json=groupMetadata,proto3" json:"group_metadata,omitempty"`
 	// group_policy_metadata is any arbitrary metadata attached to the group policy.
 	GroupPolicyMetadata string `protobuf:"bytes,4,opt,name=group_policy_metadata,json=groupPolicyMetadata,proto3" json:"group_policy_metadata,omitempty"`
-	// group_policy_as_admin is a boolean field, if set to true, the group policy account address will be used as group and group policy admin.
+	// group_policy_as_admin is a boolean field, if set to true, the group policy account address will be used as group
+	// and group policy admin.
 	GroupPolicyAsAdmin bool `protobuf:"varint,5,opt,name=group_policy_as_admin,json=groupPolicyAsAdmin,proto3" json:"group_policy_as_admin,omitempty"`
 	// decision_policy specifies the group policy's decision policy.
 	DecisionPolicy *anypb.Any `protobuf:"bytes,6,opt,name=decision_policy,json=decisionPolicy,proto3" json:"decision_policy,omitempty"`

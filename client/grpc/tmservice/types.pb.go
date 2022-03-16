@@ -29,6 +29,7 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// BlockMeta is tendermint type BlockMeta
 type BlockMeta struct {
 	BlockID   types.BlockID `protobuf:"bytes,1,opt,name=block_id,json=blockId,proto3" json:"block_id"`
 	BlockSize int64         `protobuf:"varint,2,opt,name=block_size,json=blockSize,proto3" json:"block_size,omitempty"`
@@ -97,6 +98,7 @@ func (m *BlockMeta) GetNumTxs() int64 {
 	return 0
 }
 
+// Block is tendermint type Block
 type Block struct {
 	Header     Header             `protobuf:"bytes,1,opt,name=header,proto3" json:"header"`
 	Data       types.Data         `protobuf:"bytes,2,opt,name=data,proto3" json:"data"`

@@ -9,6 +9,7 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/tmservice";
 
+// BlockMeta is tendermint type BlockMeta
 message BlockMeta {
   .tendermint.types.BlockID block_id   = 1 [(gogoproto.customname) = "BlockID", (gogoproto.nullable) = false];
   int64                     block_size = 2;
@@ -16,11 +17,12 @@ message BlockMeta {
   int64                     num_txs    = 4;
 }
 
+// Block is tendermint type Block
 message Block {
-  Header                        header      = 1 [(gogoproto.nullable) = false];
-  .tendermint.types.Data                          data        = 2 [(gogoproto.nullable) = false];
+  Header                         header      = 1 [(gogoproto.nullable) = false];
+  .tendermint.types.Data         data        = 2 [(gogoproto.nullable) = false];
   .tendermint.types.EvidenceList evidence    = 3 [(gogoproto.nullable) = false];
-  .tendermint.types.Commit                        last_commit = 4;
+  .tendermint.types.Commit       last_commit = 4;
 }
 
 // Header defines the structure of a Tendermint block header.

@@ -17,7 +17,7 @@ import (
 )
 
 func TestSave(t *testing.T) {
-	gocuke.NewRunner(t, &suite{}).Path("../../features/table/save.feature").Run()
+	gocuke.NewRunner(t, &suite{}).Path("../../features/table/saving.feature").Run()
 }
 
 type suite struct {

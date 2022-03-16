@@ -1,4 +1,4 @@
-Feature: saving entities
+Feature: inserting, updating and saving entities
 
   Scenario: can't insert an entity with a duplicate primary key
     Given an existing entity

@@ -194,8 +194,6 @@ func TestEndBlockerPruning(t *testing.T) {
 func TestEndBlocker(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	now := time.Now()
-	ctx = ctx.WithBlockTime(now)
 
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 4, sdk.NewInt(30000000))
 
@@ -258,7 +256,7 @@ func TestEndBlocker(t *testing.T) {
 				return pId
 			},
 			admin:             proposers[0],
-			newCtx:            ctx.WithBlockTime(now.Add(votingPeriod).Add(time.Hour)),
+			newCtx:            ctx.WithBlockTime(ctx.BlockTime().Add(votingPeriod).Add(time.Hour)),
 			tallyRes:          group.DefaultTallyResult(),
 			expStatus:         group.PROPOSAL_STATUS_SUBMITTED,
 			expExecutorResult: group.PROPOSAL_RESULT_UNFINALIZED,
@@ -297,7 +295,7 @@ func TestEndBlocker(t *testing.T) {
 				return pId
 			},
 			admin:  proposers[0],
-			newCtx: ctx.WithBlockTime(now.Add(votingPeriod).Add(time.Hour)),
+			newCtx: ctx.WithBlockTime(ctx.BlockTime().Add(votingPeriod).Add(time.Hour)),
 			tallyRes: group.TallyResult{
 				YesCount:        "2",
 				NoCount:         "0",

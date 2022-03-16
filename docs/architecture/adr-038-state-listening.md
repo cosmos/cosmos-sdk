@@ -221,13 +221,13 @@ type ABCIListener interface {
 	// ListenEndBlock updates the steaming service with the latest EndBlock messages
 	ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
 	// ListenDeliverTx updates the steaming service with the latest DeliverTx messages
-	ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
-	// HaltAppOnDeliveryError whether or not to halt the application when delivery of massages fails
-	// in ListenBeginBlock, ListenEndBlock, ListenDeliverTx. When `false, the app will operate in fire-and-forget mode.
-	// When `true`, the app will gracefully halt and stop the running node. Uncommitted blocks will
-	// be replayed to all listeners when the node restarts and all successful listeners that received data
-	// prior to the halt will receive duplicate data. Whether or not a listener operates in a fire-and-forget mode
-	// is determined by the listener's configuration property `halt_app_on_delivery_error = true|false`.
+	ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error 
+	// HaltAppOnDeliveryError returns true if the application has been configured to halt when
+	// ListenBeginBlock, ListenEndBlock, ListenDeliverTx fail to process messages and false when
+	// the application has been configured to send messages to ListenBeginBlock, ListenEndBlock, ListenDeliverTx
+	// in fire-and-forget fashion.
+	//
+	// This Behavior is controlled by a corresponding app config setting.
 	HaltAppOnDeliveryError() bool
 }
 

@@ -1,8 +1,12 @@
 package ormtable_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
+	"github.com/cosmos/cosmos-sdk/orm/testing/ormtest"
 
 	"github.com/gogo/protobuf/proto"
 	dbm "github.com/tendermint/tm-db"
@@ -10,7 +14,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
-	"github.com/cosmos/cosmos-sdk/orm/testing/ormtest"
 	"github.com/cosmos/cosmos-sdk/orm/types/kv"
 )
 
@@ -30,13 +33,24 @@ func init() {
 	}
 }
 
-func BenchmarkInsert(b *testing.B) {
+func BenchmarkInsertMemory(b *testing.B) {
+	b.StopTimer()
+	ctx := ormtable.WrapContextDefault(ormtest.NewMemoryBackend())
+	b.StartTimer()
+	benchInsert(b, ctx)
+}
+
+func BenchmarkInsertLevelDB(b *testing.B) {
+	b.StopTimer()
+	ctx := ormtable.WrapContextDefault(testkv.NewGoLevelDBBackend(b))
+	b.StartTimer()
+	benchInsert(b, ctx)
+}
+
+func benchInsert(b *testing.B, ctx context.Context) {
 	for i := 0; i < b.N; i++ {
-		b.StopTimer()
-		ctx := ormtable.WrapContextDefault(ormtest.NewMemoryBackend())
-		b.StartTimer()
 		assert.NilError(b, balanceTable.Insert(ctx, &testpb.Balance{
-			Address: "foo",
+			Address: fmt.Sprintf("acct%d", i),
 			Denom:   "ba",
 			Amount:  10,
 		}))
@@ -84,13 +98,25 @@ func insertBalance(store kv.Store, balance *testpb.Balance) error {
 	return nil
 }
 
-func BenchmarkManualInsert(b *testing.B) {
+func BenchmarkManualInsertMemory(b *testing.B) {
+	b.StopTimer()
+	store := dbm.NewMemDB()
+	b.StartTimer()
+	benchManualInsert(b, store)
+}
+
+func BenchmarkManualInsertLevelDB(b *testing.B) {
+	b.StopTimer()
+	store, err := dbm.NewGoLevelDB("test", b.TempDir())
+	assert.NilError(b, err)
+	b.StartTimer()
+	benchManualInsert(b, store)
+}
+
+func benchManualInsert(b *testing.B, store kv.Store) {
 	for i := 0; i < b.N; i++ {
-		b.StopTimer()
-		store := dbm.NewMemDB()
-		b.StartTimer()
 		assert.NilError(b, insertBalance(store, &testpb.Balance{
-			Address: "foo",
+			Address: fmt.Sprintf("acct%d", i),
 			Denom:   "ba",
 			Amount:  10,
 		}))

@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	types "github.com/cosmos/cosmos-sdk/store/v2"
-	"github.com/cosmos/cosmos-sdk/store/v2/mem"
+	types "github.com/cosmos/cosmos-sdk/store/v2alpha1"
+	"github.com/cosmos/cosmos-sdk/store/v2alpha1/mem"
 )
 
 func TestStore(t *testing.T) {

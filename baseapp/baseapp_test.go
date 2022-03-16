@@ -1820,8 +1820,8 @@ func TestListSnapshots(t *testing.T) {
 		s.Metadata = nil
 	}
 	assert.Equal(t, abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{
-		{Height: 4, Format: 1, Chunks: 2},
-		{Height: 2, Format: 1, Chunks: 1},
+		{Height: 4, Format: snapshottypes.CurrentFormat, Chunks: 2},
+		{Height: 2, Format: snapshottypes.CurrentFormat, Chunks: 1},
 	}}, resp)
 }
 
@@ -1837,13 +1837,13 @@ func TestLoadSnapshotChunk(t *testing.T) {
 		chunk       uint32
 		expectEmpty bool
 	}{
-		"Existing snapshot": {2, 1, 1, false},
-		"Missing height":    {100, 1, 1, true},
-		"Missing format":    {2, 2, 1, true},
-		"Missing chunk":     {2, 1, 9, true},
-		"Zero height":       {0, 1, 1, true},
+		"Existing snapshot": {2, snapshottypes.CurrentFormat, 1, false},
+		"Missing height":    {100, snapshottypes.CurrentFormat, 1, true},
+		"Missing format":    {2, 3, 1, true},
+		"Missing chunk":     {2, snapshottypes.CurrentFormat, 9, true},
+		"Zero height":       {0, snapshottypes.CurrentFormat, 1, true},
 		"Zero format":       {2, 0, 1, true},
-		"Zero chunk":        {2, 1, 0, false},
+		"Zero chunk":        {2, snapshottypes.CurrentFormat, 0, false},
 	}
 	for name, tc := range testcases {
 		tc := tc
@@ -1883,13 +1883,13 @@ func TestOfferSnapshot_Errors(t *testing.T) {
 			Height: 1, Format: 9, Chunks: 3, Hash: hash, Metadata: metadata,
 		}, abci.ResponseOfferSnapshot_REJECT_FORMAT},
 		"incorrect chunk count": {&abci.Snapshot{
-			Height: 1, Format: 1, Chunks: 2, Hash: hash, Metadata: metadata,
+			Height: 1, Format: snapshottypes.CurrentFormat, Chunks: 2, Hash: hash, Metadata: metadata,
 		}, abci.ResponseOfferSnapshot_REJECT},
 		"no chunks": {&abci.Snapshot{
-			Height: 1, Format: 1, Chunks: 0, Hash: hash, Metadata: metadata,
+			Height: 1, Format: snapshottypes.CurrentFormat, Chunks: 0, Hash: hash, Metadata: metadata,
 		}, abci.ResponseOfferSnapshot_REJECT},
 		"invalid metadata serialization": {&abci.Snapshot{
-			Height: 1, Format: 1, Chunks: 0, Hash: hash, Metadata: []byte{3, 1, 4},
+			Height: 1, Format: snapshottypes.CurrentFormat, Chunks: 0, Hash: hash, Metadata: []byte{3, 1, 4},
 		}, abci.ResponseOfferSnapshot_REJECT},
 	}
 	for name, tc := range testcases {

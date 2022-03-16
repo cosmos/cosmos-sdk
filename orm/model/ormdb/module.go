@@ -6,6 +6,10 @@ import (
 	"encoding/binary"
 	"math"
 
+	"google.golang.org/protobuf/reflect/protoregistry"
+
+	ormv1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
+
 	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
 
 	"google.golang.org/protobuf/reflect/protodesc"
@@ -20,17 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
-
-// ModuleSchema describes the ORM schema for a module.
-type ModuleSchema struct {
-	// FileDescriptors are the file descriptors that contain ORM tables to use in this schema.
-	// Each file descriptor must have an unique non-zero uint32 ID associated with it.
-	FileDescriptors map[uint32]protoreflect.FileDescriptor
-
-	// Prefix is an optional prefix to prepend to all keys. It is recommended
-	// to leave it empty.
-	Prefix []byte
-}
 
 // ModuleDB defines the ORM database type to be used by modules.
 type ModuleDB interface {
@@ -74,17 +67,13 @@ type ModuleDBOptions struct {
 	// will be used
 	JSONValidator func(proto.Message) error
 
-	// GetBackend is the function used to retrieve the table backend.
-	// See ormtable.Options.GetBackend for more details.
-	GetBackend func(context.Context) (ormtable.Backend, error)
-
-	// GetReadBackend is the function used to retrieve a table read backend.
-	// See ormtable.Options.GetReadBackend for more details.
-	GetReadBackend func(context.Context) (ormtable.ReadBackend, error)
+	// GetBackendResolver returns a backend resolver for the requested storage
+	// type or an error if this type of storage isn't supported.
+	GetBackendResolver func(ormv1alpha1.StorageType) (ormtable.BackendResolver, error)
 }
 
 // NewModuleDB constructs a ModuleDB instance from the provided schema and options.
-func NewModuleDB(schema ModuleSchema, options ModuleDBOptions) (ModuleDB, error) {
+func NewModuleDB(schema *ormv1alpha1.ModuleSchemaDescriptor, options ModuleDBOptions) (ModuleDB, error) {
 	prefix := schema.Prefix
 	db := &moduleDB{
 		prefix:       prefix,
@@ -92,29 +81,37 @@ func NewModuleDB(schema ModuleSchema, options ModuleDBOptions) (ModuleDB, error)
 		tablesByName: map[protoreflect.FullName]ormtable.Table{},
 	}
 
-	for id, fileDescriptor := range schema.FileDescriptors {
+	fileResolver := options.FileResolver
+	if fileResolver == nil {
+		fileResolver = protoregistry.GlobalFiles
+	}
+
+	for _, entry := range schema.SchemaFile {
+		var backendResolver ormtable.BackendResolver
+		var err error
+		if options.GetBackendResolver != nil {
+			backendResolver, err = options.GetBackendResolver(entry.StorageType)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		id := entry.Id
+		fileDescriptor, err := fileResolver.FindFileByPath(entry.ProtoFileName)
+		if err != nil {
+			return nil, err
+		}
+
 		if id == 0 {
 			return nil, ormerrors.InvalidFileDescriptorID.Wrapf("for %s", fileDescriptor.Path())
 		}
 
 		opts := fileDescriptorDBOptions{
-			ID:             id,
-			Prefix:         prefix,
-			TypeResolver:   options.TypeResolver,
-			JSONValidator:  options.JSONValidator,
-			GetBackend:     options.GetBackend,
-			GetReadBackend: options.GetReadBackend,
-		}
-
-		if options.FileResolver != nil {
-			// if a FileResolver is provided, we use that to resolve the file
-			// and not the one provided as a different pinned file descriptor
-			// may have been provided
-			var err error
-			fileDescriptor, err = options.FileResolver.FindFileByPath(fileDescriptor.Path())
-			if err != nil {
-				return nil, err
-			}
+			ID:              id,
+			Prefix:          prefix,
+			TypeResolver:    options.TypeResolver,
+			JSONValidator:   options.JSONValidator,
+			BackendResolver: backendResolver,
 		}
 
 		fdSchema, err := newFileDescriptorDB(fileDescriptor, opts)

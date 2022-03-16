@@ -238,6 +238,10 @@ func (c Context) WithValue(key, value interface{}) Context {
 }
 
 func (c Context) Value(key interface{}) interface{} {
+	if key == SdkContextKey {
+		return c
+	}
+
 	return c.baseCtx.Value(key)
 }
 

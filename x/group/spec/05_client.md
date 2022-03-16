@@ -580,6 +580,21 @@ Example:
 simd tx group exec 1
 ```
 
+#### leave-group
+
+The `leave-group` command allows group member to leave the group.
+
+```bash
+simd tx group leave-group [member-address] [group-id]
+```
+
+Example:
+
+```bash
+simd tx group leave-group cosmos1... 1
+```
+
+
 ## gRPC
 
 A user can query the `group` module using gRPC endpoints.

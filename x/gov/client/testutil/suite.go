@@ -19,8 +19,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
 type IntegrationTestSuite struct {
@@ -49,7 +49,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// create a proposal with deposit
 	_, err = MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 1", "Where is the title!?", v1beta1.ProposalTypeText,
-		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, v1beta2.DefaultMinDepositTokens).String()))
+		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -68,7 +68,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// create a proposal3 with deposit
 	_, err = MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 3", "Where is the title!?", v1beta1.ProposalTypeText,
-		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, v1beta2.DefaultMinDepositTokens).String()))
+		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -230,7 +230,7 @@ func (s *IntegrationTestSuite) TestCmdTally() {
 		name           string
 		args           []string
 		expectErr      bool
-		expectedOutput v1beta2.TallyResult
+		expectedOutput v1.TallyResult
 	}{
 		{
 			"without proposal id",
@@ -238,7 +238,7 @@ func (s *IntegrationTestSuite) TestCmdTally() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			true,
-			v1beta2.TallyResult{},
+			v1.TallyResult{},
 		},
 		{
 			"json output",
@@ -247,7 +247,7 @@ func (s *IntegrationTestSuite) TestCmdTally() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			v1beta2.NewTallyResult(sdk.NewInt(0), sdk.NewInt(0), sdk.NewInt(0), sdk.NewInt(0)),
+			v1.NewTallyResult(sdk.NewInt(0), sdk.NewInt(0), sdk.NewInt(0), sdk.NewInt(0)),
 		},
 		{
 			"json output",
@@ -256,7 +256,7 @@ func (s *IntegrationTestSuite) TestCmdTally() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			v1beta2.NewTallyResult(s.cfg.BondedTokens, sdk.NewInt(0), sdk.NewInt(0), sdk.NewInt(0)),
+			v1.NewTallyResult(s.cfg.BondedTokens, sdk.NewInt(0), sdk.NewInt(0), sdk.NewInt(0)),
 		},
 	}
 
@@ -271,7 +271,7 @@ func (s *IntegrationTestSuite) TestCmdTally() {
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
-				var tally v1beta2.TallyResult
+				var tally v1.TallyResult
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &tally), out.String())
 				s.Require().Equal(tally, tc.expectedOutput)
 			}
@@ -298,7 +298,7 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 {
 	"messages": [
 		{
-			"@type": "/cosmos.gov.v1beta2.MsgExecLegacyContent",
+			"@type": "/cosmos.gov.v1.MsgExecLegacyContent",
 			"authority": "%s",
 			"content": {
 				"@type": "/cosmos.gov.v1beta1.TextProposal",
@@ -493,9 +493,9 @@ func (s *IntegrationTestSuite) TestCmdGetProposal() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				var proposal v1beta2.Proposal
+				var proposal v1.Proposal
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &proposal), out.String())
-				s.Require().Equal(title, proposal.Messages[0].GetCachedValue().(*v1beta2.MsgExecLegacyContent).Content.GetCachedValue().(v1beta1.Content).GetTitle())
+				s.Require().Equal(title, proposal.Messages[0].GetCachedValue().(*v1.MsgExecLegacyContent).Content.GetCachedValue().(v1beta1.Content).GetTitle())
 			}
 		})
 	}
@@ -538,7 +538,7 @@ func (s *IntegrationTestSuite) TestCmdGetProposals() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				var proposals v1beta2.QueryProposalsResponse
+				var proposals v1.QueryProposalsResponse
 
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &proposals), out.String())
 				s.Require().Len(proposals.Proposals, 3)
@@ -585,7 +585,7 @@ func (s *IntegrationTestSuite) TestCmdQueryDeposits() {
 			} else {
 				s.Require().NoError(err)
 
-				var deposits v1beta2.QueryDepositsResponse
+				var deposits v1.QueryDepositsResponse
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &deposits), out.String())
 				s.Require().Len(deposits.Deposits, 1)
 			}
@@ -595,7 +595,7 @@ func (s *IntegrationTestSuite) TestCmdQueryDeposits() {
 
 func (s *IntegrationTestSuite) TestCmdQueryDeposit() {
 	val := s.network.Validators[0]
-	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1beta2.DefaultMinDepositTokens)
+	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens)
 
 	testCases := []struct {
 		name      string
@@ -641,7 +641,7 @@ func (s *IntegrationTestSuite) TestCmdQueryDeposit() {
 			} else {
 				s.Require().NoError(err)
 
-				var deposit v1beta2.Deposit
+				var deposit v1.Deposit
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &deposit), out.String())
 				s.Require().Equal(depositAmount.String(), sdk.Coins(deposit.Amount).String())
 			}
@@ -770,7 +770,7 @@ func (s *IntegrationTestSuite) TestCmdQueryVotes() {
 			} else {
 				s.Require().NoError(err)
 
-				var votes v1beta2.QueryVotesResponse
+				var votes v1.QueryVotesResponse
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &votes), out.String())
 				s.Require().Len(votes.Votes, 1)
 			}
@@ -785,7 +785,7 @@ func (s *IntegrationTestSuite) TestCmdQueryVote() {
 		name           string
 		args           []string
 		expectErr      bool
-		expVoteOptions v1beta2.WeightedVoteOptions
+		expVoteOptions v1.WeightedVoteOptions
 	}{
 		{
 			"get vote of non existing proposal",
@@ -794,7 +794,7 @@ func (s *IntegrationTestSuite) TestCmdQueryVote() {
 				val.Address.String(),
 			},
 			true,
-			v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes),
+			v1.NewNonSplitVoteOption(v1.OptionYes),
 		},
 		{
 			"get vote by wrong voter",
@@ -803,7 +803,7 @@ func (s *IntegrationTestSuite) TestCmdQueryVote() {
 				"wrong address",
 			},
 			true,
-			v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes),
+			v1.NewNonSplitVoteOption(v1.OptionYes),
 		},
 		{
 			"vote for valid proposal",
@@ -813,7 +813,7 @@ func (s *IntegrationTestSuite) TestCmdQueryVote() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes),
+			v1.NewNonSplitVoteOption(v1.OptionYes),
 		},
 		{
 			"split vote for valid proposal",
@@ -823,11 +823,11 @@ func (s *IntegrationTestSuite) TestCmdQueryVote() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			v1beta2.WeightedVoteOptions{
-				&v1beta2.WeightedVoteOption{Option: v1beta2.OptionYes, Weight: sdk.NewDecWithPrec(60, 2).String()},
-				&v1beta2.WeightedVoteOption{Option: v1beta2.OptionNo, Weight: sdk.NewDecWithPrec(30, 2).String()},
-				&v1beta2.WeightedVoteOption{Option: v1beta2.OptionAbstain, Weight: sdk.NewDecWithPrec(5, 2).String()},
-				&v1beta2.WeightedVoteOption{Option: v1beta2.OptionNoWithVeto, Weight: sdk.NewDecWithPrec(5, 2).String()},
+			v1.WeightedVoteOptions{
+				&v1.WeightedVoteOption{Option: v1.OptionYes, Weight: sdk.NewDecWithPrec(60, 2).String()},
+				&v1.WeightedVoteOption{Option: v1.OptionNo, Weight: sdk.NewDecWithPrec(30, 2).String()},
+				&v1.WeightedVoteOption{Option: v1.OptionAbstain, Weight: sdk.NewDecWithPrec(5, 2).String()},
+				&v1.WeightedVoteOption{Option: v1.OptionNoWithVeto, Weight: sdk.NewDecWithPrec(5, 2).String()},
 			},
 		},
 	}
@@ -845,7 +845,7 @@ func (s *IntegrationTestSuite) TestCmdQueryVote() {
 			} else {
 				s.Require().NoError(err)
 
-				var vote v1beta2.Vote
+				var vote v1.Vote
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &vote), out.String())
 				s.Require().Equal(len(vote.Options), len(tc.expVoteOptions))
 				for i, option := range tc.expVoteOptions {
@@ -879,6 +879,7 @@ func (s *IntegrationTestSuite) TestNewCmdVote() {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--metadata=%s", "AQ=="),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, 2,
@@ -891,6 +892,19 @@ func (s *IntegrationTestSuite) TestNewCmdVote() {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, 0,
+		},
+		{
+			"valid vote with metadata",
+			[]string{
+				"1",
+				"yes",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--metadata=%s", "AQ=="),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, 0,
@@ -951,6 +965,19 @@ func (s *IntegrationTestSuite) TestNewCmdWeightedVote() {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, 0,
+		},
+		{
+			"valid vote with metadata",
+			[]string{
+				"1",
+				"yes",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--metadata=%s", "AQ=="),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, 0,

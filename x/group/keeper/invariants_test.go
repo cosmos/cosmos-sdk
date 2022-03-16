@@ -24,10 +24,9 @@ import (
 type invariantTestSuite struct {
 	suite.Suite
 
-	ctx       sdk.Context
-	cdc       *codec.ProtoCodec
-	key       *storetypes.KVStoreKey
-	blockTime time.Time
+	ctx sdk.Context
+	cdc *codec.ProtoCodec
+	key *storetypes.KVStoreKey
 }
 
 func TestInvariantTestSuite(t *testing.T) {
@@ -81,7 +80,7 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				Status:             group.PROPOSAL_STATUS_SUBMITTED,
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "1", NoCount: "0", AbstainCount: "0", NoWithVetoCount: "0"},
-				Timeout:            prevCtx.BlockTime().Add(time.Second * 600),
+				VotingPeriodEnd:    prevCtx.BlockTime().Add(time.Second * 600),
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 
@@ -95,7 +94,7 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				Status:             group.PROPOSAL_STATUS_SUBMITTED,
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "2", NoCount: "0", AbstainCount: "0", NoWithVetoCount: "0"},
-				Timeout:            curCtx.BlockTime().Add(time.Second * 600),
+				VotingPeriodEnd:    curCtx.BlockTime().Add(time.Second * 600),
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 		},
@@ -110,7 +109,7 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				Status:             group.PROPOSAL_STATUS_SUBMITTED,
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "2", NoCount: "0", AbstainCount: "0", NoWithVetoCount: "0"},
-				Timeout:            prevCtx.BlockTime().Add(time.Second * 600),
+				VotingPeriodEnd:    prevCtx.BlockTime().Add(time.Second * 600),
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			curProposal: &group.Proposal{
@@ -123,7 +122,7 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				Status:             group.PROPOSAL_STATUS_SUBMITTED,
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "1", NoCount: "0", AbstainCount: "0", NoWithVetoCount: "0"},
-				Timeout:            curCtx.BlockTime().Add(time.Second * 600),
+				VotingPeriodEnd:    curCtx.BlockTime().Add(time.Second * 600),
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			expBroken: true,
@@ -139,7 +138,7 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				Status:             group.PROPOSAL_STATUS_SUBMITTED,
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "0", NoCount: "2", AbstainCount: "0", NoWithVetoCount: "0"},
-				Timeout:            prevCtx.BlockTime().Add(time.Second * 600),
+				VotingPeriodEnd:    prevCtx.BlockTime().Add(time.Second * 600),
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			curProposal: &group.Proposal{
@@ -152,7 +151,7 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				Status:             group.PROPOSAL_STATUS_SUBMITTED,
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "0", NoCount: "1", AbstainCount: "0", NoWithVetoCount: "0"},
-				Timeout:            curCtx.BlockTime().Add(time.Second * 600),
+				VotingPeriodEnd:    curCtx.BlockTime().Add(time.Second * 600),
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			expBroken: true,
@@ -168,7 +167,7 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				Status:             group.PROPOSAL_STATUS_SUBMITTED,
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "0", NoCount: "0", AbstainCount: "2", NoWithVetoCount: "0"},
-				Timeout:            prevCtx.BlockTime().Add(time.Second * 600),
+				VotingPeriodEnd:    prevCtx.BlockTime().Add(time.Second * 600),
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			curProposal: &group.Proposal{
@@ -181,7 +180,7 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				Status:             group.PROPOSAL_STATUS_SUBMITTED,
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "0", NoCount: "0", AbstainCount: "1", NoWithVetoCount: "0"},
-				Timeout:            curCtx.BlockTime().Add(time.Second * 600),
+				VotingPeriodEnd:    curCtx.BlockTime().Add(time.Second * 600),
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			expBroken: true,
@@ -197,7 +196,7 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				Status:             group.PROPOSAL_STATUS_SUBMITTED,
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "0", NoCount: "0", AbstainCount: "0", NoWithVetoCount: "2"},
-				Timeout:            prevCtx.BlockTime().Add(time.Second * 600),
+				VotingPeriodEnd:    prevCtx.BlockTime().Add(time.Second * 600),
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			curProposal: &group.Proposal{
@@ -210,7 +209,7 @@ func (s *invariantTestSuite) TestTallyVotesInvariant() {
 				Status:             group.PROPOSAL_STATUS_SUBMITTED,
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "0", NoCount: "0", AbstainCount: "0", NoWithVetoCount: "1"},
-				Timeout:            curCtx.BlockTime().Add(time.Second * 600),
+				VotingPeriodEnd:    curCtx.BlockTime().Add(time.Second * 600),
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			expBroken: true,
@@ -413,7 +412,7 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 				Status:             group.PROPOSAL_STATUS_SUBMITTED,
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "4", NoCount: "3", AbstainCount: "0", NoWithVetoCount: "0"},
-				Timeout:            curCtx.BlockTime().Add(time.Second * 600),
+				VotingPeriodEnd:    curCtx.BlockTime().Add(time.Second * 600),
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			votes: []*group.Vote{
@@ -471,7 +470,7 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 				Status:             group.PROPOSAL_STATUS_SUBMITTED,
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "6", NoCount: "0", AbstainCount: "0", NoWithVetoCount: "0"},
-				Timeout:            curCtx.BlockTime().Add(time.Second * 600),
+				VotingPeriodEnd:    curCtx.BlockTime().Add(time.Second * 600),
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			votes: []*group.Vote{
@@ -529,7 +528,7 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 				Status:             group.PROPOSAL_STATUS_SUBMITTED,
 				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 				FinalTallyResult:   group.TallyResult{YesCount: "4", NoCount: "3", AbstainCount: "0", NoWithVetoCount: "0"},
-				Timeout:            curCtx.BlockTime().Add(time.Second * 600),
+				VotingPeriodEnd:    curCtx.BlockTime().Add(time.Second * 600),
 				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			},
 			votes: []*group.Vote{
@@ -561,7 +560,7 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 		_, err := groupTable.Create(cacheCurCtx.KVStore(key), groupsInfo)
 		s.Require().NoError(err)
 
-		err = groupPolicy.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Second))
+		err = groupPolicy.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Second, 0))
 		s.Require().NoError(err)
 		err = groupPolicyTable.Create(cacheCurCtx.KVStore(key), groupPolicy)
 		s.Require().NoError(err)

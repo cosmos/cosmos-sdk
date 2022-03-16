@@ -1,11 +1,11 @@
 package baseapp
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmprototypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
@@ -118,9 +118,11 @@ func TestGetBlockRentionHeight(t *testing.T) {
 	}
 }
 
-// Test and ensure that negative heights always cause errors.
-// See issue https://github.com/cosmos/cosmos-sdk/issues/7662.
-func TestBaseAppCreateQueryContextRejectsNegativeHeights(t *testing.T) {
+// Test and ensure that invalid block heights always cause errors.
+// See issues:
+// - https://github.com/cosmos/cosmos-sdk/issues/11220
+// - https://github.com/cosmos/cosmos-sdk/issues/7662
+func TestBaseAppCreateQueryContext(t *testing.T) {
 	t.Parallel()
 
 	logger := defaultLogger()
@@ -128,14 +130,32 @@ func TestBaseAppCreateQueryContextRejectsNegativeHeights(t *testing.T) {
 	name := t.Name()
 	app := NewBaseApp(name, logger, db, nil)
 
-	proves := []bool{
-		false, true,
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
+	app.Commit()
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2}})
+	app.Commit()
+
+	testCases := []struct {
+		name   string
+		height int64
+		prove  bool
+		expErr bool
+	}{
+		{"valid height", 2, true, false},
+		{"future height", 10, true, true},
+		{"negative height, prove=true", -1, true, true},
+		{"negative height, prove=false", -1, false, true},
 	}
-	for _, prove := range proves {
-		t.Run(fmt.Sprintf("prove=%t", prove), func(t *testing.T) {
-			sctx, err := app.createQueryContext(-10, true)
-			require.Error(t, err)
-			require.Equal(t, sctx, sdk.Context{})
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := app.createQueryContext(tc.height, tc.prove)
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
 		})
 	}
 }

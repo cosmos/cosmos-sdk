@@ -37,12 +37,37 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Features
+
+* (x/bank) [\#10771](https://github.com/cosmos/cosmos-sdk/pull/10771) Add safety check on bank module perms to allow module-specific mint restrictions (e.g. only minting a certain denom).
+* (x/bank) [\#10771](https://github.com/cosmos/cosmos-sdk/pull/10771) Add `bank.BankKeeper.WithMintCoinsRestriction` function to restrict use of bank `MintCoins` usage. This function is not on the bank `Keeper` interface, so it's not API-breaking, but only additive on the keeper implementation.
+* [\#11124](https://github.com/cosmos/cosmos-sdk/pull/11124) Add `GetAllVersions` to application store
+* (x/auth) [\#10880](https://github.com/cosmos/cosmos-sdk/pull/10880) Added a new query to the tx query service that returns a block with transactions fully decoded.
+* [#11314](https://github.com/cosmos/cosmos-sdk/pull/11314) Add state rollback command.
+
+### Bug Fixes
+
+* [\#11354](https://github.com/cosmos/cosmos-sdk/pull/11355) Added missing pagination flag for `bank q total` query.
+* [\#11197](https://github.com/cosmos/cosmos-sdk/pull/11197) Signing with multisig now works with multisig address which is not in the keyring. 
+* (client) [\#11283](https://github.com/cosmos/cosmos-sdk/issues/11283) Support multiple keys for tx simulation and setting automatic gas for txs.
+* (store) [\#11177](https://github.com/cosmos/cosmos-sdk/pull/11177) Update the prune `everything` strategy to store the last two heights.
+* (store) [\#11117](https://github.com/cosmos/cosmos-sdk/pull/11117) Fix data race in store trace component
+* (x/authz) [\#11252](https://github.com/cosmos/cosmos-sdk/pull/11252) Allow insufficient funds error for authz simulation
+* (crypto) [\#11298](https://github.com/cosmos/cosmos-sdk/pull/11298) Fix cgo secp signature verification and update libscep256k1 library. 
+
+### Improvements
+
+* [\#9576](https://github.com/cosmos/cosmos-sdk/pull/9576) Add debug error message to query result when enabled
+* (types) [\#11200](https://github.com/cosmos/cosmos-sdk/pull/11200) Added `Min()` and `Max()` operations on sdk.Coins.
+* [#11267](https://github.com/cosmos/cosmos-sdk/pull/11267) Add hooks to allow app modules to add things to state-sync (backport #10961).
+
 ## [v0.45.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.1) - 2022-02-03
 
 ### Bug Fixes
 
 * (grpc) [\#10985](https://github.com/cosmos/cosmos-sdk/pull/10992) The `/cosmos/tx/v1beta1/txs/{hash}` endpoint returns a 404 when a tx does not exist.
 * [\#10990](https://github.com/cosmos/cosmos-sdk/pull/10990) Fixes missing `iavl-cache-size` config parsing in `GetConfig` method.
+* [#11222](https://github.com/cosmos/cosmos-sdk/pull/11222) reject query with block height in the future
 
 ### Improvements
 

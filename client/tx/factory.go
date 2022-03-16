@@ -1,11 +1,17 @@
 package tx
 
 import (
+	"errors"
+	"fmt"
+	"os"
+
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
@@ -188,4 +194,148 @@ func (f Factory) WithSignMode(mode signing.SignMode) Factory {
 func (f Factory) WithTimeoutHeight(height uint64) Factory {
 	f.timeoutHeight = height
 	return f
+}
+
+// BuildUnsignedTx builds a transaction to be signed given a set of messages.
+// Once created, the fee, memo, and messages are set.
+func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
+	if f.chainID == "" {
+		return nil, fmt.Errorf("chain ID required but not specified")
+	}
+
+	fees := f.fees
+
+	if !f.gasPrices.IsZero() {
+		if !fees.IsZero() {
+			return nil, errors.New("cannot provide both fees and gas prices")
+		}
+
+		glDec := sdk.NewDec(int64(f.gas))
+
+		// Derive the fees based on the provided gas prices, where
+		// fee = ceil(gasPrice * gasLimit).
+		fees = make(sdk.Coins, len(f.gasPrices))
+
+		for i, gp := range f.gasPrices {
+			fee := gp.Amount.Mul(glDec)
+			fees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
+		}
+	}
+
+	tx := f.txConfig.NewTxBuilder()
+
+	if err := tx.SetMsgs(msgs...); err != nil {
+		return nil, err
+	}
+
+	tx.SetMemo(f.memo)
+	tx.SetFeeAmount(fees)
+	tx.SetGasLimit(f.gas)
+	tx.SetTimeoutHeight(f.TimeoutHeight())
+
+	return tx, nil
+}
+
+// PrintUnsignedTx will generate an unsigned transaction and print it to the writer
+// specified by ctx.Output. If simulation was requested, the gas will be
+// simulated and also printed to the same writer before the transaction is
+// printed.
+func (f Factory) PrintUnsignedTx(clientCtx client.Context, msgs ...sdk.Msg) error {
+	if f.SimulateAndExecute() {
+		if clientCtx.Offline {
+			return errors.New("cannot estimate gas in offline mode")
+		}
+
+		_, adjusted, err := CalculateGas(clientCtx, f, msgs...)
+		if err != nil {
+			return err
+		}
+
+		f = f.WithGas(adjusted)
+		_, _ = fmt.Fprintf(os.Stderr, "%s\n", GasEstimateResponse{GasEstimate: f.Gas()})
+	}
+
+	unsignedTx, err := f.BuildUnsignedTx(msgs...)
+	if err != nil {
+		return err
+	}
+
+	json, err := clientCtx.TxConfig.TxJSONEncoder()(unsignedTx.GetTx())
+	if err != nil {
+		return err
+	}
+
+	return clientCtx.PrintString(fmt.Sprintf("%s\n", json))
+}
+
+// BuildSimTx creates an unsigned tx with an empty single signature and returns
+// the encoded transaction or an error if the unsigned transaction cannot be
+// built.
+func (f Factory) BuildSimTx(msgs ...sdk.Msg) ([]byte, error) {
+	txb, err := f.BuildUnsignedTx(msgs...)
+	if err != nil {
+		return nil, err
+	}
+
+	// use the first element from the list of keys in order to generate a valid
+	// pubkey that supports multiple algorithms
+
+	var pk cryptotypes.PubKey = &secp256k1.PubKey{} // use default public key type
+
+	if f.keybase != nil {
+		infos, _ := f.keybase.List()
+		if len(infos) == 0 {
+			return nil, errors.New("cannot build signature for simulation, key infos slice is empty")
+		}
+
+		// take the first info record just for simulation purposes
+		pk = infos[0].GetPubKey()
+	}
+
+	// Create an empty signature literal as the ante handler will populate with a
+	// sentinel pubkey.
+	sig := signing.SignatureV2{
+		PubKey: pk,
+		Data: &signing.SingleSignatureData{
+			SignMode: f.signMode,
+		},
+		Sequence: f.Sequence(),
+	}
+	if err := txb.SetSignatures(sig); err != nil {
+		return nil, err
+	}
+
+	return f.txConfig.TxEncoder()(txb.GetTx())
+}
+
+// Prepare ensures the account defined by ctx.GetFromAddress() exists and
+// if the account number and/or the account sequence number are zero (not set),
+// they will be queried for and set on the provided Factory. A new Factory with
+// the updated fields will be returned.
+func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
+	fc := f
+
+	from := clientCtx.GetFromAddress()
+
+	if err := fc.accountRetriever.EnsureExists(clientCtx, from); err != nil {
+		return fc, err
+	}
+
+	initNum, initSeq := fc.accountNumber, fc.sequence
+	if initNum == 0 || initSeq == 0 {
+		num, seq, err := fc.accountRetriever.GetAccountNumberSequence(clientCtx, from)
+		if err != nil {
+			return fc, err
+		}
+
+		if initNum == 0 {
+			fc = fc.WithAccountNumber(num)
+		}
+
+		if initSeq == 0 {
+			fc = fc.WithSequence(seq)
+		}
+	}
+
+	return fc, nil
 }

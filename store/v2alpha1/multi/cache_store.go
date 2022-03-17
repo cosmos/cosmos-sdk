@@ -2,7 +2,7 @@ package multi
 
 import (
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	types "github.com/cosmos/cosmos-sdk/store/v2"
+	types "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 )
 
 // GetKVStore implements BasicMultiStore.

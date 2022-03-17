@@ -83,8 +83,9 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 	f = f.WithFees(feesStr)
 
 	tipsStr, _ := flagSet.GetString(flags.FlagTip)
-	tipper, _ := flagSet.GetString(flags.FlagTipper)
-	f = f.WithTips(tipsStr, tipper)
+	// Add tips to factory. The tipper is necessarily the Msg signer, i.e.
+	// the from address.
+	f = f.WithTips(tipsStr, clientCtx.FromAddress.String())
 
 	gasPricesStr, _ := flagSet.GetString(flags.FlagGasPrices)
 	f = f.WithGasPrices(gasPricesStr)
@@ -276,7 +277,14 @@ func (f Factory) PrintUnsignedTx(clientCtx client.Context, msgs ...sdk.Msg) erro
 			return errors.New("cannot estimate gas in offline mode")
 		}
 
-		_, adjusted, err := CalculateGas(clientCtx, f, msgs...)
+		// Prepare TxFactory with acc & seq numbers as CalculateGas requires
+		// account and sequence numbers to be set
+		preparedTxf, err := f.Prepare(clientCtx)
+		if err != nil {
+			return err
+		}
+
+		_, adjusted, err := CalculateGas(clientCtx, preparedTxf, msgs...)
 		if err != nil {
 			return err
 		}

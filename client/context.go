@@ -9,6 +9,8 @@ import (
 
 	"sigs.k8s.io/yaml"
 
+	"google.golang.org/grpc"
+
 	"github.com/gogo/protobuf/proto"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
@@ -23,6 +25,7 @@ import (
 type Context struct {
 	FromAddress       sdk.AccAddress
 	Client            rpcclient.Client
+	GRPCClient        *grpc.ClientConn
 	ChainID           string
 	Codec             codec.Codec
 	InterfaceRegistry codectypes.InterfaceRegistry
@@ -125,6 +128,13 @@ func (ctx Context) WithHeight(height int64) Context {
 // instance.
 func (ctx Context) WithClient(client rpcclient.Client) Context {
 	ctx.Client = client
+	return ctx
+}
+
+// WithGRPCClient returns a copy of the context with an updated GRPC client
+// instance.
+func (ctx Context) WithGRPCClient(grpcClient *grpc.ClientConn) Context {
+	ctx.GRPCClient = grpcClient
 	return ctx
 }
 

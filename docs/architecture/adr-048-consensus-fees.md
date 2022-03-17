@@ -65,7 +65,13 @@ We also change the semantic of existing `fee` field of `Tx`, instead of charging
 
 Transactions are prioritized based on the tier, the higher the tier, the higher the priority.
 
-Within the same tier/priority, the transactions are processed in FIFO manner which is the default behavior of tendermint. Be aware of that the mempool tx ordering logic is not part of consensus and can be modified by malicious validator.
+Within the same tier, follow the default Tendermint order (currently FIFO). Be aware of that the mempool tx ordering logic is not part of consensus and can be modified by malicious validator.
+
+This mechanism can be easily composed with prioritization mechanisms:
+* we can add extra tires out of a user control:
+  * Example 1: user can set tire 0, 10 or 20, but the protocol will create tires 0, 1, 2 ... 29. For example IBC transactions will go to tire `user_tire + 5`: if user selected tire 1, then the transaction will go to tire 15.
+  * Example 2: we can reserve tire 4, 5, ... only for special transaction types. For example, tire 5 is reserved for evidence tx. So if submits a bank.Send transaction and set tire 5, it will be delegated to tire 3 (the max tire level available for any transaction). 
+  * Example 3: we can enforce that all transactions of a sepecific type will go to specific tire. For example, tire 100 will be reserved for evidence transactions and all evidence transactions will always go to that tire.
 
 ### `min-gas-prices`
 
@@ -112,6 +118,7 @@ def tx_tier(tx):
     else:
       # default tier for custom transactions
       return 0
+    # NOTE: we can add more rules here per "Tx Prioritization" section 
 
 class TierParams:
   'gas price strategy parameters of one tier'
@@ -182,6 +189,7 @@ If attacker spam with lower tier transactions, user can mitigate by sending high
 - The default tier keeps the same predictable gas price experience for client.
 - The higher tier's gas price can adapt to block load.
 - No priority conflict with custom priority based on transaction types, since this proposal only occupy three priority levels.
+- Possibility to compose different priority rules with tires
 
 ### Negative
 

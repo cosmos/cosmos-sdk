@@ -188,6 +188,7 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, prop
 			msg += fmt.Sprintf("error while returning vote iterator for proposal with ID %d\n%v\n", proposal.Id, err)
 			return msg, broken
 		}
+		defer voteIt.Close()
 
 		for {
 			_, err := voteIt.LoadNext(&vote)
@@ -243,7 +244,6 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, prop
 				}
 			}
 		}
-		voteIt.Close()
 
 		totalProposalVotes, err := proposal.FinalTallyResult.TotalCounts()
 		if err != nil {

@@ -58,7 +58,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 		{
 			"Success",
 			func(require *require.Assertions) {
-				suite.createCoinAuthorization(addrs[0], addrs[1])
+				expAuthorization = suite.createCoinAuthorization(addrs[0], addrs[1])
 				req = &authz.QueryGrantsRequest{
 					Granter:    addrs[1].String(),
 					Grantee:    addrs[0].String(),
@@ -125,7 +125,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorizations() {
 		{
 			"Success",
 			func() {
-				suite.createCoinAuthorization(addrs[0], addrs[1])
+				expAuthorization = suite.createCoinAuthorization(addrs[0], addrs[1])
 				req = &authz.QueryGrantsRequest{
 					Granter: addrs[1].String(),
 					Grantee: addrs[0].String(),
@@ -292,10 +292,11 @@ func (suite *TestSuite) TestGRPCQueryGranteeGrants() {
 	}
 }
 
-func (suite *TestSuite) createCoinAuthorization(a1, a2 sdk.AccAddress) {
+func (suite *TestSuite) createCoinAuthorization(a1, a2 sdk.AccAddress) authz.Authorization {
 	exp := suite.ctx.BlockHeader().Time.Add(time.Hour)
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
 	authorization := &banktypes.SendAuthorization{SpendLimit: newCoins}
 	err := suite.app.AuthzKeeper.SaveGrant(suite.ctx, a1, a2, authorization, &exp)
 	suite.Require().NoError(err)
+	return authorization
 }

@@ -33,7 +33,7 @@ func GroupTotalWeightInvariant(keeper Keeper) sdk.Invariant {
 }
 
 // TallyVotesSumInvariant checks that proposal FinalTallyResult must correspond to the vote option,
-// for proposals with PROPOSAL_STATUS_CLOSED status
+// for proposals with PROPOSAL_STATUS_CLOSED status.
 func TallyVotesSumInvariant(keeper Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		msg, broken := TallyVotesSumInvariantHelper(ctx, keeper.key, keeper.proposalTable, keeper.groupMemberTable, keeper.voteByProposalIndex, keeper.groupPolicyTable)

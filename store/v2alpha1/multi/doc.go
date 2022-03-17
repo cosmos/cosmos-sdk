@@ -1,4 +1,4 @@
-// This package provides concrete implementations of the store/v2 "MultiStore" types, including
+// This package provides concrete implementations of the store/v2alpha1 "MultiStore" types, including
 // CommitMultiStore, CacheMultiStore, and BasicMultiStore (as read-only stores at past versions).
 //
 // Substores are declared as part of a schema within StoreOptions.

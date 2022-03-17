@@ -20,8 +20,8 @@ const (
 
 // RegisterInvariants registers all group invariants
 func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper) {
-	ir.RegisterRoute(group.ModuleName, weightInvariant, GroupTotalWeightInvariant(keeper))
-	ir.RegisterRoute(group.ModuleName, votesSumInvariant, TallyVotesSumInvariant(keeper))
+	// ir.RegisterRoute(group.ModuleName, weightInvariant, GroupTotalWeightInvariant(keeper))
+	// ir.RegisterRoute(group.ModuleName, votesSumInvariant, TallyVotesSumInvariant(keeper))
 }
 
 // GroupTotalWeightInvariant checks that group's TotalWeight must be equal to the sum of its members.
@@ -33,7 +33,7 @@ func GroupTotalWeightInvariant(keeper Keeper) sdk.Invariant {
 }
 
 // TallyVotesSumInvariant checks that proposal FinalTallyResult must correspond to the vote option,
-// after voting period has ended.
+// for proposals with PROPOSAL_STATUS_CLOSED status TODO
 func TallyVotesSumInvariant(keeper Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		msg, broken := TallyVotesSumInvariantHelper(ctx, keeper.key, keeper.proposalsByVotingPeriodEnd, keeper.groupMemberTable, keeper.voteByProposalIndex, keeper.groupPolicyTable)

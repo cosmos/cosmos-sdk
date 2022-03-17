@@ -2293,36 +2293,6 @@ func (s *TestSuite) TestExecProposal() {
 			expProposalResult: group.PROPOSAL_RESULT_REJECTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
-		"with group modified before tally": {
-			setupProposal: func(ctx context.Context) uint64 {
-				myProposalID := submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
-
-				// then modify group
-				_, err := s.keeper.UpdateGroupMetadata(ctx, &group.MsgUpdateGroupMetadata{
-					Admin:   addr1.String(),
-					GroupId: s.groupID,
-				})
-				s.Require().NoError(err)
-				return myProposalID
-			},
-			expProposalStatus: group.PROPOSAL_STATUS_ABORTED,
-			expProposalResult: group.PROPOSAL_RESULT_UNFINALIZED,
-			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
-		},
-		"with group policy modified before tally": {
-			setupProposal: func(ctx context.Context) uint64 {
-				myProposalID := submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
-				_, err := s.keeper.UpdateGroupPolicyMetadata(ctx, &group.MsgUpdateGroupPolicyMetadata{
-					Admin:   addr1.String(),
-					Address: s.groupPolicyAddr.String(),
-				})
-				s.Require().NoError(err)
-				return myProposalID
-			},
-			expProposalStatus: group.PROPOSAL_STATUS_ABORTED,
-			expProposalResult: group.PROPOSAL_RESULT_UNFINALIZED,
-			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
-		},
 		"prevent double execution when successful": {
 			setupProposal: func(ctx context.Context) uint64 {
 				myProposalID := submitProposalAndVote(ctx, s, []sdk.Msg{msgSend1}, proposers, group.VOTE_OPTION_YES)

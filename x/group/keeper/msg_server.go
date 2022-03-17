@@ -761,23 +761,9 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 	}
 
 	if proposal.Status == group.PROPOSAL_STATUS_SUBMITTED {
-		// Ensure that group policy hasn't been modified before tally.
-		if proposal.GroupPolicyVersion != policyInfo.Version {
-			proposal.Result = group.PROPOSAL_RESULT_UNFINALIZED
-			proposal.Status = group.PROPOSAL_STATUS_ABORTED
-			return storeUpdates()
-		}
-
 		electorate, err := k.getGroupInfo(ctx, policyInfo.GroupId)
 		if err != nil {
 			return nil, sdkerrors.Wrap(err, "load group")
-		}
-
-		// Ensure that group hasn't been modified before tally.
-		if electorate.Version != proposal.GroupVersion {
-			proposal.Result = group.PROPOSAL_RESULT_UNFINALIZED
-			proposal.Status = group.PROPOSAL_STATUS_ABORTED
-			return storeUpdates()
 		}
 
 		if err := k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo); err != nil {

@@ -120,7 +120,20 @@ func TestAuthzAuthorizations(t *testing.T) {
 			false,
 			nil,
 		},
-
+		{
+			"delegate: testing with a validator out of denylist",
+			[]sdk.ValAddress{},
+			[]sdk.ValAddress{val1},
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
+			nil,
+			stakingtypes.NewMsgDelegate(delAddr, val2, coin100),
+			false,
+			false,
+			&stakingtypes.StakeAuthorization{
+				Validators: &stakingtypes.StakeAuthorization_DenyList{
+					DenyList: &stakingtypes.StakeAuthorization_Validators{Address: []string{val1.String()}},
+				}, MaxTokens: nil, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE},
+		},
 		{
 			"undelegate: expect 0 remaining coins",
 			[]sdk.ValAddress{val1, val2},

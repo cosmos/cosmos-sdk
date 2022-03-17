@@ -65,7 +65,7 @@ We also change the semantic of existing `fee` field of `Tx`, instead of charging
 
 Transactions are prioritized based on the tier, the higher the tier, the higher the priority.
 
-Within the same tier/priority, the transactions are processed in FIFO manner.
+Within the same tier/priority, the transactions are processed in FIFO manner which is the default behavior of tendermint. Be aware of that the mempool tx ordering logic is not part of consensus and can be modified by malicious validator.
 
 ### `min-gas-prices`
 
@@ -147,7 +147,8 @@ def mempoolFeeTxHandler_checkTx(ctx, tx):
     consensus_price = State.gas_prices[tx_tier(tx)]
     min_price = max(validator_price, consensus_price)
 
-    if tx.gas_price() < min_price:
+    # zero means infinity for gas price cap
+    if tx.gas_price() > 0 and tx.gas_price() < min_price:
         return 'insufficient fees'
     return next_CheckTx(ctx, tx)
 

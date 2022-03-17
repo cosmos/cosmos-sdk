@@ -51,7 +51,6 @@ passes as well as any metadata associated with the proposal.
 
 There are four choices to choose while voting - yes, no, abstain and veto. Not
 all decision policies will support them. Votes can contain some optional metadata.
-During the voting window, accounts that have already voted may change their vote.
 In the current implementation, the voting window begins as soon as a proposal
 is submitted.
 
@@ -65,10 +64,3 @@ new votes using the `Exec` field of `Msg/CreateProposal` and `Msg/Vote` requests
 In the former case, proposers signatures are considered as yes votes.
 For now, if the proposal can't be executed, it'll still be opened for new votes and
 could be executed later on.
-
-### Changing Group Membership
-
-In the current implementation, changing a group's membership (adding or removing members or changing their weight)
-will cause all existing proposals for group policy accounts linked to this group
-to be invalidated. They will simply fail if someone calls `Msg/Exec` and will
-eventually be garbage collected.

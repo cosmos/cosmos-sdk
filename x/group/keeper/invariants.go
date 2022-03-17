@@ -143,7 +143,7 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, prop
 
 		// Only look at proposals that are closed, i.e. for which FinalTallyResult has been computed
 		if proposal.Status != group.PROPOSAL_STATUS_CLOSED {
-			break
+			continue
 		}
 
 		totalVotingWeight, err := groupmath.NewNonNegativeDecFromString("0")

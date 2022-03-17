@@ -2044,47 +2044,6 @@ func (s *TestSuite) TestVote() {
 			expErr:  true,
 			postRun: func(sdkCtx sdk.Context) {},
 		},
-		"with group modified": {
-			req: &group.MsgVote{
-				ProposalId: myProposalID,
-				Voter:      addr4.String(),
-				Option:     group.VOTE_OPTION_NO,
-			},
-			doBefore: func(ctx context.Context) {
-				_, err = s.keeper.UpdateGroupMetadata(ctx, &group.MsgUpdateGroupMetadata{
-					GroupId: myGroupID,
-					Admin:   addr1.String(),
-				})
-				s.Require().NoError(err)
-			},
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
-		},
-		"with policy modified": {
-			req: &group.MsgVote{
-				ProposalId: myProposalID,
-				Voter:      addr4.String(),
-				Option:     group.VOTE_OPTION_NO,
-			},
-			doBefore: func(ctx context.Context) {
-				m, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(
-					addr1,
-					groupPolicy,
-					&group.ThresholdDecisionPolicy{
-						Threshold: "1",
-						Windows: &group.DecisionPolicyWindows{
-							VotingPeriod: time.Second,
-						},
-					},
-				)
-				s.Require().NoError(err)
-
-				_, err = s.keeper.UpdateGroupPolicyDecisionPolicy(ctx, m)
-				s.Require().NoError(err)
-			},
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
-		},
 	}
 	for msg, spec := range specs {
 		spec := spec

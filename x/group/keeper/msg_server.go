@@ -637,21 +637,13 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 
 	var policyInfo group.GroupPolicyInfo
 
-	// Ensure that group policy hasn't been modified since the proposal submission.
 	if policyInfo, err = k.getGroupPolicyInfo(ctx, proposal.Address); err != nil {
 		return nil, sdkerrors.Wrap(err, "load group policy")
 	}
-	if proposal.GroupPolicyVersion != policyInfo.Version {
-		return nil, sdkerrors.Wrap(errors.ErrModified, "group policy was modified")
-	}
 
-	// Ensure that group hasn't been modified since the proposal submission.
 	electorate, err := k.getGroupInfo(ctx, policyInfo.GroupId)
 	if err != nil {
 		return nil, err
-	}
-	if electorate.Version != proposal.GroupVersion {
-		return nil, sdkerrors.Wrap(errors.ErrModified, "group was modified")
 	}
 
 	// Count and store votes.

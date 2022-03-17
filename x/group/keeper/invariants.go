@@ -20,22 +20,8 @@ const (
 
 // RegisterInvariants registers all group invariants
 func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper) {
-	ir.RegisterRoute(group.ModuleName, votesInvariant, TallyVotesInvariant(keeper))
 	ir.RegisterRoute(group.ModuleName, weightInvariant, GroupTotalWeightInvariant(keeper))
 	ir.RegisterRoute(group.ModuleName, votesSumInvariant, TallyVotesSumInvariant(keeper))
-}
-
-// TallyVotesInvariant checks that vote tally sums must never have less than the block before.
-func TallyVotesInvariant(keeper Keeper) sdk.Invariant {
-	return func(ctx sdk.Context) (string, bool) {
-		if ctx.BlockHeight()-1 < 0 {
-			return sdk.FormatInvariant(group.ModuleName, votesInvariant, "Not enough blocks to perform TallyVotesInvariant"), false
-		}
-		prevCtx, _ := ctx.CacheContext()
-		prevCtx = prevCtx.WithBlockHeight(ctx.BlockHeight() - 1)
-		msg, broken := TallyVotesInvariantHelper(ctx, prevCtx, keeper.key, keeper.proposalTable)
-		return sdk.FormatInvariant(group.ModuleName, votesInvariant, msg), broken
-	}
 }
 
 // GroupTotalWeightInvariant checks that group's TotalWeight must be equal to the sum of its members.
@@ -52,89 +38,6 @@ func TallyVotesSumInvariant(keeper Keeper) sdk.Invariant {
 		msg, broken := TallyVotesSumInvariantHelper(ctx, keeper.key, keeper.groupTable, keeper.proposalTable, keeper.groupMemberTable, keeper.voteByProposalIndex, keeper.groupPolicyTable)
 		return sdk.FormatInvariant(group.ModuleName, votesSumInvariant, msg), broken
 	}
-}
-
-func TallyVotesInvariantHelper(ctx sdk.Context, prevCtx sdk.Context, key storetypes.StoreKey, proposalTable orm.AutoUInt64Table) (string, bool) {
-
-	var msg string
-	var broken bool
-
-	prevIt, err := proposalTable.PrefixScan(prevCtx.KVStore(key), 1, math.MaxUint64)
-	if err != nil {
-		msg += fmt.Sprintf("PrefixScan failure on proposal table at block height %d\n%v\n", prevCtx.BlockHeight(), err)
-		return msg, broken
-	}
-
-	curIt, err := proposalTable.PrefixScan(ctx.KVStore(key), 1, math.MaxUint64)
-	if err != nil {
-		msg += fmt.Sprintf("PrefixScan failure on proposal table at block height %d\n%v\n", ctx.BlockHeight(), err)
-		return msg, broken
-	}
-
-	var curProposals []*group.Proposal
-	_, err = orm.ReadAll(curIt, &curProposals)
-	if err != nil {
-		msg += fmt.Sprintf("error while getting all the proposals at block height %d\n%v\n", ctx.BlockHeight(), err)
-		return msg, broken
-	}
-
-	var prevProposals []*group.Proposal
-	_, err = orm.ReadAll(prevIt, &prevProposals)
-	if err != nil {
-		msg += fmt.Sprintf("error while getting all the proposals at block height %d\n%v\n", prevCtx.BlockHeight(), err)
-		return msg, broken
-	}
-
-	for i := 0; i < len(prevProposals); i++ {
-		if prevProposals[i].Id == curProposals[i].Id {
-			prevYesCount, err := prevProposals[i].FinalTallyResult.GetYesCount()
-			if err != nil {
-				msg += fmt.Sprintf("error while getting yes votes weight of proposal at block height %d\n%v\n", prevCtx.BlockHeight(), err)
-				return msg, broken
-			}
-			curYesCount, err := curProposals[i].FinalTallyResult.GetYesCount()
-			if err != nil {
-				msg += fmt.Sprintf("error while getting yes votes weight of proposal at block height %d\n%v\n", ctx.BlockHeight(), err)
-				return msg, broken
-			}
-			prevNoCount, err := prevProposals[i].FinalTallyResult.GetNoCount()
-			if err != nil {
-				msg += fmt.Sprintf("error while getting no votes weight of proposal at block height %d\n%v\n", prevCtx.BlockHeight(), err)
-				return msg, broken
-			}
-			curNoCount, err := curProposals[i].FinalTallyResult.GetNoCount()
-			if err != nil {
-				msg += fmt.Sprintf("error while getting no votes weight of proposal at block height %d\n%v\n", ctx.BlockHeight(), err)
-				return msg, broken
-			}
-			prevAbstainCount, err := prevProposals[i].FinalTallyResult.GetAbstainCount()
-			if err != nil {
-				msg += fmt.Sprintf("error while getting abstain votes weight of proposal at block height %d\n%v\n", prevCtx.BlockHeight(), err)
-				return msg, broken
-			}
-			curAbstainCount, err := curProposals[i].FinalTallyResult.GetAbstainCount()
-			if err != nil {
-				msg += fmt.Sprintf("error while getting abstain votes weight of proposal at block height %d\n%v\n", ctx.BlockHeight(), err)
-				return msg, broken
-			}
-			prevVetoCount, err := prevProposals[i].FinalTallyResult.GetNoWithVetoCount()
-			if err != nil {
-				msg += fmt.Sprintf("error while getting veto votes weight of proposal at block height %d\n%v\n", prevCtx.BlockHeight(), err)
-				return msg, broken
-			}
-			curVetoCount, err := curProposals[i].FinalTallyResult.GetNoWithVetoCount()
-			if err != nil {
-				msg += fmt.Sprintf("error while getting veto votes weight of proposal at block height %d\n%v\n", ctx.BlockHeight(), err)
-				return msg, broken
-			}
-			if (curYesCount.Cmp(prevYesCount) == -1) || (curNoCount.Cmp(prevNoCount) == -1) || (curAbstainCount.Cmp(prevAbstainCount) == -1) || (curVetoCount.Cmp(prevVetoCount) == -1) {
-				broken = true
-				msg += "vote tally sums must never have less than the block before\n"
-				return msg, broken
-			}
-		}
-	}
-	return msg, broken
 }
 
 func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, groupTable orm.AutoUInt64Table, groupMemberByGroupIndex orm.Index) (string, bool) {

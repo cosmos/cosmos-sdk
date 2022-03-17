@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	types "github.com/cosmos/cosmos-sdk/store/v2"
-	"github.com/cosmos/cosmos-sdk/store/v2/dbadapter"
+	types "github.com/cosmos/cosmos-sdk/store/v2alpha1"
+	"github.com/cosmos/cosmos-sdk/store/v2alpha1/dbadapter"
 	mocks "github.com/cosmos/cosmos-sdk/tests/mocks/db"
 )
 

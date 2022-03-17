@@ -134,7 +134,6 @@ func TestAuthzAuthorizations(t *testing.T) {
 					DenyList: &stakingtypes.StakeAuthorization_Validators{Address: []string{val1.String()}},
 				}, MaxTokens: nil, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE},
 		},
-
 		{
 			"undelegate: expect 0 remaining coins",
 			[]sdk.ValAddress{val1, val2},

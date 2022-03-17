@@ -20,8 +20,8 @@ const (
 
 // RegisterInvariants registers all group invariants
 func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper) {
-	// ir.RegisterRoute(group.ModuleName, weightInvariant, GroupTotalWeightInvariant(keeper))
-	// ir.RegisterRoute(group.ModuleName, votesSumInvariant, TallyVotesSumInvariant(keeper))
+	ir.RegisterRoute(group.ModuleName, weightInvariant, GroupTotalWeightInvariant(keeper))
+	ir.RegisterRoute(group.ModuleName, votesSumInvariant, TallyVotesSumInvariant(keeper))
 }
 
 // GroupTotalWeightInvariant checks that group's TotalWeight must be equal to the sum of its members.

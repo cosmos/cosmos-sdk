@@ -33,10 +33,10 @@ func GroupTotalWeightInvariant(keeper Keeper) sdk.Invariant {
 }
 
 // TallyVotesSumInvariant checks that proposal FinalTallyResult must correspond to the vote option,
-// for proposals with PROPOSAL_STATUS_CLOSED status TODO
+// for proposals with PROPOSAL_STATUS_CLOSED status
 func TallyVotesSumInvariant(keeper Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-		msg, broken := TallyVotesSumInvariantHelper(ctx, keeper.key, keeper.proposalsByVotingPeriodEnd, keeper.groupMemberTable, keeper.voteByProposalIndex, keeper.groupPolicyTable)
+		msg, broken := TallyVotesSumInvariantHelper(ctx, keeper.key, keeper.proposalTable, keeper.groupMemberTable, keeper.voteByProposalIndex, keeper.groupPolicyTable)
 		return sdk.FormatInvariant(group.ModuleName, votesSumInvariant, msg), broken
 	}
 }
@@ -115,34 +115,35 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 	return msg, broken
 }
 
-func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey,
-	proposalsByVotingPeriodEnd orm.Index, groupMemberTable orm.PrimaryKeyTable,
-	voteByProposalIndex orm.Index, groupPolicyTable orm.PrimaryKeyTable) (string, bool) {
+func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, proposalTable orm.AutoUInt64Table, groupMemberTable orm.PrimaryKeyTable, voteByProposalIndex orm.Index, groupPolicyTable orm.PrimaryKeyTable) (string, bool) {
 	var msg string
 	var broken bool
 
+	var proposal group.Proposal
 	var groupPolicy group.GroupPolicyInfo
 	var groupMem group.GroupMember
 	var vote group.Vote
 
-	timeBytes := sdk.FormatTimeBytes(ctx.BlockTime())
-	it, err := proposalsByVotingPeriodEnd.PrefixScan(ctx.KVStore(key), nil, timeBytes)
-
+	proposalIt, err := proposalTable.PrefixScan(ctx.KVStore(key), 1, math.MaxUint64)
 	if err != nil {
-		msg += fmt.Sprintf("PrefixScan failure on proposalsByVotingPeriodEnd index\n%v\n", err)
+		msg += fmt.Sprintf("PrefixScan failure on proposal table\n%v\n", err)
 		return msg, broken
 	}
-	defer it.Close()
+	defer proposalIt.Close()
 
-	var proposal group.Proposal
 	for {
-		_, err := it.LoadNext(&proposal)
+		_, err = proposalIt.LoadNext(&proposal)
 		if errors.ErrORMIteratorDone.Is(err) {
 			break
 		}
 		if err != nil {
-			msg += fmt.Sprintf("LoadNext failure on proposalsByVotingPeriodEnd index iterator\n%v\n", err)
+			msg += fmt.Sprintf("LoadNext failure on proposal table iterator\n%v\n", err)
 			return msg, broken
+		}
+
+		// Only look at proposals that are closed, i.e. for which FinalTallyResult has been computed
+		if proposal.Status != group.PROPOSAL_STATUS_CLOSED {
+			break
 		}
 
 		totalVotingWeight, err := groupmath.NewNonNegativeDecFromString("0")
@@ -177,12 +178,16 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey,
 			return msg, broken
 		}
 
+		if proposal.GroupPolicyVersion != groupPolicy.Version {
+			msg += fmt.Sprintf("group policy with address %s was modified\n", groupPolicy.Address)
+			return msg, broken
+		}
+
 		voteIt, err := voteByProposalIndex.Get(ctx.KVStore(key), proposal.Id)
 		if err != nil {
 			msg += fmt.Sprintf("error while returning vote iterator for proposal with ID %d\n%v\n", proposal.Id, err)
 			return msg, broken
 		}
-		defer voteIt.Close()
 
 		for {
 			_, err := voteIt.LoadNext(&vote)
@@ -238,6 +243,7 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey,
 				}
 			}
 		}
+		voteIt.Close()
 
 		totalProposalVotes, err := proposal.FinalTallyResult.TotalCounts()
 		if err != nil {

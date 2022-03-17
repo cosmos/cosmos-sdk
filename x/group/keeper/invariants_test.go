@@ -178,12 +178,6 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 	}, group.Vote{}.ProposalId)
 	s.Require().NoError(err)
 
-	proposalsByVotingPeriodEnd, err := orm.NewIndex(proposalTable, keeper.ProposalsByVotingPeriodEndPrefix, func(value interface{}) ([]interface{}, error) {
-		votingPeriodEnd := value.(*group.Proposal).VotingPeriodEnd
-		return []interface{}{sdk.FormatTimeBytes(votingPeriodEnd)}, nil
-	}, []byte{})
-	s.Require().NoError(err)
-
 	_, _, adminAddr := testdata.KeyTestPubAddr()
 	_, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
@@ -251,6 +245,58 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 					ProposalId: 1,
 					Voter:      addr2.String(),
 					Option:     group.VOTE_OPTION_NO,
+					SubmitTime: curCtx.BlockTime(),
+				},
+			},
+			expBroken: false,
+		},
+		"proposal not closed ignored": {
+			groupsInfo: &group.GroupInfo{
+				Id:          1,
+				Admin:       adminAddr.String(),
+				Version:     1,
+				TotalWeight: "7",
+			},
+			groupPolicy: &group.GroupPolicyInfo{
+				Address: addr1.String(),
+				GroupId: 1,
+				Admin:   adminAddr.String(),
+				Version: 1,
+			},
+			groupMembers: []*group.GroupMember{
+				{
+					GroupId: 1,
+					Member: &group.Member{
+						Address: addr1.String(),
+						Weight:  "4",
+					},
+				},
+				{
+					GroupId: 1,
+					Member: &group.Member{
+						Address: addr2.String(),
+						Weight:  "3",
+					},
+				},
+			},
+			proposal: &group.Proposal{
+				Id:                 1,
+				Address:            addr1.String(),
+				Proposers:          []string{addr1.String()},
+				SubmitTime:         curCtx.BlockTime(),
+				GroupVersion:       1,
+				GroupPolicyVersion: 1,
+				Status:             group.PROPOSAL_STATUS_SUBMITTED,
+				Result:             group.PROPOSAL_RESULT_UNFINALIZED,
+				FinalTallyResult:   group.TallyResult{YesCount: "0", NoCount: "0", AbstainCount: "0", NoWithVetoCount: "0"},
+				VotingPeriodEnd:    votingPeriodEnd,
+				ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+			},
+			votes: []*group.Vote{
+				{
+					ProposalId: 1,
+					Voter:      addr1.String(),
+					Option:     group.VOTE_OPTION_YES,
 					SubmitTime: curCtx.BlockTime(),
 				},
 			},
@@ -403,9 +449,7 @@ func (s *invariantTestSuite) TestTallyVotesSumInvariant() {
 			s.Require().NoError(err)
 		}
 
-		// Run invariant after votingPeriodEnd
-		cacheCurCtx = cacheCurCtx.WithBlockTime(votingPeriodEnd.Add(time.Second * 1))
-		_, broken := keeper.TallyVotesSumInvariantHelper(cacheCurCtx, key, proposalsByVotingPeriodEnd, *groupMemberTable, voteByProposalIndex, *groupPolicyTable)
+		_, broken := keeper.TallyVotesSumInvariantHelper(cacheCurCtx, key, *proposalTable, *groupMemberTable, voteByProposalIndex, *groupPolicyTable)
 		s.Require().Equal(spec.expBroken, broken)
 	}
 }

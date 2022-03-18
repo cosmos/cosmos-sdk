@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"math"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -55,7 +57,10 @@ func (sfm StaticFeeMarket) CheckTxFee(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, in
 func GetTxPriority(fee sdk.Coins) int64 {
 	var priority int64
 	for _, c := range fee {
-		p := c.Amount.Int64()
+		p := int64(math.MaxInt64)
+		if c.Amount.IsInt64() {
+			p = c.Amount.Int64()
+		}
 		if priority == 0 || p < priority {
 			priority = p
 		}

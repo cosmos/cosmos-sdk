@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authmiddleware "github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
@@ -335,21 +336,21 @@ func (k Keeper) UpdateTallyOfVPEndProposals(ctx sdk.Context) error {
 
 		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.Address)
 		if err != nil {
-			return true, err
+			return true, sdkerrors.Wrap(err, "group policy")
 		}
 
 		electorate, err := k.getGroupInfo(ctx, policyInfo.GroupId)
 		if err != nil {
-			return true, err
+			return true, sdkerrors.Wrap(err, "group")
 		}
 
 		err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo)
 		if err != nil {
-			return true, err
+			return true, sdkerrors.Wrap(err, "doTallyAndUpdate")
 		}
 
 		if err := k.proposalTable.Update(ctx.KVStore(k.key), proposal.Id, &proposal); err != nil {
-			return true, err
+			return true, sdkerrors.Wrap(err, "proposal update")
 		}
 
 		return false, nil

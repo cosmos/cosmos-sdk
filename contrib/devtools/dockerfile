@@ -10,9 +10,9 @@ ENV GOLANG_PROTOBUF_VERSION=1.27.1 \
 RUN GO111MODULE=on go get \
   github.com/cosmos/cosmos-proto/cmd/protoc-gen-go-pulsar@latest \
   google.golang.org/protobuf/cmd/protoc-gen-go@v${GOLANG_PROTOBUF_VERSION} \
-  github.com/gogo/protobuf/protoc-gen-gogo@v${GOGO_PROTOBUF_VERSION} \
-  github.com/gogo/protobuf/protoc-gen-gogofast@v${GOGO_PROTOBUF_VERSION} \
-  github.com/gogo/protobuf/protoc-gen-gogofaster@v${GOGO_PROTOBUF_VERSION} \
+  github.com/cosmos/gogoproto/protoc-gen-gogo@v${GOGO_PROTOBUF_VERSION} \
+  github.com/cosmos/gogoproto/protoc-gen-gogofast@v${GOGO_PROTOBUF_VERSION} \
+  github.com/cosmos/gogoproto/protoc-gen-gogofaster@v${GOGO_PROTOBUF_VERSION} \
   github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v${GRPC_GATEWAY_VERSION} \
   github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v${GRPC_GATEWAY_VERSION} \
   github.com/regen-network/cosmos-proto/protoc-gen-gocosmos@latest

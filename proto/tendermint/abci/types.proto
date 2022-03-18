@@ -4,7 +4,7 @@ package tendermint.abci;
 option go_package = "github.com/tendermint/tendermint/abci/types";
 
 // For more information on gogo.proto, see:
-// https://github.com/gogo/protobuf/blob/master/extensions.md
+// https://github.com/cosmos/gogoproto/blob/master/extensions.md
 import "tendermint/crypto/proof.proto";
 import "tendermint/types/types.proto";
 import "tendermint/crypto/keys.proto";
@@ -14,7 +14,7 @@ import "gogoproto/gogo.proto";
 
 // This file is copied from http://github.com/tendermint/abci
 // NOTE: When using custom types, mind the warnings.
-// https://github.com/gogo/protobuf/blob/master/custom_types.md#warnings-and-issues
+// https://github.com/cosmos/gogoproto/blob/master/custom_types.md#warnings-and-issues
 
 //----------------------------------------
 // Request types

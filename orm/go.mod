@@ -32,7 +32,7 @@ require (
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/gofrs/uuid v4.0.0+incompatible // indirect
-	github.com/cosmos/gogoproto v1.3.2 // indirect
+	github.com/cosmos/gogoproto v1.4.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.3-0.20201103224600-674baa8c7fc3 // indirect
 	github.com/google/btree v1.0.0 // indirect

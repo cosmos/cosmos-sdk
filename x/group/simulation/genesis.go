@@ -191,10 +191,8 @@ func RandomizedGenState(simState *module.SimulationState) {
 		GroupPolicySeq: 3,
 		GroupPolicies:  groupPolicies,
 		ProposalSeq:    3,
-		// Proposals:      proposals,
-		Proposals: []*group.Proposal{},
-		// Votes:          votes,
-		Votes: []*group.Vote{},
+		Proposals:      proposals,
+		Votes:          votes,
 	}
 
 	simState.GenState[group.ModuleName] = simState.Cdc.MustMarshalJSON(&groupGenesis)

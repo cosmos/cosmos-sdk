@@ -66,15 +66,24 @@ type Table interface {
 	// Save attempts to be atomic with respect to the underlying store,
 	// meaning that either the full save operation is written or the store is
 	// left unchanged, unless there is an error with the underlying store.
+	//
+	// If a unique key constraint is violated, ormerrors.UniqueKeyViolation
+	// (or an error wrapping it) will be returned.
 	Save(context context.Context, message proto.Message) error
 
 	// Insert inserts the provided entry in the store and fails if there is
 	// an unique key violation. See Save for more details on behavior.
+	//
+	// If an entity with the same primary key exists, an error wrapping
+	// ormerrors.AlreadyExists will be returned.
 	Insert(ctx context.Context, message proto.Message) error
 
 	// Update updates the provided entry in the store and fails if an entry
 	// with a matching primary key does not exist. See Save for more details
 	// on behavior.
+	//
+	// If an entity with the same primary key does not exist, ormerrors.NotFound
+	// (or an error wrapping it) will be returned.
 	Update(ctx context.Context, message proto.Message) error
 
 	// Delete deletes the entry with the with primary key fields set on message

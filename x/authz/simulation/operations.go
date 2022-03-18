@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -216,19 +215,28 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		hasGrant := false
-		var targetGrant authz.Grant
 		var granterAddr sdk.AccAddress
 		var granteeAddr sdk.AccAddress
+		var sendAuth *banktype.SendAuthorization
+		var err error
 		k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
-			targetGrant = grant
 			granterAddr = granter
 			granteeAddr = grantee
-			hasGrant = true
-			return true
+			var a authz.Authorization
+			a, err = grant.GetAuthorization()
+			if err != nil {
+				return true
+			}
+			var ok bool
+			sendAuth, ok = a.(*banktype.SendAuthorization)
+			return ok
 		})
 
-		if !hasGrant {
+		if err != nil {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
+		}
+
+		if sendAuth == nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "no grant found"), nil, nil
 		}
 
@@ -250,15 +258,6 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 		}
 
 		msg := []sdk.Msg{banktype.NewMsgSend(granterAddr, granteeAddr, coins)}
-		authorization, err := targetGrant.GetAuthorization()
-		if err != nil {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
-		}
-
-		sendAuth, ok := authorization.(*banktype.SendAuthorization)
-		if !ok {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, fmt.Sprintf("not a send authorization, got: %T", authorization)), nil, nil
-		}
 
 		_, err = sendAuth.Accept(ctx, msg[0])
 		if err != nil {

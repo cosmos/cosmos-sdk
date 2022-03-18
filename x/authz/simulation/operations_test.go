@@ -56,15 +56,17 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 
 	require := suite.Require()
 	for i, w := range weightedOps {
-		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
+		op, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
 		require.NoError(err)
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
 		// will fail
-		require.Equal(expected[i].weight, w.Weight(), "weight should be the same")
-		require.Equal(expected[i].opMsgRoute, operationMsg.Route,
-			"route should be the same. %v", operationMsg.Comment)
-		require.Equal(expected[i].opMsgRoute, operationMsg.Name, "operation Msg name should be the same")
+		require.Equal(expected[i].weight, w.Weight(),
+			"weight should be the same. %v", op.Comment)
+		require.Equal(expected[i].opMsgRoute, op.Route,
+			"route should be the same. %v", op.Comment)
+		require.Equal(expected[i].opMsgRoute, op.Name,
+			"operation Msg name should be the same %v", op.Comment)
 	}
 }
 

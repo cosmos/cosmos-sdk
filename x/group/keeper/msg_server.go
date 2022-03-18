@@ -706,7 +706,7 @@ func (k Keeper) doTallyAndUpdate(ctx sdk.Context, p *group.Proposal, electorate 
 	result, err := policy.Allow(tallyResult, electorate.TotalWeight, ctx.BlockTime().Sub(submittedAt))
 	switch {
 	case err != nil:
-		return sdkerrors.Wrap(err, "policy execution")
+		return sdkerrors.Wrap(err, "policy allow")
 	case result.Final:
 		if err := k.pruneVotes(ctx, p.Id); err != nil {
 			return err

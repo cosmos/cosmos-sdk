@@ -332,32 +332,46 @@ func (k Keeper) PruneProposals(ctx sdk.Context) error {
 }
 
 func (k Keeper) UpdateTallyOfVPEndProposals(ctx sdk.Context) error {
-	err := k.iterateProposalsByVPEnd(ctx, ctx.BlockTime(), func(proposal group.Proposal) (bool, error) {
+	timeBytes := sdk.FormatTimeBytes(ctx.BlockTime())
+	it, err := k.proposalsByVotingPeriodEnd.PrefixScan(ctx.KVStore(k.key), nil, timeBytes)
 
+	if err != nil {
+		return err
+	}
+	defer it.Close()
+
+	var proposals []group.Proposal
+	var proposal group.Proposal
+	for {
+		_, err := it.LoadNext(&proposal)
+		if errors.ErrORMIteratorDone.Is(err) {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		proposals = append(proposals, proposal)
+	}
+
+	for _, proposal := range proposals {
 		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.Address)
 		if err != nil {
-			return true, sdkerrors.Wrap(err, "group policy")
+			return sdkerrors.Wrap(err, "group policy")
 		}
 
 		electorate, err := k.getGroupInfo(ctx, policyInfo.GroupId)
 		if err != nil {
-			return true, sdkerrors.Wrap(err, "group")
+			return sdkerrors.Wrap(err, "group")
 		}
 
 		err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo)
 		if err != nil {
-			return true, sdkerrors.Wrap(err, "doTallyAndUpdate")
+			return sdkerrors.Wrap(err, "doTallyAndUpdate")
 		}
 
 		if err := k.proposalTable.Update(ctx.KVStore(k.key), proposal.Id, &proposal); err != nil {
-			return true, sdkerrors.Wrap(err, "proposal update")
+			return sdkerrors.Wrap(err, "proposal update")
 		}
-
-		return false, nil
-	})
-
-	if err != nil {
-		return err
 	}
 	return nil
 }

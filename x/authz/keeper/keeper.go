@@ -168,6 +168,7 @@ func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, auth
 			return err
 		}
 	}
+	// If the expiration didn't change, then we don't remove it and we should not insert again
 	if expiration != nil && (oldExp == nil || !oldExp.Equal(*expiration)) {
 		if err = k.insertIntoGrantQueue(ctx, granter, grantee, msgType, *expiration); err != nil {
 			return err

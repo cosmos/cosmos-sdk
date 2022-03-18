@@ -1,7 +1,7 @@
 package types
 
 import (
-	protoio "github.com/gogo/protobuf/io"
+	protoio "github.com/cosmos/gogoproto/io"
 )
 
 // Snapshotter is something that can create and restore snapshots, consisting of streamed binary

@@ -10,8 +10,8 @@ import (
 	"sync"
 
 	iavltree "github.com/cosmos/iavl"
-	protoio "github.com/gogo/protobuf/io"
-	gogotypes "github.com/gogo/protobuf/types"
+	protoio "github.com/cosmos/gogoproto/io"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/pkg/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"

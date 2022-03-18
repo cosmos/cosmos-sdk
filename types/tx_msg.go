@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )

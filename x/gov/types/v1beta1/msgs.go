@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"sigs.k8s.io/yaml"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

@@ -6,7 +6,7 @@ import (
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	crypto "github.com/cosmos/cosmos-sdk/api/tendermint/crypto"
 	version "github.com/cosmos/cosmos-sdk/api/tendermint/version"
-	_ "github.com/gogo/protobuf/gogoproto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"

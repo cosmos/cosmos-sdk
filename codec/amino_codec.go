@@ -1,7 +1,7 @@
 package codec
 
 import (
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 // AminoCodec defines a codec that utilizes Codec for both binary and JSON

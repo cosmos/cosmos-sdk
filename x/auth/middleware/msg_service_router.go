@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	gogogrpc "github.com/gogo/protobuf/grpc"
-	"github.com/gogo/protobuf/proto"
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
+	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

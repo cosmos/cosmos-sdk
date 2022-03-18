@@ -48,6 +48,7 @@ type TxHandlerOptions struct {
 	FeegrantKeeper  FeegrantKeeper
 	SignModeHandler authsigning.SignModeHandler
 	SigGasConsumer  func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
+	FeeMarket       FeeMarket
 }
 
 // NewDefaultTxHandler defines a TxHandler middleware stacks that should work
@@ -92,7 +93,8 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		// Reject all extension options which can optionally be included in the
 		// tx.
 		RejectExtensionOptionsMiddleware,
-		MempoolFeeMiddleware,
+		// Reject auth_info extension options that don't pass the criteria.
+		NewAuthExtensionOptionsMiddleware(options.FeeMarket.CheckAuthExtensionOption),
 		ValidateBasicMiddleware,
 		TxTimeoutHeightMiddleware,
 		ValidateMemoMiddleware(options.AccountKeeper),
@@ -101,8 +103,7 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		// ComposeMiddlewares godoc for details.
 		// `DeductFeeMiddleware` and `IncrementSequenceMiddleware` should be put outside of `WithBranchedStore` middleware,
 		// so their storage writes are not discarded when tx fails.
-		DeductFeeMiddleware(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper),
-		TxPriorityMiddleware,
+		DeductFeeMiddleware(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.FeeMarket),
 		SetPubKeyMiddleware(options.AccountKeeper),
 		ValidateSigCountMiddleware(options.AccountKeeper),
 		SigGasConsumeMiddleware(options.AccountKeeper, sigGasConsumer),

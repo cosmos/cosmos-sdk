@@ -142,6 +142,11 @@ message AuthInfo {
   //
   // Since: cosmos-sdk 0.46
   Tip tip = 3;
+
+  // extension_options are arbitrary options that can be added by chains
+  // when the default options are not sufficient. If any of these are present
+  // and can't be handled, the transaction will be rejected
+  repeated google.protobuf.Any extension_options = 1023;
 }
 
 // SignerInfo describes the public key and signing mode of a single top-level

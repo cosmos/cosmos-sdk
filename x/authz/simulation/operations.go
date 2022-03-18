@@ -1,7 +1,9 @@
 package simulation
 
 import (
+	"fmt"
 	"math/rand"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -9,15 +11,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
-
 	banktype "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"time"
 )
 
 // authz message types
@@ -110,14 +109,10 @@ func SimulateMsgGrant(ak authz.AccountKeeper, bk authz.BankKeeper, _ keeper.Keep
 		}
 
 		var expiration *time.Time
-		if r.Int31n(10) >= 2 {
-			e := simtypes.RandTimestamp(r)
-			expiration = &e
+		t1 := simtypes.RandTimestamp(r)
+		if !t1.Before(ctx.BlockTime()) {
+			expiration = &t1
 		}
-		if expiration.Before(ctx.BlockTime()) {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, "past time"), nil, nil
-		}
-		// TODO: add case for nil expiration
 		msg, err := authz.NewMsgGrant(granter.Address, grantee.Address, generateRandomAuthorization(r, spendLimit), expiration)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, err.Error()), nil, err
@@ -262,7 +257,7 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 
 		sendAuth, ok := authorization.(*banktype.SendAuthorization)
 		if !ok {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "not a send authorization"), nil, nil
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, fmt.Sprintf("not a send authorization, got: %T", authorization)), nil, nil
 		}
 
 		_, err = sendAuth.Accept(ctx, msg[0])

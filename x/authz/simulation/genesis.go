@@ -20,7 +20,7 @@ func genGrant(r *rand.Rand, accounts []simtypes.Account, genT time.Time) []authz
 		granter := accounts[i]
 		grantee := accounts[i+1]
 		var expiration *time.Time
-		if i%3 != 0 {
+		if i%3 != 0 { // generate some grants with no expire time
 			e := genT.AddDate(1, 0, 0)
 			expiration = &e
 		}

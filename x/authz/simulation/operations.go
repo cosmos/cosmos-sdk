@@ -17,6 +17,7 @@ import (
 
 	banktype "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"time"
 )
 
 // authz message types
@@ -108,12 +109,16 @@ func SimulateMsgGrant(ak authz.AccountKeeper, bk authz.BankKeeper, _ keeper.Keep
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, "spend limit is nil"), nil, nil
 		}
 
-		expiration := simtypes.RandTimestamp(r)
+		var expiration *time.Time
+		if r.Int31n(10) >= 2 {
+			e := simtypes.RandTimestamp(r)
+			expiration = &e
+		}
 		if expiration.Before(ctx.BlockTime()) {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, "past time"), nil, nil
 		}
 		// TODO: add case for nil expiration
-		msg, err := authz.NewMsgGrant(granter.Address, grantee.Address, generateRandomAuthorization(r, spendLimit), &expiration)
+		msg, err := authz.NewMsgGrant(granter.Address, grantee.Address, generateRandomAuthorization(r, spendLimit), expiration)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, err.Error()), nil, err
 		}

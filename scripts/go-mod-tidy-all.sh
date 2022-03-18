@@ -5,5 +5,5 @@ set -euo pipefail
 for modfile in $(find . -name go.mod); do
  echo "Updating $modfile"
  DIR=$(dirname $modfile)
- (cd $DIR; go mod tidy)
+ (cd $DIR; go mod tidy -compat=1.17)
 done

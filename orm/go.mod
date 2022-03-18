@@ -12,7 +12,7 @@ require (
 	github.com/regen-network/gocuke v0.6.1
 	github.com/stretchr/testify v1.7.0
 	github.com/tendermint/tm-db v0.6.7
-	google.golang.org/grpc v1.44.0
+	google.golang.org/grpc v1.45.0
 	google.golang.org/protobuf v1.27.1
 	gotest.tools/v3 v3.1.0
 	pgregory.net/rapid v0.4.7
@@ -32,7 +32,7 @@ require (
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/gofrs/uuid v4.0.0+incompatible // indirect
-	github.com/cosmos/gogoproto v1.4.0 // indirect
+	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.3-0.20201103224600-674baa8c7fc3 // indirect
 	github.com/google/btree v1.0.0 // indirect
@@ -41,11 +41,11 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20200815110645-5c35d600f0ca // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
-	golang.org/x/net v0.0.0-20210903162142-ad29c8ab022f // indirect
-	golang.org/x/sys v0.0.0-20210903071746-97244b99971b // indirect
-	golang.org/x/text v0.3.6 // indirect
+	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
+	golang.org/x/sys v0.0.0-20220315194320-039c03cc5b86 // indirect
+	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
-	google.golang.org/genproto v0.0.0-20220222213610-43724f9ea8cf // indirect
+	google.golang.org/genproto v0.0.0-20220314164441-57ef72a4c106 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )

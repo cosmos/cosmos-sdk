@@ -9,6 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -34,7 +35,7 @@ func testTxHandler(options middleware.TxHandlerOptions) tx.Handler {
 // similar to a real app. Make sure rootDir is empty before running the test,
 // in order to guarantee consistent results
 func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
-	db, err := sdk.NewLevelDB("mock", filepath.Join(rootDir, "data"))
+	db, err := dbm.NewDB("mock", dbm.MemDBBackend, filepath.Join(rootDir, "data"))
 	if err != nil {
 		return nil, err
 	}

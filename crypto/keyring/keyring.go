@@ -499,7 +499,7 @@ func (ks keystore) List() ([]*Record, error) {
 	var res []*Record //nolint:prealloc
 	sort.Strings(keys)
 	for _, key := range keys {
-		if strings.Contains(key, addressSuffix) {
+		if !strings.HasSuffix(key, infoSuffix) {
 			continue
 		}
 
@@ -870,7 +870,7 @@ func (ks keystore) MigrateAll() (bool, error) {
 
 	var migrated bool
 	for _, key := range keys {
-		if strings.Contains(key, addressSuffix) {
+		if !strings.HasSuffix(key, infoSuffix) {
 			continue
 		}
 

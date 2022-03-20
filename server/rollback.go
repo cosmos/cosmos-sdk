@@ -26,7 +26,7 @@ application.
 			ctx := GetServerContextFromCmd(cmd)
 			cfg := ctx.Config
 			home := cfg.RootDir
-			db, err := openDB(home)
+			db, err := openDB(home, GetAppDBBackend(ctx.Viper))
 			if err != nil {
 				return err
 			}

@@ -402,6 +402,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmdByHash() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
 	s.Require().NoError(s.network.WaitForNextBlock())
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name           string
 		args           []string
@@ -427,7 +428,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmdByHash() {
 			"happy case",
 			[]string{txRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
-			sdk.MsgTypeURL(&banktypes.MsgSend{}), // nolint: exhaustivestruct
+			sdk.MsgTypeURL(&banktypes.MsgSend{}),
 		},
 	}
 
@@ -1297,7 +1298,7 @@ func (s *IntegrationTestSuite) TestGetAccountsCmd() {
 }
 
 func TestGetBroadcastCommandOfflineFlag(t *testing.T) {
-	clientCtx := client.Context{}.WithOffline(true)
+	clientCtx := client.Context{}.WithOffline(true) // nolint: exhaustivestruct
 	clientCtx = clientCtx.WithTxConfig(simapp.MakeTestEncodingConfig().TxConfig)
 
 	cmd := authcli.GetBroadcastCommand()
@@ -1308,7 +1309,7 @@ func TestGetBroadcastCommandOfflineFlag(t *testing.T) {
 }
 
 func TestGetBroadcastCommandWithoutOfflineFlag(t *testing.T) {
-	clientCtx := client.Context{}
+	clientCtx := client.Context{} // nolint: exhaustivestruct
 	txCfg := simapp.MakeTestEncodingConfig().TxConfig
 	clientCtx = clientCtx.WithTxConfig(txCfg)
 

@@ -1,3 +1,4 @@
+// nolint: exhaustivestruct
 package testdata_pulsar
 
 import (
@@ -25,4 +26,4 @@ func (q QueryImpl) TestAny(_ context.Context, request *TestAnyRequest) (*TestAny
 	}}, nil
 }
 
-var _ QueryServer = QueryImpl{} // nolint: exhaustivestruct
+var _ QueryServer = QueryImpl{}

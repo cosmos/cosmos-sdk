@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// nolint: exhaustivestruct
 var (
 	_ ProposalContent = TextProposal{}
 )
@@ -328,6 +329,7 @@ func (pt ProposalKind) String() string {
 	}
 }
 
+// nolint: exhaustivestruct
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*ProposalContent)(nil), nil)
 	cdc.RegisterConcrete(TextProposal{}, "gov/TextProposal", nil)

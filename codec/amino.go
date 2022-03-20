@@ -29,6 +29,7 @@ func NewLegacyAmino() *LegacyAmino {
 
 // RegisterEvidences registers Tendermint evidence types with the provided Amino
 // codec.
+// nolint: exhaustivestruct
 func RegisterEvidences(cdc *LegacyAmino) {
 	cdc.Amino.RegisterInterface((*tmtypes.Evidence)(nil), nil)
 	cdc.Amino.RegisterConcrete(&tmtypes.DuplicateVoteEvidence{}, "tendermint/DuplicateVoteEvidence", nil)

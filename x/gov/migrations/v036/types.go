@@ -24,6 +24,7 @@ const (
 	MaxTitleLength       int = 140
 )
 
+// nolint: exhaustivestruct
 var (
 	_ Content = TextProposal{}
 )
@@ -129,6 +130,7 @@ func ValidateAbstract(c Content) error {
 	return nil
 }
 
+// nolint: exhaustivestruct
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*Content)(nil), nil)
 	cdc.RegisterConcrete(TextProposal{}, "cosmos-sdk/TextProposal", nil)

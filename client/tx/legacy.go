@@ -26,7 +26,7 @@ func ConvertTxToStdTx(codec *codec.LegacyAmino, tx signing.Tx) (legacytx.StdTx, 
 
 	stdTx, ok := builder.GetTx().(legacytx.StdTx)
 	if !ok {
-		return legacytx.StdTx{}, fmt.Errorf("expected %T, got %+v", legacytx.StdTx{}, builder.GetTx())
+		return legacytx.StdTx{}, fmt.Errorf("expected %T, got %+v", legacytx.StdTx{}, builder.GetTx()) // nolint: exhaustivestruct
 	}
 
 	return stdTx, nil

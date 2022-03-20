@@ -1248,7 +1248,9 @@ func randomGroupPolicy(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 
 func randomMember(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 	ctx context.Context, accounts []simtypes.Account, groupID uint64) (acc simtypes.Account, account authtypes.AccountI, err error) {
-	res, err := k.GroupMembers(ctx, &group.QueryGroupMembersRequest{GroupId: groupID})
+	res, err := k.GroupMembers(ctx, &group.QueryGroupMembersRequest{
+		GroupId: groupID,
+	})
 	if err != nil {
 		return simtypes.Account{}, nil, err
 	}

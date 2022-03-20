@@ -6,9 +6,6 @@ on:
       - master
     paths:
       - "contrib/devtools/dockerfile"
-
-permissions:
-  contents: read
   
 jobs:
   build:

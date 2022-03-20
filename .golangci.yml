@@ -11,6 +11,7 @@ linters:
     - depguard
     - dogsled
     # - errcheck
+    - exhaustivestruct
     - exportloopref
     - goconst
     - gocritic
@@ -27,7 +28,6 @@ linters:
     - revive
     - staticcheck
     - structcheck
-    - exhaustivestruct
     - stylecheck
     - typecheck
     - unconvert

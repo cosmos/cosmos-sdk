@@ -112,7 +112,7 @@ func (v Validator) MarshalJSON() ([]byte, error) {
 }
 
 func (v *Validator) UnmarshalJSON(data []byte) error {
-	bv := &bechValidator{}
+	bv := &bechValidator{} // nolint: exhaustivestruct
 	if err := legacy.Cdc.UnmarshalJSON(data, bv); err != nil {
 		return err
 	}

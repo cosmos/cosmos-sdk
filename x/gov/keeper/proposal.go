@@ -32,7 +32,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 
 		signers := msg.GetSigners()
 		if len(signers) != 1 {
-			return v1.Proposal{}, types.ErrInvalidSigner
+			return v1.Proposal{}, types.ErrInvalidSigner // nolint: exhaustivestruct
 		}
 
 		// assert that the governance module account is the only signer of the messages

@@ -177,7 +177,7 @@ func (c *Client) BlockByHash(ctx context.Context, hash string) (crgtypes.BlockRe
 
 	block, err := c.tmRPC.BlockByHash(ctx, bHash)
 	if err != nil {
-		return crgtypes.BlockResponse{}, crgerrs.WrapError(crgerrs.ErrBadGateway, err.Error())
+		return crgtypes.BlockResponse{}, crgerrs.WrapError(crgerrs.ErrBadGateway, err.Error()) // nolint: exhaustivestruct
 	}
 
 	return c.converter.ToRosetta().BlockResponse(block), nil
@@ -186,11 +186,11 @@ func (c *Client) BlockByHash(ctx context.Context, hash string) (crgtypes.BlockRe
 func (c *Client) BlockByHeight(ctx context.Context, height *int64) (crgtypes.BlockResponse, error) {
 	height, err := c.getHeight(ctx, height)
 	if err != nil {
-		return crgtypes.BlockResponse{}, crgerrs.WrapError(crgerrs.ErrBadGateway, err.Error())
+		return crgtypes.BlockResponse{}, crgerrs.WrapError(crgerrs.ErrBadGateway, err.Error()) // nolint: exhaustivestruct
 	}
 	block, err := c.tmRPC.Block(ctx, height)
 	if err != nil {
-		return crgtypes.BlockResponse{}, crgerrs.WrapError(crgerrs.ErrBadGateway, err.Error())
+		return crgtypes.BlockResponse{}, crgerrs.WrapError(crgerrs.ErrBadGateway, err.Error()) // nolint: exhaustivestruct
 	}
 
 	return c.converter.ToRosetta().BlockResponse(block), nil
@@ -209,7 +209,7 @@ func (c *Client) BlockTransactionsByHash(ctx context.Context, hash string) (crgt
 func (c *Client) BlockTransactionsByHeight(ctx context.Context, height *int64) (crgtypes.BlockTransactionsResponse, error) {
 	height, err := c.getHeight(ctx, height)
 	if err != nil {
-		return crgtypes.BlockTransactionsResponse{}, crgerrs.WrapError(crgerrs.ErrBadGateway, err.Error())
+		return crgtypes.BlockTransactionsResponse{}, crgerrs.WrapError(crgerrs.ErrBadGateway, err.Error()) // nolint: exhaustivestruct
 	}
 	blockTxResp, err := c.blockTxs(ctx, height)
 	if err != nil {

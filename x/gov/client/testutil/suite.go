@@ -226,6 +226,7 @@ func (s *IntegrationTestSuite) TestCmdProposer() {
 func (s *IntegrationTestSuite) TestCmdTally() {
 	val := s.network.Validators[0]
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name           string
 		args           []string
@@ -312,6 +313,7 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 }`, authtypes.NewModuleAddress(types.ModuleName), base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)))
 	validPropFile := testutil.WriteToNewTempFile(s.T(), validProp)
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -337,7 +339,7 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 	}
 
@@ -377,6 +379,8 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitLegacyProposal() {
   "deposit": "%s"
 }`, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)))
 	validPropFile := testutil.WriteToNewTempFile(s.T(), validProp)
+
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -415,7 +419,7 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitLegacyProposal() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"valid transaction",
@@ -429,7 +433,7 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitLegacyProposal() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 	}
 

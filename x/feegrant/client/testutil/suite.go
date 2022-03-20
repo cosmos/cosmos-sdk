@@ -65,7 +65,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.createGrant(granter, grantee)
 
-	grant, err := feegrant.NewGrant(granter, grantee, &feegrant.BasicAllowance{
+	grant, err := feegrant.NewGrant(granter, grantee, &feegrant.BasicAllowance{ // nolint: exhaustivestruct
 		SpendLimit: sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100))),
 	})
 	s.Require().NoError(err)
@@ -118,6 +118,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrant() {
 	grantee := s.addedGrantee
 	clientCtx := val.ClientCtx
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -203,6 +204,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGrantee() {
 	grantee := s.addedGrantee
 	clientCtx := val.ClientCtx
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -259,6 +261,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGranter() {
 	granter := s.addedGranter
 	clientCtx := val.ClientCtx
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -326,6 +329,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -383,7 +387,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"valid basic fee grant with granter key name",
@@ -396,7 +400,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"valid basic fee grant with amino",
@@ -410,7 +414,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"valid basic fee grant without spend limit",
@@ -422,7 +426,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"valid basic fee grant without expiration",
@@ -435,7 +439,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"valid basic fee grant without spend-limit and expiration",
@@ -447,7 +451,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"try to add existed grant",
@@ -460,7 +464,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			false, 18, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 18, &sdk.TxResponse{},
 		},
 		{
 			"invalid number of args(periodic fee grant)",
@@ -522,7 +526,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"valid periodic fee grant without spend-limit",
@@ -537,7 +541,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"valid periodic fee grant without expiration",
@@ -552,7 +556,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"valid periodic fee grant without spend-limit and expiration",
@@ -566,7 +570,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"invalid expiration",
@@ -622,6 +626,7 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 	s.Require().NoError(err)
 	s.createGrant(granter, aminoGrantee)
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -663,7 +668,7 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 				},
 				commonFlags...,
 			),
-			false, 4, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 4, &sdk.TxResponse{},
 		},
 		{
 			"Valid revoke",
@@ -675,7 +680,7 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 				},
 				commonFlags...,
 			),
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"Valid revoke with amino",
@@ -688,7 +693,7 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 				},
 				commonFlags...,
 			),
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 	}
 
@@ -784,6 +789,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 
 	allowMsgs := strings.Join([]string{sdk.MsgTypeURL(&govv1beta1.MsgSubmitProposal{}), sdk.MsgTypeURL(&govv1.MsgVoteWeighted{})}, ",") // nolint: exhaustivestruct
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -803,7 +809,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 				},
 				commonFlags...,
 			),
-			true, &sdk.TxResponse{}, 0, // nolint: exhaustivestruct
+			true, &sdk.TxResponse{}, 0,
 		},
 		{
 			"invalid grantee address",
@@ -817,7 +823,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 				},
 				commonFlags...,
 			),
-			true, &sdk.TxResponse{}, 0, // nolint: exhaustivestruct
+			true, &sdk.TxResponse{}, 0,
 		},
 		{
 			"valid filter fee grant",
@@ -831,7 +837,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 				},
 				commonFlags...,
 			),
-			false, &sdk.TxResponse{}, 0, // nolint: exhaustivestruct
+			false, &sdk.TxResponse{}, 0,
 		},
 	}
 
@@ -865,7 +871,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
 
-	resp := &feegrant.Grant{}
+	resp := &feegrant.Grant{} // nolint: exhaustivestruct
 
 	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), resp), out.String())
 	s.Require().Equal(resp.Grantee, resp.Grantee)
@@ -883,6 +889,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 	)
 
 	// exec filtered fee allowance
+	// nolint: exhaustivestruct
 	cases := []struct {
 		name         string
 		malleate     func() (testutil.BufferWriter, error)
@@ -898,7 +905,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))).String()),
 				)
 			},
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -909,7 +916,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))).String()),
 				)
 			},
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			2,
 		},
 		{
@@ -927,7 +934,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 				cmd := cli.NewCmdFeeGrant()
 				return clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 			},
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			7,
 		},
 	}

@@ -153,6 +153,7 @@ func (s *IntegrationTestSuite) TestQueryGroupMembers() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name          string
 		args          []string

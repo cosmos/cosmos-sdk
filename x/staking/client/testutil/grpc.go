@@ -114,6 +114,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryValidatorDelegations() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		url          string
@@ -225,6 +226,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryDelegation() {
 	val2 := s.network.Validators[1]
 	baseURL := val.APIAddress
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		url          string
@@ -364,6 +366,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryDelegatorDelegations() {
 	newAddr, err := k.GetAddress()
 	s.Require().NoError(err)
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		url          string
@@ -704,6 +707,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryParams() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name     string
 		url      string
@@ -735,6 +739,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryPool() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name     string
 		url      string

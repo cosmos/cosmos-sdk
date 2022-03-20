@@ -43,6 +43,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 func (s *IntegrationTestSuite) TestNewMsgVerifyInvariantTxCmd() {
 	val := s.network.Validators[0]
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -81,7 +82,7 @@ func (s *IntegrationTestSuite) TestNewMsgVerifyInvariantTxCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 	}
 

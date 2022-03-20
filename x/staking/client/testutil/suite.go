@@ -110,6 +110,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 	)
 	require.NoError(err)
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -193,7 +194,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 	}
 
@@ -314,6 +315,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegation() {
 	val := s.network.Validators[0]
 	val2 := s.network.Validators[1]
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name     string
 		args     []string
@@ -380,6 +382,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegation() {
 func (s *IntegrationTestSuite) TestGetCmdQueryDelegations() {
 	val := s.network.Validators[0]
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name     string
 		args     []string
@@ -436,6 +439,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegations() {
 func (s *IntegrationTestSuite) TestGetCmdQueryValidatorDelegations() {
 	val := s.network.Validators[0]
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name     string
 		args     []string
@@ -951,6 +955,7 @@ func (s *IntegrationTestSuite) TestNewEditValidatorCmd() {
 	securityContact := "test contact"
 	website := "https://test.com"
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -976,7 +981,7 @@ func (s *IntegrationTestSuite) TestNewEditValidatorCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"edit validator details",
@@ -987,7 +992,7 @@ func (s *IntegrationTestSuite) TestNewEditValidatorCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"edit validator identity",
@@ -998,7 +1003,7 @@ func (s *IntegrationTestSuite) TestNewEditValidatorCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"edit validator security-contact",
@@ -1009,7 +1014,7 @@ func (s *IntegrationTestSuite) TestNewEditValidatorCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"edit validator website",
@@ -1020,7 +1025,7 @@ func (s *IntegrationTestSuite) TestNewEditValidatorCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"with all edit flags",
@@ -1034,7 +1039,7 @@ func (s *IntegrationTestSuite) TestNewEditValidatorCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 	}
 
@@ -1080,6 +1085,7 @@ func (s *IntegrationTestSuite) TestNewDelegateCmd() {
 	)
 	s.Require().NoError(err)
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -1119,7 +1125,7 @@ func (s *IntegrationTestSuite) TestNewDelegateCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 	}
 
@@ -1148,6 +1154,7 @@ func (s *IntegrationTestSuite) TestNewRedelegateCmd() {
 	val := s.network.Validators[0]
 	val2 := s.network.Validators[1]
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -1178,7 +1185,7 @@ func (s *IntegrationTestSuite) TestNewRedelegateCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 3, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 3, &sdk.TxResponse{},
 		},
 		{
 			"with wrong destination validator address",
@@ -1191,7 +1198,7 @@ func (s *IntegrationTestSuite) TestNewRedelegateCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 31, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 31, &sdk.TxResponse{},
 		},
 		{
 			"valid transaction of delegate",
@@ -1205,7 +1212,7 @@ func (s *IntegrationTestSuite) TestNewRedelegateCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 	}
 
@@ -1233,6 +1240,7 @@ func (s *IntegrationTestSuite) TestNewRedelegateCmd() {
 func (s *IntegrationTestSuite) TestNewUnbondCmd() {
 	val := s.network.Validators[0]
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -1272,7 +1280,7 @@ func (s *IntegrationTestSuite) TestNewUnbondCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 	}
 

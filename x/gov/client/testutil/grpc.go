@@ -361,6 +361,7 @@ func (s *IntegrationTestSuite) TestGetParamsGRPC() {
 	vp := v1.DefaultVotingParams()
 	tp := v1.DefaultTallyParams()
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name       string
 		url        string

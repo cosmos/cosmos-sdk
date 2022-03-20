@@ -452,6 +452,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryCommunityPool() {
 func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 	val := s.network.Validators[0]
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		valAddr      fmt.Stringer
@@ -480,7 +481,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"valid transaction (with commission)",
@@ -492,7 +493,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 	}
 
@@ -519,6 +520,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 	val := s.network.Validators[0]
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -544,7 +546,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 	}
 
@@ -572,6 +574,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 func (s *IntegrationTestSuite) TestNewSetWithdrawAddrCmd() {
 	val := s.network.Validators[0]
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -599,7 +602,7 @@ func (s *IntegrationTestSuite) TestNewSetWithdrawAddrCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 	}
 
@@ -627,6 +630,7 @@ func (s *IntegrationTestSuite) TestNewSetWithdrawAddrCmd() {
 func (s *IntegrationTestSuite) TestNewFundCommunityPoolCmd() {
 	val := s.network.Validators[0]
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -654,7 +658,7 @@ func (s *IntegrationTestSuite) TestNewFundCommunityPoolCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 	}
 
@@ -714,6 +718,8 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 }`, val.Address.String(), sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)), sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)))
 
 	validPropFile := testutil.WriteToNewTempFile(s.T(), validProp)
+
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -741,7 +747,7 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 	}
 

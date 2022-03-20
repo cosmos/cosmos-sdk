@@ -110,7 +110,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().Equal(uint32(0), txResp.Code, out.String())
 
-	s.group = &group.GroupInfo{Id: 1, Admin: val.Address.String(), Metadata: validMetadata, TotalWeight: "3", Version: 1}
+	s.group = &group.GroupInfo{Id: 1, Admin: val.Address.String(), Metadata: validMetadata, TotalWeight: "3", Version: 1} // nolint: exhaustivestruct
 
 	// create 5 group policies
 	for i := 0; i < 5; i++ {
@@ -255,6 +255,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 	}]}`, val.Address.String(), tooLongMetadata)
 	invalidMembersMetadataFile := testutil.WriteToNewTempFile(s.T(), invalidMembersMetadata)
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -275,7 +276,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -291,7 +292,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -412,6 +413,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAdmin() {
 		groupIDs[i] = s.getGroupIdFromTxResponse(txResp)
 	}
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -432,7 +434,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAdmin() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -448,7 +450,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAdmin() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -513,6 +515,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMetadata() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -533,7 +536,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMetadata() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -549,7 +552,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMetadata() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -616,6 +619,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 	}]}`, val.Address.String(), tooLongMetadata)
 	invalidMembersMetadataFileName := testutil.WriteToNewTempFile(s.T(), invalidMembersMetadata).Name()
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -636,7 +640,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -656,7 +660,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -747,6 +751,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 	}]}`, val.Address.String(), tooLongMetadata)
 	invalidMembersMetadataFile := testutil.WriteToNewTempFile(s.T(), invalidMembersMetadata)
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -770,7 +775,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -788,7 +793,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -807,7 +812,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -934,6 +939,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 
 	groupID := s.group.Id
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -955,7 +961,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -971,7 +977,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -988,7 +994,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1004,7 +1010,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 			),
 			true,
 			"key not found",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1020,7 +1026,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 			),
 			true,
 			"group policy metadata: limit exceeded",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1036,7 +1042,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 			),
 			true,
 			"not found",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1052,7 +1058,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 			),
 			true,
 			"expected a positive decimal",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1068,7 +1074,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 			),
 			true,
 			"percentage must be > 0 and <= 1",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 	}
@@ -1105,6 +1111,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyAdmin() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -1125,7 +1132,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyAdmin() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1141,7 +1148,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyAdmin() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1156,7 +1163,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyAdmin() {
 			),
 			true,
 			"key not found",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1171,7 +1178,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyAdmin() {
 			),
 			true,
 			"load group policy: not found",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 	}
@@ -1208,6 +1215,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -1228,7 +1236,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1243,7 +1251,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1259,7 +1267,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1274,7 +1282,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			),
 			true,
 			"key not found",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1289,7 +1297,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			),
 			true,
 			"load group policy: not found",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1304,7 +1312,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			),
 			true,
 			"expected a positive decimal",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1319,7 +1327,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			),
 			true,
 			"percentage must be > 0 and <= 1",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 	}
@@ -1356,6 +1364,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -1376,7 +1385,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1392,7 +1401,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1407,7 +1416,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 			),
 			true,
 			"group policy metadata: limit exceeded",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1422,7 +1431,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 			),
 			true,
 			"key not found",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1437,7 +1446,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 			),
 			true,
 			"load group policy: not found",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 	}
@@ -1472,6 +1481,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -1494,7 +1504,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1512,7 +1522,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1529,7 +1539,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1547,7 +1557,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1688,6 +1698,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 		ids[i] = s.getProposalIdFromTxResponse(txResp)
 	}
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -1709,7 +1720,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1726,7 +1737,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1743,7 +1754,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1760,7 +1771,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1881,6 +1892,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 		ids[i] = s.getProposalIdFromTxResponse(txResp)
 	}
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -1900,7 +1912,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1914,7 +1926,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 			),
 			true,
 			"cannot withdraw a proposal with the status of PROPOSAL_STATUS_WITHDRAWN",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1928,7 +1940,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 			),
 			true,
 			"not found",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1942,7 +1954,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 			),
 			true,
 			"invalid syntax",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{
@@ -1956,7 +1968,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 			),
 			true,
 			"key not found",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 	}
@@ -1985,7 +1997,7 @@ func (s *IntegrationTestSuite) getProposalIdFromTxResponse(txResp sdk.TxResponse
 	s.Require().Greater(len(txResp.Logs), 0)
 	s.Require().NotNil(txResp.Logs[0].Events)
 	events := txResp.Logs[0].Events
-	createProposalEvent, _ := sdk.TypedEventToEvent(&group.EventSubmitProposal{})
+	createProposalEvent, _ := sdk.TypedEventToEvent(&group.EventSubmitProposal{}) // nolint: exhaustivestruct
 
 	for _, e := range events {
 		if e.Type == createProposalEvent.Type {
@@ -2044,6 +2056,7 @@ func (s *IntegrationTestSuite) TestTxExec() {
 		require.NoError(err, out.String())
 	}
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -2078,7 +2091,7 @@ func (s *IntegrationTestSuite) TestTxExec() {
 			),
 			false,
 			"",
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 			0,
 		},
 		{

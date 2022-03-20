@@ -144,6 +144,8 @@ slash_fraction_downtime: "0.010000000000000000"`,
 
 func (s *IntegrationTestSuite) TestNewUnjailTxCmd() {
 	val := s.network.Validators[0]
+
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		args         []string
@@ -159,7 +161,7 @@ func (s *IntegrationTestSuite) TestNewUnjailTxCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // sync mode as there are no funds yet
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 	}
 

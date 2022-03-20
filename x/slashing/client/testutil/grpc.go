@@ -19,6 +19,7 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 
 	consAddr := sdk.ConsAddress(val.PubKey.Address()).String()
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name     string
 		url      string

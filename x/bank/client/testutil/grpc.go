@@ -17,6 +17,7 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name     string
 		url      string
@@ -103,6 +104,7 @@ func (s *IntegrationTestSuite) TestDenomMetadataGRPCHandler() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name     string
 		url      string
@@ -228,6 +230,7 @@ func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name     string
 		url      string

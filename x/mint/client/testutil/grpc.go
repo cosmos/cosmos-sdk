@@ -15,6 +15,8 @@ import (
 func (s *IntegrationTestSuite) TestQueryGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
+
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name     string
 		url      string

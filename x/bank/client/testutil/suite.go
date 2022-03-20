@@ -95,6 +95,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 	val := s.network.Validators[0]
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name      string
 		args      []string
@@ -166,6 +167,7 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 	val := s.network.Validators[0]
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name      string
 		args      []string
@@ -238,6 +240,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 func (s *IntegrationTestSuite) TestGetCmdQueryDenomsMetadata() {
 	val := s.network.Validators[0]
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name      string
 		args      []string
@@ -390,6 +393,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmdGenOnly() {
 func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 	val := s.network.Validators[0]
 
+	// nolint: exhaustivestruct
 	testCases := []struct {
 		name         string
 		from, to     sdk.AccAddress
@@ -412,7 +416,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"chain-id shouldn't be used with offline and generate-only flags",
@@ -429,7 +433,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 				fmt.Sprintf("--%s=true", flags.FlagOffline),
 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 			},
-			true, 0, &sdk.TxResponse{}, // nolint: exhaustivestruct
+			true, 0, &sdk.TxResponse{},
 		},
 		{
 			"not enough fees",
@@ -446,7 +450,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 			},
 			false,
 			sdkerrors.ErrInsufficientFee.ABCICode(),
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 		},
 		{
 			"not enough gas",
@@ -464,7 +468,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 			},
 			false,
 			sdkerrors.ErrOutOfGas.ABCICode(),
-			&sdk.TxResponse{}, // nolint: exhaustivestruct
+			&sdk.TxResponse{},
 		},
 	}
 

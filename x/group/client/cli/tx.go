@@ -784,7 +784,7 @@ func MsgExecCmd() *cobra.Command {
 
 // MsgLeaveGroupCmd creates a CLI command for Msg/LeaveGroup.
 func MsgLeaveGroupCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "leave-group [member-address] [group-id]",
 		Short: "remove member from the group",
 		Long: ` remove member from the group

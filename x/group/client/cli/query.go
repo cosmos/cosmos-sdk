@@ -437,7 +437,7 @@ func QueryVotesByProposalCmd() *cobra.Command {
 
 // QueryVotesByProposalCmd creates a CLI command for Query/TallyResult.
 func QueryTallyResultCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "tally-result [proposal-id]",
 		Short: "Query tally result of proposal",
 		Args:  cobra.ExactArgs(1),

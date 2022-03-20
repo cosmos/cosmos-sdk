@@ -3,15 +3,16 @@ package server
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/spf13/cobra"
 	tmcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 )
 
 // NewRollbackCmd creates a command to rollback tendermint and multistore state by one height.
 func NewRollbackCmd(defaultNodeHome string) *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := &cobra.Command{ // nolint: exhaustivestruct
 		Use:   "rollback",
 		Short: "rollback cosmos-sdk and tendermint state by one height",
 		Long: `

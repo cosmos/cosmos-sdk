@@ -37,7 +37,7 @@ func ShowNodeIDCmd() *cobra.Command {
 
 // ShowValidatorCmd - ported from Tendermint, show this node's validator info
 func ShowValidatorCmd() *cobra.Command {
-	cmd := cobra.Command{
+	cmd := cobra.Command{ // nolint: exhaustivestruct
 		Use:   "show-validator",
 		Short: "Show this node's tendermint validator info",
 		RunE: func(cmd *cobra.Command, args []string) error {

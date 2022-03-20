@@ -12,7 +12,7 @@ require (
 	github.com/regen-network/gocuke v0.6.1
 	github.com/stretchr/testify v1.7.0
 	github.com/tendermint/tm-db v0.6.7
-	google.golang.org/grpc v1.44.0
+	google.golang.org/grpc v1.45.0
 	google.golang.org/protobuf v1.27.1
 	gotest.tools/v3 v3.1.0
 	pgregory.net/rapid v0.4.7

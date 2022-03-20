@@ -56,7 +56,6 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 				Authorization: authorizationAny,
 				Expiration:    grant.Expiration,
 			}},
-			Pagination: nil,
 		}, nil
 	}
 

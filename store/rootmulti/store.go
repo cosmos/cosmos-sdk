@@ -148,9 +148,9 @@ func (rs *Store) GetCommitKVStore(key types.StoreKey) types.CommitKVStore {
 	return rs.stores[key]
 }
 
-// GetStores returns mounted stores
-func (rs *Store) GetStores() map[types.StoreKey]types.CommitKVStore {
-	return rs.stores
+// StoreKeysByName returns mapping storeNames -> StoreKeys
+func (rs *Store) StoreKeysByName() map[string]types.StoreKey {
+	return rs.keysByName
 }
 
 // LoadLatestVersionAndUpgrade implements CommitMultiStore

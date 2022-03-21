@@ -110,10 +110,39 @@ Tip: <string>
 We call "transaction body" the `Tx.TxBody.Messages` field, which is an array of `Any`s. Since messages are widely used, they have a slightly different encoding than usual array of `Any`s (protobuf: `repeated repeated google.protobuf.Any`) described in Annex 1.
 
 ```
-This transaction has <int> messages:
+This transaction has <int> message:   // Optional 's' for "message" if there's is >1 sdk.Msgs.
 // For each Msg, print the following 2 lines:
 Msg (<int>/<int>): <string>           // E.g. Msg (1/2): bank v1beta1 send coins
 <value rendering of Msg struct>
+End of transaction messages
+```
+
+#### Example
+
+Given the following Protobuf message:
+
+```proto
+message Grant {
+  google.protobuf.Any       authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
+  google.protobuf.Timestamp expiration    = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+}
+
+message MsgGrant {
+  option (cosmos.msg.v1.signer) = "granter";
+  option (cosmos.msg.v1.textual) = "authz v1beta1 grant";
+
+  string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+```
+
+and a transaction containing 1 such `sdk.Msg`, we get the following encoding:
+
+```
+This transaction has 1 message:
+Msg (1/1): authz v1beta1 grant
+Granter: cosmos1abc...def
+Grantee: cosmos1ghi...jkl
 End of transaction messages
 ```
 
@@ -301,7 +330,7 @@ JSON:
         ]
       },
       {
-        "@type": "/cosmos.gov.v1beta2.MsgSubmitProposal",
+        "@type": "/cosmos.gov.v1.MsgSubmitProposal",
         "proposer": "cosmos1...ghi",
         "messages": [
           {
@@ -395,7 +424,7 @@ Message (1/2): bank v1beta1 send coins
 From: cosmos1...abc
 To: cosmos1...def
 Amount: 10 atom
-Message (2/2): gov v1beta2 submit proposal
+Message (2/2): gov v1 submit proposal
 Messages: 2 Messages
 > Message (1/2): bank v1beta1 send coins
 > From: cosmos1...jkl

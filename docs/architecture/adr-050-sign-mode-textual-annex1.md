@@ -51,9 +51,7 @@ Value Renderers describe how values of different Protobuf types should be encode
 
 ```proto
 message MsgSend {
-  option (cosmos.msg.v1.textual) {
-    msg_name = "bank send coins"
-  }
+  option (cosmos.msg.v1.textual) = "bank v1 send coins";
 }
 ```
 
@@ -66,12 +64,15 @@ message MsgSend {
 
 ### `repeated`
 
+- Applies to all `repeated` fields, except `cosmos.tx.v1beta1.TxBody#Messages`, who has a particular encoding (see [ADR-050](./adr-050-sign-mode-textual.md)).
 - A repeated type has the following template:
 
 ```
 This <message_name> has <int> <field_name>
-
-> <value renderer>
+<field_name> (<int>/<int>): <value rendered 1st line>
+<optional value rendered 2 to nth lines>
+<field_name> (<int>/<int>): <value rendered 1st line>
+<optional value rendered 2nd to nth lines>
 End of <field_name>.
 ```
 
@@ -101,29 +102,96 @@ x := []AllowedMsgAllowance{"cosmos.bank.v1beta1.MsgSend", "cosmos.gov.v1.MsgVote
 we have the following value-rendered encoding:
 
 ```
-This AllowedMsgAllowance has 2 allowed_messages:
-allowed_messages (1/2):
-> cosmos.bank.v1beta1.MsgSend
-allowed_messages (2/2):
-> cosmos.gov.v1.MsgVote
-End of allowed_messages.
+Allowed messages: 2 strings
+Allowed messages (1/2): cosmos.bank.v1beta1.MsgSend
+Allowed messages (2/2): cosmos.gov.v1.MsgVote
+End of Allowed messages
 ```
 
 ### `message`
 
-TODO
+- Applies to Protobuf messages whose name does not start with `Msg`
+  - For `sdk.Msg`s, please see [ADR-050](./adr-050-sign-mode-textual.md)
+  - alternatively, we can decide to add a protobuf option to denote messages that are `sdk.Msg`s.
+- Field names follow sentence case
+  - replace `_` with a spaces
+  - capitalize first letter
+- Field names are ordered by their Protobuf field number
+- Nesting:
+  - if a field contains a nested message, we value-render the underlying message, and render the template:
+  ```
+  <field_name>: <1st line of value-rendered message>
+  > <lines 2-n of value-rendered message>             // Notice the `>` prefix.
+  ```
+  - `>` character used to represent nesting. For each additional level of nesting, add `>`.
+
+#### Examples
+
+Given the following Protobuf messages:
+
+```proto
+enum VoteOption {
+  VOTE_OPTION_UNSPECIFIED = 0;
+  VOTE_OPTION_YES = 1;
+  VOTE_OPTION_ABSTAIN = 2;
+  VOTE_OPTION_NO = 3;
+  VOTE_OPTION_NO_WITH_VETO = 4;
+}
+
+message WeightedVoteOption {
+  VoteOption option = 1;
+  string     weight = 2 [(cosmos_proto.scalar) = "cosmos.Dec"];
+}
+
+message Vote {
+  uint64 proposal_id = 1;
+  string voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  reserved 3;
+  repeated WeightedVoteOption options = 4;
+}
+```
+
+we get the following encoding for the `Vote` message:
+
+```
+Vote object
+> Proposal id: 4
+> Vote: cosmos1abc...def
+> Options: 2 WeightedVoteOptions
+> Options (1/2): WeightedVoteOption object
+>> Option: Yes
+>> Weight: 0.7
+> Options (2/2): WeightedVoteOption object
+>> Option: No
+>> Weight: 0.3
+> End of Options
+```
 
 ### Enums
 
 - String case convention: snake case to sentence case
 - Allow optional annotation for textual name (TBD)
-- E.g `enum VoteOption`
+- Algorithm:
   - convert enum name (`VoteOption`) to snake_case (`VOTE_OPTION`)
   - truncate that prefix + `_` from the enum name if it exists (`VOTE_OPTION_` gets stripped from `VOTE_OPTION_YES` -> `YES`)
   - convert rest to sentence case: `YES` -> `Yes`
   - in summary: `VOTE_OPTION_YES` -> `Yes`
 
+#### Examples
+
+See example above with `message Vote{}`.
+
 ### `google.protobuf.Any`
+
+- Applies to `google.protobuf.Any`
+- Rendered as:
+
+```
+<type_url>
+> <value rendered underlying message>
+```
+
+#### Examples
 
 TODO
 
@@ -141,3 +209,9 @@ Rendered as either ISO8601 (`2021-01-01T12:00:00Z`) or a more standard English-l
 ### address bytes
 
 We currently use `string` types in protobuf for addresses so this may not be needed, but if any address bytes are used in sign mode textual they should be rendered with bech32 formatting
+
+## Utilities
+
+### Sentence case
+
+Sentence case is defined as capitalization just like a standard English sentence, e.g. "The dog is gone". When converting a string containing `_` (e.g. in Protobuf field names), each `_` is converted into a space character `' '` before converting into the sentence case.

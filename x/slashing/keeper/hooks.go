@@ -9,16 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-// Implements SlashingHooks interface
-var _ types.SlashingHooks = Keeper{}
-
-// AfterValidatorDowntime - call hook if registered
-func (k Keeper) AfterValidatorDowntime(ctx sdk.Context, consAddress sdk.ConsAddress, power int64) {
-	if k.hooks != nil {
-		k.hooks.AfterValidatorDowntime(ctx, consAddress, power)
-	}
-}
-
 func (k Keeper) AfterValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _ sdk.ValAddress) {
 	// Update the signing info start height or create a new signing info
 	_, found := k.GetValidatorSigningInfo(ctx, address)
@@ -57,6 +47,7 @@ type Hooks struct {
 	k Keeper
 }
 
+// Implements StakingHooks interface
 var _ types.StakingHooks = Hooks{}
 
 // Return the wrapper struct

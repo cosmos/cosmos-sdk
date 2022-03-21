@@ -35,7 +35,8 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 	// This counter just tracks the sum of the bit array
 	// That way we avoid needing to read/write the whole array each time
 	previous := k.GetValidatorMissedBlockBitArray(ctx, consAddr, index)
-	missed := !signed
+	missed := !signed && !k.sk.IsJailed(ctx, consAddr) // don't update missed blocks when validator's jailed
+
 	switch {
 	case !previous && missed:
 		// Array value has changed from not missed to missed, increment counter
@@ -84,7 +85,6 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 			// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
 			// That's fine since this is just used to filter unbonding delegations & redelegations.
 			distributionHeight := height - sdk.ValidatorUpdateDelay - 1
-
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(
 					types.EventTypeSlash,
@@ -120,10 +120,6 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 				"validator", consAddr.String(),
 			)
 		}
-
-		// hook is triggered for each downtime detection
-		// and defered to keep safe the write operations on SignInfo
-		defer k.AfterValidatorDowntime(ctx, consAddr, power)
 	}
 
 	// Set the updated signing info

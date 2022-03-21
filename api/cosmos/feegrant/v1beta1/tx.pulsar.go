@@ -1800,7 +1800,7 @@ type MsgGrantAllowance struct {
 	Granter string `protobuf:"bytes,1,opt,name=granter,proto3" json:"granter,omitempty"`
 	// grantee is the address of the user being granted an allowance of another user's funds.
 	Grantee string `protobuf:"bytes,2,opt,name=grantee,proto3" json:"grantee,omitempty"`
-	// allowance can be any of basic and filtered fee allowance.
+	// allowance can be any of basic, periodic, allowed fee allowance.
 	Allowance *anypb.Any `protobuf:"bytes,3,opt,name=allowance,proto3" json:"allowance,omitempty"`
 }
 

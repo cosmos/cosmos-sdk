@@ -1,6 +1,5 @@
 name: Build & Push SDK Proto Builder
 on:
-  pull_request:
   push:
     branches:
       - master

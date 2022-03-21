@@ -365,8 +365,7 @@ func (msg MsgCancelUnbondingDelegation) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes implements the sdk.Msg interface.
 func (msg MsgCancelUnbondingDelegation) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic implements the sdk.Msg interface.

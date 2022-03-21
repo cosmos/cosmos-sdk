@@ -95,7 +95,7 @@ func (t tableImpl) doSave(ctx context.Context, writer *batchIndexCommitmentWrite
 
 	if haveExisting {
 		if mode == saveModeInsert {
-			return ormerrors.PrimaryKeyConstraintViolation.Wrapf("%q:%+v", mref.Descriptor().FullName(), pkValues)
+			return ormerrors.AlreadyExists.Wrapf("%q:%+v", mref.Descriptor().FullName(), pkValues)
 		}
 
 		if validateHooks := writer.ValidateHooks(); validateHooks != nil {
@@ -106,7 +106,7 @@ func (t tableImpl) doSave(ctx context.Context, writer *batchIndexCommitmentWrite
 		}
 	} else {
 		if mode == saveModeUpdate {
-			return ormerrors.NotFoundOnUpdate.Wrapf("%q", mref.Descriptor().FullName())
+			return ormerrors.NotFound.Wrapf("%q", mref.Descriptor().FullName())
 		}
 
 		if validateHooks := writer.ValidateHooks(); validateHooks != nil {

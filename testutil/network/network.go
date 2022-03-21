@@ -603,6 +603,10 @@ func (n *Network) Cleanup() {
 		}
 	}
 
+	// Give a brief pause for things to finish closing in other processes. Hopefully this helps with the address-in-use errors.
+	// 100ms chosen randomly.
+	time.Sleep(100 * time.Millisecond)
+
 	if n.Config.CleanupDir {
 		_ = os.RemoveAll(n.BaseDir)
 	}

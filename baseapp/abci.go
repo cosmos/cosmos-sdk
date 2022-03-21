@@ -306,7 +306,6 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	// MultiStore (app.cms) so when Commit() is called is persists those values.
 	app.deliverState.ms.Write()
 	commitID := app.cms.Commit()
-	app.logger.Info("commit synced", "commit", fmt.Sprintf("%X", commitID))
 
 	// Reset the Check state to the latest committed.
 	//
@@ -339,6 +338,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 		go app.snapshot(header.Height)
 	}
 
+	app.logger.Info("commited - baseapp", "height", commitID.Version, "commit_hash", commitID.Hash, "retain_height", retainHeight)
 	return abci.ResponseCommit{
 		Data:         commitID.Hash,
 		RetainHeight: retainHeight,

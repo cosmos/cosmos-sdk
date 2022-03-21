@@ -31,14 +31,14 @@ func (ci CommitInfo) toMap() map[string][]byte {
 }
 
 // Hash returns the simple merkle root hash of the stores sorted by name.
-func (ci CommitInfo) Hash() []byte {
+func (ci CommitInfo) Hash() ([]byte, []string) {
 	// we need a special case for empty set, as SimpleProofsFromMap requires at least one entry
 	if len(ci.StoreInfos) == 0 {
-		return nil
+		return nil, nil
 	}
 
-	rootHash, _, _ := sdkmaps.ProofsFromMap(ci.toMap())
-	return rootHash
+	rootHash, _, keys := sdkmaps.ProofsFromMap(ci.toMap())
+	return rootHash, keys
 }
 
 func (ci CommitInfo) ProofOp(storeName string) tmcrypto.ProofOp {
@@ -66,8 +66,9 @@ func (ci CommitInfo) ProofOp(storeName string) tmcrypto.ProofOp {
 }
 
 func (ci CommitInfo) CommitID() CommitID {
+	hash, _ := ci.Hash()
 	return CommitID{
 		Version: ci.Version,
-		Hash:    ci.Hash(),
+		Hash:    hash,
 	}
 }

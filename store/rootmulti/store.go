@@ -386,7 +386,7 @@ func (rs *Store) Commit() types.CommitID {
 		version = previousHeight + 1
 	}
 
-	rs.lastCommitInfo = commitStores(version, rs.stores)
+	rs.lastCommitInfo = rs.commitStores(version, rs.stores)
 
 	var pruneErr error
 	defer func ()  {
@@ -412,12 +412,16 @@ func (rs *Store) Commit() types.CommitID {
 
 	// batch prune if the current height is a pruning interval height
 	if rs.pruningOpts.Interval > 0 && version%int64(rs.pruningOpts.Interval) == 0 {
+		rs.logger.Info("pruning", "height", version, "to_prune", rs.pruneHeights)
 		pruneErr = rs.pruneStores()
 	}
 
+	hash, keys := rs.lastCommitInfo.Hash()
+	rs.logger.Info("calculated commit hash", "height", version, "commit_hash", hash, "keys", keys)
+
 	return types.CommitID{
 		Version: version,
-		Hash:    rs.lastCommitInfo.Hash(),
+		Hash:    hash,
 	}
 }
 
@@ -950,6 +954,30 @@ func (rs *Store) buildCommitInfo(version int64) *types.CommitInfo {
 	}
 }
 
+// Commits each store and returns a new commitInfo.
+func (rs *Store) commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore) *types.CommitInfo {
+	storeInfos := make([]types.StoreInfo, 0, len(storeMap))
+
+	for key, store := range storeMap {
+		commitID := store.Commit()
+		rs.logger.Info("commit kvstore", "height", commitID.Version, "key", key, "commit_store_hash", commitID.Hash)
+
+		if store.GetStoreType() == types.StoreTypeTransient {
+			continue
+		}
+
+		si := types.StoreInfo{}
+		si.Name = key.Name()
+		si.CommitId = commitID
+		storeInfos = append(storeInfos, si)
+	}
+
+	return &types.CommitInfo{
+		Version:    version,
+		StoreInfos: storeInfos,
+	}
+}
+
 type storeParams struct {
 	key            types.StoreKey
 	db             dbm.DB
@@ -972,29 +1000,6 @@ func getLatestVersion(db dbm.DB) int64 {
 	}
 
 	return latestVersion
-}
-
-// Commits each store and returns a new commitInfo.
-func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore) *types.CommitInfo {
-	storeInfos := make([]types.StoreInfo, 0, len(storeMap))
-
-	for key, store := range storeMap {
-		commitID := store.Commit()
-
-		if store.GetStoreType() == types.StoreTypeTransient {
-			continue
-		}
-
-		si := types.StoreInfo{}
-		si.Name = key.Name()
-		si.CommitId = commitID
-		storeInfos = append(storeInfos, si)
-	}
-
-	return &types.CommitInfo{
-		Version:    version,
-		StoreInfos: storeInfos,
-	}
 }
 
 // Gets commitInfo from disk.

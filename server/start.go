@@ -98,8 +98,8 @@ which accepts a path for the resulting pprof file.
 The node may be started in a 'query only' mode where only the gRPC and JSON HTTP
 API services are enabled via the 'grpc-only' flag. In this mode, Tendermint is
 bypassed and can be used when legacy queries are needed after an on-chain upgrade
-is performed. Note, when enabled, either gRPC and/or API must also be enabled in
-the application configuration.
+is performed. Note, when enabled, either gRPC must also be enabled in the
+application configuration.
 `,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
@@ -258,10 +258,15 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	var tmNode tmservice.Service
 
 	gRPCOnly := ctx.Viper.GetBool(flagGRPCOnly)
-	if gRPCOnly {
+	switch {
+	case gRPCOnly && !config.GRPC.Enable:
+		return fmt.Errorf("cannot start '%s' mode; must enable gRPC in application config", flagGRPCOnly)
+
+	case gRPCOnly:
 		ctx.Logger.Info("starting node in gRPC only mode; Tendermint is not enabled")
-	} else {
-		ctx.Logger.Info("starting ABCI with Tendermint")
+
+	default:
+		ctx.Logger.Info("starting node with ABCI Tendermint in-process")
 
 		tmNode, err = node.New(cfg, ctx.Logger, abciclient.NewLocalCreator(app), genDoc)
 		if err != nil {
@@ -279,12 +284,12 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	if (config.API.Enable || config.GRPC.Enable) && tmNode != nil {
 		node, ok := tmNode.(local.NodeService)
 		if !ok {
-			panic("unable to set node type; please try re-installing the binary")
+			return fmt.Errorf("unable to set node type; please try re-installing the binary")
 		}
 
 		localNode, err := local.New(node)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		clientCtx = clientCtx.WithClient(localNode)

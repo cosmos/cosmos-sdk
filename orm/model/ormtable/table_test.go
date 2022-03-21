@@ -4,9 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"sort"
 	"strings"
 	"testing"
+	"time"
+
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/orm/types/kv"
 
@@ -61,6 +65,51 @@ func TestScenario(t *testing.T) {
 	golden.Assert(t, debugBuf.String(), "test_scenario.golden")
 
 	checkEncodeDecodeEntries(t, table, store.IndexStoreReader())
+}
+
+func TestImportedMessageIterator(t *testing.T) {
+	table, err := ormtable.Build(ormtable.Options{
+		MessageType: (&testpb.ExampleTimestamp{}).ProtoReflect().Type(),
+	})
+	backend := testkv.NewSplitMemBackend()
+	ctx := ormtable.WrapContextDefault(backend)
+	store, err := testpb.NewExampleTimestampTable(table)
+	assert.NilError(t, err)
+
+	past, err := time.Parse("2006-01-02", "2000-01-01")
+	assert.NilError(t, err)
+	middle, err := time.Parse("2006-01-02", "2020-01-01")
+	assert.NilError(t, err)
+	future, err := time.Parse("2006-01-02", "2049-01-01")
+	assert.NilError(t, err)
+
+	pastPb, middlePb, futurePb := timestamppb.New(past), timestamppb.New(middle), timestamppb.New(future)
+	timeOrder := [3]*timestamppb.Timestamp{pastPb, middlePb, futurePb}
+
+	assert.NilError(t, store.Insert(ctx, &testpb.ExampleTimestamp{
+		Name: "foo",
+		Ts:   pastPb,
+	}))
+	assert.NilError(t, store.Insert(ctx, &testpb.ExampleTimestamp{
+		Name: "bar",
+		Ts:   middlePb,
+	}))
+	assert.NilError(t, store.Insert(ctx, &testpb.ExampleTimestamp{
+		Name: "baz",
+		Ts:   futurePb,
+	}))
+
+	from, to := testpb.ExampleTimestampTsIndexKey{}.WithTs(timestamppb.New(past)), testpb.ExampleTimestampTsIndexKey{}.WithTs(timestamppb.New(future))
+	it, err := store.ListRange(ctx, from, to)
+	assert.NilError(t, err)
+
+	i := 0
+	for it.Next() {
+		v, err := it.Value()
+		assert.NilError(t, err)
+		assert.Equal(t, timeOrder[i].String(), v.Ts.String())
+		i++
+	}
 }
 
 // check that the ormkv.Entry's decode and encode to the same bytes
@@ -694,4 +743,17 @@ func protoValuesToInterfaces(ks []protoreflect.Value) []interface{} {
 	}
 
 	return values
+}
+
+func TestReadonly(t *testing.T) {
+	table, err := ormtable.Build(ormtable.Options{
+		MessageType: (&testpb.ExampleTable{}).ProtoReflect().Type(),
+	})
+	assert.NilError(t, err)
+	readBackend := ormtable.NewReadBackend(ormtable.ReadBackendOptions{
+		CommitmentStoreReader: dbm.NewMemDB(),
+		IndexStoreReader:      dbm.NewMemDB(),
+	})
+	ctx := ormtable.WrapContextDefault(readBackend)
+	assert.ErrorIs(t, ormerrors.ReadOnly, table.Insert(ctx, &testpb.ExampleTable{}))
 }

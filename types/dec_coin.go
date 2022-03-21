@@ -319,8 +319,9 @@ func (coins DecCoins) SafeSub(coinsB DecCoins) (DecCoins, bool) {
 // Intersect will return a new set of coins which contains the minimum DecCoin
 // for common denoms found in both `coins` and `coinsB`. For denoms not common
 // to both `coins` and `coinsB` the minimum is considered to be 0, thus they
-// are not added to the final set.In other words, trim any denom amount from
+// are not added to the final set. In other words, trim any denom amount from
 // coin which exceeds that of coinB, such that (coin.Intersect(coinB)).IsLTE(coinB).
+// See also Coins.Min().
 func (coins DecCoins) Intersect(coinsB DecCoins) DecCoins {
 	res := make([]DecCoin, len(coins))
 	for i, coin := range coins {

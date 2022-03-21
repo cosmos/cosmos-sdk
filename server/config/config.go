@@ -70,6 +70,10 @@ type BaseConfig struct {
 	IndexEvents []string `mapstructure:"index-events"`
 	// IavlCacheSize set the size of the iavl tree cache.
 	IAVLCacheSize uint64 `mapstructure:"iavl-cache-size"`
+
+	// AppDBBackend defines the type of Database to use for the application and snapshots databases.
+	// An empty string indicates that the Tendermint config's DBBackend value should be used.
+	AppDBBackend string `mapstructure:"app-db-backend"`
 }
 
 // APIConfig defines the API listener configuration.
@@ -210,6 +214,7 @@ func DefaultConfig() *Config {
 			MinRetainBlocks:   0,
 			IndexEvents:       make([]string, 0),
 			IAVLCacheSize:     781250, // 50 MB
+			AppDBBackend:      "",
 		},
 		Telemetry: telemetry.Config{
 			Enabled:      false,
@@ -269,6 +274,7 @@ func GetConfig(v *viper.Viper) Config {
 			IndexEvents:       v.GetStringSlice("index-events"),
 			MinRetainBlocks:   v.GetUint64("min-retain-blocks"),
 			IAVLCacheSize:     v.GetUint64("iavl-cache-size"),
+			AppDBBackend:      v.GetString("app-db-backend"),
 		},
 		Telemetry: telemetry.Config{
 			ServiceName:             v.GetString("telemetry.service-name"),
@@ -317,6 +323,11 @@ func GetConfig(v *viper.Viper) Config {
 func (c Config) ValidateBasic() error {
 	if c.BaseConfig.MinGasPrices == "" {
 		return sdkerrors.ErrAppConfig.Wrap("set min gas price in app.toml or flag or env variable")
+	}
+	if c.Pruning == storetypes.PruningOptionEverything && c.StateSync.SnapshotInterval > 0 {
+		return sdkerrors.ErrAppConfig.Wrapf(
+			"cannot enable state sync snapshots with '%s' pruning setting", storetypes.PruningOptionEverything,
+		)
 	}
 
 	return nil

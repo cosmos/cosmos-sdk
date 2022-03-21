@@ -24,7 +24,7 @@ minimum-gas-prices = "{{ .BaseConfig.MinGasPrices }}"
 
 # default: the last 362880 states are kept, pruning at 10 block intervals
 # nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
-# everything: all saved states will be deleted, storing only the current state; pruning at 10 block intervals
+# everything: all saved states will be deleted, storing only the current and previous state; pruning at 10 block intervals
 # custom: allow pruning options to be manually specified through 'pruning-keep-recent' and 'pruning-interval'
 pruning = "{{ .BaseConfig.Pruning }}"
 
@@ -74,6 +74,12 @@ index-events = [{{ range .BaseConfig.IndexEvents }}{{ printf "%q, " . }}{{end}}]
 # IavlCacheSize set the size of the iavl tree cache. 
 # Default cache size is 50mb.
 iavl-cache-size = {{ .BaseConfig.IAVLCacheSize }}
+
+# AppDBBackend defines the database backend type to use for the application and snapshots DBs.
+# An empty string indicates that a fallback will be used.
+# First fallback is the deprecated compile-time types.DBBackend value.
+# Second fallback (if the types.DBBackend also isn't set), is the db-backend value set in Tendermint's config.toml.
+app-db-backend = "{{ .BaseConfig.AppDBBackend }}"
 
 ###############################################################################
 ###                         Telemetry Configuration                         ###

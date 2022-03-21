@@ -250,7 +250,7 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 
 		msg := []sdk.Msg{banktype.NewMsgSend(granterAddr, granteeAddr, coins)}
 		authorization, err := targetGrant.GetAuthorization()
-		if err != nil{
+		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
 		}
 
@@ -259,17 +259,13 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "not a send authorization"), nil, nil
 		}
 
-		if sendAuth.SpendLimit.IsAllLTE(coins) {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "over spend limit"), nil, nil
-		}
-
-		res, err := sendAuth.Accept(ctx, msg[0])
+		_, err = sendAuth.Accept(ctx, msg[0])
 		if err != nil {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
-		}
-
-		if !res.Accept {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "expired or invalid grant"), nil, nil
+			if sdkerrors.ErrInsufficientFunds.Is(err) {
+				return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, nil
+			} else {
+				return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
+			}
 		}
 
 		msgExec := authz.NewMsgExec(granteeAddr, msg)
@@ -278,9 +274,9 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "fee error"), nil, err
 		}
+
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
 		granteeAcc := ak.GetAccount(ctx, granteeAddr)
-
 		tx, err := helpers.GenTx(
 			txCfg,
 			[]sdk.Msg{&msgExec},

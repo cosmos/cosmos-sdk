@@ -37,6 +37,7 @@ Value Renderers describe how values of different Protobuf types should be encode
 - Applies to `cosmos.base.v1beta1.Coin`.
 - Denoms are converted to `display` denoms using `Metadata` (if available). **This requires a state query**.
 - Amounts are converted to `display` denom amounts and rendered as `number`s above
+  - We do not change the capitalization of the denom. In practice, `display` denoms are stored in lowercase in state (e.g. `10 atom`), however they are often showed in UPPERCASE in everyday life (e.g. `10 ATOM`). Value renderers keep the case used in state, but we may recommend chains changing the denom metadata to be uppercase for better user display.
 - One space between the denom and amount
 - In the future, IBC denoms could maybe be converted to DID/IIDs, if we can find a robust way for doing this (ex. `cosmos:hub:atom`)
 

@@ -465,17 +465,21 @@ SIGN_MODE_TEXTUAL is purely additive, and doesn't break any backwards compatibil
 ### Positive
 
 - Human-friendly way of signing on hardware devices.
--
+- Once SIGN_MODE_TEXTUAL is shipped, SIGN_MODE_LEGACY_AMINO_JSON can be deprecated and removed. On the longer term, Amino can be totally removed.
 
 ### Negative
 
-- Implementation needs to happen
+- If the transaction is complex, the string array can be arbitrarily long, and some users might just skip some screens and blind sign.
+- Some fields are still encoded in non-human-readable ways, such as public keys in base64.
+- New ledger app needs to be released, still unclear
 
 ### Neutral
 
 ## Further Discussions
 
 - Some details on value renderers need to be polished, see [Annex 1](./adr-050-sign-mode-textual-annex1.md).
+- Are ledger apps able to support both SIGN_MODE_LEGACY_AMINO_JSON and SIGN_MODE_TEXTUAL at the same time?
+- Open question: should we add a Protobuf field option to allow app developers to overwrite the textual representation of certain Protobuf fields and message? This would be similar to Ethereum's [EIP4430](https://github.com/ethereum/EIPs/pull/4430), where the contract developer decides on the textual representation.
 - Internationalization.
 
 ## References

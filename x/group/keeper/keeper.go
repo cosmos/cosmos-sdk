@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authmiddleware "github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
@@ -35,6 +36,7 @@ const (
 	ProposalTableSeqPrefix           byte = 0x31
 	ProposalByGroupPolicyIndexPrefix byte = 0x32
 	ProposalByProposerIndexPrefix    byte = 0x33
+	ProposalsByVotingPeriodEndPrefix byte = 0x34
 
 	// Vote Table
 	VoteTablePrefix           byte = 0x40
@@ -66,6 +68,7 @@ type Keeper struct {
 	proposalTable              orm.AutoUInt64Table
 	proposalByGroupPolicyIndex orm.Index
 	proposalByProposerIndex    orm.Index
+	proposalsByVotingPeriodEnd orm.Index
 
 	// Vote Table
 	voteTable           orm.PrimaryKeyTable
@@ -73,9 +76,11 @@ type Keeper struct {
 	voteByVoterIndex    orm.Index
 
 	router *authmiddleware.MsgServiceRouter
+
+	config group.Config
 }
 
-func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddleware.MsgServiceRouter, accKeeper group.AccountKeeper) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddleware.MsgServiceRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
 	k := Keeper{
 		key:       storeKey,
 		router:    router,
@@ -179,6 +184,13 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 	if err != nil {
 		panic(err.Error())
 	}
+	k.proposalsByVotingPeriodEnd, err = orm.NewIndex(proposalTable, ProposalsByVotingPeriodEndPrefix, func(value interface{}) ([]interface{}, error) {
+		votingPeriodEnd := value.(*group.Proposal).VotingPeriodEnd
+		return []interface{}{sdk.FormatTimeBytes(votingPeriodEnd)}, nil
+	}, []byte{})
+	if err != nil {
+		panic(err.Error())
+	}
 	k.proposalTable = *proposalTable
 
 	// Vote Table
@@ -204,6 +216,14 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 	}
 	k.voteTable = *voteTable
 
+	if config.MaxMetadataLen == 0 {
+		config.MaxMetadataLen = group.DefaultConfig().MaxMetadataLen
+	}
+	if config.MaxExecutionPeriod == 0 {
+		config.MaxExecutionPeriod = group.DefaultConfig().MaxExecutionPeriod
+	}
+	k.config = config
+
 	return k
 
 }
@@ -213,7 +233,69 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", group.ModuleName))
 }
 
+// MaxMetadataLength returns the max length of the metadata bytes field for various entities within the group module.
+func (k Keeper) MaxMetadataLength() uint64 { return k.config.MaxMetadataLen }
+
 // GetGroupSequence returns the current value of the group table sequence
 func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
 	return k.groupTable.Sequence().CurVal(ctx.KVStore(k.key))
+}
+
+func (k Keeper) iterateProposalsByVPEnd(ctx sdk.Context, cb func(proposal group.Proposal) (bool, error)) error {
+	timeBytes := sdk.FormatTimeBytes(ctx.BlockTime())
+	it, err := k.proposalsByVotingPeriodEnd.PrefixScan(ctx.KVStore(k.key), nil, timeBytes)
+
+	if err != nil {
+		return err
+	}
+	defer it.Close()
+
+	var proposal group.Proposal
+	for {
+		_, err := it.LoadNext(&proposal)
+		if errors.ErrORMIteratorDone.Is(err) {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		stop, err := cb(proposal)
+		if err != nil {
+			return err
+		}
+		if stop {
+			break
+		}
+	}
+
+	return nil
+}
+
+func (k Keeper) UpdateTallyOfVPEndProposals(ctx sdk.Context) error {
+	k.iterateProposalsByVPEnd(ctx, func(proposal group.Proposal) (bool, error) {
+
+		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.Address)
+		if err != nil {
+			return true, err
+		}
+
+		electorate, err := k.getGroupInfo(ctx, policyInfo.GroupId)
+		if err != nil {
+			return true, err
+		}
+
+		err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo)
+		if err != nil {
+			return true, err
+		}
+
+		if err := k.proposalTable.Update(ctx.KVStore(k.key), proposal.Id, &proposal); err != nil {
+			return true, err
+		}
+
+		return false, nil
+	})
+
+	return nil
 }

@@ -1,6 +1,7 @@
 package simulation_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"math/big"
 	"math/rand"
 	"testing"
@@ -81,7 +82,7 @@ func TestSimulateMsgCreateValidator(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg types.MsgCreateValidator
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, "0.080000000000000000", msg.Commission.MaxChangeRate.String())
@@ -168,7 +169,7 @@ func TestSimulateMsgEditValidator(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg types.MsgEditValidator
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, "0.280623462081924936", msg.CommissionRate.String())
@@ -197,7 +198,7 @@ func TestSimulateMsgDelegate(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg types.MsgDelegate
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.DelegatorAddress)
@@ -243,7 +244,7 @@ func TestSimulateMsgUndelegate(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg types.MsgUndelegate
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.DelegatorAddress)
@@ -292,7 +293,7 @@ func TestSimulateMsgBeginRedelegate(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg types.MsgBeginRedelegate
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, "cosmos1092v0qgulpejj8y8hs6dmlw82x9gv8f7jfc7jl", msg.DelegatorAddress)

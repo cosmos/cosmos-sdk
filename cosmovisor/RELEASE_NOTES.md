@@ -1,33 +1,28 @@
-# Cosmovisor v1.0.0 Release Notes
+# Cosmovisor v1.1.0 Release Notes
 
-This is the first major release of Cosmovisor.
-It changes the way Cosmovisor is searching for an upgrade event from an app.
-Instead of scanning standard input and standard output logs, the Cosmovisor
-observes the `$DAEMON_HOME/upgrade-info.json` file, that is produced by the
-`x/upgrade` module. The `upgrade-info.json` files is created by the `x/upgrade`
-module and contains information from the on-chain upgrade Plan record.
-Using the file based approach solved many outstanding problems: freezing when
-logs are too long, race condition with the `x/upgrade` handler, and potential
-exploit (if a chain would allow to log an arbitrary message, then an attacker
-could produce a fake upgrade signal and halt a chain or instrument a download
-of modified, hacked binary when the auto download option is enabled).
+### New execution model
 
-## Auto downloads
+With this release we are shifting to a new CLI design: 
 
-Cosmovisor v1.0 supports auto downloads based on the information in the
-`data/upgrade-info.json`. In the Cosmos SDK `< v0.44`, that file doesn't contain
-`upgrade.Plan.Info`, that is needed for doing auto download. Hence Cosmovisor `v1.0`
-auto download won't work with Apps updating from `v0.43` and earlier.
+* in the past, Cosmovisor was designed to act as a wrapper for a Cosmos App. An admin could link it and use it instead of the Cosmos App. When running it will pass all options and configuration  parameters to the app. Hence the only way to configure the Cosmovisor was through environment variables.
+* now, we are moving to a more traditional model, where Cosmovisor has it's own command set and is a true supervisor.
 
-NOTE: we **don't recommend using auto download** functionality. It can lead to potential
-chain halt when the upgrade Plan contains a bad link or the resource with the
-binary will be temporarily unavailable. We are planning on adding a upgrade
-verification command which can potentially solve this issue.
+New commands have been added:
 
-## Other updates
+* `run` will start the Cosmos App and pass remaining arguments to the app (similar to `npm run`)
+* `help` will display Cosmovisor help
+* `version` will display both Cosmovisor and the associated app version.
 
-+ Changed default value of `DAEMON_RESTART_AFTER_UPGRADE` to `true`.
-+ Added `version` command, which prints both the Cosmovisor and the associated app version.
-+ Added `help`  command, which prints the Cosmovisor help without passing it to the associated version. This is an exception, because normally, Cosmovisor passes all arguments to the associated app.
+The existing way of starting an app with Cosmovisor has been deprecated (`cosmovisor [app params]`) and will be removed in the future version. Please use `cosmovisor run [app pararms]`  instead.
 
-For more details, please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/cosmovisor/v1.0.0/cosmovisor/CHANGELOG.md).
+### New Features
+
+We added a new configuration option: `DAEMON_BACKUP_DIR` (as env variable). When set, Cosmovisor will create backup the app data backup in that directory (instead of using the app home directory) before running the update. See the [README](https://github.com/cosmos/cosmos-sdk/blob/master/cosmovisor/README.md#command-line-arguments-and-environment-variables) file for more details.
+
+### Bug Fixes
+
+* Fixed `cosmovisor version` output when installed using 'go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v1.0.0'.
+
+### Changelog
+
+For more details, please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/cosmovisor/v1.1.0/cosmovisor/CHANGELOG.md).

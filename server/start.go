@@ -4,6 +4,7 @@ package server
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"runtime/pprof"
@@ -18,6 +19,7 @@ import (
 	"github.com/tendermint/tendermint/rpc/client/local"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -48,7 +50,6 @@ const (
 
 	FlagPruning           = "pruning"
 	FlagPruningKeepRecent = "pruning-keep-recent"
-	FlagPruningKeepEvery  = "pruning-keep-every"
 	FlagPruningInterval   = "pruning-interval"
 	FlagIndexEvents       = "index-events"
 	FlagMinRetainBlocks   = "min-retain-blocks"
@@ -77,15 +78,15 @@ func StartCmd(appCreator types.AppCreator, defaultNodeHome string) *cobra.Comman
 		Long: `Run the full node application with Tendermint in or out of process. By
 default, the application will run with Tendermint in process.
 
-Pruning options can be provided via the '--pruning' flag or alternatively with '--pruning-keep-recent',
-'pruning-keep-every', and 'pruning-interval' together.
+Pruning options can be provided via the '--pruning' flag or alternatively with '--pruning-keep-recent'
+and 'pruning-interval' together.
 
 For '--pruning' the options are as follows:
 
-default: the last 100 states are kept in addition to every 500th state; pruning at 10 block intervals
+default: the last 362880 states are kept, pruning at 10 block intervals
 nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
-everything: all saved states will be deleted, storing only the current state; pruning at 10 block intervals
-custom: allow pruning options to be manually specified through 'pruning-keep-recent', 'pruning-keep-every', and 'pruning-interval'
+everything: all saved states will be deleted, storing only the current and previous state; pruning at 10 block intervals
+custom: allow pruning options to be manually specified through 'pruning-keep-recent' and 'pruning-interval'
 
 Node halting configurations exist in the form of two flags: '--halt-height' and '--halt-time'. During
 the ABCI Commit phase, the node will check if the current block height is greater than or equal to
@@ -147,7 +148,6 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Bool(FlagTrace, false, "Provide full stack traces for errors in ABCI Log")
 	cmd.Flags().String(FlagPruning, storetypes.PruningOptionDefault, "Pruning strategy (default|nothing|everything|custom)")
 	cmd.Flags().Uint64(FlagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
-	cmd.Flags().Uint64(FlagPruningKeepEvery, 0, "Offset heights to keep on disk after 'keep-every' (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint64(FlagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint(FlagInvCheckPeriod, 0, "Assert registered invariants every N blocks")
 	cmd.Flags().Uint64(FlagMinRetainBlocks, 0, "Minimum block height offset during ABCI commit to prune Tendermint blocks")
@@ -171,7 +171,7 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 	transport := ctx.Viper.GetString(flagTransport)
 	home := ctx.Viper.GetString(flags.FlagHome)
 
-	db, err := openDB(home)
+	db, err := openDB(home, GetAppDBBackend(ctx.Viper))
 	if err != nil {
 		return err
 	}
@@ -230,12 +230,12 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		}
 	}
 
-	traceWriterFile := ctx.Viper.GetString(flagTraceStore)
-	db, err := openDB(home)
+	db, err := openDB(home, GetAppDBBackend(ctx.Viper))
 	if err != nil {
 		return err
 	}
 
+	traceWriterFile := ctx.Viper.GetString(flagTraceStore)
 	traceWriter, err := openTraceWriter(traceWriterFile)
 	if err != nil {
 		return err
@@ -297,6 +297,25 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		clientCtx := clientCtx.
 			WithHomeDir(home).
 			WithChainID(genDoc.ChainID)
+
+		if config.GRPC.Enable {
+			_, port, err := net.SplitHostPort(config.GRPC.Address)
+			if err != nil {
+				return err
+			}
+			grpcAddress := fmt.Sprintf("127.0.0.1:%s", port)
+			// If grpc is enabled, configure grpc client for grpc gateway.
+			grpcClient, err := grpc.Dial(
+				grpcAddress,
+				grpc.WithTransportCredentials(insecure.NewCredentials()),
+				grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec())),
+			)
+			if err != nil {
+				return err
+			}
+			clientCtx = clientCtx.WithGRPCClient(grpcClient)
+			ctx.Logger.Debug("grpc client assigned to client context", "target", grpcAddress)
+		}
 
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))
 		app.RegisterAPIRoutes(apiSrv, config.API)

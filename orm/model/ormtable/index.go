@@ -3,11 +3,12 @@ package ormtable
 import (
 	"context"
 
+	"github.com/cosmos/cosmos-sdk/orm/types/kv"
+
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/model/kv"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 )
 
@@ -16,8 +17,33 @@ import (
 // to index methods.
 type Index interface {
 
-	// Iterator returns an iterator for this index with the provided list options.
-	Iterator(ctx context.Context, options ...ormlist.Option) (Iterator, error)
+	// List does iteration over the index with the provided prefix key and options.
+	// Prefix key values must correspond in type to the index's fields and the
+	// number of values provided cannot exceed the number of fields in the index,
+	// although fewer values can be provided.
+	List(ctx context.Context, prefixKey []interface{}, options ...ormlist.Option) (Iterator, error)
+
+	// ListRange does range iteration over the index with the provided from and to
+	// values and options.
+	//
+	// From and to values must correspond in type to the index's fields and the number of values
+	// provided cannot exceed the number of fields in the index, although fewer
+	// values can be provided.
+	//
+	// Range iteration can only be done for from and to values which are
+	// well-ordered, meaning that any unordered components must be equal. Ex.
+	// the bytes type is considered unordered, so a range iterator is created
+	// over an index with a bytes field, both start and end must have the same
+	// value for bytes.
+	//
+	// Range iteration is inclusive at both ends.
+	ListRange(ctx context.Context, from, to []interface{}, options ...ormlist.Option) (Iterator, error)
+
+	// DeleteBy deletes any entries which match the provided prefix key.
+	DeleteBy(context context.Context, prefixKey ...interface{}) error
+
+	// DeleteRange deletes any entries between the provided range keys.
+	DeleteRange(context context.Context, from, to []interface{}) error
 
 	// MessageType returns the protobuf message type of the index.
 	MessageType() protoreflect.MessageType
@@ -45,9 +71,6 @@ type UniqueIndex interface {
 
 	// Get retrieves the message if one exists for the provided key values.
 	Get(context context.Context, message proto.Message, keyValues ...interface{}) (found bool, err error)
-
-	// DeleteByKey deletes the message if one exists in for the provided key values.
-	DeleteByKey(context context.Context, keyValues ...interface{}) error
 }
 
 type indexer interface {

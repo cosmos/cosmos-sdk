@@ -10,6 +10,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
@@ -20,7 +21,7 @@ func (q Keeper) GroupInfo(goCtx context.Context, request *group.QueryGroupInfoRe
 	groupID := request.GroupId
 	groupInfo, err := q.getGroupInfo(ctx, groupID)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(err, "group")
 	}
 
 	return &group.QueryGroupInfoResponse{Info: &groupInfo}, nil
@@ -36,7 +37,7 @@ func (q Keeper) GroupPolicyInfo(goCtx context.Context, request *group.QueryGroup
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	groupPolicyInfo, err := q.getGroupPolicyInfo(ctx, request.Address)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(err, "group policy")
 	}
 
 	return &group.QueryGroupPolicyInfoResponse{Info: &groupPolicyInfo}, nil
@@ -269,7 +270,6 @@ func (q Keeper) GroupsByMember(goCtx context.Context, request *group.QueryGroups
 	if err != nil {
 		return nil, err
 	}
-	defer iter.Close()
 
 	var members []*group.GroupMember
 	pageRes, err := orm.Paginate(iter, request.Pagination, &members)
@@ -303,4 +303,32 @@ func (q Keeper) getVotesByProposal(ctx sdk.Context, proposalID uint64, pageReque
 
 func (q Keeper) getVotesByVoter(ctx sdk.Context, voter sdk.AccAddress, pageRequest *query.PageRequest) (orm.Iterator, error) {
 	return q.voteByVoterIndex.GetPaginated(ctx.KVStore(q.key), voter.Bytes(), pageRequest)
+}
+
+func (q Keeper) TallyResult(goCtx context.Context, request *group.QueryTallyResultRequest) (*group.QueryTallyResultResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	proposalId := request.ProposalId
+
+	proposal, err := q.getProposal(ctx, proposalId)
+	if err != nil {
+		return nil, err
+	}
+
+	if proposal.Status == group.PROPOSAL_STATUS_WITHDRAWN || proposal.Status == group.PROPOSAL_STATUS_ABORTED {
+		return nil, sdkerrors.Wrapf(errors.ErrInvalid, "can't get the tally of a proposal with status %s", proposal.Status)
+	}
+
+	var policyInfo group.GroupPolicyInfo
+	if policyInfo, err = q.getGroupPolicyInfo(ctx, proposal.Address); err != nil {
+		return nil, sdkerrors.Wrap(err, "load group policy")
+	}
+
+	tallyResult, err := q.Tally(ctx, proposal, policyInfo.GroupId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &group.QueryTallyResultResponse{
+		Tally: tallyResult,
+	}, nil
 }

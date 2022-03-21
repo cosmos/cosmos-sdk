@@ -12,10 +12,6 @@ import (
 	v1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
 )
 
-var (
-	tablePkg = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/model/ormtable")
-)
-
 type fileGen struct {
 	*generator.GeneratedFile
 	file *protogen.File
@@ -49,7 +45,7 @@ func (f fileGen) gen() error {
 			stores = append(stores, msg)
 		}
 	}
-	f.genStoreInterfaces(stores)
+	f.genStoreInterface(stores)
 	f.genStoreStruct(stores)
 	f.genStoreMethods(stores)
 	f.genStoreInterfaceGuard()
@@ -57,10 +53,10 @@ func (f fileGen) gen() error {
 	return nil
 }
 
-func (f fileGen) genStoreInterfaces(stores []*protogen.Message) {
+func (f fileGen) genStoreInterface(stores []*protogen.Message) {
 	f.P("type ", f.storeInterfaceName(), " interface {")
 	for _, store := range stores {
-		name := f.messageStoreInterfaceName(store)
+		name := f.messageTableInterfaceName(store)
 		f.P(name, "()", name)
 	}
 	f.P()
@@ -73,7 +69,7 @@ func (f fileGen) genStoreStruct(stores []*protogen.Message) {
 	// struct
 	f.P("type ", f.storeStructName(), " struct {")
 	for _, message := range stores {
-		f.P(f.param(message.GoIdent.GoName), " ", f.messageStoreInterfaceName(message))
+		f.P(f.param(message.GoIdent.GoName), " ", f.messageTableInterfaceName(message))
 	}
 	f.P("}")
 }
@@ -100,8 +96,8 @@ func (f fileGen) fileShortName() string {
 	return strcase.ToCamel(shortName)
 }
 
-func (f fileGen) messageStoreInterfaceName(m *protogen.Message) string {
-	return m.GoIdent.GoName + "Store"
+func (f fileGen) messageTableInterfaceName(m *protogen.Message) string {
+	return m.GoIdent.GoName + "Table"
 }
 
 func (f fileGen) messageReaderInterfaceName(m *protogen.Message) string {
@@ -116,18 +112,18 @@ func (f fileGen) param(name string) string {
 	return strcase.ToLowerCamel(name)
 }
 
-func (f fileGen) messageStoreReceiverName(m *protogen.Message) string {
-	return f.param(f.messageStoreInterfaceName(m))
+func (f fileGen) messageTableReceiverName(m *protogen.Message) string {
+	return f.param(f.messageTableInterfaceName(m))
 }
 
 func (f fileGen) messageConstructorName(m *protogen.Message) string {
-	return "New" + f.messageStoreInterfaceName(m)
+	return "New" + f.messageTableInterfaceName(m)
 }
 
 func (f fileGen) genStoreMethods(stores []*protogen.Message) {
 	// getters
 	for _, msg := range stores {
-		name := f.messageStoreInterfaceName(msg)
+		name := f.messageTableInterfaceName(msg)
 		f.P("func(x ", f.storeStructName(), ") ", name, "() ", name, "{")
 		f.P("return x.", f.param(msg.GoIdent.GoName))
 		f.P("}")
@@ -142,9 +138,9 @@ func (f fileGen) genStoreInterfaceGuard() {
 }
 
 func (f fileGen) genStoreConstructor(stores []*protogen.Message) {
-	f.P("func New", f.storeInterfaceName(), "(db ", ormdbPkg.Ident("ModuleDB"), ") (", f.storeInterfaceName(), ", error) {")
+	f.P("func New", f.storeInterfaceName(), "(db ", ormTablePkg.Ident("Schema"), ") (", f.storeInterfaceName(), ", error) {")
 	for _, store := range stores {
-		f.P(f.messageStoreReceiverName(store), ", err := ", f.messageConstructorName(store), "(db)")
+		f.P(f.messageTableReceiverName(store), ", err := ", f.messageConstructorName(store), "(db)")
 		f.P("if err != nil {")
 		f.P("return nil, err")
 		f.P("}")
@@ -153,7 +149,7 @@ func (f fileGen) genStoreConstructor(stores []*protogen.Message) {
 
 	f.P("return ", f.storeStructName(), "{")
 	for _, store := range stores {
-		f.P(f.messageStoreReceiverName(store), ",")
+		f.P(f.messageTableReceiverName(store), ",")
 	}
 	f.P("}, nil")
 	f.P("}")

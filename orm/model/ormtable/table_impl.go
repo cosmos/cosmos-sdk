@@ -48,39 +48,39 @@ func (t tableImpl) GetIndexByID(id uint32) Index {
 }
 
 func (t tableImpl) Save(ctx context.Context, message proto.Message) error {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}
 
-	return t.save(backend, message, saveModeDefault)
+	return t.save(ctx, backend, message, saveModeDefault)
 }
 
 func (t tableImpl) Insert(ctx context.Context, message proto.Message) error {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}
 
-	return t.save(backend, message, saveModeInsert)
+	return t.save(ctx, backend, message, saveModeInsert)
 }
 
 func (t tableImpl) Update(ctx context.Context, message proto.Message) error {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}
 
-	return t.save(backend, message, saveModeUpdate)
+	return t.save(ctx, backend, message, saveModeUpdate)
 }
 
-func (t tableImpl) save(backend Backend, message proto.Message, mode saveMode) error {
+func (t tableImpl) save(ctx context.Context, backend Backend, message proto.Message, mode saveMode) error {
 	writer := newBatchIndexCommitmentWriter(backend)
 	defer writer.Close()
-	return t.doSave(writer, message, mode)
+	return t.doSave(ctx, writer, message, mode)
 }
 
-func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, message proto.Message, mode saveMode) error {
+func (t tableImpl) doSave(ctx context.Context, writer *batchIndexCommitmentWriter, message proto.Message, mode saveMode) error {
 	mref := message.ProtoReflect()
 	pkValues, pk, err := t.EncodeKeyFromMessage(mref)
 	if err != nil {
@@ -95,22 +95,22 @@ func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, message proto.Mess
 
 	if haveExisting {
 		if mode == saveModeInsert {
-			return ormerrors.PrimaryKeyConstraintViolation.Wrapf("%q:%+v", mref.Descriptor().FullName(), pkValues)
+			return ormerrors.AlreadyExists.Wrapf("%q:%+v", mref.Descriptor().FullName(), pkValues)
 		}
 
-		if hooks := writer.Hooks(); hooks != nil {
-			err = hooks.OnUpdate(existing, message)
+		if validateHooks := writer.ValidateHooks(); validateHooks != nil {
+			err = validateHooks.ValidateUpdate(ctx, existing, message)
 			if err != nil {
 				return err
 			}
 		}
 	} else {
 		if mode == saveModeUpdate {
-			return ormerrors.NotFoundOnUpdate.Wrapf("%q", mref.Descriptor().FullName())
+			return ormerrors.NotFound.Wrapf("%q", mref.Descriptor().FullName())
 		}
 
-		if hooks := writer.Hooks(); hooks != nil {
-			err = hooks.OnInsert(message)
+		if validateHooks := writer.ValidateHooks(); validateHooks != nil {
+			err = validateHooks.ValidateInsert(ctx, message)
 			if err != nil {
 				return err
 			}
@@ -140,6 +140,11 @@ func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, message proto.Mess
 			}
 
 		}
+		if writeHooks := writer.WriteHooks(); writeHooks != nil {
+			writer.enqueueHook(func() {
+				writeHooks.OnInsert(ctx, message)
+			})
+		}
 	} else {
 		existingMref := existing.ProtoReflect()
 		for _, idx := range t.indexers {
@@ -148,14 +153,19 @@ func (t tableImpl) doSave(writer *batchIndexCommitmentWriter, message proto.Mess
 				return err
 			}
 		}
+		if writeHooks := writer.WriteHooks(); writeHooks != nil {
+			writer.enqueueHook(func() {
+				writeHooks.OnUpdate(ctx, existing, message)
+			})
+		}
 	}
 
 	return writer.Write()
 }
 
-func (t tableImpl) Delete(context context.Context, message proto.Message) error {
+func (t tableImpl) Delete(ctx context.Context, message proto.Message) error {
 	pk := t.PrimaryKeyCodec.GetKeyValues(message.ProtoReflect())
-	return t.DeleteByKey(context, pk)
+	return t.doDelete(ctx, pk)
 }
 
 func (t tableImpl) GetIndex(fields string) Index {
@@ -277,13 +287,13 @@ func (t tableImpl) ValidateJSON(reader io.Reader) error {
 }
 
 func (t tableImpl) ImportJSON(ctx context.Context, reader io.Reader) error {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}
 
 	return t.decodeJson(reader, func(message proto.Message) error {
-		return t.save(backend, message, saveModeDefault)
+		return t.save(ctx, backend, message, saveModeDefault)
 	})
 }
 
@@ -293,18 +303,17 @@ func (t tableImpl) ExportJSON(context context.Context, writer io.Writer) error {
 		return err
 	}
 
-	return t.doExportJSON(context, writer)
+	return t.doExportJSON(context, writer, true)
 }
 
-func (t tableImpl) doExportJSON(ctx context.Context, writer io.Writer) error {
+func (t tableImpl) doExportJSON(ctx context.Context, writer io.Writer, start bool) error {
 	marshalOptions := protojson.MarshalOptions{
 		UseProtoNames: true,
 		Resolver:      t.typeResolver,
 	}
 
 	var err error
-	it, _ := t.Iterator(ctx)
-	start := true
+	it, _ := t.List(ctx, nil)
 	for {
 		found := it.Next()
 
@@ -383,7 +392,7 @@ func (t tableImpl) ID() uint32 {
 }
 
 func (t tableImpl) Has(ctx context.Context, message proto.Message) (found bool, err error) {
-	backend, err := t.getReadBackend(ctx)
+	backend, err := t.getBackend(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -396,7 +405,7 @@ func (t tableImpl) Has(ctx context.Context, message proto.Message) (found bool, 
 // set on the message. Other fields besides the primary key fields will not
 // be used for retrieval.
 func (t tableImpl) Get(ctx context.Context, message proto.Message) (found bool, err error) {
-	backend, err := t.getReadBackend(ctx)
+	backend, err := t.getBackend(ctx)
 	if err != nil {
 		return false, err
 	}

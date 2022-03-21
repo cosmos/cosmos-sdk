@@ -98,8 +98,8 @@ which accepts a path for the resulting pprof file.
 The node may be started in a 'query only' mode where only the gRPC and JSON HTTP
 API services are enabled via the 'grpc-only' flag. In this mode, Tendermint is
 bypassed and can be used when legacy queries are needed after an on-chain upgrade
-is performed. Note, when enabled, either gRPC must also be enabled in the
-application configuration.
+is performed. Note, when enabled, gRPC must also be enabled in the application
+configuration.
 `,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)

@@ -3,11 +3,11 @@
 ## Changelog
 
 - Dec 06, 2021: Initial Draft.
-- Feb 07, 2022: Draft read and concept-ACKed by the Ledget team.
+- Feb 07, 2022: Draft read and concept-ACKed by the Ledger team.
 
 ## Status
 
-Draft
+Draft. Concept ACK by the Ledger team, but details need to be polished.
 
 ## Abstract
 
@@ -15,13 +15,16 @@ This ADR specifies SIGN_MODE_TEXTUAL, a new string-based sign mode that is targe
 
 ## Context
 
-Protobuf-based SIGN_MODE_DIRECT has been introduced in [ADR-020](./adr-020-protobuf-transaction-encoding.md) and is intended to replace SIGN_MODE_LEGACY_AMINO_JSON in most situations, such as mobile wallets and CLI keyrings. However, the [Ledger](https://www.ledger.com/) hardware wallet is still using SIGN_MODE_LEGACY_AMINO_JSON for displaying the sign bytes to the user. Hardware wallets cannot transition to SIGN_MODE_DIRECT as it is binary-based and thus not suitable for display to end-users.
+Protobuf-based SIGN_MODE_DIRECT was introduced in [ADR-020](./adr-020-protobuf-transaction-encoding.md) and is intended to replace SIGN_MODE_LEGACY_AMINO_JSON in most situations, such as mobile wallets and CLI keyrings. However, the [Ledger](https://www.ledger.com/) hardware wallet is still using SIGN_MODE_LEGACY_AMINO_JSON for displaying the sign bytes to the user. Hardware wallets cannot transition to SIGN_MODE_DIRECT as:
+
+- SIGN_MODE_DIRECT is binary-based and thus not suitable for display to end-users,
+- hardware cannot decode the protobuf sign bytes due to memory constraints.
 
 In an effort to remove Amino from the SDK, a new sign mode needs to be created for hardware devices. [Initial discussions](https://github.com/cosmos/cosmos-sdk/issues/6513) propose a string-based sign mode, which this ADR formally specifies.
 
 ## Decision
 
-We propose to have SIGN_MODE_TEXTUAL’s signing payload `SignDocTextual` to be an array of strings. Each string would correspond to one "screen" on the hardware wallet device, with no (or little, TBD) additional formatting done by the hardware wallet app itself.
+We propose to have SIGN_MODE_TEXTUAL’s signing payload `SignDocTextual` to be an array of strings. Each string corresponds to one "screen" on the hardware wallet device, with no (or little) additional formatting done by the hardware wallet itself.
 
 ```proto
 message SignDocTextual {
@@ -37,9 +40,9 @@ The encoding and decoding operations between a Protobuf transaction (whose defin
 
 We concede that bijectivity is not strictly needed. Avoiding transaction malleability only requires collision resistance on the encoding. Lossless encoding also does not require decodability. However, bijectivity assures both non-malleability and losslessness.
 
-This also prevents users signing over hashed transaction metadata, which is a security concern for Ledger (the company).
+This also prevents users signing over hashed transaction metadata, which is a security concern for Ledger's security team.
 
-We propose to maintain functional tests using bijectivity in the SDK to assure losslessness and no malleability.
+We propose to maintain functional tests using bijectivity in the SDK.
 
 ### 2. Only ASCII 32-127 characters allowed
 
@@ -47,55 +50,64 @@ Ledger devices have limited character display capabilities, so all strings MUST 
 
 In particular, the newline `"\n"` (ASCII: 10) character is forbidden.
 
-### 3. All strings have the `<key>: <value>` format
+### 3. Strings SHOULD have the `<key>: <value>` format
 
-All strings MUST match the following Regex: `TODO`.
+Given the Regex `/^(\* )?(>* )?(.*: )?(.*)$/`, all strings SHOULD match the Regex with capture groups 3 and 4 non-empty. This is helpful for UIs displaying SignDocTextual to users.
 
-This is helpful for UIs displaying SignDocTextual to users. This MAY be used in the Ledger app to perform custom on-screen formatting, for example to break long lines into multiple screens.
+- The initial `*` character is optional and denotes the Ledger Expert mode, see #5.
+- Strings can also include a number of `>` character to denote nesting.
+- In the case where the first Regex capture group is not empty, it represents an indicative key, whose associated value is given in the second capture group. This MAY be used in the Ledger app to perform custom on-screen formatting, for example to break long lines into multiple screens.
+
+This Regex is however not mandatory, to allow for some flexibility, for example to display an English sentence to denote end of sections.
 
 The `<value>` itself can contain the `": "` characters.
 
 ### 4. Values are encoded using Value Renderers
 
-Value Renderers describe how values of different types are rendered in the string array. The full specification of Value Renderers can be found in [Annex 1](./adr-048-sign-mode-textual-annex1.md).
+Value Renderers describe how Protobuf types are encoded to and decoded from a string array. The full specification of Value Renderers can be found in [Annex 1](./adr-050-sign-mode-textual-annex1.md).
 
 ### 5. Strings starting with `*` are only shown in Expert mode
 
-Ledger devices have the an Expert mode for advanced users. Strings starting with the `*` character will only be shown in Expert mode.
+Ledger devices have the an Expert mode for advanced users, which needs to be manually activated. Strings starting with the `*` character will only be shown in Expert mode.
 
-### 6. The string array format
+### 6. Strings MAY contain `>` characters to denote nesting
 
-Below is the general format of a TX with N msgs. Each new line corresponds to a new screen on the Ledger device. `//` denotes comments and are not shown on the Ledger device.
+Protobuf objects can be arbitrarily complex, containing nested arrays and messages. In order to help the Ledger-signing users, we propose to use the `>` symbol in the beginning of strings to represent nested objects, where each additional `>` represents a new level of nesting.
 
 ### 7. Encoding of the Transaction Envelope
 
-We define "transaction envelope" as all data in a transaction that is not in the `TxBody`. Transaction envelope includes fee, signer infos and memo, but don't include `Msg`s.
+We define "transaction envelope" as all data in a transaction that is not in the `TxBody`. Transaction envelope includes fee, signer infos and memo, but don't include `Msg`s. `//` denotes comments and are not shown on the Ledger device.
 
 ```
 Chain ID: <string>
 Account number: <uint64>
 *Public Key: <base64_string>
 Sequence: <uint64>
-<TxBody>                                    // See 8.
-Fee: <coins>
-*Fee payer: <string>                        // Skipped if no fee_payer set
-*Fee granter: <string>                      // Skipped if no fee_granter set
-Memo: <string>                              // Skipped if no memo set
+<TxBody>                                                    // See 8.
+Fee: <coins>                                                // See value renderers for coins encoding.
+*Fee payer: <string>                                        // Skipped if no fee_payer set
+*Fee granter: <string>                                      // Skipped if no fee_granter set
+Memo: <string>                                              // Skipped if no memo set
 *Gas Limit: <uint64>
-*Timeout Height:  <uint64>                  // Skipped if no timeout_height set
-Tipper: <string>                            // If there's a tip
+*Timeout Height:  <uint64>                                  // Skipped if no timeout_height set
+Tipper: <string>                                            // If there's a tip
 Tip: <string>
-*This transaction has <int> other signers:  // Skipped if there is only one signer
+*This transaction has <int> body extension:                 // Skipped if no body extension options
+*<repeated Any>
+*This transaction has <int> body non-critical extensions:   // Skipped if no body non-critical extension options
+*<repeated Any>                                             // See value renderers for Any and array encoding.
+*This transaction has <int> body auth info extensions:      // Skipped if no auth info extension options
+*<repeated Any>
+*This transaction has <int> other signers:                  // Skipped if there is only one signer
 *Signer (<int>/<int>):
 *Public Key: <base64_string>
-*Sign mode: <string>                        // "Direct", "Direct Aux", "Legacy Amino Json", Enum value renderer
 *Sequence: <uint64>
 *End of other signers
 ```
 
 ### 8. Encoding of the Transaction Body
 
-We call "transaction body" the `Tx.TxBody.Messages` field, which is an array of Anys.
+We call "transaction body" the `Tx.TxBody.Messages` field, which is an array of `Any`s. Since messages are widely used, they have a slightly different encoding than usual array of `Any`s (protobuf: `repeated repeated google.protobuf.Any`) described in Annex 1.
 
 ```
 This transaction has <int> messages:
@@ -105,11 +117,19 @@ Msg (<int>/<int>): <string>           // E.g. Msg (1/2): bank v1beta1 send coins
 End of transaction messages
 ```
 
-### Wire Format
+### 9. Wire Format
 
 This string array is encoded as a single `\n`-delimited string before transmitted to the hardware device.
 
-### Examples
+## Additional Formatting by the Hardware Device
+
+Hardware devices differ in screen sizes and memory capacities. The above specifications are all verified on the protocol level, but we still allow the hardware device to add custom formatting rules that are specific to the device. Rules can include:
+
+- if a string is too long, show it on multiple screens,
+- break line between the `key` and `value` from #3,
+- never allow line breaks on a number or a coin value.
+
+## Examples
 
 #### Example 1: Simple `MsgSend`
 
@@ -411,18 +431,27 @@ Fee: 0.002 atom
 
 ### Backwards Compatibility
 
+SIGN_MODE_TEXTUAL is purely additive, and doesn't break any backwards compatibility with other sign modes.
+
 ### Positive
 
+- Human-friendly way of signing on hardware devices.
+-
+
 ### Negative
+
+- Implementation needs to happen
 
 ### Neutral
 
 ## Further Discussions
 
-While an ADR is in the DRAFT or PROPOSED stage, this section should contain a summary of issues to be solved in future iterations (usually referencing comments from a pull-request discussion).
-Later, this section can optionally list ideas or improvements the author or reviewers found during the analysis of this ADR.
+- Some details on value renderers need to be polished, see [Annex 1](./adr-050-sign-mode-textual-annex1.md).
+- Internationalization.
 
 ## References
+
+- [Annex 1](./adr-050-sign-mode-textual-annex1.md)
 
 - Initial discussion: https://github.com/cosmos/cosmos-sdk/issues/6513
 - Living document used in the working group: https://hackmd.io/fsZAO-TfT0CKmLDtfMcKeA?both

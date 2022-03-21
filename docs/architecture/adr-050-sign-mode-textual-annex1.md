@@ -1,31 +1,36 @@
-# ADR 049: SIGN_MODE_TEXTUAL - Annex 1 Value Renderers
+# ADR 050: SIGN_MODE_TEXTUAL - Annex 1 Value Renderers
 
 ## Changelog
 
 - Dec 06, 2021: Initial Draft
+- Feb 07, 2022: Draft read and concept-ACKed by the Ledger team.
 
 ## Status
 
-Draft
+Draft. Concept ACK by the Ledger team, but details need to be polished.
 
 ## Abstract
 
-This Annex describes value renderers, which are used for displaying values in a human-friendly way.
+This Annex describes value renderers, which are used for displaying Protobuf values in a human-friendly way using a string array.
 
 ## Value Renderers
 
-Value Renderers describe how values of different Protobuf types should be automatically rendered. Value renderers can be formalized as a set of bijective functions `func renderT(value T) string`, where `T` is one of the below Protobuf types on which this spec is defined.
+Value Renderers describe how values of different Protobuf types should be encoded as a string array. Value renderers can be formalized as a set of bijective functions `func renderT(value T) []string`, where `T` is one of the below Protobuf types on which this spec is defined.
 
 ### Protobuf `number`
 
-- Applies to numeric integer types (`uint64`, etc.) and their casted types (e.g. in Golang: `sdk.Dec`, `sdk.Int`).
+- Applies to:
+  - protobuf numeric integer types (`int{32,64}`, `uint{32,64}`, `sint{32,64}`, `fixed{32,64}`, `sfixed{32,64}`)
+  - strings whose `customtype` is `github.com/cosmos/cosmos-sdk/types.Int` or `github.com/cosmos/cosmos-sdk/types.Dec`
+  - bytes whose `customtype` is `github.com/cosmos/cosmos-sdk/types.Int` or `github.com/cosmos/cosmos-sdk/types.Dec`
+- Trailing zeroes are always removed
 - Formatting with `'`s for every three integral digits.
-- Usage of `.` to denote the decimal delimitier.
+- Usage of `.` to denote the decimal delimiter.
 
-### Examples
+#### Examples
 
-- sdk.Int, integers: `1000` -> `1'000`
-- sdk.Dec; `1000000.00` -> `1'000'000.00`
+- `1000` (uint64) -> `["1'000"]`
+- `"1000000.00"` (string representing a Dec) -> `["1'000'000"]`
 
 ### `coin`
 
@@ -34,30 +39,75 @@ Value Renderers describe how values of different Protobuf types should be automa
 - Amounts are converted to `display` denom amounts and rendered as `number`s above
 - One space between the denom and amount
 - In the future, IBC denoms could maybe be converted to DID/IIDs, if we can find a robust way for doing this (ex. `cosmos:hub:atom`)
-- Ex:
-  - `1000000000uatom` -> `1'000 atom`
+
+#### Examples
+
+- `1000000000uatom` -> `["1'000 atom"]`, because atom is the metadata's display denom.
 
 ### `type_url`
 
-- all protobuf messages to be used with `SIGN_MODE_TEXTUAL` should have a short name associated with them that can be used in format strings whenever the type url is explicitly referenced (as in the `MsgRevoke` examples below).
-- these could be options in a proto messages or config files
+- all protobuf messages to be used with `SIGN_MODE_TEXTUAL` MUST have a short name associated with them that can be used in format strings whenever the type url is explicitly referenced (as in the `MsgRevoke` examples below).
+- these are options in a proto messages or config files
 
 ```proto
 message MsgSend {
-  option (cosmos.textual) {
+  option (cosmos.msg.v1.textual) {
     msg_name = "bank send coins"
   }
 }
 ```
 
-- they should be unique per message, per chain
-- Ex:
-  - `cosmos.bank.v1beta1.MsgSend` -> `bank send coins`
-  - `cosmos.gov.v1beta1.MsgVote` -> `governance vote`
+- they MUST be unique per message, per chain
+
+#### Examples
+
+- `cosmos.bank.v1beta1.MsgSend` -> `bank v1beta1 send coins`
+- `cosmos.gov.v1.MsgVote` -> `governance v1 vote`
 
 ### `repeated`
 
-TODO
+- A repeated type has the following template:
+
+```
+This <message_name> has <int> <field_name>
+
+> <value renderer>
+End of <field_name>.
+```
+
+where:
+
+- `message_name` is the name of the Protobuf message which holds the `repeated` field,
+- `int` is the length of the array,
+- `field_name` is the Protobuf field name of the repeated field,
+  - add an optional `s` at the end if `<int> > 1` and the `field_name` doesn't already end with `s`.
+
+#### Examples
+
+Given the proto definition:
+
+```proto
+message AllowedMsgAllowance {
+  repeated string allowed_messages = 1;
+}
+```
+
+and initializing with:
+
+```go
+x := []AllowedMsgAllowance{"cosmos.bank.v1beta1.MsgSend", "cosmos.gov.v1.MsgVote"}
+```
+
+we have the following value-rendered encoding:
+
+```
+This AllowedMsgAllowance has 2 allowed_messages:
+allowed_messages (1/2):
+> cosmos.bank.v1beta1.MsgSend
+allowed_messages (2/2):
+> cosmos.gov.v1.MsgVote
+End of allowed_messages.
+```
 
 ### `message`
 
@@ -72,6 +122,10 @@ TODO
   - truncate that prefix + `_` from the enum name if it exists (`VOTE_OPTION_` gets stripped from `VOTE_OPTION_YES` -> `YES`)
   - convert rest to sentence case: `YES` -> `Yes`
   - in summary: `VOTE_OPTION_YES` -> `Yes`
+
+### `google.protobuf.Any`
+
+TODO
 
 ### `google.protobuf.Timestamp` (TODO)
 

@@ -45,6 +45,14 @@ Value Renderers describe how values of different Protobuf types should be encode
 
 - `1000000000uatom` -> `["1'000 atom"]`, because atom is the metadata's display denom.
 
+### `coins`
+
+TODO add spec
+
+### Example
+
+- `["2uatom", "3cosm"]` -> `"2 atom, 3 COSM"`
+
 ### `type_url`
 
 - all protobuf messages to be used with `SIGN_MODE_TEXTUAL` MUST have a short name associated with them that can be used in format strings whenever the type url is explicitly referenced (as in the `MsgRevoke` examples below).

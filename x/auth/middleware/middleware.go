@@ -75,6 +75,11 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		sigGasConsumer = DefaultSigVerificationGasConsumer
 	}
 
+	var feeMarket = options.FeeMarket
+	if feeMarket == nil {
+		feeMarket = ValidatorTxFee{}
+	}
+
 	return ComposeMiddlewares(
 		NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
 		NewTxDecoderMiddleware(options.TxDecoder),
@@ -94,7 +99,7 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		// tx.
 		RejectExtensionOptionsMiddleware,
 		// Reject auth_info extension options that don't pass the criteria.
-		NewAuthExtensionOptionsMiddleware(options.FeeMarket.AllowAuthExtensionOption),
+		NewAuthExtensionOptionsMiddleware(feeMarket.AllowAuthExtensionOption),
 		ValidateBasicMiddleware,
 		TxTimeoutHeightMiddleware,
 		ValidateMemoMiddleware(options.AccountKeeper),
@@ -103,7 +108,7 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		// ComposeMiddlewares godoc for details.
 		// `DeductFeeMiddleware` and `IncrementSequenceMiddleware` should be put outside of `WithBranchedStore` middleware,
 		// so their storage writes are not discarded when tx fails.
-		DeductFeeMiddleware(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.FeeMarket),
+		DeductFeeMiddleware(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, feeMarket),
 		SetPubKeyMiddleware(options.AccountKeeper),
 		ValidateSigCountMiddleware(options.AccountKeeper),
 		SigGasConsumeMiddleware(options.AccountKeeper, sigGasConsumer),

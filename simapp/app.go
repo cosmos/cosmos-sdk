@@ -471,7 +471,6 @@ func (app *SimApp) setTxHandler(txConfig client.TxConfig, indexEventsStr []strin
 		SignModeHandler:  txConfig.SignModeHandler(),
 		SigGasConsumer:   authmiddleware.DefaultSigVerificationGasConsumer,
 		TxDecoder:        txConfig.TxDecoder(),
-		FeeMarket:        authmiddleware.ValidatorTxFee{},
 	})
 	if err != nil {
 		panic(err)

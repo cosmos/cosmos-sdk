@@ -4,7 +4,6 @@
 
 * 20.08.2021: Initial draft.
 * 07.12.2021: Update `tx.Handler` interface ([\#10693](https://github.com/cosmos/cosmos-sdk/pull/10693)).
-* 22.03.2022: Update code snippets.
 
 ## Status
 

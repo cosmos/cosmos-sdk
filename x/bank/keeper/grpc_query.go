@@ -81,9 +81,6 @@ func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpend
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-	if req.Address == "" {
-		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
-	}
 
 	addr, err := sdk.AccAddressFromBech32(req.Address)
 	if err != nil {

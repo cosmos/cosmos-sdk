@@ -405,26 +405,26 @@ func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coi
 		return nil, fmt.Errorf("No cold wallet detected")
 	}
 
-	for _, x := range wallets {
-		x.Open("")
-		for j := 0; j <= 3; j++ {
-			pathstr := fmt.Sprintf("m/44'/60'/0'/%d", j)
-			path, _ := accounts.ParseDerivationPath(pathstr)
+	wallet := wallets[0]
+	wallet.Open("")
+	path, _ := accounts.ParseDerivationPath(hdPath.String())
 
-			z, err := x.Derive(path, false)
+	z, err := wallet.Derive(path, false)
 
-			if err != nil {
-				fmt.Printf("did not work")
-			} else {
-				fmt.Printf("%s ledger-%s\n", z.Address.Hex(), pathstr)
-			}
-		}
+	if err != nil {
+		fmt.Println("did not work")
+	} else {
+		fmt.Printf("%s ledger - %s\n", z.Address.Hex(), path.String())
 	}
+
 	// if err != nil {
 	// 	return nil, fmt.Errorf("failed to generate ledger key: %w", err)
 	// }
+	address := z.Address.Bytes()
 
-	return ks.writeLedgerKey(uid, nil, *hdPath, algo.Name())
+	pubKey, _ := legacy.PubKeyFromBytes(address)
+
+	return ks.writeLedgerKey(uid, pubKey, *hdPath, algo.Name())
 }
 
 func (ks keystore) writeLedgerKey(name string, pub types.PubKey, path hd.BIP44Params, algo hd.PubKeyType) (Info, error) {

@@ -473,7 +473,7 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, types.Bonded, val0.Status)
 	require.Equal(t, types.Unbonding, val1.Status)
-	require.Equal(t, types.Unbonding, val2.Status)
+	require.Equal(t, types.Bonded, val2.Status)
 	require.Equal(t, types.Bonded, val3.Status)
 	require.Equal(t, types.Bonded, val4.Status)
 

@@ -8,11 +8,14 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// StaticFeeMarket implements a static feemarket.
+// StaticFeeMarket implements a static feemarket, where the minimum price per
+// unit of gas is fixed and set by each validator.
 type StaticFeeMarket struct{}
 
-// CheckAuthExtensionOption returns true if the auth extension option should be allowed.
-func (sfm StaticFeeMarket) CheckAuthExtensionOption(*codectypes.Any) bool {
+var _ FeeMarket = StaticFeeMarket{}
+
+// AllowAuthExtensionOption returns true if the auth extension option should be allowed.
+func (sfm StaticFeeMarket) AllowAuthExtensionOption(*codectypes.Any) bool {
 	return false
 }
 

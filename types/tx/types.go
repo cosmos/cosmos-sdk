@@ -156,6 +156,8 @@ func (t *Tx) FeeGranter() sdk.AccAddress {
 	return nil
 }
 
+// AuthExtensionOptions returns the AuthInfo's ExtensionOptions,
+// implements the interface HasAuthExtensionOptionsTx.
 func (t *Tx) AuthExtensionOptions() []*codectypes.Any {
 	return t.AuthInfo.ExtensionOptions
 }

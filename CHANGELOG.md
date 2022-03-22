@@ -140,6 +140,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/authz) [\#10447](https://github.com/cosmos/cosmos-sdk/pull/10447) authz `NewGrant` takes a new argument: block time, to correctly validate expire time.
 * [\#10961](https://github.com/cosmos/cosmos-sdk/pull/10961) Support third-party modules to add extension snapshots to state-sync.
 * [\#11274](https://github.com/cosmos/cosmos-sdk/pull/11274) `types/errors.New` now is an alias for `types/errors.Register` and should only be used in initialization code.
+* (ante) [#11413](https://github.com/cosmos/cosmos-sdk/pull/11413) Refactor tx middleware to support pluggable feemarket module. The API breakages: a) Removed `MempoolFeeMiddleware` and `TxPriorityMiddleware`, the functionalities are moved into `DeductFeeMiddleware`, b) Added a new `FeeMarket` field to `HandlerOptions`, when set to `StaticFeeMarket{}`, it'll keep the existing middleware behavior.
 
 
 ### Client Breaking Changes
@@ -185,7 +186,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth) [\#10880](https://github.com/cosmos/cosmos-sdk/pull/10880) Added a new query to the tx query service that returns a block with transactions fully decoded.
 * (types) [\#11200](https://github.com/cosmos/cosmos-sdk/pull/11200) Added `Min()` and `Max()` operations on sdk.Coins.
 * (gov) [\#11287](https://github.com/cosmos/cosmos-sdk/pull/11287) Fix error message when no flags are provided while executing `submit-legacy-proposal` transaction.
-* (ante) [#11413](https://github.com/cosmos/cosmos-sdk/pull/11413) Refactor tx middleware to support pluggable feemarket module.
 
 ### Bug Fixes
 

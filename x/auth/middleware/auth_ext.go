@@ -12,6 +12,10 @@ import (
 // ExtensionOptionChecker is a function that returns true if the extension option is accepted.
 type ExtensionOptionChecker func(*codectypes.Any) bool
 
+func rejectExtensionOption(*codectypes.Any) bool {
+	return false
+}
+
 type HasAuthExtensionOptionsTx interface {
 	AuthExtensionOptions() []*codectypes.Any
 }
@@ -24,7 +28,11 @@ type checkAuthExtensionOptionsTxHandler struct {
 // NewAuthExtensionOptionsMiddleware creates a new checkAuthExtensionOptionsMiddleware.
 // NewAuthExtensionOptionsMiddleware is a middleware that checks all auth_info extension
 // options pass the checker.
+// If checker is nil, it defaults to a function that rejects all extension options.
 func NewAuthExtensionOptionsMiddleware(checker ExtensionOptionChecker) tx.Middleware {
+	if checker == nil {
+		checker = rejectExtensionOption
+	}
 	return func(next tx.Handler) tx.Handler {
 		return checkAuthExtensionOptionsTxHandler{
 			next,

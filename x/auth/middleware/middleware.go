@@ -94,7 +94,7 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		// tx.
 		RejectExtensionOptionsMiddleware,
 		// Reject auth_info extension options that don't pass the criteria.
-		NewAuthExtensionOptionsMiddleware(options.FeeMarket.CheckAuthExtensionOption),
+		NewAuthExtensionOptionsMiddleware(options.FeeMarket.AllowAuthExtensionOption),
 		ValidateBasicMiddleware,
 		TxTimeoutHeightMiddleware,
 		ValidateMemoMiddleware(options.AccountKeeper),

@@ -13,9 +13,9 @@ import (
 
 // FeeMarket defines the interface of feemarket system for tx middleware.
 type FeeMarket interface {
-	// CheckAuthExtensionOption returns true for allowed auth_info extension option,
-	// Some feemarket module needs to extent the auth_info.
-	CheckAuthExtensionOption(*codectypes.Any) bool
+	// AllowAuthExtensionOption returns true for allowed auth_info extension option,
+	// Some feemarket modules need to extend the auth_info.
+	AllowAuthExtensionOption(*codectypes.Any) bool
 	// CheckTxFee check if the provided fee is enough and returns the effective fee and tx priority,
 	// the effective fee should be deducted later, and the priority should be returned in abci response.
 	CheckTxFee(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error)

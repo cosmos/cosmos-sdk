@@ -381,6 +381,7 @@ func (ks keystore) SignByAddress(address sdk.Address, msg []byte) ([]byte, types
 }
 
 func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (Info, error) {
+	fmt.Println("KEY KEY KEY test")
 	if !ks.options.SupportedAlgosLedger.Contains(algo) {
 		return nil, fmt.Errorf(
 			"%w: signature algo %s is not defined in the keyring options",

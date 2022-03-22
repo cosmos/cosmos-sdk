@@ -162,9 +162,6 @@ var (
 	// ErrAppConfig defines an error occurred if min-gas-prices field in BaseConfig is empty.
 	ErrAppConfig = Register(RootCodespace, 40, "error in app.toml")
 
-	// ErrUnknownAuthExtensionOptions defines an error for unknown auth_info extension options.
-	ErrUnknownAuthExtensionOptions = Register(RootCodespace, 41, "unknown auth_info extension options")
-
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
 	ErrPanic = errorsmod.ErrPanic

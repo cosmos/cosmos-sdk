@@ -36,7 +36,7 @@ func (s *MWTestSuite) TestDeductFeesNoDelegation() {
 			s.app.AccountKeeper,
 			s.app.BankKeeper,
 			s.app.FeeGrantKeeper,
-			middleware.StaticFeeMarket{},
+			middleware.ValidatorTxFee{},
 		),
 	)
 

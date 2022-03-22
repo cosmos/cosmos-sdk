@@ -8,21 +8,21 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// StaticFeeMarket implements a static feemarket, where the minimum price per
+// ValidatorTxFee implements a static feemarket, where the minimum price per
 // unit of gas is fixed and set by each validator.
-type StaticFeeMarket struct{}
+type ValidatorTxFee struct{}
 
-var _ FeeMarket = StaticFeeMarket{}
+var _ FeeMarket = ValidatorTxFee{}
 
 // AllowAuthExtensionOption returns true if the auth extension option should be allowed.
-func (sfm StaticFeeMarket) AllowAuthExtensionOption(*codectypes.Any) bool {
+func (sfm ValidatorTxFee) AllowAuthExtensionOption(*codectypes.Any) bool {
 	return false
 }
 
 // CheckTxFee check if the provided fee is enough, if yes return the effective fee and priority, otherwise return
 // error.
 // The effective fee should be deducted later, and the priority should be set in the abci response.
-func (sfm StaticFeeMarket) CheckTxFee(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error) {
+func (sfm ValidatorTxFee) CheckTxFee(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return nil, 0, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
@@ -51,13 +51,13 @@ func (sfm StaticFeeMarket) CheckTxFee(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, in
 		}
 	}
 
-	priority := GetTxPriority(feeCoins)
+	priority := getTxPriority(feeCoins)
 	return feeCoins, priority, nil
 }
 
-// GetTxPriority returns a naive tx priority based on the amount of the smallest denomination of the fee
+// getTxPriority returns a naive tx priority based on the amount of the smallest denomination of the fee
 // provided in a transaction.
-func GetTxPriority(fee sdk.Coins) int64 {
+func getTxPriority(fee sdk.Coins) int64 {
 	var priority int64
 	for _, c := range fee {
 		p := int64(math.MaxInt64)

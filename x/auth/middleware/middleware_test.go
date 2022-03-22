@@ -1026,7 +1026,7 @@ func (s *MWTestSuite) TestCustomSignatureVerificationGasConsumer() {
 				}
 			},
 			TxDecoder: s.clientCtx.TxConfig.TxDecoder(),
-			FeeMarket: middleware.StaticFeeMarket{},
+			FeeMarket: middleware.ValidatorTxFee{},
 		},
 	)
 	s.Require().NoError(err)

@@ -47,7 +47,7 @@ func checkAuthExtOpts(tx sdk.Tx, checker ExtensionOptionChecker) error {
 	if hasExtOptsTx, ok := tx.(HasAuthExtensionOptionsTx); ok {
 		for _, opt := range hasExtOptsTx.AuthExtensionOptions() {
 			if !checker(opt) {
-				return sdkerrors.ErrUnknownAuthExtensionOptions
+				return sdkerrors.ErrInvalidRequest.Wrapf("Unknown auth extension option: %T", opt)
 			}
 		}
 	}

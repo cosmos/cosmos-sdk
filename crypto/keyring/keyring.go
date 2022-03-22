@@ -25,6 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/ethereum/go-ethereum/accounts/usbwallet"
 )
 
 // Backend options for Keyring
@@ -381,7 +382,6 @@ func (ks keystore) SignByAddress(address sdk.Address, msg []byte) ([]byte, types
 }
 
 func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (Info, error) {
-	fmt.Println("KEY KEY KEY test")
 	if !ks.options.SupportedAlgosLedger.Contains(algo) {
 		return nil, fmt.Errorf(
 			"%w: signature algo %s is not defined in the keyring options",
@@ -391,12 +391,26 @@ func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coi
 
 	hdPath := hd.NewFundraiserParams(account, coinType, index)
 
-	priv, _, err := ledger.NewPrivKeySecp256k1(*hdPath, hrp)
+	// priv, _, err := ledger.NewPrivKeySecp256k1(*hdPath, hrp)
+
+	ledHub, err := usbwallet.NewLedgerHub()
+
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate ledger key: %w", err)
+		return nil, fmt.Errorf("cannot start the ledger hub +%v", ledHub)
 	}
 
-	return ks.writeLedgerKey(uid, priv.PubKey(), *hdPath, algo.Name())
+	wallets := ledHub.Wallets()
+	if len(wallets) == 0 {
+		return nil, fmt.Errorf("No cold wallet detected")
+	}
+	wallet := wallets[0]
+
+	fmt.Printf("Wallet: +%v", wallet)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to generate ledger key: %w", err)
+	// }
+
+	return ks.writeLedgerKey(uid, nil, *hdPath, algo.Name())
 }
 
 func (ks keystore) writeLedgerKey(name string, pub types.PubKey, path hd.BIP44Params, algo hd.PubKeyType) (Info, error) {

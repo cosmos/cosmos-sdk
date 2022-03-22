@@ -25,6 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/usbwallet"
 )
 
@@ -403,9 +404,22 @@ func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coi
 	if len(wallets) == 0 {
 		return nil, fmt.Errorf("No cold wallet detected")
 	}
-	wallet := wallets[0]
 
-	fmt.Printf("Wallet: +%v", wallet)
+	for _, x := range wallets {
+		x.Open("")
+		for j := 0; j <= 3; j++ {
+			pathstr := fmt.Sprintf("m/44'/60'/0'/%d", j)
+			path, _ := accounts.ParseDerivationPath(pathstr)
+
+			z, err := x.Derive(path, false)
+
+			if err != nil {
+				fmt.Printf("did not work")
+			} else {
+				fmt.Printf("%s ledger-%s\n", z.Address.Hex(), pathstr)
+			}
+		}
+	}
 	// if err != nil {
 	// 	return nil, fmt.Errorf("failed to generate ledger key: %w", err)
 	// }

@@ -41,14 +41,9 @@ func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode,
 	}
 
 	body := protoTx.tx.Body
-	authInfo := protoTx.tx.AuthInfo
 
 	if len(body.ExtensionOptions) != 0 || len(body.NonCriticalExtensionOptions) != 0 {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "%s does not support protobuf extension options", signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
-	}
-
-	if len(authInfo.ExtensionOptions) != 0 {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "%s does not support AuthInfo protobuf extension options", signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
 
 	addr := data.Address

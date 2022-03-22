@@ -156,12 +156,6 @@ func (t *Tx) FeeGranter() sdk.AccAddress {
 	return nil
 }
 
-// AuthExtensionOptions returns the AuthInfo's ExtensionOptions,
-// implements the interface HasAuthExtensionOptionsTx.
-func (t *Tx) AuthExtensionOptions() []*codectypes.Any {
-	return t.AuthInfo.ExtensionOptions
-}
-
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (t *Tx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	if t.Body != nil {

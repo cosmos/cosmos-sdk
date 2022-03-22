@@ -95,11 +95,8 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		// Choose which events to index in Tendermint. Make sure no events are
 		// emitted outside of this middleware.
 		NewIndexEventsTxMiddleware(options.IndexEvents),
-		// Reject all extension options which can optionally be included in the
-		// tx.
-		RejectExtensionOptionsMiddleware,
-		// Reject auth_info extension options that don't pass the criteria.
-		NewAuthExtensionOptionsMiddleware(feeMarket.AllowAuthExtensionOption),
+		// Reject all extension options other than the ones needed by the feemarket.
+		NewExtensionOptionsMiddleware(feeMarket.AllowExtensionOption),
 		ValidateBasicMiddleware,
 		TxTimeoutHeightMiddleware,
 		ValidateMemoMiddleware(options.AccountKeeper),

@@ -14,8 +14,8 @@ type ValidatorTxFee struct{}
 
 var _ FeeMarket = ValidatorTxFee{}
 
-// AllowAuthExtensionOption returns true if the auth extension option should be allowed.
-func (sfm ValidatorTxFee) AllowAuthExtensionOption(*codectypes.Any) bool {
+// AllowExtensionOption returns true if the auth extension option should be allowed.
+func (sfm ValidatorTxFee) AllowExtensionOption(*codectypes.Any) bool {
 	return false
 }
 

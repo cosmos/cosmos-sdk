@@ -98,8 +98,7 @@ which accepts a path for the resulting pprof file.
 The node may be started in a 'query only' mode where only the gRPC and JSON HTTP
 API services are enabled via the 'grpc-only' flag. In this mode, Tendermint is
 bypassed and can be used when legacy queries are needed after an on-chain upgrade
-is performed. Note, when enabled, gRPC must also be enabled in the application
-configuration.
+is performed. Note, when enabled, gRPC will also be automatically enabled.
 `,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
@@ -255,17 +254,14 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		return err
 	}
 
-	var tmNode tmservice.Service
-
-	gRPCOnly := ctx.Viper.GetBool(flagGRPCOnly)
-	switch {
-	case gRPCOnly && !config.GRPC.Enable:
-		return fmt.Errorf("cannot start '%s' mode; must enable gRPC in application config", flagGRPCOnly)
-
-	case gRPCOnly:
-		ctx.Logger.Info("starting node in gRPC only mode; Tendermint is not enabled")
-
-	default:
+	var (
+		tmNode   tmservice.Service
+		gRPCOnly = ctx.Viper.GetBool(flagGRPCOnly)
+	)
+	if gRPCOnly {
+		ctx.Logger.Info("starting node in gRPC only mode; Tendermint is disabled")
+		config.GRPC.Enable = true
+	} else {
 		ctx.Logger.Info("starting node with ABCI Tendermint in-process")
 
 		tmNode, err = node.New(cfg, ctx.Logger, abciclient.NewLocalCreator(app), genDoc)

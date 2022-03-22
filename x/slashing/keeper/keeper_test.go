@@ -94,10 +94,12 @@ func TestHandleNewValidator(t *testing.T) {
 
 	// Validator created
 	amt := tstaking.CreateValidatorWithValPower(addr, val, 100, true)
+	InitTokens := sdk.NewIntFromUint64(200_000_000)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	require.Equal(
 		t, app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr)),
+
 		sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.GetParams(ctx).BondDenom, InitTokens.Sub(amt))),
 	)
 	require.Equal(t, amt, app.StakingKeeper.Validator(ctx, addr).GetBondedTokens())

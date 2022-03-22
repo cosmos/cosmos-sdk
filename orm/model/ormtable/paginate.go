@@ -55,11 +55,14 @@ func (it *paginationIterator) Next() bool {
 	if it.i >= it.done {
 		it.pageRes = &queryv1beta1.PageResponse{}
 		cursor := it.Cursor()
-		if it.Iterator.Next() {
+		next := it.Iterator.Next()
+		if next {
 			it.pageRes.NextKey = cursor
 			it.i++
 		}
-		if it.countTotal {
+		// once it.Iterator.Next() returns false, another call to it will panic.
+		// we must add a check for next to ensure we do not call it again.
+		if it.countTotal && next {
 			for {
 				if !it.Iterator.Next() {
 					it.pageRes.Total = uint64(it.i)
@@ -67,6 +70,8 @@ func (it *paginationIterator) Next() bool {
 				}
 				it.i++
 			}
+		} else {
+			it.pageRes.Total = uint64(it.i)
 		}
 		return false
 	}

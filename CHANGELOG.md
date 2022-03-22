@@ -140,7 +140,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/authz) [\#10447](https://github.com/cosmos/cosmos-sdk/pull/10447) authz `NewGrant` takes a new argument: block time, to correctly validate expire time.
 * [\#10961](https://github.com/cosmos/cosmos-sdk/pull/10961) Support third-party modules to add extension snapshots to state-sync.
 * [\#11274](https://github.com/cosmos/cosmos-sdk/pull/11274) `types/errors.New` now is an alias for `types/errors.Register` and should only be used in initialization code.
-* (ante) [#11413](https://github.com/cosmos/cosmos-sdk/pull/11413) Refactor tx middleware to support pluggable feemarket module. The API breakages: a) Removed `MempoolFeeMiddleware` and `TxPriorityMiddleware`, the functionalities are moved into `DeductFeeMiddleware`, b) Added a `FeeMarket` field to `HandlerOptions`, and a `FeeMarket` parameter to `DeductFeeMiddleware`, when set to `StaticFeeMarket{}`, it'll keep the existing behavior, c) Added an `extention_options` field to `AuthInfo` in `Tx`, d) Added a `NewAuthExtensionOptionsMiddleware` middleware to check the `extension_options` field.
+* (ante) [#11413](https://github.com/cosmos/cosmos-sdk/pull/11413) Refactor tx middleware to support pluggable feemarket module. Merged `MempoolFeeMiddleware` and `TxPriorityMiddleware` functionalities into `DeductFeeMiddleware`, so the potential feemarket module can implement these logic in one pass. Added a `FeeMarket` interface to plug-in different feemarket implementation in tx middleware, current fee logic is preserved by the default `ValidatorTxFee` implementation. Added an `extention_options` field to `AuthInfo`, so feemarket module can add extra fields to tx.
 
 
 ### Client Breaking Changes

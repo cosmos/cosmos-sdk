@@ -8,13 +8,13 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// ValidatorTxFee implements a static feemarket, where the minimum price per
-// unit of gas is fixed and set by each validator.
+// ValidatorTxFee implements the default fee logic, where the minimum price per
+// unit of gas is fixed and set by each validator, can the tx priority is computed from the gas price.
 type ValidatorTxFee struct{}
 
 var _ FeeMarket = ValidatorTxFee{}
 
-// AllowExtensionOption returns true if the auth extension option should be allowed.
+// AllowExtensionOption should return true if the auth extension option should be allowed.
 func (sfm ValidatorTxFee) AllowExtensionOption(*codectypes.Any) bool {
 	return false
 }

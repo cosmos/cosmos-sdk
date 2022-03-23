@@ -15,8 +15,8 @@ func (s *MWTestSuite) TestExtensionOptionsMiddleware() {
 		msg   string
 		allow bool
 	}{
-		{"reject extension", true},
-		{"allow extension", false},
+		{"allow extension", true},
+		{"reject extension", false},
 	}
 	for _, tc := range testCases {
 		s.Run(tc.msg, func() {
@@ -38,7 +38,7 @@ func (s *MWTestSuite) TestExtensionOptionsMiddleware() {
 				return
 			}
 
-			// setting any extension option should cause an error
+			// set an extension option and check
 			any, err := types.NewAnyWithValue(testdata.NewTestMsg())
 			s.Require().NoError(err)
 			extOptsTxBldr.SetExtensionOptions(any)

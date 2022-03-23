@@ -136,17 +136,6 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	tx = bldr.GetTx()
 	_, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.Error(t, err)
-
-	// expect error with AuthInfo extension options
-	bldr = newBuilder(nil)
-	buildTx(t, bldr)
-	any, err = cdctypes.NewAnyWithValue(testdata.NewTestMsg())
-	require.NoError(t, err)
-	bldr.tx.AuthInfo.ExtensionOptions = []*cdctypes.Any{any}
-	tx = bldr.GetTx()
-	_, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
-	require.Error(t, err)
-
 }
 
 func TestLegacyAminoJSONHandler_DefaultMode(t *testing.T) {

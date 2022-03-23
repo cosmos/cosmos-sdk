@@ -1,11 +1,12 @@
 package simulation_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"math/big"
 	"math/rand"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/stretchr/testify/require"
@@ -136,7 +137,7 @@ func TestSimulateMsgCancelUnbondingDelegation(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg types.MsgCancelUnbondingDelegation
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, types.TypeMsgCancelUnbondingDelegation, msg.Type())

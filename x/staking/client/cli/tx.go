@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -294,6 +295,8 @@ $ %s tx staking cancel-unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake
 				version.AppName, bech32PrefixValAddr,
 			),
 		),
+		Example: fmt.Sprintf(`$ %s tx staking cancel-unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake 2 --from mykey`,
+			version.AppName, bech32PrefixValAddr),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -310,12 +313,12 @@ $ %s tx staking cancel-unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake
 				return err
 			}
 
-			creationHeight, ok := sdk.NewIntFromString(args[2])
-			if !ok {
+			creationHeight, err := strconv.ParseUint(args[2], 10, 64)
+			if err != nil {
 				return sdkerrors.Wrap(fmt.Errorf("invalid height: %d", creationHeight), "invalid height")
 			}
 
-			msg := types.NewMsgCancelUnbondingDelegation(delAddr, valAddr, creationHeight.Uint64(), amount)
+			msg := types.NewMsgCancelUnbondingDelegation(delAddr, valAddr, creationHeight, amount)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

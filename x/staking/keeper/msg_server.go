@@ -2,10 +2,11 @@ package keeper
 
 import (
 	"context"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"strconv"
 	"time"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/armon/go-metrics"
 	tmstrings "github.com/tendermint/tendermint/libs/strings"
@@ -386,13 +387,19 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 }
 
 // CancelUnbondingDelegation defines a method for canceling the unbonding delegation
-// and delegate back to validator
+// and delegate back to validator.
 func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.MsgCancelUnbondingDelegation) (*types.MsgCancelUnbondingDelegationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if !msg.Amount.IsPositive() {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("invalid amount")
+	}
+
 	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
+
 	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
 		return nil, err
@@ -405,7 +412,6 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 		)
 	}
 
-	// get validator
 	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
 		return nil, types.ErrNoValidatorFound
@@ -427,7 +433,8 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 		return nil, status.Errorf(
 			codes.NotFound,
 			"unbonding delegation with delegator %s not found for validator %s",
-			msg.DelegatorAddress, msg.ValidatorAddress)
+			msg.DelegatorAddress, msg.ValidatorAddress,
+		)
 	}
 
 	var (
@@ -443,19 +450,15 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 		}
 	}
 	if unbondEntryIndex == -1 {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "unbonding delegation entry is not found at block height %d", msg.CreationHeight)
-	}
-
-	if !msg.Amount.IsPositive() {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid amount")
+		return nil, sdkerrors.ErrNotFound.Wrapf("unbonding delegation entry is not found at block height %d", msg.CreationHeight)
 	}
 
 	if unbondEntry.Balance.LT(msg.Amount.Amount) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "amount is greater than the unbonding delegation entry balance")
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("amount is greater than the unbonding delegation entry balance")
 	}
 
 	if ubd.Entries[unbondEntryIndex].CompletionTime.Before(ctx.BlockTime()) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "unbonding delegation is already processed.")
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("unbonding delegation is already processed")
 	}
 
 	// delegate the unbonding delegation amount to validator back
@@ -466,7 +469,6 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 
 	amount := unbondEntry.Balance.Sub(msg.Amount.Amount)
 	if amount.IsZero() {
-		// remove from ubd
 		ubd.RemoveEntry(unbondEntryIndex)
 	} else {
 		// update the unbondingDelegationEntryBalance and InitialBalance for ubd entry

@@ -408,10 +408,6 @@ func SimulateMsgCancelUnbondingDelegate(ak types.AccountKeeper, bk types.BankKee
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "account does have any unbonding delegation"), nil, nil
 		}
 
-		if k.HasMaxUnbondingDelegationEntries(ctx, simAccount.Address, valAddr) {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "validator does have a max unbonding delegation entries"), nil, nil
-		}
-
 		// get random unbonding delegation entry at block height
 		unbondingDelegationEntry := unbondingDelegation.Entries[r.Intn(len(unbondingDelegation.Entries))]
 
@@ -419,23 +415,23 @@ func SimulateMsgCancelUnbondingDelegate(ak types.AccountKeeper, bk types.BankKee
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "delegator receiving balance is negative"), nil, nil
 		}
 
-		reDelegateAmount, err := simtypes.RandPositiveInt(r, unbondingDelegationEntry.Balance)
+		cancelBondAmt, err := simtypes.RandPositiveInt(r, unbondingDelegationEntry.Balance)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "invalid reDelegateAmount amount"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "invalid cancelBondAmt amount"), nil, err
 		}
 
-		if reDelegateAmount.IsZero() {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "reDelegateAmount amount is zero"), nil, nil
+		if cancelBondAmt.IsZero() {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "cancelBondAmt amount is zero"), nil, nil
 		}
 
 		msg := types.NewMsgCancelUnbondingDelegation(
-			simAccount.Address, valAddr, uint64(unbondingDelegationEntry.CreationHeight), sdk.NewCoin(k.BondDenom(ctx), reDelegateAmount),
+			simAccount.Address, valAddr, uint64(unbondingDelegationEntry.CreationHeight), sdk.NewCoin(k.BondDenom(ctx), cancelBondAmt),
 		)
 
-		// if simaccount.PrivKey == nil, delegation address does not exist in accs. Return error
-		if simAccount.PrivKey == nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "account private key is nil"), nil, fmt.Errorf("delegation addr: %s does not exist in simulation accounts", simAccount.Address)
-		}
+		// // if simaccount.PrivKey == nil, delegation address does not exist in accs. Return error
+		// if simAccount.PrivKey == nil {
+		// 	return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "account private key is nil"), nil, fmt.Errorf("delegation addr: %s does not exist in simulation accounts", simAccount.Address)
+		// }
 
 		spendable := bk.SpendableCoins(ctx, simAccount.Address)
 

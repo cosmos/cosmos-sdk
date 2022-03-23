@@ -331,12 +331,25 @@ func (kss *KafkaStreamingService) writeAsJsonToKafka(
 		topic = fmt.Sprintf("%s-%s", kss.topicPrefix, topic)
 	}
 
-	// produce message
-	if err := kss.producer.Produce(&kafka.Message{
+	// prepare message
+	message := &kafka.Message{
 		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
 		Value:          json,
 		Key:            []byte(key),
-	}, kss.deliveryChan); err != nil {
+	}
+
+	// produce message in fire-and-forget fashion
+	if !kss.haltAppOnDeliveryError {
+		// the producer has been configured with `go.delivery.reports: false`
+		// pass `nil` for private delivery reports chan
+		if err := kss.producer.Produce(message, nil); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	// produce message and check delivery report
+	if err := kss.producer.Produce(message, kss.deliveryChan); err != nil {
 		return err
 	}
 

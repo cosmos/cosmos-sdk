@@ -130,6 +130,12 @@ func (ssp *streamingServicePlugin) Register(
 		if err := producerConfigMap.SetKey(key, element); err != nil {
 			return err
 		}
+		if !haltAppOnDeliveryError {
+			// disable delivery reports when operating in fire-and-forget fashion
+			if err := producerConfigMap.SetKey("go.delivery.reports", false); err != nil {
+				return err
+			}
+		}
 	}
 
 	var err error

@@ -47,6 +47,7 @@ var (
 
 	UnbondingDelegationEntryIdKey    = []byte{0x37} // key for the counter for the incrementing id for UnbondingDelegationEntries
 	UnbondingDelegationEntryIndexKey = []byte{0x38} // prefix for an index for looking up UnbondingDelegations by UnbondingDelegationEntry ID
+	RedelegationEntryIndexKey        = []byte{0x39} // prefix for an index for looking up UnbondingDelegations by UnbondingDelegationEntry ID
 
 	UnbondingQueueKey    = []byte{0x41} // prefix for the timestamps in unbonding queue
 	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
@@ -61,6 +62,13 @@ func GetUnbondingDelegationEntryIndexKey(id uint64) []byte {
 	bz := make([]byte, 8)
 	binary.BigEndian.PutUint64(bz, id)
 	return append(UnbondingDelegationEntryIndexKey, bz...)
+}
+
+// Returns a key for the index for looking up Redelegations by the RedelegationEntries they contain
+func GetRedelegationEntryIndexKey(id uint64) []byte {
+	bz := make([]byte, 8)
+	binary.BigEndian.PutUint64(bz, id)
+	return append(RedelegationEntryIndexKey, bz...)
 }
 
 // GetValidatorKey creates the key for the validator with address

@@ -143,7 +143,7 @@ func TestUnbondingDelegation(t *testing.T) {
 		0,
 		time.Unix(0, 0).UTC(),
 		sdk.NewInt(5),
-		app.StakingKeeper.IncrementUnbondingDelegationEntryId(ctx),
+		app.StakingKeeper.IncrementUnbondingOpId(ctx),
 	)
 
 	// set and retrieve a record
@@ -300,11 +300,11 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 type MockStakingHooks struct {
 	types.StakingHooksTemplate
 	beforeUnbondingDelegationEntryComplete func() bool
-	unbondingDelegationEntryCreated        func(uint64)
+	afterUnbondingOpInitiated              func(uint64)
 }
 
-func (h MockStakingHooks) UnbondingDelegationEntryCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress, _ int64, _ time.Time, _ sdk.Int, id uint64) {
-	h.unbondingDelegationEntryCreated(id)
+func (h MockStakingHooks) AfterUnbondingOpInitiated(_ sdk.Context, id uint64) {
+	h.afterUnbondingOpInitiated(id)
 }
 func (h MockStakingHooks) BeforeUnbondingDelegationEntryComplete(_ sdk.Context, _ uint64) bool {
 	return h.beforeUnbondingDelegationEntryComplete()
@@ -330,7 +330,7 @@ func TestUnbondingDelegationOnHold(t *testing.T) {
 		beforeUnbondingDelegationEntryComplete: func() bool {
 			return onHold
 		},
-		unbondingDelegationEntryCreated: func(id uint64) {
+		afterUnbondingOpInitiated: func(id uint64) {
 			udecHookCalled = true
 			ubdeID = id
 		},
@@ -386,7 +386,7 @@ func TestUnbondingDelegationOnHold(t *testing.T) {
 	require.True(t, udecHookCalled)
 
 	// TRY TO COMPLETE STOPPED UNBONDING TOO EARLY
-	found, err := app.StakingKeeper.CompleteStoppedUnbonding(ctx, ubdeID)
+	found, err := app.StakingKeeper.CompleteStoppedUnbondingOp(ctx, ubdeID)
 	require.NoError(t, err)
 	require.False(t, found)
 
@@ -412,7 +412,7 @@ func TestUnbondingDelegationOnHold(t *testing.T) {
 	require.True(sdk.IntEq(t, notBondedAmt2, notBondedAmt4))
 
 	// COMPLETE STOPPED UNBONDING
-	found, err = app.StakingKeeper.CompleteStoppedUnbonding(ctx, ubdeID)
+	found, err = app.StakingKeeper.CompleteStoppedUnbondingOp(ctx, ubdeID)
 	require.NoError(t, err)
 	require.True(t, found)
 

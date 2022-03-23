@@ -80,7 +80,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	// set an unbonding delegation with expiration timestamp (beyond which the
 	// unbonding delegation shouldn't be slashed)
 	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 0,
-		time.Unix(5, 0), sdk.NewInt(10), app.StakingKeeper.IncrementUnbondingDelegationEntryId(ctx))
+		time.Unix(5, 0), sdk.NewInt(10), app.StakingKeeper.IncrementUnbondingOpId(ctx))
 
 	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 
@@ -264,7 +264,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// set an unbonding delegation with expiration timestamp beyond which the
 	// unbonding delegation shouldn't be slashed
 	ubdTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 4)
-	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 11, time.Unix(0, 0), ubdTokens, app.StakingKeeper.IncrementUnbondingDelegationEntryId(ctx))
+	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 11, time.Unix(0, 0), ubdTokens, app.StakingKeeper.IncrementUnbondingOpId(ctx))
 	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 
 	// slash validator for the first time
@@ -555,7 +555,7 @@ func TestSlashBoth(t *testing.T) {
 	// unbonding delegation shouldn't be slashed)
 	ubdATokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 4)
 	ubdA := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 11,
-		time.Unix(0, 0), ubdATokens, app.StakingKeeper.IncrementUnbondingDelegationEntryId(ctx))
+		time.Unix(0, 0), ubdATokens, app.StakingKeeper.IncrementUnbondingOpId(ctx))
 	app.StakingKeeper.SetUnbondingDelegation(ctx, ubdA)
 
 	bondedCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, rdATokens.MulRaw(2)))

@@ -17,15 +17,14 @@ var (
 	PKs = simapp.CreateTestPubKeys(500)
 )
 
-func init() {
-	sdk.DefaultPowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
-}
-
 // createTestInput Returns a simapp with custom StakingKeeper
 // to avoid messing with the hooks.
 func createTestInput(t *testing.T) (*codec.LegacyAmino, *simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	stakingConfig := types.DefaultConfig()
+	stakingConfig.PowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
 
 	app.StakingKeeper = keeper.NewKeeper(
 		app.AppCodec(),
@@ -33,6 +32,7 @@ func createTestInput(t *testing.T) (*codec.LegacyAmino, *simapp.SimApp, sdk.Cont
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.GetSubspace(types.ModuleName),
+		stakingConfig,
 	)
 	return app.LegacyAmino(), app, ctx
 }

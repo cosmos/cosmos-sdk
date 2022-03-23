@@ -23,6 +23,7 @@ func createTestInput(t *testing.T) (*codec.LegacyAmino, *simapp.SimApp, sdk.Cont
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
+	// fmt.Println(app.StakingKeeper.Config)
 	stakingConfig := types.DefaultConfig()
 	stakingConfig.PowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
 
@@ -32,8 +33,9 @@ func createTestInput(t *testing.T) (*codec.LegacyAmino, *simapp.SimApp, sdk.Cont
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.GetSubspace(types.ModuleName),
-		stakingConfig,
+		types.DefaultConfig(),
 	)
+	// fmt.Println(app.StakingKeeper.Config)
 	return app.LegacyAmino(), app, ctx
 }
 

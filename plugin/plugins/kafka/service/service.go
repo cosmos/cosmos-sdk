@@ -135,8 +135,12 @@ func NewKafkaStreamingService(
 		codec:                  c,
 		stateCache:             make([][]byte, 0),
 		stateCacheLock:         new(sync.Mutex),
-		deliveryChan:           make(chan kafka.Event),
 		haltAppOnDeliveryError: haltAppOnDeliveryError,
+	}
+
+	// setup private delivery channel to listen for delivery errors.
+	if haltAppOnDeliveryError {
+		kss.deliveryChan = make(chan kafka.Event)
 	}
 
 	return kss, nil
@@ -331,25 +335,15 @@ func (kss *KafkaStreamingService) writeAsJsonToKafka(
 		topic = fmt.Sprintf("%s-%s", kss.topicPrefix, topic)
 	}
 
-	// prepare message
-	message := &kafka.Message{
+	// produce message
+	// when `halt_app_on_delivery_error = false`, kss.deliveryChan is `nil`
+	// and the producer is configured with `go.delivery.reports: false`
+	// this means that the producer operates in a fire-and-forget mode
+	if err := kss.producer.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
 		Value:          json,
 		Key:            []byte(key),
-	}
-
-	// produce message in fire-and-forget fashion
-	if !kss.haltAppOnDeliveryError {
-		// the producer has been configured with `go.delivery.reports: false`
-		// pass `nil` for private delivery reports chan
-		if err := kss.producer.Produce(message, nil); err != nil {
-			return err
-		}
-		return nil
-	}
-
-	// produce message and check delivery report
-	if err := kss.producer.Produce(message, kss.deliveryChan); err != nil {
+	}, kss.deliveryChan); err != nil {
 		return err
 	}
 
@@ -358,6 +352,10 @@ func (kss *KafkaStreamingService) writeAsJsonToKafka(
 
 // checkDeliveryReport checks kafka.Producer delivery report for successful or failed messages
 func (kss *KafkaStreamingService) checkDeliveryReport(ctx sdk.Context) error {
+	if kss.deliveryChan == nil {
+		return nil
+	}
+
 	e := <-kss.deliveryChan
 	m := e.(*kafka.Message)
 	topic := *m.TopicPartition.Topic
@@ -369,10 +367,9 @@ func (kss *KafkaStreamingService) checkDeliveryReport(ctx sdk.Context) error {
 
 	if topicErr != nil {
 		logger.Error("Delivery failed: ", "topic", topic, "partition", partition, "key", key, "err", topicErr)
-		return topicErr
 	} else {
 		logger.Debug("Delivered message:", "topic", topic, "partition", partition, "offset", offset, "key", key)
 	}
 
-	return nil
+	return topicErr
 }

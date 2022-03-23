@@ -338,7 +338,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 		go app.snapshot(header.Height)
 	}
 
-	app.logger.Info("commited - baseapp", "height", commitID.Version, "commit_hash", commitID.Hash, "retain_height", retainHeight)
+	app.logger.Info("committed ABCI", "height", commitID.Version, "commit_hash", fmt.Sprintf("%X", commitID.Hash), "retain_height", retainHeight)
 	return abci.ResponseCommit{
 		Data:         commitID.Hash,
 		RetainHeight: retainHeight,

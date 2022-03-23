@@ -10,15 +10,16 @@ import (
 
 // HandleValidatorSignature handles a validator signature, must be called once per validator per block.
 func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Address, power int64, signed bool) {
-	logger := k.Logger(ctx)
-	height := ctx.BlockHeight()
-
 	// fetch the validator public key
 	consAddr := sdk.ConsAddress(addr)
 
-	if _, err := k.GetPubkey(ctx, addr); err != nil {
-		panic(fmt.Sprintf("Validator consensus-address %s not found", consAddr))
+	// don't update missed blocks when validator's jailed
+	if k.sk.IsValidatorJailed(ctx, consAddr) {
+		return
 	}
+
+	logger := k.Logger(ctx)
+	height := ctx.BlockHeight()
 
 	// fetch signing info
 	signInfo, found := k.GetValidatorSigningInfo(ctx, consAddr)
@@ -36,6 +37,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 	// That way we avoid needing to read/write the whole array each time
 	previous := k.GetValidatorMissedBlockBitArray(ctx, consAddr, index)
 	missed := !signed
+
 	switch {
 	case !previous && missed:
 		// Array value has changed from not missed to missed, increment counter
@@ -76,7 +78,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 	// if we are past the minimum height and the validator has missed too many blocks, punish them
 	if height > minHeight && signInfo.MissedBlocksCounter > maxMissed {
 		validator := k.sk.ValidatorByConsAddr(ctx, consAddr)
-		if validator != nil && !validator.IsJailed() {
+		if validator != nil {
 			// Downtime confirmed: slash and jail the validator
 			// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height,
 			// and subtract an additional 1 since this is the LastCommit.
@@ -84,7 +86,6 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 			// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
 			// That's fine since this is just used to filter unbonding delegations & redelegations.
 			distributionHeight := height - sdk.ValidatorUpdateDelay - 1
-
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(
 					types.EventTypeSlash,
@@ -120,10 +121,6 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 				"validator", consAddr.String(),
 			)
 		}
-
-		// hook is triggered for each downtime detection
-		// and defered to keep safe the write operations on SignInfo
-		defer k.AfterValidatorDowntime(ctx, consAddr, power)
 	}
 
 	// Set the updated signing info

@@ -83,9 +83,7 @@ As a part of the Undelegate and Complete Unbonding state transitions Unbond
 Delegation may be called.
 
 * subtract the unbonded shares from delegator
-* if the validator is `Unbonding` or `Bonded` add the tokens to an `UnbondingDelegation` Entry
-* if the validator is `Unbonded` send the tokens directly to the withdraw
-  account
+* add the unbonded tokens to an `UnbondingDelegation` Entry
 * update the delegation or remove the delegation if there are no more shares
 * if the delegation is the operator of the validator and no more shares exist then trigger a jail validator
 * update the validator with removed the delegator shares and associated coins

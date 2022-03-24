@@ -773,7 +773,7 @@ func (k Keeper) InstantUndelegate(
 	amt := sdk.NewCoin(bondDenom, returnAmount)
 	res := sdk.NewCoins(amt)
 
-	moduleName := types.NotBondedPoolName    
+	moduleName := types.NotBondedPoolName
 	if validator.IsBonded() {
 		moduleName = types.BondedPoolName
 	}

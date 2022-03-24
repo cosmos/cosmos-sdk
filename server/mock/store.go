@@ -63,11 +63,11 @@ func (ms multiStore) LastCommitID() sdk.CommitID {
 	panic("not implemented")
 }
 
-func (ms multiStore) SetPruning(opts sdk.PruningOptions) {
+func (ms multiStore) SetPruning(opts *sdk.PruningOptions) {
 	panic("not implemented")
 }
 
-func (ms multiStore) GetPruning() sdk.PruningOptions {
+func (ms multiStore) GetPruning() *sdk.PruningOptions {
 	panic("not implemented")
 }
 
@@ -76,6 +76,10 @@ func (ms multiStore) GetCommitKVStore(key sdk.StoreKey) sdk.CommitKVStore {
 }
 
 func (ms multiStore) GetCommitStore(key sdk.StoreKey) sdk.CommitStore {
+	panic("not implemented")
+}
+
+func (ms multiStore) GetCommitKVStores() map[sdk.StoreKey]sdk.CommitKVStore {
 	panic("not implemented")
 }
 
@@ -111,6 +115,10 @@ func (ms multiStore) GetStoreType() sdk.StoreType {
 	panic("not implemented")
 }
 
+func (ms multiStore) PruneSnapshotHeight(height int64) {
+	panic("not implemented")
+}
+
 func (ms multiStore) SetInterBlockCache(_ sdk.MultiStorePersistentCache) {
 	panic("not implemented")
 }
@@ -119,6 +127,10 @@ func (ms multiStore) SetIAVLCacheSize(size int) {
 }
 
 func (ms multiStore) SetInitialVersion(version int64) error {
+	panic("not implemented")
+}
+
+func (ms multiStore) SetSnapshotInterval(snapshotInterval uint64) {
 	panic("not implemented")
 }
 

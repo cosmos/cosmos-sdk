@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	store "github.com/cosmos/cosmos-sdk/store/types"
+	pruningTypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -31,7 +32,7 @@ func defaultLogger() log.Logger {
 
 func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 	rs := rootmulti.NewStore(db, log.NewNopLogger())
-	rs.SetPruning(store.PruneNothing)
+	rs.SetPruning(pruningTypes.NewPruningOptions(pruningTypes.PruningNothing))
 	key := sdk.NewKVStoreKey(storeKey)
 	rs.MountStoreWithDB(key, store.StoreTypeIAVL, nil)
 	err := rs.LoadLatestVersion()
@@ -48,7 +49,7 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 
 func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
 	rs := rootmulti.NewStore(db, log.NewNopLogger())
-	rs.SetPruning(store.PruneNothing)
+	rs.SetPruning(pruningTypes.NewPruningOptions(pruningTypes.PruningNothing))
 	key := sdk.NewKVStoreKey(storeKey)
 	rs.MountStoreWithDB(key, store.StoreTypeIAVL, nil)
 	err := rs.LoadLatestVersion()
@@ -117,7 +118,7 @@ func TestSetLoader(t *testing.T) {
 			initStore(t, db, tc.origStoreKey, k, v)
 
 			// load the app with the existing db
-			opts := []func(*baseapp.BaseApp){baseapp.SetPruning(store.PruneNothing)}
+			opts := []func(*baseapp.BaseApp){baseapp.SetPruning(pruningTypes.NewPruningOptions(pruningTypes.PruningNothing))}
 
 			origapp := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
 			origapp.MountStores(sdk.NewKVStoreKey(tc.origStoreKey))

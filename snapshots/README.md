@@ -28,8 +28,8 @@ filesystem under `<node_home>/data/snapshots/`, with metadata in a LevelDB datab
 
 Snapshots are taken asynchronously, i.e. new blocks will be applied concurrently
 with snapshots being taken. This is possible because IAVL supports querying
-immutable historical heights. However, this requires `state-sync.snapshot-interval`
-to be a multiple of `pruning-keep-every`, to prevent a height from being removed
+immutable historical heights. However, this requires heights that are multiples of `state-sync.snapshot-interval`
+to be kept until after the snapshot is complete. It is done to prevent a height from being removed
 while it is being snapshotted.
 
 When a remote node is state syncing, Tendermint calls the ABCI method
@@ -48,6 +48,38 @@ corruption and non-determinism, but these are not tied to the chain state and
 can be trivially forged by an adversary. This was considered out of scope for
 the initial implementation, but can be added later without changes to the
 ABCI state sync protocol.
+
+## Relationship to Pruning
+
+Snapshot settings are optional. However, if set, they have an effect on how pruning is done by
+persisting the heights that are multiples of `state-sync.snapshot-interval` until after the snapshot is complete.
+
+If pruning is enabled (not `pruning = "nothing"`), we avoid pruning heights that are multiples of
+`state-sync.snapshot-interval` in the regular logic determined by the 
+pruning settings and applied after every `Commit()`. This is done to prevent a 
+height from being removed before a snapshot is complete. Therefore, we keep 
+such heights until after a snapshot is done. At this point, the height is sent to 
+the `pruning.Manager` to be pruned according to the pruning settings after the next `Commit()`.
+
+To illustrate, assume that we are currently at height 960 with `pruning-keep-recent = 50`,
+`pruning-interval = 10`, and `state-sync.snapshot-interval = 100`. Let's assume that
+the snapshot that was triggered at height `900` just finishes. Then, we can prune height
+`900` right away (that is, when we call `Commit()` at height 960) because it (`900`) is less than `960 - 50 = 910`.
+
+Let's now assume that all settings stay the same but `pruning-keep-recent = 100`. In that case,
+we cannot prune height `900` which is greater than `960 - 100 = 850`. As a result, height 900 is persisted until
+we can prune it according to the pruning settings.
+
+## Configuration
+
+- `state-sync.snapshot-interval`
+   * the interval at which to take snapshots.
+   * the value of 0 disables snapshots.
+   * if pruning is enabled, it is done after a snapshot is complete for the heights that are multiples of this interval.
+
+- `state-sync.snapshot-keep-recent`:
+   * the number of recent snapshots to keep.
+   * 0 means keep all.
 
 ## Snapshot Metadata
 
@@ -183,7 +215,9 @@ concurrently.
 During `BaseApp.Commit`, once a state transition has been committed, the height
 is checked against the `state-sync.snapshot-interval` setting. If the committed
 height should be snapshotted, a goroutine `BaseApp.snapshot()` is spawned that
-calls `snapshots.Manager.Create()` to create the snapshot.
+calls `snapshots.Manager.Create()` to create the snapshot. Once a snapshot is
+complete and if pruning is enabled, the snapshot height is pruned away by the manager
+with the call `PruneSnapshotHeight(...)` to the `snapshots.types.Snapshotter`.
 
 `Manager.Create()` will do some basic pre-flight checks, and then start
 generating a snapshot by calling `rootmulti.Store.Snapshot()`. The chunk stream

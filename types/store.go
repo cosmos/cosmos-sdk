@@ -5,12 +5,15 @@ import (
 	"sort"
 	"strings"
 
+	pruningTypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	snapshotTypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 type (
-	PruningOptions = types.PruningOptions
+	PruningOptions  = pruningTypes.PruningOptions
+	SnapshotOptions = snapshotTypes.SnapshotOptions
 )
 
 type (
@@ -82,6 +85,17 @@ type (
 	KVStoreKey        = types.KVStoreKey
 	TransientStoreKey = types.TransientStoreKey
 	MemoryStoreKey    = types.MemoryStoreKey
+)
+
+type (
+	PruningStrategy = pruningTypes.PruningStrategy
+)
+
+const (
+	Default    PruningStrategy = pruningTypes.PruningDefault
+	Everything                 = pruningTypes.PruningEverything
+	Nothing                    = pruningTypes.PruningNothing
+	Custom                     = pruningTypes.PruningCustom
 )
 
 // assertNoCommonPrefix will panic if there are two keys: k1 and k2 in keys, such that
@@ -181,15 +195,27 @@ type (
 	GasConfig = types.GasConfig
 )
 
-func NewGasMeter(limit Gas) GasMeter {
-	return types.NewGasMeter(limit)
-}
-
 type (
 	ErrorOutOfGas    = types.ErrorOutOfGas
 	ErrorGasOverflow = types.ErrorGasOverflow
 )
 
+func NewGasMeter(limit Gas) GasMeter {
+	return types.NewGasMeter(limit)
+}
+
 func NewInfiniteGasMeter() GasMeter {
 	return types.NewInfiniteGasMeter()
+}
+
+func NewSnapshotOptions(interval uint64, keepRecent uint32) *snapshotTypes.SnapshotOptions {
+	return snapshotTypes.NewSnapshotOptions(interval, keepRecent)
+}
+
+func NewPruningOptions(pruningStrategy PruningStrategy) *pruningTypes.PruningOptions {
+	return pruningTypes.NewPruningOptions(pruningStrategy)
+}
+
+func NewCustomPruningOptions(keepRecent, interval uint64) *pruningTypes.PruningOptions {
+	return pruningTypes.NewCustomPruningOptions(keepRecent, interval)
 }

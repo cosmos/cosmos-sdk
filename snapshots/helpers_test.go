@@ -6,15 +6,16 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
-	"os"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/libs/log"
 	db "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
+	snaphotsTestUtil "github.com/cosmos/cosmos-sdk/testutil/snapshots"
 )
 
 func checksums(slice [][]byte) [][]byte {
@@ -59,6 +60,8 @@ func readChunks(chunks <-chan io.ReadCloser) [][]byte {
 
 type mockSnapshotter struct {
 	chunks [][]byte
+	prunedHeights map[int64]struct{}
+	snapshotInterval uint64
 }
 
 func (m *mockSnapshotter) Restore(
@@ -86,6 +89,18 @@ func (m *mockSnapshotter) Restore(
 	return nil
 }
 
+func (m *mockSnapshotter) PruneSnapshotHeight(height int64) {
+	m.prunedHeights[height] = struct{}{}
+}
+
+func (m *mockSnapshotter) GetSnapshotInterval() uint64 {
+	return m.snapshotInterval
+}
+
+func (m *mockSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
+	m.snapshotInterval = snapshotInterval
+}
+
 func (m *mockSnapshotter) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, error) {
 	if format == 0 {
 		return nil, types.ErrUnknownFormat
@@ -101,21 +116,19 @@ func (m *mockSnapshotter) Snapshot(height uint64, format uint32) (<-chan io.Read
 // setupBusyManager creates a manager with an empty store that is busy creating a snapshot at height 1.
 // The snapshot will complete when the returned closer is called.
 func setupBusyManager(t *testing.T) *snapshots.Manager {
-	// ioutil.TempDir() is used instead of testing.T.TempDir()
-	// see https://github.com/cosmos/cosmos-sdk/pull/8475 for
-	// this change's rationale.
-	tempdir, err := ioutil.TempDir("", "")
-	require.NoError(t, err)
-	t.Cleanup(func() { _ = os.RemoveAll(tempdir) })
+	tempdir := snaphotsTestUtil.GetTempDir(t)
 
 	store, err := snapshots.NewStore(db.NewMemDB(), tempdir)
 	require.NoError(t, err)
 	hung := newHungSnapshotter()
-	mgr := snapshots.NewManager(store, hung)
+	mgr := snapshots.NewManager(store, opts, hung, log.NewNopLogger())
+	require.Equal(t, opts.Interval, hung.snapshotInterval)
 
 	go func() {
 		_, err := mgr.Create(1)
 		require.NoError(t, err)
+		_, didPruneHeight := hung.prunedHeights[1]
+		require.True(t, didPruneHeight)
 	}()
 	time.Sleep(10 * time.Millisecond)
 	t.Cleanup(hung.Close)
@@ -126,11 +139,14 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 // hungSnapshotter can be used to test operations in progress. Call close to end the snapshot.
 type hungSnapshotter struct {
 	ch chan struct{}
+	prunedHeights map[int64]struct{}
+	snapshotInterval uint64
 }
 
 func newHungSnapshotter() *hungSnapshotter {
 	return &hungSnapshotter{
 		ch: make(chan struct{}),
+		prunedHeights: make(map[int64]struct{}),
 	}
 }
 
@@ -143,6 +159,14 @@ func (m *hungSnapshotter) Snapshot(height uint64, format uint32) (<-chan io.Read
 	ch := make(chan io.ReadCloser, 1)
 	ch <- ioutil.NopCloser(bytes.NewReader([]byte{}))
 	return ch, nil
+}
+
+func (m *hungSnapshotter) PruneSnapshotHeight(height int64) {
+	m.prunedHeights[height] = struct{}{}
+}
+
+func (m *hungSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
+	m.snapshotInterval = snapshotInterval
 }
 
 func (m *hungSnapshotter) Restore(

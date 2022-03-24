@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	pruningTypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -31,7 +31,6 @@ type BaseConfig struct {
 
 	Pruning           string `mapstructure:"pruning"`
 	PruningKeepRecent string `mapstructure:"pruning-keep-recent"`
-	PruningKeepEvery  string `mapstructure:"pruning-keep-every"`
 	PruningInterval   string `mapstructure:"pruning-interval"`
 
 	// HaltHeight contains a non-zero block height at which a node will gracefully
@@ -205,9 +204,8 @@ func DefaultConfig() *Config {
 		BaseConfig: BaseConfig{
 			MinGasPrices:      defaultMinGasPrices,
 			InterBlockCache:   true,
-			Pruning:           storetypes.PruningOptionDefault,
+			Pruning:           pruningTypes.PruningOptionDefault,
 			PruningKeepRecent: "0",
-			PruningKeepEvery:  "0",
 			PruningInterval:   "0",
 			MinRetainBlocks:   0,
 			IndexEvents:       make([]string, 0),
@@ -265,7 +263,6 @@ func GetConfig(v *viper.Viper) Config {
 			InterBlockCache:   v.GetBool("inter-block-cache"),
 			Pruning:           v.GetString("pruning"),
 			PruningKeepRecent: v.GetString("pruning-keep-recent"),
-			PruningKeepEvery:  v.GetString("pruning-keep-every"),
 			PruningInterval:   v.GetString("pruning-interval"),
 			HaltHeight:        v.GetUint64("halt-height"),
 			HaltTime:          v.GetUint64("halt-time"),

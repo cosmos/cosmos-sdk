@@ -8,6 +8,7 @@ import (
 	tmstrings "github.com/tendermint/tendermint/libs/strings"
 	dbm "github.com/tendermint/tm-db"
 
+	pruningTypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
@@ -22,8 +23,8 @@ type Committer interface {
 	Commit() CommitID
 	LastCommitID() CommitID
 
-	SetPruning(PruningOptions)
-	GetPruning() PruningOptions
+	SetPruning(*pruningTypes.PruningOptions)
+	GetPruning() *pruningTypes.PruningOptions
 }
 
 // Stores of MultiStore must implement CommitStore.
@@ -160,6 +161,9 @@ type CommitMultiStore interface {
 
 	// Panics on a nil key.
 	GetCommitKVStore(key StoreKey) CommitKVStore
+
+	// GetCommitKVStores get all kv stores associated with the multistore.
+	GetCommitKVStores() map[StoreKey]CommitKVStore
 
 	// Load the latest persisted version. Called once after all calls to
 	// Mount*Store() are complete.
@@ -299,6 +303,7 @@ const (
 	StoreTypeIAVL
 	StoreTypeTransient
 	StoreTypeMemory
+	StoreTypeSnapshot
 )
 
 func (st StoreType) String() string {
@@ -317,6 +322,9 @@ func (st StoreType) String() string {
 
 	case StoreTypeMemory:
 		return "StoreTypeMemory"
+
+	case StoreTypeSnapshot:
+		return "StoreTypeSnapshot"
 	}
 
 	return "unknown store type"

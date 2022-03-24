@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/store/types"
+	pruningTypes "github.com/cosmos/cosmos-sdk/pruning/types"
 )
 
 var k, v = []byte("hello"), []byte("world")
@@ -26,7 +27,7 @@ func TestTransientStore(t *testing.T) {
 	require.Nil(t, tstore.Get(k))
 
 	// no-op
-	tstore.SetPruning(types.PruningOptions{})
+	tstore.SetPruning(pruningTypes.NewPruningOptions(pruningTypes.PruningUndefined))
 
 	emptyCommitID := tstore.LastCommitID()
 	require.Equal(t, emptyCommitID.Version, int64(0))

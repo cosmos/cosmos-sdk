@@ -334,9 +334,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 		app.halt()
 	}
 
-	if app.snapshotInterval > 0 && uint64(header.Height)%app.snapshotInterval == 0 {
-		go app.snapshot(header.Height)
-	}
+	app.snapshotManager.SnapshotIfApplicable(header.Height)
 
 	app.logger.Info("committed ABCI", "height", commitID.Version, "commit_hash", fmt.Sprintf("%X", commitID.Hash), "retain_height", retainHeight)
 	return abci.ResponseCommit{
@@ -365,36 +363,6 @@ func (app *BaseApp) halt() {
 	// via SIGINT/SIGTERM signals.
 	app.logger.Info("failed to send SIGINT/SIGTERM; exiting...")
 	os.Exit(0)
-}
-
-// snapshot takes a snapshot of the current state and prunes any old snapshottypes.
-func (app *BaseApp) snapshot(height int64) {
-	if app.snapshotManager == nil {
-		app.logger.Info("snapshot manager not configured")
-		return
-	}
-
-	app.logger.Info("creating state snapshot", "height", height)
-
-	snapshot, err := app.snapshotManager.Create(uint64(height))
-	if err != nil {
-		app.logger.Error("failed to create state snapshot", "height", height, "err", err)
-		return
-	}
-
-	app.logger.Info("completed state snapshot", "height", height, "format", snapshot.Format)
-
-	if app.snapshotKeepRecent > 0 {
-		app.logger.Debug("pruning state snapshots")
-
-		pruned, err := app.snapshotManager.Prune(app.snapshotKeepRecent)
-		if err != nil {
-			app.logger.Error("Failed to prune state snapshots", "err", err)
-			return
-		}
-
-		app.logger.Debug("pruned state snapshots", "pruned", pruned)
-	}
 }
 
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
@@ -707,25 +675,27 @@ func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
 		retentionHeight = commitHeight - cp.Evidence.MaxAgeNumBlocks
 	}
 
-	// Define the state pruning offset, i.e. the block offset at which the
-	// underlying logical database is persisted to disk.
-	statePruningOffset := int64(app.cms.GetPruning().KeepEvery)
-	if statePruningOffset > 0 {
-		if commitHeight > statePruningOffset {
-			v := commitHeight - (commitHeight % statePruningOffset)
-			retentionHeight = minNonZero(retentionHeight, v)
-		} else {
-			// Hitting this case means we have persisting enabled but have yet to reach
-			// a height in which we persist state, so we return zero regardless of other
-			// conditions. Otherwise, we could end up pruning blocks without having
-			// any state committed to disk.
-			return 0
+	if app.snapshotManager != nil {
+		// Define the state pruning offset, i.e. the block offset at which the
+		// underlying logical database is persisted to disk.
+		statePruningOffset := int64(app.snapshotManager.GetInterval())
+		if statePruningOffset > 0 {
+			if commitHeight > statePruningOffset {
+				v := commitHeight - (commitHeight % statePruningOffset)
+				retentionHeight = minNonZero(retentionHeight, v)
+			} else {
+				// Hitting this case means we have persisting enabled but have yet to reach
+				// a height in which we persist state, so we return zero regardless of other
+				// conditions. Otherwise, we could end up pruning blocks without having
+				// any state committed to disk.
+				return 0
+			}
 		}
-	}
 
-	if app.snapshotInterval > 0 && app.snapshotKeepRecent > 0 {
-		v := commitHeight - int64((app.snapshotInterval * uint64(app.snapshotKeepRecent)))
-		retentionHeight = minNonZero(retentionHeight, v)
+		snapshotRetentionHeights := app.snapshotManager.GetSnapshotBlockRetentionHeights()
+		if snapshotRetentionHeights > 0 {
+			retentionHeight = minNonZero(retentionHeight, commitHeight-snapshotRetentionHeights)
+		}
 	}
 
 	v := commitHeight - int64(app.minRetainBlocks)

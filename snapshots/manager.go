@@ -3,31 +3,16 @@ package snapshots
 import (
 	"bytes"
 	"crypto/sha256"
+	"errors"
 	"io"
 	"io/ioutil"
 	"sync"
 
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/tendermint/tendermint/libs/log"
 )
-
-const (
-	opNone     operation = ""
-	opSnapshot operation = "snapshot"
-	opPrune    operation = "prune"
-	opRestore  operation = "restore"
-
-	chunkBufferSize = 4
-)
-
-// operation represents a Manager operation. Only one operation can be in progress at a time.
-type operation string
-
-// restoreDone represents the result of a restore operation.
-type restoreDone struct {
-	complete bool  // if true, restore completed successfully (not prematurely)
-	err      error // if non-nil, restore errored
-}
 
 // Manager manages snapshot and restore operations for an app, making sure only a single
 // long-running operation is in progress at any given time, and provides convenience methods
@@ -43,8 +28,12 @@ type restoreDone struct {
 // 2) io.ReadCloser streams automatically propagate IO errors, and can pass arbitrary
 //    errors via io.Pipe.CloseWithError().
 type Manager struct {
+	// store is the snapshot store where all completed snapshots are persisted.
 	store  *Store
+	opts   *types.SnapshotOptions
+	// target is the store from which snapshots are taken.
 	target types.Snapshotter
+	logger log.Logger
 
 	mtx                sync.Mutex
 	operation          operation
@@ -54,11 +43,36 @@ type Manager struct {
 	restoreChunkIndex  uint32
 }
 
+// operation represents a Manager operation. Only one operation can be in progress at a time.
+type operation string
+
+// restoreDone represents the result of a restore operation.
+type restoreDone struct {
+	complete bool  // if true, restore completed successfully (not prematurely)
+	err      error // if non-nil, restore errored
+}
+
+const (
+	opNone     operation = ""
+	opSnapshot operation = "snapshot"
+	opPrune    operation = "prune"
+	opRestore  operation = "restore"
+
+	chunkBufferSize = 4
+)
+
+var (
+	ErrOptsZeroSnapshotInterval = errors.New("snaphot-interval must not be 0")
+)
+
 // NewManager creates a new manager.
-func NewManager(store *Store, target types.Snapshotter) *Manager {
+func NewManager(store *Store, opts *types.SnapshotOptions, target types.Snapshotter, logger log.Logger) *Manager {
+	target.SetSnapshotInterval(opts.Interval)
 	return &Manager{
 		store:  store,
+		opts:   opts,
 		target: target,
+		logger: logger,
 	}
 }
 
@@ -100,11 +114,32 @@ func (m *Manager) endLocked() {
 	m.restoreChunkIndex = 0
 }
 
+// GetInterval returns snapshot interval.
+func (m *Manager) GetInterval() uint64 {
+	return m.opts.Interval
+}
+
+// GetKeepRecent returns snapshot keep-recent.
+func (m *Manager) GetKeepRecent() uint32 {
+	return m.opts.KeepRecent
+}
+
+// GetSnapshotBlockRetentionHeights returns the number of heights needed
+// for block retention. Blocks since the oldest available snapshot must be
+// available for state sync nodes to catch up (oldest because a node may be
+// restoring an old snapshot while a new snapshot was taken).
+func (m *Manager) GetSnapshotBlockRetentionHeights() int64 {
+	return int64(m.opts.Interval * uint64(m.opts.KeepRecent))
+}
+
 // Create creates a snapshot and returns its metadata.
 func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 	if m == nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "no snapshot store configured")
 	}
+
+	defer m.target.PruneSnapshotHeight(int64(height))
+
 	err := m.begin(opSnapshot)
 	if err != nil {
 		return nil, err
@@ -256,4 +291,46 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+// SnapshotIfApplicable takes a snapshot of the current state if we are on a snapshot height. 
+// It also prunes any old snapshots. The snapshotting and pruning happen in separate goroutines.
+func (m *Manager) SnapshotIfApplicable(height int64) {
+	if m == nil {
+		return
+	}
+	if !m.shouldTakeSnapshot(height) {
+		m.logger.Debug("snapshot is skipped", "height", height)
+		return
+	}
+	go m.snapshot(height)
+}
+
+// shouldTakeSnapshot returns true is snapshot should be taken at height.
+func (m *Manager) shouldTakeSnapshot(height int64) bool {
+	return m.opts.Interval > 0 && uint64(height)%m.opts.Interval == 0
+}
+
+func (m *Manager) snapshot(height int64) {
+	m.logger.Info("creating state snapshot", "height", height)
+
+	snapshot, err := m.Create(uint64(height))
+	if err != nil {
+		m.logger.Error("failed to create state snapshot", "height", height, "err", err)
+		return
+	}
+
+	m.logger.Info("completed state snapshot", "height", height, "format", snapshot.Format)
+
+	if m.opts.KeepRecent > 0 {
+		m.logger.Debug("pruning state snapshots")
+
+		pruned, err := m.Prune(m.opts.KeepRecent)
+		if err != nil {
+			m.logger.Error("Failed to prune state snapshots", "err", err)
+			return
+		}
+
+		m.logger.Debug("pruned state snapshots", "pruned", pruned)
+	}
 }

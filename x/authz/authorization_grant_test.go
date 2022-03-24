@@ -23,13 +23,14 @@ func TestNewGrant(t *testing.T) {
 		title     string
 		a         Authorization
 		blockTime time.Time
-		expire    time.Time
+		expire    *time.Time
 		err       string
 	}{
-		{"wrong expire time (1)", a, time.Unix(10, 0), time.Unix(8, 0), "expiration must be after"},
-		{"wrong expire time (2)", a, time.Unix(10, 0), time.Unix(10, 0), "expiration must be after"},
-		{"good expire time (1)", a, time.Unix(10, 0), time.Unix(10, 1), ""},
-		{"good expire time (2)", a, time.Unix(10, 0), time.Unix(11, 0), ""},
+		{"wrong expire time (1)", a, time.Unix(10, 0), unixTime(8, 0), "expiration must be after"},
+		{"wrong expire time (2)", a, time.Unix(10, 0), unixTime(10, 0), "expiration must be after"},
+		{"good expire time (1)", a, time.Unix(10, 0), unixTime(10, 1), ""},
+		{"good expire time (2)", a, time.Unix(10, 0), unixTime(11, 0), ""},
+		{"good expire time (nil)", a, time.Unix(10, 0), nil, ""},
 	}
 
 	for _, tc := range tcs {
@@ -40,4 +41,9 @@ func TestNewGrant(t *testing.T) {
 		})
 	}
 
+}
+
+func unixTime(s, ns int64) *time.Time {
+	t := time.Unix(s, ns)
+	return &t
 }

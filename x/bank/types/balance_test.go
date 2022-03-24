@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -142,7 +141,8 @@ func TestBalance_GetAddress(t *testing.T) {
 
 func TestSanitizeBalances(t *testing.T) {
 	// 1. Generate balances
-	coin := sdk.NewCoin("benchcoin", testutil.TokensFromConsensusPower(81, testutil.DefaultpowerReduction))
+	tokens := sdk.TokensFromConsensusPower(81, sdk.DefaultPowerReduction)
+	coin := sdk.NewCoin("benchcoin", tokens)
 	coins := sdk.Coins{coin}
 	addrs, _ := makeRandomAddressesAndPublicKeys(20)
 
@@ -193,7 +193,9 @@ func BenchmarkSanitizeBalances1000(b *testing.B) {
 
 func benchmarkSanitizeBalances(b *testing.B, nAddresses int) {
 	b.ReportAllocs()
-	coins := sdk.NewCoins(sdk.NewCoin("benchcoin", testutil.TokensFromConsensusPower(81, testutil.DefaultpowerReduction)))
+	tokens := sdk.TokensFromConsensusPower(81, sdk.DefaultPowerReduction)
+	coin := sdk.NewCoin("benchcoin", tokens)
+	coins := sdk.Coins{coin}
 	addrs, _ := makeRandomAddressesAndPublicKeys(nAddresses)
 
 	b.ResetTimer()

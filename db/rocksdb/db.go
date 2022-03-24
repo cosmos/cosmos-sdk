@@ -286,6 +286,27 @@ func (mgr *dbManager) Revert() (err error) {
 	if mgr.openWriters > 0 {
 		return db.ErrOpenTransactions
 	}
+	return mgr.revert(mgr.vmgr.Last())
+}
+
+func (mgr *dbManager) RevertTo(target uint64) (err error) {
+	mgr.mtx.RLock()
+	defer mgr.mtx.RUnlock()
+	if mgr.openWriters > 0 {
+		return db.ErrOpenTransactions
+	}
+	if !mgr.vmgr.Exists(target) {
+		return db.ErrVersionDoesNotExist
+	}
+	err = mgr.revert(target)
+	if err != nil {
+		return
+	}
+	mgr.vmgr.DeleteAbove(target)
+	return
+}
+
+func (mgr *dbManager) revert(target uint64) (err error) {
 	// Close current connection and replace it with a checkpoint (created from the last checkpoint)
 	mgr.current.Close()
 	dbPath := filepath.Join(mgr.dir, currentDBFileName)
@@ -293,8 +314,8 @@ func (mgr *dbManager) Revert() (err error) {
 	if err != nil {
 		return
 	}
-	if last := mgr.vmgr.Last(); last != 0 {
-		err = mgr.restoreFromCheckpoint(last, dbPath)
+	if target != 0 { // when target is 0, restore no checkpoints
+		err = mgr.restoreFromCheckpoint(target, dbPath)
 		if err != nil {
 			return
 		}

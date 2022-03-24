@@ -167,19 +167,38 @@ func (dbm *MemDB) Revert() error {
 	if dbm.openWriters > 0 {
 		return db.ErrOpenTransactions
 	}
-
 	last := dbm.vmgr.Last()
 	if last == 0 {
 		dbm.btree = btree.New(bTreeDegree)
 		return nil
 	}
+	return dbm.revert(last)
+}
+
+func (dbm *MemDB) RevertTo(target uint64) error {
+	dbm.mtx.RLock()
+	defer dbm.mtx.RUnlock()
+	if dbm.openWriters > 0 {
+		return db.ErrOpenTransactions
+	}
+	if !dbm.vmgr.Exists(target) {
+		return db.ErrVersionDoesNotExist
+	}
+	err := dbm.revert(target)
+	if err != nil {
+		dbm.vmgr.DeleteAbove(target)
+	}
+	return err
+}
+
+func (dbm *MemDB) revert(target uint64) error {
 	var has bool
-	dbm.btree, has = dbm.saved[last]
+	dbm.btree, has = dbm.saved[target]
 	if !has {
-		return fmt.Errorf("bad version history: version %v not saved", last)
+		return fmt.Errorf("bad version history: version %v not saved", target)
 	}
 	for ver, _ := range dbm.saved {
-		if ver > last {
+		if ver > target {
 			delete(dbm.saved, ver)
 		}
 	}

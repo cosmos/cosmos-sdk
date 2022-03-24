@@ -274,6 +274,34 @@ func (b *BadgerDB) Revert() error {
 			return errors.New("bad version history")
 		}
 	}
+	return b.revert(target)
+}
+
+// RevertTo reverts the DB to a target version
+func (b *BadgerDB) RevertTo(ver uint64) error {
+	b.mtx.RLock()
+	defer b.mtx.RUnlock()
+	if b.openWriters > 0 {
+		return db.ErrOpenTransactions
+	}
+
+	// Revert from latest commit timestamp to target timestamp
+	if !b.vmgr.Exists(ver) {
+		return db.ErrVersionDoesNotExist
+	}
+	targetTs, has := b.vmgr.versionTs(ver)
+	if !has {
+		return errors.New("bad version history")
+	}
+	if err := b.revert(targetTs); err != nil {
+		return err
+	}
+	b.vmgr.DeleteAbove(ver)
+	return nil
+}
+
+// reverts to a target timestamp
+func (b *BadgerDB) revert(target uint64) error {
 	lastTs := b.vmgr.lastTs
 	if target == lastTs {
 		return nil
@@ -546,4 +574,13 @@ func (vm *versionManager) Save(target uint64) (uint64, error) {
 func (vm *versionManager) Delete(target uint64) {
 	vm.VersionManager.Delete(target)
 	delete(vm.vmap, target)
+}
+
+func (vm *versionManager) DeleteAbove(target uint64) {
+	vm.VersionManager.DeleteAbove(target)
+	for v, _ := range vm.vmap {
+		if v > target {
+			delete(vm.vmap, v)
+		}
+	}
 }

@@ -62,7 +62,7 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"ValidatorsByPowerIndexKey",
 			v040staking.GetValidatorsByPowerIndexKey(val),
-			types.GetValidatorsByPowerIndexKey(val, types.DefaultConfig().PowerReduction),
+			types.GetValidatorsByPowerIndexKey(val, sdk.DefaultPowerReduction),
 		},
 		{
 			"DelegationKey",

@@ -2,46 +2,44 @@ package db
 
 import (
 	"fmt"
+	"sort"
 )
 
 // VersionManager encapsulates the current valid versions of a DB and computes
 // the next version.
 type VersionManager struct {
-	versions      map[uint64]struct{}
-	initial, last uint64
+	versions []uint64
 }
 
 var _ VersionSet = (*VersionManager)(nil)
 
 // NewVersionManager creates a VersionManager from a slice of version ids.
 func NewVersionManager(versions []uint64) *VersionManager {
-	vmap := make(map[uint64]struct{})
-	var init, last uint64
-	for _, ver := range versions {
-		vmap[ver] = struct{}{}
-		if init == 0 || ver < init {
-			init = ver
-		}
-		if ver > last {
-			last = ver
-		}
-	}
-	return &VersionManager{versions: vmap, initial: init, last: last}
+	vs := make([]uint64, len(versions))
+	copy(vs, versions)
+	sort.Slice(vs, func(i, j int) bool { return vs[i] < vs[j] })
+	return &VersionManager{vs}
 }
 
 // Exists implements VersionSet.
 func (vm *VersionManager) Exists(version uint64) bool {
-	_, has := vm.versions[version]
+	_, has := binarySearch(vm.versions, version)
 	return has
 }
 
 // Last implements VersionSet.
 func (vm *VersionManager) Last() uint64 {
-	return vm.last
+	if len(vm.versions) == 0 {
+		return 0
+	}
+	return vm.versions[len(vm.versions)-1]
 }
 
 func (vm *VersionManager) Initial() uint64 {
-	return vm.initial
+	if len(vm.versions) == 0 {
+		return 0
+	}
+	return vm.versions[0]
 }
 
 func (vm *VersionManager) Save(target uint64) (uint64, error) {
@@ -52,58 +50,48 @@ func (vm *VersionManager) Save(target uint64) (uint64, error) {
 		return 0, fmt.Errorf(
 			"target version cannot be less than next sequential version (%v < %v)", target, next)
 	}
-	if _, has := vm.versions[target]; has {
+	if vm.Exists(target) {
 		return 0, fmt.Errorf("version exists: %v", target)
 	}
-	vm.versions[target] = struct{}{}
-	vm.last = target
-	if len(vm.versions) == 1 {
-		vm.initial = target
-	}
+	vm.versions = append(vm.versions, target)
 	return target, nil
 }
 
-func findLimit(m map[uint64]struct{}, cmp func(uint64, uint64) bool, init uint64) uint64 {
-	for x, _ := range m {
-		if cmp(x, init) {
-			init = x
-		}
+func (vm *VersionManager) Delete(target uint64) {
+	i, has := binarySearch(vm.versions, target)
+	if !has {
+		return
 	}
-	return init
+	vm.versions = append(vm.versions[:i], vm.versions[i+1:]...)
 }
 
-func (vm *VersionManager) Delete(target uint64) {
-	delete(vm.versions, target)
-	if target == vm.last {
-		vm.last = findLimit(vm.versions, func(x, max uint64) bool { return x > max }, 0)
+func (vm *VersionManager) DeleteAbove(target uint64) {
+	var iFrom *int
+	for i, v := range vm.versions {
+		if iFrom == nil && v > target {
+			iFrom = new(int)
+			*iFrom = i
+		}
 	}
-	if target == vm.initial {
-		vm.initial = findLimit(vm.versions, func(x, min uint64) bool { return x < min }, vm.last)
+	if iFrom != nil {
+		vm.versions = vm.versions[:*iFrom]
 	}
 }
 
 type vmIterator struct {
-	ch   <-chan uint64
-	open bool
-	buf  uint64
+	vmgr *VersionManager
+	i    int
 }
 
 func (vi *vmIterator) Next() bool {
-	vi.buf, vi.open = <-vi.ch
-	return vi.open
+	vi.i++
+	return vi.i < len(vi.vmgr.versions)
 }
-func (vi *vmIterator) Value() uint64 { return vi.buf }
+func (vi *vmIterator) Value() uint64 { return vi.vmgr.versions[vi.i] }
 
 // Iterator implements VersionSet.
 func (vm *VersionManager) Iterator() VersionIterator {
-	ch := make(chan uint64)
-	go func() {
-		for ver, _ := range vm.versions {
-			ch <- ver
-		}
-		close(ch)
-	}()
-	return &vmIterator{ch: ch}
+	return &vmIterator{vm, -1}
 }
 
 // Count implements VersionSet.
@@ -114,18 +102,35 @@ func (vm *VersionManager) Equal(that VersionSet) bool {
 	if vm.Count() != that.Count() {
 		return false
 	}
-	for it := that.Iterator(); it.Next(); {
-		if !vm.Exists(it.Value()) {
+	for i, it := 0, that.Iterator(); it.Next(); {
+		if vm.versions[i] != it.Value() {
 			return false
 		}
+		i++
 	}
 	return true
 }
 
 func (vm *VersionManager) Copy() *VersionManager {
-	vmap := make(map[uint64]struct{})
-	for ver, _ := range vm.versions {
-		vmap[ver] = struct{}{}
+	vs := make([]uint64, len(vm.versions))
+	copy(vs, vm.versions)
+	return &VersionManager{vs}
+}
+
+// Returns closest index and whether it's a match
+func binarySearch(hay []uint64, ndl uint64) (int, bool) {
+	var mid int
+	from, to := 0, len(hay)-1
+	for from <= to {
+		mid = (from + to) / 2
+		switch {
+		case hay[mid] < ndl:
+			from = mid + 1
+		case hay[mid] > ndl:
+			to = mid - 1
+		default:
+			return mid, true
+		}
 	}
-	return &VersionManager{versions: vmap, initial: vm.initial, last: vm.last}
+	return from, false
 }

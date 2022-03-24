@@ -42,11 +42,7 @@ func TestVersionManager(t *testing.T) {
 	require.Equal(t, id2, vm.Initial())
 	require.Equal(t, id3, vm.Last())
 
-	var all []uint64
-	for it := vm.Iterator(); it.Next(); {
-		all = append(all, it.Value())
-	}
-	sort.Slice(all, func(i, j int) bool { return all[i] < all[j] })
+	all := allVersions(vm)
 	require.Equal(t, []uint64{id2, id3}, all)
 
 	vmc := vm.Copy()
@@ -56,4 +52,18 @@ func TestVersionManager(t *testing.T) {
 
 	vm2 := db.NewVersionManager([]uint64{id2, id3})
 	require.True(t, vm.Equal(vm2))
+
+	vm = db.NewVersionManager([]uint64{1, 2, 3, 5, 10})
+	vm.DeleteAbove(10)
+	require.Equal(t, []uint64{1, 2, 3, 5, 10}, allVersions(vm))
+	vm.DeleteAbove(4)
+	require.Equal(t, []uint64{1, 2, 3}, allVersions(vm))
+}
+
+func allVersions(vm *db.VersionManager) (all []uint64) {
+	for it := vm.Iterator(); it.Next(); {
+		all = append(all, it.Value())
+	}
+	sort.Slice(all, func(i, j int) bool { return all[i] < all[j] })
+	return
 }

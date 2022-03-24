@@ -153,7 +153,7 @@ By default, the [gogo protobuf implementation of `Any`](https://godoc.org/github
 uses [global type registration]( https://github.com/gogo/protobuf/blob/master/proto/properties.go#L540)
 to decode values packed in `Any` into concrete
 go types. This introduces a vulnerability where any malicious module
-in the dependency tree could registry a type with the global protobuf registry
+in the dependency tree could register a type with the global protobuf registry
 and cause it to be loaded and unmarshaled by a transaction that referenced
 it in the `type_url` field.
 

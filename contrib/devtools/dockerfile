@@ -14,6 +14,7 @@ RUN GO111MODULE=on go install github.com/gogo/protobuf/protoc-gen-gogofast@v${GO
 RUN GO111MODULE=on go install github.com/gogo/protobuf/protoc-gen-gogofaster@v${GOGO_PROTOBUF_VERSION} 
 RUN GO111MODULE=on go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v${GRPC_GATEWAY_VERSION} 
 RUN GO111MODULE=on go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v${GRPC_GATEWAY_VERSION} 
+RUN GO111MODULE=on go install github.com/regen-network/cosmos-proto/protoc-gen-gocosmos@latest
 
 RUN apk add --no-cache \
   nodejs \

@@ -83,6 +83,7 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 // grants from the message signer to the grantee.
 func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) ([][]byte, error) {
 	var results = make([][]byte, len(msgs))
+	now := ctx.BlockTime()
 	for i, msg := range msgs {
 		signers := msg.GetSigners()
 		if len(signers) != 1 {
@@ -97,7 +98,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 				return nil, sdkerrors.ErrUnauthorized.Wrap("authorization not found")
 			}
 
-			if grant.Expiration.Before(ctx.BlockTime()) {
+			if grant.Expiration != nil && grant.Expiration.Before(now) {
 				return nil, sdkerrors.ErrUnauthorized.Wrap("authorization expired")
 			}
 

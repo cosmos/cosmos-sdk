@@ -273,9 +273,10 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *authz.GenesisState {
 
 // InitGenesis new authz genesis
 func (k Keeper) InitGenesis(ctx sdk.Context, data *authz.GenesisState) {
+	now := ctx.BlockTime()
 	for _, entry := range data.Authorization {
 		// ignore expired authorizations
-		if entry.Expiration.Before(ctx.BlockTime()) {
+		if entry.Expiration != nil && entry.Expiration.Before(now) {
 			continue
 		}
 

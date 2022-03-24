@@ -58,7 +58,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 		{
 			"Success",
 			func(require *require.Assertions) {
-				expAuthorization = suite.createCoinAuthorization(addrs[0], addrs[1])
+				expAuthorization = suite.createSendAuthorization(addrs[0], addrs[1])
 				req = &authz.QueryGrantsRequest{
 					Granter:    addrs[1].String(),
 					Grantee:    addrs[0].String(),
@@ -125,7 +125,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorizations() {
 		{
 			"Success",
 			func() {
-				expAuthorization = suite.createCoinAuthorization(addrs[0], addrs[1])
+				expAuthorization = suite.createSendAuthorization(addrs[0], addrs[1])
 				req = &authz.QueryGrantsRequest{
 					Granter: addrs[1].String(),
 					Grantee: addrs[0].String(),
@@ -177,7 +177,7 @@ func (suite *TestSuite) TestGRPCQueryGranterGrants() {
 		{
 			"valid case, single authorization",
 			func() {
-				suite.createCoinAuthorization(addrs[1], addrs[0])
+				suite.createSendAuthorization(addrs[1], addrs[0])
 			},
 			false,
 			authz.QueryGranterGrantsRequest{
@@ -188,7 +188,7 @@ func (suite *TestSuite) TestGRPCQueryGranterGrants() {
 		{
 			"valid case, multiple authorization",
 			func() {
-				suite.createCoinAuthorization(addrs[2], addrs[0])
+				suite.createSendAuthorization(addrs[2], addrs[0])
 			},
 			false,
 			authz.QueryGranterGrantsRequest{
@@ -245,7 +245,7 @@ func (suite *TestSuite) TestGRPCQueryGranteeGrants() {
 		{
 			"valid case, single authorization",
 			func() {
-				suite.createCoinAuthorization(addrs[0], addrs[1])
+				suite.createSendAuthorization(addrs[0], addrs[1])
 			},
 			false,
 			authz.QueryGranteeGrantsRequest{
@@ -256,7 +256,7 @@ func (suite *TestSuite) TestGRPCQueryGranteeGrants() {
 		{
 			"valid case, multiple authorization",
 			func() {
-				suite.createCoinAuthorization(addrs[0], addrs[2])
+				suite.createSendAuthorization(addrs[0], addrs[2])
 			},
 			false,
 			authz.QueryGranteeGrantsRequest{
@@ -292,7 +292,7 @@ func (suite *TestSuite) TestGRPCQueryGranteeGrants() {
 	}
 }
 
-func (suite *TestSuite) createCoinAuthorization(a1, a2 sdk.AccAddress) authz.Authorization {
+func (suite *TestSuite) createSendAuthorization(a1, a2 sdk.AccAddress) authz.Authorization {
 	exp := suite.ctx.BlockHeader().Time.Add(time.Hour)
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
 	authorization := &banktypes.SendAuthorization{SpendLimit: newCoins}

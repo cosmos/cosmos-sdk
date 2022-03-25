@@ -324,6 +324,13 @@ func (k Keeper) UpdateTallyOfVPEndProposals(ctx sdk.Context) error {
 	defer it.Close()
 
 	for {
+		// Important: this following line cannot outside the for loop.
+		// It seems that when one unmarshals into the same `group.Proposal`
+		// reference, then gogoproto somehow "adds" the new bytes to the old
+		// object for some fields. When running simulations, for proposals with
+		// each 1-2 proposers, after a couple of loop iterations we got to a
+		// proposal with 60k+ proposers.
+		// So we're declaring a local variable that gets GCed.
 		var proposal group.Proposal
 		_, err := it.LoadNext(&proposal)
 		if errors.ErrORMIteratorDone.Is(err) {

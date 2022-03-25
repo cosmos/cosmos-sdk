@@ -233,6 +233,15 @@ func (k Keeper) iterateProposalsByVPEnd(ctx sdk.Context, before time.Time, cb fu
 	defer it.Close()
 
 	for {
+		// Important: this following line cannot outside the for loop.
+		// It seems that when one unmarshals into the same `group.Proposal`
+		// reference, then gogoproto somehow "adds" the new bytes to the old
+		// object for some fields. When running simulations, for proposals with
+		// each 1-2 proposers, after a couple of loop iterations we got to a
+		// proposal with 60k+ proposers.
+		// So we're declaring a local variable that gets GCed.
+		//
+		// Also see `x/group/types/proposal_test.go`, TestGogoUnmarshalProposal().
 		var proposal group.Proposal
 		_, err := it.LoadNext(&proposal)
 		if errors.ErrORMIteratorDone.Is(err) {
@@ -307,59 +316,34 @@ func (k Keeper) PruneProposals(ctx sdk.Context) error {
 
 		return false, nil
 	})
-
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
 func (k Keeper) UpdateTallyOfVPEndProposals(ctx sdk.Context) error {
-	timeBytes := sdk.FormatTimeBytes(ctx.BlockTime())
-	it, err := k.proposalsByVotingPeriodEnd.PrefixScan(ctx.KVStore(k.key), nil, timeBytes)
-
-	if err != nil {
-		return err
-	}
-	defer it.Close()
-
-	for {
-		// Important: this following line cannot outside the for loop.
-		// It seems that when one unmarshals into the same `group.Proposal`
-		// reference, then gogoproto somehow "adds" the new bytes to the old
-		// object for some fields. When running simulations, for proposals with
-		// each 1-2 proposers, after a couple of loop iterations we got to a
-		// proposal with 60k+ proposers.
-		// So we're declaring a local variable that gets GCed.
-		//
-		// Also see `x/group/types/proposal_test.go`, TestGogoUnmarshalProposal().
-		var proposal group.Proposal
-		_, err := it.LoadNext(&proposal)
-		if errors.ErrORMIteratorDone.Is(err) {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
+	return k.iterateProposalsByVPEnd(ctx, ctx.BlockTime(), func(proposal group.Proposal) (bool, error) {
 		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.Address)
 		if err != nil {
-			return sdkerrors.Wrap(err, "group policy")
+			return true, sdkerrors.Wrap(err, "group policy")
 		}
 
 		electorate, err := k.getGroupInfo(ctx, policyInfo.GroupId)
 		if err != nil {
-			return sdkerrors.Wrap(err, "group")
+			return true, sdkerrors.Wrap(err, "group")
 		}
 
 		err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo)
 		if err != nil {
-			return sdkerrors.Wrap(err, "doTallyAndUpdate")
+			return true, sdkerrors.Wrap(err, "doTallyAndUpdate")
 		}
 
 		if err := k.proposalTable.Update(ctx.KVStore(k.key), proposal.Id, &proposal); err != nil {
-			return sdkerrors.Wrap(err, "proposal update")
+			return true, sdkerrors.Wrap(err, "proposal update")
 		}
-	}
-	return nil
+
+		return false, nil
+	})
 }

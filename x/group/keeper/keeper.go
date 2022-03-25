@@ -232,8 +232,8 @@ func (k Keeper) iterateProposalsByVPEnd(ctx sdk.Context, before time.Time, cb fu
 	}
 	defer it.Close()
 
-	var proposal group.Proposal
 	for {
+		var proposal group.Proposal
 		_, err := it.LoadNext(&proposal)
 		if errors.ErrORMIteratorDone.Is(err) {
 			break

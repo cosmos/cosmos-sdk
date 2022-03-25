@@ -103,7 +103,7 @@ Proposals and votes are automatically pruned to avoid state bloat.
 
 Votes are pruned:
 
-- either after a succesful tally, i.e. a tally whose result passes the decision
+- either after a successful tally, i.e. a tally whose result passes the decision
   policy's rules, which can be trigged by a `Msg/Exec` or a
   `Msg/{SubmitProposal,Vote}` with the `Exec` field,
 - or on `EndBlock` right after the proposal's voting period end,

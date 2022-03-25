@@ -100,13 +100,13 @@ func GetAccountCmd() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 			res, err := queryClient.Account(cmd.Context(), &types.QueryAccountRequest{Address: key.String()})
 			if err != nil {
-				node, err2 := clientCtx.GetNode()
-				if err2 != nil {
-					return err2
+				node, err := clientCtx.GetNode()
+				if err != nil {
+					return err
 				}
-				status, err2 := node.Status(context.Background())
-				if err2 != nil {
-					return err2
+				status, err := node.Status(context.Background())
+				if err != nil {
+					return err
 				}
 				catchingUp := status.SyncInfo.CatchingUp
 

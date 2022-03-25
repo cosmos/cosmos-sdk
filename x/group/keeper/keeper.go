@@ -340,9 +340,8 @@ func (k Keeper) UpdateTallyOfVPEndProposals(ctx sdk.Context) error {
 	}
 	defer it.Close()
 
-	var proposals []group.Proposal
-	var proposal group.Proposal
 	for {
+		var proposal group.Proposal
 		_, err := it.LoadNext(&proposal)
 		if errors.ErrORMIteratorDone.Is(err) {
 			break
@@ -350,10 +349,7 @@ func (k Keeper) UpdateTallyOfVPEndProposals(ctx sdk.Context) error {
 		if err != nil {
 			return err
 		}
-		proposals = append(proposals, proposal)
-	}
 
-	for _, proposal := range proposals {
 		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.Address)
 		if err != nil {
 			return sdkerrors.Wrap(err, "group policy")

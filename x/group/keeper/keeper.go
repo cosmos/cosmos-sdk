@@ -331,6 +331,8 @@ func (k Keeper) UpdateTallyOfVPEndProposals(ctx sdk.Context) error {
 		// each 1-2 proposers, after a couple of loop iterations we got to a
 		// proposal with 60k+ proposers.
 		// So we're declaring a local variable that gets GCed.
+		//
+		// Also see `x/group/types/proposal_test.go`, TestGogoUnmarshalProposal().
 		var proposal group.Proposal
 		_, err := it.LoadNext(&proposal)
 		if errors.ErrORMIteratorDone.Is(err) {

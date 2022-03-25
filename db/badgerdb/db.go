@@ -28,6 +28,7 @@ var (
 	_ db.DBReader     = (*badgerTxn)(nil)
 	_ db.DBWriter     = (*badgerWriter)(nil)
 	_ db.DBReadWriter = (*badgerWriter)(nil)
+	_ db.VersionSet   = (*versionManager)(nil)
 )
 
 // BadgerDB is a connection to a BadgerDB key-value database.

@@ -39,3 +39,16 @@ func TestRevert(t *testing.T) {
 func TestReloadDB(t *testing.T) {
 	dbtest.DoTestReloadDB(t, load)
 }
+
+func TestVersionManager(t *testing.T) {
+	new := func(vs []uint64) db.VersionSet {
+		vmap := map[uint64]uint64{}
+		var lastTs uint64
+		for _, v := range vs {
+			vmap[v] = v
+			lastTs = v
+		}
+		return &versionManager{db.NewVersionManager(vs), vmap, lastTs}
+	}
+	dbtest.DoTestVersionSet(t, new)
+}

@@ -244,6 +244,26 @@ func (e *wrappedError) Unwrap() error {
 	return e.parent
 }
 
+// GRPCStatus gets the gRPC status from the wrapped error or returns an unknown gRPC status.
+func (e *wrappedError) GRPCStatus() *grpcstatus.Status {
+	w := e.Cause()
+	for {
+		if hasStatus, ok := w.(interface {
+			GRPCStatus() *grpcstatus.Status
+		}); ok {
+			return hasStatus.GRPCStatus()
+		}
+
+		x, ok := w.(causer)
+		if ok {
+			w = x.Cause()
+		}
+		if x == nil {
+			return grpcstatus.New(grpccodes.Unknown, e.msg)
+		}
+	}
+}
+
 // Recover captures a panic and stop its propagation. If panic happens it is
 // transformed into a ErrPanic instance and assigned to given error. Call this
 // function using defer in order to work as expected.

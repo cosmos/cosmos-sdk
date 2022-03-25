@@ -8,7 +8,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/db/memdb"
-	"github.com/cosmos/cosmos-sdk/store/v2/smt"
+	"github.com/cosmos/cosmos-sdk/store/v2alpha1/smt"
 )
 
 // We hash keys produce SMT paths, so reflect that here

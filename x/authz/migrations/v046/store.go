@@ -31,6 +31,7 @@ func addExpiredGrantsIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.
 	defer grantsIter.Close()
 
 	queueItems := make(map[string][]string)
+	now := ctx.BlockTime()
 	for ; grantsIter.Valid(); grantsIter.Next() {
 		var grant authz.Grant
 		bz := grantsIter.Value()
@@ -39,11 +40,13 @@ func addExpiredGrantsIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.
 		}
 
 		// delete expired authorization
-		if grant.Expiration.Before(ctx.BlockTime()) {
+		// before 0.46 Expiration was required so it's safe to dereference
+		if grant.Expiration.Before(now) {
 			grantsStore.Delete(grantsIter.Key())
 		} else {
 			granter, grantee, msgType := ParseGrantKey(grantsIter.Key())
-			key := GrantQueueKey(grant.Expiration, granter, grantee)
+			// before 0.46 expiration was not a pointer, so now it's safe to dereference
+			key := GrantQueueKey(*grant.Expiration, granter, grantee)
 
 			queueItem, ok := queueItems[conv.UnsafeBytesToStr(key)]
 			if !ok {

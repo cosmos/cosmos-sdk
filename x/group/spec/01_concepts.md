@@ -76,7 +76,7 @@ happens first:
 - either someone tries to execute the proposal (see next section), which can
   happen on a `Msg/Exec` transaction, or a `Msg/{SubmitProposal,Vote}`
   transaction with the `Exec` field set. When a proposal execution is attempted,
-  a tally is done first to make sure the the proposal passes.
+  a tally is done first to make sure the proposal passes.
 - or on `EndBlock` when the proposal's voting period end just passed.
 
 If the tally result passes the decision policy's rules, then the proposal is

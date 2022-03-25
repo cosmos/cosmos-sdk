@@ -36,9 +36,9 @@ that must pass in order for a proposal to potentially be executed, and it may
 be set to 0. The maximum voting window is the maximum time that a proposal may
 be voted on before it is closed.
 
-We also define an app-wide maximum execution period, which is the maximum
-amount of time after a proposal's voting period end where users are allowed to
-execute a proposal.
+The chain developer also defines an app-wide maximum execution period, which is
+the maximum amount of time after a proposal's voting period end where users are
+allowed to execute a proposal.
 
 ### Threshold decision policy
 
@@ -51,7 +51,8 @@ this decision policy, abstain and veto are simply treated as no's.
 A percentage decision policy is similar to a threshold decision policy, except
 that the threshold is not defined as a constant weight, but as a percentage.
 It's more suited for groups where the group members' weights can be updated, as
-the percentage threshold stays the same.
+the percentage threshold stays the same, and doesn't depend on how those member
+weights get updated.
 
 ## Proposal
 
@@ -69,14 +70,14 @@ is submitted.
 ## Tallying
 
 Tallying is the counting of all votes on a proposal. It happens only once in
-the lifecycle of a proposal, but can happen for two reasons, whichever happens
-first:
+the lifecycle of a proposal, but can be triggered by two factors, whichever
+happens first:
 
-- either someone tries to execute the proposal (see paragraph below), which can
+- either someone tries to execute the proposal (see next section), which can
   happen on a `Msg/Exec` transaction, or a `Msg/{SubmitProposal,Vote}`
   transaction with the `Exec` field set. When a proposal execution is attempted,
   a tally is done first to make sure the the proposal passes.
-- or on `EndBlock` when the proposal's VotingPeriodEnd just passed.
+- or on `EndBlock` when the proposal's voting period end just passed.
 
 If the tally result passes the decision policy's rules, then the proposal is
 marked as `STATUS_CLOSED`, so no more voting is allowed anymore, and the tally

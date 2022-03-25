@@ -1157,45 +1157,6 @@ func TestTrackUndelegationClawbackVestingAcc(t *testing.T) {
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)}, va.DelegatedVesting)
 }
 
-func TestComputeClawback(t *testing.T) {
-	c := sdk.NewCoins
-	fee := func(x int64) sdk.Coin { return sdk.NewInt64Coin(feeDenom, x) }
-	stake := func(x int64) sdk.Coin { return sdk.NewInt64Coin(stakeDenom, x) }
-	now := tmtime.Now()
-	lockupPeriods := types.Periods{
-		{Length: int64(12 * 3600), Amount: c(fee(1000), stake(100))}, // noon
-	}
-	vestingPeriods := types.Periods{
-		{Length: int64(8 * 3600), Amount: c(fee(200))},            // 8am
-		{Length: int64(1 * 3600), Amount: c(fee(200), stake(50))}, // 9am
-		{Length: int64(6 * 3600), Amount: c(fee(200), stake(50))}, // 3pm
-		{Length: int64(2 * 3600), Amount: c(fee(200))},            // 5pm
-		{Length: int64(1 * 3600), Amount: c(fee(200))},            // 6pm
-	}
-
-	bacc, origCoins := initBaseAccount()
-	va := types.NewClawbackVestingAccount(bacc, sdk.AccAddress([]byte("funder")), origCoins, now.Unix(), lockupPeriods, vestingPeriods)
-
-	va2, amt := va.ComputeClawback(now.Unix())
-	require.Equal(t, c(fee(1000), stake(100)), amt)
-	require.Equal(t, c(), va2.OriginalVesting)
-	require.Equal(t, 0, len(va2.LockupPeriods))
-	require.Equal(t, 0, len(va2.VestingPeriods))
-
-	va2, amt = va.ComputeClawback(now.Add(11 * time.Hour).Unix())
-	require.Equal(t, c(fee(600), stake(50)), amt)
-	require.Equal(t, c(fee(400), stake(50)), va2.OriginalVesting)
-	require.Equal(t, []types.Period{{Length: int64(12 * 3600), Amount: c(fee(400), stake(50))}}, va2.LockupPeriods)
-	require.Equal(t, []types.Period{
-		{Length: int64(8 * 3600), Amount: c(fee(200))},            // 8am
-		{Length: int64(1 * 3600), Amount: c(fee(200), stake(50))}, // 9am
-	}, va2.VestingPeriods)
-
-	va2, amt = va.ComputeClawback(now.Add(23 * time.Hour).Unix())
-	require.Equal(t, c(), amt)
-	require.Equal(t, *va, va2)
-}
-
 func TestClawback(t *testing.T) {
 	c := sdk.NewCoins
 	fee := func(x int64) sdk.Coin { return sdk.NewInt64Coin(feeDenom, x) }

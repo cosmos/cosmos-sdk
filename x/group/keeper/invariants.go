@@ -46,9 +46,6 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 	var msg string
 	var broken bool
 
-	var groupInfo group.GroupInfo
-	var groupMember group.GroupMember
-
 	groupIt, err := groupTable.PrefixScan(ctx.KVStore(key), 1, math.MaxUint64)
 	if err != nil {
 		msg += fmt.Sprintf("PrefixScan failure on group table\n%v\n", err)
@@ -62,6 +59,7 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 			msg += fmt.Sprintf("error while parsing positive dec zero for group member\n%v\n", err)
 			return msg, broken
 		}
+		var groupInfo group.GroupInfo
 		_, err = groupIt.LoadNext(&groupInfo)
 		if errors.ErrORMIteratorDone.Is(err) {
 			break
@@ -79,6 +77,7 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 		defer memIt.Close()
 
 		for {
+			var groupMember group.GroupMember
 			_, err = memIt.LoadNext(&groupMember)
 			if errors.ErrORMIteratorDone.Is(err) {
 				break
@@ -119,11 +118,6 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, prop
 	var msg string
 	var broken bool
 
-	var proposal group.Proposal
-	var groupPolicy group.GroupPolicyInfo
-	var groupMem group.GroupMember
-	var vote group.Vote
-
 	proposalIt, err := proposalTable.PrefixScan(ctx.KVStore(key), 1, math.MaxUint64)
 	if err != nil {
 		msg += fmt.Sprintf("PrefixScan failure on proposal table\n%v\n", err)
@@ -132,6 +126,7 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, prop
 	defer proposalIt.Close()
 
 	for {
+		var proposal group.Proposal
 		_, err = proposalIt.LoadNext(&proposal)
 		if errors.ErrORMIteratorDone.Is(err) {
 			break
@@ -172,6 +167,7 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, prop
 			return msg, broken
 		}
 
+		var groupPolicy group.GroupPolicyInfo
 		err = groupPolicyTable.GetOne(ctx.KVStore(key), orm.PrimaryKey(&group.GroupPolicyInfo{Address: proposal.Address}), &groupPolicy)
 		if err != nil {
 			msg += fmt.Sprintf("group policy not found for address: %s\n%v\n", proposal.Address, err)
@@ -191,6 +187,7 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, prop
 		defer voteIt.Close()
 
 		for {
+			var vote group.Vote
 			_, err := voteIt.LoadNext(&vote)
 			if errors.ErrORMIteratorDone.Is(err) {
 				break
@@ -200,6 +197,7 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, prop
 				return msg, broken
 			}
 
+			var groupMem group.GroupMember
 			err = groupMemberTable.GetOne(ctx.KVStore(key), orm.PrimaryKey(&group.GroupMember{GroupId: groupPolicy.GroupId, Member: &group.Member{Address: vote.Voter}}), &groupMem)
 			if err != nil {
 				msg += fmt.Sprintf("group member not found with group ID %d and group member %s\n%v\n", groupPolicy.GroupId, vote.Voter, err)
@@ -279,7 +277,7 @@ func TallyVotesSumInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, prop
 
 		if (yesVoteWeight.Cmp(proposalYesCount) != 0) || (noVoteWeight.Cmp(proposalNoCount) != 0) || (abstainVoteWeight.Cmp(proposalAbstainCount) != 0) || (vetoVoteWeight.Cmp(proposalVetoCount) != 0) {
 			broken = true
-			msg += fmt.Sprintf("proposal FinalTallyResult must correspond to the vote option\nProposal with ID %d and voter address %s must correspond to the vote option\n", proposal.Id, vote.Voter)
+			msg += fmt.Sprintf("proposal FinalTallyResult must correspond to the sum of all votes\nProposal with ID %d FinalTallyResult must correspond to the sum of all votes\n", proposal.Id)
 			break
 		}
 	}

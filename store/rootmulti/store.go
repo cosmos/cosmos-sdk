@@ -29,12 +29,15 @@ import (
 	"github.com/pkg/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 	dbm "github.com/tendermint/tm-db"
 )
 
 const (
 	latestVersionKey = "s/latest"
 	commitInfoKeyFmt = "s/%d" // s/<version>
+
+	proofsPath = "proofs"
 
 	// Do not change chunk size without new snapshot format (must be uniform across nodes)
 	snapshotChunkSize   = uint64(10e6)
@@ -564,22 +567,28 @@ func (rs *Store) getStoreByName(name string) types.Store {
 // Query calls substore.Query with the same `req` where `req.Path` is
 // modified to remove the substore prefix.
 // Ie. `req.Path` here is `/<substore>/<path>`, and trimmed to `/<path>` for the substore.
-// TODO: add proof for `multistore -> substore`.
+// Special case: if `req.Path` is `/proofs`, the commit hash is included 
+// as response value. In addition, proofs of every store are appended to the response for 
+// the requested height
 func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	path := req.Path
-	storeName, subpath, err := parsePath(path)
+	firstPath, subpath, err := parsePath(path)
 	if err != nil {
 		return sdkerrors.QueryResult(err)
 	}
 
-	store := rs.getStoreByName(storeName)
+	if firstPath == proofsPath {
+		return rs.doProofsQuery(req)
+	}
+
+	store := rs.getStoreByName(firstPath)
 	if store == nil {
-		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "no such store: %s", storeName))
+		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "no such store: %s", firstPath))
 	}
 
 	queryable, ok := store.(types.Queryable)
 	if !ok {
-		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "store %s (type %T) doesn't support queries", storeName, store))
+		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "store %s (type %T) doesn't support queries", firstPath, store))
 	}
 
 	// trim the path and make the query
@@ -609,7 +618,7 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	}
 
 	// Restore origin path and append proof op.
-	res.ProofOps.Ops = append(res.ProofOps.Ops, commitInfo.ProofOp(storeName))
+	res.ProofOps.Ops = append(res.ProofOps.Ops, commitInfo.ProofOp(firstPath))
 
 	return res
 }
@@ -1003,6 +1012,24 @@ type storeParams struct {
 	db             dbm.DB
 	typ            types.StoreType
 	initialVersion uint64
+}
+
+func (rs *Store) doProofsQuery(req abci.RequestQuery) abci.ResponseQuery {
+	commitInfo, err := getCommitInfo(rs.db, req.Height)
+	if err != nil {
+		return sdkerrors.QueryResult(err)
+	}
+	res := abci.ResponseQuery{
+		Height:   req.Height,
+		Key:      []byte(proofsPath),
+		Value:    commitInfo.CommitID().Hash,
+		ProofOps: &crypto.ProofOps{Ops: make([]crypto.ProofOp, 0, len(commitInfo.StoreInfos))},
+	}
+
+	for _, storeInfo := range commitInfo.StoreInfos {
+		res.ProofOps.Ops = append(res.ProofOps.Ops, commitInfo.ProofOp(storeInfo.Name))
+	}
+	return res
 }
 
 func getLatestVersion(db dbm.DB) int64 {

@@ -29,7 +29,9 @@ func TestMigration(t *testing.T) {
 	sendMsgType := banktypes.SendAuthorization{}.MsgTypeURL()
 	genericMsgType := sdk.MsgTypeURL(&govtypes.MsgVote{})
 	coins100 := sdk.NewCoins(sdk.NewInt64Coin("atom", 100))
-	oneDay := ctx.BlockTime().AddDate(0, 0, 1)
+	blockTime := ctx.BlockTime()
+	oneDay := blockTime.AddDate(0, 0, 1)
+	oneYear := blockTime.AddDate(1, 0, 0)
 
 	grants := []struct {
 		granter       sdk.AccAddress
@@ -46,7 +48,7 @@ func TestMigration(t *testing.T) {
 				require.NoError(t, err)
 				return authz.Grant{
 					Authorization: any,
-					Expiration:    oneDay,
+					Expiration:    &oneDay,
 				}
 			},
 		},
@@ -59,7 +61,7 @@ func TestMigration(t *testing.T) {
 				require.NoError(t, err)
 				return authz.Grant{
 					Authorization: any,
-					Expiration:    oneDay,
+					Expiration:    &oneDay,
 				}
 			},
 		},
@@ -72,7 +74,7 @@ func TestMigration(t *testing.T) {
 				require.NoError(t, err)
 				return authz.Grant{
 					Authorization: any,
-					Expiration:    oneDay.AddDate(1, 0, 0),
+					Expiration:    &oneYear,
 				}
 			},
 		},
@@ -85,7 +87,7 @@ func TestMigration(t *testing.T) {
 				require.NoError(t, err)
 				return authz.Grant{
 					Authorization: any,
-					Expiration:    ctx.BlockTime(),
+					Expiration:    &blockTime,
 				}
 			},
 		},

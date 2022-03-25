@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"math/rand"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -9,12 +10,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
-
 	banktype "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
@@ -108,9 +107,10 @@ func SimulateMsgGrant(ak authz.AccountKeeper, bk authz.BankKeeper, _ keeper.Keep
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, "spend limit is nil"), nil, nil
 		}
 
-		expiration := simtypes.RandTimestamp(r)
-		if expiration.Before(ctx.BlockTime()) {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, "past time"), nil, nil
+		var expiration *time.Time
+		t1 := simtypes.RandTimestamp(r)
+		if !t1.Before(ctx.BlockTime()) {
+			expiration = &t1
 		}
 		msg, err := authz.NewMsgGrant(granter.Address, grantee.Address, generateRandomAuthorization(r, spendLimit), expiration)
 		if err != nil {
@@ -203,7 +203,7 @@ func SimulateMsgRevoke(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Kee
 
 		_, _, err = app.SimDeliver(txCfg.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "unable to execute tx: "+err.Error()), nil, err
 		}
 
 		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, nil
@@ -215,19 +215,27 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		hasGrant := false
-		var targetGrant authz.Grant
 		var granterAddr sdk.AccAddress
 		var granteeAddr sdk.AccAddress
+		var sendAuth *banktype.SendAuthorization
+		var err error
 		k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
-			targetGrant = grant
 			granterAddr = granter
 			granteeAddr = grantee
-			hasGrant = true
-			return true
+			var a authz.Authorization
+			a, err = grant.GetAuthorization()
+			if err != nil {
+				return true
+			}
+			var ok bool
+			sendAuth, ok = a.(*banktype.SendAuthorization)
+			return ok
 		})
 
-		if !hasGrant {
+		if err != nil {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
+		}
+		if sendAuth == nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "no grant found"), nil, nil
 		}
 
@@ -249,15 +257,6 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 		}
 
 		msg := []sdk.Msg{banktype.NewMsgSend(granterAddr, granteeAddr, coins)}
-		authorization, err := targetGrant.GetAuthorization()
-		if err != nil {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
-		}
-
-		sendAuth, ok := authorization.(*banktype.SendAuthorization)
-		if !ok {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "not a send authorization"), nil, nil
-		}
 
 		_, err = sendAuth.Accept(ctx, msg[0])
 		if err != nil {

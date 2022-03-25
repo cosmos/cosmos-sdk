@@ -357,6 +357,12 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	}
 	k.AfterValidatorBeginUnbonding(ctx, consAddr, validator.GetOperator())
 
+	// TODO JNT: make id
+	// create mapping id -> validator address
+	// k.SetValidatorUnbondingIndex(ctx, val, id)
+
+	// k.AfterUnbondingOpInitiated(ctx, id)
+
 	return validator, nil
 }
 

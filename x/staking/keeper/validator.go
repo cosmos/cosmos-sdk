@@ -435,10 +435,12 @@ func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 					panic("unexpected validator in unbonding queue; status was not unbonding")
 				}
 
+				// TODO JNT: check if on hold {
 				val = k.UnbondingToUnbonded(ctx, val)
 				if val.GetDelegatorShares().IsZero() {
 					k.RemoveValidator(ctx, val.GetOperator())
 				}
+				// }
 			}
 
 			store.Delete(key)

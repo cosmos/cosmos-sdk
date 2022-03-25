@@ -919,13 +919,7 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 	for i := 0; i < len(ubd.Entries); i++ {
 		entry := &ubd.Entries[i]
 		if entry.IsMature(ctxTime) {
-			// This hook allows external modules to stop an unbonding delegation entry from fully unbonding
-			// when the completionTime has passed. This allows them to prolong the unbonding period.
-			onHold := k.BeforeUnbondingDelegationEntryComplete(ctx, entry.Id)
-			if onHold {
-				// Mark that the entry is stopped
-				entry.OnHold = true
-			} else {
+			if !entry.OnHold {
 				// Proceed with unbonding
 				ubd.RemoveEntry(int64(i))
 				i--
@@ -955,72 +949,130 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 	return balances, nil
 }
 
-// This can be called to complete the unbonding of an unbonding operation (unbonding delegation entry or
-// redelegation) that was previously stopped by the BeforeUnbondingDelegationEntryComplete hook in CompleteUnbonding
-func (k Keeper) CompleteStoppedUnbondingOp(ctx sdk.Context, id uint64) (found bool, err error) {
+func (k Keeper) PutUnbondingOpOnHold(ctx sdk.Context, id uint64) (found bool) {
 	_, found = k.GetUnbondingDelegationByEntry(ctx, id)
 	if found {
-		return k.CompleteStoppedUnbondingDelegation(ctx, id)
+		return k.PutUnbondingDelegationEntryOnHold(ctx, id)
 	}
 
 	_, found = k.GetRedelegationByEntry(ctx, id)
 	if found {
-		return k.CompleteStoppedRedelegation(ctx, id)
+		return k.PutRedelegationEntryOnHold(ctx, id)
 	}
+
+	// If an entry was not found
+	return false
+}
+
+// This can be called to complete the unbonding of an unbonding operation (unbonding delegation entry or
+// redelegation) that was previously stopped by the BeforeUnbondingDelegationEntryComplete hook in CompleteUnbonding
+func (k Keeper) UnbondingOpCanComplete(ctx sdk.Context, id uint64) (found bool, err error) {
+	_, found = k.GetUnbondingDelegationByEntry(ctx, id)
+	if found {
+		return k.UnbondingDelegationCanComplete(ctx, id)
+	}
+
+	_, found = k.GetRedelegationByEntry(ctx, id)
+	if found {
+		return k.RedelegationCanComplete(ctx, id)
+	}
+
+	// _, found = k.GetValidatorByUnbondingOp(ctx, id)
+	// if found {
+	// 	return k.CompleteStoppedValidatorUnbonding(ctx, id)
+
+	// 	// TODO JNT: Inside of that CompleteStoppedValidatorUnbonding function:
+	// 	// val = k.UnbondingToUnbonded(ctx, val)
+	// 	// if val.GetDelegatorShares().IsZero() {
+	// 	// 	k.RemoveValidator(ctx, val.GetOperator())
+	// 	// }
+	// }
 
 	// If an entry was not found
 	return false, nil
 }
 
+func unbondingDelegationEntryArrayIndex(ubd types.UnbondingDelegation, id uint64) (index int, found bool) {
+	for i, entry := range ubd.Entries {
+		// we find the entry with the right ID
+		if entry.Id == id {
+			return i, true
+		}
+	}
+
+	return 0, false
+}
+
+func (k Keeper) PutUnbondingDelegationEntryOnHold(ctx sdk.Context, id uint64) (found bool) {
+	ubd, found := k.GetUnbondingDelegationByEntry(ctx, id)
+	if !found {
+		return false
+	}
+
+	i, found := unbondingDelegationEntryArrayIndex(ubd, id)
+	if !found {
+		return false
+	}
+
+	ubd.Entries[i].OnHold = true
+
+	k.SetUnbondingDelegation(ctx, ubd)
+
+	return true
+}
+
 // This can be called to complete the unbonding of an unbonding delegation entry that was previously
 // stopped by the BeforeUnbondingDelegationEntryComplete hook in CompleteUnbonding
-func (k Keeper) CompleteStoppedUnbondingDelegation(ctx sdk.Context, id uint64) (found bool, err error) {
+func (k Keeper) UnbondingDelegationCanComplete(ctx sdk.Context, id uint64) (found bool, err error) {
 	ubd, found := k.GetUnbondingDelegationByEntry(ctx, id)
 	if !found {
 		return false, nil
 	}
 
-	for i, entry := range ubd.Entries {
-		// we find the entry with the right ID and make sure that it
-		// is on hold.
-		if entry.Id == id && entry.OnHold {
-			// Complete unbonding
-			delegatorAddress, err := sdk.AccAddressFromBech32(ubd.DelegatorAddress)
-			if err != nil {
-				return true, err
-			}
-
-			bondDenom := k.GetParams(ctx).BondDenom
-
-			// Remove entry
-			ubd.RemoveEntry(int64(i))
-			// Remove from the UBDByEntry index
-			k.DeleteUBDByEntryIndex(ctx, entry.Id)
-
-			// track undelegation only when remaining or truncated shares are non-zero
-			if !entry.Balance.IsZero() {
-				amt := sdk.NewCoin(bondDenom, entry.Balance)
-				if err := k.bankKeeper.UndelegateCoinsFromModuleToAccount(
-					ctx, types.NotBondedPoolName, delegatorAddress, sdk.NewCoins(amt),
-				); err != nil {
-					return false, err
-				}
-			}
-
-			// set the unbonding delegation or remove it if there are no more entries
-			if len(ubd.Entries) == 0 {
-				k.RemoveUnbondingDelegation(ctx, ubd)
-			} else {
-				k.SetUnbondingDelegation(ctx, ubd)
-			}
-
-			// Successfully completed unbonding
-			return true, nil
-		}
+	i, found := unbondingDelegationEntryArrayIndex(ubd, id)
+	if !found {
+		return false, nil
 	}
 
-	// If an entry was not found
-	return false, nil
+	// Check if entry is matured.
+	if !ubd.Entries[i].IsMature(ctx.BlockHeader().Time) {
+		// If not matured, set onHold to false
+		ubd.Entries[i].OnHold = false
+	} else {
+		// If matured, complete it.
+		delegatorAddress, err := sdk.AccAddressFromBech32(ubd.DelegatorAddress)
+		if err != nil {
+			return true, err
+		}
+
+		bondDenom := k.GetParams(ctx).BondDenom
+
+		// Remove entry
+		ubd.RemoveEntry(int64(i))
+		// Remove from the UBDByEntry index
+		k.DeleteUBDByEntryIndex(ctx, ubd.Entries[i].Id)
+
+		// track undelegation only when remaining or truncated shares are non-zero
+		if !ubd.Entries[i].Balance.IsZero() {
+			amt := sdk.NewCoin(bondDenom, ubd.Entries[i].Balance)
+			if err := k.bankKeeper.UndelegateCoinsFromModuleToAccount(
+				ctx, types.NotBondedPoolName, delegatorAddress, sdk.NewCoins(amt),
+			); err != nil {
+				return false, err
+			}
+		}
+
+	}
+
+	// set the unbonding delegation or remove it if there are no more entries
+	if len(ubd.Entries) == 0 {
+		k.RemoveUnbondingDelegation(ctx, ubd)
+	} else {
+		k.SetUnbondingDelegation(ctx, ubd)
+	}
+
+	// Successfully completed unbonding
+	return true, nil
 }
 
 // begin unbonding / redelegation; create a redelegation record
@@ -1099,14 +1151,7 @@ func (k Keeper) CompleteRedelegation(
 	for i := 0; i < len(red.Entries); i++ {
 		entry := &red.Entries[i]
 		if entry.IsMature(ctxTime) {
-			// This hook allows external modules to stop an unbonding delegation entry from fully unbonding
-			// when the completionTime has passed. This allows them to prolong the unbonding period.
-			onHold := k.BeforeUnbondingDelegationEntryComplete(ctx, entry.Id)
-			if onHold {
-				// Mark that the entry is stopped
-				entry.OnHold = true
-			} else {
-				// Proceed with unbonding
+			if !entry.OnHold {
 				red.RemoveEntry(int64(i))
 				i--
 
@@ -1127,37 +1172,68 @@ func (k Keeper) CompleteRedelegation(
 	return balances, nil
 }
 
+func redelegationEntryArrayIndex(red types.Redelegation, id uint64) (index int, found bool) {
+	for i, entry := range red.Entries {
+		// we find the entry with the right ID
+		if entry.Id == id {
+			return i, true
+		}
+	}
+
+	return 0, false
+}
+
+func (k Keeper) PutRedelegationEntryOnHold(ctx sdk.Context, id uint64) (found bool) {
+	red, found := k.GetRedelegationByEntry(ctx, id)
+	if !found {
+		return false
+	}
+
+	i, found := redelegationEntryArrayIndex(red, id)
+	if !found {
+		return false
+	}
+
+	red.Entries[i].OnHold = true
+
+	k.SetRedelegation(ctx, red)
+
+	return true
+}
+
 // This can be called to complete the unbonding of an unbonding delegation entry that was previously
 // stopped by the BeforeUnbondingDelegationEntryComplete hook in CompleteUnbonding
-func (k Keeper) CompleteStoppedRedelegation(ctx sdk.Context, id uint64) (found bool, err error) {
+func (k Keeper) RedelegationCanComplete(ctx sdk.Context, id uint64) (found bool, err error) {
 	red, found := k.GetRedelegationByEntry(ctx, id)
 	if !found {
 		return false, nil
 	}
 
-	for i, entry := range red.Entries {
-		// we find the entry with the right ID and make sure that it
-		// is on hold.
-		if entry.Id == id && entry.OnHold {
-			// Remove entry
-			red.RemoveEntry(int64(i))
-			// Remove from the UBDByEntry index
-			k.DeleteREDByEntryIndex(ctx, entry.Id)
+	i, found := redelegationEntryArrayIndex(red, id)
+	if !found {
+		return false, nil
+	}
 
-			// set the unbonding delegation or remove it if there are no more entries
-			if len(red.Entries) == 0 {
-				k.RemoveRedelegation(ctx, red)
-			} else {
-				k.SetRedelegation(ctx, red)
-			}
+	if !red.Entries[i].IsMature(ctx.BlockHeader().Time) {
+		// If not matured, set onHold to false
+		red.Entries[i].OnHold = false
+	} else {
+		// If matured, complete it.
+		// Remove entry
+		red.RemoveEntry(int64(i))
+		// Remove from the UBDByEntry index
+		k.DeleteREDByEntryIndex(ctx, red.Entries[i].Id)
 
-			// Successfully completed unbonding
-			return true, nil
+		// set the unbonding delegation or remove it if there are no more entries
+		if len(red.Entries) == 0 {
+			k.RemoveRedelegation(ctx, red)
+		} else {
+			k.SetRedelegation(ctx, red)
 		}
 	}
 
-	// If an entry was not found
-	return false, nil
+	// Successfully completed unbonding
+	return true, nil
 }
 
 // ValidateUnbondAmount validates that a given unbond or redelegation amount is

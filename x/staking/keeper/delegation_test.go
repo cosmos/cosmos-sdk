@@ -386,7 +386,7 @@ func TestUnbondingDelegationOnHold(t *testing.T) {
 	require.True(t, udecHookCalled)
 
 	// TRY TO COMPLETE STOPPED UNBONDING TOO EARLY
-	found, err := app.StakingKeeper.CompleteStoppedUnbondingOp(ctx, ubdeID)
+	found, err := app.StakingKeeper.UnbondingOpCanComplete(ctx, ubdeID)
 	require.NoError(t, err)
 	require.False(t, found)
 
@@ -412,7 +412,7 @@ func TestUnbondingDelegationOnHold(t *testing.T) {
 	require.True(sdk.IntEq(t, notBondedAmt2, notBondedAmt4))
 
 	// COMPLETE STOPPED UNBONDING
-	found, err = app.StakingKeeper.CompleteStoppedUnbondingOp(ctx, ubdeID)
+	found, err = app.StakingKeeper.UnbondingOpCanComplete(ctx, ubdeID)
 	require.NoError(t, err)
 	require.True(t, found)
 

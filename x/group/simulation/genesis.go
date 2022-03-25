@@ -72,13 +72,13 @@ func getGroupPolicies(r *rand.Rand, simState *module.SimulationState) []*group.G
 	return groupPolicies
 }
 
-func getProposals(r *rand.Rand, simState *module.SimulationState) []*group.Proposal {
+func getProposals(r *rand.Rand, simState *module.SimulationState, groupPolicies []*group.GroupPolicyInfo) []*group.Proposal {
 	proposals := make([]*group.Proposal, 3)
 	proposers := []string{simState.Accounts[0].Address.String(), simState.Accounts[1].Address.String()}
 	for i := 0; i < 3; i++ {
-		from, _ := simtypes.RandomAcc(r, simState.Accounts)
+		idx := r.Intn(len(groupPolicies))
+		groupPolicyAddress := groupPolicies[idx].Address
 		to, _ := simtypes.RandomAcc(r, simState.Accounts)
-		fromAddr := from.Address.String()
 
 		submittedAt := time.Unix(0, 0)
 		timeout := submittedAt.Add(time.Second * 1000).UTC()
@@ -86,7 +86,7 @@ func getProposals(r *rand.Rand, simState *module.SimulationState) []*group.Propo
 		proposal := &group.Proposal{
 			Id:                 uint64(i + 1),
 			Proposers:          proposers,
-			Address:            fromAddr,
+			Address:            groupPolicyAddress,
 			GroupVersion:       uint64(i + 1),
 			GroupPolicyVersion: uint64(i + 1),
 			Status:             group.PROPOSAL_STATUS_SUBMITTED,
@@ -103,7 +103,7 @@ func getProposals(r *rand.Rand, simState *module.SimulationState) []*group.Propo
 			VotingPeriodEnd: timeout,
 		}
 		err := proposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
-			FromAddress: fromAddr,
+			FromAddress: groupPolicyAddress,
 			ToAddress:   to.Address.String(),
 			Amount:      sdk.NewCoins(sdk.NewInt64Coin("test", 10)),
 		}})
@@ -163,7 +163,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { members = getGroupMembers(r, simState.Accounts) },
 	)
 
-	// group accounts
+	// group policies
 	var groupPolicies []*group.GroupPolicyInfo
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, GroupPolicyInfo, &groupPolicies, simState.Rand,
@@ -174,7 +174,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	var proposals []*group.Proposal
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, GroupProposals, &proposals, simState.Rand,
-		func(r *rand.Rand) { proposals = getProposals(r, simState) },
+		func(r *rand.Rand) { proposals = getProposals(r, simState, groupPolicies) },
 	)
 
 	// votes

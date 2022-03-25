@@ -637,21 +637,13 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 
 	var policyInfo group.GroupPolicyInfo
 
-	// Ensure that group policy hasn't been modified since the proposal submission.
 	if policyInfo, err = k.getGroupPolicyInfo(ctx, proposal.Address); err != nil {
 		return nil, sdkerrors.Wrap(err, "load group policy")
 	}
-	if proposal.GroupPolicyVersion != policyInfo.Version {
-		return nil, sdkerrors.Wrap(errors.ErrModified, "group policy was modified")
-	}
 
-	// Ensure that group hasn't been modified since the proposal submission.
 	electorate, err := k.getGroupInfo(ctx, policyInfo.GroupId)
 	if err != nil {
 		return nil, err
-	}
-	if electorate.Version != proposal.GroupVersion {
-		return nil, sdkerrors.Wrap(errors.ErrModified, "group was modified")
 	}
 
 	// Count and store votes.
@@ -714,7 +706,7 @@ func (k Keeper) doTallyAndUpdate(ctx sdk.Context, p *group.Proposal, electorate 
 	result, err := policy.Allow(tallyResult, electorate.TotalWeight, ctx.BlockTime().Sub(submittedAt))
 	switch {
 	case err != nil:
-		return sdkerrors.Wrap(err, "policy execution")
+		return sdkerrors.Wrap(err, "policy allow")
 	case result.Final:
 		if err := k.pruneVotes(ctx, p.Id); err != nil {
 			return err
@@ -769,23 +761,9 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 	}
 
 	if proposal.Status == group.PROPOSAL_STATUS_SUBMITTED {
-		// Ensure that group policy hasn't been modified before tally.
-		if proposal.GroupPolicyVersion != policyInfo.Version {
-			proposal.Result = group.PROPOSAL_RESULT_UNFINALIZED
-			proposal.Status = group.PROPOSAL_STATUS_ABORTED
-			return storeUpdates()
-		}
-
 		electorate, err := k.getGroupInfo(ctx, policyInfo.GroupId)
 		if err != nil {
 			return nil, sdkerrors.Wrap(err, "load group")
-		}
-
-		// Ensure that group hasn't been modified before tally.
-		if electorate.Version != proposal.GroupVersion {
-			proposal.Result = group.PROPOSAL_RESULT_UNFINALIZED
-			proposal.Status = group.PROPOSAL_STATUS_ABORTED
-			return storeUpdates()
 		}
 
 		if err := k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo); err != nil {

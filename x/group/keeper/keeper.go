@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authmiddleware "github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
@@ -36,8 +37,7 @@ const (
 	ProposalTablePrefix              byte = 0x30
 	ProposalTableSeqPrefix           byte = 0x31
 	ProposalByGroupPolicyIndexPrefix byte = 0x32
-	ProposalByProposerIndexPrefix    byte = 0x33
-	ProposalsByVotingPeriodEndPrefix byte = 0x34
+	ProposalsByVotingPeriodEndPrefix byte = 0x33
 
 	// Vote Table
 	VoteTablePrefix           byte = 0x40
@@ -68,7 +68,6 @@ type Keeper struct {
 	// Proposal Table
 	proposalTable              orm.AutoUInt64Table
 	proposalByGroupPolicyIndex orm.Index
-	proposalByProposerIndex    orm.Index
 	proposalsByVotingPeriodEnd orm.Index
 
 	// Vote Table
@@ -170,21 +169,6 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 	if err != nil {
 		panic(err.Error())
 	}
-	k.proposalByProposerIndex, err = orm.NewIndex(proposalTable, ProposalByProposerIndexPrefix, func(value interface{}) ([]interface{}, error) {
-		proposers := value.(*group.Proposal).Proposers
-		r := make([]interface{}, len(proposers))
-		for i := range proposers {
-			addr, err := sdk.AccAddressFromBech32(proposers[i])
-			if err != nil {
-				return nil, err
-			}
-			r[i] = addr.Bytes()
-		}
-		return r, nil
-	}, []byte{})
-	if err != nil {
-		panic(err.Error())
-	}
 	k.proposalsByVotingPeriodEnd, err = orm.NewIndex(proposalTable, ProposalsByVotingPeriodEndPrefix, func(value interface{}) ([]interface{}, error) {
 		votingPeriodEnd := value.(*group.Proposal).VotingPeriodEnd
 		return []interface{}{sdk.FormatTimeBytes(votingPeriodEnd)}, nil
@@ -248,8 +232,17 @@ func (k Keeper) iterateProposalsByVPEnd(ctx sdk.Context, before time.Time, cb fu
 	}
 	defer it.Close()
 
-	var proposal group.Proposal
 	for {
+		// Important: this following line cannot outside the for loop.
+		// It seems that when one unmarshals into the same `group.Proposal`
+		// reference, then gogoproto somehow "adds" the new bytes to the old
+		// object for some fields. When running simulations, for proposals with
+		// each 1-2 proposers, after a couple of loop iterations we got to a
+		// proposal with 60k+ proposers.
+		// So we're declaring a local variable that gets GCed.
+		//
+		// Also see `x/group/types/proposal_test.go`, TestGogoUnmarshalProposal().
+		var proposal group.Proposal
 		_, err := it.LoadNext(&proposal)
 		if errors.ErrORMIteratorDone.Is(err) {
 			break
@@ -315,7 +308,7 @@ func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
 // `voting_period + max_execution_period` is greater than the current block
 // time.
 func (k Keeper) PruneProposals(ctx sdk.Context) error {
-	k.iterateProposalsByVPEnd(ctx, ctx.BlockTime().Add(-k.config.MaxExecutionPeriod), func(proposal group.Proposal) (bool, error) {
+	err := k.iterateProposalsByVPEnd(ctx, ctx.BlockTime().Add(-k.config.MaxExecutionPeriod), func(proposal group.Proposal) (bool, error) {
 		err := k.pruneProposal(ctx, proposal.Id)
 		if err != nil {
 			return true, err
@@ -323,34 +316,34 @@ func (k Keeper) PruneProposals(ctx sdk.Context) error {
 
 		return false, nil
 	})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
 func (k Keeper) UpdateTallyOfVPEndProposals(ctx sdk.Context) error {
-	k.iterateProposalsByVPEnd(ctx, ctx.BlockTime(), func(proposal group.Proposal) (bool, error) {
-
+	return k.iterateProposalsByVPEnd(ctx, ctx.BlockTime(), func(proposal group.Proposal) (bool, error) {
 		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.Address)
 		if err != nil {
-			return true, err
+			return true, sdkerrors.Wrap(err, "group policy")
 		}
 
 		electorate, err := k.getGroupInfo(ctx, policyInfo.GroupId)
 		if err != nil {
-			return true, err
+			return true, sdkerrors.Wrap(err, "group")
 		}
 
 		err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo)
 		if err != nil {
-			return true, err
+			return true, sdkerrors.Wrap(err, "doTallyAndUpdate")
 		}
 
 		if err := k.proposalTable.Update(ctx.KVStore(k.key), proposal.Id, &proposal); err != nil {
-			return true, err
+			return true, sdkerrors.Wrap(err, "proposal update")
 		}
 
 		return false, nil
 	})
-
-	return nil
 }

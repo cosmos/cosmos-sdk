@@ -286,8 +286,8 @@ func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
 	}
 	defer it.Close()
 
-	var vote group.Vote
 	for {
+		var vote group.Vote
 		_, err = it.LoadNext(&vote)
 		if errors.ErrORMIteratorDone.Is(err) {
 			break

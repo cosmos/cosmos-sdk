@@ -979,8 +979,8 @@ func (k Keeper) validateDecisionPolicies(ctx sdk.Context, g group.GroupInfo) err
 	}
 	defer it.Close()
 
-	var groupPolicy group.GroupPolicyInfo
 	for {
+		var groupPolicy group.GroupPolicyInfo
 		_, err = it.LoadNext(&groupPolicy)
 		if errors.ErrORMIteratorDone.Is(err) {
 			break

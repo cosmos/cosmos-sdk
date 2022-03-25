@@ -223,7 +223,8 @@ func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
 	return k.groupTable.Sequence().CurVal(ctx.KVStore(k.key))
 }
 
-func (k Keeper) iterateProposalsByVPEnd(ctx sdk.Context, before time.Time, cb func(proposal group.Proposal) (bool, error)) error {
+// iterateProposalsByVPEnd iterates over all proposals whose voting_period_end is after the `endTime` time argument.
+func (k Keeper) iterateProposalsByVPEnd(ctx sdk.Context, endTime time.Time, cb func(proposal group.Proposal) (bool, error)) error {
 	timeBytes := sdk.FormatTimeBytes(before)
 	it, err := k.proposalsByVotingPeriodEnd.PrefixScan(ctx.KVStore(k.key), nil, timeBytes)
 

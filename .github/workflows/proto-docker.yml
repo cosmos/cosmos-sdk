@@ -1,7 +1,5 @@
 name: Build & Push SDK Proto Builder
 on:
-  pull_request:
-    
   push:
     branches:
       - master
@@ -20,7 +18,7 @@ jobs:
         id: prep
         run: |
           DOCKER_IMAGE=tendermintdev/sdk-proto-gen
-          VERSION=v0.5
+          VERSION=noop
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/}
           elif [[ $GITHUB_REF == refs/heads/* ]]; then

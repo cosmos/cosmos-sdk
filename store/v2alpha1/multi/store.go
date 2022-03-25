@@ -196,6 +196,22 @@ func (this StoreSchema) equal(that StoreSchema) bool {
 	return true
 }
 
+func (this StoreSchema) matches(that StoreKeySchema) bool {
+	if len(this) != len(that) {
+		return false
+	}
+	for key, val := range that {
+		myval, has := this[key.Name()]
+		if !has {
+			return false
+		}
+		if val != myval {
+			return false
+		}
+	}
+	return true
+}
+
 // Parses a schema from the DB
 func readSavedSchema(bucket dbm.DBReader) (*SchemaBuilder, error) {
 	ret := newSchemaBuilder()
@@ -855,13 +871,13 @@ func (pr *SchemaBuilder) migrateSchema(upgrades types.StoreUpgrades) error {
 	return nil
 }
 
-func (pr *SchemaBuilder) storeInfo(key string) (sst types.StoreType, ix int, err error) {
-	ix, has := binarySearch(pr.reserved, key)
+func (reg *SchemaBuilder) storeInfo(key string) (sst types.StoreType, ix int, err error) {
+	ix, has := binarySearch(reg.reserved, key)
 	if !has {
 		err = fmt.Errorf("prefix does not exist: %v", key)
 		return
 	}
-	sst, has = pr.StoreSchema[key]
+	sst, has = reg.StoreSchema[key]
 	if !has {
 		err = fmt.Errorf("prefix is registered but not in schema: %v", key)
 	}
@@ -870,26 +886,26 @@ func (pr *SchemaBuilder) storeInfo(key string) (sst types.StoreType, ix int, err
 }
 
 // registerName registers a store key by name only
-func (pr *SchemaBuilder) registerName(key string, typ types.StoreType) error {
+func (reg *SchemaBuilder) registerName(key string, typ types.StoreType) error {
 	if !validSubStoreType(typ) {
 		return fmt.Errorf("StoreType not supported: %v", typ)
 	}
 
 	// Find the neighboring reserved prefix, and check for duplicates and conflicts
-	i, has := binarySearch(pr.reserved, key)
+	i, has := binarySearch(reg.reserved, key)
 	if has {
 		return fmt.Errorf("prefix already exists: %v", key)
 	}
-	if i > 0 && strings.HasPrefix(key, pr.reserved[i-1]) {
-		return fmt.Errorf("prefix conflict: '%v' exists, cannot add '%v'", pr.reserved[i-1], key)
+	if i > 0 && strings.HasPrefix(key, reg.reserved[i-1]) {
+		return fmt.Errorf("prefix conflict: '%v' exists, cannot add '%v'", reg.reserved[i-1], key)
 	}
-	if i < len(pr.reserved) && strings.HasPrefix(pr.reserved[i], key) {
-		return fmt.Errorf("prefix conflict: '%v' exists, cannot add '%v'", pr.reserved[i], key)
+	if i < len(reg.reserved) && strings.HasPrefix(reg.reserved[i], key) {
+		return fmt.Errorf("prefix conflict: '%v' exists, cannot add '%v'", reg.reserved[i], key)
 	}
-	reserved := pr.reserved[:i]
+	reserved := reg.reserved[:i]
 	reserved = append(reserved, key)
-	pr.reserved = append(reserved, pr.reserved[i:]...)
-	pr.StoreSchema[key] = typ
+	reg.reserved = append(reserved, reg.reserved[i:]...)
+	reg.StoreSchema[key] = typ
 	return nil
 }
 

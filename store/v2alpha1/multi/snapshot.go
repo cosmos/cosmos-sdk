@@ -108,6 +108,7 @@ func (rs *Store) Restore(
 
 	var subStore *substore
 	var storeSchemaReceived = false
+	var receivedStoreSchema StoreSchema
 
 	var snapshotItem snapshottypes.SnapshotItem
 
@@ -123,13 +124,13 @@ loop:
 
 		switch item := snapshotItem.Item.(type) {
 		case *snapshottypes.SnapshotItem_Schema:
-			receivedStoreSchema := make(StoreSchema, len(item.Schema.GetKeys()))
+			receivedStoreSchema = make(StoreSchema, len(item.Schema.GetKeys()))
 			storeSchemaReceived = true
 			for _, sKey := range item.Schema.GetKeys() {
 				receivedStoreSchema[string(sKey)] = types.StoreTypePersistent
 			}
 
-			if !rs.schema.equal(receivedStoreSchema) {
+			if !receivedStoreSchema.matches(rs.schema) {
 				return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(sdkerrors.ErrLogic, "received schema does not match app schema")
 			}
 
@@ -140,7 +141,7 @@ loop:
 				return snapshottypes.SnapshotItem{}, sdkerrors.Wrapf(sdkerrors.ErrLogic, "received store name before store schema %s", storeName)
 			}
 			// checking the store schema exists or not
-			if _, has := rs.schema[storeName]; !has {
+			if _, has := receivedStoreSchema[storeName]; !has {
 				return snapshottypes.SnapshotItem{}, sdkerrors.Wrapf(sdkerrors.ErrLogic, "store is missing from schema %s", storeName)
 			}
 

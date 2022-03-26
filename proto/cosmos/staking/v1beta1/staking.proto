@@ -117,6 +117,9 @@ message Validator {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false
   ];
+
+  // True if this validator's unbonding has been stopped by an external module
+  bool unbonding_on_hold = 12;
 }
 
 // BondStatus is the status of a validator.

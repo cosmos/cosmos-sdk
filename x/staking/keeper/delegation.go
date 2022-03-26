@@ -174,11 +174,11 @@ func (k Keeper) GetUnbondingDelegation(
 }
 
 // return a unbonding delegation that has an unbonding delegation entry with a certain ID
-func (k Keeper) GetUnbondingDelegationByEntry(
+func (k Keeper) GetUnbondingDelegationByUnbondingOpId(
 	ctx sdk.Context, id uint64,
 ) (ubd types.UnbondingDelegation, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	indexKey := types.GetUnbondingDelegationEntryIndexKey(id)
+	indexKey := types.GetUnbondingOpIndexKey(id)
 	ubdeKey := store.Get(indexKey)
 
 	if ubdeKey == nil {
@@ -197,7 +197,31 @@ func (k Keeper) GetUnbondingDelegationByEntry(
 }
 
 // Set an index to look up an UnbondingDelegation by the ID of an UnbondingDelegationEntry that it contains
-func (k Keeper) SetUBDByEntryIndex(ctx sdk.Context, ubd types.UnbondingDelegation, id uint64) {
+func (k Keeper) SetValidatorByUnbondingOpIndex(ctx sdk.Context, val types.Validator, id uint64) {
+	store := ctx.KVStore(k.storeKey)
+
+	valAddr, err := sdk.ValAddressFromBech32(val.OperatorAddress)
+	if err != nil {
+		panic(err)
+	}
+
+	indexKey := types.GetUnbondingOpIndexKey(id)
+	valKey := types.GetValidatorKey(valAddr)
+
+	store.Set(indexKey, valKey)
+}
+
+// Remove a ValidatorByUnbondingOpIndex
+func (k Keeper) DeleteValidatorByUnbondingOpIndex(ctx sdk.Context, id uint64) {
+	store := ctx.KVStore(k.storeKey)
+
+	indexKey := types.GetUnbondingOpIndexKey(id)
+
+	store.Delete(indexKey)
+}
+
+// Set an index to look up an UnbondingDelegation by the ID of an UnbondingDelegationEntry that it contains
+func (k Keeper) SetUBDByUnbondingOpIndex(ctx sdk.Context, ubd types.UnbondingDelegation, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 
 	delAddr, err := sdk.AccAddressFromBech32(ubd.DelegatorAddress)
@@ -210,17 +234,17 @@ func (k Keeper) SetUBDByEntryIndex(ctx sdk.Context, ubd types.UnbondingDelegatio
 		panic(err)
 	}
 
-	indexKey := types.GetUnbondingDelegationEntryIndexKey(id)
+	indexKey := types.GetUnbondingOpIndexKey(id)
 	ubdKey := types.GetUBDKey(delAddr, valAddr)
 
 	store.Set(indexKey, ubdKey)
 }
 
-// Remove a UBDByEntryIndex
-func (k Keeper) DeleteUBDByEntryIndex(ctx sdk.Context, id uint64) {
+// Remove a UBDByUnbondingOpIndex
+func (k Keeper) DeleteUBDByUnbondingOpIndex(ctx sdk.Context, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 
-	indexKey := types.GetUnbondingDelegationEntryIndexKey(id)
+	indexKey := types.GetUnbondingOpIndexKey(id)
 
 	store.Delete(indexKey)
 }
@@ -319,8 +343,8 @@ func (k Keeper) SetUnbondingDelegationEntry(
 
 	k.SetUnbondingDelegation(ctx, ubd)
 
-	// Add to the UBDByEntry index to look up the UBD by the UBDE ID
-	k.SetUBDByEntryIndex(ctx, ubd, id)
+	// Add to the UBDByUnbondingOp index to look up the UBD by the UBDE ID
+	k.SetUBDByUnbondingOpIndex(ctx, ubd, id)
 
 	// Call hook
 	k.AfterUnbondingOpInitiated(ctx, id)
@@ -434,11 +458,11 @@ func (k Keeper) GetRedelegation(ctx sdk.Context,
 }
 
 // return a unbonding delegation that has an unbonding delegation entry with a certain ID
-func (k Keeper) GetRedelegationByEntry(
+func (k Keeper) GetRedelegationByUnbondingOpId(
 	ctx sdk.Context, id uint64,
 ) (red types.Redelegation, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	indexKey := types.GetRedelegationEntryIndexKey(id)
+	indexKey := types.GetUnbondingOpIndexKey(id)
 	redKey := store.Get(indexKey)
 
 	if redKey == nil {
@@ -457,7 +481,7 @@ func (k Keeper) GetRedelegationByEntry(
 }
 
 // Set an index to look up an UnbondingDelegation by the ID of an UnbondingDelegationEntry that it contains
-func (k Keeper) SetREDByEntryIndex(ctx sdk.Context, red types.Redelegation, id uint64) {
+func (k Keeper) SetREDByUnbondingOpIndex(ctx sdk.Context, red types.Redelegation, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 
 	delAddr, err := sdk.AccAddressFromBech32(red.DelegatorAddress)
@@ -475,17 +499,17 @@ func (k Keeper) SetREDByEntryIndex(ctx sdk.Context, red types.Redelegation, id u
 		panic(err)
 	}
 
-	indexKey := types.GetRedelegationEntryIndexKey(id)
+	indexKey := types.GetUnbondingOpIndexKey(id)
 	redKey := types.GetREDKey(delAddr, valSrcAddr, valDstAddr)
 
 	store.Set(indexKey, redKey)
 }
 
-// Remove a UBDByEntryIndex
-func (k Keeper) DeleteREDByEntryIndex(ctx sdk.Context, id uint64) {
+// Remove a UBDByUnbondingOpIndex
+func (k Keeper) DeleteREDByUnbondingOpIndex(ctx sdk.Context, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 
-	indexKey := types.GetRedelegationEntryIndexKey(id)
+	indexKey := types.GetUnbondingOpIndexKey(id)
 
 	store.Delete(indexKey)
 }
@@ -573,7 +597,7 @@ func (k Keeper) SetRedelegationEntry(ctx sdk.Context,
 	k.SetRedelegation(ctx, red)
 
 	// Add to the UBDByEntry index to look up the UBD by the UBDE ID
-	k.SetREDByEntryIndex(ctx, red, id)
+	k.SetREDByUnbondingOpIndex(ctx, red, id)
 
 	// Call hook
 	k.AfterUnbondingOpInitiated(ctx, id)
@@ -950,12 +974,12 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 }
 
 func (k Keeper) PutUnbondingOpOnHold(ctx sdk.Context, id uint64) (found bool) {
-	_, found = k.GetUnbondingDelegationByEntry(ctx, id)
+	_, found = k.GetUnbondingDelegationByUnbondingOpId(ctx, id)
 	if found {
 		return k.PutUnbondingDelegationEntryOnHold(ctx, id)
 	}
 
-	_, found = k.GetRedelegationByEntry(ctx, id)
+	_, found = k.GetRedelegationByUnbondingOpId(ctx, id)
 	if found {
 		return k.PutRedelegationEntryOnHold(ctx, id)
 	}
@@ -967,21 +991,21 @@ func (k Keeper) PutUnbondingOpOnHold(ctx sdk.Context, id uint64) (found bool) {
 // This can be called to complete the unbonding of an unbonding operation (unbonding delegation entry or
 // redelegation) that was previously stopped by the BeforeUnbondingDelegationEntryComplete hook in CompleteUnbonding
 func (k Keeper) UnbondingOpCanComplete(ctx sdk.Context, id uint64) (found bool, err error) {
-	_, found = k.GetUnbondingDelegationByEntry(ctx, id)
+	_, found = k.GetUnbondingDelegationByUnbondingOpId(ctx, id)
 	if found {
 		return k.UnbondingDelegationCanComplete(ctx, id)
 	}
 
-	_, found = k.GetRedelegationByEntry(ctx, id)
+	_, found = k.GetRedelegationByUnbondingOpId(ctx, id)
 	if found {
 		return k.RedelegationCanComplete(ctx, id)
 	}
 
 	// _, found = k.GetValidatorByUnbondingOp(ctx, id)
 	// if found {
-	// 	return k.CompleteStoppedValidatorUnbonding(ctx, id)
+	// 	return k.ValidatorUnbondingCanComplete(ctx, id)
 
-	// 	// TODO JNT: Inside of that CompleteStoppedValidatorUnbonding function:
+	// 	// TODO JNT: Inside of that ValidatorUnbondingCanComplete function:
 	// 	// val = k.UnbondingToUnbonded(ctx, val)
 	// 	// if val.GetDelegatorShares().IsZero() {
 	// 	// 	k.RemoveValidator(ctx, val.GetOperator())
@@ -1004,7 +1028,7 @@ func unbondingDelegationEntryArrayIndex(ubd types.UnbondingDelegation, id uint64
 }
 
 func (k Keeper) PutUnbondingDelegationEntryOnHold(ctx sdk.Context, id uint64) (found bool) {
-	ubd, found := k.GetUnbondingDelegationByEntry(ctx, id)
+	ubd, found := k.GetUnbondingDelegationByUnbondingOpId(ctx, id)
 	if !found {
 		return false
 	}
@@ -1024,7 +1048,7 @@ func (k Keeper) PutUnbondingDelegationEntryOnHold(ctx sdk.Context, id uint64) (f
 // This can be called to complete the unbonding of an unbonding delegation entry that was previously
 // stopped by the BeforeUnbondingDelegationEntryComplete hook in CompleteUnbonding
 func (k Keeper) UnbondingDelegationCanComplete(ctx sdk.Context, id uint64) (found bool, err error) {
-	ubd, found := k.GetUnbondingDelegationByEntry(ctx, id)
+	ubd, found := k.GetUnbondingDelegationByUnbondingOpId(ctx, id)
 	if !found {
 		return false, nil
 	}
@@ -1050,7 +1074,7 @@ func (k Keeper) UnbondingDelegationCanComplete(ctx sdk.Context, id uint64) (foun
 		// Remove entry
 		ubd.RemoveEntry(int64(i))
 		// Remove from the UBDByEntry index
-		k.DeleteUBDByEntryIndex(ctx, ubd.Entries[i].Id)
+		k.DeleteUBDByUnbondingOpIndex(ctx, ubd.Entries[i].Id)
 
 		// track undelegation only when remaining or truncated shares are non-zero
 		if !ubd.Entries[i].Balance.IsZero() {
@@ -1184,7 +1208,7 @@ func redelegationEntryArrayIndex(red types.Redelegation, id uint64) (index int, 
 }
 
 func (k Keeper) PutRedelegationEntryOnHold(ctx sdk.Context, id uint64) (found bool) {
-	red, found := k.GetRedelegationByEntry(ctx, id)
+	red, found := k.GetRedelegationByUnbondingOpId(ctx, id)
 	if !found {
 		return false
 	}
@@ -1204,7 +1228,7 @@ func (k Keeper) PutRedelegationEntryOnHold(ctx sdk.Context, id uint64) (found bo
 // This can be called to complete the unbonding of an unbonding delegation entry that was previously
 // stopped by the BeforeUnbondingDelegationEntryComplete hook in CompleteUnbonding
 func (k Keeper) RedelegationCanComplete(ctx sdk.Context, id uint64) (found bool, err error) {
-	red, found := k.GetRedelegationByEntry(ctx, id)
+	red, found := k.GetRedelegationByUnbondingOpId(ctx, id)
 	if !found {
 		return false, nil
 	}
@@ -1221,8 +1245,8 @@ func (k Keeper) RedelegationCanComplete(ctx sdk.Context, id uint64) (found bool,
 		// If matured, complete it.
 		// Remove entry
 		red.RemoveEntry(int64(i))
-		// Remove from the UBDByEntry index
-		k.DeleteREDByEntryIndex(ctx, red.Entries[i].Id)
+		// Remove from the UBDByUnbondingOp index
+		k.DeleteREDByUnbondingOpIndex(ctx, red.Entries[i].Id)
 
 		// set the unbonding delegation or remove it if there are no more entries
 		if len(red.Entries) == 0 {

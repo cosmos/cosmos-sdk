@@ -177,7 +177,7 @@ func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 		}
 
 		// TODO JNT: add check for onHold
-		if entry.IsMature(now) {
+		if entry.IsMature(now) && !entry.OnHold {
 			// Unbonding delegation no longer eligible for slashing, skip it
 			continue
 		}
@@ -231,7 +231,7 @@ func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator,
 		}
 
 		// TODO JNT: add check for onHold
-		if entry.IsMature(now) {
+		if entry.IsMature(now) && !entry.OnHold {
 			// Redelegation no longer eligible for slashing, skip it
 			continue
 		}

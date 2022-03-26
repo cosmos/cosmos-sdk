@@ -45,9 +45,8 @@ var (
 	RedelegationByValSrcIndexKey     = []byte{0x35} // prefix for each key for an redelegation, by source validator operator
 	RedelegationByValDstIndexKey     = []byte{0x36} // prefix for each key for an redelegation, by destination validator operator
 
-	UnbondingDelegationEntryIdKey    = []byte{0x37} // key for the counter for the incrementing id for UnbondingDelegationEntries
-	UnbondingDelegationEntryIndexKey = []byte{0x38} // prefix for an index for looking up UnbondingDelegations by UnbondingDelegationEntry ID
-	RedelegationEntryIndexKey        = []byte{0x39} // prefix for an index for looking up UnbondingDelegations by UnbondingDelegationEntry ID
+	UnbondingDelegationEntryIdKey = []byte{0x37} // key for the counter for the incrementing id for UnbondingDelegationEntries
+	UnbondingOpIndexKey           = []byte{0x38} // prefix for an index for looking up UnbondingDelegations by UnbondingDelegationEntry ID
 
 	UnbondingQueueKey    = []byte{0x41} // prefix for the timestamps in unbonding queue
 	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
@@ -58,17 +57,10 @@ var (
 )
 
 // Returns a key for the index for looking up UnbondingDelegations by the UnbondingDelegationEntries they contain
-func GetUnbondingDelegationEntryIndexKey(id uint64) []byte {
+func GetUnbondingOpIndexKey(id uint64) []byte {
 	bz := make([]byte, 8)
 	binary.BigEndian.PutUint64(bz, id)
-	return append(UnbondingDelegationEntryIndexKey, bz...)
-}
-
-// Returns a key for the index for looking up Redelegations by the RedelegationEntries they contain
-func GetRedelegationEntryIndexKey(id uint64) []byte {
-	bz := make([]byte, 8)
-	binary.BigEndian.PutUint64(bz, id)
-	return append(RedelegationEntryIndexKey, bz...)
+	return append(UnbondingOpIndexKey, bz...)
 }
 
 // GetValidatorKey creates the key for the validator with address

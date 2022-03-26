@@ -121,7 +121,7 @@ func (suite *IntegrationTestSuite) TestSpendableBalances() {
 	)
 
 	app.AccountKeeper.SetAccount(ctx, acc)
-	suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, acc.GetAddress(), origCoins))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, acc.GetAddress(), origCoins))
 
 	// move time forward for some tokens to vest
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(30 * time.Minute))

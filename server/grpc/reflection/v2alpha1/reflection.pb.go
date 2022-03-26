@@ -6,7 +6,6 @@ package v2alpha1
 import (
 	context "context"
 	fmt "fmt"
-	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
@@ -1463,10 +1462,10 @@ type ReflectionServiceClient interface {
 }
 
 type reflectionServiceClient struct {
-	cc grpc1.ClientConn
+	cc *grpc.ClientConn
 }
 
-func NewReflectionServiceClient(cc grpc1.ClientConn) ReflectionServiceClient {
+func NewReflectionServiceClient(cc *grpc.ClientConn) ReflectionServiceClient {
 	return &reflectionServiceClient{cc}
 }
 
@@ -1565,7 +1564,7 @@ func (*UnimplementedReflectionServiceServer) GetTxDescriptor(ctx context.Context
 	return nil, status.Errorf(codes.Unimplemented, "method GetTxDescriptor not implemented")
 }
 
-func RegisterReflectionServiceServer(s grpc1.Server, srv ReflectionServiceServer) {
+func RegisterReflectionServiceServer(s *grpc.Server, srv ReflectionServiceServer) {
 	s.RegisterService(&_ReflectionService_serviceDesc, srv)
 }
 

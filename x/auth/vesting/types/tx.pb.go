@@ -7,11 +7,9 @@ import (
 	context "context"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	_ "github.com/gogo/protobuf/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -35,11 +33,11 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // MsgCreateVestingAccount defines a message that enables creating a vesting
 // account.
 type MsgCreateVestingAccount struct {
-	FromAddress string                                   `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
-	ToAddress   string                                   `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`
-	Amount      github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
-	EndTime     int64                                    `protobuf:"varint,4,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
-	Delayed     bool                                     `protobuf:"varint,5,opt,name=delayed,proto3" json:"delayed,omitempty"`
+	FromAddress string       `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
+	ToAddress   string       `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`
+	Amount      []types.Coin `protobuf:"bytes,3,rep,name=amount,proto3" json:"amount"`
+	EndTime     int64        `protobuf:"varint,4,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	Delayed     bool         `protobuf:"varint,5,opt,name=delayed,proto3" json:"delayed,omitempty"`
 }
 
 func (m *MsgCreateVestingAccount) Reset()         { *m = MsgCreateVestingAccount{} }
@@ -89,7 +87,7 @@ func (m *MsgCreateVestingAccount) GetToAddress() string {
 	return ""
 }
 
-func (m *MsgCreateVestingAccount) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *MsgCreateVestingAccount) GetAmount() []types.Coin {
 	if m != nil {
 		return m.Amount
 	}
@@ -150,9 +148,9 @@ var xxx_messageInfo_MsgCreateVestingAccountResponse proto.InternalMessageInfo
 // MsgCreatePermanentLockedAccount defines a message that enables creating a permanent
 // locked account.
 type MsgCreatePermanentLockedAccount struct {
-	FromAddress string                                   `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty" yaml:"from_address"`
-	ToAddress   string                                   `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty" yaml:"to_address"`
-	Amount      github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	FromAddress string       `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty" yaml:"from_address"`
+	ToAddress   string       `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty" yaml:"to_address"`
+	Amount      []types.Coin `protobuf:"bytes,3,rep,name=amount,proto3" json:"amount"`
 }
 
 func (m *MsgCreatePermanentLockedAccount) Reset()         { *m = MsgCreatePermanentLockedAccount{} }
@@ -202,7 +200,7 @@ func (m *MsgCreatePermanentLockedAccount) GetToAddress() string {
 	return ""
 }
 
-func (m *MsgCreatePermanentLockedAccount) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *MsgCreatePermanentLockedAccount) GetAmount() []types.Coin {
 	if m != nil {
 		return m.Amount
 	}
@@ -513,10 +511,10 @@ type MsgClient interface {
 }
 
 type msgClient struct {
-	cc grpc1.ClientConn
+	cc *grpc.ClientConn
 }
 
-func NewMsgClient(cc grpc1.ClientConn) MsgClient {
+func NewMsgClient(cc *grpc.ClientConn) MsgClient {
 	return &msgClient{cc}
 }
 
@@ -574,7 +572,7 @@ func (*UnimplementedMsgServer) CreatePeriodicVestingAccount(ctx context.Context,
 	return nil, status.Errorf(codes.Unimplemented, "method CreatePeriodicVestingAccount not implemented")
 }
 
-func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
+func RegisterMsgServer(s *grpc.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
 }
 

@@ -14,6 +14,7 @@ import (
 
 type Manager struct {
 	logger               log.Logger
+	db dbm.DB
 	opts                 *types.PruningOptions
 	snapshotInterval     uint64
 	pruneHeights         []int64
@@ -24,11 +25,14 @@ type Manager struct {
 const (
 	pruneHeightsKey         = "s/pruneheights"
 	pruneSnapshotHeightsKey = "s/pruneSnheights"
+
+	uint64Size = 8
 )
 
-func NewManager(logger log.Logger) *Manager {
+func NewManager(logger log.Logger, db dbm.DB) *Manager {
 	return &Manager{
 		logger:       logger,
+		db: db,
 		opts:         types.NewPruningOptions(types.PruningNothing),
 		pruneHeights: []int64{},
 		// These are the heights that are multiples of snapshotInterval and kept for state sync snapshots.
@@ -120,12 +124,18 @@ func (m *Manager) ShouldPruneAtHeight(height int64) bool {
 }
 
 // FlushPruningHeights flushes the pruning heights to the database for crash recovery.
-func (m *Manager) FlushPruningHeights(batch dbm.Batch) {
+func (m *Manager) FlushPruningHeights() {
 	if m.opts.GetPruningStrategy() == types.PruningNothing {
 		return
 	}
+	batch := m.db.NewBatch()
+	defer batch.Close()
 	m.flushPruningHeights(batch)
 	m.flushPruningSnapshotHeights(batch)
+
+	if err := batch.WriteSync(); err != nil {
+		panic(fmt.Errorf("error on batch write %w", err))
+	}
 }
 
 // LoadPruningHeights loads the pruning heights from the database as a crash recovery.
@@ -193,24 +203,28 @@ func (m *Manager) loadPruningSnapshotHeights(db dbm.DB) error {
 }
 
 func (m *Manager) flushPruningHeights(batch dbm.Batch) {
-	bz := make([]byte, 0)
+	bz := make([]byte, 0, len(m.pruneHeights) * uint64Size)
 	for _, ph := range m.pruneHeights {
-		buf := make([]byte, 8)
+		buf := make([]byte, uint64Size)
 		binary.BigEndian.PutUint64(buf, uint64(ph))
 		bz = append(bz, buf...)
 	}
 
-	batch.Set([]byte(pruneHeightsKey), bz)
+	if err := batch.Set([]byte(pruneHeightsKey), bz); err != nil {
+		panic(err)
+	}
 }
 
 func (m *Manager) flushPruningSnapshotHeights(batch dbm.Batch) {
 	m.mx.Lock()
 	defer m.mx.Unlock()
-	bz := make([]byte, 0)
+	bz := make([]byte, 0, m.pruneSnapshotHeights.Len() * uint64Size)
 	for e := m.pruneSnapshotHeights.Front(); e != nil; e = e.Next() {
-		buf := make([]byte, 8)
+		buf := make([]byte, uint64Size)
 		binary.BigEndian.PutUint64(buf, uint64(e.Value.(int64)))
 		bz = append(bz, buf...)
 	}
-	batch.Set([]byte(pruneSnapshotHeightsKey), bz)
+	if err := batch.Set([]byte(pruneSnapshotHeightsKey), bz); err != nil {
+		panic(err)
+	}
 }

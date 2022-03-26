@@ -215,7 +215,7 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	expectedCommitID := getExpectedCommitID(store, 1)
 	checkStore(t, store, expectedCommitID, commitID)
 
-	ci, err := getCommitInfo(db, 1)
+	ci, err := store.getCommitInfoFromDb(1)
 	require.NoError(t, err)
 	require.Equal(t, int64(1), ci.Version)
 	require.Equal(t, 3, len(ci.StoreInfos))
@@ -299,7 +299,7 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	require.Equal(t, v4, rl4.Get(k4))
 
 	// check commitInfo in storage
-	ci, err = getCommitInfo(db, 2)
+	ci, err = store.getCommitInfoFromDb(2)
 	require.NoError(t, err)
 	require.Equal(t, int64(2), ci.Version)
 	require.Equal(t, 4, len(ci.StoreInfos), ci.StoreInfos)
@@ -355,7 +355,7 @@ func TestMultiStoreRestart(t *testing.T) {
 
 		multi.Commit()
 
-		cinfo, err := getCommitInfo(multi.db, int64(i))
+		cinfo, err := multi.getCommitInfoFromDb(int64(i))
 		require.NoError(t, err)
 		require.Equal(t, int64(i), cinfo.Version)
 	}
@@ -370,7 +370,7 @@ func TestMultiStoreRestart(t *testing.T) {
 
 	multi.Commit()
 
-	flushedCinfo, err := getCommitInfo(multi.db, 3)
+	flushedCinfo, err := multi.getCommitInfoFromDb(3)
 	require.Nil(t, err)
 	require.NotEqual(t, initCid, flushedCinfo, "CID is different after flush to disk")
 
@@ -380,7 +380,7 @@ func TestMultiStoreRestart(t *testing.T) {
 
 	multi.Commit()
 
-	postFlushCinfo, err := getCommitInfo(multi.db, 4)
+	postFlushCinfo, err := multi.getCommitInfoFromDb(4)
 	require.NoError(t, err)
 	require.Equal(t, int64(4), postFlushCinfo.Version, "Commit changed after in-memory commit")
 

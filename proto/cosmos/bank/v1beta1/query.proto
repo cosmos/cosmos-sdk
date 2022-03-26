@@ -101,7 +101,7 @@ message QuerySpendableBalancesRequest {
   option (gogoproto.goproto_getters) = false;
 
   // address is the address to query spendable balances for.
-  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string address = 1;
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;

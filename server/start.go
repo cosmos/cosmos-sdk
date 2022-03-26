@@ -9,29 +9,25 @@ import (
 	"runtime/pprof"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
-
 	"github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	tmos "github.com/tendermint/tendermint/libs/os"
-	tmservice "github.com/tendermint/tendermint/libs/service"
 	"github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/rpc/client/local"
-
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
-	crgserver "github.com/cosmos/cosmos-sdk/server/rosetta/lib/server"
+	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
+	crgserver "github.com/cosmos/cosmos-sdk/server/rosetta/lib/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -260,33 +256,29 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		return err
 	}
 
-<<<<<<< HEAD
 	genDocProvider := node.DefaultGenesisDocProviderFunc(cfg)
-	tmNode, err := node.NewNode(
-		cfg,
-		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
-		nodeKey,
-		proxy.NewLocalClientCreator(app),
-		genDocProvider,
-		node.DefaultDBProvider,
-		node.DefaultMetricsProvider(cfg.Instrumentation),
-		ctx.Logger,
-=======
+
 	var (
-		tmNode   tmservice.Service
+		tmNode   *node.Node
 		gRPCOnly = ctx.Viper.GetBool(flagGRPCOnly)
->>>>>>> 1880a7d17 (feat: grpc-only mode (#11430))
 	)
+
 	if gRPCOnly {
 		ctx.Logger.Info("starting node in gRPC only mode; Tendermint is disabled")
 		config.GRPC.Enable = true
 	} else {
 		ctx.Logger.Info("starting node with ABCI Tendermint in-process")
 
-		tmNode, err = node.New(cfg, ctx.Logger, abciclient.NewLocalCreator(app), genDoc)
-		if err != nil {
-			return err
-		}
+		tmNode, err = node.NewNode(
+			cfg,
+			pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
+			nodeKey,
+			proxy.NewLocalClientCreator(app),
+			genDocProvider,
+			node.DefaultDBProvider,
+			node.DefaultMetricsProvider(cfg.Instrumentation),
+			ctx.Logger,
+		)
 
 		if err := tmNode.Start(); err != nil {
 			return err
@@ -296,23 +288,8 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	// Add the tx service to the gRPC router. We only need to register this
 	// service if API or gRPC is enabled, and avoid doing so in the general
 	// case, because it spawns a new local tendermint RPC client.
-<<<<<<< HEAD
-	if config.API.Enable || config.GRPC.Enable {
-		clientCtx = clientCtx.WithClient(local.New(tmNode))
-=======
 	if (config.API.Enable || config.GRPC.Enable) && tmNode != nil {
-		node, ok := tmNode.(local.NodeService)
-		if !ok {
-			return fmt.Errorf("unable to set node type; please try re-installing the binary")
-		}
-
-		localNode, err := local.New(node)
-		if err != nil {
-			return err
-		}
-
-		clientCtx = clientCtx.WithClient(localNode)
->>>>>>> 1880a7d17 (feat: grpc-only mode (#11430))
+		clientCtx = clientCtx.WithClient(local.New(tmNode))
 
 		app.RegisterTxService(clientCtx)
 		app.RegisterTendermintService(clientCtx)
@@ -327,31 +304,6 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 		clientCtx := clientCtx.WithHomeDir(home).WithChainID(genDoc.ChainID)
 
-<<<<<<< HEAD
-=======
-		if config.GRPC.Enable {
-			_, port, err := net.SplitHostPort(config.GRPC.Address)
-			if err != nil {
-				return err
-			}
-
-			grpcAddress := fmt.Sprintf("127.0.0.1:%s", port)
-
-			// If grpc is enabled, configure grpc client for grpc gateway.
-			grpcClient, err := grpc.Dial(
-				grpcAddress,
-				grpc.WithTransportCredentials(insecure.NewCredentials()),
-				grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec())),
-			)
-			if err != nil {
-				return err
-			}
-
-			clientCtx = clientCtx.WithGRPCClient(grpcClient)
-			ctx.Logger.Debug("grpc client assigned to client context", "target", grpcAddress)
-		}
-
->>>>>>> 1880a7d17 (feat: grpc-only mode (#11430))
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))
 		app.RegisterAPIRoutes(apiSrv, config.API)
 		errCh := make(chan error)

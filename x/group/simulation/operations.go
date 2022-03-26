@@ -67,7 +67,7 @@ const (
 	WeightMsgSubmitProposal                  = 90
 	WeightMsgVote                            = 90
 	WeightMsgExec                            = 90
-	WeightMsgLeaveGroup                      = 20
+	WeightMsgLeaveGroup                      = 5
 	WeightMsgUpdateGroupMetadata             = 5
 	WeightMsgUpdateGroupAdmin                = 5
 	WeightMsgUpdateGroupMembers              = 5
@@ -189,10 +189,6 @@ func WeightedOperations(
 			SimulateMsgCreateGroupPolicy(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
-			weightMsgLeaveGroup,
-			SimulateMsgLeaveGroup(k, ak, bk),
-		),
-		simulation.NewWeightedOperation(
 			weightMsgCreateGroupWithPolicy,
 			SimulateMsgCreateGroupWithPolicy(ak, bk),
 		),
@@ -234,6 +230,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgUpdateGroupPolicyMetadata,
 			SimulateMsgUpdateGroupPolicyMetadata(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgLeaveGroup,
+			SimulateMsgLeaveGroup(k, ak, bk),
 		),
 	}
 

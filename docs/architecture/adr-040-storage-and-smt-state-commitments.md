@@ -173,7 +173,7 @@ NOTE: modules will be able to use a special commitment and their own DBs. For ex
 
 To ease the transition to this new interface for users, we can create a shim which wraps a `CommitMultiStore` but provides a `CommitRootStore` interface, and expose functions to safely create and access the underlying `CommitMultiStore`.
 
-The new `RootStore` and supporting types can be implemented in a `store/v2` package to avoid breaking existing code.
+The new `RootStore` and supporting types can be implemented in a `store/v2alpha1` package to avoid breaking existing code.
 
 #### Merkle Proofs and IBC
 

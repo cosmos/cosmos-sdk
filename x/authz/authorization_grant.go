@@ -9,27 +9,25 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// NewGrant returns new Grant. It returns an error if the expiration is before
-// the current block time, which is passed into the `blockTime` arg.
-func NewGrant(blockTime time.Time, a Authorization, expiration time.Time) (Grant, error) {
-	if !expiration.After(blockTime) {
+// NewGrant returns new Grant. Expiration is optional and noop if null.
+// It returns an error if the expiration is before the current block time,
+// which is passed into the `blockTime` arg.
+func NewGrant(blockTime time.Time, a Authorization, expiration *time.Time) (Grant, error) {
+	if expiration != nil && !expiration.After(blockTime) {
 		return Grant{}, sdkerrors.ErrInvalidRequest.Wrapf("expiration must be after the current block time (%v), got %v", blockTime.Format(time.RFC3339), expiration.Format(time.RFC3339))
-	}
-	g := Grant{
-		Expiration: expiration,
 	}
 	msg, ok := a.(proto.Message)
 	if !ok {
 		return Grant{}, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", a)
 	}
-
 	any, err := cdctypes.NewAnyWithValue(msg)
 	if err != nil {
 		return Grant{}, err
 	}
-	g.Authorization = any
-
-	return g, nil
+	return Grant{
+		Expiration:    expiration,
+		Authorization: any,
+	}, nil
 }
 
 var (

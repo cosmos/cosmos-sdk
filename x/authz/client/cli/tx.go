@@ -60,7 +60,7 @@ func NewCmdGrantAuthorization() *cobra.Command {
 
 Examples:
  $ %s tx %s grant cosmos1skjw.. send %s --spend-limit=1000stake --from=cosmos1skl..
- $ %s tx %s grant cosmos1skjw.. generic --msg-type=/cosmos.gov.v1beta2.MsgVote --from=cosmos1sk..
+ $ %s tx %s grant cosmos1skjw.. generic --msg-type=/cosmos.gov.v1.MsgVote --from=cosmos1sk..
 	`, version.AppName, authz.ModuleName, bank.SendAuthorization{}.MsgTypeURL(), version.AppName, authz.ModuleName),
 		),
 		Args: cobra.ExactArgs(2),
@@ -71,11 +71,6 @@ Examples:
 			}
 
 			grantee, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
-
-			exp, err := cmd.Flags().GetInt64(FlagExpiration)
 			if err != nil {
 				return err
 			}
@@ -160,7 +155,12 @@ Examples:
 				return fmt.Errorf("invalid authorization type, %s", args[1])
 			}
 
-			msg, err := authz.NewMsgGrant(clientCtx.GetFromAddress(), grantee, authorization, time.Unix(exp, 0))
+			expire, err := getExpireTime(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg, err := authz.NewMsgGrant(clientCtx.GetFromAddress(), grantee, authorization, expire)
 			if err != nil {
 				return err
 			}
@@ -173,8 +173,20 @@ Examples:
 	cmd.Flags().String(FlagSpendLimit, "", "SpendLimit for Send Authorization, an array of Coins allowed spend")
 	cmd.Flags().StringSlice(FlagAllowedValidators, []string{}, "Allowed validators addresses separated by ,")
 	cmd.Flags().StringSlice(FlagDenyValidators, []string{}, "Deny validators addresses separated by ,")
-	cmd.Flags().Int64(FlagExpiration, time.Now().AddDate(1, 0, 0).Unix(), "The Unix timestamp. Default is one year.")
+	cmd.Flags().Int64(FlagExpiration, 0, "Expire time as Unix timestamp. Set zero (0) for no expiry. Default is 0.")
 	return cmd
+}
+
+func getExpireTime(cmd *cobra.Command) (*time.Time, error) {
+	exp, err := cmd.Flags().GetInt64(FlagExpiration)
+	if err != nil {
+		return nil, err
+	}
+	if exp == 0 {
+		return nil, nil
+	}
+	e := time.Unix(exp, 0)
+	return &e, nil
 }
 
 func NewCmdRevokeAuthorization() *cobra.Command {

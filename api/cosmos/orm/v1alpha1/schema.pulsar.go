@@ -1109,7 +1109,7 @@ const (
 	// STORAGE_TYPE_DEFAULT_UNSPECIFIED indicates the persistent
 	// KV-storage where primary key entries are stored in merkle-tree
 	// backed commitment storage and indexes and seqs are stored in
-	// fast index storage. Note that the Cosmos SDK before store/v2
+	// fast index storage. Note that the Cosmos SDK before store/v2alpha1
 	// does not support this.
 	StorageType_STORAGE_TYPE_DEFAULT_UNSPECIFIED StorageType = 0
 	// STORAGE_TYPE_MEMORY indicates in-memory storage that will be
@@ -1124,14 +1124,14 @@ const (
 	StorageType_STORAGE_TYPE_TRANSIENT StorageType = 2
 	// STORAGE_TYPE_INDEX indicates persistent storage which is not backed
 	// by a merkle-tree and won't affect the app hash. Note that the Cosmos SDK
-	// before store/v2 does not support this.
+	// before store/v2alpha1 does not support this.
 	StorageType_STORAGE_TYPE_INDEX StorageType = 3
 	// STORAGE_TYPE_INDEX indicates persistent storage which is backed by
 	// a merkle-tree. With this type of storage, both primary and index keys
 	// will affect the app hash and this is generally less efficient
 	// than using STORAGE_TYPE_DEFAULT_UNSPECIFIED which separates index
 	// keys into index storage. Note that modules built with the
-	// Cosmos SDK before store/v2 must specify STORAGE_TYPE_COMMITMENT
+	// Cosmos SDK before store/v2alpha1 must specify STORAGE_TYPE_COMMITMENT
 	// instead of STORAGE_TYPE_DEFAULT_UNSPECIFIED or STORAGE_TYPE_INDEX
 	// because this is the only type of persistent storage available.
 	StorageType_STORAGE_TYPE_COMMITMENT StorageType = 4

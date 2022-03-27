@@ -23,9 +23,9 @@ func newMemIterator(start, end []byte, items *dbm.MemDB, deleted map[string]stru
 	var err error
 
 	if ascending {
-		iter, err = items.IteratorNoMtx(start, end)
+		iter, err = items.Iterator(start, end)
 	} else {
-		iter, err = items.ReverseIteratorNoMtx(start, end)
+		iter, err = items.ReverseIterator(start, end)
 	}
 
 	if err != nil {

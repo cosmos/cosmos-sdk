@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
 	coreevent "cosmossdk.io/core/event"
@@ -24,11 +23,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 const (
@@ -125,11 +127,9 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
-	key := storetypes.NewKVStoreKey(banktypes.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
-	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
+func (suite *IntegrationTestSuite) SetupTest() {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 

@@ -5,16 +5,15 @@ import (
 	"fmt"
 	"time"
 
-	v1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	"cosmossdk.io/core/header"
-	"cosmossdk.io/x/bank/testutil"
-	"cosmossdk.io/x/bank/types"
-
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 func (suite *KeeperTestSuite) TestQueryBalance() {
@@ -231,46 +230,62 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 	suite.EqualValues(25, res.Balances[1].Amount.Int64())
 }
 
-func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
+func (suite *IntegrationTestSuite) TestSpendableBalances() {
+	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
 	_, _, addr := testdata.KeyTestPubAddr()
+	ctx = ctx.WithBlockTime(time.Now())
 
-	ctx := sdk.UnwrapSDKContext(suite.ctx)
-	ctx = ctx.WithHeaderInfo(header.Info{Time: time.Now()})
-	queryClient := suite.mockQueryClient(ctx)
-
-	_, err := queryClient.SpendableBalanceByDenom(ctx, &types.QuerySpendableBalanceByDenomRequest{})
+	_, err := queryClient.SpendableBalances(sdk.WrapSDKContext(ctx), &types.QuerySpendableBalancesRequest{})
 	suite.Require().Error(err)
 
-	addrStr, err := suite.authKeeper.AddressCodec().BytesToString(addr)
-	suite.Require().NoError(err)
+	pageReq := &query.PageRequest{
+		Key:        nil,
+		Limit:      2,
+		CountTotal: false,
+	}
+	req := types.NewQuerySpendableBalancesRequest(addr, pageReq)
 
-	req := types.NewQuerySpendableBalanceByDenomRequest(addrStr, fooDenom)
-	acc := authtypes.NewBaseAccountWithAddress(addr)
-
-	suite.mockSpendableCoins(ctx, acc)
-	res, err := queryClient.SpendableBalanceByDenom(ctx, req)
+	res, err := queryClient.SpendableBalances(sdk.WrapSDKContext(ctx), req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
-	suite.True(res.Balance.IsZero())
+	suite.True(res.Balances.IsZero())
 
-	fooCoins := newFooCoin(100)
+	fooCoins := newFooCoin(50)
 	barCoins := newBarCoin(30)
 
 	origCoins := sdk.NewCoins(fooCoins, barCoins)
-	vacc, err := vestingtypes.NewContinuousVestingAccount(
-		acc,
+	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+	acc = vestingtypes.NewContinuousVestingAccount(
+		acc.(*authtypes.BaseAccount),
 		sdk.NewCoins(fooCoins),
-		ctx.HeaderInfo().Time.Unix(),
-		ctx.HeaderInfo().Time.Add(time.Hour).Unix(),
+		ctx.BlockTime().Unix(),
+		ctx.BlockTime().Add(time.Hour).Unix(),
 	)
+
+	app.AccountKeeper.SetAccount(ctx, acc)
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, acc.GetAddress(), origCoins))
+
+	// move time forward for some tokens to vest
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(30 * time.Minute))
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, app.BankKeeper)
+	queryClient = types.NewQueryClient(queryHelper)
+
+	res, err = queryClient.SpendableBalances(sdk.WrapSDKContext(ctx), req)
 	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+	suite.Equal(2, res.Balances.Len())
+	suite.Nil(res.Pagination.NextKey)
+	suite.EqualValues(30, res.Balances[0].Amount.Int64())
+	suite.EqualValues(25, res.Balances[1].Amount.Int64())
+}
 
-	suite.mockFundAccount(addr)
-	suite.Require().NoError(testutil.FundAccount(suite.ctx, suite.bankKeeper, addr, origCoins))
-
-	// move time forward for half of the tokens to vest
-	ctx = ctx.WithHeaderInfo(header.Info{Time: ctx.HeaderInfo().Time.Add(30 * time.Minute)})
-	queryClient = suite.mockQueryClient(ctx)
+func (suite *IntegrationTestSuite) TestQueryTotalSupply() {
+	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
+	expectedTotalSupply := sdk.NewCoins(sdk.NewInt64Coin("test", 400000000))
+	suite.
+		Require().
+		NoError(app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, expectedTotalSupply))
 
 	// check fooCoins first, it has some vested and some vesting
 	suite.mockSpendableCoins(ctx, vacc)

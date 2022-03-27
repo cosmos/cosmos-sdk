@@ -34,6 +34,13 @@ func NewQuerySpendableBalanceByDenomRequest(addr, denom string) *QuerySpendableB
 	return &QuerySpendableBalanceByDenomRequest{Address: addr, Denom: denom}
 }
 
+// NewQuerySpendableBalancesRequest creates a new instance of a
+// QuerySpendableBalancesRequest.
+// nolint:interfacer
+func NewQuerySpendableBalancesRequest(addr sdk.AccAddress, req *query.PageRequest) *QuerySpendableBalancesRequest {
+	return &QuerySpendableBalancesRequest{Address: addr.String(), Pagination: req}
+}
+
 // QueryTotalSupplyParams defines the params for the following queries:
 // - 'custom/bank/totalSupply'
 type QueryTotalSupplyParams struct {

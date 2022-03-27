@@ -70,7 +70,7 @@ func TestMigrationV2(t *testing.T) {
 
 		// setup a new root store of smt
 		db2 := memdb.NewDB()
-		storeConfig := DefaultStoreConfig()
+		storeConfig := DefaultStoreParams()
 		// migrating the iavl store (v1) to smt store (v2)
 		v2Store, err := MigrateFromV1(v1Store, db2, storeConfig)
 		require.NoError(t, err)
@@ -98,7 +98,7 @@ func TestMigrateV2ForEmptyStore(t *testing.T) {
 	err := v1Store.LoadLatestVersion()
 	require.Nil(t, err)
 	db2 := memdb.NewDB()
-	storeConfig := DefaultStoreConfig()
+	storeConfig := DefaultStoreParams()
 	// migrating the iavl store (v1) to smt store (v2)
 	v2Store, err := MigrateFromV1(v1Store, db2, storeConfig)
 	require.NoError(t, err)

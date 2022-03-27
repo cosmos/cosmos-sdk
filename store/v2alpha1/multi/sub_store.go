@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
-	types "github.com/cosmos/cosmos-sdk/store/v2"
+	types "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 )
 
 // Get implements KVStore.

@@ -6,7 +6,7 @@ import (
 	protoio "github.com/gogo/protobuf/io"
 
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/v2"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

@@ -12,7 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/gaskv"
 	stypes "github.com/cosmos/cosmos-sdk/store/types"
-	stypes2 "github.com/cosmos/cosmos-sdk/store/v2"
+	stypes2 "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 )
 
 /*

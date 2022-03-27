@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
-	types2 "github.com/cosmos/cosmos-sdk/store/v2"
+	types2 "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 

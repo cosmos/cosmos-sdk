@@ -7,7 +7,7 @@ import (
 	tmdb "github.com/tendermint/tm-db"
 
 	v1 "github.com/cosmos/cosmos-sdk/store/types"
-	v2 "github.com/cosmos/cosmos-sdk/store/v2"
+	v2 "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 )
 
 var (

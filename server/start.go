@@ -13,41 +13,25 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cometbft/cometbft/abci/server"
-	cmtstate "github.com/cometbft/cometbft/api/cometbft/state/v1"
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
-	cmtcfg "github.com/cometbft/cometbft/config"
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
-	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
-	cmtjson "github.com/cometbft/cometbft/libs/json"
-	"github.com/cometbft/cometbft/node"
-	"github.com/cometbft/cometbft/p2p"
-	pvm "github.com/cometbft/cometbft/privval"
-	"github.com/cometbft/cometbft/proxy"
-	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
-	"github.com/cometbft/cometbft/rpc/client/local"
-	sm "github.com/cometbft/cometbft/state"
-	"github.com/cometbft/cometbft/store"
-	cmttypes "github.com/cometbft/cometbft/types"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/hashicorp/go-metrics"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"golang.org/x/sync/errgroup"
+	"github.com/tendermint/tendermint/abci/server"
+	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
+	tmos "github.com/tendermint/tendermint/libs/os"
+	"github.com/tendermint/tendermint/node"
+	"github.com/tendermint/tendermint/p2p"
+	pvm "github.com/tendermint/tendermint/privval"
+	"github.com/tendermint/tendermint/proxy"
+	"github.com/tendermint/tendermint/rpc/client/local"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
-	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/log"
-	pruningtypes "cosmossdk.io/store/pruning/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
-	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
+	crgserver "github.com/cosmos/cosmos-sdk/server/rosetta/lib/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -56,8 +40,8 @@ import (
 )
 
 const (
-	// CometBFT full-node start flags
-	flagWithComet          = "with-comet"
+	// Tendermint full-node start flags
+	flagWithTendermint     = "with-tendermint"
 	flagAddress            = "address"
 	flagTransport          = "transport"
 	flagTraceStore         = "trace-store"
@@ -71,66 +55,24 @@ const (
 	FlagTrace              = "trace"
 	FlagInvCheckPeriod     = "inv-check-period"
 
-	FlagPruning             = "pruning"
-	FlagPruningKeepRecent   = "pruning-keep-recent"
-	FlagPruningInterval     = "pruning-interval"
-	FlagIndexEvents         = "index-events"
-	FlagMinRetainBlocks     = "min-retain-blocks"
-	FlagIAVLCacheSize       = "iavl-cache-size"
-	FlagDisableIAVLFastNode = "iavl-disable-fastnode"
-	FlagShutdownGrace       = "shutdown-grace"
+	FlagPruning           = "pruning"
+	FlagPruningKeepRecent = "pruning-keep-recent"
+	FlagPruningKeepEvery  = "pruning-keep-every"
+	FlagPruningInterval   = "pruning-interval"
+	FlagIndexEvents       = "index-events"
+	FlagMinRetainBlocks   = "min-retain-blocks"
 
 	// state sync-related flags
-
 	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"
 	FlagStateSyncSnapshotKeepRecent = "state-sync.snapshot-keep-recent"
 
-	// api-related flags
-
-	FlagAPIEnable             = "api.enable"
-	FlagAPISwagger            = "api.swagger"
-	FlagAPIAddress            = "api.address"
-	FlagAPIMaxOpenConnections = "api.max-open-connections"
-	FlagRPCReadTimeout        = "api.rpc-read-timeout"
-	FlagRPCWriteTimeout       = "api.rpc-write-timeout"
-	FlagRPCMaxBodyBytes       = "api.rpc-max-body-bytes"
-	FlagAPIEnableUnsafeCORS   = "api.enabled-unsafe-cors"
-
 	// gRPC-related flags
-
-	flagGRPCOnly    = "grpc-only"
-	flagGRPCEnable  = "grpc.enable"
-	flagGRPCAddress = "grpc.address"
-
-	// mempool flags
-
-	FlagMempoolMaxTxs = "mempool.max-txs"
-
-	// testnet keys
-
-	KeyIsTestnet             = "is-testnet"
-	KeyNewChainID            = "new-chain-ID"
-	KeyNewOpAddr             = "new-operator-addr"
-	KeyNewValAddr            = "new-validator-addr"
-	KeyUserPubKey            = "user-pub-key"
-	KeyTriggerTestnetUpgrade = "trigger-testnet-upgrade"
+	flagGRPCOnly       = "grpc-only"
+	flagGRPCEnable     = "grpc.enable"
+	flagGRPCAddress    = "grpc.address"
+	flagGRPCWebEnable  = "grpc-web.enable"
+	flagGRPCWebAddress = "grpc-web.address"
 )
-
-// StartCmdOptions defines options that can be customized in `StartCmdWithOptions`,
-type StartCmdOptions[T types.Application] struct {
-	// DBOpener can be used to customize db opening, for example customize db options or support different db backends,
-	// default to the builtin db opener.
-	DBOpener func(rootDir string, backendType dbm.BackendType) (corestore.KVStoreWithBatch, error)
-	// PostSetup can be used to setup extra services under the same cancellable context,
-	// it's not called in stand-alone mode, only for in-process mode.
-	PostSetup func(app T, svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group) error
-	// PostSetupStandalone can be used to setup extra services under the same cancellable context,
-	PostSetupStandalone func(app T, svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group) error
-	// AddFlags add custom flags to start cmd
-	AddFlags func(cmd *cobra.Command)
-	// StartCommandHandler can be used to customize the start command handler
-	StartCommandHandler func(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator[T], withCMT bool, opts StartCmdOptions[T]) error
-}
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
 // CometBFT.
@@ -175,6 +117,18 @@ For profiling and benchmarking purposes, CPU profiling can be enabled via the '-
 which accepts a path for the resulting pprof file.
 
 The node may be started in a 'query only' mode where only the gRPC and JSON HTTP
+API services are enabled via the 'grpc-only' flag. In this mode, Tendermint is
+bypassed and can be used when legacy queries are needed after an on-chain upgrade
+is performed. Note, when enabled, gRPC will also be automatically enabled.
+`,
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			serverCtx := GetServerContextFromCmd(cmd)
+
+			// Bind flags to the Context's Viper so the app construction can set
+			// options accordingly.
+			serverCtx.Viper.BindPFlags(cmd.Flags())
+
+The node may be started in a 'query only' mode where only the gRPC and JSON HTTP
 API services are enabled via the 'grpc-only' flag. In this mode, CometBFT is
 bypassed and can be used when legacy queries are needed after an on-chain upgrade
 is performed. Note, when enabled, gRPC will also be automatically enabled.
@@ -196,23 +150,48 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 				serverCtx.Logger.Info("starting ABCI without CometBFT")
 			}
 
-			err = wrapCPUProfile(serverCtx, func() error {
-				return opts.StartCommandHandler(serverCtx, clientCtx, appCreator, withCMT, opts)
-			})
-
-			serverCtx.Logger.Debug("received quit signal")
-			graceDuration, _ := cmd.Flags().GetDuration(FlagShutdownGrace)
-			if graceDuration > 0 {
-				serverCtx.Logger.Info("graceful shutdown start", FlagShutdownGrace, graceDuration)
-				<-time.After(graceDuration)
-				serverCtx.Logger.Info("graceful shutdown complete")
+			// amino is needed here for backwards compatibility of REST routes
+			err = startInProcess(serverCtx, clientCtx, appCreator)
+			errCode, ok := err.(ErrorCode)
+			if !ok {
+				return err
 			}
 
 			return err
 		},
 	}
 
-	addStartNodeFlags(cmd, opts)
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
+	cmd.Flags().Bool(flagWithTendermint, true, "Run abci app embedded in-process with tendermint")
+	cmd.Flags().String(flagAddress, "tcp://0.0.0.0:26658", "Listen address")
+	cmd.Flags().String(flagTransport, "socket", "Transport protocol: socket, grpc")
+	cmd.Flags().String(flagTraceStore, "", "Enable KVStore tracing to an output file")
+	cmd.Flags().String(FlagMinGasPrices, "", "Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)")
+	cmd.Flags().IntSlice(FlagUnsafeSkipUpgrades, []int{}, "Skip a set of upgrade heights to continue the old binary")
+	cmd.Flags().Uint64(FlagHaltHeight, 0, "Block height at which to gracefully halt the chain and shutdown the node")
+	cmd.Flags().Uint64(FlagHaltTime, 0, "Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node")
+	cmd.Flags().Bool(FlagInterBlockCache, true, "Enable inter-block caching")
+	cmd.Flags().String(flagCPUProfile, "", "Enable CPU profiling and write to the provided file")
+	cmd.Flags().Bool(FlagTrace, false, "Provide full stack traces for errors in ABCI Log")
+	cmd.Flags().String(FlagPruning, storetypes.PruningOptionDefault, "Pruning strategy (default|nothing|everything|custom)")
+	cmd.Flags().Uint64(FlagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
+	cmd.Flags().Uint64(FlagPruningKeepEvery, 0, "Offset heights to keep on disk after 'keep-every' (ignored if pruning is not 'custom')")
+	cmd.Flags().Uint64(FlagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
+	cmd.Flags().Uint(FlagInvCheckPeriod, 0, "Assert registered invariants every N blocks")
+	cmd.Flags().Uint64(FlagMinRetainBlocks, 0, "Minimum block height offset during ABCI commit to prune Tendermint blocks")
+
+	cmd.Flags().Bool(flagGRPCOnly, false, "Start the node in gRPC query only mode (no Tendermint process is started)")
+	cmd.Flags().Bool(flagGRPCEnable, true, "Define if the gRPC server should be enabled")
+	cmd.Flags().String(flagGRPCAddress, config.DefaultGRPCAddress, "the gRPC server address to listen on")
+
+	cmd.Flags().Bool(flagGRPCWebEnable, true, "Define if the gRPC-Web server should be enabled. (Note: gRPC must also be enabled.)")
+	cmd.Flags().String(flagGRPCWebAddress, config.DefaultGRPCWebAddress, "The gRPC-Web server address to listen on")
+
+	cmd.Flags().Uint64(FlagStateSyncSnapshotInterval, 0, "State sync snapshot interval")
+	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
+
+	// add support for all Tendermint-specific command line options
+	tcmd.AddNodeFlags(cmd)
 	return cmd
 }
 
@@ -275,10 +254,10 @@ func startStandAlone[T types.Application](svrCtx *Context, svrCfg serverconfig.C
 		app.RegisterNodeService(clientCtx, svrCfg)
 	}
 
-	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
-	if err != nil {
-		return err
-	}
+func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.AppCreator) error {
+	cfg := ctx.Config
+	home := cfg.RootDir
+	var cpuProfileCleanup func()
 
 	err = startAPIServer(ctx, g, svrCfg, clientCtx, svrCtx, app, svrCtx.Config.RootDir, grpcSrv, metrics)
 	if err != nil {
@@ -380,31 +359,40 @@ func startCmtNode(
 		return nil, cleanupFn, err
 	}
 
-	cmtApp := NewCometABCIWrapper(app)
-	tmNode, err = node.NewNode(
-		ctx,
-		cfg,
-		pv,
-		nodeKey,
-		proxy.NewCommittingClientCreator(app),
-		genDocProvider,
-		node.DefaultDBProvider,
-		node.DefaultMetricsProvider(cfg.Instrumentation),
-		servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger},
+	genDocProvider := node.DefaultGenesisDocProviderFunc(cfg)
+
+	var (
+		tmNode   *node.Node
+		gRPCOnly = ctx.Viper.GetBool(flagGRPCOnly)
 	)
-	if err != nil {
-		return tmNode, cleanupFn, err
-	}
 
-	if err := tmNode.Start(); err != nil {
-		return tmNode, cleanupFn, err
-	}
+	if gRPCOnly {
+		ctx.Logger.Info("starting node in gRPC only mode; Tendermint is disabled")
+		config.GRPC.Enable = true
+	} else {
+		ctx.Logger.Info("starting node with ABCI Tendermint in-process")
 
-	cleanupFn = func() {
-		if tmNode != nil && tmNode.IsRunning() {
-			_ = tmNode.Stop()
+		tmNode, err = node.NewNode(
+			cfg,
+			pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
+			nodeKey,
+			proxy.NewLocalClientCreator(app),
+			genDocProvider,
+			node.DefaultDBProvider,
+			node.DefaultMetricsProvider(cfg.Instrumentation),
+			ctx.Logger,
+		)
+
+		if err := tmNode.Start(); err != nil {
+			return err
 		}
 	}
+
+	// Add the tx service to the gRPC router. We only need to register this
+	// service if API or gRPC is enabled, and avoid doing so in the general
+	// case, because it spawns a new local tendermint RPC client.
+	if (config.API.Enable || config.GRPC.Enable) && tmNode != nil {
+		clientCtx = clientCtx.WithClient(local.New(tmNode))
 
 	return tmNode, cleanupFn, nil
 }
@@ -433,10 +421,7 @@ func getGenDocProvider(cfg *cmtcfg.Config) func() (node.ChecksummedGenesisDoc, e
 			return defaultGenesisDoc, err
 		}
 
-		gen, err := appGenesis.ToGenesisDoc()
-		if err != nil {
-			return defaultGenesisDoc, err
-		}
+		clientCtx := clientCtx.WithHomeDir(home).WithChainID(genDoc.ChainID)
 
 		genbz, err := gen.AppState.MarshalJSON()
 		if err != nil {
@@ -452,6 +437,7 @@ func getGenDocProvider(cfg *cmtcfg.Config) func() (node.ChecksummedGenesisDoc, e
 		select {
 		case err := <-errCh:
 			return err
+
 		case <-time.After(types.ServerStartTime): // assume server started successfully
 		}
 	}
@@ -496,76 +482,19 @@ func startGrpcServer(
 			grpc.MaxCallSendMsgSize(maxSendMsgSize),
 		),
 	)
-	if err != nil {
-		return nil, clientCtx, err
-	}
 
-	clientCtx = clientCtx.WithGRPCClient(grpcClient)
-	svrCtx.Logger.Debug("gRPC client assigned to client context", "target", config.Address)
-
-	grpcSrv, err := servergrpc.NewGRPCServer(clientCtx, app, config)
-	if err != nil {
-		return nil, clientCtx, err
-	}
-
-	// Start the gRPC server in a goroutine. Note, the provided ctx will ensure
-	// that the server is gracefully shut down.
-	g.Go(func() error {
-		return servergrpc.StartGRPCServer(ctx, svrCtx.Logger.With("module", "grpc-server"), config, grpcSrv)
-	})
-	return grpcSrv, clientCtx, nil
-}
-
-func startAPIServer(
-	ctx context.Context,
-	g *errgroup.Group,
-	svrCfg serverconfig.Config,
-	clientCtx client.Context,
-	svrCtx *Context,
-	app types.Application,
-	home string,
-	grpcSrv *grpc.Server,
-	metrics *telemetry.Metrics,
-) error {
-	if !svrCfg.API.Enable {
-		return nil
-	}
-
-	clientCtx = clientCtx.WithHomeDir(home)
-
-	apiSrv := api.New(clientCtx, svrCtx.Logger.With("module", "api-server"), grpcSrv)
-	app.RegisterAPIRoutes(apiSrv, svrCfg.API)
-
-	if svrCfg.Telemetry.Enabled {
-		apiSrv.SetTelemetry(metrics)
-	}
-
-	g.Go(func() error {
-		return apiSrv.Start(ctx, svrCfg)
-	})
-	return nil
-}
-
-func startTelemetry(cfg serverconfig.Config) (*telemetry.Metrics, error) {
-	return telemetry.New(cfg.Telemetry)
-}
-
-// wrapCPUProfile starts CPU profiling, if enabled, and executes the provided
-// callbackFn in a separate goroutine, then will wait for that callback to
-// return.
-//
-// NOTE: We expect the caller to handle graceful shutdown and signal handling.
-func wrapCPUProfile(svrCtx *Context, callbackFn func() error) error {
-	if cpuProfile := svrCtx.Viper.GetString(flagCPUProfile); cpuProfile != "" {
-		f, err := os.Create(cpuProfile)
+	if config.GRPC.Enable {
+		grpcSrv, err = servergrpc.StartGRPCServer(clientCtx, app, config.GRPC.Address)
 		if err != nil {
 			return err
 		}
 
-		svrCtx.Logger.Info("starting CPU profiler", "profile", cpuProfile)
-
-		if err := pprof.StartCPUProfile(f); err != nil {
-			return err
+		if config.GRPCWeb.Enable {
+			grpcWebSrv, err = servergrpc.StartGRPCWeb(grpcSrv, config)
+			if err != nil {
+				ctx.Logger.Error("failed to start grpc-web http server: ", err)
+				return err
+			}
 		}
 
 		defer func() {
@@ -578,24 +507,34 @@ func wrapCPUProfile(svrCtx *Context, callbackFn func() error) error {
 		}()
 	}
 
-	return callbackFn()
-}
-
-// emitServerInfoMetrics emits server info related metrics using application telemetry.
-func emitServerInfoMetrics() {
-	var ls []metrics.Label
-
-	versionInfo := version.NewInfo()
-	if len(versionInfo.GoVersion) > 0 {
-		ls = append(ls, telemetry.NewLabel("go", versionInfo.GoVersion))
-	}
-	if len(versionInfo.CosmosSdkVersion) > 0 {
-		ls = append(ls, telemetry.NewLabel("version", versionInfo.CosmosSdkVersion))
+	// At this point it is safe to block the process if we're in gRPC only mode as
+	// we do not need to start Rosetta or handle any Tendermint related processes.
+	if gRPCOnly {
+		// wait for signal capture and gracefully return
+		return WaitForQuitSignals()
 	}
 
-	if len(ls) == 0 {
-		return
-	}
+	var rosettaSrv crgserver.Server
+	if config.Rosetta.Enable {
+		offlineMode := config.Rosetta.Offline
+
+		// If GRPC is not enabled rosetta cannot work in online mode, so it works in
+		// offline mode.
+		if !config.GRPC.Enable {
+			offlineMode = true
+		}
+
+		conf := &rosetta.Config{
+			Blockchain:        config.Rosetta.Blockchain,
+			Network:           config.Rosetta.Network,
+			TendermintRPC:     ctx.Config.RPC.ListenAddress,
+			GRPCEndpoint:      config.GRPC.Address,
+			Addr:              config.Rosetta.Address,
+			Retries:           config.Rosetta.Retries,
+			Offline:           offlineMode,
+			Codec:             clientCtx.Codec.(*codec.ProtoCodec),
+			InterfaceRegistry: clientCtx.InterfaceRegistry,
+		}
 
 	telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, ls)
 }
@@ -626,109 +565,15 @@ func startApp[T types.Application](svrCtx *Context, appCreator types.AppCreator[
 		if err != nil {
 			return app, traceCleanupFn, err
 		}
-		app = *appPtr
-	} else {
-		app = appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
-	}
 
-	cleanupFn = func() {
-		traceCleanupFn()
-		if localErr := app.Close(); localErr != nil {
-			svrCtx.Logger.Error(localErr.Error())
-		}
-	}
-	return app, cleanupFn, nil
-}
-
-// InPlaceTestnetCreator utilizes the provided chainID and operatorAddress as well as the local private validator key to
-// control the network represented in the data folder. This is useful to create testnets nearly identical to your
-// mainnet environment.
-func InPlaceTestnetCreator[T types.Application](testnetAppCreator types.AppCreator[T]) *cobra.Command {
-	opts := StartCmdOptions[T]{}
-	if opts.DBOpener == nil {
-		opts.DBOpener = OpenDB
-	}
-
-	if opts.StartCommandHandler == nil {
-		opts.StartCommandHandler = start
-	}
-
-	cmd := &cobra.Command{
-		Use:   "in-place-testnet <newChainID> <newOperatorAddress>",
-		Short: "Create and start a testnet from current local state",
-		Long: `Create and start a testnet from current local state.
-After utilizing this command the network will start. If the network is stopped,
-the normal "start" command should be used. Re-using this command on state that
-has already been modified by this command could result in unexpected behavior.
-
-Additionally, the first block may take up to one minute to be committed, depending
-on how old the block is. For instance, if a snapshot was taken weeks ago and we want
-to turn this into a testnet, it is possible lots of pending state needs to be committed
-(expiring locks, etc.). It is recommended that you should wait for this block to be committed
-before stopping the daemon.
-
-If the --trigger-testnet-upgrade flag is set, the upgrade handler specified by the flag will be run
-on the first block of the testnet.
-
-Regardless of whether the flag is set or not, if any new stores are introduced in the daemon being run,
-those stores will be registered in order to prevent panics. Therefore, you only need to set the flag if
-you want to test the upgrade handler itself.
-`,
-		Example: "in-place-testnet localosmosis osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj",
-		Args:    cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			serverCtx := GetServerContextFromCmd(cmd)
-			_, err := GetPruningOptionsFromFlags(serverCtx.Viper)
-			if err != nil {
-				return err
-			}
-
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			withCMT, _ := cmd.Flags().GetBool(flagWithComet)
-			if !withCMT {
-				serverCtx.Logger.Info("starting ABCI without CometBFT")
-			}
-
-			newChainID := args[0]
-			newOperatorAddress := args[1]
-
-			skipConfirmation, _ := cmd.Flags().GetBool("skip-confirmation")
-
-			if !skipConfirmation {
-				// Confirmation prompt to prevent accidental modification of state.
-				reader := bufio.NewReader(os.Stdin)
-				fmt.Println("This operation will modify state in your data folder and cannot be undone. Do you want to continue? (y/n)")
-				text, _ := reader.ReadString('\n')
-				response := strings.TrimSpace(strings.ToLower(text))
-				if response != "y" && response != "yes" {
-					fmt.Println("Operation canceled.")
-					return nil
-				}
-			}
-
-			// Set testnet keys to be used by the application.
-			// This is done to prevent changes to existing start API.
-			serverCtx.Viper.Set(KeyIsTestnet, true)
-			serverCtx.Viper.Set(KeyNewChainID, newChainID)
-			serverCtx.Viper.Set(KeyNewOpAddr, newOperatorAddress)
-
-			err = wrapCPUProfile(serverCtx, func() error {
-				return opts.StartCommandHandler(serverCtx, clientCtx, testnetAppCreator, withCMT, opts)
-			})
-
-			serverCtx.Logger.Debug("received quit signal")
-			graceDuration, _ := cmd.Flags().GetDuration(FlagShutdownGrace)
-			if graceDuration > 0 {
-				serverCtx.Logger.Info("graceful shutdown start", FlagShutdownGrace, graceDuration)
-				<-time.After(graceDuration)
-				serverCtx.Logger.Info("graceful shutdown complete")
+		errCh := make(chan error)
+		go func() {
+			if err := rosettaSrv.Start(); err != nil {
+				errCh <- err
 			}
 
 			return err
+
 		case <-time.After(types.ServerStartTime): // assume server started successfully
 		}
 	}
@@ -1013,10 +858,6 @@ func addStartNodeFlags[T types.Application](cmd *cobra.Command, opts StartCmdOpt
 		return pflag.NormalizedName(name)
 	})
 
-	// add support for all CometBFT-specific command line options
-	cmtcmd.AddNodeFlags(cmd)
-
-	if opts.AddFlags != nil {
-		opts.AddFlags(cmd)
-	}
+	// wait for signal capture and gracefully return
+	return WaitForQuitSignals()
 }

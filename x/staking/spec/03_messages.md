@@ -116,6 +116,27 @@ When this message is processed the following actions occur:
 
 ![Unbond sequence](../../../docs/uml/svg/unbond_sequence.svg)
 
+## MsgCancelUnbondingDelegation
+The `MsgCancelUnbondingDelegation` message allows delegators to cancel the `unbondingDelegation` entry and re-deleagate back to previous validator.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/28243eb41c16ecfc95631ac2bb266dd28ed5c317/proto/cosmos/staking/v1beta1/tx.proto#L36-L38
+
++++ https://github.com/cosmos/cosmos-sdk/blob/28243eb41c16ecfc95631ac2bb266dd28ed5c317/proto/cosmos/staking/v1beta1/tx.proto#L144-L154
+
++++ https://github.com/cosmos/cosmos-sdk/blob/28243eb41c16ecfc95631ac2bb266dd28ed5c317/proto/cosmos/staking/v1beta1/tx.proto#L156-L157
+
+
+This message is expected to fail if:
+* if an `unbondingDelegation` entry is already processed
+* if cancel unbonding delegation amount is greater than the `unbondingDelegation` entry balance
+* if cancel unbonding delegation height is not exists in the `unbondingDelegationQueue` of the delegator
+
+When this message is processed the following actions occur:
+* if delegator `unbondingDelegation` entry is not processed
+* if cancel `unbondingDelegation` amount is less than or equal to the `unbondingDelegation` entry of delegator 
+* if cancel unbonding delegation height is exists in the `unbondingDelegation` queue of the delegator
+
+
 ## MsgBeginRedelegate
 
 The redelegation command allows delegators to instantly switch validators. Once

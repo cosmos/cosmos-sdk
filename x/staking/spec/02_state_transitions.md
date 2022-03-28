@@ -91,6 +91,12 @@ Delegation may be called.
   shares from the `BondedPool` to the `NotBondedPool` `ModuleAccount`
 * remove the validator if it is unbonded and there are no more delegation shares.
 
+### Cancel an `UnbondingDelegation` Entry 
+When a `cancel unbond delegation` occures both the `validator` and the `delegation` and an `UnbondingDelegationQueue` state will be affected
+* if cancel unbonding delegation amount equals to an `UnbondingDelegation` Entry `balance` then an `UnbondingDelegation` Entry deleted from `UnbondingDelegationQueue`.
+* if cancel unbonding delegation amount is less then an `UnbondingDelegation` Entry balance then an `UnbondingDelegation` Entry updated with new balance to the `UnbondingDelegationQueue`. 
+* cancel `amount` is [Delegated](02_state_transitions.md#delegations) back to previous `validator` 
+
 ### Complete Unbonding
 
 For undelegations which do not complete immediately, the following operations

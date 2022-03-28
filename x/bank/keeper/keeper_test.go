@@ -12,7 +12,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -41,7 +40,8 @@ var (
 	randomPermAcc = authtypes.NewEmptyModuleAccount(randomPerm, "random")
 
 	// The default power validators are initialized to have within tests
-	initCoins = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdktestutil.TokensFromConsensusPower(initialPower, sdktestutil.DefaultpowerReduction)))
+	initTokens = sdk.TokensFromConsensusPower(initialPower, sdk.DefaultPowerReduction)
+	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 )
 
 func newFooCoin(amt int64) sdk.Coin {
@@ -95,7 +95,7 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 
 func (suite *IntegrationTestSuite) SetupTest() {
 	app := simapp.Setup(suite.T(), false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
 
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	app.BankKeeper.SetParams(ctx, types.DefaultParams())

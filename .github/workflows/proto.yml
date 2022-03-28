@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
       - uses: technote-space/get-diff-action@v4
         with:
           PATTERNS: |
@@ -20,7 +20,7 @@ jobs:
   breakage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
       - uses: technote-space/get-diff-action@v4
         with:
           PATTERNS: |

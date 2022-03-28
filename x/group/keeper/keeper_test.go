@@ -1598,27 +1598,29 @@ func (s *TestSuite) TestSubmitProposal() {
 			s.Require().NoError(err)
 			id := res.ProposalId
 
-			// then all data persisted
-			proposalRes, err := s.keeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: id})
-			s.Require().NoError(err)
-			proposal := proposalRes.Proposal
+			if !(spec.expProposal.ExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS) {
+				// then all data persisted
+				proposalRes, err := s.keeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: id})
+				s.Require().NoError(err)
+				proposal := proposalRes.Proposal
 
-			s.Assert().Equal(spec.expProposal.Address, proposal.Address)
-			s.Assert().Equal(spec.req.Metadata, proposal.Metadata)
-			s.Assert().Equal(spec.req.Proposers, proposal.Proposers)
-			s.Assert().Equal(s.blockTime, proposal.SubmitTime)
-			s.Assert().Equal(uint64(1), proposal.GroupVersion)
-			s.Assert().Equal(uint64(1), proposal.GroupPolicyVersion)
-			s.Assert().Equal(spec.expProposal.Status, proposal.Status)
-			s.Assert().Equal(spec.expProposal.Result, proposal.Result)
-			s.Assert().Equal(spec.expProposal.FinalTallyResult, proposal.FinalTallyResult)
-			s.Assert().Equal(spec.expProposal.ExecutorResult, proposal.ExecutorResult)
-			s.Assert().Equal(s.blockTime.Add(time.Second), proposal.VotingPeriodEnd)
+				s.Assert().Equal(spec.expProposal.Address, proposal.Address)
+				s.Assert().Equal(spec.req.Metadata, proposal.Metadata)
+				s.Assert().Equal(spec.req.Proposers, proposal.Proposers)
+				s.Assert().Equal(s.blockTime, proposal.SubmitTime)
+				s.Assert().Equal(uint64(1), proposal.GroupVersion)
+				s.Assert().Equal(uint64(1), proposal.GroupPolicyVersion)
+				s.Assert().Equal(spec.expProposal.Status, proposal.Status)
+				s.Assert().Equal(spec.expProposal.Result, proposal.Result)
+				s.Assert().Equal(spec.expProposal.FinalTallyResult, proposal.FinalTallyResult)
+				s.Assert().Equal(spec.expProposal.ExecutorResult, proposal.ExecutorResult)
+				s.Assert().Equal(s.blockTime.Add(time.Second), proposal.VotingPeriodEnd)
 
-			if spec.msgs == nil { // then empty list is ok
-				s.Assert().Len(proposal.GetMsgs(), 0)
-			} else {
-				s.Assert().Equal(spec.msgs, proposal.GetMsgs())
+				if spec.msgs == nil { // then empty list is ok
+					s.Assert().Len(proposal.GetMsgs(), 0)
+				} else {
+					s.Assert().Equal(spec.msgs, proposal.GetMsgs())
+				}
 			}
 
 			spec.postRun(s.sdkCtx)
@@ -2042,47 +2044,6 @@ func (s *TestSuite) TestVote() {
 			expErr:  true,
 			postRun: func(sdkCtx sdk.Context) {},
 		},
-		"with group modified": {
-			req: &group.MsgVote{
-				ProposalId: myProposalID,
-				Voter:      addr4.String(),
-				Option:     group.VOTE_OPTION_NO,
-			},
-			doBefore: func(ctx context.Context) {
-				_, err = s.keeper.UpdateGroupMetadata(ctx, &group.MsgUpdateGroupMetadata{
-					GroupId: myGroupID,
-					Admin:   addr1.String(),
-				})
-				s.Require().NoError(err)
-			},
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
-		},
-		"with policy modified": {
-			req: &group.MsgVote{
-				ProposalId: myProposalID,
-				Voter:      addr4.String(),
-				Option:     group.VOTE_OPTION_NO,
-			},
-			doBefore: func(ctx context.Context) {
-				m, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(
-					addr1,
-					groupPolicy,
-					&group.ThresholdDecisionPolicy{
-						Threshold: "1",
-						Windows: &group.DecisionPolicyWindows{
-							VotingPeriod: time.Second,
-						},
-					},
-				)
-				s.Require().NoError(err)
-
-				_, err = s.keeper.UpdateGroupPolicyDecisionPolicy(ctx, m)
-				s.Require().NoError(err)
-			},
-			expErr:  true,
-			postRun: func(sdkCtx sdk.Context) {},
-		},
 	}
 	for msg, spec := range specs {
 		spec := spec
@@ -2105,66 +2066,69 @@ func (s *TestSuite) TestVote() {
 			s.Require().NoError(err)
 
 			s.Require().NoError(err)
-			// vote is stored and all data persisted
-			res, err := s.keeper.VoteByProposalVoter(ctx, &group.QueryVoteByProposalVoterRequest{
-				ProposalId: spec.req.ProposalId,
-				Voter:      spec.req.Voter,
-			})
-			s.Require().NoError(err)
-			loaded := res.Vote
-			s.Assert().Equal(spec.req.ProposalId, loaded.ProposalId)
-			s.Assert().Equal(spec.req.Voter, loaded.Voter)
-			s.Assert().Equal(spec.req.Option, loaded.Option)
-			s.Assert().Equal(spec.req.Metadata, loaded.Metadata)
-			s.Assert().Equal(s.blockTime, loaded.SubmitTime)
 
-			// query votes by proposal
-			votesByProposalRes, err := s.keeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{
-				ProposalId: spec.req.ProposalId,
-			})
-			s.Require().NoError(err)
-			votesByProposal := votesByProposalRes.Votes
-			s.Require().Equal(1, len(votesByProposal))
-			vote := votesByProposal[0]
-			s.Assert().Equal(spec.req.ProposalId, vote.ProposalId)
-			s.Assert().Equal(spec.req.Voter, vote.Voter)
-			s.Assert().Equal(spec.req.Option, vote.Option)
-			s.Assert().Equal(spec.req.Metadata, vote.Metadata)
-			s.Assert().Equal(s.blockTime, vote.SubmitTime)
+			if !(spec.expExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS) {
+				// vote is stored and all data persisted
+				res, err := s.keeper.VoteByProposalVoter(ctx, &group.QueryVoteByProposalVoterRequest{
+					ProposalId: spec.req.ProposalId,
+					Voter:      spec.req.Voter,
+				})
+				s.Require().NoError(err)
+				loaded := res.Vote
+				s.Assert().Equal(spec.req.ProposalId, loaded.ProposalId)
+				s.Assert().Equal(spec.req.Voter, loaded.Voter)
+				s.Assert().Equal(spec.req.Option, loaded.Option)
+				s.Assert().Equal(spec.req.Metadata, loaded.Metadata)
+				s.Assert().Equal(s.blockTime, loaded.SubmitTime)
 
-			// query votes by voter
-			voter := spec.req.Voter
-			votesByVoterRes, err := s.keeper.VotesByVoter(ctx, &group.QueryVotesByVoterRequest{
-				Voter: voter,
-			})
-			s.Require().NoError(err)
-			votesByVoter := votesByVoterRes.Votes
-			s.Require().Equal(1, len(votesByVoter))
-			s.Assert().Equal(spec.req.ProposalId, votesByVoter[0].ProposalId)
-			s.Assert().Equal(voter, votesByVoter[0].Voter)
-			s.Assert().Equal(spec.req.Option, votesByVoter[0].Option)
-			s.Assert().Equal(spec.req.Metadata, votesByVoter[0].Metadata)
-			s.Assert().Equal(s.blockTime, votesByVoter[0].SubmitTime)
+				// query votes by proposal
+				votesByProposalRes, err := s.keeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{
+					ProposalId: spec.req.ProposalId,
+				})
+				s.Require().NoError(err)
+				votesByProposal := votesByProposalRes.Votes
+				s.Require().Equal(1, len(votesByProposal))
+				vote := votesByProposal[0]
+				s.Assert().Equal(spec.req.ProposalId, vote.ProposalId)
+				s.Assert().Equal(spec.req.Voter, vote.Voter)
+				s.Assert().Equal(spec.req.Option, vote.Option)
+				s.Assert().Equal(spec.req.Metadata, vote.Metadata)
+				s.Assert().Equal(s.blockTime, vote.SubmitTime)
 
-			proposalRes, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{
-				ProposalId: spec.req.ProposalId,
-			})
-			s.Require().NoError(err)
+				// query votes by voter
+				voter := spec.req.Voter
+				votesByVoterRes, err := s.keeper.VotesByVoter(ctx, &group.QueryVotesByVoterRequest{
+					Voter: voter,
+				})
+				s.Require().NoError(err)
+				votesByVoter := votesByVoterRes.Votes
+				s.Require().Equal(1, len(votesByVoter))
+				s.Assert().Equal(spec.req.ProposalId, votesByVoter[0].ProposalId)
+				s.Assert().Equal(voter, votesByVoter[0].Voter)
+				s.Assert().Equal(spec.req.Option, votesByVoter[0].Option)
+				s.Assert().Equal(spec.req.Metadata, votesByVoter[0].Metadata)
+				s.Assert().Equal(s.blockTime, votesByVoter[0].SubmitTime)
 
-			proposal := proposalRes.Proposal
-			if spec.isFinal {
-				s.Assert().Equal(spec.expTallyResult, proposal.FinalTallyResult)
-				s.Assert().Equal(spec.expResult, proposal.Result)
-				s.Assert().Equal(spec.expProposalStatus, proposal.Status)
-				s.Assert().Equal(spec.expExecutorResult, proposal.ExecutorResult)
-			} else {
-				s.Assert().Equal(group.DefaultTallyResult(), proposal.FinalTallyResult) // Make sure proposal isn't mutated.
-
-				// do a round of tallying
-				tallyResult, err := s.keeper.Tally(sdkCtx, *proposal, myGroupID)
+				proposalRes, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{
+					ProposalId: spec.req.ProposalId,
+				})
 				s.Require().NoError(err)
 
-				s.Assert().Equal(spec.expTallyResult, tallyResult)
+				proposal := proposalRes.Proposal
+				if spec.isFinal {
+					s.Assert().Equal(spec.expTallyResult, proposal.FinalTallyResult)
+					s.Assert().Equal(spec.expResult, proposal.Result)
+					s.Assert().Equal(spec.expProposalStatus, proposal.Status)
+					s.Assert().Equal(spec.expExecutorResult, proposal.ExecutorResult)
+				} else {
+					s.Assert().Equal(group.DefaultTallyResult(), proposal.FinalTallyResult) // Make sure proposal isn't mutated.
+
+					// do a round of tallying
+					tallyResult, err := s.keeper.Tally(sdkCtx, *proposal, myGroupID)
+					s.Require().NoError(err)
+
+					s.Assert().Equal(spec.expTallyResult, tallyResult)
+				}
 			}
 
 			spec.postRun(sdkCtx)
@@ -2329,36 +2293,6 @@ func (s *TestSuite) TestExecProposal() {
 			expProposalResult: group.PROPOSAL_RESULT_REJECTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
-		"with group modified before tally": {
-			setupProposal: func(ctx context.Context) uint64 {
-				myProposalID := submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
-
-				// then modify group
-				_, err := s.keeper.UpdateGroupMetadata(ctx, &group.MsgUpdateGroupMetadata{
-					Admin:   addr1.String(),
-					GroupId: s.groupID,
-				})
-				s.Require().NoError(err)
-				return myProposalID
-			},
-			expProposalStatus: group.PROPOSAL_STATUS_ABORTED,
-			expProposalResult: group.PROPOSAL_RESULT_UNFINALIZED,
-			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
-		},
-		"with group policy modified before tally": {
-			setupProposal: func(ctx context.Context) uint64 {
-				myProposalID := submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
-				_, err := s.keeper.UpdateGroupPolicyMetadata(ctx, &group.MsgUpdateGroupPolicyMetadata{
-					Admin:   addr1.String(),
-					Address: s.groupPolicyAddr.String(),
-				})
-				s.Require().NoError(err)
-				return myProposalID
-			},
-			expProposalStatus: group.PROPOSAL_STATUS_ABORTED,
-			expProposalResult: group.PROPOSAL_RESULT_UNFINALIZED,
-			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
-		},
 		"prevent double execution when successful": {
 			setupProposal: func(ctx context.Context) uint64 {
 				myProposalID := submitProposalAndVote(ctx, s, []sdk.Msg{msgSend1}, proposers, group.VOTE_OPTION_YES)
@@ -2367,6 +2301,7 @@ func (s *TestSuite) TestExecProposal() {
 				s.Require().NoError(err)
 				return myProposalID
 			},
+			expErr:            true, // since proposal is pruned after a successful MsgExec
 			expProposalStatus: group.PROPOSAL_STATUS_CLOSED,
 			expProposalResult: group.PROPOSAL_RESULT_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
@@ -2419,28 +2354,175 @@ func (s *TestSuite) TestExecProposal() {
 			}
 			s.Require().NoError(err)
 
-			// and proposal is updated
-			res, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
-			s.Require().NoError(err)
-			proposal := res.Proposal
+			if !(spec.expExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS) {
 
-			exp := group.ProposalResult_name[int32(spec.expProposalResult)]
-			got := group.ProposalResult_name[int32(proposal.Result)]
-			s.Assert().Equal(exp, got)
+				// and proposal is updated
+				res, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
+				s.Require().NoError(err)
+				proposal := res.Proposal
 
-			exp = group.ProposalStatus_name[int32(spec.expProposalStatus)]
-			got = group.ProposalStatus_name[int32(proposal.Status)]
-			s.Assert().Equal(exp, got)
+				exp := group.ProposalResult_name[int32(spec.expProposalResult)]
+				got := group.ProposalResult_name[int32(proposal.Result)]
+				s.Assert().Equal(exp, got)
 
-			exp = group.ProposalExecutorResult_name[int32(spec.expExecutorResult)]
-			got = group.ProposalExecutorResult_name[int32(proposal.ExecutorResult)]
-			s.Assert().Equal(exp, got)
+				exp = group.ProposalStatus_name[int32(spec.expProposalStatus)]
+				got = group.ProposalStatus_name[int32(proposal.Status)]
+				s.Assert().Equal(exp, got)
+
+				exp = group.ProposalExecutorResult_name[int32(spec.expExecutorResult)]
+				got = group.ProposalExecutorResult_name[int32(proposal.ExecutorResult)]
+				s.Assert().Equal(exp, got)
+			}
 
 			if spec.expBalance {
 				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, s.groupPolicyAddr)
 				s.Require().Contains(fromBalances, spec.expFromBalances)
 				toBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, addr2)
 				s.Require().Contains(toBalances, spec.expToBalances)
+			}
+		})
+	}
+}
+
+func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr2 := addrs[1]
+
+	msgSend1 := &banktypes.MsgSend{
+		FromAddress: s.groupPolicyAddr.String(),
+		ToAddress:   addr2.String(),
+		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+	}
+	msgSend2 := &banktypes.MsgSend{
+		FromAddress: s.groupPolicyAddr.String(),
+		ToAddress:   addr2.String(),
+		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 10001)},
+	}
+	proposers := []string{addr2.String()}
+	specs := map[string]struct {
+		srcBlockTime      time.Time
+		setupProposal     func(ctx context.Context) uint64
+		expErr            bool
+		expErrMsg         string
+		expExecutorResult group.ProposalExecutorResult
+	}{
+		"proposal pruned after executor result success": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend1}
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
+			},
+			expErrMsg:         "load proposal: not found",
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+		},
+		"proposal with multiple messages pruned when executed with result success": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend1, msgSend1}
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
+			},
+			expErrMsg:         "load proposal: not found",
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+		},
+		"proposal not pruned when not executed and rejected": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend1}
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_NO)
+			},
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+		},
+		"open proposal is not pruned which must not fail ": {
+			setupProposal: func(ctx context.Context) uint64 {
+				return submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
+			},
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+		},
+		"proposal not pruned with group modified before tally": {
+			setupProposal: func(ctx context.Context) uint64 {
+				myProposalID := submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
+
+				// then modify group
+				_, err := s.keeper.UpdateGroupMetadata(ctx, &group.MsgUpdateGroupMetadata{
+					Admin:   addr1.String(),
+					GroupId: s.groupID,
+				})
+				s.Require().NoError(err)
+				return myProposalID
+			},
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+		},
+		"proposal not pruned with group policy modified before tally": {
+			setupProposal: func(ctx context.Context) uint64 {
+				myProposalID := submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
+				_, err := s.keeper.UpdateGroupPolicyMetadata(ctx, &group.MsgUpdateGroupPolicyMetadata{
+					Admin:   addr1.String(),
+					Address: s.groupPolicyAddr.String(),
+				})
+				s.Require().NoError(err)
+				return myProposalID
+			},
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+		},
+		"proposal exists when rollback all msg updates on failure": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend1, msgSend2}
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
+			},
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_FAILURE,
+		},
+		"pruned when proposal is executable when failed before": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend2}
+				myProposalID := submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
+
+				_, err := s.keeper.Exec(ctx, &group.MsgExec{Signer: addr1.String(), ProposalId: myProposalID})
+				s.Require().NoError(err)
+				sdkCtx := sdk.UnwrapSDKContext(ctx)
+				s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+
+				return myProposalID
+			},
+			expErrMsg:         "load proposal: not found",
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+		},
+	}
+	for msg, spec := range specs {
+		spec := spec
+		s.Run(msg, func() {
+			sdkCtx, _ := s.sdkCtx.CacheContext()
+			ctx := sdk.WrapSDKContext(sdkCtx)
+			proposalID := spec.setupProposal(ctx)
+
+			if !spec.srcBlockTime.IsZero() {
+				sdkCtx = sdkCtx.WithBlockTime(spec.srcBlockTime)
+			}
+
+			ctx = sdk.WrapSDKContext(sdkCtx)
+			_, err := s.keeper.Exec(ctx, &group.MsgExec{Signer: addr1.String(), ProposalId: proposalID})
+			if spec.expErr {
+				s.Require().Error(err)
+				return
+			}
+			s.Require().NoError(err)
+
+			if spec.expExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
+				// Make sure proposal is deleted from state
+				_, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
+				s.Require().Contains(err.Error(), spec.expErrMsg)
+				res, err := s.keeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{ProposalId: proposalID})
+				s.Require().NoError(err)
+				s.Require().Empty(res.GetVotes())
+
+			} else {
+				// Check that proposal and votes exists
+				res, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
+				s.Require().NoError(err)
+				_, err = s.keeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{ProposalId: res.Proposal.Id})
+				s.Require().NoError(err)
+				s.Require().Equal("", spec.expErrMsg)
+
+				exp := group.ProposalExecutorResult_name[int32(spec.expExecutorResult)]
+				got := group.ProposalExecutorResult_name[int32(res.Proposal.ExecutorResult)]
+				s.Assert().Equal(exp, got)
 			}
 		})
 	}

@@ -16,7 +16,7 @@ order: 3
 
 ## Middlewares
 
-The SDK Baseapp's implementation of ABCI CheckTx, DeliverTx, and Simulate methods use a middleware-based design. Middlewares can add logic to be executed before or after a transaction handler execution. Middlewares allow us to solve use cases like transaction Tips and refund unused gas. 
+The SDK Baseapp's implementation of ABCI CheckTx, DeliverTx, and Baseapp's own Simulate methods use a middleware-based design. Middlewares can add logic to be executed before or after a transaction handler execution. Middlewares allow us to solve use cases like transaction Tips and refund unused gas (issue [#2150](https://github.com/cosmos/cosmos-sdk/issues/2150)). 
 
 
 ### Type Definition

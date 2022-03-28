@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
@@ -132,7 +133,7 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 	acc := ak.GetAccount(ctx, to)
 
 	if acc != nil {
-		pva, isPeriodic := acc.(*types.PeriodicVestingAccount)
+		pva, isPeriodic := acc.(exported.GrantAccount)
 		switch {
 		case !msg.Merge && isPeriodic:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists; consider using --merge", msg.ToAddress)
@@ -141,7 +142,11 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 		case msg.Merge && !isPeriodic:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrNotSupported, "account %s must be a periodic vesting account", msg.ToAddress)
 		}
-		pva.AddGrant(ctx, s.StakingKeeper, msg.GetStartTime(), msg.GetVestingPeriods(), totalCoins)
+		grantAction := types.NewPeriodicGrantAction(s.StakingKeeper, msg.GetStartTime(), msg.GetVestingPeriods(), totalCoins)
+		err := pva.AddGrant(ctx, grantAction)
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		baseAccount := ak.NewAccountWithAddress(ctx, to)
 		acc = types.NewPeriodicVestingAccount(baseAccount.(*authtypes.BaseAccount), totalCoins, msg.StartTime, msg.VestingPeriods)
@@ -233,11 +238,11 @@ func (s msgServer) CreateClawbackVestingAccount(goCtx context.Context, msg *type
 
 	madeNewAcc := false
 	acc := ak.GetAccount(ctx, to)
-	var va *types.ClawbackVestingAccount
+	var va exported.ClawbackVestingAccountI
 
 	if acc != nil {
 		var isClawback bool
-		va, isClawback = acc.(*types.ClawbackVestingAccount)
+		va, isClawback = acc.(exported.ClawbackVestingAccountI)
 		switch {
 		case !msg.Merge && isClawback:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists; consider using --merge", msg.ToAddress)
@@ -245,10 +250,14 @@ func (s msgServer) CreateClawbackVestingAccount(goCtx context.Context, msg *type
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
 		case msg.Merge && !isClawback:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrNotSupported, "account %s must be a clawback vesting account", msg.ToAddress)
-		case msg.FromAddress != va.FunderAddress:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s can only accept grants from account %s", msg.ToAddress, va.FunderAddress)
+		case msg.FromAddress != va.GetFunder().String():
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s can only accept grants from account %s", msg.ToAddress, va.GetFunder())
 		}
-		va.AddGrant(ctx, s.StakingKeeper, msg.GetStartTime(), msg.GetLockupPeriods(), msg.GetVestingPeriods(), vestingCoins)
+		grantAction := types.NewClawbackGrantAction(s.StakingKeeper, msg.GetStartTime(), msg.GetLockupPeriods(), msg.GetVestingPeriods(), vestingCoins)
+		err := va.AddGrant(ctx, grantAction)
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		baseAccount := ak.NewAccountWithAddress(ctx, to)
 		va = types.NewClawbackVestingAccount(baseAccount.(*authtypes.BaseAccount), from, vestingCoins, msg.StartTime, msg.LockupPeriods, msg.VestingPeriods)
@@ -329,7 +338,8 @@ func (s msgServer) Clawback(goCtx context.Context, msg *types.MsgClawback) (*typ
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "clawback can only be requested by original funder %s", va.FunderAddress)
 	}
 
-	err = va.Clawback(ctx, dest, ak, bk, s.StakingKeeper)
+	clawbackAction := types.NewClawbackAction(dest, ak, bk, s.StakingKeeper)
+	err = va.Clawback(ctx, clawbackAction)
 	if err != nil {
 		return nil, err
 	}

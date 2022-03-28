@@ -347,7 +347,9 @@ func TestAddGrantPeriodicVestingAcc(t *testing.T) {
 	require.Equal(t, int64(15), pva.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
 
 	// Add a new grant while all slashing is covered by unvested tokens
-	pva.AddGrant(ctx, app.StakingKeeper, ctx.BlockTime().Unix(), periods, origCoins)
+	grantAction := types.NewPeriodicGrantAction(app.StakingKeeper, ctx.BlockTime().Unix(), periods, origCoins)
+	err := pva.AddGrant(ctx, grantAction)
+	require.NoError(t, err)
 
 	// After new grant, 115stake locked at now+150 due to slashing,
 	// delegation bookkeeping unchanged
@@ -361,7 +363,9 @@ func TestAddGrantPeriodicVestingAcc(t *testing.T) {
 	require.Equal(t, int64(0), pva.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
 
 	// Add a new grant, while slashed amount is 50 unvested, 10 vested
-	pva.AddGrant(ctx, app.StakingKeeper, ctx.BlockTime().Unix(), periods, origCoins)
+	grantAction = types.NewPeriodicGrantAction(app.StakingKeeper, ctx.BlockTime().Unix(), periods, origCoins)
+	err = pva.AddGrant(ctx, grantAction)
+	require.NoError(t, err)
 
 	// After new grant, slashed amount reduced to 50 vested, locked is 100
 	require.Equal(t, int64(100), pva.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
@@ -374,7 +378,9 @@ func TestAddGrantPeriodicVestingAcc(t *testing.T) {
 	require.Equal(t, int64(0), pva.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
 
 	// Add a new grant with residual slashed amount, but no unvested
-	pva.AddGrant(ctx, app.StakingKeeper, ctx.BlockTime().Unix(), periods, origCoins)
+	grantAction = types.NewPeriodicGrantAction(app.StakingKeeper, ctx.BlockTime().Unix(), periods, origCoins)
+	err = pva.AddGrant(ctx, grantAction)
+	require.NoError(t, err)
 
 	// After new grant, all 100 locked, no residual delegation bookkeeping
 	require.Equal(t, int64(100), pva.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
@@ -384,7 +390,7 @@ func TestAddGrantPeriodicVestingAcc(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, pva)
 
 	// fund the vesting account with new grant (old has vested and transferred out)
-	err := simapp.FundAccount(app.BankKeeper, ctx, addr, origCoins)
+	err = simapp.FundAccount(app.BankKeeper, ctx, addr, origCoins)
 	require.NoError(t, err)
 	require.Equal(t, int64(100), app.BankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
 
@@ -424,7 +430,9 @@ func TestAddGrantPeriodicVestingAcc_FullSlash(t *testing.T) {
 
 	// Add a new grant of 50stake
 	newGrant := c(stake(50))
-	pva.AddGrant(ctx, app.StakingKeeper, now.Add(500*time.Second).Unix(), []types.Period{{Length: 50, Amount: newGrant}}, newGrant)
+	grantAction := types.NewPeriodicGrantAction(app.StakingKeeper, now.Add(500*time.Second).Unix(), []types.Period{{Length: 50, Amount: newGrant}}, newGrant)
+	err := pva.AddGrant(ctx, grantAction)
+	require.NoError(t, err)
 	app.AccountKeeper.SetAccount(ctx, pva)
 
 	// Only 10 of the new grant locked, since 40 fell into the "hole" of slashed-vested
@@ -1080,7 +1088,8 @@ func TestClawback(t *testing.T) {
 	// clawback the unvested funds (600fee, 50stake)
 	_, _, dest := testdata.KeyTestPubAddr()
 	va2 := app.AccountKeeper.GetAccount(ctx, addr).(*types.ClawbackVestingAccount)
-	err = va2.Clawback(ctx, dest, app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
+	clawbackAction := types.NewClawbackAction(dest, app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
+	err = va2.Clawback(ctx, clawbackAction)
 	require.NoError(t, err)
 
 	// check vesting account
@@ -1162,7 +1171,9 @@ func TestRewards(t *testing.T) {
 	// distribute a reward of 120stake
 	err = simapp.FundAccount(app.BankKeeper, ctx, addr, c(stake(120)))
 	require.NoError(t, err)
-	va.PostReward(ctx, c(stake(120)), app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
+	rewardAction := types.NewClawbackRewardAction(app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
+	err = va.PostReward(ctx, c(stake(120)), rewardAction)
+	require.NoError(t, err)
 
 	// With 1600 delegated, 1000 unvested, reward should be 75 unvested
 	va = app.AccountKeeper.GetAccount(ctx, addr).(*types.ClawbackVestingAccount)
@@ -1223,7 +1234,9 @@ func TestRewards_PostSlash(t *testing.T) {
 	// distribute a reward of 160stake - should all be unvested
 	err = simapp.FundAccount(app.BankKeeper, ctx, addr, c(stake(160)))
 	require.NoError(t, err)
-	va.PostReward(ctx, c(stake(160)), app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
+	rewardAction := types.NewClawbackRewardAction(app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
+	err = va.PostReward(ctx, c(stake(160)), rewardAction)
+	require.NoError(t, err)
 	va = app.AccountKeeper.GetAccount(ctx, addr).(*types.ClawbackVestingAccount)
 	require.Equal(t, int64(4160), va.OriginalVesting.AmountOf(stakeDenom).Int64())
 	require.Equal(t, 8, len(va.VestingPeriods))
@@ -1243,7 +1256,8 @@ func TestRewards_PostSlash(t *testing.T) {
 	ctx = ctx.WithBlockTime(now.Add(1200 * time.Second))
 	err = simapp.FundAccount(app.BankKeeper, ctx, addr, c(stake(160)))
 	require.NoError(t, err)
-	va.PostReward(ctx, c(stake(160)), app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
+	err = va.PostReward(ctx, c(stake(160)), rewardAction)
+	require.NoError(t, err)
 	va = app.AccountKeeper.GetAccount(ctx, addr).(*types.ClawbackVestingAccount)
 	// shouldn't be added to vesting schedule
 	require.Equal(t, int64(4160), va.OriginalVesting.AmountOf(stakeDenom).Int64())
@@ -1278,9 +1292,11 @@ func TestAddGrantClawbackVestingAcc_fullSlash(t *testing.T) {
 
 	// Add a new grant of 50stake
 	newGrant := c(stake(50))
-	va.AddGrant(ctx, app.StakingKeeper, now.Add(500*time.Second).Unix(),
+	grantAction := types.NewClawbackGrantAction(app.StakingKeeper, now.Add(500*time.Second).Unix(),
 		[]types.Period{{Length: 1, Amount: newGrant}},
 		[]types.Period{{Length: 50, Amount: newGrant}}, newGrant)
+	err := va.AddGrant(ctx, grantAction)
+	require.NoError(t, err)
 	app.AccountKeeper.SetAccount(ctx, va)
 
 	// Only 10 of the new grant locked, since 40 fell into the "hole" of slashed-vested.
@@ -1320,8 +1336,10 @@ func TestAddGrantClawbackVestingAcc(t *testing.T) {
 	require.Equal(t, int64(15), va.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
 
 	// Add a new grant while all slashing is covered by unvested tokens
-	va.AddGrant(ctx, app.StakingKeeper, ctx.BlockTime().Unix(),
+	grantAction := types.NewClawbackGrantAction(app.StakingKeeper, ctx.BlockTime().Unix(),
 		lockupPeriods, vestingPeriods, origCoins)
+	err := va.AddGrant(ctx, grantAction)
+	require.NoError(t, err)
 
 	// After new grant, 115stake locked at now+150, due to slashing,
 	// delegation bookkeeping unchanged
@@ -1335,7 +1353,9 @@ func TestAddGrantClawbackVestingAcc(t *testing.T) {
 	require.Equal(t, int64(0), va.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
 
 	// Add a new grant, while slashed amount is 50 unvested, 10 vested
-	va.AddGrant(ctx, app.StakingKeeper, ctx.BlockTime().Unix(), lockupPeriods, vestingPeriods, origCoins)
+	grantAction = types.NewClawbackGrantAction(app.StakingKeeper, ctx.BlockTime().Unix(), lockupPeriods, vestingPeriods, origCoins)
+	err = va.AddGrant(ctx, grantAction)
+	require.NoError(t, err)
 
 	// After new grant, slashed amount reduced to 50 vested, locked is 100
 	require.Equal(t, int64(100), va.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
@@ -1348,7 +1368,9 @@ func TestAddGrantClawbackVestingAcc(t *testing.T) {
 	require.Equal(t, int64(0), va.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
 
 	// Add a new grant with residual slashed amount, but no unvested
-	va.AddGrant(ctx, app.StakingKeeper, ctx.BlockTime().Unix(), lockupPeriods, vestingPeriods, origCoins)
+	grantAction = types.NewClawbackGrantAction(app.StakingKeeper, ctx.BlockTime().Unix(), lockupPeriods, vestingPeriods, origCoins)
+	err = va.AddGrant(ctx, grantAction)
+	require.NoError(t, err)
 
 	// After new grant, all 100 locked, no residual delegation bookkeeping
 	require.Equal(t, int64(100), va.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
@@ -1358,7 +1380,7 @@ func TestAddGrantClawbackVestingAcc(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, va)
 
 	// fund the vesting account with new grant (old has vested and transferred out)
-	err := simapp.FundAccount(app.BankKeeper, ctx, addr, origCoins)
+	err = simapp.FundAccount(app.BankKeeper, ctx, addr, origCoins)
 	require.NoError(t, err)
 	require.Equal(t, int64(100), app.BankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
 

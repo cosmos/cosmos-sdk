@@ -194,6 +194,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth) [\#10880](https://github.com/cosmos/cosmos-sdk/pull/10880) Added a new query to the tx query service that returns a block with transactions fully decoded.
 * (types) [\#11200](https://github.com/cosmos/cosmos-sdk/pull/11200) Added `Min()` and `Max()` operations on sdk.Coins.
 * (gov) [\#11287](https://github.com/cosmos/cosmos-sdk/pull/11287) Fix error message when no flags are provided while executing `submit-legacy-proposal` transaction.
+* (x/auth) [\#11482](https://github.com/cosmos/cosmos-sdk/pull/11482) Improve error message when attempting to register a method handler for a message that does not implement sdk.Msg
 
 ### Bug Fixes
 

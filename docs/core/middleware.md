@@ -112,7 +112,7 @@ While BaseApp holds a reference to a `tx.Handler`, this `tx.Handler` itself is d
 Then, the app developer can compose multiple middlewares on top on the base `tx.Handler`. Each middleware can run pre-and-post-processing logic around its next middleware, as described in the section above. Conceptually, as an example, given the middlewares `A`, `B`, and `C` and the base `tx.Handler` `H` the stack looks like:
 
 ![Composing](baseapp_transaction-middleware.png)
-
+*[reference]([url](https://lucid.app/lucidchart/2c1065fa-f6fe-4b62-b3b1-e58c436dd323/edit?invitationId=inv_ce016746-3974-4e3c-bc66-0abf55e280c0))*
 ```text
 A.pre
 

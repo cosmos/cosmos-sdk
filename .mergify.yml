@@ -1,3 +1,8 @@
+queue_rules:
+  - name: default
+    conditions:
+      - "#approved-reviews-by>1"
+
 pull_request_rules:
   - name: automerge to master with label automerge and branch protection passing
     conditions:

@@ -5,10 +5,12 @@ pull_request_rules:
       - base=master
       - label=automerge
     actions:
-      merge:
+      queue:
+        name: default
         method: squash
-        strict: true
-        commit_message: title+body
+        commit_message_template: |
+           {{ title }} (#{{ number }})
+           {{ body }}
   - name: backport patches to v0.42.x branch
     conditions:
       - base=master

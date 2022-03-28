@@ -2,6 +2,7 @@ package types
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 )
 
@@ -364,8 +366,41 @@ func (pva PeriodicVestingAccount) Validate() error {
 	return pva.BaseVestingAccount.Validate()
 }
 
+type periodicGrantAction struct {
+	sk                  StakingKeeper
+	grantStartTime      int64
+	grantVestingPeriods []Period
+	grantCoins          sdk.Coins
+}
+
+func NewPeriodicGrantAction(
+	sk StakingKeeper,
+	grantStartTime int64,
+	grantVestingPeriods []Period,
+	grantCoins sdk.Coins) exported.AddGrantAction {
+	return periodicGrantAction{
+		sk:                  sk,
+		grantStartTime:      grantStartTime,
+		grantVestingPeriods: grantVestingPeriods,
+		grantCoins:          grantCoins,
+	}
+}
+
+func (pga periodicGrantAction) AddToAccount(ctx sdk.Context, rawAccount exported.VestingAccount) error {
+	pva, ok := rawAccount.(*PeriodicVestingAccount)
+	if !ok {
+		return fmt.Errorf("expected *ClawbackVestingAccount, got %T", rawAccount)
+	}
+	pva.addGrant(ctx, pga.sk, pga.grantStartTime, pga.grantVestingPeriods, pga.grantCoins)
+	return nil
+}
+
+func (pva *PeriodicVestingAccount) AddGrant(ctx sdk.Context, action exported.AddGrantAction) error {
+	return action.AddToAccount(ctx, pva)
+}
+
 // AddGrant merges a new periodic vesting grant into an existing PeriodicVestingAccount.
-func (pva *PeriodicVestingAccount) AddGrant(ctx sdk.Context, sk StakingKeeper, grantStartTime int64, grantVestingPeriods []Period, grantCoins sdk.Coins) {
+func (pva *PeriodicVestingAccount) addGrant(ctx sdk.Context, sk StakingKeeper, grantStartTime int64, grantVestingPeriods []Period, grantCoins sdk.Coins) {
 	// how much is really delegated?
 	bondedAmt := sk.GetDelegatorBonded(ctx, pva.GetAddress())
 	unbondingAmt := sk.GetDelegatorUnbonding(ctx, pva.GetAddress())
@@ -555,6 +590,7 @@ func marshalYaml(i interface{}) (interface{}, error) {
 
 var _ vestexported.VestingAccount = (*ClawbackVestingAccount)(nil)
 var _ authtypes.GenesisAccount = (*ClawbackVestingAccount)(nil)
+var _ vestexported.ClawbackVestingAccountI = (*ClawbackVestingAccount)(nil)
 
 // NewClawbackVestingAccount returns a new ClawbackVestingAccount
 func NewClawbackVestingAccount(baseAcc *authtypes.BaseAccount, funder sdk.AccAddress, originalVesting sdk.Coins, startTime int64, lockupPeriods, vestingPeriods Periods) *ClawbackVestingAccount {
@@ -689,8 +725,43 @@ func (va ClawbackVestingAccount) MarshalYAML() (interface{}, error) {
 	return marshalYaml(out)
 }
 
+type clawbackGrantAction struct {
+	sk                  StakingKeeper
+	grantStartTime      int64
+	grantLockupPeriods  []Period
+	grantVestingPeriods []Period
+	grantCoins          sdk.Coins
+}
+
+func NewClawbackGrantAction(
+	sk StakingKeeper,
+	grantStartTime int64,
+	grantLockupPeriods, grantVestingPeriods []Period,
+	grantCoins sdk.Coins) exported.AddGrantAction {
+	return clawbackGrantAction{
+		sk:                  sk,
+		grantStartTime:      grantStartTime,
+		grantLockupPeriods:  grantLockupPeriods,
+		grantVestingPeriods: grantVestingPeriods,
+		grantCoins:          grantCoins,
+	}
+}
+
+func (cga clawbackGrantAction) AddToAccount(ctx sdk.Context, rawAccount exported.VestingAccount) error {
+	cva, ok := rawAccount.(*ClawbackVestingAccount)
+	if !ok {
+		return fmt.Errorf("expected *ClawbackVestingAccount, got %T", rawAccount)
+	}
+	cva.addGrant(ctx, cga.sk, cga.grantStartTime, cga.grantLockupPeriods, cga.grantVestingPeriods, cga.grantCoins)
+	return nil
+}
+
+func (va *ClawbackVestingAccount) AddGrant(ctx sdk.Context, action exported.AddGrantAction) error {
+	return action.AddToAccount(ctx, va)
+}
+
 // AddGrant merges a new clawback vesting grant into an existing ClawbackVestingAccount.
-func (va *ClawbackVestingAccount) AddGrant(ctx sdk.Context, sk StakingKeeper, grantStartTime int64, grantLockupPeriods, grantVestingPeriods []Period, grantCoins sdk.Coins) {
+func (va *ClawbackVestingAccount) addGrant(ctx sdk.Context, sk StakingKeeper, grantStartTime int64, grantLockupPeriods, grantVestingPeriods []Period, grantCoins sdk.Coins) {
 	// how much is really delegated?
 	bondedAmt := sk.GetDelegatorBonded(ctx, va.GetAddress())
 	unbondingAmt := sk.GetDelegatorUnbonding(ctx, va.GetAddress())
@@ -723,6 +794,14 @@ func (va *ClawbackVestingAccount) AddGrant(ctx sdk.Context, sk StakingKeeper, gr
 	unvested2 := va.GetVestingCoins(ctx.BlockTime())
 	va.DelegatedVesting = coinsMin(newDelegated, unvested2)
 	va.DelegatedFree = newDelegated.Sub(va.DelegatedVesting)
+}
+
+func (va ClawbackVestingAccount) GetFunder() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(va.FunderAddress)
+	if err != nil {
+		panic(err)
+	}
+	return addr
 }
 
 // GetUnlockedOnly returns the unlocking schedule at blockTIme.
@@ -805,11 +884,39 @@ func (va *ClawbackVestingAccount) updateDelegation(encumbered, toClawBack, bonde
 	return toClawBack
 }
 
+type clawbackAction struct {
+	dest sdk.AccAddress
+	ak   AccountKeeper
+	bk   BankKeeper
+	sk   StakingKeeper
+}
+
+func NewClawbackAction(dest sdk.AccAddress, ak AccountKeeper, bk BankKeeper, sk StakingKeeper) exported.ClawbackAction {
+	return clawbackAction{
+		dest: dest,
+		ak:   ak,
+		bk:   bk,
+		sk:   sk,
+	}
+}
+
+func (ca clawbackAction) TakeFromAccount(ctx sdk.Context, rawAccount exported.VestingAccount) error {
+	cva, ok := rawAccount.(*ClawbackVestingAccount)
+	if !ok {
+		return fmt.Errorf("clawback expects *ClawbackVestingAccount, got %T", rawAccount)
+	}
+	return cva.clawback(ctx, ca.dest, ca.ak, ca.bk, ca.sk)
+}
+
+func (va *ClawbackVestingAccount) Clawback(ctx sdk.Context, action exported.ClawbackAction) error {
+	return action.TakeFromAccount(ctx, va)
+}
+
 // Clawback transfers unvested tokens in a ClawbackVestingAccount to dest.
 // Future vesting events are removed. Unstaked tokens are simply sent.
 // Unbonding and staked tokens are transferred with their staking state
 // intact.  Account state is updated to reflect the removals.
-func (va *ClawbackVestingAccount) Clawback(ctx sdk.Context, dest sdk.AccAddress, ak AccountKeeper, bk BankKeeper, sk StakingKeeper) error {
+func (va *ClawbackVestingAccount) clawback(ctx sdk.Context, dest sdk.AccAddress, ak AccountKeeper, bk BankKeeper, sk StakingKeeper) error {
 	// Compute the clawback based on the account state only, and update account
 	toClawBack := va.computeClawback(ctx.BlockTime().Unix())
 	if toClawBack.IsZero() {
@@ -947,9 +1054,36 @@ func intMin(a, b sdk.Int) sdk.Int {
 	return a
 }
 
+type clawbackRewardAction struct {
+	ak AccountKeeper
+	bk BankKeeper
+	sk StakingKeeper
+}
+
+func NewClawbackRewardAction(ak AccountKeeper, bk BankKeeper, sk StakingKeeper) exported.RewardAction {
+	return clawbackRewardAction{
+		ak: ak,
+		bk: bk,
+		sk: sk,
+	}
+}
+
+func (cra clawbackRewardAction) ProcessReward(ctx sdk.Context, reward sdk.Coins, rawAccount exported.VestingAccount) error {
+	cva, ok := rawAccount.(*ClawbackVestingAccount)
+	if !ok {
+		return fmt.Errorf("expected *ClawbackVestingAccount, got %T", rawAccount)
+	}
+	cva.postReward(ctx, reward, cra.ak, cra.bk, cra.sk)
+	return nil
+}
+
+func (va *ClawbackVestingAccount) PostReward(ctx sdk.Context, reward sdk.Coins, action exported.RewardAction) error {
+	return action.ProcessReward(ctx, reward, va)
+}
+
 // PostReward encumbers a previously-deposited reward according to the current vesting apportionment of staking.
 // Note that rewards might be unvested, but are unlocked.
-func (va ClawbackVestingAccount) PostReward(ctx sdk.Context, reward sdk.Coins, ak AccountKeeper, bk BankKeeper, sk StakingKeeper) {
+func (va ClawbackVestingAccount) postReward(ctx sdk.Context, reward sdk.Coins, ak AccountKeeper, bk BankKeeper, sk StakingKeeper) {
 	// Find the scheduled amount of vested and unvested staking tokens
 	bondDenom := sk.BondDenom(ctx)
 	vested := ReadSchedule(va.StartTime, va.EndTime, va.VestingPeriods, va.OriginalVesting, ctx.BlockTime().Unix()).AmountOf(bondDenom)

@@ -20,7 +20,7 @@ to discuss and debate the proposal. In most cases, it is encouraged to have an o
 system that supports the on-chain governance process. To accommodate for this, a
 proposal contains a special `metadata` field, an array of bytes, which can be used to
 add context to the proposal. The `metadata` field allows custom use for networks, however,
-it is expected that the field contain a URL or some form of CID using a system such as
+it is expected that the field contains a URL or some form of CID using a system such as
 [IPFS](https://docs.ipfs.io/concepts/content-addressing/). To support the case of
 interoperability across networks, the SDK recommends that the `metadata` represents
 the following `JSON` template:
@@ -70,7 +70,7 @@ parameter set has to be created and the previous one rendered inactive.
 
 Parameters are stored in a global `GlobalParams` KVStore.
 
-Additionally, we introduce some basic types:
+Additionally, we introduced some basic types:
 
 ```go
 type Vote byte
@@ -93,7 +93,7 @@ type ProposalStatus byte
 
 
 const (
-	StatusNil           ProposalStatus = 0x00
+	  StatusNil           ProposalStatus = 0x00
     StatusDepositPeriod ProposalStatus = 0x01  // Proposal is submitted. Participants can deposit on it but not vote
     StatusVotingPeriod  ProposalStatus = 0x02  // MinDeposit is reached, participants can vote
     StatusPassed        ProposalStatus = 0x03  // Proposal passed and successfully executed
@@ -177,7 +177,7 @@ And the pseudocode for the `ProposalProcessingQueue`:
 
       tallyingParam = load(GlobalParams, 'TallyingParam')
 
-      // Update tally if validator voted they voted
+      // Update tally if validator voted the vote
       for each validator in validators
         if tmpValMap(validator).HasVoted
           proposal.updateTally(tmpValMap(validator).Vote, (validator.TotalShares - tmpValMap(validator).Minus))

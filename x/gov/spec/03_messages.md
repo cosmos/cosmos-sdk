@@ -108,7 +108,7 @@ upon receiving txGovDeposit from sender do
     // There is no proposal for this proposalID
     throw
 
-  if (txGovDeposit.Deposit.Atoms <= 0) OR (sender.AtomBalance < txGovDeposit.Deposit.Atoms) OR (proposal.CurrentStatus != ProposalStatusOpen)
+  if (txGovDeposit.Deposit.Atoms <= 0) OR (sender.AtomBalance < txGovDeposit.Deposit.Atoms) OR (proposal.CurrentStatus != ProposalStatusOpen)
 
     // deposit is negative or null
     // OR sender has insufficient funds
@@ -150,7 +150,7 @@ vote on the proposal.
 
 * Record `Vote` of sender
 
-_Note: Gas cost for this message has to take into account the future tallying of the vote in EndBlocker._
+_Note: Gas cost for this message has to be taken into account the future tallying of the vote in EndBlocker._
 
 Next is a pseudocode outline of the way `MsgVote` transactions are
 handled:

@@ -98,7 +98,7 @@ func NewUnbondingDelegationEntry(creationHeight int64, completionTime time.Time,
 		CompletionTime: completionTime,
 		InitialBalance: balance,
 		Balance:        balance,
-		Id:             id,
+		UnbondingOpId:  id,
 	}
 }
 

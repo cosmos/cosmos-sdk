@@ -53,28 +53,6 @@ func (k Keeper) mustGetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAdd
 	return validator
 }
 
-func (k Keeper) GetValidatorByUnbondingOpId(
-	ctx sdk.Context, id uint64,
-) (val types.Validator, found bool) {
-	store := ctx.KVStore(k.storeKey)
-	indexKey := types.GetUnbondingOpIndexKey(id)
-	valKey := store.Get(indexKey)
-
-	if valKey == nil {
-		return val, false
-	}
-
-	value := store.Get(valKey)
-
-	if value == nil {
-		return val, false
-	}
-
-	val = types.MustUnmarshalValidator(k.cdc, value)
-
-	return val, true
-}
-
 // set the main record holding validator details
 func (k Keeper) SetValidator(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
@@ -457,38 +435,15 @@ func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 					panic("unexpected validator in unbonding queue; status was not unbonding")
 				}
 
-				// TODO JNT: check if on hold {
 				if !val.UnbondingOnHold {
 					val = k.UnbondingToUnbonded(ctx, val)
 					if val.GetDelegatorShares().IsZero() {
 						k.RemoveValidator(ctx, val.GetOperator())
 					}
 				}
-				// }
 			}
 
 			store.Delete(key)
 		}
 	}
-}
-
-func (k Keeper) ValidatorUnbondingCanComplete(ctx sdk.Context, id uint64) (found bool, err error) {
-	val, found := k.GetValidatorByUnbondingOpId(ctx, id)
-	if !found {
-		return false, nil
-	}
-
-	// TODO JNT: getting equivalent of IsMature looks like it will be somewhat complicated
-	// Something like this: keyHeight <= blockHeight && (keyTime.Before(blockTime) || keyTime.Equal(blockTime))
-	if !val.IsMature(ctx.BlockTime(), ctx.BlockHeight()) {
-		val.UnbondingOnHold = false
-	} else {
-		// If unbonding is mature complete it
-		val = k.UnbondingToUnbonded(ctx, val)
-		if val.GetDelegatorShares().IsZero() {
-			k.RemoveValidator(ctx, val.GetOperator())
-		}
-	}
-
-	return true, nil
 }

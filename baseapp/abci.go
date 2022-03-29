@@ -1,7 +1,6 @@
 package baseapp
 
 import (
-	"context"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -10,7 +9,6 @@ import (
 	"strings"
 	"sync"
 	"syscall"
-	"time"
 
 	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -200,7 +198,12 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 			// increment the wait group counter
 			wg.Add(1)
 			go func() {
-				app.listenBeginBlock(req, res, streamingListener, wg)
+				// decrement the counter when the go routine completes
+				defer wg.Done()
+				if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
+					app.logger.Error("BeginBlock listening hook failed", "height", req.Header.Height, "err", err)
+					app.halt()
+				}
 			}()
 		} else {
 			go func() {
@@ -214,43 +217,6 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	wg.Wait()
 
 	return res
-}
-
-// listenBeginBlock asynchronously processes BeginBlock state change events.
-// The listener must complete its work before the global threshold is reached.
-// Otherwise, all work will be abandoned and resources released.
-func (app *BaseApp) listenBeginBlock(
-	req abci.RequestBeginBlock,
-	res abci.ResponseBeginBlock,
-	streamingListener ABCIListener,
-	wg *sync.WaitGroup,
-) {
-	defer wg.Done()
-
-	// Set timer so goroutines don't block indefinitely
-	ctx, cancel := context.WithTimeout(context.Background(), app.globalWaitLimit*time.Second)
-	defer cancel()
-
-	var listenErr error
-	ch := make(chan struct{})
-
-	go func(ch chan struct{}) {
-		if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
-			listenErr = err
-		}
-		ch <- struct{}{}
-	}(ch)
-
-	select {
-	case <-ch:
-	case <-ctx.Done():
-		listenErr = ctx.Err()
-	}
-
-	if listenErr != nil {
-		app.logger.Error("BeginBlock listening hook failed", "height", req.Header.Height, "err", listenErr)
-		app.halt()
-	}
 }
 
 // EndBlock implements the ABCI interface.
@@ -277,7 +243,12 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 			// increment the wait group counter
 			wg.Add(1)
 			go func() {
-				app.listenEndBlock(req, res, streamingListener, wg)
+				// decrement the counter when the go routine completes
+				defer wg.Done()
+				if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
+					app.logger.Error("EndBlock listening hook failed", "height", req.Height, "err", err)
+					app.halt()
+				}
 			}()
 		} else {
 			go func() {
@@ -291,43 +262,6 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	wg.Wait()
 
 	return res
-}
-
-// listenEndBlock asynchronously processes BeginBlock state change events.
-// The listener must complete its work before the global threshold is reached.
-// Otherwise, all work will be abandoned and resources released.
-func (app *BaseApp) listenEndBlock(
-	req abci.RequestEndBlock,
-	res abci.ResponseEndBlock,
-	streamingListener ABCIListener,
-	wg *sync.WaitGroup,
-) {
-	defer wg.Done()
-
-	// Set timer so goroutines don't block indefinitely
-	ctx, cancel := context.WithTimeout(context.Background(), app.globalWaitLimit*time.Second)
-	defer cancel()
-
-	var listenErr error
-	ch := make(chan struct{})
-
-	go func(ch chan struct{}) {
-		if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
-			listenErr = err
-		}
-		ch <- struct{}{}
-	}(ch)
-
-	select {
-	case <-ch:
-	case <-ctx.Done():
-		listenErr = ctx.Err()
-	}
-
-	if listenErr != nil {
-		app.logger.Error("EndBlock listening hook failed", "height", req.Height, "err", listenErr)
-		app.halt()
-	}
 }
 
 // CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In
@@ -382,7 +316,12 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 				// increment the wait group counter
 				wg.Add(1)
 				go func() {
-					app.listenDeliverTx(req, abciRes, streamingListener, wg)
+					// decrement the counter when the go routine completes
+					defer wg.Done()
+					if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, abciRes); err != nil {
+						app.logger.Error("DeliverTx listening hook failed", "err", err)
+						app.halt()
+					}
 				}()
 			} else {
 				go func() {
@@ -409,43 +348,6 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 	}
 
 	return abciRes
-}
-
-// listenEndBlock asynchronously processes BeginBlock state change events.
-// The listener must complete its work before the global threshold is reached.
-// Otherwise, all work will be abandoned and resources released.
-func (app *BaseApp) listenDeliverTx(
-	req abci.RequestDeliverTx,
-	res abci.ResponseDeliverTx,
-	streamingListener ABCIListener,
-	wg *sync.WaitGroup,
-) {
-	defer wg.Done()
-
-	// Set timer so goroutines don't block indefinitely
-	ctx, cancel := context.WithTimeout(context.Background(), app.globalWaitLimit*time.Second)
-	defer cancel()
-
-	var listenErr error
-	ch := make(chan struct{})
-
-	go func(ch chan struct{}) {
-		if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, res); err != nil {
-			listenErr = err
-		}
-		ch <- struct{}{}
-	}(ch)
-
-	select {
-	case <-ch:
-	case <-ctx.Done():
-		listenErr = ctx.Err()
-	}
-
-	if listenErr != nil {
-		app.logger.Error("DeliverTx listening hook failed", "err", listenErr)
-		app.halt()
-	}
 }
 
 // Commit implements the ABCI interface. It will commit all state that exists in

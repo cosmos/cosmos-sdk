@@ -637,21 +637,13 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 
 	var policyInfo group.GroupPolicyInfo
 
-	// Ensure that group policy hasn't been modified since the proposal submission.
 	if policyInfo, err = k.getGroupPolicyInfo(ctx, proposal.Address); err != nil {
 		return nil, sdkerrors.Wrap(err, "load group policy")
 	}
-	if proposal.GroupPolicyVersion != policyInfo.Version {
-		return nil, sdkerrors.Wrap(errors.ErrModified, "group policy was modified")
-	}
 
-	// Ensure that group hasn't been modified since the proposal submission.
 	electorate, err := k.getGroupInfo(ctx, policyInfo.GroupId)
 	if err != nil {
 		return nil, err
-	}
-	if electorate.Version != proposal.GroupVersion {
-		return nil, sdkerrors.Wrap(errors.ErrModified, "group was modified")
 	}
 
 	// Count and store votes.
@@ -711,17 +703,22 @@ func (k Keeper) doTallyAndUpdate(ctx sdk.Context, p *group.Proposal, electorate 
 		return err
 	}
 
-	switch result, err := policy.Allow(tallyResult, electorate.TotalWeight, ctx.BlockTime().Sub(submittedAt)); {
+	result, err := policy.Allow(tallyResult, electorate.TotalWeight, ctx.BlockTime().Sub(submittedAt))
+	switch {
 	case err != nil:
-		return sdkerrors.Wrap(err, "policy execution")
-	case result.Allow && result.Final:
+		return sdkerrors.Wrap(err, "policy allow")
+	case result.Final:
+		if err := k.pruneVotes(ctx, p.Id); err != nil {
+			return err
+		}
 		p.FinalTallyResult = tallyResult
-		p.Result = group.PROPOSAL_RESULT_ACCEPTED
-		p.Status = group.PROPOSAL_STATUS_CLOSED
-	case !result.Allow && result.Final:
-		p.FinalTallyResult = tallyResult
-		p.Result = group.PROPOSAL_RESULT_REJECTED
-		p.Status = group.PROPOSAL_STATUS_CLOSED
+		if result.Allow {
+			p.Result = group.PROPOSAL_RESULT_ACCEPTED
+			p.Status = group.PROPOSAL_STATUS_CLOSED
+		} else {
+			p.Result = group.PROPOSAL_RESULT_REJECTED
+			p.Status = group.PROPOSAL_STATUS_CLOSED
+		}
 	}
 
 	return nil
@@ -747,30 +744,26 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 	}
 
 	storeUpdates := func() (*group.MsgExecResponse, error) {
-		if err := k.proposalTable.Update(ctx.KVStore(k.key), id, &proposal); err != nil {
-			return nil, err
+		store := ctx.KVStore(k.key)
+
+		// If proposal has successfully run, delete it from state.
+		if proposal.ExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
+			if err := k.pruneProposal(ctx, proposal.Id); err != nil {
+				return nil, err
+			}
+		} else {
+			if err := k.proposalTable.Update(store, id, &proposal); err != nil {
+				return nil, err
+			}
 		}
+
 		return &group.MsgExecResponse{}, nil
 	}
 
 	if proposal.Status == group.PROPOSAL_STATUS_SUBMITTED {
-		// Ensure that group policy hasn't been modified before tally.
-		if proposal.GroupPolicyVersion != policyInfo.Version {
-			proposal.Result = group.PROPOSAL_RESULT_UNFINALIZED
-			proposal.Status = group.PROPOSAL_STATUS_ABORTED
-			return storeUpdates()
-		}
-
 		electorate, err := k.getGroupInfo(ctx, policyInfo.GroupId)
 		if err != nil {
 			return nil, sdkerrors.Wrap(err, "load group")
-		}
-
-		// Ensure that group hasn't been modified before tally.
-		if electorate.Version != proposal.GroupVersion {
-			proposal.Result = group.PROPOSAL_RESULT_UNFINALIZED
-			proposal.Status = group.PROPOSAL_STATUS_ABORTED
-			return storeUpdates()
 		}
 
 		if err := k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo); err != nil {
@@ -805,7 +798,10 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 		return nil, err
 	}
 
-	err = ctx.EventManager().EmitTypedEvent(&group.EventExec{ProposalId: id})
+	err = ctx.EventManager().EmitTypedEvent(&group.EventExec{
+		ProposalId: id,
+		Result:     proposal.ExecutorResult,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -983,8 +979,8 @@ func (k Keeper) validateDecisionPolicies(ctx sdk.Context, g group.GroupInfo) err
 	}
 	defer it.Close()
 
-	var groupPolicy group.GroupPolicyInfo
 	for {
+		var groupPolicy group.GroupPolicyInfo
 		_, err = it.LoadNext(&groupPolicy)
 		if errors.ErrORMIteratorDone.Is(err) {
 			break

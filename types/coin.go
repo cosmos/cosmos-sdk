@@ -81,6 +81,16 @@ func (coin Coin) IsLT(other Coin) bool {
 	return coin.Amount.LT(other.Amount)
 }
 
+// IsLTE returns true if they are the same type and the receiver is
+// an equal or smaller value
+func (coin Coin) IsLTE(other Coin) bool {
+	if coin.Denom != other.Denom {
+		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, other.Denom))
+	}
+
+	return !coin.Amount.GT(other.Amount)
+}
+
 // IsEqual returns true if the two sets of Coins have the same value
 func (coin Coin) IsEqual(other Coin) bool {
 	if coin.Denom != other.Denom {

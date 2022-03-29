@@ -28,7 +28,7 @@ var (
 
 // NewMsgGrant creates a new MsgGrant
 //nolint:interfacer
-func NewMsgGrant(granter sdk.AccAddress, grantee sdk.AccAddress, a Authorization, expiration time.Time) (*MsgGrant, error) {
+func NewMsgGrant(granter sdk.AccAddress, grantee sdk.AccAddress, a Authorization, expiration *time.Time) (*MsgGrant, error) {
 	m := &MsgGrant{
 		Granter: granter.String(),
 		Grantee: grantee.String(),

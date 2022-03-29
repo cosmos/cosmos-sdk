@@ -3,26 +3,13 @@ package middleware
 import (
 	"math"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// ValidatorTxFee implements a static feemarket, where the minimum price per
-// unit of gas is fixed and set by each validator.
-type ValidatorTxFee struct{}
-
-var _ FeeMarket = ValidatorTxFee{}
-
-// AllowExtensionOption returns true if the auth extension option should be allowed.
-func (sfm ValidatorTxFee) AllowExtensionOption(*codectypes.Any) bool {
-	return false
-}
-
-// CheckTxFee check if the provided fee is enough, if yes return the effective fee and priority, otherwise return
-// error.
-// The effective fee should be deducted later, and the priority should be set in the abci response.
-func (sfm ValidatorTxFee) CheckTxFee(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error) {
+// checkTxFeeWithValidatorMinGasPrices check if the provided fee against the min-gas-prices configured by validator,
+// if enough return the specified fee as effective fee, and convert the price amount to tx priority.
+func checkTxFeeWithValidatorMinGasPrices(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return nil, 0, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")

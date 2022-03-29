@@ -43,12 +43,13 @@ type TxHandlerOptions struct {
 	LegacyRouter     sdk.Router
 	MsgServiceRouter *MsgServiceRouter
 
-	AccountKeeper   AccountKeeper
-	BankKeeper      types.BankKeeper
-	FeegrantKeeper  FeegrantKeeper
-	SignModeHandler authsigning.SignModeHandler
-	SigGasConsumer  func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
-	FeeMarket       FeeMarket
+	AccountKeeper          AccountKeeper
+	BankKeeper             types.BankKeeper
+	FeegrantKeeper         FeegrantKeeper
+	SignModeHandler        authsigning.SignModeHandler
+	SigGasConsumer         func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
+	ExtensionOptionChecker ExtensionOptionChecker
+	TxFeeChecker           TxFeeChecker
 }
 
 // NewDefaultTxHandler defines a TxHandler middleware stacks that should work
@@ -75,9 +76,14 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		sigGasConsumer = DefaultSigVerificationGasConsumer
 	}
 
-	var feeMarket = options.FeeMarket
-	if feeMarket == nil {
-		feeMarket = ValidatorTxFee{}
+	var extensionOptionChecker = options.ExtensionOptionChecker
+	if extensionOptionChecker == nil {
+		extensionOptionChecker = rejectExtensionOption
+	}
+
+	var txFeeChecker = options.TxFeeChecker
+	if txFeeChecker == nil {
+		txFeeChecker = checkTxFeeWithValidatorMinGasPrices
 	}
 
 	return ComposeMiddlewares(
@@ -96,7 +102,7 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		// emitted outside of this middleware.
 		NewIndexEventsTxMiddleware(options.IndexEvents),
 		// Reject all extension options other than the ones needed by the feemarket.
-		NewExtensionOptionsMiddleware(feeMarket.AllowExtensionOption),
+		NewExtensionOptionsMiddleware(extensionOptionChecker),
 		ValidateBasicMiddleware,
 		TxTimeoutHeightMiddleware,
 		ValidateMemoMiddleware(options.AccountKeeper),
@@ -105,7 +111,7 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		// ComposeMiddlewares godoc for details.
 		// `DeductFeeMiddleware` and `IncrementSequenceMiddleware` should be put outside of `WithBranchedStore` middleware,
 		// so their storage writes are not discarded when tx fails.
-		DeductFeeMiddleware(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, feeMarket),
+		DeductFeeMiddleware(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, txFeeChecker),
 		SetPubKeyMiddleware(options.AccountKeeper),
 		ValidateSigCountMiddleware(options.AccountKeeper),
 		SigGasConsumeMiddleware(options.AccountKeeper, sigGasConsumer),

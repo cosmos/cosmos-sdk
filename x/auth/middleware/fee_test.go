@@ -17,7 +17,7 @@ func (s *MWTestSuite) TestEnsureMempoolFees() {
 		s.app.AccountKeeper,
 		s.app.BankKeeper,
 		s.app.FeeGrantKeeper,
-		middleware.ValidatorTxFee{},
+		nil,
 	))
 
 	// keys and addresses
@@ -74,7 +74,7 @@ func (s *MWTestSuite) TestDeductFees() {
 			s.app.AccountKeeper,
 			s.app.BankKeeper,
 			s.app.FeeGrantKeeper,
-			middleware.ValidatorTxFee{},
+			nil,
 		),
 	)
 

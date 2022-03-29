@@ -21,13 +21,17 @@ type FeeMarket interface {
 	CheckTxFee(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error)
 }
 
+// TxFeeChecker check if the provided fee is enough and returns the effective fee and tx priority,
+// the effective fee should be deducted later, and the priority should be returned in abci response.
+type TxFeeChecker func(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error)
+
 var _ tx.Handler = deductFeeTxHandler{}
 
 type deductFeeTxHandler struct {
 	accountKeeper  AccountKeeper
 	bankKeeper     types.BankKeeper
 	feegrantKeeper FeegrantKeeper
-	feemarket      FeeMarket
+	txFeeChecker   TxFeeChecker
 	next           tx.Handler
 }
 
@@ -35,13 +39,16 @@ type deductFeeTxHandler struct {
 // If the first signer does not have the funds to pay for the fees, return with InsufficientFunds error
 // Call next middleware if fees successfully deducted
 // CONTRACT: Tx must implement FeeTx interface to use deductFeeTxHandler
-func DeductFeeMiddleware(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKeeper, fm FeeMarket) tx.Middleware {
+func DeductFeeMiddleware(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKeeper, tfc TxFeeChecker) tx.Middleware {
+	if tfc == nil {
+		tfc = checkTxFeeWithValidatorMinGasPrices
+	}
 	return func(txh tx.Handler) tx.Handler {
 		return deductFeeTxHandler{
 			accountKeeper:  ak,
 			bankKeeper:     bk,
 			feegrantKeeper: fk,
-			feemarket:      fm,
+			txFeeChecker:   tfc,
 			next:           txh,
 		}
 	}
@@ -100,7 +107,7 @@ func (dfd deductFeeTxHandler) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 // CheckTx implements tx.Handler.CheckTx.
 func (dfd deductFeeTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	fee, priority, err := dfd.feemarket.CheckTxFee(sdkCtx, req.Tx)
+	fee, priority, err := dfd.txFeeChecker(sdkCtx, req.Tx)
 	if err != nil {
 		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
@@ -117,7 +124,7 @@ func (dfd deductFeeTxHandler) CheckTx(ctx context.Context, req tx.Request, check
 // DeliverTx implements tx.Handler.DeliverTx.
 func (dfd deductFeeTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	fee, _, err := dfd.feemarket.CheckTxFee(sdkCtx, req.Tx)
+	fee, _, err := dfd.txFeeChecker(sdkCtx, req.Tx)
 	if err != nil {
 		return tx.Response{}, err
 	}
@@ -130,7 +137,7 @@ func (dfd deductFeeTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx
 
 func (dfd deductFeeTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	fee, _, err := dfd.feemarket.CheckTxFee(sdkCtx, req.Tx)
+	fee, _, err := dfd.txFeeChecker(sdkCtx, req.Tx)
 	if err != nil {
 		return tx.Response{}, err
 	}

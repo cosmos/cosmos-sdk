@@ -30,8 +30,8 @@ const (
 
 	PRINT_DATA_TO_STDOUT_PARAM = "print_data_to_stdout"
 
-	// ACK_MODE configures whether to operate in fire-and-forget or success/failure acknowledgement mode
-	ACK_MODE = "ack"
+	// HALT_APP_ON_DELIVERY_ERROR whether or not to halt the application when plugin fails to deliver message(s)
+	HALT_APP_ON_DELIVERY_ERROR = "halt_app_on_delivery_error"
 )
 
 // Plugins is the exported symbol for loading this plugin
@@ -71,7 +71,8 @@ func (ssp *streamingServicePlugin) Register(
 	// load all the params required for this plugin from the provided AppOptions
 	tomlKeyPrefix := fmt.Sprintf("%s.%s.%s", plugin.PLUGINS_TOML_KEY, plugin.STREAMING_TOML_KEY, PLUGIN_NAME)
 	printDataToStdout := cast.ToBool(ssp.opts.Get(fmt.Sprintf("%s.%s", tomlKeyPrefix, PRINT_DATA_TO_STDOUT_PARAM)))
-	ack := cast.ToBool(ssp.opts.Get(fmt.Sprintf("%s.%s", tomlKeyPrefix, ACK_MODE)))
+	haltAppOnDeliveryError := cast.ToBool(ssp.opts.Get(fmt.Sprintf("%s.%s", tomlKeyPrefix, HALT_APP_ON_DELIVERY_ERROR)))
+
 
 	// get the store keys allowed to be exposed for this streaming service
 	exposeKeyStrings := cast.ToStringSlice(ssp.opts.Get(fmt.Sprintf("%s.%s", tomlKeyPrefix, KEYS_PARAM)))
@@ -92,7 +93,7 @@ func (ssp *streamingServicePlugin) Register(
 	}
 
 	var err error
-	ssp.tss, err = service.NewTraceStreamingService(exposeStoreKeys, marshaller, printDataToStdout, ack)
+	ssp.tss, err = service.NewTraceStreamingService(exposeStoreKeys, marshaller, printDataToStdout, haltAppOnDeliveryError)
 	if err != nil {
 		return err
 	}

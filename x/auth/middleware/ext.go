@@ -17,6 +17,8 @@ type HasExtensionOptionsTx interface {
 // ExtensionOptionChecker is a function that returns true if the extension option is accepted.
 type ExtensionOptionChecker func(*codectypes.Any) bool
 
+// rejectExtensionOption is the default extension check that reject all tx
+// extensions.
 func rejectExtensionOption(*codectypes.Any) bool {
 	return false
 }

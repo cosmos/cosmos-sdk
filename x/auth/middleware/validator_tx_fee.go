@@ -7,8 +7,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// checkTxFeeWithValidatorMinGasPrices check if the provided fee against the min-gas-prices configured by validator,
-// if enough return the specified fee as effective fee, and convert the price amount to tx priority.
+// checkTxFeeWithValidatorMinGasPrices implements the default fee logic, where the minimum price per
+// unit of gas is fixed and set by each validator, can the tx priority is computed from the gas price.
 func checkTxFeeWithValidatorMinGasPrices(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {

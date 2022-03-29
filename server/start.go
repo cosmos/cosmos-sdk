@@ -10,28 +10,28 @@ import (
 	"runtime/pprof"
 	"time"
 
-	"github.com/spf13/cobra"
-	abciclient "github.com/tendermint/tendermint/abci/client"
-	"github.com/tendermint/tendermint/abci/server"
-	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	tmservice "github.com/tendermint/tendermint/libs/service"
-	"github.com/tendermint/tendermint/node"
-	"github.com/tendermint/tendermint/rpc/client/local"
-	tmtypes "github.com/tendermint/tendermint/types"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
-	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
-	crgserver "github.com/cosmos/cosmos-sdk/server/rosetta/lib/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
+	crgserver "github.com/cosmos/cosmos-sdk/server/rosetta/lib/server"
+	pruningTypes "github.com/cosmos/cosmos-sdk/pruning/types"
+
+	"github.com/spf13/cobra"
+	"github.com/tendermint/tendermint/abci/server"
+	"github.com/tendermint/tendermint/node"
+	"github.com/tendermint/tendermint/rpc/client/local"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	abciclient "github.com/tendermint/tendermint/abci/client"
+	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
+	tmos "github.com/tendermint/tendermint/libs/os"
+	tmservice "github.com/tendermint/tendermint/libs/service"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 const (
@@ -86,15 +86,15 @@ func StartCmd(appCreator types.AppCreator, defaultNodeHome string) *cobra.Comman
 		Long: `Run the full node application with Tendermint in or out of process. By
 default, the application will run with Tendermint in process.
 
-Pruning options can be provided via the '--pruning' flag or alternatively with '--pruning-keep-recent'
-and 'pruning-interval' together.
+Pruning options can be provided via the '--pruning' flag or alternatively with '--pruning-keep-recent', and
+'pruning-interval' together.
 
 For '--pruning' the options are as follows:
 
 default: the last 362880 states are kept, pruning at 10 block intervals
 nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
-everything: all saved states will be deleted, storing only the current and previous state; pruning at 10 block intervals
-custom: allow pruning options to be manually specified through 'pruning-keep-recent' and 'pruning-interval'
+everything: all saved states will be deleted, storing only the current state; pruning at 10 block intervals
+custom: allow pruning options to be manually specified through 'pruning-keep-recent', and 'pruning-interval'
 
 Node halting configurations exist in the form of two flags: '--halt-height' and '--halt-time'. During
 the ABCI Commit phase, the node will check if the current block height is greater than or equal to
@@ -159,7 +159,7 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	cmd.Flags().Bool(FlagInterBlockCache, true, "Enable inter-block caching")
 	cmd.Flags().String(flagCPUProfile, "", "Enable CPU profiling and write to the provided file")
 	cmd.Flags().Bool(FlagTrace, false, "Provide full stack traces for errors in ABCI Log")
-	cmd.Flags().String(FlagPruning, storetypes.PruningOptionDefault, "Pruning strategy (default|nothing|everything|custom)")
+	cmd.Flags().String(FlagPruning, pruningTypes.PruningOptionDefault, "Pruning strategy (default|nothing|everything|custom)")
 	cmd.Flags().Uint64(FlagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint64(FlagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint(FlagInvCheckPeriod, 0, "Assert registered invariants every N blocks")

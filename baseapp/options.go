@@ -9,15 +9,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	pruningTypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	snapshotTypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // File for storing in-package BaseApp optional functions,
 // for options that need access to non-exported fields of the BaseApp
 
 // SetPruning sets a pruning option on the multistore associated with the app
-func SetPruning(opts sdk.PruningOptions) func(*BaseApp) {
+func SetPruning(opts *pruningTypes.PruningOptions) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetPruning(opts) }
 }
 
@@ -69,19 +71,9 @@ func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
 	return func(app *BaseApp) { app.setInterBlockCache(cache) }
 }
 
-// SetSnapshotInterval sets the snapshot interval.
-func SetSnapshotInterval(interval uint64) func(*BaseApp) {
-	return func(app *BaseApp) { app.SetSnapshotInterval(interval) }
-}
-
-// SetSnapshotKeepRecent sets the recent snapshots to keep.
-func SetSnapshotKeepRecent(keepRecent uint32) func(*BaseApp) {
-	return func(app *BaseApp) { app.SetSnapshotKeepRecent(keepRecent) }
-}
-
-// SetSnapshotStore sets the snapshot store.
-func SetSnapshotStore(snapshotStore *snapshots.Store) func(*BaseApp) {
-	return func(app *BaseApp) { app.SetSnapshotStore(snapshotStore) }
+// SetSnapshot sets the snapshot store.
+func SetSnapshot(snapshotStore *snapshots.Store, opts *snapshotTypes.SnapshotOptions) func(*BaseApp) {
+	return func(app *BaseApp) { app.SetSnapshot(snapshotStore, opts) }
 }
 
 func (app *BaseApp) SetName(name string) {
@@ -201,32 +193,16 @@ func (app *BaseApp) SetStoreLoader(loader StoreLoader) {
 	app.storeLoader = loader
 }
 
-// SetSnapshotStore sets the snapshot store.
-func (app *BaseApp) SetSnapshotStore(snapshotStore *snapshots.Store) {
+// SetSnapshot sets the snapshot store and options.
+func (app *BaseApp) SetSnapshot(snapshotStore *snapshots.Store, opts *snapshotTypes.SnapshotOptions) {
 	if app.sealed {
-		panic("SetSnapshotStore() on sealed BaseApp")
+		panic("SetSnapshot() on sealed BaseApp")
 	}
-	if snapshotStore == nil {
+	if snapshotStore == nil || opts.Interval == 0 {
 		app.snapshotManager = nil
 		return
 	}
-	app.snapshotManager = snapshots.NewManager(snapshotStore, app.cms, nil)
-}
-
-// SetSnapshotInterval sets the snapshot interval.
-func (app *BaseApp) SetSnapshotInterval(snapshotInterval uint64) {
-	if app.sealed {
-		panic("SetSnapshotInterval() on sealed BaseApp")
-	}
-	app.snapshotInterval = snapshotInterval
-}
-
-// SetSnapshotKeepRecent sets the number of recent snapshots to keep.
-func (app *BaseApp) SetSnapshotKeepRecent(snapshotKeepRecent uint32) {
-	if app.sealed {
-		panic("SetSnapshotKeepRecent() on sealed BaseApp")
-	}
-	app.snapshotKeepRecent = snapshotKeepRecent
+	app.snapshotManager = snapshots.NewManager(snapshotStore, opts, app.cms, nil, app.logger)
 }
 
 // SetInterfaceRegistry sets the InterfaceRegistry.

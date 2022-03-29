@@ -6,48 +6,45 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/store/types"
+	pruningTypes "github.com/cosmos/cosmos-sdk/pruning/types"
 )
 
 func TestGetPruningOptionsFromFlags(t *testing.T) {
 	tests := []struct {
 		name            string
 		initParams      func() *viper.Viper
-		expectedOptions types.PruningOptions
+		expectedOptions *pruningTypes.PruningOptions
 		wantErr         bool
 	}{
 		{
 			name: FlagPruning,
 			initParams: func() *viper.Viper {
 				v := viper.New()
-				v.Set(FlagPruning, types.PruningOptionNothing)
+				v.Set(FlagPruning, pruningTypes.PruningOptionNothing)
 				return v
 			},
-			expectedOptions: types.PruneNothing,
+			expectedOptions: pruningTypes.NewPruningOptions(pruningTypes.PruningNothing),
 		},
 		{
 			name: "custom pruning options",
 			initParams: func() *viper.Viper {
 				v := viper.New()
-				v.Set(FlagPruning, types.PruningOptionCustom)
+				v.Set(FlagPruning, pruningTypes.PruningOptionCustom)
 				v.Set(FlagPruningKeepRecent, 1234)
 				v.Set(FlagPruningInterval, 10)
 
 				return v
 			},
-			expectedOptions: types.PruningOptions{
-				KeepRecent: 1234,
-				Interval:   10,
-			},
+			expectedOptions: pruningTypes.NewCustomPruningOptions(1234, 10),
 		},
 		{
-			name: types.PruningOptionDefault,
+			name: pruningTypes.PruningOptionDefault,
 			initParams: func() *viper.Viper {
 				v := viper.New()
-				v.Set(FlagPruning, types.PruningOptionDefault)
+				v.Set(FlagPruning, pruningTypes.PruningOptionDefault)
 				return v
 			},
-			expectedOptions: types.PruneDefault,
+			expectedOptions: pruningTypes.NewPruningOptions(pruningTypes.PruningDefault),
 		},
 	}
 
@@ -56,7 +53,7 @@ func TestGetPruningOptionsFromFlags(t *testing.T) {
 
 		t.Run(tt.name, func(j *testing.T) {
 			viper.Reset()
-			viper.SetDefault(FlagPruning, types.PruningOptionDefault)
+			viper.SetDefault(FlagPruning, pruningTypes.PruningOptionDefault)
 			v := tt.initParams()
 
 			opts, err := GetPruningOptionsFromFlags(v)

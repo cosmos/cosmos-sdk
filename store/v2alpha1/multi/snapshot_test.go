@@ -24,7 +24,7 @@ import (
 
 func multiStoreConfig(t *testing.T, stores int) StoreConfig {
 	opts := DefaultStoreConfig()
-	opts.Pruning = types.PruneNothing
+	opts.Pruning = types.NewPruningOptions(types.PruningNothing)
 
 	for i := 0; i < stores; i++ {
 		sKey := types.NewKVStoreKey(fmt.Sprintf("store%d", i))

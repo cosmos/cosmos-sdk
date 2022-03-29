@@ -3,19 +3,25 @@ package baseapp_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/snapshots"
+	pruningTypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	snaphotsTestUtil "github.com/cosmos/cosmos-sdk/testutil/snapshots"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmprototypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
 func TestGetBlockRentionHeight(t *testing.T) {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
 	name := t.Name()
+
+	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), snaphotsTestUtil.GetTempDir(t))
+	require.NoError(t, err)
 
 	testCases := map[string]struct {
 		bapp         *baseapp.BaseApp
@@ -38,17 +44,18 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		"pruning iavl snapshot only": {
 			bapp: baseapp.NewBaseApp(
 				name, logger, db,
+				baseapp.SetPruning(sdk.NewPruningOptions(pruningTypes.PruningNothing)),
 				baseapp.SetMinRetainBlocks(1),
+				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(10000, 1)),
 			),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
-			expected:     498999,
+			expected:     489000,
 		},
 		"pruning state sync snapshot only": {
 			bapp: baseapp.NewBaseApp(
 				name, logger, db,
-				baseapp.SetSnapshotInterval(50000),
-				baseapp.SetSnapshotKeepRecent(3),
+				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(50000, 3)),
 				baseapp.SetMinRetainBlocks(1),
 			),
 			maxAgeBlocks: 0,
@@ -67,8 +74,9 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		"pruning all conditions": {
 			bapp: baseapp.NewBaseApp(
 				name, logger, db,
+				baseapp.SetPruning(sdk.NewCustomPruningOptions(0, 0)),
 				baseapp.SetMinRetainBlocks(400000),
-				baseapp.SetSnapshotInterval(50000), baseapp.SetSnapshotKeepRecent(3),
+				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(50000, 3)),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
@@ -77,8 +85,9 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		"no pruning due to no persisted state": {
 			bapp: baseapp.NewBaseApp(
 				name, logger, db,
+				baseapp.SetPruning(sdk.NewCustomPruningOptions(0, 0)),
 				baseapp.SetMinRetainBlocks(400000),
-				baseapp.SetSnapshotInterval(50000), baseapp.SetSnapshotKeepRecent(3),
+				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(50000, 3)),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 10000,
@@ -87,8 +96,9 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		"disable pruning": {
 			bapp: baseapp.NewBaseApp(
 				name, logger, db,
+				baseapp.SetPruning(sdk.NewCustomPruningOptions(0, 0)),
 				baseapp.SetMinRetainBlocks(0),
-				baseapp.SetSnapshotInterval(50000), baseapp.SetSnapshotKeepRecent(3),
+				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(50000, 3)),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
@@ -101,8 +111,8 @@ func TestGetBlockRentionHeight(t *testing.T) {
 
 		tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 		tc.bapp.InitChain(abci.RequestInitChain{
-			ConsensusParams: &tmprototypes.ConsensusParams{
-				Evidence: &tmprototypes.EvidenceParams{
+			ConsensusParams: &tmproto.ConsensusParams{
+				Evidence: &tmproto.EvidenceParams{
 					MaxAgeNumBlocks: tc.maxAgeBlocks,
 				},
 			},

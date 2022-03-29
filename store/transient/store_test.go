@@ -6,8 +6,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	pruningTypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	"github.com/cosmos/cosmos-sdk/store/transient"
 	types "github.com/cosmos/cosmos-sdk/store/v2alpha1"
-	"github.com/cosmos/cosmos-sdk/store/v2alpha1/transient"
 )
 
 var k, v = []byte("hello"), []byte("world")
@@ -26,7 +27,7 @@ func TestTransientStore(t *testing.T) {
 	require.Nil(t, tstore.Get(k))
 
 	// no-op
-	tstore.SetPruning(types.PruningOptions{})
+	tstore.SetPruning(pruningTypes.NewPruningOptions(pruningTypes.PruningUndefined))
 
 	emptyCommitID := tstore.LastCommitID()
 	require.Equal(t, emptyCommitID.Version, int64(0))

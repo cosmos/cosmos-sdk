@@ -8,7 +8,8 @@ import (
 	tmstrings "github.com/tendermint/tendermint/libs/strings"
 	dbm "github.com/tendermint/tm-db"
 
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	snapshotTypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	pruningTypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
@@ -22,8 +23,8 @@ type Committer interface {
 	Commit() CommitID
 	LastCommitID() CommitID
 
-	SetPruning(PruningOptions)
-	GetPruning() PruningOptions
+	SetPruning(*PruningOptions)
+	GetPruning() *PruningOptions
 }
 
 // Stores of MultiStore must implement CommitStore.
@@ -142,7 +143,7 @@ type CacheMultiStore interface {
 type CommitMultiStore interface {
 	Committer
 	MultiStore
-	snapshottypes.Snapshotter
+	snapshotTypes.Snapshotter
 
 	// Mount a store of type using the given db.
 	// If db == nil, the new store will use the CommitMultiStore db.
@@ -153,6 +154,9 @@ type CommitMultiStore interface {
 
 	// Panics on a nil key.
 	GetCommitKVStore(key StoreKey) CommitKVStore
+
+	// GetCommitKVStores get all kv stores associated with the multistore.
+	GetCommitKVStores() map[StoreKey]CommitKVStore
 
 	// Load the latest persisted version. Called once after all calls to
 	// Mount*Store() are complete.
@@ -298,6 +302,7 @@ const (
 	StoreTypeMemory
 	StoreTypeSMT
 	StoreTypePersistent
+	StoreTypeSnapshot
 )
 
 func (st StoreType) String() string {
@@ -322,6 +327,9 @@ func (st StoreType) String() string {
 
 	case StoreTypePersistent:
 		return "StoreTypePersistent"
+
+	case StoreTypeSnapshot:
+		return "StoreTypeSnapshot"
 	}
 
 	return "unknown store type"
@@ -438,4 +446,35 @@ type StoreWithInitialVersion interface {
 	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
 	// starting a new chain at an arbitrary height.
 	SetInitialVersion(version int64)
+}
+
+type (
+	PruningOptions  = pruningTypes.PruningOptions
+	PruningStrategy = pruningTypes.PruningStrategy
+)
+
+const (
+	PruningOptionDefault = pruningTypes.PruningOptionDefault
+	PruningOptionEverything = pruningTypes.PruningOptionEverything
+	PruningOptionNothing = pruningTypes.PruningOptionNothing
+	PruningOptionCustom = pruningTypes.PruningOptionCustom
+
+	PruningDefault = pruningTypes.PruningDefault
+	PruningEverything = pruningTypes.PruningEverything
+	PruningNothing = pruningTypes.PruningNothing
+	PruningCustom = pruningTypes.PruningCustom
+)
+
+func NewPruningOptions(pruningStrategy PruningStrategy) *PruningOptions {
+	return pruningTypes.NewPruningOptions(pruningStrategy)
+}
+
+func NewCustomPruningOptions(keepRecent, interval uint64) *PruningOptions {
+	return pruningTypes.NewCustomPruningOptions(keepRecent, interval)
+}
+
+type SnapshotOptions = snapshotTypes.SnapshotOptions
+
+func NewSnapshotOptions(interval uint64, keepRecent uint32) *SnapshotOptions {
+	return snapshotTypes.NewSnapshotOptions(interval, keepRecent)
 }

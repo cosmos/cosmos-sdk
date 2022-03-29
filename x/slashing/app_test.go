@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -42,8 +41,8 @@ func checkValidatorSigningInfo(t *testing.T, app *simapp.SimApp, addr sdk.ConsAd
 }
 
 func TestSlashingMsgs(t *testing.T) {
-	genTokens := testutil.TokensFromConsensusPower(42, testutil.DefaultpowerReduction)
-	bondTokens := testutil.TokensFromConsensusPower(10, testutil.DefaultpowerReduction)
+	genTokens := sdk.TokensFromConsensusPower(42, sdk.DefaultPowerReduction)
+	bondTokens := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
 	genCoin := sdk.NewCoin(sdk.DefaultBondDenom, genTokens)
 	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, bondTokens)
 

@@ -19,11 +19,16 @@ func genGrant(r *rand.Rand, accounts []simtypes.Account, genT time.Time) []authz
 	for i := 0; i < len(accounts)-1; i++ {
 		granter := accounts[i]
 		grantee := accounts[i+1]
+		var expiration *time.Time
+		if i%3 != 0 { // generate some grants with no expire time
+			e := genT.AddDate(1, 0, 0)
+			expiration = &e
+		}
 		authorizations[i] = authz.GrantAuthorization{
 			Granter:       granter.Address.String(),
 			Grantee:       grantee.Address.String(),
 			Authorization: generateRandomGrant(r),
-			Expiration:    genT.AddDate(1, 0, 0),
+			Expiration:    expiration,
 		}
 	}
 

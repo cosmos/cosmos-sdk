@@ -7,8 +7,8 @@ import (
 // TxExtensionOptionI defines the interface for tx extension options
 type TxExtensionOptionI interface{}
 
-// UnpackExtensionOptionsI unpacks Any's to TxExtensionOptionI's.
-func UnpackTxExtensionOptionsI(unpacker types.AnyUnpacker, anys []*types.Any) error {
+// unpackTxExtensionOptionsI unpacks Any's to TxExtensionOptionI's.
+func unpackTxExtensionOptionsI(unpacker types.AnyUnpacker, anys []*types.Any) error {
 	for _, any := range anys {
 		var opt TxExtensionOptionI
 		err := unpacker.UnpackAny(any, &opt)

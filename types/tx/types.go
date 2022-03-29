@@ -177,11 +177,11 @@ func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 		return err
 	}
 
-	if err := UnpackTxExtensionOptionsI(unpacker, m.ExtensionOptions); err != nil {
+	if err := unpackTxExtensionOptionsI(unpacker, m.ExtensionOptions); err != nil {
 		return err
 	}
 
-	if err := UnpackTxExtensionOptionsI(unpacker, m.NonCriticalExtensionOptions); err != nil {
+	if err := unpackTxExtensionOptionsI(unpacker, m.NonCriticalExtensionOptions); err != nil {
 		return err
 	}
 

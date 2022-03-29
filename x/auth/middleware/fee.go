@@ -4,22 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
-
-// FeeMarket defines the interface of feemarket system for tx middleware.
-type FeeMarket interface {
-	// AllowExtensionOption returns true for allowed extension option,
-	// Some feemarket modules need to extend the tx.
-	AllowExtensionOption(*codectypes.Any) bool
-	// CheckTxFee check if the provided fee is enough and returns the effective fee and tx priority,
-	// the effective fee should be deducted later, and the priority should be returned in abci response.
-	CheckTxFee(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error)
-}
 
 // TxFeeChecker check if the provided fee is enough and returns the effective fee and tx priority,
 // the effective fee should be deducted later, and the priority should be returned in abci response.

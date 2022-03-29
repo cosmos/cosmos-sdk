@@ -72,9 +72,6 @@ type GrantAccount interface {
 type ClawbackVestingAccountI interface {
 	GrantAccount
 
-	// GetFunder retunrs the address of the account funder.
-	GetFunder() sdk.AccAddress
-
 	// GetUnlockedOnly returns the sum of all unlocking events up to and including
 	// the blockTime.
 	GetUnlockedOnly(blockTime time.Time) sdk.Coins

@@ -4,15 +4,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"sort"
 	"strings"
 	"testing"
 	"time"
 
-	dbm "github.com/tendermint/tm-db"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/kv"
+	dbm "github.com/tendermint/tm-db"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -20,6 +19,8 @@ import (
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
 	"pgregory.net/rapid"
+
+	"github.com/cosmos/cosmos-sdk/orm/types/kv"
 
 	queryv1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/query/v1beta1"
 	sdkerrors "github.com/cosmos/cosmos-sdk/errors"
@@ -65,6 +66,38 @@ func TestScenario(t *testing.T) {
 	golden.Assert(t, debugBuf.String(), "test_scenario.golden")
 
 	checkEncodeDecodeEntries(t, table, store.IndexStoreReader())
+}
+
+// isolated test for bug - https://github.com/cosmos/cosmos-sdk/issues/11431
+func TestPaginationLimitCountTotal(t *testing.T) {
+	table, err := ormtable.Build(ormtable.Options{
+		MessageType: (&testpb.ExampleTable{}).ProtoReflect().Type(),
+	})
+	backend := testkv.NewSplitMemBackend()
+	ctx := ormtable.WrapContextDefault(backend)
+	store, err := testpb.NewExampleTableTable(table)
+	assert.NilError(t, err)
+
+	assert.NilError(t, store.Insert(ctx, &testpb.ExampleTable{U32: 4, I64: 2, Str: "co"}))
+	assert.NilError(t, store.Insert(ctx, &testpb.ExampleTable{U32: 5, I64: 2, Str: "sm"}))
+	assert.NilError(t, store.Insert(ctx, &testpb.ExampleTable{U32: 6, I64: 2, Str: "os"}))
+
+	it, err := store.List(ctx, &testpb.ExampleTablePrimaryKey{}, ormlist.Paginate(&queryv1beta1.PageRequest{Limit: 3, CountTotal: true}))
+	assert.NilError(t, err)
+	assert.Check(t, it.Next())
+
+	it, err = store.List(ctx, &testpb.ExampleTablePrimaryKey{}, ormlist.Paginate(&queryv1beta1.PageRequest{Limit: 4, CountTotal: true}))
+	assert.NilError(t, err)
+	assert.Check(t, it.Next())
+
+	it, err = store.List(ctx, &testpb.ExampleTablePrimaryKey{}, ormlist.Paginate(&queryv1beta1.PageRequest{Limit: 1, CountTotal: true}))
+	assert.NilError(t, err)
+	for it.Next() {
+	}
+	pr := it.PageResponse()
+	assert.Check(t, pr != nil)
+	assert.Equal(t, uint64(3), pr.Total)
+
 }
 
 func TestImportedMessageIterator(t *testing.T) {

@@ -873,16 +873,6 @@ func SimulateMsgWithdrawProposal(ak group.AccountKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "no proposals found"), nil, nil
 		}
 
-		// Ensure that group and group policy haven't been modified since the proposal submission.
-		if proposal.GroupPolicyVersion != groupPolicy.Version {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "group policy has been modified"), nil, nil
-		}
-
-		// Ensure the group hasn't been modified.
-		if proposal.GroupVersion != g.Version {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "group has been modified"), nil, nil
-		}
-
 		// select a random proposer
 		proposers := proposal.Proposers
 		n := randIntInRange(r, len(proposers))
@@ -972,13 +962,11 @@ func SimulateMsgVote(ak group.AccountKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "no proposals found"), nil, nil
 		}
 
-		var proposal *group.Proposal
 		proposalID := -1
 
 		for _, p := range proposals {
 			if p.Status == group.PROPOSAL_STATUS_SUBMITTED {
 				timeout := p.VotingPeriodEnd
-				proposal = p
 				proposalID = int(p.Id)
 				if timeout.Before(sdkCtx.BlockTime()) || timeout.Equal(sdkCtx.BlockTime()) {
 					return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "voting period ended: skipping"), nil, nil
@@ -990,14 +978,6 @@ func SimulateMsgVote(ak group.AccountKeeper,
 		// return no-op if no proposal found
 		if proposalID == -1 {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "no proposals found"), nil, nil
-		}
-
-		// Ensure that group and group policy haven't been modified since the proposal submission.
-		if proposal.GroupPolicyVersion != groupPolicy.Version {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "group policy has been modified"), nil, nil
-		}
-		if proposal.GroupVersion != g.Version {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "group has been modified"), nil, nil
 		}
 
 		// Ensure member hasn't already voted

@@ -29,7 +29,7 @@ Where we define the following arguments and return types:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/5491be27d02e796746bd78d3d08bd1b2a9b1deb2/types/tx/middleware.go#L25-L60
 
-BaseApp holds a reference to a `tx.Handler`:
+BaseApp holds a reference to a `tx.Handler`, which will process the incoming transactions. It could be a simple `sdk.Msg` executor, but in practice, it will be defined as a middleware stack wrapping around the base `sdk.Msg` executor.
 
 ```go
 type BaseApp  struct {

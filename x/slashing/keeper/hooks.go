@@ -88,6 +88,3 @@ func (h Hooks) AfterDelegationModified(_ sdk.Context, _ sdk.AccAddress, _ sdk.Va
 func (h Hooks) BeforeValidatorSlashed(_ sdk.Context, _ sdk.ValAddress, _ sdk.Dec)                {}
 func (h Hooks) AfterUnbondingOpInitiated(_ sdk.Context, _ uint64) {
 }
-func (h Hooks) BeforeUnbondingDelegationEntryComplete(_ sdk.Context, _ uint64) bool {
-	return false
-}

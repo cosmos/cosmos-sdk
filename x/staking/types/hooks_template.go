@@ -30,6 +30,3 @@ func (h StakingHooksTemplate) BeforeValidatorSlashed(ctx sdk.Context, valAddr sd
 }
 func (h StakingHooksTemplate) AfterUnbondingOpInitiated(ctx sdk.Context, id uint64) {
 }
-func (h StakingHooksTemplate) BeforeUnbondingDelegationEntryComplete(ctx sdk.Context, id uint64) bool {
-	return false
-}

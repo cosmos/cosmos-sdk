@@ -212,7 +212,7 @@ func (k Keeper) SetValidatorByUnbondingOpIndex(ctx sdk.Context, val types.Valida
 }
 
 // Remove a ValidatorByUnbondingOpIndex
-func (k Keeper) DeleteValidatorByUnbondingOpIndex(ctx sdk.Context, id uint64) {
+func (k Keeper) DeleteUnbondingOpIndex(ctx sdk.Context, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 
 	indexKey := types.GetUnbondingOpIndexKey(id)
@@ -238,15 +238,6 @@ func (k Keeper) SetUBDByUnbondingOpIndex(ctx sdk.Context, ubd types.UnbondingDel
 	ubdKey := types.GetUBDKey(delAddr, valAddr)
 
 	store.Set(indexKey, ubdKey)
-}
-
-// Remove a UBDByUnbondingOpIndex
-func (k Keeper) DeleteUBDByUnbondingOpIndex(ctx sdk.Context, id uint64) {
-	store := ctx.KVStore(k.storeKey)
-
-	indexKey := types.GetUnbondingOpIndexKey(id)
-
-	store.Delete(indexKey)
 }
 
 // return all unbonding delegations from a particular validator
@@ -503,15 +494,6 @@ func (k Keeper) SetREDByUnbondingOpIndex(ctx sdk.Context, red types.Redelegation
 	redKey := types.GetREDKey(delAddr, valSrcAddr, valDstAddr)
 
 	store.Set(indexKey, redKey)
-}
-
-// Remove a UBDByUnbondingOpIndex
-func (k Keeper) DeleteREDByUnbondingOpIndex(ctx sdk.Context, id uint64) {
-	store := ctx.KVStore(k.storeKey)
-
-	indexKey := types.GetUnbondingOpIndexKey(id)
-
-	store.Delete(indexKey)
 }
 
 // return all redelegations from a particular validator
@@ -942,23 +924,21 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 	// loop through all the entries and try to complete unbonding mature entries
 	for i := 0; i < len(ubd.Entries); i++ {
 		entry := &ubd.Entries[i]
-		if entry.IsMature(ctxTime) {
-			if !entry.OnHold {
-				// Proceed with unbonding
-				ubd.RemoveEntry(int64(i))
-				i--
+		if entry.IsMature(ctxTime) && !entry.OnHold {
+			// Proceed with unbonding
+			ubd.RemoveEntry(int64(i))
+			i--
 
-				// track undelegation only when remaining or truncated shares are non-zero
-				if !entry.Balance.IsZero() {
-					amt := sdk.NewCoin(bondDenom, entry.Balance)
-					if err := k.bankKeeper.UndelegateCoinsFromModuleToAccount(
-						ctx, types.NotBondedPoolName, delegatorAddress, sdk.NewCoins(amt),
-					); err != nil {
-						return nil, err
-					}
-
-					balances = balances.Add(amt)
+			// track undelegation only when remaining or truncated shares are non-zero
+			if !entry.Balance.IsZero() {
+				amt := sdk.NewCoin(bondDenom, entry.Balance)
+				if err := k.bankKeeper.UndelegateCoinsFromModuleToAccount(
+					ctx, types.NotBondedPoolName, delegatorAddress, sdk.NewCoins(amt),
+				); err != nil {
+					return nil, err
 				}
+
+				balances = balances.Add(amt)
 			}
 		}
 	}
@@ -988,8 +968,6 @@ func (k Keeper) PutUnbondingOpOnHold(ctx sdk.Context, id uint64) (found bool) {
 	return false
 }
 
-// This can be called to complete the unbonding of an unbonding operation (unbonding delegation entry or
-// redelegation) that was previously stopped by the BeforeUnbondingDelegationEntryComplete hook in CompleteUnbonding
 func (k Keeper) UnbondingOpCanComplete(ctx sdk.Context, id uint64) (found bool, err error) {
 	_, found = k.GetUnbondingDelegationByUnbondingOpId(ctx, id)
 	if found {
@@ -1001,16 +979,10 @@ func (k Keeper) UnbondingOpCanComplete(ctx sdk.Context, id uint64) (found bool, 
 		return k.RedelegationCanComplete(ctx, id)
 	}
 
-	// _, found = k.GetValidatorByUnbondingOp(ctx, id)
-	// if found {
-	// 	return k.ValidatorUnbondingCanComplete(ctx, id)
-
-	// 	// TODO JNT: Inside of that ValidatorUnbondingCanComplete function:
-	// 	// val = k.UnbondingToUnbonded(ctx, val)
-	// 	// if val.GetDelegatorShares().IsZero() {
-	// 	// 	k.RemoveValidator(ctx, val.GetOperator())
-	// 	// }
-	// }
+	_, found = k.GetValidatorByUnbondingOpId(ctx, id)
+	if found {
+		return k.ValidatorUnbondingCanComplete(ctx, id)
+	}
 
 	// If an entry was not found
 	return false, nil
@@ -1045,8 +1017,6 @@ func (k Keeper) PutUnbondingDelegationEntryOnHold(ctx sdk.Context, id uint64) (f
 	return true
 }
 
-// This can be called to complete the unbonding of an unbonding delegation entry that was previously
-// stopped by the BeforeUnbondingDelegationEntryComplete hook in CompleteUnbonding
 func (k Keeper) UnbondingDelegationCanComplete(ctx sdk.Context, id uint64) (found bool, err error) {
 	ubd, found := k.GetUnbondingDelegationByUnbondingOpId(ctx, id)
 	if !found {
@@ -1074,7 +1044,7 @@ func (k Keeper) UnbondingDelegationCanComplete(ctx sdk.Context, id uint64) (foun
 		// Remove entry
 		ubd.RemoveEntry(int64(i))
 		// Remove from the UBDByEntry index
-		k.DeleteUBDByUnbondingOpIndex(ctx, ubd.Entries[i].Id)
+		k.DeleteUnbondingOpIndex(ctx, ubd.Entries[i].Id)
 
 		// track undelegation only when remaining or truncated shares are non-zero
 		if !ubd.Entries[i].Balance.IsZero() {
@@ -1225,8 +1195,6 @@ func (k Keeper) PutRedelegationEntryOnHold(ctx sdk.Context, id uint64) (found bo
 	return true
 }
 
-// This can be called to complete the unbonding of an unbonding delegation entry that was previously
-// stopped by the BeforeUnbondingDelegationEntryComplete hook in CompleteUnbonding
 func (k Keeper) RedelegationCanComplete(ctx sdk.Context, id uint64) (found bool, err error) {
 	red, found := k.GetRedelegationByUnbondingOpId(ctx, id)
 	if !found {
@@ -1246,7 +1214,7 @@ func (k Keeper) RedelegationCanComplete(ctx sdk.Context, id uint64) (found bool,
 		// Remove entry
 		red.RemoveEntry(int64(i))
 		// Remove from the UBDByUnbondingOp index
-		k.DeleteREDByUnbondingOpIndex(ctx, red.Entries[i].Id)
+		k.DeleteUnbondingOpIndex(ctx, red.Entries[i].Id)
 
 		// set the unbonding delegation or remove it if there are no more entries
 		if len(red.Entries) == 0 {

@@ -66,11 +66,3 @@ func (h MultiStakingHooks) AfterUnbondingOpInitiated(ctx sdk.Context, id uint64)
 		h[i].AfterUnbondingOpInitiated(ctx, id)
 	}
 }
-func (h MultiStakingHooks) BeforeUnbondingDelegationEntryComplete(ctx sdk.Context, id uint64) bool {
-	for i := range h {
-		if h[i].BeforeUnbondingDelegationEntryComplete(ctx, id) {
-			return true
-		}
-	}
-	return false
-}

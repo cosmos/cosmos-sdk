@@ -84,12 +84,3 @@ func (k Keeper) AfterUnbondingOpInitiated(ctx sdk.Context, id uint64) {
 		k.hooks.AfterUnbondingOpInitiated(ctx, id)
 	}
 }
-
-// This is called before completing unbonding of a UnbondingDelegationEntry. returning true
-// will stop the unbonding.
-func (k Keeper) BeforeUnbondingDelegationEntryComplete(ctx sdk.Context, id uint64) bool {
-	if k.hooks != nil {
-		return k.hooks.BeforeUnbondingDelegationEntryComplete(ctx, id)
-	}
-	return false
-}

@@ -472,60 +472,6 @@ func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 	}
 }
 
-// This can be called to complete the unbonding of an unbonding delegation entry that was previously
-// stopped by the BeforeUnbondingDelegationEntryComplete hook in CompleteUnbonding
-func (k Keeper) UnbondingDelegationCanComplete(ctx sdk.Context, id uint64) (found bool, err error) {
-	ubd, found := k.GetValidatorByUnbondingOpId(ctx, id)
-	if !found {
-		return false, nil
-	}
-
-	i, found := unbondingDelegationEntryArrayIndex(ubd, id)
-	if !found {
-		return false, nil
-	}
-
-	// Check if entry is matured.
-	if !ubd.Entries[i].IsMature(ctx.BlockHeader().Time) {
-		// If not matured, set onHold to false
-		ubd.Entries[i].OnHold = false
-	} else {
-		// If matured, complete it.
-		delegatorAddress, err := sdk.AccAddressFromBech32(ubd.DelegatorAddress)
-		if err != nil {
-			return true, err
-		}
-
-		bondDenom := k.GetParams(ctx).BondDenom
-
-		// Remove entry
-		ubd.RemoveEntry(int64(i))
-		// Remove from the UBDByEntry index
-		k.DeleteUBDByUnbondingOpIndex(ctx, ubd.Entries[i].Id)
-
-		// track undelegation only when remaining or truncated shares are non-zero
-		if !ubd.Entries[i].Balance.IsZero() {
-			amt := sdk.NewCoin(bondDenom, ubd.Entries[i].Balance)
-			if err := k.bankKeeper.UndelegateCoinsFromModuleToAccount(
-				ctx, types.NotBondedPoolName, delegatorAddress, sdk.NewCoins(amt),
-			); err != nil {
-				return false, err
-			}
-		}
-
-	}
-
-	// set the unbonding delegation or remove it if there are no more entries
-	if len(ubd.Entries) == 0 {
-		k.RemoveUnbondingDelegation(ctx, ubd)
-	} else {
-		k.SetUnbondingDelegation(ctx, ubd)
-	}
-
-	// Successfully completed unbonding
-	return true, nil
-}
-
 func (k Keeper) ValidatorUnbondingCanComplete(ctx sdk.Context, id uint64) (found bool, err error) {
 	val, found := k.GetValidatorByUnbondingOpId(ctx, id)
 	if !found {
@@ -534,7 +480,7 @@ func (k Keeper) ValidatorUnbondingCanComplete(ctx sdk.Context, id uint64) (found
 
 	// TODO JNT: getting equivalent of IsMature looks like it will be somewhat complicated
 	// Something like this: keyHeight <= blockHeight && (keyTime.Before(blockTime) || keyTime.Equal(blockTime))
-	if !val.IsMature() {
+	if !val.IsMature(ctx.BlockTime(), ctx.BlockHeight()) {
 		val.UnbondingOnHold = false
 	} else {
 		// If unbonding is mature complete it

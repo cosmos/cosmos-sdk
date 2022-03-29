@@ -1088,7 +1088,7 @@ func TestClawback(t *testing.T) {
 	// clawback the unvested funds (600fee, 50stake)
 	_, _, dest := testdata.KeyTestPubAddr()
 	va2 := app.AccountKeeper.GetAccount(ctx, addr).(*types.ClawbackVestingAccount)
-	clawbackAction := types.NewClawbackAction(dest, app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
+	clawbackAction := types.NewClawbackAction(funder, dest, app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
 	err = va2.Clawback(ctx, clawbackAction)
 	require.NoError(t, err)
 
@@ -1292,7 +1292,7 @@ func TestAddGrantClawbackVestingAcc_fullSlash(t *testing.T) {
 
 	// Add a new grant of 50stake
 	newGrant := c(stake(50))
-	grantAction := types.NewClawbackGrantAction(app.StakingKeeper, now.Add(500*time.Second).Unix(),
+	grantAction := types.NewClawbackGrantAction(funder.String(), app.StakingKeeper, now.Add(500*time.Second).Unix(),
 		[]types.Period{{Length: 1, Amount: newGrant}},
 		[]types.Period{{Length: 50, Amount: newGrant}}, newGrant)
 	err := va.AddGrant(ctx, grantAction)
@@ -1336,7 +1336,7 @@ func TestAddGrantClawbackVestingAcc(t *testing.T) {
 	require.Equal(t, int64(15), va.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
 
 	// Add a new grant while all slashing is covered by unvested tokens
-	grantAction := types.NewClawbackGrantAction(app.StakingKeeper, ctx.BlockTime().Unix(),
+	grantAction := types.NewClawbackGrantAction(funder.String(), app.StakingKeeper, ctx.BlockTime().Unix(),
 		lockupPeriods, vestingPeriods, origCoins)
 	err := va.AddGrant(ctx, grantAction)
 	require.NoError(t, err)
@@ -1353,7 +1353,7 @@ func TestAddGrantClawbackVestingAcc(t *testing.T) {
 	require.Equal(t, int64(0), va.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
 
 	// Add a new grant, while slashed amount is 50 unvested, 10 vested
-	grantAction = types.NewClawbackGrantAction(app.StakingKeeper, ctx.BlockTime().Unix(), lockupPeriods, vestingPeriods, origCoins)
+	grantAction = types.NewClawbackGrantAction(funder.String(), app.StakingKeeper, ctx.BlockTime().Unix(), lockupPeriods, vestingPeriods, origCoins)
 	err = va.AddGrant(ctx, grantAction)
 	require.NoError(t, err)
 
@@ -1368,7 +1368,7 @@ func TestAddGrantClawbackVestingAcc(t *testing.T) {
 	require.Equal(t, int64(0), va.LockedCoins(ctx).AmountOf(stakeDenom).Int64())
 
 	// Add a new grant with residual slashed amount, but no unvested
-	grantAction = types.NewClawbackGrantAction(app.StakingKeeper, ctx.BlockTime().Unix(), lockupPeriods, vestingPeriods, origCoins)
+	grantAction = types.NewClawbackGrantAction(funder.String(), app.StakingKeeper, ctx.BlockTime().Unix(), lockupPeriods, vestingPeriods, origCoins)
 	err = va.AddGrant(ctx, grantAction)
 	require.NoError(t, err)
 

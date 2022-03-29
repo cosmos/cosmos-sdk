@@ -10,6 +10,7 @@ import (
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
@@ -786,6 +787,7 @@ func (va ClawbackVestingAccount) MarshalYAML() (interface{}, error) {
 }
 
 type clawbackGrantAction struct {
+	funderAddress       string
 	sk                  StakingKeeper
 	grantStartTime      int64
 	grantLockupPeriods  []Period
@@ -794,11 +796,13 @@ type clawbackGrantAction struct {
 }
 
 func NewClawbackGrantAction(
+	funderAddress string,
 	sk StakingKeeper,
 	grantStartTime int64,
 	grantLockupPeriods, grantVestingPeriods []Period,
 	grantCoins sdk.Coins) exported.AddGrantAction {
 	return clawbackGrantAction{
+		funderAddress:       funderAddress,
 		sk:                  sk,
 		grantStartTime:      grantStartTime,
 		grantLockupPeriods:  grantLockupPeriods,
@@ -811,6 +815,10 @@ func (cga clawbackGrantAction) AddToAccount(ctx sdk.Context, rawAccount exported
 	cva, ok := rawAccount.(*ClawbackVestingAccount)
 	if !ok {
 		return fmt.Errorf("expected *ClawbackVestingAccount, got %T", rawAccount)
+	}
+	if cga.funderAddress != cva.FunderAddress {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s can only accept grants from account %s",
+			rawAccount.GetAddress(), cva.FunderAddress)
 	}
 	cva.addGrant(ctx, cga.sk, cga.grantStartTime, cga.grantLockupPeriods, cga.grantVestingPeriods, cga.grantCoins)
 	return nil
@@ -945,18 +953,20 @@ func (va *ClawbackVestingAccount) updateDelegation(encumbered, toClawBack, bonde
 }
 
 type clawbackAction struct {
-	dest sdk.AccAddress
-	ak   AccountKeeper
-	bk   BankKeeper
-	sk   StakingKeeper
+	requestor sdk.AccAddress
+	dest      sdk.AccAddress
+	ak        AccountKeeper
+	bk        BankKeeper
+	sk        StakingKeeper
 }
 
-func NewClawbackAction(dest sdk.AccAddress, ak AccountKeeper, bk BankKeeper, sk StakingKeeper) exported.ClawbackAction {
+func NewClawbackAction(requestor, dest sdk.AccAddress, ak AccountKeeper, bk BankKeeper, sk StakingKeeper) exported.ClawbackAction {
 	return clawbackAction{
-		dest: dest,
-		ak:   ak,
-		bk:   bk,
-		sk:   sk,
+		requestor: requestor,
+		dest:      dest,
+		ak:        ak,
+		bk:        bk,
+		sk:        sk,
 	}
 }
 
@@ -964,6 +974,9 @@ func (ca clawbackAction) TakeFromAccount(ctx sdk.Context, rawAccount exported.Ve
 	cva, ok := rawAccount.(*ClawbackVestingAccount)
 	if !ok {
 		return fmt.Errorf("clawback expects *ClawbackVestingAccount, got %T", rawAccount)
+	}
+	if ca.requestor.String() != cva.FunderAddress {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "clawback can only be requested by original funder %s", cva.FunderAddress)
 	}
 	return cva.clawback(ctx, ca.dest, ca.ak, ca.bk, ca.sk)
 }

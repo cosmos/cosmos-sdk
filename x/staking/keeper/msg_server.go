@@ -391,10 +391,6 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.MsgCancelUnbondingDelegation) (*types.MsgCancelUnbondingDelegationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if !msg.Amount.IsPositive() {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap("invalid amount")
-	}
-
 	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
 		return nil, err
@@ -457,7 +453,7 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("amount is greater than the unbonding delegation entry balance")
 	}
 
-	if ubd.Entries[unbondEntryIndex].CompletionTime.Before(ctx.BlockTime()) {
+	if unbondEntry.CompletionTime.Before(ctx.BlockTime()) {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("unbonding delegation is already processed")
 	}
 
@@ -472,8 +468,9 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 		ubd.RemoveEntry(unbondEntryIndex)
 	} else {
 		// update the unbondingDelegationEntryBalance and InitialBalance for ubd entry
-		ubd.Entries[unbondEntryIndex].Balance = amount
-		ubd.Entries[unbondEntryIndex].InitialBalance = ubd.Entries[unbondEntryIndex].InitialBalance.Sub(msg.Amount.Amount)
+		unbondEntry.Balance = amount
+		unbondEntry.InitialBalance = unbondEntry.InitialBalance.Sub(msg.Amount.Amount)
+		ubd.Entries[unbondEntryIndex] = unbondEntry
 	}
 
 	// set the unbonding delegation or remove it if there are no more entries

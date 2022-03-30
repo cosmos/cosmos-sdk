@@ -342,7 +342,7 @@ func (msg MsgUndelegate) ValidateBasic() error {
 
 // NewMsgCancelUnbondingDelegation creates a new MsgCancelUnbondingDelegation instance.
 //nolint:interfacer
-func NewMsgCancelUnbondingDelegation(delAddr sdk.AccAddress, valAddr sdk.ValAddress, creationHeight uint64, amount sdk.Coin) *MsgCancelUnbondingDelegation {
+func NewMsgCancelUnbondingDelegation(delAddr sdk.AccAddress, valAddr sdk.ValAddress, creationHeight int64, amount sdk.Coin) *MsgCancelUnbondingDelegation {
 	return &MsgCancelUnbondingDelegation{
 		DelegatorAddress: delAddr.String(),
 		ValidatorAddress: valAddr.String(),
@@ -384,7 +384,7 @@ func (msg MsgCancelUnbondingDelegation) ValidateBasic() error {
 		)
 	}
 
-	if msg.CreationHeight == 0 {
+	if msg.CreationHeight <= 0 {
 		return sdkerrors.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"invalid height",

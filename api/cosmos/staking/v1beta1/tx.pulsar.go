@@ -5300,8 +5300,8 @@ func (x *fastReflection_MsgCancelUnbondingDelegation) Range(f func(protoreflect.
 			return
 		}
 	}
-	if x.CreationHeight != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.CreationHeight)
+	if x.CreationHeight != int64(0) {
+		value := protoreflect.ValueOfInt64(x.CreationHeight)
 		if !f(fd_MsgCancelUnbondingDelegation_creation_height, value) {
 			return
 		}
@@ -5328,7 +5328,7 @@ func (x *fastReflection_MsgCancelUnbondingDelegation) Has(fd protoreflect.FieldD
 	case "cosmos.staking.v1beta1.MsgCancelUnbondingDelegation.amount":
 		return x.Amount != nil
 	case "cosmos.staking.v1beta1.MsgCancelUnbondingDelegation.creation_height":
-		return x.CreationHeight != uint64(0)
+		return x.CreationHeight != int64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgCancelUnbondingDelegation"))
@@ -5352,7 +5352,7 @@ func (x *fastReflection_MsgCancelUnbondingDelegation) Clear(fd protoreflect.Fiel
 	case "cosmos.staking.v1beta1.MsgCancelUnbondingDelegation.amount":
 		x.Amount = nil
 	case "cosmos.staking.v1beta1.MsgCancelUnbondingDelegation.creation_height":
-		x.CreationHeight = uint64(0)
+		x.CreationHeight = int64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgCancelUnbondingDelegation"))
@@ -5380,7 +5380,7 @@ func (x *fastReflection_MsgCancelUnbondingDelegation) Get(descriptor protoreflec
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	case "cosmos.staking.v1beta1.MsgCancelUnbondingDelegation.creation_height":
 		value := x.CreationHeight
-		return protoreflect.ValueOfUint64(value)
+		return protoreflect.ValueOfInt64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgCancelUnbondingDelegation"))
@@ -5408,7 +5408,7 @@ func (x *fastReflection_MsgCancelUnbondingDelegation) Set(fd protoreflect.FieldD
 	case "cosmos.staking.v1beta1.MsgCancelUnbondingDelegation.amount":
 		x.Amount = value.Message().Interface().(*v1beta1.Coin)
 	case "cosmos.staking.v1beta1.MsgCancelUnbondingDelegation.creation_height":
-		x.CreationHeight = value.Uint()
+		x.CreationHeight = value.Int()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgCancelUnbondingDelegation"))
@@ -5461,7 +5461,7 @@ func (x *fastReflection_MsgCancelUnbondingDelegation) NewField(fd protoreflect.F
 		m := new(v1beta1.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.staking.v1beta1.MsgCancelUnbondingDelegation.creation_height":
-		return protoreflect.ValueOfUint64(uint64(0))
+		return protoreflect.ValueOfInt64(int64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgCancelUnbondingDelegation"))
@@ -5771,7 +5771,7 @@ func (x *fastReflection_MsgCancelUnbondingDelegation) ProtoMethods() *protoiface
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.CreationHeight |= uint64(b&0x7F) << shift
+					x.CreationHeight |= int64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -6659,7 +6659,7 @@ type MsgCancelUnbondingDelegation struct {
 	// amount is always less than or equal to unbonding delegation entry balance
 	Amount *v1beta1.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
 	// creation_height is the height which the unbonding took place.
-	CreationHeight uint64 `protobuf:"varint,4,opt,name=creation_height,json=creationHeight,proto3" json:"creation_height,omitempty"`
+	CreationHeight int64 `protobuf:"varint,4,opt,name=creation_height,json=creationHeight,proto3" json:"creation_height,omitempty"`
 }
 
 func (x *MsgCancelUnbondingDelegation) Reset() {
@@ -6703,7 +6703,7 @@ func (x *MsgCancelUnbondingDelegation) GetAmount() *v1beta1.Coin {
 	return nil
 }
 
-func (x *MsgCancelUnbondingDelegation) GetCreationHeight() uint64 {
+func (x *MsgCancelUnbondingDelegation) GetCreationHeight() int64 {
 	if x != nil {
 		return x.CreationHeight
 	}
@@ -6906,7 +6906,7 @@ var file_cosmos_staking_v1beta1_tx_proto_rawDesc = []byte{
 	0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f,
 	0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74,
 	0x12, 0x27, 0x0a, 0x0f, 0x63, 0x72, 0x65, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x68, 0x65, 0x69,
-	0x67, 0x68, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0e, 0x63, 0x72, 0x65, 0x61, 0x74,
+	0x67, 0x68, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0e, 0x63, 0x72, 0x65, 0x61, 0x74,
 	0x69, 0x6f, 0x6e, 0x48, 0x65, 0x69, 0x67, 0x68, 0x74, 0x3a, 0x1e, 0x88, 0xa0, 0x1f, 0x00, 0xe8,
 	0xa0, 0x1f, 0x00, 0x82, 0xe7, 0xb0, 0x2a, 0x11, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f,
 	0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x26, 0x0a, 0x24, 0x4d, 0x73, 0x67,

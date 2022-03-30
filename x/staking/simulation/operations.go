@@ -425,7 +425,7 @@ func SimulateMsgCancelUnbondingDelegate(ak types.AccountKeeper, bk types.BankKee
 		}
 
 		msg := types.NewMsgCancelUnbondingDelegation(
-			simAccount.Address, valAddr, uint64(unbondingDelegationEntry.CreationHeight), sdk.NewCoin(k.BondDenom(ctx), cancelBondAmt),
+			simAccount.Address, valAddr, unbondingDelegationEntry.CreationHeight, sdk.NewCoin(k.BondDenom(ctx), cancelBondAmt),
 		)
 
 		spendable := bk.SpendableCoins(ctx, simAccount.Address)

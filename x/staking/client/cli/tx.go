@@ -313,7 +313,7 @@ $ %s tx staking cancel-unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake
 				return err
 			}
 
-			creationHeight, err := strconv.ParseUint(args[2], 10, 64)
+			creationHeight, err := strconv.ParseInt(args[2], 10, 64)
 			if err != nil {
 				return sdkerrors.Wrap(fmt.Errorf("invalid height: %d", creationHeight), "invalid height")
 			}

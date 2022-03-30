@@ -152,7 +152,7 @@ message MsgCancelUnbondingDelegation{
   // amount is always less than or equal to unbonding delegation entry balance 
   cosmos.base.v1beta1.Coin amount            = 3 [(gogoproto.nullable) = false];
   // creation_height is the height which the unbonding took place.
-  uint64 creation_height = 4;
+  int64 creation_height = 4;
 }
 
 // MsgCancelUnbondingDelegationResponse

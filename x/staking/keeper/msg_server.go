@@ -439,7 +439,7 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 	)
 
 	for i, entry := range ubd.Entries {
-		if entry.CreationHeight == int64(msg.CreationHeight) {
+		if entry.CreationHeight == msg.CreationHeight {
 			unbondEntry = entry
 			unbondEntryIndex = int64(i)
 			break
@@ -486,7 +486,7 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
 			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
-			sdk.NewAttribute(types.AttributeKeyCreationHeight, strconv.FormatUint(msg.CreationHeight, 10)),
+			sdk.NewAttribute(types.AttributeKeyCreationHeight, strconv.FormatInt(msg.CreationHeight, 10)),
 		),
 	)
 

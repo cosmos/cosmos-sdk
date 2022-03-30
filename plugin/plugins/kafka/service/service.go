@@ -33,19 +33,19 @@ the length-prefixed protobuf encoded `EndBlockEvent` request is written, and the
 */
 
 // Event Kafka message key enum types for listen events.
-type Event string
+type Event int64
 const (
-	BeginBlockEvent Event = "BEGIN_BLOCK"
-	EndBlockEvent         = "END_BLOCK"
-	DeliverTxEvent        = "DELIVER_TX"
+	BEGIN_BLOCK Event = iota
+	END_BLOCK
+	DELIVER_TX
 )
 
 // EventType Kafka message key enum types for the event types.
-type EventType string
+type EventType int64
 const (
-	RequestEventType     EventType = "REQUEST"
-	ResponseEventType              = "RESPONSE"
-	StateChangeEventType           = "STATE_CHANGE"
+	REQUEST EventType = iota
+	RESPONSE
+	STATE_CHANGE
 )
 
 // EventTypeValueTypeTopic Kafka topic name enum types
@@ -62,7 +62,7 @@ const (
 
 // MsgKeyFtm Kafka message composite key format enum types
 const (
-	MsgKeyFtm = `{"block_height":%d,"event":"%s","event_id":%d,"event_type":"%s","event_type_id":%d}`
+	MsgKeyFtm = `{"block_height":%d,"event":%d,"event_id":%d,"event_type":%d,"event_type_id":%d}`
 )
 
 var _ baseapp.StreamingService = (*KafkaStreamingService)(nil)
@@ -160,22 +160,23 @@ func (kss *KafkaStreamingService) ListenBeginBlock(
 	res abci.ResponseBeginBlock,
 ) error {
 	kss.setBeginBlock(req)
+	event := int64(BEGIN_BLOCK)
 	eventId := int64(1)
 	eventTypeId := 1
 
 	// write req
-	key := fmt.Sprintf(MsgKeyFtm, kss.currentBlockNumber, BeginBlockEvent, eventId, RequestEventType, eventTypeId)
+	key := fmt.Sprintf(MsgKeyFtm, kss.currentBlockNumber, event, eventId, REQUEST, eventTypeId)
 	if err := kss.writeAsJsonToKafka(ctx, string(BeginBlockReqTopic), key, &req); err != nil {
 		return err
 	}
 
 	// write state changes
-	if err := kss.writeStateChange(ctx, string(BeginBlockEvent), eventId); err != nil {
+	if err := kss.writeStateChange(ctx, event, eventId); err != nil {
 		return err
 	}
 
 	// write res
-	key = fmt.Sprintf(MsgKeyFtm, kss.currentBlockNumber, EndBlockEvent, 1, ResponseEventType, 1)
+	key = fmt.Sprintf(MsgKeyFtm, kss.currentBlockNumber, event, 1, RESPONSE, 1)
 	if err := kss.writeAsJsonToKafka(ctx, BeginBlockResTopic, key, &res); err != nil {
 		return err
 	}
@@ -196,22 +197,23 @@ func (kss *KafkaStreamingService) ListenDeliverTx(
 	req abci.RequestDeliverTx,
 	res abci.ResponseDeliverTx,
 ) error {
+	event := int64(DELIVER_TX)
 	eventId := kss.getDeliverTxId()
 	eventTypeId := 1
 
 	// write req
-	key := fmt.Sprintf(MsgKeyFtm, kss.currentBlockNumber, DeliverTxEvent, eventId, RequestEventType, eventTypeId)
+	key := fmt.Sprintf(MsgKeyFtm, kss.currentBlockNumber, event, eventId, REQUEST, eventTypeId)
 	if err := kss.writeAsJsonToKafka(ctx, DeliverTxReqTopic, key, &req); err != nil {
 		return err
 	}
 
 	// write state changes
-	if err := kss.writeStateChange(ctx, DeliverTxEvent, eventId); err != nil {
+	if err := kss.writeStateChange(ctx, event, eventId); err != nil {
 		return err
 	}
 
 	// write res
-	key = fmt.Sprintf(MsgKeyFtm, kss.currentBlockNumber, DeliverTxEvent, eventId, ResponseEventType, 1)
+	key = fmt.Sprintf(MsgKeyFtm, kss.currentBlockNumber, event, eventId, RESPONSE, 1)
 	if err := kss.writeAsJsonToKafka(ctx, DeliverTxResTopic, key, &res); err != nil {
 		return err
 	}
@@ -232,22 +234,23 @@ func (kss *KafkaStreamingService) ListenEndBlock(
 	req abci.RequestEndBlock,
 	res abci.ResponseEndBlock,
 ) error {
+	event := int64(END_BLOCK)
 	eventId := int64(1)
 	eventTypeId := 1
 
 	// write req
-	key := fmt.Sprintf(MsgKeyFtm, kss.currentBlockNumber, EndBlockEvent, eventId, RequestEventType, eventTypeId)
+	key := fmt.Sprintf(MsgKeyFtm, kss.currentBlockNumber, event, eventId, REQUEST, eventTypeId)
 	if err := kss.writeAsJsonToKafka(ctx, EndBlockReqTopic, key, &req); err != nil {
 		return err
 	}
 
 	// write state changes
-	if err := kss.writeStateChange(ctx, EndBlockEvent, eventId); err != nil {
+	if err := kss.writeStateChange(ctx, event, eventId); err != nil {
 		return err
 	}
 
 	// write res
-	key = fmt.Sprintf(MsgKeyFtm, kss.currentBlockNumber, EndBlockEvent, eventId, ResponseEventType, eventTypeId)
+	key = fmt.Sprintf(MsgKeyFtm, kss.currentBlockNumber, event, eventId, RESPONSE, eventTypeId)
 	if err := kss.writeAsJsonToKafka(ctx, EndBlockResTopic, key, &res); err != nil {
 		return err
 	}
@@ -298,13 +301,13 @@ func (kss *KafkaStreamingService) Close() error {
 	return nil
 }
 
-func (kss *KafkaStreamingService) writeStateChange(ctx sdk.Context, event string, eventId int64) error {
+func (kss *KafkaStreamingService) writeStateChange(ctx sdk.Context, event int64, eventId int64) error {
 	// write all state changes cached for this stage to Kafka
 	kss.stateCacheLock.Lock()
 	kodec := kss.codec.(*codec.ProtoCodec)
 	kvPair := new(types.StoreKVPair)
 	for i, stateChange := range kss.stateCache {
-		key := fmt.Sprintf(MsgKeyFtm, kss.currentBlockNumber, event, eventId, StateChangeEventType, i+1)
+		key := fmt.Sprintf(MsgKeyFtm, kss.currentBlockNumber, event, eventId, STATE_CHANGE, i+1)
 		if err := kodec.UnmarshalLengthPrefixed(stateChange, kvPair); err != nil {
 			return err
 		}

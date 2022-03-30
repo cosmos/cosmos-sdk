@@ -93,7 +93,7 @@ type ProposalStatus byte
 
 
 const (
-	  StatusNil           ProposalStatus = 0x00
+    StatusNil           ProposalStatus = 0x00
     StatusDepositPeriod ProposalStatus = 0x01  // Proposal is submitted. Participants can deposit on it but not vote
     StatusVotingPeriod  ProposalStatus = 0x02  // MinDeposit is reached, participants can vote
     StatusPassed        ProposalStatus = 0x03  // Proposal passed and successfully executed

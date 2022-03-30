@@ -103,6 +103,10 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 	if err := content.ValidateBasic(); err != nil {
 		return err
 	}
+	contentWithProposer, ok := content.(ContentWithProposer)
+	if ok && contentWithProposer.GetProposer() != m.Proposer {
+		return sdkerrors.Wrap(ErrInvalidProposalContent, "proposer in content is different from the message")
+	}
 
 	return nil
 }

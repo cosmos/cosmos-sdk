@@ -100,7 +100,7 @@ func DeliverGenTxs(
 	for _, genTx := range genTxs {
 		tx, err := txEncodingConfig.TxJSONDecoder()(genTx)
 		if err != nil {
-			panic(fmt.Sprintf("failed to decode gentx: %s error: %s", genTx, err))
+			panic(fmt.Sprintf("failed to decode GenTx '%s': %s", genTx, err))
 		}
 
 		bz, err := txEncodingConfig.TxEncoder()(tx)

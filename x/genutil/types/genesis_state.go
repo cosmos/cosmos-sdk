@@ -104,6 +104,8 @@ func ValidateGenesis(genesisState *GenesisState, txJSONDecoder sdk.TxDecoder) er
 	return nil
 }
 
+// ValidateAndGetGenTx validates the genesis transaction and returns GenTx if valid
+// it cannot verify the signature as it is stateless validation
 func ValidateAndGetGenTx(genTx json.RawMessage, txJSONDecoder sdk.TxDecoder) (sdk.Tx, error) {
 	tx, err := txJSONDecoder(genTx)
 	if err != nil {

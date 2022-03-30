@@ -7,7 +7,6 @@ import (
 	"crypto/sha256"
 	"errors"
 	"io"
-	"os"
 	"testing"
 	"time"
 
@@ -17,7 +16,8 @@ import (
 	db "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/snapshots"
-	"github.com/cosmos/cosmos-sdk/snapshots/types"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -74,7 +74,7 @@ func snapshotItems(items [][]byte) [][]byte {
 		zWriter, _ := zlib.NewWriterLevel(bufWriter, 7)
 		protoWriter := protoio.NewDelimitedWriter(zWriter)
 		for _, item := range items {
-			_ = types.WriteExtensionItem(protoWriter, item)
+			_ = snapshottypes.WriteExtensionItem(protoWriter, item)
 		}
 		_ = protoWriter.Close()
 		_ = zWriter.Close()
@@ -102,36 +102,36 @@ type mockSnapshotter struct {
 
 func (m *mockSnapshotter) Restore(
 	height uint64, format uint32, protoReader protoio.Reader,
-) (types.SnapshotItem, error) {
+) (snapshottypes.SnapshotItem, error) {
 	if format == 0 {
-		return types.SnapshotItem{}, types.ErrUnknownFormat
+		return snapshottypes.SnapshotItem{}, snapshottypes.ErrUnknownFormat
 	}
 	if m.items != nil {
-		return types.SnapshotItem{}, errors.New("already has contents")
+		return snapshottypes.SnapshotItem{}, errors.New("already has contents")
 	}
 
 	m.items = [][]byte{}
 	for {
-		item := &types.SnapshotItem{}
+		item := &snapshottypes.SnapshotItem{}
 		err := protoReader.ReadMsg(item)
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			return types.SnapshotItem{}, sdkerrors.Wrap(err, "invalid protobuf message")
+			return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "invalid protobuf message")
 		}
 		payload := item.GetExtensionPayload()
 		if payload == nil {
-			return types.SnapshotItem{}, sdkerrors.Wrap(err, "invalid protobuf message")
+			return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "invalid protobuf message")
 		}
 		m.items = append(m.items, payload.Payload)
 	}
 
-	return types.SnapshotItem{}, nil
+	return snapshottypes.SnapshotItem{}, nil
 }
 
 func (m *mockSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	for _, item := range m.items {
-		if err := types.WriteExtensionItem(protoWriter, item); err != nil {
+		if err := snapshottypes.WriteExtensionItem(protoWriter, item); err != nil {
 			return err
 		}
 	}
@@ -139,11 +139,11 @@ func (m *mockSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) er
 }
 
 func (m *mockSnapshotter) SnapshotFormat() uint32 {
-	return types.CurrentFormat
+	return snapshottypes.CurrentFormat
 }
 
 func (m *mockSnapshotter) SupportedFormats() []uint32 {
-	return []uint32{types.CurrentFormat}
+	return []uint32{snapshottypes.CurrentFormat}
 }
 
 func (m *mockSnapshotter) PruneSnapshotHeight(height int64) {
@@ -161,14 +161,7 @@ func (m *mockSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
 // setupBusyManager creates a manager with an empty store that is busy creating a snapshot at height 1.
 // The snapshot will complete when the returned closer is called.
 func setupBusyManager(t *testing.T) *snapshots.Manager {
-	// os.MkdirTemp() is used instead of testing.T.TempDir()
-	// see https://github.com/cosmos/cosmos-sdk/pull/8475 for
-	// this change's rationale.
-	tempdir, err := os.MkdirTemp("", "")
-	require.NoError(t, err)
-	t.Cleanup(func() { _ = os.RemoveAll(tempdir) })
-
-	store, err := snapshots.NewStore(db.NewMemDB(), tempdir)
+	store, err := snapshots.NewStore(db.NewMemDB(), testutil.GetTempDir(t))
 	require.NoError(t, err)
 	hung := newHungSnapshotter()
 	mgr := snapshots.NewManager(store, opts, hung, nil, log.NewNopLogger())
@@ -219,6 +212,6 @@ func (m *hungSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
 
 func (m *hungSnapshotter) Restore(
 	height uint64, format uint32, protoReader protoio.Reader,
-) (types.SnapshotItem, error) {
+) (snapshottypes.SnapshotItem, error) {
 	panic("not implemented")
 }

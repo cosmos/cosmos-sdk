@@ -123,7 +123,7 @@ func ValidateAndGetGenTx(genTx json.RawMessage, txJSONDecoder sdk.TxDecoder) (sd
 	}
 
 	if err := msgs[0].ValidateBasic(); err != nil {
-		return tx, fmt.Errorf("invalid gentx: %s, error:%s", msgs[0], err)
+		return tx, fmt.Errorf("invalid GenTx '%s': %s", msgs[0], err)
 	}
 
 	return tx, nil

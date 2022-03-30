@@ -112,8 +112,7 @@ func ValidateAndGetGenTx(genTx json.RawMessage, txJSONDecoder sdk.TxDecoder) (sd
 
 	msgs := tx.GetMsgs()
 	if len(msgs) != 1 {
-		return tx, fmt.Errorf(
-			"must provide genesis Tx with exactly 1 CreateValidator message, got more in gentx %v", tx)
+		return tx, fmt.Errorf("unexpected number of GenTx messages; got: %d, expected: 1", len(msgs))
 	}
 
 	// TODO: abstract back to staking

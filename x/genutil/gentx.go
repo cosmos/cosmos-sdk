@@ -110,7 +110,7 @@ func DeliverGenTxs(
 
 		res := deliverTx(abci.RequestDeliverTx{Tx: bz})
 		if !res.IsOK() {
-			panic(fmt.Sprintf("failed to deliverTx: %s error: %s", genTx, res.Log))
+			panic(fmt.Sprintf("failed to execute DelverTx for '%s': %s", genTx, res.Log))
 		}
 	}
 

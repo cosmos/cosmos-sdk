@@ -19,6 +19,13 @@ var (
 	}
 )
 
+type TextProposalWithProposer struct {
+	TextProposal
+	Proposer string
+}
+
+func (tp TextProposalWithProposer) GetProposer() string { return tp.Proposer }
+
 func init() {
 	coinsMulti.Sort()
 }
@@ -45,6 +52,46 @@ func TestMsgSubmitProposal(t *testing.T) {
 	for i, tc := range tests {
 		msg, err := NewMsgSubmitProposal(
 			ContentFromProposalType(tc.title, tc.description, tc.proposalType),
+			tc.initialDeposit,
+			tc.proposerAddr,
+		)
+
+		require.NoError(t, err)
+
+		if tc.expectPass {
+			require.NoError(t, msg.ValidateBasic(), "test: %v", i)
+		} else {
+			require.Error(t, msg.ValidateBasic(), "test: %v", i)
+		}
+	}
+}
+
+// test ValidateBasic for MsgCreateValidator with proposer in message
+func TestMsgSubmitProposalWithProposer(t *testing.T) {
+	const (
+		proposalTypeTextWithProposer = "TextWithProposer"
+	)
+
+	tests := []struct {
+		title, description, proposer string
+		proposalType                 string
+		proposerAddr                 sdk.AccAddress
+		initialDeposit               sdk.Coins
+		expectPass                   bool
+	}{
+		{"Test valid proposer in content", "description", addrs[0].String(), proposalTypeTextWithProposer, addrs[0], coinsPos, true},
+		{"Test invalid proposer in content", "description", addrs[1].String(), proposalTypeTextWithProposer, addrs[0], coinsPos, false},
+	}
+
+	for i, tc := range tests {
+		msg, err := NewMsgSubmitProposal(
+			&TextProposalWithProposer{
+				TextProposal: TextProposal{
+					Title:       tc.title,
+					Description: tc.description,
+				},
+				Proposer: tc.proposer,
+			},
 			tc.initialDeposit,
 			tc.proposerAddr,
 		)

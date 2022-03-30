@@ -141,3 +141,14 @@ func (ms dbMapStore) Get(key []byte) ([]byte, error) {
 	}
 	return val, nil
 }
+
+func (ms dbMapStore) Delete(key []byte) error {
+	has, err := ms.DBReadWriter.Has(key)
+	if err != nil {
+		return err
+	}
+	if !has {
+		return &smt.InvalidKeyError{key}
+	}
+	return ms.DBReadWriter.Delete(key)
+}

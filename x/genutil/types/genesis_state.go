@@ -117,8 +117,7 @@ func ValidateAndGetGenTx(genTx json.RawMessage, txJSONDecoder sdk.TxDecoder) (sd
 
 	// TODO: abstract back to staking
 	if _, ok := msgs[0].(*stakingtypes.MsgCreateValidator); !ok {
-		return tx, fmt.Errorf(
-			"genesis transaction %v does not contain a MsgCreateValidator", tx)
+		return tx, fmt.Errorf("unexpected GenTx message type; expected: MsgCreateValidator, got: %T", msgs[0])
 	}
 
 	if err := msgs[0].ValidateBasic(); err != nil {

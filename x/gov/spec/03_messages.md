@@ -150,7 +150,7 @@ vote on the proposal.
 
 * Record `Vote` of sender
 
-_Note: Gas cost for this message has to be taken into account the future tallying of the vote in EndBlocker._
+_Note: Gas cost for this message has to take into account the future tallying of the vote in EndBlocker._
 
 Next is a pseudocode outline of the way `MsgVote` transactions are
 handled:

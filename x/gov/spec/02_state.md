@@ -70,7 +70,7 @@ parameter set has to be created and the previous one rendered inactive.
 
 Parameters are stored in a global `GlobalParams` KVStore.
 
-Additionally, we introduced some basic types:
+Additionally, we introduce some basic types:
 
 ```go
 type Vote byte
@@ -177,7 +177,7 @@ And the pseudocode for the `ProposalProcessingQueue`:
 
       tallyingParam = load(GlobalParams, 'TallyingParam')
 
-      // Update tally if validator voted the vote
+      // Update tally if validator voted
       for each validator in validators
         if tmpValMap(validator).HasVoted
           proposal.updateTally(tmpValMap(validator).Vote, (validator.TotalShares - tmpValMap(validator).Minus))

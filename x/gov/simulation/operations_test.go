@@ -99,7 +99,7 @@ func TestWeightedOperations(t *testing.T) {
 }
 
 // TestSimulateMsgSubmitProposal tests the normal scenario of a valid message of type TypeMsgSubmitProposal.
-// Abnormal scenarios, where the message is created by the errors are not tested here.
+// Abnormal scenarios, where errors occur, are not tested here.
 func TestSimulateMsgSubmitProposal(t *testing.T) {
 	app, ctx := createTestApp(t, false)
 

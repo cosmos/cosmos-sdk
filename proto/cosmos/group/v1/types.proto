@@ -20,7 +20,7 @@ message Member {
   // weight is the member's voting weight that should be greater than 0.
   string weight = 2;
 
-  // metadata is any arbitrary metadata to attached to the member.
+  // metadata is any arbitrary metadata attached to the member.
   string metadata = 3;
 
   // added_at is a timestamp specifying when a member was added.
@@ -34,22 +34,34 @@ message Members {
   repeated Member members = 1 [(gogoproto.nullable) = false];
 }
 
-// ThresholdDecisionPolicy implements the DecisionPolicy interface
+// ThresholdDecisionPolicy is a decision policy where a proposal passes when it
+// satisfies the two following conditions:
+// 1. The sum of all `YES` voters' weights is greater or equal than the defined
+//    `threshold`.
+// 2. The voting and execution periods of the proposal respect the parameters
+//    given by `windows`.
 message ThresholdDecisionPolicy {
   option (cosmos_proto.implements_interface) = "DecisionPolicy";
 
-  // threshold is the minimum weighted sum of yes votes that must be met or exceeded for a proposal to succeed.
+  // threshold is the minimum weighted sum of `YES` votes that must be met or
+  // exceeded for a proposal to succeed.
   string threshold = 1;
 
   // windows defines the different windows for voting and execution.
   DecisionPolicyWindows windows = 2;
 }
 
-// PercentageDecisionPolicy implements the DecisionPolicy interface
+// PercentageDecisionPolicy is a decision policy where a proposal passes when
+// it satisfies the two following conditions:
+// 1. The percentage of all `YES` voters' weights out of the total group weight
+//    is greater or equal than the given `threshold`.
+// 2. The voting and execution periods of the proposal respect the parameters
+//    given by `windows`.
 message PercentageDecisionPolicy {
   option (cosmos_proto.implements_interface) = "DecisionPolicy";
 
-  // percentage is the minimum percentage the weighted sum of yes votes must meet for a proposal to succeed.
+  // percentage is the minimum percentage the weighted sum of `YES` votes must
+  // meet for a proposal to succeed.
   string percentage = 1;
 
   // windows defines the different windows for voting and execution.
@@ -80,7 +92,8 @@ message DecisionPolicyWindows {
 enum VoteOption {
   option (gogoproto.goproto_enum_prefix) = false;
 
-  // VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
+  // VOTE_OPTION_UNSPECIFIED defines an unspecified vote option which will
+  // return an error.
   VOTE_OPTION_UNSPECIFIED = 0;
   // VOTE_OPTION_YES defines a yes vote option.
   VOTE_OPTION_YES = 1;
@@ -181,39 +194,35 @@ message Proposal {
   // submit_time is a timestamp specifying when a proposal was submitted.
   google.protobuf.Timestamp submit_time = 5 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 
-  // group_version tracks the version of the group that this proposal corresponds to.
-  // When group membership is changed, existing proposals from previous group versions will become invalid.
-  uint64 group_version = 6;
-
   // group_policy_version tracks the version of the group policy that this proposal corresponds to.
   // When a decision policy is changed, existing proposals from previous policy versions will become invalid.
-  uint64 group_policy_version = 7;
+  uint64 group_policy_version = 6;
 
   // status represents the high level position in the life cycle of the proposal. Initial value is Submitted.
-  ProposalStatus status = 8;
+  ProposalStatus status = 7;
 
   // result is the final result based on the votes and election rule. Initial value is unfinalized.
   // The result is persisted so that clients can always rely on this state and not have to replicate the logic.
-  ProposalResult result = 9;
+  ProposalResult result = 8;
 
   // final_tally_result contains the sums of all weighted votes for this
   // proposal for each vote option, after tallying. When querying a proposal
   // via gRPC, this field is not populated until the proposal's voting period
   // has ended.
-  TallyResult final_tally_result = 10 [(gogoproto.nullable) = false];
+  TallyResult final_tally_result = 9 [(gogoproto.nullable) = false];
 
   // voting_period_end is the timestamp before which voting must be done.
   // Unless a successfull MsgExec is called before (to execute a proposal whose
   // tally is successful before the voting period ends), tallying will be done
   // at this point, and the `final_tally_result`, as well
   // as `status` and `result` fields will be accordingly updated.
-  google.protobuf.Timestamp voting_period_end = 11 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp voting_period_end = 10 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 
   // executor_result is the final result based on the votes and election rule. Initial value is NotRun.
-  ProposalExecutorResult executor_result = 12;
+  ProposalExecutorResult executor_result = 11;
 
-  // messages is a list of Msgs that will be executed if the proposal passes.
-  repeated google.protobuf.Any messages = 13;
+  // messages is a list of `sdk.Msg`s that will be executed if the proposal passes.
+  repeated google.protobuf.Any messages = 12;
 }
 
 // ProposalStatus defines proposal statuses.
@@ -281,7 +290,7 @@ message TallyResult {
   // abstain_count is the weighted sum of abstainers.
   string abstain_count = 2;
 
-  // no is the weighted sum of no votes.
+  // no_count is the weighted sum of no votes.
   string no_count = 3;
 
   // no_with_veto_count is the weighted sum of veto.

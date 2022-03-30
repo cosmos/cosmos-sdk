@@ -395,7 +395,7 @@ simd tx gov submit-legacy-proposal --title="Test Proposal" --description="testin
 Example (`legacy-cancel-software-upgrade`):
 
 ```bash
-simd tx gov submit-legacy-proposal legacy-cancel-software-upgrade --title="Test Proposal" --description="testing" --type="Text" --deposit="100000000stake" --from cosmos1..
+simd tx gov submit-legacy-proposal legacy-cancel-software-upgrade --title="Test Proposal" --description="testing" --deposit="100000000stake" --from cosmos1..
 ```
 
 Example (`community-pool-spend`):

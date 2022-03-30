@@ -105,7 +105,7 @@ func DeliverGenTxs(
 
 		bz, err := txEncodingConfig.TxEncoder()(tx)
 		if err != nil {
-			panic(fmt.Sprintf("failed to encode gentx: %s error: %s", genTx, err))
+			panic(fmt.Sprintf("failed to encode GenTx '%s': %s", genTx, err))
 		}
 
 		res := deliverTx(abci.RequestDeliverTx{Tx: bz})

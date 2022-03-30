@@ -1,3 +1,7 @@
+## To test locally:
+# docker build --pull --rm -f "contrib/devtools/Dockerfile" -t cosmossdk-proto:latest "contrib/devtools"
+# docker run -v $(pwd):/workspace --workdir /workspace cosmossdk-proto sh ./scripts/protocgen.sh
+
 FROM bufbuild/buf:1.1.0 as BUILDER
 
 FROM golang:1.17-alpine

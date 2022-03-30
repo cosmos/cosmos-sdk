@@ -25,7 +25,7 @@ test-sim-nondeterminism-state-listening-kafka:
 
 	@-go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminismWithStateListening -Enabled=true \
 		-NumBlocks=50 -BlockSize=100 -Commit=true -Period=0 -v -timeout 24h \
-		-StateListeningPlugin=kafka -HaltAppOnDeliveryError=true
+		-StateListeningPlugin=kafka -HaltAppOnDeliveryError=false
 
 	@echo "Stopping Kafka..."
 	@-docker-compose -f plugin/plugins/kafka/docker-compose.yml down

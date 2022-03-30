@@ -687,22 +687,6 @@ func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
 	}
 
 	if app.snapshotManager != nil {
-		// Define the state pruning offset, i.e. the block offset at which the
-		// underlying logical database is persisted to disk.
-		statePruningOffset := int64(app.snapshotManager.GetInterval())
-		if statePruningOffset > 0 {
-			if commitHeight > statePruningOffset {
-				v := commitHeight - (commitHeight % statePruningOffset)
-				retentionHeight = minNonZero(retentionHeight, v)
-			} else {
-				// Hitting this case means we have persisting enabled but have yet to reach
-				// a height in which we persist state, so we return zero regardless of other
-				// conditions. Otherwise, we could end up pruning blocks without having
-				// any state committed to disk.
-				return 0
-			}
-		}
-
 		snapshotRetentionHeights := app.snapshotManager.GetSnapshotBlockRetentionHeights()
 		if snapshotRetentionHeights > 0 {
 			retentionHeight = minNonZero(retentionHeight, commitHeight-snapshotRetentionHeights)

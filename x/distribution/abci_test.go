@@ -101,7 +101,9 @@ func Test_VerifyProposerRewardAssignement(t *testing.T) {
 	})
 	a.NotEmpty(app.Commit())
 
+	rewardsValidatorBeforeLazyValidator := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, validators[lazyValidatorIdx+1].addr)
 	rewardsLazyValidator := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, validators[lazyValidatorIdx].addr)
 	rewardsValidatorAfterLazyValidator := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, validators[lazyValidatorIdx+1].addr)
 	a.True(rewardsLazyValidator[0].Amount.LT(rewardsValidatorAfterLazyValidator[0].Amount))
+	a.Equal(rewardsValidatorBeforeLazyValidator, rewardsValidatorAfterLazyValidator)
 }

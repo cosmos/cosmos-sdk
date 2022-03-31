@@ -53,9 +53,7 @@ func Test_VerifyProposerRewardAssignement(t *testing.T) {
 	a.NotEmpty(app.Commit())
 
 	// verify validators lists
-	stkValidators := app.StakingKeeper.GetAllValidators(ctx)
-	a.Len(stkValidators, totalValidators)
-
+	a.Len(app.StakingKeeper.GetAllValidators(ctx), totalValidators)
 	for i, val := range validators {
 		// verify all validator exists
 		a.NotNil(app.StakingKeeper.ValidatorByConsAddr(ctx, sdk.GetConsAddress(val.pubkey)))

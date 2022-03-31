@@ -6,19 +6,13 @@ import (
 	"encoding/binary"
 	"math"
 
-	"google.golang.org/protobuf/reflect/protoregistry"
-
-	ormv1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
-
-	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
-
-	"google.golang.org/protobuf/reflect/protodesc"
-
+	orm "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
-
+	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
 	"google.golang.org/protobuf/proto"
-
+	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
@@ -69,11 +63,11 @@ type ModuleDBOptions struct {
 
 	// GetBackendResolver returns a backend resolver for the requested storage
 	// type or an error if this type of storage isn't supported.
-	GetBackendResolver func(ormv1alpha1.StorageType) (ormtable.BackendResolver, error)
+	GetBackendResolver func(orm.StorageType) (ormtable.BackendResolver, error)
 }
 
 // NewModuleDB constructs a ModuleDB instance from the provided schema and options.
-func NewModuleDB(schema *ormv1alpha1.ModuleSchemaDescriptor, options ModuleDBOptions) (ModuleDB, error) {
+func NewModuleDB(schema *orm.ModuleSchemaDescriptor, options ModuleDBOptions) (ModuleDB, error) {
 	prefix := schema.Prefix
 	db := &moduleDB{
 		prefix:       prefix,

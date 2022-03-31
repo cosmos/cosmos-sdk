@@ -3,13 +3,10 @@ package codegen
 import (
 	"fmt"
 
-	"google.golang.org/protobuf/proto"
-
-	v1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
-
 	"github.com/cosmos/cosmos-proto/generator"
-
+	orm "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1"
 	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -48,11 +45,11 @@ func PluginRunner(p *protogen.Plugin) error {
 
 func hasTables(file *protogen.File) bool {
 	for _, message := range file.Messages {
-		if proto.GetExtension(message.Desc.Options(), v1alpha1.E_Table).(*v1alpha1.TableDescriptor) != nil {
+		if proto.GetExtension(message.Desc.Options(), orm.E_Table).(*orm.TableDescriptor) != nil {
 			return true
 		}
 
-		if proto.GetExtension(message.Desc.Options(), v1alpha1.E_Singleton).(*v1alpha1.SingletonDescriptor) != nil {
+		if proto.GetExtension(message.Desc.Options(), orm.E_Singleton).(*orm.SingletonDescriptor) != nil {
 			return true
 		}
 	}

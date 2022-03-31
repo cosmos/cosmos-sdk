@@ -3,16 +3,13 @@ package ormtable
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
-
+	orm "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
-
-	"google.golang.org/protobuf/reflect/protoregistry"
-
+	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
-	ormv1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
@@ -35,13 +32,13 @@ type Options struct {
 	// with the table. Generally this should be nil and the table descriptor
 	// should be pulled from the table message option. TableDescriptor
 	// cannot be used together with SingletonDescriptor.
-	TableDescriptor *ormv1alpha1.TableDescriptor
+	TableDescriptor *orm.TableDescriptor
 
 	// SingletonDescriptor is an optional singleton descriptor to be explicitly used.
 	// Generally this should be nil and the table descriptor
 	// should be pulled from the singleton message option. SingletonDescriptor
 	// cannot be used together with TableDescriptor.
-	SingletonDescriptor *ormv1alpha1.SingletonDescriptor
+	SingletonDescriptor *orm.SingletonDescriptor
 
 	// TypeResolver is an optional type resolver to be used when unmarshaling
 	// protobuf messages.
@@ -96,12 +93,12 @@ func Build(options Options) (Table, error) {
 
 	tableDesc := options.TableDescriptor
 	if tableDesc == nil {
-		tableDesc = proto.GetExtension(messageDescriptor.Options(), ormv1alpha1.E_Table).(*ormv1alpha1.TableDescriptor)
+		tableDesc = proto.GetExtension(messageDescriptor.Options(), orm.E_Table).(*orm.TableDescriptor)
 	}
 
 	singletonDesc := options.SingletonDescriptor
 	if singletonDesc == nil {
-		singletonDesc = proto.GetExtension(messageDescriptor.Options(), ormv1alpha1.E_Singleton).(*ormv1alpha1.SingletonDescriptor)
+		singletonDesc = proto.GetExtension(messageDescriptor.Options(), orm.E_Singleton).(*orm.SingletonDescriptor)
 	}
 
 	switch {

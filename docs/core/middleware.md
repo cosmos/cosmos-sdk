@@ -109,7 +109,7 @@ func (h myTxHandler) SimulateTx(ctx context.Context, req Request) (Response, err
 
 While BaseApp holds a reference to a `tx.Handler`, this `tx.Handler` itself is defined using a middleware stack. The Cosmos SDK exposes a base (i.e. innermost) `tx.Handler` called `RunMsgsTxHandler`, which executes messages. It holds a reference to the `MsgServiceRouter`, which is used to map each `sdk.Msg` to the correct module's `Msg` server handler.
 
-Then, the app developer can compose multiple middlewares on top on the base `tx.Handler`. Each middleware can run pre-and-post-processing logic around its next middleware, as described in the section above. Conceptually, as an example, given the middlewares `A`, `B`, and `C` and the base `tx.Handler` `H` the stack looks like:
+Then, the app developer can compose multiple middlewares on top of the base `tx.Handler`. Each middleware can run pre-and-post-processing logic around its next middleware, as described in the section above. Conceptually, as an example, given the middlewares `A`, `B`, and `C` and the base `tx.Handler` `H` the stack looks like:
 
 ![Composing](baseapp_transaction-middleware.png)
 

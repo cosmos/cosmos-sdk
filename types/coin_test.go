@@ -233,6 +233,7 @@ func (s *coinTestSuite) TestIsGTECoin() {
 	}{
 		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 1), true, false},
 		{sdk.NewInt64Coin(testDenom1, 2), sdk.NewInt64Coin(testDenom1, 1), true, false},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 2), false, false},
 		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom2, 1), false, true},
 	}
 
@@ -243,6 +244,30 @@ func (s *coinTestSuite) TestIsGTECoin() {
 		} else {
 			res := tc.inputOne.IsGTE(tc.inputTwo)
 			s.Require().Equal(tc.expected, res, "coin GTE relation is incorrect, tc #%d", tcIndex)
+		}
+	}
+}
+
+func (s *coinTestSuite) TestIsLTECoin() {
+	cases := []struct {
+		inputOne sdk.Coin
+		inputTwo sdk.Coin
+		expected bool
+		panics   bool
+	}{
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 1), true, false},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 2), true, false},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom2, 1), false, true},
+		{sdk.NewInt64Coin(testDenom1, 2), sdk.NewInt64Coin(testDenom1, 1), false, false},
+	}
+
+	for tcIndex, tc := range cases {
+		tc := tc
+		if tc.panics {
+			s.Require().Panics(func() { tc.inputOne.IsLTE(tc.inputTwo) })
+		} else {
+			res := tc.inputOne.IsLTE(tc.inputTwo)
+			s.Require().Equal(tc.expected, res, "coin LTE relation is incorrect, tc #%d", tcIndex)
 		}
 	}
 }

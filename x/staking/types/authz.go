@@ -94,7 +94,7 @@ func (a StakeAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRe
 		}
 	}
 
-	if !isValidatorExists {
+	if len(allowedList) > 0 && !isValidatorExists {
 		return authz.AcceptResponse{}, sdkerrors.ErrUnauthorized.Wrapf("cannot delegate/undelegate to %s validator", validatorAddress)
 	}
 

@@ -153,5 +153,8 @@ While the app developer can define and compose the middlewares of their choice, 
 | RecoveryTxMiddleware    | This index recovers from panics. It replaces baseapp.runTx's panic recovery described in [ADR-022](./adr-022-custom-panic-handling.md).                                                                                                                                                                                                                                                                                                                                                  |
 | GasTxMiddleware         | This replaces the [`Setup`](https://github.com/cosmos/cosmos-sdk/blob/v0.43.0/x/auth/ante/setup.go) Antehandler. It sets a GasMeter on sdk.Context. Note that before, GasMeter was set on sdk.Context inside the antehandlers, and there was some mess around the fact that antehandlers had their own panic recovery system so that the GasMeter could be read by baseapp's recovery system. Now, this mess is all removed: one middleware sets GasMeter, another one handles recovery.
 | TipMiddleware | This pays for transaction fees using another denom than the native fee denom of the chain. [`docs`](tips.md) 
+| SigGasConsumeMiddleware | SigGasConsumeMiddleware consumes parameter-defined amount of gas for each signature.
+|  SigVerificationMiddleware | verifies all signatures for a tx and return an error if any are invalid 
+ 
 
 

@@ -41,7 +41,7 @@ type BaseApp  struct {
 
 ## Implementing a Middleware
 
-To implement a middleware is done simply by a Go function that takes as arguments and some parameters and returns a tx. Middleware.
+To implement a middleware is done simply by a Go function that takes as arguments and some parameters and returns a `tx.Middleware`.
 
 For example, we can create a Generic middleware. 
 

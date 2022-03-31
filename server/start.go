@@ -59,6 +59,16 @@ const (
 	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"
 	FlagStateSyncSnapshotKeepRecent = "state-sync.snapshot-keep-recent"
 
+	// api-related flags
+	flagAPIEnable             = "api.enable"
+	flagAPISwagger            = "api.swagger"
+	flagAPIAddress            = "api.address"
+	flagAPIMaxOpenConnections = "api.max-open-connections"
+	flagRPCReadTimeout        = "api.rpc-read-timeout"
+	flagRPCWriteTimeout       = "api.rpc-write-timeout"
+	flagRPCMaxBodyBytes       = "api.rpc-max-body-bytes"
+	flagAPIEnableUnsafeCORS   = "api.enabled-unsafe-cors"
+
 	// gRPC-related flags
 	flagGRPCOnly       = "grpc-only"
 	flagGRPCEnable     = "grpc.enable"
@@ -152,6 +162,15 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	cmd.Flags().Uint64(FlagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint(FlagInvCheckPeriod, 0, "Assert registered invariants every N blocks")
 	cmd.Flags().Uint64(FlagMinRetainBlocks, 0, "Minimum block height offset during ABCI commit to prune Tendermint blocks")
+
+	cmd.Flags().Bool(flagAPIEnable, false, "Define if the API server should be enabled")
+	cmd.Flags().Bool(flagAPISwagger, false, "Define if swagger documentation should automatically be registered (Note: api must also be enabled.)")
+	cmd.Flags().String(flagAPIAddress, config.DefaultAPIAddress, "the API server address to listen on")
+	cmd.Flags().Uint(flagAPIMaxOpenConnections, 1000, "Define the number of maximum open connections")
+	cmd.Flags().Uint(flagRPCReadTimeout, 10, "Define the Tendermint RPC read timeout (in seconds)")
+	cmd.Flags().Uint(flagRPCWriteTimeout, 0, "Define the Tendermint RPC write timeout (in seconds)")
+	cmd.Flags().Uint(flagRPCMaxBodyBytes, 1000000, "Define the Tendermint maximum response body (in bytes)")
+	cmd.Flags().Bool(flagAPIEnableUnsafeCORS, false, "Define if CORS should be enabled (unsafe - use it at your own risk)")
 
 	cmd.Flags().Bool(flagGRPCOnly, false, "Start the node in gRPC query only mode (no Tendermint process is started)")
 	cmd.Flags().Bool(flagGRPCEnable, true, "Define if the gRPC server should be enabled")

@@ -83,7 +83,6 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		Id:                 1,
 		Address:            accAddr.String(),
 		Metadata:           "proposal metadata",
-		GroupVersion:       1,
 		GroupPolicyVersion: 1,
 		Proposers: []string{
 			memberAddr.String(),
@@ -213,7 +212,6 @@ func (s *GenesisTestSuite) assertProposalsEqual(g *group.Proposal, other *group.
 	require.Equal(g.Metadata, other.Metadata)
 	require.Equal(g.Proposers, other.Proposers)
 	require.Equal(g.SubmitTime, other.SubmitTime)
-	require.Equal(g.GroupVersion, other.GroupVersion)
 	require.Equal(g.GroupPolicyVersion, other.GroupPolicyVersion)
 	require.Equal(g.Status, other.Status)
 	require.Equal(g.Result, other.Result)

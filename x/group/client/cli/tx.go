@@ -39,7 +39,7 @@ func TxCmd(name string) *cobra.Command {
 		MsgCreateGroupWithPolicyCmd(),
 		MsgCreateGroupPolicyCmd(),
 		MsgUpdateGroupPolicyAdminCmd(),
-		MsgUpdateGroupPolicyDecisionPolicyCmd(),
+		MsgUpdateGroupDecisionPolicyCmd(),
 		MsgUpdateGroupPolicyMetadataCmd(),
 		MsgSubmitProposalCmd(),
 		MsgVoteCmd(),
@@ -465,10 +465,10 @@ func MsgUpdateGroupPolicyAdminCmd() *cobra.Command {
 	return cmd
 }
 
-// MsgUpdateGroupPolicyDecisionPolicyCmd creates a CLI command for Msg/UpdateGroupPolicyDecisionPolicy.
-func MsgUpdateGroupPolicyDecisionPolicyCmd() *cobra.Command {
+// MsgUpdateGroupDecisionPolicyCmd creates a CLI command for Msg/UpdateGroupDecisionPolicy.
+func MsgUpdateGroupDecisionPolicyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-group-policy-decision-policy [admin] [group-policy-account] [decision-policy]",
+		Use:   "update-group-decision-policy [admin] [group-policy-account] [decision-policy]",
 		Short: "Update a group policy's decision policy",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -492,7 +492,7 @@ func MsgUpdateGroupPolicyDecisionPolicyCmd() *cobra.Command {
 				return err
 			}
 
-			msg, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(
+			msg, err := group.NewMsgUpdateGroupDecisionPolicyRequest(
 				clientCtx.GetFromAddress(),
 				accountAddress,
 				policy,
@@ -763,7 +763,7 @@ func MsgExecCmd() *cobra.Command {
 
 			msg := &group.MsgExec{
 				ProposalId: proposalID,
-				Signer:     clientCtx.GetFromAddress().String(),
+				Address:    clientCtx.GetFromAddress().String(),
 			}
 			if err != nil {
 				return err

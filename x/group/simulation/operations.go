@@ -25,57 +25,57 @@ var initialGroupID = uint64(100000000000000)
 
 // group message types
 var (
-	TypeMsgCreateGroup                     = sdk.MsgTypeURL(&group.MsgCreateGroup{})
-	TypeMsgUpdateGroupMembers              = sdk.MsgTypeURL(&group.MsgUpdateGroupMembers{})
-	TypeMsgUpdateGroupAdmin                = sdk.MsgTypeURL(&group.MsgUpdateGroupAdmin{})
-	TypeMsgUpdateGroupMetadata             = sdk.MsgTypeURL(&group.MsgUpdateGroupMetadata{})
-	TypeMsgCreateGroupWithPolicy           = sdk.MsgTypeURL(&group.MsgCreateGroupWithPolicy{})
-	TypeMsgCreateGroupPolicy               = sdk.MsgTypeURL(&group.MsgCreateGroupPolicy{})
-	TypeMsgUpdateGroupPolicyAdmin          = sdk.MsgTypeURL(&group.MsgUpdateGroupPolicyAdmin{})
-	TypeMsgUpdateGroupPolicyDecisionPolicy = sdk.MsgTypeURL(&group.MsgUpdateGroupPolicyDecisionPolicy{})
-	TypeMsgUpdateGroupPolicyMetadata       = sdk.MsgTypeURL(&group.MsgUpdateGroupPolicyMetadata{})
-	TypeMsgSubmitProposal                  = sdk.MsgTypeURL(&group.MsgSubmitProposal{})
-	TypeMsgWithdrawProposal                = sdk.MsgTypeURL(&group.MsgWithdrawProposal{})
-	TypeMsgVote                            = sdk.MsgTypeURL(&group.MsgVote{})
-	TypeMsgExec                            = sdk.MsgTypeURL(&group.MsgExec{})
-	TypeMsgLeaveGroup                      = sdk.MsgTypeURL(&group.MsgLeaveGroup{})
+	TypeMsgCreateGroup               = sdk.MsgTypeURL(&group.MsgCreateGroup{})
+	TypeMsgUpdateGroupMembers        = sdk.MsgTypeURL(&group.MsgUpdateGroupMembers{})
+	TypeMsgUpdateGroupAdmin          = sdk.MsgTypeURL(&group.MsgUpdateGroupAdmin{})
+	TypeMsgUpdateGroupMetadata       = sdk.MsgTypeURL(&group.MsgUpdateGroupMetadata{})
+	TypeMsgCreateGroupWithPolicy     = sdk.MsgTypeURL(&group.MsgCreateGroupWithPolicy{})
+	TypeMsgCreateGroupPolicy         = sdk.MsgTypeURL(&group.MsgCreateGroupPolicy{})
+	TypeMsgUpdateGroupPolicyAdmin    = sdk.MsgTypeURL(&group.MsgUpdateGroupPolicyAdmin{})
+	TypeMsgUpdateGroupDecisionPolicy = sdk.MsgTypeURL(&group.MsgUpdateGroupDecisionPolicy{})
+	TypeMsgUpdateGroupPolicyMetadata = sdk.MsgTypeURL(&group.MsgUpdateGroupPolicyMetadata{})
+	TypeMsgSubmitProposal            = sdk.MsgTypeURL(&group.MsgSubmitProposal{})
+	TypeMsgWithdrawProposal          = sdk.MsgTypeURL(&group.MsgWithdrawProposal{})
+	TypeMsgVote                      = sdk.MsgTypeURL(&group.MsgVote{})
+	TypeMsgExec                      = sdk.MsgTypeURL(&group.MsgExec{})
+	TypeMsgLeaveGroup                = sdk.MsgTypeURL(&group.MsgLeaveGroup{})
 )
 
 // Simulation operation weights constants
 const (
-	OpMsgCreateGroup                     = "op_weight_msg_create_group"
-	OpMsgUpdateGroupAdmin                = "op_weight_msg_update_group_admin"
-	OpMsgUpdateGroupMetadata             = "op_wieght_msg_update_group_metadata"
-	OpMsgUpdateGroupMembers              = "op_weight_msg_update_group_members"
-	OpMsgCreateGroupPolicy               = "op_weight_msg_create_group_account"
-	OpMsgCreateGroupWithPolicy           = "op_weight_msg_create_group_with_policy"
-	OpMsgUpdateGroupPolicyAdmin          = "op_weight_msg_update_group_account_admin"
-	OpMsgUpdateGroupPolicyDecisionPolicy = "op_weight_msg_update_group_account_decision_policy"
-	OpMsgUpdateGroupPolicyMetaData       = "op_weight_msg_update_group_account_metadata"
-	OpMsgSubmitProposal                  = "op_weight_msg_submit_proposal"
-	OpMsgWithdrawProposal                = "op_weight_msg_withdraw_proposal"
-	OpMsgVote                            = "op_weight_msg_vote"
-	OpMsgExec                            = "ops_weight_msg_exec"
-	OpMsgLeaveGroup                      = "ops_weight_msg_leave_group"
+	OpMsgCreateGroup               = "op_weight_msg_create_group"
+	OpMsgUpdateGroupAdmin          = "op_weight_msg_update_group_admin"
+	OpMsgUpdateGroupMetadata       = "op_wieght_msg_update_group_metadata"
+	OpMsgUpdateGroupMembers        = "op_weight_msg_update_group_members"
+	OpMsgCreateGroupPolicy         = "op_weight_msg_create_group_account"
+	OpMsgCreateGroupWithPolicy     = "op_weight_msg_create_group_with_policy"
+	OpMsgUpdateGroupPolicyAdmin    = "op_weight_msg_update_group_account_admin"
+	OpMsgUpdateGroupDecisionPolicy = "op_weight_msg_update_group_account_decision_policy"
+	OpMsgUpdateGroupPolicyMetaData = "op_weight_msg_update_group_account_metadata"
+	OpMsgSubmitProposal            = "op_weight_msg_submit_proposal"
+	OpMsgWithdrawProposal          = "op_weight_msg_withdraw_proposal"
+	OpMsgVote                      = "op_weight_msg_vote"
+	OpMsgExec                      = "ops_weight_msg_exec"
+	OpMsgLeaveGroup                = "ops_weight_msg_leave_group"
 )
 
 // If update group or group policy txn's executed, `SimulateMsgVote` & `SimulateMsgExec` txn's returns `noOp`.
 // That's why we have less weight for update group & group-policy txn's.
 const (
-	WeightMsgCreateGroup                     = 100
-	WeightMsgCreateGroupPolicy               = 50
-	WeightMsgSubmitProposal                  = 90
-	WeightMsgVote                            = 90
-	WeightMsgExec                            = 90
-	WeightMsgLeaveGroup                      = 5
-	WeightMsgUpdateGroupMetadata             = 5
-	WeightMsgUpdateGroupAdmin                = 5
-	WeightMsgUpdateGroupMembers              = 5
-	WeightMsgUpdateGroupPolicyAdmin          = 5
-	WeightMsgUpdateGroupPolicyDecisionPolicy = 5
-	WeightMsgUpdateGroupPolicyMetadata       = 5
-	WeightMsgWithdrawProposal                = 20
-	WeightMsgCreateGroupWithPolicy           = 50
+	WeightMsgCreateGroup               = 100
+	WeightMsgCreateGroupPolicy         = 50
+	WeightMsgSubmitProposal            = 90
+	WeightMsgVote                      = 90
+	WeightMsgExec                      = 90
+	WeightMsgLeaveGroup                = 5
+	WeightMsgUpdateGroupMetadata       = 5
+	WeightMsgUpdateGroupAdmin          = 5
+	WeightMsgUpdateGroupMembers        = 5
+	WeightMsgUpdateGroupPolicyAdmin    = 5
+	WeightMsgUpdateGroupDecisionPolicy = 5
+	WeightMsgUpdateGroupPolicyMetadata = 5
+	WeightMsgWithdrawProposal          = 20
+	WeightMsgCreateGroupWithPolicy     = 50
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -83,20 +83,20 @@ func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak group.AccountKeeper,
 	bk group.BankKeeper, k keeper.Keeper, appCdc cdctypes.AnyUnpacker) simulation.WeightedOperations {
 	var (
-		weightMsgCreateGroup                     int
-		weightMsgUpdateGroupAdmin                int
-		weightMsgUpdateGroupMetadata             int
-		weightMsgUpdateGroupMembers              int
-		weightMsgCreateGroupPolicy               int
-		weightMsgUpdateGroupPolicyAdmin          int
-		weightMsgUpdateGroupPolicyDecisionPolicy int
-		weightMsgUpdateGroupPolicyMetadata       int
-		weightMsgSubmitProposal                  int
-		weightMsgVote                            int
-		weightMsgExec                            int
-		weightMsgLeaveGroup                      int
-		weightMsgWithdrawProposal                int
-		weightMsgCreateGroupWithPolicy           int
+		weightMsgCreateGroup               int
+		weightMsgUpdateGroupAdmin          int
+		weightMsgUpdateGroupMetadata       int
+		weightMsgUpdateGroupMembers        int
+		weightMsgCreateGroupPolicy         int
+		weightMsgUpdateGroupPolicyAdmin    int
+		weightMsgUpdateGroupDecisionPolicy int
+		weightMsgUpdateGroupPolicyMetadata int
+		weightMsgSubmitProposal            int
+		weightMsgVote                      int
+		weightMsgExec                      int
+		weightMsgLeaveGroup                int
+		weightMsgWithdrawProposal          int
+		weightMsgCreateGroupWithPolicy     int
 	)
 
 	appParams.GetOrGenerate(cdc, OpMsgCreateGroup, &weightMsgCreateGroup, nil,
@@ -154,9 +154,9 @@ func WeightedOperations(
 			weightMsgUpdateGroupPolicyAdmin = WeightMsgUpdateGroupPolicyAdmin
 		},
 	)
-	appParams.GetOrGenerate(cdc, OpMsgUpdateGroupPolicyDecisionPolicy, &weightMsgUpdateGroupPolicyDecisionPolicy, nil,
+	appParams.GetOrGenerate(cdc, OpMsgUpdateGroupDecisionPolicy, &weightMsgUpdateGroupDecisionPolicy, nil,
 		func(_ *rand.Rand) {
-			weightMsgUpdateGroupPolicyDecisionPolicy = WeightMsgUpdateGroupPolicyDecisionPolicy
+			weightMsgUpdateGroupDecisionPolicy = WeightMsgUpdateGroupDecisionPolicy
 		},
 	)
 	appParams.GetOrGenerate(cdc, OpMsgUpdateGroupPolicyMetaData, &weightMsgUpdateGroupPolicyMetadata, nil,
@@ -224,8 +224,8 @@ func WeightedOperations(
 			SimulateMsgUpdateGroupPolicyAdmin(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
-			weightMsgUpdateGroupPolicyDecisionPolicy,
-			SimulateMsgUpdateGroupPolicyDecisionPolicy(ak, bk, k),
+			weightMsgUpdateGroupDecisionPolicy,
+			SimulateMsgUpdateGroupDecisionPolicy(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgUpdateGroupPolicyMetadata,
@@ -710,39 +710,39 @@ func SimulateMsgUpdateGroupPolicyAdmin(ak group.AccountKeeper, bk group.BankKeep
 	}
 }
 
-// // SimulateMsgUpdateGroupPolicyDecisionPolicy generates a NewMsgUpdateGroupPolicyDecisionPolicyRequest with random values
-func SimulateMsgUpdateGroupPolicyDecisionPolicy(ak group.AccountKeeper,
+// // SimulateMsgUpdateGroupDecisionPolicy generates a NewMsgUpdateGroupDecisionPolicyRequest with random values
+func SimulateMsgUpdateGroupDecisionPolicy(ak group.AccountKeeper,
 	bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		_, groupPolicy, acc, account, err := randomGroupPolicy(r, k, ak, sdkCtx, accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, ""), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupDecisionPolicy, ""), nil, err
 		}
 		if groupPolicy == nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, "no group policy found"), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupDecisionPolicy, "no group policy found"), nil, nil
 		}
 		groupPolicyAddr := groupPolicy.Address
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, account.GetAddress())
 		fees, err := simtypes.RandomFees(r, sdkCtx, spendableCoins)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, "fee error"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupDecisionPolicy, "fee error"), nil, err
 		}
 
 		groupPolicyBech32, err := sdk.AccAddressFromBech32(groupPolicyAddr)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, fmt.Sprintf("fail to decide bech32 address: %s", err.Error())), nil, nil
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupDecisionPolicy, fmt.Sprintf("fail to decide bech32 address: %s", err.Error())), nil, nil
 		}
 
-		msg, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(acc.Address, groupPolicyBech32, &group.ThresholdDecisionPolicy{
+		msg, err := group.NewMsgUpdateGroupDecisionPolicyRequest(acc.Address, groupPolicyBech32, &group.ThresholdDecisionPolicy{
 			Threshold: fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
 			Windows: &group.DecisionPolicyWindows{
 				VotingPeriod: time.Second * time.Duration(simtypes.RandIntBetween(r, 100, 1000)),
 			},
 		})
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, err.Error()), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupDecisionPolicy, err.Error()), nil, err
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -757,7 +757,7 @@ func SimulateMsgUpdateGroupPolicyDecisionPolicy(ak group.AccountKeeper,
 			acc.PrivKey,
 		)
 		if err != nil {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, "unable to generate mock tx"), nil, err
+			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupDecisionPolicy, "unable to generate mock tx"), nil, err
 		}
 
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
@@ -1069,7 +1069,7 @@ func SimulateMsgExec(ak group.AccountKeeper,
 
 		msg := group.MsgExec{
 			ProposalId: uint64(proposalID),
-			Signer:     acc.Address.String(),
+			Address:    acc.Address.String(),
 		}
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(

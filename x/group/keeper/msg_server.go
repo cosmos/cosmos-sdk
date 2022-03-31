@@ -391,7 +391,7 @@ func (k Keeper) UpdateGroupPolicyAdmin(goCtx context.Context, req *group.MsgUpda
 	return &group.MsgUpdateGroupPolicyAdminResponse{}, nil
 }
 
-func (k Keeper) UpdateGroupPolicyDecisionPolicy(goCtx context.Context, req *group.MsgUpdateGroupPolicyDecisionPolicy) (*group.MsgUpdateGroupPolicyDecisionPolicyResponse, error) {
+func (k Keeper) UpdateGroupDecisionPolicy(goCtx context.Context, req *group.MsgUpdateGroupDecisionPolicy) (*group.MsgUpdateGroupDecisionPolicyResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	policy := req.GetDecisionPolicy()
 
@@ -420,7 +420,7 @@ func (k Keeper) UpdateGroupPolicyDecisionPolicy(goCtx context.Context, req *grou
 		return nil, err
 	}
 
-	return &group.MsgUpdateGroupPolicyDecisionPolicyResponse{}, nil
+	return &group.MsgUpdateGroupDecisionPolicyResponse{}, nil
 }
 
 func (k Keeper) UpdateGroupPolicyMetadata(goCtx context.Context, req *group.MsgUpdateGroupPolicyMetadata) (*group.MsgUpdateGroupPolicyMetadataResponse, error) {
@@ -498,7 +498,6 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		Metadata:           metadata,
 		Proposers:          proposers,
 		SubmitTime:         ctx.BlockTime(),
-		GroupVersion:       g.Version,
 		GroupPolicyVersion: policyAcc.Version,
 		Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 		Status:             group.PROPOSAL_STATUS_SUBMITTED,
@@ -541,7 +540,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 			ProposalId: id,
 			// We consider the first proposer as the MsgExecRequest signer
 			// but that could be revisited (eg using the group policy)
-			Signer: proposers[0],
+			Address: proposers[0],
 		})
 		if err != nil {
 			return &group.MsgSubmitProposalResponse{ProposalId: id}, sdkerrors.Wrap(err, "The proposal was created but failed on exec")
@@ -675,7 +674,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 	if req.Exec == group.Exec_EXEC_TRY {
 		_, err = k.Exec(sdk.WrapSDKContext(ctx), &group.MsgExec{
 			ProposalId: id,
-			Signer:     voterAddr,
+			Address:    voterAddr,
 		})
 		if err != nil {
 			return nil, err

@@ -400,11 +400,11 @@ func (m MsgUpdateGroupPolicyAdmin) ValidateBasic() error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgUpdateGroupPolicyDecisionPolicy{}
-var _ types.UnpackInterfacesMessage = MsgUpdateGroupPolicyDecisionPolicy{}
+var _ sdk.Msg = &MsgUpdateGroupDecisionPolicy{}
+var _ types.UnpackInterfacesMessage = MsgUpdateGroupDecisionPolicy{}
 
-func NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin sdk.AccAddress, address sdk.AccAddress, decisionPolicy DecisionPolicy) (*MsgUpdateGroupPolicyDecisionPolicy, error) {
-	m := &MsgUpdateGroupPolicyDecisionPolicy{
+func NewMsgUpdateGroupDecisionPolicyRequest(admin sdk.AccAddress, address sdk.AccAddress, decisionPolicy DecisionPolicy) (*MsgUpdateGroupDecisionPolicy, error) {
+	m := &MsgUpdateGroupDecisionPolicy{
 		Admin:   admin.String(),
 		Address: address.String(),
 	}
@@ -415,7 +415,7 @@ func NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin sdk.AccAddress, address 
 	return m, nil
 }
 
-func (m *MsgUpdateGroupPolicyDecisionPolicy) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
+func (m *MsgUpdateGroupDecisionPolicy) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
 	msg, ok := decisionPolicy.(proto.Message)
 	if !ok {
 		return sdkerrors.ErrInvalidType.Wrapf("can't proto marshal %T", msg)
@@ -429,22 +429,22 @@ func (m *MsgUpdateGroupPolicyDecisionPolicy) SetDecisionPolicy(decisionPolicy De
 }
 
 // Route Implements Msg.
-func (m MsgUpdateGroupPolicyDecisionPolicy) Route() string {
+func (m MsgUpdateGroupDecisionPolicy) Route() string {
 	return sdk.MsgTypeURL(&m)
 }
 
 // Type Implements Msg.
-func (m MsgUpdateGroupPolicyDecisionPolicy) Type() string {
+func (m MsgUpdateGroupDecisionPolicy) Type() string {
 	return sdk.MsgTypeURL(&m)
 }
 
 // GetSignBytes Implements Msg.
-func (m MsgUpdateGroupPolicyDecisionPolicy) GetSignBytes() []byte {
+func (m MsgUpdateGroupDecisionPolicy) GetSignBytes() []byte {
 	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
 }
 
-// GetSigners returns the expected signers for a MsgUpdateGroupPolicyDecisionPolicy.
-func (m MsgUpdateGroupPolicyDecisionPolicy) GetSigners() []sdk.AccAddress {
+// GetSigners returns the expected signers for a MsgUpdateGroupDecisionPolicy.
+func (m MsgUpdateGroupDecisionPolicy) GetSigners() []sdk.AccAddress {
 	admin, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
 		panic(err)
@@ -453,7 +453,7 @@ func (m MsgUpdateGroupPolicyDecisionPolicy) GetSigners() []sdk.AccAddress {
 }
 
 // ValidateBasic does a sanity check on the provided data
-func (m MsgUpdateGroupPolicyDecisionPolicy) ValidateBasic() error {
+func (m MsgUpdateGroupDecisionPolicy) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
 		return sdkerrors.Wrap(err, "admin")
@@ -476,7 +476,7 @@ func (m MsgUpdateGroupPolicyDecisionPolicy) ValidateBasic() error {
 	return nil
 }
 
-func (m *MsgUpdateGroupPolicyDecisionPolicy) GetDecisionPolicy() DecisionPolicy {
+func (m *MsgUpdateGroupDecisionPolicy) GetDecisionPolicy() DecisionPolicy {
 	decisionPolicy, ok := m.DecisionPolicy.GetCachedValue().(DecisionPolicy)
 	if !ok {
 		return nil
@@ -485,7 +485,7 @@ func (m *MsgUpdateGroupPolicyDecisionPolicy) GetDecisionPolicy() DecisionPolicy 
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m MsgUpdateGroupPolicyDecisionPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (m MsgUpdateGroupDecisionPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var decisionPolicy DecisionPolicy
 	return unpacker.UnpackAny(m.DecisionPolicy, &decisionPolicy)
 }
@@ -778,7 +778,7 @@ func (m MsgExec) GetSignBytes() []byte {
 
 // GetSigners returns the expected signers for a MsgExec.
 func (m MsgExec) GetSigners() []sdk.AccAddress {
-	signer, err := sdk.AccAddressFromBech32(m.Signer)
+	signer, err := sdk.AccAddressFromBech32(m.Address)
 	if err != nil {
 		panic(err)
 	}
@@ -787,7 +787,7 @@ func (m MsgExec) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic does a sanity check on the provided data
 func (m MsgExec) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(m.Signer)
+	_, err := sdk.AccAddressFromBech32(m.Address)
 	if err != nil {
 		return sdkerrors.Wrap(err, "signer")
 	}

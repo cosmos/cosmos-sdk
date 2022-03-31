@@ -1183,7 +1183,7 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 	}
 }
 
-func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
+func (s *TestSuite) TestUpdateGroupDecisionPolicy() {
 	addrs := s.addrs
 	addr1 := addrs[0]
 	addr5 := addrs[4]
@@ -1198,13 +1198,13 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 
 	specs := map[string]struct {
 		preRun         func(admin sdk.AccAddress) (policyAddr string, groupId uint64)
-		req            *group.MsgUpdateGroupPolicyDecisionPolicy
+		req            *group.MsgUpdateGroupDecisionPolicy
 		policy         group.DecisionPolicy
 		expGroupPolicy *group.GroupPolicyInfo
 		expErr         bool
 	}{
 		"with wrong admin": {
-			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
+			req: &group.MsgUpdateGroupDecisionPolicy{
 				Admin:   addr5.String(),
 				Address: groupPolicyAddr,
 			},
@@ -1213,7 +1213,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 			expErr:         true,
 		},
 		"with wrong group policy": {
-			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
+			req: &group.MsgUpdateGroupDecisionPolicy{
 				Admin:   admin.String(),
 				Address: addr5.String(),
 			},
@@ -1222,7 +1222,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 			expErr:         true,
 		},
 		"correct data": {
-			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
+			req: &group.MsgUpdateGroupDecisionPolicy{
 				Admin:   admin.String(),
 				Address: groupPolicyAddr,
 			},
@@ -1245,7 +1245,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 			preRun: func(admin sdk.AccAddress) (string, uint64) {
 				return s.createGroupAndGroupPolicy(admin, nil, policy)
 			},
-			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
+			req: &group.MsgUpdateGroupDecisionPolicy{
 				Admin:   admin.String(),
 				Address: groupPolicyAddr,
 			},
@@ -1284,7 +1284,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 		s.Require().NoError(err)
 
 		s.Run(msg, func() {
-			_, err := s.keeper.UpdateGroupPolicyDecisionPolicy(s.ctx, spec.req)
+			_, err := s.keeper.UpdateGroupDecisionPolicy(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
 				return
@@ -1608,7 +1608,6 @@ func (s *TestSuite) TestSubmitProposal() {
 				s.Assert().Equal(spec.req.Metadata, proposal.Metadata)
 				s.Assert().Equal(spec.req.Proposers, proposal.Proposers)
 				s.Assert().Equal(s.blockTime, proposal.SubmitTime)
-				s.Assert().Equal(uint64(1), proposal.GroupVersion)
 				s.Assert().Equal(uint64(1), proposal.GroupPolicyVersion)
 				s.Assert().Equal(spec.expProposal.Status, proposal.Status)
 				s.Assert().Equal(spec.expProposal.Result, proposal.Result)
@@ -1782,7 +1781,6 @@ func (s *TestSuite) TestVote() {
 	s.Assert().Equal(req.Proposers, proposals[0].Proposers)
 	s.Assert().Equal(s.blockTime, proposals[0].SubmitTime)
 
-	s.Assert().Equal(uint64(1), proposals[0].GroupVersion)
 	s.Assert().Equal(uint64(1), proposals[0].GroupPolicyVersion)
 	s.Assert().Equal(group.PROPOSAL_STATUS_SUBMITTED, proposals[0].Status)
 	s.Assert().Equal(group.PROPOSAL_RESULT_UNFINALIZED, proposals[0].Result)
@@ -2297,7 +2295,7 @@ func (s *TestSuite) TestExecProposal() {
 			setupProposal: func(ctx context.Context) uint64 {
 				myProposalID := submitProposalAndVote(ctx, s, []sdk.Msg{msgSend1}, proposers, group.VOTE_OPTION_YES)
 
-				_, err := s.keeper.Exec(ctx, &group.MsgExec{Signer: addr1.String(), ProposalId: myProposalID})
+				_, err := s.keeper.Exec(ctx, &group.MsgExec{Address: addr1.String(), ProposalId: myProposalID})
 				s.Require().NoError(err)
 				return myProposalID
 			},
@@ -2323,7 +2321,7 @@ func (s *TestSuite) TestExecProposal() {
 				msgs := []sdk.Msg{msgSend2}
 				myProposalID := submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 
-				_, err := s.keeper.Exec(ctx, &group.MsgExec{Signer: addr1.String(), ProposalId: myProposalID})
+				_, err := s.keeper.Exec(ctx, &group.MsgExec{Address: addr1.String(), ProposalId: myProposalID})
 				s.Require().NoError(err)
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
@@ -2347,7 +2345,7 @@ func (s *TestSuite) TestExecProposal() {
 			}
 
 			ctx = sdk.WrapSDKContext(sdkCtx)
-			_, err := s.keeper.Exec(ctx, &group.MsgExec{Signer: addr1.String(), ProposalId: proposalID})
+			_, err := s.keeper.Exec(ctx, &group.MsgExec{Address: addr1.String(), ProposalId: proposalID})
 			if spec.expErr {
 				s.Require().Error(err)
 				return
@@ -2474,7 +2472,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 				msgs := []sdk.Msg{msgSend2}
 				myProposalID := submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 
-				_, err := s.keeper.Exec(ctx, &group.MsgExec{Signer: addr1.String(), ProposalId: myProposalID})
+				_, err := s.keeper.Exec(ctx, &group.MsgExec{Address: addr1.String(), ProposalId: myProposalID})
 				s.Require().NoError(err)
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
@@ -2497,7 +2495,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 			}
 
 			ctx = sdk.WrapSDKContext(sdkCtx)
-			_, err := s.keeper.Exec(ctx, &group.MsgExec{Signer: addr1.String(), ProposalId: proposalID})
+			_, err := s.keeper.Exec(ctx, &group.MsgExec{Address: addr1.String(), ProposalId: proposalID})
 			if spec.expErr {
 				s.Require().Error(err)
 				return

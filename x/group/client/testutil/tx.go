@@ -1196,7 +1196,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyAdmin() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
+func (s *IntegrationTestSuite) TestTxUpdateGroupDecisionPolicy() {
 	val := s.network.Validators[0]
 	newAdmin := s.network.Validators[1].Address
 	clientCtx := val.ClientCtx
@@ -1328,7 +1328,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := client.MsgUpdateGroupPolicyDecisionPolicyCmd()
+			cmd := client.MsgUpdateGroupDecisionPolicyCmd()
 
 			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {

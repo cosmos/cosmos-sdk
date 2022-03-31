@@ -63,7 +63,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		{simulation.WeightMsgUpdateGroupAdmin, group.MsgUpdateGroupAdmin{}.Route(), simulation.TypeMsgUpdateGroupAdmin},
 		{simulation.WeightMsgUpdateGroupMembers, group.MsgUpdateGroupMembers{}.Route(), simulation.TypeMsgUpdateGroupMembers},
 		{simulation.WeightMsgUpdateGroupPolicyAdmin, group.MsgUpdateGroupPolicyAdmin{}.Route(), simulation.TypeMsgUpdateGroupPolicyAdmin},
-		{simulation.WeightMsgUpdateGroupPolicyDecisionPolicy, group.MsgUpdateGroupPolicyDecisionPolicy{}.Route(), simulation.TypeMsgUpdateGroupPolicyDecisionPolicy},
+		{simulation.WeightMsgUpdateGroupDecisionPolicy, group.MsgUpdateGroupDecisionPolicy{}.Route(), simulation.TypeMsgUpdateGroupDecisionPolicy},
 		{simulation.WeightMsgUpdateGroupPolicyMetadata, group.MsgUpdateGroupPolicyMetadata{}.Route(), simulation.TypeMsgUpdateGroupPolicyMetadata},
 		{simulation.WeightMsgLeaveGroup, group.MsgLeaveGroup{}.Route(), simulation.TypeMsgLeaveGroup},
 	}
@@ -452,7 +452,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	err = legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal(addr, msg.Signer)
+	suite.Require().Equal(addr, msg.Address)
 	suite.Require().Len(futureOperations, 0)
 }
 
@@ -635,7 +635,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyAdmin() {
 	suite.Require().Len(futureOperations, 0)
 }
 
-func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyDecisionPolicy() {
+func (suite *SimTestSuite) TestSimulateUpdateGroupDecisionPolicy() {
 	// setup 1 account
 	s := rand.NewSource(1)
 	r := rand.New(s)
@@ -676,11 +676,11 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyDecisionPolicy() {
 	})
 
 	// execute operation
-	op := simulation.SimulateMsgUpdateGroupPolicyDecisionPolicy(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.GroupKeeper)
+	op := simulation.SimulateMsgUpdateGroupDecisionPolicy(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.GroupKeeper)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg group.MsgUpdateGroupPolicyDecisionPolicy
+	var msg group.MsgUpdateGroupDecisionPolicy
 	err = legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)

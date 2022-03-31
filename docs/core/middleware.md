@@ -115,7 +115,6 @@ Then, the app developer can compose multiple middlewares on top on the base `tx.
 
 ```text
 A.pre
-
     B.pre
         C.pre
             Handler # The base tx.handler, for example `RunMsgsTxHandler`

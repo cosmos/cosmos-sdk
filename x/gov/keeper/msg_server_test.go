@@ -25,10 +25,11 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 	}
 
 	cases := map[string]struct {
-		preRun func() (*v1.MsgSubmitProposal, error)
-		expErr bool
+		preRun    func() (*v1.MsgSubmitProposal, error)
+		expErr    bool
+		expErrMsg string
 	}{
-		"metadata": {
+		"metadata too long": {
 			preRun: func() (*v1.MsgSubmitProposal, error) {
 				return v1.NewMsgSubmitProposal(
 					[]sdk.Msg{bankMsg},
@@ -37,20 +38,22 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					strings.Repeat("1", 300),
 				)
 			},
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "metadata too long",
 		},
 		"many signers": {
 			preRun: func() (*v1.MsgSubmitProposal, error) {
 				return v1.NewMsgSubmitProposal(
-					[]sdk.Msg{testdata.NewTestMsg(addrs...)},
+					[]sdk.Msg{testdata.NewTestMsg(govAcct, addrs[0])},
 					initialDeposit,
 					proposer.String(),
 					"",
 				)
 			},
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "expected gov account as only signer for proposal message",
 		},
-		"signer is'nt gov account": {
+		"signer isn't gov account": {
 			preRun: func() (*v1.MsgSubmitProposal, error) {
 				return v1.NewMsgSubmitProposal(
 					[]sdk.Msg{testdata.NewTestMsg(addrs[0])},
@@ -59,7 +62,8 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					"",
 				)
 			},
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "expected gov account as only signer for proposal message",
 		},
 		"invalid msg handler": {
 			preRun: func() (*v1.MsgSubmitProposal, error) {
@@ -70,7 +74,8 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					"",
 				)
 			},
-			expErr: true,
+			expErr:    true,
+			expErrMsg: "proposal message not recognized by router",
 		},
 		"all good": {
 			preRun: func() (*v1.MsgSubmitProposal, error) {
@@ -96,13 +101,14 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 		},
 	}
 
-	for name, c := range cases {
+	for name, tc := range cases {
 		suite.Run(name, func() {
-			msg, err := c.preRun()
+			msg, err := tc.preRun()
 			suite.Require().NoError(err)
 			res, err := suite.msgSrvr.SubmitProposal(suite.ctx, msg)
-			if c.expErr {
+			if tc.expErr {
 				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res.ProposalId)
@@ -126,7 +132,7 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 
 	msg, err := v1.NewMsgSubmitProposal(
 		[]sdk.Msg{bankMsg},
-		coins,
+		minDeposit,
 		proposer.String(),
 		"",
 	)
@@ -138,11 +144,12 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 	proposalId := res.ProposalId
 
 	cases := map[string]struct {
-		preRun   func() uint64
-		expErr   bool
-		option   v1.VoteOption
-		metadata string
-		voter    sdk.AccAddress
+		preRun    func() uint64
+		expErr    bool
+		expErrMsg string
+		option    v1.VoteOption
+		metadata  string
+		voter     sdk.AccAddress
 	}{
 		"vote on inactive proposal": {
 			preRun: func() uint64 {
@@ -159,28 +166,31 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 				suite.Require().NotNil(res.ProposalId)
 				return res.ProposalId
 			},
-			option:   v1.VoteOption_VOTE_OPTION_YES,
-			voter:    proposer,
-			metadata: "",
-			expErr:   true,
+			option:    v1.VoteOption_VOTE_OPTION_YES,
+			voter:     proposer,
+			metadata:  "",
+			expErr:    true,
+			expErrMsg: "inactive proposal",
 		},
 		"metadata too long": {
 			preRun: func() uint64 {
 				return proposalId
 			},
-			option:   v1.VoteOption_VOTE_OPTION_YES,
-			voter:    proposer,
-			metadata: strings.Repeat("a", 300),
-			expErr:   true,
+			option:    v1.VoteOption_VOTE_OPTION_YES,
+			voter:     proposer,
+			metadata:  strings.Repeat("a", 300),
+			expErr:    true,
+			expErrMsg: "metadata too long",
 		},
 		"voter error": {
 			preRun: func() uint64 {
 				return proposalId
 			},
-			option:   v1.VoteOption_VOTE_OPTION_YES,
-			voter:    sdk.AccAddress(strings.Repeat("a", 300)),
-			metadata: strings.Repeat("a", 300),
-			expErr:   true,
+			option:    v1.VoteOption_VOTE_OPTION_YES,
+			voter:     sdk.AccAddress(strings.Repeat("a", 300)),
+			metadata:  "",
+			expErr:    true,
+			expErrMsg: "address max length is 255",
 		},
 		"all good": {
 			preRun: func() uint64 {
@@ -211,6 +221,7 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 			_, err := suite.msgSrvr.Vote(suite.ctx, voteReq)
 			if tc.expErr {
 				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				suite.Require().NoError(err)
 			}
@@ -233,7 +244,7 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 
 	msg, err := v1.NewMsgSubmitProposal(
 		[]sdk.Msg{bankMsg},
-		coins,
+		minDeposit,
 		proposer.String(),
 		"",
 	)
@@ -245,12 +256,13 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 	proposalId := res.ProposalId
 
 	cases := map[string]struct {
-		preRun   func() uint64
-		vote     *v1.MsgVote
-		expErr   bool
-		option   v1.VoteOption
-		metadata string
-		voter    sdk.AccAddress
+		preRun    func() uint64
+		vote      *v1.MsgVote
+		expErr    bool
+		expErrMsg string
+		option    v1.VoteOption
+		metadata  string
+		voter     sdk.AccAddress
 	}{
 		"vote on inactive proposal": {
 			preRun: func() uint64 {
@@ -267,28 +279,31 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 				suite.Require().NotNil(res.ProposalId)
 				return res.ProposalId
 			},
-			option:   v1.VoteOption_VOTE_OPTION_YES,
-			voter:    proposer,
-			metadata: "",
-			expErr:   true,
+			option:    v1.VoteOption_VOTE_OPTION_YES,
+			voter:     proposer,
+			metadata:  "",
+			expErr:    true,
+			expErrMsg: "inactive proposal",
 		},
 		"metadata too long": {
 			preRun: func() uint64 {
 				return proposalId
 			},
-			option:   v1.VoteOption_VOTE_OPTION_YES,
-			voter:    proposer,
-			metadata: strings.Repeat("a", 300),
-			expErr:   true,
+			option:    v1.VoteOption_VOTE_OPTION_YES,
+			voter:     proposer,
+			metadata:  strings.Repeat("a", 300),
+			expErr:    true,
+			expErrMsg: "metadata too long",
 		},
 		"voter error": {
 			preRun: func() uint64 {
 				return proposalId
 			},
-			option:   v1.VoteOption_VOTE_OPTION_YES,
-			voter:    sdk.AccAddress(strings.Repeat("a", 300)),
-			metadata: strings.Repeat("a", 300),
-			expErr:   true,
+			option:    v1.VoteOption_VOTE_OPTION_YES,
+			voter:     sdk.AccAddress(strings.Repeat("a", 300)),
+			metadata:  "",
+			expErr:    true,
+			expErrMsg: "address max length is 255",
 		},
 		"all good": {
 			preRun: func() uint64 {
@@ -319,6 +334,7 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 			_, err := suite.msgSrvr.VoteWeighted(suite.ctx, voteReq)
 			if tc.expErr {
 				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				suite.Require().NoError(err)
 			}
@@ -459,7 +475,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 
 	msg, err := v1.NewMsgSubmitProposal(
 		[]sdk.Msg{bankMsg},
-		coins,
+		minDeposit,
 		proposer.String(),
 		"",
 	)
@@ -471,11 +487,12 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 	proposalId := res.ProposalId
 
 	cases := map[string]struct {
-		preRun   func() uint64
-		expErr   bool
-		option   v1beta1.VoteOption
-		metadata string
-		voter    sdk.AccAddress
+		preRun    func() uint64
+		expErr    bool
+		expErrMsg string
+		option    v1beta1.VoteOption
+		metadata  string
+		voter     sdk.AccAddress
 	}{
 		"vote on inactive proposal": {
 			preRun: func() uint64 {
@@ -492,19 +509,21 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 				suite.Require().NotNil(res.ProposalId)
 				return res.ProposalId
 			},
-			option:   v1beta1.OptionYes,
-			voter:    proposer,
-			metadata: "",
-			expErr:   true,
+			option:    v1beta1.OptionYes,
+			voter:     proposer,
+			metadata:  "",
+			expErr:    true,
+			expErrMsg: "inactive proposal",
 		},
 		"voter error": {
 			preRun: func() uint64 {
 				return proposalId
 			},
-			option:   v1beta1.OptionYes,
-			voter:    sdk.AccAddress(strings.Repeat("a", 300)),
-			metadata: strings.Repeat("a", 300),
-			expErr:   true,
+			option:    v1beta1.OptionYes,
+			voter:     sdk.AccAddress(strings.Repeat("a", 300)),
+			metadata:  "",
+			expErr:    true,
+			expErrMsg: "address max length is 255",
 		},
 		"all good": {
 			preRun: func() uint64 {
@@ -535,6 +554,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 			_, err := suite.legacyMsgSrvr.Vote(suite.ctx, voteReq)
 			if tc.expErr {
 				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				suite.Require().NoError(err)
 			}
@@ -557,7 +577,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 
 	msg, err := v1.NewMsgSubmitProposal(
 		[]sdk.Msg{bankMsg},
-		coins,
+		minDeposit,
 		proposer.String(),
 		"",
 	)
@@ -569,12 +589,13 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 	proposalId := res.ProposalId
 
 	cases := map[string]struct {
-		preRun   func() uint64
-		vote     *v1beta1.MsgVote
-		expErr   bool
-		option   v1beta1.VoteOption
-		metadata string
-		voter    sdk.AccAddress
+		preRun    func() uint64
+		vote      *v1beta1.MsgVote
+		expErr    bool
+		expErrMsg string
+		option    v1beta1.VoteOption
+		metadata  string
+		voter     sdk.AccAddress
 	}{
 		"vote on inactive proposal": {
 			preRun: func() uint64 {
@@ -591,19 +612,21 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 				suite.Require().NotNil(res.ProposalId)
 				return res.ProposalId
 			},
-			option:   v1beta1.OptionYes,
-			voter:    proposer,
-			metadata: "",
-			expErr:   true,
+			option:    v1beta1.OptionYes,
+			voter:     proposer,
+			metadata:  "",
+			expErr:    true,
+			expErrMsg: "inactive proposal",
 		},
 		"voter error": {
 			preRun: func() uint64 {
 				return proposalId
 			},
-			option:   v1beta1.OptionYes,
-			voter:    sdk.AccAddress(strings.Repeat("a", 300)),
-			metadata: strings.Repeat("a", 300),
-			expErr:   true,
+			option:    v1beta1.OptionYes,
+			voter:     sdk.AccAddress(strings.Repeat("a", 300)),
+			metadata:  "",
+			expErr:    true,
+			expErrMsg: "address max length is 255",
 		},
 		"all good": {
 			preRun: func() uint64 {
@@ -634,6 +657,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 			_, err := suite.legacyMsgSrvr.VoteWeighted(suite.ctx, voteReq)
 			if tc.expErr {
 				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				suite.Require().NoError(err)
 			}

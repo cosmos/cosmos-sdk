@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
@@ -33,8 +33,6 @@ type validator struct {
 
 // Context in https://github.com/cosmos/cosmos-sdk/issues/9161
 func Test_VerifyProposerRewardAssignement(t *testing.T) {
-	a := assert.New(t)
-
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, totalValidators, valTokens)
@@ -50,13 +48,13 @@ func Test_VerifyProposerRewardAssignement(t *testing.T) {
 		tstaking.CreateValidatorWithValPower(validators[i].addr, validators[i].pubkey, power, true)
 	}
 	app.EndBlock(abci.RequestEndBlock{})
-	a.NotEmpty(app.Commit())
+	require.NotEmpty(t, app.Commit())
 
 	// verify validators lists
-	a.Len(app.StakingKeeper.GetAllValidators(ctx), totalValidators)
+	require.Len(t, app.StakingKeeper.GetAllValidators(ctx), totalValidators)
 	for i, val := range validators {
 		// verify all validator exists
-		a.NotNil(app.StakingKeeper.ValidatorByConsAddr(ctx, sdk.GetConsAddress(val.pubkey)))
+		require.NotNil(t, app.StakingKeeper.ValidatorByConsAddr(ctx, sdk.GetConsAddress(val.pubkey)))
 
 		// populate last commit info
 		voteInfos := []abci.VoteInfo{}
@@ -85,25 +83,25 @@ func Test_VerifyProposerRewardAssignement(t *testing.T) {
 		Header:         tmproto.Header{Height: app.LastBlockHeight() + 1, ProposerAddress: sdk.GetConsAddress(validators[lazyValidatorIdx].pubkey)},
 		LastCommitInfo: abci.LastCommitInfo{Votes: validators[lazyValidatorIdx-1].votes},
 	})
-	a.NotEmpty(app.Commit())
+	require.NotEmpty(t, app.Commit())
 
 	// previous block submitted by lazy validator (with 67% previous commits) and proposed by validator n+1
 	app.BeginBlock(abci.RequestBeginBlock{
 		Header:         tmproto.Header{Height: app.LastBlockHeight() + 1, ProposerAddress: sdk.GetConsAddress(validators[lazyValidatorIdx+1].pubkey)},
 		LastCommitInfo: abci.LastCommitInfo{Votes: validators[lazyValidatorIdx].votes},
 	})
-	a.NotEmpty(app.Commit())
+	require.NotEmpty(t, app.Commit())
 
 	// previous block submitted by validator n+1 (with 100% previous commits) and proposed by validator n+2
 	app.BeginBlock(abci.RequestBeginBlock{
 		Header:         tmproto.Header{Height: app.LastBlockHeight() + 1, ProposerAddress: sdk.GetConsAddress(validators[lazyValidatorIdx+2].pubkey)},
 		LastCommitInfo: abci.LastCommitInfo{Votes: validators[lazyValidatorIdx+1].votes},
 	})
-	a.NotEmpty(app.Commit())
+	require.NotEmpty(t, app.Commit())
 
 	rewardsValidatorBeforeLazyValidator := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, validators[lazyValidatorIdx+1].addr)
 	rewardsLazyValidator := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, validators[lazyValidatorIdx].addr)
 	rewardsValidatorAfterLazyValidator := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, validators[lazyValidatorIdx+1].addr)
-	a.True(rewardsLazyValidator[0].Amount.LT(rewardsValidatorAfterLazyValidator[0].Amount))
-	a.Equal(rewardsValidatorBeforeLazyValidator, rewardsValidatorAfterLazyValidator)
+	require.True(t, rewardsLazyValidator[0].Amount.LT(rewardsValidatorAfterLazyValidator[0].Amount))
+	require.Equal(t, rewardsValidatorBeforeLazyValidator, rewardsValidatorAfterLazyValidator)
 }

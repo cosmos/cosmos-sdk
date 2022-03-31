@@ -15,8 +15,9 @@ import (
 )
 
 const (
-	lazyValidatorAddr = "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgzyl2307"
-	totalValidators   = 15
+	totalValidators  = 6
+	lazyValidatorIdx = 2
+	power            = 100 / totalValidators
 )
 
 var (
@@ -27,7 +28,6 @@ var (
 type validator struct {
 	addr   sdk.ValAddress
 	pubkey cryptotypes.PubKey
-	power  int64
 	votes  []abci.VoteInfo
 }
 
@@ -46,15 +46,16 @@ func Test_VerifyProposerRewardAssignement(t *testing.T) {
 	for i := range validators {
 		validators[i].addr = sdk.ValAddress(addrs[i])
 		validators[i].pubkey = ed25519.GenPrivKey().PubKey()
-		validators[i].power = 100 / totalValidators
 		validators[i].votes = make([]abci.VoteInfo, totalValidators)
-		tstaking.CreateValidatorWithValPower(validators[i].addr, validators[i].pubkey, validators[i].power, true)
+		tstaking.CreateValidatorWithValPower(validators[i].addr, validators[i].pubkey, power, true)
 	}
 	app.EndBlock(abci.RequestEndBlock{})
 	a.NotEmpty(app.Commit())
 
 	// verify validators lists
-	a.Len(app.StakingKeeper.GetAllValidators(ctx), totalValidators)
+	stkValidators := app.StakingKeeper.GetAllValidators(ctx)
+	a.Len(stkValidators, totalValidators)
+
 	for i, val := range validators {
 		// verify all validator exists
 		a.NotNil(app.StakingKeeper.ValidatorByConsAddr(ctx, sdk.GetConsAddress(val.pubkey)))
@@ -65,43 +66,44 @@ func Test_VerifyProposerRewardAssignement(t *testing.T) {
 			voteInfos = append(voteInfos, abci.VoteInfo{
 				Validator: abci.Validator{
 					Address: sdk.GetConsAddress(val2.pubkey),
-					Power:   val2.power,
+					Power:   power,
 				},
 				SignedLastBlock: true,
 			})
 		}
 
 		// have this validator only submit the minimum amount of pre-commits
-		if val.addr.String() == lazyValidatorAddr {
-			for i := totalValidators * 2 / 3; i < len(voteInfos); i++ {
-				voteInfos[i].SignedLastBlock = false
+		if i == lazyValidatorIdx {
+			for j := totalValidators * 2 / 3; j < len(voteInfos); j++ {
+				voteInfos[j].SignedLastBlock = false
 			}
 		}
 
 		validators[i].votes = voteInfos
 	}
 
-	var validatorAfterLazyValidator sdk.ValAddress
-	for i := 0; i < len(validators); i++ {
-		var votes []abci.VoteInfo
-		if i > 0 {
-			votes = validators[i-1].votes
+	// previous block submitted by validator n-1 (with 100% previous commits) and proposed by lazy validator
+	app.BeginBlock(abci.RequestBeginBlock{
+		Header:         tmproto.Header{Height: app.LastBlockHeight() + 1, ProposerAddress: sdk.GetConsAddress(validators[lazyValidatorIdx].pubkey)},
+		LastCommitInfo: abci.LastCommitInfo{Votes: validators[lazyValidatorIdx-1].votes},
+	})
+	a.NotEmpty(app.Commit())
 
-			if validators[i-1].addr.String() == lazyValidatorAddr {
-				validatorAfterLazyValidator = validators[i].addr
-			}
-		}
+	// previous block submitted by lazy validator (with 67% previous commits) and proposed by validator n+1
+	app.BeginBlock(abci.RequestBeginBlock{
+		Header:         tmproto.Header{Height: app.LastBlockHeight() + 1, ProposerAddress: sdk.GetConsAddress(validators[lazyValidatorIdx+1].pubkey)},
+		LastCommitInfo: abci.LastCommitInfo{Votes: validators[lazyValidatorIdx].votes},
+	})
+	a.NotEmpty(app.Commit())
 
-		app.BeginBlock(abci.RequestBeginBlock{
-			Header:         tmproto.Header{Height: app.LastBlockHeight() + 1, ProposerAddress: sdk.GetConsAddress(validators[i].pubkey)},
-			LastCommitInfo: abci.LastCommitInfo{Votes: votes},
-		})
-		a.NotEmpty(app.Commit())
-	}
+	// previous block submitted by validator n+1 (with 100% previous commits) and proposed by validator n+2
+	app.BeginBlock(abci.RequestBeginBlock{
+		Header:         tmproto.Header{Height: app.LastBlockHeight() + 1, ProposerAddress: sdk.GetConsAddress(validators[lazyValidatorIdx+2].pubkey)},
+		LastCommitInfo: abci.LastCommitInfo{Votes: validators[lazyValidatorIdx+1].votes},
+	})
+	a.NotEmpty(app.Commit())
 
-	lazyValAddr, err := sdk.ValAddressFromBech32(lazyValidatorAddr)
-	a.NoError(err)
-	rewardsLazyValidator := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, lazyValAddr)
-	rewardsValidatorAfterLazyValidator := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, validatorAfterLazyValidator)
+	rewardsLazyValidator := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, validators[lazyValidatorIdx].addr)
+	rewardsValidatorAfterLazyValidator := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, validators[lazyValidatorIdx+1].addr)
 	a.True(rewardsLazyValidator[0].Amount.LT(rewardsValidatorAfterLazyValidator[0].Amount))
 }

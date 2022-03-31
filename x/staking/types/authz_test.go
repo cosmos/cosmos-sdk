@@ -13,6 +13,7 @@ import (
 
 var (
 	coin100 = sdk.NewInt64Coin("steak", 100)
+	coin150 = sdk.NewInt64Coin("steak", 150)
 	coin50  = sdk.NewInt64Coin("steak", 50)
 	delAddr = sdk.AccAddress("_____delegator _____")
 	val1    = sdk.ValAddress("_____validator1_____")
@@ -66,6 +67,17 @@ func TestAuthzAuthorizations(t *testing.T) {
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			&coin100,
 			stakingtypes.NewMsgDelegate(delAddr, val1, coin100),
+			false,
+			true,
+			nil,
+		},
+		{
+			"delegate: coins more than allowed",
+			[]sdk.ValAddress{val1, val2},
+			[]sdk.ValAddress{},
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
+			&coin100,
+			stakingtypes.NewMsgDelegate(delAddr, val1, coin150),
 			false,
 			true,
 			nil,

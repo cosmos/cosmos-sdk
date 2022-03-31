@@ -209,33 +209,33 @@ func redelegationEntryArrayIndex(red types.Redelegation, id uint64) (index int, 
 // unbonding delegation, a redelegation, or a validator unbonding to complete
 // ----------------------------------------------------------------------------------------
 
-func (k Keeper) UnbondingOpCanComplete(ctx sdk.Context, id uint64) (found bool, err error) {
-	found, err = k.unbondingDelegationEntryCanComplete(ctx, id)
+func (k Keeper) UnbondingOpCanComplete(ctx sdk.Context, id uint64) error {
+	found, err := k.unbondingDelegationEntryCanComplete(ctx, id)
 	if err != nil {
-		return false, err
+		return err
 	}
 	if found {
-		return true, nil
+		return nil
 	}
 
 	found, err = k.redelegationEntryCanComplete(ctx, id)
 	if err != nil {
-		return false, err
+		return err
 	}
 	if found {
-		return true, nil
+		return nil
 	}
 
 	found, err = k.validatorUnbondingCanComplete(ctx, id)
 	if err != nil {
-		return false, err
+		return err
 	}
 	if found {
-		return true, nil
+		return nil
 	}
 
 	// If an entry was not found
-	return false, nil
+	return nil
 }
 
 func (k Keeper) unbondingDelegationEntryCanComplete(ctx sdk.Context, id uint64) (found bool, err error) {
@@ -245,6 +245,7 @@ func (k Keeper) unbondingDelegationEntryCanComplete(ctx sdk.Context, id uint64) 
 	}
 
 	i, found := unbondingDelegationEntryArrayIndex(ubd, id)
+
 	if !found {
 		return false, nil
 	}
@@ -262,11 +263,6 @@ func (k Keeper) unbondingDelegationEntryCanComplete(ctx sdk.Context, id uint64) 
 
 		bondDenom := k.GetParams(ctx).BondDenom
 
-		// Remove entry
-		ubd.RemoveEntry(int64(i))
-		// Remove from the UBDByEntry index
-		k.DeleteUnbondingOpIndex(ctx, id)
-
 		// track undelegation only when remaining or truncated shares are non-zero
 		if !ubd.Entries[i].Balance.IsZero() {
 			amt := sdk.NewCoin(bondDenom, ubd.Entries[i].Balance)
@@ -276,6 +272,11 @@ func (k Keeper) unbondingDelegationEntryCanComplete(ctx sdk.Context, id uint64) 
 				return false, err
 			}
 		}
+
+		// Remove entry
+		ubd.RemoveEntry(int64(i))
+		// Remove from the UBDByEntry index
+		k.DeleteUnbondingOpIndex(ctx, id)
 	}
 
 	// set the unbonding delegation or remove it if there are no more entries

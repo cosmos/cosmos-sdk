@@ -3,12 +3,10 @@ package cli
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_ParseCLIProposal(t *testing.T) {
-	a := assert.New(t)
-
 	data := []byte(`{
 			"group_policy_address": "cosmos15r295x4994egvckteam9skazy9kvfvzpak4naf",
 			"messages": [
@@ -24,9 +22,9 @@ func Test_ParseCLIProposal(t *testing.T) {
 		}`)
 
 	result, err := parseCLIProposal(data)
-	a.NoError(err)
-	a.Equal(result.GroupPolicyAddress, "cosmos15r295x4994egvckteam9skazy9kvfvzpak4naf")
-	a.NotEmpty(result.Metadata)
-	a.Equal(result.Metadata, "4pIMOgIGx1vZGU=")
-	a.Equal(result.Proposers, []string{"cosmos15r295x4994egvckteam9skazy9kvfvzpak4naf"})
+	require.NoError(t, err)
+	require.Equal(t, result.GroupPolicyAddress, "cosmos15r295x4994egvckteam9skazy9kvfvzpak4naf")
+	require.NotEmpty(t, result.Metadata)
+	require.Equal(t, result.Metadata, "4pIMOgIGx1vZGU=")
+	require.Equal(t, result.Proposers, []string{"cosmos15r295x4994egvckteam9skazy9kvfvzpak4naf"})
 }

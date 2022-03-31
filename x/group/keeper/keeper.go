@@ -325,10 +325,10 @@ func (k Keeper) PruneProposals(ctx sdk.Context) error {
 	return nil
 }
 
-// UpdateTallyOfVPEndProposals iterates over all proposals whose voting period
+// TallyProposalsAtVPEnd iterates over all proposals whose voting period
 // has ended, tallies their votes, prunes them, and updates the proposal's
 // `FinalTallyResult` field.
-func (k Keeper) UpdateTallyOfVPEndProposals(ctx sdk.Context) error {
+func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 	return k.iterateProposalsByVPEnd(ctx, ctx.BlockTime(), func(proposal group.Proposal) (bool, error) {
 		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.Address)
 		if err != nil {

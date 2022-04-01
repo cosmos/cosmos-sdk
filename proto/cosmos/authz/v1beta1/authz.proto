@@ -28,6 +28,8 @@ message Grant {
 
 // GrantAuthorization extends a grant with both the addresses of the grantee and granter.
 // It is used in genesis.proto and query.proto
+//
+// Since: cosmos-sdk 0.45.2
 message GrantAuthorization {
   string granter = 1;
   string grantee = 2;

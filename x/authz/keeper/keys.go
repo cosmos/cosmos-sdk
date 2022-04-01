@@ -104,3 +104,9 @@ func firstAddressFromGrantStoreKey(key []byte) sdk.AccAddress {
 	addrLen := key[0]
 	return sdk.AccAddress(key[1 : 1+addrLen])
 }
+
+// firstAddressFromGrantStoreKey parses the first address only
+func firstAddressFromGrantStoreKey(key []byte) sdk.AccAddress {
+	addrLen := key[0]
+	return sdk.AccAddress(key[1 : 1+addrLen])
+}

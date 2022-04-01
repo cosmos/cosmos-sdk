@@ -88,8 +88,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 			memberAddr.String(),
 		},
 		SubmitTime: submittedAt,
-		Status:     group.PROPOSAL_STATUS_CLOSED,
-		Result:     group.PROPOSAL_RESULT_ACCEPTED,
+		Status:     group.PROPOSAL_STATUS_ACCEPTED,
 		FinalTallyResult: group.TallyResult{
 			YesCount:        "1",
 			NoCount:         "0",
@@ -214,7 +213,6 @@ func (s *GenesisTestSuite) assertProposalsEqual(g *group.Proposal, other *group.
 	require.Equal(g.SubmitTime, other.SubmitTime)
 	require.Equal(g.GroupPolicyVersion, other.GroupPolicyVersion)
 	require.Equal(g.Status, other.Status)
-	require.Equal(g.Result, other.Result)
 	require.Equal(g.FinalTallyResult, other.FinalTallyResult)
 	require.Equal(g.VotingPeriodEnd, other.VotingPeriodEnd)
 	require.Equal(g.ExecutorResult, other.ExecutorResult)

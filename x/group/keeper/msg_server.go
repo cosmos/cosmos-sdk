@@ -499,7 +499,6 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		Proposers:          proposers,
 		SubmitTime:         ctx.BlockTime(),
 		GroupPolicyVersion: policyAcc.Version,
-		Result:             group.PROPOSAL_RESULT_UNFINALIZED,
 		Status:             group.PROPOSAL_STATUS_SUBMITTED,
 		ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		VotingPeriodEnd:    ctx.BlockTime().Add(policy.GetVotingPeriod()), // The voting window begins as soon as the proposal is submitted.
@@ -584,7 +583,6 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawPr
 			return nil, err
 		}
 
-		proposal.Result = group.PROPOSAL_RESULT_UNFINALIZED
 		proposal.Status = group.PROPOSAL_STATUS_WITHDRAWN
 		return storeUpdates()
 	}
@@ -607,7 +605,6 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawPr
 		return nil, err
 	}
 
-	proposal.Result = group.PROPOSAL_RESULT_UNFINALIZED
 	proposal.Status = group.PROPOSAL_STATUS_WITHDRAWN
 	return storeUpdates()
 }
@@ -712,11 +709,9 @@ func (k Keeper) doTallyAndUpdate(ctx sdk.Context, p *group.Proposal, electorate 
 		}
 		p.FinalTallyResult = tallyResult
 		if result.Allow {
-			p.Result = group.PROPOSAL_RESULT_ACCEPTED
-			p.Status = group.PROPOSAL_STATUS_CLOSED
+			p.Status = group.PROPOSAL_STATUS_ACCEPTED
 		} else {
-			p.Result = group.PROPOSAL_RESULT_REJECTED
-			p.Status = group.PROPOSAL_STATUS_CLOSED
+			p.Status = group.PROPOSAL_STATUS_REJECTED
 		}
 	}
 
@@ -733,7 +728,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 		return nil, err
 	}
 
-	if proposal.Status != group.PROPOSAL_STATUS_SUBMITTED && proposal.Status != group.PROPOSAL_STATUS_CLOSED {
+	if proposal.Status != group.PROPOSAL_STATUS_SUBMITTED && proposal.Status != group.PROPOSAL_STATUS_ACCEPTED {
 		return nil, sdkerrors.Wrapf(errors.ErrInvalid, "not possible with proposal status %s", proposal.Status.String())
 	}
 
@@ -771,7 +766,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 	}
 
 	// Execute proposal payload.
-	if proposal.Status == group.PROPOSAL_STATUS_CLOSED && proposal.Result == group.PROPOSAL_RESULT_ACCEPTED && proposal.ExecutorResult != group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
+	if proposal.Status == group.PROPOSAL_STATUS_ACCEPTED && proposal.ExecutorResult != group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
 		logger := ctx.Logger().With("module", fmt.Sprintf("x/%s", group.ModuleName))
 		// Caching context so that we don't update the store in case of failure.
 		ctx, flush := ctx.CacheContext()

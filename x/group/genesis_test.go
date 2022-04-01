@@ -62,8 +62,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			memberAddr.String(),
 		},
 		SubmitTime: submittedAt,
-		Status:     PROPOSAL_STATUS_CLOSED,
-		Result:     PROPOSAL_RESULT_ACCEPTED,
+		Status:     PROPOSAL_STATUS_ACCEPTED,
 		FinalTallyResult: TallyResult{
 			YesCount:        "1",
 			NoCount:         "0",
@@ -486,8 +485,7 @@ func TestGenesisStateValidate(t *testing.T) {
 							memberAddr.String(),
 						},
 						SubmitTime: submittedAt,
-						Status:     PROPOSAL_STATUS_CLOSED,
-						Result:     PROPOSAL_RESULT_ACCEPTED,
+						Status:     PROPOSAL_STATUS_ACCEPTED,
 						FinalTallyResult: TallyResult{
 							YesCount:        "-1",
 							NoCount:         "0",
@@ -524,8 +522,7 @@ func TestGenesisStateValidate(t *testing.T) {
 							memberAddr.String(),
 						},
 						SubmitTime: submittedAt,
-						Status:     PROPOSAL_STATUS_CLOSED,
-						Result:     PROPOSAL_RESULT_ACCEPTED,
+						Status:     PROPOSAL_STATUS_ACCEPTED,
 						FinalTallyResult: TallyResult{
 							YesCount:        "0",
 							NoCount:         "-1",
@@ -562,8 +559,7 @@ func TestGenesisStateValidate(t *testing.T) {
 							memberAddr.String(),
 						},
 						SubmitTime: submittedAt,
-						Status:     PROPOSAL_STATUS_CLOSED,
-						Result:     PROPOSAL_RESULT_ACCEPTED,
+						Status:     PROPOSAL_STATUS_ACCEPTED,
 						FinalTallyResult: TallyResult{
 							YesCount:        "0",
 							NoCount:         "0",
@@ -600,8 +596,7 @@ func TestGenesisStateValidate(t *testing.T) {
 							memberAddr.String(),
 						},
 						SubmitTime: submittedAt,
-						Status:     PROPOSAL_STATUS_CLOSED,
-						Result:     PROPOSAL_RESULT_ACCEPTED,
+						Status:     PROPOSAL_STATUS_ACCEPTED,
 						FinalTallyResult: TallyResult{
 							YesCount:        "0",
 							NoCount:         "0",

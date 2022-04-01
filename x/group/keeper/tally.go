@@ -12,8 +12,11 @@ import (
 // and returns the tally result without modifying the proposal or any state.
 func (k Keeper) Tally(ctx sdk.Context, p group.Proposal, groupId uint64) (group.TallyResult, error) {
 	// If proposal has already been tallied and updated, then its status is
-	// closed, in which case we just return the previously stored result.
-	if p.Status == group.PROPOSAL_STATUS_CLOSED {
+	// accepted/rejected, in which case we just return the previously stored result.
+	//
+	// In all other cases (including withdrawn, aborted...) we do the tally
+	// again.
+	if p.Status == group.PROPOSAL_STATUS_ACCEPTED || p.Status == group.PROPOSAL_STATUS_REJECTED {
 		return p.FinalTallyResult, nil
 	}
 

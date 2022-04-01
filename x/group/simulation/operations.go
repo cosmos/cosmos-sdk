@@ -1056,7 +1056,7 @@ func SimulateMsgExec(ak group.AccountKeeper,
 		proposalID := -1
 
 		for _, proposal := range proposals {
-			if proposal.Status == group.PROPOSAL_STATUS_CLOSED {
+			if proposal.Status == group.PROPOSAL_STATUS_ACCEPTED {
 				proposalID = int(proposal.Id)
 				break
 			}

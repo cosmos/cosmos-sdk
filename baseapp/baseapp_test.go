@@ -21,26 +21,26 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	storeTypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	pruningTypes "github.com/cosmos/cosmos-sdk/pruning/types"
-	storeTypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"google.golang.org/protobuf/proto"
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -2448,7 +2448,7 @@ func TestBaseApp_Init(t *testing.T) {
 			),
 			sdk.NewCustomPruningOptions(10, 0),
 			sdk.NewSnapshotOptions(1500, 2),
-			pruningTypes.ErrPruningIntervalZero,
+			pruningtypes.ErrPruningIntervalZero,
 		},
 		"error custom pruning too small interval": {
 			baseapp.NewBaseApp(name, logger, db,
@@ -2457,7 +2457,7 @@ func TestBaseApp_Init(t *testing.T) {
 			),
 			sdk.NewCustomPruningOptions(10, 9),
 			sdk.NewSnapshotOptions(1500, 2),
-			pruningTypes.ErrPruningIntervalTooSmall,
+			pruningtypes.ErrPruningIntervalTooSmall,
 		},
 		"error custom pruning too small keep recent": {
 			baseapp.NewBaseApp(name, logger, db,
@@ -2466,7 +2466,7 @@ func TestBaseApp_Init(t *testing.T) {
 			),
 			sdk.NewCustomPruningOptions(9, 10),
 			sdk.NewSnapshotOptions(1500, 2),
-			pruningTypes.ErrPruningKeepRecentTooSmall,
+			pruningtypes.ErrPruningKeepRecentTooSmall,
 		},
 		"snapshot zero interval - manager not set": {
 			baseapp.NewBaseApp(name, logger, db,

@@ -8,8 +8,8 @@ import (
 	tmstrings "github.com/tendermint/tendermint/libs/strings"
 	dbm "github.com/tendermint/tm-db"
 
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	snapshotTypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	pruningTypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
@@ -449,28 +449,28 @@ type StoreWithInitialVersion interface {
 }
 
 type (
-	PruningOptions  = pruningTypes.PruningOptions
-	PruningStrategy = pruningTypes.PruningStrategy
+	PruningOptions  = pruningtypes.PruningOptions
+	PruningStrategy = pruningtypes.PruningStrategy
 )
 
 const (
-	PruningOptionDefault = pruningTypes.PruningOptionDefault
-	PruningOptionEverything = pruningTypes.PruningOptionEverything
-	PruningOptionNothing = pruningTypes.PruningOptionNothing
-	PruningOptionCustom = pruningTypes.PruningOptionCustom
+	PruningOptionDefault    = pruningtypes.PruningOptionDefault
+	PruningOptionEverything = pruningtypes.PruningOptionEverything
+	PruningOptionNothing    = pruningtypes.PruningOptionNothing
+	PruningOptionCustom     = pruningtypes.PruningOptionCustom
 
-	PruningDefault = pruningTypes.PruningDefault
-	PruningEverything = pruningTypes.PruningEverything
-	PruningNothing = pruningTypes.PruningNothing
-	PruningCustom = pruningTypes.PruningCustom
+	PruningDefault    = pruningtypes.PruningDefault
+	PruningEverything = pruningtypes.PruningEverything
+	PruningNothing    = pruningtypes.PruningNothing
+	PruningCustom     = pruningtypes.PruningCustom
 )
 
 func NewPruningOptions(pruningStrategy PruningStrategy) *PruningOptions {
-	return pruningTypes.NewPruningOptions(pruningStrategy)
+	return pruningtypes.NewPruningOptions(pruningStrategy)
 }
 
 func NewCustomPruningOptions(keepRecent, interval uint64) *PruningOptions {
-	return pruningTypes.NewCustomPruningOptions(keepRecent, interval)
+	return pruningtypes.NewCustomPruningOptions(keepRecent, interval)
 }
 
 type SnapshotOptions = snapshotTypes.SnapshotOptions

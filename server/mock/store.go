@@ -6,8 +6,8 @@ import (
 	protoio "github.com/gogo/protobuf/io"
 	dbm "github.com/tendermint/tm-db"
 
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	snapshotTypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	pruningTypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	storeTypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -66,11 +66,11 @@ func (ms multiStore) LastCommitID() storeTypes.CommitID {
 	panic("not implemented")
 }
 
-func (ms multiStore) SetPruning(opts *pruningTypes.PruningOptions) {
+func (ms multiStore) SetPruning(opts *pruningtypes.PruningOptions) {
 	panic("not implemented")
 }
 
-func (ms multiStore) GetPruning() *pruningTypes.PruningOptions {
+func (ms multiStore) GetPruning() *pruningtypes.PruningOptions {
 	panic("not implemented")
 }
 

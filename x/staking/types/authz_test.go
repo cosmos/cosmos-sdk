@@ -78,8 +78,8 @@ func TestAuthzAuthorizations(t *testing.T) {
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			&coin100,
 			stakingtypes.NewMsgDelegate(delAddr, val1, coin150),
-			false,
 			true,
+			false,
 			nil,
 		},
 		{

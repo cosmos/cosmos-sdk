@@ -35,9 +35,9 @@ service Msg {
   // UpdateGroupPolicyAdmin updates a group policy admin.
   rpc UpdateGroupPolicyAdmin(MsgUpdateGroupPolicyAdmin) returns (MsgUpdateGroupPolicyAdminResponse);
 
-  // UpdateGroupDecisionPolicy allows a group policy's decision policy to be updated.
-  rpc UpdateGroupDecisionPolicy(MsgUpdateGroupDecisionPolicy)
-      returns (MsgUpdateGroupDecisionPolicyResponse);
+  // UpdateGroupPolicyDecisionPolicy allows a group policy's decision policy to be updated.
+  rpc UpdateGroupPolicyDecisionPolicy(MsgUpdateGroupPolicyDecisionPolicy)
+      returns (MsgUpdateGroupPolicyDecisionPolicyResponse);
 
   // UpdateGroupPolicyMetadata updates a group policy metadata.
   rpc UpdateGroupPolicyMetadata(MsgUpdateGroupPolicyMetadata) returns (MsgUpdateGroupPolicyMetadataResponse);
@@ -217,8 +217,8 @@ message MsgCreateGroupWithPolicyResponse {
 // MsgUpdateGroupPolicyAdminResponse is the Msg/UpdateGroupPolicyAdmin response type.
 message MsgUpdateGroupPolicyAdminResponse {}
 
-// MsgUpdateGroupDecisionPolicy is the Msg/UpdateGroupDecisionPolicy request type.
-message MsgUpdateGroupDecisionPolicy {
+// MsgUpdateGroupPolicyDecisionPolicy is the Msg/UpdateGroupPolicyDecisionPolicy request type.
+message MsgUpdateGroupPolicyDecisionPolicy {
   option (cosmos.msg.v1.signer) = "admin";
 
   option (gogoproto.goproto_getters) = false;
@@ -233,8 +233,8 @@ message MsgUpdateGroupDecisionPolicy {
   google.protobuf.Any decision_policy = 3 [(cosmos_proto.accepts_interface) = "DecisionPolicy"];
 }
 
-// MsgUpdateGroupDecisionPolicyResponse is the Msg/UpdateGroupDecisionPolicy response type.
-message MsgUpdateGroupDecisionPolicyResponse {}
+// MsgUpdateGroupPolicyDecisionPolicyResponse is the Msg/UpdateGroupPolicyDecisionPolicy response type.
+message MsgUpdateGroupPolicyDecisionPolicyResponse {}
 
 // MsgUpdateGroupPolicyMetadata is the Msg/UpdateGroupPolicyMetadata request type.
 message MsgUpdateGroupPolicyMetadata {

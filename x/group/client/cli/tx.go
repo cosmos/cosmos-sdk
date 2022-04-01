@@ -39,7 +39,7 @@ func TxCmd(name string) *cobra.Command {
 		MsgCreateGroupWithPolicyCmd(),
 		MsgCreateGroupPolicyCmd(),
 		MsgUpdateGroupPolicyAdminCmd(),
-		MsgUpdateGroupDecisionPolicyCmd(),
+		MsgUpdateGroupPolicyDecisionPolicyCmd(),
 		MsgUpdateGroupPolicyMetadataCmd(),
 		MsgSubmitProposalCmd(),
 		MsgVoteCmd(),
@@ -465,8 +465,8 @@ func MsgUpdateGroupPolicyAdminCmd() *cobra.Command {
 	return cmd
 }
 
-// MsgUpdateGroupDecisionPolicyCmd creates a CLI command for Msg/UpdateGroupDecisionPolicy.
-func MsgUpdateGroupDecisionPolicyCmd() *cobra.Command {
+// MsgUpdateGroupPolicyDecisionPolicyCmd creates a CLI command for Msg/UpdateGroupPolicyDecisionPolicy.
+func MsgUpdateGroupPolicyDecisionPolicyCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-group-decision-policy [admin] [group-policy-account] [decision-policy]",
 		Short: "Update a group policy's decision policy",
@@ -492,7 +492,7 @@ func MsgUpdateGroupDecisionPolicyCmd() *cobra.Command {
 				return err
 			}
 
-			msg, err := group.NewMsgUpdateGroupDecisionPolicyRequest(
+			msg, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(
 				clientCtx.GetFromAddress(),
 				accountAddress,
 				policy,

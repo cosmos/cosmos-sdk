@@ -23,7 +23,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacy.RegisterAminoMsg(cdc, &MsgCreateGroupWithPolicy{}, "cosmos-sdk/MsgCreateGroupWithPolicy")
 	legacy.RegisterAminoMsg(cdc, &MsgCreateGroupPolicy{}, "cosmos-sdk/MsgCreateGroupPolicy")
 	legacy.RegisterAminoMsg(cdc, &MsgUpdateGroupPolicyAdmin{}, "cosmos-sdk/MsgUpdateGroupPolicyAdmin")
-	legacy.RegisterAminoMsg(cdc, &MsgUpdateGroupDecisionPolicy{}, "cosmos-sdk/MsgUpdateGroupDecisionPolicy")
+	legacy.RegisterAminoMsg(cdc, &MsgUpdateGroupPolicyDecisionPolicy{}, "cosmos-sdk/MsgUpdateGroupDecisionPolicy")
 	legacy.RegisterAminoMsg(cdc, &MsgUpdateGroupPolicyMetadata{}, "cosmos-sdk/MsgUpdateGroupPolicyMetadata")
 	legacy.RegisterAminoMsg(cdc, &MsgSubmitProposal{}, "cosmos-sdk/group/MsgSubmitProposal")
 	legacy.RegisterAminoMsg(cdc, &MsgWithdrawProposal{}, "cosmos-sdk/group/MsgWithdrawProposal")
@@ -41,7 +41,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgCreateGroupWithPolicy{},
 		&MsgCreateGroupPolicy{},
 		&MsgUpdateGroupPolicyAdmin{},
-		&MsgUpdateGroupDecisionPolicy{},
+		&MsgUpdateGroupPolicyDecisionPolicy{},
 		&MsgUpdateGroupPolicyMetadata{},
 		&MsgSubmitProposal{},
 		&MsgWithdrawProposal{},

@@ -1183,7 +1183,7 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 	}
 }
 
-func (s *TestSuite) TestUpdateGroupDecisionPolicy() {
+func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 	addrs := s.addrs
 	addr1 := addrs[0]
 	addr5 := addrs[4]
@@ -1198,13 +1198,13 @@ func (s *TestSuite) TestUpdateGroupDecisionPolicy() {
 
 	specs := map[string]struct {
 		preRun         func(admin sdk.AccAddress) (policyAddr string, groupId uint64)
-		req            *group.MsgUpdateGroupDecisionPolicy
+		req            *group.MsgUpdateGroupPolicyDecisionPolicy
 		policy         group.DecisionPolicy
 		expGroupPolicy *group.GroupPolicyInfo
 		expErr         bool
 	}{
 		"with wrong admin": {
-			req: &group.MsgUpdateGroupDecisionPolicy{
+			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
 				Admin:   addr5.String(),
 				Address: groupPolicyAddr,
 			},
@@ -1213,7 +1213,7 @@ func (s *TestSuite) TestUpdateGroupDecisionPolicy() {
 			expErr:         true,
 		},
 		"with wrong group policy": {
-			req: &group.MsgUpdateGroupDecisionPolicy{
+			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
 				Admin:   admin.String(),
 				Address: addr5.String(),
 			},
@@ -1222,7 +1222,7 @@ func (s *TestSuite) TestUpdateGroupDecisionPolicy() {
 			expErr:         true,
 		},
 		"correct data": {
-			req: &group.MsgUpdateGroupDecisionPolicy{
+			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
 				Admin:   admin.String(),
 				Address: groupPolicyAddr,
 			},
@@ -1245,7 +1245,7 @@ func (s *TestSuite) TestUpdateGroupDecisionPolicy() {
 			preRun: func(admin sdk.AccAddress) (string, uint64) {
 				return s.createGroupAndGroupPolicy(admin, nil, policy)
 			},
-			req: &group.MsgUpdateGroupDecisionPolicy{
+			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
 				Admin:   admin.String(),
 				Address: groupPolicyAddr,
 			},
@@ -1284,7 +1284,7 @@ func (s *TestSuite) TestUpdateGroupDecisionPolicy() {
 		s.Require().NoError(err)
 
 		s.Run(msg, func() {
-			_, err := s.keeper.UpdateGroupDecisionPolicy(s.ctx, spec.req)
+			_, err := s.keeper.UpdateGroupPolicyDecisionPolicy(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
 				return

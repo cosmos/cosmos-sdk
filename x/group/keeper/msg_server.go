@@ -391,7 +391,7 @@ func (k Keeper) UpdateGroupPolicyAdmin(goCtx context.Context, req *group.MsgUpda
 	return &group.MsgUpdateGroupPolicyAdminResponse{}, nil
 }
 
-func (k Keeper) UpdateGroupDecisionPolicy(goCtx context.Context, req *group.MsgUpdateGroupDecisionPolicy) (*group.MsgUpdateGroupDecisionPolicyResponse, error) {
+func (k Keeper) UpdateGroupPolicyDecisionPolicy(goCtx context.Context, req *group.MsgUpdateGroupPolicyDecisionPolicy) (*group.MsgUpdateGroupPolicyDecisionPolicyResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	policy := req.GetDecisionPolicy()
 
@@ -420,7 +420,7 @@ func (k Keeper) UpdateGroupDecisionPolicy(goCtx context.Context, req *group.MsgU
 		return nil, err
 	}
 
-	return &group.MsgUpdateGroupDecisionPolicyResponse{}, nil
+	return &group.MsgUpdateGroupPolicyDecisionPolicyResponse{}, nil
 }
 
 func (k Keeper) UpdateGroupPolicyMetadata(goCtx context.Context, req *group.MsgUpdateGroupPolicyMetadata) (*group.MsgUpdateGroupPolicyMetadataResponse, error) {

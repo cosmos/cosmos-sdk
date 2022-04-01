@@ -400,11 +400,11 @@ func (m MsgUpdateGroupPolicyAdmin) ValidateBasic() error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgUpdateGroupDecisionPolicy{}
-var _ types.UnpackInterfacesMessage = MsgUpdateGroupDecisionPolicy{}
+var _ sdk.Msg = &MsgUpdateGroupPolicyDecisionPolicy{}
+var _ types.UnpackInterfacesMessage = MsgUpdateGroupPolicyDecisionPolicy{}
 
-func NewMsgUpdateGroupDecisionPolicyRequest(admin sdk.AccAddress, address sdk.AccAddress, decisionPolicy DecisionPolicy) (*MsgUpdateGroupDecisionPolicy, error) {
-	m := &MsgUpdateGroupDecisionPolicy{
+func NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin sdk.AccAddress, address sdk.AccAddress, decisionPolicy DecisionPolicy) (*MsgUpdateGroupPolicyDecisionPolicy, error) {
+	m := &MsgUpdateGroupPolicyDecisionPolicy{
 		Admin:   admin.String(),
 		Address: address.String(),
 	}
@@ -415,7 +415,7 @@ func NewMsgUpdateGroupDecisionPolicyRequest(admin sdk.AccAddress, address sdk.Ac
 	return m, nil
 }
 
-func (m *MsgUpdateGroupDecisionPolicy) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
+func (m *MsgUpdateGroupPolicyDecisionPolicy) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
 	msg, ok := decisionPolicy.(proto.Message)
 	if !ok {
 		return sdkerrors.ErrInvalidType.Wrapf("can't proto marshal %T", msg)
@@ -429,22 +429,22 @@ func (m *MsgUpdateGroupDecisionPolicy) SetDecisionPolicy(decisionPolicy Decision
 }
 
 // Route Implements Msg.
-func (m MsgUpdateGroupDecisionPolicy) Route() string {
+func (m MsgUpdateGroupPolicyDecisionPolicy) Route() string {
 	return sdk.MsgTypeURL(&m)
 }
 
 // Type Implements Msg.
-func (m MsgUpdateGroupDecisionPolicy) Type() string {
+func (m MsgUpdateGroupPolicyDecisionPolicy) Type() string {
 	return sdk.MsgTypeURL(&m)
 }
 
 // GetSignBytes Implements Msg.
-func (m MsgUpdateGroupDecisionPolicy) GetSignBytes() []byte {
+func (m MsgUpdateGroupPolicyDecisionPolicy) GetSignBytes() []byte {
 	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
 }
 
-// GetSigners returns the expected signers for a MsgUpdateGroupDecisionPolicy.
-func (m MsgUpdateGroupDecisionPolicy) GetSigners() []sdk.AccAddress {
+// GetSigners returns the expected signers for a MsgUpdateGroupPolicyDecisionPolicy.
+func (m MsgUpdateGroupPolicyDecisionPolicy) GetSigners() []sdk.AccAddress {
 	admin, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
 		panic(err)
@@ -453,7 +453,7 @@ func (m MsgUpdateGroupDecisionPolicy) GetSigners() []sdk.AccAddress {
 }
 
 // ValidateBasic does a sanity check on the provided data
-func (m MsgUpdateGroupDecisionPolicy) ValidateBasic() error {
+func (m MsgUpdateGroupPolicyDecisionPolicy) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
 		return sdkerrors.Wrap(err, "admin")
@@ -476,7 +476,7 @@ func (m MsgUpdateGroupDecisionPolicy) ValidateBasic() error {
 	return nil
 }
 
-func (m *MsgUpdateGroupDecisionPolicy) GetDecisionPolicy() DecisionPolicy {
+func (m *MsgUpdateGroupPolicyDecisionPolicy) GetDecisionPolicy() DecisionPolicy {
 	decisionPolicy, ok := m.DecisionPolicy.GetCachedValue().(DecisionPolicy)
 	if !ok {
 		return nil
@@ -485,7 +485,7 @@ func (m *MsgUpdateGroupDecisionPolicy) GetDecisionPolicy() DecisionPolicy {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m MsgUpdateGroupDecisionPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (m MsgUpdateGroupPolicyDecisionPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var decisionPolicy DecisionPolicy
 	return unpacker.UnpackAny(m.DecisionPolicy, &decisionPolicy)
 }

@@ -690,36 +690,36 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 	}
 }
 
-func TestMsgUpdateGroupDecisionPolicy(t *testing.T) {
+func TestMsgUpdateGroupPolicyDecisionPolicy(t *testing.T) {
 	validPolicy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
-	msg1, err := group.NewMsgUpdateGroupDecisionPolicyRequest(admin, member1, validPolicy)
+	msg1, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member1, validPolicy)
 	require.NoError(t, err)
 
 	invalidPolicy := group.NewThresholdDecisionPolicy("-1", time.Second, 0)
-	msg2, err := group.NewMsgUpdateGroupDecisionPolicyRequest(admin, member2, invalidPolicy)
+	msg2, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member2, invalidPolicy)
 	require.NoError(t, err)
 
 	validPercentagePolicy := group.NewPercentageDecisionPolicy("0.7", time.Second, 0)
-	msg3, err := group.NewMsgUpdateGroupDecisionPolicyRequest(admin, member3, validPercentagePolicy)
+	msg3, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member3, validPercentagePolicy)
 	require.NoError(t, err)
 
 	invalidPercentagePolicy := group.NewPercentageDecisionPolicy("-0.1", time.Second, 0)
-	msg4, err := group.NewMsgUpdateGroupDecisionPolicyRequest(admin, member4, invalidPercentagePolicy)
+	msg4, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member4, invalidPercentagePolicy)
 	require.NoError(t, err)
 
 	invalidPercentagePolicy2 := group.NewPercentageDecisionPolicy("2", time.Second, 0)
-	msg5, err := group.NewMsgUpdateGroupDecisionPolicyRequest(admin, member5, invalidPercentagePolicy2)
+	msg5, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member5, invalidPercentagePolicy2)
 	require.NoError(t, err)
 
 	testCases := []struct {
 		name   string
-		msg    *group.MsgUpdateGroupDecisionPolicy
+		msg    *group.MsgUpdateGroupPolicyDecisionPolicy
 		expErr bool
 		errMsg string
 	}{
 		{
 			"admin: invalid bech32 address",
-			&group.MsgUpdateGroupDecisionPolicy{
+			&group.MsgUpdateGroupPolicyDecisionPolicy{
 				Admin: "admin",
 			},
 			true,
@@ -727,7 +727,7 @@ func TestMsgUpdateGroupDecisionPolicy(t *testing.T) {
 		},
 		{
 			"group policy: invalid bech32 address",
-			&group.MsgUpdateGroupDecisionPolicy{
+			&group.MsgUpdateGroupPolicyDecisionPolicy{
 				Admin:   admin.String(),
 				Address: "address",
 			},
@@ -736,7 +736,7 @@ func TestMsgUpdateGroupDecisionPolicy(t *testing.T) {
 		},
 		{
 			"group policy: invalid bech32 address",
-			&group.MsgUpdateGroupDecisionPolicy{
+			&group.MsgUpdateGroupPolicyDecisionPolicy{
 				Admin:   admin.String(),
 				Address: "address",
 			},
@@ -784,7 +784,7 @@ func TestMsgUpdateGroupDecisionPolicy(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgUpdateGroupDecisionPolicy{}))
+				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgUpdateGroupPolicyDecisionPolicy{}))
 			}
 		})
 	}

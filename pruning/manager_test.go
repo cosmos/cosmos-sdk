@@ -90,8 +90,8 @@ func Test_Strategies(t *testing.T) {
 			// Validate strategy parameters
 			switch pruneStrategy {
 			case types.PruningDefault:
-				require.Equal(t, uint64(100000), curStrategy.KeepRecent)
-				require.Equal(t, uint64(100), curStrategy.Interval)
+				require.Equal(t, uint64(362880), curStrategy.KeepRecent)
+				require.Equal(t, uint64(10), curStrategy.Interval)
 			case types.PruningNothing:
 				require.Equal(t, uint64(0), curStrategy.KeepRecent)
 				require.Equal(t, uint64(0), curStrategy.Interval)

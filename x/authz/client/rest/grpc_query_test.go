@@ -1,3 +1,4 @@
+//go:build norace
 // +build norace
 
 package rest_test
@@ -234,10 +235,6 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 	}
 }
 
-<<<<<<< HEAD:x/authz/client/rest/grpc_query_test.go
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
-=======
 func (s *IntegrationTestSuite) TestQueryGranterGrantsGRPC() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[1]
@@ -342,5 +339,4 @@ func (s *IntegrationTestSuite) TestQueryGranteeGrantsGRPC() {
 
 		})
 	}
->>>>>>> fa8099da9 (feat: add grants by grantee authz query (#10944)):x/authz/client/testutil/grpc.go
 }

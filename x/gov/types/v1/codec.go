@@ -11,11 +11,11 @@ import (
 // RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
 // governance module.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgSubmitProposal{}, "cosmos-sdk/v1/MsgSubmitProposal", nil)
-	cdc.RegisterConcrete(&MsgDeposit{}, "cosmos-sdk/v1/MsgDeposit", nil)
-	cdc.RegisterConcrete(&MsgVote{}, "cosmos-sdk/v1/MsgVote", nil)
-	cdc.RegisterConcrete(&MsgVoteWeighted{}, "cosmos-sdk/v1/MsgVoteWeighted", nil)
-	cdc.RegisterConcrete(&MsgExecLegacyContent{}, "cosmos-sdk/v1/MsgExecLegacyContent", nil)
+	legacy.RegisterAminoMsg(cdc, &MsgSubmitProposal{}, "cosmos-sdk/v1/MsgSubmitProposal")
+	legacy.RegisterAminoMsg(cdc, &MsgDeposit{}, "cosmos-sdk/v1/MsgDeposit")
+	legacy.RegisterAminoMsg(cdc, &MsgVote{}, "cosmos-sdk/v1/MsgVote")
+	legacy.RegisterAminoMsg(cdc, &MsgVoteWeighted{}, "cosmos-sdk/v1/MsgVoteWeighted")
+	legacy.RegisterAminoMsg(cdc, &MsgExecLegacyContent{}, "cosmos-sdk/v1/MsgExecLegacyContent")
 }
 
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {

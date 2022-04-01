@@ -26,6 +26,9 @@ type QueryClient interface {
 	Balance(ctx context.Context, in *QueryBalanceRequest, opts ...grpc.CallOption) (*QueryBalanceResponse, error)
 	// AllBalances queries the balance of all coins for a single account.
 	AllBalances(ctx context.Context, in *QueryAllBalancesRequest, opts ...grpc.CallOption) (*QueryAllBalancesResponse, error)
+	// SpendableBalances queries the spenable balance of all coins for a single
+	// account.
+	SpendableBalances(ctx context.Context, in *QuerySpendableBalancesRequest, opts ...grpc.CallOption) (*QuerySpendableBalancesResponse, error)
 	// TotalSupply queries the total supply of all coins.
 	TotalSupply(ctx context.Context, in *QueryTotalSupplyRequest, opts ...grpc.CallOption) (*QueryTotalSupplyResponse, error)
 	// SupplyOf queries the supply of a single coin.
@@ -62,6 +65,15 @@ func (c *queryClient) Balance(ctx context.Context, in *QueryBalanceRequest, opts
 func (c *queryClient) AllBalances(ctx context.Context, in *QueryAllBalancesRequest, opts ...grpc.CallOption) (*QueryAllBalancesResponse, error) {
 	out := new(QueryAllBalancesResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.Query/AllBalances", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) SpendableBalances(ctx context.Context, in *QuerySpendableBalancesRequest, opts ...grpc.CallOption) (*QuerySpendableBalancesResponse, error) {
+	out := new(QuerySpendableBalancesResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.Query/SpendableBalances", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -130,6 +142,9 @@ type QueryServer interface {
 	Balance(context.Context, *QueryBalanceRequest) (*QueryBalanceResponse, error)
 	// AllBalances queries the balance of all coins for a single account.
 	AllBalances(context.Context, *QueryAllBalancesRequest) (*QueryAllBalancesResponse, error)
+	// SpendableBalances queries the spenable balance of all coins for a single
+	// account.
+	SpendableBalances(context.Context, *QuerySpendableBalancesRequest) (*QuerySpendableBalancesResponse, error)
 	// TotalSupply queries the total supply of all coins.
 	TotalSupply(context.Context, *QueryTotalSupplyRequest) (*QueryTotalSupplyResponse, error)
 	// SupplyOf queries the supply of a single coin.
@@ -156,6 +171,9 @@ func (UnimplementedQueryServer) Balance(context.Context, *QueryBalanceRequest) (
 }
 func (UnimplementedQueryServer) AllBalances(context.Context, *QueryAllBalancesRequest) (*QueryAllBalancesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AllBalances not implemented")
+}
+func (UnimplementedQueryServer) SpendableBalances(context.Context, *QuerySpendableBalancesRequest) (*QuerySpendableBalancesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SpendableBalances not implemented")
 }
 func (UnimplementedQueryServer) TotalSupply(context.Context, *QueryTotalSupplyRequest) (*QueryTotalSupplyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TotalSupply not implemented")
@@ -220,6 +238,24 @@ func _Query_AllBalances_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).AllBalances(ctx, req.(*QueryAllBalancesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_SpendableBalances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuerySpendableBalancesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).SpendableBalances(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.bank.v1beta1.Query/SpendableBalances",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).SpendableBalances(ctx, req.(*QuerySpendableBalancesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -346,6 +382,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AllBalances",
 			Handler:    _Query_AllBalances_Handler,
+		},
+		{
+			MethodName: "SpendableBalances",
+			Handler:    _Query_SpendableBalances_Handler,
 		},
 		{
 			MethodName: "TotalSupply",

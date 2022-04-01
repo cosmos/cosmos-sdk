@@ -17,11 +17,11 @@ func (b BytesCodec) FixedBufferSize() int {
 }
 
 func (b BytesCodec) ComputeBufferSize(value protoreflect.Value) (int, error) {
-	return bytesSize(value)
+	return bytesSize(value), nil
 }
 
-func bytesSize(value protoreflect.Value) (int, error) {
-	return len(value.Bytes()), nil
+func bytesSize(value protoreflect.Value) int {
+	return len(value.Bytes())
 }
 
 func (b BytesCodec) IsOrdered() bool {
@@ -51,14 +51,14 @@ func (b NonTerminalBytesCodec) FixedBufferSize() int {
 }
 
 func (b NonTerminalBytesCodec) ComputeBufferSize(value protoreflect.Value) (int, error) {
-	n, err := bytesSize(value)
+	n := bytesSize(value)
 	prefixLen := 1
 	// we use varint, if the first bit of a byte is 1 then we need to signal continuation
 	for n >= 0x80 {
 		prefixLen++
 		n >>= 7
 	}
-	return n + prefixLen, err
+	return n + prefixLen, nil
 }
 
 func (b NonTerminalBytesCodec) IsOrdered() bool {

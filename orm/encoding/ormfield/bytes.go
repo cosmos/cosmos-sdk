@@ -16,6 +16,7 @@ func (b BytesCodec) FixedBufferSize() int {
 	return -1
 }
 
+// ComputeBufferSize returns the bytes size of the value.
 func (b BytesCodec) ComputeBufferSize(value protoreflect.Value) (int, error) {
 	return bytesSize(value), nil
 }
@@ -50,6 +51,8 @@ func (b NonTerminalBytesCodec) FixedBufferSize() int {
 	return -1
 }
 
+// ComputeBufferSize returns the bytes size of the value plus the length of the
+// varint length-prefix.
 func (b NonTerminalBytesCodec) ComputeBufferSize(value protoreflect.Value) (int, error) {
 	n := bytesSize(value)
 	prefixLen := 1

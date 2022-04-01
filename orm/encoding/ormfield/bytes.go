@@ -53,7 +53,7 @@ func (b NonTerminalBytesCodec) FixedBufferSize() int {
 func (b NonTerminalBytesCodec) ComputeBufferSize(value protoreflect.Value) (int, error) {
 	n, err := bytesSize(value)
 	prefixLen := 1
-	// prefix is a varint, whose msb signals continuation
+	// we use varint, if the first bit of a byte is 1 then we need to signal continuation
 	for n >= 0x80 {
 		prefixLen++
 		n >>= 7

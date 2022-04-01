@@ -2235,7 +2235,7 @@ func (s *TestSuite) TestExecProposal() {
 				msgs := []sdk.Msg{msgSend1}
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_NO)
 			},
-			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
+			expProposalStatus: group.PROPOSAL_STATUS_REJECTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
 		"open proposal must not fail": {

@@ -33,7 +33,7 @@ type Keeper struct {
 	// The (unexposed) keys used to access the stores from the Context.
 	storeKey storetypes.StoreKey
 
-	// The codec codec for binary encoding/decoding.
+	// The codec for binary encoding/decoding.
 	cdc codec.BinaryCodec
 
 	// Legacy Proposal router

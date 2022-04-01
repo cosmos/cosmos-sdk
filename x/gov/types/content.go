@@ -28,6 +28,13 @@ type Content interface {
 	String() string
 }
 
+// ContentWithProposer embeds Content interface and adds the GetProposer method used to validate
+// that proposer in the content is equal to proposer in the MsgSubmitProposal.
+type ContentWithProposer interface {
+	Content
+	GetProposer() string
+}
+
 // Handler defines a function that handles a proposal after it has passed the
 // governance process.
 type Handler func(ctx sdk.Context, content Content) error

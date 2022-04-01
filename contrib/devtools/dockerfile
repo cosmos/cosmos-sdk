@@ -2,7 +2,7 @@ FROM bufbuild/buf:0.53.0 as BUILDER
 
 FROM unibeautify/clang-format as clang-format-build
 
-FROM golang:alpine
+FROM golang:1.16-alpine
 
 ENV GOLANG_PROTOBUF_VERSION=1.3.5 \
   GOGO_PROTOBUF_VERSION=1.3.2 \

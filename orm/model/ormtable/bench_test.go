@@ -111,6 +111,10 @@ func benchDelete(b *testing.B, ctx context.Context) {
 	}
 }
 
+//
+// Manually written versions of insert, update, delete and get for testpb.Balance
+//
+
 const (
 	addressDenomPrefix byte = iota
 	denomAddressPrefix

@@ -27,11 +27,8 @@ func GetQueryCmd() *cobra.Command {
 
 	authorizationQueryCmd.AddCommand(
 		GetCmdQueryGrants(),
-<<<<<<< HEAD
-=======
 		GetQueryGranterGrants(),
 		GetQueryGranteeGrants(),
->>>>>>> fa8099da9 (feat: add grants by grantee authz query (#10944))
 	)
 
 	return authorizationQueryCmd
@@ -96,8 +93,6 @@ $ %s query %s grants cosmos1skjw.. cosmos1skjwj.. %s
 	flags.AddPaginationFlagsToCmd(cmd, "grants")
 	return cmd
 }
-<<<<<<< HEAD
-=======
 
 func GetQueryGranterGrants() *cobra.Command {
 	cmd := &cobra.Command{
@@ -194,4 +189,3 @@ $ %s q %s grantee-grants cosmos1skj..
 	flags.AddPaginationFlagsToCmd(cmd, "grantee-grants")
 	return cmd
 }
->>>>>>> fa8099da9 (feat: add grants by grantee authz query (#10944))

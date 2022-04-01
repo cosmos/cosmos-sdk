@@ -11,7 +11,6 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/authz";
 message GenesisState {
   repeated GrantAuthorization authorization = 1 [(gogoproto.nullable) = false];
 }
-<<<<<<< HEAD
 
 // GrantAuthorization defines the GenesisState/GrantAuthorization type.
 message GrantAuthorization {
@@ -21,5 +20,3 @@ message GrantAuthorization {
   google.protobuf.Any       authorization = 3 [(cosmos_proto.accepts_interface) = "Authorization"];
   google.protobuf.Timestamp expiration    = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
-=======
->>>>>>> fa8099da9 (feat: add grants by grantee authz query (#10944))

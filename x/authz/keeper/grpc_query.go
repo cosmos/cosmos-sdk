@@ -90,8 +90,6 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 	}, nil
 }
 
-<<<<<<< HEAD
-=======
 // GranterGrants implements the Query/GranterGrants gRPC method.
 func (k Keeper) GranterGrants(c context.Context, req *authz.QueryGranterGrantsRequest) (*authz.QueryGranterGrantsResponse, error) {
 	if req == nil {
@@ -195,7 +193,6 @@ func (k Keeper) GranteeGrants(c context.Context, req *authz.QueryGranteeGrantsRe
 	}, nil
 }
 
->>>>>>> fa8099da9 (feat: add grants by grantee authz query (#10944))
 // unmarshal an authorization from a store value
 func unmarshalAuthorization(cdc codec.BinaryCodec, value []byte) (v authz.Grant, err error) {
 	err = cdc.Unmarshal(value, &v)

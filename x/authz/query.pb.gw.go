@@ -67,8 +67,6 @@ func local_request_Query_Grants_0(ctx context.Context, marshaler runtime.Marshal
 
 }
 
-<<<<<<< HEAD
-=======
 var (
 	filter_Query_GranterGrants_0 = &utilities.DoubleArray{Encoding: map[string]int{"granter": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 )
@@ -213,7 +211,6 @@ func local_request_Query_GranteeGrants_0(ctx context.Context, marshaler runtime.
 
 }
 
->>>>>>> fa8099da9 (feat: add grants by grantee authz query (#10944))
 // RegisterQueryHandlerServer registers the http handlers for service Query to "mux".
 // UnaryRPC     :call QueryServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
@@ -240,8 +237,6 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 
 	})
 
-<<<<<<< HEAD
-=======
 	mux.Handle("GET", pattern_Query_GranterGrants_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -282,7 +277,6 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 
 	})
 
->>>>>>> fa8099da9 (feat: add grants by grantee authz query (#10944))
 	return nil
 }
 
@@ -344,8 +338,6 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 
 	})
 
-<<<<<<< HEAD
-=======
 	mux.Handle("GET", pattern_Query_GranterGrants_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -386,28 +378,21 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 
 	})
 
->>>>>>> fa8099da9 (feat: add grants by grantee authz query (#10944))
 	return nil
 }
 
 var (
 	pattern_Query_Grants_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "authz", "v1beta1", "grants"}, "", runtime.AssumeColonVerbOpt(false)))
-<<<<<<< HEAD
-=======
 
 	pattern_Query_GranterGrants_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "authz", "v1beta1", "grants", "granter"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_GranteeGrants_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "authz", "v1beta1", "grants", "grantee"}, "", runtime.AssumeColonVerbOpt(false)))
->>>>>>> fa8099da9 (feat: add grants by grantee authz query (#10944))
 )
 
 var (
 	forward_Query_Grants_0 = runtime.ForwardResponseMessage
-<<<<<<< HEAD
-=======
 
 	forward_Query_GranterGrants_0 = runtime.ForwardResponseMessage
 
 	forward_Query_GranteeGrants_0 = runtime.ForwardResponseMessage
->>>>>>> fa8099da9 (feat: add grants by grantee authz query (#10944))
 )

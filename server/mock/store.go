@@ -7,7 +7,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
-	snapshotTypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	snapshotypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	storeTypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -143,7 +143,7 @@ func (ms multiStore) Snapshot(height uint64, protoWriter protoio.Writer) error {
 
 func (ms multiStore) Restore(
 	height uint64, format uint32, protoReader protoio.Reader,
-) (snapshotTypes.SnapshotItem, error) {
+) (snapshotypes.SnapshotItem, error) {
 	panic("not implemented")
 }
 

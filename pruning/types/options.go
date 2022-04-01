@@ -29,11 +29,10 @@ const (
 )
 
 const (
-	// PruningDefault defines a pruning strategy where the last 100,000 heights are
+	// PruningDefault defines a pruning strategy where the last 362880 heights are
 	// kept where to-be pruned heights are pruned at every 10th height.
-	// The last 100000 heights are kept(approximately 1 week worth of state) assuming the typical
-	// block time is 6s. If these values
-	// do not match the applications' requirements, use the "custom" option.
+	// The last 362880 heights are kept(approximately 3.5 weeks worth of state) assuming the typical
+	// block time is 6s. If these values do not match the applications' requirements, use the "custom" option.
 	PruningDefault PruningStrategy = iota
 	// PruningEverything defines a pruning strategy where all committed heights are
 	// deleted, storing only the current height and last 2 states. To-be pruned heights are
@@ -63,8 +62,8 @@ func NewPruningOptions(pruningStrategy PruningStrategy) *PruningOptions {
 	switch pruningStrategy {
 	case PruningDefault:
 		return &PruningOptions{
-			KeepRecent: 100_000,
-			Interval:   100,
+			KeepRecent: 362880,
+			Interval:   10,
 			Strategy:   PruningDefault,
 		}
 	case PruningEverything:

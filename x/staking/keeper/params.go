@@ -40,8 +40,11 @@ func (k Keeper) BondDenom(ctx sdk.Context) (res string) {
 }
 
 // PowerReduction - is the amount of staking tokens required for 1 unit of consensus-engine power.
-func (k Keeper) PowerReduction(_ sdk.Context) sdk.Int {
-	return k.Config.PowerReduction
+// Currently, this returns a global variable that the app developer can tweak.
+// TODO: we might turn this into an on-chain param:
+// https://github.com/cosmos/cosmos-sdk/issues/8365
+func (k Keeper) PowerReduction(ctx sdk.Context) sdk.Int {
+	return sdk.DefaultPowerReduction
 }
 
 // MinCommissionRate - Minimum validator commission rate

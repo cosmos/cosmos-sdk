@@ -322,7 +322,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			false,
 		},
 		{
-			"fail when grantee = granter",
+			"fail when granter = grantee",
 			[]string{
 				grantee.String(),
 				"generic",

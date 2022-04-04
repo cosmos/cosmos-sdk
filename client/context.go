@@ -6,15 +6,12 @@ import (
 	"io"
 	"os"
 
-	"github.com/spf13/viper"
-
-	"gopkg.in/yaml.v2"
-
-	"google.golang.org/grpc"
-
 	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
+	"github.com/spf13/viper"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	"google.golang.org/grpc"
+	"gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

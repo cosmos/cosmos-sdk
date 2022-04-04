@@ -20,7 +20,6 @@ import (
 	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/rpc/client/local"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -315,7 +314,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			// If grpc is enabled, configure grpc client for grpc gateway.
 			grpcClient, err := grpc.Dial(
 				grpcAddress,
-				grpc.WithTransportCredentials(insecure.NewCredentials()),
+				grpc.WithInsecure(),
 				grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec())),
 			)
 			if err != nil {

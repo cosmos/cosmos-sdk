@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/binary"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -74,18 +75,21 @@ func (k Keeper) GetRedelegationByUnbondingOpId(
 	redKey := store.Get(indexKey)
 
 	if redKey == nil {
+		fmt.Printf("no redKey with indexKey %x\n", indexKey)
 		return types.Redelegation{}, false
 	}
 
 	value := store.Get(redKey)
 
 	if value == nil {
+		fmt.Printf("no result at redKey %x\n", redKey)
 		return types.Redelegation{}, false
 	}
 
 	red, err := types.UnmarshalRED(k.cdc, value)
 	// An error here means that what we got wasn't the right type
 	if err != nil {
+		fmt.Printf("error geting redelegation %s\n", err)
 		return types.Redelegation{}, false
 	}
 
@@ -160,6 +164,8 @@ func (k Keeper) SetRedelegationByUnbondingOpIndex(ctx sdk.Context, red types.Red
 
 	indexKey := types.GetUnbondingOpIndexKey(id)
 	redKey := types.GetREDKey(delAddr, valSrcAddr, valDstAddr)
+
+	fmt.Printf("Setting red key %x\n", redKey)
 
 	store.Set(indexKey, redKey)
 }
@@ -310,13 +316,13 @@ func (k Keeper) redelegationEntryCanComplete(ctx sdk.Context, id uint64) (found 
 		red.RemoveEntry(int64(i))
 		// Remove from the UnbondingOp index
 		k.DeleteUnbondingOpIndex(ctx, id)
+	}
 
-		// set the redelegation or remove it if there are no more entries
-		if len(red.Entries) == 0 {
-			k.RemoveRedelegation(ctx, red)
-		} else {
-			k.SetRedelegation(ctx, red)
-		}
+	// set the redelegation or remove it if there are no more entries
+	if len(red.Entries) == 0 {
+		k.RemoveRedelegation(ctx, red)
+	} else {
+		k.SetRedelegation(ctx, red)
 	}
 
 	// Successfully completed unbonding
@@ -347,22 +353,29 @@ func (k Keeper) validatorUnbondingCanComplete(ctx sdk.Context, id uint64) (found
 // PutUnbondingOpOnHold allows an external module to stop an unbonding operation such as an
 // unbonding delegation, a redelegation, or a validator unbonding
 // ----------------------------------------------------------------------------------------
-
+// TODO JNT: return an error instead of bool
 func (k Keeper) PutUnbondingOpOnHold(ctx sdk.Context, id uint64) (found bool) {
+	println("CALLED PUT ONHOLD WITH ID: ", id)
 	found = k.putUnbondingDelegationEntryOnHold(ctx, id)
 	if found {
 		return true
 	}
+
+	println("1b")
 
 	found = k.putRedelegationEntryOnHold(ctx, id)
 	if found {
 		return true
 	}
 
+	println("2b")
+
 	found = k.putValidatorOnHold(ctx, id)
 	if found {
 		return true
 	}
+
+	println("3b")
 
 	// If an entry was not found
 	return false
@@ -387,15 +400,22 @@ func (k Keeper) putUnbondingDelegationEntryOnHold(ctx sdk.Context, id uint64) (f
 }
 
 func (k Keeper) putRedelegationEntryOnHold(ctx sdk.Context, id uint64) (found bool) {
+	println("IN RED METHOD")
 	red, found := k.GetRedelegationByUnbondingOpId(ctx, id)
 	if !found {
+		println("1a")
 		return false
 	}
 
+	fmt.Printf("REDELEGATION %#v", red)
+
 	i, found := redelegationEntryArrayIndex(red, id)
 	if !found {
+		println("2a")
 		return false
 	}
+
+	println("3a")
 
 	red.Entries[i].UnbondingOnHold = true
 

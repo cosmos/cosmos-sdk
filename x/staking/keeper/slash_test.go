@@ -131,7 +131,7 @@ func TestSlashRedelegation(t *testing.T) {
 	// set a redelegation with an expiration timestamp beyond which the
 	// redelegation shouldn't be slashed
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
-		time.Unix(5, 0), sdk.NewInt(10), sdk.NewDec(10))
+		time.Unix(5, 0), sdk.NewInt(10), sdk.NewDec(10), false, 1)
 
 	app.StakingKeeper.SetRedelegation(ctx, rd)
 
@@ -390,7 +390,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// set a redelegation
 	rdTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 6)
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11,
-		time.Unix(0, 0), rdTokens, rdTokens.ToDec())
+		time.Unix(0, 0), rdTokens, rdTokens.ToDec(), false, 1)
 	app.StakingKeeper.SetRedelegation(ctx, rd)
 
 	// set the associated delegation
@@ -544,7 +544,7 @@ func TestSlashBoth(t *testing.T) {
 	rdATokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 6)
 	rdA := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11,
 		time.Unix(0, 0), rdATokens,
-		rdATokens.ToDec())
+		rdATokens.ToDec(), false, 1)
 	app.StakingKeeper.SetRedelegation(ctx, rdA)
 
 	// set the associated delegation

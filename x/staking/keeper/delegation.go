@@ -432,10 +432,10 @@ func (k Keeper) SetRedelegationEntry(ctx sdk.Context,
 	red, found := k.GetRedelegation(ctx, delegatorAddr, validatorSrcAddr, validatorDstAddr)
 	id := k.IncrementUnbondingOpId(ctx)
 	if found {
-		red.AddEntry(creationHeight, minTime, balance, sharesDst)
+		red.AddEntry(creationHeight, minTime, balance, sharesDst, false, id)
 	} else {
 		red = types.NewRedelegation(delegatorAddr, validatorSrcAddr,
-			validatorDstAddr, creationHeight, minTime, balance, sharesDst)
+			validatorDstAddr, creationHeight, minTime, balance, sharesDst, false, id)
 	}
 
 	k.SetRedelegation(ctx, red)

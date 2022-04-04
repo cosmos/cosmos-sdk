@@ -10,11 +10,7 @@ import (
 	"runtime/pprof"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
-
 	"github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -23,18 +19,19 @@ import (
 	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/rpc/client/local"
-
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
-	crgserver "github.com/cosmos/cosmos-sdk/server/rosetta/lib/server"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/encoding/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
 	pruningTypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
+	crgserver "github.com/cosmos/cosmos-sdk/server/rosetta/lib/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
 )
 
@@ -312,7 +309,11 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			grpcClient, err := grpc.Dial(
 				grpcAddress,
 				grpc.WithInsecure(),
-				grpc.WithDefaultCallOptions(grpc.ForceCodec(encoding.GetCodec(proto.Name))),
+				grpc.WithDefaultCallOptions(
+					grpc.ForceCodec(encoding.GetCodec(proto.Name)),
+					grpc.MaxCallRecvMsgSize(config.GRPC.MaxRecvMsgSize),
+					grpc.MaxCallSendMsgSize(config.GRPC.MaxSendMsgSize),
+				),
 			)
 			if err != nil {
 				return err
@@ -343,7 +344,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		grpcWebSrv *http.Server
 	)
 	if config.GRPC.Enable {
-		grpcSrv, err = servergrpc.StartGRPCServer(clientCtx, app, config.GRPC.Address)
+		grpcSrv, err = servergrpc.StartGRPCServer(clientCtx, app, config.GRPC)
 		if err != nil {
 			return err
 		}

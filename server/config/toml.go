@@ -176,6 +176,14 @@ enable = {{ .GRPC.Enable }}
 # Address defines the gRPC server address to bind to.
 address = "{{ .GRPC.Address }}"
 
+# MaxRecvMsgSize defines the max message size in bytes the server can receive.
+# The default value is 4MB.
+max-recv-msg-size = "{{ .GRPC.MaxRecvMsgSize }}"
+
+# MaxSendMsgSize defines the max message size in bytes the server can send.
+# The default value is math.MaxInt32.
+max-send-msg-size = "{{ .GRPC.MaxSendMsgSize }}"
+
 ###############################################################################
 ###                        gRPC Web Configuration                           ###
 ###############################################################################

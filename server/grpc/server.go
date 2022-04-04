@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/server/grpc/gogoreflection"
 	reflection "github.com/cosmos/cosmos-sdk/server/grpc/reflection/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/server/types"
@@ -15,17 +16,23 @@ import (
 )
 
 // StartGRPCServer starts a gRPC server on the given address.
-func StartGRPCServer(clientCtx client.Context, app types.Application, address string) (*grpc.Server, error) {
-	grpcSrv := grpc.NewServer()
+func StartGRPCServer(clientCtx client.Context, app types.Application, cfg config.GRPCConfig) (*grpc.Server, error) {
+	grpcSrv := grpc.NewServer(
+		grpc.MaxSendMsgSize(cfg.MaxSendMsgSize),
+		grpc.MaxRecvMsgSize(cfg.MaxRecvMsgSize),
+	)
 	app.RegisterGRPCServer(grpcSrv)
-	// reflection allows consumers to build dynamic clients that can write
-	// to any cosmos-sdk application without relying on application packages at compile time
+
+	// Reflection allows consumers to build dynamic clients that can write to any
+	// Cosmos SDK application without relying on application packages at compile
+	// time.
 	err := reflection.Register(grpcSrv, reflection.Config{
 		SigningModes: func() map[string]int32 {
 			modes := make(map[string]int32, len(clientCtx.TxConfig.SignModeHandler().Modes()))
 			for _, m := range clientCtx.TxConfig.SignModeHandler().Modes() {
 				modes[m.String()] = (int32)(m)
 			}
+
 			return modes
 		}(),
 		ChainID:           clientCtx.ChainID,
@@ -35,10 +42,12 @@ func StartGRPCServer(clientCtx client.Context, app types.Application, address st
 	if err != nil {
 		return nil, err
 	}
+
 	// Reflection allows external clients to see what services and methods
 	// the gRPC server exposes.
 	gogoreflection.Register(grpcSrv)
-	listener, err := net.Listen("tcp", address)
+
+	listener, err := net.Listen("tcp", cfg.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -47,14 +56,16 @@ func StartGRPCServer(clientCtx client.Context, app types.Application, address st
 	go func() {
 		err = grpcSrv.Serve(listener)
 		if err != nil {
-			errCh <- fmt.Errorf("failed to serve: %w", err)
+			errCh <- fmt.Errorf("failed to serve gRPC: %w", err)
 		}
 	}()
 
 	select {
 	case err := <-errCh:
 		return nil, err
-	case <-time.After(types.ServerStartTime): // assume server started successfully
+
+	case <-time.After(types.ServerStartTime):
+		// assume server started successfully
 		return grpcSrv, nil
 	}
 }

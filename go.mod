@@ -27,7 +27,7 @@ require (
 	github.com/jhump/protoreflect v1.9.0
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.2 // indirect
-	github.com/magiconair/properties v1.8.5
+	github.com/magiconair/properties v1.8.6
 	github.com/mattn/go-isatty v0.0.14
 	github.com/onsi/ginkgo v1.16.4 // indirect
 	github.com/onsi/gomega v1.13.0 // indirect

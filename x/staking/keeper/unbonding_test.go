@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -90,70 +89,29 @@ func setup(t *testing.T, hookCalled *bool, ubdeID *uint64) (
 	return
 }
 
-// func undelegate(
-// 	t *testing.T, app *simapp.SimApp, ctx sdk.Context, bondDenom string, addrDels []sdk.AccAddress, addrVals []sdk.ValAddress, hookCalled *bool,
-// ) (completionTime time.Time, bondedAmt sdk.Int, notBondedAmt sdk.Int) {
-// 	// UNDELEGATE
-// 	// Save original bonded and unbonded amounts
-// 	bondedAmt1 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-// 	notBondedAmt1 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
-
-// 	completionTime, err := app.StakingKeeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
-// 	require.NoError(t, err)
-
-// 	// check that the unbonding actually happened
-// 	bondedAmt2 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-// 	notBondedAmt2 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
-// 	// Bonded amount is less
-// 	require.True(sdk.IntEq(t, bondedAmt1.SubRaw(1), bondedAmt2))
-// 	// Unbonded amount is more
-// 	require.True(sdk.IntEq(t, notBondedAmt1.AddRaw(1), notBondedAmt2))
-
-// 	// check that our hook was called
-// 	require.True(t, *hookCalled)
-
-// 	return completionTime, bondedAmt2, notBondedAmt2
-// }
-
-func doUnbondingOp(
-	t *testing.T, app *simapp.SimApp, ctx sdk.Context, bondDenom string, addrDels []sdk.AccAddress, addrVals []sdk.ValAddress, hookCalled *bool, unbondingOp string,
+func doUnbondingDelegation(
+	t *testing.T, app *simapp.SimApp, ctx sdk.Context, bondDenom string, addrDels []sdk.AccAddress, addrVals []sdk.ValAddress, hookCalled *bool,
 ) (completionTime time.Time, bondedAmt sdk.Int, notBondedAmt sdk.Int) {
 	// UNDELEGATE
 	// Save original bonded and unbonded amounts
 	bondedAmt1 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	notBondedAmt1 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
-	var bondedAmt2 sdk.Int
-	var notBondedAmt2 sdk.Int
+	var err error
+	completionTime, err = app.StakingKeeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
+	require.NoError(t, err)
 
-	switch unbondingOp {
-	case "unbondingDelegation":
-		var err error
-		completionTime, err = app.StakingKeeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
-		require.NoError(t, err)
+	// check that the unbonding actually happened
+	bondedAmt2 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
+	notBondedAmt2 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
+	// Bonded amount is less
+	require.True(sdk.IntEq(t, bondedAmt1.SubRaw(1), bondedAmt2))
+	// Unbonded amount is more
+	require.True(sdk.IntEq(t, notBondedAmt1.AddRaw(1), notBondedAmt2))
 
-		// check that the unbonding actually happened
-		bondedAmt2 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-		notBondedAmt2 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
-		// Bonded amount is less
-		require.True(sdk.IntEq(t, bondedAmt1.SubRaw(1), bondedAmt2))
-		// Unbonded amount is more
-		require.True(sdk.IntEq(t, notBondedAmt1.AddRaw(1), notBondedAmt2))
-
-		// Check that the unbonding happened- we look up the entry and see that it has the correct number of shares
-		unbondingDelegations := app.StakingKeeper.GetUnbondingDelegationsFromValidator(ctx, addrVals[0])
-		require.Equal(t, sdk.NewDec(1), unbondingDelegations[0].Entries[0].Balance)
-
-	case "redelegation":
-		var err error
-		completionTime, err = app.StakingKeeper.BeginRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1], sdk.NewDec(1))
-		require.NoError(t, err)
-
-		// Check that the redelegation happened- we look up the entry and see that it has the correct number of shares
-		redelegations := app.StakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
-		require.Equal(t, 1, len(redelegations))
-		require.Equal(t, sdk.NewDec(1), redelegations[0].Entries[0].SharesDst)
-	}
+	// Check that the unbonding happened- we look up the entry and see that it has the correct number of shares
+	unbondingDelegations := app.StakingKeeper.GetUnbondingDelegationsFromValidator(ctx, addrVals[0])
+	require.Equal(t, sdk.NewInt(1), unbondingDelegations[0].Entries[0].Balance)
 
 	// check that our hook was called
 	require.True(t, *hookCalled)
@@ -177,14 +135,6 @@ func doRedelegation(
 	require.True(t, *hookCalled)
 
 	return completionTime
-}
-
-func TestUnbondingDelegationOnHold1(t *testing.T) {
-	testUnbondingOpOnHold1(t, "unbondingDelegation")
-}
-
-func TestUnbondingDelegationOnHold2(t *testing.T) {
-	testUnbondingOpOnHold2(t, "unbondingDelegation")
 }
 
 func TestRedelegationOnHold1(t *testing.T) {
@@ -217,8 +167,6 @@ func TestRedelegationOnHold2(t *testing.T) {
 	app, ctx, _, addrDels, addrVals := setup(t, &hookCalled, &ubdeID)
 	completionTime := doRedelegation(t, app, ctx, addrDels, addrVals, &hookCalled)
 
-	fmt.Printf("REDELELELELELELEL %#v\n", app.StakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0]))
-
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - UNBONDING CANNOT COMPLETE
 	ctx = ctx.WithBlockTime(completionTime)
 	_, err := app.StakingKeeper.CompleteRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
@@ -237,62 +185,43 @@ func TestRedelegationOnHold2(t *testing.T) {
 	require.Equal(t, 0, len(redelegations))
 }
 
-func TestValidatorUnbondingOnHold1(t *testing.T) {
-	testUnbondingOpOnHold1(t, "validatorUnbonding")
-}
-
-func TestValidatorUnbondingOnHold2(t *testing.T) {
-	testUnbondingOpOnHold2(t, "validatorUnbonding")
-}
-
-// This is a test of the scenario where the consumer chain's unbonding period is over before the provider chain's unbonding period
-func testUnbondingOpOnHold1(t *testing.T, unbondingOp string) {
+func TestUnbondingDelegationOnHold1(t *testing.T) {
 	var hookCalled bool
 	var ubdeID uint64
 	app, ctx, bondDenom, addrDels, addrVals := setup(t, &hookCalled, &ubdeID)
-	completionTime, _, _ := doUnbondingOp(t, app, ctx, bondDenom, addrDels, addrVals, &hookCalled, unbondingOp)
+	completionTime, bondedAmt1, notBondedAmt1 := doUnbondingDelegation(t, app, ctx, bondDenom, addrDels, addrVals, &hookCalled)
 
 	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - UNBONDING CANNOT COMPLETE
 	err := app.StakingKeeper.UnbondingOpCanComplete(ctx, ubdeID)
 	require.NoError(t, err)
 
-	// bondedAmt3 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-	// notBondedAmt3 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
+	bondedAmt3 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
+	notBondedAmt3 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
-	// // Bonded and unbonded amounts are the same as before because the completionTime has not yet passed and so the
-	// // unbondingDelegation has not completed
-	// require.True(sdk.IntEq(t, bondedAmt1, bondedAmt3))
-	// require.True(sdk.IntEq(t, notBondedAmt1, notBondedAmt3))
-
-	// Redelegation is not complete - still exists
-	redelegations := app.StakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
-	require.Equal(t, 1, len(redelegations))
+	// Bonded and unbonded amounts are the same as before because the completionTime has not yet passed and so the
+	// unbondingDelegation has not completed
+	require.True(sdk.IntEq(t, bondedAmt1, bondedAmt3))
+	require.True(sdk.IntEq(t, notBondedAmt1, notBondedAmt3))
 
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - COMPLETE STOPPED UNBONDING
 	ctx = ctx.WithBlockTime(completionTime)
-	// _, err = app.StakingKeeper.CompleteUnbonding(ctx, addrDels[0], addrVals[0])
-	_, err = app.StakingKeeper.CompleteRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
+	_, err = app.StakingKeeper.CompleteUnbonding(ctx, addrDels[0], addrVals[0])
 	require.NoError(t, err)
 
-	// // Check that the unbonding was finally completed
-	// bondedAmt5 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-	// notBondedAmt5 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
+	// Check that the unbonding was finally completed
+	bondedAmt5 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
+	notBondedAmt5 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
-	// require.True(sdk.IntEq(t, bondedAmt1, bondedAmt5))
-	// // Not bonded amount back to what it was originaly
-	// require.True(sdk.IntEq(t, notBondedAmt1.SubRaw(1), notBondedAmt5))
-
-	// Redelegation is complete and record is gone
-	redelegations = app.StakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
-	require.Equal(t, 0, len(redelegations))
+	require.True(sdk.IntEq(t, bondedAmt1, bondedAmt5))
+	// Not bonded amount back to what it was originaly
+	require.True(sdk.IntEq(t, notBondedAmt1.SubRaw(1), notBondedAmt5))
 }
 
-// This is a test of the scenario where the consumer chain's unbonding period is over before the provider chain's unbonding period
-func testUnbondingOpOnHold2(t *testing.T, unbondingOp string) {
+func TestUnbondingDelegationOnHold2(t *testing.T) {
 	var hookCalled bool
 	var ubdeID uint64
 	app, ctx, bondDenom, addrDels, addrVals := setup(t, &hookCalled, &ubdeID)
-	completionTime, bondedAmt1, notBondedAmt1 := doUnbondingOp(t, app, ctx, bondDenom, addrDels, addrVals, &hookCalled, unbondingOp)
+	completionTime, bondedAmt1, notBondedAmt1 := doUnbondingDelegation(t, app, ctx, bondDenom, addrDels, addrVals, &hookCalled)
 
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - UNBONDING CANNOT COMPLETE
 	ctx = ctx.WithBlockTime(completionTime)
@@ -318,11 +247,4 @@ func testUnbondingOpOnHold2(t *testing.T, unbondingOp string) {
 	require.True(sdk.IntEq(t, bondedAmt1, bondedAmt5))
 	// Not bonded amount back to what it was originaly
 	require.True(sdk.IntEq(t, notBondedAmt1.SubRaw(1), notBondedAmt5))
-}
-
-type System struct {
-}
-
-func (s System) UndelegateAction() {
-
 }

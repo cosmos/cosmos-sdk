@@ -60,7 +60,7 @@ The Tendermint [consensus algorithm](https://docs.tendermint.com/v0.34/introduct
 
 ## ABCI
 
-Tendermint passes transactions to the application through an interface called the [ABCI](https://docs.tendermint.com/v0.34/spec/abci/), which the application must implement.
+Tendermint passes transactions to the application through an interface called the [ABCI](https://docs.tendermint.com/master/spec/abci/), which the application must implement.
 
 ```text
               +---------------------+

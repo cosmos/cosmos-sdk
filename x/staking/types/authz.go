@@ -103,6 +103,11 @@ func (a StakeAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRe
 			Updated: &StakeAuthorization{Validators: a.GetValidators(), AuthorizationType: a.GetAuthorizationType()}}, nil
 	}
 
+	// check sufficient balance exists.
+	if _, isNegative := sdk.NewCoins(*a.MaxTokens).SafeSub(sdk.NewCoins(amount)); isNegative {
+		return authz.AcceptResponse{}, sdkerrors.ErrInsufficientFunds.Wrapf("amount is more than max tokens")
+	}
+
 	limitLeft := a.MaxTokens.Sub(amount)
 	if limitLeft.IsZero() {
 		return authz.AcceptResponse{Accept: true, Delete: true}, nil

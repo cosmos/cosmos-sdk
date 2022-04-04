@@ -311,6 +311,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 				return err
 			}
 			grpcAddress := fmt.Sprintf("127.0.0.1:%s", port)
+
 			// If grpc is enabled, configure grpc client for grpc gateway.
 			grpcClient, err := grpc.Dial(
 				grpcAddress,
@@ -320,6 +321,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			if err != nil {
 				return err
 			}
+
 			clientCtx = clientCtx.WithGRPCClient(grpcClient)
 			ctx.Logger.Debug("grpc client assigned to client context", "target", grpcAddress)
 		}

@@ -25,18 +25,12 @@ import (
 // Context implements a typical context created in SDK modules for transaction
 // handling and queries.
 type Context struct {
-<<<<<<< HEAD
 	FromAddress sdk.AccAddress
 	Client      rpcclient.Client
 	ChainID     string
 	// Deprecated: Codec codec will be changed to Codec: codec.Codec
 	JSONCodec         codec.JSONCodec
-=======
-	FromAddress       sdk.AccAddress
-	Client            rpcclient.Client
 	GRPCClient        *grpc.ClientConn
-	ChainID           string
->>>>>>> 5356a8682 (feat: Modify grpc gateway to be concurrent (#11234))
 	Codec             codec.Codec
 	InterfaceRegistry codectypes.InterfaceRegistry
 	Input             io.Reader

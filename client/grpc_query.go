@@ -51,18 +51,13 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 		return err
 	}
 
-<<<<<<< HEAD
-	// Case 2. Querying state.
-	reqBz, err := protoCodec.Marshal(req)
-=======
 	if ctx.GRPCClient != nil {
 		// Case 2-1. Invoke grpc.
 		return ctx.GRPCClient.Invoke(grpcCtx, method, req, reply, opts...)
 	}
 
 	// Case 2-2. Querying state via abci query.
-	reqBz, err := ctx.gRPCCodec().Marshal(req)
->>>>>>> 5356a8682 (feat: Modify grpc gateway to be concurrent (#11234))
+	reqBz, err := protoCodec.Marshal(req)
 	if err != nil {
 		return err
 	}

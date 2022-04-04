@@ -23,9 +23,23 @@ type config struct {
 
 // NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec and sign modes. The
 // first enabled sign mode will become the default sign mode.
+// NOTE: Use NewTxConfigWithHandler to provide a custom signing handler in case the sign mode
+// is not supported by default (eg: SignMode_SIGN_MODE_EIP_191).
 func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode) client.TxConfig {
 	return &config{
 		handler:     makeSignModeHandler(enabledSignModes),
+		decoder:     DefaultTxDecoder(protoCodec),
+		encoder:     DefaultTxEncoder(),
+		jsonDecoder: DefaultJSONTxDecoder(protoCodec),
+		jsonEncoder: DefaultJSONTxEncoder(protoCodec),
+		protoCodec:  protoCodec,
+	}
+}
+
+// NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec and signing handler.
+func NewTxConfigWithHandler(protoCodec codec.ProtoCodecMarshaler, handler signing.SignModeHandler) client.TxConfig {
+	return &config{
+		handler:     handler,
 		decoder:     DefaultTxDecoder(protoCodec),
 		encoder:     DefaultTxEncoder(),
 		jsonDecoder: DefaultJSONTxDecoder(protoCodec),

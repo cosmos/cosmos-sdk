@@ -131,7 +131,7 @@ func TestSimulateMsgSubmitProposal(t *testing.T) {
 }
 
 // TestSimulateMsgDeposit tests the normal scenario of a valid message of type TypeMsgDeposit.
-// Abnormal scenarios, where the message is created by the errors are not tested here.
+// Abnormal scenarios, where errors occur, are not tested here.
 func TestSimulateMsgDeposit(t *testing.T) {
 	app, ctx := createTestApp(t, false)
 	blockTime := time.Now().UTC()
@@ -177,7 +177,7 @@ func TestSimulateMsgDeposit(t *testing.T) {
 }
 
 // TestSimulateMsgVote tests the normal scenario of a valid message of type TypeMsgVote.
-// Abnormal scenarios, where the message is created by the errors are not tested here.
+// Abnormal scenarios, where errors occur, are not tested here.
 func TestSimulateMsgVote(t *testing.T) {
 	app, ctx := createTestApp(t, false)
 	blockTime := time.Now().UTC()
@@ -221,7 +221,7 @@ func TestSimulateMsgVote(t *testing.T) {
 }
 
 // TestSimulateMsgVoteWeighted tests the normal scenario of a valid message of type TypeMsgVoteWeighted.
-// Abnormal scenarios, where the message is created by the errors are not tested here.
+// Abnormal scenarios, where errors occur, are not tested here.
 func TestSimulateMsgVoteWeighted(t *testing.T) {
 	app, ctx := createTestApp(t, false)
 	blockTime := time.Now().UTC()

@@ -43,7 +43,7 @@ enum SignMode {
   // SIGN_MODE_EIP_191 specifies the sign mode for EIP 191 signing on the Cosmos
   // SDK. Ref: https://eips.ethereum.org/EIPS/eip-191
   // 
-  // Since: cosmos-sdk 0.45
+  // Since: cosmos-sdk 0.45.2
   SIGN_MODE_EIP_191 = 191;
 }
 

@@ -39,6 +39,12 @@ enum SignMode {
   // SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses
   // Amino JSON and will be removed in the future.
   SIGN_MODE_LEGACY_AMINO_JSON = 127;
+
+  // SIGN_MODE_EIP_191 specifies the sign mode for EIP 191 signing on the Cosmos
+  // SDK. Ref: https://eips.ethereum.org/EIPS/eip-191
+  // 
+  // Since: cosmos-sdk 0.45
+  SIGN_MODE_EIP_191 = 191;
 }
 
 // SignatureDescriptors wraps multiple SignatureDescriptor's.

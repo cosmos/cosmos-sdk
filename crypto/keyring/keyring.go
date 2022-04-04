@@ -482,11 +482,11 @@ func (ks keystore) Delete(uid string) error {
 func (ks keystore) KeyByAddress(address sdk.Address) (*Record, error) {
 	ik, err := ks.db.Get(addrHexKeyAsString(address))
 	if err != nil {
-		return nil, wrapKeyNotFound(err, fmt.Sprint("key with address ", address.String(), "not found"))
+		return nil, wrapKeyNotFound(err, fmt.Sprintf("key with address %s not found", address.String()))
 	}
 
 	if len(ik.Data) == 0 {
-		return nil, wrapKeyNotFound(err, fmt.Sprint("key with address ", address.String(), "not found"))
+		return nil, wrapKeyNotFound(err, fmt.Sprintf("key with address %s not found", address.String()))
 	}
 
 	return ks.Key(string(ik.Data))

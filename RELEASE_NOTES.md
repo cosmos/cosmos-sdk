@@ -1,12 +1,11 @@
-# Cosmos SDK v0.44.6 Release Notes
+# Cosmos SDK v0.44.7 Release Notes
 
 This release introduces bug fixes and improvements on the Cosmos SDK v0.44 series:
 
-- Populate `ctx.ConsensusParams` for begin/end blockers.
-- Significantly speedup iterator creation after delete heavy workloads, which significantly improves IBC migration times.
-- Ensure that `LegacyAminoPubKey` struct correctly unmarshals from JSON.
-- Add evidence to std/codec to be able to decode evidence in client interactions.
+- The `everything` prune strategy now keeps the latest 2 heights (instead of only the latest one). If this flag is set, state sync is automatically disabled.
+- The bank keeper has a new `WithMintCoinsRestriction` method to allow custom module-specific restrictions on minting (e.g. only minting a certain denom). This function is not on the `bank.Keeper` interface, so it's not API-breaking, but only additive on the `Keeper` implementation; please use casting to access this method.
+- Fix data race in store trace component.
 
-See the [Cosmos SDK v0.44.6 Changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.44.6/CHANGELOG.md) for the exhaustive list of all changes.
+See the [Cosmos SDK v0.44.7 Changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.44.7/CHANGELOG.md) for the exhaustive list of all changes.
 
-**Full Changelog**: https://github.com/cosmos/cosmos-sdk/compare/v0.44.5...v0.44.6
+**Full Changelog**: https://github.com/cosmos/cosmos-sdk/compare/v0.44.6...v0.44.7

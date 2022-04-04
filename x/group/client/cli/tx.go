@@ -562,7 +562,7 @@ Parameters:
 			msg_tx_json_file: path to json file with messages that will be executed if the proposal is accepted.
 
 Example:
-	$ %s tx gov submit-proposal path/to/proposal.json
+	$ %s tx group submit-proposal path/to/proposal.json
 	
 	Where proposal.json contains:
 

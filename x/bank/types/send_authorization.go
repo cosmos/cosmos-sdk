@@ -45,7 +45,7 @@ func (a SendAuthorization) ValidateBasic() error {
 		return sdkerrors.ErrInvalidCoins.Wrap("spend limit cannot be nil")
 	}
 	if !a.SpendLimit.IsAllPositive() {
-		return sdkerrors.ErrInvalidCoins.Wrapf("spend limit cannot be negitive")
+		return sdkerrors.ErrInvalidCoins.Wrapf("spend limit must be positive")
 	}
 	return nil
 }

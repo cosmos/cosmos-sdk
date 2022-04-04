@@ -76,16 +76,6 @@ func TestUnsupportedFields(t *testing.T) {
 	assert.ErrorContains(t, err, ormerrors.InvalidKeyField.Error())
 }
 
-func TestNTBytesTooLong(t *testing.T) {
-	cdc, err := ormfield.GetCodec(testutil.GetTestField("bz"), true)
-	assert.NilError(t, err)
-	buf := &bytes.Buffer{}
-	bz := protoreflect.ValueOfBytes(make([]byte, 256))
-	assert.ErrorContains(t, cdc.Encode(bz, buf), ormerrors.BytesFieldTooLong.Error())
-	_, err = cdc.ComputeBufferSize(bz)
-	assert.ErrorContains(t, err, ormerrors.BytesFieldTooLong.Error())
-}
-
 func TestCompactUInt32(t *testing.T) {
 	var lastBz []byte
 	testEncodeDecode := func(x uint32, expectedLen int) {

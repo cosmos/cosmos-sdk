@@ -15,6 +15,9 @@ import (
 const (
 	defaultMinGasPrices = ""
 
+	// DefaultAPIAddress defines the default address to bind the API server to.
+	DefaultAPIAddress = "tcp://0.0.0.0:1317"
+
 	// DefaultGRPCAddress defines the default address to bind the gRPC server to.
 	DefaultGRPCAddress = "0.0.0.0:9090"
 
@@ -223,7 +226,7 @@ func DefaultConfig() *Config {
 		API: APIConfig{
 			Enable:             false,
 			Swagger:            false,
-			Address:            "tcp://0.0.0.0:1317",
+			Address:            DefaultAPIAddress,
 			MaxOpenConnections: 1000,
 			RPCReadTimeout:     10,
 			RPCMaxBodyBytes:    1000000,

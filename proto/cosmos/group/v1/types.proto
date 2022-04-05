@@ -1,3 +1,4 @@
+// Since: cosmos-sdk 0.46
 syntax = "proto3";
 
 package cosmos.group.v1;
@@ -194,31 +195,37 @@ message Proposal {
   // submit_time is a timestamp specifying when a proposal was submitted.
   google.protobuf.Timestamp submit_time = 5 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 
-  // group_policy_version tracks the version of the group policy that this proposal corresponds to.
-  // When a decision policy is changed, existing proposals from previous policy versions will become invalid.
-  uint64 group_policy_version = 6;
+  // group_version tracks the version of the group at proposal submission.
+  // This field is here for informational purposes only.
+  uint64 group_version = 6;
+
+  // group_policy_version tracks the version of the group policy at proposal submission.
+  // When a decision policy is changed, existing proposals from previous policy
+  // versions will become invalid with the `ABORTED` status.
+  // This field is here for informational purposes only.
+  uint64 group_policy_version = 7;
 
   // status represents the high level position in the life cycle of the proposal. Initial value is Submitted.
-  ProposalStatus status = 7;
+  ProposalStatus status = 8;
 
   // final_tally_result contains the sums of all weighted votes for this
-  // proposal for each vote option, after tallying. When querying a proposal
-  // via gRPC, this field is not populated until the proposal's voting period
-  // has ended.
-  TallyResult final_tally_result = 8 [(gogoproto.nullable) = false];
+  // proposal for each vote option. It is empty at submission, and only
+  // populated after tallying, at voting period end or at proposal execution,
+  // whichever happens first.
+  TallyResult final_tally_result = 9 [(gogoproto.nullable) = false];
 
   // voting_period_end is the timestamp before which voting must be done.
   // Unless a successfull MsgExec is called before (to execute a proposal whose
   // tally is successful before the voting period ends), tallying will be done
-  // at this point, and the `final_tally_result`, as well
-  // as `status` and `result` fields will be accordingly updated.
-  google.protobuf.Timestamp voting_period_end = 9 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  // at this point, and the `final_tally_result`and `status` fields will be
+  // accordingly updated.
+  google.protobuf.Timestamp voting_period_end = 10 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 
   // executor_result is the final result based on the votes and election rule. Initial value is NotRun.
-  ProposalExecutorResult executor_result = 10;
+  ProposalExecutorResult executor_result = 11;
 
   // messages is a list of `sdk.Msg`s that will be executed if the proposal passes.
-  repeated google.protobuf.Any messages = 11;
+  repeated google.protobuf.Any messages = 12;
 }
 
 // ProposalStatus defines proposal statuses.

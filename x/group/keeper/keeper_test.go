@@ -1604,6 +1604,7 @@ func (s *TestSuite) TestSubmitProposal() {
 				s.Assert().Equal(spec.req.Metadata, proposal.Metadata)
 				s.Assert().Equal(spec.req.Proposers, proposal.Proposers)
 				s.Assert().Equal(s.blockTime, proposal.SubmitTime)
+				s.Assert().Equal(uint64(1), proposal.GroupVersion)
 				s.Assert().Equal(uint64(1), proposal.GroupPolicyVersion)
 				s.Assert().Equal(spec.expProposal.Status, proposal.Status)
 				s.Assert().Equal(spec.expProposal.FinalTallyResult, proposal.FinalTallyResult)
@@ -1775,7 +1776,7 @@ func (s *TestSuite) TestVote() {
 	s.Assert().Equal(req.Metadata, proposals[0].Metadata)
 	s.Assert().Equal(req.Proposers, proposals[0].Proposers)
 	s.Assert().Equal(s.blockTime, proposals[0].SubmitTime)
-
+	s.Assert().Equal(uint64(1), proposals[0].GroupVersion)
 	s.Assert().Equal(uint64(1), proposals[0].GroupPolicyVersion)
 	s.Assert().Equal(group.PROPOSAL_STATUS_SUBMITTED, proposals[0].Status)
 	s.Assert().Equal(group.DefaultTallyResult(), proposals[0].FinalTallyResult)

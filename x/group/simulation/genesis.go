@@ -87,6 +87,7 @@ func getProposals(r *rand.Rand, simState *module.SimulationState, groupPolicies 
 			Id:                 uint64(i + 1),
 			Proposers:          proposers,
 			Address:            groupPolicyAddress,
+			GroupVersion:       uint64(i + 1),
 			GroupPolicyVersion: uint64(i + 1),
 			Status:             group.PROPOSAL_STATUS_SUBMITTED,
 			FinalTallyResult: group.TallyResult{

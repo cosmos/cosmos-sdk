@@ -498,6 +498,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		Metadata:           metadata,
 		Proposers:          proposers,
 		SubmitTime:         ctx.BlockTime(),
+		GroupVersion:       g.Version,
 		GroupPolicyVersion: policyAcc.Version,
 		Status:             group.PROPOSAL_STATUS_SUBMITTED,
 		ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,

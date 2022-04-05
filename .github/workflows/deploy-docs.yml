@@ -29,5 +29,5 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4.3.0
         with:
           branch: gh-pages
-          folder: docs/output
+          folder: ~/output
           single-commit: true

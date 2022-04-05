@@ -14,6 +14,7 @@ HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf:1.0.0-rc8
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
+DOCS_DOMAIN=docs.cosmos.network
 # RocksDB is a native dependency, so we don't assume the library is installed.
 # Instead, it must be explicitly enabled and we warn when it is not.
 ENABLE_ROCKSDB ?= false
@@ -198,10 +199,11 @@ build-docs:
 	while read -r branch path_prefix; do \
 		echo "building branch $${branch}" ; \
 		(git clean -fdx && git reset --hard && git checkout $${branch} && npm install && VUEPRESS_BASE="/$${path_prefix}/" npm run build) ; \
-		mkdir -p output/$${path_prefix} ; \
-		cp -r .vuepress/dist/* output/$${path_prefix}/ ; \
-		cp output/$${path_prefix}/index.html output ; \
+		mkdir -p ~/output/$${path_prefix} ; \
+		cp -r .vuepress/dist/* ~/output/$${path_prefix}/ ; \
+		cp ~/output/$${path_prefix}/index.html ~/output ; \
 	done < versions ;
+	@echo $(DOCS_DOMAIN) > ~/output/CNAME
 
 .PHONY: build-docs
 

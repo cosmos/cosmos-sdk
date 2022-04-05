@@ -316,7 +316,6 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			grpcClient, err := grpc.Dial(
 				grpcAddress,
 				grpc.WithInsecure(),
-				grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec())),
 			)
 			if err != nil {
 				return err

@@ -200,10 +200,10 @@ build-docs:
 		echo "building branch $${branch}" ; \
 		(git clean -fdx && git reset --hard && git checkout $${branch} && npm install && VUEPRESS_BASE="/$${path_prefix}/" npm run build) ; \
 		mkdir -p ~/output/$${path_prefix} ; \
-		echo $(DOCS_DOMAIN) > ~/output/CNAME ; \
 		cp -r .vuepress/dist/* ~/output/$${path_prefix}/ ; \
 		cp ~/output/$${path_prefix}/index.html ~/output ; \
 	done < versions ;
+	@echo $(DOCS_DOMAIN) > ~/output/CNAME
 
 .PHONY: build-docs
 

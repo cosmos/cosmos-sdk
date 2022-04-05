@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"google.golang.org/protobuf/proto"
 	"sync"
 )
 
@@ -162,10 +162,16 @@ func (kss *KafkaStreamingService) ListenBeginBlock(
 	kss.setBeginBlock(req)
 	event := int64(BEGIN_BLOCK)
 	eventId := int64(1)
-	eventTypeId := 1
+	eventTypeId := int64(1)
+	key := &MsgKey{
+		BlockHeight: kss.currentBlockNumber,
+		Event:       MsgKey_Event(event),
+		EventId:     eventId,
+		EventType:   MsgKey_EventType(REQUEST),
+		EventTypeId: eventTypeId,
+	}
 
 	// write req
-	key := fmt.Sprintf(MsgKeyFtm, kss.currentBlockNumber, event, eventId, REQUEST, eventTypeId)
 	if err := kss.writeAsJsonToKafka(ctx, string(BeginBlockReqTopic), key, &req); err != nil {
 		return err
 	}
@@ -176,7 +182,7 @@ func (kss *KafkaStreamingService) ListenBeginBlock(
 	}
 
 	// write res
-	key = fmt.Sprintf(MsgKeyFtm, kss.currentBlockNumber, event, 1, RESPONSE, 1)
+	key.EventType = MsgKey_EventType(RESPONSE)
 	if err := kss.writeAsJsonToKafka(ctx, BeginBlockResTopic, key, &res); err != nil {
 		return err
 	}
@@ -199,10 +205,16 @@ func (kss *KafkaStreamingService) ListenDeliverTx(
 ) error {
 	event := int64(DELIVER_TX)
 	eventId := kss.getDeliverTxId()
-	eventTypeId := 1
+	eventTypeId := int64(1)
+	key := &MsgKey{
+		BlockHeight: kss.currentBlockNumber,
+		Event:       MsgKey_Event(event),
+		EventId:     eventId,
+		EventType:   MsgKey_EventType(REQUEST),
+		EventTypeId: eventTypeId,
+	}
 
 	// write req
-	key := fmt.Sprintf(MsgKeyFtm, kss.currentBlockNumber, event, eventId, REQUEST, eventTypeId)
 	if err := kss.writeAsJsonToKafka(ctx, DeliverTxReqTopic, key, &req); err != nil {
 		return err
 	}
@@ -213,7 +225,7 @@ func (kss *KafkaStreamingService) ListenDeliverTx(
 	}
 
 	// write res
-	key = fmt.Sprintf(MsgKeyFtm, kss.currentBlockNumber, event, eventId, RESPONSE, 1)
+	key.EventType = MsgKey_EventType(RESPONSE)
 	if err := kss.writeAsJsonToKafka(ctx, DeliverTxResTopic, key, &res); err != nil {
 		return err
 	}
@@ -236,10 +248,16 @@ func (kss *KafkaStreamingService) ListenEndBlock(
 ) error {
 	event := int64(END_BLOCK)
 	eventId := int64(1)
-	eventTypeId := 1
+	eventTypeId := int64(1)
+	key := &MsgKey{
+		BlockHeight: kss.currentBlockNumber,
+		Event:       MsgKey_Event(event),
+		EventId:     eventId,
+		EventType: 	 MsgKey_EventType(REQUEST),
+		EventTypeId: eventTypeId,
+	}
 
 	// write req
-	key := fmt.Sprintf(MsgKeyFtm, kss.currentBlockNumber, event, eventId, REQUEST, eventTypeId)
 	if err := kss.writeAsJsonToKafka(ctx, EndBlockReqTopic, key, &req); err != nil {
 		return err
 	}
@@ -250,7 +268,7 @@ func (kss *KafkaStreamingService) ListenEndBlock(
 	}
 
 	// write res
-	key = fmt.Sprintf(MsgKeyFtm, kss.currentBlockNumber, event, eventId, RESPONSE, eventTypeId)
+	key.EventType = MsgKey_EventType(RESPONSE)
 	if err := kss.writeAsJsonToKafka(ctx, EndBlockResTopic, key, &res); err != nil {
 		return err
 	}
@@ -304,11 +322,16 @@ func (kss *KafkaStreamingService) Close() error {
 func (kss *KafkaStreamingService) writeStateChange(ctx sdk.Context, event int64, eventId int64) error {
 	// write all state changes cached for this stage to Kafka
 	kss.stateCacheLock.Lock()
-	kodec := kss.codec.(*codec.ProtoCodec)
 	kvPair := new(types.StoreKVPair)
 	for i, stateChange := range kss.stateCache {
-		key := fmt.Sprintf(MsgKeyFtm, kss.currentBlockNumber, event, eventId, STATE_CHANGE, i+1)
-		if err := kodec.UnmarshalLengthPrefixed(stateChange, kvPair); err != nil {
+		key := &MsgKey{
+			BlockHeight: kss.currentBlockNumber,
+			Event:       MsgKey_Event(event),
+			EventId:     eventId,
+			EventType:   MsgKey_EventType(STATE_CHANGE),
+			EventTypeId: int64(i + 1),
+		}
+		if err := kss.codec.UnmarshalLengthPrefixed(stateChange, kvPair); err != nil {
 			return err
 		}
 		if err := kss.writeAsJsonToKafka(ctx, StateChangeTopic, key, kvPair); err != nil {
@@ -326,14 +349,18 @@ func (kss *KafkaStreamingService) writeStateChange(ctx sdk.Context, event int64,
 func (kss *KafkaStreamingService) writeAsJsonToKafka(
 	ctx sdk.Context,
 	topic string,
-	key string,
-	data proto.Message,
+	msgKey *MsgKey,
+	msgValue codec.ProtoMarshaler,
 ) error {
-	kodec := kss.codec.(*codec.ProtoCodec)
-	json, err := kodec.MarshalJSON(data)
+	key, err := proto.Marshal(msgKey)
 	if err != nil {
 		return err
 	}
+	value, err := kss.codec.Marshal(msgValue)
+	if err != nil {
+		return err
+	}
+
 	if len(kss.topicPrefix) > 0 {
 		topic = fmt.Sprintf("%s-%s", kss.topicPrefix, topic)
 	}
@@ -344,8 +371,8 @@ func (kss *KafkaStreamingService) writeAsJsonToKafka(
 	// this means that the producer operates in a fire-and-forget mode
 	if err := kss.producer.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-		Value:          json,
-		Key:            []byte(key),
+		Key:            key,
+		Value:          value,
 	}, kss.deliveryChan); err != nil {
 		return err
 	}

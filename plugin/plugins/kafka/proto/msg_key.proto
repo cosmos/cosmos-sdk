@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+option go_package = "github.com/cosmos/cosmos-sdk/plugin/plugins/kafka/service";
+
+option java_multiple_files = true;
+option java_package = "network.cosmos.listening.plugins.kafka.service";
+
+message MsgKey {
+  int64  block_height  = 1 [json_name = "block_height"];
+  enum Event {
+    BEGIN_BLOCK = 0;
+    END_BLOCK   = 1;
+    DELIVER_TX  = 2;
+  }
+  Event event = 2;
+  int64  event_id      = 3 [json_name = "event_id"];
+  enum EventType {
+    REQUEST      = 0;
+    RESPONSE     = 1;
+    STATE_CHANGE = 2;
+  }
+  EventType event_type = 4 [json_name = "event_type"];
+  int64  event_type_id = 5 [json_name = "event_type_id"];
+}

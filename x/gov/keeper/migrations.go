@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	v043 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v043"
 	v046 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
 )
 

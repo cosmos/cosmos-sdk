@@ -41,20 +41,10 @@ func NewBaseVestingAccount(baseAccount *authtypes.BaseAccount, originalVesting s
 //
 // CONTRACT: Delegated vesting coins and vestingCoins must be sorted.
 func (bva BaseVestingAccount) LockedCoinsFromVesting(vestingCoins sdk.Coins) sdk.Coins {
-	lockedCoins := sdk.NewCoins()
-
-	for _, vestingCoin := range vestingCoins {
-		vestingAmt := vestingCoin.Amount
-		delVestingAmt := bva.DelegatedVesting.AmountOf(vestingCoin.Denom)
-
-		max := sdk.MaxInt(vestingAmt.Sub(delVestingAmt), sdk.ZeroInt())
-		lockedCoin := sdk.NewCoin(vestingCoin.Denom, max)
-
-		if !lockedCoin.IsZero() {
-			lockedCoins = lockedCoins.Add(lockedCoin)
-		}
+	lockedCoins := vestingCoins.Sub(vestingCoins.Min(bva.DelegatedVesting))
+	if lockedCoins == nil {
+		return sdk.Coins{}
 	}
-
 	return lockedCoins
 }
 

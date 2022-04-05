@@ -12,7 +12,7 @@ to resolve and then execute if the proposal passes. `Proposal`'s are identified 
 unique id and contains a series of timestamps: `submit_time`, `deposit_end_time`,
 `voting_start_time`, `voting_end_time` which track the lifecycle of a proposal
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/4a129832eb16f37a89e97652a669f0cdc9196ca9/proto/cosmos/gov/v1beta2/gov.proto#L42-L52>
++++ https://github.com/cosmos/cosmos-sdk/blob/4a129832eb16f37a89e97652a669f0cdc9196ca9/proto/cosmos/gov/v1beta2/gov.proto#L42-L52
 
 A proposal will generally require more than just a set of messages to explain its
 purpose but need some greater justification and allow a means for interested participants
@@ -20,7 +20,7 @@ to discuss and debate the proposal. In most cases, it is encouraged to have an o
 system that supports the on-chain governance process. To accommodate for this, a
 proposal contains a special `metadata` field, an array of bytes, which can be used to
 add context to the proposal. The `metadata` field allows custom use for networks, however,
-it is expected that the field contain a URL or some form of CID using a system such as
+it is expected that the field contains a URL or some form of CID using a system such as
 [IPFS](https://docs.ipfs.io/concepts/content-addressing/). To support the case of
 interoperability across networks, the SDK recommends that the `metadata` represents
 the following `JSON` template:
@@ -58,15 +58,15 @@ parameter set has to be created and the previous one rendered inactive.
 
 ### DepositParams
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/gov.proto#L127-L145>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/gov.proto#L127-L145
 
 ### VotingParams
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/gov.proto#L147-L156>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/gov.proto#L147-L156
 
 ### TallyParams
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/gov.proto#L158-L183>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/gov.proto#L158-L183
 
 Parameters are stored in a global `GlobalParams` KVStore.
 
@@ -93,7 +93,7 @@ type ProposalStatus byte
 
 
 const (
-	StatusNil           ProposalStatus = 0x00
+    StatusNil           ProposalStatus = 0x00
     StatusDepositPeriod ProposalStatus = 0x01  // Proposal is submitted. Participants can deposit on it but not vote
     StatusVotingPeriod  ProposalStatus = 0x02  // MinDeposit is reached, participants can vote
     StatusPassed        ProposalStatus = 0x03  // Proposal passed and successfully executed
@@ -104,7 +104,7 @@ const (
 
 ## Deposit
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/gov.proto#L43-L53>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/gov.proto#L43-L53
 
 ## ValidatorGovInfo
 
@@ -177,7 +177,7 @@ And the pseudocode for the `ProposalProcessingQueue`:
 
       tallyingParam = load(GlobalParams, 'TallyingParam')
 
-      // Update tally if validator voted they voted
+      // Update tally if validator voted
       for each validator in validators
         if tmpValMap(validator).HasVoted
           proposal.updateTally(tmpValMap(validator).Vote, (validator.TotalShares - tmpValMap(validator).Minus))

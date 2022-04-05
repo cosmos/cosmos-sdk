@@ -6,26 +6,30 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 // AddVote adds a vote on a specific proposal
-func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, options v1beta2.WeightedVoteOptions) error {
+func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, options v1.WeightedVoteOptions, metadata string) error {
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
 		return sdkerrors.Wrapf(types.ErrUnknownProposal, "%d", proposalID)
 	}
-	if proposal.Status != v1beta2.StatusVotingPeriod {
+	if proposal.Status != v1.StatusVotingPeriod {
 		return sdkerrors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
+	}
+	err := keeper.assertMetadataLength(metadata)
+	if err != nil {
+		return err
 	}
 
 	for _, option := range options {
-		if !v1beta2.ValidWeightedVoteOption(*option) {
+		if !v1.ValidWeightedVoteOption(*option) {
 			return sdkerrors.Wrap(types.ErrInvalidVote, option.String())
 		}
 	}
 
-	vote := v1beta2.NewVote(proposalID, voterAddr, options)
+	vote := v1.NewVote(proposalID, voterAddr, options, metadata)
 	keeper.SetVote(ctx, vote)
 
 	// called after a vote on a proposal is cast
@@ -43,8 +47,8 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 }
 
 // GetAllVotes returns all the votes from the store
-func (keeper Keeper) GetAllVotes(ctx sdk.Context) (votes v1beta2.Votes) {
-	keeper.IterateAllVotes(ctx, func(vote v1beta2.Vote) bool {
+func (keeper Keeper) GetAllVotes(ctx sdk.Context) (votes v1.Votes) {
+	keeper.IterateAllVotes(ctx, func(vote v1.Vote) bool {
 		votes = append(votes, &vote)
 		return false
 	})
@@ -52,8 +56,8 @@ func (keeper Keeper) GetAllVotes(ctx sdk.Context) (votes v1beta2.Votes) {
 }
 
 // GetVotes returns all the votes from a proposal
-func (keeper Keeper) GetVotes(ctx sdk.Context, proposalID uint64) (votes v1beta2.Votes) {
-	keeper.IterateVotes(ctx, proposalID, func(vote v1beta2.Vote) bool {
+func (keeper Keeper) GetVotes(ctx sdk.Context, proposalID uint64) (votes v1.Votes) {
+	keeper.IterateVotes(ctx, proposalID, func(vote v1.Vote) bool {
 		votes = append(votes, &vote)
 		return false
 	})
@@ -61,7 +65,7 @@ func (keeper Keeper) GetVotes(ctx sdk.Context, proposalID uint64) (votes v1beta2
 }
 
 // GetVote gets the vote from an address on a specific proposal
-func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote v1beta2.Vote, found bool) {
+func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote v1.Vote, found bool) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(types.VoteKey(proposalID, voterAddr))
 	if bz == nil {
@@ -74,7 +78,7 @@ func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 }
 
 // SetVote sets a Vote to the gov store
-func (keeper Keeper) SetVote(ctx sdk.Context, vote v1beta2.Vote) {
+func (keeper Keeper) SetVote(ctx sdk.Context, vote v1.Vote) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshal(&vote)
 	addr, err := sdk.AccAddressFromBech32(vote.Voter)
@@ -84,14 +88,14 @@ func (keeper Keeper) SetVote(ctx sdk.Context, vote v1beta2.Vote) {
 	store.Set(types.VoteKey(vote.ProposalId, addr), bz)
 }
 
-// IterateAllVotes iterates over the all the stored votes and performs a callback function
-func (keeper Keeper) IterateAllVotes(ctx sdk.Context, cb func(vote v1beta2.Vote) (stop bool)) {
+// IterateAllVotes iterates over all the stored votes and performs a callback function
+func (keeper Keeper) IterateAllVotes(ctx sdk.Context, cb func(vote v1.Vote) (stop bool)) {
 	store := ctx.KVStore(keeper.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.VotesKeyPrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		var vote v1beta2.Vote
+		var vote v1.Vote
 		keeper.cdc.MustUnmarshal(iterator.Value(), &vote)
 
 		if cb(vote) {
@@ -100,14 +104,14 @@ func (keeper Keeper) IterateAllVotes(ctx sdk.Context, cb func(vote v1beta2.Vote)
 	}
 }
 
-// IterateVotes iterates over the all the proposals votes and performs a callback function
-func (keeper Keeper) IterateVotes(ctx sdk.Context, proposalID uint64, cb func(vote v1beta2.Vote) (stop bool)) {
+// IterateVotes iterates over all the proposals votes and performs a callback function
+func (keeper Keeper) IterateVotes(ctx sdk.Context, proposalID uint64, cb func(vote v1.Vote) (stop bool)) {
 	store := ctx.KVStore(keeper.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.VotesKey(proposalID))
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		var vote v1beta2.Vote
+		var vote v1.Vote
 		keeper.cdc.MustUnmarshal(iterator.Value(), &vote)
 
 		if cb(vote) {

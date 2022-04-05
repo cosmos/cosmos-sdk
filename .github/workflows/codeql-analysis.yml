@@ -4,10 +4,6 @@ on:
   pull_request:
       paths:
         - "**.go"
-  push:
-    branches: [ master ]
-    paths:
-      - "**.go"
 
 jobs:
   analyze:
@@ -20,8 +16,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2.3.5
-
+      uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
+      with:
+        go-version: 1.17
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v1

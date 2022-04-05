@@ -1,5 +1,5 @@
 <!--
-order: 9
+order: 10
 -->
 
 # Events
@@ -16,7 +16,7 @@ order: 9
 Events are implemented in the Cosmos SDK as an alias of the ABCI `Event` type and
 take the form of: `{eventType}.{attributeKey}={attributeValue}`.
 
-+++ <https://github.com/tendermint/tendermint/blob/v0.34.8/proto/tendermint/abci/types.proto#L304-L313>
++++ https://github.com/tendermint/tendermint/blob/v0.34.8/proto/tendermint/abci/types.proto#L304-L313
 
 An Event contains:
 
@@ -57,13 +57,13 @@ In Cosmos SDK applications, Events are managed by an abstraction called the `Eve
 Internally, the `EventManager` tracks a list of Events for the entire execution flow of a
 transaction or `BeginBlock`/`EndBlock`.
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/types/events.go#L17-L25>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/types/events.go#L17-L25
 
 The `EventManager` comes with a set of useful methods to manage Events. The method
 that is used most by module and application developers is `EmitEvent` that tracks
 an Event in the `EventManager`.
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/types/events.go#L33-L37>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/types/events.go#L33-L37
 
 Module developers should handle Event emission via the `EventManager#EmitEvent` in each message
 `Handler` and in each `BeginBlock`/`EndBlock` handler. The `EventManager` is accessed via

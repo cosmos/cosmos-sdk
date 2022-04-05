@@ -1,11 +1,11 @@
 package authz
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -28,7 +28,7 @@ var (
 
 // NewMsgGrant creates a new MsgGrant
 //nolint:interfacer
-func NewMsgGrant(granter sdk.AccAddress, grantee sdk.AccAddress, a Authorization, expiration time.Time) (*MsgGrant, error) {
+func NewMsgGrant(granter sdk.AccAddress, grantee sdk.AccAddress, a Authorization, expiration *time.Time) (*MsgGrant, error) {
 	m := &MsgGrant{
 		Granter: granter.String(),
 		Grantee: grantee.String(),
@@ -80,7 +80,7 @@ func (msg MsgGrant) GetSignBytes() []byte {
 }
 
 // GetAuthorization returns the cache value from the MsgGrant.Authorization if present.
-func (msg *MsgGrant) GetAuthorization() Authorization {
+func (msg *MsgGrant) GetAuthorization() (Authorization, error) {
 	return msg.Grant.GetAuthorization()
 }
 

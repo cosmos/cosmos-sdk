@@ -50,7 +50,7 @@ func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
 			"fail invalid msg-type",
 			fmt.Sprintf(grantsURL, val.Address.String(), grantee.String(), "invalidMsg"),
 			true,
-			"rpc error: code = NotFound desc = no authorization found for invalidMsg type: key not found",
+			"authorization not found for invalidMsg type",
 		},
 		{
 			"valid query",
@@ -72,7 +72,8 @@ func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
 				require.NoError(err)
 				require.Len(g.Grants, 1)
 				g.Grants[0].UnpackInterfaces(val.ClientCtx.InterfaceRegistry)
-				auth := g.Grants[0].GetAuthorization()
+				auth, err := g.Grants[0].GetAuthorization()
+				require.NoError(err)
 				require.Equal(auth.MsgTypeURL(), banktypes.SendAuthorization{}.MsgTypeURL())
 			}
 		})

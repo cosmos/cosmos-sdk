@@ -1,5 +1,5 @@
 <!--
-order: 12
+order: 13
 -->
 
 # RunTx recovery middleware
@@ -10,12 +10,12 @@ Recovery middleware is used to add custom panic recovery for Cosmos SDK applicat
 
 More context could be found in the corresponding [ADR-022](../architecture/adr-022-custom-panic-handling.md).
 
-Implementation could be found in the [recovery.go](../../baseapp/recovery.go) file.
+Implementation could be found in the [recovery.go](https://github.com/cosmos/cosmos-sdk/tree/v0.46.0-alpha2/x/auth/middleware/recovery.go) file.
 
 ## Interface
 
 ```go
-type RecoveryHandler func(recoveryObj interface{}) error
+type RecoveryHandtree/v0.46.0-alpha2
 ```
 
 `recoveryObj` is a return value for `recover()` function from the `buildin` Golang package.

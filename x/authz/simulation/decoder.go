@@ -20,6 +20,11 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvA.Value, &grantA)
 			cdc.MustUnmarshal(kvB.Value, &grantB)
 			return fmt.Sprintf("%v\n%v", grantA, grantB)
+		case bytes.Equal(kvA.Key[:1], keeper.GrantQueuePrefix):
+			var grantA, grantB authz.GrantQueueItem
+			cdc.MustUnmarshal(kvA.Value, &grantA)
+			cdc.MustUnmarshal(kvB.Value, &grantB)
+			return fmt.Sprintf("%v\n%v", grantA, grantB)
 		default:
 			panic(fmt.Sprintf("invalid authz key %X", kvA.Key))
 		}

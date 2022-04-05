@@ -9,7 +9,7 @@ order: 3
 Proposals can be submitted by any account via a `MsgSubmitProposal`
 transaction.
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/ab9545527d630fe38761aa61cc5c95eabd68e0e6/proto/cosmos/gov/v1beta2/tx.proto#L34-L44>
++++ https://github.com/cosmos/cosmos-sdk/blob/ab9545527d630fe38761aa61cc5c95eabd68e0e6/proto/cosmos/gov/v1beta2/tx.proto#L34-L44
 
 All `sdk.Msgs` passed into the `messages` field of a `MsgSubmitProposal` message
 must be registered in the app's `MsgServiceRouter`. Each of these messages must
@@ -78,7 +78,7 @@ Once a proposal is submitted, if
 `Proposal.TotalDeposit < ActiveParam.MinDeposit`, Atom holders can send
 `MsgDeposit` transactions to increase the proposal's deposit.
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/tx.proto#L61-L72>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/tx.proto#L61-L72
 
 **State modifications:**
 
@@ -108,7 +108,7 @@ upon receiving txGovDeposit from sender do
     // There is no proposal for this proposalID
     throw
 
-  if (txGovDeposit.Deposit.Atoms <= 0) OR (sender.AtomBalance < txGovDeposit.Deposit.Atoms) OR (proposal.CurrentStatus != ProposalStatusOpen)
+  if (txGovDeposit.Deposit.Atoms <= 0) OR (sender.AtomBalance < txGovDeposit.Deposit.Atoms) OR (proposal.CurrentStatus != ProposalStatusOpen)
 
     // deposit is negative or null
     // OR sender has insufficient funds
@@ -144,7 +144,7 @@ Once `ActiveParam.MinDeposit` is reached, voting period starts. From there,
 bonded Atom holders are able to send `MsgVote` transactions to cast their
 vote on the proposal.
 
-+++ <https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/tx.proto#L46-L56>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/tx.proto#L46-L56
 
 **State modifications:**
 

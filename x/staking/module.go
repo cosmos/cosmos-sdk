@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	consensusVersion uint64 = 3
+	consensusVersion uint64 = 4
 )
 
 var (

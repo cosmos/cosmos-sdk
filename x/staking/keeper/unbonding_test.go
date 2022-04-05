@@ -165,7 +165,7 @@ func TestValidatorUnbondingOnHold1(t *testing.T) {
 
 	completionTime := validator.UnbondingTime
 
-	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - UNBONDING CANNOT COMPLETE
+	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
 	err := app.StakingKeeper.UnbondingOpCanComplete(ctx, ubdeID)
 	require.NoError(t, err)
 
@@ -175,9 +175,9 @@ func TestValidatorUnbondingOnHold1(t *testing.T) {
 	// Check that status is unbonding
 	require.Equal(t, types.BondStatus(2), validator.Status)
 
-	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - COMPLETE STOPPED UNBONDING
+	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
 	ctx = ctx.WithBlockTime(completionTime)
-	_ = app.StakingKeeper.CompleteUnbondingValidator(ctx, validator)
+	app.StakingKeeper.UnbondAllMatureValidators(ctx)
 
 	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
@@ -192,10 +192,12 @@ func TestValidatorUnbondingOnHold2(t *testing.T) {
 	validator := doValidatorUnbonding(t, app, ctx, addrDels, addrVals, &hookCalled)
 
 	completionTime := validator.UnbondingTime
+	completionHeight := validator.UnbondingHeight
 
-	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - UNBONDING CANNOT COMPLETE
-	ctx = ctx.WithBlockTime(completionTime)
-	_ = app.StakingKeeper.CompleteUnbondingValidator(ctx, validator)
+	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
+	ctx = ctx.WithBlockTime(completionTime.Add(time.Duration(1)))
+	ctx = ctx.WithBlockHeight(completionHeight + 1)
+	app.StakingKeeper.UnbondAllMatureValidators(ctx)
 
 	// Check that unbonding is not complete
 	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
@@ -203,7 +205,7 @@ func TestValidatorUnbondingOnHold2(t *testing.T) {
 	// Check that status is unbonding
 	require.Equal(t, types.BondStatus(2), validator.Status)
 
-	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - COMPLETE STOPPED UNBONDING
+	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
 	err := app.StakingKeeper.UnbondingOpCanComplete(ctx, ubdeID)
 	require.NoError(t, err)
 
@@ -219,7 +221,7 @@ func TestRedelegationOnHold1(t *testing.T) {
 	app, ctx, _, addrDels, addrVals := setup(t, &hookCalled, &ubdeID)
 	completionTime := doRedelegation(t, app, ctx, addrDels, addrVals, &hookCalled)
 
-	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - UNBONDING CANNOT COMPLETE
+	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
 	err := app.StakingKeeper.UnbondingOpCanComplete(ctx, ubdeID)
 	require.NoError(t, err)
 
@@ -227,7 +229,7 @@ func TestRedelegationOnHold1(t *testing.T) {
 	redelegations := app.StakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
 	require.Equal(t, 1, len(redelegations))
 
-	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - COMPLETE STOPPED UNBONDING
+	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
 	ctx = ctx.WithBlockTime(completionTime)
 	_, err = app.StakingKeeper.CompleteRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.NoError(t, err)
@@ -243,7 +245,7 @@ func TestRedelegationOnHold2(t *testing.T) {
 	app, ctx, _, addrDels, addrVals := setup(t, &hookCalled, &ubdeID)
 	completionTime := doRedelegation(t, app, ctx, addrDels, addrVals, &hookCalled)
 
-	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - UNBONDING CANNOT COMPLETE
+	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
 	ctx = ctx.WithBlockTime(completionTime)
 	_, err := app.StakingKeeper.CompleteRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.NoError(t, err)
@@ -252,7 +254,7 @@ func TestRedelegationOnHold2(t *testing.T) {
 	redelegations := app.StakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
 	require.Equal(t, 1, len(redelegations))
 
-	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - COMPLETE STOPPED UNBONDING
+	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
 	err = app.StakingKeeper.UnbondingOpCanComplete(ctx, ubdeID)
 	require.NoError(t, err)
 
@@ -267,7 +269,7 @@ func TestUnbondingDelegationOnHold1(t *testing.T) {
 	app, ctx, bondDenom, addrDels, addrVals := setup(t, &hookCalled, &ubdeID)
 	completionTime, bondedAmt1, notBondedAmt1 := doUnbondingDelegation(t, app, ctx, bondDenom, addrDels, addrVals, &hookCalled)
 
-	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - UNBONDING CANNOT COMPLETE
+	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
 	err := app.StakingKeeper.UnbondingOpCanComplete(ctx, ubdeID)
 	require.NoError(t, err)
 
@@ -279,7 +281,7 @@ func TestUnbondingDelegationOnHold1(t *testing.T) {
 	require.True(sdk.IntEq(t, bondedAmt1, bondedAmt3))
 	require.True(sdk.IntEq(t, notBondedAmt1, notBondedAmt3))
 
-	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - COMPLETE STOPPED UNBONDING
+	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
 	ctx = ctx.WithBlockTime(completionTime)
 	_, err = app.StakingKeeper.CompleteUnbonding(ctx, addrDels[0], addrVals[0])
 	require.NoError(t, err)
@@ -299,7 +301,7 @@ func TestUnbondingDelegationOnHold2(t *testing.T) {
 	app, ctx, bondDenom, addrDels, addrVals := setup(t, &hookCalled, &ubdeID)
 	completionTime, bondedAmt1, notBondedAmt1 := doUnbondingDelegation(t, app, ctx, bondDenom, addrDels, addrVals, &hookCalled)
 
-	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - UNBONDING CANNOT COMPLETE
+	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
 	ctx = ctx.WithBlockTime(completionTime)
 	_, err := app.StakingKeeper.CompleteUnbonding(ctx, addrDels[0], addrVals[0])
 	require.NoError(t, err)
@@ -312,7 +314,7 @@ func TestUnbondingDelegationOnHold2(t *testing.T) {
 	require.True(sdk.IntEq(t, bondedAmt1, bondedAmt3))
 	require.True(sdk.IntEq(t, notBondedAmt1, notBondedAmt3))
 
-	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - COMPLETE STOPPED UNBONDING
+	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
 	err = app.StakingKeeper.UnbondingOpCanComplete(ctx, ubdeID)
 	require.NoError(t, err)
 

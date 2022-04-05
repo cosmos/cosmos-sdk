@@ -235,7 +235,7 @@ func (k Keeper) UnbondingOpCanComplete(ctx sdk.Context, id uint64) error {
 	}
 
 	// If an entry was not found
-	return nil
+	return types.ErrUnbondingOpNotFound
 }
 
 func (k Keeper) unbondingDelegationEntryCanComplete(ctx sdk.Context, id uint64) (found bool, err error) {
@@ -331,6 +331,7 @@ func (k Keeper) validatorUnbondingCanComplete(ctx sdk.Context, id uint64) (found
 
 	if !val.IsMature(ctx.BlockTime(), ctx.BlockHeight()) {
 		val.UnbondingOnHold = false
+		k.SetValidator(ctx, val)
 	} else {
 		// If unbonding is mature complete it
 		val = k.UnbondingToUnbonded(ctx, val)

@@ -305,15 +305,8 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 			clientCtx = clientCtx.WithSignModeStr(flags.SignModeLegacyAminoJSON)
 		}
 	}
-
-	if !clientCtx.IsAux || flagSet.Changed(flags.FlagAux) {
-		isAux, _ := flagSet.GetBool(flags.FlagAux)
-		clientCtx = clientCtx.WithAux(isAux)
-		if isAux {
-			// If the user didn't explicitly set an --output flag, use JSON by default.
-			if clientCtx.OutputFormat == "" || !flagSet.Changed(flags.FlagOutput) {
-				clientCtx = clientCtx.WithOutputFormat(flags.OutputFormatJSON)
-			}
+	return clientCtx, nil
+}
 
 // GetClientQueryContext returns a Context from a command with fields set based on flags
 // defined in AddQueryFlagsToCmd. An error is returned if any flag query fails.

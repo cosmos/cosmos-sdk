@@ -63,22 +63,8 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 		signMode = signing.SignMode_SIGN_MODE_DIRECT
 	case flags.SignModeLegacyAminoJSON:
 		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
-	case flags.SignModeDirectAux:
-		signMode = signing.SignMode_SIGN_MODE_DIRECT_AUX
-	case flags.SignModeTextual:
-		signMode = signing.SignMode_SIGN_MODE_TEXTUAL
 	case flags.SignModeEIP191:
 		signMode = signing.SignMode_SIGN_MODE_EIP_191
-	}
-
-	var accNum, accSeq uint64
-	if clientCtx.Offline {
-		if flagSet.Changed(flags.FlagAccountNumber) && flagSet.Changed(flags.FlagSequence) {
-			accNum = clientCtx.Viper.GetUint64(flags.FlagAccountNumber)
-			accSeq = clientCtx.Viper.GetUint64(flags.FlagSequence)
-		} else {
-			return Factory{}, errors.New("account-number and sequence must be set in offline mode")
-		}
 	}
 
 	gasAdj := clientCtx.Viper.GetFloat64(flags.FlagGasAdjustment)

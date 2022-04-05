@@ -43,7 +43,7 @@ enum SignMode {
 
   // SIGN_MODE_EIP_191 specifies the sign mode for EIP 191 signing on the Cosmos
   // SDK. Ref: https://eips.ethereum.org/EIPS/eip-191
-  //
+  // 
   // Currently, SIGN_MODE_EIP_191 is registered as a SignMode enum variant,
   // but is not implemented on the SDK by default. To enable EIP-191, you need
   // to pass a custom `TxConfig` that has an implementation of
@@ -51,12 +51,7 @@ enum SignMode {
   // EIP-191 in the future.
   //
   // Since: cosmos-sdk 0.45.2
-  // Deprecated: post 0.47.x Sign mode refers to a method of encoding string data for
-  // signing, but in the SDK, it also refers to how to encode a transaction into a string.
-  // This opens the possibility for additional EIP191 sign modes, like SIGN_MODE_EIP_191_TEXTUAL,
-  // SIGN_MODE_EIP_191_LEGACY_JSON, and more.
-  // Each new EIP191 sign mode should be accompanied by an associated ADR.
-  SIGN_MODE_EIP_191 = 191 [deprecated = true];
+  SIGN_MODE_EIP_191 = 191;
 }
 
 // SignatureDescriptors wraps multiple SignatureDescriptor's.

@@ -2,7 +2,6 @@ package types
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"time"
 
@@ -430,6 +429,7 @@ func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 	return marshalYaml(out)
 }
 
+// periodicGrantAction is an exported.AddGrantAction for PeriodicVestingAccount.
 type periodicGrantAction struct {
 	sk                  StakingKeeper
 	grantStartTime      int64
@@ -437,6 +437,7 @@ type periodicGrantAction struct {
 	grantCoins          sdk.Coins
 }
 
+// NewPeriodicGrantAction returns an AddGrantAction for a PeriodicVestingAccount
 func NewPeriodicGrantAction(
 	sk StakingKeeper,
 	grantStartTime int64,
@@ -450,20 +451,25 @@ func NewPeriodicGrantAction(
 	}
 }
 
+// AddToAccount implements the exported.AddGrantAction interface.
+// It checks that rawAccount is a PeriodicVestingAccount, then adds the described grant to it.
 func (pga periodicGrantAction) AddToAccount(ctx sdk.Context, rawAccount exported.VestingAccount) error {
 	pva, ok := rawAccount.(*PeriodicVestingAccount)
 	if !ok {
-		return fmt.Errorf("expected *ClawbackVestingAccount, got %T", rawAccount)
+		return sdkerrors.Wrapf(sdkerrors.ErrNotSupported,
+			"account %s must be a PeriodicVestingAccount, got %T",
+			rawAccount.GetAddress(), rawAccount)
 	}
 	pva.addGrant(ctx, pga.sk, pga.grantStartTime, pga.grantVestingPeriods, pga.grantCoins)
 	return nil
 }
 
+// AddGrant implements the exported.GrantAccount interface.
 func (pva *PeriodicVestingAccount) AddGrant(ctx sdk.Context, action exported.AddGrantAction) error {
 	return action.AddToAccount(ctx, pva)
 }
 
-// AddGrant merges a new periodic vesting grant into an existing PeriodicVestingAccount.
+// addGrant merges a new periodic vesting grant into an existing PeriodicVestingAccount.
 func (pva *PeriodicVestingAccount) addGrant(ctx sdk.Context, sk StakingKeeper, grantStartTime int64, grantVestingPeriods []Period, grantCoins sdk.Coins) {
 	// how much is really delegated?
 	bondedAmt := sk.GetDelegatorBonded(ctx, pva.GetAddress())
@@ -786,6 +792,7 @@ func (va ClawbackVestingAccount) MarshalYAML() (interface{}, error) {
 	return marshalYaml(out)
 }
 
+// clawbackGrantAction is an exported.AddGrantAction for ClawbackVestingAccount.
 type clawbackGrantAction struct {
 	funderAddress       string
 	sk                  StakingKeeper
@@ -795,6 +802,7 @@ type clawbackGrantAction struct {
 	grantCoins          sdk.Coins
 }
 
+// NewClawbackGrantAction returns an AddGrantAction for a ClawbackVestingAccount.
 func NewClawbackGrantAction(
 	funderAddress string,
 	sk StakingKeeper,
@@ -811,10 +819,15 @@ func NewClawbackGrantAction(
 	}
 }
 
+// AddToAccount implements the exported.AddGrantAction interface.
+// It checks that rawAccount is a ClawbackVestingAccount with the same funder
+// and adds the described Grant to it.
 func (cga clawbackGrantAction) AddToAccount(ctx sdk.Context, rawAccount exported.VestingAccount) error {
 	cva, ok := rawAccount.(*ClawbackVestingAccount)
 	if !ok {
-		return fmt.Errorf("expected *ClawbackVestingAccount, got %T", rawAccount)
+		return sdkerrors.Wrapf(sdkerrors.ErrNotSupported,
+			"account %s must be a ClawbackVestingAccount, got %T",
+			rawAccount.GetAddress(), rawAccount)
 	}
 	if cga.funderAddress != cva.FunderAddress {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s can only accept grants from account %s",
@@ -828,7 +841,7 @@ func (va *ClawbackVestingAccount) AddGrant(ctx sdk.Context, action exported.AddG
 	return action.AddToAccount(ctx, va)
 }
 
-// AddGrant merges a new clawback vesting grant into an existing ClawbackVestingAccount.
+// addGrant merges a new clawback vesting grant into an existing ClawbackVestingAccount.
 func (va *ClawbackVestingAccount) addGrant(ctx sdk.Context, sk StakingKeeper, grantStartTime int64, grantLockupPeriods, grantVestingPeriods []Period, grantCoins sdk.Coins) {
 	// how much is really delegated?
 	bondedAmt := sk.GetDelegatorBonded(ctx, va.GetAddress())
@@ -864,6 +877,7 @@ func (va *ClawbackVestingAccount) addGrant(ctx sdk.Context, sk StakingKeeper, gr
 	va.DelegatedFree = newDelegated.Sub(va.DelegatedVesting)
 }
 
+// GetFunder implements the exported.ClawbackVestingAccountI interface.
 func (va ClawbackVestingAccount) GetFunder() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(va.FunderAddress)
 	if err != nil {
@@ -872,13 +886,15 @@ func (va ClawbackVestingAccount) GetFunder() sdk.AccAddress {
 	return addr
 }
 
-// GetUnlockedOnly returns the unlocking schedule at blockTIme.
+// GetUnlockedOnly implements the exported.ClawbackVestingAccountI interface.
+// It returns the unlocking schedule at blockTIme.
 // Like GetVestedCoins, but only for the lockup component.
 func (va ClawbackVestingAccount) GetUnlockedOnly(blockTime time.Time) sdk.Coins {
 	return ReadSchedule(va.StartTime, va.EndTime, va.LockupPeriods, va.OriginalVesting, blockTime.Unix())
 }
 
-// GetVestedOnly returns the vesting schedule and blockTime.
+// GetVestedOnly implementes the exported.ClawbackVestingAccountI interface.
+// It returns the vesting schedule and blockTime.
 // Like GetVestedCoins, but only for the vesting (in the clawback sense) component.
 func (va ClawbackVestingAccount) GetVestedOnly(blockTime time.Time) sdk.Coins {
 	return ReadSchedule(va.StartTime, va.EndTime, va.VestingPeriods, va.OriginalVesting, blockTime.Unix())
@@ -952,6 +968,7 @@ func (va *ClawbackVestingAccount) updateDelegation(encumbered, toClawBack, bonde
 	return toClawBack
 }
 
+// clawbackAction implements exported.ClawbackAction for ClawbackVestingAccount.
 type clawbackAction struct {
 	requestor sdk.AccAddress
 	dest      sdk.AccAddress
@@ -960,6 +977,7 @@ type clawbackAction struct {
 	sk        StakingKeeper
 }
 
+// NewClawbackAction returns an exported.ClawbackAction for ClawbackVestingAccount.
 func NewClawbackAction(requestor, dest sdk.AccAddress, ak AccountKeeper, bk BankKeeper, sk StakingKeeper) exported.ClawbackAction {
 	return clawbackAction{
 		requestor: requestor,
@@ -970,10 +988,13 @@ func NewClawbackAction(requestor, dest sdk.AccAddress, ak AccountKeeper, bk Bank
 	}
 }
 
+// TakeFromAccount implements the exported.ClawbackAction interface.
+// It returns an error if the account is not at ClawbackVestingAccount
+// or if the funder does not match.
 func (ca clawbackAction) TakeFromAccount(ctx sdk.Context, rawAccount exported.VestingAccount) error {
 	cva, ok := rawAccount.(*ClawbackVestingAccount)
 	if !ok {
-		return fmt.Errorf("clawback expects *ClawbackVestingAccount, got %T", rawAccount)
+		return sdkerrors.Wrapf(sdkerrors.ErrNotSupported, "clawback expects *ClawbackVestingAccount, got %T", rawAccount)
 	}
 	if ca.requestor.String() != cva.FunderAddress {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "clawback can only be requested by original funder %s", cva.FunderAddress)
@@ -981,6 +1002,7 @@ func (ca clawbackAction) TakeFromAccount(ctx sdk.Context, rawAccount exported.Ve
 	return cva.clawback(ctx, ca.dest, ca.ak, ca.bk, ca.sk)
 }
 
+// Clawback implements exported.ClawbackVestingAccountI.
 func (va *ClawbackVestingAccount) Clawback(ctx sdk.Context, action exported.ClawbackAction) error {
 	return action.TakeFromAccount(ctx, va)
 }
@@ -1127,12 +1149,14 @@ func intMin(a, b sdk.Int) sdk.Int {
 	return a
 }
 
+// clawbackRewardAction implements exported.RewardAction for ClawbackVestingAccount.
 type clawbackRewardAction struct {
 	ak AccountKeeper
 	bk BankKeeper
 	sk StakingKeeper
 }
 
+// NewClawbackRewardAction returns an exported.RewardAction for a ClawbackVestingAccount.
 func NewClawbackRewardAction(ak AccountKeeper, bk BankKeeper, sk StakingKeeper) exported.RewardAction {
 	return clawbackRewardAction{
 		ak: ak,
@@ -1141,20 +1165,22 @@ func NewClawbackRewardAction(ak AccountKeeper, bk BankKeeper, sk StakingKeeper) 
 	}
 }
 
+// ProcessReward implements the exported.RewardAction interface.
 func (cra clawbackRewardAction) ProcessReward(ctx sdk.Context, reward sdk.Coins, rawAccount exported.VestingAccount) error {
 	cva, ok := rawAccount.(*ClawbackVestingAccount)
 	if !ok {
-		return fmt.Errorf("expected *ClawbackVestingAccount, got %T", rawAccount)
+		return sdkerrors.Wrapf(sdkerrors.ErrNotSupported, "expected *ClawbackVestingAccount, got %T", rawAccount)
 	}
 	cva.postReward(ctx, reward, cra.ak, cra.bk, cra.sk)
 	return nil
 }
 
+// PostReward implements the exported.ClawbackVestingAccountI interface.
 func (va *ClawbackVestingAccount) PostReward(ctx sdk.Context, reward sdk.Coins, action exported.RewardAction) error {
 	return action.ProcessReward(ctx, reward, va)
 }
 
-// PostReward encumbers a previously-deposited reward according to the current vesting apportionment of staking.
+// postReward encumbers a previously-deposited reward according to the current vesting apportionment of staking.
 // Note that rewards might be unvested, but are unlocked.
 func (va ClawbackVestingAccount) postReward(ctx sdk.Context, reward sdk.Coins, ak AccountKeeper, bk BankKeeper, sk StakingKeeper) {
 	// Find the scheduled amount of vested and unvested staking tokens

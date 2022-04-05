@@ -431,7 +431,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						Id:                 1,
 						Address:            accAddr.String(),
 						Metadata:           "proposal metadata",
-						GroupVersion:       1,
+						GroupVersion:       0,
 						GroupPolicyVersion: 1,
 					},
 				},

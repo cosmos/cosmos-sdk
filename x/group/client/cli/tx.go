@@ -468,7 +468,7 @@ func MsgUpdateGroupPolicyAdminCmd() *cobra.Command {
 // MsgUpdateGroupPolicyDecisionPolicyCmd creates a CLI command for Msg/UpdateGroupPolicyDecisionPolicy.
 func MsgUpdateGroupPolicyDecisionPolicyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-group-decision-policy [admin] [group-policy-account] [decision-policy]",
+		Use:   "update-group-policy-decision-policy [admin] [group-policy-account] [decision-policy]",
 		Short: "Update a group policy's decision policy",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {

@@ -137,6 +137,82 @@ func doRedelegation(
 	return completionTime
 }
 
+func doValidatorUnbonding(
+	t *testing.T, app *simapp.SimApp, ctx sdk.Context, addrDels []sdk.AccAddress, addrVals []sdk.ValAddress, hookCalled *bool,
+) (validator types.Validator) {
+	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	require.True(t, found)
+	// Check that status is bonded
+	require.Equal(t, types.BondStatus(3), validator.Status)
+
+	validator, err := app.StakingKeeper.BeginUnbondingValidator(ctx, validator)
+	require.NoError(t, err)
+
+	// Check that status is unbonding
+	require.Equal(t, types.BondStatus(2), validator.Status)
+
+	// check that our hook was called
+	require.True(t, *hookCalled)
+
+	return validator
+}
+
+func TestValidatorUnbondingOnHold1(t *testing.T) {
+	var hookCalled bool
+	var ubdeID uint64
+	app, ctx, _, addrDels, addrVals := setup(t, &hookCalled, &ubdeID)
+	validator := doValidatorUnbonding(t, app, ctx, addrDels, addrVals, &hookCalled)
+
+	completionTime := validator.UnbondingTime
+
+	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - UNBONDING CANNOT COMPLETE
+	err := app.StakingKeeper.UnbondingOpCanComplete(ctx, ubdeID)
+	require.NoError(t, err)
+
+	// Check that unbonding is not complete
+	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	require.True(t, found)
+	// Check that status is unbonding
+	require.Equal(t, types.BondStatus(2), validator.Status)
+
+	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - COMPLETE STOPPED UNBONDING
+	ctx = ctx.WithBlockTime(completionTime)
+	_ = app.StakingKeeper.CompleteUnbondingValidator(ctx, validator)
+
+	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	require.True(t, found)
+	// Check that status is unbonded
+	require.Equal(t, types.BondStatus(1), validator.Status)
+}
+
+func TestValidatorUnbondingOnHold2(t *testing.T) {
+	var hookCalled bool
+	var ubdeID uint64
+	app, ctx, _, addrDels, addrVals := setup(t, &hookCalled, &ubdeID)
+	validator := doValidatorUnbonding(t, app, ctx, addrDels, addrVals, &hookCalled)
+
+	completionTime := validator.UnbondingTime
+
+	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - UNBONDING CANNOT COMPLETE
+	ctx = ctx.WithBlockTime(completionTime)
+	_ = app.StakingKeeper.CompleteUnbondingValidator(ctx, validator)
+
+	// Check that unbonding is not complete
+	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	require.True(t, found)
+	// Check that status is unbonding
+	require.Equal(t, types.BondStatus(2), validator.Status)
+
+	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - COMPLETE STOPPED UNBONDING
+	err := app.StakingKeeper.UnbondingOpCanComplete(ctx, ubdeID)
+	require.NoError(t, err)
+
+	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	require.True(t, found)
+	// Check that status is unbonded
+	require.Equal(t, types.BondStatus(1), validator.Status)
+}
+
 func TestRedelegationOnHold1(t *testing.T) {
 	var hookCalled bool
 	var ubdeID uint64

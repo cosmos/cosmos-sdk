@@ -251,7 +251,7 @@ func (k Keeper) bondedToUnbonding(ctx sdk.Context, validator types.Validator) (t
 		panic(fmt.Sprintf("bad state transition bondedToUnbonding, validator: %v\n", validator))
 	}
 
-	return k.beginUnbondingValidator(ctx, validator)
+	return k.BeginUnbondingValidator(ctx, validator)
 }
 
 func (k Keeper) unbondingToBonded(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
@@ -276,7 +276,7 @@ func (k Keeper) UnbondingToUnbonded(ctx sdk.Context, validator types.Validator) 
 		panic(fmt.Sprintf("bad state transition unbondingToBonded, validator: %v\n", validator))
 	}
 
-	return k.completeUnbondingValidator(ctx, validator)
+	return k.CompleteUnbondingValidator(ctx, validator)
 }
 
 // send a validator to jail
@@ -326,7 +326,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) (types
 }
 
 // perform all the store operations for when a validator begins unbonding
-func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
+func (k Keeper) BeginUnbondingValidator(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
 	params := k.GetParams(ctx)
 
 	// delete the validator by power index, as the key will change
@@ -357,9 +357,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	}
 	k.AfterValidatorBeginUnbonding(ctx, consAddr, validator.GetOperator())
 
-	// TODO JNT: make id
 	id := k.IncrementUnbondingOpId(ctx)
-	// create mapping id -> validator address
 	k.SetValidatorByUnbondingOpIndex(ctx, validator, id)
 
 	k.AfterUnbondingOpInitiated(ctx, id)
@@ -368,7 +366,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 }
 
 // perform all the store operations for when a validator status becomes unbonded
-func (k Keeper) completeUnbondingValidator(ctx sdk.Context, validator types.Validator) types.Validator {
+func (k Keeper) CompleteUnbondingValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 	validator = validator.UpdateStatus(types.Unbonded)
 	k.SetValidator(ctx, validator)
 

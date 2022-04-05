@@ -57,6 +57,7 @@ message MsgWithdrawDelegatorReward {
 
 // MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward response type.
 message MsgWithdrawDelegatorRewardResponse {
+  // Since: cosmos-sdk 0.46
   repeated cosmos.base.v1beta1.Coin amount = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
@@ -74,6 +75,7 @@ message MsgWithdrawValidatorCommission {
 
 // MsgWithdrawValidatorCommissionResponse defines the Msg/WithdrawValidatorCommission response type.
 message MsgWithdrawValidatorCommissionResponse {
+  // Since: cosmos-sdk 0.46
   repeated cosmos.base.v1beta1.Coin amount = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }

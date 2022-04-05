@@ -54,7 +54,7 @@ message ThresholdDecisionPolicy {
 // PercentageDecisionPolicy is a decision policy where a proposal passes when
 // it satisfies the two following conditions:
 // 1. The percentage of all `YES` voters' weights out of the total group weight
-//    is greater or equal than the given `threshold`.
+//    is greater or equal than the given `percentage`.
 // 2. The voting and execution periods of the proposal respect the parameters
 //    given by `windows`.
 message PercentageDecisionPolicy {

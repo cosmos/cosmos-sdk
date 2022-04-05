@@ -92,10 +92,10 @@ Delegation may be called.
 * remove the validator if it is unbonded and there are no more delegation shares.
 
 ### Cancel an `UnbondingDelegation` Entry 
-When a `cancel unbond delegation` occures both the `validator` and the `delegation` and an `UnbondingDelegationQueue` state will be affected
-* if cancel unbonding delegation amount equals to an `UnbondingDelegation` Entry `balance` then an `UnbondingDelegation` Entry deleted from `UnbondingDelegationQueue`.
-* if cancel unbonding delegation amount is less then an `UnbondingDelegation` Entry balance then an `UnbondingDelegation` Entry updated with new balance to the `UnbondingDelegationQueue`. 
-* cancel `amount` is [Delegated](02_state_transitions.md#delegations) back to previous `validator` 
+When a `cancel unbond delegation` occurs both the `validator`, the `delegation` and an `UnbondingDelegationQueue` state will be updated
+* if cancel unbonding delegation amount equals to the `UnbondingDelegation` Entry `balance`, then the `UnbondingDelegation` Entry deleted from `UnbondingDelegationQueue`.
+* if the `cancel unbonding delegation amount is less than the `UnbondingDelegation` Entry balance, then the `UnbondingDelegation` entry will be updated with new balance in the `UnbondingDelegationQueue`. 
+* cancel `amount` is [Delegated](02_state_transitions.md#delegations) back to  the original `validator` 
 
 ### Complete Unbonding
 

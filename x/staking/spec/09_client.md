@@ -713,7 +713,7 @@ Example:
 simd tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from mykey
 ```
 #### cancel unbond 
-The command `cancel-unbond` allow users to cancel unbonding delegation entry and re-delegate back to previous validator.
+The command `cancel-unbond` allow users to cancel the unbonding delegation entry and delegate back to the original validator.
 
 Usage:
 ```bash

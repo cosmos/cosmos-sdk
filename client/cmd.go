@@ -250,28 +250,6 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 			clientCtx = clientCtx.WithSignModeStr(flags.SignModeLegacyAminoJSON)
 		}
 	}
-
-<<<<<<< HEAD
-=======
-	if !clientCtx.IsAux || flagSet.Changed(flags.FlagAux) {
-		isAux, _ := flagSet.GetBool(flags.FlagAux)
-		clientCtx = clientCtx.WithAux(isAux)
-		if isAux {
-			// If the user didn't explicity set an --output flag, use JSON by
-			// default.
-			if clientCtx.OutputFormat == "" || !flagSet.Changed(cli.OutputFlag) {
-				clientCtx = clientCtx.WithOutputFormat("json")
-			}
-
-			// If the user didn't explicitly set a --sign-mode flag, use
-			// DIRECT_AUX by default.
-			if clientCtx.SignModeStr == "" || !flagSet.Changed(flags.FlagSignMode) {
-				clientCtx = clientCtx.WithSignModeStr(flags.SignModeDirectAux)
-			}
-		}
-	}
-
->>>>>>> dc66ddd28 (feat: EIP191 sign mode (#11533))
 	return clientCtx, nil
 }
 

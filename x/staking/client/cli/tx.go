@@ -284,10 +284,10 @@ func NewCancelUnbondingDelegation() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "cancel-unbond [validator-addr] [amount] [creation-height]",
-		Short: "Cancel unbonding delegation and delegate back to validator",
+		Short: "Cancel unbonding delegation and delegate back to the validator",
 		Args:  cobra.ExactArgs(3),
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Cancel Unbonding Delegation and delegate back to validator.
+			fmt.Sprintf(`Cancel Unbonding Delegation and delegate back to the validator.
 
 Example:
 $ %s tx staking cancel-unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake 2 --from mykey

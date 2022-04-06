@@ -9,6 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	v040auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/legacy"
 )
 
 const (
@@ -23,8 +24,6 @@ const (
 
 	// QuerierRoute is the querier route for gov
 	QuerierRoute = ModuleName
-	// v040 addrlen
-	Addrlen = 20
 )
 
 // Keys for governance store
@@ -155,7 +154,7 @@ func splitKeyWithTime(key []byte) (proposalID uint64, endTime time.Time) {
 }
 
 func splitKeyWithAddress(key []byte) (proposalID uint64, addr sdk.AccAddress) {
-	kv.AssertKeyLength(key[1:], 8+Addrlen)
+	kv.AssertKeyLength(key[1:], 8+v040auth.AddrLen)
 
 	kv.AssertKeyAtLeastLength(key, 10)
 	proposalID = GetProposalIDFromBytes(key[1:9])

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"math"
 	"reflect"
 
 	gogotypes "github.com/gogo/protobuf/types"
@@ -14,7 +15,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
-	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
+	groupmath "github.com/cosmos/cosmos-sdk/x/group/internal/math"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
@@ -38,7 +39,7 @@ func (k Keeper) CreateGroup(goCtx context.Context, req *group.MsgCreateGroup) (*
 		return nil, err
 	}
 
-	totalWeight := math.NewDecFromInt64(0)
+	totalWeight := groupmath.NewDecFromInt64(0)
 	for i := range members.Members {
 		m := members.Members[i]
 		if err := k.assertMetadataLength(m.Metadata, "member metadata"); err != nil {
@@ -46,7 +47,7 @@ func (k Keeper) CreateGroup(goCtx context.Context, req *group.MsgCreateGroup) (*
 		}
 
 		// Members of a group must have a positive weight.
-		weight, err := math.NewPositiveDecFromString(m.Weight)
+		weight, err := groupmath.NewPositiveDecFromString(m.Weight)
 		if err != nil {
 			return nil, err
 		}
@@ -100,7 +101,7 @@ func (k Keeper) CreateGroup(goCtx context.Context, req *group.MsgCreateGroup) (*
 func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGroupMembers) (*group.MsgUpdateGroupMembersResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	action := func(g *group.GroupInfo) error {
-		totalWeight, err := math.NewNonNegativeDecFromString(g.TotalWeight)
+		totalWeight, err := groupmath.NewNonNegativeDecFromString(g.TotalWeight)
 		if err != nil {
 			return err
 		}
@@ -128,7 +129,7 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 				return sdkerrors.Wrap(err, "get group member")
 			}
 
-			newMemberWeight, err := math.NewNonNegativeDecFromString(groupMember.Member.Weight)
+			newMemberWeight, err := groupmath.NewNonNegativeDecFromString(groupMember.Member.Weight)
 			if err != nil {
 				return err
 			}
@@ -140,13 +141,13 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 					return sdkerrors.Wrap(sdkerrors.ErrNotFound, "unknown member")
 				}
 
-				previousMemberWeight, err := math.NewNonNegativeDecFromString(prevGroupMember.Member.Weight)
+				previousMemberWeight, err := groupmath.NewNonNegativeDecFromString(prevGroupMember.Member.Weight)
 				if err != nil {
 					return err
 				}
 
 				// Subtract the weight of the group member to delete from the group total weight.
-				totalWeight, err = math.SubNonNegative(totalWeight, previousMemberWeight)
+				totalWeight, err = groupmath.SubNonNegative(totalWeight, previousMemberWeight)
 				if err != nil {
 					return err
 				}
@@ -159,12 +160,12 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 			}
 			// If group member already exists, handle update
 			if found {
-				previousMemberWeight, err := math.NewNonNegativeDecFromString(prevGroupMember.Member.Weight)
+				previousMemberWeight, err := groupmath.NewNonNegativeDecFromString(prevGroupMember.Member.Weight)
 				if err != nil {
 					return err
 				}
 				// Subtract previous weight from the group total weight.
-				totalWeight, err = math.SubNonNegative(totalWeight, previousMemberWeight)
+				totalWeight, err = groupmath.SubNonNegative(totalWeight, previousMemberWeight)
 				if err != nil {
 					return err
 				}
@@ -493,18 +494,17 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 	}
 
 	m := &group.Proposal{
-		Id:                 k.proposalTable.Sequence().PeekNextVal(ctx.KVStore(k.key)),
-		Address:            req.Address,
-		Metadata:           metadata,
-		Proposers:          proposers,
-		SubmitTime:         ctx.BlockTime(),
-		GroupVersion:       g.Version,
-		GroupPolicyVersion: policyAcc.Version,
-		Result:             group.PROPOSAL_RESULT_UNFINALIZED,
-		Status:             group.PROPOSAL_STATUS_SUBMITTED,
-		ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
-		VotingPeriodEnd:    ctx.BlockTime().Add(policy.GetVotingPeriod()), // The voting window begins as soon as the proposal is submitted.
-		FinalTallyResult:   group.DefaultTallyResult(),
+		Id:               k.proposalTable.Sequence().PeekNextVal(ctx.KVStore(k.key)),
+		Address:          req.Address,
+		Metadata:         metadata,
+		Proposers:        proposers,
+		SubmitTime:       ctx.BlockTime(),
+		GroupVersion:     g.Version,
+		Result:           group.PROPOSAL_RESULT_UNFINALIZED,
+		Status:           group.PROPOSAL_STATUS_SUBMITTED,
+		ExecutorResult:   group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+		VotingPeriodEnd:  ctx.BlockTime().Add(policy.GetVotingPeriod()), // The voting window begins as soon as the proposal is submitted.
+		FinalTallyResult: group.DefaultTallyResult(),
 	}
 
 	if err := m.SetMsgs(msgs); err != nil {
@@ -822,7 +822,7 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 		return nil, sdkerrors.Wrap(err, "group")
 	}
 
-	groupWeight, err := math.NewNonNegativeDecFromString(groupInfo.TotalWeight)
+	groupWeight, err := groupmath.NewNonNegativeDecFromString(groupInfo.TotalWeight)
 	if err != nil {
 		return nil, err
 	}
@@ -835,12 +835,12 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 		return nil, err
 	}
 
-	memberWeight, err := math.NewNonNegativeDecFromString(gm.Member.Weight)
+	memberWeight, err := groupmath.NewNonNegativeDecFromString(gm.Member.Weight)
 	if err != nil {
 		return nil, err
 	}
 
-	updatedWeight, err := math.SubNonNegative(groupWeight, memberWeight)
+	updatedWeight, err := groupmath.SubNonNegative(groupWeight, memberWeight)
 	if err != nil {
 		return nil, err
 	}
@@ -918,6 +918,23 @@ func (k Keeper) doUpdateGroupPolicy(ctx sdk.Context, groupPolicy string, admin s
 		return err
 	}
 
+	proposalIt, err := k.proposalTable.PrefixScan(ctx.KVStore(k.key), 1, math.MaxUint64)
+	if err != nil {
+		return err
+	}
+	defer proposalIt.Close()
+
+	for {
+		var proposalInfo group.Proposal
+		_, err = proposalIt.LoadNext(&proposalInfo)
+		if errors.ErrORMIteratorDone.Is(err) {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		proposalInfo.Status = group.PROPOSAL_STATUS_ABORTED
+	}
 	return nil
 }
 

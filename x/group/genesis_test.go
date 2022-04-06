@@ -54,11 +54,10 @@ func TestGenesisStateValidate(t *testing.T) {
 	require.NoError(t, err)
 
 	proposal := &Proposal{
-		Id:                 1,
-		Address:            accAddr.String(),
-		Metadata:           "proposal metadata",
-		GroupVersion:       1,
-		GroupPolicyVersion: 1,
+		Id:           1,
+		Address:      accAddr.String(),
+		Metadata:     "proposal metadata",
+		GroupVersion: 1,
 		Proposers: []string{
 			memberAddr.String(),
 		},
@@ -375,11 +374,10 @@ func TestGenesisStateValidate(t *testing.T) {
 				},
 				Proposals: []*Proposal{
 					{
-						Id:                 0,
-						Address:            accAddr.String(),
-						Metadata:           "proposal metadata",
-						GroupVersion:       1,
-						GroupPolicyVersion: 1,
+						Id:           0,
+						Address:      accAddr.String(),
+						Metadata:     "proposal metadata",
+						GroupVersion: 1,
 					},
 				},
 			},
@@ -402,11 +400,10 @@ func TestGenesisStateValidate(t *testing.T) {
 				},
 				Proposals: []*Proposal{
 					{
-						Id:                 1,
-						Address:            "invalid address",
-						Metadata:           "proposal metadata",
-						GroupVersion:       1,
-						GroupPolicyVersion: 1,
+						Id:           1,
+						Address:      "invalid address",
+						Metadata:     "proposal metadata",
+						GroupVersion: 1,
 					},
 				},
 			},
@@ -429,11 +426,10 @@ func TestGenesisStateValidate(t *testing.T) {
 				},
 				Proposals: []*Proposal{
 					{
-						Id:                 1,
-						Address:            accAddr.String(),
-						Metadata:           "proposal metadata",
-						GroupVersion:       0,
-						GroupPolicyVersion: 1,
+						Id:           1,
+						Address:      accAddr.String(),
+						Metadata:     "proposal metadata",
+						GroupVersion: 0,
 					},
 				},
 			},
@@ -456,11 +452,10 @@ func TestGenesisStateValidate(t *testing.T) {
 				},
 				Proposals: []*Proposal{
 					{
-						Id:                 1,
-						Address:            accAddr.String(),
-						Metadata:           "proposal metadata",
-						GroupVersion:       1,
-						GroupPolicyVersion: 0,
+						Id:           1,
+						Address:      accAddr.String(),
+						Metadata:     "proposal metadata",
+						GroupVersion: 1,
 					},
 				},
 			},
@@ -483,11 +478,10 @@ func TestGenesisStateValidate(t *testing.T) {
 				},
 				Proposals: []*Proposal{
 					{
-						Id:                 1,
-						Address:            accAddr.String(),
-						Metadata:           "proposal metadata",
-						GroupVersion:       1,
-						GroupPolicyVersion: 1,
+						Id:           1,
+						Address:      accAddr.String(),
+						Metadata:     "proposal metadata",
+						GroupVersion: 1,
 						Proposers: []string{
 							memberAddr.String(),
 						},
@@ -522,11 +516,10 @@ func TestGenesisStateValidate(t *testing.T) {
 				},
 				Proposals: []*Proposal{
 					{
-						Id:                 1,
-						Address:            accAddr.String(),
-						Metadata:           "proposal metadata",
-						GroupVersion:       1,
-						GroupPolicyVersion: 1,
+						Id:           1,
+						Address:      accAddr.String(),
+						Metadata:     "proposal metadata",
+						GroupVersion: 1,
 						Proposers: []string{
 							memberAddr.String(),
 						},
@@ -561,11 +554,10 @@ func TestGenesisStateValidate(t *testing.T) {
 				},
 				Proposals: []*Proposal{
 					{
-						Id:                 1,
-						Address:            accAddr.String(),
-						Metadata:           "proposal metadata",
-						GroupVersion:       1,
-						GroupPolicyVersion: 1,
+						Id:           1,
+						Address:      accAddr.String(),
+						Metadata:     "proposal metadata",
+						GroupVersion: 1,
 						Proposers: []string{
 							memberAddr.String(),
 						},
@@ -600,11 +592,10 @@ func TestGenesisStateValidate(t *testing.T) {
 				},
 				Proposals: []*Proposal{
 					{
-						Id:                 1,
-						Address:            accAddr.String(),
-						Metadata:           "proposal metadata",
-						GroupVersion:       1,
-						GroupPolicyVersion: 1,
+						Id:           1,
+						Address:      accAddr.String(),
+						Metadata:     "proposal metadata",
+						GroupVersion: 1,
 						Proposers: []string{
 							memberAddr.String(),
 						},

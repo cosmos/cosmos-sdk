@@ -185,10 +185,6 @@ message Proposal {
   // When group membership is changed, existing proposals from previous group versions will become invalid.
   uint64 group_version = 6;
 
-  // group_policy_version tracks the version of the group policy that this proposal corresponds to.
-  // When a decision policy is changed, existing proposals from previous policy versions will become invalid.
-  uint64 group_policy_version = 7;
-
   // status represents the high level position in the life cycle of the proposal. Initial value is Submitted.
   ProposalStatus status = 8;
 

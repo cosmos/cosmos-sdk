@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	v040auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/legacy"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	"google.golang.org/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 )
 
 const (

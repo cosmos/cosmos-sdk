@@ -365,7 +365,7 @@ func (p Proposal) ValidateBasic() error {
 	if p.Id == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
 	}
-	_, err := sdk.AccAddressFromBech32(p.Address)
+	_, err := sdk.AccAddressFromBech32(p.GroupPolicyAddress)
 	if err != nil {
 		return sdkerrors.Wrap(err, "proposal group policy address")
 	}

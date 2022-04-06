@@ -55,7 +55,7 @@ func TestGenesisStateValidate(t *testing.T) {
 
 	proposal := &Proposal{
 		Id:                 1,
-		Address:            accAddr.String(),
+		GroupPolicyAddress: accAddr.String(),
 		Metadata:           "proposal metadata",
 		GroupVersion:       1,
 		GroupPolicyVersion: 1,
@@ -375,7 +375,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Proposals: []*Proposal{
 					{
 						Id:                 0,
-						Address:            accAddr.String(),
+						GroupPolicyAddress: accAddr.String(),
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 1,
@@ -402,7 +402,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Proposals: []*Proposal{
 					{
 						Id:                 1,
-						Address:            "invalid address",
+						GroupPolicyAddress: "invalid address",
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 1,
@@ -429,7 +429,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Proposals: []*Proposal{
 					{
 						Id:                 1,
-						Address:            accAddr.String(),
+						GroupPolicyAddress: accAddr.String(),
 						Metadata:           "proposal metadata",
 						GroupVersion:       0,
 						GroupPolicyVersion: 1,
@@ -456,7 +456,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Proposals: []*Proposal{
 					{
 						Id:                 1,
-						Address:            accAddr.String(),
+						GroupPolicyAddress: accAddr.String(),
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 0,
@@ -483,7 +483,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Proposals: []*Proposal{
 					{
 						Id:                 1,
-						Address:            accAddr.String(),
+						GroupPolicyAddress: accAddr.String(),
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 1,
@@ -521,7 +521,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Proposals: []*Proposal{
 					{
 						Id:                 1,
-						Address:            accAddr.String(),
+						GroupPolicyAddress: accAddr.String(),
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 1,
@@ -559,7 +559,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Proposals: []*Proposal{
 					{
 						Id:                 1,
-						Address:            accAddr.String(),
+						GroupPolicyAddress: accAddr.String(),
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 1,
@@ -597,7 +597,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Proposals: []*Proposal{
 					{
 						Id:                 1,
-						Address:            accAddr.String(),
+						GroupPolicyAddress: accAddr.String(),
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 1,

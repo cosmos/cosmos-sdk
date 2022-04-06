@@ -333,7 +333,7 @@ func (k Keeper) TallyResult(goCtx context.Context, request *group.QueryTallyResu
 	}
 
 	var policyInfo group.GroupPolicyInfo
-	if policyInfo, err = k.getGroupPolicyInfo(ctx, proposal.Address); err != nil {
+	if policyInfo, err = k.getGroupPolicyInfo(ctx, proposal.GroupPolicyAddress); err != nil {
 		return nil, sdkerrors.Wrap(err, "load group policy")
 	}
 

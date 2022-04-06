@@ -160,7 +160,7 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 		panic(err.Error())
 	}
 	k.proposalByGroupPolicyIndex, err = orm.NewIndex(proposalTable, ProposalByGroupPolicyIndexPrefix, func(value interface{}) ([]interface{}, error) {
-		account := value.(*group.Proposal).Address
+		account := value.(*group.Proposal).GroupPolicyAddress
 		addr, err := sdk.AccAddressFromBech32(account)
 		if err != nil {
 			return nil, err
@@ -330,7 +330,7 @@ func (k Keeper) PruneProposals(ctx sdk.Context) error {
 // `FinalTallyResult` field.
 func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 	return k.iterateProposalsByVPEnd(ctx, ctx.BlockTime(), func(proposal group.Proposal) (bool, error) {
-		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.Address)
+		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.GroupPolicyAddress)
 		if err != nil {
 			return true, sdkerrors.Wrap(err, "group policy")
 		}

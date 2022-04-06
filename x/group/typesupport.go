@@ -6,6 +6,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
+// ValidateBasic performs stateless validation on an array of members. On top
+// of validating each member individually, it also makes sure there are no
+// duplicate addresses.
 func (ms Members) ValidateBasic() error {
 	index := make(map[string]struct{}, len(ms.Members))
 	for i := range ms.Members {
@@ -22,11 +25,11 @@ func (ms Members) ValidateBasic() error {
 	return nil
 }
 
-type AccAddresses []sdk.AccAddress
+type accAddresses []sdk.AccAddress
 
 // ValidateBasic verifies that there's no duplicate address.
 // Individual account address validation has to be done separately.
-func (a AccAddresses) ValidateBasic() error {
+func (a accAddresses) ValidateBasic() error {
 	index := make(map[string]struct{}, len(a))
 	for i := range a {
 		accAddr := a[i]

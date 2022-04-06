@@ -692,23 +692,23 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 
 func TestMsgUpdateGroupPolicyDecisionPolicy(t *testing.T) {
 	validPolicy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
-	msg1, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member1, validPolicy)
+	msg1, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(admin, member1, validPolicy)
 	require.NoError(t, err)
 
 	invalidPolicy := group.NewThresholdDecisionPolicy("-1", time.Second, 0)
-	msg2, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member2, invalidPolicy)
+	msg2, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(admin, member2, invalidPolicy)
 	require.NoError(t, err)
 
 	validPercentagePolicy := group.NewPercentageDecisionPolicy("0.7", time.Second, 0)
-	msg3, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member3, validPercentagePolicy)
+	msg3, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(admin, member3, validPercentagePolicy)
 	require.NoError(t, err)
 
 	invalidPercentagePolicy := group.NewPercentageDecisionPolicy("-0.1", time.Second, 0)
-	msg4, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member4, invalidPercentagePolicy)
+	msg4, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(admin, member4, invalidPercentagePolicy)
 	require.NoError(t, err)
 
 	invalidPercentagePolicy2 := group.NewPercentageDecisionPolicy("2", time.Second, 0)
-	msg5, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member5, invalidPercentagePolicy2)
+	msg5, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(admin, member5, invalidPercentagePolicy2)
 	require.NoError(t, err)
 
 	testCases := []struct {

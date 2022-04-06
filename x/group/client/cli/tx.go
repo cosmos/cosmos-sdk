@@ -492,7 +492,7 @@ func MsgUpdateGroupPolicyDecisionPolicyCmd() *cobra.Command {
 				return err
 			}
 
-			msg, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(
+			msg, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(
 				clientCtx.GetFromAddress(),
 				accountAddress,
 				policy,
@@ -601,7 +601,7 @@ Example:
 
 			execStr, _ := cmd.Flags().GetString(FlagExec)
 
-			msg, err := group.NewMsgSubmitProposalRequest(
+			msg, err := group.NewMsgSubmitProposal(
 				prop.GroupPolicyAddress,
 				prop.Proposers,
 				msgs,

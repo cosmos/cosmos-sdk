@@ -710,7 +710,7 @@ func SimulateMsgUpdateGroupPolicyAdmin(ak group.AccountKeeper, bk group.BankKeep
 	}
 }
 
-// // SimulateMsgUpdateGroupPolicyDecisionPolicy generates a NewMsgUpdateGroupPolicyDecisionPolicyRequest with random values
+// // SimulateMsgUpdateGroupPolicyDecisionPolicy generates a NewMsgUpdateGroupPolicyDecisionPolicy with random values
 func SimulateMsgUpdateGroupPolicyDecisionPolicy(ak group.AccountKeeper,
 	bk group.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
@@ -735,7 +735,7 @@ func SimulateMsgUpdateGroupPolicyDecisionPolicy(ak group.AccountKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, fmt.Sprintf("fail to decide bech32 address: %s", err.Error())), nil, nil
 		}
 
-		msg, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(acc.Address, groupPolicyBech32, &group.ThresholdDecisionPolicy{
+		msg, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(acc.Address, groupPolicyBech32, &group.ThresholdDecisionPolicy{
 			Threshold: fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
 			Windows: &group.DecisionPolicyWindows{
 				VotingPeriod: time.Second * time.Duration(simtypes.RandIntBetween(r, 100, 1000)),

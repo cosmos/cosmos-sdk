@@ -298,7 +298,10 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGro
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "request admin")
 	}
-	policy := req.GetDecisionPolicy()
+	policy, err := req.GetDecisionPolicy()
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "request decision policy")
+	}
 	groupID := req.GetGroupID()
 	metadata := req.GetMetadata()
 
@@ -453,7 +456,10 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 	}
 	metadata := req.Metadata
 	proposers := req.Proposers
-	msgs := req.GetMsgs()
+	msgs, err := req.GetMsgs()
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "request msgs")
+	}
 
 	if err := k.assertMetadataLength(metadata, "metadata"); err != nil {
 		return nil, err

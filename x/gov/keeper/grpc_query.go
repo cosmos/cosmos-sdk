@@ -184,7 +184,7 @@ func (q Keeper) Params(c context.Context, req *v1.QueryParamsRequest) (*v1.Query
 	}
 }
 
-// Deposit queries single deposit information based proposalID, depositAddr
+// Deposit queries single deposit information based on proposalID, depositAddr.
 func (q Keeper) Deposit(c context.Context, req *v1.QueryDepositRequest) (*v1.QueryDepositResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")

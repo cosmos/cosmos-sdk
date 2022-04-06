@@ -580,7 +580,7 @@ Example:
 }`, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			prop, err := parseCLIProposal(args[0])
+			prop, err := getCLIProposal(args[0])
 			if err != nil {
 				return err
 			}

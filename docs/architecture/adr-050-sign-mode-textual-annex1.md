@@ -1,4 +1,4 @@
-# ADR 050: SIGN_MODE_TEXTUAL - Annex 1 Value Renderers
+# ADR 050: SIGN_MODE_TEXTUAL: Annex 1 Value Renderers
 
 ## Changelog
 
@@ -15,7 +15,7 @@ This Annex describes value renderers, which are used for displaying Protobuf val
 
 ## Value Renderers
 
-Value Renderers describe how values of different Protobuf types should be encoded as a string array. Value renderers can be formalized as a set of bijective functions `func renderT(value T) []string`, where `T` is one of the below Protobuf types on which this spec is defined.
+Value Renderers describe how values of different Protobuf types should be encoded as a string array. Value renderers can be formalized as a set of bijective functions `func renderT(value T) []string`, where `T` is one of the below Protobuf types for which this spec is defined.
 
 ### Protobuf `number`
 
@@ -31,6 +31,7 @@ Value Renderers describe how values of different Protobuf types should be encode
 
 - `1000` (uint64) -> `["1'000"]`
 - `"1000000.00"` (string representing a Dec) -> `["1'000'000"]`
+- `"1000000.10"` (string representing a Dec) -> `["1'000'000.1"]`
 
 ### `coin`
 

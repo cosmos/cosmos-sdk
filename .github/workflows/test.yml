@@ -171,7 +171,7 @@ jobs:
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
         if: env.GIT_DIFF
-      - uses: codecov/codecov-action@v2.1.0
+      - uses: codecov/codecov-action@v3
         with:
           file: ./coverage.txt
         if: env.GIT_DIFF
@@ -228,7 +228,7 @@ jobs:
         run: go version
       - name: Install runsim
         run: export GO111MODULE="on" && go get github.com/cosmos/tools/cmd/runsim@v1.0.0
-      - uses: actions/cache@v2.1.7
+      - uses: actions/cache@v3
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
@@ -249,7 +249,7 @@ jobs:
             **/**.go
             go.mod
             go.sum
-      - uses: actions/cache@v2.1.7
+      - uses: actions/cache@v3
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary

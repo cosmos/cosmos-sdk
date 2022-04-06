@@ -125,7 +125,7 @@ End of Allowed messages
   <field_name>: <1st line of value-rendered message>
   > <lines 2-n of value-rendered message>             // Notice the `>` prefix.
   ```
-  - `>` character used to represent nesting. For each additional level of nesting, add `>`.
+  - `>` character is used to denote nesting. For each additional level of nesting, add `>`.
 
 #### Examples
 

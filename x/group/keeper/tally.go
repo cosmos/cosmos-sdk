@@ -25,8 +25,8 @@ func (q Keeper) Tally(ctx sdk.Context, p group.Proposal, groupId uint64) (group.
 
 	tallyResult := group.DefaultTallyResult()
 
-	var vote group.Vote
 	for {
+		var vote group.Vote
 		_, err = it.LoadNext(&vote)
 		if errors.ErrORMIteratorDone.Is(err) {
 			break

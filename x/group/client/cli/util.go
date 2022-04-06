@@ -42,23 +42,25 @@ func execFromString(execStr string) group.Exec {
 
 // CLIProposal defines a Msg-based group proposal for CLI purposes.
 type CLIProposal struct {
-	GroupPolicyAddress string
+	GroupPolicyAddress string `json:"group_policy_address"`
 	// Messages defines an array of sdk.Msgs proto-JSON-encoded as Anys.
-	Messages  []json.RawMessage
-	Metadata  string
-	Proposers []string
+	Messages  []json.RawMessage `json:"messages"`
+	Metadata  string            `json:"metadata"`
+	Proposers []string          `json:"proposers"`
 }
 
-func parseCLIProposal(path string) (CLIProposal, error) {
-	var p CLIProposal
-
+func getCLIProposal(path string) (CLIProposal, error) {
 	contents, err := os.ReadFile(path)
 	if err != nil {
 		return CLIProposal{}, err
 	}
 
-	err = json.Unmarshal(contents, &p)
-	if err != nil {
+	return parseCLIProposal(contents)
+}
+
+func parseCLIProposal(contents []byte) (CLIProposal, error) {
+	var p CLIProposal
+	if err := json.Unmarshal(contents, &p); err != nil {
 		return CLIProposal{}, err
 	}
 

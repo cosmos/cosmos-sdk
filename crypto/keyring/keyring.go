@@ -52,6 +52,8 @@ var (
 
 // Keyring exposes operations over a backend supported by github.com/99designs/keyring.
 type Keyring interface {
+	// Get the backend type used in the keyring config: "file", "os", "kwallet", "pass", "test", "memory".
+	Backend() string
 	// List all keys.
 	List() ([]*Record, error)
 
@@ -162,11 +164,11 @@ type Options struct {
 // purposes and on-the-fly key generation.
 // Keybase options can be applied when generating this new Keybase.
 func NewInMemory(cdc codec.Codec, opts ...Option) Keyring {
-	return newKeystore(keyring.NewArrayKeyring(nil), cdc, opts...)
+	return newKeystore(keyring.NewArrayKeyring(nil), cdc, BackendMemory, opts...)
 }
 
 // New creates a new instance of a keyring.
-// Keyring ptions can be applied when generating the new instance.
+// Keyring options can be applied when generating the new instance.
 // Available backends are "os", "file", "kwallet", "memory", "pass", "test".
 func New(
 	appName, backend, rootDir string, userInput io.Reader, cdc codec.Codec, opts ...Option,
@@ -197,17 +199,19 @@ func New(
 		return nil, err
 	}
 
-	return newKeystore(db, cdc, opts...), nil
+	return newKeystore(db, cdc, backend, opts...), nil
 }
 
 type keystore struct {
 	db      keyring.Keyring
 	cdc     codec.Codec
+	backend string
 	options Options
 }
 
-func newKeystore(kr keyring.Keyring, cdc codec.Codec, opts ...Option) keystore {
-	// Default options for keybase
+func newKeystore(kr keyring.Keyring, cdc codec.Codec, backend string, opts ...Option) keystore {
+	// Default options for keybase, these can be overwritten using the
+	// Option function
 	options := Options{
 		SupportedAlgos:       SigningAlgoList{hd.Secp256k1},
 		SupportedAlgosLedger: SigningAlgoList{hd.Secp256k1},
@@ -217,7 +221,17 @@ func newKeystore(kr keyring.Keyring, cdc codec.Codec, opts ...Option) keystore {
 		optionFn(&options)
 	}
 
-	return keystore{kr, cdc, options}
+	return keystore{
+		db:      kr,
+		cdc:     cdc,
+		backend: backend,
+		options: options,
+	}
+}
+
+// Backend returns the keyring backend option used in the config
+func (ks keystore) Backend() string {
+	return ks.backend
 }
 
 func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
@@ -369,7 +383,6 @@ func (ks keystore) SignByAddress(address sdk.Address, msg []byte) ([]byte, types
 }
 
 func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (*Record, error) {
-
 	if !ks.options.SupportedAlgosLedger.Contains(algo) {
 		return nil, fmt.Errorf(
 			"%w: signature algo %s is not defined in the keyring options",
@@ -469,11 +482,11 @@ func (ks keystore) Delete(uid string) error {
 func (ks keystore) KeyByAddress(address sdk.Address) (*Record, error) {
 	ik, err := ks.db.Get(addrHexKeyAsString(address))
 	if err != nil {
-		return nil, wrapKeyNotFound(err, fmt.Sprint("key with address ", address.String(), "not found"))
+		return nil, wrapKeyNotFound(err, fmt.Sprintf("key with address %s not found", address.String()))
 	}
 
 	if len(ik.Data) == 0 {
-		return nil, wrapKeyNotFound(err, fmt.Sprint("key with address ", address.String(), "not found"))
+		return nil, wrapKeyNotFound(err, fmt.Sprintf("key with address %s not found", address.String()))
 	}
 
 	return ks.Key(string(ik.Data))
@@ -747,7 +760,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 				continue
 			}
 
-			if err := os.WriteFile(dir+"/keyhash", passwordHash, 0555); err != nil {
+			if err := os.WriteFile(dir+"/keyhash", passwordHash, 0o555); err != nil {
 				return "", err
 			}
 

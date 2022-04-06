@@ -37,8 +37,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	appParams := make(simtypes.AppParams)
 
 	weightedOps := simulation.WeightedOperations(appParams, cdc, suite.app.AccountKeeper,
-		suite.app.BankKeeper, suite.app.AuthzKeeper, cdc,
-	)
+		suite.app.BankKeeper, suite.app.AuthzKeeper, cdc)
 
 	s := rand.NewSource(3)
 	r := rand.New(s)
@@ -54,14 +53,19 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		{simulation.WeightRevoke, simulation.TypeMsgRevoke},
 	}
 
+	require := suite.Require()
 	for i, w := range weightedOps {
-		operationMsg, _, _ := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
+		op, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
+		require.NoError(err)
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
 		// will fail
-		suite.Require().Equal(expected[i].weight, w.Weight(), "weight should be the same")
-		suite.Require().Equal(expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
-		suite.Require().Equal(expected[i].opMsgRoute, operationMsg.Name, "operation Msg name should be the same")
+		require.Equal(expected[i].weight, w.Weight(),
+			"weight should be the same. %v", op.Comment)
+		require.Equal(expected[i].opMsgRoute, op.Route,
+			"route should be the same. %v", op.Comment)
+		require.Equal(expected[i].opMsgRoute, op.Name,
+			"operation Msg name should be the same %v", op.Comment)
 	}
 }
 
@@ -131,9 +135,10 @@ func (suite *SimTestSuite) TestSimulateRevoke() {
 
 	granter := accounts[0]
 	grantee := accounts[1]
-	authorization := banktypes.NewSendAuthorization(initCoins)
+	a := banktypes.NewSendAuthorization(initCoins)
+	expire := time.Now().Add(30 * time.Hour)
 
-	err := suite.app.AuthzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
+	err := suite.app.AuthzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, a, &expire)
 	suite.Require().NoError(err)
 
 	// execute operation
@@ -166,9 +171,10 @@ func (suite *SimTestSuite) TestSimulateExec() {
 
 	granter := accounts[0]
 	grantee := accounts[1]
-	authorization := banktypes.NewSendAuthorization(initCoins)
+	a := banktypes.NewSendAuthorization(initCoins)
+	expire := suite.ctx.BlockTime().Add(1 * time.Hour)
 
-	err := suite.app.AuthzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, authorization, suite.ctx.BlockTime().Add(1*time.Hour))
+	err := suite.app.AuthzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, a, &expire)
 	suite.Require().NoError(err)
 
 	// execute operation

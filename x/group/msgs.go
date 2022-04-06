@@ -42,18 +42,21 @@ func (m MsgCreateGroup) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "admin")
 	}
 
-	return validateMembers(m.Members)
+	return strictValidateMembers(m.Members)
 }
 
 // ValidateBasic performs stateless validation on a group member, such as
-// making sure the address is well-formed, and the weight is positive.
+// making sure the address is well-formed, and the weight is non-negative.
+// Note: in state, a member's weight MUST be positive. However, in some Msgs,
+// it's possible to set a zero member weight, for example in
+// MsgUpdateGroupMembers to denote that we're removing a member.
 func (m Member) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Address)
 	if err != nil {
 		return sdkerrors.Wrap(err, "address")
 	}
 
-	if _, err := math.NewPositiveDecFromString(m.Weight); err != nil {
+	if _, err := math.NewNonNegativeDecFromString(m.Weight); err != nil {
 		return sdkerrors.Wrap(err, "weight")
 	}
 
@@ -283,7 +286,7 @@ func (m MsgCreateGroupWithPolicy) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "decision policy")
 	}
 
-	return validateMembers(m.Members)
+	return strictValidateMembers(m.Members)
 }
 
 var _ sdk.Msg = &MsgCreateGroupPolicy{}
@@ -821,6 +824,19 @@ func (m MsgLeaveGroup) ValidateBasic() error {
 	return nil
 }
 
-func validateMembers(members []Member) error {
-	return Members{members}.ValidateBasic()
+// strictValidateMembers performs ValidateBasic on Members, but also checks
+// that all members weights are positive
+func strictValidateMembers(members []Member) error {
+	err := Members{members}.ValidateBasic()
+	if err != nil {
+		return err
+	}
+
+	for _, m := range members {
+		if _, err := math.NewPositiveDecFromString(m.Weight); err != nil {
+			return sdkerrors.Wrap(err, "weight")
+		}
+	}
+
+	return nil
 }

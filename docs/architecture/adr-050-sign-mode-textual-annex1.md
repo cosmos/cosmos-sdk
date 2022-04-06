@@ -40,7 +40,7 @@ Value Renderers describe how values of different Protobuf types should be encode
 - Amounts are converted to `display` denom amounts and rendered as `number`s above
   - We do not change the capitalization of the denom. In practice, `display` denoms are stored in lowercase in state (e.g. `10 atom`), however they are often showed in UPPERCASE in everyday life (e.g. `10 ATOM`). Value renderers keep the case used in state, but we may recommend chains changing the denom metadata to be uppercase for better user display.
 - One space between the denom and amount
-- In the future, IBC denoms could maybe be converted to DID/IIDs, if we can find a robust way for doing this (ex. `cosmos:hub:atom`)
+- In the future, IBC denoms could maybe be converted to DID/IIDs, if we can find a robust way for doing this (ex. `cosmos:cosmos:hub:bank:denom:atom`)
 
 #### Examples
 
@@ -74,7 +74,7 @@ message MsgSend {
 
 ### `repeated`
 
-- Applies to all `repeated` fields, except `cosmos.tx.v1beta1.TxBody#Messages`, who has a particular encoding (see [ADR-050](./adr-050-sign-mode-textual.md)).
+- Applies to all `repeated` fields, except `cosmos.tx.v1beta1.TxBody#Messages`, which has a particular encoding (see [ADR-050](./adr-050-sign-mode-textual.md)).
 - A repeated type has the following template:
 
 ```
@@ -133,7 +133,7 @@ End of Allowed messages
   <field_name>: <1st line of value-rendered message>
   > <lines 2-n of value-rendered message>             // Notice the `>` prefix.
   ```
-  - `>` character used to represent nesting. For each additional level of nesting, add `>`.
+  - `>` character is used to denote nesting. For each additional level of nesting, add `>`.
 
 #### Examples
 

@@ -116,7 +116,7 @@ Tip: <string>
 
 ### 8. Encoding of the Transaction Body
 
-We call "transaction body" the `Tx.TxBody.Messages` field, which is an array of `Any`s. Since messages are widely used, they have a slightly different encoding than usual array of `Any`s (protobuf: `repeated repeated google.protobuf.Any`) described in Annex 1.
+Transaction body is the `Tx.TxBody.Messages` field, which is an array of `Any`s. Since messages are widely used, they have a slightly different encoding than usual array of `Any`s (protobuf: `repeated repeated google.protobuf.Any`) described in Annex 1.
 
 ```
 This transaction has <int> message:   // Optional 's' for "message" if there's is >1 sdk.Msgs.

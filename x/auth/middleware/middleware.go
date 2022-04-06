@@ -71,21 +71,6 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "sign mode handler is required for middlewares")
 	}
 
-	var sigGasConsumer = options.SigGasConsumer
-	if sigGasConsumer == nil {
-		sigGasConsumer = DefaultSigVerificationGasConsumer
-	}
-
-	var extensionOptionChecker = options.ExtensionOptionChecker
-	if extensionOptionChecker == nil {
-		extensionOptionChecker = rejectExtensionOption
-	}
-
-	var txFeeChecker = options.TxFeeChecker
-	if txFeeChecker == nil {
-		txFeeChecker = checkTxFeeWithValidatorMinGasPrices
-	}
-
 	return ComposeMiddlewares(
 		NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
 		NewTxDecoderMiddleware(options.TxDecoder),
@@ -102,7 +87,7 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		// emitted outside of this middleware.
 		NewIndexEventsTxMiddleware(options.IndexEvents),
 		// Reject all extension options other than the ones needed by the feemarket.
-		NewExtensionOptionsMiddleware(extensionOptionChecker),
+		NewExtensionOptionsMiddleware(options.ExtensionOptionChecker),
 		ValidateBasicMiddleware,
 		TxTimeoutHeightMiddleware,
 		ValidateMemoMiddleware(options.AccountKeeper),
@@ -111,10 +96,10 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		// ComposeMiddlewares godoc for details.
 		// `DeductFeeMiddleware` and `IncrementSequenceMiddleware` should be put outside of `WithBranchedStore` middleware,
 		// so their storage writes are not discarded when tx fails.
-		DeductFeeMiddleware(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, txFeeChecker),
+		DeductFeeMiddleware(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
 		SetPubKeyMiddleware(options.AccountKeeper),
 		ValidateSigCountMiddleware(options.AccountKeeper),
-		SigGasConsumeMiddleware(options.AccountKeeper, sigGasConsumer),
+		SigGasConsumeMiddleware(options.AccountKeeper, options.SigGasConsumer),
 		SigVerificationMiddleware(options.AccountKeeper, options.SignModeHandler),
 		IncrementSequenceMiddleware(options.AccountKeeper),
 		// Creates a new MultiStore branch, discards downstream writes if the downstream returns error.

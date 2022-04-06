@@ -81,15 +81,14 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 
 	proposal := &group.Proposal{
 		Id:                 1,
-		Address:            accAddr.String(),
+		GroupPolicyAddress: accAddr.String(),
 		Metadata:           "proposal metadata",
 		GroupVersion:       1,
 		Proposers: []string{
 			memberAddr.String(),
 		},
 		SubmitTime: submittedAt,
-		Status:     group.PROPOSAL_STATUS_CLOSED,
-		Result:     group.PROPOSAL_RESULT_ACCEPTED,
+		Status:     group.PROPOSAL_STATUS_ACCEPTED,
 		FinalTallyResult: group.TallyResult{
 			YesCount:        "1",
 			NoCount:         "0",
@@ -208,13 +207,12 @@ func (s *GenesisTestSuite) assertGroupPoliciesEqual(g *group.GroupPolicyInfo, ot
 func (s *GenesisTestSuite) assertProposalsEqual(g *group.Proposal, other *group.Proposal) {
 	require := s.Require()
 	require.Equal(g.Id, other.Id)
-	require.Equal(g.Address, other.Address)
+	require.Equal(g.GroupPolicyAddress, other.GroupPolicyAddress)
 	require.Equal(g.Metadata, other.Metadata)
 	require.Equal(g.Proposers, other.Proposers)
 	require.Equal(g.SubmitTime, other.SubmitTime)
 	require.Equal(g.GroupVersion, other.GroupVersion)
 	require.Equal(g.Status, other.Status)
-	require.Equal(g.Result, other.Result)
 	require.Equal(g.FinalTallyResult, other.FinalTallyResult)
 	require.Equal(g.VotingPeriodEnd, other.VotingPeriodEnd)
 	require.Equal(g.ExecutorResult, other.ExecutorResult)

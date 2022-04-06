@@ -15,8 +15,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
+// DecisionPolicyResult is the result of whether a proposal passes or not a
+// decision policy.
 type DecisionPolicyResult struct {
+	// Allow determines if the proposal is allowed to pass.
 	Allow bool
+	// Final determines if the tally result is final or not. If final, then
+	// votes are pruned, and the tally result is saved in the proposal's
+	// `FinalTallyResult` field.
 	Final bool
 }
 
@@ -359,7 +365,7 @@ func (p Proposal) ValidateBasic() error {
 	if p.Id == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
 	}
-	_, err := sdk.AccAddressFromBech32(p.Address)
+	_, err := sdk.AccAddressFromBech32(p.GroupPolicyAddress)
 	if err != nil {
 		return sdkerrors.Wrap(err, "proposal group policy address")
 	}

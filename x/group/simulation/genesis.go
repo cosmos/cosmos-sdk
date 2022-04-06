@@ -84,12 +84,11 @@ func getProposals(r *rand.Rand, simState *module.SimulationState, groupPolicies 
 		timeout := submittedAt.Add(time.Second * 1000).UTC()
 
 		proposal := &group.Proposal{
-			Id:           uint64(i + 1),
-			Proposers:    proposers,
-			Address:      groupPolicyAddress,
-			GroupVersion: uint64(i + 1),
-			Status:       group.PROPOSAL_STATUS_SUBMITTED,
-			Result:       group.PROPOSAL_RESULT_ACCEPTED,
+			Id:                 uint64(i + 1),
+			Proposers:          proposers,
+			GroupPolicyAddress: groupPolicyAddress,
+			GroupVersion:       uint64(i + 1),
+			Status:             group.PROPOSAL_STATUS_SUBMITTED,
 			FinalTallyResult: group.TallyResult{
 				YesCount:        "1",
 				NoCount:         "1",

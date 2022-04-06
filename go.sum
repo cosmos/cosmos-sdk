@@ -253,8 +253,8 @@ github.com/cockroachdb/apd/v2 v2.0.2/go.mod h1:DDxRlzC2lo3/vSlmSoS7JkqbbrARPuFOG
 github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:zn76sxSg3SzpJ0PPJaLDCu+Bu0Lg3sKTORVIj19EIF8=
 github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE/e/2PUdi/liOCUjSTXgM1o87ZssimdTWN964YiIeI=
 github.com/coinbase/kryptology v1.8.0/go.mod h1:RYXOAPdzOGUe3qlSFkMGn58i3xUA8hmxYHksuq+8ciI=
-github.com/coinbase/rosetta-sdk-go v0.7.6 h1:y3/Lxu9ojIsUKnhNc5UaZF/i0byfuNDWXLYMSKG+IBs=
-github.com/coinbase/rosetta-sdk-go v0.7.6/go.mod h1:lt2lJX/HQ2stryuKkukCWMcX3T5fBU62UrdhuwsnVYg=
+github.com/coinbase/rosetta-sdk-go v0.7.7 h1:1b4YhFs4hE7sjRlsJ16VBow1cq0NfmKY2v9tT1PKx7I=
+github.com/coinbase/rosetta-sdk-go v0.7.7/go.mod h1:lt2lJX/HQ2stryuKkukCWMcX3T5fBU62UrdhuwsnVYg=
 github.com/confio/ics23/go v0.7.0 h1:00d2kukk7sPoHWL4zZBZwzxnpA2pec1NPdwbSokJ5w8=
 github.com/confio/ics23/go v0.7.0/go.mod h1:E45NqnlpxGnpfTWL/xauN7MRwEE28T4Dd4uraToOaKg=
 github.com/consensys/bavard v0.1.8-0.20210406032232-f3452dc9b572/go.mod h1:Bpd0/3mZuaj6Sj+PqrmIquiOKy397AKGThQPaGzNXAQ=

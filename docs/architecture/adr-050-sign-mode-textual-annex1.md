@@ -1,4 +1,4 @@
-# ADR 050: SIGN_MODE_TEXTUAL - Annex 1 Value Renderers
+# ADR 050: SIGN_MODE_TEXTUAL: Annex 1 Value Renderers
 
 ## Changelog
 

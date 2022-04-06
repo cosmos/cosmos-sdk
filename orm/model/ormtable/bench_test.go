@@ -18,20 +18,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/types/kv"
 )
 
-var balanceTable testpb.BalanceTable
-
-func init() {
+func initBalanceTable(t testing.TB) testpb.BalanceTable {
 	table, err := ormtable.Build(ormtable.Options{
 		MessageType: (&testpb.Balance{}).ProtoReflect().Type(),
 	})
-	if err != nil {
-		panic(err)
-	}
+	assert.NilError(t, err)
 
-	balanceTable, err = testpb.NewBalanceTable(table)
-	if err != nil {
-		panic(err)
-	}
+	balanceTable, err := testpb.NewBalanceTable(table)
+	assert.NilError(t, err)
+
+	return balanceTable
 }
 
 func BenchmarkMemory(b *testing.B) {
@@ -75,6 +71,7 @@ func bench(b *testing.B, newBackend func(testing.TB) ormtable.Backend) {
 }
 
 func benchInsert(b *testing.B, ctx context.Context) {
+	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, balanceTable.Insert(ctx, &testpb.Balance{
 			Address: fmt.Sprintf("acct%d", i),
@@ -85,6 +82,7 @@ func benchInsert(b *testing.B, ctx context.Context) {
 }
 
 func benchUpdate(b *testing.B, ctx context.Context) {
+	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, balanceTable.Update(ctx, &testpb.Balance{
 			Address: fmt.Sprintf("acct%d", i),
@@ -95,6 +93,7 @@ func benchUpdate(b *testing.B, ctx context.Context) {
 }
 
 func benchGet(b *testing.B, ctx context.Context) {
+	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		balance, err := balanceTable.Get(ctx, fmt.Sprintf("acct%d", i), "bar")
 		assert.NilError(b, err)
@@ -103,6 +102,7 @@ func benchGet(b *testing.B, ctx context.Context) {
 }
 
 func benchDelete(b *testing.B, ctx context.Context) {
+	balanceTable := initBalanceTable(b)
 	for i := 0; i < b.N; i++ {
 		assert.NilError(b, balanceTable.Delete(ctx, &testpb.Balance{
 			Address: fmt.Sprintf("acct%d", i),

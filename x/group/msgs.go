@@ -446,9 +446,9 @@ func (m MsgUpdateGroupPolicyDecisionPolicy) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "group policy")
 	}
 
-	policy := m.GetDecisionPolicy()
-	if policy == nil {
-		return sdkerrors.Wrap(errors.ErrEmpty, "decision policy")
+	policy, err := m.GetDecisionPolicy()
+	if err != nil {
+		return sdkerrors.Wrap(err, "decision policy")
 	}
 
 	if err := policy.ValidateBasic(); err != nil {
@@ -458,12 +458,13 @@ func (m MsgUpdateGroupPolicyDecisionPolicy) ValidateBasic() error {
 	return nil
 }
 
-func (m *MsgUpdateGroupPolicyDecisionPolicy) GetDecisionPolicy() DecisionPolicy {
+func (m *MsgUpdateGroupPolicyDecisionPolicy) GetDecisionPolicy() (DecisionPolicy, error) {
 	decisionPolicy, ok := m.DecisionPolicy.GetCachedValue().(DecisionPolicy)
 	if !ok {
-		return nil
+		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (DecisionPolicy)(nil), m.DecisionPolicy.GetCachedValue())
 	}
-	return decisionPolicy
+
+	return decisionPolicy, nil
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces

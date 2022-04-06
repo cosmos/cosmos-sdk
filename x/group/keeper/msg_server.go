@@ -396,7 +396,10 @@ func (k Keeper) UpdateGroupPolicyAdmin(goCtx context.Context, req *group.MsgUpda
 
 func (k Keeper) UpdateGroupPolicyDecisionPolicy(goCtx context.Context, req *group.MsgUpdateGroupPolicyDecisionPolicy) (*group.MsgUpdateGroupPolicyDecisionPolicyResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	policy := req.GetDecisionPolicy()
+	policy, err := req.GetDecisionPolicy()
+	if err != nil {
+		return nil, err
+	}
 
 	action := func(groupPolicy *group.GroupPolicyInfo) error {
 		g, err := k.getGroupInfo(ctx, groupPolicy.GroupId)
@@ -418,7 +421,7 @@ func (k Keeper) UpdateGroupPolicyDecisionPolicy(goCtx context.Context, req *grou
 		return k.groupPolicyTable.Update(ctx.KVStore(k.key), groupPolicy)
 	}
 
-	err := k.doUpdateGroupPolicy(ctx, req.GroupPolicyAddress, req.Admin, action, "group policy's decision policy updated")
+	err = k.doUpdateGroupPolicy(ctx, req.GroupPolicyAddress, req.Admin, action, "group policy's decision policy updated")
 	if err != nil {
 		return nil, err
 	}
@@ -487,9 +490,9 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		return nil, err
 	}
 
-	policy := policyAcc.GetDecisionPolicy()
-	if policy == nil {
-		return nil, sdkerrors.Wrap(errors.ErrEmpty, "nil policy")
+	policy, err := policyAcc.GetDecisionPolicy()
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "proposal group policy decision policy")
 	}
 
 	// Prevent proposal that can not succeed.
@@ -691,7 +694,11 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 // doTallyAndUpdate performs a tally, and updates the proposal's
 // `FinalTallyResult` field only if the tally is final.
 func (k Keeper) doTallyAndUpdate(ctx sdk.Context, p *group.Proposal, electorate group.GroupInfo, policyInfo group.GroupPolicyInfo) error {
-	policy := policyInfo.GetDecisionPolicy()
+	policy, err := policyInfo.GetDecisionPolicy()
+	if err != nil {
+		return err
+	}
+
 	pSubmittedAt, err := gogotypes.TimestampProto(p.SubmitTime)
 	if err != nil {
 		return err

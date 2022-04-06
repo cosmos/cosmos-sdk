@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	proto "github.com/gogo/protobuf/proto"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -252,11 +250,7 @@ func NewGroupPolicyInfo(address sdk.AccAddress, group uint64, admin sdk.AccAddre
 }
 
 func (g *GroupPolicyInfo) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
-	msg, ok := decisionPolicy.(proto.Message)
-	if !ok {
-		return fmt.Errorf("can't proto marshal %T", msg)
-	}
-	any, err := codectypes.NewAnyWithValue(msg)
+	any, err := codectypes.NewAnyWithValue(decisionPolicy)
 	if err != nil {
 		return err
 	}
@@ -264,12 +258,13 @@ func (g *GroupPolicyInfo) SetDecisionPolicy(decisionPolicy DecisionPolicy) error
 	return nil
 }
 
-func (g GroupPolicyInfo) GetDecisionPolicy() DecisionPolicy {
+func (g GroupPolicyInfo) GetDecisionPolicy() (DecisionPolicy, error) {
 	decisionPolicy, ok := g.DecisionPolicy.GetCachedValue().(DecisionPolicy)
 	if !ok {
-		return nil
+		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (DecisionPolicy)(nil), g.DecisionPolicy.GetCachedValue())
 	}
-	return decisionPolicy
+
+	return decisionPolicy, nil
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
@@ -329,11 +324,11 @@ func (g GroupPolicyInfo) ValidateBasic() error {
 	if g.Version == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "group policy version")
 	}
-	policy := g.GetDecisionPolicy()
-
-	if policy == nil {
-		return sdkerrors.Wrap(errors.ErrEmpty, "group policy's decision policy")
+	policy, err := g.GetDecisionPolicy()
+	if err != nil {
+		return sdkerrors.Wrap(err, "group policy decision policy")
 	}
+
 	if err := policy.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "group policy's decision policy")
 	}

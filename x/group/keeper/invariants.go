@@ -14,7 +14,7 @@ import (
 
 const weightInvariant = "Group-TotalWeight"
 
-// RegisterInvariants registers all group invariants
+// RegisterInvariants registers all group invariants.
 func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper) {
 	ir.RegisterRoute(group.ModuleName, weightInvariant, GroupTotalWeightInvariant(keeper))
 }

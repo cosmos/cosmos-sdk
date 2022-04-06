@@ -389,7 +389,7 @@ func (m MsgUpdateGroupPolicyAdmin) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "new admin")
 	}
 
-	_, err = sdk.AccAddressFromBech32(m.Address)
+	_, err = sdk.AccAddressFromBech32(m.GroupPolicyAddress)
 	if err != nil {
 		return sdkerrors.Wrap(err, "group policy")
 	}
@@ -405,8 +405,8 @@ var _ types.UnpackInterfacesMessage = MsgUpdateGroupPolicyDecisionPolicy{}
 
 func NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin sdk.AccAddress, address sdk.AccAddress, decisionPolicy DecisionPolicy) (*MsgUpdateGroupPolicyDecisionPolicy, error) {
 	m := &MsgUpdateGroupPolicyDecisionPolicy{
-		Admin:   admin.String(),
-		Address: address.String(),
+		Admin:              admin.String(),
+		GroupPolicyAddress: address.String(),
 	}
 	err := m.SetDecisionPolicy(decisionPolicy)
 	if err != nil {
@@ -459,7 +459,7 @@ func (m MsgUpdateGroupPolicyDecisionPolicy) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "admin")
 	}
 
-	_, err = sdk.AccAddressFromBech32(m.Address)
+	_, err = sdk.AccAddressFromBech32(m.GroupPolicyAddress)
 	if err != nil {
 		return sdkerrors.Wrap(err, "group policy")
 	}
@@ -521,7 +521,7 @@ func (m MsgUpdateGroupPolicyMetadata) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "admin")
 	}
 
-	_, err = sdk.AccAddressFromBech32(m.Address)
+	_, err = sdk.AccAddressFromBech32(m.GroupPolicyAddress)
 	if err != nil {
 		return sdkerrors.Wrap(err, "group policy")
 	}
@@ -590,10 +590,10 @@ var _ sdk.Msg = &MsgSubmitProposal{}
 // NewMsgSubmitProposalRequest creates a new MsgSubmitProposal.
 func NewMsgSubmitProposalRequest(address string, proposers []string, msgs []sdk.Msg, metadata string, exec Exec) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
-		Address:   address,
-		Proposers: proposers,
-		Metadata:  metadata,
-		Exec:      exec,
+		GroupPolicyAddress: address,
+		Proposers:          proposers,
+		Metadata:           metadata,
+		Exec:               exec,
 	}
 	err := m.SetMsgs(msgs)
 	if err != nil {
@@ -630,7 +630,7 @@ func (m MsgSubmitProposal) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic does a sanity check on the provided data
 func (m MsgSubmitProposal) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(m.Address)
+	_, err := sdk.AccAddressFromBech32(m.GroupPolicyAddress)
 	if err != nil {
 		return sdkerrors.Wrap(err, "group policy")
 	}
@@ -778,7 +778,7 @@ func (m MsgExec) GetSignBytes() []byte {
 
 // GetSigners returns the expected signers for a MsgExec.
 func (m MsgExec) GetSigners() []sdk.AccAddress {
-	signer, err := sdk.AccAddressFromBech32(m.Signer)
+	signer, err := sdk.AccAddressFromBech32(m.Executor)
 	if err != nil {
 		panic(err)
 	}
@@ -787,7 +787,7 @@ func (m MsgExec) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic does a sanity check on the provided data
 func (m MsgExec) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(m.Signer)
+	_, err := sdk.AccAddressFromBech32(m.Executor)
 	if err != nil {
 		return sdkerrors.Wrap(err, "signer")
 	}

@@ -3,6 +3,8 @@ package cosmos.vesting.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
+import "cosmos/vesting/v1beta1/vesting.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/vesting/types";
 
@@ -11,6 +13,11 @@ service Msg {
   // CreateVestingAccount defines a method that enables creating a vesting
   // account.
   rpc CreateVestingAccount(MsgCreateVestingAccount) returns (MsgCreateVestingAccountResponse);
+  // CreateClawbackVestingAccount creats a vesting account that is subject to
+  // clawback and the configuration of vesting and lockup schedules.
+  rpc CreateClawbackVestingAccount(MsgCreateClawbackVestingAccount) returns (MsgCreateClawbackVestingAccountResponse);
+  // Clawback removes the unvested tokens from a ClawbackVestingAccount.
+  rpc Clawback(MsgClawback) returns (MsgClawbackResponse);
 }
 
 // MsgCreateVestingAccount defines a message that enables creating a vesting
@@ -29,3 +36,46 @@ message MsgCreateVestingAccount {
 
 // MsgCreateVestingAccountResponse defines the Msg/CreateVestingAccount response type.
 message MsgCreateVestingAccountResponse {}
+
+// MsgCreateClawbackVestingAccount defines a message that enables creating a ClawbackVestingAccount.
+message MsgCreateClawbackVestingAccount {
+  option (gogoproto.equal) = false;
+
+  // from_address specifies the account to provide the funds and sign the
+  // clawback request
+  string from_address = 1;
+  // to_address specifies the account to receive the funds
+  string to_address = 2;
+  // start_time defines the time at which the vesting period begins
+  int64 start_time = 3 [(gogoproto.moretags) = "yaml:\"start_time\""];
+  // lockup_periods defines the unlocking schedule relative to the start_time
+  repeated cosmos.vesting.v1beta1.Period lockup_periods = 4 [(gogoproto.nullable) = false];
+  // vesting_periods defines the vesting schedule relative to the start_time
+  repeated cosmos.vesting.v1beta1.Period vesting_periods = 5 [(gogoproto.nullable) = false];
+  // merge specifies a creation mechanism for existing
+  // ClawbackVestingAccounts. If true, merge this new grant into an existing
+  // ClawbackVestingAccount, or create it if it does not exist. If false,
+  // creates a new account. New grants to an existing account must be from the
+  // same from_address.
+  bool merge = 6;
+}
+
+// MsgCreateClawbackVestingAccountResponse defines the
+// MsgCreateClawbackVestingAccount response type.
+message MsgCreateClawbackVestingAccountResponse {}
+
+// MsgClawback defines a message that removes unvested tokens from a
+// ClawbackVestingAccount.
+message MsgClawback {
+  // funder_address is the address which funded the account
+  string funder_address = 1;
+  // address is the address of the ClawbackVestingAccount to claw back from.
+  string address = 2;
+  // dest_address specifies where the clawed-back tokens should be transferred
+  // to. If empty, the tokens will be transferred back to the original funder of
+  // the account.
+  string dest_address = 3;
+}
+
+// MsgClawbackResponse defines the MsgClawback response type.
+message MsgClawbackResponse {}

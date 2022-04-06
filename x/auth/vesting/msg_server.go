@@ -98,3 +98,11 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 
 	return &types.MsgCreateVestingAccountResponse{}, nil
 }
+
+func (s msgServer) CreateClawbackVestingAccount(goCtx context.Context, msg *types.MsgCreateClawbackVestingAccount) (*types.MsgCreateClawbackVestingAccountResponse, error) {
+	return &types.MsgCreateClawbackVestingAccountResponse{}, nil
+}
+
+func (s msgServer) Clawback(goCtx context.Context, msg *types.MsgClawback) (*types.MsgClawbackResponse, error) {
+	return &types.MsgClawbackResponse{}, nil
+}

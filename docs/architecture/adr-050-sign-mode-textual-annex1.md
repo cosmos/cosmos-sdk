@@ -31,6 +31,7 @@ Value Renderers describe how values of different Protobuf types should be encode
 
 - `1000` (uint64) -> `["1'000"]`
 - `"1000000.00"` (string representing a Dec) -> `["1'000'000"]`
+- `"1000000.10"` (string representing a Dec) -> `["1'000'000.1"]`
 
 ### `coin`
 

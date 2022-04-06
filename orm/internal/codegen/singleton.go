@@ -6,18 +6,19 @@ import (
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/types/dynamicpb"
 
-	ormv1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
+	ormv1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1"
+
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 )
 
 type singletonGen struct {
 	fileGen
 	msg      *protogen.Message
-	table    *ormv1alpha1.SingletonDescriptor
+	table    *ormv1.SingletonDescriptor
 	ormTable ormtable.Table
 }
 
-func newSingletonGen(fileGen fileGen, msg *protogen.Message, table *ormv1alpha1.SingletonDescriptor) (*singletonGen, error) {
+func newSingletonGen(fileGen fileGen, msg *protogen.Message, table *ormv1.SingletonDescriptor) (*singletonGen, error) {
 	s := &singletonGen{fileGen: fileGen, msg: msg, table: table}
 	var err error
 	s.ormTable, err = ormtable.Build(ormtable.Options{

@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	v040slashing "github.com/cosmos/cosmos-sdk/x/slashing/migrations/legacy"
 	v043slashing "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v043"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -30,17 +31,17 @@ func TestStoreMigration(t *testing.T) {
 	}{
 		{
 			"ValidatorSigningInfoKey",
-			v043slashing.ValidatorSigningInfoKey(consAddr),
+			v040slashing.ValidatorSigningInfoKey(consAddr),
 			types.ValidatorSigningInfoKey(consAddr),
 		},
 		{
 			"ValidatorMissedBlockBitArrayKey",
-			v043slashing.ValidatorMissedBlockBitArrayKey(consAddr, 2),
+			v040slashing.ValidatorMissedBlockBitArrayKey(consAddr, 2),
 			types.ValidatorMissedBlockBitArrayKey(consAddr, 2),
 		},
 		{
 			"AddrPubkeyRelationKey",
-			v043slashing.AddrPubkeyRelationKey(consAddr),
+			v040slashing.AddrPubkeyRelationKey(consAddr),
 			types.AddrPubkeyRelationKey(consAddr),
 		},
 	}

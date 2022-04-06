@@ -1,12 +1,13 @@
 // Package v040 is copy-pasted from:
 // https://github.com/cosmos/cosmos-sdk/blob/v0.41.0/x/slashing/types/keys.go
-package v043
+package legacy
 
 import (
 	"encoding/binary"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	v040auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/legacy"
 )
 
 const (
@@ -21,8 +22,6 @@ const (
 
 	// QuerierRoute is the querier route for slashing
 	QuerierRoute = ModuleName
-	// v040auth addrlen
-	AddrLen = 20
 )
 
 // Keys for slashing store
@@ -48,7 +47,7 @@ func ValidatorSigningInfoKey(v sdk.ConsAddress) []byte {
 func ValidatorSigningInfoAddress(key []byte) (v sdk.ConsAddress) {
 	kv.AssertKeyAtLeastLength(key, 2)
 	addr := key[1:]
-	kv.AssertKeyLength(addr, AddrLen)
+	kv.AssertKeyLength(addr, v040auth.AddrLen)
 	return sdk.ConsAddress(addr)
 }
 

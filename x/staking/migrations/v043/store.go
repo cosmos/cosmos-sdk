@@ -5,7 +5,9 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+	v040auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/legacy"
 	v043distribution "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v043"
+	v040staking "github.com/cosmos/cosmos-sdk/x/staking/migrations/legacy"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -20,9 +22,9 @@ func migratePrefixAddressAddressAddress(store sdk.KVStore, prefixBz []byte) {
 	defer oldStoreIter.Close()
 
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
-		addr1 := oldStoreIter.Key()[:AddrLen]
-		addr2 := oldStoreIter.Key()[AddrLen : 2*AddrLen]
-		addr3 := oldStoreIter.Key()[2*AddrLen:]
+		addr1 := oldStoreIter.Key()[:v040auth.AddrLen]
+		addr2 := oldStoreIter.Key()[v040auth.AddrLen : 2*v040auth.AddrLen]
+		addr3 := oldStoreIter.Key()[2*v040auth.AddrLen:]
 		newStoreKey := append(append(append(
 			prefixBz,
 			address.MustLengthPrefix(addr1)...), address.MustLengthPrefix(addr2)...), address.MustLengthPrefix(addr3)...,
@@ -37,7 +39,7 @@ func migratePrefixAddressAddressAddress(store sdk.KVStore, prefixBz []byte) {
 const powerBytesLen = 8
 
 func migrateValidatorsByPowerIndexKey(store sdk.KVStore) {
-	oldStore := prefix.NewStore(store, ValidatorsByPowerIndexKey)
+	oldStore := prefix.NewStore(store, v040staking.ValidatorsByPowerIndexKey)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
@@ -60,18 +62,18 @@ func migrateValidatorsByPowerIndexKey(store sdk.KVStore) {
 func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey) error {
 	store := ctx.KVStore(storeKey)
 
-	v043distribution.MigratePrefixAddress(store, LastValidatorPowerKey)
+	v043distribution.MigratePrefixAddress(store, v040staking.LastValidatorPowerKey)
 
-	v043distribution.MigratePrefixAddress(store, ValidatorsKey)
-	v043distribution.MigratePrefixAddress(store, ValidatorsByConsAddrKey)
+	v043distribution.MigratePrefixAddress(store, v040staking.ValidatorsKey)
+	v043distribution.MigratePrefixAddress(store, v040staking.ValidatorsByConsAddrKey)
 	migrateValidatorsByPowerIndexKey(store)
 
-	v043distribution.MigratePrefixAddressAddress(store, DelegationKey)
-	v043distribution.MigratePrefixAddressAddress(store, UnbondingDelegationKey)
-	v043distribution.MigratePrefixAddressAddress(store, UnbondingDelegationByValIndexKey)
-	migratePrefixAddressAddressAddress(store, RedelegationKey)
-	migratePrefixAddressAddressAddress(store, RedelegationByValSrcIndexKey)
-	migratePrefixAddressAddressAddress(store, RedelegationByValDstIndexKey)
+	v043distribution.MigratePrefixAddressAddress(store, v040staking.DelegationKey)
+	v043distribution.MigratePrefixAddressAddress(store, v040staking.UnbondingDelegationKey)
+	v043distribution.MigratePrefixAddressAddress(store, v040staking.UnbondingDelegationByValIndexKey)
+	migratePrefixAddressAddressAddress(store, v040staking.RedelegationKey)
+	migratePrefixAddressAddressAddress(store, v040staking.RedelegationByValSrcIndexKey)
+	migratePrefixAddressAddressAddress(store, v040staking.RedelegationByValDstIndexKey)
 
 	return nil
 }

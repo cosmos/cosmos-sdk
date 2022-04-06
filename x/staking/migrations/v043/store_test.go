@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	v040staking "github.com/cosmos/cosmos-sdk/x/staking/migrations/legacy"
 	v043staking "github.com/cosmos/cosmos-sdk/x/staking/migrations/v043"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -40,77 +41,77 @@ func TestStoreMigration(t *testing.T) {
 	}{
 		{
 			"LastValidatorPowerKey",
-			v043staking.GetLastValidatorPowerKey(valAddr1),
+			v040staking.GetLastValidatorPowerKey(valAddr1),
 			types.GetLastValidatorPowerKey(valAddr1),
 		},
 		{
 			"LastTotalPowerKey",
-			v043staking.LastTotalPowerKey,
+			v040staking.LastTotalPowerKey,
 			types.LastTotalPowerKey,
 		},
 		{
 			"ValidatorsKey",
-			v043staking.GetValidatorKey(valAddr1),
+			v040staking.GetValidatorKey(valAddr1),
 			types.GetValidatorKey(valAddr1),
 		},
 		{
 			"ValidatorsByConsAddrKey",
-			v043staking.GetValidatorByConsAddrKey(consAddr),
+			v040staking.GetValidatorByConsAddrKey(consAddr),
 			types.GetValidatorByConsAddrKey(consAddr),
 		},
 		{
 			"ValidatorsByPowerIndexKey",
-			v043staking.GetValidatorsByPowerIndexKey(val),
+			v040staking.GetValidatorsByPowerIndexKey(val),
 			types.GetValidatorsByPowerIndexKey(val, sdk.DefaultPowerReduction),
 		},
 		{
 			"DelegationKey",
-			v043staking.GetDelegationKey(addr4, valAddr1),
+			v040staking.GetDelegationKey(addr4, valAddr1),
 			types.GetDelegationKey(addr4, valAddr1),
 		},
 		{
 			"UnbondingDelegationKey",
-			v043staking.GetUBDKey(addr4, valAddr1),
+			v040staking.GetUBDKey(addr4, valAddr1),
 			types.GetUBDKey(addr4, valAddr1),
 		},
 		{
 			"UnbondingDelegationByValIndexKey",
-			v043staking.GetUBDByValIndexKey(addr4, valAddr1),
+			v040staking.GetUBDByValIndexKey(addr4, valAddr1),
 			types.GetUBDByValIndexKey(addr4, valAddr1),
 		},
 		{
 			"RedelegationKey",
-			v043staking.GetREDKey(addr4, valAddr1, valAddr2),
+			v040staking.GetREDKey(addr4, valAddr1, valAddr2),
 			types.GetREDKey(addr4, valAddr1, valAddr2),
 		},
 		{
 			"RedelegationByValSrcIndexKey",
-			v043staking.GetREDByValSrcIndexKey(addr4, valAddr1, valAddr2),
+			v040staking.GetREDByValSrcIndexKey(addr4, valAddr1, valAddr2),
 			types.GetREDByValSrcIndexKey(addr4, valAddr1, valAddr2),
 		},
 		{
 			"RedelegationByValDstIndexKey",
-			v043staking.GetREDByValDstIndexKey(addr4, valAddr1, valAddr2),
+			v040staking.GetREDByValDstIndexKey(addr4, valAddr1, valAddr2),
 			types.GetREDByValDstIndexKey(addr4, valAddr1, valAddr2),
 		},
 		{
 			"UnbondingQueueKey",
-			v043staking.GetUnbondingDelegationTimeKey(now),
+			v040staking.GetUnbondingDelegationTimeKey(now),
 			types.GetUnbondingDelegationTimeKey(now),
 		},
 		{
 			"RedelegationQueueKey",
-			v043staking.GetRedelegationTimeKey(now),
+			v040staking.GetRedelegationTimeKey(now),
 			types.GetRedelegationTimeKey(now),
 		},
 		{
 			"ValidatorQueueKey",
-			v043staking.GetValidatorQueueKey(now, 4),
+			v040staking.GetValidatorQueueKey(now, 4),
 			types.GetValidatorQueueKey(now, 4),
 		},
 		{
 			"HistoricalInfoKey",
-			v043staking.GetHistoricalInfoKey(4),
+			v040staking.GetHistoricalInfoKey(4),
 			types.GetHistoricalInfoKey(4),
 		},
 	}

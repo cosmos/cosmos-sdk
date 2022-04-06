@@ -1,4 +1,4 @@
-package v043
+package legacy
 
 import (
 	"bytes"
@@ -9,6 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	v040auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/legacy"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -29,9 +30,6 @@ const (
 	// value by not adding the staking module to the application module manager's
 	// SetOrderBeginBlockers.
 	DefaultHistoricalEntries uint32 = 10000
-
-	// v040auth addrlen
-	AddrLen = 20
 )
 
 var (
@@ -92,7 +90,7 @@ func GetValidatorsByPowerIndexKey(validator types.Validator) []byte {
 	powerBytesLen := len(powerBytes) // 8
 
 	// key is of format prefix || powerbytes || addrBytes
-	key := make([]byte, 1+powerBytesLen+AddrLen)
+	key := make([]byte, 1+powerBytesLen+v040auth.AddrLen)
 
 	key[0] = ValidatorsByPowerIndexKey[0]
 	copy(key[1:powerBytesLen+1], powerBytes)
@@ -119,11 +117,11 @@ func GetLastValidatorPowerKey(operator sdk.ValAddress) []byte {
 // GetREDKey returns a key prefix for indexing a redelegation from a delegator
 // and source validator to a destination validator.
 func GetREDKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []byte {
-	key := make([]byte, 1+AddrLen*3)
+	key := make([]byte, 1+v040auth.AddrLen*3)
 
-	copy(key[0:AddrLen+1], GetREDsKey(delAddr.Bytes()))
-	copy(key[AddrLen+1:2*AddrLen+1], valSrcAddr.Bytes())
-	copy(key[2*AddrLen+1:3*AddrLen+1], valDstAddr.Bytes())
+	copy(key[0:v040auth.AddrLen+1], GetREDsKey(delAddr.Bytes()))
+	copy(key[v040auth.AddrLen+1:2*v040auth.AddrLen+1], valSrcAddr.Bytes())
+	copy(key[2*v040auth.AddrLen+1:3*v040auth.AddrLen+1], valDstAddr.Bytes())
 
 	return key
 }
@@ -135,10 +133,10 @@ func GetREDByValSrcIndexKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.V
 	offset := len(REDSFromValsSrcKey)
 
 	// key is of the form REDSFromValsSrcKey || delAddr || valDstAddr
-	key := make([]byte, len(REDSFromValsSrcKey)+2*AddrLen)
+	key := make([]byte, len(REDSFromValsSrcKey)+2*v040auth.AddrLen)
 	copy(key[0:offset], REDSFromValsSrcKey)
-	copy(key[offset:offset+AddrLen], delAddr.Bytes())
-	copy(key[offset+AddrLen:offset+2*AddrLen], valDstAddr.Bytes())
+	copy(key[offset:offset+v040auth.AddrLen], delAddr.Bytes())
+	copy(key[offset+v040auth.AddrLen:offset+2*v040auth.AddrLen], valDstAddr.Bytes())
 
 	return key
 }
@@ -150,10 +148,10 @@ func GetREDByValDstIndexKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.V
 	offset := len(REDSToValsDstKey)
 
 	// key is of the form REDSToValsDstKey || delAddr || valSrcAddr
-	key := make([]byte, len(REDSToValsDstKey)+2*AddrLen)
+	key := make([]byte, len(REDSToValsDstKey)+2*v040auth.AddrLen)
 	copy(key[0:offset], REDSToValsDstKey)
-	copy(key[offset:offset+AddrLen], delAddr.Bytes())
-	copy(key[offset+AddrLen:offset+2*AddrLen], valSrcAddr.Bytes())
+	copy(key[offset:offset+v040auth.AddrLen], delAddr.Bytes())
+	copy(key[offset+v040auth.AddrLen:offset+2*v040auth.AddrLen], valSrcAddr.Bytes())
 
 	return key
 }
@@ -161,11 +159,11 @@ func GetREDByValDstIndexKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.V
 // GetREDKeyFromValSrcIndexKey rearranges the ValSrcIndexKey to get the REDKey
 func GetREDKeyFromValSrcIndexKey(indexKey []byte) []byte {
 	// note that first byte is prefix byte
-	kv.AssertKeyLength(indexKey, 3*AddrLen+1)
+	kv.AssertKeyLength(indexKey, 3*v040auth.AddrLen+1)
 
-	valSrcAddr := indexKey[1 : AddrLen+1]
-	delAddr := indexKey[AddrLen+1 : 2*AddrLen+1]
-	valDstAddr := indexKey[2*AddrLen+1 : 3*AddrLen+1]
+	valSrcAddr := indexKey[1 : v040auth.AddrLen+1]
+	delAddr := indexKey[v040auth.AddrLen+1 : 2*v040auth.AddrLen+1]
+	valDstAddr := indexKey[2*v040auth.AddrLen+1 : 3*v040auth.AddrLen+1]
 
 	return GetREDKey(delAddr, valSrcAddr, valDstAddr)
 }
@@ -173,11 +171,11 @@ func GetREDKeyFromValSrcIndexKey(indexKey []byte) []byte {
 // GetREDKeyFromValDstIndexKey rearranges the ValDstIndexKey to get the REDKey
 func GetREDKeyFromValDstIndexKey(indexKey []byte) []byte {
 	// note that first byte is prefix byte
-	kv.AssertKeyLength(indexKey, 3*AddrLen+1)
+	kv.AssertKeyLength(indexKey, 3*v040auth.AddrLen+1)
 
-	valDstAddr := indexKey[1 : AddrLen+1]
-	delAddr := indexKey[AddrLen+1 : 2*AddrLen+1]
-	valSrcAddr := indexKey[2*AddrLen+1 : 3*AddrLen+1]
+	valDstAddr := indexKey[1 : v040auth.AddrLen+1]
+	delAddr := indexKey[v040auth.AddrLen+1 : 2*v040auth.AddrLen+1]
+	valSrcAddr := indexKey[2*v040auth.AddrLen+1 : 3*v040auth.AddrLen+1]
 
 	return GetREDKey(delAddr, valSrcAddr, valDstAddr)
 }
@@ -261,11 +259,11 @@ func GetUBDByValIndexKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte 
 func GetUBDKeyFromValIndexKey(indexKey []byte) []byte {
 	kv.AssertKeyAtLeastLength(indexKey, 2)
 	addrs := indexKey[1:] // remove prefix bytes
-	kv.AssertKeyLength(addrs, 2*AddrLen)
+	kv.AssertKeyLength(addrs, 2*v040auth.AddrLen)
 
-	kv.AssertKeyAtLeastLength(addrs, AddrLen+1)
-	valAddr := addrs[:AddrLen]
-	delAddr := addrs[AddrLen:]
+	kv.AssertKeyAtLeastLength(addrs, v040auth.AddrLen+1)
+	valAddr := addrs[:v040auth.AddrLen]
+	delAddr := addrs[v040auth.AddrLen:]
 
 	return GetUBDKey(delAddr, valAddr)
 }

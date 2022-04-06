@@ -36,7 +36,7 @@ Value Renderers describe how values of different Protobuf types should be encode
 ### `coin`
 
 - Applies to `cosmos.base.v1beta1.Coin`.
-- Denoms are converted to `display` denoms using `Metadata` (if available). **This requires a state query**.
+- Denoms are converted to `display` denoms using `Metadata` (if available). **This requires a state query**. The definition of `Metadata` can be found in the [bank Protobuf definition](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/proto/cosmos/bank/v1beta1/bank.proto#L79-L108). If the `display` field is empty or nil, then we do not perform any denom conversion.
 - Amounts are converted to `display` denom amounts and rendered as `number`s above
   - We do not change the capitalization of the denom. In practice, `display` denoms are stored in lowercase in state (e.g. `10 atom`), however they are often showed in UPPERCASE in everyday life (e.g. `10 ATOM`). Value renderers keep the case used in state, but we may recommend chains changing the denom metadata to be uppercase for better user display.
 - One space between the denom and amount

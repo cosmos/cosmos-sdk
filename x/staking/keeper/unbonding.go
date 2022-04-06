@@ -348,25 +348,24 @@ func (k Keeper) validatorUnbondingCanComplete(ctx sdk.Context, id uint64) (found
 // PutUnbondingOpOnHold allows an external module to stop an unbonding operation such as an
 // unbonding delegation, a redelegation, or a validator unbonding
 // ----------------------------------------------------------------------------------------
-// TODO JNT: return an error instead of bool
-func (k Keeper) PutUnbondingOpOnHold(ctx sdk.Context, id uint64) (found bool) {
-	found = k.putUnbondingDelegationEntryOnHold(ctx, id)
+func (k Keeper) PutUnbondingOpOnHold(ctx sdk.Context, id uint64) error {
+	found := k.putUnbondingDelegationEntryOnHold(ctx, id)
 	if found {
-		return true
+		return nil
 	}
 
 	found = k.putRedelegationEntryOnHold(ctx, id)
 	if found {
-		return true
+		return nil
 	}
 
 	found = k.putValidatorOnHold(ctx, id)
 	if found {
-		return true
+		return nil
 	}
 
 	// If an entry was not found
-	return false
+	return types.ErrUnbondingOpNotFound
 }
 
 func (k Keeper) putUnbondingDelegationEntryOnHold(ctx sdk.Context, id uint64) (found bool) {

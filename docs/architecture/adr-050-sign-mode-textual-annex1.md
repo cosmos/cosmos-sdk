@@ -15,7 +15,7 @@ This Annex describes value renderers, which are used for displaying Protobuf val
 
 ## Value Renderers
 
-Value Renderers describe how values of different Protobuf types should be encoded as a string array. Value renderers can be formalized as a set of bijective functions `func renderT(value T) []string`, where `T` is one of the below Protobuf types on which this spec is defined.
+Value Renderers describe how values of different Protobuf types should be encoded as a string array. Value renderers can be formalized as a set of bijective functions `func renderT(value T) []string`, where `T` is one of the below Protobuf types for which this spec is defined.
 
 ### Protobuf `number`
 

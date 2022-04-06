@@ -275,13 +275,13 @@ func (k Keeper) unbondingDelegationEntryCanComplete(ctx sdk.Context, id uint64) 
 
 		// Remove entry
 		ubd.RemoveEntry(int64(i))
-		// Remove from the UBDByEntry index
-		k.DeleteUnbondingOpIndex(ctx, id)
 	}
 
 	// set the unbonding delegation or remove it if there are no more entries
 	if len(ubd.Entries) == 0 {
 		k.RemoveUnbondingDelegation(ctx, ubd)
+		// Remove from the UBDByEntry index
+		k.DeleteUnbondingOpIndex(ctx, id)
 	} else {
 		k.SetUnbondingDelegation(ctx, ubd)
 	}
@@ -308,13 +308,13 @@ func (k Keeper) redelegationEntryCanComplete(ctx sdk.Context, id uint64) (found 
 		// If matured, complete it.
 		// Remove entry
 		red.RemoveEntry(int64(i))
-		// Remove from the UnbondingOp index
-		k.DeleteUnbondingOpIndex(ctx, id)
 	}
 
 	// set the redelegation or remove it if there are no more entries
 	if len(red.Entries) == 0 {
 		k.RemoveRedelegation(ctx, red)
+		// Remove from the UnbondingOp index
+		k.DeleteUnbondingOpIndex(ctx, id)
 	} else {
 		k.SetRedelegation(ctx, red)
 	}

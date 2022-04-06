@@ -5,8 +5,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v040auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v040"
-	v040bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v040"
+	v040auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/legacy"
+	v040bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/legacy"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 

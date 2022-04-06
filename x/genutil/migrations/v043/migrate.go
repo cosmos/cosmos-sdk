@@ -2,11 +2,11 @@ package v043
 
 import (
 	"github.com/cosmos/cosmos-sdk/client"
-	v040bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v040"
+	v040bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/legacy"
 	v043bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v043"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
-	v040gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v040"
+	v040gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/legacy"
 	v043gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v043"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )

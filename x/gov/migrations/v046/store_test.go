@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v040gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v040"
+	v040gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/legacy"
 	v046gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"

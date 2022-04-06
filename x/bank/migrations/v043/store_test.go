@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v040bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v040"
+	v040bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/legacy"
 	v043bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v043"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )

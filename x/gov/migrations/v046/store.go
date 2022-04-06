@@ -5,7 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v040 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v040"
+	v040 "github.com/cosmos/cosmos-sdk/x/gov/migrations/legacy"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 

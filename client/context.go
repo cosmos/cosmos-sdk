@@ -2,6 +2,7 @@ package client
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 
@@ -16,6 +17,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -52,9 +54,9 @@ type Context struct {
 	FeePayer          sdk.AccAddress
 	FeeGranter        sdk.AccAddress
 	Viper             *viper.Viper
-	
+
 	// IsAux is true when the signer is an auxiliary signer (e.g. the tipper).
-	IsAux             bool
+	IsAux bool
 
 	// TODO: Deprecated (remove).
 	LegacyAmino *codec.LegacyAmino
@@ -334,24 +336,32 @@ func (ctx Context) printOutput(out []byte) error {
 	return nil
 }
 
-// GetFromFields returns a from account address, account name and keyring type, given either
-// an address or key name. If genOnly is true, only a valid Bech32 cosmos
-// address is returned.
-func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddress, string, keyring.KeyType, error) {
+// GetFromFields returns a from account address, account name and keyring type, given either an address or key name.
+// If simulate is true a new temporary address will be generated
+func GetFromFields(kr keyring.Keyring, from string, simulate bool) (sdk.AccAddress, string, keyring.KeyType, error) {
 	if from == "" {
 		return nil, "", 0, nil
 	}
 
 	var k *keyring.Record
-	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
-		k, err = kr.KeyByAddress(addr)
-		if err != nil {
-			return nil, "", 0, err
+	var err error
+
+	if !simulate {
+		if addr, err := sdk.AccAddressFromBech32(from); err == nil {
+			k, err = kr.KeyByAddress(addr)
+			if err != nil {
+				return nil, "", 0, err
+			}
+		} else {
+			k, err = kr.Key(from)
+			if err != nil {
+				return nil, "", 0, err
+			}
 		}
 	} else {
-		k, err = kr.Key(from)
+		k, _, err = kr.NewMnemonic(from, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 		if err != nil {
-			return nil, "", 0, err
+			return nil, "", 0, fmt.Errorf("failed to simulate %s key: %w", from, err)
 		}
 	}
 

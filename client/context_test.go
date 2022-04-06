@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -113,4 +114,79 @@ func TestCLIQueryConn(t *testing.T) {
 	res, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
 	require.NoError(t, err)
 	require.Equal(t, "hello", res.Message)
+}
+
+func TestGetFromFields(t *testing.T) {
+	cfg := network.DefaultConfig()
+	path := hd.CreateHDPath(118, 0, 0).String()
+
+	testCases := []struct {
+		keyring     func() keyring.Keyring
+		from        string
+		expectedErr string
+		simulate    bool
+	}{
+		{
+			keyring: func() keyring.Keyring {
+				kb := keyring.NewInMemory(cfg.Codec)
+
+				_, _, err := kb.NewMnemonic("alice", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+				require.NoError(t, err)
+
+				return kb
+			},
+			from: "alice",
+		},
+		{
+			keyring: func() keyring.Keyring {
+				return keyring.NewInMemory(cfg.Codec)
+			},
+			from:        "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+			expectedErr: "key with address cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5 not found: key not found",
+		},
+		{
+			keyring: func() keyring.Keyring {
+				kb, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, cfg.Codec)
+				require.NoError(t, err)
+
+				_, _, err = kb.NewMnemonic("bob", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+				require.NoError(t, err)
+
+				return kb
+			},
+			from: "bob",
+		},
+		{
+			keyring: func() keyring.Keyring {
+				kb, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, cfg.Codec)
+				require.NoError(t, err)
+				return kb
+			},
+			from:        "bob",
+			expectedErr: "bob.info: key not found",
+		},
+		{
+			keyring: func() keyring.Keyring {
+				return keyring.NewInMemory(cfg.Codec)
+			},
+			from:     "alice",
+			simulate: true,
+		},
+		{
+			keyring: func() keyring.Keyring {
+				return keyring.NewInMemory(cfg.Codec)
+			},
+			from:     "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+			simulate: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		_, _, _, err := client.GetFromFields(tc.keyring(), tc.from, tc.simulate)
+		if tc.expectedErr == "" {
+			require.NoError(t, err)
+		} else {
+			require.Equal(t, tc.expectedErr, err.Error())
+		}
+	}
 }

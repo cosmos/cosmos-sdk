@@ -38,6 +38,7 @@ ignored as it is implied from [from_key_or_address].`,
 			if err != nil {
 				return err
 			}
+
 			toAddr, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
 				return err

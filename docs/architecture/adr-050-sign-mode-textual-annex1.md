@@ -66,7 +66,7 @@ message MsgSend {
 
 ### `repeated`
 
-- Applies to all `repeated` fields, except `cosmos.tx.v1beta1.TxBody#Messages`, who has a particular encoding (see [ADR-050](./adr-050-sign-mode-textual.md)).
+- Applies to all `repeated` fields, except `cosmos.tx.v1beta1.TxBody#Messages`, which has a particular encoding (see [ADR-050](./adr-050-sign-mode-textual.md)).
 - A repeated type has the following template:
 
 ```

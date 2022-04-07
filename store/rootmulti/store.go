@@ -1048,7 +1048,7 @@ func (rs *Store) doProofsQuery(req abci.RequestQuery) abci.ResponseQuery {
 	}
 
 	for _, storeInfo := range commitInfo.StoreInfos {
-		res.ProofOps.Ops = append(res.ProofOps.Ops, commitInfo.ProofOp(storeInfo.Name))
+		res.ProofOps.Ops = append(res.ProofOps.Ops, crypto.ProofOp{Key: []byte(storeInfo.Name), Data: storeInfo.CommitId.Hash, })
 	}
 	return res
 }

@@ -8,7 +8,8 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
 
-	ormv1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
+	ormv1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1"
+
 	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 )
@@ -16,22 +17,22 @@ import (
 type tableGen struct {
 	fileGen
 	msg              *protogen.Message
-	table            *ormv1alpha1.TableDescriptor
+	table            *ormv1.TableDescriptor
 	primaryKeyFields fieldnames.FieldNames
 	fields           map[protoreflect.Name]*protogen.Field
-	uniqueIndexes    []*ormv1alpha1.SecondaryIndexDescriptor
+	uniqueIndexes    []*ormv1.SecondaryIndexDescriptor
 	ormTable         ormtable.Table
 }
 
 const notFoundDocs = " returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found."
 
-func newTableGen(fileGen fileGen, msg *protogen.Message, table *ormv1alpha1.TableDescriptor) (*tableGen, error) {
+func newTableGen(fileGen fileGen, msg *protogen.Message, table *ormv1.TableDescriptor) (*tableGen, error) {
 	t := &tableGen{fileGen: fileGen, msg: msg, table: table, fields: map[protoreflect.Name]*protogen.Field{}}
 	t.primaryKeyFields = fieldnames.CommaSeparatedFieldNames(table.PrimaryKey.Fields)
 	for _, field := range msg.Fields {
 		t.fields[field.Desc.Name()] = field
 	}
-	uniqIndexes := make([]*ormv1alpha1.SecondaryIndexDescriptor, 0)
+	uniqIndexes := make([]*ormv1.SecondaryIndexDescriptor, 0)
 	for _, idx := range t.table.Index {
 		if idx.Unique {
 			uniqIndexes = append(uniqIndexes, idx)
@@ -96,7 +97,7 @@ func (t tableGen) uniqueIndexSig(idxFields string) (string, string, string) {
 	return hasFuncSig, getFuncSig, getFuncName
 }
 
-func (t tableGen) genUniqueIndexSig(idx *ormv1alpha1.SecondaryIndexDescriptor) {
+func (t tableGen) genUniqueIndexSig(idx *ormv1.SecondaryIndexDescriptor) {
 	hasSig, getSig, getFuncName := t.uniqueIndexSig(idx.Fields)
 	t.P(hasSig)
 	t.P("// ", getFuncName, notFoundDocs)

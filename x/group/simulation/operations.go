@@ -439,9 +439,9 @@ func SimulateMsgSubmitProposal(ak group.AccountKeeper, bk group.BankKeeper, k ke
 		}
 
 		msg := group.MsgSubmitProposal{
-			Address:   groupPolicyAddr,
-			Proposers: []string{acc.Address.String()},
-			Metadata:  simtypes.RandStringOfLength(r, 10),
+			GroupPolicyAddress: groupPolicyAddr,
+			Proposers:          []string{acc.Address.String()},
+			Metadata:           simtypes.RandStringOfLength(r, 10),
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -681,9 +681,9 @@ func SimulateMsgUpdateGroupPolicyAdmin(ak group.AccountKeeper, bk group.BankKeep
 		}
 
 		msg := group.MsgUpdateGroupPolicyAdmin{
-			Admin:    acc.Address.String(),
-			Address:  groupPolicyAddr,
-			NewAdmin: newAdmin.Address.String(),
+			Admin:              acc.Address.String(),
+			GroupPolicyAddress: groupPolicyAddr,
+			NewAdmin:           newAdmin.Address.String(),
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -789,9 +789,9 @@ func SimulateMsgUpdateGroupPolicyMetadata(ak group.AccountKeeper,
 		}
 
 		msg := group.MsgUpdateGroupPolicyMetadata{
-			Admin:    acc.Address.String(),
-			Address:  groupPolicyAddr,
-			Metadata: simtypes.RandStringOfLength(r, 10),
+			Admin:              acc.Address.String(),
+			GroupPolicyAddress: groupPolicyAddr,
+			Metadata:           simtypes.RandStringOfLength(r, 10),
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -1056,7 +1056,7 @@ func SimulateMsgExec(ak group.AccountKeeper,
 		proposalID := -1
 
 		for _, proposal := range proposals {
-			if proposal.Status == group.PROPOSAL_STATUS_CLOSED {
+			if proposal.Status == group.PROPOSAL_STATUS_ACCEPTED {
 				proposalID = int(proposal.Id)
 				break
 			}
@@ -1069,7 +1069,7 @@ func SimulateMsgExec(ak group.AccountKeeper,
 
 		msg := group.MsgExec{
 			ProposalId: uint64(proposalID),
-			Signer:     acc.Address.String(),
+			Executor:   acc.Address.String(),
 		}
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(

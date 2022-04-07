@@ -25,6 +25,8 @@ type KeeperTestSuite struct {
 	queryClient       v1.QueryClient
 	legacyQueryClient v1beta1.QueryClient
 	addrs             []sdk.AccAddress
+	msgSrvr           v1.MsgServer
+	legacyMsgSrvr     v1beta1.MsgServer
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -50,6 +52,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.ctx = ctx
 	suite.queryClient = queryClient
 	suite.legacyQueryClient = legacyQueryClient
+	suite.msgSrvr = keeper.NewMsgServerImpl(suite.app.GovKeeper)
+
+	govAcct := suite.app.GovKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
+	suite.legacyMsgSrvr = keeper.NewLegacyMsgServerImpl(govAcct.String(), suite.msgSrvr)
 	suite.addrs = simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
 }
 

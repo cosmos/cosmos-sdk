@@ -108,7 +108,7 @@ upon receiving txGovDeposit from sender do
     // There is no proposal for this proposalID
     throw
 
-  if (txGovDeposit.Deposit.Atoms <= 0) OR (sender.AtomBalance < txGovDeposit.Deposit.Atoms) OR (proposal.CurrentStatus != ProposalStatusOpen)
+  if (txGovDeposit.Deposit.Atoms <= 0) OR (sender.AtomBalance < txGovDeposit.Deposit.Atoms) OR (proposal.CurrentStatus != ProposalStatusOpen)
 
     // deposit is negative or null
     // OR sender has insufficient funds

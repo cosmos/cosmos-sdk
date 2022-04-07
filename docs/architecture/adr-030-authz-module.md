@@ -117,6 +117,15 @@ A different type of capability for `MsgSend` could be implemented
 using the `Authorization` interface with no need to change the underlying
 `bank` module.
 
+##### Small notes on `AcceptResponse`
+
+- The `AcceptResponse.Accept` field will be set to `true` if the authorization is accepted.
+However, if it is rejected, the function `Accept` will raise an error (without setting `AcceptResponse.Accept` to `false`).
+
+- The `AcceptResponse.Updated` field will be set to a non-nil value only if there is a real change to the authorization.
+If authorization remains the same (as is, for instance, always the case for a [`GenericAuthorization`](#genericauthorization)),
+the field will be `nil`.
+
 ### `Msg` Service
 
 ```proto

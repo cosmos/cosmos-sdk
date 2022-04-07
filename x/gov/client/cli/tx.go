@@ -48,7 +48,7 @@ var ProposalFlags = []string{
 // NewTxCmd returns the transaction commands for this module
 // governance ModuleClient is slightly different from other ModuleClients in that
 // it contains a slice of legacy "proposal" child commands. These commands are respective
-// to proposal type handlers that are implemented in other modules but are mounted
+// to the proposal type handlers that are implemented in other modules but are mounted
 // under the governance CLI (eg. parameter change proposals).
 func NewTxCmd(legacyPropCmds []*cobra.Command) *cobra.Command {
 	govTxCmd := &cobra.Command{

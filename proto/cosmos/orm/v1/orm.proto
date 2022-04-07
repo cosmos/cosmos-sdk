@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package cosmos.orm.v1alpha1;
+package cosmos.orm.v1;
 
 import "google/protobuf/descriptor.proto";
 
@@ -49,10 +49,7 @@ message PrimaryKeyDescriptor {
   //   in non-terminal segments. Null characters are thus forbidden in strings.
   //   string fields support sorted iteration.
   //   - bytes are encoded as raw bytes in terminal segments and length-prefixed
-  //   with a single byte in non-terminal segments. Because of this byte arrays
-  //   longer than 255 bytes are unsupported and bytes fields should not
-  //   be assumed to be lexically sorted. If you have a byte array longer than
-  //   255 bytes that you'd like to index, you should consider hashing it first.
+  //   with a 32-bit unsigned varint in non-terminal segments.
   //   - int32, sint32, int64, sint64, sfixed32, sfixed64 are encoded as fixed width bytes with
   //   an encoding that enables sorted iteration.
   //   - google.protobuf.Timestamp and google.protobuf.Duration are encoded

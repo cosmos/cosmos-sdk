@@ -83,7 +83,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 	val := s.network.Validators[0]
 
-	// Create an legacy proposal JSON, make sure it doesn't pass this new CLI
+	// Create a legacy proposal JSON, make sure it doesn't pass this new CLI
 	// command.
 	invalidProp := `{
 	"title": "",

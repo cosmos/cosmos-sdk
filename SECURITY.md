@@ -6,7 +6,7 @@ report it to our [bug bounty program](https://hackerone.com/cosmos) on HackerOne
 ## Bug Bounty
 
 As part of our [Coordinated Vulnerability Disclosure Policy](https://tendermint.com/security), we operate a
-[bug bounty program](https://hackerone.com/tendermint) with Hacker One.
+[bug bounty program](https://hackerone.com/cosmos) with Hacker One.
 
 See the policy linked above for more details on submissions and rewards and read
 this [blog post](https://blog.cosmos.network/bug-bounty-program-for-tendermint-cosmos-833c67693586) for the program scope.

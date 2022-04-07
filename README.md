@@ -57,7 +57,7 @@ For more information, see the [Cosmos SDK Documentation](./docs/).
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for details how to contribute and participate in our [dev calls](./CONTRIBUTE.md#dev-calls).
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for details how to contribute and participate in our [dev calls](./CONTRIBUTING.md#teams-dev-calls).
 If you want to follow the updates or learn more about the latest design then join our [Discord](https://discord.com/invite/cosmosnetwork).
 
 ## Tools and Frameworks

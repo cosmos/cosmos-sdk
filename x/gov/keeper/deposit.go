@@ -73,7 +73,7 @@ func (keeper Keeper) DeleteAndBurnDeposits(ctx sdk.Context, proposalID uint64) {
 	})
 }
 
-// IterateAllDeposits iterates over the all the stored deposits and performs a callback function
+// IterateAllDeposits iterates over all the stored deposits and performs a callback function
 func (keeper Keeper) IterateAllDeposits(ctx sdk.Context, cb func(deposit v1.Deposit) (stop bool)) {
 	store := ctx.KVStore(keeper.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.DepositsKeyPrefix)
@@ -91,7 +91,7 @@ func (keeper Keeper) IterateAllDeposits(ctx sdk.Context, cb func(deposit v1.Depo
 	}
 }
 
-// IterateDeposits iterates over the all the proposals deposits and performs a callback function
+// IterateDeposits iterates over all the proposals deposits and performs a callback function
 func (keeper Keeper) IterateDeposits(ctx sdk.Context, proposalID uint64, cb func(deposit v1.Deposit) (stop bool)) {
 	store := ctx.KVStore(keeper.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.DepositsKey(proposalID))
@@ -109,8 +109,8 @@ func (keeper Keeper) IterateDeposits(ctx sdk.Context, proposalID uint64, cb func
 	}
 }
 
-// AddDeposit adds or updates a deposit of a specific depositor on a specific proposal
-// Activates voting period when appropriate
+// AddDeposit adds or updates a deposit of a specific depositor on a specific proposal.
+// Activates voting period when appropriate and returns true in that case, else returns false.
 func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress, depositAmount sdk.Coins) (bool, error) {
 	// Checks to see if proposal exists
 	proposal, ok := keeper.GetProposal(ctx, proposalID)

@@ -37,6 +37,7 @@ staking token of the chain.
 
 1. **[Concepts](01_concepts.md)**
     * [Proposal submission](01_concepts.md#proposal-submission)
+    * [Deposit](01_concepts.md#Deposit)
     * [Vote](01_concepts.md#vote)
     * [Software Upgrade](01_concepts.md#software-upgrade)
 2. **[State](02_state.md)**

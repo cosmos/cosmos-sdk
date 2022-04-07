@@ -448,9 +448,9 @@ func MsgUpdateGroupPolicyAdminCmd() *cobra.Command {
 			}
 
 			msg := &group.MsgUpdateGroupPolicyAdmin{
-				Admin:    clientCtx.GetFromAddress().String(),
-				Address:  args[1],
-				NewAdmin: args[2],
+				Admin:              clientCtx.GetFromAddress().String(),
+				GroupPolicyAddress: args[1],
+				NewAdmin:           args[2],
 			}
 			if err = msg.ValidateBasic(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
@@ -532,9 +532,9 @@ func MsgUpdateGroupPolicyMetadataCmd() *cobra.Command {
 			}
 
 			msg := &group.MsgUpdateGroupPolicyMetadata{
-				Admin:    clientCtx.GetFromAddress().String(),
-				Address:  args[1],
-				Metadata: args[2],
+				Admin:              clientCtx.GetFromAddress().String(),
+				GroupPolicyAddress: args[1],
+				Metadata:           args[2],
 			}
 			if err = msg.ValidateBasic(); err != nil {
 				return fmt.Errorf("message validation failed: %w", err)
@@ -580,7 +580,7 @@ Example:
 }`, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			prop, err := parseCLIProposal(args[0])
+			prop, err := getCLIProposal(args[0])
 			if err != nil {
 				return err
 			}
@@ -763,7 +763,7 @@ func MsgExecCmd() *cobra.Command {
 
 			msg := &group.MsgExec{
 				ProposalId: proposalID,
-				Signer:     clientCtx.GetFromAddress().String(),
+				Executor:   clientCtx.GetFromAddress().String(),
 			}
 			if err != nil {
 				return err

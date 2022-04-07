@@ -3798,6 +3798,7 @@ type MsgWithdrawDelegatorRewardResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// Since: cosmos-sdk 0.46
 	Amount []*v1beta1.Coin `protobuf:"bytes,1,rep,name=amount,proto3" json:"amount,omitempty"`
 }
 
@@ -3871,6 +3872,7 @@ type MsgWithdrawValidatorCommissionResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// Since: cosmos-sdk 0.46
 	Amount []*v1beta1.Coin `protobuf:"bytes,1,rep,name=amount,proto3" json:"amount,omitempty"`
 }
 

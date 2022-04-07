@@ -67,7 +67,7 @@ according to the final tally of the proposal:
 * All refunded or burned deposits are removed from the state. Events are issued when
   burning or refunding a deposit.
 
-## Voting
+## Vote
 
 ### Participants
 
@@ -169,7 +169,7 @@ Later, we may add permissioned keys that could only sign txs from certain module
 ## Software Upgrade
 
 If proposals are of type `SoftwareUpgradeProposal`, then nodes need to upgrade
-their software to the new version that was voted. This process is divided in
+their software to the new version that was voted. This process is divided into
 two steps.
 
 ### Signal

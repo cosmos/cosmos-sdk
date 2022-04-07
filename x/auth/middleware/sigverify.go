@@ -299,6 +299,10 @@ type sigGasConsumeTxHandler struct {
 // CONTRACT: Pubkeys are set in context for all signers before this middleware runs
 // CONTRACT: Tx must implement SigVerifiableTx interface
 func SigGasConsumeMiddleware(ak AccountKeeper, sigGasConsumer SignatureVerificationGasConsumer) tx.Middleware {
+	if sigGasConsumer == nil {
+		sigGasConsumer = DefaultSigVerificationGasConsumer
+	}
+
 	return func(h tx.Handler) tx.Handler {
 		return sigGasConsumeTxHandler{
 			ak:             ak,

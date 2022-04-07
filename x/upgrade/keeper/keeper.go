@@ -162,16 +162,24 @@ func (k Keeper) getModuleVersion(ctx sdk.Context, name string) (uint64, bool) {
 }
 
 // ScheduleUpgrade schedules an upgrade based on the specified plan.
+<<<<<<< HEAD
 // If there is another Plan already scheduled, it will overwrite it
 // (implicitly cancelling the current plan)
 // ScheduleUpgrade will also write the upgraded client to the upgraded client path
 // if an upgraded client is specified in the plan
+=======
+// If there is another Plan already scheduled, it will cancel and overwrite it.
+// ScheduleUpgrade will also write the upgraded IBC ClientState to the upgraded client
+// path if it is specified in the plan.
+>>>>>>> 5b02bf459 (feat: `ScheduleUpgradeNoHeightValidation` for automated upgrades w/o gov proposal (#11551))
 func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 	if err := plan.ValidateBasic(); err != nil {
 		return err
 	}
 
-	if plan.Height <= ctx.BlockHeight() {
+	// NOTE: allow for the possibility of chains to schedule upgrades in begin block of the same block
+	// as a strategy for emergency hard fork recoveries
+	if plan.Height < ctx.BlockHeight() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "upgrade cannot be scheduled in the past")
 	}
 
@@ -375,7 +383,11 @@ func (k Keeper) DumpUpgradeInfoWithInfoToDisk(height int64, name string, info st
 		return err
 	}
 
+<<<<<<< HEAD
 	return ioutil.WriteFile(upgradeInfoFilePath, bz, 0600)
+=======
+	return os.WriteFile(upgradeInfoFilePath, info, 0o600)
+>>>>>>> 5b02bf459 (feat: `ScheduleUpgradeNoHeightValidation` for automated upgrades w/o gov proposal (#11551))
 }
 
 // GetUpgradeInfoPath returns the upgrade info file path

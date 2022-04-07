@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v040gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v040"
+	v042gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v042"
 	v043gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v043"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -40,32 +40,32 @@ func TestMigrateStore(t *testing.T) {
 	}{
 		{
 			"ProposalKey",
-			v040gov.ProposalKey(proposalID), dummyValue,
+			v042gov.ProposalKey(proposalID), dummyValue,
 			types.ProposalKey(proposalID), dummyValue,
 		},
 		{
 			"ActiveProposalQueue",
-			v040gov.ActiveProposalQueueKey(proposalID, now), dummyValue,
+			v042gov.ActiveProposalQueueKey(proposalID, now), dummyValue,
 			types.ActiveProposalQueueKey(proposalID, now), dummyValue,
 		},
 		{
 			"InactiveProposalQueue",
-			v040gov.InactiveProposalQueueKey(proposalID, now), dummyValue,
+			v042gov.InactiveProposalQueueKey(proposalID, now), dummyValue,
 			types.InactiveProposalQueueKey(proposalID, now), dummyValue,
 		},
 		{
 			"ProposalIDKey",
-			v040gov.ProposalIDKey, dummyValue,
+			v042gov.ProposalIDKey, dummyValue,
 			types.ProposalIDKey, dummyValue,
 		},
 		{
 			"DepositKey",
-			v040gov.DepositKey(proposalID, addr1), dummyValue,
+			v042gov.DepositKey(proposalID, addr1), dummyValue,
 			types.DepositKey(proposalID, addr1), dummyValue,
 		},
 		{
 			"VotesKeyPrefix",
-			v040gov.VoteKey(proposalID, addr1), oldVoteValue,
+			v042gov.VoteKey(proposalID, addr1), oldVoteValue,
 			types.VoteKey(proposalID, addr1), newVoteValue,
 		},
 	}

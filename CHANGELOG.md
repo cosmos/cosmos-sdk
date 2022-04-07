@@ -153,6 +153,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (authz)[\#11060](https://github.com/cosmos/cosmos-sdk/pull/11060) `authz.NewMsgGrant` `expiration` is now a pointer. When `nil` is used then no expiration will be set (grant won't expire).
 * (x/distribution)[\#11457](https://github.com/cosmos/cosmos-sdk/pull/11457) Add amount field to `distr.MsgWithdrawDelegatorRewardResponse` and `distr.MsgWithdrawValidatorCommissionResponse`.
 * (x/auth/middleware) [#11413](https://github.com/cosmos/cosmos-sdk/pull/11413) Refactor tx middleware to be extensible on tx fee logic. Merged `MempoolFeeMiddleware` and `TxPriorityMiddleware` functionalities into `DeductFeeMiddleware`, make the logic extensible using the `TxFeeChecker` option, the current fee logic is preserved by the default `checkTxFeeWithValidatorMinGasPrices` implementation. Change `RejectExtensionOptionsMiddleware` to `NewExtensionOptionsMiddleware` which is extensible with the `ExtensionOptionChecker` option. Unpack the tx extension options `Any`s to interface `TxExtensionOptionI`.
+* (migrations) [#1156](https://github.com/cosmos/cosmos-sdk/pull/11556#issuecomment-1091385011) Remove migration code from 0.42 and below. To use previous migrations, checkout previous versions of the cosmos-sdk. 
 
 ### Client Breaking Changes
 
@@ -265,7 +266,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#11011](https://github.com/cosmos/cosmos-sdk/pull/11011) Remove burning of deposits when qourum is not reached on a governance proposal and when the deposit is not fully met. 
 * [\#11019](https://github.com/cosmos/cosmos-sdk/pull/11019) Add `MsgCreatePermanentLockedAccount` and CLI method for creating permanent locked account
 * (x/staking) [\#10885] (https://github.com/cosmos/cosmos-sdk/pull/10885) Add new `CancelUnbondingDelegation`
-  transaction to `x/staking` module. Delegators can now cancel unbonding delegation entry and re-delegate back to validator.
+  transaction to `x/staking` module. Delegators can now cancel unbonding delegation entry and delegate back to validator.
 * (x/feegrant) [\#10830](https://github.com/cosmos/cosmos-sdk/pull/10830) Expired allowances will be pruned from state.
 * (x/authz,x/feegrant) [\#11214](https://github.com/cosmos/cosmos-sdk/pull/11214) Fix Amino JSON encoding of authz and feegrant Msgs to be consistent with other modules.
 * (authz)[\#11060](https://github.com/cosmos/cosmos-sdk/pull/11060) Support grant with no expire time.

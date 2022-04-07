@@ -127,7 +127,7 @@ The `MsgCancelUnbondingDelegation` message allows delegators to cancel the `unbo
 
 
 This message is expected to fail if:
-* the `unbondingDelegation` entry is already processed
+* the `unbondingDelegation` entry is already processed.
 * the `cancel unbonding delegation` amount is greater than the `unbondingDelegation` entry balance.
 * the `cancel unbonding delegation` height doesn't exists in the `unbondingDelegationQueue` of the delegator.
 

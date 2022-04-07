@@ -345,7 +345,7 @@ func GetFromFields(kr keyring.Keyring, from string, simulate bool) (sdk.AccAddre
 	if simulate {
 		addr, err := sdk.AccAddressFromBech32(from)
 		if err != nil {
-			return nil, "", 0, fmt.Errorf("a valid Bech32 address must be provided in simulation mode: %w", err)
+			return nil, "", 0, fmt.Errorf("a valid bech32 address must be provided in simulation mode: %w", err)
 		}
 
 		return addr, "", 0, nil

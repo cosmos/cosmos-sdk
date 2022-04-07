@@ -180,7 +180,7 @@ func TestGetFromFields(t *testing.T) {
 			},
 			addr:        "alice",
 			simulate:    true,
-			expectedErr: "a valid Bech32 address must be provided in simulation mode",
+			expectedErr: "a valid bech32 address must be provided in simulation mode",
 		},
 	}
 

@@ -202,7 +202,11 @@ func (s *GenesisTestSuite) assertGroupPoliciesEqual(g *group.GroupPolicyInfo, ot
 	require.Equal(g.Admin, other.Admin)
 	require.Equal(g.Metadata, other.Metadata)
 	require.Equal(g.Version, other.Version)
-	require.Equal(g.GetDecisionPolicy(), other.GetDecisionPolicy())
+	dp1, err := g.GetDecisionPolicy()
+	require.NoError(err)
+	dp2, err := other.GetDecisionPolicy()
+	require.NoError(err)
+	require.Equal(dp1, dp2)
 }
 
 func (s *GenesisTestSuite) assertProposalsEqual(g *group.Proposal, other *group.Proposal) {

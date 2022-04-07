@@ -100,7 +100,7 @@ func (k Keeper) CreateGroup(goCtx context.Context, req *group.MsgCreateGroup) (*
 func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGroupMembers) (*group.MsgUpdateGroupMembersResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	action := func(g *group.GroupInfo) error {
-		totalWeight, err := math.NewNonNegativeDecFromString(g.TotalWeight)
+		totalWeight, err := math.NewPositiveDecFromString(g.TotalWeight)
 		if err != nil {
 			return err
 		}
@@ -140,7 +140,7 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 					return sdkerrors.Wrap(sdkerrors.ErrNotFound, "unknown member")
 				}
 
-				previousMemberWeight, err := math.NewNonNegativeDecFromString(prevGroupMember.Member.Weight)
+				previousMemberWeight, err := math.NewPositiveDecFromString(prevGroupMember.Member.Weight)
 				if err != nil {
 					return err
 				}
@@ -159,11 +159,11 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 			}
 			// If group member already exists, handle update
 			if found {
-				previousMemberWeight, err := math.NewNonNegativeDecFromString(prevGroupMember.Member.Weight)
+				previousMemberWeight, err := math.NewPositiveDecFromString(prevGroupMember.Member.Weight)
 				if err != nil {
 					return err
 				}
-				// Subtract previous weight from the group total weight.
+				// Substract previous weight from the group total weight.
 				totalWeight, err = math.SubNonNegative(totalWeight, previousMemberWeight)
 				if err != nil {
 					return err
@@ -340,6 +340,7 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGro
 
 		if k.accKeeper.GetAccount(ctx, accountAddr) != nil {
 			// handle a rare collision
+			// TODO should we throw an error here, because there's duplicate grup policy address
 			continue
 		}
 		acc := k.accKeeper.NewAccount(ctx, &authtypes.ModuleAccount{
@@ -830,7 +831,7 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 		return nil, sdkerrors.Wrap(err, "group")
 	}
 
-	groupWeight, err := math.NewNonNegativeDecFromString(groupInfo.TotalWeight)
+	groupWeight, err := math.NewPositiveDecFromString(groupInfo.TotalWeight)
 	if err != nil {
 		return nil, err
 	}
@@ -843,7 +844,7 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 		return nil, err
 	}
 
-	memberWeight, err := math.NewNonNegativeDecFromString(gm.Member.Weight)
+	memberWeight, err := math.NewPositiveDecFromString(gm.Member.Weight)
 	if err != nil {
 		return nil, err
 	}
@@ -860,11 +861,13 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 
 	// update group weight
 	groupInfo.TotalWeight = updatedWeight.String()
-	if err := k.groupTable.Update(ctx.KVStore(k.key), groupInfo.Id, &groupInfo); err != nil {
+	groupInfo.Version++
+
+	if err := k.validateDecisionPolicies(ctx, groupInfo); err != nil {
 		return nil, err
 	}
 
-	if err := k.validateDecisionPolicies(ctx, groupInfo); err != nil {
+	if err := k.groupTable.Update(ctx.KVStore(k.key), groupInfo.Id, &groupInfo); err != nil {
 		return nil, err
 	}
 
@@ -946,8 +949,8 @@ func (k Keeper) doUpdateGroup(ctx sdk.Context, req authNGroupReq, action actionF
 }
 
 // doAuthenticated makes sure that the group admin initiated the request,
-// and perform the provided action on the
-func (k Keeper) doAuthenticated(ctx sdk.Context, req authNGroupReq, action actionFn, note string) error {
+// and perform the provided action on the group.
+func (k Keeper) doAuthenticated(ctx sdk.Context, req authNGroupReq, action actionFn, errNote string) error {
 	group, err := k.getGroupInfo(ctx, req.GetGroupID())
 	if err != nil {
 		return err
@@ -961,10 +964,10 @@ func (k Keeper) doAuthenticated(ctx sdk.Context, req authNGroupReq, action actio
 		return sdkerrors.Wrap(err, "request admin")
 	}
 	if !admin.Equals(reqAdmin) {
-		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "not group admin")
+		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "not group admin; got %s, expected %s", req.GetAdmin(), group.Admin)
 	}
 	if err := action(&group); err != nil {
-		return sdkerrors.Wrap(err, note)
+		return sdkerrors.Wrap(err, errNote)
 	}
 	return nil
 }

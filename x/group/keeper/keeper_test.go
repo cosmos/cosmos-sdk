@@ -850,7 +850,9 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			s.Assert().Equal(groupPolicyAddr, groupPolicy.Address)
 			s.Assert().Equal(id, groupPolicy.GroupId)
 			s.Assert().Equal(spec.req.GroupPolicyMetadata, groupPolicy.Metadata)
-			s.Assert().Equal(spec.policy.(*group.ThresholdDecisionPolicy), groupPolicy.GetDecisionPolicy())
+			dp, err := groupPolicy.GetDecisionPolicy()
+			s.Assert().NoError(err)
+			s.Assert().Equal(spec.policy.(*group.ThresholdDecisionPolicy), dp)
 			if spec.req.GroupPolicyAsAdmin {
 				s.Assert().NotEqual(spec.req.Admin, groupPolicy.Admin)
 				s.Assert().Equal(groupPolicyAddr, groupPolicy.Admin)
@@ -1007,9 +1009,13 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			s.Assert().Equal(uint64(1), groupPolicy.Version)
 			percentageDecisionPolicy, ok := spec.policy.(*group.PercentageDecisionPolicy)
 			if ok {
-				s.Assert().Equal(percentageDecisionPolicy, groupPolicy.GetDecisionPolicy())
+				dp, err := groupPolicy.GetDecisionPolicy()
+				s.Assert().NoError(err)
+				s.Assert().Equal(percentageDecisionPolicy, dp)
 			} else {
-				s.Assert().Equal(spec.policy.(*group.ThresholdDecisionPolicy), groupPolicy.GetDecisionPolicy())
+				dp, err := groupPolicy.GetDecisionPolicy()
+				s.Assert().NoError(err)
+				s.Assert().Equal(spec.policy.(*group.ThresholdDecisionPolicy), dp)
 			}
 		})
 	}
@@ -1370,7 +1376,11 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 		s.Assert().Equal(policyAccs[i].Metadata, expectAccs[i].Metadata)
 		s.Assert().Equal(policyAccs[i].Version, expectAccs[i].Version)
 		s.Assert().Equal(policyAccs[i].CreatedAt, expectAccs[i].CreatedAt)
-		s.Assert().Equal(policyAccs[i].GetDecisionPolicy(), expectAccs[i].GetDecisionPolicy())
+		dp1, err := policyAccs[i].GetDecisionPolicy()
+		s.Assert().NoError(err)
+		dp2, err := expectAccs[i].GetDecisionPolicy()
+		s.Assert().NoError(err)
+		s.Assert().Equal(dp1, dp2)
 	}
 
 	// query group policy by admin
@@ -1389,7 +1399,11 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 		s.Assert().Equal(policyAccs[i].Metadata, expectAccs[i].Metadata)
 		s.Assert().Equal(policyAccs[i].Version, expectAccs[i].Version)
 		s.Assert().Equal(policyAccs[i].CreatedAt, expectAccs[i].CreatedAt)
-		s.Assert().Equal(policyAccs[i].GetDecisionPolicy(), expectAccs[i].GetDecisionPolicy())
+		dp1, err := policyAccs[i].GetDecisionPolicy()
+		s.Assert().NoError(err)
+		dp2, err := expectAccs[i].GetDecisionPolicy()
+		s.Assert().NoError(err)
+		s.Assert().Equal(dp1, dp2)
 	}
 }
 

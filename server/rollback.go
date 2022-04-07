@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/spf13/cobra"
 	tmcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 )
@@ -35,9 +34,13 @@ application.
 			if err != nil {
 				return fmt.Errorf("failed to rollback tendermint state: %w", err)
 			}
-			// rollback the multistore
-			cms := rootmulti.NewStore(db)
-			cms.RollbackToVersion(height)
+			// rollback the database
+			if err = db.RevertTo(uint64(height)); err != nil {
+				panic(err)
+			}
+			if err = db.Close(); err != nil {
+				panic(err)
+			}
 
 			fmt.Printf("Rolled back state to height %d and hash %X", height, hash)
 			return nil

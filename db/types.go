@@ -65,6 +65,10 @@ type DBConnection interface {
 	// Returns an error if any open DBWriter transactions exist.
 	Revert() error
 
+	// RevertTo reverts the DB state to the given version. Returns ErrVersionDoesNotExist for invalid versions.
+	// Returns an error if any open DBWriter transactions exist.
+	RevertTo(uint64) error
+
 	// Close closes the database connection.
 	Close() error
 }

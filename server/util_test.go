@@ -14,10 +14,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmcfg "github.com/tendermint/tendermint/config"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -466,7 +466,7 @@ func TestGetAppDBBackend(t *testing.T) {
 			name:   "nothing set",
 			dbBack: "",
 			opts:   mapGetter{},
-			exp:    dbm.GoLevelDBBackend,
+			exp:    dbm.BadgerDBBackend,
 		},
 
 		{

@@ -70,6 +70,14 @@ type versionManager struct {
 	lastTs uint64
 }
 
+func init() {
+	creator := func(name string, dir string) (db.DBConnection, error) {
+		dir = filepath.Join(dir, name)
+		return NewDB(dir)
+	}
+	db.RegisterCreator(db.BadgerDBBackend, creator, false)
+}
+
 // NewDB creates or loads a BadgerDB key-value database inside the given directory.
 // If dir does not exist, it will be created.
 func NewDB(dir string) (*BadgerDB, error) {

@@ -26,7 +26,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	dbm "github.com/cosmos/cosmos-sdk/db"
-	"github.com/cosmos/cosmos-sdk/db/badgerdb"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -365,7 +364,7 @@ func GetAppDBBackend(opts types.AppOptions) dbm.BackendType {
 	if len(rv) != 0 {
 		return dbm.BackendType(rv)
 	}
-	return dbm.GoLevelDBBackend
+	return dbm.BadgerDBBackend
 }
 
 func skipInterface(iface net.Interface) bool {
@@ -392,9 +391,9 @@ func addrToIP(addr net.Addr) net.IP {
 	return ip
 }
 
-func openDB(rootDir string) (dbm.DBConnection, error) {
-	dir := filepath.Join(rootDir, "data", "application")
-	return badgerdb.NewDB(dir)
+func openDB(rootDir string, backendType dbm.BackendType) (dbm.DBConnection, error) {
+	dataDir := filepath.Join(rootDir, "data")
+	return dbm.NewDB("application", backendType, dataDir)
 }
 
 func openTraceWriter(traceWriterFile string) (w io.Writer, err error) {

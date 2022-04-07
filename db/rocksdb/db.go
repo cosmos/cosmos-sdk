@@ -68,6 +68,14 @@ type dbOptions struct {
 	wo  *gorocksdb.WriteOptions
 }
 
+func init() {
+	creator := func(name string, dir string) (db.DBConnection, error) {
+		dir = filepath.Join(dir, name)
+		return NewDB(dir)
+	}
+	db.RegisterCreator(db.RocksDBBackend, creator, false)
+}
+
 // NewDB creates a new RocksDB key-value database with inside the given directory.
 // If dir does not exist, it will be created.
 func NewDB(dir string) (*dbManager, error) {

@@ -16,6 +16,13 @@ const (
 	bTreeDegree = 32
 )
 
+func init() {
+	creator := func(name string, dir string) (db.DBConnection, error) {
+		return NewDB(), nil
+	}
+	db.RegisterCreator(db.MemDBBackend, creator, false)
+}
+
 // MemDB is an in-memory database backend using a B-tree for storage.
 //
 // For performance reasons, all given and returned keys and values are pointers to the in-memory

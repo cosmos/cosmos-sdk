@@ -17,7 +17,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -343,25 +342,25 @@ func GetFromFields(kr keyring.Keyring, from string, simulate bool) (sdk.AccAddre
 		return nil, "", 0, nil
 	}
 
-	var k *keyring.Record
-	var err error
+	if simulate {
+		addr, err := sdk.AccAddressFromBech32(from)
+		if err != nil {
+			return nil, "", 0, fmt.Errorf("a valid Bech32 address must be provided in simulation mode: %w", err)
+		}
 
-	if !simulate {
-		if addr, err := sdk.AccAddressFromBech32(from); err == nil {
-			k, err = kr.KeyByAddress(addr)
-			if err != nil {
-				return nil, "", 0, err
-			}
-		} else {
-			k, err = kr.Key(from)
-			if err != nil {
-				return nil, "", 0, err
-			}
+		return addr, "", 0, nil
+	}
+
+	var k *keyring.Record
+	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
+		k, err = kr.KeyByAddress(addr)
+		if err != nil {
+			return nil, "", 0, err
 		}
 	} else {
-		k, _, err = kr.NewMnemonic(from, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+		k, err = kr.Key(from)
 		if err != nil {
-			return nil, "", 0, fmt.Errorf("failed to simulate %s key: %w", from, err)
+			return nil, "", 0, err
 		}
 	}
 
@@ -375,7 +374,7 @@ func GetFromFields(kr keyring.Keyring, from string, simulate bool) (sdk.AccAddre
 
 // NewKeyringFromBackend gets a Keyring object from a backend
 func NewKeyringFromBackend(ctx Context, backend string) (keyring.Keyring, error) {
-	if ctx.GenerateOnly || ctx.Simulate {
+	if ctx.Simulate {
 		backend = keyring.BackendMemory
 	}
 

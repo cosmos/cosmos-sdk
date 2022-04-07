@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/spf13/viper"
@@ -122,7 +123,8 @@ func TestGetFromFields(t *testing.T) {
 
 	testCases := []struct {
 		keyring     func() keyring.Keyring
-		from        string
+		name        string
+		addr        string
 		expectedErr string
 		simulate    bool
 	}{
@@ -135,13 +137,13 @@ func TestGetFromFields(t *testing.T) {
 
 				return kb
 			},
-			from: "alice",
+			name: "alice",
 		},
 		{
 			keyring: func() keyring.Keyring {
 				return keyring.NewInMemory(cfg.Codec)
 			},
-			from:        "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+			addr:        "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
 			expectedErr: "key with address cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5 not found: key not found",
 		},
 		{
@@ -154,7 +156,7 @@ func TestGetFromFields(t *testing.T) {
 
 				return kb
 			},
-			from: "bob",
+			name: "bob",
 		},
 		{
 			keyring: func() keyring.Keyring {
@@ -162,31 +164,37 @@ func TestGetFromFields(t *testing.T) {
 				require.NoError(t, err)
 				return kb
 			},
-			from:        "bob",
+			name:        "bob",
 			expectedErr: "bob.info: key not found",
 		},
 		{
 			keyring: func() keyring.Keyring {
 				return keyring.NewInMemory(cfg.Codec)
 			},
-			from:     "alice",
+			addr:     "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
 			simulate: true,
 		},
 		{
 			keyring: func() keyring.Keyring {
 				return keyring.NewInMemory(cfg.Codec)
 			},
-			from:     "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
-			simulate: true,
+			addr:        "alice",
+			simulate:    true,
+			expectedErr: "a valid Bech32 address must be provided in simulation mode",
 		},
 	}
 
 	for _, tc := range testCases {
-		_, _, _, err := client.GetFromFields(tc.keyring(), tc.from, tc.simulate)
+		var val = tc.name
+		if val == "" {
+			val = tc.addr
+		}
+
+		_, _, _, err := client.GetFromFields(tc.keyring(), val, tc.simulate)
 		if tc.expectedErr == "" {
 			require.NoError(t, err)
 		} else {
-			require.Equal(t, tc.expectedErr, err.Error())
+			require.True(t, strings.HasPrefix(err.Error(), tc.expectedErr))
 		}
 	}
 }

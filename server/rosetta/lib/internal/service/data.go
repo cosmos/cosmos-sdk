@@ -56,9 +56,13 @@ func (on OnlineNetwork) Block(ctx context.Context, request *types.BlockRequest) 
 		blockResponse crgtypes.BlockTransactionsResponse
 		err           error
 	)
-	// block identifier is assumed not to be nil as rosetta will do this check for us
-	// check if we have to query via hash or block number
+
+	// When fetching data by BlockIdentifier, it may be possible to only specify the index or hash.
+	// If neither property is specified, it is assumed that the client is making a request at the current block.
 	switch {
+	case request.BlockIdentifier == nil: // unlike AccountBalance(), BlockIdentifer is mandatory by spec.
+		err := errors.WrapError(errors.ErrBadArgument, "block identifier needs to be specified")
+		return nil, errors.ToRosetta(err)
 	case request.BlockIdentifier.Hash != nil:
 		blockResponse, err = on.client.BlockTransactionsByHash(ctx, *request.BlockIdentifier.Hash)
 		if err != nil {
@@ -70,8 +74,10 @@ func (on OnlineNetwork) Block(ctx context.Context, request *types.BlockRequest) 
 			return nil, errors.ToRosetta(err)
 		}
 	default:
-		err := errors.WrapError(errors.ErrBadArgument, "at least one of hash or index needs to be specified")
-		return nil, errors.ToRosetta(err)
+		blockResponse, err = on.client.BlockTransactionsByHeight(ctx, nil)
+		if err != nil {
+			return nil, errors.ToRosetta(err)
+		}
 	}
 
 	return &types.BlockResponse{

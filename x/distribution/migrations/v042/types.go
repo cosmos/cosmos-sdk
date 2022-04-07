@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	v040auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/legacy"
+	v042auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v042"
 )
 
 const (
@@ -59,7 +59,7 @@ var (
 func GetValidatorOutstandingRewardsAddress(key []byte) (valAddr sdk.ValAddress) {
 	kv.AssertKeyAtLeastLength(key, 2)
 	addr := key[1:]
-	kv.AssertKeyLength(addr, v040auth.AddrLen)
+	kv.AssertKeyLength(addr, v042auth.AddrLen)
 	return sdk.ValAddress(addr)
 }
 
@@ -67,29 +67,29 @@ func GetValidatorOutstandingRewardsAddress(key []byte) (valAddr sdk.ValAddress) 
 func GetDelegatorWithdrawInfoAddress(key []byte) (delAddr sdk.AccAddress) {
 	kv.AssertKeyAtLeastLength(key, 2)
 	addr := key[1:]
-	kv.AssertKeyLength(addr, v040auth.AddrLen)
+	kv.AssertKeyLength(addr, v042auth.AddrLen)
 	return sdk.AccAddress(addr)
 }
 
 // gets the addresses from a delegator starting info key
 func GetDelegatorStartingInfoAddresses(key []byte) (valAddr sdk.ValAddress, delAddr sdk.AccAddress) {
-	kv.AssertKeyAtLeastLength(key, 2+v040auth.AddrLen)
-	addr := key[1 : 1+v040auth.AddrLen]
-	kv.AssertKeyLength(addr, v040auth.AddrLen)
+	kv.AssertKeyAtLeastLength(key, 2+v042auth.AddrLen)
+	addr := key[1 : 1+v042auth.AddrLen]
+	kv.AssertKeyLength(addr, v042auth.AddrLen)
 	valAddr = sdk.ValAddress(addr)
-	addr = key[1+v040auth.AddrLen:]
-	kv.AssertKeyLength(addr, v040auth.AddrLen)
+	addr = key[1+v042auth.AddrLen:]
+	kv.AssertKeyLength(addr, v042auth.AddrLen)
 	delAddr = sdk.AccAddress(addr)
 	return
 }
 
 // gets the address & period from a validator's historical rewards key
 func GetValidatorHistoricalRewardsAddressPeriod(key []byte) (valAddr sdk.ValAddress, period uint64) {
-	kv.AssertKeyAtLeastLength(key, 2+v040auth.AddrLen)
-	addr := key[1 : 1+v040auth.AddrLen]
-	kv.AssertKeyLength(addr, v040auth.AddrLen)
+	kv.AssertKeyAtLeastLength(key, 2+v042auth.AddrLen)
+	addr := key[1 : 1+v042auth.AddrLen]
+	kv.AssertKeyLength(addr, v042auth.AddrLen)
 	valAddr = sdk.ValAddress(addr)
-	b := key[1+v040auth.AddrLen:]
+	b := key[1+v042auth.AddrLen:]
 	kv.AssertKeyLength(addr, 8)
 	period = binary.LittleEndian.Uint64(b)
 	return
@@ -99,7 +99,7 @@ func GetValidatorHistoricalRewardsAddressPeriod(key []byte) (valAddr sdk.ValAddr
 func GetValidatorCurrentRewardsAddress(key []byte) (valAddr sdk.ValAddress) {
 	kv.AssertKeyAtLeastLength(key, 2)
 	addr := key[1:]
-	kv.AssertKeyLength(addr, v040auth.AddrLen)
+	kv.AssertKeyLength(addr, v042auth.AddrLen)
 	return sdk.ValAddress(addr)
 }
 
@@ -107,17 +107,17 @@ func GetValidatorCurrentRewardsAddress(key []byte) (valAddr sdk.ValAddress) {
 func GetValidatorAccumulatedCommissionAddress(key []byte) (valAddr sdk.ValAddress) {
 	kv.AssertKeyAtLeastLength(key, 2)
 	addr := key[1:]
-	kv.AssertKeyLength(addr, v040auth.AddrLen)
+	kv.AssertKeyLength(addr, v042auth.AddrLen)
 	return sdk.ValAddress(addr)
 }
 
 // gets the height from a validator's slash event key
 func GetValidatorSlashEventAddressHeight(key []byte) (valAddr sdk.ValAddress, height uint64) {
-	kv.AssertKeyAtLeastLength(key, 2+v040auth.AddrLen)
-	addr := key[1 : 1+v040auth.AddrLen]
-	kv.AssertKeyLength(addr, v040auth.AddrLen)
+	kv.AssertKeyAtLeastLength(key, 2+v042auth.AddrLen)
+	addr := key[1 : 1+v042auth.AddrLen]
+	kv.AssertKeyLength(addr, v042auth.AddrLen)
 	valAddr = sdk.ValAddress(addr)
-	startB := 1 + v040auth.AddrLen
+	startB := 1 + v042auth.AddrLen
 	kv.AssertKeyAtLeastLength(key, startB+9)
 	b := key[startB : startB+8] // the next 8 bytes represent the height
 	height = binary.BigEndian.Uint64(b)

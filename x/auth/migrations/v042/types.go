@@ -1,4 +1,4 @@
-package legacy
+package v042
 
 const (
 	ModuleName = "auth"

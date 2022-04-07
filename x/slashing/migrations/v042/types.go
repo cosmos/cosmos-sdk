@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	v040auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/legacy"
+	v042auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v042"
 )
 
 const (
@@ -47,7 +47,7 @@ func ValidatorSigningInfoKey(v sdk.ConsAddress) []byte {
 func ValidatorSigningInfoAddress(key []byte) (v sdk.ConsAddress) {
 	kv.AssertKeyAtLeastLength(key, 2)
 	addr := key[1:]
-	kv.AssertKeyLength(addr, v040auth.AddrLen)
+	kv.AssertKeyLength(addr, v042auth.AddrLen)
 	return sdk.ConsAddress(addr)
 }
 

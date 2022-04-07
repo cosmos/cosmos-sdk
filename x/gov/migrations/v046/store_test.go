@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v040gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/legacy"
+	v042gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v042"
 	v046gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -36,20 +36,20 @@ func TestMigrateStore(t *testing.T) {
 	prop2Bz, err := cdc.Marshal(&prop2)
 	require.NoError(t, err)
 
-	store.Set(v040gov.ProposalKey(prop1.ProposalId), prop1Bz)
-	store.Set(v040gov.ProposalKey(prop2.ProposalId), prop2Bz)
+	store.Set(v042gov.ProposalKey(prop1.ProposalId), prop1Bz)
+	store.Set(v042gov.ProposalKey(prop2.ProposalId), prop2Bz)
 
 	// Run migrations.
 	err = v046gov.MigrateStore(ctx, govKey, cdc)
 	require.NoError(t, err)
 
 	var newProp1 v1.Proposal
-	err = cdc.Unmarshal(store.Get(v040gov.ProposalKey(prop1.ProposalId)), &newProp1)
+	err = cdc.Unmarshal(store.Get(v042gov.ProposalKey(prop1.ProposalId)), &newProp1)
 	require.NoError(t, err)
 	compareProps(t, prop1, newProp1)
 
 	var newProp2 v1.Proposal
-	err = cdc.Unmarshal(store.Get(v040gov.ProposalKey(prop2.ProposalId)), &newProp2)
+	err = cdc.Unmarshal(store.Get(v042gov.ProposalKey(prop2.ProposalId)), &newProp2)
 	require.NoError(t, err)
 	compareProps(t, prop2, newProp2)
 }

@@ -222,5 +222,9 @@ func (s *GenesisTestSuite) assertProposalsEqual(g *group.Proposal, other *group.
 	require.Equal(g.FinalTallyResult, other.FinalTallyResult)
 	require.Equal(g.VotingPeriodEnd, other.VotingPeriodEnd)
 	require.Equal(g.ExecutorResult, other.ExecutorResult)
-	require.Equal(g.GetMsgs(), other.GetMsgs())
+	msgs1, err := g.GetMsgs()
+	require.NoError(err)
+	msgs2, err := other.GetMsgs()
+	require.NoError(err)
+	require.Equal(msgs1, msgs2)
 }

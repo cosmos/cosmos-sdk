@@ -1625,10 +1625,12 @@ func (s *TestSuite) TestSubmitProposal() {
 				s.Assert().Equal(spec.expProposal.ExecutorResult, proposal.ExecutorResult)
 				s.Assert().Equal(s.blockTime.Add(time.Second), proposal.VotingPeriodEnd)
 
+				msgs, err := proposal.GetMsgs()
+				s.Assert().NoError(err)
 				if spec.msgs == nil { // then empty list is ok
-					s.Assert().Len(proposal.GetMsgs(), 0)
+					s.Assert().Len(msgs, 0)
 				} else {
-					s.Assert().Equal(spec.msgs, proposal.GetMsgs())
+					s.Assert().Equal(spec.msgs, msgs)
 				}
 			}
 

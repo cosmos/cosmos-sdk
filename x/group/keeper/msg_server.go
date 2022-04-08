@@ -3,10 +3,6 @@ package keeper
 import (
 	"context"
 	"encoding/binary"
-	"fmt"
-	"reflect"
-
-	gogotypes "github.com/gogo/protobuf/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -454,7 +450,7 @@ func (k Keeper) UpdateGroupPolicyMetadata(goCtx context.Context, req *group.MsgU
 
 func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitProposal) (*group.MsgSubmitProposalResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	accountAddress, err := sdk.AccAddressFromBech32(req.GroupPolicyAddress)
+	groupPolicyAddr, err := sdk.AccAddressFromBech32(req.GroupPolicyAddress)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "request account address of group policy")
 	}
@@ -487,7 +483,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 	}
 
 	// Check that if the messages require signers, they are all equal to the given account address of group policy.
-	if err := ensureMsgAuthZ(msgs, accountAddress); err != nil {
+	if err := ensureMsgAuthZ(msgs, groupPolicyAddr); err != nil {
 		return nil, err
 	}
 
@@ -541,7 +537,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 				Option:     group.VOTE_OPTION_YES,
 			})
 			if err != nil {
-				return &group.MsgSubmitProposalResponse{ProposalId: id}, sdkerrors.Wrap(err, "The proposal was created but failed on vote")
+				return &group.MsgSubmitProposalResponse{ProposalId: id}, sdkerrors.Wrapf(err, "the proposal was created but failed on vote for voter %s", proposers[i])
 			}
 		}
 
@@ -553,7 +549,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 			Executor: proposers[0],
 		})
 		if err != nil {
-			return &group.MsgSubmitProposalResponse{ProposalId: id}, sdkerrors.Wrap(err, "The proposal was created but failed on exec")
+			return &group.MsgSubmitProposalResponse{ProposalId: id}, sdkerrors.Wrap(err, "the proposal was created but failed on exec")
 		}
 	}
 
@@ -580,35 +576,14 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawPr
 		return nil, sdkerrors.Wrap(err, "load group policy")
 	}
 
-	storeUpdates := func() (*group.MsgWithdrawProposalResponse, error) {
-		if err := k.proposalTable.Update(ctx.KVStore(k.key), id, &proposal); err != nil {
-			return nil, err
-		}
-		return &group.MsgWithdrawProposalResponse{}, nil
-	}
-
-	// check address is the group policy admin.
-	if address == policyInfo.Address {
-		err = ctx.EventManager().EmitTypedEvent(&group.EventWithdrawProposal{ProposalId: id})
-		if err != nil {
-			return nil, err
-		}
-
-		proposal.Status = group.PROPOSAL_STATUS_WITHDRAWN
-		return storeUpdates()
-	}
-
-	// if address is not group policy admin then check whether he is in proposers list.
-	validProposer := false
-	for _, proposer := range proposal.Proposers {
-		if proposer == address {
-			validProposer = true
-			break
-		}
-	}
-
-	if !validProposer {
+	// check address is the group policy admin he is in proposers list..
+	if address != policyInfo.Admin && !isProposer(proposal, address) {
 		return nil, sdkerrors.Wrapf(errors.ErrUnauthorized, "given address is neither group policy admin nor in proposers: %s", address)
+	}
+
+	proposal.Status = group.PROPOSAL_STATUS_WITHDRAWN
+	if err := k.proposalTable.Update(ctx.KVStore(k.key), id, &proposal); err != nil {
+		return nil, err
 	}
 
 	err = ctx.EventManager().EmitTypedEvent(&group.EventWithdrawProposal{ProposalId: id})
@@ -616,8 +591,7 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawPr
 		return nil, err
 	}
 
-	proposal.Status = group.PROPOSAL_STATUS_WITHDRAWN
-	return storeUpdates()
+	return &group.MsgWithdrawProposalResponse{}, nil
 }
 
 func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteResponse, error) {
@@ -642,9 +616,8 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 		return nil, sdkerrors.Wrap(errors.ErrExpired, "voting period has ended already")
 	}
 
-	var policyInfo group.GroupPolicyInfo
-
-	if policyInfo, err = k.getGroupPolicyInfo(ctx, proposal.GroupPolicyAddress); err != nil {
+	policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.GroupPolicyAddress)
+	if err != nil {
 		return nil, sdkerrors.Wrap(err, "load group policy")
 	}
 
@@ -657,7 +630,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 	voterAddr := req.Voter
 	voter := group.GroupMember{GroupId: electorate.Id, Member: &group.Member{Address: voterAddr}}
 	if err := k.groupMemberTable.GetOne(ctx.KVStore(k.key), orm.PrimaryKey(&voter), &voter); err != nil {
-		return nil, sdkerrors.Wrapf(err, "address: %s", voterAddr)
+		return nil, sdkerrors.Wrapf(err, "voter address: %s", voterAddr)
 	}
 	newVote := group.Vote{
 		ProposalId: id,
@@ -692,19 +665,11 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 	return &group.MsgVoteResponse{}, nil
 }
 
-// doTallyAndUpdate performs a tally, and updates the proposal's
-// `FinalTallyResult` field only if the tally is final.
+// doTallyAndUpdate performs a tally, and, if the tally result is final, then:
+// - updates the proposal's `Status` and `FinalTallyResult` fields,
+// - prune all the votes.
 func (k Keeper) doTallyAndUpdate(ctx sdk.Context, p *group.Proposal, electorate group.GroupInfo, policyInfo group.GroupPolicyInfo) error {
 	policy, err := policyInfo.GetDecisionPolicy()
-	if err != nil {
-		return err
-	}
-
-	pSubmittedAt, err := gogotypes.TimestampProto(p.SubmitTime)
-	if err != nil {
-		return err
-	}
-	submittedAt, err := gogotypes.TimestampFromProto(pSubmittedAt)
 	if err != nil {
 		return err
 	}
@@ -714,11 +679,17 @@ func (k Keeper) doTallyAndUpdate(ctx sdk.Context, p *group.Proposal, electorate 
 		return err
 	}
 
-	result, err := policy.Allow(tallyResult, electorate.TotalWeight, ctx.BlockTime().Sub(submittedAt))
+	sinceSubmission := ctx.BlockTime().Sub(p.SubmitTime) // duration passed since proposal submission.
+	result, err := policy.Allow(tallyResult, electorate.TotalWeight, sinceSubmission)
+	// If the result was final (i.e. enough votes to pass) or if the voting
+	// period ended, then we consider the proposal as final.
+	isFinal := result.Final || ctx.BlockTime().After(p.VotingPeriodEnd)
+
 	switch {
 	case err != nil:
 		return sdkerrors.Wrap(err, "policy allow")
-	case result.Final:
+
+	case isFinal:
 		if err := k.pruneVotes(ctx, p.Id); err != nil {
 			return err
 		}
@@ -744,31 +715,17 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 	}
 
 	if proposal.Status != group.PROPOSAL_STATUS_SUBMITTED && proposal.Status != group.PROPOSAL_STATUS_ACCEPTED {
-		return nil, sdkerrors.Wrapf(errors.ErrInvalid, "not possible with proposal status %s", proposal.Status.String())
+		return nil, sdkerrors.Wrapf(errors.ErrInvalid, "not possible to exec with proposal status %s", proposal.Status.String())
 	}
 
-	var policyInfo group.GroupPolicyInfo
-	if policyInfo, err = k.getGroupPolicyInfo(ctx, proposal.GroupPolicyAddress); err != nil {
+	policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.GroupPolicyAddress)
+	if err != nil {
 		return nil, sdkerrors.Wrap(err, "load group policy")
 	}
 
-	storeUpdates := func() (*group.MsgExecResponse, error) {
-		store := ctx.KVStore(k.key)
-
-		// If proposal has successfully run, delete it from state.
-		if proposal.ExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
-			if err := k.pruneProposal(ctx, proposal.Id); err != nil {
-				return nil, err
-			}
-		} else {
-			if err := k.proposalTable.Update(store, id, &proposal); err != nil {
-				return nil, err
-			}
-		}
-
-		return &group.MsgExecResponse{}, nil
-	}
-
+	// If proposal is still in SUBMITTED phase, it means that the voting period
+	// didn't end yet, and tallying hasn't been done. In this case, we need to
+	// tally first.
 	if proposal.Status == group.PROPOSAL_STATUS_SUBMITTED {
 		electorate, err := k.getGroupInfo(ctx, policyInfo.GroupId)
 		if err != nil {
@@ -782,7 +739,6 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 
 	// Execute proposal payload.
 	if proposal.Status == group.PROPOSAL_STATUS_ACCEPTED && proposal.ExecutorResult != group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
-		logger := ctx.Logger().With("module", fmt.Sprintf("x/%s", group.ModuleName))
 		// Caching context so that we don't update the store in case of failure.
 		ctx, flush := ctx.CacheContext()
 
@@ -793,8 +749,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 		_, err = k.doExecuteMsgs(ctx, k.router, proposal, addr)
 		if err != nil {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_FAILURE
-			proposalType := reflect.TypeOf(proposal).String()
-			logger.Info("proposal execution failed", "cause", err, "type", proposalType, "proposalID", id)
+			k.Logger(ctx).Info("proposal execution failed", "cause", err, "proposalID", id)
 		} else {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_SUCCESS
 			flush()
@@ -802,9 +757,16 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 	}
 
 	// Update proposal in proposalTable
-	res, err := storeUpdates()
-	if err != nil {
-		return nil, err
+	// If proposal has successfully run, delete it from state.
+	if proposal.ExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
+		if err := k.pruneProposal(ctx, proposal.Id); err != nil {
+			return nil, err
+		}
+	} else {
+		store := ctx.KVStore(k.key)
+		if err := k.proposalTable.Update(store, id, &proposal); err != nil {
+			return nil, err
+		}
 	}
 
 	err = ctx.EventManager().EmitTypedEvent(&group.EventExec{
@@ -815,7 +777,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 		return nil, err
 	}
 
-	return res, nil
+	return &group.MsgExecResponse{}, nil
 }
 
 // LeaveGroup implements the MsgServer/LeaveGroup method.
@@ -1007,4 +969,15 @@ func (k Keeper) validateDecisionPolicies(ctx sdk.Context, g group.GroupInfo) err
 	}
 
 	return nil
+}
+
+// isProposer checks that an address is a proposer of a given proposal.
+func isProposer(proposal group.Proposal, address string) bool {
+	for _, proposer := range proposal.Proposers {
+		if proposer == address {
+			return true
+		}
+	}
+
+	return false
 }

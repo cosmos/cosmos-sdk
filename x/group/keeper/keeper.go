@@ -235,7 +235,7 @@ func (k Keeper) iterateProposalsByVPEnd(ctx sdk.Context, endTime time.Time, cb f
 	defer it.Close()
 
 	for {
-		// Important: this following line cannot outside the for loop.
+		// Important: this following line cannot be outside of the for loop.
 		// It seems that when one unmarshals into the same `group.Proposal`
 		// reference, then gogoproto somehow "adds" the new bytes to the old
 		// object for some fields. When running simulations, for proposals with

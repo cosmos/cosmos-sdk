@@ -27,3 +27,20 @@ func TestPruningOptions_Validate(t *testing.T) {
 		require.Equal(t, tc.expectErr, err, "options: %v, err: %s", tc.opts, err)
 	}
 }
+
+func TestNewPruningOptionsFromString(t *testing.T) {
+	testCases := []struct {
+		optString string
+		expect *PruningOptions
+	}{
+		{PruningOptionDefault, NewPruningOptions(PruningDefault)},
+		{PruningOptionEverything, NewPruningOptions(PruningEverything)},
+		{PruningOptionNothing, NewPruningOptions(PruningNothing)},
+		{"invalid", NewPruningOptions(PruningDefault)},
+	}
+
+	for _, tc := range testCases {
+		actual := NewPruningOptionsFromString(tc.optString)
+		require.Equal(t, tc.expect, actual)
+	}
+}

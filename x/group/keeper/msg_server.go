@@ -929,7 +929,12 @@ func (k Keeper) doUpdateGroupPolicy(ctx sdk.Context, groupPolicy string, admin s
 			return err
 		}
 		proposalInfo.Status = group.PROPOSAL_STATUS_ABORTED
+
+		if err := k.proposalTable.Update(ctx.KVStore(k.key), proposalInfo.Id, &proposalInfo); err != nil {
+			return err
+		}
 	}
+
 	return nil
 }
 

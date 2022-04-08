@@ -336,6 +336,28 @@ func TestEndBlocker(t *testing.T) {
 			tallyRes:  group.DefaultTallyResult(),
 			expStatus: group.PROPOSAL_STATUS_WITHDRAWN,
 		},
+		"tally of aborted proposal (due to updated group policy decision policy)": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				pId, err := submitProposal(app, sdkCtx, []sdk.Msg{msgSend}, proposers, groupPolicyAddr)
+				require.NoError(t, err)
+
+				policy := group.NewThresholdDecisionPolicy("3", time.Second, 0)
+				msg := &group.MsgUpdateGroupPolicyDecisionPolicy{
+					Admin:              addrs[0].String(),
+					GroupPolicyAddress: groupPolicyAddr.String(),
+				}
+				err = msg.SetDecisionPolicy(policy)
+				require.NoError(t, err)
+				_, err = app.GroupKeeper.UpdateGroupPolicyDecisionPolicy(ctx, msg)
+				require.NoError(t, err)
+
+				return pId
+			},
+			admin:     proposers[0],
+			newCtx:    ctx,
+			tallyRes:  group.DefaultTallyResult(),
+			expStatus: group.PROPOSAL_STATUS_ABORTED,
+		},
 	}
 
 	for msg, spec := range specs {

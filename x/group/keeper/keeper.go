@@ -346,7 +346,6 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 				return true, err
 			}
 		} else {
-
 			err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo)
 			if err != nil {
 				return true, sdkerrors.Wrap(err, "doTallyAndUpdate")

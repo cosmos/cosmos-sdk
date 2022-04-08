@@ -943,8 +943,7 @@ func (rs *Store) RollbackToVersion(target int64) int64 {
 	for ; current > target; current-- {
 		rs.pruningManager.HandleHeight(current)
 	}
-	err := rs.pruneStores()
-	if err != nil {
+	if err := rs.pruneStores(); err != nil {
 		panic(err)
 	}
 

@@ -64,7 +64,7 @@ func (m *Manager) ResetPruningHeights() {
 // HandleHeight determines if pruneHeight height needs to be kept for pruning at the right interval prescribed by
 // the pruning strategy. Returns true if the given height was kept to be pruned at the next call to Prune(), false otherwise
 func (m *Manager) HandleHeight(previousHeight int64) int64 {
-	if m.opts.GetPruningStrategy() == types.PruningNothing {
+	if m.opts.GetPruningStrategy() == types.PruningNothing || previousHeight == 0 {
 		return 0
 	}
 

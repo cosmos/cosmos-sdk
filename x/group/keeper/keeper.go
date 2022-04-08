@@ -340,6 +340,13 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 			return true, sdkerrors.Wrap(err, "group")
 		}
 
+		if proposal.Status == group.PROPOSAL_STATUS_ABORTED || proposal.Status == group.PROPOSAL_STATUS_WITHDRAWN {
+			err := k.pruneProposal(ctx, proposal.Id)
+			if err != nil {
+				return true, err
+			}
+		}
+
 		err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo)
 		if err != nil {
 			return true, sdkerrors.Wrap(err, "doTallyAndUpdate")

@@ -474,7 +474,7 @@ SIGN_MODE_TEXTUAL is purely additive, and doesn't break any backwards compatibil
 ### Positive
 
 - Human-friendly way of signing on hardware devices.
-- Once SIGN_MODE_TEXTUAL is shipped, SIGN_MODE_LEGACY_AMINO_JSON can be deprecated and removed. On the longer term, Amino can be totally removed.
+- Once SIGN_MODE_TEXTUAL is shipped, SIGN_MODE_LEGACY_AMINO_JSON can be deprecated and removed. On the longer term, once the ecosystem has totally migrated, Amino can be totally removed.
 
 ### Negative
 

@@ -345,15 +345,16 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 			if err != nil {
 				return true, err
 			}
-		}
+		} else {
 
-		err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo)
-		if err != nil {
-			return true, sdkerrors.Wrap(err, "doTallyAndUpdate")
-		}
+			err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo)
+			if err != nil {
+				return true, sdkerrors.Wrap(err, "doTallyAndUpdate")
+			}
 
-		if err := k.proposalTable.Update(ctx.KVStore(k.key), proposal.Id, &proposal); err != nil {
-			return true, sdkerrors.Wrap(err, "proposal update")
+			if err := k.proposalTable.Update(ctx.KVStore(k.key), proposal.Id, &proposal); err != nil {
+				return true, sdkerrors.Wrap(err, "proposal update")
+			}
 		}
 
 		return false, nil

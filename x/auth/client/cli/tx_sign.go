@@ -107,7 +107,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			}
 			if ms == "" {
 				from, _ := cmd.Flags().GetString(flags.FlagFrom)
-				_, fromName, _, err := client.GetFromFields(txFactory.Keybase(), from, clientCtx.Simulate)
+				_, fromName, _, err := client.GetFromFields(clientCtx, txFactory.Keybase(), from)
 				if err != nil {
 					return fmt.Errorf("error getting account from keybase: %w", err)
 				}
@@ -116,7 +116,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 					return err
 				}
 			} else {
-				multisigAddr, _, _, err := client.GetFromFields(txFactory.Keybase(), ms, clientCtx.Simulate)
+				multisigAddr, _, _, err := client.GetFromFields(clientCtx, txFactory.Keybase(), ms)
 				if err != nil {
 					return fmt.Errorf("error getting account from keybase: %w", err)
 				}
@@ -237,7 +237,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		from, _ := cmd.Flags().GetString(flags.FlagFrom)
-		_, fromName, _, err := client.GetFromFields(txF.Keybase(), from, clientCtx.Simulate)
+		_, fromName, _, err := client.GetFromFields(clientCtx, txF.Keybase(), from)
 		if err != nil {
 			return fmt.Errorf("error getting account from keybase: %w", err)
 		}
@@ -247,7 +247,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			multisigAddr, err := sdk.AccAddressFromBech32(multisig)
 			if err != nil {
 				// Bech32 decode error, maybe it's a name, we try to fetch from keyring
-				multisigAddr, _, _, err = client.GetFromFields(txFactory.Keybase(), multisig, clientCtx.Simulate)
+				multisigAddr, _, _, err = client.GetFromFields(clientCtx, txFactory.Keybase(), multisig)
 				if err != nil {
 					return fmt.Errorf("error getting account from keybase: %w", err)
 				}

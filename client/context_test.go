@@ -122,11 +122,10 @@ func TestGetFromFields(t *testing.T) {
 	path := hd.CreateHDPath(118, 0, 0).String()
 
 	testCases := []struct {
+		clientCtx   client.Context
 		keyring     func() keyring.Keyring
-		name        string
-		addr        string
+		from        string
 		expectedErr string
-		simulate    bool
 	}{
 		{
 			keyring: func() keyring.Keyring {
@@ -137,60 +136,83 @@ func TestGetFromFields(t *testing.T) {
 
 				return kb
 			},
-			name: "alice",
+			from: "alice",
+		},
+		{
+			keyring: func() keyring.Keyring {
+				kb, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, cfg.Codec)
+				require.NoError(t, err)
+
+				_, _, err = kb.NewMnemonic("alice", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+				require.NoError(t, err)
+
+				return kb
+			},
+			from: "alice",
 		},
 		{
 			keyring: func() keyring.Keyring {
 				return keyring.NewInMemory(cfg.Codec)
 			},
-			addr:        "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+			from:        "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
 			expectedErr: "key with address cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5 not found: key not found",
 		},
 		{
 			keyring: func() keyring.Keyring {
 				kb, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, cfg.Codec)
 				require.NoError(t, err)
-
-				_, _, err = kb.NewMnemonic("bob", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-				require.NoError(t, err)
-
 				return kb
 			},
-			name: "bob",
+			from:        "alice",
+			expectedErr: "alice.info: key not found",
+		},
+		{
+			keyring: func() keyring.Keyring {
+				return keyring.NewInMemory(cfg.Codec)
+			},
+			from:      "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+			clientCtx: client.Context{}.WithSimulation(true),
+		},
+		{
+			keyring: func() keyring.Keyring {
+				return keyring.NewInMemory(cfg.Codec)
+			},
+			from:        "alice",
+			clientCtx:   client.Context{}.WithSimulation(true),
+			expectedErr: "a valid bech32 address must be provided in simulation mode",
+		},
+		{
+			keyring: func() keyring.Keyring {
+				return keyring.NewInMemory(cfg.Codec)
+			},
+			from:      "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+			clientCtx: client.Context{}.WithGenerateOnly(true),
+		},
+		{
+			keyring: func() keyring.Keyring {
+				return keyring.NewInMemory(cfg.Codec)
+			},
+			from:        "alice",
+			clientCtx:   client.Context{}.WithGenerateOnly(true),
+			expectedErr: "alice.info: key not found",
 		},
 		{
 			keyring: func() keyring.Keyring {
 				kb, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, cfg.Codec)
 				require.NoError(t, err)
+
+				_, _, err = kb.NewMnemonic("alice", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+				require.NoError(t, err)
+
 				return kb
 			},
-			name:        "bob",
-			expectedErr: "bob.info: key not found",
-		},
-		{
-			keyring: func() keyring.Keyring {
-				return keyring.NewInMemory(cfg.Codec)
-			},
-			addr:     "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
-			simulate: true,
-		},
-		{
-			keyring: func() keyring.Keyring {
-				return keyring.NewInMemory(cfg.Codec)
-			},
-			addr:        "alice",
-			simulate:    true,
-			expectedErr: "a valid bech32 address must be provided in simulation mode",
+			clientCtx: client.Context{}.WithGenerateOnly(true),
+			from:      "alice",
 		},
 	}
 
 	for _, tc := range testCases {
-		var val = tc.name
-		if val == "" {
-			val = tc.addr
-		}
-
-		_, _, _, err := client.GetFromFields(tc.keyring(), val, tc.simulate)
+		_, _, _, err := client.GetFromFields(tc.clientCtx, tc.keyring(), tc.from)
 		if tc.expectedErr == "" {
 			require.NoError(t, err)
 		} else {

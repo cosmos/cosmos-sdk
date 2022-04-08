@@ -54,10 +54,10 @@ func TestGenesisStateValidate(t *testing.T) {
 	require.NoError(t, err)
 
 	proposal := &Proposal{
-		Id:           1,
-		Address:      accAddr.String(),
-		Metadata:     "proposal metadata",
-		GroupVersion: 1,
+		Id:                 1,
+		GroupPolicyAddress: accAddr.String(),
+		Metadata:           "proposal metadata",
+		GroupVersion:       1,
 		Proposers: []string{
 			memberAddr.String(),
 		},

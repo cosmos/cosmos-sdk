@@ -123,12 +123,12 @@ End of Allowed messages
 - Applies to Protobuf messages whose name does not start with `Msg`
   - For `sdk.Msg`s, please see [ADR-050](./adr-050-sign-mode-textual.md)
   - alternatively, we can decide to add a protobuf option to denote messages that are `sdk.Msg`s.
-- Field names follow sentence case
+- Field names follow [sentence case](https://en.wiktionary.org/wiki/sentence_case)
   - replace `_` with a spaces
-  - capitalize first letter
+  - capitalize first letter of the setence
 - Field names are ordered by their Protobuf field number
 - Nesting:
-  - if a field contains a nested message, we value-render the underlying message, and render the template:
+  - if a field contains a nested message, we value-render the underlying message using the template:
   ```
   <field_name>: <1st line of value-rendered message>
   > <lines 2-n of value-rendered message>             // Notice the `>` prefix.

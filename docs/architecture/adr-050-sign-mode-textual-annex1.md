@@ -80,9 +80,9 @@ message MsgSend {
 ```
 This <message_name> has <int> <field_name>
 <field_name> (<int>/<int>): <value rendered 1st line>
-<optional value rendered 2 to nth lines>
+<optional value rendered in the next lines>
 <field_name> (<int>/<int>): <value rendered 1st line>
-<optional value rendered 2nd to nth lines>
+<optional value rendered in the next lines>
 End of <field_name>.
 ```
 
@@ -205,9 +205,9 @@ See example above with `message Vote{}`.
 
 TODO
 
-### `google.protobuf.Timestamp` (TODO)
+### `google.protobuf.Timestamp`
 
-Rendered as either ISO8601 (`2021-01-01T12:00:00Z`) or a more standard English-language date format (`Jan. 1, 2021 12:00 UTC`)
+Rendered as either ISO8601 (`2021-01-01T12:00:00Z`).
 
 ### `google.protobuf.Duration` (TODO)
 

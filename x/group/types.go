@@ -372,6 +372,9 @@ func (p Proposal) ValidateBasic() error {
 	if p.GroupVersion == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "proposal group version")
 	}
+	if p.GroupPolicyVersion == 0 {
+		return sdkerrors.Wrap(errors.ErrEmpty, "proposal group policy version")
+	}
 	_, err = p.FinalTallyResult.GetYesCount()
 	if err != nil {
 		return sdkerrors.Wrap(err, "proposal FinalTallyResult yes count")

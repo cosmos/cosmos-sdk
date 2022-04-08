@@ -58,6 +58,7 @@ func TestGenesisStateValidate(t *testing.T) {
 		GroupPolicyAddress: accAddr.String(),
 		Metadata:           "proposal metadata",
 		GroupVersion:       1,
+		GroupPolicyVersion: 1,
 		Proposers: []string{
 			memberAddr.String(),
 		},

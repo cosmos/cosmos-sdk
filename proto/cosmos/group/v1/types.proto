@@ -199,7 +199,7 @@ message Proposal {
   // This field is here for informational purposes only.
   uint64 group_version = 6;
 
- // group_policy_version tracks the version of the group policy at proposal submission.
+  // group_policy_version tracks the version of the group policy at proposal submission.
   // When a decision policy is changed, existing proposals from previous policy
   // versions will become invalid with the `ABORTED` status.
   // This field is here for informational purposes only.

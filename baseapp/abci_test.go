@@ -3,16 +3,16 @@ package baseapp_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmprototypes "github.com/tendermint/tendermint/proto/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 )
 
 func TestGetBlockRentionHeight(t *testing.T) {
@@ -111,8 +111,8 @@ func TestGetBlockRentionHeight(t *testing.T) {
 
 		tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 		tc.bapp.InitChain(abci.RequestInitChain{
-			ConsensusParams: &tmproto.ConsensusParams{
-				Evidence: &tmproto.EvidenceParams{
+			ConsensusParams: &tmprototypes.ConsensusParams{
+				Evidence: &tmprototypes.EvidenceParams{
 					MaxAgeNumBlocks: tc.maxAgeBlocks,
 				},
 			},
@@ -136,10 +136,10 @@ func TestBaseAppCreateQueryContext(t *testing.T) {
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, logger, db)
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmprototypes.Header{Height: 1}})
 	app.Commit()
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmprototypes.Header{Height: 2}})
 	app.Commit()
 
 	testCases := []struct {

@@ -8,12 +8,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/pruning"
-	"github.com/cosmos/cosmos-sdk/pruning/types"
-	"github.com/stretchr/testify/require"
-
 	"github.com/tendermint/tendermint/libs/log"
 	db "github.com/tendermint/tm-db"
+	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/pruning"
+	"github.com/cosmos/cosmos-sdk/pruning/types"
 )
 
 func TestNewManager(t *testing.T) {

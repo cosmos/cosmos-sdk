@@ -28,6 +28,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	tmcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 )
 
 // DONTCOVER
@@ -270,13 +271,15 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 		ShowValidatorCmd(),
 		ShowAddressCmd(),
 		VersionCmd(),
+		tmcmd.ResetAllCmd,
+		tmcmd.ResetStateCmd,
+		tmcmd.ResetPrivValidatorCmd,
 	)
 	startCmd := StartCmd(appCreator, defaultNodeHome)
 	addStartFlags(startCmd)
 
 	rootCmd.AddCommand(
 		startCmd,
-		UnsafeResetAllCmd(),
 		tendermintCmd,
 		ExportCmd(appExport, defaultNodeHome),
 		version.NewVersionCommand(),

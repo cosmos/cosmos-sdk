@@ -169,7 +169,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9780](https://github.com/cosmos/cosmos-sdk/pull/9780) Use sigs.k8s.io for yaml, which might lead to minor YAML output changes
 * [\#10625](https://github.com/cosmos/cosmos-sdk/pull/10625) Rename `--fee-account` CLI flag to `--fee-granter`
 * [\#10684](https://github.com/cosmos/cosmos-sdk/pull/10684) Rename `edit-validator` command's `--moniker` flag to `--new-moniker`
-* [\#11116](https://github.com/cosmos/cosmos-sdk/pull/11116) `software-upgrade` and `cancel-software-upgrade` gov proposal commands have changed to `legacy-software-upgrade` and `legacy-cancel-software-upgrade`.
 * (authz)[\#11060](https://github.com/cosmos/cosmos-sdk/pull/11060) Changed the default value of the `--expiration` `tx grant` CLI Flag: was now + 1year, update: null (no expire date).
 
 ### Improvements

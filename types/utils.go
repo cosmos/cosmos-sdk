@@ -3,21 +3,20 @@ package types
 import (
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
 	"time"
 
-	dbm "github.com/tendermint/tm-db"
+	"github.com/cosmos/cosmos-sdk/db"
 )
 
 var (
 	// This is set at compile time. Could be cleveldb, defaults is goleveldb.
 	DBBackend = "" // Deprecated: Use tendermint config's DBBackend value instead.
-	backend   = dbm.GoLevelDBBackend
+	backend   = db.BadgerDBBackend
 )
 
 func init() {
 	if len(DBBackend) != 0 {
-		backend = dbm.BackendType(DBBackend)
+		backend = db.BackendType(DBBackend)
 	}
 }
 
@@ -82,19 +81,6 @@ func ParseTimeBytes(bz []byte) (time.Time, error) {
 		return t, err
 	}
 	return t.UTC().Round(0), nil
-}
-
-// NewLevelDB instantiate a new LevelDB instance according to DBBackend.
-//
-// Deprecated: Use NewDB (from "github.com/tendermint/tm-db") instead. Suggested backendType is tendermint config's DBBackend value.
-func NewLevelDB(name, dir string) (db dbm.DB, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("couldn't create db: %v", r)
-		}
-	}()
-
-	return dbm.NewDB(name, backend, dir)
 }
 
 // copy bytes

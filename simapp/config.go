@@ -22,7 +22,7 @@ var (
 	FlagCommitValue             bool
 	FlagOnOperationValue        bool // TODO: Remove in favor of binary search for invariant violation
 	FlagAllInvariantsValue      bool
-	FlagDBBackendValue          string
+	FlagTMDBBackendValue        string
 
 	FlagEnabledValue     bool
 	FlagVerboseValue     bool
@@ -47,7 +47,7 @@ func GetSimulatorFlags() {
 	flag.BoolVar(&FlagCommitValue, "Commit", false, "have the simulation commit")
 	flag.BoolVar(&FlagOnOperationValue, "SimulateEveryOperation", false, "run slow invariants every operation")
 	flag.BoolVar(&FlagAllInvariantsValue, "PrintAllInvariants", false, "print all invariants if a broken invariant is found")
-	flag.StringVar(&FlagDBBackendValue, "DBBackend", "goleveldb", "custom db backend type")
+	flag.StringVar(&FlagTMDBBackendValue, "DBBackend", "badgerdb", "custom db backend type")
 
 	// simulation flags
 	flag.BoolVar(&FlagEnabledValue, "Enabled", false, "enable the simulation")
@@ -73,6 +73,6 @@ func NewConfigFromFlags() simulation.Config {
 		Commit:             FlagCommitValue,
 		OnOperation:        FlagOnOperationValue,
 		AllInvariants:      FlagAllInvariantsValue,
-		DBBackend:          FlagDBBackendValue,
+		DBBackend:          FlagTMDBBackendValue,
 	}
 }

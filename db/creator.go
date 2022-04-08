@@ -43,7 +43,7 @@ func NewDB(name string, backend BackendType, dir string) (DBConnection, error) {
 		for k := range backends {
 			keys = append(keys, string(k))
 		}
-		return nil, fmt.Errorf("unknown db_backend %s, expected one of %v",
+		return nil, fmt.Errorf("unknown App DB backend %s, expected one of %v",
 			backend, strings.Join(keys, ","))
 	}
 

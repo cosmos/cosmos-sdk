@@ -217,7 +217,7 @@ func DefaultConfig() *Config {
 			MinRetainBlocks:   0,
 			IndexEvents:       make([]string, 0),
 			IAVLCacheSize:     781250, // 50 MB
-			AppDBBackend:      "",
+			AppDBBackend:      "badgerdb",
 		},
 		Telemetry: telemetry.Config{
 			Enabled:      false,

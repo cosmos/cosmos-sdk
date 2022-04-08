@@ -24,7 +24,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	storeTypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -59,11 +59,11 @@ type paramStore struct {
 }
 
 type setupConfig struct {
-	blocks uint64
-	blockTxs int
-	snapshotInterval uint64 
+	blocks             uint64
+	blockTxs           int
+	snapshotInterval   uint64
 	snapshotKeepRecent uint32
-	pruningOpts *storeTypes.PruningOptions
+	pruningOpts        *storetypes.PruningOptions
 }
 
 func (ps *paramStore) Set(_ sdk.Context, key []byte, value interface{}) {
@@ -300,7 +300,7 @@ func TestConsensusParamsNotNil(t *testing.T) {
 // Test that LoadLatestVersion actually does.
 func TestLoadVersion(t *testing.T) {
 	logger := defaultLogger()
-	pruningOpt := baseapp.SetPruning(sdk.NewPruningOptions(storeTypes.PruningNothing))
+	pruningOpt := baseapp.SetPruning(sdk.NewPruningOptions(storetypes.PruningNothing))
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, logger, db, pruningOpt)
@@ -309,7 +309,7 @@ func TestLoadVersion(t *testing.T) {
 	err := app.LoadLatestVersion() // needed to make stores non-nil
 	require.Nil(t, err)
 
-	emptyCommitID := storeTypes.CommitID{}
+	emptyCommitID := storetypes.CommitID{}
 
 	// fresh store has zero/empty last commit
 	lastHeight := app.LastBlockHeight()
@@ -321,13 +321,13 @@ func TestLoadVersion(t *testing.T) {
 	header := tmproto.Header{Height: 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	res := app.Commit()
-	commitID1 := storeTypes.CommitID{Version: 1, Hash: res.Data}
+	commitID1 := storetypes.CommitID{Version: 1, Hash: res.Data}
 
 	// execute a block, collect commit ID
 	header = tmproto.Header{Height: 2}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	res = app.Commit()
-	commitID2 := storeTypes.CommitID{Version: 2, Hash: res.Data}
+	commitID2 := storetypes.CommitID{Version: 2, Hash: res.Data}
 
 	// reload with LoadLatestVersion
 	app = baseapp.NewBaseApp(name, logger, db, pruningOpt)
@@ -353,15 +353,15 @@ func useDefaultLoader(app *baseapp.BaseApp) {
 
 func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 	rs := rootmulti.NewStore(db, log.NewNopLogger())
-	rs.SetPruning(sdk.NewPruningOptions(storeTypes.PruningNothing))
+	rs.SetPruning(sdk.NewPruningOptions(storetypes.PruningNothing))
 	key := sdk.NewKVStoreKey(storeKey)
-	rs.MountStoreWithDB(key, storeTypes.StoreTypeIAVL, nil)
+	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
 	err := rs.LoadLatestVersion()
 	require.Nil(t, err)
 	require.Equal(t, int64(0), rs.LastCommitID().Version)
 
 	// write some data in substore
-	kv, _ := rs.GetStore(key).(storeTypes.KVStore)
+	kv, _ := rs.GetStore(key).(storetypes.KVStore)
 	require.NotNil(t, kv)
 	kv.Set(k, v)
 	commitID := rs.Commit()
@@ -370,15 +370,15 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 
 func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
 	rs := rootmulti.NewStore(db, log.NewNopLogger())
-	rs.SetPruning(sdk.NewPruningOptions(storeTypes.PruningDefault))
+	rs.SetPruning(sdk.NewPruningOptions(storetypes.PruningDefault))
 	key := sdk.NewKVStoreKey(storeKey)
-	rs.MountStoreWithDB(key, storeTypes.StoreTypeIAVL, nil)
+	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
 	err := rs.LoadLatestVersion()
 	require.Nil(t, err)
 	require.Equal(t, ver, rs.LastCommitID().Version)
 
 	// query data in substore
-	kv, _ := rs.GetStore(key).(storeTypes.KVStore)
+	kv, _ := rs.GetStore(key).(storetypes.KVStore)
 	require.NotNil(t, kv)
 	require.Equal(t, v, kv.Get(k))
 }
@@ -413,7 +413,7 @@ func TestSetLoader(t *testing.T) {
 			initStore(t, db, tc.origStoreKey, k, v)
 
 			// load the app with the existing db
-			opts := []func(*baseapp.BaseApp){baseapp.SetPruning(sdk.NewPruningOptions(storeTypes.PruningNothing))}
+			opts := []func(*baseapp.BaseApp){baseapp.SetPruning(sdk.NewPruningOptions(storetypes.PruningNothing))}
 			if tc.setLoader != nil {
 				opts = append(opts, tc.setLoader)
 			}
@@ -436,7 +436,7 @@ func TestSetLoader(t *testing.T) {
 
 func TestVersionSetterGetter(t *testing.T) {
 	logger := defaultLogger()
-	pruningOpt := baseapp.SetPruning(sdk.NewPruningOptions(storeTypes.PruningDefault))
+	pruningOpt := baseapp.SetPruning(sdk.NewPruningOptions(storetypes.PruningDefault))
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, logger, db, pruningOpt)
@@ -456,7 +456,7 @@ func TestVersionSetterGetter(t *testing.T) {
 
 func TestLoadVersionInvalid(t *testing.T) {
 	logger := log.NewNopLogger()
-	pruningOpt := baseapp.SetPruning(sdk.NewPruningOptions(storeTypes.PruningNothing))
+	pruningOpt := baseapp.SetPruning(sdk.NewPruningOptions(storetypes.PruningNothing))
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, logger, db, pruningOpt)
@@ -471,7 +471,7 @@ func TestLoadVersionInvalid(t *testing.T) {
 	header := tmproto.Header{Height: 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	res := app.Commit()
-	commitID1 := storeTypes.CommitID{Version: 1, Hash: res.Data}
+	commitID1 := storetypes.CommitID{Version: 1, Hash: res.Data}
 
 	// create a new app with the stores mounted under the same cap key
 	app = baseapp.NewBaseApp(name, logger, db, pruningOpt)
@@ -506,7 +506,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	err = app.LoadLatestVersion() // needed to make stores non-nil
 	require.Nil(t, err)
 
-	emptyCommitID := storeTypes.CommitID{}
+	emptyCommitID := storetypes.CommitID{}
 
 	// fresh store has zero/empty last commit
 	lastHeight := app.LastBlockHeight()
@@ -514,14 +514,14 @@ func TestLoadVersionPruning(t *testing.T) {
 	require.Equal(t, int64(0), lastHeight)
 	require.Equal(t, emptyCommitID, lastID)
 
-	var lastCommitID storeTypes.CommitID
+	var lastCommitID storetypes.CommitID
 
 	// Commit 15 blocks, of which 15 (latest) is kept in addition to 5-14 inclusive
 	// (keep recent) and 3 (snapshot-interval).
 	for i := int64(1); i <= 15; i++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: i}})
 		res := app.Commit()
-		lastCommitID = storeTypes.CommitID{Version: i, Hash: res.Data}
+		lastCommitID = storetypes.CommitID{Version: i, Hash: res.Data}
 	}
 
 	for _, v := range []int64{1, 2, 3, 4} {
@@ -543,7 +543,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	testLoadVersionHelper(t, app, int64(15), lastCommitID)
 }
 
-func testLoadVersionHelper(t *testing.T, app *baseapp.BaseApp, expectedHeight int64, expectedID storeTypes.CommitID) {
+func testLoadVersionHelper(t *testing.T, app *baseapp.BaseApp, expectedHeight int64, expectedID storetypes.CommitID) {
 	lastHeight := app.LastBlockHeight()
 	lastID := app.LastCommitID()
 	require.Equal(t, expectedHeight, lastHeight)
@@ -896,7 +896,7 @@ func testTxDecoder(cdc *codec.LegacyAmino) sdk.TxDecoder {
 	}
 }
 
-func customHandlerTxTest(t *testing.T, capKey storeTypes.StoreKey, storeKey []byte) handlerFun {
+func customHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte) handlerFun {
 	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
 		store := ctx.KVStore(capKey)
 		txTest := tx.(txTest)
@@ -927,7 +927,7 @@ func counterEvent(evType string, msgCount int64) sdk.Events {
 	}
 }
 
-func handlerMsgCounter(t *testing.T, capKey storeTypes.StoreKey, deliverKey []byte) sdk.Handler {
+func handlerMsgCounter(t *testing.T, capKey storetypes.StoreKey, deliverKey []byte) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 		store := ctx.KVStore(capKey)
@@ -1818,7 +1818,6 @@ func TestGRPCQuery(t *testing.T) {
 	require.NoError(t, err)
 	app.GRPCQueryRouter().SetInterfaceRegistry(codectypes.NewInterfaceRegistry())
 
-
 	app.InitChain(abci.RequestInitChain{})
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -1932,11 +1931,11 @@ func TestGetMaximumBlockGas(t *testing.T) {
 
 func TestListSnapshots(t *testing.T) {
 	setupConfig := &setupConfig{
-		blocks: 5, 
-		blockTxs: 4,
-		snapshotInterval: 2,
+		blocks:             5,
+		blockTxs:           4,
+		snapshotInterval:   2,
 		snapshotKeepRecent: 2,
-		pruningOpts: sdk.NewPruningOptions(storeTypes.PruningNothing),
+		pruningOpts:        sdk.NewPruningOptions(storetypes.PruningNothing),
 	}
 
 	app, err := setupBaseAppWithSnapshots(t, setupConfig)
@@ -1957,17 +1956,17 @@ func TestListSnapshots(t *testing.T) {
 
 func TestSnapshotWithPruning(t *testing.T) {
 	testcases := map[string]struct {
-		config *setupConfig
+		config            *setupConfig
 		expectedSnapshots []*abci.Snapshot
-		expectedErr error
-	} {
+		expectedErr       error
+	}{
 		"prune nothing with snapshot": {
 			config: &setupConfig{
-				blocks: 20, 
-				blockTxs: 2,
-				snapshotInterval: 5,
+				blocks:             20,
+				blockTxs:           2,
+				snapshotInterval:   5,
 				snapshotKeepRecent: 1,
-				pruningOpts: sdk.NewPruningOptions(storeTypes.PruningNothing),
+				pruningOpts:        sdk.NewPruningOptions(storetypes.PruningNothing),
 			},
 			expectedSnapshots: []*abci.Snapshot{
 				{Height: 20, Format: 2, Chunks: 5},
@@ -1975,11 +1974,11 @@ func TestSnapshotWithPruning(t *testing.T) {
 		},
 		"prune everything with snapshot": {
 			config: &setupConfig{
-				blocks: 20, 
-				blockTxs: 2,
-				snapshotInterval: 5,
+				blocks:             20,
+				blockTxs:           2,
+				snapshotInterval:   5,
 				snapshotKeepRecent: 1,
-				pruningOpts: sdk.NewPruningOptions(storeTypes.PruningEverything),
+				pruningOpts:        sdk.NewPruningOptions(storetypes.PruningEverything),
 			},
 			expectedSnapshots: []*abci.Snapshot{
 				{Height: 20, Format: 2, Chunks: 5},
@@ -1987,11 +1986,11 @@ func TestSnapshotWithPruning(t *testing.T) {
 		},
 		"default pruning with snapshot": {
 			config: &setupConfig{
-				blocks: 20, 
-				blockTxs: 2,
-				snapshotInterval: 5,
+				blocks:             20,
+				blockTxs:           2,
+				snapshotInterval:   5,
 				snapshotKeepRecent: 1,
-				pruningOpts: sdk.NewPruningOptions(storeTypes.PruningDefault),
+				pruningOpts:        sdk.NewPruningOptions(storetypes.PruningDefault),
 			},
 			expectedSnapshots: []*abci.Snapshot{
 				{Height: 20, Format: 2, Chunks: 5},
@@ -1999,11 +1998,11 @@ func TestSnapshotWithPruning(t *testing.T) {
 		},
 		"custom": {
 			config: &setupConfig{
-				blocks: 25, 
-				blockTxs: 2,
-				snapshotInterval: 5,
+				blocks:             25,
+				blockTxs:           2,
+				snapshotInterval:   5,
 				snapshotKeepRecent: 2,
-				pruningOpts: sdk.NewCustomPruningOptions(12, 12),
+				pruningOpts:        sdk.NewCustomPruningOptions(12, 12),
 			},
 			expectedSnapshots: []*abci.Snapshot{
 				{Height: 25, Format: 2, Chunks: 6},
@@ -2012,20 +2011,20 @@ func TestSnapshotWithPruning(t *testing.T) {
 		},
 		"no snapshots": {
 			config: &setupConfig{
-				blocks: 10, 
-				blockTxs: 2,
+				blocks:           10,
+				blockTxs:         2,
 				snapshotInterval: 0, // 0 implies disable snapshots
-				pruningOpts: sdk.NewPruningOptions(storeTypes.PruningNothing),
+				pruningOpts:      sdk.NewPruningOptions(storetypes.PruningNothing),
 			},
 			expectedSnapshots: []*abci.Snapshot{},
 		},
 		"keep all snapshots": {
 			config: &setupConfig{
-				blocks: 10, 
-				blockTxs: 2,
-				snapshotInterval: 3,
+				blocks:             10,
+				blockTxs:           2,
+				snapshotInterval:   3,
 				snapshotKeepRecent: 0, // 0 implies keep all snapshots
-				pruningOpts: sdk.NewPruningOptions(storeTypes.PruningNothing),
+				pruningOpts:        sdk.NewPruningOptions(storetypes.PruningNothing),
 			},
 			expectedSnapshots: []*abci.Snapshot{
 				{Height: 9, Format: 2, Chunks: 2},
@@ -2058,17 +2057,17 @@ func TestSnapshotWithPruning(t *testing.T) {
 
 			// Validate that heights were pruned correctly by querying the state at the last height that should be present relative to latest
 			// and the first height that should be pruned.
-			// 
+			//
 			// Exceptions:
 			//   * Prune nothing: should be able to query all heights (we only test first and latest)
 			//   * Prune default: should be able to query all heights (we only test first and latest)
 			//      * The reason for default behaving this way is that we only commit 20 heights but default has 100_000 keep-recent
 			var lastExistingHeight int64
-			if tc.config.pruningOpts.GetPruningStrategy() == storeTypes.PruningNothing || tc.config.pruningOpts.GetPruningStrategy() == storeTypes.PruningDefault {
+			if tc.config.pruningOpts.GetPruningStrategy() == storetypes.PruningNothing || tc.config.pruningOpts.GetPruningStrategy() == storetypes.PruningDefault {
 				lastExistingHeight = 1
 			} else {
 				// Integer division rounds down so by multiplying back we get the last height at which we pruned
-				lastExistingHeight = int64((tc.config.blocks / tc.config.pruningOpts.Interval) * tc.config.pruningOpts.Interval - tc.config.pruningOpts.KeepRecent)
+				lastExistingHeight = int64((tc.config.blocks/tc.config.pruningOpts.Interval)*tc.config.pruningOpts.Interval - tc.config.pruningOpts.KeepRecent)
 			}
 
 			// Query 1
@@ -2078,10 +2077,10 @@ func TestSnapshotWithPruning(t *testing.T) {
 
 			// Query 2
 			res = app.Query(abci.RequestQuery{Path: fmt.Sprintf("/store/%s/key", capKey2.Name()), Data: []byte("0"), Height: lastExistingHeight - 1})
-			require.NotNil(t, res, "height: %d", lastExistingHeight - 1)
-			if tc.config.pruningOpts.GetPruningStrategy() == storeTypes.PruningNothing || tc.config.pruningOpts.GetPruningStrategy() == storeTypes.PruningDefault {
+			require.NotNil(t, res, "height: %d", lastExistingHeight-1)
+			if tc.config.pruningOpts.GetPruningStrategy() == storetypes.PruningNothing || tc.config.pruningOpts.GetPruningStrategy() == storetypes.PruningDefault {
 				// With prune nothing or default, we query height 0 which translates to the latest height.
-				require.NotNil(t, res.Value, "height: %d", lastExistingHeight - 1)
+				require.NotNil(t, res.Value, "height: %d", lastExistingHeight-1)
 			}
 		})
 	}
@@ -2089,11 +2088,11 @@ func TestSnapshotWithPruning(t *testing.T) {
 
 func TestLoadSnapshotChunk(t *testing.T) {
 	setupConfig := &setupConfig{
-		blocks: 2, 
-		blockTxs: 5,
-		snapshotInterval: 2,
+		blocks:             2,
+		blockTxs:           5,
+		snapshotInterval:   2,
 		snapshotKeepRecent: 2,
-		pruningOpts: sdk.NewPruningOptions(storeTypes.PruningNothing),
+		pruningOpts:        sdk.NewPruningOptions(storetypes.PruningNothing),
 	}
 	app, err := setupBaseAppWithSnapshots(t, setupConfig)
 	require.NoError(t, err)
@@ -2132,11 +2131,11 @@ func TestLoadSnapshotChunk(t *testing.T) {
 func TestOfferSnapshot_Errors(t *testing.T) {
 	// Set up app before test cases, since it's fairly expensive.
 	setupConfig := &setupConfig{
-		blocks: 0, 
-		blockTxs: 0,
-		snapshotInterval: 2,
+		blocks:             0,
+		blockTxs:           0,
+		snapshotInterval:   2,
 		snapshotKeepRecent: 2,
-		pruningOpts: sdk.NewPruningOptions(storeTypes.PruningNothing),
+		pruningOpts:        sdk.NewPruningOptions(storetypes.PruningNothing),
 	}
 	app, err := setupBaseAppWithSnapshots(t, setupConfig)
 	require.NoError(t, err)
@@ -2194,21 +2193,21 @@ func TestOfferSnapshot_Errors(t *testing.T) {
 
 func TestApplySnapshotChunk(t *testing.T) {
 	setupConfig1 := &setupConfig{
-		blocks: 4, 
-		blockTxs: 10,
-		snapshotInterval: 2,
+		blocks:             4,
+		blockTxs:           10,
+		snapshotInterval:   2,
 		snapshotKeepRecent: 2,
-		pruningOpts: sdk.NewPruningOptions(storeTypes.PruningNothing),
+		pruningOpts:        sdk.NewPruningOptions(storetypes.PruningNothing),
 	}
 	source, err := setupBaseAppWithSnapshots(t, setupConfig1)
 	require.NoError(t, err)
 
 	setupConfig2 := &setupConfig{
-		blocks: 0, 
-		blockTxs: 0,
-		snapshotInterval: 2,
+		blocks:             0,
+		blockTxs:           0,
+		snapshotInterval:   2,
 		snapshotKeepRecent: 2,
-		pruningOpts: sdk.NewPruningOptions(storeTypes.PruningNothing),
+		pruningOpts:        sdk.NewPruningOptions(storetypes.PruningNothing),
 	}
 	target, err := setupBaseAppWithSnapshots(t, setupConfig2)
 	require.NoError(t, err)
@@ -2359,41 +2358,41 @@ func TestBaseApp_Init(t *testing.T) {
 	require.NoError(t, err)
 
 	testCases := map[string]struct {
-		bapp     *baseapp.BaseApp
-		expectedPruning *storeTypes.PruningOptions
+		bapp             *baseapp.BaseApp
+		expectedPruning  *storetypes.PruningOptions
 		expectedSnapshot *snapshottypes.SnapshotOptions
-		expectedErr error
+		expectedErr      error
 	}{
 		"snapshot but no pruning": {
 			baseapp.NewBaseApp(name, logger, db,
 				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(1500, 2)),
 			),
-			sdk.NewPruningOptions(storeTypes.PruningNothing),
+			sdk.NewPruningOptions(storetypes.PruningNothing),
 			sdk.NewSnapshotOptions(1500, 2),
 			// if no pruning is set, the default is PruneNothing
 			nil,
 		},
 		"pruning everything only": {
 			baseapp.NewBaseApp(name, logger, db,
-				baseapp.SetPruning(sdk.NewPruningOptions(storeTypes.PruningEverything)),
+				baseapp.SetPruning(sdk.NewPruningOptions(storetypes.PruningEverything)),
 			),
-			sdk.NewPruningOptions(storeTypes.PruningEverything),
+			sdk.NewPruningOptions(storetypes.PruningEverything),
 			nil,
 			nil,
 		},
 		"pruning nothing only": {
 			baseapp.NewBaseApp(name, logger, db,
-				baseapp.SetPruning(sdk.NewPruningOptions(storeTypes.PruningNothing)),
+				baseapp.SetPruning(sdk.NewPruningOptions(storetypes.PruningNothing)),
 			),
-			sdk.NewPruningOptions(storeTypes.PruningNothing),
+			sdk.NewPruningOptions(storetypes.PruningNothing),
 			nil,
 			nil,
 		},
 		"pruning default only": {
 			baseapp.NewBaseApp(name, logger, db,
-				baseapp.SetPruning(sdk.NewPruningOptions(storeTypes.PruningDefault)),
+				baseapp.SetPruning(sdk.NewPruningOptions(storetypes.PruningDefault)),
 			),
-			sdk.NewPruningOptions(storeTypes.PruningDefault),
+			sdk.NewPruningOptions(storetypes.PruningDefault),
 			nil,
 			nil,
 		},
@@ -2407,28 +2406,28 @@ func TestBaseApp_Init(t *testing.T) {
 		},
 		"pruning everything and snapshots": {
 			baseapp.NewBaseApp(name, logger, db,
-				baseapp.SetPruning(sdk.NewPruningOptions(storeTypes.PruningEverything)),
+				baseapp.SetPruning(sdk.NewPruningOptions(storetypes.PruningEverything)),
 				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(1500, 2)),
 			),
-			sdk.NewPruningOptions(storeTypes.PruningEverything),
+			sdk.NewPruningOptions(storetypes.PruningEverything),
 			sdk.NewSnapshotOptions(1500, 2),
 			nil,
 		},
 		"pruning nothing and snapshots": {
 			baseapp.NewBaseApp(name, logger, db,
-				baseapp.SetPruning(sdk.NewPruningOptions(storeTypes.PruningNothing)),
+				baseapp.SetPruning(sdk.NewPruningOptions(storetypes.PruningNothing)),
 				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(1500, 2)),
 			),
-			sdk.NewPruningOptions(storeTypes.PruningNothing),
+			sdk.NewPruningOptions(storetypes.PruningNothing),
 			sdk.NewSnapshotOptions(1500, 2),
 			nil,
 		},
 		"pruning default and snapshots": {
 			baseapp.NewBaseApp(name, logger, db,
-				baseapp.SetPruning(sdk.NewPruningOptions(storeTypes.PruningDefault)),
+				baseapp.SetPruning(sdk.NewPruningOptions(storetypes.PruningDefault)),
 				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(1500, 2)),
 			),
-			sdk.NewPruningOptions(storeTypes.PruningDefault),
+			sdk.NewPruningOptions(storetypes.PruningDefault),
 			sdk.NewSnapshotOptions(1500, 2),
 			nil,
 		},

@@ -59,7 +59,7 @@ func TestMsgCreateGroup(t *testing.T) {
 				},
 			},
 			true,
-			"expected a positive decimal",
+			"expected a non-negative decimal",
 		},
 		{
 			"zero member's weight not allowed",
@@ -416,7 +416,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 				return req
 			},
 			true,
-			"expected a positive decimal",
+			"expected a non-negative decimal",
 		},
 		{
 			"zero member's weight not allowed",

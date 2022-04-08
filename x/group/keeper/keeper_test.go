@@ -1643,7 +1643,6 @@ func (s *TestSuite) TestWithdrawProposal() {
 	addrs := s.addrs
 	addr2 := addrs[1]
 	addr5 := addrs[4]
-	groupPolicy := s.groupPolicyAddr
 
 	msgSend := &banktypes.MsgSend{
 		FromAddress: s.groupPolicyAddr.String(),
@@ -1700,7 +1699,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 				return submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 			},
 			proposalId: proposalID,
-			admin:      groupPolicy.String(),
+			admin:      proposers[0],
 		},
 	}
 	for msg, spec := range specs {
@@ -2517,7 +2516,6 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 func (s *TestSuite) TestProposalsByVPEnd() {
 	addrs := s.addrs
 	addr2 := addrs[1]
-	groupPolicy := s.groupPolicyAddr
 
 	votingPeriod := s.policy.GetVotingPeriod()
 	ctx := s.sdkCtx
@@ -2547,7 +2545,7 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 			admin:     proposers[0],
 			newCtx:    ctx.WithBlockTime(now.Add(votingPeriod).Add(time.Hour)),
 			tallyRes:  group.DefaultTallyResult(),
-			expStatus: group.PROPOSAL_STATUS_SUBMITTED,
+			expStatus: group.PROPOSAL_STATUS_REJECTED,
 		},
 		"tally within voting period": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -2558,7 +2556,7 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 			tallyRes:  group.DefaultTallyResult(),
 			expStatus: group.PROPOSAL_STATUS_SUBMITTED,
 		},
-		"tally within voting period(with votes)": {
+		"tally within voting period (with votes)": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				return submitProposalAndVote(s.ctx, s, []sdk.Msg{msgSend}, proposers, group.VOTE_OPTION_YES)
 			},
@@ -2567,7 +2565,7 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 			tallyRes:  group.DefaultTallyResult(),
 			expStatus: group.PROPOSAL_STATUS_SUBMITTED,
 		},
-		"tally after voting period(with votes)": {
+		"tally after voting period (with votes)": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				return submitProposalAndVote(s.ctx, s, []sdk.Msg{msgSend}, proposers, group.VOTE_OPTION_YES)
 			},
@@ -2581,12 +2579,27 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 			},
 			expStatus: group.PROPOSAL_STATUS_ACCEPTED,
 		},
-		"tally of closed proposal": {
+		"tally after voting period (not passing)": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				// `s.addrs[4]` has weight 1
+				return submitProposalAndVote(s.ctx, s, []sdk.Msg{msgSend}, []string{s.addrs[4].String()}, group.VOTE_OPTION_YES)
+			},
+			admin:  proposers[0],
+			newCtx: ctx.WithBlockTime(now.Add(votingPeriod).Add(time.Hour)),
+			tallyRes: group.TallyResult{
+				YesCount:        "1",
+				NoCount:         "0",
+				NoWithVetoCount: "0",
+				AbstainCount:    "0",
+			},
+			expStatus: group.PROPOSAL_STATUS_REJECTED,
+		},
+		"tally of withdrawn proposal": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				pId := submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 				_, err := s.keeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
 					ProposalId: pId,
-					Address:    groupPolicy.String(),
+					Address:    proposers[0],
 				})
 
 				s.Require().NoError(err)
@@ -2597,12 +2610,12 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 			tallyRes:  group.DefaultTallyResult(),
 			expStatus: group.PROPOSAL_STATUS_WITHDRAWN,
 		},
-		"tally of closed proposal (with votes)": {
+		"tally of withdrawn proposal (with votes)": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				pId := submitProposalAndVote(s.ctx, s, []sdk.Msg{msgSend}, proposers, group.VOTE_OPTION_YES)
 				_, err := s.keeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
 					ProposalId: pId,
-					Address:    groupPolicy.String(),
+					Address:    proposers[0],
 				})
 
 				s.Require().NoError(err)

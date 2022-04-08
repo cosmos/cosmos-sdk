@@ -13,6 +13,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogo/protobuf/jsonpb"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/libs/log"
+	"google.golang.org/protobuf/proto"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
@@ -20,27 +29,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-
+	"github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
-
-	"github.com/gogo/protobuf/jsonpb"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
-	"google.golang.org/protobuf/proto"
 )
 
 var (

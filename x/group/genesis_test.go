@@ -378,6 +378,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						GroupPolicyAddress: accAddr.String(),
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
+						GroupPolicyVersion: 1,
 					},
 				},
 			},
@@ -404,6 +405,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						GroupPolicyAddress: "invalid address",
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
+						GroupPolicyVersion: 1,
 					},
 				},
 			},
@@ -430,6 +432,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						GroupPolicyAddress: accAddr.String(),
 						Metadata:           "proposal metadata",
 						GroupVersion:       0,
+						GroupPolicyVersion: 1,
 					},
 				},
 			},
@@ -456,6 +459,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						GroupPolicyAddress: accAddr.String(),
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
+						GroupPolicyVersion: 0,
 					},
 				},
 			},
@@ -482,6 +486,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						GroupPolicyAddress: accAddr.String(),
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
+						GroupPolicyVersion: 1,
 						Proposers: []string{
 							memberAddr.String(),
 						},
@@ -519,6 +524,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						GroupPolicyAddress: accAddr.String(),
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
+						GroupPolicyVersion: 1,
 						Proposers: []string{
 							memberAddr.String(),
 						},
@@ -556,6 +562,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						GroupPolicyAddress: accAddr.String(),
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
+						GroupPolicyVersion: 1,
 						Proposers: []string{
 							memberAddr.String(),
 						},
@@ -593,6 +600,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						GroupPolicyAddress: accAddr.String(),
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
+						GroupPolicyVersion: 1,
 						Proposers: []string{
 							memberAddr.String(),
 						},

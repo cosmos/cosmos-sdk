@@ -216,12 +216,40 @@ Rendered as either ISO8601 (`2021-01-01T12:00:00Z`).
 - Ex:
   - `1483530 seconds` -> `2 weeks, 3 days, 4 hours, 5 minutes, 30 seconds (1483530 seconds total)`
 
+### bytes
+
+- Bytes are rendered in base64.
+
 ### address bytes
 
 We currently use `string` types in protobuf for addresses so this may not be needed, but if any address bytes are used in sign mode textual they should be rendered with bech32 formatting
 
-## Utilities
+### strings
 
-### Sentence case
+Strings are rendered as-is.
 
-Sentence case is defined as capitalization just like a standard English sentence, e.g. "The dog is gone". When converting a string containing `_` (e.g. in Protobuf field names), each `_` is converted into a space character `' '` before converting into the sentence case.
+### Default Values
+
+- Default Protobuf values for each field are skipped.
+
+#### Example
+
+```proto
+message TestData {
+  string signer = 1;
+  string metadata = 2;
+}
+```
+
+```go
+myTestData := TestData{
+  Signer: "cosmos1abc"
+}
+```
+
+We get the following encoding for the `TestData` message:
+
+```
+TestData object
+> Signer: cosmos1abc
+```

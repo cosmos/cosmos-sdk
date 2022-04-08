@@ -826,7 +826,8 @@ func (m MsgLeaveGroup) ValidateBasic() error {
 }
 
 // strictValidateMembers performs ValidateBasic on Members, but also checks
-// that all members weights are positive
+// that all members weights are positive (whereas `Members{members}.ValidateBasic()`
+// only checks that they are non-negative.
 func strictValidateMembers(members []Member) error {
 	err := Members{members}.ValidateBasic()
 	if err != nil {

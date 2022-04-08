@@ -39,7 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* [\#11562](https://github.com/cosmos/cosmos-sdk/pull/11562) Update Tendermint to [v0.34.x]() and move all Tendermint commands under the `tendermint` sub-command, including `unsafe-reset-all`.
+* [\#11562](https://github.com/cosmos/cosmos-sdk/pull/11562) Updated Tendermint to v0.34.19; `unsafe-reset-all` command has been moved to the `tendermint` sub-command.
 
 ## [v0.45.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.2) - 2022-04-05
 

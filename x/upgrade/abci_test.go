@@ -36,11 +36,7 @@ type TestSuite struct {
 
 var s TestSuite
 
-<<<<<<< HEAD
 func setupTest(height int64, skip map[int64]bool) TestSuite {
-=======
-func setupTest(t *testing.T, height int64, skip map[int64]bool) TestSuite {
->>>>>>> 5b02bf459 (feat: `ScheduleUpgradeNoHeightValidation` for automated upgrades w/o gov proposal (#11551))
 	db := dbm.NewMemDB()
 	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, skip, simapp.DefaultNodeHome, 0, simapp.MakeTestEncodingConfig(), simapp.EmptyAppOptions{})
 	genesisState := simapp.NewDefaultGenesisState(app.AppCodec())
@@ -73,15 +69,9 @@ func TestRequireName(t *testing.T) {
 }
 
 func TestRequireFutureBlock(t *testing.T) {
-<<<<<<< HEAD
 	s := setupTest(10, map[int64]bool{})
-	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: s.ctx.BlockHeight()}})
-	require.NotNil(t, err)
-=======
-	s := setupTest(t, 10, map[int64]bool{})
 	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: s.ctx.BlockHeight() - 1}})
 	require.Error(t, err)
->>>>>>> 5b02bf459 (feat: `ScheduleUpgradeNoHeightValidation` for automated upgrades w/o gov proposal (#11551))
 	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }
 
@@ -252,15 +242,8 @@ func VerifySet(t *testing.T, skipUpgradeHeights map[int64]bool) {
 }
 
 func TestContains(t *testing.T) {
-<<<<<<< HEAD
-	var (
-		skipOne int64 = 11
-	)
-	s := setupTest(10, map[int64]bool{skipOne: true})
-=======
 	var skipOne int64 = 11
-	s := setupTest(t, 10, map[int64]bool{skipOne: true})
->>>>>>> 5b02bf459 (feat: `ScheduleUpgradeNoHeightValidation` for automated upgrades w/o gov proposal (#11551))
+	s := setupTest(10, map[int64]bool{skipOne: true})
 
 	VerifySet(t, map[int64]bool{skipOne: true})
 	t.Log("case where array contains the element")

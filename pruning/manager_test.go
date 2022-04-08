@@ -267,6 +267,15 @@ func TestLoadPruningHeights(t *testing.T) {
 	}
 }
 
+func TestLoadPruningHeights_PruneNothing(t *testing.T) {
+	var manager = pruning.NewManager(log.NewNopLogger())
+	require.NotNil(t, manager)
+
+	manager.SetOptions(types.NewPruningOptions(types.PruningNothing))
+
+	require.Nil(t, manager.LoadPruningHeights(db.NewMemDB()))
+}
+
 func TestWithSnapshot(t *testing.T) {
 	manager := pruning.NewManager(log.NewNopLogger())
 	require.NotNil(t, manager)

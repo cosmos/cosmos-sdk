@@ -20,6 +20,12 @@ func (k Keeper) Mint(ctx sdk.Context, token nft.NFT, receiver sdk.AccAddress) er
 	k.setNFT(ctx, token)
 	k.setOwner(ctx, token.ClassId, token.Id, receiver)
 	k.incrTotalSupply(ctx, token.ClassId)
+
+	ctx.EventManager().EmitTypedEvent(&nft.EventMint{
+		ClassId: token.ClassId,
+		Id:      token.Id,
+		Owner:   receiver.String(),
+	})
 	return nil
 }
 
@@ -40,6 +46,11 @@ func (k Keeper) Burn(ctx sdk.Context, classID string, nftID string) error {
 
 	k.deleteOwner(ctx, classID, nftID, owner)
 	k.decrTotalSupply(ctx, classID)
+	ctx.EventManager().EmitTypedEvent(&nft.EventBurn{
+		ClassId: classID,
+		Id:      nftID,
+		Owner:   owner.String(),
+	})
 	return nil
 }
 

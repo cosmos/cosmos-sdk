@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
-	snapshotypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -72,7 +72,7 @@ func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
 }
 
 // SetSnapshot sets the snapshot store.
-func SetSnapshot(snapshotStore *snapshots.Store, opts *snapshotypes.SnapshotOptions) func(*BaseApp) {
+func SetSnapshot(snapshotStore *snapshots.Store, opts *snapshottypes.SnapshotOptions) func(*BaseApp) {
 	return func(app *BaseApp) { app.SetSnapshot(snapshotStore, opts) }
 }
 
@@ -194,7 +194,7 @@ func (app *BaseApp) SetStoreLoader(loader StoreLoader) {
 }
 
 // SetSnapshot sets the snapshot store and options.
-func (app *BaseApp) SetSnapshot(snapshotStore *snapshots.Store, opts *snapshotypes.SnapshotOptions) {
+func (app *BaseApp) SetSnapshot(snapshotStore *snapshots.Store, opts *snapshottypes.SnapshotOptions) {
 	if app.sealed {
 		panic("SetSnapshot() on sealed BaseApp")
 	}

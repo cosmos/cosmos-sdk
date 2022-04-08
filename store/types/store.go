@@ -9,7 +9,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
-	snapshotypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
@@ -143,7 +143,7 @@ type CacheMultiStore interface {
 type CommitMultiStore interface {
 	Committer
 	MultiStore
-	snapshotypes.Snapshotter
+	snapshottypes.Snapshotter
 
 	// Mount a store of type using the given db.
 	// If db == nil, the new store will use the CommitMultiStore db.
@@ -473,8 +473,8 @@ func NewCustomPruningOptions(keepRecent, interval uint64) *PruningOptions {
 	return pruningtypes.NewCustomPruningOptions(keepRecent, interval)
 }
 
-type SnapshotOptions = snapshotypes.SnapshotOptions
+type SnapshotOptions = snapshottypes.SnapshotOptions
 
 func NewSnapshotOptions(interval uint64, keepRecent uint32) *SnapshotOptions {
-	return snapshotypes.NewSnapshotOptions(interval, keepRecent)
+	return snapshottypes.NewSnapshotOptions(interval, keepRecent)
 }

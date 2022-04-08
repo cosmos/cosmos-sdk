@@ -16,7 +16,7 @@ import (
 	db "github.com/tendermint/tm-db"
 )
 
-func Test_NewManager(t *testing.T) {
+func TestNewManager(t *testing.T) {
 	manager := pruning.NewManager(log.NewNopLogger())
 
 	require.NotNil(t, manager)
@@ -24,7 +24,7 @@ func Test_NewManager(t *testing.T) {
 	require.Equal(t, types.PruningNothing, manager.GetOptions().GetPruningStrategy())
 }
 
-func Test_Strategies(t *testing.T) {
+func TestStrategies(t *testing.T) {
 	testcases := map[string]struct {
 		strategy *types.PruningOptions
 		snapshotInterval uint64
@@ -142,7 +142,7 @@ func Test_Strategies(t *testing.T) {
 	}
 }
 
-func Test_FlushLoad(t *testing.T) {
+func TestFlushLoad(t *testing.T) {
 	manager := pruning.NewManager(log.NewNopLogger())
 	require.NotNil(t, manager)
 
@@ -196,7 +196,78 @@ func Test_FlushLoad(t *testing.T) {
 	}
 }
 
-func Test_WithSnapshot(t *testing.T) {
+func TestLoadPruningHeights(t *testing.T) {
+	var (
+		manager = pruning.NewManager(log.NewNopLogger())
+		err error
+	)
+	require.NotNil(t, manager)
+
+	// must not be PruningNothing
+	manager.SetOptions(types.NewPruningOptions(types.PruningDefault))
+	
+	testcases := map[string]struct{
+		flushedPruningHeights[]int64
+		getFlushedPruningSnapshotHeights func () *list.List
+		expectedResult error
+	} {
+		"negative pruningHeight - error": {
+			flushedPruningHeights: []int64{10, 0, -1},
+			expectedResult: fmt.Errorf(pruning.ErrNegativeHeightsFmt, -1),
+		},
+		"negative snapshotPruningHeight - error": {
+			getFlushedPruningSnapshotHeights: func() *list.List {
+				l := list.New()
+				l.PushBack(int64(5))
+				l.PushBack(int64(-2))
+				l.PushBack(int64(3))
+				return l
+			},
+			expectedResult: fmt.Errorf(pruning.ErrNegativeHeightsFmt, -2),
+		},
+		"both have negative - pruningHeight error": {
+			flushedPruningHeights: []int64{10, 0, -1},
+			getFlushedPruningSnapshotHeights: func() *list.List {
+				l := list.New()
+				l.PushBack(int64(5))
+				l.PushBack(int64(-2))
+				l.PushBack(int64(3))
+				return l
+			},
+			expectedResult: fmt.Errorf(pruning.ErrNegativeHeightsFmt, -1),
+		},
+		"both non-negative - success": {
+			flushedPruningHeights: []int64{10, 0, 3},
+			getFlushedPruningSnapshotHeights: func() *list.List {
+				l := list.New()
+				l.PushBack(int64(5))
+				l.PushBack(int64(0))
+				l.PushBack(int64(3))
+				return l
+			},
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			db := db.NewMemDB()
+			if tc.flushedPruningHeights != nil {
+				err = db.Set(pruning.PruneHeightsKey, pruning.Int64SliceToBytes(tc.flushedPruningHeights))
+				require.NoError(t, err)
+			}
+
+			if tc.getFlushedPruningSnapshotHeights != nil {
+				err = db.Set(pruning.PruneSnapshotHeightsKey, pruning.ListToBytes(tc.getFlushedPruningSnapshotHeights()))
+				require.NoError(t, err)
+			}
+	
+			err = manager.LoadPruningHeights(db)
+			require.Equal(t, tc.expectedResult, err)
+		})
+	}
+}
+
+func TestWithSnapshot(t *testing.T) {
 	manager := pruning.NewManager(log.NewNopLogger())
 	require.NotNil(t, manager)
 
@@ -216,6 +287,7 @@ func Test_WithSnapshot(t *testing.T) {
 	snapshotHeightsToPruneMirror := list.New()
 
 	wg := sync.WaitGroup{}
+	defer wg.Wait()
 
 	for curHeight := int64(1); curHeight < 100000; curHeight++ {
 		mx.Lock()
@@ -269,6 +341,4 @@ func Test_WithSnapshot(t *testing.T) {
 			}(curHeight)
 		}
 	}
-
-	wg.Wait()
 }

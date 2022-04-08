@@ -6,7 +6,7 @@ type SnapshotOptions struct {
 	// Interval defines at which heights the snapshot is taken.
 	Interval uint64
 
-	// KeepRecent defines how many snapshots to keep.
+	// KeepRecent defines how many snapshots to keep in heights.
 	KeepRecent uint32
 }
 

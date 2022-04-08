@@ -21,9 +21,11 @@ type Manager struct {
 	mx                   sync.Mutex
 }
 
-const (
-	pruneHeightsKey         = "s/pruneheights"
-	pruneSnapshotHeightsKey = "s/pruneSnheights"
+const errNegativeHeightsFmt = "failed to get pruned heights: %d"
+
+var (
+	pruneHeightsKey         = []byte("s/pruneheights")
+	pruneSnapshotHeightsKey = []byte("s/pruneSnheights")
 )
 
 func NewManager(logger log.Logger) *Manager {
@@ -55,7 +57,8 @@ func (m *Manager) GetPruningHeights() []int64 {
 
 // ResetPruningHeights resets the heights to be pruned.
 func (m *Manager) ResetPruningHeights() {
-	m.pruneHeights = make([]int64, 0)
+	// reuse previously allocated memory.
+	m.pruneHeights = m.pruneHeights[:0]
 }
 
 // HandleHeight determines if pruneHeight height needs to be kept for pruning at the right interval prescribed by
@@ -116,7 +119,7 @@ func (m *Manager) SetSnapshotInterval(snapshotInterval uint64) {
 
 // ShouldPruneAtHeight return true if the given height should be pruned, false otherwise
 func (m *Manager) ShouldPruneAtHeight(height int64) bool {
-	return m.opts.GetPruningStrategy() != types.PruningNothing && m.opts.Interval > 0 && height%int64(m.opts.Interval) == 0
+	return m.opts.Interval > 0 && m.opts.GetPruningStrategy() != types.PruningNothing && height%int64(m.opts.Interval) == 0
 }
 
 // FlushPruningHeights flushes the pruning heights to the database for crash recovery.
@@ -136,14 +139,11 @@ func (m *Manager) LoadPruningHeights(db dbm.DB) error {
 	if err := m.loadPruningHeights(db); err != nil {
 		return err
 	}
-	if err := m.loadPruningSnapshotHeights(db); err != nil {
-		return err
-	}
-	return nil
+	return m.loadPruningSnapshotHeights(db)
 }
 
 func (m *Manager) loadPruningHeights(db dbm.DB) error {
-	bz, err := db.Get([]byte(pruneHeightsKey))
+	bz, err := db.Get(pruneHeightsKey)
 	if err != nil {
 		return fmt.Errorf("failed to get pruned heights: %w", err)
 	}
@@ -154,7 +154,12 @@ func (m *Manager) loadPruningHeights(db dbm.DB) error {
 	prunedHeights := make([]int64, len(bz)/8)
 	i, offset := 0, 0
 	for offset < len(bz) {
-		prunedHeights[i] = int64(binary.BigEndian.Uint64(bz[offset : offset+8]))
+		h := int64(binary.BigEndian.Uint64(bz[offset : offset+8]))
+		if h < 0 {
+			return fmt.Errorf(errNegativeHeightsFmt, h)
+		}
+
+		prunedHeights[i] = h
 		i++
 		offset += 8
 	}
@@ -167,7 +172,7 @@ func (m *Manager) loadPruningHeights(db dbm.DB) error {
 }
 
 func (m *Manager) loadPruningSnapshotHeights(db dbm.DB) error {
-	bz, err := db.Get([]byte(pruneSnapshotHeightsKey))
+	bz, err := db.Get(pruneSnapshotHeightsKey)
 	if err != nil {
 		return fmt.Errorf("failed to get post-snapshot pruned heights: %w", err)
 	}
@@ -178,39 +183,50 @@ func (m *Manager) loadPruningSnapshotHeights(db dbm.DB) error {
 	pruneSnapshotHeights := list.New()
 	i, offset := 0, 0
 	for offset < len(bz) {
-		pruneSnapshotHeights.PushBack(int64(binary.BigEndian.Uint64(bz[offset : offset+8])))
+		h := int64(binary.BigEndian.Uint64(bz[offset : offset+8]))
+		if h < 0 {
+			return fmt.Errorf(errNegativeHeightsFmt, h)
+		}
+
+		pruneSnapshotHeights.PushBack(h)
 		i++
 		offset += 8
 	}
 
-	if pruneSnapshotHeights.Len() > 0 {
-		m.mx.Lock()
-		defer m.mx.Unlock()
-		m.pruneSnapshotHeights = pruneSnapshotHeights
-	}
+	m.mx.Lock()
+	defer m.mx.Unlock()
+	m.pruneSnapshotHeights = pruneSnapshotHeights
 
 	return nil
 }
 
 func (m *Manager) flushPruningHeights(batch dbm.Batch) {
-	bz := make([]byte, 0)
-	for _, ph := range m.pruneHeights {
-		buf := make([]byte, 8)
-		binary.BigEndian.PutUint64(buf, uint64(ph))
-		bz = append(bz, buf...)
-	}
-
-	batch.Set([]byte(pruneHeightsKey), bz)
+	batch.Set(pruneHeightsKey, int64SliceToBytes(m.pruneHeights))
 }
 
 func (m *Manager) flushPruningSnapshotHeights(batch dbm.Batch) {
 	m.mx.Lock()
 	defer m.mx.Unlock()
-	bz := make([]byte, 0)
-	for e := m.pruneSnapshotHeights.Front(); e != nil; e = e.Next() {
+	batch.Set(pruneSnapshotHeightsKey, listToBytes(m.pruneSnapshotHeights))
+}
+
+// TODO: convert to a generic version with Go 1.18.
+func int64SliceToBytes(slice []int64) []byte {
+	bz := make([]byte, 0, len(slice)*8)
+	for _, ph := range slice {
+		buf := make([]byte, 8)
+		binary.BigEndian.PutUint64(buf, uint64(ph))
+		bz = append(bz, buf...)
+	}
+	return bz
+}
+
+func listToBytes(list *list.List) []byte {
+	bz := make([]byte, 0, list.Len()*8)
+	for e := list.Front(); e != nil; e = e.Next() {
 		buf := make([]byte, 8)
 		binary.BigEndian.PutUint64(buf, uint64(e.Value.(int64)))
 		bz = append(bz, buf...)
 	}
-	batch.Set([]byte(pruneSnapshotHeightsKey), bz)
+	return bz
 }

@@ -308,10 +308,7 @@ func (app *BaseApp) Init() error {
 	if !ok {
 		return errors.New("rootmulti store is required")
 	}
-	if err := rms.GetPruning().Validate(); err != nil {
-		return err
-	}
-	return nil
+	return rms.GetPruning().Validate()
 }
 
 func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {

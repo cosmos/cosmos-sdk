@@ -134,12 +134,12 @@ func (m *Manager) endLocked() {
 	m.restoreChunkIndex = 0
 }
 
-// GetInterval returns snapshot interval.
+// GetInterval returns snapshot interval represented in heights.
 func (m *Manager) GetInterval() uint64 {
 	return m.opts.Interval
 }
 
-// GetKeepRecent returns snapshot keep-recent.
+// GetKeepRecent returns snapshot keep-recent represented in heights.
 func (m *Manager) GetKeepRecent() uint32 {
 	return m.opts.KeepRecent
 }
@@ -431,6 +431,11 @@ func (m *Manager) shouldTakeSnapshot(height int64) bool {
 
 func (m *Manager) snapshot(height int64) {
 	m.logger.Info("creating state snapshot", "height", height)
+
+	if height < 0 {
+		m.logger.Error("snapshot height must be positive", "height", height)
+		return
+	}
 
 	snapshot, err := m.Create(uint64(height))
 	if err != nil {

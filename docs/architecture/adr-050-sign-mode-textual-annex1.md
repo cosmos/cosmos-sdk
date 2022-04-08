@@ -56,8 +56,8 @@ TODO add spec
 
 ### `type_url`
 
-- all protobuf messages to be used with `SIGN_MODE_TEXTUAL` MUST have a short name associated with them that can be used in format strings whenever the type url is explicitly referenced (as in the `MsgRevoke` examples below).
-- these are options in a proto messages or config files
+- all protobuf messages to be used with `SIGN_MODE_TEXTUAL` CAN have a short name associated with them that can be used in format strings whenever the type url is explicitly referenced (as in the `MsgRevoke` examples below).
+- if this option is not specified for a Msg, then the Protobuf fully qualified name will be used.
 
 ```proto
 message MsgSend {

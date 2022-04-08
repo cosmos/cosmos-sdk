@@ -23,6 +23,7 @@ type KeeperTestSuite struct {
 	addrs       []sdk.AccAddress
 	vals        []types.Validator
 	queryClient types.QueryClient
+	msgServer   types.MsgServer
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -34,6 +35,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, querier)
 	queryClient := types.NewQueryClient(queryHelper)
+
+	suite.msgServer = keeper.NewMsgServerImpl(app.StakingKeeper)
 
 	addrs, _, validators := createValidators(suite.T(), ctx, app, []int64{9, 8, 7})
 	header := tmproto.Header{

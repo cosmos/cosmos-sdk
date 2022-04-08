@@ -38,6 +38,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* [\#11562](https://github.com/cosmos/cosmos-sdk/pull/11562) Updated Tendermint to v0.34.19; `unsafe-reset-all` command has been moved to the `tendermint` sub-command.
+
 ### Features
 
 * (x/upgrade) [\#11551](https://github.com/cosmos/cosmos-sdk/pull/11551) Update `ScheduleUpgrade` for chains to schedule an automated upgrade on `BeginBlock` without having to go though governance.

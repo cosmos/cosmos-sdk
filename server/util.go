@@ -22,7 +22,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"golang.org/x/sync/errgroup"
+	tmcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
+	tmcfg "github.com/tendermint/tendermint/config"
+	tmlog "github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 
 	corectx "cosmossdk.io/core/context"
 	corestore "cosmossdk.io/core/store"
@@ -344,15 +347,18 @@ func AddCommands[T types.Application](rootCmd *cobra.Command, appCreator types.A
 		ShowValidatorCmd(),
 		ShowAddressCmd(),
 		VersionCmd(),
-		cmtcmd.ResetAllCmd,
-		cmtcmd.ResetStateCmd,
-		BootstrapStateCmd(appCreator),
+		tmcmd.ResetAllCmd,
+		tmcmd.ResetStateCmd,
 	)
+
+	startCmd := StartCmd(appCreator, defaultNodeHome)
+	addStartFlags(startCmd)
 
 	startCmd := StartCmdWithOptions(appCreator, opts)
 	rootCmd.AddCommand(
 		startCmd,
-		cometCmd,
+		tendermintCmd,
+		ExportCmd(appExport, defaultNodeHome),
 		version.NewVersionCommand(),
 		NewRollbackCmd(defaultNodeHome),
 	)

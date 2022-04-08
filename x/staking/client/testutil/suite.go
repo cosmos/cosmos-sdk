@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -1362,7 +1363,6 @@ func (s *IntegrationTestSuite) TestNewCancelUnbondingDelegationCmd() {
 			[]string{
 				val.ValAddress.String(),
 				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10000)).String(),
-				sdk.NewInt(3).String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -1375,7 +1375,6 @@ func (s *IntegrationTestSuite) TestNewCancelUnbondingDelegationCmd() {
 			[]string{
 				val.ValAddress.String(),
 				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)).String(),
-				sdk.NewInt(3).String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -1391,6 +1390,22 @@ func (s *IntegrationTestSuite) TestNewCancelUnbondingDelegationCmd() {
 		s.Run(tc.name, func() {
 			cmd := cli.NewCancelUnbondingDelegation()
 			clientCtx := val.ClientCtx
+			if !tc.expectErr && tc.expectedCode != sdkerrors.ErrNotFound.ABCICode() {
+				getCreationHeight := func() int64 {
+					// fethichg the unbonding delegations
+					resp, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/unbonding_delegations", val.APIAddress, val.ValAddress.String()))
+					s.Require().NoError(err)
+
+					var ubds types.QueryValidatorUnbondingDelegationsResponse
+
+					err = val.ClientCtx.Codec.UnmarshalJSON(resp, &ubds)
+					s.Require().NoError(err)
+					s.Require().Len(ubds.UnbondingResponses, 1)
+					s.Require().Equal(ubds.UnbondingResponses[0].ValidatorAddress, val.ValAddress.String())
+					return ubds.UnbondingResponses[0].Entries[0].CreationHeight
+				}
+				tc.args = append(tc.args, fmt.Sprint(getCreationHeight()))
+			}
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {

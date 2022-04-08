@@ -78,7 +78,7 @@ message MsgSend {
 - A repeated type has the following template:
 
 ```
-This <message_name> has <int> <field_name>
+<message_name> has <int> <field_name>
 <field_name> (<int>/<int>): <value rendered 1st line>
 <optional value rendered in the next lines>
 <field_name> (<int>/<int>): <value rendered 1st line>

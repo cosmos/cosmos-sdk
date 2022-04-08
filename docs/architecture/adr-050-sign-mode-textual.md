@@ -45,7 +45,7 @@ Bijectivity will be tested in two ways:
 - by providing a set of test fixtures between a transaction's Proto JSON representation and its TEXTUAL representation, and checking that encoding/decoding in both directions matches the fixtures,
 - by using property testing on the proto transaction itself, and testing that the composition of encoding and decoding yields the original transaction itself.
 
-This also prevents users signing over hashed transaction metadata, which is a security concern for Ledger's security team.
+This also prevents users signing over any hashed transaction data (fee, transaction body, `Msg` content that might be hashed etc), which is a security concern for Ledger's security team.
 
 We propose to maintain functional tests using bijectivity in the SDK.
 
@@ -71,13 +71,15 @@ The `<value>` itself can contain the `": "` characters.
 
 Value Renderers describe how Protobuf types are encoded to and decoded from a string array. The full specification of Value Renderers can be found in [Annex 1](./adr-050-sign-mode-textual-annex1.md).
 
-### 5. Strings starting with [`*` are only shown in Expert mode
+### 5. Strings starting with `*` are only shown in Expert mode
 
-Ledger devices have the an Expert mode for advanced users, which needs to be manually activated. According to the [@Ledger_Support twitter account](https://twitter.com/Ledger_Support/status/1364524431800950785),
+Ledger devices have the an Expert mode for advanced users. Expert mode needs to be manually activated by the device holder, inside the device settings. According to the [@Ledger_Support twitter account](https://twitter.com/Ledger_Support/status/1364524431800950785),
 
 > Expert mode enables further, more sophisticated features. This could be useful for advanced users
 
 Strings starting with the `*` character will only be shown in Expert mode.
+
+For hardware wallets that don't have an expert mode, all strings MUST be shown on the device.
 
 ### 6. Strings MAY contain `>` characters to denote nesting
 

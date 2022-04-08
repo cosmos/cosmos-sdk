@@ -3,8 +3,8 @@ package snapshots
 import (
 	"bytes"
 	"crypto/sha256"
-	"fmt"
 	"errors"
+	"fmt"
 	"io"
 	"math"
 	"sort"
@@ -32,11 +32,11 @@ import (
 type Manager struct {
 	extensions map[string]types.ExtensionSnapshotter
 	// store is the snapshot store where all completed snapshots are persisted.
-	store  *Store
-	opts   *types.SnapshotOptions
+	store *Store
+	opts  *types.SnapshotOptions
 	// multistore is the store from which snapshots are taken.
 	multistore types.Snapshotter
-	logger log.Logger
+	logger     log.Logger
 
 	mtx                sync.Mutex
 	operation          operation
@@ -74,11 +74,11 @@ var (
 func NewManager(store *Store, opts *types.SnapshotOptions, multistore types.Snapshotter, extensions map[string]types.ExtensionSnapshotter, logger log.Logger) *Manager {
 	multistore.SetSnapshotInterval(opts.Interval)
 	return &Manager{
-		store:  store,
-		opts:   opts,
+		store:      store,
+		opts:       opts,
 		multistore: multistore,
 		extensions: extensions,
-		logger: logger,
+		logger:     logger,
 	}
 }
 
@@ -412,7 +412,7 @@ func IsFormatSupported(snapshotter types.ExtensionSnapshotter, format uint32) bo
 	return false
 }
 
-// SnapshotIfApplicable takes a snapshot of the current state if we are on a snapshot height. 
+// SnapshotIfApplicable takes a snapshot of the current state if we are on a snapshot height.
 // It also prunes any old snapshots. The snapshotting and pruning happen in separate goroutines.
 func (m *Manager) SnapshotIfApplicable(height int64) {
 	if m == nil {

@@ -9,13 +9,13 @@ import (
 
 // Re-export relevant original store types
 type (
-	StoreKey       = v1.StoreKey
-	StoreType      = v1.StoreType
-	CommitID       = v1.CommitID
-	StoreUpgrades  = v1.StoreUpgrades
-	StoreRename    = v1.StoreRename
-	Iterator       = v1.Iterator
-	PruningOptions = v1.PruningOptions
+	StoreKey        = v1.StoreKey
+	StoreType       = v1.StoreType
+	CommitID        = v1.CommitID
+	StoreUpgrades   = v1.StoreUpgrades
+	StoreRename     = v1.StoreRename
+	Iterator        = v1.Iterator
+	PruningOptions  = v1.PruningOptions
 	PruningStrategy = v1.PruningStrategy
 
 	TraceContext  = v1.TraceContext
@@ -116,10 +116,10 @@ type CacheMultiStore interface {
 // TODO: placeholder. Implement and redefine this
 type MultiStorePersistentCache = v1.MultiStorePersistentCache
 
-func NewPruningOptions(pruningStrategy PruningStrategy) *PruningOptions  {
+func NewPruningOptions(pruningStrategy PruningStrategy) *PruningOptions {
 	return v1.NewPruningOptions(pruningStrategy)
 }
 
-func NewCustomPruningOptions(keepRecent, interval uint64) *PruningOptions  {
+func NewCustomPruningOptions(keepRecent, interval uint64) *PruningOptions {
 	return v1.NewCustomPruningOptions(keepRecent, interval)
 }

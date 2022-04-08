@@ -8,8 +8,8 @@ import (
 
 func TestPruningOptions_Validate(t *testing.T) {
 	testCases := []struct {
-		opts   *PruningOptions
-		expectErr  error
+		opts      *PruningOptions
+		expectErr error
 	}{
 		{NewPruningOptions(PruningDefault), nil},
 		{NewPruningOptions(PruningEverything), nil},

@@ -6,10 +6,10 @@ import (
 
 	"github.com/spf13/viper"
 
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 )
 
 const (

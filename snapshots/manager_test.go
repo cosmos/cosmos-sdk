@@ -64,7 +64,7 @@ func TestManager_Take(t *testing.T) {
 		{7, 8, 9},
 	}
 	snapshotter := &mockSnapshotter{
-		items: items,
+		items:         items,
 		prunedHeights: make(map[int64]struct{}),
 	}
 	expectChunks := snapshotItems(items)

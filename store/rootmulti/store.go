@@ -8,15 +8,17 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/pkg/errors"
-	"github.com/tendermint/tendermint/libs/log"
-	abci "github.com/tendermint/tendermint/abci/types"
 	iavltree "github.com/cosmos/iavl"
 	protoio "github.com/gogo/protobuf/io"
 	gogotypes "github.com/gogo/protobuf/types"
+	"github.com/pkg/errors"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/pruning"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
@@ -25,8 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -40,7 +40,7 @@ const (
 // the CommitMultiStore interface.
 type Store struct {
 	db             dbm.DB
-	logger 	   log.Logger
+	logger         log.Logger
 	lastCommitInfo *types.CommitInfo
 	pruningManager *pruning.Manager
 	iavlCacheSize  int
@@ -71,14 +71,14 @@ var (
 // LoadVersion must be called.
 func NewStore(db dbm.DB, logger log.Logger) *Store {
 	return &Store{
-		db:            db,
+		db:             db,
 		logger:         logger,
-		iavlCacheSize: iavl.DefaultIAVLCacheSize,
-		storesParams:  make(map[types.StoreKey]storeParams),
-		stores:        make(map[types.StoreKey]types.CommitKVStore),
-		keysByName:    make(map[string]types.StoreKey),
-		listeners:     make(map[types.StoreKey][]types.WriteListener),
-		removalMap:    make(map[types.StoreKey]bool),
+		iavlCacheSize:  iavl.DefaultIAVLCacheSize,
+		storesParams:   make(map[types.StoreKey]storeParams),
+		stores:         make(map[types.StoreKey]types.CommitKVStore),
+		keysByName:     make(map[string]types.StoreKey),
+		listeners:      make(map[types.StoreKey][]types.WriteListener),
+		removalMap:     make(map[types.StoreKey]bool),
 		pruningManager: pruning.NewManager(logger),
 	}
 }
@@ -968,7 +968,7 @@ func (rs *Store) flushMetadata(db dbm.DB, version int64, cInfo *types.CommitInfo
 	} else {
 		rs.logger.Debug("commitInfo is nil, not flushed", "height", version)
 	}
-	
+
 	flushLatestVersion(batch, version)
 	rs.pruningManager.FlushPruningHeights(batch)
 

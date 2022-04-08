@@ -1,8 +1,8 @@
 package baseapp
 
 import (
-	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 // TODO: Can be removed once we move all middleware tests into x/auth/middleware

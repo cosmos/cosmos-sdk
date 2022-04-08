@@ -10,14 +10,14 @@ import (
 	"testing"
 	"time"
 
+	protoio "github.com/gogo/protobuf/io"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	db "github.com/tendermint/tm-db"
-	protoio "github.com/gogo/protobuf/io"
 
 	"github.com/cosmos/cosmos-sdk/snapshots"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 

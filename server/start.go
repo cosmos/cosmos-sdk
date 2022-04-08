@@ -11,28 +11,28 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/abci/server"
-	"github.com/tendermint/tendermint/node"
-	"github.com/tendermint/tendermint/rpc/client/local"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	abciclient "github.com/tendermint/tendermint/abci/client"
+	"github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmservice "github.com/tendermint/tendermint/libs/service"
+	"github.com/tendermint/tendermint/node"
+	"github.com/tendermint/tendermint/rpc/client/local"
 	tmtypes "github.com/tendermint/tendermint/types"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
-	"github.com/cosmos/cosmos-sdk/server/types"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	crgserver "github.com/cosmos/cosmos-sdk/server/rosetta/lib/server"
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	"github.com/cosmos/cosmos-sdk/server/types"
 )
 
 const (

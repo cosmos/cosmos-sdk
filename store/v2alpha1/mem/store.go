@@ -38,7 +38,7 @@ func (s *Store) Commit() (id types.CommitID) {
 	return
 }
 
-func (s *Store) SetPruning(*types.PruningOptions) {}
-func (s *Store) GetPruning() *types.PruningOptions        { return &types.PruningOptions{} }
+func (s *Store) SetPruning(*types.PruningOptions)  {}
+func (s *Store) GetPruning() *types.PruningOptions { return &types.PruningOptions{} }
 
 func (s Store) LastCommitID() (id types.CommitID) { return }

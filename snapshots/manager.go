@@ -433,7 +433,7 @@ func (m *Manager) shouldTakeSnapshot(height int64) bool {
 func (m *Manager) snapshot(height int64) {
 	m.logger.Info("creating state snapshot", "height", height)
 
-	if height < 0 {
+	if height <= 0 {
 		m.logger.Error("snapshot height must be positive", "height", height)
 		return
 	}

@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/smt"
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/transient"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
@@ -56,7 +57,7 @@ func ErrStoreNotFound(skey string) error {
 // StoreConfig is used to define a schema and other options and pass them to the MultiStore constructor.
 type StoreConfig struct {
 	// Version pruning options for backing DBs.
-	Pruning *types.PruningOptions
+	Pruning *pruningtypes.PruningOptions
 	// The minimum allowed version number.
 	InitialVersion uint64
 	// The backing DB to use for the state commitment Merkle tree data.
@@ -92,7 +93,7 @@ type Store struct {
 	mtx    sync.RWMutex
 
 	// Copied from StoreConfig
-	Pruning        *types.PruningOptions
+	Pruning        *pruningtypes.PruningOptions
 	InitialVersion uint64 // if
 	*traceListenMixin
 
@@ -152,7 +153,7 @@ func newTraceListenMixin() *traceListenMixin {
 // pruning with PruneDefault, no listeners and no tracer.
 func DefaultStoreConfig() StoreConfig {
 	return StoreConfig{
-		Pruning: types.NewPruningOptions(types.PruneDefault),
+		Pruning: pruningtypes.NewPruningOptions(pruningtypes.PruningDefault),
 		prefixRegistry: prefixRegistry{
 			StoreSchema: StoreSchema{},
 		},
@@ -908,5 +909,5 @@ func (tlm *traceListenMixin) wrapTraceListen(store types.KVStore, skey types.Sto
 	return store
 }
 
-func (s *Store) GetPruning() *types.PruningOptions   { return s.Pruning }
-func (s *Store) SetPruning(po *types.PruningOptions) { s.Pruning = po }
+func (s *Store) GetPruning() *pruningtypes.PruningOptions   { return s.Pruning }
+func (s *Store) SetPruning(po *pruningtypes.PruningOptions) { s.Pruning = po }

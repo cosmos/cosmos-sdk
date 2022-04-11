@@ -15,8 +15,6 @@ type (
 	StoreUpgrades   = v1.StoreUpgrades
 	StoreRename     = v1.StoreRename
 	Iterator        = v1.Iterator
-	PruningOptions  = v1.PruningOptions
-	PruningStrategy = v1.PruningStrategy
 
 	TraceContext  = v1.TraceContext
 	WriteListener = v1.WriteListener
@@ -47,10 +45,6 @@ const (
 )
 
 var (
-	PruneDefault    = v1.PruningDefault
-	PruneEverything = v1.PruningEverything
-	PruneNothing    = v1.PruningNothing
-
 	NewKVStoreKey                = v1.NewKVStoreKey
 	PrefixEndBytes               = v1.PrefixEndBytes
 	KVStorePrefixIterator        = v1.KVStorePrefixIterator
@@ -115,11 +109,3 @@ type CacheMultiStore interface {
 // MultiStorePersistentCache provides inter-block (persistent) caching capabilities for a CommitMultiStore.
 // TODO: placeholder. Implement and redefine this
 type MultiStorePersistentCache = v1.MultiStorePersistentCache
-
-func NewPruningOptions(pruningStrategy PruningStrategy) *PruningOptions {
-	return v1.NewPruningOptions(pruningStrategy)
-}
-
-func NewCustomPruningOptions(keepRecent, interval uint64) *PruningOptions {
-	return v1.NewCustomPruningOptions(keepRecent, interval)
-}

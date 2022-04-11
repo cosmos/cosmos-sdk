@@ -23,8 +23,8 @@ type Committer interface {
 	Commit() CommitID
 	LastCommitID() CommitID
 
-	SetPruning(*PruningOptions)
-	GetPruning() *PruningOptions
+	SetPruning(*pruningtypes.PruningOptions)
+	GetPruning() *pruningtypes.PruningOptions
 }
 
 // Stores of MultiStore must implement CommitStore.
@@ -443,35 +443,4 @@ type StoreWithInitialVersion interface {
 	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
 	// starting a new chain at an arbitrary height.
 	SetInitialVersion(version int64)
-}
-
-type (
-	PruningOptions  = pruningtypes.PruningOptions
-	PruningStrategy = pruningtypes.PruningStrategy
-)
-
-const (
-	PruningOptionDefault    = pruningtypes.PruningOptionDefault
-	PruningOptionEverything = pruningtypes.PruningOptionEverything
-	PruningOptionNothing    = pruningtypes.PruningOptionNothing
-	PruningOptionCustom     = pruningtypes.PruningOptionCustom
-
-	PruningDefault    = pruningtypes.PruningDefault
-	PruningEverything = pruningtypes.PruningEverything
-	PruningNothing    = pruningtypes.PruningNothing
-	PruningCustom     = pruningtypes.PruningCustom
-)
-
-func NewPruningOptions(pruningStrategy PruningStrategy) *PruningOptions {
-	return pruningtypes.NewPruningOptions(pruningStrategy)
-}
-
-func NewCustomPruningOptions(keepRecent, interval uint64) *PruningOptions {
-	return pruningtypes.NewCustomPruningOptions(keepRecent, interval)
-}
-
-type SnapshotOptions = snapshottypes.SnapshotOptions
-
-func NewSnapshotOptions(interval uint64, keepRecent uint32) *SnapshotOptions {
-	return snapshottypes.NewSnapshotOptions(interval, keepRecent)
 }

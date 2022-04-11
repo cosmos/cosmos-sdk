@@ -685,7 +685,7 @@ func TestCacheWraps(t *testing.T) {
 
 func TestTraceConcurrency(t *testing.T) {
 	db := dbm.NewMemDB()
-	multi := newMultiStoreWithMounts(db, types.NewPruningOptions(types.PruningNothing))
+	multi := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	err := multi.LoadLatestVersion()
 	require.NoError(t, err)
 

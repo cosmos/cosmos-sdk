@@ -5,7 +5,7 @@ import (
 )
 
 func Fuzz(data []byte) int {
-	_, err := types.AddressFromBalancesStore(data)
+	_, _, err := types.AddressAndDenomFromBalancesStore(data)
 	if err != nil {
 		return 1
 	}

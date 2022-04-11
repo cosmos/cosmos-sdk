@@ -160,11 +160,6 @@ func (rs *Store) StoreKeysByName() map[string]types.StoreKey {
 	return rs.keysByName
 }
 
-// GetCommitKVStores get all kv stores associated wit the multistore.
-func (rs *Store) GetCommitKVStores() map[types.StoreKey]types.CommitKVStore {
-	return rs.stores
-}
-
 // LoadLatestVersionAndUpgrade implements CommitMultiStore
 func (rs *Store) LoadLatestVersionAndUpgrade(upgrades *types.StoreUpgrades) error {
 	ver := getLatestVersion(rs.db)

@@ -82,10 +82,6 @@ func (ms multiStore) GetCommitStore(key storetypes.StoreKey) storetypes.CommitSt
 	panic("not implemented")
 }
 
-func (ms multiStore) GetCommitKVStores() map[storetypes.StoreKey]storetypes.CommitKVStore {
-	panic("not implemented")
-}
-
 func (ms multiStore) MountStoreWithDB(key storetypes.StoreKey, typ storetypes.StoreType, db dbm.DB) {
 	ms.kv[key] = kvStore{store: make(map[string][]byte)}
 }

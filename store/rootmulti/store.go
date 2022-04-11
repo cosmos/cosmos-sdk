@@ -973,6 +973,10 @@ func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore
 		}
 	}
 
+	sort.SliceStable(storeInfos, func(i, j int) bool {
+		return strings.Compare(storeInfos[i].Name, storeInfos[j].Name) < 0
+	})
+
 	return &types.CommitInfo{
 		Version:    version,
 		StoreInfos: storeInfos,

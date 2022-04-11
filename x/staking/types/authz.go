@@ -94,13 +94,18 @@ func (a StakeAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRe
 		}
 	}
 
-	if !isValidatorExists {
+	if len(allowedList) > 0 && !isValidatorExists {
 		return authz.AcceptResponse{}, sdkerrors.ErrUnauthorized.Wrapf("cannot delegate/undelegate to %s validator", validatorAddress)
 	}
 
 	if a.MaxTokens == nil {
 		return authz.AcceptResponse{Accept: true, Delete: false,
 			Updated: &StakeAuthorization{Validators: a.GetValidators(), AuthorizationType: a.GetAuthorizationType()}}, nil
+	}
+
+	// check sufficient balance exists.
+	if _, isNegative := sdk.NewCoins(*a.MaxTokens).SafeSub(sdk.NewCoins(amount)); isNegative {
+		return authz.AcceptResponse{}, sdkerrors.ErrInsufficientFunds.Wrapf("amount is more than max tokens")
 	}
 
 	limitLeft := a.MaxTokens.Sub(amount)

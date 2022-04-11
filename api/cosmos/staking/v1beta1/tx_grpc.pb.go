@@ -35,6 +35,9 @@ type MsgClient interface {
 	// Undelegate defines a method for performing an undelegation from a
 	// delegate and a validator.
 	Undelegate(ctx context.Context, in *MsgUndelegate, opts ...grpc.CallOption) (*MsgUndelegateResponse, error)
+	// CancelUnbondingDelegation defines a method for performing canceling the unbonding delegation
+	// and delegate back to previous validator.
+	CancelUnbondingDelegation(ctx context.Context, in *MsgCancelUnbondingDelegation, opts ...grpc.CallOption) (*MsgCancelUnbondingDelegationResponse, error)
 }
 
 type msgClient struct {
@@ -90,6 +93,15 @@ func (c *msgClient) Undelegate(ctx context.Context, in *MsgUndelegate, opts ...g
 	return out, nil
 }
 
+func (c *msgClient) CancelUnbondingDelegation(ctx context.Context, in *MsgCancelUnbondingDelegation, opts ...grpc.CallOption) (*MsgCancelUnbondingDelegationResponse, error) {
+	out := new(MsgCancelUnbondingDelegationResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Msg/CancelUnbondingDelegation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -107,6 +119,9 @@ type MsgServer interface {
 	// Undelegate defines a method for performing an undelegation from a
 	// delegate and a validator.
 	Undelegate(context.Context, *MsgUndelegate) (*MsgUndelegateResponse, error)
+	// CancelUnbondingDelegation defines a method for performing canceling the unbonding delegation
+	// and delegate back to previous validator.
+	CancelUnbondingDelegation(context.Context, *MsgCancelUnbondingDelegation) (*MsgCancelUnbondingDelegationResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -128,6 +143,9 @@ func (UnimplementedMsgServer) BeginRedelegate(context.Context, *MsgBeginRedelega
 }
 func (UnimplementedMsgServer) Undelegate(context.Context, *MsgUndelegate) (*MsgUndelegateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Undelegate not implemented")
+}
+func (UnimplementedMsgServer) CancelUnbondingDelegation(context.Context, *MsgCancelUnbondingDelegation) (*MsgCancelUnbondingDelegationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CancelUnbondingDelegation not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -232,6 +250,24 @@ func _Msg_Undelegate_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CancelUnbondingDelegation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCancelUnbondingDelegation)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CancelUnbondingDelegation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.staking.v1beta1.Msg/CancelUnbondingDelegation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CancelUnbondingDelegation(ctx, req.(*MsgCancelUnbondingDelegation))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -258,6 +294,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Undelegate",
 			Handler:    _Msg_Undelegate_Handler,
+		},
+		{
+			MethodName: "CancelUnbondingDelegation",
+			Handler:    _Msg_CancelUnbondingDelegation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

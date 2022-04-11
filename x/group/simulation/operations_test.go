@@ -53,7 +53,6 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}{
 		{simulation.WeightMsgCreateGroup, group.MsgCreateGroup{}.Route(), simulation.TypeMsgCreateGroup},
 		{simulation.WeightMsgCreateGroupPolicy, group.MsgCreateGroupPolicy{}.Route(), simulation.TypeMsgCreateGroupPolicy},
-		{simulation.WeightMsgLeaveGroup, group.MsgLeaveGroup{}.Route(), simulation.TypeMsgLeaveGroup},
 		{simulation.WeightMsgCreateGroupWithPolicy, group.MsgCreateGroupWithPolicy{}.Route(), simulation.TypeMsgCreateGroupWithPolicy},
 		{simulation.WeightMsgSubmitProposal, group.MsgSubmitProposal{}.Route(), simulation.TypeMsgSubmitProposal},
 		{simulation.WeightMsgSubmitProposal, group.MsgSubmitProposal{}.Route(), simulation.TypeMsgSubmitProposal},
@@ -66,6 +65,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		{simulation.WeightMsgUpdateGroupPolicyAdmin, group.MsgUpdateGroupPolicyAdmin{}.Route(), simulation.TypeMsgUpdateGroupPolicyAdmin},
 		{simulation.WeightMsgUpdateGroupPolicyDecisionPolicy, group.MsgUpdateGroupPolicyDecisionPolicy{}.Route(), simulation.TypeMsgUpdateGroupPolicyDecisionPolicy},
 		{simulation.WeightMsgUpdateGroupPolicyMetadata, group.MsgUpdateGroupPolicyMetadata{}.Route(), simulation.TypeMsgUpdateGroupPolicyMetadata},
+		{simulation.WeightMsgLeaveGroup, group.MsgLeaveGroup{}.Route(), simulation.TypeMsgLeaveGroup},
 	}
 
 	for i, w := range weightedOps {
@@ -244,7 +244,7 @@ func (suite *SimTestSuite) TestSimulateSubmitProposal() {
 	err = legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal(groupPolicyRes.Address, msg.Address)
+	suite.Require().Equal(groupPolicyRes.Address, msg.GroupPolicyAddress)
 	suite.Require().Len(futureOperations, 0)
 }
 
@@ -452,7 +452,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	err = legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal(addr, msg.Signer)
+	suite.Require().Equal(addr, msg.Executor)
 	suite.Require().Len(futureOperations, 0)
 }
 
@@ -631,7 +631,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyAdmin() {
 	err = legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal(groupPolicyRes.Address, msg.Address)
+	suite.Require().Equal(groupPolicyRes.Address, msg.GroupPolicyAddress)
 	suite.Require().Len(futureOperations, 0)
 }
 
@@ -684,7 +684,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyDecisionPolicy() {
 	err = legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal(groupPolicyRes.Address, msg.Address)
+	suite.Require().Equal(groupPolicyRes.Address, msg.GroupPolicyAddress)
 	suite.Require().Len(futureOperations, 0)
 }
 
@@ -737,7 +737,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyMetadata() {
 	err = legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal(groupPolicyRes.Address, msg.Address)
+	suite.Require().Equal(groupPolicyRes.Address, msg.GroupPolicyAddress)
 	suite.Require().Len(futureOperations, 0)
 }
 

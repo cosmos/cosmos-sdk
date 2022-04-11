@@ -1,5 +1,5 @@
 <!--
-order: 5
+order: 6
 -->
 
 # Store
@@ -232,7 +232,7 @@ Additional information about state streaming configuration can be found in the [
 
 When `KVStore.Set` or `KVStore.Delete` methods are called, `listenkv.Store` automatically writes the operations to the set of `Store.listeners`.
 
-## New Store package (`store/v2`)
+## New Store package (`store/v2alpha1`)
 
 The SDK is in the process of transitioning to use the types listed here as the default interface for state storage. At the time of writing, these cannot be used within an application and are not directly compatible with the `CommitMultiStore` and related types.
 
@@ -266,7 +266,7 @@ A minimal interface that only allows accessing substores. Note: substores return
 
 ### Implementation (`root.Store`)
 
-The canonical implementation of `MultiStore` is in `store/v2/root`. It internally decouples the concerns of state storage and state commitment: values are stored in, and read directly from, the backing key-value database (state storage, or *SS*), but are also mapped in a logically separate database which generates cryptographic proofs (for state-commitment or *SC*).
+The canonical implementation of `MultiStore` is in `store/v2alpha1/root`. It internally decouples the concerns of state storage and state commitment: values are stored in, and read directly from, the backing key-value database (state storage, or *SS*), but are also mapped in a logically separate database which generates cryptographic proofs (for state-commitment or *SC*).
 
 The state-commitment component of each substore is implemented as an independent `smt.Store` (see below). Internally, each substore is allocated in a logically separate partition within the same backing DB, such that commits apply to the state of all substores. Therefore, views of past versions also include the state of all substores (including *SS* and *SC* data).
 
@@ -274,7 +274,7 @@ This store can optionally be configured to use a different backend database inst
 
 ## SMT Store
 
-`store/v2/smt.Store` maps values into a Sparse Merkle Tree (SMT), and supports a `BasicKVStore` interface as well as methods for cryptographic proof generation.
+`store/v2alpha1/smt.Store` maps values into a Sparse Merkle Tree (SMT), and supports a `BasicKVStore` interface as well as methods for cryptographic proof generation.
 
 ## Next {hide}
 

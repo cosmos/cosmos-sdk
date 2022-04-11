@@ -124,8 +124,6 @@ A proposal can be executed with the `MsgExec`.
 
 The messages that are part of this proposal won't be executed if:
 
-* the group has been modified before tally.
-* the group policy has been modified before tally.
 * the proposal has not been accepted.
 * the proposal status is not closed.
 * the proposal has already been successfully executed.

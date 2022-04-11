@@ -16,9 +16,11 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	tmcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	tmcfg "github.com/tendermint/tendermint/config"
 	tmlog "github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -270,7 +272,9 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 		ShowValidatorCmd(),
 		ShowAddressCmd(),
 		VersionCmd(),
+		tmcmd.InspectCmd,
 	)
+
 	startCmd := StartCmd(appCreator, defaultNodeHome)
 	addStartFlags(startCmd)
 
@@ -348,6 +352,21 @@ func WaitForQuitSignals() ErrorCode {
 	return ErrorCode{Code: int(sig.(syscall.Signal)) + 128}
 }
 
+// GetAppDBBackend gets the backend type to use for the application DBs.
+func GetAppDBBackend(opts types.AppOptions) dbm.BackendType {
+	rv := cast.ToString(opts.Get("app-db-backend"))
+	if len(rv) == 0 {
+		rv = sdk.DBBackend
+	}
+	if len(rv) == 0 {
+		rv = cast.ToString(opts.Get("db-backend"))
+	}
+	if len(rv) != 0 {
+		return dbm.BackendType(rv)
+	}
+	return dbm.GoLevelDBBackend
+}
+
 func skipInterface(iface net.Interface) bool {
 	if iface.Flags&net.FlagUp == 0 {
 		return true // interface down
@@ -372,9 +391,9 @@ func addrToIP(addr net.Addr) net.IP {
 	return ip
 }
 
-func openDB(rootDir string) (dbm.DB, error) {
+func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
 	dataDir := filepath.Join(rootDir, "data")
-	return sdk.NewLevelDB("application", dataDir)
+	return dbm.NewDB("application", backendType, dataDir)
 }
 
 func openTraceWriter(traceWriterFile string) (w io.Writer, err error) {

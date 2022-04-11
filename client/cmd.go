@@ -274,7 +274,7 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 				clientCtx = clientCtx.WithOutputFormat("json")
 			}
 
-			// If the user didn't explicity set a --sign-mode flag, use
+			// If the user didn't explicitly set a --sign-mode flag, use
 			// DIRECT_AUX by default.
 			if clientCtx.SignModeStr == "" || !flagSet.Changed(flags.FlagSignMode) {
 				clientCtx = clientCtx.WithSignModeStr(flags.SignModeDirectAux)

@@ -142,6 +142,61 @@ func TestStrategies(t *testing.T) {
 	}
 }
 
+func TestHandleHeight_Inputs(t *testing.T) {
+	var keepRecent int64 = int64(types.NewPruningOptions(types.PruningEverything).KeepRecent)
+
+	testcases := map[string]struct {
+		height int64
+		expectedResult int64
+		strategy types.PruningStrategy
+		expectedHeights []int64
+	}{
+		"previousHeight is negative - prune everything - invalid previousHeight": {
+			-1,
+			0,
+			types.PruningEverything,
+			[]int64{},
+		},
+		"previousHeight is  zero - prune everything - invalid previousHeight": {
+			0,
+			0,
+			types.PruningEverything,
+			[]int64{},
+		},
+		"previousHeight is positive but within keep recent- prune everything - not kept": {
+			keepRecent,
+			0,
+			types.PruningEverything,
+			[]int64{},
+		},
+		"previousHeight is positive and greater than keep recent - kept": {
+			keepRecent + 1,
+			keepRecent + 1 - keepRecent,
+			types.PruningEverything,
+			[]int64{keepRecent + 1 - keepRecent},
+		},
+		"pruning nothing, previousHeight is positive and greater than keep recent - not kept": {
+			keepRecent + 1,
+			0,
+			types.PruningNothing,
+			[]int64{},
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			manager := pruning.NewManager(log.NewNopLogger())
+			require.NotNil(t, manager)
+			manager.SetOptions(types.NewPruningOptions(tc.strategy))
+
+			handleHeightActual := manager.HandleHeight(tc.height)
+			require.Equal(t, tc.expectedResult, handleHeightActual)
+
+			require.Equal(t, tc.expectedHeights, manager.GetPruningHeights())
+		})
+	}
+}
+
 func TestFlushLoad(t *testing.T) {
 	manager := pruning.NewManager(log.NewNopLogger())
 	require.NotNil(t, manager)

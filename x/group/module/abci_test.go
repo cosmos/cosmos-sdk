@@ -138,13 +138,12 @@ func TestEndBlockerPruning(t *testing.T) {
 				})
 				require.NoError(t, err)
 				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Executor: addr3.String(), ProposalId: pID})
-				require.NoError(t, err)
+				require.Error(t, err) // since proposal with status Aborted cannot be executed
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				require.NoError(t, testutil.FundAccount(app.BankKeeper, sdkCtx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
 
 				return pID
 			},
-
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
 		"pruned when proposal is executable when failed before": {

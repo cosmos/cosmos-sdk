@@ -2430,6 +2430,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 				s.Require().NoError(err)
 				return myProposalID
 			},
+			expErr:            true,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
 		"proposal exists when rollback all msg updates on failure": {

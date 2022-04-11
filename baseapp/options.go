@@ -72,7 +72,7 @@ func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
 }
 
 // SetSnapshot sets the snapshot store.
-func SetSnapshot(snapshotStore *snapshots.Store, opts *snapshottypes.SnapshotOptions) func(*BaseApp) {
+func SetSnapshot(snapshotStore *snapshots.Store, opts snapshottypes.SnapshotOptions) func(*BaseApp) {
 	return func(app *BaseApp) { app.SetSnapshot(snapshotStore, opts) }
 }
 
@@ -194,11 +194,11 @@ func (app *BaseApp) SetStoreLoader(loader StoreLoader) {
 }
 
 // SetSnapshot sets the snapshot store and options.
-func (app *BaseApp) SetSnapshot(snapshotStore *snapshots.Store, opts *snapshottypes.SnapshotOptions) {
+func (app *BaseApp) SetSnapshot(snapshotStore *snapshots.Store, opts snapshottypes.SnapshotOptions) {
 	if app.sealed {
 		panic("SetSnapshot() on sealed BaseApp")
 	}
-	if snapshotStore == nil || opts.Interval == 0 {
+	if snapshotStore == nil || opts.Interval == snapshottypes.SnapshotIntervalOff {
 		app.snapshotManager = nil
 		return
 	}

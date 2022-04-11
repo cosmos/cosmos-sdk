@@ -166,7 +166,7 @@ func NewInfiniteGasMeter() GasMeter {
 	return types.NewInfiniteGasMeter()
 }
 
-func NewSnapshotOptions(interval uint64, keepRecent uint32) *snapshottypes.SnapshotOptions {
+func NewSnapshotOptions(interval uint64, keepRecent uint32) snapshottypes.SnapshotOptions {
 	return snapshottypes.NewSnapshotOptions(interval, keepRecent)
 }
 

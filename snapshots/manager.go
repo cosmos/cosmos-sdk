@@ -33,7 +33,7 @@ type Manager struct {
 	extensions map[string]types.ExtensionSnapshotter
 	// store is the snapshot store where all completed snapshots are persisted.
 	store *Store
-	opts  *types.SnapshotOptions
+	opts  types.SnapshotOptions
 	// multistore is the store from which snapshots are taken.
 	multistore types.Snapshotter
 	logger     log.Logger
@@ -71,7 +71,7 @@ var (
 )
 
 // NewManager creates a new manager.
-func NewManager(store *Store, opts *types.SnapshotOptions, multistore types.Snapshotter, extensions map[string]types.ExtensionSnapshotter, logger log.Logger) *Manager {
+func NewManager(store *Store, opts types.SnapshotOptions, multistore types.Snapshotter, extensions map[string]types.ExtensionSnapshotter, logger log.Logger) *Manager {
 	multistore.SetSnapshotInterval(opts.Interval)
 	return &Manager{
 		store:      store,

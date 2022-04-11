@@ -2359,7 +2359,7 @@ func TestBaseApp_Init(t *testing.T) {
 	testCases := map[string]struct {
 		bapp             *baseapp.BaseApp
 		expectedPruning  pruningtypes.PruningOptions
-		expectedSnapshot *snapshottypes.SnapshotOptions
+		expectedSnapshot snapshottypes.SnapshotOptions
 		expectedErr      error
 	}{
 		"snapshot but no pruning": {
@@ -2376,7 +2376,7 @@ func TestBaseApp_Init(t *testing.T) {
 				baseapp.SetPruning(sdk.NewPruningOptions(pruningtypes.PruningEverything)),
 			),
 			sdk.NewPruningOptions(pruningtypes.PruningEverything),
-			nil,
+			sdk.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
 			nil,
 		},
 		"pruning nothing only": {
@@ -2384,7 +2384,7 @@ func TestBaseApp_Init(t *testing.T) {
 				baseapp.SetPruning(sdk.NewPruningOptions(pruningtypes.PruningNothing)),
 			),
 			sdk.NewPruningOptions(pruningtypes.PruningNothing),
-			nil,
+			sdk.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
 			nil,
 		},
 		"pruning default only": {
@@ -2392,7 +2392,7 @@ func TestBaseApp_Init(t *testing.T) {
 				baseapp.SetPruning(sdk.NewPruningOptions(pruningtypes.PruningDefault)),
 			),
 			sdk.NewPruningOptions(pruningtypes.PruningDefault),
-			nil,
+			sdk.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
 			nil,
 		},
 		"pruning custom only": {
@@ -2400,7 +2400,7 @@ func TestBaseApp_Init(t *testing.T) {
 				baseapp.SetPruning(sdk.NewCustomPruningOptions(10, 10)),
 			),
 			sdk.NewCustomPruningOptions(10, 10),
-			nil,
+			sdk.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
 			nil,
 		},
 		"pruning everything and snapshots": {
@@ -2469,10 +2469,10 @@ func TestBaseApp_Init(t *testing.T) {
 		"snapshot zero interval - manager not set": {
 			baseapp.NewBaseApp(name, logger, db,
 				baseapp.SetPruning(sdk.NewCustomPruningOptions(10, 10)),
-				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(0, 2)),
+				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 2)),
 			),
 			sdk.NewCustomPruningOptions(10, 10),
-			nil, // the snapshot manager is not set when interval is 0
+			sdk.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
 			nil,
 		},
 		"snapshot zero keep recent - allowed": {
@@ -2498,7 +2498,7 @@ func TestBaseApp_Init(t *testing.T) {
 		require.Equal(t, tc.expectedPruning, actualPruning)
 
 		snapshotManager := tc.bapp.GetSnapshotManager()
-		if tc.expectedSnapshot == nil {
+		if tc.expectedSnapshot.Interval == snapshottypes.SnapshotIntervalOff {
 			require.Nil(t, snapshotManager)
 			continue
 		}

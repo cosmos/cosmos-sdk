@@ -10,8 +10,12 @@ type SnapshotOptions struct {
 	KeepRecent uint32
 }
 
-func NewSnapshotOptions(interval uint64, keepRecent uint32) *SnapshotOptions {
-	return &SnapshotOptions{
+// SnapshotIntervalOff represents the snapshot inerval, at which
+// no snapshots are taken.
+const SnapshotIntervalOff uint64 = 0
+
+func NewSnapshotOptions(interval uint64, keepRecent uint32) SnapshotOptions {
+	return SnapshotOptions{
 		Interval:   interval,
 		KeepRecent: keepRecent,
 	}

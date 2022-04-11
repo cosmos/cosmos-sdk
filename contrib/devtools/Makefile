@@ -57,17 +57,17 @@ tools-stamp: statik runsim
 	# in a row.
 	touch $@
 
-# Install the runsim binary
+# Install the runsim binary.
 statik: $(STATIK)
 $(STATIK):
 	@echo "Installing statik..."
-	@go install github.com/rakyll/statik@v0.1.6
+	@(cd /tmp && go install github.com/rakyll/statik@v0.1.6)
 
-# Install the runsim binary
+# Install the runsim binary.
 runsim: $(RUNSIM)
 $(RUNSIM):
 	@echo "Installing runsim..."
-	@go install github.com/cosmos/tools/cmd/runsim@v1.0.0
+	@(cd /tmp && go install github.com/cosmos/tools/cmd/runsim@v1.0.0)
 
 tools-clean:
 	rm -f $(STATIK) $(GOLANGCI_LINT) $(RUNSIM)

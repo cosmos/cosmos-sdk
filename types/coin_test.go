@@ -233,6 +233,7 @@ func (s *coinTestSuite) TestIsGTECoin() {
 	}{
 		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 1), true, false},
 		{sdk.NewInt64Coin(testDenom1, 2), sdk.NewInt64Coin(testDenom1, 1), true, false},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 2), false, false},
 		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom2, 1), false, true},
 	}
 
@@ -243,6 +244,30 @@ func (s *coinTestSuite) TestIsGTECoin() {
 		} else {
 			res := tc.inputOne.IsGTE(tc.inputTwo)
 			s.Require().Equal(tc.expected, res, "coin GTE relation is incorrect, tc #%d", tcIndex)
+		}
+	}
+}
+
+func (s *coinTestSuite) TestIsLTECoin() {
+	cases := []struct {
+		inputOne sdk.Coin
+		inputTwo sdk.Coin
+		expected bool
+		panics   bool
+	}{
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 1), true, false},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 2), true, false},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom2, 1), false, true},
+		{sdk.NewInt64Coin(testDenom1, 2), sdk.NewInt64Coin(testDenom1, 1), false, false},
+	}
+
+	for tcIndex, tc := range cases {
+		tc := tc
+		if tc.panics {
+			s.Require().Panics(func() { tc.inputOne.IsLTE(tc.inputTwo) })
+		} else {
+			res := tc.inputOne.IsLTE(tc.inputTwo)
+			s.Require().Equal(tc.expected, res, "coin LTE relation is incorrect, tc #%d", tcIndex)
 		}
 	}
 }
@@ -654,6 +679,33 @@ func (s *coinTestSuite) TestCoins_Validate() {
 		} else {
 			s.Require().Error(err, tc.name)
 		}
+	}
+}
+
+func (s *coinTestSuite) TestMinMax() {
+	one := sdk.OneInt()
+	two := sdk.NewInt(2)
+
+	cases := []struct {
+		name   string
+		input1 sdk.Coins
+		input2 sdk.Coins
+		min    sdk.Coins
+		max    sdk.Coins
+	}{
+		{"zero-zero", sdk.Coins{}, sdk.Coins{}, sdk.Coins{}, sdk.Coins{}},
+		{"zero-one", sdk.Coins{}, sdk.Coins{{testDenom1, one}}, sdk.Coins{}, sdk.Coins{{testDenom1, one}}},
+		{"two-zero", sdk.Coins{{testDenom2, two}}, sdk.Coins{}, sdk.Coins{}, sdk.Coins{{testDenom2, two}}},
+		{"disjoint", sdk.Coins{{testDenom1, one}}, sdk.Coins{{testDenom2, two}}, sdk.Coins{}, sdk.Coins{{testDenom1, one}, {testDenom2, two}}},
+		{"overlap", sdk.Coins{{testDenom1, one}, {testDenom2, two}}, sdk.Coins{{testDenom1, two}, {testDenom2, one}},
+			sdk.Coins{{testDenom1, one}, {testDenom2, one}}, sdk.Coins{{testDenom1, two}, {testDenom2, two}}},
+	}
+
+	for _, tc := range cases {
+		min := tc.input1.Min(tc.input2)
+		max := tc.input1.Max(tc.input2)
+		s.Require().True(min.IsEqual(tc.min), tc.name)
+		s.Require().True(max.IsEqual(tc.max), tc.name)
 	}
 }
 

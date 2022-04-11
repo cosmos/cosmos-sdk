@@ -2,15 +2,21 @@ syntax = "proto3";
 
 package testpb;
 
-import "cosmos/orm/v1alpha1/orm.proto";
+import "cosmos/orm/v1/orm.proto";
 
 // This is a simulated bank schema used for testing.
 
 message Balance {
-  option (cosmos.orm.v1alpha1.table) = {
+  option (cosmos.orm.v1.table) = {
     id: 1;
-    primary_key:{fields: "address,denom"}
-    index: {id: 1 fields: "denom"}
+    primary_key: {
+      fields:
+          "address,denom"
+    }
+    index: {
+      id:
+          1 fields: "denom"
+    }
   };
 
   string address = 1;
@@ -19,9 +25,12 @@ message Balance {
 }
 
 message Supply {
-  option (cosmos.orm.v1alpha1.table) = {
+  option (cosmos.orm.v1.table) = {
     id: 2;
-    primary_key:{fields: "denom"}
+    primary_key: {
+      fields:
+          "denom"
+    }
   };
 
   string denom = 1;

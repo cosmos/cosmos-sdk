@@ -28,17 +28,17 @@ The Cosmos SDK `x/authz` module comes with following authorization types:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/x/authz/generic_authorization.go#L18-L31
 
-- `msg` stores Msg type URL.
+* `msg` stores Msg type URL.
 
 ### SendAuthorization
 
-`SendAuthorization` implements the `Authorization` interface for the `cosmos.bank.v1beta1.MsgSend` Msg. It takes a `SpendLimit` that specifies the maximum amount of tokens the grantee can spend. The `SpendLimit` is updated as the tokens are spent.
+`SendAuthorization` implements the `Authorization` interface for the `cosmos.bank.v1beta1.MsgSend` Msg. It takes a (positive) `SpendLimit` that specifies the maximum amount of tokens the grantee can spend. The `SpendLimit` is updated as the tokens are spent.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/proto/cosmos/bank/v1beta1/authz.proto#L10-L19
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/x/bank/types/send_authorization.go#L25-L40
 
-- `spend_limit` keeps track of how many coins are left in the authorization.
+* `spend_limit` keeps track of how many coins are left in the authorization.
 
 ### StakeAuthorization
 

@@ -19,17 +19,35 @@ type legacyProposal struct {
 	Deposit     string
 }
 
+func (p legacyProposal) validate() error {
+	if p.Type == "" {
+		return fmt.Errorf("proposal type is required")
+	}
+
+	if p.Title == "" {
+		return fmt.Errorf("proposal title is required")
+	}
+
+	if p.Description == "" {
+		return fmt.Errorf("proposal description is required")
+	}
+	return nil
+}
+
 func parseSubmitLegacyProposalFlags(fs *pflag.FlagSet) (*legacyProposal, error) {
 	proposal := &legacyProposal{}
 	proposalFile, _ := fs.GetString(FlagProposal)
 
 	if proposalFile == "" {
 		proposalType, _ := fs.GetString(FlagProposalType)
-
 		proposal.Title, _ = fs.GetString(FlagTitle)
 		proposal.Description, _ = fs.GetString(FlagDescription)
 		proposal.Type = govutils.NormalizeProposalType(proposalType)
 		proposal.Deposit, _ = fs.GetString(FlagDeposit)
+		if err := proposal.validate(); err != nil {
+			return nil, err
+		}
+
 		return proposal, nil
 	}
 
@@ -49,6 +67,10 @@ func parseSubmitLegacyProposalFlags(fs *pflag.FlagSet) (*legacyProposal, error) 
 		return nil, err
 	}
 
+	if err := proposal.validate(); err != nil {
+		return nil, err
+	}
+
 	return proposal, nil
 }
 
@@ -56,21 +78,21 @@ func parseSubmitLegacyProposalFlags(fs *pflag.FlagSet) (*legacyProposal, error) 
 type proposal struct {
 	// Msgs defines an array of sdk.Msgs proto-JSON-encoded as Anys.
 	Messages []json.RawMessage
-	Metadata []byte
+	Metadata string
 	Deposit  string
 }
 
-func parseSubmitProposal(cdc codec.Codec, path string) ([]sdk.Msg, []byte, sdk.Coins, error) {
+func parseSubmitProposal(cdc codec.Codec, path string) ([]sdk.Msg, string, sdk.Coins, error) {
 	var proposal proposal
 
 	contents, err := os.ReadFile(path)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, "", nil, err
 	}
 
 	err = json.Unmarshal(contents, &proposal)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, "", nil, err
 	}
 
 	msgs := make([]sdk.Msg, len(proposal.Messages))
@@ -78,7 +100,7 @@ func parseSubmitProposal(cdc codec.Codec, path string) ([]sdk.Msg, []byte, sdk.C
 		var msg sdk.Msg
 		err := cdc.UnmarshalInterfaceJSON(anyJSON, &msg)
 		if err != nil {
-			return nil, nil, nil, err
+			return nil, "", nil, err
 		}
 
 		msgs[i] = msg
@@ -86,7 +108,7 @@ func parseSubmitProposal(cdc codec.Codec, path string) ([]sdk.Msg, []byte, sdk.C
 
 	deposit, err := sdk.ParseCoinsNormalized(proposal.Deposit)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, "", nil, err
 	}
 
 	return msgs, proposal.Metadata, deposit, nil

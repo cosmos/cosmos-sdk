@@ -9,7 +9,7 @@ order: 3
 Proposals can be submitted by any account via a `MsgSubmitProposal`
 transaction.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/ab9545527d630fe38761aa61cc5c95eabd68e0e6/proto/cosmos/gov/v1beta2/tx.proto#L34-L44
++++ https://github.com/cosmos/cosmos-sdk/blob/5bde3686c4538ce53356af6e9fe40b34e4ce4a06/proto/cosmos/gov/v1/tx.proto#L33-L43
 
 All `sdk.Msgs` passed into the `messages` field of a `MsgSubmitProposal` message
 must be registered in the app's `MsgServiceRouter`. Each of these messages must
@@ -18,13 +18,13 @@ must not be larger than the `maxMetadataLen` config passed into the gov keeper.
 
 **State modifications:**
 
-- Generate new `proposalID`
-- Create new `Proposal`
-- Initialise `Proposal`'s attributes
-- Decrease balance of sender by `InitialDeposit`
-- If `MinDeposit` is reached:
-  - Push `proposalID` in `ProposalProcessingQueue`
-- Transfer `InitialDeposit` from the `Proposer` to the governance `ModuleAccount`
+* Generate new `proposalID`
+* Create new `Proposal`
+* Initialise `Proposal`'s attributes
+* Decrease balance of sender by `InitialDeposit`
+* If `MinDeposit` is reached:
+    * Push `proposalID` in `ProposalProcessingQueue`
+* Transfer `InitialDeposit` from the `Proposer` to the governance `ModuleAccount`
 
 A `MsgSubmitProposal` transaction can be handled according to the following
 pseudocode.
@@ -82,12 +82,12 @@ Once a proposal is submitted, if
 
 **State modifications:**
 
-- Decrease balance of sender by `deposit`
-- Add `deposit` of sender in `proposal.Deposits`
-- Increase `proposal.TotalDeposit` by sender's `deposit`
-- If `MinDeposit` is reached:
-  - Push `proposalID` in `ProposalProcessingQueueEnd`
-- Transfer `Deposit` from the `proposer` to the governance `ModuleAccount`
+* Decrease balance of sender by `deposit`
+* Add `deposit` of sender in `proposal.Deposits`
+* Increase `proposal.TotalDeposit` by sender's `deposit`
+* If `MinDeposit` is reached:
+    * Push `proposalID` in `ProposalProcessingQueueEnd`
+* Transfer `Deposit` from the `proposer` to the governance `ModuleAccount`
 
 A `MsgDeposit` transaction has to go through a number of checks to be valid.
 These checks are outlined in the following pseudocode.
@@ -108,7 +108,7 @@ upon receiving txGovDeposit from sender do
     // There is no proposal for this proposalID
     throw
 
-  if (txGovDeposit.Deposit.Atoms <= 0) OR (sender.AtomBalance < txGovDeposit.Deposit.Atoms) OR (proposal.CurrentStatus != ProposalStatusOpen)
+  if (txGovDeposit.Deposit.Atoms <= 0) OR (sender.AtomBalance < txGovDeposit.Deposit.Atoms) OR (proposal.CurrentStatus != ProposalStatusOpen)
 
     // deposit is negative or null
     // OR sender has insufficient funds
@@ -148,9 +148,9 @@ vote on the proposal.
 
 **State modifications:**
 
-- Record `Vote` of sender
+* Record `Vote` of sender
 
-_Note: Gas cost for this message has to take into account the future tallying of the vote in EndBlocker_
+_Note: Gas cost for this message has to take into account the future tallying of the vote in EndBlocker._
 
 Next is a pseudocode outline of the way `MsgVote` transactions are
 handled:

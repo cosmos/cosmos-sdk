@@ -16,6 +16,9 @@ import (
 const (
 	defaultMinGasPrices = ""
 
+	// DefaultAPIAddress defines the default address to bind the API server to.
+	DefaultAPIAddress = "tcp://0.0.0.0:1317"
+
 	// DefaultGRPCAddress defines the default address to bind the gRPC server to.
 	DefaultGRPCAddress = "0.0.0.0:9090"
 
@@ -32,7 +35,6 @@ type BaseConfig struct {
 
 	Pruning           string `mapstructure:"pruning"`
 	PruningKeepRecent string `mapstructure:"pruning-keep-recent"`
-	PruningKeepEvery  string `mapstructure:"pruning-keep-every"`
 	PruningInterval   string `mapstructure:"pruning-interval"`
 
 	// HaltHeight contains a non-zero block height at which a node will gracefully
@@ -72,6 +74,10 @@ type BaseConfig struct {
 	IndexEvents []string `mapstructure:"index-events"`
 	// IavlCacheSize set the size of the iavl tree cache.
 	IAVLCacheSize uint64 `mapstructure:"iavl-cache-size"`
+
+	// AppDBBackend defines the type of Database to use for the application and snapshots databases.
+	// An empty string indicates that the Tendermint config's DBBackend value should be used.
+	AppDBBackend string `mapstructure:"app-db-backend"`
 }
 
 // APIConfig defines the API listener configuration.
@@ -216,11 +222,11 @@ func DefaultConfig() *Config {
 			InterBlockCache:   true,
 			Pruning:           storetypes.PruningOptionDefault,
 			PruningKeepRecent: "0",
-			PruningKeepEvery:  "0",
 			PruningInterval:   "0",
 			MinRetainBlocks:   0,
 			IndexEvents:       make([]string, 0),
 			IAVLCacheSize:     781250, // 50 MB
+			AppDBBackend:      "",
 		},
 		Telemetry: telemetry.Config{
 			Enabled:      false,
@@ -229,7 +235,7 @@ func DefaultConfig() *Config {
 		API: APIConfig{
 			Enable:             false,
 			Swagger:            false,
-			Address:            "tcp://0.0.0.0:1317",
+			Address:            DefaultAPIAddress,
 			MaxOpenConnections: 1000,
 			RPCReadTimeout:     10,
 			RPCMaxBodyBytes:    1000000,
@@ -277,13 +283,13 @@ func GetConfig(v *viper.Viper) Config {
 			InterBlockCache:   v.GetBool("inter-block-cache"),
 			Pruning:           v.GetString("pruning"),
 			PruningKeepRecent: v.GetString("pruning-keep-recent"),
-			PruningKeepEvery:  v.GetString("pruning-keep-every"),
 			PruningInterval:   v.GetString("pruning-interval"),
 			HaltHeight:        v.GetUint64("halt-height"),
 			HaltTime:          v.GetUint64("halt-time"),
 			IndexEvents:       v.GetStringSlice("index-events"),
 			MinRetainBlocks:   v.GetUint64("min-retain-blocks"),
 			IAVLCacheSize:     v.GetUint64("iavl-cache-size"),
+			AppDBBackend:      v.GetString("app-db-backend"),
 		},
 		Telemetry: telemetry.Config{
 			ServiceName:             v.GetString("telemetry.service-name"),
@@ -335,6 +341,11 @@ func GetConfig(v *viper.Viper) Config {
 func (c Config) ValidateBasic() error {
 	if c.BaseConfig.MinGasPrices == "" {
 		return sdkerrors.ErrAppConfig.Wrap("set min gas price in app.toml or flag or env variable")
+	}
+	if c.Pruning == storetypes.PruningOptionEverything && c.StateSync.SnapshotInterval > 0 {
+		return sdkerrors.ErrAppConfig.Wrapf(
+			"cannot enable state sync snapshots with '%s' pruning setting", storetypes.PruningOptionEverything,
+		)
 	}
 
 	return nil

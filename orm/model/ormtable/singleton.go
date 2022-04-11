@@ -5,9 +5,8 @@ import (
 	"encoding/json"
 	"io"
 
-	"google.golang.org/protobuf/proto"
-
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 // singleton implements a Table instance for singletons.
@@ -44,7 +43,7 @@ func (t singleton) ValidateJSON(reader io.Reader) error {
 }
 
 func (t singleton) ImportJSON(ctx context.Context, reader io.Reader) error {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}
@@ -60,7 +59,7 @@ func (t singleton) ImportJSON(ctx context.Context, reader io.Reader) error {
 		return err
 	}
 
-	return t.save(backend, msg, saveModeDefault)
+	return t.save(ctx, backend, msg, saveModeDefault)
 }
 
 func (t singleton) ExportJSON(ctx context.Context, writer io.Writer) error {

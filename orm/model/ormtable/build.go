@@ -1,7 +1,6 @@
 package ormtable
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
@@ -13,7 +12,8 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	ormv1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
+	ormv1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1"
+
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
@@ -36,13 +36,13 @@ type Options struct {
 	// with the table. Generally this should be nil and the table descriptor
 	// should be pulled from the table message option. TableDescriptor
 	// cannot be used together with SingletonDescriptor.
-	TableDescriptor *ormv1alpha1.TableDescriptor
+	TableDescriptor *ormv1.TableDescriptor
 
 	// SingletonDescriptor is an optional singleton descriptor to be explicitly used.
 	// Generally this should be nil and the table descriptor
 	// should be pulled from the singleton message option. SingletonDescriptor
 	// cannot be used together with TableDescriptor.
-	SingletonDescriptor *ormv1alpha1.SingletonDescriptor
+	SingletonDescriptor *ormv1.SingletonDescriptor
 
 	// TypeResolver is an optional type resolver to be used when unmarshaling
 	// protobuf messages.
@@ -53,18 +53,15 @@ type Options struct {
 	// will be used
 	JSONValidator func(proto.Message) error
 
-	// GetBackend is an optional function which retrieves a Backend from the context.
+	// BackendResolver is an optional function which retrieves a Backend from the context.
 	// If it is nil, the default behavior will be to attempt to retrieve a
 	// backend using the method that WrapContextDefault uses. This method
-	// can be used to imlement things like "store keys" which would allow a
+	// can be used to implement things like "store keys" which would allow a
 	// table to only be used with a specific backend and to hide direct
 	// access to the backend other than through the table interface.
-	GetBackend func(context.Context) (Backend, error)
-
-	// GetReadBackend is an optional function which retrieves a ReadBackend from the context.
-	// If it is nil, the default behavior will be to attempt to retrieve a
-	// backend using the method that WrapContextDefault uses.
-	GetReadBackend func(context.Context) (ReadBackend, error)
+	// Mutating operations will attempt to cast ReadBackend to Backend and
+	// will return an error if that fails.
+	BackendResolver BackendResolver
 }
 
 // TypeResolver is an interface that can be used for the protoreflect.UnmarshalOptions.Resolver option.
@@ -77,20 +74,15 @@ type TypeResolver interface {
 func Build(options Options) (Table, error) {
 	messageDescriptor := options.MessageType.Descriptor()
 
-	getReadBackend := options.GetReadBackend
-	if getReadBackend == nil {
-		getReadBackend = getReadBackendDefault
-	}
-	getBackend := options.GetBackend
-	if getBackend == nil {
-		getBackend = getBackendDefault
+	backendResolver := options.BackendResolver
+	if backendResolver == nil {
+		backendResolver = getBackendDefault
 	}
 
 	table := &tableImpl{
 		primaryKeyIndex: &primaryKeyIndex{
-			indexers:       []indexer{},
-			getBackend:     getBackend,
-			getReadBackend: getReadBackend,
+			indexers:   []indexer{},
+			getBackend: backendResolver,
 		},
 		indexes:               []Index{},
 		indexesByFields:       map[fieldnames.FieldNames]concreteIndex{},
@@ -105,12 +97,12 @@ func Build(options Options) (Table, error) {
 
 	tableDesc := options.TableDescriptor
 	if tableDesc == nil {
-		tableDesc = proto.GetExtension(messageDescriptor.Options(), ormv1alpha1.E_Table).(*ormv1alpha1.TableDescriptor)
+		tableDesc = proto.GetExtension(messageDescriptor.Options(), ormv1.E_Table).(*ormv1.TableDescriptor)
 	}
 
 	singletonDesc := options.SingletonDescriptor
 	if singletonDesc == nil {
-		singletonDesc = proto.GetExtension(messageDescriptor.Options(), ormv1alpha1.E_Singleton).(*ormv1alpha1.SingletonDescriptor)
+		singletonDesc = proto.GetExtension(messageDescriptor.Options(), ormv1.E_Singleton).(*ormv1.SingletonDescriptor)
 	}
 
 	switch {
@@ -213,7 +205,7 @@ func Build(options Options) (Table, error) {
 				UniqueKeyCodec: uniqCdc,
 				fields:         idxFields,
 				primaryKey:     pkIndex,
-				getReadBackend: getReadBackend,
+				getReadBackend: backendResolver,
 			}
 			table.uniqueIndexesByFields[idxFields] = uniqIdx
 			index = uniqIdx
@@ -231,7 +223,7 @@ func Build(options Options) (Table, error) {
 				IndexKeyCodec:  idxCdc,
 				fields:         idxFields,
 				primaryKey:     pkIndex,
-				getReadBackend: getReadBackend,
+				getReadBackend: backendResolver,
 			}
 
 			// non-unique indexes can sometimes be named by several sub-lists of

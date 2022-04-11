@@ -2,24 +2,16 @@ package rootmulti
 
 import (
 	"bytes"
-	"crypto/sha256"
-	"encoding/binary"
-	"encoding/hex"
-	"errors"
 	"fmt"
-	"io"
-	"math/rand"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
@@ -86,7 +78,7 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 
 	k, v := []byte("wind"), []byte("blows")
 
-	store1 := ms.getStoreByName("store1").(types.KVStore)
+	store1 := ms.GetStoreByName("store1").(types.KVStore)
 	store1.Set(k, v)
 
 	cID := ms.Commit()
@@ -123,7 +115,7 @@ func TestHashStableWithEmptyCommit(t *testing.T) {
 
 	k, v := []byte("wind"), []byte("blows")
 
-	store1 := ms.getStoreByName("store1").(types.KVStore)
+	store1 := ms.GetStoreByName("store1").(types.KVStore)
 	store1.Set(k, v)
 
 	cID := ms.Commit()
@@ -147,11 +139,11 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	checkStore(t, store, commitID, commitID)
 
 	// Make sure we can get stores by name.
-	s1 := store.getStoreByName("store1")
+	s1 := store.GetStoreByName("store1")
 	require.NotNil(t, s1)
-	s3 := store.getStoreByName("store3")
+	s3 := store.GetStoreByName("store3")
 	require.NotNil(t, s3)
-	s77 := store.getStoreByName("store77")
+	s77 := store.GetStoreByName("store77")
 	require.Nil(t, s77)
 
 	// Make a few commits and check them.
@@ -191,21 +183,21 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 
 	// write some data in all stores
 	k1, v1 := []byte("first"), []byte("store")
-	s1, _ := store.getStoreByName("store1").(types.KVStore)
+	s1, _ := store.GetStoreByName("store1").(types.KVStore)
 	require.NotNil(t, s1)
 	s1.Set(k1, v1)
 
 	k2, v2 := []byte("second"), []byte("restore")
-	s2, _ := store.getStoreByName("store2").(types.KVStore)
+	s2, _ := store.GetStoreByName("store2").(types.KVStore)
 	require.NotNil(t, s2)
 	s2.Set(k2, v2)
 
 	k3, v3 := []byte("third"), []byte("dropped")
-	s3, _ := store.getStoreByName("store3").(types.KVStore)
+	s3, _ := store.GetStoreByName("store3").(types.KVStore)
 	require.NotNil(t, s3)
 	s3.Set(k3, v3)
 
-	s4, _ := store.getStoreByName("store4").(types.KVStore)
+	s4, _ := store.GetStoreByName("store4").(types.KVStore)
 	require.Nil(t, s4)
 
 	// do one commit
@@ -228,7 +220,7 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	checkStore(t, store, commitID, commitID)
 
 	// let's query data to see it was saved properly
-	s2, _ = store.getStoreByName("store2").(types.KVStore)
+	s2, _ = store.GetStoreByName("store2").(types.KVStore)
 	require.NotNil(t, s2)
 	require.Equal(t, v2, s2.Get(k2))
 
@@ -238,17 +230,17 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	require.Nil(t, err)
 
 	// s1 was not changed
-	s1, _ = restore.getStoreByName("store1").(types.KVStore)
+	s1, _ = restore.GetStoreByName("store1").(types.KVStore)
 	require.NotNil(t, s1)
 	require.Equal(t, v1, s1.Get(k1))
 
 	// store3 is mounted, but data deleted are gone
-	s3, _ = restore.getStoreByName("store3").(types.KVStore)
+	s3, _ = restore.GetStoreByName("store3").(types.KVStore)
 	require.NotNil(t, s3)
 	require.Nil(t, s3.Get(k3)) // data was deleted
 
 	// store4 is mounted, with empty data
-	s4, _ = restore.getStoreByName("store4").(types.KVStore)
+	s4, _ = restore.GetStoreByName("store4").(types.KVStore)
 	require.NotNil(t, s4)
 
 	iterator := s4.Iterator(nil, nil)
@@ -266,11 +258,11 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	s4.Set(k4, v4)
 
 	// store2 is no longer mounted
-	st2 := restore.getStoreByName("store2")
+	st2 := restore.GetStoreByName("store2")
 	require.Nil(t, st2)
 
 	// restore2 has the old data
-	rs2, _ := restore.getStoreByName("restore2").(types.KVStore)
+	rs2, _ := restore.GetStoreByName("restore2").(types.KVStore)
 	require.NotNil(t, rs2)
 	require.Equal(t, v2, rs2.Get(k2))
 
@@ -284,15 +276,15 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	require.Equal(t, migratedID, reload.LastCommitID())
 
 	// query this new store
-	rl1, _ := reload.getStoreByName("store1").(types.KVStore)
+	rl1, _ := reload.GetStoreByName("store1").(types.KVStore)
 	require.NotNil(t, rl1)
 	require.Equal(t, v1, rl1.Get(k1))
 
-	rl2, _ := reload.getStoreByName("restore2").(types.KVStore)
+	rl2, _ := reload.GetStoreByName("restore2").(types.KVStore)
 	require.NotNil(t, rl2)
 	require.Equal(t, v2, rl2.Get(k2))
 
-	rl4, _ := reload.getStoreByName("store4").(types.KVStore)
+	rl4, _ := reload.GetStoreByName("store4").(types.KVStore)
 	require.NotNil(t, rl4)
 	require.Equal(t, v4, rl4.Get(k4))
 
@@ -329,7 +321,6 @@ func TestMultiStoreRestart(t *testing.T) {
 	db := dbm.NewMemDB()
 	pruning := types.PruningOptions{
 		KeepRecent: 2,
-		KeepEvery:  3,
 		Interval:   1,
 	}
 	multi := newMultiStoreWithMounts(db, pruning)
@@ -344,15 +335,15 @@ func TestMultiStoreRestart(t *testing.T) {
 
 	for i := 1; i < 3; i++ {
 		// Set and commit data in one store.
-		store1 := multi.getStoreByName("store1").(types.KVStore)
+		store1 := multi.GetStoreByName("store1").(types.KVStore)
 		store1.Set([]byte(k), []byte(fmt.Sprintf("%s:%d", v, i)))
 
 		// ... and another.
-		store2 := multi.getStoreByName("store2").(types.KVStore)
+		store2 := multi.GetStoreByName("store2").(types.KVStore)
 		store2.Set([]byte(k2), []byte(fmt.Sprintf("%s:%d", v2, i)))
 
 		// ... and another.
-		store3 := multi.getStoreByName("store3").(types.KVStore)
+		store3 := multi.GetStoreByName("store3").(types.KVStore)
 		store3.Set([]byte(k3), []byte(fmt.Sprintf("%s:%d", v3, i)))
 
 		multi.Commit()
@@ -363,11 +354,11 @@ func TestMultiStoreRestart(t *testing.T) {
 	}
 
 	// Set and commit data in one store.
-	store1 := multi.getStoreByName("store1").(types.KVStore)
+	store1 := multi.GetStoreByName("store1").(types.KVStore)
 	store1.Set([]byte(k), []byte(fmt.Sprintf("%s:%d", v, 3)))
 
 	// ... and another.
-	store2 := multi.getStoreByName("store2").(types.KVStore)
+	store2 := multi.GetStoreByName("store2").(types.KVStore)
 	store2.Set([]byte(k2), []byte(fmt.Sprintf("%s:%d", v2, 3)))
 
 	multi.Commit()
@@ -377,7 +368,7 @@ func TestMultiStoreRestart(t *testing.T) {
 	require.NotEqual(t, initCid, flushedCinfo, "CID is different after flush to disk")
 
 	// ... and another.
-	store3 := multi.getStoreByName("store3").(types.KVStore)
+	store3 := multi.GetStoreByName("store3").(types.KVStore)
 	store3.Set([]byte(k3), []byte(fmt.Sprintf("%s:%d", v3, 3)))
 
 	multi.Commit()
@@ -394,16 +385,16 @@ func TestMultiStoreRestart(t *testing.T) {
 	require.Equal(t, int64(4), reloadedCid.Version, "Reloaded CID is not the same as last flushed CID")
 
 	// Check that store1 and store2 retained date from 3rd commit
-	store1 = multi.getStoreByName("store1").(types.KVStore)
+	store1 = multi.GetStoreByName("store1").(types.KVStore)
 	val := store1.Get([]byte(k))
 	require.Equal(t, []byte(fmt.Sprintf("%s:%d", v, 3)), val, "Reloaded value not the same as last flushed value")
 
-	store2 = multi.getStoreByName("store2").(types.KVStore)
+	store2 = multi.GetStoreByName("store2").(types.KVStore)
 	val2 := store2.Get([]byte(k2))
 	require.Equal(t, []byte(fmt.Sprintf("%s:%d", v2, 3)), val2, "Reloaded value not the same as last flushed value")
 
 	// Check that store3 still has data from last commit even though update happened on 2nd commit
-	store3 = multi.getStoreByName("store3").(types.KVStore)
+	store3 = multi.GetStoreByName("store3").(types.KVStore)
 	val3 := store3.Get([]byte(k3))
 	require.Equal(t, []byte(fmt.Sprintf("%s:%d", v3, 3)), val3, "Reloaded value not the same as last flushed value")
 }
@@ -421,15 +412,15 @@ func TestMultiStoreQuery(t *testing.T) {
 	cid := multi.Commit()
 
 	// Make sure we can get by name.
-	garbage := multi.getStoreByName("bad-name")
+	garbage := multi.GetStoreByName("bad-name")
 	require.Nil(t, garbage)
 
 	// Set and commit data in one store.
-	store1 := multi.getStoreByName("store1").(types.KVStore)
+	store1 := multi.GetStoreByName("store1").(types.KVStore)
 	store1.Set(k, v)
 
 	// ... and another.
-	store2 := multi.getStoreByName("store2").(types.KVStore)
+	store2 := multi.GetStoreByName("store2").(types.KVStore)
 	store2.Set(k2, v2)
 
 	// Commit the multistore.
@@ -488,9 +479,9 @@ func TestMultiStore_Pruning(t *testing.T) {
 	}{
 		{"prune nothing", 10, types.PruneNothing, nil, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
 		{"prune everything", 10, types.PruneEverything, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9}, []int64{10}},
-		{"prune some; no batch", 10, types.NewPruningOptions(2, 3, 1), []int64{1, 2, 4, 5, 7}, []int64{3, 6, 8, 9, 10}},
-		{"prune some; small batch", 10, types.NewPruningOptions(2, 3, 3), []int64{1, 2, 4, 5}, []int64{3, 6, 7, 8, 9, 10}},
-		{"prune some; large batch", 10, types.NewPruningOptions(2, 3, 11), nil, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
+		{"prune some; no batch", 10, types.NewPruningOptions(2, 1), []int64{1, 2, 4, 5, 7}, []int64{3, 6, 8, 9, 10}},
+		{"prune some; small batch", 10, types.NewPruningOptions(2, 3), []int64{1, 2, 4, 5}, []int64{3, 6, 7, 8, 9, 10}},
+		{"prune some; large batch", 10, types.NewPruningOptions(2, 11), nil, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
 	}
 
 	for _, tc := range testCases {
@@ -520,7 +511,7 @@ func TestMultiStore_Pruning(t *testing.T) {
 
 func TestMultiStore_PruningRestart(t *testing.T) {
 	db := dbm.NewMemDB()
-	ms := newMultiStoreWithMounts(db, types.NewPruningOptions(2, 3, 11))
+	ms := newMultiStoreWithMounts(db, types.NewPruningOptions(2, 11))
 	require.NoError(t, ms.LoadLatestVersion())
 
 	// Commit enough to build up heights to prune, where on the next block we should
@@ -534,13 +525,13 @@ func TestMultiStore_PruningRestart(t *testing.T) {
 	// ensure we've persisted the current batch of heights to prune to the store's DB
 	ph, err := getPruningHeights(ms.db)
 	require.NoError(t, err)
-	require.Equal(t, pruneHeights, ph)
+	require.Equal(t, []int64{1, 2, 3, 4, 5, 6, 7}, ph)
 
 	// "restart"
-	ms = newMultiStoreWithMounts(db, types.NewPruningOptions(2, 3, 11))
+	ms = newMultiStoreWithMounts(db, types.NewPruningOptions(2, 11))
 	err = ms.LoadLatestVersion()
 	require.NoError(t, err)
-	require.Equal(t, pruneHeights, ms.pruneHeights)
+	require.Equal(t, []int64{1, 2, 3, 4, 5, 6, 7}, ms.pruneHeights)
 
 	// commit one more block and ensure the heights have been pruned
 	ms.Commit()
@@ -549,121 +540,6 @@ func TestMultiStore_PruningRestart(t *testing.T) {
 	for _, v := range pruneHeights {
 		_, err := ms.CacheMultiStoreWithVersion(v)
 		require.NoError(t, err, "expected error when loading height: %d", v)
-	}
-}
-
-func TestMultistoreSnapshot_Checksum(t *testing.T) {
-	// Chunks from different nodes must fit together, so all nodes must produce identical chunks.
-	// This checksum test makes sure that the byte stream remains identical. If the test fails
-	// without having changed the data (e.g. because the Protobuf or zlib encoding changes),
-	// snapshottypes.CurrentFormat must be bumped.
-	store := newMultiStoreWithGeneratedData(dbm.NewMemDB(), 5, 10000)
-	version := uint64(store.LastCommitID().Version)
-
-	testcases := []struct {
-		format      uint32
-		chunkHashes []string
-	}{
-		{1, []string{
-			"503e5b51b657055b77e88169fadae543619368744ad15f1de0736c0a20482f24",
-			"e1a0daaa738eeb43e778aefd2805e3dd720798288a410b06da4b8459c4d8f72e",
-			"aa048b4ee0f484965d7b3b06822cf0772cdcaad02f3b1b9055e69f2cb365ef3c",
-			"7921eaa3ed4921341e504d9308a9877986a879fe216a099c86e8db66fcba4c63",
-			"a4a864e6c02c9fca5837ec80dc84f650b25276ed7e4820cf7516ced9f9901b86",
-			"ca2879ac6e7205d257440131ba7e72bef784cd61642e32b847729e543c1928b9",
-		}},
-	}
-	for _, tc := range testcases {
-		tc := tc
-		t.Run(fmt.Sprintf("Format %v", tc.format), func(t *testing.T) {
-			chunks, err := store.Snapshot(version, tc.format)
-			require.NoError(t, err)
-			hashes := []string{}
-			hasher := sha256.New()
-			for chunk := range chunks {
-				hasher.Reset()
-				_, err := io.Copy(hasher, chunk)
-				require.NoError(t, err)
-				hashes = append(hashes, hex.EncodeToString(hasher.Sum(nil)))
-			}
-			assert.Equal(t, tc.chunkHashes, hashes,
-				"Snapshot output for format %v has changed", tc.format)
-		})
-	}
-}
-
-func TestMultistoreSnapshot_Errors(t *testing.T) {
-	store := newMultiStoreWithMixedMountsAndBasicData(dbm.NewMemDB())
-
-	testcases := map[string]struct {
-		height     uint64
-		format     uint32
-		expectType error
-	}{
-		"0 height":       {0, snapshottypes.CurrentFormat, nil},
-		"0 format":       {1, 0, snapshottypes.ErrUnknownFormat},
-		"unknown height": {9, snapshottypes.CurrentFormat, nil},
-		"unknown format": {1, 9, snapshottypes.ErrUnknownFormat},
-	}
-	for name, tc := range testcases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			_, err := store.Snapshot(tc.height, tc.format)
-			require.Error(t, err)
-			if tc.expectType != nil {
-				assert.True(t, errors.Is(err, tc.expectType))
-			}
-		})
-	}
-}
-
-func TestMultistoreRestore_Errors(t *testing.T) {
-	store := newMultiStoreWithMixedMounts(dbm.NewMemDB())
-
-	testcases := map[string]struct {
-		height     uint64
-		format     uint32
-		expectType error
-	}{
-		"0 height":       {0, snapshottypes.CurrentFormat, nil},
-		"0 format":       {1, 0, snapshottypes.ErrUnknownFormat},
-		"unknown format": {1, 9, snapshottypes.ErrUnknownFormat},
-	}
-	for name, tc := range testcases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			err := store.Restore(tc.height, tc.format, nil, nil)
-			require.Error(t, err)
-			if tc.expectType != nil {
-				assert.True(t, errors.Is(err, tc.expectType))
-			}
-		})
-	}
-}
-
-func TestMultistoreSnapshotRestore(t *testing.T) {
-	source := newMultiStoreWithMixedMountsAndBasicData(dbm.NewMemDB())
-	target := newMultiStoreWithMixedMounts(dbm.NewMemDB())
-	version := uint64(source.LastCommitID().Version)
-	require.EqualValues(t, 3, version)
-
-	chunks, err := source.Snapshot(version, snapshottypes.CurrentFormat)
-	require.NoError(t, err)
-	ready := make(chan struct{})
-	err = target.Restore(version, snapshottypes.CurrentFormat, chunks, ready)
-	require.NoError(t, err)
-	assert.EqualValues(t, struct{}{}, <-ready)
-
-	assert.Equal(t, source.LastCommitID(), target.LastCommitID())
-	for key, sourceStore := range source.stores {
-		targetStore := target.getStoreByName(key.Name()).(types.CommitKVStore)
-		switch sourceStore.GetStoreType() {
-		case types.StoreTypeTransient:
-			assert.False(t, targetStore.Iterator(nil, nil).Valid(),
-				"transient store %v not empty", key.Name())
-		default:
-			assertStoresEqual(t, sourceStore, targetStore, "store %q not equal", key.Name())
-		}
 	}
 }
 
@@ -854,79 +730,6 @@ func TestTraceConcurrency(t *testing.T) {
 	stopW <- struct{}{}
 }
 
-func BenchmarkMultistoreSnapshot100K(b *testing.B) {
-	benchmarkMultistoreSnapshot(b, 10, 10000)
-}
-
-func BenchmarkMultistoreSnapshot1M(b *testing.B) {
-	benchmarkMultistoreSnapshot(b, 10, 100000)
-}
-
-func BenchmarkMultistoreSnapshotRestore100K(b *testing.B) {
-	benchmarkMultistoreSnapshotRestore(b, 10, 10000)
-}
-
-func BenchmarkMultistoreSnapshotRestore1M(b *testing.B) {
-	benchmarkMultistoreSnapshotRestore(b, 10, 100000)
-}
-
-func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
-	b.Skip("Noisy with slow setup time, please see https://github.com/cosmos/cosmos-sdk/issues/8855.")
-
-	b.ReportAllocs()
-	b.StopTimer()
-	source := newMultiStoreWithGeneratedData(dbm.NewMemDB(), stores, storeKeys)
-	version := source.LastCommitID().Version
-	require.EqualValues(b, 1, version)
-	b.StartTimer()
-
-	for i := 0; i < b.N; i++ {
-		target := NewStore(dbm.NewMemDB())
-		for key := range source.stores {
-			target.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
-		}
-		err := target.LoadLatestVersion()
-		require.NoError(b, err)
-		require.EqualValues(b, 0, target.LastCommitID().Version)
-
-		chunks, err := source.Snapshot(uint64(version), snapshottypes.CurrentFormat)
-		require.NoError(b, err)
-		for reader := range chunks {
-			_, err := io.Copy(io.Discard, reader)
-			require.NoError(b, err)
-			err = reader.Close()
-			require.NoError(b, err)
-		}
-	}
-}
-
-func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys uint64) {
-	b.Skip("Noisy with slow setup time, please see https://github.com/cosmos/cosmos-sdk/issues/8855.")
-
-	b.ReportAllocs()
-	b.StopTimer()
-	source := newMultiStoreWithGeneratedData(dbm.NewMemDB(), stores, storeKeys)
-	version := uint64(source.LastCommitID().Version)
-	require.EqualValues(b, 1, version)
-	b.StartTimer()
-
-	for i := 0; i < b.N; i++ {
-		target := NewStore(dbm.NewMemDB())
-		for key := range source.stores {
-			target.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
-		}
-		err := target.LoadLatestVersion()
-		require.NoError(b, err)
-		require.EqualValues(b, 0, target.LastCommitID().Version)
-
-		chunks, err := source.Snapshot(version, snapshottypes.CurrentFormat)
-		require.NoError(b, err)
-		err = target.Restore(version, snapshottypes.CurrentFormat, chunks, nil)
-		require.NoError(b, err)
-		require.Equal(b, source.LastCommitID(), target.LastCommitID())
-	}
-}
-
 //-----------------------------------------------------------------------
 // utils
 
@@ -945,75 +748,6 @@ func newMultiStoreWithMounts(db dbm.DB, pruningOpts types.PruningOptions) *Store
 	store.MountStoreWithDB(testStoreKey3, types.StoreTypeIAVL, nil)
 
 	return store
-}
-
-func newMultiStoreWithMixedMounts(db dbm.DB) *Store {
-	store := NewStore(db)
-	store.MountStoreWithDB(types.NewKVStoreKey("iavl1"), types.StoreTypeIAVL, nil)
-	store.MountStoreWithDB(types.NewKVStoreKey("iavl2"), types.StoreTypeIAVL, nil)
-	store.MountStoreWithDB(types.NewKVStoreKey("iavl3"), types.StoreTypeIAVL, nil)
-	store.MountStoreWithDB(types.NewTransientStoreKey("trans1"), types.StoreTypeTransient, nil)
-	store.LoadLatestVersion()
-
-	return store
-}
-
-func newMultiStoreWithMixedMountsAndBasicData(db dbm.DB) *Store {
-	store := newMultiStoreWithMixedMounts(db)
-	store1 := store.getStoreByName("iavl1").(types.CommitKVStore)
-	store2 := store.getStoreByName("iavl2").(types.CommitKVStore)
-	trans1 := store.getStoreByName("trans1").(types.KVStore)
-
-	store1.Set([]byte("a"), []byte{1})
-	store1.Set([]byte("b"), []byte{1})
-	store2.Set([]byte("X"), []byte{255})
-	store2.Set([]byte("A"), []byte{101})
-	trans1.Set([]byte("x1"), []byte{91})
-	store.Commit()
-
-	store1.Set([]byte("b"), []byte{2})
-	store1.Set([]byte("c"), []byte{3})
-	store2.Set([]byte("B"), []byte{102})
-	store.Commit()
-
-	store2.Set([]byte("C"), []byte{103})
-	store2.Delete([]byte("X"))
-	trans1.Set([]byte("x2"), []byte{92})
-	store.Commit()
-
-	return store
-}
-
-func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *Store {
-	multiStore := NewStore(db)
-	r := rand.New(rand.NewSource(49872768940)) // Fixed seed for deterministic tests
-
-	keys := []*types.KVStoreKey{}
-	for i := uint8(0); i < stores; i++ {
-		key := types.NewKVStoreKey(fmt.Sprintf("store%v", i))
-		multiStore.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
-		keys = append(keys, key)
-	}
-	multiStore.LoadLatestVersion()
-
-	for _, key := range keys {
-		store := multiStore.stores[key].(*iavl.Store)
-		for i := uint64(0); i < storeKeys; i++ {
-			k := make([]byte, 8)
-			v := make([]byte, 1024)
-			binary.BigEndian.PutUint64(k, i)
-			_, err := r.Read(v)
-			if err != nil {
-				panic(err)
-			}
-			store.Set(k, v)
-		}
-	}
-
-	multiStore.Commit()
-	multiStore.LoadLatestVersion()
-
-	return multiStore
 }
 
 func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts types.PruningOptions) (*Store, *types.StoreUpgrades) {
@@ -1035,25 +769,6 @@ func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts types.PruningOptions
 	}
 
 	return store, upgrades
-}
-
-func assertStoresEqual(t *testing.T, expect, actual types.CommitKVStore, msgAndArgs ...interface{}) {
-	assert.Equal(t, expect.LastCommitID(), actual.LastCommitID())
-	expectIter := expect.Iterator(nil, nil)
-	expectMap := map[string][]byte{}
-	for ; expectIter.Valid(); expectIter.Next() {
-		expectMap[string(expectIter.Key())] = expectIter.Value()
-	}
-	require.NoError(t, expectIter.Error())
-
-	actualIter := expect.Iterator(nil, nil)
-	actualMap := map[string][]byte{}
-	for ; actualIter.Valid(); actualIter.Next() {
-		actualMap[string(actualIter.Key())] = actualIter.Value()
-	}
-	require.NoError(t, actualIter.Error())
-
-	assert.Equal(t, expectMap, actualMap, msgAndArgs...)
 }
 
 func checkStore(t *testing.T, store *Store, expect, got types.CommitID) {

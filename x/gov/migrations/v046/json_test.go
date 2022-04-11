@@ -15,8 +15,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	v046 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
 func TestMigrateJSON(t *testing.T) {
@@ -57,7 +57,7 @@ func TestMigrateJSON(t *testing.T) {
 	// Make sure the migrated proposal's Msg signer is the gov acct.
 	require.Equal(t,
 		authtypes.NewModuleAddress(types.ModuleName).String(),
-		migrated.Proposals[0].Messages[0].GetCachedValue().(*v1beta2.MsgExecLegacyContent).Authority,
+		migrated.Proposals[0].Messages[0].GetCachedValue().(*v1.MsgExecLegacyContent).Authority,
 	)
 
 	bz, err := clientCtx.Codec.MarshalJSON(migrated)
@@ -87,14 +87,15 @@ func TestMigrateJSON(t *testing.T) {
 		{
 			"deposit_end_time": "2001-09-09T01:46:40Z",
 			"final_tally_result": {
-				"abstain": "0",
-				"no": "0",
-				"no_with_veto": "0",
-				"yes": "0"
+				"abstain_count": "0",
+				"no_count": "0",
+				"no_with_veto_count": "0",
+				"yes_count": "0"
 			},
+			"id": "1",
 			"messages": [
 				{
-					"@type": "/cosmos.gov.v1beta2.MsgExecLegacyContent",
+					"@type": "/cosmos.gov.v1.MsgExecLegacyContent",
 					"authority": "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
 					"content": {
 						"@type": "/cosmos.gov.v1beta1.TextProposal",
@@ -103,8 +104,7 @@ func TestMigrateJSON(t *testing.T) {
 					}
 				}
 			],
-			"metadata": null,
-			"proposal_id": "1",
+			"metadata": "",
 			"status": "PROPOSAL_STATUS_DEPOSIT_PERIOD",
 			"submit_time": "2001-09-09T01:46:40Z",
 			"total_deposit": [
@@ -125,6 +125,7 @@ func TestMigrateJSON(t *testing.T) {
 	},
 	"votes": [
 		{
+			"metadata": "",
 			"options": [
 				{
 					"option": "VOTE_OPTION_ABSTAIN",
@@ -135,6 +136,7 @@ func TestMigrateJSON(t *testing.T) {
 			"voter": "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
 		},
 		{
+			"metadata": "",
 			"options": [
 				{
 					"option": "VOTE_OPTION_NO",

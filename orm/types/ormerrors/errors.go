@@ -1,6 +1,9 @@
 package ormerrors
 
-import "github.com/cosmos/cosmos-sdk/errors"
+import (
+	"github.com/cosmos/cosmos-sdk/errors"
+	"google.golang.org/grpc/codes"
+)
 
 var codespace = "orm"
 
@@ -19,24 +22,25 @@ var (
 	InvalidIndexId                = errors.New(codespace, 7, "invalid or missing index id, need a value >= 0 and < 32768")
 	DuplicateIndexId              = errors.New(codespace, 8, "duplicate index id")
 	PrimaryKeyConstraintViolation = errors.New(codespace, 9, "object with primary key already exists")
-	NotFoundOnUpdate              = errors.New(codespace, 10, "can't update object which doesn't exist")
 	PrimaryKeyInvalidOnUpdate     = errors.New(codespace, 11, "can't update object with missing or invalid primary key")
 	AutoIncrementKeyAlreadySet    = errors.New(codespace, 12, "can't create with auto-increment primary key already set")
 	CantFindIndex                 = errors.New(codespace, 13, "can't find index")
 	UnexpectedDecodePrefix        = errors.New(codespace, 14, "unexpected prefix while trying to decode an entry")
-	BytesFieldTooLong             = errors.New(codespace, 15, "bytes field is longer than 255 bytes")
 	UnsupportedOperation          = errors.New(codespace, 16, "unsupported operation")
 	BadDecodeEntry                = errors.New(codespace, 17, "bad decode entry")
 	IndexOutOfBounds              = errors.New(codespace, 18, "index out of bounds")
 	InvalidListOptions            = errors.New(codespace, 19, "invalid list options")
-	UnsupportedKeyField           = errors.New(codespace, 20, "unsupported key field")
+	InvalidKeyField               = errors.New(codespace, 20, "invalid key field")
 	UnexpectedError               = errors.New(codespace, 21, "unexpected error")
 	InvalidRangeIterationKeys     = errors.New(codespace, 22, "invalid range iteration keys")
 	JSONImportError               = errors.New(codespace, 23, "json import error")
-	UniqueKeyViolation            = errors.New(codespace, 24, "unique key violation")
+	UniqueKeyViolation            = errors.RegisterWithGRPCCode(codespace, 24, codes.FailedPrecondition, "unique key violation")
 	InvalidTableDefinition        = errors.New(codespace, 25, "invalid table definition")
 	InvalidFileDescriptorID       = errors.New(codespace, 26, "invalid file descriptor ID")
 	TableNotFound                 = errors.New(codespace, 27, "table not found")
 	JSONValidationError           = errors.New(codespace, 28, "invalid JSON")
-	NotFound                      = errors.New(codespace, 29, "not found")
+	NotFound                      = errors.RegisterWithGRPCCode(codespace, 29, codes.NotFound, "not found")
+	ReadOnly                      = errors.New(codespace, 30, "database is read-only")
+	AlreadyExists                 = errors.RegisterWithGRPCCode(codespace, 31, codes.AlreadyExists, "already exists")
+	ConstraintViolation           = errors.RegisterWithGRPCCode(codespace, 32, codes.FailedPrecondition, "failed precondition")
 )

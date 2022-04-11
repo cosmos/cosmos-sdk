@@ -2,8 +2,8 @@
 
 ## Changelog
 
-- 2020 Apr 24: Initial Draft
-- 2021 Sep 14: Superseded by ADR-045
+* 2020 Apr 24: Initial Draft
+* 2021 Sep 14: Superseded by ADR-045
 
 ## Status
 
@@ -196,23 +196,23 @@ This method would prepend handlers to an existing chain.
 
 ### Positive
 
-- Developers of Cosmos SDK based projects can add custom panic handlers to:
+* Developers of Cosmos SDK based projects can add custom panic handlers to:
     * add error context for custom panic sources (panic inside of custom keepers);
     * emit `panic()`: passthrough recovery object to the Tendermint core;
     * other necessary handling;
-- Developers can use standard Cosmos SDK `BaseApp` implementation, rather that rewriting it in their projects;
-- Proposed solution doesn't break the current "standard" `runTx()` flow;
+* Developers can use standard Cosmos SDK `BaseApp` implementation, rather that rewriting it in their projects;
+* Proposed solution doesn't break the current "standard" `runTx()` flow;
 
 ### Negative
 
-- Introduces changes to the execution model design.
+* Introduces changes to the execution model design.
 
 ### Neutral
 
-- `OutOfGas` error handler becomes one of the middlewares;
-- Default panic handler becomes one of the middlewares;
+* `OutOfGas` error handler becomes one of the middlewares;
+* Default panic handler becomes one of the middlewares;
 
 ## References
 
-- [PR-6053 with proposed solution](https://github.com/cosmos/cosmos-sdk/pull/6053)
-- [Similar solution. ADR-010 Modular AnteHandler](https://github.com/cosmos/cosmos-sdk/blob/v0.38.3/docs/architecture/adr-010-modular-antehandler.md)
+* [PR-6053 with proposed solution](https://github.com/cosmos/cosmos-sdk/pull/6053)
+* [Similar solution. ADR-010 Modular AnteHandler](https://github.com/cosmos/cosmos-sdk/blob/v0.38.3/docs/architecture/adr-010-modular-antehandler.md)

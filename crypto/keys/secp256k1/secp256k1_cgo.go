@@ -1,4 +1,5 @@
-// +build libsecp256k1
+//go:build libsecp256k1_sdk
+// +build libsecp256k1_sdk
 
 package secp256k1
 
@@ -21,6 +22,6 @@ func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
 
 // VerifySignature validates the signature.
 // The msg will be hashed prior to signature verification.
-func (pubKey *PrivKey) VerifySignature(msg []byte, sig []byte) bool {
-	return secp256k1.VerifySignature(pubKey.Key, crypto.Sha256(msg), sig)
+func (pubKey *PubKey) VerifySignature(msg []byte, sigStr []byte) bool {
+	return secp256k1.VerifySignature(pubKey.Bytes(), crypto.Sha256(msg), sigStr)
 }

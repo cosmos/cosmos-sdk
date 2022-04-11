@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,7 +29,7 @@ func (s *IntegrationTestSuite) TestQueryGroupInfo() {
 			"group not found",
 			[]string{"12345", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			true,
-			"not found: invalid request",
+			"group: not found",
 			0,
 		},
 		{
@@ -40,7 +41,7 @@ func (s *IntegrationTestSuite) TestQueryGroupInfo() {
 		},
 		{
 			"group found",
-			[]string{strconv.FormatUint(s.group.GroupId, 10), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{strconv.FormatUint(s.group.Id, 10), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 			"",
 			0,
@@ -61,7 +62,7 @@ func (s *IntegrationTestSuite) TestQueryGroupInfo() {
 
 				var g group.GroupInfo
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &g))
-				s.Require().Equal(s.group.GroupId, g.GroupId)
+				s.Require().Equal(s.group.Id, g.Id)
 				s.Require().Equal(s.group.Admin, g.Admin)
 				s.Require().Equal(s.group.TotalWeight, g.TotalWeight)
 				s.Require().Equal(s.group.Metadata, g.Metadata)
@@ -85,7 +86,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByMembers() {
 	require.Len(groups.Groups, 1)
 
 	cmd = client.QueryGroupMembersCmd()
-	out, err = cli.ExecTestCLICmd(clientCtx, cmd, []string{fmt.Sprintf("%d", groups.Groups[0].GroupId), fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	out, err = cli.ExecTestCLICmd(clientCtx, cmd, []string{fmt.Sprintf("%d", groups.Groups[0].Id), fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	require.NoError(err)
 
 	var members group.QueryGroupMembersResponse
@@ -170,17 +171,17 @@ func (s *IntegrationTestSuite) TestQueryGroupMembers() {
 		},
 		{
 			"members found",
-			[]string{strconv.FormatUint(s.group.GroupId, 10), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{strconv.FormatUint(s.group.Id, 10), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 			"",
 			0,
 			[]*group.GroupMember{
 				{
-					GroupId: s.group.GroupId,
+					GroupId: s.group.Id,
 					Member: &group.Member{
 						Address:  val.Address.String(),
 						Weight:   "3",
-						Metadata: []byte{1},
+						Metadata: validMetadata,
 					},
 				},
 			},
@@ -269,7 +270,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByAdmin() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
 				s.Require().Equal(len(res.Groups), len(tc.expectGroups))
 				for i := range res.Groups {
-					s.Require().Equal(res.Groups[i].GroupId, tc.expectGroups[i].GroupId)
+					s.Require().Equal(res.Groups[i].Id, tc.expectGroups[i].Id)
 					s.Require().Equal(res.Groups[i].Metadata, tc.expectGroups[i].Metadata)
 					s.Require().Equal(res.Groups[i].Version, tc.expectGroups[i].Version)
 					s.Require().Equal(res.Groups[i].TotalWeight, tc.expectGroups[i].TotalWeight)
@@ -295,7 +296,7 @@ func (s *IntegrationTestSuite) TestQueryGroupPolicyInfo() {
 			"group policy not found",
 			[]string{val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			true,
-			"not found: invalid request",
+			"group policy: not found",
 			0,
 		},
 		{
@@ -362,7 +363,7 @@ func (s *IntegrationTestSuite) TestQueryGroupPoliciesByGroup() {
 		},
 		{
 			"found group policies",
-			[]string{strconv.FormatUint(s.group.GroupId, 10), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{strconv.FormatUint(s.group.Id, 10), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 			"",
 			0,
@@ -372,6 +373,7 @@ func (s *IntegrationTestSuite) TestQueryGroupPoliciesByGroup() {
 				s.groupPolicies[2],
 				s.groupPolicies[3],
 				s.groupPolicies[4],
+				s.groupPolicies[5],
 			},
 		},
 	}
@@ -443,6 +445,7 @@ func (s *IntegrationTestSuite) TestQueryGroupPoliciesByAdmin() {
 				s.groupPolicies[2],
 				s.groupPolicies[3],
 				s.groupPolicies[4],
+				s.groupPolicies[5],
 			},
 		},
 	}
@@ -747,4 +750,115 @@ func (s *IntegrationTestSuite) TestQueryVotesByVoter() {
 			}
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) TestTallyResult() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+
+	member := s.voter
+
+	var commonFlags = []string{
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	}
+
+	// create a proposal
+	out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
+		append(
+			[]string{
+				s.createCLIProposal(
+					s.groupPolicies[0].Address, val.Address.String(),
+					s.groupPolicies[0].Address, val.Address.String(),
+					""),
+			},
+			commonFlags...,
+		),
+	)
+	s.Require().NoError(err, out.String())
+
+	var txResp sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+	s.Require().Equal(uint32(0), txResp.Code, out.String())
+	proposalId := s.getProposalIdFromTxResponse(txResp)
+
+	testCases := []struct {
+		name           string
+		args           []string
+		expectErr      bool
+		expTallyResult group.TallyResult
+		expectErrMsg   string
+		expectedCode   uint32
+	}{
+		{
+			"not found",
+			[]string{
+				"12345",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+			group.TallyResult{},
+			"not found",
+			0,
+		},
+		{
+			"invalid proposal id",
+			[]string{
+				"",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+			group.TallyResult{},
+			"strconv.ParseUint: parsing \"\": invalid syntax",
+			0,
+		},
+		{
+			"valid proposal id with no votes",
+			[]string{
+				proposalId,
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			group.DefaultTallyResult(),
+			"",
+			0,
+		},
+		{
+			"valid proposal id",
+			[]string{
+				"1",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			group.TallyResult{
+				YesCount:        member.Weight,
+				AbstainCount:    "0",
+				NoCount:         "0",
+				NoWithVetoCount: "0",
+			},
+			"",
+			0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := client.QueryTallyResultCmd()
+
+			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Contains(out.String(), tc.expectErrMsg)
+			} else {
+				s.Require().NoError(err, out.String())
+				var tallyResultRes group.QueryTallyResultResponse
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &tallyResultRes))
+				s.Require().NotNil(tallyResultRes)
+				s.Require().Equal(tc.expTallyResult, tallyResultRes.Tally)
+			}
+		})
+	}
+
 }

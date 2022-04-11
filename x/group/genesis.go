@@ -22,7 +22,7 @@ func (s GenesisState) Validate() error {
 		if err := g.ValidateBasic(); err != nil {
 			return sdkerrors.Wrap(err, "Group validation failed")
 		}
-		groups[g.GroupId] = *g
+		groups[g.Id] = *g
 	}
 
 	for _, g := range s.GroupPolicies {
@@ -54,14 +54,14 @@ func (s GenesisState) Validate() error {
 	for _, p := range s.Proposals {
 
 		// check that group policy with proposal address exists
-		if _, exists := groupPolicies[p.Address]; !exists {
-			return sdkerrors.Wrap(sdkerrors.ErrNotFound, fmt.Sprintf("group policy account with address %s doesn't correspond to proposal address", p.Address))
+		if _, exists := groupPolicies[p.GroupPolicyAddress]; !exists {
+			return sdkerrors.Wrap(sdkerrors.ErrNotFound, fmt.Sprintf("group policy account with address %s doesn't correspond to proposal address", p.GroupPolicyAddress))
 		}
 
 		if err := p.ValidateBasic(); err != nil {
 			return sdkerrors.Wrap(err, "Proposal validation failed")
 		}
-		proposals[p.ProposalId] = *p
+		proposals[p.Id] = *p
 	}
 
 	for _, v := range s.Votes {

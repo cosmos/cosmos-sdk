@@ -36,6 +36,7 @@ type Keeper struct {
 	upgradeHandlers    map[string]types.UpgradeHandler // map of plan name to upgrade handler
 	versionSetter      xp.ProtocolVersionSetter        // implements setting the protocol version field on BaseApp
 	downgradeVerified  bool                            // tells if we've already sanity checked that this binary version isn't being used against an old state.
+	authority          string                          // the address capable of executing and cancelling an upgrade. Usually the gov module account
 }
 
 // NewKeeper constructs an upgrade Keeper which requires the following arguments:
@@ -44,7 +45,7 @@ type Keeper struct {
 // cdc - the app-wide binary codec
 // homePath - root directory of the application's config
 // vs - the interface implemented by baseapp which allows setting baseapp's protocol version field
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter) Keeper {
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter, authority string) Keeper {
 	return Keeper{
 		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,
@@ -52,6 +53,7 @@ func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, 
 		cdc:                cdc,
 		upgradeHandlers:    map[string]types.UpgradeHandler{},
 		versionSetter:      vs,
+		authority:          authority,
 	}
 }
 
@@ -165,14 +167,16 @@ func (k Keeper) getModuleVersion(ctx sdk.Context, name string) (uint64, bool) {
 
 // ScheduleUpgrade schedules an upgrade based on the specified plan.
 // If there is another Plan already scheduled, it will cancel and overwrite it.
-// ScheduleUpgrade will also write the upgraded client to the upgraded client path
-// if an upgraded client is specified in the plan
+// ScheduleUpgrade will also write the upgraded IBC ClientState to the upgraded client
+// path if it is specified in the plan.
 func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 	if err := plan.ValidateBasic(); err != nil {
 		return err
 	}
 
-	if plan.Height <= ctx.BlockHeight() {
+	// NOTE: allow for the possibility of chains to schedule upgrades in begin block of the same block
+	// as a strategy for emergency hard fork recoveries
+	if plan.Height < ctx.BlockHeight() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "upgrade cannot be scheduled in the past")
 	}
 
@@ -362,7 +366,7 @@ func (k Keeper) DumpUpgradeInfoToDisk(height int64, p types.Plan) error {
 		return err
 	}
 
-	return os.WriteFile(upgradeInfoFilePath, info, 0600)
+	return os.WriteFile(upgradeInfoFilePath, info, 0o600)
 }
 
 // GetUpgradeInfoPath returns the upgrade info file path

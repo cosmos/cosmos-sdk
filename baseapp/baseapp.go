@@ -8,7 +8,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
@@ -128,10 +127,6 @@ type BaseApp struct { // nolint: maligned
 	// abciListeners for hooking into the ABCI message processing of the BaseApp
 	// and exposing the requests and responses to external consumers
 	abciListeners []ABCIListener
-
-	// globalWaitLimit is the maximum amount of time the BaseApp will wait
-	// for ABCIListeners to complete their work.
-	globalWaitLimit time.Duration
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

@@ -295,6 +295,10 @@ func (app *BaseApp) LastBlockHeight() int64 {
 	return app.cms.LastCommitID().Version
 }
 
+// Init initializes the app. It seals the app, preventing any
+// further modifications. In addition, it validates the app against
+// the earlier provided settings. Returns an error if validation fails.
+// nil otherwise. Panics if the app is already sealed.
 func (app *BaseApp) Init() error {
 	if app.sealed {
 		panic("cannot call initFromMainStore: baseapp already sealed")

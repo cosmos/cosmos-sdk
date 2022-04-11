@@ -18,7 +18,7 @@ jobs:
       - name: install tparse
         run: |
           export GO111MODULE="on" && go get github.com/mfridman/tparse@v0.8.3
-      - uses: actions/cache@v3.0.1
+      - uses: actions/cache@v3.0.2
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-tparse-binary

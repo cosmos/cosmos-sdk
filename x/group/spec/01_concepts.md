@@ -103,7 +103,9 @@ Proposals and votes are automatically pruned to avoid state bloat.
 
 Votes are pruned:
 
-- either after a successful tally, i.e. a tally whose result passes the decision
+- on `EndBlock` whose proposal status is `withdrawn` or `aborted` on proposal's voting period end, 
+  all the votes for that proposal will be pruned,
+- and either after a successful tally, i.e. a tally whose result passes the decision
   policy's rules, which can be trigged by a `Msg/Exec` or a
   `Msg/{SubmitProposal,Vote}` with the `Exec` field,
 - or on `EndBlock` right after the proposal's voting period end,
@@ -112,8 +114,10 @@ whichever happens first.
 
 Proposals are pruned:
 
-- either after a successful proposal execution,
+- on `EndBlock` whose proposal status is `withdrawn` or `aborted` on proposal's voting period end before tallying,
+- and either after a successful proposal execution,
 - or on `EndBlock` right after the proposal's `voting_period_end` +
   `max_execution_period` (defined as an app-wide configuration) is passed,
 
 whichever happens first.
+

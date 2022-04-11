@@ -145,6 +145,7 @@ func TestEndBlockerPruning(t *testing.T) {
 
 				return pID
 			},
+
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
 		"pruned when proposal is executable when failed before": {

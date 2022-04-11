@@ -351,6 +351,7 @@ func GetFromFields(clientCtx Context, kr keyring.Keyring, from string) (sdk.AccA
 		}
 
 		return addr, "", 0, nil
+
 	case clientCtx.GenerateOnly:
 		if err == nil {
 			return addr, "", 0, nil

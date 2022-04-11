@@ -73,11 +73,21 @@ Value Renderers describe how Protobuf types are encoded to and decoded from a st
 
 ### 5. Strings starting with `*` are only shown in Expert mode
 
-Ledger devices have the an Expert mode for advanced users. Expert mode needs to be manually activated by the device holder, inside the device settings. According to the [@Ledger_Support twitter account](https://twitter.com/Ledger_Support/status/1364524431800950785),
+Ledger devices have the an Expert mode for advanced users. Expert mode needs to be manually activated by the device holder, inside the device settings. There is currently no official documentation on Expert mode, but according to the [@Ledger_Support twitter account](https://twitter.com/Ledger_Support/status/1364524431800950785),
 
 > Expert mode enables further, more sophisticated features. This could be useful for advanced users
 
-Strings starting with the `*` character will only be shown in Expert mode.
+Strings starting with the `*` character will only be shown in Expert mode. These strings are:
+
+- either hardcoded in the transaction emvelope (see point #7),
+- or, in the transaction body, fields that have the `cosmos.msg.v1.textual.expert` Protobuf field option set to `true`.
+
+```proto
+message MsgMyExample {
+  string signer  = 1;                                         // This field will show on a screen.
+  bytes metadata = 2 [(cosmos.msg.v1.textual.expert) = true]; // This field, encoded as base64, will only show in Expert mode.
+}
+```
 
 For hardware wallets that don't have an expert mode, all strings MUST be shown on the device.
 
@@ -87,7 +97,7 @@ Protobuf objects can be arbitrarily complex, containing nested arrays and messag
 
 ### 7. Encoding of the Transaction Envelope
 
-We define "transaction envelope" as all data in a transaction that is not in the `TxBody`. Transaction envelope includes fee, signer infos and memo, but don't include `Msg`s. `//` denotes comments and are not shown on the Ledger device.
+We define "transaction envelope" as all data in a transaction that is not in the `TxBody.Messages` field. Transaction envelope includes fee, signer infos and memo, but don't include `Msg`s. `//` denotes comments and are not shown on the Ledger device.
 
 ```
 Chain ID: <string>
@@ -118,7 +128,7 @@ Tip: <string>
 
 ### 8. Encoding of the Transaction Body
 
-Transaction body is the `Tx.TxBody.Messages` field, which is an array of `Any`s. Since messages are widely used, they have a slightly different encoding than usual array of `Any`s (protobuf: `repeated repeated google.protobuf.Any`) described in Annex 1.
+Transaction Body is the `Tx.TxBody.Messages` field, which is an array of `Any`s, where each `Any` packs a `sdk.Msg`. Since `sdk.Msg`s are widely used, they have a slightly different encoding than usual array of `Any`s (Protobuf: `repeated google.protobuf.Any`) described in Annex 1.
 
 ```
 This transaction has <int> message:   // Optional 's' for "message" if there's is >1 sdk.Msgs.
@@ -140,7 +150,7 @@ message Grant {
 
 message MsgGrant {
   option (cosmos.msg.v1.signer) = "granter";
-  option (cosmos.msg.v1.textual) = "authz v1beta1 grant";
+  option (cosmos.msg.v1.textual.type_url) = "authz v1beta1 grant";
 
   string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];

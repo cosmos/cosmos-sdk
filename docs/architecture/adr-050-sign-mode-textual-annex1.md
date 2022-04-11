@@ -56,12 +56,12 @@ TODO add spec
 
 ### `type_url`
 
-- all protobuf messages to be used with `SIGN_MODE_TEXTUAL` CAN have a short name associated with them that can be used in format strings whenever the type url is explicitly referenced (as in the `MsgRevoke` examples below).
+- all protobuf messages to be used with `SIGN_MODE_TEXTUAL` CAN have a short name associated with them that can be used in format strings whenever the type url is explicitly referenced via the `cosmos.msg.v1.textual.type_url` Protobuf message option.
 - if this option is not specified for a Msg, then the Protobuf fully qualified name will be used.
 
 ```proto
 message MsgSend {
-  option (cosmos.msg.v1.textual) = "bank v1 send coins";
+  option (cosmos.msg.v1.textual.type_url) = "bank v1 send coins";
 }
 ```
 
@@ -218,7 +218,7 @@ Rendered as either ISO8601 (`2021-01-01T12:00:00Z`).
 
 ### bytes
 
-- Bytes are rendered in base64.
+- Bytes are rendered in hexadecimal.
 
 ### address bytes
 

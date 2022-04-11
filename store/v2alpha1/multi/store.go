@@ -57,7 +57,7 @@ func ErrStoreNotFound(skey string) error {
 // StoreConfig is used to define a schema and other options and pass them to the MultiStore constructor.
 type StoreConfig struct {
 	// Version pruning options for backing DBs.
-	Pruning *pruningtypes.PruningOptions
+	Pruning pruningtypes.PruningOptions
 	// The minimum allowed version number.
 	InitialVersion uint64
 	// The backing DB to use for the state commitment Merkle tree data.
@@ -93,7 +93,7 @@ type Store struct {
 	mtx    sync.RWMutex
 
 	// Copied from StoreConfig
-	Pruning        *pruningtypes.PruningOptions
+	Pruning        pruningtypes.PruningOptions
 	InitialVersion uint64 // if
 	*traceListenMixin
 
@@ -909,5 +909,5 @@ func (tlm *traceListenMixin) wrapTraceListen(store types.KVStore, skey types.Sto
 	return store
 }
 
-func (s *Store) GetPruning() *pruningtypes.PruningOptions   { return s.Pruning }
-func (s *Store) SetPruning(po *pruningtypes.PruningOptions) { s.Pruning = po }
+func (s *Store) GetPruning() pruningtypes.PruningOptions   { return s.Pruning }
+func (s *Store) SetPruning(po pruningtypes.PruningOptions) { s.Pruning = po }

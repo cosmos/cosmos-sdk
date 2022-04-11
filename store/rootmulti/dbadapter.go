@@ -32,10 +32,10 @@ func (cdsa commitDBStoreAdapter) LastCommitID() types.CommitID {
 	}
 }
 
-func (cdsa commitDBStoreAdapter) SetPruning(_ *pruningtypes.PruningOptions) {}
+func (cdsa commitDBStoreAdapter) SetPruning(_ pruningtypes.PruningOptions) {}
 
 // GetPruning is a no-op as pruning options cannot be directly set on this store.
 // They must be set on the root commit multi-store.
-func (cdsa commitDBStoreAdapter) GetPruning() *pruningtypes.PruningOptions {
+func (cdsa commitDBStoreAdapter) GetPruning() pruningtypes.PruningOptions {
 	return pruningtypes.NewPruningOptions(pruningtypes.PruningUndefined)
 }

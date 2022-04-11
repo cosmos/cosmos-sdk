@@ -13,7 +13,7 @@ func TestGetPruningOptionsFromFlags(t *testing.T) {
 	tests := []struct {
 		name            string
 		initParams      func() *viper.Viper
-		expectedOptions *pruningtypes.PruningOptions
+		expectedOptions pruningtypes.PruningOptions
 		wantErr         bool
 	}{
 		{

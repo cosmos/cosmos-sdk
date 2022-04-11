@@ -26,7 +26,7 @@ func TestNewManager(t *testing.T) {
 
 func TestStrategies(t *testing.T) {
 	testcases := map[string]struct {
-		strategy         *types.PruningOptions
+		strategy         types.PruningOptions
 		snapshotInterval uint64
 		strategyToAssert types.PruningStrategy
 		isValid          bool

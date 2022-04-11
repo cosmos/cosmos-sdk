@@ -395,7 +395,7 @@ func sliceToSet(slice []uint64) map[uint64]struct{} {
 func TestPruning(t *testing.T) {
 	// Save versions up to 10 and verify pruning at final commit
 	testCases := []struct {
-		*pruningtypes.PruningOptions
+		pruningtypes.PruningOptions
 		kept []uint64
 	}{
 		{pruningtypes.NewCustomPruningOptions(2, 10), []uint64{8, 9, 10}},

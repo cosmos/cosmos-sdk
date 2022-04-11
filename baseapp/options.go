@@ -19,7 +19,7 @@ import (
 // for options that need access to non-exported fields of the BaseApp
 
 // SetPruning sets a pruning option on the multistore associated with the app
-func SetPruning(opts *pruningtypes.PruningOptions) func(*BaseApp) {
+func SetPruning(opts pruningtypes.PruningOptions) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetPruning(opts) }
 }
 

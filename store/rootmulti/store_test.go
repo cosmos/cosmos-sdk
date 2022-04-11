@@ -472,7 +472,7 @@ func TestMultiStore_Pruning(t *testing.T) {
 	testCases := []struct {
 		name        string
 		numVersions int64
-		po          *pruningtypes.PruningOptions
+		po          pruningtypes.PruningOptions
 		deleted     []int64
 		saved       []int64
 	}{
@@ -742,7 +742,7 @@ var (
 	testStoreKey3 = types.NewKVStoreKey("store3")
 )
 
-func newMultiStoreWithMounts(db dbm.DB, pruningOpts *pruningtypes.PruningOptions) *Store {
+func newMultiStoreWithMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions) *Store {
 	store := NewStore(db, log.NewNopLogger())
 	store.SetPruning(pruningOpts)
 
@@ -753,7 +753,7 @@ func newMultiStoreWithMounts(db dbm.DB, pruningOpts *pruningtypes.PruningOptions
 	return store
 }
 
-func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts *pruningtypes.PruningOptions) (*Store, *types.StoreUpgrades) {
+func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions) (*Store, *types.StoreUpgrades) {
 	store := NewStore(db, log.NewNopLogger())
 	store.SetPruning(pruningOpts)
 

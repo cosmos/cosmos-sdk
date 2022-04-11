@@ -41,7 +41,7 @@ func (ts *Store) Commit() (id types.CommitID) {
 	return
 }
 
-func (ts *Store) SetPruning(*pruningtypes.PruningOptions)  {}
-func (ts *Store) GetPruning() *pruningtypes.PruningOptions { return &pruningtypes.PruningOptions{} }
+func (ts *Store) SetPruning(pruningtypes.PruningOptions)  {}
+func (ts *Store) GetPruning() pruningtypes.PruningOptions { return pruningtypes.PruningOptions{} }
 
 func (ts *Store) LastCommitID() (id types.CommitID) { return }

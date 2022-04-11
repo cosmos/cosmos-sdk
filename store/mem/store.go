@@ -55,11 +55,11 @@ func (s Store) CacheWrapWithListeners(storeKey types.StoreKey, listeners []types
 // Commit performs a no-op as entries are persistent between commitments.
 func (s *Store) Commit() (id types.CommitID) { return }
 
-func (s *Store) SetPruning(pruning *pruningtypes.PruningOptions) {}
+func (s *Store) SetPruning(pruning pruningtypes.PruningOptions) {}
 
 // GetPruning is a no-op as pruning options cannot be directly set on this store.
 // They must be set on the root commit multi-store.
-func (s *Store) GetPruning() *pruningtypes.PruningOptions {
+func (s *Store) GetPruning() pruningtypes.PruningOptions {
 	return pruningtypes.NewPruningOptions(pruningtypes.PruningUndefined)
 }
 

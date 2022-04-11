@@ -170,10 +170,10 @@ func NewSnapshotOptions(interval uint64, keepRecent uint32) *snapshottypes.Snaps
 	return snapshottypes.NewSnapshotOptions(interval, keepRecent)
 }
 
-func NewPruningOptions(pruningStrategy pruningtypes.PruningStrategy) *pruningtypes.PruningOptions {
+func NewPruningOptions(pruningStrategy pruningtypes.PruningStrategy) pruningtypes.PruningOptions {
 	return pruningtypes.NewPruningOptions(pruningStrategy)
 }
 
-func NewCustomPruningOptions(keepRecent, interval uint64) *pruningtypes.PruningOptions {
+func NewCustomPruningOptions(keepRecent, interval uint64) pruningtypes.PruningOptions {
 	return pruningtypes.NewCustomPruningOptions(keepRecent, interval)
 }

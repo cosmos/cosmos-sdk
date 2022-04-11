@@ -84,14 +84,14 @@ func NewStore(db dbm.DB, logger log.Logger) *Store {
 }
 
 // GetPruning fetches the pruning strategy from the root store.
-func (rs *Store) GetPruning() *pruningtypes.PruningOptions {
+func (rs *Store) GetPruning() pruningtypes.PruningOptions {
 	return rs.pruningManager.GetOptions()
 }
 
 // SetPruning sets the pruning strategy on the root store and all the sub-stores.
 // Note, calling SetPruning on the root store prior to LoadVersion or
 // LoadLatestVersion performs a no-op as the stores aren't mounted yet.
-func (rs *Store) SetPruning(pruningOpts *pruningtypes.PruningOptions) {
+func (rs *Store) SetPruning(pruningOpts pruningtypes.PruningOptions) {
 	rs.pruningManager.SetOptions(pruningOpts)
 }
 

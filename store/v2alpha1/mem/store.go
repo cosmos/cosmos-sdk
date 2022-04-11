@@ -39,7 +39,7 @@ func (s *Store) Commit() (id types.CommitID) {
 	return
 }
 
-func (s *Store) SetPruning(*pruningtypes.PruningOptions)  {}
-func (s *Store) GetPruning() *pruningtypes.PruningOptions { return &pruningtypes.PruningOptions{} }
+func (s *Store) SetPruning(pruningtypes.PruningOptions)  {}
+func (s *Store) GetPruning() pruningtypes.PruningOptions { return pruningtypes.PruningOptions{} }
 
 func (s Store) LastCommitID() (id types.CommitID) { return }

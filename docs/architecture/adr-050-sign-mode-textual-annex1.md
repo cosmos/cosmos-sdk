@@ -29,9 +29,9 @@ Value Renderers describe how values of different Protobuf types should be encode
 
 #### Examples
 
-- `1000` (uint64) -> `["1'000"]`
-- `"1000000.00"` (string representing a Dec) -> `["1'000'000"]`
-- `"1000000.10"` (string representing a Dec) -> `["1'000'000.1"]`
+- `1000` (uint64) -> `1'000`
+- `"1000000.00"` (string representing a Dec) -> `1'000'000`
+- `"1000000.10"` (string representing a Dec) -> `1'000'000.1`
 
 ### `coin`
 
@@ -48,11 +48,12 @@ Value Renderers describe how values of different Protobuf types should be encode
 
 ### `coins`
 
-TODO add spec
+- an array of `coin` is display as the concatenation of each `coin` encoded as the specification above, the joined together with the delimiter `", "` (a comma and a space, no quotes around).
+- the list of coins is ordered by alphabetical order of the display denom.
 
 ### Example
 
-- `["2uatom", "3cosm"]` -> `"2 atom, 3 COSM"`
+- `["3cosm", "2000000uatom"]` -> `2 atom, 3 COSM` (assuming the display denoms are `atom` and `COSM`)
 
 ### `type_url`
 

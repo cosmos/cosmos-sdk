@@ -62,7 +62,7 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 
 		md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
 		if err = grpc.SetHeader(grpcCtx, md); err != nil {
-			app.logger.Error("cannot set grpc header", "err", err)
+			app.logger.Error("failed to set gRPC header", "err", err)
 		}
 
 		return handler(grpcCtx, req)

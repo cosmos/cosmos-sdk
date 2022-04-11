@@ -278,6 +278,32 @@ func (k Keeper) pruneProposal(ctx sdk.Context, proposalID uint64) error {
 	return nil
 }
 
+// updateProposalStatus iterates through all proposals by group policy index and updates proposal status
+func (k Keeper) updateProposalStatus(ctx sdk.Context) error {
+	proposalIt, err := k.proposalByGroupPolicyIndex.PrefixScan(ctx.KVStore(k.key), nil, nil)
+	if err != nil {
+		return err
+	}
+	defer proposalIt.Close()
+
+	for {
+		var proposalInfo group.Proposal
+		_, err = proposalIt.LoadNext(&proposalInfo)
+		if errors.ErrORMIteratorDone.Is(err) {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		proposalInfo.Status = group.PROPOSAL_STATUS_ABORTED
+
+		if err := k.proposalTable.Update(ctx.KVStore(k.key), proposalInfo.Id, &proposalInfo); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // pruneVotes prunes all votes for a proposal from state.
 func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
 	store := ctx.KVStore(k.key)

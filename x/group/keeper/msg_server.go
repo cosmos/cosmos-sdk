@@ -913,28 +913,9 @@ func (k Keeper) doUpdateGroupPolicy(ctx sdk.Context, groupPolicy string, admin s
 		return err
 	}
 
-	proposalIt, err := k.proposalByGroupPolicyIndex.PrefixScan(ctx.KVStore(k.key), nil, nil)
-	if err != nil {
+	if err = k.updateProposalStatus(ctx); err != nil {
 		return err
 	}
-	defer proposalIt.Close()
-
-	for {
-		var proposalInfo group.Proposal
-		_, err = proposalIt.LoadNext(&proposalInfo)
-		if errors.ErrORMIteratorDone.Is(err) {
-			break
-		}
-		if err != nil {
-			return err
-		}
-		proposalInfo.Status = group.PROPOSAL_STATUS_ABORTED
-
-		if err := k.proposalTable.Update(ctx.KVStore(k.key), proposalInfo.Id, &proposalInfo); err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 

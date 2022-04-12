@@ -73,19 +73,19 @@ func NewStoreKVPairWriteListener(w io.Writer, m codec.BinaryCodec) *StoreKVPairW
 
 // OnWrite satisfies the WriteListener interface by writing length-prefixed protobuf encoded StoreKVPairs
 func (wl *StoreKVPairWriteListener) OnWrite(storeKey types.StoreKey, key []byte, value []byte, delete bool) error error {
-	kvPair := new(types.StoreKVPair)
-	kvPair.StoreKey = storeKey.Name()
-	kvPair.Delete = Delete
-	kvPair.Key = key
-	kvPair.Value = value
-	by, err := wl.marshaller.MarshalBinaryLengthPrefixed(kvPair)
-	if err != nil {
-                return err
-	}
-        if _, err := wl.writer.Write(by); err != nil {
-        	return err
-        }
-        return nil
+    kvPair := new(types.StoreKVPair)
+    kvPair.StoreKey = storeKey.Name()
+    kvPair.Delete = Delete
+    kvPair.Key = key
+    kvPair.Value = value
+    by, err := wl.marshaller.MarshalBinaryLengthPrefixed(kvPair)
+    if err != nil {
+        return err
+    }
+    if _, err := wl.writer.Write(by); err != nil {
+        return err
+    }
+    return nil
 }
 ```
 
@@ -99,39 +99,39 @@ We can configure the `Store` with a set of `WriteListener`s which stream the out
 // Operations are traced on each core KVStore call and written to any of the
 // underlying listeners with the proper key and operation permissions
 type Store struct {
-	parent    types.KVStore
-	listeners []types.WriteListener
-	parentStoreKey types.StoreKey
+    parent    types.KVStore
+    listeners []types.WriteListener
+    parentStoreKey types.StoreKey
 }
 
 // NewStore returns a reference to a new traceKVStore given a parent
 // KVStore implementation and a buffered writer.
 func NewStore(parent types.KVStore, psk types.StoreKey, listeners []types.WriteListener) *Store {
-	return &Store{parent: parent, listeners: listeners, parentStoreKey: psk}
+    return &Store{parent: parent, listeners: listeners, parentStoreKey: psk}
 }
 
 // Set implements the KVStore interface. It traces a write operation and
 // delegates the Set call to the parent KVStore.
 func (s *Store) Set(key []byte, value []byte) {
-	types.AssertValidKey(key)
-	s.parent.Set(key, value)
-	s.onWrite(false, key, value)
+    types.AssertValidKey(key)
+    s.parent.Set(key, value)
+    s.onWrite(false, key, value)
 }
 
 // Delete implements the KVStore interface. It traces a write operation and
 // delegates the Delete call to the parent KVStore.
 func (s *Store) Delete(key []byte) {
-	s.parent.Delete(key)
-	s.onWrite(true, key, nil)
+    s.parent.Delete(key)
+    s.onWrite(true, key, nil)
 }
 
 // onWrite writes a KVStore operation to all the WriteListeners
 func (s *Store) onWrite(delete bool, key, value []byte) {
-	for _, l := range s.listeners {
-		if err := l.OnWrite(s.parentStoreKey, key, value, delete); err != nil {
-                    // log error
-                }
-	}
+    for _, l := range s.listeners {
+        if err := l.OnWrite(s.parentStoreKey, key, value, delete); err != nil {
+            // log error
+        }
+    }
 }
 ```
 
@@ -142,30 +142,30 @@ Additionally, we will update the `CacheWrap` and `CacheWrapper` interfaces to en
 
 ```go
 type MultiStore interface {
-	...
+    ...
 
-	// ListeningEnabled returns if listening is enabled for the KVStore belonging the provided StoreKey
-	ListeningEnabled(key StoreKey) bool
+    // ListeningEnabled returns if listening is enabled for the KVStore belonging the provided StoreKey
+    ListeningEnabled(key StoreKey) bool
 
-	// AddListeners adds WriteListeners for the KVStore belonging to the provided StoreKey
-	// It appends the listeners to a current set, if one already exists
-	AddListeners(key StoreKey, listeners []WriteListener)
+    // AddListeners adds WriteListeners for the KVStore belonging to the provided StoreKey
+    // It appends the listeners to a current set, if one already exists
+    AddListeners(key StoreKey, listeners []WriteListener)
 }
 ```
 
 ```go
 type CacheWrap interface {
-	...
+    ...
 
-	// CacheWrapWithListeners recursively wraps again with listening enabled
-	CacheWrapWithListeners(storeKey types.StoreKey, listeners []WriteListener) CacheWrap
+    // CacheWrapWithListeners recursively wraps again with listening enabled
+    CacheWrapWithListeners(storeKey types.StoreKey, listeners []WriteListener) CacheWrap
 }
 
 type CacheWrapper interface {
-	...
+    ...
 
-	// CacheWrapWithListeners recursively wraps again with listening enabled
-	CacheWrapWithListeners(storeKey types.StoreKey, listeners []WriteListener) CacheWrap
+    // CacheWrapWithListeners recursively wraps again with listening enabled
+    CacheWrapWithListeners(storeKey types.StoreKey, listeners []WriteListener) CacheWrap
 }
 ```
 
@@ -176,16 +176,16 @@ to wrap the returned `KVStore` with a `listenkv.Store` if listening is turned on
 
 ```go
 func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
-	store := rs.stores[key].(types.KVStore)
+    store := rs.stores[key].(types.KVStore)
 
-	if rs.TracingEnabled() {
-		store = tracekv.NewStore(store, rs.traceWriter, rs.traceContext)
-	}
-	if rs.ListeningEnabled(key) {
-		store = listenkv.NewStore(key, store, rs.listeners[key])
-	}
+    if rs.TracingEnabled() {
+        store = tracekv.NewStore(store, rs.traceWriter, rs.traceContext)
+    }
+    if rs.ListeningEnabled(key) {
+        store = listenkv.NewStore(key, store, rs.listeners[key])
+    }
 
-	return store
+    return store
 }
 ```
 
@@ -194,11 +194,11 @@ to and enable listening in the cache layer.
 
 ```go
 func (rs *Store) CacheMultiStore() types.CacheMultiStore {
-	stores := make(map[types.StoreKey]types.CacheWrapper)
-	for k, v := range rs.stores {
-		stores[k] = v
-	}
-	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.traceContext, rs.listeners)
+    stores := make(map[types.StoreKey]types.CacheWrapper)
+    for k, v := range rs.stores {
+        stores[k] = v
+    }
+    return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.traceContext, rs.listeners)
 }
 ```
 
@@ -216,31 +216,31 @@ receipt from the `StreamingService`.
 ```go
 // ABCIListener interface used to hook into the ABCI message processing of the BaseApp
 type ABCIListener interface {
-	// ListenBeginBlock updates the streaming service with the latest BeginBlock messages
-	ListenBeginBlock(ctx types.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error
-	// ListenEndBlock updates the steaming service with the latest EndBlock messages
-	ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
-	// ListenDeliverTx updates the steaming service with the latest DeliverTx messages
-	ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error 
-	// HaltAppOnDeliveryError returns true if the application has been configured to halt when
-	// ListenBeginBlock, ListenEndBlock, ListenDeliverTx fail to process messages and false when
-	// the application has been configured to send messages to ListenBeginBlock, ListenEndBlock, ListenDeliverTx
-	// in fire-and-forget fashion.
-	//
-	// This behavior is controlled by a corresponding app config setting.
-	HaltAppOnDeliveryError() bool
+    // ListenBeginBlock updates the streaming service with the latest BeginBlock messages
+    ListenBeginBlock(ctx types.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error
+    // ListenEndBlock updates the steaming service with the latest EndBlock messages
+    ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
+    // ListenDeliverTx updates the steaming service with the latest DeliverTx messages
+    ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
+    // HaltAppOnDeliveryError whether or not to halt the application when delivery of massages fails
+    // in ListenBeginBlock, ListenEndBlock, ListenDeliverTx. When `false, the app will operate in fire-and-forget mode.
+    // When `true`, the app will gracefully halt and stop the running node. Uncommitted blocks will
+    // be replayed to all listeners when the node restarts and all successful listeners that received data
+    // prior to the halt will receive duplicate data. Whether or not a listener operates in a fire-and-forget mode
+    // is determined by the listener's configuration property `halt_app_on_delivery_error = true|false`.
+    HaltAppOnDeliveryError() bool
 }
 
 // StreamingService interface for registering WriteListeners with the BaseApp and updating the service with the ABCI messages using the hooks
 type StreamingService interface {
-	// Stream is the streaming service loop, awaits kv pairs and writes them to a destination stream or file
-	Stream(wg *sync.WaitGroup) error
-	// Listeners returns the streaming service's listeners for the BaseApp to register
-	Listeners() map[types.StoreKey][]store.WriteListener
-	// ABCIListener interface for hooking into the ABCI messages from inside the BaseApp
-	ABCIListener
-	// Closer interface
-	io.Closer
+    // Stream is the streaming service loop, awaits kv pairs and writes them to a destination stream or file
+    Stream(wg *sync.WaitGroup) error
+    // Listeners returns the streaming service's listeners for the BaseApp to register
+    Listeners() map[types.StoreKey][]store.WriteListener
+    // ABCIListener interface for hooking into the ABCI messages from inside the BaseApp
+    ABCIListener
+    // Closer interface
+    io.Closer
 }
 ```
 
@@ -261,17 +261,6 @@ func (app *BaseApp) SetStreamingService(s StreamingService) {
 }
 ```
 
-We will add a new method to the `BaseApp` that is used to configure a global wait limit. The global wait limit will be used as
-a fallback to prevent the node from stalling only when `HaltAppOnDeliveryError == true` to interrupt long-running
-or indefinite blocking listener goroutines.
-
-```go
-func (app *BaseApp) SetGlobalWaitLimit(t time.Duration) {
-	app.globalWaitLimit = t
-}
-```
-
-
 We will also modify the `BeginBlock`, `EndBlock`, and `DeliverTx` methods to pass ABCI requests and responses to any streaming service hooks registered
 with the `BaseApp`.
 
@@ -288,7 +277,12 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 			// increment the wait group counter
 			wg.Add(1)
 			go func() {
-				app.listenBeginBlock(req, res, streamingListener, wg)
+				// decrement the counter when the go routine completes
+				defer wg.Done()
+				if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
+					app.logger.Error("BeginBlock listening hook failed", "height", req.Header.Height, "err", err)
+					app.halt()
+				}
 			}()
 		} else {
 			// fire and forget semantics
@@ -304,44 +298,6 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	return res
 }
-
-// listenBeginBlock asynchronously processes BeginBlock state change events.
-// The listener must complete its work before the global threshold is reached.
-// Otherwise, all work will be abandoned and resources released.
-func (app *BaseApp) listenBeginBlock(
-	req abci.RequestBeginBlock,
-	res abci.ResponseBeginBlock,
-	streamingListener ABCIListener,
-	wg *sync.WaitGroup,
-) {
-	defer wg.Done()
-
-	// Set timer so goroutines don't block indefinitely
-	ctx, cancel := context.WithTimeout(context.Background(), app.globalWaitLimit*time.Second)
-	defer cancel()
-
-	var listenErr error
-	ch := make(chan struct{})
-
-	go func(ch chan struct{}) {
-		if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
-			listenErr = err
-		}
-		ch <- struct{}{}
-	}(ch)
-
-	select {
-        case <-ch:
-        case <-ctx.Done():
-                slistenErr = ctx.Err()
-	}
-
-	if listenErr != nil {
-		app.logger.Error("BeginBlock listening hook failed", "height", req.Header.Height, "err", listenErr)
-		app.halt()
-	}
-}
-
 ```
 
 ```go
@@ -357,7 +313,12 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 			// increment the wait group counter
 			wg.Add(1)
 			go func() {
-				app.listenEndBlock(req, res, streamingListener, wg)
+				// decrement the counter when the go routine completes
+				defer wg.Done()
+				if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
+					app.logger.Error("EndBlock listening hook failed", "height", req.Height, "err", err)
+					app.halt()
+				}
 			}()
 		} else {
 			// fire and forget semantics
@@ -372,43 +333,6 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	wg.Wait()
 
 	return res
-}
-
-// listenEndBlock asynchronously processes BeginBlock state change events.
-// The listener must complete its work before the global threshold is reached.
-// Otherwise, all work will be abandoned and resources released.
-func (app *BaseApp) listenEndBlock(
-	req abci.RequestEndBlock,
-	res abci.ResponseEndBlock,
-	streamingListener ABCIListener,
-	wg *sync.WaitGroup,
-) {
-	defer wg.Done()
-
-	// Set timer so goroutines don't block indefinitely
-	ctx, cancel := context.WithTimeout(context.Background(), app.globalWaitLimit*time.Second)
-	defer cancel()
-
-	var listenErr error
-	ch := make(chan struct{})
-
-	go func(ch chan struct{}) {
-		if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
-			listenErr = err
-		}
-		ch <- struct{}{}
-	}(ch)
-
-	select {
-	case <-ch:
-        case <-ctx.Done():
-                listenErr = ctx.Err()
-	}
-
-	if listenErr != nil {
-		app.logger.Error("EndBlock listening hook failed", "height", req.Height, "err", listenErr)
-		app.halt()
-	}
 }
 ```
 
@@ -425,7 +349,12 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 				// increment the wait group counter
 				wg.Add(1)
 				go func() {
-					app.listenDeliverTx(req, abciRes, streamingListener, wg)
+					// decrement the counter when the go routine completes
+					defer wg.Done()
+					if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, abciRes); err != nil {
+						app.logger.Error("DeliverTx listening hook failed", "err", err)
+						app.halt()
+					}
 				}()
 			} else {
 				// fire and forget semantics
@@ -443,43 +372,6 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 	...
 
 	return res
-}
-
-// listenEndBlock asynchronously processes BeginBlock state change events.
-// The listener must complete its work before the global threshold is reached.
-// Otherwise, all work will be abandoned and resources released.
-func (app *BaseApp) listenDeliverTx(
-	req abci.RequestDeliverTx,
-	res abci.ResponseDeliverTx,
-	streamingListener ABCIListener,
-	wg *sync.WaitGroup,
-) {
-	defer wg.Done()
-
-	// Set timer so goroutines don't block indefinitely
-	ctx, cancel := context.WithTimeout(context.Background(), app.globalWaitLimit*time.Second)
-	defer cancel()
-
-	var listenErr error
-	ch := make(chan struct{})
-
-	go func(ch chan struct{}) {
-		if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, res); err != nil {
-			listenErr = err
-		}
-		ch <- struct{}{}
-	}(ch)
-
-	select {
-	case <-ch:
-        case <-ctx.Done():
-                listenErr = ctx.Err()
-	}
-
-	if listenErr != nil {
-		app.logger.Error("DeliverTx listening hook failed", "err", listenErr)
-		app.halt()
-	}
 }
 ```
 
@@ -512,7 +404,7 @@ type Plugin interface {
 The `Name` method returns a plugin's name.
 The `Version` method returns a plugin's version.
 The `Init` method initializes a plugin with the provided `AppOptions`.
-The `io.Closer` shuts down the plugin service.
+The io.Closer is used to shut down the plugin service.
 
 For the purposes of this ADR we introduce a single kind of plugin- a state streaming plugin.
 We will define a `StateStreamingPlugin` interface which extends the above `Plugin` interface to support a state streaming service.
@@ -554,13 +446,6 @@ func NewSimApp(
 
 	pluginsOnKey := fmt.Sprintf("%s.%s", plugin.PLUGINS_TOML_KEY, plugin.PLUGINS_ON_TOML_KEY)
 	if cast.ToBool(appOpts.Get(pluginsOnKey)) {
-		pluginsStreamingKey := fmt.Sprintf("%s.%s", plugin.PLUGINS_TOML_KEY, plugin.STREAMING_TOML_KEY)
-		globalWaitLimitKey := fmt.Sprintf("%s.%s", pluginsStreamingKey, plugin.GLOBAL_WAIT_LIMIT_TOML_KEY)
-		gloalWaitLimit := cast.ToDuration(appOpts.Get(globalWaitLimitKey))
-		if globalWaitLimit > 0 {
-			bApp.SetGlobalWaitLimit(globalWaitLimit)
-		}
-		
 		// this loads the preloaded and any plugins found in `plugins.dir`
 		pluginLoader, err := loader.NewPluginLoader(appOpts, logger)
 		if err != nil {
@@ -624,7 +509,6 @@ e.g.
     enabled = ["list", "of", "plugin", "names", "to", "enable"]
     dir = "the directory to load non-preloaded plugins from; defaults to "
     [plugins.streaming] # a mapping of plugin-specific streaming service parameters, mapped to their plugin name
-        global_wait_limit = 120 # Prevent long-running listners from blocking listener WaitGroup when `halt_app_on_delivery_error = true` (seconds)
         [plugins.streaming.file] # the specific parameters for the file streaming service plugin
             keys = ["list", "of", "store", "keys", "we", "want", "to", "expose", "for", "this", "streaming", "service"]
             write_dir = "path to the write directory"

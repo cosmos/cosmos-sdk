@@ -81,14 +81,20 @@ func (on OnlineNetwork) ConstructionMetadata(ctx context.Context, request *types
 		if !ok {
 			return nil, errors.ToRosetta(errors.WrapError(errors.ErrBadArgument, "invalid gas_price"))
 		}
+		if gasPrice == "" { // gas_price is unset. skip fee suggestion
+			return response, nil
+		}
 		price, err := sdk.ParseDecCoin(gasPrice)
 		if err != nil {
 			return nil, errors.ToRosetta(err)
 		}
 
 		gasLimit, ok := metadata["gas_limit"].(float64)
-		if !ok || gasLimit <= 0 {
+		if !ok {
 			return nil, errors.ToRosetta(errors.WrapError(errors.ErrBadArgument, "invalid gas_limit"))
+		}
+		if gasLimit == 0 { // gas_limit is unset. skip fee suggestion
+			return response, nil
 		}
 		gas := sdk.NewIntFromUint64(uint64(gasLimit))
 

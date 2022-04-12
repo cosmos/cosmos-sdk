@@ -183,7 +183,7 @@ func FromFlags(flags *pflag.FlagSet) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	enableDefaultFeeSuggest, err := flags.GetBool(FlagEnableDefaultSuggestedFee)
+	enableDefaultSuggestedFee, err := flags.GetBool(FlagEnableDefaultSuggestedFee)
 	if err != nil {
 		return nil, err
 	}
@@ -212,7 +212,7 @@ func FromFlags(flags *pflag.FlagSet) (*Config, error) {
 		Addr:                      addr,
 		Retries:                   retries,
 		Offline:                   offline,
-		EnableDefaultSuggestedFee: enableDefaultFeeSuggest,
+		EnableDefaultSuggestedFee: enableDefaultSuggestedFee,
 		SuggestGas:                suggestGas,
 		DefaultSuggestDenom:       suggestDenom,
 		SuggestPrices:             prices,

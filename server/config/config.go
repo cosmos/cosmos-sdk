@@ -133,7 +133,8 @@ type RosettaConfig struct {
 	// Offline defines if the server must be run in offline mode
 	Offline bool `mapstructure:"offline"`
 
-	EnableDefaultFeeSuggest bool `mapstructure:"enable-default-fee-suggest"`
+	// EnableDefaultSuggestedFee defines if the server should suggest fee by default
+	EnableDefaultSuggestedFee bool `mapstructure:"enable-default-suggested-fee"`
 
 	// SuggestGas defines gas limit when calculate fee
 	SuggestGas int `mapstructure:"suggest-gas"`
@@ -246,15 +247,15 @@ func DefaultConfig() *Config {
 			Address: DefaultGRPCAddress,
 		},
 		Rosetta: RosettaConfig{
-			Enable:                  false,
-			Address:                 ":8080",
-			Blockchain:              "app",
-			Network:                 "network",
-			Retries:                 3,
-			Offline:                 false,
-			EnableDefaultFeeSuggest: false,
-			SuggestGas:              clientflags.DefaultGasLimit,
-			DefaultSuggestDenom:     "uatom",
+			Enable:                    false,
+			Address:                   ":8080",
+			Blockchain:                "app",
+			Network:                   "network",
+			Retries:                   3,
+			Offline:                   false,
+			EnableDefaultSuggestedFee: false,
+			SuggestGas:                clientflags.DefaultGasLimit,
+			DefaultSuggestDenom:       "uatom",
 		},
 		GRPCWeb: GRPCWebConfig{
 			Enable:  true,
@@ -313,15 +314,15 @@ func GetConfig(v *viper.Viper) Config {
 			EnableUnsafeCORS:   v.GetBool("api.enabled-unsafe-cors"),
 		},
 		Rosetta: RosettaConfig{
-			Enable:                  v.GetBool("rosetta.enable"),
-			Address:                 v.GetString("rosetta.address"),
-			Blockchain:              v.GetString("rosetta.blockchain"),
-			Network:                 v.GetString("rosetta.network"),
-			Retries:                 v.GetInt("rosetta.retries"),
-			Offline:                 v.GetBool("rosetta.offline"),
-			EnableDefaultFeeSuggest: v.GetBool("rosetta.enable-default-fee-suggest"),
-			SuggestGas:              v.GetInt("rosetta.suggest-gas"),
-			DefaultSuggestDenom:     v.GetString("rosetta.default-suggest-denom"),
+			Enable:                    v.GetBool("rosetta.enable"),
+			Address:                   v.GetString("rosetta.address"),
+			Blockchain:                v.GetString("rosetta.blockchain"),
+			Network:                   v.GetString("rosetta.network"),
+			Retries:                   v.GetInt("rosetta.retries"),
+			Offline:                   v.GetBool("rosetta.offline"),
+			EnableDefaultSuggestedFee: v.GetBool("rosetta.enable-default-fee-suggest"),
+			SuggestGas:                v.GetInt("rosetta.suggest-gas"),
+			DefaultSuggestDenom:       v.GetString("rosetta.default-suggest-denom"),
 		},
 		GRPC: GRPCConfig{
 			Enable:  v.GetBool("grpc.enable"),

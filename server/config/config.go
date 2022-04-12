@@ -320,7 +320,7 @@ func GetConfig(v *viper.Viper) Config {
 			Network:                   v.GetString("rosetta.network"),
 			Retries:                   v.GetInt("rosetta.retries"),
 			Offline:                   v.GetBool("rosetta.offline"),
-			EnableDefaultSuggestedFee: v.GetBool("rosetta.enable-default-fee-suggest"),
+			EnableDefaultSuggestedFee: v.GetBool("rosetta.enable-default-suggested-fee"),
 			SuggestGas:                v.GetInt("rosetta.suggest-gas"),
 			DefaultSuggestDenom:       v.GetString("rosetta.default-suggest-denom"),
 		},

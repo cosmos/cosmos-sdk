@@ -7,10 +7,11 @@ import (
 	"strconv"
 	"strings"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ConstructionCombine Combine creates a network-specific transaction from an unsigned transaction
@@ -71,11 +72,20 @@ func (on OnlineNetwork) ConstructionMetadata(ctx context.Context, request *types
 		return nil, errors.ToRosetta(err)
 	}
 
-	price, err := sdk.ParseDecCoin(metadata["gas_price"].(string))
+	gasPrice, ok := metadata["gas_price"].(string)
+	if !ok {
+		return nil, errors.ToRosetta(errors.WrapError(errors.ErrBadArgument, "invalid gas_price"))
+	}
+	price, err := sdk.ParseDecCoin(gasPrice)
 	if err != nil {
 		return nil, errors.ToRosetta(err)
 	}
-	gas := sdk.NewIntFromUint64(uint64(metadata["gas_limit"].(float64)))
+
+	gasLimit, ok := metadata["gas_limit"].(float64)
+	if !ok {
+		return nil, errors.ToRosetta(errors.WrapError(errors.ErrBadArgument, "invalid gas_limit"))
+	}
+	gas := sdk.NewIntFromUint64(uint64(gasLimit))
 
 	suggestedFee := types.Amount{
 		Value: strconv.FormatInt(price.Amount.MulInt64(gas.Int64()).Ceil().TruncateInt64(), 10),
@@ -83,7 +93,6 @@ func (on OnlineNetwork) ConstructionMetadata(ctx context.Context, request *types
 			Symbol:   price.Denom,
 			Decimals: 0,
 		}),
-		/*metadata*/
 	}
 
 	return &types.ConstructionMetadataResponse{

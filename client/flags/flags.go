@@ -37,6 +37,8 @@ const (
 	SignModeLegacyAminoJSON = "amino-json"
 	// SignModeDirectAux is the value of the --sign-mode flag for SIGN_MODE_DIRECT_AUX
 	SignModeDirectAux = "direct-aux"
+	// SignModeEIP191 is the value of the --sign-mode flag for SIGN_MODE_EIP_191
+	SignModeEIP191 = "eip-191"
 )
 
 // List of CLI flags
@@ -110,8 +112,8 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
 	cmd.Flags().Float64(FlagGasAdjustment, DefaultGasAdjustment, "adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored ")
 	cmd.Flags().StringP(FlagBroadcastMode, "b", BroadcastSync, "Transaction broadcasting mode (sync|async|block)")
-	cmd.Flags().Bool(FlagDryRun, false, "ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it")
-	cmd.Flags().Bool(FlagGenerateOnly, false, "Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase is not accessible)")
+	cmd.Flags().Bool(FlagDryRun, false, "ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)")
+	cmd.Flags().Bool(FlagGenerateOnly, false, "Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)")
 	cmd.Flags().Bool(FlagOffline, false, "Offline mode (does not allow any online functionality)")
 	cmd.Flags().BoolP(FlagSkipConfirmation, "y", false, "Skip tx broadcasting prompt confirmation")
 	cmd.Flags().String(FlagKeyringBackend, DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test|memory)")

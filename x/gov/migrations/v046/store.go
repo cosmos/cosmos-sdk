@@ -5,14 +5,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v040 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v040"
+	v042 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v042"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 // migrateProposals migrates all legacy proposals into MsgExecLegacyContent
 // proposals.
 func migrateProposals(store sdk.KVStore, cdc codec.BinaryCodec) error {
-	propStore := prefix.NewStore(store, v040.ProposalsKeyPrefix)
+	propStore := prefix.NewStore(store, v042.ProposalsKeyPrefix)
 
 	iter := propStore.Iterator(nil, nil)
 	defer iter.Close()

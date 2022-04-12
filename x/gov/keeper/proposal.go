@@ -10,7 +10,7 @@ import (
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
-// SubmitProposal create new proposal given an array of messages
+// SubmitProposal creates a new proposal given an array of messages
 func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadata string) (v1.Proposal, error) {
 	err := keeper.assertMetadataLength(metadata)
 	if err != nil {
@@ -91,7 +91,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	return proposal, nil
 }
 
-// GetProposal get proposal from store by ProposalID.
+// GetProposal gets a proposal from store by ProposalID.
 // Panics if can't unmarshal the proposal.
 func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (v1.Proposal, bool) {
 	store := ctx.KVStore(keeper.storeKey)
@@ -109,7 +109,7 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (v1.Proposa
 	return proposal, true
 }
 
-// SetProposal set a proposal to store.
+// SetProposal sets a proposal to store.
 // Panics if can't marshal the proposal.
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal v1.Proposal) {
 	bz, err := keeper.MarshalProposal(proposal)

@@ -16,11 +16,12 @@ import (
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgCreateValidator = "op_weight_msg_create_validator"
-	OpWeightMsgEditValidator   = "op_weight_msg_edit_validator"
-	OpWeightMsgDelegate        = "op_weight_msg_delegate"
-	OpWeightMsgUndelegate      = "op_weight_msg_undelegate"
-	OpWeightMsgBeginRedelegate = "op_weight_msg_begin_redelegate"
+	OpWeightMsgCreateValidator           = "op_weight_msg_create_validator"
+	OpWeightMsgEditValidator             = "op_weight_msg_edit_validator"
+	OpWeightMsgDelegate                  = "op_weight_msg_delegate"
+	OpWeightMsgUndelegate                = "op_weight_msg_undelegate"
+	OpWeightMsgBeginRedelegate           = "op_weight_msg_begin_redelegate"
+	OpWeightMsgCancelUnbondingDelegation = "op_weight_msg_cancel_unbonding_delegation"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -29,11 +30,12 @@ func WeightedOperations(
 	bk types.BankKeeper, k keeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
-		weightMsgCreateValidator int
-		weightMsgEditValidator   int
-		weightMsgDelegate        int
-		weightMsgUndelegate      int
-		weightMsgBeginRedelegate int
+		weightMsgCreateValidator           int
+		weightMsgEditValidator             int
+		weightMsgDelegate                  int
+		weightMsgUndelegate                int
+		weightMsgBeginRedelegate           int
+		weightMsgCancelUnbondingDelegation int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreateValidator, &weightMsgCreateValidator, nil,
@@ -66,6 +68,12 @@ func WeightedOperations(
 		},
 	)
 
+	appParams.GetOrGenerate(cdc, OpWeightMsgCancelUnbondingDelegation, &weightMsgCancelUnbondingDelegation, nil,
+		func(_ *rand.Rand) {
+			weightMsgCancelUnbondingDelegation = simappparams.DefaultWeightMsgCancelUnbondingDelegation
+		},
+	)
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgCreateValidator,
@@ -86,6 +94,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgBeginRedelegate,
 			SimulateMsgBeginRedelegate(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgCancelUnbondingDelegation,
+			SimulateMsgCancelUnbondingDelegate(ak, bk, k),
 		),
 	}
 }
@@ -350,6 +362,77 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 
 		account := ak.GetAccount(ctx, delAddr)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+	}
+}
+
+// SimulateMsgCancelUnbondingDelegate generates a MsgCancelUnbondingDelegate with random values
+func SimulateMsgCancelUnbondingDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		if len(k.GetAllValidators(ctx)) == 0 {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDelegate, "number of validators equal zero"), nil, nil
+		}
+		// get random account
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+		// get random validator
+		validator, ok := keeper.RandomValidator(r, k, ctx)
+		if !ok {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "validator is not ok"), nil, nil
+		}
+
+		if validator.IsJailed() || validator.InvalidExRate() {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "validator is jailed"), nil, nil
+		}
+
+		valAddr := validator.GetOperator()
+		unbondingDelegation, found := k.GetUnbondingDelegation(ctx, simAccount.Address, valAddr)
+		if !found {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "account does have any unbonding delegation"), nil, nil
+		}
+
+		// get random unbonding delegation entry at block height
+		unbondingDelegationEntry := unbondingDelegation.Entries[r.Intn(len(unbondingDelegation.Entries))]
+
+		if unbondingDelegationEntry.CompletionTime.Before(ctx.BlockTime()) {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "unbonding delegation is already processed"), nil, nil
+		}
+
+		if !unbondingDelegationEntry.Balance.IsPositive() {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "delegator receiving balance is negative"), nil, nil
+		}
+
+		cancelBondAmt, err := simtypes.RandPositiveInt(r, unbondingDelegationEntry.Balance)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "invalid cancelBondAmt amount"), nil, err
+		}
+
+		if cancelBondAmt.IsZero() {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "cancelBondAmt amount is zero"), nil, nil
+		}
+
+		msg := types.NewMsgCancelUnbondingDelegation(
+			simAccount.Address, valAddr, unbondingDelegationEntry.CreationHeight, sdk.NewCoin(k.BondDenom(ctx), cancelBondAmt),
+		)
+
+		spendable := bk.SpendableCoins(ctx, simAccount.Address)
 
 		txCtx := simulation.OperationInput{
 			R:               r,

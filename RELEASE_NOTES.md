@@ -1,4 +1,4 @@
-# Cosmos SDK v0.44.7 Release Notes
+# Cosmos SDK v0.44.8 Release Notes
 
 This release introduces only a Tendermint dependency update to v0.34.19 which
 itself includes two bug fixes related to consensus. See the full changelog from

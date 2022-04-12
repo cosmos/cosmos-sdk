@@ -36,7 +36,6 @@ import (
 // interface assertion
 var _ crgtypes.Client = (*Client)(nil)
 
-const tmWebsocketPath = "/websocket"
 const defaultNodeTimeout = time.Minute
 
 // Client implements a single network client to interact with cosmos based chains
@@ -104,7 +103,7 @@ func (c *Client) Bootstrap() error {
 		return err
 	}
 
-	tmRPC, err := http.New(c.config.TendermintRPC, tmWebsocketPath)
+	tmRPC, err := http.New(c.config.TendermintRPC)
 	if err != nil {
 		return err
 	}

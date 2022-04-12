@@ -2,10 +2,10 @@
 
 ## Changelog
 
-- 2019-11-06: Initial Draft
-- 2020-10-12: Updated Draft
-- 2020-11-13: Accepted
-- 2020-05-06: proto API updates, use `sdk.Msg` instead of `sdk.ServiceMsg` (the latter concept was removed from Cosmos SDK)
+* 2019-11-06: Initial Draft
+* 2020-10-12: Updated Draft
+* 2020-11-13: Accepted
+* 2020-05-06: proto API updates, use `sdk.Msg` instead of `sdk.ServiceMsg` (the latter concept was removed from Cosmos SDK)
 
 ## Status
 
@@ -20,9 +20,9 @@ on behalf of that account to other accounts.
 
 The concrete use cases which motivated this module include:
 
-- the desire to delegate the ability to vote on proposals to other accounts besides the account which one has
+* the desire to delegate the ability to vote on proposals to other accounts besides the account which one has
 delegated stake
-- "sub-keys" functionality, as originally proposed in [\#4480](https://github.com/cosmos/cosmos-sdk/issues/4480) which
+* "sub-keys" functionality, as originally proposed in [\#4480](https://github.com/cosmos/cosmos-sdk/issues/4480) which
 is a term used to describe the functionality provided by this module together with
 the `fee_grant` module from [ADR 029](./adr-029-fee-grant-module.md) and the [group module](https://github.com/regen-network/cosmos-modules/tree/master/incubator/group).
 
@@ -116,6 +116,15 @@ func (a SendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRes
 A different type of capability for `MsgSend` could be implemented
 using the `Authorization` interface with no need to change the underlying
 `bank` module.
+
+##### Small notes on `AcceptResponse`
+
+- The `AcceptResponse.Accept` field will be set to `true` if the authorization is accepted.
+However, if it is rejected, the function `Accept` will raise an error (without setting `AcceptResponse.Accept` to `false`).
+
+- The `AcceptResponse.Updated` field will be set to a non-nil value only if there is a real change to the authorization.
+If authorization remains the same (as is, for instance, always the case for a [`GenericAuthorization`](#genericauthorization)),
+the field will be `nil`.
 
 ### `Msg` Service
 
@@ -232,9 +241,9 @@ message GenericAuthorization {
 
 ### Positive
 
-- Users will be able to authorize arbitrary actions on behalf of their accounts to other
+* Users will be able to authorize arbitrary actions on behalf of their accounts to other
 users, improving key management for many use cases
-- The solution is more generic than previously considered approaches and the
+* The solution is more generic than previously considered approaches and the
 `Authorization` interface approach can be extended to cover other use cases by
 SDK users
 
@@ -244,6 +253,6 @@ SDK users
 
 ## References
 
-- Initial Hackatom implementation: https://github.com/cosmos-gaians/cosmos-sdk/tree/hackatom/x/delegation
-- Post-Hackatom spec: https://gist.github.com/aaronc/b60628017352df5983791cad30babe56#delegation-module
-- B-Harvest subkeys spec: https://github.com/cosmos/cosmos-sdk/issues/4480
+* Initial Hackatom implementation: https://github.com/cosmos-gaians/cosmos-sdk/tree/hackatom/x/delegation
+* Post-Hackatom spec: https://gist.github.com/aaronc/b60628017352df5983791cad30babe56#delegation-module
+* B-Harvest subkeys spec: https://github.com/cosmos/cosmos-sdk/issues/4480

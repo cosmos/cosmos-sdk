@@ -18,7 +18,7 @@ import (
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -35,13 +35,13 @@ func TestImportExportQueues(t *testing.T) {
 
 	ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 	// Create two proposals, put the second into the voting period
-	proposal1, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)})
+	proposal1, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "")
 	require.NoError(t, err)
-	proposalID1 := proposal1.ProposalId
+	proposalID1 := proposal1.Id
 
-	proposal2, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)})
+	proposal2, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "")
 	require.NoError(t, err)
-	proposalID2 := proposal2.ProposalId
+	proposalID2 := proposal2.Id
 
 	votingStarted, err := app.GovKeeper.AddDeposit(ctx, proposalID2, addrs[0], app.GovKeeper.GetDepositParams(ctx).MinDeposit)
 	require.NoError(t, err)
@@ -51,8 +51,8 @@ func TestImportExportQueues(t *testing.T) {
 	require.True(t, ok)
 	proposal2, ok = app.GovKeeper.GetProposal(ctx, proposalID2)
 	require.True(t, ok)
-	require.True(t, proposal1.Status == v1beta2.StatusDepositPeriod)
-	require.True(t, proposal2.Status == v1beta2.StatusVotingPeriod)
+	require.True(t, proposal1.Status == v1.StatusDepositPeriod)
+	require.True(t, proposal2.Status == v1.StatusVotingPeriod)
 
 	authGenState := auth.ExportGenesis(ctx, app.AccountKeeper)
 	bankGenState := app.BankKeeper.ExportGenesis(ctx)
@@ -101,8 +101,8 @@ func TestImportExportQueues(t *testing.T) {
 	require.True(t, ok)
 	proposal2, ok = app2.GovKeeper.GetProposal(ctx2, proposalID2)
 	require.True(t, ok)
-	require.True(t, proposal1.Status == v1beta2.StatusDepositPeriod)
-	require.True(t, proposal2.Status == v1beta2.StatusVotingPeriod)
+	require.True(t, proposal1.Status == v1.StatusDepositPeriod)
+	require.True(t, proposal2.Status == v1.StatusVotingPeriod)
 
 	macc := app2.GovKeeper.GetGovernanceAccount(ctx2)
 	require.Equal(t, sdk.Coins(app2.GovKeeper.GetDepositParams(ctx2).MinDeposit), app2.BankKeeper.GetAllBalances(ctx2, macc.GetAddress()))
@@ -115,15 +115,15 @@ func TestImportExportQueues(t *testing.T) {
 
 	proposal2, ok = app2.GovKeeper.GetProposal(ctx2, proposalID2)
 	require.True(t, ok)
-	require.True(t, proposal2.Status == v1beta2.StatusRejected)
+	require.True(t, proposal2.Status == v1.StatusRejected)
 }
 
 func TestImportExportQueues_ErrorUnconsistentState(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	require.Panics(t, func() {
-		gov.InitGenesis(ctx, app.AccountKeeper, app.BankKeeper, app.GovKeeper, &v1beta2.GenesisState{
-			Deposits: v1beta2.Deposits{
+		gov.InitGenesis(ctx, app.AccountKeeper, app.BankKeeper, app.GovKeeper, &v1.GenesisState{
+			Deposits: v1.Deposits{
 				{
 					ProposalId: 1234,
 					Depositor:  "me",

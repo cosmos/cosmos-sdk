@@ -971,6 +971,47 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
+func (s *IntegrationTestSuite) TestSignWithMultisig() {
+	val1 := s.network.Validators[0]
+
+	// Generate a account for signing.
+	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
+	s.Require().NoError(err)
+
+	addr1, err := account1.GetAddress()
+	s.Require().NoError(err)
+
+	// Create an address that is not in the keyring, will be used to simulate `--multisig`
+	multisig := "cosmos1hd6fsrvnz6qkp87s3u86ludegq97agxsdkwzyh"
+	multisigAddr, err := sdk.AccAddressFromBech32(multisig)
+	s.Require().NoError(err)
+
+	// Generate a transaction for testing --multisig with an address not in the keyring.
+	multisigTx, err := bankcli.MsgSendExec(
+		val1.ClientCtx,
+		val1.Address,
+		val1.Address,
+		sdk.NewCoins(
+			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+	)
+	s.Require().NoError(err)
+
+	// Save multi tx to file
+	multiGeneratedTx2File := testutil.WriteToNewTempFile(s.T(), multisigTx.String())
+
+	// Sign using multisig. We're signing a tx on behalf of the multisig address,
+	// even though the tx signer is NOT the multisig address. This is fine though,
+	// as the main point of this test is to test the `--multisig` flag with an address
+	// that is not in the keyring.
+	_, err = TxSignExec(val1.ClientCtx, addr1, multiGeneratedTx2File.Name(), "--multisig", multisigAddr.String())
+	s.Require().Contains(err.Error(), "tx intended signer does not match the given signer")
+}
+
 func (s *IntegrationTestSuite) TestCLIMultisign() {
 	val1 := s.network.Validators[0]
 
@@ -1503,7 +1544,7 @@ func (s *IntegrationTestSuite) TestAuxSigner() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			_, err := govtestutil.MsgSubmitProposal(
+			_, err := govtestutil.MsgSubmitLegacyProposal(
 				val.ClientCtx,
 				val.Address.String(),
 				"test",
@@ -1563,7 +1604,6 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
-				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
 				fmt.Sprintf("--%s=true", flags.FlagAux),
 			},
 			expectErrAux: true,
@@ -1600,7 +1640,6 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
-				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
 				fmt.Sprintf("--%s=true", flags.FlagAux),
 			},
 			feePayerArgs: []string{
@@ -1619,7 +1658,6 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
-				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
 				fmt.Sprintf("--%s=true", flags.FlagAux),
 			},
 			feePayerArgs: []string{
@@ -1637,7 +1675,6 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdk.NewInt(0)},
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
-				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
 				fmt.Sprintf("--%s=true", flags.FlagAux),
 			},
 			feePayerArgs: []string{
@@ -1656,7 +1693,6 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
-				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
 				fmt.Sprintf("--%s=true", flags.FlagAux),
 			},
 			feePayerArgs: []string{
@@ -1674,7 +1710,6 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
-				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
 				fmt.Sprintf("--%s=true", flags.FlagAux),
 			},
 			feePayerArgs: []string{
@@ -1685,23 +1720,24 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			},
 		},
 		{
-			name:     "wrong tipper address: error",
+			name:     "chain-id mismatch: error",
 			tipper:   tipper,
 			feePayer: feePayer,
 			tip:      tip,
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
-				fmt.Sprintf("--%s=%s", flags.FlagTipper, "foobar"),
 				fmt.Sprintf("--%s=true", flags.FlagAux),
 			},
-			expectErrAux: true,
+			expectErrAux: false,
 			feePayerArgs: []string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagChainID, "foobar"),
 			},
+			expectErrBroadCast: true,
 		},
 		{
 			name:     "wrong denom in tip: error",
@@ -1711,7 +1747,6 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagTip, "1000wrongDenom"),
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
-				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
 				fmt.Sprintf("--%s=true", flags.FlagAux),
 			},
 			feePayerArgs: []string{
@@ -1731,7 +1766,6 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
-				fmt.Sprintf("--%s=%s", flags.FlagTipper, tipper.String()),
 				fmt.Sprintf("--%s=true", flags.FlagAux),
 			},
 			feePayerArgs: []string{
@@ -1747,7 +1781,7 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			res, err := govtestutil.MsgSubmitProposal(
+			res, err := govtestutil.MsgSubmitLegacyProposal(
 				val.ClientCtx,
 				tipper.String(),
 				"test",
@@ -1769,15 +1803,20 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 					tc.feePayerArgs...,
 				)
 
-				var txRes sdk.TxResponse
-				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
-
 				if tc.expectErrBroadCast {
 					require.Error(err)
 				} else if tc.errMsg != "" {
+					require.NoError(err)
+
+					var txRes sdk.TxResponse
+					s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
+
 					require.Contains(txRes.RawLog, tc.errMsg)
 				} else {
 					require.NoError(err)
+
+					var txRes sdk.TxResponse
+					s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
 
 					s.Require().Equal(uint32(0), txRes.Code)
 					s.Require().NotNil(int64(0), txRes.Height)

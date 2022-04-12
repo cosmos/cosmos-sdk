@@ -3,7 +3,10 @@ package ormtable
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/orm/model/kv"
+	"github.com/cosmos/cosmos-sdk/orm/types/kv"
+
+	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
+
 	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
@@ -17,18 +20,27 @@ import (
 
 type uniqueKeyIndex struct {
 	*ormkv.UniqueKeyCodec
-	fields         fieldNames
+	fields         fieldnames.FieldNames
 	primaryKey     *primaryKeyIndex
 	getReadBackend func(context.Context) (ReadBackend, error)
 }
 
-func (u uniqueKeyIndex) Iterator(ctx context.Context, options ...ormlist.Option) (Iterator, error) {
+func (u uniqueKeyIndex) List(ctx context.Context, prefixKey []interface{}, options ...ormlist.Option) (Iterator, error) {
 	backend, err := u.getReadBackend(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return iterator(backend, backend.IndexStoreReader(), u, u.GetKeyCodec(), options)
+	return prefixIterator(backend.IndexStoreReader(), backend, u, u.GetKeyCodec(), prefixKey, options)
+}
+
+func (u uniqueKeyIndex) ListRange(ctx context.Context, from, to []interface{}, options ...ormlist.Option) (Iterator, error) {
+	backend, err := u.getReadBackend(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return rangeIterator(backend.IndexStoreReader(), backend, u, u.GetKeyCodec(), from, to, options)
 }
 
 func (u uniqueKeyIndex) doNotImplement() {}
@@ -76,33 +88,22 @@ func (u uniqueKeyIndex) Get(ctx context.Context, message proto.Message, keyValue
 	return u.primaryKey.get(backend, message, pk)
 }
 
-func (u uniqueKeyIndex) DeleteByKey(ctx context.Context, keyValues ...interface{}) error {
-	backend, err := u.getReadBackend(ctx)
+func (u uniqueKeyIndex) DeleteBy(ctx context.Context, keyValues ...interface{}) error {
+	it, err := u.List(ctx, keyValues)
 	if err != nil {
 		return err
 	}
 
-	key, err := u.GetKeyCodec().EncodeKey(encodeutil.ValuesOf(keyValues...))
+	return u.primaryKey.deleteByIterator(ctx, it)
+}
+
+func (u uniqueKeyIndex) DeleteRange(ctx context.Context, from, to []interface{}) error {
+	it, err := u.ListRange(ctx, from, to)
 	if err != nil {
 		return err
 	}
 
-	value, err := backend.IndexStoreReader().Get(key)
-	if err != nil {
-		return err
-	}
-
-	// for unique keys, value can be empty and the entry still exists
-	if value == nil {
-		return nil
-	}
-
-	_, pk, err := u.DecodeIndexKey(key, value)
-	if err != nil {
-		return err
-	}
-
-	return u.primaryKey.doDeleteByKey(ctx, pk)
+	return u.primaryKey.deleteByIterator(ctx, it)
 }
 
 func (u uniqueKeyIndex) onInsert(store kv.Store, message protoreflect.Message) error {
@@ -117,7 +118,7 @@ func (u uniqueKeyIndex) onInsert(store kv.Store, message protoreflect.Message) e
 	}
 
 	if has {
-		return ormerrors.UniqueKeyViolation
+		return ormerrors.UniqueKeyViolation.Wrapf("%q", u.fields)
 	}
 
 	return store.Set(k, v)
@@ -142,7 +143,7 @@ func (u uniqueKeyIndex) onUpdate(store kv.Store, new, existing protoreflect.Mess
 	}
 
 	if has {
-		return ormerrors.UniqueKeyViolation
+		return ormerrors.UniqueKeyViolation.Wrapf("%q", u.fields)
 	}
 
 	existingKey, err := keyCodec.EncodeKey(existingValues)
@@ -185,8 +186,8 @@ func (u uniqueKeyIndex) readValueFromIndexKey(store ReadBackend, primaryKey []pr
 	return nil
 }
 
-func (p uniqueKeyIndex) Fields() string {
-	return p.fields.String()
+func (u uniqueKeyIndex) Fields() string {
+	return u.fields.String()
 }
 
 var _ indexer = &uniqueKeyIndex{}

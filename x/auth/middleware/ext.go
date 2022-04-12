@@ -14,27 +14,44 @@ type HasExtensionOptionsTx interface {
 	GetNonCriticalExtensionOptions() []*codectypes.Any
 }
 
-type rejectExtensionOptionsTxHandler struct {
-	next tx.Handler
+// ExtensionOptionChecker is a function that returns true if the extension option is accepted.
+type ExtensionOptionChecker func(*codectypes.Any) bool
+
+// rejectExtensionOption is the default extension check that reject all tx
+// extensions.
+func rejectExtensionOption(*codectypes.Any) bool {
+	return false
 }
 
-// RejectExtensionOptionsMiddleware creates a new rejectExtensionOptionsMiddleware.
-// rejectExtensionOptionsMiddleware is a middleware that rejects all extension
-// options which can optionally be included in protobuf transactions. Users that
-// need extension options should create a custom middleware chain that handles
-// needed extension options properly and rejects unknown ones.
-func RejectExtensionOptionsMiddleware(txh tx.Handler) tx.Handler {
-	return rejectExtensionOptionsTxHandler{
-		next: txh,
+type rejectExtensionOptionsTxHandler struct {
+	next    tx.Handler
+	checker ExtensionOptionChecker
+}
+
+// NewExtensionOptionsMiddleware creates a new middleware that rejects all extension
+// options which can optionally be included in protobuf transactions that don't pass the checker.
+// Users that need extension options should pass a custom checker that returns true for the
+// needed extension options.
+func NewExtensionOptionsMiddleware(checker ExtensionOptionChecker) tx.Middleware {
+	if checker == nil {
+		checker = rejectExtensionOption
+	}
+	return func(txh tx.Handler) tx.Handler {
+		return rejectExtensionOptionsTxHandler{
+			next:    txh,
+			checker: checker,
+		}
 	}
 }
 
 var _ tx.Handler = rejectExtensionOptionsTxHandler{}
 
-func checkExtOpts(tx sdk.Tx) error {
+func checkExtOpts(tx sdk.Tx, checker ExtensionOptionChecker) error {
 	if hasExtOptsTx, ok := tx.(HasExtensionOptionsTx); ok {
-		if len(hasExtOptsTx.GetExtensionOptions()) != 0 {
-			return sdkerrors.ErrUnknownExtensionOptions
+		for _, opt := range hasExtOptsTx.GetExtensionOptions() {
+			if !checker(opt) {
+				return sdkerrors.ErrUnknownExtensionOptions
+			}
 		}
 	}
 
@@ -43,7 +60,7 @@ func checkExtOpts(tx sdk.Tx) error {
 
 // CheckTx implements tx.Handler.CheckTx.
 func (txh rejectExtensionOptionsTxHandler) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
-	if err := checkExtOpts(req.Tx); err != nil {
+	if err := checkExtOpts(req.Tx, txh.checker); err != nil {
 		return tx.Response{}, tx.ResponseCheckTx{}, err
 	}
 
@@ -52,7 +69,7 @@ func (txh rejectExtensionOptionsTxHandler) CheckTx(ctx context.Context, req tx.R
 
 // DeliverTx implements tx.Handler.DeliverTx.
 func (txh rejectExtensionOptionsTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	if err := checkExtOpts(req.Tx); err != nil {
+	if err := checkExtOpts(req.Tx, txh.checker); err != nil {
 		return tx.Response{}, err
 	}
 
@@ -61,7 +78,7 @@ func (txh rejectExtensionOptionsTxHandler) DeliverTx(ctx context.Context, req tx
 
 // SimulateTx implements tx.Handler.SimulateTx method.
 func (txh rejectExtensionOptionsTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	if err := checkExtOpts(req.Tx); err != nil {
+	if err := checkExtOpts(req.Tx, txh.checker); err != nil {
 		return tx.Response{}, err
 	}
 

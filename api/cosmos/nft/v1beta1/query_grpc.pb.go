@@ -28,8 +28,9 @@ type QueryClient interface {
 	Owner(ctx context.Context, in *QueryOwnerRequest, opts ...grpc.CallOption) (*QueryOwnerResponse, error)
 	// Supply queries the number of NFTs from the given class, same as totalSupply of ERC721.
 	Supply(ctx context.Context, in *QuerySupplyRequest, opts ...grpc.CallOption) (*QuerySupplyResponse, error)
-	// NFTsOfClass queries all NFTs of a given class or optional owner, similar to tokenByIndex in ERC721Enumerable
-	NFTsOfClass(ctx context.Context, in *QueryNFTsOfClassRequest, opts ...grpc.CallOption) (*QueryNFTsOfClassResponse, error)
+	// NFTs queries all NFTs of a given class or owner,choose at least one of the two, similar to tokenByIndex in
+	// ERC721Enumerable
+	NFTs(ctx context.Context, in *QueryNFTsRequest, opts ...grpc.CallOption) (*QueryNFTsResponse, error)
 	// NFT queries an NFT based on its class and id.
 	NFT(ctx context.Context, in *QueryNFTRequest, opts ...grpc.CallOption) (*QueryNFTResponse, error)
 	// Class queries an NFT class based on its id
@@ -73,9 +74,9 @@ func (c *queryClient) Supply(ctx context.Context, in *QuerySupplyRequest, opts .
 	return out, nil
 }
 
-func (c *queryClient) NFTsOfClass(ctx context.Context, in *QueryNFTsOfClassRequest, opts ...grpc.CallOption) (*QueryNFTsOfClassResponse, error) {
-	out := new(QueryNFTsOfClassResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.nft.v1beta1.Query/NFTsOfClass", in, out, opts...)
+func (c *queryClient) NFTs(ctx context.Context, in *QueryNFTsRequest, opts ...grpc.CallOption) (*QueryNFTsResponse, error) {
+	out := new(QueryNFTsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.nft.v1beta1.Query/NFTs", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -119,8 +120,9 @@ type QueryServer interface {
 	Owner(context.Context, *QueryOwnerRequest) (*QueryOwnerResponse, error)
 	// Supply queries the number of NFTs from the given class, same as totalSupply of ERC721.
 	Supply(context.Context, *QuerySupplyRequest) (*QuerySupplyResponse, error)
-	// NFTsOfClass queries all NFTs of a given class or optional owner, similar to tokenByIndex in ERC721Enumerable
-	NFTsOfClass(context.Context, *QueryNFTsOfClassRequest) (*QueryNFTsOfClassResponse, error)
+	// NFTs queries all NFTs of a given class or owner,choose at least one of the two, similar to tokenByIndex in
+	// ERC721Enumerable
+	NFTs(context.Context, *QueryNFTsRequest) (*QueryNFTsResponse, error)
 	// NFT queries an NFT based on its class and id.
 	NFT(context.Context, *QueryNFTRequest) (*QueryNFTResponse, error)
 	// Class queries an NFT class based on its id
@@ -143,8 +145,8 @@ func (UnimplementedQueryServer) Owner(context.Context, *QueryOwnerRequest) (*Que
 func (UnimplementedQueryServer) Supply(context.Context, *QuerySupplyRequest) (*QuerySupplyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Supply not implemented")
 }
-func (UnimplementedQueryServer) NFTsOfClass(context.Context, *QueryNFTsOfClassRequest) (*QueryNFTsOfClassResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method NFTsOfClass not implemented")
+func (UnimplementedQueryServer) NFTs(context.Context, *QueryNFTsRequest) (*QueryNFTsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NFTs not implemented")
 }
 func (UnimplementedQueryServer) NFT(context.Context, *QueryNFTRequest) (*QueryNFTResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NFT not implemented")
@@ -222,20 +224,20 @@ func _Query_Supply_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_NFTsOfClass_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryNFTsOfClassRequest)
+func _Query_NFTs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryNFTsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).NFTsOfClass(ctx, in)
+		return srv.(QueryServer).NFTs(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.nft.v1beta1.Query/NFTsOfClass",
+		FullMethod: "/cosmos.nft.v1beta1.Query/NFTs",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).NFTsOfClass(ctx, req.(*QueryNFTsOfClassRequest))
+		return srv.(QueryServer).NFTs(ctx, req.(*QueryNFTsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -314,8 +316,8 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Query_Supply_Handler,
 		},
 		{
-			MethodName: "NFTsOfClass",
-			Handler:    _Query_NFTsOfClass_Handler,
+			MethodName: "NFTs",
+			Handler:    _Query_NFTs_Handler,
 		},
 		{
 			MethodName: "NFT",

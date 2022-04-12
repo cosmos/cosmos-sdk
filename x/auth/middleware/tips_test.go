@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
@@ -33,7 +33,7 @@ func (s *MWTestSuite) setupAcctsForTips(ctx sdk.Context) (sdk.Context, []testAcc
 	s.Require().NoError(err)
 
 	// Create dummy proposal for tipper to vote on.
-	prop, err := govtypes.NewProposal([]sdk.Msg{banktypes.NewMsgSend(accts[0].acc.GetAddress(), accts[0].acc.GetAddress(), initialRegens)}, 1, time.Now(), time.Now().Add(time.Hour))
+	prop, err := govtypes.NewProposal([]sdk.Msg{banktypes.NewMsgSend(accts[0].acc.GetAddress(), accts[0].acc.GetAddress(), initialRegens)}, 1, "", time.Now(), time.Now().Add(time.Hour))
 	s.Require().NoError(err)
 	s.app.GovKeeper.SetProposal(ctx, prop)
 	s.app.GovKeeper.ActivateVotingPeriod(ctx, prop)
@@ -93,7 +93,7 @@ func (s *MWTestSuite) TestTips() {
 			ctx, accts := s.setupAcctsForTips(ctx)
 			tipper, feePayer := accts[0], accts[1]
 
-			msg = govtypes.NewMsgVote(tipper.acc.GetAddress(), 1, govtypes.OptionYes)
+			msg = govtypes.NewMsgVote(tipper.acc.GetAddress(), 1, govtypes.OptionYes, "")
 
 			auxSignerData := s.mkTipperAuxSignerData(tipper.priv, msg, tc.tip, signing.SignMode_SIGN_MODE_DIRECT_AUX, tipper.accNum, 0, ctx.ChainID())
 			feePayerTxBuilder := s.mkFeePayerTxBuilder(s.clientCtx, auxSignerData, feePayer.priv, signing.SignMode_SIGN_MODE_DIRECT, tx.Fee{Amount: tc.fee, GasLimit: tc.gasLimit}, feePayer.accNum, 0, ctx.ChainID())

@@ -15,38 +15,35 @@ import (
 )
 
 func TestSingleton(t *testing.T) {
-	val := &testpb.ExampleSingleton{}
-	singleton, err := ormtable.Build(ormtable.Options{
-		MessageType: val.ProtoReflect().Type(),
+	table, err := ormtable.Build(ormtable.Options{
+		MessageType: (&testpb.ExampleSingleton{}).ProtoReflect().Type(),
 	})
 	assert.NilError(t, err)
-	store := ormtable.WrapContextDefault(testkv.NewSplitMemBackend())
+	ctx := ormtable.WrapContextDefault(testkv.NewSplitMemBackend())
 
-	found, err := singleton.Has(store, val)
+	store, err := testpb.NewExampleSingletonTable(table)
 	assert.NilError(t, err)
-	assert.Assert(t, !found)
-	assert.NilError(t, singleton.Save(store, val))
-	found, err = singleton.Has(store, val)
+
+	val, err := store.Get(ctx)
 	assert.NilError(t, err)
-	assert.Assert(t, found)
+	assert.Assert(t, val != nil) // singletons are always set
+	assert.NilError(t, store.Save(ctx, &testpb.ExampleSingleton{}))
 
 	val.Foo = "abc"
 	val.Bar = 3
-	assert.NilError(t, singleton.Save(store, val))
+	assert.NilError(t, store.Save(ctx, val))
 
-	var val2 testpb.ExampleSingleton
-	found, err = singleton.Get(store, &val2)
+	val2, err := store.Get(ctx)
 	assert.NilError(t, err)
-	assert.DeepEqual(t, val, &val2, protocmp.Transform())
+	assert.DeepEqual(t, val, val2, protocmp.Transform())
 
 	buf := &bytes.Buffer{}
-	assert.NilError(t, singleton.ExportJSON(store, buf))
-	assert.NilError(t, singleton.ValidateJSON(bytes.NewReader(buf.Bytes())))
+	assert.NilError(t, table.ExportJSON(ctx, buf))
+	assert.NilError(t, table.ValidateJSON(bytes.NewReader(buf.Bytes())))
 	store2 := ormtable.WrapContextDefault(testkv.NewSplitMemBackend())
-	assert.NilError(t, singleton.ImportJSON(store2, bytes.NewReader(buf.Bytes())))
+	assert.NilError(t, table.ImportJSON(store2, bytes.NewReader(buf.Bytes())))
 
-	var val3 testpb.ExampleSingleton
-	found, err = singleton.Get(store, &val3)
+	val3, err := store.Get(ctx)
 	assert.NilError(t, err)
-	assert.DeepEqual(t, val, &val3, protocmp.Transform())
+	assert.DeepEqual(t, val, val3, protocmp.Transform())
 }

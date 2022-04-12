@@ -24,9 +24,10 @@ service Query {
     option (google.api.http).get = "/cosmos/nft/v1beta1/supply/{class_id}";
   }
 
-  // NFTsOfClass queries all NFTs of a given class or optional owner, similar to tokenByIndex in ERC721Enumerable
-  rpc NFTsOfClass(QueryNFTsOfClassRequest) returns (QueryNFTsOfClassResponse) {
-    option (google.api.http).get = "/cosmos/nft/v1beta1/nfts/{class_id}";
+  // NFTs queries all NFTs of a given class or owner,choose at least one of the two, similar to tokenByIndex in
+  // ERC721Enumerable
+  rpc NFTs(QueryNFTsRequest) returns (QueryNFTsResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/nfts";
   }
 
   // NFT queries an NFT based on its class and id.
@@ -77,15 +78,15 @@ message QuerySupplyResponse {
   uint64 amount = 1;
 }
 
-// QueryNFTsOfClassRequest is the request type for the Query/NFTsOfClass RPC method
-message QueryNFTsOfClassRequest {
+// QueryNFTstRequest is the request type for the Query/NFTs RPC method
+message QueryNFTsRequest {
   string                                class_id   = 1;
   string                                owner      = 2;
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
 
-// QueryNFTsOfClassResponse is the response type for the Query/NFTsOfClass and Query/NFTsOfClassByOwner RPC methods
-message QueryNFTsOfClassResponse {
+// QueryNFTsResponse is the response type for the Query/NFTs RPC methods
+message QueryNFTsResponse {
   repeated cosmos.nft.v1beta1.NFT        nfts       = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

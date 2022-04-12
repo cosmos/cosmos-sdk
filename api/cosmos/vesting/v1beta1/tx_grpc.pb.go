@@ -25,6 +25,9 @@ type MsgClient interface {
 	// CreateVestingAccount defines a method that enables creating a vesting
 	// account.
 	CreateVestingAccount(ctx context.Context, in *MsgCreateVestingAccount, opts ...grpc.CallOption) (*MsgCreateVestingAccountResponse, error)
+	// CreatePermanentLockedAccount defines a method that enables creating a permanent
+	// locked account.
+	CreatePermanentLockedAccount(ctx context.Context, in *MsgCreatePermanentLockedAccount, opts ...grpc.CallOption) (*MsgCreatePermanentLockedAccountResponse, error)
 	// CreatePeriodicVestingAccount defines a method that enables creating a
 	// periodic vesting account.
 	CreatePeriodicVestingAccount(ctx context.Context, in *MsgCreatePeriodicVestingAccount, opts ...grpc.CallOption) (*MsgCreatePeriodicVestingAccountResponse, error)
@@ -47,6 +50,15 @@ func (c *msgClient) CreateVestingAccount(ctx context.Context, in *MsgCreateVesti
 	return out, nil
 }
 
+func (c *msgClient) CreatePermanentLockedAccount(ctx context.Context, in *MsgCreatePermanentLockedAccount, opts ...grpc.CallOption) (*MsgCreatePermanentLockedAccountResponse, error) {
+	out := new(MsgCreatePermanentLockedAccountResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.vesting.v1beta1.Msg/CreatePermanentLockedAccount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) CreatePeriodicVestingAccount(ctx context.Context, in *MsgCreatePeriodicVestingAccount, opts ...grpc.CallOption) (*MsgCreatePeriodicVestingAccountResponse, error) {
 	out := new(MsgCreatePeriodicVestingAccountResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.vesting.v1beta1.Msg/CreatePeriodicVestingAccount", in, out, opts...)
@@ -63,6 +75,9 @@ type MsgServer interface {
 	// CreateVestingAccount defines a method that enables creating a vesting
 	// account.
 	CreateVestingAccount(context.Context, *MsgCreateVestingAccount) (*MsgCreateVestingAccountResponse, error)
+	// CreatePermanentLockedAccount defines a method that enables creating a permanent
+	// locked account.
+	CreatePermanentLockedAccount(context.Context, *MsgCreatePermanentLockedAccount) (*MsgCreatePermanentLockedAccountResponse, error)
 	// CreatePeriodicVestingAccount defines a method that enables creating a
 	// periodic vesting account.
 	CreatePeriodicVestingAccount(context.Context, *MsgCreatePeriodicVestingAccount) (*MsgCreatePeriodicVestingAccountResponse, error)
@@ -75,6 +90,9 @@ type UnimplementedMsgServer struct {
 
 func (UnimplementedMsgServer) CreateVestingAccount(context.Context, *MsgCreateVestingAccount) (*MsgCreateVestingAccountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateVestingAccount not implemented")
+}
+func (UnimplementedMsgServer) CreatePermanentLockedAccount(context.Context, *MsgCreatePermanentLockedAccount) (*MsgCreatePermanentLockedAccountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreatePermanentLockedAccount not implemented")
 }
 func (UnimplementedMsgServer) CreatePeriodicVestingAccount(context.Context, *MsgCreatePeriodicVestingAccount) (*MsgCreatePeriodicVestingAccountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreatePeriodicVestingAccount not implemented")
@@ -110,6 +128,24 @@ func _Msg_CreateVestingAccount_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CreatePermanentLockedAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreatePermanentLockedAccount)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreatePermanentLockedAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.vesting.v1beta1.Msg/CreatePermanentLockedAccount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreatePermanentLockedAccount(ctx, req.(*MsgCreatePermanentLockedAccount))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Msg_CreatePeriodicVestingAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgCreatePeriodicVestingAccount)
 	if err := dec(in); err != nil {
@@ -138,6 +174,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateVestingAccount",
 			Handler:    _Msg_CreateVestingAccount_Handler,
+		},
+		{
+			MethodName: "CreatePermanentLockedAccount",
+			Handler:    _Msg_CreatePermanentLockedAccount_Handler,
 		},
 		{
 			MethodName: "CreatePeriodicVestingAccount",

@@ -65,23 +65,107 @@ func checkEncodeDecodeSize(t *rapid.T, x protoreflect.Value, cdc ormfield.Codec)
 
 func TestUnsupportedFields(t *testing.T) {
 	_, err := ormfield.GetCodec(nil, false)
-	assert.ErrorContains(t, err, ormerrors.UnsupportedKeyField.Error())
+	assert.ErrorContains(t, err, ormerrors.InvalidKeyField.Error())
 	_, err = ormfield.GetCodec(testutil.GetTestField("repeated"), false)
-	assert.ErrorContains(t, err, ormerrors.UnsupportedKeyField.Error())
+	assert.ErrorContains(t, err, ormerrors.InvalidKeyField.Error())
 	_, err = ormfield.GetCodec(testutil.GetTestField("map"), false)
-	assert.ErrorContains(t, err, ormerrors.UnsupportedKeyField.Error())
+	assert.ErrorContains(t, err, ormerrors.InvalidKeyField.Error())
 	_, err = ormfield.GetCodec(testutil.GetTestField("msg"), false)
-	assert.ErrorContains(t, err, ormerrors.UnsupportedKeyField.Error())
+	assert.ErrorContains(t, err, ormerrors.InvalidKeyField.Error())
 	_, err = ormfield.GetCodec(testutil.GetTestField("oneof"), false)
-	assert.ErrorContains(t, err, ormerrors.UnsupportedKeyField.Error())
+	assert.ErrorContains(t, err, ormerrors.InvalidKeyField.Error())
 }
 
-func TestNTBytesTooLong(t *testing.T) {
-	cdc, err := ormfield.GetCodec(testutil.GetTestField("bz"), true)
-	assert.NilError(t, err)
-	buf := &bytes.Buffer{}
-	bz := protoreflect.ValueOfBytes(make([]byte, 256))
-	assert.ErrorContains(t, cdc.Encode(bz, buf), ormerrors.BytesFieldTooLong.Error())
-	_, err = cdc.ComputeBufferSize(bz)
-	assert.ErrorContains(t, err, ormerrors.BytesFieldTooLong.Error())
+func TestCompactUInt32(t *testing.T) {
+	var lastBz []byte
+	testEncodeDecode := func(x uint32, expectedLen int) {
+		bz := ormfield.EncodeCompactUint32(x)
+		assert.Equal(t, expectedLen, len(bz))
+		y, err := ormfield.DecodeCompactUint32(bytes.NewReader(bz))
+		assert.NilError(t, err)
+		assert.Equal(t, x, y)
+		assert.Assert(t, bytes.Compare(lastBz, bz) < 0)
+		lastBz = bz
+	}
+
+	testEncodeDecode(64, 2)
+	testEncodeDecode(16383, 2)
+	testEncodeDecode(16384, 3)
+	testEncodeDecode(4194303, 3)
+	testEncodeDecode(4194304, 4)
+	testEncodeDecode(1073741823, 4)
+	testEncodeDecode(1073741824, 5)
+
+	// randomized tests
+	rapid.Check(t, func(t *rapid.T) {
+		x := rapid.Uint32().Draw(t, "x").(uint32)
+		y := rapid.Uint32().Draw(t, "y").(uint32)
+
+		bx := ormfield.EncodeCompactUint32(x)
+		by := ormfield.EncodeCompactUint32(y)
+
+		cmp := bytes.Compare(bx, by)
+		if x < y {
+			assert.Equal(t, -1, cmp)
+		} else if x == y {
+			assert.Equal(t, 0, cmp)
+		} else {
+			assert.Equal(t, 1, cmp)
+		}
+
+		x2, err := ormfield.DecodeCompactUint32(bytes.NewReader(bx))
+		assert.NilError(t, err)
+		assert.Equal(t, x, x2)
+		y2, err := ormfield.DecodeCompactUint32(bytes.NewReader(by))
+		assert.NilError(t, err)
+		assert.Equal(t, y, y2)
+	})
+}
+
+func TestCompactUInt64(t *testing.T) {
+	var lastBz []byte
+	testEncodeDecode := func(x uint64, expectedLen int) {
+		bz := ormfield.EncodeCompactUint64(x)
+		assert.Equal(t, expectedLen, len(bz))
+		y, err := ormfield.DecodeCompactUint64(bytes.NewReader(bz))
+		assert.NilError(t, err)
+		assert.Equal(t, x, y)
+		assert.Assert(t, bytes.Compare(lastBz, bz) < 0)
+		lastBz = bz
+	}
+
+	testEncodeDecode(64, 2)
+	testEncodeDecode(16383, 2)
+	testEncodeDecode(16384, 4)
+	testEncodeDecode(4194303, 4)
+	testEncodeDecode(4194304, 4)
+	testEncodeDecode(1073741823, 4)
+	testEncodeDecode(1073741824, 6)
+	testEncodeDecode(70368744177663, 6)
+	testEncodeDecode(70368744177664, 9)
+
+	// randomized tests
+	rapid.Check(t, func(t *rapid.T) {
+		x := rapid.Uint64().Draw(t, "x").(uint64)
+		y := rapid.Uint64().Draw(t, "y").(uint64)
+
+		bx := ormfield.EncodeCompactUint64(x)
+		by := ormfield.EncodeCompactUint64(y)
+
+		cmp := bytes.Compare(bx, by)
+		if x < y {
+			assert.Equal(t, -1, cmp)
+		} else if x == y {
+			assert.Equal(t, 0, cmp)
+		} else {
+			assert.Equal(t, 1, cmp)
+		}
+
+		x2, err := ormfield.DecodeCompactUint64(bytes.NewReader(bx))
+		assert.NilError(t, err)
+		assert.Equal(t, x, x2)
+		y2, err := ormfield.DecodeCompactUint64(bytes.NewReader(by))
+		assert.NilError(t, err)
+		assert.Equal(t, y, y2)
+	})
 }

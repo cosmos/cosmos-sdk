@@ -15,7 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 type TxSearchMock struct {
@@ -81,19 +81,19 @@ func TestGetPaginatedVotes(t *testing.T) {
 		description string
 		page, limit int
 		msgs        [][]sdk.Msg
-		votes       []v1beta2.Vote
+		votes       []v1.Vote
 	}
 	acc1 := make(sdk.AccAddress, 20)
 	acc1[0] = 1
 	acc2 := make(sdk.AccAddress, 20)
 	acc2[0] = 2
 	acc1Msgs := []sdk.Msg{
-		v1beta2.NewMsgVote(acc1, 0, v1beta2.OptionYes),
-		v1beta2.NewMsgVote(acc1, 0, v1beta2.OptionYes),
+		v1.NewMsgVote(acc1, 0, v1.OptionYes, ""),
+		v1.NewMsgVote(acc1, 0, v1.OptionYes, ""),
 	}
 	acc2Msgs := []sdk.Msg{
-		v1beta2.NewMsgVote(acc2, 0, v1beta2.OptionYes),
-		v1beta2.NewMsgVoteWeighted(acc2, 0, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)),
+		v1.NewMsgVote(acc2, 0, v1.OptionYes, ""),
+		v1.NewMsgVoteWeighted(acc2, 0, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
 	}
 	for _, tc := range []testCase{
 		{
@@ -104,9 +104,9 @@ func TestGetPaginatedVotes(t *testing.T) {
 				acc1Msgs[:1],
 				acc2Msgs[:1],
 			},
-			votes: []v1beta2.Vote{
-				v1beta2.NewVote(0, acc1, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)),
-				v1beta2.NewVote(0, acc2, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes))},
+			votes: []v1.Vote{
+				v1.NewVote(0, acc1, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
+				v1.NewVote(0, acc2, v1.NewNonSplitVoteOption(v1.OptionYes), "")},
 		},
 		{
 			description: "2MsgPerTx1Chunk",
@@ -116,9 +116,9 @@ func TestGetPaginatedVotes(t *testing.T) {
 				acc1Msgs,
 				acc2Msgs,
 			},
-			votes: []v1beta2.Vote{
-				v1beta2.NewVote(0, acc1, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)),
-				v1beta2.NewVote(0, acc1, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)),
+			votes: []v1.Vote{
+				v1.NewVote(0, acc1, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
+				v1.NewVote(0, acc1, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
 			},
 		},
 		{
@@ -129,9 +129,9 @@ func TestGetPaginatedVotes(t *testing.T) {
 				acc1Msgs,
 				acc2Msgs,
 			},
-			votes: []v1beta2.Vote{
-				v1beta2.NewVote(0, acc2, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)),
-				v1beta2.NewVote(0, acc2, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes)),
+			votes: []v1.Vote{
+				v1.NewVote(0, acc2, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
+				v1.NewVote(0, acc2, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
 			},
 		},
 		{
@@ -141,7 +141,7 @@ func TestGetPaginatedVotes(t *testing.T) {
 			msgs: [][]sdk.Msg{
 				acc1Msgs[:1],
 			},
-			votes: []v1beta2.Vote{v1beta2.NewVote(0, acc1, v1beta2.NewNonSplitVoteOption(v1beta2.OptionYes))},
+			votes: []v1.Vote{v1.NewVote(0, acc1, v1.NewNonSplitVoteOption(v1.OptionYes), "")},
 		},
 		{
 			description: "InvalidPage",
@@ -179,10 +179,10 @@ func TestGetPaginatedVotes(t *testing.T) {
 				marshalled[i] = tx
 			}
 
-			params := v1beta2.NewQueryProposalVotesParams(0, tc.page, tc.limit)
+			params := v1.NewQueryProposalVotesParams(0, tc.page, tc.limit)
 			votesData, err := utils.QueryVotesByTxQuery(clientCtx, params)
 			require.NoError(t, err)
-			votes := []v1beta2.Vote{}
+			votes := []v1.Vote{}
 			require.NoError(t, clientCtx.LegacyAmino.UnmarshalJSON(votesData, &votes))
 			require.Equal(t, len(tc.votes), len(votes))
 			for i := range votes {

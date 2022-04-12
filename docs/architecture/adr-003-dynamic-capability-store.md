@@ -2,8 +2,8 @@
 
 ## Changelog
 
-- 12 December 2019: Initial version
-- 02 April 2020: Memory Store Revisions
+* 12 December 2019: Initial version
+* 02 April 2020: Memory Store Revisions
 
 ## Context
 
@@ -326,14 +326,14 @@ Proposed.
 
 ### Positive
 
-- Dynamic capability support.
-- Allows CapabilityKeeper to return same capability pointer from go-map while reverting any writes to the persistent `KVStore` and in-memory `MemoryStore` on tx failure.
+* Dynamic capability support.
+* Allows CapabilityKeeper to return same capability pointer from go-map while reverting any writes to the persistent `KVStore` and in-memory `MemoryStore` on tx failure.
 
 ### Negative
 
-- Requires an additional keeper.
-- Some overlap with existing `StoreKey` system (in the future they could be combined, since this is a superset functionality-wise).
-- Requires an extra level of indirection in the reverse mapping, since MemoryStore must map to index which must then be used as key in a go map to retrieve the actual capability
+* Requires an additional keeper.
+* Some overlap with existing `StoreKey` system (in the future they could be combined, since this is a superset functionality-wise).
+* Requires an extra level of indirection in the reverse mapping, since MemoryStore must map to index which must then be used as key in a go map to retrieve the actual capability
 
 ### Neutral
 
@@ -341,4 +341,4 @@ Proposed.
 
 ## References
 
-- [Original discussion](https://github.com/cosmos/cosmos-sdk/pull/5230#discussion_r343978513)
+* [Original discussion](https://github.com/cosmos/cosmos-sdk/pull/5230#discussion_r343978513)

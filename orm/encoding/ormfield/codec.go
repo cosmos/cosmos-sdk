@@ -55,14 +55,18 @@ var (
 // non-terminal segment of a multi-part key.
 func GetCodec(field protoreflect.FieldDescriptor, nonTerminal bool) (Codec, error) {
 	if field == nil {
-		return nil, ormerrors.UnsupportedKeyField.Wrap("nil field")
+		return nil, ormerrors.InvalidKeyField.Wrap("nil field")
 	}
 	if field.IsList() {
-		return nil, ormerrors.UnsupportedKeyField.Wrapf("repeated field %s", field.FullName())
+		return nil, ormerrors.InvalidKeyField.Wrapf("repeated field %s", field.FullName())
 	}
 
 	if field.ContainingOneof() != nil {
-		return nil, ormerrors.UnsupportedKeyField.Wrapf("oneof field %s", field.FullName())
+		return nil, ormerrors.InvalidKeyField.Wrapf("oneof field %s", field.FullName())
+	}
+
+	if field.HasOptionalKeyword() {
+		return nil, ormerrors.InvalidKeyField.Wrapf("optional field %s", field.FullName())
 	}
 
 	switch field.Kind() {
@@ -78,10 +82,14 @@ func GetCodec(field protoreflect.FieldDescriptor, nonTerminal bool) (Codec, erro
 		} else {
 			return StringCodec{}, nil
 		}
-	case protoreflect.Uint32Kind, protoreflect.Fixed32Kind:
-		return Uint32Codec{}, nil
-	case protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
-		return Uint64Codec{}, nil
+	case protoreflect.Uint32Kind:
+		return CompactUint32Codec{}, nil
+	case protoreflect.Fixed32Kind:
+		return FixedUint32Codec{}, nil
+	case protoreflect.Uint64Kind:
+		return CompactUint64Codec{}, nil
+	case protoreflect.Fixed64Kind:
+		return FixedUint64Codec{}, nil
 	case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
 		return Int32Codec{}, nil
 	case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
@@ -98,9 +106,9 @@ func GetCodec(field protoreflect.FieldDescriptor, nonTerminal bool) (Codec, erro
 		case durationFullName:
 			return DurationCodec{}, nil
 		default:
-			return nil, ormerrors.UnsupportedKeyField.Wrapf("%s of type %s", field.FullName(), msgName)
+			return nil, ormerrors.InvalidKeyField.Wrapf("%s of type %s", field.FullName(), msgName)
 		}
 	default:
-		return nil, ormerrors.UnsupportedKeyField.Wrapf("%s of kind %s", field.FullName(), field.Kind())
+		return nil, ormerrors.InvalidKeyField.Wrapf("%s of kind %s", field.FullName(), field.Kind())
 	}
 }

@@ -12,7 +12,7 @@ to resolve and then execute if the proposal passes. `Proposal`'s are identified 
 unique id and contains a series of timestamps: `submit_time`, `deposit_end_time`,
 `voting_start_time`, `voting_end_time` which track the lifecycle of a proposal
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/4a129832eb16f37a89e97652a669f0cdc9196ca9/proto/cosmos/gov/v1beta2/gov.proto#L42-L52
++++ https://github.com/cosmos/cosmos-sdk/blob/5bde3686c4538ce53356af6e9fe40b34e4ce4a06/proto/cosmos/gov/v1/gov.proto#L42-L59
 
 A proposal will generally require more than just a set of messages to explain its
 purpose but need some greater justification and allow a means for interested participants
@@ -20,7 +20,7 @@ to discuss and debate the proposal. In most cases, it is encouraged to have an o
 system that supports the on-chain governance process. To accommodate for this, a
 proposal contains a special `metadata` field, an array of bytes, which can be used to
 add context to the proposal. The `metadata` field allows custom use for networks, however,
-it is expected that the field contain a URL or some form of CID using a system such as
+it is expected that the field contains a URL or some form of CID using a system such as
 [IPFS](https://docs.ipfs.io/concepts/content-addressing/). To support the case of
 interoperability across networks, the SDK recommends that the `metadata` represents
 the following `JSON` template:
@@ -35,6 +35,9 @@ the following `JSON` template:
 ```
 
 This makes it far easier for clients to support multiple networks.
+
+The metadata has a maximum length that is chosen by the app developer, and
+passed into the gov keeper as a config.
 
 ### Writing a module that uses governance
 
@@ -90,7 +93,7 @@ type ProposalStatus byte
 
 
 const (
-	StatusNil           ProposalStatus = 0x00
+    StatusNil           ProposalStatus = 0x00
     StatusDepositPeriod ProposalStatus = 0x01  // Proposal is submitted. Participants can deposit on it but not vote
     StatusVotingPeriod  ProposalStatus = 0x02  // MinDeposit is reached, participants can vote
     StatusPassed        ProposalStatus = 0x03  // Proposal passed and successfully executed
@@ -121,21 +124,21 @@ parameter in the list_`
 
 We will use one KVStore `Governance` to store two mappings:
 
-- A mapping from `proposalID|'proposal'` to `Proposal`.
-- A mapping from `proposalID|'addresses'|address` to `Vote`. This mapping allows
+* A mapping from `proposalID|'proposal'` to `Proposal`.
+* A mapping from `proposalID|'addresses'|address` to `Vote`. This mapping allows
   us to query all addresses that voted on the proposal along with their vote by
   doing a range query on `proposalID:addresses`.
 
 For pseudocode purposes, here are the two function we will use to read or write in stores:
 
-- `load(StoreKey, Key)`: Retrieve item stored at key `Key` in store found at key `StoreKey` in the multistore
-- `store(StoreKey, Key, value)`: Write value `Value` at key `Key` in store found at key `StoreKey` in the multistore
+* `load(StoreKey, Key)`: Retrieve item stored at key `Key` in store found at key `StoreKey` in the multistore
+* `store(StoreKey, Key, value)`: Write value `Value` at key `Key` in store found at key `StoreKey` in the multistore
 
 ## Proposal Processing Queue
 
 **Store:**
 
-- `ProposalProcessingQueue`: A queue `queue[proposalID]` containing all the
+* `ProposalProcessingQueue`: A queue `queue[proposalID]` containing all the
   `ProposalIDs` of proposals that reached `MinDeposit`. During each `EndBlock`,
   all the proposals that have reached the end of their voting period are processed.
   To process a finished proposal, the application tallies the votes, computes the
@@ -174,7 +177,7 @@ And the pseudocode for the `ProposalProcessingQueue`:
 
       tallyingParam = load(GlobalParams, 'TallyingParam')
 
-      // Update tally if validator voted they voted
+      // Update tally if validator voted
       for each validator in validators
         if tmpValMap(validator).HasVoted
           proposal.updateTally(tmpValMap(validator).Vote, (validator.TotalShares - tmpValMap(validator).Minus))

@@ -1,5 +1,5 @@
 <!--
-order: 5
+order: 6
 -->
 
 # Store
@@ -8,13 +8,13 @@ A store is a data structure that holds the state of the application. {synopsis}
 
 ## Pre-requisite Readings
 
-- [Anatomy of a Cosmos SDK application](../basics/app-anatomy.md) {prereq}
+* [Anatomy of a Cosmos SDK application](../basics/app-anatomy.md) {prereq}
 
 ## Introduction to Cosmos SDK Stores
 
 The Cosmos SDK comes with a large set of stores to persist the state of applications. By default, the main store of Cosmos SDK applications is a `multistore`, i.e. a store of stores. Developers can add any number of key-value stores to the multistore, depending on their application needs. The multistore exists to support the modularity of the Cosmos SDK, as it lets each module declare and manage their own subset of the state. Key-value stores in the multistore can only be accessed with a specific capability `key`, which is typically held in the [`keeper`](../building-modules/keeper.md) of the module that declared the store.
 
-```
+```text
 +-----------------------------------------------------+
 |                                                     |
 |    +--------------------------------------------+   |
@@ -134,9 +134,9 @@ The default implementation of `KVStore` and `CommitKVStore` used in `baseapp` is
 
 `iavl` stores are based around an [IAVL Tree](https://github.com/tendermint/iavl), a self-balancing binary tree which guarantees that:
 
-- `Get` and `Set` operations are O(log n), where n is the number of elements in the tree.
-- Iteration efficiently returns the sorted elements within the range.
-- Each tree version is immutable and can be retrieved even after a commit (depending on the pruning settings).
+* `Get` and `Set` operations are O(log n), where n is the number of elements in the tree.
+* Iteration efficiently returns the sorted elements within the range.
+* Each tree version is immutable and can be retrieved even after a commit (depending on the pruning settings).
 
 The documentation on the IAVL Tree is located [here](https://github.com/cosmos/iavl/blob/v0.15.0-rc5/docs/overview.md).
 
@@ -226,13 +226,13 @@ When `Store.Iterator()` is called, it does not simply prefix the `Store.prefix`,
 
 `listenkv.Store` is a wrapper `KVStore` which provides state listening capabilities over the underlying `KVStore`.
 It is applied automatically by the Cosmos SDK on any `KVStore` whose `StoreKey` is specified during state streaming configuration.
-Additional information about state streaming configuration can be found in the [store/streaming/README.md](../../store/streaming/README.md).
+Additional information about state streaming configuration can be found in the [store/streaming/README.md](https://github.com/cosmos/cosmos-sdk/tree/v0.46.0-alpha2/store/streaming).
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.44.1/store/listenkv/store.go#L11-L18
 
 When `KVStore.Set` or `KVStore.Delete` methods are called, `listenkv.Store` automatically writes the operations to the set of `Store.listeners`.
 
-## New Store package (`store/v2`)
+## New Store package (`store/v2alpha1`)
 
 The SDK is in the process of transitioning to use the types listed here as the default interface for state storage. At the time of writing, these cannot be used within an application and are not directly compatible with the `CommitMultiStore` and related types.
 
@@ -247,16 +247,18 @@ An interface providing only the basic CRUD functionality (`Get`, `Set`, `Has`, a
 ## MultiStore
 
 This is the new interface (or, set of interfaces) for the main client store, replacing the role of `store/types.MultiStore` (v1). There are a few significant differences in behavior compared with v1:
-  * Commits are atomic and are performed on the entire store state; individual substores cannot be committed separately and cannot have different version numbers.
-  * The store's current version and version history track that of the backing `db.DBConnection`. Past versions are accessible read-only.
-  * The set of valid substores is defined at initialization and cannot be updated dynamically in an existing store instance.
+
+* Commits are atomic and are performed on the entire store state; individual substores cannot be committed separately and cannot have different version numbers.
+* The store's current version and version history track that of the backing `db.DBConnection`. Past versions are accessible read-only.
+* The set of valid substores is defined at initialization and cannot be updated dynamically in an existing store instance.
 
 ### `CommitMultiStore`
 
 This is the main interface for persisent application state, analogous to the original `CommitMultiStore`.
-  * Past version views are accessed with `GetVersion`, which returns a `BasicMultiStore`.
-  * Substores are accessed with `GetKVStore`. Trying to get a substore that was not defined at initialization will cause a panic.
-  * `Close` must be called to release the DB resources being used by the store.
+
+* Past version views are accessed with `GetVersion`, which returns a `BasicMultiStore`.
+* Substores are accessed with `GetKVStore`. Trying to get a substore that was not defined at initialization will cause a panic.
+* `Close` must be called to release the DB resources being used by the store.
 
 ### `BasicMultiStore`
 
@@ -264,7 +266,7 @@ A minimal interface that only allows accessing substores. Note: substores return
 
 ### Implementation (`root.Store`)
 
-The canonical implementation of `MultiStore` is in `store/v2/root`. It internally decouples the concerns of state storage and state commitment: values are stored in, and read directly from, the backing key-value database (state storage, or *SS*), but are also mapped in a logically separate database which generates cryptographic proofs (for state-commitment or *SC*).
+The canonical implementation of `MultiStore` is in `store/v2alpha1/root`. It internally decouples the concerns of state storage and state commitment: values are stored in, and read directly from, the backing key-value database (state storage, or *SS*), but are also mapped in a logically separate database which generates cryptographic proofs (for state-commitment or *SC*).
 
 The state-commitment component of each substore is implemented as an independent `smt.Store` (see below). Internally, each substore is allocated in a logically separate partition within the same backing DB, such that commits apply to the state of all substores. Therefore, views of past versions also include the state of all substores (including *SS* and *SC* data).
 
@@ -272,7 +274,7 @@ This store can optionally be configured to use a different backend database inst
 
 ## SMT Store
 
-`store/v2/smt.Store` maps values into a Sparse Merkle Tree (SMT), and supports a `BasicKVStore` interface as well as methods for cryptographic proof generation.
+`store/v2alpha1/smt.Store` maps values into a Sparse Merkle Tree (SMT), and supports a `BasicKVStore` interface as well as methods for cryptographic proof generation.
 
 ## Next {hide}
 

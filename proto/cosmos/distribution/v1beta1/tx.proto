@@ -7,6 +7,7 @@ option (gogoproto.equal_all) = true;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
 
 // Msg defines the distribution Msg service.
 service Msg {
@@ -30,6 +31,8 @@ service Msg {
 // MsgSetWithdrawAddress sets the withdraw address for
 // a delegator (or validator self-delegation).
 message MsgSetWithdrawAddress {
+  option (cosmos.msg.v1.signer) = "delegator_address";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -43,6 +46,8 @@ message MsgSetWithdrawAddressResponse {}
 // MsgWithdrawDelegatorReward represents delegation withdrawal to a delegator
 // from a single validator.
 message MsgWithdrawDelegatorReward {
+  option (cosmos.msg.v1.signer) = "delegator_address";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -51,11 +56,17 @@ message MsgWithdrawDelegatorReward {
 }
 
 // MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward response type.
-message MsgWithdrawDelegatorRewardResponse {}
+message MsgWithdrawDelegatorRewardResponse {
+  // Since: cosmos-sdk 0.46
+  repeated cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
 
 // MsgWithdrawValidatorCommission withdraws the full commission to the validator
 // address.
 message MsgWithdrawValidatorCommission {
+  option (cosmos.msg.v1.signer) = "validator_address";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -63,11 +74,17 @@ message MsgWithdrawValidatorCommission {
 }
 
 // MsgWithdrawValidatorCommissionResponse defines the Msg/WithdrawValidatorCommission response type.
-message MsgWithdrawValidatorCommissionResponse {}
+message MsgWithdrawValidatorCommissionResponse {
+  // Since: cosmos-sdk 0.46
+  repeated cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
 
 // MsgFundCommunityPool allows an account to directly
 // fund the community pool.
 message MsgFundCommunityPool {
+  option (cosmos.msg.v1.signer) = "depositor";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 

@@ -59,6 +59,38 @@ func newSubStoreWithData(t *testing.T, db dbm.DBConnection, storeData map[string
 	return root, store
 }
 
+func TestStoreParams(t *testing.T) {
+	opts := DefaultStoreParams()
+	// Fail with invalid types
+	require.Error(t, opts.RegisterSubstore(skey_1, types.StoreTypeDB))
+	require.Error(t, opts.RegisterSubstore(skey_1, types.StoreTypeSMT))
+	// Ensure that no prefix conflicts are allowed
+	require.NoError(t, opts.RegisterSubstore(skey_1, types.StoreTypePersistent))
+	require.NoError(t, opts.RegisterSubstore(skey_2, types.StoreTypeMemory))
+	require.NoError(t, opts.RegisterSubstore(skey_3b, types.StoreTypeTransient))
+	require.Error(t, opts.RegisterSubstore(skey_1b, types.StoreTypePersistent))
+	require.Error(t, opts.RegisterSubstore(skey_2b, types.StoreTypePersistent))
+	require.Error(t, opts.RegisterSubstore(skey_3, types.StoreTypePersistent))
+}
+
+func TestMultiStoreBasic(t *testing.T) {
+	opts := DefaultStoreParams()
+	err := opts.RegisterSubstore(skey_1, types.StoreTypePersistent)
+	require.NoError(t, err)
+	db := memdb.NewDB()
+	store, err := NewStore(db, opts)
+	require.NoError(t, err)
+
+	store_1 := store.GetKVStore(skey_1)
+	require.NotNil(t, store_1)
+	store_1.Set([]byte{0}, []byte{0})
+	val := store_1.Get([]byte{0})
+	require.Equal(t, []byte{0}, val)
+	store_1.Delete([]byte{0})
+	val = store_1.Get([]byte{0})
+	require.Equal(t, []byte(nil), val)
+}
+
 func TestGetSetHasDelete(t *testing.T) {
 	_, store := newSubStoreWithData(t, memdb.NewDB(), alohaData)
 	key := "hello"
@@ -85,6 +117,67 @@ func TestGetSetHasDelete(t *testing.T) {
 	require.Panics(t, func() { store.Set(nil, []byte("value")) }, "Set(nil key) should panic")
 	require.Panics(t, func() { store.Set([]byte{}, []byte("value")) }, "Set(empty key) should panic")
 	require.Panics(t, func() { store.Set([]byte("key"), nil) }, "Set(nil value) should panic")
+}
+
+func TestIterators(t *testing.T) {
+	_, store := newSubStoreWithData(t, memdb.NewDB(), map[string]string{
+		string([]byte{0x00}):       "0",
+		string([]byte{0x00, 0x00}): "0 0",
+		string([]byte{0x00, 0x01}): "0 1",
+		string([]byte{0x00, 0x02}): "0 2",
+		string([]byte{0x01}):       "1",
+	})
+
+	var testCase = func(t *testing.T, iter types.Iterator, expected []string) {
+		var i int
+		for i = 0; iter.Valid(); iter.Next() {
+			expectedValue := expected[i]
+			value := iter.Value()
+			require.EqualValues(t, string(value), expectedValue)
+			i++
+		}
+		require.Equal(t, len(expected), i)
+	}
+
+	testCase(t, store.Iterator(nil, nil),
+		[]string{"0", "0 0", "0 1", "0 2", "1"})
+	testCase(t, store.Iterator([]byte{0}, nil),
+		[]string{"0", "0 0", "0 1", "0 2", "1"})
+	testCase(t, store.Iterator([]byte{0}, []byte{0, 1}),
+		[]string{"0", "0 0"})
+	testCase(t, store.Iterator([]byte{0}, []byte{1}),
+		[]string{"0", "0 0", "0 1", "0 2"})
+	testCase(t, store.Iterator([]byte{0, 1}, []byte{1}),
+		[]string{"0 1", "0 2"})
+	testCase(t, store.Iterator(nil, []byte{1}),
+		[]string{"0", "0 0", "0 1", "0 2"})
+	testCase(t, store.Iterator([]byte{0}, []byte{0}), []string{}) // start = end
+	testCase(t, store.Iterator([]byte{1}, []byte{0}), []string{}) // start > end
+
+	testCase(t, store.ReverseIterator(nil, nil),
+		[]string{"1", "0 2", "0 1", "0 0", "0"})
+	testCase(t, store.ReverseIterator([]byte{0}, nil),
+		[]string{"1", "0 2", "0 1", "0 0", "0"})
+	testCase(t, store.ReverseIterator([]byte{0}, []byte{0, 1}),
+		[]string{"0 0", "0"})
+	testCase(t, store.ReverseIterator([]byte{0}, []byte{1}),
+		[]string{"0 2", "0 1", "0 0", "0"})
+	testCase(t, store.ReverseIterator([]byte{0, 1}, []byte{1}),
+		[]string{"0 2", "0 1"})
+	testCase(t, store.ReverseIterator(nil, []byte{1}),
+		[]string{"0 2", "0 1", "0 0", "0"})
+	testCase(t, store.ReverseIterator([]byte{0}, []byte{0}), []string{}) // start = end
+	testCase(t, store.ReverseIterator([]byte{1}, []byte{0}), []string{}) // start > end
+
+	testCase(t, types.KVStorePrefixIterator(store, []byte{0}),
+		[]string{"0", "0 0", "0 1", "0 2"})
+	testCase(t, types.KVStoreReversePrefixIterator(store, []byte{0}),
+		[]string{"0 2", "0 1", "0 0", "0"})
+
+	require.Panics(t, func() { store.Iterator([]byte{}, nil) }, "Iterator(empty key) should panic")
+	require.Panics(t, func() { store.Iterator(nil, []byte{}) }, "Iterator(empty key) should panic")
+	require.Panics(t, func() { store.ReverseIterator([]byte{}, nil) }, "Iterator(empty key) should panic")
+	require.Panics(t, func() { store.ReverseIterator(nil, []byte{}) }, "Iterator(empty key) should panic")
 }
 
 func TestConstructors(t *testing.T) {
@@ -148,67 +241,6 @@ func TestConstructors(t *testing.T) {
 		store, err = NewStore(dbRWCrudFails{db}, DefaultStoreParams())
 		require.Error(t, err)
 	})
-}
-
-func TestIterators(t *testing.T) {
-	_, store := newSubStoreWithData(t, memdb.NewDB(), map[string]string{
-		string([]byte{0x00}):       "0",
-		string([]byte{0x00, 0x00}): "0 0",
-		string([]byte{0x00, 0x01}): "0 1",
-		string([]byte{0x00, 0x02}): "0 2",
-		string([]byte{0x01}):       "1",
-	})
-
-	var testCase = func(t *testing.T, iter types.Iterator, expected []string) {
-		var i int
-		for i = 0; iter.Valid(); iter.Next() {
-			expectedValue := expected[i]
-			value := iter.Value()
-			require.EqualValues(t, string(value), expectedValue)
-			i++
-		}
-		require.Equal(t, len(expected), i)
-	}
-
-	testCase(t, store.Iterator(nil, nil),
-		[]string{"0", "0 0", "0 1", "0 2", "1"})
-	testCase(t, store.Iterator([]byte{0}, nil),
-		[]string{"0", "0 0", "0 1", "0 2", "1"})
-	testCase(t, store.Iterator([]byte{0}, []byte{0, 1}),
-		[]string{"0", "0 0"})
-	testCase(t, store.Iterator([]byte{0}, []byte{1}),
-		[]string{"0", "0 0", "0 1", "0 2"})
-	testCase(t, store.Iterator([]byte{0, 1}, []byte{1}),
-		[]string{"0 1", "0 2"})
-	testCase(t, store.Iterator(nil, []byte{1}),
-		[]string{"0", "0 0", "0 1", "0 2"})
-	testCase(t, store.Iterator([]byte{0}, []byte{0}), []string{}) // start = end
-	testCase(t, store.Iterator([]byte{1}, []byte{0}), []string{}) // start > end
-
-	testCase(t, store.ReverseIterator(nil, nil),
-		[]string{"1", "0 2", "0 1", "0 0", "0"})
-	testCase(t, store.ReverseIterator([]byte{0}, nil),
-		[]string{"1", "0 2", "0 1", "0 0", "0"})
-	testCase(t, store.ReverseIterator([]byte{0}, []byte{0, 1}),
-		[]string{"0 0", "0"})
-	testCase(t, store.ReverseIterator([]byte{0}, []byte{1}),
-		[]string{"0 2", "0 1", "0 0", "0"})
-	testCase(t, store.ReverseIterator([]byte{0, 1}, []byte{1}),
-		[]string{"0 2", "0 1"})
-	testCase(t, store.ReverseIterator(nil, []byte{1}),
-		[]string{"0 2", "0 1", "0 0", "0"})
-	testCase(t, store.ReverseIterator([]byte{0}, []byte{0}), []string{}) // start = end
-	testCase(t, store.ReverseIterator([]byte{1}, []byte{0}), []string{}) // start > end
-
-	testCase(t, types.KVStorePrefixIterator(store, []byte{0}),
-		[]string{"0", "0 0", "0 1", "0 2"})
-	testCase(t, types.KVStoreReversePrefixIterator(store, []byte{0}),
-		[]string{"0 2", "0 1", "0 0", "0"})
-
-	require.Panics(t, func() { store.Iterator([]byte{}, nil) }, "Iterator(empty key) should panic")
-	require.Panics(t, func() { store.Iterator(nil, []byte{}) }, "Iterator(empty key) should panic")
-	require.Panics(t, func() { store.ReverseIterator([]byte{}, nil) }, "Iterator(empty key) should panic")
-	require.Panics(t, func() { store.ReverseIterator(nil, []byte{}) }, "Iterator(empty key) should panic")
 }
 
 func TestCommit(t *testing.T) {
@@ -676,38 +708,6 @@ func TestQuery(t *testing.T) {
 	})
 }
 
-func TestStoreParams(t *testing.T) {
-	opts := DefaultStoreParams()
-	// Fail with invalid types
-	require.Error(t, opts.RegisterSubstore(skey_1, types.StoreTypeDB))
-	require.Error(t, opts.RegisterSubstore(skey_1, types.StoreTypeSMT))
-	// Ensure that no prefix conflicts are allowed
-	require.NoError(t, opts.RegisterSubstore(skey_1, types.StoreTypePersistent))
-	require.NoError(t, opts.RegisterSubstore(skey_2, types.StoreTypeMemory))
-	require.NoError(t, opts.RegisterSubstore(skey_3b, types.StoreTypeTransient))
-	require.Error(t, opts.RegisterSubstore(skey_1b, types.StoreTypePersistent))
-	require.Error(t, opts.RegisterSubstore(skey_2b, types.StoreTypePersistent))
-	require.Error(t, opts.RegisterSubstore(skey_3, types.StoreTypePersistent))
-}
-
-func TestMultiStoreBasic(t *testing.T) {
-	opts := DefaultStoreParams()
-	err := opts.RegisterSubstore(skey_1, types.StoreTypePersistent)
-	require.NoError(t, err)
-	db := memdb.NewDB()
-	store, err := NewStore(db, opts)
-	require.NoError(t, err)
-
-	store_1 := store.GetKVStore(skey_1)
-	require.NotNil(t, store_1)
-	store_1.Set([]byte{0}, []byte{0})
-	val := store_1.Get([]byte{0})
-	require.Equal(t, []byte{0}, val)
-	store_1.Delete([]byte{0})
-	val = store_1.Get([]byte{0})
-	require.Equal(t, []byte(nil), val)
-}
-
 func TestGetVersion(t *testing.T) {
 	db := memdb.NewDB()
 	opts := storeParams123(t)
@@ -743,7 +743,7 @@ func TestGetVersion(t *testing.T) {
 	require.Equal(t, []byte{0}, subview.Get([]byte{0}))
 }
 
-func TestMultiStoreMigration(t *testing.T) {
+func TestStoreSchemaMigration(t *testing.T) {
 	db := memdb.NewDB()
 	opts := storeParams123(t)
 	store, err := NewStore(db, opts)

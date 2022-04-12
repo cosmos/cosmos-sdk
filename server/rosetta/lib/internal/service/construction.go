@@ -72,33 +72,37 @@ func (on OnlineNetwork) ConstructionMetadata(ctx context.Context, request *types
 		return nil, errors.ToRosetta(err)
 	}
 
-	gasPrice, ok := metadata["gas_price"].(string)
-	if !ok {
-		return nil, errors.ToRosetta(errors.WrapError(errors.ErrBadArgument, "invalid gas_price"))
-	}
-	price, err := sdk.ParseDecCoin(gasPrice)
-	if err != nil {
-		return nil, errors.ToRosetta(err)
+	response := &types.ConstructionMetadataResponse{
+		Metadata: metadata,
 	}
 
-	gasLimit, ok := metadata["gas_limit"].(float64)
-	if !ok {
-		return nil, errors.ToRosetta(errors.WrapError(errors.ErrBadArgument, "invalid gas_limit"))
-	}
-	gas := sdk.NewIntFromUint64(uint64(gasLimit))
+	if metadata["gas_price"] != nil && metadata["gas_limit"] != nil {
+		gasPrice, ok := metadata["gas_price"].(string)
+		if !ok {
+			return nil, errors.ToRosetta(errors.WrapError(errors.ErrBadArgument, "invalid gas_price"))
+		}
+		price, err := sdk.ParseDecCoin(gasPrice)
+		if err != nil {
+			return nil, errors.ToRosetta(err)
+		}
 
-	suggestedFee := types.Amount{
-		Value: strconv.FormatInt(price.Amount.MulInt64(gas.Int64()).Ceil().TruncateInt64(), 10),
-		Currency: &(types.Currency{
-			Symbol:   price.Denom,
-			Decimals: 0,
-		}),
+		gasLimit, ok := metadata["gas_limit"].(float64)
+		if !ok || gasLimit <= 0 {
+			return nil, errors.ToRosetta(errors.WrapError(errors.ErrBadArgument, "invalid gas_limit"))
+		}
+		gas := sdk.NewIntFromUint64(uint64(gasLimit))
+
+		suggestedFee := types.Amount{
+			Value: strconv.FormatInt(price.Amount.MulInt64(gas.Int64()).Ceil().TruncateInt64(), 10),
+			Currency: &(types.Currency{
+				Symbol:   price.Denom,
+				Decimals: 0,
+			}),
+		}
+		response.SuggestedFee = []*types.Amount{&suggestedFee}
 	}
 
-	return &types.ConstructionMetadataResponse{
-		Metadata:     metadata,
-		SuggestedFee: []*types.Amount{&suggestedFee},
-	}, nil
+	return response, nil
 }
 
 // ConstructionParse Parse is called on both unsigned and signed transactions to understand the

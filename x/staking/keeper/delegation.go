@@ -253,7 +253,7 @@ func (k Keeper) IterateDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAd
 }
 
 // IterateDelegatorRedelegations iterates through one delegator's redelegations
-func (k Keeper) IterateDelegatorRedelegations(ctx sdk.Context, delegator sdk.AccAddress, fn func(red types.Redelegation) (stop bool)) {
+func (k Keeper) IterateDelegatorRedelegations(ctx sdk.Context, delegator sdk.AccAddress, cb func(red types.Redelegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := types.GetREDsKey(delegator)
 
@@ -262,7 +262,7 @@ func (k Keeper) IterateDelegatorRedelegations(ctx sdk.Context, delegator sdk.Acc
 
 	for ; iterator.Valid(); iterator.Next() {
 		red := types.MustUnmarshalRED(k.cdc, iterator.Value())
-		if stop := fn(red); stop {
+		if cb(red) {
 			break
 		}
 	}

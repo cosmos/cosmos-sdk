@@ -31,6 +31,9 @@ var (
 	skey_1b = types.NewKVStoreKey("store1b")
 	skey_2b = types.NewKVStoreKey("store2b")
 	skey_3b = types.NewKVStoreKey("store3b")
+
+	skey_mem1  = types.NewMemoryStoreKey("mstore1")
+	skey_tran1 = types.NewTransientStoreKey("tstore1")
 )
 
 func storeParams1(t *testing.T) StoreParams {
@@ -905,10 +908,10 @@ func TestTrace(t *testing.T) {
 
 	db := memdb.NewDB()
 	opts := storeParams1(t)
-	require.NoError(t, opts.RegisterSubstore(skey_2, types.StoreTypeMemory))
-	require.NoError(t, opts.RegisterSubstore(skey_3, types.StoreTypeTransient))
+	require.NoError(t, opts.RegisterSubstore(skey_mem1, types.StoreTypeMemory))
+	require.NoError(t, opts.RegisterSubstore(skey_tran1, types.StoreTypeTransient))
 
-	store, err := NewStore(db, opts)
+	store, err := ctor(db, opts)
 	require.NoError(t, err)
 	store.SetTracingContext(tc)
 	require.False(t, store.TracingEnabled())
@@ -917,7 +920,7 @@ func TestTrace(t *testing.T) {
 	store.SetTracer(&buf)
 	require.True(t, store.TracingEnabled())
 
-	for _, skey := range []types.StoreKey{skey_1, skey_2, skey_3} {
+	for _, skey := range []types.StoreKey{skey_1, skey_mem1, skey_tran1} {
 		buf.Reset()
 		store.GetKVStore(skey).Get(key)
 		require.Equal(t, expected_Get_missing, buf.String())

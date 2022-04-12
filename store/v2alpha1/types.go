@@ -51,6 +51,8 @@ var (
 	PruneNothing    = v1.PruneNothing
 
 	NewKVStoreKey                = v1.NewKVStoreKey
+	NewMemoryStoreKey            = v1.NewMemoryStoreKey
+	NewTransientStoreKey         = v1.NewTransientStoreKey
 	PrefixEndBytes               = v1.PrefixEndBytes
 	KVStorePrefixIterator        = v1.KVStorePrefixIterator
 	KVStoreReversePrefixIterator = v1.KVStoreReversePrefixIterator

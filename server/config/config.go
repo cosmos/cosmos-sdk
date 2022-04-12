@@ -133,10 +133,10 @@ type RosettaConfig struct {
 	// Offline defines if the server must be run in offline mode
 	Offline bool `mapstructure:"offline"`
 
-	EnableDefaultFeeSuggest bool `mapstructure:"enable-default-fee-suggest"`
+	EnableDefaultSuggestedFee bool `mapstructure:"enable-default-suggested-fee"`
 
 	// SuggestGas defines gas limit when calculate fee
-	SuggestGas int `mapstructure:"suggest-gas"`
+	SuggestedGasLimit int `mapstructure:"suggested-gas-limit"`
 
 	// DefaultSuggestDenom defines the defult denom for fee suggestion
 	DefaultSuggestDenom string `mapstructure:"default-suggest-denom"`

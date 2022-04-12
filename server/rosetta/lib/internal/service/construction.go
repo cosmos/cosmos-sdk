@@ -77,12 +77,11 @@ func (on OnlineNetwork) ConstructionMetadata(ctx context.Context, request *types
 	gas := sdk.NewIntFromUint64(uint64(metadata["gas_limit"].(float64)))
 
 	suggestedFee := types.Amount{
-		Value: price.Amount.MulInt64(gas.Int64()).String(),
+		Value: price.Amount.Mul(gas).String(),
 		Currency: &(types.Currency{
 			Symbol:   price.Denom,
 			Decimals: 0,
 		}),
-		/*metadata*/
 	}
 
 	return &types.ConstructionMetadataResponse{

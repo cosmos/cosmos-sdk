@@ -31,7 +31,7 @@ import (
 // interface assertion
 var _ crgtypes.Client = (*Client)(nil)
 
-const defaultNodeTimeout = 60 * time.Second
+const defaultNodeTimeout = time.Minute
 
 // Client implements a single network client to interact with cosmos based chains
 type Client struct {
@@ -403,7 +403,7 @@ func (c *Client) ConstructionMetadataFromOptions(ctx context.Context, options ma
 		return nil, err
 	}
 
-	// if default fess suggestion is enabled and gas limit or price is unset, use default
+	// if default fees suggestion is enabled and gas limit or price is unset, use default
 	if c.config.EnableDefaultFeeSuggest {
 		if constructionOptions.GasLimit <= 0 {
 			constructionOptions.GasLimit = uint64(c.config.SuggestGas)

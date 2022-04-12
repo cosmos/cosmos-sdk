@@ -18,44 +18,41 @@ The plugin is setup to run as the `default` plugin. See `./plugin/loader/preload
    ```
    # app.toml
 
-   ...
-    
+   . . .
+
    ###############################################################################
    ###                      Plugin system configuration                        ###
    ###############################################################################
-    
+
    [plugins]
-    
+
    # turn the plugin system, as a whole, on or off
    on = true
-    
+
    # List of plugin names to enable from the plugin/plugins/*
-   enabled = ["trace"]
-    
-   # The directory to load non-preloaded plugins from; defaults to
+   enabled = ["kafka"]
+
+   # The directory to load non-preloaded plugins from; defaults $GOPATH/src/github.com/cosmos/cosmos-sdk/plugin/plugins
    dir = ""
-    
-   # a mapping of plugin-specific streaming service parameters, mapped to their pluginFileName
-   [plugins.streaming]
-    
+
    ###############################################################################
    ###                       Trace Plugin configuration                        ###
    ###############################################################################
-   
-   # The specific parameters for the Kafka streaming service plugin
+
+   # The specific parameters for the trace streaming service plugin
    [plugins.streaming.trace]
-   
+
    # List of store keys we want to expose for this streaming service.
    keys = []
-   
+
    # In addition to block event info, print the data to stdout as well.
    print_data_to_stdout = false
 
    # Whether or not to halt the application when plugin fails to deliver message(s).
-   halt_app_on_delivery_error = true
+   halt_app_on_delivery_error = false
    ```
-   
-2. Run `make test-sim-nondeterminism` and wait for the tests to finish.
+
+2. Run `make test-sim-nondeterminism-state-listening-trace` and wait for the tests to finish.
 
 
 ## Plugin design

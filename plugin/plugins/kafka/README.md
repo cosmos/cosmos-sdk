@@ -6,99 +6,83 @@ This plugin demonstrates how to listen to state changes of individual `KVStores`
 
 <!-- TOC -->
   - [Plugin design](#plugin-design)
-    - [Channel-Based producer](#channel-based-producer)
+    - [Function-Based producer](#function-based-producer)
     - [Delivery Report handler](#delivery-report-handler)
     - [Message serde](#message-serde)
+    - [Message key](#message-key)
     - [Example configuration](#example-configuration)
   - [Testing the plugin](#testing-the-plugin)
-  - [Confluent Platform](#confluent-platform)
-    - [Docker](#docker)
-    - [Schema Registry](#schema-registry)
-    - [KSQL examples](#ksql-examples)
+    - [Confluent Platform](#confluent-platform)
     
 
 
 ## Plugin design
-The plugin was build using [confluent-kafka-go](https://github.com/confluentinc/confluent-kafka-go); a lightwieght wrapper around [librdkafka](https://github.com/edenhill/librdkafka).
+The plugin was build using [confluent-kafka-go](https://github.com/confluentinc/confluent-kafka-go), a lightweight wrapper around [librdkafka](https://github.com/edenhill/librdkafka).
 
-This particular implmentation uses:
+This particular implementation uses:
 * `Channel-Based producer` - Faster than the function-based `producer.Produce()`.
 * `Delivery reports handler` - Notifies the application of success or failure to deliver messages to Kafka.
 
-### Channel-Based producer
-The plugin uses the `producer.Producerchannel()` to deliver messages to Kafka.
-
+### Function-Based producer
+The plugin uses the `producer.Produce()` to deliver messages to Kafka. Delivery reports are emitted on the `producer.Events()` or specific private channel.
+Any errors that occur during delivery propagate up the stack and `halt` the app when `plugins.streaming.kafka.halt_app_on_delivery_error = true`
 
 Pros:
-* Proper channel backpressure if `librdkafka`'s internal queue is full. The queue size can be controlled by setting.
-* Message order is preserved (guaranteed by the producer API).
-* Faster than the `function-based` async producer.
+* Go:ish
 
 Cons:
-* Double queueing: messages are first queued in the channel and the inside librdkafka. the Size of the channel is configurable via `queue.buffering.max.messages`.
+* `Produce()` is a non-blocking call, if the internal librdkafka queue is full the call will fail.
+
+*The Producer's queue is configurable with the `queue.buffering.max.messages` property (default: 100000). See [config-docs](https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md) for further understanding.
 
 ### Delivery Report handler
-Producing is an asynchronous operation. Therefore, the client notifies the application (per-message) of success or failure through delivery reports. Deliver reports are by default emmitted on the `producer.Events()` channel as `*kafka.Message`. One needs to check `msg.TopicPartition.Error` for `nil` to find out if the message was successfully delivered or not.
+Producing is an asynchronous operation. Therefore, the client notifies the application (per-message) of success or failure through delivery reports.
+Deliver reports are by default emitted on the `producer.Events()` channel as `*kafka.Message`. One needs to check `msg.TopicPartition.Error` for `nil` for successful delivery.
+The plugin implementation uses a private delivery channel `Produce(msg *Message, deliveryChan chan Event)` for successful delivery of each message.
+When `plugins.streaming.kafka.halt_app_on_delivery_error = true`, the app will `halt` if delivery of any messages fails. This helps keep state in sync between the node and Kafka.
 
 Pros:
-* Can be used to propagate success or failures to the application.
-* Can be used to track the messages produced.
-* Can be turned off by setting `"go.delivery.reports": false` for a fire-and-forget scenario.
+* Used to propagate success or failures to the application.
+* Used to track the messages produced.
+* Is turned off by setting `"go.delivery.reports": false` for a fire-and-forget scenario.
 
 Cons:
-* Must be handled in a go routine which makes it difficult to propagate errors to the `WriterListner.onWrite()`.
+* Slower than when the plugin operates in fire-and-forget mode `plugins.streaming.kafka.halt_app_on_delivery_error = false` as each message needs to be checked whether it was successfully delivered. 
 
 ### Message serde
 
-As of this writing there is no `golang` support for `serialization/deserialization` of proto messages for the Confluent Schema Registry. Because of this limitiation, the Marshalled JSON data is saved instead.
+As of this writing there is no `golang` support for `serialization/deserialization` of proto message schema with the Confluent Schema Registry. Therefore, the Kafka plugin produces messages in proto binary format without a registered schema.
 
-Note, you can register the proto messages with the schema registry by generating the `Java` code and using the supported [Java](https://github.com/confluentinc/schema-registry/blob/master/protobuf-serializer/src/main/java/io/confluent/kafka/serializers/protobuf/KafkaProtobufSerializer.java) client library for the schema registry to automatically register the proto messages.
+Note, proto message schemas can be registered with the Confluent Schema Registry by [generating the Java code](https://developers.google.com/protocol-buffers/docs/javatutorial) of the CosmosSDK proto files and then use the supported Java libraries. See the Confluent [docs](https://docs.confluent.io/platform/current/schema-registry/serdes-develop/serdes-protobuf.html) for how to do this.
 
 #### Message `key`
-To be able to identify an track messages in Kafka the `key` is made up of the following properties:
-* `block height` - BIGINT
-* `event` - BEGIN_BLOCK, END_BLOCK, DELIVER_TX
-* `event_id` - BIGINT (increments for DELIVER_TX)
-* `event_type` - REQUEST, RESPONSE, STATE_CHANGE
-* `event_type_id` - BIGINT (increments for STATE_CHANGE)
 
-Example:
+To be able to identify and track messages in Kafka a [msg_key.proto](./proto/msg_key.proto) was introduced to the plugin.
+
 ```
-// first tx
-{
-  "block_height": 1,
-  "event": "DELIVER_TX",
-  "event_id": 1,
-  "event_type": "REQUEST",
-  "event_type_id ": 1
-}
+syntax = "proto3";
 
-// second tx
-{
-  "block_height": 1,
-  "event": "DELIVER_TX",
-  "event_id": 2,           // incrementing
-  "event_type": "REQUEST",
-  "event_type_id ": 1
-}
-```
+option go_package = "github.com/cosmos/cosmos-sdk/plugin/plugins/kafka/service";
 
-#### Message `value`
+option java_multiple_files = true;
+option java_package = "network.cosmos.listening.plugins.kafka.service";
 
-The `value` structure is the Marshalled JSON structure of the request, response or the state change for begin block, end block, and deliver tx events.
-
-Example:
-```
-{
-  "BLOCK_HEIGHT": 1,
-  "EVENT": "BEGIN_BLOCK",
-  "EVENT_ID": 1,
-  "EVENT_TYPE": "STATE_CHANGE",
-  "EVENT_TYPE_ID": 1,
-  "STORE_KEY": "mockStore1",
-  "DELETE": false,
-  "KEY": "AQID",
-  "VALUE": "AwIB"
+message MsgKey {
+  int64  block_height  = 1 [json_name = "block_height"];
+  enum Event {
+    BEGIN_BLOCK = 0;
+    END_BLOCK   = 1;
+    DELIVER_TX  = 2;
+  }
+  Event event = 2;
+  int64  event_id      = 3 [json_name = "event_id"];
+  enum EventType {
+    REQUEST      = 0;
+    RESPONSE     = 1;
+    STATE_CHANGE = 2;
+  }
+  EventType event_type = 4 [json_name = "event_type"];
+  int64  event_type_id = 5 [json_name = "event_type_id"];
 }
 ```
 
@@ -108,7 +92,7 @@ Below is an example of how to configure the Kafka plugin.
 ```
 # app.toml
 
-...
+. . .
 
 ###############################################################################
 ###                      Plugin system configuration                        ###
@@ -122,31 +106,25 @@ on = true
 # List of plugin names to enable from the plugin/plugins/*
 enabled = ["kafka"]
 
-# The directory to load non-preloaded plugins from; defaults to ./plugin/plugins
+# The directory to load non-preloaded plugins from; defaults $GOPATH/src/github.com/cosmos/cosmos-sdk/plugin/plugins
 dir = ""
 
-# a mapping of plugin-specific streaming service parameters, mapped to their pluginFileName
-[plugins.streaming]
-
-# maximum amount of time the BaseApp will await positive acknowledgement of message receipt from all streaming services
-# in milliseconds
-global_ack_wait_limit = 2000
 
 ###############################################################################
 ###                       Kafka Plugin configuration                        ###
 ###############################################################################
 
-# The specific parameters for the Kafka streaming service plugin
+# The specific parameters for the kafka streaming service plugin
 [plugins.streaming.kafka]
 
 # List of store keys we want to expose for this streaming service.
 keys = []
 
-# Optional topic prefix for the topic(s) where data will be stored
-topic_prefix = "block"
+# Optional prefix for topic names where data will be stored.
+topic_prefix = "pio"
 
 # Flush and wait for outstanding messages and requests to complete delivery. (milliseconds)
-flush_timeout_ms = 1500
+flush_timeout_ms = 5000
 
 # Whether or not to halt the application when plugin fails to deliver message(s).
 halt_app_on_delivery_error = true
@@ -161,7 +139,7 @@ halt_app_on_delivery_error = true
 bootstrap_servers = "localhost:9092"
 
 # Client identifier
-client_id = "my-app-id"
+client_id = "pio-state-listening"
 
 # This field indicates the number of acknowledgements the leader
 # broker must receive from ISR brokers before responding to the request
@@ -185,132 +163,7 @@ To execute the tests, run:
 make test-sim-nondeterminism-state-listening-kafka
 ```
 
-## Confluent Platform
+### Confluent Platform
 
 If you're interested in viewing or querying events stored in kafka you can stand up the Confluent Platform stack with docker.
-
-*Visit the Confluent Platform [docs](https://docs.confluent.io/platform/current/quickstart/ce-docker-quickstart.html) for up to date docker instructions.*
-
-### Docker
-
-Spin up Confluent Platform.
-```
-docker-compose -f plugin/plugins/kafka/docker-compose.yml up -d
-```
-
-You should see something like this:
-```
-Creating network "kafka_default" with the default driver
-Creating zookeeper ... done
-Creating broker    ... done
-Creating schema-registry ... done
-Creating rest-proxy      ... done
-Creating connect         ... done
-Creating ksqldb-server   ... done
-Creating ksql-datagen    ... done
-Creating ksqldb-cli      ... done
-Creating control-center  ... done
-```
-
-Check status
-```
-docker-compose ps
-```
-
-You should see something like this:
-```
-     Name                    Command               State                       Ports                     
----------------------------------------------------------------------------------------------------------
-broker            /etc/confluent/docker/run        Up      0.0.0.0:9092->9092/tcp, 0.0.0.0:9101->9101/tcp
-connect           /etc/confluent/docker/run        Up      0.0.0.0:8083->8083/tcp, 9092/tcp              
-control-center    /etc/confluent/docker/run        Up      0.0.0.0:9021->9021/tcp                        
-ksql-datagen      bash -c echo Waiting for K ...   Up                                                    
-ksqldb-cli        /bin/sh                          Up                                                    
-ksqldb-server     /etc/confluent/docker/run        Up      0.0.0.0:8088->8088/tcp                        
-rest-proxy        /etc/confluent/docker/run        Up      0.0.0.0:8082->8082/tcp                        
-schema-registry   /etc/confluent/docker/run        Up      0.0.0.0:8081->8081/tcp                        
-zookeeper         /etc/confluent/docker/run        Up      0.0.0.0:2181->2181/tcp, 2888/tcp, 3888/tcp  
-```
-
-### KSQL examples
-
-One huge advante of using Kafka with the Confluent Platform is the KSQL streaming engine. KSQL allows us to be able to write queries and create streams or tables from one or multiple Kafka topics (through joins) without having to write any code.
-
-Examples:
-
-Create a structured stream from the `block-state-change` topic containig raw data. This will make it easier to be able to fitler out specific events.
-```
-CREATE OR REPLACE STREAM state_change_stream (
-  block_height  BIGINT KEY,    /* k1 */
-  event         STRING KEY,    /* k2 */
-  event_id      BIGINT KEY,    /* k3 */
-  event_type    STRING KEY,    /* k4 */
-  event_type_id BIGINT KEY,    /* k5 */
-  store_key     STRING,
-  `delete`      BOOLEAN,
-  key           STRING,
-  value         STRING         /* this may be a STRUC depending on the store type */
-) WITH (KAFKA_TOPIC='block-state-change', KEY_FORMAT='JSON', VALUE_FORMAT='JSON');
-```
-
-Run the below query to see the messages in of this new stream.
-
-```
-SELECT * FROM state_change_stream EMIT CHANGES LIMIT 1;
-```
-
-Result:
-```
-{
-  "BLOCK_HEIGHT": 1,
-  "EVENT": "BEGIN_BLOCK",
-  "EVENT_ID": 1,
-  "EVENT_TYPE": "STATE_CHANGE",
-  "EVENT_TYPE_ID": 1,
-  "STORE_KEY": "mockStore1",
-  "delete": false,
-  "KEY": "AQID",
-  "VALUE": "AwIB"
-}
-```
-
-Lets take it one step further and create a stream that contains only `DELIVER_TX` events.
-
-```
-SET 'processing.guarantee' = 'exactly_once';
-
-CREATE OR REPLACE STREAM deliver_tx_state_change_stream
-  AS SELECT * 
-  FROM  STATE_CHANGE_STREAM 
-  WHERE event = 'DELIVER_TX'
-  EMIT CHANGES;
-```
-
-Lets take a look at what the data looks like.
-
-```
-SELECT * FROM deliver_tx_state_change_stream EMIT CHANGES LIMIT 1;
-```
-
-Result:
-
-```
-{
-  "BLOCK_HEIGHT": 2,
-  "EVENT": "BEGIN_BLOCK",
-  "EVENT_ID": 1,
-  "EVENT_TYPE": "STATE_CHANGE",
-  "EVENT_TYPE_ID": 1,
-  "STORE_KEY": "acc",
-  "delete": false,
-  "KEY": "AQBhNv4khMI7PylvV6i1lSlSCleL",
-  "VALUE": "CiAvY29zbW9zLmF1dGgudjFiZXRhMS5CYXNlQWNjb3VudBJ8Ci1jb3Ntb3MxcXBzbmRsM3lzbnByazBlZmRhdDYzZHY0OTlmcTU0dXR0eWdncGsSRgofL2Nvc21vcy5jcnlwdG8uc2VjcDI1NmsxLlB1YktleRIjCiECcyIkZHE6G+gkK2TJEjko3LjNFgZ4Fmfu90jDkjlbojcYygEgAQ=="
-}
-```
-
-### Schema Registry
-
-Because `golang` lacks support to be able to register Protobuf messages with the schema registry, one needs to generate the Java code from the proto messages and use the [KafkaProtobufSerializer.java](https://github.com/confluentinc/schema-registry/blob/master/protobuf-serializer/src/main/java/io/confluent/kafka/serializers/protobuf/KafkaProtobufSerializer.java) to automatically register them. The Java libraries make this process exctreamly easy. Take a look [here](https://docs.confluent.io/platform/current/schema-registry/serdes-develop/serdes-protobuf.html) fro an example of how this is achived.
-
-
-Check out the [docs](https://docs.ksqldb.io/en/latest/) and this [post](https://www.confluent.io/blog/ksqldb-0-15-reads-more-message-keys-supports-more-data-types/) for more complex examples and a deeper understanding of KSQL.
+Visit the Confluent Platform [docs](https://docs.confluent.io/platform/current/quickstart/ce-docker-quickstart.html) for up to date docker instructions.

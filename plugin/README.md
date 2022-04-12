@@ -28,20 +28,22 @@ type Plugin interface {
 
 Specific plugin types extend this interface, enabling them to work with the loader tooling defined in the [loader sub-directory](./loader).
 
-The plugin system itself is configured using the `plugins` TOML mapping in the App's app.toml file. There are three
-parameters for configuring the plugins: `plugins.on`, `plugins.disabled` and `plugins.dir`. `plugins.on` is a bool that
+The plugin system itself is configured using the `plugins` TOML mapping in the App's `app.toml` file. There are three
+parameters for configuring the plugins: `plugins.on`, `plugins.enabled` and `plugins.dir`. `plugins.on` is a bool that
 turns on or off the plugin system at large, `plugins.dir` directs the system to a directory to load plugins from, and
-`plugins.disabled` is a list of names for the plugins we want to disable (useful for disabling preloaded plugins).
+`plugins.enabled` is a list enabled plugin names.
 
 ```toml
 [plugins]
     on = false # turn the plugin system, as a whole, on or off
-    disabled = ["list", "of", "plugin", "names", "to", "disable"]
+    enabled = ["list", "of", "plugin", "names", "to", "enable"]
     dir = "the directory to load non-preloaded plugins from; defaults to cosmos-sdk/plugin/plugins"
 ```
 
 As mentioned above, some plugins can be preloaded. This means they do not need to be loaded from the specified `plugins.dir` and instead
-are loaded by default. At this time the only preloaded plugin is the [file streaming service plugin](./plugins/file).
+are loaded by default. Note, both preloaded and non-preloaded plugins must appear in `plugins.enabled` list for the app to send events to them.
+This provides node operators with the ability to `opt-in` and enable only plugins of interest. At this time the only preloaded plugins are;
+the [file streaming service plugin](./plugins/file), the [trace streaming service plugin](./plugins/trace) and the [kafka streaming service plugin](./plugins/kafka).
 Plugins can be added to the preloaded set by adding the plugin to the [plugins dir](../../plugin/plugin.go) and modifying the [preload_list](../../plugin/loader/preload_list).
 
 In your application, if the  `plugins.on` is set to `true` use this to direct the invocation of `NewPluginLoader` and walk through
@@ -68,6 +70,7 @@ func NewSimApp(
 	pluginsOnKey := fmt.Sprintf("%s.%s", plugin.PLUGINS_TOML_KEY, plugin.PLUGINS_ON_TOML_KEY)
 	if cast.ToBool(appOpts.Get(pluginsOnKey)) {
 		// this loads the preloaded and any plugins found in `plugins.dir`
+		// if their names match those in the `plugins.enabled` list.
 		pluginLoader, err := loader.NewPluginLoader(appOpts, logger)
 		if err != nil {
 			// handle error
@@ -118,38 +121,31 @@ type StateStreamingPlugin interface {
 }
 ```
 
-A `StateStreamingPlugin` is configured from within an App using the `AppOptions` loaded from the app.toml file.
+A `StateStreamingPlugin` is configured from within an App using the `AppOptions` loaded from the `app.toml` file.
 Every `StateStreamingPlugin` will be configured within the `plugins.streaming` TOML mapping. The exact keys/parameters
 present in this mapping will be dependent on the specific `StateStreamingPlugin`, but we will introduce some standards
 here using the file `StateStreamingPlugin`:
 
 Plugin TOML configuration should be split into separate sub-tables for each kind of plugin (e.g. `plugins.streaming`).
-For streaming plugins a parameter `plugins.streaming.global_ack_wait_limit` is used to configure the maximum amount of time
-the BaseApp will wait for positive acknowledgement of receipt by the external streaming services before it considers
-the message relay to be a failure.
 
 Within these sub-tables, the parameters for a specific plugin of that kind are included in another sub-table (e.g. `plugins.streaming.file`).
 It is generally expected, but not required, that a streaming service plugin can be configured with a set of store keys
-(e.g. `plugins.streaming.file.keys`) for the stores it listens to and a flag (e.g. `plugins.streaming.file.ack`)
-that signifies whether the service operates in a fire-and-forget capacity or the BaseApp should require positive
-acknowledgement of message receipt by the service. In the case of "ack" mode, the service may also need to be
-configured with an acknowledgement wait limit specific to that individual service (e.g. `plugins.streaming.kafka.ack_wait_limit`).
-The file `StreamingService` does not have an individual `ack_wait_limit` since it operates synchronously with the App.
+(e.g. `plugins.streaming.file.keys`) for the stores it listens to and a flag (e.g. `plugins.streaming.file.halt_app_on_delivery_error`)
+that signifies whether the service operates in a fire-and-forget capacity, or the BaseApp should halt in case of a delivery error by the plugin service.
+The file `StreamingService` does not have an individual `halt_app_on_delivery_error` since it operates synchronously with the App.
 
 e.g.
 
 ```toml
 [plugins]
     on = false # turn the plugin system, as a whole, on or off
-    disabled = ["list", "of", "plugin", "names", "to", "disable"]
+    enabled = ["list", "of", "plugin", "names", "to", "enable"]
     dir = "the directory to load non-preloaded plugins from; defaults to cosmos-sdk/plugin/plugins"
     [plugins.streaming] # a mapping of plugin-specific streaming service parameters, mapped to their pluginFileName
-        # maximum amount of time the BaseApp will await positive acknowledgement of message receipt from all streaming services
-        # in milliseconds
-        global_ack_wait_limit = 500
         [plugins.streaming.file] # the specific parameters for the file streaming service plugin
             keys = ["list", "of", "store", "keys", "we", "want", "to", "expose", "for", "this", "streaming", "service"]
             write_dir = "path to the write directory"
-            prefix = "optional prefix to prepend to the generated file names"
-            ack = "false" # false == fire-and-forget; true == sends a message receipt success/fail signal
+            prefix = "optional prefix to prepend to the generated file names
+            # Whether or not to halt the application when plugin fails to deliver message(s).
+            halt_app_on_delivery_error = false # false = fire-and-forget
 ```

@@ -542,24 +542,30 @@ func (s *Store) Commit() types.CommitID {
 		panic(err)
 	}
 
-	// Prune if necessary
-	previous := cid.Version - 1
-	if s.Pruning.Interval != 0 && cid.Version%int64(s.Pruning.Interval) == 0 {
-		// The range of newly prunable versions
-		lastPrunable := previous - int64(s.Pruning.KeepRecent)
-		firstPrunable := lastPrunable - int64(s.Pruning.Interval)
+	pruneVersions(cid.Version, s.Pruning, func(ver int64) {
+		s.stateDB.DeleteVersion(uint64(ver))
 
-		for version := firstPrunable; version <= lastPrunable; version++ {
-			s.stateDB.DeleteVersion(uint64(version))
-
-			if s.StateCommitmentDB != nil {
-				s.StateCommitmentDB.DeleteVersion(uint64(version))
-			}
+		if s.StateCommitmentDB != nil {
+			s.StateCommitmentDB.DeleteVersion(uint64(ver))
 		}
-	}
+	})
 
 	s.tran.Commit()
 	return *cid
+}
+
+// Performs necessary pruning via callback
+func pruneVersions(current int64, opts types.PruningOptions, prune func(int64)) {
+	previous := current - 1
+	if opts.Interval != 0 && current%int64(opts.Interval) == 0 {
+		// The range of newly prunable versions
+		lastPrunable := previous - int64(opts.KeepRecent)
+		firstPrunable := lastPrunable - int64(opts.Interval)
+
+		for version := firstPrunable; version <= lastPrunable; version++ {
+			prune(version)
+		}
+	}
 }
 
 func (s *Store) getMerkleRoots() (ret map[string][]byte, err error) {

@@ -15,7 +15,7 @@ import (
 // compatibility with existing code that expects the old interface.
 type TmdbAdapter struct {
 	dbm.DBReadWriter
-	db dbm.DBConnection
+	Connection dbm.DBConnection
 }
 type tmdbBatchAdapter struct {
 	*TmdbAdapter
@@ -29,7 +29,7 @@ var (
 // ConnectionAsTmdb returns a tmdb.DB which wraps a DBConnection.
 func ConnectionAsTmdb(db dbm.DBConnection) *TmdbAdapter { return &TmdbAdapter{db.ReadWriter(), db} }
 
-func (d *TmdbAdapter) Close() error   { d.CloseTx(); return d.db.Close() }
+func (d *TmdbAdapter) Close() error   { d.CloseTx(); return d.Connection.Close() }
 func (d *TmdbAdapter) CloseTx() error { return d.DBReadWriter.Discard() }
 
 func (d *TmdbAdapter) sync() error {
@@ -37,7 +37,7 @@ func (d *TmdbAdapter) sync() error {
 	if err != nil {
 		return err
 	}
-	d.DBReadWriter = d.db.ReadWriter()
+	d.DBReadWriter = d.Connection.ReadWriter()
 	return nil
 }
 func (d *TmdbAdapter) DeleteSync(k []byte) error {
@@ -60,11 +60,11 @@ func (d *TmdbAdapter) Commit() (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	v, err := d.db.SaveNextVersion()
+	v, err := d.Connection.SaveNextVersion()
 	if err != nil {
 		return 0, err
 	}
-	d.DBReadWriter = d.db.ReadWriter()
+	d.DBReadWriter = d.Connection.ReadWriter()
 	return v, err
 }
 

@@ -25,6 +25,12 @@ type cacheStore1as2 struct {
 	v1.CacheMultiStore
 }
 
+type viewStore1as2 struct{ cacheStore1as2 }
+
+type readonlyKVStore struct {
+	v2.KVStore
+}
+
 // NewV1MultiStoreAsV2 constructs a v1 CommitMultiStore from v2.StoreParams
 func NewV1MultiStoreAsV2(database db.DBConnection, opts StoreParams) (v2.CommitMultiStore, error) {
 	adapter := dbutil.ConnectionAsTmdb(database)
@@ -62,9 +68,17 @@ func NewV1MultiStoreAsV2(database db.DBConnection, opts StoreParams) (v2.CommitM
 func (s *store1as2) CacheWrap() v2.CacheMultiStore {
 	return cacheStore1as2{s.CacheMultiStore()}
 }
+
 func (s *store1as2) GetVersion(ver int64) (v2.MultiStore, error) {
 	ret, err := s.CacheMultiStoreWithVersion(ver)
-	return cacheStore1as2{ret}, err
+	versions, err := s.database.Connection.Versions()
+	if err != nil {
+		return nil, err
+	}
+	if !versions.Exists(uint64(ver)) {
+		return nil, db.ErrVersionDoesNotExist
+	}
+	return viewStore1as2{cacheStore1as2{ret}}, err
 }
 
 // CommitMultiStore
@@ -79,6 +93,9 @@ func (s *store1as2) Commit() v2.CommitID {
 	if err != nil {
 		panic(err)
 	}
+	pruneVersions(ret.Version, s.GetPruning(), func(ver int64) {
+		s.database.Connection.DeleteVersion(uint64(ver))
+	})
 	return ret
 }
 
@@ -100,4 +117,17 @@ func (s cacheStore1as2) CacheWrap() v2.CacheMultiStore {
 func (s cacheStore1as2) SetTracer(w io.Writer) { s.CacheMultiStore.SetTracer(w) }
 func (s cacheStore1as2) SetTracingContext(tc v2.TraceContext) {
 	s.CacheMultiStore.SetTracingContext(tc)
+}
+
+func (s viewStore1as2) GetKVStore(skey v2.StoreKey) v2.KVStore {
+	sub := s.CacheMultiStore.GetKVStore(skey)
+	return readonlyKVStore{sub}
+}
+
+func (kv readonlyKVStore) Set(key []byte, value []byte) {
+	panic(ErrReadOnly)
+}
+
+func (kv readonlyKVStore) Delete(key []byte) {
+	panic(ErrReadOnly)
 }

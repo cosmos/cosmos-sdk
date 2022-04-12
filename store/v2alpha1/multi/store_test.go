@@ -36,6 +36,13 @@ var (
 	skey_tran1 = types.NewTransientStoreKey("tstore1")
 )
 
+// Factored out so the same tests can be run on Store and adaptor (v1asv2)
+type storeConstructor = func(dbm.DBConnection, StoreParams) (types.CommitMultiStore, error)
+
+func multistoreConstructor(db dbm.DBConnection, params StoreParams) (types.CommitMultiStore, error) {
+	return NewStore(db, params)
+}
+
 func storeParams1(t *testing.T) StoreParams {
 	opts := DefaultStoreParams()
 	require.NoError(t, opts.RegisterSubstore(skey_1, types.StoreTypePersistent))
@@ -77,11 +84,14 @@ func TestStoreParams(t *testing.T) {
 }
 
 func TestMultiStoreBasic(t *testing.T) {
+	doTestMultiStoreBasic(t, multistoreConstructor)
+}
+
+func doTestMultiStoreBasic(t *testing.T, ctor storeConstructor) {
 	opts := DefaultStoreParams()
 	err := opts.RegisterSubstore(skey_1, types.StoreTypePersistent)
 	require.NoError(t, err)
-	db := memdb.NewDB()
-	store, err := NewStore(db, opts)
+	store, err := ctor(memdb.NewDB(), opts)
 	require.NoError(t, err)
 
 	store_1 := store.GetKVStore(skey_1)
@@ -430,6 +440,10 @@ func sliceToSet(slice []uint64) map[uint64]struct{} {
 }
 
 func TestPruning(t *testing.T) {
+	doTestPruning(t, multistoreConstructor, true)
+}
+
+func doTestPruning(t *testing.T, ctor storeConstructor, sepDBs bool) {
 	// Save versions up to 10 and verify pruning at final commit
 	testCases := []struct {
 		types.PruningOptions
@@ -442,11 +456,14 @@ func TestPruning(t *testing.T) {
 	}
 
 	for tci, tc := range testCases {
-		dbs := []dbm.DBConnection{memdb.NewDB(), memdb.NewDB()}
 		opts := storeParams1(t)
 		opts.Pruning = tc.PruningOptions
-		opts.StateCommitmentDB = dbs[1]
-		store, err := NewStore(dbs[0], opts)
+		dbs := []dbm.DBConnection{memdb.NewDB()}
+		if sepDBs {
+			dbs = append(dbs, memdb.NewDB())
+			opts.StateCommitmentDB = dbs[1]
+		}
+		store, err := ctor(dbs[0], opts)
 		require.NoError(t, err)
 
 		s1 := store.GetKVStore(skey_1)
@@ -481,7 +498,7 @@ func TestPruning(t *testing.T) {
 	db := memdb.NewDB()
 	opts := storeParams1(t)
 	opts.Pruning = types.PruningOptions{0, 10}
-	store, err := NewStore(db, opts)
+	store, err := ctor(db, opts)
 	require.NoError(t, err)
 
 	for i := byte(1); i <= 20; i++ {
@@ -507,9 +524,13 @@ func TestPruning(t *testing.T) {
 	}
 }
 
+func TestQuery(t *testing.T) {
+	doTestQuery(t, multistoreConstructor)
+}
+
 func queryPath(skey types.StoreKey, endp string) string { return "/" + skey.Name() + endp }
 
-func TestQuery(t *testing.T) {
+func doTestQuery(t *testing.T, ctor storeConstructor) {
 	k1, v1 := []byte("k1"), []byte("v1")
 	k2, v2 := []byte("k2"), []byte("v2")
 	v3 := []byte("v3")
@@ -712,9 +733,13 @@ func TestQuery(t *testing.T) {
 }
 
 func TestGetVersion(t *testing.T) {
+	doTestGetVersion(t, multistoreConstructor)
+}
+
+func doTestGetVersion(t *testing.T, ctor storeConstructor) {
 	db := memdb.NewDB()
 	opts := storeParams123(t)
-	store, err := NewStore(db, opts)
+	store, err := ctor(db, opts)
 	require.NoError(t, err)
 
 	cid := store.Commit()
@@ -747,9 +772,13 @@ func TestGetVersion(t *testing.T) {
 }
 
 func TestStoreSchemaMigration(t *testing.T) {
+	doTestStoreSchemaMigration(t, multistoreConstructor)
+}
+
+func doTestStoreSchemaMigration(t *testing.T, ctor storeConstructor) {
 	db := memdb.NewDB()
 	opts := storeParams123(t)
-	store, err := NewStore(db, opts)
+	store, err := ctor(db, opts)
 	require.NoError(t, err)
 
 	// write some data in all stores
@@ -776,7 +805,7 @@ func TestStoreSchemaMigration(t *testing.T) {
 	var migratedID types.CommitID
 
 	// Load without changes and make sure it is sensible
-	store, err = NewStore(db, opts)
+	store, err = ctor(db, opts)
 	require.NoError(t, err)
 
 	// let's query data to see it was saved properly
@@ -799,7 +828,7 @@ func TestStoreSchemaMigration(t *testing.T) {
 		// store must be loaded with post-migration schema, so this fails
 		opts := storeParams123(t)
 		opts.Upgrades = upgrades
-		store, err = NewStore(db, opts)
+		store, err = ctor(db, opts)
 		require.Error(t, err)
 
 		opts = DefaultStoreParams()
@@ -807,7 +836,7 @@ func TestStoreSchemaMigration(t *testing.T) {
 		require.NoError(t, opts.RegisterSubstore(skey_1, types.StoreTypePersistent))
 		require.NoError(t, opts.RegisterSubstore(skey_2b, types.StoreTypePersistent))
 		require.NoError(t, opts.RegisterSubstore(skey_4, types.StoreTypePersistent))
-		store, err = NewStore(db, opts)
+		store, err = ctor(db, opts)
 		require.NoError(t, err)
 
 		// store1 was not changed
@@ -846,7 +875,7 @@ func TestStoreSchemaMigration(t *testing.T) {
 
 	t.Run("reload after migrations", func(t *testing.T) {
 		// fail to load the migrated store with the old schema
-		store, err = NewStore(db, storeParams123(t))
+		store, err = ctor(db, storeParams123(t))
 		require.Error(t, err)
 
 		// pass in a schema reflecting the migrations
@@ -854,7 +883,7 @@ func TestStoreSchemaMigration(t *testing.T) {
 		require.NoError(t, migratedOpts.RegisterSubstore(skey_1, types.StoreTypePersistent))
 		require.NoError(t, migratedOpts.RegisterSubstore(skey_2b, types.StoreTypePersistent))
 		require.NoError(t, migratedOpts.RegisterSubstore(skey_4, types.StoreTypePersistent))
-		store, err = NewStore(db, migratedOpts)
+		store, err = ctor(db, migratedOpts)
 		require.NoError(t, err)
 		require.Equal(t, migratedID, store.LastCommitID())
 
@@ -896,6 +925,10 @@ func TestStoreSchemaMigration(t *testing.T) {
 }
 
 func TestTrace(t *testing.T) {
+	doTestTrace(t, multistoreConstructor)
+}
+
+func doTestTrace(t *testing.T, ctor storeConstructor) {
 	key, value := []byte("test-key"), []byte("test-value")
 	tc := types.TraceContext(map[string]interface{}{"blockHeight": 64})
 
@@ -953,9 +986,13 @@ func TestTrace(t *testing.T) {
 }
 
 func TestTraceConcurrency(t *testing.T) {
+	doTestTraceConcurrency(t, multistoreConstructor)
+}
+
+func doTestTraceConcurrency(t *testing.T, ctor storeConstructor) {
 	db := memdb.NewDB()
 	opts := storeParams123(t)
-	store, err := NewStore(db, opts)
+	store, err := ctor(db, opts)
 	require.NoError(t, err)
 
 	b := &bytes.Buffer{}
@@ -1000,6 +1037,10 @@ func TestTraceConcurrency(t *testing.T) {
 }
 
 func TestListeners(t *testing.T) {
+	doTestListeners(t, multistoreConstructor)
+}
+
+func doTestListeners(t *testing.T, ctor storeConstructor) {
 	kvPairs := []types.KVPair{
 		{Key: []byte{1}, Value: []byte("v1")},
 		{Key: []byte{2}, Value: []byte("v2")},
@@ -1036,7 +1077,7 @@ func TestListeners(t *testing.T) {
 	require.NoError(t, opts.RegisterSubstore(skey_2, types.StoreTypeMemory))
 	require.NoError(t, opts.RegisterSubstore(skey_3, types.StoreTypeTransient))
 
-	store, err := NewStore(db, opts)
+	store, err := ctor(db, opts)
 	require.NoError(t, err)
 
 	for i, tc := range testCases {

@@ -2,10 +2,11 @@ name: Sims
 # Sims workflow runs multiple types of simulations (nondeterminism, import-export, after-import, multi-seed-short)
 # This workflow will run on all Pull Requests, if a .go, .mod or .sum file have been changed
 on:
-  schedule:
-    - cron: "* */2 * * *"
-  release:
-    types: [published]
+  pull_request:
+  push:
+    branches:
+      - v[0-9]+.[0-9]+.x-celestia
+      - release/**
 
 jobs:
   cleanup-runs:

@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// GetDelegation returns a specific delegation
+// GetDelegation returns a specific delegation.
 func (k Keeper) GetDelegation(ctx sdk.Context,
 	delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation types.Delegation, found bool) {
 	store := ctx.KVStore(k.storeKey)

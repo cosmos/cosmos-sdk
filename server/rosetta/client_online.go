@@ -11,26 +11,32 @@ import (
 	"strconv"
 	"time"
 
-	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/cosmos/cosmos-sdk/version"
+
 	abcitypes "github.com/tendermint/tendermint/abci/types"
-	tmrpc "github.com/tendermint/tendermint/rpc/client"
+
+	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
+	"google.golang.org/grpc/metadata"
+
 	"github.com/tendermint/tendermint/rpc/client/http"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 
 	crgerrs "github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
 	crgtypes "github.com/cosmos/cosmos-sdk/server/rosetta/lib/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-	"github.com/cosmos/cosmos-sdk/version"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	tmrpc "github.com/tendermint/tendermint/rpc/client"
 )
 
 // interface assertion
 var _ crgtypes.Client = (*Client)(nil)
 
+const tmWebsocketPath = "/websocket"
 const defaultNodeTimeout = time.Minute
 
 // Client implements a single network client to interact with cosmos based chains
@@ -98,7 +104,7 @@ func (c *Client) Bootstrap() error {
 		return err
 	}
 
-	tmRPC, err := http.New(c.config.TendermintRPC)
+	tmRPC, err := http.New(c.config.TendermintRPC, tmWebsocketPath)
 	if err != nil {
 		return err
 	}
@@ -404,7 +410,7 @@ func (c *Client) ConstructionMetadataFromOptions(ctx context.Context, options ma
 	}
 
 	// if default fees suggestion is enabled and gas limit or price is unset, use default
-	if c.config.EnableDefaultFeeSuggest {
+	if c.config.EnableDefaultSuggestedFee {
 		if constructionOptions.GasLimit <= 0 {
 			constructionOptions.GasLimit = uint64(c.config.SuggestGas)
 		}
@@ -525,15 +531,18 @@ func (c *Client) getHeight(ctx context.Context, height *int64) (realHeight *int6
 	return
 }
 
-var initialHeightRE = regexp.MustCompile(`"initial_height":"(\d+)"`)
-
 func extractInitialHeightFromGenesisChunk(genesisChunk string) (int64, error) {
 	firstChunk, err := base64.StdEncoding.DecodeString(genesisChunk)
 	if err != nil {
 		return 0, err
 	}
 
-	matches := initialHeightRE.FindStringSubmatch(string(firstChunk))
+	re, err := regexp.Compile("\"initial_height\":\"(\\d+)\"") //nolint:gocritic
+	if err != nil {
+		return 0, err
+	}
+
+	matches := re.FindStringSubmatch(string(firstChunk))
 	if len(matches) != 2 {
 		return 0, errors.New("failed to fetch initial_height")
 	}

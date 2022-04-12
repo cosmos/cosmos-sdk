@@ -337,7 +337,7 @@ func (gr GasEstimateResponse) String() string {
 // makeAuxSignerData generates an AuxSignerData from the client inputs.
 func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx.AuxSignerData, error) {
 	b := NewAuxTxBuilder()
-	fromAddress, name, _, err := client.GetFromFields(clientCtx.Keyring, clientCtx.From, false)
+	fromAddress, name, _, err := client.GetFromFields(clientCtx, clientCtx.Keyring, clientCtx.From)
 	if err != nil {
 		return tx.AuxSignerData{}, err
 	}

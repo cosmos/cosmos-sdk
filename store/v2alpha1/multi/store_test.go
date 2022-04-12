@@ -71,13 +71,18 @@ func newSubStoreWithData(t *testing.T, db dbm.DBConnection, storeData map[string
 
 func TestStoreParams(t *testing.T) {
 	opts := DefaultStoreParams()
-	// Fail with invalid types
+	// Fail with invalid type enum
 	require.Error(t, opts.RegisterSubstore(skey_1, types.StoreTypeDB))
 	require.Error(t, opts.RegisterSubstore(skey_1, types.StoreTypeSMT))
+	// Mem & tranient stores require a bespoke concrete type
+	require.Error(t, opts.RegisterSubstore(skey_1, types.StoreTypeMemory))
+	require.Error(t, opts.RegisterSubstore(skey_1, types.StoreTypeTransient))
+	require.NoError(t, opts.RegisterSubstore(skey_mem1, types.StoreTypeMemory))
+	require.NoError(t, opts.RegisterSubstore(skey_tran1, types.StoreTypeTransient))
 	// Ensure that no prefix conflicts are allowed
 	require.NoError(t, opts.RegisterSubstore(skey_1, types.StoreTypePersistent))
-	require.NoError(t, opts.RegisterSubstore(skey_2, types.StoreTypeMemory))
-	require.NoError(t, opts.RegisterSubstore(skey_3b, types.StoreTypeTransient))
+	require.NoError(t, opts.RegisterSubstore(skey_2, types.StoreTypePersistent))
+	require.NoError(t, opts.RegisterSubstore(skey_3b, types.StoreTypePersistent))
 	require.Error(t, opts.RegisterSubstore(skey_1b, types.StoreTypePersistent))
 	require.Error(t, opts.RegisterSubstore(skey_2b, types.StoreTypePersistent))
 	require.Error(t, opts.RegisterSubstore(skey_3, types.StoreTypePersistent))
@@ -1060,12 +1065,12 @@ func doTestListeners(t *testing.T, ctor storeConstructor) {
 		{
 			key:   kvPairs[1].Key,
 			value: kvPairs[1].Value,
-			skey:  skey_2,
+			skey:  skey_mem1,
 		},
 		{
 			key:   kvPairs[2].Key,
 			value: kvPairs[2].Value,
-			skey:  skey_3,
+			skey:  skey_tran1,
 		},
 	}
 
@@ -1074,8 +1079,8 @@ func doTestListeners(t *testing.T, ctor storeConstructor) {
 
 	db := memdb.NewDB()
 	opts := storeParams1(t)
-	require.NoError(t, opts.RegisterSubstore(skey_2, types.StoreTypeMemory))
-	require.NoError(t, opts.RegisterSubstore(skey_3, types.StoreTypeTransient))
+	require.NoError(t, opts.RegisterSubstore(skey_mem1, types.StoreTypeMemory))
+	require.NoError(t, opts.RegisterSubstore(skey_tran1, types.StoreTypeTransient))
 
 	store, err := ctor(db, opts)
 	require.NoError(t, err)

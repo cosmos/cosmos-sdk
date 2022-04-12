@@ -148,8 +148,22 @@ func DefaultStoreParams() StoreParams {
 	}
 }
 
-// func (pr *SchemaBuilder) registerName(key string, typ types.StoreType) error {
 func (par *StoreParams) RegisterSubstore(skey types.StoreKey, typ types.StoreType) error {
+	if !validSubStoreType(typ) {
+		return fmt.Errorf("StoreType not supported: %v", typ)
+	}
+	var ok bool
+	switch typ {
+	case types.StoreTypePersistent:
+		_, ok = skey.(*types.KVStoreKey)
+	case types.StoreTypeMemory:
+		_, ok = skey.(*types.MemoryStoreKey)
+	case types.StoreTypeTransient:
+		_, ok = skey.(*types.TransientStoreKey)
+	}
+	if !ok {
+		return fmt.Errorf("invalid StoreKey for %v: %T", typ, skey)
+	}
 	if err := par.registerName(skey.Name(), typ); err != nil {
 		return err
 	}
@@ -893,10 +907,6 @@ func (reg *SchemaBuilder) storeInfo(key string) (sst types.StoreType, ix int, er
 
 // registerName registers a store key by name only
 func (reg *SchemaBuilder) registerName(key string, typ types.StoreType) error {
-	if !validSubStoreType(typ) {
-		return fmt.Errorf("StoreType not supported: %v", typ)
-	}
-
 	// Find the neighboring reserved prefix, and check for duplicates and conflicts
 	i, has := binarySearch(reg.reserved, key)
 	if has {

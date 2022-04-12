@@ -92,6 +92,11 @@ func TestEndBlockerPruning(t *testing.T) {
 		ToAddress:   addr2.String(),
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 	}
+	msgSend2 := &banktypes.MsgSend{
+		FromAddress: groupPolicyAddr2.String(),
+		ToAddress:   addr2.String(),
+		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+	}
 	proposers := []string{addr2.String()}
 
 	specs := map[string]struct {
@@ -231,7 +236,7 @@ func TestEndBlockerPruning(t *testing.T) {
 		},
 		"proposal with status aborted is pruned after voting period end (due to updated group policy decision policy)": {
 			setupProposal: func(sdkCtx sdk.Context) uint64 {
-				pId, err := submitProposal(app, sdkCtx, []sdk.Msg{msgSend1}, proposers, groupPolicyAddr)
+				pId, err := submitProposal(app, sdkCtx, []sdk.Msg{msgSend2}, proposers, groupPolicyAddr2)
 				require.NoError(t, err)
 
 				policy := group.NewThresholdDecisionPolicy("3", time.Second, 0)
@@ -253,7 +258,7 @@ func TestEndBlockerPruning(t *testing.T) {
 		},
 		"proposal with status aborted is not pruned before voting period end (due to updated group policy)": {
 			setupProposal: func(sdkCtx sdk.Context) uint64 {
-				pId, err := submitProposal(app, sdkCtx, []sdk.Msg{msgSend1}, proposers, groupPolicyAddr)
+				pId, err := submitProposal(app, sdkCtx, []sdk.Msg{msgSend2}, proposers, groupPolicyAddr2)
 				require.NoError(t, err)
 
 				policy := group.NewThresholdDecisionPolicy("3", time.Second, 0)
@@ -282,6 +287,7 @@ func TestEndBlockerPruning(t *testing.T) {
 			module.EndBlocker(spec.newCtx, app.GroupKeeper)
 
 			if spec.expErrMsg != "" && spec.expExecutorResult != group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
+				_, err = app.GroupKeeper.Proposal(spec.newCtx, &group.QueryProposalRequest{ProposalId: proposalID})
 				require.Error(t, err)
 				require.Contains(t, err.Error(), spec.expErrMsg)
 				return

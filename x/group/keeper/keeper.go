@@ -279,8 +279,8 @@ func (k Keeper) pruneProposal(ctx sdk.Context, proposalID uint64) error {
 }
 
 // updateProposalStatus iterates through all proposals by group policy index and updates proposal status
-func (k Keeper) updateProposalStatus(ctx sdk.Context) error {
-	proposalIt, err := k.proposalByGroupPolicyIndex.PrefixScan(ctx.KVStore(k.key), nil, nil)
+func (k Keeper) updateProposalStatus(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) error {
+	proposalIt, err := k.proposalByGroupPolicyIndex.Get(ctx.KVStore(k.key), groupPolicyAddr.Bytes())
 	if err != nil {
 		return err
 	}

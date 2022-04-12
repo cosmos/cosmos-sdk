@@ -39,14 +39,6 @@ module.exports = {
     },
     versions: [
       {
-        "label": "v0.39",
-        "key": "v0.39"
-      },
-      {
-        "label": "v0.42",
-        "key": "v0.42"
-      },
-      {
         "label": "v0.44",
         "key": "v0.44"
       },

@@ -48,7 +48,7 @@ aside: false
 ## Get Started
 
 * **[Cosmos SDK Intro](./intro/overview.md)**: High-level overview of the Cosmos SDK.
-* **[Starport](https://docs.starport.network/)**: A developer-friendly interface to the Cosmos SDK to scaffold, launch, and maintain any crypto application on a sovereign and secured blockchain.
+* **[Ignite CLI](https://docs.ignite.com)**: A developer-friendly interface to the Cosmos SDK to scaffold, launch, and maintain any crypto application on a sovereign and secured blockchain.
 * **[SDK Tutorials](https://tutorials.cosmos.network/)**: Tutorials that showcase how to build Cosmos SDK-based blockchains from scratch and explain the basic Cosmos SDK principles in the process.
 
 ## Reference Docs

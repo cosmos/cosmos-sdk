@@ -530,18 +530,15 @@ func (c *Client) getHeight(ctx context.Context, height *int64) (realHeight *int6
 	return
 }
 
+var initialHeightRE = regexp.MustCompile(`"initial_height":"(\d+)"`)
+
 func extractInitialHeightFromGenesisChunk(genesisChunk string) (int64, error) {
 	firstChunk, err := base64.StdEncoding.DecodeString(genesisChunk)
 	if err != nil {
 		return 0, err
 	}
 
-	re, err := regexp.Compile("\"initial_height\":\"(\\d+)\"") //nolint:gocritic
-	if err != nil {
-		return 0, err
-	}
-
-	matches := re.FindStringSubmatch(string(firstChunk))
+	matches := initialHeightRE.FindStringSubmatch(string(firstChunk))
 	if len(matches) != 2 {
 		return 0, errors.New("failed to fetch initial_height")
 	}

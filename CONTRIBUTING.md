@@ -76,7 +76,7 @@ When proposing an architecture decision for the Cosmos SDK, please start by open
 * The latest state of development is on `master`.
 * `master` must never fail `make lint test test-race`.
 * No `--force` onto `master` (except when reverting a broken commit, which should seldom happen).
-* Create a branch to start a wok:
+* Create a branch to start work:
     * Fork the repo (core developers must create a branch directly in the Cosmos SDK repo),
     branch from the HEAD of `master`, make some commits, and submit a PR to `master`.
     * For core developers working within the `cosmos-sdk` repo, follow branch name conventions to ensure a clear

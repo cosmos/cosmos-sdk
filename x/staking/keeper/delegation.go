@@ -41,7 +41,7 @@ func (k Keeper) IterateAllDelegations(ctx sdk.Context, cb func(delegation types.
 	}
 }
 
-// GetAllDelegations returns all delegations used during genesis dump
+// GetAllDelegations returns all delegations used during genesis dump.
 func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegation) {
 	k.IterateAllDelegations(ctx, func(delegation types.Delegation) bool {
 		delegations = append(delegations, delegation)
@@ -90,7 +90,7 @@ func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddres
 	return delegations[:i] // trim if the array length < maxRetrieve
 }
 
-// SetDelegation sets a delegation
+// SetDelegation sets a delegation.
 func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 	delegatorAddress, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
 	if err != nil {
@@ -118,7 +118,7 @@ func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) e
 	return nil
 }
 
-// GetUnbondingDelegations returns a given amount of all the delegator unbonding-delegations
+// GetUnbondingDelegations returns a given amount of all the delegator unbonding-delegations.
 func (k Keeper) GetUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 	maxRetrieve uint16) (unbondingDelegations []types.UnbondingDelegation) {
 	unbondingDelegations = make([]types.UnbondingDelegation, maxRetrieve)
@@ -139,7 +139,7 @@ func (k Keeper) GetUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddres
 	return unbondingDelegations[:i] // trim if the array length < maxRetrieve
 }
 
-// GetUnbondingDelegation returns a unbonding delegation
+// GetUnbondingDelegation returns a unbonding delegation.
 func (k Keeper) GetUnbondingDelegation(
 	ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress,
 ) (ubd types.UnbondingDelegation, found bool) {
@@ -157,7 +157,7 @@ func (k Keeper) GetUnbondingDelegation(
 }
 
 // GetUnbondingDelegationsFromValidator returns all unbonding delegations from a
-// particular validator
+// particular validator.
 func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sdk.ValAddress) (ubds []types.UnbondingDelegation) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -174,7 +174,7 @@ func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sd
 	return ubds
 }
 
-// IterateUnbondingDelegations iterates through all of the unbonding delegations
+// IterateUnbondingDelegations iterates through all of the unbonding delegations.
 func (k Keeper) IterateUnbondingDelegations(ctx sdk.Context, fn func(index int64, ubd types.UnbondingDelegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -190,7 +190,7 @@ func (k Keeper) IterateUnbondingDelegations(ctx sdk.Context, fn func(index int64
 	}
 }
 
-// GetDelegatorUnbonding returns the total amount a delegator has unbonding
+// GetDelegatorUnbonding returns the total amount a delegator has unbonding.
 func (k Keeper) GetDelegatorUnbonding(ctx sdk.Context, delegator sdk.AccAddress) sdk.Int {
 	unbonding := sdk.ZeroInt()
 	k.IterateDelegatorUnbondingDelegations(ctx, delegator, func(ubd types.UnbondingDelegation) bool {
@@ -202,7 +202,7 @@ func (k Keeper) GetDelegatorUnbonding(ctx sdk.Context, delegator sdk.AccAddress)
 	return unbonding
 }
 
-// IterateDelegatorUnbondingDelegations iterates through a delegator's unbonding delegations
+// IterateDelegatorUnbondingDelegations iterates through a delegator's unbonding delegations.
 func (k Keeper) IterateDelegatorUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress, cb func(ubd types.UnbondingDelegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -217,7 +217,7 @@ func (k Keeper) IterateDelegatorUnbondingDelegations(ctx sdk.Context, delegator 
 	}
 }
 
-// GetDelegatorBonded returs the total amount a delegator has bonded
+// GetDelegatorBonded returs the total amount a delegator has bonded.
 func (k Keeper) GetDelegatorBonded(ctx sdk.Context, delegator sdk.AccAddress) sdk.Int {
 	bonded := sdk.ZeroDec()
 
@@ -237,7 +237,7 @@ func (k Keeper) GetDelegatorBonded(ctx sdk.Context, delegator sdk.AccAddress) sd
 	return bonded.RoundInt()
 }
 
-// IterateDelegatorDelegations iterates through one delegator's delegations
+// IterateDelegatorDelegations iterates through one delegator's delegations.
 func (k Keeper) IterateDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := types.GetDelegationsKey(delegator)
@@ -252,7 +252,7 @@ func (k Keeper) IterateDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAd
 	}
 }
 
-// IterateDelegatorRedelegations iterates through one delegator's redelegations
+// IterateDelegatorRedelegations iterates through one delegator's redelegations.
 func (k Keeper) IterateDelegatorRedelegations(ctx sdk.Context, delegator sdk.AccAddress, cb func(red types.Redelegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := types.GetREDsKey(delegator)
@@ -268,7 +268,7 @@ func (k Keeper) IterateDelegatorRedelegations(ctx sdk.Context, delegator sdk.Acc
 	}
 }
 
-// HasMaxUnbondingDelegationEntries - check if unbonding delegation has maximum number of entries
+// HasMaxUnbondingDelegationEntries - check if unbonding delegation has maximum number of entries.
 func (k Keeper) HasMaxUnbondingDelegationEntries(ctx sdk.Context,
 	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) bool {
 	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
@@ -279,7 +279,7 @@ func (k Keeper) HasMaxUnbondingDelegationEntries(ctx sdk.Context,
 	return len(ubd.Entries) >= int(k.MaxEntries(ctx))
 }
 
-// SetUnbondingDelegation sets the unbonding delegation and associated index
+// SetUnbondingDelegation sets the unbonding delegation and associated index.
 func (k Keeper) SetUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
 	delegatorAddress, err := sdk.AccAddressFromBech32(ubd.DelegatorAddress)
 	if err != nil {
@@ -296,7 +296,7 @@ func (k Keeper) SetUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDeleg
 	store.Set(types.GetUBDByValIndexKey(delegatorAddress, addr), []byte{}) // index, store empty bytes
 }
 
-// RemoveUnbondingDelegation removes the unbonding delegation object and associated index
+// RemoveUnbondingDelegation removes the unbonding delegation object and associated index.
 func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
 	delegatorAddress, err := sdk.AccAddressFromBech32(ubd.DelegatorAddress)
 	if err != nil {
@@ -314,7 +314,7 @@ func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDe
 }
 
 // SetUnbondingDelegationEntry adds an entry to the unbonding delegation at
-// the given addresses. It creates the unbonding delegation if it does not exist
+// the given addresses. It creates the unbonding delegation if it does not exist.
 func (k Keeper) SetUnbondingDelegationEntry(
 	ctx sdk.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 	creationHeight int64, minTime time.Time, balance sdk.Int,
@@ -358,7 +358,7 @@ func (k Keeper) SetUBDQueueTimeSlice(ctx sdk.Context, timestamp time.Time, keys 
 }
 
 // InsertUBDQueue inserts an unbonding delegation to the appropriate timeslice
-// in the unbonding queue
+// in the unbonding queue.
 func (k Keeper) InsertUBDQueue(ctx sdk.Context, ubd types.UnbondingDelegation,
 	completionTime time.Time) {
 	dvPair := types.DVPair{DelegatorAddress: ubd.DelegatorAddress, ValidatorAddress: ubd.ValidatorAddress}
@@ -372,7 +372,7 @@ func (k Keeper) InsertUBDQueue(ctx sdk.Context, ubd types.UnbondingDelegation,
 	}
 }
 
-// UBDQueueIterator returns all the unbonding queue timeslices from time 0 until endTime
+// UBDQueueIterator returns all the unbonding queue timeslices from time 0 until endTime.
 func (k Keeper) UBDQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	return store.Iterator(types.UnbondingQueueKey,
@@ -380,7 +380,7 @@ func (k Keeper) UBDQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterato
 }
 
 // DequeueAllMatureUBDQueue returns a concatenated list of all the timeslices inclusively previous to
-// currTime, and deletes the timeslices from the queue
+// currTime, and deletes the timeslices from the queue.
 func (k Keeper) DequeueAllMatureUBDQueue(ctx sdk.Context, currTime time.Time) (matureUnbonds []types.DVPair) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -401,7 +401,7 @@ func (k Keeper) DequeueAllMatureUBDQueue(ctx sdk.Context, currTime time.Time) (m
 	return matureUnbonds
 }
 
-// GetRedelegations returns a given amount of all the delegator redelegations
+// GetRedelegations returns a given amount of all the delegator redelegations.
 func (k Keeper) GetRedelegations(ctx sdk.Context, delegator sdk.AccAddress,
 	maxRetrieve uint16) (redelegations []types.Redelegation) {
 	redelegations = make([]types.Redelegation, maxRetrieve)
@@ -422,7 +422,7 @@ func (k Keeper) GetRedelegations(ctx sdk.Context, delegator sdk.AccAddress,
 	return redelegations[:i] // trim if the array length < maxRetrieve
 }
 
-// GetRedelegation returns a redelegation
+// GetRedelegation returns a redelegation.
 func (k Keeper) GetRedelegation(ctx sdk.Context,
 	delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) (red types.Redelegation, found bool) {
 	store := ctx.KVStore(k.storeKey)
@@ -439,7 +439,7 @@ func (k Keeper) GetRedelegation(ctx sdk.Context,
 }
 
 // GetRedelegationsFromSrcValidator returns all redelegations from a particular
-// validator
+// validator.
 func (k Keeper) GetRedelegationsFromSrcValidator(ctx sdk.Context, valAddr sdk.ValAddress) (reds []types.Redelegation) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -456,7 +456,7 @@ func (k Keeper) GetRedelegationsFromSrcValidator(ctx sdk.Context, valAddr sdk.Va
 	return reds
 }
 
-// HasReceivingRedelegation checks if validator is receiving a redelegation
+// HasReceivingRedelegation checks if validator is receiving a redelegation.
 func (k Keeper) HasReceivingRedelegation(ctx sdk.Context,
 	delAddr sdk.AccAddress, valDstAddr sdk.ValAddress) bool {
 	store := ctx.KVStore(k.storeKey)
@@ -468,7 +468,7 @@ func (k Keeper) HasReceivingRedelegation(ctx sdk.Context,
 	return iterator.Valid()
 }
 
-// HasMaxRedelegationEntries checks if redelegation has maximum number of entries
+// HasMaxRedelegationEntries checks if redelegation has maximum number of entries.
 func (k Keeper) HasMaxRedelegationEntries(ctx sdk.Context,
 	delegatorAddr sdk.AccAddress, validatorSrcAddr,
 	validatorDstAddr sdk.ValAddress) bool {
@@ -480,7 +480,7 @@ func (k Keeper) HasMaxRedelegationEntries(ctx sdk.Context,
 	return len(red.Entries) >= int(k.MaxEntries(ctx))
 }
 
-// SetRedelegation set a redelegation and associated index
+// SetRedelegation set a redelegation and associated index.
 func (k Keeper) SetRedelegation(ctx sdk.Context, red types.Redelegation) {
 	delegatorAddress, err := sdk.AccAddressFromBech32(red.DelegatorAddress)
 	if err != nil {
@@ -503,8 +503,8 @@ func (k Keeper) SetRedelegation(ctx sdk.Context, red types.Redelegation) {
 	store.Set(types.GetREDByValDstIndexKey(delegatorAddress, valSrcAddr, valDestAddr), []byte{})
 }
 
-// SetRedelegationEntry adds an entry to the unbonding delegation at
-// the given addresses. It creates the unbonding delegation if it does not exist
+// SetRedelegationEntry adds an entry to the unbonding delegation at the given
+// addresses. It creates the unbonding delegation if it does not exist.
 func (k Keeper) SetRedelegationEntry(ctx sdk.Context,
 	delegatorAddr sdk.AccAddress, validatorSrcAddr,
 	validatorDstAddr sdk.ValAddress, creationHeight int64,
@@ -523,7 +523,7 @@ func (k Keeper) SetRedelegationEntry(ctx sdk.Context,
 	return red
 }
 
-// IterateRedelegations iterates through all redelegations
+// IterateRedelegations iterates through all redelegations.
 func (k Keeper) IterateRedelegations(ctx sdk.Context, fn func(index int64, red types.Redelegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -539,7 +539,7 @@ func (k Keeper) IterateRedelegations(ctx sdk.Context, fn func(index int64, red t
 	}
 }
 
-// RemoveRedelegation removes a redelegation object and associated index
+// RemoveRedelegation removes a redelegation object and associated index.
 func (k Keeper) RemoveRedelegation(ctx sdk.Context, red types.Redelegation) {
 	delegatorAddress, err := sdk.AccAddressFromBech32(red.DelegatorAddress)
 	if err != nil {
@@ -586,7 +586,8 @@ func (k Keeper) SetRedelegationQueueTimeSlice(ctx sdk.Context, timestamp time.Ti
 	store.Set(types.GetRedelegationTimeKey(timestamp), bz)
 }
 
-// InsertRedelegationQueue insert an redelegation delegation to the appropriate timeslice in the redelegation queue
+// InsertRedelegationQueue insert an redelegation delegation to the appropriate
+// timeslice in the redelegation queue.
 func (k Keeper) InsertRedelegationQueue(ctx sdk.Context, red types.Redelegation,
 	completionTime time.Time) {
 	timeSlice := k.GetRedelegationQueueTimeSlice(ctx, completionTime)
@@ -603,14 +604,16 @@ func (k Keeper) InsertRedelegationQueue(ctx sdk.Context, red types.Redelegation,
 	}
 }
 
-// RedelegationQueueIterator returns all the redelegation queue timeslices from time 0 until endTime
+// RedelegationQueueIterator returns all the redelegation queue timeslices from
+// time 0 until endTime.
 func (k Keeper) RedelegationQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	return store.Iterator(types.RedelegationQueueKey, sdk.InclusiveEndBytes(types.GetRedelegationTimeKey(endTime)))
 }
 
-// DequeueAllMatureRedelegationQueue returns a concatenated list of all the timeslices inclusively previous to
-// currTime, and deletes the timeslices from the queue
+// DequeueAllMatureRedelegationQueue returns a concatenated list of all the
+// timeslices inclusively previous to currTime, and deletes the timeslices from
+// the queue.
 func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time.Time) (matureRedelegations []types.DVVTriplet) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -900,7 +903,7 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 }
 
 // BeginRedelegation begins unbonding / redelegation and creates a redelegation
-// record
+// record.
 func (k Keeper) BeginRedelegation(
 	ctx sdk.Context, delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, sharesAmount sdk.Dec,
 ) (completionTime time.Time, err error) {

@@ -159,9 +159,17 @@ func (s *KeeperTestSuite) TestDelegation() {
 
 	// test total bonded for single delegator
 	expBonded := bond1to1.Shares.Add(bond2to1.Shares).Add(bond1to3.Shares)
-	resDelBond, err := keeper.GetDelegatorBonded(ctx, addrDels[0])
-	require.NoError(err)
-	require.Equal(expBonded, math.LegacyNewDecFromInt(resDelBond))
+	resDelBond := app.StakingKeeper.GetDelegatorBonded(ctx, addrDels[0])
+	require.Equal(t, expBonded, sdk.NewDecFromInt(resDelBond))
+
+	// delete a record
+	app.StakingKeeper.RemoveDelegation(ctx, bond2to3)
+	_, found = app.StakingKeeper.GetDelegation(ctx, addrDels[1], valAddrs[2])
+	require.False(t, found)
+	resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
+	require.Equal(t, 2, len(resBonds))
+	require.Equal(t, bond2to1, resBonds[0])
+	require.Equal(t, bond2to2, resBonds[1])
 
 	// delete a record
 	require.NoError(keeper.RemoveDelegation(ctx, bond2to3))
@@ -391,9 +399,9 @@ func (s *KeeperTestSuite) TestUnbondingDelegation() {
 	require.Equal(ubd, resUnbond)
 
 	// modify a records, save, and retrieve
-	expUnbond := math.NewInt(21)
+	expUnbond := sdk.NewInt(21)
 	ubd.Entries[0].Balance = expUnbond
-	require.NoError(keeper.SetUnbondingDelegation(ctx, ubd))
+	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 
 	resUnbonds, err := keeper.GetUnbondingDelegations(ctx, delAddrs[0], 5)
 	require.NoError(err)
@@ -410,6 +418,9 @@ func (s *KeeperTestSuite) TestUnbondingDelegation() {
 	resDelUnbond, err := keeper.GetDelegatorUnbonding(ctx, delAddrs[0])
 	require.NoError(err)
 	require.Equal(expUnbond, resDelUnbond)
+
+	resDelUnbond := app.StakingKeeper.GetDelegatorUnbonding(ctx, delAddrs[0])
+	require.Equal(t, expUnbond, resDelUnbond)
 
 	// delete a record
 	require.NoError(keeper.RemoveUnbondingDelegation(ctx, ubd))

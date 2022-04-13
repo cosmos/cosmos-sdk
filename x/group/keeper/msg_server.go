@@ -325,7 +325,8 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGro
 
 	// Generate account address of group policy.
 	var accountAddr sdk.AccAddress
-	// loop here in the rare case of a collision
+	// loop here in the rare case where a ADR-028-derived address creates a
+	// collision with an existing address.
 	for {
 		nextAccVal := k.groupPolicySeq.NextVal(ctx.KVStore(k.key))
 		var buf = make([]byte, 8)
@@ -335,8 +336,8 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGro
 		accountAddr = address.Derive(parentAcc, buf)
 
 		if k.accKeeper.GetAccount(ctx, accountAddr) != nil {
-			// handle a rare collision
-			// TODO should we throw an error here, because there's duplicate grup policy address
+			// handle a rare collision, in which case we just go on to the
+			// next sequence value and derive a new address.
 			continue
 		}
 		acc := k.accKeeper.NewAccount(ctx, &authtypes.ModuleAccount{

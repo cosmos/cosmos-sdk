@@ -93,6 +93,12 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		clientCtx = clientCtx.WithOutputFormat(output)
 	}
 
+	fmt.Println("-------------------------")
+	fmt.Println(clientCtx.HomeDir)
+	fmt.Println(flagSet.Changed(flags.FlagHome))
+	fmt.Println(flagSet.GetString(flags.FlagHome))
+	fmt.Println("-------------------------")
+
 	if clientCtx.HomeDir == "" || flagSet.Changed(flags.FlagHome) {
 		homeDir, _ := flagSet.GetString(flags.FlagHome)
 		clientCtx = clientCtx.WithHomeDir(homeDir)

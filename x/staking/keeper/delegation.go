@@ -102,13 +102,8 @@ func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 	store.Set(types.GetDelegationKey(delegatorAddress, delegation.GetValidatorAddr()), b)
 }
 
-<<<<<<< HEAD
-// remove a delegation
+// RemoveDelegation removes a delegation.
 func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
-=======
-// RemoveDelegation removes a delegation
-func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) error {
->>>>>>> b8270fc9b (feat: add (re)delegation getters (#11596))
 	delegatorAddress, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
 	if err != nil {
 		panic(err)

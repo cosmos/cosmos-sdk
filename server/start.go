@@ -283,11 +283,27 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	} else {
 		ctx.Logger.Info("starting node with ABCI Tendermint in-process")
 
+<<<<<<< HEAD
 		tmNode, err = node.New(cfg, ctx.Logger, abciclient.NewLocalCreator(app), genDoc)
 		if err != nil {
 			return err
 		}
 
+=======
+		tmNode, err = node.NewNode(
+			cfg,
+			pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
+			nodeKey,
+			proxy.NewLocalClientCreator(app),
+			genDocProvider,
+			node.DefaultDBProvider,
+			node.DefaultMetricsProvider(cfg.Instrumentation),
+			ctx.Logger,
+		)
+		if err != nil {
+			return err
+		}
+>>>>>>> 5ad3a36a2 (check error returned from NewNode (#11624))
 		if err := tmNode.Start(); err != nil {
 			return err
 		}

@@ -83,7 +83,7 @@ allowed on it.
 
 ## Aborted Proposals
 
-If during the voting period of the proposal, the group policy is updated, then
+If the group policy is updated during the voting period of the proposal, then
 the proposal is marked as `PROPOSAL_STATUS_ABORTED`, and no more voting or
 execution is allowed on it. This is because the group policy defines the rules
 of proposal voting and execution, so if those rules change during the lifecycle

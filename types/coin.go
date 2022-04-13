@@ -118,16 +118,25 @@ func (coin Coin) AddAmount(amount Int) Coin {
 // Sub subtracts amounts of two coins with same denom. If the coins differ in denom
 // then it panics.
 func (coin Coin) Sub(coinB Coin) Coin {
+	res, err := coin.SafeSub(coinB)
+	if err != nil {
+		panic(err)
+	}
+
+	return res
+}
+
+func (coin Coin) SafeSub(coinB Coin) (Coin, error) {
 	if coin.Denom != coinB.Denom {
-		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, coinB.Denom))
+		return Coin{}, fmt.Errorf("invalid coin denoms: %s, %s", coin.Denom, coinB.Denom)
 	}
 
 	res := Coin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
 	if res.IsNegative() {
-		panic("negative coin amount")
+		return Coin{}, fmt.Errorf("negative coin amount")
 	}
 
-	return res
+	return res, nil
 }
 
 // SubAmount subtracts an amount from the Coin.

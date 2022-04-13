@@ -72,7 +72,7 @@ passes as well as any metadata associated with the proposal.
 There are four choices to choose while voting - yes, no, abstain and veto. Not
 all decision policies will take the four choices into account. Votes can contain some optional metadata.
 In the current implementation, the voting window begins as soon as a proposal
-is submitted.
+is submitted, and the end is defined by the group policy's decision policy.
 
 ## Withdraw Proposal
 
@@ -110,18 +110,28 @@ result is persisted to state in the proposal's `FinalTallyResult`.
 
 Proposals are executed only when the tallying is done, and the group account's
 decision policy allows the proposal to pass based on the tally outcome. They
-are marked by the status `PROPOSAL_STATUS_ACCEPTED`.
+are marked by the status `PROPOSAL_STATUS_ACCEPTED`. Execution must happen
+before a duration of `MaxExecutionPeriod` (set by the chain developer) after
+each proposal's voting period end.
 
 Proposals will not be automatically executed by the chain in this current design,
 but rather a user must submit a `Msg/Exec` transaction to attempt to execute the
 proposal based on the current votes and decision policy. Any user (not only the
-group members) can execute proposals that are accepted, and execution fees are
+group members) can execute proposals that have been accepted, and execution fees are
 paid by the proposal executor.
 It's also possible to try to execute a proposal immediately on creation or on
 new votes using the `Exec` field of `Msg/SubmitProposal` and `Msg/Vote` requests.
 In the former case, proposers signatures are considered as yes votes.
-For now, if the proposal can't be executed, it will still be opened for new votes and
-could be executed later on.
+In these cases, if the proposal can't be executed (i.e. it didn't pass the
+decision policy's rules), it will still be opened for new votes and
+could be tallied and executed later on.
+
+A successful proposal execution will have its `ExecutorResult` marked as
+`PROPOSAL_EXECUTOR_RESULT_SUCCESS`. The proposal will be automatically pruned
+after execution. On the other hand, a failed proposal execution will be marked
+as `PROPOSAL_EXECUTOR_RESULT_FAILURE`. Such a proposal can be re-executed
+multiple times, until it expires after `MaxExecutionPeriod` after voting period
+end.
 
 ## Pruning
 
@@ -131,7 +141,7 @@ Votes are pruned:
 
 - either after a successful tally, i.e. a tally whose result passes the decision
   policy's rules, which can be trigged by a `Msg/Exec` or a
-  `Msg/{SubmitProposal,Vote}` with the `Exec` field,
+  `Msg/{SubmitProposal,Vote}` with the `Exec` field set,
 - or on `EndBlock` right after the proposal's voting period end,
 
 whichever happens first.

@@ -6,134 +6,147 @@ order: 3
 
 ## Msg/CreateGroup
 
-A new group can be created with the `MsgCreateGroup`, which has an admin address, a list of members and some optional metadata bytes.
+A new group can be created with the `MsgCreateGroup`, which has an admin address, a list of members and some optional metadata.
 
 The metadata has a maximum length that is chosen by the app developer, and
 passed into the group keeper as a config.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/6f58963e7f6ce820e9b33f02f06f7b96f6d2e347/proto/cosmos/group/v1beta1/tx.proto#L54-L65
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/proto/cosmos/group/v1/tx.proto#L65-L76
 
-It's expecting to fail if metadata length is greater than `MaxMetadataLen` config.
+It's expected to fail if
+
+- metadata length is greater than `MaxMetadataLen`
+  config
+- members are not correctly set (e.g. wrong address format, duplicates, or with 0 weight).
 
 ## Msg/UpdateGroupMembers
 
 Group members can be updated with the `UpdateGroupMembers`.
 
-+++https://github.com/cosmos/cosmos-sdk/blob/9aef070625e9676d7c0acb212c17ae9dba3c32dc/proto/cosmos/group/v1beta1/tx.proto#L74-L86
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/proto/cosmos/group/v1/tx.proto#L85-L98
 
 In the list of `MemberUpdates`, an existing member can be removed by setting its weight to 0.
 
-It's expecting to fail if the signer is not the admin of the group.
+It's expected to fail if the signer is not the admin of the group.
 
 ## Msg/UpdateGroupAdmin
 
 The `UpdateGroupAdmin` can be used to update a group admin.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/9aef070625e9676d7c0acb212c17ae9dba3c32dc/proto/cosmos/group/v1beta1/tx.proto#L91-L102
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/proto/cosmos/group/v1/tx.proto#L103-L115
 
-It's expecting to fail if the signer is not the admin of the group.
+It's expected to fail if the signer is not the admin of the group.
 
 ## Msg/UpdateGroupMetadata
 
 The `UpdateGroupMetadata` can be used to update a group metadata.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/9aef070625e9676d7c0acb212c17ae9dba3c32dc/proto/cosmos/group/v1beta1/tx.proto#L107-L118
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/proto/cosmos/group/v1/tx.proto#L120-L132
 
-It's expecting to fail if:
+It's expected to fail if:
 
-* new metadata length is greater than `MaxMetadataLen` config.
-* the signer is not the admin of the group.
+- new metadata length is greater than `MaxMetadataLen` config.
+- the signer is not the admin of the group.
 
 ## Msg/CreateGroupPolicy
 
-A new group policy can be created with the `MsgCreateGroupPolicy`, which has an admin address, a group id, a decision policy and some optional metadata bytes.
+A new group policy can be created with the `MsgCreateGroupPolicy`, which has an admin address, a group id, a decision policy and some optional metadata.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/9aef070625e9676d7c0acb212c17ae9dba3c32dc/proto/cosmos/group/v1beta1/tx.proto#L127-L142
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/proto/cosmos/group/v1/tx.proto#L141-L158
 
-It's expecting to fail if metadata length is greater than `MaxMetadataLen` config.
+It's expected to fail if:
+
+- the signer is not the admin of the group.
+- metadata length is greater than `MaxMetadataLen` config.
+- the decision policy's `Validate()` method doesn't pass against the group.
 
 ## Msg/CreateGroupWithPolicy
 
-A new group with policy can be created with the `MsgCreateGroupWithPolicy`, which has an admin address, a list of members, a decision policy, a group policy as admin field to optionally set group and group policy admin with group policy address and some optional metadata bytes for group and group policy.
+A new group with policy can be created with the `MsgCreateGroupWithPolicy`, which has an admin address, a list of members, a decision policy, a `group_policy_as_admin` field to optionally set group and group policy admin with group policy address and some optional metadata for group and group policy.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/likhita/MsgCreateGroupWithPolicy/proto/cosmos/group/v1beta1/tx.proto#L167-L188
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/proto/cosmos/group/v1/tx.proto#L181-L202
 
-It's expecting to fail if group metadata or group policy metadata length is greater than some `MaxMetadataLength`.
+It's expected to fail for the same reasons as `Msg/CreateGroup` and `Msg/CreateGroupPolicy`.
 
 ## Msg/UpdateGroupPolicyAdmin
 
 The `UpdateGroupPolicyAdmin` can be used to update a group policy admin.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/9aef070625e9676d7c0acb212c17ae9dba3c32dc/proto/cosmos/group/v1beta1/tx.proto#L151-L162
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/proto/cosmos/group/v1/tx.proto#L167-L179
 
-It's expecting to fail if the signer is not the admin of the group policy.
+It's expected to fail if the signer is not the admin of the group policy.
 
 ## Msg/UpdateGroupPolicyDecisionPolicy
 
 The `UpdateGroupPolicyDecisionPolicy` can be used to update a decision policy.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/9aef070625e9676d7c0acb212c17ae9dba3c32dc/proto/cosmos/group/v1beta1/tx.proto#L167-L179
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/proto/cosmos/group/v1/tx.proto#L217-L231
 
-It's expecting to fail if the signer is not the admin of the group policy.
+It's expected to fail if:
+
+- the signer is not the admin of the group policy.
+- the new decision policy's `Validate()` method doesn't pass against the group.
 
 ## Msg/UpdateGroupPolicyMetadata
 
 The `UpdateGroupPolicyMetadata` can be used to update a group policy metadata.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/9aef070625e9676d7c0acb212c17ae9dba3c32dc/proto/cosmos/group/v1beta1/tx.proto#L184-L195
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/proto/cosmos/group/v1/tx.proto#L236-L248
 
-It's expecting to fail if:
+It's expected to fail if:
 
-* new metadata length is greater than `MaxMetadataLen` config.
-* the signer is not the admin of the group.
+- new metadata length is greater than `MaxMetadataLen` config.
+- the signer is not the admin of the group.
 
-## Msg/CreateProposal
+## Msg/SubmitProposal
 
-A new proposal can be created with the `MsgCreateProposal`, which has a group policy account address, a list of proposers addresses, a list of messages to execute if the proposal is accepted and some optional metadata bytes.
+A new proposal can be created with the `MsgSubmitProposal`, which has a group policy account address, a list of proposers addresses, a list of messages to execute if the proposal is accepted and some optional metadata.
 An optional `Exec` value can be provided to try to execute the proposal immediately after proposal creation. Proposers signatures are considered as yes votes in this case.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/9aef070625e9676d7c0acb212c17ae9dba3c32dc/proto/cosmos/group/v1beta1/tx.proto#L218-L239
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/proto/cosmos/group/v1/tx.proto#L271-L294
 
-It's expecting to fail if metadata length is greater than `MaxMetadataLen` config.
+It's expected to fail if metadata length is greater than `MaxMetadataLen` config.
 
 ## Msg/WithdrawProposal
 
-A proposal can be withdrawn using `MsgWithdrawProposal` which has a `address` (can be either proposer or policy admin) and a `proposal_id` (which has to be withdrawn).
+A proposal can be withdrawn using `MsgWithdrawProposal` which has an `address` (can be either a proposer or the group policy admin) and a `proposal_id` (which has to be withdrawn).
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/f2d6f0e4bb1a9bd7f7ae3cdc4702c9d3d1fc0329/proto/cosmos/group/v1beta1/tx.proto#L251-L258
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/proto/cosmos/group/v1/tx.proto#L303-L310
 
-It's expecting to fail if:
+It's expected to fail if:
 
-* the signer is neither policy address nor proposer of the proposal.
-* the proposal is already closed or aborted.
+- the signer is neither the group policy address nor proposer of the proposal.
+- the proposal is already closed or aborted.
 
 ## Msg/Vote
 
-A new vote can be created with the `MsgVote`, given a proposal id, a voter address, a choice (yes, no, veto or abstain) and some optional metadata bytes.
+A new vote can be created with the `MsgVote`, given a proposal id, a voter address, a choice (yes, no, veto or abstain) and some optional metadata.
 An optional `Exec` value can be provided to try to execute the proposal immediately after voting.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/9aef070625e9676d7c0acb212c17ae9dba3c32dc/proto/cosmos/group/v1beta1/tx.proto#L248-L265
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/proto/cosmos/group/v1/tx.proto#L315-L333
 
-It's expecting to fail if metadata length is greater than `MaxMetadataLen` config.
+It's expected to fail if:
+
+- metadata length is greater than `MaxMetadataLen` config.
+- the proposal is not in voting period anymore.
 
 ## Msg/Exec
 
 A proposal can be executed with the `MsgExec`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/9aef070625e9676d7c0acb212c17ae9dba3c32dc/proto/cosmos/group/v1beta1/tx.proto#L270-L278
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/proto/cosmos/group/v1/tx.proto#L338-L347
 
 The messages that are part of this proposal won't be executed if:
 
-* the proposal has not been accepted.
-* the proposal status is not closed.
-* the proposal has already been successfully executed.
+- the proposal has not been accepted by the group policy.
+- the proposal has already been successfully executed.
 
 ## Msg/LeaveGroup
 
 The `MsgLeaveGroup` allows group member to leave a group.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/a635fd78663d04c5de23f4d032e5a3abea1b005a/proto/cosmos/group/v1beta1/tx.proto#L352-L361
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/proto/cosmos/group/v1/tx.proto#L352-L361
 
-It's expecting to fail if:
+It's expected to fail if:
 
-* the group member is not part of the group.
+- the group member is not part of the group.

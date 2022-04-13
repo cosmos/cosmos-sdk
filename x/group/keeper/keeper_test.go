@@ -2446,7 +2446,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 				return myProposalID
 			},
 			expErr:            true, // since proposal status will be `aborted` when group policy is modified
-			expErrMsg:         "not possible with proposal status",
+			expErrMsg:         "not possible to exec with proposal status",
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
 		"proposal exists when rollback all msg updates on failure": {

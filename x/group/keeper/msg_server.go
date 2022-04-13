@@ -875,6 +875,11 @@ func (k Keeper) doUpdateGroupPolicy(ctx sdk.Context, groupPolicy string, admin s
 		return sdkerrors.Wrap(err, "load group policy")
 	}
 
+	groupPolicyAddr, err := sdk.AccAddressFromBech32(groupPolicy)
+	if err != nil {
+		return sdkerrors.Wrap(err, "group policy address")
+	}
+
 	groupPolicyAdmin, err := sdk.AccAddressFromBech32(admin)
 	if err != nil {
 		return sdkerrors.Wrap(err, "group policy admin")
@@ -894,6 +899,9 @@ func (k Keeper) doUpdateGroupPolicy(ctx sdk.Context, groupPolicy string, admin s
 		return err
 	}
 
+	if err = k.updateProposalStatus(ctx, groupPolicyAddr); err != nil {
+		return err
+	}
 	return nil
 }
 

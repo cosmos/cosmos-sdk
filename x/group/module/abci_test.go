@@ -34,9 +34,16 @@ func TestEndBlockerPruning(t *testing.T) {
 		Admin:   addr1.String(),
 		Members: members,
 	})
-
 	require.NoError(t, err)
+
+	groupRes2, err := app.GroupKeeper.CreateGroup(ctx, &group.MsgCreateGroup{
+		Admin:   addr2.String(),
+		Members: members,
+	})
+	require.NoError(t, err)
+
 	groupID := groupRes.GroupId
+	groupID2 := groupRes2.GroupId
 
 	policy := group.NewThresholdDecisionPolicy(
 		"2",
@@ -54,26 +61,54 @@ func TestEndBlockerPruning(t *testing.T) {
 	policyRes, err := app.GroupKeeper.CreateGroupPolicy(ctx, policyReq)
 	require.NoError(t, err)
 
+	policy2 := group.NewThresholdDecisionPolicy(
+		"1",
+		time.Second,
+		0,
+	)
+
+	policyReq2 := &group.MsgCreateGroupPolicy{
+		Admin:   addr2.String(),
+		GroupId: groupID2,
+	}
+
+	err = policyReq2.SetDecisionPolicy(policy2)
+	require.NoError(t, err)
+	policyRes2, err := app.GroupKeeper.CreateGroupPolicy(ctx, policyReq2)
+	require.NoError(t, err)
+
 	groupPolicyAddr, err := sdk.AccAddressFromBech32(policyRes.Address)
 	require.NoError(t, err)
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
+
+	groupPolicyAddr2, err := sdk.AccAddressFromBech32(policyRes2.Address)
+	require.NoError(t, err)
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, groupPolicyAddr2, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
+
+	votingPeriod := policy.GetVotingPeriod()
 
 	msgSend1 := &banktypes.MsgSend{
 		FromAddress: groupPolicyAddr.String(),
 		ToAddress:   addr2.String(),
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 	}
+	msgSend2 := &banktypes.MsgSend{
+		FromAddress: groupPolicyAddr2.String(),
+		ToAddress:   addr2.String(),
+		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+	}
 	proposers := []string{addr2.String()}
 
 	specs := map[string]struct {
-		srcBlockTime      time.Time
-		setupProposal     func(ctx context.Context) uint64
+		setupProposal     func(ctx sdk.Context) uint64
 		expErr            bool
 		expErrMsg         string
+		newCtx            sdk.Context
 		expExecutorResult group.ProposalExecutorResult
+		expStatus         group.ProposalStatus
 	}{
 		"proposal pruned after executor result success": {
-			setupProposal: func(ctx context.Context) uint64 {
+			setupProposal: func(ctx sdk.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
 				pID, err := submitProposalAndVote(app, ctx, msgs, proposers, groupPolicyAddr, group.VOTE_OPTION_YES)
 				require.NoError(t, err)
@@ -85,10 +120,11 @@ func TestEndBlockerPruning(t *testing.T) {
 				return pID
 			},
 			expErrMsg:         "load proposal: not found",
+			newCtx:            ctx,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 		},
 		"proposal with multiple messages pruned when executed with result success": {
-			setupProposal: func(ctx context.Context) uint64 {
+			setupProposal: func(ctx sdk.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1, msgSend1}
 				pID, err := submitProposalAndVote(app, ctx, msgs, proposers, groupPolicyAddr, group.VOTE_OPTION_YES)
 				require.NoError(t, err)
@@ -100,10 +136,11 @@ func TestEndBlockerPruning(t *testing.T) {
 				return pID
 			},
 			expErrMsg:         "load proposal: not found",
+			newCtx:            ctx,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 		},
 		"proposal not pruned when not executed and rejected": {
-			setupProposal: func(ctx context.Context) uint64 {
+			setupProposal: func(ctx sdk.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
 				pID, err := submitProposalAndVote(app, ctx, msgs, proposers, groupPolicyAddr, group.VOTE_OPTION_NO)
 				require.NoError(t, err)
@@ -114,10 +151,12 @@ func TestEndBlockerPruning(t *testing.T) {
 
 				return pID
 			},
+			newCtx:            ctx,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+			expStatus:         group.PROPOSAL_STATUS_REJECTED,
 		},
 		"open proposal is not pruned which must not fail ": {
-			setupProposal: func(ctx context.Context) uint64 {
+			setupProposal: func(ctx sdk.Context) uint64 {
 				pID, err := submitProposal(app, ctx, []sdk.Msg{msgSend1}, proposers, groupPolicyAddr)
 				require.NoError(t, err)
 				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Executor: addr3.String(), ProposalId: pID})
@@ -127,10 +166,12 @@ func TestEndBlockerPruning(t *testing.T) {
 
 				return pID
 			},
+			newCtx:            ctx,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+			expStatus:         group.PROPOSAL_STATUS_SUBMITTED,
 		},
 		"proposal not pruned with group policy modified before tally": {
-			setupProposal: func(ctx context.Context) uint64 {
+			setupProposal: func(ctx sdk.Context) uint64 {
 				pID, err := submitProposal(app, ctx, []sdk.Msg{msgSend1}, proposers, groupPolicyAddr)
 				require.NoError(t, err)
 				_, err = app.GroupKeeper.UpdateGroupPolicyMetadata(ctx, &group.MsgUpdateGroupPolicyMetadata{
@@ -139,16 +180,18 @@ func TestEndBlockerPruning(t *testing.T) {
 				})
 				require.NoError(t, err)
 				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Executor: addr3.String(), ProposalId: pID})
-				require.NoError(t, err)
+				require.Error(t, err) // since proposal with status Aborted cannot be executed
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				require.NoError(t, testutil.FundAccount(app.BankKeeper, sdkCtx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
 
 				return pID
 			},
+			newCtx:            ctx,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+			expStatus:         group.PROPOSAL_STATUS_ABORTED,
 		},
 		"pruned when proposal is executable when failed before": {
-			setupProposal: func(ctx context.Context) uint64 {
+			setupProposal: func(ctx sdk.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
 				pID, err := submitProposalAndVote(app, ctx, msgs, proposers, groupPolicyAddr, group.VOTE_OPTION_YES)
 				require.NoError(t, err)
@@ -156,8 +199,84 @@ func TestEndBlockerPruning(t *testing.T) {
 				require.NoError(t, err)
 				return pID
 			},
+			newCtx:            ctx,
 			expErrMsg:         "load proposal: not found",
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+		},
+		"proposal with status withdrawn is pruned after voting period end": {
+			setupProposal: func(sdkCtx sdk.Context) uint64 {
+				pId, err := submitProposal(app, sdkCtx, []sdk.Msg{msgSend1}, proposers, groupPolicyAddr)
+				require.NoError(t, err)
+				_, err = app.GroupKeeper.WithdrawProposal(ctx, &group.MsgWithdrawProposal{
+					ProposalId: pId,
+					Address:    groupPolicyAddr.String(),
+				})
+				require.NoError(t, err)
+				return pId
+			},
+			newCtx:    ctx.WithBlockTime(ctx.BlockTime().Add(votingPeriod).Add(time.Hour)),
+			expErrMsg: "load proposal: not found",
+			expStatus: group.PROPOSAL_STATUS_WITHDRAWN,
+		},
+		"proposal with status withdrawn is not pruned (before voting period)": {
+			setupProposal: func(sdkCtx sdk.Context) uint64 {
+				pId, err := submitProposal(app, sdkCtx, []sdk.Msg{msgSend1}, proposers, groupPolicyAddr)
+				require.NoError(t, err)
+				_, err = app.GroupKeeper.WithdrawProposal(ctx, &group.MsgWithdrawProposal{
+					ProposalId: pId,
+					Address:    groupPolicyAddr.String(),
+				})
+				require.NoError(t, err)
+				return pId
+			},
+			newCtx:            ctx,
+			expErrMsg:         "",
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+			expStatus:         group.PROPOSAL_STATUS_WITHDRAWN,
+		},
+		"proposal with status aborted is pruned after voting period end (due to updated group policy decision policy)": {
+			setupProposal: func(sdkCtx sdk.Context) uint64 {
+				pId, err := submitProposal(app, sdkCtx, []sdk.Msg{msgSend2}, proposers, groupPolicyAddr2)
+				require.NoError(t, err)
+
+				policy := group.NewThresholdDecisionPolicy("3", time.Second, 0)
+				msg := &group.MsgUpdateGroupPolicyDecisionPolicy{
+					Admin:              addrs[1].String(),
+					GroupPolicyAddress: groupPolicyAddr2.String(),
+				}
+				err = msg.SetDecisionPolicy(policy)
+				require.NoError(t, err)
+				_, err = app.GroupKeeper.UpdateGroupPolicyDecisionPolicy(ctx, msg)
+				require.NoError(t, err)
+
+				return pId
+			},
+			newCtx:            ctx.WithBlockTime(ctx.BlockTime().Add(votingPeriod).Add(time.Hour)),
+			expErrMsg:         "load proposal: not found",
+			expStatus:         group.PROPOSAL_STATUS_ABORTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+		},
+		"proposal with status aborted is not pruned before voting period end (due to updated group policy)": {
+			setupProposal: func(sdkCtx sdk.Context) uint64 {
+				pId, err := submitProposal(app, sdkCtx, []sdk.Msg{msgSend2}, proposers, groupPolicyAddr2)
+				require.NoError(t, err)
+
+				policy := group.NewThresholdDecisionPolicy("3", time.Second, 0)
+				msg := &group.MsgUpdateGroupPolicyDecisionPolicy{
+					Admin:              addrs[1].String(),
+					GroupPolicyAddress: groupPolicyAddr2.String(),
+				}
+				err = msg.SetDecisionPolicy(policy)
+				require.NoError(t, err)
+				_, err = app.GroupKeeper.UpdateGroupPolicyDecisionPolicy(ctx, msg)
+				require.NoError(t, err)
+
+				return pId
+			},
+			newCtx:            ctx,
+			expErrMsg:         "",
+			expStatus:         group.PROPOSAL_STATUS_ABORTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
 	}
 	for msg, spec := range specs {
@@ -165,18 +284,24 @@ func TestEndBlockerPruning(t *testing.T) {
 		t.Run(msg, func(t *testing.T) {
 			proposalID := spec.setupProposal(ctx)
 
-			module.EndBlocker(ctx, app.GroupKeeper)
+			module.EndBlocker(spec.newCtx, app.GroupKeeper)
 
+			if spec.expErrMsg != "" && spec.expExecutorResult != group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
+				_, err = app.GroupKeeper.Proposal(spec.newCtx, &group.QueryProposalRequest{ProposalId: proposalID})
+				require.Error(t, err)
+				require.Contains(t, err.Error(), spec.expErrMsg)
+				return
+			}
 			if spec.expExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
 				// Make sure proposal is deleted from state
-				_, err = app.GroupKeeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
+				_, err = app.GroupKeeper.Proposal(spec.newCtx, &group.QueryProposalRequest{ProposalId: proposalID})
 				require.Contains(t, err.Error(), spec.expErrMsg)
 				res, err := app.GroupKeeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{ProposalId: proposalID})
 				require.NoError(t, err)
 				require.Empty(t, res.GetVotes())
 			} else {
 				// Check that proposal and votes exists
-				res, err := app.GroupKeeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
+				res, err := app.GroupKeeper.Proposal(spec.newCtx, &group.QueryProposalRequest{ProposalId: proposalID})
 				require.NoError(t, err)
 				_, err = app.GroupKeeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{ProposalId: res.Proposal.Id})
 				require.NoError(t, err)
@@ -185,6 +310,8 @@ func TestEndBlockerPruning(t *testing.T) {
 				exp := group.ProposalExecutorResult_name[int32(spec.expExecutorResult)]
 				got := group.ProposalExecutorResult_name[int32(res.Proposal.ExecutorResult)]
 				assert.Equal(t, exp, got)
+
+				require.Equal(t, res.GetProposal().Status, spec.expStatus)
 			}
 		})
 	}
@@ -240,13 +367,12 @@ func TestEndBlockerTallying(t *testing.T) {
 	proposers := []string{addrs[2].String()}
 
 	specs := map[string]struct {
-		preRun     func(sdkCtx sdk.Context) uint64
-		proposalId uint64
-		admin      string
-		expErrMsg  string
-		newCtx     sdk.Context
-		tallyRes   group.TallyResult
-		expStatus  group.ProposalStatus
+		preRun    func(sdkCtx sdk.Context) uint64
+		admin     string
+		expErrMsg string
+		newCtx    sdk.Context
+		tallyRes  group.TallyResult
+		expStatus group.ProposalStatus
 	}{
 		"tally updated after voting power end": {
 			preRun: func(sdkCtx sdk.Context) uint64 {

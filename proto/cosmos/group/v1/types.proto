@@ -221,7 +221,7 @@ message Proposal {
   // accordingly updated.
   google.protobuf.Timestamp voting_period_end = 10 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 
-  // executor_result is the final result based on the votes and election rule. Initial value is NotRun.
+  // executor_result is the final result of the proposal execution. Initial value is NotRun.
   ProposalExecutorResult executor_result = 11;
 
   // messages is a list of `sdk.Msg`s that will be executed if the proposal passes.

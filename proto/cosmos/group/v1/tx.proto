@@ -353,7 +353,10 @@ message MsgExec {
 }
 
 // MsgExecResponse is the Msg/Exec request type.
-message MsgExecResponse {}
+message MsgExecResponse {
+  // result is the final result of the proposal execution.
+  ProposalExecutorResult result = 2;
+}
 
 // MsgLeaveGroup is the Msg/LeaveGroup request type.
 message MsgLeaveGroup {

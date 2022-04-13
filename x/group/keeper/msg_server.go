@@ -894,14 +894,15 @@ func (k Keeper) doUpdateGroupPolicy(ctx sdk.Context, groupPolicy string, admin s
 		return sdkerrors.Wrap(err, note)
 	}
 
+	if err = k.abortProposals(ctx, groupPolicyAddr); err != nil {
+		return err
+	}
+
 	err = ctx.EventManager().EmitTypedEvent(&group.EventUpdateGroupPolicy{Address: admin})
 	if err != nil {
 		return err
 	}
 
-	if err = k.updateProposalStatus(ctx, groupPolicyAddr); err != nil {
-		return err
-	}
 	return nil
 }
 

@@ -17,17 +17,17 @@ type Manager struct {
 	logger           log.Logger
 	opts             types.PruningOptions
 	snapshotInterval uint64
-	pruneHeights     []int64
 	// Although pruneHeights happen in the same goroutine with the normal execution,
 	// we sync access to them to avoid soundness issues in the future if concurrency pattern changes.
-	pruneHeightsMx sync.Mutex
-	// These are the heights that are multiples of snapshotInterval and kept for state sync snapshots.
-	// The heights are added to this list to be pruned when a snapshot is complete.
-	pruneSnapshotHeights *list.List
+	pruneHeightsMx         sync.Mutex
+	pruneHeights           []int64
 	// Snapshots are taken in a separate goroutine fromt the regular execution
 	// and can be delivered asynchrounously via HandleHeightSnapshot.
-	// Therefore, we sync access to pruneSnapshotHeights with this mutex.
+	// Therefore, we sync access to pruneSnapshotHeights with this mutex. 
 	pruneSnapshotHeightsMx sync.Mutex
+	// These are the heights that are multiples of snapshotInterval and kept for state sync snapshots.
+	// The heights are added to this list to be pruned when a snapshot is complete.
+	pruneSnapshotHeights   *list.List
 }
 
 // NegativeHeightsError is returned when a negative height is provided to the manager.

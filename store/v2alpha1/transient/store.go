@@ -3,9 +3,9 @@ package transient
 import (
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/db/memdb"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/dbadapter"
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 )
 
 var (

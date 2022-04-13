@@ -7,8 +7,8 @@ package mock
 import (
 	reflect "reflect"
 
-	db "github.com/tendermint/tm-db"
 	gomock "github.com/golang/mock/gomock"
+	db "github.com/tendermint/tm-db"
 )
 
 // MockDB is a mock of DB interface.

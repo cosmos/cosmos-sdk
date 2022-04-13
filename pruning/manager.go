@@ -13,24 +13,33 @@ import (
 )
 
 type Manager struct {
-	db                     dbm.DB
-	logger                 log.Logger
-	opts                   types.PruningOptions
-	snapshotInterval       uint64
-	pruneHeights           []int64
+	db               dbm.DB
+	logger           log.Logger
+	opts             types.PruningOptions
+	snapshotInterval uint64
+	pruneHeights     []int64
 	// Although pruneHeights happen in the same goroutine with the normal execution,
 	// we sync access to them to avoid soundness issues in the future if concurrency pattern changes.
-	pruneHeightsMx         sync.Mutex
+	pruneHeightsMx sync.Mutex
 	// These are the heights that are multiples of snapshotInterval and kept for state sync snapshots.
 	// The heights are added to this list to be pruned when a snapshot is complete.
-	pruneSnapshotHeights   *list.List
+	pruneSnapshotHeights *list.List
 	// Snapshots are taken in a separate goroutine fromt the regular execution
 	// and can be delivered asynchrounously via HandleHeightSnapshot.
-	// Therefore, we sync access to pruneSnapshotHeights with this mutex. 
+	// Therefore, we sync access to pruneSnapshotHeights with this mutex.
 	pruneSnapshotHeightsMx sync.Mutex
 }
 
-const errNegativeHeightsFmt = "failed to get pruned heights: %d"
+// NegativeHeightsError is returned when a negative height is provided to the manager.
+type NegativeHeightsError struct {
+	Height int64
+}
+
+var _ error = &NegativeHeightsError{}
+
+func (e *NegativeHeightsError) Error() string {
+	return fmt.Sprintf("failed to get pruned heights: %d", e.Height)
+}
 
 var (
 	pruneHeightsKey         = []byte("s/pruneheights")
@@ -39,11 +48,11 @@ var (
 
 func NewManager(db dbm.DB, logger log.Logger) *Manager {
 	return &Manager{
-		db:             db,
-		logger:         logger,
-		opts:           types.NewPruningOptions(types.PruningNothing),
-		pruneHeights:   []int64{},
-		pruneSnapshotHeights:   list.New(),
+		db:                   db,
+		logger:               logger,
+		opts:                 types.NewPruningOptions(types.PruningNothing),
+		pruneHeights:         []int64{},
+		pruneSnapshotHeights: list.New(),
 	}
 }
 
@@ -136,7 +145,7 @@ func (m *Manager) HandleHeight(previousHeight int64) int64 {
 
 // HandleHeightSnapshot persists the snapshot height to be pruned at the next appropriate
 // height defined by the pruning strategy. Flushes the update to disk and panics if the flush fails
-// The input height must be greater than 0 and pruning strategy any but pruning nothing. 
+// The input height must be greater than 0 and pruning strategy any but pruning nothing.
 // If one of these conditions is not met, this function does nothing.
 func (m *Manager) HandleHeightSnapshot(height int64) {
 	if m.opts.GetPruningStrategy() == types.PruningNothing || height <= 0 {
@@ -207,7 +216,7 @@ func loadPruningHeights(db dbm.DB) ([]int64, error) {
 	for offset < len(bz) {
 		h := int64(binary.BigEndian.Uint64(bz[offset : offset+8]))
 		if h < 0 {
-			return []int64{}, fmt.Errorf(errNegativeHeightsFmt, h)
+			return []int64{}, &NegativeHeightsError{Height: h}
 		}
 
 		prunedHeights[i] = h
@@ -232,9 +241,8 @@ func loadPruningSnapshotHeights(db dbm.DB) (*list.List, error) {
 	for offset < len(bz) {
 		h := int64(binary.BigEndian.Uint64(bz[offset : offset+8]))
 		if h < 0 {
-			return pruneSnapshotHeights, fmt.Errorf(errNegativeHeightsFmt, h)
+			return nil, &NegativeHeightsError{Height: h}
 		}
-
 		pruneSnapshotHeights.PushBack(h)
 		i++
 		offset += 8

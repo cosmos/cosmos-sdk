@@ -31,7 +31,7 @@ func TestPruningOptions_Validate(t *testing.T) {
 
 func TestPruningOptions_GetStrategy(t *testing.T) {
 	testCases := []struct {
-		opts      PruningOptions
+		opts             PruningOptions
 		expectedStrategy PruningStrategy
 	}{
 		{NewPruningOptions(PruningDefault), PruningDefault},
@@ -50,7 +50,7 @@ func TestPruningOptions_GetStrategy(t *testing.T) {
 func TestNewPruningOptionsFromString(t *testing.T) {
 	testCases := []struct {
 		optString string
-		expect PruningOptions
+		expect    PruningOptions
 	}{
 		{PruningOptionDefault, NewPruningOptions(PruningDefault)},
 		{PruningOptionEverything, NewPruningOptions(PruningEverything)},

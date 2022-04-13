@@ -9,12 +9,12 @@ import (
 
 // Re-export relevant original store types
 type (
-	StoreKey        = v1.StoreKey
-	StoreType       = v1.StoreType
-	CommitID        = v1.CommitID
-	StoreUpgrades   = v1.StoreUpgrades
-	StoreRename     = v1.StoreRename
-	Iterator        = v1.Iterator
+	StoreKey      = v1.StoreKey
+	StoreType     = v1.StoreType
+	CommitID      = v1.CommitID
+	StoreUpgrades = v1.StoreUpgrades
+	StoreRename   = v1.StoreRename
+	Iterator      = v1.Iterator
 
 	TraceContext  = v1.TraceContext
 	WriteListener = v1.WriteListener

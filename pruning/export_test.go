@@ -1,7 +1,5 @@
 package pruning
 
-const ErrNegativeHeightsFmt = errNegativeHeightsFmt
-
 var (
 	PruneHeightsKey         = pruneHeightsKey
 	PruneSnapshotHeightsKey = pruneSnapshotHeightsKey

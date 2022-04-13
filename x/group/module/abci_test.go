@@ -374,7 +374,7 @@ func TestEndBlockerTallying(t *testing.T) {
 		tallyRes  group.TallyResult
 		expStatus group.ProposalStatus
 	}{
-		"tally updated after voting power end": {
+		"tally updated after voting period end": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				pId, err := submitProposal(app, sdkCtx, []sdk.Msg{msgSend}, proposers, groupPolicyAddr)
 				require.NoError(t, err)

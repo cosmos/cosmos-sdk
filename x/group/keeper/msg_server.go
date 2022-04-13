@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"encoding/binary"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -739,6 +740,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 	}
 
 	// Execute proposal payload.
+	var logs string
 	if proposal.Status == group.PROPOSAL_STATUS_ACCEPTED && proposal.ExecutorResult != group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
 		// Caching context so that we don't update the store in case of failure.
 		ctx, flush := ctx.CacheContext()
@@ -750,6 +752,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 		_, err = k.doExecuteMsgs(ctx, k.router, proposal, addr)
 		if err != nil {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_FAILURE
+			logs = fmt.Sprintf("proposal execution failed on proposal %d, because of error %+v", id, err)
 			k.Logger(ctx).Info("proposal execution failed", "cause", err, "proposalID", id)
 		} else {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_SUCCESS
@@ -772,6 +775,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 
 	err = ctx.EventManager().EmitTypedEvent(&group.EventExec{
 		ProposalId: id,
+		Logs:       logs,
 		Result:     proposal.ExecutorResult,
 	})
 	if err != nil {

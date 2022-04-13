@@ -128,11 +128,6 @@ func (m *Manager) HandleHeight(previousHeight int64) int64 {
 			defer m.pruneHeightsMx.Unlock()
 
 			m.pruneHeights = append(m.pruneHeights, pruneHeight)
-
-			// flush the updates to disk so that they are not lost if crash happens.
-			if err := m.db.SetSync(pruneHeightsKey, int64SliceToBytes(m.pruneHeights)); err != nil {
-				panic(err)
-			}
 			return pruneHeight
 		}
 	}
@@ -225,10 +220,10 @@ func loadPruningHeights(db dbm.DB) ([]int64, error) {
 
 func loadPruningSnapshotHeights(db dbm.DB) (*list.List, error) {
 	bz, err := db.Get(pruneSnapshotHeightsKey)
-	pruneSnapshotHeights := list.New()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get post-snapshot pruned heights: %w", err)
 	}
+	pruneSnapshotHeights := list.New()
 	if len(bz) == 0 {
 		return pruneSnapshotHeights, nil
 	}

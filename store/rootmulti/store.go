@@ -79,7 +79,7 @@ func NewStore(db dbm.DB, logger log.Logger) *Store {
 		keysByName:     make(map[string]types.StoreKey),
 		listeners:      make(map[types.StoreKey][]types.WriteListener),
 		removalMap:     make(map[types.StoreKey]bool),
-		pruningManager: pruning.NewManager(logger),
+		pruningManager: pruning.NewManager(db, logger),
 	}
 }
 
@@ -550,12 +550,17 @@ func (rs *Store) handlePruning(version int64) error {
 }
 
 func (rs *Store) pruneStores() error {
-	pruningHeights := rs.pruningManager.GetPruningHeights()
-	rs.logger.Debug(fmt.Sprintf("pruning the following heights: %v\n", pruningHeights))
+	pruningHeights, err := rs.pruningManager.GetFlushAndResetPruningHeights()
+	if err != nil {
+		return err
+	}
 
 	if len(pruningHeights) == 0 {
+		rs.logger.Debug("pruning skipped; no heights to prune")
 		return nil
 	}
+
+	rs.logger.Debug("pruning heights", "heights", pruningHeights)
 
 	for key, store := range rs.stores {
 		// If the store is wrapped with an inter-block cache, we must first unwrap
@@ -575,7 +580,6 @@ func (rs *Store) pruneStores() error {
 			return err
 		}
 	}
-	rs.pruningManager.ResetPruningHeights()
 	return nil
 }
 
@@ -964,7 +968,6 @@ func (rs *Store) flushMetadata(db dbm.DB, version int64, cInfo *types.CommitInfo
 	}
 
 	flushLatestVersion(batch, version)
-	rs.pruningManager.FlushPruningHeights(batch)
 
 	if err := batch.WriteSync(); err != nil {
 		panic(fmt.Errorf("error on batch write %w", err))

@@ -161,6 +161,33 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 	require.False(t, tallyResults.Equals(v1.EmptyTallyResult()))
 }
 
+func TestTallyOnlyValidatorsVetoedAndAbstainExcluded(t *testing.T) {
+	app := simapp.Setup(t, false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	valAccAddrs, _ := createValidators(t, ctx, app, []int64{6, 6, 7, 1})
+
+	tp := TestProposal
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, "")
+	require.NoError(t, err)
+	proposalID := proposal.Id
+	proposal.Status = v1.StatusVotingPeriod
+	app.GovKeeper.SetProposal(ctx, proposal)
+
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[1], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[2], v1.NewNonSplitVoteOption(v1.OptionNoWithVeto), ""))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[3], v1.NewNonSplitVoteOption(v1.OptionAbstain), ""))
+
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
+	require.True(t, ok)
+	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+
+	require.False(t, passes)
+	require.True(t, burnDeposits)
+	require.False(t, tallyResults.Equals(v1.EmptyTallyResult()))
+}
+
 func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})

@@ -15,7 +15,7 @@ pruning = "< strategy >" # where the options are:
 - `everything`: 2 latest states will be kept; pruning at 10 block intervals.
 - `custom`: allow pruning options to be manually specified through 'pruning-keep-recent', and 'pruning-interval'
 
-If no strategy is given to `Baseapp`, `nothing` is selected. However, we perform validation on the cli layer to require these to be always set in the config file.
+If no strategy is given to the BaseApp, `nothing` is selected. However, we perform validation on the CLI layer to require these to be always set in the config file.
 
 ## Custom Pruning
 

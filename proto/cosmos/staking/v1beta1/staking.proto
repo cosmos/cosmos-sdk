@@ -288,6 +288,12 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
+  // min_self_delegation is the chain-wide minimum amount that a validator has to self delegate
+  string min_self_delegation = 7 [
+    (gogoproto.moretags)   = "yaml:\"min_self_delegation\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 // DelegationResponse is equivalent to Delegation except that it contains a

@@ -778,7 +778,9 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 		return nil, err
 	}
 
-	return &group.MsgExecResponse{}, nil
+	return &group.MsgExecResponse{
+		Result: proposal.ExecutorResult,
+	}, nil
 }
 
 // LeaveGroup implements the MsgServer/LeaveGroup method.

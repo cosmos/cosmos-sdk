@@ -60,6 +60,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#11124](https://github.com/cosmos/cosmos-sdk/pull/11124) Add `GetAllVersions` to application store
 * (x/auth) [\#10880](https://github.com/cosmos/cosmos-sdk/pull/10880) Added a new query to the tx query service that returns a block with transactions fully decoded.
 * [#11314](https://github.com/cosmos/cosmos-sdk/pull/11314) Add state rollback command.
+* (x/staking) [\#11596](https://github.com/cosmos/cosmos-sdk/pull/11596) Add (re)delegation getters
 
 ### Bug Fixes
 

@@ -175,6 +175,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [\#11630](https://github.com/cosmos/cosmos-sdk/pull/11630) Added SafeSub method to avoid panic in Sub method for sdk.Coin
 * [\#11511](https://github.com/cosmos/cosmos-sdk/pull/11511) Add api server flags to start command.
 * [\#11484](https://github.com/cosmos/cosmos-sdk/pull/11484) Implement getter for keyring backend option.
 * [\#11449](https://github.com/cosmos/cosmos-sdk/pull/11449) Improved error messages when node isn't synced.
@@ -206,7 +207,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* [\#11630](https://github.com/cosmos/cosmos-sdk/pull/11630) Added SafeSub method to avoid panic in Sub method for sdk.Coin
 * [\#11558](https://github.com/cosmos/cosmos-sdk/pull/11558) Fix `--dry-run` not working when using tx command.
 * [\#11354](https://github.com/cosmos/cosmos-sdk/pull/11355) Added missing pagination flag for `bank q total` query.
 * [\#11197](https://github.com/cosmos/cosmos-sdk/pull/11197) Signing with multisig now works with multisig address which is not in the keyring.

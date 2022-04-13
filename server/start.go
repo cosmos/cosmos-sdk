@@ -270,8 +270,34 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		node.DefaultMetricsProvider(cfg.Instrumentation),
 		ctx.Logger,
 	)
+<<<<<<< HEAD
 	if err != nil {
 		return err
+=======
+
+	if gRPCOnly {
+		ctx.Logger.Info("starting node in gRPC only mode; Tendermint is disabled")
+		config.GRPC.Enable = true
+	} else {
+		ctx.Logger.Info("starting node with ABCI Tendermint in-process")
+
+		tmNode, err = node.NewNode(
+			cfg,
+			pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
+			nodeKey,
+			proxy.NewLocalClientCreator(app),
+			genDocProvider,
+			node.DefaultDBProvider,
+			node.DefaultMetricsProvider(cfg.Instrumentation),
+			ctx.Logger,
+		)
+		if err != nil {
+			return err
+		}
+		if err := tmNode.Start(); err != nil {
+			return err
+		}
+>>>>>>> 5ad3a36a2 (check error returned from NewNode (#11624))
 	}
 
 	ctx.Logger.Debug("initialization: tmNode created")

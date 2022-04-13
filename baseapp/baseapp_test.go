@@ -291,7 +291,7 @@ func TestConsensusParamsNotNil(t *testing.T) {
 	app.EndBlock(abci.RequestEndBlock{Height: header.Height})
 	app.CheckTx(abci.RequestCheckTx{})
 	app.DeliverTx(abci.RequestDeliverTx{})
-	_, _, err := app.Simulate([]byte{})
+	_, _, err = app.Simulate([]byte{})
 	require.NoError(t, err)
 }
 

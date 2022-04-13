@@ -14,6 +14,7 @@ func TestPruningOptions_Validate(t *testing.T) {
 		{NewPruningOptions(PruningDefault), nil},
 		{NewPruningOptions(PruningEverything), nil},
 		{NewPruningOptions(PruningNothing), nil},
+		{NewPruningOptions(PruningCustom), ErrPruningIntervalZero},
 		{NewCustomPruningOptions(2, 10), nil},
 		{NewCustomPruningOptions(100, 15), nil},
 		{NewCustomPruningOptions(1, 10), ErrPruningKeepRecentTooSmall},
@@ -25,6 +26,24 @@ func TestPruningOptions_Validate(t *testing.T) {
 	for _, tc := range testCases {
 		err := tc.opts.Validate()
 		require.Equal(t, tc.expectErr, err, "options: %v, err: %s", tc.opts, err)
+	}
+}
+
+func TestPruningOptions_GetStrategy(t *testing.T) {
+	testCases := []struct {
+		opts      PruningOptions
+		expectedStrategy PruningStrategy
+	}{
+		{NewPruningOptions(PruningDefault), PruningDefault},
+		{NewPruningOptions(PruningEverything), PruningEverything},
+		{NewPruningOptions(PruningNothing), PruningNothing},
+		{NewPruningOptions(PruningCustom), PruningCustom},
+		{NewCustomPruningOptions(2, 10), PruningCustom},
+	}
+
+	for _, tc := range testCases {
+		actualStrategy := tc.opts.GetPruningStrategy()
+		require.Equal(t, tc.expectedStrategy, actualStrategy)
 	}
 }
 

@@ -78,13 +78,9 @@ func NewPruningOptions(pruningStrategy PruningStrategy) PruningOptions {
 			Interval:   0,
 			Strategy:   PruningNothing,
 		}
-	case PruningCustom:
-		return PruningOptions{
-			Strategy: PruningCustom,
-		}
 	default:
 		return PruningOptions{
-			Strategy: PruningUndefined,
+			Strategy: PruningCustom,
 		}
 	}
 }

@@ -64,7 +64,9 @@ func (ps *paramStore) Set(_ sdk.Context, key []byte, value interface{}) {
 		panic(err)
 	}
 
-	ps.db.Set(key, bz)
+	if err := ps.db.Set(key, bz); err != nil {
+		panic(err)
+	}
 }
 
 func (ps *paramStore) Has(_ sdk.Context, key []byte) bool {
@@ -183,7 +185,7 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), snapshotDir)
 	require.NoError(t, err)
 	teardown := func() {
-		os.RemoveAll(snapshotDir)
+		_ = os.RemoveAll(snapshotDir)
 	}
 
 	app := setupBaseApp(t, append(options,
@@ -287,7 +289,8 @@ func TestConsensusParamsNotNil(t *testing.T) {
 	app.EndBlock(abci.RequestEndBlock{Height: header.Height})
 	app.CheckTx(abci.RequestCheckTx{})
 	app.DeliverTx(abci.RequestDeliverTx{})
-	app.Simulate([]byte{})
+	_, _, err := app.Simulate([]byte{})
+	require.NoError(t, err)
 }
 
 // Test that we can make commits and then reload old versions.

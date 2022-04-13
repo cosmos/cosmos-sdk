@@ -115,7 +115,9 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 
 			// Bind flags to the Context's Viper so the app construction can set
 			// options accordingly.
-			serverCtx.Viper.BindPFlags(cmd.Flags())
+			if err := serverCtx.Viper.BindPFlags(cmd.Flags()); err != nil {
+				return err
+			}
 
 			_, err := GetPruningOptionsFromFlags(serverCtx.Viper)
 			return err
@@ -246,7 +248,9 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		cpuProfileCleanup = func() {
 			ctx.Logger.Info("stopping CPU profiler", "profile", cpuProfile)
 			pprof.StopCPUProfile()
-			f.Close()
+			if err := f.Close(); err != nil {
+				ctx.Logger.Info("failed to close cpu-profile file", "profile", cpuProfile, "err", err.Error())
+			}
 		}
 	}
 
@@ -447,7 +451,9 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		if grpcSrv != nil {
 			grpcSrv.Stop()
 			if grpcWebSrv != nil {
-				grpcWebSrv.Close()
+				if err := grpcWebSrv.Close(); err != nil {
+					ctx.Logger.Error("failed to close grpc-web http server: ", err)
+				}
 			}
 		}
 

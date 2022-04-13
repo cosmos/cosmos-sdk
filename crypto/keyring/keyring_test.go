@@ -1077,19 +1077,19 @@ func TestNonConsistentKeyring_SavePubKey(t *testing.T) {
 	priv := ed25519.GenPrivKey()
 	pub := priv.PubKey()
 
-	k, err := kr.SaveOfflineKey(key, pub)
-	require.Nil(t, err)
+	_, err = kr.SaveOfflineKey(key, pub)
+	require.NoError(t, err)
 
 	// broken keyring state test
 	unsafeKr, ok := kr.(keystore)
 	require.True(t, ok)
 	// we lost public key for some reason, but still have an address record
-	unsafeKr.db.Remove(infoKey(key))
+	require.NoError(t, unsafeKr.db.Remove(infoKey(key)))
 	list, err = kr.List()
 	require.NoError(t, err)
 	require.Equal(t, 0, len(list))
 
-	k, err = kr.SaveOfflineKey(key, pub)
+	k, err := kr.SaveOfflineKey(key, pub)
 	require.Nil(t, err)
 	pubKey, err := k.GetPubKey()
 	require.NoError(t, err)

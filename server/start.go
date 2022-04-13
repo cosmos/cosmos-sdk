@@ -382,7 +382,9 @@ func startCmtNode(
 			node.DefaultMetricsProvider(cfg.Instrumentation),
 			ctx.Logger,
 		)
-
+		if err != nil {
+			return err
+		}
 		if err := tmNode.Start(); err != nil {
 			return err
 		}

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -29,18 +30,29 @@ func newUpgradeFileWatcher(filename string, interval time.Duration) (*fileWatche
 	if filename == "" {
 		return nil, errors.New("filename undefined")
 	}
+
 	filenameAbs, err := filepath.Abs(filename)
 	if err != nil {
 		return nil,
-			fmt.Errorf("wrong path, %s must be a valid file path, [%w]", filename, err)
+			fmt.Errorf("invalid path; %s must be a valid file path: %w", filename, err)
 	}
+
 	dirname := filepath.Dir(filename)
 	info, err := os.Stat(dirname)
 	if err != nil || !info.IsDir() {
-		return nil, fmt.Errorf("wrong path, %s must be an existing directory, [%w]", dirname, err)
+		return nil, fmt.Errorf("invalid path; %s must be an existing directory: %w", dirname, err)
 	}
 
-	return &fileWatcher{filenameAbs, interval, upgradetypes.Plan{}, time.Time{}, make(chan bool), time.NewTicker(interval), false, false}, nil
+	return &fileWatcher{
+		filename:    filenameAbs,
+		interval:    interval,
+		currentInfo: upgradetypes.Plan{},
+		lastModTime: time.Time{},
+		cancel:      make(chan bool),
+		ticker:      time.NewTicker(interval),
+		needsUpdate: false,
+		initialized: false,
+	}, nil
 }
 
 func (fw *fileWatcher) Stop() {
@@ -64,11 +76,13 @@ func (fw *fileWatcher) MonitorUpdate(currentUpgrade upgradetypes.Plan) <-chan st
 					done <- struct{}{}
 					return
 				}
+
 			case <-fw.cancel:
 				return
 			}
 		}
 	}()
+
 	return done
 }
 
@@ -79,25 +93,33 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 	if fw.needsUpdate {
 		return true
 	}
+
 	stat, err := os.Stat(fw.filename)
-	if err != nil { // file doesn't exists
+	if err != nil {
+		// file doesn't exists
 		return false
 	}
+
 	if !stat.ModTime().After(fw.lastModTime) {
 		return false
 	}
+
 	info, err := parseUpgradeInfoFile(fw.filename)
 	if err != nil {
-		Logger.Fatal().Err(err).Msg("Can't parse upgrade info file")
+		Logger.Fatal().Err(err).Msg("failed to parse upgrade info file")
 		return false
 	}
-	if !fw.initialized { // daemon has restarted
+
+	if !fw.initialized {
+		// daemon has restarted
 		fw.initialized = true
 		fw.currentInfo = info
 		fw.lastModTime = stat.ModTime()
-		// heuristic: deamon has restarted, so we don't know if we successfully downloaded the upgrade or not.
-		// so we try to compare the running upgrade name (read from the cosmovisor file) with the upgrade info
-		if currentUpgrade.Name != fw.currentInfo.Name {
+
+		// Heuristic: Deamon has restarted, so we don't know if we successfully
+		// downloaded the upgrade or not. So we try to compare the running upgrade
+		// name (read from the cosmovisor file) with the upgrade info.
+		if !strings.EqualFold(currentUpgrade.Name, fw.currentInfo.Name) {
 			fw.needsUpdate = true
 			return true
 		}
@@ -109,24 +131,32 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 		fw.needsUpdate = true
 		return true
 	}
+
 	return false
 }
 
 func parseUpgradeInfoFile(filename string) (upgradetypes.Plan, error) {
 	var ui upgradetypes.Plan
+
 	f, err := os.Open(filename)
 	if err != nil {
-		return ui, err
+		return upgradetypes.Plan{}, err
 	}
 	defer f.Close()
+
 	d := json.NewDecoder(f)
-	err = d.Decode(&ui)
-	if err != nil {
-		return ui, err
+	if err := d.Decode(&ui); err != nil {
+		return upgradetypes.Plan{}, err
 	}
+
 	// required values must be set
-	if ui.Height == 0 || ui.Name == "" {
-		return upgradetypes.Plan{}, fmt.Errorf("invalid upgrade-info.json content. Name and Hight must be not empty. Got: %v", ui)
+	if ui.Height <= 0 || ui.Name == "" {
+		return upgradetypes.Plan{}, fmt.Errorf("invalid upgrade-info.json content; name and height must be not empty; got: %v", ui)
 	}
+
+	// Normalize name to prevent operator error in upgrade name case sensitivity
+	// errors.
+	ui.Name = strings.ToLower(ui.Name)
+
 	return ui, err
 }

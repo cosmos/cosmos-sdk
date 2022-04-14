@@ -24,7 +24,7 @@ type Manager struct {
 	// we sync access to them to avoid soundness issues in the future if concurrency pattern changes.
 	pruneHeightsMx         sync.Mutex
 	pruneHeights           []int64
-	// Snapshots are taken in a separate goroutine fromt the regular execution
+	// Snapshots are taken in a separate goroutine from the regular execution
 	// and can be delivered asynchrounously via HandleHeightSnapshot.
 	// Therefore, we sync access to pruneSnapshotHeights with this mutex. 
 	pruneSnapshotHeightsMx sync.Mutex
@@ -159,8 +159,10 @@ func (m *Manager) HandleHeightSnapshot(height int64) {
 	if m.opts.GetPruningStrategy() == types.PruningNothing || height <= 0 {
 		return
 	}
+
 	m.pruneSnapshotHeightsMx.Lock()
 	defer m.pruneSnapshotHeightsMx.Unlock()
+	
 	m.logger.Debug("HandleHeightSnapshot", "height", height)
 	m.pruneSnapshotHeights.PushBack(height)
 

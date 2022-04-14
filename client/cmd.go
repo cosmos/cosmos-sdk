@@ -93,12 +93,6 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		clientCtx = clientCtx.WithOutputFormat(output)
 	}
 
-	fmt.Println("-------------------------")
-	fmt.Println(clientCtx.HomeDir)
-	fmt.Println(flagSet.Changed(flags.FlagHome))
-	fmt.Println(flagSet.GetString(flags.FlagHome))
-	fmt.Println("-------------------------")
-
 	if clientCtx.HomeDir == "" || flagSet.Changed(flags.FlagHome) {
 		homeDir, _ := flagSet.GetString(flags.FlagHome)
 		clientCtx = clientCtx.WithHomeDir(homeDir)
@@ -125,6 +119,8 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		chainID, _ := flagSet.GetString(flags.FlagChainID)
 		clientCtx = clientCtx.WithChainID(chainID)
 	}
+
+	fmt.Println(clientCtx.ChainID)
 
 	if clientCtx.Keyring == nil || flagSet.Changed(flags.FlagKeyringBackend) {
 		keyringBackend, _ := flagSet.GetString(flags.FlagKeyringBackend)

@@ -96,7 +96,7 @@ func (ak AccountKeeper) ModuleAccounts(c context.Context, req *types.QueryModule
 	ctx := sdk.UnwrapSDKContext(c)
 
 	// For deterministic output, sort the permAddrs by module name.
-	var sortedPermAddrs []string
+	sortedPermAddrs := make([]string, 0, len(ak.permAddrs))
 	for moduleName := range ak.permAddrs {
 		sortedPermAddrs = append(sortedPermAddrs, moduleName)
 	}

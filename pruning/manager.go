@@ -75,14 +75,15 @@ func (m *Manager) GetFlushAndResetPruningHeights() ([]int64, error) {
 	m.pruneHeightsMx.Lock()
 	defer m.pruneHeightsMx.Unlock()
 
-	pruningHeights := m.pruneHeights
-
 	// flush the updates to disk so that it is not lost if crash happens.
-	if err := m.db.SetSync(pruneHeightsKey, int64SliceToBytes(pruningHeights)); err != nil {
+	if err := m.db.SetSync(pruneHeightsKey, int64SliceToBytes(m.pruneHeights)); err != nil {
 		return nil, err
 	}
 
-	m.pruneHeights = make([]int64, 0, m.opts.Interval)
+	// Return a copy to prevent data races.
+	pruningHeights := make([]int64, len(m.pruneHeights))
+	copy(pruningHeights, m.pruneHeights)
+	m.pruneHeights = m.pruneHeights[:0]
 
 	return pruningHeights, nil
 }

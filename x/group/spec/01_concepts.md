@@ -74,7 +74,7 @@ all decision policies will take the four choices into account. Votes can contain
 In the current implementation, the voting window begins as soon as a proposal
 is submitted, and the end is defined by the group policy's decision policy.
 
-### Withdraw Proposal
+### Withdrawing Proposals
 
 Proposals can be withdrawn any time before the voting period end, either by the
 admin of the group policy or by one of the proposers. Once withdrawn, it is
@@ -89,7 +89,7 @@ execution is allowed on it. This is because the group policy defines the rules
 of proposal voting and execution, so if those rules change during the lifecycle
 of a proposal, then the proposal should be marked as stale.
 
-## Tallying
+### Tallying
 
 Tallying is the counting of all votes on a proposal. It happens only once in
 the lifecycle of a proposal, but can be triggered by two factors, whichever
@@ -106,7 +106,7 @@ marked as `PROPOSAL_STATUS_ACCEPTED`, or else it is marked as
 `PROPOSAL_STATUS_REJECTED`. In any case, no more voting is allowed anymore, and the tally
 result is persisted to state in the proposal's `FinalTallyResult`.
 
-## Executing Proposals
+### Executing Proposals
 
 Proposals are executed only when the tallying is done, and the group account's
 decision policy allows the proposal to pass based on the tally outcome. They

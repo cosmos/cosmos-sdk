@@ -209,7 +209,7 @@ func TestEndBlockerPruning(t *testing.T) {
 				require.NoError(t, err)
 				_, err = app.GroupKeeper.WithdrawProposal(ctx, &group.MsgWithdrawProposal{
 					ProposalId: pId,
-					Address:    groupPolicyAddr.String(),
+					Address:    proposers[0],
 				})
 				require.NoError(t, err)
 				return pId
@@ -224,7 +224,7 @@ func TestEndBlockerPruning(t *testing.T) {
 				require.NoError(t, err)
 				_, err = app.GroupKeeper.WithdrawProposal(ctx, &group.MsgWithdrawProposal{
 					ProposalId: pId,
-					Address:    groupPolicyAddr.String(),
+					Address:    proposers[0],
 				})
 				require.NoError(t, err)
 				return pId

@@ -40,7 +40,7 @@ The chain developer also defines an app-wide maximum execution period, which is
 the maximum amount of time after a proposal's voting period end where users are
 allowed to execute a proposal.
 
-The current groups module comes shipped with two decision policies: threshold
+The current group module comes shipped with two decision policies: threshold
 and percentage. Any chain developer can extend upon these two, by creating
 custom decision policies, as long as they adhere to the `DecisionPolicy`
 interface:
@@ -83,7 +83,7 @@ allowed on it.
 
 ## Aborted Proposals
 
-If during the voting period of the proposal, the group policy is updated, then
+If the group policy is updated during the voting period of the proposal, then
 the proposal is marked as `PROPOSAL_STATUS_ABORTED`, and no more voting or
 execution is allowed on it. This is because the group policy defines the rules
 of proposal voting and execution, so if those rules change during the lifecycle

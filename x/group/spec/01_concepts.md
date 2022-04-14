@@ -67,21 +67,21 @@ Any member(s) of a group can submit a proposal for a group policy account to dec
 A proposal consists of a set of messages that will be executed if the proposal
 passes as well as any metadata associated with the proposal.
 
-## Voting
+### Voting
 
 There are four choices to choose while voting - yes, no, abstain and veto. Not
 all decision policies will take the four choices into account. Votes can contain some optional metadata.
 In the current implementation, the voting window begins as soon as a proposal
 is submitted, and the end is defined by the group policy's decision policy.
 
-## Withdraw Proposal
+### Withdraw Proposal
 
 Proposals can be withdrawn any time before the voting period end, either by the
 admin of the group policy or by one of the proposers. Once withdrawn, it is
 marked as `PROPOSAL_STATUS_WITHDRAWN`, and no more voting or execution is
 allowed on it.
 
-## Aborted Proposals
+### Aborted Proposals
 
 If the group policy is updated during the voting period of the proposal, then
 the proposal is marked as `PROPOSAL_STATUS_ABORTED`, and no more voting or

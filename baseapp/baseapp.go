@@ -310,7 +310,7 @@ func (app *BaseApp) Init() error {
 
 	rms, ok := app.cms.(*rootmulti.Store)
 	if !ok {
-		return errors.New("rootmulti store is required")
+		return fmt.Errorf("invalid commit multi-store; expected %T, got: %T", &rootmulti.Store{}, app.cms)
 	}
 	return rms.GetPruning().Validate()
 }

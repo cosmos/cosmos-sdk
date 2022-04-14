@@ -12,6 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/pruning/types"
 )
 
+// Manager is an abstraction to handle the logic needed for
+// determinging when to prune old heights of the store
+// based on the strategy described by the pruning options.
 type Manager struct {
 	db               dbm.DB
 	logger           log.Logger
@@ -46,6 +49,10 @@ var (
 	pruneSnapshotHeightsKey = []byte("s/pruneSnheights")
 )
 
+// NewManager returns a new Manager with the given db and logger.
+// The retuned manager uses a pruning strategy of "nothing" which
+// keeps all heights. Users of the Manager may change the strategy
+// by calling SetOptions.
 func NewManager(db dbm.DB, logger log.Logger) *Manager {
 	return &Manager{
 		db:                   db,

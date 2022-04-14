@@ -31,7 +31,8 @@ func TestHomeFlagRegistration(t *testing.T) {
 
 	rootCmd.SetArgs([]string{
 		"query",
-		fmt.Sprintf("--home %s", homeDir),
+		fmt.Sprintf("--%s", flags.FlagHome),
+		homeDir,
 	})
 
 	require.NoError(t, svrcmd.Execute(rootCmd, "", simapp.DefaultNodeHome))

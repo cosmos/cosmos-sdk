@@ -144,12 +144,12 @@ Initially, the threshold is set at 50% of `Yes` votes, excluding `Abstain`
 votes. A possibility to veto exists if more than 1/3rd of all votes are
 `NoWithVeto` votes.  This means that proposals are accepted iff:
 
-* there exist bonded tokens.
-* quorum has been achieved.
-* the proportion of `Abstain` votes is inferior to 1/1.
-* the proportion of `NoWithVeto` votes is inferior to 1/3, including
+* There exist bonded tokens.
+* Quorum has been achieved.
+* The proportion of `Abstain` votes is inferior to 1/1.
+* The proportion of `NoWithVeto` votes is inferior to 1/3, including
   `Abstain` votes.
-* the proportion of `Yes` votes, excluding `Abstain` votes, at the end of
+* The proportion of `Yes` votes, excluding `Abstain` votes, at the end of
   the voting period is superior to 1/2.
 
 ### Inheritance

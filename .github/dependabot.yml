@@ -5,6 +5,7 @@ updates:
   schedule:
     interval: daily
   open-pull-requests-limit: 10
+
 - package-ecosystem: gomod
   directory: "/"
   schedule:
@@ -12,10 +13,10 @@ updates:
   open-pull-requests-limit: 10
   reviewers:
   - alexanderbez
-  - fedekunze
   labels:
-  - automerge
+  - "A:automerge"
   - dependencies
+
 - package-ecosystem: npm
   directory: "/docs"
   schedule:

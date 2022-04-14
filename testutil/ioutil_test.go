@@ -27,7 +27,7 @@ func TestApplyMockIO(t *testing.T) {
 
 func TestWriteToNewTempFile(t *testing.T) {
 	tempfile := testutil.WriteToNewTempFile(t, "test string")
-	tempfile.Close()
+	require.NoError(t, tempfile.Close())
 
 	bs, err := os.ReadFile(tempfile.Name())
 	require.NoError(t, err)

@@ -2430,6 +2430,8 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 				s.Require().NoError(err)
 				return myProposalID
 			},
+			expErr:            true, // since proposal status will be `aborted` when group policy is modified
+			expErrMsg:         "not possible with proposal status",
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
 		"proposal exists when rollback all msg updates on failure": {
@@ -2470,6 +2472,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 			_, err := s.keeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: proposalID})
 			if spec.expErr {
 				s.Require().Error(err)
+				s.Require().Contains(err.Error(), spec.expErrMsg)
 				return
 			}
 			s.Require().NoError(err)

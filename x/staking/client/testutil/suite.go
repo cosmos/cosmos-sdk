@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -72,14 +73,21 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().Equal(uint32(0), txRes.Code)
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
-	// unbonding
-	out, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbond)
+
+	unbondingAmount := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(5))
+	// unbonding the amount
+	out, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbondingAmount)
+	s.Require().NoError(err)
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+	s.Require().Equal(uint32(0), txRes.Code)
+	// unbonding the amount
+	out, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbondingAmount)
 	s.Require().NoError(err)
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
 	s.Require().Equal(uint32(0), txRes.Code)
 
-	_, err = s.network.WaitForHeight(1)
+	err = s.network.WaitForNextBlock()
 	s.Require().NoError(err)
 }
 
@@ -595,7 +603,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryUnbondingDelegation() {
 				s.Require().NoError(err)
 				s.Require().Equal(ubd.DelegatorAddress, val.Address.String())
 				s.Require().Equal(ubd.ValidatorAddress, val.ValAddress.String())
-				s.Require().Len(ubd.Entries, 1)
+				s.Require().Len(ubd.Entries, 2)
 			}
 		})
 	}
@@ -1362,7 +1370,6 @@ func (s *IntegrationTestSuite) TestNewCancelUnbondingDelegationCmd() {
 			[]string{
 				val.ValAddress.String(),
 				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10000)).String(),
-				sdk.NewInt(3).String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -1374,8 +1381,7 @@ func (s *IntegrationTestSuite) TestNewCancelUnbondingDelegationCmd() {
 			"valid transaction of canceling unbonding delegation",
 			[]string{
 				val.ValAddress.String(),
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)).String(),
-				sdk.NewInt(3).String(),
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5)).String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -1391,6 +1397,22 @@ func (s *IntegrationTestSuite) TestNewCancelUnbondingDelegationCmd() {
 		s.Run(tc.name, func() {
 			cmd := cli.NewCancelUnbondingDelegation()
 			clientCtx := val.ClientCtx
+			if !tc.expectErr && tc.expectedCode != sdkerrors.ErrNotFound.ABCICode() {
+				getCreationHeight := func() int64 {
+					// fethichg the unbonding delegations
+					resp, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/unbonding_delegations", val.APIAddress, val.Address.String()))
+					s.Require().NoError(err)
+
+					var ubds types.QueryDelegatorUnbondingDelegationsResponse
+
+					err = val.ClientCtx.Codec.UnmarshalJSON(resp, &ubds)
+					s.Require().NoError(err)
+					s.Require().Len(ubds.UnbondingResponses, 1)
+					s.Require().Equal(ubds.UnbondingResponses[0].DelegatorAddress, val.Address.String())
+					return ubds.UnbondingResponses[0].Entries[1].CreationHeight
+				}
+				tc.args = append(tc.args, fmt.Sprint(getCreationHeight()))
+			}
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {

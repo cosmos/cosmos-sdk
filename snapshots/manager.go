@@ -166,7 +166,12 @@ func (m *Manager) createSnapshot(height uint64, ch chan<- io.ReadCloser) {
 	if streamWriter == nil {
 		return
 	}
-	defer streamWriter.Close()
+	defer func() {
+		if err := streamWriter.Close(); err != nil {
+			streamWriter.CloseWithError(err)
+		}
+	}()
+
 	if err := m.multistore.Snapshot(height, streamWriter); err != nil {
 		streamWriter.CloseWithError(err)
 		return

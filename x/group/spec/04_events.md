@@ -61,6 +61,7 @@ The group module emits the following events:
 | ------------------------- | ------------- | ------------------------- |
 | message                   | action        | /cosmos.group.v1.Msg/Exec |
 | cosmos.group.v1.EventExec | proposal_id   | {proposalId}              |
+| cosmos.group.v1.EventExec | logs          | {logs_string}             |
 
 ## EventLeaveGroup
 

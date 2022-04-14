@@ -27,7 +27,10 @@ Group members can be updated with the `UpdateGroupMembers`.
 
 In the list of `MemberUpdates`, an existing member can be removed by setting its weight to 0.
 
-It's expected to fail if the signer is not the admin of the group.
+It's expected to fail if:
+
+- the signer is not the admin of the group.
+- for any one of the associated group policies, if its decision policy's `Validate()` method fails against the new group.
 
 ## Msg/UpdateGroupAdmin
 
@@ -105,7 +108,10 @@ An optional `Exec` value can be provided to try to execute the proposal immediat
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/proto/cosmos/group/v1/tx.proto#L271-L294
 
-It's expected to fail if metadata length is greater than `MaxMetadataLen` config.
+It's expected to fail if:
+
+- metadata length is greater than `MaxMetadataLen` config.
+- if any of the proposers is not a group member.
 
 ## Msg/WithdrawProposal
 
@@ -150,3 +156,4 @@ The `MsgLeaveGroup` allows group member to leave a group.
 It's expected to fail if:
 
 - the group member is not part of the group.
+- for any one of the associated group policies, if its decision policy's `Validate()` method fails against the new group.

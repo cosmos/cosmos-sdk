@@ -14,7 +14,7 @@ updates:
   reviewers:
   - alexanderbez
   labels:
-  - "A:automerge"
+  - "A:Automerge"
   - dependencies
 
 - package-ecosystem: npm

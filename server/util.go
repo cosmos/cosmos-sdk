@@ -282,6 +282,7 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 	rootCmd.AddCommand(
 		startCmd,
 		tmcmd.ResetAllCmd,
+		tendermintCmd,
 		ExportCmd(appExport, defaultNodeHome),
 		version.NewVersionCommand(),
 	)

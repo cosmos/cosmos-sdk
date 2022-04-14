@@ -115,7 +115,7 @@ A proposal can be withdrawn using `MsgWithdrawProposal` which has an `address` (
 
 It's expected to fail if:
 
-- the signer is neither the group policy address nor proposer of the proposal.
+- the signer is neither the group policy admin nor proposer of the proposal.
 - the proposal is already closed or aborted.
 
 ## Msg/Vote

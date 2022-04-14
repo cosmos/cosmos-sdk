@@ -105,7 +105,7 @@ func (a StakeAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRe
 
 	limitLeft, err := a.MaxTokens.SafeSub(amount)
 	if err != nil {
-		return authz.AcceptResponse{}, sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "negative coin amount")
+		return authz.AcceptResponse{}, err
 	}
 	if limitLeft.IsZero() {
 		return authz.AcceptResponse{Accept: true, Delete: true}, nil

@@ -40,7 +40,7 @@ The chain developer also defines an app-wide maximum execution period, which is
 the maximum amount of time after a proposal's voting period end where users are
 allowed to execute a proposal.
 
-The current groups module comes shipped with two decision policies: threshold
+The current group module comes shipped with two decision policies: threshold
 and percentage. Any chain developer can extend upon these two, by creating
 custom decision policies, as long as they adhere to the `DecisionPolicy`
 interface:

@@ -142,7 +142,8 @@ Threshold is defined as the minimum proportion of `Yes` votes (excluding
 
 Initially, the threshold is set at 50% of `Yes` votes, excluding `Abstain`
 votes. A possibility to veto exists if more than 1/3rd of all votes are
-`NoWithVeto` votes.  This means that proposals are accepted if:
+`NoWithVeto` votes.  This means that proposals are accepted iff:
+
 * there exist bonded tokens.
 * quorum has been achieved.
 * the proportion of `Abstain` votes is inferior to 1/1.

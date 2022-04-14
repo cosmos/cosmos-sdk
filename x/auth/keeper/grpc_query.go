@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"sort"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -94,9 +95,16 @@ func (ak AccountKeeper) ModuleAccounts(c context.Context, req *types.QueryModule
 
 	ctx := sdk.UnwrapSDKContext(c)
 
+	// For deterministic output, sort the permAddrs by permission name.
+	var sortedPermAddrs []string
+	for moduleName := range ak.permAddrs {
+		sortedPermAddrs = append(sortedPermAddrs, moduleName)
+	}
+	sort.Strings(sortedPermAddrs)
+
 	modAccounts := make([]*codectypes.Any, 0, len(ak.permAddrs))
 
-	for moduleName := range ak.permAddrs {
+	for _, moduleName := range sortedPermAddrs {
 		account := ak.GetModuleAccount(ctx, moduleName)
 		if account == nil {
 			return nil, status.Errorf(codes.NotFound, "account %s not found", moduleName)

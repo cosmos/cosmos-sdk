@@ -10,7 +10,8 @@ A group is simply an aggregation of accounts with associated weights. It is not
 an account and doesn't have a balance. It doesn't in and of itself have any
 sort of voting or decision weight. It does have an "administrator" which has
 the ability to add, remove and update members in the group. Note that a
-group policy account could be an administrator of a group.
+group policy account could be an administrator of a group, and that the
+administrator doesn't necessarily have to be a member of the group.
 
 ## Group Policy
 

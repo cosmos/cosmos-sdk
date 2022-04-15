@@ -66,7 +66,7 @@ As we mentioned in the flow above, the tipper signs over the `SignDocDirectAux`,
 - The tipper MUST use `SIGN_MODE_DIRECT_AUX` or `SIGN_MODE_LEGACY_AMINO_JSON`. That is because the tipper needs to sign over the body, the tip, but not the other signers' information and not over the fee (which is unknown to the tipper).
 - The fee payer MUST use `SIGN_MODE_DIRECT` or `SIGN_MODE_LEGACY_AMINO_JSON`. The fee payer signs over the whole transaction.
 
-For example, if the fee payers signs the whole transaction with `SIGN_MODE_DIRECT_AUX`, it will be rejected by the node, as that would introduce malleability issues (`SIGN_MODE_DIRECT_AUX` doesn't sign over fees).
+For example, if the fee payer signs the whole transaction with `SIGN_MODE_DIRECT_AUX`, it will be rejected by the node, as that would introduce malleability issues (`SIGN_MODE_DIRECT_AUX` doesn't sign over fees).
 
 In both cases, using `SIGN_MODE_LEGACY_AMINO_JSON` is recommended only if hardware wallet signing is needed.
 
@@ -98,7 +98,7 @@ If you are using the Cosmos SDK's default middleware stack `NewDefaultTxHandler(
 
 The Cosmos SDK also provides some CLI tooling for the transaction tips flow, both for the tipper and for the feepayer.
 
-For the tipper, the CLI `tx` subcommand has two new flags: `--aux` and `--tip`. The `--aux` flag is used to denote that we are creating a `AuxSignerData` instead of a , and the `--tip` is used to populate its `Tip` field.
+For the tipper, the CLI `tx` subcommand has two new flags: `--aux` and `--tip`. The `--aux` flag is used to denote that we are creating an `AuxSignerData` instead of a `Tx`, and the `--tip` is used to populate its `Tip` field.
 
 ```bash
 $ simd tx gov vote 16 yes --from <tipper_address> --aux --tip 50ibcdenom
@@ -110,7 +110,7 @@ $ simd tx gov vote 16 yes --from <tipper_address> --aux --tip 50ibcdenom
 
 It is useful to pipe the JSON output to a file, `> aux_signed_tx.json`
 
-For the fee payer, the Cosmos SDK added a `tx aux-to-fee` subcommand to include a `AuxSignerData` into a transaction, add fees to it, and broadcast it.
+For the fee payer, the Cosmos SDK added a `tx aux-to-fee` subcommand to include an `AuxSignerData` into a transaction, add fees to it, and broadcast it.
 
 ```bash
 $ simd tx aux-to-fee aux_signed_tx.json --from <fee_payer_address> --fees 30atom

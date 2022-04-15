@@ -73,7 +73,7 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 				return msg, broken
 			}
 
-			curMemWeight, err := groupmath.NewNonNegativeDecFromString(groupMember.GetMember().GetWeight())
+			curMemWeight, err := groupmath.NewPositiveDecFromString(groupMember.GetMember().GetWeight())
 			if err != nil {
 				msg += fmt.Sprintf("error while parsing non-nengative decimal for group member %s\n%v\n", groupMember.Member.Address, err)
 				return msg, broken
@@ -85,7 +85,7 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 			}
 		}
 
-		groupWeight, err := groupmath.NewNonNegativeDecFromString(groupInfo.GetTotalWeight())
+		groupWeight, err := groupmath.NewPositiveDecFromString(groupInfo.GetTotalWeight())
 		if err != nil {
 			msg += fmt.Sprintf("error while parsing non-nengative decimal for group with ID %d\n%v\n", groupInfo.Id, err)
 			return msg, broken

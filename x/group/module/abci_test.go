@@ -209,7 +209,7 @@ func TestEndBlockerPruning(t *testing.T) {
 				require.NoError(t, err)
 				_, err = app.GroupKeeper.WithdrawProposal(ctx, &group.MsgWithdrawProposal{
 					ProposalId: pId,
-					Address:    groupPolicyAddr.String(),
+					Address:    proposers[0],
 				})
 				require.NoError(t, err)
 				return pId
@@ -224,7 +224,7 @@ func TestEndBlockerPruning(t *testing.T) {
 				require.NoError(t, err)
 				_, err = app.GroupKeeper.WithdrawProposal(ctx, &group.MsgWithdrawProposal{
 					ProposalId: pId,
-					Address:    groupPolicyAddr.String(),
+					Address:    proposers[0],
 				})
 				require.NoError(t, err)
 				return pId
@@ -318,7 +318,7 @@ func TestEndBlockerPruning(t *testing.T) {
 
 }
 
-func TestEndBlocker(t *testing.T) {
+func TestEndBlockerTallying(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -374,7 +374,7 @@ func TestEndBlocker(t *testing.T) {
 		tallyRes  group.TallyResult
 		expStatus group.ProposalStatus
 	}{
-		"tally updated after voting power end": {
+		"tally updated after voting period end": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				pId, err := submitProposal(app, sdkCtx, []sdk.Msg{msgSend}, proposers, groupPolicyAddr)
 				require.NoError(t, err)
@@ -383,7 +383,7 @@ func TestEndBlocker(t *testing.T) {
 			admin:     proposers[0],
 			newCtx:    ctx.WithBlockTime(ctx.BlockTime().Add(votingPeriod).Add(time.Hour)),
 			tallyRes:  group.DefaultTallyResult(),
-			expStatus: group.PROPOSAL_STATUS_SUBMITTED,
+			expStatus: group.PROPOSAL_STATUS_REJECTED,
 		},
 		"tally within voting period": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -409,6 +409,24 @@ func TestEndBlocker(t *testing.T) {
 			tallyRes:  group.DefaultTallyResult(),
 			expStatus: group.PROPOSAL_STATUS_SUBMITTED,
 		},
+		"tally after voting period (not passing)": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				// `addrs[1]` has weight 1
+				pId, err := submitProposalAndVote(app, ctx, []sdk.Msg{msgSend}, []string{addrs[1].String()}, groupPolicyAddr, group.VOTE_OPTION_YES)
+				require.NoError(t, err)
+
+				return pId
+			},
+			admin:  proposers[0],
+			newCtx: ctx.WithBlockTime(ctx.BlockTime().Add(votingPeriod).Add(time.Hour)),
+			tallyRes: group.TallyResult{
+				YesCount:        "1",
+				NoCount:         "0",
+				NoWithVetoCount: "0",
+				AbstainCount:    "0",
+			},
+			expStatus: group.PROPOSAL_STATUS_REJECTED,
+		},
 		"tally after voting period(with votes)": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				pId, err := submitProposalAndVote(app, ctx, []sdk.Msg{msgSend}, proposers, groupPolicyAddr, group.VOTE_OPTION_YES)
@@ -426,14 +444,14 @@ func TestEndBlocker(t *testing.T) {
 			},
 			expStatus: group.PROPOSAL_STATUS_ACCEPTED,
 		},
-		"tally of closed proposal": {
+		"tally of withdrawn proposal": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				pId, err := submitProposal(app, sdkCtx, []sdk.Msg{msgSend}, proposers, groupPolicyAddr)
 				require.NoError(t, err)
 
 				_, err = app.GroupKeeper.WithdrawProposal(ctx, &group.MsgWithdrawProposal{
 					ProposalId: pId,
-					Address:    groupPolicyAddr.String(),
+					Address:    proposers[0],
 				})
 
 				require.NoError(t, err)
@@ -444,14 +462,14 @@ func TestEndBlocker(t *testing.T) {
 			tallyRes:  group.DefaultTallyResult(),
 			expStatus: group.PROPOSAL_STATUS_WITHDRAWN,
 		},
-		"tally of closed proposal (with votes)": {
+		"tally of withdrawn proposal (with votes)": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				pId, err := submitProposalAndVote(app, ctx, []sdk.Msg{msgSend}, proposers, groupPolicyAddr, group.VOTE_OPTION_YES)
 				require.NoError(t, err)
 
 				_, err = app.GroupKeeper.WithdrawProposal(ctx, &group.MsgWithdrawProposal{
 					ProposalId: pId,
-					Address:    groupPolicyAddr.String(),
+					Address:    proposers[0],
 				})
 
 				require.NoError(t, err)

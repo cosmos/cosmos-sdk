@@ -65,6 +65,9 @@ message EventExec {
 
   // result is the proposal execution result.
   ProposalExecutorResult result = 2;
+
+  // logs contains error logs in case the execution result is FAILURE.
+  string logs = 3;
 }
 
 // EventLeaveGroup is an event emitted when group member leaves the group.

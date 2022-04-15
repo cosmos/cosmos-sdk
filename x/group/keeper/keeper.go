@@ -235,7 +235,7 @@ func (k Keeper) iterateProposalsByVPEnd(ctx sdk.Context, endTime time.Time, cb f
 	defer it.Close()
 
 	for {
-		// Important: this following line cannot outside the for loop.
+		// Important: this following line cannot be outside of the for loop.
 		// It seems that when one unmarshals into the same `group.Proposal`
 		// reference, then gogoproto somehow "adds" the new bytes to the old
 		// object for some fields. When running simulations, for proposals with
@@ -275,6 +275,37 @@ func (k Keeper) pruneProposal(ctx sdk.Context, proposalID uint64) error {
 	}
 
 	k.Logger(ctx).Debug(fmt.Sprintf("Pruned proposal %d", proposalID))
+	return nil
+}
+
+// abortProposals iterates through all proposals by group policy index
+// and marks submitted proposals as aborted.
+func (k Keeper) abortProposals(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) error {
+	proposalIt, err := k.proposalByGroupPolicyIndex.Get(ctx.KVStore(k.key), groupPolicyAddr.Bytes())
+	if err != nil {
+		return err
+	}
+	defer proposalIt.Close()
+
+	for {
+		var proposalInfo group.Proposal
+		_, err = proposalIt.LoadNext(&proposalInfo)
+		if errors.ErrORMIteratorDone.Is(err) {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		// Mark all proposals still in the voting phase as aborted.
+		if proposalInfo.Status == group.PROPOSAL_STATUS_SUBMITTED {
+			proposalInfo.Status = group.PROPOSAL_STATUS_ABORTED
+
+			if err := k.proposalTable.Update(ctx.KVStore(k.key), proposalInfo.Id, &proposalInfo); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 
@@ -340,13 +371,23 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 			return true, sdkerrors.Wrap(err, "group")
 		}
 
-		err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo)
-		if err != nil {
-			return true, sdkerrors.Wrap(err, "doTallyAndUpdate")
-		}
+		proposalId := proposal.Id
+		if proposal.Status == group.PROPOSAL_STATUS_ABORTED || proposal.Status == group.PROPOSAL_STATUS_WITHDRAWN {
+			if err := k.pruneProposal(ctx, proposalId); err != nil {
+				return true, err
+			}
+			if err := k.pruneVotes(ctx, proposalId); err != nil {
+				return true, err
+			}
+		} else {
+			err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo)
+			if err != nil {
+				return true, sdkerrors.Wrap(err, "doTallyAndUpdate")
+			}
 
-		if err := k.proposalTable.Update(ctx.KVStore(k.key), proposal.Id, &proposal); err != nil {
-			return true, sdkerrors.Wrap(err, "proposal update")
+			if err := k.proposalTable.Update(ctx.KVStore(k.key), proposal.Id, &proposal); err != nil {
+				return true, sdkerrors.Wrap(err, "proposal update")
+			}
 		}
 
 		return false, nil

@@ -10,10 +10,9 @@ import (
 	"runtime"
 	"strings"
 
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/hashicorp/go-getter"
 	"github.com/otiai10/copy"
-
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // DoUpgrade will be called after the log message has been parsed and the process has terminated.

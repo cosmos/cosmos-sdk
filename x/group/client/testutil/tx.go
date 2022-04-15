@@ -1582,7 +1582,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 				commonFlags...,
 			),
 			true,
-			"msg does not have group policy authorization: unauthorized",
+			"msg does not have group policy authorization",
 			nil,
 			0,
 		},

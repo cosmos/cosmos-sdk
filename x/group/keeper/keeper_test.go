@@ -850,7 +850,9 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			s.Assert().Equal(groupPolicyAddr, groupPolicy.Address)
 			s.Assert().Equal(id, groupPolicy.GroupId)
 			s.Assert().Equal(spec.req.GroupPolicyMetadata, groupPolicy.Metadata)
-			s.Assert().Equal(spec.policy.(*group.ThresholdDecisionPolicy), groupPolicy.GetDecisionPolicy())
+			dp, err := groupPolicy.GetDecisionPolicy()
+			s.Assert().NoError(err)
+			s.Assert().Equal(spec.policy.(*group.ThresholdDecisionPolicy), dp)
 			if spec.req.GroupPolicyAsAdmin {
 				s.Assert().NotEqual(spec.req.Admin, groupPolicy.Admin)
 				s.Assert().Equal(groupPolicyAddr, groupPolicy.Admin)
@@ -1007,9 +1009,13 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			s.Assert().Equal(uint64(1), groupPolicy.Version)
 			percentageDecisionPolicy, ok := spec.policy.(*group.PercentageDecisionPolicy)
 			if ok {
-				s.Assert().Equal(percentageDecisionPolicy, groupPolicy.GetDecisionPolicy())
+				dp, err := groupPolicy.GetDecisionPolicy()
+				s.Assert().NoError(err)
+				s.Assert().Equal(percentageDecisionPolicy, dp)
 			} else {
-				s.Assert().Equal(spec.policy.(*group.ThresholdDecisionPolicy), groupPolicy.GetDecisionPolicy())
+				dp, err := groupPolicy.GetDecisionPolicy()
+				s.Assert().NoError(err)
+				s.Assert().Equal(spec.policy.(*group.ThresholdDecisionPolicy), dp)
 			}
 		})
 	}
@@ -1370,7 +1376,11 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 		s.Assert().Equal(policyAccs[i].Metadata, expectAccs[i].Metadata)
 		s.Assert().Equal(policyAccs[i].Version, expectAccs[i].Version)
 		s.Assert().Equal(policyAccs[i].CreatedAt, expectAccs[i].CreatedAt)
-		s.Assert().Equal(policyAccs[i].GetDecisionPolicy(), expectAccs[i].GetDecisionPolicy())
+		dp1, err := policyAccs[i].GetDecisionPolicy()
+		s.Assert().NoError(err)
+		dp2, err := expectAccs[i].GetDecisionPolicy()
+		s.Assert().NoError(err)
+		s.Assert().Equal(dp1, dp2)
 	}
 
 	// query group policy by admin
@@ -1389,7 +1399,11 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 		s.Assert().Equal(policyAccs[i].Metadata, expectAccs[i].Metadata)
 		s.Assert().Equal(policyAccs[i].Version, expectAccs[i].Version)
 		s.Assert().Equal(policyAccs[i].CreatedAt, expectAccs[i].CreatedAt)
-		s.Assert().Equal(policyAccs[i].GetDecisionPolicy(), expectAccs[i].GetDecisionPolicy())
+		dp1, err := policyAccs[i].GetDecisionPolicy()
+		s.Assert().NoError(err)
+		dp2, err := expectAccs[i].GetDecisionPolicy()
+		s.Assert().NoError(err)
+		s.Assert().Equal(dp1, dp2)
 	}
 }
 
@@ -1611,10 +1625,12 @@ func (s *TestSuite) TestSubmitProposal() {
 				s.Assert().Equal(spec.expProposal.ExecutorResult, proposal.ExecutorResult)
 				s.Assert().Equal(s.blockTime.Add(time.Second), proposal.VotingPeriodEnd)
 
+				msgs, err := proposal.GetMsgs()
+				s.Assert().NoError(err)
 				if spec.msgs == nil { // then empty list is ok
-					s.Assert().Len(proposal.GetMsgs(), 0)
+					s.Assert().Len(msgs, 0)
 				} else {
-					s.Assert().Equal(spec.msgs, proposal.GetMsgs())
+					s.Assert().Equal(spec.msgs, msgs)
 				}
 			}
 
@@ -1627,7 +1643,6 @@ func (s *TestSuite) TestWithdrawProposal() {
 	addrs := s.addrs
 	addr2 := addrs[1]
 	addr5 := addrs[4]
-	groupPolicy := s.groupPolicyAddr
 
 	msgSend := &banktypes.MsgSend{
 		FromAddress: s.groupPolicyAddr.String(),
@@ -1684,7 +1699,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 				return submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 			},
 			proposalId: proposalID,
-			admin:      groupPolicy.String(),
+			admin:      proposers[0],
 		},
 	}
 	for msg, spec := range specs {
@@ -2431,7 +2446,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 				return myProposalID
 			},
 			expErr:            true, // since proposal status will be `aborted` when group policy is modified
-			expErrMsg:         "not possible with proposal status",
+			expErrMsg:         "not possible to exec with proposal status",
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
 		"proposal exists when rollback all msg updates on failure": {
@@ -2504,7 +2519,6 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 func (s *TestSuite) TestProposalsByVPEnd() {
 	addrs := s.addrs
 	addr2 := addrs[1]
-	groupPolicy := s.groupPolicyAddr
 
 	votingPeriod := s.policy.GetVotingPeriod()
 	ctx := s.sdkCtx
@@ -2527,14 +2541,14 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 		tallyRes   group.TallyResult
 		expStatus  group.ProposalStatus
 	}{
-		"tally updated after voting power end": {
+		"tally updated after voting period end": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				return submitProposal(sdkCtx, s, []sdk.Msg{msgSend}, proposers)
 			},
 			admin:     proposers[0],
 			newCtx:    ctx.WithBlockTime(now.Add(votingPeriod).Add(time.Hour)),
 			tallyRes:  group.DefaultTallyResult(),
-			expStatus: group.PROPOSAL_STATUS_SUBMITTED,
+			expStatus: group.PROPOSAL_STATUS_REJECTED,
 		},
 		"tally within voting period": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -2545,7 +2559,7 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 			tallyRes:  group.DefaultTallyResult(),
 			expStatus: group.PROPOSAL_STATUS_SUBMITTED,
 		},
-		"tally within voting period(with votes)": {
+		"tally within voting period (with votes)": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				return submitProposalAndVote(s.ctx, s, []sdk.Msg{msgSend}, proposers, group.VOTE_OPTION_YES)
 			},
@@ -2554,7 +2568,7 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 			tallyRes:  group.DefaultTallyResult(),
 			expStatus: group.PROPOSAL_STATUS_SUBMITTED,
 		},
-		"tally after voting period(with votes)": {
+		"tally after voting period (with votes)": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				return submitProposalAndVote(s.ctx, s, []sdk.Msg{msgSend}, proposers, group.VOTE_OPTION_YES)
 			},
@@ -2568,12 +2582,27 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 			},
 			expStatus: group.PROPOSAL_STATUS_ACCEPTED,
 		},
-		"tally of closed proposal": {
+		"tally after voting period (not passing)": {
+			preRun: func(sdkCtx sdk.Context) uint64 {
+				// `s.addrs[4]` has weight 1
+				return submitProposalAndVote(s.ctx, s, []sdk.Msg{msgSend}, []string{s.addrs[4].String()}, group.VOTE_OPTION_YES)
+			},
+			admin:  proposers[0],
+			newCtx: ctx.WithBlockTime(now.Add(votingPeriod).Add(time.Hour)),
+			tallyRes: group.TallyResult{
+				YesCount:        "1",
+				NoCount:         "0",
+				NoWithVetoCount: "0",
+				AbstainCount:    "0",
+			},
+			expStatus: group.PROPOSAL_STATUS_REJECTED,
+		},
+		"tally of withdrawn proposal": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				pId := submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 				_, err := s.keeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
 					ProposalId: pId,
-					Address:    groupPolicy.String(),
+					Address:    proposers[0],
 				})
 
 				s.Require().NoError(err)
@@ -2584,12 +2613,12 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 			tallyRes:  group.DefaultTallyResult(),
 			expStatus: group.PROPOSAL_STATUS_WITHDRAWN,
 		},
-		"tally of closed proposal (with votes)": {
+		"tally of withdrawn proposal (with votes)": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				pId := submitProposalAndVote(s.ctx, s, []sdk.Msg{msgSend}, proposers, group.VOTE_OPTION_YES)
 				_, err := s.keeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
 					ProposalId: pId,
-					Address:    groupPolicy.String(),
+					Address:    proposers[0],
 				})
 
 				s.Require().NoError(err)

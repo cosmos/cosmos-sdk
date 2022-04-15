@@ -282,7 +282,7 @@ func (suite *SimTestSuite) TestWithdrawProposal() {
 	suite.Require().NoError(err)
 
 	// setup a proposal
-	proposalReq, err := group.NewMsgSubmitProposalRequest(groupPolicyRes.Address, []string{addr}, []sdk.Msg{
+	proposalReq, err := group.NewMsgSubmitProposal(groupPolicyRes.Address, []string{addr}, []sdk.Msg{
 		&banktypes.MsgSend{
 			FromAddress: groupPolicyRes.Address,
 			ToAddress:   addr,
@@ -349,7 +349,7 @@ func (suite *SimTestSuite) TestSimulateVote() {
 	suite.Require().NoError(err)
 
 	// setup a proposal
-	proposalReq, err := group.NewMsgSubmitProposalRequest(groupPolicyRes.Address, []string{addr}, []sdk.Msg{
+	proposalReq, err := group.NewMsgSubmitProposal(groupPolicyRes.Address, []string{addr}, []sdk.Msg{
 		&banktypes.MsgSend{
 			FromAddress: groupPolicyRes.Address,
 			ToAddress:   addr,
@@ -415,7 +415,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	suite.Require().NoError(err)
 
 	// setup a proposal
-	proposalReq, err := group.NewMsgSubmitProposalRequest(groupPolicyRes.Address, []string{addr}, []sdk.Msg{
+	proposalReq, err := group.NewMsgSubmitProposal(groupPolicyRes.Address, []string{addr}, []sdk.Msg{
 		&banktypes.MsgSend{
 			FromAddress: groupPolicyRes.Address,
 			ToAddress:   addr,

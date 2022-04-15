@@ -120,8 +120,6 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		clientCtx = clientCtx.WithChainID(chainID)
 	}
 
-	fmt.Println(clientCtx.ChainID)
-
 	if clientCtx.Keyring == nil || flagSet.Changed(flags.FlagKeyringBackend) {
 		keyringBackend, _ := flagSet.GetString(flags.FlagKeyringBackend)
 

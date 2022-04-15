@@ -1,7 +1,8 @@
 <!--
 order: 5
 -->
-
+'{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"1", \
+"windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
 # Client
 
 ## CLI

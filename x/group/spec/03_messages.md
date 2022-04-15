@@ -156,4 +156,4 @@ The `MsgLeaveGroup` allows group member to leave a group.
 It's expected to fail if:
 
 - the group member is not part of the group.
-- for any one of the associated group policies, if its decision policy's `Validate()` method fails against the new group.
+- for any one of the associated group policies, if its decision policy's `Validate()` method fails against the updated group.

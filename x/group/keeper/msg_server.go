@@ -823,6 +823,10 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 		return nil, err
 	}
 
+	if updatedWeight.IsZero() {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("last member cannot leave group")
+	}
+
 	// delete group member in the groupMemberTable.
 	if err := k.groupMemberTable.Delete(ctx.KVStore(k.key), gm); err != nil {
 		return nil, sdkerrors.Wrap(err, "group member")

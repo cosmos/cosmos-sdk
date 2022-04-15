@@ -379,7 +379,6 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 			if err := k.pruneVotes(ctx, proposalId); err != nil {
 				return true, err
 			}
-
 		} else {
 			err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo)
 			if err != nil {

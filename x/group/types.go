@@ -72,16 +72,16 @@ func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower strin
 
 	threshold, err := math.NewPositiveDecFromString(p.Threshold)
 	if err != nil {
-		return DecisionPolicyResult{}, err
+		return DecisionPolicyResult{}, sdkerrors.Wrap(err, "threshold")
 	}
 	yesCount, err := math.NewNonNegativeDecFromString(tallyResult.YesCount)
 	if err != nil {
-		return DecisionPolicyResult{}, err
+		return DecisionPolicyResult{}, sdkerrors.Wrap(err, "yes count")
 	}
 
 	totalPowerDec, err := math.NewPositiveDecFromString(totalPower)
 	if err != nil {
-		return DecisionPolicyResult{}, err
+		return DecisionPolicyResult{}, sdkerrors.Wrap(err, "total power")
 	}
 
 	// the real threshold of the policy is `min(threshold,total_weight)`. If
@@ -185,15 +185,15 @@ func (p PercentageDecisionPolicy) Allow(tally TallyResult, totalPower string, si
 
 	percentage, err := math.NewPositiveDecFromString(p.Percentage)
 	if err != nil {
-		return DecisionPolicyResult{}, err
+		return DecisionPolicyResult{}, sdkerrors.Wrap(err, "percentage")
 	}
 	yesCount, err := math.NewNonNegativeDecFromString(tally.YesCount)
 	if err != nil {
-		return DecisionPolicyResult{}, err
+		return DecisionPolicyResult{}, sdkerrors.Wrap(err, "yes count")
 	}
 	totalPowerDec, err := math.NewPositiveDecFromString(totalPower)
 	if err != nil {
-		return DecisionPolicyResult{}, err
+		return DecisionPolicyResult{}, sdkerrors.Wrap(err, "total power")
 	}
 
 	yesPercentage, err := yesCount.Quo(totalPowerDec)

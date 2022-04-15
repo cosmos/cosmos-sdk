@@ -30,7 +30,7 @@ In the list of `MemberUpdates`, an existing member can be removed by setting its
 It's expected to fail if:
 
 - the signer is not the admin of the group.
-- for any one of the associated group policies, if its decision policy's `Validate()` method fails against the new group.
+- for any one of the associated group policies, if its decision policy's `Validate()` method fails against the updated group.
 
 ## Msg/UpdateGroupAdmin
 

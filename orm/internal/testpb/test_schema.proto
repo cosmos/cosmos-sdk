@@ -4,10 +4,10 @@ package testpb;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
-import "cosmos/orm/v1alpha1/orm.proto";
+import "cosmos/orm/v1/orm.proto";
 
 message ExampleTable {
-  option (cosmos.orm.v1alpha1.table) = {
+  option (cosmos.orm.v1.table) = {
     id: 1;
     primary_key: {
       fields:
@@ -74,7 +74,7 @@ enum Enum {
 }
 
 message ExampleAutoIncrementTable {
-  option (cosmos.orm.v1alpha1.table) = {
+  option (cosmos.orm.v1.table) = {
     id: 3
     primary_key: {fields: "id" auto_increment: true}
     index: {id: 1 fields: "x" unique: true}
@@ -86,7 +86,7 @@ message ExampleAutoIncrementTable {
 }
 
 message ExampleSingleton {
-  option (cosmos.orm.v1alpha1.singleton) = {
+  option (cosmos.orm.v1.singleton) = {
     id: 2
   };
   string foo = 1;
@@ -94,7 +94,7 @@ message ExampleSingleton {
 }
 
 message ExampleTimestamp {
-  option (cosmos.orm.v1alpha1.table) = {
+  option (cosmos.orm.v1.table) = {
     id: 4
     primary_key: {fields: "id" auto_increment: true}
     index: {id: 1 fields: "ts"}
@@ -106,7 +106,7 @@ message ExampleTimestamp {
 }
 
 message SimpleExample {
-  option (cosmos.orm.v1alpha1.table) = {
+  option (cosmos.orm.v1.table) = {
     id: 5
     primary_key: {fields: "name"}
     index: {id: 1, fields: "unique", unique: true}

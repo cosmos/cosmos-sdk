@@ -77,7 +77,7 @@ func TestEndBlockerPruning(t *testing.T) {
 				msgs := []sdk.Msg{msgSend1}
 				pID, err := submitProposalAndVote(app, ctx, msgs, proposers, groupPolicyAddr, group.VOTE_OPTION_YES)
 				require.NoError(t, err)
-				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Signer: addr3.String(), ProposalId: pID})
+				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Executor: addr3.String(), ProposalId: pID})
 				require.NoError(t, err)
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				require.NoError(t, testutil.FundAccount(app.BankKeeper, sdkCtx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
@@ -92,7 +92,7 @@ func TestEndBlockerPruning(t *testing.T) {
 				msgs := []sdk.Msg{msgSend1, msgSend1}
 				pID, err := submitProposalAndVote(app, ctx, msgs, proposers, groupPolicyAddr, group.VOTE_OPTION_YES)
 				require.NoError(t, err)
-				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Signer: addr3.String(), ProposalId: pID})
+				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Executor: addr3.String(), ProposalId: pID})
 				require.NoError(t, err)
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				require.NoError(t, testutil.FundAccount(app.BankKeeper, sdkCtx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
@@ -107,7 +107,7 @@ func TestEndBlockerPruning(t *testing.T) {
 				msgs := []sdk.Msg{msgSend1}
 				pID, err := submitProposalAndVote(app, ctx, msgs, proposers, groupPolicyAddr, group.VOTE_OPTION_NO)
 				require.NoError(t, err)
-				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Signer: addr3.String(), ProposalId: pID})
+				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Executor: addr3.String(), ProposalId: pID})
 				require.NoError(t, err)
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				require.NoError(t, testutil.FundAccount(app.BankKeeper, sdkCtx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
@@ -120,7 +120,7 @@ func TestEndBlockerPruning(t *testing.T) {
 			setupProposal: func(ctx context.Context) uint64 {
 				pID, err := submitProposal(app, ctx, []sdk.Msg{msgSend1}, proposers, groupPolicyAddr)
 				require.NoError(t, err)
-				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Signer: addr3.String(), ProposalId: pID})
+				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Executor: addr3.String(), ProposalId: pID})
 				require.NoError(t, err)
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				require.NoError(t, testutil.FundAccount(app.BankKeeper, sdkCtx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
@@ -134,11 +134,11 @@ func TestEndBlockerPruning(t *testing.T) {
 				pID, err := submitProposal(app, ctx, []sdk.Msg{msgSend1}, proposers, groupPolicyAddr)
 				require.NoError(t, err)
 				_, err = app.GroupKeeper.UpdateGroupPolicyMetadata(ctx, &group.MsgUpdateGroupPolicyMetadata{
-					Admin:   addr1.String(),
-					Address: groupPolicyAddr.String(),
+					Admin:              addr1.String(),
+					GroupPolicyAddress: groupPolicyAddr.String(),
 				})
 				require.NoError(t, err)
-				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Signer: addr3.String(), ProposalId: pID})
+				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Executor: addr3.String(), ProposalId: pID})
 				require.NoError(t, err)
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				require.NoError(t, testutil.FundAccount(app.BankKeeper, sdkCtx, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
@@ -152,7 +152,7 @@ func TestEndBlockerPruning(t *testing.T) {
 				msgs := []sdk.Msg{msgSend1}
 				pID, err := submitProposalAndVote(app, ctx, msgs, proposers, groupPolicyAddr, group.VOTE_OPTION_YES)
 				require.NoError(t, err)
-				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Signer: addrs[2].String(), ProposalId: pID})
+				_, err = app.GroupKeeper.Exec(ctx, &group.MsgExec{Executor: addrs[2].String(), ProposalId: pID})
 				require.NoError(t, err)
 				return pID
 			},
@@ -240,14 +240,13 @@ func TestEndBlocker(t *testing.T) {
 	proposers := []string{addrs[2].String()}
 
 	specs := map[string]struct {
-		preRun            func(sdkCtx sdk.Context) uint64
-		proposalId        uint64
-		admin             string
-		expErrMsg         string
-		newCtx            sdk.Context
-		tallyRes          group.TallyResult
-		expStatus         group.ProposalStatus
-		expExecutorResult group.ProposalResult
+		preRun     func(sdkCtx sdk.Context) uint64
+		proposalId uint64
+		admin      string
+		expErrMsg  string
+		newCtx     sdk.Context
+		tallyRes   group.TallyResult
+		expStatus  group.ProposalStatus
 	}{
 		"tally updated after voting power end": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -255,11 +254,10 @@ func TestEndBlocker(t *testing.T) {
 				require.NoError(t, err)
 				return pId
 			},
-			admin:             proposers[0],
-			newCtx:            ctx.WithBlockTime(ctx.BlockTime().Add(votingPeriod).Add(time.Hour)),
-			tallyRes:          group.DefaultTallyResult(),
-			expStatus:         group.PROPOSAL_STATUS_SUBMITTED,
-			expExecutorResult: group.PROPOSAL_RESULT_UNFINALIZED,
+			admin:     proposers[0],
+			newCtx:    ctx.WithBlockTime(ctx.BlockTime().Add(votingPeriod).Add(time.Hour)),
+			tallyRes:  group.DefaultTallyResult(),
+			expStatus: group.PROPOSAL_STATUS_SUBMITTED,
 		},
 		"tally within voting period": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -268,11 +266,10 @@ func TestEndBlocker(t *testing.T) {
 
 				return pId
 			},
-			admin:             proposers[0],
-			newCtx:            ctx,
-			tallyRes:          group.DefaultTallyResult(),
-			expStatus:         group.PROPOSAL_STATUS_SUBMITTED,
-			expExecutorResult: group.PROPOSAL_RESULT_UNFINALIZED,
+			admin:     proposers[0],
+			newCtx:    ctx,
+			tallyRes:  group.DefaultTallyResult(),
+			expStatus: group.PROPOSAL_STATUS_SUBMITTED,
 		},
 		"tally within voting period(with votes)": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -281,11 +278,10 @@ func TestEndBlocker(t *testing.T) {
 
 				return pId
 			},
-			admin:             proposers[0],
-			newCtx:            ctx,
-			tallyRes:          group.DefaultTallyResult(),
-			expStatus:         group.PROPOSAL_STATUS_SUBMITTED,
-			expExecutorResult: group.PROPOSAL_RESULT_UNFINALIZED,
+			admin:     proposers[0],
+			newCtx:    ctx,
+			tallyRes:  group.DefaultTallyResult(),
+			expStatus: group.PROPOSAL_STATUS_SUBMITTED,
 		},
 		"tally after voting period(with votes)": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -302,8 +298,7 @@ func TestEndBlocker(t *testing.T) {
 				NoWithVetoCount: "0",
 				AbstainCount:    "0",
 			},
-			expStatus:         group.PROPOSAL_STATUS_CLOSED,
-			expExecutorResult: group.PROPOSAL_RESULT_ACCEPTED,
+			expStatus: group.PROPOSAL_STATUS_ACCEPTED,
 		},
 		"tally of closed proposal": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -318,11 +313,10 @@ func TestEndBlocker(t *testing.T) {
 				require.NoError(t, err)
 				return pId
 			},
-			admin:             proposers[0],
-			newCtx:            ctx,
-			tallyRes:          group.DefaultTallyResult(),
-			expStatus:         group.PROPOSAL_STATUS_WITHDRAWN,
-			expExecutorResult: group.PROPOSAL_RESULT_UNFINALIZED,
+			admin:     proposers[0],
+			newCtx:    ctx,
+			tallyRes:  group.DefaultTallyResult(),
+			expStatus: group.PROPOSAL_STATUS_WITHDRAWN,
 		},
 		"tally of closed proposal (with votes)": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -337,11 +331,10 @@ func TestEndBlocker(t *testing.T) {
 				require.NoError(t, err)
 				return pId
 			},
-			admin:             proposers[0],
-			newCtx:            ctx,
-			tallyRes:          group.DefaultTallyResult(),
-			expStatus:         group.PROPOSAL_STATUS_WITHDRAWN,
-			expExecutorResult: group.PROPOSAL_RESULT_UNFINALIZED,
+			admin:     proposers[0],
+			newCtx:    ctx,
+			tallyRes:  group.DefaultTallyResult(),
+			expStatus: group.PROPOSAL_STATUS_WITHDRAWN,
 		},
 	}
 
@@ -364,7 +357,6 @@ func TestEndBlocker(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, resp.GetProposal().FinalTallyResult, spec.tallyRes)
 			require.Equal(t, resp.GetProposal().Status, spec.expStatus)
-			require.Equal(t, resp.GetProposal().Result, spec.expExecutorResult)
 		})
 	}
 }
@@ -373,8 +365,8 @@ func submitProposal(
 	app *simapp.SimApp, ctx context.Context, msgs []sdk.Msg,
 	proposers []string, groupPolicyAddr sdk.AccAddress) (uint64, error) {
 	proposalReq := &group.MsgSubmitProposal{
-		Address:   groupPolicyAddr.String(),
-		Proposers: proposers,
+		GroupPolicyAddress: groupPolicyAddr.String(),
+		Proposers:          proposers,
 	}
 	err := proposalReq.SetMsgs(msgs)
 	if err != nil {

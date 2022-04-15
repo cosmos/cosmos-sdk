@@ -80,6 +80,7 @@ type Keeper struct {
 	config group.Config
 }
 
+// NewKeeper creates a new group keeper.
 func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddleware.MsgServiceRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
 	k := Keeper{
 		key:       storeKey,
@@ -159,7 +160,7 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 		panic(err.Error())
 	}
 	k.proposalByGroupPolicyIndex, err = orm.NewIndex(proposalTable, ProposalByGroupPolicyIndexPrefix, func(value interface{}) ([]interface{}, error) {
-		account := value.(*group.Proposal).Address
+		account := value.(*group.Proposal).GroupPolicyAddress
 		addr, err := sdk.AccAddressFromBech32(account)
 		if err != nil {
 			return nil, err
@@ -324,9 +325,12 @@ func (k Keeper) PruneProposals(ctx sdk.Context) error {
 	return nil
 }
 
-func (k Keeper) UpdateTallyOfVPEndProposals(ctx sdk.Context) error {
+// TallyProposalsAtVPEnd iterates over all proposals whose voting period
+// has ended, tallies their votes, prunes them, and updates the proposal's
+// `FinalTallyResult` field.
+func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 	return k.iterateProposalsByVPEnd(ctx, ctx.BlockTime(), func(proposal group.Proposal) (bool, error) {
-		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.Address)
+		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.GroupPolicyAddress)
 		if err != nil {
 			return true, sdkerrors.Wrap(err, "group policy")
 		}

@@ -30,15 +30,22 @@ A decision policy is the mechanism by which members of a group can vote on
 proposals, as well as the rules that dictate whether a proposal should pass
 or not based on its tally outcome.
 
-All decision policies generally would have a mininum execution perdio and a
+All decision policies generally would have a mininum execution period and a
 maximum voting window. The minimum execution period is the minimum amount of time
-that must pass in order for a proposal to potentially be executed, and it may
-be set to 0. The maximum voting window is the maximum time that a proposal may
-be voted on before it is closed.
+that must pass after submission in order for a proposal to potentially be executed, and it may
+be set to 0. The maximum voting window is the maximum time after submission that a proposal may
+be voted on before it is tallied.
 
 The chain developer also defines an app-wide maximum execution period, which is
 the maximum amount of time after a proposal's voting period end where users are
 allowed to execute a proposal.
+
+The current group module comes shipped with two decision policies: threshold
+and percentage. Any chain developer can extend upon these two, by creating
+custom decision policies, as long as they adhere to the `DecisionPolicy`
+interface:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/x/group/types.go#L23-L37
 
 ### Threshold decision policy
 
@@ -56,18 +63,33 @@ weights get updated.
 
 ## Proposal
 
-Any member of a group can submit a proposal for a group policy account to decide upon.
+Any member(s) of a group can submit a proposal for a group policy account to decide upon.
 A proposal consists of a set of messages that will be executed if the proposal
 passes as well as any metadata associated with the proposal.
 
-## Voting
+### Voting
 
 There are four choices to choose while voting - yes, no, abstain and veto. Not
-all decision policies will support them. Votes can contain some optional metadata.
+all decision policies will take the four choices into account. Votes can contain some optional metadata.
 In the current implementation, the voting window begins as soon as a proposal
-is submitted.
+is submitted, and the end is defined by the group policy's decision policy.
 
-## Tallying
+### Withdrawing Proposals
+
+Proposals can be withdrawn any time before the voting period end, either by the
+admin of the group policy or by one of the proposers. Once withdrawn, it is
+marked as `PROPOSAL_STATUS_WITHDRAWN`, and no more voting or execution is
+allowed on it.
+
+### Aborted Proposals
+
+If the group policy is updated during the voting period of the proposal, then
+the proposal is marked as `PROPOSAL_STATUS_ABORTED`, and no more voting or
+execution is allowed on it. This is because the group policy defines the rules
+of proposal voting and execution, so if those rules change during the lifecycle
+of a proposal, then the proposal should be marked as stale.
+
+### Tallying
 
 Tallying is the counting of all votes on a proposal. It happens only once in
 the lifecycle of a proposal, but can be triggered by two factors, whichever
@@ -80,22 +102,36 @@ happens first:
 - or on `EndBlock` when the proposal's voting period end just passed.
 
 If the tally result passes the decision policy's rules, then the proposal is
-marked as `STATUS_CLOSED`, so no more voting is allowed anymore, and the tally
-result is persisted to state.
+marked as `PROPOSAL_STATUS_ACCEPTED`, or else it is marked as
+`PROPOSAL_STATUS_REJECTED`. In any case, no more voting is allowed anymore, and the tally
+result is persisted to state in the proposal's `FinalTallyResult`.
 
-## Executing Proposals
+### Executing Proposals
 
 Proposals are executed only when the tallying is done, and the group account's
-decision policy allows the proposal to pass based on the tally outcome.
+decision policy allows the proposal to pass based on the tally outcome. They
+are marked by the status `PROPOSAL_STATUS_ACCEPTED`. Execution must happen
+before a duration of `MaxExecutionPeriod` (set by the chain developer) after
+each proposal's voting period end.
 
 Proposals will not be automatically executed by the chain in this current design,
 but rather a user must submit a `Msg/Exec` transaction to attempt to execute the
-proposal based on the current votes and decision policy.
+proposal based on the current votes and decision policy. Any user (not only the
+group members) can execute proposals that have been accepted, and execution fees are
+paid by the proposal executor.
 It's also possible to try to execute a proposal immediately on creation or on
 new votes using the `Exec` field of `Msg/SubmitProposal` and `Msg/Vote` requests.
 In the former case, proposers signatures are considered as yes votes.
-For now, if the proposal can't be executed, it'll still be opened for new votes and
-could be executed later on.
+In these cases, if the proposal can't be executed (i.e. it didn't pass the
+decision policy's rules), it will still be opened for new votes and
+could be tallied and executed later on.
+
+A successful proposal execution will have its `ExecutorResult` marked as
+`PROPOSAL_EXECUTOR_RESULT_SUCCESS`. The proposal will be automatically pruned
+after execution. On the other hand, a failed proposal execution will be marked
+as `PROPOSAL_EXECUTOR_RESULT_FAILURE`. Such a proposal can be re-executed
+multiple times, until it expires after `MaxExecutionPeriod` after voting period
+end.
 
 ## Pruning
 
@@ -105,7 +141,7 @@ Votes are pruned:
 
 - either after a successful tally, i.e. a tally whose result passes the decision
   policy's rules, which can be trigged by a `Msg/Exec` or a
-  `Msg/{SubmitProposal,Vote}` with the `Exec` field,
+  `Msg/{SubmitProposal,Vote}` with the `Exec` field set,
 - or on `EndBlock` right after the proposal's voting period end. This applies to proposals with status `aborted` or `withdrawn` too.
 
 whichever happens first.
@@ -118,4 +154,3 @@ Proposals are pruned:
   `max_execution_period` (defined as an app-wide configuration) is passed,
 
 whichever happens first.
-

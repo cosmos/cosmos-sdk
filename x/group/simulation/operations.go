@@ -427,7 +427,7 @@ func SimulateMsgSubmitProposal(ak group.AccountKeeper, bk group.BankKeeper, k ke
 
 		// Pick a random member from the group
 		ctx := sdk.WrapSDKContext(sdkCtx)
-		acc, account, _, err := randomMember(r, k, ak, ctx, accounts, groupID)
+		acc, account, err := randomMember(r, k, ak, ctx, accounts, groupID)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgSubmitProposal, ""), nil, err
 		}
@@ -945,7 +945,7 @@ func SimulateMsgVote(ak group.AccountKeeper,
 
 		// Pick a random member from the group
 		ctx := sdk.WrapSDKContext(sdkCtx)
-		acc, account, _, err := randomMember(r, k, ak, ctx, accounts, g.Id)
+		acc, account, err := randomMember(r, k, ak, ctx, accounts, g.Id)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, ""), nil, err
 		}
@@ -1120,15 +1120,12 @@ func SimulateMsgLeaveGroup(k keeper.Keeper, ak group.AccountKeeper, bk group.Ban
 		}
 
 		// Pick a random member from the group
-		acc, account, member, err := randomMember(r, k, ak, ctx, accounts, groupInfo.Id)
+		acc, account, err := randomMember(r, k, ak, ctx, accounts, groupInfo.Id)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, ""), nil, err
 		}
 		if account == nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, "no group member found"), nil, nil
-		}
-		if groupInfo.TotalWeight == member.Member.Weight {
-			return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, "last member of the group"), nil, nil
 		}
 
 		spendableCoins := bk.SpendableCoins(sdkCtx, acc.Address)
@@ -1235,24 +1232,24 @@ func randomGroupPolicy(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 }
 
 func randomMember(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
-	ctx context.Context, accounts []simtypes.Account, groupID uint64) (acc simtypes.Account, account authtypes.AccountI, member *group.GroupMember, err error) {
+	ctx context.Context, accounts []simtypes.Account, groupID uint64) (acc simtypes.Account, account authtypes.AccountI, err error) {
 	res, err := k.GroupMembers(ctx, &group.QueryGroupMembersRequest{
 		GroupId: groupID,
 	})
 	if err != nil {
-		return simtypes.Account{}, nil, nil, err
+		return simtypes.Account{}, nil, err
 	}
 	n := randIntInRange(r, len(res.Members))
 	if n < 0 {
-		return simtypes.Account{}, nil, nil, err
+		return simtypes.Account{}, nil, err
 	}
 	idx := findAccount(accounts, res.Members[n].Member.Address)
 	if idx < 0 {
-		return simtypes.Account{}, nil, nil, err
+		return simtypes.Account{}, nil, err
 	}
 	acc = accounts[idx]
 	account = ak.GetAccount(sdk.UnwrapSDKContext(ctx), acc.Address)
-	return acc, account, res.Members[n], nil
+	return acc, account, nil
 }
 
 func randIntInRange(r *rand.Rand, l int) int {

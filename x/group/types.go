@@ -79,7 +79,7 @@ func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower strin
 		return DecisionPolicyResult{}, sdkerrors.Wrap(err, "yes count")
 	}
 
-	totalPowerDec, err := math.NewPositiveDecFromString(totalPower)
+	totalPowerDec, err := math.NewNonNegativeDecFromString(totalPower)
 	if err != nil {
 		return DecisionPolicyResult{}, sdkerrors.Wrap(err, "total power")
 	}
@@ -191,7 +191,7 @@ func (p PercentageDecisionPolicy) Allow(tally TallyResult, totalPower string, si
 	if err != nil {
 		return DecisionPolicyResult{}, sdkerrors.Wrap(err, "yes count")
 	}
-	totalPowerDec, err := math.NewPositiveDecFromString(totalPower)
+	totalPowerDec, err := math.NewNonNegativeDecFromString(totalPower)
 	if err != nil {
 		return DecisionPolicyResult{}, sdkerrors.Wrap(err, "total power")
 	}

@@ -13,7 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/db"
 	dbutil "github.com/cosmos/cosmos-sdk/db/internal"
-	"github.com/cosmos/gorocksdb"
+	"github.com/linxGnu/grocksdb"
 )
 
 var (
@@ -42,7 +42,7 @@ type dbManager struct {
 	cpCache     checkpointCache
 }
 
-type dbConnection = gorocksdb.OptimisticTransactionDB
+type dbConnection = grocksdb.OptimisticTransactionDB
 
 type checkpointCache struct {
 	cache map[uint64]*cpCacheEntry
@@ -55,17 +55,17 @@ type cpCacheEntry struct {
 }
 
 type dbTxn struct {
-	txn     *gorocksdb.Transaction
+	txn     *grocksdb.Transaction
 	mgr     *dbManager
 	version uint64
 }
 type dbWriter struct{ dbTxn }
 
 type dbOptions struct {
-	dbo *gorocksdb.Options
-	txo *gorocksdb.OptimisticTransactionOptions
-	ro  *gorocksdb.ReadOptions
-	wo  *gorocksdb.WriteOptions
+	dbo *grocksdb.Options
+	txo *grocksdb.OptimisticTransactionOptions
+	ro  *grocksdb.ReadOptions
+	wo  *grocksdb.WriteOptions
 }
 
 // NewDB creates a new RocksDB key-value database with inside the given directory.
@@ -78,10 +78,10 @@ func NewDB(dir string) (*dbManager, error) {
 	// default rocksdb option, good enough for most cases, including heavy workloads.
 	// 1GB table cache, 512MB write buffer(may use 50% more on heavy workloads).
 	// compression: snappy as default, need to -lsnappy to enable.
-	bbto := gorocksdb.NewDefaultBlockBasedTableOptions()
-	bbto.SetBlockCache(gorocksdb.NewLRUCache(1 << 30))
-	bbto.SetFilterPolicy(gorocksdb.NewBloomFilter(10))
-	dbo := gorocksdb.NewDefaultOptions()
+	bbto := grocksdb.NewDefaultBlockBasedTableOptions()
+	bbto.SetBlockCache(grocksdb.NewLRUCache(1 << 30))
+	bbto.SetFilterPolicy(grocksdb.NewBloomFilter(10))
+	dbo := grocksdb.NewDefaultOptions()
 	dbo.SetBlockBasedTableFactory(bbto)
 	dbo.SetCreateIfMissing(true)
 	dbo.IncreaseParallelism(runtime.NumCPU())
@@ -90,9 +90,9 @@ func NewDB(dir string) (*dbManager, error) {
 
 	opts := dbOptions{
 		dbo: dbo,
-		txo: gorocksdb.NewDefaultOptimisticTransactionOptions(),
-		ro:  gorocksdb.NewDefaultReadOptions(),
-		wo:  gorocksdb.NewDefaultWriteOptions(),
+		txo: grocksdb.NewDefaultOptimisticTransactionOptions(),
+		ro:  grocksdb.NewDefaultReadOptions(),
+		wo:  grocksdb.NewDefaultWriteOptions(),
 	}
 	mgr := &dbManager{
 		dir:     dir,
@@ -117,7 +117,7 @@ func NewDB(dir string) (*dbManager, error) {
 			}
 		}
 	}
-	mgr.current, err = gorocksdb.OpenOptimisticTransactionDb(dbo, dbPath)
+	mgr.current, err = grocksdb.OpenOptimisticTransactionDb(dbo, dbPath)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +170,7 @@ func (mgr *dbManager) openCheckpoint(version uint64) (*dbConnection, error) {
 	if err != nil {
 		return nil, err
 	}
-	db, err := gorocksdb.OpenOptimisticTransactionDb(mgr.opts.dbo, dbPath)
+	db, err := grocksdb.OpenOptimisticTransactionDb(mgr.opts.dbo, dbPath)
 	if err != nil {
 		return nil, err
 	}
@@ -299,7 +299,7 @@ func (mgr *dbManager) Revert() (err error) {
 			return
 		}
 	}
-	mgr.current, err = gorocksdb.OpenOptimisticTransactionDb(mgr.opts.dbo, dbPath)
+	mgr.current, err = grocksdb.OpenOptimisticTransactionDb(mgr.opts.dbo, dbPath)
 	return
 }
 

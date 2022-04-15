@@ -3,12 +3,12 @@ go 1.17
 module github.com/cosmos/cosmos-sdk/db
 
 require (
-	// Note: gorocksdb bindings for OptimisticTransactionDB are not merged upstream, so we use a fork
-	// See https://github.com/tecbot/gorocksdb/pull/216
-	github.com/cosmos/gorocksdb v1.2.0
 	github.com/dgraph-io/badger/v3 v3.2103.2
 	github.com/dgraph-io/ristretto v0.1.0
 	github.com/google/btree v1.0.1
+	// Note: grocksdb bindings for OptimisticTransactionDB are not merged upstream, so we use a fork
+	// See https://github.com/tecbot/grocksdb/pull/216
+	github.com/linxGnu/grocksdb v1.7.0
 	github.com/stretchr/testify v1.7.1
 )
 

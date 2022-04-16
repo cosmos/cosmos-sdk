@@ -61,7 +61,6 @@ func (t tableGen) getTableInterface() {
 	t.P("type ", t.messageTableInterfaceName(t.msg), " interface {")
 	t.P("Insert(ctx ", contextPkg.Ident("Context"), ", ", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") error")
 	if t.table.PrimaryKey.AutoIncrement {
-		t.P(ormtable.AutoIncTableMethodName)
 		t.P("InsertReturning", t.fieldsToCamelCase(t.table.PrimaryKey.Fields), "(ctx ", contextPkg.Ident("Context"), ", ", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") (uint64, error)")
 	}
 	t.P("Update(ctx ", contextPkg.Ident("Context"), ", ", t.param(t.msg.GoIdent.GoName), " *", t.QualifiedGoIdent(t.msg.GoIdent), ") error")
@@ -181,8 +180,6 @@ func (t tableGen) genTableImpl() {
 	}
 
 	if t.table.PrimaryKey.AutoIncrement {
-		t.P(receiver, ormtable.AutoIncTableMethodName, " { }")
-		t.P()
 		t.P(receiver, "InsertReturning", t.fieldsToCamelCase(t.table.PrimaryKey.Fields), "(ctx ", contextPkg.Ident("Context"), ", ", varName, " *", varTypeName, ") (uint64, error) {")
 		t.P("return ", receiverVar, ".table.InsertReturningID(ctx, ", varName, ")")
 		t.P("}")

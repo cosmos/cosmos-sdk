@@ -10,7 +10,7 @@ type SnapshotOptions struct {
 	KeepRecent uint32
 }
 
-// SnapshotIntervalOff represents the snapshot inerval, at which
+// SnapshotIntervalOff represents the snapshot interval, at which
 // no snapshots are taken.
 const SnapshotIntervalOff uint64 = 0
 

@@ -150,6 +150,8 @@ type Schema interface {
 	GetTable(message proto.Message) Table
 }
 
+const AutoIncTableMethodName = "autoIncTable()"
+
 type AutoIncrementTable interface {
 	Table
 

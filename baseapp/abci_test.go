@@ -10,9 +10,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestGetBlockRentionHeight(t *testing.T) {
@@ -44,9 +44,9 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		"pruning iavl snapshot only": {
 			bapp: baseapp.NewBaseApp(
 				name, logger, db,
-				baseapp.SetPruning(sdk.NewPruningOptions(pruningtypes.PruningNothing)),
+				baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)),
 				baseapp.SetMinRetainBlocks(1),
-				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(10000, 1)),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(10000, 1)),
 			),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
@@ -55,7 +55,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		"pruning state sync snapshot only": {
 			bapp: baseapp.NewBaseApp(
 				name, logger, db,
-				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(50000, 3)),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
 				baseapp.SetMinRetainBlocks(1),
 			),
 			maxAgeBlocks: 0,
@@ -74,9 +74,9 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		"pruning all conditions": {
 			bapp: baseapp.NewBaseApp(
 				name, logger, db,
-				baseapp.SetPruning(sdk.NewCustomPruningOptions(0, 0)),
+				baseapp.SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
 				baseapp.SetMinRetainBlocks(400000),
-				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(50000, 3)),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
@@ -85,9 +85,9 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		"no pruning due to no persisted state": {
 			bapp: baseapp.NewBaseApp(
 				name, logger, db,
-				baseapp.SetPruning(sdk.NewCustomPruningOptions(0, 0)),
+				baseapp.SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
 				baseapp.SetMinRetainBlocks(400000),
-				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(50000, 3)),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 10000,
@@ -96,9 +96,9 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		"disable pruning": {
 			bapp: baseapp.NewBaseApp(
 				name, logger, db,
-				baseapp.SetPruning(sdk.NewCustomPruningOptions(0, 0)),
+				baseapp.SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
 				baseapp.SetMinRetainBlocks(0),
-				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(50000, 3)),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,

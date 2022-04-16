@@ -188,7 +188,7 @@ func setupBaseAppWithSnapshots(t *testing.T, config *setupConfig) (*baseapp.Base
 	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), testutil.GetTempDir(t))
 	require.NoError(t, err)
 
-	app, err := setupBaseApp(t, routerOpt, baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(config.snapshotInterval, uint32(config.snapshotKeepRecent))), baseapp.SetPruning(config.pruningOpts))
+	app, err := setupBaseApp(t, routerOpt, baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(config.snapshotInterval, uint32(config.snapshotKeepRecent))), baseapp.SetPruning(config.pruningOpts))
 	if err != nil {
 		return nil, err
 	}
@@ -299,7 +299,7 @@ func TestConsensusParamsNotNil(t *testing.T) {
 // Test that LoadLatestVersion actually does.
 func TestLoadVersion(t *testing.T) {
 	logger := defaultLogger()
-	pruningOpt := baseapp.SetPruning(sdk.NewPruningOptions(pruningtypes.PruningNothing))
+	pruningOpt := baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, logger, db, pruningOpt)
@@ -352,7 +352,7 @@ func useDefaultLoader(app *baseapp.BaseApp) {
 
 func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 	rs := rootmulti.NewStore(db, log.NewNopLogger())
-	rs.SetPruning(sdk.NewPruningOptions(pruningtypes.PruningNothing))
+	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	key := sdk.NewKVStoreKey(storeKey)
 	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
 	err := rs.LoadLatestVersion()
@@ -369,7 +369,7 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 
 func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
 	rs := rootmulti.NewStore(db, log.NewNopLogger())
-	rs.SetPruning(sdk.NewPruningOptions(pruningtypes.PruningDefault))
+	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
 	key := sdk.NewKVStoreKey(storeKey)
 	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
 	err := rs.LoadLatestVersion()
@@ -412,7 +412,7 @@ func TestSetLoader(t *testing.T) {
 			initStore(t, db, tc.origStoreKey, k, v)
 
 			// load the app with the existing db
-			opts := []func(*baseapp.BaseApp){baseapp.SetPruning(sdk.NewPruningOptions(pruningtypes.PruningNothing))}
+			opts := []func(*baseapp.BaseApp){baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))}
 			if tc.setLoader != nil {
 				opts = append(opts, tc.setLoader)
 			}
@@ -435,7 +435,7 @@ func TestSetLoader(t *testing.T) {
 
 func TestVersionSetterGetter(t *testing.T) {
 	logger := defaultLogger()
-	pruningOpt := baseapp.SetPruning(sdk.NewPruningOptions(pruningtypes.PruningDefault))
+	pruningOpt := baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, logger, db, pruningOpt)
@@ -455,7 +455,7 @@ func TestVersionSetterGetter(t *testing.T) {
 
 func TestLoadVersionInvalid(t *testing.T) {
 	logger := log.NewNopLogger()
-	pruningOpt := baseapp.SetPruning(sdk.NewPruningOptions(pruningtypes.PruningNothing))
+	pruningOpt := baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, logger, db, pruningOpt)
@@ -487,14 +487,14 @@ func TestLoadVersionInvalid(t *testing.T) {
 
 func TestLoadVersionPruning(t *testing.T) {
 	logger := log.NewNopLogger()
-	pruningOptions := sdk.NewCustomPruningOptions(10, 15)
+	pruningOptions := pruningtypes.NewCustomPruningOptions(10, 15)
 	pruningOpt := baseapp.SetPruning(pruningOptions)
 	db := dbm.NewMemDB()
 	name := t.Name()
 
 	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), testutil.GetTempDir(t))
 	require.NoError(t, err)
-	snapshotOpt := baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(3, 1))
+	snapshotOpt := baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(3, 1))
 
 	app := baseapp.NewBaseApp(name, logger, db, pruningOpt, snapshotOpt)
 
@@ -1934,7 +1934,7 @@ func TestListSnapshots(t *testing.T) {
 		blockTxs:           4,
 		snapshotInterval:   2,
 		snapshotKeepRecent: 2,
-		pruningOpts:        sdk.NewPruningOptions(pruningtypes.PruningNothing),
+		pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
 	}
 
 	app, err := setupBaseAppWithSnapshots(t, setupConfig)
@@ -1965,7 +1965,7 @@ func TestSnapshotWithPruning(t *testing.T) {
 				blockTxs:           2,
 				snapshotInterval:   5,
 				snapshotKeepRecent: 1,
-				pruningOpts:        sdk.NewPruningOptions(pruningtypes.PruningNothing),
+				pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
 			},
 			expectedSnapshots: []*abci.Snapshot{
 				{Height: 20, Format: 2, Chunks: 5},
@@ -1977,7 +1977,7 @@ func TestSnapshotWithPruning(t *testing.T) {
 				blockTxs:           2,
 				snapshotInterval:   5,
 				snapshotKeepRecent: 1,
-				pruningOpts:        sdk.NewPruningOptions(pruningtypes.PruningEverything),
+				pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningEverything),
 			},
 			expectedSnapshots: []*abci.Snapshot{
 				{Height: 20, Format: 2, Chunks: 5},
@@ -1989,7 +1989,7 @@ func TestSnapshotWithPruning(t *testing.T) {
 				blockTxs:           2,
 				snapshotInterval:   5,
 				snapshotKeepRecent: 1,
-				pruningOpts:        sdk.NewPruningOptions(pruningtypes.PruningDefault),
+				pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningDefault),
 			},
 			expectedSnapshots: []*abci.Snapshot{
 				{Height: 20, Format: 2, Chunks: 5},
@@ -2001,7 +2001,7 @@ func TestSnapshotWithPruning(t *testing.T) {
 				blockTxs:           2,
 				snapshotInterval:   5,
 				snapshotKeepRecent: 2,
-				pruningOpts:        sdk.NewCustomPruningOptions(12, 12),
+				pruningOpts:        pruningtypes.NewCustomPruningOptions(12, 12),
 			},
 			expectedSnapshots: []*abci.Snapshot{
 				{Height: 25, Format: 2, Chunks: 6},
@@ -2013,7 +2013,7 @@ func TestSnapshotWithPruning(t *testing.T) {
 				blocks:           10,
 				blockTxs:         2,
 				snapshotInterval: 0, // 0 implies disable snapshots
-				pruningOpts:      sdk.NewPruningOptions(pruningtypes.PruningNothing),
+				pruningOpts:      pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
 			},
 			expectedSnapshots: []*abci.Snapshot{},
 		},
@@ -2023,7 +2023,7 @@ func TestSnapshotWithPruning(t *testing.T) {
 				blockTxs:           2,
 				snapshotInterval:   3,
 				snapshotKeepRecent: 0, // 0 implies keep all snapshots
-				pruningOpts:        sdk.NewPruningOptions(pruningtypes.PruningNothing),
+				pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
 			},
 			expectedSnapshots: []*abci.Snapshot{
 				{Height: 9, Format: 2, Chunks: 2},
@@ -2091,7 +2091,7 @@ func TestLoadSnapshotChunk(t *testing.T) {
 		blockTxs:           5,
 		snapshotInterval:   2,
 		snapshotKeepRecent: 2,
-		pruningOpts:        sdk.NewPruningOptions(pruningtypes.PruningNothing),
+		pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
 	}
 	app, err := setupBaseAppWithSnapshots(t, setupConfig)
 	require.NoError(t, err)
@@ -2134,7 +2134,7 @@ func TestOfferSnapshot_Errors(t *testing.T) {
 		blockTxs:           0,
 		snapshotInterval:   2,
 		snapshotKeepRecent: 2,
-		pruningOpts:        sdk.NewPruningOptions(pruningtypes.PruningNothing),
+		pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
 	}
 	app, err := setupBaseAppWithSnapshots(t, setupConfig)
 	require.NoError(t, err)
@@ -2196,7 +2196,7 @@ func TestApplySnapshotChunk(t *testing.T) {
 		blockTxs:           10,
 		snapshotInterval:   2,
 		snapshotKeepRecent: 2,
-		pruningOpts:        sdk.NewPruningOptions(pruningtypes.PruningNothing),
+		pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
 	}
 	source, err := setupBaseAppWithSnapshots(t, setupConfig1)
 	require.NoError(t, err)
@@ -2206,7 +2206,7 @@ func TestApplySnapshotChunk(t *testing.T) {
 		blockTxs:           0,
 		snapshotInterval:   2,
 		snapshotKeepRecent: 2,
-		pruningOpts:        sdk.NewPruningOptions(pruningtypes.PruningNothing),
+		pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
 	}
 	target, err := setupBaseAppWithSnapshots(t, setupConfig2)
 	require.NoError(t, err)
@@ -2364,124 +2364,124 @@ func TestBaseApp_Init(t *testing.T) {
 	}{
 		"snapshot but no pruning": {
 			baseapp.NewBaseApp(name, logger, db,
-				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(1500, 2)),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(1500, 2)),
 			),
-			sdk.NewPruningOptions(pruningtypes.PruningNothing),
-			sdk.NewSnapshotOptions(1500, 2),
+			pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
+			snapshottypes.NewSnapshotOptions(1500, 2),
 			// if no pruning is set, the default is PruneNothing
 			nil,
 		},
 		"pruning everything only": {
 			baseapp.NewBaseApp(name, logger, db,
-				baseapp.SetPruning(sdk.NewPruningOptions(pruningtypes.PruningEverything)),
+				baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningEverything)),
 			),
-			sdk.NewPruningOptions(pruningtypes.PruningEverything),
-			sdk.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
+			pruningtypes.NewPruningOptions(pruningtypes.PruningEverything),
+			snapshottypes.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
 			nil,
 		},
 		"pruning nothing only": {
 			baseapp.NewBaseApp(name, logger, db,
-				baseapp.SetPruning(sdk.NewPruningOptions(pruningtypes.PruningNothing)),
+				baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)),
 			),
-			sdk.NewPruningOptions(pruningtypes.PruningNothing),
-			sdk.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
+			pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
+			snapshottypes.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
 			nil,
 		},
 		"pruning default only": {
 			baseapp.NewBaseApp(name, logger, db,
-				baseapp.SetPruning(sdk.NewPruningOptions(pruningtypes.PruningDefault)),
+				baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningDefault)),
 			),
-			sdk.NewPruningOptions(pruningtypes.PruningDefault),
-			sdk.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
+			pruningtypes.NewPruningOptions(pruningtypes.PruningDefault),
+			snapshottypes.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
 			nil,
 		},
 		"pruning custom only": {
 			baseapp.NewBaseApp(name, logger, db,
-				baseapp.SetPruning(sdk.NewCustomPruningOptions(10, 10)),
+				baseapp.SetPruning(pruningtypes.NewCustomPruningOptions(10, 10)),
 			),
-			sdk.NewCustomPruningOptions(10, 10),
-			sdk.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
+			pruningtypes.NewCustomPruningOptions(10, 10),
+			snapshottypes.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
 			nil,
 		},
 		"pruning everything and snapshots": {
 			baseapp.NewBaseApp(name, logger, db,
-				baseapp.SetPruning(sdk.NewPruningOptions(pruningtypes.PruningEverything)),
-				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(1500, 2)),
+				baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningEverything)),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(1500, 2)),
 			),
-			sdk.NewPruningOptions(pruningtypes.PruningEverything),
-			sdk.NewSnapshotOptions(1500, 2),
+			pruningtypes.NewPruningOptions(pruningtypes.PruningEverything),
+			snapshottypes.NewSnapshotOptions(1500, 2),
 			nil,
 		},
 		"pruning nothing and snapshots": {
 			baseapp.NewBaseApp(name, logger, db,
-				baseapp.SetPruning(sdk.NewPruningOptions(pruningtypes.PruningNothing)),
-				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(1500, 2)),
+				baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(1500, 2)),
 			),
-			sdk.NewPruningOptions(pruningtypes.PruningNothing),
-			sdk.NewSnapshotOptions(1500, 2),
+			pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
+			snapshottypes.NewSnapshotOptions(1500, 2),
 			nil,
 		},
 		"pruning default and snapshots": {
 			baseapp.NewBaseApp(name, logger, db,
-				baseapp.SetPruning(sdk.NewPruningOptions(pruningtypes.PruningDefault)),
-				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(1500, 2)),
+				baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningDefault)),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(1500, 2)),
 			),
-			sdk.NewPruningOptions(pruningtypes.PruningDefault),
-			sdk.NewSnapshotOptions(1500, 2),
+			pruningtypes.NewPruningOptions(pruningtypes.PruningDefault),
+			snapshottypes.NewSnapshotOptions(1500, 2),
 			nil,
 		},
 		"pruning custom and snapshots": {
 			baseapp.NewBaseApp(name, logger, db,
-				baseapp.SetPruning(sdk.NewCustomPruningOptions(10, 10)),
-				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(1500, 2)),
+				baseapp.SetPruning(pruningtypes.NewCustomPruningOptions(10, 10)),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(1500, 2)),
 			),
-			sdk.NewCustomPruningOptions(10, 10),
-			sdk.NewSnapshotOptions(1500, 2),
+			pruningtypes.NewCustomPruningOptions(10, 10),
+			snapshottypes.NewSnapshotOptions(1500, 2),
 			nil,
 		},
 		"error custom pruning 0 interval": {
 			baseapp.NewBaseApp(name, logger, db,
-				baseapp.SetPruning(sdk.NewCustomPruningOptions(10, 0)),
-				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(1500, 2)),
+				baseapp.SetPruning(pruningtypes.NewCustomPruningOptions(10, 0)),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(1500, 2)),
 			),
-			sdk.NewCustomPruningOptions(10, 0),
-			sdk.NewSnapshotOptions(1500, 2),
+			pruningtypes.NewCustomPruningOptions(10, 0),
+			snapshottypes.NewSnapshotOptions(1500, 2),
 			pruningtypes.ErrPruningIntervalZero,
 		},
 		"error custom pruning too small interval": {
 			baseapp.NewBaseApp(name, logger, db,
-				baseapp.SetPruning(sdk.NewCustomPruningOptions(10, 9)),
-				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(1500, 2)),
+				baseapp.SetPruning(pruningtypes.NewCustomPruningOptions(10, 9)),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(1500, 2)),
 			),
-			sdk.NewCustomPruningOptions(10, 9),
-			sdk.NewSnapshotOptions(1500, 2),
+			pruningtypes.NewCustomPruningOptions(10, 9),
+			snapshottypes.NewSnapshotOptions(1500, 2),
 			pruningtypes.ErrPruningIntervalTooSmall,
 		},
 		"error custom pruning too small keep recent": {
 			baseapp.NewBaseApp(name, logger, db,
-				baseapp.SetPruning(sdk.NewCustomPruningOptions(1, 10)),
-				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(1500, 2)),
+				baseapp.SetPruning(pruningtypes.NewCustomPruningOptions(1, 10)),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(1500, 2)),
 			),
-			sdk.NewCustomPruningOptions(9, 10),
-			sdk.NewSnapshotOptions(1500, 2),
+			pruningtypes.NewCustomPruningOptions(9, 10),
+			snapshottypes.NewSnapshotOptions(1500, 2),
 			pruningtypes.ErrPruningKeepRecentTooSmall,
 		},
 		"snapshot zero interval - manager not set": {
 			baseapp.NewBaseApp(name, logger, db,
-				baseapp.SetPruning(sdk.NewCustomPruningOptions(10, 10)),
-				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 2)),
+				baseapp.SetPruning(pruningtypes.NewCustomPruningOptions(10, 10)),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 2)),
 			),
-			sdk.NewCustomPruningOptions(10, 10),
-			sdk.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
+			pruningtypes.NewCustomPruningOptions(10, 10),
+			snapshottypes.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
 			nil,
 		},
 		"snapshot zero keep recent - allowed": {
 			baseapp.NewBaseApp(name, logger, db,
-				baseapp.SetPruning(sdk.NewCustomPruningOptions(10, 10)),
-				baseapp.SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(1500, 0)),
+				baseapp.SetPruning(pruningtypes.NewCustomPruningOptions(10, 10)),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(1500, 0)),
 			),
-			sdk.NewCustomPruningOptions(10, 10),
-			sdk.NewSnapshotOptions(1500, 0), // 0 snapshot-keep-recent means keep all
+			pruningtypes.NewCustomPruningOptions(10, 10),
+			snapshottypes.NewSnapshotOptions(1500, 0), // 0 snapshot-keep-recent means keep all
 			nil,
 		},
 	}

@@ -299,7 +299,6 @@ const (
 	StoreTypeMemory
 	StoreTypeSMT
 	StoreTypePersistent
-	StoreTypeSnapshot
 )
 
 func (st StoreType) String() string {
@@ -324,9 +323,6 @@ func (st StoreType) String() string {
 
 	case StoreTypePersistent:
 		return "StoreTypePersistent"
-
-	case StoreTypeSnapshot:
-		return "StoreTypeSnapshot"
 	}
 
 	return "unknown store type"

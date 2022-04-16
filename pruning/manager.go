@@ -46,7 +46,7 @@ func (e *NegativeHeightsError) Error() string {
 
 var (
 	pruneHeightsKey         = []byte("s/pruneheights")
-	pruneSnapshotHeightsKey = []byte("s/pruneSnheights")
+	pruneSnapshotHeightsKey = []byte("s/prunesnapshotheights")
 )
 
 // NewManager returns a new Manager with the given db and logger.

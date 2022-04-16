@@ -156,4 +156,6 @@ type AutoIncrementTable interface {
 	// InsertReturningID inserts the provided entry in the store and returns the newly
 	// generated ID for the message or an error.
 	InsertReturningID(ctx context.Context, message proto.Message) (newId uint64, err error)
+
+	autoIncTable()
 }

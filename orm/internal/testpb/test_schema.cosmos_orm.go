@@ -215,6 +215,7 @@ func NewExampleTableTable(db ormtable.Schema) (ExampleTableTable, error) {
 
 type ExampleAutoIncrementTableTable interface {
 	Insert(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
+	autoIncTable()
 	InsertReturningId(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) (uint64, error)
 	Update(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
 	Save(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
@@ -297,6 +298,8 @@ func (this exampleAutoIncrementTableTable) Save(ctx context.Context, exampleAuto
 func (this exampleAutoIncrementTableTable) Delete(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error {
 	return this.table.Delete(ctx, exampleAutoIncrementTable)
 }
+
+func (this exampleAutoIncrementTableTable) autoIncTable() {}
 
 func (this exampleAutoIncrementTableTable) InsertReturningId(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) (uint64, error) {
 	return this.table.InsertReturningID(ctx, exampleAutoIncrementTable)
@@ -400,6 +403,7 @@ func NewExampleSingletonTable(db ormtable.Schema) (ExampleSingletonTable, error)
 
 type ExampleTimestampTable interface {
 	Insert(ctx context.Context, exampleTimestamp *ExampleTimestamp) error
+	autoIncTable()
 	InsertReturningId(ctx context.Context, exampleTimestamp *ExampleTimestamp) (uint64, error)
 	Update(ctx context.Context, exampleTimestamp *ExampleTimestamp) error
 	Save(ctx context.Context, exampleTimestamp *ExampleTimestamp) error
@@ -479,6 +483,8 @@ func (this exampleTimestampTable) Save(ctx context.Context, exampleTimestamp *Ex
 func (this exampleTimestampTable) Delete(ctx context.Context, exampleTimestamp *ExampleTimestamp) error {
 	return this.table.Delete(ctx, exampleTimestamp)
 }
+
+func (this exampleTimestampTable) autoIncTable() {}
 
 func (this exampleTimestampTable) InsertReturningId(ctx context.Context, exampleTimestamp *ExampleTimestamp) (uint64, error) {
 	return this.table.InsertReturningID(ctx, exampleTimestamp)
@@ -682,6 +688,7 @@ func NewSimpleExampleTable(db ormtable.Schema) (SimpleExampleTable, error) {
 
 type ExampleAutoIncFieldNameTable interface {
 	Insert(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) error
+	autoIncTable()
 	InsertReturningFoo(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) (uint64, error)
 	Update(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) error
 	Save(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) error
@@ -748,6 +755,8 @@ func (this exampleAutoIncFieldNameTable) Save(ctx context.Context, exampleAutoIn
 func (this exampleAutoIncFieldNameTable) Delete(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) error {
 	return this.table.Delete(ctx, exampleAutoIncFieldName)
 }
+
+func (this exampleAutoIncFieldNameTable) autoIncTable() {}
 
 func (this exampleAutoIncFieldNameTable) InsertReturningFoo(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) (uint64, error) {
 	return this.table.InsertReturningID(ctx, exampleAutoIncFieldName)

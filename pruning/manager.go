@@ -95,7 +95,7 @@ func (m *Manager) GetFlushAndResetPruningHeights() ([]int64, error) {
 	return pruningHeights, nil
 }
 
-// HandleHeight determines if pruneHeight height needs to be kept for pruning at the right interval prescribed by
+// HandleHeight determines if previousHeight height needs to be kept for pruning at the right interval prescribed by
 // the pruning strategy. Returns previousHeight, if it was kept to be pruned at the next call to Prune(), 0 otherwise.
 // previousHeight must be greater than 0 for the handling to take effect since valid heights start at 1 and 0 represents
 // the latest height. The latest height cannot be pruned. As a result, if previousHeight is less than or equal to 0, 0 is returned.

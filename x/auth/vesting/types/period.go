@@ -2,6 +2,10 @@ package types
 
 import (
 	"time"
+	"fmt"
+	"strings"
+
+	"sigs.k8s.io/yaml"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -13,6 +17,12 @@ type Periods []Period
 func (p Period) Duration() time.Duration {
 	return time.Duration(p.Length) * time.Second
 }
+// String implements the fmt.Stringer interface
+func (p Period) String() string {
+	out, _ := yaml.Marshal(p)
+	return string(out)
+}
+
 
 // TotalLength return the total length in seconds for a period
 func (p Periods) TotalLength() int64 {
@@ -36,4 +46,15 @@ func (p Periods) TotalAmount() sdk.Coins {
 		total = total.Add(period.Amount...)
 	}
 	return total
+}
+
+// String implements the fmt.Stringer interface
+func (p Periods) String() string {
+	periodsListString := make([]string, len(vp))
+	for _, period := range vp {
+		periodsListString = append(periodsListString, period.String())
+	}
+
+	return strings.TrimSpace(fmt.Sprintf(`Vesting Periods:
+		%s`, strings.Join(periodsListString, ", ")))
 }

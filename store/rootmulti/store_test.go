@@ -797,6 +797,40 @@ func TestTraceConcurrency(t *testing.T) {
 	stopW <- struct{}{}
 }
 
+func TestCommitOrdered(t *testing.T) {
+	var db dbm.DB = dbm.NewMemDB()
+	multi := newMultiStoreWithMounts(db, types.PruneNothing)
+	err := multi.LoadLatestVersion()
+	require.Nil(t, err)
+
+	commitID := types.CommitID{}
+	checkStore(t, multi, commitID, commitID)
+
+	k, v := []byte("wind"), []byte("blows")
+	k2, v2 := []byte("water"), []byte("flows")
+	k3, v3 := []byte("fire"), []byte("burns")
+
+	store1 := multi.GetStoreByName("store1").(types.KVStore)
+	store1.Set(k, v)
+
+	store2 := multi.GetStoreByName("store2").(types.KVStore)
+	store2.Set(k2, v2)
+
+	store3 := multi.GetStoreByName("store3").(types.KVStore)
+	store3.Set(k3, v3)
+
+	typeID := multi.Commit()
+	require.Equal(t, int64(1), typeID.Version)
+
+	ci, err := getCommitInfo(db, 1)
+	require.NoError(t, err)
+	require.Equal(t, int64(1), ci.Version)
+	require.Equal(t, 3, len(ci.StoreInfos))
+	for i, s := range ci.StoreInfos {
+		require.Equal(t, s.Name, fmt.Sprintf("store%d", i+1))
+	}
+}
+
 //-----------------------------------------------------------------------
 // utils
 

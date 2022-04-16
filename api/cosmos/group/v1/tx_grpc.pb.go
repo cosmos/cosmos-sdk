@@ -42,7 +42,7 @@ type MsgClient interface {
 	UpdateGroupPolicyMetadata(ctx context.Context, in *MsgUpdateGroupPolicyMetadata, opts ...grpc.CallOption) (*MsgUpdateGroupPolicyMetadataResponse, error)
 	// SubmitProposal submits a new proposal.
 	SubmitProposal(ctx context.Context, in *MsgSubmitProposal, opts ...grpc.CallOption) (*MsgSubmitProposalResponse, error)
-	// WithdrawProposal aborts a proposal.
+	// WithdrawProposal withdraws a proposal.
 	WithdrawProposal(ctx context.Context, in *MsgWithdrawProposal, opts ...grpc.CallOption) (*MsgWithdrawProposalResponse, error)
 	// Vote allows a voter to vote on a proposal.
 	Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOption) (*MsgVoteResponse, error)
@@ -210,7 +210,7 @@ type MsgServer interface {
 	UpdateGroupPolicyMetadata(context.Context, *MsgUpdateGroupPolicyMetadata) (*MsgUpdateGroupPolicyMetadataResponse, error)
 	// SubmitProposal submits a new proposal.
 	SubmitProposal(context.Context, *MsgSubmitProposal) (*MsgSubmitProposalResponse, error)
-	// WithdrawProposal aborts a proposal.
+	// WithdrawProposal withdraws a proposal.
 	WithdrawProposal(context.Context, *MsgWithdrawProposal) (*MsgWithdrawProposalResponse, error)
 	// Vote allows a voter to vote on a proposal.
 	Vote(context.Context, *MsgVote) (*MsgVoteResponse, error)

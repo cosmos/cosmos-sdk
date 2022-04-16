@@ -799,7 +799,7 @@ func TestTraceConcurrency(t *testing.T) {
 
 func TestCommitOrdered(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
-	multi := newMultiStoreWithMounts(db, types.PruneNothing)
+	multi := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	err := multi.LoadLatestVersion()
 	require.Nil(t, err)
 

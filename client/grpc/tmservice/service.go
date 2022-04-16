@@ -23,13 +23,13 @@ var (
 )
 
 type (
+	abciQueryFn = func(abci.RequestQuery) abci.ResponseQuery
+
 	queryServer struct {
 		clientCtx         client.Context
 		interfaceRegistry codectypes.InterfaceRegistry
 		queryFn           abciQueryFn
 	}
-
-	abciQueryFn = func(abci.RequestQuery) abci.ResponseQuery
 )
 
 // NewQueryServer creates a new tendermint query server.

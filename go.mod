@@ -20,7 +20,7 @@ require (
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/gogo/gateway v1.1.0
-	github.com/gogo/protobuf v1.3.3
+	github.com/gogo/protobuf v1.3.2
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/handlers v1.5.1

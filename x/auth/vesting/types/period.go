@@ -26,7 +26,7 @@ func (p Period) String() string {
 
 // TotalLength return the total length in seconds for a period
 func (p Periods) TotalLength() int64 {
-	total := int64(0)
+	var total int64
 	for _, period := range p {
 		total += period.Length
 	}

@@ -78,8 +78,9 @@ When writing ADRs, follow the same best practices for writing RFCs. When writing
 * [ADR 039: Epoched Staking](./adr-039-epoched-staking.md)
 * [ADR 040: Storage and SMT State Commitments](./adr-040-storage-and-smt-state-commitments.md)
 * [ADR 046: Module Params](./adr-046-module-params.md)
+* [ADR 050: Epoch Distribution](./adr-050-epoch-distribution.md)
 
 ### Draft
 
-- [ADR 044: Guidelines for Updating Protobuf Definitions](./adr-044-protobuf-updates-guidelines.md)
-- [ADR 047: Extend Upgrade Plan](./adr-047-extend-upgrade-plan.md)
+* [ADR 044: Guidelines for Updating Protobuf Definitions](./adr-044-protobuf-updates-guidelines.md)
+* [ADR 047: Extend Upgrade Plan](./adr-047-extend-upgrade-plan.md)

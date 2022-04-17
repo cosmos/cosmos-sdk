@@ -236,6 +236,4 @@ func (t *autoIncrementTable) GetTable(message proto.Message) Table {
 	return nil
 }
 
-func (t *autoIncrementTable) autoIncTable() {}
-
 var _ AutoIncrementTable = &autoIncrementTable{}

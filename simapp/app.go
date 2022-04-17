@@ -143,6 +143,8 @@ var (
 	}
 )
 
+var test = 88
+
 var (
 	_ App                     = (*SimApp)(nil)
 	_ servertypes.Application = (*SimApp)(nil)

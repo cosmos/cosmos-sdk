@@ -1,9 +1,9 @@
 package types
 
 import (
-	"time"
 	"fmt"
 	"strings"
+	"time"
 
 	"sigs.k8s.io/yaml"
 
@@ -17,12 +17,12 @@ type Periods []Period
 func (p Period) Duration() time.Duration {
 	return time.Duration(p.Length) * time.Second
 }
+
 // String implements the fmt.Stringer interface
 func (p Period) String() string {
 	out, _ := yaml.Marshal(p)
 	return string(out)
 }
-
 
 // TotalLength return the total length in seconds for a period
 func (p Periods) TotalLength() int64 {
@@ -50,8 +50,8 @@ func (p Periods) TotalAmount() sdk.Coins {
 
 // String implements the fmt.Stringer interface
 func (p Periods) String() string {
-	periodsListString := make([]string, len(vp))
-	for _, period := range vp {
+	periodsListString := make([]string, len(p))
+	for _, period := range p {
 		periodsListString = append(periodsListString, period.String())
 	}
 

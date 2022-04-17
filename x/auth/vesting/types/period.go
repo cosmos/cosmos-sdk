@@ -5,13 +5,9 @@ import (
 	"strings"
 	"time"
 
-<<<<<<< HEAD
 	yaml "gopkg.in/yaml.v2"
-=======
-	"sigs.k8s.io/yaml"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
->>>>>>> c67695227 (feat: add vesting util functions (#11652))
 )
 
 // Periods stores all vesting periods passed as part of a PeriodicVestingAccount

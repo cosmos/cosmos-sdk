@@ -18,14 +18,18 @@ func (req *ABCIQueryRequest) ToABCIRequestQuery() abci.RequestQuery {
 // FromABCIResponseQuery converts an ABCI ResponseQuery type to a gRPC
 // ABCIQueryResponse type.
 func FromABCIResponseQuery(res abci.ResponseQuery) *ABCIQueryResponse {
-	proofOps := ProofOps{
-		Ops: make([]ProofOp, len(res.ProofOps.Ops)),
-	}
-	for i, proofOp := range res.ProofOps.Ops {
-		proofOps.Ops[i] = ProofOp{
-			Type: proofOp.Type,
-			Key:  proofOp.Key,
-			Data: proofOp.Data,
+	var proofOps *ProofOps
+
+	if res.ProofOps != nil {
+		proofOps = &ProofOps{
+			Ops: make([]ProofOp, len(res.ProofOps.Ops)),
+		}
+		for i, proofOp := range res.ProofOps.Ops {
+			proofOps.Ops[i] = ProofOp{
+				Type: proofOp.Type,
+				Key:  proofOp.Key,
+				Data: proofOp.Data,
+			}
 		}
 	}
 
@@ -36,7 +40,7 @@ func FromABCIResponseQuery(res abci.ResponseQuery) *ABCIQueryResponse {
 		Index:     res.Index,
 		Key:       res.Key,
 		Value:     res.Value,
-		ProofOps:  &proofOps,
+		ProofOps:  proofOps,
 		Height:    res.Height,
 		Codespace: res.Codespace,
 	}

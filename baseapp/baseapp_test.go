@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"google.golang.org/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
 

@@ -9,9 +9,9 @@ import (
 	"strings"
 	"sync"
 
-	iavltree "github.com/cosmos/iavl"
 	protoio "github.com/cosmos/gogoproto/io"
 	gogotypes "github.com/cosmos/gogoproto/types"
+	iavltree "github.com/cosmos/iavl"
 	"github.com/pkg/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"

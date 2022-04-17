@@ -10,8 +10,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
 
+	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"

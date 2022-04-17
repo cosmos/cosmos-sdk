@@ -104,7 +104,7 @@ func convertInnerOps(path []byte, sideNodes [][]byte) []*ics23.InnerOp {
 			Hash:   ics23.HashOp_SHA256,
 			Prefix: []byte{1},
 		}
-		if getBitAtFromMSB(path[:], depth-1-i) == 1 {
+		if getBitAtFromMSB(path, depth-1-i) == 1 {
 			// right child is on path
 			op.Prefix = append(op.Prefix, sideNodes[i]...)
 		} else {

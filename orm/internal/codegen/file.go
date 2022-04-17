@@ -5,9 +5,9 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-proto/generator"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/iancoleman/strcase"
 	"google.golang.org/protobuf/compiler/protogen"
-	"google.golang.org/protobuf/proto"
 
 	v1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
 )

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"io"
 
-	"google.golang.org/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	"google.golang.org/protobuf/encoding/protojson"
 )

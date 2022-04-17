@@ -9,7 +9,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	proto "google.golang.org/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 )
 
 // MockValidateHooks is a mock of ValidateHooks interface.

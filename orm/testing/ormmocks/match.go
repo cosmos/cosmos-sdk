@@ -1,9 +1,9 @@
 package ormmocks
 
 import (
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 

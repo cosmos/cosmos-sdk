@@ -248,7 +248,7 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 		}
 		// Version sets of each DB must match
 		if !versions.Equal(scVersions) {
-			err = fmt.Errorf("Storage and StateCommitment DB have different version history") //nolint:stylecheck
+			err = fmt.Errorf("Storage and StateCommitment DB have different version history")
 			return
 		}
 		err = opts.StateCommitmentDB.Revert()
@@ -769,7 +769,7 @@ func (rs *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		// TODO: actual IBC compatible proof. This is a placeholder so unit tests can pass
 		res.ProofOps, err = substore.GetProof(res.Key)
 		if err != nil {
-			return sdkerrors.QueryResult(fmt.Errorf("Merkle proof creation failed for key: %v", res.Key), false) //nolint: stylecheck // proper name
+			return sdkerrors.QueryResult(fmt.Errorf("Merkle proof creation failed for key: %v", res.Key), false)
 		}
 
 	case "/subspace":

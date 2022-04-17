@@ -219,8 +219,8 @@ github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.3 h1:Ep7FHNViVwwGnwLFEPewZYsyN2C
 github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.3/go.mod h1:HFea93YKmoMJ/mNKtkSeJZDtyJ4inxBsUK928KONcqo=
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
 github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4xuwvCdJw=
-github.com/cosmos/gogoproto v1.4.0 h1:yvu8ibdNep6zoIWn8go9jsYcjN8N3Yk+10tEZPWni38=
-github.com/cosmos/gogoproto v1.4.0/go.mod h1:PmDilxjma3Cp50k5beXFV3ATB4O3/Sys4WI6Fo9kMAo=
+github.com/cosmos/gogoproto v1.4.1-0.20220401124828-90e4c3283529 h1:ctbJkEhkoSRg4qFKGP3Pj7wtF2uqMq0O+RjwWJ3mqVs=
+github.com/cosmos/gogoproto v1.4.1-0.20220401124828-90e4c3283529/go.mod h1:PmDilxjma3Cp50k5beXFV3ATB4O3/Sys4WI6Fo9kMAo=
 github.com/cosmos/iavl v0.18.0 h1:02ur4vnalMR2GuWCFNkuseUcl/BCVmg9tOeHOGiZOkE=
 github.com/cosmos/iavl v0.18.0/go.mod h1:L0VZHfq0tqMNJvXlslGExaaiZM7eSm+90Vh9QUbp6j4=
 github.com/cosmos/ledger-cosmos-go v0.11.1 h1:9JIYsGnXP613pb2vPjFeMMjBI5lEDsEaF6oYorTy6J4=

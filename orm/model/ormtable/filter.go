@@ -1,6 +1,6 @@
 package ormtable
 
-import "google.golang.org/protobuf/proto"
+import "github.com/cosmos/gogoproto/proto"
 
 type filterIterator struct {
 	Iterator

@@ -1,7 +1,7 @@
 package ormtable
 
 import (
-	"google.golang.org/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	queryv1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/query/v1beta1"

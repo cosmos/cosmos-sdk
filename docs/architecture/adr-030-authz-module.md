@@ -87,8 +87,8 @@ a `SpendLimit` and updates it down to zero:
 ```go
 type SendAuthorization struct {
 	// SpendLimit specifies the maximum amount of tokens that can be spent
-	// by this authorization and will be updated as tokens are spent. If it is
-	// empty, there is no spend limit and any amount of coins can be spent.
+	// by this authorization and will be updated as tokens are spent (Generic authorization 
+	// can be used with bank msg type url to create limitless bank authorization).
 	SpendLimit sdk.Coins
 }
 

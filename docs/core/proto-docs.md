@@ -1268,6 +1268,9 @@ tags are stringified and the log is JSON decoded.
 | `gas_used` | [int64](#int64) |  | Amount of gas consumed by transaction. |
 | `tx` | [google.protobuf.Any](#google.protobuf.Any) |  | The request transaction bytes. |
 | `timestamp` | [string](#string) |  | Time of the previous block. For heights > 1, it's the weighted median of the timestamps of the valid votes in the block.LastCommit. For height == 1, it's genesis time. |
+| `events` | [tendermint.abci.Event](#tendermint.abci.Event) | repeated | Events defines all the events emitted by processing a transaction. Note, these events include those emitted by processing all the messages and those emitted from the ante handler. Whereas Logs contains the events, with additional metadata, emitted only by processing the messages.
+
+Since: cosmos-sdk 0.42.11, 0.44.5, 0.45 |
 
 
 
@@ -6484,6 +6487,8 @@ RedelegationEntry defines a redelegation object with relevant metadata.
 | `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | completion_time defines the unix time for redelegation completion. |
 | `initial_balance` | [string](#string) |  | initial_balance defines the initial balance when redelegation started. |
 | `shares_dst` | [string](#string) |  | shares_dst is the amount of destination-validator shares created by redelegation. |
+| `unbonding_op_id` | [uint64](#uint64) |  | Incrementing id that uniquely identifies this entry |
+| `unbonding_on_hold` | [bool](#bool) |  | True if this entry's unbonding has been stopped by an external module |
 
 
 
@@ -6558,8 +6563,8 @@ UnbondingDelegationEntry defines an unbonding object with relevant metadata.
 | `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | completion_time is the unix time for unbonding completion. |
 | `initial_balance` | [string](#string) |  | initial_balance defines the tokens initially scheduled to receive at completion. |
 | `balance` | [string](#string) |  | balance defines the tokens to receive at completion. |
-| `id` | [uint64](#uint64) |  | Incrementing id that uniquely identifies this entry |
-| `on_hold` | [bool](#bool) |  | True if this entry's unbonding has been stopped by an external module |
+| `unbonding_op_id` | [uint64](#uint64) |  | Incrementing id that uniquely identifies this entry |
+| `unbonding_on_hold` | [bool](#bool) |  | True if this entry's unbonding has been stopped by an external module |
 
 
 
@@ -6607,6 +6612,7 @@ multiplied by exchange rate.
 | `unbonding_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | unbonding_time defines, if unbonding, the min time for the validator to complete unbonding. |
 | `commission` | [Commission](#cosmos.staking.v1beta1.Commission) |  | commission defines the commission parameters. |
 | `min_self_delegation` | [string](#string) |  | min_self_delegation is the validator's self declared minimum self delegation. |
+| `unbonding_on_hold` | [bool](#bool) |  | True if this validator's unbonding has been stopped by an external module |
 
 
 

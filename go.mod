@@ -49,7 +49,11 @@ require (
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.16.0
+<<<<<<< HEAD
 	github.com/tendermint/tendermint v0.35.2
+=======
+	github.com/tendermint/tendermint v0.35.4
+>>>>>>> c53157dd6 (build(deps): Bump github.com/tendermint/tendermint from 0.35.3 to 0.35.4 (#11672))
 	github.com/tendermint/tm-db v0.6.6
 	golang.org/x/crypto v0.0.0-20220112180741-5e0467b6c7ce
 	google.golang.org/genproto v0.0.0-20220222213610-43724f9ea8cf

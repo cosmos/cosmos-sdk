@@ -20,7 +20,7 @@ func keyPath(prefix, key string) string {
 func TestVerifySMTStoreProof(t *testing.T) {
 	// Create main tree for testing.
 	txn := memdb.NewDB().ReadWriter()
-	store := smt.NewStore(txn)
+	store := smt.NewStore(smt.StoreParams{TreeData: txn})
 	store.Set([]byte("MYKEY"), []byte("MYVALUE"))
 	root := store.Root()
 

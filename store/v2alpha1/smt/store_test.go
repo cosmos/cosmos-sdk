@@ -11,7 +11,7 @@ import (
 
 func TestGetSetHasDelete(t *testing.T) {
 	db := memdb.NewDB()
-	s := store.NewStore(db.ReadWriter())
+	s := store.NewStore(store.StoreParams{TreeData: db.ReadWriter()})
 
 	s.Set([]byte("foo"), []byte("bar"))
 	assert.Equal(t, []byte("bar"), s.Get([]byte("foo")))
@@ -33,14 +33,15 @@ func TestGetSetHasDelete(t *testing.T) {
 func TestLoadStore(t *testing.T) {
 	db := memdb.NewDB()
 	txn := db.ReadWriter()
-	s := store.NewStore(txn)
+	s := store.NewStore(store.StoreParams{TreeData: txn})
 
 	s.Set([]byte{0}, []byte{0})
 	s.Set([]byte{1}, []byte{1})
 	s.Delete([]byte{1})
 	root := s.Root()
+	assert.NoError(t, s.Commit())
 
-	s = store.LoadStore(txn, root)
+	s = store.LoadStore(store.StoreParams{TreeData: txn}, root)
 	assert.Equal(t, []byte{0}, s.Get([]byte{0}))
 	assert.False(t, s.Has([]byte{1}))
 	s.Set([]byte{2}, []byte{2})

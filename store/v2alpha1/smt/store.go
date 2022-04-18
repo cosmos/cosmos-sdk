@@ -10,7 +10,6 @@ import (
 
 	ics23 "github.com/confio/ics23/go"
 	"github.com/lazyledger/smt"
-	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
 var (
@@ -20,18 +19,25 @@ var (
 
 var (
 	nodesPrefix     = []byte{0}
-	valuesPrefix    = []byte{1}
-	preimagesPrefix = []byte{2}
+	preimagesPrefix = []byte{1}
+	valuesPrefix    = []byte{2}
 
 	errKeyEmpty = errors.New("key is empty or nil")
 	errValueNil = errors.New("value is nil")
 )
 
+// StoreParams defines how the SMT structural and value data are accessed internally.
+type StoreParams struct {
+	TreeData  dbm.DBReadWriter
+	ValueData dbm.DBReadWriter
+}
+
 // Store Implements types.BasicKVStore.
 type Store struct {
-	tree   *smt.SparseMerkleTree
-	values dbm.DBReader
-	// Map hashed keys back to preimage
+	tree smt.SparseMerkleTree
+	// Maps value hash back to preimage
+	values dbm.DBReadWriter
+	// Maps hashed key (tree path) back to preimage
 	preimages dbm.DBReadWriter
 }
 
@@ -39,38 +45,32 @@ type Store struct {
 // smt.SparseMerkleTree expects this error to be returned when a key is not found
 type dbMapStore struct{ dbm.DBReadWriter }
 
-func NewStore(db dbm.DBReadWriter) *Store {
-	nodes := prefix.NewPrefixReadWriter(db, nodesPrefix)
-	values := prefix.NewPrefixReadWriter(db, valuesPrefix)
-	preimages := prefix.NewPrefixReadWriter(db, preimagesPrefix)
+func NewStore(par StoreParams) *Store {
+	nodes := prefix.NewPrefixReadWriter(par.TreeData, nodesPrefix)
+	preimages := prefix.NewPrefixReadWriter(par.TreeData, preimagesPrefix)
+	values := par.ValueData
+	if values == nil {
+		values = prefix.NewPrefixReadWriter(par.TreeData, valuesPrefix)
+	}
 	return &Store{
-		tree:      smt.NewSparseMerkleTree(dbMapStore{nodes}, dbMapStore{values}, sha256.New()),
+		tree:      smt.NewSMT(dbMapStore{nodes}, sha256.New()),
 		values:    values,
 		preimages: preimages,
 	}
 }
 
-func LoadStore(db dbm.DBReadWriter, root []byte) *Store {
-	nodes := prefix.NewPrefixReadWriter(db, nodesPrefix)
-	values := prefix.NewPrefixReadWriter(db, valuesPrefix)
-	preimages := prefix.NewPrefixReadWriter(db, preimagesPrefix)
+func LoadStore(par StoreParams, root []byte) *Store {
+	nodes := prefix.NewPrefixReadWriter(par.TreeData, nodesPrefix)
+	preimages := prefix.NewPrefixReadWriter(par.TreeData, preimagesPrefix)
+	values := par.ValueData
+	if values == nil {
+		values = prefix.NewPrefixReadWriter(par.TreeData, valuesPrefix)
+	}
 	return &Store{
-		tree:      smt.ImportSparseMerkleTree(dbMapStore{nodes}, dbMapStore{values}, sha256.New(), root),
+		tree:      smt.ImportSMT(dbMapStore{nodes}, sha256.New(), root),
 		values:    values,
 		preimages: preimages,
 	}
-}
-
-func (s *Store) GetProof(key []byte) (*tmcrypto.ProofOps, error) {
-	if len(key) == 0 {
-		return nil, errKeyEmpty
-	}
-	proof, err := s.tree.Prove(key)
-	if err != nil {
-		return nil, err
-	}
-	op := NewProofOp(s.tree.Root(), key, SHA256, proof)
-	return &tmcrypto.ProofOps{Ops: []tmcrypto.ProofOp{op.ProofOp()}}, nil
 }
 
 func (s *Store) GetProofICS23(key []byte) (*ics23.CommitmentProof, error) {
@@ -86,7 +86,7 @@ func (s *Store) Get(key []byte) []byte {
 	if len(key) == 0 {
 		panic(errKeyEmpty)
 	}
-	val, err := s.tree.Get(key)
+	val, err := s.values.Get(key)
 	if err != nil {
 		panic(err)
 	}
@@ -98,7 +98,7 @@ func (s *Store) Has(key []byte) bool {
 	if len(key) == 0 {
 		panic(errKeyEmpty)
 	}
-	has, err := s.tree.Has(key)
+	has, err := s.values.Has(key)
 	if err != nil {
 		panic(err)
 	}
@@ -113,12 +113,17 @@ func (s *Store) Set(key []byte, value []byte) {
 	if value == nil {
 		panic(errValueNil)
 	}
-	_, err := s.tree.Update(key, value)
-	if err != nil {
+	if err := s.tree.Update(key, value); err != nil {
 		panic(err)
 	}
+	if err := s.values.Set(key, value); err != nil {
+		panic(err)
+	}
+	// TODO: plug into the SMT's hashers
 	path := sha256.Sum256(key)
-	s.preimages.Set(path[:], key)
+	if err := s.preimages.Set(path[:], key); err != nil {
+		panic(err)
+	}
 }
 
 // Delete deletes the key. Panics on nil key.
@@ -126,9 +131,18 @@ func (s *Store) Delete(key []byte) {
 	if len(key) == 0 {
 		panic(errKeyEmpty)
 	}
-	_, _ = s.tree.Delete(key)
+	if err := s.tree.Delete(key); err != nil && err != smt.ErrKeyNotPresent {
+		panic(err)
+	}
+	if err := s.values.Delete(key); err != nil {
+		panic(err)
+	}
 	path := sha256.Sum256(key)
 	s.preimages.Delete(path[:])
+}
+
+func (s *Store) Commit() error {
+	return s.tree.Save()
 }
 
 func (ms dbMapStore) Get(key []byte) ([]byte, error) {

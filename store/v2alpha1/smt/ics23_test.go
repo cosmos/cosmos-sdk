@@ -14,7 +14,7 @@ import (
 
 func TestProofICS23(t *testing.T) {
 	txn := memdb.NewDB().ReadWriter()
-	s := store.NewStore(txn)
+	s := store.NewStore(store.StoreParams{TreeData: txn})
 	// pick keys whose hashes begin with different bits
 	key00 := []byte("foo")  // 00101100 = sha256(foo)[0]
 	key01 := []byte("bill") // 01100010
@@ -74,7 +74,8 @@ func TestProofICS23(t *testing.T) {
 
 	// Make sure proofs work with a loaded store
 	root := s.Root()
-	s = store.LoadStore(txn, root)
+	assert.NoError(t, s.Commit())
+	s = store.LoadStore(store.StoreParams{TreeData: txn}, root)
 	proof, err = s.GetProofICS23(key10)
 	assert.NoError(t, err)
 	nonexist = proof.GetNonexist()

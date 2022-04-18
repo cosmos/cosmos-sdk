@@ -158,3 +158,6 @@ replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 replace github.com/cosmos/cosmos-sdk/db => ./db
 
 retract v0.43.0
+
+// DEV
+replace github.com/lazyledger/smt => ../smt

@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	pvm "github.com/tendermint/tendermint/privval"
 	tversion "github.com/tendermint/tendermint/version"
 	"sigs.k8s.io/yaml"
@@ -116,21 +115,6 @@ against which this app has been compiled.
 			}
 
 			fmt.Println(string(bs))
-			return nil
-		},
-	}
-}
-
-// UnsafeResetAllCmd - extension of the tendermint command, resets initialization
-func UnsafeResetAllCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:   "unsafe-reset-all",
-		Short: "Resets the blockchain database, removes address book files, and resets data/priv_validator_state.json to the genesis state",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			serverCtx := GetServerContextFromCmd(cmd)
-			cfg := serverCtx.Config
-
-			tcmd.ResetAll(cfg.DBDir(), cfg.P2P.AddrBookFile(), cfg.PrivValidator.KeyFile(), cfg.PrivValidator.StateFile(), serverCtx.Logger)
 			return nil
 		},
 	}

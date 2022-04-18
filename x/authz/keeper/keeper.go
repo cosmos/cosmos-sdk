@@ -88,7 +88,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 	for i, msg := range msgs {
 		signers := msg.GetSigners()
 		if len(signers) != 1 {
-			return nil, sdkerrors.ErrInvalidRequest.Wrap("authorization can be given to msg with only one signer")
+			return nil, authz.ErrAuthorizationNumOfSigners
 		}
 		granter := signers[0]
 

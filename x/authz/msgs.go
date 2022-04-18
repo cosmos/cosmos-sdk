@@ -1,8 +1,9 @@
 package authz
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 
 	"github.com/gogo/protobuf/proto"
 
@@ -59,7 +60,7 @@ func (msg MsgGrant) ValidateBasic() error {
 	}
 
 	if granter.Equals(grantee) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "granter and grantee cannot be same")
+		return sdkerrors.ErrInvalidRequest.Wrap("granter and grantee cannot be same")
 	}
 	return msg.Grant.ValidateBasic()
 }
@@ -88,7 +89,7 @@ func (msg *MsgGrant) GetAuthorization() (Authorization, error) {
 func (msg *MsgGrant) SetAuthorization(a Authorization) error {
 	m, ok := a.(proto.Message)
 	if !ok {
-		return sdkerrors.Wrapf(sdkerrors.ErrPackAny, "can't proto marshal %T", m)
+		return sdkerrors.ErrPackAny.Wrapf("can't proto marshal %T", m)
 	}
 	any, err := cdctypes.NewAnyWithValue(m)
 	if err != nil {
@@ -144,11 +145,11 @@ func (msg MsgRevoke) ValidateBasic() error {
 	}
 
 	if granter.Equals(grantee) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "granter and grantee cannot be same")
+		return sdkerrors.ErrInvalidRequest.Wrap("granter and grantee cannot be same")
 	}
 
 	if msg.MsgTypeUrl == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "missing method name")
+		return sdkerrors.ErrInvalidRequest.Wrap("missing method name")
 	}
 
 	return nil
@@ -194,7 +195,7 @@ func (msg MsgExec) GetMessages() ([]sdk.Msg, error) {
 	for i, msgAny := range msg.Msgs {
 		msg, ok := msgAny.GetCachedValue().(sdk.Msg)
 		if !ok {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "messages contains %T which is not a sdk.MsgRequest", msgAny)
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("messages contains %T which is not a sdk.MsgRequest", msgAny)
 		}
 		msgs[i] = msg
 	}
@@ -215,7 +216,7 @@ func (msg MsgExec) ValidateBasic() error {
 	}
 
 	if len(msg.Msgs) == 0 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "messages cannot be empty")
+		return sdkerrors.ErrInvalidRequest.Wrapf("messages cannot be empty")
 	}
 
 	return nil

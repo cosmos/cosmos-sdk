@@ -51,7 +51,7 @@ func (a StakeAuthorization) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "negative coin amount: %v", a.MaxTokens)
 	}
 	if a.AuthorizationType == AuthorizationType_AUTHORIZATION_TYPE_UNSPECIFIED {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "unknown authorization type")
+		return authz.ErrUnknownAuthorizationType
 	}
 
 	return nil
@@ -148,6 +148,6 @@ func normalizeAuthzType(authzType AuthorizationType) (string, error) {
 	case AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE:
 		return sdk.MsgTypeURL(&MsgBeginRedelegate{}), nil
 	default:
-		return "", sdkerrors.ErrInvalidType.Wrapf("unknown authorization type %T", authzType)
+		return "", sdkerrors.Wrapf(authz.ErrUnknownAuthorizationType, "cannot normalize authz type with %T", authzType)
 	}
 }

@@ -60,12 +60,12 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 	skey := grantStoreKey(grantee, granter, updated.MsgTypeURL())
 	grant, found := k.getGrant(ctx, skey)
 	if !found {
-		return sdkerrors.ErrNotFound.Wrap("authorization not found")
+		return authz.ErrNoAuthorizationFound
 	}
 
 	msg, ok := updated.(proto.Message)
 	if !ok {
-		sdkerrors.ErrPackAny.Wrapf("cannot proto marshal %T", updated)
+		return sdkerrors.ErrPackAny.Wrapf("cannot proto marshal %T", updated)
 	}
 
 	any, err := codectypes.NewAnyWithValue(msg)
@@ -76,6 +76,7 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 	grant.Authorization = any
 	store := ctx.KVStore(k.storeKey)
 	store.Set(skey, k.cdc.MustMarshal(&grant))
+
 	return nil
 }
 
@@ -93,13 +94,15 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 
 		// if granter != grantee then check authorization.Accept, otherwise we implicitly accept.
 		if !granter.Equals(grantee) {
-			grant, found := k.getGrant(ctx, grantStoreKey(grantee, granter, sdk.MsgTypeURL(msg)))
+			skey := grantStoreKey(grantee, granter, sdk.MsgTypeURL(msg))
+
+			grant, found := k.getGrant(ctx, skey)
 			if !found {
-				return nil, sdkerrors.ErrUnauthorized.Wrap("authorization not found")
+				return nil, sdkerrors.Wrapf(authz.ErrNoAuthorizationFound, "failed to update grant with key %s", string(skey))
 			}
 
 			if grant.Expiration != nil && grant.Expiration.Before(now) {
-				return nil, sdkerrors.ErrUnauthorized.Wrap("authorization expired")
+				return nil, authz.ErrAuthorizationExpired
 			}
 
 			authorization, err := grant.GetAuthorization()
@@ -193,7 +196,7 @@ func (k Keeper) DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk
 	skey := grantStoreKey(grantee, granter, msgType)
 	grant, found := k.getGrant(ctx, skey)
 	if !found {
-		return sdkerrors.ErrNotFound.Wrap("authorization not found")
+		return sdkerrors.Wrapf(authz.ErrNoAuthorizationFound, "failed to delete grant with key %s", string(skey))
 	}
 
 	store.Delete(skey)
@@ -355,7 +358,7 @@ func (keeper Keeper) removeFromGrantQueue(ctx sdk.Context, grantKey []byte, gran
 	key := GrantQueueKey(expiration, granter, grantee)
 	bz := store.Get(key)
 	if bz == nil {
-		return sdkerrors.ErrLogic.Wrap("can't remove grant from the expire queue, grant key not found")
+		return sdkerrors.Wrap(authz.ErrNoGrantKeyFound, "can't remove grant from the expire queue, grant key not found")
 	}
 
 	var queueItem authz.GrantQueueItem

@@ -7,6 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	yaml "gopkg.in/yaml.v2"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Periods stores all vesting periods passed as part of a PeriodicVestingAccount
@@ -15,6 +17,12 @@ type Periods []Period
 // Duration is converts the period Length from seconds to a time.Duration
 func (p Period) Duration() time.Duration {
 	return time.Duration(p.Length) * time.Second
+}
+
+// String implements the fmt.Stringer interface
+func (p Period) String() string {
+	out, _ := yaml.Marshal(p)
+	return string(out)
 }
 
 // TotalLength return the total length in seconds for a period
@@ -32,7 +40,7 @@ func (p Periods) TotalDuration() time.Duration {
 	return time.Duration(len) * time.Second
 }
 
-// TotalAmount returns the sum of coins for the period
+// TotalDuration returns the sum of coins for the period
 func (p Periods) TotalAmount() sdk.Coins {
 	total := sdk.Coins{}
 	for _, period := range p {

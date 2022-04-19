@@ -39,7 +39,7 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 	if req.MsgTypeUrl != "" {
 		grant, found := k.getGrant(ctx, grantStoreKey(grantee, granter, req.MsgTypeUrl))
 		if !found {
-			return nil, sdkerrors.ErrNotFound.Wrapf("authorization not found for %s type", req.MsgTypeUrl)
+			return nil, sdkerrors.Wrapf(authz.ErrNoAuthorizationFound, "authorization not found for %s type", req.MsgTypeUrl)
 		}
 
 		authorization, err := grant.GetAuthorization()

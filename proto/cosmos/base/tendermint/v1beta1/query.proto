@@ -18,14 +18,17 @@ service Service {
   rpc GetNodeInfo(GetNodeInfoRequest) returns (GetNodeInfoResponse) {
     option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/node_info";
   }
+
   // GetSyncing queries node syncing.
   rpc GetSyncing(GetSyncingRequest) returns (GetSyncingResponse) {
     option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/syncing";
   }
+
   // GetLatestBlock returns the latest block.
   rpc GetLatestBlock(GetLatestBlockRequest) returns (GetLatestBlockResponse) {
     option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/blocks/latest";
   }
+
   // GetBlockByHeight queries block for given height.
   rpc GetBlockByHeight(GetBlockByHeightRequest) returns (GetBlockByHeightResponse) {
     option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/blocks/{height}";
@@ -35,11 +38,15 @@ service Service {
   rpc GetLatestValidatorSet(GetLatestValidatorSetRequest) returns (GetLatestValidatorSetResponse) {
     option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/validatorsets/latest";
   }
+
   // GetValidatorSetByHeight queries validator-set at a given height.
   rpc GetValidatorSetByHeight(GetValidatorSetByHeightRequest) returns (GetValidatorSetByHeightResponse) {
     option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/validatorsets/{height}";
   }
+
   // ABCIQuery defines a query that proxies an ABCI query request to Tendermint.
+  //
+  // Since: cosmos-sdk 0.46
   rpc ABCIQuery(ABCIQueryRequest) returns (ABCIQueryResponse) {
     option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/abci_query";
   }

@@ -2802,6 +2802,53 @@ func (s *TestSuite) TestLeaveGroup() {
 	}
 }
 
+func (s *TestSuite) TestPruneProposals() {
+	addrs := s.addrs
+	expirationTime := time.Hour * 24 * 15
+	groupID := s.groupID
+	accountAddr := s.groupPolicyAddr
+
+	msgSend := &banktypes.MsgSend{
+		FromAddress: s.groupPolicyAddr.String(),
+		ToAddress:   addrs[0].String(),
+		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+	}
+
+	policyReq := &group.MsgCreateGroupPolicy{
+		Admin:   addrs[0].String(),
+		GroupId: groupID,
+	}
+
+	policy := group.NewThresholdDecisionPolicy("100", time.Microsecond, time.Microsecond)
+	err := policyReq.SetDecisionPolicy(policy)
+	s.Require().NoError(err)
+	_, err = s.keeper.CreateGroupPolicy(s.ctx, policyReq)
+	s.Require().NoError(err)
+
+	s.Run("Validate that prune proposal removes expired proposals", func() {
+		req := &group.MsgSubmitProposal{
+			GroupPolicyAddress: accountAddr.String(),
+			Proposers:          []string{addrs[1].String()},
+		}
+		err := req.SetMsgs([]sdk.Msg{msgSend})
+		s.Require().NoError(err)
+		_, err = s.keeper.SubmitProposal(s.ctx, req)
+		s.Require().NoError(err)
+		queryProposal := group.QueryProposalsByGroupPolicyRequest{
+			Address: accountAddr.String(),
+		}
+		prePrune, err := s.keeper.ProposalsByGroupPolicy(s.ctx, &queryProposal)
+		// Move Forward in time
+		s.sdkCtx = s.sdkCtx.WithBlockTime(s.sdkCtx.BlockTime().Add(expirationTime))
+		err = s.keeper.PruneProposals(s.sdkCtx)
+		s.Require().NoError(err)
+		postPrune, err := s.keeper.ProposalsByGroupPolicy(s.ctx, &queryProposal)
+		s.Require().NotEqual(len(prePrune.Proposals), len(postPrune.Proposals))
+		s.Require().Equal(len(prePrune.Proposals), len(postPrune.Proposals)+1)
+
+	})
+}
+
 func submitProposal(
 	ctx context.Context, s *TestSuite, msgs []sdk.Msg,
 	proposers []string) uint64 {

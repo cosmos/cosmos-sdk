@@ -2303,6 +2303,286 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+	require := s.Require()
+
+	commonFlags := []string{
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	}
+
+	// create 3 accounts with some tokens
+	members := make([]string, 3)
+
+	for i := 1; i <= 3; i++ {
+		info, _, err := clientCtx.Keyring.NewMnemonic(fmt.Sprintf("member%d", i), keyring.English, sdk.FullFundraiserPath,
+			keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+		require.NoError(err)
+
+		pk, err := info.GetPubKey()
+		require.NoError(err)
+
+		account := sdk.AccAddress(pk.Address())
+		members[i-1] = account.String()
+
+		_, err = banktestutil.MsgSendExec(clientCtx, val.Address, account,
+			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))),
+			commonFlags...,
+		)
+		require.NoError(err)
+	}
+
+	// create a group with the 3 members
+	validMembers := fmt.Sprintf(`{"members": [{
+		"address": "%s",
+		  "weight": "1",
+		  "metadata": "AQ=="
+	  },{
+		"address": "%s",
+		  "weight": "1",
+		  "metadata": "AQ=="
+	  },{
+		"address": "%s",
+		  "weight": "3",
+		  "metadata": "AQ=="
+	  }]}`, members[0], members[1], members[2])
+	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
+	out, err := cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupCmd(),
+		append([]string{
+			val.Address.String(),
+			validMetadata,
+			validMembersFile.Name(),
+		},
+			commonFlags...,
+		),
+	)
+	require.NoError(err, out.String())
+	var txtResp sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txtResp), out.String())
+	groupID := s.getGroupIdFromTxResponse(txtResp)
+
+	// create group policy
+	out, err = cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupPolicyCmd(),
+		append(
+			[]string{
+				val.Address.String(),
+				groupID,
+				"AQ==",
+				"{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"4\", \"windows\":{\"voting_period\":\"1s\"}}",
+			},
+			commonFlags...,
+		),
+	)
+	var txResp = sdk.TxResponse{}
+	require.NoError(err, out.String())
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+	s.Require().Equal(uint32(0), txResp.Code, out.String())
+
+	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{groupID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	s.Require().NoError(err, out.String())
+	var res group.QueryGroupPoliciesByGroupResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
+	groupPolicyAdress := res.GroupPolicies[0].Address
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+		errMsg    string
+		respType  proto.Message
+	}{
+		{
+			"member that leaves does not affect the threshold",
+			append(
+				[]string{
+					members[0],
+					groupID,
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[2]),
+				},
+				commonFlags...,
+			),
+			false,
+			"",
+			&sdk.TxResponse{},
+		},
+		{
+			"member that leaves affects the threshold",
+			append(
+				[]string{
+					members[2],
+					groupID,
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[2]),
+				},
+				commonFlags...,
+			),
+			true,
+			"failed to execute message",
+			&sdk.TxResponse{},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmdSubmitProposal := client.MsgSubmitProposalCmd()
+			cmdLeaveGroup := client.MsgLeaveGroupCmd()
+
+			out, err := cli.ExecTestCLICmd(clientCtx, cmdLeaveGroup, tc.args)
+			require.NoError(err, out.String())
+			var resp sdk.TxResponse
+			require.NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+
+			submitPropossalArgs := append([]string{
+				s.createCLIProposal(
+					groupPolicyAdress, val.Address.String(),
+					groupPolicyAdress, val.Address.String(),
+					"",
+				),
+			},
+				commonFlags...,
+			)
+			out, err = cli.ExecTestCLICmd(clientCtx, cmdSubmitProposal, submitPropossalArgs)
+			if tc.expectErr {
+				s.Require().Contains(out.String(), tc.errMsg)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+			}
+		})
+	}
+
+}
+
+func (s *IntegrationTestSuite) TestSubmitProposalAndUpdate() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+	require := s.Require()
+
+	commonFlags := []string{
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	}
+
+	// create 3 accounts with some tokens
+	members := make([]string, 3)
+
+	for i := 1; i <= 3; i++ {
+		info, _, err := clientCtx.Keyring.NewMnemonic(fmt.Sprintf("member%d", i), keyring.English, sdk.FullFundraiserPath,
+			keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+		require.NoError(err)
+
+		pk, err := info.GetPubKey()
+		require.NoError(err)
+
+		account := sdk.AccAddress(pk.Address())
+		members[i-1] = account.String()
+
+		_, err = banktestutil.MsgSendExec(clientCtx, val.Address, account,
+			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))),
+			commonFlags...,
+		)
+		require.NoError(err)
+	}
+
+	// create a group with the 3 members
+	validMembers := fmt.Sprintf(`{"members": [{
+		"address": "%s",
+		  "weight": "1",
+		  "metadata": "AQ=="
+	  },{
+		"address": "%s",
+		  "weight": "1",
+		  "metadata": "AQ=="
+	  },{
+		"address": "%s",
+		  "weight": "3",
+		  "metadata": "AQ=="
+	  }]}`, members[0], members[1], members[2])
+	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
+	out, err := cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupCmd(),
+		append([]string{
+			val.Address.String(),
+			validMetadata,
+			validMembersFile.Name(),
+		},
+			commonFlags...,
+		),
+	)
+	require.NoError(err, out.String())
+	var txtResp sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txtResp), out.String())
+	groupID := s.getGroupIdFromTxResponse(txtResp)
+
+	// create group policy
+	out, err = cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupPolicyCmd(),
+		append(
+			[]string{
+				val.Address.String(),
+				groupID,
+				"AQ==",
+				"{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"4\", \"windows\":{\"voting_period\":\"1s\"}}",
+			},
+			commonFlags...,
+		),
+	)
+	var txResp = sdk.TxResponse{}
+	require.NoError(err, out.String())
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+	s.Require().Equal(uint32(0), txResp.Code, out.String())
+
+	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{groupID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	s.Require().NoError(err, out.String())
+	var res group.QueryGroupPoliciesByGroupResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
+	groupPolicyAdress := res.GroupPolicies[0].Address
+
+	validUpdatedMembersFileName := testutil.WriteToNewTempFile(s.T(), fmt.Sprintf(`{"members": [{
+		"address": "%s",
+		"weight": "0",
+		"metadata": "%s"
+	}, {
+		"address": "%s",
+		"weight": "1",
+		"metadata": "%s"
+	}]}`, val.Address.String(), validMetadata, s.groupPolicies[0].Address, validMetadata)).Name()
+
+	s.Run("submit proposal, update decision policy", func() {
+		cmdSubmitProposal := client.MsgSubmitProposalCmd()
+		submitPropossalArgs := append([]string{
+			s.createCLIProposal(
+				groupPolicyAdress, val.Address.String(),
+				groupPolicyAdress, val.Address.String(),
+				"",
+			),
+		},
+			commonFlags...,
+		)
+		out, err = cli.ExecTestCLICmd(clientCtx, cmdSubmitProposal, submitPropossalArgs)
+		s.Require().NoError(err, out.String())
+		s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
+
+		args := append(
+			[]string{
+				val.Address.String(),
+				groupID,
+				validUpdatedMembersFileName,
+			},
+			commonFlags...,
+		)
+		cmd := client.MsgUpdateGroupMembersCmd()
+
+		out, _ := cli.ExecTestCLICmd(clientCtx, cmd, args)
+		s.Require().Contains(out.String(), "out string is wrong")
+		s.Require().NotEqual(out.String(), "")
+		fmt.Println(out)
+		s.Require().True(false)
+	})
+}
 func (s *IntegrationTestSuite) getGroupIdFromTxResponse(txResp sdk.TxResponse) string {
 	s.Require().Greater(len(txResp.Logs), 0)
 	s.Require().NotNil(txResp.Logs[0].Events)

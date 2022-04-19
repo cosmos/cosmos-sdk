@@ -1,7 +1,7 @@
 package authz
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
@@ -76,7 +76,7 @@ func (msg MsgGrant) Route() string {
 
 // GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgGrant) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetAuthorization returns the cache value from the MsgGrant.Authorization if present.
@@ -166,7 +166,7 @@ func (msg MsgRevoke) Route() string {
 
 // GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgRevoke) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // NewMsgExec creates a new MsgExecAuthorized
@@ -233,5 +233,5 @@ func (msg MsgExec) Route() string {
 
 // GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgExec) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msg))
 }

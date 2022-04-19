@@ -156,6 +156,7 @@ jobs:
         with:
           name: "${{ github.sha }}-go-submodules-coverage"
         if: env.GIT_DIFF
+        continue-on-error: true
       - run: |
           cat ./*profile.out | grep -v "mode: atomic" >> coverage.txt
         if: env.GIT_DIFF
@@ -227,7 +228,7 @@ jobs:
       - name: Display go version
         run: go version
       - name: Install runsim
-        run: export GO111MODULE="on" && go get github.com/cosmos/tools/cmd/runsim@v1.0.0
+        run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
       - uses: actions/cache@v3
         with:
           path: ~/go/bin

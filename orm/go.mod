@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/orm
 
-go 1.17
+go 1.18
 
 require (
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7

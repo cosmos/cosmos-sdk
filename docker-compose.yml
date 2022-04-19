@@ -18,7 +18,7 @@ services:
       - "9090:9090"
       - "2345:2345"
     volumes:
-      - ./localnet:/data:Z
+      - ./.testnets:/data:Z
     networks:
       localnet:
         ipv4_address: 192.168.10.2
@@ -40,7 +40,7 @@ services:
       - "9091:9090"
       - "2346:2345"
     volumes:
-      - ./localnet:/data:Z
+      - ./.testnets:/data:Z
     networks:
       localnet:
         ipv4_address: 192.168.10.3
@@ -62,7 +62,7 @@ services:
       - "9092:9090"
       - "2347:2345"
     volumes:
-      - ./localnet:/data:Z
+      - ./.testnets:/data:Z
     networks:
       localnet:
         ipv4_address: 192.168.10.4
@@ -84,7 +84,7 @@ services:
       - "9093:9090"
       - "2348:2345"
     volumes:
-      - ./localnet:/data:Z
+      - ./.testnets:/data:Z
     networks:
       localnet:
         ipv4_address: 192.168.10.5

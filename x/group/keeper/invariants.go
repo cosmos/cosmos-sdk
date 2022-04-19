@@ -85,7 +85,7 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 			}
 		}
 
-		groupWeight, err := groupmath.NewPositiveDecFromString(groupInfo.GetTotalWeight())
+		groupWeight, err := groupmath.NewNonNegativeDecFromString(groupInfo.GetTotalWeight())
 		if err != nil {
 			msg += fmt.Sprintf("error while parsing non-nengative decimal for group with ID %d\n%v\n", groupInfo.Id, err)
 			return msg, broken

@@ -2753,7 +2753,7 @@ func (s *TestSuite) TestLeaveGroup() {
 			math.NewDecFromInt64(0),
 		},
 		{
-			"valid testcase: decision policy is not present",
+			"valid testcase: decision policy is not present (and group total weight can be 0)",
 			&group.MsgLeaveGroup{
 				GroupId: groupID2,
 				Address: member1.String(),

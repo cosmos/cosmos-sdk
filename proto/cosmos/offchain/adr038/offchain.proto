@@ -2,7 +2,7 @@ syntax="proto3";
 
 package cosmos.offchain.v1alpha1;
 
-option go_package="github.com/cosmos/cosmos-sdk/x/auth/offchain";
+option go_package="github.com/cosmos/cosmos-sdk/offchain/adr038";
 
 import "gogoproto/gogo.proto";
 

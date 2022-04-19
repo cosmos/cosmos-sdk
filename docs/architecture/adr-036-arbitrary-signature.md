@@ -75,7 +75,7 @@ Signed MsgSignData json example:
   "value": {
     "msg": [
       {
-        "type": "sign/MsgSignData",
+        "type": "offchain/MsgSignData",
         "value": {
           "signer": "cosmos1hftz5ugqmpg9243xeegsqqav62f8hnywsjr4xr",
           "data": "cmFuZG9t"

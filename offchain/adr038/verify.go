@@ -1,4 +1,4 @@
-package offchain
+package adr038
 
 import (
 	"errors"
@@ -13,8 +13,8 @@ import (
 
 // errors are private and used only for testing purposes
 var (
-	errInvalidType  = errors.New("invalid type")
-	errInvalidRoute = errors.New("invalid route")
+	errInvalidType    = errors.New("invalid type")
+	errInvalidTypeURL = errors.New("invalid type url")
 )
 
 // NewVerifier is SignatureVerifier's constructor
@@ -93,8 +93,8 @@ func verifyMessage(m sdk.Msg) error {
 	if !valid {
 		return fmt.Errorf("%w: %T", errInvalidType, m)
 	}
-	if m.Route() != ExpectedRoute {
-		return fmt.Errorf("%w: %s", errInvalidRoute, m.Route())
+	if sdk.MsgTypeURL(m) != sdk.MsgTypeURL(&MsgSignData{}) {
+		return fmt.Errorf("%w: %s", errInvalidTypeURL, sdk.MsgTypeURL(m))
 	}
 	return nil
 }

@@ -1,4 +1,4 @@
-package offchain
+package adr038
 
 import (
 	"errors"
@@ -47,7 +47,11 @@ func newKeyRingWrapper(uid string, keyring keyring.Keyring) (keyringWrapper, err
 	if err != nil {
 		return keyringWrapper{}, err
 	}
-	wrapper := keyringWrapper{uid: uid, pubKey: info.GetPubKey()}
+	pubKey, err := info.GetPubKey()
+	if err != nil {
+		return keyringWrapper{}, err
+	}
+	wrapper := keyringWrapper{uid: uid, pubKey: pubKey}
 	return wrapper, nil
 }
 

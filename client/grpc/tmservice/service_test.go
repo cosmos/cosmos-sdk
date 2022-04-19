@@ -261,6 +261,7 @@ func (s IntegrationTestSuite) TestABCIQuery() {
 	testCases := []struct {
 		name         string
 		req          *tmservice.ABCIQueryRequest
+		expectErr    bool
 		expectedCode uint32
 		validQuery   bool
 	}{
@@ -288,8 +289,7 @@ func (s IntegrationTestSuite) TestABCIQuery() {
 				Path: "/foo/bar",
 				Data: []byte{0x03},
 			},
-			expectedCode: 6,
-			validQuery:   false,
+			expectErr: true,
 		},
 		{
 			name: "request with invalid path recursive",
@@ -299,8 +299,15 @@ func (s IntegrationTestSuite) TestABCIQuery() {
 					Path: "/cosmos.base.tendermint.v1beta1.Service/ABCIQuery",
 				}),
 			},
-			expectedCode: 0,
-			validQuery:   false,
+			expectErr: true,
+		},
+		{
+			name: "request with invalid broadcast tx path",
+			req: &tmservice.ABCIQueryRequest{
+				Path: "/cosmos.tx.v1beta1.Service/BroadcastTx",
+				Data: []byte{0x00},
+			},
+			expectErr: true,
 		},
 		{
 			name: "request with invalid data",
@@ -317,9 +324,14 @@ func (s IntegrationTestSuite) TestABCIQuery() {
 
 		s.Run(tc.name, func() {
 			res, err := s.queryClient.ABCIQuery(context.Background(), tc.req)
-			s.Require().NoError(err)
-			s.Require().NotNil(res)
-			s.Require().Equal(res.Code, tc.expectedCode)
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().Nil(res)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NotNil(res)
+				s.Require().Equal(res.Code, tc.expectedCode)
+			}
 
 			if tc.validQuery {
 				s.Require().Greater(res.Height, int64(0))

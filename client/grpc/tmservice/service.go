@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -221,6 +222,18 @@ func (s queryServer) ABCIQuery(ctx context.Context, req *ABCIQueryRequest) (*ABC
 	}
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if path := baseapp.SplitABCIQueryPath(req.Path); len(path) > 0 {
+		switch path[0] {
+		case baseapp.QueryPathApp, baseapp.QueryPathStore, baseapp.QueryPathP2P, baseapp.QueryPathCustom:
+			// valid path
+
+		default:
+			// Otherwise, error as to prevent either valid gRPC service requests or
+			// bogus ABCI queries.
+			return nil, status.Errorf(codes.InvalidArgument, "unsupported ABCI query path: %s", req.Path)
+		}
 	}
 
 	res := s.queryFn(req.ToABCIRequestQuery())

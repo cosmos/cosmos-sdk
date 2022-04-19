@@ -2838,7 +2838,7 @@ func (s *TestSuite) TestPruneProposals() {
 			Address: accountAddr.String(),
 		}
 		prePrune, err := s.keeper.ProposalsByGroupPolicy(s.ctx, &queryProposal)
-		// Move Forward in time
+		// Move Forward in time for 15 days, after voting period end + max_execution_period
 		s.sdkCtx = s.sdkCtx.WithBlockTime(s.sdkCtx.BlockTime().Add(expirationTime))
 		err = s.keeper.PruneProposals(s.sdkCtx)
 		s.Require().NoError(err)

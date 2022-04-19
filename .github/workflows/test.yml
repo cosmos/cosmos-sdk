@@ -234,7 +234,7 @@ jobs:
             go.sum
       - name: start localnet
         run: |
-          make clean build-simd-linux localnet-start
+          make clean localnet-start
         if: env.GIT_DIFF
       - name: test liveness
         run: |

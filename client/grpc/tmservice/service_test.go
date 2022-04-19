@@ -294,7 +294,7 @@ func (s IntegrationTestSuite) TestABCIQuery() {
 		{
 			name: "request with invalid path recursive",
 			req: &tmservice.ABCIQueryRequest{
-				Path: "/cosmos.base.terndermint.v1beta.Query/ABCIQuery",
+				Path: "/cosmos.base.tendermint.v1beta1.Service/ABCIQuery",
 				Data: []byte{0x03},
 			},
 			expectedCode: 6,

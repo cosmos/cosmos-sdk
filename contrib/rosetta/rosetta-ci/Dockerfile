@@ -13,7 +13,7 @@ COPY . ./
 RUN go build -o simd ./simapp/simd/
 
 FROM alpine
-RUN apk add gcc libc-dev python3 --no-cache
+RUN apk add gcc git libc-dev python3 --no-cache
 
 ENV PATH=$PATH:/bin
 

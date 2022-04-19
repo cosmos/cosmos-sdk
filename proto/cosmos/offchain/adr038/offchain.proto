@@ -1,6 +1,6 @@
 syntax="proto3";
 
-package cosmos.offchain.v1alpha1;
+package cosmos.offchain.adr038;
 
 option go_package="github.com/cosmos/cosmos-sdk/offchain/adr038";
 

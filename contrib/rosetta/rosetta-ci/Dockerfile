@@ -1,6 +1,6 @@
 FROM golang:alpine as build
 
-RUN apk add --no-cache tar
+RUN apk add --no-cache tar git
 
 # prepare node data
 WORKDIR /node

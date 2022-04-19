@@ -145,7 +145,7 @@ func (msg MsgRevoke) ValidateBasic() error {
 	}
 
 	if granter.Equals(grantee) {
-		return sdkerrors.ErrInvalidRequest.Wrap("granter and grantee cannot be same")
+		return ErrGranteeIsGranter
 	}
 
 	if msg.MsgTypeUrl == "" {

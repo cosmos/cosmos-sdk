@@ -746,7 +746,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			},
-			4,
+			authz.ErrNoAuthorizationFound.ABCICode(),
 			false,
 			"",
 		},

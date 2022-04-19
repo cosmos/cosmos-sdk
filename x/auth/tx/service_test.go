@@ -40,6 +40,7 @@ type IntegrationTestSuite struct {
 	cfg     network.Config
 	network *network.Network
 
+	txHeight    int64
 	queryClient tx.ServiceClient
 	txRes       sdk.TxResponse
 }
@@ -71,7 +72,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 		fmt.Sprintf("--%s=foobar", flags.FlagNote),
@@ -80,7 +81,29 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &s.txRes))
 	s.Require().Equal(uint32(0), s.txRes.Code)
 
+	out, err = bankcli.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		val.Address,
+		sdk.NewCoins(
+			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1)),
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=2", flags.FlagSequence),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+		fmt.Sprintf("--%s=foobar", flags.FlagNote),
+	)
+	s.Require().NoError(err)
+	var tr sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &tr))
+	s.Require().Equal(uint32(0), tr.Code)
+
 	s.Require().NoError(s.network.WaitForNextBlock())
+	height, err := s.network.LatestHeight()
+	s.Require().NoError(err)
+	s.txHeight = height
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -129,6 +152,7 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
 				// - Sending Amount to recipient: coin_spent, coin_received, transfer and message.sender=<val1>
 				// - Msg events: message.module=bank and message.action=/cosmos.bank.v1beta1.MsgSend
 				s.Require().Equal(len(res.GetResult().GetEvents()), 13)
+				s.Require().Len(res.GetResult().MsgResponses, 1)
 				// Check the result and gas used are correct.
 				s.Require().True(res.GetGasInfo().GetGasUsed() > 0) // Gas used sometimes change, just check it's not empty.
 			}
@@ -171,7 +195,8 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
 				s.Require().NoError(err)
 				// Check the result and gas used are correct.
 				s.Require().Equal(len(result.GetResult().GetEvents()), 13) // See TestSimulateTx_GRPC for the 13 events.
-				s.Require().True(result.GetGasInfo().GetGasUsed() > 0)     // Gas used sometimes change, just check it's not empty.
+				s.Require().Len(result.GetResult().MsgResponses, 1)
+				s.Require().True(result.GetGasInfo().GetGasUsed() > 0) // Gas used sometimes change, just check it's not empty.
 			}
 		})
 	}
@@ -339,8 +364,8 @@ func (s IntegrationTestSuite) TestGetTx_GRPC() {
 		expErrMsg string
 	}{
 		{"nil request", nil, true, "request cannot be nil"},
-		{"empty request", &tx.GetTxRequest{}, true, "transaction hash cannot be empty"},
-		{"request with dummy hash", &tx.GetTxRequest{Hash: "deadbeef"}, true, "tx (DEADBEEF) not found"},
+		{"empty request", &tx.GetTxRequest{}, true, "tx hash cannot be empty"},
+		{"request with dummy hash", &tx.GetTxRequest{Hash: "deadbeef"}, true, "code = NotFound desc = tx not found: deadbeef"},
 		{"good request", &tx.GetTxRequest{Hash: s.txRes.TxHash}, false, ""},
 	}
 	for _, tc := range testCases {
@@ -369,12 +394,12 @@ func (s IntegrationTestSuite) TestGetTx_GRPCGateway() {
 		{
 			"empty params",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/", val.APIAddress),
-			true, "transaction hash cannot be empty",
+			true, "tx hash cannot be empty",
 		},
 		{
 			"dummy hash",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/%s", val.APIAddress, "deadbeef"),
-			true, "tx (DEADBEEF) not found",
+			true, "code = NotFound desc = tx not found: deadbeef",
 		},
 		{
 			"good hash",
@@ -525,7 +550,7 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 		addr,
 		sdk.NewCoins(coins),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 	)
@@ -543,7 +568,7 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 		fmt.Sprintf("--%s=foobar", flags.FlagNote),
@@ -584,6 +609,81 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 
 	// make sure gas was used
 	s.Require().Greater(res.GasInfo.GasUsed, uint64(0))
+}
+
+func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPC() {
+	testCases := []struct {
+		name      string
+		req       *tx.GetBlockWithTxsRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"nil request", nil, true, "request cannot be nil"},
+		{"empty request", &tx.GetBlockWithTxsRequest{}, true, "height must not be less than 1 or greater than the current height"},
+		{"bad height", &tx.GetBlockWithTxsRequest{Height: 99999999}, true, "height must not be less than 1 or greater than the current height"},
+		{"bad pagination", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 1000, Limit: 100}}, true, "out of range"},
+		{"good request", &tx.GetBlockWithTxsRequest{Height: s.txHeight}, false, ""},
+		{"with pagination request", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 0, Limit: 1}}, false, ""},
+		{"page all request", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 0, Limit: 100}}, false, ""},
+	}
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			// Query the tx via gRPC.
+			grpcRes, err := s.queryClient.GetBlockWithTxs(context.Background(), tc.req)
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
+				s.Require().Equal(grpcRes.Block.Header.Height, tc.req.Height)
+				if tc.req.Pagination != nil {
+					s.Require().LessOrEqual(len(grpcRes.Txs), int(tc.req.Pagination.Limit))
+				}
+			}
+		})
+	}
+}
+
+func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPCGateway() {
+	val := s.network.Validators[0]
+	testCases := []struct {
+		name      string
+		url       string
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			"empty params",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/block/0", val.APIAddress),
+			true, "height must not be less than 1 or greater than the current height",
+		},
+		{
+			"bad height",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/block/%d", val.APIAddress, 9999999),
+			true, "height must not be less than 1 or greater than the current height",
+		},
+		{
+			"good request",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/block/%d", val.APIAddress, s.txHeight),
+			false, "",
+		},
+	}
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			res, err := rest.GetRequest(tc.url)
+			s.Require().NoError(err)
+			if tc.expErr {
+				s.Require().Contains(string(res), tc.expErrMsg)
+			} else {
+				var result tx.GetBlockWithTxsResponse
+				err = val.ClientCtx.Codec.UnmarshalJSON(res, &result)
+				s.Require().NoError(err)
+				s.Require().Equal("foobar", result.Txs[0].Body.Memo)
+				s.Require().Equal(result.Block.Header.Height, s.txHeight)
+			}
+		})
+	}
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

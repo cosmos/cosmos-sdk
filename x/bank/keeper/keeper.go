@@ -4,12 +4,13 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -20,11 +21,13 @@ var _ Keeper = (*BaseKeeper)(nil)
 // between accounts.
 type Keeper interface {
 	SendKeeper
+	WithMintCoinsRestriction(MintingRestrictionFn) BaseKeeper
 
 	InitGenesis(sdk.Context, *types.GenesisState)
 	ExportGenesis(sdk.Context) *types.GenesisState
 
 	GetSupply(ctx sdk.Context, denom string) sdk.Coin
+	HasSupply(ctx sdk.Context, denom string) bool
 	GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error)
 	IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bool)
 	GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool)
@@ -50,11 +53,14 @@ type Keeper interface {
 type BaseKeeper struct {
 	BaseSendKeeper
 
-	ak         types.AccountKeeper
-	cdc        codec.BinaryCodec
-	storeKey   sdk.StoreKey
-	paramSpace paramtypes.Subspace
+	ak                     types.AccountKeeper
+	cdc                    codec.BinaryCodec
+	storeKey               storetypes.StoreKey
+	paramSpace             paramtypes.Subspace
+	mintCoinsRestrictionFn MintingRestrictionFn
 }
+
+type MintingRestrictionFn func(ctx sdk.Context, coins sdk.Coins) error
 
 // GetPaginatedTotalSupply queries for the supply, ignoring 0 coins, with a given pagination
 func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error) {
@@ -89,7 +95,7 @@ func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.P
 // by using a SendCoinsFromModuleToAccount execution.
 func NewBaseKeeper(
 	cdc codec.BinaryCodec,
-	storeKey sdk.StoreKey,
+	storeKey storetypes.StoreKey,
 	ak types.AccountKeeper,
 	paramSpace paramtypes.Subspace,
 	blockedAddrs map[string]bool,
@@ -101,12 +107,33 @@ func NewBaseKeeper(
 	}
 
 	return BaseKeeper{
-		BaseSendKeeper: NewBaseSendKeeper(cdc, storeKey, ak, paramSpace, blockedAddrs),
-		ak:             ak,
-		cdc:            cdc,
-		storeKey:       storeKey,
-		paramSpace:     paramSpace,
+		BaseSendKeeper:         NewBaseSendKeeper(cdc, storeKey, ak, paramSpace, blockedAddrs),
+		ak:                     ak,
+		cdc:                    cdc,
+		storeKey:               storeKey,
+		paramSpace:             paramSpace,
+		mintCoinsRestrictionFn: func(ctx sdk.Context, coins sdk.Coins) error { return nil },
 	}
+}
+
+// WithMintCoinsRestriction restricts the bank Keeper used within a specific module to
+// have restricted permissions on minting via function passed in parameter.
+// Previous restriction functions can be nested as such:
+//  bankKeeper.WithMintCoinsRestriction(restriction1).WithMintCoinsRestriction(restriction2)
+func (k BaseKeeper) WithMintCoinsRestriction(check MintingRestrictionFn) BaseKeeper {
+	oldRestrictionFn := k.mintCoinsRestrictionFn
+	k.mintCoinsRestrictionFn = func(ctx sdk.Context, coins sdk.Coins) error {
+		err := check(ctx, coins)
+		if err != nil {
+			return err
+		}
+		err = oldRestrictionFn(ctx, coins)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	return k
 }
 
 // DelegateCoins performs delegation by deducting amt coins from an account with
@@ -194,7 +221,7 @@ func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
 	store := ctx.KVStore(k.storeKey)
 	supplyStore := prefix.NewStore(store, types.SupplyKey)
 
-	bz := supplyStore.Get([]byte(denom))
+	bz := supplyStore.Get(conv.UnsafeStrToBytes(denom))
 	if bz == nil {
 		return sdk.Coin{
 			Denom:  denom,
@@ -214,13 +241,20 @@ func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
 	}
 }
 
+// HasSupply checks if the supply coin exists in store.
+func (k BaseKeeper) HasSupply(ctx sdk.Context, denom string) bool {
+	store := ctx.KVStore(k.storeKey)
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
+	return supplyStore.Has(conv.UnsafeStrToBytes(denom))
+}
+
 // GetDenomMetaData retrieves the denomination metadata. returns the metadata and true if the denom exists,
 // false otherwise.
 func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool) {
 	store := ctx.KVStore(k.storeKey)
 	store = prefix.NewStore(store, types.DenomMetadataPrefix)
 
-	bz := store.Get([]byte(denom))
+	bz := store.Get(conv.UnsafeStrToBytes(denom))
 	if bz == nil {
 		return types.Metadata{}, false
 	}
@@ -235,7 +269,7 @@ func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) (types.Metad
 func (k BaseKeeper) HasDenomMetaData(ctx sdk.Context, denom string) bool {
 	store := ctx.KVStore(k.storeKey)
 	store = prefix.NewStore(store, types.DenomMetadataPrefix)
-	return store.Has([]byte(denom))
+	return store.Has(conv.UnsafeStrToBytes(denom))
 }
 
 // GetAllDenomMetaData retrieves all denominations metadata
@@ -371,6 +405,11 @@ func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 // MintCoins creates new coins from thin air and adds it to the module account.
 // It will panic if the module account does not exist or is unauthorized.
 func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amounts sdk.Coins) error {
+	err := k.mintCoinsRestrictionFn(ctx, amounts)
+	if err != nil {
+		ctx.Logger().Error(fmt.Sprintf("Module %q attempted to mint coins %s it doesn't have permission for, error %v", moduleName, amounts, err))
+		return err
+	}
 	acc := k.ak.GetModuleAccount(ctx, moduleName)
 	if acc == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleName))
@@ -380,7 +419,7 @@ func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amounts sdk.Co
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to mint tokens", moduleName))
 	}
 
-	err := k.addCoins(ctx, acc.GetAddress(), amounts)
+	err = k.addCoins(ctx, acc.GetAddress(), amounts)
 	if err != nil {
 		return err
 	}
@@ -448,7 +487,7 @@ func (k BaseKeeper) setSupply(ctx sdk.Context, coin sdk.Coin) {
 
 	// Bank invariants and IBC requires to remove zero coins.
 	if coin.IsZero() {
-		supplyStore.Delete([]byte(coin.GetDenom()))
+		supplyStore.Delete(conv.UnsafeStrToBytes(coin.GetDenom()))
 	} else {
 		supplyStore.Set([]byte(coin.GetDenom()), intBytes)
 	}
@@ -461,7 +500,7 @@ func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, balanc
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 	}
 
-	vacc, ok := acc.(vestexported.VestingAccount)
+	vacc, ok := acc.(types.VestingAccount)
 	if ok {
 		// TODO: return error on account.TrackDelegation
 		vacc.TrackDelegation(ctx.BlockHeader().Time, balance, amt)
@@ -478,7 +517,7 @@ func (k BaseKeeper) trackUndelegation(ctx sdk.Context, addr sdk.AccAddress, amt 
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 	}
 
-	vacc, ok := acc.(vestexported.VestingAccount)
+	vacc, ok := acc.(types.VestingAccount)
 	if ok {
 		// TODO: return error on account.TrackUndelegation
 		vacc.TrackUndelegation(amt)

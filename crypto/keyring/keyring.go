@@ -5,14 +5,12 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 
 	"github.com/99designs/keyring"
-	"github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
 	"github.com/tendermint/crypto/bcrypt"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
@@ -25,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/go-bip39"
 )
 
 // Backend options for Keyring
@@ -53,6 +52,8 @@ var (
 
 // Keyring exposes operations over a backend supported by github.com/99designs/keyring.
 type Keyring interface {
+	// Get the backend type used in the keyring config: "file", "os", "kwallet", "pass", "test", "memory".
+	Backend() string
 	// List all keys.
 	List() ([]*Record, error)
 
@@ -163,11 +164,11 @@ type Options struct {
 // purposes and on-the-fly key generation.
 // Keybase options can be applied when generating this new Keybase.
 func NewInMemory(cdc codec.Codec, opts ...Option) Keyring {
-	return newKeystore(keyring.NewArrayKeyring(nil), cdc, opts...)
+	return newKeystore(keyring.NewArrayKeyring(nil), cdc, BackendMemory, opts...)
 }
 
 // New creates a new instance of a keyring.
-// Keyring ptions can be applied when generating the new instance.
+// Keyring options can be applied when generating the new instance.
 // Available backends are "os", "file", "kwallet", "memory", "pass", "test".
 func New(
 	appName, backend, rootDir string, userInput io.Reader, cdc codec.Codec, opts ...Option,
@@ -198,17 +199,19 @@ func New(
 		return nil, err
 	}
 
-	return newKeystore(db, cdc, opts...), nil
+	return newKeystore(db, cdc, backend, opts...), nil
 }
 
 type keystore struct {
 	db      keyring.Keyring
 	cdc     codec.Codec
+	backend string
 	options Options
 }
 
-func newKeystore(kr keyring.Keyring, cdc codec.Codec, opts ...Option) keystore {
-	// Default options for keybase
+func newKeystore(kr keyring.Keyring, cdc codec.Codec, backend string, opts ...Option) keystore {
+	// Default options for keybase, these can be overwritten using the
+	// Option function
 	options := Options{
 		SupportedAlgos:       SigningAlgoList{hd.Secp256k1},
 		SupportedAlgosLedger: SigningAlgoList{hd.Secp256k1},
@@ -218,7 +221,17 @@ func newKeystore(kr keyring.Keyring, cdc codec.Codec, opts ...Option) keystore {
 		optionFn(&options)
 	}
 
-	return keystore{kr, cdc, options}
+	return keystore{
+		db:      kr,
+		cdc:     cdc,
+		backend: backend,
+		options: options,
+	}
+}
+
+// Backend returns the keyring backend option used in the config
+func (ks keystore) Backend() string {
+	return ks.backend
 }
 
 func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
@@ -370,7 +383,6 @@ func (ks keystore) SignByAddress(address sdk.Address, msg []byte) ([]byte, types
 }
 
 func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (*Record, error) {
-
 	if !ks.options.SupportedAlgosLedger.Contains(algo) {
 		return nil, fmt.Errorf(
 			"%w: signature algo %s is not defined in the keyring options",
@@ -441,6 +453,8 @@ func (ks keystore) Rename(oldName, newName string) error {
 	return nil
 }
 
+// Delete deletes a key in the keyring. `uid` represents the key name, without
+// the `.info` suffix.
 func (ks keystore) Delete(uid string) error {
 	k, err := ks.Key(uid)
 	if err != nil {
@@ -457,7 +471,7 @@ func (ks keystore) Delete(uid string) error {
 		return err
 	}
 
-	err = ks.db.Remove(uid)
+	err = ks.db.Remove(infoKey(uid))
 	if err != nil {
 		return err
 	}
@@ -468,11 +482,11 @@ func (ks keystore) Delete(uid string) error {
 func (ks keystore) KeyByAddress(address sdk.Address) (*Record, error) {
 	ik, err := ks.db.Get(addrHexKeyAsString(address))
 	if err != nil {
-		return nil, wrapKeyNotFound(err, fmt.Sprint("key with address", address, "not found"))
+		return nil, wrapKeyNotFound(err, fmt.Sprintf("key with address %s not found", address.String()))
 	}
 
 	if len(ik.Data) == 0 {
-		return nil, wrapKeyNotFound(err, fmt.Sprint("key with address", address, "not found"))
+		return nil, wrapKeyNotFound(err, fmt.Sprintf("key with address %s not found", address.String()))
 	}
 
 	return ks.Key(string(ik.Data))
@@ -495,7 +509,7 @@ func (ks keystore) List() ([]*Record, error) {
 		return nil, err
 	}
 
-	var res []*Record
+	var res []*Record //nolint:prealloc
 	sort.Strings(keys)
 	for _, key := range keys {
 		if strings.Contains(key, addressSuffix) {
@@ -682,7 +696,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 
 		switch {
 		case err == nil:
-			keyhash, err = ioutil.ReadFile(keyhashFilePath)
+			keyhash, err = os.ReadFile(keyhashFilePath)
 			if err != nil {
 				return "", fmt.Errorf("failed to read %s: %v", keyhashFilePath, err)
 			}
@@ -746,7 +760,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 				continue
 			}
 
-			if err := ioutil.WriteFile(dir+"/keyhash", passwordHash, 0555); err != nil {
+			if err := os.WriteFile(dir+"/keyhash", passwordHash, 0o555); err != nil {
 				return "", err
 			}
 
@@ -771,7 +785,7 @@ func (ks keystore) writeRecord(k *Record) error {
 		return err
 	}
 
-	key := k.Name
+	key := infoKey(k.Name)
 
 	exists, err := ks.existsInDb(addr, key)
 	if err != nil {
@@ -809,18 +823,29 @@ func (ks keystore) writeRecord(k *Record) error {
 
 // existsInDb returns (true, nil) if either addr or name exist is in keystore DB.
 // On the other hand, it returns (false, error) if Get method returns error different from keyring.ErrKeyNotFound
+// In case of inconsistent keyring, it recovers it automatically.
 func (ks keystore) existsInDb(addr sdk.Address, name string) (bool, error) {
-
-	if _, err := ks.db.Get(addrHexKeyAsString(addr)); err == nil {
-		return true, nil // address lookup succeeds - info exists
-	} else if err != keyring.ErrKeyNotFound {
-		return false, err // received unexpected error - returns error
+	_, errAddr := ks.db.Get(addrHexKeyAsString(addr))
+	if errAddr != nil && !errors.Is(errAddr, keyring.ErrKeyNotFound) {
+		return false, errAddr
 	}
 
-	if _, err := ks.db.Get(name); err == nil {
+	_, errInfo := ks.db.Get(infoKey(name))
+	if errInfo == nil {
 		return true, nil // uid lookup succeeds - info exists
-	} else if err != keyring.ErrKeyNotFound {
-		return false, err // received unexpected error - returns
+	} else if !errors.Is(errInfo, keyring.ErrKeyNotFound) {
+		return false, errInfo // received unexpected error - returns
+	}
+
+	// looking for an issue, record with meta (getByAddress) exists, but record with public key itself does not
+	if errAddr == nil && errors.Is(errInfo, keyring.ErrKeyNotFound) {
+		fmt.Fprintf(os.Stderr, "address \"%s\" exists but pubkey itself does not\n", hex.EncodeToString(addr.Bytes()))
+		fmt.Fprintln(os.Stderr, "recreating pubkey record")
+		err := ks.db.Remove(addrHexKeyAsString(addr))
+		if err != nil {
+			return true, err
+		}
+		return false, nil
 	}
 
 	// both lookups failed, info does not exist
@@ -878,6 +903,9 @@ func (ks keystore) MigrateAll() (bool, error) {
 
 // migrate converts keyring.Item from amino to proto serialization format.
 func (ks keystore) migrate(key string) (*Record, bool, error) {
+	if !(strings.HasSuffix(key, infoSuffix)) && !(strings.HasPrefix(key, sdk.Bech32PrefixAccAddr)) {
+		key = infoKey(key)
+	}
 	item, err := ks.db.Get(key)
 	if err != nil {
 		return nil, false, wrapKeyNotFound(err, key)

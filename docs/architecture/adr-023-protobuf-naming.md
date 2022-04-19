@@ -2,8 +2,8 @@
 
 ## Changelog
 
-- 2020 April 27: Initial Draft
-- 2020 August 5: Update guidelines
+* 2020 April 27: Initial Draft
+* 2020 August 5: Update guidelines
 
 ## Status
 
@@ -51,7 +51,7 @@ The goal of this ADR is to provide thoughtful naming conventions that:
 names too short and cryptic) or under-optimizing (just accepting bloated names
 with lots of redundant information)
 
-These guidelines are meant to act as a style guide for both the SDK and
+These guidelines are meant to act as a style guide for both the Cosmos SDK and
 third-party modules.
 
 As a starting point, we should adopt all of the [DEFAULT](https://buf.build/docs/lint-checkers#default)
@@ -132,13 +132,13 @@ The following guidelines are recommended for marking packages as alpha or beta:
 
 * marking something as `alpha` or `beta` should be a last resort and just putting something in the
 stable package (i.e. `v1` or `v2`) should be preferred
-* a package *should* be marked as `alpha` *if and only if* there are active discussions to remove
+* a package _should_ be marked as `alpha` _if and only if_ there are active discussions to remove
 or significantly alter the package in the near future
-* a package *should* be marked as `beta` *if and only if* there is an active discussion to
+* a package _should_ be marked as `beta` _if and only if_ there is an active discussion to
 significantly refactor/rework the functionality in the near future but not remove it
-* modules *can and should* have types in both stable (i.e. `v1` or `v2`) and unstable (`alpha` or `beta`) packages.
+* modules _can and should_ have types in both stable (i.e. `v1` or `v2`) and unstable (`alpha` or `beta`) packages.
 
-*`alpha` and `beta` should not be used to avoid responsibility for maintaining compatibility.*
+_`alpha` and `beta` should not be used to avoid responsibility for maintaining compatibility._
 Whenever code is released into the wild, especially on a blockchain, there is a high cost to changing things. In some
 cases, for instance with immutable smart contracts, a breaking change may be impossible to fix.
 
@@ -251,7 +251,7 @@ community-based governance.
 the path)
 * code generation will be easier for clients because .proto files will be
 in a single `proto/` directory which can be copied rather than scattered
-throughout the SDK
+throughout the Cosmos SDK
 
 ### Negative
 

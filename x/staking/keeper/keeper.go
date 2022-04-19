@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,7 +20,7 @@ var _ types.DelegationSet = Keeper{}
 
 // keeper of the staking store
 type Keeper struct {
-	storeKey   sdk.StoreKey
+	storeKey   storetypes.StoreKey
 	cdc        codec.BinaryCodec
 	authKeeper types.AccountKeeper
 	bankKeeper types.BankKeeper
@@ -29,7 +30,7 @@ type Keeper struct {
 
 // NewKeeper creates a new staking Keeper instance
 func NewKeeper(
-	cdc codec.BinaryCodec, key sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper,
+	cdc codec.BinaryCodec, key storetypes.StoreKey, ak types.AccountKeeper, bk types.BankKeeper,
 	ps paramtypes.Subspace,
 ) Keeper {
 	// set KeyTable if it has not already been set

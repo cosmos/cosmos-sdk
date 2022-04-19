@@ -94,7 +94,7 @@ func (a StakeAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRe
 		}
 	}
 
-	if !isValidatorExists {
+	if len(allowedList) > 0 && !isValidatorExists {
 		return authz.AcceptResponse{}, sdkerrors.ErrUnauthorized.Wrapf("cannot delegate/undelegate to %s validator", validatorAddress)
 	}
 
@@ -103,7 +103,10 @@ func (a StakeAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRe
 			Updated: &StakeAuthorization{Validators: a.GetValidators(), AuthorizationType: a.GetAuthorizationType()}}, nil
 	}
 
-	limitLeft := a.MaxTokens.Sub(amount)
+	limitLeft, err := a.MaxTokens.SafeSub(amount)
+	if err != nil {
+		return authz.AcceptResponse{}, err
+	}
 	if limitLeft.IsZero() {
 		return authz.AcceptResponse{Accept: true, Delete: true}, nil
 	}

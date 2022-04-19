@@ -4,19 +4,22 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // wrapper is a wrapper around the tx.Tx proto.Message which retain the raw
 // body and auth_info bytes.
 type wrapper struct {
+	cdc codec.Codec
+
 	tx *tx.Tx
 
 	// bodyBz represents the protobuf encoding of TxBody. This should be encoding
@@ -31,10 +34,12 @@ type wrapper struct {
 }
 
 var (
-	_ authsigning.Tx             = &wrapper{}
-	_ client.TxBuilder           = &wrapper{}
-	_ ante.HasExtensionOptionsTx = &wrapper{}
-	_ ExtensionOptionsTxBuilder  = &wrapper{}
+	_ authsigning.Tx                   = &wrapper{}
+	_ client.TxBuilder                 = &wrapper{}
+	_ tx.TipTx                         = &wrapper{}
+	_ middleware.HasExtensionOptionsTx = &wrapper{}
+	_ ExtensionOptionsTxBuilder        = &wrapper{}
+	_ tx.TipTx                         = &wrapper{}
 )
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.
@@ -45,8 +50,9 @@ type ExtensionOptionsTxBuilder interface {
 	SetNonCriticalExtensionOptions(...*codectypes.Any)
 }
 
-func newBuilder() *wrapper {
+func newBuilder(cdc codec.Codec) *wrapper {
 	return &wrapper{
+		cdc: cdc,
 		tx: &tx.Tx{
 			Body: &tx.TxBody{},
 			AuthInfo: &tx.AuthInfo{
@@ -156,6 +162,10 @@ func (w *wrapper) FeeGranter() sdk.AccAddress {
 	return nil
 }
 
+func (w *wrapper) GetTip() *tx.Tip {
+	return w.tx.AuthInfo.Tip
+}
+
 func (w *wrapper) GetMemo() string {
 	return w.tx.Body.Memo
 }
@@ -250,6 +260,13 @@ func (w *wrapper) SetFeeAmount(coins sdk.Coins) {
 	w.authInfoBz = nil
 }
 
+func (w *wrapper) SetTip(tip *tx.Tip) {
+	w.tx.AuthInfo.Tip = tip
+
+	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
+	w.authInfoBz = nil
+}
+
 func (w *wrapper) SetFeePayer(feePayer sdk.AccAddress) {
 	if w.tx.AuthInfo.Fee == nil {
 		w.tx.AuthInfo.Fee = &tx.Fee{}
@@ -303,8 +320,26 @@ func (w *wrapper) setSignerInfos(infos []*tx.SignerInfo) {
 	w.authInfoBz = nil
 }
 
+func (w *wrapper) setSignerInfoAtIndex(index int, info *tx.SignerInfo) {
+	if w.tx.AuthInfo.SignerInfos == nil {
+		w.tx.AuthInfo.SignerInfos = make([]*tx.SignerInfo, len(w.GetSigners()))
+	}
+
+	w.tx.AuthInfo.SignerInfos[index] = info
+	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
+	w.authInfoBz = nil
+}
+
 func (w *wrapper) setSignatures(sigs [][]byte) {
 	w.tx.Signatures = sigs
+}
+
+func (w *wrapper) setSignatureAtIndex(index int, sig []byte) {
+	if w.tx.Signatures == nil {
+		w.tx.Signatures = make([][]byte, len(w.GetSigners()))
+	}
+
+	w.tx.Signatures[index] = sig
 }
 
 func (w *wrapper) GetTx() authsigning.Tx {
@@ -344,4 +379,95 @@ func (w *wrapper) SetExtensionOptions(extOpts ...*codectypes.Any) {
 func (w *wrapper) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
 	w.tx.Body.NonCriticalExtensionOptions = extOpts
 	w.bodyBz = nil
+}
+
+func (w *wrapper) AddAuxSignerData(data tx.AuxSignerData) error {
+	err := data.ValidateBasic()
+	if err != nil {
+		return err
+	}
+
+	w.bodyBz = data.SignDoc.BodyBytes
+
+	var body tx.TxBody
+	err = w.cdc.Unmarshal(w.bodyBz, &body)
+	if err != nil {
+		return err
+	}
+
+	if w.tx.Body.Memo != "" && w.tx.Body.Memo != body.Memo {
+		return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has memo %s, got %s in AuxSignerData", w.tx.Body.Memo, body.Memo)
+	}
+	if w.tx.Body.TimeoutHeight != 0 && w.tx.Body.TimeoutHeight != body.TimeoutHeight {
+		return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has timeout height %d, got %d in AuxSignerData", w.tx.Body.TimeoutHeight, body.TimeoutHeight)
+	}
+	if len(w.tx.Body.ExtensionOptions) != 0 {
+		if len(w.tx.Body.ExtensionOptions) != len(body.ExtensionOptions) {
+			return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has %d extension options, got %d in AuxSignerData", len(w.tx.Body.ExtensionOptions), len(body.ExtensionOptions))
+		}
+		for i, o := range w.tx.Body.ExtensionOptions {
+			if !o.Equal(body.ExtensionOptions[i]) {
+				return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has extension option %+v at index %d, got %+v in AuxSignerData", o, i, body.ExtensionOptions[i])
+			}
+		}
+	}
+	if len(w.tx.Body.NonCriticalExtensionOptions) != 0 {
+		if len(w.tx.Body.NonCriticalExtensionOptions) != len(body.NonCriticalExtensionOptions) {
+			return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has %d non-critical extension options, got %d in AuxSignerData", len(w.tx.Body.NonCriticalExtensionOptions), len(body.NonCriticalExtensionOptions))
+		}
+		for i, o := range w.tx.Body.NonCriticalExtensionOptions {
+			if !o.Equal(body.NonCriticalExtensionOptions[i]) {
+				return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has non-critical extension option %+v at index %d, got %+v in AuxSignerData", o, i, body.NonCriticalExtensionOptions[i])
+			}
+		}
+	}
+	if len(w.tx.Body.Messages) != 0 {
+		if len(w.tx.Body.Messages) != len(body.Messages) {
+			return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has %d Msgs, got %d in AuxSignerData", len(w.tx.Body.Messages), len(body.Messages))
+		}
+		for i, o := range w.tx.Body.Messages {
+			if !o.Equal(body.Messages[i]) {
+				return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has Msg %+v at index %d, got %+v in AuxSignerData", o, i, body.Messages[i])
+			}
+		}
+	}
+	if w.tx.AuthInfo.Tip != nil && data.SignDoc.Tip != nil {
+		if !w.tx.AuthInfo.Tip.Amount.IsEqual(data.SignDoc.Tip.Amount) {
+			return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has tip %+v, got %+v in AuxSignerData", w.tx.AuthInfo.Tip.Amount, data.SignDoc.Tip.Amount)
+		}
+		if w.tx.AuthInfo.Tip.Tipper != data.SignDoc.Tip.Tipper {
+			return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has tipper %s, got %s in AuxSignerData", w.tx.AuthInfo.Tip.Tipper, data.SignDoc.Tip.Tipper)
+		}
+	}
+
+	w.SetMemo(body.Memo)
+	w.SetTimeoutHeight(body.TimeoutHeight)
+	w.SetExtensionOptions(body.ExtensionOptions...)
+	w.SetNonCriticalExtensionOptions(body.NonCriticalExtensionOptions...)
+	msgs := make([]sdk.Msg, len(body.Messages))
+	for i, msgAny := range body.Messages {
+		msgs[i] = msgAny.GetCachedValue().(sdk.Msg)
+	}
+	w.SetMsgs(msgs...)
+	w.SetTip(data.GetSignDoc().GetTip())
+
+	// Get the aux signer's index in GetSigners.
+	signerIndex := -1
+	for i, signer := range w.GetSigners() {
+		if signer.String() == data.Address {
+			signerIndex = i
+		}
+	}
+	if signerIndex < 0 {
+		return sdkerrors.ErrLogic.Wrapf("address %s is not a signer", data.Address)
+	}
+
+	w.setSignerInfoAtIndex(signerIndex, &tx.SignerInfo{
+		PublicKey: data.SignDoc.PublicKey,
+		ModeInfo:  &tx.ModeInfo{Sum: &tx.ModeInfo_Single_{Single: &tx.ModeInfo_Single{Mode: data.Mode}}},
+		Sequence:  data.SignDoc.Sequence,
+	})
+	w.setSignatureAtIndex(signerIndex, data.Sig)
+
+	return nil
 }

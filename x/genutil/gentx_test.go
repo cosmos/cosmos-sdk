@@ -240,7 +240,7 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 					sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)},
 					helpers.DefaultGenTxGas,
 					suite.ctx.ChainID(),
-					[]uint64{0},
+					[]uint64{7},
 					[]uint64{0},
 					priv1,
 				)
@@ -269,12 +269,12 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 					)
 				})
 			} else {
-				suite.Require().Panics(func() {
-					genutil.DeliverGenTxs(
-						suite.ctx, genTxs, suite.app.StakingKeeper, suite.app.BaseApp.DeliverTx,
-						suite.encodingConfig.TxConfig,
-					)
-				})
+				_, err := genutil.DeliverGenTxs(
+					suite.ctx, genTxs, suite.app.StakingKeeper, suite.app.BaseApp.DeliverTx,
+					suite.encodingConfig.TxConfig,
+				)
+
+				suite.Require().Error(err)
 			}
 		})
 	}

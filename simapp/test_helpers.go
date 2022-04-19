@@ -2,6 +2,7 @@ package simapp
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -38,8 +39,8 @@ import (
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
 // SimApp testing.
-var DefaultConsensusParams = &abci.ConsensusParams{
-	Block: &abci.BlockParams{
+var DefaultConsensusParams = &tmproto.ConsensusParams{
+	Block: &tmproto.BlockParams{
 		MaxBytes: 200000,
 		MaxGas:   2000000,
 	},
@@ -81,7 +82,7 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 	t.Helper()
 
 	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey()
+	pubKey, err := privVal.GetPubKey(context.TODO())
 	require.NoError(t, err)
 	// create validator set with single validator
 	validator := tmtypes.NewValidator(pubKey, 1)
@@ -121,21 +122,23 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 func Setup(t *testing.T, isCheckTx bool) *SimApp {
 	t.Helper()
 
-	app, genesisState := setup(!isCheckTx, 5)
-	if !isCheckTx {
-		// init chain must be called to stop deliverState from being nil
-		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-		require.NoError(t, err)
+	privVal := mock.NewPV()
+	pubKey, err := privVal.GetPubKey(context.TODO())
+	require.NoError(t, err)
 
-		// Initialize the chain
-		app.InitChain(
-			abci.RequestInitChain{
-				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: DefaultConsensusParams,
-				AppStateBytes:   stateBytes,
-			},
-		)
+	// create validator set with single validator
+	validator := tmtypes.NewValidator(pubKey, 1)
+	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+
+	// generate genesis account
+	senderPrivKey := secp256k1.GenPrivKey()
+	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	balance := banktypes.Balance{
+		Address: acc.GetAddress().String(),
+		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
 	}
+
+	app := SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{acc}, balance)
 
 	return app
 }
@@ -181,8 +184,13 @@ func genesisStateWithValSet(t *testing.T,
 
 	totalSupply := sdk.NewCoins()
 	for _, b := range balances {
-		// add genesis acc tokens and delegated tokens to total supply
-		totalSupply = totalSupply.Add(b.Coins.Add(sdk.NewCoin(sdk.DefaultBondDenom, bondAmt))...)
+		// add genesis acc tokens to total supply
+		totalSupply = totalSupply.Add(b.Coins...)
+	}
+
+	for range delegations {
+		// add delegated tokens to total supply
+		totalSupply = totalSupply.Add(sdk.NewCoin(sdk.DefaultBondDenom, bondAmt))
 	}
 
 	// add bonded amount to bonded pool module account
@@ -237,33 +245,44 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 func SetupWithGenesisAccounts(t *testing.T, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
 	t.Helper()
 
-	app, genesisState := setup(true, 0)
-	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
-	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
-
-	totalSupply := sdk.NewCoins()
-	for _, b := range balances {
-		totalSupply = totalSupply.Add(b.Coins...)
-	}
-
-	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{})
-	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
-
-	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
+	privVal := mock.NewPV()
+	pubKey, err := privVal.GetPubKey(context.TODO())
 	require.NoError(t, err)
 
-	app.InitChain(
-		abci.RequestInitChain{
-			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: DefaultConsensusParams,
-			AppStateBytes:   stateBytes,
+	// create validator set with single validator
+	validator := tmtypes.NewValidator(pubKey, 1)
+	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+
+	return SetupWithGenesisValSet(t, valSet, genAccs, balances...)
+}
+
+// SetupWithGenesisValSet initializes GenesisState with a single validator and genesis accounts
+// that also act as delegators.
+func GenesisStateWithSingleValidator(t *testing.T, app *SimApp) GenesisState {
+	t.Helper()
+
+	privVal := mock.NewPV()
+	pubKey, err := privVal.GetPubKey(context.TODO())
+	require.NoError(t, err)
+
+	// create validator set with single validator
+	validator := tmtypes.NewValidator(pubKey, 1)
+	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+
+	// generate genesis account
+	senderPrivKey := secp256k1.GenPrivKey()
+	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	balances := []banktypes.Balance{
+		{
+			Address: acc.GetAddress().String(),
+			Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
 		},
-	)
+	}
 
-	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1}})
+	genesisState := NewDefaultGenesisState(app.appCodec)
+	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balances...)
 
-	return app
+	return genesisState
 }
 
 type GenerateAccountStrategy func(int) []sdk.AccAddress

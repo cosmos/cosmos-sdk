@@ -38,13 +38,15 @@ message Plan {
   // Deprecated: UpgradedClientState field has been deprecated. IBC upgrade logic has been
   // moved to the IBC module in the sub module 02-client.
   // If this field is not empty, an error will be thrown.
-  google.protobuf.Any upgraded_client_state = 5
-      [deprecated = true, (gogoproto.moretags) = "yaml:\"upgraded_client_state\""];
+  google.protobuf.Any upgraded_client_state = 5 [deprecated = true];
 }
 
 // SoftwareUpgradeProposal is a gov Content type for initiating a software
 // upgrade.
+// Deprecated: This legacy proposal is deprecated in favor of Msg-based gov
+// proposals, see MsgSoftwareUpgrade.
 message SoftwareUpgradeProposal {
+  option deprecated                   = true;
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
@@ -55,7 +57,10 @@ message SoftwareUpgradeProposal {
 
 // CancelSoftwareUpgradeProposal is a gov Content type for cancelling a software
 // upgrade.
+// Deprecated: This legacy proposal is deprecated in favor of Msg-based gov
+// proposals, see MsgCancelUpgrade.
 message CancelSoftwareUpgradeProposal {
+  option deprecated                   = true;
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
@@ -64,6 +69,8 @@ message CancelSoftwareUpgradeProposal {
 }
 
 // ModuleVersion specifies a module and its consensus version.
+//
+// Since: cosmos-sdk 0.43
 message ModuleVersion {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = true;

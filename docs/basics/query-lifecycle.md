@@ -4,11 +4,11 @@ order: 3
 
 # Query Lifecycle
 
-This document describes the lifecycle of a query in a SDK application, from the user interface to application stores and back. {synopsis}
+This document describes the lifecycle of a query in a Cosmos SDK application, from the user interface to application stores and back. {synopsis}
 
 ## Pre-requisite Readings
 
-- [Transaction Lifecycle](./tx-lifecycle.md) {prereq}
+* [Transaction Lifecycle](./tx-lifecycle.md) {prereq}
 
 ## Query Creation
 
@@ -39,11 +39,11 @@ The CLI understands a specific set of commands, defined in a hierarchical struct
 ### gRPC
 
 ::: warning
-A patch introduced in `go-grpc v1.34.0` made gRPC incompatible with the `gogoproto` library, making some [gRPC queries](https://github.com/cosmos/cosmos-sdk/issues/8426) panic. As such, the SDK requires that `go-grpc <=v1.33.2` is installed in your `go.mod`.
+A patch introduced in `go-grpc v1.34.0` made gRPC incompatible with the `gogoproto` library, making some [gRPC queries](https://github.com/cosmos/cosmos-sdk/issues/8426) panic. As such, the Cosmos SDK requires that `go-grpc <=v1.33.2` is installed in your `go.mod`.
 
 To make sure that gRPC is working properly, it is **highly recommended** to add the following line in your application's `go.mod`:
 
-```
+```go
 replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 ```
 
@@ -82,12 +82,12 @@ The examples above show how an external user can interact with a node by queryin
 
 The first thing that is created in the execution of a CLI command is a `client.Context`. A `client.Context` is an object that stores all the data needed to process a request on the user side. In particular, a `client.Context` stores the following:
 
-- **Codec**: The [encoder/decoder](../core/encoding.md) used by the application, used to marshal the parameters and query before making the Tendermint RPC request and unmarshal the returned response into a JSON object. The default codec used by the CLI is Protobuf.
-- **Account Decoder**: The account decoder from the [`auth`](../..//x/auth/spec/README.md) module, which translates `[]byte`s into accounts.
-- **RPC Client**: The Tendermint RPC Client, or node, to which the request will be relayed to.
-- **Keyring**: A [Key Manager](../basics/accounts.md#keyring) used to sign transactions and handle other operations with keys.
-- **Output Writer**: A [Writer](https://golang.org/pkg/io/#Writer) used to output the response.
-- **Configurations**: The flags configured by the user for this command, including `--height`, specifying the height of the blockchain to query and `--indent`, which indicates to add an indent to the JSON response.
+* **Codec**: The [encoder/decoder](../core/encoding.md) used by the application, used to marshal the parameters and query before making the Tendermint RPC request and unmarshal the returned response into a JSON object. The default codec used by the CLI is Protobuf.
+* **Account Decoder**: The account decoder from the [`auth`](../..//x/auth/spec/README.md) module, which translates `[]byte`s into accounts.
+* **RPC Client**: The Tendermint RPC Client, or node, to which the request will be relayed to.
+* **Keyring**: A [Key Manager](../basics/accounts.md#keyring) used to sign transactions and handle other operations with keys.
+* **Output Writer**: A [Writer](https://golang.org/pkg/io/#Writer) used to output the response.
+* **Configurations**: The flags configured by the user for this command, including `--height`, specifying the height of the blockchain to query and `--indent`, which indicates to add an indent to the JSON response.
 
 The `client.Context` also contains various functions such as `Query()` which retrieves the RPC Client and makes an ABCI call to relay a query to a full-node.
 
@@ -109,7 +109,7 @@ Here is what the code looks like for the CLI command:
 
 #### gRPC Query Client Creation
 
-The SDK leverages code generated from Protobuf services to make queries. The `staking` module's `MyQuery` service generates a `queryClient`, which the CLI will use to make queries. Here is the relevant code:
+The Cosmos SDK leverages code generated from Protobuf services to make queries. The `staking` module's `MyQuery` service generates a `queryClient`, which the CLI will use to make queries. Here is the relevant code:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/x/staking/client/cli/query.go#L318-L342
 

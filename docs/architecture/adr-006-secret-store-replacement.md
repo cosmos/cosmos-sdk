@@ -2,14 +2,14 @@
 
 ## Changelog
 
-- July 29th, 2019: Initial draft
-- September 11th, 2019: Work has started
-- November 4th: SDK changes merged in
-- November 18th: Gaia changes merged in
+* July 29th, 2019: Initial draft
+* September 11th, 2019: Work has started
+* November 4th: Cosmos SDK changes merged in
+* November 18th: Gaia changes merged in
 
 ## Context
 
-Currently, an SDK application's CLI directory stores key material and metadata in a plain text database in the user’s home directory.  Key material is encrypted by a passphrase, protected by bcrypt hashing algorithm. Metadata (e.g. addresses, public keys, key storage details) is available in plain text.
+Currently, a Cosmos SDK application's CLI directory stores key material and metadata in a plain text database in the user’s home directory.  Key material is encrypted by a passphrase, protected by bcrypt hashing algorithm. Metadata (e.g. addresses, public keys, key storage details) is available in plain text.
 
 This is not desirable for a number of reasons. Perhaps the biggest reason is insufficient security protection of key material and metadata. Leaking the plain text allows an attacker to surveil what keys a given computer controls via a number of techniques, like compromised dependencies without any privilege execution. This could be followed by a more targeted attack on a particular user/computer.
 
@@ -47,8 +47,8 @@ Running tests locally on a Mac require numerous repetitive password entries.
 
 ## References
 
-- #4754 Switch secret store to the keyring secret store (original PR by @poldsam) [__CLOSED__]
-- #5029 Add support for github.com/99designs/keyring-backed keybases [__MERGED__]
-- #5097 Add keys migrate command [__MERGED__]
-- #5180 Drop on-disk keybase in favor of keyring [_PENDING_REVIEW_]
-- cosmos/gaia#164 Drop on-disk keybase in favor of keyring (gaia's changes) [_PENDING_REVIEW_]
+* #4754 Switch secret store to the keyring secret store (original PR by @poldsam) [__CLOSED__]
+* #5029 Add support for github.com/99designs/keyring-backed keybases [__MERGED__]
+* #5097 Add keys migrate command [__MERGED__]
+* #5180 Drop on-disk keybase in favor of keyring [_PENDING_REVIEW_]
+* cosmos/gaia#164 Drop on-disk keybase in favor of keyring (gaia's changes) [_PENDING_REVIEW_]

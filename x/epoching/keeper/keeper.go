@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	db "github.com/tendermint/tm-db"
 )
@@ -22,7 +23,7 @@ var (
 
 // Keeper of the store
 type Keeper struct {
-	storeKey sdk.StoreKey
+	storeKey storetypes.StoreKey
 	cdc      codec.BinaryCodec
 	// Used to calculate the estimated next epoch time.
 	// This is local to every node
@@ -31,7 +32,7 @@ type Keeper struct {
 }
 
 // NewKeeper creates a epoch queue manager
-func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, commitTimeout time.Duration) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, key storetypes.StoreKey, commitTimeout time.Duration) Keeper {
 	return Keeper{
 		storeKey:      key,
 		cdc:           cdc,
@@ -106,7 +107,7 @@ func (k Keeper) GetEpochMsg(ctx sdk.Context, epochNumber int64, actionID uint64)
 // GetEpochActions get all actions
 func (k Keeper) GetEpochActions(ctx sdk.Context) []sdk.Msg {
 	actions := []sdk.Msg{}
-	iterator := sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte(EpochActionQueuePrefix))
+	iterator := k.GetEpochActionsIterator(ctx)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -121,13 +122,13 @@ func (k Keeper) GetEpochActions(ctx sdk.Context) []sdk.Msg {
 
 // GetEpochActionsIterator returns iterator for EpochActions
 func (k Keeper) GetEpochActionsIterator(ctx sdk.Context) db.Iterator {
-	return sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte(EpochActionQueuePrefix))
+	return sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), EpochActionQueuePrefix)
 }
 
 // DequeueEpochActions dequeue all the actions store on epoch
 func (k Keeper) DequeueEpochActions(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, []byte(EpochActionQueuePrefix))
+	iterator := sdk.KVStorePrefixIterator(store, EpochActionQueuePrefix)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

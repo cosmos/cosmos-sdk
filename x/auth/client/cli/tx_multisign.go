@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -128,13 +127,15 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 				return fmt.Errorf("set the chain id with either the --chain-id flag or config file")
 			}
 
-			signingData := signing.SignerData{
-				ChainID:       txFactory.ChainID(),
-				AccountNumber: txFactory.AccountNumber(),
-				Sequence:      txFactory.Sequence(),
-			}
-
 			for _, sig := range sigs {
+				signingData := signing.SignerData{
+					Address:       sdk.AccAddress(sig.PubKey.Address()).String(),
+					ChainID:       txFactory.ChainID(),
+					AccountNumber: txFactory.AccountNumber(),
+					Sequence:      txFactory.Sequence(),
+					PubKey:        sig.PubKey,
+				}
+
 				err = signing.VerifySignature(sig.PubKey, signingData, sig.Data, txCfg.SignModeHandler(), txBuilder.GetTx())
 				if err != nil {
 					addr, _ := sdk.AccAddressFromHex(sig.PubKey.Address().String())
@@ -323,9 +324,11 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			multisigPub := pubKey.(*kmultisig.LegacyAminoPubKey)
 			multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
 			signingData := signing.SignerData{
+				Address:       sdk.AccAddress(pubKey.Address()).String(),
 				ChainID:       txFactory.ChainID(),
 				AccountNumber: txFactory.AccountNumber(),
 				Sequence:      txFactory.Sequence(),
+				PubKey:        pubKey,
 			}
 
 			for _, sig := range signatureBatch {
@@ -393,14 +396,14 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 
 func unmarshalSignatureJSON(clientCtx client.Context, filename string) (sigs []signingtypes.SignatureV2, err error) {
 	var bytes []byte
-	if bytes, err = ioutil.ReadFile(filename); err != nil {
+	if bytes, err = os.ReadFile(filename); err != nil {
 		return
 	}
 	return clientCtx.TxConfig.UnmarshalSignatureJSON(bytes)
 }
 
 func readSignaturesFromFile(ctx client.Context, filename string) (sigs []signingtypes.SignatureV2, err error) {
-	bz, err := ioutil.ReadFile(filename)
+	bz, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,7 @@
 package simulation_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"math/rand"
 	"testing"
 
@@ -73,7 +74,7 @@ func (suite *SimTestSuite) TestSimulateMsgSetWithdrawAddress() {
 	suite.Require().NoError(err)
 
 	var msg types.MsgSetWithdrawAddress
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.DelegatorAddress)
@@ -114,7 +115,7 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 	suite.Require().NoError(err)
 
 	var msg types.MsgWithdrawDelegatorReward
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal("cosmosvaloper1l4s054098kk9hmr5753c6k3m2kw65h686d3mhr", msg.ValidatorAddress)
@@ -157,9 +158,11 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 	)
 
 	suite.app.DistrKeeper.SetValidatorOutstandingRewards(suite.ctx, validator0.GetOperator(), types.ValidatorOutstandingRewards{Rewards: valCommission})
+	suite.app.DistrKeeper.SetValidatorOutstandingRewards(suite.ctx, suite.genesisVals[0].GetOperator(), types.ValidatorOutstandingRewards{Rewards: valCommission})
 
 	// setup validator accumulated commission
 	suite.app.DistrKeeper.SetValidatorAccumulatedCommission(suite.ctx, validator0.GetOperator(), types.ValidatorAccumulatedCommission{Commission: valCommission})
+	suite.app.DistrKeeper.SetValidatorAccumulatedCommission(suite.ctx, suite.genesisVals[0].GetOperator(), types.ValidatorAccumulatedCommission{Commission: valCommission})
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
@@ -167,16 +170,20 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 	// execute operation
 	op := simulation.SimulateMsgWithdrawValidatorCommission(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.DistrKeeper, suite.app.StakingKeeper)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
-	suite.Require().NoError(err)
+	if !operationMsg.OK {
+		suite.Require().Equal("could not find account", operationMsg.Comment)
+	} else {
+		suite.Require().NoError(err)
 
-	var msg types.MsgWithdrawValidatorCommission
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+		var msg types.MsgWithdrawValidatorCommission
+		legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
-	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal("cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
-	suite.Require().Equal(types.TypeMsgWithdrawValidatorCommission, msg.Type())
-	suite.Require().Equal(types.ModuleName, msg.Route())
-	suite.Require().Len(futureOperations, 0)
+		suite.Require().True(operationMsg.OK)
+		suite.Require().Equal("cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
+		suite.Require().Equal(types.TypeMsgWithdrawValidatorCommission, msg.Type())
+		suite.Require().Equal(types.ModuleName, msg.Route())
+		suite.Require().Len(futureOperations, 0)
+	}
 }
 
 // TestSimulateMsgFundCommunityPool tests the normal scenario of a valid message of type TypeMsgFundCommunityPool.
@@ -196,7 +203,7 @@ func (suite *SimTestSuite) TestSimulateMsgFundCommunityPool() {
 	suite.Require().NoError(err)
 
 	var msg types.MsgFundCommunityPool
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal("4896096stake", msg.Amount.String())
@@ -209,8 +216,9 @@ func (suite *SimTestSuite) TestSimulateMsgFundCommunityPool() {
 type SimTestSuite struct {
 	suite.Suite
 
-	ctx sdk.Context
-	app *simapp.SimApp
+	ctx         sdk.Context
+	app         *simapp.SimApp
+	genesisVals []stakingtypes.Validator
 }
 
 func (suite *SimTestSuite) SetupTest() {
@@ -218,6 +226,9 @@ func (suite *SimTestSuite) SetupTest() {
 	app := simapp.Setup(suite.T(), checkTx)
 	suite.app = app
 	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{})
+	genesisVals := app.StakingKeeper.GetAllValidators(suite.ctx)
+	suite.Require().Len(genesisVals, 1)
+	suite.genesisVals = genesisVals
 }
 
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {

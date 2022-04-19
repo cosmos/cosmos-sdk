@@ -24,7 +24,6 @@ func GetPruningOptionsFromFlags(appOpts types.AppOptions) (storetypes.PruningOpt
 	case storetypes.PruningOptionCustom:
 		opts := storetypes.NewPruningOptions(
 			cast.ToUint64(appOpts.Get(FlagPruningKeepRecent)),
-			cast.ToUint64(appOpts.Get(FlagPruningKeepEvery)),
 			cast.ToUint64(appOpts.Get(FlagPruningInterval)),
 		)
 

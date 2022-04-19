@@ -8,8 +8,8 @@ A Protobuf `Msg` service processes [messages](./messages-and-queries.md#messages
 
 ## Pre-requisite Readings
 
-- [Module Manager](./module-manager.md) {prereq}
-- [Messages and Queries](./messages-and-queries.md) {prereq}
+* [Module Manager](./module-manager.md) {prereq}
+* [Messages and Queries](./messages-and-queries.md) {prereq}
 
 ## Implementation of a module `Msg` service
 
@@ -29,20 +29,48 @@ When possible, the existing module's [`Keeper`](keeper.md) should implement `Msg
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/bank/keeper/msg_server.go#L27-L28
 
-`sdk.Msg` processing usually follows these 2 steps:
+`sdk.Msg` processing usually follows these 3 steps:
 
-- First, they perform *stateful* checks to make sure the `message` is valid. At this stage, the `message`'s `ValidateBasic()` method has already been called, meaning *stateless* checks on the message (like making sure parameters are correctly formatted) have already been performed. Checks performed in the `msgServer` method can be more expensive and require access to the state. For example, a `msgServer` method for a `transfer` message might check that the sending account has enough funds to actually perform the transfer. To access the state, the `msgServer` method needs to call the [`keeper`'s](./keeper.md) getter functions.
-- Then, if the checks are successful, the `msgServer` method calls the [`keeper`'s](./keeper.md) setter functions to actually perform the state transition.
+### Validation 
 
-Before returning, `msgServer` methods generally emit one or more [events](../core/events.md) via the `EventManager` held in the `ctx`:
+Before a `msgServer` method is executed, the message's [`ValidateBasic()`](../basics/tx-lifecycle.md#ValidateBasic) method has already been called. Since `msg.ValidateBasic()`  performs only the most basic checks, this stage must perform all other validation (both *stateful* and *stateless*) to make sure the `message` is valid. Checks performed in the `msgServer` method can be more expensive and the signer is charged gas for these operations.
+For example, a `msgServer` method for a `transfer` message might check that the sending account has enough funds to actually perform the transfer. 
+
+It is recommended to implement all validation checks in a separate function that passes state values as arguments. This implementation simplifies testing. As expected, expensive validation functions charge additional gas. Example:
+
+```go
+ValidateMsgA(msg MsgA, now Time, gm GasMeter) error {
+	if now.Before(msg.Expire) {
+		return sdkerrrors.ErrInvalidRequest.Wrap("msg expired")
+	}
+	gm.ConsumeGas(1000, "signature verification")
+	return signatureVerificaton(msg.Prover, msg.Data)
+}
+```
+
+### State Transition
+
+After the validation is successful, the `msgServer` method uses the [`keeper`](./keeper.md) functions to access the state and perform a state transition.
+
+### Events 
+
+Before returning, `msgServer` methods generally emit one or more [events](../core/events.md) by using the `EventManager` held in the `ctx`. Use the new `EmitTypedEvent` function that uses protobuf-based event types:
+
+```go
+ctx.EventManager().EmitTypedEvent(
+	&group.EventABC{Key1: Value1,  Key2, Value2})
+```
+
+or the older `EmitEvent` function: 
 
 ```go
 ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			eventType,  // e.g. sdk.EventTypeMessage for a message, types.CustomEventType for a custom event defined in the module
-			sdk.NewAttribute(attributeKey, attributeValue),
-		),
-    )
+	sdk.NewEvent(
+		eventType,  // e.g. sdk.EventTypeMessage for a message, types.CustomEventType for a custom event defined in the module
+		sdk.NewAttribute(key1, value1),
+		sdk.NewAttribute(key2, value2),
+	),
+)
 ```
 
 These events are relayed back to the underlying consensus engine and can be used by service providers to implement services around the application. Click [here](../core/events.md) to learn more about events.
@@ -71,9 +99,9 @@ Here is the typical structure of a `handler` function:
 
 Let us break it down:
 
-- The [`LegacyMsg`](./messages-and-queries.md#messages) is the actual object being processed.
-- The [`Context`](../core/context.md) contains all the necessary information needed to process the `msg`, as well as a branch of the latest state. If the `msg` is successfully processed, the branched version of the state contained in the `ctx` will be written to the main state (branch).
-- The `*Result` returned to `BaseApp` contains (among other things) information on the execution of the `handler` and [events](../core/events.md).
+* The [`LegacyMsg`](./messages-and-queries.md#messages) is the actual object being processed.
+* The [`Context`](../core/context.md) contains all the necessary information needed to process the `msg`, as well as a branch of the latest state. If the `msg` is successfully processed, the branched version of the state contained in the `ctx` will be written to the main state (branch).
+* The `*Result` returned to `BaseApp` contains (among other things) information on the execution of the `handler` and [events](../core/events.md).
 
 Module `handler`s are typically implemented in a `./handler.go` file inside the module's folder. The [module manager](./module-manager.md) is used to add the module's `handler`s to the
 [application's `router`](../core/baseapp.md#message-routing) via the `Route()` method. Typically,

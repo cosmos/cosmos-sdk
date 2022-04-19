@@ -81,6 +81,16 @@ func (coin Coin) IsLT(other Coin) bool {
 	return coin.Amount.LT(other.Amount)
 }
 
+// IsLTE returns true if they are the same type and the receiver is
+// an equal or smaller value
+func (coin Coin) IsLTE(other Coin) bool {
+	if coin.Denom != other.Denom {
+		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, other.Denom))
+	}
+
+	return !coin.Amount.GT(other.Amount)
+}
+
 // IsEqual returns true if the two sets of Coins have the same value
 func (coin Coin) IsEqual(other Coin) bool {
 	if coin.Denom != other.Denom {
@@ -105,19 +115,29 @@ func (coin Coin) AddAmount(amount Int) Coin {
 	return Coin{coin.Denom, coin.Amount.Add(amount)}
 }
 
-// Sub subtracts amounts of two coins with same denom. If the coins differ in denom
-// then it panics.
+// Sub subtracts amounts of two coins with same denom and panics on error.
 func (coin Coin) Sub(coinB Coin) Coin {
+	res, err := coin.SafeSub(coinB)
+	if err != nil {
+		panic(err)
+	}
+
+	return res
+}
+
+// SafeSub safely subtracts the amounts of two coins. It returns an error if the coins differ
+// in denom or subtraction results in negative coin denom.
+func (coin Coin) SafeSub(coinB Coin) (Coin, error) {
 	if coin.Denom != coinB.Denom {
-		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, coinB.Denom))
+		return Coin{}, fmt.Errorf("invalid coin denoms: %s, %s", coin.Denom, coinB.Denom)
 	}
 
 	res := Coin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
 	if res.IsNegative() {
-		panic("negative coin amount")
+		return Coin{}, fmt.Errorf("negative coin amount")
 	}
 
-	return res
+	return res, nil
 }
 
 // SubAmount subtracts an amount from the Coin.
@@ -142,6 +162,11 @@ func (coin Coin) IsPositive() bool {
 // TODO: Remove once unsigned integers are used.
 func (coin Coin) IsNegative() bool {
 	return coin.Amount.Sign() == -1
+}
+
+// IsNil returns true if the coin amount is nil and false otherwise.
+func (coin Coin) IsNil() bool {
+	return coin.Amount.i == nil
 }
 
 //-----------------------------------------------------------------------------
@@ -385,6 +410,91 @@ func (coins Coins) SafeSub(coinsB Coins) (Coins, bool) {
 	return diff, diff.IsAnyNegative()
 }
 
+// Max takes two valid Coins inputs and returns a valid Coins result
+// where for every denom D, AmountOf(D) of the result is the maximum
+// of AmountOf(D) of the inputs.  Note that the result might be not
+// be equal to either input. For any valid Coins a, b, and c, the
+// following are always true:
+//     a.IsAllLTE(a.Max(b))
+//     b.IsAllLTE(a.Max(b))
+//     a.IsAllLTE(c) && b.IsAllLTE(c) == a.Max(b).IsAllLTE(c)
+//     a.Add(b...).IsEqual(a.Min(b).Add(a.Max(b)...))
+//
+// E.g.
+// {1A, 3B, 2C}.Max({4A, 2B, 2C} == {4A, 3B, 2C})
+// {2A, 3B}.Max({1B, 4C}) == {2A, 3B, 4C}
+// {1A, 2B}.Max({}) == {1A, 2B}
+func (coins Coins) Max(coinsB Coins) Coins {
+	max := make([]Coin, 0)
+	indexA, indexB := 0, 0
+	for indexA < len(coins) && indexB < len(coinsB) {
+		coinA, coinB := coins[indexA], coinsB[indexB]
+		switch strings.Compare(coinA.Denom, coinB.Denom) {
+		case -1: // denom missing from coinsB
+			max = append(max, coinA)
+			indexA++
+		case 0: // same denom in both
+			maxCoin := coinA
+			if coinB.Amount.GT(maxCoin.Amount) {
+				maxCoin = coinB
+			}
+			max = append(max, maxCoin)
+			indexA++
+			indexB++
+		case 1: // denom missing from coinsA
+			max = append(max, coinB)
+			indexB++
+		}
+	}
+	for ; indexA < len(coins); indexA++ {
+		max = append(max, coins[indexA])
+	}
+	for ; indexB < len(coinsB); indexB++ {
+		max = append(max, coinsB[indexB])
+	}
+	return NewCoins(max...)
+}
+
+// Min takes two valid Coins inputs and returns a valid Coins result
+// where for every denom D, AmountOf(D) of the result is the minimum
+// of AmountOf(D) of the inputs.  Note that the result might be not
+// be equal to either input. For any valid Coins a, b, and c, the
+// following are always true:
+//     a.Min(b).IsAllLTE(a)
+//     a.Min(b).IsAllLTE(b)
+//     c.IsAllLTE(a) && c.IsAllLTE(b) == c.IsAllLTE(a.Min(b))
+//     a.Add(b...).IsEqual(a.Min(b).Add(a.Max(b)...))
+//
+// E.g.
+// {1A, 3B, 2C}.Min({4A, 2B, 2C} == {1A, 2B, 2C})
+// {2A, 3B}.Min({1B, 4C}) == {1B}
+// {1A, 2B}.Min({3C}) == empty
+//
+// See also DecCoins.Intersect().
+func (coins Coins) Min(coinsB Coins) Coins {
+	min := make([]Coin, 0)
+	for indexA, indexB := 0, 0; indexA < len(coins) && indexB < len(coinsB); {
+		coinA, coinB := coins[indexA], coinsB[indexB]
+		switch strings.Compare(coinA.Denom, coinB.Denom) {
+		case -1: // denom missing from coinsB
+			indexA++
+		case 0: // same denom in both
+			minCoin := coinA
+			if coinB.Amount.LT(minCoin.Amount) {
+				minCoin = coinB
+			}
+			if !minCoin.IsZero() {
+				min = append(min, minCoin)
+			}
+			indexA++
+			indexB++
+		case 1: // denom missing from coins
+			indexB++
+		}
+	}
+	return NewCoins(min...)
+}
+
 // IsAllGT returns true if for every denom in coinsB,
 // the denom is present at a greater amount in coins.
 func (coins Coins) IsAllGT(coinsB Coins) bool {
@@ -590,6 +700,19 @@ func (coins Coins) IsAnyNegative() bool {
 	return false
 }
 
+// IsAnyNil returns true if there is at least one coin whose amount
+// is nil; returns false otherwise. It returns false if the coin set
+// is empty too.
+func (coins Coins) IsAnyNil() bool {
+	for _, coin := range coins {
+		if coin.IsNil() {
+			return true
+		}
+	}
+
+	return false
+}
+
 // negative returns a set of coins with all amount negative.
 //
 // TODO: Remove once unsigned integers are used.
@@ -608,7 +731,18 @@ func (coins Coins) negative() Coins {
 
 // removeZeroCoins removes all zero coins from the given coin set in-place.
 func removeZeroCoins(coins Coins) Coins {
-	result := make([]Coin, 0, len(coins))
+	for i := 0; i < len(coins); i++ {
+		if coins[i].IsZero() {
+			break
+		} else if i == len(coins)-1 {
+			return coins
+		}
+	}
+
+	var result []Coin
+	if len(coins) > 0 {
+		result = make([]Coin, 0, len(coins)-1)
+	}
 
 	for _, coin := range coins {
 		if !coin.IsZero() {
@@ -644,8 +778,8 @@ func (coins Coins) Sort() Coins {
 
 var (
 	// Denominations can be 3 ~ 128 characters long and support letters, followed by either
-	// a letter, a number or a separator ('/').
-	reDnmString = `[a-zA-Z][a-zA-Z0-9/-]{2,127}`
+	// a letter, a number or a separator ('/', ':', '.', '_' or '-').
+	reDnmString = `[a-zA-Z][a-zA-Z0-9/:._-]{2,127}`
 	reDecAmt    = `[[:digit:]]+(?:\.[[:digit:]]+)?|\.[[:digit:]]+`
 	reSpc       = `[[:space:]]*`
 	reDnm       *regexp.Regexp

@@ -34,6 +34,7 @@ func TestInitGenesis(t *testing.T) {
 
 	params := app.StakingKeeper.GetParams(ctx)
 	validators := app.StakingKeeper.GetAllValidators(ctx)
+	require.Len(t, validators, 1)
 	var delegations []types.Delegation
 
 	pk0, err := codectypes.NewAnyWithValue(PKs[0])
@@ -64,16 +65,20 @@ func TestInitGenesis(t *testing.T) {
 	validators = append(validators, bondedVal1, bondedVal2)
 	log.Printf("%#v", len(validators))
 	// mint coins in the bonded pool representing the validators coins
+	i2 := len(validators) - 1 // -1 to exclude genesis validator
 	require.NoError(t,
 		testutil.FundModuleAccount(
 			app.BankKeeper,
 			ctx,
 			types.BondedPoolName,
 			sdk.NewCoins(
-				sdk.NewCoin(params.BondDenom, valTokens.MulRaw((int64)(len(validators)))),
+				sdk.NewCoin(params.BondDenom, valTokens.MulRaw((int64)(i2))),
 			),
 		),
 	)
+	genesisDelegations := app.StakingKeeper.GetAllDelegations(ctx)
+	delegations = append(delegations, genesisDelegations...)
+
 	genesisState := types.NewGenesisState(params, validators, delegations)
 	vals := staking.InitGenesis(ctx, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, genesisState)
 
@@ -99,6 +104,8 @@ func TestInitGenesis(t *testing.T) {
 	require.Equal(t, types.Bonded, resVal.Status)
 
 	abcivals := make([]abci.ValidatorUpdate, len(vals))
+
+	validators = validators[1:] // remove genesis validator
 	for i, val := range validators {
 		abcivals[i] = val.ABCIValidatorUpdate(app.StakingKeeper.PowerReduction(ctx))
 	}
@@ -156,6 +163,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	require.True(t, size > 100)
 
 	app, ctx, addrs := bootstrapGenesisTest(t, 200)
+	genesisValidators := app.StakingKeeper.GetAllValidators(ctx)
 
 	params := app.StakingKeeper.GetParams(ctx)
 	delegations := []types.Delegation{}
@@ -179,6 +187,8 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 		bondedPoolAmt = bondedPoolAmt.Add(tokens)
 	}
 
+	validators = append(validators, genesisValidators...)
+
 	genesisState := types.NewGenesisState(params, validators, delegations)
 
 	// mint coins in the bonded pool representing the validators coins
@@ -198,6 +208,8 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 		abcivals[i] = val.ABCIValidatorUpdate(app.StakingKeeper.PowerReduction(ctx))
 	}
 
+	// remove genesis validator
+	vals = vals[:100]
 	require.Equal(t, abcivals, vals)
 }
 

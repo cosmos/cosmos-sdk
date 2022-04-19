@@ -1,5 +1,5 @@
 <!--
-order: 10
+order: 11
 -->
 
 # Telemetry
@@ -117,28 +117,12 @@ The following examples expose too much cardinality and may not even prove to be 
 | `tx_msg_ibc_recv_packet`        | Total number of IBC packets received                                                      | packet          | counter |
 | `tx_msg_ibc_acknowledge_packet` | Total number of IBC packets acknowledged                                                  | acknowledgement | counter |
 | `ibc_timeout_packet`            | Total number of IBC timeout packets                                                       | timeout         | counter |
-| `abci_check_tx`                 | Duration of ABCI `CheckTx`                                                                | ms              | summary |
-| `abci_deliver_tx`               | Duration of ABCI `DeliverTx`                                                              | ms              | summary |
-| `abci_commit`                   | Duration of ABCI `Commit`                                                                 | ms              | summary |
-| `abci_query`                    | Duration of ABCI `Query`                                                                  | ms              | summary |
-| `abci_begin_block`              | Duration of ABCI `BeginBlock`                                                             | ms              | summary |
-| `abci_end_block`                | Duration of ABCI `EndBlock`                                                               | ms              | summary |
-| `begin_blocker`                 | Duration of `BeginBlock` for a given module                                               | ms              | summary |
-| `end_blocker`                   | Duration of `EndBlock` for a given module                                                 | ms              | summary |
 | `store_iavl_get`                | Duration of an IAVL `Store#Get` call                                                      | ms              | summary |
 | `store_iavl_set`                | Duration of an IAVL `Store#Set` call                                                      | ms              | summary |
 | `store_iavl_has`                | Duration of an IAVL `Store#Has` call                                                      | ms              | summary |
 | `store_iavl_delete`             | Duration of an IAVL `Store#Delete` call                                                   | ms              | summary |
 | `store_iavl_commit`             | Duration of an IAVL `Store#Commit` call                                                   | ms              | summary |
 | `store_iavl_query`              | Duration of an IAVL `Store#Query` call                                                    | ms              | summary |
-| `store_gaskv_get`               | Duration of a GasKV `Store#Get` call                                                      | ms              | summary |
-| `store_gaskv_set`               | Duration of a GasKV `Store#Set` call                                                      | ms              | summary |
-| `store_gaskv_has`               | Duration of a GasKV `Store#Has` call                                                      | ms              | summary |
-| `store_gaskv_delete`            | Duration of a GasKV `Store#Delete` call                                                   | ms              | summary |
-| `store_cachekv_get`             | Duration of a CacheKV `Store#Get` call                                                    | ms              | summary |
-| `store_cachekv_set`             | Duration of a CacheKV `Store#Set` call                                                    | ms              | summary |
-| `store_cachekv_write`           | Duration of a CacheKV `Store#Write` call                                                  | ms              | summary |
-| `store_cachekv_delete`          | Duration of a CacheKV `Store#Delete` call                                                 | ms              | summary |
 
 ## Next {hide}
 

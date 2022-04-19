@@ -16,11 +16,11 @@ simd tx bank send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000stake --chain-id my-test-
 
 will run the following steps:
 
-- generate a transaction with one `Msg` (`x/bank`'s `MsgSend`), and print the generated transaction to the console.
-- ask the user for confirmation to send the transaction from the `$MY_VALIDATOR_ADDRESS` account.
-- fetch `$MY_VALIDATOR_ADDRESS` from the keyring. This is possible because we have [set up the CLI's keyring](./keyring.md) in a previous step.
-- sign the generated transaction with the keyring's account.
-- broadcast the signed transaction to the network. This is possible because the CLI connects to the node's Tendermint RPC endpoint.
+* generate a transaction with one `Msg` (`x/bank`'s `MsgSend`), and print the generated transaction to the console.
+* ask the user for confirmation to send the transaction from the `$MY_VALIDATOR_ADDRESS` account.
+* fetch `$MY_VALIDATOR_ADDRESS` from the keyring. This is possible because we have [set up the CLI's keyring](./keyring.md) in a previous step.
+* sign the generated transaction with the keyring's account.
+* broadcast the signed transaction to the network. This is possible because the CLI connects to the node's Tendermint RPC endpoint.
 
 The CLI bundles all the necessary steps into a simple-to-use user experience. However, it's possible to run all the steps individually too.
 
@@ -46,8 +46,8 @@ This command will decode the unsigned transaction and sign it with `SIGN_MODE_DI
 
 Some useful flags to consider in the `tx sign` command:
 
-- `--sign-mode`: you may use `amino-json` to sign the transaction using `SIGN_MODE_LEGACY_AMINO_JSON`,
-- `--offline`: sign in offline mode. This means that the `tx sign` command doesn't connect to the node to retrieve the signer's account number and sequence, both needed for signing. In this case, you must manually supply the `--account-number` and `--sequence` flags. This is useful for offline signing, i.e. signing in a secure environment which doesn't have access to the internet.
+* `--sign-mode`: you may use `amino-json` to sign the transaction using `SIGN_MODE_LEGACY_AMINO_JSON`,
+* `--offline`: sign in offline mode. This means that the `tx sign` command doesn't connect to the node to retrieve the signer's account number and sequence, both needed for signing. In this case, you must manually supply the `--account-number` and `--sequence` flags. This is useful for offline signing, i.e. signing in a secure environment which doesn't have access to the internet.
 
 #### Signing with Multiple Signers
 
@@ -61,12 +61,12 @@ For example, starting with the `unsigned_tx.json`, and assuming the transaction 
 
 ```bash
 # Let signer1 sign the unsigned tx.
-simd tx multisignsign unsigned_tx.json signer_key_1 --chain-id my-test-chain --keyring-backend test > partial_tx_1.json
+simd tx multisign unsigned_tx.json signer_key_1 --chain-id my-test-chain --keyring-backend test > partial_tx_1.json
 # Now signer1 will send the partial_tx_1.json to the signer2.
 # Signer2 appends their signature:
-simd tx multisignsign partial_tx_1.json signer_key_2 --chain-id my-test-chain --keyring-backend test > partial_tx_2.json
+simd tx multisign partial_tx_1.json signer_key_2 --chain-id my-test-chain --keyring-backend test > partial_tx_2.json
 # Signer2 sends the partial_tx_2.json file to signer3, and signer3 can append his signature:
-simd tx multisignsign partial_tx_2.json signer_key_3 --chain-id my-test-chain --keyring-backend test > partial_tx_3.json
+simd tx multisign partial_tx_2.json signer_key_3 --chain-id my-test-chain --keyring-backend test > partial_tx_3.json
 ```
 
 ### Broadcasting a Transaction
@@ -79,9 +79,9 @@ simd tx broadcast tx_signed.json
 
 You may optionally pass the `--broadcast-mode` flag to specify which response to receive from the node:
 
-- `block`: the CLI waits for the tx to be committed in a block.
-- `sync`: the CLI waits for a CheckTx execution response only.
-- `async`: the CLI returns immediately (transaction might fail).
+* `block`: the CLI waits for the tx to be committed in a block.
+* `sync`: the CLI waits for a CheckTx execution response only.
+* `async`: the CLI returns immediately (transaction might fail).
 
 ### Encoding a Transaction
 
@@ -113,7 +113,7 @@ It is possible to manipulate transactions programmatically via Go using the Cosm
 
 ### Generating a Transaction
 
-Before generating a transaction, a new instance of a `TxBuilder` needs to be created. Since the SDK supports both Amino and Protobuf transactions, the first step would be to decide which encoding scheme to use. All the subsequent steps remain unchanged, whether you're using Amino or Protobuf, as `TxBuilder` abstracts the encoding mechanisms. In the following snippet, we will use Protobuf.
+Before generating a transaction, a new instance of a `TxBuilder` needs to be created. Since the Cosmos SDK supports both Amino and Protobuf transactions, the first step would be to decide which encoding scheme to use. All the subsequent steps remain unchanged, whether you're using Amino or Protobuf, as `TxBuilder` abstracts the encoding mechanisms. In the following snippet, we will use Protobuf.
 
 ```go
 import (
@@ -179,8 +179,8 @@ At this point, `TxBuilder`'s underlying transaction is ready to be signed.
 
 We set encoding config to use Protobuf, which will use `SIGN_MODE_DIRECT` by default. As per [ADR-020](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/docs/architecture/adr-020-protobuf-transaction-encoding.md), each signer needs to sign the `SignerInfo`s of all other signers. This means that we need to perform two steps sequentially:
 
-- for each signer, populate the signer's `SignerInfo` inside `TxBuilder`,
-- once all `SignerInfo`s are populated, for each signer, sign the `SignDoc` (the payload to be signed).
+* for each signer, populate the signer's `SignerInfo` inside `TxBuilder`,
+* once all `SignerInfo`s are populated, for each signer, sign the `SignDoc` (the payload to be signed).
 
 In the current `TxBuilder`'s API, both steps are done using the same method: `SetSignatures()`. The current API requires us to first perform a round of `SetSignatures()` _with empty signatures_, only to populate `SignerInfo`s, and a second round of `SetSignatures()` to actually sign the correct payload.
 
@@ -283,7 +283,7 @@ func sendTx(ctx context.Context) error {
     // Create a connection to the gRPC server.
     grpcConn := grpc.Dial(
         "127.0.0.1:9090", // Or your gRPC server address.
-        grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
+        grpc.WithInsecure(), // The Cosmos SDK doesn't support any transport security mechanism.
     )
     defer grpcConn.Close()
 

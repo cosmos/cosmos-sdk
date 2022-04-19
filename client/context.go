@@ -2,13 +2,15 @@ package client
 
 import (
 	"bufio"
-	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 
 	"github.com/spf13/viper"
 
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
+
+	"google.golang.org/grpc"
 
 	"github.com/gogo/protobuf/proto"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
@@ -24,6 +26,7 @@ import (
 type Context struct {
 	FromAddress       sdk.AccAddress
 	Client            rpcclient.Client
+	GRPCClient        *grpc.ClientConn
 	ChainID           string
 	Codec             codec.Codec
 	InterfaceRegistry codectypes.InterfaceRegistry
@@ -47,8 +50,12 @@ type Context struct {
 	TxConfig          TxConfig
 	AccountRetriever  AccountRetriever
 	NodeURI           string
+	FeePayer          sdk.AccAddress
 	FeeGranter        sdk.AccAddress
 	Viper             *viper.Viper
+
+	// IsAux is true when the signer is an auxiliary signer (e.g. the tipper).
+	IsAux bool
 
 	// TODO: Deprecated (remove).
 	LegacyAmino *codec.LegacyAmino
@@ -125,6 +132,13 @@ func (ctx Context) WithClient(client rpcclient.Client) Context {
 	return ctx
 }
 
+// WithGRPCClient returns a copy of the context with an updated GRPC client
+// instance.
+func (ctx Context) WithGRPCClient(grpcClient *grpc.ClientConn) Context {
+	ctx.GRPCClient = grpcClient
+	return ctx
+}
+
 // WithUseLedger returns a copy of the context with an updated UseLedger flag.
 func (ctx Context) WithUseLedger(useLedger bool) Context {
 	ctx.UseLedger = useLedger
@@ -179,6 +193,13 @@ func (ctx Context) WithFromName(name string) Context {
 // address.
 func (ctx Context) WithFromAddress(addr sdk.AccAddress) Context {
 	ctx.FromAddress = addr
+	return ctx
+}
+
+// WithFeePayerAddress returns a copy of the context with an updated fee payer account
+// address.
+func (ctx Context) WithFeePayerAddress(addr sdk.AccAddress) Context {
+	ctx.FeePayer = addr
 	return ctx
 }
 
@@ -238,6 +259,12 @@ func (ctx Context) WithViper(prefix string) Context {
 	return ctx
 }
 
+// WithAux returns a copy of the context with an updated IsAux value.
+func (ctx Context) WithAux(isAux bool) Context {
+	ctx.IsAux = isAux
+	return ctx
+}
+
 // PrintString prints the raw string to ctx.Output if it's defined, otherwise to os.Stdout
 func (ctx Context) PrintString(str string) error {
 	return ctx.PrintBytes([]byte(str))
@@ -279,16 +306,9 @@ func (ctx Context) PrintObjectLegacy(toPrint interface{}) error {
 }
 
 func (ctx Context) printOutput(out []byte) error {
+	var err error
 	if ctx.OutputFormat == "text" {
-		// handle text format by decoding and re-encoding JSON as YAML
-		var j interface{}
-
-		err := json.Unmarshal(out, &j)
-		if err != nil {
-			return err
-		}
-
-		out, err = yaml.Marshal(j)
+		out, err = yaml.JSONToYAML(out)
 		if err != nil {
 			return err
 		}
@@ -299,7 +319,7 @@ func (ctx Context) printOutput(out []byte) error {
 		writer = os.Stdout
 	}
 
-	_, err := writer.Write(out)
+	_, err = writer.Write(out)
 	if err != nil {
 		return err
 	}
@@ -315,16 +335,31 @@ func (ctx Context) printOutput(out []byte) error {
 	return nil
 }
 
-// GetFromFields returns a from account address, account name and keyring type, given either
-// an address or key name. If genOnly is true, only a valid Bech32 cosmos
-// address is returned.
-func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddress, string, keyring.KeyType, error) {
+// GetFromFields returns a from account address, account name and keyring type, given either an address or key name.
+// If clientCtx.Simulate is true the keystore is not accessed and a valid address must be provided
+// If clientCtx.GenerateOnly is true the keystore is only accessed if a key name is provided
+func GetFromFields(clientCtx Context, kr keyring.Keyring, from string) (sdk.AccAddress, string, keyring.KeyType, error) {
 	if from == "" {
 		return nil, "", 0, nil
 	}
 
+	addr, err := sdk.AccAddressFromBech32(from)
+	switch {
+	case clientCtx.Simulate:
+		if err != nil {
+			return nil, "", 0, fmt.Errorf("a valid bech32 address must be provided in simulation mode: %w", err)
+		}
+
+		return addr, "", 0, nil
+
+	case clientCtx.GenerateOnly:
+		if err == nil {
+			return addr, "", 0, nil
+		}
+	}
+
 	var k *keyring.Record
-	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
+	if err == nil {
 		k, err = kr.KeyByAddress(addr)
 		if err != nil {
 			return nil, "", 0, err
@@ -336,7 +371,7 @@ func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddres
 		}
 	}
 
-	addr, err := k.GetAddress()
+	addr, err = k.GetAddress()
 	if err != nil {
 		return nil, "", 0, err
 	}
@@ -346,7 +381,7 @@ func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddres
 
 // NewKeyringFromBackend gets a Keyring object from a backend
 func NewKeyringFromBackend(ctx Context, backend string) (keyring.Keyring, error) {
-	if ctx.GenerateOnly || ctx.Simulate {
+	if ctx.Simulate {
 		backend = keyring.BackendMemory
 	}
 

@@ -21,13 +21,13 @@ type kvstoreTx struct {
 }
 
 // dummy implementation of proto.Message
-func (msg kvstoreTx) Reset()         {}
-func (msg kvstoreTx) String() string { return "TODO" }
-func (msg kvstoreTx) ProtoMessage()  {}
+func (msg *kvstoreTx) Reset()         {}
+func (msg *kvstoreTx) String() string { return "TODO" }
+func (msg *kvstoreTx) ProtoMessage()  {}
 
-var _ sdk.Tx = kvstoreTx{}
-var _ sdk.Msg = kvstoreTx{}
-var _ middleware.GasTx = kvstoreTx{}
+var _ sdk.Tx = &kvstoreTx{}
+var _ sdk.Msg = &kvstoreTx{}
+var _ middleware.GasTx = &kvstoreTx{}
 
 func NewTx(key, value string) kvstoreTx {
 	bytes := fmt.Sprintf("%s=%s", key, value)
@@ -46,7 +46,7 @@ func (tx kvstoreTx) Type() string {
 	return "kvstore_tx"
 }
 
-func (tx kvstoreTx) GetMsgs() []sdk.Msg {
+func (tx *kvstoreTx) GetMsgs() []sdk.Msg {
 	return []sdk.Msg{tx}
 }
 
@@ -79,10 +79,10 @@ func decodeTx(txBytes []byte) (sdk.Tx, error) {
 	split := bytes.Split(txBytes, []byte("="))
 	if len(split) == 1 {
 		k := split[0]
-		tx = kvstoreTx{k, k, txBytes}
+		tx = &kvstoreTx{k, k, txBytes}
 	} else if len(split) == 2 {
 		k, v := split[0], split[1]
-		tx = kvstoreTx{k, v, txBytes}
+		tx = &kvstoreTx{k, v, txBytes}
 	} else {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "too many '='")
 	}

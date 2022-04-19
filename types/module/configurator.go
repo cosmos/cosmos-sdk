@@ -1,6 +1,8 @@
 package module
 
 import (
+	"fmt"
+
 	"github.com/gogo/protobuf/grpc"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -24,14 +26,14 @@ type Configurator interface {
 
 	// RegisterMigration registers an in-place store migration for a module. The
 	// handler is a migration script to perform in-place migrations from version
-	// `forVersion` to version `forVersion+1`.
+	// `fromVersion` to version `fromVersion+1`.
 	//
 	// EACH TIME a module's ConsensusVersion increments, a new migration MUST
 	// be registered using this function. If a migration handler is missing for
 	// a particular function, the upgrade logic (see RunMigrations function)
 	// will panic. If the ConsensusVersion bump does not introduce any store
 	// changes, then a no-op function must be registered here.
-	RegisterMigration(moduleName string, forVersion uint64, handler MigrationHandler) error
+	RegisterMigration(moduleName string, fromVersion uint64, handler MigrationHandler) error
 }
 
 type configurator struct {
@@ -39,7 +41,7 @@ type configurator struct {
 	msgServer   grpc.Server
 	queryServer grpc.Server
 
-	// migrations is a map of moduleName -> forVersion -> migration script handler
+	// migrations is a map of moduleName -> fromVersion -> migration script handler
 	migrations map[string]map[uint64]MigrationHandler
 }
 
@@ -66,8 +68,8 @@ func (c configurator) QueryServer() grpc.Server {
 }
 
 // RegisterMigration implements the Configurator.RegisterMigration method
-func (c configurator) RegisterMigration(moduleName string, forVersion uint64, handler MigrationHandler) error {
-	if forVersion == 0 {
+func (c configurator) RegisterMigration(moduleName string, fromVersion uint64, handler MigrationHandler) error {
+	if fromVersion == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "module migration versions should start at 1")
 	}
 
@@ -75,11 +77,11 @@ func (c configurator) RegisterMigration(moduleName string, forVersion uint64, ha
 		c.migrations[moduleName] = map[uint64]MigrationHandler{}
 	}
 
-	if c.migrations[moduleName][forVersion] != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrLogic, "another migration for module %s and version %d already exists", moduleName, forVersion)
+	if c.migrations[moduleName][fromVersion] != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrLogic, "another migration for module %s and version %d already exists", moduleName, fromVersion)
 	}
 
-	c.migrations[moduleName][forVersion] = handler
+	c.migrations[moduleName][fromVersion] = handler
 
 	return nil
 }
@@ -103,6 +105,7 @@ func (c configurator) runModuleMigrations(ctx sdk.Context, moduleName string, fr
 		if !found {
 			return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "no migration found for module %s from version %d to version %d", moduleName, i, i+1)
 		}
+		ctx.Logger().Info(fmt.Sprintf("migrating module %s from version %d to version %d", moduleName, i, i+1))
 
 		err := migrateFn(ctx)
 		if err != nil {

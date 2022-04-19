@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
@@ -21,21 +20,21 @@ func TestStdSignatureMarshalYAML(t *testing.T) {
 	}{
 		{
 			legacytx.StdSignature{},
-			"|\n  pubkey: \"\"\n  signature: \"\"\n",
+			"pub_key: \"\"\nsignature: \"\"\n",
 		},
 		{
 			legacytx.StdSignature{PubKey: pk, Signature: []byte("dummySig")},
-			fmt.Sprintf("|\n  pubkey: %s\n  signature: 64756D6D79536967\n", pkStr),
+			fmt.Sprintf("pub_key: %s\nsignature: 64756D6D79536967\n", pkStr),
 		},
 		{
 			legacytx.StdSignature{PubKey: pk, Signature: nil},
-			fmt.Sprintf("|\n  pubkey: %s\n  signature: \"\"\n", pkStr),
+			fmt.Sprintf("pub_key: %s\nsignature: \"\"\n", pkStr),
 		},
 	}
 
 	for i, tc := range testCases {
-		bz, err := yaml.Marshal(tc.sig)
+		bz2, err := tc.sig.MarshalYAML()
 		require.NoError(t, err)
-		require.Equal(t, tc.expected, string(bz), "test case #%d", i)
+		require.Equal(t, tc.expected, bz2.(string), "test case #%d", i)
 	}
 }

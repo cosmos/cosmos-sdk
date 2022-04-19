@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	btcSecp256k1 "github.com/btcsuite/btcd/btcec"
-	"github.com/btcsuite/btcutil/base58"
+	"github.com/cosmos/btcutil/base58"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"

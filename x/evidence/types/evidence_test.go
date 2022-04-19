@@ -30,7 +30,18 @@ func TestEquivocation_Valid(t *testing.T) {
 	require.Equal(t, e.Type(), types.TypeEquivocation)
 	require.Equal(t, e.Route(), types.RouteEquivocation)
 	require.Equal(t, e.Hash().String(), "1E10F9267BEA3A9A4AB5302C2C510CC1AFD7C54E232DA5B2E3360DFAFACF7A76")
-	require.Equal(t, e.String(), "height: 100\ntime: 2006-01-02T15:04:05Z\npower: 1000000\nconsensus_address: cosmosvalcons1vehk7h6lta047h6lta047h6lta047h6l8m4r53\n")
+	require.Equal(t, e.String(), "consensus_address: cosmosvalcons1vehk7h6lta047h6lta047h6lta047h6l8m4r53\nheight: 100\npower: 1000000\ntime: \"2006-01-02T15:04:05Z\"\n")
+	require.NoError(t, e.ValidateBasic())
+
+	require.Equal(t, int64(0), e.GetTotalPower())
+	require.Equal(t, e.Power, e.GetValidatorPower())
+	require.Equal(t, e.Time, e.GetTime())
+	require.Equal(t, e.ConsensusAddress, e.GetConsensusAddress().String())
+	require.Equal(t, e.Height, e.GetHeight())
+	require.Equal(t, types.TypeEquivocation, e.Type())
+	require.Equal(t, types.RouteEquivocation, e.Route())
+	require.Equal(t, "1E10F9267BEA3A9A4AB5302C2C510CC1AFD7C54E232DA5B2E3360DFAFACF7A76", e.Hash().String())
+	require.Equal(t, "consensus_address: cosmosvalcons1vehk7h6lta047h6lta047h6lta047h6l8m4r53\nheight: 100\npower: 1000000\ntime: \"2006-01-02T15:04:05Z\"\n", e.String())
 	require.NoError(t, e.ValidateBasic())
 }
 

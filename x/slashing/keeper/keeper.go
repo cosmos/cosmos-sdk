@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -13,14 +14,14 @@ import (
 
 // Keeper of the slashing store
 type Keeper struct {
-	storeKey   sdk.StoreKey
+	storeKey   storetypes.StoreKey
 	cdc        codec.BinaryCodec
 	sk         types.StakingKeeper
 	paramspace types.ParamSubspace
 }
 
 // NewKeeper creates a slashing keeper
-func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, sk types.StakingKeeper, paramspace types.ParamSubspace) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, key storetypes.StoreKey, sk types.StakingKeeper, paramspace types.ParamSubspace) Keeper {
 	// set KeyTable if it has not already been set
 	if !paramspace.HasKeyTable() {
 		paramspace = paramspace.WithKeyTable(types.ParamKeyTable())

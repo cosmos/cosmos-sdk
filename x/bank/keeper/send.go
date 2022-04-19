@@ -3,6 +3,7 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -37,7 +38,7 @@ type BaseSendKeeper struct {
 
 	cdc        codec.BinaryCodec
 	ak         types.AccountKeeper
-	storeKey   sdk.StoreKey
+	storeKey   storetypes.StoreKey
 	paramSpace paramtypes.Subspace
 
 	// list of addresses that are restricted from receiving transactions
@@ -45,7 +46,7 @@ type BaseSendKeeper struct {
 }
 
 func NewBaseSendKeeper(
-	cdc codec.BinaryCodec, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blockedAddrs map[string]bool,
+	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blockedAddrs map[string]bool,
 ) BaseSendKeeper {
 
 	return BaseSendKeeper{
@@ -153,16 +154,18 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 		k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, toAddr))
 	}
 
+	// bech32 encoding is expensive! Only do it once for fromAddr
+	fromAddrString := fromAddr.String()
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeTransfer,
 			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
-			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
+			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
+			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
 		),
 	})
 

@@ -2,8 +2,8 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
@@ -37,12 +37,6 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	)
 }
 
-var (
-	amino     = codec.NewLegacyAmino()
-	ModuleCdc = codec.NewAminoCodec(amino)
-)
-
 func init() {
-	RegisterLegacyAminoCodec(amino)
-	cryptocodec.RegisterCrypto(amino)
+	RegisterLegacyAminoCodec(legacy.Cdc)
 }

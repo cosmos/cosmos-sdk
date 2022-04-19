@@ -70,8 +70,9 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rout
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the mint module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
-
+	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
+		panic(err)
+	}
 }
 
 // GetTxCmd returns no root tx command for the mint module.
@@ -88,14 +89,23 @@ type AppModule struct {
 
 	keeper     keeper.Keeper
 	authKeeper types.AccountKeeper
+
+	// inflationCalculator is used to calculate the inflation rate during BeginBlock.
+	// If inflationCalculator is nil, the default inflation calculation logic is used.
+	inflationCalculator types.InflationCalculationFn
 }
 
-// NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper) AppModule {
+// NewAppModule creates a new AppModule object. If the InflationCalculationFn
+// argument is nil, then the SDK's default inflation function will be used.
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper, ic types.InflationCalculationFn) AppModule {
+	if ic == nil {
+		ic = types.DefaultInflationCalculationFn
+	}
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
-		keeper:         keeper,
-		authKeeper:     ak,
+		AppModuleBasic:      AppModuleBasic{cdc: cdc},
+		keeper:              keeper,
+		authKeeper:          ak,
+		inflationCalculator: ic,
 	}
 }
 
@@ -148,7 +158,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock returns the begin blocker for the mint module.
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
-	BeginBlocker(ctx, am.keeper)
+	BeginBlocker(ctx, am.keeper, am.inflationCalculator)
 }
 
 // EndBlock returns the end blocker for the mint module. It returns no validator

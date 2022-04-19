@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -31,8 +32,8 @@ func (suite *SubspaceTestSuite) SetupTest() {
 	db := dbm.NewMemDB()
 
 	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(tkey, sdk.StoreTypeTransient, db)
+	ms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(tkey, storetypes.StoreTypeTransient, db)
 	suite.NoError(ms.LoadLatestVersion())
 
 	encCfg := simapp.MakeTestEncodingConfig()

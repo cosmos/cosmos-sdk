@@ -6,7 +6,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -15,6 +15,7 @@ var (
 	_ sdk.Tx                             = (*StdTx)(nil)
 	_ sdk.TxWithMemo                     = (*StdTx)(nil)
 	_ sdk.FeeTx                          = (*StdTx)(nil)
+	_ tx.TipTx                           = (*StdTx)(nil)
 	_ codectypes.UnpackInterfacesMessage = (*StdTx)(nil)
 
 	_ codectypes.UnpackInterfacesMessage = (*StdSignature)(nil)
@@ -25,8 +26,10 @@ var (
 // which must be above some miminum to be accepted into the mempool.
 // [Deprecated]
 type StdFee struct {
-	Amount sdk.Coins `json:"amount" yaml:"amount"`
-	Gas    uint64    `json:"gas" yaml:"gas"`
+	Amount  sdk.Coins `json:"amount" yaml:"amount"`
+	Gas     uint64    `json:"gas" yaml:"gas"`
+	Payer   string    `json:"payer,omitempty" yaml:"payer"`
+	Granter string    `json:"granter,omitempty" yaml:"granter"`
 }
 
 // Deprecated: NewStdFee returns a new instance of StdFee
@@ -70,6 +73,12 @@ func (fee StdFee) GasPrices() sdk.DecCoins {
 	return sdk.NewDecCoinsFromCoins(fee.Amount...).QuoDec(sdk.NewDec(int64(fee.Gas)))
 }
 
+// StdTip is the tips used in a tipped transaction.
+type StdTip struct {
+	Amount sdk.Coins `json:"amount" yaml:"amount"`
+	Tipper string    `json:"tipper" yaml:"tipper"`
+}
+
 // StdTx is the legacy transaction format for wrapping a Msg with Fee and Signatures.
 // It only works with Amino, please prefer the new protobuf Tx in types/tx.
 // NOTE: the first signature is the fee payer (Signatures must not be nil).
@@ -97,28 +106,28 @@ func (tx StdTx) GetMsgs() []sdk.Msg { return tx.Msgs }
 
 // ValidateBasic does a simple and lightweight validation check that doesn't
 // require access to any other information.
-func (tx StdTx) ValidateBasic() error {
-	stdSigs := tx.GetSignatures()
+func (stdTx StdTx) ValidateBasic() error {
+	stdSigs := stdTx.GetSignatures()
 
-	if tx.Fee.Gas > txtypes.MaxGasWanted {
+	if stdTx.Fee.Gas > tx.MaxGasWanted {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest,
-			"invalid gas supplied; %d > %d", tx.Fee.Gas, txtypes.MaxGasWanted,
+			"invalid gas supplied; %d > %d", stdTx.Fee.Gas, tx.MaxGasWanted,
 		)
 	}
-	if tx.Fee.Amount.IsAnyNegative() {
+	if stdTx.Fee.Amount.IsAnyNegative() {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInsufficientFee,
-			"invalid fee provided: %s", tx.Fee.Amount,
+			"invalid fee provided: %s", stdTx.Fee.Amount,
 		)
 	}
 	if len(stdSigs) == 0 {
 		return sdkerrors.ErrNoSignatures
 	}
-	if len(stdSigs) != len(tx.GetSigners()) {
+	if len(stdSigs) != len(stdTx.GetSigners()) {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrUnauthorized,
-			"wrong number of signers; expected %d, got %d", len(tx.GetSigners()), len(stdSigs),
+			"wrong number of signers; expected %d, got %d", len(stdTx.GetSigners()), len(stdSigs),
 		)
 	}
 
@@ -223,6 +232,9 @@ func (tx StdTx) FeePayer() sdk.AccAddress {
 func (tx StdTx) FeeGranter() sdk.AccAddress {
 	return nil
 }
+
+// GetTip always returns nil for StdTx
+func (tx StdTx) GetTip() *tx.Tip { return nil }
 
 func (tx StdTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, m := range tx.Msgs {

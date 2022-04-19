@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -33,6 +33,9 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 type IntegrationTestSuite struct {
@@ -134,7 +137,7 @@ func (s *IntegrationTestSuite) TestCLISignGenOnly() {
 		sendTokens.String(),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly), // shouldn't break if we use keyname with --generate-only flag
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 	}
 	generatedStd, err := clitestutil.ExecTestCLICmd(val.ClientCtx, bank.NewSendTxCmd(), args)
 	s.Require().NoError(err)
@@ -334,7 +337,7 @@ func (s *IntegrationTestSuite) TestCLISignAminoJSON() {
 	fileFlag := fmt.Sprintf("--%s=%s", flags.FlagOutputDocument, filenameSigned)
 	_, err = TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag, fileFlag, signModeAminoFlag)
 	require.NoError(err)
-	fContent, err := ioutil.ReadFile(filenameSigned)
+	fContent, err := os.ReadFile(filenameSigned)
 	require.NoError(err)
 	require.Equal(res.String(), string(fContent))
 
@@ -760,7 +763,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Broadcast correct transaction.
-	val1.ClientCtx.BroadcastMode = flags.BroadcastBlock
+	val1.ClientCtx.BroadcastMode = flags.BroadcastSync
 	_, err = TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
@@ -815,7 +818,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
@@ -897,6 +900,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	s.Require().NoError(err)
 	intialCoins := balRes.Balances
 
+	s.Require().NoError(s.network.WaitForNextBlock())
 	// Send coins from validator to multisig.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
 	_, err = s.createBankMsg(
@@ -925,7 +929,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
@@ -960,11 +964,52 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	_, err = TxValidateSignaturesExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
-	val1.ClientCtx.BroadcastMode = flags.BroadcastBlock
+	val1.ClientCtx.BroadcastMode = flags.BroadcastSync
 	_, err = TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
 	s.Require().NoError(s.network.WaitForNextBlock())
+}
+
+func (s *IntegrationTestSuite) TestSignWithMultisig() {
+	val1 := s.network.Validators[0]
+
+	// Generate a account for signing.
+	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
+	s.Require().NoError(err)
+
+	addr1, err := account1.GetAddress()
+	s.Require().NoError(err)
+
+	// Create an address that is not in the keyring, will be used to simulate `--multisig`
+	multisig := "cosmos1hd6fsrvnz6qkp87s3u86ludegq97agxsdkwzyh"
+	multisigAddr, err := sdk.AccAddressFromBech32(multisig)
+	s.Require().NoError(err)
+
+	// Generate a transaction for testing --multisig with an address not in the keyring.
+	multisigTx, err := bankcli.MsgSendExec(
+		val1.ClientCtx,
+		val1.Address,
+		val1.Address,
+		sdk.NewCoins(
+			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+	)
+	s.Require().NoError(err)
+
+	// Save multi tx to file
+	multiGeneratedTx2File := testutil.WriteToNewTempFile(s.T(), multisigTx.String())
+
+	// Sign using multisig. We're signing a tx on behalf of the multisig address,
+	// even though the tx signer is NOT the multisig address. This is fine though,
+	// as the main point of this test is to test the `--multisig` flag with an address
+	// that is not in the keyring.
+	_, err = TxSignExec(val1.ClientCtx, addr1, multiGeneratedTx2File.Name(), "--multisig", multisigAddr.String())
+	s.Require().Contains(err.Error(), "tx intended signer does not match the given signer")
 }
 
 func (s *IntegrationTestSuite) TestCLIMultisign() {
@@ -985,10 +1030,12 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 
 	// Send coins from validator to multisig.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
+	s.Require().NoError(s.network.WaitForNextBlock())
 	_, err = s.createBankMsg(
 		val1, addr,
 		sdk.NewCoins(sendTokens),
 	)
+	s.Require().NoError(s.network.WaitForNextBlock())
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
@@ -998,7 +1045,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	var balRes banktypes.QueryAllBalancesResponse
 	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
 	s.Require().NoError(err)
-	s.Require().Equal(sendTokens.Amount, balRes.Balances.AmountOf(s.cfg.BondDenom))
+	s.Require().True(sendTokens.Amount.Equal(balRes.Balances.AmountOf(s.cfg.BondDenom)))
 
 	// Generate multisig transaction.
 	multiGeneratedTx, err := bankcli.MsgSendExec(
@@ -1009,7 +1056,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
@@ -1049,7 +1096,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	_, err = TxValidateSignaturesExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
-	val1.ClientCtx.BroadcastMode = flags.BroadcastBlock
+	val1.ClientCtx.BroadcastMode = flags.BroadcastSync
 	_, err = TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
@@ -1087,7 +1134,7 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1)),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
@@ -1116,7 +1163,6 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	file2 := testutil.WriteToNewTempFile(s.T(), res.String())
 	_, err = TxMultiSignExec(val.ClientCtx, multisigRecord.Name, filename.Name(), file1.Name(), file2.Name())
 	s.Require().NoError(err)
-
 }
 
 func (s *IntegrationTestSuite) TestMultisignBatch() {
@@ -1150,7 +1196,7 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1)),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
@@ -1190,7 +1236,7 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	// Broadcast transactions.
 	for _, signedTx := range signedTxs {
 		signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx)
-		val.ClientCtx.BroadcastMode = flags.BroadcastBlock
+		val.ClientCtx.BroadcastMode = flags.BroadcastSync
 		_, err = TxBroadcastExec(val.ClientCtx, signedTxFile.Name())
 		s.Require().NoError(err)
 		s.Require().NoError(s.network.WaitForNextBlock())
@@ -1364,7 +1410,7 @@ func (s *IntegrationTestSuite) TestTxWithoutPublicKey() {
 	unsignedTxFile := testutil.WriteToNewTempFile(s.T(), string(txJSON))
 
 	// Sign the file with the unsignedTx.
-	signedTx, err := TxSignExec(val1.ClientCtx, val1.Address, unsignedTxFile.Name())
+	signedTx, err := TxSignExec(val1.ClientCtx, val1.Address, unsignedTxFile.Name(), fmt.Sprintf("--%s=true", cli.FlagOverwrite))
 	s.Require().NoError(err)
 
 	// Remove the signerInfo's `public_key` field manually from the signedTx.
@@ -1459,13 +1505,331 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 	require.Equal(sdk.NewCoins(val0Coin, val1Coin), queryRes.Balances)
 }
 
+func (s *IntegrationTestSuite) TestAuxSigner() {
+	require := s.Require()
+	val := s.network.Validators[0]
+	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10))
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"error with SIGN_MODE_DIRECT_AUX and --aux unset",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+			},
+			true,
+		},
+		{
+			"no error with SIGN_MDOE_DIRECT_AUX mode and generate-only set (ignores generate-only)",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+			},
+			false,
+		},
+		{
+			"no error with SIGN_MDOE_DIRECT_AUX mode and generate-only, tip flag set",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+				fmt.Sprintf("--%s=%s", flags.FlagTip, val0Coin.String()),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			_, err := govtestutil.MsgSubmitLegacyProposal(
+				val.ClientCtx,
+				val.Address.String(),
+				"test",
+				"test desc",
+				govtypes.ProposalTypeText,
+				tc.args...,
+			)
+			if tc.expectErr {
+				require.Error(err)
+			} else {
+				require.NoError(err)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestAuxToFee() {
+	require := s.Require()
+	val := s.network.Validators[0]
+
+	kb := s.network.Validators[0].ClientCtx.Keyring
+	acc, _, err := kb.NewMnemonic("tipperAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	require.NoError(err)
+
+	tipper, err := acc.GetAddress()
+	require.NoError(err)
+	tipperInitialBal := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10000))
+
+	feePayer := val.Address
+	fee := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1000))
+	tip := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(1000))
+
+	s.Require().NoError(s.network.WaitForNextBlock())
+	_, err = s.createBankMsg(val, tipper, sdk.NewCoins(tipperInitialBal))
+	require.NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	bal := s.getBalances(val.ClientCtx, tipper, tip.Denom)
+	s.Require().True(bal.Equal(tipperInitialBal.Amount))
+
+	testCases := []struct {
+		name               string
+		tipper             sdk.AccAddress
+		feePayer           sdk.AccAddress
+		tip                sdk.Coin
+		expectErrAux       bool
+		expectErrBroadCast bool
+		errMsg             string
+		tipperArgs         []string
+		feePayerArgs       []string
+	}{
+		{
+			name:     "when --aux and --sign-mode = direct set: error",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      tip,
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
+				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			expectErrAux: true,
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+			},
+		},
+		{
+			name:     "both tipper, fee payer uses AMINO: no error",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      tip,
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+			},
+		},
+		{
+			name:     "tipper uses DIRECT_AUX, fee payer uses AMINO: no error",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      tip,
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+			},
+		},
+		{
+			name:     "--tip flag unset: no error",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdk.NewInt(0)},
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+			},
+		},
+		{
+			name:     "legacy amino json: no error",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      tip,
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+			},
+		},
+		{
+			name:     "tipper uses direct aux, fee payer uses direct: happy case",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      tip,
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+			},
+		},
+		{
+			name:     "chain-id mismatch: error",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      tip,
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			expectErrAux: false,
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagChainID, "foobar"),
+			},
+			expectErrBroadCast: true,
+		},
+		{
+			name:     "wrong denom in tip: error",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdk.NewInt(0)},
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagTip, "1000wrongDenom"),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+			},
+			errMsg: "insufficient funds",
+		},
+		{
+			name:     "insufficient fees: error",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdk.NewInt(0)},
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+			},
+			errMsg: "insufficient fees",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			res, err := govtestutil.MsgSubmitLegacyProposal(
+				val.ClientCtx,
+				tipper.String(),
+				"test",
+				"test desc",
+				govtypes.ProposalTypeText,
+				tc.tipperArgs...,
+			)
+
+			if tc.expectErrAux {
+				require.Error(err)
+			} else {
+				require.NoError(err)
+				genTxFile := testutil.WriteToNewTempFile(s.T(), string(res.Bytes()))
+
+				// broadcast the tx
+				res, err = TxAuxToFeeExec(
+					val.ClientCtx,
+					genTxFile.Name(),
+					tc.feePayerArgs...,
+				)
+
+				if tc.expectErrBroadCast {
+					require.Error(err)
+				} else if tc.errMsg != "" {
+					require.NoError(err)
+
+					var txRes sdk.TxResponse
+					s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
+
+					require.Contains(txRes.RawLog, tc.errMsg)
+				} else {
+					require.NoError(err)
+
+					var txRes sdk.TxResponse
+					s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
+
+					s.Require().Equal(uint32(0), txRes.Code)
+					s.Require().NotNil(int64(0), txRes.Height)
+
+					bal = s.getBalances(val.ClientCtx, tipper, tc.tip.Denom)
+					tipperInitialBal = tipperInitialBal.Sub(tc.tip)
+					s.Require().True(bal.Equal(tipperInitialBal.Amount))
+				}
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.AccAddress, amount sdk.Coins, extraFlags ...string) (testutil.BufferWriter, error) {
 	flags := []string{fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees,
 			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
 	flags = append(flags, extraFlags...)
 	return bankcli.MsgSendExec(val.ClientCtx, val.Address, toAddr, amount, flags...)
+}
+
+func (s *IntegrationTestSuite) getBalances(clientCtx client.Context, addr sdk.AccAddress, denom string) sdk.Int {
+	resp, err := bankcli.QueryBalancesExec(clientCtx, addr)
+	s.Require().NoError(err)
+
+	var balRes banktypes.QueryAllBalancesResponse
+	err = clientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
+	s.Require().NoError(err)
+	startTokens := balRes.Balances.AmountOf(denom)
+	return startTokens
 }

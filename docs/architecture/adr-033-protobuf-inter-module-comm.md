@@ -2,7 +2,7 @@
 
 ## Changelog
 
-- 2020-10-05: Initial Draft
+* 2020-10-05: Initial Draft
 
 ## Status
 
@@ -14,15 +14,15 @@ This ADR introduces a system for permissioned inter-module communication leverag
 service definitions defined in [ADR 021](./adr-021-protobuf-query-encoding.md) and
 [ADR 031](./adr-031-msg-service.md) which provides:
 
-- stable protobuf based module interfaces to potentially later replace the keeper paradigm
-- stronger inter-module object capabilities (OCAPs) guarantees
-- module accounts and sub-account authorization
+* stable protobuf based module interfaces to potentially later replace the keeper paradigm
+* stronger inter-module object capabilities (OCAPs) guarantees
+* module accounts and sub-account authorization
 
 ## Context
 
 In the current Cosmos SDK documentation on the [Object-Capability Model](../core/ocap.md), it is stated that:
 
-> We assume that a thriving ecosystem of Cosmos-SDK modules that are easy to compose into a blockchain application will contain faulty or malicious modules.
+> We assume that a thriving ecosystem of Cosmos SDK modules that are easy to compose into a blockchain application will contain faulty or malicious modules.
 
 There is currently not a thriving ecosystem of Cosmos SDK modules. We hypothesize that this is in part due to:
 
@@ -99,8 +99,8 @@ transaction
 
 This mechanism has the added benefits of:
 
-- reducing boilerplate through code generation, and
-- allowing for modules in other languages either via a VM like CosmWasm or sub-processes using gRPC
+* reducing boilerplate through code generation, and
+* allowing for modules in other languages either via a VM like CosmWasm or sub-processes using gRPC
 
 ### Inter-module Communication
 
@@ -352,9 +352,9 @@ Other future improvements may include:
 ### MsgServices vs `x/capability`
 
 The `x/capability` module does provide a proper object-capability implementation that can be used by any module in the
-SDK and could even be used for inter-module OCAPs as described in [\#5931](https://github.com/cosmos/cosmos-sdk/issues/5931).
+Cosmos SDK and could even be used for inter-module OCAPs as described in [\#5931](https://github.com/cosmos/cosmos-sdk/issues/5931).
 
-The advantages of the approach described in this ADR are mostly around how it integrates with other parts of the SDK,
+The advantages of the approach described in this ADR are mostly around how it integrates with other parts of the Cosmos SDK,
 specifically:
 
 * protobuf so that:
@@ -376,16 +376,16 @@ replacing `Keeper` interfaces altogether.
 
 ### Positive
 
-- an alternative to keepers which can more easily lead to stable inter-module interfaces
-- proper inter-module OCAPs
-- improved module developer DevX, as commented on by several particpants on
+* an alternative to keepers which can more easily lead to stable inter-module interfaces
+* proper inter-module OCAPs
+* improved module developer DevX, as commented on by several particpants on
     [Architecture Review Call, Dec 3](https://hackmd.io/E0wxxOvRQ5qVmTf6N_k84Q)
-- lays the groundwork for what can be a greatly simplified `app.go`
-- router can be setup to enforce atomic transactions for moule-to-module calls
+* lays the groundwork for what can be a greatly simplified `app.go`
+* router can be setup to enforce atomic transactions for module-to-module calls
 
 ### Negative
 
-- modules which adopt this will need significant refactoring
+* modules which adopt this will need significant refactoring
 
 ### Neutral
 
@@ -393,8 +393,8 @@ replacing `Keeper` interfaces altogether.
 
 ## References
 
-- [ADR 021](./adr-021-protobuf-query-encoding.md)
-- [ADR 031](./adr-031-msg-service.md)
-- [ADR 028](./adr-028-public-key-addresses.md)
-- [ADR 030 draft](https://github.com/cosmos/cosmos-sdk/pull/7105)
-- [Object-Capability Model](../docs/core/ocap.md)
+* [ADR 021](./adr-021-protobuf-query-encoding.md)
+* [ADR 031](./adr-031-msg-service.md)
+* [ADR 028](./adr-028-public-key-addresses.md)
+* [ADR 030 draft](https://github.com/cosmos/cosmos-sdk/pull/7105)
+* [Object-Capability Model](../docs/core/ocap.md)

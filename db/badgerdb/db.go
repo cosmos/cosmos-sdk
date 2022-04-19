@@ -2,28 +2,32 @@ package badgerdb
 
 import (
 	"bytes"
+	"context"
 	"encoding/csv"
-	"math"
+	"errors"
 	"os"
 	"path/filepath"
 	"strconv"
 	"sync"
 	"sync/atomic"
 
-	dbm "github.com/cosmos/cosmos-sdk/db"
+	"github.com/cosmos/cosmos-sdk/db"
+	dbutil "github.com/cosmos/cosmos-sdk/db/internal"
 
 	"github.com/dgraph-io/badger/v3"
+	bpb "github.com/dgraph-io/badger/v3/pb"
+	"github.com/dgraph-io/ristretto/z"
 )
 
 var (
-	versionsFilename string = "versions.csv"
+	versionsFilename = "versions.csv"
 )
 
 var (
-	_ dbm.DBConnection = (*BadgerDB)(nil)
-	_ dbm.DBReader     = (*badgerTxn)(nil)
-	_ dbm.DBWriter     = (*badgerWriter)(nil)
-	_ dbm.DBReadWriter = (*badgerWriter)(nil)
+	_ db.DBConnection = (*BadgerDB)(nil)
+	_ db.DBReader     = (*badgerTxn)(nil)
+	_ db.DBWriter     = (*badgerWriter)(nil)
+	_ db.DBReadWriter = (*badgerWriter)(nil)
 )
 
 // BadgerDB is a connection to a BadgerDB key-value database.
@@ -41,6 +45,7 @@ type badgerTxn struct {
 
 type badgerWriter struct {
 	badgerTxn
+	discarded bool
 }
 
 type badgerIterator struct {
@@ -48,17 +53,18 @@ type badgerIterator struct {
 	start, end []byte
 	iter       *badger.Iterator
 	lastErr    error
-	primed     bool
+	// Whether iterator has been advanced to the first element (is fully initialized)
+	primed bool
 }
 
 // Map our versions to Badger timestamps.
 //
-// A badger Txn's commit TS must be strictly greater than a record's "last-read"
-// TS in order to detect conflicts, and a Txn must be read at a TS after last
+// A badger Txn's commit timestamp must be strictly greater than a record's "last-read"
+// timestamp in order to detect conflicts, and a Txn must be read at a timestamp after last
 // commit to see current state. So we must use commit increments that are more
-// granular than our version interval, and map versions to the corresponding TS.
+// granular than our version interval, and map versions to the corresponding timestamp.
 type versionManager struct {
-	*dbm.VersionManager
+	*db.VersionManager
 	vmap   map[uint64]uint64
 	lastTs uint64
 }
@@ -80,7 +86,7 @@ func NewDB(dir string) (*BadgerDB, error) {
 // NewDBWithOptions creates a BadgerDB key-value database with the specified Options
 // (https://pkg.go.dev/github.com/dgraph-io/badger/v3#Options)
 func NewDBWithOptions(opts badger.Options) (*BadgerDB, error) {
-	db, err := badger.OpenManaged(opts)
+	d, err := badger.OpenManaged(opts)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +95,7 @@ func NewDBWithOptions(opts badger.Options) (*BadgerDB, error) {
 		return nil, err
 	}
 	return &BadgerDB{
-		db:   db,
+		db:   d,
 		vmgr: vmgr,
 	}, nil
 }
@@ -107,7 +113,10 @@ func readVersionsFile(path string) (*versionManager, error) {
 	if err != nil {
 		return nil, err
 	}
-	var versions []uint64
+	var (
+		versions []uint64
+		lastTs   uint64
+	)
 	vmap := map[uint64]uint64{}
 	for _, row := range rows {
 		version, err := strconv.ParseUint(row[0], 10, 64)
@@ -118,14 +127,17 @@ func readVersionsFile(path string) (*versionManager, error) {
 		if err != nil {
 			return nil, err
 		}
+		if version == 0 { // 0 maps to the latest timestamp
+			lastTs = ts
+		}
 		versions = append(versions, version)
 		vmap[version] = ts
 	}
-	vmgr := dbm.NewVersionManager(versions)
+	vmgr := db.NewVersionManager(versions)
 	return &versionManager{
 		VersionManager: vmgr,
 		vmap:           vmap,
-		lastTs:         vmgr.Last(),
+		lastTs:         lastTs,
 	}, nil
 }
 
@@ -137,7 +149,9 @@ func writeVersionsFile(vm *versionManager, path string) error {
 	}
 	defer file.Close()
 	w := csv.NewWriter(file)
-	var rows [][]string
+	rows := [][]string{
+		[]string{"0", strconv.FormatUint(vm.lastTs, 10)},
+	}
 	for it := vm.Iterator(); it.Next(); {
 		version := it.Value()
 		ts, ok := vm.vmap[version]
@@ -152,28 +166,32 @@ func writeVersionsFile(vm *versionManager, path string) error {
 	return w.WriteAll(rows)
 }
 
-func (b *BadgerDB) Reader() dbm.DBReader {
-	return &badgerTxn{txn: b.db.NewTransactionAt(math.MaxUint64, false), db: b}
+func (b *BadgerDB) Reader() db.DBReader {
+	b.mtx.RLock()
+	ts := b.vmgr.lastTs
+	b.mtx.RUnlock()
+	return &badgerTxn{txn: b.db.NewTransactionAt(ts, false), db: b}
 }
 
-func (b *BadgerDB) ReaderAt(version uint64) (dbm.DBReader, error) {
+func (b *BadgerDB) ReaderAt(version uint64) (db.DBReader, error) {
 	b.mtx.RLock()
 	defer b.mtx.RUnlock()
-	if !b.vmgr.Exists(version) {
-		return nil, dbm.ErrVersionDoesNotExist
+	ts, has := b.vmgr.versionTs(version)
+	if !has {
+		return nil, db.ErrVersionDoesNotExist
 	}
-	return &badgerTxn{txn: b.db.NewTransactionAt(b.vmgr.versionTs(version), false), db: b}, nil
+	return &badgerTxn{txn: b.db.NewTransactionAt(ts, false), db: b}, nil
 }
 
-func (b *BadgerDB) ReadWriter() dbm.DBReadWriter {
+func (b *BadgerDB) ReadWriter() db.DBReadWriter {
 	atomic.AddInt32(&b.openWriters, 1)
 	b.mtx.RLock()
-	ts := b.vmgr.lastCommitTs()
+	ts := b.vmgr.lastTs
 	b.mtx.RUnlock()
-	return &badgerWriter{badgerTxn{txn: b.db.NewTransactionAt(ts, true), db: b}}
+	return &badgerWriter{badgerTxn{txn: b.db.NewTransactionAt(ts, true), db: b}, false}
 }
 
-func (b *BadgerDB) Writer() dbm.DBWriter {
+func (b *BadgerDB) Writer() db.DBWriter {
 	// Badger has a WriteBatch, but it doesn't support conflict detection
 	return b.ReadWriter()
 }
@@ -187,7 +205,7 @@ func (b *BadgerDB) Close() error {
 
 // Versions implements DBConnection.
 // Returns a VersionSet that is valid until the next call to SaveVersion or DeleteVersion.
-func (b *BadgerDB) Versions() (dbm.VersionSet, error) {
+func (b *BadgerDB) Versions() (db.VersionSet, error) {
 	b.mtx.RLock()
 	defer b.mtx.RUnlock()
 	return b.vmgr, nil
@@ -197,21 +215,21 @@ func (b *BadgerDB) save(target uint64) (uint64, error) {
 	b.mtx.Lock()
 	defer b.mtx.Unlock()
 	if b.openWriters > 0 {
-		return 0, dbm.ErrOpenTransactions
+		return 0, db.ErrOpenTransactions
 	}
 	b.vmgr = b.vmgr.Copy()
 	return b.vmgr.Save(target)
 }
 
-// SaveVersion implements DBConnection.
+// SaveNextVersion implements DBConnection.
 func (b *BadgerDB) SaveNextVersion() (uint64, error) {
 	return b.save(0)
 }
 
-// SaveNextVersion implements DBConnection.
+// SaveVersion implements DBConnection.
 func (b *BadgerDB) SaveVersion(target uint64) error {
 	if target == 0 {
-		return dbm.ErrInvalidVersion
+		return db.ErrInvalidVersion
 	}
 	_, err := b.save(target)
 	return err
@@ -221,18 +239,95 @@ func (b *BadgerDB) DeleteVersion(target uint64) error {
 	b.mtx.Lock()
 	defer b.mtx.Unlock()
 	if !b.vmgr.Exists(target) {
-		return dbm.ErrVersionDoesNotExist
+		return db.ErrVersionDoesNotExist
 	}
 	b.vmgr = b.vmgr.Copy()
 	b.vmgr.Delete(target)
 	return nil
 }
 
+func (b *BadgerDB) Revert() error {
+	b.mtx.RLock()
+	defer b.mtx.RUnlock()
+	if b.openWriters > 0 {
+		return db.ErrOpenTransactions
+	}
+
+	// Revert from latest commit timestamp to last "saved" timestamp
+	// if no versions exist, use 0 as it precedes any possible commit timestamp
+	var target uint64
+	last := b.vmgr.Last()
+	if last == 0 {
+		target = 0
+	} else {
+		var has bool
+		if target, has = b.vmgr.versionTs(last); !has {
+			return errors.New("bad version history")
+		}
+	}
+	lastTs := b.vmgr.lastTs
+	if target == lastTs {
+		return nil
+	}
+
+	// Badger provides no way to rollback committed data, so we undo all changes
+	// since the target version using the Stream API
+	stream := b.db.NewStreamAt(lastTs)
+	// Skips unchanged keys
+	stream.ChooseKey = func(item *badger.Item) bool { return item.Version() > target }
+	// Scans for value at target version
+	stream.KeyToList = func(key []byte, itr *badger.Iterator) (*bpb.KVList, error) {
+		kv := bpb.KV{Key: key}
+		// advance down to <= target version
+		itr.Next() // we have at least one newer version
+		for itr.Valid() && bytes.Equal(key, itr.Item().Key()) && itr.Item().Version() > target {
+			itr.Next()
+		}
+		if itr.Valid() && bytes.Equal(key, itr.Item().Key()) && !itr.Item().IsDeletedOrExpired() {
+			var err error
+			kv.Value, err = itr.Item().ValueCopy(nil)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return &bpb.KVList{Kv: []*bpb.KV{&kv}}, nil
+	}
+	txn := b.db.NewTransactionAt(lastTs, true)
+	defer txn.Discard()
+	stream.Send = func(buf *z.Buffer) error {
+		kvl, err := badger.BufferToKVList(buf)
+		if err != nil {
+			return err
+		}
+		// nil Value indicates a deleted entry
+		for _, kv := range kvl.Kv {
+			if kv.Value == nil {
+				err = txn.Delete(kv.Key)
+				if err != nil {
+					return err
+				}
+			} else {
+				err = txn.Set(kv.Key, kv.Value)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+
+	err := stream.Orchestrate(context.Background())
+	if err != nil {
+		return err
+	}
+	return txn.CommitAt(lastTs, nil)
+}
+
 func (b *BadgerDB) Stats() map[string]string { return nil }
 
 func (tx *badgerTxn) Get(key []byte) ([]byte, error) {
 	if len(key) == 0 {
-		return nil, dbm.ErrKeyEmpty
+		return nil, db.ErrKeyEmpty
 	}
 
 	item, err := tx.txn.Get(key)
@@ -250,7 +345,7 @@ func (tx *badgerTxn) Get(key []byte) ([]byte, error) {
 
 func (tx *badgerTxn) Has(key []byte) (bool, error) {
 	if len(key) == 0 {
-		return false, dbm.ErrKeyEmpty
+		return false, db.ErrKeyEmpty
 	}
 
 	_, err := tx.txn.Get(key)
@@ -261,41 +356,49 @@ func (tx *badgerTxn) Has(key []byte) (bool, error) {
 }
 
 func (tx *badgerWriter) Set(key, value []byte) error {
-	if len(key) == 0 {
-		return dbm.ErrKeyEmpty
-	}
-	if value == nil {
-		return dbm.ErrValueNil
+	if err := dbutil.ValidateKv(key, value); err != nil {
+		return err
 	}
 	return tx.txn.Set(key, value)
 }
 
 func (tx *badgerWriter) Delete(key []byte) error {
 	if len(key) == 0 {
-		return dbm.ErrKeyEmpty
+		return db.ErrKeyEmpty
 	}
 	return tx.txn.Delete(key)
 }
 
-func (tx *badgerWriter) Commit() error {
-	// Commit to the current commit TS, after ensuring it is > ReadTs
+func (tx *badgerWriter) Commit() (err error) {
+	if tx.discarded {
+		return errors.New("transaction has been discarded")
+	}
+	defer func() { err = dbutil.CombineErrors(err, tx.Discard(), "Discard also failed") }()
+	// Commit to the current commit timestamp, after ensuring it is > ReadTs
+	tx.db.mtx.RLock()
 	tx.db.vmgr.updateCommitTs(tx.txn.ReadTs())
-	defer tx.Discard()
-	return tx.txn.CommitAt(tx.db.vmgr.lastCommitTs(), nil)
+	ts := tx.db.vmgr.lastTs
+	tx.db.mtx.RUnlock()
+	err = tx.txn.CommitAt(ts, nil)
+	return
 }
 
-func (tx *badgerTxn) Discard() {
+func (tx *badgerTxn) Discard() error {
 	tx.txn.Discard()
+	return nil
 }
 
-func (tx *badgerWriter) Discard() {
-	defer atomic.AddInt32(&tx.db.openWriters, -1)
-	tx.badgerTxn.Discard()
+func (tx *badgerWriter) Discard() error {
+	if !tx.discarded {
+		defer atomic.AddInt32(&tx.db.openWriters, -1)
+		tx.discarded = true
+	}
+	return tx.badgerTxn.Discard()
 }
 
 func (tx *badgerTxn) iteratorOpts(start, end []byte, opts badger.IteratorOptions) (*badgerIterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, dbm.ErrKeyEmpty
+		return nil, db.ErrKeyEmpty
 	}
 	iter := tx.txn.NewIterator(opts)
 	iter.Rewind()
@@ -313,12 +416,12 @@ func (tx *badgerTxn) iteratorOpts(start, end []byte, opts badger.IteratorOptions
 	}, nil
 }
 
-func (tx *badgerTxn) Iterator(start, end []byte) (dbm.Iterator, error) {
+func (tx *badgerTxn) Iterator(start, end []byte) (db.Iterator, error) {
 	opts := badger.DefaultIteratorOptions
 	return tx.iteratorOpts(start, end, opts)
 }
 
-func (tx *badgerTxn) ReverseIterator(start, end []byte) (dbm.Iterator, error) {
+func (tx *badgerTxn) ReverseIterator(start, end []byte) (db.Iterator, error) {
 	opts := badger.DefaultIteratorOptions
 	opts.Reverse = true
 	return tx.iteratorOpts(end, start, opts)
@@ -373,14 +476,23 @@ func (i *badgerIterator) Value() []byte {
 	return val
 }
 
-func (vm *versionManager) versionTs(ver uint64) uint64 {
-	return vm.vmap[ver]
+func (vm *versionManager) versionTs(ver uint64) (uint64, bool) {
+	ts, has := vm.vmap[ver]
+	return ts, has
+}
+
+// updateCommitTs increments the lastTs if equal to readts.
+func (vm *versionManager) updateCommitTs(readts uint64) {
+	if vm.lastTs == readts {
+		vm.lastTs++
+	}
 }
 
 // Atomically accesses the last commit timestamp used as a version marker.
 func (vm *versionManager) lastCommitTs() uint64 {
 	return atomic.LoadUint64(&vm.lastTs)
 }
+
 func (vm *versionManager) Copy() *versionManager {
 	vmap := map[uint64]uint64{}
 	for ver, ts := range vm.vmap {
@@ -393,10 +505,6 @@ func (vm *versionManager) Copy() *versionManager {
 	}
 }
 
-// updateCommitTs atomically increments the lastTs if equal to readts.
-func (vm *versionManager) updateCommitTs(readts uint64) {
-	atomic.CompareAndSwapUint64(&vm.lastTs, readts, readts+1)
-}
 func (vm *versionManager) Save(target uint64) (uint64, error) {
 	id, err := vm.VersionManager.Save(target)
 	if err != nil {
@@ -404,4 +512,9 @@ func (vm *versionManager) Save(target uint64) (uint64, error) {
 	}
 	vm.vmap[id] = vm.lastTs // non-atomic, already guarded by the vmgr mutex
 	return id, nil
+}
+
+func (vm *versionManager) Delete(target uint64) {
+	vm.VersionManager.Delete(target)
+	delete(vm.vmap, target)
 }

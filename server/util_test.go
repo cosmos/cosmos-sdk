@@ -11,13 +11,18 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	tmcfg "github.com/tendermint/tendermint/config"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
@@ -27,7 +32,7 @@ var cancelledInPreRun = errors.New("Cancelled in prerun")
 // Used in each test to run the function under test via Cobra
 // but to always halt the command
 func preRunETestImpl(cmd *cobra.Command, args []string) error {
-	err := server.InterceptConfigsPreRunHandler(cmd, "", nil)
+	err := server.InterceptConfigsPreRunHandler(cmd, "", nil, tmcfg.DefaultConfig())
 	if err != nil {
 		return err
 	}
@@ -104,7 +109,7 @@ func TestInterceptConfigsPreRunHandlerReadsConfigToml(t *testing.T) {
 		t.Fatalf("creating config.toml file failed: %v", err)
 	}
 
-	_, err = writer.WriteString(fmt.Sprintf("db_backend = '%s'\n", testDbBackend))
+	_, err = writer.WriteString(fmt.Sprintf("db-backend = '%s'\n", testDbBackend))
 	if err != nil {
 		t.Fatalf("Failed writing string to config.toml: %v", err)
 	}
@@ -128,7 +133,7 @@ func TestInterceptConfigsPreRunHandlerReadsConfigToml(t *testing.T) {
 	}
 
 	if testDbBackend != serverCtx.Config.DBBackend {
-		t.Error("DBPath was not set from config.toml")
+		t.Error("backend was not set from config.toml")
 	}
 }
 
@@ -213,9 +218,9 @@ func TestInterceptConfigsPreRunHandlerReadsEnvVars(t *testing.T) {
 	basename = strings.ReplaceAll(basename, ".", "_")
 	// This is added by tendermint
 	envVarName := fmt.Sprintf("%s_RPC_LADDR", strings.ToUpper(basename))
-	os.Setenv(envVarName, testAddr)
+	require.NoError(t, os.Setenv(envVarName, testAddr))
 	t.Cleanup(func() {
-		os.Unsetenv(envVarName)
+		require.NoError(t, os.Unsetenv(envVarName))
 	})
 
 	cmd.PreRunE = preRunETestImpl
@@ -300,7 +305,7 @@ func (v precedenceCommon) setAll(t *testing.T, setFlag *string, setEnvVar *strin
 	}
 
 	if setEnvVar != nil {
-		os.Setenv(v.envVarName, *setEnvVar)
+		require.NoError(t, os.Setenv(v.envVarName, *setEnvVar))
 	}
 
 	if setConfigFile != nil {
@@ -432,8 +437,89 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	// Run StartCmd.
 	cmd = server.StartCmd(nil, tempDir)
 	cmd.PreRunE = func(cmd *cobra.Command, _ []string) error {
-		return server.InterceptConfigsPreRunHandler(cmd, "", nil)
+		return server.InterceptConfigsPreRunHandler(cmd, "", nil, tmcfg.DefaultConfig())
 	}
 	err = cmd.ExecuteContext(ctx)
 	require.Errorf(t, err, sdkerrors.ErrAppConfig.Error())
+}
+
+type mapGetter map[string]interface{}
+
+func (m mapGetter) Get(key string) interface{} {
+	return m[key]
+}
+
+var _ servertypes.AppOptions = mapGetter{}
+
+func TestGetAppDBBackend(t *testing.T) {
+	origDBBackend := types.DBBackend
+	defer func() {
+		types.DBBackend = origDBBackend
+	}()
+	tests := []struct {
+		name   string
+		dbBack string
+		opts   mapGetter
+		exp    dbm.BackendType
+	}{
+		{
+			name:   "nothing set",
+			dbBack: "",
+			opts:   mapGetter{},
+			exp:    dbm.GoLevelDBBackend,
+		},
+
+		{
+			name:   "only db-backend set",
+			dbBack: "",
+			opts:   mapGetter{"db-backend": "db-backend value 1"},
+			exp:    dbm.BackendType("db-backend value 1"),
+		},
+		{
+			name:   "only DBBackend set",
+			dbBack: "DBBackend value 2",
+			opts:   mapGetter{},
+			exp:    dbm.BackendType("DBBackend value 2"),
+		},
+		{
+			name:   "only app-db-backend set",
+			dbBack: "",
+			opts:   mapGetter{"app-db-backend": "app-db-backend value 3"},
+			exp:    dbm.BackendType("app-db-backend value 3"),
+		},
+
+		{
+			name:   "app-db-backend and db-backend set",
+			dbBack: "",
+			opts:   mapGetter{"db-backend": "db-backend value 4", "app-db-backend": "app-db-backend value 5"},
+			exp:    dbm.BackendType("app-db-backend value 5"),
+		},
+		{
+			name:   "app-db-backend and DBBackend set",
+			dbBack: "DBBackend value 6",
+			opts:   mapGetter{"app-db-backend": "app-db-backend value 7"},
+			exp:    dbm.BackendType("app-db-backend value 7"),
+		},
+		{
+			name:   "db-backend and DBBackend set",
+			dbBack: "DBBackend value 8",
+			opts:   mapGetter{"db-backend": "db-backend value 9"},
+			exp:    dbm.BackendType("DBBackend value 8"),
+		},
+
+		{
+			name:   "all of app-db-backend db-backend DBBackend set",
+			dbBack: "DBBackend value 10",
+			opts:   mapGetter{"db-backend": "db-backend value 11", "app-db-backend": "app-db-backend value 12"},
+			exp:    dbm.BackendType("app-db-backend value 12"),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(st *testing.T) {
+			types.DBBackend = tc.dbBack
+			act := server.GetAppDBBackend(tc.opts)
+			assert.Equal(st, tc.exp, act)
+		})
+	}
 }

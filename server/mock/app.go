@@ -6,23 +6,36 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/tendermint/tendermint/types"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 )
+
+func testTxHandler(options middleware.TxHandlerOptions) tx.Handler {
+	return middleware.ComposeMiddlewares(
+		middleware.NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
+		middleware.NewTxDecoderMiddleware(options.TxDecoder),
+		middleware.GasTxMiddleware,
+		middleware.RecoveryTxMiddleware,
+		middleware.NewIndexEventsTxMiddleware(options.IndexEvents),
+	)
+}
 
 // NewApp creates a simple mock kvstore app for testing. It should work
 // similar to a real app. Make sure rootDir is empty before running the test,
 // in order to guarantee consistent results
 func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
-	db, err := sdk.NewLevelDB("mock", filepath.Join(rootDir, "data"))
+	db, err := dbm.NewDB("mock", dbm.MemDBBackend, filepath.Join(rootDir, "data"))
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +44,7 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	capKeyMainStore := sdk.NewKVStoreKey("main")
 
 	// Create BaseApp.
-	baseApp := bam.NewBaseApp("kvstore", logger, db, decodeTx)
+	baseApp := bam.NewBaseApp("kvstore", logger, db)
 
 	// Set mounts for BaseApp's MultiStore.
 	baseApp.MountStores(capKeyMainStore)
@@ -44,13 +57,13 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	// We're adding a test legacy route here, which accesses the kvstore
 	// and simply sets the Msg's key/value pair in the kvstore.
 	legacyRouter.AddRoute(sdk.NewRoute("kvstore", KVStoreHandler(capKeyMainStore)))
-	txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
-		LegacyRouter:     legacyRouter,
-		MsgServiceRouter: middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry),
-	})
-	if err != nil {
-		return nil, err
-	}
+	txHandler := testTxHandler(
+		middleware.TxHandlerOptions{
+			LegacyRouter:     legacyRouter,
+			MsgServiceRouter: middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry),
+			TxDecoder:        decodeTx,
+		},
+	)
 	baseApp.SetTxHandler(txHandler)
 
 	// Load latest version.
@@ -63,9 +76,9 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 
 // KVStoreHandler is a simple handler that takes kvstoreTx and writes
 // them to the db
-func KVStoreHandler(storeKey sdk.StoreKey) sdk.Handler {
+func KVStoreHandler(storeKey storetypes.StoreKey) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-		dTx, ok := msg.(kvstoreTx)
+		dTx, ok := msg.(*kvstoreTx)
 		if !ok {
 			return nil, errors.New("KVStoreHandler should only receive kvstoreTx")
 		}
@@ -77,8 +90,14 @@ func KVStoreHandler(storeKey sdk.StoreKey) sdk.Handler {
 		store := ctx.KVStore(storeKey)
 		store.Set(key, value)
 
+		any, err := codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			return nil, err
+		}
+
 		return &sdk.Result{
-			Log: fmt.Sprintf("set %s=%s", key, value),
+			Log:          fmt.Sprintf("set %s=%s", key, value),
+			MsgResponses: []*codectypes.Any{any},
 		}, nil
 	}
 }
@@ -96,7 +115,7 @@ type GenesisJSON struct {
 
 // InitChainer returns a function that can initialize the chain
 // with key/value pairs
-func InitChainer(key sdk.StoreKey) func(sdk.Context, abci.RequestInitChain) abci.ResponseInitChain {
+func InitChainer(key storetypes.StoreKey) func(sdk.Context, abci.RequestInitChain) abci.ResponseInitChain {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		stateJSON := req.AppStateBytes
 

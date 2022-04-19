@@ -9,23 +9,25 @@ The database interface types consist of objects to encapsulate the singular conn
 ### `DBConnection`
 
 This interface represents a connection to a versioned key-value database. All versioning operations are performed using methods on this type.
-  * The `Versions` method returns a `VersionSet` which represents an immutable view of the version history at the current state.
-  * Version history is modified via the `{Save,Delete}Version` methods.
-  * Operations on version history do not modify any database contents.
+
+* The `Versions` method returns a `VersionSet` which represents an immutable view of the version history at the current state.
+* Version history is modified via the `{Save,Delete}Version` methods.
+* Operations on version history do not modify any database contents.
 
 ### `DBReader`, `DBWriter`, and `DBReadWriter`
 
 These types represent transactions on the database contents. Their methods provide CRUD operations as well as iteration.
-  * Writeable transactions call `Commit` flushes operations to the source DB.
-  * All open transactions must be closed with `Discard` or `Commit` before a new version can be saved on the source DB.
-  * The maximum number of safely concurrent transactions is dependent on the backend implementation.
-  * A single transaction object is not safe for concurrent use.
-  * Write conflicts on concurrent transactions will cause an error at commit time (optimistic concurrency control).
+
+* Writeable transactions call `Commit` flushes operations to the source DB.
+* All open transactions must be closed with `Discard` or `Commit` before a new version can be saved on the source DB.
+* The maximum number of safely concurrent transactions is dependent on the backend implementation.
+* A single transaction object is not safe for concurrent use.
+* Write conflicts on concurrent transactions will cause an error at commit time (optimistic concurrency control).
 
 #### `Iterator`
 
-  * An iterator is invalidated by any writes within its `Domain` to the source transaction while it is open.
-  * An iterator must call `Close` before its source transaction is closed.
+* An iterator is invalidated by any writes within its `Domain` to the source transaction while it is open.
+* An iterator must call `Close` before its source transaction is closed.
 
 ### `VersionSet`
 
@@ -36,7 +38,8 @@ This represents a self-contained and immutable view of a database's version hist
 ### In-memory DB
 
 The in-memory DB in the `db/memdb` package cannot be persisted to disk. It is implemented using the Google [btree](https://pkg.go.dev/github.com/google/btree) library.
-  * This currently does not perform write conflict detection, so it only supports a single open write-transaction at a time. Multiple and concurrent read-transactions are supported.
+
+* This currently does not perform write conflict detection, so it only supports a single open write-transaction at a time. Multiple and concurrent read-transactions are supported.
 
 ### BadgerDB
 
@@ -54,6 +57,7 @@ err := tx2.Commit() // err is non-nil
 ```
 
 But this will not:
+
 ```go
 tx1, tx2 := db.Writer(), db.ReadWriter()
 key := []byte("key")
@@ -62,3 +66,7 @@ tx2.Set(key, []byte("b"))
 tx1.Commit() // ok
 tx2.Commit() // ok
 ```
+
+### RocksDB
+
+A [RocksDB](https://github.com/facebook/rocksdb)-based backend. Internally this uses [`OptimisticTransactionDB`](https://github.com/facebook/rocksdb/wiki/Transactions#optimistictransactiondb) to allow concurrent transactions with write conflict detection. Historical versioning is internally implemented with [Checkpoints](https://github.com/facebook/rocksdb/wiki/Checkpoints).

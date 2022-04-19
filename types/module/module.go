@@ -30,6 +30,8 @@ package module
 
 import (
 	"encoding/json"
+	"fmt"
+	"sort"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -228,6 +230,7 @@ type Manager struct {
 	OrderExportGenesis []string
 	OrderBeginBlockers []string
 	OrderEndBlockers   []string
+	OrderMigrations    []string
 }
 
 // NewManager creates a new Manager object
@@ -251,22 +254,33 @@ func NewManager(modules ...AppModule) *Manager {
 
 // SetOrderInitGenesis sets the order of init genesis calls
 func (m *Manager) SetOrderInitGenesis(moduleNames ...string) {
+	m.assertNoForgottenModules("SetOrderInitGenesis", moduleNames)
 	m.OrderInitGenesis = moduleNames
 }
 
 // SetOrderExportGenesis sets the order of export genesis calls
 func (m *Manager) SetOrderExportGenesis(moduleNames ...string) {
+	m.assertNoForgottenModules("SetOrderExportGenesis", moduleNames)
 	m.OrderExportGenesis = moduleNames
 }
 
 // SetOrderBeginBlockers sets the order of set begin-blocker calls
 func (m *Manager) SetOrderBeginBlockers(moduleNames ...string) {
+	m.assertNoForgottenModules("SetOrderBeginBlockers", moduleNames)
 	m.OrderBeginBlockers = moduleNames
 }
 
 // SetOrderEndBlockers sets the order of set end-blocker calls
 func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
+	m.assertNoForgottenModules("SetOrderEndBlockers", moduleNames)
 	m.OrderEndBlockers = moduleNames
+}
+
+// SetOrderMigrations sets the order of migrations to be run. If not set
+// then migrations will be run with an order defined in `DefaultMigrationsOrder`.
+func (m *Manager) SetOrderMigrations(moduleNames ...string) {
+	m.assertNoForgottenModules("SetOrderMigrations", moduleNames)
+	m.OrderMigrations = moduleNames
 }
 
 // RegisterInvariants registers all module invariants
@@ -295,7 +309,9 @@ func (m *Manager) RegisterServices(cfg Configurator) {
 	}
 }
 
-// InitGenesis performs init genesis functionality for modules
+// InitGenesis performs init genesis functionality for modules. Exactly one
+// module must return a non-empty validator set update to correctly initialize
+// the chain.
 func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData map[string]json.RawMessage) abci.ResponseInitChain {
 	var validatorUpdates []abci.ValidatorUpdate
 	ctx.Logger().Info("initializing blockchain state from genesis.json")
@@ -317,6 +333,11 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 		}
 	}
 
+	// a chain must initialize with a non-empty validator set
+	if len(validatorUpdates) == 0 {
+		panic(fmt.Sprintf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction))
+	}
+
 	return abci.ResponseInitChain{
 		Validators: validatorUpdates,
 	}
@@ -332,11 +353,29 @@ func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) map[string
 	return genesisData
 }
 
+// assertNoForgottenModules checks that we didn't forget any modules in the
+// SetOrder* functions.
+func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []string) {
+	ms := make(map[string]bool)
+	for _, m := range moduleNames {
+		ms[m] = true
+	}
+	var missing []string
+	for m := range m.Modules {
+		if !ms[m] {
+			missing = append(missing, m)
+		}
+	}
+	if len(missing) != 0 {
+		panic(fmt.Sprintf(
+			"%s: all modules must be defined when setting %s, missing: %v", setOrderFnName, setOrderFnName, missing))
+	}
+}
+
 // MigrationHandler is the migration function that each module registers.
 type MigrationHandler func(sdk.Context) error
 
-// VersionMap is a map of moduleName -> version, where version denotes the
-// version from which we should perform the migration for each module.
+// VersionMap is a map of moduleName -> version
 type VersionMap map[string]uint64
 
 // RunMigrations performs in-place store migrations for all modules. This
@@ -362,6 +401,9 @@ type VersionMap map[string]uint64
 //      because it was not in the previous x/upgrade's store), then run
 //      `InitGenesis` on that module.
 // - return the `updatedVM` to be persisted in the x/upgrade's store.
+//
+// Migrations are run in an order defined by `Manager.OrderMigrations` or (if not set) defined by
+// `DefaultMigrationsOrder` function.
 //
 // As an app developer, if you wish to skip running InitGenesis for your new
 // module "foo", you need to manually pass a `fromVM` argument to this function
@@ -389,38 +431,37 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
 	}
+	var modules = m.OrderMigrations
+	if modules == nil {
+		modules = DefaultMigrationsOrder(m.ModuleNames())
+	}
 
-	updatedVM := make(VersionMap)
-	for moduleName, module := range m.Modules {
+	updatedVM := VersionMap{}
+	for _, moduleName := range modules {
+		module := m.Modules[moduleName]
 		fromVersion, exists := fromVM[moduleName]
 		toVersion := module.ConsensusVersion()
 
-		// Only run migrations when the module exists in the fromVM.
-		// Run InitGenesis otherwise.
+		// We run migration if the module is specified in `fromVM`.
+		// Otherwise we run InitGenesis.
 		//
-		// the module won't exist in the fromVM in two cases:
+		// The module won't exist in the fromVM in two cases:
 		// 1. A new module is added. In this case we run InitGenesis with an
 		// empty genesis state.
-		// 2. An existing chain is upgrading to v043 for the first time. In this case,
-		// all modules have yet to be added to x/upgrade's VersionMap store.
+		// 2. An existing chain is upgrading from version < 0.43 to v0.43+ for the first time.
+		// In this case, all modules have yet to be added to x/upgrade's VersionMap store.
 		if exists {
 			err := c.runModuleMigrations(ctx, moduleName, fromVersion, toVersion)
 			if err != nil {
 				return nil, err
 			}
 		} else {
-			cfgtor, ok := cfg.(configurator)
-			if !ok {
-				// Currently, the only implementator of Configurator (the interface)
-				// is configurator (the struct).
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
-			}
-
-			moduleValUpdates := module.InitGenesis(ctx, cfgtor.cdc, module.DefaultGenesis(cfgtor.cdc))
+			ctx.Logger().Info(fmt.Sprintf("adding a new module: %s", moduleName))
+			moduleValUpdates := module.InitGenesis(ctx, c.cdc, module.DefaultGenesis(c.cdc))
 			// The module manager assumes only one module will update the
-			// validator set, and that it will not be by a new module.
+			// validator set, and it can't be a new module.
 			if len(moduleValUpdates) > 0 {
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic, "validator InitGenesis updates already set by a previous module")
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic, "validator InitGenesis update is already set by another module")
 			}
 		}
 
@@ -482,4 +523,36 @@ func (m *Manager) GetVersionMap() VersionMap {
 	}
 
 	return vermap
+}
+
+// ModuleNames returns list of all module names, without any particular order.
+func (m *Manager) ModuleNames() []string {
+	ms := make([]string, len(m.Modules))
+	i := 0
+	for m := range m.Modules {
+		ms[i] = m
+		i++
+	}
+	return ms
+}
+
+// DefaultMigrationsOrder returns a default migrations order: ascending alphabetical by module name,
+// except x/auth which will run last, see:
+// https://github.com/cosmos/cosmos-sdk/issues/10591
+func DefaultMigrationsOrder(modules []string) []string {
+	const authName = "auth"
+	out := make([]string, 0, len(modules))
+	hasAuth := false
+	for _, m := range modules {
+		if m == authName {
+			hasAuth = true
+		} else {
+			out = append(out, m)
+		}
+	}
+	sort.Strings(out)
+	if hasAuth {
+		out = append(out, authName)
+	}
+	return out
 }

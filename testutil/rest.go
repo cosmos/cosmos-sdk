@@ -1,7 +1,7 @@
 package testutil
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -25,7 +25,7 @@ func GetRequestWithHeaders(url string, headers map[string]string) ([]byte, error
 		return nil, err
 	}
 
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}

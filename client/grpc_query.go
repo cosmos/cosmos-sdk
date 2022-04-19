@@ -2,15 +2,17 @@ package client
 
 import (
 	gocontext "context"
+	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
+	proto "github.com/gogo/protobuf/proto"
+	"google.golang.org/grpc/encoding"
 	"reflect"
 	"strconv"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/encoding"
-	"google.golang.org/grpc/encoding/proto"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -21,25 +23,26 @@ import (
 
 var _ gogogrpc.ClientConn = Context{}
 
-var protoCodec = encoding.GetCodec(proto.Name)
+// fallBackCodec is used by Context in case Codec is not set.
+// it can process every gRPC type, except the ones which contain
+// interfaces in their types.
+var fallBackCodec = codec.NewProtoCodec(failingInterfaceRegistry{})
 
 // Invoke implements the grpc ClientConn.Invoke method
 func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply interface{}, opts ...grpc.CallOption) (err error) {
 	// Two things can happen here:
 	// 1. either we're broadcasting a Tx, in which call we call Tendermint's broadcast endpoint directly,
-	// 2. or we are querying for state, in which case we call ABCI's Query.
+	// 2-1. or we are querying for state, in which case we call grpc if grpc client set.
+	// 2-2. or we are querying for state, in which case we call ABCI's Query if grpc client not set.
 
-	// In both cases, we don't allow empty request req (it will panic unexpectedly).
+	// In both cases, we don't allow empty request args (it will panic unexpectedly).
 	if reflect.ValueOf(req).IsNil() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "request cannot be nil")
 	}
 
 	// Case 1. Broadcasting a Tx.
 	if reqProto, ok := req.(*tx.BroadcastTxRequest); ok {
-		if !ok {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "expected %T, got %T", (*tx.BroadcastTxRequest)(nil), req)
-		}
-		resProto, ok := reply.(*tx.BroadcastTxResponse)
+		res, ok := reply.(*tx.BroadcastTxResponse)
 		if !ok {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "expected %T, got %T", (*tx.BroadcastTxResponse)(nil), req)
 		}
@@ -48,30 +51,67 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 		if err != nil {
 			return err
 		}
-		*resProto = *broadcastRes
+		*res = *broadcastRes
 
 		return err
 	}
 
-	// Case 2. Querying state.
-	inMd, _ := metadata.FromOutgoingContext(grpcCtx)
-	abciRes, outMd, err := RunGRPCQuery(ctx, grpcCtx, method, req, inMd)
+	if ctx.GRPCClient != nil {
+		// Case 2-1. Invoke grpc.
+		return ctx.GRPCClient.Invoke(grpcCtx, method, req, reply, opts...)
+	}
+
+	// Case 2-2. Querying state via abci query.
+	reqBz, err := ctx.gRPCCodec().Marshal(req)
 	if err != nil {
 		return err
 	}
 
-	err = protoCodec.Unmarshal(abciRes.Value, reply)
+	// parse height header
+	md, _ := metadata.FromOutgoingContext(grpcCtx)
+	if heights := md.Get(grpctypes.GRPCBlockHeightHeader); len(heights) > 0 {
+		height, err := strconv.ParseInt(heights[0], 10, 64)
+		if err != nil {
+			return err
+		}
+		if height < 0 {
+			return sdkerrors.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"client.Context.Invoke: height (%d) from %q must be >= 0", height, grpctypes.GRPCBlockHeightHeader)
+		}
+
+		ctx = ctx.WithHeight(height)
+	}
+
+	abciReq := abci.RequestQuery{
+		Path:   method,
+		Data:   reqBz,
+		Height: ctx.Height,
+	}
+
+	res, err := ctx.QueryABCI(abciReq)
 	if err != nil {
 		return err
 	}
 
+	err = ctx.gRPCCodec().Unmarshal(res.Value, reply)
+	if err != nil {
+		return err
+	}
+
+	// Create header metadata. For now the headers contain:
+	// - block height
+	// We then parse all the call options, if the call option is a
+	// HeaderCallOption, then we manually set the value of that header to the
+	// metadata.
+	md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(res.Height, 10))
 	for _, callOpt := range opts {
 		header, ok := callOpt.(grpc.HeaderCallOption)
 		if !ok {
 			continue
 		}
 
-		*header.HeaderAddr = outMd
+		*header.HeaderAddr = md
 	}
 
 	if ctx.InterfaceRegistry != nil {
@@ -86,48 +126,51 @@ func (Context) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.Ca
 	return nil, fmt.Errorf("streaming rpc not supported")
 }
 
-// RunGRPCQuery runs a gRPC query from the clientCtx, given all necessary
-// arguments for the gRPC method, and returns the ABCI response. It is used
-// to factorize code between client (Invoke) and server (RegisterGRPCServer)
-// gRPC handlers.
-func RunGRPCQuery(ctx Context, grpcCtx gocontext.Context, method string, req interface{}, md metadata.MD) (abci.ResponseQuery, metadata.MD, error) {
-	reqBz, err := protoCodec.Marshal(req)
-	if err != nil {
-		return abci.ResponseQuery{}, nil, err
+// gRPCCodec checks if Context's Codec is codec.GRPCCodecProvider
+// otherwise it returns fallBackCodec.
+func (ctx Context) gRPCCodec() encoding.Codec {
+	if ctx.Codec == nil {
+		return fallBackCodec.GRPCCodec()
 	}
 
-	// parse height header
-	if heights := md.Get(grpctypes.GRPCBlockHeightHeader); len(heights) > 0 {
-		height, err := strconv.ParseInt(heights[0], 10, 64)
-		if err != nil {
-			return abci.ResponseQuery{}, nil, err
-		}
-		if height < 0 {
-			return abci.ResponseQuery{}, nil, sdkerrors.Wrapf(
-				sdkerrors.ErrInvalidRequest,
-				"client.Context.Invoke: height (%d) from %q must be >= 0", height, grpctypes.GRPCBlockHeightHeader)
-		}
-
-		ctx = ctx.WithHeight(height)
+	pc, ok := ctx.Codec.(codec.GRPCCodecProvider)
+	if !ok {
+		return fallBackCodec.GRPCCodec()
 	}
 
-	abciReq := abci.RequestQuery{
-		Path:   method,
-		Data:   reqBz,
-		Height: ctx.Height,
-	}
+	return pc.GRPCCodec()
+}
 
-	abciRes, err := ctx.QueryABCI(abciReq)
-	if err != nil {
-		return abci.ResponseQuery{}, nil, err
-	}
+var _ types.InterfaceRegistry = failingInterfaceRegistry{}
 
-	// Create header metadata. For now the headers contain:
-	// - block height
-	// We then parse all the call options, if the call option is a
-	// HeaderCallOption, then we manually set the value of that header to the
-	// metadata.
-	md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(abciRes.Height, 10))
+// failingInterfaceRegistry is used by the fallback codec
+// in case Context's Codec is not set.
+type failingInterfaceRegistry struct{}
 
-	return abciRes, md, nil
+// errCodecNotSet is return by failingInterfaceRegistry in case there are attempt to decode
+// or encode a type which contains an interface field.
+var errCodecNotSet = errors.New("client: cannot encode or decode type which requires the application specific codec")
+
+func (f failingInterfaceRegistry) UnpackAny(any *types.Any, iface interface{}) error {
+	return errCodecNotSet
+}
+
+func (f failingInterfaceRegistry) Resolve(typeUrl string) (proto.Message, error) {
+	return nil, errCodecNotSet
+}
+
+func (f failingInterfaceRegistry) RegisterInterface(protoName string, iface interface{}, impls ...proto.Message) {
+	panic("cannot be called")
+}
+
+func (f failingInterfaceRegistry) RegisterImplementations(iface interface{}, impls ...proto.Message) {
+	panic("cannot be called")
+}
+
+func (f failingInterfaceRegistry) ListAllInterfaces() []string {
+	panic("cannot be called")
+}
+
+func (f failingInterfaceRegistry) ListImplementations(ifaceTypeURL string) []string {
+	panic("cannot be called")
 }

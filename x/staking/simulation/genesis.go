@@ -40,9 +40,10 @@ func getHistEntries(r *rand.Rand) uint32 {
 func RandomizedGenState(simState *module.SimulationState) {
 	// params
 	var (
-		unbondTime  time.Duration
-		maxVals     uint32
-		histEntries uint32
+		unbondTime        time.Duration
+		maxVals           uint32
+		histEntries       uint32
+		minCommissionRate sdk.Dec
 	)
 
 	simState.AppParams.GetOrGenerate(
@@ -63,7 +64,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	// NOTE: the slashing module need to be defined after the staking module on the
 	// NewSimulationManager constructor for this to work
 	simState.UnbondTime = unbondTime
-	params := types.NewParams(simState.UnbondTime, maxVals, 7, histEntries, sdk.DefaultBondDenom)
+	params := types.NewParams(simState.UnbondTime, maxVals, 7, histEntries, sdk.DefaultBondDenom, minCommissionRate)
 
 	// validators & delegations
 	var (

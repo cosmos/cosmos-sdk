@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	yaml "gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -41,20 +41,10 @@ func NewBaseVestingAccount(baseAccount *authtypes.BaseAccount, originalVesting s
 //
 // CONTRACT: Delegated vesting coins and vestingCoins must be sorted.
 func (bva BaseVestingAccount) LockedCoinsFromVesting(vestingCoins sdk.Coins) sdk.Coins {
-	lockedCoins := sdk.NewCoins()
-
-	for _, vestingCoin := range vestingCoins {
-		vestingAmt := vestingCoin.Amount
-		delVestingAmt := bva.DelegatedVesting.AmountOf(vestingCoin.Denom)
-
-		max := sdk.MaxInt(vestingAmt.Sub(delVestingAmt), sdk.ZeroInt())
-		lockedCoin := sdk.NewCoin(vestingCoin.Denom, max)
-
-		if !lockedCoin.IsZero() {
-			lockedCoins = lockedCoins.Add(lockedCoin)
-		}
+	lockedCoins := vestingCoins.Sub(vestingCoins.Min(bva.DelegatedVesting))
+	if lockedCoins == nil {
+		return sdk.Coins{}
 	}
-
 	return lockedCoins
 }
 
@@ -162,18 +152,18 @@ func (bva BaseVestingAccount) Validate() error {
 }
 
 type vestingAccountYAML struct {
-	Address          sdk.AccAddress `json:"address" yaml:"address"`
-	PubKey           string         `json:"public_key" yaml:"public_key"`
-	AccountNumber    uint64         `json:"account_number" yaml:"account_number"`
-	Sequence         uint64         `json:"sequence" yaml:"sequence"`
-	OriginalVesting  sdk.Coins      `json:"original_vesting" yaml:"original_vesting"`
-	DelegatedFree    sdk.Coins      `json:"delegated_free" yaml:"delegated_free"`
-	DelegatedVesting sdk.Coins      `json:"delegated_vesting" yaml:"delegated_vesting"`
-	EndTime          int64          `json:"end_time" yaml:"end_time"`
+	Address          sdk.AccAddress `json:"address"`
+	PubKey           string         `json:"public_key"`
+	AccountNumber    uint64         `json:"account_number"`
+	Sequence         uint64         `json:"sequence"`
+	OriginalVesting  sdk.Coins      `json:"original_vesting"`
+	DelegatedFree    sdk.Coins      `json:"delegated_free"`
+	DelegatedVesting sdk.Coins      `json:"delegated_vesting"`
+	EndTime          int64          `json:"end_time"`
 
 	// custom fields based on concrete vesting type which can be omitted
-	StartTime      int64   `json:"start_time,omitempty" yaml:"start_time,omitempty"`
-	VestingPeriods Periods `json:"vesting_periods,omitempty" yaml:"vesting_periods,omitempty"`
+	StartTime      int64   `json:"start_time,omitempty"`
+	VestingPeriods Periods `json:"vesting_periods,omitempty"`
 }
 
 func (bva BaseVestingAccount) String() string {

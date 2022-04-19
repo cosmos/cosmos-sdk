@@ -1,3 +1,4 @@
+// Since: cosmos-sdk 0.43
 syntax = "proto3";
 package cosmos.authz.v1beta1;
 
@@ -21,6 +22,25 @@ message GenericAuthorization {
 // Grant gives permissions to execute
 // the provide method with expiration time.
 message Grant {
-  google.protobuf.Any       authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
-  google.protobuf.Timestamp expiration    = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  google.protobuf.Any authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
+  // time when the grant will expire and will be pruned. If null, then the grant
+  // doesn't have a time expiration (other conditions  in `authorization`
+  // may apply to invalidate the grant)
+  google.protobuf.Timestamp expiration = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = true];
+}
+
+// GrantAuthorization extends a grant with both the addresses of the grantee and granter.
+// It is used in genesis.proto and query.proto
+message GrantAuthorization {
+  string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  google.protobuf.Any       authorization = 3 [(cosmos_proto.accepts_interface) = "Authorization"];
+  google.protobuf.Timestamp expiration    = 4 [(gogoproto.stdtime) = true];
+}
+
+// GrantQueueItem contains the list of TypeURL of a sdk.Msg.
+message GrantQueueItem {
+  // msg_type_urls contains the list of TypeURL of a sdk.Msg.
+  repeated string msg_type_urls = 1;
 }

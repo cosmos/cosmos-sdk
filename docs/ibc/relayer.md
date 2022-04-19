@@ -6,8 +6,8 @@ order: 4
 
 ## Prerequisites Readings
 
-- [IBC Overview](./overview.md) {prereq}
-- [Events](https://github.com/cosmos/cosmos-sdk/blob/master/docs/core/events.md) {prereq}
+* [IBC Overview](./overview.md) {prereq}
+* [Events](https://github.com/cosmos/cosmos-sdk/blob/master/docs/core/events.md) {prereq}
 
 ## Events
 
@@ -16,7 +16,7 @@ of some logic clients may want to be aware of. This is extremely useful when rel
 Any message that uses IBC will emit events for the corresponding TAO logic executed as defined in
 the [IBC events spec](https://github.com/cosmos/ibc-go/blob/main/modules/core/spec/06_events.md).
 
-In the SDK, it can be assumed that for every message there is an event emitted with the type `message`,
+In the Cosmos SDK, it can be assumed that for every message there is an event emitted with the type `message`,
 attribute key `action`, and an attribute value representing the type of message sent
 (`channel_open_init` would be the attribute value for `MsgChannelOpenInit`). If a relayer queries
 for transaction events, it can split message events using this event Type/Attribute Key pair.
@@ -42,6 +42,6 @@ piece of information needed to relay a packet.
 
 ## Example Implementations
 
-- [Golang Relayer](https://github.com/iqlusioninc/relayer)
-- [Hermes](https://github.com/informalsystems/ibc-rs/tree/master/relayer)
-- [Typescript Relayer](https://github.com/confio/ts-relayer)
+* [Golang Relayer](https://github.com/iqlusioninc/relayer)
+* [Hermes](https://github.com/informalsystems/ibc-rs/tree/master/relayer)
+* [Typescript Relayer](https://github.com/confio/ts-relayer)

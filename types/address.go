@@ -10,7 +10,7 @@ import (
 	"sync"
 
 	"github.com/hashicorp/golang-lru/simplelru"
-	yaml "gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
@@ -115,10 +115,6 @@ type Address interface {
 var _ Address = AccAddress{}
 var _ Address = ValAddress{}
 var _ Address = ConsAddress{}
-
-var _ yaml.Marshaler = AccAddress{}
-var _ yaml.Marshaler = ValAddress{}
-var _ yaml.Marshaler = ConsAddress{}
 
 // ----------------------------------------------------------------------------
 // account

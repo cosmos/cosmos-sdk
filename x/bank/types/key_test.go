@@ -56,3 +56,15 @@ func TestAddressFromBalancesStore(t *testing.T) {
 		})
 	}
 }
+
+func TestCreateDenomAddressPrefix(t *testing.T) {
+	require := require.New(t)
+
+	key := types.CreateDenomAddressPrefix("")
+	require.Len(key, len(types.DenomAddressPrefix)+1)
+	require.Equal(append(types.DenomAddressPrefix, 0), key)
+
+	key = types.CreateDenomAddressPrefix("abc")
+	require.Len(key, len(types.DenomAddressPrefix)+4)
+	require.Equal(append(types.DenomAddressPrefix, 'a', 'b', 'c', 0), key)
+}

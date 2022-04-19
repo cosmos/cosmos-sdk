@@ -74,12 +74,7 @@ func (s queryServer) GetBlockByHeight(ctx context.Context, req *GetBlockByHeight
 		return nil, status.Error(codes.InvalidArgument, "requested block height is bigger then the chain length")
 	}
 
-	res, err := getBlock(ctx, s.clientCtx, &req.Height)
-	if err != nil {
-		return nil, err
-	}
-	protoBlockID := res.BlockID.ToProto()
-	protoBlock, err := res.Block.ToProto()
+	protoBlockID, protoBlock, err := GetProtoBlock(ctx, s.clientCtx, &req.Height)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +177,7 @@ func (s queryServer) GetNodeInfo(ctx context.Context, req *GetNodeInfoRequest) (
 	}
 
 	resp := GetNodeInfoResponse{
-		DefaultNodeInfo: protoNodeInfo,
+		NodeInfo: protoNodeInfo,
 		ApplicationVersion: &VersionInfo{
 			AppName:          nodeInfo.AppName,
 			Name:             nodeInfo.Name,
@@ -212,5 +207,5 @@ func RegisterTendermintService(
 // RegisterGRPCGatewayRoutes mounts the tendermint service's GRPC-gateway routes on the
 // given Mux.
 func RegisterGRPCGatewayRoutes(clientConn gogogrpc.ClientConn, mux *runtime.ServeMux) {
-	RegisterServiceHandlerClient(context.Background(), mux, NewServiceClient(clientConn))
+	_ = RegisterServiceHandlerClient(context.Background(), mux, NewServiceClient(clientConn))
 }

@@ -1,6 +1,7 @@
 package testutil
 
 import (
+	"encoding/hex"
 	"fmt"
 	"strings"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
@@ -29,12 +31,16 @@ func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
 	return &IntegrationTestSuite{cfg: cfg}
 }
 
-// SetupTest creates a new network for _each_ integration test. We create a new
+// SetupSuite creates a new network for _each_ integration test. We create a new
 // network for each test because there are some state modifications that are
 // needed to be made in order to make useful queries. However, we don't want
 // these state changes to be present in other tests.
-func (s *IntegrationTestSuite) SetupTest() {
+func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
+
+	cfg := network.DefaultConfig()
+	cfg.NumValidators = 1
+	s.cfg = cfg
 
 	genesisState := s.cfg.GenesisState
 	var mintData minttypes.GenesisState
@@ -57,9 +63,9 @@ func (s *IntegrationTestSuite) SetupTest() {
 	s.Require().NoError(err)
 }
 
-// TearDownTest cleans up the curret test network after _each_ test.
-func (s *IntegrationTestSuite) TearDownTest() {
-	s.T().Log("tearing down integration test suite")
+// TearDownSuite cleans up the curret test network after _each_ test.
+func (s *IntegrationTestSuite) TearDownSuite() {
+	s.T().Log("tearing down integration test suite1")
 	s.network.Cleanup()
 }
 
@@ -129,7 +135,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			`{"rewards":[{"denom":"stake","amount":"1164.240000000000000000"}]}`,
+			`{"rewards":[{"denom":"stake","amount":"232.260000000000000000"}]}`,
 		},
 		{
 			"text output",
@@ -140,7 +146,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 			},
 			false,
 			`rewards:
-- amount: "1164.240000000000000000"
+- amount: "232.260000000000000000"
   denom: stake`,
 		},
 	}
@@ -192,7 +198,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			`{"commission":[{"denom":"stake","amount":"464.520000000000000000"}]}`,
+			`{"commission":[{"denom":"stake","amount":"116.130000000000000000"}]}`,
 		},
 		{
 			"text output",
@@ -203,7 +209,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
 			},
 			false,
 			`commission:
-- amount: "464.520000000000000000"
+- amount: "116.130000000000000000"
   denom: stake`,
 		},
 	}
@@ -345,7 +351,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegatorRewards() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			fmt.Sprintf(`{"rewards":[{"validator_address":"%s","reward":[{"denom":"stake","amount":"387.100000000000000000"}]}],"total":[{"denom":"stake","amount":"387.100000000000000000"}]}`, valAddr.String()),
+			fmt.Sprintf(`{"rewards":[{"validator_address":"%s","reward":[{"denom":"stake","amount":"193.550000000000000000"}]}],"total":[{"denom":"stake","amount":"193.550000000000000000"}]}`, valAddr.String()),
 		},
 		{
 			"json output (specific validator)",
@@ -355,7 +361,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegatorRewards() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			`{"rewards":[{"denom":"stake","amount":"387.100000000000000000"}]}`,
+			`{"rewards":[{"denom":"stake","amount":"193.550000000000000000"}]}`,
 		},
 		{
 			"text output",
@@ -367,11 +373,11 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegatorRewards() {
 			false,
 			fmt.Sprintf(`rewards:
 - reward:
-  - amount: "387.100000000000000000"
+  - amount: "193.550000000000000000"
     denom: stake
   validator_address: %s
 total:
-- amount: "387.100000000000000000"
+- amount: "193.550000000000000000"
   denom: stake`, valAddr.String()),
 		},
 		{
@@ -383,7 +389,7 @@ total:
 			},
 			false,
 			`rewards:
-- amount: "387.100000000000000000"
+- amount: "193.550000000000000000"
   denom: stake`,
 		},
 	}
@@ -449,12 +455,13 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
-		name         string
-		valAddr      fmt.Stringer
-		args         []string
-		expectErr    bool
-		expectedCode uint32
-		respType     proto.Message
+		name                 string
+		valAddr              fmt.Stringer
+		args                 []string
+		expectErr            bool
+		expectedCode         uint32
+		respType             proto.Message
+		expectedResponseType []string
 	}{
 		{
 			"invalid validator address",
@@ -465,7 +472,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, 0, nil,
+			true, 0, nil, []string{},
 		},
 		{
 			"valid transaction",
@@ -476,7 +483,9 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{},
+			false, 0, &sdk.TxResponse{}, []string{
+				"/cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse",
+			},
 		},
 		{
 			"valid transaction (with commission)",
@@ -488,7 +497,10 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{},
+			false, 0, &sdk.TxResponse{}, []string{
+				"/cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse",
+				"/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse",
+			},
 		},
 	}
 
@@ -498,6 +510,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
 
+			_, _ = s.network.WaitForHeightWithTimeout(10, time.Minute)
 			bz, err := MsgWithdrawDelegatorRewardExec(clientCtx, tc.valAddr, tc.args...)
 			if tc.expectErr {
 				s.Require().Error(err)
@@ -507,6 +520,32 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
+
+				data, err := hex.DecodeString(txResp.Data)
+				s.Require().NoError(err)
+
+				txMsgData := sdk.TxMsgData{}
+				err = s.cfg.Codec.Unmarshal(data, &txMsgData)
+				s.Require().NoError(err)
+				for responseIdx, msgResponse := range txMsgData.MsgResponses {
+					s.Require().Equal(tc.expectedResponseType[responseIdx], msgResponse.TypeUrl)
+					switch msgResponse.TypeUrl {
+					case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse":
+						var resp distrtypes.MsgWithdrawDelegatorRewardResponse
+						// can't use unpackAny as response types are not registered.
+						err = s.cfg.Codec.Unmarshal(msgResponse.Value, &resp)
+						s.Require().NoError(err)
+						s.Require().True(resp.Amount.IsAllGT(sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()))),
+							fmt.Sprintf("expected a positive coin value, got %v", resp.Amount))
+					case "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse":
+						var resp distrtypes.MsgWithdrawValidatorCommissionResponse
+						// can't use unpackAny as response types are not registered.
+						err = s.cfg.Codec.Unmarshal(msgResponse.Value, &resp)
+						s.Require().NoError(err)
+						s.Require().True(resp.Amount.IsAllGT(sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()))),
+							fmt.Sprintf("expected a positive coin value, got %v", resp.Amount))
+					}
+				}
 			}
 		})
 	}
@@ -516,11 +555,12 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
-		name         string
-		args         []string
-		expectErr    bool
-		expectedCode uint32
-		respType     proto.Message
+		name                 string
+		args                 []string
+		expectErr            bool
+		expectedCode         uint32
+		respType             proto.Message
+		expectedResponseType []string
 	}{
 		{
 			"valid transaction (offline)",
@@ -530,7 +570,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, 0, nil,
+			true, 0, nil, []string{},
 		},
 		{
 			"valid transaction",
@@ -540,7 +580,9 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{},
+			false, 0, &sdk.TxResponse{}, []string{
+				"/cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse",
+			},
 		},
 	}
 
@@ -548,8 +590,11 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
+
 			cmd := cli.NewWithdrawAllRewardsCmd()
 			clientCtx := val.ClientCtx
+
+			_, _ = s.network.WaitForHeightWithTimeout(10, time.Minute)
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
@@ -560,6 +605,32 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
+
+				data, err := hex.DecodeString(txResp.Data)
+				s.Require().NoError(err)
+
+				txMsgData := sdk.TxMsgData{}
+				err = s.cfg.Codec.Unmarshal(data, &txMsgData)
+				s.Require().NoError(err)
+				for responseIdx, msgResponse := range txMsgData.MsgResponses {
+					s.Require().Equal(tc.expectedResponseType[responseIdx], msgResponse.TypeUrl)
+					switch msgResponse.TypeUrl {
+					case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse":
+						var resp distrtypes.MsgWithdrawDelegatorRewardResponse
+						// can't use unpackAny as response types are not registered.
+						err = s.cfg.Codec.Unmarshal(msgResponse.Value, &resp)
+						s.Require().NoError(err)
+						s.Require().True(resp.Amount.IsAllGT(sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()))),
+							fmt.Sprintf("expected a positive coin value, got %v", resp.Amount))
+					case "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse":
+						var resp distrtypes.MsgWithdrawValidatorCommissionResponse
+						// can't use unpackAny as response types are not registered.
+						err = s.cfg.Codec.Unmarshal(msgResponse.Value, &resp)
+						s.Require().NoError(err)
+						s.Require().True(resp.Amount.IsAllGT(sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()))),
+							fmt.Sprintf("expected a positive coin value, got %v", resp.Amount))
+					}
+				}
 			}
 		})
 	}
@@ -685,7 +756,21 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
   "deposit": -324foocoin
 }`
 
+	// fund some tokens to the community pool
+	args := []string{sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431))).String(),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String())}
+
 	invalidPropFile := testutil.WriteToNewTempFile(s.T(), invalidProp)
+	cmd := cli.NewFundCommunityPoolCmd()
+	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
+	s.Require().NoError(err)
+
+	var txResp sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+	s.Require().Equal(uint32(0), txResp.Code)
 
 	validProp := fmt.Sprintf(`{
   "title": "Community Pool Spend",
@@ -709,7 +794,7 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 				invalidPropFile.Name(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			true, 0, nil,
@@ -720,7 +805,7 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 				validPropFile.Name(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // sync mode as there are no funds yet
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, 0, &sdk.TxResponse{},

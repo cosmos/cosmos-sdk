@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -33,11 +33,11 @@ func checkDefaultPubKey(t *testing.T, priv types.LedgerPrivKey) {
 	expectedPkStr := "PubKeySecp256k1{034FEF9CD7C4C63588D3B03FEB5281B9D232CBA34D6F3D71AEE59211FFBFE1FE87}"
 	require.Equal(t, "eb5ae98721034fef9cd7c4c63588d3b03feb5281b9d232cba34d6f3d71aee59211ffbfe1fe87",
 		fmt.Sprintf("%x", cdc.Amino.MustMarshalBinaryBare(priv.PubKey())),
-		"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
+		"Is your device using test mnemonic: %s ?", testdata.TestMnemonic)
 	require.Equal(t, expectedPkStr, priv.PubKey().String())
 	addr := sdk.AccAddress(priv.PubKey().Address()).String()
 	require.Equal(t, "cosmos1w34k53py5v5xyluazqpq65agyajavep2rflq6h",
-		addr, "Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
+		addr, "Is your device using test mnemonic: %s ?", testdata.TestMnemonic)
 }
 
 func TestPublicKeyUnsafeHDPath(t *testing.T) {
@@ -74,7 +74,7 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 
 		// in this test we are chekcking if the generated keys are correct.
 		require.Equal(t, expectedAnswers[i], priv.PubKey().String(),
-			"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
+			"Is your device using test mnemonic: %s ?", testdata.TestMnemonic)
 
 		// Store and restore
 		serializedPk := priv.Bytes()
@@ -151,7 +151,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 		require.Equal(t, addr2, addr)
 		require.Equal(t,
 			expectedAddrs[i], addr,
-			"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
+			"Is your device using test mnemonic: %s ?", testdata.TestMnemonic)
 
 		// Check other methods
 		tmp := priv.(PrivKeyLedgerSecp256k1)
@@ -161,7 +161,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 		// in this test we are chekcking if the generated keys are correct and stored in a right path.
 		require.Equal(t,
 			expectedPubKeys[i], priv.PubKey().String(),
-			"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
+			"Is your device using test mnemonic: %s ?", testdata.TestMnemonic)
 
 		// Store and restore
 		serializedPk := priv.Bytes()
@@ -203,7 +203,7 @@ func TestSignaturesHD(t *testing.T) {
 		require.NoError(t, err)
 
 		valid := pub.VerifySignature(msg, sig)
-		require.True(t, valid, "Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
+		require.True(t, valid, "Is your device using test mnemonic: %s ?", testdata.TestMnemonic)
 	}
 }
 

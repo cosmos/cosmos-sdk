@@ -8,71 +8,64 @@ _Disclaimer: This is work in progress. Mechanisms are susceptible to change._
 
 The governance process is divided in a few steps that are outlined below:
 
-- **Proposal submission:** Proposal is submitted to the blockchain with a
+* **Proposal submission:** Proposal is submitted to the blockchain with a
   deposit.
-- **Vote:** Once deposit reaches a certain value (`MinDeposit`), proposal is
+* **Vote:** Once deposit reaches a certain value (`MinDeposit`), proposal is
   confirmed and vote opens. Bonded Atom holders can then send `TxGovVote`
   transactions to vote on the proposal.
-- If the proposal involves a software upgrade:
-    - **Signal:** Validators start signaling that they are ready to switch to the
-    new version.
-    - **Switch:** Once more than 75% of validators have signaled that they are
-    ready to switch, their software automatically flips to the new version.
+* **Execution** After a period of time, the votes are tallied and depending
+  on the result, the messages in the proposal will be executed.
 
 ## Proposal submission
 
 ### Right to submit a proposal
 
-Any Atom holder, whether bonded or unbonded, can submit proposals by sending a
-`TxGovProposal` transaction. Once a proposal is submitted, it is identified by
-its unique `proposalID`.
+Every account can submit proposals by sending a `MsgSubmitProposal` transaction.
+Once a proposal is submitted, it is identified by its unique `proposalID`.
 
-### Proposal types
+### Proposal Messages
 
-In the initial version of the governance module, there are five types of
-proposals:
-
-- `TextProposal` All the proposals that do not involve a modification of
-  the source code go under this type. For example, an opinion poll would use a
-  proposal of type `TextProposal`.
-- `SoftwareUpgradeProposal`. If accepted, validators are expected to update
-  their software in accordance with the proposal. They must do so by following
-  a 2-steps process described in the [Software Upgrade](#software-upgrade)
-  section below. Software upgrade roadmap may be discussed and agreed on via
-  `TextProposals`, but actual software upgrades must be performed via
-  `SoftwareUpgradeProposals`.
-- `CommunityPoolSpendProposal` details a proposal for use of community funds,
-  together with how many coins are proposed to be spent, and to which recipient account.
-- `ParameterChangeProposal` defines a proposal to change one or
-  more parameters. If accepted, the requested parameter change is updated
-  automatically by the proposal handler upon conclusion of the voting period.
-- `CancelSoftwareUpgradeProposal` is a gov Content type for cancelling a software upgrade.
-
-Other modules may expand upon the governance module by implementing their own
-proposal types and handlers. These types are registered and processed through the
-governance module (eg. `ParamChangeProposal`), which then execute the respective
-module's proposal handler when a proposal passes. This custom handler may perform
-arbitrary state changes.
+A proposal includes an array of `sdk.Msg`s which are executed automatically if the
+proposal passes. The messages are executed by the governance `ModuleAccount` itself. Modules
+such as `x/upgrade`, that want to allow certain messages to be executed by governance
+only should add a whitelist within the respective msg server, granting the governance
+module the right to execute the message once a quorum has been reached. The governance
+module uses the `MsgServiceRouter` to check that these messages are correctly constructed
+and have a respective path to execute on but do not perform a full validity check.
 
 ## Deposit
 
-To prevent spam, proposals must be submitted with a deposit in the coins defined in the `MinDeposit` param.
+To prevent spam, proposals must be submitted with a deposit in the coins defined by
+the `MinDeposit` param.
 
-When a proposal is submitted, it has to be accompanied with a deposit that must be strictly positive, but can be inferior to `MinDeposit`. The submitter doesn't need to pay for the entire deposit on their own.
-The newly created proposal is stored in an _inactive proposal queue_ and stays there until its deposit passes the `MinDeposit`. Other token holders can increase the proposal's deposit by sending a `Deposit` transaction.
-If a proposal doesn't pass the `MinDeposit` before the deposit end time (the time when deposits are no longer accepted), the proposal will be destroyed: the proposal will be removed from state and the deposit will be burned (see x/gov `EndBlocker`).
-When a proposal deposit passes the `MinDeposit` threshold (even during the proposal submission) before the deposit end time, the proposal will be moved into the _active proposal queue_ and the voting period will begin.
+When a proposal is submitted, it has to be accompanied with a deposit that must be
+strictly positive, but can be inferior to `MinDeposit`. The submitter doesn't need
+to pay for the entire deposit on their own. The newly created proposal is stored in
+an _inactive proposal queue_ and stays there until its deposit passes the `MinDeposit`.
+Other token holders can increase the proposal's deposit by sending a `Deposit`
+transaction. If a proposal doesn't pass the `MinDeposit` before the deposit end time
+(the time when deposits are no longer accepted), the proposal will be destroyed: the
+proposal will be removed from state and the deposit will be burned (see x/gov `EndBlocker`).
+When a proposal deposit passes the `MinDeposit` threshold (even during the proposal
+submission) before the deposit end time, the proposal will be moved into the
+_active proposal queue_ and the voting period will begin.
 
-The deposit is kept in escrow and held by the governance `ModuleAccount` until the proposal is finalized (passed or rejected).
+The deposit is kept in escrow and held by the governance `ModuleAccount` until the
+proposal is finalized (passed or rejected).
 
 ### Deposit refund and burn
 
-When a proposal is finalized, the coins from the deposit are either refunded or burned, according to the final tally of the proposal:
+When a proposal is finalized, the coins from the deposit are either refunded or burned
+according to the final tally of the proposal:
 
-- If the proposal is approved or rejected but _not_ vetoed, each deposit will be automatically refunded to its respective depositor (transferred from the governance `ModuleAccount`). 
-- When the proposal is vetoed with a supermajority, deposits will be burned from the governance `ModuleAccount` and the proposal information along with its deposit information will be removed from state.
-- All refunded or burned deposits are removed from the state. Events are issued when burning or refunding a deposit.
-- NOTE: The proposals which completed the voting period, cannot return the deposits when queried.
+* If the proposal is approved or rejected but _not_ vetoed, each deposit will be
+  automatically refunded to its respective depositor (transferred from the governance
+  `ModuleAccount`).
+* When the proposal is vetoed with greater than 1/3, deposits will be burned from the
+  governance `ModuleAccount` and the proposal information along with its deposit
+  information will be removed from state.
+* All refunded or burned deposits are removed from the state. Events are issued when
+  burning or refunding a deposit.
 
 ## Vote
 
@@ -86,9 +79,9 @@ can submit and deposit on proposals.
 Note that some _participants_ can be forbidden to vote on a proposal under a
 certain validator if:
 
-- _participant_ bonded or unbonded Atoms to said validator after proposal
+* _participant_ bonded or unbonded Atoms to said validator after proposal
   entered voting period.
-- _participant_ became validator after proposal entered voting period.
+* _participant_ became validator after proposal entered voting period.
 
 This does not prevent _participant_ to vote with Atoms bonded to other
 validators. For example, if a _participant_ bonded some Atoms to validator A
@@ -111,10 +104,10 @@ choose from when casting its vote.
 
 The initial option set includes the following options:
 
-- `Yes`
-- `No`
-- `NoWithVeto`
-- `Abstain`
+* `Yes`
+* `No`
+* `NoWithVeto`
+* `Abstain`
 
 `NoWithVeto` counts as `No` but also adds a `Veto` vote. `Abstain` option
 allows voters to signal that they do not intend to vote in favor or against the
@@ -158,9 +151,9 @@ votes).
 
 If a delegator does not vote, it will inherit its validator vote.
 
-- If the delegator votes before its validator, it will not inherit from the
+* If the delegator votes before its validator, it will not inherit from the
   validator's vote.
-- If the delegator votes after its validator, it will override its validator
+* If the delegator votes after its validator, it will override its validator
   vote with its own. If the proposal is urgent, it is possible
   that the vote will close before delegators have a chance to react and
   override their validator's vote. This is not a problem, as proposals require more than 2/3rd of the total voting power to pass before the end of the voting period. If more than 2/3rd of validators collude, they can censor the votes of delegators anyway.
@@ -176,7 +169,7 @@ Later, we may add permissioned keys that could only sign txs from certain module
 ## Software Upgrade
 
 If proposals are of type `SoftwareUpgradeProposal`, then nodes need to upgrade
-their software to the new version that was voted. This process is divided in
+their software to the new version that was voted. This process is divided into
 two steps.
 
 ### Signal
@@ -200,4 +193,4 @@ Once a block contains more than 2/3rd _precommits_ where a common
 nodes, non-validating full nodes and light-nodes) are expected to switch to the
 new version of the software.
 
-_Note: Not clear how the flip is handled programmatically_
+_Note: Not clear how the flip is handled programmatically._

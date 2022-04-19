@@ -1,9 +1,9 @@
 syntax = "proto3";
 package cosmos.nft.v1beta1;
 
-import "cosmos/nft/v1beta1/nft.proto";
-
 option go_package = "github.com/cosmos/cosmos-sdk/x/nft";
+
+import "cosmos/msg/v1/msg.proto";
 
 // Msg defines the nft Msg service.
 service Msg {
@@ -12,6 +12,8 @@ service Msg {
 }
 // MsgSend represents a message to send a nft from one account to another account.
 message MsgSend {
+  option (cosmos.msg.v1.signer) = "sender";
+
   // class_id defines the unique identifier of the nft classification, similar to the contract address of ERC721
   string class_id = 1;
 

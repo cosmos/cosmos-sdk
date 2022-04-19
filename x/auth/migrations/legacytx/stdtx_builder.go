@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
@@ -56,6 +57,10 @@ func (s *StdTxBuilder) SetGasLimit(limit uint64) {
 	s.StdTx.Fee.Gas = limit
 }
 
+func (s *StdTxBuilder) SetTip(tip *tx.Tip) {
+	panic("StdTxBuilder does not support tips")
+}
+
 // SetMemo implements TxBuilder.SetMemo
 func (s *StdTxBuilder) SetMemo(memo string) {
 	s.Memo = memo
@@ -68,6 +73,14 @@ func (s *StdTxBuilder) SetTimeoutHeight(height uint64) {
 
 // SetFeeGranter does nothing for stdtx
 func (s *StdTxBuilder) SetFeeGranter(_ sdk.AccAddress) {}
+
+// SetFeePayer does nothing for stdtx
+func (s *StdTxBuilder) SetFeePayer(_ sdk.AccAddress) {}
+
+// AddAuxSignerData returns an error for StdTxBuilder.
+func (s *StdTxBuilder) AddAuxSignerData(_ tx.AuxSignerData) error {
+	return sdkerrors.ErrLogic.Wrap("cannot use AuxSignerData with StdTxBuilder")
+}
 
 // StdTxConfig is a context.TxConfig for StdTx
 type StdTxConfig struct {

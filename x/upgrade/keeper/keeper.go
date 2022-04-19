@@ -3,18 +3,22 @@ package keeper
 import (
 	"encoding/binary"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	xp "github.com/cosmos/cosmos-sdk/x/upgrade/exported"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -27,10 +31,12 @@ const UpgradeInfoFileName string = "upgrade-info.json"
 type Keeper struct {
 	homePath           string                          // root directory of app config
 	skipUpgradeHeights map[int64]bool                  // map of heights to skip for an upgrade
-	storeKey           sdk.StoreKey                    // key to access x/upgrade store
+	storeKey           storetypes.StoreKey             // key to access x/upgrade store
 	cdc                codec.BinaryCodec               // App-wide binary codec
 	upgradeHandlers    map[string]types.UpgradeHandler // map of plan name to upgrade handler
 	versionSetter      xp.ProtocolVersionSetter        // implements setting the protocol version field on BaseApp
+	downgradeVerified  bool                            // tells if we've already sanity checked that this binary version isn't being used against an old state.
+	authority          string                          // the address capable of executing and cancelling an upgrade. Usually the gov module account
 }
 
 // NewKeeper constructs an upgrade Keeper which requires the following arguments:
@@ -39,7 +45,7 @@ type Keeper struct {
 // cdc - the app-wide binary codec
 // homePath - root directory of the application's config
 // vs - the interface implemented by baseapp which allows setting baseapp's protocol version field
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter) Keeper {
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter, authority string) Keeper {
 	return Keeper{
 		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,
@@ -47,6 +53,7 @@ func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc cod
 		cdc:                cdc,
 		upgradeHandlers:    map[string]types.UpgradeHandler{},
 		versionSetter:      vs,
+		authority:          authority,
 	}
 }
 
@@ -84,7 +91,18 @@ func (k Keeper) SetModuleVersionMap(ctx sdk.Context, vm module.VersionMap) {
 	if len(vm) > 0 {
 		store := ctx.KVStore(k.storeKey)
 		versionStore := prefix.NewStore(store, []byte{types.VersionMapByte})
-		for modName, ver := range vm {
+		// Even though the underlying store (cachekv) store is sorted, we still
+		// prefer a deterministic iteration order of the map, to avoid undesired
+		// surprises if we ever change stores.
+		sortedModNames := make([]string, 0, len(vm))
+
+		for key := range vm {
+			sortedModNames = append(sortedModNames, key)
+		}
+		sort.Strings(sortedModNames)
+
+		for _, modName := range sortedModNames {
+			ver := vm[modName]
 			nameBytes := []byte(modName)
 			verBytes := make([]byte, 8)
 			binary.BigEndian.PutUint64(verBytes, ver)
@@ -149,14 +167,16 @@ func (k Keeper) getModuleVersion(ctx sdk.Context, name string) (uint64, bool) {
 
 // ScheduleUpgrade schedules an upgrade based on the specified plan.
 // If there is another Plan already scheduled, it will cancel and overwrite it.
-// ScheduleUpgrade will also write the upgraded client to the upgraded client path
-// if an upgraded client is specified in the plan
+// ScheduleUpgrade will also write the upgraded IBC ClientState to the upgraded client
+// path if it is specified in the plan.
 func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 	if err := plan.ValidateBasic(); err != nil {
 		return err
 	}
 
-	if plan.Height <= ctx.BlockHeight() {
+	// NOTE: allow for the possibility of chains to schedule upgrades in begin block of the same block
+	// as a strategy for emergency hard fork recoveries
+	if plan.Height < ctx.BlockHeight() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "upgrade cannot be scheduled in the past")
 	}
 
@@ -215,10 +235,27 @@ func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, lastHeight int64) ([]
 	return bz, true
 }
 
+// GetLastCompletedUpgrade returns the last applied upgrade name and height.
+func (k Keeper) GetLastCompletedUpgrade(ctx sdk.Context) (string, int64) {
+	iter := sdk.KVStoreReversePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
+	defer iter.Close()
+	if iter.Valid() {
+		return parseDoneKey(iter.Key()), int64(binary.BigEndian.Uint64(iter.Value()))
+	}
+
+	return "", 0
+}
+
+// parseDoneKey - split upgrade name from the done key
+func parseDoneKey(key []byte) string {
+	kv.AssertKeyAtLeastLength(key, 2)
+	return string(key[1:])
+}
+
 // GetDoneHeight returns the height at which the given upgrade was executed
 func (k Keeper) GetDoneHeight(ctx sdk.Context, name string) int64 {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
-	bz := store.Get([]byte(name))
+	bz := store.Get(conv.UnsafeStrToBytes(name))
 	if len(bz) == 0 {
 		return 0
 	}
@@ -329,7 +366,7 @@ func (k Keeper) DumpUpgradeInfoToDisk(height int64, p types.Plan) error {
 		return err
 	}
 
-	return ioutil.WriteFile(upgradeInfoFilePath, info, 0600)
+	return os.WriteFile(upgradeInfoFilePath, info, 0o600)
 }
 
 // GetUpgradeInfoPath returns the upgrade info file path
@@ -360,7 +397,7 @@ func (k Keeper) ReadUpgradeInfoFromDisk() (types.Plan, error) {
 		return upgradeInfo, err
 	}
 
-	data, err := ioutil.ReadFile(upgradeInfoPath)
+	data, err := os.ReadFile(upgradeInfoPath)
 	if err != nil {
 		// if file does not exist, assume there are no upgrades
 		if os.IsNotExist(err) {
@@ -375,4 +412,14 @@ func (k Keeper) ReadUpgradeInfoFromDisk() (types.Plan, error) {
 	}
 
 	return upgradeInfo, nil
+}
+
+// SetDowngradeVerified updates downgradeVerified.
+func (k *Keeper) SetDowngradeVerified(v bool) {
+	k.downgradeVerified = v
+}
+
+// DowngradeVerified returns downgradeVerified.
+func (k Keeper) DowngradeVerified() bool {
+	return k.downgradeVerified
 }

@@ -69,8 +69,10 @@ func TestDirectModeHandler(t *testing.T) {
 	require.Len(t, modeHandler.Modes(), 1)
 
 	signingData := signing.SignerData{
+		Address:       addr.String(),
 		ChainID:       "test-chain",
 		AccountNumber: 1,
+		PubKey:        pubkey,
 	}
 
 	signBytes, err := modeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, txBuilder.GetTx())
@@ -131,7 +133,6 @@ func TestDirectModeHandler(t *testing.T) {
 
 func TestDirectModeHandler_nonDIRECT_MODE(t *testing.T) {
 	invalidModes := []signingtypes.SignMode{
-		signingtypes.SignMode_SIGN_MODE_DIRECT_JSON,
 		signingtypes.SignMode_SIGN_MODE_TEXTUAL,
 		signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 		signingtypes.SignMode_SIGN_MODE_UNSPECIFIED,

@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -49,7 +48,7 @@ func generateRandomAllowances(granter, grantee sdk.AccAddress, r *rand.Rand) fee
 
 	filteredAllowance, err := feegrant.NewGrant(granter, grantee, &feegrant.AllowedMsgAllowance{
 		Allowance:       basicAllowance.GetAllowance(),
-		AllowedMessages: []string{"/cosmos.gov.v1beta1.MsgSubmitProposal"},
+		AllowedMessages: []string{"/cosmos.gov.v1.MsgSubmitProposal"},
 	})
 	if err != nil {
 		panic(err)
@@ -74,6 +73,5 @@ func RandomizedGenState(simState *module.SimulationState) {
 		panic(err)
 	}
 
-	fmt.Printf("Selected randomly generated %s parameters:\n%s\n", feegrant.ModuleName, bz)
 	simState.GenState[feegrant.ModuleName] = bz
 }

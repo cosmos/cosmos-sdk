@@ -8,8 +8,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
+
+// storeNameCtxKey is the TraceContext metadata key that identifies
+// the store which emitted a given trace.
+const storeNameCtxKey = "store_name"
 
 //----------------------------------------
 // Store
@@ -49,17 +55,17 @@ func NewFromKVStore(
 	}
 
 	for key, store := range stores {
-		var cacheWrapped types.CacheWrap
 		if cms.TracingEnabled() {
-			cacheWrapped = store.CacheWrapWithTrace(cms.traceWriter, cms.traceContext)
-		} else {
-			cacheWrapped = store.CacheWrap()
+			tctx := cms.traceContext.Clone().Merge(types.TraceContext{
+				storeNameCtxKey: key.Name(),
+			})
+
+			store = tracekv.NewStore(store.(types.KVStore), cms.traceWriter, tctx)
 		}
 		if cms.ListeningEnabled(key) {
-			cms.stores[key] = cacheWrapped.CacheWrapWithListeners(key, cms.listeners[key])
-		} else {
-			cms.stores[key] = cacheWrapped
+			store = listenkv.NewStore(store.(types.KVStore), key, listeners[key])
 		}
+		cms.stores[key] = cachekv.NewStore(store.(types.KVStore))
 	}
 
 	return cms

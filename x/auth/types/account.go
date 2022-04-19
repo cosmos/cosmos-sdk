@@ -9,7 +9,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/tendermint/tendermint/crypto"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -218,11 +218,6 @@ func (ma ModuleAccount) SetPubKey(pubKey cryptotypes.PubKey) error {
 	return fmt.Errorf("not supported for module accounts")
 }
 
-// SetSequence - Implements AccountI
-func (ma ModuleAccount) SetSequence(seq uint64) error {
-	return fmt.Errorf("not supported for module accounts")
-}
-
 // Validate checks for errors on the account fields
 func (ma ModuleAccount) Validate() error {
 	if strings.TrimSpace(ma.Name) == "" {
@@ -237,12 +232,12 @@ func (ma ModuleAccount) Validate() error {
 }
 
 type moduleAccountPretty struct {
-	Address       sdk.AccAddress `json:"address" yaml:"address"`
-	PubKey        string         `json:"public_key" yaml:"public_key"`
-	AccountNumber uint64         `json:"account_number" yaml:"account_number"`
-	Sequence      uint64         `json:"sequence" yaml:"sequence"`
-	Name          string         `json:"name" yaml:"name"`
-	Permissions   []string       `json:"permissions" yaml:"permissions"`
+	Address       sdk.AccAddress `json:"address"`
+	PubKey        string         `json:"public_key"`
+	AccountNumber uint64         `json:"account_number"`
+	Sequence      uint64         `json:"sequence"`
+	Name          string         `json:"name"`
+	Permissions   []string       `json:"permissions"`
 }
 
 func (ma ModuleAccount) String() string {
@@ -265,7 +260,6 @@ func (ma ModuleAccount) MarshalYAML() (interface{}, error) {
 		Name:          ma.Name,
 		Permissions:   ma.Permissions,
 	})
-
 	if err != nil {
 		return nil, err
 	}

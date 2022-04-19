@@ -60,9 +60,11 @@ func TestHandlerMap_GetSignBytes(t *testing.T) {
 	aminoJSONHandler := legacytx.NewStdTxSignModeHandler()
 
 	signingData := signing.SignerData{
+		Address:       addr1.String(),
 		ChainID:       chainId,
 		AccountNumber: accNum,
 		Sequence:      seqNum,
+		PubKey:        priv1.PubKey(),
 	}
 	signBz, err := handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.NoError(t, err)

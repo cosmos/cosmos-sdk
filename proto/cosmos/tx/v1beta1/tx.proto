@@ -64,41 +64,10 @@ message SignDoc {
   uint64 account_number = 4;
 }
 
-// SignDocJSON is the type used for generating sign bytes for
-// SIGN_MODE_DIRECT_JSON. It is designed to be serialized as proto3 JSON
-// following the rules defined here:
-// https://github.com/regen-network/canonical-proto3/blob/master/README.md#json.
-message SignDocJSON {
-  // body is the processable content of the transaction
-  TxBody body = 1;
-
-  // auth_info is the authorization related content of the transaction,
-  // specifically signers, signer modes and fee
-  AuthInfo auth_info = 2;
-
-  // chain_id is the identifier of the chain this transaction targets.
-  // It prevents signed transactions from being used on another chain by an
-  // attacker
-  string chain_id = 3;
-
-  // account_number is the account number of the signing account in state
-  uint64 account_number = 4;
-
-  // sign_doc_sha256_hash is the SHA-256 hash of SignDoc. It is included here to
-  // reduce the malleability attack surface of SIGN_MODE_DIRECT_JSON vs
-  // SIGN_MODE_DIRECT to zero. Basically this means that any discrepancy between
-  // protobuf bytes over the wire and protobuf bytes that are signed cannot be
-  // exploited. This information is obviously redundant with information already
-  // in SignDocJSON, but is included as a security check for scenarios where
-  // this information may have inadvertently been excluded. We include the hash
-  // of SignDoc rather than the full SignDoc bytes to reduce the size of
-  // SignDocJSON for scenarios where large payloads could cause problems for
-  // hardware wallets.
-  bytes sign_doc_sha256_hash = 5;
-}
-
 // SignDocDirectAux is the type used for generating sign bytes for
 // SIGN_MODE_DIRECT_AUX.
+//
+// Since: cosmos-sdk 0.46
 message SignDocDirectAux {
   // body_bytes is protobuf serialization of a TxBody that matches the
   // representation in TxRaw.
@@ -170,6 +139,8 @@ message AuthInfo {
   Fee fee = 2;
 
   // Tip is the optional tip used for meta-transactions.
+  //
+  // Since: cosmos-sdk 0.46
   Tip tip = 3;
 }
 
@@ -246,9 +217,33 @@ message Fee {
 }
 
 // Tip is the tip used for meta-transactions.
+//
+// Since: cosmos-sdk 0.46
 message Tip {
   // amount is the amount of the tip
-  repeated cosmos.base.v1beta1.Coin amount = 1;
+  repeated cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   // tipper is the address of the account paying for the tip
   string tipper = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// AuxSignerData is the intermediary format that an auxiliary signer (e.g. a
+// tipper) builds and sends to the fee payer (who will build and broadcast the
+// actual tx). AuxSignerData is not a valid tx in itself, and will be rejected
+// by the node if sent directly as-is.
+//
+// Since: cosmos-sdk 0.46
+message AuxSignerData {
+  // address is the bech32-encoded address of the auxiliary signer. If using
+  // AuxSignerData across different chains, the bech32 prefix of the target
+  // chain (where the final transaction is broadcasted) should be used.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // sign_doc is the SIGN_MODE_DIRECT_AUX sign doc that the auxiliary signer
+  // signs. Note: we use the same sign doc even if we're signing with
+  // LEGACY_AMINO_JSON.
+  SignDocDirectAux sign_doc = 2;
+  // mode is the signing mode of the single signer.
+  cosmos.tx.signing.v1beta1.SignMode mode = 3;
+  // sig is the signature of the sign doc.
+  bytes sig = 4;
 }

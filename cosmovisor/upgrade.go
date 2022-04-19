@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/hashicorp/go-getter"
 	"github.com/otiai10/copy"
 )
@@ -18,7 +18,7 @@ import (
 // DoUpgrade will be called after the log message has been parsed and the process has terminated.
 // We can now make any changes to the underlying directory without interference and leave it
 // in a state, so we can make a proper restart
-func DoUpgrade(cfg *Config, info UpgradeInfo) error {
+func DoUpgrade(cfg *Config, info upgradetypes.Plan) error {
 	// Simplest case is to switch the link
 	err := EnsureBinary(cfg.UpgradeBin(info.Name))
 	if err == nil {
@@ -36,11 +36,11 @@ func DoUpgrade(cfg *Config, info UpgradeInfo) error {
 	}
 
 	// If not there, then we try to download it... maybe
-	fmt.Println("[cosmovisor] No upgrade binary found, beginning to download it")
+	Logger.Info().Msg("No upgrade binary found, beginning to download it")
 	if err := DownloadBinary(cfg, info); err != nil {
 		return fmt.Errorf("cannot download binary. %w", err)
 	}
-	fmt.Println("[cosmovisor] Downloading binary complete")
+	Logger.Info().Msg("Downloading binary complete")
 
 	// and then set the binary again
 	if err := EnsureBinary(cfg.UpgradeBin(info.Name)); err != nil {
@@ -51,7 +51,7 @@ func DoUpgrade(cfg *Config, info UpgradeInfo) error {
 }
 
 // DownloadBinary will grab the binary and place it in the proper directory
-func DownloadBinary(cfg *Config, info UpgradeInfo) error {
+func DownloadBinary(cfg *Config, info upgradetypes.Plan) error {
 	url, err := GetDownloadURL(info)
 	if err != nil {
 		return err
@@ -104,11 +104,11 @@ type UpgradeConfig struct {
 }
 
 // GetDownloadURL will check if there is an arch-dependent binary specified in Info
-func GetDownloadURL(info UpgradeInfo) (string, error) {
+func GetDownloadURL(info upgradetypes.Plan) (string, error) {
 	doc := strings.TrimSpace(info.Info)
 	// if this is a url, then we download that and try to get a new doc with the real info
 	if _, err := url.Parse(doc); err == nil {
-		tmpDir, err := ioutil.TempDir("", "upgrade-manager-reference")
+		tmpDir, err := os.MkdirTemp("", "upgrade-manager-reference")
 		if err != nil {
 			return "", fmt.Errorf("create tempdir for reference file: %w", err)
 		}
@@ -119,7 +119,7 @@ func GetDownloadURL(info UpgradeInfo) (string, error) {
 			return "", fmt.Errorf("downloading reference link %s: %w", doc, err)
 		}
 
-		refBytes, err := ioutil.ReadFile(refPath)
+		refBytes, err := os.ReadFile(refPath)
 		if err != nil {
 			return "", fmt.Errorf("reading downloaded reference: %w", err)
 		}

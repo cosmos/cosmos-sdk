@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -36,7 +37,7 @@ func Test_runRenameCmd(t *testing.T) {
 	require.NoError(t, err)
 
 	// put fakeKeyName1 in keyring
-	_, err = kb.NewAccount(fakeKeyName1, testutil.TestMnemonic, "", path, hd.Secp256k1)
+	_, err = kb.NewAccount(fakeKeyName1, testdata.TestMnemonic, "", path, hd.Secp256k1)
 	require.NoError(t, err)
 
 	clientCtx := client.Context{}.
@@ -49,7 +50,7 @@ func Test_runRenameCmd(t *testing.T) {
 	cmd.SetArgs([]string{"blah", "blaah", fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome)})
 	err = cmd.ExecuteContext(ctx)
 	require.Error(t, err)
-	require.EqualError(t, err, "blah: key not found")
+	require.EqualError(t, err, "blah.info: key not found")
 
 	// User confirmation missing
 	cmd.SetArgs([]string{

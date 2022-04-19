@@ -2,8 +2,8 @@
 
 ## Changelog
 
-- 2020-10-05: Initial Draft
-- 2021-04-21: Remove `ServiceMsg`s to follow Protobuf `Any`'s spec, see [#9063](https://github.com/cosmos/cosmos-sdk/issues/9063).
+* 2020-10-05: Initial Draft
+* 2021-04-21: Remove `ServiceMsg`s to follow Protobuf `Any`'s spec, see [#9063](https://github.com/cosmos/cosmos-sdk/issues/9063).
 
 ## Status
 
@@ -38,7 +38,7 @@ This was never adopted, however.
 Having a well-specified return value for `Msg`s would improve client UX. For instance,
 in `x/gov`,  `MsgSubmitProposal` returns the proposal ID as a big-endian `uint64`.
 This isn’t really documented anywhere and clients would need to know the internals
-of the SDK to parse that value and return it to users.
+of the Cosmos SDK to parse that value and return it to users.
 
 Also, there may be cases where we want to use these return values programatically.
 For instance, https://github.com/cosmos/cosmos-sdk/issues/7093 proposes a method for
@@ -183,20 +183,20 @@ Finally, closing a module to client API opens desirable OCAP patterns discussed 
 
 ### Pros
 
-- communicates return type clearly
-- manual handler registration and return type marshaling is no longer needed, just implement the interface and register it
-- communication interface is automatically generated, the developer can now focus only on the state transition methods - this would improve the UX of [\#7093](https://github.com/cosmos/cosmos-sdk/issues/7093) approach (1) if we chose to adopt that
-- generated client code could be useful for clients and tests
-- dramatically reduces and simplifies the code
+* communicates return type clearly
+* manual handler registration and return type marshaling is no longer needed, just implement the interface and register it
+* communication interface is automatically generated, the developer can now focus only on the state transition methods - this would improve the UX of [\#7093](https://github.com/cosmos/cosmos-sdk/issues/7093) approach (1) if we chose to adopt that
+* generated client code could be useful for clients and tests
+* dramatically reduces and simplifies the code
 
 ### Cons
 
-- using `service` definitions outside the context of gRPC could be confusing (but doesn’t violate the proto3 spec)
+* using `service` definitions outside the context of gRPC could be confusing (but doesn’t violate the proto3 spec)
 
 ## References
 
-- [Initial Github Issue \#7122](https://github.com/cosmos/cosmos-sdk/issues/7122)
-- [proto 3 Language Guide: Defining Services](https://developers.google.com/protocol-buffers/docs/proto3#services)
-- [Initial pre-`Any` `Msg` designs](https://docs.google.com/document/d/1eEgYgvgZqLE45vETjhwIw4VOqK-5hwQtZtjVbiXnIGc)
-- [ADR 020](./adr-020-protobuf-transaction-encoding.md)
-- [ADR 021](./adr-021-protobuf-query-encoding.md)
+* [Initial Github Issue \#7122](https://github.com/cosmos/cosmos-sdk/issues/7122)
+* [proto 3 Language Guide: Defining Services](https://developers.google.com/protocol-buffers/docs/proto3#services)
+* [Initial pre-`Any` `Msg` designs](https://docs.google.com/document/d/1eEgYgvgZqLE45vETjhwIw4VOqK-5hwQtZtjVbiXnIGc)
+* [ADR 020](./adr-020-protobuf-transaction-encoding.md)
+* [ADR 021](./adr-021-protobuf-query-encoding.md)

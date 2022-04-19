@@ -2,13 +2,13 @@
 
 ## Changelog
 
-- 28-Sept-2020: Initial Draft
+* 28-Sept-2020: Initial Draft
 
 ## Authors
 
-- Anil Kumar (@anilcse)
-- Jack Zampolin (@jackzampolin)
-- Adam Bozanich (@boz)
+* Anil Kumar (@anilcse)
+* Jack Zampolin (@jackzampolin)
+* Adam Bozanich (@boz)
 
 ## Status
 
@@ -16,17 +16,17 @@ Proposed
 
 ## Abstract
 
-Currently in the SDK, events are defined in the handlers for each message as well as `BeginBlock` and `EndBlock`. Each module doesn't have types defined for each event, they are implemented as `map[string]string`. Above all else this makes these events difficult to consume as it requires a great deal of raw string matching and parsing. This proposal focuses on updating the events to use **typed events** defined in each module such that emiting and subscribing to events will be much easier. This workflow comes from the experience of the Akash Network team.
+Currently in the Cosmos SDK, events are defined in the handlers for each message as well as `BeginBlock` and `EndBlock`. Each module doesn't have types defined for each event, they are implemented as `map[string]string`. Above all else this makes these events difficult to consume as it requires a great deal of raw string matching and parsing. This proposal focuses on updating the events to use **typed events** defined in each module such that emiting and subscribing to events will be much easier. This workflow comes from the experience of the Akash Network team.
 
 ## Context
 
-Currently in the SDK, events are defined in the handlers for each message, meaning each module doesn't have a cannonical set of types for each event. Above all else this makes these events difficult to consume as it requires a great deal of raw string matching and parsing. This proposal focuses on updating the events to use **typed events** defined in each module such that emiting and subscribing to events will be much easier. This workflow comes from the experience of the Akash Network team.
+Currently in the Cosmos SDK, events are defined in the handlers for each message, meaning each module doesn't have a cannonical set of types for each event. Above all else this makes these events difficult to consume as it requires a great deal of raw string matching and parsing. This proposal focuses on updating the events to use **typed events** defined in each module such that emiting and subscribing to events will be much easier. This workflow comes from the experience of the Akash Network team.
 
-[Our platform](http://github.com/ovrclk/akash) requires a number of programatic on chain interactions both on the provider (datacenter - to bid on new orders and listen for leases created) and user (application developer - to send the app manifest to the provider) side. In addition the Akash team is now maintaining the IBC [`relayer`](https://github.com/ovrclk/relayer), another very event driven process. In working on these core pieces of infrastructure, and integrating lessons learned from Kubernetes developement, our team has developed a standard method for defining and consuming typed events in SDK modules. We have found that it is extremely useful in building this type of event driven application.
+[Our platform](http://github.com/ovrclk/akash) requires a number of programatic on chain interactions both on the provider (datacenter - to bid on new orders and listen for leases created) and user (application developer - to send the app manifest to the provider) side. In addition the Akash team is now maintaining the IBC [`relayer`](https://github.com/ovrclk/relayer), another very event driven process. In working on these core pieces of infrastructure, and integrating lessons learned from Kubernetes developement, our team has developed a standard method for defining and consuming typed events in Cosmos SDK modules. We have found that it is extremely useful in building this type of event driven application.
 
-As the SDK gets used more extensively for apps like `peggy`, other peg zones, IBC, DeFi, etc... there will be an exploding demand for event driven applications to support new features desired by users. We propose upstreaming our findings into the SDK to enable all SDK applications to quickly and easily build event driven apps to aid their core application. Wallets, exchanges, explorers, and defi protocols all stand to benefit from this work.
+As the Cosmos SDK gets used more extensively for apps like `peggy`, other peg zones, IBC, DeFi, etc... there will be an exploding demand for event driven applications to support new features desired by users. We propose upstreaming our findings into the Cosmos SDK to enable all Cosmos SDK applications to quickly and easily build event driven apps to aid their core application. Wallets, exchanges, explorers, and defi protocols all stand to benefit from this work.
 
-If this proposal is accepted, users will be able to build event driven SDK apps in go by just writing `EventHandler`s for their specific event types and passing them to `EventEmitters` that are defined in the SDK.
+If this proposal is accepted, users will be able to build event driven Cosmos SDK apps in go by just writing `EventHandler`s for their specific event types and passing them to `EventEmitters` that are defined in the Cosmos SDK.
 
 The end of this proposal contains a detailed example of how to consume events after this refactor.
 
@@ -34,7 +34,7 @@ This proposal is specifically about how to consume these events as a client of t
 
 ## Decision
 
-__Step-1__:  Implement additional functionality in the `types` package: `EmitTypedEvent` and `ParseTypedEvent` functions
+**Step-1**:  Implement additional functionality in the `types` package: `EmitTypedEvent` and `ParseTypedEvent` functions
 
 ```go
 // types/events.go
@@ -111,7 +111,7 @@ Here, the `EmitTypedEvent` is a method on `EventManager` which takes typed event
 
 When we subscribe to emitted events on the tendermint websocket, they are emitted in the form of an `abci.Event`. `ParseTypedEvent` parses the event back to it's original proto message.
 
-__Step-2__: Add proto definitions for typed events for msgs in each module:
+**Step-2**: Add proto definitions for typed events for msgs in each module:
 
 For example, let's take `MsgSubmitProposal` of `gov` module and implement this event's type.
 
@@ -128,7 +128,7 @@ message EventSubmitProposal {
 }
 ```
 
-__Step-3__: Refactor event emission to use the typed event created and emit using `sdk.EmitTypedEvent`:
+**Step-3**: Refactor event emission to use the typed event created and emit using `sdk.EmitTypedEvent`:
 
 ```go
 // x/gov/handler.go
@@ -145,7 +145,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper keeper.Keeper, msg types.Ms
 }
 ```
 
-#### How to subscribe to these typed events in `Client`
+### How to subscribe to these typed events in `Client`
 
 > NOTE: Full code example below
 
@@ -159,7 +159,7 @@ Please see the below code sample for more detail on this flow looks for clients.
 
 ### Positive
 
-* Improves consistency of implementation for the events currently in the sdk
+* Improves consistency of implementation for the events currently in the Cosmos SDK
 * Provides a much more ergonomic way to handle events and facilitates writing event driven applications
 * This implementation will support a middleware ecosystem of `EventHandler`s
 
@@ -206,7 +206,7 @@ func SubmitProposalEventHandler(ev proto.Message) (err error) {
 }
 
 // TxEmitter is an example of an event emitter that emits just transaction events. This can and
-// should be implemented somewhere in the SDK. The SDK can include an EventEmitters for tm.event='Tx'
+// should be implemented somewhere in the Cosmos SDK. The Cosmos SDK can include an EventEmitters for tm.event='Tx'
 // and/or tm.event='NewBlock' (the new block events may contain typed events)
 func TxEmitter(ctx context.Context, cliCtx client.Context, ehs ...EventHandler) (err error) {
     // Instantiate and start tendermint RPC client
@@ -315,5 +315,5 @@ func PublishChainTxEvents(ctx context.Context, client tmclient.EventsClient, bus
 
 ## References
 
-- [Publish Custom Events via a bus](https://github.com/ovrclk/akash/blob/90d258caeb933b611d575355b8df281208a214f8/events/publish.go#L19-L58)
-- [Consuming the events in `Client`](https://github.com/ovrclk/deploy/blob/bf6c633ab6c68f3026df59efd9982d6ca1bf0561/cmd/event-handlers.go#L57)
+* [Publish Custom Events via a bus](https://github.com/ovrclk/akash/blob/90d258caeb933b611d575355b8df281208a214f8/events/publish.go#L19-L58)
+* [Consuming the events in `Client`](https://github.com/ovrclk/deploy/blob/bf6c633ab6c68f3026df59efd9982d6ca1bf0561/cmd/event-handlers.go#L57)

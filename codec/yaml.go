@@ -1,10 +1,8 @@
 package codec
 
 import (
-	"encoding/json"
-
 	"github.com/gogo/protobuf/proto"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 )
 
 // MarshalYAML marshals toPrint using JSONCodec to leverage specialized MarshalJSON methods
@@ -18,12 +16,5 @@ func MarshalYAML(cdc JSONCodec, toPrint proto.Message) ([]byte, error) {
 		return nil, err
 	}
 
-	// generate YAML by decoding JSON and re-encoding to YAML
-	var j interface{}
-	err = json.Unmarshal(bz, &j)
-	if err != nil {
-		return nil, err
-	}
-
-	return yaml.Marshal(j)
+	return yaml.JSONToYAML(bz)
 }

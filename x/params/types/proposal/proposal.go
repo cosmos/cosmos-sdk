@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	yaml "gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
@@ -19,7 +19,6 @@ var _ govtypes.Content = &ParameterChangeProposal{}
 
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeChange)
-	govtypes.RegisterProposalTypeCodec(&ParameterChangeProposal{}, "cosmos-sdk/ParameterChangeProposal")
 }
 
 func NewParameterChangeProposal(title, description string, changes []ParamChange) *ParameterChangeProposal {

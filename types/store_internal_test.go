@@ -3,6 +3,7 @@ package types
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -47,7 +48,7 @@ func (s *storeIntSuite) TestNewKVStoreKeys() {
 	require := s.Require()
 	require.Panics(func() { NewKVStoreKeys("a1", "a") }, "should fail one key is a prefix of another one")
 
-	require.Equal(map[string]*KVStoreKey{}, NewKVStoreKeys())
+	require.Equal(map[string]*types.KVStoreKey{}, NewKVStoreKeys())
 	require.Equal(1, len(NewKVStoreKeys("one")))
 
 	key := "baca"

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -38,7 +37,7 @@ func GenAppStateFromConfig(cdc codec.JSONCodec, txEncodingConfig client.TxEncodi
 	}
 
 	config.P2P.PersistentPeers = persistentPeers
-	cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
+	cfg.WriteConfigFile(config.RootDir, config)
 
 	// if there are no gen txs to be processed, return the default empty state
 	if len(appGenTxs) == 0 {
@@ -79,8 +78,8 @@ func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTx
 		return appGenTxs, persistentPeers, err
 	}
 
-	var fos []os.FileInfo
-	fos, err = ioutil.ReadDir(genTxsDir)
+	var fos []os.DirEntry
+	fos, err = os.ReadDir(genTxsDir)
 	if err != nil {
 		return appGenTxs, persistentPeers, err
 	}
@@ -107,13 +106,13 @@ func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTx
 		}
 
 		// get the genTx
-		jsonRawTx, err := ioutil.ReadFile(filepath.Join(genTxsDir, fo.Name()))
+		jsonRawTx, err := os.ReadFile(filepath.Join(genTxsDir, fo.Name()))
 		if err != nil {
 			return appGenTxs, persistentPeers, err
 		}
 
-		var genTx sdk.Tx
-		if genTx, err = txJSONDecoder(jsonRawTx); err != nil {
+		genTx, err := types.ValidateAndGetGenTx(jsonRawTx, txJSONDecoder)
+		if err != nil {
 			return appGenTxs, persistentPeers, err
 		}
 

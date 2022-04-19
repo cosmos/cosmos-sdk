@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
@@ -43,7 +44,7 @@ type (
 
 		// RegisterGRPCServer registers gRPC services directly with the gRPC
 		// server.
-		RegisterGRPCServer(client.Context, grpc.Server)
+		RegisterGRPCServer(grpc.Server)
 
 		// RegisterTxService registers the gRPC Query service for tx (such as tx
 		// simulation, fetching txs by hash...).
@@ -70,7 +71,7 @@ type (
 		// Height is the app's latest block height.
 		Height int64
 		// ConsensusParams are the exported consensus params for ABCI.
-		ConsensusParams *abci.ConsensusParams
+		ConsensusParams *tmproto.ConsensusParams
 	}
 
 	// AppExporter is a function that dumps all app state to

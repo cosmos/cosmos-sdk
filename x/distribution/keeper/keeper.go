@@ -6,6 +6,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -14,23 +15,21 @@ import (
 
 // Keeper of the distribution store
 type Keeper struct {
-	storeKey      sdk.StoreKey
+	storeKey      storetypes.StoreKey
 	cdc           codec.BinaryCodec
 	paramSpace    paramtypes.Subspace
 	authKeeper    types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
 
-	blockedAddrs map[string]bool
-
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
 
 // NewKeeper creates a new distribution Keeper instance
 func NewKeeper(
-	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
+	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace paramtypes.Subspace,
 	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper,
-	feeCollectorName string, blockedAddrs map[string]bool,
+	feeCollectorName string,
 ) Keeper {
 
 	// ensure distribution module account is set
@@ -51,7 +50,6 @@ func NewKeeper(
 		bankKeeper:       bk,
 		stakingKeeper:    sk,
 		feeCollectorName: feeCollectorName,
-		blockedAddrs:     blockedAddrs,
 	}
 }
 
@@ -62,7 +60,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // SetWithdrawAddr sets a new address that will receive the rewards upon withdrawal
 func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, withdrawAddr sdk.AccAddress) error {
-	if k.blockedAddrs[withdrawAddr.String()] {
+	if k.bankKeeper.BlockedAddr(withdrawAddr) {
 		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive external funds", withdrawAddr)
 	}
 

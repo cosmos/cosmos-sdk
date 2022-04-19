@@ -14,12 +14,18 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 service Query {
   // Balance queries the balance of a single coin for a single account.
   rpc Balance(QueryBalanceRequest) returns (QueryBalanceResponse) {
-    option (google.api.http).get = "/cosmos/bank/v1beta1/balances/{address}/{denom}";
+    option (google.api.http).get = "/cosmos/bank/v1beta1/balances/{address}/by_denom";
   }
 
   // AllBalances queries the balance of all coins for a single account.
   rpc AllBalances(QueryAllBalancesRequest) returns (QueryAllBalancesResponse) {
     option (google.api.http).get = "/cosmos/bank/v1beta1/balances/{address}";
+  }
+
+  // SpendableBalances queries the spenable balance of all coins for a single
+  // account.
+  rpc SpendableBalances(QuerySpendableBalancesRequest) returns (QuerySpendableBalancesResponse) {
+    option (google.api.http).get = "/cosmos/bank/v1beta1/spendable_balances/{address}";
   }
 
   // TotalSupply queries the total supply of all coins.
@@ -29,7 +35,7 @@ service Query {
 
   // SupplyOf queries the supply of a single coin.
   rpc SupplyOf(QuerySupplyOfRequest) returns (QuerySupplyOfResponse) {
-    option (google.api.http).get = "/cosmos/bank/v1beta1/supply/{denom}";
+    option (google.api.http).get = "/cosmos/bank/v1beta1/supply/by_denom";
   }
 
   // Params queries the parameters of x/bank module.
@@ -96,6 +102,30 @@ message QueryAllBalancesResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
+// QuerySpendableBalancesRequest defines the gRPC request structure for querying
+// an account's spendable balances.
+message QuerySpendableBalancesRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // address is the address to query spendable balances for.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QuerySpendableBalancesResponse defines the gRPC response structure for querying
+// an account's spendable balances.
+message QuerySpendableBalancesResponse {
+  // balances is the spendable balances of all the coins.
+  repeated cosmos.base.v1beta1.Coin balances = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
 // QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC
 // method.
 message QueryTotalSupplyRequest {
@@ -103,6 +133,8 @@ message QueryTotalSupplyRequest {
   option (gogoproto.goproto_getters) = false;
 
   // pagination defines an optional pagination for the request.
+  //
+  // Since: cosmos-sdk 0.43
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
@@ -114,6 +146,8 @@ message QueryTotalSupplyResponse {
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
   // pagination defines the pagination in the response.
+  //
+  // Since: cosmos-sdk 0.43
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
@@ -182,7 +216,8 @@ message QueryDenomOwnersRequest {
 // balance of the denominated token.
 message DenomOwner {
   // address defines the address that owns a particular denomination.
-  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];;
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  ;
 
   // balance is the balance of the denominated coin for an account.
   cosmos.base.v1beta1.Coin balance = 2 [(gogoproto.nullable) = false];

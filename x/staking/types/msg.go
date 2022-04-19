@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,11 +10,12 @@ import (
 
 // staking message types
 const (
-	TypeMsgUndelegate      = "begin_unbonding"
-	TypeMsgEditValidator   = "edit_validator"
-	TypeMsgCreateValidator = "create_validator"
-	TypeMsgDelegate        = "delegate"
-	TypeMsgBeginRedelegate = "begin_redelegate"
+	TypeMsgUndelegate                = "begin_unbonding"
+	TypeMsgCancelUnbondingDelegation = "cancel_unbond"
+	TypeMsgEditValidator             = "edit_validator"
+	TypeMsgCreateValidator           = "create_validator"
+	TypeMsgDelegate                  = "delegate"
+	TypeMsgBeginRedelegate           = "begin_redelegate"
 )
 
 var (
@@ -24,6 +26,7 @@ var (
 	_ sdk.Msg                            = &MsgDelegate{}
 	_ sdk.Msg                            = &MsgUndelegate{}
 	_ sdk.Msg                            = &MsgBeginRedelegate{}
+	_ sdk.Msg                            = &MsgCancelUnbondingDelegation{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
@@ -76,7 +79,7 @@ func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgCreateValidator) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -160,7 +163,7 @@ func (msg MsgEditValidator) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes implements the sdk.Msg interface.
 func (msg MsgEditValidator) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -214,7 +217,7 @@ func (msg MsgDelegate) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes implements the sdk.Msg interface.
 func (msg MsgDelegate) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -264,7 +267,7 @@ func (msg MsgBeginRedelegate) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes implements the sdk.Msg interface.
 func (msg MsgBeginRedelegate) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -314,7 +317,7 @@ func (msg MsgUndelegate) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes implements the sdk.Msg interface.
 func (msg MsgUndelegate) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -331,6 +334,60 @@ func (msg MsgUndelegate) ValidateBasic() error {
 		return sdkerrors.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"invalid shares amount",
+		)
+	}
+
+	return nil
+}
+
+// NewMsgCancelUnbondingDelegation creates a new MsgCancelUnbondingDelegation instance.
+//nolint:interfacer
+func NewMsgCancelUnbondingDelegation(delAddr sdk.AccAddress, valAddr sdk.ValAddress, creationHeight int64, amount sdk.Coin) *MsgCancelUnbondingDelegation {
+	return &MsgCancelUnbondingDelegation{
+		DelegatorAddress: delAddr.String(),
+		ValidatorAddress: valAddr.String(),
+		Amount:           amount,
+		CreationHeight:   creationHeight,
+	}
+}
+
+// Route implements the sdk.Msg interface.
+func (msg MsgCancelUnbondingDelegation) Route() string { return RouterKey }
+
+// Type implements the sdk.Msg interface.
+func (msg MsgCancelUnbondingDelegation) Type() string { return TypeMsgCancelUnbondingDelegation }
+
+// GetSigners implements the sdk.Msg interface.
+func (msg MsgCancelUnbondingDelegation) GetSigners() []sdk.AccAddress {
+	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	return []sdk.AccAddress{delegator}
+}
+
+// GetSignBytes implements the sdk.Msg interface.
+func (msg MsgCancelUnbondingDelegation) GetSignBytes() []byte {
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (msg MsgCancelUnbondingDelegation) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
+	}
+	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
+	}
+
+	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
+		return sdkerrors.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"invalid amount",
+		)
+	}
+
+	if msg.CreationHeight <= 0 {
+		return sdkerrors.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"invalid height",
 		)
 	}
 

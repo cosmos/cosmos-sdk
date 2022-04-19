@@ -11,12 +11,12 @@ Tendermint blocks can include
 
 ### Equivocation
 
-Currently, the SDK handles two types of evidence inside the ABCI `BeginBlock`:
+The Cosmos SDK handles two types of evidence inside the ABCI `BeginBlock`:
 
-- `DuplicateVoteEvidence`,
-- `LightClientAttackEvidence`.
+* `DuplicateVoteEvidence`,
+* `LightClientAttackEvidence`.
 
-The evidence module handles these two evidence types the same way. First, the SDK converts the Tendermint concrete evidence type to a SDK `Evidence` interface using `Equivocation` as the concrete type.
+The evidence module handles these two evidence types the same way. First, the Cosmos SDK converts the Tendermint concrete evidence type to an SDK `Evidence` interface using `Equivocation` as the concrete type.
 
 ```proto
 // Equivocation implements the Evidence interface.
@@ -34,8 +34,8 @@ For some `Equivocation` submitted in `block` to be valid, it must satisfy:
 
 Where:
 
-- `Evidence.Timestamp` is the timestamp in the block at height `Evidence.Height`
-- `block.Timestamp` is the current block timestamp.
+* `Evidence.Timestamp` is the timestamp in the block at height `Evidence.Height`
+* `block.Timestamp` is the current block timestamp.
 
 If valid `Equivocation` evidence is included in a block, the validator's stake is
 reduced (slashed) by `SlashFractionDoubleSign` as defined by the `x/slashing` module
@@ -149,6 +149,6 @@ func (k Keeper) HandleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 }
 ```
 
-Note, the slashing, jailing, and tombstoning calls are delegated through the `x/slashing` module
+**Note:** The slashing, jailing, and tombstoning calls are delegated through the `x/slashing` module
 that emits informative events and finally delegates calls to the `x/staking` module. See documentation
-on slashing and jailing in [x/staking spec](/.././cosmos-sdk/x/staking/spec/02_state_transitions.md).
+on slashing and jailing in [State Transitions](/.././cosmos-sdk/x/staking/spec/02_state_transitions.md).

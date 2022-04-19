@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -38,6 +39,17 @@ func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*simapp.Si
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), totalSupply))
+
+	// unbond genesis validator delegations
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	require.Len(t, delegations, 1)
+	delegation := delegations[0]
+
+	_, err := app.StakingKeeper.Undelegate(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr(), delegation.Shares)
+	require.NoError(t, err)
+
+	// end block to unbond genesis validator
+	staking.EndBlocker(ctx, app.StakingKeeper)
 
 	return app, ctx, addrDels, addrVals
 }
@@ -97,14 +109,12 @@ func TestSetValidator(t *testing.T) {
 
 	resVals = app.StakingKeeper.GetValidators(ctx, 1)
 	require.Equal(t, 1, len(resVals))
-	require.True(ValEq(t, validator, resVals[0]))
 
 	resVals = app.StakingKeeper.GetValidators(ctx, 10)
-	require.Equal(t, 1, len(resVals))
-	require.True(ValEq(t, validator, resVals[0]))
+	require.Equal(t, 2, len(resVals))
 
 	allVals := app.StakingKeeper.GetAllValidators(ctx)
-	require.Equal(t, 1, len(allVals))
+	require.Equal(t, 2, len(allVals))
 }
 
 func TestUpdateValidatorByPowerIndex(t *testing.T) {
@@ -264,7 +274,7 @@ func TestValidatorBasics(t *testing.T) {
 	require.Zero(t, len(resVals))
 
 	resVals = app.StakingKeeper.GetValidators(ctx, 2)
-	require.Zero(t, len(resVals))
+	require.Len(t, resVals, 1)
 
 	// set and retrieve a record
 	validators[0] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[0], true)
@@ -1042,6 +1052,11 @@ func TestUpdateValidatorCommission(t *testing.T) {
 	app, ctx, _, addrVals := bootstrapValidatorTest(t, 1000, 20)
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Now().UTC()})
 
+	// Set MinCommissionRate to 0.05
+	params := app.StakingKeeper.GetParams(ctx)
+	params.MinCommissionRate = sdk.NewDecWithPrec(5, 2)
+	app.StakingKeeper.SetParams(ctx, params)
+
 	commission1 := types.NewCommissionWithTime(
 		sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(3, 1),
 		sdk.NewDecWithPrec(1, 1), time.Now().UTC().Add(time.Duration(-1)*time.Hour),
@@ -1066,6 +1081,7 @@ func TestUpdateValidatorCommission(t *testing.T) {
 		{val2, sdk.NewDecWithPrec(-1, 1), true},
 		{val2, sdk.NewDecWithPrec(4, 1), true},
 		{val2, sdk.NewDecWithPrec(3, 1), true},
+		{val2, sdk.NewDecWithPrec(1, 2), true},
 		{val2, sdk.NewDecWithPrec(2, 1), false},
 	}
 

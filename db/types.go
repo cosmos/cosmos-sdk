@@ -3,8 +3,8 @@ package db
 import "errors"
 
 var (
-	// ErrBatchClosed is returned when a closed or written batch is used.
-	ErrBatchClosed = errors.New("batch has been written or closed")
+	// ErrTransactionClosed is returned when a closed or written transaction is used.
+	ErrTransactionClosed = errors.New("transaction has been written or closed")
 
 	// ErrKeyEmpty is returned when attempting to use an empty or nil key.
 	ErrKeyEmpty = errors.New("key cannot be empty")
@@ -31,35 +31,39 @@ var (
 // and read and write access.
 // Past versions are only accessible read-only.
 type DBConnection interface {
-	// Opens a read-only transaction at the current working version.
+	// Reader opens a read-only transaction at the current working version.
 	Reader() DBReader
 
-	// Opens a read-only transaction at a specified version.
+	// ReaderAt opens a read-only transaction at a specified version.
 	// Returns ErrVersionDoesNotExist for invalid versions.
 	ReaderAt(uint64) (DBReader, error)
 
-	// Opens a read-write transaction at the current version.
+	// ReadWriter opens a read-write transaction at the current version.
 	ReadWriter() DBReadWriter
 
-	// Opens a write-only transaction at the current version.
+	// Writer opens a write-only transaction at the current version.
 	Writer() DBWriter
 
-	// Returns all saved versions as an immutable set which is safe for concurrent access.
+	// Versions returns all saved versions as an immutable set which is safe for concurrent access.
 	Versions() (VersionSet, error)
 
-	// Saves the current contents of the database and returns the next version ID, which will be
-	// `Versions().Last()+1`.
+	// SaveNextVersion saves the current contents of the database and returns the next version ID,
+	// which will be `Versions().Last()+1`.
 	// Returns an error if any open DBWriter transactions exist.
 	// TODO: rename to something more descriptive?
 	SaveNextVersion() (uint64, error)
 
-	// Attempts to save database at a specific version ID, which must be greater than or equal to
-	// what would be returned by `SaveNextVersion`.
+	// SaveVersion attempts to save database at a specific version ID, which must be greater than or
+	// equal to what would be returned by `SaveNextVersion`.
 	// Returns an error if any open DBWriter transactions exist.
 	SaveVersion(uint64) error
 
-	// Deletes a saved version. Returns ErrVersionDoesNotExist for invalid versions.
+	// DeleteVersion deletes a saved version. Returns ErrVersionDoesNotExist for invalid versions.
 	DeleteVersion(uint64) error
+
+	// Revert reverts the DB state to the last saved version; if none exist, this clears the DB.
+	// Returns an error if any open DBWriter transactions exist.
+	Revert() error
 
 	// Close closes the database connection.
 	Close() error
@@ -96,13 +100,15 @@ type DBReader interface {
 	// TODO: replace with an extra argument to Iterator()?
 	ReverseIterator(start, end []byte) (Iterator, error)
 
-	// Discards the transaction, invalidating any future operations on it.
-	Discard()
+	// Discard discards the transaction, invalidating any future operations on it.
+	Discard() error
 }
 
 // DBWriter is a write-only transaction interface.
 // It is safe for concurrent writes, following an optimistic (OCC) strategy, detecting any write
 // conflicts and returning an error on commit, rather than locking the DB.
+// Callers must call Commit or Discard when done with the transaction.
+//
 // This can be used to wrap a write-optimized batch object if provided by the backend implementation.
 type DBWriter interface {
 	// Set sets the value for the given key, replacing it if it already exists.
@@ -113,11 +119,11 @@ type DBWriter interface {
 	// CONTRACT: key readonly []byte
 	Delete([]byte) error
 
-	// Flushes pending writes and discards the transaction.
+	// Commit flushes pending writes and discards the transaction.
 	Commit() error
 
-	// Discards the transaction, invalidating any future operations on it.
-	Discard()
+	// Discard discards the transaction, invalidating any future operations on it.
+	Discard() error
 }
 
 // DBReadWriter is a transaction interface that allows both reading and writing.
@@ -132,29 +138,32 @@ type DBReadWriter interface {
 //
 // Callers must make sure the iterator is valid before calling any methods on it, otherwise
 // these methods will panic. This is in part caused by most backend databases using this convention.
+// Note that the iterator is invalid on contruction: Next() must be called to initialize it to its
+// starting position.
 //
 // As with DBReader, keys and values should be considered read-only, and must be copied before they are
 // modified.
 //
 // Typical usage:
 //
-// var itr Iterator = ...
-// defer itr.Close()
+//   var itr Iterator = ...
+//   defer itr.Close()
 //
-// for ; itr.Valid(); itr.Next() {
-//   k, v := itr.Key(); itr.Value()
-//   ...
-// }
-// if err := itr.Error(); err != nil {
-//   ...
-// }
+//   for itr.Next() {
+//     k, v := itr.Key(); itr.Value()
+//     ...
+//   }
+//   if err := itr.Error(); err != nil {
+//     ...
+//   }
 type Iterator interface {
 	// Domain returns the start (inclusive) and end (exclusive) limits of the iterator.
 	// CONTRACT: start, end readonly []byte
 	Domain() (start []byte, end []byte)
 
 	// Next moves the iterator to the next key in the database, as defined by order of iteration;
-	// returns whether the iterator is valid. Once invalid, it remains invalid forever.
+	// returns whether the iterator is valid.
+	// Once this function returns false, the iterator remains invalid forever.
 	Next() bool
 
 	// Key returns the key at the current position. Panics if the iterator is invalid.

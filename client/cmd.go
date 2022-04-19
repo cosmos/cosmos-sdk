@@ -93,6 +93,11 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		clientCtx = clientCtx.WithOutputFormat(output)
 	}
 
+	if clientCtx.HomeDir == "" || flagSet.Changed(flags.FlagHome) {
+		homeDir, _ := flagSet.GetString(flags.FlagHome)
+		clientCtx = clientCtx.WithHomeDir(homeDir)
+	}
+
 	if !clientCtx.Simulate || flagSet.Changed(flags.FlagDryRun) {
 		dryRun, _ := flagSet.GetBool(flags.FlagDryRun)
 		clientCtx = clientCtx.WithSimulation(dryRun)
@@ -215,8 +220,21 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		clientCtx = clientCtx.WithSignModeStr(signModeStr)
 	}
 
-	if clientCtx.FeeGranter == nil || flagSet.Changed(flags.FlagFeeAccount) {
-		granter, _ := flagSet.GetString(flags.FlagFeeAccount)
+	if clientCtx.FeePayer == nil || flagSet.Changed(flags.FlagFeePayer) {
+		payer, _ := flagSet.GetString(flags.FlagFeePayer)
+
+		if payer != "" {
+			payerAcc, err := sdk.AccAddressFromBech32(payer)
+			if err != nil {
+				return clientCtx, err
+			}
+
+			clientCtx = clientCtx.WithFeePayerAddress(payerAcc)
+		}
+	}
+
+	if clientCtx.FeeGranter == nil || flagSet.Changed(flags.FlagFeeGranter) {
+		granter, _ := flagSet.GetString(flags.FlagFeeGranter)
 
 		if granter != "" {
 			granterAcc, err := sdk.AccAddressFromBech32(granter)
@@ -230,7 +248,7 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 
 	if clientCtx.From == "" || flagSet.Changed(flags.FlagFrom) {
 		from, _ := flagSet.GetString(flags.FlagFrom)
-		fromAddr, fromName, keyType, err := GetFromFields(clientCtx.Keyring, from, clientCtx.GenerateOnly)
+		fromAddr, fromName, keyType, err := GetFromFields(clientCtx, clientCtx.Keyring, from)
 		if err != nil {
 			return clientCtx, err
 		}
@@ -246,18 +264,25 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		}
 	}
 
-	return clientCtx, nil
-}
+	if !clientCtx.IsAux || flagSet.Changed(flags.FlagAux) {
+		isAux, _ := flagSet.GetBool(flags.FlagAux)
+		clientCtx = clientCtx.WithAux(isAux)
+		if isAux {
+			// If the user didn't explicity set an --output flag, use JSON by
+			// default.
+			if clientCtx.OutputFormat == "" || !flagSet.Changed(cli.OutputFlag) {
+				clientCtx = clientCtx.WithOutputFormat("json")
+			}
 
-// ReadHomeFlag checks if home flag is changed. If this is a case, we update
-// HomeDir field of Client Context.
-func ReadHomeFlag(clientCtx Context, cmd *cobra.Command) Context {
-	if cmd.Flags().Changed(flags.FlagHome) {
-		rootDir, _ := cmd.Flags().GetString(flags.FlagHome)
-		clientCtx = clientCtx.WithHomeDir(rootDir)
+			// If the user didn't explicitly set a --sign-mode flag, use
+			// DIRECT_AUX by default.
+			if clientCtx.SignModeStr == "" || !flagSet.Changed(flags.FlagSignMode) {
+				clientCtx = clientCtx.WithSignModeStr(flags.SignModeDirectAux)
+			}
+		}
 	}
 
-	return clientCtx
+	return clientCtx, nil
 }
 
 // GetClientQueryContext returns a Context from a command with fields set based on flags

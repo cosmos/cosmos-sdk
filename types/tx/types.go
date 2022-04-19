@@ -58,6 +58,13 @@ func (t *Tx) ValidateBasic() error {
 		)
 	}
 
+	if fee.Amount.IsAnyNil() {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInsufficientFee,
+			"invalid fee provided: null",
+		)
+	}
+
 	if fee.Amount.IsAnyNegative() {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInsufficientFee,
@@ -166,7 +173,19 @@ func (t *Tx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	return UnpackInterfaces(unpacker, m.Messages)
+	if err := UnpackInterfaces(unpacker, m.Messages); err != nil {
+		return err
+	}
+
+	if err := unpackTxExtensionOptionsI(unpacker, m.ExtensionOptions); err != nil {
+		return err
+	}
+
+	if err := unpackTxExtensionOptionsI(unpacker, m.NonCriticalExtensionOptions); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
@@ -185,8 +204,14 @@ func (m *SignerInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return unpacker.UnpackAny(m.PublicKey, new(cryptotypes.PubKey))
 }
 
-// RegisterInterfaces registers the sdk.Tx interface.
+// RegisterInterfaces registers the sdk.Tx and MsgResponse interfaces.
+// Note: the registration of sdk.Msg is done in sdk.RegisterInterfaces, but it
+// could be moved inside this function.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	registry.RegisterInterface(msgResponseInterfaceProtoName, (*MsgResponse)(nil))
+
 	registry.RegisterInterface("cosmos.tx.v1beta1.Tx", (*sdk.Tx)(nil))
 	registry.RegisterImplementations((*sdk.Tx)(nil), &Tx{})
+
+	registry.RegisterInterface("cosmos.tx.v1beta1.TxExtensionOptionI", (*TxExtensionOptionI)(nil))
 }

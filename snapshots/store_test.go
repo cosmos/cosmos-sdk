@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -20,10 +19,10 @@ import (
 )
 
 func setupStore(t *testing.T) *snapshots.Store {
-	// ioutil.TempDir() is used instead of testing.T.TempDir()
+	// os.MkdirTemp() is used instead of testing.T.TempDir()
 	// see https://github.com/cosmos/cosmos-sdk/pull/8475 for
 	// this change's rationale.
-	tempdir, err := ioutil.TempDir("", "")
+	tempdir, err := os.MkdirTemp("", "")
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = os.RemoveAll(tempdir) })
 
@@ -89,7 +88,10 @@ func TestStore_Delete(t *testing.T) {
 
 	// Deleting a snapshot being saved should error
 	ch := make(chan io.ReadCloser)
-	go store.Save(9, 1, ch)
+	go func() {
+		_, err := store.Save(9, 1, ch)
+		require.NoError(t, err)
+	}()
 
 	time.Sleep(10 * time.Millisecond)
 	err = store.Delete(9, 1)
@@ -195,7 +197,7 @@ func TestStore_Load(t *testing.T) {
 	for i := uint32(0); i < snapshot.Chunks; i++ {
 		reader, ok := <-chunks
 		require.True(t, ok)
-		chunk, err := ioutil.ReadAll(reader)
+		chunk, err := io.ReadAll(reader)
 		require.NoError(t, err)
 		err = reader.Close()
 		require.NoError(t, err)
@@ -220,7 +222,7 @@ func TestStore_LoadChunk(t *testing.T) {
 	chunk, err = store.LoadChunk(2, 1, 0)
 	require.NoError(t, err)
 	require.NotNil(t, chunk)
-	body, err := ioutil.ReadAll(chunk)
+	body, err := io.ReadAll(chunk)
 	require.NoError(t, err)
 	assert.Equal(t, []byte{2, 1, 0}, body)
 	err = chunk.Close()
@@ -314,7 +316,7 @@ func TestStore_Save(t *testing.T) {
 
 	ch := make(chan io.ReadCloser, 2)
 	ch <- pr
-	ch <- ioutil.NopCloser(bytes.NewBuffer([]byte{0xff}))
+	ch <- io.NopCloser(bytes.NewBuffer([]byte{0xff}))
 	close(ch)
 
 	_, err = store.Save(6, 1, ch)
@@ -325,7 +327,10 @@ func TestStore_Save(t *testing.T) {
 	// Saving a snapshot should error if a snapshot is already in progress for the same height,
 	// regardless of format. However, a different height should succeed.
 	ch = make(chan io.ReadCloser)
-	go store.Save(7, 1, ch)
+	go func() {
+		_, err := store.Save(7, 1, ch)
+		require.NoError(t, err)
+	}()
 	time.Sleep(10 * time.Millisecond)
 	_, err = store.Save(7, 2, makeChunks(nil))
 	require.Error(t, err)

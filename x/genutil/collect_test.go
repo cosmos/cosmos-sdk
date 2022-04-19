@@ -2,7 +2,6 @@ package genutil_test
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -38,7 +37,7 @@ func (dni *doNothingIterator) IterateGenesisBalances(_ codec.JSONCodec, _ map[st
 // Ensures that CollectTx correctly traverses directories and won't error out on encountering
 // a directory during traversal of the first level. See issue https://github.com/cosmos/cosmos-sdk/issues/6788.
 func TestCollectTxsHandlesDirectories(t *testing.T) {
-	testDir, err := ioutil.TempDir(os.TempDir(), "testCollectTxs")
+	testDir, err := os.MkdirTemp(os.TempDir(), "testCollectTxs")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -12,15 +12,15 @@ send fungible token transfers to other chains.
 
 ## Integrating the IBC module
 
-Integrating the IBC module to your SDK-based application is straighforward. The general changes can be summarized in the following steps:
+Integrating the IBC module to your Cosmos SDK-based application is straighforward. The general changes can be summarized in the following steps:
 
-- Add required modules to the `module.BasicManager`
-- Define additional `Keeper` fields for the new modules on the `App` type
-- Add the module's `StoreKeys` and initialize their `Keepers`
-- Set up corresponding routers and routes for the `ibc` and `evidence` modules
-- Add the modules to the module `Manager`
-- Add modules to `Begin/EndBlockers` and `InitGenesis`
-- Update the module `SimulationManager` to enable simulations
+* Add required modules to the `module.BasicManager`
+* Define additional `Keeper` fields for the new modules on the `App` type
+* Add the module's `StoreKeys` and initialize their `Keepers`
+* Set up corresponding routers and routes for the `ibc` and `evidence` modules
+* Add the modules to the module `Manager`
+* Add modules to `Begin/EndBlockers` and `InitGenesis`
+* Update the module `SimulationManager` to enable simulations
 
 ### Module `BasicManager` and `ModuleAccount` permissions
 
@@ -244,7 +244,7 @@ func NewApp(...args) *App {
 :::
 
 That's it! You have now wired up the IBC module and are now able to send fungible tokens across
-different chains. If you want to have a broader view of the changes take a look into the SDK's
+different chains. If you want to have a broader view of the changes take a look into the Cosmos SDK's
 [`SimApp`](https://github.com/cosmos/ibc-go/blob/main/testing/simapp/app.go).
 
 ## Next {hide}

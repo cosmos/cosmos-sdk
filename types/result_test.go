@@ -7,13 +7,11 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/proto"
-
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/bytes"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/tendermint/tendermint/rpc/coretypes"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -75,7 +73,7 @@ func (s *resultTestSuite) TestResponseResultTx() {
 		GasWanted: 100,
 		GasUsed:   90,
 	}
-	resultTx := &ctypes.ResultTx{
+	resultTx := &coretypes.ResultTx{
 		Hash:     bytes.HexBytes([]byte("test")),
 		Height:   10,
 		TxResult: deliverTxResult,
@@ -101,22 +99,24 @@ func (s *resultTestSuite) TestResponseResultTx() {
 
 	s.Require().Equal(want, sdk.NewResponseResultTx(resultTx, nil, "timestamp"))
 	s.Require().Equal((*sdk.TxResponse)(nil), sdk.NewResponseResultTx(nil, nil, "timestamp"))
-	s.Require().Equal(`Response:
-  Height: 10
-  TxHash: 74657374
-  Code: 1
-  Data: 64617461
-  Raw Log: []
-  Logs: []
-  Info: info
-  GasWanted: 100
-  GasUsed: 90
-  Codespace: codespace
-  Timestamp: timestamp`, sdk.NewResponseResultTx(resultTx, nil, "timestamp").String())
+	s.Require().Equal(`code: 1
+codespace: codespace
+data: "64617461"
+events: []
+gas_used: "90"
+gas_wanted: "100"
+height: "10"
+info: info
+logs: []
+raw_log: '[]'
+timestamp: timestamp
+tx: null
+txhash: "74657374"
+`, sdk.NewResponseResultTx(resultTx, nil, "timestamp").String())
 	s.Require().True(sdk.TxResponse{}.Empty())
 	s.Require().False(want.Empty())
 
-	resultBroadcastTx := &ctypes.ResultBroadcastTx{
+	resultBroadcastTx := &coretypes.ResultBroadcastTx{
 		Code:      1,
 		Codespace: "codespace",
 		Data:      []byte("data"),
@@ -143,7 +143,7 @@ func (s *resultTestSuite) TestResponseFormatBroadcastTxCommit() {
 	s.Require().NoError(err)
 
 	// test checkTx
-	checkTxResult := &ctypes.ResultBroadcastTxCommit{
+	checkTxResult := &coretypes.ResultBroadcastTxCommit{
 		Height: 10,
 		Hash:   bytes.HexBytes([]byte("test")),
 		CheckTx: abci.ResponseCheckTx{
@@ -154,9 +154,21 @@ func (s *resultTestSuite) TestResponseFormatBroadcastTxCommit() {
 			GasWanted: 99,
 			GasUsed:   100,
 			Codespace: "codespace",
+			Events: []abci.Event{
+				{
+					Type: "message",
+					Attributes: []abci.EventAttribute{
+						{
+							Key:   "action",
+							Value: "foo",
+							Index: true,
+						},
+					},
+				},
+			},
 		},
 	}
-	deliverTxResult := &ctypes.ResultBroadcastTxCommit{
+	deliverTxResult := &coretypes.ResultBroadcastTxCommit{
 		Height: 10,
 		Hash:   bytes.HexBytes([]byte("test")),
 		DeliverTx: abci.ResponseDeliverTx{
@@ -167,6 +179,18 @@ func (s *resultTestSuite) TestResponseFormatBroadcastTxCommit() {
 			GasWanted: 99,
 			GasUsed:   100,
 			Codespace: "codespace",
+			Events: []abci.Event{
+				{
+					Type: "message",
+					Attributes: []abci.EventAttribute{
+						{
+							Key:   "action",
+							Value: "foo",
+							Index: true,
+						},
+					},
+				},
+			},
 		},
 	}
 	want := &sdk.TxResponse{
@@ -180,6 +204,18 @@ func (s *resultTestSuite) TestResponseFormatBroadcastTxCommit() {
 		Info:      "info",
 		GasWanted: 99,
 		GasUsed:   100,
+		Events: []abci.Event{
+			{
+				Type: "message",
+				Attributes: []abci.EventAttribute{
+					{
+						Key:   "action",
+						Value: "foo",
+						Index: true,
+					},
+				},
+			},
+		},
 	}
 
 	s.Require().Equal(want, sdk.NewResponseFormatBroadcastTxCommit(checkTxResult))
@@ -193,14 +229,14 @@ func TestWrapServiceResult(t *testing.T) {
 	require.Nil(t, res)
 	require.NotNil(t, err)
 
-	res, err = sdk.WrapServiceResult(ctx, nil, nil)
+	res, err = sdk.WrapServiceResult(ctx, &testdata.Dog{}, nil)
 	require.NotNil(t, res)
 	require.Nil(t, err)
 	require.Empty(t, res.Events)
 
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	ctx.EventManager().EmitEvent(sdk.NewEvent("test"))
-	res, err = sdk.WrapServiceResult(ctx, nil, nil)
+	res, err = sdk.WrapServiceResult(ctx, &testdata.Dog{}, nil)
 	require.NotNil(t, res)
 	require.Nil(t, err)
 	require.Len(t, res.Events, 1)

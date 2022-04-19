@@ -2,7 +2,6 @@ package testdata
 
 import (
 	"encoding/json"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/stretchr/testify/require"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // KeyTestPubAddr generates a new secp256k1 keypair.
@@ -36,7 +36,7 @@ func NewTestFeeAmount() sdk.Coins {
 
 // NewTestGasLimit is a test fee gas limit.
 func NewTestGasLimit() uint64 {
-	return 100000
+	return 200000
 }
 
 // NewTestMsg creates a message for testing with the given signers.

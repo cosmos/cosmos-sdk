@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -15,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
@@ -52,7 +52,6 @@ type BaseApp struct { // nolint: maligned
 	queryRouter       sdk.QueryRouter      // router for redirecting query calls
 	grpcQueryRouter   *GRPCQueryRouter     // router for redirecting gRPC query calls
 	interfaceRegistry types.InterfaceRegistry
-	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 
 	txHandler      tx.Handler       // txHandler for {Deliver,Check}Tx and simulations
 	initChainer    sdk.InitChainer  // initialize state with validators and state blob
@@ -125,6 +124,10 @@ type BaseApp struct { // nolint: maligned
 	// indexEvents defines the set of events in the form {eventType}.{attributeKey},
 	// which informs Tendermint what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
+
+	// abciListeners for hooking into the ABCI message processing of the BaseApp
+	// and exposing the requests and responses to external consumers
+	abciListeners []ABCIListener
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -133,7 +136,7 @@ type BaseApp struct { // nolint: maligned
 //
 // NOTE: The db is used to store the version number for now.
 func NewBaseApp(
-	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
+	name string, logger log.Logger, db dbm.DB, options ...func(*BaseApp),
 ) *BaseApp {
 	app := &BaseApp{
 		logger:          logger,
@@ -143,7 +146,6 @@ func NewBaseApp(
 		storeLoader:     DefaultStoreLoader,
 		queryRouter:     NewQueryRouter(),
 		grpcQueryRouter: NewGRPCQueryRouter(),
-		txDecoder:       txDecoder,
 		fauxMerkleMode:  false,
 	}
 
@@ -185,60 +187,60 @@ func (app *BaseApp) Trace() bool {
 
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
 // multistore.
-func (app *BaseApp) MountStores(keys ...sdk.StoreKey) {
+func (app *BaseApp) MountStores(keys ...storetypes.StoreKey) {
 	for _, key := range keys {
 		switch key.(type) {
-		case *sdk.KVStoreKey:
+		case *storetypes.KVStoreKey:
 			if !app.fauxMerkleMode {
-				app.MountStore(key, sdk.StoreTypeIAVL)
+				app.MountStore(key, storetypes.StoreTypeIAVL)
 			} else {
 				// StoreTypeDB doesn't do anything upon commit, and it doesn't
 				// retain history, but it's useful for faster simulation.
-				app.MountStore(key, sdk.StoreTypeDB)
+				app.MountStore(key, storetypes.StoreTypeDB)
 			}
 
-		case *sdk.TransientStoreKey:
-			app.MountStore(key, sdk.StoreTypeTransient)
+		case *storetypes.TransientStoreKey:
+			app.MountStore(key, storetypes.StoreTypeTransient)
 
 		default:
-			panic("Unrecognized store key type " + reflect.TypeOf(key).Name())
+			panic(fmt.Sprintf("Unrecognized store key type :%T", key))
 		}
 	}
 }
 
 // MountKVStores mounts all IAVL or DB stores to the provided keys in the
 // BaseApp multistore.
-func (app *BaseApp) MountKVStores(keys map[string]*sdk.KVStoreKey) {
+func (app *BaseApp) MountKVStores(keys map[string]*storetypes.KVStoreKey) {
 	for _, key := range keys {
 		if !app.fauxMerkleMode {
-			app.MountStore(key, sdk.StoreTypeIAVL)
+			app.MountStore(key, storetypes.StoreTypeIAVL)
 		} else {
 			// StoreTypeDB doesn't do anything upon commit, and it doesn't
 			// retain history, but it's useful for faster simulation.
-			app.MountStore(key, sdk.StoreTypeDB)
+			app.MountStore(key, storetypes.StoreTypeDB)
 		}
 	}
 }
 
 // MountTransientStores mounts all transient stores to the provided keys in
 // the BaseApp multistore.
-func (app *BaseApp) MountTransientStores(keys map[string]*sdk.TransientStoreKey) {
+func (app *BaseApp) MountTransientStores(keys map[string]*storetypes.TransientStoreKey) {
 	for _, key := range keys {
-		app.MountStore(key, sdk.StoreTypeTransient)
+		app.MountStore(key, storetypes.StoreTypeTransient)
 	}
 }
 
 // MountMemoryStores mounts all in-memory KVStores with the BaseApp's internal
 // commit multi-store.
-func (app *BaseApp) MountMemoryStores(keys map[string]*sdk.MemoryStoreKey) {
+func (app *BaseApp) MountMemoryStores(keys map[string]*storetypes.MemoryStoreKey) {
 	for _, memKey := range keys {
-		app.MountStore(memKey, sdk.StoreTypeMemory)
+		app.MountStore(memKey, storetypes.StoreTypeMemory)
 	}
 }
 
 // MountStore mounts a store to the provided key in the BaseApp multistore,
 // using the default DB.
-func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
+func (app *BaseApp) MountStore(key storetypes.StoreKey, typ storetypes.StoreType) {
 	app.cms.MountStoreWithDB(key, typ, nil)
 }
 
@@ -258,6 +260,22 @@ func DefaultStoreLoader(ms sdk.CommitMultiStore) error {
 	return ms.LoadLatestVersion()
 }
 
+// CommitMultiStore returns the root multi-store.
+// App constructor can use this to access the `cms`.
+// UNSAFE: only safe to use during app initialization.
+func (app *BaseApp) CommitMultiStore() sdk.CommitMultiStore {
+	if app.sealed {
+		panic("cannot call CommitMultiStore() after baseapp is sealed")
+	}
+	return app.cms
+}
+
+// SnapshotManager returns the snapshot manager.
+// application use this to register extra extension snapshotters.
+func (app *BaseApp) SnapshotManager() *snapshots.Manager {
+	return app.snapshotManager
+}
+
 // LoadVersion loads the BaseApp application version. It will panic if called
 // more than once on a running baseapp.
 func (app *BaseApp) LoadVersion(version int64) error {
@@ -270,7 +288,7 @@ func (app *BaseApp) LoadVersion(version int64) error {
 }
 
 // LastCommitID returns the last CommitID of the multistore.
-func (app *BaseApp) LastCommitID() sdk.CommitID {
+func (app *BaseApp) LastCommitID() storetypes.CommitID {
 	return app.cms.LastCommitID()
 }
 
@@ -290,15 +308,8 @@ func (app *BaseApp) init() error {
 
 	// make sure the snapshot interval is a multiple of the pruning KeepEvery interval
 	if app.snapshotManager != nil && app.snapshotInterval > 0 {
-		rms, ok := app.cms.(*rootmulti.Store)
-		if !ok {
+		if _, ok := app.cms.(*rootmulti.Store); !ok {
 			return errors.New("state sync snapshots require a rootmulti store")
-		}
-		pruningOpts := rms.GetPruning()
-		if pruningOpts.KeepEvery > 0 && app.snapshotInterval%pruningOpts.KeepEvery != 0 {
-			return fmt.Errorf(
-				"state sync snapshot interval %v must be a multiple of pruning keep every interval %v",
-				app.snapshotInterval, pruningOpts.KeepEvery)
 		}
 	}
 
@@ -372,15 +383,15 @@ func (app *BaseApp) setDeliverState(header tmproto.Header) {
 
 // GetConsensusParams returns the current consensus parameters from the BaseApp's
 // ParamStore. If the BaseApp has no ParamStore defined, nil is returned.
-func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *abci.ConsensusParams {
+func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams {
 	if app.paramStore == nil {
 		return nil
 	}
 
-	cp := new(abci.ConsensusParams)
+	cp := new(tmproto.ConsensusParams)
 
 	if app.paramStore.Has(ctx, ParamStoreKeyBlockParams) {
-		var bp abci.BlockParams
+		var bp tmproto.BlockParams
 
 		app.paramStore.Get(ctx, ParamStoreKeyBlockParams, &bp)
 		cp.Block = &bp
@@ -404,7 +415,7 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *abci.ConsensusParams {
 }
 
 // StoreConsensusParams sets the consensus parameters to the baseapp's param store.
-func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *abci.ConsensusParams) {
+func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *tmproto.ConsensusParams) {
 	if app.paramStore == nil {
 		panic("cannot store consensus params with no params store set")
 	}

@@ -17,6 +17,9 @@ import (
 func TestCalculateRewardsBasic(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	app.DistrKeeper.DeleteAllValidatorHistoricalRewards(ctx)
+
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000))
@@ -273,6 +276,8 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
+	app.DistrKeeper.DeleteAllValidatorHistoricalRewards(ctx)
+
 	balancePower := int64(1000)
 	balanceTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, balancePower)
 	addr := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(1000000000))
@@ -485,6 +490,8 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	app.DistrKeeper.DeleteAllValidatorHistoricalRewards(ctx)
 
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000000000))

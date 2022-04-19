@@ -18,7 +18,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
@@ -71,11 +73,21 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().Equal(uint32(0), txRes.Code)
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
-	// unbonding
-	_, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbond)
-	s.Require().NoError(err)
 
-	_, err = s.network.WaitForHeight(1)
+	unbondingAmount := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(5))
+	// unbonding the amount
+	out, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbondingAmount)
+	s.Require().NoError(err)
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+	s.Require().Equal(uint32(0), txRes.Code)
+	// unbonding the amount
+	out, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbondingAmount)
+	s.Require().NoError(err)
+	s.Require().NoError(err)
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+	s.Require().Equal(uint32(0), txRes.Code)
+
+	err = s.network.WaitForNextBlock()
 	s.Require().NoError(err)
 }
 
@@ -591,7 +603,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryUnbondingDelegation() {
 				s.Require().NoError(err)
 				s.Require().Equal(ubd.DelegatorAddress, val.Address.String())
 				s.Require().Equal(ubd.ValidatorAddress, val.ValAddress.String())
-				s.Require().Len(ubd.Entries, 1)
+				s.Require().Len(ubd.Entries, 2)
 			}
 		})
 	}
@@ -885,12 +897,13 @@ func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
 historical_entries: 10000
 max_entries: 7
 max_validators: 100
+min_commission_rate: "0.000000000000000000"
 unbonding_time: 1814400s`,
 		},
 		{
 			"with json output",
 			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":10000,"bond_denom":"stake"}`,
+			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":10000,"bond_denom":"stake","min_commission_rate":"0.000000000000000000"}`,
 		},
 	}
 	for _, tc := range testCases {
@@ -1296,6 +1309,125 @@ func (s *IntegrationTestSuite) TestNewUnbondCmd() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestNewCancelUnbondingDelegationCmd() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		expectedCode uint32
+		respType     proto.Message
+	}{
+		{
+			"Without validator address",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, 0, nil,
+		},
+		{
+			"Without canceling unbond delegation amount",
+			[]string{
+				val.ValAddress.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, 0, nil,
+		},
+		{
+			"Without unbond creation height",
+			[]string{
+				val.ValAddress.String(),
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, 0, nil,
+		},
+		{
+			"Wrong unbonding creation height",
+			[]string{
+				val.ValAddress.String(),
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)).String(),
+				sdk.NewInt(10000).String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, sdkerrors.ErrNotFound.ABCICode(), &sdk.TxResponse{},
+		},
+		{
+			"Invalid unbonding amount (higher than the unbonding amount)",
+			[]string{
+				val.ValAddress.String(),
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10000)).String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, sdkerrors.ErrInvalidRequest.ABCICode(), &sdk.TxResponse{},
+		},
+		{
+			"valid transaction of canceling unbonding delegation",
+			[]string{
+				val.ValAddress.String(),
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5)).String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, 0, &sdk.TxResponse{},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.NewCancelUnbondingDelegation()
+			clientCtx := val.ClientCtx
+			if !tc.expectErr && tc.expectedCode != sdkerrors.ErrNotFound.ABCICode() {
+				getCreationHeight := func() int64 {
+					// fethichg the unbonding delegations
+					resp, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/unbonding_delegations", val.APIAddress, val.Address.String()))
+					s.Require().NoError(err)
+
+					var ubds types.QueryDelegatorUnbondingDelegationsResponse
+
+					err = val.ClientCtx.Codec.UnmarshalJSON(resp, &ubds)
+					s.Require().NoError(err)
+					s.Require().Len(ubds.UnbondingResponses, 1)
+					s.Require().Equal(ubds.UnbondingResponses[0].DelegatorAddress, val.Address.String())
+					return ubds.UnbondingResponses[0].Entries[1].CreationHeight
+				}
+				tc.args = append(tc.args, fmt.Sprint(getCreationHeight()))
+			}
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+
 // TestBlockResults tests that the validator updates correctly show when
 // calling the /block_results RPC endpoint.
 // ref: https://github.com/cosmos/cosmos-sdk/issues/7401.
@@ -1336,7 +1468,7 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 	require.NoError(err)
 
 	// Create a HTTP rpc client.
-	rpcClient, err := http.New(val.RPCAddress, "/websocket")
+	rpcClient, err := http.New(val.RPCAddress)
 	require.NoError(err)
 
 	// Loop until we find a block result with the correct validator updates.
@@ -1366,4 +1498,52 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 
 		s.network.WaitForNextBlock()
 	}
+}
+
+// https://github.com/cosmos/cosmos-sdk/issues/10660
+func (s *IntegrationTestSuite) TestEditValidatorMoniker() {
+	val := s.network.Validators[0]
+	require := s.Require()
+
+	txCmd := cli.NewEditValidatorCmd()
+	moniker := "testing"
+	_, err := clitestutil.ExecTestCLICmd(val.ClientCtx, txCmd, []string{
+		val.ValAddress.String(),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", cli.FlagEditMoniker, moniker),
+		fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	})
+	require.NoError(err)
+
+	queryCmd := cli.GetCmdQueryValidator()
+	res, err := clitestutil.ExecTestCLICmd(
+		val.ClientCtx, queryCmd,
+		[]string{val.ValAddress.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+	)
+	require.NoError(err)
+	var result types.Validator
+	require.NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &result))
+	require.Equal(result.GetMoniker(), moniker)
+
+	_, err = clitestutil.ExecTestCLICmd(val.ClientCtx, txCmd, []string{
+		val.ValAddress.String(),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	})
+	require.NoError(err)
+
+	res, err = clitestutil.ExecTestCLICmd(
+		val.ClientCtx, queryCmd,
+		[]string{val.ValAddress.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+	)
+	require.NoError(err)
+
+	require.NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &result))
+	require.Equal(result.GetMoniker(), moniker)
 }

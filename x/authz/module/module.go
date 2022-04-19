@@ -44,10 +44,17 @@ func (AppModuleBasic) Name() string {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	authz.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 	authz.RegisterMsgServer(cfg.MsgServer(), am.keeper)
+	m := keeper.NewMigrator(am.keeper)
+	err := cfg.RegisterMigration(authz.ModuleName, 1, m.Migrate1to2)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // RegisterLegacyAminoCodec registers the authz module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	authz.RegisterLegacyAminoCodec(cdc)
+}
 
 // RegisterInterfaces registers the authz module's interface types
 func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -76,7 +83,9 @@ func (AppModuleBasic) RegisterRESTRoutes(_ sdkclient.Context, _ *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the authz module.
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
-	authz.RegisterQueryHandlerClient(context.Background(), mux, authz.NewQueryClient(clientCtx))
+	if err := authz.RegisterQueryHandlerClient(context.Background(), mux, authz.NewQueryClient(clientCtx)); err != nil {
+		panic(err)
+	}
 }
 
 // GetQueryCmd returns the cli query commands for the authz module
@@ -151,9 +160,12 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 1 }
+func (AppModule) ConsensusVersion() uint64 { return 2 }
 
-func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
+// BeginBlock returns the begin blocker for the authz module.
+func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
+	BeginBlocker(ctx, am.keeper)
+}
 
 // EndBlock does nothing
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {

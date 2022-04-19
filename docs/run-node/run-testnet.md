@@ -6,7 +6,7 @@ order: 7
 
 The `simd testnet` subcommand makes it easy to initialize and start a simulated test network for testing purposes. {synopsis}
 
-In addition to the commands for [running a node](./run-node.html), the `simd` binary also includes a `testnet` command that allows you to start a simulated test network in-process or to initialize files for a simulated test network that runs in a separate process. 
+In addition to the commands for [running a node](./run-node.html), the `simd` binary also includes a `testnet` command that allows you to start a simulated test network in-process or to initialize files for a simulated test network that runs in a separate process.
 
 ## Initialize Files
 
@@ -76,19 +76,19 @@ The first validator node is now running in-process, which means the test network
 
 Check the status of the first validator node:
 
-```
+```sh
 simd status
 ```
 
 Import the key from the provided mnemonic:
 
-```
+```sh
 simd keys add test --recover --keyring-backend test
 ```
 
 Check the balance of the account address:
 
-```
+```sh
 simd q bank balances [address]
 ```
 

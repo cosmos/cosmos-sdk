@@ -24,8 +24,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.network, err = network.New(s.T(), s.T().TempDir(), network.DefaultConfig())
 	s.Require().NoError(err)
 
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	h, err := s.network.WaitForHeight(1)
+	s.Require().NoError(err, "stalled at height %d", h)
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {

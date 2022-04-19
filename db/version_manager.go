@@ -2,7 +2,6 @@ package db
 
 import (
 	"fmt"
-	"math"
 )
 
 // VersionManager encapsulates the current valid versions of a DB and computes
@@ -18,10 +17,9 @@ var _ VersionSet = (*VersionManager)(nil)
 func NewVersionManager(versions []uint64) *VersionManager {
 	vmap := make(map[uint64]struct{})
 	var init, last uint64
-	init = math.MaxUint64
 	for _, ver := range versions {
 		vmap[ver] = struct{}{}
-		if ver < init {
+		if init == 0 || ver < init {
 			init = ver
 		}
 		if ver > last {
@@ -46,16 +44,11 @@ func (vm *VersionManager) Initial() uint64 {
 	return vm.initial
 }
 
-func (vm *VersionManager) Next() uint64 {
-	return vm.Last() + 1
-}
-
 func (vm *VersionManager) Save(target uint64) (uint64, error) {
-	next := vm.Next()
+	next := vm.Last() + 1
 	if target == 0 {
 		target = next
-	}
-	if target < next {
+	} else if target < next {
 		return 0, fmt.Errorf(
 			"target version cannot be less than next sequential version (%v < %v)", target, next)
 	}

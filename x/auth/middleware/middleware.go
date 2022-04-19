@@ -2,7 +2,11 @@ package middleware
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // ComposeMiddlewares compose multiple middlewares on top of a tx.Handler. The
@@ -28,6 +32,10 @@ func ComposeMiddlewares(txHandler tx.Handler, middlewares ...tx.Middleware) tx.H
 
 type TxHandlerOptions struct {
 	Debug bool
+
+	// TxDecoder is used to decode the raw tx bytes into a sdk.Tx.
+	TxDecoder sdk.TxDecoder
+
 	// IndexEvents defines the set of events in the form {eventType}.{attributeKey},
 	// which informs Tendermint what to index. If empty, all events will be indexed.
 	IndexEvents map[string]struct{}
@@ -35,14 +43,37 @@ type TxHandlerOptions struct {
 	LegacyRouter     sdk.Router
 	MsgServiceRouter *MsgServiceRouter
 
-	LegacyAnteHandler sdk.AnteHandler
+	AccountKeeper          AccountKeeper
+	BankKeeper             types.BankKeeper
+	FeegrantKeeper         FeegrantKeeper
+	SignModeHandler        authsigning.SignModeHandler
+	SigGasConsumer         func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
+	ExtensionOptionChecker ExtensionOptionChecker
+	TxFeeChecker           TxFeeChecker
 }
 
 // NewDefaultTxHandler defines a TxHandler middleware stacks that should work
 // for most applications.
 func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
+	if options.TxDecoder == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "txDecoder is required for middlewares")
+	}
+
+	if options.AccountKeeper == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "account keeper is required for middlewares")
+	}
+
+	if options.BankKeeper == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "bank keeper is required for middlewares")
+	}
+
+	if options.SignModeHandler == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "sign mode handler is required for middlewares")
+	}
+
 	return ComposeMiddlewares(
 		NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
+		NewTxDecoderMiddleware(options.TxDecoder),
 		// Set a new GasMeter on sdk.Context.
 		//
 		// Make sure the Gas middleware is outside of all other middlewares
@@ -55,8 +86,30 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		// Choose which events to index in Tendermint. Make sure no events are
 		// emitted outside of this middleware.
 		NewIndexEventsTxMiddleware(options.IndexEvents),
-		// Temporary middleware to bundle antehandlers.
-		// TODO Remove in https://github.com/cosmos/cosmos-sdk/issues/9585.
-		newLegacyAnteMiddleware(options.LegacyAnteHandler),
+		// Reject all extension options other than the ones needed by the feemarket.
+		NewExtensionOptionsMiddleware(options.ExtensionOptionChecker),
+		ValidateBasicMiddleware,
+		TxTimeoutHeightMiddleware,
+		ValidateMemoMiddleware(options.AccountKeeper),
+		ConsumeTxSizeGasMiddleware(options.AccountKeeper),
+		// No gas should be consumed in any middleware above in a "post" handler part. See
+		// ComposeMiddlewares godoc for details.
+		// `DeductFeeMiddleware` and `IncrementSequenceMiddleware` should be put outside of `WithBranchedStore` middleware,
+		// so their storage writes are not discarded when tx fails.
+		DeductFeeMiddleware(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
+		SetPubKeyMiddleware(options.AccountKeeper),
+		ValidateSigCountMiddleware(options.AccountKeeper),
+		SigGasConsumeMiddleware(options.AccountKeeper, options.SigGasConsumer),
+		SigVerificationMiddleware(options.AccountKeeper, options.SignModeHandler),
+		IncrementSequenceMiddleware(options.AccountKeeper),
+		// Creates a new MultiStore branch, discards downstream writes if the downstream returns error.
+		// These kinds of middlewares should be put under this:
+		// - Could return error after messages executed succesfully.
+		// - Storage writes should be discarded together when tx failed.
+		WithBranchedStore,
+		// Consume block gas. All middlewares whose gas consumption after their `next` handler
+		// should be accounted for, should go below this middleware.
+		ConsumeBlockGasMiddleware,
+		NewTipMiddleware(options.BankKeeper),
 	), nil
 }

@@ -3,7 +3,6 @@ package server_test
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -22,7 +21,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -33,7 +31,7 @@ import (
 func TestExportCmd_ConsensusParams(t *testing.T) {
 	tempDir := t.TempDir()
 
-	_, ctx, genDoc, cmd := setupApp(t, tempDir)
+	_, ctx, _, cmd := setupApp(t, tempDir)
 
 	output := &bytes.Buffer{}
 	cmd.SetOut(output)
@@ -46,7 +44,6 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 		t.Fatalf("error unmarshaling exported genesis doc: %s", err)
 	}
 
-	require.Equal(t, genDoc.ConsensusParams.Block.TimeIotaMs, exportedGenDoc.ConsensusParams.Block.TimeIotaMs)
 	require.Equal(t, simapp.DefaultConsensusParams.Block.MaxBytes, exportedGenDoc.ConsensusParams.Block.MaxBytes)
 	require.Equal(t, simapp.DefaultConsensusParams.Block.MaxGas, exportedGenDoc.ConsensusParams.Block.MaxGas)
 
@@ -123,20 +120,29 @@ func TestExportCmd_Height(t *testing.T) {
 }
 
 func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *tmtypes.GenesisDoc, *cobra.Command) {
+	t.Helper()
+
 	if err := createConfigFolder(tempDir); err != nil {
 		t.Fatalf("error creating config folder: %s", err)
 	}
 
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	logger, _ := log.NewDefaultLogger("plain", "info", false)
 	db := dbm.NewMemDB()
 	encCfg := simapp.MakeTestEncodingConfig()
 	app := simapp.NewSimApp(logger, db, nil, true, map[int64]bool{}, tempDir, 0, encCfg, simapp.EmptyAppOptions{})
+
+	genesisState := simapp.GenesisStateWithSingleValidator(t, app)
+	stateBytes, err := tmjson.MarshalIndent(genesisState, "", " ")
+	require.NoError(t, err)
 
 	serverCtx := server.NewDefaultContext()
 	serverCtx.Config.RootDir = tempDir
 
 	clientCtx := client.Context{}.WithCodec(app.AppCodec())
-	genDoc := newDefaultGenesisDoc(encCfg.Codec)
+	genDoc := &tmtypes.GenesisDoc{}
+	genDoc.ChainID = "theChainId"
+	genDoc.Validators = nil
+	genDoc.AppState = stateBytes
 
 	require.NoError(t, saveGenesisFile(genDoc, serverCtx.Config.GenesisFile()))
 	app.InitChain(
@@ -175,22 +181,6 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 
 func createConfigFolder(dir string) error {
 	return os.Mkdir(path.Join(dir, "config"), 0700)
-}
-
-func newDefaultGenesisDoc(cdc codec.Codec) *tmtypes.GenesisDoc {
-	genesisState := simapp.NewDefaultGenesisState(cdc)
-
-	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
-	if err != nil {
-		panic(err)
-	}
-
-	genDoc := &tmtypes.GenesisDoc{}
-	genDoc.ChainID = "theChainId"
-	genDoc.Validators = nil
-	genDoc.AppState = stateBytes
-
-	return genDoc
 }
 
 func saveGenesisFile(genDoc *tmtypes.GenesisDoc, dir string) error {

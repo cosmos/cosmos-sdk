@@ -19,7 +19,8 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
@@ -43,7 +44,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
-	s.grantee = make([]sdk.AccAddress, 2)
+	s.grantee = make([]sdk.AccAddress, 3)
 
 	// Send some funds to the new account.
 	// Create new account in the keyring.
@@ -53,9 +54,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	// create a proposal with deposit
-	_, err = govtestutil.MsgSubmitProposal(val.ClientCtx, val.Address.String(),
-		"Text Proposal 1", "Where is the title!?", govtypes.ProposalTypeText,
-		fmt.Sprintf("--%s=%s", govcli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, govtypes.DefaultMinDepositTokens).String()))
+	_, err = govtestutil.MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
+		"Text Proposal 1", "Where is the title!?", govv1beta1.ProposalTypeText,
+		fmt.Sprintf("--%s=%s", govcli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, govv1.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 
 	// Create new account in the keyring.
@@ -64,7 +65,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.msgSendExec(s.grantee[1])
 
 	// grant send authorization to grantee2
-	out, err := ExecGrant(val, []string{
+	out, err := CreateGrant(val, []string{
 		s.grantee[1].String(),
 		"send",
 		fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
@@ -79,6 +80,31 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
+
+	// Create new account in the keyring.
+	s.grantee[2] = s.createAccount("grantee3")
+
+	// grant send authorization to grantee3
+	out, err = CreateGrant(val, []string{
+		s.grantee[2].String(),
+		"send",
+		fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%d", cli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix()),
+	})
+	s.Require().NoError(err)
+
+	err = s.network.WaitForNextBlock()
+	s.Require().NoError(err)
+
+	var response sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
+	s.Require().Equal(int(response.Code), 0)
+	s.Require().NotEqual(int(response.Height), 0)
+
 }
 
 func (s *IntegrationTestSuite) createAccount(uid string) sdk.AccAddress {
@@ -114,15 +140,15 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 var typeMsgSend = bank.SendAuthorization{}.MsgTypeURL()
-var typeMsgVote = sdk.MsgTypeURL(&govtypes.MsgVote{})
-var typeMsgSubmitProposal = sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{})
+var typeMsgVote = sdk.MsgTypeURL(&govv1.MsgVote{})
+var typeMsgSubmitProposal = sdk.MsgTypeURL(&govv1.MsgSubmitProposal{})
 
 func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[0]
 
-	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
-	pastHour := time.Now().Add(time.Minute * time.Duration(-60)).Unix()
+	twoHours := time.Now().Add(time.Minute * 120).Unix()
+	pastHour := time.Now().Add(-time.Minute * 60).Unix()
 
 	testCases := []struct {
 		name         string
@@ -163,7 +189,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 				"send",
 				fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+				fmt.Sprintf("--%s=true", flags.FlagBroadcastMode),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, pastHour),
 			},
 			0,
@@ -296,6 +322,21 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			false,
 		},
 		{
+			"fail when granter = grantee",
+			[]string{
+				grantee.String(),
+				"generic",
+				fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgVote),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			0,
+			true,
+		},
+		{
 			"Valid tx with amino",
 			[]string{
 				grantee.String(),
@@ -314,15 +355,14 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
-			out, err := ExecGrant(
+			out, err := CreateGrant(
 				val,
 				tc.args,
 			)
 			if tc.expectErr {
-				s.Require().Error(err)
+				s.Require().Error(err, out)
 			} else {
 				var txResp sdk.TxResponse
 				s.Require().NoError(err)
@@ -346,7 +386,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
 	// send-authorization
-	_, err := ExecGrant(
+	_, err := CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -362,7 +402,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 	s.Require().NoError(err)
 
 	// generic-authorization
-	_, err = ExecGrant(
+	_, err = CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -378,7 +418,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 	s.Require().NoError(err)
 
 	// generic-authorization used for amino testing
-	_, err = ExecGrant(
+	_, err = CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -491,7 +531,7 @@ func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 	grantee := s.grantee[0]
 	tenSeconds := time.Now().Add(time.Second * time.Duration(10)).Unix()
 
-	_, err := ExecGrant(
+	_, err := CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -506,7 +546,7 @@ func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 	)
 	s.Require().NoError(err)
 	// msg vote
-	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1beta1.MsgVote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
+	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1.MsgVote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
 	execMsg := testutil.WriteToNewTempFile(s.T(), voteTx)
 
 	// waiting for authorization to expires
@@ -531,7 +571,7 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := ExecGrant(
+	_, err := CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -547,7 +587,7 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 	s.Require().NoError(err)
 
 	// msg vote
-	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1beta1.MsgVote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
+	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1.MsgVote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
 	execMsg := testutil.WriteToNewTempFile(s.T(), voteTx)
 
 	testCases := []struct {
@@ -631,9 +671,10 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[0]
+	grantee1 := s.grantee[2]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := ExecGrant(
+	_, err := CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -667,6 +708,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 		args         []string
 		expectedCode uint32
 		expectErr    bool
+		expectErrMsg string
 	}{
 		{
 			"valid txn",
@@ -679,6 +721,20 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 			},
 			0,
 			false,
+			"",
+		},
+		{
+			"error over grantee doesn't exist on chain",
+			[]string{
+				execMsg.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee1.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			},
+			0,
+			true,
+			"insufficient funds", // earlier the error was account not found here.
 		},
 		{
 			"error over spent",
@@ -691,6 +747,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 			},
 			4,
 			false,
+			"",
 		},
 	}
 
@@ -701,10 +758,13 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
+			var response sdk.TxResponse
+			if tc.expectErrMsg != "" {
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
+				s.Require().Contains(response.RawLog, tc.expectErrMsg)
+			} else if tc.expectErr {
 				s.Require().Error(err)
 			} else {
-				var response sdk.TxResponse
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 				s.Require().Equal(tc.expectedCode, response.Code, out.String())
@@ -718,7 +778,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := ExecGrant(
+	_, err := CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -810,7 +870,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 	}
 
 	// test delegate no spend-limit
-	_, err = ExecGrant(
+	_, err = CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -887,7 +947,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 	}
 
 	// test delegating to denied validator
-	_, err = ExecGrant(
+	_, err = CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -922,7 +982,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
 	// granting undelegate msg authorization
-	_, err := ExecGrant(
+	_, err := CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -971,6 +1031,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 			"valid txn: (undelegate half tokens)",
 			[]string{
 				execMsg.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagGas, "250000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -984,6 +1045,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 			"valid txn: (undelegate remaining half tokens)",
 			[]string{
 				execMsg.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagGas, "250000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -997,6 +1059,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 			"failed with error no authorization found",
 			[]string{
 				execMsg.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagGas, "250000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -1028,7 +1091,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 	}
 
 	// grant undelegate authorization without limit
-	_, err = ExecGrant(
+	_, err = CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -1061,6 +1124,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 			"valid txn",
 			[]string{
 				execMsg.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagGas, "250000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -1074,6 +1138,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 			"valid txn",
 			[]string{
 				execMsg.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagGas, "250000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),

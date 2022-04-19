@@ -142,7 +142,8 @@ Threshold is defined as the minimum proportion of `Yes` votes (excluding
 
 Initially, the threshold is set at 50% of `Yes` votes, excluding `Abstain`
 votes. A possibility to veto exists if more than 1/3rd of all votes are
-`NoWithVeto` votes.  Note, both of these values are derived from the `TallyParams` on-chain parameter, which is modifiable by governance.
+`NoWithVeto` votes.  Note, both of these values are derived from the `TallyParams`
+on-chain parameter, which is modifiable by governance.
 This means that proposals are accepted iff:
 
 * There exist bonded tokens.

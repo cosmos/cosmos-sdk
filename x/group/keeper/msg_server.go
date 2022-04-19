@@ -97,9 +97,9 @@ func (k Keeper) CreateGroup(goCtx context.Context, req *group.MsgCreateGroup) (*
 func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGroupMembers) (*group.MsgUpdateGroupMembersResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	action := func(g *group.GroupInfo) error {
-		totalWeight, err := math.NewPositiveDecFromString(g.TotalWeight)
+		totalWeight, err := math.NewNonNegativeDecFromString(g.TotalWeight)
 		if err != nil {
-			return err
+			return sdkerrors.Wrap(err, "group total weight")
 		}
 		for i := range req.MemberUpdates {
 			if err := k.assertMetadataLength(req.MemberUpdates[i].Metadata, "group member metadata"); err != nil {
@@ -800,7 +800,7 @@ func (k Keeper) LeaveGroup(goCtx context.Context, req *group.MsgLeaveGroup) (*gr
 		return nil, sdkerrors.Wrap(err, "group")
 	}
 
-	groupWeight, err := math.NewPositiveDecFromString(groupInfo.TotalWeight)
+	groupWeight, err := math.NewNonNegativeDecFromString(groupInfo.TotalWeight)
 	if err != nil {
 		return nil, err
 	}

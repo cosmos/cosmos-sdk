@@ -6,6 +6,7 @@ import (
 
 	ics23 "github.com/confio/ics23/go"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/db/memdb"
 	store "github.com/cosmos/cosmos-sdk/store/v2alpha1/smt"
@@ -33,7 +34,7 @@ func TestProofICS23(t *testing.T) {
 	nonexist := proof.GetNonexist()
 	assert.Nil(t, nonexist)
 	exist := proof.GetExist()
-	assert.NotNil(t, exist)
+	require.NotNil(t, exist)
 	assert.Equal(t, 0, len(exist.Path))
 	assert.NoError(t, exist.Verify(ics23.SmtSpec, s.Root(), path01[:], val1))
 
@@ -41,18 +42,18 @@ func TestProofICS23(t *testing.T) {
 	proof, err = s.GetProofICS23(key00) // When leaf is leftmost node
 	assert.NoError(t, err)
 	nonexist = proof.GetNonexist()
-	assert.NotNil(t, nonexist)
+	require.NotNil(t, nonexist)
 	assert.Nil(t, nonexist.Left)
 	assert.Equal(t, path00[:], nonexist.Key)
-	assert.NotNil(t, nonexist.Right)
+	require.NotNil(t, nonexist.Right)
 	assert.Equal(t, 0, len(nonexist.Right.Path))
 	assert.NoError(t, nonexist.Verify(ics23.SmtSpec, s.Root(), path00[:]))
 
 	proof, err = s.GetProofICS23(key10) // When rightmost
 	assert.NoError(t, err)
 	nonexist = proof.GetNonexist()
-	assert.NotNil(t, nonexist)
-	assert.NotNil(t, nonexist.Left)
+	require.NotNil(t, nonexist)
+	require.NotNil(t, nonexist.Left)
 	assert.Equal(t, 0, len(nonexist.Left.Path))
 	assert.Nil(t, nonexist.Right)
 	assert.NoError(t, nonexist.Verify(ics23.SmtSpec, s.Root(), path10[:]))
@@ -63,11 +64,11 @@ func TestProofICS23(t *testing.T) {
 	proof, err = s.GetProofICS23(key10) // In between two keys
 	assert.NoError(t, err)
 	nonexist = proof.GetNonexist()
-	assert.NotNil(t, nonexist)
+	require.NotNil(t, nonexist)
 	assert.Equal(t, path10[:], nonexist.Key)
-	assert.NotNil(t, nonexist.Left)
+	require.NotNil(t, nonexist.Left)
 	assert.Equal(t, 1, len(nonexist.Left.Path))
-	assert.NotNil(t, nonexist.Right)
+	require.NotNil(t, nonexist.Right)
 	assert.Equal(t, 1, len(nonexist.Right.Path))
 	assert.NoError(t, nonexist.Verify(ics23.SmtSpec, s.Root(), path10[:]))
 
@@ -78,9 +79,9 @@ func TestProofICS23(t *testing.T) {
 	assert.NoError(t, err)
 	nonexist = proof.GetNonexist()
 	assert.Equal(t, path10[:], nonexist.Key)
-	assert.NotNil(t, nonexist.Left)
+	require.NotNil(t, nonexist.Left)
 	assert.Equal(t, 1, len(nonexist.Left.Path))
-	assert.NotNil(t, nonexist.Right)
+	require.NotNil(t, nonexist.Right)
 	assert.Equal(t, 1, len(nonexist.Right.Path))
 	assert.NoError(t, nonexist.Verify(ics23.SmtSpec, s.Root(), path10[:]))
 

@@ -36,7 +36,7 @@ func (dsa Store) Has(key []byte) bool {
 	return ok
 }
 
-// Set wraps the underlying DB's Set method panicing on error.
+// Set wraps the underlying DB's Set method panicking on error.
 func (dsa Store) Set(key, value []byte) {
 	types.AssertValidKey(key)
 	if err := dsa.DB.Set(key, value); err != nil {
@@ -44,14 +44,14 @@ func (dsa Store) Set(key, value []byte) {
 	}
 }
 
-// Delete wraps the underlying DB's Delete method panicing on error.
+// Delete wraps the underlying DB's Delete method panicking on error.
 func (dsa Store) Delete(key []byte) {
 	if err := dsa.DB.Delete(key); err != nil {
 		panic(err)
 	}
 }
 
-// Iterator wraps the underlying DB's Iterator method panicing on error.
+// Iterator wraps the underlying DB's Iterator method panicking on error.
 func (dsa Store) Iterator(start, end []byte) types.Iterator {
 	iter, err := dsa.DB.Iterator(start, end)
 	if err != nil {
@@ -61,7 +61,7 @@ func (dsa Store) Iterator(start, end []byte) types.Iterator {
 	return iter
 }
 
-// ReverseIterator wraps the underlying DB's ReverseIterator method panicing on error.
+// ReverseIterator wraps the underlying DB's ReverseIterator method panicking on error.
 func (dsa Store) ReverseIterator(start, end []byte) types.Iterator {
 	iter, err := dsa.DB.ReverseIterator(start, end)
 	if err != nil {

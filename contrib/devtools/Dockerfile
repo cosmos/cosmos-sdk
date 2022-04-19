@@ -4,7 +4,7 @@
 
 FROM bufbuild/buf:1.1.0 as BUILDER
 
-FROM golang:1.17-alpine
+FROM golang:alpine
 
 RUN apk add --no-cache \
   nodejs \
@@ -17,14 +17,14 @@ ENV GOLANG_PROTOBUF_VERSION=1.28.0 \
   GRPC_GATEWAY_VERSION=1.16.0
 
 
-RUN GO111MODULE=on go get github.com/cosmos/cosmos-proto/cmd/protoc-gen-go-pulsar@latest \
-  google.golang.org/protobuf/cmd/protoc-gen-go@v${GOLANG_PROTOBUF_VERSION} \
-  github.com/gogo/protobuf/protoc-gen-gogo@v${GOGO_PROTOBUF_VERSION} \
-  github.com/gogo/protobuf/protoc-gen-gogofast@v${GOGO_PROTOBUF_VERSION} \ 
-  github.com/gogo/protobuf/protoc-gen-gogofaster@v${GOGO_PROTOBUF_VERSION} \
-  github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v${GRPC_GATEWAY_VERSION} \
-  github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v${GRPC_GATEWAY_VERSION} \
-  github.com/regen-network/cosmos-proto/protoc-gen-gocosmos@latest 
+RUN go install github.com/cosmos/cosmos-proto/cmd/protoc-gen-go-pulsar@latest && \
+  go install google.golang.org/protobuf/cmd/protoc-gen-go@v${GOLANG_PROTOBUF_VERSION} && \
+  go install github.com/gogo/protobuf/protoc-gen-gogo@v${GOGO_PROTOBUF_VERSION} && \
+  go install github.com/gogo/protobuf/protoc-gen-gogofast@v${GOGO_PROTOBUF_VERSION} && \ 
+  go install github.com/gogo/protobuf/protoc-gen-gogofaster@v${GOGO_PROTOBUF_VERSION} && \
+  go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v${GRPC_GATEWAY_VERSION} && \
+  go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v${GRPC_GATEWAY_VERSION} && \
+  go install github.com/regen-network/cosmos-proto/protoc-gen-gocosmos@latest 
 
 
 RUN npm install -g swagger-combine

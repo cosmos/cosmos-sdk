@@ -47,7 +47,7 @@ func TestDeposits(t *testing.T) {
 	proposal, ok = app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
 	require.Equal(t, fourStake, sdk.NewCoins(proposal.TotalDeposit...))
-	require.Equal(t, addr0Initial.Sub(fourStake), app.BankKeeper.GetAllBalances(ctx, TestAddrs[0]))
+	require.Equal(t, addr0Initial.Sub(fourStake...), app.BankKeeper.GetAllBalances(ctx, TestAddrs[0]))
 
 	// Check a second deposit from same address
 	votingStarted, err = app.GovKeeper.AddDeposit(ctx, proposalID, TestAddrs[0], fiveStake)
@@ -60,7 +60,7 @@ func TestDeposits(t *testing.T) {
 	proposal, ok = app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
 	require.Equal(t, fourStake.Add(fiveStake...), sdk.NewCoins(proposal.TotalDeposit...))
-	require.Equal(t, addr0Initial.Sub(fourStake).Sub(fiveStake), app.BankKeeper.GetAllBalances(ctx, TestAddrs[0]))
+	require.Equal(t, addr0Initial.Sub(fourStake...).Sub(fiveStake...), app.BankKeeper.GetAllBalances(ctx, TestAddrs[0]))
 
 	// Check third deposit from a new address
 	votingStarted, err = app.GovKeeper.AddDeposit(ctx, proposalID, TestAddrs[1], fourStake)
@@ -73,7 +73,7 @@ func TestDeposits(t *testing.T) {
 	proposal, ok = app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
 	require.Equal(t, fourStake.Add(fiveStake...).Add(fourStake...), sdk.NewCoins(proposal.TotalDeposit...))
-	require.Equal(t, addr1Initial.Sub(fourStake), app.BankKeeper.GetAllBalances(ctx, TestAddrs[1]))
+	require.Equal(t, addr1Initial.Sub(fourStake...), app.BankKeeper.GetAllBalances(ctx, TestAddrs[1]))
 
 	// Check that proposal moved to voting period
 	proposal, ok = app.GovKeeper.GetProposal(ctx, proposalID)
@@ -109,5 +109,5 @@ func TestDeposits(t *testing.T) {
 	app.GovKeeper.DeleteAndBurnDeposits(ctx, proposalID)
 	deposits = app.GovKeeper.GetDeposits(ctx, proposalID)
 	require.Len(t, deposits, 0)
-	require.Equal(t, addr0Initial.Sub(fourStake), app.BankKeeper.GetAllBalances(ctx, TestAddrs[0]))
+	require.Equal(t, addr0Initial.Sub(fourStake...), app.BankKeeper.GetAllBalances(ctx, TestAddrs[0]))
 }

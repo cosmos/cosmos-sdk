@@ -297,7 +297,7 @@ func (s IntegrationTestSuite) TestABCIQuery() {
 				Path: "/cosmos.base.terndermint.v1beta.Query/ABCIQuery",
 				Data: []byte{0x03},
 			},
-			expectedCode: 6,
+			expectedCode: 0,
 			validQuery:   false,
 		},
 		{

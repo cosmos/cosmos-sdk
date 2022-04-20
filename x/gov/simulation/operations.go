@@ -170,7 +170,7 @@ func SimulateMsgSubmitProposal(
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenerateSignedTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,

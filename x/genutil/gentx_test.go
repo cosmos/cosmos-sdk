@@ -77,29 +77,14 @@ func (suite *GenTxTestSuite) SetupTest() {
 	suite.NoError(err)
 }
 
-func (suite *GenTxTestSuite) setAccountBalance(balances []banktypes.Balance) json.RawMessage {
-	bankGenesisState := banktypes.GenesisState{
-		Params: banktypes.Params{DefaultSendEnabled: true},
-		Balances: []banktypes.Balance{
-			{
-				Address: "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh",
-				Coins:   sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)},
-			},
-			{
-				Address: "cosmos1jv65s3grqf6v6jl3dp4t6c9t9rk99cd88lyufl",
-				Coins:   sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 2059726)},
-			},
-			{
-				Address: "cosmos1k5lndq46x9xpejdxq52q3ql3ycrphg4qxlfqn7",
-				Coins:   sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000000000)},
-			},
-		},
-		Supply: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
-	}
-	bankGenesisState.Balances = append(bankGenesisState.Balances, balances...)
-	for _, balance := range bankGenesisState.Balances {
-		bankGenesisState.Supply.Add(balance.Coins...)
-	}
+func (suite *GenTxTestSuite) setAccountBalance(addr sdk.AccAddress, amount int64) json.RawMessage {
+	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
+	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+
+	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, amount)})
+	suite.Require().NoError(err)
+
+	bankGenesisState := suite.app.BankKeeper.ExportGenesis(suite.ctx)
 	bankGenesis, err := suite.encodingConfig.Amino.MarshalJSON(bankGenesisState) // TODO switch this to use Marshaler
 	suite.Require().NoError(err)
 
@@ -283,10 +268,11 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 		{
 			"success",
 			func() {
-				r := rand.New(rand.NewSource(time.Now().UnixNano()))
-				msg := banktypes.NewMsgSend(addr1Str, addr2Str, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)})
-				tx, err := simtestutil.GenSignedMockTx(
-					r,
+				_ = suite.setAccountBalance(addr1, 50)
+				_ = suite.setAccountBalance(addr2, 1)
+
+				msg := banktypes.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)})
+				tx, err := helpers.GenTx(
 					suite.encodingConfig.TxConfig,
 					[]sdk.Msg{msg},
 					sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)},

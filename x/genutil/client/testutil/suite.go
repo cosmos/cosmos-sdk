@@ -2,7 +2,7 @@ package testutil
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -48,52 +48,6 @@ func (s *IntegrationTestSuite) TestGenTxCmd() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 	amount := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))
-<<<<<<< HEAD
-	genTxFile := filepath.Join(dir, "myTx")
-	cmd.SetArgs([]string{
-		fmt.Sprintf("--%s=%s", flags.FlagChainID, s.network.Config.ChainID),
-		fmt.Sprintf("--%s=%s", flags.FlagOutputDocument, genTxFile),
-		val.Moniker,
-		amount.String(),
-	})
-
-	err := cmd.ExecuteContext(ctx)
-	s.Require().NoError(err)
-
-	// validate generated transaction.
-	open, err := os.Open(genTxFile)
-	s.Require().NoError(err)
-
-	all, err := ioutil.ReadAll(open)
-	s.Require().NoError(err)
-
-	tx, err := val.ClientCtx.TxConfig.TxJSONDecoder()(all)
-	s.Require().NoError(err)
-
-	msgs := tx.GetMsgs()
-	s.Require().Len(msgs, 1)
-
-	s.Require().Equal(sdk.MsgTypeURL(&types.MsgCreateValidator{}), sdk.MsgTypeURL(msgs[0]))
-	s.Require().Equal([]sdk.AccAddress{val.Address}, msgs[0].GetSigners())
-	s.Require().Equal(amount, msgs[0].(*types.MsgCreateValidator).Value)
-	s.Require().NoError(tx.ValidateBasic())
-}
-
-func (s *IntegrationTestSuite) TestGenTxCmdPubkey() {
-	val := s.network.Validators[0]
-	dir := s.T().TempDir()
-
-	cmd := cli.GenTxCmd(
-		simapp.ModuleBasics,
-		val.ClientCtx.TxConfig,
-		banktypes.GenesisBalancesIterator{},
-		val.ClientCtx.HomeDir,
-	)
-
-	_, out := testutil.ApplyMockIO(cmd)
-	clientCtx := val.ClientCtx.WithOutput(out)
-=======
->>>>>>> df6114203 (fix: Add validation on create gentx (#11693))
 
 	tests := []struct {
 		name     string

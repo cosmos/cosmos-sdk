@@ -65,10 +65,13 @@ func (s *MWTestSuite) TestSetup() {
 	for _, tc := range testcases {
 		s.Run(tc.name, func() {
 			res, _, err := txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: tc.tx}, tx.RequestCheckTx{})
+			_, simErr := txHandler.SimulateTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: tc.tx})
 			if tc.expErr {
 				s.Require().EqualError(err, tc.errorStr)
+				s.Require().EqualError(simErr, tc.errorStr)
 			} else {
 				s.Require().Nil(err, "SetUpContextMiddleware returned error")
+				s.Require().Nil(simErr, "SetUpContextMiddleware returned error")
 				s.Require().Equal(tc.expGasLimit, uint64(res.GasWanted))
 			}
 		})

@@ -393,8 +393,8 @@ func (coins Coins) DenomsSubsetOf(coinsB Coins) bool {
 //
 // CONTRACT: Sub will never return Coins where one Coin has a non-positive
 // amount. In otherwords, IsValid will always return true.
-func (coins Coins) Sub(coinsB Coins) Coins {
-	diff, hasNeg := coins.SafeSub(coinsB)
+func (coins Coins) Sub(coinsB ...Coin) Coins {
+	diff, hasNeg := coins.SafeSub(coinsB...)
 	if hasNeg {
 		panic("negative coin amount")
 	}
@@ -405,8 +405,8 @@ func (coins Coins) Sub(coinsB Coins) Coins {
 // SafeSub performs the same arithmetic as Sub but returns a boolean if any
 // negative coin amount was returned.
 // The function panics if `coins` or  `coinsB` are not sorted (ascending).
-func (coins Coins) SafeSub(coinsB Coins) (Coins, bool) {
-	diff := coins.safeAdd(coinsB.negative())
+func (coins Coins) SafeSub(coinsB ...Coin) (Coins, bool) {
+	diff := coins.safeAdd(NewCoins(coinsB...).negative())
 	return diff, diff.IsAnyNegative()
 }
 

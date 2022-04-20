@@ -46,11 +46,18 @@ func (s *MWTestSuite) TestTxDecoderMiddleware() {
 				txReqChecker,
 				middleware.NewTxDecoderMiddleware(s.clientCtx.TxConfig.TxDecoder()),
 			)
+
+			// DeliverTx
 			_, err := txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tc.req)
+
+			// SimulateTx
+			_, simErr := txHandler.SimulateTx(sdk.WrapSDKContext(ctx), tc.req)
 			if tc.expErr {
 				require.Error(err)
+				require.Error(simErr)
 			} else {
 				require.NoError(err)
+				require.NoError(simErr)
 			}
 		})
 	}

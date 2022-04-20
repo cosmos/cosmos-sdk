@@ -161,7 +161,7 @@ func SimulateMsgSubmitProposal(
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		var fees sdk.Coins
-		coins, hasNeg := spendable.SafeSub(deposit)
+		coins, hasNeg := spendable.SafeSub(deposit...)
 		if !hasNeg {
 			fees, err = simtypes.RandomFees(r, ctx, coins)
 			if err != nil {
@@ -248,7 +248,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		var fees sdk.Coins
-		coins, hasNeg := spendable.SafeSub(deposit)
+		coins, hasNeg := spendable.SafeSub(deposit...)
 		if !hasNeg {
 			fees, err = simtypes.RandomFees(r, ctx, coins)
 			if err != nil {

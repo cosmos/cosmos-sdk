@@ -187,7 +187,7 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx sdk.Context, addr sdk.AccAddress, a
 		locked := sdk.NewCoin(coin.Denom, lockedCoins.AmountOf(coin.Denom))
 		spendable := balance.Sub(locked)
 
-		_, hasNeg := sdk.Coins{spendable}.SafeSub(sdk.Coins{coin})
+		_, hasNeg := sdk.Coins{spendable}.SafeSub(coin)
 		if hasNeg {
 			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", spendable, coin)
 		}

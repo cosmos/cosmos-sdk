@@ -54,9 +54,9 @@ type Store struct {
 	traceContext      types.TraceContext
 	traceContextMutex sync.Mutex
 
-	cleanHouseHeight   int64 // CVCH: -1 Unstarted; 0 Finished; +# Current Height we are pruning down from
-	cleanHouseAmount   int64 // CVCH: Positive Integer of blocks to prune @ Each pruning-interval
-	cleanHouseFinished bool  // CVCH: true at false, then turn off when cleanHouse is complete
+	histPruneHeight   int64 // CVCH: -1 Unstarted; 0 Finished; +# Current Height we are pruning down from
+	histPruneAmount   int64 // CVCH: Positive Integer of blocks to prune @ Each pruning-interval
+	histPruneFinished bool  // CVCH: true at start, then falsewhen histPrune is complete
 
 	interBlockCache types.MultiStorePersistentCache
 
@@ -84,9 +84,9 @@ func NewStore(db dbm.DB) *Store {
 		listeners:     make(map[types.StoreKey][]types.WriteListener),
 		removalMap:    make(map[types.StoreKey]bool),
 
-		cleanHouseHeight:   -1,    // CVCH
-		cleanHouseAmount:   10,    // CVCH
-		cleanHouseFinished: false, // CVCH
+		histPruneHeight:   -1,    // CVCH
+		histPruneAmount:   10,    // CVCH
+		histPruneFinished: false, // CVCH
 	}
 }
 
@@ -396,50 +396,62 @@ func (rs *Store) LastCommitID() types.CommitID {
 // Example 1: KeepRecent = 100 is changed to KeepRecent = 50, leaving the oldest 50 blocks unpruned after restart.
 // Example 2: KeepEvery = 100 is changed to KeepRecent = 50, leaving the old "Every" heights in the DB.
 func (rs *Store) addPruneHistorical(previousHeight int64) {
+	debuginfo := false // show debug info
+
 	// Clean Historical is already finished
-	if rs.cleanHouseFinished {
+	if rs.histPruneFinished {
 		return
 	}
 
-	// Avoid cleaning historical too early in the blockchain lifecycle
+	// Avoid historical pruning too early in the blockchain lifecycle
 	// Only consider cleaning historical heights if current height > KeepRecent)
 	if previousHeight < int64(rs.pruningOpts.KeepRecent) {
-		fmt.Printf("**CVCH Too Early: %d !> %d\n", previousHeight, rs.pruningOpts.KeepRecent)
-		fmt.Printf("**CVCH Early Finished!!\n")
-		rs.cleanHouseFinished = true // Since we have started below the KeepRecent height, cleanHouse is unnecessary
+		if debuginfo {
+			fmt.Printf("**CVCH Too Early: %d !> %d\n", previousHeight, rs.pruningOpts.KeepRecent)
+			fmt.Printf("**CVCH Early Finished!!\n")
+		}
+		rs.histPruneFinished = true // Since we have started below the KeepRecent height, histPrune is unnecessary
 		return
 	}
 
 	// Debug
-	fmt.Printf("**CVCH Run : %d > %d\n", previousHeight, rs.pruningOpts.KeepRecent)
-	fmt.Printf("**CVCH cHH : %d\n", rs.cleanHouseHeight)
+	if debuginfo {
+		fmt.Printf("**CVCH Run : %d > %d\n", previousHeight, rs.pruningOpts.KeepRecent)
+		fmt.Printf("**CVCH cHH : %d\n", rs.histPruneHeight)
+	}
 
 	//       Start from current height, then move towards 0 since more recent blocks are more likely to be present)
 	//       Remove all previous blocks older than KeepRecent
 	//       NOTE: SNAPSHOTS MUST be within KeepRecent (Must KeepRecent > snapshot-keep-recent * snapshot-interval (a multiple of pruning-keep-every in older cosmos-sdk versions, or within keep-recent for newer cosmos-sdk versions)
 
 	// Clean Historical hasn't been set up yet
-	if rs.cleanHouseHeight == -1 {
-		rs.cleanHouseHeight = previousHeight - int64(rs.pruningOpts.KeepRecent) // We are not concerned about duplicate height removals
-		fmt.Printf("**CVCH Init cleanHouseHeight = %d\n", rs.cleanHouseHeight)
+	if rs.histPruneHeight == -1 {
+		rs.histPruneHeight = previousHeight - int64(rs.pruningOpts.KeepRecent) // We are not concerned about duplicate height removals
+		if debuginfo {
+			fmt.Printf("**CVCH Init histPruneHeight = %d\n", rs.histPruneHeight)
+		}
 	}
 
-	fmt.Printf("**PH CVCH Starting: cleanHouseHeight %d\n", rs.cleanHouseHeight)
-	// Determine starting and ending heights to clean
-	var cleanOffset int64
-	for cleanOffset = 0; cleanOffset < rs.cleanHouseAmount; cleanOffset++ {
-		fmt.Printf("**PH CVCH Add %d\n", rs.cleanHouseHeight)
-		rs.pruneHeights = append(rs.pruneHeights, rs.cleanHouseHeight)
+	if debuginfo {
+		fmt.Printf("**PH CVCH Starting: histPruneHeight %d\n", rs.histPruneHeight)
+	}
+	// Determine starting and ending heights to prune
+	var histCtr int64
+	for histCtr = 0; histCtr < rs.histPruneAmount; histCtr++ {
+		if debuginfo {
+			fmt.Printf("**PH CVCH Add %d\n", rs.histPruneHeight)
+		}
+		rs.pruneHeights = append(rs.pruneHeights, rs.histPruneHeight)
 
-		rs.cleanHouseHeight-- // Reduce cleanHouseHeight for next time through the loop
-		if rs.cleanHouseHeight < 1 {
-			fmt.Printf("\t\t**PH CVCH **COMPLETE** cHH:%d\n", rs.cleanHouseHeight)
-			fmt.Printf("**CVCH Finished!!\n")
-			rs.cleanHouseFinished = true
+		rs.histPruneHeight-- // Reduce histPruneHeight for next time through the loop
+		if rs.histPruneHeight < 1 {
+			if debuginfo {
+				fmt.Printf("**CVCH Finished!!\n")
+			}
+			rs.histPruneFinished = true
 			break // do not remove heights below 1
 		}
 	}
-	fmt.Printf("**PH CVCH Resulting: cleanHouseHeight %d\n", rs.cleanHouseHeight)
 }
 
 // Commit implements Committer/CommitStore.
@@ -478,14 +490,14 @@ func (rs *Store) Commit() types.CommitID {
 	// be pruned, where pruneHeight = (commitHeight - 1) - KeepRecent.
 	if rs.pruningOpts.Interval > 0 && int64(rs.pruningOpts.KeepRecent) < previousHeight {
 		pruneHeight := previousHeight - int64(rs.pruningOpts.KeepRecent)
-		fmt.Printf("**CVCH PH.Future Add pruneHeight %d (previousHeight %d)\n", pruneHeight, previousHeight)
+		//fmt.Printf("**CVCH PH.Future Add pruneHeight %d (previousHeight %d)\n", pruneHeight, previousHeight)
 		rs.pruneHeights = append(rs.pruneHeights, pruneHeight)
 	}
 
 	// If the next version will be a pruning interval, pre-append any historical prunes.
 	// This early addtion makes testing in the existing framework easy
 	if rs.pruningOpts.Interval > 0 && (version+1)%int64(rs.pruningOpts.Interval) == 0 {
-		rs.addPruneHistorical(previousHeight) // CVCH: Add additional block heights for clean house pruning
+		rs.addPruneHistorical(previousHeight) // CVCH: Add additional block heights for historical pruning
 	}
 
 	// Execute batch prune if the current height is a pruning interval height
@@ -504,6 +516,7 @@ func (rs *Store) Commit() types.CommitID {
 // pruneStores will batch delete a list of heights from each mounted sub-store.
 // Afterwards, pruneHeights is reset.
 func (rs *Store) pruneStores() {
+	debuginfo := false // show debug info - Helpful to see which heights are pruned
 	if len(rs.pruneHeights) == 0 {
 		return
 	}
@@ -514,7 +527,9 @@ func (rs *Store) pruneStores() {
 			// it to get the underlying IAVL store.
 			store = rs.GetCommitKVStore(key)
 
-			fmt.Printf("**PH DV %s => %v\n", key, rs.pruneHeights)
+			if debuginfo {
+				fmt.Printf("**pruneStores Key: %s  Heights: %v\n", key, rs.pruneHeights)
+			}
 			if err := store.(*iavl.Store).DeleteVersions(rs.pruneHeights...); err != nil {
 				if errCause := errors.Cause(err); errCause != nil && errCause != iavltree.ErrVersionDoesNotExist {
 					panic(err)

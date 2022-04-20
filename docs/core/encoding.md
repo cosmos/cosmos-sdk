@@ -73,12 +73,12 @@ Since the `MsgExec` message type can contain different messages instances, it is
 add the following code inside the `init` method of their module's `codec.go` file:
 
 ```go
-import "github.com/cosmos/cosmos-sdk/codec/legacy"
+import authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 
 init() {
-    // Register all Amino interfaces and concrete types on the global Amino codec so that this can later be
-    // used to properly serialize x/authz MsgExec instances
-    RegisterLegacyAminoCodec(legacy.Cdc)	
+    // Register all Amino interfaces and concrete types on the authz Amino codec so that this can later be
+    // used to properly serialize MsgGrant and MsgExec instances
+    RegisterLegacyAminoCodec(authzcodec.Amino)
 }
 ```
 

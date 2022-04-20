@@ -231,7 +231,7 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 			"success",
 			func() {
 				_ = suite.setAccountBalance(addr1, 50)
-				_ = suite.setAccountBalance(addr2, 0)
+				_ = suite.setAccountBalance(addr2, 1)
 
 				msg := banktypes.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)})
 				tx, err := helpers.GenTx(

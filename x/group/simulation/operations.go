@@ -258,7 +258,7 @@ func SimulateMsgCreateGroup(ak group.AccountKeeper, bk group.BankKeeper) simtype
 		msg := &group.MsgCreateGroup{Admin: accAddr, Members: members, Metadata: simtypes.RandStringOfLength(r, 10)}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -316,7 +316,7 @@ func SimulateMsgCreateGroupWithPolicy(ak group.AccountKeeper, bk group.BankKeepe
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -374,7 +374,7 @@ func SimulateMsgCreateGroupPolicy(ak group.AccountKeeper, bk group.BankKeeper, k
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -445,7 +445,7 @@ func SimulateMsgSubmitProposal(ak group.AccountKeeper, bk group.BankKeeper, k ke
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -503,7 +503,7 @@ func SimulateMsgUpdateGroupAdmin(ak group.AccountKeeper, bk group.BankKeeper, k 
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -552,7 +552,7 @@ func SimulateMsgUpdateGroupMetadata(ak group.AccountKeeper, bk group.BankKeeper,
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -629,7 +629,7 @@ func SimulateMsgUpdateGroupMembers(ak group.AccountKeeper,
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -687,7 +687,7 @@ func SimulateMsgUpdateGroupPolicyAdmin(ak group.AccountKeeper, bk group.BankKeep
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -746,7 +746,7 @@ func SimulateMsgUpdateGroupPolicyDecisionPolicy(ak group.AccountKeeper,
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -795,7 +795,7 @@ func SimulateMsgUpdateGroupPolicyMetadata(ak group.AccountKeeper,
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -892,7 +892,7 @@ func SimulateMsgWithdrawProposal(ak group.AccountKeeper,
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -996,7 +996,7 @@ func SimulateMsgVote(ak group.AccountKeeper,
 			Metadata:   simtypes.RandStringOfLength(r, 10),
 		}
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -1072,7 +1072,7 @@ func SimulateMsgExec(ak group.AccountKeeper,
 			Signer:     acc.Address.String(),
 		}
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -1134,7 +1134,7 @@ func SimulateMsgLeaveGroup(k keeper.Keeper, ak group.AccountKeeper, bk group.Ban
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,

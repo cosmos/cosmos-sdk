@@ -17,7 +17,7 @@
  # go install github.com/cosmos/gogoproto@latest
 set -eo pipefail
 
-go install github.com/julienrbrt/gogoproto/protoc-gen-gocosmos@v1.4.2
+go install github.com/cosmos/gogoproto/protoc-gen-gocosmos@v1.4.1
 
 echo "Generating gogo proto code"
 cd proto

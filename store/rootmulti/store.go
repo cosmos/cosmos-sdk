@@ -394,7 +394,7 @@ func (rs *Store) LastCommitID() types.CommitID {
 
 // CVCH: Chill Validation - After Pruning 'strategy' changes, previous heights may be left around.
 // Example 1: KeepRecent = 100 is changed to KeepRecent = 50, leaving the oldest 50 blocks unpruned after restart.
-// Example 2: KeepEvery = 100 is changed to KeepRecent = 50, leaving the old "Every" heights in the DB.
+// Example 2: KeepEvery = 100 is changed to KeepEvery = 35, leaving the old "Every" heights in the DB.
 func (rs *Store) addPruneHistorical(previousHeight int64) {
 	debuginfo := false // show debug info
 

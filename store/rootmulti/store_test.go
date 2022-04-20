@@ -543,6 +543,87 @@ func TestMultiStore_PruningRestart(t *testing.T) {
 	}
 }
 
+func TestMultiStore_PruningHistoricalEarlyFinish(t *testing.T) {
+	fmt.Println("TestMultiStore_PruningHistoricalEarlyFinish")
+	db := dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db, types.PruningOptions{KeepRecent: 20, Interval: 5})
+	require.NoError(t, ms.LoadLatestVersion())
+
+	// Commit enough to build up heights to prune, where on the next block we should
+	// batch delete.
+	for i := int64(0); i < 10; i++ {
+		ms.Commit()
+	}
+	require.Equal(t, ms.cleanHouseFinished, true) // Should already be flagged complete since we started at zero height
+	fmt.Println("")
+	fmt.Println("")
+}
+
+func TestMultiStore_PruningHistorical(t *testing.T) {
+	fmt.Println("TestMultiStore_PruningHistorical")
+	db := dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db, types.PruningOptions{KeepRecent: 100, Interval: 5})
+	require.NoError(t, ms.LoadLatestVersion())
+
+	// Add Heights 1-50
+	for i := int64(0); i < 50; i++ {
+		ms.Commit()
+	}
+	_, err := getPruningHeights(ms.db)
+	require.Error(t, err) // Should Error w/o height to prune
+
+	// commit more (new heights 51 - 157, 1-54 pruned, 55, 56 unpruned until height = 160)
+	for i := int64(0); i < 107; i++ {
+		ms.Commit()
+	}
+	// require.NoError(t, err)
+	ph, err := getPruningHeights(ms.db)
+	fmt.Printf("gPH: %v\n", ph)
+	require.Equal(t, []int64{55, 56}, ph)
+
+	// next pruneHeight 160, historicalPrune queue height = 159, previousHeight = 158, previousHeight(158) - keepRecent(10) = 148
+	historicMarker := int64(148)
+
+	// "restart" + CHANGE PruningOptions (to a lower KeepRecent), Check for historical prune
+	fmt.Printf("Restart with new PruneingOptions\n")
+
+	targetPruneHeights := []int64{55, 56}
+
+	ms = newMultiStoreWithMounts(db, types.NewPruningOptions(10, 5))
+	err = ms.LoadLatestVersion()
+	require.NoError(t, err)
+	require.Equal(t, targetPruneHeights, ms.pruneHeights)
+
+	// 158
+	fmt.Printf("Commit Height 158\n")
+	ms.Commit()
+	targetPruneHeights = append(targetPruneHeights, 147)  // expect to prune the previousHeight - keepRecent
+	require.Equal(t, targetPruneHeights, ms.pruneHeights) // Check that db reloaded oldPruneHeights
+
+	// 159
+	fmt.Printf("Commit Height 159\n")
+	ms.Commit()
+	// Expect each historical Height to be queued for prune
+	for h := historicMarker; h > historicMarker-10; h-- {
+		require.Contains(t, ms.pruneHeights, h)
+	}
+	historicMarker -= 10
+
+	// 160-163
+	for ms.cleanHouseFinished == false {
+		for i := int64(0); i < 5; i++ {
+			fmt.Printf("\tCommit Height %d\n", ms.lastCommitInfo.GetVersion()+1)
+			ms.Commit()
+		}
+		// Expect each historical Height to be queued for prune
+		for h := historicMarker; h > historicMarker-10 && h > 0; h-- {
+			require.Contains(t, ms.pruneHeights, h)
+		}
+		historicMarker -= 10
+	}
+
+}
+
 func TestSetInitialVersion(t *testing.T) {
 	db := dbm.NewMemDB()
 	multi := newMultiStoreWithMounts(db, types.PruneNothing)

@@ -1,7 +1,6 @@
 package testutil
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"os"
@@ -9,7 +8,6 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -50,12 +48,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) TestGenTxCmd() {
 	val := s.network.Validators[0]
-
 	clientCtx := val.ClientCtx
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
 	amount := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))
 
 	tests := []struct {
@@ -114,7 +107,9 @@ func (s *IntegrationTestSuite) TestGenTxCmd() {
 		s.Run(tc.name, func() {
 			cmd := cli.GenTxCmd(
 				simapp.ModuleBasics,
-				val.ClientCtx.TxConfig, banktypes.GenesisBalancesIterator{}, val.ClientCtx.HomeDir)
+				val.ClientCtx.TxConfig,
+				banktypes.GenesisBalancesIterator{},
+				val.ClientCtx.HomeDir)
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 

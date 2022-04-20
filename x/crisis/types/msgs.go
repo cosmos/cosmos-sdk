@@ -1,7 +1,6 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -30,7 +29,7 @@ func (msg MsgVerifyInvariant) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes gets the sign bytes for the msg MsgVerifyInvariant
 func (msg MsgVerifyInvariant) GetSignBytes() []byte {
-	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	bz := ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 

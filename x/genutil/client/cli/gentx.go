@@ -162,7 +162,15 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			w := bytes.NewBuffer([]byte{})
 			clientCtx = clientCtx.WithOutput(w)
 
+<<<<<<< HEAD
 			if err = authclient.PrintUnsignedStdTx(txBldr, clientCtx, []sdk.Msg{msg}); err != nil {
+=======
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			if err = txBldr.PrintUnsignedTx(clientCtx, msg); err != nil {
+>>>>>>> df6114203 (fix: Add validation on create gentx (#11693))
 				return errors.Wrap(err, "failed to print unsigned std tx")
 			}
 

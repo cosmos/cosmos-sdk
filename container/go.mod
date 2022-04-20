@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/container
 
-go 1.17
+go 1.18
 
 require (
 	github.com/goccy/go-graphviz v0.0.9

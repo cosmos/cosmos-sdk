@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/cosmovisor
 
-go 1.17
+go 1.18
 
 require (
 	github.com/cosmos/cosmos-sdk v0.46.0-beta2

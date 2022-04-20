@@ -138,7 +138,7 @@ func sendMsgSend(
 		}
 	}
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
-	tx, err := helpers.GenTx(
+	tx, err := helpers.GenSignedMockTx(
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
@@ -360,7 +360,7 @@ func sendMsgMultiSend(
 	}
 
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
-	tx, err := helpers.GenTx(
+	tx, err := helpers.GenSignedMockTx(
 		txGen,
 		[]sdk.Msg{msg},
 		fees,

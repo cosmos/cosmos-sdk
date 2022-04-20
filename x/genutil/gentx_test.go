@@ -269,12 +269,12 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 					)
 				})
 			} else {
-				suite.Require().Panics(func() {
-					genutil.DeliverGenTxs(
-						suite.ctx, genTxs, suite.app.StakingKeeper, suite.app.BaseApp.DeliverTx,
-						suite.encodingConfig.TxConfig,
-					)
-				})
+				_, err := genutil.DeliverGenTxs(
+					suite.ctx, genTxs, suite.app.StakingKeeper, suite.app.BaseApp.DeliverTx,
+					suite.encodingConfig.TxConfig,
+				)
+
+				suite.Require().Error(err)
 			}
 		})
 	}

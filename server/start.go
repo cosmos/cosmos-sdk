@@ -59,6 +59,16 @@ const (
 	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"
 	FlagStateSyncSnapshotKeepRecent = "state-sync.snapshot-keep-recent"
 
+	// api-related flags
+	FlagAPIEnable             = "api.enable"
+	FlagAPISwagger            = "api.swagger"
+	FlagAPIAddress            = "api.address"
+	FlagAPIMaxOpenConnections = "api.max-open-connections"
+	FlagRPCReadTimeout        = "api.rpc-read-timeout"
+	FlagRPCWriteTimeout       = "api.rpc-write-timeout"
+	FlagRPCMaxBodyBytes       = "api.rpc-max-body-bytes"
+	FlagAPIEnableUnsafeCORS   = "api.enabled-unsafe-cors"
+
 	// gRPC-related flags
 	flagGRPCOnly       = "grpc-only"
 	flagGRPCEnable     = "grpc.enable"
@@ -105,7 +115,9 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 
 			// Bind flags to the Context's Viper so the app construction can set
 			// options accordingly.
-			serverCtx.Viper.BindPFlags(cmd.Flags())
+			if err := serverCtx.Viper.BindPFlags(cmd.Flags()); err != nil {
+				return err
+			}
 
 			_, err := GetPruningOptionsFromFlags(serverCtx.Viper)
 			return err
@@ -152,6 +164,15 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	cmd.Flags().Uint64(FlagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint(FlagInvCheckPeriod, 0, "Assert registered invariants every N blocks")
 	cmd.Flags().Uint64(FlagMinRetainBlocks, 0, "Minimum block height offset during ABCI commit to prune Tendermint blocks")
+
+	cmd.Flags().Bool(FlagAPIEnable, false, "Define if the API server should be enabled")
+	cmd.Flags().Bool(FlagAPISwagger, false, "Define if swagger documentation should automatically be registered (Note: api must also be enabled.)")
+	cmd.Flags().String(FlagAPIAddress, config.DefaultAPIAddress, "the API server address to listen on")
+	cmd.Flags().Uint(FlagAPIMaxOpenConnections, 1000, "Define the number of maximum open connections")
+	cmd.Flags().Uint(FlagRPCReadTimeout, 10, "Define the Tendermint RPC read timeout (in seconds)")
+	cmd.Flags().Uint(FlagRPCWriteTimeout, 0, "Define the Tendermint RPC write timeout (in seconds)")
+	cmd.Flags().Uint(FlagRPCMaxBodyBytes, 1000000, "Define the Tendermint maximum response body (in bytes)")
+	cmd.Flags().Bool(FlagAPIEnableUnsafeCORS, false, "Define if CORS should be enabled (unsafe - use it at your own risk)")
 
 	cmd.Flags().Bool(flagGRPCOnly, false, "Start the node in gRPC query only mode (no Tendermint process is started)")
 	cmd.Flags().Bool(flagGRPCEnable, true, "Define if the gRPC server should be enabled")
@@ -227,7 +248,9 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		cpuProfileCleanup = func() {
 			ctx.Logger.Info("stopping CPU profiler", "profile", cpuProfile)
 			pprof.StopCPUProfile()
-			f.Close()
+			if err := f.Close(); err != nil {
+				ctx.Logger.Info("failed to close cpu-profile file", "profile", cpuProfile, "err", err.Error())
+			}
 		}
 	}
 
@@ -428,7 +451,9 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		if grpcSrv != nil {
 			grpcSrv.Stop()
 			if grpcWebSrv != nil {
-				grpcWebSrv.Close()
+				if err := grpcWebSrv.Close(); err != nil {
+					ctx.Logger.Error("failed to close grpc-web http server: ", err)
+				}
 			}
 		}
 

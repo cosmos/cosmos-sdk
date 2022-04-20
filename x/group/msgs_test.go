@@ -59,7 +59,7 @@ func TestMsgCreateGroup(t *testing.T) {
 				},
 			},
 			true,
-			"expected a positive decimal",
+			"expected a non-negative decimal",
 		},
 		{
 			"zero member's weight not allowed",
@@ -416,7 +416,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 				return req
 			},
 			true,
-			"expected a positive decimal",
+			"expected a non-negative decimal",
 		},
 		{
 			"zero member's weight not allowed",
@@ -692,23 +692,23 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 
 func TestMsgUpdateGroupPolicyDecisionPolicy(t *testing.T) {
 	validPolicy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
-	msg1, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member1, validPolicy)
+	msg1, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(admin, member1, validPolicy)
 	require.NoError(t, err)
 
 	invalidPolicy := group.NewThresholdDecisionPolicy("-1", time.Second, 0)
-	msg2, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member2, invalidPolicy)
+	msg2, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(admin, member2, invalidPolicy)
 	require.NoError(t, err)
 
 	validPercentagePolicy := group.NewPercentageDecisionPolicy("0.7", time.Second, 0)
-	msg3, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member3, validPercentagePolicy)
+	msg3, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(admin, member3, validPercentagePolicy)
 	require.NoError(t, err)
 
 	invalidPercentagePolicy := group.NewPercentageDecisionPolicy("-0.1", time.Second, 0)
-	msg4, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member4, invalidPercentagePolicy)
+	msg4, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(admin, member4, invalidPercentagePolicy)
 	require.NoError(t, err)
 
 	invalidPercentagePolicy2 := group.NewPercentageDecisionPolicy("2", time.Second, 0)
-	msg5, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member5, invalidPercentagePolicy2)
+	msg5, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(admin, member5, invalidPercentagePolicy2)
 	require.NoError(t, err)
 
 	testCases := []struct {
@@ -728,8 +728,8 @@ func TestMsgUpdateGroupPolicyDecisionPolicy(t *testing.T) {
 		{
 			"group policy: invalid bech32 address",
 			&group.MsgUpdateGroupPolicyDecisionPolicy{
-				Admin:   admin.String(),
-				Address: "address",
+				Admin:              admin.String(),
+				GroupPolicyAddress: "address",
 			},
 			true,
 			"group policy: decoding bech32 failed",
@@ -737,8 +737,8 @@ func TestMsgUpdateGroupPolicyDecisionPolicy(t *testing.T) {
 		{
 			"group policy: invalid bech32 address",
 			&group.MsgUpdateGroupPolicyDecisionPolicy{
-				Admin:   admin.String(),
-				Address: "address",
+				Admin:              admin.String(),
+				GroupPolicyAddress: "address",
 			},
 			true,
 			"group policy: decoding bech32 failed",
@@ -808,9 +808,9 @@ func TestMsgUpdateGroupPolicyAdmin(t *testing.T) {
 		{
 			"policy address: invalid bech32 address",
 			&group.MsgUpdateGroupPolicyAdmin{
-				Admin:    admin.String(),
-				NewAdmin: member1.String(),
-				Address:  "address",
+				Admin:              admin.String(),
+				NewAdmin:           member1.String(),
+				GroupPolicyAddress: "address",
 			},
 			true,
 			"group policy: decoding bech32 failed",
@@ -818,9 +818,9 @@ func TestMsgUpdateGroupPolicyAdmin(t *testing.T) {
 		{
 			"new admin: invalid bech32 address",
 			&group.MsgUpdateGroupPolicyAdmin{
-				Admin:    admin.String(),
-				Address:  admin.String(),
-				NewAdmin: "new-admin",
+				Admin:              admin.String(),
+				GroupPolicyAddress: admin.String(),
+				NewAdmin:           "new-admin",
 			},
 			true,
 			"new admin: decoding bech32 failed",
@@ -828,9 +828,9 @@ func TestMsgUpdateGroupPolicyAdmin(t *testing.T) {
 		{
 			"same old and new admin",
 			&group.MsgUpdateGroupPolicyAdmin{
-				Admin:    admin.String(),
-				Address:  admin.String(),
-				NewAdmin: admin.String(),
+				Admin:              admin.String(),
+				GroupPolicyAddress: admin.String(),
+				NewAdmin:           admin.String(),
 			},
 			true,
 			"new and old admin are same",
@@ -838,9 +838,9 @@ func TestMsgUpdateGroupPolicyAdmin(t *testing.T) {
 		{
 			"valid test",
 			&group.MsgUpdateGroupPolicyAdmin{
-				Admin:    admin.String(),
-				Address:  admin.String(),
-				NewAdmin: member1.String(),
+				Admin:              admin.String(),
+				GroupPolicyAddress: admin.String(),
+				NewAdmin:           member1.String(),
 			},
 			false,
 			"",
@@ -880,8 +880,8 @@ func TestMsgUpdateGroupPolicyMetadata(t *testing.T) {
 		{
 			"group policy address: invalid bech32 address",
 			&group.MsgUpdateGroupPolicyMetadata{
-				Admin:   admin.String(),
-				Address: "address",
+				Admin:              admin.String(),
+				GroupPolicyAddress: "address",
 			},
 			true,
 			"group policy: decoding bech32 failed",
@@ -889,9 +889,9 @@ func TestMsgUpdateGroupPolicyMetadata(t *testing.T) {
 		{
 			"valid testcase",
 			&group.MsgUpdateGroupPolicyMetadata{
-				Admin:    admin.String(),
-				Address:  member1.String(),
-				Metadata: "metadata",
+				Admin:              admin.String(),
+				GroupPolicyAddress: member1.String(),
+				Metadata:           "metadata",
 			},
 			false,
 			"",
@@ -923,7 +923,7 @@ func TestMsgSubmitProposal(t *testing.T) {
 		{
 			"invalid group policy address",
 			&group.MsgSubmitProposal{
-				Address: "address",
+				GroupPolicyAddress: "address",
 			},
 			true,
 			"group policy: decoding bech32 failed",
@@ -931,7 +931,7 @@ func TestMsgSubmitProposal(t *testing.T) {
 		{
 			"proposers required",
 			&group.MsgSubmitProposal{
-				Address: admin.String(),
+				GroupPolicyAddress: admin.String(),
 			},
 			true,
 			"proposers: value is empty",
@@ -939,8 +939,8 @@ func TestMsgSubmitProposal(t *testing.T) {
 		{
 			"valid testcase",
 			&group.MsgSubmitProposal{
-				Address:   admin.String(),
-				Proposers: []string{member1.String(), member2.String()},
+				GroupPolicyAddress: admin.String(),
+				Proposers:          []string{member1.String(), member2.String()},
 			},
 			false,
 			"",
@@ -1080,7 +1080,7 @@ func TestMsgExec(t *testing.T) {
 		{
 			"invalid signer address",
 			&group.MsgExec{
-				Signer: "signer",
+				Executor: "signer",
 			},
 			true,
 			"signer: decoding bech32 failed",
@@ -1088,7 +1088,7 @@ func TestMsgExec(t *testing.T) {
 		{
 			"proposal is required",
 			&group.MsgExec{
-				Signer: admin.String(),
+				Executor: admin.String(),
 			},
 			true,
 			"proposal id: value is empty",
@@ -1096,7 +1096,7 @@ func TestMsgExec(t *testing.T) {
 		{
 			"valid testcase",
 			&group.MsgExec{
-				Signer:     admin.String(),
+				Executor:   admin.String(),
 				ProposalId: 1,
 			},
 			false,
@@ -1145,7 +1145,7 @@ func TestMsgLeaveGroup(t *testing.T) {
 			"valid testcase",
 			&group.MsgLeaveGroup{
 				Address: admin.String(),
-				GroupId:       1,
+				GroupId: 1,
 			},
 			false,
 			"",

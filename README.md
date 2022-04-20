@@ -45,7 +45,7 @@ The Cosmos SDK is a framework for building blockchain applications. [Tendermint 
 **WARNING**: The Cosmos SDK has mostly stabilized, but we are still making some
 breaking changes.
 
-**Note**: Requires [Go 1.17+](https://golang.org/dl/)
+**Note**: Requires [Go 1.18+](https://go.dev/dl)
 
 ## Quick Start
 
@@ -75,9 +75,9 @@ The Cosmos Hub application, `gaia`, has moved to its own [cosmos/gaia repository
 
 The IBC module for the Cosmos SDK has moved to its own [cosmos/ibc-go repository](https://github.com/cosmos/ibc-go). Go there to build and integrate with the IBC module.
 
-### Starport
+### Ignite CLI
 
-Starport is the all-in-one platform to build, launch, and maintain any crypto application on a sovereign and secured blockchain. If you are building a new app or a new module, use [Starport](https://github.com/tendermint/starport) to get started and speed up development.
+Ignite CLI is the all-in-one platform to build, launch, and maintain any crypto application on a sovereign and secured blockchain. If you are building a new app or a new module, use [Ignite CLI](https://github.com/ignite-hq/cli) to get started and speed up development.
 
 ## Disambiguation
 

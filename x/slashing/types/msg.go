@@ -1,7 +1,6 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -31,7 +30,7 @@ func (msg MsgUnjail) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes gets the bytes for the message signer to sign on
 func (msg MsgUnjail) GetSignBytes() []byte {
-	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	bz := ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 

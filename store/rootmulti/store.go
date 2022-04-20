@@ -478,7 +478,7 @@ func (rs *Store) Commit() types.CommitID {
 	// be pruned, where pruneHeight = (commitHeight - 1) - KeepRecent.
 	if rs.pruningOpts.Interval > 0 && int64(rs.pruningOpts.KeepRecent) < previousHeight {
 		pruneHeight := previousHeight - int64(rs.pruningOpts.KeepRecent)
-		fmt.Printf("**PH.Future Add pruneHeight %d (previousHeight %d)\n", pruneHeight, previousHeight)
+		fmt.Printf("**CVCH PH.Future Add pruneHeight %d (previousHeight %d)\n", pruneHeight, previousHeight)
 		rs.pruneHeights = append(rs.pruneHeights, pruneHeight)
 	}
 

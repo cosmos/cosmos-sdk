@@ -24,7 +24,7 @@ RUN go install github.com/cosmos/cosmos-proto/cmd/protoc-gen-go-pulsar@latest &&
   go install github.com/gogo/protobuf/protoc-gen-gogofaster@v${GOGO_PROTOBUF_VERSION} && \
   go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v${GRPC_GATEWAY_VERSION} && \
   go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v${GRPC_GATEWAY_VERSION} && \
-  go install github.com/cosmos/gogoproto/protoc-gen-gocosmos@v1.4.1 
+  go install github.com/cosmos/gogoproto/protoc-gen-gocosmos@v1.4.1
 
 
 RUN npm install -g swagger-combine

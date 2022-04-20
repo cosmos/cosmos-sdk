@@ -17,8 +17,6 @@
  # go install github.com/cosmos/gogoproto@latest
 set -eo pipefail
 
-go install github.com/cosmos/gogoproto/protoc-gen-gocosmos@v1.4.1
-
 echo "Generating gogo proto code"
 cd proto
 proto_dirs=$(find ./cosmos -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)

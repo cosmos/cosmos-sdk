@@ -93,6 +93,38 @@ func (s *IntegrationTestSuite) TestGenTxCmd() {
 	s.Require().NoError(tx.ValidateBasic())
 }
 
+func (s *IntegrationTestSuite) TestGenTxCmdValidation() {
+	val := s.network.Validators[0]
+	dir := s.T().TempDir()
+
+	cmd := cli.GenTxCmd(
+		simapp.ModuleBasics,
+		val.ClientCtx.TxConfig, banktypes.GenesisBalancesIterator{}, val.ClientCtx.HomeDir)
+
+	_, out := testutil.ApplyMockIO(cmd)
+	clientCtx := val.ClientCtx.WithOutput(out)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+	amount := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))
+	genTxFile := filepath.Join(dir, "myTx")
+	cmd.SetArgs([]string{
+		fmt.Sprintf("--%s=%s", flags.FlagChainID, s.network.Config.ChainID),
+		fmt.Sprintf("--%s=%s", flags.FlagOutputDocument, genTxFile),
+		fmt.Sprintf("--%s=1", stakingcli.FlagCommissionRate),
+		val.Moniker,
+		amount.String(),
+	})
+
+	err := cmd.ExecuteContext(ctx)
+	s.Require().Error(err)
+
+	// validate generated transaction.
+	_, err = os.Open(genTxFile)
+	s.Require().Error(err)
+}
+
 func (s *IntegrationTestSuite) TestGenTxCmdPubkey() {
 	val := s.network.Validators[0]
 	dir := s.T().TempDir()

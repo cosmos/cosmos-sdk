@@ -1,7 +1,6 @@
 package testutil
 
 import (
-	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -9,10 +8,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -48,19 +46,9 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) TestGenTxCmd() {
 	val := s.network.Validators[0]
-	dir := s.T().TempDir()
-
-	cmd := cli.GenTxCmd(
-		simapp.ModuleBasics,
-		val.ClientCtx.TxConfig, banktypes.GenesisBalancesIterator{}, val.ClientCtx.HomeDir)
-
-	_, out := testutil.ApplyMockIO(cmd)
-	clientCtx := val.ClientCtx.WithOutput(out)
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
+	clientCtx := val.ClientCtx
 	amount := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))
+<<<<<<< HEAD
 	genTxFile := filepath.Join(dir, "myTx")
 	cmd.SetArgs([]string{
 		fmt.Sprintf("--%s=%s", flags.FlagChainID, s.network.Config.ChainID),
@@ -104,28 +92,97 @@ func (s *IntegrationTestSuite) TestGenTxCmdPubkey() {
 
 	_, out := testutil.ApplyMockIO(cmd)
 	clientCtx := val.ClientCtx.WithOutput(out)
+=======
+>>>>>>> df6114203 (fix: Add validation on create gentx (#11693))
 
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+	tests := []struct {
+		name     string
+		args     []string
+		expError bool
+	}{
+		{
+			name: "invalid commission rate returns error",
+			args: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagChainID, s.network.Config.ChainID),
+				fmt.Sprintf("--%s=1", stakingcli.FlagCommissionRate),
+				val.Moniker,
+				amount.String(),
+			},
+			expError: true,
+		},
+		{
+			name: "valid gentx",
+			args: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagChainID, s.network.Config.ChainID),
+				val.Moniker,
+				amount.String(),
+			},
+			expError: false,
+		},
+		{
+			name: "invalid pubkey",
+			args: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagChainID, s.network.Config.ChainID),
+				fmt.Sprintf("--%s={\"key\":\"BOIkjkFruMpfOFC9oNPhiJGfmY2pHF/gwHdLDLnrnS0=\"}", stakingcli.FlagPubKey),
+				val.Moniker,
+				amount.String(),
+			},
+			expError: true,
+		},
+		{
+			name: "valid pubkey flag",
+			args: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagChainID, s.network.Config.ChainID),
+				fmt.Sprintf("--%s={\"@type\":\"/cosmos.crypto.ed25519.PubKey\",\"key\":\"BOIkjkFruMpfOFC9oNPhiJGfmY2pHF/gwHdLDLnrnS0=\"}", stakingcli.FlagPubKey),
+				val.Moniker,
+				amount.String(),
+			},
+			expError: false,
+		},
+	}
 
-	amount := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))
-	genTxFile := filepath.Join(dir, "myTx")
+	for _, tc := range tests {
+		tc := tc
 
-	cmd.SetArgs([]string{
-		fmt.Sprintf("--%s=%s", flags.FlagChainID, s.network.Config.ChainID),
-		fmt.Sprintf("--%s=%s", flags.FlagOutputDocument, genTxFile),
-		fmt.Sprintf("--%s={\"key\":\"BOIkjkFruMpfOFC9oNPhiJGfmY2pHF/gwHdLDLnrnS0=\"}", stakingcli.FlagPubKey),
-		val.Moniker,
-		amount.String(),
-	})
-	s.Require().Error(cmd.ExecuteContext(ctx))
+		dir := s.T().TempDir()
+		genTxFile := filepath.Join(dir, "myTx")
+		tc.args = append(tc.args, fmt.Sprintf("--%s=%s", flags.FlagOutputDocument, genTxFile))
 
-	cmd.SetArgs([]string{
-		fmt.Sprintf("--%s=%s", flags.FlagChainID, s.network.Config.ChainID),
-		fmt.Sprintf("--%s=%s", flags.FlagOutputDocument, genTxFile),
-		fmt.Sprintf("--%s={\"@type\":\"/cosmos.crypto.ed25519.PubKey\",\"key\":\"BOIkjkFruMpfOFC9oNPhiJGfmY2pHF/gwHdLDLnrnS0=\"}", stakingcli.FlagPubKey),
-		val.Moniker,
-		amount.String(),
-	})
-	s.Require().NoError(cmd.ExecuteContext(ctx))
+		s.Run(tc.name, func() {
+			cmd := cli.GenTxCmd(
+				simapp.ModuleBasics,
+				val.ClientCtx.TxConfig,
+				banktypes.GenesisBalancesIterator{},
+				val.ClientCtx.HomeDir)
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expError {
+				s.Require().Error(err)
+
+				_, err = os.Open(genTxFile)
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, "test: %s\noutput: %s", tc.name, out.String())
+
+				// validate generated transaction.
+				open, err := os.Open(genTxFile)
+				s.Require().NoError(err)
+
+				all, err := io.ReadAll(open)
+				s.Require().NoError(err)
+
+				tx, err := val.ClientCtx.TxConfig.TxJSONDecoder()(all)
+				s.Require().NoError(err)
+
+				msgs := tx.GetMsgs()
+				s.Require().Len(msgs, 1)
+
+				s.Require().Equal(sdk.MsgTypeURL(&types.MsgCreateValidator{}), sdk.MsgTypeURL(msgs[0]))
+				s.Require().True(val.Address.Equals(msgs[0].GetSigners()[0]))
+				s.Require().Equal(amount, msgs[0].(*types.MsgCreateValidator).Value)
+				s.Require().NoError(tx.ValidateBasic())
+			}
+		})
+	}
 }

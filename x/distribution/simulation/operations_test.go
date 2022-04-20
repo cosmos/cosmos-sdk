@@ -1,7 +1,6 @@
 package simulation_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"math/rand"
 	"testing"
 
@@ -74,7 +73,7 @@ func (suite *SimTestSuite) TestSimulateMsgSetWithdrawAddress() {
 	suite.Require().NoError(err)
 
 	var msg types.MsgSetWithdrawAddress
-	legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.DelegatorAddress)
@@ -115,7 +114,7 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 	suite.Require().NoError(err)
 
 	var msg types.MsgWithdrawDelegatorReward
-	legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal("cosmosvaloper1l4s054098kk9hmr5753c6k3m2kw65h686d3mhr", msg.ValidatorAddress)
@@ -176,7 +175,7 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 		suite.Require().NoError(err)
 
 		var msg types.MsgWithdrawValidatorCommission
-		legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
+		types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 		suite.Require().True(operationMsg.OK)
 		suite.Require().Equal("cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
@@ -203,7 +202,7 @@ func (suite *SimTestSuite) TestSimulateMsgFundCommunityPool() {
 	suite.Require().NoError(err)
 
 	var msg types.MsgFundCommunityPool
-	legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal("4896096stake", msg.Amount.String())

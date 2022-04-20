@@ -16,7 +16,7 @@ If there is already a grant for the `(granter, grantee, Authorization)` triple, 
 The message handling should fail if:
 
 * both granter and grantee have the same address.
-* provided `Expiration` time is less than current unix timestamp.
+* provided `Expiration` time is less than current unix timestamp (but a grant will be created if no `expiration` time is provided since `expiration` is optional).
 * provided `Grant.Authorization` is not implemented.
 * `Authorization.MsgTypeURL()` is not defined in the router (there is no defined handler in the app router to handle that Msg types).
 

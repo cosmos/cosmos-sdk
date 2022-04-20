@@ -115,9 +115,9 @@ func (s *MWTestSuite) TestTips() {
 				s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: ctx.BlockHeight()}})
 
 				// Make sure tip is correctly transferred to feepayer, and fee is paid.
-				expTipperRegens := initialRegens.Sub(tc.tip)
+				expTipperRegens := initialRegens.Sub(tc.tip...)
 				expFeePayerRegens := initialRegens.Add(tc.tip...)
-				expFeePayerAtoms := initialAtoms.Sub(tc.fee)
+				expFeePayerAtoms := initialAtoms.Sub(tc.fee...)
 				s.Require().True(expTipperRegens.AmountOf("regen").Equal(s.app.BankKeeper.GetBalance(ctx, tipper.acc.GetAddress(), "regen").Amount))
 				s.Require().True(expFeePayerRegens.AmountOf("regen").Equal(s.app.BankKeeper.GetBalance(ctx, feePayer.acc.GetAddress(), "regen").Amount))
 				s.Require().True(expFeePayerAtoms.AmountOf("atom").Equal(s.app.BankKeeper.GetBalance(ctx, feePayer.acc.GetAddress(), "atom").Amount))

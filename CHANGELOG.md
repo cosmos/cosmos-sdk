@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* [\#11693](https://github.com/cosmos/cosmos-sdk/pull/11693) Add validation for gentx cmd.
+
 ## [v0.44.8](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.44.8) - 2022-04-12
 
 ### Improvements

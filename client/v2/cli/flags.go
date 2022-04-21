@@ -6,10 +6,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-func (b *Builder) addFieldFlag(flags *pflag.FlagSet, field protoreflect.FieldDescriptor) {
-	name := strcase.ToKebab(string(field.Name()))
-	docs := field.ParentFile().SourceLocations().ByDescriptor(field).LeadingComments
-	flags.String(name, "", docs)
+func (b *Builder) getFlagType(field protoreflect.FieldDescriptor) FlagType {
 
 	if field.IsList() {
 	}
@@ -23,6 +20,7 @@ func (b *Builder) addFieldFlag(flags *pflag.FlagSet, field protoreflect.FieldDes
 	switch field.Kind() {
 	case protoreflect.BytesKind:
 	case protoreflect.StringKind:
+		return stringFlagType{}
 	case protoreflect.Uint32Kind:
 	case protoreflect.Fixed32Kind:
 	case protoreflect.Uint64Kind:
@@ -30,8 +28,44 @@ func (b *Builder) addFieldFlag(flags *pflag.FlagSet, field protoreflect.FieldDes
 	case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
 	case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
 	case protoreflect.BoolKind:
+		return boolFlagType{}
 	case protoreflect.EnumKind:
 	case protoreflect.MessageKind:
 	default:
 	}
+
+	//fmt.Printf("TODO: %v\n", field)
+	return nil
+}
+
+type flagValueClosure func() protoreflect.Value
+
+func (f flagValueClosure) Get() protoreflect.Value {
+	return f()
+}
+
+type stringFlagType struct{}
+
+func (s stringFlagType) AddFlag(set *pflag.FlagSet, field protoreflect.FieldDescriptor) FlagValue {
+	val := set.String(descriptorKebabName(field), "", descriptorDocs(field))
+	return flagValueClosure(func() protoreflect.Value {
+		return protoreflect.ValueOfString(*val)
+	})
+}
+
+type boolFlagType struct{}
+
+func (s boolFlagType) AddFlag(set *pflag.FlagSet, field protoreflect.FieldDescriptor) FlagValue {
+	val := set.Bool(descriptorKebabName(field), false, descriptorDocs(field))
+	return flagValueClosure(func() protoreflect.Value {
+		return protoreflect.ValueOfBool(*val)
+	})
+}
+
+func descriptorKebabName(descriptor protoreflect.Descriptor) string {
+	return strcase.ToKebab(string(descriptor.Name()))
+}
+
+func descriptorDocs(descriptor protoreflect.Descriptor) string {
+	return descriptor.ParentFile().SourceLocations().ByDescriptor(descriptor).LeadingComments
 }

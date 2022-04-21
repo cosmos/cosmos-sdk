@@ -5,7 +5,6 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -29,29 +28,29 @@ func (b *Builder) QueryMethodToCommand(serviceDescriptor protoreflect.ServiceDes
 	cmd := &cobra.Command{
 		Use:  protoNameToCliName(descriptor.Name()),
 		Long: docs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := cmd.Context()
-			clientConn := getClientConn(ctx)
-			input := inputType.New()
-			output := outputType.New()
-			err := clientConn.Invoke(ctx, methodName, input.Interface(), output.Interface())
-			if err != nil {
-				return err
-			}
-
-			bz, err := protojson.Marshal(output.Interface())
-			if err != nil {
-				return err
-			}
-
-			_, err = cmd.OutOrStdout().Write(bz)
-			return err
-		},
 	}
 
-	numFields := inputDesc.Fields().Len()
-	for i := 0; i < numFields; i++ {
-		b.addFieldFlag(cmd.Flags(), inputDesc.Fields().Get(i))
+	flagHandler := b.registerMessageFlagSet(cmd.Flags(), inputType)
+
+	jsonMarshalOptions := b.JSONMarshalOptions
+
+	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		ctx := cmd.Context()
+		clientConn := getClientConn(ctx)
+		input := flagHandler.buildMessage()
+		output := outputType.New()
+		err := clientConn.Invoke(ctx, methodName, input.Interface(), output.Interface())
+		if err != nil {
+			return err
+		}
+
+		bz, err := jsonMarshalOptions.Marshal(output.Interface())
+		if err != nil {
+			return err
+		}
+
+		_, err = fmt.Fprintln(cmd.OutOrStdout(), string(bz))
+		return err
 	}
 
 	return cmd

@@ -221,6 +221,10 @@ func (s *errorsTestSuite) TestGRPCStatus() {
 	// test wrapping
 	s.Require().Equal(codes.Unimplemented, grpcstatus.Code(ErrNotSupported.Wrap("test")))
 	s.Require().Equal(codes.FailedPrecondition, grpcstatus.Code(ErrConflict.Wrapf("test %s", "foo")))
+
+	status, ok = grpcstatus.FromError(ErrNotFound.Wrap("test"))
+	s.Require().True(ok)
+	s.Require().Equal("codespace testtesttest code 38: not found: test", status.Message())
 }
 
 func ExampleWrap() {

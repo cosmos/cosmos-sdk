@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	dbm "github.com/tendermint/tm-db"
 )
 
@@ -105,4 +106,31 @@ func CopyBytes(bz []byte) (ret []byte) {
 	ret = make([]byte, len(bz))
 	copy(ret, bz)
 	return ret
+}
+
+// AppendBytes combines the slices of bytes to one slice of bytes.
+func AppendBytes(args ...[]byte) []byte {
+	length := 0
+	for _, v := range args {
+		length += len(v)
+	}
+	res := make([]byte, length)
+
+	length = 0
+	for _, v := range args {
+		copy(res[length:length+len(v)], v)
+		length += len(v)
+	}
+
+	return res
+}
+
+// ParseByteSlice panics when store key length is not equal to the given length.
+func ParseByteSlice(key []byte, startIndex int, sliceLength int) ([]byte, int) {
+	neededLength := startIndex + sliceLength
+	endIndex := neededLength - 1
+	kv.AssertKeyAtLeastLength(key, neededLength)
+	byteSlice := key[startIndex:neededLength]
+
+	return byteSlice, endIndex
 }

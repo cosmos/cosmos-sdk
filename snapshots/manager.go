@@ -72,7 +72,6 @@ var (
 
 // NewManager creates a new manager.
 func NewManager(store *Store, opts types.SnapshotOptions, multistore types.Snapshotter, extensions map[string]types.ExtensionSnapshotter, logger log.Logger) *Manager {
-	multistore.SetSnapshotInterval(opts.Interval)
 	return &Manager{
 		store:      store,
 		opts:       opts,

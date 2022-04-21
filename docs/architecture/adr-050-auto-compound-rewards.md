@@ -30,3 +30,6 @@ However, it has been shown that there is a strong desire to auto-compound
 distribution rewards. As a result, there has been a proliferation of scripts, tooling
 and clients off-chain to facilitate such a mechanism. However, these methods are
 ad-hoc, often provide a cumbersome UX, and do not scale well to multiple networks.
+
+Thus, we propose a mechanism to modify the `x/distribution` module to allow for
+delegators to auto-compound their rewards on-chain.

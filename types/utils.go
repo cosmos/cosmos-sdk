@@ -108,8 +108,8 @@ func CopyBytes(bz []byte) (ret []byte) {
 	return ret
 }
 
-// AppendBytes combines the slices of bytes to one slice of bytes.
-func AppendBytes(args ...[]byte) []byte {
+// AppendLengthPrefixedBytes combines the slices of bytes to one slice of bytes.
+func AppendLengthPrefixedBytes(args ...[]byte) []byte {
 	length := 0
 	for _, v := range args {
 		length += len(v)
@@ -125,8 +125,8 @@ func AppendBytes(args ...[]byte) []byte {
 	return res
 }
 
-// ParseByteSlice panics when store key length is not equal to the given length.
-func ParseByteSlice(key []byte, startIndex int, sliceLength int) ([]byte, int) {
+// ParseLengthPrefixedBytes panics when store key length is not equal to the given length.
+func ParseLengthPrefixedBytes(key []byte, startIndex int, sliceLength int) ([]byte, int) {
 	neededLength := startIndex + sliceLength
 	endIndex := neededLength - 1
 	kv.AssertKeyAtLeastLength(key, neededLength)

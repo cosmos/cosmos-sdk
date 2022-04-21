@@ -34,7 +34,7 @@ func grantStoreKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType strin
 	m := conv.UnsafeStrToBytes(msgType)
 	granter = address.MustLengthPrefix(granter)
 	grantee = address.MustLengthPrefix(grantee)
-	key := sdk.AppendBytes(GrantKey, granter, grantee, m)
+	key := sdk.AppendLengthPrefixedBytes(GrantKey, granter, grantee, m)
 
 	return key
 }
@@ -44,11 +44,11 @@ func parseGrantStoreKey(key []byte) (granterAddr, granteeAddr sdk.AccAddress, ms
 	// key is of format:
 	// 0x01<granterAddressLen (1 Byte)><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes><msgType_Bytes>
 
-	granterAddrLen, granterAddrLenEndIndex := sdk.ParseByteSlice(key, 1, 1) // ignore key[0] since it is a prefix key
-	granterAddr, granterAddrEndIndex := sdk.ParseByteSlice(key, granterAddrLenEndIndex+1, int(granterAddrLen[0]))
+	granterAddrLen, granterAddrLenEndIndex := sdk.ParseLengthPrefixedBytes(key, 1, 1) // ignore key[0] since it is a prefix key
+	granterAddr, granterAddrEndIndex := sdk.ParseLengthPrefixedBytes(key, granterAddrLenEndIndex+1, int(granterAddrLen[0]))
 
-	granteeAddrLen, granteeAddrLenEndIndex := sdk.ParseByteSlice(key, granterAddrEndIndex+1, 1)
-	granteeAddr, granteeAddrEndIndex := sdk.ParseByteSlice(key, granteeAddrLenEndIndex+1, int(granteeAddrLen[0]))
+	granteeAddrLen, granteeAddrLenEndIndex := sdk.ParseLengthPrefixedBytes(key, granterAddrEndIndex+1, 1)
+	granteeAddr, granteeAddrEndIndex := sdk.ParseLengthPrefixedBytes(key, granteeAddrLenEndIndex+1, int(granteeAddrLen[0]))
 
 	kv.AssertKeyAtLeastLength(key, granteeAddrEndIndex+1)
 	return granterAddr, granteeAddr, conv.UnsafeBytesToStr(key[(granteeAddrEndIndex + 1):])
@@ -59,18 +59,18 @@ func parseGrantQueueKey(key []byte) (time.Time, sdk.AccAddress, sdk.AccAddress, 
 	// key is of format:
 	// 0x02<grant_expiration_Bytes><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes>
 
-	expBytes, expEndIndex := sdk.ParseByteSlice(key, 1, lenTime)
+	expBytes, expEndIndex := sdk.ParseLengthPrefixedBytes(key, 1, lenTime)
 
 	exp, err := sdk.ParseTimeBytes(expBytes)
 	if err != nil {
 		return exp, nil, nil, err
 	}
 
-	granterAddrLen, granterAddrLenEndIndex := sdk.ParseByteSlice(key, expEndIndex+1, 1)
-	granter, granterEndIndex := sdk.ParseByteSlice(key, granterAddrLenEndIndex+1, int(granterAddrLen[0]))
+	granterAddrLen, granterAddrLenEndIndex := sdk.ParseLengthPrefixedBytes(key, expEndIndex+1, 1)
+	granter, granterEndIndex := sdk.ParseLengthPrefixedBytes(key, granterAddrLenEndIndex+1, int(granterAddrLen[0]))
 
-	granteeAddrLen, granteeAddrLenEndIndex := sdk.ParseByteSlice(key, granterEndIndex+1, 1)
-	grantee, _ := sdk.ParseByteSlice(key, granteeAddrLenEndIndex+1, int(granteeAddrLen[0]))
+	granteeAddrLen, granteeAddrLenEndIndex := sdk.ParseLengthPrefixedBytes(key, granterEndIndex+1, 1)
+	grantee, _ := sdk.ParseLengthPrefixedBytes(key, granteeAddrLenEndIndex+1, int(granteeAddrLen[0]))
 
 	return exp, granter, grantee, nil
 }
@@ -84,7 +84,7 @@ func GrantQueueKey(expiration time.Time, granter sdk.AccAddress, grantee sdk.Acc
 	granter = address.MustLengthPrefix(granter)
 	grantee = address.MustLengthPrefix(grantee)
 
-	return sdk.AppendBytes(GrantQueuePrefix, exp, granter, grantee)
+	return sdk.AppendLengthPrefixedBytes(GrantQueuePrefix, exp, granter, grantee)
 }
 
 // GrantQueueTimePrefix - return grant queue time prefix

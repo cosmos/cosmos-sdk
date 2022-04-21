@@ -2371,7 +2371,7 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 				val.Address.String(),
 				groupID,
 				"AQ==",
-				"{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"4\", \"windows\":{\"voting_period\":\"1s\"}}",
+				"{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"4\", \"windows\":{\"voting_period\":\"60s\"}}",
 			},
 			commonFlags...,
 		),
@@ -2385,7 +2385,7 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 	s.Require().NoError(err, out.String())
 	var res group.QueryGroupPoliciesByGroupResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
-	groupPolicyAdress := res.GroupPolicies[0].Address
+	groupPolicyAddress := res.GroupPolicies[0].Address
 
 	testCases := []struct {
 		name      string
@@ -2398,7 +2398,7 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 			"member that leaves does not affect the threshold",
 			append(
 				[]string{
-					members[0],
+					members[2],
 					groupID,
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[2]),
 				},
@@ -2408,20 +2408,20 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 			"",
 			&sdk.TxResponse{},
 		},
-		{
-			"member that leaves affects the threshold",
-			append(
-				[]string{
-					members[2],
-					groupID,
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[2]),
-				},
-				commonFlags...,
-			),
-			true,
-			"failed to execute message",
-			&sdk.TxResponse{},
-		},
+		//{
+		//	"member that leaves affects the threshold",
+		//	append(
+		//		[]string{
+		//			members[2],
+		//			groupID,
+		//			fmt.Sprintf("--%s=%s", flags.FlagFrom, members[2]),
+		//		},
+		//		commonFlags...,
+		//	),
+		//	true,
+		//	"failed to execute message",
+		//	&sdk.TxResponse{},
+		//},
 	}
 
 	for _, tc := range testCases {
@@ -2431,27 +2431,46 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 			cmdSubmitProposal := client.MsgSubmitProposalCmd()
 			cmdLeaveGroup := client.MsgLeaveGroupCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmdLeaveGroup, tc.args)
-			require.NoError(err, out.String())
-			var resp sdk.TxResponse
-			require.NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-
+			// Submit proposal
 			submitPropossalArgs := append([]string{
 				s.createCLIProposal(
-					groupPolicyAdress, val.Address.String(),
-					groupPolicyAdress, val.Address.String(),
+					groupPolicyAddress, members[0],
+					groupPolicyAddress, members[0],
 					"",
 				),
 			},
 				commonFlags...,
 			)
+			var submitPropossalResp sdk.TxResponse
 			out, err = cli.ExecTestCLICmd(clientCtx, cmdSubmitProposal, submitPropossalArgs)
-			if tc.expectErr {
-				s.Require().Contains(out.String(), tc.errMsg)
-			} else {
+			fmt.Println("this is the subit proposal", out)
+			s.Require().NoError(err, out.String())
+			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &submitPropossalResp), out.String())
+			for _, memberAddress := range members {
+				out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgVoteCmd(),
+					append(
+						[]string{
+							"2",
+							memberAddress,
+							"VOTE_OPTION_YES",
+							"",
+						},
+						commonFlags...,
+					),
+				)
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+				s.Require().Equal(uint32(0), txResp.Code, out.String())
 			}
+
+			out, err := cli.ExecTestCLICmd(clientCtx, cmdLeaveGroup, tc.args)
+			fmt.Println("leave group: ", out)
+			fmt.Println("error", err.Error())
+			require.True(false)
+			require.NoError(err, out.String())
+			var resp sdk.TxResponse
+			require.NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+
 		})
 	}
 
@@ -2580,7 +2599,7 @@ func (s *IntegrationTestSuite) TestSubmitProposalAndUpdate() {
 		s.Require().Contains(out.String(), "out string is wrong")
 		s.Require().NotEqual(out.String(), "")
 		fmt.Println(out)
-		s.Require().True(false)
+		//s.Require().True(false)
 	})
 }
 func (s *IntegrationTestSuite) getGroupIdFromTxResponse(txResp sdk.TxResponse) string {

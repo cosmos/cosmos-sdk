@@ -2826,7 +2826,6 @@ func (s *TestSuite) TestPruneProposals() {
 	s.Require().NoError(err)
 
 	s.Run("Validate that prune proposal removes expired proposals", func() {
-		expectedErrorMsg := "load proposal: not found"
 		req := &group.MsgSubmitProposal{
 			GroupPolicyAddress: accountAddr.String(),
 			Proposers:          []string{addrs[1].String()},
@@ -2848,7 +2847,7 @@ func (s *TestSuite) TestPruneProposals() {
 		postPrune, err := s.keeper.Proposal(s.ctx, &queryProposal)
 		s.Require().Nil(postPrune)
 		s.Require().Error(err)
-		s.Require().Contains(err.Error(), expectedErrorMsg)
+		s.Require().Contains(err.Error(), "load proposal: not found")
 	})
 }
 

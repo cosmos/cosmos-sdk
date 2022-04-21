@@ -1,8 +1,12 @@
 package cli
 
 import (
+	"context"
+
+	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/pflag"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -15,6 +19,14 @@ func (b *Builder) getFlagType(field protoreflect.FieldDescriptor) FlagType {
 	}
 
 	if field.HasOptionalKeyword() {
+	}
+
+	scalar := proto.GetExtension(field.Options(), cosmos_proto.E_Scalar)
+	if scalar != nil {
+		b.init()
+		if flagType, ok := b.scalarFlagTypes[scalar.(string)]; ok {
+			return flagType
+		}
 	}
 
 	switch field.Kind() {
@@ -31,6 +43,10 @@ func (b *Builder) getFlagType(field protoreflect.FieldDescriptor) FlagType {
 		return boolFlagType{}
 	case protoreflect.EnumKind:
 	case protoreflect.MessageKind:
+		b.init()
+		if flagType, ok := b.messageFlagTypes[field.Message().FullName()]; ok {
+			return flagType
+		}
 	default:
 	}
 
@@ -46,7 +62,7 @@ func (f flagValueClosure) Get() protoreflect.Value {
 
 type stringFlagType struct{}
 
-func (s stringFlagType) AddFlag(set *pflag.FlagSet, field protoreflect.FieldDescriptor) FlagValue {
+func (s stringFlagType) AddFlag(ctx context.Context, set *pflag.FlagSet, field protoreflect.FieldDescriptor) FlagValue {
 	val := set.String(descriptorKebabName(field), "", descriptorDocs(field))
 	return flagValueClosure(func() protoreflect.Value {
 		return protoreflect.ValueOfString(*val)
@@ -55,7 +71,7 @@ func (s stringFlagType) AddFlag(set *pflag.FlagSet, field protoreflect.FieldDesc
 
 type boolFlagType struct{}
 
-func (s boolFlagType) AddFlag(set *pflag.FlagSet, field protoreflect.FieldDescriptor) FlagValue {
+func (s boolFlagType) AddFlag(ctx context.Context, set *pflag.FlagSet, field protoreflect.FieldDescriptor) FlagValue {
 	val := set.Bool(descriptorKebabName(field), false, descriptorDocs(field))
 	return flagValueClosure(func() protoreflect.Value {
 		return protoreflect.ValueOfBool(*val)

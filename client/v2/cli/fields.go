@@ -18,7 +18,7 @@ func (b *Builder) registerMessageFlagSet(set *pflag.FlagSet, messageType protore
 			// TODO get rid of this
 			continue
 		}
-		val := typ.AddFlag(set, field)
+		val := typ.AddFlag(nil, set, field)
 		handler.flagFieldPairs = append(handler.flagFieldPairs, struct {
 			value FlagValue
 			field protoreflect.FieldDescriptor

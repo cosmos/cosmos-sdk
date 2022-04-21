@@ -192,7 +192,7 @@ func (k BaseViewKeeper) spendableCoins(ctx sdk.Context, addr sdk.AccAddress) (sp
 	total = k.GetAllBalances(ctx, addr)
 	locked := k.LockedCoins(ctx, addr)
 
-	spendable, hasNeg := total.SafeSub(locked)
+	spendable, hasNeg := total.SafeSub(locked...)
 	if hasNeg {
 		spendable = sdk.NewCoins()
 		return

@@ -223,6 +223,9 @@ func (s queryServer) ABCIQuery(ctx context.Context, req *ABCIQueryRequest) (*ABC
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
+	if len(req.Path) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "empty query path")
+	}
 
 	if path := baseapp.SplitABCIQueryPath(req.Path); len(path) > 0 {
 		switch path[0] {

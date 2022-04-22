@@ -84,31 +84,6 @@ func TestEcho(t *testing.T) {
 		"--uints", "4",
 	)
 	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
-	//assert.DeepEqual(t, &testpb.EchoRequest{
-	//	U32:       0,
-	//	U64:       0,
-	//	Str:       "",
-	//	Bz:        nil,
-	//	Timestamp: nil,
-	//	Duration:  nil,
-	//	I32:       0,
-	//	I64:       0,
-	//	ABool:     false,
-	//	AnEnum:    0,
-	//	AMessage:  nil,
-	//	ACoin:     &basev1beta1.Coin{
-	//		Denom:  "",
-	//		Amount: "",
-	//	},
-	//	AnAddress: "",
-	//	Page:      &queryv1beta1.PageRequest{
-	//		Key:        nil,
-	//		Offset:     0,
-	//		Limit:      0,
-	//		CountTotal: false,
-	//		Reverse:    false,
-	//	},
-	//}, conn.lastResponse, protocmp.Transform())
 }
 
 func TestHelp(t *testing.T) {

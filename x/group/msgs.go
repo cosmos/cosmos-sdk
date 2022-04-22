@@ -1,13 +1,8 @@
 package group
 
 import (
-<<<<<<< HEAD
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
-
-=======
->>>>>>> 610b2eec6 (revert: replace all ModuleCdc instances with legacy.Cdc (#11680))
 	proto "github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"

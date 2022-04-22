@@ -1,11 +1,6 @@
 package authz
 
 import (
-<<<<<<< HEAD
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
-=======
-	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
->>>>>>> 610b2eec6 (revert: replace all ModuleCdc instances with legacy.Cdc (#11680))
 	"time"
 
 	"github.com/gogo/protobuf/proto"
@@ -14,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 )
 
 var (

@@ -11,15 +11,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/v2/internal/util"
 )
 
-type FieldBinder interface {
+// FieldValueBinder wraps a flag value in a way that allows it to be bound
+// to a particular field in a protobuf message.
+type FieldValueBinder interface {
 	Bind(message protoreflect.Message, field protoreflect.FieldDescriptor)
 }
 
+// Options specifies options for specific flags.
 type Options struct {
+
+	// Prefix is a prefix to prepend to all flags.
 	Prefix string
 }
 
-func (b *Builder) BindFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, field protoreflect.FieldDescriptor, options Options) FieldBinder {
+// AddFieldFlag adds a flag for the provided field to the flag set.
+func (b *Builder) AddFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, field protoreflect.FieldDescriptor, options Options) FieldValueBinder {
 	if field.Kind() == protoreflect.MessageKind && field.Message().FullName() == "cosmos.base.query.v1beta1.PageRequest" {
 		return b.bindPageRequest(ctx, flagSet, field)
 	}

@@ -8,6 +8,8 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"github.com/cosmos/cosmos-sdk/client/v2/internal/util"
 )
 
 type jsonMessageFlagType struct {
@@ -16,9 +18,9 @@ type jsonMessageFlagType struct {
 
 func (j jsonMessageFlagType) NewValue(_ context.Context, builder *Builder) pflag.Value {
 	return &jsonMessageFlagValue{
-		messageType:          builder.ResolveMessageType(j.messageDesc),
-		jsonMarshalOptions:   protojson.MarshalOptions{Resolver: builder.Resolver},
-		jsonUnmarshalOptions: protojson.UnmarshalOptions{Resolver: builder.Resolver},
+		messageType:          util.ResolveMessageType(builder.TypeResolver, j.messageDesc),
+		jsonMarshalOptions:   protojson.MarshalOptions{Resolver: builder.TypeResolver},
+		jsonUnmarshalOptions: protojson.UnmarshalOptions{Resolver: builder.TypeResolver},
 	}
 }
 

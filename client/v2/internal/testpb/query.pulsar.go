@@ -2,7 +2,6 @@
 package testpb
 
 import (
-	binary "encoding/binary"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
@@ -27,13 +26,7 @@ var (
 	fd_FooRequest_timestamp  protoreflect.FieldDescriptor
 	fd_FooRequest_duration   protoreflect.FieldDescriptor
 	fd_FooRequest_i32        protoreflect.FieldDescriptor
-	fd_FooRequest_s32        protoreflect.FieldDescriptor
-	fd_FooRequest_sf32       protoreflect.FieldDescriptor
 	fd_FooRequest_i64        protoreflect.FieldDescriptor
-	fd_FooRequest_s64        protoreflect.FieldDescriptor
-	fd_FooRequest_sf64       protoreflect.FieldDescriptor
-	fd_FooRequest_f32        protoreflect.FieldDescriptor
-	fd_FooRequest_f64        protoreflect.FieldDescriptor
 	fd_FooRequest_a_bool     protoreflect.FieldDescriptor
 	fd_FooRequest_an_enum    protoreflect.FieldDescriptor
 	fd_FooRequest_a_message  protoreflect.FieldDescriptor
@@ -52,13 +45,7 @@ func init() {
 	fd_FooRequest_timestamp = md_FooRequest.Fields().ByName("timestamp")
 	fd_FooRequest_duration = md_FooRequest.Fields().ByName("duration")
 	fd_FooRequest_i32 = md_FooRequest.Fields().ByName("i32")
-	fd_FooRequest_s32 = md_FooRequest.Fields().ByName("s32")
-	fd_FooRequest_sf32 = md_FooRequest.Fields().ByName("sf32")
 	fd_FooRequest_i64 = md_FooRequest.Fields().ByName("i64")
-	fd_FooRequest_s64 = md_FooRequest.Fields().ByName("s64")
-	fd_FooRequest_sf64 = md_FooRequest.Fields().ByName("sf64")
-	fd_FooRequest_f32 = md_FooRequest.Fields().ByName("f32")
-	fd_FooRequest_f64 = md_FooRequest.Fields().ByName("f64")
 	fd_FooRequest_a_bool = md_FooRequest.Fields().ByName("a_bool")
 	fd_FooRequest_an_enum = md_FooRequest.Fields().ByName("an_enum")
 	fd_FooRequest_a_message = md_FooRequest.Fields().ByName("a_message")
@@ -174,45 +161,9 @@ func (x *fastReflection_FooRequest) Range(f func(protoreflect.FieldDescriptor, p
 			return
 		}
 	}
-	if x.S32 != int32(0) {
-		value := protoreflect.ValueOfInt32(x.S32)
-		if !f(fd_FooRequest_s32, value) {
-			return
-		}
-	}
-	if x.Sf32 != int32(0) {
-		value := protoreflect.ValueOfInt32(x.Sf32)
-		if !f(fd_FooRequest_sf32, value) {
-			return
-		}
-	}
 	if x.I64 != int64(0) {
 		value := protoreflect.ValueOfInt64(x.I64)
 		if !f(fd_FooRequest_i64, value) {
-			return
-		}
-	}
-	if x.S64 != int64(0) {
-		value := protoreflect.ValueOfInt64(x.S64)
-		if !f(fd_FooRequest_s64, value) {
-			return
-		}
-	}
-	if x.Sf64 != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Sf64)
-		if !f(fd_FooRequest_sf64, value) {
-			return
-		}
-	}
-	if x.F32 != uint32(0) {
-		value := protoreflect.ValueOfUint32(x.F32)
-		if !f(fd_FooRequest_f32, value) {
-			return
-		}
-	}
-	if x.F64 != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.F64)
-		if !f(fd_FooRequest_f64, value) {
 			return
 		}
 	}
@@ -281,20 +232,8 @@ func (x *fastReflection_FooRequest) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.Duration != nil
 	case "testpb.FooRequest.i32":
 		return x.I32 != int32(0)
-	case "testpb.FooRequest.s32":
-		return x.S32 != int32(0)
-	case "testpb.FooRequest.sf32":
-		return x.Sf32 != int32(0)
 	case "testpb.FooRequest.i64":
 		return x.I64 != int64(0)
-	case "testpb.FooRequest.s64":
-		return x.S64 != int64(0)
-	case "testpb.FooRequest.sf64":
-		return x.Sf64 != int64(0)
-	case "testpb.FooRequest.f32":
-		return x.F32 != uint32(0)
-	case "testpb.FooRequest.f64":
-		return x.F64 != uint64(0)
 	case "testpb.FooRequest.a_bool":
 		return x.ABool != false
 	case "testpb.FooRequest.an_enum":
@@ -337,20 +276,8 @@ func (x *fastReflection_FooRequest) Clear(fd protoreflect.FieldDescriptor) {
 		x.Duration = nil
 	case "testpb.FooRequest.i32":
 		x.I32 = int32(0)
-	case "testpb.FooRequest.s32":
-		x.S32 = int32(0)
-	case "testpb.FooRequest.sf32":
-		x.Sf32 = int32(0)
 	case "testpb.FooRequest.i64":
 		x.I64 = int64(0)
-	case "testpb.FooRequest.s64":
-		x.S64 = int64(0)
-	case "testpb.FooRequest.sf64":
-		x.Sf64 = int64(0)
-	case "testpb.FooRequest.f32":
-		x.F32 = uint32(0)
-	case "testpb.FooRequest.f64":
-		x.F64 = uint64(0)
 	case "testpb.FooRequest.a_bool":
 		x.ABool = false
 	case "testpb.FooRequest.an_enum":
@@ -400,27 +327,9 @@ func (x *fastReflection_FooRequest) Get(descriptor protoreflect.FieldDescriptor)
 	case "testpb.FooRequest.i32":
 		value := x.I32
 		return protoreflect.ValueOfInt32(value)
-	case "testpb.FooRequest.s32":
-		value := x.S32
-		return protoreflect.ValueOfInt32(value)
-	case "testpb.FooRequest.sf32":
-		value := x.Sf32
-		return protoreflect.ValueOfInt32(value)
 	case "testpb.FooRequest.i64":
 		value := x.I64
 		return protoreflect.ValueOfInt64(value)
-	case "testpb.FooRequest.s64":
-		value := x.S64
-		return protoreflect.ValueOfInt64(value)
-	case "testpb.FooRequest.sf64":
-		value := x.Sf64
-		return protoreflect.ValueOfInt64(value)
-	case "testpb.FooRequest.f32":
-		value := x.F32
-		return protoreflect.ValueOfUint32(value)
-	case "testpb.FooRequest.f64":
-		value := x.F64
-		return protoreflect.ValueOfUint64(value)
 	case "testpb.FooRequest.a_bool":
 		value := x.ABool
 		return protoreflect.ValueOfBool(value)
@@ -473,20 +382,8 @@ func (x *fastReflection_FooRequest) Set(fd protoreflect.FieldDescriptor, value p
 		x.Duration = value.Message().Interface().(*durationpb.Duration)
 	case "testpb.FooRequest.i32":
 		x.I32 = int32(value.Int())
-	case "testpb.FooRequest.s32":
-		x.S32 = int32(value.Int())
-	case "testpb.FooRequest.sf32":
-		x.Sf32 = int32(value.Int())
 	case "testpb.FooRequest.i64":
 		x.I64 = value.Int()
-	case "testpb.FooRequest.s64":
-		x.S64 = value.Int()
-	case "testpb.FooRequest.sf64":
-		x.Sf64 = value.Int()
-	case "testpb.FooRequest.f32":
-		x.F32 = uint32(value.Uint())
-	case "testpb.FooRequest.f64":
-		x.F64 = value.Uint()
 	case "testpb.FooRequest.a_bool":
 		x.ABool = value.Bool()
 	case "testpb.FooRequest.an_enum":
@@ -554,20 +451,8 @@ func (x *fastReflection_FooRequest) Mutable(fd protoreflect.FieldDescriptor) pro
 		panic(fmt.Errorf("field bz of message testpb.FooRequest is not mutable"))
 	case "testpb.FooRequest.i32":
 		panic(fmt.Errorf("field i32 of message testpb.FooRequest is not mutable"))
-	case "testpb.FooRequest.s32":
-		panic(fmt.Errorf("field s32 of message testpb.FooRequest is not mutable"))
-	case "testpb.FooRequest.sf32":
-		panic(fmt.Errorf("field sf32 of message testpb.FooRequest is not mutable"))
 	case "testpb.FooRequest.i64":
 		panic(fmt.Errorf("field i64 of message testpb.FooRequest is not mutable"))
-	case "testpb.FooRequest.s64":
-		panic(fmt.Errorf("field s64 of message testpb.FooRequest is not mutable"))
-	case "testpb.FooRequest.sf64":
-		panic(fmt.Errorf("field sf64 of message testpb.FooRequest is not mutable"))
-	case "testpb.FooRequest.f32":
-		panic(fmt.Errorf("field f32 of message testpb.FooRequest is not mutable"))
-	case "testpb.FooRequest.f64":
-		panic(fmt.Errorf("field f64 of message testpb.FooRequest is not mutable"))
 	case "testpb.FooRequest.a_bool":
 		panic(fmt.Errorf("field a_bool of message testpb.FooRequest is not mutable"))
 	case "testpb.FooRequest.an_enum":
@@ -603,20 +488,8 @@ func (x *fastReflection_FooRequest) NewField(fd protoreflect.FieldDescriptor) pr
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "testpb.FooRequest.i32":
 		return protoreflect.ValueOfInt32(int32(0))
-	case "testpb.FooRequest.s32":
-		return protoreflect.ValueOfInt32(int32(0))
-	case "testpb.FooRequest.sf32":
-		return protoreflect.ValueOfInt32(int32(0))
 	case "testpb.FooRequest.i64":
 		return protoreflect.ValueOfInt64(int64(0))
-	case "testpb.FooRequest.s64":
-		return protoreflect.ValueOfInt64(int64(0))
-	case "testpb.FooRequest.sf64":
-		return protoreflect.ValueOfInt64(int64(0))
-	case "testpb.FooRequest.f32":
-		return protoreflect.ValueOfUint32(uint32(0))
-	case "testpb.FooRequest.f64":
-		return protoreflect.ValueOfUint64(uint64(0))
 	case "testpb.FooRequest.a_bool":
 		return protoreflect.ValueOfBool(false)
 	case "testpb.FooRequest.an_enum":
@@ -726,26 +599,8 @@ func (x *fastReflection_FooRequest) ProtoMethods() *protoiface.Methods {
 		if x.I32 != 0 {
 			n += 1 + runtime.Sov(uint64(x.I32))
 		}
-		if x.S32 != 0 {
-			n += 1 + runtime.Soz(uint64(x.S32))
-		}
-		if x.Sf32 != 0 {
-			n += 5
-		}
 		if x.I64 != 0 {
 			n += 1 + runtime.Sov(uint64(x.I64))
-		}
-		if x.S64 != 0 {
-			n += 1 + runtime.Soz(uint64(x.S64))
-		}
-		if x.Sf64 != 0 {
-			n += 9
-		}
-		if x.F32 != 0 {
-			n += 5
-		}
-		if x.F64 != 0 {
-			n += 9
 		}
 		if x.ABool {
 			n += 2
@@ -872,44 +727,10 @@ func (x *fastReflection_FooRequest) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x78
 		}
-		if x.F64 != 0 {
-			i -= 8
-			binary.LittleEndian.PutUint64(dAtA[i:], uint64(x.F64))
-			i--
-			dAtA[i] = 0x71
-		}
-		if x.F32 != 0 {
-			i -= 4
-			binary.LittleEndian.PutUint32(dAtA[i:], uint32(x.F32))
-			i--
-			dAtA[i] = 0x6d
-		}
-		if x.Sf64 != 0 {
-			i -= 8
-			binary.LittleEndian.PutUint64(dAtA[i:], uint64(x.Sf64))
-			i--
-			dAtA[i] = 0x61
-		}
-		if x.S64 != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64((uint64(x.S64)<<1)^uint64((x.S64>>63))))
-			i--
-			dAtA[i] = 0x58
-		}
 		if x.I64 != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.I64))
 			i--
 			dAtA[i] = 0x50
-		}
-		if x.Sf32 != 0 {
-			i -= 4
-			binary.LittleEndian.PutUint32(dAtA[i:], uint32(x.Sf32))
-			i--
-			dAtA[i] = 0x4d
-		}
-		if x.S32 != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64((uint32(x.S32)<<1)^uint32((x.S32>>31))))
-			i--
-			dAtA[i] = 0x40
 		}
 		if x.I32 != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.I32))
@@ -1212,37 +1033,6 @@ func (x *fastReflection_FooRequest) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
-			case 8:
-				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field S32", wireType)
-				}
-				var v int32
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					v |= int32(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				v = int32((uint32(v) >> 1) ^ uint32(((v&1)<<31)>>31))
-				x.S32 = v
-			case 9:
-				if wireType != 5 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Sf32", wireType)
-				}
-				x.Sf32 = 0
-				if (iNdEx + 4) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Sf32 = int32(binary.LittleEndian.Uint32(dAtA[iNdEx:]))
-				iNdEx += 4
 			case 10:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field I64", wireType)
@@ -1262,57 +1052,6 @@ func (x *fastReflection_FooRequest) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
-			case 11:
-				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field S64", wireType)
-				}
-				var v uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					v |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				v = (v >> 1) ^ uint64((int64(v&1)<<63)>>63)
-				x.S64 = int64(v)
-			case 12:
-				if wireType != 1 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Sf64", wireType)
-				}
-				x.Sf64 = 0
-				if (iNdEx + 8) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Sf64 = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-				iNdEx += 8
-			case 13:
-				if wireType != 5 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field F32", wireType)
-				}
-				x.F32 = 0
-				if (iNdEx + 4) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.F32 = uint32(binary.LittleEndian.Uint32(dAtA[iNdEx:]))
-				iNdEx += 4
-			case 14:
-				if wireType != 1 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field F64", wireType)
-				}
-				x.F64 = 0
-				if (iNdEx + 8) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.F64 = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-				iNdEx += 8
 			case 15:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ABool", wireType)
@@ -1528,12 +1267,16 @@ func (x *fastReflection_FooRequest) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_AMessage protoreflect.MessageDescriptor
+	md_AMessage     protoreflect.MessageDescriptor
+	fd_AMessage_bar protoreflect.FieldDescriptor
+	fd_AMessage_baz protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_testpb_query_proto_init()
 	md_AMessage = File_testpb_query_proto.Messages().ByName("AMessage")
+	fd_AMessage_bar = md_AMessage.Fields().ByName("bar")
+	fd_AMessage_baz = md_AMessage.Fields().ByName("baz")
 }
 
 var _ protoreflect.Message = (*fastReflection_AMessage)(nil)
@@ -1601,6 +1344,18 @@ func (x *fastReflection_AMessage) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_AMessage) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Bar != "" {
+		value := protoreflect.ValueOfString(x.Bar)
+		if !f(fd_AMessage_bar, value) {
+			return
+		}
+	}
+	if x.Baz != int32(0) {
+		value := protoreflect.ValueOfInt32(x.Baz)
+		if !f(fd_AMessage_baz, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -1616,6 +1371,10 @@ func (x *fastReflection_AMessage) Range(f func(protoreflect.FieldDescriptor, pro
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_AMessage) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
+	case "testpb.AMessage.bar":
+		return x.Bar != ""
+	case "testpb.AMessage.baz":
+		return x.Baz != int32(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.AMessage"))
@@ -1632,6 +1391,10 @@ func (x *fastReflection_AMessage) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_AMessage) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
+	case "testpb.AMessage.bar":
+		x.Bar = ""
+	case "testpb.AMessage.baz":
+		x.Baz = int32(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.AMessage"))
@@ -1648,6 +1411,12 @@ func (x *fastReflection_AMessage) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_AMessage) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
+	case "testpb.AMessage.bar":
+		value := x.Bar
+		return protoreflect.ValueOfString(value)
+	case "testpb.AMessage.baz":
+		value := x.Baz
+		return protoreflect.ValueOfInt32(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.AMessage"))
@@ -1668,6 +1437,10 @@ func (x *fastReflection_AMessage) Get(descriptor protoreflect.FieldDescriptor) p
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_AMessage) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
+	case "testpb.AMessage.bar":
+		x.Bar = value.Interface().(string)
+	case "testpb.AMessage.baz":
+		x.Baz = int32(value.Int())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.AMessage"))
@@ -1688,6 +1461,10 @@ func (x *fastReflection_AMessage) Set(fd protoreflect.FieldDescriptor, value pro
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_AMessage) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "testpb.AMessage.bar":
+		panic(fmt.Errorf("field bar of message testpb.AMessage is not mutable"))
+	case "testpb.AMessage.baz":
+		panic(fmt.Errorf("field baz of message testpb.AMessage is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.AMessage"))
@@ -1701,6 +1478,10 @@ func (x *fastReflection_AMessage) Mutable(fd protoreflect.FieldDescriptor) proto
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_AMessage) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "testpb.AMessage.bar":
+		return protoreflect.ValueOfString("")
+	case "testpb.AMessage.baz":
+		return protoreflect.ValueOfInt32(int32(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.AMessage"))
@@ -1770,6 +1551,13 @@ func (x *fastReflection_AMessage) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
+		l = len(x.Bar)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Baz != 0 {
+			n += 1 + runtime.Sov(uint64(x.Baz))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -1798,6 +1586,18 @@ func (x *fastReflection_AMessage) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Baz != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Baz))
+			i--
+			dAtA[i] = 0x10
+		}
+		if len(x.Bar) > 0 {
+			i -= len(x.Bar)
+			copy(dAtA[i:], x.Bar)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Bar)))
+			i--
+			dAtA[i] = 0xa
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -1848,6 +1648,57 @@ func (x *fastReflection_AMessage) ProtoMethods() *protoiface.Methods {
 				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: AMessage: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Bar", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Bar = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Baz", wireType)
+				}
+				x.Baz = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Baz |= int32(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -2320,13 +2171,7 @@ type FooRequest struct {
 	Timestamp *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	Duration  *durationpb.Duration   `protobuf:"bytes,6,opt,name=duration,proto3" json:"duration,omitempty"`
 	I32       int32                  `protobuf:"varint,7,opt,name=i32,proto3" json:"i32,omitempty"`
-	S32       int32                  `protobuf:"zigzag32,8,opt,name=s32,proto3" json:"s32,omitempty"`
-	Sf32      int32                  `protobuf:"fixed32,9,opt,name=sf32,proto3" json:"sf32,omitempty"`
 	I64       int64                  `protobuf:"varint,10,opt,name=i64,proto3" json:"i64,omitempty"`
-	S64       int64                  `protobuf:"zigzag64,11,opt,name=s64,proto3" json:"s64,omitempty"`
-	Sf64      int64                  `protobuf:"fixed64,12,opt,name=sf64,proto3" json:"sf64,omitempty"`
-	F32       uint32                 `protobuf:"fixed32,13,opt,name=f32,proto3" json:"f32,omitempty"`
-	F64       uint64                 `protobuf:"fixed64,14,opt,name=f64,proto3" json:"f64,omitempty"`
 	ABool     bool                   `protobuf:"varint,15,opt,name=a_bool,json=aBool,proto3" json:"a_bool,omitempty"`
 	AnEnum    Enum                   `protobuf:"varint,16,opt,name=an_enum,json=anEnum,proto3,enum=testpb.Enum" json:"an_enum,omitempty"`
 	AMessage  *AMessage              `protobuf:"bytes,17,opt,name=a_message,json=aMessage,proto3" json:"a_message,omitempty"`
@@ -2404,51 +2249,9 @@ func (x *FooRequest) GetI32() int32 {
 	return 0
 }
 
-func (x *FooRequest) GetS32() int32 {
-	if x != nil {
-		return x.S32
-	}
-	return 0
-}
-
-func (x *FooRequest) GetSf32() int32 {
-	if x != nil {
-		return x.Sf32
-	}
-	return 0
-}
-
 func (x *FooRequest) GetI64() int64 {
 	if x != nil {
 		return x.I64
-	}
-	return 0
-}
-
-func (x *FooRequest) GetS64() int64 {
-	if x != nil {
-		return x.S64
-	}
-	return 0
-}
-
-func (x *FooRequest) GetSf64() int64 {
-	if x != nil {
-		return x.Sf64
-	}
-	return 0
-}
-
-func (x *FooRequest) GetF32() uint32 {
-	if x != nil {
-		return x.F32
-	}
-	return 0
-}
-
-func (x *FooRequest) GetF64() uint64 {
-	if x != nil {
-		return x.F64
 	}
 	return 0
 }
@@ -2499,6 +2302,9 @@ type AMessage struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
+
+	Bar string `protobuf:"bytes,1,opt,name=bar,proto3" json:"bar,omitempty"`
+	Baz int32  `protobuf:"varint,2,opt,name=baz,proto3" json:"baz,omitempty"`
 }
 
 func (x *AMessage) Reset() {
@@ -2519,6 +2325,20 @@ func (*AMessage) ProtoMessage() {}
 // Deprecated: Use AMessage.ProtoReflect.Descriptor instead.
 func (*AMessage) Descriptor() ([]byte, []int) {
 	return file_testpb_query_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *AMessage) GetBar() string {
+	if x != nil {
+		return x.Bar
+	}
+	return ""
+}
+
+func (x *AMessage) GetBaz() int32 {
+	if x != nil {
+		return x.Baz
+	}
+	return 0
 }
 
 type FooResponse struct {
@@ -2562,7 +2382,7 @@ var file_testpb_query_proto_rawDesc = []byte{
 	0x74, 0x61, 0x31, 0x2f, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73,
 	0x65, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x22, 0xeb, 0x04, 0x0a, 0x0a, 0x46, 0x6f, 0x6f, 0x52, 0x65, 0x71, 0x75,
+	0x72, 0x6f, 0x74, 0x6f, 0x22, 0xfb, 0x03, 0x0a, 0x0a, 0x46, 0x6f, 0x6f, 0x52, 0x65, 0x71, 0x75,
 	0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x33, 0x32, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d,
 	0x52, 0x03, 0x75, 0x33, 0x32, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x36, 0x34, 0x18, 0x02, 0x20, 0x01,
 	0x28, 0x04, 0x52, 0x03, 0x75, 0x36, 0x34, 0x12, 0x10, 0x0a, 0x03, 0x73, 0x74, 0x72, 0x18, 0x03,
@@ -2576,14 +2396,7 @@ var file_testpb_query_proto_rawDesc = []byte{
 	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e,
 	0x52, 0x08, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x10, 0x0a, 0x03, 0x69, 0x33,
 	0x32, 0x18, 0x07, 0x20, 0x01, 0x28, 0x05, 0x52, 0x03, 0x69, 0x33, 0x32, 0x12, 0x10, 0x0a, 0x03,
-	0x73, 0x33, 0x32, 0x18, 0x08, 0x20, 0x01, 0x28, 0x11, 0x52, 0x03, 0x73, 0x33, 0x32, 0x12, 0x12,
-	0x0a, 0x04, 0x73, 0x66, 0x33, 0x32, 0x18, 0x09, 0x20, 0x01, 0x28, 0x0f, 0x52, 0x04, 0x73, 0x66,
-	0x33, 0x32, 0x12, 0x10, 0x0a, 0x03, 0x69, 0x36, 0x34, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x03, 0x52,
-	0x03, 0x69, 0x36, 0x34, 0x12, 0x10, 0x0a, 0x03, 0x73, 0x36, 0x34, 0x18, 0x0b, 0x20, 0x01, 0x28,
-	0x12, 0x52, 0x03, 0x73, 0x36, 0x34, 0x12, 0x12, 0x0a, 0x04, 0x73, 0x66, 0x36, 0x34, 0x18, 0x0c,
-	0x20, 0x01, 0x28, 0x10, 0x52, 0x04, 0x73, 0x66, 0x36, 0x34, 0x12, 0x10, 0x0a, 0x03, 0x66, 0x33,
-	0x32, 0x18, 0x0d, 0x20, 0x01, 0x28, 0x07, 0x52, 0x03, 0x66, 0x33, 0x32, 0x12, 0x10, 0x0a, 0x03,
-	0x66, 0x36, 0x34, 0x18, 0x0e, 0x20, 0x01, 0x28, 0x06, 0x52, 0x03, 0x66, 0x36, 0x34, 0x12, 0x15,
+	0x69, 0x36, 0x34, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x03, 0x52, 0x03, 0x69, 0x36, 0x34, 0x12, 0x15,
 	0x0a, 0x06, 0x61, 0x5f, 0x62, 0x6f, 0x6f, 0x6c, 0x18, 0x0f, 0x20, 0x01, 0x28, 0x08, 0x52, 0x05,
 	0x61, 0x42, 0x6f, 0x6f, 0x6c, 0x12, 0x25, 0x0a, 0x07, 0x61, 0x6e, 0x5f, 0x65, 0x6e, 0x75, 0x6d,
 	0x18, 0x10, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x0c, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e,
@@ -2601,27 +2414,30 @@ var file_testpb_query_proto_rawDesc = []byte{
 	0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61,
 	0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
 	0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x04, 0x70, 0x61,
-	0x67, 0x65, 0x22, 0x0a, 0x0a, 0x08, 0x41, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0x0d,
-	0x0a, 0x0b, 0x46, 0x6f, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x2a, 0x64, 0x0a,
-	0x04, 0x45, 0x6e, 0x75, 0x6d, 0x12, 0x14, 0x0a, 0x10, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x55, 0x4e,
-	0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x0c, 0x0a, 0x08, 0x45,
-	0x4e, 0x55, 0x4d, 0x5f, 0x4f, 0x4e, 0x45, 0x10, 0x01, 0x12, 0x0c, 0x0a, 0x08, 0x45, 0x4e, 0x55,
-	0x4d, 0x5f, 0x54, 0x57, 0x4f, 0x10, 0x02, 0x12, 0x0d, 0x0a, 0x09, 0x45, 0x4e, 0x55, 0x4d, 0x5f,
-	0x46, 0x49, 0x56, 0x45, 0x10, 0x05, 0x12, 0x1b, 0x0a, 0x0e, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x4e,
-	0x45, 0x47, 0x5f, 0x54, 0x48, 0x52, 0x45, 0x45, 0x10, 0xfd, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-	0xff, 0xff, 0x01, 0x32, 0x37, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x2e, 0x0a, 0x03,
-	0x46, 0x6f, 0x6f, 0x12, 0x12, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x46, 0x6f, 0x6f,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x13, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62,
-	0x2e, 0x46, 0x6f, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x88, 0x01, 0x0a,
-	0x0a, 0x63, 0x6f, 0x6d, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x42, 0x0a, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x36, 0x67, 0x69, 0x74, 0x68, 0x75,
-	0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x2f, 0x76,
-	0x32, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x70,
-	0x62, 0xa2, 0x02, 0x03, 0x54, 0x58, 0x58, 0xaa, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62,
-	0xca, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0xe2, 0x02, 0x12, 0x54, 0x65, 0x73, 0x74,
-	0x70, 0x62, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02,
-	0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x67, 0x65, 0x22, 0x2e, 0x0a, 0x08, 0x41, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x10,
+	0x0a, 0x03, 0x62, 0x61, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x62, 0x61, 0x72,
+	0x12, 0x10, 0x0a, 0x03, 0x62, 0x61, 0x7a, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x03, 0x62,
+	0x61, 0x7a, 0x22, 0x0d, 0x0a, 0x0b, 0x46, 0x6f, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x2a, 0x64, 0x0a, 0x04, 0x45, 0x6e, 0x75, 0x6d, 0x12, 0x14, 0x0a, 0x10, 0x45, 0x4e, 0x55,
+	0x4d, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12,
+	0x0c, 0x0a, 0x08, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x4f, 0x4e, 0x45, 0x10, 0x01, 0x12, 0x0c, 0x0a,
+	0x08, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x54, 0x57, 0x4f, 0x10, 0x02, 0x12, 0x0d, 0x0a, 0x09, 0x45,
+	0x4e, 0x55, 0x4d, 0x5f, 0x46, 0x49, 0x56, 0x45, 0x10, 0x05, 0x12, 0x1b, 0x0a, 0x0e, 0x45, 0x4e,
+	0x55, 0x4d, 0x5f, 0x4e, 0x45, 0x47, 0x5f, 0x54, 0x48, 0x52, 0x45, 0x45, 0x10, 0xfd, 0xff, 0xff,
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01, 0x32, 0x37, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x12, 0x2e, 0x0a, 0x03, 0x46, 0x6f, 0x6f, 0x12, 0x12, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62,
+	0x2e, 0x46, 0x6f, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x13, 0x2e, 0x74, 0x65,
+	0x73, 0x74, 0x70, 0x62, 0x2e, 0x46, 0x6f, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x42, 0x88, 0x01, 0x0a, 0x0a, 0x63, 0x6f, 0x6d, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x42,
+	0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x36, 0x67,
+	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x63, 0x6c, 0x69, 0x65,
+	0x6e, 0x74, 0x2f, 0x76, 0x32, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x74,
+	0x65, 0x73, 0x74, 0x70, 0x62, 0xa2, 0x02, 0x03, 0x54, 0x58, 0x58, 0xaa, 0x02, 0x06, 0x54, 0x65,
+	0x73, 0x74, 0x70, 0x62, 0xca, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0xe2, 0x02, 0x12,
+	0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
+	0x74, 0x61, 0xea, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x33,
 }
 
 var (

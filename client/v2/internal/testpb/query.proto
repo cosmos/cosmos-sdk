@@ -22,13 +22,7 @@ message FooRequest {
   google.protobuf.Timestamp timestamp = 5;
   google.protobuf.Duration  duration = 6;
   int32                     i32 = 7;
-  sint32                    s32 = 8;
-  sfixed32                  sf32 = 9;
   int64                     i64 = 10;
-  sint64                    s64 = 11;
-  sfixed64                  sf64 = 12;
-  fixed32                   f32 = 13;
-  fixed64                   f64 = 14;
   bool                      a_bool = 15;
   Enum                      an_enum = 16;
   AMessage a_message = 17;
@@ -46,7 +40,8 @@ enum Enum {
 }
 
 message AMessage {
-
+  string bar = 1;
+  int32 baz = 2;
 }
 
 message FooResponse {

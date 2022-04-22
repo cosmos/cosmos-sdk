@@ -6,16 +6,16 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 )
 
-type Options struct {
+type Builder struct {
 	Resolver interface {
 		protoregistry.MessageTypeResolver
 		protoregistry.ExtensionTypeResolver
 	}
-	messageFlagTypes map[protoreflect.FullName]interface{}
-	scalarFlagTypes  map[string]interface{}
+	messageFlagTypes map[protoreflect.FullName]Type
+	scalarFlagTypes  map[string]Type
 }
 
-func (b *Options) resolverMessageType(descriptor protoreflect.MessageDescriptor) protoreflect.MessageType {
+func (b *Builder) ResolveMessageType(descriptor protoreflect.MessageDescriptor) protoreflect.MessageType {
 	resolver := b.Resolver
 	if resolver == nil {
 		resolver = protoregistry.GlobalTypes
@@ -29,24 +29,25 @@ func (b *Options) resolverMessageType(descriptor protoreflect.MessageDescriptor)
 	return dynamicpb.NewMessageType(descriptor)
 }
 
-func (b *Options) init() {
+func (b *Builder) init() {
 	if b.messageFlagTypes == nil {
-		b.messageFlagTypes = map[protoreflect.FullName]interface{}{}
-		// TODO b.messageFlagTypes["cosmos.base.query.v1beta1.PageRequest"] = pageRequestTYpe{}
+		b.messageFlagTypes = map[protoreflect.FullName]Type{}
+		b.messageFlagTypes["google.protobuf.Timestamp"] = timestampType{}
+		b.messageFlagTypes["google.protobuf.Duration"] = durationType{}
 	}
 
 	if b.scalarFlagTypes == nil {
-		b.scalarFlagTypes = map[string]interface{}{}
+		b.scalarFlagTypes = map[string]Type{}
 		b.scalarFlagTypes["cosmos.AddressString"] = addressStringType{}
 	}
 }
 
-func (b *Options) DefineMessageFlagType(messageName protoreflect.FullName, flagType Type) {
+func (b *Builder) DefineMessageFlagType(messageName protoreflect.FullName, flagType Type) {
 	b.init()
 	b.messageFlagTypes[messageName] = flagType
 }
 
-func (b *Options) DefineScalarFlagType(scalarName string, flagType Type) {
+func (b *Builder) DefineScalarFlagType(scalarName string, flagType Type) {
 	b.init()
 	b.scalarFlagTypes[scalarName] = flagType
 }

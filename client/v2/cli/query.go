@@ -5,39 +5,61 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
+
+	"github.com/cosmos/cosmos-sdk/client/v2/cli/flag"
+	"github.com/cosmos/cosmos-sdk/client/v2/internal/util"
 )
 
-func (b *Builder) AddQueryService(command *cobra.Command, descriptor protoreflect.ServiceDescriptor) {
-	methods := descriptor.Methods()
+func (b *Builder) AddQueryServiceCommands(command *cobra.Command, serviceName protoreflect.FullName) *cobra.Command {
+	resolver := b.FileResolver
+	if resolver == nil {
+		resolver = protoregistry.GlobalFiles
+	}
+	descriptor, err := resolver.FindDescriptorByName(serviceName)
+	if err != nil {
+		panic(err)
+	}
+
+	service := descriptor.(protoreflect.ServiceDescriptor)
+	methods := service.Methods()
 	n := methods.Len()
 	for i := 0; i < n; i++ {
-		cmd := b.QueryMethodToCommand(descriptor, methods.Get(i))
+		cmd := b.CreateQueryMethodCommand(service, methods.Get(i))
 		command.AddCommand(cmd)
 	}
+	return command
 }
 
-func (b *Builder) QueryMethodToCommand(serviceDescriptor protoreflect.ServiceDescriptor, descriptor protoreflect.MethodDescriptor) *cobra.Command {
-	docs := descriptorDocs(descriptor)
+func (b *Builder) CreateQueryMethodCommand(serviceDescriptor protoreflect.ServiceDescriptor, descriptor protoreflect.MethodDescriptor) *cobra.Command {
+	docs := util.DescriptorDocs(descriptor)
 	getClientConn := b.GetClientConn
 	methodName := fmt.Sprintf("/%s/%s", serviceDescriptor.FullName(), descriptor.Name())
 
 	inputDesc := descriptor.Input()
-	inputType := b.resolverMessageType(inputDesc)
-	outputType := b.resolverMessageType(descriptor.Output())
+	inputType := b.ResolveMessageType(inputDesc)
+	outputType := b.ResolveMessageType(descriptor.Output())
 	cmd := &cobra.Command{
 		Use:  protoNameToCliName(descriptor.Name()),
 		Long: docs,
 	}
 
-	flagHandler := b.registerMessageFlagSet(cmd.Context(), cmd.Flags(), inputType)
+	binder := b.RegisterMessageFlags(cmd.Context(), cmd.Flags(), inputType, flag.Options{})
 
-	jsonMarshalOptions := b.JSONMarshalOptions
+	jsonMarshalOptions := protojson.MarshalOptions{
+		Indent:          "  ",
+		UseProtoNames:   true,
+		UseEnumNumbers:  false,
+		EmitUnpopulated: true,
+		Resolver:        b.Resolver,
+	}
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Context()
 		clientConn := getClientConn(ctx)
-		input := flagHandler.buildMessage()
+		input := binder.BuildMessage()
 		output := outputType.New()
 		err := clientConn.Invoke(ctx, methodName, input.Interface(), output.Interface())
 		if err != nil {

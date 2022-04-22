@@ -9,7 +9,7 @@ import (
 
 type addressStringType struct{}
 
-func (a addressStringType) NewValue(_ context.Context, _ *Options) pflag.Value {
+func (a addressStringType) NewValue(_ context.Context, _ *Builder) pflag.Value {
 	return &addressValue{}
 }
 

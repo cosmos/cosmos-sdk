@@ -1,6 +1,9 @@
 package flag
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -15,7 +18,8 @@ func bindSimpleListFlag(flagSet *pflag.FlagSet, kind protoreflect.Kind, name, sh
 			}
 		})
 	case protoreflect.BytesKind:
-		panic("TODO")
+		// TODO
+		return nil
 	case protoreflect.Uint32Kind, protoreflect.Fixed32Kind,
 		protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
 		val := flagSet.UintSliceP(name, shorthand, nil, usage)
@@ -50,63 +54,48 @@ func (f listValue) AppendTo(list protoreflect.List) {
 	f(list)
 }
 
-//type compositeListType struct {
-//	simpleType Type
-//}
-//
-//func (t compositeListType) NewValue(_ context.Context, _ *Options) pflag.Value {
-//	return &compositeListValue{}
-//}
-//
-//func (t compositeListType) DefaultValue() string {
-//	return ""
-//}
-//
-//type compositeListValue struct {
-//	simpleType Type
-//	values []protoreflect.Value
-//	changed bool
-//}
-//
-//func readAsCSV(val string) ([]string, error) {
-//	if val == "" {
-//		return []string{}, nil
-//	}
-//	stringReader := strings.NewReader(val)
-//	csvReader := csv.NewReader(stringReader)
-//	return csvReader.Read()
-//}
-//
-//func writeAsCSV(vals []string) (string, error) {
-//	b := &bytes.Buffer{}
-//	w := csv.NewWriter(b)
-//	err := w.Write(vals)
-//	if err != nil {
-//		return "", err
-//	}
-//	w.Flush()
-//	return strings.TrimSuffix(b.String(), "\n"), nil
-//}
-//
-//func (c compositeListValue) String() string {
-//	//TODO implement me
-//	panic("implement me")
-//}
-//
-//func (c *compositeListValue) Set(val string) error {
-//	v, err := readAsCSV(val)
-//	if err != nil {
-//		return err
-//	}
-//	if !c.changed {
-//		*c.values = v
-//	} else {
-//		*c.values = append(*c.values, v...)
-//	}
-//	c.changed = true
-//	return nil
-//}
-//
-//func (c compositeListValue) Type() string {
-//	return fmt.Sprintf("slice of %s", c.simpleType)
-//}
+type compositeListType struct {
+	simpleType Type
+}
+
+func (t compositeListType) NewValue(ctx context.Context, opts *Builder) pflag.Value {
+	return &compositeListValue{
+		simpleType: t.simpleType,
+		values:     nil,
+		ctx:        ctx,
+		opts:       opts,
+	}
+}
+
+func (t compositeListType) DefaultValue() string {
+	return ""
+}
+
+type compositeListValue struct {
+	simpleType Type
+	values     []protoreflect.Value
+	ctx        context.Context
+	opts       *Builder
+}
+
+func (c compositeListValue) String() string {
+	if len(c.values) == 0 {
+		return ""
+	}
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *compositeListValue) Set(val string) error {
+	simpleVal := c.simpleType.NewValue(c.ctx, c.opts)
+	err := simpleVal.Set(val)
+	if err != nil {
+		return err
+	}
+	c.values = append(c.values, simpleVal.(SimpleValue).Get())
+	return nil
+}
+
+func (c compositeListValue) Type() string {
+	return fmt.Sprintf("%s (repeated)", c.simpleType.NewValue(c.ctx, c.opts).Type())
+}

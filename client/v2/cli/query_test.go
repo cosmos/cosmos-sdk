@@ -5,40 +5,51 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
-	grpc "google.golang.org/grpc"
+	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/client/v2/internal/testpb"
 )
 
-func TestFoo(t *testing.T) {
-	desc, err := protoregistry.GlobalFiles.FindDescriptorByName(protoreflect.FullName(testpb.Query_ServiceDesc.ServiceName))
-	assert.NilError(t, err)
+func testExec(t *testing.T, args ...string) {
 	b := &Builder{
 		GetClientConn: func(ctx context.Context) grpc.ClientConnInterface {
 			return testClientConn{t: t}
 		},
-		JSONMarshalOptions: protojson.MarshalOptions{
-			EmitUnpopulated: true,
-		},
 	}
-	cmd := &cobra.Command{
-		Use: "test",
-	}
-	b.AddQueryService(cmd, desc.(protoreflect.ServiceDescriptor))
-	cmd.SetArgs([]string{"foo", "-h"})
-	cmd.Execute()
+	cmd := b.AddQueryServiceCommands(&cobra.Command{Use: "test"}, protoreflect.FullName(testpb.Query_ServiceDesc.ServiceName))
+	cmd.SetArgs(args)
+	assert.NilError(t, cmd.Execute())
+}
+
+func TestFoo(t *testing.T) {
+	testExec(t,
+		"foo",
+		"--a-bool",
+		"--an-enum", "one",
+		"--a-message", `{"bar":"abc", "baz":-3}`,
+		"--duration", "4h3s",
+		"--u-32", "27",
+		"--u-64", "3267246890",
+		"--i-32", "-253",
+		"--i-64", "-234602347",
+		"--str", "def",
+		"--timestamp", "2019-01-02T00:01:02Z",
+	)
+}
+
+func TestHelp(t *testing.T) {
+	testExec(t, "foo", "-h")
 }
 
 type testClientConn struct {
 	t *testing.T
 }
 
-func (t testClientConn) Invoke(ctx context.Context, method string, args interface{}, reply interface{}, opts ...grpc.CallOption) error {
+func (t testClientConn) Invoke(_ context.Context, method string, args interface{}, _ interface{}, _ ...grpc.CallOption) error {
 	in, err := protojson.Marshal(args.(proto.Message))
 	if err != nil {
 		return err
@@ -47,7 +58,7 @@ func (t testClientConn) Invoke(ctx context.Context, method string, args interfac
 	return nil
 }
 
-func (t testClientConn) NewStream(ctx context.Context, desc *grpc.StreamDesc, method string, opts ...grpc.CallOption) (grpc.ClientStream, error) {
+func (t testClientConn) NewStream(context.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
 	t.t.Fatal("unexpected streaming call")
 	return nil, nil
 }

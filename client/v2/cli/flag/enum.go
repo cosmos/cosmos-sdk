@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/iancoleman/strcase"
+	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -13,10 +14,17 @@ type enumType struct {
 	enum protoreflect.EnumDescriptor
 }
 
-func (b enumType) NewValue(ctx context.Context, builder *Options) SimpleValue {
-	return &enumValue{
-		enum: b.enum,
+func (b enumType) NewValue(context.Context, *Builder) pflag.Value {
+	val := &enumValue{
+		enum:   b.enum,
+		valMap: map[string]protoreflect.EnumValueDescriptor{},
 	}
+	n := b.enum.Values().Len()
+	for i := 0; i < n; i++ {
+		valDesc := b.enum.Values().Get(i)
+		val.valMap[enumValueName(b.enum, valDesc)] = valDesc
+	}
+	return val
 }
 
 func (b enumType) DefaultValue() string {
@@ -28,8 +36,9 @@ func (b enumType) DefaultValue() string {
 }
 
 type enumValue struct {
-	enum  protoreflect.EnumDescriptor
-	value protoreflect.EnumNumber
+	enum   protoreflect.EnumDescriptor
+	value  protoreflect.EnumNumber
+	valMap map[string]protoreflect.EnumValueDescriptor
 }
 
 func (e enumValue) Get() protoreflect.Value {
@@ -47,8 +56,8 @@ func (e enumValue) String() string {
 }
 
 func (e *enumValue) Set(s string) error {
-	valDesc := e.enum.Values().ByName(protoreflect.Name(s))
-	if valDesc == nil {
+	valDesc, ok := e.valMap[s]
+	if !ok {
 		return fmt.Errorf("%s is not a valid value for enum %s", s, e.enum.FullName())
 	}
 	e.value = valDesc.Number()

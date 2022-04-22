@@ -2346,7 +2346,7 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 		  "metadata": "AQ=="
 	  },{
 		"address": "%s",
-		  "weight": "3",
+		  "weight": "1",
 		  "metadata": "AQ=="
 	  }]}`, members[0], members[1], members[2])
 	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
@@ -2371,7 +2371,7 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 				val.Address.String(),
 				groupID,
 				"AQ==",
-				"{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"4\", \"windows\":{\"voting_period\":\"60s\"}}",
+				"{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"3\", \"windows\":{\"voting_period\":\"30000s\"}}",
 			},
 			commonFlags...,
 		),
@@ -2398,7 +2398,7 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 			"member that leaves does not affect the threshold",
 			append(
 				[]string{
-					members[2],
+					members[0],
 					groupID,
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[2]),
 				},
@@ -2429,10 +2429,12 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 
 		s.Run(tc.name, func() {
 			cmdSubmitProposal := client.MsgSubmitProposalCmd()
-			cmdLeaveGroup := client.MsgLeaveGroupCmd()
+			//cmdLeaveGroup := client.MsgLeaveGroupCmd()
+			//cmdQueryProposal := client.QueryProposalCmd()
+			cmdMsgExec := client.MsgExecCmd()
 
 			// Submit proposal
-			submitPropossalArgs := append([]string{
+			submitProposalArgs := append([]string{
 				s.createCLIProposal(
 					groupPolicyAddress, members[0],
 					groupPolicyAddress, members[0],
@@ -2441,16 +2443,17 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 			},
 				commonFlags...,
 			)
-			var submitPropossalResp sdk.TxResponse
-			out, err = cli.ExecTestCLICmd(clientCtx, cmdSubmitProposal, submitPropossalArgs)
+			var submitProposalResp sdk.TxResponse
+			out, err = cli.ExecTestCLICmd(clientCtx, cmdSubmitProposal, submitProposalArgs)
 			fmt.Println("this is the subit proposal", out)
 			s.Require().NoError(err, out.String())
-			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &submitPropossalResp), out.String())
+			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &submitProposalResp), out.String())
+			proposalID := s.getProposalIdFromTxResponse(submitProposalResp)
 			for _, memberAddress := range members {
 				out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgVoteCmd(),
 					append(
 						[]string{
-							"2",
+							proposalID,
 							memberAddress,
 							"VOTE_OPTION_YES",
 							"",
@@ -2461,15 +2464,38 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 				s.Require().Equal(uint32(0), txResp.Code, out.String())
+				fmt.Println("Vote :", out)
 			}
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmdLeaveGroup, tc.args)
-			fmt.Println("leave group: ", out)
-			fmt.Println("error", err.Error())
-			require.True(false)
-			require.NoError(err, out.String())
-			var resp sdk.TxResponse
-			require.NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+			//out, err := cli.ExecTestCLICmd(clientCtx, cmdLeaveGroup, tc.args)
+			//fmt.Println("leave group: ", out)
+			//fmt.Println("error", err)
+			//s.Require().NoError(err, out.String())
+			//var resp sdk.TxResponse
+			//s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+			//s.Require().Equal(uint32(0), txResp.Code, out.String())
+
+			out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryVotesByProposalCmd(), []string{proposalID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+			fmt.Println("VOTES-: ", out)
+			fmt.Println("err", err)
+			args := append(
+				[]string{
+					proposalID,
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				},
+				commonFlags...,
+			)
+
+			out, err = cli.ExecTestCLICmd(clientCtx, cmdMsgExec, args)
+			//s.Require().NoError(err)
+			fmt.Println("propossal exec: ", out)
+			fmt.Println("error is: ", err)
+
+			//fmt.Println("pre")
+			//out, err = cli.ExecTestCLICmd(clientCtx, cmdQueryProposal, args)
+			//s.Require().NoError(err)
+			//fmt.Println("propossal final: ", out)
+			s.Require().True(false)
 
 		})
 	}

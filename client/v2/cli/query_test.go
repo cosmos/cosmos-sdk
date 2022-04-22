@@ -66,8 +66,49 @@ func TestEcho(t *testing.T) {
 		"--page-limit", "1000",
 		"--page-offset", "10",
 		"--page-reverse",
+		"--bools", "true",
+		"--bools", "false,false,true",
+		"--enums", "one",
+		"--enums", "five",
+		"--enums", "two",
+		"--strings", "abc",
+		"--strings", "xyz",
+		"--strings", "xyz,qrs",
+		"--durations", "3s",
+		"--durations", "5s",
+		"--durations", "10h",
+		"--some-messages", "{}",
+		"--some-messages", `{"bar":"baz"}`,
+		"--some-messages", `{"baz":-1}`,
+		"--uints", "1,2,3",
+		"--uints", "4",
 	)
 	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
+	//assert.DeepEqual(t, &testpb.EchoRequest{
+	//	U32:       0,
+	//	U64:       0,
+	//	Str:       "",
+	//	Bz:        nil,
+	//	Timestamp: nil,
+	//	Duration:  nil,
+	//	I32:       0,
+	//	I64:       0,
+	//	ABool:     false,
+	//	AnEnum:    0,
+	//	AMessage:  nil,
+	//	ACoin:     &basev1beta1.Coin{
+	//		Denom:  "",
+	//		Amount: "",
+	//	},
+	//	AnAddress: "",
+	//	Page:      &queryv1beta1.PageRequest{
+	//		Key:        nil,
+	//		Offset:     0,
+	//		Limit:      0,
+	//		CountTotal: false,
+	//		Reverse:    false,
+	//	},
+	//}, conn.lastResponse, protocmp.Transform())
 }
 
 func TestHelp(t *testing.T) {
@@ -94,7 +135,7 @@ type testEchoServer struct {
 	testpb.UnimplementedQueryServer
 }
 
-func (t testEchoServer) Echo(ctx context.Context, request *testpb.EchoRequest) (*testpb.EchoResponse, error) {
+func (t testEchoServer) Echo(_ context.Context, request *testpb.EchoRequest) (*testpb.EchoResponse, error) {
 	return &testpb.EchoResponse{Request: request}, nil
 }
 

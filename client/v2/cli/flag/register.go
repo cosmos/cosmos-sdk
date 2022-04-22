@@ -20,6 +20,7 @@ func (b *Builder) AddMessageFlags(ctx context.Context, set *pflag.FlagSet, messa
 		binder := b.AddFieldFlag(ctx, set, field, options)
 		if binder == nil {
 			fmt.Printf("unable to bind field %s to a flag, support will be added soon\n", field)
+			continue
 		}
 		handler.flagFieldPairs = append(handler.flagFieldPairs, struct {
 			binder FieldValueBinder

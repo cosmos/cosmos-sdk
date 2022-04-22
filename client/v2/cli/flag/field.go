@@ -48,6 +48,8 @@ func (b *Builder) AddFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, fiel
 			return simpleValueBinder{val}
 		case ListValue:
 			return listValueBinder{val}
+		default:
+			return nil
 		}
 	}
 
@@ -68,7 +70,11 @@ func (b *Builder) AddFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, fiel
 func (b *Builder) resolveFlagType(field protoreflect.FieldDescriptor) Type {
 	typ := b.resolveFlagTypeBasic(field)
 	if field.IsList() {
-		return compositeListType{simpleType: typ}
+		if typ != nil {
+			return compositeListType{simpleType: typ}
+		}
+
+		return nil
 	}
 
 	return typ

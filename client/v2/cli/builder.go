@@ -12,11 +12,12 @@ import (
 )
 
 type Builder struct {
-	GetClientConn       func(context.Context) grpc.ClientConnInterface
-	MessageTypeResolver protoregistry.MessageTypeResolver
-	JSONMarshalOptions  protojson.MarshalOptions
-	messageFlagTypes    map[protoreflect.FullName]FlagType
-	scalarFlagTypes     map[string]FlagType
+	GetClientConn        func(context.Context) grpc.ClientConnInterface
+	MessageTypeResolver  protoregistry.MessageTypeResolver
+	JSONMarshalOptions   protojson.MarshalOptions
+	JSONUnmarshalOptions protojson.UnmarshalOptions
+	messageFlagTypes     map[protoreflect.FullName]FlagType
+	scalarFlagTypes      map[string]FlagType
 }
 
 func (b *Builder) resolverMessageType(descriptor protoreflect.MessageDescriptor) protoreflect.MessageType {

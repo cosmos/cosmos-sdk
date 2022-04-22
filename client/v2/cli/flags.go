@@ -8,6 +8,7 @@ import (
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/pflag"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -147,8 +148,59 @@ func descriptorDocs(descriptor protoreflect.Descriptor) string {
 	return descriptor.ParentFile().SourceLocations().ByDescriptor(descriptor).LeadingComments
 }
 
+type jsonMessageFlagType struct {
+	messageDesc protoreflect.MessageDescriptor
+}
+
+func (j jsonMessageFlagType) AddFlag(ctx context.Context, builder *Builder, set *pflag.FlagSet, descriptor protoreflect.FieldDescriptor) FlagValue {
+	val := &jsonMessageFlagValue{
+		messageType:          builder.resolverMessageType(j.messageDesc),
+		jsonMarshalOptions:   builder.JSONMarshalOptions,
+		jsonUnmarshalOptions: builder.JSONUnmarshalOptions,
+	}
+	set.AddFlag(&pflag.Flag{
+		Name:  descriptorKebabName(descriptor),
+		Usage: descriptorDocs(descriptor),
+		Value: val,
+	})
+	return val
+}
+
+type jsonMessageFlagValue struct {
+	jsonMarshalOptions   protojson.MarshalOptions
+	jsonUnmarshalOptions protojson.UnmarshalOptions
+	messageType          protoreflect.MessageType
+	message              proto.Message
+}
+
+func (j jsonMessageFlagValue) Get() protoreflect.Value {
+	return protoreflect.ValueOfMessage(j.message.ProtoReflect())
+}
+
+func (j jsonMessageFlagValue) String() string {
+	if j.message == nil {
+		return ""
+	}
+
+	bz, err := j.jsonMarshalOptions.Marshal(j.message)
+	if err != nil {
+		return err.Error()
+	}
+	return string(bz)
+}
+
+func (j *jsonMessageFlagValue) Set(s string) error {
+	j.message = j.messageType.New().Interface()
+	return j.jsonUnmarshalOptions.Unmarshal([]byte(s), j.message)
+}
+
+func (j jsonMessageFlagValue) Type() string {
+	return fmt.Sprintf("%s (json string or file)", j.messageType.Descriptor().FullName())
+}
+
 func (b *Builder) getFlagType(field protoreflect.FieldDescriptor) FlagType {
 	if field.IsList() {
+
 	}
 
 	if field.ContainingOneof() != nil {
@@ -188,6 +240,9 @@ func (b *Builder) getFlagType(field protoreflect.FieldDescriptor) FlagType {
 		b.init()
 		if flagType, ok := b.messageFlagTypes[field.Message().FullName()]; ok {
 			return flagType
+		}
+		return jsonMessageFlagType{
+			messageDesc: field.Message(),
 		}
 	default:
 	}

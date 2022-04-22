@@ -4,7 +4,9 @@ package testpb;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
+import "cosmos_proto/cosmos.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 service Query {
   // Foo does something
@@ -29,7 +31,10 @@ message FooRequest {
   fixed64                   f64 = 14;
   bool                      a_bool = 15;
   Enum                      an_enum = 16;
-  cosmos.base.query.v1beta1.PageRequest page = 17;
+  AMessage a_message = 17;
+  cosmos.base.v1beta1.Coin a_coin = 18;
+  string an_address = 19 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  cosmos.base.query.v1beta1.PageRequest page = 20;
 }
 
 enum Enum {
@@ -38,6 +43,10 @@ enum Enum {
   ENUM_TWO = 2;
   ENUM_FIVE = 5;
   ENUM_NEG_THREE = -3;
+}
+
+message AMessage {
+
 }
 
 message FooResponse {

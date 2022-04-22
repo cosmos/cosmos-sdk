@@ -38,5 +38,5 @@ func (a *addressStringFlagValue) Set(s string) error {
 }
 
 func (a addressStringFlagValue) Type() string {
-	return "address"
+	return "bech32 account address key name"
 }

@@ -1,11 +1,13 @@
 package cli
 
 import (
+	"context"
+
 	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-func (b *Builder) registerMessageFlagSet(set *pflag.FlagSet, messageType protoreflect.MessageType) *messageFlagHandler {
+func (b *Builder) registerMessageFlagSet(ctx context.Context, set *pflag.FlagSet, messageType protoreflect.MessageType) *messageFlagHandler {
 	fields := messageType.Descriptor().Fields()
 	numFields := fields.Len()
 	handler := &messageFlagHandler{
@@ -18,7 +20,7 @@ func (b *Builder) registerMessageFlagSet(set *pflag.FlagSet, messageType protore
 			// TODO get rid of this
 			continue
 		}
-		val := typ.AddFlag(nil, set, field)
+		val := typ.AddFlag(ctx, b, set, field)
 		handler.flagFieldPairs = append(handler.flagFieldPairs, struct {
 			value FlagValue
 			field protoreflect.FieldDescriptor

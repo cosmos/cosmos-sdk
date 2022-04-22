@@ -30,7 +30,7 @@ func TestBank(t *testing.T) {
 		Use: "bank",
 	}
 	b.AddQueryService(cmd, desc.(protoreflect.ServiceDescriptor))
-	cmd.SetArgs([]string{"balance", "--denom", "foo", "--address", "bob"})
+	cmd.SetArgs([]string{"help", "all-balances"})
 	cmd.Execute()
 }
 

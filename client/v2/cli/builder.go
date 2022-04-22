@@ -36,6 +36,7 @@ func (b *Builder) resolverMessageType(descriptor protoreflect.MessageDescriptor)
 func (b *Builder) init() {
 	if b.messageFlagTypes == nil {
 		b.messageFlagTypes = map[protoreflect.FullName]FlagType{}
+		b.messageFlagTypes["cosmos.base.query.v1beta1.PageRequest"] = pageRequestFlagType{}
 	}
 
 	if b.scalarFlagTypes == nil {
@@ -55,7 +56,7 @@ func (b *Builder) DefineScalarFlagType(scalarName string, flagType FlagType) {
 }
 
 type FlagType interface {
-	AddFlag(context.Context, *pflag.FlagSet, protoreflect.FieldDescriptor) FlagValue
+	AddFlag(context.Context, *Builder, *pflag.FlagSet, protoreflect.FieldDescriptor) FlagValue
 }
 
 type FlagValue interface {

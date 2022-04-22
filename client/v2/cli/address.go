@@ -9,7 +9,7 @@ import (
 
 type addressStringFlagType struct{}
 
-func (a addressStringFlagType) AddFlag(_ context.Context, set *pflag.FlagSet, descriptor protoreflect.FieldDescriptor) FlagValue {
+func (a addressStringFlagType) AddFlag(_ context.Context, builder *Builder, set *pflag.FlagSet, descriptor protoreflect.FieldDescriptor) FlagValue {
 	val := &addressStringValue{}
 	set.AddFlag(&pflag.Flag{
 		Name:  descriptorKebabName(descriptor),

@@ -18,7 +18,7 @@ func (b *Builder) AddQueryService(command *cobra.Command, descriptor protoreflec
 }
 
 func (b *Builder) QueryMethodToCommand(serviceDescriptor protoreflect.ServiceDescriptor, descriptor protoreflect.MethodDescriptor) *cobra.Command {
-	docs := descriptor.ParentFile().SourceLocations().ByDescriptor(descriptor).LeadingComments
+	docs := descriptorDocs(descriptor)
 	getClientConn := b.GetClientConn
 	methodName := fmt.Sprintf("/%s/%s", serviceDescriptor.FullName(), descriptor.Name())
 
@@ -30,7 +30,7 @@ func (b *Builder) QueryMethodToCommand(serviceDescriptor protoreflect.ServiceDes
 		Long: docs,
 	}
 
-	flagHandler := b.registerMessageFlagSet(cmd.Flags(), inputType)
+	flagHandler := b.registerMessageFlagSet(cmd.Context(), cmd.Flags(), inputType)
 
 	jsonMarshalOptions := b.JSONMarshalOptions
 

@@ -31,12 +31,12 @@ func (b *Builder) getFlagType(field protoreflect.FieldDescriptor) FlagType {
 
 	switch field.Kind() {
 	case protoreflect.BytesKind:
+		return base64BytesFlagType{}
 	case protoreflect.StringKind:
 		return stringFlagType{}
-	case protoreflect.Uint32Kind:
-	case protoreflect.Fixed32Kind:
-	case protoreflect.Uint64Kind:
-	case protoreflect.Fixed64Kind:
+	case protoreflect.Uint32Kind, protoreflect.Fixed32Kind:
+	case protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
+		return uint64FlagType{}
 	case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
 	case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
 	case protoreflect.BoolKind:
@@ -62,7 +62,7 @@ func (f flagValueClosure) Get() protoreflect.Value {
 
 type stringFlagType struct{}
 
-func (s stringFlagType) AddFlag(ctx context.Context, set *pflag.FlagSet, field protoreflect.FieldDescriptor) FlagValue {
+func (s stringFlagType) AddFlag(ctx context.Context, builder *Builder, set *pflag.FlagSet, field protoreflect.FieldDescriptor) FlagValue {
 	val := set.String(descriptorKebabName(field), "", descriptorDocs(field))
 	return flagValueClosure(func() protoreflect.Value {
 		return protoreflect.ValueOfString(*val)
@@ -71,10 +71,28 @@ func (s stringFlagType) AddFlag(ctx context.Context, set *pflag.FlagSet, field p
 
 type boolFlagType struct{}
 
-func (s boolFlagType) AddFlag(ctx context.Context, set *pflag.FlagSet, field protoreflect.FieldDescriptor) FlagValue {
+func (s boolFlagType) AddFlag(ctx context.Context, builder *Builder, set *pflag.FlagSet, field protoreflect.FieldDescriptor) FlagValue {
 	val := set.Bool(descriptorKebabName(field), false, descriptorDocs(field))
 	return flagValueClosure(func() protoreflect.Value {
 		return protoreflect.ValueOfBool(*val)
+	})
+}
+
+type uint64FlagType struct{}
+
+func (u uint64FlagType) AddFlag(ctx context.Context, builder *Builder, set *pflag.FlagSet, descriptor protoreflect.FieldDescriptor) FlagValue {
+	val := set.Uint64(descriptorKebabName(descriptor), 0, descriptorDocs(descriptor))
+	return flagValueClosure(func() protoreflect.Value {
+		return protoreflect.ValueOfUint64(*val)
+	})
+}
+
+type base64BytesFlagType struct{}
+
+func (b base64BytesFlagType) AddFlag(ctx context.Context, builder *Builder, set *pflag.FlagSet, descriptor protoreflect.FieldDescriptor) FlagValue {
+	val := set.BytesBase64(descriptorKebabName(descriptor), nil, descriptorDocs(descriptor))
+	return flagValueClosure(func() protoreflect.Value {
+		return protoreflect.ValueOfBytes(*val)
 	})
 }
 

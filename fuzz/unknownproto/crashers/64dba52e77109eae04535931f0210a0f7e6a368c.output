@@ -1,3 +1,0 @@
-program hanged (timeout 10 seconds)
-
-signal: killed

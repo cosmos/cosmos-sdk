@@ -86,7 +86,7 @@ func (st *viewSubstore) CacheWrapWithListeners(storeKey types.StoreKey, listener
 
 func (s *viewStore) getMerkleRoots() (ret map[string][]byte, err error) {
 	ret = map[string][]byte{}
-	for key, _ := range s.schema {
+	for key := range s.schema {
 		sub, has := s.substoreCache[key]
 		if !has {
 			sub, err = s.getSubstore(key)

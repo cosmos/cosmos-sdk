@@ -28,6 +28,9 @@ var eom = &errOnMarshal{}
 // Ensure that returning an error doesn't suddenly allocate and waste bytes.
 // See https://github.com/cosmos/cosmos-sdk/issues/8537
 func TestNewAnyWithCustomTypeURLWithErrorNoAllocation(t *testing.T) {
+	// make sure we're not in the middle of a GC.
+	runtime.GC()
+
 	var ms1, ms2 runtime.MemStats
 	runtime.ReadMemStats(&ms1)
 	any, err := types.NewAnyWithValue(eom)

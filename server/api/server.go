@@ -33,12 +33,12 @@ type Server struct {
 
 	logger   log.Logger
 	metrics  *telemetry.Metrics
-	listener net.Listener
 	// Start() is blocking and generally called from a separate goroutine.
-	// Close() can be called asynchrounously and access shared memory
+	// Close() can be called asynchronously and access shared memory
 	// via the listener. Therefore, we sync access to Start and Close with
 	// this mutex to avoid data races.
-	startCloseMx sync.Mutex
+	mtx sync.Mutex
+	listener net.Listener
 }
 
 // CustomGRPCHeaderMatcher for mapping request headers to

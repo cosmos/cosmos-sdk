@@ -58,6 +58,14 @@ func TestEcho(t *testing.T) {
 		"--i-64", "-234602347",
 		"--str", "def",
 		"--timestamp", "2019-01-02T00:01:02Z",
+		"--a-coin", `{"denom":"foo","amount":"100000"}`,
+		"--an-address", "cosmossdghdsfoi2134sdgh",
+		"--bz", "c2RncXdlZndkZ3NkZw==",
+		"--page-count-total",
+		"--page-key", "MTIzNTQ4N3NnaGRhcw==",
+		"--page-limit", "1000",
+		"--page-offset", "10",
+		"--page-reverse",
 	)
 	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
 }

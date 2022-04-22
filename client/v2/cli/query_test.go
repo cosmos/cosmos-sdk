@@ -12,11 +12,11 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"gotest.tools/v3/assert"
 
-	bankv1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/bank/v1beta1"
+	"github.com/cosmos/cosmos-sdk/client/v2/internal/testpb"
 )
 
-func TestBank(t *testing.T) {
-	desc, err := protoregistry.GlobalFiles.FindDescriptorByName(protoreflect.FullName(bankv1beta1.Query_ServiceDesc.ServiceName))
+func TestFoo(t *testing.T) {
+	desc, err := protoregistry.GlobalFiles.FindDescriptorByName(protoreflect.FullName(testpb.Query_ServiceDesc.ServiceName))
 	assert.NilError(t, err)
 	b := &Builder{
 		GetClientConn: func(ctx context.Context) grpc.ClientConnInterface {
@@ -27,10 +27,10 @@ func TestBank(t *testing.T) {
 		},
 	}
 	cmd := &cobra.Command{
-		Use: "bank",
+		Use: "test",
 	}
 	b.AddQueryService(cmd, desc.(protoreflect.ServiceDescriptor))
-	cmd.SetArgs([]string{"help", "all-balances"})
+	cmd.SetArgs([]string{"foo", "-h"})
 	cmd.Execute()
 }
 

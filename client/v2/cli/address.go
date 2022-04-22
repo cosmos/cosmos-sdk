@@ -10,7 +10,7 @@ import (
 type addressStringFlagType struct{}
 
 func (a addressStringFlagType) AddFlag(_ context.Context, builder *Builder, set *pflag.FlagSet, descriptor protoreflect.FieldDescriptor) FlagValue {
-	val := &addressStringValue{}
+	val := &addressStringFlagValue{}
 	set.AddFlag(&pflag.Flag{
 		Name:  descriptorKebabName(descriptor),
 		Usage: descriptorDocs(descriptor),
@@ -19,24 +19,24 @@ func (a addressStringFlagType) AddFlag(_ context.Context, builder *Builder, set 
 	return val
 }
 
-type addressStringValue struct {
+type addressStringFlagValue struct {
 	value string
 }
 
-func (a addressStringValue) Get() protoreflect.Value {
+func (a addressStringFlagValue) Get() protoreflect.Value {
 	return protoreflect.ValueOfString(a.value)
 }
 
-func (a addressStringValue) String() string {
+func (a addressStringFlagValue) String() string {
 	return a.value
 }
 
-func (a *addressStringValue) Set(s string) error {
+func (a *addressStringFlagValue) Set(s string) error {
 	a.value = s
 	// TODO handle bech32 validation
 	return nil
 }
 
-func (a addressStringValue) Type() string {
+func (a addressStringFlagValue) Type() string {
 	return "address"
 }

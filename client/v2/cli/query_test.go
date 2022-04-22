@@ -1,33 +1,53 @@
 package cli
 
 import (
+	"bytes"
 	"context"
+	"net"
 	"testing"
 
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
+	"gotest.tools/v3/golden"
 
 	"github.com/cosmos/cosmos-sdk/client/v2/internal/testpb"
 )
 
-func testExec(t *testing.T, args ...string) {
+func testExec(t *testing.T, args ...string) *testClientConn {
+	server := grpc.NewServer()
+	testpb.RegisterQueryServer(server, &testEchoServer{})
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	assert.NilError(t, err)
+	go server.Serve(listener)
+	defer listener.Close()
+	clientConn, err := grpc.Dial(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	assert.NilError(t, err)
+	defer clientConn.Close()
+
+	conn := &testClientConn{
+		ClientConn: clientConn,
+		t:          t,
+		out:        &bytes.Buffer{},
+	}
 	b := &Builder{
 		GetClientConn: func(ctx context.Context) grpc.ClientConnInterface {
-			return testClientConn{t: t}
+			return conn
 		},
 	}
 	cmd := b.AddQueryServiceCommands(&cobra.Command{Use: "test"}, protoreflect.FullName(testpb.Query_ServiceDesc.ServiceName))
 	cmd.SetArgs(args)
+	cmd.SetOut(conn.out)
 	assert.NilError(t, cmd.Execute())
+	return conn
 }
 
-func TestFoo(t *testing.T) {
-	testExec(t,
-		"foo",
+func TestEcho(t *testing.T) {
+	conn := testExec(t,
+		"echo",
 		"--a-bool",
 		"--an-enum", "one",
 		"--a-message", `{"bar":"abc", "baz":-3}`,
@@ -39,26 +59,35 @@ func TestFoo(t *testing.T) {
 		"--str", "def",
 		"--timestamp", "2019-01-02T00:01:02Z",
 	)
+	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
 }
 
 func TestHelp(t *testing.T) {
-	testExec(t, "foo", "-h")
+	conn := testExec(t, "echo", "-h")
+	golden.Assert(t, conn.out.String(), "help.golden")
 }
 
 type testClientConn struct {
-	t *testing.T
+	*grpc.ClientConn
+	t            *testing.T
+	lastRequest  interface{}
+	lastResponse interface{}
+	out          *bytes.Buffer
 }
 
-func (t testClientConn) Invoke(_ context.Context, method string, args interface{}, _ interface{}, _ ...grpc.CallOption) error {
-	in, err := protojson.Marshal(args.(proto.Message))
-	if err != nil {
-		return err
-	}
-	t.t.Logf("invoke %s: %s", method, in)
-	return nil
+func (t *testClientConn) Invoke(ctx context.Context, method string, args interface{}, reply interface{}, opts ...grpc.CallOption) error {
+	err := t.ClientConn.Invoke(ctx, method, args, reply, opts...)
+	t.lastRequest = args
+	t.lastResponse = reply
+	return err
 }
 
-func (t testClientConn) NewStream(context.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
-	t.t.Fatal("unexpected streaming call")
-	return nil, nil
+type testEchoServer struct {
+	testpb.UnimplementedQueryServer
 }
+
+func (t testEchoServer) Echo(ctx context.Context, request *testpb.EchoRequest) (*testpb.EchoResponse, error) {
+	return &testpb.EchoResponse{Request: request}, nil
+}
+
+var _ testpb.QueryServer = testEchoServer{}

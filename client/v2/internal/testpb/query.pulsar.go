@@ -18,51 +18,51 @@ import (
 )
 
 var (
-	md_FooRequest            protoreflect.MessageDescriptor
-	fd_FooRequest_u32        protoreflect.FieldDescriptor
-	fd_FooRequest_u64        protoreflect.FieldDescriptor
-	fd_FooRequest_str        protoreflect.FieldDescriptor
-	fd_FooRequest_bz         protoreflect.FieldDescriptor
-	fd_FooRequest_timestamp  protoreflect.FieldDescriptor
-	fd_FooRequest_duration   protoreflect.FieldDescriptor
-	fd_FooRequest_i32        protoreflect.FieldDescriptor
-	fd_FooRequest_i64        protoreflect.FieldDescriptor
-	fd_FooRequest_a_bool     protoreflect.FieldDescriptor
-	fd_FooRequest_an_enum    protoreflect.FieldDescriptor
-	fd_FooRequest_a_message  protoreflect.FieldDescriptor
-	fd_FooRequest_a_coin     protoreflect.FieldDescriptor
-	fd_FooRequest_an_address protoreflect.FieldDescriptor
-	fd_FooRequest_page       protoreflect.FieldDescriptor
+	md_EchoRequest            protoreflect.MessageDescriptor
+	fd_EchoRequest_u32        protoreflect.FieldDescriptor
+	fd_EchoRequest_u64        protoreflect.FieldDescriptor
+	fd_EchoRequest_str        protoreflect.FieldDescriptor
+	fd_EchoRequest_bz         protoreflect.FieldDescriptor
+	fd_EchoRequest_timestamp  protoreflect.FieldDescriptor
+	fd_EchoRequest_duration   protoreflect.FieldDescriptor
+	fd_EchoRequest_i32        protoreflect.FieldDescriptor
+	fd_EchoRequest_i64        protoreflect.FieldDescriptor
+	fd_EchoRequest_a_bool     protoreflect.FieldDescriptor
+	fd_EchoRequest_an_enum    protoreflect.FieldDescriptor
+	fd_EchoRequest_a_message  protoreflect.FieldDescriptor
+	fd_EchoRequest_a_coin     protoreflect.FieldDescriptor
+	fd_EchoRequest_an_address protoreflect.FieldDescriptor
+	fd_EchoRequest_page       protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_testpb_query_proto_init()
-	md_FooRequest = File_testpb_query_proto.Messages().ByName("FooRequest")
-	fd_FooRequest_u32 = md_FooRequest.Fields().ByName("u32")
-	fd_FooRequest_u64 = md_FooRequest.Fields().ByName("u64")
-	fd_FooRequest_str = md_FooRequest.Fields().ByName("str")
-	fd_FooRequest_bz = md_FooRequest.Fields().ByName("bz")
-	fd_FooRequest_timestamp = md_FooRequest.Fields().ByName("timestamp")
-	fd_FooRequest_duration = md_FooRequest.Fields().ByName("duration")
-	fd_FooRequest_i32 = md_FooRequest.Fields().ByName("i32")
-	fd_FooRequest_i64 = md_FooRequest.Fields().ByName("i64")
-	fd_FooRequest_a_bool = md_FooRequest.Fields().ByName("a_bool")
-	fd_FooRequest_an_enum = md_FooRequest.Fields().ByName("an_enum")
-	fd_FooRequest_a_message = md_FooRequest.Fields().ByName("a_message")
-	fd_FooRequest_a_coin = md_FooRequest.Fields().ByName("a_coin")
-	fd_FooRequest_an_address = md_FooRequest.Fields().ByName("an_address")
-	fd_FooRequest_page = md_FooRequest.Fields().ByName("page")
+	md_EchoRequest = File_testpb_query_proto.Messages().ByName("EchoRequest")
+	fd_EchoRequest_u32 = md_EchoRequest.Fields().ByName("u32")
+	fd_EchoRequest_u64 = md_EchoRequest.Fields().ByName("u64")
+	fd_EchoRequest_str = md_EchoRequest.Fields().ByName("str")
+	fd_EchoRequest_bz = md_EchoRequest.Fields().ByName("bz")
+	fd_EchoRequest_timestamp = md_EchoRequest.Fields().ByName("timestamp")
+	fd_EchoRequest_duration = md_EchoRequest.Fields().ByName("duration")
+	fd_EchoRequest_i32 = md_EchoRequest.Fields().ByName("i32")
+	fd_EchoRequest_i64 = md_EchoRequest.Fields().ByName("i64")
+	fd_EchoRequest_a_bool = md_EchoRequest.Fields().ByName("a_bool")
+	fd_EchoRequest_an_enum = md_EchoRequest.Fields().ByName("an_enum")
+	fd_EchoRequest_a_message = md_EchoRequest.Fields().ByName("a_message")
+	fd_EchoRequest_a_coin = md_EchoRequest.Fields().ByName("a_coin")
+	fd_EchoRequest_an_address = md_EchoRequest.Fields().ByName("an_address")
+	fd_EchoRequest_page = md_EchoRequest.Fields().ByName("page")
 }
 
-var _ protoreflect.Message = (*fastReflection_FooRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_EchoRequest)(nil)
 
-type fastReflection_FooRequest FooRequest
+type fastReflection_EchoRequest EchoRequest
 
-func (x *FooRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_FooRequest)(x)
+func (x *EchoRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_EchoRequest)(x)
 }
 
-func (x *FooRequest) slowProtoReflect() protoreflect.Message {
+func (x *EchoRequest) slowProtoReflect() protoreflect.Message {
 	mi := &file_testpb_query_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -74,43 +74,43 @@ func (x *FooRequest) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_FooRequest_messageType fastReflection_FooRequest_messageType
-var _ protoreflect.MessageType = fastReflection_FooRequest_messageType{}
+var _fastReflection_EchoRequest_messageType fastReflection_EchoRequest_messageType
+var _ protoreflect.MessageType = fastReflection_EchoRequest_messageType{}
 
-type fastReflection_FooRequest_messageType struct{}
+type fastReflection_EchoRequest_messageType struct{}
 
-func (x fastReflection_FooRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_FooRequest)(nil)
+func (x fastReflection_EchoRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_EchoRequest)(nil)
 }
-func (x fastReflection_FooRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_FooRequest)
+func (x fastReflection_EchoRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_EchoRequest)
 }
-func (x fastReflection_FooRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_FooRequest
+func (x fastReflection_EchoRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_EchoRequest
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_FooRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_FooRequest
+func (x *fastReflection_EchoRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_EchoRequest
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_FooRequest) Type() protoreflect.MessageType {
-	return _fastReflection_FooRequest_messageType
+func (x *fastReflection_EchoRequest) Type() protoreflect.MessageType {
+	return _fastReflection_EchoRequest_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_FooRequest) New() protoreflect.Message {
-	return new(fastReflection_FooRequest)
+func (x *fastReflection_EchoRequest) New() protoreflect.Message {
+	return new(fastReflection_EchoRequest)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_FooRequest) Interface() protoreflect.ProtoMessage {
-	return (*FooRequest)(x)
+func (x *fastReflection_EchoRequest) Interface() protoreflect.ProtoMessage {
+	return (*EchoRequest)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -118,88 +118,88 @@ func (x *fastReflection_FooRequest) Interface() protoreflect.ProtoMessage {
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_FooRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_EchoRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.U32 != uint32(0) {
 		value := protoreflect.ValueOfUint32(x.U32)
-		if !f(fd_FooRequest_u32, value) {
+		if !f(fd_EchoRequest_u32, value) {
 			return
 		}
 	}
 	if x.U64 != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.U64)
-		if !f(fd_FooRequest_u64, value) {
+		if !f(fd_EchoRequest_u64, value) {
 			return
 		}
 	}
 	if x.Str != "" {
 		value := protoreflect.ValueOfString(x.Str)
-		if !f(fd_FooRequest_str, value) {
+		if !f(fd_EchoRequest_str, value) {
 			return
 		}
 	}
 	if len(x.Bz) != 0 {
 		value := protoreflect.ValueOfBytes(x.Bz)
-		if !f(fd_FooRequest_bz, value) {
+		if !f(fd_EchoRequest_bz, value) {
 			return
 		}
 	}
 	if x.Timestamp != nil {
 		value := protoreflect.ValueOfMessage(x.Timestamp.ProtoReflect())
-		if !f(fd_FooRequest_timestamp, value) {
+		if !f(fd_EchoRequest_timestamp, value) {
 			return
 		}
 	}
 	if x.Duration != nil {
 		value := protoreflect.ValueOfMessage(x.Duration.ProtoReflect())
-		if !f(fd_FooRequest_duration, value) {
+		if !f(fd_EchoRequest_duration, value) {
 			return
 		}
 	}
 	if x.I32 != int32(0) {
 		value := protoreflect.ValueOfInt32(x.I32)
-		if !f(fd_FooRequest_i32, value) {
+		if !f(fd_EchoRequest_i32, value) {
 			return
 		}
 	}
 	if x.I64 != int64(0) {
 		value := protoreflect.ValueOfInt64(x.I64)
-		if !f(fd_FooRequest_i64, value) {
+		if !f(fd_EchoRequest_i64, value) {
 			return
 		}
 	}
 	if x.ABool != false {
 		value := protoreflect.ValueOfBool(x.ABool)
-		if !f(fd_FooRequest_a_bool, value) {
+		if !f(fd_EchoRequest_a_bool, value) {
 			return
 		}
 	}
 	if x.AnEnum != 0 {
 		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.AnEnum))
-		if !f(fd_FooRequest_an_enum, value) {
+		if !f(fd_EchoRequest_an_enum, value) {
 			return
 		}
 	}
 	if x.AMessage != nil {
 		value := protoreflect.ValueOfMessage(x.AMessage.ProtoReflect())
-		if !f(fd_FooRequest_a_message, value) {
+		if !f(fd_EchoRequest_a_message, value) {
 			return
 		}
 	}
 	if x.ACoin != nil {
 		value := protoreflect.ValueOfMessage(x.ACoin.ProtoReflect())
-		if !f(fd_FooRequest_a_coin, value) {
+		if !f(fd_EchoRequest_a_coin, value) {
 			return
 		}
 	}
 	if x.AnAddress != "" {
 		value := protoreflect.ValueOfString(x.AnAddress)
-		if !f(fd_FooRequest_an_address, value) {
+		if !f(fd_EchoRequest_an_address, value) {
 			return
 		}
 	}
 	if x.Page != nil {
 		value := protoreflect.ValueOfMessage(x.Page.ProtoReflect())
-		if !f(fd_FooRequest_page, value) {
+		if !f(fd_EchoRequest_page, value) {
 			return
 		}
 	}
@@ -216,41 +216,41 @@ func (x *fastReflection_FooRequest) Range(f func(protoreflect.FieldDescriptor, p
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_FooRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_EchoRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "testpb.FooRequest.u32":
+	case "testpb.EchoRequest.u32":
 		return x.U32 != uint32(0)
-	case "testpb.FooRequest.u64":
+	case "testpb.EchoRequest.u64":
 		return x.U64 != uint64(0)
-	case "testpb.FooRequest.str":
+	case "testpb.EchoRequest.str":
 		return x.Str != ""
-	case "testpb.FooRequest.bz":
+	case "testpb.EchoRequest.bz":
 		return len(x.Bz) != 0
-	case "testpb.FooRequest.timestamp":
+	case "testpb.EchoRequest.timestamp":
 		return x.Timestamp != nil
-	case "testpb.FooRequest.duration":
+	case "testpb.EchoRequest.duration":
 		return x.Duration != nil
-	case "testpb.FooRequest.i32":
+	case "testpb.EchoRequest.i32":
 		return x.I32 != int32(0)
-	case "testpb.FooRequest.i64":
+	case "testpb.EchoRequest.i64":
 		return x.I64 != int64(0)
-	case "testpb.FooRequest.a_bool":
+	case "testpb.EchoRequest.a_bool":
 		return x.ABool != false
-	case "testpb.FooRequest.an_enum":
+	case "testpb.EchoRequest.an_enum":
 		return x.AnEnum != 0
-	case "testpb.FooRequest.a_message":
+	case "testpb.EchoRequest.a_message":
 		return x.AMessage != nil
-	case "testpb.FooRequest.a_coin":
+	case "testpb.EchoRequest.a_coin":
 		return x.ACoin != nil
-	case "testpb.FooRequest.an_address":
+	case "testpb.EchoRequest.an_address":
 		return x.AnAddress != ""
-	case "testpb.FooRequest.page":
+	case "testpb.EchoRequest.page":
 		return x.Page != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.FooRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.EchoRequest"))
 		}
-		panic(fmt.Errorf("message testpb.FooRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.EchoRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -260,41 +260,41 @@ func (x *fastReflection_FooRequest) Has(fd protoreflect.FieldDescriptor) bool {
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_FooRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_EchoRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "testpb.FooRequest.u32":
+	case "testpb.EchoRequest.u32":
 		x.U32 = uint32(0)
-	case "testpb.FooRequest.u64":
+	case "testpb.EchoRequest.u64":
 		x.U64 = uint64(0)
-	case "testpb.FooRequest.str":
+	case "testpb.EchoRequest.str":
 		x.Str = ""
-	case "testpb.FooRequest.bz":
+	case "testpb.EchoRequest.bz":
 		x.Bz = nil
-	case "testpb.FooRequest.timestamp":
+	case "testpb.EchoRequest.timestamp":
 		x.Timestamp = nil
-	case "testpb.FooRequest.duration":
+	case "testpb.EchoRequest.duration":
 		x.Duration = nil
-	case "testpb.FooRequest.i32":
+	case "testpb.EchoRequest.i32":
 		x.I32 = int32(0)
-	case "testpb.FooRequest.i64":
+	case "testpb.EchoRequest.i64":
 		x.I64 = int64(0)
-	case "testpb.FooRequest.a_bool":
+	case "testpb.EchoRequest.a_bool":
 		x.ABool = false
-	case "testpb.FooRequest.an_enum":
+	case "testpb.EchoRequest.an_enum":
 		x.AnEnum = 0
-	case "testpb.FooRequest.a_message":
+	case "testpb.EchoRequest.a_message":
 		x.AMessage = nil
-	case "testpb.FooRequest.a_coin":
+	case "testpb.EchoRequest.a_coin":
 		x.ACoin = nil
-	case "testpb.FooRequest.an_address":
+	case "testpb.EchoRequest.an_address":
 		x.AnAddress = ""
-	case "testpb.FooRequest.page":
+	case "testpb.EchoRequest.page":
 		x.Page = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.FooRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.EchoRequest"))
 		}
-		panic(fmt.Errorf("message testpb.FooRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.EchoRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -304,55 +304,55 @@ func (x *fastReflection_FooRequest) Clear(fd protoreflect.FieldDescriptor) {
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_FooRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_EchoRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "testpb.FooRequest.u32":
+	case "testpb.EchoRequest.u32":
 		value := x.U32
 		return protoreflect.ValueOfUint32(value)
-	case "testpb.FooRequest.u64":
+	case "testpb.EchoRequest.u64":
 		value := x.U64
 		return protoreflect.ValueOfUint64(value)
-	case "testpb.FooRequest.str":
+	case "testpb.EchoRequest.str":
 		value := x.Str
 		return protoreflect.ValueOfString(value)
-	case "testpb.FooRequest.bz":
+	case "testpb.EchoRequest.bz":
 		value := x.Bz
 		return protoreflect.ValueOfBytes(value)
-	case "testpb.FooRequest.timestamp":
+	case "testpb.EchoRequest.timestamp":
 		value := x.Timestamp
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "testpb.FooRequest.duration":
+	case "testpb.EchoRequest.duration":
 		value := x.Duration
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "testpb.FooRequest.i32":
+	case "testpb.EchoRequest.i32":
 		value := x.I32
 		return protoreflect.ValueOfInt32(value)
-	case "testpb.FooRequest.i64":
+	case "testpb.EchoRequest.i64":
 		value := x.I64
 		return protoreflect.ValueOfInt64(value)
-	case "testpb.FooRequest.a_bool":
+	case "testpb.EchoRequest.a_bool":
 		value := x.ABool
 		return protoreflect.ValueOfBool(value)
-	case "testpb.FooRequest.an_enum":
+	case "testpb.EchoRequest.an_enum":
 		value := x.AnEnum
 		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
-	case "testpb.FooRequest.a_message":
+	case "testpb.EchoRequest.a_message":
 		value := x.AMessage
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "testpb.FooRequest.a_coin":
+	case "testpb.EchoRequest.a_coin":
 		value := x.ACoin
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "testpb.FooRequest.an_address":
+	case "testpb.EchoRequest.an_address":
 		value := x.AnAddress
 		return protoreflect.ValueOfString(value)
-	case "testpb.FooRequest.page":
+	case "testpb.EchoRequest.page":
 		value := x.Page
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.FooRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.EchoRequest"))
 		}
-		panic(fmt.Errorf("message testpb.FooRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message testpb.EchoRequest does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -366,41 +366,41 @@ func (x *fastReflection_FooRequest) Get(descriptor protoreflect.FieldDescriptor)
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_FooRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_EchoRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "testpb.FooRequest.u32":
+	case "testpb.EchoRequest.u32":
 		x.U32 = uint32(value.Uint())
-	case "testpb.FooRequest.u64":
+	case "testpb.EchoRequest.u64":
 		x.U64 = value.Uint()
-	case "testpb.FooRequest.str":
+	case "testpb.EchoRequest.str":
 		x.Str = value.Interface().(string)
-	case "testpb.FooRequest.bz":
+	case "testpb.EchoRequest.bz":
 		x.Bz = value.Bytes()
-	case "testpb.FooRequest.timestamp":
+	case "testpb.EchoRequest.timestamp":
 		x.Timestamp = value.Message().Interface().(*timestamppb.Timestamp)
-	case "testpb.FooRequest.duration":
+	case "testpb.EchoRequest.duration":
 		x.Duration = value.Message().Interface().(*durationpb.Duration)
-	case "testpb.FooRequest.i32":
+	case "testpb.EchoRequest.i32":
 		x.I32 = int32(value.Int())
-	case "testpb.FooRequest.i64":
+	case "testpb.EchoRequest.i64":
 		x.I64 = value.Int()
-	case "testpb.FooRequest.a_bool":
+	case "testpb.EchoRequest.a_bool":
 		x.ABool = value.Bool()
-	case "testpb.FooRequest.an_enum":
+	case "testpb.EchoRequest.an_enum":
 		x.AnEnum = (Enum)(value.Enum())
-	case "testpb.FooRequest.a_message":
+	case "testpb.EchoRequest.a_message":
 		x.AMessage = value.Message().Interface().(*AMessage)
-	case "testpb.FooRequest.a_coin":
+	case "testpb.EchoRequest.a_coin":
 		x.ACoin = value.Message().Interface().(*v1beta1.Coin)
-	case "testpb.FooRequest.an_address":
+	case "testpb.EchoRequest.an_address":
 		x.AnAddress = value.Interface().(string)
-	case "testpb.FooRequest.page":
+	case "testpb.EchoRequest.page":
 		x.Page = value.Message().Interface().(*v1beta11.PageRequest)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.FooRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.EchoRequest"))
 		}
-		panic(fmt.Errorf("message testpb.FooRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.EchoRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -414,112 +414,112 @@ func (x *fastReflection_FooRequest) Set(fd protoreflect.FieldDescriptor, value p
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_FooRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_EchoRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "testpb.FooRequest.timestamp":
+	case "testpb.EchoRequest.timestamp":
 		if x.Timestamp == nil {
 			x.Timestamp = new(timestamppb.Timestamp)
 		}
 		return protoreflect.ValueOfMessage(x.Timestamp.ProtoReflect())
-	case "testpb.FooRequest.duration":
+	case "testpb.EchoRequest.duration":
 		if x.Duration == nil {
 			x.Duration = new(durationpb.Duration)
 		}
 		return protoreflect.ValueOfMessage(x.Duration.ProtoReflect())
-	case "testpb.FooRequest.a_message":
+	case "testpb.EchoRequest.a_message":
 		if x.AMessage == nil {
 			x.AMessage = new(AMessage)
 		}
 		return protoreflect.ValueOfMessage(x.AMessage.ProtoReflect())
-	case "testpb.FooRequest.a_coin":
+	case "testpb.EchoRequest.a_coin":
 		if x.ACoin == nil {
 			x.ACoin = new(v1beta1.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.ACoin.ProtoReflect())
-	case "testpb.FooRequest.page":
+	case "testpb.EchoRequest.page":
 		if x.Page == nil {
 			x.Page = new(v1beta11.PageRequest)
 		}
 		return protoreflect.ValueOfMessage(x.Page.ProtoReflect())
-	case "testpb.FooRequest.u32":
-		panic(fmt.Errorf("field u32 of message testpb.FooRequest is not mutable"))
-	case "testpb.FooRequest.u64":
-		panic(fmt.Errorf("field u64 of message testpb.FooRequest is not mutable"))
-	case "testpb.FooRequest.str":
-		panic(fmt.Errorf("field str of message testpb.FooRequest is not mutable"))
-	case "testpb.FooRequest.bz":
-		panic(fmt.Errorf("field bz of message testpb.FooRequest is not mutable"))
-	case "testpb.FooRequest.i32":
-		panic(fmt.Errorf("field i32 of message testpb.FooRequest is not mutable"))
-	case "testpb.FooRequest.i64":
-		panic(fmt.Errorf("field i64 of message testpb.FooRequest is not mutable"))
-	case "testpb.FooRequest.a_bool":
-		panic(fmt.Errorf("field a_bool of message testpb.FooRequest is not mutable"))
-	case "testpb.FooRequest.an_enum":
-		panic(fmt.Errorf("field an_enum of message testpb.FooRequest is not mutable"))
-	case "testpb.FooRequest.an_address":
-		panic(fmt.Errorf("field an_address of message testpb.FooRequest is not mutable"))
+	case "testpb.EchoRequest.u32":
+		panic(fmt.Errorf("field u32 of message testpb.EchoRequest is not mutable"))
+	case "testpb.EchoRequest.u64":
+		panic(fmt.Errorf("field u64 of message testpb.EchoRequest is not mutable"))
+	case "testpb.EchoRequest.str":
+		panic(fmt.Errorf("field str of message testpb.EchoRequest is not mutable"))
+	case "testpb.EchoRequest.bz":
+		panic(fmt.Errorf("field bz of message testpb.EchoRequest is not mutable"))
+	case "testpb.EchoRequest.i32":
+		panic(fmt.Errorf("field i32 of message testpb.EchoRequest is not mutable"))
+	case "testpb.EchoRequest.i64":
+		panic(fmt.Errorf("field i64 of message testpb.EchoRequest is not mutable"))
+	case "testpb.EchoRequest.a_bool":
+		panic(fmt.Errorf("field a_bool of message testpb.EchoRequest is not mutable"))
+	case "testpb.EchoRequest.an_enum":
+		panic(fmt.Errorf("field an_enum of message testpb.EchoRequest is not mutable"))
+	case "testpb.EchoRequest.an_address":
+		panic(fmt.Errorf("field an_address of message testpb.EchoRequest is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.FooRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.EchoRequest"))
 		}
-		panic(fmt.Errorf("message testpb.FooRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.EchoRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_FooRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_EchoRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "testpb.FooRequest.u32":
+	case "testpb.EchoRequest.u32":
 		return protoreflect.ValueOfUint32(uint32(0))
-	case "testpb.FooRequest.u64":
+	case "testpb.EchoRequest.u64":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "testpb.FooRequest.str":
+	case "testpb.EchoRequest.str":
 		return protoreflect.ValueOfString("")
-	case "testpb.FooRequest.bz":
+	case "testpb.EchoRequest.bz":
 		return protoreflect.ValueOfBytes(nil)
-	case "testpb.FooRequest.timestamp":
+	case "testpb.EchoRequest.timestamp":
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "testpb.FooRequest.duration":
+	case "testpb.EchoRequest.duration":
 		m := new(durationpb.Duration)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "testpb.FooRequest.i32":
+	case "testpb.EchoRequest.i32":
 		return protoreflect.ValueOfInt32(int32(0))
-	case "testpb.FooRequest.i64":
+	case "testpb.EchoRequest.i64":
 		return protoreflect.ValueOfInt64(int64(0))
-	case "testpb.FooRequest.a_bool":
+	case "testpb.EchoRequest.a_bool":
 		return protoreflect.ValueOfBool(false)
-	case "testpb.FooRequest.an_enum":
+	case "testpb.EchoRequest.an_enum":
 		return protoreflect.ValueOfEnum(0)
-	case "testpb.FooRequest.a_message":
+	case "testpb.EchoRequest.a_message":
 		m := new(AMessage)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "testpb.FooRequest.a_coin":
+	case "testpb.EchoRequest.a_coin":
 		m := new(v1beta1.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "testpb.FooRequest.an_address":
+	case "testpb.EchoRequest.an_address":
 		return protoreflect.ValueOfString("")
-	case "testpb.FooRequest.page":
+	case "testpb.EchoRequest.page":
 		m := new(v1beta11.PageRequest)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.FooRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.EchoRequest"))
 		}
-		panic(fmt.Errorf("message testpb.FooRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.EchoRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_FooRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_EchoRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in testpb.FooRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in testpb.EchoRequest", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -527,7 +527,7 @@ func (x *fastReflection_FooRequest) WhichOneof(d protoreflect.OneofDescriptor) p
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_FooRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_EchoRequest) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -538,7 +538,7 @@ func (x *fastReflection_FooRequest) GetUnknown() protoreflect.RawFields {
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_FooRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_EchoRequest) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -550,7 +550,7 @@ func (x *fastReflection_FooRequest) SetUnknown(fields protoreflect.RawFields) {
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_FooRequest) IsValid() bool {
+func (x *fastReflection_EchoRequest) IsValid() bool {
 	return x != nil
 }
 
@@ -560,9 +560,9 @@ func (x *fastReflection_FooRequest) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_FooRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_EchoRequest) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*FooRequest)
+		x := input.Message.Interface().(*EchoRequest)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -634,7 +634,7 @@ func (x *fastReflection_FooRequest) ProtoMethods() *protoiface.Methods {
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*FooRequest)
+		x := input.Message.Interface().(*EchoRequest)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -800,7 +800,7 @@ func (x *fastReflection_FooRequest) ProtoMethods() *protoiface.Methods {
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*FooRequest)
+		x := input.Message.Interface().(*EchoRequest)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -832,10 +832,10 @@ func (x *fastReflection_FooRequest) ProtoMethods() *protoiface.Methods {
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: FooRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EchoRequest: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: FooRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EchoRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -1735,23 +1735,25 @@ func (x *fastReflection_AMessage) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_FooResponse protoreflect.MessageDescriptor
+	md_EchoResponse         protoreflect.MessageDescriptor
+	fd_EchoResponse_request protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_testpb_query_proto_init()
-	md_FooResponse = File_testpb_query_proto.Messages().ByName("FooResponse")
+	md_EchoResponse = File_testpb_query_proto.Messages().ByName("EchoResponse")
+	fd_EchoResponse_request = md_EchoResponse.Fields().ByName("request")
 }
 
-var _ protoreflect.Message = (*fastReflection_FooResponse)(nil)
+var _ protoreflect.Message = (*fastReflection_EchoResponse)(nil)
 
-type fastReflection_FooResponse FooResponse
+type fastReflection_EchoResponse EchoResponse
 
-func (x *FooResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_FooResponse)(x)
+func (x *EchoResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_EchoResponse)(x)
 }
 
-func (x *FooResponse) slowProtoReflect() protoreflect.Message {
+func (x *EchoResponse) slowProtoReflect() protoreflect.Message {
 	mi := &file_testpb_query_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1763,43 +1765,43 @@ func (x *FooResponse) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_FooResponse_messageType fastReflection_FooResponse_messageType
-var _ protoreflect.MessageType = fastReflection_FooResponse_messageType{}
+var _fastReflection_EchoResponse_messageType fastReflection_EchoResponse_messageType
+var _ protoreflect.MessageType = fastReflection_EchoResponse_messageType{}
 
-type fastReflection_FooResponse_messageType struct{}
+type fastReflection_EchoResponse_messageType struct{}
 
-func (x fastReflection_FooResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_FooResponse)(nil)
+func (x fastReflection_EchoResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_EchoResponse)(nil)
 }
-func (x fastReflection_FooResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_FooResponse)
+func (x fastReflection_EchoResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_EchoResponse)
 }
-func (x fastReflection_FooResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_FooResponse
+func (x fastReflection_EchoResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_EchoResponse
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_FooResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_FooResponse
+func (x *fastReflection_EchoResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_EchoResponse
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_FooResponse) Type() protoreflect.MessageType {
-	return _fastReflection_FooResponse_messageType
+func (x *fastReflection_EchoResponse) Type() protoreflect.MessageType {
+	return _fastReflection_EchoResponse_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_FooResponse) New() protoreflect.Message {
-	return new(fastReflection_FooResponse)
+func (x *fastReflection_EchoResponse) New() protoreflect.Message {
+	return new(fastReflection_EchoResponse)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_FooResponse) Interface() protoreflect.ProtoMessage {
-	return (*FooResponse)(x)
+func (x *fastReflection_EchoResponse) Interface() protoreflect.ProtoMessage {
+	return (*EchoResponse)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -1807,7 +1809,13 @@ func (x *fastReflection_FooResponse) Interface() protoreflect.ProtoMessage {
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_FooResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_EchoResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Request != nil {
+		value := protoreflect.ValueOfMessage(x.Request.ProtoReflect())
+		if !f(fd_EchoResponse_request, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -1821,13 +1829,15 @@ func (x *fastReflection_FooResponse) Range(f func(protoreflect.FieldDescriptor, 
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_FooResponse) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_EchoResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
+	case "testpb.EchoResponse.request":
+		return x.Request != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.FooResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.EchoResponse"))
 		}
-		panic(fmt.Errorf("message testpb.FooResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.EchoResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1837,13 +1847,15 @@ func (x *fastReflection_FooResponse) Has(fd protoreflect.FieldDescriptor) bool {
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_FooResponse) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_EchoResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
+	case "testpb.EchoResponse.request":
+		x.Request = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.FooResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.EchoResponse"))
 		}
-		panic(fmt.Errorf("message testpb.FooResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.EchoResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1853,13 +1865,16 @@ func (x *fastReflection_FooResponse) Clear(fd protoreflect.FieldDescriptor) {
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_FooResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_EchoResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
+	case "testpb.EchoResponse.request":
+		value := x.Request
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.FooResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.EchoResponse"))
 		}
-		panic(fmt.Errorf("message testpb.FooResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message testpb.EchoResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -1873,13 +1888,15 @@ func (x *fastReflection_FooResponse) Get(descriptor protoreflect.FieldDescriptor
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_FooResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_EchoResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
+	case "testpb.EchoResponse.request":
+		x.Request = value.Message().Interface().(*EchoRequest)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.FooResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.EchoResponse"))
 		}
-		panic(fmt.Errorf("message testpb.FooResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.EchoResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1893,36 +1910,44 @@ func (x *fastReflection_FooResponse) Set(fd protoreflect.FieldDescriptor, value 
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_FooResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_EchoResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "testpb.EchoResponse.request":
+		if x.Request == nil {
+			x.Request = new(EchoRequest)
+		}
+		return protoreflect.ValueOfMessage(x.Request.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.FooResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.EchoResponse"))
 		}
-		panic(fmt.Errorf("message testpb.FooResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.EchoResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_FooResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_EchoResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "testpb.EchoResponse.request":
+		m := new(EchoRequest)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.FooResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.EchoResponse"))
 		}
-		panic(fmt.Errorf("message testpb.FooResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message testpb.EchoResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_FooResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_EchoResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in testpb.FooResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in testpb.EchoResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -1930,7 +1955,7 @@ func (x *fastReflection_FooResponse) WhichOneof(d protoreflect.OneofDescriptor) 
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_FooResponse) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_EchoResponse) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -1941,7 +1966,7 @@ func (x *fastReflection_FooResponse) GetUnknown() protoreflect.RawFields {
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_FooResponse) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_EchoResponse) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -1953,7 +1978,7 @@ func (x *fastReflection_FooResponse) SetUnknown(fields protoreflect.RawFields) {
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_FooResponse) IsValid() bool {
+func (x *fastReflection_EchoResponse) IsValid() bool {
 	return x != nil
 }
 
@@ -1963,9 +1988,9 @@ func (x *fastReflection_FooResponse) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_FooResponse) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_EchoResponse) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*FooResponse)
+		x := input.Message.Interface().(*EchoResponse)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1977,6 +2002,10 @@ func (x *fastReflection_FooResponse) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
+		if x.Request != nil {
+			l = options.Size(x.Request)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -1987,7 +2016,7 @@ func (x *fastReflection_FooResponse) ProtoMethods() *protoiface.Methods {
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*FooResponse)
+		x := input.Message.Interface().(*EchoResponse)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2006,6 +2035,20 @@ func (x *fastReflection_FooResponse) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
+		if x.Request != nil {
+			encoded, err := options.Marshal(x.Request)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
 		} else {
@@ -2017,7 +2060,7 @@ func (x *fastReflection_FooResponse) ProtoMethods() *protoiface.Methods {
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*FooResponse)
+		x := input.Message.Interface().(*EchoResponse)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2049,12 +2092,48 @@ func (x *fastReflection_FooResponse) ProtoMethods() *protoiface.Methods {
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: FooResponse: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EchoResponse: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: FooResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EchoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Request == nil {
+					x.Request = &EchoRequest{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Request); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -2158,7 +2237,7 @@ func (Enum) EnumDescriptor() ([]byte, []int) {
 	return file_testpb_query_proto_rawDescGZIP(), []int{0}
 }
 
-type FooRequest struct {
+type EchoRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -2180,8 +2259,8 @@ type FooRequest struct {
 	Page      *v1beta11.PageRequest  `protobuf:"bytes,20,opt,name=page,proto3" json:"page,omitempty"`
 }
 
-func (x *FooRequest) Reset() {
-	*x = FooRequest{}
+func (x *EchoRequest) Reset() {
+	*x = EchoRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_query_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2189,109 +2268,109 @@ func (x *FooRequest) Reset() {
 	}
 }
 
-func (x *FooRequest) String() string {
+func (x *EchoRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*FooRequest) ProtoMessage() {}
+func (*EchoRequest) ProtoMessage() {}
 
-// Deprecated: Use FooRequest.ProtoReflect.Descriptor instead.
-func (*FooRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use EchoRequest.ProtoReflect.Descriptor instead.
+func (*EchoRequest) Descriptor() ([]byte, []int) {
 	return file_testpb_query_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *FooRequest) GetU32() uint32 {
+func (x *EchoRequest) GetU32() uint32 {
 	if x != nil {
 		return x.U32
 	}
 	return 0
 }
 
-func (x *FooRequest) GetU64() uint64 {
+func (x *EchoRequest) GetU64() uint64 {
 	if x != nil {
 		return x.U64
 	}
 	return 0
 }
 
-func (x *FooRequest) GetStr() string {
+func (x *EchoRequest) GetStr() string {
 	if x != nil {
 		return x.Str
 	}
 	return ""
 }
 
-func (x *FooRequest) GetBz() []byte {
+func (x *EchoRequest) GetBz() []byte {
 	if x != nil {
 		return x.Bz
 	}
 	return nil
 }
 
-func (x *FooRequest) GetTimestamp() *timestamppb.Timestamp {
+func (x *EchoRequest) GetTimestamp() *timestamppb.Timestamp {
 	if x != nil {
 		return x.Timestamp
 	}
 	return nil
 }
 
-func (x *FooRequest) GetDuration() *durationpb.Duration {
+func (x *EchoRequest) GetDuration() *durationpb.Duration {
 	if x != nil {
 		return x.Duration
 	}
 	return nil
 }
 
-func (x *FooRequest) GetI32() int32 {
+func (x *EchoRequest) GetI32() int32 {
 	if x != nil {
 		return x.I32
 	}
 	return 0
 }
 
-func (x *FooRequest) GetI64() int64 {
+func (x *EchoRequest) GetI64() int64 {
 	if x != nil {
 		return x.I64
 	}
 	return 0
 }
 
-func (x *FooRequest) GetABool() bool {
+func (x *EchoRequest) GetABool() bool {
 	if x != nil {
 		return x.ABool
 	}
 	return false
 }
 
-func (x *FooRequest) GetAnEnum() Enum {
+func (x *EchoRequest) GetAnEnum() Enum {
 	if x != nil {
 		return x.AnEnum
 	}
 	return Enum_ENUM_UNSPECIFIED
 }
 
-func (x *FooRequest) GetAMessage() *AMessage {
+func (x *EchoRequest) GetAMessage() *AMessage {
 	if x != nil {
 		return x.AMessage
 	}
 	return nil
 }
 
-func (x *FooRequest) GetACoin() *v1beta1.Coin {
+func (x *EchoRequest) GetACoin() *v1beta1.Coin {
 	if x != nil {
 		return x.ACoin
 	}
 	return nil
 }
 
-func (x *FooRequest) GetAnAddress() string {
+func (x *EchoRequest) GetAnAddress() string {
 	if x != nil {
 		return x.AnAddress
 	}
 	return ""
 }
 
-func (x *FooRequest) GetPage() *v1beta11.PageRequest {
+func (x *EchoRequest) GetPage() *v1beta11.PageRequest {
 	if x != nil {
 		return x.Page
 	}
@@ -2341,14 +2420,16 @@ func (x *AMessage) GetBaz() int32 {
 	return 0
 }
 
-type FooResponse struct {
+type EchoResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
+
+	Request *EchoRequest `protobuf:"bytes,1,opt,name=request,proto3" json:"request,omitempty"`
 }
 
-func (x *FooResponse) Reset() {
-	*x = FooResponse{}
+func (x *EchoResponse) Reset() {
+	*x = EchoResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_query_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2356,15 +2437,22 @@ func (x *FooResponse) Reset() {
 	}
 }
 
-func (x *FooResponse) String() string {
+func (x *EchoResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*FooResponse) ProtoMessage() {}
+func (*EchoResponse) ProtoMessage() {}
 
-// Deprecated: Use FooResponse.ProtoReflect.Descriptor instead.
-func (*FooResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use EchoResponse.ProtoReflect.Descriptor instead.
+func (*EchoResponse) Descriptor() ([]byte, []int) {
 	return file_testpb_query_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *EchoResponse) GetRequest() *EchoRequest {
+	if x != nil {
+		return x.Request
+	}
+	return nil
 }
 
 var File_testpb_query_proto protoreflect.FileDescriptor
@@ -2382,62 +2470,65 @@ var file_testpb_query_proto_rawDesc = []byte{
 	0x74, 0x61, 0x31, 0x2f, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73,
 	0x65, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x22, 0xfb, 0x03, 0x0a, 0x0a, 0x46, 0x6f, 0x6f, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x33, 0x32, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d,
-	0x52, 0x03, 0x75, 0x33, 0x32, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x36, 0x34, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x04, 0x52, 0x03, 0x75, 0x36, 0x34, 0x12, 0x10, 0x0a, 0x03, 0x73, 0x74, 0x72, 0x18, 0x03,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x73, 0x74, 0x72, 0x12, 0x0e, 0x0a, 0x02, 0x62, 0x7a, 0x18,
-	0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x02, 0x62, 0x7a, 0x12, 0x38, 0x0a, 0x09, 0x74, 0x69, 0x6d,
-	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67,
-	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54,
-	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74,
-	0x61, 0x6d, 0x70, 0x12, 0x35, 0x0a, 0x08, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18,
-	0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e,
-	0x52, 0x08, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x10, 0x0a, 0x03, 0x69, 0x33,
-	0x32, 0x18, 0x07, 0x20, 0x01, 0x28, 0x05, 0x52, 0x03, 0x69, 0x33, 0x32, 0x12, 0x10, 0x0a, 0x03,
-	0x69, 0x36, 0x34, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x03, 0x52, 0x03, 0x69, 0x36, 0x34, 0x12, 0x15,
-	0x0a, 0x06, 0x61, 0x5f, 0x62, 0x6f, 0x6f, 0x6c, 0x18, 0x0f, 0x20, 0x01, 0x28, 0x08, 0x52, 0x05,
-	0x61, 0x42, 0x6f, 0x6f, 0x6c, 0x12, 0x25, 0x0a, 0x07, 0x61, 0x6e, 0x5f, 0x65, 0x6e, 0x75, 0x6d,
-	0x18, 0x10, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x0c, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e,
-	0x45, 0x6e, 0x75, 0x6d, 0x52, 0x06, 0x61, 0x6e, 0x45, 0x6e, 0x75, 0x6d, 0x12, 0x2d, 0x0a, 0x09,
-	0x61, 0x5f, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x11, 0x20, 0x01, 0x28, 0x0b, 0x32,
-	0x10, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x41, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67,
-	0x65, 0x52, 0x08, 0x61, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x30, 0x0a, 0x06, 0x61,
-	0x5f, 0x63, 0x6f, 0x69, 0x6e, 0x18, 0x12, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x52, 0x05, 0x61, 0x43, 0x6f, 0x69, 0x6e, 0x12, 0x37, 0x0a,
-	0x0a, 0x61, 0x6e, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x13, 0x20, 0x01, 0x28,
-	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x09, 0x61, 0x6e, 0x41,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x3a, 0x0a, 0x04, 0x70, 0x61, 0x67, 0x65, 0x18, 0x14,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61,
-	0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x04, 0x70, 0x61,
-	0x67, 0x65, 0x22, 0x2e, 0x0a, 0x08, 0x41, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x10,
-	0x0a, 0x03, 0x62, 0x61, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x62, 0x61, 0x72,
-	0x12, 0x10, 0x0a, 0x03, 0x62, 0x61, 0x7a, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x03, 0x62,
-	0x61, 0x7a, 0x22, 0x0d, 0x0a, 0x0b, 0x46, 0x6f, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x2a, 0x64, 0x0a, 0x04, 0x45, 0x6e, 0x75, 0x6d, 0x12, 0x14, 0x0a, 0x10, 0x45, 0x4e, 0x55,
-	0x4d, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12,
-	0x0c, 0x0a, 0x08, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x4f, 0x4e, 0x45, 0x10, 0x01, 0x12, 0x0c, 0x0a,
-	0x08, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x54, 0x57, 0x4f, 0x10, 0x02, 0x12, 0x0d, 0x0a, 0x09, 0x45,
-	0x4e, 0x55, 0x4d, 0x5f, 0x46, 0x49, 0x56, 0x45, 0x10, 0x05, 0x12, 0x1b, 0x0a, 0x0e, 0x45, 0x4e,
-	0x55, 0x4d, 0x5f, 0x4e, 0x45, 0x47, 0x5f, 0x54, 0x48, 0x52, 0x45, 0x45, 0x10, 0xfd, 0xff, 0xff,
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01, 0x32, 0x37, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79,
-	0x12, 0x2e, 0x0a, 0x03, 0x46, 0x6f, 0x6f, 0x12, 0x12, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62,
-	0x2e, 0x46, 0x6f, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x13, 0x2e, 0x74, 0x65,
-	0x73, 0x74, 0x70, 0x62, 0x2e, 0x46, 0x6f, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x42, 0x88, 0x01, 0x0a, 0x0a, 0x63, 0x6f, 0x6d, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x42,
-	0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x36, 0x67,
-	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x63, 0x6c, 0x69, 0x65,
-	0x6e, 0x74, 0x2f, 0x76, 0x32, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x74,
-	0x65, 0x73, 0x74, 0x70, 0x62, 0xa2, 0x02, 0x03, 0x54, 0x58, 0x58, 0xaa, 0x02, 0x06, 0x54, 0x65,
-	0x73, 0x74, 0x70, 0x62, 0xca, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0xe2, 0x02, 0x12,
-	0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
-	0x74, 0x61, 0xea, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x72, 0x6f, 0x74, 0x6f, 0x22, 0xfc, 0x03, 0x0a, 0x0b, 0x45, 0x63, 0x68, 0x6f, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x33, 0x32, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0d, 0x52, 0x03, 0x75, 0x33, 0x32, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x36, 0x34, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x04, 0x52, 0x03, 0x75, 0x36, 0x34, 0x12, 0x10, 0x0a, 0x03, 0x73, 0x74, 0x72, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x73, 0x74, 0x72, 0x12, 0x0e, 0x0a, 0x02, 0x62, 0x7a,
+	0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x02, 0x62, 0x7a, 0x12, 0x38, 0x0a, 0x09, 0x74, 0x69,
+	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e,
+	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
+	0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73,
+	0x74, 0x61, 0x6d, 0x70, 0x12, 0x35, 0x0a, 0x08, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x52, 0x08, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x10, 0x0a, 0x03, 0x69,
+	0x33, 0x32, 0x18, 0x07, 0x20, 0x01, 0x28, 0x05, 0x52, 0x03, 0x69, 0x33, 0x32, 0x12, 0x10, 0x0a,
+	0x03, 0x69, 0x36, 0x34, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x03, 0x52, 0x03, 0x69, 0x36, 0x34, 0x12,
+	0x15, 0x0a, 0x06, 0x61, 0x5f, 0x62, 0x6f, 0x6f, 0x6c, 0x18, 0x0f, 0x20, 0x01, 0x28, 0x08, 0x52,
+	0x05, 0x61, 0x42, 0x6f, 0x6f, 0x6c, 0x12, 0x25, 0x0a, 0x07, 0x61, 0x6e, 0x5f, 0x65, 0x6e, 0x75,
+	0x6d, 0x18, 0x10, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x0c, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62,
+	0x2e, 0x45, 0x6e, 0x75, 0x6d, 0x52, 0x06, 0x61, 0x6e, 0x45, 0x6e, 0x75, 0x6d, 0x12, 0x2d, 0x0a,
+	0x09, 0x61, 0x5f, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x11, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x10, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x41, 0x4d, 0x65, 0x73, 0x73, 0x61,
+	0x67, 0x65, 0x52, 0x08, 0x61, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x30, 0x0a, 0x06,
+	0x61, 0x5f, 0x63, 0x6f, 0x69, 0x6e, 0x18, 0x12, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x52, 0x05, 0x61, 0x43, 0x6f, 0x69, 0x6e, 0x12, 0x37,
+	0x0a, 0x0a, 0x61, 0x6e, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x13, 0x20, 0x01,
+	0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x09, 0x61, 0x6e,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x3a, 0x0a, 0x04, 0x70, 0x61, 0x67, 0x65, 0x18,
+	0x14, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
+	0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x04, 0x70,
+	0x61, 0x67, 0x65, 0x22, 0x2e, 0x0a, 0x08, 0x41, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12,
+	0x10, 0x0a, 0x03, 0x62, 0x61, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x62, 0x61,
+	0x72, 0x12, 0x10, 0x0a, 0x03, 0x62, 0x61, 0x7a, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x03,
+	0x62, 0x61, 0x7a, 0x22, 0x3d, 0x0a, 0x0c, 0x45, 0x63, 0x68, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x2d, 0x0a, 0x07, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x63,
+	0x68, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x07, 0x72, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x2a, 0x64, 0x0a, 0x04, 0x45, 0x6e, 0x75, 0x6d, 0x12, 0x14, 0x0a, 0x10, 0x45, 0x4e,
+	0x55, 0x4d, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00,
+	0x12, 0x0c, 0x0a, 0x08, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x4f, 0x4e, 0x45, 0x10, 0x01, 0x12, 0x0c,
+	0x0a, 0x08, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x54, 0x57, 0x4f, 0x10, 0x02, 0x12, 0x0d, 0x0a, 0x09,
+	0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x46, 0x49, 0x56, 0x45, 0x10, 0x05, 0x12, 0x1b, 0x0a, 0x0e, 0x45,
+	0x4e, 0x55, 0x4d, 0x5f, 0x4e, 0x45, 0x47, 0x5f, 0x54, 0x48, 0x52, 0x45, 0x45, 0x10, 0xfd, 0xff,
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01, 0x32, 0x3a, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x12, 0x31, 0x0a, 0x04, 0x45, 0x63, 0x68, 0x6f, 0x12, 0x13, 0x2e, 0x74, 0x65, 0x73, 0x74,
+	0x70, 0x62, 0x2e, 0x45, 0x63, 0x68, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x14,
+	0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x63, 0x68, 0x6f, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x42, 0x88, 0x01, 0x0a, 0x0a, 0x63, 0x6f, 0x6d, 0x2e, 0x74, 0x65, 0x73,
+	0x74, 0x70, 0x62, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
+	0x01, 0x5a, 0x36, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f,
+	0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x2f, 0x76, 0x32, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e,
+	0x61, 0x6c, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0xa2, 0x02, 0x03, 0x54, 0x58, 0x58, 0xaa,
+	0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0xca, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70,
+	0x62, 0xe2, 0x02, 0x12, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65,
+	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2456,28 +2547,29 @@ var file_testpb_query_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_testpb_query_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_testpb_query_proto_goTypes = []interface{}{
 	(Enum)(0),                     // 0: testpb.Enum
-	(*FooRequest)(nil),            // 1: testpb.FooRequest
+	(*EchoRequest)(nil),           // 1: testpb.EchoRequest
 	(*AMessage)(nil),              // 2: testpb.AMessage
-	(*FooResponse)(nil),           // 3: testpb.FooResponse
+	(*EchoResponse)(nil),          // 3: testpb.EchoResponse
 	(*timestamppb.Timestamp)(nil), // 4: google.protobuf.Timestamp
 	(*durationpb.Duration)(nil),   // 5: google.protobuf.Duration
 	(*v1beta1.Coin)(nil),          // 6: cosmos.base.v1beta1.Coin
 	(*v1beta11.PageRequest)(nil),  // 7: cosmos.base.query.v1beta1.PageRequest
 }
 var file_testpb_query_proto_depIdxs = []int32{
-	4, // 0: testpb.FooRequest.timestamp:type_name -> google.protobuf.Timestamp
-	5, // 1: testpb.FooRequest.duration:type_name -> google.protobuf.Duration
-	0, // 2: testpb.FooRequest.an_enum:type_name -> testpb.Enum
-	2, // 3: testpb.FooRequest.a_message:type_name -> testpb.AMessage
-	6, // 4: testpb.FooRequest.a_coin:type_name -> cosmos.base.v1beta1.Coin
-	7, // 5: testpb.FooRequest.page:type_name -> cosmos.base.query.v1beta1.PageRequest
-	1, // 6: testpb.Query.Foo:input_type -> testpb.FooRequest
-	3, // 7: testpb.Query.Foo:output_type -> testpb.FooResponse
-	7, // [7:8] is the sub-list for method output_type
-	6, // [6:7] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	4, // 0: testpb.EchoRequest.timestamp:type_name -> google.protobuf.Timestamp
+	5, // 1: testpb.EchoRequest.duration:type_name -> google.protobuf.Duration
+	0, // 2: testpb.EchoRequest.an_enum:type_name -> testpb.Enum
+	2, // 3: testpb.EchoRequest.a_message:type_name -> testpb.AMessage
+	6, // 4: testpb.EchoRequest.a_coin:type_name -> cosmos.base.v1beta1.Coin
+	7, // 5: testpb.EchoRequest.page:type_name -> cosmos.base.query.v1beta1.PageRequest
+	1, // 6: testpb.EchoResponse.request:type_name -> testpb.EchoRequest
+	1, // 7: testpb.Query.Echo:input_type -> testpb.EchoRequest
+	3, // 8: testpb.Query.Echo:output_type -> testpb.EchoResponse
+	8, // [8:9] is the sub-list for method output_type
+	7, // [7:8] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_testpb_query_proto_init() }
@@ -2487,7 +2579,7 @@ func file_testpb_query_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_testpb_query_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*FooRequest); i {
+			switch v := v.(*EchoRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2511,7 +2603,7 @@ func file_testpb_query_proto_init() {
 			}
 		}
 		file_testpb_query_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*FooResponse); i {
+			switch v := v.(*EchoResponse); i {
 			case 0:
 				return &v.state
 			case 1:

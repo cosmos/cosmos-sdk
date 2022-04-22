@@ -82,8 +82,8 @@ func (c compositeListValue) String() string {
 	if len(c.values) == 0 {
 		return ""
 	}
-	//TODO implement me
-	panic("implement me")
+
+	return fmt.Sprintf("%+v", c.values)
 }
 
 func (c *compositeListValue) Set(val string) error {

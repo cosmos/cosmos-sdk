@@ -9,11 +9,11 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
 service Query {
-  // Foo does something
-  rpc Foo(FooRequest) returns (FooResponse);
+  // Echo returns the request in the response
+  rpc Echo(EchoRequest) returns (EchoResponse);
 }
 
-message FooRequest {
+message EchoRequest {
   // u32 is an uint32
   uint32                    u32 = 1;
   uint64                    u64 = 2;
@@ -44,6 +44,6 @@ message AMessage {
   int32 baz = 2;
 }
 
-message FooResponse {
-
+message EchoResponse {
+  EchoRequest request = 1;
 }

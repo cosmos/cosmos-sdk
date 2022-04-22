@@ -31,21 +31,18 @@ func (s *processTestSuite) TestLaunchProcess() {
 	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", PollInterval: 20, UnsafeSkipBackup: true}
 
 	// should run the genesis binary and produce expected output
+	var stdout, stderr = NewBuffer(), NewBuffer()
 	currentBin, err := cfg.CurrentBin()
 	require.NoError(err)
 	require.Equal(cfg.GenesisBin(), currentBin)
 
-	var stdout, stderr = NewBuffer(), NewBuffer()
-	runCfg := &cosmovisor.RunConfig{
-		StdOut: stdout,
-		StdErr: stderr,
-	}
-	launcher, err := cosmovisor.NewLauncher(cfg, runCfg)
+	launcher, err := cosmovisor.NewLauncher(cfg)
 	require.NoError(err)
 
 	upgradeFile := cfg.UpgradeInfoFilePath()
+
 	args := []string{"foo", "bar", "1234", upgradeFile}
-	doUpgrade, err := launcher.Run(args)
+	doUpgrade, err := launcher.Run(args, stdout, stderr)
 	require.NoError(err)
 	require.True(doUpgrade)
 	require.Equal("", stderr.String())
@@ -62,7 +59,7 @@ func (s *processTestSuite) TestLaunchProcess() {
 	stdout.Reset()
 	stderr.Reset()
 
-	doUpgrade, err = launcher.Run(args)
+	doUpgrade, err = launcher.Run(args, stdout, stderr)
 	require.NoError(err)
 	require.False(doUpgrade)
 	require.Equal("", stderr.String())
@@ -89,16 +86,13 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	require.NoError(err)
 	require.Equal(cfg.GenesisBin(), currentBin)
 
-	var stdout, stderr = NewBuffer(), NewBuffer()
-	runCfg := &cosmovisor.RunConfig{
-		StdOut: stdout,
-		StdErr: stderr,
-	}
-	launcher, err := cosmovisor.NewLauncher(cfg, runCfg)
+	launcher, err := cosmovisor.NewLauncher(cfg)
 	require.NoError(err)
 
+	var stdout, stderr = NewBuffer(), NewBuffer()
 	args := []string{"some", "args", upgradeFilename}
-	doUpgrade, err := launcher.Run(args)
+	doUpgrade, err := launcher.Run(args, stdout, stderr)
+
 	require.NoError(err)
 	require.True(doUpgrade)
 	require.Equal("", stderr.String())
@@ -111,7 +105,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	stdout.Reset()
 	stderr.Reset()
 	args = []string{"run", "--fast", upgradeFilename}
-	doUpgrade, err = launcher.Run(args)
+	doUpgrade, err = launcher.Run(args, stdout, stderr)
 	require.NoError(err)
 
 	require.Equal("", stderr.String())
@@ -126,7 +120,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	args = []string{"end", "--halt", upgradeFilename}
 	stdout.Reset()
 	stderr.Reset()
-	doUpgrade, err = launcher.Run(args)
+	doUpgrade, err = launcher.Run(args, stdout, stderr)
 	require.NoError(err)
 	require.False(doUpgrade)
 	require.Equal("", stderr.String())

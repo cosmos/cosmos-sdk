@@ -17,3 +17,7 @@ func SetupLogging() {
 func DisableLogger() {
 	zerolog.SetGlobalLevel(zerolog.Disabled)
 }
+
+func EnableLogger() {
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+}

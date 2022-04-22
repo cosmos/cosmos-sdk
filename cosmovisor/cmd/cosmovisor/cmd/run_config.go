@@ -1,8 +1,10 @@
-package cosmovisor
+package cmd
 
 import (
 	"io"
 	"os"
+
+	"github.com/cosmos/cosmos-sdk/cosmovisor"
 )
 
 var DefaultRunConfig = RunConfig{
@@ -35,6 +37,6 @@ func StdErr(w io.Writer) RunOption {
 func DisableLogging() RunOption {
 	return func(cfg *RunConfig) {
 		cfg.DisableLogging = true
-		DisableLogger()
+		cosmovisor.DisableLogger()
 	}
 }

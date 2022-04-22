@@ -3,7 +3,6 @@ package cosmovisor
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -19,19 +18,25 @@ import (
 )
 
 type Launcher struct {
-	cfg *Config
-	fw  *fileWatcher
+	cfg    *Config
+	runCfg *RunConfig
+	fw     *fileWatcher
 }
 
-func NewLauncher(cfg *Config) (Launcher, error) {
+func NewLauncher(cfg *Config, runCfg *RunConfig) (Launcher, error) {
 	fw, err := newUpgradeFileWatcher(cfg.UpgradeInfoFilePath(), cfg.PollInterval)
-	return Launcher{cfg, fw}, err
+	if err != nil {
+		return Launcher{}, err
+	}
+
+	return Launcher{cfg: cfg, runCfg: runCfg, fw: fw}, nil
 }
 
 // Run launches the app in a subprocess and returns when the subprocess (app)
 // exits (either when it dies, or *after* a successful upgrade.) and upgrade finished.
 // Returns true if the upgrade request was detected and the upgrade process started.
-func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
+func (l Launcher) Run(args []string) (bool, error) {
+
 	bin, err := l.cfg.CurrentBin()
 	if err != nil {
 		return false, fmt.Errorf("error creating symlink to genesis: %w", err)
@@ -40,10 +45,12 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	if err := EnsureBinary(bin); err != nil {
 		return false, fmt.Errorf("current binary is invalid: %w", err)
 	}
+
 	Logger.Info().Str("path", bin).Strs("args", args).Msg("running app")
+
 	cmd := exec.Command(bin, args...)
-	cmd.Stdout = stdout
-	cmd.Stderr = stderr
+	cmd.Stdout = l.runCfg.StdOut
+	cmd.Stderr = l.runCfg.StdErr
 	if err := cmd.Start(); err != nil {
 		return false, fmt.Errorf("launching process %s %s failed: %w", bin, strings.Join(args, " "), err)
 	}

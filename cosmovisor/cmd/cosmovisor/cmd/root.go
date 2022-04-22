@@ -12,20 +12,24 @@ func RunCosmovisorCommand(args []string) error {
 	if len(args) > 0 {
 		arg0 = strings.TrimSpace(args[0])
 	}
+
 	switch {
 	case IsVersionCommand(arg0):
-		return PrintVersion()
+		return PrintVersion(args[1:])
+
 	case ShouldGiveHelp(arg0):
-		DoHelp()
-		return nil
+		return DoHelp()
+
 	case IsRunCommand(arg0):
 		return Run(args[1:])
 	}
+
 	warnRun := func() {
 		cosmovisor.Logger.Warn().Msg("Use of cosmovisor without the 'run' command is deprecated. Use: cosmovisor run [args]")
 	}
 	warnRun()
 	defer warnRun()
+
 	return Run(args)
 }
 

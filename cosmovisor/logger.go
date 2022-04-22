@@ -13,3 +13,7 @@ func SetupLogging() {
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.Kitchen}
 	Logger = zerolog.New(output).With().Str("module", "cosmovisor").Timestamp().Logger()
 }
+
+func DisableLogger() {
+	zerolog.SetGlobalLevel(zerolog.Disabled)
+}

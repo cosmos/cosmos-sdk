@@ -409,12 +409,12 @@ func (c *Client) ConstructionMetadataFromOptions(ctx context.Context, options ma
 	}
 
 	// if default fees suggestion is enabled and gas limit or price is unset, use default
-	if c.config.EnableDefaultSuggestedFee {
+	if c.config.EnableFeeSuggestion {
 		if constructionOptions.GasLimit <= 0 {
-			constructionOptions.GasLimit = uint64(c.config.SuggestGas)
+			constructionOptions.GasLimit = uint64(c.config.GasToSuggest)
 		}
 		if constructionOptions.GasPrice == "" {
-			denom := c.config.DefaultSuggestDenom
+			denom := c.config.DenomToSuggest
 			constructionOptions.GasPrice = c.config.SuggestPrices.AmountOf(denom).String() + denom
 		}
 	}

@@ -170,15 +170,17 @@ retries = {{ .Rosetta.Retries }}
 # Offline defines if Rosetta server should run in offline mode.
 offline = {{ .Rosetta.Offline }}
 
-# EnableDefaultSuggestedFee defines if the server should suggest fee by default
-enable-default-suggested-fee = {{ .Rosetta.EnableDefaultSuggestedFee }}
+# EnableDefaultSuggestedFee defines if the server should suggest fee by default.
+# If 'construction/medata' is called without gas limit and gas price,
+# suggested fee based on gas-to-suggest and denom-to-suggest will be given.
+enable-fee-suggestion = {{ . Rosetta.EnableFeeSuggestion }}
 
-# SuggestGas defines gas limit when calculate fee
-suggest-gas = {{ .Rosetta.SuggestGas }}
+# GasToSuggest defines gas limit when calculating the fee
+gas-to-suggest = {{ .Rosetta.GasToSuggest }}
 
-# DefaultSuggestDenom defines the defult denom for fee suggestion.
+# DenomToSuggest defines the defult denom for fee suggestion.
 # Price must be in minimum-gas-prices.
-default-suggest-denom = "{{ .Rosetta.DefaultSuggestDenom }}"
+denom-to-suggest = "{{ .Rosetta.DenomToSuggest }}"
 
 ###############################################################################
 ###                           gRPC Configuration                            ###

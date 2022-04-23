@@ -32,27 +32,27 @@ const (
 	DefaultNetwork = "network"
 	// DefaultOffline defines the default offline value
 	DefaultOffline = false
-	// DefaultEnableSuggestedFee indicates to use fee suggestion
-	DefaultEnableSuggestedFee = false
-	// DefaultSuggestDenom defines the default denom for fee suggestion
-	DefaultSuggestDenom = "uatom"
-	// DefaultSuggestPrices defines the default list of prices to suggest
-	DefaultSuggestPrices = "0.0uatom"
+	// DefaultEnableFeeSuggestion indicates to use fee suggestion if `construction/metadata` is called without gas limit and price
+	DefaultEnableFeeSuggestion = false
+	// DenomToSuggest defines the default denom for fee suggestion
+	DenomToSuggest = "uatom"
+	// DefaultPrices defines the default list of prices to suggest
+	DefaultPrices = "0.0uatom"
 )
 
 // configuration flags
 const (
-	FlagBlockchain                = "blockchain"
-	FlagNetwork                   = "network"
-	FlagTendermintEndpoint        = "tendermint"
-	FlagGRPCEndpoint              = "grpc"
-	FlagAddr                      = "addr"
-	FlagRetries                   = "retries"
-	FlagOffline                   = "offline"
-	FlagEnableDefaultSuggestedFee = "enable-default-suggested-fee"
-	FlagSuggestGas                = "suggest-gas"
-	FlagSuggestDenom              = "suggest-denom"
-	FlagSuggestPrices             = "suggest-prices"
+	FlagBlockchain          = "blockchain"
+	FlagNetwork             = "network"
+	FlagTendermintEndpoint  = "tendermint"
+	FlagGRPCEndpoint        = "grpc"
+	FlagAddr                = "addr"
+	FlagRetries             = "retries"
+	FlagOffline             = "offline"
+	FlagEnableFeeSuggestion = "enable-fee-suggestion"
+	FlagGasToSuggest        = "gas-to-suggest"
+	FlagDenomToSuggest      = "denom-to-suggest"
+	FlagPricesToSuggest     = "prices-to-suggest"
 )
 
 // Config defines the configuration of the rosetta server
@@ -77,12 +77,12 @@ type Config struct {
 	Retries int
 	// Offline defines if the server must be run in offline mode
 	Offline bool
-	// EnableDefaultSuggestedFee indicates to use fee suggestion
-	EnableDefaultSuggestedFee bool
-	// SuggestGas defines the gas limit for fee suggestion
-	SuggestGas int
-	// DefaultSuggestDenom defines the default denom for fee suggestion
-	DefaultSuggestDenom string
+	// EnableFeeSuggestion indicates to use fee suggestion when `construction/metadata` is called without gas limit and price
+	EnableFeeSuggestion bool
+	// GasToSuggest defines the gas limit for fee suggestion
+	GasToSuggest int
+	// DenomToSuggest defines the default denom for fee suggestion
+	DenomToSuggest string
 	// SuggestPrices defines the gas prices for fee suggestion
 	SuggestPrices sdk.DecCoins
 	// Codec overrides the default data and construction api client codecs
@@ -119,12 +119,12 @@ func (c *Config) validate() error {
 	if c.Network == "" {
 		return fmt.Errorf("network not provided")
 	}
-	if c.SuggestGas <= 0 {
-		c.SuggestGas = clientflags.DefaultGasLimit
+	if c.GasToSuggest <= 0 {
+		c.GasToSuggest = clientflags.DefaultGasLimit
 	}
 	found := false
 	for i := 0; i < c.SuggestPrices.Len(); i++ {
-		if c.SuggestPrices.GetDenomByIndex(i) == c.DefaultSuggestDenom {
+		if c.SuggestPrices.GetDenomByIndex(i) == c.DenomToSuggest {
 			found = true
 			break
 		}
@@ -183,19 +183,19 @@ func FromFlags(flags *pflag.FlagSet) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	enableDefaultSuggestedFee, err := flags.GetBool(FlagEnableDefaultSuggestedFee)
+	enableDefaultFeeSuggestion, err := flags.GetBool(FlagEnableFeeSuggestion)
 	if err != nil {
 		return nil, err
 	}
-	suggestGas, err := flags.GetInt(FlagSuggestGas)
+	suggestGas, err := flags.GetInt(FlagGasToSuggest)
 	if err != nil {
 		return nil, err
 	}
-	suggestDenom, err := flags.GetString(FlagSuggestDenom)
+	suggestDenom, err := flags.GetString(FlagDenomToSuggest)
 	if err != nil {
 		return nil, err
 	}
-	suggestPrices, err := flags.GetString(FlagSuggestPrices)
+	suggestPrices, err := flags.GetString(FlagPricesToSuggest)
 	if err != nil {
 		return nil, err
 	}
@@ -205,17 +205,17 @@ func FromFlags(flags *pflag.FlagSet) (*Config, error) {
 	}
 
 	conf := &Config{
-		Blockchain:                blockchain,
-		Network:                   network,
-		TendermintRPC:             tendermintRPC,
-		GRPCEndpoint:              gRPCEndpoint,
-		Addr:                      addr,
-		Retries:                   retries,
-		Offline:                   offline,
-		EnableDefaultSuggestedFee: enableDefaultSuggestedFee,
-		SuggestGas:                suggestGas,
-		DefaultSuggestDenom:       suggestDenom,
-		SuggestPrices:             prices,
+		Blockchain:          blockchain,
+		Network:             network,
+		TendermintRPC:       tendermintRPC,
+		GRPCEndpoint:        gRPCEndpoint,
+		Addr:                addr,
+		Retries:             retries,
+		Offline:             offline,
+		EnableFeeSuggestion: enableDefaultFeeSuggestion,
+		GasToSuggest:        suggestGas,
+		DenomToSuggest:      suggestDenom,
+		SuggestPrices:       prices,
 	}
 	err = conf.validate()
 	if err != nil {
@@ -256,8 +256,8 @@ func SetFlags(flags *pflag.FlagSet) {
 	flags.String(FlagAddr, DefaultAddr, "the address rosetta will bind to")
 	flags.Int(FlagRetries, DefaultRetries, "the number of retries that will be done before quitting")
 	flags.Bool(FlagOffline, DefaultOffline, "run rosetta only with construction API")
-	flags.Bool(FlagEnableDefaultSuggestedFee, DefaultEnableSuggestedFee, "enable default fee suggestion")
-	flags.Int(FlagSuggestGas, clientflags.DefaultGasLimit, "default gas for fee suggestion")
-	flags.String(FlagSuggestDenom, DefaultSuggestDenom, "default denom to suggest fee")
-	flags.String(FlagSuggestPrices, DefaultSuggestPrices, "default prices to suggest fee")
+	flags.Bool(FlagEnableFeeSuggestion, DefaultEnableFeeSuggestion, "enable default fee suggestion")
+	flags.Int(FlagGasToSuggest, clientflags.DefaultGasLimit, "default gas for fee suggestion")
+	flags.String(FlagDenomToSuggest, DenomToSuggest, "default denom for fee suggestion")
+	flags.String(FlagPricesToSuggest, DefaultPrices, "default prices for fee suggestion")
 }

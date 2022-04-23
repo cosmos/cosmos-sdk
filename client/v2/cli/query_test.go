@@ -23,7 +23,7 @@ func testExec(t *testing.T, args ...string) *testClientConn {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	assert.NilError(t, err)
 	go server.Serve(listener)
-	defer listener.Close()
+	defer server.GracefulStop()
 	clientConn, err := grpc.Dial(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	assert.NilError(t, err)
 	defer clientConn.Close()

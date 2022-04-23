@@ -2,6 +2,7 @@ package flag
 
 import (
 	"context"
+	"fmt"
 
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"github.com/spf13/pflag"
@@ -49,7 +50,7 @@ func (b *Builder) AddFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, fiel
 		case ListValue:
 			return listValueBinder{val}
 		default:
-			return nil
+			panic(fmt.Errorf("%T does not implement SimpleValue or ListValue", val))
 		}
 	}
 

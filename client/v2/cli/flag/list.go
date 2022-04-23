@@ -78,6 +78,12 @@ type compositeListValue struct {
 	opts       *Builder
 }
 
+func (c compositeListValue) AppendTo(list protoreflect.List) {
+	for _, value := range c.values {
+		list.Append(value)
+	}
+}
+
 func (c compositeListValue) String() string {
 	if len(c.values) == 0 {
 		return ""

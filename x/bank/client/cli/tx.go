@@ -96,7 +96,7 @@ func NewMultiSendTxCmd() *cobra.Command {
 			}
 
 			totalAddr := types.NewInt(int64(len(args) - 2))
-			// coins to be receives by the address
+			// coins to be received by the addresses
 			sendCoins := coins
 			if split && !coins.IsZero() {
 				sendCoins = coins.Quo(totalAddr)

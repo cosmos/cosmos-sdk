@@ -247,7 +247,7 @@ may simply migrate any existing types that
 are encoded and persisted via their concrete Amino codec to Protobuf (see 1. for further guidelines) and accept a `Marshaler` as the codec which is implemented via the `ProtoCodec`
 without any further customization.
 
-However, if a module type composes an interface, it must wrap it in the `skd.Any` (from `/types` package) type. To do that, a module-level .proto file must use [`google.protobuf.Any`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/any.proto) for respective message type interface types.
+However, if a module type composes an interface, it must wrap it in the `sdk.Any` (from `/types` package) type. To do that, a module-level .proto file must use [`google.protobuf.Any`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/any.proto) for respective message type interface types.
 
 For example, in the `x/evidence` module defines an `Evidence` interface, which is used by the `MsgSubmitEvidence`. The structure definition must use `sdk.Any` to wrap the evidence file. In the proto file we define it as follows:
 

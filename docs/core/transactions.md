@@ -79,7 +79,7 @@ Module `sdk.Msg`s are not to be confused with [ABCI Messages](https://tendermint
 
 **Messages** (or `sdk.Msg`s) are module-specific objects that trigger state transitions within the scope of the module they belong to. Module developers define the messages for their module by adding methods to the Protobuf [`Msg` service](../building-modules/msg-services.md), and also implement the corresponding `MsgServer`.
 
-Each `sdk.Msg`s is related to exactly one Protobuf [`Msg` service](../building-modules/msg-services.md) RPC, defined inside each module's `tx.proto` file. An SKD app router automatically maps every `sdk.Msg` to a corresponding RPC. Protobuf generates a `MsgServer` interface for each module `Msg` service, and the module developer needs to implement this interface.
+Each `sdk.Msg`s is related to exactly one Protobuf [`Msg` service](../building-modules/msg-services.md) RPC, defined inside each module's `tx.proto` file. A SDK app router automatically maps every `sdk.Msg` to a corresponding RPC. Protobuf generates a `MsgServer` interface for each module `Msg` service, and the module developer needs to implement this interface.
 This design puts more responsibility on module developers, allowing application developers to reuse common functionalities without having to implement state transition logic repetitively.
 
 To learn more about Protobuf `Msg` services and how to implement `MsgServer`, click [here](../building-modules/msg-services.md).

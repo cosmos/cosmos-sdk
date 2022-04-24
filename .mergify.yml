@@ -48,3 +48,4 @@ pull_request_rules:
       backport:
         branches:
           - release/v0.42.x
+![This is an image](https://myoctocat.com/assets/images/base-octocat.svg

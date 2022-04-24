@@ -6,21 +6,27 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
+
+var FlagSplit = "split"
 
 // NewTxCmd returns a root CLI command handler for all x/bank transaction commands.
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
-		Use:                        types.ModuleName,
+		Use:                        banktypes.ModuleName,
 		Short:                      "Bank transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
 
-	txCmd.AddCommand(NewSendTxCmd())
+	txCmd.AddCommand(
+		NewSendTxCmd(),
+		NewMultiSendTxCmd(),
+	)
 
 	return txCmd
 }
@@ -50,11 +56,79 @@ func NewSendTxCmd() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgSend(clientCtx.GetFromAddress(), toAddr, coins)
+			msg := banktypes.NewMsgSend(clientCtx.GetFromAddress(), toAddr, coins)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewMultiSendTxCmd returns a CLI command handler for creating a MsgMultiSend transaction.
+// For a better UX this command is limited to send one coin from one address to multiple addresses.
+func NewMultiSendTxCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use: "multi-send [from_key_or_address] [to_address_1, to_address_2, ...] [amount]",
+		Short: `Send funds from one account multiple others.
+		By default, sends the [amount] to each address of the list.
+		Using the '--split' flag, the [amount] is split equally between the addresses.
+		Note, the '--from' flag is ignored as it is implied from [from_key_or_address].
+		When using '--dry-run' a key name cannot be used, only a bech32 address.`,
+		Args: cobra.MinimumNArgs(4),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Flags().Set(flags.FlagFrom, args[0])
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			coins, err := sdk.ParseCoinsNormalized(args[len(args)-1])
+			if err != nil {
+				return err
+			}
+
+			split, err := cmd.Flags().GetBool(FlagSplit)
+			if err != nil {
+				return err
+			}
+
+			totalAddr := types.NewInt(int64(len(args) - 2))
+			// coins to be receives by the address
+			sendCoins := coins
+			if split && !coins.IsZero() {
+				sendCoins = coins.Quo(totalAddr)
+			}
+
+			var output []banktypes.Output
+			for _, arg := range args[1 : len(args)-1] {
+				toAddr, err := sdk.AccAddressFromBech32(arg)
+				if err != nil {
+					return err
+				}
+
+				output = append(output, banktypes.NewOutput(toAddr, sendCoins))
+			}
+
+			// amount to be send from the from address
+			var amount sdk.Coins
+			if split {
+				// user input: 1000stake to send to 3 addresses
+				// actual: 333stake to each address (=> 999stake actually sent)
+				amount = sendCoins.Mul(totalAddr)
+			} else {
+				amount = coins.Mul(totalAddr)
+			}
+
+			msg := banktypes.NewMsgMultiSend([]banktypes.Input{banktypes.NewInput(clientCtx.FromAddress, amount)}, output)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().Bool(FlagSplit, false, "Send the equally split token amount to each address")
 
 	flags.AddTxFlagsToCmd(cmd)
 

@@ -410,6 +410,76 @@ func (coins Coins) SafeSub(coinsB ...Coin) (Coins, bool) {
 	return diff, diff.IsAnyNegative()
 }
 
+// Mul performs the scalar multiplication of coins with a `multiplier`
+// All coins are multipled by x
+// e.g.
+// {2A, 3B} * 2 = {4A, 6B}
+// {2A} * 0 panics
+// Note, if IsValid was true on Coins, IsValid stays true
+func (coins Coins) Mul(x Int) Coins {
+	coins, ok := coins.SafeMul(x)
+	if !ok {
+		panic("multiplying by zero is an invalid operation on coins")
+	}
+
+	return coins
+}
+
+// SafeMul performs the same arithmetic as Mul but returns false
+// if the `multiplier` is zero because it makes IsValid return false
+func (coins Coins) SafeMul(x Int) (Coins, bool) {
+	if x.IsNil() || x.IsZero() {
+		return nil, false
+	}
+
+	res := make(Coins, len(coins))
+	for i, coin := range coins {
+		c := coin
+		c.Amount = c.Amount.Mul(x)
+		res[i] = c
+	}
+
+	return res, true
+}
+
+// Quo performs the scalar division of coins with a `divisor`
+// All coins are divided by x
+// e.g.
+// {2A, 30B} / 2 = {1A, 15B}
+// {2A} / 2 = {1A}
+// {2A} / 0 = panics
+// {2A} / 3 = panics
+// Note, if IsValid was true on Coins, IsValid stays true
+func (coins Coins) Quo(x Int) Coins {
+	coins, err := coins.SafeQuo(x)
+	if err != nil {
+		panic(err)
+	}
+
+	return coins
+}
+
+// SafeQuo performs the same arithmetic as Quo but returns an error
+// if the division cannot be done
+func (coins Coins) SafeQuo(x Int) (Coins, error) {
+	if x.IsNil() || x.IsZero() {
+		return nil, fmt.Errorf("cannot divide by zero")
+	}
+
+	if coins.IsAllGTE(Coins{NewCoin(DefaultBondDenom, x)}) {
+		return nil, fmt.Errorf("cannot divide coins by %[1]s, at least once coins is lesser than %[1]s", x.String())
+	}
+
+	var res Coins
+	for _, coin := range coins {
+		coin := coin
+		coin.Amount = coin.Amount.Quo(x)
+		res = append(res, coin)
+	}
+
+	return res, nil
+}
+
 // Max takes two valid Coins inputs and returns a valid Coins result
 // where for every denom D, AmountOf(D) of the result is the maximum
 // of AmountOf(D) of the inputs.  Note that the result might be not

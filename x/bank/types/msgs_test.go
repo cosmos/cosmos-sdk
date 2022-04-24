@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestMsgSendRoute(t *testing.T) {
@@ -202,6 +203,10 @@ func TestMsgMultiSendValidation(t *testing.T) {
 		{true, MsgMultiSend{
 			Inputs:  []Input{input1, input2},
 			Outputs: []Output{outputMulti}},
+		},
+		{true, MsgMultiSend{
+			Inputs:  []Input{NewInput(addr2, atom123.Mul(types.NewInt(2)))},
+			Outputs: []Output{output1, output1}},
 		},
 	}
 

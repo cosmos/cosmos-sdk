@@ -443,17 +443,18 @@ func (coins Coins) SafeMul(x Int) (Coins, bool) {
 }
 
 // Quo performs the scalar division of coins with a `divisor`
-// All coins are divided by x
+// All coins are divided by x and trucated.
 // e.g.
 // {2A, 30B} / 2 = {1A, 15B}
 // {2A} / 2 = {1A}
+// {4A} / {8A} = {0A}
 // {2A} / 0 = panics
-// {2A} / 3 = panics
-// Note, if IsValid was true on Coins, IsValid stays true
+// Note, if IsValid was true on Coins, IsValid stays true,
+// unless the `divisor` is greater than the smallest coin amount.
 func (coins Coins) Quo(x Int) Coins {
-	coins, err := coins.SafeQuo(x)
-	if err != nil {
-		panic(err)
+	coins, ok := coins.SafeQuo(x)
+	if !ok {
+		panic("cannot divide by zero")
 	}
 
 	return coins
@@ -461,13 +462,9 @@ func (coins Coins) Quo(x Int) Coins {
 
 // SafeQuo performs the same arithmetic as Quo but returns an error
 // if the division cannot be done
-func (coins Coins) SafeQuo(x Int) (Coins, error) {
+func (coins Coins) SafeQuo(x Int) (Coins, bool) {
 	if x.IsNil() || x.IsZero() {
-		return nil, fmt.Errorf("cannot divide by zero")
-	}
-
-	if coins.IsAllGTE(Coins{NewCoin(DefaultBondDenom, x)}) {
-		return nil, fmt.Errorf("cannot divide coins by %[1]s, at least once coins is lesser than %[1]s", x.String())
+		return nil, false
 	}
 
 	var res Coins
@@ -477,7 +474,7 @@ func (coins Coins) SafeQuo(x Int) (Coins, error) {
 		res = append(res, coin)
 	}
 
-	return res, nil
+	return res, true
 }
 
 // Max takes two valid Coins inputs and returns a valid Coins result

@@ -256,12 +256,13 @@ func (s *coinTestSuite) TestQuoCoins() {
 		input       sdk.Coins
 		divisor     sdk.Int
 		expected    sdk.Coins
+		isValid     bool
 		shouldPanic bool
 	}{
-		// test cases for sorted denoms
-		{sdk.Coins{s.ca2, s.ca1}, sdk.NewInt(0), sdk.Coins{s.ca0, s.ca0}, true},
-		{sdk.Coins{s.ca2}, sdk.NewInt(2), sdk.Coins{s.ca1}, false},
-		{sdk.Coins{s.ca4}, sdk.NewInt(2), sdk.Coins{s.ca2}, false},
+		{sdk.Coins{s.ca2, s.ca1}, sdk.NewInt(0), sdk.Coins{s.ca0, s.ca0}, true, true},
+		{sdk.Coins{s.ca2}, sdk.NewInt(4), sdk.Coins{s.ca0}, false, false},
+		{sdk.Coins{s.ca2, s.cm4}, sdk.NewInt(2), sdk.Coins{s.ca1, s.cm2}, true, false},
+		{sdk.Coins{s.ca4}, sdk.NewInt(2), sdk.Coins{s.ca2}, true, false},
 	}
 
 	assert := s.Assert()
@@ -271,7 +272,7 @@ func (s *coinTestSuite) TestQuoCoins() {
 			assert.Panics(func() { tc.input.Quo(tc.divisor) })
 		} else {
 			res := tc.input.Quo(tc.divisor)
-			assert.True(res.IsValid())
+			assert.Equal(tc.isValid, res.IsValid())
 			assert.Equal(tc.expected, res, "quotient of coins is incorrect, tc #%d", i)
 		}
 	}

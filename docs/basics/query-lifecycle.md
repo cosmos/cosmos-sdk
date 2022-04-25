@@ -137,7 +137,7 @@ Once a result is received from the querier, `baseapp` begins the process of retu
 
 ## Response
 
-Since `Query()` is an ABCI function, `baseapp` returns the response as an [`abci.ResponseQuery`](https://tendermint.com/docs/spec/abci/abci.html#messages) type. The `client.Context` `Query()` routine receives the response and.
+Since `Query()` is an ABCI function, `baseapp` returns the response as an [`abci.ResponseQuery`](https://docs.tendermint.com/master/spec/abci/abci.html#query-2) type. The `client.Context` `Query()` routine receives the response and.
 
 ### CLI Response
 

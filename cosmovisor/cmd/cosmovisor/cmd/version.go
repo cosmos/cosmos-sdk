@@ -52,7 +52,7 @@ func printVersionJSON(args []string) error {
 
 	if err := Run(
 		[]string{"version", "--long", "--output", "json"},
-		StdOut(buf),
+		StdOutRunOption(buf),
 		DisableLogging(),
 	); err != nil {
 		handleRunVersionFailure(err)

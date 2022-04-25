@@ -18,8 +18,7 @@ func RunCosmovisorCommand(args []string) error {
 		return PrintVersion(args[1:])
 
 	case ShouldGiveHelp(arg0):
-		DoHelp()
-		return nil
+		return DoHelp()
 
 	case IsRunCommand(arg0):
 		return Run(args[1:])

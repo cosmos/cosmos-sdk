@@ -7,12 +7,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
 )
 
+// DefaultRunConfig defintes a default RunConfig that writes to os.Stdout and os.Stderr
 var DefaultRunConfig = RunConfig{
 	DisableLogging: false,
 	StdOut:         os.Stdout,
 	StdErr:         os.Stderr,
 }
 
+// RunConfig defines the configuration for running a command
 type RunConfig struct {
 	DisableLogging bool
 
@@ -22,18 +24,21 @@ type RunConfig struct {
 
 type RunOption func(*RunConfig)
 
-func StdOut(w io.Writer) RunOption {
+// StdOutRunOption sets the StdOut writer for the Run command
+func StdOutRunOption(w io.Writer) RunOption {
 	return func(cfg *RunConfig) {
 		cfg.StdOut = w
 	}
 }
 
-func StdErr(w io.Writer) RunOption {
+// SdErrRunOption sets the StdErr writer for the Run command
+func StdErrRunOption(w io.Writer) RunOption {
 	return func(cfg *RunConfig) {
 		cfg.StdErr = w
 	}
 }
 
+// DisableLoggingRunOption disables logging for the specific Run command
 func DisableLogging() RunOption {
 	return func(cfg *RunConfig) {
 		cfg.DisableLogging = true

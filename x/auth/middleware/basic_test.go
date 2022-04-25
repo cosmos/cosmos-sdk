@@ -33,21 +33,36 @@ func (s *MWTestSuite) TestValidateBasic() {
 	invalidTx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 	s.Require().NoError(err)
 
+	// DeliverTx
 	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: invalidTx})
+	s.Require().NotNil(err, "Did not error on invalid tx")
+
+	// SimulateTx
+	_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: invalidTx})
 	s.Require().NotNil(err, "Did not error on invalid tx")
 
 	privs, accNums, accSeqs = []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	validTx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 	s.Require().NoError(err)
 
+	// DeliverTx
 	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: validTx})
+	s.Require().Nil(err, "ValidateBasicMiddleware returned error on valid tx. err: %v", err)
+
+	// SimulateTx
+	_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: validTx})
 	s.Require().Nil(err, "ValidateBasicMiddleware returned error on valid tx. err: %v", err)
 
 	// test middleware skips on recheck
 	ctx = ctx.WithIsReCheckTx(true)
 
 	// middleware should skip processing invalidTx on recheck and thus return nil-error
+	// DeliverTx
 	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: invalidTx})
+	s.Require().Nil(err, "ValidateBasicMiddleware ran on ReCheck")
+
+	// SimulateTx
+	_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: invalidTx})
 	s.Require().Nil(err, "ValidateBasicMiddleware ran on ReCheck")
 }
 
@@ -73,8 +88,12 @@ func (s *MWTestSuite) TestValidateMemo() {
 	s.Require().NoError(err)
 
 	// require that long memos get rejected
+	// DeliverTx
 	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: invalidTx})
+	s.Require().NotNil(err, "Did not error on tx with high memo")
 
+	// SimulateTx
+	_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: invalidTx})
 	s.Require().NotNil(err, "Did not error on tx with high memo")
 
 	txBuilder.SetMemo(strings.Repeat("01234567890", 10))
@@ -82,7 +101,12 @@ func (s *MWTestSuite) TestValidateMemo() {
 	s.Require().NoError(err)
 
 	// require small memos pass ValidateMemo middleware
+	// DeliverTx
 	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: validTx})
+	s.Require().Nil(err, "ValidateBasicMiddleware returned error on valid tx. err: %v", err)
+
+	// SimulateTx
+	_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: validTx})
 	s.Require().Nil(err, "ValidateBasicMiddleware returned error on valid tx. err: %v", err)
 }
 
@@ -214,8 +238,15 @@ func (s *MWTestSuite) TestTxHeightTimeoutMiddleware() {
 			s.Require().NoError(err)
 
 			ctx := ctx.WithBlockHeight(tc.height)
+
+			// DeliverTx
+			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx})
+			s.Require().Equal(tc.expectErr, err != nil, err)
+
+			// SimulateTx
 			_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx})
 			s.Require().Equal(tc.expectErr, err != nil, err)
+
 		})
 	}
 }

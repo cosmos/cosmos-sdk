@@ -20,12 +20,12 @@ import (
 )
 
 type Launcher struct {
-	logger logging.Logger
+	logger *logging.Logger
 	cfg    *Config
 	fw     *fileWatcher
 }
 
-func NewLauncher(logger logging.Logger, cfg *Config) (Launcher, error) {
+func NewLauncher(logger *logging.Logger, cfg *Config) (Launcher, error) {
 	fw, err := newUpgradeFileWatcher(logger, cfg.UpgradeInfoFilePath(), cfg.PollInterval)
 	if err != nil {
 		return Launcher{}, err

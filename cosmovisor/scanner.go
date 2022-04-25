@@ -15,7 +15,7 @@ import (
 )
 
 type fileWatcher struct {
-	logger logging.Logger
+	logger *logging.Logger
 
 	// full path to a watched file
 	filename string
@@ -30,7 +30,7 @@ type fileWatcher struct {
 	initialized bool
 }
 
-func newUpgradeFileWatcher(logger logging.Logger, filename string, interval time.Duration) (*fileWatcher, error) {
+func newUpgradeFileWatcher(logger *logging.Logger, filename string, interval time.Duration) (*fileWatcher, error) {
 	if filename == "" {
 		return nil, errors.New("filename undefined")
 	}

@@ -183,7 +183,7 @@ func GetConfigFromEnv() (*Config, error) {
 }
 
 // LogConfigOrError logs either the config details or the error.
-func LogConfigOrError(logger logging.Logger, cfg *Config, err error) {
+func LogConfigOrError(logger *logging.Logger, cfg *Config, err error) {
 	if cfg == nil && err == nil {
 		return
 	}

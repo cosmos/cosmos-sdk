@@ -19,7 +19,7 @@ import (
 // DoUpgrade will be called after the log message has been parsed and the process has terminated.
 // We can now make any changes to the underlying directory without interference and leave it
 // in a state, so we can make a proper restart
-func DoUpgrade(logger logging.Logger, cfg *Config, info upgradetypes.Plan) error {
+func DoUpgrade(logger *logging.Logger, cfg *Config, info upgradetypes.Plan) error {
 	// Simplest case is to switch the link
 	err := EnsureBinary(cfg.UpgradeBin(info.Name))
 	if err == nil {

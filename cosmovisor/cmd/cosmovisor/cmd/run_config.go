@@ -39,7 +39,7 @@ func StdErrRunOption(w io.Writer) RunOption {
 }
 
 // DisableLoggingRunOption disables logging for the specific Run command
-func DisableLogging(logger logging.Logger) RunOption {
+func DisableLogging(logger *logging.Logger) RunOption {
 	return func(cfg *RunConfig) {
 		cfg.DisableLogging = true
 		logger.DisableLogger()

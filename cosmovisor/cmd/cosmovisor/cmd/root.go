@@ -7,10 +7,10 @@ import (
 )
 
 type Cosmovisor struct {
-	logger logging.Logger
+	logger *logging.Logger
 }
 
-func NewCosmovisor(logger logging.Logger) Cosmovisor {
+func NewCosmovisor(logger *logging.Logger) Cosmovisor {
 	return Cosmovisor{
 		logger: logger,
 	}

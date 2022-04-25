@@ -19,14 +19,14 @@ func (cv *Cosmovisor) Run(args []string, options ...RunOption) error {
 		return err
 	}
 
-	launcher, err := cosmovisor.NewLauncher(cv.logger, cfg)
-	if err != nil {
-		return err
-	}
-
 	runCfg := DefaultRunConfig
 	for _, opt := range options {
 		opt(&runCfg)
+	}
+
+	launcher, err := cosmovisor.NewLauncher(cv.logger, cfg)
+	if err != nil {
+		return err
 	}
 
 	doUpgrade, err := launcher.Run(args, runCfg.StdOut, runCfg.StdErr)

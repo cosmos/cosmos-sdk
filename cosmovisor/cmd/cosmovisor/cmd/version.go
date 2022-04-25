@@ -81,6 +81,6 @@ func (cv *Cosmovisor) handleRunVersionFailure(err error) {
 	// and also to not have any of the extra parameters in the output.
 	cv.logger.EnableLogger()
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.Kitchen}
-	logger := logging.Logger{Logger: zerolog.New(output).With().Timestamp().Logger()}
+	logger := &logging.Logger{Logger: zerolog.New(output).With().Timestamp().Logger()}
 	cverrors.LogErrors(logger, fmt.Sprintf("Can't run %s version", strings.ToUpper(os.Getenv(cosmovisor.EnvName))), err)
 }

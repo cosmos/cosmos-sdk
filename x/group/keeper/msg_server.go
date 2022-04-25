@@ -784,8 +784,13 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 		_, err = k.doExecuteMsgs(ctx, k.router, proposal, addr)
 		if err != nil {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_FAILURE
+<<<<<<< HEAD
 			proposalType := reflect.TypeOf(proposal).String()
 			logger.Info("proposal execution failed", "cause", err, "type", proposalType, "proposalID", id)
+=======
+			logs = fmt.Sprintf("proposal execution failed on proposal %d, because of error %s", id, err.Error())
+			k.Logger(ctx).Info("proposal execution failed", "cause", err, "proposalID", id)
+>>>>>>> 6e95e114c (fix(group): Better error logs for MsgExec (#11746))
 		} else {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_SUCCESS
 			flush()

@@ -34,7 +34,7 @@ func (s Keeper) doExecuteMsgs(ctx sdk.Context, router *authmiddleware.MsgService
 		}
 		r, err := handler(ctx, msg)
 		if err != nil {
-			return nil, errors.Wrapf(err, "message %q at position %d", msg, i)
+			return nil, errors.Wrapf(err, "message %s at position %d", sdk.MsgTypeURL(msg), i)
 		}
 		if r != nil {
 			results[i] = *r

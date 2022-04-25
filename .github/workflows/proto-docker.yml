@@ -5,6 +5,7 @@ on:
       - main
     paths:
       - "contrib/devtools/dockerfile"
+  pull_request:
 
 permissions:
   contents: read

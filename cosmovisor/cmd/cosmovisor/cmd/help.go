@@ -17,7 +17,7 @@ func ShouldGiveHelp(arg string) bool {
 }
 
 // DoHelp outputs help text
-func (cv *Cosmovisor) DoHelp() error {
+func DoHelp() error {
 	// Not using the logger for this output because the header and footer look weird for help text.
 	fmt.Println(GetHelpText())
 

@@ -10,8 +10,7 @@ import (
 
 func main() {
 	logger := logging.NewLogger()
-	app := cmd.NewCosmovisor(logger)
-	if err := app.RunCosmovisorCommand(os.Args[1:]); err != nil {
+	if err := cmd.RunCosmovisorCommand(logger, os.Args[1:]); err != nil {
 		cverrors.LogErrors(logger, "", err)
 		os.Exit(1)
 	}

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
+	"github.com/cosmos/cosmos-sdk/cosmovisor/logging"
 )
 
 // RunArgs are the strings that indicate a cosmovisor run command.
@@ -13,7 +14,7 @@ func IsRunCommand(arg string) bool {
 }
 
 // Run runs the configured program with the given args and monitors it for upgrades.
-func (cv *Cosmovisor) Run(args []string, options ...RunOption) error {
+func Run(logger *logging.Logger, args []string, options ...RunOption) error {
 	cfg, err := cosmovisor.GetConfigFromEnv()
 	if err != nil {
 		return err
@@ -24,7 +25,7 @@ func (cv *Cosmovisor) Run(args []string, options ...RunOption) error {
 		opt(&runCfg)
 	}
 
-	launcher, err := cosmovisor.NewLauncher(cv.logger, cfg)
+	launcher, err := cosmovisor.NewLauncher(logger, cfg)
 	if err != nil {
 		return err
 	}
@@ -32,11 +33,11 @@ func (cv *Cosmovisor) Run(args []string, options ...RunOption) error {
 	doUpgrade, err := launcher.Run(args, runCfg.StdOut, runCfg.StdErr)
 	// if RestartAfterUpgrade, we launch after a successful upgrade (only condition LaunchProcess returns nil)
 	for cfg.RestartAfterUpgrade && err == nil && doUpgrade {
-		cv.logger.Info().Str("app", cfg.Name).Msg("upgrade detected, relaunching")
+		logger.Info().Str("app", cfg.Name).Msg("upgrade detected, relaunching")
 		doUpgrade, err = launcher.Run(args, runCfg.StdOut, runCfg.StdErr)
 	}
 	if doUpgrade && err == nil {
-		cv.logger.Info().Msg("upgrade detected, DAEMON_RESTART_AFTER_UPGRADE is off. Verify new upgrade and start cosmovisor again.")
+		logger.Info().Msg("upgrade detected, DAEMON_RESTART_AFTER_UPGRADE is off. Verify new upgrade and start cosmovisor again.")
 	}
 
 	return err

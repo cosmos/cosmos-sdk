@@ -220,7 +220,7 @@ func (s *TestSuite) TestDispatchAction() {
 				require.Len(authzs, 1)
 				authorization := authzs[0].(*banktypes.SendAuthorization)
 				require.NotNil(authorization)
-				require.Equal(authorization.SpendLimit, coins100.Sub(coins10))
+				require.Equal(authorization.SpendLimit, coins100.Sub(coins10...))
 			},
 		},
 		{

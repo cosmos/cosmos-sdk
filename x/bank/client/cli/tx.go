@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -33,8 +35,9 @@ func NewTxCmd() *cobra.Command {
 // NewSendTxCmd returns a CLI command handler for creating a MsgSend transaction.
 func NewSendTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "send [from_key_or_address] [to_address] [amount]",
-		Short: `Send funds from one account to another.
+		Use:   "send [from_key_or_address] [to_address] [amount]",
+		Short: "Send funds from one account to another.",
+		Long: `Send funds from one account to another.
 		Note, the '--from' flag is ignored as it is implied from [from_key_or_address].
 		When using '--dry-run' a key name cannot be used, only a bech32 address.`,
 		Args: cobra.ExactArgs(3),
@@ -70,8 +73,9 @@ func NewSendTxCmd() *cobra.Command {
 // For a better UX this command is limited to send one coin from one address to multiple addresses.
 func NewMultiSendTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "multi-send [from_key_or_address] [to_address_1, to_address_2, ...] [amount]",
-		Short: `Send funds from one account multiple others.
+		Use:   "multi-send [from_key_or_address] [to_address_1, to_address_2, ...] [amount]",
+		Short: "Send funds from one account to multiple others.",
+		Long: `Send funds from one account multiple others.
 		By default, sends the [amount] to each address of the list.
 		Using the '--split' flag, the [amount] is split equally between the addresses.
 		Note, the '--from' flag is ignored as it is implied from [from_key_or_address].
@@ -89,16 +93,20 @@ func NewMultiSendTxCmd() *cobra.Command {
 				return err
 			}
 
+			if coins.IsZero() {
+				return fmt.Errorf("must send positive amount")
+			}
+
 			split, err := cmd.Flags().GetBool(FlagSplit)
 			if err != nil {
 				return err
 			}
 
-			totalAddr := sdk.NewInt(int64(len(args) - 2))
+			totalAddrs := sdk.NewInt(int64(len(args) - 2))
 			// coins to be received by the addresses
 			sendCoins := coins
-			if split && !coins.IsZero() {
-				sendCoins = coins.QuoInt(totalAddr)
+			if split {
+				sendCoins = coins.QuoInt(totalAddrs)
 			}
 
 			var output []types.Output
@@ -116,9 +124,9 @@ func NewMultiSendTxCmd() *cobra.Command {
 			if split {
 				// user input: 1000stake to send to 3 addresses
 				// actual: 333stake to each address (=> 999stake actually sent)
-				amount = sendCoins.MulInt(totalAddr)
+				amount = sendCoins.MulInt(totalAddrs)
 			} else {
-				amount = coins.MulInt(totalAddr)
+				amount = coins.MulInt(totalAddrs)
 			}
 
 			msg := types.NewMsgMultiSend([]types.Input{types.NewInput(clientCtx.FromAddress, amount)}, output)

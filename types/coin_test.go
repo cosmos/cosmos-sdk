@@ -32,8 +32,8 @@ func (s *coinTestSuite) SetupSuite() {
 	two := sdk.NewInt(2)
 	four := sdk.NewInt(4)
 
-	s.ca0, s.ca1, s.ca2, s.ca4 = sdk.Coin{testDenom1, zero}, sdk.Coin{testDenom1, one}, sdk.Coin{testDenom1, two}, sdk.Coin{testDenom1, four}
-	s.cm0, s.cm1, s.cm2, s.cm4 = sdk.Coin{testDenom2, zero}, sdk.Coin{testDenom2, one}, sdk.Coin{testDenom2, two}, sdk.Coin{testDenom2, four}
+	s.ca0, s.ca1, s.ca2, s.ca4 = sdk.NewCoin(testDenom1, zero), sdk.NewCoin(testDenom1, one), sdk.NewCoin(testDenom1, two), sdk.NewCoin(testDenom1, four)
+	s.cm0, s.cm1, s.cm2, s.cm4 = sdk.NewCoin(testDenom2, zero), sdk.NewCoin(testDenom2, one), sdk.NewCoin(testDenom2, two), sdk.NewCoin(testDenom2, four)
 }
 
 // ----------------------------------------------------------------------------

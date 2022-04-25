@@ -19,7 +19,7 @@ jobs:
         id: prep
         run: |
           DOCKER_IMAGE=tendermintdev/sdk-proto-gen
-          VERSION=v0.6 
+          VERSION=v0.7
           TAGS="${DOCKER_IMAGE}:${VERSION}"
           echo ::set-output name=tags::${TAGS}
 

@@ -13,7 +13,7 @@ parent:
   <a href="https://github.com/cosmos/cosmos-sdk/releases/latest">
     <img alt="Version" src="https://img.shields.io/github/tag/cosmos/cosmos-sdk.svg" />
   </a>
-  <a href="https://github.com/cosmos/cosmos-sdk/blob/master/LICENSE">
+  <a href="https://github.com/cosmos/cosmos-sdk/blob/main/LICENSE">
     <img alt="License: Apache-2.0" src="https://img.shields.io/github/license/cosmos/cosmos-sdk.svg" />
   </a>
   <a href="https://pkg.go.dev/github.com/cosmos/cosmos-sdk?tab=doc">
@@ -23,7 +23,7 @@ parent:
     <img alt="Go report card" src="https://goreportcard.com/badge/github.com/cosmos/cosmos-sdk" />
   </a>
   <a href="https://codecov.io/gh/cosmos/cosmos-sdk">
-    <img alt="Code Coverage" src="https://codecov.io/gh/cosmos/cosmos-sdk/branch/master/graph/badge.svg" />
+    <img alt="Code Coverage" src="https://codecov.io/gh/cosmos/cosmos-sdk/branch/main/graph/badge.svg" />
   </a>
 </div>
 <div align="center">
@@ -45,7 +45,7 @@ The Cosmos SDK is a framework for building blockchain applications. [Tendermint 
 **WARNING**: The Cosmos SDK has mostly stabilized, but we are still making some
 breaking changes.
 
-**Note**: Requires [Go 1.17+](https://golang.org/dl/)
+**Note**: Requires [Go 1.18+](https://go.dev/dl)
 
 ## Quick Start
 

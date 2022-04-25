@@ -13,12 +13,12 @@ import (
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/db/memdb"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	types "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 var (
-	cacheSize = 100
 	alohaData = map[string]string{
 		"hello": "goodbye",
 		"aloha": "shalom",
@@ -40,7 +40,7 @@ func simpleStoreConfig(t *testing.T) StoreConfig {
 
 func storeConfig123(t *testing.T) StoreConfig {
 	opts := DefaultStoreConfig()
-	opts.Pruning = types.PruneNothing
+	opts.Pruning = pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)
 	require.NoError(t, opts.RegisterSubstore(skey_1.Name(), types.StoreTypePersistent))
 	require.NoError(t, opts.RegisterSubstore(skey_2.Name(), types.StoreTypePersistent))
 	require.NoError(t, opts.RegisterSubstore(skey_3.Name(), types.StoreTypePersistent))
@@ -101,7 +101,7 @@ func TestConstructors(t *testing.T) {
 	require.NoError(t, store.Close())
 
 	t.Run("fail to load if InitialVersion > lowest existing version", func(t *testing.T) {
-		opts := StoreConfig{InitialVersion: 5, Pruning: types.PruneNothing}
+		opts := StoreConfig{InitialVersion: 5, Pruning: pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)}
 		store, err = NewStore(db, opts)
 		require.Error(t, err)
 		db.Close()
@@ -247,7 +247,7 @@ func TestCommit(t *testing.T) {
 		}
 	}
 	basicOpts := simpleStoreConfig(t)
-	basicOpts.Pruning = types.PruneNothing
+	basicOpts.Pruning = pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)
 	t.Run("sanity tests for Merkle hashing", func(t *testing.T) {
 		testBasic(basicOpts)
 	})
@@ -286,7 +286,7 @@ func TestCommit(t *testing.T) {
 	}
 
 	opts := simpleStoreConfig(t)
-	opts.Pruning = types.PruneNothing
+	opts.Pruning = pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)
 
 	// Ensure Store's commit is rolled back in each failure case...
 	t.Run("recover after failed Commit", func(t *testing.T) {
@@ -349,7 +349,7 @@ func TestCommit(t *testing.T) {
 	t.Run("height overflow triggers failure", func(t *testing.T) {
 		opts.StateCommitmentDB = nil
 		opts.InitialVersion = math.MaxInt64
-		opts.Pruning = types.PruneNothing
+		opts.Pruning = pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)
 		store, err := NewStore(memdb.NewDB(), opts)
 		require.NoError(t, err)
 		require.Equal(t, int64(math.MaxInt64), store.Commit().Version)
@@ -360,7 +360,7 @@ func TestCommit(t *testing.T) {
 	t.Run("first commit version matches InitialVersion", func(t *testing.T) {
 		opts = simpleStoreConfig(t)
 		opts.InitialVersion = 5
-		opts.Pruning = types.PruneNothing
+		opts.Pruning = pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)
 		opts.StateCommitmentDB = memdb.NewDB()
 		store, err := NewStore(memdb.NewDB(), opts)
 		require.NoError(t, err)
@@ -395,13 +395,13 @@ func sliceToSet(slice []uint64) map[uint64]struct{} {
 func TestPruning(t *testing.T) {
 	// Save versions up to 10 and verify pruning at final commit
 	testCases := []struct {
-		types.PruningOptions
+		pruningtypes.PruningOptions
 		kept []uint64
 	}{
-		{types.PruningOptions{2, 10}, []uint64{8, 9, 10}},
-		{types.PruningOptions{0, 10}, []uint64{10}},
-		{types.PruneEverything, []uint64{8, 9, 10}},
-		{types.PruneNothing, []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
+		{pruningtypes.NewCustomPruningOptions(2, 10), []uint64{8, 9, 10}},
+		{pruningtypes.NewCustomPruningOptions(0, 10), []uint64{10}},
+		{pruningtypes.NewPruningOptions(pruningtypes.PruningEverything), []uint64{8, 9, 10}},
+		{pruningtypes.NewPruningOptions(pruningtypes.PruningNothing), []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
 	}
 
 	for tci, tc := range testCases {
@@ -443,7 +443,7 @@ func TestPruning(t *testing.T) {
 
 	db := memdb.NewDB()
 	opts := simpleStoreConfig(t)
-	opts.Pruning = types.PruningOptions{0, 10}
+	opts.Pruning = pruningtypes.NewCustomPruningOptions(0, 10)
 	store, err := NewStore(db, opts)
 	require.NoError(t, err)
 
@@ -689,7 +689,7 @@ func TestGetVersion(t *testing.T) {
 	require.Panics(t, func() { subview.Set([]byte{1}, []byte{1}) })
 	require.Panics(t, func() { subview.Delete([]byte{0}) })
 	// nonexistent version shouldn't be accessible
-	view, err = store.GetVersion(cid.Version + 1)
+	_, err = store.GetVersion(cid.Version + 1)
 	require.Equal(t, ErrVersionDoesNotExist, err)
 
 	substore := store.GetKVStore(skey_1)
@@ -750,7 +750,7 @@ func TestMultiStoreMigration(t *testing.T) {
 	t.Run("basic migration", func(t *testing.T) {
 		// now, let's load with upgrades...
 		opts.Upgrades = []types.StoreUpgrades{
-			types.StoreUpgrades{
+			{
 				Added: []string{skey_4.Name()},
 				Renamed: []types.StoreRename{{
 					OldKey: skey_2.Name(),

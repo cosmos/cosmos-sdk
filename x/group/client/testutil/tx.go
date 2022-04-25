@@ -2306,7 +2306,6 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
-	require := s.Require()
 
 	commonFlags := []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -2314,70 +2313,27 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
-	// create 3 accounts with some tokens
-	members := make([]string, 3)
+	weights := []string{"1", "2", "2"}
 
-	for i := 1; i <= 3; i++ {
-		info, _, err := clientCtx.Keyring.NewMnemonic(fmt.Sprintf("member%d", i), keyring.English, sdk.FullFundraiserPath,
-			keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-		require.NoError(err)
-
-		pk, err := info.GetPubKey()
-		require.NoError(err)
-
-		account := sdk.AccAddress(pk.Address())
-		members[i-1] = account.String()
-
-		_, err = banktestutil.MsgSendExec(clientCtx, val.Address, account,
-			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))),
-			commonFlags...,
-		)
-		require.NoError(err)
-	}
+	groupID, members := s.createGroupWithMembers(weights)
 
 	// create a group with the 3 members
-	validMembers := fmt.Sprintf(`{"members": [{
-		"address": "%s",
-		  "weight": "1",
-		  "metadata": "AQ=="
-	  },{
-		"address": "%s",
-		  "weight": "1",
-		  "metadata": "AQ=="
-	  },{
-		"address": "%s",
-		  "weight": "1",
-		  "metadata": "AQ=="
-	  }]}`, members[0], members[1], members[2])
-	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
-	out, err := cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupCmd(),
-		append([]string{
-			val.Address.String(),
-			validMetadata,
-			validMembersFile.Name(),
-		},
-			commonFlags...,
-		),
-	)
-	require.NoError(err, out.String())
-	var txtResp sdk.TxResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txtResp), out.String())
-	groupID := s.getGroupIdFromTxResponse(txtResp)
-
 	// create group policy
-	out, err = cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupPolicyCmd(),
+	threshold := 3
+	out, err := cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupPolicyCmd(),
 		append(
 			[]string{
 				val.Address.String(),
 				groupID,
-				"AQ==",
-				"{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"3\", \"windows\":{\"voting_period\":\"30000s\"}}",
+				validMetadata,
+				fmt.Sprintf("{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"%d\", \"windows\":{\"voting_period\":\"30000s\"}}", threshold),
 			},
 			commonFlags...,
 		),
 	)
 	var txResp = sdk.TxResponse{}
-	require.NoError(err, out.String())
+	s.Require().NoError(err, out.String())
+	fmt.Println("group policy: ", out)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().Equal(uint32(0), txResp.Code, out.String())
 
@@ -2386,6 +2342,7 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 	var res group.QueryGroupPoliciesByGroupResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
 	groupPolicyAddress := res.GroupPolicies[0].Address
+	fmt.Println("address: ", groupPolicyAddress, "\n")
 
 	testCases := []struct {
 		name      string
@@ -2513,58 +2470,10 @@ func (s *IntegrationTestSuite) TestSubmitProposalAndUpdate() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
-	// create 3 accounts with some tokens
-	members := make([]string, 3)
-
-	for i := 1; i <= 3; i++ {
-		info, _, err := clientCtx.Keyring.NewMnemonic(fmt.Sprintf("member%d", i), keyring.English, sdk.FullFundraiserPath,
-			keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-		require.NoError(err)
-
-		pk, err := info.GetPubKey()
-		require.NoError(err)
-
-		account := sdk.AccAddress(pk.Address())
-		members[i-1] = account.String()
-
-		_, err = banktestutil.MsgSendExec(clientCtx, val.Address, account,
-			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))),
-			commonFlags...,
-		)
-		require.NoError(err)
-	}
-
-	// create a group with the 3 members
-	validMembers := fmt.Sprintf(`{"members": [{
-		"address": "%s",
-		  "weight": "1",
-		  "metadata": "AQ=="
-	  },{
-		"address": "%s",
-		  "weight": "1",
-		  "metadata": "AQ=="
-	  },{
-		"address": "%s",
-		  "weight": "3",
-		  "metadata": "AQ=="
-	  }]}`, members[0], members[1], members[2])
-	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
-	out, err := cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupCmd(),
-		append([]string{
-			val.Address.String(),
-			validMetadata,
-			validMembersFile.Name(),
-		},
-			commonFlags...,
-		),
-	)
-	require.NoError(err, out.String())
-	var txtResp sdk.TxResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txtResp), out.String())
-	groupID := s.getGroupIdFromTxResponse(txtResp)
-
+	membersWeights := []string{"1", "1", "1"}
+	groupID, _ := s.createGroupWithMembers(membersWeights)
 	// create group policy
-	out, err = cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupPolicyCmd(),
+	out, err := cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupPolicyCmd(),
 		append(
 			[]string{
 				val.Address.String(),
@@ -2668,4 +2577,84 @@ func (s *IntegrationTestSuite) createCLIProposal(groupPolicyAddress, proposer, s
 	s.Require().NoError(err)
 
 	return testutil.WriteToNewTempFile(s.T(), string(bz)).Name()
+}
+
+func (s *IntegrationTestSuite) createAccounts(quantity int) []string {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+	accounts := make([]string, quantity)
+	commonFlags := []string{
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	}
+
+	for i := 1; i <= 3; i++ {
+		info, _, err := clientCtx.Keyring.NewMnemonic(fmt.Sprintf("member%d", i), keyring.English, sdk.FullFundraiserPath,
+			keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+		s.Require().NoError(err)
+
+		pk, err := info.GetPubKey()
+		s.Require().NoError(err)
+
+		account := sdk.AccAddress(pk.Address())
+		accounts[i-1] = account.String()
+
+		_, err = banktestutil.MsgSendExec(clientCtx, val.Address, account,
+			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))),
+			commonFlags...,
+		)
+		s.Require().NoError(err)
+	}
+	return accounts
+}
+
+func (s *IntegrationTestSuite) createGroupWithMembers(membersWeight []string) (string, []string) {
+	membersAddress := s.createAccounts(len(membersWeight))
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+	commonFlags := []string{
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	}
+
+	membersValid := validMembers{}
+
+	for i, address := range membersAddress {
+		membersValid.Members = append(membersValid.Members, member{
+			address,
+			membersWeight[i],
+			validMetadata,
+		})
+	}
+	validMemberByte, err := json.MarshalIndent(&membersValid, "", "\t")
+	s.Require().NoError(err)
+	validMemberString := string(validMemberByte)
+	s.Require().NoError(err)
+	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMemberString)
+	out, err := cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupCmd(),
+		append(
+			[]string{
+				val.Address.String(),
+				validMetadata,
+				validMembersFile.Name(),
+			},
+			commonFlags...,
+		),
+	)
+	s.Require().NoError(err, out.String())
+	var txResp sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+	return s.getGroupIdFromTxResponse(txResp), membersAddress
+}
+
+type validMembers struct {
+	Members []member `json:"members"`
+}
+
+type member struct {
+	Address  string `json:"address"`
+	Weight   string `json:"weight"`
+	Metadata string `json:"metadata"`
 }

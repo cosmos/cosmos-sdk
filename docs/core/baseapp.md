@@ -84,7 +84,7 @@ Then, parameters used to define [volatile states](#volatile-states) (i.e. cached
 * `deliverState`: This state is updated during [`DeliverTx`](#delivertx), and set to `nil` on
   [`Commit`](#commit) and gets re-initialized on BeginBlock.
 
-Finally, a few more important parameterd:
+Finally, a few more important parameters:
 
 * `voteInfos`: This parameter carries the list of validators whose precommit is missing, either
   because they did not vote or because the proposer did not include their vote. This information is

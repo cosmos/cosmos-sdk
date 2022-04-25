@@ -249,10 +249,7 @@ func (k Keeper) GetLastCompletedUpgrade(ctx sdk.Context) (string, int64) {
 	for iter.Valid() {
 		name := parseDoneKey(iter.Key())
 		value := int64(binary.BigEndian.Uint64(iter.Value()))
-		upgrades = append(upgrades, struct {
-			Name        string
-			BlockHeight int64
-		}{Name: name, BlockHeight: value})
+		upgrades = append(upgrades, upgrade{Name: name, BlockHeight: value})
 		iter.Next()
 	}
 	sort.SliceStable(upgrades, func(i, j int) bool {

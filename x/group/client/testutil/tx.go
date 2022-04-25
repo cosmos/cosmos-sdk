@@ -2339,12 +2339,21 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 	fmt.Println("group policy: ", out)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().Equal(uint32(0), txResp.Code, out.String())
+	fmt.Println("group policy response", txResp)
 
 	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{groupID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	s.Require().NoError(err, out.String())
 	var res group.QueryGroupPoliciesByGroupResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
 	groupPolicyAddress := res.GroupPolicies[0].Address
+	addr, err := sdk.AccAddressFromBech32(groupPolicyAddress)
+	s.Require().NoError(err)
+	out, err = banktestutil.MsgSendExec(clientCtx, val.Address, addr,
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))),
+		commonFlags...,
+	)
+	s.Require().NoError(err)
+	fmt.Println("send response: ", out)
 	fmt.Println("address: ", groupPolicyAddress)
 
 	testCases := []struct {
@@ -2354,34 +2363,34 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 		errMsg    string
 		respType  proto.Message
 	}{
-		{
-			"member that leaves does not affect the threshold",
-			append(
-				[]string{
-					members[0],
-					groupID,
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[2]),
-				},
-				commonFlags...,
-			),
-			false,
-			"",
-			&sdk.TxResponse{},
-		},
 		//{
-		//	"member that leaves affects the threshold",
+		//	"member that leaves does not affect the threshold",
 		//	append(
 		//		[]string{
-		//			members[2],
+		//			members[0],
 		//			groupID,
 		//			fmt.Sprintf("--%s=%s", flags.FlagFrom, members[2]),
 		//		},
 		//		commonFlags...,
 		//	),
-		//	true,
-		//	"failed to execute message",
+		//	false,
+		//	"",
 		//	&sdk.TxResponse{},
 		//},
+		{
+			"member that leaves affects the threshold",
+			append(
+				[]string{
+					members[2],
+					groupID,
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[2]),
+				},
+				commonFlags...,
+			),
+			true,
+			"failed to execute message",
+			&sdk.TxResponse{},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -2438,14 +2447,14 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 			out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryVotesByProposalCmd(), []string{proposalID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 			fmt.Println("VOTES-: ", out)
 			fmt.Println("err", err)
+
 			args := append(
 				[]string{
 					proposalID,
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[0]),
 				},
 				commonFlags...,
 			)
-
 			out, err = cli.ExecTestCLICmd(clientCtx, cmdMsgExec, args)
 			//s.Require().NoError(err)
 			fmt.Println("propossal exec: ", out)
@@ -2564,7 +2573,7 @@ func (s *IntegrationTestSuite) createCLIProposal(groupPolicyAddress, proposer, s
 	msg := banktypes.MsgSend{
 		FromAddress: sendFrom,
 		ToAddress:   sendTo,
-		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))),
+		Amount:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20))),
 	}
 	msgJSON, err := s.cfg.Codec.MarshalInterfaceJSON(&msg)
 	s.Require().NoError(err)
@@ -2649,6 +2658,8 @@ func (s *IntegrationTestSuite) createGroupWithMembers(membersWeight []string) (s
 	s.Require().NoError(err, out.String())
 	var txResp sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+	//txResp.
+	fmt.Println("response from creating group", txResp.Events[0])
 	return s.getGroupIdFromTxResponse(txResp), membersAddress
 }
 

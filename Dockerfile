@@ -4,4 +4,4 @@
 
 FROM faddat/archlinux
 
-RUN pacman -Syyu --noconfirm leveldb rocksdb go base-devel git
+RUN pacman -Syyu --noconfirm leveldb rocksdb go base-devel git python

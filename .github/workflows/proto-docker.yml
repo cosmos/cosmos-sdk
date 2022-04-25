@@ -5,7 +5,6 @@ on:
       - main
     paths:
       - "contrib/devtools/dockerfile"
-  pull_request:
 
 permissions:
   contents: read
@@ -20,7 +19,7 @@ jobs:
         id: prep
         run: |
           DOCKER_IMAGE=tendermintdev/sdk-proto-gen
-          VERSION=v0.7
+          VERSION=latest
           TAGS="${DOCKER_IMAGE}:${VERSION}"
           echo ::set-output name=tags::${TAGS}
 

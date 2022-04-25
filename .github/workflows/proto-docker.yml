@@ -2,18 +2,18 @@ name: Build & Push SDK Proto Builder
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - "contrib/devtools/dockerfile"
 
 permissions:
   contents: read
-  
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    # set VERSION to new version when making changes, when merged to master the image will automatically be pushed
+      # set VERSION to new version when making changes, when merged to main the image will automatically be pushed
       - uses: actions/checkout@v3
       - name: Prepare
         id: prep

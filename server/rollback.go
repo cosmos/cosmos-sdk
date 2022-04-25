@@ -36,7 +36,7 @@ application.
 				return fmt.Errorf("failed to rollback tendermint state: %w", err)
 			}
 			// rollback the multistore
-			cms := rootmulti.NewStore(db)
+			cms := rootmulti.NewStore(db, ctx.Logger)
 			cms.RollbackToVersion(height)
 
 			fmt.Printf("Rolled back state to height %d and hash %X", height, hash)

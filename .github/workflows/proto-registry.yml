@@ -4,9 +4,9 @@ name: Buf-Push
 on:
   push:
     branches:
-      - master
+      - main
     paths:
-      - 'proto/**'
+      - "proto/**"
 
 jobs:
   push:
@@ -16,6 +16,5 @@ jobs:
       - uses: bufbuild/buf-setup-action@v1.4.0
       - uses: bufbuild/buf-push-action@v1
         with:
-          input: 'proto'
+          input: "proto"
           buf_token: ${{ secrets.BUF_TOKEN }}
-        

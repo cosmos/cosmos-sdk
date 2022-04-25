@@ -16,7 +16,8 @@ type Snapshotter interface {
 	PruneSnapshotHeight(height int64)
 
 	// SetSnapshotInterval sets the interval at which the snapshots are taken.
-	// It is used by the store to determine which heights to retain until after the snapshot is complete.
+	// It is used by the store that implements the Snapshotter interface
+	// to determine which heights to retain until after the snapshot is complete.
 	SetSnapshotInterval(snapshotInterval uint64)
 
 	// Restore restores a state snapshot, taking snapshot chunk readers as input.

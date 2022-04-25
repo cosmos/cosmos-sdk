@@ -20,8 +20,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	pruningTypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
@@ -38,7 +38,7 @@ func TestStoreType(t *testing.T) {
 
 func TestGetCommitKVStore(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
-	ms := newMultiStoreWithMounts(db, pruningTypes.NewPruningOptions(pruningTypes.PruningDefault))
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -71,7 +71,7 @@ func TestStoreMount(t *testing.T) {
 
 func TestCacheMultiStore(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
-	ms := newMultiStoreWithMounts(db, pruningTypes.NewPruningOptions(pruningTypes.PruningNothing))
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 
 	cacheMulti := ms.CacheMultiStore()
 	require.IsType(t, cachemulti.Store{}, cacheMulti)
@@ -79,7 +79,7 @@ func TestCacheMultiStore(t *testing.T) {
 
 func TestCacheMultiStoreWithVersion(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
-	ms := newMultiStoreWithMounts(db, pruningTypes.NewPruningOptions(pruningTypes.PruningNothing))
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -116,7 +116,7 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 
 func TestHashStableWithEmptyCommit(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
-	ms := newMultiStoreWithMounts(db, pruningTypes.NewPruningOptions(pruningTypes.PruningNothing))
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -140,7 +140,7 @@ func TestHashStableWithEmptyCommit(t *testing.T) {
 
 func TestMultistoreCommitLoad(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
-	store := newMultiStoreWithMounts(db, pruningTypes.NewPruningOptions(pruningTypes.PruningNothing))
+	store := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	err := store.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -165,7 +165,7 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	}
 
 	// Load the latest multistore again and check version.
-	store = newMultiStoreWithMounts(db, pruningTypes.NewPruningOptions(pruningTypes.PruningNothing))
+	store = newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	err = store.LoadLatestVersion()
 	require.Nil(t, err)
 	commitID = getExpectedCommitID(store, nCommits)
@@ -178,7 +178,7 @@ func TestMultistoreCommitLoad(t *testing.T) {
 
 	// Load an older multistore and check version.
 	ver := nCommits - 1
-	store = newMultiStoreWithMounts(db, pruningTypes.NewPruningOptions(pruningTypes.PruningNothing))
+	store = newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	err = store.LoadVersion(ver)
 	require.Nil(t, err)
 	commitID = getExpectedCommitID(store, ver)
@@ -187,7 +187,7 @@ func TestMultistoreCommitLoad(t *testing.T) {
 
 func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
-	store := newMultiStoreWithMounts(db, pruningTypes.NewPruningOptions(pruningTypes.PruningNothing))
+	store := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	err := store.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -222,7 +222,7 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	checkContains(t, ci.StoreInfos, []string{"store1", "store2", "store3"})
 
 	// Load without changes and make sure it is sensible
-	store = newMultiStoreWithMounts(db, pruningTypes.NewPruningOptions(pruningTypes.PruningNothing))
+	store = newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 
 	err = store.LoadLatestVersion()
 	require.Nil(t, err)
@@ -235,7 +235,7 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	require.Equal(t, v2, s2.Get(k2))
 
 	// now, let's load with upgrades...
-	restore, upgrades := newMultiStoreWithModifiedMounts(db, pruningTypes.NewPruningOptions(pruningTypes.PruningNothing))
+	restore, upgrades := newMultiStoreWithModifiedMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	err = restore.LoadLatestVersionAndUpgrade(upgrades)
 	require.Nil(t, err)
 
@@ -280,7 +280,7 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	migratedID := restore.Commit()
 	require.Equal(t, migratedID.Version, int64(2))
 
-	reload, _ := newMultiStoreWithModifiedMounts(db, pruningTypes.NewPruningOptions(pruningTypes.PruningNothing))
+	reload, _ := newMultiStoreWithModifiedMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	err = reload.LoadLatestVersion()
 	require.Nil(t, err)
 	require.Equal(t, migratedID, reload.LastCommitID())
@@ -329,7 +329,7 @@ func TestParsePath(t *testing.T) {
 
 func TestMultiStoreRestart(t *testing.T) {
 	db := dbm.NewMemDB()
-	pruning := pruningTypes.NewCustomPruningOptions(2, 1)
+	pruning := pruningtypes.NewCustomPruningOptions(2, 1)
 	multi := newMultiStoreWithMounts(db, pruning)
 	err := multi.LoadLatestVersion()
 	require.Nil(t, err)
@@ -408,7 +408,7 @@ func TestMultiStoreRestart(t *testing.T) {
 
 func TestMultiStoreQuery(t *testing.T) {
 	db := dbm.NewMemDB()
-	multi := newMultiStoreWithMounts(db, pruningTypes.NewPruningOptions(pruningTypes.PruningNothing))
+	multi := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	err := multi.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -435,7 +435,7 @@ func TestMultiStoreQuery(t *testing.T) {
 	ver := cid2.Version
 
 	// Reload multistore from database
-	multi = newMultiStoreWithMounts(db, pruningTypes.NewPruningOptions(pruningTypes.PruningNothing))
+	multi = newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	err = multi.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -500,15 +500,15 @@ func TestMultiStore_Pruning(t *testing.T) {
 	testCases := []struct {
 		name        string
 		numVersions int64
-		po          *pruningTypes.PruningOptions
+		po          pruningtypes.PruningOptions
 		deleted     []int64
 		saved       []int64
 	}{
-		{"prune nothing", 10, pruningTypes.NewPruningOptions(pruningTypes.PruningNothing), nil, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
-		{"prune everything", 10, pruningTypes.NewPruningOptions(pruningTypes.PruningEverything), []int64{1, 2, 3, 4, 5, 6, 7, 8, 9}, []int64{10}},
-		{"prune some; no batch", 10, pruningTypes.NewCustomPruningOptions(2, 1), []int64{1, 2, 4, 5, 7}, []int64{3, 6, 8, 9, 10}},
-		{"prune some; small batch", 10, pruningTypes.NewCustomPruningOptions(2, 3), []int64{1, 2, 4, 5}, []int64{3, 6, 7, 8, 9, 10}},
-		{"prune some; large batch", 10, pruningTypes.NewCustomPruningOptions(2, 11), nil, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
+		{"prune nothing", 10, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing), nil, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
+		{"prune everything", 10, pruningtypes.NewPruningOptions(pruningtypes.PruningEverything), []int64{1, 2, 3, 4, 5, 6, 7, 8, 9}, []int64{10}},
+		{"prune some; no batch", 10, pruningtypes.NewCustomPruningOptions(2, 1), []int64{1, 2, 4, 5, 7}, []int64{3, 6, 8, 9, 10}},
+		{"prune some; small batch", 10, pruningtypes.NewCustomPruningOptions(2, 3), []int64{1, 2, 4, 5}, []int64{3, 6, 7, 8, 9, 10}},
+		{"prune some; large batch", 10, pruningtypes.NewCustomPruningOptions(2, 11), nil, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
 	}
 
 	for _, tc := range testCases {
@@ -536,9 +536,63 @@ func TestMultiStore_Pruning(t *testing.T) {
 	}
 }
 
+func TestMultiStore_Pruning_SameHeightsTwice(t *testing.T) {
+	const (
+		numVersions int64  = 10
+		keepRecent  uint64 = 2
+		interval    uint64 = 10
+	)
+
+	expectedHeights := []int64{}
+	for i := int64(1); i < numVersions-int64(keepRecent); i++ {
+		expectedHeights = append(expectedHeights, i)
+	}
+
+	db := dbm.NewMemDB()
+
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(keepRecent, interval))
+	require.NoError(t, ms.LoadLatestVersion())
+
+	var lastCommitInfo types.CommitID
+	for i := int64(0); i < numVersions; i++ {
+		lastCommitInfo = ms.Commit()
+	}
+
+	require.Equal(t, numVersions, lastCommitInfo.Version)
+
+	for v := int64(1); v < numVersions-int64(keepRecent); v++ {
+		err := ms.LoadVersion(v)
+		require.Error(t, err, "expected error when loading pruned height: %d", v)
+	}
+
+	for v := int64(numVersions - int64(keepRecent)); v < numVersions; v++ {
+		err := ms.LoadVersion(v)
+		require.NoError(t, err, "expected no error when loading height: %d", v)
+	}
+
+	// Get latest
+	err := ms.LoadVersion(numVersions - 1)
+	require.NoError(t, err)
+
+	// Ensure already pruned heights were loaded
+	heights, err := ms.pruningManager.GetFlushAndResetPruningHeights()
+	require.NoError(t, err)
+	require.Equal(t, expectedHeights, heights)
+
+	require.NoError(t, ms.pruningManager.LoadPruningHeights())
+
+	// Test pruning the same heights again
+	lastCommitInfo = ms.Commit()
+	require.Equal(t, numVersions, lastCommitInfo.Version)
+
+	// Ensure that can commit one more height with no panic
+	lastCommitInfo = ms.Commit()
+	require.Equal(t, numVersions+1, lastCommitInfo.Version)
+}
+
 func TestMultiStore_PruningRestart(t *testing.T) {
 	db := dbm.NewMemDB()
-	ms := newMultiStoreWithMounts(db, pruningTypes.NewCustomPruningOptions(2, 11))
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(2, 11))
 	ms.SetSnapshotInterval(3)
 	require.NoError(t, ms.LoadLatestVersion())
 
@@ -551,20 +605,30 @@ func TestMultiStore_PruningRestart(t *testing.T) {
 	pruneHeights := []int64{1, 2, 4, 5, 7}
 
 	// ensure we've persisted the current batch of heights to prune to the store's DB
-	err := ms.pruningManager.LoadPruningHeights(ms.db)
+	err := ms.pruningManager.LoadPruningHeights()
 	require.NoError(t, err)
-	require.Equal(t, pruneHeights, ms.pruningManager.GetPruningHeights())
+
+	actualHeightsToPrune, err := ms.pruningManager.GetFlushAndResetPruningHeights()
+	require.NoError(t, err)
+	require.Equal(t, len(pruneHeights), len(actualHeightsToPrune))
+	require.Equal(t, pruneHeights, actualHeightsToPrune)
 
 	// "restart"
-	ms = newMultiStoreWithMounts(db, pruningTypes.NewCustomPruningOptions(2, 11))
+	ms = newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(2, 11))
 	ms.SetSnapshotInterval(3)
 	err = ms.LoadLatestVersion()
 	require.NoError(t, err)
-	require.Equal(t, pruneHeights, ms.pruningManager.GetPruningHeights())
+
+	actualHeightsToPrune, err = ms.pruningManager.GetFlushAndResetPruningHeights()
+	require.NoError(t, err)
+	require.Equal(t, pruneHeights, actualHeightsToPrune)
 
 	// commit one more block and ensure the heights have been pruned
 	ms.Commit()
-	require.Empty(t, ms.pruningManager.GetPruningHeights())
+
+	actualHeightsToPrune, err = ms.pruningManager.GetFlushAndResetPruningHeights()
+	require.NoError(t, err)
+	require.Empty(t, actualHeightsToPrune)
 
 	for _, v := range pruneHeights {
 		_, err := ms.CacheMultiStoreWithVersion(v)
@@ -689,7 +753,7 @@ func TestMultistoreSnapshotRestore(t *testing.T) {
 
 func TestSetInitialVersion(t *testing.T) {
 	db := dbm.NewMemDB()
-	multi := newMultiStoreWithMounts(db, pruningTypes.NewPruningOptions(pruningTypes.PruningNothing))
+	multi := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 
 	require.NoError(t, multi.LoadLatestVersion())
 
@@ -707,7 +771,7 @@ func TestSetInitialVersion(t *testing.T) {
 
 func TestAddListenersAndListeningEnabled(t *testing.T) {
 	db := dbm.NewMemDB()
-	multi := newMultiStoreWithMounts(db, pruningTypes.NewPruningOptions(pruningTypes.PruningNothing))
+	multi := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	testKey := types.NewKVStoreKey("listening_test_key")
 	enabled := multi.ListeningEnabled(testKey)
 	require.False(t, enabled)
@@ -738,7 +802,7 @@ var (
 func TestGetListenWrappedKVStore(t *testing.T) {
 	buf := new(bytes.Buffer)
 	var db dbm.DB = dbm.NewMemDB()
-	ms := newMultiStoreWithMounts(db, pruningTypes.NewPruningOptions(pruningTypes.PruningNothing))
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	ms.LoadLatestVersion()
 	mockListeners := []types.WriteListener{types.NewStoreKVPairWriteListener(buf, testMarshaller)}
 	ms.AddListeners(testStoreKey1, mockListeners)
@@ -814,7 +878,7 @@ func TestGetListenWrappedKVStore(t *testing.T) {
 
 func TestCacheWraps(t *testing.T) {
 	db := dbm.NewMemDB()
-	multi := newMultiStoreWithMounts(db, pruningTypes.NewPruningOptions(pruningTypes.PruningNothing))
+	multi := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 
 	cacheWrapper := multi.CacheWrap()
 	require.IsType(t, cachemulti.Store{}, cacheWrapper)
@@ -908,7 +972,7 @@ var (
 	testStoreKey3 = types.NewKVStoreKey("store3")
 )
 
-func newMultiStoreWithMounts(db dbm.DB, pruningOpts *pruningTypes.PruningOptions) *Store {
+func newMultiStoreWithMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions) *Store {
 	store := NewStore(db, log.NewNopLogger())
 	store.SetPruning(pruningOpts)
 
@@ -988,7 +1052,7 @@ func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *
 	return multiStore
 }
 
-func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts *pruningTypes.PruningOptions) (*Store, *types.StoreUpgrades) {
+func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions) (*Store, *types.StoreUpgrades) {
 	store := NewStore(db, log.NewNopLogger())
 	store.SetPruning(pruningOpts)
 

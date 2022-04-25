@@ -29,8 +29,8 @@ import (
 //    errors via io.Pipe.CloseWithError().
 type Manager struct {
 	// store is the snapshot store where all completed snapshots are persisted.
-	store  *Store
-	opts   *types.SnapshotOptions
+	store *Store
+	opts  types.SnapshotOptions
 	// target is the store from which snapshots are taken.
 	target types.Snapshotter
 	logger log.Logger
@@ -66,8 +66,7 @@ var (
 )
 
 // NewManager creates a new manager.
-func NewManager(store *Store, opts *types.SnapshotOptions, target types.Snapshotter, logger log.Logger) *Manager {
-	target.SetSnapshotInterval(opts.Interval)
+func NewManager(store *Store, opts types.SnapshotOptions, target types.Snapshotter, logger log.Logger) *Manager {
 	return &Manager{
 		store:  store,
 		opts:   opts,
@@ -114,12 +113,12 @@ func (m *Manager) endLocked() {
 	m.restoreChunkIndex = 0
 }
 
-// GetInterval returns snapshot interval.
+// GetInterval returns snapshot interval represented in heights.
 func (m *Manager) GetInterval() uint64 {
 	return m.opts.Interval
 }
 
-// GetKeepRecent returns snapshot keep-recent.
+// GetKeepRecent returns snapshot keep-recent represented in heights.
 func (m *Manager) GetKeepRecent() uint32 {
 	return m.opts.KeepRecent
 }
@@ -293,8 +292,8 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 	return false, nil
 }
 
-// SnapshotIfApplicable takes a snapshot of the current state if we are on a snapshot height. 
-// It also prunes any old snapshots. The snapshotting and pruning happen in separate goroutines.
+// SnapshotIfApplicable takes a snapshot of the current state if we are on a snapshot height.
+// It also prunes any old snapshots.
 func (m *Manager) SnapshotIfApplicable(height int64) {
 	if m == nil {
 		return
@@ -303,7 +302,7 @@ func (m *Manager) SnapshotIfApplicable(height int64) {
 		m.logger.Debug("snapshot is skipped", "height", height)
 		return
 	}
-	go m.snapshot(height)
+	m.snapshot(height)
 }
 
 // shouldTakeSnapshot returns true is snapshot should be taken at height.
@@ -313,6 +312,11 @@ func (m *Manager) shouldTakeSnapshot(height int64) bool {
 
 func (m *Manager) snapshot(height int64) {
 	m.logger.Info("creating state snapshot", "height", height)
+
+	if height <= 0 {
+		m.logger.Error("snapshot height must be positive", "height", height)
+		return
+	}
 
 	snapshot, err := m.Create(uint64(height))
 	if err != nil {

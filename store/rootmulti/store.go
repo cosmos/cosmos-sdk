@@ -11,7 +11,7 @@ import (
 	"sync"
 
 	"github.com/cosmos/cosmos-sdk/pruning"
-	pruningTypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
@@ -60,7 +60,7 @@ type Store struct {
 	db             dbm.DB
 	logger         log.Logger
 	lastCommitInfo *types.CommitInfo
-	mx *sync.RWMutex // mutex to sync access to lastCommitInfo
+	mx             sync.RWMutex // mutex to sync access to lastCommitInfo
 	pruningManager *pruning.Manager
 	iavlCacheSize  int
 	storesParams   map[types.StoreKey]storeParams
@@ -95,20 +95,19 @@ func NewStore(db dbm.DB, logger log.Logger) *Store {
 		stores:         make(map[types.StoreKey]types.CommitKVStore),
 		keysByName:     make(map[string]types.StoreKey),
 		listeners:      make(map[types.StoreKey][]types.WriteListener),
-		pruningManager: pruning.NewManager(logger, db),
-		mx: &sync.RWMutex{},
+		pruningManager: pruning.NewManager(db, logger),
 	}
 }
 
 // GetPruning fetches the pruning strategy from the root store.
-func (rs *Store) GetPruning() *pruningTypes.PruningOptions {
+func (rs *Store) GetPruning() pruningtypes.PruningOptions {
 	return rs.pruningManager.GetOptions()
 }
 
 // SetPruning sets the pruning strategy on the root store and all the sub-stores.
 // Note, calling SetPruning on the root store prior to LoadVersion or
 // LoadLatestVersion performs a no-op as the stores aren't mounted yet.
-func (rs *Store) SetPruning(pruningOpts *pruningTypes.PruningOptions) {
+func (rs *Store) SetPruning(pruningOpts pruningtypes.PruningOptions) {
 	rs.pruningManager.SetOptions(pruningOpts)
 }
 
@@ -172,9 +171,9 @@ func (rs *Store) GetCommitKVStore(key types.StoreKey) types.CommitKVStore {
 	return rs.stores[key]
 }
 
-// GetCommitKVStores get all kv stores associated wit the multistore.
-func (rs *Store) GetCommitKVStores() map[types.StoreKey]types.CommitKVStore {
-	return rs.stores
+// StoreKeysByName returns mapping storeNames -> StoreKeys
+func (rs *Store) StoreKeysByName() map[string]types.StoreKey {
+	return rs.keysByName
 }
 
 // LoadLatestVersionAndUpgrade implements CommitMultiStore
@@ -280,7 +279,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	rs.stores = newStores
 
 	// load any pruned heights we missed from disk to be pruned on the next run
-	if err := rs.pruningManager.LoadPruningHeights(rs.db); err != nil {
+	if err := rs.pruningManager.LoadPruningHeights(); err != nil {
 		return err
 	}
 
@@ -530,35 +529,45 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 }
 
 func (rs *Store) handlePruning(version int64) error {
-	defer rs.pruningManager.FlushPruningHeights()
-
 	rs.pruningManager.HandleHeight(version - 1) // we should never prune the current version.
-	if rs.pruningManager.ShouldPruneAtHeight(version) {
-		rs.logger.Info("prune start", "height", version)
-
-		pruningHeights := rs.pruningManager.GetPruningHeights()
-		rs.logger.Debug(fmt.Sprintf("pruning the following heights: %v\n", pruningHeights))
-
-		if len(pruningHeights) == 0 {
-			return nil
-		}
-
-		for key, store := range rs.stores {
-			if store.GetStoreType() == types.StoreTypeIAVL {
-				// If the store is wrapped with an inter-block cache, we must first unwrap
-				// it to get the underlying IAVL store.
-				store = rs.GetCommitKVStore(key)
-
-				if err := store.(*iavl.Store).DeleteVersions(pruningHeights...); err != nil {
-					if errCause := errors.Cause(err); errCause != nil && errCause != iavltree.ErrVersionDoesNotExist {
-						return err
-					}
-				}
-			}
-		}
-		rs.pruningManager.ResetPruningHeights()
-		rs.logger.Info("prune end", "height", version)
+	if !rs.pruningManager.ShouldPruneAtHeight(version) {
 		return nil
+	}
+	rs.logger.Info("prune start", "height", version)
+	defer rs.logger.Info("prune end", "height", version)
+	return rs.pruneStores()
+}
+
+func (rs *Store) pruneStores() error {
+	pruningHeights, err := rs.pruningManager.GetFlushAndResetPruningHeights()
+	if err != nil {
+		return err
+	}
+
+	if len(pruningHeights) == 0 {
+		rs.logger.Debug("pruning skipped; no heights to prune")
+		return nil
+	}
+
+	rs.logger.Debug("pruning heights", "heights", pruningHeights)
+
+	for key, store := range rs.stores {
+		// If the store is wrapped with an inter-block cache, we must first unwrap
+		// it to get the underlying IAVL store.
+		if store.GetStoreType() != types.StoreTypeIAVL {
+			continue
+		}
+
+		store = rs.GetCommitKVStore(key)
+
+		err := store.(*iavl.Store).DeleteVersions(pruningHeights...)
+		if err == nil {
+			continue
+		}
+
+		if errCause := errors.Cause(err); errCause != nil && errCause != iavltree.ErrVersionDoesNotExist {
+			return err
+		}
 	}
 	return nil
 }
@@ -579,8 +588,8 @@ func (rs *Store) getStoreByName(name string) types.Store {
 // Query calls substore.Query with the same `req` where `req.Path` is
 // modified to remove the substore prefix.
 // Ie. `req.Path` here is `/<substore>/<path>`, and trimmed to `/<path>` for the substore.
-// Special case: if `req.Path` is `/proofs`, the commit hash is included 
-// as response value. In addition, proofs of every store are appended to the response for 
+// Special case: if `req.Path` is `/proofs`, the commit hash is included
+// as response value. In addition, proofs of every store are appended to the response for
 // the requested height
 func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	path := req.Path
@@ -614,7 +623,6 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	if res.ProofOps == nil || len(res.ProofOps.Ops) == 0 {
 		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "proof is unexpectedly empty; ensure height has not been pruned"))
 	}
-
 
 	commitInfo, err := rs.getCommitInfoFromDb(res.Height)
 	if err != nil {
@@ -892,7 +900,6 @@ func (rs *Store) Restore(
 	}
 
 	rs.flushLastCommitInfo(rs.buildCommitInfo(int64(height)))
-	rs.pruningManager.FlushPruningHeights()
 	return rs.LoadLatestVersion()
 }
 
@@ -1048,7 +1055,7 @@ func (rs *Store) doProofsQuery(req abci.RequestQuery) abci.ResponseQuery {
 	}
 
 	for _, storeInfo := range commitInfo.StoreInfos {
-		res.ProofOps.Ops = append(res.ProofOps.Ops, crypto.ProofOp{Key: []byte(storeInfo.Name), Data: storeInfo.CommitId.Hash, })
+		res.ProofOps.Ops = append(res.ProofOps.Ops, crypto.ProofOp{Key: []byte(storeInfo.Name), Data: storeInfo.CommitId.Hash})
 	}
 	return res
 }

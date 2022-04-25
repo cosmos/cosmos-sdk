@@ -7,7 +7,9 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -16,7 +18,7 @@ import (
 // for options that need access to non-exported fields of the BaseApp
 
 // SetPruning sets a pruning option on the multistore associated with the app
-func SetPruning(opts *sdk.PruningOptions) func(*BaseApp) {
+func SetPruning(opts pruningtypes.PruningOptions) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetPruning(opts) }
 }
 
@@ -69,7 +71,7 @@ func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
 }
 
 // SetSnapshot sets the snapshot store.
-func SetSnapshot(snapshotStore *snapshots.Store, opts *sdk.SnapshotOptions) func(*BaseApp) {
+func SetSnapshot(snapshotStore *snapshots.Store, opts snapshottypes.SnapshotOptions) func(*BaseApp) {
 	return func(app *BaseApp) { app.SetSnapshot(snapshotStore, opts) }
 }
 
@@ -199,14 +201,15 @@ func (app *BaseApp) SetRouter(router sdk.Router) {
 }
 
 // SetSnapshot sets the snapshot store and options.
-func (app *BaseApp) SetSnapshot(snapshotStore *snapshots.Store, opts *sdk.SnapshotOptions) {
+func (app *BaseApp) SetSnapshot(snapshotStore *snapshots.Store, opts snapshottypes.SnapshotOptions) {
 	if app.sealed {
 		panic("SetSnapshot() on sealed BaseApp")
 	}
-	if snapshotStore == nil || opts.Interval == 0 {
+	if snapshotStore == nil || opts.Interval == snapshottypes.SnapshotIntervalOff {
 		app.snapshotManager = nil
 		return
 	}
+	app.cms.SetSnapshotInterval(opts.Interval)
 	app.snapshotManager = snapshots.NewManager(snapshotStore, opts, app.cms, app.logger)
 }
 

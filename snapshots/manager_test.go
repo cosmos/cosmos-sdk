@@ -17,6 +17,7 @@ var opts = types.NewSnapshotOptions(1500, 2)
 func TestManager_List(t *testing.T) {
 	store := setupStore(t)
 	snapshotter := &mockSnapshotter{}
+	snapshotter.SetSnapshotInterval(opts.Interval)
 	manager := snapshots.NewManager(store, opts, snapshotter, log.NewNopLogger())
 	require.Equal(t, opts.Interval, snapshotter.GetSnapshotInterval())
 
@@ -108,7 +109,9 @@ func TestManager_Take(t *testing.T) {
 
 func TestManager_Prune(t *testing.T) {
 	store := setupStore(t)
-	manager := snapshots.NewManager(store, opts, &mockSnapshotter{}, log.NewNopLogger())
+	snapshotter := &mockSnapshotter{}
+	snapshotter.SetSnapshotInterval(opts.Interval)
+	manager := snapshots.NewManager(store, opts, snapshotter, log.NewNopLogger())
 
 	pruned, err := manager.Prune(2)
 	require.NoError(t, err)

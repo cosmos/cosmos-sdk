@@ -6,22 +6,22 @@ import (
 
 	"github.com/spf13/cast"
 
-	pruningTypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/server/types"
 )
 
 // GetPruningOptionsFromFlags parses command flags and returns the correct
 // PruningOptions. If a pruning strategy is provided, that will be parsed and
 // returned, otherwise, it is assumed custom pruning options are provided.
-func GetPruningOptionsFromFlags(appOpts types.AppOptions) (*pruningTypes.PruningOptions, error) {
+func GetPruningOptionsFromFlags(appOpts types.AppOptions) (pruningtypes.PruningOptions, error) {
 	strategy := strings.ToLower(cast.ToString(appOpts.Get(FlagPruning)))
 
 	switch strategy {
-	case pruningTypes.PruningOptionDefault, pruningTypes.PruningOptionNothing, pruningTypes.PruningOptionEverything:
-		return pruningTypes.NewPruningOptionsFromString(strategy), nil
+	case pruningtypes.PruningOptionDefault, pruningtypes.PruningOptionNothing, pruningtypes.PruningOptionEverything:
+		return pruningtypes.NewPruningOptionsFromString(strategy), nil
 
-	case pruningTypes.PruningOptionCustom:
-		opts := pruningTypes.NewCustomPruningOptions(
+	case pruningtypes.PruningOptionCustom:
+		opts := pruningtypes.NewCustomPruningOptions(
 			cast.ToUint64(appOpts.Get(FlagPruningKeepRecent)),
 			cast.ToUint64(appOpts.Get(FlagPruningInterval)),
 		)
@@ -33,6 +33,6 @@ func GetPruningOptionsFromFlags(appOpts types.AppOptions) (*pruningTypes.Pruning
 		return opts, nil
 
 	default:
-		return nil, fmt.Errorf("unknown pruning strategy %s", strategy)
+		return pruningtypes.PruningOptions{}, fmt.Errorf("unknown pruning strategy %s", strategy)
 	}
 }

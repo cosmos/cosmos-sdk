@@ -6,45 +6,45 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	pruningTypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 )
 
 func TestGetPruningOptionsFromFlags(t *testing.T) {
 	tests := []struct {
 		name            string
 		initParams      func() *viper.Viper
-		expectedOptions *pruningTypes.PruningOptions
+		expectedOptions pruningtypes.PruningOptions
 		wantErr         bool
 	}{
 		{
 			name: FlagPruning,
 			initParams: func() *viper.Viper {
 				v := viper.New()
-				v.Set(FlagPruning, pruningTypes.PruningOptionNothing)
+				v.Set(FlagPruning, pruningtypes.PruningOptionNothing)
 				return v
 			},
-			expectedOptions: pruningTypes.NewPruningOptions(pruningTypes.PruningNothing),
+			expectedOptions: pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
 		},
 		{
 			name: "custom pruning options",
 			initParams: func() *viper.Viper {
 				v := viper.New()
-				v.Set(FlagPruning, pruningTypes.PruningOptionCustom)
+				v.Set(FlagPruning, pruningtypes.PruningOptionCustom)
 				v.Set(FlagPruningKeepRecent, 1234)
 				v.Set(FlagPruningInterval, 10)
 
 				return v
 			},
-			expectedOptions: pruningTypes.NewCustomPruningOptions(1234, 10),
+			expectedOptions: pruningtypes.NewCustomPruningOptions(1234, 10),
 		},
 		{
-			name: pruningTypes.PruningOptionDefault,
+			name: pruningtypes.PruningOptionDefault,
 			initParams: func() *viper.Viper {
 				v := viper.New()
-				v.Set(FlagPruning, pruningTypes.PruningOptionDefault)
+				v.Set(FlagPruning, pruningtypes.PruningOptionDefault)
 				return v
 			},
-			expectedOptions: pruningTypes.NewPruningOptions(pruningTypes.PruningDefault),
+			expectedOptions: pruningtypes.NewPruningOptions(pruningtypes.PruningDefault),
 		},
 	}
 
@@ -53,7 +53,7 @@ func TestGetPruningOptionsFromFlags(t *testing.T) {
 
 		t.Run(tt.name, func(j *testing.T) {
 			viper.Reset()
-			viper.SetDefault(FlagPruning, pruningTypes.PruningOptionDefault)
+			viper.SetDefault(FlagPruning, pruningtypes.PruningOptionDefault)
 			v := tt.initParams()
 
 			opts, err := GetPruningOptionsFromFlags(v)

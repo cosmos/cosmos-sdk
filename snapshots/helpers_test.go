@@ -59,8 +59,8 @@ func readChunks(chunks <-chan io.ReadCloser) [][]byte {
 }
 
 type mockSnapshotter struct {
-	chunks [][]byte
-	prunedHeights map[int64]struct{}
+	chunks           [][]byte
+	prunedHeights    map[int64]struct{}
 	snapshotInterval uint64
 }
 
@@ -121,6 +121,7 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 	store, err := snapshots.NewStore(db.NewMemDB(), tempdir)
 	require.NoError(t, err)
 	hung := newHungSnapshotter()
+	hung.SetSnapshotInterval(opts.Interval)
 	mgr := snapshots.NewManager(store, opts, hung, log.NewNopLogger())
 	require.Equal(t, opts.Interval, hung.snapshotInterval)
 
@@ -138,14 +139,14 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 
 // hungSnapshotter can be used to test operations in progress. Call close to end the snapshot.
 type hungSnapshotter struct {
-	ch chan struct{}
-	prunedHeights map[int64]struct{}
+	ch               chan struct{}
+	prunedHeights    map[int64]struct{}
 	snapshotInterval uint64
 }
 
 func newHungSnapshotter() *hungSnapshotter {
 	return &hungSnapshotter{
-		ch: make(chan struct{}),
+		ch:            make(chan struct{}),
 		prunedHeights: make(map[int64]struct{}),
 	}
 }

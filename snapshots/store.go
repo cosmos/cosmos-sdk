@@ -32,8 +32,6 @@ type Store struct {
 	saving map[uint64]bool // heights currently being saved
 }
 
-var _ store.Store = (*Store)(nil)
-
 // NewStore creates a new snapshot store.
 func NewStore(db db.DB, dir string) (*Store, error) {
 	if dir == "" {
@@ -294,11 +292,6 @@ func (s *Store) Save(
 	snapshot.Chunks = index
 	snapshot.Hash = snapshotHasher.Sum(nil)
 	return snapshot, s.saveSnapshot(snapshot)
-}
-
-// GetStoreType implements the Store interface. It returns the underlying Store type.
-func (*Store) GetStoreType() store.StoreType {
-	return store.StoreTypeSnapshot
 }
 
 // CacheWrap implements the Store interface. It panics because a Store

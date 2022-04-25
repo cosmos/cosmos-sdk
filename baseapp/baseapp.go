@@ -1,7 +1,6 @@
 package baseapp
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -302,13 +301,10 @@ func (app *BaseApp) init() error {
 	app.Seal()
 
 	rms, ok := app.cms.(*rootmulti.Store)
-	if !ok && app.snapshotManager != nil {
-		return errors.New("state sync snapshots require a rootmulti store")
+	if !ok {
+		return fmt.Errorf("invalid commit multi-store; expected %T, got: %T", &rootmulti.Store{}, app.cms)
 	}
-	if err := rms.GetPruning().Validate(); err != nil {
-		return err
-	}
-	return nil
+	return rms.GetPruning().Validate()
 }
 
 func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {

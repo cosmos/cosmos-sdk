@@ -4,14 +4,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/snapshots"
-	snaphotsTestUtil "github.com/cosmos/cosmos-sdk/testutil/snapshots"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmprototypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
+
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	"github.com/cosmos/cosmos-sdk/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	snaphotstestutil "github.com/cosmos/cosmos-sdk/testutil/snapshots"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestGetBlockRentionHeight(t *testing.T) {
@@ -19,7 +21,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 	db := dbm.NewMemDB()
 	name := t.Name()
 
-	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), snaphotsTestUtil.GetTempDir(t))
+	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), snaphotstestutil.GetTempDir(t))
 	require.NoError(t, err)
 
 	testCases := map[string]struct {
@@ -43,9 +45,9 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		"pruning iavl snapshot only": {
 			bapp: NewBaseApp(
 				name, logger, db, nil,
-				SetPruning(sdk.NewPruningOptions(sdk.Nothing)),
+				SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)),
 				SetMinRetainBlocks(1),
-				SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(10000, 1)),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(10000, 1)),
 			),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
@@ -54,7 +56,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		"pruning state sync snapshot only": {
 			bapp: NewBaseApp(
 				name, logger, db, nil,
-				SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(50000, 3)),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
 				SetMinRetainBlocks(1),
 			),
 			maxAgeBlocks: 0,
@@ -73,9 +75,9 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		"pruning all conditions": {
 			bapp: NewBaseApp(
 				name, logger, db, nil,
-				SetPruning(sdk.NewCustomPruningOptions(0, 0)),
+				SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
 				SetMinRetainBlocks(400000),
-				SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(50000, 3)),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
@@ -84,9 +86,9 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		"no pruning due to no persisted state": {
 			bapp: NewBaseApp(
 				name, logger, db, nil,
-				SetPruning(sdk.NewCustomPruningOptions(0, 0)),
+				SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
 				SetMinRetainBlocks(400000),
-				SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(50000, 3)),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 10000,
@@ -95,9 +97,9 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		"disable pruning": {
 			bapp: NewBaseApp(
 				name, logger, db, nil,
-				SetPruning(sdk.NewCustomPruningOptions(0, 0)),
+				SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
 				SetMinRetainBlocks(0),
-				SetSnapshot(snapshotStore, sdk.NewSnapshotOptions(50000, 3)),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,

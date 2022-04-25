@@ -15,7 +15,7 @@ This ADR provides guidelines and recommended practices when updating Protobuf de
 
 ## Context
 
-The Cosmos SDK maintains a set of [Protobuf definitions](https://github.com/cosmos/cosmos-sdk/tree/master/proto/cosmos). It is important to correctly design Protobuf definitions to avoid any breaking changes within the same version. The reasons are to not break tooling (including indexers and explorers), wallets and other third-party integrations.
+The Cosmos SDK maintains a set of [Protobuf definitions](https://github.com/cosmos/cosmos-sdk/tree/main/proto/cosmos). It is important to correctly design Protobuf definitions to avoid any breaking changes within the same version. The reasons are to not break tooling (including indexers and explorers), wallets and other third-party integrations.
 
 When making changes to these Protobuf definitions, the Cosmos SDK currently only follows [Buf's](https://docs.buf.build/) recommendations. We noticed however that Buf's recommendations might still result in breaking changes in the SDK in some cases. For example:
 

@@ -1,6 +1,6 @@
 # Updating the docs
 
-If you want to open a PR in Cosmos SDK to update the documentation, please follow the guidelines in [`CONTRIBUTING.md`](https://github.com/cosmos/cosmos-sdk/tree/master/CONTRIBUTING.md#updating-documentation).
+If you want to open a PR in Cosmos SDK to update the documentation, please follow the guidelines in [`CONTRIBUTING.md`](https://github.com/cosmos/cosmos-sdk/tree/main/CONTRIBUTING.md#updating-documentation).
 
 ## Internationalization
 
@@ -13,8 +13,8 @@ If you want to open a PR in Cosmos SDK to update the documentation, please follo
     * `docs/intro/`
     * `docs/migrations/`
     * `docs/run-node/`
-* Each `docs/<locale>/` folder must also have a `README.md` that includes a translated version of both the layout and content within the root-level [`README.md`](https://github.com/cosmos/cosmos-sdk/tree/master/docs/README.md). The layout defined in the `README.md` is used to build the homepage.
-* Always translate content living on `master` unless you are revising documentation for a specific release. Translated documentation like the root-level documentation is semantically versioned.
+* Each `docs/<locale>/` folder must also have a `README.md` that includes a translated version of both the layout and content within the root-level [`README.md`](https://github.com/cosmos/cosmos-sdk/tree/main/docs/README.md). The layout defined in the `README.md` is used to build the homepage.
+* Always translate content living on `main` unless you are revising documentation for a specific release. Translated documentation like the root-level documentation is semantically versioned.
 * For additional configuration options, please see [VuePress Internationalization](https://vuepress.vuejs.org/guide/i18n.html).
 
 ## Docs Build Workflow
@@ -23,7 +23,7 @@ The documentation for Cosmos SDK is hosted at https://docs.cosmos.network/ and b
 
 ### How It Works
 
-There is a CircleCI job listening for changes in the `/docs` directory for the `master` branch and each supported version tag (`v0.39` and `v0.42`). Any updates to files in the `/docs` directory will automatically trigger a website deployment. Under the hood, the private website repository has a `make build-docs` target consumed by a CircleCI job within that repository.
+There is a CircleCI job listening for changes in the `/docs` directory for the `main` branch and each supported version tag (`v0.39` and `v0.42`). Any updates to files in the `/docs` directory will automatically trigger a website deployment. Under the hood, the private website repository has a `make build-docs` target consumed by a CircleCI job within that repository.
 
 ## README
 
@@ -92,7 +92,7 @@ To build documentation as a static website run `npm run build`. You will find th
 
 First, run `make tools` from the root of repo, to install the swagger-ui tool.
 
-Then, edit the `swagger.yaml` manually; it is found [here](https://github.com/cosmos/cosmos-sdk/blob/master/client/lcd/swagger-ui/swagger.yaml)
+Then, edit the `swagger.yaml` manually; it is found [here](https://github.com/cosmos/cosmos-sdk/blob/main/client/lcd/swagger-ui/swagger.yaml)
 
 Finally, run `make update_gaia_lite_docs` from the root of the repo.
 

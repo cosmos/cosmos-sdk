@@ -290,7 +290,8 @@ If group-policy-as-admin flag is set to true, the admin of the newly created gro
 
 Example:
 $ %s tx group create-group-with-policy [admin] [group-metadata] [group-policy-metadata] [members-json-file] \
-'{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"1s"}'
+'{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"1", \
+"windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
 
 where members.json contains:
 
@@ -378,10 +379,11 @@ Note, the '--from' flag is ignored as it is implied from [admin].
 
 Example:
 $ %s tx group create-group-policy [admin] [group-id] [metadata] \
-'{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"1s"}'
+'{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"1", \
+"windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
 
 Here, we can use percentage decision policy when needed, where 0 < percentage <= 1.
-Ex: '{"@type":"/cosmos.group.v1.PercentageDecisionPolicy", "percentage":"0.5", "timeout":"1s"}'
+Ex: '{"@type":"/cosmos.group.v1.PercentageDecisionPolicy", "percentage":"0.5", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}
 `,
 				version.AppName,
 			),
@@ -492,7 +494,7 @@ func MsgUpdateGroupPolicyDecisionPolicyCmd() *cobra.Command {
 				return err
 			}
 
-			msg, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(
+			msg, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(
 				clientCtx.GetFromAddress(),
 				accountAddress,
 				policy,
@@ -560,7 +562,7 @@ Parameters:
 			msg_tx_json_file: path to json file with messages that will be executed if the proposal is accepted.
 
 Example:
-	$ %s tx gov submit-proposal path/to/proposal.json
+	$ %s tx group submit-proposal path/to/proposal.json
 	
 	Where proposal.json contains:
 
@@ -601,7 +603,7 @@ Example:
 
 			execStr, _ := cmd.Flags().GetString(FlagExec)
 
-			msg, err := group.NewMsgSubmitProposalRequest(
+			msg, err := group.NewMsgSubmitProposal(
 				prop.GroupPolicyAddress,
 				prop.Proposers,
 				msgs,

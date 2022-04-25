@@ -128,9 +128,14 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		if isShowPubKey {
 			out = ko.PubKey
 		}
-		fmt.Fprintln(cmd.OutOrStdout(), out)
+
+		if _, err := fmt.Fprintln(cmd.OutOrStdout(), out); err != nil {
+			return err
+		}
 	default:
-		printKeyringRecord(cmd.OutOrStdout(), k, bechKeyOut, outputFormat)
+		if err := printKeyringRecord(cmd.OutOrStdout(), k, bechKeyOut, outputFormat); err != nil {
+			return err
+		}
 	}
 
 	if isShowDevice {

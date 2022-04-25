@@ -71,7 +71,7 @@ The `AnteHandler` is run for every transaction during `CheckTx` and `DeliverTx`,
 type AnteHandler func(ctx Context, tx Tx, simulate bool) (newCtx Context, result Result, abort bool)
 ```
 
-The `anteHandler` is not implemented in the core Cosmos SDK but in a module. This gives the possibility to developers to choose which version of `AnteHandler` fits their application's needs. That said, most applications today use the default implementation defined in the [`auth` module](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth). Here is what the `anteHandler` is intended to do in a normal Cosmos SDK application:
+The `anteHandler` is not implemented in the core Cosmos SDK but in a module. This gives the possibility to developers to choose which version of `AnteHandler` fits their application's needs. That said, most applications today use the default implementation defined in the [`auth` module](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth). Here is what the `anteHandler` is intended to do in a normal Cosmos SDK application:
 
 * Verify that the transaction are of the correct type. Transaction types are defined in the module that implements the `anteHandler`, and they follow the transaction interface:
   +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/tx_msg.go#L49-L57

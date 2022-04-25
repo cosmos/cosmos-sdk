@@ -1,6 +1,6 @@
-FROM golang:1.17-alpine as build
+FROM golang:1.18-alpine as build
 
-RUN apk add --no-cache tar
+RUN apk add --no-cache tar git
 
 # prepare node data
 WORKDIR /node
@@ -13,7 +13,7 @@ COPY . ./
 RUN go build -o simd ./simapp/simd/
 
 FROM alpine
-RUN apk add gcc libc-dev python3 --no-cache
+RUN apk add gcc git libc-dev python3 --no-cache
 
 ENV PATH=$PATH:/bin
 

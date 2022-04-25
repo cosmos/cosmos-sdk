@@ -6,9 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 var FlagSplit = "split"
@@ -16,7 +15,7 @@ var FlagSplit = "split"
 // NewTxCmd returns a root CLI command handler for all x/bank transaction commands.
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
-		Use:                        banktypes.ModuleName,
+		Use:                        types.ModuleName,
 		Short:                      "Bank transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
@@ -56,7 +55,7 @@ func NewSendTxCmd() *cobra.Command {
 				return err
 			}
 
-			msg := banktypes.NewMsgSend(clientCtx.GetFromAddress(), toAddr, coins)
+			msg := types.NewMsgSend(clientCtx.GetFromAddress(), toAddr, coins)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -95,21 +94,21 @@ func NewMultiSendTxCmd() *cobra.Command {
 				return err
 			}
 
-			totalAddr := types.NewInt(int64(len(args) - 2))
+			totalAddr := sdk.NewInt(int64(len(args) - 2))
 			// coins to be received by the addresses
 			sendCoins := coins
 			if split && !coins.IsZero() {
-				sendCoins = coins.Quo(totalAddr)
+				sendCoins = coins.QuoInt(totalAddr)
 			}
 
-			var output []banktypes.Output
+			var output []types.Output
 			for _, arg := range args[1 : len(args)-1] {
 				toAddr, err := sdk.AccAddressFromBech32(arg)
 				if err != nil {
 					return err
 				}
 
-				output = append(output, banktypes.NewOutput(toAddr, sendCoins))
+				output = append(output, types.NewOutput(toAddr, sendCoins))
 			}
 
 			// amount to be send from the from address
@@ -117,12 +116,12 @@ func NewMultiSendTxCmd() *cobra.Command {
 			if split {
 				// user input: 1000stake to send to 3 addresses
 				// actual: 333stake to each address (=> 999stake actually sent)
-				amount = sendCoins.Mul(totalAddr)
+				amount = sendCoins.MulInt(totalAddr)
 			} else {
-				amount = coins.Mul(totalAddr)
+				amount = coins.MulInt(totalAddr)
 			}
 
-			msg := banktypes.NewMsgMultiSend([]banktypes.Input{banktypes.NewInput(clientCtx.FromAddress, amount)}, output)
+			msg := types.NewMsgMultiSend([]types.Input{types.NewInput(clientCtx.FromAddress, amount)}, output)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

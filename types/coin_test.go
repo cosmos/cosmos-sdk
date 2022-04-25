@@ -226,7 +226,7 @@ func (s *coinTestSuite) TestSubCoinAmount() {
 	}
 }
 
-func (s *coinTestSuite) TestMulCoins() {
+func (s *coinTestSuite) TestMulIntCoins() {
 	testCases := []struct {
 		input       sdk.Coins
 		multiplier  sdk.Int
@@ -242,16 +242,16 @@ func (s *coinTestSuite) TestMulCoins() {
 	for i, tc := range testCases {
 		tc := tc
 		if tc.shouldPanic {
-			assert.Panics(func() { tc.input.Mul(tc.multiplier) })
+			assert.Panics(func() { tc.input.MulInt(tc.multiplier) })
 		} else {
-			res := tc.input.Mul(tc.multiplier)
+			res := tc.input.MulInt(tc.multiplier)
 			assert.True(res.IsValid())
 			assert.Equal(tc.expected, res, "multiplication of coins is incorrect, tc #%d", i)
 		}
 	}
 }
 
-func (s *coinTestSuite) TestQuoCoins() {
+func (s *coinTestSuite) TestQuoIntCoins() {
 	testCases := []struct {
 		input       sdk.Coins
 		divisor     sdk.Int
@@ -269,9 +269,9 @@ func (s *coinTestSuite) TestQuoCoins() {
 	for i, tc := range testCases {
 		tc := tc
 		if tc.shouldPanic {
-			assert.Panics(func() { tc.input.Quo(tc.divisor) })
+			assert.Panics(func() { tc.input.QuoInt(tc.divisor) })
 		} else {
-			res := tc.input.Quo(tc.divisor)
+			res := tc.input.QuoInt(tc.divisor)
 			assert.Equal(tc.isValid, res.IsValid())
 			assert.Equal(tc.expected, res, "quotient of coins is incorrect, tc #%d", i)
 		}

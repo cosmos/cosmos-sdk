@@ -410,14 +410,14 @@ func (coins Coins) SafeSub(coinsB ...Coin) (Coins, bool) {
 	return diff, diff.IsAnyNegative()
 }
 
-// Mul performs the scalar multiplication of coins with a `multiplier`
+// MulInt performs the scalar multiplication of coins with a `multiplier`
 // All coins are multipled by x
 // e.g.
 // {2A, 3B} * 2 = {4A, 6B}
 // {2A} * 0 panics
 // Note, if IsValid was true on Coins, IsValid stays true
-func (coins Coins) Mul(x Int) Coins {
-	coins, ok := coins.SafeMul(x)
+func (coins Coins) MulInt(x Int) Coins {
+	coins, ok := coins.SafeMulInt(x)
 	if !ok {
 		panic("multiplying by zero is an invalid operation on coins")
 	}
@@ -425,9 +425,9 @@ func (coins Coins) Mul(x Int) Coins {
 	return coins
 }
 
-// SafeMul performs the same arithmetic as Mul but returns false
+// SafeMulInt performs the same arithmetic as MulInt but returns false
 // if the `multiplier` is zero because it makes IsValid return false
-func (coins Coins) SafeMul(x Int) (Coins, bool) {
+func (coins Coins) SafeMulInt(x Int) (Coins, bool) {
 	if x.IsNil() || x.IsZero() {
 		return nil, false
 	}
@@ -442,7 +442,7 @@ func (coins Coins) SafeMul(x Int) (Coins, bool) {
 	return res, true
 }
 
-// Quo performs the scalar division of coins with a `divisor`
+// QuoInt performs the scalar division of coins with a `divisor`
 // All coins are divided by x and trucated.
 // e.g.
 // {2A, 30B} / 2 = {1A, 15B}
@@ -451,8 +451,8 @@ func (coins Coins) SafeMul(x Int) (Coins, bool) {
 // {2A} / 0 = panics
 // Note, if IsValid was true on Coins, IsValid stays true,
 // unless the `divisor` is greater than the smallest coin amount.
-func (coins Coins) Quo(x Int) Coins {
-	coins, ok := coins.SafeQuo(x)
+func (coins Coins) QuoInt(x Int) Coins {
+	coins, ok := coins.SafeQuoInt(x)
 	if !ok {
 		panic("cannot divide by zero")
 	}
@@ -460,9 +460,9 @@ func (coins Coins) Quo(x Int) Coins {
 	return coins
 }
 
-// SafeQuo performs the same arithmetic as Quo but returns an error
+// SafeQuoInt performs the same arithmetic as QuoInt but returns an error
 // if the division cannot be done
-func (coins Coins) SafeQuo(x Int) (Coins, bool) {
+func (coins Coins) SafeQuoInt(x Int) (Coins, bool) {
 	if x.IsNil() || x.IsZero() {
 		return nil, false
 	}

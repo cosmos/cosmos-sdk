@@ -54,7 +54,7 @@ The command-line is an easy way to interact with an application, but `Tx` can al
 
 Each full-node (running Tendermint) that receives a `Tx` sends an [ABCI message](https://tendermint.com/docs/spec/abci/abci.html#messages),
 `CheckTx`, to the application layer to check for validity, and receives an `abci.ResponseCheckTx`. If the `Tx` passes the checks, it is held in the nodes'
-[**Mempool**](https://tendermint.com/docs/tendermint-core/mempool.html#mempool), an in-memory pool of transactions unique to each node) pending inclusion in a block - honest nodes will discard `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
+[**Mempool**](https://tendermint.com/docs/tendermint-core/mempool), an in-memory pool of transactions unique to each node) pending inclusion in a block - honest nodes will discard `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
 
 ### Types of Checks
 
@@ -102,7 +102,7 @@ After the ValidateBasic checks, the `AnteHandler`s are run. Technically, they ar
 
 A copy of the cached context is provided to the `AnteHandler`, which performs limited checks specified for the transaction type. Using a copy allows the AnteHandler to do stateful checks for `Tx` without modifying the last committed state, and revert back to the original if the execution fails.
 
-For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module `AnteHandler` checks and increments sequence numbers, checks signatures and account numbers, and deducts fees from the first signer of the transaction - all state changes are made using the `checkState`.
+For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth/spec) module `AnteHandler` checks and increments sequence numbers, checks signatures and account numbers, and deducts fees from the first signer of the transaction - all state changes are made using the `checkState`.
 
 ### Gas
 

@@ -2342,7 +2342,7 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 	var res group.QueryGroupPoliciesByGroupResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
 	groupPolicyAddress := res.GroupPolicies[0].Address
-	fmt.Println("address: ", groupPolicyAddress, "\n")
+	fmt.Println("address: ", groupPolicyAddress)
 
 	testCases := []struct {
 		name      string
@@ -2478,7 +2478,7 @@ func (s *IntegrationTestSuite) TestSubmitProposalAndUpdate() {
 			[]string{
 				val.Address.String(),
 				groupID,
-				"AQ==",
+				validMetadata,
 				"{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"4\", \"windows\":{\"voting_period\":\"1s\"}}",
 			},
 			commonFlags...,
@@ -2493,7 +2493,7 @@ func (s *IntegrationTestSuite) TestSubmitProposalAndUpdate() {
 	s.Require().NoError(err, out.String())
 	var res group.QueryGroupPoliciesByGroupResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
-	groupPolicyAdress := res.GroupPolicies[0].Address
+	groupPolicyAddress := res.GroupPolicies[0].Address
 
 	validUpdatedMembersFileName := testutil.WriteToNewTempFile(s.T(), fmt.Sprintf(`{"members": [{
 		"address": "%s",
@@ -2507,16 +2507,16 @@ func (s *IntegrationTestSuite) TestSubmitProposalAndUpdate() {
 
 	s.Run("submit proposal, update decision policy", func() {
 		cmdSubmitProposal := client.MsgSubmitProposalCmd()
-		submitPropossalArgs := append([]string{
+		submitProposalArgs := append([]string{
 			s.createCLIProposal(
-				groupPolicyAdress, val.Address.String(),
-				groupPolicyAdress, val.Address.String(),
+				groupPolicyAddress, val.Address.String(),
+				groupPolicyAddress, val.Address.String(),
 				"",
 			),
 		},
 			commonFlags...,
 		)
-		out, err = cli.ExecTestCLICmd(clientCtx, cmdSubmitProposal, submitPropossalArgs)
+		out, err = cli.ExecTestCLICmd(clientCtx, cmdSubmitProposal, submitProposalArgs)
 		s.Require().NoError(err, out.String())
 		s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
 

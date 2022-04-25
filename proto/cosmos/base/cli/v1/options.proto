@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package cosmos.base.cli.v1;
+
+import "google/protobuf/descriptor.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/api/cosmos/base/cli/v1;cliv1";
+
+extend google.protobuf.MethodOptions {
+  string long = 357349126;
+  string short = 357349127;
+  string example = 357349128;
+  repeated string alias = 357349129;
+  repeated string suggest_for = 357349130;
+  string command_deprecated = 357349131;
+  string version = 357349132;
+  repeated Annotation annotation = 357349133;
+}
+
+message Annotation {
+  string key = 1;
+  string value = 2;
+}
+
+extend google.protobuf.FieldOptions {
+  string name = 357349140;
+  string shorthand = 357349141;
+  string usage = 357349142;
+  string default_value = 357349143;
+  string no_opt_default_value = 357349144;
+  string field_deprecated = 357349145;
+  string shorthand_deprecated = 357349146;
+  bool hidden = 357349147;
+  repeated Annotation annotations = 357349148;
+}

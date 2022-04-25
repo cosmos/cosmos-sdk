@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	_ "github.com/cosmos/gogoproto/gogoproto" // required so it does register the gogoproto file descriptor
+	//	_ "github.com/cosmos/gogoproto/proto"     // possibly also required for the same reason
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	// nolint: staticcheck
@@ -16,8 +17,8 @@ import (
 )
 
 var importsToFix = map[string]string{
-	"gogo.proto":   "gogoproto/gogo.proto",
-	"cosmos.proto": "cosmos_proto/cosmos.proto",
+	"gogo.proto": "gogoproto/gogo.proto",
+	//	"cosmos.proto": "cosmos_proto/cosmos.proto",
 }
 
 // fixRegistration is required because certain files register themselves in a way

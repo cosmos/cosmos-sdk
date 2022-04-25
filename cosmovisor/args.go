@@ -226,9 +226,9 @@ func (cfg *Config) validate() []error {
 	// if UnsafeSkipBackup is false, check if the DataBackupPath valid
 	switch {
 	case cfg.DataBackupPath == "":
-		errs = append(errs, errors.New(EnvDataBackupPath+" must not be empty"))
+		errs = append(errs, fmt.Errorf("%s must not be empty", EnvDataBackupPath))
 	case !filepath.IsAbs(cfg.DataBackupPath):
-		errs = append(errs, errors.New(cfg.DataBackupPath+" must be an absolute path"))
+		errs = append(errs, fmt.Errorf("%s must be an absolute path", cfg.DataBackupPath))
 	default:
 		switch info, err := os.Stat(cfg.DataBackupPath); {
 		case err != nil:

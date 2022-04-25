@@ -9,10 +9,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/cosmovisor/logging"
+
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type fileWatcher struct {
+	logger logging.Logger
+
 	// full path to a watched file
 	filename string
 	interval time.Duration
@@ -26,7 +30,7 @@ type fileWatcher struct {
 	initialized bool
 }
 
-func newUpgradeFileWatcher(filename string, interval time.Duration) (*fileWatcher, error) {
+func newUpgradeFileWatcher(logger logging.Logger, filename string, interval time.Duration) (*fileWatcher, error) {
 	if filename == "" {
 		return nil, errors.New("filename undefined")
 	}
@@ -44,6 +48,7 @@ func newUpgradeFileWatcher(filename string, interval time.Duration) (*fileWatche
 	}
 
 	return &fileWatcher{
+		logger:      logger,
 		filename:    filenameAbs,
 		interval:    interval,
 		currentInfo: upgradetypes.Plan{},
@@ -106,7 +111,7 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 
 	info, err := parseUpgradeInfoFile(fw.filename)
 	if err != nil {
-		Logger.Fatal().Err(err).Msg("failed to parse upgrade info file")
+		fw.logger.Fatal().Err(err).Msg("failed to parse upgrade info file")
 		return false
 	}
 

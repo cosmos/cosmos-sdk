@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
+	"github.com/cosmos/cosmos-sdk/cosmovisor/logging"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -29,6 +30,7 @@ func (s *processTestSuite) TestLaunchProcess() {
 	require := s.Require()
 	home := copyTestData(s.T(), "validate")
 	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", PollInterval: 20, UnsafeSkipBackup: true}
+	logger := logging.NewLogger()
 
 	// should run the genesis binary and produce expected output
 	var stdout, stderr = NewBuffer(), NewBuffer()
@@ -36,7 +38,7 @@ func (s *processTestSuite) TestLaunchProcess() {
 	require.NoError(err)
 	require.Equal(cfg.GenesisBin(), currentBin)
 
-	launcher, err := cosmovisor.NewLauncher(cfg)
+	launcher, err := cosmovisor.NewLauncher(logger, cfg)
 	require.NoError(err)
 
 	upgradeFile := cfg.UpgradeInfoFilePath()
@@ -79,6 +81,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	require := s.Require()
 	home := copyTestData(s.T(), "download")
 	cfg := &cosmovisor.Config{Home: home, Name: "autod", AllowDownloadBinaries: true, PollInterval: 100, UnsafeSkipBackup: true}
+	logger := logging.NewLogger()
 	upgradeFilename := cfg.UpgradeInfoFilePath()
 
 	// should run the genesis binary and produce expected output
@@ -86,7 +89,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	require.NoError(err)
 	require.Equal(cfg.GenesisBin(), currentBin)
 
-	launcher, err := cosmovisor.NewLauncher(cfg)
+	launcher, err := cosmovisor.NewLauncher(logger, cfg)
 	require.NoError(err)
 
 	var stdout, stderr = NewBuffer(), NewBuffer()

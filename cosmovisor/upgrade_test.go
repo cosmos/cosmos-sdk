@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
+	"github.com/cosmos/cosmos-sdk/cosmovisor/logging"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -95,6 +96,7 @@ func (s *upgradeTestSuite) assertCurrentLink(cfg cosmovisor.Config, target strin
 func (s *upgradeTestSuite) TestDoUpgradeNoDownloadUrl() {
 	home := copyTestData(s.T(), "validate")
 	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", AllowDownloadBinaries: true}
+	logger := logging.NewLogger()
 
 	currentBin, err := cfg.CurrentBin()
 	s.Require().NoError(err)
@@ -104,7 +106,7 @@ func (s *upgradeTestSuite) TestDoUpgradeNoDownloadUrl() {
 	// do upgrade ignores bad files
 	for _, name := range []string{"missing", "nobin", "noexec"} {
 		info := upgradetypes.Plan{Name: name}
-		err = cosmovisor.DoUpgrade(cfg, info)
+		err = cosmovisor.DoUpgrade(logger, cfg, info)
 		s.Require().Error(err, name)
 		currentBin, err := cfg.CurrentBin()
 		s.Require().NoError(err)
@@ -115,7 +117,7 @@ func (s *upgradeTestSuite) TestDoUpgradeNoDownloadUrl() {
 	for _, upgrade := range []string{"chain2", "chain3"} {
 		// now set it to a valid upgrade and make sure CurrentBin is now set properly
 		info := upgradetypes.Plan{Name: upgrade}
-		err = cosmovisor.DoUpgrade(cfg, info)
+		err = cosmovisor.DoUpgrade(logger, cfg, info)
 		s.Require().NoError(err)
 		// we should see current point to the new upgrade dir
 		upgradeBin := cfg.UpgradeBin(upgrade)

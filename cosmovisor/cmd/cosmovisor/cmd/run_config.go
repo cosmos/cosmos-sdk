@@ -4,7 +4,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/cosmovisor"
+	"github.com/cosmos/cosmos-sdk/cosmovisor/logging"
 )
 
 // DefaultRunConfig defintes a default RunConfig that writes to os.Stdout and os.Stderr
@@ -39,9 +39,9 @@ func StdErrRunOption(w io.Writer) RunOption {
 }
 
 // DisableLoggingRunOption disables logging for the specific Run command
-func DisableLogging() RunOption {
+func DisableLogging(logger logging.Logger) RunOption {
 	return func(cfg *RunConfig) {
 		cfg.DisableLogging = true
-		cosmovisor.DisableLogger()
+		logger.DisableLogger()
 	}
 }

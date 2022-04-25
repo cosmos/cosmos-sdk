@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
 	cverrors "github.com/cosmos/cosmos-sdk/cosmovisor/errors"
+	"github.com/cosmos/cosmos-sdk/cosmovisor/logging"
 	"github.com/rs/zerolog"
 )
 
@@ -27,35 +28,35 @@ func IsVersionCommand(arg string) bool {
 }
 
 // PrintVersion prints the cosmovisor version.
-func PrintVersion(args []string) error {
+func (cv *Cosmovisor) PrintVersion(args []string) error {
 	for _, arg := range args {
 		if strings.Contains(arg, FlagJSON) {
-			return printVersionJSON(args)
+			return cv.printVersionJSON(args)
 		}
 	}
 
-	return printVersion(args)
+	return cv.printVersion(args)
 }
 
-func printVersion(args []string) error {
+func (cv *Cosmovisor) printVersion(args []string) error {
 	fmt.Println("Cosmovisor Version: ", Version)
 
-	if err := Run(append([]string{"version"}, args...)); err != nil {
-		handleRunVersionFailure(err)
+	if err := cv.Run(append([]string{"version"}, args...)); err != nil {
+		cv.handleRunVersionFailure(err)
 	}
 
 	return nil
 }
 
-func printVersionJSON(args []string) error {
+func (cv *Cosmovisor) printVersionJSON(args []string) error {
 	buf := new(strings.Builder)
 
-	if err := Run(
+	if err := cv.Run(
 		[]string{"version", "--long", "--output", "json"},
 		StdOutRunOption(buf),
-		DisableLogging(),
+		DisableLogging(cv.logger),
 	); err != nil {
-		handleRunVersionFailure(err)
+		cv.handleRunVersionFailure(err)
 	}
 
 	out, err := json.Marshal(struct {
@@ -66,7 +67,7 @@ func printVersionJSON(args []string) error {
 		AppVersion: json.RawMessage(buf.String()),
 	})
 	if err != nil {
-		cosmovisor.EnableLogger()
+		cv.logger.EnableLogger()
 		return fmt.Errorf("Can't print version output, expected valid json from APP, got: %s - %w", buf.String(), err)
 	}
 
@@ -74,12 +75,12 @@ func printVersionJSON(args []string) error {
 	return nil
 }
 
-func handleRunVersionFailure(err error) {
+func (cv *Cosmovisor) handleRunVersionFailure(err error) {
 	// Check the config and output details or any errors.
 	// Not using the cosmovisor.Logger in order to ignore any level it might have set,
 	// and also to not have any of the extra parameters in the output.
-	cosmovisor.EnableLogger()
+	cv.logger.EnableLogger()
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.Kitchen}
-	logger := zerolog.New(output).With().Timestamp().Logger()
+	logger := logging.Logger{Logger: zerolog.New(output).With().Timestamp().Logger()}
 	cverrors.LogErrors(logger, fmt.Sprintf("Can't run %s version", strings.ToUpper(os.Getenv(cosmovisor.EnvName))), err)
 }

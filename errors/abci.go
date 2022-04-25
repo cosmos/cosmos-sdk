@@ -112,7 +112,7 @@ func errIsNil(err error) bool {
 	return false
 }
 
-var errPanicWithMsg = Wrapf(ErrPanic, "panic message redacted to hide potentially sensitive system info")
+var errPanicWithMsg = Wrapf(ErrPanic, "error message hidden to hide potential sensitive info. Use the '--trace' flag when running a node to see the full stack trace")
 
 // Redact replaces an error that is not initialized as an ABCI Error with a
 // generic internal error instance. If the error is an ABCI Error, that error is

@@ -121,14 +121,14 @@ func (b *AuxTxBuilder) SetSignMode(mode signing.SignMode) error {
 	return nil
 }
 
-// SetTip sets an optional tip.
+// SetTip sets an optional tip in the AuxSignerData.
 func (b *AuxTxBuilder) SetTip(tip *tx.Tip) {
 	b.checkEmptyFields()
 
 	b.auxSignerData.SignDoc.Tip = tip
 }
 
-// SetSignature sets the aux signer's signature.
+// SetSignature sets the aux signer's signature in the AuxSignerData.
 func (b *AuxTxBuilder) SetSignature(sig []byte) {
 	b.checkEmptyFields()
 

@@ -115,19 +115,29 @@ func (coin Coin) AddAmount(amount Int) Coin {
 	return Coin{coin.Denom, coin.Amount.Add(amount)}
 }
 
-// Sub subtracts amounts of two coins with same denom. If the coins differ in denom
-// then it panics.
+// Sub subtracts amounts of two coins with same denom and panics on error.
 func (coin Coin) Sub(coinB Coin) Coin {
+	res, err := coin.SafeSub(coinB)
+	if err != nil {
+		panic(err)
+	}
+
+	return res
+}
+
+// SafeSub safely subtracts the amounts of two coins. It returns an error if the coins differ
+// in denom or subtraction results in negative coin denom.
+func (coin Coin) SafeSub(coinB Coin) (Coin, error) {
 	if coin.Denom != coinB.Denom {
-		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, coinB.Denom))
+		return Coin{}, fmt.Errorf("invalid coin denoms: %s, %s", coin.Denom, coinB.Denom)
 	}
 
 	res := Coin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
 	if res.IsNegative() {
-		panic("negative coin amount")
+		return Coin{}, fmt.Errorf("negative coin amount")
 	}
 
-	return res
+	return res, nil
 }
 
 // SubAmount subtracts an amount from the Coin.
@@ -383,8 +393,8 @@ func (coins Coins) DenomsSubsetOf(coinsB Coins) bool {
 //
 // CONTRACT: Sub will never return Coins where one Coin has a non-positive
 // amount. In otherwords, IsValid will always return true.
-func (coins Coins) Sub(coinsB Coins) Coins {
-	diff, hasNeg := coins.SafeSub(coinsB)
+func (coins Coins) Sub(coinsB ...Coin) Coins {
+	diff, hasNeg := coins.SafeSub(coinsB...)
 	if hasNeg {
 		panic("negative coin amount")
 	}
@@ -395,8 +405,8 @@ func (coins Coins) Sub(coinsB Coins) Coins {
 // SafeSub performs the same arithmetic as Sub but returns a boolean if any
 // negative coin amount was returned.
 // The function panics if `coins` or  `coinsB` are not sorted (ascending).
-func (coins Coins) SafeSub(coinsB Coins) (Coins, bool) {
-	diff := coins.safeAdd(coinsB.negative())
+func (coins Coins) SafeSub(coinsB ...Coin) (Coins, bool) {
+	diff := coins.safeAdd(NewCoins(coinsB...).negative())
 	return diff, diff.IsAnyNegative()
 }
 
@@ -824,13 +834,13 @@ func ParseCoinNormalized(coinStr string) (coin Coin, err error) {
 	return coin, nil
 }
 
-// ParseCoinsNormalized will parse out a list of coins separated by commas, and normalize them by converting to smallest
-// unit. If the parsing is successuful, the provided coins will be sanitized by removing zero coins and sorting the coin
+// ParseCoinsNormalized will parse out a list of coins separated by commas, and normalize them by converting to the smallest
+// unit. If the parsing is successful, the provided coins will be sanitized by removing zero coins and sorting the coin
 // set. Lastly a validation of the coin set is executed. If the check passes, ParseCoinsNormalized will return the
 // sanitized coins.
-// Otherwise it will return an error.
+// Otherwise, it will return an error.
 // If an empty string is provided to ParseCoinsNormalized, it returns nil Coins.
-// ParseCoinsNormalized supports decimal coins as inputs, and truncate them to int after converted to smallest unit.
+// ParseCoinsNormalized supports decimal coins as inputs, and truncate them to int after converted to the smallest unit.
 // Expected format: "{amount0}{denomination},...,{amountN}{denominationN}"
 func ParseCoinsNormalized(coinStr string) (Coins, error) {
 	coins, err := ParseDecCoins(coinStr)

@@ -38,12 +38,12 @@ func GetTxCmd() *cobra.Command {
 // Deprecated: please use NewCmdSubmitUpgradeProposal instead.
 func NewCmdSubmitLegacyUpgradeProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "legacy-software-upgrade [name] (--upgrade-height [height]) (--upgrade-info [info]) [flags]",
+		Use:   "software-upgrade [name] (--upgrade-height [height]) (--upgrade-info [info]) [flags]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Submit a software upgrade proposal",
 		Long: "Submit a software upgrade along with an initial deposit.\n" +
 			"Please specify a unique name and height for the upgrade to take effect.\n" +
-			"You may include info to reference a binary download link, in a format compatible with: https://github.com/cosmos/cosmos-sdk/tree/master/cosmovisor",
+			"You may include info to reference a binary download link, in a format compatible with: https://github.com/cosmos/cosmos-sdk/tree/main/cosmovisor",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -108,7 +108,7 @@ func NewCmdSubmitLegacyUpgradeProposal() *cobra.Command {
 // Deprecated: please use NewCmdSubmitCancelUpgradeProposal instead.
 func NewCmdSubmitLegacyCancelUpgradeProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "legacy-cancel-software-upgrade [flags]",
+		Use:   "cancel-software-upgrade [flags]",
 		Args:  cobra.ExactArgs(0),
 		Short: "Cancel the current software upgrade proposal",
 		Long:  "Cancel a software upgrade along with an initial deposit.",

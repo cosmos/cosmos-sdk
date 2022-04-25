@@ -17,7 +17,7 @@ The existing way of starting an app with Cosmovisor has been deprecated (`cosmov
 
 ### New Features
 
-We added a new configuration option: `DAEMON_BACKUP_DIR` (as env variable). When set, Cosmovisor will create backup the app data backup in that directory (instead of using the app home directory) before running the update. See the [README](https://github.com/cosmos/cosmos-sdk/blob/master/cosmovisor/README.md#command-line-arguments-and-environment-variables) file for more details.
+We added a new configuration option: `DAEMON_BACKUP_DIR` (as env variable). When set, Cosmovisor will create backup the app data backup in that directory (instead of using the app home directory) before running the update. See the [README](https://github.com/cosmos/cosmos-sdk/blob/main/cosmovisor/README.md#command-line-arguments-and-environment-variables) file for more details.
 
 ### Bug Fixes
 

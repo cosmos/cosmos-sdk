@@ -69,16 +69,16 @@ If you would like to join one of those calls, then please contact us on [Discord
 
 ## Architecture Decision Records (ADR)
 
-When proposing an architecture decision for the Cosmos SDK, please start by opening an [issue](https://github.com/cosmos/cosmos-sdk/issues/new/choose) or a [discussion](https://github.com/cosmos/cosmos-sdk/discussions/new) with a summary of the proposal. Once the proposal has been discussed and there is rough alignment on a high-level approach to the design, the [ADR creation process](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/PROCESS.md) can begin. We are following this process to ensure all involved parties are in agreement before any party begins coding the proposed implementation. If you would like to see examples of how these are written, please refer to the current [ADRs](https://github.com/cosmos/cosmos-sdk/tree/master/docs/architecture).
+When proposing an architecture decision for the Cosmos SDK, please start by opening an [issue](https://github.com/cosmos/cosmos-sdk/issues/new/choose) or a [discussion](https://github.com/cosmos/cosmos-sdk/discussions/new) with a summary of the proposal. Once the proposal has been discussed and there is rough alignment on a high-level approach to the design, the [ADR creation process](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/PROCESS.md) can begin. We are following this process to ensure all involved parties are in agreement before any party begins coding the proposed implementation. If you would like to see examples of how these are written, please refer to the current [ADRs](https://github.com/cosmos/cosmos-sdk/tree/main/docs/architecture).
 
 ## Development Procedure
 
-* The latest state of development is on `master`.
-* `master` must never fail `make lint test test-race`.
-* No `--force` onto `master` (except when reverting a broken commit, which should seldom happen).
-* Create a branch to start a wok:
+* The latest state of development is on `main`.
+* `main` must never fail `make lint test test-race`.
+* No `--force` onto `main` (except when reverting a broken commit, which should seldom happen).
+* Create a branch to start work:
     * Fork the repo (core developers must create a branch directly in the Cosmos SDK repo),
-    branch from the HEAD of `master`, make some commits, and submit a PR to `master`.
+    branch from the HEAD of `main`, make some commits, and submit a PR to `main`.
     * For core developers working within the `cosmos-sdk` repo, follow branch name conventions to ensure a clear
     ownership of branches: `{moniker}/{issue#}-branch-name`.
     * See [Branching Model](#branching-model-and-release) for more details.
@@ -90,7 +90,7 @@ When proposing an architecture decision for the Cosmos SDK, please start by open
   before each commit is available in the `contrib/githooks/` directory.
 * Follow the [CODING GUIDELINES](CODING_GUIDELINES.md), which defines criteria for designing and coding a software.
 
-Code is merged into master through pull request procedure.
+Code is merged into main through pull request procedure.
 
 ### Testing
 
@@ -100,7 +100,7 @@ Tests can be executed by running `make test` at the top level of the Cosmos SDK 
 
 Before submitting a pull request:
 
-* merge the latest master `git merge origin/master`,
+* merge the latest main `git merge origin/main`,
 * run `make lint test` to ensure that all checks and tests pass.
 
 Then:
@@ -117,9 +117,9 @@ PRs must have a category prefix that is based on the type of changes being made 
 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
 Additionally, each PR should only address a single issue.
 
-Pull requests are merged automatically using [`automerge` action](https://mergify.io/features/auto-merge).
+Pull requests are merged automatically using [`A:automerge` action](https://mergify.io/features/auto-merge).
 
-NOTE: when merging, GitHub will squash commits and rebase on top of the master.
+NOTE: when merging, GitHub will squash commits and rebase on top of the main.
 
 ### Pull Request Templates
 
@@ -169,7 +169,7 @@ When writing documentation, follow the [Documentation Writing Guidelines](./docs
 We use [Go Modules](https://github.com/golang/go/wiki/Modules) to manage
 dependency versions.
 
-The master branch of every Cosmos repository should just build with `go get`,
+The main branch of every Cosmos repository should just build with `go get`,
 which means they should be kept up-to-date with their dependencies, so we can
 get away with telling people they can just `go get` our software.
 
@@ -215,11 +215,11 @@ The Cosmos SDK utilizes [semantic versioning](https://semver.org/).
 
 ### PR Targeting
 
-Ensure that you base and target your PR on the `master` branch.
+Ensure that you base and target your PR on the `main` branch.
 
-All feature additions and all bug fixes must be targeted against `master`. Exception is for bug fixes which are only related to a released version. In that case, the related bug fix PRs must target against the release branch.
+All feature additions and all bug fixes must be targeted against `main`. Exception is for bug fixes which are only related to a released version. In that case, the related bug fix PRs must target against the release branch.
 
-If needed, we backport a commit from `master` to a release branch (excluding consensus breaking feature, API breaking and similar).
+If needed, we backport a commit from `main` to a release branch (excluding consensus breaking feature, API breaking and similar).
 
 ## Code Owner Membership
 
@@ -273,9 +273,9 @@ is broken up into three distinct stages: **Strategy Discovery**, **Concept Appro
 
 * Architecture Decision Records (ADRs) may be proposed by any contributors or maintainers of the Cosmos SDK,
     and should follow the guidelines outlined in the
-    [ADR Creation Process](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/PROCESS.md)
+    [ADR Creation Process](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/PROCESS.md)
 * After proposal, a time bound period for Request for Comment (RFC) on ADRs commences
-* ADRs are intended to be iterative, and may be merged into `master` while still in a `Proposed` status
+* ADRs are intended to be iterative, and may be merged into `main` while still in a `Proposed` status
 
 #### Time Bound Period
 

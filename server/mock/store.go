@@ -6,6 +6,7 @@ import (
 	protoio "github.com/cosmos/gogoproto/io"
 	dbm "github.com/tendermint/tm-db"
 
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -65,11 +66,11 @@ func (ms multiStore) LastCommitID() storetypes.CommitID {
 	panic("not implemented")
 }
 
-func (ms multiStore) SetPruning(opts sdk.PruningOptions) {
+func (ms multiStore) SetPruning(opts pruningtypes.PruningOptions) {
 	panic("not implemented")
 }
 
-func (ms multiStore) GetPruning() sdk.PruningOptions {
+func (ms multiStore) GetPruning() pruningtypes.PruningOptions {
 	panic("not implemented")
 }
 
@@ -110,6 +111,14 @@ func (ms multiStore) GetStore(key storetypes.StoreKey) sdk.Store {
 }
 
 func (ms multiStore) GetStoreType() storetypes.StoreType {
+	panic("not implemented")
+}
+
+func (ms multiStore) PruneSnapshotHeight(height int64) {
+	panic("not implemented")
+}
+
+func (ms multiStore) SetSnapshotInterval(snapshotInterval uint64) {
 	panic("not implemented")
 }
 

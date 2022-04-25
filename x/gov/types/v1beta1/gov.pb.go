@@ -76,7 +76,7 @@ func (VoteOption) EnumDescriptor() ([]byte, []int) {
 type ProposalStatus int32
 
 const (
-	// PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.
+	// PROPOSAL_STATUS_UNSPECIFIED defines the default proposal status.
 	StatusNil ProposalStatus = 0
 	// PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit
 	// period.

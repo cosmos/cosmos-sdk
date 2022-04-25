@@ -28,8 +28,13 @@ func (s *MWTestSuite) TestRunMsgs() {
 	txBytes, err := s.clientCtx.TxConfig.TxEncoder()(testTx)
 	s.Require().NoError(err)
 
+	// DeliverTx
 	res, err := txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx, TxBytes: txBytes})
 	s.Require().NoError(err)
 	s.Require().Len(res.MsgResponses, 1)
 	s.Require().Equal(fmt.Sprintf("/%s", proto.MessageName(&testdata.MsgCreateDogResponse{})), res.MsgResponses[0].TypeUrl)
+
+	// SimulateTx
+	_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx, TxBytes: txBytes})
+	s.Require().NoError(err)
 }

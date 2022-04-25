@@ -2,6 +2,7 @@ package client
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 
@@ -52,9 +53,9 @@ type Context struct {
 	FeePayer          sdk.AccAddress
 	FeeGranter        sdk.AccAddress
 	Viper             *viper.Viper
-	
+
 	// IsAux is true when the signer is an auxiliary signer (e.g. the tipper).
-	IsAux             bool
+	IsAux bool
 
 	// TODO: Deprecated (remove).
 	LegacyAmino *codec.LegacyAmino
@@ -334,16 +335,31 @@ func (ctx Context) printOutput(out []byte) error {
 	return nil
 }
 
-// GetFromFields returns a from account address, account name and keyring type, given either
-// an address or key name. If genOnly is true, only a valid Bech32 cosmos
-// address is returned.
-func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddress, string, keyring.KeyType, error) {
+// GetFromFields returns a from account address, account name and keyring type, given either an address or key name.
+// If clientCtx.Simulate is true the keystore is not accessed and a valid address must be provided
+// If clientCtx.GenerateOnly is true the keystore is only accessed if a key name is provided
+func GetFromFields(clientCtx Context, kr keyring.Keyring, from string) (sdk.AccAddress, string, keyring.KeyType, error) {
 	if from == "" {
 		return nil, "", 0, nil
 	}
 
+	addr, err := sdk.AccAddressFromBech32(from)
+	switch {
+	case clientCtx.Simulate:
+		if err != nil {
+			return nil, "", 0, fmt.Errorf("a valid bech32 address must be provided in simulation mode: %w", err)
+		}
+
+		return addr, "", 0, nil
+
+	case clientCtx.GenerateOnly:
+		if err == nil {
+			return addr, "", 0, nil
+		}
+	}
+
 	var k *keyring.Record
-	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
+	if err == nil {
 		k, err = kr.KeyByAddress(addr)
 		if err != nil {
 			return nil, "", 0, err
@@ -355,7 +371,7 @@ func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddres
 		}
 	}
 
-	addr, err := k.GetAddress()
+	addr, err = k.GetAddress()
 	if err != nil {
 		return nil, "", 0, err
 	}
@@ -365,7 +381,7 @@ func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddres
 
 // NewKeyringFromBackend gets a Keyring object from a backend
 func NewKeyringFromBackend(ctx Context, backend string) (keyring.Keyring, error) {
-	if ctx.GenerateOnly || ctx.Simulate {
+	if ctx.Simulate {
 		backend = keyring.BackendMemory
 	}
 

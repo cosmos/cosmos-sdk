@@ -36,7 +36,7 @@ The Cosmos SDK gives developers maximum flexibility to define the state of their
 
 ## Tendermint
 
-Thanks to the Cosmos SDK, developers just have to define the state machine, and [*Tendermint*](https://tendermint.com/docs/introduction/what-is-tendermint.html) will handle replication over the network for them.
+Thanks to the Cosmos SDK, developers just have to define the state machine, and [*Tendermint*](https://docs.tendermint.com/master/introduction/what-is-tendermint.html) will handle replication over the network for them.
 
 ```text
                 ^  +-------------------------------+  ^
@@ -60,7 +60,7 @@ The Tendermint [consensus algorithm](https://docs.tendermint.com/v0.34/introduct
 
 ## ABCI
 
-Tendermint passes transactions to the application through an interface called the [ABCI](https://docs.tendermint.com/v0.34/spec/abci/), which the application must implement.
+Tendermint passes transactions to the application through an interface called the [ABCI](https://docs.tendermint.com/master/spec/abci/), which the application must implement.
 
 ```text
               +---------------------+

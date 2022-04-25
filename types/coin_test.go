@@ -496,12 +496,36 @@ func (s *coinTestSuite) TestSubCoins() {
 	for i, tc := range testCases {
 		tc := tc
 		if tc.shouldPanic {
-			assert.Panics(func() { tc.inputOne.Sub(tc.inputTwo) })
+			assert.Panics(func() { tc.inputOne.Sub(tc.inputTwo...) })
 		} else {
-			res := tc.inputOne.Sub(tc.inputTwo)
+			res := tc.inputOne.Sub(tc.inputTwo...)
 			assert.True(res.IsValid())
 			assert.Equal(tc.expected, res, "sum of coins is incorrect, tc #%d", i)
 		}
+	}
+}
+
+func (s *coinTestSuite) TestSafeSubCoin() {
+	cases := []struct {
+		inputOne  sdk.Coin
+		inputTwo  sdk.Coin
+		expected  sdk.Coin
+		expErrMsg string
+	}{
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom2, 1), sdk.NewInt64Coin(testDenom1, 1), "invalid coin denoms"},
+		{sdk.NewInt64Coin(testDenom1, 10), sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 9), ""},
+		{sdk.NewInt64Coin(testDenom1, 5), sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom1, 5), ""},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 5), sdk.Coin{}, "negative coin amount"},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		res, err := tc.inputOne.SafeSub(tc.inputTwo)
+		if err != nil {
+			s.Require().Contains(err.Error(), tc.expErrMsg)
+			return
+		}
+		s.Require().Equal(tc.expected, res)
 	}
 }
 

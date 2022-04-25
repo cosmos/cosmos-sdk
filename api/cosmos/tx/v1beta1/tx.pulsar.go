@@ -8814,11 +8814,11 @@ type AuxSignerData struct {
 	// AuxSignerData across different chains, the bech32 prefix of the target
 	// chain (where the final transaction is broadcasted) should be used.
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	// sign_doc is the SIGN_MOD_DIRECT_AUX sign doc that the auxiliary signer
+	// sign_doc is the SIGN_MODE_DIRECT_AUX sign doc that the auxiliary signer
 	// signs. Note: we use the same sign doc even if we're signing with
 	// LEGACY_AMINO_JSON.
 	SignDoc *SignDocDirectAux `protobuf:"bytes,2,opt,name=sign_doc,json=signDoc,proto3" json:"sign_doc,omitempty"`
-	// mode is the signing mode of the single signer
+	// mode is the signing mode of the single signer.
 	Mode v1beta1.SignMode `protobuf:"varint,3,opt,name=mode,proto3,enum=cosmos.tx.signing.v1beta1.SignMode" json:"mode,omitempty"`
 	// sig is the signature of the sign doc.
 	Sig []byte `protobuf:"bytes,4,opt,name=sig,proto3" json:"sig,omitempty"`

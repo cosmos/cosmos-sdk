@@ -16,7 +16,9 @@ func GetRequest(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer func() {
+		_ = res.Body.Close()
+	}()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
@@ -33,7 +35,9 @@ func PostRequest(url string, contentType string, data []byte) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error while sending post request: %w", err)
 	}
-	defer res.Body.Close()
+	defer func() {
+		_ = res.Body.Close()
+	}()
 
 	bz, err := io.ReadAll(res.Body)
 	if err != nil {

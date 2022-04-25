@@ -7,17 +7,17 @@ import (
 	"crypto/sha256"
 	"errors"
 	"io"
-	"os"
 	"testing"
 	"time"
 
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/libs/log"
 	db "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/snapshots"
-	"github.com/cosmos/cosmos-sdk/snapshots/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -74,12 +74,12 @@ func snapshotItems(items [][]byte) [][]byte {
 		zWriter, _ := zlib.NewWriterLevel(bufWriter, 7)
 		protoWriter := protoio.NewDelimitedWriter(zWriter)
 		for _, item := range items {
-			types.WriteExtensionItem(protoWriter, item)
+			_ = snapshottypes.WriteExtensionItem(protoWriter, item)
 		}
-		protoWriter.Close()
-		zWriter.Close()
-		bufWriter.Flush()
-		chunkWriter.Close()
+		_ = protoWriter.Close()
+		_ = zWriter.Close()
+		_ = bufWriter.Flush()
+		_ = chunkWriter.Close()
 	}()
 
 	var chunks [][]byte
@@ -90,18 +90,21 @@ func snapshotItems(items [][]byte) [][]byte {
 		}
 		chunks = append(chunks, chunk)
 	}
+
 	return chunks
 }
 
 type mockSnapshotter struct {
-	items [][]byte
+	items            [][]byte
+	prunedHeights    map[int64]struct{}
+	snapshotInterval uint64
 }
 
 func (m *mockSnapshotter) Restore(
 	height uint64, format uint32, protoReader protoio.Reader,
 ) (snapshottypes.SnapshotItem, error) {
 	if format == 0 {
-		return snapshottypes.SnapshotItem{}, types.ErrUnknownFormat
+		return snapshottypes.SnapshotItem{}, snapshottypes.ErrUnknownFormat
 	}
 	if m.items != nil {
 		return snapshottypes.SnapshotItem{}, errors.New("already has contents")
@@ -128,7 +131,7 @@ func (m *mockSnapshotter) Restore(
 
 func (m *mockSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	for _, item := range m.items {
-		if err := types.WriteExtensionItem(protoWriter, item); err != nil {
+		if err := snapshottypes.WriteExtensionItem(protoWriter, item); err != nil {
 			return err
 		}
 	}
@@ -138,28 +141,38 @@ func (m *mockSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) er
 func (m *mockSnapshotter) SnapshotFormat() uint32 {
 	return snapshottypes.CurrentFormat
 }
+
 func (m *mockSnapshotter) SupportedFormats() []uint32 {
 	return []uint32{snapshottypes.CurrentFormat}
+}
+
+func (m *mockSnapshotter) PruneSnapshotHeight(height int64) {
+	m.prunedHeights[height] = struct{}{}
+}
+
+func (m *mockSnapshotter) GetSnapshotInterval() uint64 {
+	return m.snapshotInterval
+}
+
+func (m *mockSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
+	m.snapshotInterval = snapshotInterval
 }
 
 // setupBusyManager creates a manager with an empty store that is busy creating a snapshot at height 1.
 // The snapshot will complete when the returned closer is called.
 func setupBusyManager(t *testing.T) *snapshots.Manager {
-	// os.MkdirTemp() is used instead of testing.T.TempDir()
-	// see https://github.com/cosmos/cosmos-sdk/pull/8475 for
-	// this change's rationale.
-	tempdir, err := os.MkdirTemp("", "")
-	require.NoError(t, err)
-	t.Cleanup(func() { _ = os.RemoveAll(tempdir) })
-
-	store, err := snapshots.NewStore(db.NewMemDB(), tempdir)
+	store, err := snapshots.NewStore(db.NewMemDB(), testutil.GetTempDir(t))
 	require.NoError(t, err)
 	hung := newHungSnapshotter()
-	mgr := snapshots.NewManager(store, hung, nil)
+	hung.SetSnapshotInterval(opts.Interval)
+	mgr := snapshots.NewManager(store, opts, hung, nil, log.NewNopLogger())
+	require.Equal(t, opts.Interval, hung.snapshotInterval)
 
 	go func() {
 		_, err := mgr.Create(1)
 		require.NoError(t, err)
+		_, didPruneHeight := hung.prunedHeights[1]
+		require.True(t, didPruneHeight)
 	}()
 	time.Sleep(10 * time.Millisecond)
 	t.Cleanup(hung.Close)
@@ -169,12 +182,15 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 
 // hungSnapshotter can be used to test operations in progress. Call close to end the snapshot.
 type hungSnapshotter struct {
-	ch chan struct{}
+	ch               chan struct{}
+	prunedHeights    map[int64]struct{}
+	snapshotInterval uint64
 }
 
 func newHungSnapshotter() *hungSnapshotter {
 	return &hungSnapshotter{
-		ch: make(chan struct{}),
+		ch:            make(chan struct{}),
+		prunedHeights: make(map[int64]struct{}),
 	}
 }
 
@@ -185,6 +201,14 @@ func (m *hungSnapshotter) Close() {
 func (m *hungSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	<-m.ch
 	return nil
+}
+
+func (m *hungSnapshotter) PruneSnapshotHeight(height int64) {
+	m.prunedHeights[height] = struct{}{}
+}
+
+func (m *hungSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
+	m.snapshotInterval = snapshotInterval
 }
 
 func (m *hungSnapshotter) Restore(

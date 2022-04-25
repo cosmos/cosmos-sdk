@@ -123,7 +123,7 @@ Here is what the code looks like:
 
 With a call to `ABCIQueryWithOptions()`, `MyQuery` is received by a [full-node](../core/encoding.md) which will then process the request. Note that, while the RPC is made to the consensus engine (e.g. Tendermint Core) of a full-node, queries are not part of consensus and will not be broadcasted to the rest of the network, as they do not require anything the network needs to agree upon.
 
-Read more about ABCI Clients and Tendermint RPC in the Tendermint documentation [here](https://tendermint.com/rpc).
+Read more about ABCI Clients and Tendermint RPC in the Tendermint documentation [here](https://docs.tendermint.com/master/rpc/).
 
 ## Application Query Handling
 
@@ -137,7 +137,7 @@ Once a result is received from the querier, `baseapp` begins the process of retu
 
 ## Response
 
-Since `Query()` is an ABCI function, `baseapp` returns the response as an [`abci.ResponseQuery`](https://tendermint.com/docs/spec/abci/abci.html#messages) type. The `client.Context` `Query()` routine receives the response and.
+Since `Query()` is an ABCI function, `baseapp` returns the response as an [`abci.ResponseQuery`](https://docs.tendermint.com/master/spec/abci/abci.html#query-2) type. The `client.Context` `Query()` routine receives the response and.
 
 ### CLI Response
 

@@ -415,7 +415,7 @@ func (coins Coins) SafeSub(coinsB ...Coin) (Coins, bool) {
 // e.g.
 // {2A, 3B} * 2 = {4A, 6B}
 // {2A} * 0 panics
-// Note, if IsValid was true on Coins, IsValid stays true
+// Note, if IsValid was true on Coins, IsValid stays true.
 func (coins Coins) MulInt(x Int) Coins {
 	coins, ok := coins.SafeMulInt(x)
 	if !ok {
@@ -426,7 +426,7 @@ func (coins Coins) MulInt(x Int) Coins {
 }
 
 // SafeMulInt performs the same arithmetic as MulInt but returns false
-// if the `multiplier` is zero because it makes IsValid return false
+// if the `multiplier` is zero because it makes IsValid return false.
 func (coins Coins) SafeMulInt(x Int) (Coins, bool) {
 	if x.IsNil() || x.IsZero() {
 		return nil, false
@@ -454,14 +454,14 @@ func (coins Coins) SafeMulInt(x Int) (Coins, bool) {
 func (coins Coins) QuoInt(x Int) Coins {
 	coins, ok := coins.SafeQuoInt(x)
 	if !ok {
-		panic("cannot divide by zero")
+		panic("dividing by zero is an invalid operation on coins")
 	}
 
 	return coins
 }
 
 // SafeQuoInt performs the same arithmetic as QuoInt but returns an error
-// if the division cannot be done
+// if the division cannot be done.
 func (coins Coins) SafeQuoInt(x Int) (Coins, bool) {
 	if x.IsNil() || x.IsZero() {
 		return nil, false

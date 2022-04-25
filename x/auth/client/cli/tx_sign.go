@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
@@ -105,6 +104,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
+
 			if ms == "" {
 				from, _ := cmd.Flags().GetString(flags.FlagFrom)
 				_, fromName, _, err := client.GetFromFields(clientCtx, txFactory.Keybase(), from)
@@ -244,27 +244,21 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 
 		overwrite, _ := f.GetBool(flagOverwrite)
 		if multisig != "" {
-			multisigAddr, err := sdk.AccAddressFromBech32(multisig)
+			multisigAddr, _, _, err := client.GetFromFields(clientCtx, txFactory.Keybase(), multisig)
 			if err != nil {
-				// Bech32 decode error, maybe it's a name, we try to fetch from keyring
-				multisigAddr, _, _, err = client.GetFromFields(clientCtx, txFactory.Keybase(), multisig)
-				if err != nil {
-					return fmt.Errorf("error getting account from keybase: %w", err)
-				}
+				return fmt.Errorf("error getting account from keybase: %w", err)
 			}
-			err = authclient.SignTxWithSignerAddress(
-				txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline, overwrite)
-			if err != nil {
+
+			if err = authclient.SignTxWithSignerAddress(txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline, overwrite); err != nil {
 				return err
 			}
+
 			printSignatureOnly = true
 		} else {
-			err = authclient.SignTx(txF, clientCtx, clientCtx.GetFromName(), txBuilder, clientCtx.Offline, overwrite)
+			if err = authclient.SignTx(txF, clientCtx, clientCtx.GetFromName(), txBuilder, clientCtx.Offline, overwrite); err != nil {
+				return err
+			}
 		}
-		if err != nil {
-			return err
-		}
-
 		aminoJSON, err := f.GetBool(flagAmino)
 		if err != nil {
 			return err

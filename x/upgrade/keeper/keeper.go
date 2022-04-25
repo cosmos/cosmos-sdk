@@ -235,16 +235,17 @@ func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, lastHeight int64) ([]
 	return bz, true
 }
 
+type upgrade struct {
+	Name        string
+	BlockHeight int64
+}
+
 // GetLastCompletedUpgrade returns the last applied upgrade name and height.
 func (k Keeper) GetLastCompletedUpgrade(ctx sdk.Context) (string, int64) {
 	iter := sdk.KVStoreReversePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
 	defer iter.Close()
 
-	upgrades := []struct {
-		Name        string
-		BlockHeight int64
-	}{}
-
+	upgrades := []upgrade{}
 	for iter.Valid() {
 		name := parseDoneKey(iter.Key())
 		value := int64(binary.BigEndian.Uint64(iter.Value()))

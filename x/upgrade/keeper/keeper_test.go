@@ -283,7 +283,6 @@ func (s *KeeperTestSuite) TestLastCompletedUpgradeOrdering() {
 	require := s.Require()
 
 	// apply first upgrade
-
 	keeper.SetUpgradeHandler("test-v0.9", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		return vm, nil
 	})
@@ -298,7 +297,6 @@ func (s *KeeperTestSuite) TestLastCompletedUpgradeOrdering() {
 	require.Equal(int64(10), height)
 
 	// apply second upgrade
-
 	keeper.SetUpgradeHandler("test-v0.10", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		return vm, nil
 	})

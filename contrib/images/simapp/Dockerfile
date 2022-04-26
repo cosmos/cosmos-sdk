@@ -24,7 +24,7 @@ COPY . .
 RUN make build-linux
 
 # Copy over binaries from the build-env
-RUN cp /go/src/github.com/cosmos/cosmos-sdk/build/simd /usr/bin/simd
+RUN mv /go/src/github.com/cosmos/cosmos-sdk/build/simd /usr/bin/simd
 
 EXPOSE 26656 26657 1317 9090
 

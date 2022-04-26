@@ -21,6 +21,12 @@ func FuzzCryptoHDDerivePrivateKeyForPath(f *testing.F) {
 			return
 		}
 		mnemonic, path := splits[0], splits[1]
+		if len(path) > 1e5 {
+			// Deriving a private key takes non-trivial time proportional
+			// to the path length. Skip the longer ones that trigger timeouts
+			// on fuzzing infrastructure.
+			return
+		}
 		seed := mnemonicToSeed(string(mnemonic))
 		master, ch := hd.ComputeMastersFromSeed(seed)
 		hd.DerivePrivateKeyForPath(master, ch, string(path))

@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/cosmovisor"
 	cverrors "github.com/cosmos/cosmos-sdk/cosmovisor/errors"
 	"github.com/rs/zerolog"
 )
@@ -85,5 +84,5 @@ func handleRunVersionFailure(err error) {
 	// and also to not have any of the extra parameters in the output.
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.Kitchen}
 	logger := zerolog.New(output).With().Timestamp().Logger()
-	cverrors.LogErrors(&logger, fmt.Sprintf("Can't run %s version", strings.ToUpper(os.Getenv(cosmovisor.EnvName))), err)
+	cverrors.LogErrors(&logger, "Can't run APP version", err)
 }

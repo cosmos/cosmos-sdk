@@ -38,7 +38,7 @@ jobs:
       -
         name: Build
         uses: docker/build-push-action@v2.1.0
-        if: ${{ github.event_name = 'pull_request' }}
+        if: ${{ github.event_name == 'pull_request' }}
         with:
           context: .
           platforms: linux/amd64,linux/arm64

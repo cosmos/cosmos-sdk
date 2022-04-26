@@ -2316,44 +2316,14 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
-	weights := []string{"1", "2", "2"}
-
-	groupID, members := s.createGroupWithMembers(weights)
+	weights := []string{"1", "1", "2"}
 
 	// create a group with the 3 members
-	// create group policy
-	threshold := 3
-	out, err := cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupPolicyCmd(),
-		append(
-			[]string{
-				val.Address.String(),
-				groupID,
-				validMetadata,
-				fmt.Sprintf("{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"%d\", \"windows\":{\"voting_period\":\"30000s\"}}", threshold),
-			},
-			commonFlags...,
-		),
-	)
-	var txResp = sdk.TxResponse{}
-	s.Require().NoError(err, out.String())
-	fmt.Println("group policy: ", out)
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.Require().Equal(uint32(0), txResp.Code, out.String())
-	fmt.Println("group policy response", txResp)
+	groupID, members := s.createGroupWithMembers(weights)
 
-	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{groupID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
-	s.Require().NoError(err, out.String())
-	var res group.QueryGroupPoliciesByGroupResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
-	groupPolicyAddress := res.GroupPolicies[0].Address
-	addr, err := sdk.AccAddressFromBech32(groupPolicyAddress)
-	s.Require().NoError(err)
-	out, err = banktestutil.MsgSendExec(clientCtx, val.Address, addr,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))),
-		commonFlags...,
-	)
-	s.Require().NoError(err)
-	fmt.Println("send response: ", out)
+	// create group policy
+	groupPolicyAddress := s.createGroupThresholdPolicyWithDenon(groupID, 4, 100)
+
 	fmt.Println("address: ", groupPolicyAddress)
 
 	testCases := []struct {
@@ -2398,8 +2368,7 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 
 		s.Run(tc.name, func() {
 			cmdSubmitProposal := client.MsgSubmitProposalCmd()
-			//cmdLeaveGroup := client.MsgLeaveGroupCmd()
-			//cmdQueryProposal := client.QueryProposalCmd()
+			cmdLeaveGroup := client.MsgLeaveGroupCmd()
 			cmdMsgExec := client.MsgExecCmd()
 
 			// Submit proposal
@@ -2413,7 +2382,7 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 				commonFlags...,
 			)
 			var submitProposalResp sdk.TxResponse
-			out, err = cli.ExecTestCLICmd(clientCtx, cmdSubmitProposal, submitProposalArgs)
+			out, err := cli.ExecTestCLICmd(clientCtx, cmdSubmitProposal, submitProposalArgs)
 			fmt.Println("this is the subit proposal", out)
 			s.Require().NoError(err, out.String())
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &submitProposalResp), out.String())
@@ -2430,23 +2399,25 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 						commonFlags...,
 					),
 				)
+
+				var txResp sdk.TxResponse
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 				s.Require().Equal(uint32(0), txResp.Code, out.String())
 				fmt.Println("Vote :", out)
 			}
 
-			//out, err := cli.ExecTestCLICmd(clientCtx, cmdLeaveGroup, tc.args)
-			//fmt.Println("leave group: ", out)
-			//fmt.Println("error", err)
-			//s.Require().NoError(err, out.String())
-			//var resp sdk.TxResponse
-			//s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-			//s.Require().Equal(uint32(0), txResp.Code, out.String())
-
 			out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryVotesByProposalCmd(), []string{proposalID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 			fmt.Println("VOTES-: ", out)
 			fmt.Println("err", err)
+
+			out, err = cli.ExecTestCLICmd(clientCtx, cmdLeaveGroup, tc.args)
+			fmt.Println("leave group: ", out)
+			fmt.Println("error", err)
+			s.Require().NoError(err, out.String())
+			var resp sdk.TxResponse
+			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+			s.Require().Equal(uint32(0), resp.Code, out.String())
 
 			args := append(
 				[]string{
@@ -2474,7 +2445,6 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 func (s *IntegrationTestSuite) TestSubmitProposalAndUpdate() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
-	require := s.Require()
 
 	commonFlags := []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -2483,52 +2453,37 @@ func (s *IntegrationTestSuite) TestSubmitProposalAndUpdate() {
 	}
 
 	membersWeights := []string{"1", "1", "1"}
-	groupID, _ := s.createGroupWithMembers(membersWeights)
+	groupID, members := s.createGroupWithMembers(membersWeights)
 	// create group policy
-	out, err := cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupPolicyCmd(),
-		append(
-			[]string{
-				val.Address.String(),
-				groupID,
-				validMetadata,
-				"{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"4\", \"windows\":{\"voting_period\":\"1s\"}}",
-			},
-			commonFlags...,
-		),
-	)
-	var txResp = sdk.TxResponse{}
-	require.NoError(err, out.String())
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.Require().Equal(uint32(0), txResp.Code, out.String())
 
-	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{groupID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
-	s.Require().NoError(err, out.String())
-	var res group.QueryGroupPoliciesByGroupResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
-	groupPolicyAddress := res.GroupPolicies[0].Address
+	groupPolicyAddress := s.createGroupThresholdPolicyWithDenon(groupID, 3, 100)
 
-	validUpdatedMembersFileName := testutil.WriteToNewTempFile(s.T(), fmt.Sprintf(`{"members": [{
-		"address": "%s",
-		"weight": "0",
-		"metadata": "%s"
-	}, {
-		"address": "%s",
-		"weight": "1",
-		"metadata": "%s"
-	}]}`, val.Address.String(), validMetadata, s.groupPolicies[0].Address, validMetadata)).Name()
+	updateGroupString := s.NewValidMembers([]string{"1", "1"}).String()
+
+	validUpdateMemberFileName := testutil.WriteToNewTempFile(s.T(), updateGroupString).Name()
+
+	//validUpdatedMembersFileName := testutil.WVriteToNewTempFile(s.T(), fmt.Sprintf(`{"members": [{
+	//	"address": "%s",
+	//	"weight": "0",
+	//	"metadata": "%s"
+	//}, {
+	//	"address": "%s",
+	//	"weight": "1",
+	//	"metadata": "%s"
+	//}]}`, val.Address.String(), validMetadata, s.groupPolicies[0].Address, validMetadata)).Name()
 
 	s.Run("submit proposal, update decision policy", func() {
 		cmdSubmitProposal := client.MsgSubmitProposalCmd()
 		submitProposalArgs := append([]string{
 			s.createCLIProposal(
-				groupPolicyAddress, val.Address.String(),
-				groupPolicyAddress, val.Address.String(),
+				groupPolicyAddress, members[0],
+				groupPolicyAddress, members[0],
 				"",
 			),
 		},
 			commonFlags...,
 		)
-		out, err = cli.ExecTestCLICmd(clientCtx, cmdSubmitProposal, submitProposalArgs)
+		out, err := cli.ExecTestCLICmd(clientCtx, cmdSubmitProposal, submitProposalArgs)
 		s.Require().NoError(err, out.String())
 		s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
 
@@ -2536,19 +2491,20 @@ func (s *IntegrationTestSuite) TestSubmitProposalAndUpdate() {
 			[]string{
 				val.Address.String(),
 				groupID,
-				validUpdatedMembersFileName,
+				validUpdateMemberFileName,
 			},
 			commonFlags...,
 		)
-		cmd := client.MsgUpdateGroupMembersCmd()
 
-		out, _ := cli.ExecTestCLICmd(clientCtx, cmd, args)
+		out, err = cli.ExecTestCLICmd(clientCtx, client.MsgUpdateGroupMembersCmd(), args)
+		s.Require().NoError(err)
 		s.Require().Contains(out.String(), "out string is wrong")
 		s.Require().NotEqual(out.String(), "")
 		fmt.Println(out)
-		//s.Require().True(false)
+		s.Require().True(false)
 	})
 }
+
 func (s *IntegrationTestSuite) getGroupIdFromTxResponse(txResp sdk.TxResponse) string {
 	s.Require().Greater(len(txResp.Logs), 0)
 	s.Require().NotNil(txResp.Logs[0].Events)
@@ -2663,8 +2619,77 @@ func (s *IntegrationTestSuite) createGroupWithMembers(membersWeight []string) (s
 	return s.getGroupIdFromTxResponse(txResp), membersAddress
 }
 
+func (s *IntegrationTestSuite) createGroupThresholdPolicyWithDenon(groupID string, threshold int, denon int64) string {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+
+	commonFlags := []string{
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	}
+
+	out, err := cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupPolicyCmd(),
+		append(
+			[]string{
+				val.Address.String(),
+				groupID,
+				validMetadata,
+				fmt.Sprintf("{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"%d\", \"windows\":{\"voting_period\":\"30000s\"}}", threshold),
+			},
+			commonFlags...,
+		),
+	)
+	var txResp = sdk.TxResponse{}
+	s.Require().NoError(err, out.String())
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+	s.Require().Equal(uint32(0), txResp.Code, out.String())
+
+	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{groupID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	s.Require().NoError(err, out.String())
+	var res group.QueryGroupPoliciesByGroupResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
+	groupPolicyAddress := res.GroupPolicies[0].Address
+
+	addr, err := sdk.AccAddressFromBech32(groupPolicyAddress)
+	s.Require().NoError(err)
+	out, err = banktestutil.MsgSendExec(clientCtx, val.Address, addr,
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(denon))),
+		commonFlags...,
+	)
+	s.Require().NoError(err)
+	return groupPolicyAddress
+}
+
+func (s *IntegrationTestSuite) NewValidMembers(weights []string) validMembers {
+	membersAddress := s.createAccounts(len(weights))
+	membersValid := validMembers{}
+
+	for i, address := range membersAddress {
+		membersValid.Members = append(membersValid.Members, member{
+			address,
+			weights[i],
+			validMetadata,
+		})
+	}
+	return membersValid
+}
+
 type validMembers struct {
 	Members []member `json:"members"`
+}
+
+func (vm validMembers) Addresses() []string {
+	var addresses []string
+	for _, member := range vm.Members {
+		addresses = append(addresses, member.Address)
+	}
+	return addresses
+}
+
+func (vm validMembers) String() string {
+	validMemberByte, _ := json.MarshalIndent(&vm, "", "\t")
+	return string(validMemberByte)
 }
 
 type member struct {

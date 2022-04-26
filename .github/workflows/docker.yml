@@ -1,10 +1,10 @@
 name: Build & Push
-# Build & Push builds the simapp docker image on every push to master and
+# Build & Push builds the simapp docker image on every push to main and
 # and pushes the image to https://hub.docker.com/r/interchainio/simapp/tags
 on:
   push:
     branches:
-      - master
+      - main
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+" # Push events to matching v*, i.e. v1.0, v20.15.10
       - "v[0-9]+.[0-9]+.[0-9]+-rc*" # Push events to matching v*, i.e. v1.0-rc1, v20.15.10-rc5

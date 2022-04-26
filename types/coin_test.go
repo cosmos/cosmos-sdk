@@ -496,9 +496,9 @@ func (s *coinTestSuite) TestSubCoins() {
 	for i, tc := range testCases {
 		tc := tc
 		if tc.shouldPanic {
-			assert.Panics(func() { tc.inputOne.Sub(tc.inputTwo) })
+			assert.Panics(func() { tc.inputOne.Sub(tc.inputTwo...) })
 		} else {
-			res := tc.inputOne.Sub(tc.inputTwo)
+			res := tc.inputOne.Sub(tc.inputTwo...)
 			assert.True(res.IsValid())
 			assert.Equal(tc.expected, res, "sum of coins is incorrect, tc #%d", i)
 		}

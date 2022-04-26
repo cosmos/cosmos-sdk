@@ -12,9 +12,9 @@ import (
 	"time"
 
 	cverrors "github.com/cosmos/cosmos-sdk/cosmovisor/errors"
-	"github.com/cosmos/cosmos-sdk/cosmovisor/logging"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/rs/zerolog"
 )
 
 // environment variable names
@@ -183,7 +183,7 @@ func GetConfigFromEnv() (*Config, error) {
 }
 
 // LogConfigOrError logs either the config details or the error.
-func LogConfigOrError(logger *logging.Logger, cfg *Config, err error) {
+func LogConfigOrError(logger *zerolog.Logger, cfg *Config, err error) {
 	if cfg == nil && err == nil {
 		return
 	}

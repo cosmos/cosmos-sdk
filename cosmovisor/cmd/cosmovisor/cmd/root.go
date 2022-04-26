@@ -3,11 +3,11 @@ package cmd
 import (
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/cosmovisor/logging"
+	"github.com/rs/zerolog"
 )
 
 // RunCosmovisorCommand executes the desired cosmovisor command.
-func RunCosmovisorCommand(logger *logging.Logger, args []string) error {
+func RunCosmovisorCommand(logger *zerolog.Logger, args []string) error {
 	arg0 := ""
 	if len(args) > 0 {
 		arg0 = strings.TrimSpace(args[0])

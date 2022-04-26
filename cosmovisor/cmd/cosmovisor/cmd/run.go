@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
-	"github.com/cosmos/cosmos-sdk/cosmovisor/logging"
+	"github.com/rs/zerolog"
 )
 
 // RunArgs are the strings that indicate a cosmovisor run command.
@@ -14,7 +14,7 @@ func IsRunCommand(arg string) bool {
 }
 
 // Run runs the configured program with the given args and monitors it for upgrades.
-func Run(logger *logging.Logger, args []string, options ...RunOption) error {
+func Run(logger *zerolog.Logger, args []string, options ...RunOption) error {
 	cfg, err := cosmovisor.GetConfigFromEnv()
 	if err != nil {
 		return err

@@ -14,18 +14,18 @@ import (
 	"time"
 
 	"github.com/otiai10/copy"
+	"github.com/rs/zerolog"
 
-	"github.com/cosmos/cosmos-sdk/cosmovisor/logging"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type Launcher struct {
-	logger *logging.Logger
+	logger *zerolog.Logger
 	cfg    *Config
 	fw     *fileWatcher
 }
 
-func NewLauncher(logger *logging.Logger, cfg *Config) (Launcher, error) {
+func NewLauncher(logger *zerolog.Logger, cfg *Config) (Launcher, error) {
 	fw, err := newUpgradeFileWatcher(logger, cfg.UpgradeInfoFilePath(), cfg.PollInterval)
 	if err != nil {
 		return Launcher{}, err

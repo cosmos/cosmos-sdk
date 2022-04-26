@@ -43,6 +43,6 @@ services:
   test_rosetta:
     build: ../images/rosetta-cli
     volumes:
-      - ./configuration:/rosetta/config:z
-    command: ["./config/run_tests.sh"]
+      - ./contrib/images/rosetta-cli/configuration:/rosetta/config:z
+    command: ["./contrib/run_tests.sh"]
     working_dir: /rosetta

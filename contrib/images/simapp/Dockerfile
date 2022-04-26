@@ -10,7 +10,7 @@
 # > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simappcli:/root/.simapp simapp simd keys add foo
 # > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simappcli:/root/.simapp simapp simd keys list
 # TODO: demo connecting rest-server (or is this in server now?)
-FROM ghcr.io/cosmos/cosmos-sdk AS build-env
+FROM faddat/archlinux
 
 # Set working directory for the build
 WORKDIR /go/src/github.com/cosmos/cosmos-sdk

@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             (unknown)
-// source: cosmos/orm/v1alpha1/query.proto
+// source: cosmos/orm/query/v1/query.proto
 
-package ormv1alpha1
+package queryv1
 
 import (
 	context "context"
@@ -38,7 +38,7 @@ func NewQueryClient(cc grpc.ClientConnInterface) QueryClient {
 
 func (c *queryClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
 	out := new(GetResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.orm.v1alpha1.Query/Get", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.orm.query.v1.Query/Get", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (c *queryClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.Call
 
 func (c *queryClient) List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error) {
 	out := new(ListResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.orm.v1alpha1.Query/List", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.orm.query.v1.Query/List", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +98,7 @@ func _Query_Get_Handler(srv interface{}, ctx context.Context, dec func(interface
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.orm.v1alpha1.Query/Get",
+		FullMethod: "/cosmos.orm.query.v1.Query/Get",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Get(ctx, req.(*GetRequest))
@@ -116,7 +116,7 @@ func _Query_List_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.orm.v1alpha1.Query/List",
+		FullMethod: "/cosmos.orm.query.v1.Query/List",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).List(ctx, req.(*ListRequest))
@@ -128,7 +128,7 @@ func _Query_List_Handler(srv interface{}, ctx context.Context, dec func(interfac
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Query_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "cosmos.orm.v1alpha1.Query",
+	ServiceName: "cosmos.orm.query.v1.Query",
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -141,5 +141,5 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "cosmos/orm/v1alpha1/query.proto",
+	Metadata: "cosmos/orm/query/v1/query.proto",
 }

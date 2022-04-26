@@ -3,8 +3,7 @@ on:
   push:
     branches:
       - main
-    paths:
-      - "contrib/devtools/dockerfile"
+
 
 permissions:
   contents: read
@@ -40,7 +39,8 @@ jobs:
       - name: Publish to Docker Hub
         uses: docker/build-push-action@v2
         with:
-          context: ./contrib/devtools
+          file: contrib/images/proto-builder
+          context: .
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.prep.outputs.tags }}

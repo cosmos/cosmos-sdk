@@ -15,7 +15,7 @@ RUN go build -o simd ./simapp/simd/
 RUN mv /simd/simd /bin/simd
 
 WORKDIR /rosetta
-COPY ./contrib/rosetta/configuration ./
+COPY ./contrib/images/rosetta-ci/configuration ./
 RUN chmod +x run_tests.sh
 RUN chmod +x send_funds.sh
 RUN chmod +x faucet.py

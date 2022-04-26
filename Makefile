@@ -328,7 +328,7 @@ test-cover:
 .PHONY: test-cover
 
 test-rosetta:
-	docker-compose -f contrib/rosetta/docker-compose.yaml up --abort-on-container-exit --exit-code-from test_rosetta --build
+	docker-compose -f contrib/rosetta/docker-compose.yaml up --abort-on-container-exit --exit-code-from test_rosetta
 .PHONY: test-rosetta
 
 benchmark:

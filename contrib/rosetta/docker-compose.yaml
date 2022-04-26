@@ -2,7 +2,10 @@ version: "3"
 
 services:
   cosmos:
-    build: contrib/images/rosetta-ci
+    image: rosetta-ci
+    build: 
+      context: ../../
+      dockerfile: contrib/images/rosetta-ci/Dockerfile
     command: ["simd", "start","--mode","validator", "--pruning", "nothing", "--grpc-web.enable", "true", "--grpc-web.address", "0.0.0.0:9091"]
     ports:
       - 9090:9090
@@ -11,7 +14,10 @@ services:
       driver: "none"
 
   rosetta:
-    image: contrib/images/rosetta-ci
+    image: rosetta-ci
+    build: 
+      context: ../../
+      dockerfile: contrib/images/rosetta-ci/Dockerfile
     command: [
       "simd",
       "rosetta",
@@ -25,14 +31,17 @@ services:
       - 8080:8080
 
   faucet:
-    build: contrib/images/rosetta-ci
+    image: rosetta-ci
+    build: 
+      context: ../../
+      dockerfile: contrib/images/rosetta-ci/Dockerfile
     working_dir: /rosetta
     command: ["python3", "faucet.py"]
     expose:
       - 8080
 
   test_rosetta:
-    build: contrib/images/rosetta-cli
+    build: ../images/rosetta-cli
     volumes:
       - ./configuration:/rosetta/config:z
     command: ["./config/run_tests.sh"]

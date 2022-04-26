@@ -41,8 +41,10 @@ services:
       - 8080
 
   test_rosetta:
-    build: ../images/rosetta-cli
-    volumes:
-      - ./contrib/images/rosetta-cli/configuration:/rosetta/config:z
-    command: ["./contrib/images/rosetta-ci/configuration/run_tests.sh"]
-    working_dir: /rosetta
+      build: 
+        context: ../../
+        dockerfile: contrib/images/rosetta-cli/Dockerfile
+      volumes:
+      - ./contrib/images/rosetta-ci/configuration:/rosetta/config:z
+      command: ["./config/run_tests.sh"]
+      working_dir: /rosetta

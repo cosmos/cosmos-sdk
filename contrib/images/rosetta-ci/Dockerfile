@@ -20,7 +20,7 @@ RUN chmod +x run_tests.sh
 RUN chmod +x send_funds.sh
 RUN chmod +x faucet.py
 
-COPY cp /node/root /root/
+RUN mv /node/root /root/
 WORKDIR /root/.simapp
 
 RUN chmod -R 0777 ./

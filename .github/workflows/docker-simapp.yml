@@ -1,4 +1,4 @@
-name: Build & Push
+name: Simapp Docker image
 # Build & Push rebuilds the iavl docker image on every push to master and creation of tags
 # and pushes the image to https://ghcr.io/cosmos/cosmos-sdk
 # Other images in the cosmos-sdk consume ghcr.io/cosmos/cosmos-sdk

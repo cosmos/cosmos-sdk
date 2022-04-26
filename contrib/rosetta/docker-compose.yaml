@@ -2,7 +2,7 @@ version: "3"
 
 services:
   cosmos:
-    image: rosetta-ci:latest
+    build: contrib/images/rosetta-ci
     command: ["simd", "start","--mode","validator", "--pruning", "nothing", "--grpc-web.enable", "true", "--grpc-web.address", "0.0.0.0:9091"]
     ports:
       - 9090:9090
@@ -11,7 +11,7 @@ services:
       driver: "none"
 
   rosetta:
-    image: rosetta-ci:latest
+    image: contrib/images/rosetta-ci
     command: [
       "simd",
       "rosetta",
@@ -25,14 +25,14 @@ services:
       - 8080:8080
 
   faucet:
-    image: rosetta-ci:latest
+    build: contrib/images/rosetta-ci
     working_dir: /rosetta
     command: ["python3", "faucet.py"]
     expose:
       - 8080
 
   test_rosetta:
-    image: tendermintdev/rosetta-cli:v0.6.7
+    build: contrib/images/rosetta-cli
     volumes:
       - ./configuration:/rosetta/config:z
     command: ["./config/run_tests.sh"]

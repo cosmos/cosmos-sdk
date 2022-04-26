@@ -34,6 +34,12 @@ type ServiceClient interface {
 	GetLatestValidatorSet(ctx context.Context, in *GetLatestValidatorSetRequest, opts ...grpc.CallOption) (*GetLatestValidatorSetResponse, error)
 	// GetValidatorSetByHeight queries validator-set at a given height.
 	GetValidatorSetByHeight(ctx context.Context, in *GetValidatorSetByHeightRequest, opts ...grpc.CallOption) (*GetValidatorSetByHeightResponse, error)
+	// ABCIQuery defines a query handler that supports ABCI queries directly to the
+	// application, bypassing Tendermint completely. The ABCI query must contain
+	// a valid and supported path, including app, custom, p2p, and store.
+	//
+	// Since: cosmos-sdk 0.46
+	ABCIQuery(ctx context.Context, in *ABCIQueryRequest, opts ...grpc.CallOption) (*ABCIQueryResponse, error)
 }
 
 type serviceClient struct {
@@ -98,6 +104,15 @@ func (c *serviceClient) GetValidatorSetByHeight(ctx context.Context, in *GetVali
 	return out, nil
 }
 
+func (c *serviceClient) ABCIQuery(ctx context.Context, in *ABCIQueryRequest, opts ...grpc.CallOption) (*ABCIQueryResponse, error) {
+	out := new(ABCIQueryResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.base.tendermint.v1beta1.Service/ABCIQuery", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ServiceServer is the server API for Service service.
 // All implementations must embed UnimplementedServiceServer
 // for forward compatibility
@@ -114,6 +129,12 @@ type ServiceServer interface {
 	GetLatestValidatorSet(context.Context, *GetLatestValidatorSetRequest) (*GetLatestValidatorSetResponse, error)
 	// GetValidatorSetByHeight queries validator-set at a given height.
 	GetValidatorSetByHeight(context.Context, *GetValidatorSetByHeightRequest) (*GetValidatorSetByHeightResponse, error)
+	// ABCIQuery defines a query handler that supports ABCI queries directly to the
+	// application, bypassing Tendermint completely. The ABCI query must contain
+	// a valid and supported path, including app, custom, p2p, and store.
+	//
+	// Since: cosmos-sdk 0.46
+	ABCIQuery(context.Context, *ABCIQueryRequest) (*ABCIQueryResponse, error)
 	mustEmbedUnimplementedServiceServer()
 }
 
@@ -138,6 +159,9 @@ func (UnimplementedServiceServer) GetLatestValidatorSet(context.Context, *GetLat
 }
 func (UnimplementedServiceServer) GetValidatorSetByHeight(context.Context, *GetValidatorSetByHeightRequest) (*GetValidatorSetByHeightResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetValidatorSetByHeight not implemented")
+}
+func (UnimplementedServiceServer) ABCIQuery(context.Context, *ABCIQueryRequest) (*ABCIQueryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ABCIQuery not implemented")
 }
 func (UnimplementedServiceServer) mustEmbedUnimplementedServiceServer() {}
 
@@ -260,6 +284,24 @@ func _Service_GetValidatorSetByHeight_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Service_ABCIQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ABCIQueryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).ABCIQuery(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.base.tendermint.v1beta1.Service/ABCIQuery",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).ABCIQuery(ctx, req.(*ABCIQueryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Service_ServiceDesc is the grpc.ServiceDesc for Service service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -290,6 +332,10 @@ var Service_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetValidatorSetByHeight",
 			Handler:    _Service_GetValidatorSetByHeight_Handler,
+		},
+		{
+			MethodName: "ABCIQuery",
+			Handler:    _Service_ABCIQuery_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -814,13 +814,13 @@ func ParseCoinNormalized(coinStr string) (coin Coin, err error) {
 	return coin, nil
 }
 
-// ParseCoinsNormalized will parse out a list of coins separated by commas, and normalize them by converting to smallest
-// unit. If the parsing is successuful, the provided coins will be sanitized by removing zero coins and sorting the coin
+// ParseCoinsNormalized will parse out a list of coins separated by commas, and normalize them by converting to the smallest
+// unit. If the parsing is successful, the provided coins will be sanitized by removing zero coins and sorting the coin
 // set. Lastly a validation of the coin set is executed. If the check passes, ParseCoinsNormalized will return the
 // sanitized coins.
-// Otherwise it will return an error.
+// Otherwise, it will return an error.
 // If an empty string is provided to ParseCoinsNormalized, it returns nil Coins.
-// ParseCoinsNormalized supports decimal coins as inputs, and truncate them to int after converted to smallest unit.
+// ParseCoinsNormalized supports decimal coins as inputs, and truncate them to int after converted to the smallest unit.
 // Expected format: "{amount0}{denomination},...,{amountN}{denominationN}"
 func ParseCoinsNormalized(coinStr string) (Coins, error) {
 	coins, err := ParseDecCoins(coinStr)

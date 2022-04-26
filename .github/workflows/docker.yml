@@ -5,6 +5,9 @@ name: Build & Push
 
 on:
   pull_request:
+  schedule:
+    # Run hourly, to speed downstream builds
+    - cron:  '0 * * * *'
   push:
     branches:
       - main

@@ -1,6 +1,6 @@
-FROM golang:1.18-alpine as build
+FROM faddat/archlinux
 
-RUN apk add --no-cache tar git
+RUN pacman -Syyu --noconfirm leveldb rocksdb go base-devel git python
 
 # prepare node data
 WORKDIR /node
@@ -12,12 +12,7 @@ WORKDIR /simd
 COPY . ./
 RUN go build -o simd ./simapp/simd/
 
-FROM alpine
-RUN apk add gcc git libc-dev python3 --no-cache
-
-ENV PATH=$PATH:/bin
-
-COPY --from=build /simd/simd /bin/simd
+RUN mv /simd/simd /bin/simd
 
 WORKDIR /rosetta
 COPY ./contrib/rosetta/configuration ./
@@ -25,7 +20,7 @@ RUN chmod +x run_tests.sh
 RUN chmod +x send_funds.sh
 RUN chmod +x faucet.py
 
-COPY --from=build /node/root /root/
+COPY cp /node/root /root/
 WORKDIR /root/.simapp
 
 RUN chmod -R 0777 ./

@@ -12,6 +12,8 @@
 # TODO: demo connecting rest-server (or is this in server now?)
 FROM faddat/archlinux
 
+RUN pacman -Syyu --noconfirm leveldb rocksdb go base-devel git python
+
 # Set working directory for the build
 WORKDIR /go/src/github.com/cosmos/cosmos-sdk
 

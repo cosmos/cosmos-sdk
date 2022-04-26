@@ -75,7 +75,7 @@ func (on OnlineNetwork) Block(ctx context.Context, request *types.BlockRequest) 
 		}
 
 	default:
-	  // both empty
+		// both empty
 		blockResponse, err = on.client.BlockTransactionsByHeight(ctx, nil)
 		if err != nil {
 			return nil, errors.ToRosetta(err)
@@ -83,9 +83,13 @@ func (on OnlineNetwork) Block(ctx context.Context, request *types.BlockRequest) 
 	}
 
 	// Both of index and hash can be specified in reuqest, so make sure they are not mismatching.
-	if (request.BlockIdentifier.Index != nil && *request.BlockIdentifier.Index != blockResponse.Block.Index) ||
-		(request.BlockIdentifier.Hash != nil && *request.BlockIdentifier.Hash != blockResponse.Block.Hash) {
-		err := errors.WrapError(errors.ErrBadArgument, "mismatching index or hash")
+	if request.BlockIdentifier.Index != nil && *request.BlockIdentifier.Index != blockResponse.Block.Index {
+		err := errors.WrapError(errors.ErrBadArgument, "mismatching index")
+		return nil, errors.ToRosetta(err)
+	}
+
+	if request.BlockIdentifier.Hash != nil && *request.BlockIdentifier.Hash != blockResponse.Block.Hash {
+		err := errors.WrapError(errors.ErrBadArgument, "mismatching hash")
 		return nil, errors.ToRosetta(err)
 	}
 

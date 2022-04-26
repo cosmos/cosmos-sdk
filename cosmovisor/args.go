@@ -187,7 +187,7 @@ func LogConfigOrError(logger *zerolog.Logger, cfg *Config, err error) {
 	if cfg == nil && err == nil {
 		return
 	}
-	logger.Info().Msg("Configuration:")
+	logger.Info().Msg("configuration:")
 	switch {
 	case err != nil:
 		cverrors.LogErrors(logger, "configuration errors found", err)

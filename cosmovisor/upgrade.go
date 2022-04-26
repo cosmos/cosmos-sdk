@@ -37,11 +37,11 @@ func DoUpgrade(logger *zerolog.Logger, cfg *Config, info upgradetypes.Plan) erro
 	}
 
 	// If not there, then we try to download it... maybe
-	logger.Info().Msg("No upgrade binary found, beginning to download it")
+	logger.Info().Msg("no upgrade binary found, beginning to download it")
 	if err := DownloadBinary(cfg, info); err != nil {
 		return fmt.Errorf("cannot download binary. %w", err)
 	}
-	logger.Info().Msg("Downloading binary complete")
+	logger.Info().Msg("downloading binary complete")
 
 	// and then set the binary again
 	if err := EnsureBinary(cfg.UpgradeBin(info.Name)); err != nil {

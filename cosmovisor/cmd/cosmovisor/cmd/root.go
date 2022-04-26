@@ -25,7 +25,7 @@ func RunCosmovisorCommand(logger *zerolog.Logger, args []string) error {
 	}
 
 	warnRun := func() {
-		logger.Warn().Msg("Use of cosmovisor without the 'run' command is deprecated. Use: cosmovisor run [args]")
+		logger.Warn().Msg("use of cosmovisor without the 'run' command is deprecated. Use: cosmovisor run [args]")
 	}
 	warnRun()
 	defer warnRun()

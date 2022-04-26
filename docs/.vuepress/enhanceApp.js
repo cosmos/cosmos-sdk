@@ -4,5 +4,6 @@ export default ({ router }) => {
     { path: '/main/spec/governance/', redirect: '/main/modules/gov/' },
     { path: '/v0.41/', redirect: '/v0.42/' },
     { path: '/v0.43/', redirect: '/v0.44/' },
+    { path: '/master/', redirect: '/main/' },
   ])
 }

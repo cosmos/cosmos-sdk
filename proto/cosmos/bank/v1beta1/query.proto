@@ -217,7 +217,6 @@ message QueryDenomOwnersRequest {
 message DenomOwner {
   // address defines the address that owns a particular denomination.
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  ;
 
   // balance is the balance of the denominated coin for an account.
   cosmos.base.v1beta1.Coin balance = 2 [(gogoproto.nullable) = false];

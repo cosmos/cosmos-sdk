@@ -62,6 +62,7 @@ func (on OnlineNetwork) Block(ctx context.Context, request *types.BlockRequest) 
 	case request.BlockIdentifier == nil: // unlike AccountBalance(), BlockIdentifer is mandatory by spec 1.4.10.
 		err := errors.WrapError(errors.ErrBadArgument, "block identifier needs to be specified")
 		return nil, errors.ToRosetta(err)
+
 	case request.BlockIdentifier.Hash != nil:
 		blockResponse, err = on.client.BlockTransactionsByHash(ctx, *request.BlockIdentifier.Hash)
 		if err != nil {
@@ -72,7 +73,9 @@ func (on OnlineNetwork) Block(ctx context.Context, request *types.BlockRequest) 
 		if err != nil {
 			return nil, errors.ToRosetta(err)
 		}
-	default: // both empty
+
+	default:
+	  // both empty
 		blockResponse, err = on.client.BlockTransactionsByHeight(ctx, nil)
 		if err != nil {
 			return nil, errors.ToRosetta(err)
@@ -82,7 +85,7 @@ func (on OnlineNetwork) Block(ctx context.Context, request *types.BlockRequest) 
 	// Both of index and hash can be specified in reuqest, so make sure they are not mismatching.
 	if (request.BlockIdentifier.Index != nil && *request.BlockIdentifier.Index != blockResponse.Block.Index) ||
 		(request.BlockIdentifier.Hash != nil && *request.BlockIdentifier.Hash != blockResponse.Block.Hash) {
-		err := errors.WrapError(errors.ErrBadArgument, "mismatching index and hash")
+		err := errors.WrapError(errors.ErrBadArgument, "mismatching index or hash")
 		return nil, errors.ToRosetta(err)
 	}
 

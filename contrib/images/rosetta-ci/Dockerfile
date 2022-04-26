@@ -4,7 +4,7 @@ RUN pacman -Syyu --noconfirm leveldb rocksdb go base-devel git python
 
 # prepare node data
 WORKDIR /node
-COPY ./contrib/rosetta/rosetta-ci/data.tar.gz data.tar.gz
+COPY ./contrib/images/rosetta-ci/data.tar.gz data.tar.gz
 RUN tar -zxvf data.tar.gz -C .
 
 # build simd

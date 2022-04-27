@@ -43,7 +43,7 @@ jobs:
 
   test-submodules:
     runs-on: ubuntu-latest
-    container: faddat/archlinux
+    container: tendermintdev/docker-tm-db-testing
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -58,9 +58,7 @@ jobs:
             go.sum
       - name: Run submodule tests and create test coverage profile.
         # GIT_DIFF is passed to the scripts
-        run: |
-          pacman -Syyu --noconfirm go base-devel rocksdb git
-          bash scripts/module-tests.sh
+        run: bash scripts/module-tests.sh
         if: env.GIT_DIFF
       - uses: actions/upload-artifact@v3
         with:

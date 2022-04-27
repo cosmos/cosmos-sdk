@@ -2,6 +2,7 @@ package input
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -83,12 +84,25 @@ func inputIsTty() bool {
 	return isatty.IsTerminal(os.Stdin.Fd()) || isatty.IsCygwinTerminal(os.Stdin.Fd())
 }
 
-// readLineFromBuf reads one line from stdin.
+// readLineFromBuf reads one line from reader.
 // Subsequent calls reuse the same buffer, so we don't lose
 // any input when reading a password twice (to verify)
 func readLineFromBuf(buf *bufio.Reader) (string, error) {
 	pass, err := buf.ReadString('\n')
-	if err != nil {
+
+	switch {
+	case errors.Is(err, io.EOF):
+		// If by any chance the error is EOF, but we were actually able to read
+		// something from the reader then don't return the EOF error.
+		// If we didn't read anything from the reader and got the EOF error, then
+		// it's safe to return EOF back to the caller.
+		if len(pass) > 0 {
+			// exit the switch statement
+			break
+		}
+		return "", err
+
+	case err != nil:
 		return "", err
 	}
 

@@ -92,7 +92,7 @@ func readLineFromBuf(buf *bufio.Reader) (string, error) {
 
 	switch {
 	case errors.Is(err, io.EOF):
-		// if by any chance the error is EOF, but we were actually able to read
+		// If by any chance the error is EOF, but we were actually able to read
 		// something from the reader then don't return the EOF error.
 		// If we didn't read anything from the reader and got the EOF error, then
 		// it's safe to return EOF back to the caller.
@@ -101,6 +101,7 @@ func readLineFromBuf(buf *bufio.Reader) (string, error) {
 			break
 		}
 		return "", err
+
 	case err != nil:
 		return "", err
 	}

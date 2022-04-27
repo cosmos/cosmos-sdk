@@ -32,7 +32,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdkmath "github.com/cosmos/cosmos-sdk/math"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
@@ -402,7 +401,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			sdk.NewCoin(cfg.BondDenom, cfg.BondedTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(commission, sdk.OneDec(), sdk.OneDec()),
-			sdkmath.OneInt(),
+			sdk.OneInt(),
 		)
 		if err != nil {
 			return nil, err
@@ -414,7 +413,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		}
 
 		memo := fmt.Sprintf("%s@%s:%s", nodeIDs[i], p2pURL.Hostname(), p2pURL.Port())
-		fee := sdk.NewCoins(sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), sdkmath.NewInt(0)))
+		fee := sdk.NewCoins(sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), sdk.NewInt(0)))
 		txBuilder := cfg.TxConfig.NewTxBuilder()
 		err = txBuilder.SetMsgs(createValMsg)
 		if err != nil {

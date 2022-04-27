@@ -18,7 +18,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdkmath "github.com/cosmos/cosmos-sdk/math"
 	crgerrs "github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
 	crgtypes "github.com/cosmos/cosmos-sdk/server/rosetta/lib/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -421,7 +420,7 @@ func (c converter) Amounts(ownedCoins []sdk.Coin, availableCoins sdk.Coins) []*r
 		value, owned := ownedCoinsMap[coin.Denom]
 		if !owned {
 			amounts[i] = &rosettatypes.Amount{
-				Value: sdkmath.NewInt(0).String(),
+				Value: sdk.NewInt(0).String(),
 				Currency: &rosettatypes.Currency{
 					Symbol: coin.Denom,
 				},

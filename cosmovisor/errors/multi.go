@@ -70,7 +70,7 @@ func (e MultiError) String() string {
 	return e.Error()
 }
 
-func LogErrors(logger zerolog.Logger, msg string, err error) {
+func LogErrors(logger *zerolog.Logger, msg string, err error) {
 	switch err := err.(type) {
 	case *MultiError:
 		if msg != "" {

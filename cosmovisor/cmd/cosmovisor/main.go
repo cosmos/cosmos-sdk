@@ -9,9 +9,9 @@ import (
 )
 
 func main() {
-	cosmovisor.SetupLogging()
-	if err := cmd.RunCosmovisorCommand(os.Args[1:]); err != nil {
-		cverrors.LogErrors(cosmovisor.Logger, "", err)
+	logger := cosmovisor.NewLogger()
+	if err := cmd.RunCosmovisorCommand(logger, os.Args[1:]); err != nil {
+		cverrors.LogErrors(logger, "", err)
 		os.Exit(1)
 	}
 }

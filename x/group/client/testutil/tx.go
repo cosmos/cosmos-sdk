@@ -2317,48 +2317,58 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 	}
 
 	weights := []string{"1", "1", "2"}
+	accounts := s.createAccounts(3)
 
-	// create a group with the 3 members
-	groupID, members := s.createGroupWithMembers(weights)
+	groupIDs := []string{s.createGroupWithMembers(weights, accounts), s.createGroupWithMembers(weights, accounts)}
 
-	// create group policy
-	groupPolicyAddress := s.createGroupThresholdPolicyWithDenon(groupID, 4, 100)
+	groupPolicyAddress := []string{s.createGroupThresholdPolicyWithDenom(groupIDs[0], 3, 100), s.createGroupThresholdPolicyWithDenom(groupIDs[1], 3, 100)}
 
-	fmt.Println("address: ", groupPolicyAddress)
+	//fmt.Println("address: ", groupPolicyAddress)
 
 	testCases := []struct {
-		name      string
-		args      []string
-		expectErr bool
-		errMsg    string
-		respType  proto.Message
+		name               string
+		args               []string
+		votes              []string
+		members            []string
+		groupPolicyAddress string
+		expectErr          bool
+		errMsg             string
+		respType           proto.Message
 	}{
-		//{
-		//	"member that leaves does not affect the threshold",
-		//	append(
-		//		[]string{
-		//			members[0],
-		//			groupID,
-		//			fmt.Sprintf("--%s=%s", flags.FlagFrom, members[2]),
-		//		},
-		//		commonFlags...,
-		//	),
-		//	false,
-		//	"",
-		//	&sdk.TxResponse{},
-		//},
+		{
+			"member that leaves does not affect the threshold",
+			append(
+				[]string{
+					accounts[0],
+					groupIDs[0],
+
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[0]),
+				},
+				commonFlags...,
+			),
+			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_YES", "VOTE_OPTION_YES"},
+			accounts,
+			groupPolicyAddress[0],
+			false,
+			"",
+			&sdk.TxResponse{},
+		},
 		{
 			"member that leaves affects the threshold",
 			append(
 				[]string{
-					members[2],
-					groupID,
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[2]),
+					accounts[2],
+					groupIDs[1],
+
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[2]),
 				},
 				commonFlags...,
 			),
+			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_NO"},
+			accounts,
+			groupPolicyAddress[1],
 			true,
-			"failed to execute message",
+			"PROPOSAL_EXECUTOR_RESULT_NOT_RUN",
 			&sdk.TxResponse{},
 		},
 	}
@@ -2374,8 +2384,8 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 			// Submit proposal
 			submitProposalArgs := append([]string{
 				s.createCLIProposal(
-					groupPolicyAddress, members[0],
-					groupPolicyAddress, members[0],
+					tc.groupPolicyAddress, tc.members[0],
+					tc.groupPolicyAddress, tc.members[0],
 					"",
 				),
 			},
@@ -2383,17 +2393,19 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 			)
 			var submitProposalResp sdk.TxResponse
 			out, err := cli.ExecTestCLICmd(clientCtx, cmdSubmitProposal, submitProposalArgs)
-			fmt.Println("this is the subit proposal", out)
 			s.Require().NoError(err, out.String())
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &submitProposalResp), out.String())
 			proposalID := s.getProposalIdFromTxResponse(submitProposalResp)
-			for _, memberAddress := range members {
+
+			for i, vote := range tc.votes {
+				fmt.Println("vote no#", i)
+				memberAddress := tc.members[i]
 				out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgVoteCmd(),
 					append(
 						[]string{
 							proposalID,
 							memberAddress,
-							"VOTE_OPTION_YES",
+							vote,
 							"",
 						},
 						commonFlags...,
@@ -2404,12 +2416,10 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 				s.Require().Equal(uint32(0), txResp.Code, out.String())
-				fmt.Println("Vote :", out)
+
 			}
 
 			out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryVotesByProposalCmd(), []string{proposalID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
-			fmt.Println("VOTES-: ", out)
-			fmt.Println("err", err)
 
 			out, err = cli.ExecTestCLICmd(clientCtx, cmdLeaveGroup, tc.args)
 			fmt.Println("leave group: ", out)
@@ -2419,23 +2429,28 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			s.Require().Equal(uint32(0), resp.Code, out.String())
 
+			err = s.network.WaitForNextBlock()
+			s.Require().NoError(err)
+
 			args := append(
 				[]string{
 					proposalID,
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[0]),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.members[0]),
 				},
 				commonFlags...,
 			)
+			var execResp sdk.TxResponse
 			out, err = cli.ExecTestCLICmd(clientCtx, cmdMsgExec, args)
-			//s.Require().NoError(err)
+			s.Require().NoError(err)
+			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &execResp), out.String())
+
 			fmt.Println("propossal exec: ", out)
 			fmt.Println("error is: ", err)
 
-			//fmt.Println("pre")
-			//out, err = cli.ExecTestCLICmd(clientCtx, cmdQueryProposal, args)
-			//s.Require().NoError(err)
-			//fmt.Println("propossal final: ", out)
-			s.Require().True(false)
+			if tc.expectErr {
+				s.Require().Contains(execResp.RawLog, tc.errMsg)
+			}
+			//s.Require().True(false)
 
 		})
 	}
@@ -2453,10 +2468,11 @@ func (s *IntegrationTestSuite) TestSubmitProposalAndUpdate() {
 	}
 
 	membersWeights := []string{"1", "1", "1"}
-	groupID, members := s.createGroupWithMembers(membersWeights)
+	accounts := s.createAccounts(3)
+	groupID := s.createGroupWithMembers(membersWeights, accounts)
 	// create group policy
 
-	groupPolicyAddress := s.createGroupThresholdPolicyWithDenon(groupID, 3, 100)
+	groupPolicyAddress := s.createGroupThresholdPolicyWithDenom(groupID, 3, 100)
 
 	updateGroupString := s.NewValidMembers([]string{"1", "1"}).String()
 
@@ -2476,8 +2492,8 @@ func (s *IntegrationTestSuite) TestSubmitProposalAndUpdate() {
 		cmdSubmitProposal := client.MsgSubmitProposalCmd()
 		submitProposalArgs := append([]string{
 			s.createCLIProposal(
-				groupPolicyAddress, members[0],
-				groupPolicyAddress, members[0],
+				groupPolicyAddress, accounts[0],
+				groupPolicyAddress, accounts[0],
 				"",
 			),
 		},
@@ -2557,7 +2573,7 @@ func (s *IntegrationTestSuite) createAccounts(quantity int) []string {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
-	for i := 1; i <= 3; i++ {
+	for i := 1; i <= quantity; i++ {
 		info, _, err := clientCtx.Keyring.NewMnemonic(fmt.Sprintf("member%d", i), keyring.English, sdk.FullFundraiserPath,
 			keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 		s.Require().NoError(err)
@@ -2569,7 +2585,7 @@ func (s *IntegrationTestSuite) createAccounts(quantity int) []string {
 		accounts[i-1] = account.String()
 
 		_, err = banktestutil.MsgSendExec(clientCtx, val.Address, account,
-			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))),
+			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1000))),
 			commonFlags...,
 		)
 		s.Require().NoError(err)
@@ -2577,8 +2593,8 @@ func (s *IntegrationTestSuite) createAccounts(quantity int) []string {
 	return accounts
 }
 
-func (s *IntegrationTestSuite) createGroupWithMembers(membersWeight []string) (string, []string) {
-	membersAddress := s.createAccounts(len(membersWeight))
+func (s *IntegrationTestSuite) createGroupWithMembers(membersWeight, membersAddress []string) string {
+	s.Require().Equal(len(membersWeight), len(membersAddress))
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 	commonFlags := []string{
@@ -2616,10 +2632,10 @@ func (s *IntegrationTestSuite) createGroupWithMembers(membersWeight []string) (s
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	//txResp.
 	fmt.Println("response from creating group", txResp.Events[0])
-	return s.getGroupIdFromTxResponse(txResp), membersAddress
+	return s.getGroupIdFromTxResponse(txResp)
 }
 
-func (s *IntegrationTestSuite) createGroupThresholdPolicyWithDenon(groupID string, threshold int, denon int64) string {
+func (s *IntegrationTestSuite) createGroupThresholdPolicyWithDenom(groupID string, threshold int, denon int64) string {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 

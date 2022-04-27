@@ -5,7 +5,6 @@ import (
 	"math"
 
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 

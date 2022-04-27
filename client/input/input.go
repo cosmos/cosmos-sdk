@@ -84,7 +84,7 @@ func inputIsTty() bool {
 	return isatty.IsTerminal(os.Stdin.Fd()) || isatty.IsCygwinTerminal(os.Stdin.Fd())
 }
 
-// readLineFromBuf reads one line from stdin.
+// readLineFromBuf reads one line from reader.
 // Subsequent calls reuse the same buffer, so we don't lose
 // any input when reading a password twice (to verify)
 func readLineFromBuf(buf *bufio.Reader) (string, error) {

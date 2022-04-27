@@ -53,4 +53,5 @@ func TestReadLineFromBuf(t *testing.T) {
 		_, err := readLineFromBuf(buf)
 		require.ErrorIs(t, err, expectedErr)
 	})
+
 }

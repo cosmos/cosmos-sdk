@@ -83,8 +83,6 @@ These state machines will also need to migrate to https://github.com/cosmos/cosm
 
 ### Neutral
 
-{neutral consequences}
-
 ## Further Discussions
 
 Further discussions will happen within the Cosmos SDK Framework Working Group. Current planned and ongoing work includes:

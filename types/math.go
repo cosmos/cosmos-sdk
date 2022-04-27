@@ -33,8 +33,3 @@ const (
 func (ip IntProto) String() string {
 	return ip.Int.String()
 }
-
-// ToDec converts an Int type to a Dec type.
-func ToDec(i Int) Dec {
-	return NewDecFromInt(i)
-}

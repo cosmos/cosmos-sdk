@@ -79,7 +79,8 @@ These state machines will also need to migrate to https://github.com/cosmos/cosm
 
 ### Negative
 
-* worse performance than hand-generated keys (for now)
+* worse performance than handwritten keys (for now). See [Further Discussions](#further-discussions)
+for potential improvements
 
 ### Neutral
 
@@ -88,7 +89,11 @@ These state machines will also need to migrate to https://github.com/cosmos/cosm
 Further discussions will happen within the Cosmos SDK Framework Working Group. Current planned and ongoing work includes:
 * automatically generate client-facing query layer
 * index ORM data to SQL databases
-* improve performance by optimizing existing reflection based code &/or implementing more sophisticated code generation 
+* improve performance by:
+  * optimizing existing reflection based code to avoid unnecessary gets when doing deletes & updates of simple tables
+  * more sophisticated code generation such as making fast path reflection even faster (avoiding `switch` statements),
+  or even fully generating code that equals handwritten performance
+
 
 ## References
 

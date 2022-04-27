@@ -10,8 +10,12 @@ PROPOSED
 
 ## Abstract
 
-> "If you can't explain it simply, you don't understand it well enough." Provide a simplified and layman-accessible explanation of the ADR.
-> A short (~200 word) description of the issue being addressed.
+In order to work well with semantically versioned go modules, some changes to 
+the cosmos-proto code generator need to be made and best practices need to
+be followed. In particular:
+* clients should use generated protobuf code in a standalone "API" module
+* state machines should use cosmos-proto generated code in `internal/` packages
+* protobuf interface types (to be implemented in cosmos-proto) should be used in all public facing API's
 
 ## Context
 

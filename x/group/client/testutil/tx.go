@@ -2334,7 +2334,7 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 		respType           proto.Message
 	}{
 		{
-			"member that leaves does not affect the threshold",
+			"member leaves while all others vote yes",
 			append(
 				[]string{
 					accounts[0],

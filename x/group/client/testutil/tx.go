@@ -2461,54 +2461,56 @@ func (s *IntegrationTestSuite) TestSubmitProposalAndUpdate() {
 	membersWeights := []string{"1", "1", "1"}
 	accounts := s.createAccounts(3)
 	groupID := s.createGroupWithMembers(membersWeights, accounts)
-	// create group policy
 
 	groupPolicyAddress := s.createGroupThresholdPolicyWithDenom(groupID, 3, 100)
 
-	updateGroupString := s.NewValidMembers([]string{"1", "1"}).String()
+	updateGroupString := s.newValidMembers(membersWeights[0:1], accounts[0:1]).String()
 
 	validUpdateMemberFileName := testutil.WriteToNewTempFile(s.T(), updateGroupString).Name()
 
-	//validUpdatedMembersFileName := testutil.WVriteToNewTempFile(s.T(), fmt.Sprintf(`{"members": [{
-	//	"address": "%s",
-	//	"weight": "0",
-	//	"metadata": "%s"
-	//}, {
-	//	"address": "%s",
-	//	"weight": "1",
-	//	"metadata": "%s"
-	//}]}`, val.Address.String(), validMetadata, s.groupPolicies[0].Address, validMetadata)).Name()
+	cmdSubmitProposal := client.MsgSubmitProposalCmd()
+	submitProposalArgs := append([]string{
+		s.createCLIProposal(
+			groupPolicyAddress, accounts[0],
+			groupPolicyAddress, accounts[0],
+			"",
+		),
+	},
+		commonFlags...,
+	)
+	var submitProposalResp sdk.TxResponse
+	out, err := cli.ExecTestCLICmd(clientCtx, cmdSubmitProposal, submitProposalArgs)
+	s.Require().NoError(err, out.String())
+	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &submitProposalResp), out.String())
+	proposalID := s.getProposalIdFromTxResponse(submitProposalResp)
 
-	s.Run("submit proposal, update decision policy", func() {
-		cmdSubmitProposal := client.MsgSubmitProposalCmd()
-		submitProposalArgs := append([]string{
-			s.createCLIProposal(
-				groupPolicyAddress, accounts[0],
-				groupPolicyAddress, accounts[0],
-				"",
-			),
+	args := append(
+		[]string{
+			val.Address.String(),
+			groupID,
+			validUpdateMemberFileName,
 		},
-			commonFlags...,
-		)
-		out, err := cli.ExecTestCLICmd(clientCtx, cmdSubmitProposal, submitProposalArgs)
-		s.Require().NoError(err, out.String())
-		s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
+		commonFlags...,
+	)
 
-		args := append(
-			[]string{
-				val.Address.String(),
-				groupID,
-				validUpdateMemberFileName,
-			},
-			commonFlags...,
-		)
+	out, err = cli.ExecTestCLICmd(clientCtx, client.MsgUpdateGroupMembersCmd(), args)
+	s.Require().NoError(err)
 
-		out, err = cli.ExecTestCLICmd(clientCtx, client.MsgUpdateGroupMembersCmd(), args)
-		s.Require().NoError(err)
-		s.Require().Contains(out.String(), "out string is wrong")
-		s.Require().NotEqual(out.String(), "")
-		s.Require().True(false)
-	})
+	args = append(
+		[]string{
+			proposalID,
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[0]),
+		},
+		commonFlags...,
+	)
+
+	var execResp sdk.TxResponse
+	out, err = cli.ExecTestCLICmd(clientCtx, client.MsgExecCmd(), args)
+	s.Require().NoError(err)
+	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &execResp), out.String())
+
+	s.Require().Contains(execResp.RawLog, "PROPOSAL_EXECUTOR_RESULT_NOT_RUN")
+
 }
 
 func (s *IntegrationTestSuite) getGroupIdFromTxResponse(txResp sdk.TxResponse) string {
@@ -2665,8 +2667,8 @@ func (s *IntegrationTestSuite) createGroupThresholdPolicyWithDenom(groupID strin
 	return groupPolicyAddress
 }
 
-func (s *IntegrationTestSuite) NewValidMembers(weights []string) validMembers {
-	membersAddress := s.createAccounts(len(weights))
+func (s *IntegrationTestSuite) newValidMembers(weights, membersAddress []string) validMembers {
+	s.Require().Equal(len(weights), len(membersAddress))
 	membersValid := validMembers{}
 
 	for i, address := range membersAddress {

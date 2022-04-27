@@ -3,30 +3,34 @@ package cmd
 import (
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/cosmovisor"
+	"github.com/rs/zerolog"
 )
 
 // RunCosmovisorCommand executes the desired cosmovisor command.
-func RunCosmovisorCommand(args []string) error {
+func RunCosmovisorCommand(logger *zerolog.Logger, args []string) error {
 	arg0 := ""
 	if len(args) > 0 {
 		arg0 = strings.TrimSpace(args[0])
 	}
+
 	switch {
 	case IsVersionCommand(arg0):
-		return PrintVersion()
+		return PrintVersion(logger, args[1:])
+
 	case ShouldGiveHelp(arg0):
-		DoHelp()
-		return nil
+		return DoHelp()
+
 	case IsRunCommand(arg0):
-		return Run(args[1:])
+		return Run(logger, args[1:])
 	}
+
 	warnRun := func() {
-		cosmovisor.Logger.Warn().Msg("Use of cosmovisor without the 'run' command is deprecated. Use: cosmovisor run [args]")
+		logger.Warn().Msg("use of cosmovisor without the 'run' command is deprecated. Use: cosmovisor run [args]")
 	}
 	warnRun()
 	defer warnRun()
-	return Run(args)
+
+	return Run(logger, args)
 }
 
 // isOneOf returns true if the given arg equals one of the provided options (ignoring case).

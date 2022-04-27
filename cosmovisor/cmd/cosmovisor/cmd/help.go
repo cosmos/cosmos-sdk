@@ -17,9 +17,11 @@ func ShouldGiveHelp(arg string) bool {
 }
 
 // DoHelp outputs help text
-func DoHelp() {
+func DoHelp() error {
 	// Not using the logger for this output because the header and footer look weird for help text.
 	fmt.Println(GetHelpText())
+
+	return nil
 }
 
 // GetHelpText creates the help text multi-line string.

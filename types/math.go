@@ -24,6 +24,8 @@ var (
 	NewIntFromString = sdkmath.NewIntFromString
 	NewUint          = sdkmath.NewUint
 	NewIntFromUint64 = sdkmath.NewIntFromUint64
+	MaxInt           = sdkmath.MaxInt
+	MinInt           = sdkmath.MinInt
 )
 
 const (

@@ -250,7 +250,7 @@ func (k Keeper) GetLastCompletedUpgrade(ctx sdk.Context) (string, int64) {
 func parseDoneKey(key []byte) (string, int64) {
 	// 1 byte for the DoneByte + 8 bytes height + at least 1 byte for the name
 	kv.AssertKeyAtLeastLength(key, 10)
-	height := binary.BigEndian.Uint64(key[1:])
+	height := binary.BigEndian.Uint64(key[1:9])
 	return string(key[9:]), int64(height)
 }
 
@@ -258,7 +258,7 @@ func parseDoneKey(key []byte) (string, int64) {
 func encodeDoneKey(name string, height int64) []byte {
 	key := make([]byte, 9+len(name))
 	key[0] = types.DoneByte
-	binary.BigEndian.PutUint64(key[1:], uint64(height))
+	binary.BigEndian.PutUint64(key[1:9], uint64(height))
 	copy(key[9:], name)
 	return key
 }

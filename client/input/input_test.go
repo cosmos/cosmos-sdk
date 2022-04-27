@@ -33,7 +33,7 @@ func TestReadLineFromBuf(t *testing.T) {
 		require.Equal(t, "hello", pass)
 	})
 
-	t.Run("it returns EOF is reader has been exhausted", func(t *testing.T) {
+	t.Run("it returns EOF if reader has been exhausted", func(t *testing.T) {
 		fr.fnc = func(p []byte) (int, error) {
 			return 0, io.EOF
 		}

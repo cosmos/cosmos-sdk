@@ -24,11 +24,16 @@ const (
 	// number of decimal places
 	Precision = 18
 
-	// bytes required to represent the above precision
-	// Ceiling[Log2[999 999 999 999 999 999]]
+	// bits required to represent the above precision
+	// Ceiling[Log2[10^Precision - 1]]
 	DecimalPrecisionBits = 60
 
-	maxDecBitLen = sdkmath.MaxBitLen + DecimalPrecisionBits
+	// decimalTruncateBits is the minimum number of bits removed
+	// by a truncate operation. It is equal to
+	// Floor[Log2[10^Precision - 1]].
+	decimalTruncateBits = DecimalPrecisionBits - 1
+
+	maxDecBitLen = sdkmath.MaxBitLen + decimalTruncateBits
 
 	// max number of iterations in ApproxRoot function
 	maxApproxRootIterations = 100

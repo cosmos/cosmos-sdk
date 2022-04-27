@@ -23,6 +23,10 @@ func init() {
 	types.RegisterLegacyAminoCodec(codec.NewLegacyAmino())
 }
 
+const (
+	consensusVersion uint64 = 2
+)
+
 var (
 	_ module.AppModule      = AppModule{}
 	_ module.AppModuleBasic = AppModuleBasic{}
@@ -127,7 +131,7 @@ func (am AppModule) ExportGenesis(_ sdk.Context, cdc codec.JSONCodec) json.RawMe
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 2 }
+func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
 
 // BeginBlock calls the upgrade module hooks
 //

@@ -4,12 +4,12 @@ name: Protobuf
 on:
   pull_request:
     paths:
-      - 'proto/**'
+      - "proto/**"
   push:
     branches:
-      - master
+      - main
     paths:
-      - 'proto/**'
+      - "proto/**"
 
 jobs:
   lint:
@@ -17,7 +17,7 @@ jobs:
     timeout-minutes: 5
     steps:
     - uses: actions/checkout@v3
-    - uses: bufbuild/buf-setup-action@v1.1.0
+    - uses: bufbuild/buf-setup-action@v1.4.0
     - uses: bufbuild/buf-lint-action@v1
       with:
         input: 'proto'
@@ -26,8 +26,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: bufbuild/buf-setup-action@v1.1.0
+      - uses: bufbuild/buf-setup-action@v1.4.0
       - uses: bufbuild/buf-breaking-action@v1
         with:
-          input: 'proto'
-          against: 'https://github.com/${{ github.repository }}.git#branch=${{ github.event.pull_request.base.ref }},ref=HEAD~1,subdir=proto'
+          input: "proto"
+          against: "https://github.com/${{ github.repository }}.git#branch=${{ github.event.pull_request.base.ref }},ref=HEAD~1,subdir=proto"

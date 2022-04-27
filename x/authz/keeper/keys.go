@@ -34,14 +34,8 @@ func grantStoreKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType strin
 	m := conv.UnsafeStrToBytes(msgType)
 	granter = address.MustLengthPrefix(granter)
 	grantee = address.MustLengthPrefix(grantee)
+	key := sdk.AppendLengthPrefixedBytes(GrantKey, granter, grantee, m)
 
-	l := 1 + len(grantee) + len(granter) + len(m)
-	var key = make([]byte, l)
-	copy(key, GrantKey)
-	copy(key[1:], granter)
-	copy(key[1+len(granter):], grantee)
-	copy(key[l-len(m):], m)
-	//	fmt.Println(">>>> len", l, key)
 	return key
 }
 
@@ -49,15 +43,15 @@ func grantStoreKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType strin
 func parseGrantStoreKey(key []byte) (granterAddr, granteeAddr sdk.AccAddress, msgType string) {
 	// key is of format:
 	// 0x01<granterAddressLen (1 Byte)><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes><msgType_Bytes>
-	kv.AssertKeyAtLeastLength(key, 2)
-	granterAddrLen := key[1] // remove prefix key
-	kv.AssertKeyAtLeastLength(key, int(3+granterAddrLen))
-	granterAddr = sdk.AccAddress(key[2 : 2+granterAddrLen])
-	granteeAddrLen := int(key[2+granterAddrLen])
-	kv.AssertKeyAtLeastLength(key, 4+int(granterAddrLen+byte(granteeAddrLen)))
-	granteeAddr = sdk.AccAddress(key[3+granterAddrLen : 3+granterAddrLen+byte(granteeAddrLen)])
 
-	return granterAddr, granteeAddr, conv.UnsafeBytesToStr(key[3+granterAddrLen+byte(granteeAddrLen):])
+	granterAddrLen, granterAddrLenEndIndex := sdk.ParseLengthPrefixedBytes(key, 1, 1) // ignore key[0] since it is a prefix key
+	granterAddr, granterAddrEndIndex := sdk.ParseLengthPrefixedBytes(key, granterAddrLenEndIndex+1, int(granterAddrLen[0]))
+
+	granteeAddrLen, granteeAddrLenEndIndex := sdk.ParseLengthPrefixedBytes(key, granterAddrEndIndex+1, 1)
+	granteeAddr, granteeAddrEndIndex := sdk.ParseLengthPrefixedBytes(key, granteeAddrLenEndIndex+1, int(granteeAddrLen[0]))
+
+	kv.AssertKeyAtLeastLength(key, granteeAddrEndIndex+1)
+	return granterAddr, granteeAddr, conv.UnsafeBytesToStr(key[(granteeAddrEndIndex + 1):])
 }
 
 // parseGrantQueueKey split expiration time, granter and grantee from the grant queue key
@@ -65,40 +59,32 @@ func parseGrantQueueKey(key []byte) (time.Time, sdk.AccAddress, sdk.AccAddress, 
 	// key is of format:
 	// 0x02<grant_expiration_Bytes><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes>
 
-	kv.AssertKeyAtLeastLength(key, 1+lenTime)
-	exp, err := sdk.ParseTimeBytes(key[1 : 1+lenTime])
+	expBytes, expEndIndex := sdk.ParseLengthPrefixedBytes(key, 1, lenTime)
+
+	exp, err := sdk.ParseTimeBytes(expBytes)
 	if err != nil {
 		return exp, nil, nil, err
 	}
 
-	granterAddrLen := key[1+lenTime]
-	kv.AssertKeyAtLeastLength(key, 1+lenTime+int(granterAddrLen))
-	granter := sdk.AccAddress(key[2+lenTime : byte(2+lenTime)+granterAddrLen])
+	granterAddrLen, granterAddrLenEndIndex := sdk.ParseLengthPrefixedBytes(key, expEndIndex+1, 1)
+	granter, granterEndIndex := sdk.ParseLengthPrefixedBytes(key, granterAddrLenEndIndex+1, int(granterAddrLen[0]))
 
-	granteeAddrLen := key[byte(2+lenTime)+granterAddrLen]
-	granteeStart := byte(3+lenTime) + granterAddrLen
-	kv.AssertKeyAtLeastLength(key, int(granteeStart))
-	grantee := sdk.AccAddress(key[granteeStart : granteeStart+granteeAddrLen])
+	granteeAddrLen, granteeAddrLenEndIndex := sdk.ParseLengthPrefixedBytes(key, granterEndIndex+1, 1)
+	grantee, _ := sdk.ParseLengthPrefixedBytes(key, granteeAddrLenEndIndex+1, int(granteeAddrLen[0]))
 
 	return exp, granter, grantee, nil
 }
 
-// GrantQueueKey - return grant queue store key
-// Key format is
-//
-// - 0x02<grant_expiration_Bytes>: GrantQueueItem
+// GrantQueueKey - return grant queue store key. If a given grant doesn't have a defined
+// expiration, then it should not be used in the pruning queue.
+// Key format is:
+//     0x02<grant_expiration_Bytes>: GrantQueueItem
 func GrantQueueKey(expiration time.Time, granter sdk.AccAddress, grantee sdk.AccAddress) []byte {
 	exp := sdk.FormatTimeBytes(expiration)
 	granter = address.MustLengthPrefix(granter)
 	grantee = address.MustLengthPrefix(grantee)
 
-	l := 1 + len(exp) + len(granter) + len(grantee)
-	var key = make([]byte, l)
-	copy(key, GrantQueuePrefix)
-	copy(key[1:], exp)
-	copy(key[1+len(exp):], granter)
-	copy(key[1+len(exp)+len(granter):], grantee)
-	return key
+	return sdk.AppendLengthPrefixedBytes(GrantQueuePrefix, exp, granter, grantee)
 }
 
 // GrantQueueTimePrefix - return grant queue time prefix

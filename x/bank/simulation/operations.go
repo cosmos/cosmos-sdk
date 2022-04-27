@@ -130,7 +130,7 @@ func sendMsgSend(
 	account := ak.GetAccount(ctx, from)
 	spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-	coins, hasNeg := spendable.SafeSub(msg.Amount)
+	coins, hasNeg := spendable.SafeSub(msg.Amount...)
 	if !hasNeg {
 		fees, err = simtypes.RandomFees(r, ctx, coins)
 		if err != nil {
@@ -138,7 +138,7 @@ func sendMsgSend(
 		}
 	}
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
-	tx, err := helpers.GenTx(
+	tx, err := helpers.GenSignedMockTx(
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
@@ -219,7 +219,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 				// take random subset of remaining coins for output
 				// and update remaining coins
 				outCoins = simtypes.RandSubsetCoins(r, totalSentCoins)
-				totalSentCoins = totalSentCoins.Sub(outCoins)
+				totalSentCoins = totalSentCoins.Sub(outCoins...)
 			}
 
 			outputs[o] = types.NewOutput(outAddr.Address, outCoins)
@@ -286,7 +286,7 @@ func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keepe
 				// take random subset of remaining coins for output
 				// and update remaining coins
 				outCoins = simtypes.RandSubsetCoins(r, totalSentCoins)
-				totalSentCoins = totalSentCoins.Sub(outCoins)
+				totalSentCoins = totalSentCoins.Sub(outCoins...)
 			}
 
 			outputs[i] = types.NewOutput(moduleAccounts[i].Address, outCoins)
@@ -351,7 +351,7 @@ func sendMsgMultiSend(
 	feePayer := ak.GetAccount(ctx, addr)
 	spendable := bk.SpendableCoins(ctx, feePayer.GetAddress())
 
-	coins, hasNeg := spendable.SafeSub(msg.Inputs[0].Coins)
+	coins, hasNeg := spendable.SafeSub(msg.Inputs[0].Coins...)
 	if !hasNeg {
 		fees, err = simtypes.RandomFees(r, ctx, coins)
 		if err != nil {
@@ -360,7 +360,7 @@ func sendMsgMultiSend(
 	}
 
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
-	tx, err := helpers.GenTx(
+	tx, err := helpers.GenSignedMockTx(
 		txGen,
 		[]sdk.Msg{msg},
 		fees,

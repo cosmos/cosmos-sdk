@@ -48,7 +48,7 @@ aside: false
 ## Get Started
 
 * **[Cosmos SDK Intro](./intro/overview.md)**: High-level overview of the Cosmos SDK.
-* **[Starport](https://docs.starport.network/)**: A developer-friendly interface to the Cosmos SDK to scaffold, launch, and maintain any crypto application on a sovereign and secured blockchain.
+* **[Ignite CLI](https://docs.ignite.com)**: A developer-friendly interface to the Cosmos SDK to scaffold, launch, and maintain any crypto application on a sovereign and secured blockchain.
 * **[SDK Tutorials](https://tutorials.cosmos.network/)**: Tutorials that showcase how to build Cosmos SDK-based blockchains from scratch and explain the basic Cosmos SDK principles in the process.
 
 ## Reference Docs
@@ -70,7 +70,7 @@ aside: false
 
 ## Cosmos Hub
 
-The Cosmos Hub (`gaia`) docs have moved to [github.com/cosmos/gaia](https://github.com/cosmos/gaia/tree/master/docs).
+The Cosmos Hub (`gaia`) docs have moved to [github.com/cosmos/gaia](https://github.com/cosmos/gaia/tree/main/docs).
 
 ## Languages
 
@@ -78,4 +78,4 @@ The Cosmos SDK is written in [Golang](https://golang.org/), though the framework
 
 ## Contribute
 
-See the [DOCS_README.md](https://github.com/cosmos/cosmos-sdk/blob/master/docs/DOCS_README.md) for details of the build process and considerations when making changes.
+See the [DOCS_README.md](https://github.com/cosmos/cosmos-sdk/blob/main/docs/DOCS_README.md) for details of the build process and considerations when making changes.

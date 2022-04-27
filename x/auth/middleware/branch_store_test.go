@@ -72,7 +72,7 @@ func (s *MWTestSuite) TestBranchStore() {
 				middleware.NewTxDecoderMiddleware(s.clientCtx.TxConfig.TxDecoder()),
 				middleware.GasTxMiddleware,
 				middleware.RecoveryTxMiddleware,
-				middleware.DeductFeeMiddleware(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper),
+				middleware.DeductFeeMiddleware(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, nil),
 				middleware.IncrementSequenceMiddleware(s.app.AccountKeeper),
 				middleware.WithBranchedStore,
 				middleware.ConsumeBlockGasMiddleware,

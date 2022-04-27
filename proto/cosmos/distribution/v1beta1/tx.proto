@@ -56,7 +56,11 @@ message MsgWithdrawDelegatorReward {
 }
 
 // MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward response type.
-message MsgWithdrawDelegatorRewardResponse {}
+message MsgWithdrawDelegatorRewardResponse {
+  // Since: cosmos-sdk 0.46
+  repeated cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
 
 // MsgWithdrawValidatorCommission withdraws the full commission to the validator
 // address.
@@ -70,7 +74,11 @@ message MsgWithdrawValidatorCommission {
 }
 
 // MsgWithdrawValidatorCommissionResponse defines the Msg/WithdrawValidatorCommission response type.
-message MsgWithdrawValidatorCommissionResponse {}
+message MsgWithdrawValidatorCommissionResponse {
+  // Since: cosmos-sdk 0.46
+  repeated cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
 
 // MsgFundCommunityPool allows an account to directly
 // fund the community pool.

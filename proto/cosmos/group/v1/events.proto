@@ -1,8 +1,10 @@
+// Since: cosmos-sdk 0.46
 syntax = "proto3";
 
 package cosmos.group.v1;
 
 import "cosmos_proto/cosmos.proto";
+import "cosmos/group/v1/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/group";
 
@@ -60,6 +62,12 @@ message EventExec {
 
   // proposal_id is the unique ID of the proposal.
   uint64 proposal_id = 1;
+
+  // result is the proposal execution result.
+  ProposalExecutorResult result = 2;
+
+  // logs contains error logs in case the execution result is FAILURE.
+  string logs = 3;
 }
 
 // EventLeaveGroup is an event emitted when group member leaves the group.

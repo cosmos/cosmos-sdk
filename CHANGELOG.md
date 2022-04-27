@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * (db) [\#11657] (https://github.com/cosmos/cosmos-sdk/pull/11657) Update cosmos/gorocksdb to lnxGnu/grocksdb to use rocksdb v7
+* (docker) [\$11768](https://github.com/cosmos/cosmos-sdk/pull/11768) Introduce a canonical dockerfile containing all cosmos-sdk supported databases and change to using ghcr.io for docker images
 * (grpc) [\#11642](https://github.com/cosmos/cosmos-sdk/pull/11642) Implement `ABCIQuery` in the Tendermint gRPC service, which proxies ABCI `Query` requests directly to the application.
 * (x/upgrade) [\#11551](https://github.com/cosmos/cosmos-sdk/pull/11551) Update `ScheduleUpgrade` for chains to schedule an automated upgrade on `BeginBlock` without having to go though governance.
 * (cli) [\#11548](https://github.com/cosmos/cosmos-sdk/pull/11548) Add Tendermint's `inspect` command to the `tendermint` sub-command.

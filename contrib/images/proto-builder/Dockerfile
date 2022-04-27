@@ -2,15 +2,11 @@
 # docker build --pull --rm -f "contrib/devtools/Dockerfile" -t cosmossdk-proto:latest "contrib/devtools"
 # docker run --rm -v $(pwd):/workspace --workdir /workspace cosmossdk-proto sh ./scripts/protocgen.sh
 
-FROM bufbuild/buf:1.1.0 as BUILDER
+FROM bufbuild/buf as BUILDER
 
-FROM golang:1.18-alpine
+FROM faddat/archlinux
 
-RUN apk add --no-cache \
-  nodejs \
-  npm \
-  git \
-  make
+RUN pacman -Syyu --noconfirm leveldb rocksdb go base-devel git python npm
 
 ENV GOLANG_PROTOBUF_VERSION=1.28.0 \
   GOGO_PROTOBUF_VERSION=1.3.2 \

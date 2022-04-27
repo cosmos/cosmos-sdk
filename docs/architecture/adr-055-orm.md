@@ -17,7 +17,7 @@ against state data, we have implemented an ORM (object-relational mapping) layer
 
 Historically modules in the Cosmos SDK have always used the key-value store directly and created various handwritten
 functions for managing key format as well as constructing secondary indexes. This consumes a significant amount of
-time when building a module and is error prone. Because key formats are non-standard, sometimes poorly documented,
+time when building a module and is error-prone. Because key formats are non-standard, sometimes poorly documented,
 and subject to change, it is hard for clients to generically index, query and verify merkle proofs against state data.
 
 The known first instance of an "ORM" in the Cosmos ecosystem was in [weave](https://github.com/iov-one/weave/tree/master/orm).
@@ -29,7 +29,7 @@ While these earlier designs made it significantly easier to write state machines
 configuration, didn't expose state format directly to clients, and were limited in their support of different types
 of index keys, composite keys, and range queries.
 
-Discussions around the design continued in https://github.com/cosmos/cosmos-sdk/discussions/9156 and more
+Discussions about the design continued in https://github.com/cosmos/cosmos-sdk/discussions/9156 and more
 sophisticated proofs of concept were created in https://github.com/allinbits/cosmos-sdk-poc/tree/master/runtime/orm
 and https://github.com/cosmos/cosmos-sdk/pull/10454.
 
@@ -56,10 +56,10 @@ in a future ADR related to app wiring.
 The ORM makes optimizations around storage space by not repeating values in the primary key in the key value
 when storing primary key records. For example, if the object `{"a":0,"b":1}` has the primary key `a`, it will
 be stored in the key value store as `Key: '0', Value: {"b":1}` (with more efficient protobuf binary encoding).
-Also the generated code from https://github.com/cosmos/cosmos-proto does optimizations around the
+Also, the generated code from https://github.com/cosmos/cosmos-proto does optimizations around the
 `google.golang.org/protobuf/reflect/protoreflect` API to improve performance.
 
-A code generator is include with the ORM which creates type safe wrappers around the ORM's dynamic `Table`
+A code generator is included with the ORM which creates type safe wrappers around the ORM's dynamic `Table`
 implementation and is the recommended way for modules to use the ORM.
 
 ## Consequences

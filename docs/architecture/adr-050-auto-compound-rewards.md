@@ -72,6 +72,17 @@ key and value:
 When a user decides to disable auto-compounding rewards by setting `enable` to
 `false`, we delete the record stored under the above key.
 
+Given that we now have such a key ordering in state, we can iterate over the all
+the relevant records using the dedicated `<prefixByte>` using a prefix `KVStore`,
+which will allow us to withdraw rewards and re-delegate to validators. This can
+be defined as follows in `x/distribution`:
+
+```go
+func (k Keeper) AutoCompoundRewards(ctx sdk.Context) {
+  
+}
+```
+
 ## Consequences
 
 ### Backwards Compatibility

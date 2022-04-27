@@ -17,9 +17,11 @@ func ShouldGiveHelp(arg string) bool {
 }
 
 // DoHelp outputs help text
-func DoHelp() {
+func DoHelp() error {
 	// Not using the logger for this output because the header and footer look weird for help text.
 	fmt.Println(GetHelpText())
+
+	return nil
 }
 
 // GetHelpText creates the help text multi-line string.
@@ -34,7 +36,7 @@ the proposal. Cosmovisor interprets that data to perform an update: switch a cur
 and restart the App.
 
 Configuration of Cosmovisor is done through environment variables, which are
-documented in: https://github.com/cosmos/cosmos-sdk/tree/master/cosmovisor/README.md
+documented in: https://github.com/cosmos/cosmos-sdk/tree/main/cosmovisor/README.md
 
 To get help for the configured binary:
   cosmovisor run help

@@ -2,7 +2,6 @@ package baseapp
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -62,9 +61,7 @@ type BaseApp struct { // nolint: maligned
 	fauxMerkleMode bool             // if true, IAVL MountStores uses MountStoresDB for simulation speed.
 
 	// manages snapshots, i.e. dumps of app state at certain intervals
-	snapshotManager    *snapshots.Manager
-	snapshotInterval   uint64 // block interval between state sync snapshots
-	snapshotKeepRecent uint32 // recent state sync snapshots to keep
+	snapshotManager *snapshots.Manager
 
 	// volatile states:
 	//
@@ -252,7 +249,7 @@ func (app *BaseApp) LoadLatestVersion() error {
 		return fmt.Errorf("failed to load latest version: %w", err)
 	}
 
-	return app.init()
+	return app.Init()
 }
 
 // DefaultStoreLoader will be used by default and loads the latest version
@@ -284,7 +281,7 @@ func (app *BaseApp) LoadVersion(version int64) error {
 		return fmt.Errorf("failed to load version %d: %w", version, err)
 	}
 
-	return app.init()
+	return app.Init()
 }
 
 // LastCommitID returns the last CommitID of the multistore.
@@ -297,7 +294,11 @@ func (app *BaseApp) LastBlockHeight() int64 {
 	return app.cms.LastCommitID().Version
 }
 
-func (app *BaseApp) init() error {
+// Init initializes the app. It seals the app, preventing any
+// further modifications. In addition, it validates the app against
+// the earlier provided settings. Returns an error if validation fails.
+// nil otherwise. Panics if the app is already sealed.
+func (app *BaseApp) Init() error {
 	if app.sealed {
 		panic("cannot call initFromMainStore: baseapp already sealed")
 	}
@@ -306,14 +307,11 @@ func (app *BaseApp) init() error {
 	app.setCheckState(tmproto.Header{})
 	app.Seal()
 
-	// make sure the snapshot interval is a multiple of the pruning KeepEvery interval
-	if app.snapshotManager != nil && app.snapshotInterval > 0 {
-		if _, ok := app.cms.(*rootmulti.Store); !ok {
-			return errors.New("state sync snapshots require a rootmulti store")
-		}
+	rms, ok := app.cms.(*rootmulti.Store)
+	if !ok {
+		return fmt.Errorf("invalid commit multi-store; expected %T, got: %T", &rootmulti.Store{}, app.cms)
 	}
-
-	return nil
+	return rms.GetPruning().Validate()
 }
 
 func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {

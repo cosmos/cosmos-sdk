@@ -22,6 +22,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
+// Supported ABCI Query prefixes
+const (
+	QueryPathApp    = "app"
+	QueryPathCustom = "custom"
+	QueryPathP2P    = "p2p"
+	QueryPathStore  = "store"
+)
+
 // InitChain implements the ABCI interface. It runs the initialization logic
 // directly on the CommitMultiStore.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
@@ -338,9 +346,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 		app.halt()
 	}
 
-	if app.snapshotInterval > 0 && uint64(header.Height)%app.snapshotInterval == 0 {
-		go app.snapshot(header.Height)
-	}
+	go app.snapshotManager.SnapshotIfApplicable(header.Height)
 
 	return abci.ResponseCommit{
 		Data:         commitID.Hash,
@@ -370,40 +376,9 @@ func (app *BaseApp) halt() {
 	os.Exit(0)
 }
 
-// snapshot takes a snapshot of the current state and prunes any old snapshottypes.
-func (app *BaseApp) snapshot(height int64) {
-	if app.snapshotManager == nil {
-		app.logger.Info("snapshot manager not configured")
-		return
-	}
-
-	app.logger.Info("creating state snapshot", "height", height)
-
-	snapshot, err := app.snapshotManager.Create(uint64(height))
-	if err != nil {
-		app.logger.Error("failed to create state snapshot", "height", height, "err", err)
-		return
-	}
-
-	app.logger.Info("completed state snapshot", "height", height, "format", snapshot.Format)
-
-	if app.snapshotKeepRecent > 0 {
-		app.logger.Debug("pruning state snapshots")
-
-		pruned, err := app.snapshotManager.Prune(app.snapshotKeepRecent)
-		if err != nil {
-			app.logger.Error("Failed to prune state snapshots", "err", err)
-			return
-		}
-
-		app.logger.Debug("pruned state snapshots", "pruned", pruned)
-	}
-}
-
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
 // implements Queryable.
 func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
-
 	// Add panic recovery for all queries.
 	// ref: https://github.com/cosmos/cosmos-sdk/pull/8039
 	defer func() {
@@ -423,23 +398,23 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		return app.handleQueryGRPC(grpcHandler, req)
 	}
 
-	path := splitPath(req.Path)
+	path := SplitABCIQueryPath(req.Path)
 	if len(path) == 0 {
 		sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), app.trace)
 	}
 
 	switch path[0] {
-	// "/app" prefix for special application queries
-	case "app":
+	case QueryPathApp:
+		// "/app" prefix for special application queries
 		return handleQueryApp(app, path, req)
 
-	case "store":
+	case QueryPathStore:
 		return handleQueryStore(app, path, req)
 
-	case "p2p":
+	case QueryPathP2P:
 		return handleQueryP2P(app, path)
 
-	case "custom":
+	case QueryPathCustom:
 		return handleQueryCustom(app, path, req)
 	}
 
@@ -718,9 +693,11 @@ func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
 		retentionHeight = commitHeight - cp.Evidence.MaxAgeNumBlocks
 	}
 
-	if app.snapshotInterval > 0 && app.snapshotKeepRecent > 0 {
-		v := commitHeight - int64((app.snapshotInterval * uint64(app.snapshotKeepRecent)))
-		retentionHeight = minNonZero(retentionHeight, v)
+	if app.snapshotManager != nil {
+		snapshotRetentionHeights := app.snapshotManager.GetSnapshotBlockRetentionHeights()
+		if snapshotRetentionHeights > 0 {
+			retentionHeight = minNonZero(retentionHeight, commitHeight-snapshotRetentionHeights)
+		}
 	}
 
 	v := commitHeight - int64(app.minRetainBlocks)
@@ -869,10 +846,10 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) abci.
 	}
 }
 
-// splitPath splits a string path using the delimiter '/'.
+// SplitABCIQueryPath splits a string path using the delimiter '/'.
 //
 // e.g. "this/is/funny" becomes []string{"this", "is", "funny"}
-func splitPath(requestPath string) (path []string) {
+func SplitABCIQueryPath(requestPath string) (path []string) {
 	path = strings.Split(requestPath, "/")
 
 	// first element is empty string

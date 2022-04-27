@@ -1,23 +1,23 @@
 name: Tests / Code Coverage
 #  Tests / Code Coverage workflow runs unit tests and uploads a code coverage report
-#  This workflow is run on pushes to master & every Pull Requests where a .go, .mod, .sum have been changed
+#  This workflow is run on pushes to main & every Pull Requests where a .go, .mod, .sum have been changed
 on:
   pull_request:
   push:
     branches:
-      - master
+      - main
 
 permissions:
   contents: read
-  
+
 jobs:
   cleanup-runs:
     runs-on: ubuntu-latest
     steps:
-    - uses: rokroskar/workflow-run-cleanup-action@master
-      env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-    if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/master'"
+      - uses: rokroskar/workflow-run-cleanup-action@master
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+    if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/main'"
   build:
     runs-on: ubuntu-latest
     strategy:
@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.17
+          go-version: 1.18
       - uses: technote-space/get-diff-action@v6.0.1
         id: git_diff
         with:
@@ -48,7 +48,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.17
+          go-version: 1.18
       - uses: technote-space/get-diff-action@v6.0.1
         id: git_diff
         with:
@@ -71,9 +71,9 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.17
+          go-version: 1.18
       - name: Create a file with all core Cosmos SDK pkgs
-        run:  go list ./... > pkgs.txt
+        run: go list ./... > pkgs.txt
       - name: Split pkgs into 4 files
         run: split -d -n l/4 pkgs.txt pkgs.txt.part.
       # cache multiple
@@ -105,7 +105,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.17
+          go-version: 1.18
       - uses: technote-space/get-diff-action@v6.0.1
         with:
           PATTERNS: |
@@ -156,6 +156,7 @@ jobs:
         with:
           name: "${{ github.sha }}-go-submodules-coverage"
         if: env.GIT_DIFF
+        continue-on-error: true
       - run: |
           cat ./*profile.out | grep -v "mode: atomic" >> coverage.txt
         if: env.GIT_DIFF
@@ -200,7 +201,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.17
+          go-version: 1.18
       - uses: technote-space/get-diff-action@v6.0.1
         id: git_diff
         with:
@@ -216,18 +217,18 @@ jobs:
         run: |
           ./contrib/localnet_liveness.sh 100 5 50 localhost
         if: env.GIT_DIFF
-        
+
   install-runsim:
     runs-on: ubuntu-latest
     needs: build
     steps:
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.17
+          go-version: 1.18
       - name: Display go version
         run: go version
       - name: Install runsim
-        run: export GO111MODULE="on" && go get github.com/cosmos/tools/cmd/runsim@v1.0.0
+        run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
       - uses: actions/cache@v3
         with:
           path: ~/go/bin
@@ -240,7 +241,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.17
+          go-version: 1.18
       - name: Display go version
         run: go version
       - uses: technote-space/get-diff-action@v6.0.1

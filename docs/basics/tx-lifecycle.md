@@ -52,9 +52,9 @@ The command-line is an easy way to interact with an application, but `Tx` can al
 
 ## Addition to Mempool
 
-Each full-node (running Tendermint) that receives a `Tx` sends an [ABCI message](https://tendermint.com/docs/spec/abci/abci.html#messages),
+Each full-node (running Tendermint) that receives a `Tx` sends an [ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#messages),
 `CheckTx`, to the application layer to check for validity, and receives an `abci.ResponseCheckTx`. If the `Tx` passes the checks, it is held in the nodes'
-[**Mempool**](https://tendermint.com/docs/tendermint-core/mempool.html#mempool), an in-memory pool of transactions unique to each node) pending inclusion in a block - honest nodes will discard `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
+[**Mempool**](https://docs.tendermint.com/master/tendermint-core/mempool/), an in-memory pool of transactions unique to each node) pending inclusion in a block - honest nodes will discard `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
 
 ### Types of Checks
 
@@ -102,7 +102,7 @@ After the ValidateBasic checks, the `AnteHandler`s are run. Technically, they ar
 
 A copy of the cached context is provided to the `AnteHandler`, which performs limited checks specified for the transaction type. Using a copy allows the AnteHandler to do stateful checks for `Tx` without modifying the last committed state, and revert back to the original if the execution fails.
 
-For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module `AnteHandler` checks and increments sequence numbers, checks signatures and account numbers, and deducts fees from the first signer of the transaction - all state changes are made using the `checkState`.
+For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth/spec) module `AnteHandler` checks and increments sequence numbers, checks signatures and account numbers, and deducts fees from the first signer of the transaction - all state changes are made using the `checkState`.
 
 ### Gas
 
@@ -137,7 +137,7 @@ Consensus, the process through which validator nodes come to agreement on which 
 accept, happens in **rounds**. Each round begins with a proposer creating a block of the most
 recent transactions and ends with **validators**, special full-nodes with voting power responsible
 for consensus, agreeing to accept the block or go with a `nil` block instead. Validator nodes
-execute the consensus algorithm, such as [Tendermint BFT](https://tendermint.com/docs/spec/consensus/consensus.html#terms),
+execute the consensus algorithm, such as [Tendermint BFT](https://docs.tendermint.com/master/spec/consensus/consensus.html#terms),
 confirming the transactions using ABCI requests to the application, in order to come to this agreement.
 
 The first step of consensus is the **block proposal**. One proposer amongst the validators is chosen

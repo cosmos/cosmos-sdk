@@ -371,11 +371,11 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 	// first make sure everything made it in to the gotValidator group
 	resValidators := app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	assert.Equal(t, n, len(resValidators))
-	assert.Equal(t, sdk.NewInt(400).Mul(app.StakingKeeper.PowerReduction(ctx)), resValidators[0].BondedTokens(), "%v", resValidators)
-	assert.Equal(t, sdk.NewInt(200).Mul(app.StakingKeeper.PowerReduction(ctx)), resValidators[1].BondedTokens(), "%v", resValidators)
-	assert.Equal(t, sdk.NewInt(100).Mul(app.StakingKeeper.PowerReduction(ctx)), resValidators[2].BondedTokens(), "%v", resValidators)
-	assert.Equal(t, sdk.NewInt(1).Mul(app.StakingKeeper.PowerReduction(ctx)), resValidators[3].BondedTokens(), "%v", resValidators)
-	assert.Equal(t, sdk.NewInt(0), resValidators[4].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, sdkmath.NewInt(400).Mul(app.StakingKeeper.PowerReduction(ctx)), resValidators[0].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, sdkmath.NewInt(200).Mul(app.StakingKeeper.PowerReduction(ctx)), resValidators[1].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, sdkmath.NewInt(100).Mul(app.StakingKeeper.PowerReduction(ctx)), resValidators[2].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, sdkmath.NewInt(1).Mul(app.StakingKeeper.PowerReduction(ctx)), resValidators[3].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, sdkmath.NewInt(0), resValidators[4].BondedTokens(), "%v", resValidators)
 	assert.Equal(t, validators[3].OperatorAddress, resValidators[0].OperatorAddress, "%v", resValidators)
 	assert.Equal(t, validators[4].OperatorAddress, resValidators[1].OperatorAddress, "%v", resValidators)
 	assert.Equal(t, validators[1].OperatorAddress, resValidators[2].OperatorAddress, "%v", resValidators)
@@ -383,14 +383,14 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 	assert.Equal(t, validators[0].OperatorAddress, resValidators[4].OperatorAddress, "%v", resValidators)
 
 	// test a basic increase in voting power
-	validators[3].Tokens = sdk.NewInt(500).Mul(app.StakingKeeper.PowerReduction(ctx))
+	validators[3].Tokens = sdkmath.NewInt(500).Mul(app.StakingKeeper.PowerReduction(ctx))
 	keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
 	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, len(resValidators), n)
 	assert.True(ValEq(t, validators[3], resValidators[0]))
 
 	// test a decrease in voting power
-	validators[3].Tokens = sdk.NewInt(300).Mul(app.StakingKeeper.PowerReduction(ctx))
+	validators[3].Tokens = sdkmath.NewInt(300).Mul(app.StakingKeeper.PowerReduction(ctx))
 	keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
 	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, len(resValidators), n)
@@ -398,7 +398,7 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 	assert.True(ValEq(t, validators[4], resValidators[1]))
 
 	// test equal voting power, different age
-	validators[3].Tokens = sdk.NewInt(200).Mul(app.StakingKeeper.PowerReduction(ctx))
+	validators[3].Tokens = sdkmath.NewInt(200).Mul(app.StakingKeeper.PowerReduction(ctx))
 	ctx = ctx.WithBlockHeight(10)
 	keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
 	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
@@ -415,8 +415,8 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 	assert.True(ValEq(t, validators[4], resValidators[1]))
 
 	// change in voting power of both validators, both still in v-set, no age change
-	validators[3].Tokens = sdk.NewInt(300).Mul(app.StakingKeeper.PowerReduction(ctx))
-	validators[4].Tokens = sdk.NewInt(300).Mul(app.StakingKeeper.PowerReduction(ctx))
+	validators[3].Tokens = sdkmath.NewInt(300).Mul(app.StakingKeeper.PowerReduction(ctx))
+	validators[4].Tokens = sdkmath.NewInt(300).Mul(app.StakingKeeper.PowerReduction(ctx))
 	keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
 	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	require.Equal(t, len(resValidators), n)
@@ -481,8 +481,8 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 	resValidators := app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	// The validators returned should match the max validators
 	assert.Equal(t, 2, len(resValidators))
-	assert.Equal(t, sdk.NewInt(400).Mul(app.StakingKeeper.PowerReduction(ctx)), resValidators[0].BondedTokens(), "%v", resValidators)
-	assert.Equal(t, sdk.NewInt(200).Mul(app.StakingKeeper.PowerReduction(ctx)), resValidators[1].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, sdkmath.NewInt(400).Mul(app.StakingKeeper.PowerReduction(ctx)), resValidators[0].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, sdkmath.NewInt(200).Mul(app.StakingKeeper.PowerReduction(ctx)), resValidators[1].BondedTokens(), "%v", resValidators)
 	assert.Equal(t, validators[3].OperatorAddress, resValidators[0].OperatorAddress, "%v", resValidators)
 	assert.Equal(t, validators[4].OperatorAddress, resValidators[1].OperatorAddress, "%v", resValidators)
 }
@@ -585,10 +585,10 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 
 	// validator 3 does not get spot back
 	app.StakingKeeper.DeleteValidatorByPowerIndex(ctx, validators[3])
-	validators[3], _ = validators[3].AddTokensFromDel(sdk.NewInt(200))
+	validators[3], _ = validators[3].AddTokensFromDel(sdkmath.NewInt(200))
 
 	notBondedPool = app.StakingKeeper.GetNotBondedPool(ctx)
-	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(params.BondDenom, sdk.NewInt(200)))))
+	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(params.BondDenom, sdkmath.NewInt(200)))))
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	validators[3] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
@@ -943,7 +943,7 @@ func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
 	// zero power
 	valPubKey := PKs[len(validators)+1]
 	valAddr := sdk.ValAddress(valPubKey.Address().Bytes())
-	amt := sdk.NewInt(100)
+	amt := sdkmath.NewInt(100)
 
 	validator := teststaking.NewValidator(t, valAddr, valPubKey)
 	validator, _ = validator.AddTokensFromDel(amt)

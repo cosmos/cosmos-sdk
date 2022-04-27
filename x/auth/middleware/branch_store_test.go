@@ -6,6 +6,7 @@ import (
 	"math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdkmath "github.com/cosmos/cosmos-sdk/math"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,7 +38,7 @@ func (s *MWTestSuite) TestBranchStore() {
 			txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 
 			// tx fee
-			feeCoin := sdk.NewCoin("atom", sdk.NewInt(150))
+			feeCoin := sdk.NewCoin("atom", sdkmath.NewInt(150))
 			feeAmount := sdk.NewCoins(feeCoin)
 
 			// test account and fund

@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdkmath "github.com/cosmos/cosmos-sdk/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -18,8 +19,8 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-var initialRegens = sdk.NewCoins(sdk.NewCoin("regen", sdk.NewInt(1000)))
-var initialAtoms = sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(1000)))
+var initialRegens = sdk.NewCoins(sdk.NewCoin("regen", sdkmath.NewInt(1000)))
+var initialAtoms = sdk.NewCoins(sdk.NewCoin("atom", sdkmath.NewInt(1000)))
 
 // setupAcctsForTips sets up 2 accounts:
 // - tipper has 1000 regens
@@ -61,17 +62,17 @@ func (s *MWTestSuite) TestTips() {
 	}{
 		{
 			"wrong tip denom",
-			sdk.NewCoins(sdk.NewCoin("foobar", sdk.NewInt(1000))), initialAtoms, 200000,
+			sdk.NewCoins(sdk.NewCoin("foobar", sdkmath.NewInt(1000))), initialAtoms, 200000,
 			true, "0foobar is smaller than 1000foobar: insufficient funds",
 		},
 		{
 			"insufficient tip from tipper",
-			sdk.NewCoins(sdk.NewCoin("regen", sdk.NewInt(5000))), initialAtoms, 200000,
+			sdk.NewCoins(sdk.NewCoin("regen", sdkmath.NewInt(5000))), initialAtoms, 200000,
 			true, "1000regen is smaller than 5000regen: insufficient funds",
 		},
 		{
 			"insufficient fees from feePayer",
-			initialRegens, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(5000))), 200000,
+			initialRegens, sdk.NewCoins(sdk.NewCoin("atom", sdkmath.NewInt(5000))), 200000,
 			true, "1000atom is smaller than 5000atom: insufficient funds: insufficient funds",
 		},
 		{

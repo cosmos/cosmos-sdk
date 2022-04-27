@@ -41,8 +41,8 @@ func (s *DepositTestSuite) SetupSuite() {
 	val := s.network.Validators[0]
 
 	deposits := sdk.Coins{
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(0)),
-		sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens.Sub(sdk.NewInt(50))),
+		sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(0)),
+		sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens.Sub(sdkmath.NewInt(50))),
 	}
 	s.deposits = deposits
 
@@ -99,7 +99,7 @@ func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 	proposalID := s.proposalIDs[0]
 
 	// deposit amount
-	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens.Add(sdk.NewInt(50))).String()
+	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens.Add(sdkmath.NewInt(50))).String()
 	_, err := MsgDeposit(clientCtx, val.Address.String(), proposalID, depositAmount)
 	s.Require().NoError(err)
 

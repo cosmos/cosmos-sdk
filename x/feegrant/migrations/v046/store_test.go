@@ -4,13 +4,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	v046 "github.com/cosmos/cosmos-sdk/x/feegrant/migrations/v046"
-	"github.com/stretchr/testify/require"
 )
 
 func TestMigration(t *testing.T) {
@@ -23,7 +24,7 @@ func TestMigration(t *testing.T) {
 	granter2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	grantee2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 
-	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))
+	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1000)))
 	now := ctx.BlockTime()
 	oneDay := now.AddDate(0, 0, 1)
 	twoDays := now.AddDate(0, 0, 2)

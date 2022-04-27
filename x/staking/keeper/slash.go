@@ -45,7 +45,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 			"WARNING: ignored attempt to slash a nonexistent validator; we recommend you investigate immediately",
 			"validator", consAddr.String(),
 		)
-		return sdk.NewInt(0)
+		return sdkmath.NewInt(0)
 	}
 
 	// should not be slashing an unbonded validator

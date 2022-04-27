@@ -73,7 +73,7 @@ func TestMsgCreateValidator(t *testing.T) {
 		{"empty bond", "a", "b", "c", "d", "e", commission2, sdk.OneInt(), valAddr1, pk1, coinZero, false},
 		{"nil bond", "a", "b", "c", "d", "e", commission2, sdk.OneInt(), valAddr1, pk1, sdk.Coin{}, false},
 		{"zero min self delegation", "a", "b", "c", "d", "e", commission1, sdk.ZeroInt(), valAddr1, pk1, coinPos, false},
-		{"negative min self delegation", "a", "b", "c", "d", "e", commission1, sdk.NewInt(-1), valAddr1, pk1, coinPos, false},
+		{"negative min self delegation", "a", "b", "c", "d", "e", commission1, sdkmath.NewInt(-1), valAddr1, pk1, coinPos, false},
 		{"delegation less than min self delegation", "a", "b", "c", "d", "e", commission1, coinPos.Amount.Add(sdk.OneInt()), valAddr1, pk1, coinPos, false},
 	}
 

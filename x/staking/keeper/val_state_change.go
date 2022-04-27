@@ -183,7 +183,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		delete(last, valAddrStr)
 		count++
 
-		totalPower = totalPower.Add(sdk.NewInt(newPower))
+		totalPower = totalPower.Add(sdkmath.NewInt(newPower))
 	}
 
 	noLongerBonded, err := sortNoLongerBonded(last)

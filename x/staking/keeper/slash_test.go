@@ -81,19 +81,19 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	// set an unbonding delegation with expiration timestamp (beyond which the
 	// unbonding delegation shouldn't be slashed)
 	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 0,
-		time.Unix(5, 0), sdk.NewInt(10))
+		time.Unix(5, 0), sdkmath.NewInt(10))
 
 	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 
 	// unbonding started prior to the infraction height, stakw didn't contribute
 	slashAmount := app.StakingKeeper.SlashUnbondingDelegation(ctx, ubd, 1, fraction)
-	require.True(t, slashAmount.Equal(sdk.NewInt(0)))
+	require.True(t, slashAmount.Equal(sdkmath.NewInt(0)))
 
 	// after the expiration time, no longer eligible for slashing
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(10, 0)})
 	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 	slashAmount = app.StakingKeeper.SlashUnbondingDelegation(ctx, ubd, 0, fraction)
-	require.True(t, slashAmount.Equal(sdk.NewInt(0)))
+	require.True(t, slashAmount.Equal(sdkmath.NewInt(0)))
 
 	// test valid slash, before expiration timestamp and to which stake contributed
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
@@ -101,19 +101,19 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(0, 0)})
 	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 	slashAmount = app.StakingKeeper.SlashUnbondingDelegation(ctx, ubd, 0, fraction)
-	require.True(t, slashAmount.Equal(sdk.NewInt(5)))
+	require.True(t, slashAmount.Equal(sdkmath.NewInt(5)))
 	ubd, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
 
 	// initial balance unchanged
-	require.Equal(t, sdk.NewInt(10), ubd.Entries[0].InitialBalance)
+	require.Equal(t, sdkmath.NewInt(10), ubd.Entries[0].InitialBalance)
 
 	// balance decreased
-	require.Equal(t, sdk.NewInt(5), ubd.Entries[0].Balance)
+	require.Equal(t, sdkmath.NewInt(5), ubd.Entries[0].Balance)
 	newUnbondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
 	diffTokens := oldUnbondedPoolBalances.Sub(newUnbondedPoolBalances...)
-	require.True(t, diffTokens.AmountOf(app.StakingKeeper.BondDenom(ctx)).Equal(sdk.NewInt(5)))
+	require.True(t, diffTokens.AmountOf(app.StakingKeeper.BondDenom(ctx)).Equal(sdkmath.NewInt(5)))
 }
 
 // tests slashRedelegation
@@ -132,7 +132,7 @@ func TestSlashRedelegation(t *testing.T) {
 	// set a redelegation with an expiration timestamp beyond which the
 	// redelegation shouldn't be slashed
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
-		time.Unix(5, 0), sdk.NewInt(10), sdk.NewDec(10))
+		time.Unix(5, 0), sdkmath.NewInt(10), sdk.NewDec(10))
 
 	app.StakingKeeper.SetRedelegation(ctx, rd)
 
@@ -144,7 +144,7 @@ func TestSlashRedelegation(t *testing.T) {
 	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[1])
 	require.True(t, found)
 	slashAmount := app.StakingKeeper.SlashRedelegation(ctx, validator, rd, 1, fraction)
-	require.True(t, slashAmount.Equal(sdk.NewInt(0)))
+	require.True(t, slashAmount.Equal(sdkmath.NewInt(0)))
 
 	// after the expiration time, no longer eligible for slashing
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(10, 0)})
@@ -152,7 +152,7 @@ func TestSlashRedelegation(t *testing.T) {
 	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[1])
 	require.True(t, found)
 	slashAmount = app.StakingKeeper.SlashRedelegation(ctx, validator, rd, 0, fraction)
-	require.True(t, slashAmount.Equal(sdk.NewInt(0)))
+	require.True(t, slashAmount.Equal(sdkmath.NewInt(0)))
 
 	balances = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 
@@ -162,7 +162,7 @@ func TestSlashRedelegation(t *testing.T) {
 	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[1])
 	require.True(t, found)
 	slashAmount = app.StakingKeeper.SlashRedelegation(ctx, validator, rd, 0, fraction)
-	require.True(t, slashAmount.Equal(sdk.NewInt(5)))
+	require.True(t, slashAmount.Equal(sdkmath.NewInt(5)))
 	rd, found = app.StakingKeeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
 	require.Len(t, rd.Entries, 1)
@@ -171,7 +171,7 @@ func TestSlashRedelegation(t *testing.T) {
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 1)
 
 	// initialbalance unchanged
-	require.Equal(t, sdk.NewInt(10), rd.Entries[0].InitialBalance)
+	require.Equal(t, sdkmath.NewInt(10), rd.Entries[0].InitialBalance)
 
 	// shares decreased
 	del, found = app.StakingKeeper.GetDelegation(ctx, addrDels[0], addrVals[1])
@@ -312,7 +312,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	require.Len(t, ubd.Entries, 1)
 
 	// balance decreased again
-	require.Equal(t, sdk.NewInt(0), ubd.Entries[0].Balance)
+	require.Equal(t, sdkmath.NewInt(0), ubd.Entries[0].Balance)
 
 	// bonded tokens burned again
 	newBondedPoolBalances = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
@@ -338,7 +338,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	require.Len(t, ubd.Entries, 1)
 
 	// balance unchanged
-	require.Equal(t, sdk.NewInt(0), ubd.Entries[0].Balance)
+	require.Equal(t, sdkmath.NewInt(0), ubd.Entries[0].Balance)
 
 	// bonded tokens burned again
 	newBondedPoolBalances = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
@@ -364,7 +364,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	require.Len(t, ubd.Entries, 1)
 
 	// balance unchanged
-	require.Equal(t, sdk.NewInt(0), ubd.Entries[0].Balance)
+	require.Equal(t, sdkmath.NewInt(0), ubd.Entries[0].Balance)
 
 	// just 1 bonded token burned again since that's all the validator now has
 	newBondedPoolBalances = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
@@ -616,5 +616,5 @@ func TestSlashAmount(t *testing.T) {
 	// test the case where the validator was not found, which should return no coins
 	_, addrVals := generateAddresses(app, ctx, 100)
 	noBurned := app.StakingKeeper.Slash(ctx, sdk.ConsAddress(addrVals[0]), ctx.BlockHeight(), 10, fraction)
-	require.True(t, sdk.NewInt(0).Equal(noBurned))
+	require.True(t, sdkmath.NewInt(0).Equal(noBurned))
 }

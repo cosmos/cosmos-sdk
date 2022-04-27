@@ -17,7 +17,7 @@ func TestSetWithdrawAddr(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000000000))
+	addr := simapp.AddTestAddrs(app, ctx, 2, sdkmath.NewInt(1000000000))
 
 	params := app.DistrKeeper.GetParams(ctx)
 	params.WithdrawAddrEnabled = false
@@ -44,12 +44,12 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 		sdk.NewDecCoinFromDec("stake", sdk.NewDec(3).Quo(sdk.NewDec(2))),
 	}
 
-	addr := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(1000000000))
+	addr := simapp.AddTestAddrs(app, ctx, 1, sdkmath.NewInt(1000000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
 
 	// set module account coins
 	distrAcc := app.DistrKeeper.GetDistributionAccount(ctx)
-	coins := sdk.NewCoins(sdk.NewCoin("mytoken", sdk.NewInt(2)), sdk.NewCoin("stake", sdk.NewInt(2)))
+	coins := sdk.NewCoins(sdk.NewCoin("mytoken", sdkmath.NewInt(2)), sdk.NewCoin("stake", sdkmath.NewInt(2)))
 	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, distrAcc.GetName(), coins))
 
 	app.AccountKeeper.SetModuleAccount(ctx, distrAcc)
@@ -73,7 +73,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	// check balance increase
 	balance = app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(valAddrs[0]))
 	require.Equal(t, sdk.NewCoins(
-		sdk.NewCoin("mytoken", sdk.NewInt(1)),
+		sdk.NewCoin("mytoken", sdkmath.NewInt(1)),
 		sdk.NewCoin("stake", expTokens.AddRaw(1)),
 	), balance)
 
@@ -96,7 +96,7 @@ func TestGetTotalRewards(t *testing.T) {
 		sdk.NewDecCoinFromDec("stake", sdk.NewDec(3).Quo(sdk.NewDec(2))),
 	}
 
-	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000000000))
+	addr := simapp.AddTestAddrs(app, ctx, 2, sdkmath.NewInt(1000000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
 
 	app.DistrKeeper.SetValidatorOutstandingRewards(ctx, valAddrs[0], types.ValidatorOutstandingRewards{Rewards: valCommission})

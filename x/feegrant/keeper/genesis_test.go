@@ -36,7 +36,7 @@ var (
 )
 
 func (suite *GenesisTestSuite) TestImportExportGenesis() {
-	coins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1_000)))
+	coins := sdk.NewCoins(sdk.NewCoin("foo", sdkmath.NewInt(1_000)))
 	now := suite.ctx.BlockHeader().Time
 	oneYear := now.AddDate(1, 0, 0)
 	msgSrvr := keeper.NewMsgServerImpl(suite.keeper)

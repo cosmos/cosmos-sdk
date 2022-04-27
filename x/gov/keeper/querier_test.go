@@ -151,7 +151,7 @@ func TestQueries(t *testing.T) {
 	legacyQuerierCdc := app.LegacyAmino()
 	querier := keeper.NewQuerier(app.GovKeeper, legacyQuerierCdc)
 
-	TestAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(20000001))
+	TestAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdkmath.NewInt(20000001))
 
 	oneCoins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1))
 	consCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 10)))

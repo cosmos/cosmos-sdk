@@ -588,7 +588,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVote() {
 func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
 
-	addrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
+	addrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdkmath.NewInt(30000000))
 
 	var (
 		req      *v1.QueryVotesRequest
@@ -689,7 +689,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryVotes() {
 	app, ctx, queryClient := suite.app, suite.ctx, suite.legacyQueryClient
 
-	addrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
+	addrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdkmath.NewInt(30000000))
 
 	var (
 		req      *v1beta1.QueryVotesRequest
@@ -1420,7 +1420,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 
 				expRes = &v1.QueryTallyResultResponse{
 					Tally: &v1.TallyResult{
-						YesCount:        sdk.NewInt(3 * 5 * 1000000).String(),
+						YesCount:        sdkmath.NewInt(3 * 5 * 1000000).String(),
 						NoCount:         "0",
 						AbstainCount:    "0",
 						NoWithVetoCount: "0",
@@ -1531,10 +1531,10 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryTally() {
 
 				expRes = &v1beta1.QueryTallyResultResponse{
 					Tally: v1beta1.TallyResult{
-						Yes:        sdk.NewInt(3 * 5 * 1000000),
-						No:         sdk.NewInt(0),
-						Abstain:    sdk.NewInt(0),
-						NoWithVeto: sdk.NewInt(0),
+						Yes:        sdkmath.NewInt(3 * 5 * 1000000),
+						No:         sdkmath.NewInt(0),
+						Abstain:    sdkmath.NewInt(0),
+						NoWithVeto: sdkmath.NewInt(0),
 					},
 				}
 			},

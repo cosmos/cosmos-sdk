@@ -43,7 +43,7 @@ func TestMigrateJSON(t *testing.T) {
 			VotingEndTime:    propTime,
 			Status:           v1beta1.StatusDepositPeriod,
 			FinalTallyResult: v1beta1.EmptyTallyResult(),
-			TotalDeposit:     sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(123))),
+			TotalDeposit:     sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(123))),
 		},
 	}
 	govGenState.Votes = v1beta1.Votes{

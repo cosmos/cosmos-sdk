@@ -5,14 +5,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/module"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
@@ -20,7 +21,7 @@ import (
 func TestEndBlockerPruning(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	addrs := simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(30000000))
+	addrs := simapp.AddTestAddrsIncremental(app, ctx, 3, sdkmath.NewInt(30000000))
 	addr1 := addrs[0]
 	addr2 := addrs[1]
 	addr3 := addrs[2]
@@ -322,7 +323,7 @@ func TestEndBlockerTallying(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	addrs := simapp.AddTestAddrsIncremental(app, ctx, 4, sdk.NewInt(30000000))
+	addrs := simapp.AddTestAddrsIncremental(app, ctx, 4, sdkmath.NewInt(30000000))
 
 	// Initial group, group policy and balance setup
 	members := []group.Member{

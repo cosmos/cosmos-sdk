@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdkmath "github.com/cosmos/cosmos-sdk/math"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -86,8 +87,8 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 	val := s.network.Validators[0]
 	sendTokens := sdk.NewCoins(
-		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)))
+		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdkmath.NewInt(10)),
+		sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10)))
 
 	res, err := s.createBankMsg(val, val.Address, sendTokens,
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly))
@@ -130,7 +131,7 @@ func (s *IntegrationTestSuite) TestCLISignGenOnly() {
 	account, err := val.ClientCtx.AccountRetriever.GetAccount(val.ClientCtx, addr)
 	s.Require().NoError(err)
 
-	sendTokens := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)))
+	sendTokens := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10)))
 	args := []string{
 		keyName, // from keyname
 		val2.Address.String(),
@@ -232,8 +233,8 @@ func (s *IntegrationTestSuite) TestCLISignGenOnly() {
 func (s *IntegrationTestSuite) TestCLISignBatch() {
 	val := s.network.Validators[0]
 	var sendTokens = sdk.NewCoins(
-		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdkmath.NewInt(10)),
+		sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10)),
 	)
 
 	generatedStd, err := s.createBankMsg(val, val.Address,
@@ -285,8 +286,8 @@ func (s *IntegrationTestSuite) TestCLISignAminoJSON() {
 	val1 := s.network.Validators[0]
 	txCfg := val1.ClientCtx.TxConfig
 	var sendTokens = sdk.NewCoins(
-		sdk.NewCoin(fmt.Sprintf("%stoken", val1.Moniker), sdk.NewInt(10)),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+		sdk.NewCoin(fmt.Sprintf("%stoken", val1.Moniker), sdkmath.NewInt(10)),
+		sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10)),
 	)
 	txBz, err := s.createBankMsg(val1, val1.Address,
 		sendTokens, fmt.Sprintf("--%s=true", flags.FlagGenerateOnly))
@@ -604,7 +605,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxsCmdByEvents() {
 			"fee event happy case",
 			[]string{
 				fmt.Sprintf("--events=tx.fee=%s",
-					sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+					sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
@@ -613,7 +614,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxsCmdByEvents() {
 			"no matching fee event",
 			[]string{
 				fmt.Sprintf("--events=tx.fee=%s",
-					sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(0))).String()),
+					sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(0))).String()),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			true,
@@ -819,7 +820,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
@@ -930,7 +931,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
@@ -996,7 +997,7 @@ func (s *IntegrationTestSuite) TestSignWithMultisig() {
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
@@ -1057,7 +1058,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
@@ -1131,11 +1132,11 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 		addr,
 		val.Address,
 		sdk.NewCoins(
-			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1)),
+			sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(1)),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
@@ -1193,11 +1194,11 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 		addr,
 		val.Address,
 		sdk.NewCoins(
-			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1)),
+			sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(1)),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
@@ -1387,11 +1388,11 @@ func (s *IntegrationTestSuite) TestTxWithoutPublicKey() {
 	// Create a txBuilder with an unsigned tx.
 	txBuilder := txCfg.NewTxBuilder()
 	msg := banktypes.NewMsgSend(val1.Address, val1.Address, sdk.NewCoins(
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+		sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10)),
 	))
 	err := txBuilder.SetMsgs(msg)
 	s.Require().NoError(err)
-	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150))))
+	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(150))))
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
 	// Set empty signature to set signer infos.
 	sigV2 := signing.SignatureV2{
@@ -1442,8 +1443,8 @@ func (s *IntegrationTestSuite) TestTxWithoutPublicKey() {
 func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 	require := s.Require()
 	val0, val1 := s.network.Validators[0], s.network.Validators[1]
-	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val0.Moniker), sdk.NewInt(10))
-	val1Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val1.Moniker), sdk.NewInt(10))
+	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val0.Moniker), sdkmath.NewInt(10))
+	val1Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val1.Moniker), sdkmath.NewInt(10))
 	_, _, addr1 := testdata.KeyTestPubAddr()
 
 	// Creating a tx with 2 msgs from 2 signers: val0 and val1.
@@ -1455,7 +1456,7 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 		banktypes.NewMsgSend(val0.Address, addr1, sdk.NewCoins(val0Coin)),
 		banktypes.NewMsgSend(val1.Address, addr1, sdk.NewCoins(val1Coin)),
 	)
-	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))))
+	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))))
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit() * 2)
 	require.Equal([]sdk.AccAddress{val0.Address, val1.Address}, txBuilder.GetTx().GetSigners())
 
@@ -1508,7 +1509,7 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 func (s *IntegrationTestSuite) TestAuxSigner() {
 	require := s.Require()
 	val := s.network.Validators[0]
-	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10))
+	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdkmath.NewInt(10))
 
 	testCases := []struct {
 		name      string
@@ -1571,11 +1572,11 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 
 	tipper, err := acc.GetAddress()
 	require.NoError(err)
-	tipperInitialBal := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10000))
+	tipperInitialBal := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdkmath.NewInt(10000))
 
 	feePayer := val.Address
-	fee := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1000))
-	tip := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(1000))
+	fee := sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(1000))
+	tip := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdkmath.NewInt(1000))
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 	_, err = s.createBankMsg(val, tipper, sdk.NewCoins(tipperInitialBal))
@@ -1654,7 +1655,7 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			name:     "--tip flag unset: no error",
 			tipper:   tipper,
 			feePayer: feePayer,
-			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdk.NewInt(0)},
+			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdkmath.NewInt(0)},
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
 				fmt.Sprintf("--%s=true", flags.FlagAux),
@@ -1725,7 +1726,7 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			name:     "wrong denom in tip: error",
 			tipper:   tipper,
 			feePayer: feePayer,
-			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdk.NewInt(0)},
+			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdkmath.NewInt(0)},
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagTip, "1000wrongDenom"),
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
@@ -1744,7 +1745,7 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			name:     "insufficient fees: error",
 			tipper:   tipper,
 			feePayer: feePayer,
-			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdk.NewInt(0)},
+			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdkmath.NewInt(0)},
 			tipperArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
@@ -1816,7 +1817,7 @@ func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.
 	flags := []string{fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees,
-			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
 	}
 
 	flags = append(flags, extraFlags...)

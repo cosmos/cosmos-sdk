@@ -34,7 +34,7 @@ func TestProposalContents(t *testing.T) {
 	require.Equal(t, simulation.OpWeightSubmitCommunitySpendProposal, w0.AppParamsKey())
 	require.Equal(t, simappparams.DefaultWeightTextProposal, w0.DefaultWeight())
 
-	amount := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)), sdk.NewCoin("atoken", sdk.NewInt(2)))
+	amount := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(1)), sdk.NewCoin("atoken", sdkmath.NewInt(2)))
 
 	feePool := app.DistrKeeper.GetFeePool(ctx)
 	feePool.CommunityPool = sdk.NewDecCoinsFromCoins(amount...)

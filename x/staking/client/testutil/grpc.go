@@ -272,7 +272,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryDelegation() {
 						ValidatorAddress: val2.ValAddress.String(),
 						Shares:           sdk.NewDec(10),
 					},
-					Balance: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)),
+					Balance: sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10)),
 				},
 			},
 		},
@@ -751,8 +751,8 @@ func (s *IntegrationTestSuite) TestGRPCQueryPool() {
 			&types.QueryPoolResponse{},
 			&types.QueryPoolResponse{
 				Pool: types.Pool{
-					NotBondedTokens: sdk.NewInt(0),
-					BondedTokens:    cli.DefaultTokens.Mul(sdk.NewInt(2)),
+					NotBondedTokens: sdkmath.NewInt(0),
+					BondedTokens:    cli.DefaultTokens.Mul(sdkmath.NewInt(2)),
 				},
 			},
 		},

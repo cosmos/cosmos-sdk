@@ -4,12 +4,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	v046 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/stretchr/testify/require"
 )
 
 func TestConvertToLegacyProposal(t *testing.T) {
@@ -56,10 +57,10 @@ func TestConvertToLegacyProposal(t *testing.T) {
 				require.Equal(t, v1beta1Proposal.VotingEndTime, *proposal.VotingEndTime)
 				require.Equal(t, v1beta1Proposal.SubmitTime, *proposal.SubmitTime)
 				require.Equal(t, v1beta1Proposal.DepositEndTime, *proposal.DepositEndTime)
-				require.Equal(t, v1beta1Proposal.FinalTallyResult.Yes, sdk.NewInt(0))
-				require.Equal(t, v1beta1Proposal.FinalTallyResult.No, sdk.NewInt(0))
-				require.Equal(t, v1beta1Proposal.FinalTallyResult.NoWithVeto, sdk.NewInt(0))
-				require.Equal(t, v1beta1Proposal.FinalTallyResult.Abstain, sdk.NewInt(0))
+				require.Equal(t, v1beta1Proposal.FinalTallyResult.Yes, sdkmath.NewInt(0))
+				require.Equal(t, v1beta1Proposal.FinalTallyResult.No, sdkmath.NewInt(0))
+				require.Equal(t, v1beta1Proposal.FinalTallyResult.NoWithVeto, sdkmath.NewInt(0))
+				require.Equal(t, v1beta1Proposal.FinalTallyResult.Abstain, sdkmath.NewInt(0))
 			}
 		})
 	}
@@ -164,7 +165,7 @@ func TestConvertToLegacyDeposit(t *testing.T) {
 	deposit := v1.Deposit{
 		ProposalId: 1,
 		Depositor:  "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh",
-		Amount:     sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))),
+		Amount:     sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(1))),
 	}
 
 	v1beta1Deposit := v046.ConvertToLegacyDeposit(&deposit)

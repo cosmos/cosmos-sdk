@@ -122,7 +122,7 @@ func TestQueries(t *testing.T) {
 	// reset fee pool
 	app.DistrKeeper.SetFeePool(ctx, types.InitialFeePool())
 
-	addr := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(1000000000))
+	addr := simapp.AddTestAddrs(app, ctx, 1, sdkmath.NewInt(1000000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
 	valOpAddr1 := valAddrs[0]
 
@@ -175,7 +175,7 @@ func TestQueries(t *testing.T) {
 	// test delegation rewards query
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valOpAddr1, valConsPk1, sdk.NewInt(100), true)
+	tstaking.CreateValidator(valOpAddr1, valConsPk1, sdkmath.NewInt(100), true)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
 

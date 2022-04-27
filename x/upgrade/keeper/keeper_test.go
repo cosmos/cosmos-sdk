@@ -42,7 +42,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		Height: 10,
 	})
 	s.msgSrvr = keeper.NewMsgServerImpl(s.app.UpgradeKeeper)
-	s.addrs = simapp.AddTestAddrsIncremental(app, s.ctx, 1, sdk.NewInt(30000000))
+	s.addrs = simapp.AddTestAddrsIncremental(app, s.ctx, 1, sdkmath.NewInt(30000000))
 }
 
 func (s *KeeperTestSuite) TestReadUpgradeInfoFromDisk() {

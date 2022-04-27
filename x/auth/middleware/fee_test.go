@@ -2,6 +2,7 @@ package middleware_test
 
 import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdkmath "github.com/cosmos/cosmos-sdk/math"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -25,7 +26,7 @@ func (s *MWTestSuite) TestEnsureMempoolFees() {
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
-	atomCoin := sdk.NewCoin("atom", sdk.NewInt(150))
+	atomCoin := sdk.NewCoin("atom", sdkmath.NewInt(150))
 	apeCoin := sdk.NewInt64Coin("ape", 1500000)
 	feeAmount := sdk.NewCoins(apeCoin, atomCoin)
 	gasLimit := testdata.NewTestGasLimit()
@@ -96,7 +97,7 @@ func (s *MWTestSuite) TestDeductFees() {
 	// Set account with insufficient funds
 	acc := s.app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	s.app.AccountKeeper.SetAccount(ctx, acc)
-	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(10)))
+	coins := sdk.NewCoins(sdk.NewCoin("atom", sdkmath.NewInt(10)))
 	err = testutil.FundAccount(s.app.BankKeeper, ctx, addr1, coins)
 	s.Require().NoError(err)
 
@@ -110,14 +111,14 @@ func (s *MWTestSuite) TestDeductFees() {
 
 	// Set account with sufficient funds
 	s.app.AccountKeeper.SetAccount(ctx, acc)
-	err = testutil.FundAccount(s.app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200))))
+	err = testutil.FundAccount(s.app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdkmath.NewInt(200))))
 	s.Require().NoError(err)
 
 	// DeliverTx
 	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx})
 	s.Require().Nil(err, "Tx did not error after account has been set with sufficient funds")
 
-	err = testutil.FundAccount(s.app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200))))
+	err = testutil.FundAccount(s.app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdkmath.NewInt(200))))
 	s.Require().NoError(err)
 
 	// SimulateTx

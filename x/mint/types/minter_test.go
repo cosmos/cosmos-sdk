@@ -74,7 +74,7 @@ func TestBlockProvision(t *testing.T) {
 		provisions := minter.BlockProvision(params)
 
 		expProvisions := sdk.NewCoin(params.MintDenom,
-			sdk.NewInt(tc.expProvisions))
+			sdkmath.NewInt(tc.expProvisions))
 
 		require.True(t, expProvisions.IsEqual(provisions),
 			"test: %v\n\tExp: %v\n\tGot: %v\n",
@@ -124,7 +124,7 @@ func BenchmarkNextAnnualProvisions(b *testing.B) {
 	b.ReportAllocs()
 	minter := InitialMinter(sdk.NewDecWithPrec(1, 1))
 	params := DefaultParams()
-	totalSupply := sdk.NewInt(100000000000000)
+	totalSupply := sdkmath.NewInt(100000000000000)
 
 	// run the NextAnnualProvisions function b.N times
 	for n := 0; n < b.N; n++ {

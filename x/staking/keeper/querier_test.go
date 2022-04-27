@@ -19,12 +19,12 @@ import (
 func TestNewQuerier(t *testing.T) {
 	cdc, app, ctx := createTestInput(t)
 
-	addrs := simapp.AddTestAddrs(app, ctx, 500, sdk.NewInt(10000))
+	addrs := simapp.AddTestAddrs(app, ctx, 500, sdkmath.NewInt(10000))
 	_, addrAcc2 := addrs[0], addrs[1]
 	addrVal1, _ := sdk.ValAddress(addrs[0]), sdk.ValAddress(addrs[1])
 
 	// Create Validators
-	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8)}
+	amts := []sdk.Int{sdkmath.NewInt(9), sdkmath.NewInt(8)}
 	var validators [2]types.Validator
 	for i, amt := range amts {
 		validators[i] = teststaking.NewValidator(t, sdk.ValAddress(addrs[i]), PKs[i])
@@ -143,7 +143,7 @@ func TestQueryValidators(t *testing.T) {
 	addrs := simapp.AddTestAddrs(app, ctx, 500, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
 
 	// Create Validators
-	amts := []sdk.Int{sdk.NewInt(8), sdk.NewInt(7)}
+	amts := []sdk.Int{sdkmath.NewInt(8), sdkmath.NewInt(7)}
 	status := []types.BondStatus{types.Unbonded, types.Unbonding}
 	var validators [2]types.Validator
 	for i, amt := range amts {

@@ -193,7 +193,7 @@ godocs:
 
 # This builds a docs site for each branch/tag in `./docs/versions`
 # and copies each site to a version prefixed path. The last entry inside
-# the `versions` file will be the default root index.html.
+# the `versions` file will be the default root index.html (and it should be main).
 build-docs:
 	@cd docs && \
 	while read -r branch path_prefix; do \

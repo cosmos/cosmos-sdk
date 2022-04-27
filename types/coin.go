@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	sdkmath "github.com/cosmos/cosmos-sdk/math"
 )
 
 //-----------------------------------------------------------------------------
@@ -29,7 +31,7 @@ func NewCoin(denom string, amount Int) Coin {
 // NewInt64Coin returns a new coin with a denomination and amount. It will panic
 // if the amount is negative.
 func NewInt64Coin(denom string, amount int64) Coin {
-	return NewCoin(denom, NewInt(amount))
+	return NewCoin(denom, sdkmath.NewInt(amount))
 }
 
 // String provides a human-readable representation of a coin
@@ -166,7 +168,7 @@ func (coin Coin) IsNegative() bool {
 
 // IsNil returns true if the coin amount is nil and false otherwise.
 func (coin Coin) IsNil() bool {
-	return coin.Amount.i == nil
+	return coin.Amount.BigInt() == nil
 }
 
 //-----------------------------------------------------------------------------
@@ -640,14 +642,14 @@ func (coins Coins) AmountOf(denom string) Int {
 func (coins Coins) AmountOfNoDenomValidation(denom string) Int {
 	switch len(coins) {
 	case 0:
-		return ZeroInt()
+		return sdkmath.ZeroInt()
 
 	case 1:
 		coin := coins[0]
 		if coin.Denom == denom {
 			return coin.Amount
 		}
-		return ZeroInt()
+		return sdkmath.ZeroInt()
 
 	default:
 		// Binary search the amount of coins remaining

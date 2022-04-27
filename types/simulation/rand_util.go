@@ -7,6 +7,7 @@ import (
 	"time"
 	"unsafe"
 
+	sdkmath "github.com/cosmos/cosmos-sdk/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -41,13 +42,13 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 
 // RandPositiveInt get a rand positive sdk.Int
 func RandPositiveInt(r *rand.Rand, max sdk.Int) (sdk.Int, error) {
-	if !max.GTE(sdk.OneInt()) {
+	if !max.GTE(sdkmath.OneInt()) {
 		return sdk.Int{}, errors.New("max too small")
 	}
 
-	max = max.Sub(sdk.OneInt())
+	max = max.Sub(sdkmath.OneInt())
 
-	return sdk.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(sdk.OneInt()), nil
+	return sdkmath.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(sdkmath.OneInt()), nil
 }
 
 // RandomAmount generates a random amount
@@ -64,7 +65,7 @@ func RandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
 		randInt = big.NewInt(0).Rand(r, max.BigInt()) // up to max - 1
 	}
 
-	return sdk.NewIntFromBigInt(randInt)
+	return sdkmath.NewIntFromBigInt(randInt)
 }
 
 // RandomDecAmount generates a random decimal amount

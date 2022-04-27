@@ -1,7 +1,7 @@
 package types
 
 import (
-	mathmod "github.com/cosmos/cosmos-sdk/math"
+	sdkmath "github.com/cosmos/cosmos-sdk/math"
 )
 
 // Type aliases to the SDK's math sub-module
@@ -11,15 +11,15 @@ import (
 //
 // Please use the above module instead of this package.
 type (
-	Int  = mathmod.Int
-	Uint = mathmod.Uint
+	Int  = sdkmath.Int
+	Uint = sdkmath.Uint
 )
 
 func (ip IntProto) String() string {
 	return ip.Int.String()
 }
 
-// ToDec converts Int to Dec
+// ToDec converts an Int type to a Dec type.
 func ToDec(i Int) Dec {
 	return NewDecFromInt(i)
 }

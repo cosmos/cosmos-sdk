@@ -9,6 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdkmath "github.com/cosmos/cosmos-sdk/math"
 	testdata "github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -74,7 +75,7 @@ func (s *eventsTestSuite) TestEventManager() {
 func (s *eventsTestSuite) TestEventManagerTypedEvents() {
 	em := sdk.NewEventManager()
 
-	coin := sdk.NewCoin("fakedenom", sdk.NewInt(1999999))
+	coin := sdk.NewCoin("fakedenom", sdkmath.NewInt(1999999))
 	cat := testdata.Cat{
 		Moniker: "Garfield",
 		Lives:   6,

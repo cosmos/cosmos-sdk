@@ -190,8 +190,8 @@ func (u *Uint) Unmarshal(data []byte) error {
 		return err
 	}
 
-	if u.i.BitLen() > maxBitLen {
-		return fmt.Errorf("integer out of range; got: %d, max: %d", u.i.BitLen(), maxBitLen)
+	if u.i.BitLen() > MaxBitLen {
+		return fmt.Errorf("integer out of range; got: %d, max: %d", u.i.BitLen(), MaxBitLen)
 	}
 
 	return nil

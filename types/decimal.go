@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	sdkmath "github.com/cosmos/cosmos-sdk/math"
 )
 
 var _ CustomProtobufType = (*Dec)(nil)
@@ -26,7 +28,7 @@ const (
 	// Ceiling[Log2[999 999 999 999 999 999]]
 	DecimalPrecisionBits = 60
 
-	maxDecBitLen = maxBitLen + DecimalPrecisionBits
+	maxDecBitLen = sdkmath.MaxBitLen + DecimalPrecisionBits
 
 	// max number of iterations in ApproxRoot function
 	maxApproxRootIterations = 100
@@ -313,7 +315,7 @@ func (d Dec) MulInt(i Int) Dec {
 }
 
 func (d Dec) MulIntMut(i Int) Dec {
-	d.i.Mul(d.i, i.i)
+	d.i.Mul(d.i, i.BigInt())
 	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
@@ -397,7 +399,7 @@ func (d Dec) QuoInt(i Int) Dec {
 }
 
 func (d Dec) QuoIntMut(i Int) Dec {
-	d.i.Quo(d.i, i.i)
+	d.i.Quo(d.i, i.BigInt())
 	return d
 }
 
@@ -652,7 +654,7 @@ func (d Dec) RoundInt64() int64 {
 
 // RoundInt round the decimal using bankers rounding
 func (d Dec) RoundInt() Int {
-	return NewIntFromBigInt(chopPrecisionAndRoundNonMutative(d.i))
+	return sdkmath.NewIntFromBigInt(chopPrecisionAndRoundNonMutative(d.i))
 }
 
 // chopPrecisionAndTruncate is similar to chopPrecisionAndRound,
@@ -678,7 +680,7 @@ func (d Dec) TruncateInt64() int64 {
 
 // TruncateInt truncates the decimals from the number and returns an Int
 func (d Dec) TruncateInt() Int {
-	return NewIntFromBigInt(chopPrecisionAndTruncateNonMutative(d.i))
+	return sdkmath.NewIntFromBigInt(chopPrecisionAndTruncateNonMutative(d.i))
 }
 
 // TruncateDec truncates the decimals from the number and returns a Dec

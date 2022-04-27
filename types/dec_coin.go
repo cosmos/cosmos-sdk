@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+
+	sdkmath "github.com/cosmos/cosmos-sdk/math"
 )
 
 // ----------------------------------------------------------------------------
@@ -17,7 +19,7 @@ func NewDecCoin(denom string, amount Int) DecCoin {
 
 	return DecCoin{
 		Denom:  coin.Denom,
-		Amount: coin.Amount.ToDec(),
+		Amount: ToDec(coin.Amount),
 	}
 }
 
@@ -43,14 +45,14 @@ func NewDecCoinFromCoin(coin Coin) DecCoin {
 
 	return DecCoin{
 		Denom:  coin.Denom,
-		Amount: coin.Amount.ToDec(),
+		Amount: ToDec(coin.Amount),
 	}
 }
 
 // NewInt64DecCoin returns a new DecCoin with a denomination and amount. It will
 // panic if the amount is negative or denom is invalid.
 func NewInt64DecCoin(denom string, amount int64) DecCoin {
-	return NewDecCoin(denom, NewInt(amount))
+	return NewDecCoin(denom, sdkmath.NewInt(amount))
 }
 
 // IsZero returns if the DecCoin amount is zero.
@@ -111,7 +113,7 @@ func (coin DecCoin) Sub(coinB DecCoin) DecCoin {
 // change. Note, the change may be zero.
 func (coin DecCoin) TruncateDecimal() (Coin, DecCoin) {
 	truncated := coin.Amount.TruncateInt()
-	change := coin.Amount.Sub(truncated.ToDec())
+	change := coin.Amount.Sub(ToDec(truncated))
 	return NewCoin(coin.Denom, truncated), NewDecCoinFromDec(coin.Denom, change)
 }
 

@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+
+	sdkmath "github.com/cosmos/cosmos-sdk/math"
 )
 
 func TestCoinTestSuite(t *testing.T) {
@@ -15,7 +17,7 @@ type coinInternalSuite struct {
 }
 
 func (s *coinInternalSuite) TestIsSorted() {
-	v := NewInt(1)
+	v := sdkmath.NewInt(1)
 	cases := []struct {
 		coins    Coins
 		expected bool

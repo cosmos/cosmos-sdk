@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"sigs.k8s.io/yaml"
 
+	sdkmath "github.com/cosmos/cosmos-sdk/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -346,10 +347,10 @@ func (s *decimalTestSuite) TestDecMulInt() {
 		sdkInt sdk.Int
 		want   sdk.Dec
 	}{
-		{sdk.NewDec(10), sdk.NewInt(2), sdk.NewDec(20)},
-		{sdk.NewDec(1000000), sdk.NewInt(100), sdk.NewDec(100000000)},
-		{sdk.NewDecWithPrec(1, 1), sdk.NewInt(10), sdk.NewDec(1)},
-		{sdk.NewDecWithPrec(1, 5), sdk.NewInt(20), sdk.NewDecWithPrec(2, 4)},
+		{sdk.NewDec(10), sdkmath.NewInt(2), sdk.NewDec(20)},
+		{sdk.NewDec(1000000), sdkmath.NewInt(100), sdk.NewDec(100000000)},
+		{sdk.NewDecWithPrec(1, 1), sdkmath.NewInt(10), sdk.NewDec(1)},
+		{sdk.NewDecWithPrec(1, 5), sdkmath.NewInt(20), sdk.NewDecWithPrec(2, 4)},
 	}
 	for i, tc := range tests {
 		got := tc.sdkDec.MulInt(tc.sdkInt)
@@ -384,13 +385,13 @@ func (s *decimalTestSuite) TestPower() {
 		power    uint64
 		expected sdk.Dec
 	}{
-		{sdk.NewDec(100), 0, sdk.OneDec()},                                                 // 10 ^ (0) => 1.0
-		{sdk.OneDec(), 10, sdk.OneDec()},                                                   // 1.0 ^ (10) => 1.0
-		{sdk.NewDecWithPrec(5, 1), 2, sdk.NewDecWithPrec(25, 2)},                           // 0.5 ^ 2 => 0.25
-		{sdk.NewDecWithPrec(2, 1), 2, sdk.NewDecWithPrec(4, 2)},                            // 0.2 ^ 2 => 0.04
-		{sdk.NewDecFromInt(sdk.NewInt(3)), 3, sdk.NewDecFromInt(sdk.NewInt(27))},           // 3 ^ 3 => 27
-		{sdk.NewDecFromInt(sdk.NewInt(-3)), 4, sdk.NewDecFromInt(sdk.NewInt(81))},          // -3 ^ 4 = 81
-		{sdk.NewDecWithPrec(1414213562373095049, 18), 2, sdk.NewDecFromInt(sdk.NewInt(2))}, // 1.414213562373095049 ^ 2 = 2
+		{sdk.NewDec(100), 0, sdk.OneDec()},                                                     // 10 ^ (0) => 1.0
+		{sdk.OneDec(), 10, sdk.OneDec()},                                                       // 1.0 ^ (10) => 1.0
+		{sdk.NewDecWithPrec(5, 1), 2, sdk.NewDecWithPrec(25, 2)},                               // 0.5 ^ 2 => 0.25
+		{sdk.NewDecWithPrec(2, 1), 2, sdk.NewDecWithPrec(4, 2)},                                // 0.2 ^ 2 => 0.04
+		{sdk.NewDecFromInt(sdkmath.NewInt(3)), 3, sdk.NewDecFromInt(sdkmath.NewInt(27))},       // 3 ^ 3 => 27
+		{sdk.NewDecFromInt(sdkmath.NewInt(-3)), 4, sdk.NewDecFromInt(sdkmath.NewInt(81))},      // -3 ^ 4 = 81
+		{sdk.NewDecWithPrec(1414213562373095049, 18), 2, sdk.NewDecFromInt(sdkmath.NewInt(2))}, // 1.414213562373095049 ^ 2 = 2
 	}
 
 	for i, tc := range testCases {
@@ -414,9 +415,9 @@ func (s *decimalTestSuite) TestApproxRoot() {
 		{sdk.OneDec(), 10, sdk.OneDec()},                                                       // 1.0 ^ (0.1) => 1.0
 		{sdk.NewDecWithPrec(25, 2), 2, sdk.NewDecWithPrec(5, 1)},                               // 0.25 ^ (0.5) => 0.5
 		{sdk.NewDecWithPrec(4, 2), 2, sdk.NewDecWithPrec(2, 1)},                                // 0.04 ^ (0.5) => 0.2
-		{sdk.NewDecFromInt(sdk.NewInt(27)), 3, sdk.NewDecFromInt(sdk.NewInt(3))},               // 27 ^ (1/3) => 3
-		{sdk.NewDecFromInt(sdk.NewInt(-81)), 4, sdk.NewDecFromInt(sdk.NewInt(-3))},             // -81 ^ (0.25) => -3
-		{sdk.NewDecFromInt(sdk.NewInt(2)), 2, sdk.NewDecWithPrec(1414213562373095049, 18)},     // 2 ^ (0.5) => 1.414213562373095049
+		{sdk.NewDecFromInt(sdkmath.NewInt(27)), 3, sdk.NewDecFromInt(sdkmath.NewInt(3))},       // 27 ^ (1/3) => 3
+		{sdk.NewDecFromInt(sdkmath.NewInt(-81)), 4, sdk.NewDecFromInt(sdkmath.NewInt(-3))},     // -81 ^ (0.25) => -3
+		{sdk.NewDecFromInt(sdkmath.NewInt(2)), 2, sdk.NewDecWithPrec(1414213562373095049, 18)}, // 2 ^ (0.5) => 1.414213562373095049
 		{sdk.NewDecWithPrec(1005, 3), 31536000, sdk.MustNewDecFromStr("1.000000000158153904")}, // 1.005 ^ (1/31536000) ≈ 1.00000000016
 		{sdk.SmallestDec(), 2, sdk.NewDecWithPrec(1, 9)},                                       // 1e-18 ^ (0.5) => 1e-9
 		{sdk.SmallestDec(), 3, sdk.MustNewDecFromStr("0.000000999999999997")},                  // 1e-18 ^ (1/3) => 1e-6
@@ -439,12 +440,12 @@ func (s *decimalTestSuite) TestApproxSqrt() {
 		input    sdk.Dec
 		expected sdk.Dec
 	}{
-		{sdk.OneDec(), sdk.OneDec()},                                                    // 1.0 => 1.0
-		{sdk.NewDecWithPrec(25, 2), sdk.NewDecWithPrec(5, 1)},                           // 0.25 => 0.5
-		{sdk.NewDecWithPrec(4, 2), sdk.NewDecWithPrec(2, 1)},                            // 0.09 => 0.3
-		{sdk.NewDecFromInt(sdk.NewInt(9)), sdk.NewDecFromInt(sdk.NewInt(3))},            // 9 => 3
-		{sdk.NewDecFromInt(sdk.NewInt(-9)), sdk.NewDecFromInt(sdk.NewInt(-3))},          // -9 => -3
-		{sdk.NewDecFromInt(sdk.NewInt(2)), sdk.NewDecWithPrec(1414213562373095049, 18)}, // 2 => 1.414213562373095049
+		{sdk.OneDec(), sdk.OneDec()},                                                        // 1.0 => 1.0
+		{sdk.NewDecWithPrec(25, 2), sdk.NewDecWithPrec(5, 1)},                               // 0.25 => 0.5
+		{sdk.NewDecWithPrec(4, 2), sdk.NewDecWithPrec(2, 1)},                                // 0.09 => 0.3
+		{sdk.NewDecFromInt(sdkmath.NewInt(9)), sdk.NewDecFromInt(sdkmath.NewInt(3))},        // 9 => 3
+		{sdk.NewDecFromInt(sdkmath.NewInt(-9)), sdk.NewDecFromInt(sdkmath.NewInt(-3))},      // -9 => -3
+		{sdk.NewDecFromInt(sdkmath.NewInt(2)), sdk.NewDecWithPrec(1414213562373095049, 18)}, // 2 => 1.414213562373095049
 	}
 
 	for i, tc := range testCases {

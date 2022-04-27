@@ -3,7 +3,7 @@ package listinternal
 import (
 	"fmt"
 
-	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 // Options is the internal list options struct.

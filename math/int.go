@@ -66,7 +66,7 @@ func unmarshalText(i *big.Int, text string) error {
 	return nil
 }
 
-var _ CustomProtobufType = (*Int)(nil)
+var _ customProtobufType = (*Int)(nil)
 
 // Int wraps big.Int with a 257 bit range bound
 // Checks overflow, underflow and division by zero
@@ -149,11 +149,6 @@ func ZeroInt() Int { return Int{big.NewInt(0)} }
 
 // OneInt returns Int value with one
 func OneInt() Int { return Int{big.NewInt(1)} }
-
-// ToDec converts Int to Dec
-func (i Int) ToDec() Dec {
-	return NewDecFromInt(i)
-}
 
 // Int64 converts Int to int64
 // Panics if the value is out of range
@@ -435,8 +430,4 @@ func (i *Int) UnmarshalAmino(bz []byte) error { return i.Unmarshal(bz) }
 // intended to be used with require/assert:  require.True(IntEq(...))
 func IntEq(t *testing.T, exp, got Int) (*testing.T, bool, string, string, string) {
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
-}
-
-func (ip IntProto) String() string {
-	return ip.Int.String()
 }

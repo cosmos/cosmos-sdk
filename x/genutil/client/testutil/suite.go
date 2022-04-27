@@ -49,7 +49,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 func (s *IntegrationTestSuite) TestGenTxCmd() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
-	amount := sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(12))
+	amount := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))
 
 	tests := []struct {
 		name     string

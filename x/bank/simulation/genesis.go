@@ -43,7 +43,7 @@ func RandomGenesisBalances(simState *module.SimulationState) []types.Balance {
 	for _, acc := range simState.Accounts {
 		genesisBalances = append(genesisBalances, types.Balance{
 			Address: acc.Address.String(),
-			Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(simState.InitialStake))),
+			Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(simState.InitialStake))),
 		})
 	}
 
@@ -65,7 +65,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	)
 
 	numAccs := int64(len(simState.Accounts))
-	totalSupply := sdkmath.NewInt(simState.InitialStake * (numAccs + simState.NumBonded))
+	totalSupply := sdk.NewInt(simState.InitialStake * (numAccs + simState.NumBonded))
 	supply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupply))
 
 	bankGenesis := types.GenesisState{

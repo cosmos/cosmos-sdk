@@ -4,14 +4,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/require"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func TestCancelUnbondingDelegation(t *testing.T) {
@@ -32,7 +31,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 	require.Equal(t, sdk.NewInt64Coin(bondDenom, startTokens.Int64()), moduleBalance)
 
 	// accounts
-	delAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdkmath.NewInt(10000))
+	delAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(10000))
 	validators := app.StakingKeeper.GetValidators(ctx, 10)
 	require.Equal(t, len(validators), 1)
 
@@ -65,7 +64,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
-				Amount:           sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdkmath.NewInt(4)),
+				Amount:           sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(4)),
 				CreationHeight:   0,
 			},
 		},
@@ -75,7 +74,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
-				Amount:           sdk.NewCoin("dump_coin", sdkmath.NewInt(4)),
+				Amount:           sdk.NewCoin("dump_coin", sdk.NewInt(4)),
 				CreationHeight:   0,
 			},
 		},

@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	sdkmath "github.com/cosmos/cosmos-sdk/math"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -53,12 +52,12 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 		"create a continuous vesting account": {
 			args: []string{
 				sdk.AccAddress("addr2_______________").String(),
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String(),
+				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
 				"4070908800",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			expectErr:    false,
 			expectedCode: 0,
@@ -67,13 +66,13 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 		"create a delayed vesting account": {
 			args: []string{
 				sdk.AccAddress("addr3_______________").String(),
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String(),
+				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
 				"4070908800",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 				fmt.Sprintf("--%s=true", cli.FlagDelayed),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			expectErr:    false,
 			expectedCode: 0,
@@ -82,7 +81,7 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 		"invalid address": {
 			args: []string{
 				"addr4",
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String(),
+				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
 				"4070908800",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 			},
@@ -104,7 +103,7 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 		"invalid end time": {
 			args: []string{
 				sdk.AccAddress("addr4_______________").String(),
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String(),
+				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
 				"-4070908800",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 			},
@@ -160,11 +159,11 @@ func (s *IntegrationTestSuite) TestNewMsgCreatePermanentLockedAccountCmd() {
 		"create a permanent locked account": {
 			args: []string{
 				sdk.AccAddress("addr4_______________").String(),
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(100))).String(),
+				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))).String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			expectErr:    false,
 			expectedCode: 0,
@@ -173,7 +172,7 @@ func (s *IntegrationTestSuite) TestNewMsgCreatePermanentLockedAccountCmd() {
 		"invalid address": {
 			args: []string{
 				"addr4",
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String(),
+				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
 				"4070908800",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 			},

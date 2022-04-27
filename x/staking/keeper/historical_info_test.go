@@ -26,7 +26,7 @@ func IsValSetSorted(data []types.Validator, powerReduction sdk.Int) bool {
 func TestHistoricalInfo(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdkmath.NewInt(0))
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	validators := make([]types.Validator, len(addrVals))
@@ -53,7 +53,7 @@ func TestHistoricalInfo(t *testing.T) {
 func TestTrackHistoricalInfo(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdkmath.NewInt(0))
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	// set historical entries in params to 5
@@ -139,7 +139,7 @@ func TestGetAllHistoricalInfo(t *testing.T) {
 	require.Len(t, infos, 1)
 	app.StakingKeeper.DeleteHistoricalInfo(ctx, infos[0].Header.Height)
 
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdkmath.NewInt(0))
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	valSet := []types.Validator{

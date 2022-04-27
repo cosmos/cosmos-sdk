@@ -21,8 +21,8 @@ func InitGenesis(
 	ctx sdk.Context, keeper keeper.Keeper, accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper, data *types.GenesisState,
 ) (res []abci.ValidatorUpdate) {
-	bondedTokens := sdkmath.ZeroInt()
-	notBondedTokens := sdkmath.ZeroInt()
+	bondedTokens := sdk.ZeroInt()
+	notBondedTokens := sdk.ZeroInt()
 
 	// We need to pretend to be "n blocks before genesis", where "n" is the
 	// validator update delay, so that e.g. slashing periods are correctly

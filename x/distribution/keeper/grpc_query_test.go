@@ -41,7 +41,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.ctx = ctx
 	suite.queryClient = queryClient
 
-	suite.addrs = simapp.AddTestAddrs(app, ctx, 2, sdkmath.NewInt(1000000000))
+	suite.addrs = simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000000000))
 	suite.valAddrs = simapp.ConvertAddrsToValAddrs(suite.addrs)
 }
 
@@ -344,7 +344,7 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 
 	tstaking := teststaking.NewHelper(suite.T(), ctx, app.StakingKeeper)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdkmath.NewInt(100), true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)

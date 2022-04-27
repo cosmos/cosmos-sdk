@@ -89,7 +89,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		if err != nil {
 			panic(err)
 		}
-		validator.Tokens = sdkmath.NewInt(simState.InitialStake)
+		validator.Tokens = sdk.NewInt(simState.InitialStake)
 		validator.DelegatorShares = sdk.NewDec(simState.InitialStake)
 		validator.Commission = commission
 

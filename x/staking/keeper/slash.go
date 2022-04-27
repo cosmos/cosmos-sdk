@@ -45,7 +45,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 			"WARNING: ignored attempt to slash a nonexistent validator; we recommend you investigate immediately",
 			"validator", consAddr.String(),
 		)
-		return sdkmath.NewInt(0)
+		return sdk.NewInt(0)
 	}
 
 	// should not be slashing an unbonded validator
@@ -103,8 +103,8 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	}
 
 	// cannot decrease balance below zero
-	tokensToBurn := sdkmath.MinInt(remainingSlashAmount, validator.Tokens)
-	tokensToBurn = sdkmath.MaxInt(tokensToBurn, sdkmath.ZeroInt()) // defensive.
+	tokensToBurn := sdk.MinInt(remainingSlashAmount, validator.Tokens)
+	tokensToBurn = sdk.MaxInt(tokensToBurn, sdk.ZeroInt()) // defensive.
 
 	// we need to calculate the *effective* slash fraction for distribution
 	if validator.Tokens.IsPositive() {
@@ -167,8 +167,8 @@ func (k Keeper) Unjail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation types.UnbondingDelegation,
 	infractionHeight int64, slashFactor sdk.Dec) (totalSlashAmount sdk.Int) {
 	now := ctx.BlockHeader().Time
-	totalSlashAmount = sdkmath.ZeroInt()
-	burnedAmount := sdkmath.ZeroInt()
+	totalSlashAmount = sdk.ZeroInt()
+	burnedAmount := sdk.ZeroInt()
 
 	// perform slashing on all entries within the unbonding delegation
 	for i, entry := range unbondingDelegation.Entries {
@@ -191,7 +191,7 @@ func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 		// Possible since the unbonding delegation may already
 		// have been slashed, and slash amounts are calculated
 		// according to stake held at time of infraction
-		unbondingSlashAmount := sdkmath.MinInt(slashAmount, entry.Balance)
+		unbondingSlashAmount := sdk.MinInt(slashAmount, entry.Balance)
 
 		// Update unbonding delegation if necessary
 		if unbondingSlashAmount.IsZero() {
@@ -220,8 +220,8 @@ func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator, redelegation types.Redelegation,
 	infractionHeight int64, slashFactor sdk.Dec) (totalSlashAmount sdk.Int) {
 	now := ctx.BlockHeader().Time
-	totalSlashAmount = sdkmath.ZeroInt()
-	bondedBurnedAmount, notBondedBurnedAmount := sdkmath.ZeroInt(), sdkmath.ZeroInt()
+	totalSlashAmount = sdk.ZeroInt()
+	bondedBurnedAmount, notBondedBurnedAmount := sdk.ZeroInt(), sdk.ZeroInt()
 
 	// perform slashing on all entries within the redelegation
 	for _, entry := range redelegation.Entries {

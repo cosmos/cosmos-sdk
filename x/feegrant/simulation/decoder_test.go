@@ -26,7 +26,7 @@ func TestDecodeStore(t *testing.T) {
 	dec := simulation.NewDecodeStore(cdc)
 
 	grant, err := feegrant.NewGrant(granterAddr, granteeAddr, &feegrant.BasicAllowance{
-		SpendLimit: sdk.NewCoins(sdk.NewCoin("foo", sdkmath.NewInt(100))),
+		SpendLimit: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100))),
 	})
 
 	require.NoError(t, err)

@@ -4,13 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/stretchr/testify/require"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func TestQueryGroupsByMember(t *testing.T) {
@@ -21,7 +20,7 @@ func TestQueryGroupsByMember(t *testing.T) {
 	queryClient := group.NewQueryClient(queryHelper)
 	sdkCtx := sdk.WrapSDKContext(ctx)
 
-	addrs := simapp.AddTestAddrsIncremental(app, ctx, 6, sdkmath.NewInt(30000000))
+	addrs := simapp.AddTestAddrsIncremental(app, ctx, 6, sdk.NewInt(30000000))
 
 	// Initial group, group policy and balance setup
 	members := []group.Member{

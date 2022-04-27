@@ -14,7 +14,7 @@ func TestDeposits(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	TestAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdkmath.NewInt(10000000))
+	TestAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(10000000))
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, "")

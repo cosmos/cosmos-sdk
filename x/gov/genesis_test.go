@@ -130,7 +130,7 @@ func TestImportExportQueues_ErrorUnconsistentState(t *testing.T) {
 					Amount: sdk.Coins{
 						sdk.NewCoin(
 							"stake",
-							sdkmath.NewInt(1234),
+							sdk.NewInt(1234),
 						),
 					},
 				},

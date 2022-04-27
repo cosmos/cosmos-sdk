@@ -23,7 +23,7 @@ import (
 func bootstrapGenesisTest(t *testing.T, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
 	_, app, ctx := getBaseSimappWithCustomKeeper(t)
 
-	addrDels, _ := generateAddresses(app, ctx, numAddrs, sdkmath.NewInt(10000))
+	addrDels, _ := generateAddresses(app, ctx, numAddrs, sdk.NewInt(10000))
 	return app, ctx, addrDels
 }
 
@@ -125,8 +125,8 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 		OperatorAddress: sdk.ValAddress("12345678901234567890").String(),
 		ConsensusPubkey: consPub,
 		Jailed:          false,
-		Tokens:          sdkmath.NewInt(10),
-		DelegatorShares: sdkmath.NewInt(10).ToDec(),
+		Tokens:          sdk.NewInt(10),
+		DelegatorShares: sdk.NewInt(10).ToDec(),
 		Description:     types.NewDescription("bloop", "", "", "", ""),
 	}
 	// valid params
@@ -170,7 +170,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	validators := make([]types.Validator, size)
 	var err error
 
-	bondedPoolAmt := sdkmath.ZeroInt()
+	bondedPoolAmt := sdk.ZeroInt()
 	for i := range validators {
 		validators[i], err = types.NewValidator(sdk.ValAddress(addrs[i]),
 			PKs[i], types.NewDescription(fmt.Sprintf("#%d", i), "", "", "", ""))

@@ -21,9 +21,9 @@ func TestSupplyMigration(t *testing.T) {
 	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(bankKey)
 
-	oldFooCoin := sdk.NewCoin("foo", sdkmath.NewInt(100))
-	oldBarCoin := sdk.NewCoin("bar", sdkmath.NewInt(200))
-	oldFooBarCoin := sdk.NewCoin("foobar", sdkmath.NewInt(0)) // to ensure the zero denom coins pruned.
+	oldFooCoin := sdk.NewCoin("foo", sdk.NewInt(100))
+	oldBarCoin := sdk.NewCoin("bar", sdk.NewInt(200))
+	oldFooBarCoin := sdk.NewCoin("foobar", sdk.NewInt(0)) // to ensure the zero denom coins pruned.
 
 	// Old supply was stored as a single blob under the `SupplyKey`.
 	var oldSupply v042bank.SupplyI
@@ -73,14 +73,14 @@ func TestBalanceKeysMigration(t *testing.T) {
 	_, _, addr := testdata.KeyTestPubAddr()
 
 	// set 10 foo coin
-	fooCoin := sdk.NewCoin("foo", sdkmath.NewInt(10))
+	fooCoin := sdk.NewCoin("foo", sdk.NewInt(10))
 	oldFooKey := append(append(v042bank.BalancesPrefix, addr...), []byte(fooCoin.Denom)...)
 	fooBz, err := encCfg.Codec.Marshal(&fooCoin)
 	require.NoError(t, err)
 	store.Set(oldFooKey, fooBz)
 
 	// set 0 foobar coin
-	fooBarCoin := sdk.NewCoin("foobar", sdkmath.NewInt(0))
+	fooBarCoin := sdk.NewCoin("foobar", sdk.NewInt(0))
 	oldKeyFooBar := append(append(v042bank.BalancesPrefix, addr...), []byte(fooBarCoin.Denom)...)
 	fooBarBz, err := encCfg.Codec.Marshal(&fooBarCoin)
 	require.NoError(t, err)

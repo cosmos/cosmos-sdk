@@ -177,7 +177,7 @@ func (s *IntegrationTestSuite) TestCmdTally() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			v1.NewTallyResult(sdkmath.NewInt(0), sdkmath.NewInt(0), sdkmath.NewInt(0), sdkmath.NewInt(0)),
+			v1.NewTallyResult(sdk.NewInt(0), sdk.NewInt(0), sdk.NewInt(0), sdk.NewInt(0)),
 		},
 		{
 			"json output",
@@ -186,7 +186,7 @@ func (s *IntegrationTestSuite) TestCmdTally() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			v1.NewTallyResult(s.cfg.BondedTokens, sdkmath.NewInt(0), sdkmath.NewInt(0), sdkmath.NewInt(0)),
+			v1.NewTallyResult(s.cfg.BondedTokens, sdk.NewInt(0), sdk.NewInt(0), sdk.NewInt(0)),
 		},
 	}
 

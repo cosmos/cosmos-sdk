@@ -211,7 +211,7 @@ func ValidatePowerReduction(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.LT(sdkmath.NewInt(1)) {
+	if v.LT(sdk.NewInt(1)) {
 		return fmt.Errorf("power reduction cannot be lower than 1")
 	}
 

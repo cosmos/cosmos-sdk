@@ -35,11 +35,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	suite.app = app
 	suite.sdkCtx = ctx
-	suite.addrs = simapp.AddTestAddrsIncremental(app, ctx, 4, sdkmath.NewInt(30000000))
+	suite.addrs = simapp.AddTestAddrsIncremental(app, ctx, 4, sdk.NewInt(30000000))
 	suite.ctx = sdk.WrapSDKContext(ctx)
 	suite.keeper = suite.app.FeeGrantKeeper
 	suite.msgSrvr = keeper.NewMsgServerImpl(suite.keeper)
-	suite.atom = sdk.NewCoins(sdk.NewCoin("atom", sdkmath.NewInt(555)))
+	suite.atom = sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(555)))
 }
 
 func (suite *KeeperTestSuite) TestKeeperCrud() {

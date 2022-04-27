@@ -16,7 +16,7 @@ func NewGenesisState(constantFee sdk.Coin) *GenesisState {
 // DefaultGenesisState creates a default GenesisState object
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
-		ConstantFee: sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(1000)),
+		ConstantFee: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)),
 	}
 }
 

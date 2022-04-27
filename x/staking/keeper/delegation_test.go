@@ -28,11 +28,11 @@ func TestDelegation(t *testing.T) {
 		DelegatorAddress: delegations[0].DelegatorAddress,
 	})
 
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 3, sdkmath.NewInt(10000))
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(10000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	//construct the validators
-	amts := []sdk.Int{sdkmath.NewInt(9), sdkmath.NewInt(8), sdkmath.NewInt(7)}
+	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
 	var validators [3]types.Validator
 	for i, amt := range amts {
 		validators[i] = teststaking.NewValidator(t, valAddrs[i], PKs[i])
@@ -149,7 +149,7 @@ func TestDelegation(t *testing.T) {
 func TestUnbondingDelegation(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
-	delAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdkmath.NewInt(10000))
+	delAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(10000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(delAddrs)
 
 	ubd := types.NewUnbondingDelegation(
@@ -157,7 +157,7 @@ func TestUnbondingDelegation(t *testing.T) {
 		valAddrs[0],
 		0,
 		time.Unix(0, 0).UTC(),
-		sdkmath.NewInt(5),
+		sdk.NewInt(5),
 	)
 
 	// set and retrieve a record
@@ -167,7 +167,7 @@ func TestUnbondingDelegation(t *testing.T) {
 	require.Equal(t, ubd, resUnbond)
 
 	// modify a records, save, and retrieve
-	expUnbond := sdkmath.NewInt(21)
+	expUnbond := sdk.NewInt(21)
 	ubd.Entries[0].Balance = expUnbond
 	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 
@@ -199,7 +199,7 @@ func TestUnbondingDelegation(t *testing.T) {
 func TestUnbondDelegation(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
-	delAddrs := simapp.AddTestAddrsIncremental(app, ctx, 1, sdkmath.NewInt(10000))
+	delAddrs := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(10000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(delAddrs)
 
 	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
@@ -238,7 +238,7 @@ func TestUnbondDelegation(t *testing.T) {
 func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, sdkmath.NewInt(10000))
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(10000))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
@@ -256,7 +256,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	require.Equal(t, startTokens, issuedShares.RoundInt())
 
 	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
-	require.True(sdkmath.IntEq(t, startTokens, validator.BondedTokens()))
+	require.True(sdk.IntEq(t, startTokens, validator.BondedTokens()))
 	require.True(t, validator.IsBonded())
 
 	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares)
@@ -277,8 +277,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 
 	newBonded := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	newNotBonded := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
-	require.True(sdkmath.IntEq(t, newBonded, oldBonded.SubRaw(int64(maxEntries))))
-	require.True(sdkmath.IntEq(t, newNotBonded, oldNotBonded.AddRaw(int64(maxEntries))))
+	require.True(sdk.IntEq(t, newBonded, oldBonded.SubRaw(int64(maxEntries))))
+	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded.AddRaw(int64(maxEntries))))
 
 	oldBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	oldNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
@@ -290,8 +290,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	newBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	newNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
-	require.True(sdkmath.IntEq(t, newBonded, oldBonded))
-	require.True(sdkmath.IntEq(t, newNotBonded, oldNotBonded))
+	require.True(sdk.IntEq(t, newBonded, oldBonded))
+	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded))
 
 	// mature unbonding delegations
 	ctx = ctx.WithBlockTime(completionTime)
@@ -300,8 +300,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 
 	newBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	newNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
-	require.True(sdkmath.IntEq(t, newBonded, oldBonded))
-	require.True(sdkmath.IntEq(t, newNotBonded, oldNotBonded.SubRaw(int64(maxEntries))))
+	require.True(sdk.IntEq(t, newBonded, oldBonded))
+	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded.SubRaw(int64(maxEntries))))
 
 	oldNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
@@ -311,8 +311,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 
 	newBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	newNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
-	require.True(sdkmath.IntEq(t, newBonded, oldBonded.SubRaw(1)))
-	require.True(sdkmath.IntEq(t, newNotBonded, oldNotBonded.AddRaw(1)))
+	require.True(sdk.IntEq(t, newBonded, oldBonded.SubRaw(1)))
+	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded.AddRaw(1)))
 }
 
 //// test undelegating self delegation from a validator pushing it below MinSelfDelegation
@@ -320,7 +320,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, sdkmath.NewInt(10000))
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(10000))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	delCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delTokens))
@@ -382,7 +382,7 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	delCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delTokens))
 
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdkmath.NewInt(0))
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	//create a validator with a self-delegation
@@ -458,7 +458,7 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 	ubd, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[1], addrVals[0])
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
-	require.True(t, ubd.Entries[0].Balance.Equal(sdkmath.NewInt(6)))
+	require.True(t, ubd.Entries[0].Balance.Equal(sdk.NewInt(6)))
 	assert.Equal(t, blockHeight2, ubd.Entries[0].CreationHeight)
 	assert.True(t, blockTime2.Add(params.UnbondingTime).Equal(ubd.Entries[0].CompletionTime))
 }
@@ -468,7 +468,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	delCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delTokens))
 
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdkmath.NewInt(0))
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	// add bonded tokens to pool for delegations
@@ -549,7 +549,7 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	delCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delTokens))
 
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdkmath.NewInt(0))
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	// add bonded tokens to pool for delegations
@@ -620,11 +620,11 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 func TestGetRedelegationsFromSrcValidator(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdkmath.NewInt(0))
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
-		time.Unix(0, 0), sdkmath.NewInt(5),
+		time.Unix(0, 0), sdk.NewInt(5),
 		sdk.NewDec(5))
 
 	// set and retrieve a record
@@ -647,11 +647,11 @@ func TestGetRedelegationsFromSrcValidator(t *testing.T) {
 func TestRedelegation(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdkmath.NewInt(0))
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
-		time.Unix(0, 0).UTC(), sdkmath.NewInt(5),
+		time.Unix(0, 0).UTC(), sdk.NewInt(5),
 		sdk.NewDec(5))
 
 	// test shouldn't have and redelegations
@@ -710,7 +710,7 @@ func TestRedelegation(t *testing.T) {
 func TestRedelegateToSameValidator(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, sdkmath.NewInt(0))
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
@@ -739,7 +739,7 @@ func TestRedelegateToSameValidator(t *testing.T) {
 func TestRedelegationMaxEntries(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdkmath.NewInt(0))
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 20)
@@ -795,7 +795,7 @@ func TestRedelegationMaxEntries(t *testing.T) {
 func TestRedelegateSelfDelegation(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdkmath.NewInt(0))
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 30)
@@ -851,7 +851,7 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdkmath.NewInt(0))
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 30)
@@ -933,7 +933,7 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdkmath.NewInt(0))
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 30)

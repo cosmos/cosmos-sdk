@@ -225,7 +225,7 @@ func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
 	if bz == nil {
 		return sdk.Coin{
 			Denom:  denom,
-			Amount: sdkmath.NewInt(0),
+			Amount: sdk.NewInt(0),
 		}
 	}
 

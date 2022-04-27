@@ -35,7 +35,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	// Populate the gov account with some coins, as the TestProposal we have
 	// is a MsgSend from the gov account.
-	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100000)))
+	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100000)))
 	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
 	suite.NoError(err)
 	err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins)
@@ -56,7 +56,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	govAcct := suite.app.GovKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	suite.legacyMsgSrvr = keeper.NewLegacyMsgServerImpl(govAcct.String(), suite.msgSrvr)
-	suite.addrs = simapp.AddTestAddrsIncremental(app, ctx, 2, sdkmath.NewInt(30000000))
+	suite.addrs = simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
 }
 
 func TestIncrementProposalNumber(t *testing.T) {

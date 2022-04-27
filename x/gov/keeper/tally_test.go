@@ -41,7 +41,7 @@ func TestTallyNoQuorum(t *testing.T) {
 
 	createValidators(t, ctx, app, []int64{2, 5, 0})
 
-	addrs := simapp.AddTestAddrsIncremental(app, ctx, 1, sdkmath.NewInt(10000000))
+	addrs := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(10000000))
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, "")

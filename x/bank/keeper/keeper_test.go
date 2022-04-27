@@ -228,7 +228,7 @@ func (suite *IntegrationTestSuite) TestSupply_MintCoins() {
 	suite.Require().Panics(func() { keeper.MintCoins(ctx, "", initCoins) }, "no module account")                // nolint:errcheck
 	suite.Require().Panics(func() { keeper.MintCoins(ctx, authtypes.Burner, initCoins) }, "invalid permission") // nolint:errcheck
 
-	err = keeper.MintCoins(ctx, authtypes.Minter, sdk.Coins{sdk.Coin{Denom: "denom", Amount: sdkmath.NewInt(-10)}})
+	err = keeper.MintCoins(ctx, authtypes.Minter, sdk.Coins{sdk.Coin{Denom: "denom", Amount: sdk.NewInt(-10)}})
 	suite.Require().Error(err, "insufficient coins")
 
 	suite.Require().Panics(func() { keeper.MintCoins(ctx, randomPerm, initCoins) }) // nolint:errcheck
@@ -905,7 +905,7 @@ func (suite *IntegrationTestSuite) TestDelegateCoins_Invalid() {
 	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 
 	suite.Require().Error(app.BankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins))
-	invalidCoins := sdk.Coins{sdk.Coin{Denom: "fooDenom", Amount: sdkmath.NewInt(-50)}}
+	invalidCoins := sdk.Coins{sdk.Coin{Denom: "fooDenom", Amount: sdk.NewInt(-50)}}
 	suite.Require().Error(app.BankKeeper.DelegateCoins(ctx, addr1, addrModule, invalidCoins))
 
 	app.AccountKeeper.SetAccount(ctx, macc)
@@ -1063,7 +1063,7 @@ func (suite *IntegrationTestSuite) TestBalanceTrackingEvents() {
 		suite.app.BankKeeper.MintCoins(
 			suite.ctx,
 			multiPermAcc.Name,
-			sdk.NewCoins(sdk.NewCoin("utxo", sdkmath.NewInt(100000)))),
+			sdk.NewCoins(sdk.NewCoin("utxo", sdk.NewInt(100000)))),
 	)
 	// send coins to address
 	addr1 := sdk.AccAddress("addr1_______________")
@@ -1072,7 +1072,7 @@ func (suite *IntegrationTestSuite) TestBalanceTrackingEvents() {
 			suite.ctx,
 			multiPermAcc.Name,
 			addr1,
-			sdk.NewCoins(sdk.NewCoin("utxo", sdkmath.NewInt(50000))),
+			sdk.NewCoins(sdk.NewCoin("utxo", sdk.NewInt(50000))),
 		),
 	)
 

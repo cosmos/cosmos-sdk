@@ -13,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdkmath "github.com/cosmos/cosmos-sdk/math"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -165,7 +164,7 @@ func TestTxValidateBasic(t *testing.T) {
 
 	// require to fail validation upon invalid fee
 	badFee := NewTestStdFee()
-	badFee.Amount[0].Amount = sdkmath.NewInt(-5)
+	badFee.Amount[0].Amount = sdk.NewInt(-5)
 	tx := NewTestTx(ctx, nil, nil, nil, nil, 0, badFee)
 
 	err := tx.ValidateBasic()

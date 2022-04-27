@@ -82,7 +82,7 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 			},
 			&types.QuerySupplyOfResponse{},
 			&types.QuerySupplyOfResponse{
-				Amount: sdk.NewCoin("foobar", sdk.ZeroInt()),
+				Amount: sdk.NewCoin("foobar", sdkmath.ZeroInt()),
 			},
 		},
 	}

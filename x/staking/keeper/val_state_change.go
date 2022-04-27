@@ -113,8 +113,8 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 	params := k.GetParams(ctx)
 	maxValidators := params.MaxValidators
 	powerReduction := k.PowerReduction(ctx)
-	totalPower := sdk.ZeroInt()
-	amtFromBondedToNotBonded, amtFromNotBondedToBonded := sdk.ZeroInt(), sdk.ZeroInt()
+	totalPower := sdkmath.ZeroInt()
+	amtFromBondedToNotBonded, amtFromNotBondedToBonded := sdkmath.ZeroInt(), sdkmath.ZeroInt()
 
 	// Retrieve the last validator set.
 	// The persistent set is updated later in this function.

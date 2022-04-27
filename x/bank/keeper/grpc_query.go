@@ -91,7 +91,7 @@ func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpend
 
 	balances := sdk.NewCoins()
 	accountStore := k.getAccountStore(sdkCtx, addr)
-	zeroAmt := sdk.ZeroInt()
+	zeroAmt := sdkmath.ZeroInt()
 
 	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, value []byte) error {
 		balances = append(balances, sdk.NewCoin(string(key), zeroAmt))

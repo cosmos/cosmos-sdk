@@ -491,7 +491,7 @@ func (s *MWTestSuite) TestTxHandlerFees() {
 				modAcc := s.app.AccountKeeper.GetModuleAccount(ctx, types.FeeCollectorName)
 
 				s.Require().True(s.app.BankKeeper.GetAllBalances(ctx, modAcc.GetAddress()).Empty())
-				require.True(sdk.IntEq(s.T(), s.app.BankKeeper.GetAllBalances(ctx, addr0).AmountOf("atom"), sdkmath.NewInt(149)))
+				require.True(sdkmath.IntEq(s.T(), s.app.BankKeeper.GetAllBalances(ctx, addr0).AmountOf("atom"), sdkmath.NewInt(149)))
 
 				err := testutil.FundAccount(s.app.BankKeeper, ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 1)))
 				s.Require().NoError(err)
@@ -505,8 +505,8 @@ func (s *MWTestSuite) TestTxHandlerFees() {
 			func() {
 				modAcc := s.app.AccountKeeper.GetModuleAccount(ctx, types.FeeCollectorName)
 
-				require.True(sdk.IntEq(s.T(), s.app.BankKeeper.GetAllBalances(ctx, modAcc.GetAddress()).AmountOf("atom"), sdkmath.NewInt(150)))
-				require.True(sdk.IntEq(s.T(), s.app.BankKeeper.GetAllBalances(ctx, addr0).AmountOf("atom"), sdkmath.NewInt(0)))
+				require.True(sdkmath.IntEq(s.T(), s.app.BankKeeper.GetAllBalances(ctx, modAcc.GetAddress()).AmountOf("atom"), sdkmath.NewInt(150)))
+				require.True(sdkmath.IntEq(s.T(), s.app.BankKeeper.GetAllBalances(ctx, addr0).AmountOf("atom"), sdkmath.NewInt(0)))
 			},
 			false,
 			false,

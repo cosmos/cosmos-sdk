@@ -26,7 +26,7 @@ var (
 func TestGetValidatorPowerRank(t *testing.T) {
 	valAddr1 := sdk.ValAddress(keysAddr1)
 	val1 := newValidator(t, valAddr1, keysPK1)
-	val1.Tokens = sdk.ZeroInt()
+	val1.Tokens = sdkmath.ZeroInt()
 	val2, val3, val4 := val1, val1, val1
 	val2.Tokens = sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction)
 	val3.Tokens = sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)

@@ -170,7 +170,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	validators := make([]types.Validator, size)
 	var err error
 
-	bondedPoolAmt := sdk.ZeroInt()
+	bondedPoolAmt := sdkmath.ZeroInt()
 	for i := range validators {
 		validators[i], err = types.NewValidator(sdk.ValAddress(addrs[i]),
 			PKs[i], types.NewDescription(fmt.Sprintf("#%d", i), "", "", "", ""))

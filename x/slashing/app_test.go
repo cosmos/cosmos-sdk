@@ -80,7 +80,7 @@ func TestSlashingMsgs(t *testing.T) {
 	validator := checkValidator(t, app, addr1, true)
 	require.Equal(t, sdk.ValAddress(addr1).String(), validator.OperatorAddress)
 	require.Equal(t, stakingtypes.Bonded, validator.Status)
-	require.True(sdk.IntEq(t, bondTokens, validator.BondedTokens()))
+	require.True(sdkmath.IntEq(t, bondTokens, validator.BondedTokens()))
 	unjailMsg := &types.MsgUnjail{ValidatorAddr: sdk.ValAddress(addr1).String()}
 
 	checkValidatorSigningInfo(t, app, sdk.ConsAddress(valAddr), true)

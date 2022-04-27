@@ -105,7 +105,7 @@ func TestAddTokensValidatorBonded(t *testing.T) {
 	validator, delShares := validator.AddTokensFromDel(sdkmath.NewInt(10))
 
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), delShares))
-	assert.True(sdk.IntEq(t, sdkmath.NewInt(10), validator.BondedTokens()))
+	assert.True(sdkmath.IntEq(t, sdkmath.NewInt(10), validator.BondedTokens()))
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))
 }
 
@@ -116,7 +116,7 @@ func TestAddTokensValidatorUnbonding(t *testing.T) {
 
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), delShares))
 	assert.Equal(t, types.Unbonding, validator.Status)
-	assert.True(sdk.IntEq(t, sdkmath.NewInt(10), validator.Tokens))
+	assert.True(sdkmath.IntEq(t, sdkmath.NewInt(10), validator.Tokens))
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))
 }
 
@@ -128,7 +128,7 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), delShares))
 	assert.Equal(t, types.Unbonded, validator.Status)
-	assert.True(sdk.IntEq(t, sdkmath.NewInt(10), validator.Tokens))
+	assert.True(sdkmath.IntEq(t, sdkmath.NewInt(10), validator.Tokens))
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))
 }
 
@@ -152,7 +152,7 @@ func TestRemoveDelShares(t *testing.T) {
 	validator := mkValidator(5102, sdk.NewDec(115))
 	_, tokens := validator.RemoveDelShares(sdk.NewDec(29))
 
-	require.True(sdk.IntEq(t, sdkmath.NewInt(1286), tokens))
+	require.True(sdkmath.IntEq(t, sdkmath.NewInt(1286), tokens))
 }
 
 func TestAddTokensFromDel(t *testing.T) {
@@ -161,12 +161,12 @@ func TestAddTokensFromDel(t *testing.T) {
 	validator, shares := validator.AddTokensFromDel(sdkmath.NewInt(6))
 	require.True(sdk.DecEq(t, sdk.NewDec(6), shares))
 	require.True(sdk.DecEq(t, sdk.NewDec(6), validator.DelegatorShares))
-	require.True(sdk.IntEq(t, sdkmath.NewInt(6), validator.Tokens))
+	require.True(sdkmath.IntEq(t, sdkmath.NewInt(6), validator.Tokens))
 
 	validator, shares = validator.AddTokensFromDel(sdkmath.NewInt(3))
 	require.True(sdk.DecEq(t, sdk.NewDec(3), shares))
 	require.True(sdk.DecEq(t, sdk.NewDec(9), validator.DelegatorShares))
-	require.True(sdk.IntEq(t, sdkmath.NewInt(9), validator.Tokens))
+	require.True(sdkmath.IntEq(t, sdkmath.NewInt(9), validator.Tokens))
 }
 
 func TestUpdateStatus(t *testing.T) {

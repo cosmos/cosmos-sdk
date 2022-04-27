@@ -3,8 +3,9 @@ package keeper
 import (
 	"fmt"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/tendermint/tendermint/libs/log"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -79,7 +80,7 @@ func (k Keeper) GetLastTotalPower(ctx sdk.Context) sdk.Int {
 	bz := store.Get(types.LastTotalPowerKey)
 
 	if bz == nil {
-		return sdk.ZeroInt()
+		return sdkmath.ZeroInt()
 	}
 
 	ip := sdk.IntProto{}

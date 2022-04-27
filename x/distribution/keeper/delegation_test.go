@@ -688,7 +688,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 	zeroRewards := sdk.Coins{
 		sdk.Coin{
 			Denom:  denom,
-			Amount: sdk.ZeroInt(),
+			Amount: sdkmath.ZeroInt(),
 		},
 	}
 	require.True(t, rewards.IsEqual(zeroRewards))

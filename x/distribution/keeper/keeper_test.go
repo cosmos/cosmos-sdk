@@ -115,7 +115,7 @@ func TestFundCommunityPool(t *testing.T) {
 	// reset fee pool
 	app.DistrKeeper.SetFeePool(ctx, types.InitialFeePool())
 
-	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.ZeroInt())
+	addr := simapp.AddTestAddrs(app, ctx, 2, sdkmath.ZeroInt())
 
 	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr[0], amount))

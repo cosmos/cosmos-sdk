@@ -256,7 +256,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	require.Equal(t, startTokens, issuedShares.RoundInt())
 
 	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
-	require.True(sdk.IntEq(t, startTokens, validator.BondedTokens()))
+	require.True(sdkmath.IntEq(t, startTokens, validator.BondedTokens()))
 	require.True(t, validator.IsBonded())
 
 	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares)
@@ -277,8 +277,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 
 	newBonded := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	newNotBonded := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
-	require.True(sdk.IntEq(t, newBonded, oldBonded.SubRaw(int64(maxEntries))))
-	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded.AddRaw(int64(maxEntries))))
+	require.True(sdkmath.IntEq(t, newBonded, oldBonded.SubRaw(int64(maxEntries))))
+	require.True(sdkmath.IntEq(t, newNotBonded, oldNotBonded.AddRaw(int64(maxEntries))))
 
 	oldBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	oldNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
@@ -290,8 +290,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	newBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	newNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
-	require.True(sdk.IntEq(t, newBonded, oldBonded))
-	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded))
+	require.True(sdkmath.IntEq(t, newBonded, oldBonded))
+	require.True(sdkmath.IntEq(t, newNotBonded, oldNotBonded))
 
 	// mature unbonding delegations
 	ctx = ctx.WithBlockTime(completionTime)
@@ -300,8 +300,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 
 	newBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	newNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
-	require.True(sdk.IntEq(t, newBonded, oldBonded))
-	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded.SubRaw(int64(maxEntries))))
+	require.True(sdkmath.IntEq(t, newBonded, oldBonded))
+	require.True(sdkmath.IntEq(t, newNotBonded, oldNotBonded.SubRaw(int64(maxEntries))))
 
 	oldNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
@@ -311,8 +311,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 
 	newBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	newNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
-	require.True(sdk.IntEq(t, newBonded, oldBonded.SubRaw(1)))
-	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded.AddRaw(1)))
+	require.True(sdkmath.IntEq(t, newBonded, oldBonded.SubRaw(1)))
+	require.True(sdkmath.IntEq(t, newNotBonded, oldNotBonded.AddRaw(1)))
 }
 
 //// test undelegating self delegation from a validator pushing it below MinSelfDelegation

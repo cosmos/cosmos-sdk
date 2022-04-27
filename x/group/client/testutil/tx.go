@@ -2319,58 +2319,44 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 	weights := []string{"1", "1", "2"}
 	accounts := s.createAccounts(3)
 
-	groupIDs := []string{s.createGroupWithMembers(weights, accounts), s.createGroupWithMembers(weights, accounts)}
-
-	groupPolicyAddress := []string{s.createGroupThresholdPolicyWithDenom(groupIDs[0], 3, 100), s.createGroupThresholdPolicyWithDenom(groupIDs[1], 3, 100)}
-
 	testCases := []struct {
-		name               string
-		args               []string
-		votes              []string
-		members            []string
-		groupPolicyAddress string
-		expectErr          bool
-		errMsg             string
-		respType           proto.Message
+		name                    string
+		indexOfMemberThatLEaves int
+		votes                   []string
+		members                 []string
+		expectErr               bool
+		errMsg                  string
+		respType                proto.Message
 	}{
 		{
 			"member leaves while all others vote yes",
-			append(
-				[]string{
-					accounts[0],
-					groupIDs[0],
-
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[0]),
-				},
-				commonFlags...,
-			),
+			0,
 			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_YES", "VOTE_OPTION_YES"},
 			accounts,
-			groupPolicyAddress[0],
 			false,
 			"",
 			&sdk.TxResponse{},
 		},
 		{
 			"member that leaves affects the threshold",
-			append(
-				[]string{
-					accounts[2],
-					groupIDs[1],
-
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[2]),
-				},
-				commonFlags...,
-			),
+			2,
 			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_NO"},
 			accounts,
-			groupPolicyAddress[1],
 			true,
 			"PROPOSAL_EXECUTOR_RESULT_NOT_RUN",
 			&sdk.TxResponse{},
 		},
 	}
 
+	//append(
+	//	[]string{
+	//		accounts[0],
+	//		groupIDs[0],
+	//
+	//		fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[0]),
+	//	},
+	//	commonFlags...,
+	//),
 	for _, tc := range testCases {
 		tc := tc
 
@@ -2379,13 +2365,17 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 			cmdLeaveGroup := client.MsgLeaveGroupCmd()
 			cmdMsgExec := client.MsgExecCmd()
 
+			groupID := s.createGroupWithMembers(weights, accounts)
+			groupPolicyAddress := s.createGroupThresholdPolicyWithDenom(groupID, 3, 100)
+
 			// Submit proposal
+			proposal := s.createCLIProposal(
+				groupPolicyAddress, tc.members[0],
+				groupPolicyAddress, tc.members[0],
+				"",
+			)
 			submitProposalArgs := append([]string{
-				s.createCLIProposal(
-					tc.groupPolicyAddress, tc.members[0],
-					tc.groupPolicyAddress, tc.members[0],
-					"",
-				),
+				proposal,
 			},
 				commonFlags...,
 			)
@@ -2418,7 +2408,17 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 
 			out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryVotesByProposalCmd(), []string{proposalID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 
-			out, err = cli.ExecTestCLICmd(clientCtx, cmdLeaveGroup, tc.args)
+			leaveGroupArg := append(
+				[]string{
+					accounts[tc.indexOfMemberThatLEaves],
+					groupID,
+
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[tc.indexOfMemberThatLEaves]),
+				},
+				commonFlags...,
+			)
+
+			out, err = cli.ExecTestCLICmd(clientCtx, cmdLeaveGroup, leaveGroupArg)
 			s.Require().NoError(err, out.String())
 			var resp sdk.TxResponse
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())

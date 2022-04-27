@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 package cosmovisor_test
@@ -28,6 +29,7 @@ func (s *processTestSuite) TestLaunchProcess() {
 	require := s.Require()
 	home := copyTestData(s.T(), "validate")
 	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", PollInterval: 20, UnsafeSkipBackup: true}
+	logger := cosmovisor.NewLogger()
 
 	// should run the genesis binary and produce expected output
 	var stdout, stderr = NewBuffer(), NewBuffer()
@@ -35,10 +37,11 @@ func (s *processTestSuite) TestLaunchProcess() {
 	require.NoError(err)
 	require.Equal(cfg.GenesisBin(), currentBin)
 
-	launcher, err := cosmovisor.NewLauncher(cfg)
+	launcher, err := cosmovisor.NewLauncher(logger, cfg)
 	require.NoError(err)
 
 	upgradeFile := cfg.UpgradeInfoFilePath()
+
 	args := []string{"foo", "bar", "1234", upgradeFile}
 	doUpgrade, err := launcher.Run(args, stdout, stderr)
 	require.NoError(err)
@@ -77,6 +80,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	require := s.Require()
 	home := copyTestData(s.T(), "download")
 	cfg := &cosmovisor.Config{Home: home, Name: "autod", AllowDownloadBinaries: true, PollInterval: 100, UnsafeSkipBackup: true}
+	logger := cosmovisor.NewLogger()
 	upgradeFilename := cfg.UpgradeInfoFilePath()
 
 	// should run the genesis binary and produce expected output
@@ -84,7 +88,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	require.NoError(err)
 	require.Equal(cfg.GenesisBin(), currentBin)
 
-	launcher, err := cosmovisor.NewLauncher(cfg)
+	launcher, err := cosmovisor.NewLauncher(logger, cfg)
 	require.NoError(err)
 
 	var stdout, stderr = NewBuffer(), NewBuffer()

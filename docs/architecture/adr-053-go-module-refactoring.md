@@ -64,6 +64,10 @@ better served by a standalone repository in the future
 * all go modules should follow the guidelines in https://go.dev/blog/module-compatibility
 before `v1.0.0` is tagged and should make use of `internal` packages to limit
 the exposed API surface
+* the new go module's API may deviate from the existing code where there are
+clear improvements to be made or to remove legacy dependencies (for instance on
+amino or gogo proto), as long the old package attempts
+to avoid API breakage with aliases and wrappers
 
 ## Consequences
 

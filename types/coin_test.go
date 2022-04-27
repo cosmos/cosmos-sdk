@@ -1023,19 +1023,19 @@ func (s *coinTestSuite) TestParseCoins() {
 		{"0stake,1foo,99bar", true, sdk.Coins{{"bar", math.NewInt(99)}, {"foo", one}}}, // remove zero coins
 		{"1foo", true, sdk.Coins{{"foo", one}}},
 		{"10btc,1atom,20btc", false, nil},
-		{"10bar", true, sdk.Coins{{"bar", math.NewInt(10)}}},
-		{"99bar,1foo", true, sdk.Coins{{"bar", math.NewInt(99)}, {"foo", one}}},
-		{"98 bar , 1 foo  ", true, sdk.Coins{{"bar", math.NewInt(98)}, {"foo", one}}},
-		{"  55\t \t bling\n", true, sdk.Coins{{"bling", math.NewInt(55)}}},
-		{"2foo, 97 bar", true, sdk.Coins{{"bar", math.NewInt(97)}, {"foo", math.NewInt(2)}}},
-		{"5 mycoin,", false, nil},                            // no empty coins in a list
-		{"2 3foo, 97 bar", false, nil},                       // 3foo is invalid coin name
-		{"11me coin, 12you coin", false, nil},                // no spaces in coin names
-		{"1.2btc", true, sdk.Coins{{"btc", math.NewInt(1)}}}, // amount can be decimal, will get truncated
-		{"5foo:bar", true, sdk.Coins{{"foo:bar", math.NewInt(5)}}},
-		{"10atom10", true, sdk.Coins{{"atom10", math.NewInt(10)}}},
-		{"200transfer/channelToA/uatom", true, sdk.Coins{{"transfer/channelToA/uatom", math.NewInt(200)}}},
-		{"50ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", true, sdk.Coins{{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", math.NewInt(50)}}},
+		{"10bar", true, sdk.Coins{{"bar", sdk.NewInt(10)}}},
+		{"99bar,1foo", true, sdk.Coins{{"bar", sdk.NewInt(99)}, {"foo", one}}},
+		{"98 bar , 1 foo  ", true, sdk.Coins{{"bar", sdk.NewInt(98)}, {"foo", one}}},
+		{"  55\t \t bling\n", true, sdk.Coins{{"bling", sdk.NewInt(55)}}},
+		{"2foo, 97 bar", true, sdk.Coins{{"bar", sdk.NewInt(97)}, {"foo", sdk.NewInt(2)}}},
+		{"5 mycoin,", false, nil},                           // no empty coins in a list
+		{"2 3foo, 97 bar", false, nil},                      // 3foo is invalid coin name
+		{"11me coin, 12you coin", false, nil},               // no spaces in coin names
+		{"1.2btc", true, sdk.Coins{{"btc", sdk.NewInt(1)}}}, // amount can be decimal, will get truncated
+		{"5foo:bar", false, nil},                            // invalid separator
+		{"10atom10", true, sdk.Coins{{"atom10", sdk.NewInt(10)}}},
+		{"200transfer/channelToA/uatom", true, sdk.Coins{{"transfer/channelToA/uatom", sdk.NewInt(200)}}},
+		{"50ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", true, sdk.Coins{{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", sdk.NewInt(50)}}},
 		{"120000000000000000000000000000000000000000000000000000000000000000000000000000btc", false, nil},
 	}
 

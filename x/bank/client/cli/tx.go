@@ -71,7 +71,7 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.
 }
 
 // NewMultiSendTxCmd returns a CLI command handler for creating a MsgMultiSend transaction.
-// For a better UX this command is limited to send one coin from one address to multiple addresses.
+// For a better UX this command is limited to send funds from one address to multiple addresses.
 func NewMultiSendTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "multi-send [from_key_or_address] [to_address_1, to_address_2, ...] [amount]",

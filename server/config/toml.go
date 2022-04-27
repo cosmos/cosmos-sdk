@@ -173,7 +173,7 @@ offline = {{ .Rosetta.Offline }}
 # EnableDefaultSuggestedFee defines if the server should suggest fee by default.
 # If 'construction/medata' is called without gas limit and gas price,
 # suggested fee based on gas-to-suggest and denom-to-suggest will be given.
-enable-fee-suggestion = {{ . Rosetta.EnableFeeSuggestion }}
+enable-fee-suggestion = {{ .Rosetta.EnableFeeSuggestion }}
 
 # GasToSuggest defines gas limit when calculating the fee
 gas-to-suggest = {{ .Rosetta.GasToSuggest }}

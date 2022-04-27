@@ -2323,8 +2323,6 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 
 	groupPolicyAddress := []string{s.createGroupThresholdPolicyWithDenom(groupIDs[0], 3, 100), s.createGroupThresholdPolicyWithDenom(groupIDs[1], 3, 100)}
 
-	//fmt.Println("address: ", groupPolicyAddress)
-
 	testCases := []struct {
 		name               string
 		args               []string
@@ -2398,7 +2396,6 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 			proposalID := s.getProposalIdFromTxResponse(submitProposalResp)
 
 			for i, vote := range tc.votes {
-				fmt.Println("vote no#", i)
 				memberAddress := tc.members[i]
 				out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgVoteCmd(),
 					append(
@@ -2422,8 +2419,6 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 			out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryVotesByProposalCmd(), []string{proposalID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 
 			out, err = cli.ExecTestCLICmd(clientCtx, cmdLeaveGroup, tc.args)
-			fmt.Println("leave group: ", out)
-			fmt.Println("error", err)
 			s.Require().NoError(err, out.String())
 			var resp sdk.TxResponse
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
@@ -2444,13 +2439,9 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 			s.Require().NoError(err)
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &execResp), out.String())
 
-			fmt.Println("propossal exec: ", out)
-			fmt.Println("error is: ", err)
-
 			if tc.expectErr {
 				s.Require().Contains(execResp.RawLog, tc.errMsg)
 			}
-			//s.Require().True(false)
 
 		})
 	}
@@ -2516,7 +2507,6 @@ func (s *IntegrationTestSuite) TestSubmitProposalAndUpdate() {
 		s.Require().NoError(err)
 		s.Require().Contains(out.String(), "out string is wrong")
 		s.Require().NotEqual(out.String(), "")
-		fmt.Println(out)
 		s.Require().True(false)
 	})
 }
@@ -2630,8 +2620,6 @@ func (s *IntegrationTestSuite) createGroupWithMembers(membersWeight, membersAddr
 	s.Require().NoError(err, out.String())
 	var txResp sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	//txResp.
-	fmt.Println("response from creating group", txResp.Events[0])
 	return s.getGroupIdFromTxResponse(txResp)
 }
 

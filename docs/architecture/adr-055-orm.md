@@ -10,34 +10,76 @@ ACCEPTED Implemented
 
 ## Abstract
 
-> "If you can't explain it simply, you don't understand it well enough." Provide a simplified and layman-accessible explanation of the ADR.
-> A short (~200 word) description of the issue being addressed.
+In order to make it easier for developers to build state machines and for clients to query, index and verify proofs
+against state data, we have implemented an ORM (object-relational mapping) layer for the Cosmos SDK.
 
 ## Context
 
-> This section describes the forces at play, including technological, political, social, and project local. These forces are probably in tension, and should be called out as such. The language in this section is value-neutral. It is simply describing facts. It should clearly explain the problem and motivation that the proposal aims to resolve.
-> {context body}
+Historically modules in the Cosmos SDK have always used the key-value store directly and created various handwritten
+functions for managing key format as well as constructing secondary indexes. This consumes a significant amount of
+time when building a module and is error prone. Because key formats are non-standard, sometimes poorly documented,
+and subject to change, it is hard for clients to generically index, query and verify merkle proofs against state data.
+
+The known first instance of an "ORM" in the Cosmos ecosystem was in [weave](https://github.com/iov-one/weave/tree/master/orm).
+A later version was built for [regen-ledger](https://github.com/regen-network/regen-ledger/tree/master/orm) for
+use in the group module and later [ported to the SDK](https://github.com/cosmos/cosmos-sdk/tree/main/x/group/internal/orm)
+just for that purpose.
+
+While these earlier designs made it significantly easier to write state machines, they still required a lot of manual
+configuration, didn't expose state format directly to clients, and were limited in their support of different types
+of index keys, composite keys, and range queries.
+
+Discussions around the design continued in https://github.com/cosmos/cosmos-sdk/discussions/9156 and more
+sophisticated proofs of concept were created in https://github.com/allinbits/cosmos-sdk-poc/tree/master/runtime/orm
+and https://github.com/cosmos/cosmos-sdk/pull/10454.
 
 ## Decision
 
-> This section describes our response to these forces. It is stated in full sentences, with active voice. "We will ..."
-> {decision body}
+These prior efforts culminated in the creation of the Cosmos SDK `orm` go module which uses protobuf annotations
+for specifying ORM table definitions. This ORM is based on the new `google.golang.org/protobuf/reflect/protoreflect`
+API and supports:
+* sorted indexes for all simple protobuf types (except `bytes`, `enum`, `float`, `double`) as well as `Timestamp` and `Duration`
+* unsorted `bytes` and `enum` indexes
+* composite primary and secondary keys
+* unique indexes
+* auto-incrementing `uint64` primary keys
+* complex prefix and range queries
+* paginated queries
+* complete logical decoding of KV-store data
+
+Almost all the information needed to decode state directly is specified in .proto files. Each table definition specifies
+an ID which is unique per .proto file and each index within a table is unique within that table. Clients then only need
+to know the name of a module and the prefix ORM data for a specific .proto file within that module in order to decode
+state data directly. This additional information will be exposed directly through app configs which will be explained
+in a future ADR related to app wiring.
+
+The ORM makes optimizations around storage space by not repeating values in the primary key in the key value
+when storing primary key records. For example, if the object `{"a":0,"b":1}` has the primary key `a`, it will
+be stored in the key value store as `Key: '0', Value: {"b":1}` (with more efficient protobuf binary encoding).
+Also the generated code from https://github.com/cosmos/cosmos-proto does optimizations around the
+`google.golang.org/protobuf/reflect/protoreflect` API to improve performance.
+
+A code generator is include with the ORM which creates type safe wrappers around the ORM's dynamic `Table`
+implementation and is the recommended way for modules to use the ORM.
 
 ## Consequences
 
-> This section describes the resulting context, after applying the decision. All consequences should be listed here, not just the "positive" ones. A particular decision may have positive, negative, and neutral consequences, but all of them affect the team and project in the future.
-
 ### Backwards Compatibility
 
-> All ADRs that introduce backwards incompatibilities must include a section describing these incompatibilities and their severity. The ADR must explain how the author proposes to deal with these incompatibilities. ADR submissions without a sufficient backwards compatibility treatise may be rejected outright.
+State machine code that adopts the ORM will need migrations as the state layout is generally backwards incompatible.
+These state machines will also need to migrate to https://github.com/cosmos/cosmos-proto at least for state data.
 
 ### Positive
 
-{positive consequences}
+* easier to build modules
+* easier to add secondary indexes to state
+* possible to write a generic indexer for ORM state
+* easier to write clients that do state proofs
+* possible to automatically write query layers rather than needing to manually implement gRPC queries
 
 ### Negative
 
-{negative consequences}
+* worse performance than hand-generated keys (for now)
 
 ### Neutral
 
@@ -45,13 +87,16 @@ ACCEPTED Implemented
 
 ## Further Discussions
 
-While an ADR is in the DRAFT or PROPOSED stage, this section should contain a summary of issues to be solved in future iterations (usually referencing comments from a pull-request discussion).
-Later, this section can optionally list ideas or improvements the author or reviewers found during the analysis of this ADR.
-
-## Test Cases [optional]
-
-Test cases for an implementation are mandatory for ADRs that are affecting consensus changes. Other ADRs can choose to include links to test cases if applicable.
+Further discussions will happen within the Cosmos SDK Framework Working Group. Current planned and ongoing work includes:
+* automatically generate client-facing query layer
+* index ORM data to SQL databases
+* improve performance by optimizing existing reflection based code &/or implementing more sophisticated code generation 
 
 ## References
 
-* {reference link}
+* https://github.com/iov-one/weave/tree/master/orm).
+* https://github.com/regen-network/regen-ledger/tree/master/orm
+* https://github.com/cosmos/cosmos-sdk/tree/main/x/group/internal/orm)
+* https://github.com/cosmos/cosmos-sdk/discussions/9156
+* https://github.com/allinbits/cosmos-sdk-poc/tree/master/runtime/orm
+* https://github.com/cosmos/cosmos-sdk/pull/10454

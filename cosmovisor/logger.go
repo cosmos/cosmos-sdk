@@ -7,9 +7,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
-var Logger zerolog.Logger
-
-func SetupLogging() {
+func NewLogger() *zerolog.Logger {
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.Kitchen}
-	Logger = zerolog.New(output).With().Str("module", "cosmovisor").Timestamp().Logger()
+	logger := zerolog.New(output).With().Str("module", "cosmovisor").Timestamp().Logger()
+	return &logger
 }

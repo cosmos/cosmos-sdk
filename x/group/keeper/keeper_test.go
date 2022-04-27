@@ -2857,30 +2857,28 @@ func (s *TestSuite) TestPruneProposals() {
 	_, err = s.keeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 
-	s.Run("Validate that prune proposal removes expired proposals", func() {
-		req := &group.MsgSubmitProposal{
-			GroupPolicyAddress: accountAddr.String(),
-			Proposers:          []string{addrs[1].String()},
-		}
-		err := req.SetMsgs([]sdk.Msg{msgSend})
-		s.Require().NoError(err)
-		submittedProposal, err := s.keeper.SubmitProposal(s.ctx, req)
-		s.Require().NoError(err)
-		queryProposal := group.QueryProposalRequest{ProposalId: submittedProposal.ProposalId}
-		prePrune, err := s.keeper.Proposal(s.ctx, &queryProposal)
-		s.Require().NoError(err)
-		s.Require().Equal(prePrune.Proposal.Id, submittedProposal.ProposalId)
-		// Move Forward in time for 15 days, after voting period end + max_execution_period
-		s.sdkCtx = s.sdkCtx.WithBlockTime(s.sdkCtx.BlockTime().Add(expirationTime))
+	req := &group.MsgSubmitProposal{
+		GroupPolicyAddress: accountAddr.String(),
+		Proposers:          []string{addrs[1].String()},
+	}
+	err = req.SetMsgs([]sdk.Msg{msgSend})
+	s.Require().NoError(err)
+	submittedProposal, err := s.keeper.SubmitProposal(s.ctx, req)
+	s.Require().NoError(err)
+	queryProposal := group.QueryProposalRequest{ProposalId: submittedProposal.ProposalId}
+	prePrune, err := s.keeper.Proposal(s.ctx, &queryProposal)
+	s.Require().NoError(err)
+	s.Require().Equal(prePrune.Proposal.Id, submittedProposal.ProposalId)
+	// Move Forward in time for 15 days, after voting period end + max_execution_period
+	s.sdkCtx = s.sdkCtx.WithBlockTime(s.sdkCtx.BlockTime().Add(expirationTime))
 
-		// Prune Expired Proposals
-		err = s.keeper.PruneProposals(s.sdkCtx)
-		s.Require().NoError(err)
-		postPrune, err := s.keeper.Proposal(s.ctx, &queryProposal)
-		s.Require().Nil(postPrune)
-		s.Require().Error(err)
-		s.Require().Contains(err.Error(), "load proposal: not found")
-	})
+	// Prune Expired Proposals
+	err = s.keeper.PruneProposals(s.sdkCtx)
+	s.Require().NoError(err)
+	postPrune, err := s.keeper.Proposal(s.ctx, &queryProposal)
+	s.Require().Nil(postPrune)
+	s.Require().Error(err)
+	s.Require().Contains(err.Error(), "load proposal: not found")
 }
 
 func submitProposal(

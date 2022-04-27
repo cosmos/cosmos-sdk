@@ -15,6 +15,11 @@ type (
 	Uint = sdkmath.Uint
 )
 
+var (
+	NewIntFromBigInt = sdkmath.NewIntFromBigInt
+	OneInt           = sdkmath.OneInt
+)
+
 func (ip IntProto) String() string {
 	return ip.Int.String()
 }

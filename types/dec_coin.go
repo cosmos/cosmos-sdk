@@ -6,8 +6,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-
-	sdkmath "github.com/cosmos/cosmos-sdk/math"
 )
 
 // ----------------------------------------------------------------------------
@@ -52,7 +50,7 @@ func NewDecCoinFromCoin(coin Coin) DecCoin {
 // NewInt64DecCoin returns a new DecCoin with a denomination and amount. It will
 // panic if the amount is negative or denom is invalid.
 func NewInt64DecCoin(denom string, amount int64) DecCoin {
-	return NewDecCoin(denom, sdkmath.NewInt(amount))
+	return NewDecCoin(denom, NewInt(amount))
 }
 
 // IsZero returns if the DecCoin amount is zero.

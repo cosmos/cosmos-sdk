@@ -1,9 +1,5 @@
 package types
 
-import (
-	sdkmath "github.com/cosmos/cosmos-sdk/math"
-)
-
 // staking constants
 const (
 
@@ -23,7 +19,7 @@ const (
 )
 
 // DefaultPowerReduction is the default amount of staking tokens required for 1 unit of consensus-engine power
-var DefaultPowerReduction = sdkmath.NewIntFromUint64(1000000)
+var DefaultPowerReduction = NewIntFromUint64(1000000)
 
 // TokensToConsensusPower - convert input tokens to potential consensus-engine power
 func TokensToConsensusPower(tokens Int, powerReduction Int) int64 {
@@ -32,5 +28,5 @@ func TokensToConsensusPower(tokens Int, powerReduction Int) int64 {
 
 // TokensFromConsensusPower - convert input power to tokens
 func TokensFromConsensusPower(power int64, powerReduction Int) Int {
-	return sdkmath.NewInt(power).Mul(powerReduction)
+	return NewInt(power).Mul(powerReduction)
 }

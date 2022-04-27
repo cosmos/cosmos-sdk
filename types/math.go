@@ -18,6 +18,16 @@ type (
 var (
 	NewIntFromBigInt = sdkmath.NewIntFromBigInt
 	OneInt           = sdkmath.OneInt
+	NewInt           = sdkmath.NewInt
+	ZeroInt          = sdkmath.ZeroInt
+	IntEq            = sdkmath.IntEq
+	NewIntFromString = sdkmath.NewIntFromString
+	NewUint          = sdkmath.NewUint
+	NewIntFromUint64 = sdkmath.NewIntFromUint64
+)
+
+const (
+	MaxBitLen = sdkmath.MaxBitLen
 )
 
 func (ip IntProto) String() string {

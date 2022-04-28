@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package cosmos.orm.v1alpha1;
+
+import "google/protobuf/any.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+
+service Service {
+  rpc Find(FindRequest) returns (FindResponse);
+}
+
+message FindRequest {
+  // message_name is the fully-qualified message name of the ORM table being queried.
+  string message_name = 1;
+
+  WhereExpr where = 2;
+
+  repeated OrderExpr order_by = 3;
+
+  // pagination is the pagination request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 4;
+}
+
+message WhereExpr {
+  repeated FieldExpr fields = 1;
+}
+
+message FieldExpr {
+  string name = 1;
+  string eq = 2;
+  string gt = 3;
+  string lt = 4;
+  string lte = 5;
+  string gte = 6;
+//  repeated string in = 7;
+//  repeated string nin = 8;
+//  string neq = 9;
+//  string regex = 10;
+}
+
+message OrderExpr {
+  string field = 1;
+  Order order = 2;
+}
+
+enum Order {
+  ORDER_ASC_UNDEFINED = 0;
+  ORDER_DESC = 2;
+}
+
+message FindResponse {
+  // results are the results of the query.
+  repeated google.protobuf.Any results = 1;
+
+  // pagination is the pagination response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 5;
+}

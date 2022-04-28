@@ -2315,7 +2315,6 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 
 		s.Run(tc.name, func() {
 			cmdSubmitProposal := client.MsgSubmitProposalCmd()
-			//cmdLeaveGroup := client.MsgLeaveGroupCmd()
 			cmdMsgExec := client.MsgExecCmd()
 
 			groupID := s.createGroupWithMembers(weights, accounts)

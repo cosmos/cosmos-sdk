@@ -256,7 +256,7 @@ func parseDoneKey(key []byte) (string, int64) {
 
 // encodeDoneKey - concatenate DoneByte, height and upgrade name to form the done key
 func encodeDoneKey(name string, height int64) []byte {
-	key := make([]byte, 9+len(name))
+	key := make([]byte, 9+len(name)) // 9 = donebyte + uint64 len
 	key[0] = types.DoneByte
 	binary.BigEndian.PutUint64(key[1:9], uint64(height))
 	copy(key[9:], name)

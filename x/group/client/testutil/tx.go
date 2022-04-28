@@ -35,6 +35,7 @@ type IntegrationTestSuite struct {
 	proposal      *group.Proposal
 	vote          *group.Vote
 	voter         *group.Member
+	nextAccount   int
 }
 
 const validMetadata = "metadata"
@@ -2146,24 +2147,25 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 	}
 
 	// create 3 accounts with some tokens
-	members := make([]string, 3)
-	for i := 1; i <= 3; i++ {
-		info, _, err := clientCtx.Keyring.NewMnemonic(fmt.Sprintf("member%d", i), keyring.English, sdk.FullFundraiserPath,
-			keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-		require.NoError(err)
-
-		pk, err := info.GetPubKey()
-		require.NoError(err)
-
-		account := sdk.AccAddress(pk.Address())
-		members[i-1] = account.String()
-
-		_, err = banktestutil.MsgSendExec(clientCtx, val.Address, account,
-			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))),
-			commonFlags...,
-		)
-		require.NoError(err)
-	}
+	members := s.createAccounts(3)
+	//members := make([]string, 3)
+	//for i := 1; i <= 3; i++ {
+	//	info, _, err := clientCtx.Keyring.NewMnemonic(fmt.Sprintf("member%d", i), keyring.English, sdk.FullFundraiserPath,
+	//		keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	//	require.NoError(err)
+	//
+	//	pk, err := info.GetPubKey()
+	//	require.NoError(err)
+	//
+	//	account := sdk.AccAddress(pk.Address())
+	//	members[i-1] = account.String()
+	//
+	//	_, err = banktestutil.MsgSendExec(clientCtx, val.Address, account,
+	//		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))),
+	//		commonFlags...,
+	//	)
+	//	require.NoError(err)
+	//}
 
 	// create a group with three members
 	validMembers := fmt.Sprintf(`{"members": [{
@@ -2318,7 +2320,6 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 
 	weights := []string{"1", "1", "2"}
 	accounts := s.createAccounts(3)
-
 	testCases := []struct {
 		name                    string
 		indexOfMemberThatLEaves int
@@ -2337,6 +2338,15 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 			"",
 			&sdk.TxResponse{},
 		},
+		//{
+		//	"member leaves while all others vote yes and no",
+		//	0,
+		//	[]string{"VOTE_OPTION_YES", "VOTE_OPTION_NO", "VOTE_OPTION_YES"},
+		//	accounts,
+		//	true,
+		//	"PROPOSAL_EXECUTOR_RESULT_NOT_RUN",
+		//	&sdk.TxResponse{},
+		//},
 		{
 			"member that leaves affects the threshold",
 			2,
@@ -2348,15 +2358,6 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 		},
 	}
 
-	//append(
-	//	[]string{
-	//		accounts[0],
-	//		groupIDs[0],
-	//
-	//		fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[0]),
-	//	},
-	//	commonFlags...,
-	//),
 	for _, tc := range testCases {
 		tc := tc
 
@@ -2566,9 +2567,11 @@ func (s *IntegrationTestSuite) createAccounts(quantity int) []string {
 	}
 
 	for i := 1; i <= quantity; i++ {
-		info, _, err := clientCtx.Keyring.NewMnemonic(fmt.Sprintf("member%d", i), keyring.English, sdk.FullFundraiserPath,
+		memberNumber := s.nextAccount
+		info, _, err := clientCtx.Keyring.NewMnemonic(fmt.Sprintf("member%d", memberNumber), keyring.English, sdk.FullFundraiserPath,
 			keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 		s.Require().NoError(err)
+		s.nextAccount++
 
 		pk, err := info.GetPubKey()
 		s.Require().NoError(err)

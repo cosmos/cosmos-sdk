@@ -48,7 +48,7 @@ func (m MsgCreateGroup) ValidateBasic() error {
 // Note: in state, a member's weight MUST be positive. However, in some Msgs,
 // it's possible to set a zero member weight, for example in
 // MsgUpdateGroupMembers to denote that we're removing a member.
-func (m Member) ValidateBasic() error {
+func (m MemberRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Address)
 	if err != nil {
 		return sdkerrors.Wrap(err, "address")
@@ -208,7 +208,7 @@ var _ sdk.Msg = &MsgCreateGroupWithPolicy{}
 var _ types.UnpackInterfacesMessage = MsgCreateGroupWithPolicy{}
 
 // NewMsgCreateGroupWithPolicy creates a new MsgCreateGroupWithPolicy.
-func NewMsgCreateGroupWithPolicy(admin string, members []Member, groupMetadata string, groupPolicyMetadata string, groupPolicyAsAdmin bool, decisionPolicy DecisionPolicy) (*MsgCreateGroupWithPolicy, error) {
+func NewMsgCreateGroupWithPolicy(admin string, members []MemberRequest, groupMetadata string, groupPolicyMetadata string, groupPolicyAsAdmin bool, decisionPolicy DecisionPolicy) (*MsgCreateGroupWithPolicy, error) {
 	m := &MsgCreateGroupWithPolicy{
 		Admin:               admin,
 		Members:             members,
@@ -826,7 +826,7 @@ func (m MsgLeaveGroup) ValidateBasic() error {
 // strictValidateMembers performs ValidateBasic on Members, but also checks
 // that all members weights are positive (whereas `Members{members}.ValidateBasic()`
 // only checks that they are non-negative.
-func strictValidateMembers(members []Member) error {
+func strictValidateMembers(members []MemberRequest) error {
 	err := Members{members}.ValidateBasic()
 	if err != nil {
 		return err

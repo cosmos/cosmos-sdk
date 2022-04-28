@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
-func parseMembers(clientCtx client.Context, membersFile string) ([]group.Member, error) {
+func parseMembers(clientCtx client.Context, membersFile string) ([]group.MemberRequest, error) {
 	members := group.Members{}
 
 	if membersFile == "" {

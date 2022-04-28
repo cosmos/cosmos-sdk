@@ -348,11 +348,19 @@ func (g GroupMember) ValidateBasic() error {
 		return sdkerrors.Wrap(errors.ErrEmpty, "group member's group id")
 	}
 
-	err := g.Member.ValidateBasic()
+	err := MemberToMemberRequest(g.Member).ValidateBasic()
 	if err != nil {
 		return sdkerrors.Wrap(err, "group member")
 	}
 	return nil
+}
+
+func MemberToMemberRequest(m *Member) MemberRequest {
+	return MemberRequest{
+		Address: m.Address,
+		Weight: m.Weight,
+		Metadata: m.Metadata,
+	}
 }
 
 func (p Proposal) ValidateBasic() error {

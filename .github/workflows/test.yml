@@ -47,9 +47,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Run submodule tests and create test coverage profile.
-        # GIT_DIFF is passed to the scripts
         run: bash scripts/module-tests.sh
-        if: env.GIT_DIFF
       - uses: actions/upload-artifact@v3
         with:
           name: "${{ github.sha }}-go-submodules-coverage"

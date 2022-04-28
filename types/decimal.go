@@ -138,7 +138,7 @@ func NewDecFromIntWithPrec(i Int, prec int64) Dec {
 // CONTRACT - This function does not mutate the input str.
 func NewDecFromStr(str string) (Dec, error) {
 	if len(str) == 0 {
-		return Dec{}, fmt.Errorf("%w: %s", ErrEmptyDecimalStr, str)
+		return Dec{}, fmt.Errorf("%s: %w", str, ErrEmptyDecimalStr)
 	}
 
 	// first extract any negative symbol
@@ -149,7 +149,7 @@ func NewDecFromStr(str string) (Dec, error) {
 	}
 
 	if len(str) == 0 {
-		return Dec{}, fmt.Errorf("%w: %s", ErrEmptyDecimalStr, str)
+		return Dec{}, fmt.Errorf("%s: %w", str, ErrEmptyDecimalStr)
 	}
 
 	strs := strings.Split(str, ".")

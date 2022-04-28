@@ -2308,13 +2308,13 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_YES", "VOTE_OPTION_YES"},
 			accounts,
 			func(groupID string) (*cobra.Command, []string) {
-				indexOfMemberThatLEaves := 0
+				indexOfMemberThatLeaves := 0
 				args := append(
 					[]string{
-						accounts[indexOfMemberThatLEaves],
+						accounts[indexOfMemberThatLeaves],
 						groupID,
 
-						fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[indexOfMemberThatLEaves]),
+						fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[indexOfMemberThatLeaves]),
 					},
 					commonFlags...,
 				)
@@ -2330,13 +2330,13 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_NO", "VOTE_OPTION_YES"},
 			accounts,
 			func(groupID string) (*cobra.Command, []string) {
-				indexOfMemberThatLEaves := 0
+				indexOfMemberThatLeaves := 0
 				args := append(
 					[]string{
-						accounts[indexOfMemberThatLEaves],
+						accounts[indexOfMemberThatLeaves],
 						groupID,
 
-						fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[indexOfMemberThatLEaves]),
+						fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[indexOfMemberThatLeaves]),
 					},
 					commonFlags...,
 				)
@@ -2352,13 +2352,13 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_NO"},
 			accounts,
 			func(groupID string) (*cobra.Command, []string) {
-				indexOfMemberThatLEaves := 2
+				indexOfMemberThatLeaves := 2
 				args := append(
 					[]string{
-						accounts[indexOfMemberThatLEaves],
+						accounts[indexOfMemberThatLeaves],
 						groupID,
 
-						fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[indexOfMemberThatLEaves]),
+						fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[indexOfMemberThatLeaves]),
 					},
 					commonFlags...,
 				)

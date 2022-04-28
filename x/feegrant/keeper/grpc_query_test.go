@@ -192,7 +192,7 @@ func (suite *KeeperTestSuite) TestFeeAllowancesByGranter() {
 			func() {
 				suite.grantFeeAllowance(suite.addrs[0], suite.addrs[1])
 
-				// adding this allowance to check the pagination working fine.
+				// adding this allowance to check whether the pagination working fine.
 				suite.grantFeeAllowance(suite.addrs[1], suite.addrs[2])
 			},
 			func(resp *feegrant.QueryAllowancesByGranterResponse) {

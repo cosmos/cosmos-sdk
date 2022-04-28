@@ -4,6 +4,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
+	"github.com/spf13/cobra"
 	"strconv"
 	"strings"
 
@@ -700,6 +702,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 			cmd := client.MsgUpdateGroupMembersCmd()
 
 			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			fmt.Println("TESTCASE", out)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
@@ -707,6 +710,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
+				fmt.Println("TextResp", txResp)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
 			}
 		})
@@ -2326,6 +2330,7 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 		indexOfMemberThatLEaves int
 		votes                   []string
 		members                 []string
+		malleate                func(groupID string) (*cobra.Command, []string)
 		expectErr               bool
 		errMsg                  string
 		respType                proto.Message
@@ -2335,6 +2340,19 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 			0,
 			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_YES", "VOTE_OPTION_YES"},
 			accounts,
+			func(groupID string) (*cobra.Command, []string) {
+				indexOfMemberThatLEaves := 0
+				args := append(
+					[]string{
+						accounts[indexOfMemberThatLEaves],
+						groupID,
+
+						fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[indexOfMemberThatLEaves]),
+					},
+					commonFlags...,
+				)
+				return client.MsgLeaveGroupCmd(), args
+			},
 			false,
 			"",
 			&sdk.TxResponse{},
@@ -2344,6 +2362,19 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 			0,
 			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_NO", "VOTE_OPTION_YES"},
 			accounts,
+			func(groupID string) (*cobra.Command, []string) {
+				indexOfMemberThatLEaves := 0
+				args := append(
+					[]string{
+						accounts[indexOfMemberThatLEaves],
+						groupID,
+
+						fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[indexOfMemberThatLEaves]),
+					},
+					commonFlags...,
+				)
+				return client.MsgLeaveGroupCmd(), args
+			},
 			true,
 			"PROPOSAL_EXECUTOR_RESULT_NOT_RUN",
 			&sdk.TxResponse{},
@@ -2353,6 +2384,43 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 			2,
 			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_NO"},
 			accounts,
+			func(groupID string) (*cobra.Command, []string) {
+				indexOfMemberThatLEaves := 2
+				args := append(
+					[]string{
+						accounts[indexOfMemberThatLEaves],
+						groupID,
+
+						fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[indexOfMemberThatLEaves]),
+					},
+					commonFlags...,
+				)
+				return client.MsgLeaveGroupCmd(), args
+			},
+			true,
+			"PROPOSAL_EXECUTOR_RESULT_NOT_RUN",
+			&sdk.TxResponse{},
+		},
+		{
+			"update member policy",
+			2,
+			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_NO"},
+			accounts,
+			func(groupID string) (*cobra.Command, []string) {
+				updateGroupString := s.newValidMembers(weights[0:1], accounts[0:1]).String()
+
+				validUpdateMemberFileName := testutil.WriteToNewTempFile(s.T(), updateGroupString).Name()
+
+				args := append(
+					[]string{
+						val.Address.String(),
+						groupID,
+						validUpdateMemberFileName,
+					},
+					commonFlags...,
+				)
+				return client.MsgUpdateGroupMembersCmd(), args
+			},
 			true,
 			"PROPOSAL_EXECUTOR_RESULT_NOT_RUN",
 			&sdk.TxResponse{},
@@ -2363,16 +2431,12 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			fmt.Println("TEST ----:", tc.name)
 			cmdSubmitProposal := client.MsgSubmitProposalCmd()
-			cmdLeaveGroup := client.MsgLeaveGroupCmd()
+			//cmdLeaveGroup := client.MsgLeaveGroupCmd()
 			cmdMsgExec := client.MsgExecCmd()
 
 			groupID := s.createGroupWithMembers(weights, accounts)
 			groupPolicyAddress := s.createGroupThresholdPolicyWithTokens(groupID, 3, 100)
-
-			fmt.Println("GroupID:", groupID)
-			fmt.Println("Group Policy Address", groupPolicyAddress)
 
 			// Submit proposal
 			proposal := s.createCLIProposal(
@@ -2390,11 +2454,8 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 			s.Require().NoError(err, out.String())
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &submitProposalResp), out.String())
 			proposalID := s.getProposalIdFromTxResponse(submitProposalResp)
-			fmt.Println("SubmitProposal: ", out)
-			fmt.Println("ProposalID:", proposalID)
 
 			for i, vote := range tc.votes {
-				fmt.Println("Vote #", i)
 				memberAddress := tc.members[i]
 				out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgVoteCmd(),
 					append(
@@ -2413,24 +2474,11 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 				s.Require().Equal(uint32(0), txResp.Code, out.String())
 
-				fmt.Println("VOTE:", out)
-
 			}
 
-			out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryVotesByProposalCmd(), []string{proposalID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
-			fmt.Println("Votes", out)
+			testCMD, testArgs := tc.malleate(groupID)
 
-			leaveGroupArg := append(
-				[]string{
-					accounts[tc.indexOfMemberThatLEaves],
-					groupID,
-
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[tc.indexOfMemberThatLEaves]),
-				},
-				commonFlags...,
-			)
-
-			out, err = cli.ExecTestCLICmd(clientCtx, cmdLeaveGroup, leaveGroupArg)
+			out, err = cli.ExecTestCLICmd(clientCtx, testCMD, testArgs)
 			s.Require().NoError(err, out.String())
 			var resp sdk.TxResponse
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
@@ -2452,7 +2500,6 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 			out, err = cli.ExecTestCLICmd(clientCtx, cmdMsgExec, args)
 			s.Require().NoError(err)
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &execResp), out.String())
-			fmt.Println("ExecMSG", out)
 
 			if tc.expectErr {
 				s.Require().Contains(execResp.RawLog, tc.errMsg)
@@ -2460,71 +2507,6 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 
 		})
 	}
-
-}
-
-func (s *IntegrationTestSuite) TestSubmitProposalAndUpdate() {
-	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx
-
-	commonFlags := []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-
-	membersWeights := []string{"1", "1", "1"}
-	accounts := s.createAccounts(3)
-	groupID := s.createGroupWithMembers(membersWeights, accounts)
-
-	groupPolicyAddress := s.createGroupThresholdPolicyWithTokens(groupID, 3, 100)
-
-	updateGroupString := s.newValidMembers(membersWeights[0:1], accounts[0:1]).String()
-
-	validUpdateMemberFileName := testutil.WriteToNewTempFile(s.T(), updateGroupString).Name()
-
-	cmdSubmitProposal := client.MsgSubmitProposalCmd()
-	submitProposalArgs := append([]string{
-		s.createCLIProposal(
-			groupPolicyAddress, accounts[0],
-			groupPolicyAddress, accounts[0],
-			"",
-		),
-	},
-		commonFlags...,
-	)
-	var submitProposalResp sdk.TxResponse
-	out, err := cli.ExecTestCLICmd(clientCtx, cmdSubmitProposal, submitProposalArgs)
-	s.Require().NoError(err, out.String())
-	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &submitProposalResp), out.String())
-	proposalID := s.getProposalIdFromTxResponse(submitProposalResp)
-
-	args := append(
-		[]string{
-			val.Address.String(),
-			groupID,
-			validUpdateMemberFileName,
-		},
-		commonFlags...,
-	)
-
-	out, err = cli.ExecTestCLICmd(clientCtx, client.MsgUpdateGroupMembersCmd(), args)
-	s.Require().NoError(err)
-
-	args = append(
-		[]string{
-			proposalID,
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[0]),
-		},
-		commonFlags...,
-	)
-
-	var execResp sdk.TxResponse
-	out, err = cli.ExecTestCLICmd(clientCtx, client.MsgExecCmd(), args)
-	s.Require().NoError(err)
-	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &execResp), out.String())
-
-	s.Require().Contains(execResp.RawLog, "PROPOSAL_EXECUTOR_RESULT_NOT_RUN")
 
 }
 
@@ -2581,11 +2563,12 @@ func (s *IntegrationTestSuite) createAccounts(quantity int) []string {
 	}
 
 	for i := 1; i <= quantity; i++ {
-		memberNumber := s.nextAccount
-		info, _, err := clientCtx.Keyring.NewMnemonic(fmt.Sprintf("member%d", memberNumber), keyring.English, sdk.FullFundraiserPath,
+		memberNumber := uuid.New().String()
+
+		info, _, err := clientCtx.Keyring.NewMnemonic(fmt.Sprintf("member%s", memberNumber), keyring.English, sdk.FullFundraiserPath,
 			keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 		s.Require().NoError(err)
-		s.nextAccount++
+		//s.nextAccount++
 
 		pk, err := info.GetPubKey()
 		s.Require().NoError(err)

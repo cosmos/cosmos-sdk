@@ -2547,7 +2547,6 @@ func (s *IntegrationTestSuite) createAccounts(quantity int) []string {
 		info, _, err := clientCtx.Keyring.NewMnemonic(fmt.Sprintf("member%s", memberNumber), keyring.English, sdk.FullFundraiserPath,
 			keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 		s.Require().NoError(err)
-		//s.nextAccount++
 
 		pk, err := info.GetPubKey()
 		s.Require().NoError(err)

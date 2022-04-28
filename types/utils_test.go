@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 	"time"
 
@@ -100,6 +101,10 @@ func (s *utilsTestSuite) TestFormatTimeBytes() {
 	tm, err := time.Parse("Jan 2, 2006 at 3:04pm (MST)", "Mar 3, 2020 at 7:54pm (UTC)")
 	s.Require().NoError(err)
 	s.Require().Equal("2020-03-03T19:54:00.000000000", string(sdk.FormatTimeBytes(tm)))
+	fmt.Printf("string(sdk.FormatTimeBytes(tm)): %v\n", len(sdk.FormatTimeBytes(tm)))
+	key := []byte{0x01}
+	fmt.Printf("string(sdk.FormatTimeBytes(tm)): %v\n", len(key))
+	s.Require().NotNil(nil)
 }
 
 func (s *utilsTestSuite) TestParseTimeBytes() {

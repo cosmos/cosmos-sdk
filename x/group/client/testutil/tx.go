@@ -702,7 +702,6 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 			cmd := client.MsgUpdateGroupMembersCmd()
 
 			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			fmt.Println("TESTCASE", out)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
@@ -710,7 +709,6 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				fmt.Println("TextResp", txResp)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
 			}
 		})

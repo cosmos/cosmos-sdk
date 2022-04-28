@@ -2463,9 +2463,10 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 				},
 				commonFlags...,
 			)
-			var execResp sdk.TxResponse
 			out, err = cli.ExecTestCLICmd(clientCtx, cmdMsgExec, args)
 			s.Require().NoError(err)
+
+			var execResp sdk.TxResponse
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &execResp), out.String())
 
 			if tc.expectErr {

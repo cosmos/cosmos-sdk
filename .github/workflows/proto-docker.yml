@@ -23,21 +23,21 @@ jobs:
           echo ::set-output name=tags::${TAGS}
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@master
+        uses: docker/setup-qemu-action@v1.2.0
         with:
           platforms: all
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@latest
+        uses: docker/setup-buildx-action@v1.7.0
 
       - name: Login to DockerHub
-        uses: docker/login-action@latest
+        uses: docker/login-action@v1.14.1
         with:
           username: ${{ secrets.DOCKERHUBTM_USERNAME }}
           password: ${{ secrets.DOCKERHUBTM_TOKEN }}
 
       - name: Publish to Docker Hub
-        uses: docker/build-push-action@latest
+        uses: docker/build-push-action@v2.1.0
         with:
           file: contrib/images/proto-builder
           context: .

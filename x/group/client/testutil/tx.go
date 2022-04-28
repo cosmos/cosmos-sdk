@@ -2294,7 +2294,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 	accounts := s.createAccounts(3)
 	testCases := []struct {
 		name                    string
-		indexOfMemberThatLEaves int
+		indexOfMemberThatLeaves int
 		votes                   []string
 		members                 []string
 		malleate                func(groupID string) (*cobra.Command, []string)

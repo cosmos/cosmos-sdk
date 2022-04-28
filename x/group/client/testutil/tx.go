@@ -37,6 +37,7 @@ type IntegrationTestSuite struct {
 	proposal      *group.Proposal
 	vote          *group.Vote
 	voter         *group.Member
+	commonFlags   []string
 }
 
 const validMetadata = "metadata"
@@ -49,6 +50,12 @@ func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
+
+	s.commonFlags = []string{
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	}
 
 	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
@@ -77,12 +84,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	)
 	s.Require().NoError(err)
 
-	var commonFlags = []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-
 	memberWeight := "3"
 	// create a group
 	validMembers := fmt.Sprintf(`
@@ -103,7 +104,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				validMetadata,
 				validMembersFile.Name(),
 			},
-			commonFlags...,
+			s.commonFlags...,
 		),
 	)
 
@@ -135,7 +136,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				validMetadata,
 				fmt.Sprintf("{\"@type\":\"/cosmos.group.v1.PercentageDecisionPolicy\", \"percentage\":\"%f\", \"windows\":{\"voting_period\":\"30000s\"}}", percentage),
 			},
-			commonFlags...,
+			s.commonFlags...,
 		),
 	)
 	s.Require().NoError(err, out.String())
@@ -159,7 +160,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 					s.groupPolicies[0].Address, val.Address.String(),
 					""),
 			},
-			commonFlags...,
+			s.commonFlags...,
 		),
 	)
 	s.Require().NoError(err, out.String())
@@ -175,7 +176,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				"VOTE_OPTION_YES",
 				"",
 			},
-			commonFlags...,
+			s.commonFlags...,
 		),
 	)
 	s.Require().NoError(err, out.String())
@@ -211,12 +212,6 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 func (s *IntegrationTestSuite) TestTxCreateGroup() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
-
-	var commonFlags = []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
 
 	validMembers := fmt.Sprintf(`{"members": [{
 	  "address": "%s",
@@ -260,7 +255,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 					"",
 					validMembersFile.Name(),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -276,7 +271,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 					validMembersFile.Name(),
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -291,7 +286,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 					strings.Repeat("a", 256),
 					"",
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"group metadata: limit exceeded",
@@ -306,7 +301,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 					"null",
 					invalidMembersAddressFile.Name(),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"message validation failed: address: empty address string is not allowed",
@@ -321,7 +316,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 					"null",
 					invalidMembersWeightFile.Name(),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"expected a positive decimal, got 0: invalid decimal string",
@@ -336,7 +331,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 					"null",
 					invalidMembersMetadataFile.Name(),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"member metadata: limit exceeded",
@@ -370,12 +365,6 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAdmin() {
 	clientCtx := val.ClientCtx
 	require := s.Require()
 
-	var commonFlags = []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-
 	groupIDs := make([]string, 2)
 	for i := 0; i < 2; i++ {
 		validMembers := fmt.Sprintf(`{"members": [{
@@ -391,7 +380,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAdmin() {
 					validMetadata,
 					validMembersFile.Name(),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 		)
 		require.NoError(err, out.String())
@@ -417,7 +406,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAdmin() {
 					groupIDs[0],
 					s.network.Validators[1].Address.String(),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -433,7 +422,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAdmin() {
 					s.network.Validators[1].Address.String(),
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -448,7 +437,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAdmin() {
 					"",
 					s.network.Validators[1].Address.String(),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"strconv.ParseUint: parsing \"\": invalid syntax",
@@ -463,7 +452,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAdmin() {
 					"12345",
 					s.network.Validators[1].Address.String(),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"not found",
@@ -496,12 +485,6 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMetadata() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
-	var commonFlags = []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-
 	testCases := []struct {
 		name         string
 		args         []string
@@ -518,7 +501,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMetadata() {
 					"2",
 					validMetadata,
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -534,7 +517,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMetadata() {
 					validMetadata,
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -549,7 +532,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMetadata() {
 					strconv.FormatUint(s.group.Id, 10),
 					strings.Repeat("a", 256),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"group metadata: limit exceeded",
@@ -581,12 +564,6 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMetadata() {
 func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
-
-	var commonFlags = []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
 
 	validUpdatedMembersFileName := testutil.WriteToNewTempFile(s.T(), fmt.Sprintf(`{"members": [{
 		"address": "%s",
@@ -623,7 +600,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 					"2",
 					validUpdatedMembersFileName,
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -643,7 +620,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 	}]}`, s.groupPolicies[0].Address, validMetadata)).Name(),
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -658,7 +635,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 					strconv.FormatUint(s.group.Id, 10),
 					invalidMembersMetadataFileName,
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"group member metadata: limit exceeded",
@@ -673,7 +650,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 					"12345",
 					validUpdatedMembersFileName,
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"not found",
@@ -705,12 +682,6 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
-
-	var commonFlags = []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
 
 	validMembers := fmt.Sprintf(`{"members": [{
 		"address": "%s",
@@ -757,7 +728,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 					"{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
 					fmt.Sprintf("--%s=%v", client.FlagGroupPolicyAsAdmin, false),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -775,7 +746,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 					"{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
 					fmt.Sprintf("--%s=%v", client.FlagGroupPolicyAsAdmin, true),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -794,7 +765,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 					fmt.Sprintf("--%s=%v", client.FlagGroupPolicyAsAdmin, false),
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -812,7 +783,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 					"{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
 					fmt.Sprintf("--%s=%v", client.FlagGroupPolicyAsAdmin, false),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"group metadata: limit exceeded",
@@ -830,7 +801,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 					"{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
 					fmt.Sprintf("--%s=%v", client.FlagGroupPolicyAsAdmin, false),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"group policy metadata: limit exceeded",
@@ -848,7 +819,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 					"{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
 					fmt.Sprintf("--%s=%v", client.FlagGroupPolicyAsAdmin, false),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"message validation failed: address: empty address string is not allowed",
@@ -866,7 +837,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 					"{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
 					fmt.Sprintf("--%s=%v", client.FlagGroupPolicyAsAdmin, false),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"expected a positive decimal, got 0: invalid decimal string",
@@ -884,7 +855,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 					"{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
 					fmt.Sprintf("--%s=%v", client.FlagGroupPolicyAsAdmin, false),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"member metadata: limit exceeded",
@@ -917,12 +888,6 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 	wrongAdmin := s.network.Validators[1].Address
 	clientCtx := val.ClientCtx
 
-	var commonFlags = []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-
 	groupID := s.group.Id
 
 	testCases := []struct {
@@ -942,7 +907,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 					validMetadata,
 					"{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -958,7 +923,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 					validMetadata,
 					"{\"@type\":\"/cosmos.group.v1.PercentageDecisionPolicy\", \"percentage\":\"0.5\", \"windows\":{\"voting_period\":\"1s\"}}",
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -975,7 +940,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 					"{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -991,7 +956,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 					validMetadata,
 					"{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"key not found",
@@ -1007,7 +972,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 					strings.Repeat("a", 500),
 					"{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"group policy metadata: limit exceeded",
@@ -1023,7 +988,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 					validMetadata,
 					"{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"1\", \"windows\":{\"voting_period\":\"1s\"}}",
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"not found",
@@ -1039,7 +1004,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 					validMetadata,
 					"{\"@type\":\"/cosmos.group.v1.PercentageDecisionPolicy\", \"percentage\":\"-0.5\", \"windows\":{\"voting_period\":\"1s\"}}",
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"expected a positive decimal",
@@ -1055,7 +1020,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 					validMetadata,
 					"{\"@type\":\"/cosmos.group.v1.PercentageDecisionPolicy\", \"percentage\":\"2\", \"windows\":{\"voting_period\":\"1s\"}}",
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"percentage must be > 0 and <= 1",
@@ -1090,12 +1055,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyAdmin() {
 	clientCtx := val.ClientCtx
 	groupPolicy := s.groupPolicies[3]
 
-	var commonFlags = []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
-	}
+	commonFlags := append(s.commonFlags, fmt.Sprintf("--%s=%d", flags.FlagGas, 300000))
 
 	testCases := []struct {
 		name         string
@@ -1194,12 +1154,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 	clientCtx := val.ClientCtx
 	groupPolicy := s.groupPolicies[2]
 
-	var commonFlags = []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
-	}
+	commonFlags := append(s.commonFlags, fmt.Sprintf("--%s=%d", flags.FlagGas, 300000))
 
 	testCases := []struct {
 		name         string
@@ -1343,12 +1298,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 	clientCtx := val.ClientCtx
 	groupPolicy := s.groupPolicies[2]
 
-	var commonFlags = []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
-	}
+	commonFlags := append(s.commonFlags, fmt.Sprintf("--%s=%d", flags.FlagGas, 300000))
 
 	testCases := []struct {
 		name         string
@@ -1460,12 +1410,6 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
-	var commonFlags = []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-
 	testCases := []struct {
 		name         string
 		args         []string
@@ -1484,7 +1428,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 						"",
 					),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -1502,7 +1446,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 					),
 					fmt.Sprintf("--%s=try", client.FlagExec),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -1519,7 +1463,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 						""),
 					fmt.Sprintf("--%s=try", client.FlagExec),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -1537,7 +1481,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 					),
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -1554,7 +1498,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 						tooLongMetadata,
 					),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"metadata: limit exceeded",
@@ -1570,7 +1514,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 						val.Address.String(), s.groupPolicies[0].Address,
 						""),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"msg does not have group policy authorization",
@@ -1587,7 +1531,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 						"",
 					),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"invalid.info: key not found",
@@ -1604,7 +1548,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 						"",
 					),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"group policy: decoding bech32 failed",
@@ -1621,7 +1565,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 						"",
 					),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"group policy: not found",
@@ -1654,12 +1598,6 @@ func (s *IntegrationTestSuite) TestTxVote() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
-	var commonFlags = []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-
 	ids := make([]string, 4)
 
 	for i := 0; i < 4; i++ {
@@ -1671,7 +1609,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 						s.groupPolicies[1].Address, val.Address.String(),
 						""),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 		)
 		s.Require().NoError(err, out.String())
@@ -1699,7 +1637,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 					"VOTE_OPTION_YES",
 					"",
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -1716,7 +1654,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 					"",
 					fmt.Sprintf("--%s=try", client.FlagExec),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -1733,7 +1671,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 					"",
 					fmt.Sprintf("--%s=try", client.FlagExec),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -1750,7 +1688,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 					"",
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -1766,7 +1704,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 					"VOTE_OPTION_YES",
 					"",
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"invalid syntax",
@@ -1782,7 +1720,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 					"VOTE_OPTION_YES",
 					"",
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"proposal: not found",
@@ -1798,7 +1736,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 					"VOTE_OPTION_YES",
 					tooLongMetadata,
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"metadata: limit exceeded",
@@ -1814,7 +1752,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 					"INVALID_VOTE_OPTION",
 					"",
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"not a valid vote option",
@@ -1847,12 +1785,6 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
-	var commonFlags = []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-
 	ids := make([]string, 2)
 
 	for i := 0; i < 2; i++ {
@@ -1864,7 +1796,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 						s.groupPolicies[1].Address, val.Address.String(),
 						""),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 		)
 		s.Require().NoError(err, out.String())
@@ -1890,7 +1822,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 					ids[0],
 					val.Address.String(),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -1904,7 +1836,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 					ids[0],
 					val.Address.String(),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"cannot withdraw a proposal with the status of PROPOSAL_STATUS_WITHDRAWN",
@@ -1918,7 +1850,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 					"222",
 					"wrongAdmin",
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"not found",
@@ -1932,7 +1864,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 					"abc",
 					val.Address.String(),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"invalid syntax",
@@ -1946,7 +1878,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 					ids[1],
 					"wrongAdmin",
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"key not found",
@@ -1995,12 +1927,6 @@ func (s *IntegrationTestSuite) TestTxExec() {
 	clientCtx := val.ClientCtx
 	require := s.Require()
 
-	var commonFlags = []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-
 	var proposalIDs []string
 	// create proposals and vote
 	for i := 0; i < 2; i++ {
@@ -2013,7 +1939,7 @@ func (s *IntegrationTestSuite) TestTxExec() {
 						"",
 					),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 		)
 		require.NoError(err, out.String())
@@ -2032,7 +1958,7 @@ func (s *IntegrationTestSuite) TestTxExec() {
 					"VOTE_OPTION_YES",
 					"",
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 		)
 		require.NoError(err, out.String())
@@ -2053,7 +1979,7 @@ func (s *IntegrationTestSuite) TestTxExec() {
 					proposalIDs[0],
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -2068,7 +1994,7 @@ func (s *IntegrationTestSuite) TestTxExec() {
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -2082,7 +2008,7 @@ func (s *IntegrationTestSuite) TestTxExec() {
 					"abcd",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"invalid syntax",
@@ -2096,7 +2022,7 @@ func (s *IntegrationTestSuite) TestTxExec() {
 					"1234",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"proposal: not found",
@@ -2130,12 +2056,6 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 	clientCtx := val.ClientCtx
 	require := s.Require()
 
-	commonFlags := []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-
 	// create 3 accounts with some tokens
 	members := s.createAccounts(3)
 
@@ -2161,7 +2081,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 				validMetadata,
 				validMembersFile.Name(),
 			},
-			commonFlags...,
+			s.commonFlags...,
 		),
 	)
 	require.NoError(err, out.String())
@@ -2178,7 +2098,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 				"AQ==",
 				"{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"3\", \"windows\":{\"voting_period\":\"1s\"}}",
 			},
-			commonFlags...,
+			s.commonFlags...,
 		),
 	)
 	require.NoError(err, out.String())
@@ -2204,7 +2124,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 					groupID,
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"key not found",
@@ -2217,7 +2137,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 					"40",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[0]),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"group: not found",
@@ -2230,7 +2150,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 					groupID,
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[2]),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -2243,7 +2163,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 					groupID,
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[2]),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			true,
 			"is not part of group",
@@ -2256,7 +2176,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 					groupID,
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, members[1]),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			),
 			false,
 			"",
@@ -2284,12 +2204,6 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
-	commonFlags := []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-
 	weights := []string{"1", "1", "2"}
 	accounts := s.createAccounts(3)
 	testCases := []struct {
@@ -2316,7 +2230,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 
 						fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[indexOfMemberThatLeaves]),
 					},
-					commonFlags...,
+					s.commonFlags...,
 				)
 				return client.MsgLeaveGroupCmd(), args
 			},
@@ -2338,7 +2252,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 
 						fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[indexOfMemberThatLeaves]),
 					},
-					commonFlags...,
+					s.commonFlags...,
 				)
 				return client.MsgLeaveGroupCmd(), args
 			},
@@ -2360,7 +2274,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 
 						fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[indexOfMemberThatLeaves]),
 					},
-					commonFlags...,
+					s.commonFlags...,
 				)
 				return client.MsgLeaveGroupCmd(), args
 			},
@@ -2386,7 +2300,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 						groupID,
 						validUpdateMemberFileName,
 					},
-					commonFlags...,
+					s.commonFlags...,
 				)
 				return client.MsgUpdateGroupMembersCmd(), args
 			},
@@ -2416,7 +2330,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			submitProposalArgs := append([]string{
 				proposal,
 			},
-				commonFlags...,
+				s.commonFlags...,
 			)
 			var submitProposalResp sdk.TxResponse
 			out, err := cli.ExecTestCLICmd(clientCtx, cmdSubmitProposal, submitProposalArgs)
@@ -2434,7 +2348,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 							vote,
 							"",
 						},
-						commonFlags...,
+						s.commonFlags...,
 					),
 				)
 
@@ -2461,7 +2375,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 					proposalID,
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.members[0]),
 				},
-				commonFlags...,
+				s.commonFlags...,
 			)
 			out, err = cli.ExecTestCLICmd(clientCtx, cmdMsgExec, args)
 			s.Require().NoError(err)
@@ -2524,11 +2438,6 @@ func (s *IntegrationTestSuite) createAccounts(quantity int) []string {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 	accounts := make([]string, quantity)
-	commonFlags := []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
 
 	for i := 1; i <= quantity; i++ {
 		memberNumber := uuid.New().String()
@@ -2545,7 +2454,7 @@ func (s *IntegrationTestSuite) createAccounts(quantity int) []string {
 
 		_, err = banktestutil.MsgSendExec(clientCtx, val.Address, account,
 			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1000))),
-			commonFlags...,
+			s.commonFlags...,
 		)
 		s.Require().NoError(err)
 	}
@@ -2556,25 +2465,14 @@ func (s *IntegrationTestSuite) createGroupWithMembers(membersWeight, membersAddr
 	s.Require().Equal(len(membersWeight), len(membersAddress))
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
-	commonFlags := []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
 
-	membersValid := validMembers{}
+	membersValid := s.newValidMembers(membersWeight, membersAddress)
+	membersValidByte, err := membersValid.Marshal()
+	s.Require().NoError(err)
 
-	for i, address := range membersAddress {
-		membersValid.Members = append(membersValid.Members, member{
-			address,
-			membersWeight[i],
-			validMetadata,
-		})
-	}
-	validMemberByte, err := json.MarshalIndent(&membersValid, "", "\t")
+	validMemberString := string(membersValidByte)
 	s.Require().NoError(err)
-	validMemberString := string(validMemberByte)
-	s.Require().NoError(err)
+
 	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMemberString)
 	out, err := cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupCmd(),
 		append(
@@ -2583,7 +2481,7 @@ func (s *IntegrationTestSuite) createGroupWithMembers(membersWeight, membersAddr
 				validMetadata,
 				validMembersFile.Name(),
 			},
-			commonFlags...,
+			s.commonFlags...,
 		),
 	)
 	s.Require().NoError(err, out.String())
@@ -2596,12 +2494,6 @@ func (s *IntegrationTestSuite) createGroupThresholdPolicyWithTokens(groupID stri
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
-	commonFlags := []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-
 	out, err := cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupPolicyCmd(),
 		append(
 			[]string{
@@ -2610,7 +2502,7 @@ func (s *IntegrationTestSuite) createGroupThresholdPolicyWithTokens(groupID stri
 				validMetadata,
 				fmt.Sprintf("{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"%d\", \"windows\":{\"voting_period\":\"30000s\"}}", threshold),
 			},
-			commonFlags...,
+			s.commonFlags...,
 		),
 	)
 	var txResp = sdk.TxResponse{}
@@ -2628,7 +2520,7 @@ func (s *IntegrationTestSuite) createGroupThresholdPolicyWithTokens(groupID stri
 	s.Require().NoError(err)
 	out, err = banktestutil.MsgSendExec(clientCtx, val.Address, addr,
 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(tokens))),
-		commonFlags...,
+		s.commonFlags...,
 	)
 	s.Require().NoError(err)
 	return groupPolicyAddress
@@ -2636,11 +2528,6 @@ func (s *IntegrationTestSuite) createGroupThresholdPolicyWithTokens(groupID stri
 func (s *IntegrationTestSuite) fundAllGroupPolicies(groupID string, tokens int64) {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
-	commonFlags := []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
 
 	out, err := cli.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{groupID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	s.Require().NoError(err, out.String())
@@ -2653,7 +2540,7 @@ func (s *IntegrationTestSuite) fundAllGroupPolicies(groupID string, tokens int64
 		s.Require().NoError(err)
 		out, err = banktestutil.MsgSendExec(clientCtx, val.Address, addr,
 			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(tokens))),
-			commonFlags...,
+			s.commonFlags...,
 		)
 		s.Require().NoError(err)
 	}

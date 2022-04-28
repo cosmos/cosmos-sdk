@@ -2293,7 +2293,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
+func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 

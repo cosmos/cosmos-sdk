@@ -411,13 +411,6 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-				fmt.Sprintf("--%s=%d", flags.FlagSequence, func() uint64 {
-					account, err := val.ClientCtx.AccountRetriever.GetAccount(val.ClientCtx, val.Address)
-					if err != nil {
-						panic(err)
-					}
-					return account.GetSequence()
-				}()),
 			},
 			false, 0, &sdk.TxResponse{},
 		},
@@ -521,13 +514,7 @@ func (s *IntegrationTestSuite) TestNewMultiSendTxCmd() {
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-				fmt.Sprintf("--%s=%d", flags.FlagSequence, func() uint64 {
-					account, err := val.ClientCtx.AccountRetriever.GetAccount(val.ClientCtx, val.Address)
-					if err != nil {
-						panic(err)
-					}
-					return account.GetSequence()
-				}())},
+			},
 			false, 0, &sdk.TxResponse{},
 		},
 		{
@@ -543,13 +530,7 @@ func (s *IntegrationTestSuite) TestNewMultiSendTxCmd() {
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-				fmt.Sprintf("--%s=%d", flags.FlagSequence, func() uint64 {
-					account, err := val.ClientCtx.AccountRetriever.GetAccount(val.ClientCtx, val.Address)
-					if err != nil {
-						panic(err)
-					}
-					return account.GetSequence()
-				}())},
+			},
 			false, 0, &sdk.TxResponse{},
 		},
 		{

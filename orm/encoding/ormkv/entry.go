@@ -6,7 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/orm/internal/stablejson"
 
-	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 

@@ -44,7 +44,7 @@ message MemberRequest {
   string metadata = 3;
 }
 
-// Members defines a repeated slice of Member objects.
+// Members defines a repeated slice of MemberRequest objects.
 message Members {
 
   // members is the list of members.

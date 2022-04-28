@@ -295,7 +295,7 @@ func (m *MemberRequest) GetMetadata() string {
 	return ""
 }
 
-// Members defines a repeated slice of Member objects.
+// Members defines a repeated slice of MemberRequest objects.
 type Members struct {
 	// members is the list of members.
 	Members []MemberRequest `protobuf:"bytes,1,rep,name=members,proto3" json:"members"`

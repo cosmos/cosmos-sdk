@@ -3,6 +3,8 @@ package cli
 import (
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
+
 	"strings"
 	"time"
 
@@ -26,6 +28,8 @@ const (
 	FlagExpiration        = "expiration"
 	FlagAllowedValidators = "allowed-validators"
 	FlagDenyValidators    = "deny-validators"
+	FlagPeriod            = "period"
+	FlagPeriodLimit       = "period-limit"
 	delegate              = "delegate"
 	redelegate            = "redelegate"
 	unbond                = "unbond"
@@ -75,9 +79,52 @@ Examples:
 				return err
 			}
 
+			expire, err := getExpireTime(cmd)
+			if err != nil {
+				return err
+			}
+
 			var authorization authz.Authorization
 			switch args[1] {
 			case "send":
+				var periodicAllowance *feegrant.PeriodicAllowance
+				periodClock, err := cmd.Flags().GetInt64(FlagPeriod)
+				if err != nil {
+					return err
+				}
+
+				periodLimitVal, err := cmd.Flags().GetString(FlagPeriodLimit)
+				if err != nil {
+					return err
+				}
+
+				// Check any of period or periodLimit flags set, If set consider it as periodicAllowance fee allowance.
+				if periodClock > 0 || periodLimitVal != "" {
+					periodLimit, err := sdk.ParseCoinsNormalized(periodLimitVal)
+					if err != nil {
+						return err
+					}
+
+					if periodClock <= 0 {
+						return fmt.Errorf("period clock was not set")
+					}
+
+					if periodLimit == nil {
+						return fmt.Errorf("period limit was not set")
+					}
+					periodReset := getPeriodReset(periodClock)
+					if expire != nil && periodReset.Sub(*expire) > 0 {
+						return fmt.Errorf("period (%d) cannot reset after expiration (%v)", periodClock, expire)
+					}
+
+					periodicAllowance = &feegrant.PeriodicAllowance{
+						Period:           getPeriod(periodClock),
+						PeriodReset:      getPeriodReset(periodClock),
+						PeriodSpendLimit: periodLimit,
+						PeriodCanSpend:   periodLimit,
+					}
+				}
+
 				limit, err := cmd.Flags().GetString(FlagSpendLimit)
 				if err != nil {
 					return err
@@ -88,11 +135,16 @@ Examples:
 					return err
 				}
 
-				if !spendLimit.IsAllPositive() {
-					return fmt.Errorf("spend-limit should be greater than zero")
+				if periodicAllowance != nil {
+					fmt.Println(periodicAllowance)
+					authorization = bank.NewPeriodicSendAuthorization(*periodicAllowance, spendLimit)
+				} else {
+					if !spendLimit.IsAllPositive() {
+						return fmt.Errorf("spend-limit should be greater than zero")
+					}
+					authorization = bank.NewSendAuthorization(spendLimit)
 				}
 
-				authorization = bank.NewSendAuthorization(spendLimit)
 			case "generic":
 				msgType, err := cmd.Flags().GetString(FlagMsgType)
 				if err != nil {
@@ -155,11 +207,6 @@ Examples:
 				return fmt.Errorf("invalid authorization type, %s", args[1])
 			}
 
-			expire, err := getExpireTime(cmd)
-			if err != nil {
-				return err
-			}
-
 			msg, err := authz.NewMsgGrant(clientCtx.GetFromAddress(), grantee, authorization, expire)
 			if err != nil {
 				return err
@@ -174,6 +221,8 @@ Examples:
 	cmd.Flags().StringSlice(FlagAllowedValidators, []string{}, "Allowed validators addresses separated by ,")
 	cmd.Flags().StringSlice(FlagDenyValidators, []string{}, "Deny validators addresses separated by ,")
 	cmd.Flags().Int64(FlagExpiration, 0, "Expire time as Unix timestamp. Set zero (0) for no expiry. Default is 0.")
+	cmd.Flags().Int64(FlagPeriod, 0, "period specifies the time duration(in seconds) in which period_limit coins can be spent before that allowance is reset (ex: 3600)")
+	cmd.Flags().String(FlagPeriodLimit, "", "period limit specifies the maximum number of coins that can be spent in the period")
 	return cmd
 }
 
@@ -201,11 +250,12 @@ Example:
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			print("HERE?")
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
+			fmt.Println(args)
 			grantee, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
@@ -271,4 +321,12 @@ func bech32toValidatorAddresses(validators []string) ([]sdk.ValAddress, error) {
 		vals[i] = addr
 	}
 	return vals, nil
+}
+
+func getPeriodReset(duration int64) time.Time {
+	return time.Now().Add(getPeriod(duration))
+}
+
+func getPeriod(duration int64) time.Duration {
+	return time.Duration(duration) * time.Second
 }

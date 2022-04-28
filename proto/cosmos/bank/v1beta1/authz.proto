@@ -4,6 +4,7 @@ package cosmos.bank.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/feegrant/v1beta1/feegrant.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
@@ -16,4 +17,15 @@ message SendAuthorization {
 
   repeated cosmos.base.v1beta1.Coin spend_limit = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+message PeriodicSendAuthorization {
+  option (cosmos_proto.implements_interface) = "Authorization";
+
+  repeated cosmos.base.v1beta1.Coin spend_limit = 1
+  [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+
+  // periodicAllowance specifies a struct of `PeriodicAllowance`
+  cosmos.feegrant.v1beta1.PeriodicAllowance periodicAllowance = 2 [(gogoproto.nullable) = false];
+
 }

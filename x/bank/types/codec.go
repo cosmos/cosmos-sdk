@@ -17,6 +17,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacy.RegisterAminoMsg(cdc, &MsgSend{}, "cosmos-sdk/MsgSend")
 	legacy.RegisterAminoMsg(cdc, &MsgMultiSend{}, "cosmos-sdk/MsgMultiSend")
 	cdc.RegisterConcrete(&SendAuthorization{}, "cosmos-sdk/SendAuthorization", nil)
+	cdc.RegisterConcrete(&PeriodicSendAuthorization{}, "cosmos-sdk/PeriodicSendAuthorization", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
@@ -27,6 +28,11 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*authz.Authorization)(nil),
 		&SendAuthorization{},
+	)
+	registry.RegisterInterface(
+		"cosmos.bank.v1beta1.PeriodicSendAuthorization",
+		(*authz.Authorization)(nil),
+		&PeriodicSendAuthorization{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

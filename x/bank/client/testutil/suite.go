@@ -411,6 +411,13 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%d", flags.FlagSequence, func() uint64 {
+					account, err := val.ClientCtx.AccountRetriever.GetAccount(val.ClientCtx, val.Address)
+					if err != nil {
+						panic(err)
+					}
+					return account.GetSequence()
+				}()),
 			},
 			false, 0, &sdk.TxResponse{},
 		},
@@ -475,6 +482,152 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 			clientCtx := val.ClientCtx
 
 			bz, err := MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(bz.Bytes(), tc.respType), bz.String())
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestNewMultiSendTxCmd() {
+	val := s.network.Validators[0]
+	testAddr := sdk.AccAddress("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5")
+
+	testCases := []struct {
+		name         string
+		from         sdk.AccAddress
+		to           []sdk.AccAddress
+		amount       sdk.Coins
+		args         []string
+		expectErr    bool
+		expectedCode uint32
+		respType     proto.Message
+	}{
+		{
+			"valid transaction",
+			val.Address,
+			[]sdk.AccAddress{val.Address, testAddr},
+			sdk.NewCoins(
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+			),
+			[]string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%d", flags.FlagSequence, func() uint64 {
+					account, err := val.ClientCtx.AccountRetriever.GetAccount(val.ClientCtx, val.Address)
+					if err != nil {
+						panic(err)
+					}
+					return account.GetSequence()
+				}())},
+			false, 0, &sdk.TxResponse{},
+		},
+		{
+			"valid split transaction",
+			val.Address,
+			[]sdk.AccAddress{val.Address, testAddr},
+			sdk.NewCoins(
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+			),
+			[]string{
+				fmt.Sprintf("--%s=true", cli.FlagSplit),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%d", flags.FlagSequence, func() uint64 {
+					account, err := val.ClientCtx.AccountRetriever.GetAccount(val.ClientCtx, val.Address)
+					if err != nil {
+						panic(err)
+					}
+					return account.GetSequence()
+				}())},
+			false, 0, &sdk.TxResponse{},
+		},
+		{
+			"not enough arguments",
+			val.Address,
+			[]sdk.AccAddress{val.Address},
+			sdk.NewCoins(
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+			),
+			[]string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, 0, &sdk.TxResponse{},
+		},
+		{
+			"chain-id shouldn't be used with offline and generate-only flags",
+			val.Address,
+			[]sdk.AccAddress{val.Address, testAddr},
+			sdk.NewCoins(
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+			),
+			[]string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=true", flags.FlagOffline),
+				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+			},
+			true, 0, &sdk.TxResponse{},
+		},
+		{
+			"not enough fees",
+			val.Address,
+			[]sdk.AccAddress{val.Address, testAddr},
+			sdk.NewCoins(
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+			),
+			[]string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))).String()),
+			},
+			false,
+			sdkerrors.ErrInsufficientFee.ABCICode(),
+			&sdk.TxResponse{},
+		},
+		{
+			"not enough gas",
+			val.Address,
+			[]sdk.AccAddress{val.Address, testAddr},
+			sdk.NewCoins(
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+			),
+			[]string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				"--gas=10",
+			},
+			false,
+			sdkerrors.ErrOutOfGas.ABCICode(),
+			&sdk.TxResponse{},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			clientCtx := val.ClientCtx
+
+			bz, err := MsgMultiSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {

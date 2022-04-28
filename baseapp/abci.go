@@ -22,6 +22,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
+// Supported ABCI Query prefixes
+const (
+	QueryPathApp    = "app"
+	QueryPathCustom = "custom"
+	QueryPathP2P    = "p2p"
+	QueryPathStore  = "store"
+)
+
 // InitChain implements the ABCI interface. It runs the initialization logic
 // directly on the CommitMultiStore.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
@@ -371,7 +379,6 @@ func (app *BaseApp) halt() {
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
 // implements Queryable.
 func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
-
 	// Add panic recovery for all queries.
 	// ref: https://github.com/cosmos/cosmos-sdk/pull/8039
 	defer func() {
@@ -391,23 +398,23 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		return app.handleQueryGRPC(grpcHandler, req)
 	}
 
-	path := splitPath(req.Path)
+	path := SplitABCIQueryPath(req.Path)
 	if len(path) == 0 {
 		sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), app.trace)
 	}
 
 	switch path[0] {
-	// "/app" prefix for special application queries
-	case "app":
+	case QueryPathApp:
+		// "/app" prefix for special application queries
 		return handleQueryApp(app, path, req)
 
-	case "store":
+	case QueryPathStore:
 		return handleQueryStore(app, path, req)
 
-	case "p2p":
+	case QueryPathP2P:
 		return handleQueryP2P(app, path)
 
-	case "custom":
+	case QueryPathCustom:
 		return handleQueryCustom(app, path, req)
 	}
 
@@ -839,10 +846,10 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) abci.
 	}
 }
 
-// splitPath splits a string path using the delimiter '/'.
+// SplitABCIQueryPath splits a string path using the delimiter '/'.
 //
 // e.g. "this/is/funny" becomes []string{"this", "is", "funny"}
-func splitPath(requestPath string) (path []string) {
+func SplitABCIQueryPath(requestPath string) (path []string) {
 	path = strings.Split(requestPath, "/")
 
 	// first element is empty string

@@ -2153,24 +2153,6 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 
 	// create 3 accounts with some tokens
 	members := s.createAccounts(3)
-	//members := make([]string, 3)
-	//for i := 1; i <= 3; i++ {
-	//	info, _, err := clientCtx.Keyring.NewMnemonic(fmt.Sprintf("member%d", i), keyring.English, sdk.FullFundraiserPath,
-	//		keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-	//	require.NoError(err)
-	//
-	//	pk, err := info.GetPubKey()
-	//	require.NoError(err)
-	//
-	//	account := sdk.AccAddress(pk.Address())
-	//	members[i-1] = account.String()
-	//
-	//	_, err = banktestutil.MsgSendExec(clientCtx, val.Address, account,
-	//		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))),
-	//		commonFlags...,
-	//	)
-	//	require.NoError(err)
-	//}
 
 	// create a group with three members
 	validMembers := fmt.Sprintf(`{"members": [{

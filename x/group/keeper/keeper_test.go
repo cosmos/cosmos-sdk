@@ -436,6 +436,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 					Member: &group.Member{
 						Address: member2,
 						Weight:  "2",
+						AddedAt: s.sdkCtx.BlockTime(),
 					},
 					GroupId: groupID,
 				},
@@ -443,6 +444,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 					Member: &group.Member{
 						Address: member1,
 						Weight:  "1",
+						AddedAt: s.blockTime,
 					},
 					GroupId: groupID,
 				},
@@ -470,6 +472,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 					Member: &group.Member{
 						Address: member1,
 						Weight:  "2",
+						AddedAt: s.blockTime,
 					},
 				},
 			},
@@ -496,6 +499,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 					Member: &group.Member{
 						Address: member1,
 						Weight:  "1",
+						AddedAt: s.blockTime,
 					},
 				},
 			},
@@ -527,6 +531,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				Member: &group.Member{
 					Address: member2,
 					Weight:  "1",
+					AddedAt: s.sdkCtx.BlockTime(),
 				},
 			}},
 		},
@@ -658,6 +663,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				s.Assert().Equal(spec.expMembers[i].Member.Metadata, loadedMembers[i].Member.Metadata)
 				s.Assert().Equal(spec.expMembers[i].Member.Address, loadedMembers[i].Member.Address)
 				s.Assert().Equal(spec.expMembers[i].Member.Weight, loadedMembers[i].Member.Weight)
+				s.Assert().Equal(spec.expMembers[i].Member.AddedAt, loadedMembers[i].Member.AddedAt)
 				s.Assert().Equal(spec.expMembers[i].GroupId, loadedMembers[i].GroupId)
 			}
 		})

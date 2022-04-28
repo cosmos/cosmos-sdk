@@ -1,5 +1,5 @@
 name: Build & Push
-# Build & Push rebuilds the iavl docker image on every push to master and creation of tags
+# Build & Push rebuilds the cosmos sdk development environment image every time the master branch is updated,
 # and pushes the image to https://ghcr.io/cosmos/cosmos-sdk
 # Other images in the cosmos-sdk consume ghcr.io/cosmos/cosmos-sdk
 
@@ -12,8 +12,7 @@ on:
     branches:
       - main
     tags:
-      - "v[0-9]+.[0-9]+.[0-9]+" # Push events to matching v*, i.e. v1.0, v20.15.10
-      - "v[0-9]+.[0-9]+.[0-9]+-rc*" # Push events to matching v*, i.e. v1.0-rc1, v20.15.10-rc5
+      - "v[0-9]+.[0-9]+.[0-9]?-rc*" # Push events to matching v*, i.e. v1.0, v20.15.10 or Push events to matching v*, i.e. v1.0-rc1, v20.15.10-rc5
 
 jobs:
   docker:

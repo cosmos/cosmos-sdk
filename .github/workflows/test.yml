@@ -46,9 +46,6 @@ jobs:
     container: ghcr.io/faddat/archlinux/cosmos
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.18
       - uses: technote-space/get-diff-action@v6.0.1
         id: git_diff
         with:

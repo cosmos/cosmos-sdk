@@ -9,31 +9,31 @@ import (
 
 	cverrors "github.com/cosmos/cosmos-sdk/cosmovisor/errors"
 	"github.com/rs/zerolog"
+	"github.com/spf13/cobra"
 )
+
+func init() {
+	versionCmd.Flags().BoolP(FlagJSON, "j", false, "Print version output in JSON format")
+	rootCmd.AddCommand(versionCmd)
+}
 
 var (
 	// FlagJSON formats the output in json
-	FlagJSON = "--json"
+	FlagJSON = "json"
 	// Version represents Cosmovisor version value. Overwritten during build
 	Version = "1.1.0"
-	// VersionArgs is the strings that indicate a cosmovisor version command.
-	VersionArgs = []string{"version", "--version"}
 )
 
-// IsVersionCommand checks if the given args indicate that the version is being requested.
-func IsVersionCommand(arg string) bool {
-	return isOneOf(arg, VersionArgs)
-}
-
-// PrintVersion prints the cosmovisor version.
-func PrintVersion(logger *zerolog.Logger, args []string) error {
-	for _, arg := range args {
-		if strings.Contains(arg, FlagJSON) {
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Prints the version of Cosmovisor",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if ok, err := cmd.Flags().GetBool(FlagJSON); ok && err == nil {
 			return printVersionJSON(logger, args)
 		}
-	}
 
-	return printVersion(logger, args)
+		return printVersion(logger, args)
+	},
 }
 
 func printVersion(logger *zerolog.Logger, args []string) error {

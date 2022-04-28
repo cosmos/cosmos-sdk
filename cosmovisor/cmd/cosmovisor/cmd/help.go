@@ -4,24 +4,19 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
+	"github.com/spf13/cobra"
 )
 
-// HelpArgs are the strings that indicate a cosmovisor help command.
-var HelpArgs = []string{"help", "--help", "-h"}
-
-// ShouldGiveHelp checks the env and provided args to see if help is needed or being requested.
-// Help is needed if either cosmovisor.EnvName and/or cosmovisor.EnvHome env vars aren't set.
-// Help is requested if the first arg is "help", "--help", or "-h".
-func ShouldGiveHelp(arg string) bool {
-	return isOneOf(arg, HelpArgs)
+func init() {
+	rootCmd.AddCommand(helpCmd)
 }
 
-// DoHelp outputs help text
-func DoHelp() error {
-	// Not using the logger for this output because the header and footer look weird for help text.
-	fmt.Println(GetHelpText())
-
-	return nil
+var helpCmd = &cobra.Command{
+	Use:   "help",
+	Short: "Print the help command",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(GetHelpText())
+	},
 }
 
 // GetHelpText creates the help text multi-line string.

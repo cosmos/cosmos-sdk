@@ -3,14 +3,19 @@ package cmd
 import (
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
 	"github.com/rs/zerolog"
+	"github.com/spf13/cobra"
 )
 
-// RunArgs are the strings that indicate a cosmovisor run command.
-var RunArgs = []string{"run"}
+func init() {
+	rootCmd.AddCommand(runCmd)
+}
 
-// IsRunCommand checks if the given args indicate that a run is desired.
-func IsRunCommand(arg string) bool {
-	return isOneOf(arg, RunArgs)
+var runCmd = &cobra.Command{
+	Use:   "run",
+	Short: "Run an APP command.",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return Run(logger, args)
+	},
 }
 
 // Run runs the configured program with the given args and monitors it for upgrades.

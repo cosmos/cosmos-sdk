@@ -1,36 +1,31 @@
 package cmd
 
 import (
+	"fmt"
+	"os"
 	"strings"
 
 	"github.com/rs/zerolog"
+	"github.com/spf13/cobra"
 )
 
-// RunCosmovisorCommand executes the desired cosmovisor command.
-func RunCosmovisorCommand(logger *zerolog.Logger, args []string) error {
-	arg0 := ""
-	if len(args) > 0 {
-		arg0 = strings.TrimSpace(args[0])
+var logger *zerolog.Logger
+
+var rootCmd = &cobra.Command{
+	Use:   "cosmovisor",
+	Short: "Facilitate your cosmos-sdk upgrades with Cosmovisor",
+	Long:  "Cosmovisor is a small process manager for Cosmos SDK application binaries that monitors the governance module for incoming chain upgrade proposals.",
+}
+
+// Execute adds all child commands to the root command and sets flags appropriately.
+// This is called by main.main(). It only needs to happen once to the rootCmd.
+func Execute(log *zerolog.Logger) {
+	logger = log
+
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
-
-	switch {
-	case IsVersionCommand(arg0):
-		return PrintVersion(logger, args[1:])
-
-	case ShouldGiveHelp(arg0):
-		return DoHelp()
-
-	case IsRunCommand(arg0):
-		return Run(logger, args[1:])
-	}
-
-	warnRun := func() {
-		logger.Warn().Msg("use of cosmovisor without the 'run' command is deprecated. Use: cosmovisor run [args]")
-	}
-	warnRun()
-	defer warnRun()
-
-	return Run(logger, args)
 }
 
 // isOneOf returns true if the given arg equals one of the provided options (ignoring case).

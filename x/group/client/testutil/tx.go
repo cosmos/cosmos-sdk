@@ -213,6 +213,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		Weight:   memberWeight,
 		Metadata: validMetadata,
 	}
+	s.nextAccount = 10
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -2338,15 +2339,15 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 			"",
 			&sdk.TxResponse{},
 		},
-		//{
-		//	"member leaves while all others vote yes and no",
-		//	0,
-		//	[]string{"VOTE_OPTION_YES", "VOTE_OPTION_NO", "VOTE_OPTION_YES"},
-		//	accounts,
-		//	true,
-		//	"PROPOSAL_EXECUTOR_RESULT_NOT_RUN",
-		//	&sdk.TxResponse{},
-		//},
+		{
+			"member leaves while all others vote yes and no",
+			0,
+			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_NO", "VOTE_OPTION_YES"},
+			accounts,
+			true,
+			"PROPOSAL_EXECUTOR_RESULT_NOT_RUN",
+			&sdk.TxResponse{},
+		},
 		{
 			"member that leaves affects the threshold",
 			2,
@@ -2362,12 +2363,16 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 		tc := tc
 
 		s.Run(tc.name, func() {
+			fmt.Println("TEST ----:", tc.name)
 			cmdSubmitProposal := client.MsgSubmitProposalCmd()
 			cmdLeaveGroup := client.MsgLeaveGroupCmd()
 			cmdMsgExec := client.MsgExecCmd()
 
 			groupID := s.createGroupWithMembers(weights, accounts)
-			groupPolicyAddress := s.createGroupThresholdPolicyWithDenom(groupID, 3, 100)
+			groupPolicyAddress := s.createGroupThresholdPolicyWithTokens(groupID, 3, 100)
+
+			fmt.Println("GroupID:", groupID)
+			fmt.Println("Group Policy Address", groupPolicyAddress)
 
 			// Submit proposal
 			proposal := s.createCLIProposal(
@@ -2385,8 +2390,11 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 			s.Require().NoError(err, out.String())
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &submitProposalResp), out.String())
 			proposalID := s.getProposalIdFromTxResponse(submitProposalResp)
+			fmt.Println("SubmitProposal: ", out)
+			fmt.Println("ProposalID:", proposalID)
 
 			for i, vote := range tc.votes {
+				fmt.Println("Vote #", i)
 				memberAddress := tc.members[i]
 				out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgVoteCmd(),
 					append(
@@ -2405,9 +2413,12 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 				s.Require().Equal(uint32(0), txResp.Code, out.String())
 
+				fmt.Println("VOTE:", out)
+
 			}
 
 			out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryVotesByProposalCmd(), []string{proposalID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+			fmt.Println("Votes", out)
 
 			leaveGroupArg := append(
 				[]string{
@@ -2425,6 +2436,8 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			s.Require().Equal(uint32(0), resp.Code, out.String())
 
+			fmt.Println("Leave Group", out)
+
 			err = s.network.WaitForNextBlock()
 			s.Require().NoError(err)
 
@@ -2439,6 +2452,7 @@ func (s *IntegrationTestSuite) TestSubmitProposalsWhenMemberLeaves() {
 			out, err = cli.ExecTestCLICmd(clientCtx, cmdMsgExec, args)
 			s.Require().NoError(err)
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &execResp), out.String())
+			fmt.Println("ExecMSG", out)
 
 			if tc.expectErr {
 				s.Require().Contains(execResp.RawLog, tc.errMsg)
@@ -2463,7 +2477,7 @@ func (s *IntegrationTestSuite) TestSubmitProposalAndUpdate() {
 	accounts := s.createAccounts(3)
 	groupID := s.createGroupWithMembers(membersWeights, accounts)
 
-	groupPolicyAddress := s.createGroupThresholdPolicyWithDenom(groupID, 3, 100)
+	groupPolicyAddress := s.createGroupThresholdPolicyWithTokens(groupID, 3, 100)
 
 	updateGroupString := s.newValidMembers(membersWeights[0:1], accounts[0:1]).String()
 
@@ -2628,7 +2642,7 @@ func (s *IntegrationTestSuite) createGroupWithMembers(membersWeight, membersAddr
 	return s.getGroupIdFromTxResponse(txResp)
 }
 
-func (s *IntegrationTestSuite) createGroupThresholdPolicyWithDenom(groupID string, threshold int, denon int64) string {
+func (s *IntegrationTestSuite) createGroupThresholdPolicyWithTokens(groupID string, threshold int, tokens int64) string {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -2663,7 +2677,7 @@ func (s *IntegrationTestSuite) createGroupThresholdPolicyWithDenom(groupID strin
 	addr, err := sdk.AccAddressFromBech32(groupPolicyAddress)
 	s.Require().NoError(err)
 	out, err = banktestutil.MsgSendExec(clientCtx, val.Address, addr,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(denon))),
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(tokens))),
 		commonFlags...,
 	)
 	s.Require().NoError(err)

@@ -250,7 +250,6 @@ Example:
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			print("HERE?")
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err

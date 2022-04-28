@@ -27,8 +27,6 @@ func (a PeriodicSendAuthorization) MsgTypeURL() string {
 
 // Accept implements Authorization.Accept.
 func (a PeriodicSendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
-	fmt.Println("HERE!!!!!")
-	fmt.Errorf("TEST")
 	mSend, ok := msg.(*MsgSend)
 	if !ok {
 		return authz.AcceptResponse{}, sdkerrors.ErrInvalidType.Wrap("type mismatch")

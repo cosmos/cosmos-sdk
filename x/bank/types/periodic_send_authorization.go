@@ -34,8 +34,7 @@ func (a PeriodicSendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.A
 	remove, err := a.PeriodicAllowance.Accept(ctx, mSend.Amount, nil)
 	fmt.Println(remove)
 	if err != nil {
-		fmt.Println(err)
-		return authz.AcceptResponse{}, sdkerrors.ErrInvalidType.Wrap("some error")
+		return authz.AcceptResponse{}, err
 	}
 
 	return authz.AcceptResponse{Accept: true, Delete: false, Updated: &a}, nil

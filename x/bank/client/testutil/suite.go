@@ -471,6 +471,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 	for _, tc := range testCases {
 		tc := tc
 
+		s.Require().NoError(s.network.WaitForNextBlock())
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
 
@@ -605,6 +606,7 @@ func (s *IntegrationTestSuite) TestNewMultiSendTxCmd() {
 	for _, tc := range testCases {
 		tc := tc
 
+		s.Require().NoError(s.network.WaitForNextBlock())
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
 

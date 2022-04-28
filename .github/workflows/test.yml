@@ -46,13 +46,6 @@ jobs:
     container: ghcr.io/faddat/archlinux/cosmos
     steps:
       - uses: actions/checkout@v3
-      - uses: technote-space/get-diff-action@v6.0.1
-        id: git_diff
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
       - name: Run submodule tests and create test coverage profile.
         # GIT_DIFF is passed to the scripts
         run: bash scripts/module-tests.sh

@@ -37,7 +37,6 @@ type IntegrationTestSuite struct {
 	proposal      *group.Proposal
 	vote          *group.Vote
 	voter         *group.Member
-	nextAccount   int
 }
 
 const validMetadata = "metadata"
@@ -215,7 +214,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		Weight:   memberWeight,
 		Metadata: validMetadata,
 	}
-	s.nextAccount = 10
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -702,6 +700,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 			cmd := client.MsgUpdateGroupMembersCmd()
 
 			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			fmt.Print(out)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {

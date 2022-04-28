@@ -20,6 +20,7 @@ jobs:
       - uses: codecov/codecov-action@v2
         with:
           name: cosmos-sdk
+          file: cosmos-sdk.tmp
           fail_ci_if_error: true # optional (default = false)
           verbose: true # optional (default = false)
           
@@ -54,17 +55,7 @@ jobs:
       - name: Build cosmovisor
         run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make cosmovisor
 
-  test-submodules:
-    runs-on: ubuntu-latest
-    container: ghcr.io/faddat/archlinux/cosmos
-    steps:
-      - uses: actions/checkout@v3
-      - name: Run submodule tests and create test coverage profile.
-        run: bash scripts/module-tests.sh
-      - uses: actions/upload-artifact@v3
-        with:
-          name: "${{ github.sha }}-go-submodules-coverage"
-          path: ./coverage-go-submod-profile.out
+
 
   split-test-files:
     runs-on: ubuntu-latest

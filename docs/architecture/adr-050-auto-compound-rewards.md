@@ -47,11 +47,26 @@ message MsgAutoCompoundRewards {
 
   // ...
 
-  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  bool   enable            = 3;
+  string delegator_address     = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string src_validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string dst_validator_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  bool   enable                = 4;
 }
 ```
+
+Recall, `x/distribution` executes reward withdrawal via a tuple, (`DelegatorAddress`, `ValidatorAddress`).
+Furthermore, a delegator can also define a different address to which the rewards
+are withdrawn to. This means that we need to know the tuple to execute the withdraw
+and the withdraw address in order to send the rewards from when auto-compounding.
+
+To reflect this in `MsgAutoCompoundRewards`, the `delegator_address` and `src_validator_address`
+fields act as the tuple to execute the withdraw. We can use `delegator_address`
+to find the withdraw address. Finally, the `dst_validator_address` defines the
+validator address to delegate the withdrawn rewards to, from the withdraw address.
+We imagine in most instances, `src_validator_address` and `dst_validator_address`
+will be the same.
+
+----
 
 When a delegator wants to have their "unrealized" rewards be withdrawn and
 automatically delegated to the relative validator(s), they would broadcast a

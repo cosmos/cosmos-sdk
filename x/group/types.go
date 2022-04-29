@@ -356,7 +356,7 @@ func (g GroupMember) ValidateBasic() error {
 }
 
 // MemberToMemberRequest converts a `Member` (used for storage)
-// to a `MemberRequest`` (used in requests). The only difference
+// to a `MemberRequest` (used in requests). The only difference
 // between the two is that `MemberRequest`` doesn't have any `AddedAt` field
 // since it cannot be set as part of requests.
 func MemberToMemberRequest(m *Member) MemberRequest {

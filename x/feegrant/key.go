@@ -66,7 +66,7 @@ func AllowanceByExpTimeKey(exp *time.Time) []byte {
 	return append(FeeAllowanceQueueKeyPrefix, sdk.FormatTimeBytes(*exp)...)
 }
 
-// ParseAddressesFromFeeAllowanceKey exrtacts and returns the granter, grantee from the given key.
+// ParseAddressesFromFeeAllowanceKey extracts and returns the granter, grantee from the given key.
 func ParseAddressesFromFeeAllowanceKey(key []byte) (granter, grantee sdk.AccAddress) {
 
 	// key is of format:

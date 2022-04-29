@@ -123,6 +123,10 @@ We identified use-cases, where modules will need to save an object commitment wi
 Modules should be able to commit a value fully managed by the module itself. For example, a module can manage its own special database and commit its state by setting a value only to `SC`.
 Similarly, a module can save a value without committing it - this is useful for ORM module or secondary indexes (eg x/staking `UnbondingDelegationKey` and `UnbondingDelegationByValIndexKey`).
 
+We consider 2 options for accessing `SS` and `SC` while working on this ADR.
+
+#### Option 1: StoreAccess interface
+
 Currently, a module can access a store only through `sdk.Context`. We add the following methods to the `sdk.Context`:
 
 ```
@@ -157,6 +161,12 @@ type CombinedKVStore {
 
 The Cache store must be aware if writes happen to a combined `KVStore` or `SCStore` only.
 The proposed solution is to return different cache instances for each method of `StoreAccess` interface. More specifically, when starting a transaction, we will create create 3 cache instances (for CombinedKVStore, SS and SC).
+
+#### Option 2: SCStoreKey and SSStoreKey types
+
+Cosmos SDK manages prefix keys for various storage types for modules. Module requests a store key for specified store type (permanent, transient, memory). We can extend that mechanism and introduce two new sore key types: `SCStoreKey` and `SSStoreKey`. 
+If an app module will need to write some data only to `SC` store and some other data to a general store, then it will request both `SCStoreKey` and `KVStoreKey` during module initialization. Stores are accessed using the existing mechanism: `kvstore := Context.KVStore(storeKey)`.
+Store manager will assign different prefix keys for stores with different store key, so data stored and accessed with each key will be in a different namespace (opposite to the option 1 approach). Specifically, if `(key, valule)` is written using `Context.KVStore(moduleStoreKey)` it won't be available when querying using `Context.KVStore(moduleSCStoreKey)`.
 
 ### MultiStore Refactor
 

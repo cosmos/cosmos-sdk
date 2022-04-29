@@ -3,6 +3,7 @@ package tx
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -87,12 +88,14 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	}
 
 	if !clientCtx.SkipConfirm {
-		out, err := clientCtx.TxConfig.TxJSONEncoder()(tx.GetTx())
+		txBytes, err := clientCtx.TxConfig.TxJSONEncoder()(tx.GetTx())
 		if err != nil {
 			return err
 		}
 
-		_, _ = fmt.Fprintf(os.Stderr, "%s\n\n", out)
+		if err := clientCtx.PrintRaw(json.RawMessage(txBytes)); err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "%s\n", txBytes)
+		}
 
 		buf := bufio.NewReader(os.Stdin)
 		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf, os.Stderr)

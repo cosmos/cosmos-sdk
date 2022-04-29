@@ -24,7 +24,7 @@ const gasCostPerIteration = uint64(20)
 func (k Keeper) CreateGroup(goCtx context.Context, req *group.MsgCreateGroup) (*group.MsgCreateGroupResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	metadata := req.Metadata
-	members := group.Members{Members: req.Members}
+	members := group.MembersRequest{Members: req.Members}
 	admin := req.Admin
 
 	if err := members.ValidateBasic(); err != nil {

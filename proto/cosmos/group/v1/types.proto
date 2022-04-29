@@ -44,13 +44,6 @@ message MemberRequest {
   string metadata = 3;
 }
 
-// Members defines a repeated slice of MemberRequest objects.
-message Members {
-
-  // members is the list of members.
-  repeated MemberRequest members = 1 [(gogoproto.nullable) = false];
-}
-
 // ThresholdDecisionPolicy is a decision policy where a proposal passes when it
 // satisfies the two following conditions:
 // 1. The sum of all `YES` voters' weights is greater or equal than the defined

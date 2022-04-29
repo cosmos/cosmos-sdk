@@ -6,10 +6,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
+// MembersRequest defines a repeated slice of MemberRequest objects.
+type MembersRequest struct {
+	// members is the list of members.
+	Members []MemberRequest `protobuf:"bytes,1,rep,name=members,proto3" json:"members"`
+}
+
 // ValidateBasic performs stateless validation on an array of members. On top
 // of validating each member individually, it also makes sure there are no
 // duplicate addresses.
-func (ms Members) ValidateBasic() error {
+func (ms MembersRequest) ValidateBasic() error {
 	index := make(map[string]struct{}, len(ms.Members))
 	for i := range ms.Members {
 		member := ms.Members[i]

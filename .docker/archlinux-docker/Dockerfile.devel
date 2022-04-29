@@ -1,0 +1,11 @@
+ARG ARCH
+FROM lopsided/archlinux-$ARCH
+
+ARG ARCHDIR
+
+ADD $ARCHDIR /
+
+RUN pacman -Syu --noconfirm --needed base-devel
+
+# Remove current pacman database, likely outdated very soon
+RUN rm /var/lib/pacman/sync/*

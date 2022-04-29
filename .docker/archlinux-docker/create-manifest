@@ -1,0 +1,23 @@
+#!/bin/bash -ex
+
+DOCKER_ORG=ghcr.io/faddat
+DOCKER_IMAGE=archlinux
+
+TAGS="latest devel"
+
+for TAG in $TAGS
+do
+	docker manifest create --amend $DOCKER_ORG/$DOCKER_IMAGE:$TAG \
+	      $DOCKER_ORG/$DOCKER_IMAGE-amd64:$TAG \
+				$DOCKER_ORG/$DOCKER_IMAGE-arm64v8:$TAG
+
+	docker manifest annotate $DOCKER_ORG/$DOCKER_IMAGE:$TAG \
+			$DOCKER_ORG/$DOCKER_IMAGE-amd64:$TAG \
+			--os linux --arch amd64
+
+	docker manifest annotate $DOCKER_ORG/$DOCKER_IMAGE:$TAG \
+			$DOCKER_ORG/$DOCKER_IMAGE-arm64v8:$TAG \
+			--os linux --arch arm64 --variant v8
+
+	docker manifest push $DOCKER_ORG/$DOCKER_IMAGE:$TAG
+done

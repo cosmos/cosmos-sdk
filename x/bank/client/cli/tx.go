@@ -35,18 +35,12 @@ func NewTxCmd() *cobra.Command {
 // NewSendTxCmd returns a CLI command handler for creating a MsgSend transaction.
 func NewSendTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-<<<<<<< HEAD
-		Use: "send [from_key_or_address] [to_address] [amount]",
-		Short: `Send funds from one account to another. Note, the'--from' flag is
-ignored as it is implied from [from_key_or_address].`,
-=======
 		Use:   "send [from_key_or_address] [to_address] [amount]",
 		Short: "Send funds from one account to another.",
 		Long: `Send funds from one account to another.
 Note, the '--from' flag is ignored as it is implied from [from_key_or_address].
 When using '--dry-run' a key name cannot be used, only a bech32 address.
 `,
->>>>>>> 6a9b8247f (feat: implement multi-send transaction command (#11738))
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Flags().Set(flags.FlagFrom, args[0])

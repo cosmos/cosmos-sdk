@@ -22,10 +22,7 @@ message SendAuthorization {
 message PeriodicSendAuthorization {
   option (cosmos_proto.implements_interface) = "Authorization";
 
-  repeated cosmos.base.v1beta1.Coin spend_limit = 1
-  [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-
   // periodicAllowance specifies a struct of `PeriodicAllowance`
-  cosmos.feegrant.v1beta1.PeriodicAllowance periodicAllowance = 2 [(gogoproto.nullable) = false];
+  cosmos.feegrant.v1beta1.PeriodicAllowance periodicAllowance = 1 [(gogoproto.nullable) = false];
 
 }

@@ -57,8 +57,10 @@ func GetTxCmd() *cobra.Command {
 
 func NewCmdGrantAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant <grantee> <authorization_type=\"send\"|\"generic\"|\"delegate\"|\"unbond\"|\"redelegate\"> --from <granter>",
-		Short: "Grant authorization to an address",
+		Use:        "grant <grantee> <authorization_type=\"send\"|\"generic\"|\"delegate\"|\"unbond\"|\"redelegate\"> --from <granter>",
+		Aliases:    nil,
+		SuggestFor: nil,
+		Short:      "Grant authorization to an address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`create a new grant authorization to an address to execute a transaction on your behalf:
 
@@ -67,7 +69,20 @@ Examples:
  $ %s tx %s grant cosmos1skjw.. generic --msg-type=/cosmos.gov.v1.MsgVote --from=cosmos1sk..
 	`, version.AppName, authz.ModuleName, bank.SendAuthorization{}.MsgTypeURL(), version.AppName, authz.ModuleName),
 		),
-		Args: cobra.ExactArgs(2),
+		Example:                "",
+		ValidArgs:              nil,
+		ValidArgsFunction:      nil,
+		Args:                   cobra.ExactArgs(2),
+		ArgAliases:             nil,
+		BashCompletionFunction: "",
+		Deprecated:             "",
+		Annotations:            nil,
+		Version:                "",
+		PersistentPreRun:       nil,
+		PersistentPreRunE:      nil,
+		PreRun:                 nil,
+		PreRunE:                nil,
+		Run:                    nil,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -82,6 +97,22 @@ Examples:
 			expire, err := getExpireTime(cmd)
 			if err != nil {
 				return err
+			}
+
+			limit, err := cmd.Flags().GetString(FlagSpendLimit)
+			if err != nil {
+				return err
+			}
+
+			var spendLimit sdk.Coins
+			if limit != "" {
+				spendLimit, err = sdk.ParseCoinsNormalized(limit)
+				if err != nil {
+					return err
+				}
+				if !spendLimit.IsAllPositive() {
+					return fmt.Errorf("spend-limit should be greater than zero")
+				}
 			}
 
 			var authorization authz.Authorization
@@ -117,7 +148,12 @@ Examples:
 						return fmt.Errorf("period (%d) cannot reset after expiration (%v)", periodClock, expire)
 					}
 
+					var basic feegrant.BasicAllowance
+					if len(spendLimit) > 0 || expire != nil {
+						basic = feegrant.BasicAllowance{SpendLimit: spendLimit, Expiration: expire}
+					}
 					periodicAllowance = &feegrant.PeriodicAllowance{
+						Basic:            basic,
 						Period:           getPeriod(periodClock),
 						PeriodReset:      getPeriodReset(periodClock),
 						PeriodSpendLimit: periodLimit,
@@ -125,23 +161,9 @@ Examples:
 					}
 				}
 
-				limit, err := cmd.Flags().GetString(FlagSpendLimit)
-				if err != nil {
-					return err
-				}
-
-				spendLimit, err := sdk.ParseCoinsNormalized(limit)
-				if err != nil {
-					return err
-				}
-
 				if periodicAllowance != nil {
-					fmt.Println(periodicAllowance)
-					authorization = bank.NewPeriodicSendAuthorization(*periodicAllowance, spendLimit)
+					authorization = bank.NewPeriodicSendAuthorization(*periodicAllowance)
 				} else {
-					if !spendLimit.IsAllPositive() {
-						return fmt.Errorf("spend-limit should be greater than zero")
-					}
 					authorization = bank.NewSendAuthorization(spendLimit)
 				}
 
@@ -214,6 +236,21 @@ Examples:
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
+		PostRun:                    nil,
+		PostRunE:                   nil,
+		PersistentPostRun:          nil,
+		PersistentPostRunE:         nil,
+		FParseErrWhitelist:         cobra.FParseErrWhitelist{},
+		CompletionOptions:          cobra.CompletionOptions{},
+		TraverseChildren:           false,
+		Hidden:                     false,
+		SilenceErrors:              false,
+		SilenceUsage:               false,
+		DisableFlagParsing:         false,
+		DisableAutoGenTag:          false,
+		DisableFlagsInUseLine:      false,
+		DisableSuggestions:         false,
+		SuggestionsMinimumDistance: 0,
 	}
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().String(FlagMsgType, "", "The Msg method name for which we are creating a GenericAuthorization")
@@ -254,7 +291,7 @@ Example:
 			if err != nil {
 				return err
 			}
-			fmt.Println(args)
+
 			grantee, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err

@@ -13,10 +13,9 @@ var (
 )
 
 // NewPeriodicSendAuthorization creates a new PeriodicSendAuthorization object.
-func NewPeriodicSendAuthorization(periodicAllowance feegrant.PeriodicAllowance, spendLimit sdk.Coins) *PeriodicSendAuthorization {
+func NewPeriodicSendAuthorization(periodicAllowance feegrant.PeriodicAllowance) *PeriodicSendAuthorization {
 	return &PeriodicSendAuthorization{
 		PeriodicAllowance: periodicAllowance,
-		SpendLimit:        spendLimit,
 	}
 }
 
@@ -32,12 +31,12 @@ func (a PeriodicSendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.A
 		return authz.AcceptResponse{}, sdkerrors.ErrInvalidType.Wrap("type mismatch")
 	}
 	remove, err := a.PeriodicAllowance.Accept(ctx, mSend.Amount, nil)
-	fmt.Println(remove)
+
 	if err != nil {
 		return authz.AcceptResponse{}, err
 	}
 
-	return authz.AcceptResponse{Accept: true, Delete: false, Updated: &a}, nil
+	return authz.AcceptResponse{Accept: true, Delete: remove, Updated: &a}, nil
 }
 
 // ValidateBasic implements Authorization.ValidateBasic.

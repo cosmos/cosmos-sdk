@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 	"strconv"
@@ -2284,7 +2285,8 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			accounts,
 			func(groupID string) (*cobra.Command, []string) {
 				updateGroup := s.newValidMembers(weights[0:1], accounts[0:1])
-				updateGroupByte, err := updateGroup.Marshal()
+
+				updateGroupByte, err := codec.MarshalJSONIndent(codec.NewLegacyAmino(), updateGroup)
 				s.Require().NoError(err)
 
 				validUpdateMemberFileName := testutil.WriteToNewTempFile(s.T(), string(updateGroupByte)).Name()
@@ -2461,13 +2463,10 @@ func (s *IntegrationTestSuite) createGroupWithMembers(membersWeight, membersAddr
 	clientCtx := val.ClientCtx
 
 	membersValid := s.newValidMembers(membersWeight, membersAddress)
-	membersValidByte, err := membersValid.Marshal()
+	membersByte, err := codec.MarshalJSONIndent(codec.NewLegacyAmino(), membersValid)
 	s.Require().NoError(err)
 
-	validMemberString := string(membersValidByte)
-	s.Require().NoError(err)
-
-	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMemberString)
+	validMembersFile := testutil.WriteToNewTempFile(s.T(), string(membersByte))
 	out, err := cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupCmd(),
 		append(
 			[]string{

@@ -80,7 +80,7 @@ func ParseAddressesFromFeeAllowanceKey(key []byte) (granter, grantee sdk.AccAddr
 	return granter, grantee
 }
 
-// ParseAddressesFromFeeAllowanceQueueKey exrtacts and returns the granter, grantee from the given key.
+// ParseAddressesFromFeeAllowanceQueueKey extracts and returns the granter, grantee from the given key.
 func ParseAddressesFromFeeAllowanceQueueKey(key []byte) (granter, grantee sdk.AccAddress) {
 	var lenTime = len(sdk.FormatTimeBytes(time.Now()))
 

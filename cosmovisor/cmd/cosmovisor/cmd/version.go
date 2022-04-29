@@ -3,50 +3,48 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
-	"time"
 
-	cverrors "github.com/cosmos/cosmos-sdk/cosmovisor/errors"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
 func init() {
-	versionCmd.Flags().BoolP(FlagJSON, "j", false, "Print version output in JSON format")
+	versionCmd.Flags().StringP(OutputFlag, "o", "text", "Output format (text|json)")
 	rootCmd.AddCommand(versionCmd)
 }
 
 var (
-	// FlagJSON formats the output in json
-	FlagJSON = "json"
 	// Version represents Cosmovisor version value. Overwritten during build
 	Version = "1.1.0"
+	// OutputFlag defines the output format flag
+	OutputFlag = tmcli.OutputFlag
 )
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Prints the version of Cosmovisor",
+	Short: "Prints the version of Cosmovisor.",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if ok, err := cmd.Flags().GetBool(FlagJSON); ok && err == nil {
-			return printVersionJSON(logger, args)
+		if val, err := cmd.Flags().GetString(OutputFlag); val == "json" && err == nil {
+			return printVersionJSON(args)
 		}
 
-		return printVersion(logger, args)
+		return printVersion(args)
 	},
 }
 
-func printVersion(logger *zerolog.Logger, args []string) error {
-	fmt.Println("Cosmovisor Version: ", Version)
+func printVersion(args []string) error {
+	fmt.Println("cosmovisor version: ", Version)
 
-	if err := Run(logger, append([]string{"version"}, args...)); err != nil {
-		handleRunVersionFailure(err)
+	if err := Run(append([]string{"version"}, args...)); err != nil {
+		return fmt.Errorf("failed to run version command: %w", err)
 	}
 
 	return nil
 }
 
-func printVersionJSON(logger *zerolog.Logger, args []string) error {
+func printVersionJSON(args []string) error {
 	buf := new(strings.Builder)
 
 	// disable logger
@@ -54,11 +52,10 @@ func printVersionJSON(logger *zerolog.Logger, args []string) error {
 	logger = &l
 
 	if err := Run(
-		logger,
 		[]string{"version", "--long", "--output", "json"},
 		StdOutRunOption(buf),
 	); err != nil {
-		handleRunVersionFailure(err)
+		return fmt.Errorf("failed to run version command: %w", err)
 	}
 
 	out, err := json.Marshal(struct {
@@ -69,20 +66,9 @@ func printVersionJSON(logger *zerolog.Logger, args []string) error {
 		AppVersion: json.RawMessage(buf.String()),
 	})
 	if err != nil {
-		l := logger.Level(zerolog.TraceLevel)
-		logger = &l
-		return fmt.Errorf("Can't print version output, expected valid json from APP, got: %s - %w", buf.String(), err)
+		return fmt.Errorf("can't print version output, expected valid json from APP, got: %s - %w", buf.String(), err)
 	}
 
 	fmt.Println(string(out))
 	return nil
-}
-
-func handleRunVersionFailure(err error) {
-	// Check the config and output details or any errors.
-	// Not using the cosmovisor.Logger in order to ignore any level it might have set,
-	// and also to not have any of the extra parameters in the output.
-	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.Kitchen}
-	logger := zerolog.New(output).With().Timestamp().Logger()
-	cverrors.LogErrors(&logger, "Can't run APP version", err)
 }

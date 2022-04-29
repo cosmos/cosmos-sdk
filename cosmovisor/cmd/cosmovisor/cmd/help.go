@@ -4,20 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
-	"github.com/spf13/cobra"
 )
-
-func init() {
-	rootCmd.AddCommand(helpCmd)
-}
-
-var helpCmd = &cobra.Command{
-	Use:   "help",
-	Short: "Print the help command",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(GetHelpText())
-	},
-}
 
 // GetHelpText creates the help text multi-line string.
 func GetHelpText() string {
@@ -31,14 +18,5 @@ the proposal. Cosmovisor interprets that data to perform an update: switch a cur
 and restart the App.
 
 Configuration of Cosmovisor is done through environment variables, which are
-documented in: https://github.com/cosmos/cosmos-sdk/tree/main/cosmovisor/README.md
-
-To get help for the configured binary:
-  cosmovisor run help
-
-Available Commands:
-  help     This help message
-  run      Runs app passing all subsequent parameters
-  version  Prints version of cosmovisor and the associated app.
-`, cosmovisor.EnvName, cosmovisor.EnvHome)
+documented in: https://github.com/cosmos/cosmos-sdk/tree/main/cosmovisor/README.md`, cosmovisor.EnvName, cosmovisor.EnvHome)
 }

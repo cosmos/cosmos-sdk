@@ -4,11 +4,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
-	"strconv"
-	"strings"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
@@ -388,7 +389,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAdmin() {
 		var txResp sdk.TxResponse
 		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 		s.Require().Equal(uint32(0), txResp.Code, out.String())
-		groupIDs[i] = s.getGroupIdFromTxResponse(txResp)
+		groupIDs[i] = s.getGroupIDFromTxResponse(txResp)
 	}
 
 	testCases := []struct {
@@ -1056,7 +1057,8 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyAdmin() {
 	clientCtx := val.ClientCtx
 	groupPolicy := s.groupPolicies[3]
 
-	commonFlags := append(s.commonFlags, fmt.Sprintf("--%s=%d", flags.FlagGas, 300000))
+	commonFlags := s.commonFlags
+	commonFlags = append(commonFlags, fmt.Sprintf("--%s=%d", flags.FlagGas, 300000))
 
 	testCases := []struct {
 		name         string
@@ -1155,7 +1157,8 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 	clientCtx := val.ClientCtx
 	groupPolicy := s.groupPolicies[2]
 
-	commonFlags := append(s.commonFlags, fmt.Sprintf("--%s=%d", flags.FlagGas, 300000))
+	commonFlags := s.commonFlags
+	commonFlags = append(commonFlags, fmt.Sprintf("--%s=%d", flags.FlagGas, 300000))
 
 	testCases := []struct {
 		name         string
@@ -1299,7 +1302,8 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 	clientCtx := val.ClientCtx
 	groupPolicy := s.groupPolicies[2]
 
-	commonFlags := append(s.commonFlags, fmt.Sprintf("--%s=%d", flags.FlagGas, 300000))
+	commonFlags := s.commonFlags
+	commonFlags = append(commonFlags, fmt.Sprintf("--%s=%d", flags.FlagGas, 300000))
 
 	testCases := []struct {
 		name         string
@@ -1618,7 +1622,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 		var txResp sdk.TxResponse
 		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 		s.Require().Equal(uint32(0), txResp.Code, out.String())
-		ids[i] = s.getProposalIdFromTxResponse(txResp)
+		ids[i] = s.getProposalIDFromTxResponse(txResp)
 	}
 
 	testCases := []struct {
@@ -1805,7 +1809,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 		var txResp sdk.TxResponse
 		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 		s.Require().Equal(uint32(0), txResp.Code, out.String())
-		ids[i] = s.getProposalIdFromTxResponse(txResp)
+		ids[i] = s.getProposalIDFromTxResponse(txResp)
 	}
 
 	testCases := []struct {
@@ -1908,7 +1912,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 	}
 }
 
-func (s *IntegrationTestSuite) getProposalIdFromTxResponse(txResp sdk.TxResponse) string {
+func (s *IntegrationTestSuite) getProposalIDFromTxResponse(txResp sdk.TxResponse) string {
 	s.Require().Greater(len(txResp.Logs), 0)
 	s.Require().NotNil(txResp.Logs[0].Events)
 	events := txResp.Logs[0].Events
@@ -1948,7 +1952,7 @@ func (s *IntegrationTestSuite) TestTxExec() {
 		var txResp sdk.TxResponse
 		require.NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 		require.Equal(uint32(0), txResp.Code, out.String())
-		proposalID := s.getProposalIdFromTxResponse(txResp)
+		proposalID := s.getProposalIDFromTxResponse(txResp)
 		proposalIDs = append(proposalIDs, proposalID)
 
 		out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgVoteCmd(),
@@ -2088,7 +2092,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 	require.NoError(err, out.String())
 	var txResp sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	groupID := s.getGroupIdFromTxResponse(txResp)
+	groupID := s.getGroupIDFromTxResponse(txResp)
 
 	// create group policy
 	out, err = cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupPolicyCmd(),
@@ -2332,7 +2336,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			out, err := cli.ExecTestCLICmd(clientCtx, cmdSubmitProposal, submitProposalArgs)
 			s.Require().NoError(err, out.String())
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &submitProposalResp), out.String())
-			proposalID := s.getProposalIdFromTxResponse(submitProposalResp)
+			proposalID := s.getProposalIDFromTxResponse(submitProposalResp)
 
 			for i, vote := range tc.votes {
 				memberAddress := tc.members[i]
@@ -2388,7 +2392,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 
 }
 
-func (s *IntegrationTestSuite) getGroupIdFromTxResponse(txResp sdk.TxResponse) string {
+func (s *IntegrationTestSuite) getGroupIDFromTxResponse(txResp sdk.TxResponse) string {
 	s.Require().Greater(len(txResp.Logs), 0)
 	s.Require().NotNil(txResp.Logs[0].Events)
 	events := txResp.Logs[0].Events
@@ -2480,7 +2484,7 @@ func (s *IntegrationTestSuite) createGroupWithMembers(membersWeight, membersAddr
 	s.Require().NoError(err, out.String())
 	var txResp sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	return s.getGroupIdFromTxResponse(txResp)
+	return s.getGroupIDFromTxResponse(txResp)
 }
 
 func (s *IntegrationTestSuite) createGroupThresholdPolicyWithBalance(groupID string, threshold int, tokens int64) string {

@@ -11,7 +11,7 @@ import (
 )
 
 func parseMembers(membersFile string) ([]group.MemberRequest, error) {
-	members := group.MembersRequest{}
+	members := group.MemberRequests{}
 
 	if membersFile == "" {
 		return members.Members, nil

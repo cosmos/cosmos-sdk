@@ -193,7 +193,7 @@ func (m MsgUpdateGroupMembers) ValidateBasic() error {
 	if len(m.MemberUpdates) == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "member updates")
 	}
-	members := MembersRequest{Members: m.MemberUpdates}
+	members := MemberRequests{Members: m.MemberUpdates}
 	if err := members.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "members")
 	}
@@ -827,7 +827,7 @@ func (m MsgLeaveGroup) ValidateBasic() error {
 // that all members weights are positive (whereas `Members{members}.ValidateBasic()`
 // only checks that they are non-negative.
 func strictValidateMembers(members []MemberRequest) error {
-	err := MembersRequest{members}.ValidateBasic()
+	err := MemberRequests{members}.ValidateBasic()
 	if err != nil {
 		return err
 	}

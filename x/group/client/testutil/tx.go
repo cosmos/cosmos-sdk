@@ -121,7 +121,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		if threshold > 3 {
 			threshold = 3
 		}
-		s.createGroupThresholdPolicyWithTokens("1", threshold, 1000)
+		s.createGroupThresholdPolicyWithBalance("1", threshold, 1000)
 
 		out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 		s.Require().NoError(err, out.String())
@@ -2207,28 +2207,26 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 	weights := []string{"1", "1", "2"}
 	accounts := s.createAccounts(3)
 	testCases := []struct {
-		name                    string
-		indexOfMemberThatLeaves int
-		votes                   []string
-		members                 []string
-		malleate                func(groupID string) (*cobra.Command, []string)
-		expectErr               bool
-		errMsg                  string
-		respType                proto.Message
+		name      string
+		votes     []string
+		members   []string
+		malleate  func(groupID string) (*cobra.Command, []string)
+		expectErr bool
+		errMsg    string
+		respType  proto.Message
 	}{
 		{
 			"member leaves while all others vote yes",
-			0,
 			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_YES", "VOTE_OPTION_YES"},
 			accounts,
 			func(groupID string) (*cobra.Command, []string) {
 				leavingMemberIdx := 0
 				args := append(
 					[]string{
-						accounts[indexOfMemberThatLeaves],
+						accounts[leavingMemberIdx],
 						groupID,
 
-						fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[indexOfMemberThatLeaves]),
+						fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[leavingMemberIdx]),
 					},
 					s.commonFlags...,
 				)
@@ -2240,17 +2238,16 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 		},
 		{
 			"member leaves while all others vote yes and no",
-			0,
 			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_NO", "VOTE_OPTION_YES"},
 			accounts,
 			func(groupID string) (*cobra.Command, []string) {
-				indexOfMemberThatLeaves := 0
+				leavingMemberIdx := 0
 				args := append(
 					[]string{
-						accounts[indexOfMemberThatLeaves],
+						accounts[leavingMemberIdx],
 						groupID,
 
-						fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[indexOfMemberThatLeaves]),
+						fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[leavingMemberIdx]),
 					},
 					s.commonFlags...,
 				)
@@ -2262,17 +2259,16 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 		},
 		{
 			"member that leaves affects the threshold",
-			2,
 			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_NO"},
 			accounts,
 			func(groupID string) (*cobra.Command, []string) {
-				indexOfMemberThatLeaves := 2
+				leavingMemberIdx := 2
 				args := append(
 					[]string{
-						accounts[indexOfMemberThatLeaves],
+						accounts[leavingMemberIdx],
 						groupID,
 
-						fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[indexOfMemberThatLeaves]),
+						fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[leavingMemberIdx]),
 					},
 					s.commonFlags...,
 				)
@@ -2284,7 +2280,6 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 		},
 		{
 			"update member policy",
-			2,
 			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_NO"},
 			accounts,
 			func(groupID string) (*cobra.Command, []string) {
@@ -2318,7 +2313,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			cmdMsgExec := client.MsgExecCmd()
 
 			groupID := s.createGroupWithMembers(weights, accounts)
-			groupPolicyAddress := s.createGroupThresholdPolicyWithTokens(groupID, 3, 100)
+			groupPolicyAddress := s.createGroupThresholdPolicyWithBalance(groupID, 3, 100)
 
 			// Submit proposal
 			proposal := s.createCLIProposal(
@@ -2489,7 +2484,7 @@ func (s *IntegrationTestSuite) createGroupWithMembers(membersWeight, membersAddr
 	return s.getGroupIdFromTxResponse(txResp)
 }
 
-func (s *IntegrationTestSuite) createGroupThresholdPolicyWithTokens(groupID string, threshold int, tokens int64) string {
+func (s *IntegrationTestSuite) createGroupThresholdPolicyWithBalance(groupID string, threshold int, tokens int64) string {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 

@@ -23,8 +23,9 @@ var (
 )
 
 var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Prints the version of Cosmovisor.",
+	Use:          "version",
+	Short:        "Prints the version of Cosmovisor.",
+	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if val, err := cmd.Flags().GetString(OutputFlag); val == "json" && err == nil {
 			return printVersionJSON(args)

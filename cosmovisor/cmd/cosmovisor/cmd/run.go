@@ -12,6 +12,7 @@ func init() {
 var runCmd = &cobra.Command{
 	Use:                "run",
 	Short:              "Run an APP command.",
+	SilenceUsage:       true,
 	DisableFlagParsing: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return Run(args)

@@ -1,11 +1,12 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
+
+	cverrors "github.com/cosmos/cosmos-sdk/cosmovisor/errors"
 )
 
 var logger *zerolog.Logger
@@ -21,7 +22,7 @@ func Execute(log *zerolog.Logger) {
 	logger = log
 
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		cverrors.LogErrors(logger, "", err)
 		os.Exit(1)
 	}
 }

@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 
-	v1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
+	ormv1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1"
 )
 
 type fileGen struct {
@@ -23,7 +23,7 @@ func (f fileGen) gen() error {
 	f.P("package ", f.file.GoPackageName)
 	stores := make([]*protogen.Message, 0)
 	for _, msg := range f.file.Messages {
-		tableDesc := proto.GetExtension(msg.Desc.Options(), v1alpha1.E_Table).(*v1alpha1.TableDescriptor)
+		tableDesc := proto.GetExtension(msg.Desc.Options(), ormv1.E_Table).(*ormv1.TableDescriptor)
 		if tableDesc != nil {
 			tableGen, err := newTableGen(f, msg, tableDesc)
 			if err != nil {
@@ -31,7 +31,7 @@ func (f fileGen) gen() error {
 			}
 			tableGen.gen()
 		}
-		singletonDesc := proto.GetExtension(msg.Desc.Options(), v1alpha1.E_Singleton).(*v1alpha1.SingletonDescriptor)
+		singletonDesc := proto.GetExtension(msg.Desc.Options(), ormv1.E_Singleton).(*ormv1.SingletonDescriptor)
 		if singletonDesc != nil {
 			// do some singleton magic
 			singletonGen, err := newSingletonGen(f, msg, singletonDesc)

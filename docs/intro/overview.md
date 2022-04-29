@@ -12,7 +12,7 @@ The goal of the Cosmos SDK is to allow developers to easily create custom blockc
 
 ## What are Application-Specific Blockchains
 
-One development paradigm in the blockchain world today is that of virtual-machine blockchains like Ethereum, where development generally revolves around building a decentralised applications on top of an existing blockchain as a set of smart contracts. While smart contracts can be very good for some use cases like single-use applications (e.g. ICOs), they often fall short for building complex decentralised platforms. More generally, smart contracts can be limiting in terms of flexibility, sovereignty and performance.
+One development paradigm in the blockchain world today is that of virtual-machine blockchains like Ethereum, where development generally revolves around building decentralised applications on top of an existing blockchain as a set of smart contracts. While smart contracts can be very good for some use cases like single-use applications (e.g. ICOs), they often fall short for building complex decentralised platforms. More generally, smart contracts can be limiting in terms of flexibility, sovereignty and performance.
 
 Application-specific blockchains offer a radically different development paradigm than virtual-machine blockchains. An application-specific blockchain is a blockchain customized to operate a single application: developers have all the freedom to make the design decisions required for the application to run optimally. They can also provide better sovereignty, security and performance.
 

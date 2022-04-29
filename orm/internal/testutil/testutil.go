@@ -2,11 +2,11 @@ package testutil
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
-	"google.golang.org/protobuf/types/known/durationpb"
-
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"pgregory.net/rapid"
 
@@ -39,7 +39,7 @@ var TestFieldSpecs = []TestFieldSpec{
 	},
 	{
 		"bz",
-		rapid.SliceOfN(rapid.Byte(), 0, 255),
+		rapid.SliceOfN(rapid.Byte(), 0, math.MaxUint32),
 	},
 	{
 		"i32",

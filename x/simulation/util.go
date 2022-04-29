@@ -85,7 +85,7 @@ func GenAndDeliverTxWithRandFees(txCtx OperationInput) (simtypes.OperationMsg, [
 	var fees sdk.Coins
 	var err error
 
-	coins, hasNeg := spendable.SafeSub(txCtx.CoinsSpentInMsg)
+	coins, hasNeg := spendable.SafeSub(txCtx.CoinsSpentInMsg...)
 	if hasNeg {
 		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "message doesn't leave room for fees"), nil, err
 	}
@@ -100,7 +100,7 @@ func GenAndDeliverTxWithRandFees(txCtx OperationInput) (simtypes.OperationMsg, [
 // GenAndDeliverTx generates a transactions and delivers it.
 func GenAndDeliverTx(txCtx OperationInput, fees sdk.Coins) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 	account := txCtx.AccountKeeper.GetAccount(txCtx.Context, txCtx.SimAccount.Address)
-	tx, err := helpers.GenTx(
+	tx, err := helpers.GenSignedMockTx(
 		txCtx.TxGen,
 		[]sdk.Msg{txCtx.Msg},
 		fees,

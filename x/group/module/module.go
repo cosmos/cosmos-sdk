@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -97,10 +96,6 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 // RegisterLegacyAminoCodec registers the group module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
 
-// RegisterRESTRoutes registers the REST routes for the group module.
-// Deprecated: RegisterRESTRoutes is deprecated.
-func (AppModuleBasic) RegisterRESTRoutes(_ sdkclient.Context, _ *mux.Router) {}
-
 // Name returns the group module's name.
 func (AppModule) Name() string {
 	return group.ModuleName
@@ -154,8 +149,9 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
 
-// EndBlock does nothing
+// EndBlock implements the group module's EndBlock.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	EndBlocker(ctx, am.keeper)
 	return []abci.ValidatorUpdate{}
 }
 

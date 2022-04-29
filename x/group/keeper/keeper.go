@@ -2,14 +2,17 @@ package keeper
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authmiddleware "github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )
 
@@ -34,7 +37,7 @@ const (
 	ProposalTablePrefix              byte = 0x30
 	ProposalTableSeqPrefix           byte = 0x31
 	ProposalByGroupPolicyIndexPrefix byte = 0x32
-	ProposalByProposerIndexPrefix    byte = 0x33
+	ProposalsByVotingPeriodEndPrefix byte = 0x33
 
 	// Vote Table
 	VoteTablePrefix           byte = 0x40
@@ -65,7 +68,7 @@ type Keeper struct {
 	// Proposal Table
 	proposalTable              orm.AutoUInt64Table
 	proposalByGroupPolicyIndex orm.Index
-	proposalByProposerIndex    orm.Index
+	proposalsByVotingPeriodEnd orm.Index
 
 	// Vote Table
 	voteTable           orm.PrimaryKeyTable
@@ -77,6 +80,7 @@ type Keeper struct {
 	config group.Config
 }
 
+// NewKeeper creates a new group keeper.
 func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddleware.MsgServiceRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
 	k := Keeper{
 		key:       storeKey,
@@ -156,7 +160,7 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 		panic(err.Error())
 	}
 	k.proposalByGroupPolicyIndex, err = orm.NewIndex(proposalTable, ProposalByGroupPolicyIndexPrefix, func(value interface{}) ([]interface{}, error) {
-		account := value.(*group.Proposal).Address
+		account := value.(*group.Proposal).GroupPolicyAddress
 		addr, err := sdk.AccAddressFromBech32(account)
 		if err != nil {
 			return nil, err
@@ -166,17 +170,9 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 	if err != nil {
 		panic(err.Error())
 	}
-	k.proposalByProposerIndex, err = orm.NewIndex(proposalTable, ProposalByProposerIndexPrefix, func(value interface{}) ([]interface{}, error) {
-		proposers := value.(*group.Proposal).Proposers
-		r := make([]interface{}, len(proposers))
-		for i := range proposers {
-			addr, err := sdk.AccAddressFromBech32(proposers[i])
-			if err != nil {
-				return nil, err
-			}
-			r[i] = addr.Bytes()
-		}
-		return r, nil
+	k.proposalsByVotingPeriodEnd, err = orm.NewIndex(proposalTable, ProposalsByVotingPeriodEndPrefix, func(value interface{}) ([]interface{}, error) {
+		votingPeriodEnd := value.(*group.Proposal).VotingPeriodEnd
+		return []interface{}{sdk.FormatTimeBytes(votingPeriodEnd)}, nil
 	}, []byte{})
 	if err != nil {
 		panic(err.Error())
@@ -223,10 +219,177 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", group.ModuleName))
 }
 
-// MaxMetadataLength returns the max length of the metadata bytes field for various entities within the group module.
-func (k Keeper) MaxMetadataLength() uint64 { return k.config.MaxMetadataLen }
-
 // GetGroupSequence returns the current value of the group table sequence
 func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
 	return k.groupTable.Sequence().CurVal(ctx.KVStore(k.key))
+}
+
+// iterateProposalsByVPEnd iterates over all proposals whose voting_period_end is after the `endTime` time argument.
+func (k Keeper) iterateProposalsByVPEnd(ctx sdk.Context, endTime time.Time, cb func(proposal group.Proposal) (bool, error)) error {
+	timeBytes := sdk.FormatTimeBytes(endTime)
+	it, err := k.proposalsByVotingPeriodEnd.PrefixScan(ctx.KVStore(k.key), nil, timeBytes)
+
+	if err != nil {
+		return err
+	}
+	defer it.Close()
+
+	for {
+		// Important: this following line cannot be outside of the for loop.
+		// It seems that when one unmarshals into the same `group.Proposal`
+		// reference, then gogoproto somehow "adds" the new bytes to the old
+		// object for some fields. When running simulations, for proposals with
+		// each 1-2 proposers, after a couple of loop iterations we got to a
+		// proposal with 60k+ proposers.
+		// So we're declaring a local variable that gets GCed.
+		//
+		// Also see `x/group/types/proposal_test.go`, TestGogoUnmarshalProposal().
+		var proposal group.Proposal
+		_, err := it.LoadNext(&proposal)
+		if errors.ErrORMIteratorDone.Is(err) {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		stop, err := cb(proposal)
+		if err != nil {
+			return err
+		}
+		if stop {
+			break
+		}
+	}
+
+	return nil
+}
+
+// pruneProposal deletes a proposal from state.
+func (k Keeper) pruneProposal(ctx sdk.Context, proposalID uint64) error {
+	store := ctx.KVStore(k.key)
+
+	err := k.proposalTable.Delete(store, proposalID)
+	if err != nil {
+		return err
+	}
+
+	k.Logger(ctx).Debug(fmt.Sprintf("Pruned proposal %d", proposalID))
+	return nil
+}
+
+// abortProposals iterates through all proposals by group policy index
+// and marks submitted proposals as aborted.
+func (k Keeper) abortProposals(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) error {
+	proposalIt, err := k.proposalByGroupPolicyIndex.Get(ctx.KVStore(k.key), groupPolicyAddr.Bytes())
+	if err != nil {
+		return err
+	}
+	defer proposalIt.Close()
+
+	for {
+		var proposalInfo group.Proposal
+		_, err = proposalIt.LoadNext(&proposalInfo)
+		if errors.ErrORMIteratorDone.Is(err) {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		// Mark all proposals still in the voting phase as aborted.
+		if proposalInfo.Status == group.PROPOSAL_STATUS_SUBMITTED {
+			proposalInfo.Status = group.PROPOSAL_STATUS_ABORTED
+
+			if err := k.proposalTable.Update(ctx.KVStore(k.key), proposalInfo.Id, &proposalInfo); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// pruneVotes prunes all votes for a proposal from state.
+func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
+	store := ctx.KVStore(k.key)
+	it, err := k.voteByProposalIndex.Get(store, proposalID)
+	if err != nil {
+		return err
+	}
+	defer it.Close()
+
+	for {
+		var vote group.Vote
+		_, err = it.LoadNext(&vote)
+		if errors.ErrORMIteratorDone.Is(err) {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		err = k.voteTable.Delete(store, &vote)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// PruneProposals prunes all proposals that are expired, i.e. whose
+// `voting_period + max_execution_period` is greater than the current block
+// time.
+func (k Keeper) PruneProposals(ctx sdk.Context) error {
+	err := k.iterateProposalsByVPEnd(ctx, ctx.BlockTime().Add(-k.config.MaxExecutionPeriod), func(proposal group.Proposal) (bool, error) {
+		err := k.pruneProposal(ctx, proposal.Id)
+		if err != nil {
+			return true, err
+		}
+
+		return false, nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// TallyProposalsAtVPEnd iterates over all proposals whose voting period
+// has ended, tallies their votes, prunes them, and updates the proposal's
+// `FinalTallyResult` field.
+func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
+	return k.iterateProposalsByVPEnd(ctx, ctx.BlockTime(), func(proposal group.Proposal) (bool, error) {
+		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.GroupPolicyAddress)
+		if err != nil {
+			return true, sdkerrors.Wrap(err, "group policy")
+		}
+
+		electorate, err := k.getGroupInfo(ctx, policyInfo.GroupId)
+		if err != nil {
+			return true, sdkerrors.Wrap(err, "group")
+		}
+
+		proposalId := proposal.Id
+		if proposal.Status == group.PROPOSAL_STATUS_ABORTED || proposal.Status == group.PROPOSAL_STATUS_WITHDRAWN {
+			if err := k.pruneProposal(ctx, proposalId); err != nil {
+				return true, err
+			}
+			if err := k.pruneVotes(ctx, proposalId); err != nil {
+				return true, err
+			}
+		} else {
+			err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo)
+			if err != nil {
+				return true, sdkerrors.Wrap(err, "doTallyAndUpdate")
+			}
+
+			if err := k.proposalTable.Update(ctx.KVStore(k.key), proposal.Id, &proposal); err != nil {
+				return true, sdkerrors.Wrap(err, "proposal update")
+			}
+		}
+
+		return false, nil
+	})
 }

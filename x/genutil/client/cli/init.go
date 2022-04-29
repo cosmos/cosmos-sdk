@@ -163,7 +163,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			genDoc.AppState = appState
 
 			if err = genutil.ExportGenesisFile(genDoc, genFile); err != nil {
-				return errors.Wrap(err, "Failed to export gensis file")
+				return errors.Wrap(err, "Failed to export genesis file")
 			}
 
 			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)

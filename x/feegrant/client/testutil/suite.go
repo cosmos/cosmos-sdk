@@ -21,8 +21,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/client/cli"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	govv1beta2 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
 const (
@@ -316,7 +316,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 	alreadyExistedGrantee := s.addedGrantee
 	clientCtx := val.ClientCtx
 
-	fromAddr, fromName, _, err := client.GetFromFields(clientCtx.Keyring, granter.String(), clientCtx.GenerateOnly)
+	fromAddr, fromName, _, err := client.GetFromFields(clientCtx, clientCtx.Keyring, granter.String())
 	s.Require().Equal(fromAddr, granter)
 	s.Require().NoError(err)
 
@@ -782,7 +782,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 	}
 	spendLimit := sdk.NewCoin("stake", sdk.NewInt(1000))
 
-	allowMsgs := strings.Join([]string{sdk.MsgTypeURL(&govv1beta1.MsgSubmitProposal{}), sdk.MsgTypeURL(&govv1beta2.MsgVoteWeighted{})}, ",")
+	allowMsgs := strings.Join([]string{sdk.MsgTypeURL(&govv1beta1.MsgSubmitProposal{}), sdk.MsgTypeURL(&govv1.MsgVoteWeighted{})}, ",")
 
 	testCases := []struct {
 		name         string

@@ -4,18 +4,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 )
 
 // RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
 // governance module.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*Content)(nil), nil)
-	cdc.RegisterConcrete(&MsgSubmitProposal{}, "cosmos-sdk/MsgSubmitProposal", nil)
-	cdc.RegisterConcrete(&MsgDeposit{}, "cosmos-sdk/MsgDeposit", nil)
-	cdc.RegisterConcrete(&MsgVote{}, "cosmos-sdk/MsgVote", nil)
-	cdc.RegisterConcrete(&MsgVoteWeighted{}, "cosmos-sdk/MsgVoteWeighted", nil)
+	legacy.RegisterAminoMsg(cdc, &MsgSubmitProposal{}, "cosmos-sdk/MsgSubmitProposal")
+	legacy.RegisterAminoMsg(cdc, &MsgDeposit{}, "cosmos-sdk/MsgDeposit")
+	legacy.RegisterAminoMsg(cdc, &MsgVote{}, "cosmos-sdk/MsgVote")
+	legacy.RegisterAminoMsg(cdc, &MsgVoteWeighted{}, "cosmos-sdk/MsgVoteWeighted")
 	cdc.RegisterConcrete(&TextProposal{}, "cosmos-sdk/TextProposal", nil)
 }
 
@@ -35,6 +37,17 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
+var (
+	amino     = codec.NewLegacyAmino()
+	ModuleCdc = codec.NewAminoCodec(amino)
+)
+
 func init() {
-	RegisterLegacyAminoCodec(legacy.Cdc)
+	RegisterLegacyAminoCodec(amino)
+	cryptocodec.RegisterCrypto(amino)
+	sdk.RegisterLegacyAminoCodec(amino)
+
+	// Register all Amino interfaces and concrete types on the authz Amino codec so that this can later be
+	// used to properly serialize MsgGrant and MsgExec instances
+	RegisterLegacyAminoCodec(authzcodec.Amino)
 }

@@ -219,7 +219,7 @@ NOTE: modules will be able to use a special commitment and their own DBs. For ex
 
 Cosmos SDK users should be only concerned about the module interface, which currently relies on the `KVStore`. We don't change this interface, so the proposed store/v2 is 100% compatible with existing modules.
 
-The new `MultiStore` and supporting types are implemented in `store/v2` package to provide Cosmos SDK users the choice to use the new store or the old IAVL-based store.
+The new `RootStore` and supporting types can be implemented in a `store/v2alpha1` package to avoid breaking existing code and keep the support for IAVL stores using `store` (v1) package.
 
 #### Merkle Proofs and IBC
 

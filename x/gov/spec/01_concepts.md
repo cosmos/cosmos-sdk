@@ -67,7 +67,7 @@ according to the final tally of the proposal:
 * All refunded or burned deposits are removed from the state. Events are issued when
   burning or refunding a deposit.
 
-## Voting
+## Vote
 
 ### Participants
 
@@ -140,12 +140,19 @@ casted on a proposal for the result to be valid.
 Threshold is defined as the minimum proportion of `Yes` votes (excluding
 `Abstain` votes) for the proposal to be accepted.
 
-Initially, the threshold is set at 50% with a possibility to veto if more than
-1/3rd of votes (excluding `Abstain` votes) are `NoWithVeto` votes. This means
-that proposals are accepted if the proportion of `Yes` votes (excluding
-`Abstain` votes) at the end of the voting period is superior to 50% and if the
-proportion of `NoWithVeto` votes is inferior to 1/3 (excluding `Abstain`
-votes).
+Initially, the threshold is set at 50% of `Yes` votes, excluding `Abstain`
+votes. A possibility to veto exists if more than 1/3rd of all votes are
+`NoWithVeto` votes.  Note, both of these values are derived from the `TallyParams`
+on-chain parameter, which is modifiable by governance.
+This means that proposals are accepted iff:
+
+* There exist bonded tokens.
+* Quorum has been achieved.
+* The proportion of `Abstain` votes is inferior to 1/1.
+* The proportion of `NoWithVeto` votes is inferior to 1/3, including
+  `Abstain` votes.
+* The proportion of `Yes` votes, excluding `Abstain` votes, at the end of
+  the voting period is superior to 1/2.
 
 ### Inheritance
 
@@ -169,7 +176,7 @@ Later, we may add permissioned keys that could only sign txs from certain module
 ## Software Upgrade
 
 If proposals are of type `SoftwareUpgradeProposal`, then nodes need to upgrade
-their software to the new version that was voted. This process is divided in
+their software to the new version that was voted. This process is divided into
 two steps.
 
 ### Signal

@@ -41,7 +41,7 @@ func NewBaseVestingAccount(baseAccount *authtypes.BaseAccount, originalVesting s
 //
 // CONTRACT: Delegated vesting coins and vestingCoins must be sorted.
 func (bva BaseVestingAccount) LockedCoinsFromVesting(vestingCoins sdk.Coins) sdk.Coins {
-	lockedCoins := vestingCoins.Sub(vestingCoins.Min(bva.DelegatedVesting))
+	lockedCoins := vestingCoins.Sub(vestingCoins.Min(bva.DelegatedVesting)...)
 	if lockedCoins == nil {
 		return sdk.Coins{}
 	}
@@ -111,12 +111,12 @@ func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
 
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
-			bva.DelegatedFree = bva.DelegatedFree.Sub(sdk.Coins{xCoin})
+			bva.DelegatedFree = bva.DelegatedFree.Sub(xCoin)
 		}
 
 		if !y.IsZero() {
 			yCoin := sdk.NewCoin(coin.Denom, y)
-			bva.DelegatedVesting = bva.DelegatedVesting.Sub(sdk.Coins{yCoin})
+			bva.DelegatedVesting = bva.DelegatedVesting.Sub(yCoin)
 		}
 	}
 }
@@ -238,7 +238,7 @@ func (cva ContinuousVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coin
 	s := sdk.NewDec(x).Quo(sdk.NewDec(y))
 
 	for _, ovc := range cva.OriginalVesting {
-		vestedAmt := ovc.Amount.ToDec().Mul(s).RoundInt()
+		vestedAmt := sdk.NewDecFromInt(ovc.Amount).Mul(s).RoundInt()
 		vestedCoins = append(vestedCoins, sdk.NewCoin(ovc.Denom, vestedAmt))
 	}
 
@@ -248,7 +248,7 @@ func (cva ContinuousVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coin
 // GetVestingCoins returns the total number of vesting coins. If no coins are
 // vesting, nil is returned.
 func (cva ContinuousVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins {
-	return cva.OriginalVesting.Sub(cva.GetVestedCoins(blockTime))
+	return cva.OriginalVesting.Sub(cva.GetVestedCoins(blockTime)...)
 }
 
 // LockedCoins returns the set of coins that are not spendable (i.e. locked),
@@ -374,7 +374,7 @@ func (pva PeriodicVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins 
 // GetVestingCoins returns the total number of vesting coins. If no coins are
 // vesting, nil is returned.
 func (pva PeriodicVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins {
-	return pva.OriginalVesting.Sub(pva.GetVestedCoins(blockTime))
+	return pva.OriginalVesting.Sub(pva.GetVestedCoins(blockTime)...)
 }
 
 // LockedCoins returns the set of coins that are not spendable (i.e. locked),
@@ -485,7 +485,7 @@ func (dva DelayedVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins {
 // GetVestingCoins returns the total number of vesting coins for a delayed
 // vesting account.
 func (dva DelayedVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins {
-	return dva.OriginalVesting.Sub(dva.GetVestedCoins(blockTime))
+	return dva.OriginalVesting.Sub(dva.GetVestedCoins(blockTime)...)
 }
 
 // LockedCoins returns the set of coins that are not spendable (i.e. locked),

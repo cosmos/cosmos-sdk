@@ -14,13 +14,14 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	govv1beta2 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
@@ -56,7 +57,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// create a proposal with deposit
 	_, err = govtestutil.MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 1", "Where is the title!?", govv1beta1.ProposalTypeText,
-		fmt.Sprintf("--%s=%s", govcli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, govv1beta2.DefaultMinDepositTokens).String()))
+		fmt.Sprintf("--%s=%s", govcli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, govv1.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 
 	// Create new account in the keyring.
@@ -140,8 +141,8 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 var typeMsgSend = bank.SendAuthorization{}.MsgTypeURL()
-var typeMsgVote = sdk.MsgTypeURL(&govv1beta2.MsgVote{})
-var typeMsgSubmitProposal = sdk.MsgTypeURL(&govv1beta2.MsgSubmitProposal{})
+var typeMsgVote = sdk.MsgTypeURL(&govv1.MsgVote{})
+var typeMsgSubmitProposal = sdk.MsgTypeURL(&govv1.MsgSubmitProposal{})
 
 func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 	val := s.network.Validators[0]
@@ -320,6 +321,21 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			false,
+		},
+		{
+			"fail when granter = grantee",
+			[]string{
+				grantee.String(),
+				"generic",
+				fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgVote),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			0,
+			true,
 		},
 		{
 			"Valid tx with amino",
@@ -531,7 +547,7 @@ func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 	)
 	s.Require().NoError(err)
 	// msg vote
-	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1beta2.MsgVote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
+	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1.MsgVote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
 	execMsg := testutil.WriteToNewTempFile(s.T(), voteTx)
 
 	// waiting for authorization to expires
@@ -548,7 +564,7 @@ func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 	})
 	s.Require().NoError(err)
-	s.Require().Contains(res.String(), "authorization not found")
+	s.Require().Contains(res.String(), authz.ErrNoAuthorizationFound.Error())
 }
 
 func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
@@ -572,7 +588,7 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 	s.Require().NoError(err)
 
 	// msg vote
-	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1beta2.MsgVote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
+	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1.MsgVote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
 	execMsg := testutil.WriteToNewTempFile(s.T(), voteTx)
 
 	testCases := []struct {
@@ -730,7 +746,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			},
-			4,
+			authz.ErrNoAuthorizationFound.ABCICode(),
 			false,
 			"",
 		},
@@ -829,9 +845,9 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			},
-			4,
+			authz.ErrNoAuthorizationFound.ABCICode(),
 			false,
-			"authorization not found",
+			authz.ErrNoAuthorizationFound.Error(),
 		},
 	}
 
@@ -1050,9 +1066,9 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			},
-			4,
+			authz.ErrNoAuthorizationFound.ABCICode(),
 			false,
-			"authorization not found",
+			authz.ErrNoAuthorizationFound.Error(),
 		},
 	}
 

@@ -14,6 +14,7 @@ HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf:1.0.0-rc8
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
+DOCS_DOMAIN=docs.cosmos.network
 # RocksDB is a native dependency, so we don't assume the library is installed.
 # Instead, it must be explicitly enabled and we warn when it is not.
 ENABLE_ROCKSDB ?= false
@@ -46,8 +47,8 @@ ifeq ($(LEDGER_ENABLED),true)
   endif
 endif
 
-ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += gcc
+ifeq (secp,$(findstring secp,$(COSMOS_BUILD_OPTIONS)))
+  build_tags += libsecp256k1_sdk
 endif
 
 whitespace :=
@@ -73,10 +74,9 @@ endif
 
 # DB backend selection
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
-  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
+  build_tags += gcc
 endif
 ifeq (badgerdb,$(findstring badgerdb,$(COSMOS_BUILD_OPTIONS)))
-  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=badgerdb
   BUILD_TAGS += badgerdb
 endif
 # handle rocksdb
@@ -86,12 +86,10 @@ ifeq (rocksdb,$(findstring rocksdb,$(COSMOS_BUILD_OPTIONS)))
   endif
   CGO_ENABLED=1
   BUILD_TAGS += rocksdb
-  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=rocksdb
 endif
 # handle boltdb
 ifeq (boltdb,$(findstring boltdb,$(COSMOS_BUILD_OPTIONS)))
   BUILD_TAGS += boltdb
-  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=boltdb
 endif
 
 ifeq (,$(findstring nostrip,$(COSMOS_BUILD_OPTIONS)))
@@ -195,7 +193,7 @@ godocs:
 
 # This builds a docs site for each branch/tag in `./docs/versions`
 # and copies each site to a version prefixed path. The last entry inside
-# the `versions` file will be the default root index.html.
+# the `versions` file will be the default root index.html (and it should be main).
 build-docs:
 	@cd docs && \
 	while read -r branch path_prefix; do \
@@ -204,7 +202,9 @@ build-docs:
 		mkdir -p ~/output/$${path_prefix} ; \
 		cp -r .vuepress/dist/* ~/output/$${path_prefix}/ ; \
 		cp ~/output/$${path_prefix}/index.html ~/output ; \
+		cp ~/output/$${path_prefix}/404.html ~/output ; \
 	done < versions ;
+	@echo $(DOCS_DOMAIN) > ~/output/CNAME
 
 .PHONY: build-docs
 
@@ -396,7 +396,7 @@ devdoc-update:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=v0.3
+protoVer=v0.7
 protoImageName=tendermintdev/sdk-proto-gen:$(protoVer)
 containerProtoGen=$(PROJECT_NAME)-proto-gen-$(protoVer)
 containerProtoGenAny=$(PROJECT_NAME)-proto-gen-any-$(protoVer)
@@ -431,7 +431,7 @@ proto-lint:
 	@$(DOCKER_BUF) lint --error-format=json
 
 proto-check-breaking:
-	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=master
+	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main
 
 
 TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.0-rc6/proto/tendermint

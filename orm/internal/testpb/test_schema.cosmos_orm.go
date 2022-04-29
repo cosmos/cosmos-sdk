@@ -4,10 +4,10 @@ package testpb
 
 import (
 	context "context"
-
 	ormlist "github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 	ormtable "github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 	ormerrors "github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type ExampleTableTable interface {
@@ -398,10 +398,294 @@ func NewExampleSingletonTable(db ormtable.Schema) (ExampleSingletonTable, error)
 	return &exampleSingletonTable{table}, nil
 }
 
+type ExampleTimestampTable interface {
+	Insert(ctx context.Context, exampleTimestamp *ExampleTimestamp) error
+	InsertReturningID(ctx context.Context, exampleTimestamp *ExampleTimestamp) (uint64, error)
+	Update(ctx context.Context, exampleTimestamp *ExampleTimestamp) error
+	Save(ctx context.Context, exampleTimestamp *ExampleTimestamp) error
+	Delete(ctx context.Context, exampleTimestamp *ExampleTimestamp) error
+	Has(ctx context.Context, id uint64) (found bool, err error)
+	// Get returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
+	Get(ctx context.Context, id uint64) (*ExampleTimestamp, error)
+	List(ctx context.Context, prefixKey ExampleTimestampIndexKey, opts ...ormlist.Option) (ExampleTimestampIterator, error)
+	ListRange(ctx context.Context, from, to ExampleTimestampIndexKey, opts ...ormlist.Option) (ExampleTimestampIterator, error)
+	DeleteBy(ctx context.Context, prefixKey ExampleTimestampIndexKey) error
+	DeleteRange(ctx context.Context, from, to ExampleTimestampIndexKey) error
+
+	doNotImplement()
+}
+
+type ExampleTimestampIterator struct {
+	ormtable.Iterator
+}
+
+func (i ExampleTimestampIterator) Value() (*ExampleTimestamp, error) {
+	var exampleTimestamp ExampleTimestamp
+	err := i.UnmarshalMessage(&exampleTimestamp)
+	return &exampleTimestamp, err
+}
+
+type ExampleTimestampIndexKey interface {
+	id() uint32
+	values() []interface{}
+	exampleTimestampIndexKey()
+}
+
+// primary key starting index..
+type ExampleTimestampPrimaryKey = ExampleTimestampIdIndexKey
+
+type ExampleTimestampIdIndexKey struct {
+	vs []interface{}
+}
+
+func (x ExampleTimestampIdIndexKey) id() uint32                { return 0 }
+func (x ExampleTimestampIdIndexKey) values() []interface{}     { return x.vs }
+func (x ExampleTimestampIdIndexKey) exampleTimestampIndexKey() {}
+
+func (this ExampleTimestampIdIndexKey) WithId(id uint64) ExampleTimestampIdIndexKey {
+	this.vs = []interface{}{id}
+	return this
+}
+
+type ExampleTimestampTsIndexKey struct {
+	vs []interface{}
+}
+
+func (x ExampleTimestampTsIndexKey) id() uint32                { return 1 }
+func (x ExampleTimestampTsIndexKey) values() []interface{}     { return x.vs }
+func (x ExampleTimestampTsIndexKey) exampleTimestampIndexKey() {}
+
+func (this ExampleTimestampTsIndexKey) WithTs(ts *timestamppb.Timestamp) ExampleTimestampTsIndexKey {
+	this.vs = []interface{}{ts}
+	return this
+}
+
+type exampleTimestampTable struct {
+	table ormtable.AutoIncrementTable
+}
+
+func (this exampleTimestampTable) Insert(ctx context.Context, exampleTimestamp *ExampleTimestamp) error {
+	return this.table.Insert(ctx, exampleTimestamp)
+}
+
+func (this exampleTimestampTable) Update(ctx context.Context, exampleTimestamp *ExampleTimestamp) error {
+	return this.table.Update(ctx, exampleTimestamp)
+}
+
+func (this exampleTimestampTable) Save(ctx context.Context, exampleTimestamp *ExampleTimestamp) error {
+	return this.table.Save(ctx, exampleTimestamp)
+}
+
+func (this exampleTimestampTable) Delete(ctx context.Context, exampleTimestamp *ExampleTimestamp) error {
+	return this.table.Delete(ctx, exampleTimestamp)
+}
+
+func (this exampleTimestampTable) InsertReturningID(ctx context.Context, exampleTimestamp *ExampleTimestamp) (uint64, error) {
+	return this.table.InsertReturningID(ctx, exampleTimestamp)
+}
+
+func (this exampleTimestampTable) Has(ctx context.Context, id uint64) (found bool, err error) {
+	return this.table.PrimaryKey().Has(ctx, id)
+}
+
+func (this exampleTimestampTable) Get(ctx context.Context, id uint64) (*ExampleTimestamp, error) {
+	var exampleTimestamp ExampleTimestamp
+	found, err := this.table.PrimaryKey().Get(ctx, &exampleTimestamp, id)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, ormerrors.NotFound
+	}
+	return &exampleTimestamp, nil
+}
+
+func (this exampleTimestampTable) List(ctx context.Context, prefixKey ExampleTimestampIndexKey, opts ...ormlist.Option) (ExampleTimestampIterator, error) {
+	it, err := this.table.GetIndexByID(prefixKey.id()).List(ctx, prefixKey.values(), opts...)
+	return ExampleTimestampIterator{it}, err
+}
+
+func (this exampleTimestampTable) ListRange(ctx context.Context, from, to ExampleTimestampIndexKey, opts ...ormlist.Option) (ExampleTimestampIterator, error) {
+	it, err := this.table.GetIndexByID(from.id()).ListRange(ctx, from.values(), to.values(), opts...)
+	return ExampleTimestampIterator{it}, err
+}
+
+func (this exampleTimestampTable) DeleteBy(ctx context.Context, prefixKey ExampleTimestampIndexKey) error {
+	return this.table.GetIndexByID(prefixKey.id()).DeleteBy(ctx, prefixKey.values()...)
+}
+
+func (this exampleTimestampTable) DeleteRange(ctx context.Context, from, to ExampleTimestampIndexKey) error {
+	return this.table.GetIndexByID(from.id()).DeleteRange(ctx, from.values(), to.values())
+}
+
+func (this exampleTimestampTable) doNotImplement() {}
+
+var _ ExampleTimestampTable = exampleTimestampTable{}
+
+func NewExampleTimestampTable(db ormtable.Schema) (ExampleTimestampTable, error) {
+	table := db.GetTable(&ExampleTimestamp{})
+	if table == nil {
+		return nil, ormerrors.TableNotFound.Wrap(string((&ExampleTimestamp{}).ProtoReflect().Descriptor().FullName()))
+	}
+	return exampleTimestampTable{table.(ormtable.AutoIncrementTable)}, nil
+}
+
+type SimpleExampleTable interface {
+	Insert(ctx context.Context, simpleExample *SimpleExample) error
+	Update(ctx context.Context, simpleExample *SimpleExample) error
+	Save(ctx context.Context, simpleExample *SimpleExample) error
+	Delete(ctx context.Context, simpleExample *SimpleExample) error
+	Has(ctx context.Context, name string) (found bool, err error)
+	// Get returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
+	Get(ctx context.Context, name string) (*SimpleExample, error)
+	HasByUnique(ctx context.Context, unique string) (found bool, err error)
+	// GetByUnique returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
+	GetByUnique(ctx context.Context, unique string) (*SimpleExample, error)
+	List(ctx context.Context, prefixKey SimpleExampleIndexKey, opts ...ormlist.Option) (SimpleExampleIterator, error)
+	ListRange(ctx context.Context, from, to SimpleExampleIndexKey, opts ...ormlist.Option) (SimpleExampleIterator, error)
+	DeleteBy(ctx context.Context, prefixKey SimpleExampleIndexKey) error
+	DeleteRange(ctx context.Context, from, to SimpleExampleIndexKey) error
+
+	doNotImplement()
+}
+
+type SimpleExampleIterator struct {
+	ormtable.Iterator
+}
+
+func (i SimpleExampleIterator) Value() (*SimpleExample, error) {
+	var simpleExample SimpleExample
+	err := i.UnmarshalMessage(&simpleExample)
+	return &simpleExample, err
+}
+
+type SimpleExampleIndexKey interface {
+	id() uint32
+	values() []interface{}
+	simpleExampleIndexKey()
+}
+
+// primary key starting index..
+type SimpleExamplePrimaryKey = SimpleExampleNameIndexKey
+
+type SimpleExampleNameIndexKey struct {
+	vs []interface{}
+}
+
+func (x SimpleExampleNameIndexKey) id() uint32             { return 0 }
+func (x SimpleExampleNameIndexKey) values() []interface{}  { return x.vs }
+func (x SimpleExampleNameIndexKey) simpleExampleIndexKey() {}
+
+func (this SimpleExampleNameIndexKey) WithName(name string) SimpleExampleNameIndexKey {
+	this.vs = []interface{}{name}
+	return this
+}
+
+type SimpleExampleUniqueIndexKey struct {
+	vs []interface{}
+}
+
+func (x SimpleExampleUniqueIndexKey) id() uint32             { return 1 }
+func (x SimpleExampleUniqueIndexKey) values() []interface{}  { return x.vs }
+func (x SimpleExampleUniqueIndexKey) simpleExampleIndexKey() {}
+
+func (this SimpleExampleUniqueIndexKey) WithUnique(unique string) SimpleExampleUniqueIndexKey {
+	this.vs = []interface{}{unique}
+	return this
+}
+
+type simpleExampleTable struct {
+	table ormtable.Table
+}
+
+func (this simpleExampleTable) Insert(ctx context.Context, simpleExample *SimpleExample) error {
+	return this.table.Insert(ctx, simpleExample)
+}
+
+func (this simpleExampleTable) Update(ctx context.Context, simpleExample *SimpleExample) error {
+	return this.table.Update(ctx, simpleExample)
+}
+
+func (this simpleExampleTable) Save(ctx context.Context, simpleExample *SimpleExample) error {
+	return this.table.Save(ctx, simpleExample)
+}
+
+func (this simpleExampleTable) Delete(ctx context.Context, simpleExample *SimpleExample) error {
+	return this.table.Delete(ctx, simpleExample)
+}
+
+func (this simpleExampleTable) Has(ctx context.Context, name string) (found bool, err error) {
+	return this.table.PrimaryKey().Has(ctx, name)
+}
+
+func (this simpleExampleTable) Get(ctx context.Context, name string) (*SimpleExample, error) {
+	var simpleExample SimpleExample
+	found, err := this.table.PrimaryKey().Get(ctx, &simpleExample, name)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, ormerrors.NotFound
+	}
+	return &simpleExample, nil
+}
+
+func (this simpleExampleTable) HasByUnique(ctx context.Context, unique string) (found bool, err error) {
+	return this.table.GetIndexByID(1).(ormtable.UniqueIndex).Has(ctx,
+		unique,
+	)
+}
+
+func (this simpleExampleTable) GetByUnique(ctx context.Context, unique string) (*SimpleExample, error) {
+	var simpleExample SimpleExample
+	found, err := this.table.GetIndexByID(1).(ormtable.UniqueIndex).Get(ctx, &simpleExample,
+		unique,
+	)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, ormerrors.NotFound
+	}
+	return &simpleExample, nil
+}
+
+func (this simpleExampleTable) List(ctx context.Context, prefixKey SimpleExampleIndexKey, opts ...ormlist.Option) (SimpleExampleIterator, error) {
+	it, err := this.table.GetIndexByID(prefixKey.id()).List(ctx, prefixKey.values(), opts...)
+	return SimpleExampleIterator{it}, err
+}
+
+func (this simpleExampleTable) ListRange(ctx context.Context, from, to SimpleExampleIndexKey, opts ...ormlist.Option) (SimpleExampleIterator, error) {
+	it, err := this.table.GetIndexByID(from.id()).ListRange(ctx, from.values(), to.values(), opts...)
+	return SimpleExampleIterator{it}, err
+}
+
+func (this simpleExampleTable) DeleteBy(ctx context.Context, prefixKey SimpleExampleIndexKey) error {
+	return this.table.GetIndexByID(prefixKey.id()).DeleteBy(ctx, prefixKey.values()...)
+}
+
+func (this simpleExampleTable) DeleteRange(ctx context.Context, from, to SimpleExampleIndexKey) error {
+	return this.table.GetIndexByID(from.id()).DeleteRange(ctx, from.values(), to.values())
+}
+
+func (this simpleExampleTable) doNotImplement() {}
+
+var _ SimpleExampleTable = simpleExampleTable{}
+
+func NewSimpleExampleTable(db ormtable.Schema) (SimpleExampleTable, error) {
+	table := db.GetTable(&SimpleExample{})
+	if table == nil {
+		return nil, ormerrors.TableNotFound.Wrap(string((&SimpleExample{}).ProtoReflect().Descriptor().FullName()))
+	}
+	return simpleExampleTable{table}, nil
+}
+
 type TestSchemaStore interface {
 	ExampleTableTable() ExampleTableTable
 	ExampleAutoIncrementTableTable() ExampleAutoIncrementTableTable
 	ExampleSingletonTable() ExampleSingletonTable
+	ExampleTimestampTable() ExampleTimestampTable
+	SimpleExampleTable() SimpleExampleTable
 
 	doNotImplement()
 }
@@ -410,6 +694,8 @@ type testSchemaStore struct {
 	exampleTable              ExampleTableTable
 	exampleAutoIncrementTable ExampleAutoIncrementTableTable
 	exampleSingleton          ExampleSingletonTable
+	exampleTimestamp          ExampleTimestampTable
+	simpleExample             SimpleExampleTable
 }
 
 func (x testSchemaStore) ExampleTableTable() ExampleTableTable {
@@ -422,6 +708,14 @@ func (x testSchemaStore) ExampleAutoIncrementTableTable() ExampleAutoIncrementTa
 
 func (x testSchemaStore) ExampleSingletonTable() ExampleSingletonTable {
 	return x.exampleSingleton
+}
+
+func (x testSchemaStore) ExampleTimestampTable() ExampleTimestampTable {
+	return x.exampleTimestamp
+}
+
+func (x testSchemaStore) SimpleExampleTable() SimpleExampleTable {
+	return x.simpleExample
 }
 
 func (testSchemaStore) doNotImplement() {}
@@ -444,9 +738,21 @@ func NewTestSchemaStore(db ormtable.Schema) (TestSchemaStore, error) {
 		return nil, err
 	}
 
+	exampleTimestampTable, err := NewExampleTimestampTable(db)
+	if err != nil {
+		return nil, err
+	}
+
+	simpleExampleTable, err := NewSimpleExampleTable(db)
+	if err != nil {
+		return nil, err
+	}
+
 	return testSchemaStore{
 		exampleTableTable,
 		exampleAutoIncrementTableTable,
 		exampleSingletonTable,
+		exampleTimestampTable,
+		simpleExampleTable,
 	}, nil
 }

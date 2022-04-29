@@ -213,11 +213,18 @@ func (s *errorsTestSuite) TestABCIError() {
 func (s *errorsTestSuite) TestGRPCStatus() {
 	s.Require().Equal(codes.Unknown, grpcstatus.Code(errInternal))
 	s.Require().Equal(codes.NotFound, grpcstatus.Code(ErrNotFound))
-	s.Require().Equal(codes.Unimplemented, grpcstatus.Code(ErrNotSupported))
-	s.Require().Equal(codes.FailedPrecondition, grpcstatus.Code(ErrConflict))
+
 	status, ok := grpcstatus.FromError(ErrNotFound)
 	s.Require().True(ok)
 	s.Require().Equal("codespace testtesttest code 38: not found", status.Message())
+
+	// test wrapping
+	s.Require().Equal(codes.Unimplemented, grpcstatus.Code(ErrNotSupported.Wrap("test")))
+	s.Require().Equal(codes.FailedPrecondition, grpcstatus.Code(ErrConflict.Wrapf("test %s", "foo")))
+
+	status, ok = grpcstatus.FromError(ErrNotFound.Wrap("test"))
+	s.Require().True(ok)
+	s.Require().Equal("codespace testtesttest code 38: not found: test", status.Message())
 }
 
 func ExampleWrap() {

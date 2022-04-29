@@ -222,7 +222,7 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 			err  error
 		)
 
-		coins, hasNeg := spendable.SafeSub(fundAmount)
+		coins, hasNeg := spendable.SafeSub(fundAmount...)
 		if !hasNeg {
 			fees, err = simtypes.RandomFees(r, ctx, coins)
 			if err != nil {

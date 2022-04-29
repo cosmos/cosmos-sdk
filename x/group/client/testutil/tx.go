@@ -2222,7 +2222,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_YES", "VOTE_OPTION_YES"},
 			accounts,
 			func(groupID string) (*cobra.Command, []string) {
-				indexOfMemberThatLeaves := 0
+				leavingMemberIdx := 0
 				args := append(
 					[]string{
 						accounts[indexOfMemberThatLeaves],

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/cosmovisor"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
@@ -27,25 +28,27 @@ var versionCmd = &cobra.Command{
 	Short:        "Prints the version of Cosmovisor.",
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		logger := cmd.Context().Value(cosmovisor.LoggerKey).(*zerolog.Logger)
+
 		if val, err := cmd.Flags().GetString(OutputFlag); val == "json" && err == nil {
-			return printVersionJSON(args)
+			return printVersionJSON(logger, args)
 		}
 
-		return printVersion(args)
+		return printVersion(logger, args)
 	},
 }
 
-func printVersion(args []string) error {
+func printVersion(logger *zerolog.Logger, args []string) error {
 	fmt.Println("cosmovisor version: ", Version)
 
-	if err := Run(append([]string{"version"}, args...)); err != nil {
+	if err := Run(logger, append([]string{"version"}, args...)); err != nil {
 		return fmt.Errorf("failed to run version command: %w", err)
 	}
 
 	return nil
 }
 
-func printVersionJSON(args []string) error {
+func printVersionJSON(logger *zerolog.Logger, args []string) error {
 	buf := new(strings.Builder)
 
 	// disable logger
@@ -53,6 +56,7 @@ func printVersionJSON(args []string) error {
 	logger = &l
 
 	if err := Run(
+		logger,
 		[]string{"version", "--long", "--output", "json"},
 		StdOutRunOption(buf),
 	); err != nil {

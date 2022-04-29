@@ -1,15 +1,15 @@
 package cmd
 
 import (
+	"context"
 	"os"
 
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
+	"github.com/cosmos/cosmos-sdk/cosmovisor"
 	cverrors "github.com/cosmos/cosmos-sdk/cosmovisor/errors"
 )
-
-var logger *zerolog.Logger
 
 var rootCmd = &cobra.Command{
 	Use:   "cosmovisor",
@@ -18,10 +18,10 @@ var rootCmd = &cobra.Command{
 }
 
 // Execute the CLI application.
-func Execute(log *zerolog.Logger) {
-	logger = log
+func Execute(logger *zerolog.Logger) {
+	ctx := context.WithValue(context.Background(), cosmovisor.LoggerKey, logger)
 
-	if err := rootCmd.Execute(); err != nil {
+	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		cverrors.LogErrors(logger, "", err)
 		os.Exit(1)
 	}

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
+	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
 
@@ -15,12 +16,14 @@ var runCmd = &cobra.Command{
 	SilenceUsage:       true,
 	DisableFlagParsing: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return Run(args)
+		logger := cmd.Context().Value(cosmovisor.LoggerKey).(*zerolog.Logger)
+
+		return Run(logger, args)
 	},
 }
 
 // Run runs the configured program with the given args and monitors it for upgrades.
-func Run(args []string, options ...RunOption) error {
+func Run(logger *zerolog.Logger, args []string, options ...RunOption) error {
 	cfg, err := cosmovisor.GetConfigFromEnv()
 	if err != nil {
 		return err

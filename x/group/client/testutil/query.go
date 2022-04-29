@@ -793,7 +793,7 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 	var txResp sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().Equal(uint32(0), txResp.Code, out.String())
-	proposalId := s.getProposalIdFromTxResponse(txResp)
+	proposalId := s.getProposalIDFromTxResponse(txResp)
 
 	testCases := []struct {
 		name           string

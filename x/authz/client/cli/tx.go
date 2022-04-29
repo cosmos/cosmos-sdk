@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	feegrantcli "github.com/cosmos/cosmos-sdk/x/feegrant/client/cli"
 
 	"strings"
 	"time"
@@ -143,7 +144,7 @@ Examples:
 					if periodLimit == nil {
 						return fmt.Errorf("period limit was not set")
 					}
-					periodReset := getPeriodReset(periodClock)
+					periodReset := feegrantcli.GetPeriodReset(periodClock)
 					if expire != nil && periodReset.Sub(*expire) > 0 {
 						return fmt.Errorf("period (%d) cannot reset after expiration (%v)", periodClock, expire)
 					}
@@ -154,8 +155,8 @@ Examples:
 					}
 					periodicAllowance = &feegrant.PeriodicAllowance{
 						Basic:            basic,
-						Period:           getPeriod(periodClock),
-						PeriodReset:      getPeriodReset(periodClock),
+						Period:           feegrantcli.GetPeriod(periodClock),
+						PeriodReset:      feegrantcli.GetPeriodReset(periodClock),
 						PeriodSpendLimit: periodLimit,
 						PeriodCanSpend:   periodLimit,
 					}
@@ -357,12 +358,4 @@ func bech32toValidatorAddresses(validators []string) ([]sdk.ValAddress, error) {
 		vals[i] = addr
 	}
 	return vals, nil
-}
-
-func getPeriodReset(duration int64) time.Time {
-	return time.Now().Add(getPeriod(duration))
-}
-
-func getPeriod(duration int64) time.Duration {
-	return time.Duration(duration) * time.Second
 }

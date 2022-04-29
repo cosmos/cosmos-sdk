@@ -133,15 +133,15 @@ Examples:
 					return fmt.Errorf("period limit was not set")
 				}
 
-				periodReset := getPeriodReset(periodClock)
+				periodReset := GetPeriodReset(periodClock)
 				if exp != "" && periodReset.Sub(expiresAtTime) > 0 {
 					return fmt.Errorf("period (%d) cannot reset after expiration (%v)", periodClock, exp)
 				}
 
 				periodic := feegrant.PeriodicAllowance{
 					Basic:            basic,
-					Period:           getPeriod(periodClock),
-					PeriodReset:      getPeriodReset(periodClock),
+					Period:           GetPeriod(periodClock),
+					PeriodReset:      GetPeriodReset(periodClock),
 					PeriodSpendLimit: periodLimit,
 					PeriodCanSpend:   periodLimit,
 				}
@@ -216,10 +216,10 @@ Example:
 	return cmd
 }
 
-func getPeriodReset(duration int64) time.Time {
-	return time.Now().Add(getPeriod(duration))
+func GetPeriodReset(duration int64) time.Time {
+	return time.Now().Add(GetPeriod(duration))
 }
 
-func getPeriod(duration int64) time.Duration {
+func GetPeriod(duration int64) time.Duration {
 	return time.Duration(duration) * time.Second
 }

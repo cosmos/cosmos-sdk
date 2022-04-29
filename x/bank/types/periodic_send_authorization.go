@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -33,7 +32,7 @@ func (a PeriodicSendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.A
 	remove, err := a.PeriodicAllowance.Accept(ctx, mSend.Amount, nil)
 
 	if err != nil {
-		return authz.AcceptResponse{}, err
+		return authz.AcceptResponse{Delete: remove}, err
 	}
 
 	return authz.AcceptResponse{Accept: true, Delete: remove, Updated: &a}, nil
@@ -43,8 +42,7 @@ func (a PeriodicSendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.A
 func (a PeriodicSendAuthorization) ValidateBasic() error {
 	err := a.PeriodicAllowance.ValidateBasic()
 	if err != nil {
-		fmt.Println(err)
-		return sdkerrors.ErrInvalidType.Wrap("some error")
+		return err
 	}
 	return nil
 }

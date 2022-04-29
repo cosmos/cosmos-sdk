@@ -166,7 +166,7 @@ func (coin Coin) IsNegative() bool {
 
 // IsNil returns true if the coin amount is nil and false otherwise.
 func (coin Coin) IsNil() bool {
-	return coin.Amount.i == nil
+	return coin.Amount.BigInt() == nil
 }
 
 //-----------------------------------------------------------------------------

@@ -19,10 +19,13 @@ message SendAuthorization {
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
+// PeriodicSendAuthorization allows the grantee to spend up to periodic_allowance.period_spend_limit coins from
+// the granter's account during a period of periodic_allowance.period seconds
+//
 message PeriodicSendAuthorization {
   option (cosmos_proto.implements_interface) = "Authorization";
 
   // periodicAllowance specifies a struct of `PeriodicAllowance`
-  cosmos.feegrant.v1beta1.PeriodicAllowance periodicAllowance = 1 [(gogoproto.nullable) = false];
+  cosmos.feegrant.v1beta1.PeriodicAllowance periodic_allowance = 1 [(gogoproto.nullable) = false];
 
 }

@@ -278,6 +278,8 @@ func (s *KeeperTestSuite) TestLastCompletedUpgrade() {
 	require.Equal(int64(15), height)
 }
 
+// This test ensures that `GetLastDoneUpgrade` always returns the last upgrade according to the block height
+// it was executed at, rather than using an ordering based on upgrade names.
 func (s *KeeperTestSuite) TestLastCompletedUpgradeOrdering() {
 	keeper := s.app.UpgradeKeeper
 	require := s.Require()

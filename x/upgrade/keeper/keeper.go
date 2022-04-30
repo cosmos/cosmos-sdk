@@ -246,7 +246,7 @@ func (k Keeper) GetLastCompletedUpgrade(ctx sdk.Context) (string, int64) {
 	return "", 0
 }
 
-// parseDoneKey - split height and upgrade name from the done key
+// parseDoneKey - split upgrade name and height from the done key
 func parseDoneKey(key []byte) (string, int64) {
 	// 1 byte for the DoneByte + 8 bytes height + at least 1 byte for the name
 	kv.AssertKeyAtLeastLength(key, 10)

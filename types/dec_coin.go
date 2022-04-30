@@ -17,7 +17,7 @@ func NewDecCoin(denom string, amount Int) DecCoin {
 
 	return DecCoin{
 		Denom:  coin.Denom,
-		Amount: coin.Amount.ToDec(),
+		Amount: NewDecFromInt(coin.Amount),
 	}
 }
 
@@ -43,7 +43,7 @@ func NewDecCoinFromCoin(coin Coin) DecCoin {
 
 	return DecCoin{
 		Denom:  coin.Denom,
-		Amount: coin.Amount.ToDec(),
+		Amount: NewDecFromInt(coin.Amount),
 	}
 }
 
@@ -111,7 +111,7 @@ func (coin DecCoin) Sub(coinB DecCoin) DecCoin {
 // change. Note, the change may be zero.
 func (coin DecCoin) TruncateDecimal() (Coin, DecCoin) {
 	truncated := coin.Amount.TruncateInt()
-	change := coin.Amount.Sub(truncated.ToDec())
+	change := coin.Amount.Sub(NewDecFromInt(truncated))
 	return NewCoin(coin.Denom, truncated), NewDecCoinFromDec(coin.Denom, change)
 }
 

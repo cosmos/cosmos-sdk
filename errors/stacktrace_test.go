@@ -32,8 +32,8 @@ func (s *errorsTestSuite) TestStackTrace() {
 
 	// Wrapping code is unwanted in the errors stack trace.
 	unwantedSrc := []string{
-		"github.com/cosmos/cosmos-sdk/errors.Wrap\n",
-		"github.com/cosmos/cosmos-sdk/errors.Wrapf\n",
+		"cosmossdk.io/errors.Wrap\n",
+		"cosmossdk.io/errors.Wrapf\n",
 		"runtime.goexit\n",
 	}
 	const thisTestSrc = "errors/stacktrace_test.go"

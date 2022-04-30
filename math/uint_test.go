@@ -7,7 +7,7 @@ import (
 	"math/rand"
 	"testing"
 
-	sdkmath "github.com/cosmos/cosmos-sdk/math"
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
 )
 

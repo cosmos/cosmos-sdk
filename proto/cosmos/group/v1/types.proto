@@ -12,7 +12,7 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/any.proto";
 
 // Member represents a group member with an account address,
-// non-zero weight and metadata.
+// non-zero weight, metadata and added_at timestamp.
 message Member {
 
   // address is the member's account address.
@@ -28,11 +28,20 @@ message Member {
   google.protobuf.Timestamp added_at = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
 
-// Members defines a repeated slice of Member objects.
-message Members {
 
-  // members is the list of members.
-  repeated Member members = 1 [(gogoproto.nullable) = false];
+// MemberRequest represents a group member to be used in Msg server requests.
+// Contrary to `Member`, it doesn't have any `added_at` field
+// since this field cannot be set as part of requests.
+message MemberRequest {
+
+  // address is the member's account address.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // weight is the member's voting weight that should be greater than 0.
+  string weight = 2;
+
+  // metadata is any arbitrary metadata attached to the member.
+  string metadata = 3;
 }
 
 // ThresholdDecisionPolicy is a decision policy where a proposal passes when it

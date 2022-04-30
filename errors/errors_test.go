@@ -3,14 +3,11 @@ package errors
 import (
 	stdlib "errors"
 	"fmt"
-	"testing"
-
-	grpcstatus "google.golang.org/grpc/status"
-
-	"google.golang.org/grpc/codes"
-
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
+	"testing"
 )
 
 type errorsTestSuite struct {

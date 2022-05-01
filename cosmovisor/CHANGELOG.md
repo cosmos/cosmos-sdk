@@ -37,6 +37,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 <!-- NOTE: when creating a new release, update cosmovisor/cmd/cosmovisor/cmd/version.go:Version -->
 
+* [\#11731](https://github.com/cosmos/cosmos-sdk/pull/11731) `cosmovisor version --json` returns the cosmovisor version and the result of `simd --output json --long` in one JSON object.
+
 ## v1.1.0 2022-10-02
 
 ### Features

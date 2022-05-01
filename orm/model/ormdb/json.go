@@ -11,7 +11,7 @@ import (
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"github.com/cosmos/cosmos-sdk/errors"
+	"cosmossdk.io/errors"
 )
 
 func (m moduleDB) DefaultJSON(target ormjson.WriteTarget) error {

@@ -49,7 +49,7 @@ func TestInitGenesis(t *testing.T) {
 		ConsensusPubkey: pk0,
 		Status:          types.Bonded,
 		Tokens:          valTokens,
-		DelegatorShares: valTokens.ToDec(),
+		DelegatorShares: sdk.NewDecFromInt(valTokens),
 		Description:     types.NewDescription("hoop", "", "", "", ""),
 	}
 	bondedVal2 := types.Validator{
@@ -57,7 +57,7 @@ func TestInitGenesis(t *testing.T) {
 		ConsensusPubkey: pk1,
 		Status:          types.Bonded,
 		Tokens:          valTokens,
-		DelegatorShares: valTokens.ToDec(),
+		DelegatorShares: sdk.NewDecFromInt(valTokens),
 		Description:     types.NewDescription("bloop", "", "", "", ""),
 	}
 
@@ -126,7 +126,7 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 		ConsensusPubkey: consPub,
 		Jailed:          false,
 		Tokens:          sdk.NewInt(10),
-		DelegatorShares: sdk.NewInt(10).ToDec(),
+		DelegatorShares: sdk.NewDecFromInt(sdk.NewInt(10)),
 		Description:     types.NewDescription("bloop", "", "", "", ""),
 	}
 	// valid params
@@ -182,7 +182,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 			tokens = app.StakingKeeper.TokensFromConsensusPower(ctx, 2)
 		}
 		validators[i].Tokens = tokens
-		validators[i].DelegatorShares = tokens.ToDec()
+		validators[i].DelegatorShares = sdk.NewDecFromInt(tokens)
 		// add bonded coins
 		bondedPoolAmt = bondedPoolAmt.Add(tokens)
 	}

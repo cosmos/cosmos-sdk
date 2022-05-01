@@ -51,7 +51,7 @@ func (s *TestSuite) SetupTest() {
 	s.addrs = simapp.AddTestAddrsIncremental(app, ctx, 6, sdk.NewInt(30000000))
 
 	// Initial group, group policy and balance setup
-	members := []group.Member{
+	members := []group.MemberRequest{
 		{Address: s.addrs[4].String(), Weight: "1"}, {Address: s.addrs[1].String(), Weight: "2"},
 	}
 	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
@@ -92,14 +92,12 @@ func (s *TestSuite) TestCreateGroup() {
 	addr5 := addrs[4]
 	addr6 := addrs[5]
 
-	members := []group.Member{{
+	members := []group.MemberRequest{{
 		Address: addr5.String(),
 		Weight:  "1",
-		AddedAt: s.blockTime,
 	}, {
 		Address: addr6.String(),
 		Weight:  "2",
-		AddedAt: s.blockTime,
 	}}
 
 	expGroups := []*group.GroupInfo{
@@ -142,7 +140,7 @@ func (s *TestSuite) TestCreateGroup() {
 		"member metadata too long": {
 			req: &group.MsgCreateGroup{
 				Admin: addr1.String(),
-				Members: []group.Member{{
+				Members: []group.MemberRequest{{
 					Address:  addr3.String(),
 					Weight:   "1",
 					Metadata: strings.Repeat("a", 256),
@@ -153,7 +151,7 @@ func (s *TestSuite) TestCreateGroup() {
 		"zero member weight": {
 			req: &group.MsgCreateGroup{
 				Admin: addr1.String(),
-				Members: []group.Member{{
+				Members: []group.MemberRequest{{
 					Address: addr3.String(),
 					Weight:  "0",
 				}},
@@ -166,6 +164,7 @@ func (s *TestSuite) TestCreateGroup() {
 	for msg, spec := range specs {
 		spec := spec
 		s.Run(msg, func() {
+			blockTime := sdk.UnwrapSDKContext(s.ctx).BlockTime()
 			res, err := s.keeper.CreateGroup(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
@@ -204,7 +203,7 @@ func (s *TestSuite) TestCreateGroup() {
 				s.Assert().Equal(members[i].Metadata, loadedMembers[i].Member.Metadata)
 				s.Assert().Equal(members[i].Address, loadedMembers[i].Member.Address)
 				s.Assert().Equal(members[i].Weight, loadedMembers[i].Member.Weight)
-				s.Assert().Equal(members[i].AddedAt, loadedMembers[i].Member.AddedAt)
+				s.Assert().Equal(blockTime, loadedMembers[i].Member.AddedAt)
 				s.Assert().Equal(id, loadedMembers[i].GroupId)
 			}
 
@@ -233,10 +232,9 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 	addr3 := addrs[2]
 	addr4 := addrs[3]
 
-	members := []group.Member{{
+	members := []group.MemberRequest{{
 		Address: addr1.String(),
 		Weight:  "1",
-		AddedAt: s.blockTime,
 	}}
 	oldAdmin := addr2.String()
 	newAdmin := addr3.String()
@@ -398,7 +396,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 
 	member1 := addr5.String()
 	member2 := addr6.String()
-	members := []group.Member{{
+	members := []group.MemberRequest{{
 		Address: member1,
 		Weight:  "1",
 	}}
@@ -421,7 +419,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			req: &group.MsgUpdateGroupMembers{
 				GroupId: groupID,
 				Admin:   myAdmin,
-				MemberUpdates: []group.Member{{
+				MemberUpdates: []group.MemberRequest{{
 					Address: member2,
 					Weight:  "2",
 				}},
@@ -438,6 +436,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 					Member: &group.Member{
 						Address: member2,
 						Weight:  "2",
+						AddedAt: s.sdkCtx.BlockTime(),
 					},
 					GroupId: groupID,
 				},
@@ -445,6 +444,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 					Member: &group.Member{
 						Address: member1,
 						Weight:  "1",
+						AddedAt: s.blockTime,
 					},
 					GroupId: groupID,
 				},
@@ -454,7 +454,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			req: &group.MsgUpdateGroupMembers{
 				GroupId: groupID,
 				Admin:   myAdmin,
-				MemberUpdates: []group.Member{{
+				MemberUpdates: []group.MemberRequest{{
 					Address: member1,
 					Weight:  "2",
 				}},
@@ -472,6 +472,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 					Member: &group.Member{
 						Address: member1,
 						Weight:  "2",
+						AddedAt: s.blockTime,
 					},
 				},
 			},
@@ -480,7 +481,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			req: &group.MsgUpdateGroupMembers{
 				GroupId: groupID,
 				Admin:   myAdmin,
-				MemberUpdates: []group.Member{{
+				MemberUpdates: []group.MemberRequest{{
 					Address: member1,
 					Weight:  "1",
 				}},
@@ -498,6 +499,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 					Member: &group.Member{
 						Address: member1,
 						Weight:  "1",
+						AddedAt: s.blockTime,
 					},
 				},
 			},
@@ -506,7 +508,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			req: &group.MsgUpdateGroupMembers{
 				GroupId: groupID,
 				Admin:   myAdmin,
-				MemberUpdates: []group.Member{
+				MemberUpdates: []group.MemberRequest{
 					{
 						Address: member1,
 						Weight:  "0",
@@ -529,6 +531,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				Member: &group.Member{
 					Address: member2,
 					Weight:  "1",
+					AddedAt: s.sdkCtx.BlockTime(),
 				},
 			}},
 		},
@@ -536,7 +539,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			req: &group.MsgUpdateGroupMembers{
 				GroupId: groupID,
 				Admin:   myAdmin,
-				MemberUpdates: []group.Member{{
+				MemberUpdates: []group.MemberRequest{{
 					Address: member1,
 					Weight:  "0",
 				}},
@@ -554,7 +557,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			req: &group.MsgUpdateGroupMembers{
 				GroupId: groupID,
 				Admin:   myAdmin,
-				MemberUpdates: []group.Member{{
+				MemberUpdates: []group.MemberRequest{{
 					Address: addr4.String(),
 					Weight:  "0",
 				}},
@@ -579,7 +582,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			req: &group.MsgUpdateGroupMembers{
 				GroupId: groupID,
 				Admin:   addr3.String(),
-				MemberUpdates: []group.Member{{
+				MemberUpdates: []group.MemberRequest{{
 					Address: member1,
 					Weight:  "2",
 				}},
@@ -604,7 +607,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			req: &group.MsgUpdateGroupMembers{
 				GroupId: 999,
 				Admin:   myAdmin,
-				MemberUpdates: []group.Member{{
+				MemberUpdates: []group.MemberRequest{{
 					Address: member1,
 					Weight:  "2",
 				}},
@@ -660,6 +663,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				s.Assert().Equal(spec.expMembers[i].Member.Metadata, loadedMembers[i].Member.Metadata)
 				s.Assert().Equal(spec.expMembers[i].Member.Address, loadedMembers[i].Member.Address)
 				s.Assert().Equal(spec.expMembers[i].Member.Weight, loadedMembers[i].Member.Weight)
+				s.Assert().Equal(spec.expMembers[i].Member.AddedAt, loadedMembers[i].Member.AddedAt)
 				s.Assert().Equal(spec.expMembers[i].GroupId, loadedMembers[i].GroupId)
 			}
 		})
@@ -673,14 +677,12 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 	addr5 := addrs[4]
 	addr6 := addrs[5]
 
-	members := []group.Member{{
+	members := []group.MemberRequest{{
 		Address: addr5.String(),
 		Weight:  "1",
-		AddedAt: s.blockTime,
 	}, {
 		Address: addr6.String(),
 		Weight:  "2",
-		AddedAt: s.blockTime,
 	}}
 
 	specs := map[string]struct {
@@ -746,7 +748,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 		"member metadata too long": {
 			req: &group.MsgCreateGroupWithPolicy{
 				Admin: addr1.String(),
-				Members: []group.Member{{
+				Members: []group.MemberRequest{{
 					Address:  addr3.String(),
 					Weight:   "1",
 					Metadata: strings.Repeat("a", 256),
@@ -764,7 +766,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 		"zero member weight": {
 			req: &group.MsgCreateGroupWithPolicy{
 				Admin: addr1.String(),
-				Members: []group.Member{{
+				Members: []group.MemberRequest{{
 					Address: addr3.String(),
 					Weight:  "0",
 				}},
@@ -799,6 +801,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			err := spec.req.SetDecisionPolicy(spec.policy)
 			s.Require().NoError(err)
 
+			blockTime := sdk.UnwrapSDKContext(s.ctx).BlockTime()
 			res, err := s.keeper.CreateGroupWithPolicy(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
@@ -838,7 +841,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 				s.Assert().Equal(members[i].Metadata, loadedMembers[i].Member.Metadata)
 				s.Assert().Equal(members[i].Address, loadedMembers[i].Member.Address)
 				s.Assert().Equal(members[i].Weight, loadedMembers[i].Member.Weight)
-				s.Assert().Equal(members[i].AddedAt, loadedMembers[i].Member.AddedAt)
+				s.Assert().Equal(blockTime, loadedMembers[i].Member.AddedAt)
 				s.Assert().Equal(id, loadedMembers[i].GroupId)
 			}
 
@@ -1733,9 +1736,9 @@ func (s *TestSuite) TestVote() {
 	addr3 := addrs[2]
 	addr4 := addrs[3]
 	addr5 := addrs[4]
-	members := []group.Member{
-		{Address: addr4.String(), Weight: "1", AddedAt: s.blockTime},
-		{Address: addr3.String(), Weight: "2", AddedAt: s.blockTime},
+	members := []group.MemberRequest{
+		{Address: addr4.String(), Weight: "1"},
+		{Address: addr3.String(), Weight: "2"},
 	}
 	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:   addr1.String(),
@@ -2136,10 +2139,10 @@ func (s *TestSuite) TestVote() {
 
 	s.T().Log("test tally result should not take into account the member who left the group")
 	require := s.Require()
-	members = []group.Member{
-		{Address: addr2.String(), Weight: "3", AddedAt: s.blockTime},
-		{Address: addr3.String(), Weight: "2", AddedAt: s.blockTime},
-		{Address: addr4.String(), Weight: "1", AddedAt: s.blockTime},
+	members = []group.MemberRequest{
+		{Address: addr2.String(), Weight: "3"},
+		{Address: addr3.String(), Weight: "2"},
+		{Address: addr4.String(), Weight: "1"},
 	}
 	reqCreate := &group.MsgCreateGroupWithPolicy{
 		Admin:         addr1.String(),
@@ -2665,24 +2668,21 @@ func (s *TestSuite) TestLeaveGroup() {
 	admin3 := addrs[6]
 	require := s.Require()
 
-	members := []group.Member{
+	members := []group.MemberRequest{
 		{
 			Address:  member1.String(),
 			Weight:   "1",
 			Metadata: "metadata",
-			AddedAt:  s.sdkCtx.BlockTime(),
 		},
 		{
 			Address:  member2.String(),
 			Weight:   "2",
 			Metadata: "metadata",
-			AddedAt:  s.sdkCtx.BlockTime(),
 		},
 		{
 			Address:  member3.String(),
 			Weight:   "3",
 			Metadata: "metadata",
-			AddedAt:  s.sdkCtx.BlockTime(),
 		},
 	}
 	policy := group.NewThresholdDecisionPolicy(
@@ -2692,28 +2692,25 @@ func (s *TestSuite) TestLeaveGroup() {
 	)
 	_, groupID1 := s.createGroupAndGroupPolicy(admin1, members, policy)
 
-	members = []group.Member{
+	members = []group.MemberRequest{
 		{
 			Address:  member1.String(),
 			Weight:   "1",
 			Metadata: "metadata",
-			AddedAt:  s.sdkCtx.BlockTime(),
 		},
 	}
 	_, groupID2 := s.createGroupAndGroupPolicy(admin2, members, nil)
 
-	members = []group.Member{
+	members = []group.MemberRequest{
 		{
 			Address:  member1.String(),
 			Weight:   "1",
 			Metadata: "metadata",
-			AddedAt:  s.sdkCtx.BlockTime(),
 		},
 		{
 			Address:  member2.String(),
 			Weight:   "2",
 			Metadata: "metadata",
-			AddedAt:  s.sdkCtx.BlockTime(),
 		},
 	}
 	policy = &group.PercentageDecisionPolicy{
@@ -2913,7 +2910,7 @@ func submitProposalAndVote(
 
 func (s *TestSuite) createGroupAndGroupPolicy(
 	admin sdk.AccAddress,
-	members []group.Member,
+	members []group.MemberRequest,
 	policy group.DecisionPolicy,
 ) (policyAddr string, groupID uint64) {
 	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{

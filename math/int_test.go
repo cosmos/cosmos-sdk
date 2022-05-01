@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/math"
+	"cosmossdk.io/math"
 )
 
 type intTestSuite struct {

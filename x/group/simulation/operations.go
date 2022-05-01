@@ -605,7 +605,7 @@ func SimulateMsgUpdateGroupMembers(ak group.AccountKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupMembers, "group members"), nil, err
 		}
 
-		// set existing radnom group member weight to zero to remove from the group
+		// set existing random group member weight to zero to remove from the group
 		existigMembers := res.Members
 		if len(existigMembers) > 0 {
 			memberToRemove := existigMembers[r.Intn(len(existigMembers))]
@@ -621,7 +621,7 @@ func SimulateMsgUpdateGroupMembers(ak group.AccountKeeper,
 			if !isDuplicateMember {
 				m := memberToRemove.Member
 				m.Weight = "0"
-				members = append(members, *m)
+				members = append(members, group.MemberToMemberRequest(m))
 			}
 		}
 
@@ -1274,9 +1274,9 @@ func findAccount(accounts []simtypes.Account, addr string) (idx int) {
 	return idx
 }
 
-func genGroupMembers(r *rand.Rand, accounts []simtypes.Account) []group.Member {
+func genGroupMembers(r *rand.Rand, accounts []simtypes.Account) []group.MemberRequest {
 	if len(accounts) == 1 {
-		return []group.Member{
+		return []group.MemberRequest{
 			{
 				Address:  accounts[0].Address.String(),
 				Weight:   fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
@@ -1291,10 +1291,10 @@ func genGroupMembers(r *rand.Rand, accounts []simtypes.Account) []group.Member {
 	}
 
 	membersLen := simtypes.RandIntBetween(r, 1, max)
-	members := make([]group.Member, membersLen)
+	members := make([]group.MemberRequest, membersLen)
 
 	for i := 0; i < membersLen; i++ {
-		members[i] = group.Member{
+		members[i] = group.MemberRequest{
 			Address:  accounts[i].Address.String(),
 			Weight:   fmt.Sprintf("%d", simtypes.RandIntBetween(r, 1, 10)),
 			Metadata: simtypes.RandStringOfLength(r, 10),

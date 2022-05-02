@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/gogo/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
@@ -2307,7 +2306,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			func(groupID string) error {
 				updateGroup := s.newValidMembers(weights[0:1], accounts[0:1])
 
-				updateGroupByte, err := codec.MarshalJSONIndent(codec.NewLegacyAmino(), updateGroup)
+				updateGroupByte, err := json.Marshal(updateGroup)
 				s.Require().NoError(err)
 
 				validUpdateMemberFileName := testutil.WriteToNewTempFile(s.T(), string(updateGroupByte)).Name()

@@ -24,8 +24,8 @@ minimum-gas-prices = "{{ .BaseConfig.MinGasPrices }}"
 
 # default: the last 362880 states are kept, pruning at 10 block intervals
 # nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
-# everything: all saved states will be deleted, storing only the current and previous state; pruning at 10 block intervals
-# custom: allow pruning options to be manually specified through 'pruning-keep-recent' and 'pruning-interval'
+# everything: 2 latest states will be kept; pruning at 10 block intervals.
+# custom: allow pruning options to be manually specified through 'pruning-keep-recent', and 'pruning-interval'
 pruning = "{{ .BaseConfig.Pruning }}"
 
 # These are applied if and only if the pruning strategy is custom.
@@ -169,6 +169,18 @@ retries = {{ .Rosetta.Retries }}
 
 # Offline defines if Rosetta server should run in offline mode.
 offline = {{ .Rosetta.Offline }}
+
+# EnableDefaultSuggestedFee defines if the server should suggest fee by default.
+# If 'construction/medata' is called without gas limit and gas price,
+# suggested fee based on gas-to-suggest and denom-to-suggest will be given.
+enable-fee-suggestion = {{ .Rosetta.EnableFeeSuggestion }}
+
+# GasToSuggest defines gas limit when calculating the fee
+gas-to-suggest = {{ .Rosetta.GasToSuggest }}
+
+# DenomToSuggest defines the defult denom for fee suggestion.
+# Price must be in minimum-gas-prices.
+denom-to-suggest = "{{ .Rosetta.DenomToSuggest }}"
 
 ###############################################################################
 ###                           gRPC Configuration                            ###

@@ -18,7 +18,7 @@ updates:
     interval: daily
   open-pull-requests-limit: 10
   labels:
-  - automerge
+  - "A:automerge"
   - dependencies
 - package-ecosystem: gomod
   directory: "/db"
@@ -26,7 +26,7 @@ updates:
     interval: daily
   open-pull-requests-limit: 10
   labels:
-  - automerge
+  - "A:automerge"
   - dependencies
 - package-ecosystem: gomod
   directory: "/api"
@@ -34,7 +34,7 @@ updates:
     interval: daily
   open-pull-requests-limit: 10
   labels:
-  - automerge
+  - "A:automerge"
   - dependencies
 - package-ecosystem: gomod
   directory: "/orm"
@@ -42,7 +42,7 @@ updates:
     interval: daily
   open-pull-requests-limit: 10
   labels:
-  - automerge
+  - "A:automerge"
   - dependencies
 - package-ecosystem: gomod
   directory: "/container"
@@ -50,7 +50,7 @@ updates:
     interval: daily
   open-pull-requests-limit: 10
   labels:
-  - automerge
+  - "A:automerge"
   - dependencies
 - package-ecosystem: gomod
   directory: "/cosmovisor"
@@ -58,5 +58,5 @@ updates:
     interval: daily
   open-pull-requests-limit: 10
   labels:
-  - automerge
+  - "A:automerge"
   - dependencies

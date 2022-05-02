@@ -19,10 +19,13 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	cfg     network.Config
-	network *network.Network
-
+	cfg         network.Config
+	network     *network.Network
 	queryClient tmservice.ServiceClient
+}
+
+func TestIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationTestSuite))
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
@@ -254,6 +257,91 @@ func (s IntegrationTestSuite) TestValidatorSetByHeight_GRPCGateway() {
 	}
 }
 
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
+func (s IntegrationTestSuite) TestABCIQuery() {
+	testCases := []struct {
+		name         string
+		req          *tmservice.ABCIQueryRequest
+		expectErr    bool
+		expectedCode uint32
+		validQuery   bool
+	}{
+		{
+			name: "valid request with proof",
+			req: &tmservice.ABCIQueryRequest{
+				Path:  "/store/gov/key",
+				Data:  []byte{0x03},
+				Prove: true,
+			},
+			validQuery: true,
+		},
+		{
+			name: "valid request without proof",
+			req: &tmservice.ABCIQueryRequest{
+				Path:  "/store/gov/key",
+				Data:  []byte{0x03},
+				Prove: false,
+			},
+			validQuery: true,
+		},
+		{
+			name: "request with invalid path",
+			req: &tmservice.ABCIQueryRequest{
+				Path: "/foo/bar",
+				Data: []byte{0x03},
+			},
+			expectErr: true,
+		},
+		{
+			name: "request with invalid path recursive",
+			req: &tmservice.ABCIQueryRequest{
+				Path: "/cosmos.base.tendermint.v1beta1.Service/ABCIQuery",
+				Data: s.cfg.Codec.MustMarshal(&tmservice.ABCIQueryRequest{
+					Path: "/cosmos.base.tendermint.v1beta1.Service/ABCIQuery",
+				}),
+			},
+			expectErr: true,
+		},
+		{
+			name: "request with invalid broadcast tx path",
+			req: &tmservice.ABCIQueryRequest{
+				Path: "/cosmos.tx.v1beta1.Service/BroadcastTx",
+				Data: []byte{0x00},
+			},
+			expectErr: true,
+		},
+		{
+			name: "request with invalid data",
+			req: &tmservice.ABCIQueryRequest{
+				Path: "/store/gov/key",
+				Data: []byte{0x0044, 0x00},
+			},
+			validQuery: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			res, err := s.queryClient.ABCIQuery(context.Background(), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().Nil(res)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NotNil(res)
+				s.Require().Equal(res.Code, tc.expectedCode)
+			}
+
+			if tc.validQuery {
+				s.Require().Greater(res.Height, int64(0))
+				s.Require().Greater(len(res.Key), 0, "expected non-empty key")
+				s.Require().Greater(len(res.Value), 0, "expected non-empty value")
+			}
+
+			if tc.req.Prove {
+				s.Require().Greater(len(res.ProofOps.Ops), 0, "expected proofs")
+			}
+		})
+	}
 }

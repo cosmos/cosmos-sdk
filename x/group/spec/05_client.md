@@ -62,7 +62,9 @@ admin: cosmos1..
 decision_policy:
   '@type': /cosmos.group.v1beta1.ThresholdDecisionPolicy
   threshold: "1"
-  timeout: 600s
+  windows:
+      min_execution_period: 0s
+      voting_period: 432000s
 group_id: "1"
 metadata: AQ==
 version: "1"
@@ -145,7 +147,7 @@ simd query group group-policies-by-group [group-id] [flags]
 Example:
 
 ```bash
-simd query group group-policies-by-group 1 
+simd query group group-policies-by-group 1
 ```
 
 Example Output:
@@ -157,7 +159,9 @@ group_policies:
   decision_policy:
     '@type': /cosmos.group.v1beta1.ThresholdDecisionPolicy
     threshold: "1"
-    timeout: 600s
+    windows:
+      min_execution_period: 0s
+      voting_period: 432000s
   group_id: "1"
   metadata: AQ==
   version: "1"
@@ -166,7 +170,9 @@ group_policies:
   decision_policy:
     '@type': /cosmos.group.v1beta1.ThresholdDecisionPolicy
     threshold: "1"
-    timeout: 600s
+    windows:
+      min_execution_period: 0s
+      voting_period: 432000s
   group_id: "1"
   metadata: AQ==
   version: "1"
@@ -198,7 +204,9 @@ group_policies:
   decision_policy:
     '@type': /cosmos.group.v1beta1.ThresholdDecisionPolicy
     threshold: "1"
-    timeout: 600s
+    windows:
+      min_execution_period: 0s
+      voting_period: 432000s
   group_id: "1"
   metadata: AQ==
   version: "1"
@@ -207,7 +215,9 @@ group_policies:
   decision_policy:
     '@type': /cosmos.group.v1beta1.ThresholdDecisionPolicy
     threshold: "1"
-    timeout: 600s
+    windows:
+      min_execution_period: 0s
+      voting_period: 432000s
   group_id: "1"
   metadata: AQ==
   version: "1"
@@ -252,7 +262,9 @@ proposal:
   result: RESULT_UNFINALIZED
   status: STATUS_SUBMITTED
   submitted_at: "2021-12-17T07:06:26.310638964Z"
-  timeout: "2021-12-17T07:06:27.310638964Z"
+  windows:
+    min_execution_period: 0s
+    voting_period: 432000s
   vote_state:
     abstain_count: "0"
     no_count: "0"
@@ -299,7 +311,9 @@ proposals:
   result: RESULT_UNFINALIZED
   status: STATUS_SUBMITTED
   submitted_at: "2021-12-17T07:06:26.310638964Z"
-  timeout: "2021-12-17T07:06:27.310638964Z"
+  windows:
+    min_execution_period: 0s
+    voting_period: 432000s
   vote_state:
     abstain_count: "0"
     no_count: "0"
@@ -343,7 +357,7 @@ simd query group votes-by-proposal [proposal-id] [flags]
 Example:
 
 ```bash
-simd query group votes-by-proposal 1 
+simd query group votes-by-proposal 1
 ```
 
 Example Output:
@@ -408,7 +422,7 @@ simd tx group create-group [admin] [metadata] [members-json-file]
 Example:
 
 ```bash
-simd tx group create-group cosmos1.. "AQ==" members.json 
+simd tx group create-group cosmos1.. "AQ==" members.json
 ```
 
 #### update-group-admin
@@ -455,7 +469,7 @@ simd tx group update-group-metadata cosmos1.. 1 "AQ=="
 
 #### create-group-policy
 
-The `create-group-policy` command allows users to create a group policy which is an account associated with a group and a decision policy. 
+The `create-group-policy` command allows users to create a group policy which is an account associated with a group and a decision policy.
 
 ```bash
 simd tx group create-group-policy [admin] [group-id] [metadata] [decision-policy] [flags]
@@ -464,9 +478,8 @@ simd tx group create-group-policy [admin] [group-id] [metadata] [decision-policy
 Example:
 
 ```bash
-simd tx group create-group-policy cosmos1.. 1 "AQ==" '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"600s"}' 
+simd tx group create-group-policy cosmos1.. 1 "AQ==" '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
 ```
-
 
 #### create-group-with-policy
 
@@ -479,7 +492,7 @@ simd tx group create-group-with-policy [admin] [group-metadata] [group-policy-me
 Example:
 
 ```bash
-simd tx group create-group-with-policy cosmos1.. "AQ==" "AQ==" members.json '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "timeout":"600s"}' 
+simd tx group create-group-with-policy cosmos1.. "AQ==" "AQ==" members.json '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
 ```
 
 #### update-group-policy-admin
@@ -521,7 +534,7 @@ simd  tx group update-group-policy-decision-policy [admin] [group-policy-account
 Example:
 
 ```bash
-simd tx group update-group-policy-decision-policy cosmos1.. cosmos1.. '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"2", "timeout":"1000s"}' 
+simd tx group update-group-policy-decision-policy cosmos1.. cosmos1.. '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"2", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
 ```
 
 #### create-proposal
@@ -552,7 +565,7 @@ Example:
 simd tx group withdraw-proposal 1 cosmos1..
 ```
 
-#### vote 
+#### vote
 
 The `vote` command allows users to vote on a proposal.
 
@@ -594,7 +607,6 @@ Example:
 simd tx group leave-group cosmos1... 1
 ```
 
-
 ## gRPC
 
 A user can query the `group` module using gRPC endpoints.
@@ -607,7 +619,7 @@ The `GroupInfo` endpoint allows users to query for group info by given group id.
 cosmos.group.v1beta1.Query/GroupInfo
 ```
 
-Example: 
+Example:
 
 ```bash
 grpcurl -plaintext \
@@ -652,7 +664,7 @@ Example Output:
     "groupId": "1",
     "admin": "cosmos1..",
     "version": "1",
-    "decisionPolicy": {"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy","threshold":"1","timeout":"600s"},
+    "decisionPolicy": {"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy","threshold":"1","windows": {"voting_period": "120h", "min_execution_period": "0s"}},
   }
 }
 ```
@@ -764,14 +776,14 @@ Example Output:
       "groupId": "1",
       "admin": "cosmos1..",
       "version": "1",
-      "decisionPolicy": {"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy","threshold":"1","timeout":"600s"},
+      "decisionPolicy": {"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy","threshold":"1","windows":{"voting_period": "120h", "min_execution_period": "0s"}},
     },
     {
       "address": "cosmos1..",
       "groupId": "1",
       "admin": "cosmos1..",
       "version": "1",
-      "decisionPolicy": {"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy","threshold":"1","timeout":"600s"},
+      "decisionPolicy": {"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy","threshold":"1","windows":{"voting_period": "120h", "min_execution_period": "0s"}},
     }
   ],
   "pagination": {
@@ -805,14 +817,14 @@ Example Output:
       "groupId": "1",
       "admin": "cosmos1..",
       "version": "1",
-      "decisionPolicy": {"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy","threshold":"1","timeout":"600s"},
+      "decisionPolicy": {"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy","threshold":"1","windows":{"voting_period": "120h", "min_execution_period": "0s"}},
     },
     {
       "address": "cosmos1..",
       "groupId": "1",
       "admin": "cosmos1..",
       "version": "1",
-      "decisionPolicy": {"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy","threshold":"1","timeout":"600s"},
+      "decisionPolicy": {"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy","threshold":"1","windows":{"voting_period": "120h", "min_execution_period": "0s"}},
     }
   ],
   "pagination": {
@@ -857,7 +869,10 @@ Example Output:
       "abstainCount": "0",
       "vetoCount": "0"
     },
-    "timeout": "2021-12-17T07:06:27.310638964Z",
+    "windows": {
+      "min_execution_period": "0s",
+      "voting_period": "432000s"
+    },
     "executorResult": "EXECUTOR_RESULT_NOT_RUN",
     "msgs": [
       {"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"stake","amount":"100000000"}],"fromAddress":"cosmos1..","toAddress":"cosmos1.."}
@@ -903,7 +918,10 @@ Example Output:
         "abstainCount": "0",
         "vetoCount": "0"
       },
-      "timeout": "2021-12-17T08:13:27.099649352Z",
+      "windows": {
+        "min_execution_period": "0s",
+        "voting_period": "432000s"
+      },
       "executorResult": "EXECUTOR_RESULT_NOT_RUN",
       "msgs": [
         {"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"stake","amount":"100000000"}],"fromAddress":"cosmos1..","toAddress":"cosmos1.."}
@@ -1069,7 +1087,10 @@ Example Output:
     "decision_policy": {
       "@type": "/cosmos.group.v1beta1.ThresholdDecisionPolicy",
       "threshold": "1",
-      "timeout": "600s"
+      "windows": {
+        "voting_period": "120h",
+        "min_execution_period": "0s"
+      }
     },
   }
 }
@@ -1186,7 +1207,10 @@ Example Output:
       "decision_policy": {
         "@type": "/cosmos.group.v1beta1.ThresholdDecisionPolicy",
         "threshold": "1",
-        "timeout": "600s"
+        "windows": {
+          "voting_period": "120h",
+          "min_execution_period": "0s"
+      }
       },
     },
     {
@@ -1198,7 +1222,10 @@ Example Output:
       "decision_policy": {
         "@type": "/cosmos.group.v1beta1.ThresholdDecisionPolicy",
         "threshold": "1",
-        "timeout": "600s"
+        "windows": {
+          "voting_period": "120h",
+          "min_execution_period": "0s"
+      }
       },
     }
   ],
@@ -1237,7 +1264,10 @@ Example Output:
       "decision_policy": {
         "@type": "/cosmos.group.v1beta1.ThresholdDecisionPolicy",
         "threshold": "1",
-        "timeout": "600s"
+        "windows": {
+          "voting_period": "120h",
+          "min_execution_period": "0s"
+      }
       },
     },
     {
@@ -1249,7 +1279,10 @@ Example Output:
       "decision_policy": {
         "@type": "/cosmos.group.v1beta1.ThresholdDecisionPolicy",
         "threshold": "1",
-        "timeout": "600s"
+        "windows": {
+          "voting_period": "120h",
+          "min_execution_period": "0s"
+      }
       },
     }
   ],
@@ -1295,7 +1328,10 @@ Example Output:
       "abstain_count": "0",
       "veto_count": "0"
     },
-    "timeout": "2021-12-17T07:06:27.310638964Z",
+    "windows": {
+      "min_execution_period": "0s",
+      "voting_period": "432000s"
+    },
     "executor_result": "EXECUTOR_RESULT_NOT_RUN",
     "msgs": [
       {
@@ -1351,7 +1387,10 @@ Example Output:
         "abstain_count": "0",
         "veto_count": "0"
       },
-      "timeout": "2021-12-17T08:13:27.099649352Z",
+      "windows": {
+        "min_execution_period": "0s",
+        "voting_period": "432000s"
+      },
       "executor_result": "EXECUTOR_RESULT_NOT_RUN",
       "msgs": [
         {

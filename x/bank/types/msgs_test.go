@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestMsgSendRoute(t *testing.T) {
@@ -184,24 +185,46 @@ func TestMsgMultiSendValidation(t *testing.T) {
 		{false, MsgMultiSend{}},                           // no input or output
 		{false, MsgMultiSend{Inputs: []Input{input1}}},    // just input
 		{false, MsgMultiSend{Outputs: []Output{output1}}}, // just output
-		{false, MsgMultiSend{
-			Inputs:  []Input{NewInput(emptyAddr, atom123)}, // invalid input
-			Outputs: []Output{output1}}},
-		{false, MsgMultiSend{
-			Inputs:  []Input{input1},
-			Outputs: []Output{{emptyAddr.String(), atom123}}}, // invalid output
+		{
+			false,
+			MsgMultiSend{
+				Inputs:  []Input{NewInput(emptyAddr, atom123)}, // invalid input
+				Outputs: []Output{output1}},
 		},
-		{false, MsgMultiSend{
-			Inputs:  []Input{input1},
-			Outputs: []Output{output2}}, // amounts dont match
+		{
+			false,
+			MsgMultiSend{
+				Inputs:  []Input{input1},
+				Outputs: []Output{{emptyAddr.String(), atom123}}, // invalid output
+			},
 		},
-		{true, MsgMultiSend{
-			Inputs:  []Input{input1},
-			Outputs: []Output{output1}},
+		{
+			false,
+			MsgMultiSend{
+				Inputs:  []Input{input1},
+				Outputs: []Output{output2}, // amounts dont match
+			},
 		},
-		{true, MsgMultiSend{
-			Inputs:  []Input{input1, input2},
-			Outputs: []Output{outputMulti}},
+		{
+			true,
+			MsgMultiSend{
+				Inputs:  []Input{input1},
+				Outputs: []Output{output1},
+			},
+		},
+		{
+			true,
+			MsgMultiSend{
+				Inputs:  []Input{input1, input2},
+				Outputs: []Output{outputMulti},
+			},
+		},
+		{
+			true,
+			MsgMultiSend{
+				Inputs:  []Input{NewInput(addr2, atom123.MulInt(types.NewInt(2)))},
+				Outputs: []Output{output1, output1},
+			},
 		},
 	}
 

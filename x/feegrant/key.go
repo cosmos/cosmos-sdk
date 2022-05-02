@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 const (
@@ -67,17 +66,31 @@ func AllowanceByExpTimeKey(exp *time.Time) []byte {
 	return append(FeeAllowanceQueueKeyPrefix, sdk.FormatTimeBytes(*exp)...)
 }
 
-// ParseAddressesFromFeeAllowanceKey exrtacts and returns the granter, grantee from the given key.
+// ParseAddressesFromFeeAllowanceKey extracts and returns the granter, grantee from the given key.
 func ParseAddressesFromFeeAllowanceKey(key []byte) (granter, grantee sdk.AccAddress) {
+
 	// key is of format:
 	// 0x00<granteeAddressLen (1 Byte)><granteeAddress_Bytes><granterAddressLen (1 Byte)><granterAddress_Bytes>
-	kv.AssertKeyAtLeastLength(key, 2)
-	granteeAddrLen := key[1] // remove prefix key
-	kv.AssertKeyAtLeastLength(key, 2+int(granteeAddrLen))
-	grantee = sdk.AccAddress(key[2 : 2+int(granteeAddrLen)])
-	granterAddrLen := int(key[2+granteeAddrLen])
-	kv.AssertKeyAtLeastLength(key, 3+int(granteeAddrLen)+int(granterAddrLen))
-	granter = sdk.AccAddress(key[3+granterAddrLen : 3+int(granteeAddrLen)+int(granterAddrLen)])
+	granterAddrLen, granterAddrLenEndIndex := sdk.ParseLengthPrefixedBytes(key, 1, 1) // ignore key[0] since it is a prefix key
+	grantee, granterAddrEndIndex := sdk.ParseLengthPrefixedBytes(key, granterAddrLenEndIndex+1, int(granterAddrLen[0]))
+
+	granteeAddrLen, granteeAddrLenEndIndex := sdk.ParseLengthPrefixedBytes(key, granterAddrEndIndex+1, 1)
+	granter, _ = sdk.ParseLengthPrefixedBytes(key, granteeAddrLenEndIndex+1, int(granteeAddrLen[0]))
+
+	return granter, grantee
+}
+
+// ParseAddressesFromFeeAllowanceQueueKey extracts and returns the granter, grantee from the given key.
+func ParseAddressesFromFeeAllowanceQueueKey(key []byte) (granter, grantee sdk.AccAddress) {
+	var lenTime = len(sdk.FormatTimeBytes(time.Now()))
+
+	// key is of format:
+	// <0x01><expiration_bytes(fixed length)><granteeAddressLen (1 Byte)><granteeAddress_Bytes><granterAddressLen (1 Byte)><granterAddress_Bytes>
+	granterAddrLen, granterAddrLenEndIndex := sdk.ParseLengthPrefixedBytes(key, 1+lenTime, 1) // ignore key[0] since it is a prefix key
+	grantee, granterAddrEndIndex := sdk.ParseLengthPrefixedBytes(key, granterAddrLenEndIndex+1, int(granterAddrLen[0]))
+
+	granteeAddrLen, granteeAddrLenEndIndex := sdk.ParseLengthPrefixedBytes(key, granterAddrEndIndex+1, 1)
+	granter, _ = sdk.ParseLengthPrefixedBytes(key, granteeAddrLenEndIndex+1, int(granteeAddrLen[0]))
 
 	return granter, grantee
 }

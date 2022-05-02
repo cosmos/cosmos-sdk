@@ -342,7 +342,7 @@ func (v Validator) SharesFromTokensTruncated(amt sdk.Int) (sdk.Dec, error) {
 		return sdk.ZeroDec(), ErrInsufficientShares
 	}
 
-	return v.GetDelegatorShares().MulInt(amt).QuoTruncate(v.GetTokens().ToDec()), nil
+	return v.GetDelegatorShares().MulInt(amt).QuoTruncate(sdk.NewDecFromInt(v.GetTokens())), nil
 }
 
 // get the bonded tokens which the validator holds
@@ -382,7 +382,7 @@ func (v Validator) AddTokensFromDel(amount sdk.Int) (Validator, sdk.Dec) {
 	var issuedShares sdk.Dec
 	if v.DelegatorShares.IsZero() {
 		// the first delegation to a validator sets the exchange rate to one
-		issuedShares = amount.ToDec()
+		issuedShares = sdk.NewDecFromInt(amount)
 	} else {
 		shares, err := v.SharesFromTokens(amount)
 		if err != nil {

@@ -1,4 +1,4 @@
-package types
+package math
 
 import (
 	"errors"
@@ -49,7 +49,7 @@ func ZeroUint() Uint { return Uint{big.NewInt(0)} }
 // OneUint returns Uint value with one.
 func OneUint() Uint { return Uint{big.NewInt(1)} }
 
-var _ CustomProtobufType = (*Uint)(nil)
+var _ customProtobufType = (*Uint)(nil)
 
 // Uint64 converts Uint to uint64
 // Panics if the value is out of range
@@ -190,8 +190,8 @@ func (u *Uint) Unmarshal(data []byte) error {
 		return err
 	}
 
-	if u.i.BitLen() > maxBitLen {
-		return fmt.Errorf("integer out of range; got: %d, max: %d", u.i.BitLen(), maxBitLen)
+	if u.i.BitLen() > MaxBitLen {
+		return fmt.Errorf("integer out of range; got: %d, max: %d", u.i.BitLen(), MaxBitLen)
 	}
 
 	return nil

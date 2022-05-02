@@ -1,11 +1,10 @@
-package cmd
+package main
 
 import (
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -85,72 +84,6 @@ func (s *HelpTestSuite) setEnv(t *testing.T, env *cosmovisorHelpEnv) {
 		default:
 			s.T().Logf("done %s", msg)
 		}
-	}
-}
-
-func (s HelpTestSuite) TestShouldGiveHelpArg() {
-	initialEnv := s.clearEnv()
-	defer s.setEnv(nil, initialEnv)
-
-	s.setEnv(s.T(), &cosmovisorHelpEnv{"/testhome", "testname"})
-
-	tests := []struct {
-		name     string
-		arg      string
-		expected bool
-	}{
-		{
-			name:     "empty string",
-			arg:      "",
-			expected: false,
-		},
-		{
-			name:     "random",
-			arg:      "random",
-			expected: false,
-		},
-		{
-			name:     "help",
-			arg:      "help",
-			expected: true,
-		},
-		{
-			name:     "-h",
-			arg:      "-h",
-			expected: true,
-		},
-		{
-			name:     "--help",
-			arg:      "--help",
-			expected: true,
-		},
-		{
-			name:     "help weird casing",
-			arg:      "hELP",
-			expected: true,
-		},
-		{
-			name:     "version",
-			arg:      "version",
-			expected: false,
-		},
-		{
-			name:     "--version",
-			arg:      "--version",
-			expected: false,
-		},
-		{
-			name:     "run",
-			arg:      "run",
-			expected: false,
-		},
-	}
-
-	for _, tc := range tests {
-		s.T().Run(fmt.Sprintf("%s - %t", tc.name, tc.expected), func(t *testing.T) {
-			actual := ShouldGiveHelp(tc.arg)
-			assert.Equal(t, tc.expected, actual)
-		})
 	}
 }
 

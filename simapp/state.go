@@ -148,8 +148,10 @@ func AppStateRandomizedFn(
 
 	// generate a random amount of initial stake coins and a random initial
 	// number of bonded accounts
-	var numInitiallyBonded int64
-	var initialStake sdkmath.Int
+	var (
+		numInitiallyBonded int64
+		initialStake       sdkmath.Int
+	)
 	appParams.GetOrGenerate(
 		cdc, simappparams.StakePerAccount, &initialStake, r,
 		func(r *rand.Rand) { initialStake = sdkmath.NewInt(r.Int63n(1e12)) },

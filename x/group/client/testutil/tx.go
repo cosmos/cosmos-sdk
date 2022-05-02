@@ -148,6 +148,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	var res group.QueryGroupPoliciesByGroupResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
 	s.Require().Equal(len(res.GroupPolicies), 6)
+	fmt.Println(res.GroupPolicies[0])
 	s.groupPolicies = res.GroupPolicies
 
 	// create a proposal
@@ -564,6 +565,9 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
+	// groupID := s.createGroupWithMembers(weights, accounts)
+	// groupPolicyAddress := s.createGroupThresholdPolicyWithBalance(groupID, 3, 100)
+
 	validUpdatedMembersFileName := testutil.WriteToNewTempFile(s.T(), fmt.Sprintf(`{"members": [{
 		"address": "%s",
 		"weight": "0",
@@ -581,9 +585,6 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 	}]}`, val.Address.String(), tooLongMetadata)
 	invalidMembersMetadataFileName := testutil.WriteToNewTempFile(s.T(), invalidMembersMetadata).Name()
 
-	tokens := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1000))
-	s.fundAllGroupPolicies("2", tokens)
-
 	testCases := []struct {
 		name         string
 		args         []string
@@ -597,7 +598,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 			append(
 				[]string{
 					val.Address.String(),
-					"2",
+					"1",
 					validUpdatedMembersFileName,
 				},
 				s.commonFlags...,
@@ -612,7 +613,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 			append(
 				[]string{
 					val.Address.String(),
-					"2",
+					"1",
 					testutil.WriteToNewTempFile(s.T(), fmt.Sprintf(`{"members": [{
 		"address": "%s",
 		"weight": "2",

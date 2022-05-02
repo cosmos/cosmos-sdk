@@ -793,7 +793,7 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 	var txResp sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().Equal(uint32(0), txResp.Code, out.String())
-	proposalId := s.getProposalIDFromTxResponse(txResp)
+	proposalID := s.getProposalIDFromTxResponse(txResp)
 
 	testCases := []struct {
 		name           string
@@ -828,7 +828,7 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 		{
 			"valid proposal id with no votes",
 			[]string{
-				proposalId,
+				proposalID,
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,

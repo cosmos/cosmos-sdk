@@ -582,8 +582,8 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 	}]}`, val.Address.String(), tooLongMetadata)
 	invalidMembersMetadataFileName := testutil.WriteToNewTempFile(s.T(), invalidMembersMetadata).Name()
 
-	// tokens := sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1000)))
-	// s.fundAllGroupPolicies("2", tokens)
+	tokens := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1000))
+	s.fundAllGroupPolicies("2", tokens)
 
 	testCases := []struct {
 		name         string
@@ -2555,7 +2555,7 @@ func (s *IntegrationTestSuite) fundAllGroupPolicies(groupID string, tokens sdk.C
 		addr, err := sdk.AccAddressFromBech32(address)
 		s.Require().NoError(err)
 		out, err = banktestutil.MsgSendExec(clientCtx, val.Address, addr,
-			tokens,
+			sdk.NewCoins(tokens),
 			s.commonFlags...,
 		)
 		s.Require().NoError(err)

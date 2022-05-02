@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -51,9 +52,23 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 		return err
 	}
 
-	if ctx.GRPCClient != nil {
+	// Certain queries must not be be concurrent with ABCI to function correctly.
+	// As a result, we direct them to the ABCI flow where they get syncronized.
+	_, isSimulationRequest := req.(*tx.SimulateRequest)
+	isTendermintQuery := strings.Contains(method, "tendermint")
+
+	isGRPCAllowed := !isTendermintQuery && !isSimulationRequest
+
+	requestedHeight, err := selectHeight(ctx, grpcCtx)
+	if err != nil {
+		return err
+	}
+
+	if ctx.GRPCClient != nil && isGRPCAllowed {
+		md := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(requestedHeight, 10))
+		context := metadata.NewOutgoingContext(grpcCtx, md)
 		// Case 2-1. Invoke grpc.
-		return ctx.GRPCClient.Invoke(grpcCtx, method, req, reply, opts...)
+		return ctx.GRPCClient.Invoke(context, method, req, reply, opts...)
 	}
 
 	// Case 2-2. Querying state via abci query.
@@ -62,26 +77,10 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 		return err
 	}
 
-	// parse height header
-	md, _ := metadata.FromOutgoingContext(grpcCtx)
-	if heights := md.Get(grpctypes.GRPCBlockHeightHeader); len(heights) > 0 {
-		height, err := strconv.ParseInt(heights[0], 10, 64)
-		if err != nil {
-			return err
-		}
-		if height < 0 {
-			return sdkerrors.Wrapf(
-				sdkerrors.ErrInvalidRequest,
-				"client.Context.Invoke: height (%d) from %q must be >= 0", height, grpctypes.GRPCBlockHeightHeader)
-		}
-
-		ctx = ctx.WithHeight(height)
-	}
-
 	abciReq := abci.RequestQuery{
 		Path:   method,
 		Data:   reqBz,
-		Height: ctx.Height,
+		Height: requestedHeight,
 	}
 
 	res, err := ctx.QueryABCI(abciReq)
@@ -99,7 +98,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 	// We then parse all the call options, if the call option is a
 	// HeaderCallOption, then we manually set the value of that header to the
 	// metadata.
-	md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(res.Height, 10))
+	md := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(res.Height, 10))
 	for _, callOpt := range opts {
 		header, ok := callOpt.(grpc.HeaderCallOption)
 		if !ok {
@@ -119,4 +118,23 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 // NewStream implements the grpc ClientConn.NewStream method
 func (Context) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
 	return nil, fmt.Errorf("streaming rpc not supported")
+}
+
+// selectHeight returns the height chosen from client context and grpc context.
+// If exists, height extracted from grpcCtx takes precedence.
+func selectHeight(clientContext Context, grpcCtx gocontext.Context) (int64, error) {
+	var height int64
+	if clientContext.Height > 0 {
+		height = clientContext.Height
+	}
+
+	md, _ := metadata.FromOutgoingContext(grpcCtx)
+	if heights := md.Get(grpctypes.GRPCBlockHeightHeader); len(heights) > 0 {
+		var err error
+		height, err = strconv.ParseInt(heights[0], 10, 64)
+		if err != nil {
+			return 0, err
+		}
+	}
+	return height, nil
 }

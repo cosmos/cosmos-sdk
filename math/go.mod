@@ -1,4 +1,4 @@
-module github.com/cosmos/cosmos-sdk/math
+module cosmossdk.io/math
 
 go 1.18
 

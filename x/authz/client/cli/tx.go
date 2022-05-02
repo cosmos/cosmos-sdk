@@ -88,10 +88,6 @@ Examples:
 					return err
 				}
 
-				if spendLimit.GetDenomByIndex(0) != staking.DefaultParams().BondDenom {
-					return fmt.Errorf("invalid denom\ncoin denom should match the current bond denom")
-				}
-
 				if !spendLimit.IsAllPositive() {
 					return fmt.Errorf("spend-limit should be greater than zero")
 				}

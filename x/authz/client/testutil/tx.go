@@ -293,21 +293,6 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			true,
 		},
 		{
-			"invalid bond denom for tx send authorization",
-			[]string{
-				grantee.String(),
-				"send",
-				fmt.Sprintf("--%s=100xyz", cli.FlagSpendLimit),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			0,
-			true,
-		},
-		{
 			"valid tx delegate authorization allowed validators",
 			[]string{
 				grantee.String(),

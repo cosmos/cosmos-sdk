@@ -1,15 +1,15 @@
-package types
+package math
 
 import (
 	"encoding"
 	"encoding/json"
 	"fmt"
-	"testing"
-
 	"math/big"
+	"testing"
 )
 
-const maxBitLen = 256
+// MaxBitLen defines the maximum bit length supported bit Int and Uint types.
+const MaxBitLen = 256
 
 func newIntegerFromString(s string) (*big.Int, bool) {
 	return new(big.Int).SetString(s, 0)
@@ -60,14 +60,14 @@ func unmarshalText(i *big.Int, text string) error {
 		return err
 	}
 
-	if i.BitLen() > maxBitLen {
+	if i.BitLen() > MaxBitLen {
 		return fmt.Errorf("integer out of range: %s", text)
 	}
 
 	return nil
 }
 
-var _ CustomProtobufType = (*Int)(nil)
+var _ customProtobufType = (*Int)(nil)
 
 // Int wraps big.Int with a 257 bit range bound
 // Checks overflow, underflow and division by zero
@@ -108,7 +108,7 @@ func NewIntFromBigInt(i *big.Int) Int {
 		return Int{}
 	}
 
-	if i.BitLen() > maxBitLen {
+	if i.BitLen() > MaxBitLen {
 		panic("NewIntFromBigInt() out of bound")
 	}
 	return Int{i}
@@ -121,7 +121,7 @@ func NewIntFromString(s string) (res Int, ok bool) {
 		return
 	}
 	// Check overflow
-	if i.BitLen() > maxBitLen {
+	if i.BitLen() > MaxBitLen {
 		ok = false
 		return
 	}
@@ -139,7 +139,7 @@ func NewIntWithDecimal(n int64, dec int) Int {
 	i.Mul(big.NewInt(n), exp)
 
 	// Check overflow
-	if i.BitLen() > maxBitLen {
+	if i.BitLen() > MaxBitLen {
 		panic("NewIntWithDecimal() out of bound")
 	}
 	return Int{i}
@@ -150,11 +150,6 @@ func ZeroInt() Int { return Int{big.NewInt(0)} }
 
 // OneInt returns Int value with one
 func OneInt() Int { return Int{big.NewInt(1)} }
-
-// ToDec converts Int to Dec
-func (i Int) ToDec() Dec {
-	return NewDecFromInt(i)
-}
 
 // Int64 converts Int to int64
 // Panics if the value is out of range
@@ -234,7 +229,7 @@ func (i Int) LTE(i2 Int) bool {
 func (i Int) Add(i2 Int) (res Int) {
 	res = Int{add(i.i, i2.i)}
 	// Check overflow
-	if res.i.BitLen() > maxBitLen {
+	if res.i.BitLen() > MaxBitLen {
 		panic("Int overflow")
 	}
 	return
@@ -249,7 +244,7 @@ func (i Int) AddRaw(i2 int64) Int {
 func (i Int) Sub(i2 Int) (res Int) {
 	res = Int{sub(i.i, i2.i)}
 	// Check overflow
-	if res.i.BitLen() > maxBitLen {
+	if res.i.BitLen() > MaxBitLen {
 		panic("Int overflow")
 	}
 	return
@@ -263,12 +258,12 @@ func (i Int) SubRaw(i2 int64) Int {
 // Mul multiples two Ints
 func (i Int) Mul(i2 Int) (res Int) {
 	// Check overflow
-	if i.i.BitLen()+i2.i.BitLen()-1 > maxBitLen {
+	if i.i.BitLen()+i2.i.BitLen()-1 > MaxBitLen {
 		panic("Int overflow")
 	}
 	res = Int{mul(i.i, i2.i)}
 	// Check overflow if sign of both are same
-	if res.i.BitLen() > maxBitLen {
+	if res.i.BitLen() > MaxBitLen {
 		panic("Int overflow")
 	}
 	return
@@ -416,8 +411,8 @@ func (i *Int) Unmarshal(data []byte) error {
 		return err
 	}
 
-	if i.i.BitLen() > maxBitLen {
-		return fmt.Errorf("integer out of range; got: %d, max: %d", i.i.BitLen(), maxBitLen)
+	if i.i.BitLen() > MaxBitLen {
+		return fmt.Errorf("integer out of range; got: %d, max: %d", i.i.BitLen(), MaxBitLen)
 	}
 
 	return nil
@@ -436,8 +431,4 @@ func (i *Int) UnmarshalAmino(bz []byte) error { return i.Unmarshal(bz) }
 // intended to be used with require/assert:  require.True(IntEq(...))
 func IntEq(t *testing.T, exp, got Int) (*testing.T, bool, string, string, string) {
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
-}
-
-func (ip IntProto) String() string {
-	return ip.Int.String()
 }

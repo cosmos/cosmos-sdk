@@ -26,7 +26,7 @@ func TestEndBlockerPruning(t *testing.T) {
 	addr3 := addrs[2]
 
 	// Initial group, group policy and balance setup
-	members := []group.Member{
+	members := []group.MemberRequest{
 		{Address: addr1.String(), Weight: "1"}, {Address: addr2.String(), Weight: "2"},
 	}
 
@@ -325,7 +325,7 @@ func TestEndBlockerTallying(t *testing.T) {
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 4, sdk.NewInt(30000000))
 
 	// Initial group, group policy and balance setup
-	members := []group.Member{
+	members := []group.MemberRequest{
 		{Address: addrs[1].String(), Weight: "1"}, {Address: addrs[2].String(), Weight: "2"},
 	}
 

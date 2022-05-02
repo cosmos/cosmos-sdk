@@ -327,9 +327,8 @@ func (k Keeper) RemoveExpiredAllowances(ctx sdk.Context) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		store.Delete(iterator.Key())
-		expLen := len(sdk.FormatTimeBytes(ctx.BlockTime()))
 
-		// extract the fee allowance key by removing the allowance queue prefix length, expiration length from key.
-		store.Delete(append(feegrant.FeeAllowanceKeyPrefix, iterator.Key()[1+expLen:]...))
+		granter, grantee := feegrant.ParseAddressesFromFeeAllowanceQueueKey(iterator.Key())
+		store.Delete(feegrant.FeeAllowanceKey(granter, grantee))
 	}
 }

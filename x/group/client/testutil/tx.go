@@ -564,9 +564,6 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
-	// groupID := s.createGroupWithMembers(weights, accounts)
-	// groupPolicyAddress := s.createGroupThresholdPolicyWithBalance(groupID, 3, 100)
-
 	validUpdatedMembersFileName := testutil.WriteToNewTempFile(s.T(), fmt.Sprintf(`{"members": [{
 		"address": "%s",
 		"weight": "0",

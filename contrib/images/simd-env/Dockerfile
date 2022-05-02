@@ -1,9 +1,12 @@
 FROM golang:1.18-alpine AS build
+
 RUN apk add build-base git linux-headers
+
 WORKDIR /work
 COPY go.mod go.sum /work/
 COPY db/go.mod db/go.sum /work/db/
 COPY errors/go.mod errors/go.sum /work/errors/
+COPY math/go.mod math/go.sum /work/math/
 
 RUN go mod download
 COPY ./ /work

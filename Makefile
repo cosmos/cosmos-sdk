@@ -193,7 +193,7 @@ godocs:
 
 # This builds a docs site for each branch/tag in `./docs/versions`
 # and copies each site to a version prefixed path. The last entry inside
-# the `versions` file will be the default root index.html.
+# the `versions` file will be the default root index.html (and it should be main).
 build-docs:
 	@cd docs && \
 	while read -r branch path_prefix; do \
@@ -202,6 +202,7 @@ build-docs:
 		mkdir -p ~/output/$${path_prefix} ; \
 		cp -r .vuepress/dist/* ~/output/$${path_prefix}/ ; \
 		cp ~/output/$${path_prefix}/index.html ~/output ; \
+		cp ~/output/$${path_prefix}/404.html ~/output ; \
 	done < versions ;
 	@echo $(DOCS_DOMAIN) > ~/output/CNAME
 

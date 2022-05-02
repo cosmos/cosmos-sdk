@@ -106,7 +106,7 @@ func (k Keeper) AutoCompoundRewards(ctx sdk.Context) {
 		rewards, err := k.WithdrawDelegationRewards(ctx, delAddr, srcValAddr)
 		switch {
 		case err != nil:
-				// log error
+			// log error
 
 		case rewards != nil && !rewards.IsZero():
 			withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, delAddr)

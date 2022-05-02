@@ -9,6 +9,7 @@ require (
 	github.com/otiai10/copy v1.7.0
 	github.com/rs/zerolog v1.26.1
 	github.com/stretchr/testify v1.7.1
+<<<<<<< HEAD
 	google.golang.org/api v0.44.0 // indirect
 	google.golang.org/genproto v0.0.0-20210828152312-66f60bf46e71 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
@@ -18,6 +19,17 @@ require (
 	cloud.google.com/go v0.81.0 // indirect
 	cloud.google.com/go/storage v1.10.0 // indirect
 	filippo.io/edwards25519 v1.0.0-beta.2 // indirect
+=======
+	github.com/tendermint/tendermint v0.35.4
+)
+
+require (
+	cloud.google.com/go v0.100.2 // indirect
+	cloud.google.com/go/compute v1.5.0 // indirect
+	cloud.google.com/go/iam v0.3.0 // indirect
+	cloud.google.com/go/storage v1.14.0 // indirect
+	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
+>>>>>>> 2e77e512c (build(deps): Bump github.com/tendermint/tendermint in /cosmovisor (#11853))
 	github.com/99designs/keyring v1.1.6 // indirect
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect
 	github.com/DataDog/zstd v1.4.5 // indirect
@@ -51,9 +63,16 @@ require (
 	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
+<<<<<<< HEAD
 	github.com/golang/snappy v0.0.3-0.20201103224600-674baa8c7fc3 // indirect
 	github.com/google/btree v1.0.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.0.5 // indirect
+=======
+	github.com/golang/snappy v0.0.4 // indirect
+	github.com/google/btree v1.0.1 // indirect
+	github.com/google/uuid v1.3.0 // indirect
+	github.com/googleapis/gax-go/v2 v2.3.0 // indirect
+>>>>>>> 2e77e512c (build(deps): Bump github.com/tendermint/tendermint in /cosmovisor (#11853))
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
@@ -63,8 +82,13 @@ require (
 	github.com/gtank/ristretto255 v0.1.2 // indirect
 	github.com/hashicorp/go-immutable-radix v1.0.0 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
+<<<<<<< HEAD
 	github.com/hashicorp/go-version v1.2.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
+=======
+	github.com/hashicorp/go-version v1.4.0 // indirect
+	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d // indirect
+>>>>>>> 2e77e512c (build(deps): Bump github.com/tendermint/tendermint in /cosmovisor (#11853))
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hdevalence/ed25519consensus v0.0.0-20210204194344-59a8610d2b87 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
@@ -82,7 +106,13 @@ require (
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
+<<<<<<< HEAD
 	github.com/pelletier/go-toml v1.9.3 // indirect
+=======
+	github.com/oasisprotocol/curve25519-voi v0.0.0-20210609091139-0a56a4bca00b // indirect
+	github.com/pelletier/go-toml v1.9.4 // indirect
+	github.com/pelletier/go-toml/v2 v2.0.0-beta.8 // indirect
+>>>>>>> 2e77e512c (build(deps): Bump github.com/tendermint/tendermint in /cosmovisor (#11853))
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -93,12 +123,20 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0 // indirect
 	github.com/regen-network/cosmos-proto v0.3.1 // indirect
 	github.com/sasha-s/go-deadlock v0.2.1-0.20190427202633-1595213edefa // indirect
+<<<<<<< HEAD
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v1.2.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.8.1 // indirect
+=======
+	github.com/spf13/afero v1.8.2 // indirect
+	github.com/spf13/cast v1.4.1 // indirect
+	github.com/spf13/jwalterweatherman v1.1.0 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/viper v1.11.0 // indirect
+>>>>>>> 2e77e512c (build(deps): Bump github.com/tendermint/tendermint in /cosmovisor (#11853))
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20200815110645-5c35d600f0ca // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
@@ -111,6 +149,7 @@ require (
 	github.com/zondax/hid v0.9.0 // indirect
 	go.etcd.io/bbolt v1.3.5 // indirect
 	go.opencensus.io v0.23.0 // indirect
+<<<<<<< HEAD
 	golang.org/x/crypto v0.0.0-20211215165025-cf75a172585e // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/mod v0.4.2 // indirect
@@ -125,6 +164,21 @@ require (
 	google.golang.org/grpc v1.42.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
+=======
+	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect
+	golang.org/x/net v0.0.0-20220412020605-290c469a71a5 // indirect
+	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5 // indirect
+	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad // indirect
+	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
+	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f // indirect
+	google.golang.org/api v0.74.0 // indirect
+	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/genproto v0.0.0-20220407144326-9054f6ed7bac // indirect
+	google.golang.org/grpc v1.45.0 // indirect
+	google.golang.org/protobuf v1.28.0 // indirect
+	gopkg.in/ini.v1 v1.66.4 // indirect
+>>>>>>> 2e77e512c (build(deps): Bump github.com/tendermint/tendermint in /cosmovisor (#11853))
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 

@@ -148,21 +148,20 @@ requirement of using epoch-based actions.
 
 ### Positive
 
-<!-- {positive consequences} -->
+* Enables auto-compounding of rewards, including the ability to delegate to
+  validators that the rewards did not originate from.
 
 ### Negative
 
-<!-- {negative consequences} -->
+* Requires `x/epochs` to enable auto-compounding of rewards, creating variable
+  block times during the epoch blocks.
 
 ### Neutral
 
-<!-- {neutral consequences} -->
 
 ## Further Discussions
-
-<!-- While an ADR is in the DRAFT or PROPOSED stage, this section should contain a summary of issues to be solved in future iterations (usually referencing comments from a pull-request discussion).
-Later, this section can optionally list ideas or improvements the author or reviewers found during the analysis of this ADR. -->
 
 ## References
 
 * [F1 Specification](https://drops.dagstuhl.de/opus/volltexte/2020/11974/pdf/OASIcs-Tokenomics-2019-10.pdf)
+* [Osmosis x/epochs](https://github.com/osmosis-labs/osmosis/tree/main/x/epochs/spec)

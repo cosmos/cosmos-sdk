@@ -46,6 +46,7 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	// some helpers
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
 	exp := suite.sdkCtx.BlockTime().AddDate(1, 0, 0)
+	exp2 := suite.sdkCtx.BlockTime().AddDate(2, 0, 0)
 	basic := &feegrant.BasicAllowance{
 		SpendLimit: suite.atom,
 		Expiration: &exp,
@@ -54,6 +55,11 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	basic2 := &feegrant.BasicAllowance{
 		SpendLimit: eth,
 		Expiration: &exp,
+	}
+
+	basic3 := &feegrant.BasicAllowance{
+		SpendLimit: eth,
+		Expiration: &exp2,
 	}
 
 	// let's set up some initial state here
@@ -85,7 +91,7 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	err = suite.keeper.GrantAllowance(suite.sdkCtx, suite.addrs[0], suite.addrs[2], basic)
 	suite.Require().NoError(err)
 
-	err = suite.keeper.GrantAllowance(suite.sdkCtx, suite.addrs[1], suite.addrs[2], basic2)
+	err = suite.keeper.GrantAllowance(suite.sdkCtx, suite.addrs[1], suite.addrs[2], basic3)
 	suite.Require().NoError(err)
 
 	// end state:
@@ -115,7 +121,7 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 		"addr modified": {
 			granter:   suite.addrs[1],
 			grantee:   suite.addrs[2],
-			allowance: basic2,
+			allowance: basic3,
 		},
 	}
 
@@ -273,6 +279,8 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 		grantee   sdk.AccAddress
 		allowance feegrant.FeeAllowanceI
 		expErrMsg string
+		preRun    func()
+		postRun   func()
 	}{
 		{
 			name:    "grant not pruned from state",
@@ -325,6 +333,99 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 				SpendLimit: eth,
 				Expiration: &oneYearExpiry,
 			},
+		},
+		{
+			name:    "grant created with a day expiry & overwritten with no expiry shouldn't be pruned: no error",
+			ctx:     suite.sdkCtx.WithBlockTime(now.AddDate(0, 0, 2)),
+			granter: suite.addrs[2],
+			grantee: suite.addrs[1],
+			allowance: &feegrant.BasicAllowance{
+				SpendLimit: eth,
+			},
+			preRun: func() {
+				// create a grant with same granter, grantee with a day expiry.
+				now := suite.sdkCtx.BlockTime().AddDate(0, 0, 1)
+				allowance := &feegrant.BasicAllowance{
+					SpendLimit: suite.atom,
+					Expiration: &now,
+				}
+				err := suite.keeper.GrantAllowance(suite.sdkCtx, suite.addrs[2], suite.addrs[1], allowance)
+				suite.NoError(err)
+			},
+			postRun: func() {
+				_, err := suite.msgSrvr.RevokeAllowance(suite.sdkCtx, &feegrant.MsgRevokeAllowance{
+					Granter: suite.addrs[2].String(),
+					Grantee: suite.addrs[1].String(),
+				})
+				suite.NoError(err)
+			},
+		},
+		{
+			name:    "grant created with a day expiry & overwritten with a year expiry shouldn't be pruned: no error",
+			ctx:     suite.sdkCtx.WithBlockTime(now.AddDate(0, 0, 2)),
+			granter: suite.addrs[2],
+			grantee: suite.addrs[1],
+			allowance: &feegrant.BasicAllowance{
+				SpendLimit: eth,
+				Expiration: &oneYearExpiry,
+			},
+			preRun: func() {
+				// create a grant with same granter, grantee with a day expiry.
+				day := suite.sdkCtx.BlockTime().AddDate(0, 0, 1)
+				allowance := &feegrant.BasicAllowance{
+					SpendLimit: suite.atom,
+					Expiration: &day,
+				}
+				err := suite.keeper.GrantAllowance(suite.sdkCtx, suite.addrs[2], suite.addrs[1], allowance)
+				suite.NoError(err)
+			},
+			postRun: func() {
+				_, err := suite.msgSrvr.RevokeAllowance(suite.sdkCtx, &feegrant.MsgRevokeAllowance{
+					Granter: suite.addrs[2].String(),
+					Grantee: suite.addrs[1].String(),
+				})
+				suite.NoError(err)
+			},
+		},
+		{
+			name:    "grant created with a year expiry & overwritten with a day expiry should be pruned after a day: error",
+			ctx:     suite.sdkCtx.WithBlockTime(now.AddDate(0, 0, 1)),
+			granter: suite.addrs[2],
+			grantee: suite.addrs[1],
+			allowance: &feegrant.BasicAllowance{
+				SpendLimit: eth,
+				Expiration: &oneYearExpiry,
+			},
+			preRun: func() {
+				// create a grant with same granter, grantee with 2 day expiry.
+				day := suite.sdkCtx.BlockTime().AddDate(0, 0, 1)
+				allowance := &feegrant.BasicAllowance{
+					SpendLimit: suite.atom,
+					Expiration: &day,
+				}
+				err := suite.keeper.GrantAllowance(suite.sdkCtx, suite.addrs[2], suite.addrs[1], allowance)
+				suite.NoError(err)
+			},
+			postRun: func() {},
+		},
+		{
+			name:    "grant created with no expiry & overwritten with a day expiry should be pruned after a day: error",
+			ctx:     suite.sdkCtx.WithBlockTime(now.AddDate(0, 0, 1)),
+			granter: suite.addrs[2],
+			grantee: suite.addrs[1],
+			allowance: &feegrant.BasicAllowance{
+				SpendLimit: eth,
+				Expiration: &oneYearExpiry,
+			},
+			preRun: func() {
+				// create a grant with same granter, grantee with no expiry.
+				allowance := &feegrant.BasicAllowance{
+					SpendLimit: suite.atom,
+				}
+				err := suite.keeper.GrantAllowance(suite.sdkCtx, suite.addrs[2], suite.addrs[1], allowance)
+				suite.NoError(err)
+			},
+			postRun: func() {},
 		},
 	}
 

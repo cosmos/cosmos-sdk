@@ -7,7 +7,9 @@ require (
 	github.com/hashicorp/go-getter v1.5.11
 	github.com/otiai10/copy v1.7.0
 	github.com/rs/zerolog v1.26.1
+	github.com/spf13/cobra v1.4.0
 	github.com/stretchr/testify v1.7.1
+	github.com/tendermint/tendermint v0.35.2
 )
 
 require (
@@ -85,7 +87,6 @@ require (
 	github.com/sasha-s/go-deadlock v0.2.1-0.20190427202633-1595213edefa // indirect
 	github.com/spf13/afero v1.8.0 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
-	github.com/spf13/cobra v1.4.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.10.1 // indirect
@@ -95,7 +96,6 @@ require (
 	github.com/tendermint/btcd v0.1.1 // indirect
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15 // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
-	github.com/tendermint/tendermint v0.35.2 // indirect
 	github.com/tendermint/tm-db v0.6.6 // indirect
 	github.com/ulikunitz/xz v0.5.8 // indirect
 	github.com/zondax/hid v0.9.1-0.20220302062450-5552068d2266 // indirect

@@ -8,10 +8,8 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/google/uuid"
-	"github.com/spf13/cobra"
-
 	"github.com/gogo/protobuf/proto"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
@@ -584,7 +582,8 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 	}]}`, val.Address.String(), tooLongMetadata)
 	invalidMembersMetadataFileName := testutil.WriteToNewTempFile(s.T(), invalidMembersMetadata).Name()
 
-	s.fundAllGroupPolicies("2", 1000)
+	// tokens := sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1000)))
+	// s.fundAllGroupPolicies("2", tokens)
 
 	testCases := []struct {
 		name         string
@@ -2215,7 +2214,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 		name      string
 		votes     []string
 		members   []string
-		malleate  func(groupID string) (*cobra.Command, []string)
+		malleate  func(groupID string) error
 		expectErr bool
 		errMsg    string
 		respType  proto.Message
@@ -2224,7 +2223,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			"member leaves while all others vote yes",
 			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_YES", "VOTE_OPTION_YES"},
 			accounts,
-			func(groupID string) (*cobra.Command, []string) {
+			func(groupID string) error {
 				leavingMemberIdx := 0
 				args := append(
 					[]string{
@@ -2235,7 +2234,13 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 					},
 					s.commonFlags...,
 				)
-				return client.MsgLeaveGroupCmd(), args
+				out, err := cli.ExecTestCLICmd(clientCtx, client.MsgLeaveGroupCmd(), args)
+				s.Require().NoError(err, out.String())
+				var resp sdk.TxResponse
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				s.Require().Equal(uint32(0), resp.Code, out.String())
+
+				return err
 			},
 			false,
 			"",
@@ -2245,7 +2250,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			"member leaves while all others vote yes and no",
 			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_NO", "VOTE_OPTION_YES"},
 			accounts,
-			func(groupID string) (*cobra.Command, []string) {
+			func(groupID string) error {
 				leavingMemberIdx := 0
 				args := append(
 					[]string{
@@ -2256,17 +2261,23 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 					},
 					s.commonFlags...,
 				)
-				return client.MsgLeaveGroupCmd(), args
+				out, err := cli.ExecTestCLICmd(clientCtx, client.MsgLeaveGroupCmd(), args)
+				s.Require().NoError(err, out.String())
+				var resp sdk.TxResponse
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				s.Require().Equal(uint32(0), resp.Code, out.String())
+
+				return err
 			},
 			true,
 			"PROPOSAL_EXECUTOR_RESULT_NOT_RUN",
 			&sdk.TxResponse{},
 		},
 		{
-			"member that leaves affects the threshold",
+			"member that leaves affects the threshold policy outcome",
 			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_NO"},
 			accounts,
-			func(groupID string) (*cobra.Command, []string) {
+			func(groupID string) error {
 				leavingMemberIdx := 2
 				args := append(
 					[]string{
@@ -2277,17 +2288,23 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 					},
 					s.commonFlags...,
 				)
-				return client.MsgLeaveGroupCmd(), args
+				out, err := cli.ExecTestCLICmd(clientCtx, client.MsgLeaveGroupCmd(), args)
+				s.Require().NoError(err, out.String())
+				var resp sdk.TxResponse
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				s.Require().Equal(uint32(0), resp.Code, out.String())
+
+				return err
 			},
 			true,
 			"PROPOSAL_EXECUTOR_RESULT_NOT_RUN",
 			&sdk.TxResponse{},
 		},
 		{
-			"update member policy",
+			"update group policy voids the proposal",
 			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_NO"},
 			accounts,
-			func(groupID string) (*cobra.Command, []string) {
+			func(groupID string) error {
 				updateGroup := s.newValidMembers(weights[0:1], accounts[0:1])
 
 				updateGroupByte, err := codec.MarshalJSONIndent(codec.NewLegacyAmino(), updateGroup)
@@ -2303,7 +2320,13 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 					},
 					s.commonFlags...,
 				)
-				return client.MsgUpdateGroupMembersCmd(), args
+				out, err := cli.ExecTestCLICmd(clientCtx, client.MsgUpdateGroupMembersCmd(), args)
+				s.Require().NoError(err, out.String())
+				var resp sdk.TxResponse
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				s.Require().Equal(uint32(0), resp.Code, out.String())
+
+				return err
 			},
 			true,
 			"PROPOSAL_EXECUTOR_RESULT_NOT_RUN",
@@ -2359,13 +2382,8 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 
 			}
 
-			testCMD, testArgs := tc.malleate(groupID)
-
-			out, err = cli.ExecTestCLICmd(clientCtx, testCMD, testArgs)
-			s.Require().NoError(err, out.String())
-			var resp sdk.TxResponse
-			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-			s.Require().Equal(uint32(0), resp.Code, out.String())
+			err = tc.malleate(groupID)
+			s.Require().NoError(err)
 
 			err = s.network.WaitForNextBlock()
 			s.Require().NoError(err)
@@ -2467,7 +2485,8 @@ func (s *IntegrationTestSuite) createGroupWithMembers(membersWeight, membersAddr
 	clientCtx := val.ClientCtx
 
 	membersValid := s.newValidMembers(membersWeight, membersAddress)
-	membersByte, err := codec.MarshalJSONIndent(codec.NewLegacyAmino(), membersValid)
+	membersByte, err := json.Marshal(membersValid)
+
 	s.Require().NoError(err)
 
 	validMembersFile := testutil.WriteToNewTempFile(s.T(), string(membersByte))
@@ -2522,7 +2541,7 @@ func (s *IntegrationTestSuite) createGroupThresholdPolicyWithBalance(groupID str
 	s.Require().NoError(err)
 	return groupPolicyAddress
 }
-func (s *IntegrationTestSuite) fundAllGroupPolicies(groupID string, tokens int64) {
+func (s *IntegrationTestSuite) fundAllGroupPolicies(groupID string, tokens sdk.Coin) {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -2536,19 +2555,19 @@ func (s *IntegrationTestSuite) fundAllGroupPolicies(groupID string, tokens int64
 		addr, err := sdk.AccAddressFromBech32(address)
 		s.Require().NoError(err)
 		out, err = banktestutil.MsgSendExec(clientCtx, val.Address, addr,
-			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(tokens))),
+			tokens,
 			s.commonFlags...,
 		)
 		s.Require().NoError(err)
 	}
 }
 
-func (s *IntegrationTestSuite) newValidMembers(weights, membersAddress []string) group.Members {
+func (s *IntegrationTestSuite) newValidMembers(weights, membersAddress []string) group.MemberRequests {
 	s.Require().Equal(len(weights), len(membersAddress))
-	membersValid := group.Members{}
+	membersValid := group.MemberRequests{}
 
 	for i, address := range membersAddress {
-		membersValid.Members = append(membersValid.Members, group.Member{
+		membersValid.Members = append(membersValid.Members, group.MemberRequest{
 			Address:  address,
 			Weight:   weights[i],
 			Metadata: validMetadata,

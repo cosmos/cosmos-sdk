@@ -38,11 +38,11 @@ delegators to auto-compound their rewards on-chain.
 
 In order to facilitate auto-compounding rewards, we need the ability for delegators
 to opt into having their rewards auto-compounded. There are numerous ways to approach
-this, where a simple method would to introduce a new message type, `MsgAutoCompoundRewards`,
+this, where a simple method would to introduce a new message type, `MsgEnableAutoCompoundRewards`,
 defined as follows:
 
 ```protobuf
-message MsgAutoCompoundRewards {
+message MsgEnableAutoCompoundRewards {
   option (cosmos.msg.v1.signer) = "delegator_address";
 
   // ...
@@ -50,7 +50,6 @@ message MsgAutoCompoundRewards {
   string delegator_address     = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string src_validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string dst_validator_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  bool   enable                = 4;
 }
 ```
 
@@ -59,33 +58,42 @@ Furthermore, a delegator can also define a different address to which the reward
 are withdrawn to. This means that we need to know the tuple to execute the withdraw
 and the withdraw address in order to send the rewards from when auto-compounding.
 
-To reflect this in `MsgAutoCompoundRewards`, the `delegator_address` and `src_validator_address`
-fields act as the tuple to execute the withdraw. We can use `delegator_address`
-to find the withdraw address. Finally, the `dst_validator_address` defines the
-validator address to delegate the withdrawn rewards to, from the withdraw address.
+To reflect this in `MsgEnableAutoCompoundRewards`, the `delegator_address` and
+`src_validator_address` fields act as the tuple to execute the withdraw. We can
+use `delegator_address` to find the withdraw address. Finally, the `dst_validator_address`
+defines the validator address to delegate the withdrawn rewards to, from the withdraw address.
 We imagine in most instances, `src_validator_address` and `dst_validator_address`
 will be the same.
 
-----
-
 When a delegator wants to have their "unrealized" rewards be withdrawn and
 automatically delegated to the relative validator(s), they would broadcast a
-`MsgAutoCompoundRewards` transaction with `enable` set to `true` and a
-`validator_address` that would have the withdrawn rewards delegated to. To stop
-or disable auto-compounding, the user would send the same transaction with
-`enable` set to `false` (`validator_address` can be omitted in this case).
+`MsgEnableAutoCompoundRewards` transaction. To stop or disable auto-compounding,
+the user would send a similar transaction as defined by `MsgDisableAutoCompoundRewards`:
 
-In addition, we require the `x/distribution` module to use an additional state
-index to store the records for delegators. When a user submits a `MsgAutoCompoundRewards`
-transaction with `enable` set to `true`, we store a record with the following
-key and value:
+```protobuf
+message MsgDisableAutoCompoundRewards {
+  option (cosmos.msg.v1.signer) = "delegator_address";
 
-```text
-<prefixByte> | address.MustLengthPrefix(DelegatorAddress) -> validator_address
+  // ...
+
+  string delegator_address     = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string src_validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
 ```
 
-When a user decides to disable auto-compounding rewards by setting `enable` to
-`false`, we delete the record stored under the above key.
+In addition, we require the `x/distribution` module to use an additional state
+index to store the records for delegators. When a user submits a `MsgEnableAutoCompoundRewards`
+transaction, we store a record with the following key and value:
+
+```text
+<prefixByte> | delegator_address | src_validator_address -> dst_validator_address
+```
+
+> Note, both `delegator_address` and `src_validator_address` are length-prefixed
+> via `address.MustLengthPrefix` in the key.
+
+When a user decides to disable auto-compounding rewards by sending a `MsgDisableAutoCompoundRewards`
+transaction, we delete the record stored under the above key.
 
 Given that we now have such a key ordering in state, we can iterate over the all
 the relevant records using the dedicated `<prefixByte>` using a prefix `KVStore`,
@@ -94,9 +102,41 @@ be defined as follows in `x/distribution`:
 
 ```go
 func (k Keeper) AutoCompoundRewards(ctx sdk.Context) {
-  
+	k.IterateAutoCompoundRewards(ctx, func(delAddr sdk.AccAddress, srcValAddr, dstValAddr sdk.ValAddress) (stop bool) {
+		rewards, err := k.WithdrawDelegationRewards(ctx, delAddr, srcValAddr)
+		switch {
+		case err != nil:
+				// log error
+
+		case rewards != nil && !rewards.IsZero():
+			withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, delAddr)
+			// delegate 'rewards' from 'withdrawAddr' to 'dstValAddr'
+		}
+
+		return false
+	})
 }
 ```
+
+Obviously executing `AutoCompoundRewards` on a block-by-block basis would be way
+too costly and inefficient as it would slow the chain down. In order to enable
+such functionality, we have to perform `AutoCompoundRewards` on an epoch basis.
+
+In order to facilitate this, we propose to remove the current `x/epoching` in the
+SDK with the Osmosis `x/epochs` [module](https://github.com/osmosis-labs/osmosis/tree/main/x/epochs/spec).
+In addition, we propose to make it a sub-module and version it to decouple it's
+development cycle from the rest of the SDK and allow easier collaboration with
+the Osmosis team.
+
+By using the `x/epochs` module, we would introduce a new `EpochInfo` to describe
+how often the epoch should run. The epoch would have an associated `epochIdentifier`,
+which `x/distribution` module would use. In addition, the `x/distribution` module
+would define epoch hooks, where it would call `AutoCompoundRewards` during
+`AfterEpochEnd` given that `epochIdentifier` matches. This would require the
+`x/distribution` module to store the associated `epochIdentifier`, i.e. we require
+storing an additional parameter. Note, the subject of this ADR is not to define
+the exact epoch timing or frequency, as governance can and should decide on such
+decisions.
 
 ## Consequences
 

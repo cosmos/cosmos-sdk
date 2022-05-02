@@ -25,11 +25,16 @@ func TestDecExp(t *testing.T) {
 		{mustNewDecFromStr(t, "0.5"), mustNewDecFromStr(t, "1.648721270700128146")},
 		{mustNewDecFromStr(t, "-0.5"), mustNewDecFromStr(t, "0.606530659712633423")},
 		{mustNewDecFromStr(t, "-7.654321"), mustNewDecFromStr(t, "0.000473991580066384")},
+		{mustNewDecFromStr(t, "-41"), mustNewDecFromStr(t, "0.000000000000000001")},
+		{mustNewDecFromStr(t, "-42"), mustNewDecFromStr(t, "0.000000000000000000")},
+		{mustNewDecFromStr(t, "88"), mustNewDecFromStr(t, "165163625499400185552832979626485876677.500000000000000000")},
 	}
 	for i, tc := range tests {
 		got := globalFastExp.DecExp(tc.sdkDec)
 		require.True(t, tc.want.Equal(*got), "Incorrect result on test case %d", i)
 	}
+	// test overflow case
+	require.True(t, globalFastExp.DecExp(mustNewDecFromStr(t, "89")) == nil)
 }
 
 func TestInflationMonotonicity(t *testing.T) {

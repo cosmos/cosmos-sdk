@@ -92,6 +92,9 @@ func (fe *FastExp) DecExp(x sdk.Dec) *sdk.Dec {
 	tmp0.Lsh(tmp0, 64)
 	tmp0.Div(tmp0, precisionReuse)
 	var tmp1 = fe.exp(tmp0)
+	if tmp1 == nil {
+		return nil
+	}
 	// multiply by 10^18 to get to maximum precision allowed by `Dec`
 	tmp1.Mul(tmp1, precisionReuse)
 	// remove binary fixed point component
@@ -129,6 +132,11 @@ func (fe *FastExp) exp2m1Fracint(x *big.Int) *big.Int {
 	if x.BitLen() > 128 {
 		return nil
 	}
+	// Note: there is likely a method involving Pade approximants that uses fewer constants
+	// and is faster. I have chosen this method for its simplicity. The input and constants
+	// are both purely fractional and have only truncation biases applied which guarantees
+	// everything stays in the [0, 1) range and cannot exponentially explode, which is bad
+	// with dynamic bigints.
 	var h = new(big.Int)
 	// `2^x = 1 + (ln(2)/1!)*x + (ln(2)^2/2!)*x^2 + (ln(2)^3/3!)*x^3`
 	// `2^x - 1 = x*(C_1 + x*(C_2 + x*(C_3 + ...)))` where `C_n = ln(2)^n / n!`
@@ -157,9 +165,7 @@ func (fe *FastExp) exp(x *big.Int) *big.Int {
 	// `2^x = (2^floor(x)) * 2^(x - floor(x))`
 	// let `y = x*lb(e)`
 	// `e^x = (2^floor(y)) * 2^(y - floor(y))`
-	if x.BitLen() > 128 {
-		return nil
-	}
+
 	var msb = x.Sign() == -1
 	// make unsigned
 	x.Abs(x)
@@ -174,12 +180,25 @@ func (fe *FastExp) exp(x *big.Int) *big.Int {
 	fracPart.Rsh(fracPart, 64)
 
 	if !intPart.IsInt64() {
+		if msb {
+			// certain zero
+			return new(big.Int)
+		} else {
+			// certain overflow
+			return nil
+		}
+	}
+	var shift = int(intPart.Int64())
+	if msb {
+		if shift >= 64 {
+			// certain zero
+			return new(big.Int)
+		}
+	} else if shift >= 128 {
 		// certain overflow
 		return nil
 	}
 
-	// note: we assume `int` is 64 bits
-	var shift = int(intPart.Int64())
 	if msb {
 		shift = -shift - 1
 		// two's complement without changing the sign
@@ -190,36 +209,20 @@ func (fe *FastExp) exp(x *big.Int) *big.Int {
 
 	// calculate exp2
 	var res = fe.exp2m1Fracint(fracPart)
+	// faster OR because we know the one's place cannot be set
 	res.Or(res, fe.exp2FpOne)
 
-	switch {
-	case shift < 0:
-		var shift = unsignedAbs(shift)
-		if shift >= 128 {
-			// shift is large enough to guarantee zero
-			return new(big.Int)
-		}
-		res.Rsh(res, shift)
-	case shift <= (128 - res.BitLen()):
+	if shift < 0 {
+		res.Rsh(res, unsignedAbs(shift))
+	} else {
 		res.Lsh(res, unsignedAbs(shift))
-		if res.BitLen() > 128 {
-			return nil
-		}
-	default:
-		// guaranteed overflow from large positive shift
-		return nil
 	}
-
 	return res
 }
 
 // Calculates `e^(-((x-peakOffset)^2 / (2*(std_dev^2)))))`
 // `tokenSupply` is in units of token. Returns a fixed point integer capped at 1.0u65f64.
 func (ic *InflationCurve) calculateInflationBinary(tokenSupply *big.Int) *big.Int {
-	if tokenSupply.BitLen() >= 90 {
-		// guaranteed < 2^-64
-		return new(big.Int)
-	}
 	// apply offset
 	var tmp = new(big.Int).Add(tokenSupply, ic.peakOffset)
 	// square

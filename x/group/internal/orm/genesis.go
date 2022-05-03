@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TableExportable defines the method to import and export a table.
+// TableExportable defines the methods to import and export a table.
 type TableExportable interface {
 	// Export stores all the values in the table in the passed
 	// ModelSlicePtr. If the table has an associated sequence, then its

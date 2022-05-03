@@ -115,12 +115,35 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.group = &group.GroupInfo{Id: 1, Admin: val.Address.String(), Metadata: validMetadata, TotalWeight: "3", Version: 1}
 
 	// create 5 group policies
+	// for i := 0; i < 5; i++ {
+	//	threshold := i + 1
+	//	if threshold > 3 {
+	//		threshold = 3
+	//	}
+	//	s.createGroupThresholdPolicyWithBalance(val.Address.String(), "1", threshold, 1000)
+	//
+	//	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	//	s.Require().NoError(err, out.String())
+	//}
 	for i := 0; i < 5; i++ {
 		threshold := i + 1
 		if threshold > 3 {
 			threshold = 3
 		}
-		s.createGroupThresholdPolicyWithBalance(val.Address.String(), "1", threshold, 1000)
+		out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateGroupPolicyCmd(),
+			append(
+				[]string{
+					val.Address.String(),
+					"1",
+					validMetadata,
+					fmt.Sprintf("{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"%d\", \"windows\":{\"voting_period\":\"30000s\"}}", threshold),
+				},
+				s.commonFlags...,
+			),
+		)
+		s.Require().NoError(err, out.String())
+		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+		s.Require().Equal(uint32(0), txResp.Code, out.String())
 
 		out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 		s.Require().NoError(err, out.String())
@@ -1605,8 +1628,8 @@ func (s *IntegrationTestSuite) TestTxVote() {
 			append(
 				[]string{
 					s.createCLIProposal(
-						s.groupPolicies[1].Address, val.Address.String(),
-						s.groupPolicies[1].Address, val.Address.String(),
+						s.groupPolicies[0].Address, val.Address.String(),
+						s.groupPolicies[0].Address, val.Address.String(),
 						""),
 				},
 				s.commonFlags...,

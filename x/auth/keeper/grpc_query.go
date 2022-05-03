@@ -119,6 +119,7 @@ func (ak AccountKeeper) ModuleAccounts(c context.Context, req *types.QueryModule
 	return &types.QueryModuleAccountsResponse{Accounts: modAccounts}, nil
 }
 
+// Bech32Prefix retuns the keeper internally stored bech32 prefix.
 func (ak AccountKeeper) Bech32Prefix(ctx context.Context, req *types.Bech32PrefixRequest) (*types.Bech32PrefixResponse, error) {
 	bech32Prefix, err := ak.getBech32Prefix()
 	if err != nil {
@@ -128,6 +129,8 @@ func (ak AccountKeeper) Bech32Prefix(ctx context.Context, req *types.Bech32Prefi
 	return &types.Bech32PrefixResponse{Bech32Prefix: bech32Prefix}, nil
 }
 
+// AddressBytesToString converts an address from bytes to string, using the
+// keeper's bech32 prefix.
 func (ak AccountKeeper) AddressBytesToString(ctx context.Context, req *types.AddressBytesToStringRequest) (*types.AddressBytesToStringResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -145,6 +148,8 @@ func (ak AccountKeeper) AddressBytesToString(ctx context.Context, req *types.Add
 	return &types.AddressBytesToStringResponse{AddressString: text}, nil
 }
 
+// AddressBytesToString converts an address from string to bytes, using the
+// keeper's bech32 prefix.
 func (ak AccountKeeper) AddressStringToBytes(ctx context.Context, req *types.AddressStringToBytesRequest) (*types.AddressStringToBytesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

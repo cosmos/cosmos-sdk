@@ -497,7 +497,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMetadata() {
 			append(
 				[]string{
 					val.Address.String(),
-					"2",
+					"1",
 					validMetadata,
 				},
 				s.commonFlags...,
@@ -512,7 +512,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMetadata() {
 			append(
 				[]string{
 					val.Address.String(),
-					"2",
+					"1",
 					validMetadata,
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
@@ -2533,7 +2533,6 @@ func (s *IntegrationTestSuite) createGroupThresholdPolicyWithBalance(adminAddres
 	var res group.QueryGroupPoliciesByGroupResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
 	groupPolicyAddress := res.GroupPolicies[0].Address
-
 	addr, err := sdk.AccAddressFromBech32(groupPolicyAddress)
 	s.Require().NoError(err)
 	out, err = banktestutil.MsgSendExec(clientCtx, val.Address, addr,
@@ -2556,7 +2555,7 @@ func (s *IntegrationTestSuite) fundAllGroupPolicies(groupID string, tokens sdk.C
 		address := policy.Address
 		addr, err := sdk.AccAddressFromBech32(address)
 		s.Require().NoError(err)
-		out, err = banktestutil.MsgSendExec(clientCtx, val.Address, addr,
+		_, err = banktestutil.MsgSendExec(clientCtx, val.Address, addr,
 			sdk.NewCoins(tokens),
 			s.commonFlags...,
 		)
@@ -2567,7 +2566,6 @@ func (s *IntegrationTestSuite) fundAllGroupPolicies(groupID string, tokens sdk.C
 func (s *IntegrationTestSuite) newValidMembers(weights, membersAddress []string) group.MemberRequests {
 	s.Require().Equal(len(weights), len(membersAddress))
 	membersValid := group.MemberRequests{}
-
 	for i, address := range membersAddress {
 		membersValid.Members = append(membersValid.Members, group.MemberRequest{
 			Address:  address,

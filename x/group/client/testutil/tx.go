@@ -120,7 +120,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		if threshold > 3 {
 			threshold = 3
 		}
-		s.createGroupThresholdPolicyWithBalance("1", threshold, 1000)
+		s.createGroupThresholdPolicyWithBalance(val.Address.String(), "1", threshold, 1000)
 
 		out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 		s.Require().NoError(err, out.String())
@@ -2220,7 +2220,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_YES", "VOTE_OPTION_YES"},
 			accounts,
 			func(groupID string) error {
-				leavingMemberIdx := 0
+				leavingMemberIdx := 1
 				args := append(
 					[]string{
 						accounts[leavingMemberIdx],
@@ -2244,10 +2244,10 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 		},
 		{
 			"member leaves while all others vote yes and no",
-			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_NO", "VOTE_OPTION_YES"},
+			[]string{"VOTE_OPTION_NO", "VOTE_OPTION_YES", "VOTE_OPTION_YES"},
 			accounts,
 			func(groupID string) error {
-				leavingMemberIdx := 0
+				leavingMemberIdx := 1
 				args := append(
 					[]string{
 						accounts[leavingMemberIdx],
@@ -2310,7 +2310,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 
 				args := append(
 					[]string{
-						val.Address.String(),
+						accounts[0],
 						groupID,
 						validUpdateMemberFileName,
 					},
@@ -2338,7 +2338,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			cmdMsgExec := client.MsgExecCmd()
 
 			groupID := s.createGroupWithMembers(weights, accounts)
-			groupPolicyAddress := s.createGroupThresholdPolicyWithBalance(groupID, 3, 100)
+			groupPolicyAddress := s.createGroupThresholdPolicyWithBalance(accounts[0], groupID, 3, 100)
 
 			// Submit proposal
 			proposal := s.createCLIProposal(
@@ -2466,19 +2466,25 @@ func (s *IntegrationTestSuite) createAccounts(quantity int) []string {
 		account := sdk.AccAddress(pk.Address())
 		accounts[i-1] = account.String()
 
-		_, err = banktestutil.MsgSendExec(clientCtx, val.Address, account,
-			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1000))),
-			s.commonFlags...,
+		_, err = banktestutil.MsgSendExec(
+			val.ClientCtx,
+			val.Address,
+			account,
+			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(2000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		)
+		s.Require().NoError(err)
 		s.Require().NoError(err)
 	}
 	return accounts
 }
 
 func (s *IntegrationTestSuite) createGroupWithMembers(membersWeight, membersAddress []string) string {
-	s.Require().Equal(len(membersWeight), len(membersAddress))
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
+
+	s.Require().Equal(len(membersWeight), len(membersAddress))
 
 	membersValid := s.newValidMembers(membersWeight, membersAddress)
 	membersByte, err := json.Marshal(membersValid)
@@ -2489,7 +2495,7 @@ func (s *IntegrationTestSuite) createGroupWithMembers(membersWeight, membersAddr
 	out, err := cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupCmd(),
 		append(
 			[]string{
-				val.Address.String(),
+				membersAddress[0],
 				validMetadata,
 				validMembersFile.Name(),
 			},
@@ -2502,14 +2508,14 @@ func (s *IntegrationTestSuite) createGroupWithMembers(membersWeight, membersAddr
 	return s.getGroupIDFromTxResponse(txResp)
 }
 
-func (s *IntegrationTestSuite) createGroupThresholdPolicyWithBalance(groupID string, threshold int, tokens int64) string {
+func (s *IntegrationTestSuite) createGroupThresholdPolicyWithBalance(adminAddress, groupID string, threshold int, tokens int64) string {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
 	out, err := cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupPolicyCmd(),
 		append(
 			[]string{
-				val.Address.String(),
+				adminAddress,
 				groupID,
 				validMetadata,
 				fmt.Sprintf("{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"%d\", \"windows\":{\"voting_period\":\"30000s\"}}", threshold),

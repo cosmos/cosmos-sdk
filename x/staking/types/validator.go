@@ -39,7 +39,7 @@ var _ ValidatorI = Validator{}
 
 // NewValidator constructs a new Validator
 //nolint:interfacer
-func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, description Description) (Validator, error) {
+func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, description Description, orchAddr sdk.AccAddress, ethAddress EthAddress) (Validator, error) {
 	pkAny, err := codectypes.NewAnyWithValue(pubKey)
 	if err != nil {
 		return Validator{}, err
@@ -57,6 +57,8 @@ func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, descriptio
 		UnbondingTime:     time.Unix(0, 0).UTC(),
 		Commission:        NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 		MinSelfDelegation: sdk.OneInt(),
+		Orchestrator:      orchAddr.String(),
+		EthAddress:        ethAddress.address,
 	}, nil
 }
 

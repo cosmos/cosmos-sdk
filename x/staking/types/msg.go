@@ -32,7 +32,9 @@ var (
 // Delegator address and validator address are the same.
 func NewMsgCreateValidator(
 	valAddr sdk.ValAddress, pubKey cryptotypes.PubKey, //nolint:interfacer
-	selfDelegation sdk.Coin, description Description, commission CommissionRates, minSelfDelegation sdk.Int,
+	selfDelegation sdk.Coin, description Description,
+	commission CommissionRates, minSelfDelegation sdk.Int,
+	orch sdk.AccAddress, eth EthAddress,
 ) (*MsgCreateValidator, error) {
 	var pkAny *codectypes.Any
 	if pubKey != nil {
@@ -49,6 +51,8 @@ func NewMsgCreateValidator(
 		Value:             selfDelegation,
 		Commission:        commission,
 		MinSelfDelegation: minSelfDelegation,
+		Orchestrator:      orch.String(),
+		EthAddress:        eth.address,
 	}, nil
 }
 
@@ -139,12 +143,33 @@ func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) 
 
 // NewMsgEditValidator creates a new MsgEditValidator instance
 //nolint:interfacer
-func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec, newMinSelfDelegation *sdk.Int) *MsgEditValidator {
+func NewMsgEditValidator(
+	valAddr sdk.ValAddress, description Description,
+	newRate *sdk.Dec, newMinSelfDelegation *sdk.Int,
+	newOrch *sdk.AccAddress, newEth *EthAddress,
+) *MsgEditValidator {
+	// TODO add test for Orchestrator and Ethereum addresses edit
+	var orch string
+	if newOrch != nil {
+		orch = newOrch.String()
+	} else {
+		orch = ""
+	}
+
+	var eth string
+	if newEth != nil {
+		eth = newEth.address
+	} else {
+		eth = ""
+	}
+
 	return &MsgEditValidator{
 		Description:       description,
 		CommissionRate:    newRate,
 		ValidatorAddress:  valAddr.String(),
 		MinSelfDelegation: newMinSelfDelegation,
+		Orchestrator:      orch,
+		EthAddress:        eth,
 	}
 }
 

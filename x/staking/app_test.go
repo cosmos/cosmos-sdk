@@ -62,10 +62,16 @@ func TestStakingMsgs(t *testing.T) {
 	simapp.CheckBalance(t, app, addr1, sdk.Coins{genCoin})
 	simapp.CheckBalance(t, app, addr2, sdk.Coins{genCoin})
 
+	orchAddr, err := sdk.AccAddressFromBech32(testOrchAddr)
+	require.NoError(t, err)
+
+	evmAddr, err := types.NewEthAddress(testEthAddr)
+	require.NoError(t, err)
+
 	// create validator
 	description := types.NewDescription("foo_moniker", "", "", "", "")
 	createValidatorMsg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(addr1), valKey.PubKey(), bondCoin, description, commissionRates, sdk.OneInt(),
+		sdk.ValAddress(addr1), valKey.PubKey(), bondCoin, description, commissionRates, sdk.OneInt(), orchAddr, *evmAddr,
 	)
 	require.NoError(t, err)
 
@@ -88,7 +94,7 @@ func TestStakingMsgs(t *testing.T) {
 
 	// edit the validator
 	description = types.NewDescription("bar_moniker", "", "", "", "")
-	editValidatorMsg := types.NewMsgEditValidator(sdk.ValAddress(addr1), description, nil, nil)
+	editValidatorMsg := types.NewMsgEditValidator(sdk.ValAddress(addr1), description, nil, nil, nil, nil)
 
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
 	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{editValidatorMsg}, "", []uint64{0}, []uint64{1}, true, true, priv1)

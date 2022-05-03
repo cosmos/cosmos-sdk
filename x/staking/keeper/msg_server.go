@@ -85,7 +85,17 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 		}
 	}
 
-	validator, err := types.NewValidator(valAddr, pk, msg.Description)
+	orchAddr, err := sdk.AccAddressFromBech32(msg.Orchestrator)
+	if err != nil {
+		return nil, err
+	}
+
+	evmAddr, err := types.NewEthAddress(msg.EthAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	validator, err := types.NewValidator(valAddr, pk, msg.Description, orchAddr, *evmAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -185,6 +195,14 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 		}
 
 		validator.MinSelfDelegation = *msg.MinSelfDelegation
+	}
+
+	if msg.EthAddress != "" {
+		validator.EthAddress = msg.EthAddress
+	}
+
+	if msg.Orchestrator != "" {
+		validator.Orchestrator = msg.Orchestrator
 	}
 
 	k.SetValidator(ctx, validator)

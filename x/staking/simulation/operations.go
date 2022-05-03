@@ -158,7 +158,11 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 			simtypes.RandomDecAmount(r, maxCommission),
 		)
 
-		msg, err := types.NewMsgCreateValidator(address, simAccount.ConsKey.PubKey(), selfDelegation, description, commission, sdk.OneInt())
+		// TODO update later
+		orchAddr, _ := sdk.AccAddressFromBech32("celes1qktu8009djs6uym9uwj84ead24exkezsaqrmn5")
+		ethAddr, _ := types.NewEthAddress("0x91DEd26b5f38B065FC0204c7929Da6b2A21277Cd")
+
+		msg, err := types.NewMsgCreateValidator(address, simAccount.ConsKey.PubKey(), selfDelegation, description, commission, sdk.OneInt(), orchAddr, *ethAddr)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to create CreateValidator message"), nil, err
 		}
@@ -219,7 +223,8 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k kee
 			simtypes.RandStringOfLength(r, 10),
 		)
 
-		msg := types.NewMsgEditValidator(address, description, &newCommissionRate, nil)
+		// TODO make the orch/eth addresses also random
+		msg := types.NewMsgEditValidator(address, description, &newCommissionRate, nil, nil, nil)
 
 		txCtx := simulation.OperationInput{
 			R:               r,

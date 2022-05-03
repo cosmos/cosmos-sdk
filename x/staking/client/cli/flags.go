@@ -31,6 +31,9 @@ const (
 	FlagGenesisFormat = "genesis-format"
 	FlagNodeID        = "node-id"
 	FlagIP            = "ip"
+
+	FlagOrchestratorAddress = "orchestrator-address"
+	FlagEthereumAddress     = "ethereum-address"
 )
 
 // common flagsets to add to various functions
@@ -77,6 +80,20 @@ func FlagSetAmount() *flag.FlagSet {
 func FlagSetPublicKey() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 	fs.String(FlagPubKey, "", "The validator's Protobuf JSON encoded public key")
+	return fs
+}
+
+// FlagSetOrchestratorAddress Returns the flagset for Orchestrator address related operations.
+func FlagSetOrchestratorAddress() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+	fs.String(FlagOrchestratorAddress, "", "The Bech32 celes1 address of the orchestrator")
+	return fs
+}
+
+// FlagSetEthereumAddress Returns the flagset for Ethereum address related operations.
+func FlagSetEthereumAddress() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+	fs.String(FlagEthereumAddress, "", "The 0x EVM address of the orchestrator")
 	return fs
 }
 

@@ -17,7 +17,9 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 	privKey := ed25519.GenPrivKey()
 	valPubKey := privKey.PubKey()
 	moniker := "DefaultMoniker"
-	mkTxValCfg := func(amount, commission, commissionMax, commissionMaxChange, minSelfDelegation string) TxCreateValidatorConfig {
+	testOrchAddr := "celes1qktu8009djs6uym9uwj84ead24exkezsaqrmn5"
+	testEthAddr := "0x91DEd26b5f38B065FC0204c7929Da6b2A21277Cd"
+	mkTxValCfg := func(amount, commission, commissionMax, commissionMaxChange, minSelfDelegation string, orchAddr string, ethAddr string) TxCreateValidatorConfig {
 		return TxCreateValidatorConfig{
 			IP:                      ip,
 			ChainID:                 chainID,
@@ -29,6 +31,8 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 			CommissionMaxRate:       commissionMax,
 			CommissionMaxChangeRate: commissionMaxChange,
 			MinSelfDelegation:       minSelfDelegation,
+			OrchestratorAddress:     orchAddr,
+			EthereumAddress:         ethAddr,
 		}
 	}
 
@@ -42,42 +46,42 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 			fsModify: func(fs *pflag.FlagSet) {
 				return
 			},
-			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.2", "0.01", "1"),
+			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.2", "0.01", "1", testOrchAddr, testEthAddr),
 		},
 		{
 			name: "Custom amount",
 			fsModify: func(fs *pflag.FlagSet) {
 				fs.Set(FlagAmount, "2000stake")
 			},
-			expectedCfg: mkTxValCfg("2000stake", "0.1", "0.2", "0.01", "1"),
+			expectedCfg: mkTxValCfg("2000stake", "0.1", "0.2", "0.01", "1", testOrchAddr, testEthAddr),
 		},
 		{
 			name: "Custom commission rate",
 			fsModify: func(fs *pflag.FlagSet) {
 				fs.Set(FlagCommissionRate, "0.54")
 			},
-			expectedCfg: mkTxValCfg(defaultAmount, "0.54", "0.2", "0.01", "1"),
+			expectedCfg: mkTxValCfg(defaultAmount, "0.54", "0.2", "0.01", "1", testOrchAddr, testEthAddr),
 		},
 		{
 			name: "Custom commission max rate",
 			fsModify: func(fs *pflag.FlagSet) {
 				fs.Set(FlagCommissionMaxRate, "0.89")
 			},
-			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.89", "0.01", "1"),
+			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.89", "0.01", "1", testOrchAddr, testEthAddr),
 		},
 		{
 			name: "Custom commission max change rate",
 			fsModify: func(fs *pflag.FlagSet) {
 				fs.Set(FlagCommissionMaxChangeRate, "0.55")
 			},
-			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.2", "0.55", "1"),
+			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.2", "0.55", "1", testOrchAddr, testEthAddr),
 		},
 		{
 			name: "Custom min self delegations",
 			fsModify: func(fs *pflag.FlagSet) {
 				fs.Set(FlagMinSelfDelegation, "0.33")
 			},
-			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.2", "0.01", "0.33"),
+			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.2", "0.01", "0.33", testOrchAddr, testEthAddr),
 		},
 	}
 
@@ -89,7 +93,7 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 
 			tc.fsModify(fs)
 
-			cvCfg, err := PrepareConfigForTxCreateValidator(fs, moniker, nodeID, chainID, valPubKey)
+			cvCfg, err := PrepareConfigForTxCreateValidator(fs, moniker, nodeID, chainID, valPubKey, testOrchAddr, testEthAddr)
 			require.NoError(t, err)
 
 			require.Equal(t, tc.expectedCfg, cvCfg)

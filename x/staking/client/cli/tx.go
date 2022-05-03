@@ -78,6 +78,8 @@ func NewCreateValidatorCmd() *cobra.Command {
 	cmd.Flags().AddFlagSet(flagSetDescriptionCreate())
 	cmd.Flags().AddFlagSet(FlagSetCommissionCreate())
 	cmd.Flags().AddFlagSet(FlagSetMinSelfDelegation())
+	cmd.Flags().AddFlagSet(FlagSetEthereumAddress())
+	cmd.Flags().AddFlagSet(FlagSetOrchestratorAddress())
 
 	cmd.Flags().String(FlagIP, "", fmt.Sprintf("The node's public IP. It takes effect only when used in combination with --%s", flags.FlagGenerateOnly))
 	cmd.Flags().String(FlagNodeID, "", "The node's ID")
@@ -87,6 +89,8 @@ func NewCreateValidatorCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired(FlagAmount)
 	_ = cmd.MarkFlagRequired(FlagPubKey)
 	_ = cmd.MarkFlagRequired(FlagMoniker)
+	_ = cmd.MarkFlagRequired(FlagEthereumAddress)
+	_ = cmd.MarkFlagRequired(FlagOrchestratorAddress)
 
 	return cmd
 }
@@ -133,7 +137,31 @@ func NewEditValidatorCmd() *cobra.Command {
 				newMinSelfDelegation = &msb
 			}
 
-			msg := types.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate, newMinSelfDelegation)
+			orchAddrString, _ := cmd.Flags().GetString(FlagOrchestratorAddress)
+			evmAddrString, _ := cmd.Flags().GetString(FlagEthereumAddress)
+
+			var orchAddr *sdk.AccAddress
+			if orchAddrString != "" {
+				addr, err := sdk.AccAddressFromBech32(orchAddrString)
+				if err != nil {
+					return err
+				}
+				orchAddr = &addr
+			}
+
+			var evmAddr *types.EthAddress
+			if evmAddrString != "" {
+				evmAddr, err = types.NewEthAddress(evmAddrString)
+				if err != nil {
+					return err
+				}
+			}
+
+			msg := types.NewMsgEditValidator(
+				sdk.ValAddress(valAddr), description,
+				newRate, newMinSelfDelegation,
+				orchAddr, evmAddr,
+			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -384,8 +412,24 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 		return txf, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
 	}
 
+	orchAddrString, _ := fs.GetString(FlagOrchestratorAddress)
+	evmAddrString, _ := fs.GetString(FlagEthereumAddress)
+
+	orchAddr, err := sdk.AccAddressFromBech32(orchAddrString)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	evmAddr, err := types.NewEthAddress(evmAddrString)
+	if err != nil {
+		return txf, nil, err
+	}
+
 	msg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(valAddr), pk, amount, description, commissionRates, minSelfDelegation,
+		sdk.ValAddress(valAddr), pk,
+		amount, description,
+		commissionRates, minSelfDelegation,
+		orchAddr, *evmAddr,
 	)
 	if err != nil {
 		return txf, nil, err
@@ -422,6 +466,8 @@ func CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc
 	fsCreateValidator.AddFlagSet(FlagSetMinSelfDelegation())
 	fsCreateValidator.AddFlagSet(FlagSetAmount())
 	fsCreateValidator.AddFlagSet(FlagSetPublicKey())
+	fsCreateValidator.AddFlagSet(FlagSetEthereumAddress())
+	fsCreateValidator.AddFlagSet(FlagSetOrchestratorAddress())
 
 	defaultsDesc = fmt.Sprintf(`
 	delegation amount:           %s
@@ -455,9 +501,12 @@ type TxCreateValidatorConfig struct {
 	SecurityContact string
 	Details         string
 	Identity        string
+
+	OrchestratorAddress string
+	EthereumAddress     string
 }
 
-func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, chainID string, valPubKey cryptotypes.PubKey) (TxCreateValidatorConfig, error) {
+func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, chainID string, valPubKey cryptotypes.PubKey, orchAddr string, ethAddr string) (TxCreateValidatorConfig, error) {
 	c := TxCreateValidatorConfig{}
 
 	ip, err := flagSet.GetString(FlagIP)
@@ -548,6 +597,16 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 		c.MinSelfDelegation = defaultMinSelfDelegation
 	}
 
+	c.EthereumAddress, err = flagSet.GetString(FlagEthereumAddress)
+	if err != nil {
+		return c, err
+	}
+
+	c.OrchestratorAddress, err = flagSet.GetString(FlagOrchestratorAddress)
+	if err != nil {
+		return c, err
+	}
+
 	return c, nil
 }
 
@@ -585,9 +644,23 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 		return txBldr, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
 	}
 
+	orchAddr, err := sdk.AccAddressFromBech32(config.OrchestratorAddress)
+	if err != nil {
+		return txBldr, nil, err
+	}
+
+	evmAddr, err := types.NewEthAddress(config.EthereumAddress)
+	if err != nil {
+		return txBldr, nil, err
+	}
+
 	msg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(valAddr), config.PubKey, amount, description, commissionRates, minSelfDelegation,
+		sdk.ValAddress(valAddr), config.PubKey,
+		amount, description,
+		commissionRates, minSelfDelegation,
+		orchAddr, *evmAddr,
 	)
+
 	if err != nil {
 		return txBldr, msg, err
 	}

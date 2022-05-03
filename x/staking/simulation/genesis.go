@@ -85,7 +85,10 @@ func RandomizedGenState(simState *module.SimulationState) {
 			simulation.RandomDecAmount(simState.Rand, maxCommission),
 		)
 
-		validator, err := types.NewValidator(valAddr, simState.Accounts[i].ConsKey.PubKey(), types.Description{})
+		orchAddr, _ := sdk.AccAddressFromBech32("celes1qktu8009djs6uym9uwj84ead24exkezsaqrmn5")
+		ethAddr, _ := types.NewEthAddress("0x91DEd26b5f38B065FC0204c7929Da6b2A21277Cd")
+
+		validator, err := types.NewValidator(valAddr, simState.Accounts[i].ConsKey.PubKey(), types.Description{}, orchAddr, *ethAddr)
 		if err != nil {
 			panic(err)
 		}

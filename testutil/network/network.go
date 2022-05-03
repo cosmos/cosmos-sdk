@@ -399,13 +399,16 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			return nil, err
 		}
 
+		orchAddr, _ := sdk.AccAddressFromHex("celes1qktu8009djs6uym9uwj84ead24exkezsaqrmn5")
+		ethAddr, _ := stakingtypes.NewEthAddress("0x91DEd26b5f38B065FC0204c7929Da6b2A21277Cd")
+
 		createValMsg, err := stakingtypes.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			valPubKeys[i],
 			sdk.NewCoin(cfg.BondDenom, cfg.BondedTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(commission, sdk.OneDec(), sdk.OneDec()),
-			sdk.OneInt(),
+			sdk.OneInt(), orchAddr, *ethAddr,
 		)
 		if err != nil {
 			return nil, err

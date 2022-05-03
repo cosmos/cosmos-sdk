@@ -110,7 +110,12 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			}
 
 			// set flags for creating a gentx
-			createValCfg, err := cli.PrepareConfigForTxCreateValidator(cmd.Flags(), moniker, nodeID, genDoc.ChainID, valPubKey)
+			createValCfg, err := cli.PrepareConfigForTxCreateValidator(
+				cmd.Flags(), moniker,
+				nodeID, genDoc.ChainID,
+				valPubKey, cli.FlagOrchestratorAddress,
+				cli.FlagEthereumAddress,
+			)
 			if err != nil {
 				return errors.Wrap(err, "error creating configuration to create validator msg")
 			}

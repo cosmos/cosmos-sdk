@@ -20,7 +20,6 @@ services:
       "--tendermint", "cosmos:26657",
       "--grpc", "cosmos:9090",
       "--addr", ":8080",
-      "--prices-to-suggest", "0.1uatom,0.1stake",
     ]
     ports:
       - 8080:8080

@@ -415,7 +415,7 @@ func (c *Client) ConstructionMetadataFromOptions(ctx context.Context, options ma
 		}
 		if constructionOptions.GasPrice == "" {
 			denom := c.config.DenomToSuggest
-			constructionOptions.GasPrice = c.config.SuggestPrices.AmountOf(denom).String() + denom
+			constructionOptions.GasPrice = c.config.GasPrices.AmountOf(denom).String() + denom
 		}
 	}
 
@@ -424,9 +424,8 @@ func (c *Client) ConstructionMetadataFromOptions(ctx context.Context, options ma
 		if err != nil {
 			return nil, err
 		}
-		// check gasPrice is in the list
-		if !c.config.SuggestPrices.AmountOf(gasPrice.Denom).IsPositive() {
-			return nil, crgerrs.ErrBadArgument
+		if !gasPrice.IsPositive() {
+			return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, "gas price must be positive")
 		}
 	}
 

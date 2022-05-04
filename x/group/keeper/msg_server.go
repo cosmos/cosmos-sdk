@@ -24,7 +24,7 @@ const gasCostPerIteration = uint64(20)
 func (k Keeper) CreateGroup(goCtx context.Context, req *group.MsgCreateGroup) (*group.MsgCreateGroupResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	metadata := req.Metadata
-	members := group.Members{Members: req.Members}
+	members := group.MemberRequests{Members: req.Members}
 	admin := req.Admin
 
 	if err := members.ValidateBasic(); err != nil {
@@ -166,12 +166,15 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 					return err
 				}
 				// Save updated group member in the groupMemberTable.
+				groupMember.Member.AddedAt = prevGroupMember.Member.AddedAt
 				if err := k.groupMemberTable.Update(ctx.KVStore(k.key), &groupMember); err != nil {
 					return sdkerrors.Wrap(err, "add member")
 				}
-				// else handle create.
-			} else if err := k.groupMemberTable.Create(ctx.KVStore(k.key), &groupMember); err != nil {
-				return sdkerrors.Wrap(err, "add member")
+			} else { // else handle create.
+				groupMember.Member.AddedAt = ctx.BlockTime()
+				if err := k.groupMemberTable.Create(ctx.KVStore(k.key), &groupMember); err != nil {
+					return sdkerrors.Wrap(err, "add member")
+				}
 			}
 			// In both cases (handle + update), we need to add the new member's weight to the group total weight.
 			totalWeight, err = totalWeight.Add(newMemberWeight)

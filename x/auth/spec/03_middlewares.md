@@ -20,7 +20,7 @@ The auth module provides:
   - `GasTxMiddleware`: Sets the `GasMeter` in the `Context`.
   - `RecoveryTxMiddleware`: Wraps the next middleware with a defer clause to recover from any downstream panics in the middleware chain to return an error with information on gas provided and gas used.
   - `RejectExtensionOptionsMiddleware`: Rejects all extension options which can optionally be included in protobuf transactions.
-  - `MempoolFeeMiddleware`: Checks if the `tx` fee is above local mempool `minFee` parameter during `CheckTx`.
+  - `IndexEventsTxMiddleware`: Choose which events to index in Tendermint. Make sure no events are emitted outside of this middleware.
   - `ValidateBasicMiddleware`: Calls `tx.ValidateBasic` and returns any non-nil error.
   - `TxTimeoutHeightMiddleware`: Check for a `tx` height timeout.
   - `ValidateMemoMiddleware`: Validates `tx` memo with application parameters and returns any non-nil error.
@@ -31,5 +31,8 @@ The auth module provides:
   - `SigGasConsumeMiddleware`: Consumes parameter-defined amount of gas for each signature. This requires pubkeys to be set in context for all signers as part of `SetPubKeyMiddleware`.
   - `SigVerificationMiddleware`: Verifies all signatures are valid. This requires pubkeys to be set in context for all signers as part of `SetPubKeyMiddleware`.
   - `IncrementSequenceMiddleware`: Increments the account sequence for each signer to prevent replay attacks.
+  - `WithBranchedStore`: Creates a new MultiStore branch, discards downstream writes if the downstream returns error.
+  - `ConsumeBlockGasMiddleware`: Consume block gas.
+  - `TipMiddleware`: Transfer tips to the fee payer in transactions with tips.
 
 This default list of middlewares can be instantiated using the `NewDefaultTxHandler` function. If a chain wants to tweak the list of middlewares, they can create their own `NewTxHandler` function using the same template as `NewDefaultTxHandler`, and chain new middlewares in the `ComposeMiddleware` function.

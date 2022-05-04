@@ -12,7 +12,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -54,7 +53,7 @@ func TestImportExportQueues(t *testing.T) {
 	require.True(t, proposal1.Status == v1.StatusDepositPeriod)
 	require.True(t, proposal2.Status == v1.StatusVotingPeriod)
 
-	authGenState := auth.ExportGenesis(ctx, app.AccountKeeper)
+	authGenState := app.AccountKeeper.ExportGenesis(ctx)
 	bankGenState := app.BankKeeper.ExportGenesis(ctx)
 	stakingGenState := staking.ExportGenesis(ctx, app.StakingKeeper)
 	distributionGenState := app.DistrKeeper.ExportGenesis(ctx)

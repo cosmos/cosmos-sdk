@@ -119,7 +119,7 @@ func (ak AccountKeeper) ModuleAccounts(c context.Context, req *types.QueryModule
 	return &types.QueryModuleAccountsResponse{Accounts: modAccounts}, nil
 }
 
-// Bech32Prefix retuns the keeper internally stored bech32 prefix.
+// Bech32Prefix returns the keeper internally stored bech32 prefix.
 func (ak AccountKeeper) Bech32Prefix(ctx context.Context, req *types.Bech32PrefixRequest) (*types.Bech32PrefixResponse, error) {
 	bech32Prefix, err := ak.getBech32Prefix()
 	if err != nil {

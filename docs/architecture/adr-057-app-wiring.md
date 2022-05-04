@@ -10,8 +10,8 @@ PROPOSED Partially Implemented
 
 ## Abstract
 
-> "If you can't explain it simply, you don't understand it well enough." Provide a simplified and layman-accessible explanation of the ADR.
-> A short (~200 word) description of the issue being addressed.
+In order to make it easier to build Cosmos SDK modules and apps, we propose a new app wiring system based on
+dependency injection and declarative app configurations to replace the current `app.go` code.
 
 ## Context
 
@@ -133,37 +133,100 @@ to decode the app config in separate phases:
 
 Because in [ADR 054: Protobuf Semver Compatible Codegen](https://github.com/cosmos/cosmos-sdk/pull/11802), each module
 should use `internal` generated code which is not registered with the global protobuf registry, this code should provide
-an alternate way to register protobuf types with a type registry.
+an alternate way to register protobuf types with a type registry. In the same way that `.pb.go` files currently have a
+`var File_foo_proto protoreflect.FileDescriptor` for the file `foo.proto`, generated code should have a new member
+`var Types_foo_proto TypeInfo` where `TypeInfo` is an interface or struct with all the necessary info to register both
+the protobuf generated types and file descriptor.
+
+So a module must provide dependency injection providers and protobuf types, and takes as input its module
+config object which uniquely identifies the module based on its type URL.
+
+With this in mind, we define a global module register which allows module implementations to register themselves
+with the following API:
+
+```go
+// Register registers a module with the provided type name (ex. cosmos.bank.module.v1.Module)
+// and the provided options.
+func Register(configTypeName protoreflect.FullName, option ...Option) { ... }
+
+type Option { /* private methods */ }
+
+// Provide registers dependency injection provider functions which work with the
+// cosmos-sdk container module. These functions can also accept an additional
+// parameter for the module's config object.
+func Provide(providers ...interface{}) Option { ... }
+
+// Types registers protobuf TypeInfo's with the protobuf registry.
+func Types(types ...TypeInfo) Option { ... }
+```
+
+Ex:
+```go
+func init() {
+	module.Register("cosmos.bank.module.v1.Module",
+		module.Types(
+			types.Types_tx_proto,
+            types.Types_query_proto,
+            types.Types_types_proto,
+	    ),
+	    module.Provide(
+			provideBankModule,
+	    )
+	)
+}
+
+type inputs struct {
+	container.In
+	
+	AuthKeeper auth.Keeper
+	DB ormdb.ModuleDB
+}
+
+type outputs struct {
+	Keeper bank.Keeper
+	Handler app.Handler // app.Handler is a hypothetical type which replaces the current AppModule
+}
+
+func provideBankModule(config types.Module, inputs) (outputs, error) { ... }
+```
+
+### Application to existing SDK modules
+
+So far we have described a system which is largely agnostic to the specifics of the SDK such as store keys, `AppModule`,
+`BaseApp`, etc. A second app wiring ADR will be created which outlines the details of how this app wiring system will
+be applied to the existing SDK in a way that:
+1. is as easy to apply to existing modules as possible,
+2. while also making it possible to improve existing APIs and minimize long-term technical debt
 
 ## Consequences
 
-> This section describes the resulting context, after applying the decision. All consequences should be listed here, not just the "positive" ones. A particular decision may have positive, negative, and neutral consequences, but all of them affect the team and project in the future.
-
 ### Backwards Compatibility
 
-> All ADRs that introduce backwards incompatibilities must include a section describing these incompatibilities and their severity. The ADR must explain how the author proposes to deal with these incompatibilities. ADR submissions without a sufficient backwards compatibility treatise may be rejected outright.
+Modules which work with the new app wiring system do not need to drop their existing `AppModule` and `NewKeeper`
+registration paradigms. These two methods can live side-by-side for as long as is needed.
 
 ### Positive
 
-{positive consequences}
+* wiring up new apps will be simpler, more succinct and less error-prone
+* it will be easier to develop and test standalone SDK modules without needing to replicate all of simapp
+* it may be possible to dynamically load modules and upgrade chains without needing to do a coordinated stop and binary
+  upgrade using this mechanism
 
 ### Negative
 
-{negative consequences}
-
 ### Neutral
 
-{neutral consequences}
+* it will require work and education
 
 ## Further Discussions
 
-While an ADR is in the DRAFT or PROPOSED stage, this section should contain a summary of issues to be solved in future iterations (usually referencing comments from a pull-request discussion).
-Later, this section can optionally list ideas or improvements the author or reviewers found during the analysis of this ADR.
-
-## Test Cases [optional]
-
-Test cases for an implementation are mandatory for ADRs that are affecting consensus changes. Other ADRs can choose to include links to test cases if applicable.
+As mentioned above, a second app wiring ADR will be created to describe more specifics than there is space to go
+into here. Further discussions will also happen within the Cosmos SDK Framework Working Group and in https://github.com/cosmos/cosmos-sdk/discussions/10582.
 
 ## References
 
-* {reference link}
+* https://github.com/cosmos/cosmos-sdk/blob/c3edbb22cab8678c35e21fe0253919996b780c01/simapp/app.go
+* https://github.com/allinbits/cosmos-sdk-poc
+* https://github.com/uber-go/dig
+* https://pkg.go.dev/github.com/cosmos/cosmos-sdk/container
+* https://github.com/cosmos/cosmos-sdk/pull/11802

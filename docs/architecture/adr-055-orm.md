@@ -10,7 +10,7 @@ ACCEPTED Implemented
 
 ## Abstract
 
-In order to make it easier for developers to build Cosmos SDK Apps and for clients to query, index and verify proofs
+In order to make it easier for developers to build Cosmos SDK modules and for clients to query, index and verify proofs
 against state data, we have implemented an ORM (object-relational mapping) layer for the Cosmos SDK.
 
 ## Context
@@ -21,8 +21,8 @@ time when building a module and is error-prone. Because key formats are non-stan
 and subject to change, it is hard for clients to generically index, query and verify merkle proofs against state data.
 
 The known first instance of an "ORM" in the Cosmos ecosystem was in [weave](https://github.com/iov-one/weave/tree/master/orm).
-A later version was built for [regen-ledger](https://github.com/regen-network/regen-ledger/tree/master/orm) for
-use in the group module and later [ported to the SDK](https://github.com/cosmos/cosmos-sdk/tree/main/x/group/internal/orm)
+A later version was built for [regen-ledger](https://github.com/regen-network/regen-ledger/tree/157181f955823149e1825263a317ad8e16096da4/orm) for
+use in the group module and later [ported to the SDK](https://github.com/cosmos/cosmos-sdk/tree/35d3312c3be306591fcba39892223f1244c8d108/x/group/internal/orm)
 just for that purpose.
 
 While these earlier designs made it significantly easier to write state machines, they still required a lot of manual
@@ -98,8 +98,8 @@ Further discussions will happen within the Cosmos SDK Framework Working Group. C
 ## References
 
 * https://github.com/iov-one/weave/tree/master/orm).
-* https://github.com/regen-network/regen-ledger/tree/master/orm
-* https://github.com/cosmos/cosmos-sdk/tree/main/x/group/internal/orm)
+* https://github.com/regen-network/regen-ledger/tree/157181f955823149e1825263a317ad8e16096da4/orm
+* https://github.com/cosmos/cosmos-sdk/tree/35d3312c3be306591fcba39892223f1244c8d108/x/group/internal/orm
 * https://github.com/cosmos/cosmos-sdk/discussions/9156
 * https://github.com/allinbits/cosmos-sdk-poc/tree/master/runtime/orm
 * https://github.com/cosmos/cosmos-sdk/pull/10454

@@ -6,7 +6,7 @@
 
 ## Status
 
-PROPOSED Not Implemented
+PROPOSED Partially Implemented
 
 ## Abstract
 
@@ -38,7 +38,7 @@ involves:
 * declaration configuration of the modules in an app which can be serialized to JSON or YAML
 * a dependency-injection (DI) framework for instantiating apps from the that configuration
 
-## Dependency Injection
+### Dependency Injection
 
 When examining the code in `app.go` most of the code simply instantiates modules with dependencies provided either
 by the framework (such as store keys) or by other modules (such as keepers). It is generally pretty obvious given
@@ -61,7 +61,7 @@ Here are some examples of how these would be used in an SDK module:
 * a module's `AppModule` instance (or the equivalent) could be a `OnePerModuleType`
 * CLI commands could be provided with `AutoGroupType`s
 
-## App Config
+### Declarative App Config
 
 In order to compose modules into an app, a declarative app configuration will be used. This configuration is based off
 of protobuf and its basic structure is very simple:
@@ -114,6 +114,26 @@ of `abci.Application`.
 
 In this model, an app is *modules all the way down* and the dependency injection/app config layer is very much
 protocol-agnostic and can adapt to even major breaking changes at the protocol layer.
+
+### Module & Protobuf Registration
+
+In order for the two components of dependency injection and declarative configuration to work together as described,
+we need a way for modules to actually register themselves and provide dependencies to the container.
+
+One additional complexity that needs to be handled at this layer is protobuf registry initialization. Recall that
+in both the current SDK `codec` and the proposed [ADR 054: Protobuf Semver Compatible Codegen](https://github.com/cosmos/cosmos-sdk/pull/11802),
+protobuf types need to be explicitly registered. Given that the app config itself is based on protobuf and
+uses protobuf `Any` types, protobuf registration needs to happen before the app config itself can be decoded. Because
+we don't know which protobuf `Any` types will be needed a priori and modules themselves define those types, we need
+to decode the app config in separate phases:
+1. parse app config JSON/YAML as raw JSON and collect required module type URLs (without doing proto JSON decoding)
+2. build a [protobuf type registry](https://pkg.go.dev/google.golang.org/protobuf@v1.28.0/reflect/protoregistry) based
+   on file descriptors and types provided by each required module
+3. decode the app config as proto JSON using the protobuf type registry
+
+Because in [ADR 054: Protobuf Semver Compatible Codegen](https://github.com/cosmos/cosmos-sdk/pull/11802), each module
+should use `internal` generated code which is not registered with the global protobuf registry, this code should provide
+an alternate way to register protobuf types with a type registry.
 
 ## Consequences
 

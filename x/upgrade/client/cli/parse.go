@@ -4,26 +4,26 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
-func parseArgsToContent(cmd *cobra.Command, name string) (gov.Content, error) {
-	title, err := cmd.Flags().GetString(cli.FlagTitle)
+func parseArgsToContent(fs *pflag.FlagSet, name string) (gov.Content, error) {
+	title, err := fs.GetString(cli.FlagTitle)
 	if err != nil {
 		return nil, err
 	}
 
-	description, err := cmd.Flags().GetString(cli.FlagDescription)
+	description, err := fs.GetString(cli.FlagDescription)
 	if err != nil {
 		return nil, err
 	}
 
-	height, err := cmd.Flags().GetInt64(FlagUpgradeHeight)
+	height, err := fs.GetInt64(FlagUpgradeHeight)
 	if err != nil {
 		return nil, err
 	}
 
-	info, err := cmd.Flags().GetString(FlagUpgradeInfo)
+	info, err := fs.GetString(FlagUpgradeInfo)
 	if err != nil {
 		return nil, err
 	}

@@ -50,7 +50,7 @@ func NewCmdSubmitLegacyUpgradeProposal() *cobra.Command {
 				return err
 			}
 			name := args[0]
-			content, err := parseArgsToContent(cmd, name)
+			content, err := parseArgsToContent(cmd.Flags(), name)
 			if err != nil {
 				return err
 			}

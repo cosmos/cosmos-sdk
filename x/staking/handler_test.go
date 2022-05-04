@@ -78,7 +78,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 
 	// slash and jail the first validator
 	consAddr0 := sdk.ConsAddress(PKs[0].Address())
-	app.StakingKeeper.Slash(ctx, consAddr0, 0, initPower, sdk.NewDecWithPrec(5, 1))
+	app.StakingKeeper.Slash(ctx, consAddr0, 0, initPower, sdk.NewDecWithPrec(5, 1), false)
 	app.StakingKeeper.Jail(ctx, consAddr0)
 	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
@@ -1110,7 +1110,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	require.Equal(t, 2, len(updates))
 
 	// slash the validator by half
-	app.StakingKeeper.Slash(ctx, consAddr0, 0, 20, sdk.NewDecWithPrec(5, 1))
+	app.StakingKeeper.Slash(ctx, consAddr0, 0, 20, sdk.NewDecWithPrec(5, 1), false)
 
 	// unbonding delegation should have been slashed by half
 	ubd, found := app.StakingKeeper.GetUnbondingDelegation(ctx, del, valA)
@@ -1135,7 +1135,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 
 	// slash the validator for an infraction committed after the unbonding and redelegation begin
 	ctx = ctx.WithBlockHeight(3)
-	app.StakingKeeper.Slash(ctx, consAddr0, 2, 10, sdk.NewDecWithPrec(5, 1))
+	app.StakingKeeper.Slash(ctx, consAddr0, 2, 10, sdk.NewDecWithPrec(5, 1), false)
 	tstaking.Ctx = ctx
 
 	// unbonding delegation should be unchanged

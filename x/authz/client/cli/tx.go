@@ -123,8 +123,19 @@ Examples:
 						return err
 					}
 
-					if spendLimit.GetDenomByIndex(0) != staking.DefaultParams().BondDenom {
-						return fmt.Errorf("invalid denom\ncoin denom should match the current bond denom")
+					queryClient := staking.NewQueryClient(clientCtx)
+
+					for i := 0; i < len(spendLimit); i++ {
+
+						res, err := queryClient.Params(cmd.Context(), &staking.QueryParamsRequest{})
+						if err != nil {
+							return err
+						}
+
+						if spendLimit[i].Denom != res.Params.BondDenom {
+							return fmt.Errorf("invalid denom %s \ncoin denom should match the current bond denom", spendLimit[i].Denom)
+						}
+
 					}
 
 					if !spendLimit.IsAllPositive() {

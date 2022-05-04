@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -56,7 +55,7 @@ func TestImportExportQueues(t *testing.T) {
 
 	authGenState := auth.ExportGenesis(ctx, app.AccountKeeper)
 	bankGenState := app.BankKeeper.ExportGenesis(ctx)
-	stakingGenState := staking.ExportGenesis(ctx, app.StakingKeeper)
+	stakingGenState := app.StakingKeeper.ExportGenesis(ctx)
 	distributionGenState := app.DistrKeeper.ExportGenesis(ctx)
 
 	// export the state and import it into a new app

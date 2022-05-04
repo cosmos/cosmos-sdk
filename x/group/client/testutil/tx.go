@@ -2224,20 +2224,20 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeaves() {
+func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
 	weights := []string{"1", "1", "2"}
 	accounts := s.createAccounts(3)
 	testCases := []struct {
-		name      string
-		votes     []string
-		members   []string
-		malleate  func(groupID string) error
-		expectErr bool
-		errMsg    string
-		respType  proto.Message
+		name         string
+		votes        []string
+		members      []string
+		malleate     func(groupID string) error
+		expectLogErr bool
+		errMsg       string
+		respType     proto.Message
 	}{
 		{
 			"member leaves while all others vote yes",
@@ -2318,6 +2318,33 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeaves() {
 			},
 			true,
 			"PROPOSAL_EXECUTOR_RESULT_NOT_RUN",
+			&sdk.TxResponse{},
+		},
+		{
+			"member that leaves does not affect the threshold policy outcome",
+			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_YES"},
+			accounts,
+			func(groupID string) error {
+				leavingMemberIdx := 2
+				args := append(
+					[]string{
+						accounts[leavingMemberIdx],
+						groupID,
+
+						fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[leavingMemberIdx]),
+					},
+					s.commonFlags...,
+				)
+				out, err := cli.ExecTestCLICmd(clientCtx, client.MsgLeaveGroupCmd(), args)
+				s.Require().NoError(err, out.String())
+				var resp sdk.TxResponse
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				s.Require().Equal(uint32(0), resp.Code, out.String())
+
+				return err
+			},
+			false,
+			"",
 			&sdk.TxResponse{},
 		},
 		{
@@ -2421,7 +2448,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeaves() {
 			var execResp sdk.TxResponse
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &execResp), out.String())
 
-			if tc.expectErr {
+			if tc.expectLogErr {
 				s.Require().Contains(execResp.RawLog, tc.errMsg)
 			}
 

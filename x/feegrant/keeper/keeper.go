@@ -54,7 +54,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 
 	var oldExp *time.Time
 	existingGrant, err := k.getGrant(ctx, granter, grantee)
-	if err != nil && !strings.Contains(err.Error(), "fee-grant not found") {
+	if err != nil && !strings.Contains(err.Error(), sdkerrors.ErrUnauthorized.Error()) {
 		return err
 	}
 

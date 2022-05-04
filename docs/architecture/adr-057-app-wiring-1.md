@@ -55,11 +55,18 @@ features:
 * grouped-dependencies (many-per-container) through the `AutoGroupType` tag interface
 * module-scoped dependencies via `ModuleKey`s (where each module gets a unique dependency)
 * one-per-module dependencies through the `OnePerModuleType` tag interface
+* sophisticated debugging information and container visualization via GraphViz
 
 Here are some examples of how these would be used in an SDK module:
 * `StoreKey` could be a module-scoped dependency which is unique per module
 * a module's `AppModule` instance (or the equivalent) could be a `OnePerModuleType`
 * CLI commands could be provided with `AutoGroupType`s
+
+Note that even though dependency resolution is dynamic and based on reflection, which could be considered a pitfall
+of this approach, the entire dependency graph should be resolved immediately on app startup and only gets resolved
+once (except in the case of dynamic config reloading which is a separate topic). This means that if there are any
+errors in the dependency graph, they will get reported immediately on startup so this approach is only slightly worse
+than fully static resolution in terms of error reporting and much better in terms of code complexity.
 
 ### Declarative App Config
 
@@ -190,6 +197,12 @@ type outputs struct {
 func provideBankModule(config types.Module, inputs) (outputs, error) { ... }
 ```
 
+Note that in this module, a module configuration object *cannot* register different dependency providers based on the
+configuration. This is intentional because it allows us to know globally which modules provide which dependencies. This
+can help us figure out issues with missing dependencies in an app config if the needed modules are loaded at runtime.
+In cases where required modules are not loaded at runtime, it may be possible to guide users to the correct module if
+through a global Cosmos SDK module registry.
+
 ### Application to existing SDK modules
 
 So far we have described a system which is largely agnostic to the specifics of the SDK such as store keys, `AppModule`,
@@ -213,6 +226,8 @@ registration paradigms. These two methods can live side-by-side for as long as i
   upgrade using this mechanism
 
 ### Negative
+* it may be confusing when a dependency is missing although error messages, the GraphViz visualization, and global
+  module registration may help with that
 
 ### Neutral
 

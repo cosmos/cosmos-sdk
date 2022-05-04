@@ -53,11 +53,67 @@ features:
 * dependency resolution and provision through functional constructors, ex: `func(need SomeDep) (AnotherDep, error)`
 * dependency injection `In` and `Out` structs which support `optional` dependencies
 * grouped-dependencies (many-per-container) through the `AutoGroupType` tag interface
-* module-scoped dependencies via `ModuleKey`s
+* module-scoped dependencies via `ModuleKey`s (where each module gets a unique dependency)
 * one-per-module dependencies through the `OnePerModuleType` tag interface
 
 Here are some examples of how these would be used in an SDK module:
-*
+* `StoreKey` could be a module-scoped dependency which is unique per module
+* a module's `AppModule` instance (or the equivalent) could be a `OnePerModuleType`
+* CLI commands could be provided with `AutoGroupType`s
+
+## App Config
+
+In order to compose modules into an app, a declarative app configuration will be used. This configuration is based off
+of protobuf and its basic structure is very simple:
+
+```protobuf
+package cosmos.app.v1;
+
+message Config {
+  repeated ModuleConfig modules = 1;
+}
+
+message ModuleConfig {
+  string name = 1;
+  google.protobuf.Any config = 2;
+}
+```
+
+The configuration for every module is itself a protobuf message and modules will be identified and loaded based
+on the protobuf type URL of their config object (ex. `cosmos.bank.module.v1.Module`). Modules are given a unique short `name`
+to share resources across different versions of the same module which might have a different protobuf package
+versions (ex. `cosmos.bank.module.v2.Module`).
+
+An example app config in YAML might look like this:
+```yaml
+modules:
+  - name: baseapp
+    config:
+      "@type": cosmos.baseapp.module.v1.Module
+      begin_blockers: [staking, auth, bank]
+      end_blockers: [bank, auth, staking]
+      init_genesis: [bank, auth, staking]
+  - name: auth
+    config:
+      "@type": cosmos.auth.module.v1.Module
+      bech32_prefix: "foo"
+  - name: bank
+    config:
+      "@type": cosmos.bank.module.v1.Module
+  - name: staking
+    config:
+      "@type": cosmos.staking.module.v1.Module
+```
+
+In the above example, there is a hypothetical `baseapp` module which contains the information around ordering of
+begin blockers, end blockers, and init genesis. Rather than lifting these concerns up to the module config layer,
+they are themselves handled by a module which could allow a convenient way of swapping out different versions of
+baseapp (for instance to target different versions of tendermint), without needing to change the rest of the config.
+The `baseapp` module would then provide to the server framework (which sort of sits outside the ABCI app) an instance
+of `abci.Application`.
+
+In this model, an app is *modules all the way down* and the dependency injection/app config layer is very much
+protocol-agnostic and can adapt to even major breaking changes at the protocol layer.
 
 ## Consequences
 

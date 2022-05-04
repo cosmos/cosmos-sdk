@@ -57,6 +57,7 @@ When writing ADRs, follow the same best practices for writing RFCs. When writing
 * [ADR 030: Message Authorization Module](./adr-030-authz-module.md)
 * [ADR 031: Protobuf Msg Services](./adr-031-msg-service.md)
 * [ADR 055: ORM](./adr-055-orm.md)
+* [ADR 058: Auto-Generated CLI](./adr-058-auto-generated-cli.md)
 
 ### Proposed
 

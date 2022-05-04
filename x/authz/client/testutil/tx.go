@@ -156,6 +156,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 		args         []string
 		expectedCode uint32
 		expectErr    bool
+		expErrMsg    string
 	}{
 		{
 			"Invalid granter Address",
@@ -169,6 +170,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			true,
+			"key not found",
 		},
 		{
 			"Invalid grantee Address",
@@ -182,6 +184,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			true,
+			"invalid separator index",
 		},
 		{
 			"Invalid expiration time",
@@ -195,6 +198,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			true,
+			"",
 		},
 		{
 			"fail with error invalid msg-type",
@@ -210,6 +214,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0x1d,
 			false,
+			"",
 		},
 		{
 			"failed with error both validators not allowed",
@@ -227,6 +232,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			true,
+			"cannot set both allowed & deny list",
 		},
 		{
 			"invalid bond denom for tx delegate authorization allowed validators",
@@ -243,6 +249,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			true,
+			"invalid denom",
 		},
 		{
 			"invalid bond denom for tx delegate authorization deny validators",
@@ -259,6 +266,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			true,
+			"invalid denom",
 		},
 		{
 			"invalid bond denom for tx undelegate authorization",
@@ -275,6 +283,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			true,
+			"invalid denom",
 		},
 		{
 			"invalid bond denon for tx redelegate authorization",
@@ -291,6 +300,41 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			true,
+			"invalid denom",
+		},
+		{
+			"spendlimit with two different bond denom values",
+			[]string{
+				grantee.String(),
+				"delegate",
+				fmt.Sprintf("--%s=100stake,20xyz", cli.FlagSpendLimit),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+				fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, val.ValAddress.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			0,
+			true,
+			"spendlimit cannot be more than one value",
+		},
+		{
+			"spendlimit with two values with same denom",
+			[]string{
+				grantee.String(),
+				"delegate",
+				fmt.Sprintf("--%s=100stake,20stake", cli.FlagSpendLimit),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+				fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, val.ValAddress.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			0,
+			true,
+			"duplicate denomination",
 		},
 		{
 			"valid tx delegate authorization allowed validators",
@@ -307,6 +351,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			false,
+			"",
 		},
 		{
 			"valid tx delegate authorization deny validators",
@@ -323,6 +368,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			false,
+			"",
 		},
 		{
 			"valid tx undelegate authorization",
@@ -339,6 +385,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			false,
+			"",
 		},
 		{
 			"valid tx redelegate authorization",
@@ -355,6 +402,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			false,
+			"",
 		},
 		{
 			"Valid tx send authorization",
@@ -370,6 +418,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			false,
+			"",
 		},
 		{
 			"Valid tx generic authorization",
@@ -385,6 +434,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			false,
+			"",
 		},
 		{
 			"fail when granter = grantee",
@@ -400,6 +450,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			true,
+			"grantee and granter should be different",
 		},
 		{
 			"Valid tx with amino",
@@ -416,6 +467,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			false,
+			"",
 		},
 	}
 
@@ -428,6 +480,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			)
 			if tc.expectErr {
 				s.Require().Error(err, out)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				var txResp sdk.TxResponse
 				s.Require().NoError(err)

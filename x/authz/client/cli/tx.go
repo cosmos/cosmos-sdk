@@ -130,10 +130,11 @@ Examples:
 						return err
 					}
 
-					for i := 0; i < len(spendLimit); i++ {
-						if spendLimit[i].Denom != res.Params.BondDenom {
-							return fmt.Errorf("invalid denom %s \ncoin denom should match the current bond denom", spendLimit[i].Denom)
-						}
+					if len(spendLimit) > 1 {
+						return fmt.Errorf("spendlimit cannot be more than one value")
+					}
+					if spendLimit[0].Denom != res.Params.BondDenom {
+						return fmt.Errorf("invalid denom %s \ncoin denom should match the current bond denom", spendLimit[0].Denom)
 					}
 
 					if !spendLimit.IsAllPositive() {

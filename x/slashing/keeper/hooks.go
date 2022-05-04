@@ -77,8 +77,5 @@ func (h Hooks) BeforeDelegationSharesModified(_ sdk.Context, _ sdk.AccAddress, _
 func (h Hooks) BeforeDelegationRemoved(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress)        {}
 func (h Hooks) AfterDelegationModified(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress)        {}
 func (h Hooks) BeforeValidatorSlashed(_ sdk.Context, _ sdk.ValAddress, _ sdk.Dec)                {}
-func (h Hooks) UnbondingDelegationEntryCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress, _ int64, _ time.Time, _ sdk.Int, _ uint64) {
-}
-func (h Hooks) BeforeUnbondingDelegationEntryComplete(_ sdk.Context, _ uint64) bool {
-	return false
+func (h Hooks) AfterUnbondingOpInitiated(_ sdk.Context, _ uint64) {
 }

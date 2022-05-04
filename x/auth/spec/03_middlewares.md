@@ -16,7 +16,7 @@ The auth module provides:
 - one `tx.Handler`, called `RunMsgsTxHandler`, which routes each `sdk.Msg` from a transaction to the correct module `Msg` service, and runs each `sdk.Msg` to perform state transitions,
 - a set of middlewares that are recursively chained together around the base `tx.Handler` in the following order (the first middleware's `pre`-hook is run first, and `post`-hook is run last):
 
-  - `NewTxDecoderMiddleware`: Decodes the transaction bytes from ABCI `CheckTx` and `DeliverTx` into the SDK transaction type. This middleware is generally called first, as most middlewares' logic rely on a decoded SDK transaction.
+  - `NewTxDecoderMiddleware`: Decodes the transaction bytes from ABCI `CheckTx` and `DeliverTx` into the SDK transaction type. This middleware is generally called first, as most middlewares logic rely on a decoded SDK transaction.
   - `GasTxMiddleware`: Sets the `GasMeter` in the `Context`.
   - `RecoveryTxMiddleware`: Wraps the next middleware with a defer clause to recover from any downstream panics in the middleware chain to return an error with information on gas provided and gas used.
   - `RejectExtensionOptionsMiddleware`: Rejects all extension options which can optionally be included in protobuf transactions.

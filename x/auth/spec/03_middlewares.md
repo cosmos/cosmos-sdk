@@ -27,7 +27,7 @@ The auth module provides:
   - `ConsumeGasTxSizeMiddleware`: Consumes gas proportional to the `tx` size based on application parameters.
   - `DeductFeeMiddleware`: Deducts the `FeeAmount` from first signer of the `tx`. If the `x/feegrant` module is enabled and a fee granter is set, it deducts fees from the fee granter account.
   - `SetPubKeyMiddleware`: Sets the pubkey from a `tx`'s signers that does not already have its corresponding pubkey saved in the state machine and in the current context.
-  - `ValidateSigCountMiddleware`: Validates the number of signatures in `tx` based on app-parameters.
+  - `ValidateSigCountMiddleware`: Validates the number of signatures in the `tx` based on app-parameters.
   - `SigGasConsumeMiddleware`: Consumes parameter-defined amount of gas for each signature. This requires pubkeys to be set in context for all signers as part of `SetPubKeyMiddleware`.
   - `SigVerificationMiddleware`: Verifies all signatures are valid. This requires pubkeys to be set in context for all signers as part of `SetPubKeyMiddleware`.
   - `IncrementSequenceMiddleware`: Increments the account sequence for each signer to prevent replay attacks.

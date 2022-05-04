@@ -86,6 +86,8 @@ message ModuleConfig {
 }
 ```
 
+(See also https://github.com/cosmos/cosmos-sdk/blob/6e18f582bf69e3926a1e22a6de3c35ea327aadce/proto/cosmos/app/v1alpha1/config.proto)
+
 The configuration for every module is itself a protobuf message and modules will be identified and loaded based
 on the protobuf type URL of their config object (ex. `cosmos.bank.module.v1.Module`). Modules are given a unique short `name`
 to share resources across different versions of the same module which might have a different protobuf package
@@ -202,6 +204,30 @@ configuration. This is intentional because it allows us to know globally which m
 can help us figure out issues with missing dependencies in an app config if the needed modules are loaded at runtime.
 In cases where required modules are not loaded at runtime, it may be possible to guide users to the correct module if
 through a global Cosmos SDK module registry.
+
+### New `app.go`
+
+With this setup, `app.go` might now look something like this:
+
+```go
+package main
+
+import (
+	// Each go package which registers a module must be imported just for side-effects
+	// so that module implementations are registered.
+	_ "github.com/cosmos/cosmos-sdk/x/auth/module"
+	_ "github.com/cosmos/cosmos-sdk/x/bank/module"
+	_ "github.com/cosmos/cosmos-sdk/x/staking/module"
+	"github.com/cosmos/cosmos-sdk/core/app"
+)
+
+// go:embed app.yaml
+var appConfigYaml []byte
+
+func main() {
+	app.Run(app.ParseYamlConfig(appConfigYaml))
+}
+```
 
 ### Application to existing SDK modules
 

@@ -1,8 +1,6 @@
 package group
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
-
 	proto "github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -23,7 +21,7 @@ func (m MsgCreateGroup) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgCreateGroup) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgCreateGroup.
@@ -50,7 +48,7 @@ func (m MsgCreateGroup) ValidateBasic() error {
 // Note: in state, a member's weight MUST be positive. However, in some Msgs,
 // it's possible to set a zero member weight, for example in
 // MsgUpdateGroupMembers to denote that we're removing a member.
-func (m Member) ValidateBasic() error {
+func (m MemberRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Address)
 	if err != nil {
 		return sdkerrors.Wrap(err, "address")
@@ -75,7 +73,7 @@ func (m MsgUpdateGroupAdmin) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupAdmin) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgUpdateGroupAdmin.
@@ -125,7 +123,7 @@ func (m MsgUpdateGroupMetadata) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupMetadata) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgUpdateGroupMetadata.
@@ -167,7 +165,7 @@ func (m MsgUpdateGroupMembers) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupMembers) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 var _ sdk.Msg = &MsgUpdateGroupMembers{}
@@ -195,7 +193,7 @@ func (m MsgUpdateGroupMembers) ValidateBasic() error {
 	if len(m.MemberUpdates) == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "member updates")
 	}
-	members := Members{Members: m.MemberUpdates}
+	members := MemberRequests{Members: m.MemberUpdates}
 	if err := members.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "members")
 	}
@@ -210,7 +208,7 @@ var _ sdk.Msg = &MsgCreateGroupWithPolicy{}
 var _ types.UnpackInterfacesMessage = MsgCreateGroupWithPolicy{}
 
 // NewMsgCreateGroupWithPolicy creates a new MsgCreateGroupWithPolicy.
-func NewMsgCreateGroupWithPolicy(admin string, members []Member, groupMetadata string, groupPolicyMetadata string, groupPolicyAsAdmin bool, decisionPolicy DecisionPolicy) (*MsgCreateGroupWithPolicy, error) {
+func NewMsgCreateGroupWithPolicy(admin string, members []MemberRequest, groupMetadata string, groupPolicyMetadata string, groupPolicyAsAdmin bool, decisionPolicy DecisionPolicy) (*MsgCreateGroupWithPolicy, error) {
 	m := &MsgCreateGroupWithPolicy{
 		Admin:               admin,
 		Members:             members,
@@ -260,7 +258,7 @@ func (m MsgCreateGroupWithPolicy) Type() string {
 
 // GetSignBytes Implements Msg.
 func (m MsgCreateGroupWithPolicy) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgCreateGroupWithPolicy.
@@ -301,7 +299,7 @@ func (m MsgCreateGroupPolicy) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgCreateGroupPolicy) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgCreateGroupPolicy.
@@ -346,7 +344,7 @@ func (m MsgUpdateGroupPolicyAdmin) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupPolicyAdmin) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgUpdateGroupPolicyAdmin.
@@ -422,7 +420,7 @@ func (m MsgUpdateGroupPolicyDecisionPolicy) Type() string {
 
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupPolicyDecisionPolicy) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgUpdateGroupPolicyDecisionPolicy.
@@ -485,7 +483,7 @@ func (m MsgUpdateGroupPolicyMetadata) Type() string { return sdk.MsgTypeURL(&m) 
 
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupPolicyMetadata) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgUpdateGroupPolicyMetadata.
@@ -591,7 +589,7 @@ func (m MsgSubmitProposal) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgSubmitProposal) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgSubmitProposal.
@@ -683,7 +681,7 @@ func (m MsgWithdrawProposal) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgWithdrawProposal) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgWithdrawProposal.
@@ -721,7 +719,7 @@ func (m MsgVote) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgVote) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgVote.
@@ -763,7 +761,7 @@ func (m MsgExec) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgExec) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgExec.
@@ -799,7 +797,7 @@ func (m MsgLeaveGroup) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg
 func (m MsgLeaveGroup) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the expected signers for a MsgLeaveGroup
@@ -828,8 +826,8 @@ func (m MsgLeaveGroup) ValidateBasic() error {
 // strictValidateMembers performs ValidateBasic on Members, but also checks
 // that all members weights are positive (whereas `Members{members}.ValidateBasic()`
 // only checks that they are non-negative.
-func strictValidateMembers(members []Member) error {
-	err := Members{members}.ValidateBasic()
+func strictValidateMembers(members []MemberRequest) error {
+	err := MemberRequests{members}.ValidateBasic()
 	if err != nil {
 		return err
 	}

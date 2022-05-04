@@ -100,15 +100,27 @@ func (s *MWTestSuite) TestDeductFees() {
 	err = testutil.FundAccount(s.app.BankKeeper, ctx, addr1, coins)
 	s.Require().NoError(err)
 
+	// DeliverTx
 	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx})
-	s.Require().NotNil(err, "Tx did not error when fee payer had insufficient funds")
+	s.Require().NotNil(err, "Tx errored when fee payer had insufficient funds")
+
+	// SimulateTx
+	_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx})
+	s.Require().NotNil(err, "Tx errored when fee payer had insufficient funds")
 
 	// Set account with sufficient funds
 	s.app.AccountKeeper.SetAccount(ctx, acc)
 	err = testutil.FundAccount(s.app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200))))
 	s.Require().NoError(err)
 
+	// DeliverTx
 	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx})
+	s.Require().Nil(err, "Tx did not error after account has been set with sufficient funds")
 
-	s.Require().Nil(err, "Tx errored after account has been set with sufficient funds")
+	err = testutil.FundAccount(s.app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200))))
+	s.Require().NoError(err)
+
+	// SimulateTx
+	_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx})
+	s.Require().Nil(err, "Tx did not error after account has been set with sufficient funds")
 }

@@ -84,7 +84,7 @@ Then, parameters used to define [volatile states](#volatile-states) (i.e. cached
 * `deliverState`: This state is updated during [`DeliverTx`](#delivertx), and set to `nil` on
   [`Commit`](#commit) and gets re-initialized on BeginBlock.
 
-Finally, a few more important parameterd:
+Finally, a few more important parameters:
 
 * `voteInfos`: This parameter carries the list of validators whose precommit is missing, either
   because they did not vote or because the proposer did not include their vote. This information is
@@ -93,7 +93,7 @@ Finally, a few more important parameterd:
 * `minGasPrices`: This parameter defines the minimum gas prices accepted by the node. This is a
   **local** parameter, meaning each full-node can set a different `minGasPrices`. It is used in the
   `AnteHandler` during [`CheckTx`](#checktx), mainly as a spam protection mechanism. The transaction
-  enters the [mempool](https://tendermint.com/docs/tendermint-core/mempool.html#transaction-ordering)
+  enters the [mempool](https://docs.tendermint.com/master/tendermint-core/mempool/)
   only if the gas prices of the transaction are greater than one of the minimum gas price in
   `minGasPrices` (e.g. if `minGasPrices == 1uatom,1photon`, the `gas-price` of the transaction must be
   greater than `1uatom` OR `1photon`).
@@ -205,7 +205,7 @@ Just like the `msgServiceRouter`, the `grpcQueryRouter` is initialized with all 
 
 ## Main ABCI Messages
 
-The [Application-Blockchain Interface](https://tendermint.com/docs/spec/abci/) (ABCI) is a generic interface that connects a state-machine with a consensus engine to form a functional full-node. It can be wrapped in any language, and needs to be implemented by each application-specific blockchain built on top of an ABCI-compatible consensus engine like Tendermint.
+The [Application-Blockchain Interface](https://docs.tendermint.com/master/spec/abci/) (ABCI) is a generic interface that connects a state-machine with a consensus engine to form a functional full-node. It can be wrapped in any language, and needs to be implemented by each application-specific blockchain built on top of an ABCI-compatible consensus engine like Tendermint.
 
 The consensus engine handles two main tasks:
 
@@ -254,7 +254,7 @@ be rejected. In any case, the sender's account will not actually pay the fees un
 is actually included in a block, because `checkState` never gets committed to the main state. The
 `checkState` is reset to the latest state of the main state each time a blocks gets [committed](#commit).
 
-`CheckTx` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://tendermint.com/docs/spec/abci/abci.html#messages).
+`CheckTx` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://docs.tendermint.com/master/spec/abci/abci.html#checktx-2).
 The response contains:
 
 * `Code (uint32)`: Response Code. `0` if successful.
@@ -293,7 +293,7 @@ During the additional fifth step outlined in (2), each read/write to the store i
 
 At any point, if `GasConsumed > GasWanted`, the function returns with `Code != 0` and `DeliverTx` fails.
 
-`DeliverTx` returns a response to the underlying consensus engine of type [`abci.ResponseDeliverTx`](https://tendermint.com/docs/spec/abci/abci.html#delivertx). The response contains:
+`DeliverTx` returns a response to the underlying consensus engine of type [`abci.ResponseDeliverTx`](https://docs.tendermint.com/master/spec/abci/abci.html#delivertx-2). The response contains:
 
 * `Code (uint32)`: Response Code. `0` if successful.
 * `Data ([]byte)`: Result bytes, if any.
@@ -348,9 +348,9 @@ First, it retrieves the `sdk.Msg`'s fully-qualified type name, by checking the `
 
 ### InitChain
 
-The [`InitChain` ABCI message](https://tendermint.com/docs/app-dev/abci-spec.html#initchain) is sent from the underlying Tendermint engine when the chain is first started. It is mainly used to **initialize** parameters and state like:
+The [`InitChain` ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#initchain) is sent from the underlying Tendermint engine when the chain is first started. It is mainly used to **initialize** parameters and state like:
 
-* [Consensus Parameters](https://tendermint.com/docs/spec/abci/apps.html#consensus-parameters) via `setConsensusParams`.
+* [Consensus Parameters](https://docs.tendermint.com/master/spec/abci/apps.html#consensus-parameters) via `setConsensusParams`.
 * [`checkState` and `deliverState`](#volatile-states) via `setCheckState` and `setDeliverState`.
 * The [block gas meter](../basics/gas-fees.md#block-gas-meter), with infinite gas to process genesis transactions.
 
@@ -358,22 +358,22 @@ Finally, the `InitChain(req abci.RequestInitChain)` method of `BaseApp` calls th
 
 ### BeginBlock
 
-The [`BeginBlock` ABCI message](#https://tendermint.com/docs/app-dev/abci-spec.html#beginblock) is sent from the underlying Tendermint engine when a block proposal created by the correct proposer is received, before [`DeliverTx`](#delivertx) is run for each transaction in the block. It allows developers to have logic be executed at the beginning of each block. In the Cosmos SDK, the `BeginBlock(req abci.RequestBeginBlock)` method does the following:
+The [`BeginBlock` ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#beginblock) is sent from the underlying Tendermint engine when a block proposal created by the correct proposer is received, before [`DeliverTx`](#delivertx) is run for each transaction in the block. It allows developers to have logic be executed at the beginning of each block. In the Cosmos SDK, the `BeginBlock(req abci.RequestBeginBlock)` method does the following:
 
 * Initialize [`deliverState`](#volatile-states) with the latest header using the `req abci.RequestBeginBlock` passed as parameter via the `setDeliverState` function.
   +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/baseapp/baseapp.go#L387-L397
   This function also resets the [main gas meter](../basics/gas-fees.md#main-gas-meter).
 * Initialize the [block gas meter](../basics/gas-fees.md#block-gas-meter) with the `maxGas` limit. The `gas` consumed within the block cannot go above `maxGas`. This parameter is defined in the application's consensus parameters.
 * Run the application's [`beginBlocker()`](../basics/app-anatomy.md#beginblocker-and-endblock), which mainly runs the [`BeginBlocker()`](../building-modules/beginblock-endblock.md#beginblock) method of each of the application's modules.
-* Set the [`VoteInfos`](https://tendermint.com/docs/app-dev/abci-spec.html#voteinfo) of the application, i.e. the list of validators whose _precommit_ for the previous block was included by the proposer of the current block. This information is carried into the [`Context`](./context.md) so that it can be used during `DeliverTx` and `EndBlock`.
+* Set the [`VoteInfos`](https://docs.tendermint.com/master/spec/abci/abci.html#voteinfo) of the application, i.e. the list of validators whose _precommit_ for the previous block was included by the proposer of the current block. This information is carried into the [`Context`](./context.md) so that it can be used during `DeliverTx` and `EndBlock`.
 
 ### EndBlock
 
-The [`EndBlock` ABCI message](#https://tendermint.com/docs/app-dev/abci-spec.html#endblock) is sent from the underlying Tendermint engine after [`DeliverTx`](#delivertx) as been run for each transaction in the block. It allows developers to have logic be executed at the end of each block. In the Cosmos SDK, the bulk `EndBlock(req abci.RequestEndBlock)` method is to run the application's [`EndBlocker()`](../basics/app-anatomy.md#beginblocker-and-endblock), which mainly runs the [`EndBlocker()`](../building-modules/beginblock-endblock.md#beginblock) method of each of the application's modules.
+The [`EndBlock` ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#endblock) is sent from the underlying Tendermint engine after [`DeliverTx`](#delivertx) as been run for each transaction in the block. It allows developers to have logic be executed at the end of each block. In the Cosmos SDK, the bulk `EndBlock(req abci.RequestEndBlock)` method is to run the application's [`EndBlocker()`](../basics/app-anatomy.md#beginblocker-and-endblock), which mainly runs the [`EndBlocker()`](../building-modules/beginblock-endblock.md#beginblock) method of each of the application's modules.
 
 ### Commit
 
-The [`Commit` ABCI message](https://tendermint.com/docs/app-dev/abci-spec.html#commit) is sent from the underlying Tendermint engine after the full-node has received _precommits_ from 2/3+ of validators (weighted by voting power). On the `BaseApp` end, the `Commit(res abci.ResponseCommit)` function is implemented to commit all the valid state transitions that occured during `BeginBlock`, `DeliverTx` and `EndBlock` and to reset state for the next block.
+The [`Commit` ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#commit) is sent from the underlying Tendermint engine after the full-node has received _precommits_ from 2/3+ of validators (weighted by voting power). On the `BaseApp` end, the `Commit(res abci.ResponseCommit)` function is implemented to commit all the valid state transitions that occured during `BeginBlock`, `DeliverTx` and `EndBlock` and to reset state for the next block.
 
 To commit state-transitions, the `Commit` function calls the `Write()` function on `deliverState.ms`, where `deliverState.ms` is a branched multistore of the main store `app.cms`. Then, the `Commit` function sets `checkState` to the latest header (obtbained from `deliverState.ctx.BlockHeader`) and `deliverState` to `nil`.
 
@@ -381,11 +381,11 @@ Finally, `Commit` returns the hash of the commitment of `app.cms` back to the un
 
 ### Info
 
-The [`Info` ABCI message](https://tendermint.com/docs/app-dev/abci-spec.html#info) is a simple query from the underlying consensus engine, notably used to sync the latter with the application during a handshake that happens on startup. When called, the `Info(res abci.ResponseInfo)` function from `BaseApp` will return the application's name, version and the hash of the last commit of `app.cms`.
+The [`Info` ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#info) is a simple query from the underlying consensus engine, notably used to sync the latter with the application during a handshake that happens on startup. When called, the `Info(res abci.ResponseInfo)` function from `BaseApp` will return the application's name, version and the hash of the last commit of `app.cms`.
 
 ### Query
 
-The [`Query` ABCI message](https://tendermint.com/docs/app-dev/abci-spec.html#query) is used to serve queries received from the underlying consensus engine, including queries received via RPC like Tendermint RPC. It used to be the main entrypoint to build interfaces with the application, but with the introduction of [gRPC queries](../building-modules/query-services.md) in Cosmos SDK v0.40, its usage is more limited. The application must respect a few rules when implementing the `Query` method, which are outlined [here](https://tendermint.com/docs/app-dev/abci-spec.html#query).
+The [`Query` ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#query-2) is used to serve queries received from the underlying consensus engine, including queries received via RPC like Tendermint RPC. It used to be the main entrypoint to build interfaces with the application, but with the introduction of [gRPC queries](../building-modules/query-services.md) in Cosmos SDK v0.40, its usage is more limited. The application must respect a few rules when implementing the `Query` method, which are outlined [here](https://docs.tendermint.com/master/spec/abci/apps.html#query).
 
 Each Tendermint `query` comes with a `path`, which is a `string` which denotes what to query. If the `path` matches a gRPC fully-qualified service method, then `BaseApp` will defer the query to the `grpcQueryRouter` and let it handle it like explained [above](#grpc-query-router). Otherwise, the `path` represents a query that is not (yet) handled by the gRPC router. `BaseApp` splits the `path` string with the `/` delimiter. By convention, the first element of the splitted string (`splitted[0]`) contains the category of `query` (`app`, `p2p`, `store` or `custom` ). The `BaseApp` implementation of the `Query(req abci.RequestQuery)` method is a simple dispatcher serving these 4 main categories of queries:
 

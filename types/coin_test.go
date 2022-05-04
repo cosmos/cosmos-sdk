@@ -18,7 +18,7 @@ var (
 
 type coinTestSuite struct {
 	suite.Suite
-	ca0, ca1, ca2, cm0, cm1, cm2 sdk.Coin
+	ca0, ca1, ca2, ca4, cm0, cm1, cm2, cm4 sdk.Coin
 }
 
 func TestCoinTestSuite(t *testing.T) {
@@ -30,8 +30,10 @@ func (s *coinTestSuite) SetupSuite() {
 	zero := sdk.NewInt(0)
 	one := sdk.OneInt()
 	two := sdk.NewInt(2)
-	s.ca0, s.ca1, s.ca2 = sdk.Coin{testDenom1, zero}, sdk.Coin{testDenom1, one}, sdk.Coin{testDenom1, two}
-	s.cm0, s.cm1, s.cm2 = sdk.Coin{testDenom2, zero}, sdk.Coin{testDenom2, one}, sdk.Coin{testDenom2, two}
+	four := sdk.NewInt(4)
+
+	s.ca0, s.ca1, s.ca2, s.ca4 = sdk.NewCoin(testDenom1, zero), sdk.NewCoin(testDenom1, one), sdk.NewCoin(testDenom1, two), sdk.NewCoin(testDenom1, four)
+	s.cm0, s.cm1, s.cm2, s.cm4 = sdk.NewCoin(testDenom2, zero), sdk.NewCoin(testDenom2, one), sdk.NewCoin(testDenom2, two), sdk.NewCoin(testDenom2, four)
 }
 
 // ----------------------------------------------------------------------------
@@ -220,6 +222,58 @@ func (s *coinTestSuite) TestSubCoinAmount() {
 		} else {
 			res := tc.coin.SubAmount(tc.amount)
 			s.Require().Equal(tc.expected, res, "result of subtraction is incorrect, tc #%d", i)
+		}
+	}
+}
+
+func (s *coinTestSuite) TestMulIntCoins() {
+	testCases := []struct {
+		input       sdk.Coins
+		multiplier  sdk.Int
+		expected    sdk.Coins
+		shouldPanic bool
+	}{
+		{sdk.Coins{s.ca2}, sdk.NewInt(0), sdk.Coins{s.ca0}, true},
+		{sdk.Coins{s.ca2}, sdk.NewInt(2), sdk.Coins{s.ca4}, false},
+		{sdk.Coins{s.ca1, s.cm2}, sdk.NewInt(2), sdk.Coins{s.ca2, s.cm4}, false},
+	}
+
+	assert := s.Assert()
+	for i, tc := range testCases {
+		tc := tc
+		if tc.shouldPanic {
+			assert.Panics(func() { tc.input.MulInt(tc.multiplier) })
+		} else {
+			res := tc.input.MulInt(tc.multiplier)
+			assert.True(res.IsValid())
+			assert.Equal(tc.expected, res, "multiplication of coins is incorrect, tc #%d", i)
+		}
+	}
+}
+
+func (s *coinTestSuite) TestQuoIntCoins() {
+	testCases := []struct {
+		input       sdk.Coins
+		divisor     sdk.Int
+		expected    sdk.Coins
+		isValid     bool
+		shouldPanic bool
+	}{
+		{sdk.Coins{s.ca2, s.ca1}, sdk.NewInt(0), sdk.Coins{s.ca0, s.ca0}, true, true},
+		{sdk.Coins{s.ca2}, sdk.NewInt(4), sdk.Coins{s.ca0}, false, false},
+		{sdk.Coins{s.ca2, s.cm4}, sdk.NewInt(2), sdk.Coins{s.ca1, s.cm2}, true, false},
+		{sdk.Coins{s.ca4}, sdk.NewInt(2), sdk.Coins{s.ca2}, true, false},
+	}
+
+	assert := s.Assert()
+	for i, tc := range testCases {
+		tc := tc
+		if tc.shouldPanic {
+			assert.Panics(func() { tc.input.QuoInt(tc.divisor) })
+		} else {
+			res := tc.input.QuoInt(tc.divisor)
+			assert.Equal(tc.isValid, res.IsValid())
+			assert.Equal(tc.expected, res, "quotient of coins is incorrect, tc #%d", i)
 		}
 	}
 }
@@ -496,9 +550,9 @@ func (s *coinTestSuite) TestSubCoins() {
 	for i, tc := range testCases {
 		tc := tc
 		if tc.shouldPanic {
-			assert.Panics(func() { tc.inputOne.Sub(tc.inputTwo) })
+			assert.Panics(func() { tc.inputOne.Sub(tc.inputTwo...) })
 		} else {
-			res := tc.inputOne.Sub(tc.inputTwo)
+			res := tc.inputOne.Sub(tc.inputTwo...)
 			assert.True(res.IsValid())
 			assert.Equal(tc.expected, res, "sum of coins is incorrect, tc #%d", i)
 		}
@@ -801,6 +855,7 @@ func (s *coinTestSuite) TestParseCoins() {
 		{"10atom10", true, sdk.Coins{{"atom10", sdk.NewInt(10)}}},
 		{"200transfer/channelToA/uatom", true, sdk.Coins{{"transfer/channelToA/uatom", sdk.NewInt(200)}}},
 		{"50ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", true, sdk.Coins{{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", sdk.NewInt(50)}}},
+		{"120000000000000000000000000000000000000000000000000000000000000000000000000000btc", false, nil},
 	}
 
 	for tcIndex, tc := range cases {

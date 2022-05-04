@@ -6,7 +6,8 @@ import (
 
 	"github.com/spf13/viper"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	clientflags "github.com/cosmos/cosmos-sdk/client/flags"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -131,6 +132,15 @@ type RosettaConfig struct {
 
 	// Offline defines if the server must be run in offline mode
 	Offline bool `mapstructure:"offline"`
+
+	// EnableFeeSuggestion defines if the server should suggest fee by default
+	EnableFeeSuggestion bool `mapstructure:"enable-fee-suggestion"`
+
+	// GasToSuggest defines gas limit when calculating the fee
+	GasToSuggest int `mapstructure:"gas-to-suggest"`
+
+	// DenomToSuggest defines the defult denom for fee suggestion
+	DenomToSuggest string `mapstructure:"denom-to-suggest"`
 }
 
 // GRPCConfig defines configuration for the gRPC server.
@@ -211,7 +221,7 @@ func DefaultConfig() *Config {
 		BaseConfig: BaseConfig{
 			MinGasPrices:      defaultMinGasPrices,
 			InterBlockCache:   true,
-			Pruning:           storetypes.PruningOptionDefault,
+			Pruning:           pruningtypes.PruningOptionDefault,
 			PruningKeepRecent: "0",
 			PruningInterval:   "0",
 			MinRetainBlocks:   0,
@@ -236,12 +246,15 @@ func DefaultConfig() *Config {
 			Address: DefaultGRPCAddress,
 		},
 		Rosetta: RosettaConfig{
-			Enable:     false,
-			Address:    ":8080",
-			Blockchain: "app",
-			Network:    "network",
-			Retries:    3,
-			Offline:    false,
+			Enable:              false,
+			Address:             ":8080",
+			Blockchain:          "app",
+			Network:             "network",
+			Retries:             3,
+			Offline:             false,
+			EnableFeeSuggestion: false,
+			GasToSuggest:        clientflags.DefaultGasLimit,
+			DenomToSuggest:      "uatom",
 		},
 		GRPCWeb: GRPCWebConfig{
 			Enable:  true,
@@ -299,12 +312,15 @@ func GetConfig(v *viper.Viper) Config {
 			EnableUnsafeCORS:   v.GetBool("api.enabled-unsafe-cors"),
 		},
 		Rosetta: RosettaConfig{
-			Enable:     v.GetBool("rosetta.enable"),
-			Address:    v.GetString("rosetta.address"),
-			Blockchain: v.GetString("rosetta.blockchain"),
-			Network:    v.GetString("rosetta.network"),
-			Retries:    v.GetInt("rosetta.retries"),
-			Offline:    v.GetBool("rosetta.offline"),
+			Enable:              v.GetBool("rosetta.enable"),
+			Address:             v.GetString("rosetta.address"),
+			Blockchain:          v.GetString("rosetta.blockchain"),
+			Network:             v.GetString("rosetta.network"),
+			Retries:             v.GetInt("rosetta.retries"),
+			Offline:             v.GetBool("rosetta.offline"),
+			EnableFeeSuggestion: v.GetBool("rosetta.enable-fee-suggestion"),
+			GasToSuggest:        v.GetInt("rosetta.gas-to-suggest"),
+			DenomToSuggest:      v.GetString("rosetta.denom-to-suggest"),
 		},
 		GRPC: GRPCConfig{
 			Enable:  v.GetBool("grpc.enable"),
@@ -327,9 +343,9 @@ func (c Config) ValidateBasic() error {
 	if c.BaseConfig.MinGasPrices == "" {
 		return sdkerrors.ErrAppConfig.Wrap("set min gas price in app.toml or flag or env variable")
 	}
-	if c.Pruning == storetypes.PruningOptionEverything && c.StateSync.SnapshotInterval > 0 {
+	if c.Pruning == pruningtypes.PruningOptionEverything && c.StateSync.SnapshotInterval > 0 {
 		return sdkerrors.ErrAppConfig.Wrapf(
-			"cannot enable state sync snapshots with '%s' pruning setting", storetypes.PruningOptionEverything,
+			"cannot enable state sync snapshots with '%s' pruning setting", pruningtypes.PruningOptionEverything,
 		)
 	}
 

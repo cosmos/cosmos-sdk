@@ -5,14 +5,13 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
-func parseMembers(clientCtx client.Context, membersFile string) ([]group.Member, error) {
-	members := group.Members{}
+func parseMembers(membersFile string) ([]group.MemberRequest, error) {
+	members := group.MemberRequests{}
 
 	if membersFile == "" {
 		return members.Members, nil
@@ -23,7 +22,7 @@ func parseMembers(clientCtx client.Context, membersFile string) ([]group.Member,
 		return nil, err
 	}
 
-	err = clientCtx.Codec.UnmarshalJSON(contents, &members)
+	err = json.Unmarshal(contents, &members)
 	if err != nil {
 		return nil, err
 	}

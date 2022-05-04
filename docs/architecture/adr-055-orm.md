@@ -10,7 +10,7 @@ ACCEPTED Implemented
 
 ## Abstract
 
-In order to make it easier for developers to build state machines and for clients to query, index and verify proofs
+In order to make it easier for developers to build Cosmos SDK Apps and for clients to query, index and verify proofs
 against state data, we have implemented an ORM (object-relational mapping) layer for the Cosmos SDK.
 
 ## Context

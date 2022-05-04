@@ -125,17 +125,15 @@ Examples:
 
 					queryClient := staking.NewQueryClient(clientCtx)
 
+					res, err := queryClient.Params(cmd.Context(), &staking.QueryParamsRequest{})
+					if err != nil {
+						return err
+					}
+
 					for i := 0; i < len(spendLimit); i++ {
-
-						res, err := queryClient.Params(cmd.Context(), &staking.QueryParamsRequest{})
-						if err != nil {
-							return err
-						}
-
 						if spendLimit[i].Denom != res.Params.BondDenom {
 							return fmt.Errorf("invalid denom %s \ncoin denom should match the current bond denom", spendLimit[i].Denom)
 						}
-
 					}
 
 					if !spendLimit.IsAllPositive() {

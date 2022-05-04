@@ -37,7 +37,7 @@ const (
 	// DenomToSuggest defines the default denom for fee suggestion
 	DenomToSuggest = "uatom"
 	// DefaultPrices defines the default list of prices to suggest
-	DefaultPrices = "0.0uatom"
+	DefaultPrices = "1uatom,1stake"
 )
 
 // configuration flags
@@ -83,8 +83,8 @@ type Config struct {
 	GasToSuggest int
 	// DenomToSuggest defines the default denom for fee suggestion
 	DenomToSuggest string
-	// SuggestPrices defines the gas prices for fee suggestion
-	SuggestPrices sdk.DecCoins
+	// GasPrices defines the gas prices for fee suggestion
+	GasPrices sdk.DecCoins
 	// Codec overrides the default data and construction api client codecs
 	Codec *codec.ProtoCodec
 	// InterfaceRegistry overrides the default data and construction api interface registry
@@ -120,17 +120,19 @@ func (c *Config) validate() error {
 		return fmt.Errorf("network not provided")
 	}
 	if c.GasToSuggest <= 0 {
-		c.GasToSuggest = clientflags.DefaultGasLimit
+		return fmt.Errorf("gas to suggest must be positive")
 	}
-	found := false
-	for i := 0; i < c.SuggestPrices.Len(); i++ {
-		if c.SuggestPrices.GetDenomByIndex(i) == c.DenomToSuggest {
-			found = true
-			break
+	if c.EnableFeeSuggestion {
+		found := false
+		for i := 0; i < c.GasPrices.Len(); i++ {
+			if c.GasPrices.GetDenomByIndex(i) == c.DenomToSuggest {
+				found = true
+				break
+			}
 		}
-	}
-	if !found {
-		return fmt.Errorf("default suggest denom is not found in minimum-gas-prices")
+		if !found {
+			return fmt.Errorf("default suggest denom is not found in prices to suggest")
+		}
 	}
 
 	// these are optional but it must be online
@@ -187,21 +189,25 @@ func FromFlags(flags *pflag.FlagSet) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	suggestGas, err := flags.GetInt(FlagGasToSuggest)
+	gasToSuggest, err := flags.GetInt(FlagGasToSuggest)
 	if err != nil {
 		return nil, err
 	}
-	suggestDenom, err := flags.GetString(FlagDenomToSuggest)
+	denomToSuggest, err := flags.GetString(FlagDenomToSuggest)
 	if err != nil {
 		return nil, err
 	}
-	suggestPrices, err := flags.GetString(FlagPricesToSuggest)
-	if err != nil {
-		return nil, err
-	}
-	prices, err := sdk.ParseDecCoins(suggestPrices)
-	if err != nil {
-		return nil, err
+
+	var prices sdk.DecCoins
+	if enableDefaultFeeSuggestion {
+		pricesToSuggest, err := flags.GetString(FlagPricesToSuggest)
+		if err != nil {
+			return nil, err
+		}
+		prices, err = sdk.ParseDecCoins(pricesToSuggest)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	conf := &Config{
@@ -213,9 +219,9 @@ func FromFlags(flags *pflag.FlagSet) (*Config, error) {
 		Retries:             retries,
 		Offline:             offline,
 		EnableFeeSuggestion: enableDefaultFeeSuggestion,
-		GasToSuggest:        suggestGas,
-		DenomToSuggest:      suggestDenom,
-		SuggestPrices:       prices,
+		GasToSuggest:        gasToSuggest,
+		DenomToSuggest:      denomToSuggest,
+		GasPrices:           prices,
 	}
 	err = conf.validate()
 	if err != nil {

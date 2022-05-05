@@ -2595,6 +2595,8 @@ func (s *IntegrationTestSuite) createGroupThresholdPolicyWithBalance(adminAddres
 	s.Require().NoError(err)
 	return groupPolicyAddress
 }
+
+// fundAllGroupPolicies sends tokens to all group policies of a given group ID.
 func (s *IntegrationTestSuite) fundAllGroupPolicies(groupID string, tokens sdk.Coin) {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx

@@ -67,7 +67,7 @@ not defined on a per-module basis. Registering this `StoreLoader` is done via
 func UpgradeStoreLoader (upgradeHeight int64, storeUpgrades *store.StoreUpgrades) baseapp.StoreLoader
 ```
 
-If there's a planned upgrade and the upgrade height is reached, the old binary writes `Plan` to the disk before panic'ing.
+If there's a planned upgrade and the upgrade height is reached, the old binary writes `Plan` to the disk before panicking.
 
 This information is critical to ensure the `StoreUpgrades` happens smoothly at correct height and
 expected upgrade. It eliminiates the chances for the new binary to execute `StoreUpgrades` multiple
@@ -82,7 +82,7 @@ This proposal prescribes to the standard governance process. If the proposal pas
 the `Plan`, which targets a specific `Handler`, is persisted and scheduled. The
 upgrade can be delayed or hastened by updating the `Plan.Height` in a new proposal.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/08ddb217c176abe31c96af9d5f6c4c6fc645c4d4/proto/cosmos/upgrade/v1beta1/tx.proto#L19-L28
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/proto/cosmos/upgrade/v1beta1/tx.proto#L24-L35
 
 ### Cancelling Upgrade Proposals
 
@@ -91,6 +91,8 @@ message type, which can be embedded in a proposal, voted on and, if passed, will
 remove the scheduled upgrade `Plan`.
 Of course this requires that the upgrade was known to be a bad idea well before the
 upgrade itself, to allow time for a vote.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/proto/cosmos/upgrade/v1beta1/tx.proto#L42-L50
 
 If such a possibility is desired, the upgrade height is to be
 `2 * (VotingPeriod + DepositPeriod) + (SafetyDelta)` from the beginning of the

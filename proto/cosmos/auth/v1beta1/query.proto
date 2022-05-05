@@ -34,7 +34,7 @@ service Query {
     option (google.api.http).get = "/cosmos/auth/v1beta1/module_accounts";
   }
 
-  // Bech32 queries bech32Prefix
+  // Bech32Prefix queries bech32Prefix
   //
   // Since: cosmos-sdk 0.46
   rpc Bech32Prefix(Bech32PrefixRequest) returns (Bech32PrefixResponse) {

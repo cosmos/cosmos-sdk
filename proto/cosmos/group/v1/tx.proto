@@ -71,7 +71,7 @@ message MsgCreateGroup {
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // members defines the group members.
-  repeated Member members = 2 [(gogoproto.nullable) = false];
+  repeated MemberRequest members = 2 [(gogoproto.nullable) = false];
 
   // metadata is any arbitrary metadata to attached to the group.
   string metadata = 3;
@@ -96,7 +96,7 @@ message MsgUpdateGroupMembers {
 
   // member_updates is the list of members to update,
   // set weight to 0 to remove a member.
-  repeated Member member_updates = 3 [(gogoproto.nullable) = false];
+  repeated MemberRequest member_updates = 3 [(gogoproto.nullable) = false];
 }
 
 // MsgUpdateGroupMembersResponse is the Msg/UpdateGroupMembers response type.
@@ -189,7 +189,7 @@ message MsgCreateGroupWithPolicy {
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // members defines the group members.
-  repeated Member members = 2 [(gogoproto.nullable) = false];
+  repeated MemberRequest members = 2 [(gogoproto.nullable) = false];
 
   // group_metadata is any arbitrary metadata attached to the group.
   string group_metadata = 3;

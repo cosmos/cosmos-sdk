@@ -1,11 +1,11 @@
 name: Tests Race
 #  Tests Race workflow runs unit tests with the race detector
-#  This workflow is run on pushes to master & every Pull Requests where a .go, .mod, .sum have been changed
+#  This workflow is run on pushes to main & every Pull Requests where a .go, .mod, .sum have been changed
 on:
   pull_request:
   push:
     branches:
-      - master
+      - main
 
 permissions:
   contents: read
@@ -17,7 +17,7 @@ jobs:
       - uses: rokroskar/workflow-run-cleanup-action@master
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-    if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/master'"
+    if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/main'"
 
   install-tparse:
     runs-on: ubuntu-latest

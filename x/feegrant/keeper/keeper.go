@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -54,7 +53,10 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 
 	var oldExp *time.Time
 	existingGrant, err := k.getGrant(ctx, granter, grantee)
-	if err != nil && !strings.Contains(err.Error(), sdkerrors.ErrUnauthorized.Error()) {
+
+	// If we didn't find any grant, we don't return any error.
+	// All other kinds of errors are returned.
+	if err != nil && !sdkerrors.IsOf(err, sdkerrors.ErrNotFound) {
 		return err
 	}
 
@@ -189,7 +191,7 @@ func (k Keeper) getGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.Ac
 	key := feegrant.FeeAllowanceKey(granter, grantee)
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "fee-grant not found")
+		return nil, sdkerrors.ErrNotFound.Wrap("fee-grant not found")
 	}
 
 	var feegrant feegrant.Grant

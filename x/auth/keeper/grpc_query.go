@@ -148,7 +148,7 @@ func (ak AccountKeeper) AddressBytesToString(ctx context.Context, req *types.Add
 	return &types.AddressBytesToStringResponse{AddressString: text}, nil
 }
 
-// AddressBytesToString converts an address from string to bytes, using the
+// AddressStringToBytes converts an address from string to bytes, using the
 // keeper's bech32 prefix.
 func (ak AccountKeeper) AddressStringToBytes(ctx context.Context, req *types.AddressStringToBytesRequest) (*types.AddressStringToBytesResponse, error) {
 	if req == nil {

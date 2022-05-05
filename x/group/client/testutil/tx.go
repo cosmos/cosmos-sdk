@@ -2294,34 +2294,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			&sdk.TxResponse{},
 		},
 		{
-			"member that leaves affects the threshold policy outcome",
-			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_NO"},
-			accounts,
-			func(groupID string) error {
-				leavingMemberIdx := 2
-				args := append(
-					[]string{
-						accounts[leavingMemberIdx],
-						groupID,
-
-						fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[leavingMemberIdx]),
-					},
-					s.commonFlags...,
-				)
-				out, err := cli.ExecTestCLICmd(clientCtx, client.MsgLeaveGroupCmd(), args)
-				s.Require().NoError(err, out.String())
-				var resp sdk.TxResponse
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-				s.Require().Equal(uint32(0), resp.Code, out.String())
-
-				return err
-			},
-			true,
-			"PROPOSAL_EXECUTOR_RESULT_NOT_RUN",
-			&sdk.TxResponse{},
-		},
-		{
-			"member that leaves does not affect the threshold policy outcome",
+			"member that leaves does affect the threshold policy outcome",
 			[]string{"VOTE_OPTION_YES", "VOTE_OPTION_YES"},
 			accounts,
 			func(groupID string) error {

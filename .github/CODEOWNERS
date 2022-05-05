@@ -3,6 +3,5 @@
 # NOTE: Order is important; the last matching pattern takes the 
 # most precedence.
 
-# Primary repo maintainers
-*       @aaronc @alexanderbez
-
+# People who get pinged on every PR, request if you'd like to be added
+*       @osmosis-labs/chain-engineering-core-reviewers

@@ -105,13 +105,13 @@ func (s *addressTestSuite) TestRandBech32AccAddrConsistency() {
 		s.Require().Equal(acc, res)
 
 		str = hex.EncodeToString(acc)
-		res, err = types.AccAddressFromHex(str)
+		res, err = types.AccAddressFromHexUnsafe(str)
 		s.Require().Nil(err)
 		s.Require().Equal(acc, res)
 	}
 
 	for _, str := range invalidStrs {
-		_, err := types.AccAddressFromHex(str)
+		_, err := types.AccAddressFromHexUnsafe(str)
 		s.Require().NotNil(err)
 
 		_, err = types.AccAddressFromBech32(str)
@@ -121,7 +121,7 @@ func (s *addressTestSuite) TestRandBech32AccAddrConsistency() {
 		s.Require().NotNil(err)
 	}
 
-	_, err := types.AccAddressFromHex("")
+	_, err := types.AccAddressFromHexUnsafe("")
 	s.Require().Equal("decoding Bech32 address failed: must provide an address", err.Error())
 }
 

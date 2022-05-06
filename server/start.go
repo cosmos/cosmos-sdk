@@ -420,7 +420,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			Offline:             offlineMode,
 			GasToSuggest:        config.Rosetta.GasToSuggest,
 			EnableFeeSuggestion: config.Rosetta.EnableFeeSuggestion,
-			SuggestPrices:       minGasPrices.Sort(),
+			GasPrices:           minGasPrices.Sort(),
 			Codec:               clientCtx.Codec.(*codec.ProtoCodec),
 			InterfaceRegistry:   clientCtx.InterfaceRegistry,
 		}

@@ -12,14 +12,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -54,9 +52,9 @@ func TestImportExportQueues(t *testing.T) {
 	require.True(t, proposal1.Status == v1.StatusDepositPeriod)
 	require.True(t, proposal2.Status == v1.StatusVotingPeriod)
 
-	authGenState := auth.ExportGenesis(ctx, app.AccountKeeper)
+	authGenState := app.AccountKeeper.ExportGenesis(ctx)
 	bankGenState := app.BankKeeper.ExportGenesis(ctx)
-	stakingGenState := staking.ExportGenesis(ctx, app.StakingKeeper)
+	stakingGenState := app.StakingKeeper.ExportGenesis(ctx)
 	distributionGenState := app.DistrKeeper.ExportGenesis(ctx)
 
 	// export the state and import it into a new app

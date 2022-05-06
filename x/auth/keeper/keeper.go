@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
 	gogotypes "github.com/gogo/protobuf/types"
@@ -11,7 +10,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -249,7 +247,7 @@ func (ak AccountKeeper) GetCodec() codec.BinaryCodec { return ak.cdc }
 func (ak AccountKeeper) getBech32Prefix() (string, error) {
 	bech32Codec, ok := ak.addressCdc.(bech32Codec)
 	if !ok {
-		return "", errors.New("unable cast addressCdc to bech32Codec")
+		return "", fmt.Errorf("unable cast addressCdc to bech32Codec; expected %T got %T", bech32Codec, ak.addressCdc)
 	}
 
 	return bech32Codec.bech32Prefix, nil

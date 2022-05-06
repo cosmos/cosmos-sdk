@@ -130,9 +130,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			}
 
 			txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
-			if err != nil {
-				return errors.Wrap(err, "error creating tx builder")
-			}
+
 			pub, err := key.GetAddress()
 			if err != nil {
 				return err

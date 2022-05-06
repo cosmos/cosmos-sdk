@@ -115,6 +115,8 @@ var xxx_messageInfo_Grant proto.InternalMessageInfo
 
 // GrantAuthorization extends a grant with both the addresses of the grantee and granter.
 // It is used in genesis.proto and query.proto
+//
+// Since: cosmos-sdk 0.45.2
 type GrantAuthorization struct {
 	Granter       string     `protobuf:"bytes,1,opt,name=granter,proto3" json:"granter,omitempty"`
 	Grantee       string     `protobuf:"bytes,2,opt,name=grantee,proto3" json:"grantee,omitempty"`

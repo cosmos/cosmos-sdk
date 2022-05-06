@@ -127,9 +127,137 @@ func (s *CLITestSuite) createGrant(granter, grantee sdk.AccAddress, addressCodec
 	out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
 	s.Require().NoError(err)
 
-	var resp sdk.TxResponse
-	s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-	s.Require().Equal(resp.Code, uint32(0))
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expectErrMsg)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().Equal(tc.respType.Grantee, tc.respType.Grantee)
+				s.Require().Equal(tc.respType.Granter, tc.respType.Granter)
+				grant, err := tc.respType.GetGrant()
+				s.Require().NoError(err)
+				grant1, err1 := tc.resp.GetGrant()
+				s.Require().NoError(err1)
+				s.Require().Equal(
+					grant.(*feegrant.BasicAllowance).SpendLimit,
+					grant1.(*feegrant.BasicAllowance).SpendLimit,
+				)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGrantee() {
+	val := s.network.Validators[0]
+	grantee := s.addedGrantee
+	clientCtx := val.ClientCtx
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		resp         *feegrant.QueryAllowancesResponse
+		expectLength int
+	}{
+		{
+			"wrong grantee",
+			[]string{
+				"wrong_grantee",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true, nil, 0,
+		},
+		{
+			"non existent grantee",
+			[]string{
+				"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false, &feegrant.QueryAllowancesResponse{}, 0,
+		},
+		{
+			"valid req",
+			[]string{
+				grantee.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false, &feegrant.QueryAllowancesResponse{}, 1,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryFeeGrantsByGrantee()
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.resp), out.String())
+				s.Require().Len(tc.resp.Allowances, tc.expectLength)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGranter() {
+	val := s.network.Validators[0]
+	granter := s.addedGranter
+	clientCtx := val.ClientCtx
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		resp         *feegrant.QueryAllowancesByGranterResponse
+		expectLength int
+	}{
+		{
+			"wrong grantee",
+			[]string{
+				"wrong_grantee",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true, nil, 0,
+		},
+		{
+			"non existent grantee",
+			[]string{
+				"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false, &feegrant.QueryAllowancesByGranterResponse{}, 0,
+		},
+		{
+			"valid req",
+			[]string{
+				granter.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false, &feegrant.QueryAllowancesByGranterResponse{}, 1,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryFeeGrantsByGranter()
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.resp), out.String())
+				s.Require().Len(tc.resp.Allowances, tc.expectLength)
+			}
+		})
+	}
 }
 
 func (s *CLITestSuite) TestNewCmdFeeGrant() {

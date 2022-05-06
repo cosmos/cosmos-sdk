@@ -1,12 +1,14 @@
-package types
+// Package v040 is copy-pasted from:
+// https://github.com/cosmos/cosmos-sdk/blob/v0.41.0/x/gov/types/keys.go
+package v040
 
 import (
 	"encoding/binary"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	v040auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v040"
 )
 
 const (
@@ -18,19 +20,34 @@ const (
 
 	// RouterKey is the message route for gov
 	RouterKey = ModuleName
+
+	// QuerierRoute is the querier route for gov
+	QuerierRoute = ModuleName
 )
 
+// Keys for governance store
+// Items are stored with the following key: values
+//
+// - 0x00<proposalID_Bytes>: Proposal
+//
+// - 0x01<endTime_Bytes><proposalID_Bytes>: activeProposalID
+//
+// - 0x02<endTime_Bytes><proposalID_Bytes>: inactiveProposalID
+//
+// - 0x03: nextProposalID
+//
+// - 0x10<proposalID_Bytes><depositorAddr_Bytes>: Deposit
+//
+// - 0x20<proposalID_Bytes><voterAddr_Bytes>: Voter
 var (
-	ProposalsKeyPrefix           = collections.NewPrefix(0)  // ProposalsKeyPrefix stores the proposals raw bytes.
-	ActiveProposalQueuePrefix    = collections.NewPrefix(1)  // ActiveProposalQueuePrefix stores the active proposals.
-	InactiveProposalQueuePrefix  = collections.NewPrefix(2)  // InactiveProposalQueuePrefix stores the inactive proposals.
-	ProposalIDKey                = collections.NewPrefix(3)  // ProposalIDKey stores the sequence representing the next proposal ID.
-	DepositsKeyPrefix            = collections.NewPrefix(16) // DepositsKeyPrefix stores deposits.
-	VotesKeyPrefix               = collections.NewPrefix(32) // VotesKeyPrefix stores the votes of proposals.
-	ParamsKey                    = collections.NewPrefix(48) // ParamsKey stores the module's params.
-	ConstitutionKey              = collections.NewPrefix(49) // ConstitutionKey stores a chain's constitution.
-	ProposalVoteOptionsKeyPrefix = collections.NewPrefix(50) // ProposalVoteOptionsKeyPrefix stores the vote options of proposals.
-	MessageBasedParamsKey        = collections.NewPrefix(51) // MessageBasedParamsKey stores the message based gov params.
+	ProposalsKeyPrefix          = []byte{0x00}
+	ActiveProposalQueuePrefix   = []byte{0x01}
+	InactiveProposalQueuePrefix = []byte{0x02}
+	ProposalIDKey               = []byte{0x03}
+
+	DepositsKeyPrefix = []byte{0x10}
+
+	VotesKeyPrefix = []byte{0x20}
 )
 
 var lenTime = len(sdk.FormatTimeBytes(time.Now()))
@@ -79,7 +96,7 @@ func DepositsKey(proposalID uint64) []byte {
 
 // DepositKey key of a specific deposit from the store
 func DepositKey(proposalID uint64, depositorAddr sdk.AccAddress) []byte {
-	return append(DepositsKey(proposalID), address.MustLengthPrefix(depositorAddr.Bytes())...)
+	return append(DepositsKey(proposalID), depositorAddr.Bytes()...)
 }
 
 // VotesKey gets the first part of the votes key based on the proposalID
@@ -89,7 +106,7 @@ func VotesKey(proposalID uint64) []byte {
 
 // VoteKey key of a specific vote from the store
 func VoteKey(proposalID uint64, voterAddr sdk.AccAddress) []byte {
-	return append(VotesKey(proposalID), address.MustLengthPrefix(voterAddr.Bytes())...)
+	return append(VotesKey(proposalID), voterAddr.Bytes()...)
 }
 
 // Split keys function; used for iterators
@@ -136,11 +153,10 @@ func splitKeyWithTime(key []byte) (proposalID uint64, endTime time.Time) {
 }
 
 func splitKeyWithAddress(key []byte) (proposalID uint64, addr sdk.AccAddress) {
-	// Both Vote and Deposit store keys are of format:
-	// <prefix (1 Byte)><proposalID (8 bytes)><addrLen (1 Byte)><addr_Bytes>
+	kv.AssertKeyLength(key[1:], 8+v040auth.AddrLen)
+
 	kv.AssertKeyAtLeastLength(key, 10)
 	proposalID = GetProposalIDFromBytes(key[1:9])
-	kv.AssertKeyAtLeastLength(key, 11)
-	addr = sdk.AccAddress(key[10:])
+	addr = sdk.AccAddress(key[9:])
 	return
 }

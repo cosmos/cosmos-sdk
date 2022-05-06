@@ -156,7 +156,43 @@ func ParseValidatorPowerRankKey(key []byte) (operAddr []byte) {
 // GetUBDKey creates the key for an unbonding delegation by delegator and validator addr
 // VALUE: staking/UnbondingDelegation
 func GetUBDKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
-	return append(append(UnbondingDelegationKey, address.MustLengthPrefix(delAddr)...), address.MustLengthPrefix(valAddr)...)
+	return append(GetUBDsKey(delAddr.Bytes()), address.MustLengthPrefix(valAddr)...)
+}
+
+// GetUBDByValIndexKey creates the index-key for an unbonding delegation, stored by validator-index
+// VALUE: none (key rearrangement used)
+func GetUBDByValIndexKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
+	return append(GetUBDsByValIndexKey(valAddr), address.MustLengthPrefix(delAddr)...)
+}
+
+// GetUBDKeyFromValIndexKey rearranges the ValIndexKey to get the UBDKey
+func GetUBDKeyFromValIndexKey(indexKey []byte) []byte {
+	kv.AssertKeyAtLeastLength(indexKey, 2)
+	addrs := indexKey[1:] // remove prefix bytes
+
+	valAddrLen := addrs[0]
+	kv.AssertKeyAtLeastLength(addrs, 2+int(valAddrLen))
+	valAddr := addrs[1 : 1+valAddrLen]
+	kv.AssertKeyAtLeastLength(addrs, 3+int(valAddrLen))
+	delAddr := addrs[valAddrLen+2:]
+
+	return GetUBDKey(delAddr, valAddr)
+}
+
+// GetUBDsKey creates the prefix for all unbonding delegations from a delegator
+func GetUBDsKey(delAddr sdk.AccAddress) []byte {
+	return append(UnbondingDelegationKey, address.MustLengthPrefix(delAddr)...)
+}
+
+// GetUBDsByValIndexKey creates the prefix keyspace for the indexes of unbonding delegations for a validator
+func GetUBDsByValIndexKey(valAddr sdk.ValAddress) []byte {
+	return append(UnbondingDelegationByValIndexKey, address.MustLengthPrefix(valAddr)...)
+}
+
+// GetUnbondingDelegationTimeKey creates the prefix for all unbonding delegations from a delegator
+func GetUnbondingDelegationTimeKey(timestamp time.Time) []byte {
+	bz := sdk.FormatTimeBytes(timestamp)
+	return append(UnbondingQueueKey, bz...)
 }
 
 // GetREDKey returns a key prefix for indexing a redelegation from a delegator
@@ -172,6 +208,83 @@ func GetREDKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []
 	copy(key[4+len(delAddr)+len(valSrcAddr):], valDstAddr.Bytes())
 
 	return key
+}
+
+// GetREDByValSrcIndexKey creates the index-key for a redelegation, stored by source-validator-index
+// VALUE: none (key rearrangement used)
+func GetREDByValSrcIndexKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []byte {
+	REDSFromValsSrcKey := GetREDsFromValSrcIndexKey(valSrcAddr)
+	offset := len(REDSFromValsSrcKey)
+
+	// key is of the form REDSFromValsSrcKey || delAddrLen (1 byte) || delAddr || valDstAddrLen (1 byte) || valDstAddr
+	key := make([]byte, offset+2+len(delAddr)+len(valDstAddr))
+	copy(key[0:offset], REDSFromValsSrcKey)
+	key[offset] = byte(len(delAddr))
+	copy(key[offset+1:offset+1+len(delAddr)], delAddr.Bytes())
+	key[offset+1+len(delAddr)] = byte(len(valDstAddr))
+	copy(key[offset+2+len(delAddr):], valDstAddr.Bytes())
+
+	return key
+}
+
+// GetREDByValDstIndexKey creates the index-key for a redelegation, stored by destination-validator-index
+// VALUE: none (key rearrangement used)
+func GetREDByValDstIndexKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []byte {
+	REDSToValsDstKey := GetREDsToValDstIndexKey(valDstAddr)
+	offset := len(REDSToValsDstKey)
+
+	// key is of the form REDSToValsDstKey || delAddrLen (1 byte) || delAddr || valSrcAddrLen (1 byte) || valSrcAddr
+	key := make([]byte, offset+2+len(delAddr)+len(valSrcAddr))
+	copy(key[0:offset], REDSToValsDstKey)
+	key[offset] = byte(len(delAddr))
+	copy(key[offset+1:offset+1+len(delAddr)], delAddr.Bytes())
+	key[offset+1+len(delAddr)] = byte(len(valSrcAddr))
+	copy(key[offset+2+len(delAddr):], valSrcAddr.Bytes())
+
+	return key
+}
+
+// GetREDKeyFromValSrcIndexKey rearranges the ValSrcIndexKey to get the REDKey
+func GetREDKeyFromValSrcIndexKey(indexKey []byte) []byte {
+	// note that first byte is prefix byte, which we remove
+	kv.AssertKeyAtLeastLength(indexKey, 2)
+	addrs := indexKey[1:]
+
+	valSrcAddrLen := addrs[0]
+	kv.AssertKeyAtLeastLength(addrs, int(valSrcAddrLen)+2)
+	valSrcAddr := addrs[1 : valSrcAddrLen+1]
+	delAddrLen := addrs[valSrcAddrLen+1]
+	kv.AssertKeyAtLeastLength(addrs, int(valSrcAddrLen)+int(delAddrLen)+2)
+	delAddr := addrs[valSrcAddrLen+2 : valSrcAddrLen+2+delAddrLen]
+	kv.AssertKeyAtLeastLength(addrs, int(valSrcAddrLen)+int(delAddrLen)+4)
+	valDstAddr := addrs[valSrcAddrLen+delAddrLen+3:]
+
+	return GetREDKey(delAddr, valSrcAddr, valDstAddr)
+}
+
+// GetREDKeyFromValDstIndexKey rearranges the ValDstIndexKey to get the REDKey
+func GetREDKeyFromValDstIndexKey(indexKey []byte) []byte {
+	// note that first byte is prefix byte, which we remove
+	kv.AssertKeyAtLeastLength(indexKey, 2)
+	addrs := indexKey[1:]
+
+	valDstAddrLen := addrs[0]
+	kv.AssertKeyAtLeastLength(addrs, int(valDstAddrLen)+2)
+	valDstAddr := addrs[1 : valDstAddrLen+1]
+	delAddrLen := addrs[valDstAddrLen+1]
+	kv.AssertKeyAtLeastLength(addrs, int(valDstAddrLen)+int(delAddrLen)+3)
+	delAddr := addrs[valDstAddrLen+2 : valDstAddrLen+2+delAddrLen]
+	kv.AssertKeyAtLeastLength(addrs, int(valDstAddrLen)+int(delAddrLen)+4)
+	valSrcAddr := addrs[valDstAddrLen+delAddrLen+3:]
+
+	return GetREDKey(delAddr, valSrcAddr, valDstAddr)
+}
+
+// GetRedelegationTimeKey returns a key prefix for indexing an unbonding
+// redelegation based on a completion time.
+func GetRedelegationTimeKey(timestamp time.Time) []byte {
+	bz := sdk.FormatTimeBytes(timestamp)
+	return append(RedelegationQueueKey, bz...)
 }
 
 // GetREDsKey returns a key prefix for indexing a redelegation from a delegator

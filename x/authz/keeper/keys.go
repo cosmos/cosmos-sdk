@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
 // Keys for store prefixes
@@ -49,6 +50,13 @@ func granterStoreKey(granter sdk.AccAddress) []byte {
 func parseGrantStoreKey(key []byte) (granterAddr, granteeAddr sdk.AccAddress, msgType string) {
 	// key is of format:
 	// 0x01<granterAddressLen (1 Byte)><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes><msgType_Bytes>
+	kv.AssertKeyAtLeastLength(key, 2)
+	granterAddrLen := key[1] // remove prefix key
+	kv.AssertKeyAtLeastLength(key, int(3+granterAddrLen))
+	granterAddr = sdk.AccAddress(key[2 : 2+granterAddrLen])
+	granteeAddrLen := int(key[2+granterAddrLen])
+	kv.AssertKeyAtLeastLength(key, 4+int(granterAddrLen+byte(granteeAddrLen)))
+	granteeAddr = sdk.AccAddress(key[3+granterAddrLen : 3+granterAddrLen+byte(granteeAddrLen)])
 
 	granterAddrLen, granterAddrLenEndIndex := sdk.ParseLengthPrefixedBytes(key, 1, 1) // ignore key[0] since it is a prefix key
 	granterAddr, granterAddrEndIndex := sdk.ParseLengthPrefixedBytes(key, granterAddrLenEndIndex+1, int(granterAddrLen[0]))

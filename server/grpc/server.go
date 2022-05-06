@@ -17,9 +17,19 @@ import (
 
 // StartGRPCServer starts a gRPC server on the given address.
 func StartGRPCServer(clientCtx client.Context, app types.Application, cfg config.GRPCConfig) (*grpc.Server, error) {
+	maxSendMsgSize := cfg.MaxSendMsgSize
+	if maxSendMsgSize == 0 {
+		maxSendMsgSize = config.DefaultGRPCMaxSendMsgSize
+	}
+
+	maxRecvMsgSize := cfg.MaxRecvMsgSize
+	if maxRecvMsgSize == 0 {
+		maxRecvMsgSize = config.DefaultGRPCMaxRecvMsgSize
+	}
+
 	grpcSrv := grpc.NewServer(
-		grpc.MaxSendMsgSize(cfg.MaxSendMsgSize),
-		grpc.MaxRecvMsgSize(cfg.MaxRecvMsgSize),
+		grpc.MaxSendMsgSize(maxSendMsgSize),
+		grpc.MaxRecvMsgSize(maxRecvMsgSize),
 	)
 	app.RegisterGRPCServer(grpcSrv)
 

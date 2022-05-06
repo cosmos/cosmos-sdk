@@ -21,6 +21,14 @@ const (
 
 	// DefaultGRPCWebAddress defines the default address to bind the gRPC-web server to.
 	DefaultGRPCWebAddress = "0.0.0.0:9091"
+
+	// DefaultGRPCMaxRecvMsgSize defines the default gRPC max message size in
+	// bytes the server can receive.
+	DefaultGRPCMaxRecvMsgSize = 1024 * 1024 * 10
+
+	// DefaultGRPCMaxSendMsgSize defines the default gRPC max message size in
+	// bytes the server can send.
+	DefaultGRPCMaxSendMsgSize = math.MaxInt32
 )
 
 // BaseConfig defines the server's basic configuration
@@ -235,8 +243,8 @@ func DefaultConfig() *Config {
 		GRPC: GRPCConfig{
 			Enable:         true,
 			Address:        DefaultGRPCAddress,
-			MaxRecvMsgSize: 1024 * 1024 * 10,
-			MaxSendMsgSize: math.MaxInt32,
+			MaxRecvMsgSize: DefaultGRPCMaxRecvMsgSize,
+			MaxSendMsgSize: DefaultGRPCMaxSendMsgSize,
 		},
 		Rosetta: RosettaConfig{
 			Enable:     false,

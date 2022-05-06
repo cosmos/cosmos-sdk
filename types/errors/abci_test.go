@@ -233,7 +233,7 @@ func (s *abciTestSuite) TestABCIInfoSerializeErr() {
 		},
 		"redact in default encoder": {
 			src: myPanic,
-			exp: "panic message redacted to hide potentially sensitive system info: panic",
+			exp: "error message redacted to hide potential sensitive info. Use the '--trace' flag if you are running a node to see the full stack trace error: panic",
 		},
 		"do not redact in debug encoder": {
 			src:   myPanic,

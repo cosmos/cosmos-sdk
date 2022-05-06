@@ -72,6 +72,8 @@ func (s *IntegrationTestSuite) TestGenTxCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagChainID, s.network.Config.ChainID),
 				val.Moniker,
 				amount.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagEthereumAddress, val.EthereumAddr.GetAddress()),
+				fmt.Sprintf("--%s=%s", flags.FlagOrchestratorAddress, val.OrchestratorAddr.String()),
 			},
 			expError: false,
 		},

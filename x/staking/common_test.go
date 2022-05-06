@@ -32,9 +32,6 @@ var (
 	commissionRates = types.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 
 	PKs = simapp.CreateTestPubKeys(500)
-
-	testOrchAddr = "celes1qktu8009djs6uym9uwj84ead24exkezsaqrmn5"
-	testEthAddr  = "0x91DEd26b5f38B065FC0204c7929Da6b2A21277Cd"
 )
 
 // getBaseSimappWithCustomKeeper Returns a simapp with custom StakingKeeper

@@ -3,9 +3,12 @@ package network
 import (
 	"bufio"
 	"context"
+	"crypto/ecdsa"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/crypto"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -167,6 +170,11 @@ type (
 		api     *api.Server
 		grpc    *grpc.Server
 		grpcWeb *http.Server
+
+		EthPrivateKey *ecdsa.PrivateKey
+		EthereumAddr  *stakingtypes.EthAddress
+
+		OrchestratorAddr sdk.AccAddress
 	}
 )
 
@@ -399,11 +407,11 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			return nil, err
 		}
 
-		orchAddr, _ := sdk.AccAddressFromHex("celes1qktu8009djs6uym9uwj84ead24exkezsaqrmn5")
-		ethAddr, _ := stakingtypes.NewEthAddress("0x91DEd26b5f38B065FC0204c7929Da6b2A21277Cd")
-
-		orchAddr, _ := sdk.AccAddressFromHex("celes1qktu8009djs6uym9uwj84ead24exkezsaqrmn5")
-		ethAddr, _ := stakingtypes.NewEthAddress("0x91DEd26b5f38B065FC0204c7929Da6b2A21277Cd")
+		ethPrivateKey, err := crypto.GenerateKey()
+		require.NoError(t, err)
+		orchEthPublicKey := ethPrivateKey.Public().(*ecdsa.PublicKey)
+		ethAddr, err := stakingtypes.NewEthAddress(crypto.PubkeyToAddress(*orchEthPublicKey).Hex())
+		require.NoError(t, err)
 
 		createValMsg, err := stakingtypes.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
@@ -411,7 +419,9 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			sdk.NewCoin(cfg.BondDenom, cfg.BondedTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(commission, sdk.OneDec(), sdk.OneDec()),
-			sdk.OneInt(), orchAddr, *ethAddr,
+			sdk.OneInt(),
+			addr,
+			*ethAddr,
 		)
 		if err != nil {
 			return nil, err
@@ -468,18 +478,21 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			WithAccountRetriever(cfg.AccountRetriever)
 
 		network.Validators[i] = &Validator{
-			AppConfig:  appCfg,
-			ClientCtx:  clientCtx,
-			Ctx:        ctx,
-			Dir:        filepath.Join(network.BaseDir, nodeDirName),
-			NodeID:     nodeID,
-			PubKey:     pubKey,
-			Moniker:    nodeDirName,
-			RPCAddress: tmCfg.RPC.ListenAddress,
-			P2PAddress: tmCfg.P2P.ListenAddress,
-			APIAddress: apiAddr,
-			Address:    addr,
-			ValAddress: sdk.ValAddress(addr),
+			AppConfig:        appCfg,
+			ClientCtx:        clientCtx,
+			Ctx:              ctx,
+			Dir:              filepath.Join(network.BaseDir, nodeDirName),
+			NodeID:           nodeID,
+			PubKey:           pubKey,
+			Moniker:          nodeDirName,
+			RPCAddress:       tmCfg.RPC.ListenAddress,
+			P2PAddress:       tmCfg.P2P.ListenAddress,
+			APIAddress:       apiAddr,
+			Address:          addr,
+			ValAddress:       sdk.ValAddress(addr),
+			EthPrivateKey:    ethPrivateKey,
+			EthereumAddr:     ethAddr,
+			OrchestratorAddr: addr,
 		}
 	}
 

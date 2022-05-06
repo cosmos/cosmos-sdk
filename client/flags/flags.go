@@ -83,6 +83,10 @@ const (
 	// Tendermint logging flags
 	FlagLogLevel  = "log_level"
 	FlagLogFormat = "log_format"
+
+	// QGB related flags
+	FlagOrchestratorAddress = "orchestrator-address"
+	FlagEthereumAddress     = "ethereum-address"
 )
 
 // LineBreak can be included in a command list to provide a blank line

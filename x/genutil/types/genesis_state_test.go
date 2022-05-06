@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"encoding/json"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -17,8 +18,11 @@ import (
 )
 
 var (
-	pk1 = ed25519.GenPrivKey().PubKey()
-	pk2 = ed25519.GenPrivKey().PubKey()
+	pk1         = ed25519.GenPrivKey().PubKey()
+	ethAddr1, _ = teststaking.RandomEthAddress()
+
+	pk2         = ed25519.GenPrivKey().PubKey()
+	ethAddr2, _ = teststaking.RandomEthAddress()
 )
 
 func TestNetGenesisState(t *testing.T) {
@@ -38,11 +42,17 @@ func TestValidateGenesisMultipleMessages(t *testing.T) {
 	comm := stakingtypes.CommissionRates{}
 
 	msg1, err := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk1.Address()), pk1,
-		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt())
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt(),
+		sdk.AccAddress(pk1.Address()),
+		*ethAddr1,
+	)
 	require.NoError(t, err)
 
 	msg2, err := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk2.Address()), pk2,
-		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt())
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt(),
+		sdk.AccAddress(pk2.Address()),
+		*ethAddr2,
+	)
 	require.NoError(t, err)
 
 	txGen := simapp.MakeTestEncodingConfig().TxConfig
@@ -59,7 +69,7 @@ func TestValidateGenesisMultipleMessages(t *testing.T) {
 func TestValidateGenesisBadMessage(t *testing.T) {
 	desc := stakingtypes.NewDescription("testname", "", "", "", "")
 
-	msg1 := stakingtypes.NewMsgEditValidator(sdk.ValAddress(pk1.Address()), desc, nil, nil)
+	msg1 := stakingtypes.NewMsgEditValidator(sdk.ValAddress(pk1.Address()), desc, nil, nil, nil, nil)
 
 	txGen := simapp.MakeTestEncodingConfig().TxConfig
 	txBuilder := txGen.NewTxBuilder()

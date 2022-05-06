@@ -158,9 +158,8 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 			simtypes.RandomDecAmount(r, maxCommission),
 		)
 
-		// TODO update later
-		orchAddr, _ := sdk.AccAddressFromBech32("celes1qktu8009djs6uym9uwj84ead24exkezsaqrmn5")
 		ethAddr, _ := types.NewEthAddress("0x91DEd26b5f38B065FC0204c7929Da6b2A21277Cd")
+		orchAddr := simAccount.Address
 
 		msg, err := types.NewMsgCreateValidator(address, simAccount.ConsKey.PubKey(), selfDelegation, description, commission, sdk.OneInt(), orchAddr, *ethAddr)
 		if err != nil {

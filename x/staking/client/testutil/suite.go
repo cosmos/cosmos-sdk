@@ -3,6 +3,7 @@ package testutil
 import (
 	"context"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"strings"
 	"testing"
 
@@ -49,7 +50,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 
-	_, err = s.network.WaitForHeight(1)
+	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
 	unbond, err := sdk.ParseCoinNormalized("10stake")
@@ -65,7 +66,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		val.ValAddress,
 		val2.ValAddress,
 		unbond,
-		fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
+		fmt.Sprintf("--%s=%d", flags.FlagGas, 306313), //  306313 is the required
 	)
 	s.Require().NoError(err)
 	var txRes sdk.TxResponse
@@ -120,6 +121,9 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	)
+	require.NoError(err)
+
+	randomEthAddress, err := teststaking.RandomEthAddress()
 	require.NoError(err)
 
 	testCases := []struct {
@@ -204,6 +208,8 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagEthereumAddress, randomEthAddress.GetAddress()),
+				fmt.Sprintf("--%s=%s", flags.FlagOrchestratorAddress, newAddr.String()),
 			},
 			false, 0, &sdk.TxResponse{},
 		},

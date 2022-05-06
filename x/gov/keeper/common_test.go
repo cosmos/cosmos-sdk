@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -50,11 +51,19 @@ func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers 
 		app.GetSubspace(stakingtypes.ModuleName),
 	)
 
-	val1, err := stakingtypes.NewValidator(valAddrs[0], pks[0], stakingtypes.Description{})
+	randomEthAddress1, err := teststaking.RandomEthAddress()
 	require.NoError(t, err)
-	val2, err := stakingtypes.NewValidator(valAddrs[1], pks[1], stakingtypes.Description{})
+	val1, err := stakingtypes.NewValidator(valAddrs[0], pks[0], stakingtypes.Description{}, sdk.AccAddress(pks[0].Address()), *randomEthAddress1)
 	require.NoError(t, err)
-	val3, err := stakingtypes.NewValidator(valAddrs[2], pks[2], stakingtypes.Description{})
+
+	randomEthAddress2, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
+	val2, err := stakingtypes.NewValidator(valAddrs[1], pks[1], stakingtypes.Description{}, sdk.AccAddress(pks[1].Address()), *randomEthAddress2)
+	require.NoError(t, err)
+
+	randomEthAddress3, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
+	val3, err := stakingtypes.NewValidator(valAddrs[2], pks[2], stakingtypes.Description{}, sdk.AccAddress(pks[2].Address()), *randomEthAddress3)
 	require.NoError(t, err)
 
 	app.StakingKeeper.SetValidator(ctx, val1)

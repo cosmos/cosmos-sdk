@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	flag "github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -31,9 +32,6 @@ const (
 	FlagGenesisFormat = "genesis-format"
 	FlagNodeID        = "node-id"
 	FlagIP            = "ip"
-
-	FlagOrchestratorAddress = "orchestrator-address"
-	FlagEthereumAddress     = "ethereum-address"
 )
 
 // common flagsets to add to various functions
@@ -86,14 +84,14 @@ func FlagSetPublicKey() *flag.FlagSet {
 // FlagSetOrchestratorAddress Returns the flagset for Orchestrator address related operations.
 func FlagSetOrchestratorAddress() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
-	fs.String(FlagOrchestratorAddress, "", "The Bech32 celes1 address of the orchestrator")
+	fs.String(flags.FlagOrchestratorAddress, "", "The Bech32 cosmos1 address of the orchestrator")
 	return fs
 }
 
 // FlagSetEthereumAddress Returns the flagset for Ethereum address related operations.
 func FlagSetEthereumAddress() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
-	fs.String(FlagEthereumAddress, "", "The 0x EVM address of the orchestrator")
+	fs.String(flags.FlagEthereumAddress, "", "The 0x EVM address of the orchestrator")
 	return fs
 }
 

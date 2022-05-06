@@ -118,11 +118,10 @@ Examples:
 
 				var delegateLimit *sdk.Coin
 				if limit != "" {
-					spendLimit, err := sdk.ParseCoinsNormalized(limit)
+					spendLimit, err := sdk.ParseCoinNormalized(limit)
 					if err != nil {
 						return err
 					}
-
 					queryClient := staking.NewQueryClient(clientCtx)
 
 					res, err := queryClient.Params(cmd.Context(), &staking.QueryParamsRequest{})
@@ -130,17 +129,14 @@ Examples:
 						return err
 					}
 
-					if len(spendLimit) > 1 {
-						return fmt.Errorf("spendlimit cannot be more than one value")
-					}
-					if spendLimit[0].Denom != res.Params.BondDenom {
-						return fmt.Errorf("invalid denom %s \ncoin denom should match the current bond denom", spendLimit[0].Denom)
+					if spendLimit.Denom != res.Params.BondDenom {
+						return fmt.Errorf("invalid denom %s \ncoin denom should match the current bond denom", spendLimit.Denom)
 					}
 
-					if !spendLimit.IsAllPositive() {
+					if !spendLimit.IsPositive() {
 						return fmt.Errorf("spend-limit should be greater than zero")
 					}
-					delegateLimit = &spendLimit[0]
+					delegateLimit = &spendLimit
 				}
 
 				allowed, err := bech32toValidatorAddresses(allowValidators)

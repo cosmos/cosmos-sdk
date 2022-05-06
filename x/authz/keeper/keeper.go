@@ -205,6 +205,7 @@ func (k Keeper) DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk
 			return err
 		}
 	}
+
 	store.Delete(skey)
 
 	return ctx.EventManager().EmitTypedEvent(&authz.EventRevoke{

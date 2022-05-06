@@ -303,7 +303,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			"invalid denom",
 		},
 		{
-			"spendlimit with two different bond denom values",
+			"invalid decimal coin expression with more than single coin",
 			[]string{
 				grantee.String(),
 				"delegate",
@@ -317,24 +317,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			true,
-			"spendlimit cannot be more than one value",
-		},
-		{
-			"spendlimit with two values with same denom",
-			[]string{
-				grantee.String(),
-				"delegate",
-				fmt.Sprintf("--%s=100stake,20stake", cli.FlagSpendLimit),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-				fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, val.ValAddress.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			0,
-			true,
-			"duplicate denomination",
+			"invalid decimal coin expression",
 		},
 		{
 			"valid tx delegate authorization allowed validators",

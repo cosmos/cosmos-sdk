@@ -85,6 +85,11 @@ var (
 	valAddrCache  *simplelru.LRU
 )
 
+// sentinel errors
+var (
+	ErrEmptyHexAddress = errors.New("decoding address from hex string failed: empty address")
+)
+
 func init() {
 	var err error
 	// in total the cache size is 61k entries. Key is 32 bytes and value is around 50-70 bytes.
@@ -646,7 +651,7 @@ func GetFromBech32(bech32str, prefix string) ([]byte, error) {
 
 func addressBytesFromHexString(address string) ([]byte, error) {
 	if len(address) == 0 {
-		return nil, errors.New("decoding address from hex string failed: empty address")
+		return nil, ErrEmptyHexAddress
 	}
 
 	return hex.DecodeString(address)

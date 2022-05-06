@@ -34,17 +34,23 @@ service Query {
     option (google.api.http).get = "/cosmos/auth/v1beta1/module_accounts";
   }
 
-  // Bech32 queries bech32Prefix
+  // Bech32Prefix queries bech32Prefix
+  //
+  // Since: cosmos-sdk 0.46
   rpc Bech32Prefix(Bech32PrefixRequest) returns (Bech32PrefixResponse) {
     option (google.api.http).get = "/cosmos/auth/v1beta1/bech32";
   }
 
   // AddressBytesToString converts Account Address bytes to string
+  //
+  // Since: cosmos-sdk 0.46
   rpc AddressBytesToString(AddressBytesToStringRequest) returns (AddressBytesToStringResponse) {
     option (google.api.http).get = "/cosmos/auth/v1beta1/bech32/{address_bytes}";
   }
 
   // AddressStringToBytes converts Address string to bytes
+  //
+  // Since: cosmos-sdk 0.46
   rpc AddressStringToBytes(AddressStringToBytesRequest) returns (AddressStringToBytesResponse) {
     option (google.api.http).get = "/cosmos/auth/v1beta1/bech32/{address_string}";
   }
@@ -101,30 +107,42 @@ message QueryModuleAccountsResponse {
   repeated google.protobuf.Any accounts = 1 [(cosmos_proto.accepts_interface) = "ModuleAccountI"];
 }
 
-// Bech32PrefixRequest is the request type for Bech32Prefix rpc method
+// Bech32PrefixRequest is the request type for Bech32Prefix rpc method.
+//
+// Since: cosmos-sdk 0.46
 message Bech32PrefixRequest {}
 
-// Bech32PrefixResponse is the response type for Bech32Prefix rpc method
+// Bech32PrefixResponse is the response type for Bech32Prefix rpc method.
+//
+// Since: cosmos-sdk 0.46
 message Bech32PrefixResponse {
   string bech32_prefix = 1;
 }
 
-// AddressBytesToStringRequest is the request type for AddressString rpc method
+// AddressBytesToStringRequest is the request type for AddressString rpc method.
+//
+// Since: cosmos-sdk 0.46
 message AddressBytesToStringRequest {
   bytes address_bytes = 1;
 }
 
-// AddressBytesToStringResponse is the response type for AddressString rpc method
+// AddressBytesToStringResponse is the response type for AddressString rpc method.
+//
+// Since: cosmos-sdk 0.46
 message AddressBytesToStringResponse {
   string address_string = 1;
 }
 
-// AddressStringToBytesRequest is the request type for AccountBytes rpc method
+// AddressStringToBytesRequest is the request type for AccountBytes rpc method.
+//
+// Since: cosmos-sdk 0.46
 message AddressStringToBytesRequest {
   string address_string = 1;
 }
 
-// AddressStringToBytesResponse is the response type for AddressBytes rpc method
+// AddressStringToBytesResponse is the response type for AddressBytes rpc method.
+//
+// Since: cosmos-sdk 0.46
 message AddressStringToBytesResponse {
   bytes address_bytes = 1;
 }

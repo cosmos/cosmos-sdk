@@ -109,6 +109,18 @@ Assuming the state at that block has not yet been pruned by the node, this query
 
 The following snippet shows how to query the state using gRPC inside a Go program. The idea is to create a gRPC connection, and use the Protobuf-generated client code to query the gRPC server.
 
+#### Install cosmos sdk
+
+Add below line to `go.mod` to replace protobuf, read more [#8469](https://github.com/cosmos/cosmos-sdk/issues/8469)
+
+```
+replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+```
+
+```bash
+$ go get github.com/cosmos/cosmos-sdk@main
+```
+
 ```go
 import (
     "context"
@@ -128,13 +140,16 @@ func queryState() error {
     }
 
     // Create a connection to the gRPC server.
-    grpcConn := grpc.Dial(
+    grpcConn, err := grpc.Dial(
         "127.0.0.1:9090", // your gRPC server address.
         grpc.WithInsecure(), // The Cosmos SDK doesn't support any transport security mechanism. 
         // This instantiates a general gRPC codec which handles proto bytes. We pass in a nil interface registry
         // if the request/response types contain interface instead of 'nil' you should pass the application specific codec.
 		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(nil).GRPCCodec())),
 	)
+    if err != nil {
+        return err
+    }
     defer grpcConn.Close()
 
     // This creates a gRPC client to query the x/bank service.

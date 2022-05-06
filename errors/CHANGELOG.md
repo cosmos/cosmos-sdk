@@ -34,6 +34,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## [Unreleased]
+
+### Improvements
+
+* [\#11762](https://github.com/cosmos/cosmos-sdk/pull/11762) Improve error messages
+
 ## v1.0.0
 
 ### Features

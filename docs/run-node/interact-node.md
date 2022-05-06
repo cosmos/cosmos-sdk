@@ -126,11 +126,11 @@ import (
     "context"
     "fmt"
 
-	"google.golang.org/grpc"
+    "google.golang.org/grpc"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+    "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
+    banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func queryState() error {
@@ -156,7 +156,7 @@ func queryState() error {
     bankClient := banktypes.NewQueryClient(grpcConn)
     bankRes, err := bankClient.Balance(
         context.Background(),
-        &banktypes.QueryBalanceRequest{Address: myAddress, Denom: "atom"},
+        &banktypes.QueryBalanceRequest{Address: myAddress.String(), Denom: "atom"},
     )
     if err != nil {
         return err
@@ -182,8 +182,10 @@ import (
     "google.golang.org/grpc"
     "google.golang.org/grpc/metadata"
 
+    "github.com/cosmos/cosmos-sdk/codec"
+    sdk "github.com/cosmos/cosmos-sdk/types"
     grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-	"github.com/cosmos/cosmos-sdk/types/tx"
+    banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func queryState() error {
@@ -192,13 +194,13 @@ func queryState() error {
     var header metadata.MD
     bankRes, err = bankClient.Balance(
         metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, "12"), // Add metadata to request
-        &banktypes.QueryBalanceRequest{Address: myAddress, Denom: denom},
+        &banktypes.QueryBalanceRequest{Address: myAddress.String(), Denom: "atom"},
         grpc.Header(&header), // Retrieve header from response
     )
     if err != nil {
         return err
     }
-    blockHeight = header.Get(grpctypes.GRPCBlockHeightHeader)
+    blockHeight := header.Get(grpctypes.GRPCBlockHeightHeader)
 
     fmt.Println(blockHeight) // Prints the block height (12)
 

@@ -646,7 +646,7 @@ func GetFromBech32(bech32str, prefix string) ([]byte, error) {
 
 func addressBytesFromHexString(address string) ([]byte, error) {
 	if len(address) == 0 {
-		return nil, errors.New("decoding Bech32 address failed: must provide an address")
+		return nil, errors.New("decoding Bech32 address from hex string failed: empty address")
 	}
 
 	return hex.DecodeString(address)

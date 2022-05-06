@@ -50,7 +50,7 @@ func NewCmdSubmitLegacyUpgradeProposal() *cobra.Command {
 				return err
 			}
 			name := args[0]
-			content, err := parseArgsToContent(cmd, name)
+			content, err := parseArgsToContent(cmd.Flags(), name)
 			if err != nil {
 				return err
 			}
@@ -163,7 +163,7 @@ func NewCmdSubmitLegacyCancelUpgradeProposal() *cobra.Command {
 // If a DAEMON_NAME env var is set, that is used.
 // Otherwise, the last part of the currently running executable is used.
 func getDefaultDaemonName() string {
-	// DAEMON_NAME is specifically used here to correspond with the Comsovisor setup env vars.
+	// DAEMON_NAME is specifically used here to correspond with the Cosmovisor setup env vars.
 	name := os.Getenv("DAEMON_NAME")
 	if len(name) == 0 {
 		_, name = filepath.Split(os.Args[0])

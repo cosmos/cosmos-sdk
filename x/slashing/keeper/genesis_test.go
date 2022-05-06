@@ -1,4 +1,4 @@
-package slashing_test
+package keeper_test
 
 import (
 	"testing"
@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/slashing/testslashing"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -29,7 +28,7 @@ func TestExportAndInitGenesis(t *testing.T) {
 
 	app.SlashingKeeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[0]), info1)
 	app.SlashingKeeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[1]), info2)
-	genesisState := slashing.ExportGenesis(ctx, app.SlashingKeeper)
+	genesisState := app.SlashingKeeper.ExportGenesis(ctx)
 
 	require.Equal(t, genesisState.Params, testslashing.TestParams())
 	require.Len(t, genesisState.SigningInfos, 2)
@@ -45,7 +44,8 @@ func TestExportAndInitGenesis(t *testing.T) {
 	newInfo1, ok := app.SlashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[0]))
 	require.NotEqual(t, info1, newInfo1)
 	// Initialise genesis with genesis state before tombstone
-	slashing.InitGenesis(ctx, app.SlashingKeeper, app.StakingKeeper, genesisState)
+
+	app.SlashingKeeper.InitGenesis(ctx, app.StakingKeeper, genesisState)
 
 	// Validator isTombstoned should return false as GenesisState is initialised
 	ok = app.SlashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(addrDels[0]))

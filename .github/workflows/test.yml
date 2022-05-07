@@ -45,6 +45,8 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/faddat/cosmos
     steps:
+      # this is necessary because we're using a newer version of git, ref: https://github.com/actions/checkout/issues/760
+      - run: git config --global --add safe.directory /__w/cosmos-sdk/cosmos-sdk
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:

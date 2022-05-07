@@ -10,6 +10,9 @@ import (
 )
 
 // UpgradeName defines the on-chain upgrade name for the sample simap upgrade from v045 to v046.
+//
+// NOTE: This upgrade defines a reference implementation of what an upgrade could look like
+// when an application is migrating from Cosmos SDK version v0.45.x to v0.46.x.
 const UpgradeName = "v045-to-v046"
 
 func (app SimApp) RegisterUpgradeHandlers() {

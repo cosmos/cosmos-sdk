@@ -29,7 +29,7 @@ type App struct {
 	msgServiceRegistrar grpc.Server
 }
 
-func (a App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (a *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState map[string]json.RawMessage
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
@@ -38,19 +38,19 @@ func (a App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.Respon
 	return a.mm.InitGenesis(ctx, a.privateState.cdc, genesisState)
 }
 
-func (a App) ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAddrs []string) (servertypes.ExportedApp, error) {
+func (a *App) ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAddrs []string) (servertypes.ExportedApp, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (a App) SimulationManager() *module.SimulationManager {
+func (a *App) SimulationManager() *module.SimulationManager {
 	//TODO implement me
 	panic("implement me")
 }
 
-var _ SimappLikeApp = &App{}
+var _ simappLikeApp = &App{}
 
-func (a App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
+func (a *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
 	basics := module.BasicManager{}
 
@@ -61,13 +61,13 @@ func (a App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	basics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 }
 
-func (a App) RegisterTxService(clientCtx client.Context) {}
+func (a *App) RegisterTxService(clientCtx client.Context) {}
 
-func (a App) RegisterTendermintService(clientCtx client.Context) {}
+func (a *App) RegisterTendermintService(clientCtx client.Context) {}
 
 var _ servertypes.Application = &App{}
 
-type SimappLikeApp interface {
+type simappLikeApp interface {
 	// Exports the state of the application for a genesis file.
 	ExportAppStateAndValidators(
 		forZeroHeight bool, jailAllowedAddrs []string,

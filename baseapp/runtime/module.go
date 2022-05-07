@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 
@@ -31,6 +32,7 @@ type privateState struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	cdc               codec.Codec
 	amino             *codec.LegacyAmino
+	moduleBasics      map[string]module.AppModuleBasicWiringWrapper
 }
 
 func (a *privateState) registerStoreKey(key storetypes.StoreKey) {
@@ -72,6 +74,7 @@ func provideBuilder(moduleBasics map[string]module.AppModuleBasicWiringWrapper) 
 		interfaceRegistry: interfaceRegistry,
 		cdc:               cdc,
 		amino:             amino,
+		moduleBasics:      moduleBasics,
 	}
 
 	return interfaceRegistry, cdc, amino, builder, cdc
@@ -91,6 +94,14 @@ func (a *AppBuilder) RegisterModules(modules ...module.AppModule) error {
 	return nil
 }
 
+func (a AppBuilder) DefaultGenesis() map[string]json.RawMessage {
+	genesis := make(map[string]json.RawMessage)
+	for name, wrapper := range a.app.privateState.moduleBasics {
+		genesis[name] = wrapper.DefaultGenesis(a.app.privateState.cdc)
+	}
+	return genesis
+}
+
 func (a *AppBuilder) Create(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptions ...func(*baseapp.BaseApp)) *App {
 	for _, option := range a.app.baseAppOptions {
 		baseAppOptions = append(baseAppOptions, option)
@@ -98,8 +109,8 @@ func (a *AppBuilder) Create(logger log.Logger, db dbm.DB, traceStore io.Writer, 
 	bApp := baseapp.NewBaseApp(a.app.config.AppName, logger, db, baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
-	bApp.SetInterfaceRegistry(a.app.builder.interfaceRegistry)
-	bApp.MountStores(a.app.builder.storeKeys...)
+	bApp.SetInterfaceRegistry(a.app.privateState.interfaceRegistry)
+	bApp.MountStores(a.app.privateState.storeKeys...)
 	bApp.SetTxHandler(a.app.txHandler)
 
 	a.app.BaseApp = bApp
@@ -111,7 +122,7 @@ func (a *AppBuilder) Finish(loadLatest bool) error {
 		return fmt.Errorf("app not created yet, can't finish")
 	}
 
-	configurator := module.NewConfigurator(a.app.builder.cdc, a.app.msgServiceRegistrar, a.app.GRPCQueryRouter())
+	configurator := module.NewConfigurator(a.app.privateState.cdc, a.app.msgServiceRegistrar, a.app.GRPCQueryRouter())
 	a.app.mm.RegisterServices(configurator)
 	a.app.mm.SetOrderInitGenesis(a.app.config.InitGenesis...)
 	a.app.mm.SetOrderBeginBlockers(a.app.config.BeginBlockers...)
@@ -146,7 +157,7 @@ func provideApp(
 			BaseApp:             nil,
 			baseAppOptions:      baseAppOptions,
 			config:              config,
-			builder:             builder,
+			privateState:        builder,
 			mm:                  mm,
 			beginBlockers:       nil,
 			endBlockers:         nil,

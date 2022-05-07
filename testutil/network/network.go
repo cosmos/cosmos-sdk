@@ -138,6 +138,7 @@ func DefaultConfigWithAppConfig(appConfig container.Option) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
+	cfg.GenesisState = appBuilder.DefaultGenesis()
 	cfg.AppConstructor = func(val Validator) servertypes.Application {
 		app := appBuilder.Create(val.Ctx.Logger, dbm.NewMemDB(),
 			nil,

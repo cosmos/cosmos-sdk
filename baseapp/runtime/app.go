@@ -20,7 +20,7 @@ import (
 type App struct {
 	*baseapp.BaseApp
 	config              *runtimev1.Module
-	builder             *privateState
+	privateState        *privateState
 	mm                  *module.Manager
 	beginBlockers       []func(sdk.Context, abci.RequestBeginBlock)
 	endBlockers         []func(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
@@ -35,7 +35,7 @@ func (a App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.Respon
 		panic(err)
 	}
 	// TODO: app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
-	return a.mm.InitGenesis(ctx, a.builder.cdc, genesisState)
+	return a.mm.InitGenesis(ctx, a.privateState.cdc, genesisState)
 }
 
 func (a App) ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAddrs []string) (servertypes.ExportedApp, error) {

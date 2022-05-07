@@ -25,10 +25,12 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/baseapp/runtime"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/container"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -125,6 +127,30 @@ func DefaultConfig() Config {
 		KeyringOptions:    []keyring.Option{},
 		PrintMnemonic:     false,
 	}
+}
+
+func DefaultConfigWithAppConfig(appConfig container.Option) (Config, error) {
+	cfg := DefaultConfig()
+	var appBuilder *runtime.AppBuilder
+	err := container.Run(func(b *runtime.AppBuilder) {
+		appBuilder = b
+	}, appConfig)
+	if err != nil {
+		return Config{}, err
+	}
+	cfg.AppConstructor = func(val Validator) servertypes.Application {
+		app := appBuilder.Create(val.Ctx.Logger, dbm.NewMemDB(),
+			nil,
+			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
+			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+		)
+		err := appBuilder.Finish(true)
+		if err != nil {
+			panic(err)
+		}
+		return app
+	}
+	return cfg, nil
 }
 
 type (

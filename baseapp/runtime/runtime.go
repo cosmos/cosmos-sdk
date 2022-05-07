@@ -20,7 +20,7 @@ import (
 type App struct {
 	*baseapp.BaseApp
 	config              *runtimev1.Module
-	builder             *appBuilder
+	builder             *privateState
 	mm                  *module.Manager
 	beginBlockers       []func(sdk.Context, abci.RequestBeginBlock)
 	endBlockers         []func(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate

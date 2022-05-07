@@ -7,8 +7,12 @@ package container
 //
 // Ex:
 //  Run(func (x int) error { println(x) }, Provide(func() int { return 1 }))
+//
+// Run uses the debug mode provided by AutoDebug which means there will be
+// verbose debugging information if there is an error and nothing upon success.
+// Use RunDebug to configure behavior with more control.
 func Run(invoker interface{}, opts ...Option) error {
-	return RunDebug(invoker, nil, opts...)
+	return RunDebug(invoker, AutoDebug(), opts...)
 }
 
 // RunDebug is a version of Run which takes an optional DebugOption for
@@ -36,9 +40,16 @@ func RunDebug(invoker interface{}, debugOpt DebugOption, opts ...Option) error {
 	err = opt.apply(ctr)
 	if err != nil {
 		cfg.logf("Failed registering providers because of: %+v", err)
+		cfg.onError()
 		return err
 	}
 	cfg.dedentLogger()
 
-	return ctr.run(invoker)
+	err = ctr.run(invoker)
+	if err != nil {
+		cfg.onError()
+	} else {
+		cfg.onSuccess()
+	}
+	return err
 }

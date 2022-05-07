@@ -66,14 +66,50 @@ func Logger(logger func(string)) DebugOption {
 	})
 }
 
+const debugContainerSvg = "debug_container.svg"
+const debugContainerDot = "debug_container.dot"
+
 // Debug is a default debug option which sends log output to stdout, dumps
-// the container in the graphviz DOT format to stdout, and to the file
-// container_dump.svg.
+// the container in the graphviz DOT and SVG formats to debug_container.dot
+// and debug_container.svg respectively.
 func Debug() DebugOption {
 	return DebugOptions(
 		StdoutLogger(),
-		FileVisualizer("container_dump.svg", "svg"),
+		FileVisualizer(debugContainerSvg, "svg"),
+		FileVisualizer(debugContainerDot, "dot"),
 	)
+}
+
+// AutoDebug does the same thing as Debug when there is an error and deletes
+// the debug_container.dot and debug_container.dot if they exist when there
+// is no error. This is the default debug mode of Run.
+func AutoDebug() DebugOption {
+	return debugOption(func(c *debugConfig) error {
+		logBuf := &bytes.Buffer{}
+		c.loggers = append(c.loggers, func(s string) {
+			logBuf.WriteString(s)
+			logBuf.WriteString("\n")
+		})
+		c.onError = func() {
+			c.addFileVisualizer(debugContainerSvg, "svg")
+			c.addFileVisualizer(debugContainerDot, "dot")
+			_, _ = os.Stdout.Write(logBuf.Bytes())
+			c.loggers = append(c.loggers, func(s string) {
+				_, _ = fmt.Fprintln(os.Stdout, s)
+			})
+		}
+		c.onSuccess = func() {
+			deleteIfExists(debugContainerSvg)
+			deleteIfExists(debugContainerDot)
+		}
+		return nil
+	})
+}
+
+func deleteIfExists(filename string) {
+	if _, err := os.Stat(filename); err == nil {
+		_ = os.Remove(filename)
+	}
 }
 
 // DebugOptions creates a debug option which bundles together other debug options.
@@ -99,6 +135,8 @@ type debugConfig struct {
 	graph         *cgraph.Graph
 	visualizers   []func(string)
 	logVisualizer bool
+	onError       func()
+	onSuccess     func()
 }
 
 type debugOption func(*debugConfig) error

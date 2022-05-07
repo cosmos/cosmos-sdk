@@ -26,14 +26,14 @@ type BaseAppOption func(*baseapp.BaseApp)
 
 func (b BaseAppOption) IsAutoGroupType() {}
 
-type appBuilder struct {
+type privateState struct {
 	storeKeys         []storetypes.StoreKey
 	interfaceRegistry codectypes.InterfaceRegistry
 	cdc               codec.Codec
 	amino             *codec.LegacyAmino
 }
 
-func (a *appBuilder) registerStoreKey(key storetypes.StoreKey) {
+func (a *privateState) registerStoreKey(key storetypes.StoreKey) {
 	a.storeKeys = append(a.storeKeys, key)
 }
 
@@ -53,7 +53,7 @@ func provideBuilder(moduleBasics map[string]module.AppModuleBasicWiringWrapper) 
 	codectypes.InterfaceRegistry,
 	codec.Codec,
 	*codec.LegacyAmino,
-	*appBuilder,
+	*privateState,
 	codec.ProtoCodecMarshaler) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	amino := codec.NewLegacyAmino()
@@ -67,7 +67,7 @@ func provideBuilder(moduleBasics map[string]module.AppModuleBasicWiringWrapper) 
 	std.RegisterLegacyAminoCodec(amino)
 
 	cdc := codec.NewProtoCodec(interfaceRegistry)
-	builder := &appBuilder{
+	builder := &privateState{
 		storeKeys:         nil,
 		interfaceRegistry: interfaceRegistry,
 		cdc:               cdc,
@@ -77,11 +77,11 @@ func provideBuilder(moduleBasics map[string]module.AppModuleBasicWiringWrapper) 
 	return interfaceRegistry, cdc, amino, builder, cdc
 }
 
-type AppCreator struct {
+type AppBuilder struct {
 	app *App
 }
 
-func (a *AppCreator) RegisterModules(modules ...module.AppModule) error {
+func (a *AppBuilder) RegisterModules(modules ...module.AppModule) error {
 	for _, appModule := range modules {
 		if _, ok := a.app.mm.Modules[appModule.Name()]; ok {
 			return fmt.Errorf("module named %q already exists", appModule.Name())
@@ -91,7 +91,7 @@ func (a *AppCreator) RegisterModules(modules ...module.AppModule) error {
 	return nil
 }
 
-func (a *AppCreator) Create(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptions ...func(*baseapp.BaseApp)) *App {
+func (a *AppBuilder) Create(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptions ...func(*baseapp.BaseApp)) *App {
 	for _, option := range a.app.baseAppOptions {
 		baseAppOptions = append(baseAppOptions, option)
 	}
@@ -106,7 +106,7 @@ func (a *AppCreator) Create(logger log.Logger, db dbm.DB, traceStore io.Writer, 
 	return a.app
 }
 
-func (a *AppCreator) Finish(loadLatest bool) error {
+func (a *AppBuilder) Finish(loadLatest bool) error {
 	if a.app == nil {
 		return fmt.Errorf("app not created yet, can't finish")
 	}
@@ -131,17 +131,17 @@ func (a *AppCreator) Finish(loadLatest bool) error {
 
 func provideApp(
 	config *runtimev1.Module,
-	builder *appBuilder,
+	builder *privateState,
 	modules map[string]module.AppModuleWiringWrapper,
 	baseAppOptions []BaseAppOption,
 	txHandler tx.Handler,
 	msgServiceRegistrar grpc.Server,
-) *AppCreator {
+) *AppBuilder {
 	mm := &module.Manager{Modules: map[string]module.AppModule{}}
 	for name, wrapper := range modules {
 		mm.Modules[name] = wrapper.AppModule
 	}
-	return &AppCreator{
+	return &AppBuilder{
 		app: &App{
 			BaseApp:             nil,
 			baseAppOptions:      baseAppOptions,
@@ -156,19 +156,19 @@ func provideApp(
 	}
 }
 
-func provideKVStoreKey(key container.ModuleKey, builder *appBuilder) *storetypes.KVStoreKey {
+func provideKVStoreKey(key container.ModuleKey, builder *privateState) *storetypes.KVStoreKey {
 	storeKey := storetypes.NewKVStoreKey(key.Name())
 	builder.registerStoreKey(storeKey)
 	return storeKey
 }
 
-func provideTransientStoreKey(key container.ModuleKey, builder *appBuilder) *storetypes.TransientStoreKey {
+func provideTransientStoreKey(key container.ModuleKey, builder *privateState) *storetypes.TransientStoreKey {
 	storeKey := storetypes.NewTransientStoreKey(fmt.Sprintf("transient:%s", key.Name()))
 	builder.registerStoreKey(storeKey)
 	return storeKey
 }
 
-func provideMemoryStoreKey(key container.ModuleKey, builder *appBuilder) *storetypes.MemoryStoreKey {
+func provideMemoryStoreKey(key container.ModuleKey, builder *privateState) *storetypes.MemoryStoreKey {
 	storeKey := storetypes.NewMemoryStoreKey(fmt.Sprintf("memory:%s", key.Name()))
 	builder.registerStoreKey(storeKey)
 	return storeKey

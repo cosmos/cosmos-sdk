@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package cosmos.bank.module.v1;
+
+import "cosmos/app/v1alpha1/module.proto";
+
+message Module {
+  option (cosmos.app.v1alpha1.module) = {
+    go_import: "github.com/cosmos/cosmos-sdk/x/bank"
+  };
+
+  repeated string blocked_addresses = 1;
+}
+
+message ModuleAccountPermission {
+  string module = 1;
+  repeated string permissions = 2;
+}

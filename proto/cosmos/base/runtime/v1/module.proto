@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package cosmos.base.runtime.v1;
+
+import "cosmos/app/v1alpha1/module.proto";
+
+message Module {
+  option (cosmos.app.v1alpha1.module) = {
+    go_import: "github.com/cosmos/cosmos-sdk/baseapp/runtime"
+  };
+
+  string app_name = 1;
+  repeated string begin_blockers = 2;
+  repeated string end_blockers = 3;
+  repeated string init_genesis = 4;
+}

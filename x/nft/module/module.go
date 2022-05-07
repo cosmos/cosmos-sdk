@@ -9,14 +9,19 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"cosmossdk.io/core/appmodule"
+	modulev1 "github.com/cosmos/cosmos-sdk/api/cosmos/nft/module/v1"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/container"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/nft"
 	"github.com/cosmos/cosmos-sdk/x/nft/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
@@ -191,4 +196,54 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		simState.AppParams, simState.Cdc,
 		am.accountKeeper, am.bankKeeper, am.keeper,
 	)
+}
+
+type Inputs struct {
+	container.In
+
+	StoreKey          *store.KVStoreKey
+	Codec             codec.Codec
+	AccountKeeper     authkeeper.AccountKeeper
+	BankKeeper        bankkeeper.Keeper
+	InterfaceRegistry cdctypes.InterfaceRegistry
+}
+
+type Outputs struct {
+	container.Out
+
+	Keeper    keeper.Keeper
+	AppModule module.AppModuleWiringWrapper
+}
+
+func Provide(inputs Inputs) (Outputs, error) {
+	k := keeper.NewKeeper(inputs.StoreKey, inputs.Codec, inputs.AccountKeeper, inputs.BankKeeper)
+	m := NewAppModule(inputs.Codec, k, inputs.AccountKeeper, inputs.BankKeeper, inputs.InterfaceRegistry)
+	return Outputs{
+		Keeper:    k,
+		AppModule: module.AppModuleWiringWrapper{AppModule: m},
+	}, nil
+}
+
+func init() {
+	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(
+			provideModuleBasic,
+			provideModule,
+		))
+}
+
+func provideModuleBasic() module.AppModuleBasicWiringWrapper {
+	return module.AppModuleBasicWiringWrapper{AppModuleBasic: AppModuleBasic{}}
+}
+
+func provideModule(
+	kvStoreKey *store.KVStoreKey,
+	cdc codec.Codec,
+	accKeeper authkeeper.AccountKeeper,
+	bankKeeper bankkeeper.Keeper,
+	interfaceRegistry cdctypes.InterfaceRegistry) (keeper.Keeper, module.AppModuleWiringWrapper) {
+
+	k := keeper.NewKeeper(kvStoreKey, cdc, accKeeper, bankKeeper)
+	m := NewAppModule(cdc, k, accKeeper, bankKeeper, interfaceRegistry)
+	return k, module.AppModuleWiringWrapper{AppModule: m}
 }

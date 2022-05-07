@@ -72,7 +72,6 @@ func Logger(logger func(string)) DebugOption {
 func Debug() DebugOption {
 	return DebugOptions(
 		StdoutLogger(),
-		LogVisualizer(),
 		FileVisualizer("container_dump.svg", "svg"),
 	)
 }
@@ -210,7 +209,7 @@ func (c *debugConfig) locationGraphNode(location Location, key *moduleKey) (*cgr
 }
 
 func (c *debugConfig) typeGraphNode(typ reflect.Type) (*cgraph.Node, error) {
-	node, found, err := c.findOrCreateGraphNode(c.graph, typ.String())
+	node, found, err := c.findOrCreateGraphNode(c.graph, moreUsefulTypeString(typ))
 	if err != nil {
 		return nil, err
 	}
@@ -221,6 +220,22 @@ func (c *debugConfig) typeGraphNode(typ reflect.Type) (*cgraph.Node, error) {
 
 	node.SetColor("lightgrey")
 	return node, err
+}
+
+// moreUsefulTypeString is more useful than reflect.Type.String()
+func moreUsefulTypeString(ty reflect.Type) string {
+	switch ty.Kind() {
+	case reflect.Struct, reflect.Interface:
+		return fmt.Sprintf("%s.%s", ty.PkgPath(), ty.Name())
+	case reflect.Pointer:
+		return fmt.Sprintf("*%s", moreUsefulTypeString(ty.Elem()))
+	case reflect.Map:
+		return fmt.Sprintf("map[%s]%s", moreUsefulTypeString(ty.Key()), moreUsefulTypeString(ty.Elem()))
+	case reflect.Slice:
+		return fmt.Sprintf("[]%s", moreUsefulTypeString(ty.Elem()))
+	default:
+		return ty.String()
+	}
 }
 
 func (c *debugConfig) findOrCreateGraphNode(subGraph *cgraph.Graph, name string) (node *cgraph.Node, found bool, err error) {
@@ -246,7 +261,7 @@ func (c *debugConfig) moduleSubGraph(key *moduleKey) *cgraph.Graph {
 	if key != nil {
 		gname := fmt.Sprintf("cluster_%s", key.name)
 		graph = c.graph.SubGraph(gname, 1)
-		graph.SetLabel(fmt.Sprintf("ModuleKey: %s", key.name))
+		graph.SetLabel(fmt.Sprintf("Module: %s", key.name))
 	}
 	return graph
 }

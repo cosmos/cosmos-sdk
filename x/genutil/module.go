@@ -9,12 +9,18 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"cosmossdk.io/core/appmodule"
+	modulev1 "github.com/cosmos/cosmos-sdk/api/cosmos/genutil/module"
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	runtime2 "github.com/cosmos/cosmos-sdk/baseapp/runtime"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 var (
@@ -107,3 +113,31 @@ func (am AppModule) ExportGenesis(_ sdk.Context, cdc codec.JSONCodec) json.RawMe
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+func init() {
+	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(provideModuleBasic, provideModule),
+	)
+}
+
+func provideModuleBasic() module.AppModuleBasicWiringWrapper {
+	return module.AppModuleBasicWiringWrapper{AppModuleBasic: AppModuleBasic{}}
+}
+
+func provideModule(
+	accountKeeper authkeeper.AccountKeeper,
+	stakingKeeper stakingkeeper.Keeper,
+	config client.TxConfig,
+) (module.AppModuleWiringWrapper, runtime2.BaseAppOption) {
+	// this is a total hack to get access to baseapp
+	var bApp *baseapp.BaseApp
+	m := NewAppModule(accountKeeper, stakingKeeper, func(tx abci.RequestDeliverTx) abci.ResponseDeliverTx {
+		if bApp == nil {
+			panic("BaseApp not initialized!")
+		}
+		return bApp.DeliverTx(tx)
+	}, config)
+	return module.AppModuleWiringWrapper{AppModule: m}, func(app *baseapp.BaseApp) {
+		bApp = app
+	}
+}

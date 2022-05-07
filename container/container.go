@@ -170,7 +170,7 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 		c.addGraphEdge(typeGraphNode, providerGraphNode)
 	}
 
-	if key != nil || !hasModuleKeyParam {
+	if !hasModuleKeyParam {
 		c.logf("Registering %s", provider.Location.String())
 		c.indentLogger()
 		defer c.dedentLogger()
@@ -214,9 +214,10 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 				}
 
 				vr = &simpleResolver{
-					node:      sp,
-					typ:       typ,
-					graphNode: typeGraphNode,
+					node:        sp,
+					typ:         typ,
+					graphNode:   typeGraphNode,
+					idxInValues: i,
 				}
 				c.resolvers[typ] = vr
 			}
@@ -325,8 +326,8 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 		}
 
 		markGraphNodeAsFailed(typeGraphNode)
-		return reflect.Value{}, errors.Errorf("can't resolve type %v for %s:\n%s",
-			in.Type, caller, c.formatResolveStack())
+		return reflect.Value{}, errors.Errorf("can't resolve type %s for %s:\n%s",
+			moreUsefulTypeString(in.Type), caller, c.formatResolveStack())
 	}
 
 	res, err := vr.resolve(c, moduleKey, caller)

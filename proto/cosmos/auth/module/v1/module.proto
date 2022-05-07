@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package cosmos.auth.module.v1;
+
+import "cosmos/app/v1alpha1/module.proto";
+
+message Module {
+  option (cosmos.app.v1alpha1.module) = {
+    go_import: "github.com/cosmos/cosmos-sdk/x/auth"
+  };
+
+  string bech32_prefix = 1;
+  repeated ModuleAccountPermission module_account_permissions = 3;
+}
+
+message ModuleAccountPermission {
+  string account = 1;
+  repeated string permissions = 2;
+}

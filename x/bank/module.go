@@ -11,18 +11,23 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"cosmossdk.io/core/appmodule"
+	modulev1 "github.com/cosmos/cosmos-sdk/api/cosmos/bank/module/v1"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	v040 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v042"
 	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 var (
@@ -194,4 +199,30 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	return simulation.WeightedOperations(
 		simState.AppParams, simState.Cdc, am.accountKeeper, am.keeper,
 	)
+}
+
+func init() {
+	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(provideModuleBasic, provideModule),
+	)
+}
+
+func provideModuleBasic() module.AppModuleBasicWiringWrapper {
+	return module.AppModuleBasicWiringWrapper{AppModuleBasic: AppModuleBasic{}}
+}
+
+func provideModule(
+	config *modulev1.Module,
+	key *store.KVStoreKey,
+	cdc codec.Codec,
+	subspace paramtypes.Subspace,
+	accountKeeper authkeeper.AccountKeeper,
+) (keeper.Keeper, module.AppModuleWiringWrapper) {
+	blockedAddrs := map[string]bool{}
+	for _, address := range config.BlockedAddresses {
+		blockedAddrs[address] = true
+	}
+	k := keeper.NewBaseKeeper(cdc, key, accountKeeper, subspace, blockedAddrs)
+	m := NewAppModule(cdc, k, accountKeeper)
+	return k, module.AppModuleWiringWrapper{AppModule: m}
 }

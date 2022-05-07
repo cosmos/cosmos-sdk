@@ -9,9 +9,16 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	modulev1 "github.com/cosmos/cosmos-sdk/api/cosmos/params/module/v1"
+
+	"cosmossdk.io/core/appmodule"
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	runtime2 "github.com/cosmos/cosmos-sdk/baseapp/runtime"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/container"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -147,4 +154,35 @@ func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 // EndBlock performs a no-op.
 func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
+}
+
+func init() {
+	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(
+			provideModuleBasic,
+			provideModule,
+			provideSubSpace,
+		))
+}
+
+func provideModuleBasic() module.AppModuleBasicWiringWrapper {
+	return module.AppModuleBasicWiringWrapper{AppModuleBasic: AppModuleBasic{}}
+}
+
+func provideModule(
+	kvStoreKey *store.KVStoreKey,
+	transientStoreKey *store.TransientStoreKey,
+	cdc codec.Codec,
+	amino *codec.LegacyAmino,
+) (keeper.Keeper, module.AppModuleWiringWrapper, runtime2.BaseAppOption) {
+
+	k := keeper.NewKeeper(cdc, amino, kvStoreKey, transientStoreKey)
+	m := NewAppModule(k)
+	return k, module.AppModuleWiringWrapper{AppModule: m}, func(app *baseapp.BaseApp) {
+		app.SetParamStore(k.Subspace(baseapp.Paramspace).WithKeyTable(types.ConsensusParamsKeyTable()))
+	}
+}
+
+func provideSubSpace(key container.ModuleKey, k keeper.Keeper) types.Subspace {
+	return k.Subspace(key.Name())
 }

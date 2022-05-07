@@ -31,7 +31,7 @@ v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → 
     * create new release candidate tags after bugs are fixed.
 * After the team feels the release branch is stable and everything works, create a full release:
     * update `CHANGELOG.md`.
-    * run `gofumpt -w -l .`.
+    * run `gofumpt -w -l .` to format the code.
     * create a new annotated git tag (eg `git -a v1.1.0`) in the release branch.
     * Create a GitHub release.
 

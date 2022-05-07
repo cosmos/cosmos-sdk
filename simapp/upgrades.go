@@ -36,9 +36,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 				"staking":      1,
 				"upgrade":      1,
 				"vesting":      1,
-				"ibc":          1,
 				"genutil":      1,
-				"transfer":     1,
 			}
 
 			return app.mm.RunMigrations(ctx, app.configurator, fromVM)

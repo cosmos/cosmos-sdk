@@ -7,11 +7,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/db"
 	dbutil "github.com/cosmos/cosmos-sdk/db/internal"
-	"github.com/cosmos/gorocksdb"
+	"github.com/linxGnu/grocksdb"
 )
 
 type rocksDBBatch struct {
-	batch *gorocksdb.WriteBatch
+	batch *grocksdb.WriteBatch
 	mgr   *dbManager
 }
 
@@ -19,7 +19,7 @@ var _ db.DBWriter = (*rocksDBBatch)(nil)
 
 func (mgr *dbManager) newRocksDBBatch() *rocksDBBatch {
 	return &rocksDBBatch{
-		batch: gorocksdb.NewWriteBatch(),
+		batch: grocksdb.NewWriteBatch(),
 		mgr:   mgr,
 	}
 }

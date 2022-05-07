@@ -6,11 +6,11 @@ import (
 	"bytes"
 
 	"github.com/cosmos/cosmos-sdk/db"
-	"github.com/cosmos/gorocksdb"
+	"github.com/linxGnu/grocksdb"
 )
 
 type rocksDBIterator struct {
-	source     *gorocksdb.Iterator
+	source     *grocksdb.Iterator
 	start, end []byte
 	isReverse  bool
 	isInvalid  bool
@@ -20,7 +20,7 @@ type rocksDBIterator struct {
 
 var _ db.Iterator = (*rocksDBIterator)(nil)
 
-func newRocksDBIterator(source *gorocksdb.Iterator, start, end []byte, isReverse bool) *rocksDBIterator {
+func newRocksDBIterator(source *grocksdb.Iterator, start, end []byte, isReverse bool) *rocksDBIterator {
 	if isReverse {
 		if end == nil {
 			source.SeekToLast()
@@ -138,7 +138,7 @@ func (itr *rocksDBIterator) assertIsValid() {
 // moveSliceToBytes will free the slice and copy out a go []byte
 // This function can be applied on *Slice returned from Key() and Value()
 // of an Iterator, because they are marked as freed.
-func moveSliceToBytes(s *gorocksdb.Slice) []byte {
+func moveSliceToBytes(s *grocksdb.Slice) []byte {
 	defer s.Free()
 	if !s.Exists() {
 		return nil

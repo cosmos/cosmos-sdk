@@ -222,7 +222,6 @@ func (s *TestSuite) TestCreateGroup() {
 			}
 		})
 	}
-
 }
 
 func (s *TestSuite) TestUpdateGroupAdmin() {
@@ -864,7 +863,6 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			}
 		})
 	}
-
 }
 
 func (s *TestSuite) TestCreateGroupPolicy() {
@@ -2833,7 +2831,8 @@ func (s *TestSuite) TestLeaveGroup() {
 
 func submitProposal(
 	ctx context.Context, s *TestSuite, msgs []sdk.Msg,
-	proposers []string) uint64 {
+	proposers []string,
+) uint64 {
 	proposalReq := &group.MsgSubmitProposal{
 		GroupPolicyAddress: s.groupPolicyAddr.String(),
 		Proposers:          proposers,
@@ -2848,7 +2847,8 @@ func submitProposal(
 
 func submitProposalAndVote(
 	ctx context.Context, s *TestSuite, msgs []sdk.Msg,
-	proposers []string, voteOption group.VoteOption) uint64 {
+	proposers []string, voteOption group.VoteOption,
+) uint64 {
 	s.Require().Greater(len(proposers), 0)
 	myProposalID := submitProposal(ctx, s, msgs, proposers)
 

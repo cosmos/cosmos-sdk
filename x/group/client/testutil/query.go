@@ -770,7 +770,7 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 
 	member := s.voter
 
-	var commonFlags = []string{
+	commonFlags := []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -872,5 +872,4 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 			}
 		})
 	}
-
 }

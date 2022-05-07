@@ -26,7 +26,6 @@ type Entry interface {
 
 // PrimaryKeyEntry represents a logically decoded primary-key entry.
 type PrimaryKeyEntry struct {
-
 	// TableName is the table this entry represents.
 	TableName protoreflect.FullName
 
@@ -71,7 +70,6 @@ func (p *PrimaryKeyEntry) doNotImplement() {}
 
 // IndexKeyEntry represents a logically decoded index entry.
 type IndexKeyEntry struct {
-
 	// TableName is the table this entry represents.
 	TableName protoreflect.FullName
 
@@ -111,14 +109,12 @@ func (i *IndexKeyEntry) String() string {
 	if i.IsUnique {
 		return fmt.Sprintf("UNIQ %s", i.string())
 	} else {
-
 		return fmt.Sprintf("IDX %s", i.string())
 	}
 }
 
 // SeqEntry represents a sequence for tables with auto-incrementing primary keys.
 type SeqEntry struct {
-
 	// TableName is the table this entry represents.
 	TableName protoreflect.FullName
 

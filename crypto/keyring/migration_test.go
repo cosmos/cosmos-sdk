@@ -239,6 +239,7 @@ func (s *MigrationTestSuite) TestMigrateErrEmptyItemData() {
 	s.Require().False(migrated)
 	s.Require().EqualError(err, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, n1).Error())
 }
+
 func TestMigrationTestSuite(t *testing.T) {
 	suite.Run(t, new(MigrationTestSuite))
 }

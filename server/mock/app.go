@@ -137,7 +137,8 @@ func InitChainer(key storetypes.StoreKey) func(sdk.Context, abci.RequestInitChai
 // AppGenState can be passed into InitCmd, returns a static string of a few
 // key-values that can be parsed by InitChainer
 func AppGenState(_ *codec.LegacyAmino, _ types.GenesisDoc, _ []json.RawMessage) (appState json.
-	RawMessage, err error) {
+	RawMessage, err error,
+) {
 	appState = json.RawMessage(`{
   "values": [
     {
@@ -155,7 +156,8 @@ func AppGenState(_ *codec.LegacyAmino, _ types.GenesisDoc, _ []json.RawMessage) 
 
 // AppGenStateEmpty returns an empty transaction state for mocking.
 func AppGenStateEmpty(_ *codec.LegacyAmino, _ types.GenesisDoc, _ []json.RawMessage) (
-	appState json.RawMessage, err error) {
+	appState json.RawMessage, err error,
+) {
 	appState = json.RawMessage(``)
 	return
 }

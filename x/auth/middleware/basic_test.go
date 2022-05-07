@@ -246,7 +246,6 @@ func (s *MWTestSuite) TestTxHeightTimeoutMiddleware() {
 			// SimulateTx
 			_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx})
 			s.Require().Equal(tc.expectErr, err != nil, err)
-
 		})
 	}
 }

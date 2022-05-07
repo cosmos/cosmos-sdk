@@ -16,9 +16,7 @@ func TestGRPCQuery(t *testing.T) {
 }
 
 func (s *TestSuite) TestBalance() {
-	var (
-		req *nft.QueryBalanceRequest
-	)
+	var req *nft.QueryBalanceRequest
 	testCases := []struct {
 		msg      string
 		malleate func(index int, require *require.Assertions)
@@ -169,9 +167,7 @@ func (s *TestSuite) TestOwner() {
 }
 
 func (s *TestSuite) TestSupply() {
-	var (
-		req *nft.QuerySupplyRequest
-	)
+	var req *nft.QuerySupplyRequest
 	testCases := []struct {
 		msg      string
 		malleate func(index int, require *require.Assertions)
@@ -252,6 +248,7 @@ func (s *TestSuite) TestSupply() {
 		})
 	}
 }
+
 func (s *TestSuite) TestNFTs() {
 	var (
 		req  *nft.QueryNFTsRequest

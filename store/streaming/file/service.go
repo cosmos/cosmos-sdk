@@ -133,7 +133,7 @@ func (fss *StreamingService) openBeginBlockFile(req abci.RequestBeginBlock) (*os
 	if fss.filePrefix != "" {
 		fileName = fmt.Sprintf("%s-%s", fss.filePrefix, fileName)
 	}
-	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0600)
+	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0o600)
 }
 
 // ListenDeliverTx satisfies the baseapp.ABCIListener interface
@@ -183,7 +183,7 @@ func (fss *StreamingService) openDeliverTxFile() (*os.File, error) {
 		fileName = fmt.Sprintf("%s-%s", fss.filePrefix, fileName)
 	}
 	fss.currentTxIndex++
-	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0600)
+	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0o600)
 }
 
 // ListenEndBlock satisfies the baseapp.ABCIListener interface
@@ -232,7 +232,7 @@ func (fss *StreamingService) openEndBlockFile() (*os.File, error) {
 	if fss.filePrefix != "" {
 		fileName = fmt.Sprintf("%s-%s", fss.filePrefix, fileName)
 	}
-	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0600)
+	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0o600)
 }
 
 // Stream satisfies the baseapp.StreamingService interface
@@ -272,7 +272,7 @@ func (fss *StreamingService) Close() error {
 // to dir. It returns nil if dir is writable.
 func isDirWriteable(dir string) error {
 	f := path.Join(dir, ".touch")
-	if err := ioutil.WriteFile(f, []byte(""), 0600); err != nil {
+	if err := ioutil.WriteFile(f, []byte(""), 0o600); err != nil {
 		return err
 	}
 	return os.Remove(f)

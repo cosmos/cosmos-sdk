@@ -6,7 +6,7 @@ import (
 	"github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	runtimev1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/runtime/v1"
+	runtimev1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/app/runtime/v1alpha1"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/api"
@@ -19,7 +19,7 @@ import (
 
 type App struct {
 	*baseapp.BaseApp
-	config              *runtimev1.Module
+	config              *runtimev1alpha1.Module
 	privateState        *privateState
 	mm                  *module.Manager
 	beginBlockers       []func(sdk.Context, abci.RequestBeginBlock)

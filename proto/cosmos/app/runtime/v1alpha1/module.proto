@@ -1,12 +1,13 @@
 syntax = "proto3";
 
-package cosmos.base.runtime.v1;
+package cosmos.app.runtime.v1alpha1;
 
 import "cosmos/app/v1alpha1/module.proto";
 
 message Module {
   option (cosmos.app.v1alpha1.module) = {
-    go_import: "github.com/cosmos/cosmos-sdk/baseapp/runtime"
+    go_import: "github.com/cosmos/cosmos-sdk/runtime"
+    use_package: {name: "cosmos.app.v1alpha1"}
   };
 
   string app_name = 1;

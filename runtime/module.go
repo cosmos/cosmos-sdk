@@ -6,8 +6,8 @@ import (
 	"github.com/gogo/protobuf/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	runtimev1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/app/runtime/v1alpha1"
 
-	runtimev1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/runtime/v1"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -35,7 +35,7 @@ func (a *privateState) registerStoreKey(key storetypes.StoreKey) {
 }
 
 func init() {
-	appmodule.Register(&runtimev1.Module{},
+	appmodule.Register(&runtimev1alpha1.Module{},
 		appmodule.Provide(
 			provideBuilder,
 			provideApp,
@@ -76,7 +76,7 @@ func provideBuilder(moduleBasics map[string]module.AppModuleBasicWiringWrapper) 
 }
 
 func provideApp(
-	config *runtimev1.Module,
+	config *runtimev1alpha1.Module,
 	builder *privateState,
 	modules map[string]module.AppModuleWiringWrapper,
 	baseAppOptions []BaseAppOption,

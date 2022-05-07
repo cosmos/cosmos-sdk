@@ -1,7 +1,7 @@
 modules:
   - name: runtime
     config:
-      "@type": cosmos.base.runtime.v1.Module
+      "@type": cosmos.app.runtime.v1alpha1.Module
       begin_blockers: [ staking, auth, bank, genutil, nft, params ]
       end_blockers: [ staking, auth, bank, genutil, nft, params ]
       init_genesis: [ auth, bank, staking, genutil, nft, params ]

@@ -10,10 +10,10 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	modulev1 "github.com/cosmos/cosmos-sdk/api/cosmos/params/module/v1"
+	runtime2 "github.com/cosmos/cosmos-sdk/runtime"
 
 	"cosmossdk.io/core/appmodule"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	runtime2 "github.com/cosmos/cosmos-sdk/baseapp/runtime"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

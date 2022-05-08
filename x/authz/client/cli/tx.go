@@ -130,7 +130,7 @@ Examples:
 					}
 
 					if spendLimit.Denom != res.Params.BondDenom {
-						return fmt.Errorf("invalid denom %s \ncoin denom should match the current bond denom", spendLimit.Denom)
+						return fmt.Errorf("invalid denom %s; coin denom should match the current bond denom %s", spendLimit.Denom, res.Params.BondDenom)
 					}
 
 					if !spendLimit.IsPositive() {

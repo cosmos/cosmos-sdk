@@ -14,6 +14,11 @@ import "google/protobuf/any.proto";
 message Config {
   // modules are the module configurations for the app.
   repeated ModuleConfig modules = 1;
+
+  // version is used to specify the app config version being used when using
+  // JSON and YAML serialization. It MUST be equal to v1alpha1 when using this
+  // version.
+  string version = 2;
 }
 
 // ModuleConfig is a module configuration for an app.

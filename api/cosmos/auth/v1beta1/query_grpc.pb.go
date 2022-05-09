@@ -32,11 +32,17 @@ type QueryClient interface {
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// ModuleAccounts returns all the existing module accounts.
 	ModuleAccounts(ctx context.Context, in *QueryModuleAccountsRequest, opts ...grpc.CallOption) (*QueryModuleAccountsResponse, error)
-	// Bech32 queries bech32Prefix
+	// Bech32Prefix queries bech32Prefix
+	//
+	// Since: cosmos-sdk 0.46
 	Bech32Prefix(ctx context.Context, in *Bech32PrefixRequest, opts ...grpc.CallOption) (*Bech32PrefixResponse, error)
 	// AddressBytesToString converts Account Address bytes to string
+	//
+	// Since: cosmos-sdk 0.46
 	AddressBytesToString(ctx context.Context, in *AddressBytesToStringRequest, opts ...grpc.CallOption) (*AddressBytesToStringResponse, error)
 	// AddressStringToBytes converts Address string to bytes
+	//
+	// Since: cosmos-sdk 0.46
 	AddressStringToBytes(ctx context.Context, in *AddressStringToBytesRequest, opts ...grpc.CallOption) (*AddressStringToBytesResponse, error)
 }
 
@@ -125,11 +131,17 @@ type QueryServer interface {
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// ModuleAccounts returns all the existing module accounts.
 	ModuleAccounts(context.Context, *QueryModuleAccountsRequest) (*QueryModuleAccountsResponse, error)
-	// Bech32 queries bech32Prefix
+	// Bech32Prefix queries bech32Prefix
+	//
+	// Since: cosmos-sdk 0.46
 	Bech32Prefix(context.Context, *Bech32PrefixRequest) (*Bech32PrefixResponse, error)
 	// AddressBytesToString converts Account Address bytes to string
+	//
+	// Since: cosmos-sdk 0.46
 	AddressBytesToString(context.Context, *AddressBytesToStringRequest) (*AddressBytesToStringResponse, error)
 	// AddressStringToBytes converts Address string to bytes
+	//
+	// Since: cosmos-sdk 0.46
 	AddressStringToBytes(context.Context, *AddressStringToBytesRequest) (*AddressStringToBytesResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }

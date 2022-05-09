@@ -342,20 +342,44 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 	return res, nil
 }
 
-func (c *container) run(invoker interface{}) error {
-	rctr, err := ExtractProviderDescriptor(invoker)
+func (c *container) build(loc Location, outputs ...interface{}) error {
+	var providerIn []ProviderInput
+	for _, output := range outputs {
+		typ := reflect.TypeOf(output)
+		if typ.Kind() != reflect.Pointer {
+			return fmt.Errorf("output type must be a pointer, %s is invalid", typ)
+		}
+
+		providerIn = append(providerIn, ProviderInput{Type: typ.Elem()})
+	}
+
+	desc := ProviderDescriptor{
+		Inputs:  providerIn,
+		Outputs: nil,
+		Fn: func(values []reflect.Value) ([]reflect.Value, error) {
+			if len(values) != len(outputs) {
+				return nil, fmt.Errorf("internal error, unexpected number of values")
+			}
+
+			for i, output := range outputs {
+				val := reflect.ValueOf(output)
+				val.Elem().Set(values[i])
+			}
+
+			return nil, nil
+		},
+		Location: loc,
+	}
+
+	desc, err := expandStructArgsProvider(desc)
 	if err != nil {
 		return err
 	}
 
-	if len(rctr.Outputs) > 0 {
-		return errors.Errorf("invoker function cannot have return values other than error: %s", rctr.Location)
-	}
-
-	c.logf("Registering invoker")
+	c.logf("Registering outputs")
 	c.indentLogger()
 
-	node, err := c.addNode(&rctr, nil)
+	node, err := c.addNode(&desc, nil)
 	if err != nil {
 		return err
 	}

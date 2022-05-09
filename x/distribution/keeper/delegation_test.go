@@ -26,8 +26,10 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
 
 	// create validator with 50% commission
+	randomEthAddress, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), sdk.AccAddress(valConsPk1.Address()), *randomEthAddress, true)
 
 	// end block to bond validator and start new block
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -82,7 +84,9 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	// create validator with 50% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	valPower := int64(100)
-	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, true)
+	randomEthAddress, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
+	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, sdk.AccAddress(valConsPk1.Address()), *randomEthAddress, true)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -143,9 +147,11 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
 
 	// create validator with 50% commission
+	randomEthAddress, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
 	valPower := int64(100)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, true)
+	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, sdk.AccAddress(valConsPk1.Address()), *randomEthAddress, true)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -218,8 +224,10 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
 
 	// create validator with 50% commission
+	randomEthAddress, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), sdk.AccAddress(valConsPk1.Address()), *randomEthAddress, true)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -290,9 +298,11 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	app.AccountKeeper.SetModuleAccount(ctx, distrAcc)
 
 	// create validator with 50% commission
+	randomEthAddress, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
 	power := int64(100)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	valTokens := tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, power, true)
+	valTokens := tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, power, sdk.AccAddress(valConsPk1.Address()), *randomEthAddress, true)
 
 	// assert correct initial balance
 	expTokens := balanceTokens.Sub(valTokens)
@@ -320,7 +330,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	require.Equal(t, uint64(2), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))
 
 	// withdraw rewards
-	_, err := app.DistrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
+	_, err = app.DistrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
 	require.Nil(t, err)
 
 	// historical count should still be 2 (added one record, cleared one)
@@ -354,9 +364,11 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// create validator with 50% commission
+	randomEthAddress, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
 	valPower := int64(100)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, true)
+	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, sdk.AccAddress(valConsPk1.Address()), *randomEthAddress, true)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -422,9 +434,11 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
 
 	// create validator with 50% commission
+	randomEthAddress, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	valPower := int64(100)
-	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, true)
+	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, sdk.AccAddress(valConsPk1.Address()), *randomEthAddress, true)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -506,8 +520,10 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	tokens := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(initial))}
 
 	// create validator with 50% commission
+	randomEthAddress, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), sdk.AccAddress(valConsPk1.Address()), *randomEthAddress, true)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -545,7 +561,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// first delegator withdraws
-	_, err := app.DistrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
+	_, err = app.DistrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
 	require.NoError(t, err)
 
 	// second delegator withdraws

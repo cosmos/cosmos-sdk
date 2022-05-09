@@ -424,7 +424,7 @@ func (k msgServer) validateEthereumAddress(ctx sdk.Context, ethAddr string) (typ
 	if err != nil {
 		return types.EthAddress{}, err
 	}
-	if evmAddr.GetAddress() == types.EthZeroAddress {
+	if evmAddr.GetAddress() == types.EthZeroAddress.GetAddress() {
 		return types.EthAddress{}, types.ErrValidatorEthereumZeroAddress
 	}
 	if _, found := k.GetValidatorByEthereumAddress(ctx, *evmAddr); found {

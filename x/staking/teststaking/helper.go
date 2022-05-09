@@ -33,26 +33,24 @@ func NewHelper(t *testing.T, ctx sdk.Context, k keeper.Keeper) *Helper {
 }
 
 // CreateValidator calls staking module `MsgServer/CreateValidator` to create a new validator
-func (sh *Helper) CreateValidator(addr sdk.ValAddress, pk cryptotypes.PubKey, stakeAmount sdk.Int, ok bool) {
+func (sh *Helper) CreateValidator(addr sdk.ValAddress, pk cryptotypes.PubKey, stakeAmount sdk.Int, orchAddress sdk.AccAddress, ethAddress stakingtypes.EthAddress, ok bool) {
 	coin := sdk.NewCoin(sh.Denom, stakeAmount)
-	sh.createValidator(addr, pk, coin, ok)
+	sh.createValidator(addr, pk, coin, orchAddress, ethAddress, ok)
 }
 
 // CreateValidatorWithValPower calls staking module `MsgServer/CreateValidator` to create a new validator with zero
 // commission
-func (sh *Helper) CreateValidatorWithValPower(addr sdk.ValAddress, pk cryptotypes.PubKey, valPower int64, ok bool) sdk.Int {
+func (sh *Helper) CreateValidatorWithValPower(addr sdk.ValAddress, pk cryptotypes.PubKey, valPower int64, orchAddress sdk.AccAddress, ethAddress stakingtypes.EthAddress, ok bool) sdk.Int {
 	amount := sh.k.TokensFromConsensusPower(sh.Ctx, valPower)
 	coin := sdk.NewCoin(sh.Denom, amount)
-	sh.createValidator(addr, pk, coin, ok)
+	sh.createValidator(addr, pk, coin, orchAddress, ethAddress, ok)
 	return amount
 }
 
 // CreateValidatorMsg returns a message used to create validator in this service.
-func (sh *Helper) CreateValidatorMsg(addr sdk.ValAddress, pk cryptotypes.PubKey, stakeAmount sdk.Int) *stakingtypes.MsgCreateValidator {
+func (sh *Helper) CreateValidatorMsg(addr sdk.ValAddress, pk cryptotypes.PubKey, stakeAmount sdk.Int, orchAddress sdk.AccAddress, ethAddress stakingtypes.EthAddress) *stakingtypes.MsgCreateValidator {
 	coin := sdk.NewCoin(sh.Denom, stakeAmount)
-	randomEthAddress, err := RandomEthAddress()
-	require.NoError(sh.t, err)
-	msg, err := stakingtypes.NewMsgCreateValidator(addr, pk, coin, stakingtypes.Description{}, sh.Commission, sdk.OneInt(), sdk.AccAddress(pk.Address()), *randomEthAddress)
+	msg, err := stakingtypes.NewMsgCreateValidator(addr, pk, coin, stakingtypes.Description{}, sh.Commission, sdk.OneInt(), orchAddress, ethAddress)
 	require.NoError(sh.t, err)
 	return msg
 }
@@ -62,10 +60,8 @@ func (sh *Helper) CreateValidatorWithMsg(ctx context.Context, msg *stakingtypes.
 	return sh.msgSrvr.CreateValidator(ctx, msg)
 }
 
-func (sh *Helper) createValidator(addr sdk.ValAddress, pk cryptotypes.PubKey, coin sdk.Coin, ok bool) {
-	randomEthAddress, err := RandomEthAddress()
-	require.NoError(sh.t, err)
-	msg, err := stakingtypes.NewMsgCreateValidator(addr, pk, coin, stakingtypes.Description{}, sh.Commission, sdk.OneInt(), sdk.AccAddress(pk.Address()), *randomEthAddress)
+func (sh *Helper) createValidator(addr sdk.ValAddress, pk cryptotypes.PubKey, coin sdk.Coin, orchAddress sdk.AccAddress, ethAddress stakingtypes.EthAddress, ok bool) {
+	msg, err := stakingtypes.NewMsgCreateValidator(addr, pk, coin, stakingtypes.Description{}, sh.Commission, sdk.OneInt(), orchAddress, ethAddress)
 	require.NoError(sh.t, err)
 	res, err := sh.msgSrvr.CreateValidator(sdk.WrapSDKContext(sh.Ctx), msg)
 	if ok {

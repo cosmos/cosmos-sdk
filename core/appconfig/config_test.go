@@ -92,8 +92,7 @@ modules:
 `))
 	expectContainerErrorContains(t, opt, "module should have the option cosmos.app.v1alpha1.module")
 
-	// reset module registry
-	internal.ModuleRegistry = map[reflect.Type]*internal.ModuleInitializer{}
+	internal.ModuleRegistry = map[reflect.Type]*internal.ModuleInitializer{} // reset module registry
 	appmodule.Register(&testpb.TestNoGoImportModule{})
 	opt = appconfig.LoadYAML([]byte(`
 modules:

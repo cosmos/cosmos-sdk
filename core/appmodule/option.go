@@ -17,7 +17,7 @@ func (f funcOption) apply(initializer *internal.ModuleInitializer) error {
 	return f(initializer)
 }
 
-// Provide registers providers with the dependency injection system to be
+// Provide registers providers with the dependency injection system that will be
 // run within the module scope. See github.com/cosmos/cosmos-sdk/container for
 // documentation on the dependency injection system.
 func Provide(providers ...interface{}) Option {

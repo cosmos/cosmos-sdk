@@ -33,17 +33,17 @@ func RunDebug(invoker interface{}, debugOpt DebugOption, opts ...Option) error {
 	err = run(cfg, invoker, debugOpt, opts...)
 	if err != nil {
 		if cfg.onError != nil {
-			err = cfg.onError.applyConfig(cfg)
-			if err != nil {
-				return err
+			err2 := cfg.onError.applyConfig(cfg)
+			if err2 != nil {
+				return err2
 			}
 		}
 		return err
 	} else {
 		if cfg.onSuccess != nil {
-			err = cfg.onSuccess.applyConfig(cfg)
-			if err != nil {
-				return err
+			err2 := cfg.onSuccess.applyConfig(cfg)
+			if err2 != nil {
+				return err2
 			}
 		}
 		return nil

@@ -62,6 +62,14 @@ func Logger(logger func(string)) DebugOption {
 	return debugOption(func(c *debugConfig) error {
 		logger("Initializing logger")
 		c.loggers = append(c.loggers, logger)
+
+		// send conditional log messages batched for onError/onSuccess cases
+		if c.logBuf != nil {
+			for _, s := range *c.logBuf {
+				logger(s)
+			}
+		}
+
 		return nil
 	})
 }

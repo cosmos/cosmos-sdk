@@ -7,24 +7,56 @@ package container
 //
 // Ex:
 //  Run(func (x int) error { println(x) }, Provide(func() int { return 1 }))
+//
+// Run uses the debug mode provided by AutoDebug which means there will be
+// verbose debugging information if there is an error and nothing upon success.
+// Use RunDebug to configure behavior with more control.
 func Run(invoker interface{}, opts ...Option) error {
-	return RunDebug(invoker, nil, opts...)
+	return RunDebug(invoker, AutoDebug(), opts...)
 }
 
 // RunDebug is a version of Run which takes an optional DebugOption for
 // logging and visualization.
 func RunDebug(invoker interface{}, debugOpt DebugOption, opts ...Option) error {
-	opt := Options(opts...)
-
 	cfg, err := newDebugConfig()
 	if err != nil {
 		return err
 	}
 
+	// debug cleanup
+	defer func() {
+		for _, f := range cfg.cleanup {
+			f()
+		}
+	}()
+
+	err = run(cfg, invoker, debugOpt, opts...)
+	if err != nil {
+		if cfg.onError != nil {
+			err = cfg.onError.applyConfig(cfg)
+			if err != nil {
+				return err
+			}
+		}
+		return err
+	} else {
+		if cfg.onSuccess != nil {
+			err = cfg.onSuccess.applyConfig(cfg)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+}
+
+func run(cfg *debugConfig, invoker interface{}, debugOpt DebugOption, opts ...Option) error {
+	opt := Options(opts...)
+
 	defer cfg.generateGraph() // always generate graph on exit
 
 	if debugOpt != nil {
-		err = debugOpt.applyConfig(cfg)
+		err := debugOpt.applyConfig(cfg)
 		if err != nil {
 			return err
 		}
@@ -33,7 +65,7 @@ func RunDebug(invoker interface{}, debugOpt DebugOption, opts ...Option) error {
 	cfg.logf("Registering providers")
 	cfg.indentLogger()
 	ctr := newContainer(cfg)
-	err = opt.apply(ctr)
+	err := opt.apply(ctr)
 	if err != nil {
 		cfg.logf("Failed registering providers because of: %+v", err)
 		return err

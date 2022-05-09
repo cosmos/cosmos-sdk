@@ -19,18 +19,20 @@ var _ types.DelegationSet = Keeper{}
 
 // keeper of the staking store
 type Keeper struct {
-	storeKey   sdk.StoreKey
-	cdc        codec.BinaryCodec
-	authKeeper types.AccountKeeper
-	bankKeeper types.BankKeeper
-	hooks      types.StakingHooks
-	paramstore paramtypes.Subspace
+	storeKey    sdk.StoreKey
+	cdc         codec.BinaryCodec
+	authKeeper  types.AccountKeeper
+	bankKeeper  types.BankKeeper
+	distrKeeper types.DistributionKeeper
+	hooks       types.StakingHooks
+	spm         types.SlashingProtestedModules
+	paramstore  paramtypes.Subspace
 }
 
 // NewKeeper creates a new staking Keeper instance
 func NewKeeper(
 	cdc codec.BinaryCodec, key sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper,
-	ps paramtypes.Subspace,
+	distrKeeper types.DistributionKeeper, ps paramtypes.Subspace,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
@@ -47,12 +49,13 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		storeKey:   key,
-		cdc:        cdc,
-		authKeeper: ak,
-		bankKeeper: bk,
-		paramstore: ps,
-		hooks:      nil,
+		storeKey:    key,
+		cdc:         cdc,
+		authKeeper:  ak,
+		bankKeeper:  bk,
+		paramstore:  ps,
+		distrKeeper: distrKeeper,
+		hooks:       nil,
 	}
 }
 
@@ -68,6 +71,18 @@ func (k *Keeper) SetHooks(sh types.StakingHooks) *Keeper {
 	}
 
 	k.hooks = sh
+
+	return k
+}
+
+// SetSlashingProtestedModules sets the set of the modules which are protected from the slashing and will be automatically
+// unbonded before the slashing.
+func (k *Keeper) SetSlashingProtestedModules(spm types.SlashingProtestedModules) *Keeper {
+	if k.spm != nil {
+		panic("cannot set slashing protested modules twice")
+	}
+
+	k.spm = spm
 
 	return k
 }

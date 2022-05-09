@@ -7,8 +7,8 @@ import (
 
 // DistributionKeeper expected distribution keeper (noalias)
 type DistributionKeeper interface {
-	GetFeePoolCommunityCoins(ctx sdk.Context) sdk.DecCoins
-	GetValidatorOutstandingRewardsCoins(ctx sdk.Context, val sdk.ValAddress) sdk.DecCoins
+	HasDelegatorStartingInfo(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress) bool
+	WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error)
 }
 
 // AccountKeeper defines the expected account keeper (noalias)
@@ -102,3 +102,6 @@ type StakingHooks interface {
 	AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress)
 	BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec)
 }
+
+// The SlashingProtestedModules is a type used for the slashing protected modules names.
+type SlashingProtestedModules func() map[string]struct{}

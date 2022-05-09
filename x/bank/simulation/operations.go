@@ -12,7 +12,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -416,7 +416,7 @@ func getModuleAccounts(ak types.AccountKeeper, ctx sdk.Context, moduleAccCount i
 	moduleAccounts := make([]simtypes.Account, moduleAccCount)
 
 	for i := 0; i < moduleAccCount; i++ {
-		addr := ak.GetModuleAddress(distributiontypes.ModuleName)
+		addr := ak.GetModuleAddress(govtypes.ModuleName)
 		acc := ak.GetAccount(ctx, addr)
 		mAcc := simtypes.Account{
 			Address: acc.GetAddress(),

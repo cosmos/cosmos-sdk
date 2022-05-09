@@ -41,6 +41,9 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
 
 	for acc := range maccPerms {
+		if allowedReceivingModAcc[acc] == true {
+			continue
+		}
 		require.True(
 			t,
 			app.BankKeeper.BlockedAddr(app.AccountKeeper.GetModuleAddress(acc)),

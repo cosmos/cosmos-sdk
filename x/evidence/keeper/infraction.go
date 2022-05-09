@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // HandleEquivocationEvidence implements an equivocation evidence handler. Assuming the
@@ -109,6 +110,7 @@ func (k Keeper) HandleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 		consAddr,
 		k.slashingKeeper.SlashFractionDoubleSign(ctx),
 		evidence.GetValidatorPower(), distributionHeight,
+		stakingtypes.DoubleSign,
 	)
 
 	// Jail the validator if not already jailed. This will begin unbonding the

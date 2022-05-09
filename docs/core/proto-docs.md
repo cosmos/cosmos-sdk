@@ -466,6 +466,7 @@
     - [Validator](#cosmos.staking.v1beta1.Validator)
   
     - [BondStatus](#cosmos.staking.v1beta1.BondStatus)
+    - [InfractionType](#cosmos.staking.v1beta1.InfractionType)
   
 - [cosmos/staking/v1beta1/genesis.proto](#cosmos/staking/v1beta1/genesis.proto)
     - [GenesisState](#cosmos.staking.v1beta1.GenesisState)
@@ -6632,6 +6633,19 @@ BondStatus is the status of a validator.
 | BOND_STATUS_UNBONDED | 1 | UNBONDED defines a validator that is not bonded. |
 | BOND_STATUS_UNBONDING | 2 | UNBONDING defines a validator that is unbonding. |
 | BOND_STATUS_BONDED | 3 | BONDED defines a validator that is bonded. |
+
+
+
+<a name="cosmos.staking.v1beta1.InfractionType"></a>
+
+### InfractionType
+InfractionType indicates the infraction type a validator commited.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| INFRACTION_TYPE_UNSPECIFIED | 0 | UNSPECIFIED defines an empty infraction type. |
+| INFRACTION_TYPE_DOUBLE_SIGN | 1 | DOUBLE_SIGN defines a validator that double-signs a block. |
+| INFRACTION_TYPE_DOWNTIME | 2 | DOWNTIME defines a validator that missed to sign to many blocks. |
 
 
  <!-- end enums -->

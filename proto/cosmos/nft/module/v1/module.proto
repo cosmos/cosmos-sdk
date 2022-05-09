@@ -6,6 +6,9 @@ import "cosmos/app/v1alpha1/module.proto";
 
 message Module {
   option (cosmos.app.v1alpha1.module) = {
-    go_import: "github.com/cosmos/cosmos-sdk/baseapp/runtime"
+    go_import: "github.com/cosmos/cosmos-sdk/x/nft/module"
+    use_package: {
+      name: "cosmos.nft.v1beta1"
+    }
   };
 }

@@ -10,5 +10,3 @@ jobs:
       - uses: gaurav-nelson/github-action-markdown-link-check@1.0.14
         with:
           folder-path: "docs"
-Wrathchyld-patch-1
-https://www.facebook.com/jerry.robertson.9847

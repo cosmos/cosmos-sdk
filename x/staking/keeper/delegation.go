@@ -245,7 +245,7 @@ func (k Keeper) SetUnbondingDelegationEntry(
 	k.SetUnbondingDelegation(ctx, ubd)
 
 	// Add to the UBDByUnbondingOp index to look up the UBD by the UBDE ID
-	k.SetUnbondingDelegationByUnbondingOpIndex(ctx, ubd, id)
+	k.SetUnbondingDelegationByUnbondingIndex(ctx, ubd, id)
 
 	// Call hook
 	k.AfterUnbondingOpInitiated(ctx, id)
@@ -441,7 +441,7 @@ func (k Keeper) SetRedelegationEntry(ctx sdk.Context,
 	k.SetRedelegation(ctx, red)
 
 	// Add to the UBDByEntry index to look up the UBD by the UBDE ID
-	k.SetRedelegationByUnbondingOpIndex(ctx, red, id)
+	k.SetRedelegationByUnbondingIndex(ctx, red, id)
 
 	// Call hook
 	k.AfterUnbondingOpInitiated(ctx, id)

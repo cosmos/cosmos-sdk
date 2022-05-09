@@ -41,7 +41,7 @@ func setup(t *testing.T, hookCalled *bool, ubdeID *uint64) (
 			// save id
 			*ubdeID = id
 			// call back to stop unbonding
-			err := app.StakingKeeper.PutUnbondingOpOnHold(ctx, id)
+			err := app.StakingKeeper.PutUnbondingOnHold(ctx, id)
 			require.NoError(t, err)
 		},
 	}

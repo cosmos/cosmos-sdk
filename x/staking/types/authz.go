@@ -10,14 +10,13 @@ import (
 // Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054, https://github.com/cosmos/cosmos-sdk/discussions/9072
 const gasCostPerIteration = uint64(10)
 
-// Normalized Msg type URLs
 var (
 	_ authz.Authorization = &StakeAuthorization{}
 )
 
 // NewStakeAuthorization creates a new StakeAuthorization object.
 func NewStakeAuthorization(allowed []sdk.ValAddress, denied []sdk.ValAddress, authzType AuthorizationType, amount *sdk.Coin) (*StakeAuthorization, error) {
-	allowedValidators, deniedValidators, err := validateAndBech32fy(allowed, denied)
+	allowedValidators, deniedValidators, err := validateAllowAndDenyValidators(allowed, denied)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +117,7 @@ func (a StakeAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRe
 	}, nil
 }
 
-func validateAndBech32fy(allowed []sdk.ValAddress, denied []sdk.ValAddress) ([]string, []string, error) {
+func validateAllowAndDenyValidators(allowed []sdk.ValAddress, denied []sdk.ValAddress) ([]string, []string, error) {
 	if len(allowed) == 0 && len(denied) == 0 {
 		return nil, nil, sdkerrors.ErrInvalidRequest.Wrap("both allowed & deny list cannot be empty")
 	}
@@ -143,6 +142,7 @@ func validateAndBech32fy(allowed []sdk.ValAddress, denied []sdk.ValAddress) ([]s
 	return nil, deniedValidators, nil
 }
 
+// Normalized Msg type URLs
 func normalizeAuthzType(authzType AuthorizationType) (string, error) {
 	switch authzType {
 	case AuthorizationType_AUTHORIZATION_TYPE_DELEGATE:

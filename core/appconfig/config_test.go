@@ -73,6 +73,7 @@ modules:
 	assert.NilError(t, container.Run(func(a testpb.App) { app = a }, opt))
 	buf := &bytes.Buffer{}
 	app(buf)
+	// NOTE: this test hits a bug fixed in https://github.com/cosmos/cosmos-sdk/pull/11913 so it will need to be updated when that is merged
 	const expected = `got store key runtime
 running module handler a
 result: hello

@@ -454,6 +454,7 @@ type TestOutput struct {
 	container.Out
 
 	X string
+	Y int64
 }
 
 func TestStructArgs(t *testing.T) {
@@ -478,11 +479,12 @@ func TestStructArgs(t *testing.T) {
 	))
 
 	require.NoError(t, container.Run(
-		func(x string) {
+		func(x string, y int64) {
 			require.Equal(t, "A", x)
+			require.Equal(t, int64(-10), y)
 		},
 		container.Provide(func() (TestOutput, error) {
-			return TestOutput{X: "A"}, nil
+			return TestOutput{X: "A", Y: -10}, nil
 		}),
 	))
 

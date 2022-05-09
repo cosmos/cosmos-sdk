@@ -214,9 +214,10 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 				}
 
 				vr = &simpleResolver{
-					node:      sp,
-					typ:       typ,
-					graphNode: typeGraphNode,
+					node:        sp,
+					typ:         typ,
+					graphNode:   typeGraphNode,
+					idxInValues: i,
 				}
 				c.resolvers[typ] = vr
 			}

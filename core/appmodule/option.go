@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/core/internal"
 )
 
+// Option is a functional option for implementing modules.
 type Option interface {
 	apply(*internal.ModuleInitializer) error
 }
@@ -16,9 +17,9 @@ func (f funcOption) apply(initializer *internal.ModuleInitializer) error {
 	return f(initializer)
 }
 
-// Provide registers providers with the dependency injection system. See
-// github.com/cosmos/cosmos-sdk/container for more documentation on the
-// dependency injection system.
+// Provide registers providers with the dependency injection system to be
+// run within the module scope. See github.com/cosmos/cosmos-sdk/container for
+// documentation on the dependency injection system.
 func Provide(providers ...interface{}) Option {
 	return funcOption(func(initializer *internal.ModuleInitializer) error {
 		for _, provider := range providers {

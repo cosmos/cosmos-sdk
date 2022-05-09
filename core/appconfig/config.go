@@ -7,6 +7,7 @@ import (
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
 	"sigs.k8s.io/yaml"
@@ -40,7 +41,7 @@ func LoadYAML(bz []byte) container.Option {
 }
 
 // Compose composes a v1alpha1 app config into a container option by resolving
-// all of the required modules and composing their options.
+// the required modules and composing their options.
 func Compose(appConfig *appv1alpha1.Config) container.Option {
 	opts := []container.Option{
 		container.Supply(appConfig),
@@ -52,7 +53,7 @@ func Compose(appConfig *appv1alpha1.Config) container.Option {
 		}
 
 		if module.Config == nil {
-			return container.Error(fmt.Errorf("module %s is missing a config object", module.Name))
+			return container.Error(fmt.Errorf("module %q is missing a config object", module.Name))
 		}
 
 		msgType, err := protoregistry.GlobalTypes.FindMessageByURL(module.Config.TypeUrl)
@@ -60,7 +61,12 @@ func Compose(appConfig *appv1alpha1.Config) container.Option {
 			return container.Error(err)
 		}
 
-		init, ok := internal.ModuleRegistry[msgType.Descriptor().FullName()]
+		modules, err := internal.ModulesByProtoMessageName()
+		if err != nil {
+			return container.Error(err)
+		}
+
+		init, ok := modules[msgType.Descriptor().FullName()]
 		if !ok {
 			modDesc := proto.GetExtension(msgType.Descriptor().Options(), appv1alpha1.E_Module).(*appv1alpha1.ModuleDescriptor)
 			if modDesc == nil {
@@ -69,10 +75,10 @@ func Compose(appConfig *appv1alpha1.Config) container.Option {
 			}
 
 			return container.Error(fmt.Errorf("no module registered for type URL %s, did you forget to import %s\n\n%s",
-				module.Config.TypeUrl, modDesc.GoImport, dumpRegisteredModules()))
+				module.Config.TypeUrl, modDesc.GoImport, dumpRegisteredModules(modules)))
 		}
 
-		config := init.ConfigProtoType.New().Interface()
+		config := init.ConfigProtoMessage.ProtoReflect().Type().New().Interface()
 		err = anypb.UnmarshalTo(module.Config, config, proto.UnmarshalOptions{})
 		if err != nil {
 
@@ -96,18 +102,10 @@ func Compose(appConfig *appv1alpha1.Config) container.Option {
 	return container.Options(opts...)
 }
 
-func dumpRegisteredModules() string {
+func dumpRegisteredModules(modules map[protoreflect.FullName]*internal.ModuleInitializer) string {
 	var mods []string
-	for name := range internal.ModuleRegistry {
+	for name := range modules {
 		mods = append(mods, "  "+string(name))
 	}
 	return fmt.Sprintf("modules are:\n%s", strings.Join(mods, "\n"))
-}
-
-func MustWrapAny(message proto.Message) *anypb.Any {
-	a, err := anypb.New(message)
-	if err != nil {
-		panic(err)
-	}
-	return a
 }

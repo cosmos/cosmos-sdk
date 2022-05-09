@@ -85,17 +85,17 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 		}
 	}
 
-	orchAddr, err := sdk.AccAddressFromBech32(msg.Orchestrator)
+	orchAddr, err := k.validateOrchestratorAddress(ctx, msg.Orchestrator)
 	if err != nil {
 		return nil, err
 	}
 
-	evmAddr, err := types.NewEthAddress(msg.EthAddress)
+	evmAddr, err := k.validateEthereumAddress(ctx, msg.EthAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	validator, err := types.NewValidator(valAddr, pk, msg.Description, orchAddr, *evmAddr)
+	validator, err := types.NewValidator(valAddr, pk, msg.Description, orchAddr, evmAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -197,12 +197,20 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 		validator.MinSelfDelegation = *msg.MinSelfDelegation
 	}
 
-	if msg.EthAddress != "" {
-		validator.EthAddress = msg.EthAddress
+	if msg.Orchestrator != "" {
+		_, err := k.validateOrchestratorAddress(ctx, msg.Orchestrator)
+		if err != nil {
+			return nil, err
+		}
+		validator.Orchestrator = msg.Orchestrator
 	}
 
-	if msg.Orchestrator != "" {
-		validator.Orchestrator = msg.Orchestrator
+	if msg.EthAddress != "" {
+		_, err := k.validateEthereumAddress(ctx, msg.EthAddress)
+		if err != nil {
+			return nil, err
+		}
+		validator.EthAddress = msg.EthAddress
 	}
 
 	k.SetValidator(ctx, validator)
@@ -409,6 +417,32 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	return &types.MsgUndelegateResponse{
 		CompletionTime: completionTime,
 	}, nil
+}
+
+func (k msgServer) validateEthereumAddress(ctx sdk.Context, ethAddr string) (types.EthAddress, error) {
+	evmAddr, err := types.NewEthAddress(ethAddr)
+	if err != nil {
+		return types.EthAddress{}, err
+	}
+	if evmAddr.GetAddress() == types.EthZeroAddress {
+		return types.EthAddress{}, types.ErrValidatorEthereumZeroAddress
+	}
+	if _, found := k.GetValidatorByEthereumAddress(ctx, *evmAddr); found {
+		return types.EthAddress{}, types.ErrValidatorEthereumAddressExists
+	}
+	return *evmAddr, nil
+}
+
+func (k msgServer) validateOrchestratorAddress(ctx sdk.Context, orchAddr string) (sdk.AccAddress, error) {
+	addr, err := sdk.AccAddressFromBech32(orchAddr)
+	if err != nil {
+		return sdk.AccAddress{}, err
+	}
+	// FIXME should we add the zero accAddr check?
+	if _, found := k.GetValidatorByOrchestratorAddress(ctx, addr); found {
+		return sdk.AccAddress{}, types.ErrValidatorOrchestratorAddressExists
+	}
+	return addr, nil
 }
 
 // CancelUnbondingDelegation defines a method for canceling the unbonding delegation

@@ -79,6 +79,32 @@ func (k Keeper) mustGetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAdd
 	return validator
 }
 
+func (k Keeper) GetValidatorByOrchestratorAddress(ctx sdk.Context, orch sdk.AccAddress) (types.Validator, bool) {
+	// TODO optimise these queries and even add grpc queries for them.
+	// Issue: https://github.com/celestiaorg/cosmos-sdk/issues/129
+	validators := k.GetAllValidators(ctx)
+	for _, val := range validators {
+		if val.Orchestrator == orch.String() {
+			return val, true
+		}
+	}
+
+	return types.Validator{}, false
+}
+
+func (k Keeper) GetValidatorByEthereumAddress(ctx sdk.Context, eth types.EthAddress) (types.Validator, bool) {
+	// TODO optimise these queries and even add grpc queries for them.
+	// Issue: https://github.com/celestiaorg/cosmos-sdk/issues/129
+	validators := k.GetAllValidators(ctx)
+	for _, val := range validators {
+		if val.EthAddress == eth.GetAddress() {
+			return val, true
+		}
+	}
+
+	return types.Validator{}, false
+}
+
 // set the main record holding validator details
 func (k Keeper) SetValidator(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)

@@ -158,8 +158,10 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 			simtypes.RandomDecAmount(r, maxCommission),
 		)
 
-		ethAddr, _ := types.NewEthAddress("0x91DEd26b5f38B065FC0204c7929Da6b2A21277Cd")
 		orchAddr := simAccount.Address
+		// create an Ethereum address from the orchestrator address
+		// this is mainly to have a deterministic way of generating an Ethereum address on every run // to have a long enough bytes array
+		ethAddr, _ := types.NewEthAddress("0x" + fmt.Sprintf("%X", simAccount.Address.Bytes()))
 
 		msg, err := types.NewMsgCreateValidator(address, simAccount.ConsKey.PubKey(), selfDelegation, description, commission, sdk.OneInt(), orchAddr, *ethAddr)
 		if err != nil {

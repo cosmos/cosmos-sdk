@@ -166,7 +166,7 @@ func TestValidatorUnbondingOnHold1(t *testing.T) {
 	completionTime := validator.UnbondingTime
 
 	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
-	err := app.StakingKeeper.UnbondingOpCanComplete(ctx, ubdeID)
+	err := app.StakingKeeper.UnbondingCanComplete(ctx, ubdeID)
 	require.NoError(t, err)
 
 	// Check that unbonding is not complete
@@ -206,7 +206,7 @@ func TestValidatorUnbondingOnHold2(t *testing.T) {
 	require.Equal(t, types.BondStatus(2), validator.Status)
 
 	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
-	err := app.StakingKeeper.UnbondingOpCanComplete(ctx, ubdeID)
+	err := app.StakingKeeper.UnbondingCanComplete(ctx, ubdeID)
 	require.NoError(t, err)
 
 	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[0])
@@ -222,7 +222,7 @@ func TestRedelegationOnHold1(t *testing.T) {
 	completionTime := doRedelegation(t, app, ctx, addrDels, addrVals, &hookCalled)
 
 	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
-	err := app.StakingKeeper.UnbondingOpCanComplete(ctx, ubdeID)
+	err := app.StakingKeeper.UnbondingCanComplete(ctx, ubdeID)
 	require.NoError(t, err)
 
 	// Redelegation is not complete - still exists
@@ -255,7 +255,7 @@ func TestRedelegationOnHold2(t *testing.T) {
 	require.Equal(t, 1, len(redelegations))
 
 	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
-	err = app.StakingKeeper.UnbondingOpCanComplete(ctx, ubdeID)
+	err = app.StakingKeeper.UnbondingCanComplete(ctx, ubdeID)
 	require.NoError(t, err)
 
 	// Redelegation is complete and record is gone
@@ -270,7 +270,7 @@ func TestUnbondingDelegationOnHold1(t *testing.T) {
 	completionTime, bondedAmt1, notBondedAmt1 := doUnbondingDelegation(t, app, ctx, bondDenom, addrDels, addrVals, &hookCalled)
 
 	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
-	err := app.StakingKeeper.UnbondingOpCanComplete(ctx, ubdeID)
+	err := app.StakingKeeper.UnbondingCanComplete(ctx, ubdeID)
 	require.NoError(t, err)
 
 	bondedAmt3 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
@@ -315,7 +315,7 @@ func TestUnbondingDelegationOnHold2(t *testing.T) {
 	require.True(sdk.IntEq(t, notBondedAmt1, notBondedAmt3))
 
 	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
-	err = app.StakingKeeper.UnbondingOpCanComplete(ctx, ubdeID)
+	err = app.StakingKeeper.UnbondingCanComplete(ctx, ubdeID)
 	require.NoError(t, err)
 
 	// Check that the unbonding was finally completed

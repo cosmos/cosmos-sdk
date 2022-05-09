@@ -205,11 +205,11 @@ func redelegationEntryArrayIndex(red types.Redelegation, id uint64) (index int, 
 	return 0, false
 }
 
-// UnbondingOpCanComplete allows a stopped unbonding operation such as an
+// UnbondingCanComplete allows a stopped unbonding operation such as an
 // unbonding delegation, a redelegation, or a validator unbonding to complete
 // ----------------------------------------------------------------------------------------
 
-func (k Keeper) UnbondingOpCanComplete(ctx sdk.Context, id uint64) error {
+func (k Keeper) UnbondingCanComplete(ctx sdk.Context, id uint64) error {
 	found, err := k.unbondingDelegationEntryCanComplete(ctx, id)
 	if err != nil {
 		return err

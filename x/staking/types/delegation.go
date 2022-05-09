@@ -234,21 +234,21 @@ func (e RedelegationEntry) IsMature(currentTime time.Time) bool {
 //nolint:interfacer
 func NewRedelegation(
 	delegatorAddr sdk.AccAddress, validatorSrcAddr, validatorDstAddr sdk.ValAddress,
-	creationHeight int64, minTime time.Time, balance sdk.Int, sharesDst sdk.Dec, onHold bool, unbondingOpId uint64,
+	creationHeight int64, minTime time.Time, balance sdk.Int, sharesDst sdk.Dec, onHold bool, unbondingId uint64,
 ) Redelegation {
 	return Redelegation{
 		DelegatorAddress:    delegatorAddr.String(),
 		ValidatorSrcAddress: validatorSrcAddr.String(),
 		ValidatorDstAddress: validatorDstAddr.String(),
 		Entries: []RedelegationEntry{
-			NewRedelegationEntry(creationHeight, minTime, balance, sharesDst, onHold, unbondingOpId),
+			NewRedelegationEntry(creationHeight, minTime, balance, sharesDst, onHold, unbondingId),
 		},
 	}
 }
 
 // AddEntry - append entry to the unbonding delegation
-func (red *Redelegation) AddEntry(creationHeight int64, minTime time.Time, balance sdk.Int, sharesDst sdk.Dec, onHold bool, unbondingOpId uint64) {
-	entry := NewRedelegationEntry(creationHeight, minTime, balance, sharesDst, onHold, unbondingOpId)
+func (red *Redelegation) AddEntry(creationHeight int64, minTime time.Time, balance sdk.Int, sharesDst sdk.Dec, onHold bool, unbondingId uint64) {
+	entry := NewRedelegationEntry(creationHeight, minTime, balance, sharesDst, onHold, unbondingId)
 	red.Entries = append(red.Entries, entry)
 }
 

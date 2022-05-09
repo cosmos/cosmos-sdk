@@ -119,7 +119,7 @@ func (k Keeper) GetValidatorByUnbondingOpId(
 	return val, true
 }
 
-// Set an index to look up an UnbondingDelegation by the UnbondingOpId of an UnbondingDelegationEntry that it contains
+// Set an index to look up an UnbondingDelegation by the unbondingId of an UnbondingDelegationEntry that it contains
 func (k Keeper) SetUnbondingDelegationByUnbondingOpIndex(ctx sdk.Context, ubd types.UnbondingDelegation, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -139,7 +139,7 @@ func (k Keeper) SetUnbondingDelegationByUnbondingOpIndex(ctx sdk.Context, ubd ty
 	store.Set(indexKey, ubdKey)
 }
 
-// Set an index to look up an Redelegation by the UnbondingOpId of an RedelegationEntry that it contains
+// Set an index to look up an Redelegation by the unbondingId of an RedelegationEntry that it contains
 func (k Keeper) SetRedelegationByUnbondingOpIndex(ctx sdk.Context, red types.Redelegation, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -164,7 +164,7 @@ func (k Keeper) SetRedelegationByUnbondingOpIndex(ctx sdk.Context, red types.Red
 	store.Set(indexKey, redKey)
 }
 
-// Set an index to look up a Validator by the UnbondingOpId corresponding to its current unbonding
+// Set an index to look up a Validator by the unbondingId corresponding to its current unbonding
 func (k Keeper) SetValidatorByUnbondingOpIndex(ctx sdk.Context, val types.Validator, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -186,7 +186,7 @@ func (k Keeper) SetValidatorByUnbondingOpIndex(ctx sdk.Context, val types.Valida
 func unbondingDelegationEntryArrayIndex(ubd types.UnbondingDelegation, id uint64) (index int, found bool) {
 	for i, entry := range ubd.Entries {
 		// we find the entry with the right ID
-		if entry.UnbondingOpId == id {
+		if entry.UnbondingId == id {
 			return i, true
 		}
 	}
@@ -197,7 +197,7 @@ func unbondingDelegationEntryArrayIndex(ubd types.UnbondingDelegation, id uint64
 func redelegationEntryArrayIndex(red types.Redelegation, id uint64) (index int, found bool) {
 	for i, entry := range red.Entries {
 		// we find the entry with the right ID
-		if entry.UnbondingOpId == id {
+		if entry.UnbondingId == id {
 			return i, true
 		}
 	}

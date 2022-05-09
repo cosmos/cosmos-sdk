@@ -98,7 +98,7 @@ func NewUnbondingDelegationEntry(creationHeight int64, completionTime time.Time,
 		CompletionTime: completionTime,
 		InitialBalance: balance,
 		Balance:        balance,
-		UnbondingOpId:  id,
+		UnbondingId:    id,
 	}
 }
 
@@ -216,7 +216,7 @@ func NewRedelegationEntry(creationHeight int64, completionTime time.Time, balanc
 		InitialBalance:  balance,
 		SharesDst:       sharesDst,
 		UnbondingOnHold: onHold,
-		UnbondingOpId:   id,
+		UnbondingId:     id,
 	}
 }
 

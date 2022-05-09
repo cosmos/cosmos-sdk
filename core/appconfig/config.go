@@ -70,8 +70,8 @@ func Compose(appConfig *appv1alpha1.Config) container.Option {
 		if !ok {
 			modDesc := proto.GetExtension(msgType.Descriptor().Options(), appv1alpha1.E_Module).(*appv1alpha1.ModuleDescriptor)
 			if modDesc == nil {
-				return container.Error(fmt.Errorf("no module registered for type URL %s and that protobuf type does not have the option %s",
-					module.Config.TypeUrl, appv1alpha1.E_Module.TypeDescriptor().FullName()))
+				return container.Error(fmt.Errorf("no module registered for type URL %s and that protobuf type does not have the option %s\n\n%s",
+					module.Config.TypeUrl, appv1alpha1.E_Module.TypeDescriptor().FullName(), dumpRegisteredModules(modules)))
 			}
 
 			return container.Error(fmt.Errorf("no module registered for type URL %s, did you forget to import %s\n\n%s",
@@ -107,5 +107,5 @@ func dumpRegisteredModules(modules map[protoreflect.FullName]*internal.ModuleIni
 	for name := range modules {
 		mods = append(mods, "  "+string(name))
 	}
-	return fmt.Sprintf("modules are:\n%s", strings.Join(mods, "\n"))
+	return fmt.Sprintf("registered modules are:\n%s", strings.Join(mods, "\n"))
 }

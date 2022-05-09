@@ -44,6 +44,8 @@ modules:
     "@type": cosmos.app.v1alpha1.Config # this is not actually a module config type!
 `))
 	expectContainerErrorContains(t, opt, "does not have the option cosmos.app.v1alpha1.module")
+	expectContainerErrorContains(t, opt, "registered modules are")
+	expectContainerErrorContains(t, opt, "testpb.TestModuleA")
 
 	opt = appconfig.LoadYAML([]byte(`
 modules:
@@ -52,6 +54,8 @@ modules:
     "@type": testpb.TestUnregisteredModule
 `))
 	expectContainerErrorContains(t, opt, "did you forget to import cosmossdk.io/core/internal/testpb")
+	expectContainerErrorContains(t, opt, "registered modules are")
+	expectContainerErrorContains(t, opt, "testpb.TestModuleA")
 
 	var app testpb.App
 	opt = appconfig.LoadYAML([]byte(`

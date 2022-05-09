@@ -77,5 +77,5 @@ func (h Hooks) BeforeDelegationSharesModified(_ sdk.Context, _ sdk.AccAddress, _
 func (h Hooks) BeforeDelegationRemoved(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress)        {}
 func (h Hooks) AfterDelegationModified(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress)        {}
 func (h Hooks) BeforeValidatorSlashed(_ sdk.Context, _ sdk.ValAddress, _ sdk.Dec)                {}
-func (h Hooks) AfterUnbondingOpInitiated(_ sdk.Context, _ uint64) {
+func (h Hooks) AfterUnbondingInitiated(_ sdk.Context, _ uint64) {
 }

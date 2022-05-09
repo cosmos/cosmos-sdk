@@ -248,7 +248,7 @@ func (k Keeper) SetUnbondingDelegationEntry(
 	k.SetUnbondingDelegationByUnbondingIndex(ctx, ubd, id)
 
 	// Call hook
-	k.AfterUnbondingOpInitiated(ctx, id)
+	k.AfterUnbondingInitiated(ctx, id)
 
 	return ubd
 }
@@ -444,7 +444,7 @@ func (k Keeper) SetRedelegationEntry(ctx sdk.Context,
 	k.SetRedelegationByUnbondingIndex(ctx, red, id)
 
 	// Call hook
-	k.AfterUnbondingOpInitiated(ctx, id)
+	k.AfterUnbondingInitiated(ctx, id)
 
 	return red
 }

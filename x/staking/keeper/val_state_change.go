@@ -360,7 +360,7 @@ func (k Keeper) BeginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	id := k.IncrementUnbondingId(ctx)
 	k.SetValidatorByUnbondingIndex(ctx, validator, id)
 
-	k.AfterUnbondingOpInitiated(ctx, id)
+	k.AfterUnbondingInitiated(ctx, id)
 
 	return validator, nil
 }

@@ -8,7 +8,7 @@ import (
 )
 
 // Increments and returns a unique ID for an UnbondingDelegationEntry
-func (k Keeper) IncrementUnbondingOpId(ctx sdk.Context) (unbondingDelegationEntryId uint64) {
+func (k Keeper) IncrementUnbondingId(ctx sdk.Context) (unbondingDelegationEntryId uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.UnbondingDelegationEntryIdKey)
 

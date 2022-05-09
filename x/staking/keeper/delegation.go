@@ -235,7 +235,7 @@ func (k Keeper) SetUnbondingDelegationEntry(
 	creationHeight int64, minTime time.Time, balance sdk.Int,
 ) types.UnbondingDelegation {
 	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
-	id := k.IncrementUnbondingOpId(ctx)
+	id := k.IncrementUnbondingId(ctx)
 	if found {
 		ubd.AddEntry(creationHeight, minTime, balance, id)
 	} else {
@@ -430,7 +430,7 @@ func (k Keeper) SetRedelegationEntry(ctx sdk.Context,
 	minTime time.Time, balance sdk.Int,
 	sharesSrc, sharesDst sdk.Dec) types.Redelegation {
 	red, found := k.GetRedelegation(ctx, delegatorAddr, validatorSrcAddr, validatorDstAddr)
-	id := k.IncrementUnbondingOpId(ctx)
+	id := k.IncrementUnbondingId(ctx)
 	if found {
 		red.AddEntry(creationHeight, minTime, balance, sharesDst, false, id)
 	} else {

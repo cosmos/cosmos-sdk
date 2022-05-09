@@ -6487,7 +6487,7 @@ RedelegationEntry defines a redelegation object with relevant metadata.
 | `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | completion_time defines the unix time for redelegation completion. |
 | `initial_balance` | [string](#string) |  | initial_balance defines the initial balance when redelegation started. |
 | `shares_dst` | [string](#string) |  | shares_dst is the amount of destination-validator shares created by redelegation. |
-| `unbonding_op_id` | [uint64](#uint64) |  | Incrementing id that uniquely identifies this entry |
+| `unbonding_id` | [uint64](#uint64) |  | Incrementing id that uniquely identifies this entry |
 | `unbonding_on_hold` | [bool](#bool) |  | True if this entry's unbonding has been stopped by an external module |
 
 
@@ -6563,7 +6563,7 @@ UnbondingDelegationEntry defines an unbonding object with relevant metadata.
 | `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | completion_time is the unix time for unbonding completion. |
 | `initial_balance` | [string](#string) |  | initial_balance defines the tokens initially scheduled to receive at completion. |
 | `balance` | [string](#string) |  | balance defines the tokens to receive at completion. |
-| `unbonding_op_id` | [uint64](#uint64) |  | Incrementing id that uniquely identifies this entry |
+| `unbonding_id` | [uint64](#uint64) |  | Incrementing id that uniquely identifies this entry |
 | `unbonding_on_hold` | [bool](#bool) |  | True if this entry's unbonding has been stopped by an external module |
 
 

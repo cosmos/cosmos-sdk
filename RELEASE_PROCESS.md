@@ -12,22 +12,22 @@ Before making a new _major_ release we do beta and release candidate releases. F
 v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → v1.0.0
 ```
 
-* Release a first beta version on the `master` branch and freeze `master` from receiving any new features. After beta is released, we focus on releasing the release candidate:
+* Release a first beta version on the `main` branch and freeze `main` from receiving any new features. After beta is released, we focus on releasing the release candidate:
     * finish audits and reviews
     * kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks)
     * perform functional tests
     * add more tests
     * release new beta version as the bugs are discovered and fixed.
-* After the team feels that the `master` works fine we create a `release/vY` branch (going forward known a release branch), where `Y` is the version number, with the patch part substituted to `x` (eg: 0.42.x, 1.0.x). Ensure the release branch is protected so that pushes against the release branch are permitted only by the release manager or release coordinator.
+* After the team feels that the `main` works fine we create a `release/vY` branch (going forward known a release branch), where `Y` is the version number, with the patch part substituted to `x` (eg: 0.42.x, 1.0.x). Ensure the release branch is protected so that pushes against the release branch are permitted only by the release manager or release coordinator.
     * **PRs targeting this branch can be merged _only_ when exceptional circumstances arise**
-    * update the GitHub mergify integration by adding instructions for automatically backporting commits from `master` to the `release/vY` using the `backport/Y` label.
+    * update the GitHub mergify integration by adding instructions for automatically backporting commits from `main` to the `release/vY` using the `backport/Y` label.
 * In the release branch, prepare a new version section in the `CHANGELOG.md`
     * All links must be link-ified: `$ python ./scripts/linkify_changelog.py CHANGELOG.md`
     * Copy the entries into a `RELEASE_CHANGELOG.md`, this is needed so the bot knows which entries to add to the release page on GitHub.
 * Create a new annotated git tag for a release candidate  (eg: `git tag -a v1.1.0-rc1`) in the release branch.
-    * from this point we unfreeze master.
+    * from this point we unfreeze main.
     * the SDK teams collaborate and do their best to run testnets in order to validate the release.
-    * when bugs are found, create a PR for `master`, and backport fixes to the release branch.
+    * when bugs are found, create a PR for `main`, and backport fixes to the release branch.
     * create new release candidate tags after bugs are fixed.
 * After the team feels the release branch is stable and everything works, create a full release:
     * update `CHANGELOG.md`.
@@ -47,7 +47,7 @@ A _patch release_ is an increment of the patch number (eg: `v1.2.0` → `v1.2.1`
 
 **Patch release must not break API nor consensus.**
 
-Updates to the release branch should come from `master` by backporting PRs (usually done by automatic cherry pick followed by a PRs to the release branch). The backports must be marked using `backport/Y` label in PR for master.
+Updates to the release branch should come from `main` by backporting PRs (usually done by automatic cherry pick followed by a PRs to the release branch). The backports must be marked using `backport/Y` label in PR for main.
 It is the PR author's responsibility to fix merge conflicts, update changelog entries, and
 ensure CI passes. If a PR originates from an external contributor, a core team member assumes
 responsibility to perform this process instead of the original author.
@@ -82,8 +82,8 @@ and must follow the [Patch Release Procedure][CONTRIBUTING.md#patch-release-proc
 
 ### Rationale
 
-Unlike in-development `master` branch snapshots, **Cosmos-SDK** releases are subject to much wider adoption,
-and by a significantly different demographic of users. During development, changes in the `master` branch
+Unlike in-development `main` branch snapshots, **Cosmos-SDK** releases are subject to much wider adoption,
+and by a significantly different demographic of users. During development, changes in the `main` branch
 affect SDK users, application developers, early adopters, and other advanced users that elect to use
 unstable experimental software at their own risk.
 
@@ -97,13 +97,13 @@ poorly tested code. We never assume that any change, no matter how little or non
 of regression risks.
 
 Therefore, the requirements for stable changes are different than those that are candidates to be merged in
-the `master` branch. When preparing future major releases, our aim is to design the most elegant, user-friendly and
+the `main` branch. When preparing future major releases, our aim is to design the most elegant, user-friendly and
 maintainable SDK possible which often entails fundamental changes to the SDK's architecture design, rearranging and/or
 renaming packages as well as reducing code duplication so that we maintain common functions and data structures in one
 place rather than leaving them scattered all over the code base. However, once a release is published, the
-priority is to minimise the risk caused by changes that are not strictly required to fix qualifying bugs; this tends to
-be correlated with minimising the size of such changes. As such, the same bug may need to be fixed in different
-ways in stable releases and `master` branch.
+priority is to minimize the risk caused by changes that are not strictly required to fix qualifying bugs; this tends to
+be correlated with minimizing the size of such changes. As such, the same bug may need to be fixed in different
+ways in stable releases and `main` branch.
 
 ### Migrations
 
@@ -157,7 +157,7 @@ As rule of thumb, the following changes will **NOT** be automatically accepted i
 
 ### Stable Release Exception - Procedure
 
-1. Check that the bug is either fixed or not reproducible in `master`. It is, in general, not appropriate to release bug fixes for stable releases without first testing them in `master`. Please apply the label [v0.43](https://github.com/cosmos/cosmos-sdk/milestone/26) to the issue.
+1. Check that the bug is either fixed or not reproducible in `main`. It is, in general, not appropriate to release bug fixes for stable releases without first testing them in `main`. Please apply the label [v0.43](https://github.com/cosmos/cosmos-sdk/milestone/26) to the issue.
 2. Add a comment to the issue and ensure it contains the following information (see the bug template below):
 
    * **[Impact]** An explanation of the bug on users and justification for backporting the fix to the stable release.

@@ -60,7 +60,7 @@ func TestAuxTxBuilder(t *testing.T) {
 		{
 			"GetSignBytes pubkey should not be nil",
 			func() error {
-				b.SetMsgs(msg1)
+				require.NoError(t, b.SetMsgs(msg1))
 
 				_, err := b.GetSignBytes()
 				return err
@@ -70,8 +70,8 @@ func TestAuxTxBuilder(t *testing.T) {
 		{
 			"GetSignBytes invalid sign mode",
 			func() error {
-				b.SetMsgs(msg1)
-				b.SetPubKey(pub1)
+				require.NoError(t, b.SetMsgs(msg1))
+				require.NoError(t, b.SetPubKey(pub1))
 
 				_, err := b.GetSignBytes()
 				return err
@@ -81,13 +81,12 @@ func TestAuxTxBuilder(t *testing.T) {
 		{
 			"GetSignBytes tipper should not be nil (if tip is set)",
 			func() error {
-				b.SetMsgs(msg1)
-				b.SetPubKey(pub1)
+				require.NoError(t, b.SetMsgs(msg1))
+				require.NoError(t, b.SetPubKey(pub1))
 				b.SetTip(&typestx.Tip{})
-				err := b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX)
-				require.NoError(t, err)
+				require.NoError(t, b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX))
 
-				_, err = b.GetSignBytes()
+				_, err := b.GetSignBytes()
 				return err
 			},
 			true, "tipper cannot be empty",
@@ -95,13 +94,12 @@ func TestAuxTxBuilder(t *testing.T) {
 		{
 			"GetSignBytes works for DIRECT_AUX",
 			func() error {
-				b.SetMsgs(msg1)
-				b.SetPubKey(pub1)
+				require.NoError(t, b.SetMsgs(msg1))
+				require.NoError(t, b.SetPubKey(pub1))
 				b.SetTip(tip)
-				err := b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX)
-				require.NoError(t, err)
+				require.NoError(t, b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX))
 
-				_, err = b.GetSignBytes()
+				_, err := b.GetSignBytes()
 				return err
 			},
 			false, "",
@@ -109,13 +107,12 @@ func TestAuxTxBuilder(t *testing.T) {
 		{
 			"GetAuxSignerData address should not be empty",
 			func() error {
-				b.SetMsgs(msg1)
-				b.SetPubKey(pub1)
+				require.NoError(t, b.SetMsgs(msg1))
+				require.NoError(t, b.SetPubKey(pub1))
 				b.SetTip(tip)
-				err := b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX)
-				require.NoError(t, err)
+				require.NoError(t, b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX))
 
-				_, err = b.GetSignBytes()
+				_, err := b.GetSignBytes()
 				require.NoError(t, err)
 
 				_, err = b.GetAuxSignerData()
@@ -126,14 +123,13 @@ func TestAuxTxBuilder(t *testing.T) {
 		{
 			"GetAuxSignerData signature should not be empty",
 			func() error {
-				b.SetMsgs(msg1)
-				b.SetPubKey(pub1)
+				require.NoError(t, b.SetMsgs(msg1))
+				require.NoError(t, b.SetPubKey(pub1))
 				b.SetTip(tip)
 				b.SetAddress(addr1.String())
-				err := b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX)
-				require.NoError(t, err)
+				require.NoError(t, b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX))
 
-				_, err = b.GetSignBytes()
+				_, err := b.GetSignBytes()
 				require.NoError(t, err)
 
 				_, err = b.GetAuxSignerData()
@@ -149,8 +145,8 @@ func TestAuxTxBuilder(t *testing.T) {
 				b.SetTimeoutHeight(timeoutHeight)
 				b.SetMemo(memo)
 				b.SetChainID(chainID)
-				b.SetMsgs(msg1)
-				b.SetPubKey(pub1)
+				require.NoError(t, b.SetMsgs(msg1))
+				require.NoError(t, b.SetPubKey(pub1))
 				b.SetTip(tip)
 				b.SetAddress(addr1.String())
 				err := b.SetSignMode(signing.SignMode_SIGN_MODE_DIRECT_AUX)
@@ -172,8 +168,8 @@ func TestAuxTxBuilder(t *testing.T) {
 		{
 			"GetSignBytes works for LEGACY_AMINO_JSON",
 			func() error {
-				b.SetMsgs(msg1)
-				b.SetPubKey(pub1)
+				require.NoError(t, b.SetMsgs(msg1))
+				require.NoError(t, b.SetPubKey(pub1))
 				b.SetTip(tip)
 				b.SetAddress(addr1.String())
 				err := b.SetSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
@@ -192,8 +188,8 @@ func TestAuxTxBuilder(t *testing.T) {
 				b.SetTimeoutHeight(timeoutHeight)
 				b.SetMemo(memo)
 				b.SetChainID(chainID)
-				b.SetMsgs(msg1)
-				b.SetPubKey(pub1)
+				require.NoError(t, b.SetMsgs(msg1))
+				require.NoError(t, b.SetPubKey(pub1))
 				b.SetTip(tip)
 				b.SetAddress(addr1.String())
 				err := b.SetSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)

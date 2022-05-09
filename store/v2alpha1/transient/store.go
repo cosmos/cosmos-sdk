@@ -3,6 +3,7 @@ package transient
 import (
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/db/memdb"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/dbadapter"
 )
@@ -40,7 +41,7 @@ func (ts *Store) Commit() (id types.CommitID) {
 	return
 }
 
-func (ts *Store) SetPruning(types.PruningOptions)  {}
-func (ts *Store) GetPruning() types.PruningOptions { return types.PruningOptions{} }
+func (ts *Store) SetPruning(pruningtypes.PruningOptions)  {}
+func (ts *Store) GetPruning() pruningtypes.PruningOptions { return pruningtypes.PruningOptions{} }
 
 func (ts *Store) LastCommitID() (id types.CommitID) { return }

@@ -33,7 +33,6 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -55,7 +54,6 @@ type AppModuleBasic interface {
 	ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage) error
 
 	// client functionality
-	RegisterRESTRoutes(client.Context, *mux.Router)
 	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
 	GetTxCmd() *cobra.Command
 	GetQueryCmd() *cobra.Command
@@ -106,13 +104,6 @@ func (bm BasicManager) ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEn
 	}
 
 	return nil
-}
-
-// RegisterRESTRoutes registers all module rest routes
-func (bm BasicManager) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
-	for _, b := range bm {
-		b.RegisterRESTRoutes(clientCtx, rtr)
-	}
 }
 
 // RegisterGRPCGatewayRoutes registers all module rest routes
@@ -368,7 +359,7 @@ func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []
 	}
 	if len(missing) != 0 {
 		panic(fmt.Sprintf(
-			"%s: all modules must be defined when setting SetOrderMigrations, missing: %v", setOrderFnName, missing))
+			"%s: all modules must be defined when setting %s, missing: %v", setOrderFnName, setOrderFnName, missing))
 	}
 }
 

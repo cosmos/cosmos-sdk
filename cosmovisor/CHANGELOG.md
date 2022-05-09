@@ -37,6 +37,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 <!-- NOTE: when creating a new release, update cosmovisor/cmd/cosmovisor/cmd/version.go:Version -->
 
+### Features
+
+* [\#11823](https://github.com/cosmos/cosmos-sdk/pull/11823) Refactor `cosmovisor` CLI to use `cobra`.
+* [\#11731](https://github.com/cosmos/cosmos-sdk/pull/11731) `cosmovisor version -o json` returns the cosmovisor version and the result of `simd --output json --long` in one JSON object.
+
 ## v1.1.0 2022-10-02
 
 ### Features

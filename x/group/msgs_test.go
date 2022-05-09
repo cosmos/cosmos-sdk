@@ -38,7 +38,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			"invalid member address",
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
-				Members: []group.Member{
+				Members: []group.MemberRequest{
 					{
 						Address: "invalid address",
 					},
@@ -51,7 +51,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			"negitive member's weight not allowed",
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
-				Members: []group.Member{
+				Members: []group.MemberRequest{
 					{
 						Address: member1.String(),
 						Weight:  "-1",
@@ -59,13 +59,13 @@ func TestMsgCreateGroup(t *testing.T) {
 				},
 			},
 			true,
-			"expected a positive decimal",
+			"expected a non-negative decimal",
 		},
 		{
 			"zero member's weight not allowed",
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
-				Members: []group.Member{
+				Members: []group.MemberRequest{
 					{
 						Address: member1.String(),
 						Weight:  "0",
@@ -79,7 +79,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			"duplicate member not allowed",
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
-				Members: []group.Member{
+				Members: []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "1",
@@ -99,7 +99,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			"valid test case with single member",
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
-				Members: []group.Member{
+				Members: []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "1",
@@ -114,7 +114,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			"minimum fields",
 			&group.MsgCreateGroup{
 				Admin:   admin.String(),
-				Members: []group.Member{},
+				Members: []group.MemberRequest{},
 			},
 			false,
 			"",
@@ -123,7 +123,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			"valid test case with multiple members",
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
-				Members: []group.Member{
+				Members: []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "1",
@@ -303,7 +303,7 @@ func TestMsgUpdateGroupMembers(t *testing.T) {
 			&group.MsgUpdateGroupMembers{
 				GroupId:       1,
 				Admin:         admin.String(),
-				MemberUpdates: []group.Member{},
+				MemberUpdates: []group.MemberRequest{},
 			},
 			true,
 			"member updates: value is empty",
@@ -313,7 +313,7 @@ func TestMsgUpdateGroupMembers(t *testing.T) {
 			&group.MsgUpdateGroupMembers{
 				GroupId: 1,
 				Admin:   admin.String(),
-				MemberUpdates: []group.Member{
+				MemberUpdates: []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "1",
@@ -329,7 +329,7 @@ func TestMsgUpdateGroupMembers(t *testing.T) {
 			&group.MsgUpdateGroupMembers{
 				GroupId: 1,
 				Admin:   admin.String(),
-				MemberUpdates: []group.Member{
+				MemberUpdates: []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "0",
@@ -368,7 +368,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 			func() *group.MsgCreateGroupWithPolicy {
 				admin := "admin"
 				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
-				members := []group.Member{
+				members := []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "1",
@@ -386,7 +386,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 			"invalid member address",
 			func() *group.MsgCreateGroupWithPolicy {
 				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
-				members := []group.Member{
+				members := []group.MemberRequest{
 					{
 						Address:  "invalid_address",
 						Weight:   "1",
@@ -404,7 +404,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 			"negative member's weight not allowed",
 			func() *group.MsgCreateGroupWithPolicy {
 				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
-				members := []group.Member{
+				members := []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "-1",
@@ -416,13 +416,13 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 				return req
 			},
 			true,
-			"expected a positive decimal",
+			"expected a non-negative decimal",
 		},
 		{
 			"zero member's weight not allowed",
 			func() *group.MsgCreateGroupWithPolicy {
 				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
-				members := []group.Member{
+				members := []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "0",
@@ -440,7 +440,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 			"duplicate member not allowed",
 			func() *group.MsgCreateGroupWithPolicy {
 				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
-				members := []group.Member{
+				members := []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "1",
@@ -463,7 +463,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 			"invalid threshold policy",
 			func() *group.MsgCreateGroupWithPolicy {
 				policy := group.NewThresholdDecisionPolicy("-1", time.Second, 0)
-				members := []group.Member{
+				members := []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "1",
@@ -481,7 +481,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 			"valid test case with single member",
 			func() *group.MsgCreateGroupWithPolicy {
 				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
-				members := []group.Member{
+				members := []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "1",
@@ -499,7 +499,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 			"valid test case with multiple members",
 			func() *group.MsgCreateGroupWithPolicy {
 				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
-				members := []group.Member{
+				members := []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "1",
@@ -692,23 +692,23 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 
 func TestMsgUpdateGroupPolicyDecisionPolicy(t *testing.T) {
 	validPolicy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
-	msg1, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member1, validPolicy)
+	msg1, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(admin, member1, validPolicy)
 	require.NoError(t, err)
 
 	invalidPolicy := group.NewThresholdDecisionPolicy("-1", time.Second, 0)
-	msg2, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member2, invalidPolicy)
+	msg2, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(admin, member2, invalidPolicy)
 	require.NoError(t, err)
 
 	validPercentagePolicy := group.NewPercentageDecisionPolicy("0.7", time.Second, 0)
-	msg3, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member3, validPercentagePolicy)
+	msg3, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(admin, member3, validPercentagePolicy)
 	require.NoError(t, err)
 
 	invalidPercentagePolicy := group.NewPercentageDecisionPolicy("-0.1", time.Second, 0)
-	msg4, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member4, invalidPercentagePolicy)
+	msg4, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(admin, member4, invalidPercentagePolicy)
 	require.NoError(t, err)
 
 	invalidPercentagePolicy2 := group.NewPercentageDecisionPolicy("2", time.Second, 0)
-	msg5, err := group.NewMsgUpdateGroupPolicyDecisionPolicyRequest(admin, member5, invalidPercentagePolicy2)
+	msg5, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(admin, member5, invalidPercentagePolicy2)
 	require.NoError(t, err)
 
 	testCases := []struct {

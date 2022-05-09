@@ -275,7 +275,7 @@ func (cgts consumeTxSizeGasTxHandler) simulateSigGasCost(ctx context.Context, tx
 		}
 
 		// use stdsignature to mock the size of a full signature
-		simSig := legacytx.StdSignature{ //nolint:staticcheck // this will be removed when proto is ready
+		simSig := legacytx.StdSignature{
 			Signature: simSecp256k1Sig[:],
 			PubKey:    pubkey,
 		}
@@ -295,7 +295,6 @@ func (cgts consumeTxSizeGasTxHandler) simulateSigGasCost(ctx context.Context, tx
 	return nil
 }
 
-//nolint:unparam
 func (cgts consumeTxSizeGasTxHandler) consumeTxSizeGas(ctx context.Context, _ sdk.Tx, txBytes []byte) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	params := cgts.ak.GetParams(sdkCtx)

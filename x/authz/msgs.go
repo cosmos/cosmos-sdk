@@ -1,8 +1,9 @@
 package authz
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 
 	"github.com/cosmos/gogoproto/proto"
 

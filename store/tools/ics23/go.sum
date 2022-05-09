@@ -186,8 +186,8 @@ github.com/coreos/go-systemd v0.0.0-20190620071333-e64a0ec8b42a/go.mod h1:F5haX7
 github.com/coreos/go-systemd/v22 v22.3.2/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
 github.com/coreos/pkg v0.0.0-20160727233714-3ac0863d7acf/go.mod h1:E3G3o1h8I7cfcXa63jLwjI0eiQQMgzzUDFVpN/nH/eA=
 github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f/go.mod h1:E3G3o1h8I7cfcXa63jLwjI0eiQQMgzzUDFVpN/nH/eA=
-github.com/cosmos/gogoproto v1.4.0 h1:yvu8ibdNep6zoIWn8go9jsYcjN8N3Yk+10tEZPWni38=
-github.com/cosmos/gogoproto v1.4.0/go.mod h1:PmDilxjma3Cp50k5beXFV3ATB4O3/Sys4WI6Fo9kMAo=
+github.com/cosmos/gogoproto v1.4.1-0.20220401124828-90e4c3283529 h1:ctbJkEhkoSRg4qFKGP3Pj7wtF2uqMq0O+RjwWJ3mqVs=
+github.com/cosmos/gogoproto v1.4.1-0.20220401124828-90e4c3283529/go.mod h1:PmDilxjma3Cp50k5beXFV3ATB4O3/Sys4WI6Fo9kMAo=
 github.com/cosmos/iavl v0.18.0 h1:02ur4vnalMR2GuWCFNkuseUcl/BCVmg9tOeHOGiZOkE=
 github.com/cosmos/iavl v0.18.0/go.mod h1:L0VZHfq0tqMNJvXlslGExaaiZM7eSm+90Vh9QUbp6j4=
 github.com/cpuguy83/go-md2man v1.0.10/go.mod h1:SmD6nW6nTyfqj6ABTjUi3V3JVMnlJmwcJI5acqYI6dE=

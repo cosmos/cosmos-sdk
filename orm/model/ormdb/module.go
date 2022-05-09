@@ -16,7 +16,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
 
-	"google.golang.org/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 

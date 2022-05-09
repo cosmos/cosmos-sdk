@@ -13,7 +13,7 @@ import (
 
 	dbm "github.com/tendermint/tm-db"
 
-	"google.golang.org/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"

@@ -2,6 +2,7 @@ package v1beta1
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 
 	"github.com/cosmos/gogoproto/proto"

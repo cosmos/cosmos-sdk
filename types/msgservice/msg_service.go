@@ -8,8 +8,8 @@ import (
 	"reflect"
 
 	"github.com/cosmos/gogoproto/proto"
+	proto2 "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
-	proto2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"

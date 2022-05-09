@@ -3,7 +3,7 @@ package ormtable
 import (
 	"context"
 
-	"google.golang.org/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 // ValidateHooks defines an interface for a table hooks which can intercept

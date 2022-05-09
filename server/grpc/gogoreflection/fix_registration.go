@@ -10,7 +10,7 @@ import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	// nolint: staticcheck
-	"github.com/golang/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	_ "github.com/regen-network/cosmos-proto" // look above
 )

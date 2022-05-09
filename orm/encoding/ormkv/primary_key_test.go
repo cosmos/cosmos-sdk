@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"google.golang.org/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"

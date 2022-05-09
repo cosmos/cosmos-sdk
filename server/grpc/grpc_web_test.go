@@ -195,7 +195,9 @@ func (s *GRPCWebTestSuite) makeGrpcRequest(
 	if err != nil {
 		return nil, Trailer{}, nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 	contents, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, Trailer{}, nil, err

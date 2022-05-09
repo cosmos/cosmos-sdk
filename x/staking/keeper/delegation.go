@@ -689,6 +689,32 @@ func (k Keeper) Unbond(
 	return amount, nil
 }
 
+// UnbondAndUndelegateCoins unbonds the tokens from the validator and undelegates them from the not bonded pool to the delegator.
+func (k Keeper) UnbondAndUndelegateCoins(
+	ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, shares sdk.Dec,
+) (amount sdk.Int, err error) {
+	amount, err = k.Unbond(ctx, delAddr, valAddr, shares)
+	if err != nil {
+		return amount, err
+	}
+	if amount.IsZero() {
+		return sdk.ZeroInt(), nil
+	}
+
+	val, _ := k.GetValidator(ctx, valAddr)
+	if val.IsBonded() {
+		k.bondedTokensToNotBonded(ctx, amount)
+	}
+
+	if err = k.bankKeeper.UndelegateCoinsFromModuleToAccount(
+		ctx, types.NotBondedPoolName, delAddr, sdk.Coins{sdk.NewCoin(k.BondDenom(ctx), amount)},
+	); err != nil {
+		return amount, err
+	}
+
+	return amount, err
+}
+
 // getBeginInfo returns the completion time and height of a redelegation, along
 // with a boolean signaling if the redelegation is complete based on the source
 // validator.

@@ -61,8 +61,8 @@ func (h MultiStakingHooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.V
 		h[i].BeforeValidatorSlashed(ctx, valAddr, fraction)
 	}
 }
-func (h MultiStakingHooks) AfterUnbondingOpInitiated(ctx sdk.Context, id uint64) {
+func (h MultiStakingHooks) AfterUnbondingInitiated(ctx sdk.Context, id uint64) {
 	for i := range h {
-		h[i].AfterUnbondingOpInitiated(ctx, id)
+		h[i].AfterUnbondingInitiated(ctx, id)
 	}
 }

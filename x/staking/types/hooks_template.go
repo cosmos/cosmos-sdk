@@ -28,5 +28,5 @@ func (h StakingHooksTemplate) AfterDelegationModified(ctx sdk.Context, delAddr s
 }
 func (h StakingHooksTemplate) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
 }
-func (h StakingHooksTemplate) AfterUnbondingOpInitiated(ctx sdk.Context, id uint64) {
+func (h StakingHooksTemplate) AfterUnbondingInitiated(ctx sdk.Context, id uint64) {
 }

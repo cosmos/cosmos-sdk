@@ -684,7 +684,7 @@ type UnbondingDelegationEntry struct {
 	// balance defines the tokens to receive at completion.
 	Balance github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=balance,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"balance"`
 	// Incrementing id that uniquely identifies this entry
-	UnbondingOpId uint64 `protobuf:"varint,5,opt,name=unbonding_op_id,json=unbondingOpId,proto3" json:"unbonding_op_id,omitempty"`
+	UnbondingId uint64 `protobuf:"varint,5,opt,name=unbonding_op_id,json=UnbondingId,proto3" json:"unbonding_op_id,omitempty"`
 	// True if this entry's unbonding has been stopped by an external module
 	UnbondingOnHold bool `protobuf:"varint,6,opt,name=unbonding_on_hold,json=unbondingOnHold,proto3" json:"unbonding_on_hold,omitempty"`
 }
@@ -735,9 +735,9 @@ func (m *UnbondingDelegationEntry) GetCompletionTime() time.Time {
 	return time.Time{}
 }
 
-func (m *UnbondingDelegationEntry) GetUnbondingOpId() uint64 {
+func (m *UnbondingDelegationEntry) GetUnbondingId() uint64 {
 	if m != nil {
-		return m.UnbondingOpId
+		return m.UnbondingId
 	}
 	return 0
 }
@@ -760,7 +760,7 @@ type RedelegationEntry struct {
 	// shares_dst is the amount of destination-validator shares created by redelegation.
 	SharesDst github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=shares_dst,json=sharesDst,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"shares_dst"`
 	// Incrementing id that uniquely identifies this entry
-	UnbondingOpId uint64 `protobuf:"varint,5,opt,name=unbonding_op_id,json=unbondingOpId,proto3" json:"unbonding_op_id,omitempty"`
+	UnbondingId uint64 `protobuf:"varint,5,opt,name=unbonding_op_id,json=UnbondingId,proto3" json:"unbonding_op_id,omitempty"`
 	// True if this entry's unbonding has been stopped by an external module
 	UnbondingOnHold bool `protobuf:"varint,6,opt,name=unbonding_on_hold,json=unbondingOnHold,proto3" json:"unbonding_on_hold,omitempty"`
 }
@@ -811,9 +811,9 @@ func (m *RedelegationEntry) GetCompletionTime() time.Time {
 	return time.Time{}
 }
 
-func (m *RedelegationEntry) GetUnbondingOpId() uint64 {
+func (m *RedelegationEntry) GetUnbondingId() uint64 {
 	if m != nil {
-		return m.UnbondingOpId
+		return m.UnbondingId
 	}
 	return 0
 }
@@ -2059,7 +2059,7 @@ func (this *UnbondingDelegationEntry) Equal(that interface{}) bool {
 	if !this.Balance.Equal(that1.Balance) {
 		return false
 	}
-	if this.UnbondingOpId != that1.UnbondingOpId {
+	if this.UnbondingId != that1.UnbondingId {
 		return false
 	}
 	if this.UnbondingOnHold != that1.UnbondingOnHold {
@@ -2098,7 +2098,7 @@ func (this *RedelegationEntry) Equal(that interface{}) bool {
 	if !this.SharesDst.Equal(that1.SharesDst) {
 		return false
 	}
-	if this.UnbondingOpId != that1.UnbondingOpId {
+	if this.UnbondingId != that1.UnbondingId {
 		return false
 	}
 	if this.UnbondingOnHold != that1.UnbondingOnHold {
@@ -2840,8 +2840,8 @@ func (m *UnbondingDelegationEntry) MarshalToSizedBuffer(dAtA []byte) (int, error
 		i--
 		dAtA[i] = 0x30
 	}
-	if m.UnbondingOpId != 0 {
-		i = encodeVarintStaking(dAtA, i, uint64(m.UnbondingOpId))
+	if m.UnbondingId != 0 {
+		i = encodeVarintStaking(dAtA, i, uint64(m.UnbondingId))
 		i--
 		dAtA[i] = 0x28
 	}
@@ -2911,8 +2911,8 @@ func (m *RedelegationEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x30
 	}
-	if m.UnbondingOpId != 0 {
-		i = encodeVarintStaking(dAtA, i, uint64(m.UnbondingOpId))
+	if m.UnbondingId != 0 {
+		i = encodeVarintStaking(dAtA, i, uint64(m.UnbondingId))
 		i--
 		dAtA[i] = 0x28
 	}
@@ -3505,8 +3505,8 @@ func (m *UnbondingDelegationEntry) Size() (n int) {
 	n += 1 + l + sovStaking(uint64(l))
 	l = m.Balance.Size()
 	n += 1 + l + sovStaking(uint64(l))
-	if m.UnbondingOpId != 0 {
-		n += 1 + sovStaking(uint64(m.UnbondingOpId))
+	if m.UnbondingId != 0 {
+		n += 1 + sovStaking(uint64(m.UnbondingId))
 	}
 	if m.UnbondingOnHold {
 		n += 2
@@ -3529,8 +3529,8 @@ func (m *RedelegationEntry) Size() (n int) {
 	n += 1 + l + sovStaking(uint64(l))
 	l = m.SharesDst.Size()
 	n += 1 + l + sovStaking(uint64(l))
-	if m.UnbondingOpId != 0 {
-		n += 1 + sovStaking(uint64(m.UnbondingOpId))
+	if m.UnbondingId != 0 {
+		n += 1 + sovStaking(uint64(m.UnbondingId))
 	}
 	if m.UnbondingOnHold {
 		n += 2
@@ -5618,9 +5618,9 @@ func (m *UnbondingDelegationEntry) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 5:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UnbondingOpId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field UnbondingId", wireType)
 			}
-			m.UnbondingOpId = 0
+			m.UnbondingId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowStaking
@@ -5630,7 +5630,7 @@ func (m *UnbondingDelegationEntry) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.UnbondingOpId |= uint64(b&0x7F) << shift
+				m.UnbondingId |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5827,9 +5827,9 @@ func (m *RedelegationEntry) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 5:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UnbondingOpId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field UnbondingId", wireType)
 			}
-			m.UnbondingOpId = 0
+			m.UnbondingId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowStaking
@@ -5839,7 +5839,7 @@ func (m *RedelegationEntry) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.UnbondingOpId |= uint64(b&0x7F) << shift
+				m.UnbondingId |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

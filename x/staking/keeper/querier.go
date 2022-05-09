@@ -515,7 +515,7 @@ func RedelegationsToRedelegationResponses(
 				entry.InitialBalance,
 				val.TokensFromShares(entry.SharesDst).TruncateInt(),
 				entry.UnbondingOnHold,
-				entry.UnbondingOpId,
+				entry.UnbondingId,
 			)
 		}
 

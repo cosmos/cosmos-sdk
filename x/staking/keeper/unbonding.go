@@ -8,7 +8,7 @@ import (
 )
 
 // Increments and returns a unique ID for an UnbondingDelegationEntry
-func (k Keeper) IncrementUnbondingOpId(ctx sdk.Context) (unbondingDelegationEntryId uint64) {
+func (k Keeper) IncrementUnbondingId(ctx sdk.Context) (unbondingDelegationEntryId uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.UnbondingDelegationEntryIdKey)
 
@@ -29,21 +29,21 @@ func (k Keeper) IncrementUnbondingOpId(ctx sdk.Context) (unbondingDelegationEntr
 	return unbondingDelegationEntryId
 }
 
-// Remove a ValidatorByUnbondingOpIndex
-func (k Keeper) DeleteUnbondingOpIndex(ctx sdk.Context, id uint64) {
+// Remove a ValidatorByUnbondingIndex
+func (k Keeper) DeleteUnbondingIndex(ctx sdk.Context, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 
-	indexKey := types.GetUnbondingOpIndexKey(id)
+	indexKey := types.GetUnbondingIndexKey(id)
 
 	store.Delete(indexKey)
 }
 
 // return a unbonding delegation that has an unbonding delegation entry with a certain ID
-func (k Keeper) GetUnbondingDelegationByUnbondingOpId(
+func (k Keeper) GetUnbondingDelegationByUnbondingId(
 	ctx sdk.Context, id uint64,
 ) (ubd types.UnbondingDelegation, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	indexKey := types.GetUnbondingOpIndexKey(id)
+	indexKey := types.GetUnbondingIndexKey(id)
 	ubdeKey := store.Get(indexKey)
 
 	if ubdeKey == nil {
@@ -66,11 +66,11 @@ func (k Keeper) GetUnbondingDelegationByUnbondingOpId(
 }
 
 // return a unbonding delegation that has an unbonding delegation entry with a certain ID
-func (k Keeper) GetRedelegationByUnbondingOpId(
+func (k Keeper) GetRedelegationByUnbondingId(
 	ctx sdk.Context, id uint64,
 ) (red types.Redelegation, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	indexKey := types.GetUnbondingOpIndexKey(id)
+	indexKey := types.GetUnbondingIndexKey(id)
 	redKey := store.Get(indexKey)
 
 	if redKey == nil {
@@ -93,11 +93,11 @@ func (k Keeper) GetRedelegationByUnbondingOpId(
 }
 
 // return the validator that is unbonding with a certain unbonding op ID
-func (k Keeper) GetValidatorByUnbondingOpId(
+func (k Keeper) GetValidatorByUnbondingId(
 	ctx sdk.Context, id uint64,
 ) (val types.Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	indexKey := types.GetUnbondingOpIndexKey(id)
+	indexKey := types.GetUnbondingIndexKey(id)
 	valKey := store.Get(indexKey)
 
 	if valKey == nil {
@@ -119,8 +119,8 @@ func (k Keeper) GetValidatorByUnbondingOpId(
 	return val, true
 }
 
-// Set an index to look up an UnbondingDelegation by the UnbondingOpId of an UnbondingDelegationEntry that it contains
-func (k Keeper) SetUnbondingDelegationByUnbondingOpIndex(ctx sdk.Context, ubd types.UnbondingDelegation, id uint64) {
+// Set an index to look up an UnbondingDelegation by the UnbondingId of an UnbondingDelegationEntry that it contains
+func (k Keeper) SetUnbondingDelegationByUnbondingIndex(ctx sdk.Context, ubd types.UnbondingDelegation, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 
 	delAddr, err := sdk.AccAddressFromBech32(ubd.DelegatorAddress)
@@ -133,14 +133,14 @@ func (k Keeper) SetUnbondingDelegationByUnbondingOpIndex(ctx sdk.Context, ubd ty
 		panic(err)
 	}
 
-	indexKey := types.GetUnbondingOpIndexKey(id)
+	indexKey := types.GetUnbondingIndexKey(id)
 	ubdKey := types.GetUBDKey(delAddr, valAddr)
 
 	store.Set(indexKey, ubdKey)
 }
 
-// Set an index to look up an Redelegation by the UnbondingOpId of an RedelegationEntry that it contains
-func (k Keeper) SetRedelegationByUnbondingOpIndex(ctx sdk.Context, red types.Redelegation, id uint64) {
+// Set an index to look up an Redelegation by the UnbondingId of an RedelegationEntry that it contains
+func (k Keeper) SetRedelegationByUnbondingIndex(ctx sdk.Context, red types.Redelegation, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 
 	delAddr, err := sdk.AccAddressFromBech32(red.DelegatorAddress)
@@ -158,14 +158,14 @@ func (k Keeper) SetRedelegationByUnbondingOpIndex(ctx sdk.Context, red types.Red
 		panic(err)
 	}
 
-	indexKey := types.GetUnbondingOpIndexKey(id)
+	indexKey := types.GetUnbondingIndexKey(id)
 	redKey := types.GetREDKey(delAddr, valSrcAddr, valDstAddr)
 
 	store.Set(indexKey, redKey)
 }
 
-// Set an index to look up a Validator by the UnbondingOpId corresponding to its current unbonding
-func (k Keeper) SetValidatorByUnbondingOpIndex(ctx sdk.Context, val types.Validator, id uint64) {
+// Set an index to look up a Validator by the UnbondingId corresponding to its current unbonding
+func (k Keeper) SetValidatorByUnbondingIndex(ctx sdk.Context, val types.Validator, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 
 	valAddr, err := sdk.ValAddressFromBech32(val.OperatorAddress)
@@ -173,7 +173,7 @@ func (k Keeper) SetValidatorByUnbondingOpIndex(ctx sdk.Context, val types.Valida
 		panic(err)
 	}
 
-	indexKey := types.GetUnbondingOpIndexKey(id)
+	indexKey := types.GetUnbondingIndexKey(id)
 	valKey := types.GetValidatorKey(valAddr)
 
 	store.Set(indexKey, valKey)
@@ -186,7 +186,7 @@ func (k Keeper) SetValidatorByUnbondingOpIndex(ctx sdk.Context, val types.Valida
 func unbondingDelegationEntryArrayIndex(ubd types.UnbondingDelegation, id uint64) (index int, found bool) {
 	for i, entry := range ubd.Entries {
 		// we find the entry with the right ID
-		if entry.UnbondingOpId == id {
+		if entry.UnbondingId == id {
 			return i, true
 		}
 	}
@@ -197,7 +197,7 @@ func unbondingDelegationEntryArrayIndex(ubd types.UnbondingDelegation, id uint64
 func redelegationEntryArrayIndex(red types.Redelegation, id uint64) (index int, found bool) {
 	for i, entry := range red.Entries {
 		// we find the entry with the right ID
-		if entry.UnbondingOpId == id {
+		if entry.UnbondingId == id {
 			return i, true
 		}
 	}
@@ -205,11 +205,11 @@ func redelegationEntryArrayIndex(red types.Redelegation, id uint64) (index int, 
 	return 0, false
 }
 
-// UnbondingOpCanComplete allows a stopped unbonding operation such as an
+// UnbondingCanComplete allows a stopped unbonding operation such as an
 // unbonding delegation, a redelegation, or a validator unbonding to complete
 // ----------------------------------------------------------------------------------------
 
-func (k Keeper) UnbondingOpCanComplete(ctx sdk.Context, id uint64) error {
+func (k Keeper) UnbondingCanComplete(ctx sdk.Context, id uint64) error {
 	found, err := k.unbondingDelegationEntryCanComplete(ctx, id)
 	if err != nil {
 		return err
@@ -235,11 +235,11 @@ func (k Keeper) UnbondingOpCanComplete(ctx sdk.Context, id uint64) error {
 	}
 
 	// If an entry was not found
-	return types.ErrUnbondingOpNotFound
+	return types.ErrUnbondingNotFound
 }
 
 func (k Keeper) unbondingDelegationEntryCanComplete(ctx sdk.Context, id uint64) (found bool, err error) {
-	ubd, found := k.GetUnbondingDelegationByUnbondingOpId(ctx, id)
+	ubd, found := k.GetUnbondingDelegationByUnbondingId(ctx, id)
 	if !found {
 		return false, nil
 	}
@@ -275,8 +275,8 @@ func (k Keeper) unbondingDelegationEntryCanComplete(ctx sdk.Context, id uint64) 
 
 		// Remove entry
 		ubd.RemoveEntry(int64(i))
-		// Remove from the UnbondingOpIndex
-		k.DeleteUnbondingOpIndex(ctx, id)
+		// Remove from the UnbondingIndex
+		k.DeleteUnbondingIndex(ctx, id)
 	}
 
 	// set the unbonding delegation or remove it if there are no more entries
@@ -291,7 +291,7 @@ func (k Keeper) unbondingDelegationEntryCanComplete(ctx sdk.Context, id uint64) 
 }
 
 func (k Keeper) redelegationEntryCanComplete(ctx sdk.Context, id uint64) (found bool, err error) {
-	red, found := k.GetRedelegationByUnbondingOpId(ctx, id)
+	red, found := k.GetRedelegationByUnbondingId(ctx, id)
 	if !found {
 		return false, nil
 	}
@@ -308,8 +308,8 @@ func (k Keeper) redelegationEntryCanComplete(ctx sdk.Context, id uint64) (found 
 		// If matured, complete it.
 		// Remove entry
 		red.RemoveEntry(int64(i))
-		// Remove from the UnbondingOp index
-		k.DeleteUnbondingOpIndex(ctx, id)
+		// Remove from the Unbonding index
+		k.DeleteUnbondingIndex(ctx, id)
 	}
 
 	// set the redelegation or remove it if there are no more entries
@@ -324,7 +324,7 @@ func (k Keeper) redelegationEntryCanComplete(ctx sdk.Context, id uint64) (found 
 }
 
 func (k Keeper) validatorUnbondingCanComplete(ctx sdk.Context, id uint64) (found bool, err error) {
-	val, found := k.GetValidatorByUnbondingOpId(ctx, id)
+	val, found := k.GetValidatorByUnbondingId(ctx, id)
 	if !found {
 		return false, nil
 	}
@@ -339,16 +339,16 @@ func (k Keeper) validatorUnbondingCanComplete(ctx sdk.Context, id uint64) (found
 			k.RemoveValidator(ctx, val.GetOperator())
 		}
 
-		k.DeleteUnbondingOpIndex(ctx, id)
+		k.DeleteUnbondingIndex(ctx, id)
 	}
 
 	return true, nil
 }
 
-// PutUnbondingOpOnHold allows an external module to stop an unbonding operation such as an
+// PutUnbondingOnHold allows an external module to stop an unbonding operation such as an
 // unbonding delegation, a redelegation, or a validator unbonding
 // ----------------------------------------------------------------------------------------
-func (k Keeper) PutUnbondingOpOnHold(ctx sdk.Context, id uint64) error {
+func (k Keeper) PutUnbondingOnHold(ctx sdk.Context, id uint64) error {
 	found := k.putUnbondingDelegationEntryOnHold(ctx, id)
 	if found {
 		return nil
@@ -365,11 +365,11 @@ func (k Keeper) PutUnbondingOpOnHold(ctx sdk.Context, id uint64) error {
 	}
 
 	// If an entry was not found
-	return types.ErrUnbondingOpNotFound
+	return types.ErrUnbondingNotFound
 }
 
 func (k Keeper) putUnbondingDelegationEntryOnHold(ctx sdk.Context, id uint64) (found bool) {
-	ubd, found := k.GetUnbondingDelegationByUnbondingOpId(ctx, id)
+	ubd, found := k.GetUnbondingDelegationByUnbondingId(ctx, id)
 	if !found {
 		return false
 	}
@@ -387,7 +387,7 @@ func (k Keeper) putUnbondingDelegationEntryOnHold(ctx sdk.Context, id uint64) (f
 }
 
 func (k Keeper) putRedelegationEntryOnHold(ctx sdk.Context, id uint64) (found bool) {
-	red, found := k.GetRedelegationByUnbondingOpId(ctx, id)
+	red, found := k.GetRedelegationByUnbondingId(ctx, id)
 	if !found {
 		return false
 	}
@@ -405,7 +405,7 @@ func (k Keeper) putRedelegationEntryOnHold(ctx sdk.Context, id uint64) (found bo
 }
 
 func (k Keeper) putValidatorOnHold(ctx sdk.Context, id uint64) (found bool) {
-	val, found := k.GetValidatorByUnbondingOpId(ctx, id)
+	val, found := k.GetValidatorByUnbondingId(ctx, id)
 	if !found {
 		return false
 	}

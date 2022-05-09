@@ -18,6 +18,7 @@ type (
 		failOn []bool
 	}
 )
+
 type dbVersionsIs struct {
 	dbm.DBConnection
 	vset dbm.VersionSet

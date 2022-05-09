@@ -2,13 +2,16 @@ package types
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	yaml "gopkg.in/yaml.v2"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 )
 
@@ -18,6 +21,7 @@ var (
 	_ vestexported.VestingAccount = (*ContinuousVestingAccount)(nil)
 	_ vestexported.VestingAccount = (*PeriodicVestingAccount)(nil)
 	_ vestexported.VestingAccount = (*DelayedVestingAccount)(nil)
+	_ vestexported.VestingAccount = (*ClawbackVestingAccount)(nil)
 )
 
 // Base Vesting Account
@@ -610,4 +614,303 @@ func marshalYaml(i interface{}) (interface{}, error) {
 		return nil, err
 	}
 	return string(bz), nil
+}
+
+// Clawback Vesting Account
+
+var _ vestexported.VestingAccount = (*ClawbackVestingAccount)(nil)
+var _ authtypes.GenesisAccount = (*ClawbackVestingAccount)(nil)
+
+// NewClawbackVestingAccount returns a new ClawbackVestingAccount
+func NewClawbackVestingAccount(
+	baseAcc *authtypes.BaseAccount,
+	funder sdk.AccAddress,
+	originalVesting sdk.Coins,
+	startTime int64,
+	lockupPeriods,
+	vestingPeriods Periods,
+) *ClawbackVestingAccount {
+	// copy and align schedules to avoid mutating inputs
+	lockupPeriod := make(Periods, len(lockupPeriods))
+	copy(lockupPeriod, lockupPeriods)
+	vp := make(Periods, len(vestingPeriods))
+	copy(vp, vestingPeriods)
+	_, endTime := AlignSchedules(startTime, startTime, lockupPeriod, vp)
+	baseVestingAcc := &BaseVestingAccount{
+		BaseAccount:     baseAcc,
+		OriginalVesting: originalVesting,
+		EndTime:         endTime,
+	}
+
+	return &ClawbackVestingAccount{
+		BaseVestingAccount: baseVestingAcc,
+		FunderAddress:      funder.String(),
+		StartTime:          startTime,
+		LockupPeriods:      lockupPeriod,
+		VestingPeriods:     vp,
+	}
+}
+
+// GetVestedCoins returns the total number of vested coins. If no coins are vested,
+// nil is returned.
+func (va ClawbackVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins {
+	// It's likely that one or the other schedule will be nearly trivial,
+	// so there should be little overhead in recomputing the conjunction each time.
+	coins := coinsMin(va.GetUnlockedOnly(blockTime), va.GetVestedOnly(blockTime))
+	if coins.IsZero() {
+		return nil
+	}
+	return coins
+}
+
+// GetVestingCoins returns the total number of vesting coins. If no coins are
+// vesting, nil is returned.
+func (va ClawbackVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins {
+	return va.OriginalVesting.Sub(va.GetVestedCoins(blockTime))
+}
+
+// LockedCoins returns the set of coins that are not spendable (i.e. locked),
+// defined as the vesting coins that are not delegated.
+func (va ClawbackVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
+	return va.BaseVestingAccount.LockedCoinsFromVesting(va.GetVestingCoins(blockTime))
+}
+
+// TrackDelegation tracks a desired delegation amount by setting the appropriate
+// values for the amount of delegated vesting, delegated free, and reducing the
+// overall amount of base coins.
+func (va *ClawbackVestingAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) {
+	va.BaseVestingAccount.TrackDelegation(balance, va.GetVestingCoins(blockTime), amount)
+}
+
+// GetStartTime returns the time when vesting starts for a periodic vesting
+// account.
+func (va ClawbackVestingAccount) GetStartTime() int64 {
+	return va.StartTime
+}
+
+// GetVestingPeriods returns vesting periods associated with periodic vesting account.
+func (va ClawbackVestingAccount) GetVestingPeriods() Periods {
+	return va.VestingPeriods
+}
+
+// coinEq returns whether two Coins are equal.
+// The IsEqual() method can panic.
+func CoinEq(a, b sdk.Coins) bool {
+	return a.IsAllLTE(b) && b.IsAllLTE(a)
+}
+
+// Validate checks for errors on the account fields
+func (va ClawbackVestingAccount) Validate() error {
+	if va.GetStartTime() >= va.GetEndTime() {
+		return errors.New("vesting start-time must be before end-time")
+
+	}
+
+	lockupEnd := va.GetStartTime()
+	lockupCoins := sdk.NewCoins()
+
+	for _, p := range va.LockupPeriods {
+		lockupEnd += p.Length
+		lockupCoins = lockupCoins.Add(p.Amount...)
+	}
+
+	if lockupEnd > va.EndTime {
+		return errors.New("lockup schedule extends beyond account end time")
+	}
+
+	// use coinEq to prevent panic
+	if !CoinEq(lockupCoins, va.OriginalVesting) {
+		return errors.New("original vesting coins does not match the sum of all coins in lockup periods")
+	}
+
+	vestingEnd := va.GetStartTime()
+	vestingCoins := sdk.NewCoins()
+
+	for _, p := range va.VestingPeriods {
+		vestingEnd += p.Length
+		vestingCoins = vestingCoins.Add(p.Amount...)
+	}
+
+	if vestingEnd > va.EndTime {
+		return errors.New("vesting schedule exteds beyond account end time")
+	}
+
+	if !CoinEq(vestingCoins, va.OriginalVesting) {
+		return errors.New("original vesting coins does not match the sum of all coins in vesting periods")
+	}
+
+	return va.BaseVestingAccount.Validate()
+}
+
+type clawbackGrantAction struct {
+	funderAddress       string
+	grantStartTime      int64
+	grantLockupPeriods  []Period
+	grantVestingPeriods []Period
+	grantCoins          sdk.Coins
+}
+
+func NewClawbackGrantAction(
+	funderAddress string,
+	grantStartTime int64,
+	grantLockupPeriods, grantVestingPeriods []Period,
+	grantCoins sdk.Coins,
+) exported.AddGrantAction {
+	return clawbackGrantAction{
+		funderAddress:       funderAddress,
+		grantStartTime:      grantStartTime,
+		grantLockupPeriods:  grantLockupPeriods,
+		grantVestingPeriods: grantVestingPeriods,
+		grantCoins:          grantCoins,
+	}
+}
+
+func (cga clawbackGrantAction) AddToAccount(ctx sdk.Context, rawAccount exported.VestingAccount) error {
+	cva, ok := rawAccount.(*ClawbackVestingAccount)
+	if !ok {
+		return fmt.Errorf("expected *ClawbackVestingAccount, got %T", rawAccount)
+	}
+	if cga.funderAddress != cva.FunderAddress {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"account %s can only accept grants from account %s",
+			rawAccount.GetAddress(), cva.FunderAddress,
+		)
+	}
+	cva.addGrant(ctx, cga.grantStartTime, cga.grantLockupPeriods, cga.grantVestingPeriods, cga.grantCoins)
+	return nil
+
+}
+
+func (va *ClawbackVestingAccount) AddGrant(ctx sdk.Context, action exported.AddGrantAction) error {
+	return action.AddToAccount(ctx, va)
+}
+
+func (va *ClawbackVestingAccount) addGrant(ctx sdk.Context, grantStartTime int64, grantLockupPeriods, grantVestingPeriods []Period, grantCoins sdk.Coins) {
+	// modify schedules for the new grant
+	newLockupStart, newLockupEnd, newLockupPeriods := DisjunctPeriods(va.GetStartTime(), grantStartTime, va.LockupPeriods, grantLockupPeriods)
+	newVestingStart, newVestingEnd, newVestingPeriods := DisjunctPeriods(va.GetStartTime(), grantStartTime,
+		va.GetVestingPeriods(), grantVestingPeriods)
+	if newLockupStart != newVestingStart {
+		panic("bad start time calculation")
+	}
+	va.StartTime = newLockupStart
+	va.EndTime = max64(newLockupEnd, newVestingEnd)
+	va.LockupPeriods = newLockupPeriods
+	va.VestingPeriods = newVestingPeriods
+	va.OriginalVesting = va.OriginalVesting.Add(grantCoins...)
+}
+
+// GetUnlockedOnly returns the unlocking schedule at blockTIme.
+func (va ClawbackVestingAccount) GetUnlockedOnly(blockTime time.Time) sdk.Coins {
+	return ReadSchedule(va.GetStartTime(), va.EndTime, va.LockupPeriods, va.OriginalVesting, blockTime.Unix())
+}
+
+// GetVestedOnly returns the vesting schedule at blockTime.
+func (va ClawbackVestingAccount) GetVestedOnly(blockTime time.Time) sdk.Coins {
+	return ReadSchedule(va.GetStartTime(), va.EndTime, va.VestingPeriods, va.OriginalVesting, blockTime.Unix())
+}
+
+// computeClawback removes all future vesting events from the account,
+// returns the total sum of these events. When removing the future vesting events,
+// the lockup schedule will also have to be capped to keep the total sums the same.
+// (But future unlocking events might be preserved if they unlock currently vested coins.)
+// If the amount returned is zero, then the returned account should be unchanged.
+// Note that this method althers the struct itself
+// Does not adjust DelegatedVesting
+func (va *ClawbackVestingAccount) computeClawback(clawbackTime int64) sdk.Coins {
+	// Compute the truncated vesting schedule and amounts.
+	// Work with the schedule as the primary data and recompute derived fields, e.g. OriginalVesting.
+	vestTime := va.GetStartTime()
+	totalVested := sdk.NewCoins()
+	totalUnvested := sdk.NewCoins()
+	unvestedIdx := 0
+	for i, period := range va.VestingPeriods {
+		// this period vests at time t, if this occurred before clawback time,
+		// then its already vested.
+		vestTime += period.Length
+		// tie in time gets clawed back
+		if vestTime < clawbackTime {
+			totalVested = totalVested.Add(period.Amount...)
+			unvestedIdx = i + 1
+		} else {
+			totalUnvested = totalUnvested.Add(period.Amount...)
+		}
+	}
+	lastVestTime := vestTime
+
+	newVestingPeriods := va.VestingPeriods[:unvestedIdx]
+
+	// To cap the unlocking schedule to the new total vested, conjunct with a limiting schedule
+	capPeriods := []Period{
+		{
+			Length: 0,
+			Amount: totalVested,
+		},
+	}
+	_, lastLockTime, newLockupPeriods := ConjunctPeriods(va.StartTime, va.StartTime, va.LockupPeriods, capPeriods)
+
+	// Now construct the new account state
+	va.OriginalVesting = totalVested
+	va.EndTime = max64(lastVestTime, lastLockTime)
+	va.LockupPeriods = newLockupPeriods
+	va.VestingPeriods = newVestingPeriods
+
+	return totalUnvested
+}
+
+type clawbackAction struct {
+	requestor sdk.AccAddress
+	dest      sdk.AccAddress
+	ak        AccountKeeper
+	bk        BankKeeper
+}
+
+func NewClawbackAction(requestor, dest sdk.AccAddress, ak AccountKeeper, bk BankKeeper) exported.ClawbackAction {
+	return clawbackAction{
+		requestor: requestor,
+		dest:      dest,
+		ak:        ak,
+		bk:        bk,
+	}
+}
+
+func (ca clawbackAction) TakeFromAccount(ctx sdk.Context, rawAccount exported.VestingAccount) error {
+	cva, ok := rawAccount.(*ClawbackVestingAccount)
+	if !ok {
+		return fmt.Errorf("clawback expects *ClawbackVestingAccount, got %T", rawAccount)
+	}
+	if ca.requestor.String() != cva.FunderAddress {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "clawback can only be requested by original funder %s", cva.FunderAddress)
+	}
+	return cva.clawback(ctx, ca.dest, ca.ak, ca.bk)
+}
+
+func (va *ClawbackVestingAccount) Clawback(ctx sdk.Context, action exported.ClawbackAction) error {
+	return action.TakeFromAccount(ctx, va)
+}
+
+// Clawback transfers unvested tokens in a ClawbackVestingAccount to dest.
+// Future vesting events are removed. Unstaked tokens are simply sent.
+// Unbonding and staked tokens are transferred with their staking state
+// intact.  Account state is updated to reflect the removals.
+func (va *ClawbackVestingAccount) clawback(ctx sdk.Context, dest sdk.AccAddress, ak AccountKeeper, bk BankKeeper) error {
+	// Compute the clawback based on the account state only, and update account
+	toClawBack := va.computeClawback(ctx.BlockTime().Unix())
+	if toClawBack.IsZero() {
+		return nil
+	}
+	addr := va.GetAddress()
+
+	// update the account's vesting settings
+	ak.SetAccount(ctx, va)
+
+	// Now that future vesting events (and associated lockup) are removed,
+	// the balance of the account is unlocked and can be freely transferred.
+	err := bk.SendCoins(ctx, addr, dest, toClawBack)
+	if err != nil {
+		// shouldn't happen, we have a correctness issue in toClawBack in this case
+		return err
+	}
+	return nil
 }

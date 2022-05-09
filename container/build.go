@@ -1,12 +1,14 @@
 package container
 
-// Build runs the provided invoker function with values provided by the provided
-// options. It is the single entry point for building and running a dependency
-// injection container. Invoker should be a function taking one or more
-// dependencies from the container, optionally returning an error.
+// Build builds the container specified by containerOption and extracts the
+// requested outputs from the container or returns an error. It is the single
+// entry point for building and running a dependency injection container.
+// Each of the values specified as outputs must be pointers to types that
+// can be provided by the container.
 //
 // Ex:
-//  Build(func (x int) error { println(x) }, Provide(func() int { return 1 }))
+//  var x int
+//  Build(Provide(func() int { return 1 }), &x)
 func Build(containerOption Option, outputs ...interface{}) error {
 	loc := LocationFromCaller(1)
 	return build(loc, nil, containerOption, outputs...)

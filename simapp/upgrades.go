@@ -21,7 +21,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 			// We set fromVersion to 1 to avoid running InitGenesis for modules for
 			// in-store migrations.
 			// 
-			// If you wish to skip any module migrations, i.e. the were already migrated
+			// If you wish to skip any module migrations, i.e. they were already migrated
 			// in an older version, you can use `modulename.AppModule{}.ConsensusVersion()`
 			// instead of `1` below.
 			// 

@@ -1,14 +1,12 @@
 package container
 
 import (
-	"bytes"
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 
-	"github.com/goccy/go-graphviz/cgraph"
-
-	"github.com/cosmos/cosmos-sdk/container/internal/graphviz"
+	"github.com/emicklei/dot"
 )
 
 // DebugOption is a functional option for running a container that controls
@@ -44,12 +42,11 @@ func LogVisualizer() DebugOption {
 	})
 }
 
-// FileVisualizer is a debug option which dumps a graphviz rendering of
-// the container to the specified file with the specified format. Currently
-// supported formats are: dot, svg, png and jpg.
-func FileVisualizer(filename, format string) DebugOption {
+// FileVisualizer is a debug option which dumps a graphviz DOT rendering of
+// the container to the specified file.
+func FileVisualizer(filename string) DebugOption {
 	return debugOption(func(c *debugConfig) error {
-		c.addFileVisualizer(filename, format)
+		c.addFileVisualizer(filename)
 		return nil
 	})
 }
@@ -83,8 +80,7 @@ const (
 func Debug() DebugOption {
 	return DebugOptions(
 		StdoutLogger(),
-		FileVisualizer(debugContainerSvg, "svg"),
-		FileVisualizer(debugContainerDot, "dot"),
+		FileVisualizer(debugContainerDot),
 	)
 }
 
@@ -167,7 +163,7 @@ type debugConfig struct {
 	logBuf    *[]string // a log buffer for onError/onSuccess processing
 
 	// graphing
-	graph         *graphviz.Graph
+	graph         *dot.Graph
 	visualizers   []func(string)
 	logVisualizer bool
 
@@ -187,7 +183,7 @@ var _ DebugOption = (*debugOption)(nil)
 
 func newDebugConfig() (*debugConfig, error) {
 	return &debugConfig{
-		graph: graphviz.NewGraph(),
+		graph: dot.NewGraph(),
 	}, nil
 }
 
@@ -209,16 +205,13 @@ func (c debugConfig) logf(format string, args ...interface{}) {
 }
 
 func (c *debugConfig) generateGraph() {
-	buf := &bytes.Buffer{}
-	c.graph.RenderDOT(buf)
-
-	dot := buf.String()
+	dotStr := c.graph.String()
 	if c.logVisualizer {
-		c.logf("DOT Graph: %s", dot)
+		c.logf("DOT Graph: %s", dotStr)
 	}
 
 	for _, v := range c.visualizers {
-		v(dot)
+		v(dotStr)
 	}
 }
 
@@ -232,41 +225,44 @@ func (c *debugConfig) enableLogVisualizer() {
 	c.logVisualizer = true
 }
 
-func (c *debugConfig) addFileVisualizer(filename string, format string) {
+func (c *debugConfig) addFileVisualizer(filename string) {
 	c.visualizers = append(c.visualizers, func(_ string) {
-		panic("TODO")
-		//err := c.graph.RenderDOT(c.graph, graphviz.Format(format), filename)
-		//if err != nil {
-		//	c.logf("Error saving graphviz file %s with format %s: %+v", filename, format, err)
-		//} else {
-		//	path, err := filepath.Abs(filename)
-		//	if err == nil {
-		//		c.logf("Saved graph of container to %s", path)
-		//	}
-		//}
+		dotStr := c.graph.String()
+		err := os.WriteFile(filename, []byte(dotStr), 0644)
+		if err != nil {
+			c.logf("Error saving graphviz file %s: %+v", filename, err)
+		} else {
+			path, err := filepath.Abs(filename)
+			if err == nil {
+				c.logf("Saved graph of container to %s", path)
+			}
+		}
 	})
 }
 
-func (c *debugConfig) locationGraphNode(location Location, key *moduleKey) *graphviz.Node {
+func (c *debugConfig) locationGraphNode(location Location, key *moduleKey) dot.Node {
 	graph := c.moduleSubGraph(key)
-	node, found := graph.FindOrCreateNode(location.Name())
+	name := location.Name()
+	node, found := graph.FindNodeById(name)
 	if found {
 		return node
 	}
 
-	node.SetShape(cgraph.BoxShape)
-	node.SetColor("lightgrey")
+	node = graph.Node(name)
+	node.Attr("shape", "box")
+	node.Attr("color", "lightgrey")
 	return node
 }
 
-func (c *debugConfig) typeGraphNode(typ reflect.Type) *graphviz.Node {
-	node, found := c.graph.FindOrCreateNode(moreUsefulTypeString(typ))
-
+func (c *debugConfig) typeGraphNode(typ reflect.Type) dot.Node {
+	name := moreUsefulTypeString(typ)
+	node, found := c.graph.FindNodeById(name)
 	if found {
 		return node
 	}
 
-	node.SetColor("lightgrey")
+	node = c.graph.Node(name)
+	node.Attr("color", "lightgrey")
 	return node
 }
 
@@ -286,16 +282,16 @@ func moreUsefulTypeString(ty reflect.Type) string {
 	}
 }
 
-func (c *debugConfig) moduleSubGraph(key *moduleKey) *graphviz.Graph {
+func (c *debugConfig) moduleSubGraph(key *moduleKey) *dot.Graph {
 	graph := c.graph
 	if key != nil {
 		gname := fmt.Sprintf("cluster_%s", key.name)
-		graph = c.graph.SubGraph(gname)
-		graph.SetLabel(fmt.Sprintf("Module: %s", key.name))
+		graph = c.graph.Subgraph(gname)
+		graph.Label(fmt.Sprintf("Module: %s", key.name))
 	}
 	return graph
 }
 
-func (c *debugConfig) addGraphEdge(from, to *graphviz.Node) {
-	_ = c.graph.CreateEdge("", from, to)
+func (c *debugConfig) addGraphEdge(from, to dot.Node) {
+	_ = c.graph.Edge(from, to)
 }

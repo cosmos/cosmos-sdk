@@ -1,0 +1,45 @@
+digraph  {
+	subgraph s7 {
+		label="Module: a";
+		n8[color="lightgrey",label="github.com/cosmos/cosmos-sdk/container_test.ModuleA.Provide",shape="box"];
+		
+	}
+	subgraph s13 {
+		label="Module: b";
+		n14[color="black",label="github.com/cosmos/cosmos-sdk/container_test.ModuleB.Provide",shape="box"];
+		n17[color="black",label="github.com/cosmos/cosmos-sdk/container_test.ProvideKVStoreKey",shape="box"];
+		
+	}
+	subgraph s4 {
+		label="Module: runtime";
+		n5[color="lightgrey",label="github.com/cosmos/cosmos-sdk/container_test.ProvideKVStoreKey",shape="box"];
+		
+	}
+	
+	n12[color="lightgrey",comment="auto-group",label="[]github.com/cosmos/cosmos-sdk/container_test.Command"];
+	n2[color="black",label="github.com/cosmos/cosmos-sdk/container.ModuleKey"];
+	n9[color="lightgrey",label="github.com/cosmos/cosmos-sdk/container.OwnModuleKey"];
+	n6[color="black",label="github.com/cosmos/cosmos-sdk/container_test.KVStoreKey"];
+	n10[color="lightgrey",label="github.com/cosmos/cosmos-sdk/container_test.KeeperA"];
+	n15[color="black",label="github.com/cosmos/cosmos-sdk/container_test.KeeperB"];
+	n3[color="black",label="github.com/cosmos/cosmos-sdk/container_test.MsgClientA"];
+	n1[color="black",label="github.com/cosmos/cosmos-sdk/container_test.ProvideMsgClientA",shape="box"];
+	n16[color="black",label="github.com/cosmos/cosmos-sdk/container_test.TestLogging",shape="box"];
+	n11[color="lightgrey",comment="one-per-module",label="map[string]github.com/cosmos/cosmos-sdk/container_test.Handler"];
+	n2->n1;
+	n2->n5;
+	n9->n8;
+	n6->n8;
+	n6->n14;
+	n15->n16;
+	n8->n10;
+	n8->n11;
+	n8->n12;
+	n14->n15;
+	n14->n12;
+	n14->n11;
+	n3->n14;
+	n5->n6;
+	n1->n3;
+	
+}

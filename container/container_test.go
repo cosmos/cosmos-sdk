@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/golden"
 
 	"github.com/cosmos/cosmos-sdk/container"
 )
@@ -81,6 +82,13 @@ func (ModuleB) Provide(dependencies BDependencies) (BProvides, Handler, error) {
 	}, Handler{}, nil
 }
 
+var scenarioConfig = container.Options(
+	container.Provide(ProvideMsgClientA),
+	container.ProvideInModule("runtime", ProvideKVStoreKey),
+	container.ProvideInModule("a", wrapMethod0(ModuleA{})),
+	container.ProvideInModule("b", wrapMethod0(ModuleB{})),
+)
+
 func TestScenario(t *testing.T) {
 	var (
 		handlers map[string]Handler
@@ -90,12 +98,7 @@ func TestScenario(t *testing.T) {
 	)
 	require.NoError(t,
 		container.Build(
-			container.Options(
-				container.Provide(ProvideMsgClientA),
-				container.ProvideInModule("runtime", ProvideKVStoreKey),
-				container.ProvideInModule("a", wrapMethod0(ModuleA{})),
-				container.ProvideInModule("b", wrapMethod0(ModuleB{})),
-			),
+			scenarioConfig,
 			&handlers,
 			&commands,
 			&a,
@@ -554,6 +557,7 @@ func TestLogging(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Remove(graphfile.Name())
 
+	var b KeeperB
 	require.NoError(t, container.BuildDebug(
 		container.DebugOptions(
 			container.Logger(func(s string) {
@@ -563,10 +567,11 @@ func TestLogging(t *testing.T) {
 				dotGraph = g
 			}),
 			container.LogVisualizer(),
-			container.FileVisualizer(graphfile.Name(), "svg"),
+			container.FileVisualizer(graphfile.Name()),
 			container.StdoutLogger(),
 		),
-		container.Options(),
+		scenarioConfig,
+		&b,
 	))
 
 	require.Contains(t, logOut, "digraph")
@@ -578,7 +583,9 @@ func TestLogging(t *testing.T) {
 
 	graphfileContents, err := os.ReadFile(graphfile.Name())
 	require.NoError(t, err)
-	require.Contains(t, string(graphfileContents), "<svg")
+	require.Contains(t, string(graphfileContents), "digraph")
+
+	golden.Assert(t, dotGraph, "example.dot")
 }
 
 func TestConditionalDebugging(t *testing.T) {

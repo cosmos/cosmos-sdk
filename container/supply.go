@@ -3,14 +3,14 @@ package container
 import (
 	"reflect"
 
-	"github.com/goccy/go-graphviz/cgraph"
+	"github.com/emicklei/dot"
 )
 
 type supplyResolver struct {
 	typ       reflect.Type
 	value     reflect.Value
 	loc       Location
-	graphNode *cgraph.Node
+	graphNode dot.Node
 }
 
 func (s supplyResolver) describeLocation() string {
@@ -26,6 +26,6 @@ func (s supplyResolver) resolve(c *container, _ *moduleKey, caller Location) (re
 	return s.value, nil
 }
 
-func (s supplyResolver) typeGraphNode() *cgraph.Node {
+func (s supplyResolver) typeGraphNode() dot.Node {
 	return s.graphNode
 }

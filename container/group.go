@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/goccy/go-graphviz/cgraph"
-
+	"github.com/emicklei/dot"
 	"github.com/pkg/errors"
 )
 
@@ -35,7 +34,7 @@ type groupResolver struct {
 	providers    []*simpleProvider
 	resolved     bool
 	values       reflect.Value
-	graphNode    *cgraph.Node
+	graphNode    dot.Node
 }
 
 type sliceGroupResolver struct {
@@ -90,6 +89,6 @@ func (g *groupResolver) addNode(n *simpleProvider, i int) error {
 	return nil
 }
 
-func (g groupResolver) typeGraphNode() *cgraph.Node {
+func (g groupResolver) typeGraphNode() dot.Node {
 	return g.graphNode
 }

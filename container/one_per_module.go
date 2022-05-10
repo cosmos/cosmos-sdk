@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/goccy/go-graphviz/cgraph"
-
+	"github.com/emicklei/dot"
 	"github.com/pkg/errors"
 )
 
@@ -34,7 +33,7 @@ type onePerModuleResolver struct {
 	idxMap    map[*moduleKey]int
 	resolved  bool
 	values    reflect.Value
-	graphNode *cgraph.Node
+	graphNode dot.Node
 }
 
 type mapOfOnePerModuleResolver struct {
@@ -101,6 +100,6 @@ func (o *mapOfOnePerModuleResolver) addNode(s *simpleProvider, _ int) error {
 	return errors.Errorf("%v is a one-per-module type and thus %v can't be used as an output parameter in %s", o.typ, o.mapType, s.provider.Location)
 }
 
-func (o onePerModuleResolver) typeGraphNode() *cgraph.Node {
+func (o onePerModuleResolver) typeGraphNode() dot.Node {
 	return o.graphNode
 }

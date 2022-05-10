@@ -62,19 +62,91 @@ func Logger(logger func(string)) DebugOption {
 	return debugOption(func(c *debugConfig) error {
 		logger("Initializing logger")
 		c.loggers = append(c.loggers, logger)
+
+		// send conditional log messages batched for onError/onSuccess cases
+		if c.logBuf != nil {
+			for _, s := range *c.logBuf {
+				logger(s)
+			}
+		}
+
 		return nil
 	})
 }
 
+const (
+	debugContainerSvg = "debug_container.svg"
+	debugContainerDot = "debug_container.dot"
+)
+
 // Debug is a default debug option which sends log output to stdout, dumps
-// the container in the graphviz DOT format to stdout, and to the file
-// container_dump.svg.
+// the container in the graphviz DOT and SVG formats to debug_container.dot
+// and debug_container.svg respectively.
 func Debug() DebugOption {
 	return DebugOptions(
 		StdoutLogger(),
-		LogVisualizer(),
-		FileVisualizer("container_dump.svg", "svg"),
+		FileVisualizer(debugContainerSvg, "svg"),
+		FileVisualizer(debugContainerDot, "dot"),
 	)
+}
+
+func (d *debugConfig) initLogBuf() {
+	if d.logBuf == nil {
+		d.logBuf = &[]string{}
+		d.loggers = append(d.loggers, func(s string) {
+			*d.logBuf = append(*d.logBuf, s)
+		})
+	}
+}
+
+// OnError is a debug option that allows setting debug options that are
+// conditional on an error happening. Any loggers added error will
+// receive the full dump of logs since the start of container processing.
+func OnError(option DebugOption) DebugOption {
+	return debugOption(func(config *debugConfig) error {
+		config.initLogBuf()
+		config.onError = option
+		return nil
+	})
+}
+
+// OnSuccess is a debug option that allows setting debug options that are
+// conditional on successful container resolution. Any loggers added on success
+// will receive the full dump of logs since the start of container processing.
+func OnSuccess(option DebugOption) DebugOption {
+	return debugOption(func(config *debugConfig) error {
+		config.initLogBuf()
+		config.onSuccess = option
+		return nil
+	})
+}
+
+// DebugCleanup specifies a clean-up function to be called at the end of
+// processing to clean up any resources that may be used during debugging.
+func DebugCleanup(cleanup func()) DebugOption {
+	return debugOption(func(config *debugConfig) error {
+		config.cleanup = append(config.cleanup, cleanup)
+		return nil
+	})
+}
+
+// AutoDebug does the same thing as Debug when there is an error and deletes
+// the debug_container.dot and debug_container.dot if they exist when there
+// is no error. This is the default debug mode of Run.
+func AutoDebug() DebugOption {
+	return DebugOptions(
+		OnError(Debug()),
+		OnSuccess(DebugCleanup(func() {
+			deleteIfExists(debugContainerSvg)
+			deleteIfExists(debugContainerDot)
+		})),
+	)
+}
+
+func deleteIfExists(filename string) {
+	if _, err := os.Stat(filename); err == nil {
+		_ = os.Remove(filename)
+	}
 }
 
 // DebugOptions creates a debug option which bundles together other debug options.
@@ -94,12 +166,18 @@ type debugConfig struct {
 	// logging
 	loggers   []func(string)
 	indentStr string
+	logBuf    *[]string // a log buffer for onError/onSuccess processing
 
 	// graphing
 	graphviz      *graphviz.Graphviz
 	graph         *cgraph.Graph
 	visualizers   []func(string)
 	logVisualizer bool
+
+	// extra processing
+	onError   DebugOption
+	onSuccess DebugOption
+	cleanup   []func()
 }
 
 type debugOption func(*debugConfig) error
@@ -210,7 +288,7 @@ func (c *debugConfig) locationGraphNode(location Location, key *moduleKey) (*cgr
 }
 
 func (c *debugConfig) typeGraphNode(typ reflect.Type) (*cgraph.Node, error) {
-	node, found, err := c.findOrCreateGraphNode(c.graph, typ.String())
+	node, found, err := c.findOrCreateGraphNode(c.graph, moreUsefulTypeString(typ))
 	if err != nil {
 		return nil, err
 	}
@@ -221,6 +299,22 @@ func (c *debugConfig) typeGraphNode(typ reflect.Type) (*cgraph.Node, error) {
 
 	node.SetColor("lightgrey")
 	return node, err
+}
+
+// moreUsefulTypeString is more useful than reflect.Type.String()
+func moreUsefulTypeString(ty reflect.Type) string {
+	switch ty.Kind() {
+	case reflect.Struct, reflect.Interface:
+		return fmt.Sprintf("%s.%s", ty.PkgPath(), ty.Name())
+	case reflect.Pointer:
+		return fmt.Sprintf("*%s", moreUsefulTypeString(ty.Elem()))
+	case reflect.Map:
+		return fmt.Sprintf("map[%s]%s", moreUsefulTypeString(ty.Key()), moreUsefulTypeString(ty.Elem()))
+	case reflect.Slice:
+		return fmt.Sprintf("[]%s", moreUsefulTypeString(ty.Elem()))
+	default:
+		return ty.String()
+	}
 }
 
 func (c *debugConfig) findOrCreateGraphNode(subGraph *cgraph.Graph, name string) (node *cgraph.Node, found bool, err error) {
@@ -246,7 +340,7 @@ func (c *debugConfig) moduleSubGraph(key *moduleKey) *cgraph.Graph {
 	if key != nil {
 		gname := fmt.Sprintf("cluster_%s", key.name)
 		graph = c.graph.SubGraph(gname, 1)
-		graph.SetLabel(fmt.Sprintf("ModuleKey: %s", key.name))
+		graph.SetLabel(fmt.Sprintf("Module: %s", key.name))
 	}
 	return graph
 }

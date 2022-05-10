@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/tendermint/tendermint/crypto/tmhash"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/tendermint/tendermint/crypto/tmhash"
 )
 
 type handlerFun func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error)

@@ -119,7 +119,7 @@ func (k Keeper) GetValidatorByUnbondingId(
 	return val, true
 }
 
-// Set an index to look up an UnbondingDelegation by the UnbondingId of an UnbondingDelegationEntry that it contains
+// Set an index to look up an UnbondingDelegation by the unbondingId of an UnbondingDelegationEntry that it contains
 func (k Keeper) SetUnbondingDelegationByUnbondingIndex(ctx sdk.Context, ubd types.UnbondingDelegation, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -139,7 +139,7 @@ func (k Keeper) SetUnbondingDelegationByUnbondingIndex(ctx sdk.Context, ubd type
 	store.Set(indexKey, ubdKey)
 }
 
-// Set an index to look up an Redelegation by the UnbondingId of an RedelegationEntry that it contains
+// Set an index to look up an Redelegation by the unbondingId of an RedelegationEntry that it contains
 func (k Keeper) SetRedelegationByUnbondingIndex(ctx sdk.Context, red types.Redelegation, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -164,7 +164,7 @@ func (k Keeper) SetRedelegationByUnbondingIndex(ctx sdk.Context, red types.Redel
 	store.Set(indexKey, redKey)
 }
 
-// Set an index to look up a Validator by the UnbondingId corresponding to its current unbonding
+// Set an index to look up a Validator by the unbondingId corresponding to its current unbonding
 func (k Keeper) SetValidatorByUnbondingIndex(ctx sdk.Context, val types.Validator, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 

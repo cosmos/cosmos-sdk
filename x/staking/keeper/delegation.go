@@ -244,7 +244,7 @@ func (k Keeper) SetUnbondingDelegationEntry(
 
 	k.SetUnbondingDelegation(ctx, ubd)
 
-	// Add to the UBDByUnbonding index to look up the UBD by the UBDE ID
+	// Add to the UBDByUnbondingOp index to look up the UBD by the UBDE ID
 	k.SetUnbondingDelegationByUnbondingIndex(ctx, ubd, id)
 
 	// Call hook

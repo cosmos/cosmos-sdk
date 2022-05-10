@@ -373,27 +373,6 @@ func NewSimApp(
 		panic(err)
 	}
 
-	//// During begin block slashing happens after distr.BeginBlocker so that
-	//// there is nothing left over in the validator fee pool, so as to keep the
-	//// CanWithdrawInvariant invariant.
-	//// NOTE: staking module is required if HistoricalEntries param > 0
-	//// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
-	//app.mm.SetOrderBeginBlockers(
-	//	upgradetypes.ModuleName, capabilitytypes.ModuleName, minttypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
-	//	evidencetypes.ModuleName, stakingtypes.ModuleName,
-	//	authtypes.ModuleName, banktypes.ModuleName, govtypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName,
-	//	authz.ModuleName, feegrant.ModuleName, nft.ModuleName, group.ModuleName,
-	//	paramstypes.ModuleName, vestingtypes.ModuleName,
-	//)
-	//app.mm.SetOrderEndBlockers(
-	//	crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName,
-	//	capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName,
-	//	slashingtypes.ModuleName, minttypes.ModuleName,
-	//	genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
-	//	feegrant.ModuleName, nft.ModuleName, group.ModuleName,
-	//	paramstypes.ModuleName, upgradetypes.ModuleName, vestingtypes.ModuleName,
-	//)
-
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
 	// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
@@ -413,8 +392,8 @@ func NewSimApp(
 
 	app.ModuleManager.RegisterInvariants(&app.CrisisKeeper)
 	app.ModuleManager.RegisterRoutes(app.legacyRouter, app.QueryRouter(), encodingConfig.Amino)
-	//app.configurator = module.NewConfigurator(app.appCodec, app.msgSvcRouter, app.GRPCQueryRouter())
-	//app.mm.RegisterServices(app.configurator)
+	app.configurator = module.NewConfigurator(app.appCodec, app.msgSvcRouter, app.GRPCQueryRouter())
+	app.ModuleManager.RegisterServices(app.configurator)
 
 	// add test gRPC service for testing gRPC queries in isolation
 	testdata_pulsar.RegisterQueryServer(app.GRPCQueryRouter(), testdata_pulsar.QueryImpl{})
@@ -447,15 +426,7 @@ func NewSimApp(
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
-	//app.SetBeginBlocker(app.BeginBlocker)
-	//app.SetEndBlocker(app.EndBlocker)
 	app.setTxHandler(encodingConfig.TxConfig, cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents)))
-
-	//if loadLatest {
-	//	if err := app.LoadLatestVersion(); err != nil {
-	//		tmos.Exit(err.Error())
-	//	}
-	//}
 
 	err = app.Load(loadLatest)
 	if err != nil {

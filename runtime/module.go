@@ -17,8 +17,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
+// BaseAppOption is a container.AutoGroupType which can be used to pass
+// BaseApp options into the container. It should be used carefully.
 type BaseAppOption func(*baseapp.BaseApp)
 
+// IsAutoGroupType indicates that this is a container.AutoGroupType.
 func (b BaseAppOption) IsAutoGroupType() {}
 
 type privateState struct {

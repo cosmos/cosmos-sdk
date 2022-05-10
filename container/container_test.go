@@ -15,14 +15,13 @@ type KVStoreKey struct {
 	name string
 }
 
-type ModuleKey string
-
 type MsgClientA struct {
-	key ModuleKey
+	key string
 }
 
 type KeeperA struct {
-	key KVStoreKey
+	key  KVStoreKey
+	name string
 }
 
 type KeeperB struct {
@@ -46,18 +45,14 @@ func ProvideKVStoreKey(moduleKey container.ModuleKey) KVStoreKey {
 	return KVStoreKey{name: moduleKey.Name()}
 }
 
-func ProvideModuleKey(moduleKey container.ModuleKey) (ModuleKey, error) {
-	return ModuleKey(moduleKey.Name()), nil
-}
-
-func ProvideMsgClientA(_ container.ModuleKey, key ModuleKey) MsgClientA {
-	return MsgClientA{key}
+func ProvideMsgClientA(key container.ModuleKey) MsgClientA {
+	return MsgClientA{key.Name()}
 }
 
 type ModuleA struct{}
 
-func (ModuleA) Provide(key KVStoreKey) (KeeperA, Handler, Command) {
-	return KeeperA{key}, Handler{}, Command{}
+func (ModuleA) Provide(key KVStoreKey, moduleKey container.OwnModuleKey) (KeeperA, Handler, Command) {
+	return KeeperA{key: key, name: container.ModuleKey(moduleKey).Name()}, Handler{}, Command{}
 }
 
 type ModuleB struct{}
@@ -76,7 +71,7 @@ type BProvides struct {
 	Commands []Command
 }
 
-func (ModuleB) Provide(dependencies BDependencies, _ container.ModuleKey) (BProvides, Handler, error) {
+func (ModuleB) Provide(dependencies BDependencies) (BProvides, Handler, error) {
 	return BProvides{
 		KeeperB: KeeperB{
 			key:        dependencies.Key,
@@ -96,11 +91,8 @@ func TestScenario(t *testing.T) {
 	require.NoError(t,
 		container.Build(
 			container.Options(
-				container.Provide(
-					ProvideKVStoreKey,
-					ProvideModuleKey,
-					ProvideMsgClientA,
-				),
+				container.Provide(ProvideMsgClientA),
+				container.ProvideInModule("runtime", ProvideKVStoreKey),
 				container.ProvideInModule("a", wrapMethod0(ModuleA{})),
 				container.ProvideInModule("b", wrapMethod0(ModuleB{})),
 			),
@@ -115,7 +107,8 @@ func TestScenario(t *testing.T) {
 	require.Equal(t, Handler{}, handlers["b"])
 	require.Len(t, commands, 3)
 	require.Equal(t, KeeperA{
-		key: KVStoreKey{name: "a"},
+		key:  KVStoreKey{name: "a"},
+		name: "a",
 	}, a)
 	require.Equal(t, KeeperB{
 		key: KVStoreKey{name: "b"},
@@ -506,6 +499,7 @@ type TestOutput struct {
 	container.Out
 
 	X string
+	Y int64
 }
 
 func TestStructArgs(t *testing.T) {
@@ -527,13 +521,15 @@ func TestStructArgs(t *testing.T) {
 	require.Equal(t, 1.3, input.Y)
 
 	var x string
+	var y int64
 	require.NoError(t, container.Build(
 		container.Provide(func() (TestOutput, error) {
-			return TestOutput{X: "A"}, nil
+			return TestOutput{X: "A", Y: -10}, nil
 		}),
-		&x,
+		&x, &y,
 	))
 	require.Equal(t, "A", x)
+	require.Equal(t, int64(-10), y)
 
 	require.Error(t, container.Build(
 		container.Provide(func() (TestOutput, error) {

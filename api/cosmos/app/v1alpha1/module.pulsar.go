@@ -1617,10 +1617,8 @@ type ModuleDescriptor struct {
 	unknownFields protoimpl.UnknownFields
 
 	// go_import names the package that should be imported by an app to load the
-	// module in the runtime module registry. Either go_import must be defined here
-	// or the go_package option must be defined at the file level to indicate
-	// to users where to location the module implementation. go_import takes
-	// precedence over go_package when both are defined.
+	// module in the runtime module registry. It is required to make debugging
+	// of configuration errors easier for users.
 	GoImport string `protobuf:"bytes,1,opt,name=go_import,json=goImport,proto3" json:"go_import,omitempty"`
 	// use_package refers to a protobuf package that this module
 	// uses and exposes to the world. In an app, only one module should "use"

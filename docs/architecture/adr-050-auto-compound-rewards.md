@@ -50,6 +50,7 @@ message MsgEnableAutoCompoundRewards {
   string delegator_address     = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string src_validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string dst_validator_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string delegate_fraction     = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 }
 ```
 
@@ -67,8 +68,11 @@ will be the same.
 
 When a delegator wants to have their "unrealized" rewards be withdrawn and
 automatically delegated to the relative validator(s), they would broadcast a
-`MsgEnableAutoCompoundRewards` transaction. To stop or disable auto-compounding,
-the user would send a similar transaction as defined by `MsgDisableAutoCompoundRewards`:
+`MsgEnableAutoCompoundRewards` transaction. Note, the total amount of rewards
+automatically delegated would be `rewards * delegate_fraction`.
+
+To stop or disable auto-compounding, the user would send a similar transaction
+as defined by `MsgDisableAutoCompoundRewards`:
 
 ```protobuf
 message MsgDisableAutoCompoundRewards {
@@ -85,15 +89,23 @@ In addition, we require the `x/distribution` module to use an additional state
 index to store the records for delegators. When a user submits a `MsgEnableAutoCompoundRewards`
 transaction, we store a record with the following key and value:
 
+```proto
+message AutoCompoundRewardsRecord {
+  string dst_validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string delegate_fraction     = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+}
+```
+
 ```text
-<prefixByte> | delegator_address | src_validator_address -> dst_validator_address
+<prefixByte> | delegator_address | src_validator_address -> AutoCompoundRewardsRecord(...)
 ```
 
 > Note, both `delegator_address` and `src_validator_address` are length-prefixed
 > via `address.MustLengthPrefix` in the key.
 
-When a user decides to disable auto-compounding rewards by sending a `MsgDisableAutoCompoundRewards`
-transaction, we delete the record stored under the above key.
+When a user decides to disable auto-compounding rewards by sending a
+`MsgDisableAutoCompoundRewards` transaction, we delete the record stored under
+the above key.
 
 Given that we now have such a key ordering in state, we can iterate over the all
 the relevant records using the dedicated `<prefixByte>` using a prefix `KVStore`,
@@ -102,7 +114,7 @@ be defined as follows in `x/distribution`:
 
 ```go
 func (k Keeper) AutoCompoundRewards(ctx sdk.Context) {
-	k.IterateAutoCompoundRewards(ctx, func(delAddr sdk.AccAddress, srcValAddr, dstValAddr sdk.ValAddress) (stop bool) {
+	k.IterateAutoCompoundRewards(ctx, func(delAddr sdk.AccAddress, srcValAddr, dstValAddr sdk.ValAddress, frac sdk.Dec) (stop bool) {
 		rewards, err := k.WithdrawDelegationRewards(ctx, delAddr, srcValAddr)
 		switch {
 		case err != nil:
@@ -110,7 +122,7 @@ func (k Keeper) AutoCompoundRewards(ctx sdk.Context) {
 
 		case rewards != nil && !rewards.IsZero():
 			withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, delAddr)
-			// delegate 'rewards' from 'withdrawAddr' to 'dstValAddr'
+			// delegate 'rewards * frac' from 'withdrawAddr' to 'dstValAddr'
 		}
 
 		return false

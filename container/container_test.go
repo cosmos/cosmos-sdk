@@ -15,14 +15,13 @@ type KVStoreKey struct {
 	name string
 }
 
-type ModuleKey string
-
 type MsgClientA struct {
-	key ModuleKey
+	key string
 }
 
 type KeeperA struct {
-	key KVStoreKey
+	key  KVStoreKey
+	name string
 }
 
 type KeeperB struct {
@@ -46,18 +45,14 @@ func ProvideKVStoreKey(moduleKey container.ModuleKey) KVStoreKey {
 	return KVStoreKey{name: moduleKey.Name()}
 }
 
-func ProvideModuleKey(moduleKey container.ModuleKey) (ModuleKey, error) {
-	return ModuleKey(moduleKey.Name()), nil
-}
-
-func ProvideMsgClientA(_ container.ModuleKey, key ModuleKey) MsgClientA {
-	return MsgClientA{key}
+func ProvideMsgClientA(key container.ModuleKey) MsgClientA {
+	return MsgClientA{key.Name()}
 }
 
 type ModuleA struct{}
 
-func (ModuleA) Provide(key KVStoreKey) (KeeperA, Handler, Command) {
-	return KeeperA{key}, Handler{}, Command{}
+func (ModuleA) Provide(key KVStoreKey, moduleKey container.OwnModuleKey) (KeeperA, Handler, Command) {
+	return KeeperA{key: key, name: container.ModuleKey(moduleKey).Name()}, Handler{}, Command{}
 }
 
 type ModuleB struct{}
@@ -76,7 +71,7 @@ type BProvides struct {
 	Commands []Command
 }
 
-func (ModuleB) Provide(dependencies BDependencies, _ container.ModuleKey) (BProvides, Handler, error) {
+func (ModuleB) Provide(dependencies BDependencies) (BProvides, Handler, error) {
 	return BProvides{
 		KeeperB: KeeperB{
 			key:        dependencies.Key,
@@ -95,7 +90,8 @@ func TestScenario(t *testing.T) {
 				require.Equal(t, Handler{}, handlers["b"])
 				require.Len(t, commands, 3)
 				require.Equal(t, KeeperA{
-					key: KVStoreKey{name: "a"},
+					key:  KVStoreKey{name: "a"},
+					name: "a",
 				}, a)
 				require.Equal(t, KeeperB{
 					key: KVStoreKey{name: "b"},
@@ -104,11 +100,8 @@ func TestScenario(t *testing.T) {
 					},
 				}, b)
 			},
-			container.Provide(
-				ProvideKVStoreKey,
-				ProvideModuleKey,
-				ProvideMsgClientA,
-			),
+			container.Provide(ProvideMsgClientA),
+			container.ProvideInModule("runtime", ProvideKVStoreKey),
 			container.ProvideInModule("a", wrapMethod0(ModuleA{})),
 			container.ProvideInModule("b", wrapMethod0(ModuleB{})),
 		))

@@ -133,6 +133,8 @@ func (c *container) getResolver(typ reflect.Type) (resolver, error) {
 	return c.resolvers[typ], nil
 }
 
+var stringType = reflect.TypeOf("")
+
 func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (interface{}, error) {
 	providerGraphNode, err := c.locationGraphNode(provider.Location, key)
 	if err != nil {
@@ -140,10 +142,15 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 	}
 
 	hasModuleKeyParam := false
+	hasOwnModuleKeyParam := false
 	for _, in := range provider.Inputs {
 		typ := in.Type
 		if typ == moduleKeyType {
 			hasModuleKeyParam = true
+		}
+
+		if typ == ownModuleKeyType {
+			hasOwnModuleKeyParam = true
 		}
 
 		if isAutoGroupType(typ) {
@@ -170,7 +177,7 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 		c.addGraphEdge(typeGraphNode, providerGraphNode)
 	}
 
-	if key != nil || !hasModuleKeyParam {
+	if !hasModuleKeyParam {
 		c.logf("Registering %s", provider.Location.String())
 		c.indentLogger()
 		defer c.dedentLogger()
@@ -227,6 +234,11 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 
 		return sp, nil
 	} else {
+		if hasOwnModuleKeyParam {
+			return nil, errors.Errorf("%T and %T must not be declared as dependencies on the same provided",
+				ModuleKey{}, OwnModuleKey{})
+		}
+
 		c.logf("Registering module-scoped provider: %s", provider.Location.String())
 		c.indentLogger()
 		defer c.dedentLogger()
@@ -312,6 +324,15 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 		c.logf("Providing ModuleKey %s", moduleKey.name)
 		markGraphNodeAsUsed(typeGraphNode)
 		return reflect.ValueOf(ModuleKey{moduleKey}), nil
+	}
+
+	if in.Type == ownModuleKeyType {
+		if moduleKey == nil {
+			return reflect.Value{}, errors.Errorf("trying to resolve %T for %s but not inside of any module's scope", moduleKey, caller)
+		}
+		c.logf("Providing OwnModuleKey %s", moduleKey.name)
+		markGraphNodeAsUsed(typeGraphNode)
+		return reflect.ValueOf(OwnModuleKey{moduleKey}), nil
 	}
 
 	vr, err := c.getResolver(in.Type)

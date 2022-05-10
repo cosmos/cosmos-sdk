@@ -1,50 +1,50 @@
-<!--
-The default pull request template is for types feat, fix, or refactor.
-For other templates, add one of the following parameters to the url:
-- template=docs.md
-- template=other.md
--->
+<!-- < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < ☺
+v                               ✰  Thanks for creating a PR! ✰    
+v    Before smashing the submit button please review the checkboxes.
+v    If a checkbox is n/a - please still include it but + a little note why
+v    If your PR doesn't close an issue, that's OK!  Just remove the Closes: #XXX line!
+☺ > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > >  -->
 
-## Description
+Closes: #XXX
 
-Closes: #XXXX
+## What is the purpose of the change
 
-<!-- Add a description of the changes that this PR introduces and the files that
-are the most critical to review. -->
+> Add a description of the overall background and high-level changes that this PR introduces
 
----
+*(E.g.: This pull request improves documentation of area A by adding ....*
 
-### Author Checklist
 
-*All items are required. Please add a note to the item if the item is not applicable and
-please add links to any relevant follow up issues.*
+## Brief Changelog
 
-I have...
+*(for example:)*
+ 
+  - *The metadata is stored in the blob store on job creation time as a persistent artifact*
+  - *Deployments RPC transmits only the blob storage reference*
+  - *Daemons retrieve the RPC data from the blob cache*
 
-- [ ] included the correct [type prefix](https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.json) in the PR title
-- [ ] added `!` to the type prefix if API or client breaking change
-- [ ] targeted the correct branch (see [PR Targeting](https://github.com/cosmos/cosmos-sdk/blob/master/CONTRIBUTING.md#pr-targeting))
-- [ ] provided a link to the relevant issue or specification
-- [ ] followed the guidelines for [building modules](https://github.com/cosmos/cosmos-sdk/blob/master/docs/building-modules)
-- [ ] included the necessary unit and integration [tests](https://github.com/cosmos/cosmos-sdk/blob/master/CONTRIBUTING.md#testing)
-- [ ] added a changelog entry to `CHANGELOG.md`
-- [ ] included comments for [documenting Go code](https://blog.golang.org/godoc)
-- [ ] updated the relevant documentation or specification
-- [ ] reviewed "Files changed" and left comments if necessary
-- [ ] confirmed all CI checks have passed
 
-### Reviewers Checklist
+## Testing and Verifying
 
-*All items are required. Please add a note if the item is not applicable and please add
-your handle next to the items reviewed if you only reviewed selected items.*
+*(Please pick one of the following options)*
 
-I have...
+This change is a trivial rework / code cleanup without any test coverage.
 
-- [ ] confirmed the correct [type prefix](https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.json) in the PR title
-- [ ] confirmed `!` in the type prefix if API or client breaking change
-- [ ] confirmed all author checklist items have been addressed 
-- [ ] reviewed state machine logic
-- [ ] reviewed API design and naming
-- [ ] reviewed documentation is accurate
-- [ ] reviewed tests and test coverage
-- [ ] manually tested (if applicable)
+*(or)*
+
+This change is already covered by existing tests, such as *(please describe tests)*.
+
+*(or)*
+
+This change added tests and can be verified as follows:
+
+*(example:)*
+  - *Added unit test that validates ...*
+  - *Added integration tests for end-to-end deployment with ...*
+  - *Extended integration test for ...*
+  - *Manually verified the change by ...*
+
+## Documentation and Release Note
+
+  - Does this pull request introduce a new feature or user-facing behavior changes? (yes / no)
+  - Is a relevant changelog entry added to the `Unreleased` section in `CHANGELOG.md`? (yes / no)
+  - How is the feature or change documented? (not applicable   /   specification (`x/<module>/spec/`)  /  [Osmosis docs repo](https://github.com/osmosis-labs/docs)   /   not documented)

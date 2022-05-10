@@ -1,0 +1,68 @@
+name: Add pull request to project
+on:
+  pull_request:
+    types: [opened]
+env:
+  GITHUB_TOKEN: ${{ secrets.ADD_TO_PROJECT_PAT }}
+  ORGANIZATION: osmosis-labs
+  REPOSITORY: cosmos-sdk
+  PROJECT_NUMBER: 1
+jobs:
+  track_pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get ID of the project to update
+        env:
+          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+          ORGANIZATION: ${{ env.ORGANIZATION }}
+          PROJECT_NUMBER: ${{ env.PROJECT_NUMBER }}
+        run: |
+          gh api graphql -f query='
+            query($org: String!, $number: Int!) {
+              organization(login: $org){
+                projectNext(number: $number) {
+                  id
+                  fields(first:20) {
+                    nodes {
+                      id
+                      name
+                      settings
+                    }
+                  }
+                }
+              }
+            }' -f org=$ORGANIZATION -F number=$PROJECT_NUMBER > project_id.json
+
+          echo 'PROJECT_ID='$(jq '.data.organization.projectNext.id' project_id.json) >> $GITHUB_ENV
+
+      - name: Get ID of the current pull request
+        env:
+          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+          ORGANIZATION: ${{ env.ORGANIZATION }}
+          REPOSITORY: ${{ env.REPOSITORY }}
+          EVENT_ID: ${{ github.event.number }}
+        run: |
+          gh api graphql -f query='
+            query ($org: String!, $repo: String!, $pr_id: Int!) {
+              repository(owner:$org, name:$repo) {
+                  pullRequest(number: $pr_id) {
+                    id
+                  }
+                }
+            }' -f org=$ORGANIZATION -f repo=$REPOSITORY -F pr_id=$EVENT_ID > pull_request_node_id.json
+          cat pull_request_node_id.json
+
+          echo 'PULL_REQUEST_NODE_ID='$(jq '.data.repository.pullRequest.id' pull_request_node_id.json) >> $GITHUB_ENV
+                    
+      - name: Add pull request to project
+        env:
+          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+        run: |
+          item_id="$( gh api graphql -f query='
+            mutation($project:ID!, $issue:ID!) {
+              addProjectNextItem(input: {projectId: $project, contentId: $issue}) {
+                projectNextItem {
+                  id
+                }
+              }
+            }' -f project=$PROJECT_ID -f issue=$PULL_REQUEST_NODE_ID --jq '.data.addProjectNextItem.projectNextItem.id')"

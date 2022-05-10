@@ -248,7 +248,7 @@ func NewSimApp(
 	}
 
 	app := &SimApp{
-		// TODO: App: app,
+		App:               runtimeApp,
 		legacyAmino:       legacyAmino,
 		appCodec:          appCodec,
 		interfaceRegistry: interfaceRegistry,

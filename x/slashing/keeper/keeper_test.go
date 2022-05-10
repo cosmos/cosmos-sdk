@@ -4,15 +4,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/testslashing"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -278,53 +275,4 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	// validator should now be jailed & kicked
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	tstaking.CheckValidator(valAddr, stakingtypes.Unbonding, true)
-}
-
-type MockSlashingHooks struct {
-	triggered bool
-}
-
-func (h *MockSlashingHooks) AfterValidatorDowntime(_ sdk.Context, _ sdk.ConsAddress, _ int64) {
-	h.triggered = true
-}
-
-// Test hook is triggered when validator is down
-func TestValidatorDowntimedHook(t *testing.T) {
-	// initial setup
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-	// create a validator pubkey and address
-	pubkey := ed25519.GenPrivKey().PubKey()
-	consAddr := sdk.ConsAddress(pubkey.Address())
-
-	// store the validator pubkey and signing info
-	app.SlashingKeeper.AddPubkey(ctx, pubkey)
-	valInfo := types.NewValidatorSigningInfo(consAddr, ctx.BlockHeight(), ctx.BlockHeight()-1,
-		time.Time{}.UTC(), false, int64(0))
-	app.SlashingKeeper.SetValidatorSigningInfo(ctx, consAddr, valInfo)
-
-	// define a slashing hook mock
-
-	mh := MockSlashingHooks{}
-	app.SlashingKeeper.SetHooks(&mh)
-
-	// 1000 first blocks OK
-	height := int64(0)
-	power := int64(1)
-
-	for ; height < app.SlashingKeeper.SignedBlocksWindow(ctx); height++ {
-		ctx = ctx.WithBlockHeight(height)
-		app.SlashingKeeper.HandleValidatorSignature(ctx, pubkey.Address(), power, true)
-	}
-	// hook shouldn't be triggered
-	require.False(t, mh.triggered)
-
-	// 501 blocks missed
-	for ; height < app.SlashingKeeper.SignedBlocksWindow(ctx)+(app.SlashingKeeper.SignedBlocksWindow(ctx)-app.SlashingKeeper.MinSignedPerWindow(ctx))+1; height++ {
-		ctx = ctx.WithBlockHeight(height)
-		app.SlashingKeeper.HandleValidatorSignature(ctx, pubkey.Address(), power, false)
-	}
-
-	require.True(t, mh.triggered)
 }

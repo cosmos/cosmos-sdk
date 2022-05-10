@@ -9,13 +9,16 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"cosmossdk.io/core/appmodule"
+	modulev1 "github.com/cosmos/cosmos-sdk/api/cosmos/params/module/v1"
 	"github.com/cosmos/cosmos-sdk/runtime"
+
+	"github.com/cosmos/cosmos-sdk/container"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/container"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -155,13 +158,12 @@ func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Validato
 }
 
 func init() {
-	// TODO:
-	//appmodule.Register(&modulev1.Module{},
-	//	appmodule.Provide(
-	//		provideModuleBasic,
-	//		provideModule,
-	//		provideSubSpace,
-	//	))
+	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(
+			provideModuleBasic,
+			provideModule,
+			provideSubSpace,
+		))
 }
 
 func provideModuleBasic() runtime.AppModuleBasicWrapper {

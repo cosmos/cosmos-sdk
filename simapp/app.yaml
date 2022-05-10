@@ -1,7 +1,7 @@
 modules:
   - name: runtime
     config:
-      "@type": cosmos.base.runtime.v1.Module
+      "@type": cosmos.app.runtime.v1alpha1.Module
 
       # During begin block slashing happens after distr.BeginBlocker so that
       # there is nothing left over in the validator fee pool, so as to keep the

@@ -66,8 +66,10 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 
 // Load finishes all initialization operations and loads the app.
 func (a *App) Load(loadLatest bool) error {
-	configurator := module.NewConfigurator(a.privateState.cdc, a.msgServiceRegistrar, a.GRPCQueryRouter())
-	a.ModuleManager.RegisterServices(configurator)
+	if a.msgServiceRegistrar != nil {
+		configurator := module.NewConfigurator(a.privateState.cdc, a.msgServiceRegistrar, a.GRPCQueryRouter())
+		a.ModuleManager.RegisterServices(configurator)
+	}
 
 	if len(a.config.InitGenesis) != 0 {
 		a.ModuleManager.SetOrderInitGenesis(a.config.InitGenesis...)

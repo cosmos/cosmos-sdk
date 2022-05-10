@@ -5,12 +5,15 @@ import (
 
 	"github.com/gogo/protobuf/grpc"
 
+	"github.com/cosmos/cosmos-sdk/container"
+
+	"cosmossdk.io/core/appmodule"
+
 	runtimev1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/app/runtime/v1alpha1"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/container"
 	"github.com/cosmos/cosmos-sdk/std"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -37,16 +40,15 @@ func (a *privateState) registerStoreKey(key storetypes.StoreKey) {
 }
 
 func init() {
-	// TODO:
-	//appmodule.Register(&runtimev1alpha1.Module{},
-	//	appmodule.Provide(
-	//		provideBuilder,
-	//		provideApp,
-	//		provideKVStoreKey,
-	//		provideTransientStoreKey,
-	//		provideMemoryStoreKey,
-	//	),
-	//)
+	appmodule.Register(&runtimev1alpha1.Module{},
+		appmodule.Provide(
+			provideBuilder,
+			provideApp,
+			provideKVStoreKey,
+			provideTransientStoreKey,
+			provideMemoryStoreKey,
+		),
+	)
 }
 
 func provideBuilder(moduleBasics map[string]AppModuleBasicWrapper) (
@@ -80,29 +82,31 @@ func provideBuilder(moduleBasics map[string]AppModuleBasicWrapper) (
 	return interfaceRegistry, cdc, amino, builder, cdc
 }
 
-func provideApp(
-	config *runtimev1alpha1.Module,
-	builder *privateState,
-	modules map[string]AppModuleWrapper,
-	baseAppOptions []BaseAppOption,
-	txHandler tx.Handler,
-	msgServiceRegistrar grpc.Server,
-) *AppBuilder {
+type appInputs struct {
+	Config              *runtimev1alpha1.Module
+	State               *privateState
+	Modules             map[string]AppModuleWrapper
+	BaseAppOptions      []BaseAppOption
+	TxHandler           tx.Handler  `optional:"true"`
+	MsgServiceRegistrar grpc.Server `options:"true"`
+}
+
+func provideApp(inputs appInputs) *AppBuilder {
 	mm := &module.Manager{Modules: map[string]module.AppModule{}}
-	for name, wrapper := range modules {
+	for name, wrapper := range inputs.Modules {
 		mm.Modules[name] = wrapper.AppModule
 	}
 	return &AppBuilder{
 		app: &App{
 			BaseApp:             nil,
-			baseAppOptions:      baseAppOptions,
-			config:              config,
-			privateState:        builder,
+			baseAppOptions:      inputs.BaseAppOptions,
+			config:              inputs.Config,
+			privateState:        inputs.State,
 			ModuleManager:       mm,
 			beginBlockers:       nil,
 			endBlockers:         nil,
-			txHandler:           txHandler,
-			msgServiceRegistrar: msgServiceRegistrar,
+			txHandler:           inputs.TxHandler,
+			msgServiceRegistrar: inputs.MsgServiceRegistrar,
 		},
 	}
 }

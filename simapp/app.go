@@ -15,12 +15,15 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/container"
+
+	"cosmossdk.io/core/appconfig"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/container"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	_ "github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
@@ -201,7 +204,7 @@ func init() {
 //go:embed app.yaml
 var appConfigYaml []byte
 
-var appConfig container.Option
+var appConfig = appconfig.LoadYAML(appConfigYaml)
 
 // NewSimApp returns a reference to an initialized SimApp.
 func NewSimApp(

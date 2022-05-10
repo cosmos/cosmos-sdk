@@ -15,9 +15,9 @@ This document describes `BaseApp`, the abstraction that implements the core func
 
 `BaseApp` is a base type that implements the core of a Cosmos SDK application, namely:
 
-* The [Application Blockchain Interface](#abci), for the state-machine to communicate with the underlying consensus engine (e.g. Tendermint).
+* The [Application Blockchain Interface](#main-abci-messages), for the state-machine to communicate with the underlying consensus engine (e.g. Tendermint).
 * [Service Routers](#service-routers), to route messages and queries to the appropriate module.
-* Different [states](#states), as the state-machine can have different volatile states updated based on the ABCI message received.
+* Different [states](#state-updates), as the state-machine can have different volatile states updated based on the ABCI message received.
 
 The goal of `BaseApp` is to provide the fundamental layer of a Cosmos SDK application
 that developers can easily extend to build their own custom application. Usually,
@@ -66,15 +66,15 @@ First, the important parameters that are initialized during the bootstrapping of
 * [`TxDecoder`](https://godoc.org/github.com/cosmos/cosmos-sdk/types#TxDecoder): It is used to decode
   raw transaction bytes relayed by the underlying Tendermint engine.
 * [`ParamStore`](#paramstore): The parameter store used to get and set application consensus parameters.
-* [`TxHandler`](#middlewares): This handler is used to handle signature verification, fee payment,
-  and other pre-message execution checks when a transaction is received. It's executed during
+* [`TxHandler`](#middlewares): This handler is used to set middlewares. Middlewares can, for instace, handle signature verification,
+  fee payment, and other pre-message execution checks when a transaction is received. It's executed during
   [`CheckTx/RecheckTx`](#checktx) and [`DeliverTx`](#delivertx).
 * [`InitChainer`](../basics/app-anatomy.md#initchainer),
   [`BeginBlocker` and `EndBlocker`](../basics/app-anatomy.md#beginblocker-and-endblocker): These are
   the functions executed when the application receives the `InitChain`, `BeginBlock` and `EndBlock`
   ABCI messages from the underlying Tendermint engine.
 
-Then, parameters used to define [volatile states](#volatile-states) (i.e. cached states):
+Then, parameters used to define [volatile states](#state-updates) (i.e. cached states):
 
 * `checkState`: This state is updated during [`CheckTx`](#checktx), and reset on [`Commit`](#commit).
 * `deliverState`: This state is updated during [`DeliverTx`](#delivertx), and set to `nil` on
@@ -223,18 +223,17 @@ to do the following checks:
 3. Perform non-module related _stateful_ checks on the [account](../basics/accounts.md). This step is mainly about checking
    that the `sdk.Msg` signatures are valid, that enough fees are provided and that the sending account
    has enough funds to pay for said fees. Note that no precise [`gas`](../basics/gas-fees.md) counting occurs here,
-   as `sdk.Msg`s are not processed. Usually, the [`Middleware`](../basics/gas-fees.md#middleware) will check that the `gas` provided
+   as `sdk.Msg`s are not processed. Usually, the [`middleware`](../basics/gas-fees.md#middleware) will check that the `gas` provided
    with the transaction is superior to a minimum reference gas amount based on the raw transaction size,
    in order to avoid spam with transactions that provide 0 gas.
 
 `CheckTx` does **not** process `sdk.Msg`s -  they only need to be processed when the canonical state need to be updated, which happens during `DeliverTx`.
 
-Steps 2. and 3. are performed by the [`Middleware`](../basics/gas-fees.md#middleware) in the [`RunTx()`](#runtx-middlewares-and-runmsgs)
-function, which `CheckTx()` calls with the `runTxModeCheck` mode. During each step of `CheckTx()`, a
-special [volatile state](#volatile-states) called `checkState` is updated. This state is used to keep
-track of the temporary changes triggered by the `CheckTx()` calls of each transaction without modifying
-the [main canonical state](#main-state) . For example, when a transaction goes through `CheckTx()`, the
-transaction's fees are deducted from the sender's account in `checkState`. If a second transaction is
+Steps 2. and 3. are performed by the [`middlewares`](../basics/gas-fees.md#middleware)' `CheckTx()`.
+During each step of `CheckTx()`, a special [volatile state](#state-updates) called `checkState` is updated.
+This state is used to keep track of the temporary changes triggered by the `CheckTx()` calls of each transaction 
+without modifying the [main canonical state](#main-state) . For example, when a transaction goes through `CheckTx()`,
+the transaction's fees are deducted from the sender's account in `checkState`. If a second transaction is
 received from the same account before the first is processed, and the account has consumed all its
 funds in `checkState` during the first transaction, the second transaction will fail `CheckTx`() and
 be rejected. In any case, the sender's account will not actually pay the fees until the transaction
@@ -267,16 +266,16 @@ This allows certain checks like signature verification can be skipped during `Ch
 
 When the underlying consensus engine receives a block proposal, each transaction in the block needs to be processed by the application. To that end, the underlying consensus engine sends a `DeliverTx` message to the application for each transaction in a sequential order.
 
-Before the first transaction of a given block is processed, a [volatile state](#volatile-states) called `deliverState` is intialized during [`BeginBlock`](#beginblock). This state is updated each time a transaction is processed via `DeliverTx`, and committed to the [main state](#main-state) when the block is [committed](#commit), after what is is set to `nil`.
+Before the first transaction of a given block is processed, a [volatile state](#state-updates) called `deliverState` is intialized during [`BeginBlock`](#beginblock). This state is updated each time a transaction is processed via `DeliverTx`, and committed to the [main state](#main-state) when the block is [committed](#commit), after what is is set to `nil`.
 
 `DeliverTx` performs the **exact same steps as `CheckTx`**, with a little caveat at step 3 and the addition of a fifth step:
 
-1. The middleware does **not** check that the transaction's `gas-prices` is sufficient. That is because the `min-gas-prices` value `gas-prices` is checked against is local to the node, and therefore what is enough for one full-node might not be for another. This means that the proposer can potentially include transactions for free, although they are not incentivised to do so, as they earn a bonus on the total fee of the block they propose.
+1. The `GasTxMiddleware` does **not** check that the transaction's `gas-prices` is sufficient. That is because the `min-gas-prices` value `gas-prices` is checked against is local to the node, and therefore what is enough for one full-node might not be for another. This means that the proposer can potentially include transactions for free, although they are not incentivised to do so, as they earn a bonus on the total fee of the block they propose.
 2. For each `sdk.Msg` in the transaction, route to the appropriate module's Protobuf [`Msg` service](../building-modules/msg-services.md). Additional _stateful_ checks are performed, and the branched multistore held in `deliverState`'s `context` is updated by the module's `keeper`. If the `Msg` service returns successfully, the branched multistore held in `context` is written to `deliverState` `CacheMultiStore`.
 
 During the additional fifth step outlined in (2), each read/write to the store increases the value of `GasConsumed`. You can find the default cost of each operation:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/store/types/gas.go#L164-L175
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/store/types/gas.go#L230-L241
 
 At any point, if `GasConsumed > GasWanted`, the function returns with `Code != 0` and `DeliverTx` fails.
 
@@ -291,31 +290,13 @@ At any point, if `GasConsumed > GasWanted`, the function returns with `Code != 0
 * `Events ([]cmn.KVPair)`: Key-Value tags for filtering and indexing transactions (eg. by account). See [`event`s](./events.md) for more.
 * `Codespace (string)`: Namespace for the Code.
 
-## RunTx, Middlewares and RunMsgs
+## Middlewares
 
-### RunTx
-
-`RunTx` is called from `CheckTx`/`DeliverTx` to handle the transaction, with `runTxModeCheck` or `runTxModeDeliver` as parameter to differentiate between the two modes of execution. Note that when `RunTx` receives a transaction, it has already been decoded.
-
-The first thing `RunTx` does upon being called is to retrieve the `context`'s `CacheMultiStore` by calling the `getContextForTx()` function with the appropriate mode (either `runTxModeCheck` or `runTxModeDeliver`). This `CacheMultiStore` is a branch of the main store, with cache functionality (for query requests), instantiated during `BeginBlock` for `DeliverTx` and during the `Commit` of the previous block for `CheckTx`. After that, two `defer func()` are called for [`gas`](../basics/gas-fees.md) management. They are executed when `runTx` returns and make sure `gas` is actually consumed, and will throw errors, if any.
-
-After that, `RunTx()` calls `ValidateBasic()` on each `sdk.Msg`in the `Tx`, which runs preliminary _stateless_ validity checks. If any `sdk.Msg` fails to pass `ValidateBasic()`, `RunTx()` returns with an error.
-
-Then, the [`anteHandler`](#antehandler) of the application is run (if it exists). In preparation of this step, both the `checkState`/`deliverState`'s `context` and `context`'s `CacheMultiStore` are branched using the `cacheTxContext()` function.
-
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/baseapp/baseapp.go#L623-L630
-
-This allows `RunTx` not to commit the changes made to the state during the execution of `anteHandler` if it ends up failing. It also prevents the module implementing the `anteHandler` from writing to state, which is an important part of the [object-capabilities](./ocap.md) of the Cosmos SDK.
-
-Finally, the [`RunMsgs()`](#runmsgs) function is called to process the `sdk.Msg`s in the `Tx`. In preparation of this step, just like with the `anteHandler`, both the `checkState`/`deliverState`'s `context` and `context`'s `CacheMultiStore` are branched using the `cacheTxContext()` function.
-
-### TxHandler and Middleware
-
-The `Middleware` is a special handler that implements the `tx.Handler` interface and is used to authenticate the transaction before the transaction's internal messages are processed.
+Middlewares implement the `tx.Handler` interface. They are called within BaseApp `CheckTx` and `DeliverTx`, allowing to run custom logic before or after the transaction is processed. They are primaraly used to authenticate the transaction before the transaction's internal messages are processed, but also to perform additional checks on the transaction itself.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/types/tx/middleware.go#L62:L68
 
-Middlewares are theoretically optional, but still a very important component of public blockchain networks. It serves 3 primary purposes:
+Middlewares are theoretically optional, but still a very important component of public blockchain networks. They have 3 primary purposes:
 
 * Be a primary line of defense against spam and second line of defense (the first one being the mempool) against transaction replay with fees deduction and [`sequence`](./transactions.md#transaction-generation) checking.
 * Perform preliminary _stateful_ validity checks like ensuring signatures are valid or that the sender has enough funds to pay for fees.
@@ -323,13 +304,18 @@ Middlewares are theoretically optional, but still a very important component of 
 
 `BaseApp` holds a `txHandler` as parameter that is initialized in the [application's constructor](../basics/app-anatomy.md#application-constructor). The most widely used `middlewares` are the [`auth` module middlewares](https://github.com/cosmos/cosmos-sdk/blob/main/x/auth/middleware).
 
+`NewDefaultTxHandler` groups a number a `middlewares` that are commonly used:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/x/auth/middleware/middleware.go#L89:L130
+
 Click [here](../basics/gas-fees.md#middleware) for more on these `middlewares`.
 
-### RunMsgs
+### RunMsgsTxHandler
 
-`RunMsgs` is called from `RunTx` with `runTxModeCheck` as parameter to check the existence of a route for each message the transaction, and with `runTxModeDeliver` to actually process the `sdk.Msg`s.
+`RunMsgsTxHandler` is a middleware that runs the `sdk.Msg`s in the transaction.
+When being called from `DeliverTx` or `SimulateTx`, it retrieves the `sdk.Msg`'s fully-qualified type name, by checking the `type_url` of the Protobuf `Any` representing the `sdk.Msg`. Then, using its [`msgServiceRouter`](#msg-service-router), it checks for the existence of `Msg` service method related to that `type_url`. At this point the [`Msg` service](../building-modules/msg-services.md) RPC is executed, before returning.
 
-First, it retrieves the `sdk.Msg`'s fully-qualified type name, by checking the `type_url` of the Protobuf `Any` representing the `sdk.Msg`. Then, using the application's [`msgServiceRouter`](#msg-service-router), it checks for the existence of `Msg` service method related to that `type_url`. At this point, if `mode == runTxModeCheck`, `RunMsgs` returns. Otherwise, if `mode == runTxModeDeliver`, the [`Msg` service](../building-modules/msg-services.md) RPC is executed, before `RunMsgs` returns.
+Note: When its `CheckTx` method is called, the `RunMsgsTxHandler` does not do anything as messages are not run during `CheckTx`.
 
 ## Other ABCI Messages
 
@@ -338,7 +324,7 @@ First, it retrieves the `sdk.Msg`'s fully-qualified type name, by checking the `
 The [`InitChain` ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#initchain) is sent from the underlying Tendermint engine when the chain is first started. It is mainly used to **initialize** parameters and state like:
 
 * [Consensus Parameters](https://docs.tendermint.com/master/spec/abci/apps.html#consensus-parameters) via `setConsensusParams`.
-* [`checkState` and `deliverState`](#volatile-states) via `setCheckState` and `setDeliverState`.
+* [`checkState` and `deliverState`](#state-updates) via `setCheckState` and `setDeliverState`.
 * The [block gas meter](../basics/gas-fees.md#block-gas-meter), with infinite gas to process genesis transactions.
 
 Finally, the `InitChain(req abci.RequestInitChain)` method of `BaseApp` calls the [`initChainer()`](../basics/app-anatomy.md#initchainer) of the application in order to initialize the main state of the application from the `genesis file` and, if defined, call the [`InitGenesis`](../building-modules/genesis.md#initgenesis) function of each of the application's modules.
@@ -347,7 +333,7 @@ Finally, the `InitChain(req abci.RequestInitChain)` method of `BaseApp` calls th
 
 The [`BeginBlock` ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#beginblock) is sent from the underlying Tendermint engine when a block proposal created by the correct proposer is received, before [`DeliverTx`](#delivertx) is run for each transaction in the block. It allows developers to have logic be executed at the beginning of each block. In the Cosmos SDK, the `BeginBlock(req abci.RequestBeginBlock)` method does the following:
 
-* Initialize [`deliverState`](#volatile-states) with the latest header using the `req abci.RequestBeginBlock` passed as parameter via the `setDeliverState` function.
+* Initialize [`deliverState`](#state-updates) with the latest header using the `req abci.RequestBeginBlock` passed as parameter via the `setDeliverState` function.
   +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/baseapp/baseapp.go#L387-L397
   This function also resets the [main gas meter](../basics/gas-fees.md#main-gas-meter).
 * Initialize the [block gas meter](../basics/gas-fees.md#block-gas-meter) with the `maxGas` limit. The `gas` consumed within the block cannot go above `maxGas`. This parameter is defined in the application's consensus parameters.

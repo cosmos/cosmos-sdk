@@ -68,7 +68,7 @@ are not empty, enforcing nonnegative numbers, and other logic specified in the d
 **_Stateful_** checks validate transactions and messages based on a committed state. Examples
 include checking that the relevant values exist and are able to be transacted with, the address
 has sufficient funds, and the sender is authorized or has the correct ownership to transact.
-At any given moment, full-nodes typically have [multiple versions](../core/baseapp.md#volatile-states)
+At any given moment, full-nodes typically have [multiple versions](../core/baseapp.md#state-updates)
 of the application's internal state for different purposes. For example, nodes will execute state
 changes while in the process of verifying transactions, but still need a copy of the last committed
 state in order to answer queries - they should not respond using state with uncommitted changes.
@@ -79,7 +79,7 @@ through several steps, beginning with decoding `Tx`.
 
 ### Decoding
 
-When `Tx` is received by the application from the underlying consensus engine (e.g. Tendermint), it is still in its [encoded](../core/encoding.md) `[]byte` form and needs to be unmarshaled in order to be processed. Then, the [`runTx`](../core/baseapp.md#runtx-middlewares-and-runmsgs) function is called to run in `runTxModeCheck` mode, meaning the function will run all checks but exit before executing messages and writing state changes.
+When `Tx` is received by the application from the underlying consensus engine (e.g. Tendermint), it is still in its [encoded](../core/encoding.md) `[]byte` form and needs to be unmarshaled in order to be processed. Then, the transaction is passed to the middlewares defined in `tx.Handler`. The middlewares will performe additional checks defined in their own `CheckTx`, meaning the they will run all checks but exit before executing messages and writing state changes.
 
 ### ValidateBasic
 
@@ -207,10 +207,10 @@ Instead of using their `checkState`, full-nodes use `deliverState`:
   middleware will not compare `gas-prices` to the node's `min-gas-prices` since that value is local
   to each node - differing values across nodes would yield nondeterministic results.
 
-* **`MsgServiceRouter`:** While `CheckTx` would have exited, `DeliverTx` continues to run
-  [`runMsgs`](../core/baseapp.md#runtx-and-runmsgs) to fully execute each `Msg` within the transaction.
+* **`RunMsgsTxHandler`:** While `CheckTx` would have exited, `DeliverTx` continues to run
+  [`RunMsgsTxHandler`](../core/baseapp.md#middlewares) to fully execute each `Msg` within the transaction.
   Since the transaction may have messages from different modules, `BaseApp` needs to know which module
-  to find the appropriate handler. This is achieved using `BaseApp`'s `MsgServiceRouter` so that it can be processed by the module's Protobuf [`Msg` service](../building-modules/msg-services.md).
+  to find the appropriate handler. This is achieved using `RunMsgsTxHandler`'s `MsgServiceRouter` so that it can be processed by the module's Protobuf [`Msg` service](../building-modules/msg-services.md).
   For `LegacyMsg` routing, the `Route` function is called via the [module manager](../building-modules/module-manager.md) to retrieve the route name and find the legacy [`Handler`](../building-modules/msg-services.md#handler-type) within the module.
 
 * **`Msg` service:** a Protobuf `Msg` service is responsible for executing each

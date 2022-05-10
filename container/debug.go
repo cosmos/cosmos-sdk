@@ -74,8 +74,10 @@ func Logger(logger func(string)) DebugOption {
 	})
 }
 
-const debugContainerSvg = "debug_container.svg"
-const debugContainerDot = "debug_container.dot"
+const (
+	debugContainerSvg = "debug_container.svg"
+	debugContainerDot = "debug_container.dot"
+)
 
 // Debug is a default debug option which sends log output to stdout, dumps
 // the container in the graphviz DOT and SVG formats to debug_container.dot

@@ -12,10 +12,8 @@ import (
 )
 
 // AppBuilder is a type that is injected into a container by the runtime module
-// as *AppBuilder which can be used to create an app which is compatible with
-// the existing app.go initialization conventions. It can be used to create a
-// hybrid app.go where some of the configuration is done declaratively with
-// an app config and the rest of it is done the old way.
+// (as *AppBuilder) which can be used to create an app which is compatible with
+// the existing app.go initialization conventions.
 type AppBuilder struct {
 	app *App
 }
@@ -26,7 +24,7 @@ func (a *AppBuilder) DefaultGenesis() map[string]json.RawMessage {
 	return a.app.privateState.basicManager.DefaultGenesis(a.app.privateState.cdc)
 }
 
-// Build builds an App instance.
+// Build builds an *App instance.
 func (a *AppBuilder) Build(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptions ...func(*baseapp.BaseApp)) *App {
 	for _, option := range a.app.baseAppOptions {
 		baseAppOptions = append(baseAppOptions, option)

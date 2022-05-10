@@ -22,6 +22,13 @@ import (
 
 // App is a wrapper around BaseApp and ModuleManager that can be used in hybrid
 // app.go/app config scenarios or directly as a servertypes.Application instance.
+// To get an instance of *App, *AppBuilder must be requested as a dependency
+// in a container which declares the runtime module and the AppBuilder.Build()
+// method must be called.
+//
+// App can be used to create a hybrid app.go setup where some configuration is
+// done declaratively with an app config and the rest of it is done the old way.
+// See simapp/app.go for an example of this setup.
 type App struct {
 	*baseapp.BaseApp
 	ModuleManager       *module.Manager
@@ -96,6 +103,7 @@ func (app *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 	return app.ModuleManager.EndBlock(ctx, req)
 }
 
+// InitChainer initializes the chain.
 func (a *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState map[string]json.RawMessage
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {

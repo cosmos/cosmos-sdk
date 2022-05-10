@@ -580,3 +580,35 @@ func TestLogging(t *testing.T) {
 	require.NoError(t, err)
 	require.Contains(t, string(graphfileContents), "<svg")
 }
+
+func TestConditionalDebugging(t *testing.T) {
+	logs := ""
+	success := false
+	conditionalDebugOpt := container.DebugOptions(
+		container.OnError(container.Logger(func(s string) {
+			logs += s + "\n"
+		})),
+		container.OnSuccess(container.DebugCleanup(func() {
+			success = true
+		})))
+
+	var input TestInput
+	require.Error(t, container.BuildDebug(
+		conditionalDebugOpt,
+		container.Options(),
+		&input,
+	))
+	require.Contains(t, logs, `Initializing logger`)
+	require.Contains(t, logs, `Registering providers`)
+	require.Contains(t, logs, `Registering outputs`)
+	require.False(t, success)
+
+	logs = ""
+	success = false
+	require.NoError(t, container.BuildDebug(
+		conditionalDebugOpt,
+		container.Options(),
+	))
+	require.Empty(t, logs)
+	require.True(t, success)
+}

@@ -141,43 +141,34 @@ func (s *DepositTestSuite) TestQueryProposalNotEnoughDeposits() {
 }
 
 func (s *DepositTestSuite) TestRejectedProposalDeposits() {
-	// resetting state required (proposal is getting removed from state and proposalID is not in sequence)
-	s.TearDownSuite()
-	s.SetupNewSuite()
-
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 	initialDeposit := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens)
-	id := 1
+
+	// ID is 3 because the first 2 were created during setup.
+	id := 3
 	proposalID := fmt.Sprintf("%d", id)
 
+	// We can't create this proposal in the setup because TestQueryProposalNotEnoughDeposits
+	// waits until all the proposals' deposit periods time out.
 	s.submitProposal(val, initialDeposit, id)
 
 	// query deposits
-	var deposits v1.QueryDepositsResponse
-	args := []string{proposalID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
-	cmd := cli.GetCmdQueryDeposits()
-	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
-	s.Require().NoError(err)
-	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(out.Bytes(), &deposits))
-	s.Require().Equal(len(deposits.Deposits), 1)
+	depositsRes := s.queryDeposits(val, proposalID, false, "")
+	s.Require().NotNil(depositsRes)
+	s.Require().Len(depositsRes.Deposits, 1)
 	// verify initial deposit
-	s.Require().Equal(sdk.Coins(deposits.Deposits[0].Amount).String(), initialDeposit.String())
+	s.Require().Equal(sdk.Coins(depositsRes.Deposits[0].Amount).String(), initialDeposit.String())
 
 	// vote
-	_, err = MsgVote(clientCtx, val.Address.String(), proposalID, "no")
+	_, err := MsgVote(clientCtx, val.Address.String(), proposalID, "no")
 	s.Require().NoError(err)
 
 	_, err = s.network.WaitForHeight(3)
 	s.Require().NoError(err)
 
-	args = []string{proposalID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
-	cmd = cli.GetCmdQueryProposal()
-	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	s.Require().NoError(err)
-
 	// query deposits
-	depositsRes := s.queryDeposits(val, proposalID, false, "")
+	depositsRes = s.queryDeposits(val, proposalID, false, "")
 	s.Require().NotNil(depositsRes)
 	s.Require().Len(depositsRes.Deposits, 1)
 	// verify initial deposit

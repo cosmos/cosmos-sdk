@@ -4,13 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"path/filepath"
 	"reflect"
 
-	"github.com/pkg/errors"
-
-	"github.com/goccy/go-graphviz"
 	"github.com/goccy/go-graphviz/cgraph"
+
+	"github.com/cosmos/cosmos-sdk/container/internal/graphviz"
 )
 
 // DebugOption is a functional option for running a container that controls
@@ -169,8 +167,7 @@ type debugConfig struct {
 	logBuf    *[]string // a log buffer for onError/onSuccess processing
 
 	// graphing
-	graphviz      *graphviz.Graphviz
-	graph         *cgraph.Graph
+	graph         *graphviz.Graph
 	visualizers   []func(string)
 	logVisualizer bool
 
@@ -189,15 +186,8 @@ func (c debugOption) applyConfig(ctr *debugConfig) error {
 var _ DebugOption = (*debugOption)(nil)
 
 func newDebugConfig() (*debugConfig, error) {
-	g := graphviz.New()
-	graph, err := g.Graph()
-	if err != nil {
-		return nil, errors.Wrap(err, "error initializing graph")
-	}
-
 	return &debugConfig{
-		graphviz: g,
-		graph:    graph,
+		graph: graphviz.NewGraph(),
 	}, nil
 }
 
@@ -220,11 +210,7 @@ func (c debugConfig) logf(format string, args ...interface{}) {
 
 func (c *debugConfig) generateGraph() {
 	buf := &bytes.Buffer{}
-	err := c.graphviz.Render(c.graph, graphviz.XDOT, buf)
-	if err != nil {
-		c.logf("Error rendering DOT graph: %+v", err)
-		return
-	}
+	c.graph.RenderDOT(buf)
 
 	dot := buf.String()
 	if c.logVisualizer {
@@ -233,17 +219,6 @@ func (c *debugConfig) generateGraph() {
 
 	for _, v := range c.visualizers {
 		v(dot)
-	}
-
-	err = c.graph.Close()
-	if err != nil {
-		c.logf("Error closing graph: %+v", err)
-		return
-	}
-
-	err = c.graphviz.Close()
-	if err != nil {
-		c.logf("Error closing graphviz: %+v", err)
 	}
 }
 
@@ -259,46 +234,40 @@ func (c *debugConfig) enableLogVisualizer() {
 
 func (c *debugConfig) addFileVisualizer(filename string, format string) {
 	c.visualizers = append(c.visualizers, func(_ string) {
-		err := c.graphviz.RenderFilename(c.graph, graphviz.Format(format), filename)
-		if err != nil {
-			c.logf("Error saving graphviz file %s with format %s: %+v", filename, format, err)
-		} else {
-			path, err := filepath.Abs(filename)
-			if err == nil {
-				c.logf("Saved graph of container to %s", path)
-			}
-		}
+		panic("TODO")
+		//err := c.graph.RenderDOT(c.graph, graphviz.Format(format), filename)
+		//if err != nil {
+		//	c.logf("Error saving graphviz file %s with format %s: %+v", filename, format, err)
+		//} else {
+		//	path, err := filepath.Abs(filename)
+		//	if err == nil {
+		//		c.logf("Saved graph of container to %s", path)
+		//	}
+		//}
 	})
 }
 
-func (c *debugConfig) locationGraphNode(location Location, key *moduleKey) (*cgraph.Node, error) {
+func (c *debugConfig) locationGraphNode(location Location, key *moduleKey) *graphviz.Node {
 	graph := c.moduleSubGraph(key)
-	node, found, err := c.findOrCreateGraphNode(graph, location.Name())
-	if err != nil {
-		return nil, err
-	}
-
+	node, found := graph.FindOrCreateNode(location.Name())
 	if found {
-		return node, nil
+		return node
 	}
 
 	node.SetShape(cgraph.BoxShape)
 	node.SetColor("lightgrey")
-	return node, nil
+	return node
 }
 
-func (c *debugConfig) typeGraphNode(typ reflect.Type) (*cgraph.Node, error) {
-	node, found, err := c.findOrCreateGraphNode(c.graph, moreUsefulTypeString(typ))
-	if err != nil {
-		return nil, err
-	}
+func (c *debugConfig) typeGraphNode(typ reflect.Type) *graphviz.Node {
+	node, found := c.graph.FindOrCreateNode(moreUsefulTypeString(typ))
 
 	if found {
-		return node, nil
+		return node
 	}
 
 	node.SetColor("lightgrey")
-	return node, err
+	return node
 }
 
 // moreUsefulTypeString is more useful than reflect.Type.String()
@@ -317,37 +286,16 @@ func moreUsefulTypeString(ty reflect.Type) string {
 	}
 }
 
-func (c *debugConfig) findOrCreateGraphNode(subGraph *cgraph.Graph, name string) (node *cgraph.Node, found bool, err error) {
-	node, err = c.graph.Node(name)
-	if err != nil {
-		return nil, false, errors.Wrapf(err, "error finding graph node %s", name)
-	}
-
-	if node != nil {
-		return node, true, nil
-	}
-
-	node, err = subGraph.CreateNode(name)
-	if err != nil {
-		return nil, false, errors.Wrapf(err, "error creating graph node %s", name)
-	}
-
-	return node, false, nil
-}
-
-func (c *debugConfig) moduleSubGraph(key *moduleKey) *cgraph.Graph {
+func (c *debugConfig) moduleSubGraph(key *moduleKey) *graphviz.Graph {
 	graph := c.graph
 	if key != nil {
 		gname := fmt.Sprintf("cluster_%s", key.name)
-		graph = c.graph.SubGraph(gname, 1)
+		graph = c.graph.SubGraph(gname)
 		graph.SetLabel(fmt.Sprintf("Module: %s", key.name))
 	}
 	return graph
 }
 
-func (c *debugConfig) addGraphEdge(from *cgraph.Node, to *cgraph.Node) {
-	_, err := c.graph.CreateEdge("", from, to)
-	if err != nil {
-		c.logf("error creating graph edge")
-	}
+func (c *debugConfig) addGraphEdge(from, to *graphviz.Node) {
+	_ = c.graph.CreateEdge("", from, to)
 }

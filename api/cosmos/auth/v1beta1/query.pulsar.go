@@ -6119,6 +6119,8 @@ func (x *QueryAccountRequest) GetAddress() string {
 }
 
 // QueryModuleAccountsRequest is the request type for the Query/ModuleAccounts RPC method.
+//
+// Since: cosmos-sdk 0.46
 type QueryModuleAccountsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -6247,6 +6249,8 @@ func (*QueryParamsRequest) Descriptor() ([]byte, []int) {
 }
 
 // QueryModuleAccountsResponse is the response type for the Query/ModuleAccounts RPC method.
+//
+// Since: cosmos-sdk 0.46
 type QueryModuleAccountsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -6282,7 +6286,9 @@ func (x *QueryModuleAccountsResponse) GetAccounts() []*anypb.Any {
 	return nil
 }
 
-// Bech32PrefixRequest is the request type for Bech32Prefix rpc method
+// Bech32PrefixRequest is the request type for Bech32Prefix rpc method.
+//
+// Since: cosmos-sdk 0.46
 type Bech32PrefixRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -6309,7 +6315,9 @@ func (*Bech32PrefixRequest) Descriptor() ([]byte, []int) {
 	return file_cosmos_auth_v1beta1_query_proto_rawDescGZIP(), []int{8}
 }
 
-// Bech32PrefixResponse is the response type for Bech32Prefix rpc method
+// Bech32PrefixResponse is the response type for Bech32Prefix rpc method.
+//
+// Since: cosmos-sdk 0.46
 type Bech32PrefixResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -6345,7 +6353,9 @@ func (x *Bech32PrefixResponse) GetBech32Prefix() string {
 	return ""
 }
 
-// AddressBytesToStringRequest is the request type for AddressString rpc method
+// AddressBytesToStringRequest is the request type for AddressString rpc method.
+//
+// Since: cosmos-sdk 0.46
 type AddressBytesToStringRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -6381,7 +6391,9 @@ func (x *AddressBytesToStringRequest) GetAddressBytes() []byte {
 	return nil
 }
 
-// AddressBytesToStringResponse is the response type for AddressString rpc method
+// AddressBytesToStringResponse is the response type for AddressString rpc method.
+//
+// Since: cosmos-sdk 0.46
 type AddressBytesToStringResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -6417,7 +6429,9 @@ func (x *AddressBytesToStringResponse) GetAddressString() string {
 	return ""
 }
 
-// AddressStringToBytesRequest is the request type for AccountBytes rpc method
+// AddressStringToBytesRequest is the request type for AccountBytes rpc method.
+//
+// Since: cosmos-sdk 0.46
 type AddressStringToBytesRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -6453,7 +6467,9 @@ func (x *AddressStringToBytesRequest) GetAddressString() string {
 	return ""
 }
 
-// AddressStringToBytesResponse is the response type for AddressBytes rpc method
+// AddressStringToBytesResponse is the response type for AddressBytes rpc method.
+//
+// Since: cosmos-sdk 0.46
 type AddressStringToBytesResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

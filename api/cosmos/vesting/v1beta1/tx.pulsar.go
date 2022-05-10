@@ -3211,6 +3211,8 @@ func (*MsgCreateVestingAccountResponse) Descriptor() ([]byte, []int) {
 
 // MsgCreatePermanentLockedAccount defines a message that enables creating a permanent
 // locked account.
+//
+// Since: cosmos-sdk 0.46
 type MsgCreatePermanentLockedAccount struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -3263,6 +3265,8 @@ func (x *MsgCreatePermanentLockedAccount) GetAmount() []*v1beta1.Coin {
 }
 
 // MsgCreatePermanentLockedAccountResponse defines the Msg/CreatePermanentLockedAccount response type.
+//
+// Since: cosmos-sdk 0.46
 type MsgCreatePermanentLockedAccountResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -3291,6 +3295,8 @@ func (*MsgCreatePermanentLockedAccountResponse) Descriptor() ([]byte, []int) {
 
 // MsgCreateVestingAccount defines a message that enables creating a vesting
 // account.
+//
+// Since: cosmos-sdk 0.46
 type MsgCreatePeriodicVestingAccount struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -3352,6 +3358,8 @@ func (x *MsgCreatePeriodicVestingAccount) GetVestingPeriods() []*Period {
 
 // MsgCreateVestingAccountResponse defines the Msg/CreatePeriodicVestingAccount
 // response type.
+//
+// Since: cosmos-sdk 0.46
 type MsgCreatePeriodicVestingAccountResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

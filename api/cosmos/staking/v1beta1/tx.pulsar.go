@@ -6649,6 +6649,8 @@ func (x *MsgUndelegateResponse) GetCompletionTime() *timestamppb.Timestamp {
 }
 
 // MsgCancelUnbondingDelegation defines the SDK message for performing a cancel unbonding delegation for delegator
+//
+// Since: cosmos-sdk 0.46
 type MsgCancelUnbondingDelegation struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -6711,6 +6713,8 @@ func (x *MsgCancelUnbondingDelegation) GetCreationHeight() int64 {
 }
 
 // MsgCancelUnbondingDelegationResponse
+//
+// Since: cosmos-sdk 0.46
 type MsgCancelUnbondingDelegationResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

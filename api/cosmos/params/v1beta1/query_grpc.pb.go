@@ -26,8 +26,6 @@ type QueryClient interface {
 	// key.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// Subspaces queries for all registered subspaces and all keys for a subspace.
-	//
-	// Since: cosmos-sdk 0.46
 	Subspaces(ctx context.Context, in *QuerySubspacesRequest, opts ...grpc.CallOption) (*QuerySubspacesResponse, error)
 }
 
@@ -65,8 +63,6 @@ type QueryServer interface {
 	// key.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// Subspaces queries for all registered subspaces and all keys for a subspace.
-	//
-	// Since: cosmos-sdk 0.46
 	Subspaces(context.Context, *QuerySubspacesRequest) (*QuerySubspacesResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }

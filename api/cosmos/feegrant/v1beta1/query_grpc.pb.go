@@ -27,8 +27,7 @@ type QueryClient interface {
 	// Allowances returns all the grants for address.
 	Allowances(ctx context.Context, in *QueryAllowancesRequest, opts ...grpc.CallOption) (*QueryAllowancesResponse, error)
 	// AllowancesByGranter returns all the grants given by an address
-	//
-	// Since: cosmos-sdk 0.46
+	// Since v0.46
 	AllowancesByGranter(ctx context.Context, in *QueryAllowancesByGranterRequest, opts ...grpc.CallOption) (*QueryAllowancesByGranterResponse, error)
 }
 
@@ -76,8 +75,7 @@ type QueryServer interface {
 	// Allowances returns all the grants for address.
 	Allowances(context.Context, *QueryAllowancesRequest) (*QueryAllowancesResponse, error)
 	// AllowancesByGranter returns all the grants given by an address
-	//
-	// Since: cosmos-sdk 0.46
+	// Since v0.46
 	AllowancesByGranter(context.Context, *QueryAllowancesByGranterRequest) (*QueryAllowancesByGranterResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }

@@ -219,8 +219,6 @@ func (m *QueryAllBalancesResponse) GetPagination() *query.PageResponse {
 
 // QuerySpendableBalancesRequest defines the gRPC request structure for querying
 // an account's spendable balances.
-//
-// Since: cosmos-sdk 0.46
 type QuerySpendableBalancesRequest struct {
 	// address is the address to query spendable balances for.
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
@@ -263,8 +261,6 @@ var xxx_messageInfo_QuerySpendableBalancesRequest proto.InternalMessageInfo
 
 // QuerySpendableBalancesResponse defines the gRPC response structure for querying
 // an account's spendable balances.
-//
-// Since: cosmos-sdk 0.46
 type QuerySpendableBalancesResponse struct {
 	// balances is the spendable balances of all the coins.
 	Balances github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=balances,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"balances"`
@@ -848,8 +844,6 @@ func (m *QueryDenomOwnersRequest) GetPagination() *query.PageRequest {
 // DenomOwner defines structure representing an account that owns or holds a
 // particular denominated token. It contains the account address and account
 // balance of the denominated token.
-//
-// Since: cosmos-sdk 0.46
 type DenomOwner struct {
 	// address defines the address that owns a particular denomination.
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
@@ -905,8 +899,6 @@ func (m *DenomOwner) GetBalance() types.Coin {
 }
 
 // QueryDenomOwnersResponse defines the RPC response of a DenomOwners RPC query.
-//
-// Since: cosmos-sdk 0.46
 type QueryDenomOwnersResponse struct {
 	DenomOwners []*DenomOwner `protobuf:"bytes,1,rep,name=denom_owners,json=denomOwners,proto3" json:"denom_owners,omitempty"`
 	// pagination defines the pagination in the response.
@@ -1069,8 +1061,6 @@ type QueryClient interface {
 	AllBalances(ctx context.Context, in *QueryAllBalancesRequest, opts ...grpc.CallOption) (*QueryAllBalancesResponse, error)
 	// SpendableBalances queries the spenable balance of all coins for a single
 	// account.
-	//
-	// Since: cosmos-sdk 0.46
 	SpendableBalances(ctx context.Context, in *QuerySpendableBalancesRequest, opts ...grpc.CallOption) (*QuerySpendableBalancesResponse, error)
 	// TotalSupply queries the total supply of all coins.
 	TotalSupply(ctx context.Context, in *QueryTotalSupplyRequest, opts ...grpc.CallOption) (*QueryTotalSupplyResponse, error)
@@ -1085,8 +1075,6 @@ type QueryClient interface {
 	DenomsMetadata(ctx context.Context, in *QueryDenomsMetadataRequest, opts ...grpc.CallOption) (*QueryDenomsMetadataResponse, error)
 	// DenomOwners queries for all account addresses that own a particular token
 	// denomination.
-	//
-	// Since: cosmos-sdk 0.46
 	DenomOwners(ctx context.Context, in *QueryDenomOwnersRequest, opts ...grpc.CallOption) (*QueryDenomOwnersResponse, error)
 }
 
@@ -1187,8 +1175,6 @@ type QueryServer interface {
 	AllBalances(context.Context, *QueryAllBalancesRequest) (*QueryAllBalancesResponse, error)
 	// SpendableBalances queries the spenable balance of all coins for a single
 	// account.
-	//
-	// Since: cosmos-sdk 0.46
 	SpendableBalances(context.Context, *QuerySpendableBalancesRequest) (*QuerySpendableBalancesResponse, error)
 	// TotalSupply queries the total supply of all coins.
 	TotalSupply(context.Context, *QueryTotalSupplyRequest) (*QueryTotalSupplyResponse, error)
@@ -1203,8 +1189,6 @@ type QueryServer interface {
 	DenomsMetadata(context.Context, *QueryDenomsMetadataRequest) (*QueryDenomsMetadataResponse, error)
 	// DenomOwners queries for all account addresses that own a particular token
 	// denomination.
-	//
-	// Since: cosmos-sdk 0.46
 	DenomOwners(context.Context, *QueryDenomOwnersRequest) (*QueryDenomOwnersResponse, error)
 }
 

@@ -28,8 +28,6 @@ type QueryClient interface {
 	AllBalances(ctx context.Context, in *QueryAllBalancesRequest, opts ...grpc.CallOption) (*QueryAllBalancesResponse, error)
 	// SpendableBalances queries the spenable balance of all coins for a single
 	// account.
-	//
-	// Since: cosmos-sdk 0.46
 	SpendableBalances(ctx context.Context, in *QuerySpendableBalancesRequest, opts ...grpc.CallOption) (*QuerySpendableBalancesResponse, error)
 	// TotalSupply queries the total supply of all coins.
 	TotalSupply(ctx context.Context, in *QueryTotalSupplyRequest, opts ...grpc.CallOption) (*QueryTotalSupplyResponse, error)
@@ -44,8 +42,6 @@ type QueryClient interface {
 	DenomsMetadata(ctx context.Context, in *QueryDenomsMetadataRequest, opts ...grpc.CallOption) (*QueryDenomsMetadataResponse, error)
 	// DenomOwners queries for all account addresses that own a particular token
 	// denomination.
-	//
-	// Since: cosmos-sdk 0.46
 	DenomOwners(ctx context.Context, in *QueryDenomOwnersRequest, opts ...grpc.CallOption) (*QueryDenomOwnersResponse, error)
 }
 
@@ -148,8 +144,6 @@ type QueryServer interface {
 	AllBalances(context.Context, *QueryAllBalancesRequest) (*QueryAllBalancesResponse, error)
 	// SpendableBalances queries the spenable balance of all coins for a single
 	// account.
-	//
-	// Since: cosmos-sdk 0.46
 	SpendableBalances(context.Context, *QuerySpendableBalancesRequest) (*QuerySpendableBalancesResponse, error)
 	// TotalSupply queries the total supply of all coins.
 	TotalSupply(context.Context, *QueryTotalSupplyRequest) (*QueryTotalSupplyResponse, error)
@@ -164,8 +158,6 @@ type QueryServer interface {
 	DenomsMetadata(context.Context, *QueryDenomsMetadataRequest) (*QueryDenomsMetadataResponse, error)
 	// DenomOwners queries for all account addresses that own a particular token
 	// denomination.
-	//
-	// Since: cosmos-sdk 0.46
 	DenomOwners(context.Context, *QueryDenomOwnersRequest) (*QueryDenomOwnersResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }

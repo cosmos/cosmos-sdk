@@ -333,8 +333,6 @@ type Validator struct {
 	// commission defines the commission parameters.
 	Commission Commission `protobuf:"bytes,10,opt,name=commission,proto3" json:"commission"`
 	// min_self_delegation is the validator's self declared minimum self delegation.
-	//
-	// Since: cosmos-sdk 0.46
 	MinSelfDelegation github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,11,opt,name=min_self_delegation,json=minSelfDelegation,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"min_self_delegation"`
 }
 

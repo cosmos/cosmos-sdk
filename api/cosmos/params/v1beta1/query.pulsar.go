@@ -2425,8 +2425,6 @@ func (x *QueryParamsResponse) GetParam() *ParamChange {
 
 // QuerySubspacesRequest defines a request type for querying for all registered
 // subspaces and all keys for a subspace.
-//
-// Since: cosmos-sdk 0.46
 type QuerySubspacesRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -2455,8 +2453,6 @@ func (*QuerySubspacesRequest) Descriptor() ([]byte, []int) {
 
 // QuerySubspacesResponse defines the response types for querying for all
 // registered subspaces and all keys for a subspace.
-//
-// Since: cosmos-sdk 0.46
 type QuerySubspacesResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -2494,8 +2490,6 @@ func (x *QuerySubspacesResponse) GetSubspaces() []*Subspace {
 
 // Subspace defines a parameter subspace name and all the keys that exist for
 // the subspace.
-//
-// Since: cosmos-sdk 0.46
 type Subspace struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

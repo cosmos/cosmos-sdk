@@ -5112,8 +5112,6 @@ func (x *Metadata) GetChunkHashes() [][]byte {
 }
 
 // SnapshotItem is an item contained in a rootmulti.Store snapshot.
-//
-// Since: cosmos-sdk 0.46
 type SnapshotItem struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -5241,8 +5239,6 @@ func (*SnapshotItem_Kv) isSnapshotItem_Item() {}
 func (*SnapshotItem_Schema) isSnapshotItem_Item() {}
 
 // SnapshotStoreItem contains metadata about a snapshotted store.
-//
-// Since: cosmos-sdk 0.46
 type SnapshotStoreItem struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -5279,8 +5275,6 @@ func (x *SnapshotStoreItem) GetName() string {
 }
 
 // SnapshotIAVLItem is an exported IAVL node.
-//
-// Since: cosmos-sdk 0.46
 type SnapshotIAVLItem struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -5343,8 +5337,6 @@ func (x *SnapshotIAVLItem) GetHeight() int32 {
 }
 
 // SnapshotExtensionMeta contains metadata about an external snapshotter.
-//
-// Since: cosmos-sdk 0.46
 type SnapshotExtensionMeta struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -5389,8 +5381,6 @@ func (x *SnapshotExtensionMeta) GetFormat() uint32 {
 }
 
 // SnapshotExtensionPayload contains payloads of an external snapshotter.
-//
-// Since: cosmos-sdk 0.46
 type SnapshotExtensionPayload struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -5427,8 +5417,6 @@ func (x *SnapshotExtensionPayload) GetPayload() []byte {
 }
 
 // SnapshotKVItem is an exported Key/Value Pair
-//
-// Since: cosmos-sdk 0.46
 type SnapshotKVItem struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -5473,8 +5461,6 @@ func (x *SnapshotKVItem) GetValue() []byte {
 }
 
 // SnapshotSchema is an exported schema of smt store
-//
-// Since: cosmos-sdk 0.46
 type SnapshotSchema struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

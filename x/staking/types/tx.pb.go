@@ -452,8 +452,6 @@ func (m *MsgUndelegateResponse) GetCompletionTime() time.Time {
 }
 
 // MsgCancelUnbondingDelegation defines the SDK message for performing a cancel unbonding delegation for delegator
-//
-// Since: cosmos-sdk 0.46
 type MsgCancelUnbondingDelegation struct {
 	DelegatorAddress string `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
 	ValidatorAddress string `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
@@ -497,8 +495,6 @@ func (m *MsgCancelUnbondingDelegation) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgCancelUnbondingDelegation proto.InternalMessageInfo
 
 // MsgCancelUnbondingDelegationResponse
-//
-// Since: cosmos-sdk 0.46
 type MsgCancelUnbondingDelegationResponse struct {
 }
 
@@ -642,8 +638,6 @@ type MsgClient interface {
 	Undelegate(ctx context.Context, in *MsgUndelegate, opts ...grpc.CallOption) (*MsgUndelegateResponse, error)
 	// CancelUnbondingDelegation defines a method for performing canceling the unbonding delegation
 	// and delegate back to previous validator.
-	//
-	// Since: cosmos-sdk 0.46
 	CancelUnbondingDelegation(ctx context.Context, in *MsgCancelUnbondingDelegation, opts ...grpc.CallOption) (*MsgCancelUnbondingDelegationResponse, error)
 }
 
@@ -726,8 +720,6 @@ type MsgServer interface {
 	Undelegate(context.Context, *MsgUndelegate) (*MsgUndelegateResponse, error)
 	// CancelUnbondingDelegation defines a method for performing canceling the unbonding delegation
 	// and delegate back to previous validator.
-	//
-	// Since: cosmos-sdk 0.46
 	CancelUnbondingDelegation(context.Context, *MsgCancelUnbondingDelegation) (*MsgCancelUnbondingDelegationResponse, error)
 }
 

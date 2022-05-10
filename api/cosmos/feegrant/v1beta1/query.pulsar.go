@@ -3268,8 +3268,6 @@ func (x *QueryAllowancesResponse) GetPagination() *v1beta1.PageResponse {
 }
 
 // QueryAllowancesByGranterRequest is the request type for the Query/AllowancesByGranter RPC method.
-//
-// Since: cosmos-sdk 0.46
 type QueryAllowancesByGranterRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -3315,8 +3313,6 @@ func (x *QueryAllowancesByGranterRequest) GetPagination() *v1beta1.PageRequest {
 }
 
 // QueryAllowancesByGranterResponse is the response type for the Query/AllowancesByGranter RPC method.
-//
-// Since: cosmos-sdk 0.46
 type QueryAllowancesByGranterResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

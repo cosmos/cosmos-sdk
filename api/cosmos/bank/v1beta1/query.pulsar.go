@@ -9359,8 +9359,6 @@ func (x *QueryAllBalancesResponse) GetPagination() *v1beta11.PageResponse {
 
 // QuerySpendableBalancesRequest defines the gRPC request structure for querying
 // an account's spendable balances.
-//
-// Since: cosmos-sdk 0.46
 type QuerySpendableBalancesRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -9408,8 +9406,6 @@ func (x *QuerySpendableBalancesRequest) GetPagination() *v1beta11.PageRequest {
 
 // QuerySpendableBalancesResponse defines the gRPC response structure for querying
 // an account's spendable balances.
-//
-// Since: cosmos-sdk 0.46
 type QuerySpendableBalancesResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -9891,8 +9887,6 @@ func (x *QueryDenomOwnersRequest) GetPagination() *v1beta11.PageRequest {
 // DenomOwner defines structure representing an account that owns or holds a
 // particular denominated token. It contains the account address and account
 // balance of the denominated token.
-//
-// Since: cosmos-sdk 0.46
 type DenomOwner struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -9939,8 +9933,6 @@ func (x *DenomOwner) GetBalance() *v1beta1.Coin {
 }
 
 // QueryDenomOwnersResponse defines the RPC response of a DenomOwners RPC query.
-//
-// Since: cosmos-sdk 0.46
 type QueryDenomOwnersResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

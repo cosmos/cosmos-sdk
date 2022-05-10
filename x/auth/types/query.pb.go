@@ -177,8 +177,6 @@ func (m *QueryAccountRequest) XXX_DiscardUnknown() {
 var xxx_messageInfo_QueryAccountRequest proto.InternalMessageInfo
 
 // QueryModuleAccountsRequest is the request type for the Query/ModuleAccounts RPC method.
-//
-// Since: cosmos-sdk 0.46
 type QueryModuleAccountsRequest struct {
 }
 
@@ -345,8 +343,6 @@ func (m *QueryParamsRequest) XXX_DiscardUnknown() {
 var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
 
 // QueryModuleAccountsResponse is the response type for the Query/ModuleAccounts RPC method.
-//
-// Since: cosmos-sdk 0.46
 type QueryModuleAccountsResponse struct {
 	Accounts []*types.Any `protobuf:"bytes,1,rep,name=accounts,proto3" json:"accounts,omitempty"`
 }
@@ -760,8 +756,6 @@ type QueryClient interface {
 	// Params queries all parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// ModuleAccounts returns all the existing module accounts.
-	//
-	// Since: cosmos-sdk 0.46
 	ModuleAccounts(ctx context.Context, in *QueryModuleAccountsRequest, opts ...grpc.CallOption) (*QueryModuleAccountsResponse, error)
 	// Bech32Prefix queries bech32Prefix
 	//
@@ -859,8 +853,6 @@ type QueryServer interface {
 	// Params queries all parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// ModuleAccounts returns all the existing module accounts.
-	//
-	// Since: cosmos-sdk 0.46
 	ModuleAccounts(context.Context, *QueryModuleAccountsRequest) (*QueryModuleAccountsResponse, error)
 	// Bech32Prefix queries bech32Prefix
 	//

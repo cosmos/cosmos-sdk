@@ -150,6 +150,17 @@ storing an additional parameter. Note, the subject of this ADR is not to define
 the exact epoch timing or frequency, as governance can and should decide on such
 decisions.
 
+Finally, there is one additional case we need to handle. When a delegator changes
+their delegation, either by completely unbonding from a validator or redelegating
+to another one, we need to ensure we don't keep the `AutoCompoundRewardsRecord`
+in state, as they will essentially be invalid and take up space in state unnecessarily.
+To handle this case, we will utilize the `x/staking` module's hooks to remove
+the relevant `AutoCompoundRewardsRecord` record. Namely, we will perform this
+logic during the `BeforeDelegationRemoved` hook. We could also add the same
+check to the `AfterValidatorRemoved` and `AfterValidatorBeginUnbonding`, but for
+simplicity's sake, we will leave this responsibility to the delegator in that
+they should manually execute a `MsgDisableAutoCompoundRewards` transaction.
+
 ## Consequences
 
 ### Backwards Compatibility

@@ -69,12 +69,12 @@ func (a *App) Load(loadLatest bool) error {
 
 	if len(a.config.BeginBlockers) != 0 {
 		a.ModuleManager.SetOrderBeginBlockers(a.config.BeginBlockers...)
-		a.SetBeginBlocker(a.ModuleManager.BeginBlock)
+		a.SetBeginBlocker(a.BeginBlocker)
 	}
 
 	if len(a.config.EndBlockers) != 0 {
 		a.ModuleManager.SetOrderEndBlockers(a.config.EndBlockers...)
-		a.SetEndBlocker(a.ModuleManager.EndBlock)
+		a.SetEndBlocker(a.EndBlocker)
 	}
 
 	if loadLatest {
@@ -84,6 +84,16 @@ func (a *App) Load(loadLatest bool) error {
 	}
 
 	return nil
+}
+
+// BeginBlocker application updates every begin block
+func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+	return app.ModuleManager.BeginBlock(ctx, req)
+}
+
+// EndBlocker application updates every end block
+func (app *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+	return app.ModuleManager.EndBlock(ctx, req)
 }
 
 func (a *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
@@ -96,7 +106,7 @@ func (a *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.Respo
 
 // RegisterAPIRoutes registers all application module routes with the provided
 // API server.
-func (a *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
+func (a *App) RegisterAPIRoutes(apiSvr *api.Server, _ config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
 	// Register new tx routes from grpc-gateway.
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)

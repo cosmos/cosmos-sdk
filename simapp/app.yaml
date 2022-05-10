@@ -20,18 +20,6 @@ modules:
                       feegrant, nft, group,
                       params, upgrade, vesting ]
 
-      # NOTE: The genutils module must occur after staking so that pools are
-      # properly initialized with tokens from genesis accounts.
-      # NOTE: The genutils module must also occur after auth so that it can access the params from auth.
-      # NOTE: Capability module must occur first so that it can initialize any capabilities
-      # so that other modules that want to create or claim capabilities afterwards in InitChain
-      # can do so safely.
-      init_genesis: [ capability, auth, bank, distribution, staking,
-                      slashing, gov, mint, crisis,
-                      genutil, evidence, authz,
-                      feegrant, nft, group,
-                      params, upgrade, vesting ]
-
   - name: params
     config:
       "@type": cosmos.params.module.v1.Module

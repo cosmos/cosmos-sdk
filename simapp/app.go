@@ -1,6 +1,7 @@
 package simapp
 
 import (
+	_ "embed"
 	"io"
 	"net/http"
 	"os"
@@ -17,7 +18,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/container"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
@@ -29,7 +31,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authmiddleware "github.com/cosmos/cosmos-sdk/x/auth/middleware"
@@ -152,7 +153,7 @@ type SimApp struct {
 	*runtime.App
 	legacyAmino       *codec.LegacyAmino
 	appCodec          codec.Codec
-	interfaceRegistry types.InterfaceRegistry
+	interfaceRegistry codectypes.InterfaceRegistry
 	msgSvcRouter      *authmiddleware.MsgServiceRouter
 	legacyRouter      sdk.Router
 
@@ -181,9 +182,6 @@ type SimApp struct {
 	GroupKeeper      groupkeeper.Keeper
 	NFTKeeper        nftkeeper.Keeper
 
-	// the module manager
-	mm *module.Manager
-
 	// simulation manager
 	sm *module.SimulationManager
 
@@ -200,37 +198,49 @@ func init() {
 	DefaultNodeHome = filepath.Join(userHomeDir, ".simapp")
 }
 
+//go:embed app.yaml
+var appConfigYaml []byte
+
+var appConfig container.Option
+
 // NewSimApp returns a reference to an initialized SimApp.
 func NewSimApp(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
 	homePath string, invCheckPeriod uint, encodingConfig simappparams.EncodingConfig,
 	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
+	var appBuilder *runtime.AppBuilder
+	var paramsKeeper paramskeeper.Keeper
+	var appCodec codec.Codec
+	var legacyAmino *codec.LegacyAmino
+	var interfaceRegistry codectypes.InterfaceRegistry
+	err := container.Build(appConfig,
+		&appBuilder,
+		&paramsKeeper,
+		&appCodec,
+		&legacyAmino,
+		&interfaceRegistry,
+	)
+	if err != nil {
+		panic(err)
+	}
 
-	appCodec := encodingConfig.Codec
-	legacyAmino := encodingConfig.Amino
-	interfaceRegistry := encodingConfig.InterfaceRegistry
-
-	bApp := baseapp.NewBaseApp(appName, logger, db, baseAppOptions...)
-	bApp.SetCommitMultiStoreTracer(traceStore)
-	bApp.SetVersion(version.Version)
-	bApp.SetInterfaceRegistry(interfaceRegistry)
+	runtimeApp := appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 
 	keys := sdk.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
-		govtypes.StoreKey, paramstypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
+		govtypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, capabilitytypes.StoreKey,
 		authzkeeper.StoreKey, nftkeeper.StoreKey, group.StoreKey,
 	)
-	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	// NOTE: The testingkey is just mounted for testing purposes. Actual applications should
 	// not include this key.
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, "testingkey")
 
 	// configure state listening capabilities using AppOptions
 	// we are doing nothing with the returned streamingServices and waitGroup in this case
-	if _, _, err := streaming.LoadStreamingServices(bApp, appOpts, appCodec, keys); err != nil {
+	if _, _, err := streaming.LoadStreamingServices(runtimeApp.BaseApp, appOpts, appCodec, keys); err != nil {
 		tmos.Exit(err.Error())
 	}
 
@@ -243,14 +253,11 @@ func NewSimApp(
 		msgSvcRouter:      authmiddleware.NewMsgServiceRouter(interfaceRegistry),
 		invCheckPeriod:    invCheckPeriod,
 		keys:              keys,
-		tkeys:             tkeys,
 		memKeys:           memKeys,
 	}
 
-	app.ParamsKeeper = initParamsKeeper(appCodec, legacyAmino, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
-
-	// set the BaseApp's parameter store
-	bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable()))
+	app.ParamsKeeper = paramsKeeper
+	initParamsKeeper(paramsKeeper)
 
 	app.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, keys[capabilitytypes.StoreKey], memKeys[capabilitytypes.MemStoreKey])
 	// Applications that wish to enforce statically created ScopedKeepers should call `Seal` after creating
@@ -339,7 +346,7 @@ func NewSimApp(
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
-	app.mm = module.NewManager(
+	err = app.RegisterModules(
 		genutil.NewAppModule(
 			app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx,
 			encodingConfig.TxConfig,
@@ -362,27 +369,30 @@ func NewSimApp(
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		nftmodule.NewAppModule(appCodec, app.NFTKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 	)
+	if err != nil {
+		panic(err)
+	}
 
-	// During begin block slashing happens after distr.BeginBlocker so that
-	// there is nothing left over in the validator fee pool, so as to keep the
-	// CanWithdrawInvariant invariant.
-	// NOTE: staking module is required if HistoricalEntries param > 0
-	// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
-	app.mm.SetOrderBeginBlockers(
-		upgradetypes.ModuleName, capabilitytypes.ModuleName, minttypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
-		evidencetypes.ModuleName, stakingtypes.ModuleName,
-		authtypes.ModuleName, banktypes.ModuleName, govtypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName,
-		authz.ModuleName, feegrant.ModuleName, nft.ModuleName, group.ModuleName,
-		paramstypes.ModuleName, vestingtypes.ModuleName,
-	)
-	app.mm.SetOrderEndBlockers(
-		crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName,
-		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName,
-		slashingtypes.ModuleName, minttypes.ModuleName,
-		genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
-		feegrant.ModuleName, nft.ModuleName, group.ModuleName,
-		paramstypes.ModuleName, upgradetypes.ModuleName, vestingtypes.ModuleName,
-	)
+	//// During begin block slashing happens after distr.BeginBlocker so that
+	//// there is nothing left over in the validator fee pool, so as to keep the
+	//// CanWithdrawInvariant invariant.
+	//// NOTE: staking module is required if HistoricalEntries param > 0
+	//// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
+	//app.mm.SetOrderBeginBlockers(
+	//	upgradetypes.ModuleName, capabilitytypes.ModuleName, minttypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
+	//	evidencetypes.ModuleName, stakingtypes.ModuleName,
+	//	authtypes.ModuleName, banktypes.ModuleName, govtypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName,
+	//	authz.ModuleName, feegrant.ModuleName, nft.ModuleName, group.ModuleName,
+	//	paramstypes.ModuleName, vestingtypes.ModuleName,
+	//)
+	//app.mm.SetOrderEndBlockers(
+	//	crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName,
+	//	capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName,
+	//	slashingtypes.ModuleName, minttypes.ModuleName,
+	//	genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
+	//	feegrant.ModuleName, nft.ModuleName, group.ModuleName,
+	//	paramstypes.ModuleName, upgradetypes.ModuleName, vestingtypes.ModuleName,
+	//)
 
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
@@ -390,7 +400,7 @@ func NewSimApp(
 	// NOTE: Capability module must occur first so that it can initialize any capabilities
 	// so that other modules that want to create or claim capabilities afterwards in InitChain
 	// can do so safely.
-	app.mm.SetOrderInitGenesis(
+	app.ModuleManager.SetOrderInitGenesis(
 		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, stakingtypes.ModuleName,
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisistypes.ModuleName,
 		genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
@@ -401,10 +411,10 @@ func NewSimApp(
 	// Uncomment if you want to set a custom migration order here.
 	// app.mm.SetOrderMigrations(custom order)
 
-	app.mm.RegisterInvariants(&app.CrisisKeeper)
-	app.mm.RegisterRoutes(app.legacyRouter, app.QueryRouter(), encodingConfig.Amino)
-	app.configurator = module.NewConfigurator(app.appCodec, app.msgSvcRouter, app.GRPCQueryRouter())
-	app.mm.RegisterServices(app.configurator)
+	app.ModuleManager.RegisterInvariants(&app.CrisisKeeper)
+	app.ModuleManager.RegisterRoutes(app.legacyRouter, app.QueryRouter(), encodingConfig.Amino)
+	//app.configurator = module.NewConfigurator(app.appCodec, app.msgSvcRouter, app.GRPCQueryRouter())
+	//app.mm.RegisterServices(app.configurator)
 
 	// add test gRPC service for testing gRPC queries in isolation
 	testdata_pulsar.RegisterQueryServer(app.GRPCQueryRouter(), testdata_pulsar.QueryImpl{})
@@ -423,7 +433,6 @@ func NewSimApp(
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		params.NewAppModule(app.ParamsKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
@@ -434,19 +443,23 @@ func NewSimApp(
 
 	// initialize stores
 	app.MountKVStores(keys)
-	app.MountTransientStores(tkeys)
 	app.MountMemoryStores(memKeys)
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
-	app.SetBeginBlocker(app.BeginBlocker)
-	app.SetEndBlocker(app.EndBlocker)
+	//app.SetBeginBlocker(app.BeginBlocker)
+	//app.SetEndBlocker(app.EndBlocker)
 	app.setTxHandler(encodingConfig.TxConfig, cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents)))
 
-	if loadLatest {
-		if err := app.LoadLatestVersion(); err != nil {
-			tmos.Exit(err.Error())
-		}
+	//if loadLatest {
+	//	if err := app.LoadLatestVersion(); err != nil {
+	//		tmos.Exit(err.Error())
+	//	}
+	//}
+
+	err = app.Load(loadLatest)
+	if err != nil {
+		panic(err)
 	}
 
 	return app
@@ -479,19 +492,9 @@ func (app *SimApp) setTxHandler(txConfig client.TxConfig, indexEventsStr []strin
 // Name returns the name of the App
 func (app *SimApp) Name() string { return app.BaseApp.Name() }
 
-// BeginBlocker application updates every begin block
-func (app *SimApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	return app.mm.BeginBlock(ctx, req)
-}
-
-// EndBlocker application updates every end block
-func (app *SimApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	return app.mm.EndBlock(ctx, req)
-}
-
 // InitChainer application update at chain initialization
 func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
+	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
 	return app.App.InitChainer(ctx, req)
 }
 
@@ -527,7 +530,7 @@ func (app *SimApp) AppCodec() codec.Codec {
 }
 
 // InterfaceRegistry returns SimApp's InterfaceRegistry
-func (app *SimApp) InterfaceRegistry() types.InterfaceRegistry {
+func (app *SimApp) InterfaceRegistry() codectypes.InterfaceRegistry {
 	return app.interfaceRegistry
 }
 
@@ -577,7 +580,7 @@ func (app *SimApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICon
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server
-func RegisterSwaggerAPI(ctx client.Context, rtr *mux.Router) {
+func RegisterSwaggerAPI(_ client.Context, rtr *mux.Router) {
 	statikFS, err := fs.New()
 	if err != nil {
 		panic(err)
@@ -597,9 +600,7 @@ func GetMaccPerms() map[string][]string {
 }
 
 // initParamsKeeper init params keeper and its subspaces
-func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey storetypes.StoreKey) paramskeeper.Keeper {
-	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
-
+func initParamsKeeper(paramsKeeper paramskeeper.Keeper) {
 	paramsKeeper.Subspace(authtypes.ModuleName)
 	paramsKeeper.Subspace(banktypes.ModuleName)
 	paramsKeeper.Subspace(stakingtypes.ModuleName)
@@ -608,6 +609,4 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(slashingtypes.ModuleName)
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govv1.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)
-
-	return paramsKeeper
 }

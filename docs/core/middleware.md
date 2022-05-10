@@ -1,5 +1,5 @@
 <!--
-order: 3
+order: 4
 -->
 
 # Middlewares
@@ -10,11 +10,11 @@ order: 3
 ## Pre-requisite Readings
 
 * [Anatomy of a Cosmos SDK Application](../basics/app-anatomy.md) {prereq}
-* [Transactons](transactions.md) {prereq}
+* [Transactions](transactions.md) {prereq}
 
 ## Middlewares
 
-The SDK Baseapp's implementation of ABCI CheckTx, DeliverTx, and Baseapp's own Simulate methods use a middleware-based design. Middlewares can add logic to be executed before or after a transaction handler execution. Middlewares are like an `antehandler` with the added feature of being able to add post-transaction handler execution. Middlewares allow us to solve use cases like transaction Tips and refund unused gas (issue [#2150](https://github.com/cosmos/cosmos-sdk/issues/2150)).
+The SDK Baseapp's implementation of ABCI CheckTx, DeliverTx, and Baseapp's own Simulate methods use a middleware-based design. Middlewares can add logic to be executed before or after a transaction handler execution. Middlewares are like the previous notion of `antehandler` with the added feature of being able to add post-transaction handler execution. Middlewares allow us to solve use cases like transaction Tips and refund unused gas (issue [#2150](https://github.com/cosmos/cosmos-sdk/issues/2150)).
 
 ### Type Definition
 
@@ -107,7 +107,7 @@ While BaseApp holds a reference to a `tx.Handler`, this `tx.Handler` itself is d
 
 Then, the app developer can compose multiple middlewares on top of the base `tx.Handler`. Each middleware can run pre-and-post-processing logic around its next middleware, as described in the section above. Conceptually, as an example, given the middlewares `A`, `B`, and `C` and the base `tx.Handler` `H` the stack looks like:
 
-![Composing](baseapp_transaction-middleware.png)
+![Composing](./baseapp_transaction-middleware.png)
 
 ```text
 A.pre
@@ -143,11 +143,11 @@ While the app developer can define and compose the middlewares of their choice, 
 | Middleware                | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | RunMsgsTxHandler          | This is the base `tx.Handler`. It replaces the old baseapp's `runMsgs`, and executes a transaction's `Msg`s.                                                                                                                                                                                                                                                                                                                                                                             |
-| TxDecoderMiddleware       | This middleware takes in transaction raw bytes, and decodes them into a `sdk.Tx`. It replaces the `baseapp.txDecoder` field, so that BaseApp stays as thin as possible. Since most middlewares read the contents of the `sdk.Tx`, the TxDecoderMiddleware should be run first in the middelware stack.                                                                                                                                                                                   |
+| TxDecoderMiddleware       | This middleware takes in transaction raw bytes, and decodes them into a `sdk.Tx`. It replaces the `baseapp.txDecoder` field, so that BaseApp stays as thin as possible. Since most middlewares read the contents of the `sdk.Tx`, the TxDecoderMiddleware should be run first in the middleware stack.                                                                                                                                                                                   |
 | {Antehandlers}            | Each antehandler is converted to its own middleware. These middlewares perform signature verification, fee deductions and other validations on the incoming transaction.                                                                                                                                                                                                                                                                                                                 |
 | IndexEventsTxMiddleware   | This is a simple middleware that chooses which events to index in Tendermint. Replaces `baseapp.indexEvents` (which unfortunately still exists in baseapp too, because it's used to index Begin/EndBlock events)                                                                                                                                                                                                                                                                         |
 | RecoveryTxMiddleware      | This index recovers from panics. It replaces baseapp.runTx's panic recovery described in [ADR-022](./adr-022-custom-panic-handling.md).                                                                                                                                                                                                                                                                                                                                                  |
-| GasTxMiddleware           | This replaces the [`Setup`](https://github.com/cosmos/cosmos-sdk/blob/v0.43.0/x/auth/ante/setup.go) Antehandler. It sets a GasMeter on sdk.Context. Note that before, GasMeter was set on sdk.Context inside the antehandlers, and there was some mess around the fact that antehandlers had their own panic recovery system so that the GasMeter could be read by baseapp's recovery system. Now, this mess is all removed: one middleware sets GasMeter, another one handles recovery. |
+| GasTxMiddleware           | This replaces the [`Setup`](https://github.com/cosmos/cosmos-sdk/blob/v0.45.3/x/auth/ante/setup.go) Antehandler. It sets a GasMeter on sdk.Context. Note that before, GasMeter was set on sdk.Context inside the antehandlers, and there was some mess around the fact that antehandlers had their own panic recovery system so that the GasMeter could be read by baseapp's recovery system. Now, this mess is all removed: one middleware sets GasMeter, another one handles recovery. |
 | TipMiddleware             | This pays for transaction fees using another denom than the native fee denom of the chain. [`docs`](tips.md)                                                                                                                                                                                                                                                                                                                                                                             |
 | SigGasConsumeMiddleware   | SigGasConsumeMiddleware consumes parameter-defined amount of gas for each signature.                                                                                                                                                                                                                                                                                                                                                                                                     |
 | SigVerificationMiddleware | verifies all signatures for a tx and return an error if any are invalid                                                                                                                                                                                                                                                                                                                                                                                                                  |

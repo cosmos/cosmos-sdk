@@ -1,0 +1,37 @@
+modules:
+  - name: runtime
+    config:
+      "@type": cosmos.base.runtime.v1.Module
+
+      # During begin block slashing happens after distr.BeginBlocker so that
+      # there is nothing left over in the validator fee pool, so as to keep the
+      # CanWithdrawInvariant invariant.
+      # NOTE: staking module is required if HistoricalEntries param > 0
+      # NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
+      begin_blockers: [ upgrade, capability, mint, distribution, slashing,
+                        evidence, staking, auth, bank, gov, crisis, genutil,
+                        authz, feegrant, nft, group,
+                        params, vesting ]
+
+      end_blockers: [ crisis, gov, staking,
+                      capability, auth, bank, distribution,
+                      slashing, mint,
+                      genutil, evidence, authz,
+                      feegrant, nft, group,
+                      params, upgrade, vesting ]
+
+      # NOTE: The genutils module must occur after staking so that pools are
+      # properly initialized with tokens from genesis accounts.
+      # NOTE: The genutils module must also occur after auth so that it can access the params from auth.
+      # NOTE: Capability module must occur first so that it can initialize any capabilities
+      # so that other modules that want to create or claim capabilities afterwards in InitChain
+      # can do so safely.
+      init_genesis: [ capability, auth, bank, distribution, staking,
+                      slashing, gov, mint, crisis,
+                      genutil, evidence, authz,
+                      feegrant, nft, group,
+                      params, upgrade, vesting ]
+
+  - name: params
+    config:
+      "@type": cosmos.params.module.v1.Module

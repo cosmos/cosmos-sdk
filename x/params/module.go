@@ -5,13 +5,18 @@ import (
 	"encoding/json"
 	"math/rand"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/container"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -51,7 +56,7 @@ func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, config client.TxEncodin
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the params module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := proposal.RegisterQueryHandlerClient(context.Background(), mux, proposal.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
@@ -147,4 +152,37 @@ func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 // EndBlock performs a no-op.
 func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
+}
+
+func init() {
+	// TODO:
+	//appmodule.Register(&modulev1.Module{},
+	//	appmodule.Provide(
+	//		provideModuleBasic,
+	//		provideModule,
+	//		provideSubSpace,
+	//	))
+}
+
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+func provideModule(
+	kvStoreKey *store.KVStoreKey,
+	transientStoreKey *store.TransientStoreKey,
+	cdc codec.Codec,
+	amino *codec.LegacyAmino,
+) (keeper.Keeper, runtime.AppModuleWrapper, runtime.BaseAppOption) {
+
+	k := keeper.NewKeeper(cdc, amino, kvStoreKey, transientStoreKey)
+	m := NewAppModule(k)
+	baseappOpt := func(app *baseapp.BaseApp) {
+		app.SetParamStore(k.Subspace(baseapp.Paramspace).WithKeyTable(types.ConsensusParamsKeyTable()))
+	}
+	return k, runtime.WrapAppModule(m), baseappOpt
+}
+
+func provideSubSpace(key container.ModuleKey, k keeper.Keeper) types.Subspace {
+	return k.Subspace(key.Name())
 }

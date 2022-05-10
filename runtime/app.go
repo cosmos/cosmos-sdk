@@ -10,12 +10,14 @@ import (
 	runtimev1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/app/runtime/v1alpha1"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 // App is a wrapper around BaseApp and ModuleManager that can be used in hybrid
@@ -89,45 +91,35 @@ func (a *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.Respo
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
-	// TODO: app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
 	return a.ModuleManager.InitGenesis(ctx, a.privateState.cdc, genesisState)
 }
 
-func (a *App) ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAddrs []string) (servertypes.ExportedApp, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (a *App) SimulationManager() *module.SimulationManager {
-	//TODO implement me
-	panic("implement me")
-}
-
-var _ simappLikeApp = &App{}
-
+// RegisterAPIRoutes registers all application module routes with the provided
+// API server.
 func (a *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
-	basics := module.BasicManager{}
+	// Register new tx routes from grpc-gateway.
+	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+	// Register new tendermint queries routes from grpc-gateway.
+	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
-	for name, mod := range a.ModuleManager.Modules {
-		basics[name] = mod
-	}
-
-	basics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+	// Register grpc-gateway routes for all modules.
+	a.privateState.basicManager.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 }
 
-func (a *App) RegisterTxService(clientCtx client.Context) {}
+// RegisterTxService implements the Application.RegisterTxService method.
+func (a *App) RegisterTxService(clientCtx client.Context) {
+	authtx.RegisterTxService(a.GRPCQueryRouter(), clientCtx, a.Simulate, a.privateState.interfaceRegistry)
+}
 
-func (a *App) RegisterTendermintService(clientCtx client.Context) {}
+// RegisterTendermintService implements the Application.RegisterTendermintService method.
+func (a *App) RegisterTendermintService(clientCtx client.Context) {
+	tmservice.RegisterTendermintService(
+		clientCtx,
+		a.GRPCQueryRouter(),
+		a.privateState.interfaceRegistry,
+		a.Query,
+	)
+}
 
 var _ servertypes.Application = &App{}
-
-type simappLikeApp interface {
-	// Exports the state of the application for a genesis file.
-	ExportAppStateAndValidators(
-		forZeroHeight bool, jailAllowedAddrs []string,
-	) (servertypes.ExportedApp, error)
-
-	// Helper for the simulation framework.
-	SimulationManager() *module.SimulationManager
-}

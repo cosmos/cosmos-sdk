@@ -96,13 +96,13 @@ Example, if the message is to send coins from one address to another, `ValidateB
 
 See also [Msg Service Validation](../building-modules/msg-services.md#Validation).
 
-### Middleware
+### Middlewares
 
-After the ValidateBasic checks, the `Middlewares`s are run. Technically, they are optional, but in practice, they are very often present to perform signature verification, gas calculation, fee deduction and other core operations related to blockchain transactions.
+Middlewares implements the `TxHandler` interface and are defined by `tx.Handler` in `BaseApp`. This architecture allows to run the middlewares logic in the `CheckTx` and `DeliverTx` phases. Technically, they are optional, but in practice, they are very often present to perform signature verification, gas calculation, fee deduction and other core operations related to blockchain transactions.
 
-A copy of the cached context is provided to the `Middleware`, which performs limited checks specified for the transaction type. Using a copy allows the Middleware to do stateful checks for `Tx` without modifying the last committed state, and revert back to the original if the execution fails.
+A copy of the cached context is provided to the middleware, which performs limited checks specified for the transaction type. Using a copy allows the Middleware to do stateful checks for `Tx` without modifying the last committed state, and revert back to the original if the execution fails.
 
-For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth/spec) middleware checks and increments sequence numbers, checks signatures and account numbers, and deducts fees from the first signer of the transaction - all state changes are made using the `checkState`.
+For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth/spec) middlewares can check and increment sequence numbers, check signatures and account numbers, and deduct fees from the first signer of the transaction - all state changes are made using the `checkState`.
 
 ### Gas
 

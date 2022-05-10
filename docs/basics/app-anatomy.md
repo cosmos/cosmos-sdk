@@ -73,7 +73,7 @@ Here are the main actions performed by this function:
 * Set the remainder of application's parameters:
     * [`InitChainer`](#initchainer): used to initialize the application when it is first started.
     * [`BeginBlocker`, `EndBlocker`](#beginblocker-and-endlbocker): called at the beginning and the end of every block).
-    * [`Middlewares`](../core/baseapp.md#middleware): f.e. used to handle fees and signature verification.
+    * [`TxHandler`](../core/baseapp.md#middleware): to setup middlewares, f.e. used to handle fees and signature verification.
 * Mount the stores.
 * Return the application.
 

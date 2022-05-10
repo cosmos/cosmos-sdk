@@ -309,7 +309,7 @@ This allows `RunTx` not to commit the changes made to the state during the execu
 
 Finally, the [`RunMsgs()`](#runmsgs) function is called to process the `sdk.Msg`s in the `Tx`. In preparation of this step, just like with the `anteHandler`, both the `checkState`/`deliverState`'s `context` and `context`'s `CacheMultiStore` are branched using the `cacheTxContext()` function.
 
-### Middleware
+### TxHandler and Middleware
 
 The `Middleware` is a special handler that implements the `tx.Handler` interface and is used to authenticate the transaction before the transaction's internal messages are processed.
 

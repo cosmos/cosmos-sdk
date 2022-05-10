@@ -61,7 +61,7 @@ func NewApp(...) *App {
   // ...
 
   // Creating a scoped keeper
-	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
+  scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
 
   // Seal the capability keeper to prevent any further modules from creating scoped
   // sub-keepers.

@@ -18,7 +18,7 @@ import (
 
 func expectContainerErrorContains(t *testing.T, option container.Option, contains string) {
 	t.Helper()
-	err := container.Run(func() {}, option)
+	err := container.Build(option)
 	assert.ErrorContains(t, err, contains)
 }
 
@@ -70,11 +70,11 @@ modules:
   config:
    "@type": testpb.TestModuleB
 `))
-	assert.NilError(t, container.Run(func(a testpb.App) { app = a }, opt))
+	assert.NilError(t, container.Build(opt, &app))
 	buf := &bytes.Buffer{}
 	app(buf)
-	// NOTE: this test hits a bug fixed in https://github.com/cosmos/cosmos-sdk/pull/11913 so it will need to be updated when that is merged
-	const expected = `got store key runtime
+	const expected = `got store key a
+got store key b
 running module handler a
 result: hello
 running module handler b

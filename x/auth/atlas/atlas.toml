@@ -1,5 +1,5 @@
 [module]
-description = "The auth module is responsible for specifying the base transaction and account types for an application, as well as AnteHandler and authentication logic."
+description = "The auth module is responsible for specifying the base transaction and account types for an application, as well as middlewares and authentication logic."
 homepage = "https://github.com/cosmos/cosmos-sdk"
 keywords = [
   "authentication",

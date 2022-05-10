@@ -83,12 +83,14 @@ func provideBuilder(moduleBasics map[string]AppModuleBasicWrapper) (
 }
 
 type appInputs struct {
+	container.In
+
 	Config              *runtimev1alpha1.Module
 	State               *privateState
 	Modules             map[string]AppModuleWrapper
 	BaseAppOptions      []BaseAppOption
 	TxHandler           tx.Handler  `optional:"true"`
-	MsgServiceRegistrar grpc.Server `options:"true"`
+	MsgServiceRegistrar grpc.Server `optional:"true"`
 }
 
 func provideApp(inputs appInputs) *AppBuilder {

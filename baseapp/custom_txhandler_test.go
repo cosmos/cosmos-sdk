@@ -18,8 +18,7 @@ type customTxHandler struct {
 
 var _ tx.Handler = customTxHandler{}
 
-// CustomTxMiddleware is being used in tests for testing
-// custom pre-`runMsgs` logic (also called antehandlers before).
+// CustomTxMiddleware is being used in tests for testing custom pre-`runMsgs` logic.
 func CustomTxHandlerMiddleware(handler handlerFun) tx.Middleware {
 	return func(txHandler tx.Handler) tx.Handler {
 		return customTxHandler{

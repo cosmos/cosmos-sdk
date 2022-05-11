@@ -22,7 +22,7 @@ func StdoutLogger() DebugOption {
 	})
 }
 
-// StderrLogger is a debug option which routes logging output to stderro.
+// StderrLogger is a debug option which routes logging output to stderr.
 func StderrLogger() DebugOption {
 	return Logger(func(s string) {
 		_, _ = fmt.Fprintln(os.Stderr, s)

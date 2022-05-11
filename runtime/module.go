@@ -27,7 +27,7 @@ type BaseAppOption func(*baseapp.BaseApp)
 // IsAutoGroupType indicates that this is a container.AutoGroupType.
 func (b BaseAppOption) IsAutoGroupType() {}
 
-// appWrapper is used to pass around an instance of app internally between
+// appWrapper is used to pass around an instance of *App internally between
 // runtime dependency inject providers that is partially constructed (no
 // baseapp yet).
 type appWrapper *App

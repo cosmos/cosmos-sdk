@@ -79,7 +79,7 @@ type appInputs struct {
 	container.In
 
 	Config              *runtimev1alpha1.Module
-	app                 appWrapper
+	App                 appWrapper
 	Modules             map[string]AppModuleWrapper
 	BaseAppOptions      []BaseAppOption
 	TxHandler           tx.Handler  `optional:"true"`
@@ -91,7 +91,7 @@ func provideAppBuilder(inputs appInputs) *AppBuilder {
 	for name, wrapper := range inputs.Modules {
 		mm.Modules[name] = wrapper.AppModule
 	}
-	app := inputs.app
+	app := inputs.App
 	app.baseAppOptions = inputs.BaseAppOptions
 	app.config = inputs.Config
 	app.ModuleManager = mm

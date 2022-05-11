@@ -30,7 +30,7 @@ tree.
 For store encoding, protobuf definitions can exist for any type and will typically
 have an Amino-based "intermediary" type. Specifically, the protobuf-based type
 definition is used for serialization and persistence, whereas the Amino-based type
-is used for business logic in the state-machine where they may converted back-n-forth.
+is used for business logic in the state-machine where they may convert back-n-forth.
 Note, the Amino-based types may slowly be phased-out in the future so developers
 should take note to use the protobuf message definitions where possible.
 

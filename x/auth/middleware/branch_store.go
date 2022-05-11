@@ -8,7 +8,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-// WithBranchAnte creates a store branch (cache context) for Antehandlers.
+// WithBranchAnte creates a store branch (cache store) for Antehandlers.
 //
 // Usage:
 // beginBranch, endBranch := WithBranchAnte()
@@ -23,7 +23,7 @@ func WithBranchAnte() (tx.Middleware, tx.Middleware) {
 	return withBranchStore("ante", true)
 }
 
-// WithBranchAnte creates a store branch (cache context) for running Msgs.
+// WithBranchAnte creates a store branch (cache store) for running Msgs.
 //
 // Usage:
 // beginBranch, endBranch := WithBranchRunMsgs()
@@ -38,6 +38,12 @@ func WithBranchRunMsgs() (tx.Middleware, tx.Middleware) {
 	return withBranchStore("runMsgs", false)
 }
 
+// withBranchStore creates 2 middlewares:
+// - one that creates a branched store (i.e. a cache store),
+// - another that writes the cache store to its parent store.
+//
+// For the writer middleware, we pass a `writeAfterNext` to decide if we write
+// before or after the `next` tx.Handler.
 func withBranchStore(branchName string, writeAfterNext bool) (tx.Middleware, tx.Middleware) {
 	key := sdk.ContextKey(branchName)
 
@@ -48,6 +54,7 @@ func withBranchStore(branchName string, writeAfterNext bool) (tx.Middleware, tx.
 		}
 }
 
+// branchBegin is the tx.Handler that creates a new branched store.
 type branchBegin struct {
 	next       tx.Handler
 	branchName sdk.ContextKey
@@ -101,6 +108,8 @@ func branchStore(sdkCtx sdk.Context, tx tmtypes.Tx) (sdk.Context, sdk.CacheMulti
 	return sdkCtx.WithMultiStore(msCache), msCache
 }
 
+// branchWrite is the tx.Handler that commits the state writes of a previously
+// created branchBegin tx.Handler.
 type branchWrite struct {
 	next           tx.Handler
 	branchName     sdk.ContextKey

@@ -47,9 +47,9 @@ aside: false
 
 ## Get Started
 
-- **[SDK Intro](./intro/overview.md)**: High-level overview of the Cosmos SDK.
-- **[Starport](https://github.com/tendermint/starport/blob/develop/docs/README.md)**: A developer-friendly interface to the Cosmos SDK to scaffold a standard Cosmos SDK blockchain app.
-- **[SDK Application Tutorial](https://github.com/cosmos/sdk-application-tutorial)**: A tutorial that showcases how to build a Cosmos SDK-based blockchain from scratch and explains the basic principles of the SDK in the process.
+* **[Cosmos SDK Intro](./intro/overview.md)**: High-level overview of the Cosmos SDK.
+* **[Ignite CLI](https://docs.ignite.com)**: A developer-friendly interface to the Cosmos SDK to scaffold, launch, and maintain any crypto application on a sovereign and secured blockchain.
+* **[SDK Tutorials](https://tutorials.cosmos.network/)**: Tutorials that showcase how to build Cosmos SDK-based blockchains from scratch and explain the basic Cosmos SDK principles in the process.
 
 ## Reference
 

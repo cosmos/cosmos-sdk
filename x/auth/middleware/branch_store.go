@@ -14,8 +14,8 @@ type branchStoreHandler struct {
 
 // WithBranchedStore creates a new MultiStore branch and commits the store if the downstream
 // returned no error. It cancels writes from the failed transactions.
-func WithBranchedStore(h tx.Handler) tx.Handler {
-	return branchStoreHandler{next: h}
+func WithBranchedStore(txh tx.Handler) tx.Handler {
+	return branchStoreHandler{next: txh}
 }
 
 // CheckTx implements tx.Handler.CheckTx method.

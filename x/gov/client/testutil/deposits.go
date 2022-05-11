@@ -134,7 +134,7 @@ func (s *DepositTestSuite) TestQueryDepositsWithInitialDeposit() {
 	s.Require().Equal(sdk.Coins(deposits.Deposits[0].Amount).String(), s.deposits[1].String())
 }
 
-func (s *DepositTestSuite) TestQueryProposalNotEnoughDeposits() {
+func (s *DepositTestSuite) TestQueryProposalAfterVotingPeriod() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 	proposalID := s.proposalIDs[2]
@@ -145,7 +145,7 @@ func (s *DepositTestSuite) TestQueryProposalNotEnoughDeposits() {
 	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
 
-	// waiting for deposit period to end
+	// waiting for deposit and voting period to end
 	time.Sleep(20 * time.Second)
 
 	// query proposal

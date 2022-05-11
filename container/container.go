@@ -415,7 +415,7 @@ func (c container) formatResolveStack() string {
 func markGraphNodeAsUsed(node *graphviz.Node) {
 	node.SetColor("black")
 	node.SetPenWidth("1.5")
-	node.SetAttr("fontcolor", "black")
+	node.SetFontColor("black")
 }
 
 func markGraphNodeAsFailed(node *graphviz.Node) {

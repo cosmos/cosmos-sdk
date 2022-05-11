@@ -1,3 +1,4 @@
+// Package graphviz
 package graphviz
 
 import (
@@ -6,6 +7,7 @@ import (
 	"io"
 )
 
+// Graph represents a graphviz digraph.
 type Graph struct {
 	*Attributes
 
@@ -27,6 +29,7 @@ type Graph struct {
 	edges []*Edge
 }
 
+// NewGraph creates a new Graph instance.
 func NewGraph() *Graph {
 	return &Graph{
 		Attributes: NewAttributes(),
@@ -39,6 +42,7 @@ func NewGraph() *Graph {
 	}
 }
 
+// FindOrCreateNode finds or creates the node with the provided name.
 func (g *Graph) FindOrCreateNode(name string) (node *Node, found bool) {
 	if node, ok := g.allNodes[name]; ok {
 		return node, true
@@ -53,6 +57,7 @@ func (g *Graph) FindOrCreateNode(name string) (node *Node, found bool) {
 	return node, false
 }
 
+// SubGraph finds or creates the subgraph with the provided name.
 func (g *Graph) SubGraph(name string) *Graph {
 	if sub, ok := g.subgraphs[name]; ok {
 		return sub
@@ -71,6 +76,7 @@ func (g *Graph) SubGraph(name string) *Graph {
 	return n
 }
 
+// CreateEdge creates a new graphviz edge.
 func (g *Graph) CreateEdge(from, to *Node) *Edge {
 	edge := &Edge{
 		Attributes: NewAttributes(),
@@ -81,6 +87,7 @@ func (g *Graph) CreateEdge(from, to *Node) *Edge {
 	return edge
 }
 
+// RenderDOT renders the graph to DOT format.
 func (g *Graph) RenderDOT(w io.Writer) error {
 	return g.render(w, "")
 }
@@ -134,6 +141,7 @@ func (g *Graph) render(w io.Writer, indent string) error {
 	return err
 }
 
+// String returns the graph in DOT format.
 func (g *Graph) String() string {
 	buf := &bytes.Buffer{}
 	err := g.RenderDOT(buf)

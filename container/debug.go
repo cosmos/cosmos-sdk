@@ -267,7 +267,7 @@ func (c *debugConfig) typeGraphNode(typ reflect.Type) *graphviz.Node {
 func setUnusedStyle(attr *graphviz.Attributes) {
 	attr.SetColor("lightgrey")
 	attr.SetPenWidth("0.5")
-	attr.SetAttr("fontcolor", "dimgrey")
+	attr.SetFontColor("dimgrey")
 }
 
 // moreUsefulTypeString is more useful than reflect.Type.String()
@@ -293,7 +293,7 @@ func (c *debugConfig) moduleSubGraph(key *moduleKey) *graphviz.Graph {
 		graph = c.graph.SubGraph(gname)
 		graph.SetLabel(fmt.Sprintf("Module: %s", key.name))
 		graph.SetPenWidth("0.5")
-		graph.SetAttr("fontsize", "12.0")
+		graph.SetFontSize("12.0")
 	}
 	return graph
 }

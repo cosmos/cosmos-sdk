@@ -5,30 +5,44 @@ import (
 	"strings"
 )
 
+// Attributes represents a graphviz attributes map.
 type Attributes struct {
 	attrs map[string]string
 }
 
+// NewAttributes creates a new Attributes instance.
 func NewAttributes() *Attributes {
 	return &Attributes{attrs: map[string]string{}}
 }
 
+// SetAttr sets the graphviz attribute to the provided value.
 func (a *Attributes) SetAttr(name, value string) { a.attrs[name] = value }
 
-func (n *Attributes) SetShape(shape string) { n.SetAttr("shape", shape) }
+// SetShape sets the shape attribute.
+func (a *Attributes) SetShape(shape string) { a.SetAttr("shape", shape) }
 
-func (n *Attributes) SetColor(color string) { n.SetAttr("color", color) }
+// SetColor sets the color attribute.
+func (a *Attributes) SetColor(color string) { a.SetAttr("color", color) }
 
-func (n *Attributes) SetBgColor(color string) { n.SetAttr("bgcolor", color) }
+// SetBgColor sets the bgcolor attribute.
+func (a *Attributes) SetBgColor(color string) { a.SetAttr("bgcolor", color) }
 
-func (n *Attributes) SetComment(comment string) { n.SetAttr("comment", comment) }
+// SetLabel sets the label attribute.
+func (a *Attributes) SetLabel(label string) { a.SetAttr("label", label) }
 
-func (n *Attributes) SetLabel(label string) { n.SetAttr("label", label) }
+// SetComment sets the comment attribute.
+func (a *Attributes) SetComment(comment string) { a.SetAttr("comment", comment) }
 
-func (n *Attributes) SetPenWidth(w string) { n.SetAttr("penwidth", w) }
+// SetPenWidth sets the penwidth attribute.
+func (a *Attributes) SetPenWidth(w string) { a.SetAttr("penwidth", w) }
 
-func (n *Attributes) SetFontColor(color string) { n.SetAttr("fontcolor", color) }
+// SetFontColor sets the fontcolor attribute.
+func (a *Attributes) SetFontColor(color string) { a.SetAttr("fontcolor", color) }
 
+// SetFontSize sets the fontsize attribute.
+func (a *Attributes) SetFontSize(size string) { a.SetAttr("fontsize", size) }
+
+// String returns the attributes graphviz string in the format [name = "value", ...].
 func (a *Attributes) String() string {
 	if len(a.attrs) == 0 {
 		return ""

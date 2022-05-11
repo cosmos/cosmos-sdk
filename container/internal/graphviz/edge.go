@@ -2,9 +2,10 @@ package graphviz
 
 import (
 	"fmt"
-	io "io"
+	"io"
 )
 
+// Edge represents a graphviz edge.
 type Edge struct {
 	*Attributes
 	from, to *Node

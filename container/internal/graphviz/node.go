@@ -2,9 +2,10 @@ package graphviz
 
 import (
 	"fmt"
-	io "io"
+	"io"
 )
 
+// Node represents a graphviz node.
 type Node struct {
 	*Attributes
 	name string

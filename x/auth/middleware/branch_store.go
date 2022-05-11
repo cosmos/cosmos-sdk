@@ -14,11 +14,9 @@ type branchStoreHandler struct {
 
 // WithBranchedStore creates a new MultiStore branch and commits the store if the downstream
 // returned no error. It cancels writes from the failed transactions.
-func WithBranchedStore(middlewares ...tx.Middleware) tx.Middleware {
-	return func(h tx.Handler) tx.Handler {
-		return branchStoreHandler{
-			next: ComposeMiddlewares(h, middlewares...),
-		}
+func WithBranchedStore(h tx.Handler) tx.Handler {
+	return branchStoreHandler{
+		next: h,
 	}
 }
 

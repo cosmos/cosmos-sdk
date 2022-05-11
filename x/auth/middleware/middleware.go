@@ -75,46 +75,45 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
 		// Creates a new MultiStore branch, discards downstream writes if the downstream returns error.
 		// This block of middlewares correspond to what was called "antehandlers" before.
-		WithBranchedStore(
-			NewTxDecoderMiddleware(options.TxDecoder),
-			// Set a new GasMeter on sdk.Context.
-			//
-			// Make sure the Gas middleware is outside of all other middlewares
-			// that reads the GasMeter. In our case, the Recovery middleware reads
-			// the GasMeter to populate GasInfo.
-			GasTxMiddleware,
-			// Recover from panics. Panics outside of this middleware won't be
-			// caught, be careful!
-			RecoveryTxMiddleware,
-			// Choose which events to index in Tendermint. Make sure no events are
-			// emitted outside of this middleware.
-			NewIndexEventsTxMiddleware(options.IndexEvents),
-			// Reject all extension options other than the ones needed by the feemarket.
-			NewExtensionOptionsMiddleware(options.ExtensionOptionChecker),
-			ValidateBasicMiddleware,
-			TxTimeoutHeightMiddleware,
-			ValidateMemoMiddleware(options.AccountKeeper),
-			ConsumeTxSizeGasMiddleware(options.AccountKeeper),
-			// No gas should be consumed in any middleware above in a "post" handler part. See
-			// ComposeMiddlewares godoc for details.
-			// `DeductFeeMiddleware` and `IncrementSequenceMiddleware` should be put outside of `WithBranchedStore` middleware,
-			// so their storage writes are not discarded when tx fails.
-			DeductFeeMiddleware(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
-			SetPubKeyMiddleware(options.AccountKeeper),
-			ValidateSigCountMiddleware(options.AccountKeeper),
-			SigGasConsumeMiddleware(options.AccountKeeper, options.SigGasConsumer),
-			SigVerificationMiddleware(options.AccountKeeper, options.SignModeHandler),
-			IncrementSequenceMiddleware(options.AccountKeeper),
-		),
+		WithBranchedStore,
+		NewTxDecoderMiddleware(options.TxDecoder),
+		// Set a new GasMeter on sdk.Context.
+		//
+		// Make sure the Gas middleware is outside of all other middlewares
+		// that reads the GasMeter. In our case, the Recovery middleware reads
+		// the GasMeter to populate GasInfo.
+		GasTxMiddleware,
+		// Recover from panics. Panics outside of this middleware won't be
+		// caught, be careful!
+		RecoveryTxMiddleware,
+		// Choose which events to index in Tendermint. Make sure no events are
+		// emitted outside of this middleware.
+		NewIndexEventsTxMiddleware(options.IndexEvents),
+		// Reject all extension options other than the ones needed by the feemarket.
+		NewExtensionOptionsMiddleware(options.ExtensionOptionChecker),
+		ValidateBasicMiddleware,
+		TxTimeoutHeightMiddleware,
+		ValidateMemoMiddleware(options.AccountKeeper),
+		ConsumeTxSizeGasMiddleware(options.AccountKeeper),
+		// No gas should be consumed in any middleware above in a "post" handler part. See
+		// ComposeMiddlewares godoc for details.
+		// `DeductFeeMiddleware` and `IncrementSequenceMiddleware` should be put outside of `WithBranchedStore` middleware,
+		// so their storage writes are not discarded when tx fails.
+		DeductFeeMiddleware(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
+		SetPubKeyMiddleware(options.AccountKeeper),
+		ValidateSigCountMiddleware(options.AccountKeeper),
+		SigGasConsumeMiddleware(options.AccountKeeper, options.SigGasConsumer),
+		SigVerificationMiddleware(options.AccountKeeper, options.SignModeHandler),
+		IncrementSequenceMiddleware(options.AccountKeeper),
+
 		// Creates a new MultiStore branch, discards downstream writes if the downstream returns error.
 		// These kinds of middlewares should be put under this:
 		// - Could return error after messages executed succesfully.
 		// - Storage writes should be discarded together when runMsg failed.
-		WithBranchedStore(
-			// Consume block gas. All middlewares whose gas consumption after their `next` handler
-			// should be accounted for, should go below this middleware.
-			ConsumeBlockGasMiddleware,
-			NewTipMiddleware(options.BankKeeper),
-		),
+		WithBranchedStore,
+		// Consume block gas. All middlewares whose gas consumption after their `next` handler
+		// should be accounted for, should go below this middleware.
+		ConsumeBlockGasMiddleware,
+		NewTipMiddleware(options.BankKeeper),
 	), nil
 }

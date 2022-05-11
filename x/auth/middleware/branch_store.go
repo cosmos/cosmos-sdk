@@ -20,7 +20,7 @@ import (
 //   // some other middlewares
 // )
 func WithBranchAnte() (tx.Middleware, tx.Middleware) {
-	return withBranchStore("ante", true)
+	return withBranchStore("ante", false)
 }
 
 // WithBranchAnte creates a store branch (cache store) for running Msgs.
@@ -35,7 +35,7 @@ func WithBranchAnte() (tx.Middleware, tx.Middleware) {
 //   endBranch, // will write to state right after runMsgs
 // )
 func WithBranchRunMsgs() (tx.Middleware, tx.Middleware) {
-	return withBranchStore("runMsgs", false)
+	return withBranchStore("runMsgs", true)
 }
 
 // withBranchStore creates 2 middlewares:

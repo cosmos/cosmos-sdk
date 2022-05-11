@@ -1,7 +1,12 @@
+---
+name: General issue
+about: A template for general issues with acceptance criteria
+title: ''
+assignees: ''
+---
 <!-- < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < ☺
 v                               ✰  Thanks for creating an issue! ✰    
 ☺ > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > >  -->
-
 ## Background
 *This is where you can provide code examples or context (e.g. past PR's)*
 *(for example)*

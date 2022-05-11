@@ -663,7 +663,7 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 				},
 				commonFlags...,
 			),
-			false, 4, &sdk.TxResponse{},
+			false, 38, &sdk.TxResponse{},
 		},
 		{
 			"Valid revoke",

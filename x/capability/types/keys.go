@@ -23,7 +23,7 @@ var (
 	KeyIndex = []byte("index")
 
 	// KeyPrefixIndexCapability defines a key prefix that stores index to capability
-	// name mappings.
+	// owners mappings.
 	KeyPrefixIndexCapability = []byte("capability_index")
 
 	// KeyMemInitialized defines the key that stores the initialized flag in the memory store

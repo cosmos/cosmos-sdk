@@ -22,15 +22,15 @@ type Manager struct {
 	snapshotInterval uint64
 	// Although pruneHeights happen in the same goroutine with the normal execution,
 	// we sync access to them to avoid soundness issues in the future if concurrency pattern changes.
-	pruneHeightsMx         sync.Mutex
-	pruneHeights           []int64
+	pruneHeightsMx sync.Mutex
+	pruneHeights   []int64
 	// Snapshots are taken in a separate goroutine from the regular execution
 	// and can be delivered asynchrounously via HandleHeightSnapshot.
-	// Therefore, we sync access to pruneSnapshotHeights with this mutex. 
+	// Therefore, we sync access to pruneSnapshotHeights with this mutex.
 	pruneSnapshotHeightsMx sync.Mutex
 	// These are the heights that are multiples of snapshotInterval and kept for state sync snapshots.
 	// The heights are added to this list to be pruned when a snapshot is complete.
-	pruneSnapshotHeights   *list.List
+	pruneSnapshotHeights *list.List
 }
 
 // NegativeHeightsError is returned when a negative height is provided to the manager.
@@ -162,7 +162,7 @@ func (m *Manager) HandleHeightSnapshot(height int64) {
 
 	m.pruneSnapshotHeightsMx.Lock()
 	defer m.pruneSnapshotHeightsMx.Unlock()
-	
+
 	m.logger.Debug("HandleHeightSnapshot", "height", height)
 	m.pruneSnapshotHeights.PushBack(height)
 

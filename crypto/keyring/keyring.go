@@ -100,13 +100,6 @@ type Keyring interface {
 	Migrator
 }
 
-// UnsafeKeyring exposes unsafe operations such as unsafe unarmored export in
-// addition to those that are made available by the Keyring interface.
-type UnsafeKeyring interface {
-	Keyring
-	UnsafeExporter
-}
-
 // Signer is implemented by key stores that want to provide signing capabilities.
 type Signer interface {
 	// Sign sign byte messages with a user key.
@@ -140,13 +133,6 @@ type Exporter interface {
 	// It returns an error if the key does not exist or a wrong encryption passphrase is supplied.
 	ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error)
 	ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassphrase string) (armor string, err error)
-}
-
-// UnsafeExporter is implemented by key stores that support unsafe export
-// of private keys' material.
-type UnsafeExporter interface {
-	// UnsafeExportPrivKeyHex returns a private key in unarmored hex format
-	UnsafeExportPrivKeyHex(uid string) (string, error)
 }
 
 // Option overrides keyring configuration options.
@@ -994,29 +980,6 @@ func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 		return nil, errors.New("unknown LegacyInfo type")
 
 	}
-}
-
-type unsafeKeystore struct {
-	keystore
-}
-
-// NewUnsafe returns a new keyring that provides support for unsafe operations.
-func NewUnsafe(kr Keyring) UnsafeKeyring {
-	// The type assertion is against the only keystore
-	// implementation that is currently provided.
-	ks := kr.(keystore)
-
-	return unsafeKeystore{ks}
-}
-
-// UnsafeExportPrivKeyHex exports private keys in unarmored hexadecimal format.
-func (ks unsafeKeystore) UnsafeExportPrivKeyHex(uid string) (privkey string, err error) {
-	priv, err := ks.ExportPrivateKeyObject(uid)
-	if err != nil {
-		return "", err
-	}
-
-	return hex.EncodeToString(priv.Bytes()), nil
 }
 
 func addrHexKeyAsString(address sdk.Address) string {

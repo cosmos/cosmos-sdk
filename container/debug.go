@@ -22,6 +22,13 @@ func StdoutLogger() DebugOption {
 	})
 }
 
+// StderrLogger is a debug option which routes logging output to stderro.
+func StderrLogger() DebugOption {
+	return Logger(func(s string) {
+		_, _ = fmt.Fprintln(os.Stderr, s)
+	})
+}
+
 // Visualizer creates an option which provides a visualizer function which
 // will receive a rendering of the container in the Graphiz DOT format
 // whenever the container finishes building or fails due to an error. The
@@ -73,16 +80,15 @@ func Logger(logger func(string)) DebugOption {
 }
 
 const (
-	debugContainerSvg = "debug_container.svg"
 	debugContainerDot = "debug_container.dot"
 )
 
-// Debug is a default debug option which sends log output to stdout, dumps
+// Debug is a default debug option which sends log output to stderr, dumps
 // the container in the graphviz DOT and SVG formats to debug_container.dot
 // and debug_container.svg respectively.
 func Debug() DebugOption {
 	return DebugOptions(
-		StdoutLogger(),
+		StderrLogger(),
 		FileVisualizer(debugContainerDot),
 	)
 }
@@ -128,13 +134,12 @@ func DebugCleanup(cleanup func()) DebugOption {
 }
 
 // AutoDebug does the same thing as Debug when there is an error and deletes
-// the debug_container.dot and debug_container.dot if they exist when there
-// is no error. This is the default debug mode of Run.
+// the debug_container.dot if it exists when there is no error. This is the
+// default debug mode of Run.
 func AutoDebug() DebugOption {
 	return DebugOptions(
 		OnError(Debug()),
 		OnSuccess(DebugCleanup(func() {
-			deleteIfExists(debugContainerSvg)
 			deleteIfExists(debugContainerDot)
 		})),
 	)
@@ -290,15 +295,20 @@ func moreUsefulTypeString(ty reflect.Type) string {
 }
 
 func (c *debugConfig) moduleSubGraph(key *moduleKey) *graphviz.Graph {
-	graph := c.graph
-	if key != nil {
+	if key == nil {
+		// return the root graph
+		return c.graph
+	} else {
 		gname := fmt.Sprintf("cluster_%s", key.name)
-		graph = c.graph.SubGraph(gname)
-		graph.SetLabel(fmt.Sprintf("Module: %s", key.name))
-		graph.SetPenWidth("0.5")
-		graph.SetFontSize("12.0")
+		graph, found := c.graph.FindOrCreateSubGraph(gname)
+		if !found {
+			graph.SetLabel(fmt.Sprintf("Module: %s", key.name))
+			graph.SetPenWidth("0.5")
+			graph.SetFontSize("12.0")
+			graph.SetStyle("rounded")
+		}
+		return graph
 	}
-	return graph
 }
 
 func (c *debugConfig) addGraphEdge(from, to *graphviz.Node) {

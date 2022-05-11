@@ -59,10 +59,10 @@ func (g *Graph) FindOrCreateNode(name string) (node *Node, found bool) {
 	return node, false
 }
 
-// SubGraph finds or creates the subgraph with the provided name.
-func (g *Graph) SubGraph(name string) *Graph {
+// FindOrCreateSubGraph finds or creates the subgraph with the provided name.
+func (g *Graph) FindOrCreateSubGraph(name string) (graph *Graph, found bool) {
 	if sub, ok := g.subgraphs[name]; ok {
-		return sub
+		return sub, true
 	}
 
 	n := &Graph{
@@ -75,7 +75,7 @@ func (g *Graph) SubGraph(name string) *Graph {
 		edges:      nil,
 	}
 	g.subgraphs[name] = n
-	return n
+	return n, false
 }
 
 // CreateEdge creates a new graphviz edge.

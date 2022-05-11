@@ -361,6 +361,8 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 		},
 		Location: loc,
 	}
+	callerGraphNode := c.locationGraphNode(loc, nil)
+	callerGraphNode.SetShape("hexagon")
 
 	desc, err := expandStructArgsProvider(desc)
 	if err != nil {

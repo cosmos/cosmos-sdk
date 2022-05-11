@@ -6119,6 +6119,8 @@ func (x *QueryAccountRequest) GetAddress() string {
 }
 
 // QueryModuleAccountsRequest is the request type for the Query/ModuleAccounts RPC method.
+//
+// Since: cosmos-sdk 0.46
 type QueryModuleAccountsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -6247,6 +6249,8 @@ func (*QueryParamsRequest) Descriptor() ([]byte, []int) {
 }
 
 // QueryModuleAccountsResponse is the response type for the Query/ModuleAccounts RPC method.
+//
+// Since: cosmos-sdk 0.46
 type QueryModuleAccountsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

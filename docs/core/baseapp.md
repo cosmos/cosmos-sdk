@@ -139,7 +139,7 @@ To avoid unnecessary roundtrip to the main state, all reads to the branched stor
 
 During `CheckTx`, the `checkState`, which is based off of the last committed state from the root
 store, is used for any reads and writes. Here we only execute the wired middlewares `CheckTx` and verify a service router
-exists for every message in the transaction. Note, that if the a middleware's `CheckTx` fails,
+exists for every message in the transaction. Note, that if a middleware's `CheckTx` fails,
 the state transitions won't be reflected in the `checkState` -- i.e. `checkState` is only updated on
 success.
 
@@ -266,7 +266,7 @@ This allows certain checks like signature verification can be skipped during `Ch
 
 When the underlying consensus engine receives a block proposal, each transaction in the block needs to be processed by the application. To that end, the underlying consensus engine sends a `DeliverTx` message to the application for each transaction in a sequential order.
 
-Before the first transaction of a given block is processed, a [volatile state](#state-updates) called `deliverState` is intialized during [`BeginBlock`](#beginblock). This state is updated each time a transaction is processed via `DeliverTx`, and committed to the [main state](#main-state) when the block is [committed](#commit), after what is is set to `nil`.
+Before the first transaction of a given block is processed, a [volatile state](#state-updates) called `deliverState` is initialized during [`BeginBlock`](#beginblock). This state is updated each time a transaction is processed via `DeliverTx`, and committed to the [main state](#main-state) when the block is [committed](#commit), after what it is set to `nil`.
 
 `DeliverTx` performs the **exact same steps as `CheckTx`**, with a little caveat at step 3 and the addition of a fifth step:
 
@@ -292,7 +292,7 @@ At any point, if `GasConsumed > GasWanted`, the function returns with `Code != 0
 
 ## Middlewares
 
-Middlewares implement the `tx.Handler` interface. They are called within BaseApp `CheckTx` and `DeliverTx`, allowing to run custom logic before or after the transaction is processed. They are primaraly used to authenticate the transaction before the transaction's internal messages are processed, but also to perform additional checks on the transaction itself.
+Middlewares implement the `tx.Handler` interface. They are called within BaseApp `CheckTx` and `DeliverTx`, allowing to run custom logic before or after the transaction is processed. They are primarily used to authenticate the transaction before the transaction's internal messages are processed, but also to perform additional checks on the transaction itself.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/types/tx/middleware.go#L62:L68
 
@@ -346,9 +346,9 @@ The [`EndBlock` ABCI message](https://docs.tendermint.com/master/spec/abci/abci.
 
 ### Commit
 
-The [`Commit` ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#commit) is sent from the underlying Tendermint engine after the full-node has received _precommits_ from 2/3+ of validators (weighted by voting power). On the `BaseApp` end, the `Commit(res abci.ResponseCommit)` function is implemented to commit all the valid state transitions that occured during `BeginBlock`, `DeliverTx` and `EndBlock` and to reset state for the next block.
+The [`Commit` ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#commit) is sent from the underlying Tendermint engine after the full-node has received _precommits_ from 2/3+ of validators (weighted by voting power). On the `BaseApp` end, the `Commit(res abci.ResponseCommit)` function is implemented to commit all the valid state transitions that occurred during `BeginBlock`, `DeliverTx` and `EndBlock` and to reset state for the next block.
 
-To commit state-transitions, the `Commit` function calls the `Write()` function on `deliverState.ms`, where `deliverState.ms` is a branched multistore of the main store `app.cms`. Then, the `Commit` function sets `checkState` to the latest header (obtbained from `deliverState.ctx.BlockHeader`) and `deliverState` to `nil`.
+To commit state-transitions, the `Commit` function calls the `Write()` function on `deliverState.ms`, where `deliverState.ms` is a branched multistore of the main store `app.cms`. Then, the `Commit` function sets `checkState` to the latest header (obtained from `deliverState.ctx.BlockHeader`) and `deliverState` to `nil`.
 
 Finally, `Commit` returns the hash of the commitment of `app.cms` back to the underlying consensus engine. This hash is used as a reference in the header of the next block.
 
@@ -360,7 +360,7 @@ The [`Info` ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html
 
 The [`Query` ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#query-2) is used to serve queries received from the underlying consensus engine, including queries received via RPC like Tendermint RPC. It used to be the main entrypoint to build interfaces with the application, but with the introduction of [gRPC queries](../building-modules/query-services.md) in Cosmos SDK v0.40, its usage is more limited. The application must respect a few rules when implementing the `Query` method, which are outlined [here](https://docs.tendermint.com/master/spec/abci/apps.html#query).
 
-Each Tendermint `query` comes with a `path`, which is a `string` which denotes what to query. If the `path` matches a gRPC fully-qualified service method, then `BaseApp` will defer the query to the `grpcQueryRouter` and let it handle it like explained [above](#grpc-query-router). Otherwise, the `path` represents a query that is not (yet) handled by the gRPC router. `BaseApp` splits the `path` string with the `/` delimiter. By convention, the first element of the splitted string (`splitted[0]`) contains the category of `query` (`app`, `p2p`, `store` or `custom` ). The `BaseApp` implementation of the `Query(req abci.RequestQuery)` method is a simple dispatcher serving these 4 main categories of queries:
+Each Tendermint `query` comes with a `path`, which is a `string` which denotes what to query. If the `path` matches a gRPC fully-qualified service method, then `BaseApp` will defer the query to the `grpcQueryRouter` and let it handle it like explained [above](#grpc-query-router). Otherwise, the `path` represents a query that is not (yet) handled by the gRPC router. `BaseApp` splits the `path` string with the `/` delimiter. By convention, the first element of the split string (`split[0]`) contains the category of `query` (`app`, `p2p`, `store` or `custom` ). The `BaseApp` implementation of the `Query(req abci.RequestQuery)` method is a simple dispatcher serving these 4 main categories of queries:
 
 * Application-related queries like querying the application's version, which are served via the `handleQueryApp` method.
 * Direct queries to the multistore, which are served by the `handlerQueryStore` method. These direct queries are different from custom queries which go through `app.queryRouter`, and are mainly used by third-party service provider like block explorers.

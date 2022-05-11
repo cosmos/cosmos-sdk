@@ -30,7 +30,7 @@ Additionally, there are several [flags](../core/cli.md) users can use to indicat
 
 * `--gas` refers to how much [gas](./gas-fees.md), which represents computational resources, `Tx` consumes. Gas is dependent on the transaction and is not precisely calculated until execution, but can be estimated by providing `auto` as the value for `--gas`.
 * `--gas-adjustment` (optional) can be used to scale `gas` up in order to avoid underestimating. For example, users can specify their gas adjustment as 1.5 to use 1.5 times the estimated gas.
-* `--gas-prices` specifies how much the user is willing pay per unit of gas, which can be one or multiple denominations of tokens. For example, `--gas-prices=0.025uatom, 0.025upho` means the user is willing to pay 0.025uatom AND 0.025upho per unit of gas.
+* `--gas-prices` specifies how much the user is willing to pay per unit of gas, which can be one or multiple denominations of tokens. For example, `--gas-prices=0.025uatom, 0.025upho` means the user is willing to pay 0.025uatom AND 0.025upho per unit of gas.
 * `--fees` specifies how much in fees the user is willing to pay in total.
 * `--timeout-height` specifies a block timeout height to prevent the tx from being committed past a certain height.
 
@@ -40,7 +40,7 @@ Later, validators decide whether or not to include the transaction in their bloc
 
 #### CLI Example
 
-Users of application `app` can enter the following command into their CLI to generate a transaction to send 1000uatom from a `senderAddress` to a `recipientAddress`. It specifies how much gas they are willing to pay: an automatic estimate scaled up by 1.5 times, with a gas price of 0.025uatom per unit gas.
+Users of the application `app` can enter the following command into their CLI to generate a transaction to send 1000uatom from a `senderAddress` to a `recipientAddress`. It specifies how much gas they are willing to pay: an automatic estimate scaled up by 1.5 times, with a gas price of 0.025uatom per unit gas.
 
 ```bash
 appd tx send <recipientAddress> 1000uatom --from <senderAddress> --gas auto --gas-adjustment 1.5 --gas-prices 0.025uatom
@@ -66,7 +66,7 @@ them - and are thus less computationally expensive. Stateless checks include mak
 are not empty, enforcing nonnegative numbers, and other logic specified in the definitions.
 
 **_Stateful_** checks validate transactions and messages based on a committed state. Examples
-include checking that the relevant values exist and are able to be transacted with, the address
+include checking that the relevant values exist and can be transacted with, the address
 has sufficient funds, and the sender is authorized or has the correct ownership to transact.
 At any given moment, full-nodes typically have [multiple versions](../core/baseapp.md#state-updates)
 of the application's internal state for different purposes. For example, nodes will execute state
@@ -79,7 +79,7 @@ through several steps, beginning with decoding `Tx`.
 
 ### Decoding
 
-When `Tx` is received by the application from the underlying consensus engine (e.g. Tendermint), it is still in its [encoded](../core/encoding.md) `[]byte` form and needs to be unmarshaled in order to be processed. Then, the transaction is passed to the middlewares defined in `tx.Handler`. The middlewares will performe additional checks defined in their own `CheckTx`, meaning the they will run all checks but exit before executing messages and writing state changes.
+When `Tx` is received by the application from the underlying consensus engine (e.g. Tendermint), it is still in its [encoded](../core/encoding.md) `[]byte` form and needs to be unmarshaled in order to be processed. Then, the transaction is passed to the middlewares defined in `tx.Handler`. The middlewares will perform additional checks defined in their own `CheckTx`, meaning that they will run all checks but exit before executing messages and writing state changes.
 
 ### ValidateBasic
 
@@ -89,7 +89,7 @@ To discard obviously invalid messages, the `BaseApp` type calls the `ValidateBas
 
 #### Guideline
 
-Gas is not charged when `ValidateBasic` is executed so we recommend only performing all necessary stateless checks to enable middleware operations (for example, parsing the required signer accounts to validate a signature by a middleware) and stateless sanity checks not impacting performance of the CheckTx phase.
+Gas is not charged when `ValidateBasic` is executed, so we recommend only performing all necessary stateless checks to enable middleware operations (for example, parsing the required signer accounts to validate a signature by a middleware) and stateless sanity checks not impacting performance of the CheckTx phase.
 Other validation operations must be performed when [handling a message](../building-modules/msg-services#Validation) in a module Msg Server.
 
 Example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for non-empty addresses and a non-negative coin amount, but does not require knowledge of state such as the account balance of an address.
@@ -98,7 +98,7 @@ See also [Msg Service Validation](../building-modules/msg-services.md#Validation
 
 ### Middlewares
 
-Middlewares implements the `TxHandler` interface and are defined by `tx.Handler` in `BaseApp`. This architecture allows to run the middlewares logic in the `CheckTx` and `DeliverTx` phases. Technically, they are optional, but in practice, they are very often present to perform signature verification, gas calculation, fee deduction and other core operations related to blockchain transactions.
+Middlewares implements the `TxHandler` interface and are defined by `tx.Handler` in `BaseApp`. This architecture allows running the middlewares logic in the `CheckTx` and `DeliverTx` phases. Technically, they are optional, but in practice, they are very often present to perform signature verification, gas calculation, fee deduction and other core operations related to blockchain transactions.
 
 A copy of the cached context is provided to the middleware, which performs limited checks specified for the transaction type. Using a copy allows the Middleware to do stateful checks for `Tx` without modifying the last committed state, and revert back to the original if the execution fails.
 
@@ -117,7 +117,7 @@ nodes and add it to the Mempool so that the `Tx` becomes a candidate to be inclu
 The **mempool** serves the purpose of keeping track of transactions seen by all full-nodes.
 Full-nodes keep a **mempool cache** of the last `mempool.cache_size` transactions they have seen, as a first line of
 defense to prevent replay attacks. Ideally, `mempool.cache_size` is large enough to encompass all
-of the transactions in the full mempool. If the the mempool cache is too small to keep track of all
+of the transactions in the full mempool. If the mempool cache is too small to keep track of all
 the transactions, `CheckTx` is responsible for identifying and rejecting replayed transactions.
 
 Currently existing preventative measures include fees and a `sequence` (nonce) counter to distinguish

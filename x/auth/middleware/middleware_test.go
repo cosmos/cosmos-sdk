@@ -7,6 +7,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -20,8 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var testCoins = sdk.Coins{sdk.NewInt64Coin("atom", 10000000)}
@@ -1152,4 +1154,109 @@ func (s *MWTestSuite) TestTxHandlerReCheck() {
 
 	_, _, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, tx.RequestCheckTx{})
 	s.Require().NotNil(err, "txhandler on recheck did not fail once feePayer no longer has sufficient funds")
+}
+
+func (s *MWTestSuite) TestTxReplayFeeDeduction() {
+	ctx := s.SetupTest(false) // reset
+	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
+	accounts := s.createTestAccounts(ctx, 1, testCoins)
+
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
+	msgs := []sdk.Msg{testdata.NewTestMsg(accounts[0].acc.GetAddress())}
+	s.Require().NoError(txBuilder.SetMsgs(msgs...))
+
+	txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
+	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
+
+	testTx, txBytes, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+	s.Require().NoError(err)
+
+	// execute a valid tx and require that it succeeds
+	_, err = s.txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx, TxBytes: txBytes})
+	s.Require().NoError(err)
+
+	// require the balance be adjusted (10_000_000 - 150 (fee) = 9_999_850)
+	balance := s.app.BankKeeper.GetBalance(ctx, accounts[0].acc.GetAddress(), testCoins[0].Denom)
+	s.Require().Equal(sdk.NewInt(9_999_850), balance.Amount)
+
+	// Execute the exact same tx, which should fail as expected. Imagine a faulty
+	// modified mempool or bad actors proposing blocks with already committed
+	// transactions.
+	_, err = s.txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx, TxBytes: txBytes})
+	s.Require().Error(err)
+
+	// Require the balance NOT change, even though the network already accepted
+	// the exact same message from the same sender.
+	//
+	// Note, this would be considered faulty behavior and can result in accounts
+	// being drained of their funds.
+	balance = s.app.BankKeeper.GetBalance(ctx, accounts[0].acc.GetAddress(), testCoins[0].Denom)
+	s.Require().Equal(sdk.NewInt(9_999_850), balance.Amount)
+}
+
+// TestTxReplayFeeDeduction_Invalid demonstrates that with an invalid or improper
+// ordering of signature-related middlewares along with the fee deduction middleware,
+// can result in faulty behavior.
+func (s *MWTestSuite) TestTxReplayFeeDeduction_Invalid() {
+	ctx := s.SetupTest(false) // reset
+	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
+	accounts := s.createTestAccounts(ctx, 1, testCoins)
+
+	txHandler := middleware.ComposeMiddlewares(
+		middleware.NewRunMsgsTxHandler(s.mOpts.MsgServiceRouter, s.mOpts.LegacyRouter),
+		middleware.WithBranchedStore(
+			middleware.NewTxDecoderMiddleware(s.mOpts.TxDecoder),
+			middleware.GasTxMiddleware,
+			middleware.RecoveryTxMiddleware,
+			middleware.NewIndexEventsTxMiddleware(s.mOpts.IndexEvents),
+			middleware.NewExtensionOptionsMiddleware(s.mOpts.ExtensionOptionChecker),
+			middleware.ValidateBasicMiddleware,
+			middleware.TxTimeoutHeightMiddleware,
+			middleware.ValidateMemoMiddleware(s.mOpts.AccountKeeper),
+			middleware.ConsumeTxSizeGasMiddleware(s.mOpts.AccountKeeper),
+			middleware.DeductFeeMiddleware(s.mOpts.AccountKeeper, s.mOpts.BankKeeper, s.mOpts.FeegrantKeeper, s.mOpts.TxFeeChecker),
+			middleware.SetPubKeyMiddleware(s.mOpts.AccountKeeper),
+			middleware.ValidateSigCountMiddleware(s.mOpts.AccountKeeper),
+			middleware.SigGasConsumeMiddleware(s.mOpts.AccountKeeper, s.mOpts.SigGasConsumer),
+			middleware.SigVerificationMiddleware(s.mOpts.AccountKeeper, s.mOpts.SignModeHandler),
+			middleware.IncrementSequenceMiddleware(s.mOpts.AccountKeeper),
+		),
+		middleware.WithBranchedStore(
+			middleware.ConsumeBlockGasMiddleware,
+			middleware.NewTipMiddleware(s.mOpts.BankKeeper),
+		),
+	)
+
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
+	msgs := []sdk.Msg{testdata.NewTestMsg(accounts[0].acc.GetAddress())}
+	s.Require().NoError(txBuilder.SetMsgs(msgs...))
+
+	txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
+	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
+
+	testTx, txBytes, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+	s.Require().NoError(err)
+
+	// execute a valid tx and require that it succeeds
+	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx, TxBytes: txBytes})
+	s.Require().NoError(err)
+
+	// require the balance be adjusted (10_000_000 - 150 (fee) = 9_999_850)
+	balance := s.app.BankKeeper.GetBalance(ctx, accounts[0].acc.GetAddress(), testCoins[0].Denom)
+	s.Require().Equal(sdk.NewInt(9_999_850), balance.Amount)
+
+	// Execute the exact same tx, which should fail as expected. Imagine a faulty
+	// modified mempool or bad actors proposing blocks with already committed
+	// transactions.
+	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx, TxBytes: txBytes})
+	s.Require().Error(err)
+
+	// Require the balance DOES NOT change, as it fails the antehandler stage, so
+	// fees aren't deducted.
+	balance = s.app.BankKeeper.GetBalance(ctx, accounts[0].acc.GetAddress(), testCoins[0].Denom)
+	s.Require().Equal(sdk.NewInt(9_999_850), balance.Amount)
+}
+
+func TestMWTestSuite2(t *testing.T) {
+	suite.Run(t, new(MWTestSuite))
 }

@@ -38,6 +38,7 @@ type MWTestSuite struct {
 	app       *simapp.SimApp
 	clientCtx client.Context
 	txHandler txtypes.Handler
+	mOpts     middleware.TxHandlerOptions
 }
 
 // returns context and app with params set on account keeper
@@ -80,7 +81,7 @@ func (s *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
 			MsgResponses: []*codectypes.Any{any},
 		}, nil
 	}))
-	txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
+	s.mOpts = middleware.TxHandlerOptions{
 		Debug:            s.app.Trace(),
 		MsgServiceRouter: msr,
 		LegacyRouter:     legacyRouter,
@@ -90,8 +91,11 @@ func (s *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
 		SignModeHandler:  encodingConfig.TxConfig.SignModeHandler(),
 		SigGasConsumer:   middleware.DefaultSigVerificationGasConsumer,
 		TxDecoder:        s.clientCtx.TxConfig.TxDecoder(),
-	})
+	}
+
+	txHandler, err := middleware.NewDefaultTxHandler(s.mOpts)
 	s.Require().NoError(err)
+
 	s.txHandler = txHandler
 
 	return ctx

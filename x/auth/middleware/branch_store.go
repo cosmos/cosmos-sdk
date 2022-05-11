@@ -14,8 +14,12 @@ type branchStoreHandler struct {
 
 // WithBranchedStore creates a new MultiStore branch and commits the store if the downstream
 // returned no error. It cancels writes from the failed transactions.
-func WithBranchedStore(txh tx.Handler) tx.Handler {
-	return branchStoreHandler{next: txh}
+func WithBranchedStore(middlewares ...tx.Middleware) tx.Middleware {
+	return func(h tx.Handler) tx.Handler {
+		return branchStoreHandler{
+			next: ComposeMiddlewares(h, middlewares...),
+		}
+	}
 }
 
 // CheckTx implements tx.Handler.CheckTx method.
@@ -40,9 +44,9 @@ type nextFn func(ctx context.Context, req tx.Request) (tx.Response, error)
 // in case message processing fails.
 func branchAndRun(ctx context.Context, req tx.Request, fn nextFn) (tx.Response, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	runMsgCtx, branchedStore := branchStore(sdkCtx, tmtypes.Tx(req.TxBytes))
+	newCtx, branchedStore := branchStore(sdkCtx, tmtypes.Tx(req.TxBytes))
 
-	rsp, err := fn(sdk.WrapSDKContext(runMsgCtx), req)
+	rsp, err := fn(sdk.WrapSDKContext(newCtx), req)
 	if err == nil {
 		// commit storage iff no error
 		branchedStore.Write()

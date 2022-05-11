@@ -3,7 +3,6 @@ module github.com/cosmos/cosmos-sdk/container
 go 1.18
 
 require (
-	github.com/emicklei/dot v0.16.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.1
 	gotest.tools/v3 v3.2.0

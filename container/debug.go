@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"reflect"
 
-	"github.com/emicklei/dot"
+	"github.com/cosmos/cosmos-sdk/container/internal/graphviz"
 )
 
 // DebugOption is a functional option for running a container that controls
@@ -163,7 +163,7 @@ type debugConfig struct {
 	logBuf    *[]string // a log buffer for onError/onSuccess processing
 
 	// graphing
-	graph         *dot.Graph
+	graph         *graphviz.Graph
 	visualizers   []func(string)
 	logVisualizer bool
 
@@ -183,7 +183,7 @@ var _ DebugOption = (*debugOption)(nil)
 
 func newDebugConfig() (*debugConfig, error) {
 	return &debugConfig{
-		graph: dot.NewGraph(),
+		graph: graphviz.NewGraph(),
 	}, nil
 }
 
@@ -240,30 +240,34 @@ func (c *debugConfig) addFileVisualizer(filename string) {
 	})
 }
 
-func (c *debugConfig) locationGraphNode(location Location, key *moduleKey) dot.Node {
+func (c *debugConfig) locationGraphNode(location Location, key *moduleKey) *graphviz.Node {
 	graph := c.moduleSubGraph(key)
 	name := location.Name()
-	node, found := graph.FindNodeById(name)
+	node, found := graph.FindOrCreateNode(name)
 	if found {
 		return node
 	}
 
-	node = graph.Node(name)
-	node.Attr("shape", "box")
-	node.Attr("color", "lightgrey")
+	node.SetShape("box")
+	setUnusedStyle(node.Attributes)
 	return node
 }
 
-func (c *debugConfig) typeGraphNode(typ reflect.Type) dot.Node {
+func (c *debugConfig) typeGraphNode(typ reflect.Type) *graphviz.Node {
 	name := moreUsefulTypeString(typ)
-	node, found := c.graph.FindNodeById(name)
+	node, found := c.graph.FindOrCreateNode(name)
 	if found {
 		return node
 	}
 
-	node = c.graph.Node(name)
-	node.Attr("color", "lightgrey")
+	setUnusedStyle(node.Attributes)
 	return node
+}
+
+func setUnusedStyle(attr *graphviz.Attributes) {
+	attr.SetColor("lightgrey")
+	attr.SetPenWidth("0.5")
+	attr.SetAttr("fontcolor", "dimgrey")
 }
 
 // moreUsefulTypeString is more useful than reflect.Type.String()
@@ -282,16 +286,18 @@ func moreUsefulTypeString(ty reflect.Type) string {
 	}
 }
 
-func (c *debugConfig) moduleSubGraph(key *moduleKey) *dot.Graph {
+func (c *debugConfig) moduleSubGraph(key *moduleKey) *graphviz.Graph {
 	graph := c.graph
 	if key != nil {
 		gname := fmt.Sprintf("cluster_%s", key.name)
-		graph = c.graph.Subgraph(gname)
-		graph.Label(fmt.Sprintf("Module: %s", key.name))
+		graph = c.graph.SubGraph(gname)
+		graph.SetLabel(fmt.Sprintf("Module: %s", key.name))
+		graph.SetPenWidth("0.5")
+		graph.SetAttr("fontsize", "12.0")
 	}
 	return graph
 }
 
-func (c *debugConfig) addGraphEdge(from, to dot.Node) {
-	_ = c.graph.Edge(from, to)
+func (c *debugConfig) addGraphEdge(from, to *graphviz.Node) {
+	_ = c.graph.CreateEdge(from, to)
 }

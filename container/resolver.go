@@ -3,12 +3,12 @@ package container
 import (
 	"reflect"
 
-	"github.com/emicklei/dot"
+	"github.com/cosmos/cosmos-sdk/container/internal/graphviz"
 )
 
 type resolver interface {
 	addNode(*simpleProvider, int) error
 	resolve(*container, *moduleKey, Location) (reflect.Value, error)
 	describeLocation() string
-	typeGraphNode() dot.Node
+	typeGraphNode() *graphviz.Node
 }

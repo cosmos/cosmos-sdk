@@ -3,7 +3,7 @@ package container
 import (
 	"reflect"
 
-	"github.com/emicklei/dot"
+	"github.com/cosmos/cosmos-sdk/container/internal/graphviz"
 )
 
 type moduleDepProvider struct {
@@ -17,7 +17,7 @@ type moduleDepResolver struct {
 	idxInValues int
 	node        *moduleDepProvider
 	valueMap    map[*moduleKey]reflect.Value
-	graphNode   dot.Node
+	graphNode   *graphviz.Node
 }
 
 func (s moduleDepResolver) describeLocation() string {
@@ -52,6 +52,6 @@ func (s moduleDepResolver) addNode(p *simpleProvider, _ int) error {
 	return duplicateDefinitionError(s.typ, p.provider.Location, s.node.provider.Location.String())
 }
 
-func (s moduleDepResolver) typeGraphNode() dot.Node {
+func (s moduleDepResolver) typeGraphNode() *graphviz.Node {
 	return s.graphNode
 }

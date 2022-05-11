@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/emicklei/dot"
 	"github.com/pkg/errors"
+
+	"github.com/cosmos/cosmos-sdk/container/internal/graphviz"
 )
 
 type container struct {
@@ -85,14 +86,14 @@ func (c *container) getResolver(typ reflect.Type) (resolver, error) {
 		elemType = elemType.Elem()
 	}
 
-	var typeGraphNode dot.Node
+	var typeGraphNode *graphviz.Node
 
 	if isAutoGroupType(elemType) {
 		c.logf("Registering resolver for auto-group type %v", elemType)
 		sliceType := reflect.SliceOf(elemType)
 
 		typeGraphNode = c.typeGraphNode(sliceType)
-		typeGraphNode.Attr("comment", "auto-group")
+		typeGraphNode.SetComment("auto-group")
 
 		r := &groupResolver{
 			typ:       elemType,
@@ -107,7 +108,7 @@ func (c *container) getResolver(typ reflect.Type) (resolver, error) {
 		mapType := reflect.MapOf(stringType, elemType)
 
 		typeGraphNode = c.typeGraphNode(mapType)
-		typeGraphNode.Attr("comment", "one-per-module")
+		typeGraphNode.SetComment("one-per-module")
 
 		r := &onePerModuleResolver{
 			typ:       elemType,
@@ -151,7 +152,7 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 			return nil, err
 		}
 
-		var typeGraphNode dot.Node
+		var typeGraphNode *graphviz.Node
 		if vr != nil {
 			typeGraphNode = vr.typeGraphNode()
 		} else {
@@ -411,10 +412,12 @@ func (c container) formatResolveStack() string {
 	return buf.String()
 }
 
-func markGraphNodeAsUsed(node dot.Node) {
-	node.Attr("color", "black")
+func markGraphNodeAsUsed(node *graphviz.Node) {
+	node.SetColor("black")
+	node.SetPenWidth("1.5")
+	node.SetAttr("fontcolor", "black")
 }
 
-func markGraphNodeAsFailed(node dot.Node) {
-	node.Attr("color", "red")
+func markGraphNodeAsFailed(node *graphviz.Node) {
+	node.SetColor("red")
 }

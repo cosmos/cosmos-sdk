@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/emicklei/dot"
 	"github.com/pkg/errors"
+
+	"github.com/cosmos/cosmos-sdk/container/internal/graphviz"
 )
 
 // AutoGroupType marks a type which automatically gets grouped together. For an AutoGroupType T,
@@ -34,7 +35,7 @@ type groupResolver struct {
 	providers    []*simpleProvider
 	resolved     bool
 	values       reflect.Value
-	graphNode    dot.Node
+	graphNode    *graphviz.Node
 }
 
 type sliceGroupResolver struct {
@@ -89,6 +90,6 @@ func (g *groupResolver) addNode(n *simpleProvider, i int) error {
 	return nil
 }
 
-func (g groupResolver) typeGraphNode() dot.Node {
+func (g groupResolver) typeGraphNode() *graphviz.Node {
 	return g.graphNode
 }

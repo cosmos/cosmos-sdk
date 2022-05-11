@@ -3,14 +3,14 @@ package container
 import (
 	"reflect"
 
-	"github.com/emicklei/dot"
+	"github.com/cosmos/cosmos-sdk/container/internal/graphviz"
 )
 
 type supplyResolver struct {
 	typ       reflect.Type
 	value     reflect.Value
 	loc       Location
-	graphNode dot.Node
+	graphNode *graphviz.Node
 }
 
 func (s supplyResolver) describeLocation() string {
@@ -26,6 +26,6 @@ func (s supplyResolver) resolve(c *container, _ *moduleKey, caller Location) (re
 	return s.value, nil
 }
 
-func (s supplyResolver) typeGraphNode() dot.Node {
+func (s supplyResolver) typeGraphNode() *graphviz.Node {
 	return s.graphNode
 }

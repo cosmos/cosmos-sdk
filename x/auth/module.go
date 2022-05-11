@@ -6,10 +6,23 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/cosmos/cosmos-sdk/container"
+
+	"cosmossdk.io/core/appmodule"
+	modulev1 "github.com/cosmos/cosmos-sdk/api/cosmos/auth/module/v1"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	store "github.com/cosmos/cosmos-sdk/store/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	authmiddleware "github.com/cosmos/cosmos-sdk/x/auth/middleware"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -59,7 +72,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the auth module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
@@ -184,4 +197,67 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 // WeightedOperations doesn't return any auth module operation.
 func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
 	return nil
+}
+
+//
+// New App Wiring Setup
+//
+
+func init() {
+	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(provideModuleBasic, provideTxConfig, provideModule, provideTxHandler),
+	)
+}
+
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+func provideTxConfig(marshaler codec.ProtoCodecMarshaler) client.TxConfig {
+	return tx.NewTxConfig(marshaler, tx.DefaultSignModes)
+}
+
+func provideModule(
+	config *modulev1.Module,
+	key *store.KVStoreKey,
+	cdc codec.Codec,
+	subspace paramtypes.Subspace) (keeper.AccountKeeper, runtime.AppModuleWrapper) {
+
+	maccPerms := map[string][]string{}
+	for _, permission := range config.ModuleAccountPermissions {
+		maccPerms[permission.Account] = permission.Permissions
+	}
+
+	k := keeper.NewAccountKeeper(cdc, key, subspace, types.ProtoBaseAccount, maccPerms, config.Bech32Prefix)
+	m := NewAppModule(cdc, k, simulation.RandomGenesisAccounts)
+	return k, runtime.WrapAppModule(m)
+}
+
+type txHandlerInput struct {
+	container.In
+
+	TxConfig          client.TxConfig
+	InterfaceRegistry codectypes.InterfaceRegistry
+	Codec             codec.Codec
+	AccountKeeper     keeper.AccountKeeper
+	BankKeeper        bankkeeper.Keeper
+	FeeGrantKeeper    feegrantkeeper.Keeper `optional:"true"`
+	Modules           map[string]runtime.AppModuleWrapper
+}
+
+func provideTxHandler(in txHandlerInput) (runtime.MsgServiceRouter, txtypes.Handler, error) {
+	msgSvcRouter := authmiddleware.NewMsgServiceRouter(in.InterfaceRegistry)
+	txHandler, err := authmiddleware.NewDefaultTxHandler(authmiddleware.TxHandlerOptions{
+		//Debug:            app.Trace(),
+		//IndexEvents:      indexEvents,
+		//LegacyRouter:     app.legacyRouter,
+		MsgServiceRouter: msgSvcRouter,
+		AccountKeeper:    in.AccountKeeper,
+		BankKeeper:       in.BankKeeper,
+		FeegrantKeeper:   in.FeeGrantKeeper,
+		SignModeHandler:  in.TxConfig.SignModeHandler(),
+		SigGasConsumer:   authmiddleware.DefaultSigVerificationGasConsumer,
+		TxDecoder:        in.TxConfig.TxDecoder(),
+	})
+	return msgSvcRouter, txHandler, err
 }

@@ -3,9 +3,8 @@ package runtime
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/grpc"
-
 	"github.com/cosmos/cosmos-sdk/container"
+	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
 
@@ -26,6 +25,8 @@ type BaseAppOption func(*baseapp.BaseApp)
 
 // IsAutoGroupType indicates that this is a container.AutoGroupType.
 func (b BaseAppOption) IsAutoGroupType() {}
+
+type MsgServiceRouter grpc.ServiceRegistrar
 
 // appWrapper is used to pass around an instance of *App internally between
 // runtime dependency inject providers that is partially constructed (no
@@ -82,8 +83,8 @@ type appInputs struct {
 	App                 appWrapper
 	Modules             map[string]AppModuleWrapper
 	BaseAppOptions      []BaseAppOption
-	TxHandler           tx.Handler  `optional:"true"`
-	MsgServiceRegistrar grpc.Server `optional:"true"`
+	TxHandler           tx.Handler            `optional:"true"`
+	MsgServiceRegistrar grpc.ServiceRegistrar `optional:"true"`
 }
 
 func provideAppBuilder(inputs appInputs) *AppBuilder {

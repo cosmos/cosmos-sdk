@@ -818,15 +818,26 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Module is the config object for the runtime module.
 type Module struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	AppName       string   `protobuf:"bytes,1,opt,name=app_name,json=appName,proto3" json:"app_name,omitempty"`
+	// app_name is the name of the app.
+	AppName string `protobuf:"bytes,1,opt,name=app_name,json=appName,proto3" json:"app_name,omitempty"`
+	// begin_blockers specifies the module names of begin blockers
+	// to call in the order in which they should be called. If this is left empty
+	// no begin blocker will be registered.
 	BeginBlockers []string `protobuf:"bytes,2,rep,name=begin_blockers,json=beginBlockers,proto3" json:"begin_blockers,omitempty"`
-	EndBlockers   []string `protobuf:"bytes,3,rep,name=end_blockers,json=endBlockers,proto3" json:"end_blockers,omitempty"`
-	InitGenesis   []string `protobuf:"bytes,4,rep,name=init_genesis,json=initGenesis,proto3" json:"init_genesis,omitempty"`
+	// end_blockers specifies the module names of the end blockers
+	// to call in the order in which they should be called. If this is left empty
+	// no end blocker will be registered.
+	EndBlockers []string `protobuf:"bytes,3,rep,name=end_blockers,json=endBlockers,proto3" json:"end_blockers,omitempty"`
+	// init_genesis specifies the module names of init genesis functions
+	// to call in the order in which they should be called. If this is left empty
+	// no init genesis function will be registered.
+	InitGenesis []string `protobuf:"bytes,4,rep,name=init_genesis,json=initGenesis,proto3" json:"init_genesis,omitempty"`
 }
 
 func (x *Module) Reset() {

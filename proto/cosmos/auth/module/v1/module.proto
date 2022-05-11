@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package cosmos.auth.module.v1;
+
+import "cosmos/app/v1alpha1/module.proto";
+import "google/protobuf/any.proto";
+
+message Module {
+  option (cosmos.app.v1alpha1.module) = {
+    go_import: "github.com/cosmos/cosmos-sdk/x/auth"
+  };
+
+  // bech32_prefix is the bech32 account prefix for the app.
+  string bech32_prefix = 1;
+
+  // module_account_permissions are module account permissions.
+  repeated ModuleAccountPermission module_account_permissions = 2;
+
+  // account_constructor is an optional AccountI constructor config object that can be provided
+  // to override the default BaseAccount constructor. The provided config object must have
+  // an `NewAccount() AccountI` method defined. If this is left empty, the default constructor
+  // will be used
+  google.protobuf.Any account_constructor = 3;
+
+  google.protobuf.Any random_genesis_accounts_provider = 4;
+}
+
+// ModuleAccountPermission represents permissions for a module account.
+message ModuleAccountPermission {
+  // account is the name of the module.
+  string account = 1;
+
+  // permissions are the permissions this module has. Currently recognized
+  // values are minter, burner and staking.
+  repeated string permissions = 2;
+}
+
+message DefaultAccountConstructor {}
+
+message DefaultRandomGenesisAccountsProvider {}

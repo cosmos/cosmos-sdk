@@ -20,6 +20,23 @@ modules:
                       feegrant, nft, group,
                       params, upgrade, vesting ]
 
+  - name: auth
+    config:
+      "@type": cosmos.auth.module.v1.Module
+      bech32_prefix: cosmos
+      module_account_permissions:
+        - account: fee_collector
+        - account: distribution
+        - account: minter
+          permissions: [ minter ]
+        - account: bonded_tokens_pool
+          permissions: [ burner, staking ]
+        - account: not_bonded_tokens_pool
+          permissions: [ burner, staking ]
+        - account: gov
+          permissions: [ burner ]
+        - account: nft
+
   - name: params
     config:
       "@type": cosmos.params.module.v1.Module

@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"google.golang.org/grpc"
 
 	runtimev1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/app/runtime/v1alpha1"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -45,7 +45,7 @@ type App struct {
 	endBlockers         []func(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 	baseAppOptions      []BaseAppOption
 	txHandler           tx.Handler
-	msgServiceRegistrar grpc.Server
+	msgServiceRegistrar grpc.ServiceRegistrar
 }
 
 // RegisterModules registers the provided modules with the module manager and

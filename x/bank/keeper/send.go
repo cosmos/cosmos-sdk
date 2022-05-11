@@ -23,6 +23,10 @@ type SendKeeper interface {
 	GetParams(ctx sdk.Context) types.Params
 	SetParams(ctx sdk.Context, params types.Params)
 
+	IsSendEnabled(ctx sdk.Context, denom string) bool
+	SetSendEnabled(ctx sdk.Context, denom string, value bool)
+	DeleteSendEnabled(ctx sdk.Context, denom string)
+
 	IsSendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool
 	IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
 
@@ -307,7 +311,7 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 func (k BaseSendKeeper) IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error {
 	for _, coin := range coins {
 		if !k.IsSendEnabledCoin(ctx, coin) {
-			return sdkerrors.Wrapf(types.ErrSendDisabled, "%s transfers are currently disabled", coin.Denom)
+			return types.ErrSendDisabled.Wrapf("%s transfers are currently disabled", coin.Denom)
 		}
 	}
 	return nil
@@ -315,11 +319,58 @@ func (k BaseSendKeeper) IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) e
 
 // IsSendEnabledCoin returns the current SendEnabled status of the provided coin's denom
 func (k BaseSendKeeper) IsSendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool {
-	return k.GetParams(ctx).SendEnabledDenom(coin.Denom)
+	return k.IsSendEnabled(ctx, coin.Denom)
 }
 
 // BlockedAddr checks if a given address is restricted from
 // receiving funds.
 func (k BaseSendKeeper) BlockedAddr(addr sdk.AccAddress) bool {
 	return k.blockedAddrs[addr.String()]
+}
+
+// IsSendEnabled returns the current SendEnabled status of the provided denom.
+func (k BaseSendKeeper) IsSendEnabled(ctx sdk.Context, denom string) bool {
+	sendEnabled, found := k.getSendEnabled(ctx, denom)
+	if found {
+		return sendEnabled
+	}
+	return k.GetParams(ctx).DefaultSendEnabled
+}
+
+// getSendEnabled returns whether send is enabled and whether that flag was set for a denom.
+//
+// Example usage:
+//    sendEnabled, found := getSendEnabled(ctx, "atom")
+//    if !found {
+//        sendEnabled = DefaultSendEnabled
+//    }
+func (k BaseSendKeeper) getSendEnabled(ctx sdk.Context, denom string) (bool, bool) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.CreateSendEnabledKey(denom)
+	if !store.Has(key) {
+		return false, false
+
+	}
+	v := store.Get(key)
+	if len(v) == 0 {
+		return false, false
+	}
+	return v[0] == types.TrueB, true
+}
+
+// SetSendEnabled sets the SendEnabled flag for a denom to the provided value.
+func (k BaseSendKeeper) SetSendEnabled(ctx sdk.Context, denom string, value bool) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.CreateSendEnabledKey(denom)
+	val := types.TrueB
+	if !value {
+		val = types.FalseB
+	}
+	store.Set(key, []byte{val})
+}
+
+// DeleteSendEnabled deletes a SendEnabled flag for a denom.
+func (k BaseSendKeeper) DeleteSendEnabled(ctx sdk.Context, denom string) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.CreateSendEnabledKey(denom))
 }

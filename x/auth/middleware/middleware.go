@@ -73,6 +73,7 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 
 	return ComposeMiddlewares(
 		NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
+
 		// Creates a new MultiStore branch, discards downstream writes if the downstream returns error.
 		// This block of middlewares correspond to what was called "antehandlers" before.
 		WithBranchedStore,

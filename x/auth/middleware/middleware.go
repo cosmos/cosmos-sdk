@@ -71,12 +71,15 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "sign mode handler is required for middlewares")
 	}
 
+	beginAnteBranch, endAnteBranch := WithBranchAnte()
+	beginRunMsgsBranch, endRunMsgsBranch := WithBranchRunMsgs()
+
 	return ComposeMiddlewares(
 		NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
 
 		// Creates a new MultiStore branch, discards downstream writes if the downstream returns error.
 		// This block of middlewares correspond to what was called "antehandlers" before.
-		WithBranchedStore,
+		beginAnteBranch,
 		NewTxDecoderMiddleware(options.TxDecoder),
 		// Set a new GasMeter on sdk.Context.
 		//
@@ -106,15 +109,17 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		SigGasConsumeMiddleware(options.AccountKeeper, options.SigGasConsumer),
 		SigVerificationMiddleware(options.AccountKeeper, options.SignModeHandler),
 		IncrementSequenceMiddleware(options.AccountKeeper),
+		endAnteBranch,
 
 		// Creates a new MultiStore branch, discards downstream writes if the downstream returns error.
 		// These kinds of middlewares should be put under this:
 		// - Could return error after messages executed succesfully.
 		// - Storage writes should be discarded together when runMsg failed.
-		WithBranchedStore,
+		beginRunMsgsBranch,
 		// Consume block gas. All middlewares whose gas consumption after their `next` handler
 		// should be accounted for, should go below this middleware.
 		ConsumeBlockGasMiddleware,
 		NewTipMiddleware(options.BankKeeper),
+		endRunMsgsBranch,
 	), nil
 }

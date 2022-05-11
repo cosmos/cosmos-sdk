@@ -67,16 +67,21 @@ func (s *MWTestSuite) TestBranchStore() {
 				return tx.Response{}, nil
 			}}
 
+			beginAnteBranch, endAnteBranch := middleware.WithBranchAnte()
+			beginRunMsgsBranch, endRunMsgsBranch := middleware.WithBranchRunMsgs()
+
 			txHandler := middleware.ComposeMiddlewares(
 				testMsgTxHandler,
-				middleware.WithBranchedStore,
+				beginAnteBranch,
 				middleware.NewTxDecoderMiddleware(s.clientCtx.TxConfig.TxDecoder()),
 				middleware.GasTxMiddleware,
 				middleware.RecoveryTxMiddleware,
 				middleware.DeductFeeMiddleware(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, nil),
 				middleware.IncrementSequenceMiddleware(s.app.AccountKeeper),
-				middleware.WithBranchedStore,
+				endAnteBranch,
+				beginRunMsgsBranch,
 				middleware.ConsumeBlockGasMiddleware,
+				endRunMsgsBranch,
 			)
 
 			// msg and signatures

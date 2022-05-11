@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -1191,4 +1192,8 @@ func (s *MWTestSuite) TestTxReplayFeeDeduction() {
 	// being drained of their funds.
 	balance = s.app.BankKeeper.GetBalance(ctx, accounts[0].acc.GetAddress(), testCoins[0].Denom)
 	s.Require().Equal(sdk.NewInt(9_999_850), balance.Amount)
+}
+
+func TestMWTestSuite2(t *testing.T) {
+	suite.Run(t, new(MWTestSuite))
 }

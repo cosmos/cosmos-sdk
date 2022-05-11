@@ -1,4 +1,4 @@
-# Cosmos SDK Dependency Injection `container` Moduleo
+# Cosmos SDK Dependency Injection `container` Module
 
 ## Overview
 

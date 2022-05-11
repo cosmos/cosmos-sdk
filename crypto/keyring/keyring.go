@@ -118,9 +118,9 @@ type Importer interface {
 	ImportPubKey(uid string, armor string) error
 }
 
-// Migrator is implemented by key stores and enables migration of  keys from amino to proto
+// Migrator is implemented by key stores and enables migration of keys from amino to proto
 type Migrator interface {
-	MigrateAll() (bool, error)
+	MigrateAll() error
 }
 
 // Exporter is implemented by key stores that support export of public and private keys.
@@ -486,7 +486,7 @@ func wrapKeyNotFound(err error, msg string) error {
 }
 
 func (ks keystore) List() ([]*Record, error) {
-	if _, err := ks.MigrateAll(); err != nil {
+	if err := ks.MigrateAll(); err != nil {
 		return nil, err
 	}
 
@@ -583,7 +583,7 @@ func (ks keystore) isSupportedSigningAlgo(algo SignatureAlgo) bool {
 }
 
 func (ks keystore) Key(uid string) (*Record, error) {
-	k, _, err := ks.migrate(uid)
+	k, err := ks.migrate(uid)
 	if err != nil {
 		return nil, err
 	}
@@ -857,70 +857,65 @@ func (ks keystore) writeMultisigKey(name string, pk types.PubKey) (*Record, erro
 	return k, ks.writeRecord(k)
 }
 
-func (ks keystore) MigrateAll() (bool, error) {
+func (ks keystore) MigrateAll() error {
 	keys, err := ks.db.Keys()
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	if len(keys) == 0 {
-		return false, nil
+		return nil
 	}
 
-	var migrated bool
 	for _, key := range keys {
 		if strings.Contains(key, addressSuffix) {
 			continue
 		}
 
-		_, migrated2, err := ks.migrate(key)
+		_, err := ks.migrate(key)
 		if err != nil {
-			fmt.Printf("migrate err: %q", err)
+			fmt.Printf("migrate err: %q\n", err)
 			continue
-		}
-
-		if migrated2 {
-			migrated = true
 		}
 	}
 
-	return migrated, nil
+	return nil
 }
 
 // migrate converts keyring.Item from amino to proto serialization format.
-func (ks keystore) migrate(key string) (*Record, bool, error) {
+func (ks keystore) migrate(key string) (*Record, error) {
 	if !(strings.HasSuffix(key, infoSuffix)) && !(strings.HasPrefix(key, sdk.Bech32PrefixAccAddr)) {
 		key = infoKey(key)
 	}
 	item, err := ks.db.Get(key)
 	if err != nil {
-		return nil, false, wrapKeyNotFound(err, key)
+		return nil, wrapKeyNotFound(err, key)
 	}
 
 	if len(item.Data) == 0 {
-		return nil, false, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
 	}
 
-	// 2.try to deserialize using proto, if good then continue, otherwise try to deserialize using amino
+	// Try to deserialize using proto, if good then continue, otherwise try to deserialize using amino
 	k, err := ks.protoUnmarshalRecord(item.Data)
 	if err == nil {
-		return k, false, nil
+		return k, nil
 	}
 
 	LegacyInfo, err := unMarshalLegacyInfo(item.Data)
 	if err != nil {
-		return nil, false, fmt.Errorf("unable to unmarshal item.Data, err: %w", err)
+		return nil, fmt.Errorf("unable to unmarshal item.Data, err: %w", err)
 	}
 
-	// 4.serialize info using proto
+	// Serialize info using proto
 	k, err = ks.convertFromLegacyInfo(LegacyInfo)
 	if err != nil {
-		return nil, false, fmt.Errorf("convertFromLegacyInfo, err: %w", err)
+		return nil, fmt.Errorf("convertFromLegacyInfo, err: %w", err)
 	}
 
 	serializedRecord, err := ks.cdc.Marshal(k)
 	if err != nil {
-		return nil, false, fmt.Errorf("unable to serialize record, err: %w", err)
+		return nil, fmt.Errorf("unable to serialize record, err: %w", err)
 	}
 
 	item = keyring.Item{
@@ -928,12 +923,15 @@ func (ks keystore) migrate(key string) (*Record, bool, error) {
 		Data:        serializedRecord,
 		Description: "SDK kerying version",
 	}
-	// 5.overwrite the keyring entry with
+
+	// Overwrite the keyring entry with the new proto-encoded key.
 	if err := ks.SetItem(item); err != nil {
-		return nil, false, fmt.Errorf("unable to set keyring.Item, err: %w", err)
+		return nil, fmt.Errorf("unable to set keyring.Item, err: %w", err)
 	}
 
-	return k, true, nil
+	fmt.Printf("Successfully migrated key %s.\n", key)
+
+	return k, nil
 }
 
 func (ks keystore) protoUnmarshalRecord(bz []byte) (*Record, error) {

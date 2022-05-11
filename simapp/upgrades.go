@@ -20,11 +20,11 @@ func (app SimApp) RegisterUpgradeHandlers() {
 		func(ctx sdk.Context, plan upgradetypes.Plan, _ module.VersionMap) (module.VersionMap, error) {
 			// We set fromVersion to 1 to avoid running InitGenesis for modules for
 			// in-store migrations.
-			// 
+			//
 			// If you wish to skip any module migrations, i.e. they were already migrated
 			// in an older version, you can use `modulename.AppModule{}.ConsensusVersion()`
 			// instead of `1` below.
-			// 
+			//
 			// For example:
 			// "auth":	auth.AppModule{}.ConsensusVersion()
 			fromVM := map[string]uint64{
@@ -46,7 +46,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 				"genutil":      1,
 			}
 
-			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+			return app.ModuleManager.RunMigrations(ctx, app.configurator, fromVM)
 		})
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()

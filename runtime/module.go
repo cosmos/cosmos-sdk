@@ -27,23 +27,16 @@ type BaseAppOption func(*baseapp.BaseApp)
 // IsAutoGroupType indicates that this is a container.AutoGroupType.
 func (b BaseAppOption) IsAutoGroupType() {}
 
-type privateState struct {
-	storeKeys         []storetypes.StoreKey
-	interfaceRegistry codectypes.InterfaceRegistry
-	cdc               codec.Codec
-	amino             *codec.LegacyAmino
-	basicManager      module.BasicManager
-}
-
-func (a *privateState) registerStoreKey(key storetypes.StoreKey) {
-	a.storeKeys = append(a.storeKeys, key)
-}
+// appWrapper is used to pass around an instance of app internally between
+// runtime dependency inject providers that is partially constructed (no
+// baseapp yet).
+type appWrapper *App
 
 func init() {
 	appmodule.Register(&runtimev1alpha1.Module{},
 		appmodule.Provide(
-			provideBuilder,
-			provideApp,
+			provideCodecs,
+			provideAppBuilder,
 			provideKVStoreKey,
 			provideTransientStoreKey,
 			provideMemoryStoreKey,
@@ -51,11 +44,11 @@ func init() {
 	)
 }
 
-func provideBuilder(moduleBasics map[string]AppModuleBasicWrapper) (
+func provideCodecs(moduleBasics map[string]AppModuleBasicWrapper) (
 	codectypes.InterfaceRegistry,
 	codec.Codec,
 	*codec.LegacyAmino,
-	*privateState,
+	appWrapper,
 	codec.ProtoCodecMarshaler) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	amino := codec.NewLegacyAmino()
@@ -71,7 +64,7 @@ func provideBuilder(moduleBasics map[string]AppModuleBasicWrapper) (
 	std.RegisterLegacyAminoCodec(amino)
 
 	cdc := codec.NewProtoCodec(interfaceRegistry)
-	builder := &privateState{
+	app := &App{
 		storeKeys:         nil,
 		interfaceRegistry: interfaceRegistry,
 		cdc:               cdc,
@@ -79,54 +72,52 @@ func provideBuilder(moduleBasics map[string]AppModuleBasicWrapper) (
 		basicManager:      basicManager,
 	}
 
-	return interfaceRegistry, cdc, amino, builder, cdc
+	return interfaceRegistry, cdc, amino, app, cdc
 }
 
 type appInputs struct {
 	container.In
 
 	Config              *runtimev1alpha1.Module
-	State               *privateState
+	app                 appWrapper
 	Modules             map[string]AppModuleWrapper
 	BaseAppOptions      []BaseAppOption
 	TxHandler           tx.Handler  `optional:"true"`
 	MsgServiceRegistrar grpc.Server `optional:"true"`
 }
 
-func provideApp(inputs appInputs) *AppBuilder {
+func provideAppBuilder(inputs appInputs) *AppBuilder {
 	mm := &module.Manager{Modules: map[string]module.AppModule{}}
 	for name, wrapper := range inputs.Modules {
 		mm.Modules[name] = wrapper.AppModule
 	}
-	return &AppBuilder{
-		app: &App{
-			BaseApp:             nil,
-			baseAppOptions:      inputs.BaseAppOptions,
-			config:              inputs.Config,
-			privateState:        inputs.State,
-			ModuleManager:       mm,
-			beginBlockers:       nil,
-			endBlockers:         nil,
-			txHandler:           inputs.TxHandler,
-			msgServiceRegistrar: inputs.MsgServiceRegistrar,
-		},
-	}
+	app := inputs.app
+	app.baseAppOptions = inputs.BaseAppOptions
+	app.config = inputs.Config
+	app.ModuleManager = mm
+	app.txHandler = inputs.TxHandler
+	app.msgServiceRegistrar = inputs.MsgServiceRegistrar
+	return &AppBuilder{app: app}
 }
 
-func provideKVStoreKey(key container.ModuleKey, builder *privateState) *storetypes.KVStoreKey {
+func registerStoreKey(wrapper appWrapper, key storetypes.StoreKey) {
+	wrapper.storeKeys = append(wrapper.storeKeys, key)
+}
+
+func provideKVStoreKey(key container.ModuleKey, app appWrapper) *storetypes.KVStoreKey {
 	storeKey := storetypes.NewKVStoreKey(key.Name())
-	builder.registerStoreKey(storeKey)
+	registerStoreKey(app, storeKey)
 	return storeKey
 }
 
-func provideTransientStoreKey(key container.ModuleKey, builder *privateState) *storetypes.TransientStoreKey {
+func provideTransientStoreKey(key container.ModuleKey, app appWrapper) *storetypes.TransientStoreKey {
 	storeKey := storetypes.NewTransientStoreKey(fmt.Sprintf("transient:%s", key.Name()))
-	builder.registerStoreKey(storeKey)
+	registerStoreKey(app, storeKey)
 	return storeKey
 }
 
-func provideMemoryStoreKey(key container.ModuleKey, builder *privateState) *storetypes.MemoryStoreKey {
+func provideMemoryStoreKey(key container.ModuleKey, app appWrapper) *storetypes.MemoryStoreKey {
 	storeKey := storetypes.NewMemoryStoreKey(fmt.Sprintf("memory:%s", key.Name()))
-	builder.registerStoreKey(storeKey)
+	registerStoreKey(app, storeKey)
 	return storeKey
 }

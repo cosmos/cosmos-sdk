@@ -21,7 +21,7 @@ type AppBuilder struct {
 // DefaultGenesis returns a default genesis from the registered
 // AppModuleBasic's.
 func (a *AppBuilder) DefaultGenesis() map[string]json.RawMessage {
-	return a.app.privateState.basicManager.DefaultGenesis(a.app.privateState.cdc)
+	return a.app.basicManager.DefaultGenesis(a.app.cdc)
 }
 
 // Build builds an *App instance.
@@ -32,8 +32,8 @@ func (a *AppBuilder) Build(logger log.Logger, db dbm.DB, traceStore io.Writer, b
 	bApp := baseapp.NewBaseApp(a.app.config.AppName, logger, db, baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
-	bApp.SetInterfaceRegistry(a.app.privateState.interfaceRegistry)
-	bApp.MountStores(a.app.privateState.storeKeys...)
+	bApp.SetInterfaceRegistry(a.app.interfaceRegistry)
+	bApp.MountStores(a.app.storeKeys...)
 	bApp.SetTxHandler(a.app.txHandler)
 
 	a.app.BaseApp = bApp

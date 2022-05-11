@@ -11,9 +11,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -33,7 +36,11 @@ type App struct {
 	*baseapp.BaseApp
 	ModuleManager       *module.Manager
 	config              *runtimev1alpha1.Module
-	privateState        *privateState
+	storeKeys           []storetypes.StoreKey
+	interfaceRegistry   codectypes.InterfaceRegistry
+	cdc                 codec.Codec
+	amino               *codec.LegacyAmino
+	basicManager        module.BasicManager
 	beginBlockers       []func(sdk.Context, abci.RequestBeginBlock)
 	endBlockers         []func(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 	baseAppOptions      []BaseAppOption
@@ -52,13 +59,13 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 		}
 		a.ModuleManager.Modules[name] = appModule
 
-		if _, ok := a.privateState.basicManager[name]; ok {
+		if _, ok := a.basicManager[name]; ok {
 			return fmt.Errorf("AppModuleBasic named %q already exists", name)
 		}
 
-		a.privateState.basicManager[name] = appModule
-		appModule.RegisterInterfaces(a.privateState.interfaceRegistry)
-		appModule.RegisterLegacyAminoCodec(a.privateState.amino)
+		a.basicManager[name] = appModule
+		appModule.RegisterInterfaces(a.interfaceRegistry)
+		appModule.RegisterLegacyAminoCodec(a.amino)
 
 	}
 	return nil
@@ -67,7 +74,7 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 // Load finishes all initialization operations and loads the app.
 func (a *App) Load(loadLatest bool) error {
 	if a.msgServiceRegistrar != nil {
-		configurator := module.NewConfigurator(a.privateState.cdc, a.msgServiceRegistrar, a.GRPCQueryRouter())
+		configurator := module.NewConfigurator(a.cdc, a.msgServiceRegistrar, a.GRPCQueryRouter())
 		a.ModuleManager.RegisterServices(configurator)
 	}
 
@@ -111,7 +118,7 @@ func (a *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.Respo
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
-	return a.ModuleManager.InitGenesis(ctx, a.privateState.cdc, genesisState)
+	return a.ModuleManager.InitGenesis(ctx, a.cdc, genesisState)
 }
 
 // RegisterAPIRoutes registers all application module routes with the provided
@@ -124,12 +131,12 @@ func (a *App) RegisterAPIRoutes(apiSvr *api.Server, _ config.APIConfig) {
 	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register grpc-gateway routes for all modules.
-	a.privateState.basicManager.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+	a.basicManager.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.
 func (a *App) RegisterTxService(clientCtx client.Context) {
-	authtx.RegisterTxService(a.GRPCQueryRouter(), clientCtx, a.Simulate, a.privateState.interfaceRegistry)
+	authtx.RegisterTxService(a.GRPCQueryRouter(), clientCtx, a.Simulate, a.interfaceRegistry)
 }
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
@@ -137,7 +144,7 @@ func (a *App) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(
 		clientCtx,
 		a.GRPCQueryRouter(),
-		a.privateState.interfaceRegistry,
+		a.interfaceRegistry,
 		a.Query,
 	)
 }

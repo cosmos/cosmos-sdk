@@ -361,8 +361,8 @@ func (g GroupMember) ValidateBasic() error {
 // since it cannot be set as part of requests.
 func MemberToMemberRequest(m *Member) MemberRequest {
 	return MemberRequest{
-		Address: m.Address,
-		Weight: m.Weight,
+		Address:  m.Address,
+		Weight:   m.Weight,
 		Metadata: m.Metadata,
 	}
 }

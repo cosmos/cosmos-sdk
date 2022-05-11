@@ -133,6 +133,8 @@ func (c *container) getResolver(typ reflect.Type) (resolver, error) {
 	return c.resolvers[typ], nil
 }
 
+var stringType = reflect.TypeOf("")
+
 func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (interface{}, error) {
 	providerGraphNode, err := c.locationGraphNode(provider.Location, key)
 	if err != nil {
@@ -140,10 +142,15 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 	}
 
 	hasModuleKeyParam := false
+	hasOwnModuleKeyParam := false
 	for _, in := range provider.Inputs {
 		typ := in.Type
 		if typ == moduleKeyType {
 			hasModuleKeyParam = true
+		}
+
+		if typ == ownModuleKeyType {
+			hasOwnModuleKeyParam = true
 		}
 
 		if isAutoGroupType(typ) {
@@ -170,7 +177,7 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 		c.addGraphEdge(typeGraphNode, providerGraphNode)
 	}
 
-	if key != nil || !hasModuleKeyParam {
+	if !hasModuleKeyParam {
 		c.logf("Registering %s", provider.Location.String())
 		c.indentLogger()
 		defer c.dedentLogger()
@@ -214,9 +221,10 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 				}
 
 				vr = &simpleResolver{
-					node:      sp,
-					typ:       typ,
-					graphNode: typeGraphNode,
+					node:        sp,
+					typ:         typ,
+					graphNode:   typeGraphNode,
+					idxInValues: i,
 				}
 				c.resolvers[typ] = vr
 			}
@@ -226,6 +234,11 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 
 		return sp, nil
 	} else {
+		if hasOwnModuleKeyParam {
+			return nil, errors.Errorf("%T and %T must not be declared as dependencies on the same provided",
+				ModuleKey{}, OwnModuleKey{})
+		}
+
 		c.logf("Registering module-scoped provider: %s", provider.Location.String())
 		c.indentLogger()
 		defer c.dedentLogger()
@@ -313,6 +326,15 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 		return reflect.ValueOf(ModuleKey{moduleKey}), nil
 	}
 
+	if in.Type == ownModuleKeyType {
+		if moduleKey == nil {
+			return reflect.Value{}, errors.Errorf("trying to resolve %T for %s but not inside of any module's scope", moduleKey, caller)
+		}
+		c.logf("Providing OwnModuleKey %s", moduleKey.name)
+		markGraphNodeAsUsed(typeGraphNode)
+		return reflect.ValueOf(OwnModuleKey{moduleKey}), nil
+	}
+
 	vr, err := c.getResolver(in.Type)
 	if err != nil {
 		return reflect.Value{}, err
@@ -342,20 +364,44 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 	return res, nil
 }
 
-func (c *container) run(invoker interface{}) error {
-	rctr, err := ExtractProviderDescriptor(invoker)
+func (c *container) build(loc Location, outputs ...interface{}) error {
+	var providerIn []ProviderInput
+	for _, output := range outputs {
+		typ := reflect.TypeOf(output)
+		if typ.Kind() != reflect.Pointer {
+			return fmt.Errorf("output type must be a pointer, %s is invalid", typ)
+		}
+
+		providerIn = append(providerIn, ProviderInput{Type: typ.Elem()})
+	}
+
+	desc := ProviderDescriptor{
+		Inputs:  providerIn,
+		Outputs: nil,
+		Fn: func(values []reflect.Value) ([]reflect.Value, error) {
+			if len(values) != len(outputs) {
+				return nil, fmt.Errorf("internal error, unexpected number of values")
+			}
+
+			for i, output := range outputs {
+				val := reflect.ValueOf(output)
+				val.Elem().Set(values[i])
+			}
+
+			return nil, nil
+		},
+		Location: loc,
+	}
+
+	desc, err := expandStructArgsProvider(desc)
 	if err != nil {
 		return err
 	}
 
-	if len(rctr.Outputs) > 0 {
-		return errors.Errorf("invoker function cannot have return values other than error: %s", rctr.Location)
-	}
-
-	c.logf("Registering invoker")
+	c.logf("Registering outputs")
 	c.indentLogger()
 
-	node, err := c.addNode(&rctr, nil)
+	node, err := c.addNode(&desc, nil)
 	if err != nil {
 		return err
 	}

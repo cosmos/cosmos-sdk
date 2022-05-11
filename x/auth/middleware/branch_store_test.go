@@ -79,6 +79,7 @@ func (s *MWTestSuite) TestBranchStore() {
 				middleware.DeductFeeMiddleware(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, nil),
 				middleware.IncrementSequenceMiddleware(s.app.AccountKeeper),
 				endAnteBranch,
+
 				beginRunMsgsBranch,
 				middleware.ConsumeBlockGasMiddleware,
 				endRunMsgsBranch,

@@ -425,9 +425,9 @@ func (rs *Store) Commit() types.CommitID {
 	}
 
 	rs.mx.RLock()
-	hash, keys := rs.lastCommitInfo.Hash()
 	defer rs.mx.RUnlock()
-	rs.logger.Info("calculated commit hash", "height", version, "commit_hash", fmt.Sprintf("%X", hash), "keys", keys)
+	hash, keys := rs.lastCommitInfo.Hash()
+	rs.logger.Debug("calculated commit hash", "height", version, "commit_hash", fmt.Sprintf("%X", hash), "keys", keys)
 
 	return types.CommitID{
 		Version: version,
@@ -986,7 +986,7 @@ func (rs *Store) commitStores(version int64, storeMap map[types.StoreKey]types.C
 
 	for key, store := range storeMap {
 		commitID := store.Commit()
-		rs.logger.Info("committed KVStore", "height", commitID.Version, "key", key.Name(), "commit_store_hash", fmt.Sprintf("%X", commitID.Hash))
+		rs.logger.Debug("committed KVStore", "height", commitID.Version, "key", key.Name(), "commit_store_hash", fmt.Sprintf("%X", commitID.Hash))
 
 		if store.GetStoreType() == types.StoreTypeTransient {
 			continue

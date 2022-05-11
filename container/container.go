@@ -420,4 +420,5 @@ func markGraphNodeAsUsed(node *graphviz.Node) {
 
 func markGraphNodeAsFailed(node *graphviz.Node) {
 	node.SetColor("red")
+	node.SetFontColor("red")
 }

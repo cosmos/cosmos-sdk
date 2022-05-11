@@ -25,7 +25,10 @@ func StdoutLogger() DebugOption {
 // Visualizer creates an option which provides a visualizer function which
 // will receive a rendering of the container in the Graphiz DOT format
 // whenever the container finishes building or fails due to an error. The
-// graph is color-coded to aid debugging.
+// graph is color-coded to aid debugging with black representing success,
+// red representing an error, and gray representing unused types or functions.
+// Graph rendering should be deterministic for a given version of the container
+// module and container options so that graphs can be used in tests.
 func Visualizer(visualizer func(dotGraph string)) DebugOption {
 	return debugOption(func(c *debugConfig) error {
 		c.addFuncVisualizer(visualizer)

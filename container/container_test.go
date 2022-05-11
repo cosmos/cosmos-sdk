@@ -542,7 +542,7 @@ func TestStructArgs(t *testing.T) {
 	))
 }
 
-func TestLogging(t *testing.T) {
+func TestDebugOptions(t *testing.T) {
 	var logOut string
 	var dotGraph string
 
@@ -557,7 +557,6 @@ func TestLogging(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Remove(graphfile.Name())
 
-	var b KeeperB
 	require.NoError(t, container.BuildDebug(
 		container.DebugOptions(
 			container.Logger(func(s string) {
@@ -570,22 +569,44 @@ func TestLogging(t *testing.T) {
 			container.FileVisualizer(graphfile.Name()),
 			container.StdoutLogger(),
 		),
-		scenarioConfig,
-		&b,
+		container.Options(),
 	))
 
-	golden.Assert(t, dotGraph, "example.dot")
+	require.Contains(t, logOut, "digraph")
+	require.Contains(t, dotGraph, "digraph")
 
-	//require.Contains(t, logOut, "digraph")
-	//require.Contains(t, dotGraph, "digraph")
-	//
-	//outfileContents, err := os.ReadFile(outfile.Name())
-	//require.NoError(t, err)
-	//require.Contains(t, string(outfileContents), "digraph")
-	//
-	//graphfileContents, err := os.ReadFile(graphfile.Name())
-	//require.NoError(t, err)
-	//require.Contains(t, string(graphfileContents), "digraph")
+	outfileContents, err := os.ReadFile(outfile.Name())
+	require.NoError(t, err)
+	require.Contains(t, string(outfileContents), "digraph")
+
+	graphfileContents, err := os.ReadFile(graphfile.Name())
+	require.NoError(t, err)
+	require.Contains(t, string(graphfileContents), "digraph")
+}
+
+func TestGraphAndLogOutput(t *testing.T) {
+	var logOut, graphOut string
+	var b KeeperB
+	debugOpts := container.DebugOptions(
+		container.Logger(func(s string) {
+			logOut += s + "\n"
+		}),
+		container.Visualizer(func(dotGraph string) {
+			graphOut = dotGraph
+		}))
+	require.NoError(t, container.BuildDebug(debugOpts, scenarioConfig, &b))
+	golden.Assert(t, logOut, "example.log")
+	golden.Assert(t, graphOut, "example.dot")
+
+	logOut = ""
+	badConfig := container.Options(
+		container.ProvideInModule("runtime", ProvideKVStoreKey),
+		container.ProvideInModule("a", wrapMethod0(ModuleA{})),
+		container.ProvideInModule("b", wrapMethod0(ModuleB{})),
+	)
+	require.Error(t, container.BuildDebug(debugOpts, badConfig, &b))
+	golden.Assert(t, logOut, "example_error.log")
+	golden.Assert(t, graphOut, "example_error.dot")
 }
 
 func TestConditionalDebugging(t *testing.T) {

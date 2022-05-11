@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+
+	"github.com/cosmos/cosmos-sdk/container/internal/util"
 )
 
 // Graph represents a graphviz digraph.
@@ -115,18 +117,20 @@ func (g *Graph) render(w io.Writer, indent string) error {
 			}
 		}
 
-		for _, subgraph := range g.subgraphs {
-			err := subgraph.render(w, subIndent+"  ")
-			if err != nil {
-				return err
-			}
+		// we do map iteration in sorted order so that outputs are stable and
+		// can be used in tests
+		err := util.IterateMapOrdered(g.subgraphs, func(_ string, subgraph *Graph) error {
+			return subgraph.render(w, subIndent+"  ")
+		})
+		if err != nil {
+			return err
 		}
 
-		for _, node := range g.myNodes {
-			err := node.render(w, subIndent)
-			if err != nil {
-				return err
-			}
+		err = util.IterateMapOrdered(g.myNodes, func(_ string, node *Node) error {
+			return node.render(w, subIndent)
+		})
+		if err != nil {
+			return err
 		}
 
 		for _, edge := range g.edges {

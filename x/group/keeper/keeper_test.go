@@ -2829,10 +2829,7 @@ func (s *TestSuite) TestLeaveGroup() {
 	}
 }
 
-func submitProposal(
-	ctx context.Context, s *TestSuite, msgs []sdk.Msg,
-	proposers []string,
-) uint64 {
+func submitProposal(ctx context.Context, s *TestSuite, msgs []sdk.Msg, proposers []string) uint64 {
 	proposalReq := &group.MsgSubmitProposal{
 		GroupPolicyAddress: s.groupPolicyAddr.String(),
 		Proposers:          proposers,

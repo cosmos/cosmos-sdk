@@ -10,9 +10,7 @@ import (
 // Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054, https://github.com/cosmos/cosmos-sdk/discussions/9072
 const gasCostPerIteration = uint64(10)
 
-var (
-	_ authz.Authorization = &StakeAuthorization{}
-)
+var _ authz.Authorization = &StakeAuthorization{}
 
 // NewStakeAuthorization creates a new StakeAuthorization object.
 func NewStakeAuthorization(allowed []sdk.ValAddress, denied []sdk.ValAddress, authzType AuthorizationType, amount *sdk.Coin) (*StakeAuthorization, error) {

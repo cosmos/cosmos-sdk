@@ -504,10 +504,7 @@ func TestEndBlockerTallying(t *testing.T) {
 	}
 }
 
-func submitProposal(
-	app *simapp.SimApp, ctx context.Context, msgs []sdk.Msg,
-	proposers []string, groupPolicyAddr sdk.AccAddress,
-) (uint64, error) {
+func submitProposal(app *simapp.SimApp, ctx context.Context, msgs []sdk.Msg, proposers []string, groupPolicyAddr sdk.AccAddress) (uint64, error) {
 	proposalReq := &group.MsgSubmitProposal{
 		GroupPolicyAddress: groupPolicyAddr.String(),
 		Proposers:          proposers,

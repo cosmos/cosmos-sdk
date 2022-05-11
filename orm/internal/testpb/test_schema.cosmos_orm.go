@@ -299,7 +299,7 @@ func (this exampleAutoIncrementTableTable) Delete(ctx context.Context, exampleAu
 }
 
 func (this exampleAutoIncrementTableTable) InsertReturningId(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) (uint64, error) {
-	return this.table.InsertReturningID(ctx, exampleAutoIncrementTable)
+	return this.table.InsertReturningPKey(ctx, exampleAutoIncrementTable)
 }
 
 func (this exampleAutoIncrementTableTable) Has(ctx context.Context, id uint64) (found bool, err error) {
@@ -481,7 +481,7 @@ func (this exampleTimestampTable) Delete(ctx context.Context, exampleTimestamp *
 }
 
 func (this exampleTimestampTable) InsertReturningId(ctx context.Context, exampleTimestamp *ExampleTimestamp) (uint64, error) {
-	return this.table.InsertReturningID(ctx, exampleTimestamp)
+	return this.table.InsertReturningPKey(ctx, exampleTimestamp)
 }
 
 func (this exampleTimestampTable) Has(ctx context.Context, id uint64) (found bool, err error) {
@@ -750,7 +750,7 @@ func (this exampleAutoIncFieldNameTable) Delete(ctx context.Context, exampleAuto
 }
 
 func (this exampleAutoIncFieldNameTable) InsertReturningFoo(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) (uint64, error) {
-	return this.table.InsertReturningID(ctx, exampleAutoIncFieldName)
+	return this.table.InsertReturningPKey(ctx, exampleAutoIncFieldName)
 }
 
 func (this exampleAutoIncFieldNameTable) Has(ctx context.Context, foo uint64) (found bool, err error) {

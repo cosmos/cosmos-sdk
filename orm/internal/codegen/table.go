@@ -181,7 +181,7 @@ func (t tableGen) genTableImpl() {
 
 	if t.table.PrimaryKey.AutoIncrement {
 		t.P(receiver, "InsertReturning", t.fieldsToCamelCase(t.table.PrimaryKey.Fields), "(ctx ", contextPkg.Ident("Context"), ", ", varName, " *", varTypeName, ") (uint64, error) {")
-		t.P("return ", receiverVar, ".table.InsertReturningID(ctx, ", varName, ")")
+		t.P("return ", receiverVar, ".table.InsertReturningPKey(ctx, ", varName, ")")
 		t.P("}")
 		t.P()
 	}

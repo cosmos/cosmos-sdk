@@ -71,6 +71,14 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "sign mode handler is required for middlewares")
 	}
 
+	// Antehandlers have been migrated to middlewares as part of ADR-045.
+	// However, we still call "antehandlers" the middlewares that are run before
+	// the runMsgs tx.Handler.
+	//
+	// After successful antehandlers, we actually do a state write. This
+	// `WithAnteBranch` middleware denotes where to start the store branching
+	// (i.e. before the antehanndler block) and where to write back the branch
+	// to the main store (i.e. right after the antehandler block, before runMsgs).
 	beginAnteBranch, endAnteBranch := WithAnteBranch()
 
 	return ComposeMiddlewares(
@@ -78,7 +86,6 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 
 		// Creates a new MultiStore branch, discards downstream writes if the downstream returns error.
 		// This block of middlewares correspond to what was called "antehandlers" before.
-
 		beginAnteBranch,
 		NewTxDecoderMiddleware(options.TxDecoder),
 		// Set a new GasMeter on sdk.Context.
@@ -114,7 +121,8 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		// Creates a new MultiStore branch, discards downstream writes if the downstream returns error.
 		// These kinds of middlewares should be put under this:
 		// - Could return error after messages executed succesfully.
-		// - Storage writes below this middleware should ALWAYS be discarded together when middleware fails.
+		// - Storage writes below this middleware should ALWAYS be discarded
+		//   together when middleware fails, but those above can have state writes.
 		WithRunMsgsBranch,
 		// Consume block gas. All middlewares whose gas consumption after their `next` handler
 		// should be accounted for, should go below this middleware.

@@ -100,7 +100,7 @@ func NewTestnetCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBala
 	return testnetCmd
 }
 
-// get cmd to initialize all files for tendermint testnet and application
+// testnetInitFilesCmd returns a cmd to initialize all files for tendermint testnet and application
 func testnetInitFilesCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init-files",
@@ -150,7 +150,7 @@ Example:
 	return cmd
 }
 
-// get cmd to start multi validator in-process testnet
+// testnetStartCmd returns a cmd to start multi validator in-process testnet
 func testnetStartCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",

@@ -1,9 +1,7 @@
 <!--
-order: false
-parent:
-  order: 5
+order: 1
 -->
 
-# IBC
+# IBC documentation
 
-This documentation has moved to the official [`ibc-go` documentation](https://ibc.cosmos.network).
+See [`ibc-go` documentation](https://ibc.cosmos.network).

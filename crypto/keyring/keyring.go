@@ -883,10 +883,19 @@ func (ks keystore) MigrateAll() error {
 }
 
 // migrate converts keyring.Item from amino to proto serialization format.
+//
+// It operates as follows:
+// 1. retrieve any key
+// 2. try to decode it using protobuf
+// 3. if ok, then return the key, do nothing else
+// 4. if it fails, then try to decide it using amino
+// 5. convert from the amino struct to the protobuf struct
+// 6. write the proto-encoded key back to the keyring
 func (ks keystore) migrate(key string) (*Record, error) {
 	if !(strings.HasSuffix(key, infoSuffix)) && !(strings.HasPrefix(key, sdk.Bech32PrefixAccAddr)) {
 		key = infoKey(key)
 	}
+	// 1. get the key.
 	item, err := ks.db.Get(key)
 	if err != nil {
 		return nil, wrapKeyNotFound(err, key)
@@ -896,19 +905,20 @@ func (ks keystore) migrate(key string) (*Record, error) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
 	}
 
-	// Try to deserialize using proto, if good then continue, otherwise try to deserialize using amino
+	// 2. Try to deserialize using proto, if good then continue, otherwise try to deserialize using amino
 	k, err := ks.protoUnmarshalRecord(item.Data)
 	if err == nil {
 		return k, nil
 	}
 
-	LegacyInfo, err := unMarshalLegacyInfo(item.Data)
+	// 4. Try to decode with amino
+	legacyInfo, err := unMarshalLegacyInfo(item.Data)
 	if err != nil {
 		return nil, fmt.Errorf("unable to unmarshal item.Data, err: %w", err)
 	}
 
-	// Serialize info using proto
-	k, err = ks.convertFromLegacyInfo(LegacyInfo)
+	// 5. Convert and serialize info using proto
+	k, err = ks.convertFromLegacyInfo(legacyInfo)
 	if err != nil {
 		return nil, fmt.Errorf("convertFromLegacyInfo, err: %w", err)
 	}
@@ -919,12 +929,11 @@ func (ks keystore) migrate(key string) (*Record, error) {
 	}
 
 	item = keyring.Item{
-		Key:         key,
-		Data:        serializedRecord,
-		Description: "SDK kerying version",
+		Key:  key,
+		Data: serializedRecord,
 	}
 
-	// Overwrite the keyring entry with the new proto-encoded key.
+	// 6. Overwrite the keyring entry with the new proto-encoded key.
 	if err := ks.SetItem(item); err != nil {
 		return nil, fmt.Errorf("unable to set keyring.Item, err: %w", err)
 	}

@@ -4,6 +4,6 @@ parent:
   order: 7
 -->
 
-# IBC documentation
+# IBC
 
-See the [`ibc-go` documentation](https://ibc.cosmos.network).
+See the office [`ibc-go` documentation](https://ibc.cosmos.network).

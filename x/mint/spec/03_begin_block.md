@@ -7,7 +7,19 @@ order: 3
 Minting parameters are recalculated and inflation
 paid at the beginning of each block.
 
-## NextInflationRate
+## Inflation rate calculation
+
+Inflation rate is calculated using an "inflation calculation function" that's
+passed to the `NewAppModule` function. If no function is passed, then the SDK's
+default inflation function will be used (`NextInflationRate`). In case a custom
+inflation calculation logic is needed, this can be achieved by defining and
+passing a function that matches `InflationCalculationFn`'s signature.
+
+```go
+type InflationCalculationFn func(ctx sdk.Context, minter Minter, params Params, bondedRatio sdk.Dec) sdk.Dec
+```
+
+### NextInflationRate
 
 The target annual inflation rate is recalculated each block.
 The inflation is also subject to a rate change (positive or negative)

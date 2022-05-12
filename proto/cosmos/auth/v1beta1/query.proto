@@ -30,6 +30,8 @@ service Query {
   }
 
   // ModuleAccounts returns all the existing module accounts.
+  //
+  // Since: cosmos-sdk 0.46
   rpc ModuleAccounts(QueryModuleAccountsRequest) returns (QueryModuleAccountsResponse) {
     option (google.api.http).get = "/cosmos/auth/v1beta1/module_accounts";
   }
@@ -85,6 +87,8 @@ message QueryAccountRequest {
 }
 
 // QueryModuleAccountsRequest is the request type for the Query/ModuleAccounts RPC method.
+//
+// Since: cosmos-sdk 0.46
 message QueryModuleAccountsRequest {}
 
 // QueryParamsResponse is the response type for the Query/Params RPC method.
@@ -103,6 +107,8 @@ message QueryAccountResponse {
 message QueryParamsRequest {}
 
 // QueryModuleAccountsResponse is the response type for the Query/ModuleAccounts RPC method.
+//
+// Since: cosmos-sdk 0.46
 message QueryModuleAccountsResponse {
   repeated google.protobuf.Any accounts = 1 [(cosmos_proto.accepts_interface) = "ModuleAccountI"];
 }

@@ -164,7 +164,7 @@ A redelegation object is created every time a redelegation occurs. To prevent
 
 All queues objects are sorted by timestamp. The time used within any queue is
 first rounded to the nearest nanosecond then sorted. The sortable time format
-used is a slight modification of the RFC3339Nano and uses the the format string
+used is a slight modification of the RFC3339Nano and uses the format string
 `"2006-01-02T15:04:05.000000000"`. Notably this format:
 
 * right pads all zeros

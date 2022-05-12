@@ -76,8 +76,7 @@ func gasContext(ctx sdk.Context, tx sdk.Tx, isSimulate bool) (sdk.Context, error
 	// all transactions must implement GasTx
 	gasTx, ok := tx.(GasTx)
 	if !ok {
-		// Set a gas meter with limit 0 as to prevent an infinite gas meter attack
-		// during runTx.
+		// Set a gas meter with limit 0 as to prevent an infinite gas meter attack execution.
 		newCtx := setGasMeter(ctx, 0, isSimulate)
 		return newCtx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be GasTx")
 	}

@@ -199,14 +199,14 @@ func (k Keeper) DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk
 		return sdkerrors.Wrapf(authz.ErrNoAuthorizationFound, "failed to delete grant with key %s", string(skey))
 	}
 
-	store.Delete(skey)
-
 	if grant.Expiration != nil {
 		err := k.removeFromGrantQueue(ctx, skey, granter, grantee, *grant.Expiration)
 		if err != nil {
 			return err
 		}
 	}
+
+	store.Delete(skey)
 
 	return ctx.EventManager().EmitTypedEvent(&authz.EventRevoke{
 		MsgTypeUrl: msgType,

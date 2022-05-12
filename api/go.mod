@@ -1,4 +1,4 @@
-module github.com/cosmos/cosmos-sdk/api
+module cosmossdk.io/api
 
 go 1.18
 

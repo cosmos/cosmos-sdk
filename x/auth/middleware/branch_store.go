@@ -8,7 +8,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-// WithAnteBranch creates a store branch (cache store) for Antehandlers.
+// WithAnteBranch creates a store branch (cache-wrapped multistore) for Antehandlers.
 //
 // Usage:
 // beginBranch, endBranch := WithAnteBranch()

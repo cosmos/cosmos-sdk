@@ -498,7 +498,7 @@ func (ks keystore) List() ([]*Record, error) {
 	var res []*Record //nolint:prealloc
 	sort.Strings(keys)
 	for _, key := range keys {
-		if strings.Contains(key, addressSuffix) {
+		if strings.HasSuffix(key, addressSuffix) {
 			continue
 		}
 
@@ -764,7 +764,11 @@ func (ks keystore) writeLocalKey(name string, privKey types.PrivKey) (*Record, e
 	return k, ks.writeRecord(k)
 }
 
-// writeRecord persists a keyring item in keystore if it does not exist there
+// writeRecord persists a keyring item in keystore if it does not exist there.
+// For each key record, we actually write 2 items:
+// - one with key `<uid>.info`, with Data = the serialized protobuf key
+// - another with key `<addr_as_hex>.address`, with Data = the uid (i.e. the key name)
+// This is to be able to query keys both by name and by address.
 func (ks keystore) writeRecord(k *Record) error {
 	addr, err := k.GetAddress()
 	if err != nil {
@@ -783,7 +787,7 @@ func (ks keystore) writeRecord(k *Record) error {
 
 	serializedRecord, err := ks.cdc.Marshal(k)
 	if err != nil {
-		return fmt.Errorf("unable to serialize record, err - %s", err)
+		return fmt.Errorf("unable to serialize record; %+w", err)
 	}
 
 	item := keyring.Item{
@@ -868,13 +872,15 @@ func (ks keystore) MigrateAll() error {
 	}
 
 	for _, key := range keys {
-		if strings.Contains(key, addressSuffix) {
+		// The keyring items with `.address` suffix only holds as Data the
+		// key name uid, so there's nothing to migrate.
+		if strings.HasSuffix(key, addressSuffix) {
 			continue
 		}
 
 		_, err := ks.migrate(key)
 		if err != nil {
-			fmt.Printf("migrate err: %q\n", err)
+			fmt.Printf("migrate err for key %s: %q\n", key, err)
 			continue
 		}
 	}
@@ -883,6 +889,8 @@ func (ks keystore) MigrateAll() error {
 }
 
 // migrate converts keyring.Item from amino to proto serialization format.
+// the `key` argument can be a key uid (e.g. "alice") or with the '.info'
+// suffix (e.g. "alice.info").
 //
 // It operates as follows:
 // 1. retrieve any key
@@ -892,9 +900,10 @@ func (ks keystore) MigrateAll() error {
 // 5. convert from the amino struct to the protobuf struct
 // 6. write the proto-encoded key back to the keyring
 func (ks keystore) migrate(key string) (*Record, error) {
-	if !(strings.HasSuffix(key, infoSuffix)) && !(strings.HasPrefix(key, sdk.Bech32PrefixAccAddr)) {
+	if !strings.HasSuffix(key, infoSuffix) {
 		key = infoKey(key)
 	}
+
 	// 1. get the key.
 	item, err := ks.db.Get(key)
 	if err != nil {

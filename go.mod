@@ -3,6 +3,7 @@ go 1.18
 module github.com/cosmos/cosmos-sdk
 
 require (
+	cosmossdk.io/api v0.1.0-alpha8
 	cosmossdk.io/errors v1.0.0-beta.6
 	cosmossdk.io/math v1.0.0-beta.2
 	github.com/99designs/keyring v1.1.6
@@ -58,7 +59,6 @@ require (
 	google.golang.org/protobuf v1.28.0
 	pgregory.net/rapid v0.4.7
 	sigs.k8s.io/yaml v1.3.0
-	cosmossdk.io/api v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -151,7 +151,6 @@ require (
 )
 
 replace (
-	cosmossdk.io/api => ./api
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
 	github.com/cosmos/cosmos-sdk/db => ./db
 

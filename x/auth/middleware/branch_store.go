@@ -44,24 +44,28 @@ type anteBranchBegin struct {
 // CheckTx implements tx.Handler.CheckTx method.
 // Do nothing during CheckTx.
 func (sh anteBranchBegin) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
-	return sh.next.CheckTx(ctx, req, checkReq)
+	newCtx := anteCreateBranch(ctx, sh.originalMSKey, sh.cacheMSKey, req)
+
+	return sh.next.CheckTx(newCtx, req, checkReq)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx method.
 func (sh anteBranchBegin) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	return anteCreateBranch(ctx, sh.originalMSKey, sh.cacheMSKey, req, sh.next.DeliverTx)
+	newCtx := anteCreateBranch(ctx, sh.originalMSKey, sh.cacheMSKey, req)
+
+	return sh.next.DeliverTx(newCtx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
 func (sh anteBranchBegin) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	return anteCreateBranch(ctx, sh.originalMSKey, sh.cacheMSKey, req, sh.next.SimulateTx)
-}
+	newCtx := anteCreateBranch(ctx, sh.originalMSKey, sh.cacheMSKey, req)
 
-type nextFn func(ctx context.Context, req tx.Request) (tx.Response, error)
+	return sh.next.SimulateTx(newCtx, req)
+}
 
 // anteCreateBranch creates a new Context based on the existing Context with a MultiStore branch
 // in case message processing fails.
-func anteCreateBranch(ctx context.Context, originalMSKey, cacheMSKey sdk.ContextKey, req tx.Request, fn nextFn) (tx.Response, error) {
+func anteCreateBranch(ctx context.Context, originalMSKey, cacheMSKey sdk.ContextKey, req tx.Request) context.Context {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	newSdkCtx, branchedStore := branchStore(sdkCtx, tmtypes.Tx(req.TxBytes))
@@ -71,9 +75,7 @@ func anteCreateBranch(ctx context.Context, originalMSKey, cacheMSKey sdk.Context
 		WithValue(cacheMSKey, branchedStore).
 		WithValue(originalMSKey, sdkCtx.MultiStore())
 
-	newCtx := sdk.WrapSDKContext(newSdkCtx)
-
-	return fn(newCtx, req)
+	return sdk.WrapSDKContext(newSdkCtx)
 }
 
 // branchStore returns a new context based off of the provided context with
@@ -105,22 +107,28 @@ type anteBranchWrite struct {
 // CheckTx implements tx.Handler.CheckTx method.
 // Do nothing during CheckTx.
 func (sh anteBranchWrite) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
-	return sh.next.CheckTx(ctx, req, checkReq)
+	newCtx := anteWrite(ctx, sh.originalMSKey, sh.cacheMSKey)
+
+	return sh.next.CheckTx(newCtx, req, checkReq)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx method.
 func (sh anteBranchWrite) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	return anteWrite(ctx, sh.originalMSKey, sh.cacheMSKey, req, sh.next.DeliverTx)
+	newCtx := anteWrite(ctx, sh.originalMSKey, sh.cacheMSKey)
+
+	return sh.next.DeliverTx(newCtx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
 func (sh anteBranchWrite) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
-	return anteWrite(ctx, sh.originalMSKey, sh.cacheMSKey, req, sh.next.SimulateTx)
+	newCtx := anteWrite(ctx, sh.originalMSKey, sh.cacheMSKey)
+
+	return sh.next.SimulateTx(newCtx, req)
 }
 
 // branchAndRun creates a new Context based on the existing Context with a MultiStore branch
 // in case message processing fails.
-func anteWrite(ctx context.Context, originalMSKey, cacheMSKey sdk.ContextKey, req tx.Request, fn nextFn) (tx.Response, error) {
+func anteWrite(ctx context.Context, originalMSKey, cacheMSKey sdk.ContextKey) context.Context {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	originalStore := sdkCtx.Value(originalMSKey).(sdk.MultiStore)
 	branchedStore := sdkCtx.Value(cacheMSKey).(sdk.CacheMultiStore)
@@ -140,7 +148,7 @@ func anteWrite(ctx context.Context, originalMSKey, cacheMSKey sdk.ContextKey, re
 	// We don't need references to the 2 multistores anymore.
 	sdkCtx = sdkCtx.WithValue(originalMSKey, nil).WithValue(cacheMSKey, nil)
 
-	return fn(sdk.WrapSDKContext(sdkCtx), req)
+	return sdk.WrapSDKContext(sdkCtx)
 }
 
 // WithRunMsgsBranch creates a store branch (cache store) for running Msgs.
@@ -180,6 +188,8 @@ func (sh runMsgsBranch) DeliverTx(ctx context.Context, req tx.Request) (tx.Respo
 func (sh runMsgsBranch) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
 	return branchAndRun(ctx, req, sh.next.SimulateTx)
 }
+
+type nextFn func(ctx context.Context, req tx.Request) (tx.Response, error)
 
 // branchAndRun creates a new Context based on the existing Context with a MultiStore branch
 // in case message processing fails.

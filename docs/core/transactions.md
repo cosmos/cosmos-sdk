@@ -47,7 +47,7 @@ Once signed by all signers, the `body_bytes`, `auth_info_bytes` and `signatures`
 
 #### `SIGN_MODE_LEGACY_AMINO_JSON`
 
-The legacy implemention of the `Tx` interface is the `StdTx` struct from `x/auth`:
+The legacy implementation of the `Tx` interface is the `StdTx` struct from `x/auth`:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/x/auth/legacy/legacytx/stdtx.go#L120-L130
 
@@ -63,7 +63,7 @@ The Cosmos SDK also provides a couple of other sign modes for particular use cas
 
 #### `SIGN_MODE_DIRECT_AUX`
 
-`SIGN_MODE_DIRECT_AUX` is a sign mode released in the Cosmos SDK v0.46 which targets transactions with multiple signers. Whereas `SIGN_MODE_DIRECT` expects each signer to sign over both `TxBody` and `AuthInfo` (which includes all other signers' signer infos, i.e. their account sequence, public key and mode info), `SIGN_MODE_DIRECT_AUX` allows N-1 signers to only sign over `TxBody` and _their own_ signer info. Morover, each auxiliary signer (i.e. a signer using `SIGN_MODE_DIRECT_AUX`) doesn't
+`SIGN_MODE_DIRECT_AUX` is a sign mode released in the Cosmos SDK v0.46 which targets transactions with multiple signers. Whereas `SIGN_MODE_DIRECT` expects each signer to sign over both `TxBody` and `AuthInfo` (which includes all other signers' signer infos, i.e. their account sequence, public key and mode info), `SIGN_MODE_DIRECT_AUX` allows N-1 signers to only sign over `TxBody` and _their own_ signer info. Morever, each auxiliary signer (i.e. a signer using `SIGN_MODE_DIRECT_AUX`) doesn't
 need to sign over the fees:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/proto/cosmos/tx/v1beta1/tx.proto#L67-L93
@@ -142,7 +142,7 @@ Once the transaction bytes are generated, there are currently three ways of broa
 
 #### CLI
 
-Application developers create entrypoints to the application by creating a [command-line interface](../core/cli.md), [gRPC and/or REST interface](../core/grpc_rest.md), typically found in the application's `./cmd` folder. These interfaces allow users to interact with the application through command-line.
+Application developers create entry points to the application by creating a [command-line interface](../core/cli.md), [gRPC and/or REST interface](../core/grpc_rest.md), typically found in the application's `./cmd` folder. These interfaces allow users to interact with the application through command-line.
 
 For the [command-line interface](../building-modules/module-interfaces.md#cli), module developers create subcommands to add as children to the application top-level transaction command `TxCmd`. CLI commands actually bundle all the steps of transaction processing into one simple command: creating messages, generating transactions and broadcasting. For concrete examples, see the [Interacting with a Node](../run-node/interact-node.md) section. An example transaction made using CLI looks like:
 

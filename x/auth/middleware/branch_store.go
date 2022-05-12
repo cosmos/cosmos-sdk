@@ -27,11 +27,14 @@ func WithAnteBranch() (tx.Middleware, tx.Middleware) {
 	originalMSKey := sdk.ContextKey("ante-original-ms")
 	cacheMSKey := sdk.ContextKey("ante-cache-ms")
 
-	return func(h tx.Handler) tx.Handler {
-			return anteBranchBegin{next: h, originalMSKey: originalMSKey, cacheMSKey: cacheMSKey}
-		}, func(h tx.Handler) tx.Handler {
-			return anteBranchWrite{next: h, originalMSKey: originalMSKey, cacheMSKey: cacheMSKey}
-		}
+	beginAnteBranch := func(h tx.Handler) tx.Handler {
+		return anteBranchBegin{next: h, originalMSKey: originalMSKey, cacheMSKey: cacheMSKey}
+	}
+	endAnteBranch := func(h tx.Handler) tx.Handler {
+		return anteBranchWrite{next: h, originalMSKey: originalMSKey, cacheMSKey: cacheMSKey}
+	}
+
+	return beginAnteBranch, endAnteBranch
 }
 
 // anteBranchBegin is the tx.Handler that creates a new branched store.

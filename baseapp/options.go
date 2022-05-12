@@ -205,7 +205,7 @@ func (app *BaseApp) SetSnapshot(snapshotStore *snapshots.Store, opts snapshottyp
 	if app.sealed {
 		panic("SetSnapshot() on sealed BaseApp")
 	}
-	if snapshotStore == nil || opts.Interval == snapshottypes.SnapshotIntervalOff {
+	if snapshotStore == nil {
 		app.snapshotManager = nil
 		return
 	}

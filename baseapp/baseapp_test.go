@@ -2250,10 +2250,11 @@ func TestBaseApp_Init(t *testing.T) {
 	require.NoError(t, err)
 
 	testCases := map[string]struct {
-		bapp             *BaseApp
-		expectedPruning  pruningtypes.PruningOptions
-		expectedSnapshot snapshottypes.SnapshotOptions
-		expectedErr      error
+		bapp                 *BaseApp
+		expectedPruning      pruningtypes.PruningOptions
+		expectedSnapshot     snapshottypes.SnapshotOptions
+		expectedErr          error
+		isSnapshotManagerNil bool
 	}{
 		"snapshot but no pruning": {
 			NewBaseApp(name, logger, db, nil,
@@ -2263,14 +2264,26 @@ func TestBaseApp_Init(t *testing.T) {
 			snapshottypes.NewSnapshotOptions(1500, 2),
 			// if no pruning is set, the default is PruneNothing
 			nil,
+			false,
+		},
+		"nil snapshot store": {
+			NewBaseApp(name, logger, db, nil,
+				SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)),
+				SetSnapshot(nil, snapshottypes.NewSnapshotOptions(1500, 2)),
+			),
+			pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
+			snapshottypes.SnapshotOptions{},
+			nil,
+			true,
 		},
 		"pruning everything only": {
 			NewBaseApp(name, logger, db, nil,
 				SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningEverything)),
 			),
 			pruningtypes.NewPruningOptions(pruningtypes.PruningEverything),
-			snapshottypes.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
+			snapshottypes.SnapshotOptions{},
 			nil,
+			true,
 		},
 		"pruning nothing only": {
 			NewBaseApp(name, logger, db, nil,
@@ -2279,6 +2292,7 @@ func TestBaseApp_Init(t *testing.T) {
 			pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
 			snapshottypes.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
 			nil,
+			true,
 		},
 		"pruning default only": {
 			NewBaseApp(name, logger, db, nil,
@@ -2287,6 +2301,7 @@ func TestBaseApp_Init(t *testing.T) {
 			pruningtypes.NewPruningOptions(pruningtypes.PruningDefault),
 			snapshottypes.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
 			nil,
+			true,
 		},
 		"pruning custom only": {
 			NewBaseApp(name, logger, db, nil,
@@ -2295,6 +2310,7 @@ func TestBaseApp_Init(t *testing.T) {
 			pruningtypes.NewCustomPruningOptions(10, 10),
 			snapshottypes.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
 			nil,
+			true,
 		},
 		"pruning everything and snapshots": {
 			NewBaseApp(name, logger, db, nil,
@@ -2304,6 +2320,7 @@ func TestBaseApp_Init(t *testing.T) {
 			pruningtypes.NewPruningOptions(pruningtypes.PruningEverything),
 			snapshottypes.NewSnapshotOptions(1500, 2),
 			nil,
+			false,
 		},
 		"pruning nothing and snapshots": {
 			NewBaseApp(name, logger, db, nil,
@@ -2313,6 +2330,7 @@ func TestBaseApp_Init(t *testing.T) {
 			pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
 			snapshottypes.NewSnapshotOptions(1500, 2),
 			nil,
+			false,
 		},
 		"pruning default and snapshots": {
 			NewBaseApp(name, logger, db, nil,
@@ -2322,6 +2340,7 @@ func TestBaseApp_Init(t *testing.T) {
 			pruningtypes.NewPruningOptions(pruningtypes.PruningDefault),
 			snapshottypes.NewSnapshotOptions(1500, 2),
 			nil,
+			false,
 		},
 		"pruning custom and snapshots": {
 			NewBaseApp(name, logger, db, nil,
@@ -2331,6 +2350,7 @@ func TestBaseApp_Init(t *testing.T) {
 			pruningtypes.NewCustomPruningOptions(10, 10),
 			snapshottypes.NewSnapshotOptions(1500, 2),
 			nil,
+			false,
 		},
 		"error custom pruning 0 interval": {
 			NewBaseApp(name, logger, db, nil,
@@ -2340,6 +2360,7 @@ func TestBaseApp_Init(t *testing.T) {
 			pruningtypes.NewCustomPruningOptions(10, 0),
 			snapshottypes.NewSnapshotOptions(1500, 2),
 			pruningtypes.ErrPruningIntervalZero,
+			false,
 		},
 		"error custom pruning too small interval": {
 			NewBaseApp(name, logger, db, nil,
@@ -2349,6 +2370,7 @@ func TestBaseApp_Init(t *testing.T) {
 			pruningtypes.NewCustomPruningOptions(10, 9),
 			snapshottypes.NewSnapshotOptions(1500, 2),
 			pruningtypes.ErrPruningIntervalTooSmall,
+			false,
 		},
 		"error custom pruning too small keep recent": {
 			NewBaseApp(name, logger, db, nil,
@@ -2358,15 +2380,17 @@ func TestBaseApp_Init(t *testing.T) {
 			pruningtypes.NewCustomPruningOptions(9, 10),
 			snapshottypes.NewSnapshotOptions(1500, 2),
 			pruningtypes.ErrPruningKeepRecentTooSmall,
+			false,
 		},
-		"snapshot zero interval - manager not set": {
+		"snapshot zero interval - manager is set": {
 			NewBaseApp(name, logger, db, nil,
 				SetPruning(pruningtypes.NewCustomPruningOptions(10, 10)),
 				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(0, 2)),
 			),
 			pruningtypes.NewCustomPruningOptions(10, 10),
-			snapshottypes.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
+			snapshottypes.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 2),
 			nil,
+			false,
 		},
 		"snapshot zero keep recent - allowed": {
 			NewBaseApp(name, logger, db, nil,
@@ -2376,6 +2400,7 @@ func TestBaseApp_Init(t *testing.T) {
 			pruningtypes.NewCustomPruningOptions(10, 10),
 			snapshottypes.NewSnapshotOptions(1500, 0), // 0 snapshot-keep-recent means keep all
 			nil,
+			false,
 		},
 	}
 
@@ -2390,7 +2415,7 @@ func TestBaseApp_Init(t *testing.T) {
 		actualPruning := tc.bapp.cms.GetPruning()
 		require.Equal(t, tc.expectedPruning, actualPruning)
 
-		if tc.expectedSnapshot.Interval == snapshottypes.SnapshotIntervalOff {
+		if tc.isSnapshotManagerNil {
 			require.Nil(t, tc.bapp.snapshotManager)
 			continue
 		}

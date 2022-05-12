@@ -585,27 +585,21 @@ func TestDebugOptions(t *testing.T) {
 }
 
 func TestGraphAndLogOutput(t *testing.T) {
-	var logOut, graphOut string
+	var graphOut string
 	var b KeeperB
 	debugOpts := container.DebugOptions(
-		container.Logger(func(s string) {
-			logOut += s + "\n"
-		}),
 		container.Visualizer(func(dotGraph string) {
 			graphOut = dotGraph
 		}))
 	require.NoError(t, container.BuildDebug(debugOpts, scenarioConfig, &b))
-	golden.Assert(t, logOut, "example.log")
 	golden.Assert(t, graphOut, "example.dot")
 
-	logOut = ""
 	badConfig := container.Options(
 		container.ProvideInModule("runtime", ProvideKVStoreKey),
 		container.ProvideInModule("a", wrapMethod0(ModuleA{})),
 		container.ProvideInModule("b", wrapMethod0(ModuleB{})),
 	)
 	require.Error(t, container.BuildDebug(debugOpts, badConfig, &b))
-	golden.Assert(t, logOut, "example_error.log")
 	golden.Assert(t, graphOut, "example_error.dot")
 }
 

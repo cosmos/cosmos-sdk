@@ -3,6 +3,8 @@ package graphviz
 import (
 	"fmt"
 	"strings"
+
+	"github.com/cosmos/cosmos-sdk/container/internal/util"
 )
 
 // Attributes represents a graphviz attributes map.
@@ -51,8 +53,8 @@ func (a *Attributes) String() string {
 		return ""
 	}
 	var attrStrs []string
-	for k, v := range a.attrs {
-		attrStrs = append(attrStrs, fmt.Sprintf("%s=%q", k, v))
+	for _, k := range util.OrderedMapKeys(a.attrs) {
+		attrStrs = append(attrStrs, fmt.Sprintf("%s=%q", k, a.attrs[k]))
 	}
 	return fmt.Sprintf("[%s]", strings.Join(attrStrs, ", "))
 }

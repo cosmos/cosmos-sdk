@@ -10,7 +10,7 @@ TODO
 
 ## Debugging
 
-Issues with resolving dependencies in the container can be done with [logs](./testdata/example.log)
+Issues with resolving dependencies in the container can be done with logs
 and [Graphviz](https://graphviz.org) renderings of the container tree. By default, whenever there is an error, logs will
 be printed to stderr and a rendering of the dependency graph in Graphviz DOT format will be saved to
 `debug_container.dot`.

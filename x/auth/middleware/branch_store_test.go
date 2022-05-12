@@ -67,8 +67,7 @@ func (s *MWTestSuite) TestBranchStore() {
 				return tx.Response{}, nil
 			}}
 
-			beginAnteBranch, endAnteBranch := middleware.WithBranchAnte()
-			beginRunMsgsBranch, endRunMsgsBranch := middleware.WithBranchRunMsgs()
+			beginAnteBranch, endAnteBranch := middleware.WithAnteBranch()
 
 			txHandler := middleware.ComposeMiddlewares(
 				testMsgTxHandler,
@@ -80,9 +79,8 @@ func (s *MWTestSuite) TestBranchStore() {
 				middleware.IncrementSequenceMiddleware(s.app.AccountKeeper),
 				endAnteBranch,
 
-				beginRunMsgsBranch,
+				middleware.WithRunMsgsBranch,
 				middleware.ConsumeBlockGasMiddleware,
-				endRunMsgsBranch,
 			)
 
 			// msg and signatures

@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -879,12 +878,12 @@ func (s *MWTestSuite) TestTxHandlerSetPubKey() {
 			sdkerrors.ErrWrongSequence,
 		},
 		{
-			"make sure previous public key has been set after wrong signature",
+			"make sure previous public key has NOT been set after wrong signature",
 			func() {
 				// Make sure public key has been set, as SetPubKeyMiddleware
 				// is called before all signature verification middlewares.
 				acc1 := s.app.AccountKeeper.GetAccount(ctx, accounts[1].acc.GetAddress())
-				s.Require().Equal(acc1.GetPubKey(), accounts[1].priv.PubKey())
+				s.Require().Equal(nil, acc1.GetPubKey())
 			},
 			false,
 			false,
@@ -1192,8 +1191,4 @@ func (s *MWTestSuite) TestTxReplayFeeDeduction() {
 	// being drained of their funds.
 	balance = s.app.BankKeeper.GetBalance(ctx, accounts[0].acc.GetAddress(), testCoins[0].Denom)
 	s.Require().Equal(sdk.NewInt(9_999_850), balance.Amount)
-}
-
-func TestMWTestSuite2(t *testing.T) {
-	suite.Run(t, new(MWTestSuite))
 }

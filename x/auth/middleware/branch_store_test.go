@@ -71,6 +71,7 @@ func (s *MWTestSuite) TestBranchStore() {
 
 			txHandler := middleware.ComposeMiddlewares(
 				testMsgTxHandler,
+
 				beginAnteBranch,
 				middleware.NewTxDecoderMiddleware(s.clientCtx.TxConfig.TxDecoder()),
 				middleware.GasTxMiddleware,

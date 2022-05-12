@@ -6,4 +6,4 @@ parent:
 
 # IBC documentation
 
-See [`ibc-go` documentation](https://ibc.cosmos.network).
+See the [`ibc-go` documentation](https://ibc.cosmos.network).

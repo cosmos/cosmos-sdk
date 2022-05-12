@@ -31,7 +31,7 @@ For store encoding, protobuf definitions can exist for any type and will typical
 have an Amino-based "intermediary" type. Specifically, the protobuf-based type
 definition is used for serialization and persistence, whereas the Amino-based type
 is used for business logic in the state-machine where they may convert back-n-forth.
-Note, the Amino-based types may slowly be phased-out in the future so developers
+Note, the Amino-based types may slowly be phased-out in the future, so developers
 should take note to use the protobuf message definitions where possible.
 
 In the `codec` package, there exists two core interfaces, `Marshaler` and `ProtoMarshaler`,
@@ -43,7 +43,7 @@ In addition, there exists two implementations of `Marshaler`. The first being
 second being `ProtoCodec`, where both binary and JSON serialization is handled
 via Protobuf.
 
-This means that modules may use Amino or Protobuf encoding but the types must
+This means that modules may use Amino or Protobuf encoding, but the types must
 implement `ProtoMarshaler`. If modules wish to avoid implementing this interface
 for their types, they may use an Amino codec directly.
 

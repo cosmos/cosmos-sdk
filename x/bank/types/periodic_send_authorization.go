@@ -59,7 +59,7 @@ func (a PeriodicSendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.A
 			return authz.AcceptResponse{}, sdkerrors.Wrap(ErrSpendLimitExceeded, "absolute limit")
 		}
 
-		return authz.AcceptResponse{Delete: a.SpendLimit.IsZero()}, nil
+		return authz.AcceptResponse{Delete: a.SpendLimit.IsZero(), Updated: &a}, nil
 	}
 
 	return authz.AcceptResponse{Accept: true, Updated: &a}, nil
@@ -93,10 +93,6 @@ func (a *PeriodicSendAuthorization) tryResetPeriod(blockTime time.Time) {
 
 // ValidateBasic implements Authorization.ValidateBasic.
 func (a PeriodicSendAuthorization) ValidateBasic() error {
-	if err := a.ValidateBasic(); err != nil {
-		return err
-	}
-
 	if !a.PeriodSpendLimit.IsValid() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "spend amount is invalid: %s", a.PeriodSpendLimit)
 	}

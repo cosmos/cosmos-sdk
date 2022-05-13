@@ -122,7 +122,7 @@ func (s *eventsTestSuite) TestStringifyEvents() {
 			name: "multiple events with same attributes",
 			events: sdk.Events{
 				sdk.NewEvent(
-					sdk.EventTypeMessage,
+					"message",
 					sdk.NewAttribute(sdk.AttributeKeyModule, "staking"),
 					sdk.NewAttribute(sdk.AttributeKeySender, "cosmos1foo"),
 				),

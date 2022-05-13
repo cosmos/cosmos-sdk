@@ -52,8 +52,15 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	key := feegrant.FeeAllowanceKey(granter, grantee)
 
 	var oldExp *time.Time
-	existingGrant, err := k.getGrant(ctx, grantee, granter)
-	if err != nil && existingGrant != nil && existingGrant.GetAllowance() != nil {
+	existingGrant, err := k.getGrant(ctx, granter, grantee)
+
+	// If we didn't find any grant, we don't return any error.
+	// All other kinds of errors are returned.
+	if err != nil && !sdkerrors.IsOf(err, sdkerrors.ErrNotFound) {
+		return err
+	}
+
+	if existingGrant != nil && existingGrant.GetAllowance() != nil {
 		grantInfo, err := existingGrant.GetGrant()
 		if err != nil {
 			return err
@@ -184,7 +191,7 @@ func (k Keeper) getGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.Ac
 	key := feegrant.FeeAllowanceKey(granter, grantee)
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "fee-grant not found")
+		return nil, sdkerrors.ErrNotFound.Wrap("fee-grant not found")
 	}
 
 	var feegrant feegrant.Grant
@@ -322,9 +329,8 @@ func (k Keeper) RemoveExpiredAllowances(ctx sdk.Context) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		store.Delete(iterator.Key())
-		expLen := len(sdk.FormatTimeBytes(ctx.BlockTime()))
 
-		// extract the fee allowance key by removing the allowance queue prefix length, expiration length from key.
-		store.Delete(append(feegrant.FeeAllowanceKeyPrefix, iterator.Key()[1+expLen:]...))
+		granter, grantee := feegrant.ParseAddressesFromFeeAllowanceQueueKey(iterator.Key())
+		store.Delete(feegrant.FeeAllowanceKey(granter, grantee))
 	}
 }

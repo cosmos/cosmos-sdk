@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/tendermint/tendermint/crypto/tmhash"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/tendermint/tendermint/crypto/tmhash"
 )
 
 type handlerFun func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error)
@@ -18,8 +19,7 @@ type customTxHandler struct {
 
 var _ tx.Handler = customTxHandler{}
 
-// CustomTxMiddleware is being used in tests for testing
-// custom pre-`runMsgs` logic (also called antehandlers before).
+// CustomTxMiddleware is being used in tests for testing custom pre-`runMsgs` logic.
 func CustomTxHandlerMiddleware(handler handlerFun) tx.Middleware {
 	return func(txHandler tx.Handler) tx.Handler {
 		return customTxHandler{

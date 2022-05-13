@@ -127,7 +127,7 @@ Read more about ABCI Clients and Tendermint RPC in the Tendermint documentation 
 
 ## Application Query Handling
 
-When a query is received by the full-node after it has been relayed from the underlying consensus engine, it is now being handled within an environment that understands application-specific types and has a copy of the state. [`baseapp`](../core/baseapp.md) implements the ABCI [`Query()`](../core/baseapp.md#query) function and handles gRPC queries. The query route is parsed, and it it matches the fully-qualified service method name of an existing service method (most likely in one of the modules), then `baseapp` will relay the request to the relevant module.
+When a query is received by the full-node after it has been relayed from the underlying consensus engine, it is now being handled within an environment that understands application-specific types and has a copy of the state. [`baseapp`](../core/baseapp.md) implements the ABCI [`Query()`](../core/baseapp.md#query) function and handles gRPC queries. The query route is parsed, and it matches the fully-qualified service method name of an existing service method (most likely in one of the modules), then `baseapp` will relay the request to the relevant module.
 
 Apart from gRPC routes, `baseapp` also handles four different types of queries: `app`, `store`, `p2p`, and `custom`. The first three types (`app`, `store`, `p2p`) are purely application-level and thus directly handled by `baseapp` or the stores, but the `custom` query type requires `baseapp` to route the query to a module's [legacy queriers](../building-modules/query-services.md#legacy-queriers). To learn more about these queries, please refer to [this guide](../core/grpc_rest.md#tendermint-rpc).
 

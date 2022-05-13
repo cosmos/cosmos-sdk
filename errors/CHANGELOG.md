@@ -15,10 +15,7 @@ Change log entries are to be added to the Unreleased section under the
 appropriate stanza (see below). Each entry should ideally include a tag and
 the Github issue reference in the following format:
 
-* (<tag>) \#<issue-number> message
-
-The issue numbers will later be link-ified during the release process so you do
-not have to worry about including a link manually, but you can if you wish.
+* (<tag>) [#<issue-number>] Changelog message.
 
 Types of changes (Stanzas):
 
@@ -26,13 +23,17 @@ Types of changes (Stanzas):
 "Improvements" for changes in existing functionality.
 "Deprecated" for soon-to-be removed features.
 "Bug Fixes" for any bug fixes.
-"Client Breaking" for breaking Protobuf, gRPC and REST routes used by end-users.
-"CLI Breaking" for breaking CLI commands.
 "API Breaking" for breaking exported APIs used by developers building on SDK.
 Ref: https://keepachangelog.com/en/1.0.0/
 -->
 
 # Changelog
+
+## [Unreleased]
+
+### Improvements
+
+* [\#11762](https://github.com/cosmos/cosmos-sdk/pull/11762) Improve error messages
 
 ## v1.0.0
 

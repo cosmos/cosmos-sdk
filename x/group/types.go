@@ -348,11 +348,23 @@ func (g GroupMember) ValidateBasic() error {
 		return sdkerrors.Wrap(errors.ErrEmpty, "group member's group id")
 	}
 
-	err := g.Member.ValidateBasic()
+	err := MemberToMemberRequest(g.Member).ValidateBasic()
 	if err != nil {
 		return sdkerrors.Wrap(err, "group member")
 	}
 	return nil
+}
+
+// MemberToMemberRequest converts a `Member` (used for storage)
+// to a `MemberRequest` (used in requests). The only difference
+// between the two is that `MemberRequest` doesn't have any `AddedAt` field
+// since it cannot be set as part of requests.
+func MemberToMemberRequest(m *Member) MemberRequest {
+	return MemberRequest{
+		Address:  m.Address,
+		Weight:   m.Weight,
+		Metadata: m.Metadata,
+	}
 }
 
 func (p Proposal) ValidateBasic() error {

@@ -1,5 +1,5 @@
 <!--
-order: 15
+order: 14
 -->
 
 # Transaction Tips
@@ -14,13 +14,13 @@ Transaction tips is a new solution for cross-chain transaction fees payment, whe
 
 Assuming we have two chains, A and B, we define the following terms:
 
-- **the tipper**: this is the initiator of the transaction, who wants to execute a `Msg` on chain A, but doesn't have any native chain A tokens, only chain B tokens. In our example above, the tipper is the Osmosis (chain B) user wanting to vote on a Cosmos Hub (chain A) proposal.
-- **the fee payer**: this is the party that will relay and broadcast the final transaction on chain A, and has chain A tokens. The tipper doesn't need to trust the feepayer.
-- **the target chain**: the chain where the `Msg` is executed, chain A in this case.
+* **the tipper**: this is the initiator of the transaction, who wants to execute a `Msg` on chain A, but doesn't have any native chain A tokens, only chain B tokens. In our example above, the tipper is the Osmosis (chain B) user wanting to vote on a Cosmos Hub (chain A) proposal.
+* **the fee payer**: this is the party that will relay and broadcast the final transaction on chain A, and has chain A tokens. The tipper doesn't need to trust the feepayer.
+* **the target chain**: the chain where the `Msg` is executed, chain A in this case.
 
 ## Transaction Tips Flow
 
-The transaction tips flow happens in multipe steps.
+The transaction tips flow happens in multiple steps.
 
 1. The tipper sends via IBC some chain B tokens to chain A. These tokens will cover for fees on the target chain A. This means that chain A's bank module holds some IBC tokens under the tipper's address.
 
@@ -42,12 +42,12 @@ Notice that this document doesn't sign over the final chain A fees. Instead, it 
 
 4. From the signed `AuxSignerData` document, the fee payer constructs a transaction, using the following algorithm:
 
-- use as `TxBody` the exact `AuxSignerData.SignDocDirectAux.body_bytes`, to not alter the original intent of the tipper,
-- create an `AuthInfo` with:
-  - `AuthInfo.Tip` copied from `AuxSignerData.SignDocDirectAux.Tip`,
-  - `AuthInfo.Fee` chosen by the fee payer, which should cover for the transaction gas, but also be small enough so that the tip/fee exchange rate is economically interesting for the fee payer,
-  - `AuthInfo.SignerInfos` has two signers: the first signer is the tipper, using the public key, sequence and sign mode specified in `AuxSignerData`; and the second signer is the fee payer, using their favorite sign mode,
-- a `Signatures` array with two items: the tipper's signature from `AuxSignerData.Sig`, and the final fee payer's signature.
+* use as `TxBody` the exact `AuxSignerData.SignDocDirectAux.body_bytes`, to not alter the original intent of the tipper,
+* create an `AuthInfo` with:
+    * `AuthInfo.Tip` copied from `AuxSignerData.SignDocDirectAux.Tip`,
+    * `AuthInfo.Fee` chosen by the fee payer, which should cover for the transaction gas, but also be small enough so that the tip/fee exchange rate is economically interesting for the fee payer,
+    * `AuthInfo.SignerInfos` has two signers: the first signer is the tipper, using the public key, sequence and sign mode specified in `AuxSignerData`; and the second signer is the fee payer, using their favorite sign mode,
+* a `Signatures` array with two items: the tipper's signature from `AuxSignerData.Sig`, and the final fee payer's signature.
 
 5. Broadcast the final transaction signed by the two parties to the target chain. Once included, the Cosmos SDK will trigger a transfer of the `Tip` specified in the transaction from the tipper address to the fee payer address.
 
@@ -63,8 +63,8 @@ In the future, we imagine a market where fee payers will compete to include tran
 
 As we mentioned in the flow above, the tipper signs over the `SignDocDirectAux`, and the fee payer signs over the whole final transaction. As such, both parties might use different sign modes.
 
-- The tipper MUST use `SIGN_MODE_DIRECT_AUX` or `SIGN_MODE_LEGACY_AMINO_JSON`. That is because the tipper needs to sign over the body, the tip, but not the other signers' information and not over the fee (which is unknown to the tipper).
-- The fee payer MUST use `SIGN_MODE_DIRECT` or `SIGN_MODE_LEGACY_AMINO_JSON`. The fee payer signs over the whole transaction.
+* The tipper MUST use `SIGN_MODE_DIRECT_AUX` or `SIGN_MODE_LEGACY_AMINO_JSON`. That is because the tipper needs to sign over the body, the tip, but not the other signers' information and not over the fee (which is unknown to the tipper).
+* The fee payer MUST use `SIGN_MODE_DIRECT` or `SIGN_MODE_LEGACY_AMINO_JSON`. The fee payer signs over the whole transaction.
 
 For example, if the fee payer signs the whole transaction with `SIGN_MODE_DIRECT_AUX`, it will be rejected by the node, as that would introduce malleability issues (`SIGN_MODE_DIRECT_AUX` doesn't sign over fees).
 

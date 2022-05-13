@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/goccy/go-graphviz/cgraph"
 	"github.com/pkg/errors"
+
+	"github.com/cosmos/cosmos-sdk/container/internal/graphviz"
 )
 
 type container struct {
@@ -38,10 +39,8 @@ func newContainer(cfg *debugConfig) *container {
 
 func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]reflect.Value, error) {
 	loc := provider.Location
-	graphNode, err := c.locationGraphNode(loc, moduleKey)
-	if err != nil {
-		return nil, err
-	}
+	graphNode := c.locationGraphNode(loc, moduleKey)
+
 	markGraphNodeAsFailed(graphNode)
 
 	if c.callerMap[loc] {
@@ -87,17 +86,13 @@ func (c *container) getResolver(typ reflect.Type) (resolver, error) {
 		elemType = elemType.Elem()
 	}
 
-	var typeGraphNode *cgraph.Node
-	var err error
+	var typeGraphNode *graphviz.Node
 
 	if isAutoGroupType(elemType) {
 		c.logf("Registering resolver for auto-group type %v", elemType)
 		sliceType := reflect.SliceOf(elemType)
 
-		typeGraphNode, err = c.typeGraphNode(sliceType)
-		if err != nil {
-			return nil, err
-		}
+		typeGraphNode = c.typeGraphNode(sliceType)
 		typeGraphNode.SetComment("auto-group")
 
 		r := &groupResolver{
@@ -112,10 +107,7 @@ func (c *container) getResolver(typ reflect.Type) (resolver, error) {
 		c.logf("Registering resolver for one-per-module type %v", elemType)
 		mapType := reflect.MapOf(stringType, elemType)
 
-		typeGraphNode, err = c.typeGraphNode(mapType)
-		if err != nil {
-			return nil, err
-		}
+		typeGraphNode = c.typeGraphNode(mapType)
 		typeGraphNode.SetComment("one-per-module")
 
 		r := &onePerModuleResolver{
@@ -133,17 +125,20 @@ func (c *container) getResolver(typ reflect.Type) (resolver, error) {
 	return c.resolvers[typ], nil
 }
 
-func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (interface{}, error) {
-	providerGraphNode, err := c.locationGraphNode(provider.Location, key)
-	if err != nil {
-		return nil, err
-	}
+var stringType = reflect.TypeOf("")
 
+func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (interface{}, error) {
+	providerGraphNode := c.locationGraphNode(provider.Location, key)
 	hasModuleKeyParam := false
+	hasOwnModuleKeyParam := false
 	for _, in := range provider.Inputs {
 		typ := in.Type
 		if typ == moduleKeyType {
 			hasModuleKeyParam = true
+		}
+
+		if typ == ownModuleKeyType {
+			hasOwnModuleKeyParam = true
 		}
 
 		if isAutoGroupType(typ) {
@@ -157,11 +152,11 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 			return nil, err
 		}
 
-		var typeGraphNode *cgraph.Node
+		var typeGraphNode *graphviz.Node
 		if vr != nil {
 			typeGraphNode = vr.typeGraphNode()
 		} else {
-			typeGraphNode, err = c.typeGraphNode(typ)
+			typeGraphNode = c.typeGraphNode(typ)
 			if err != nil {
 				return nil, err
 			}
@@ -170,7 +165,7 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 		c.addGraphEdge(typeGraphNode, providerGraphNode)
 	}
 
-	if key != nil || !hasModuleKeyParam {
+	if !hasModuleKeyParam {
 		c.logf("Registering %s", provider.Location.String())
 		c.indentLogger()
 		defer c.dedentLogger()
@@ -208,15 +203,12 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 			} else {
 				c.logf("Registering resolver for simple type %v", typ)
 
-				typeGraphNode, err := c.typeGraphNode(typ)
-				if err != nil {
-					return nil, err
-				}
-
+				typeGraphNode := c.typeGraphNode(typ)
 				vr = &simpleResolver{
-					node:      sp,
-					typ:       typ,
-					graphNode: typeGraphNode,
+					node:        sp,
+					typ:         typ,
+					graphNode:   typeGraphNode,
+					idxInValues: i,
 				}
 				c.resolvers[typ] = vr
 			}
@@ -226,6 +218,11 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 
 		return sp, nil
 	} else {
+		if hasOwnModuleKeyParam {
+			return nil, errors.Errorf("%T and %T must not be declared as dependencies on the same provided",
+				ModuleKey{}, OwnModuleKey{})
+		}
+
 		c.logf("Registering module-scoped provider: %s", provider.Location.String())
 		c.indentLogger()
 		defer c.dedentLogger()
@@ -247,11 +244,7 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 					typ, provider.Location, existing.describeLocation())
 			}
 
-			typeGraphNode, err := c.typeGraphNode(typ)
-			if err != nil {
-				return reflect.Value{}, err
-			}
-
+			typeGraphNode := c.typeGraphNode(typ)
 			c.resolvers[typ] = &moduleDepResolver{
 				typ:         typ,
 				idxInValues: i,
@@ -269,17 +262,9 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 
 func (c *container) supply(value reflect.Value, location Location) error {
 	typ := value.Type()
-	locGrapNode, err := c.locationGraphNode(location, nil)
-	if err != nil {
-		return err
-	}
+	locGrapNode := c.locationGraphNode(location, nil)
 	markGraphNodeAsUsed(locGrapNode)
-
-	typeGraphNode, err := c.typeGraphNode(typ)
-	if err != nil {
-		return err
-	}
-
+	typeGraphNode := c.typeGraphNode(typ)
 	c.addGraphEdge(locGrapNode, typeGraphNode)
 
 	if existing, ok := c.resolvers[typ]; ok {
@@ -299,10 +284,7 @@ func (c *container) supply(value reflect.Value, location Location) error {
 func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Location) (reflect.Value, error) {
 	c.resolveStack = append(c.resolveStack, resolveFrame{loc: caller, typ: in.Type})
 
-	typeGraphNode, err := c.typeGraphNode(in.Type)
-	if err != nil {
-		return reflect.Value{}, err
-	}
+	typeGraphNode := c.typeGraphNode(in.Type)
 
 	if in.Type == moduleKeyType {
 		if moduleKey == nil {
@@ -311,6 +293,15 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 		c.logf("Providing ModuleKey %s", moduleKey.name)
 		markGraphNodeAsUsed(typeGraphNode)
 		return reflect.ValueOf(ModuleKey{moduleKey}), nil
+	}
+
+	if in.Type == ownModuleKeyType {
+		if moduleKey == nil {
+			return reflect.Value{}, errors.Errorf("trying to resolve %T for %s but not inside of any module's scope", moduleKey, caller)
+		}
+		c.logf("Providing OwnModuleKey %s", moduleKey.name)
+		markGraphNodeAsUsed(typeGraphNode)
+		return reflect.ValueOf(OwnModuleKey{moduleKey}), nil
 	}
 
 	vr, err := c.getResolver(in.Type)
@@ -342,20 +333,46 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 	return res, nil
 }
 
-func (c *container) run(invoker interface{}) error {
-	rctr, err := ExtractProviderDescriptor(invoker)
+func (c *container) build(loc Location, outputs ...interface{}) error {
+	var providerIn []ProviderInput
+	for _, output := range outputs {
+		typ := reflect.TypeOf(output)
+		if typ.Kind() != reflect.Pointer {
+			return fmt.Errorf("output type must be a pointer, %s is invalid", typ)
+		}
+
+		providerIn = append(providerIn, ProviderInput{Type: typ.Elem()})
+	}
+
+	desc := ProviderDescriptor{
+		Inputs:  providerIn,
+		Outputs: nil,
+		Fn: func(values []reflect.Value) ([]reflect.Value, error) {
+			if len(values) != len(outputs) {
+				return nil, fmt.Errorf("internal error, unexpected number of values")
+			}
+
+			for i, output := range outputs {
+				val := reflect.ValueOf(output)
+				val.Elem().Set(values[i])
+			}
+
+			return nil, nil
+		},
+		Location: loc,
+	}
+	callerGraphNode := c.locationGraphNode(loc, nil)
+	callerGraphNode.SetShape("hexagon")
+
+	desc, err := expandStructArgsProvider(desc)
 	if err != nil {
 		return err
 	}
 
-	if len(rctr.Outputs) > 0 {
-		return errors.Errorf("invoker function cannot have return values other than error: %s", rctr.Location)
-	}
-
-	c.logf("Registering invoker")
+	c.logf("Registering outputs")
 	c.indentLogger()
 
-	node, err := c.addNode(&rctr, nil)
+	node, err := c.addNode(&desc, nil)
 	if err != nil {
 		return err
 	}
@@ -397,10 +414,13 @@ func (c container) formatResolveStack() string {
 	return buf.String()
 }
 
-func markGraphNodeAsUsed(node *cgraph.Node) {
+func markGraphNodeAsUsed(node *graphviz.Node) {
 	node.SetColor("black")
+	node.SetPenWidth("1.5")
+	node.SetFontColor("black")
 }
 
-func markGraphNodeAsFailed(node *cgraph.Node) {
+func markGraphNodeAsFailed(node *graphviz.Node) {
 	node.SetColor("red")
+	node.SetFontColor("red")
 }

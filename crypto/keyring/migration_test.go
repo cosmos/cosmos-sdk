@@ -16,7 +16,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-const n1 = "cosmos"
+const n1 = "cosmos.info"
 
 type MigrationTestSuite struct {
 	suite.Suite
@@ -214,7 +214,7 @@ func (s *MigrationTestSuite) TestMigrateErrUnknownItemKey() {
 
 	incorrectItemKey := n1 + "1"
 	_, err := s.ks.migrate(incorrectItemKey)
-	s.Require().EqualError(err, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, incorrectItemKey).Error())
+	s.Require().EqualError(err, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, infoKey(incorrectItemKey)).Error())
 }
 
 func (s *MigrationTestSuite) TestMigrateErrEmptyItemData() {

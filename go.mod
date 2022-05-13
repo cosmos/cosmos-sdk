@@ -3,6 +3,7 @@ go 1.18
 module github.com/cosmos/cosmos-sdk
 
 require (
+	cosmossdk.io/api v0.1.0-alpha8
 	cosmossdk.io/errors v1.0.0-beta.6
 	cosmossdk.io/math v1.0.0-beta.2
 	github.com/99designs/keyring v1.1.6
@@ -14,7 +15,6 @@ require (
 	github.com/confio/ics23/go v0.7.0
 	github.com/cosmos/btcutil v1.0.4
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
-	github.com/cosmos/cosmos-sdk/api v0.1.0
 	github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.18.0

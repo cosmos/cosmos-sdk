@@ -108,7 +108,7 @@ type anteBranchWrite struct {
 }
 
 // CheckTx implements tx.Handler.CheckTx method.
-// Do nothing during CheckTx.
+// Does nothing during CheckTx.
 func (sh anteBranchWrite) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
 	newCtx := anteWrite(ctx, sh.originalMSKey, sh.cacheMSKey)
 

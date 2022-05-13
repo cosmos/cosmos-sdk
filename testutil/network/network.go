@@ -196,7 +196,7 @@ func (s CLILogger) Logf(format string, args ...interface{}) {
 	s.cmd.Printf(format, args...)
 }
 
-// NewCLILogger creates a new CLILogger
+// NewCLILogger creates a new CLILogger.
 func NewCLILogger(cmd *cobra.Command) CLILogger {
 	return CLILogger{cmd}
 }

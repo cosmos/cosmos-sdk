@@ -15,15 +15,15 @@ var (
 
 	// Periodic auth errors
 	// ErrspendLimitExceeded error if there are not enough allowance to cover the fees
-	ErrSpendLimitExceeded = sdkerrors.Register(ModuleName, 2, "spend limit exceeded")
+	ErrSpendLimitExceeded = sdkerrors.Register(ModuleName, 8, "spend limit exceeded")
 	// ErrSpendLimitExpired error if the allowance has expired
-	ErrSpendLimitExpired = sdkerrors.Register(ModuleName, 3, "spend allowance expired")
+	ErrSpendLimitExpired = sdkerrors.Register(ModuleName, 9, "spend allowance expired")
 	// ErrInvalidDuration error if the Duration is invalid or doesn't match the expiration
-	ErrInvalidDuration = sdkerrors.Register(ModuleName, 4, "invalid duration")
+	ErrInvalidDuration = sdkerrors.Register(ModuleName, 10, "invalid duration")
 	// ErrNoAllowance error if there is no allowance for that pair
-	ErrNoAllowance = sdkerrors.Register(ModuleName, 5, "no allowance")
+	ErrNoAllowance = sdkerrors.Register(ModuleName, 11, "no allowance")
 	// ErrNoMessages error if there is no message
-	ErrNoMessages = sdkerrors.Register(ModuleName, 6, "allowed messages are empty")
+	ErrNoMessages = sdkerrors.Register(ModuleName, 12, "allowed messages are empty")
 	// ErrMessageNotAllowed error if message is not allowed
-	ErrMessageNotAllowed = sdkerrors.Register(ModuleName, 7, "message not allowed")
+	ErrMessageNotAllowed = sdkerrors.Register(ModuleName, 13, "message not allowed")
 )

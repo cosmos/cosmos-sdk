@@ -57,7 +57,7 @@ func (s *MigrateTestSuite) Test_runListAndShowCmd() {
 	item := design99keyring.Item{
 		Key:         s.appName + ".info",
 		Data:        serializedLegacyMultiInfo,
-		Description: "SDK kerying version",
+		Description: "SDK keyring version",
 	}
 
 	//run test simd keys list - to see that the migrated key is there

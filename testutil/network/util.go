@@ -57,7 +57,7 @@ func startInProcess(cfg Config, val *Validator) error {
 	if val.RPCAddress != "" {
 		node, ok := val.tmNode.(local.NodeService)
 		if !ok {
-			return fmt.Errorf("can't cast %T to NodeService", val.tmNode)
+			return fmt.Errorf("failed to cast %T to NodeService", val.tmNode)
 		}
 		val.RPCClient, err = local.New(node)
 		if err != nil {

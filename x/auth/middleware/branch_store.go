@@ -8,6 +8,15 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
+// We'll store the original sdk.Context multistore, as well as a
+// cache-wrapped multistore, inside the sdk.Context's Values (it's just
+// a simple key-value map). We define those keys here, and pass them to the
+// middlewares.
+var (
+	originalMSKey = sdk.ContextKey("ante-original-ms")
+	cacheMSKey    = sdk.ContextKey("ante-cache-ms")
+)
+
 // WithAnteBranch creates a store branch (cache-wrapped multistore) for Antehandlers.
 //
 // Usage:
@@ -20,12 +29,6 @@ import (
 //   // some other middlewares
 // )
 func WithAnteBranch() (tx.Middleware, tx.Middleware) {
-	// We'll store the original sdk.Context multistore, as well as a
-	// cache-wrapped multistore, inside the sdk.Context's Values (it's just
-	// a simple key-value map). We define those keys here, and pass them to the
-	// middlewares.
-	originalMSKey := sdk.ContextKey("ante-original-ms")
-	cacheMSKey := sdk.ContextKey("ante-cache-ms")
 
 	beginAnteBranch := func(h tx.Handler) tx.Handler {
 		return anteBranchBegin{next: h, originalMSKey: originalMSKey, cacheMSKey: cacheMSKey}

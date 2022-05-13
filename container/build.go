@@ -40,6 +40,7 @@ func build(loc Location, debugOpt DebugOption, option Option, outputs ...interfa
 
 	err = doBuild(cfg, loc, debugOpt, option, outputs...)
 	if err != nil {
+		cfg.logf("Error: %v", err)
 		if cfg.onError != nil {
 			err2 := cfg.onError.applyConfig(cfg)
 			if err2 != nil {

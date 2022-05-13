@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/golden"
 
 	"github.com/cosmos/cosmos-sdk/container"
 )
@@ -81,6 +82,13 @@ func (ModuleB) Provide(dependencies BDependencies) (BProvides, Handler, error) {
 	}, Handler{}, nil
 }
 
+var scenarioConfig = container.Options(
+	container.Provide(ProvideMsgClientA),
+	container.ProvideInModule("runtime", ProvideKVStoreKey),
+	container.ProvideInModule("a", wrapMethod0(ModuleA{})),
+	container.ProvideInModule("b", wrapMethod0(ModuleB{})),
+)
+
 func TestScenario(t *testing.T) {
 	var (
 		handlers map[string]Handler
@@ -90,12 +98,7 @@ func TestScenario(t *testing.T) {
 	)
 	require.NoError(t,
 		container.Build(
-			container.Options(
-				container.Provide(ProvideMsgClientA),
-				container.ProvideInModule("runtime", ProvideKVStoreKey),
-				container.ProvideInModule("a", wrapMethod0(ModuleA{})),
-				container.ProvideInModule("b", wrapMethod0(ModuleB{})),
-			),
+			scenarioConfig,
 			&handlers,
 			&commands,
 			&a,
@@ -539,7 +542,7 @@ func TestStructArgs(t *testing.T) {
 	))
 }
 
-func TestLogging(t *testing.T) {
+func TestDebugOptions(t *testing.T) {
 	var logOut string
 	var dotGraph string
 
@@ -563,7 +566,7 @@ func TestLogging(t *testing.T) {
 				dotGraph = g
 			}),
 			container.LogVisualizer(),
-			container.FileVisualizer(graphfile.Name(), "svg"),
+			container.FileVisualizer(graphfile.Name()),
 			container.StdoutLogger(),
 		),
 		container.Options(),
@@ -578,7 +581,26 @@ func TestLogging(t *testing.T) {
 
 	graphfileContents, err := os.ReadFile(graphfile.Name())
 	require.NoError(t, err)
-	require.Contains(t, string(graphfileContents), "<svg")
+	require.Contains(t, string(graphfileContents), "digraph")
+}
+
+func TestGraphAndLogOutput(t *testing.T) {
+	var graphOut string
+	var b KeeperB
+	debugOpts := container.DebugOptions(
+		container.Visualizer(func(dotGraph string) {
+			graphOut = dotGraph
+		}))
+	require.NoError(t, container.BuildDebug(debugOpts, scenarioConfig, &b))
+	golden.Assert(t, graphOut, "example.dot")
+
+	badConfig := container.Options(
+		container.ProvideInModule("runtime", ProvideKVStoreKey),
+		container.ProvideInModule("a", wrapMethod0(ModuleA{})),
+		container.ProvideInModule("b", wrapMethod0(ModuleB{})),
+	)
+	require.Error(t, container.BuildDebug(debugOpts, badConfig, &b))
+	golden.Assert(t, graphOut, "example_error.dot")
 }
 
 func TestConditionalDebugging(t *testing.T) {

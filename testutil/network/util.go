@@ -61,7 +61,7 @@ func startInProcess(cfg Config, val *Validator) error {
 		}
 		val.RPCClient, err = local.New(node)
 		if err != nil {
-			return errors.Wrap(err, "can't create a local node")
+			return errors.Wrap(err, "failed to create a local node")
 		}
 	}
 

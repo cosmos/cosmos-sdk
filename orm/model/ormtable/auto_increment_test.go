@@ -89,9 +89,9 @@ func TestBadJSON(t *testing.T) {
 	store := ormtable.WrapContextDefault(testkv.NewSplitMemBackend())
 	f, err := os.Open("testdata/bad_auto_inc.json")
 	assert.NilError(t, err)
-	assert.ErrorContains(t, table.ImportJSON(store, f), "invalid ID")
+	assert.ErrorContains(t, table.ImportJSON(store, f), "invalid auto increment primary key")
 
 	f, err = os.Open("testdata/bad_auto_inc2.json")
 	assert.NilError(t, err)
-	assert.ErrorContains(t, table.ImportJSON(store, f), "invalid ID")
+	assert.ErrorContains(t, table.ImportJSON(store, f), "invalid auto increment primary key")
 }

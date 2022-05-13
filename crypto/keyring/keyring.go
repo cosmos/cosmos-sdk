@@ -896,7 +896,7 @@ func (ks keystore) MigrateAll() error {
 // 1. retrieve any key
 // 2. try to decode it using protobuf
 // 3. if ok, then return the key, do nothing else
-// 4. if it fails, then try to decide it using amino
+// 4. if it fails, then try to decode it using amino
 // 5. convert from the amino struct to the protobuf struct
 // 6. write the proto-encoded key back to the keyring
 func (ks keystore) migrate(key string) (*Record, error) {

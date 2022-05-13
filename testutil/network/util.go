@@ -2,6 +2,7 @@ package network
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"time"
@@ -16,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	srvtypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -55,11 +57,11 @@ func startInProcess(cfg Config, val *Validator) error {
 	if val.RPCAddress != "" {
 		node, ok := val.tmNode.(local.NodeService)
 		if !ok {
-			panic("can't cast service.Service to NodeService")
+			return fmt.Errorf("can't cast %T to NodeService", val.tmNode)
 		}
 		val.RPCClient, err = local.New(node)
 		if err != nil {
-			panic("cant create a local node")
+			return errors.Wrap(err, "cant create a local node")
 		}
 	}
 

@@ -10,7 +10,7 @@ import (
 
 func TestGetPubKey(t *testing.T) {
 	pv := NewPV()
-	pb, err := pv.GetPubKey(context.TODO())
+	pb, err := pv.GetPubKey(context.Background())
 	require.NoError(t, err)
 	require.NotNil(t, pb)
 }
@@ -18,7 +18,7 @@ func TestGetPubKey(t *testing.T) {
 func TestSignVote(t *testing.T) {
 	pv := NewPV()
 	v := tmproto.Vote{}
-	err := pv.SignVote(context.TODO(), "chain-id", &v)
+	err := pv.SignVote(context.Background(), "chain-id", &v)
 	require.NoError(t, err)
 	require.NotNil(t, v.Signature)
 }
@@ -26,7 +26,7 @@ func TestSignVote(t *testing.T) {
 func TestSignProposal(t *testing.T) {
 	pv := NewPV()
 	p := tmproto.Proposal{}
-	err := pv.SignProposal(context.TODO(), "chain-id", &p)
+	err := pv.SignProposal(context.Background(), "chain-id", &p)
 	require.NoError(t, err)
 	require.NotNil(t, p.Signature)
 }

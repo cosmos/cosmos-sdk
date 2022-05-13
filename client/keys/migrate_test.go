@@ -55,7 +55,7 @@ func (s *MigrateTestSuite) Test_runListAndShowCmd() {
 	serializedLegacyMultiInfo := keyring.MarshalInfo(legacyMultiInfo)
 
 	item := design99keyring.Item{
-		Key:         s.appName,
+		Key:         s.appName + ".info",
 		Data:        serializedLegacyMultiInfo,
 		Description: "SDK kerying version",
 	}

@@ -6645,7 +6645,7 @@ InfractionType indicates the infraction type a validator commited.
 | ---- | ------ | ----------- |
 | INFRACTION_TYPE_UNSPECIFIED | 0 | UNSPECIFIED defines an empty infraction type. |
 | INFRACTION_TYPE_DOUBLE_SIGN | 1 | DOUBLE_SIGN defines a validator that double-signs a block. |
-| INFRACTION_TYPE_DOWNTIME | 2 | DOWNTIME defines a validator that missed to sign to many blocks. |
+| INFRACTION_TYPE_DOWNTIME | 2 | DOWNTIME defines a validator that missed signing too many blocks. |
 
 
  <!-- end enums -->

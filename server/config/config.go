@@ -2,10 +2,12 @@ package config
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/spf13/viper"
 
+	clientflags "github.com/cosmos/cosmos-sdk/client/flags"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,6 +25,14 @@ const (
 
 	// DefaultGRPCWebAddress defines the default address to bind the gRPC-web server to.
 	DefaultGRPCWebAddress = "0.0.0.0:9091"
+
+	// DefaultGRPCMaxRecvMsgSize defines the default gRPC max message size in
+	// bytes the server can receive.
+	DefaultGRPCMaxRecvMsgSize = 1024 * 1024 * 10
+
+	// DefaultGRPCMaxSendMsgSize defines the default gRPC max message size in
+	// bytes the server can send.
+	DefaultGRPCMaxSendMsgSize = math.MaxInt32
 )
 
 // BaseConfig defines the server's basic configuration
@@ -131,6 +141,15 @@ type RosettaConfig struct {
 
 	// Offline defines if the server must be run in offline mode
 	Offline bool `mapstructure:"offline"`
+
+	// EnableFeeSuggestion defines if the server should suggest fee by default
+	EnableFeeSuggestion bool `mapstructure:"enable-fee-suggestion"`
+
+	// GasToSuggest defines gas limit when calculating the fee
+	GasToSuggest int `mapstructure:"gas-to-suggest"`
+
+	// DenomToSuggest defines the defult denom for fee suggestion
+	DenomToSuggest string `mapstructure:"denom-to-suggest"`
 }
 
 // GRPCConfig defines configuration for the gRPC server.
@@ -140,6 +159,14 @@ type GRPCConfig struct {
 
 	// Address defines the API server to listen on
 	Address string `mapstructure:"address"`
+
+	// MaxRecvMsgSize defines the max message size in bytes the server can receive.
+	// The default value is 10MB.
+	MaxRecvMsgSize int `mapstructure:"max-recv-msg-size"`
+
+	// MaxSendMsgSize defines the max message size in bytes the server can send.
+	// The default value is math.MaxInt32.
+	MaxSendMsgSize int `mapstructure:"max-send-msg-size"`
 }
 
 // GRPCWebConfig defines configuration for the gRPC-web server.
@@ -157,7 +184,7 @@ type GRPCWebConfig struct {
 // StateSyncConfig defines the state sync snapshot configuration.
 type StateSyncConfig struct {
 	// SnapshotInterval sets the interval at which state sync snapshots are taken.
-	// 0 disables snapshots. Must be a multiple of PruningKeepEvery.
+	// 0 disables snapshots.
 	SnapshotInterval uint64 `mapstructure:"snapshot-interval"`
 
 	// SnapshotKeepRecent sets the number of recent state sync snapshots to keep.
@@ -232,16 +259,21 @@ func DefaultConfig() *Config {
 			RPCMaxBodyBytes:    1000000,
 		},
 		GRPC: GRPCConfig{
-			Enable:  true,
-			Address: DefaultGRPCAddress,
+			Enable:         true,
+			Address:        DefaultGRPCAddress,
+			MaxRecvMsgSize: DefaultGRPCMaxRecvMsgSize,
+			MaxSendMsgSize: DefaultGRPCMaxSendMsgSize,
 		},
 		Rosetta: RosettaConfig{
-			Enable:     false,
-			Address:    ":8080",
-			Blockchain: "app",
-			Network:    "network",
-			Retries:    3,
-			Offline:    false,
+			Enable:              false,
+			Address:             ":8080",
+			Blockchain:          "app",
+			Network:             "network",
+			Retries:             3,
+			Offline:             false,
+			EnableFeeSuggestion: false,
+			GasToSuggest:        clientflags.DefaultGasLimit,
+			DenomToSuggest:      "uatom",
 		},
 		GRPCWeb: GRPCWebConfig{
 			Enable:  true,
@@ -299,16 +331,21 @@ func GetConfig(v *viper.Viper) Config {
 			EnableUnsafeCORS:   v.GetBool("api.enabled-unsafe-cors"),
 		},
 		Rosetta: RosettaConfig{
-			Enable:     v.GetBool("rosetta.enable"),
-			Address:    v.GetString("rosetta.address"),
-			Blockchain: v.GetString("rosetta.blockchain"),
-			Network:    v.GetString("rosetta.network"),
-			Retries:    v.GetInt("rosetta.retries"),
-			Offline:    v.GetBool("rosetta.offline"),
+			Enable:              v.GetBool("rosetta.enable"),
+			Address:             v.GetString("rosetta.address"),
+			Blockchain:          v.GetString("rosetta.blockchain"),
+			Network:             v.GetString("rosetta.network"),
+			Retries:             v.GetInt("rosetta.retries"),
+			Offline:             v.GetBool("rosetta.offline"),
+			EnableFeeSuggestion: v.GetBool("rosetta.enable-fee-suggestion"),
+			GasToSuggest:        v.GetInt("rosetta.gas-to-suggest"),
+			DenomToSuggest:      v.GetString("rosetta.denom-to-suggest"),
 		},
 		GRPC: GRPCConfig{
-			Enable:  v.GetBool("grpc.enable"),
-			Address: v.GetString("grpc.address"),
+			Enable:         v.GetBool("grpc.enable"),
+			Address:        v.GetString("grpc.address"),
+			MaxRecvMsgSize: v.GetInt("grpc.max-recv-msg-size"),
+			MaxSendMsgSize: v.GetInt("grpc.max-send-msg-size"),
 		},
 		GRPCWeb: GRPCWebConfig{
 			Enable:           v.GetBool("grpc-web.enable"),

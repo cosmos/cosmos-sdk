@@ -32,7 +32,7 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 Please see [issue #8392](https://github.com/cosmos/cosmos-sdk/issues/8392) for more info.
 :::
 
-Cosmos SDK v0.40 introduced Protobuf as the main [encoding](./encoding) library, and this brings a wide range of Protobuf-based tools that can be plugged into the Cosmos SDK. One such tool is [gRPC](https://grpc.io), a modern open source high performance RPC framework that has decent client support in several languages.
+Cosmos SDK v0.40 introduced Protobuf as the main [encoding](./encoding) library, and this brings a wide range of Protobuf-based tools that can be plugged into the Cosmos SDK. One such tool is [gRPC](https://grpc.io), a modern open-source high performance RPC framework that has decent client support in several languages.
 
 Each module exposes a [Protobuf `Query` service](../building-modules/messages-and-queries.md#queries) that defines state queries. The `Query` services and a transaction service used to broadcast transactions are hooked up to the gRPC server via the following function inside the application:
 
@@ -51,7 +51,7 @@ The `grpc.Server` is a concrete gRPC server, which spawns and serves all gRPC qu
 
 Once the gRPC server is started, you can send requests to it using a gRPC client. Some examples are given in our [Interact with the Node](../run-node/interact-node.md#using-grpc) tutorial.
 
-An overview of all available gRPC endpoints shipped with the Cosmos SDK is [Protobuf documention](https://buf.build/cosmos/cosmos-sdk).
+An overview of all available gRPC endpoints shipped with the Cosmos SDK is [Protobuf documentation](https://buf.build/cosmos/cosmos-sdk).
 
 ## REST Server
 

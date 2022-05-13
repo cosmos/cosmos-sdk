@@ -4,7 +4,7 @@ order: 3
 
 # Context
 
-The `context` is a data structure intended to be passed from function to function that carries information about the current state of the application. It provides an access to a branched storage (a safe branch of the entire state) as well as useful objects and information like `gasMeter`, `block height`, `consensus parameters` and more. {synopsis}
+The `context` is a data structure intended to be passed from function to function that carries information about the current state of the application. It provides access to a branched storage (a safe branch of the entire state) as well as useful objects and information like `gasMeter`, `block height`, `consensus parameters` and more. {synopsis}
 
 ## Pre-requisites Readings
 
@@ -21,7 +21,7 @@ The Cosmos SDK `Context` is a custom data structure that contains Go's stdlib [`
 * **Multistore:** Every application's `BaseApp` contains a [`CommitMultiStore`](./store.md#multistore) which is provided when a `Context` is created. Calling the `KVStore()` and `TransientStore()` methods allows modules to fetch their respective [`KVStore`](./store.md#base-layer-kvstores) using their unique `StoreKey`.
 * **Header:** The [header](https://docs.tendermint.com/master/spec/core/data_structures.html#header) is a Blockchain type. It carries important information about the state of the blockchain, such as block height and proposer of the current block.
 * **Chain ID:** The unique identification number of the blockchain a block pertains to.
-* **Transaction Bytes:** The `[]byte` representation of a transaction being processed using the context. Every transaction is processed by various parts of the Cosmos SDK and consensus engine (e.g. Tendermint) throughout its [lifecycle](../basics/tx-lifecycle.md), some of which to not have any understanding of transaction types. Thus, transactions are marshaled into the generic `[]byte` type using some kind of [encoding format](./encoding.md) such as [Amino](./encoding.md).
+* **Transaction Bytes:** The `[]byte` representation of a transaction being processed using the context. Every transaction is processed by various parts of the Cosmos SDK and consensus engine (e.g. Tendermint) throughout its [lifecycle](../basics/tx-lifecycle.md), some of which do not have any understanding of transaction types. Thus, transactions are marshaled into the generic `[]byte` type using some kind of [encoding format](./encoding.md) such as [Amino](./encoding.md).
 * **Logger:** A `logger` from the Tendermint libraries. Learn more about logs [here](https://docs.tendermint.com/master/nodes/logging.html). Modules call this method to create their own unique module-specific logger.
 * **VoteInfo:** A list of the ABCI type [`VoteInfo`](https://docs.tendermint.com/master/spec/abci/abci.html#voteinfo), which includes the name of a validator and a boolean indicating whether they have signed the block.
 * **Gas Meters:** Specifically, a [`gasMeter`](../basics/gas-fees.md#main-gas-meter) for the transaction currently being processed using the context and a [`blockGasMeter`](../basics/gas-fees.md#block-gas-meter) for the entire block it belongs to. Users specify how much in fees they wish to pay for the execution of their transaction; these gas meters keep track of how much [gas](../basics/gas-fees.md) has been used in the transaction or block so far. If the gas meter runs out, execution halts.
@@ -72,32 +72,9 @@ goes wrong. The pattern of usage for a Context is as follows:
    needs to be done - the branch `ctx` is simply discarded. If successful, the changes made to
    the `CacheMultiStore` can be committed to the original `ctx.ms` via `Write()`.
 
-For example, here is a snippet from the [`runTx`](./baseapp.md#runtx-and-runmsgs) function in
-[`baseapp`](./baseapp.md):
+For example, here is a snippet from the [`CustomTxHandlerMiddleware`](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/baseapp/custom_txhandler_test.go#L23) used in tests:
 
-```go
-runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)
-result = app.runMsgs(runMsgCtx, msgs, mode)
-result.GasWanted = gasWanted
-
-if mode != runTxModeDeliver {
-  return result
-}
-
-if result.IsOK() {
-  msCache.Write()
-}
-```
-
-Here is the process:
-
-1. Prior to calling `runMsgs` on the message(s) in the transaction, it uses `app.cacheTxContext()`
-   to branch and cache the context and multistore.
-2. `runMsgCtx` - the context with branched store, is used in `runMsgs` to return a result.
-3. If the process is running in [`checkTxMode`](./baseapp.md#checktx), there is no need to write the
-   changes - the result is returned immediately.
-4. If the process is running in [`deliverTxMode`](./baseapp.md#delivertx) and the result indicates
-   a successful run over all the messages, the branched multistore is written back to the original.
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/baseapp/custom_txhandler_test.go#L62:L97
 
 ## Next {hide}
 

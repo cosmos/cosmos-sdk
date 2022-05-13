@@ -914,8 +914,9 @@ func (ks keystore) migrate(key string) (*Record, error) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
 	}
 
-	// 2. Try to deserialize using proto, if good then continue, otherwise try to deserialize using amino
+	// 2. Try to deserialize using proto
 	k, err := ks.protoUnmarshalRecord(item.Data)
+	// 3. If ok then return the key
 	if err == nil {
 		return k, nil
 	}

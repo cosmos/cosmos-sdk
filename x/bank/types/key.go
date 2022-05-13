@@ -85,3 +85,8 @@ func CreateSendEnabledKey(denom string) []byte {
 	copy(key[len(SendEnabledPrefix):], denom)
 	return key
 }
+
+// IsTrueB returns true if the provided byte slice has exactly one byte, and it is equal to TrueB.
+func IsTrueB(bz []byte) bool {
+	return len(bz) == 1 && bz[0] == TrueB
+}

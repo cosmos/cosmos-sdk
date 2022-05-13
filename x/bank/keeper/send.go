@@ -23,12 +23,14 @@ type SendKeeper interface {
 	GetParams(ctx sdk.Context) types.Params
 	SetParams(ctx sdk.Context, params types.Params)
 
-	IsSendEnabled(ctx sdk.Context, denom string) bool
+	IsSendEnabledDenom(ctx sdk.Context, denom string) bool
 	SetSendEnabled(ctx sdk.Context, denom string, value bool)
 	DeleteSendEnabled(ctx sdk.Context, denom string)
 
 	IsSendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool
 	IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
+	IterateSendEnabledEntries(ctx sdk.Context, cb func(denom string, sendEnabled bool) (stop bool))
+	GetAllSendEnabledEntries(ctx sdk.Context) []types.SendEnabled
 
 	BlockedAddr(addr sdk.AccAddress) bool
 }
@@ -332,7 +334,7 @@ func (k BaseSendKeeper) IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) e
 
 // IsSendEnabledCoin returns the current SendEnabled status of the provided coin's denom
 func (k BaseSendKeeper) IsSendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool {
-	return k.IsSendEnabled(ctx, coin.Denom)
+	return k.IsSendEnabledDenom(ctx, coin.Denom)
 }
 
 // BlockedAddr checks if a given address is restricted from
@@ -342,38 +344,8 @@ func (k BaseSendKeeper) BlockedAddr(addr sdk.AccAddress) bool {
 }
 
 // IsSendEnabled returns the current SendEnabled status of the provided denom.
-func (k BaseSendKeeper) IsSendEnabled(ctx sdk.Context, denom string) bool {
+func (k BaseSendKeeper) IsSendEnabledDenom(ctx sdk.Context, denom string) bool {
 	return k.getSendEnabledOrDefault(ctx.KVStore(k.storeKey), denom, func() bool { return k.GetParams(ctx).DefaultSendEnabled })
-}
-
-// getSendEnabled returns whether send is enabled and whether that flag was set for a denom.
-//
-// Example usage:
-//    store := ctx.KVStore(k.storeKey)
-//    sendEnabled, found := getSendEnabled(store, "atom")
-//    if !found {
-//        sendEnabled = DefaultSendEnabled
-//    }
-func (k BaseSendKeeper) getSendEnabled(store sdk.KVStore, denom string) (bool, bool) {
-	key := types.CreateSendEnabledKey(denom)
-	if !store.Has(key) {
-		return false, false
-
-	}
-	v := store.Get(key)
-	if len(v) == 0 {
-		return false, false
-	}
-	return v[0] == types.TrueB, true
-}
-
-// getSendEnabledOrDefault gets the send enabled value for a denom. If it's not in the store, this will return the result of the getDefault function.
-func (k BaseSendKeeper) getSendEnabledOrDefault(store sdk.KVStore, denom string, getDefault func() bool) bool {
-	sendEnabled, found := k.getSendEnabled(store, denom)
-	if found {
-		return sendEnabled
-	}
-	return getDefault()
 }
 
 // SetSendEnabled sets the SendEnabled flag for a denom to the provided value.
@@ -391,4 +363,67 @@ func (k BaseSendKeeper) SetSendEnabled(ctx sdk.Context, denom string, value bool
 func (k BaseSendKeeper) DeleteSendEnabled(ctx sdk.Context, denom string) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.CreateSendEnabledKey(denom))
+}
+
+// IterateSendEnabled iterates over all the SendEnabled entries.
+func (k BaseSendKeeper) IterateSendEnabledEntries(ctx sdk.Context, cb func(denom string, sendEnabled bool) bool) {
+	seStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.SendEnabledPrefix)
+
+	iterator := seStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		denom := string(iterator.Key())
+		val := types.IsTrueB(iterator.Value())
+		if cb(denom, val) {
+			break
+		}
+	}
+}
+
+// GetAllSendEnabledEntries gets all the SendEnabled entries that are stored.
+// Any denoms not returned use the default value (set in Params).
+func (k BaseSendKeeper) GetAllSendEnabledEntries(ctx sdk.Context) []types.SendEnabled {
+	var rv []types.SendEnabled
+	k.IterateSendEnabledEntries(ctx, func(denom string, sendEnabled bool) bool {
+		rv = append(rv, types.SendEnabled{Denom: denom, Enabled: sendEnabled})
+		return false
+	})
+	return rv
+}
+
+// getSendEnabled returns whether send is enabled and whether that flag was set for a denom.
+//
+// Example usage:
+//    store := ctx.KVStore(k.storeKey)
+//    sendEnabled, found := getSendEnabled(store, "atom")
+//    if !found {
+//        sendEnabled = DefaultSendEnabled
+//    }
+func (k BaseSendKeeper) getSendEnabled(store sdk.KVStore, denom string) (bool, bool) {
+	key := types.CreateSendEnabledKey(denom)
+	if !store.Has(key) {
+		return false, false
+	}
+	v := store.Get(key)
+	if len(v) != 1 {
+		return false, false
+	}
+	switch v[0] {
+	case types.TrueB:
+		return true, true
+	case types.FalseB:
+		return false, true
+	default:
+		return false, false
+	}
+}
+
+// getSendEnabledOrDefault gets the send_enabled value for a denom. If it's not in the store, this will return the result of the getDefault function.
+func (k BaseSendKeeper) getSendEnabledOrDefault(store sdk.KVStore, denom string, getDefault func() bool) bool {
+	sendEnabled, found := k.getSendEnabled(store, denom)
+	if found {
+		return sendEnabled
+	}
+	return getDefault()
 }

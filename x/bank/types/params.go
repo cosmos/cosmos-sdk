@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 
 	"sigs.k8s.io/yaml"
@@ -10,13 +11,14 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-const (
-	// DefaultSendEnabled enabled
-	DefaultSendEnabled = true
+var (
+	// DefaultDefaultSendEnabled is the value that DefaultSendEnabled will have from DefaultParams().
+	DefaultDefaultSendEnabled = true
 )
 
 var (
 	// KeySendEnabled is store's key for SendEnabled Params
+	// Deprecated: Use the SendEnabled functionality in the keeper.
 	KeySendEnabled = []byte("SendEnabled")
 	// KeyDefaultSendEnabled is store's key for the DefaultSendEnabled option
 	KeyDefaultSendEnabled = []byte("DefaultSendEnabled")
@@ -38,16 +40,15 @@ func NewParams(defaultSendEnabled bool, sendEnabledParams SendEnabledParams) Par
 // DefaultParams is the default parameter configuration for the bank module
 func DefaultParams() Params {
 	return Params{
-		SendEnabled: SendEnabledParams{},
-		// The default send enabled value allows send transfers for all coin denoms
-		DefaultSendEnabled: true,
+		SendEnabled:        SendEnabledParams{},
+		DefaultSendEnabled: DefaultDefaultSendEnabled,
 	}
 }
 
 // Validate all bank module parameters
 func (p Params) Validate() error {
-	if err := validateSendEnabledParams(p.SendEnabled); err != nil {
-		return err
+	if len(p.SendEnabled) > 0 {
+		return errors.New("use of send_enabled in params is no longer supported")
 	}
 	return validateIsBool(p.DefaultSendEnabled)
 }
@@ -59,6 +60,7 @@ func (p Params) String() string {
 }
 
 // SendEnabledDenom returns true if the given denom is enabled for sending
+// TODO: Delete this.
 func (p Params) SendEnabledDenom(denom string) bool {
 	for _, pse := range p.SendEnabled {
 		if pse.Denom == denom {
@@ -70,6 +72,7 @@ func (p Params) SendEnabledDenom(denom string) bool {
 
 // SetSendEnabledParam returns an updated set of Parameters with the given denom
 // send enabled flag set.
+// TODO: Delete this.
 func (p Params) SetSendEnabledParam(denom string, sendEnabled bool) Params {
 	var sendParams SendEnabledParams
 	for _, p := range p.SendEnabled {
@@ -89,6 +92,10 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	}
 }
 
+func (se SendEnabled) Validate() error {
+	return sdk.ValidateDenom(se.Denom)
+}
+
 // SendEnabledParams is a collection of parameters indicating if a coin denom is enabled for sending
 type SendEnabledParams []*SendEnabled
 
@@ -97,16 +104,8 @@ func validateSendEnabledParams(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	// ensure each denom is only registered one time.
-	registered := make(map[string]bool)
-	for _, p := range params {
-		if _, exists := registered[p.Denom]; exists {
-			return fmt.Errorf("duplicate send enabled parameter found: '%s'", p.Denom)
-		}
-		if err := validateSendEnabled(*p); err != nil {
-			return err
-		}
-		registered[p.Denom] = true
+	if len(params) > 0 {
+		return errors.New("use of send_enabled in params is no longer supported")
 	}
 	return nil
 }
@@ -120,7 +119,7 @@ func NewSendEnabled(denom string, sendEnabled bool) *SendEnabled {
 	}
 }
 
-// String implements stringer insterface
+// String implements stringer interface
 func (se SendEnabled) String() string {
 	bz, err := codec.ProtoMarshalJSON(&se, nil)
 	if err != nil {
@@ -135,12 +134,13 @@ func (se SendEnabled) String() string {
 	return string(out)
 }
 
+// TODO: Delete this.
 func validateSendEnabled(i interface{}) error {
 	param, ok := i.(SendEnabled)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	return sdk.ValidateDenom(param.Denom)
+	return param.Validate()
 }
 
 func validateIsBool(i interface{}) error {

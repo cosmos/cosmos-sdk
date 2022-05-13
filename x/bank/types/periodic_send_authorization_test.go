@@ -2,7 +2,6 @@ package types_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"testing"
 	"time"
 
@@ -24,19 +23,14 @@ func TestPeriodicSendAuthorization(t *testing.T) {
 	tenMinutes := time.Duration(10) * time.Minute
 	totalLimit := sdk.NewCoins(sdk.NewInt64Coin("atom", 2000))
 	periodLimit := sdk.NewCoins(sdk.NewInt64Coin("atom", 50))
-	periodLeft := sdk.NewCoins(sdk.NewInt64Coin("atom", 50))
 
-	periodicAllowance := &feegrant.PeriodicAllowance{
-		Basic: feegrant.BasicAllowance{
-			SpendLimit: totalLimit,
-			Expiration: &oneHour,
-		},
-		Period:           tenMinutes,
-		PeriodReset:      inOne,
-		PeriodSpendLimit: periodLimit,
-		PeriodCanSpend:   periodLeft,
-	}
-	authorization := types.NewPeriodicSendAuthorization(*periodicAllowance)
+	authorization := types.NewPeriodicSendAuthorization(
+		totalLimit,
+		&oneHour,
+		tenMinutes,
+		periodLimit,
+		inOne,
+	)
 
 	t.Log("verify authorization returns valid method name")
 	require.Equal(t, authorization.MsgTypeURL(), "/cosmos.bank.v1beta1.MsgSend")
@@ -50,9 +44,9 @@ func TestPeriodicSendAuthorization(t *testing.T) {
 	require.False(t, resp.Delete)
 	authorization = resp.Updated.(*types.PeriodicSendAuthorization)
 	left := sdk.NewCoins(sdk.NewInt64Coin("atom", 10))
-	t.Log(authorization.PeriodicAllowance.PeriodCanSpend.AmountOf("atom"))
+	t.Log(authorization.PeriodCanSpend.AmountOf("atom"))
 	t.Log(left.AmountOf("atom"))
-	require.True(t, authorization.PeriodicAllowance.PeriodCanSpend.AmountOf("atom").Equal(left.AmountOf("atom")))
+	require.True(t, authorization.PeriodCanSpend.AmountOf("atom").Equal(left.AmountOf("atom")))
 
 	t.Log("verify period limit exceeded")
 	send = types.NewMsgSend(fromAddr, toAddr, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(20))))

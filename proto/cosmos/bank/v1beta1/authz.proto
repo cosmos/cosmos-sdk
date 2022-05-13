@@ -5,6 +5,9 @@ import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/feegrant/v1beta1/feegrant.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
@@ -19,13 +22,36 @@ message SendAuthorization {
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
-// PeriodicSendAuthorization allows the grantee to spend up to periodic_allowance.period_spend_limit coins from
-// the granter's account during a period of periodic_allowance.period seconds
+// PeriodicSendAuthorization allows the grantee to spend up to `period_spend_limit` coins from
+// the granter's account during a period of `period` seconds
 //
 message PeriodicSendAuthorization {
   option (cosmos_proto.implements_interface) = "Authorization";
 
-  // periodicAllowance specifies a struct of `PeriodicAllowance`
-  cosmos.feegrant.v1beta1.PeriodicAllowance periodic_allowance = 1 [(gogoproto.nullable) = false];
+  // spend_limit specifies the maximum amount of tokens that can be spent
+  // by this authorization and will be updated as tokens are spent. If it is
+  // empty, there is no spend limit and any amount of coins can be spent.
+  repeated cosmos.base.v1beta1.Coin spend_limit = 1
+  [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
+  // expiration specifies an optional time when this authorization expires
+  google.protobuf.Timestamp expiration = 2 [(gogoproto.stdtime) = true];
+
+  // period specifies the time duration in which period_spend_limit coins can
+  // be spent before that authorization is reset
+  google.protobuf.Duration period = 3 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+
+  // period_spend_limit specifies the maximum number of coins that can be spent
+  // in the period
+  repeated cosmos.base.v1beta1.Coin period_spend_limit = 4
+  [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+
+  // period_can_spend is the number of coins left to be spent before the period_reset time
+  repeated cosmos.base.v1beta1.Coin period_can_spend = 5
+  [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+
+  // period_reset is the time at which this period resets and a new one begins,
+  // it is calculated from the start time of the first transaction after the
+  // last period ended
+  google.protobuf.Timestamp period_reset = 6 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 }

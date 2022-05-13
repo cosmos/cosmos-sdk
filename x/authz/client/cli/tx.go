@@ -3,7 +3,6 @@ package cli
 import (
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	feegrantcli "github.com/cosmos/cosmos-sdk/x/feegrant/client/cli"
 
 	"strings"
@@ -119,7 +118,6 @@ Examples:
 			var authorization authz.Authorization
 			switch args[1] {
 			case "send":
-				var periodicAllowance *feegrant.PeriodicAllowance
 				periodClock, err := cmd.Flags().GetInt64(FlagPeriod)
 				if err != nil {
 					return err
@@ -130,7 +128,7 @@ Examples:
 					return err
 				}
 
-				// Check any of period or periodLimit flags set, If set consider it as periodicAllowance fee allowance.
+				// Check any of period or periodLimit flags set, If set consider it as periodic authorization.
 				if periodClock > 0 || periodLimitVal != "" {
 					periodLimit, err := sdk.ParseCoinsNormalized(periodLimitVal)
 					if err != nil {
@@ -149,22 +147,18 @@ Examples:
 						return fmt.Errorf("period (%d) cannot reset after expiration (%v)", periodClock, expire)
 					}
 
-					var basic feegrant.BasicAllowance
-					if len(spendLimit) > 0 || expire != nil {
-						basic = feegrant.BasicAllowance{SpendLimit: spendLimit, Expiration: expire}
-					}
-					periodicAllowance = &feegrant.PeriodicAllowance{
-						Basic:            basic,
-						Period:           feegrantcli.GetPeriod(periodClock),
-						PeriodReset:      feegrantcli.GetPeriodReset(periodClock),
-						PeriodSpendLimit: periodLimit,
-						PeriodCanSpend:   periodLimit,
-					}
-				}
+					authorization = bank.NewPeriodicSendAuthorization(
+						spendLimit,
+						expire,
+						feegrantcli.GetPeriod(periodClock),
+						periodLimit,
+						feegrantcli.GetPeriodReset(periodClock),
+					)
 
-				if periodicAllowance != nil {
-					authorization = bank.NewPeriodicSendAuthorization(*periodicAllowance)
 				} else {
+					if expire != nil {
+						return fmt.Errorf("expire can only be used with periodic authorizations")
+					}
 					authorization = bank.NewSendAuthorization(spendLimit)
 				}
 

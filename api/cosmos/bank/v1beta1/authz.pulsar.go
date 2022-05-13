@@ -6,11 +6,14 @@ import (
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	v1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/v1beta1"
-	v1beta11 "github.com/cosmos/cosmos-sdk/api/cosmos/feegrant/v1beta1"
+	_ "github.com/cosmos/cosmos-sdk/api/cosmos/feegrant/v1beta1"
 	_ "github.com/gogo/protobuf/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	_ "google.golang.org/protobuf/types/known/anypb"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	reflect "reflect"
 	sync "sync"
@@ -510,15 +513,178 @@ func (x *fastReflection_SendAuthorization) ProtoMethods() *protoiface.Methods {
 	}
 }
 
+var _ protoreflect.List = (*_PeriodicSendAuthorization_1_list)(nil)
+
+type _PeriodicSendAuthorization_1_list struct {
+	list *[]*v1beta1.Coin
+}
+
+func (x *_PeriodicSendAuthorization_1_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_PeriodicSendAuthorization_1_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_PeriodicSendAuthorization_1_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_PeriodicSendAuthorization_1_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_PeriodicSendAuthorization_1_list) AppendMutable() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_PeriodicSendAuthorization_1_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_PeriodicSendAuthorization_1_list) NewElement() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_PeriodicSendAuthorization_1_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_PeriodicSendAuthorization_4_list)(nil)
+
+type _PeriodicSendAuthorization_4_list struct {
+	list *[]*v1beta1.Coin
+}
+
+func (x *_PeriodicSendAuthorization_4_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_PeriodicSendAuthorization_4_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_PeriodicSendAuthorization_4_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_PeriodicSendAuthorization_4_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_PeriodicSendAuthorization_4_list) AppendMutable() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_PeriodicSendAuthorization_4_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_PeriodicSendAuthorization_4_list) NewElement() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_PeriodicSendAuthorization_4_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_PeriodicSendAuthorization_5_list)(nil)
+
+type _PeriodicSendAuthorization_5_list struct {
+	list *[]*v1beta1.Coin
+}
+
+func (x *_PeriodicSendAuthorization_5_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_PeriodicSendAuthorization_5_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_PeriodicSendAuthorization_5_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_PeriodicSendAuthorization_5_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_PeriodicSendAuthorization_5_list) AppendMutable() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_PeriodicSendAuthorization_5_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_PeriodicSendAuthorization_5_list) NewElement() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_PeriodicSendAuthorization_5_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
 	md_PeriodicSendAuthorization                    protoreflect.MessageDescriptor
-	fd_PeriodicSendAuthorization_periodic_allowance protoreflect.FieldDescriptor
+	fd_PeriodicSendAuthorization_spend_limit        protoreflect.FieldDescriptor
+	fd_PeriodicSendAuthorization_expiration         protoreflect.FieldDescriptor
+	fd_PeriodicSendAuthorization_period             protoreflect.FieldDescriptor
+	fd_PeriodicSendAuthorization_period_spend_limit protoreflect.FieldDescriptor
+	fd_PeriodicSendAuthorization_period_can_spend   protoreflect.FieldDescriptor
+	fd_PeriodicSendAuthorization_period_reset       protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_bank_v1beta1_authz_proto_init()
 	md_PeriodicSendAuthorization = File_cosmos_bank_v1beta1_authz_proto.Messages().ByName("PeriodicSendAuthorization")
-	fd_PeriodicSendAuthorization_periodic_allowance = md_PeriodicSendAuthorization.Fields().ByName("periodic_allowance")
+	fd_PeriodicSendAuthorization_spend_limit = md_PeriodicSendAuthorization.Fields().ByName("spend_limit")
+	fd_PeriodicSendAuthorization_expiration = md_PeriodicSendAuthorization.Fields().ByName("expiration")
+	fd_PeriodicSendAuthorization_period = md_PeriodicSendAuthorization.Fields().ByName("period")
+	fd_PeriodicSendAuthorization_period_spend_limit = md_PeriodicSendAuthorization.Fields().ByName("period_spend_limit")
+	fd_PeriodicSendAuthorization_period_can_spend = md_PeriodicSendAuthorization.Fields().ByName("period_can_spend")
+	fd_PeriodicSendAuthorization_period_reset = md_PeriodicSendAuthorization.Fields().ByName("period_reset")
 }
 
 var _ protoreflect.Message = (*fastReflection_PeriodicSendAuthorization)(nil)
@@ -586,9 +752,39 @@ func (x *fastReflection_PeriodicSendAuthorization) Interface() protoreflect.Prot
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_PeriodicSendAuthorization) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.PeriodicAllowance != nil {
-		value := protoreflect.ValueOfMessage(x.PeriodicAllowance.ProtoReflect())
-		if !f(fd_PeriodicSendAuthorization_periodic_allowance, value) {
+	if len(x.SpendLimit) != 0 {
+		value := protoreflect.ValueOfList(&_PeriodicSendAuthorization_1_list{list: &x.SpendLimit})
+		if !f(fd_PeriodicSendAuthorization_spend_limit, value) {
+			return
+		}
+	}
+	if x.Expiration != nil {
+		value := protoreflect.ValueOfMessage(x.Expiration.ProtoReflect())
+		if !f(fd_PeriodicSendAuthorization_expiration, value) {
+			return
+		}
+	}
+	if x.Period != nil {
+		value := protoreflect.ValueOfMessage(x.Period.ProtoReflect())
+		if !f(fd_PeriodicSendAuthorization_period, value) {
+			return
+		}
+	}
+	if len(x.PeriodSpendLimit) != 0 {
+		value := protoreflect.ValueOfList(&_PeriodicSendAuthorization_4_list{list: &x.PeriodSpendLimit})
+		if !f(fd_PeriodicSendAuthorization_period_spend_limit, value) {
+			return
+		}
+	}
+	if len(x.PeriodCanSpend) != 0 {
+		value := protoreflect.ValueOfList(&_PeriodicSendAuthorization_5_list{list: &x.PeriodCanSpend})
+		if !f(fd_PeriodicSendAuthorization_period_can_spend, value) {
+			return
+		}
+	}
+	if x.PeriodReset != nil {
+		value := protoreflect.ValueOfMessage(x.PeriodReset.ProtoReflect())
+		if !f(fd_PeriodicSendAuthorization_period_reset, value) {
 			return
 		}
 	}
@@ -607,8 +803,18 @@ func (x *fastReflection_PeriodicSendAuthorization) Range(f func(protoreflect.Fie
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_PeriodicSendAuthorization) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.periodic_allowance":
-		return x.PeriodicAllowance != nil
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.spend_limit":
+		return len(x.SpendLimit) != 0
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.expiration":
+		return x.Expiration != nil
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period":
+		return x.Period != nil
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period_spend_limit":
+		return len(x.PeriodSpendLimit) != 0
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period_can_spend":
+		return len(x.PeriodCanSpend) != 0
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period_reset":
+		return x.PeriodReset != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.PeriodicSendAuthorization"))
@@ -625,8 +831,18 @@ func (x *fastReflection_PeriodicSendAuthorization) Has(fd protoreflect.FieldDesc
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_PeriodicSendAuthorization) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.periodic_allowance":
-		x.PeriodicAllowance = nil
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.spend_limit":
+		x.SpendLimit = nil
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.expiration":
+		x.Expiration = nil
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period":
+		x.Period = nil
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period_spend_limit":
+		x.PeriodSpendLimit = nil
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period_can_spend":
+		x.PeriodCanSpend = nil
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period_reset":
+		x.PeriodReset = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.PeriodicSendAuthorization"))
@@ -643,8 +859,32 @@ func (x *fastReflection_PeriodicSendAuthorization) Clear(fd protoreflect.FieldDe
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_PeriodicSendAuthorization) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.periodic_allowance":
-		value := x.PeriodicAllowance
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.spend_limit":
+		if len(x.SpendLimit) == 0 {
+			return protoreflect.ValueOfList(&_PeriodicSendAuthorization_1_list{})
+		}
+		listValue := &_PeriodicSendAuthorization_1_list{list: &x.SpendLimit}
+		return protoreflect.ValueOfList(listValue)
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.expiration":
+		value := x.Expiration
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period":
+		value := x.Period
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period_spend_limit":
+		if len(x.PeriodSpendLimit) == 0 {
+			return protoreflect.ValueOfList(&_PeriodicSendAuthorization_4_list{})
+		}
+		listValue := &_PeriodicSendAuthorization_4_list{list: &x.PeriodSpendLimit}
+		return protoreflect.ValueOfList(listValue)
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period_can_spend":
+		if len(x.PeriodCanSpend) == 0 {
+			return protoreflect.ValueOfList(&_PeriodicSendAuthorization_5_list{})
+		}
+		listValue := &_PeriodicSendAuthorization_5_list{list: &x.PeriodCanSpend}
+		return protoreflect.ValueOfList(listValue)
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period_reset":
+		value := x.PeriodReset
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
@@ -666,8 +906,24 @@ func (x *fastReflection_PeriodicSendAuthorization) Get(descriptor protoreflect.F
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_PeriodicSendAuthorization) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.periodic_allowance":
-		x.PeriodicAllowance = value.Message().Interface().(*v1beta11.PeriodicAllowance)
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.spend_limit":
+		lv := value.List()
+		clv := lv.(*_PeriodicSendAuthorization_1_list)
+		x.SpendLimit = *clv.list
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.expiration":
+		x.Expiration = value.Message().Interface().(*timestamppb.Timestamp)
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period":
+		x.Period = value.Message().Interface().(*durationpb.Duration)
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period_spend_limit":
+		lv := value.List()
+		clv := lv.(*_PeriodicSendAuthorization_4_list)
+		x.PeriodSpendLimit = *clv.list
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period_can_spend":
+		lv := value.List()
+		clv := lv.(*_PeriodicSendAuthorization_5_list)
+		x.PeriodCanSpend = *clv.list
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period_reset":
+		x.PeriodReset = value.Message().Interface().(*timestamppb.Timestamp)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.PeriodicSendAuthorization"))
@@ -688,11 +944,39 @@ func (x *fastReflection_PeriodicSendAuthorization) Set(fd protoreflect.FieldDesc
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_PeriodicSendAuthorization) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.periodic_allowance":
-		if x.PeriodicAllowance == nil {
-			x.PeriodicAllowance = new(v1beta11.PeriodicAllowance)
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.spend_limit":
+		if x.SpendLimit == nil {
+			x.SpendLimit = []*v1beta1.Coin{}
 		}
-		return protoreflect.ValueOfMessage(x.PeriodicAllowance.ProtoReflect())
+		value := &_PeriodicSendAuthorization_1_list{list: &x.SpendLimit}
+		return protoreflect.ValueOfList(value)
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.expiration":
+		if x.Expiration == nil {
+			x.Expiration = new(timestamppb.Timestamp)
+		}
+		return protoreflect.ValueOfMessage(x.Expiration.ProtoReflect())
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period":
+		if x.Period == nil {
+			x.Period = new(durationpb.Duration)
+		}
+		return protoreflect.ValueOfMessage(x.Period.ProtoReflect())
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period_spend_limit":
+		if x.PeriodSpendLimit == nil {
+			x.PeriodSpendLimit = []*v1beta1.Coin{}
+		}
+		value := &_PeriodicSendAuthorization_4_list{list: &x.PeriodSpendLimit}
+		return protoreflect.ValueOfList(value)
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period_can_spend":
+		if x.PeriodCanSpend == nil {
+			x.PeriodCanSpend = []*v1beta1.Coin{}
+		}
+		value := &_PeriodicSendAuthorization_5_list{list: &x.PeriodCanSpend}
+		return protoreflect.ValueOfList(value)
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period_reset":
+		if x.PeriodReset == nil {
+			x.PeriodReset = new(timestamppb.Timestamp)
+		}
+		return protoreflect.ValueOfMessage(x.PeriodReset.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.v1beta1.PeriodicSendAuthorization"))
@@ -706,8 +990,23 @@ func (x *fastReflection_PeriodicSendAuthorization) Mutable(fd protoreflect.Field
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_PeriodicSendAuthorization) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.periodic_allowance":
-		m := new(v1beta11.PeriodicAllowance)
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.spend_limit":
+		list := []*v1beta1.Coin{}
+		return protoreflect.ValueOfList(&_PeriodicSendAuthorization_1_list{list: &list})
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.expiration":
+		m := new(timestamppb.Timestamp)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period":
+		m := new(durationpb.Duration)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period_spend_limit":
+		list := []*v1beta1.Coin{}
+		return protoreflect.ValueOfList(&_PeriodicSendAuthorization_4_list{list: &list})
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period_can_spend":
+		list := []*v1beta1.Coin{}
+		return protoreflect.ValueOfList(&_PeriodicSendAuthorization_5_list{list: &list})
+	case "cosmos.bank.v1beta1.PeriodicSendAuthorization.period_reset":
+		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
@@ -778,8 +1077,34 @@ func (x *fastReflection_PeriodicSendAuthorization) ProtoMethods() *protoiface.Me
 		var n int
 		var l int
 		_ = l
-		if x.PeriodicAllowance != nil {
-			l = options.Size(x.PeriodicAllowance)
+		if len(x.SpendLimit) > 0 {
+			for _, e := range x.SpendLimit {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.Expiration != nil {
+			l = options.Size(x.Expiration)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Period != nil {
+			l = options.Size(x.Period)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if len(x.PeriodSpendLimit) > 0 {
+			for _, e := range x.PeriodSpendLimit {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.PeriodCanSpend) > 0 {
+			for _, e := range x.PeriodCanSpend {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.PeriodReset != nil {
+			l = options.Size(x.PeriodReset)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
@@ -811,8 +1136,8 @@ func (x *fastReflection_PeriodicSendAuthorization) ProtoMethods() *protoiface.Me
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.PeriodicAllowance != nil {
-			encoded, err := options.Marshal(x.PeriodicAllowance)
+		if x.PeriodReset != nil {
+			encoded, err := options.Marshal(x.PeriodReset)
 			if err != nil {
 				return protoiface.MarshalOutput{
 					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -823,7 +1148,83 @@ func (x *fastReflection_PeriodicSendAuthorization) ProtoMethods() *protoiface.Me
 			copy(dAtA[i:], encoded)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 			i--
-			dAtA[i] = 0xa
+			dAtA[i] = 0x32
+		}
+		if len(x.PeriodCanSpend) > 0 {
+			for iNdEx := len(x.PeriodCanSpend) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.PeriodCanSpend[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x2a
+			}
+		}
+		if len(x.PeriodSpendLimit) > 0 {
+			for iNdEx := len(x.PeriodSpendLimit) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.PeriodSpendLimit[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x22
+			}
+		}
+		if x.Period != nil {
+			encoded, err := options.Marshal(x.Period)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if x.Expiration != nil {
+			encoded, err := options.Marshal(x.Expiration)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.SpendLimit) > 0 {
+			for iNdEx := len(x.SpendLimit) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.SpendLimit[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0xa
+			}
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -876,7 +1277,7 @@ func (x *fastReflection_PeriodicSendAuthorization) ProtoMethods() *protoiface.Me
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PeriodicAllowance", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field SpendLimit", wireType)
 				}
 				var msglen int
 				for shift := uint(0); ; shift += 7 {
@@ -903,10 +1304,184 @@ func (x *fastReflection_PeriodicSendAuthorization) ProtoMethods() *protoiface.Me
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.PeriodicAllowance == nil {
-					x.PeriodicAllowance = &v1beta11.PeriodicAllowance{}
+				x.SpendLimit = append(x.SpendLimit, &v1beta1.Coin{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.SpendLimit[len(x.SpendLimit)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.PeriodicAllowance); err != nil {
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Expiration", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Expiration == nil {
+					x.Expiration = &timestamppb.Timestamp{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Expiration); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Period", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Period == nil {
+					x.Period = &durationpb.Duration{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Period); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PeriodSpendLimit", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.PeriodSpendLimit = append(x.PeriodSpendLimit, &v1beta1.Coin{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.PeriodSpendLimit[len(x.PeriodSpendLimit)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PeriodCanSpend", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.PeriodCanSpend = append(x.PeriodCanSpend, &v1beta1.Coin{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.PeriodCanSpend[len(x.PeriodCanSpend)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PeriodReset", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.PeriodReset == nil {
+					x.PeriodReset = &timestamppb.Timestamp{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.PeriodReset); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -997,16 +1572,32 @@ func (x *SendAuthorization) GetSpendLimit() []*v1beta1.Coin {
 	return nil
 }
 
-// PeriodicSendAuthorization allows the grantee to spend up to periodic_allowance.period_spend_limit coins from
-// the granter's account during a period of periodic_allowance.period seconds
+// PeriodicSendAuthorization allows the grantee to spend up to `period_spend_limit` coins from
+// the granter's account during a period of `period` seconds
 //
 type PeriodicSendAuthorization struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// periodicAllowance specifies a struct of `PeriodicAllowance`
-	PeriodicAllowance *v1beta11.PeriodicAllowance `protobuf:"bytes,1,opt,name=periodic_allowance,json=periodicAllowance,proto3" json:"periodic_allowance,omitempty"`
+	// spend_limit specifies the maximum amount of tokens that can be spent
+	// by this authorization and will be updated as tokens are spent. If it is
+	// empty, there is no spend limit and any amount of coins can be spent.
+	SpendLimit []*v1beta1.Coin `protobuf:"bytes,1,rep,name=spend_limit,json=spendLimit,proto3" json:"spend_limit,omitempty"`
+	// expiration specifies an optional time when this authorization expires
+	Expiration *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=expiration,proto3" json:"expiration,omitempty"`
+	// period specifies the time duration in which period_spend_limit coins can
+	// be spent before that authorization is reset
+	Period *durationpb.Duration `protobuf:"bytes,3,opt,name=period,proto3" json:"period,omitempty"`
+	// period_spend_limit specifies the maximum number of coins that can be spent
+	// in the period
+	PeriodSpendLimit []*v1beta1.Coin `protobuf:"bytes,4,rep,name=period_spend_limit,json=periodSpendLimit,proto3" json:"period_spend_limit,omitempty"`
+	// period_can_spend is the number of coins left to be spent before the period_reset time
+	PeriodCanSpend []*v1beta1.Coin `protobuf:"bytes,5,rep,name=period_can_spend,json=periodCanSpend,proto3" json:"period_can_spend,omitempty"`
+	// period_reset is the time at which this period resets and a new one begins,
+	// it is calculated from the start time of the first transaction after the
+	// last period ended
+	PeriodReset *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=period_reset,json=periodReset,proto3" json:"period_reset,omitempty"`
 }
 
 func (x *PeriodicSendAuthorization) Reset() {
@@ -1029,9 +1620,44 @@ func (*PeriodicSendAuthorization) Descriptor() ([]byte, []int) {
 	return file_cosmos_bank_v1beta1_authz_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *PeriodicSendAuthorization) GetPeriodicAllowance() *v1beta11.PeriodicAllowance {
+func (x *PeriodicSendAuthorization) GetSpendLimit() []*v1beta1.Coin {
 	if x != nil {
-		return x.PeriodicAllowance
+		return x.SpendLimit
+	}
+	return nil
+}
+
+func (x *PeriodicSendAuthorization) GetExpiration() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Expiration
+	}
+	return nil
+}
+
+func (x *PeriodicSendAuthorization) GetPeriod() *durationpb.Duration {
+	if x != nil {
+		return x.Period
+	}
+	return nil
+}
+
+func (x *PeriodicSendAuthorization) GetPeriodSpendLimit() []*v1beta1.Coin {
+	if x != nil {
+		return x.PeriodSpendLimit
+	}
+	return nil
+}
+
+func (x *PeriodicSendAuthorization) GetPeriodCanSpend() []*v1beta1.Coin {
+	if x != nil {
+		return x.PeriodCanSpend
+	}
+	return nil
+}
+
+func (x *PeriodicSendAuthorization) GetPeriodReset() *timestamppb.Timestamp {
+	if x != nil {
+		return x.PeriodReset
 	}
 	return nil
 }
@@ -1049,40 +1675,74 @@ var file_cosmos_bank_v1beta1_authz_proto_rawDesc = []byte{
 	0x62, 0x61, 0x73, 0x65, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69,
 	0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x26, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f,
 	0x66, 0x65, 0x65, 0x67, 0x72, 0x61, 0x6e, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2f, 0x66, 0x65, 0x65, 0x67, 0x72, 0x61, 0x6e, 0x74, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22,
-	0x94, 0x01, 0x0a, 0x11, 0x53, 0x65, 0x6e, 0x64, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x7a,
-	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x6c, 0x0a, 0x0b, 0x73, 0x70, 0x65, 0x6e, 0x64, 0x5f, 0x6c,
-	0x69, 0x6d, 0x69, 0x74, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x30, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x28, 0x67,
-	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65,
-	0x73, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x52, 0x0a, 0x73, 0x70, 0x65, 0x6e, 0x64, 0x4c, 0x69,
-	0x6d, 0x69, 0x74, 0x3a, 0x11, 0xca, 0xb4, 0x2d, 0x0d, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69,
-	0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x8f, 0x01, 0x0a, 0x19, 0x50, 0x65, 0x72, 0x69, 0x6f,
-	0x64, 0x69, 0x63, 0x53, 0x65, 0x6e, 0x64, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x7a, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x12, 0x5f, 0x0a, 0x12, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x69, 0x63,
-	0x5f, 0x61, 0x6c, 0x6c, 0x6f, 0x77, 0x61, 0x6e, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x2a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x66, 0x65, 0x65, 0x67, 0x72, 0x61,
-	0x6e, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x65, 0x72, 0x69, 0x6f,
-	0x64, 0x69, 0x63, 0x41, 0x6c, 0x6c, 0x6f, 0x77, 0x61, 0x6e, 0x63, 0x65, 0x42, 0x04, 0xc8, 0xde,
-	0x1f, 0x00, 0x52, 0x11, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x69, 0x63, 0x41, 0x6c, 0x6c, 0x6f,
-	0x77, 0x61, 0x6e, 0x63, 0x65, 0x3a, 0x11, 0xca, 0xb4, 0x2d, 0x0d, 0x41, 0x75, 0x74, 0x68, 0x6f,
-	0x72, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0xd5, 0x01, 0x0a, 0x17, 0x63, 0x6f, 0x6d,
-	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x76, 0x31, 0x62,
-	0x65, 0x74, 0x61, 0x31, 0x42, 0x0a, 0x41, 0x75, 0x74, 0x68, 0x7a, 0x50, 0x72, 0x6f, 0x74, 0x6f,
-	0x50, 0x01, 0x5a, 0x40, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b,
-	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b,
-	0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x62, 0x61, 0x6e, 0x6b, 0x76, 0x31, 0x62,
-	0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x42, 0x58, 0xaa, 0x02, 0x13, 0x43, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x42, 0x61, 0x6e, 0x6b, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0xca, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x42, 0x61, 0x6e, 0x6b, 0x5c, 0x56,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c,
-	0x42, 0x61, 0x6e, 0x6b, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42,
-	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x3a, 0x3a, 0x42, 0x61, 0x6e, 0x6b, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x2f, 0x66, 0x65, 0x65, 0x67, 0x72, 0x61, 0x6e, 0x74, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a,
+	0x19, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
+	0x2f, 0x61, 0x6e, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1f, 0x67, 0x6f, 0x6f, 0x67,
+	0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x74, 0x69, 0x6d, 0x65,
+	0x73, 0x74, 0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e, 0x67, 0x6f, 0x6f,
+	0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x64, 0x75, 0x72,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x94, 0x01, 0x0a, 0x11,
+	0x53, 0x65, 0x6e, 0x64, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x12, 0x6c, 0x0a, 0x0b, 0x73, 0x70, 0x65, 0x6e, 0x64, 0x5f, 0x6c, 0x69, 0x6d, 0x69, 0x74,
+	0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69,
+	0x6e, 0x42, 0x30, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75,
+	0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x43, 0x6f,
+	0x69, 0x6e, 0x73, 0x52, 0x0a, 0x73, 0x70, 0x65, 0x6e, 0x64, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x3a,
+	0x11, 0xca, 0xb4, 0x2d, 0x0d, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x7a, 0x61, 0x74, 0x69,
+	0x6f, 0x6e, 0x22, 0xd6, 0x04, 0x0a, 0x19, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x69, 0x63, 0x53,
+	0x65, 0x6e, 0x64, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x12, 0x6c, 0x0a, 0x0b, 0x73, 0x70, 0x65, 0x6e, 0x64, 0x5f, 0x6c, 0x69, 0x6d, 0x69, 0x74, 0x18,
+	0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
+	0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e,
+	0x42, 0x30, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,
+	0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x43, 0x6f, 0x69,
+	0x6e, 0x73, 0x52, 0x0a, 0x73, 0x70, 0x65, 0x6e, 0x64, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x12, 0x40,
+	0x0a, 0x0a, 0x65, 0x78, 0x70, 0x69, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x04,
+	0x90, 0xdf, 0x1f, 0x01, 0x52, 0x0a, 0x65, 0x78, 0x70, 0x69, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x12, 0x3b, 0x0a, 0x06, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x19, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
+	0x75, 0x66, 0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x08, 0xc8, 0xde, 0x1f,
+	0x00, 0x98, 0xdf, 0x1f, 0x01, 0x52, 0x06, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x12, 0x79, 0x0a,
+	0x12, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x5f, 0x73, 0x70, 0x65, 0x6e, 0x64, 0x5f, 0x6c, 0x69,
+	0x6d, 0x69, 0x74, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
+	0x43, 0x6f, 0x69, 0x6e, 0x42, 0x30, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x28, 0x67, 0x69,
+	0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73,
+	0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x52, 0x10, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x53, 0x70,
+	0x65, 0x6e, 0x64, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x12, 0x75, 0x0a, 0x10, 0x70, 0x65, 0x72, 0x69,
+	0x6f, 0x64, 0x5f, 0x63, 0x61, 0x6e, 0x5f, 0x73, 0x70, 0x65, 0x6e, 0x64, 0x18, 0x05, 0x20, 0x03,
+	0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x30, 0xc8,
+	0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f,
+	0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d,
+	0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x52,
+	0x0e, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x43, 0x61, 0x6e, 0x53, 0x70, 0x65, 0x6e, 0x64, 0x12,
+	0x47, 0x0a, 0x0c, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x5f, 0x72, 0x65, 0x73, 0x65, 0x74, 0x18,
+	0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
+	0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x0b, 0x70, 0x65, 0x72,
+	0x69, 0x6f, 0x64, 0x52, 0x65, 0x73, 0x65, 0x74, 0x3a, 0x11, 0xca, 0xb4, 0x2d, 0x0d, 0x41, 0x75,
+	0x74, 0x68, 0x6f, 0x72, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0xd5, 0x01, 0x0a, 0x17,
+	0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e, 0x6b, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x0a, 0x41, 0x75, 0x74, 0x68, 0x7a, 0x50, 0x72,
+	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x40, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f,
+	0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d,
+	0x73, 0x64, 0x6b, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62,
+	0x61, 0x6e, 0x6b, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x62, 0x61, 0x6e, 0x6b,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x42, 0x58, 0xaa, 0x02, 0x13,
+	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x42, 0x61, 0x6e, 0x6b, 0x2e, 0x56, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0xca, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x42, 0x61, 0x6e,
+	0x6b, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x5c, 0x42, 0x61, 0x6e, 0x6b, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c,
+	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x42, 0x61, 0x6e, 0x6b, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1099,19 +1759,25 @@ func file_cosmos_bank_v1beta1_authz_proto_rawDescGZIP() []byte {
 
 var file_cosmos_bank_v1beta1_authz_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_cosmos_bank_v1beta1_authz_proto_goTypes = []interface{}{
-	(*SendAuthorization)(nil),          // 0: cosmos.bank.v1beta1.SendAuthorization
-	(*PeriodicSendAuthorization)(nil),  // 1: cosmos.bank.v1beta1.PeriodicSendAuthorization
-	(*v1beta1.Coin)(nil),               // 2: cosmos.base.v1beta1.Coin
-	(*v1beta11.PeriodicAllowance)(nil), // 3: cosmos.feegrant.v1beta1.PeriodicAllowance
+	(*SendAuthorization)(nil),         // 0: cosmos.bank.v1beta1.SendAuthorization
+	(*PeriodicSendAuthorization)(nil), // 1: cosmos.bank.v1beta1.PeriodicSendAuthorization
+	(*v1beta1.Coin)(nil),              // 2: cosmos.base.v1beta1.Coin
+	(*timestamppb.Timestamp)(nil),     // 3: google.protobuf.Timestamp
+	(*durationpb.Duration)(nil),       // 4: google.protobuf.Duration
 }
 var file_cosmos_bank_v1beta1_authz_proto_depIdxs = []int32{
 	2, // 0: cosmos.bank.v1beta1.SendAuthorization.spend_limit:type_name -> cosmos.base.v1beta1.Coin
-	3, // 1: cosmos.bank.v1beta1.PeriodicSendAuthorization.periodic_allowance:type_name -> cosmos.feegrant.v1beta1.PeriodicAllowance
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	2, // 1: cosmos.bank.v1beta1.PeriodicSendAuthorization.spend_limit:type_name -> cosmos.base.v1beta1.Coin
+	3, // 2: cosmos.bank.v1beta1.PeriodicSendAuthorization.expiration:type_name -> google.protobuf.Timestamp
+	4, // 3: cosmos.bank.v1beta1.PeriodicSendAuthorization.period:type_name -> google.protobuf.Duration
+	2, // 4: cosmos.bank.v1beta1.PeriodicSendAuthorization.period_spend_limit:type_name -> cosmos.base.v1beta1.Coin
+	2, // 5: cosmos.bank.v1beta1.PeriodicSendAuthorization.period_can_spend:type_name -> cosmos.base.v1beta1.Coin
+	3, // 6: cosmos.bank.v1beta1.PeriodicSendAuthorization.period_reset:type_name -> google.protobuf.Timestamp
+	7, // [7:7] is the sub-list for method output_type
+	7, // [7:7] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_bank_v1beta1_authz_proto_init() }

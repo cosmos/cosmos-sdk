@@ -6,20 +6,26 @@ package types
 import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
+	_ "github.com/cosmos/cosmos-sdk/codec/types"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
-	feegrant "github.com/cosmos/cosmos-sdk/x/feegrant"
+	_ "github.com/cosmos/cosmos-sdk/x/feegrant"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
+	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
+	_ "google.golang.org/protobuf/types/known/durationpb"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -75,12 +81,28 @@ func (m *SendAuthorization) GetSpendLimit() github_com_cosmos_cosmos_sdk_types.C
 	return nil
 }
 
-// PeriodicSendAuthorization allows the grantee to spend up to periodic_allowance.period_spend_limit coins from
-// the granter's account during a period of periodic_allowance.period seconds
+// PeriodicSendAuthorization allows the grantee to spend up to `period_spend_limit` coins from
+// the granter's account during a period of `period` seconds
 //
 type PeriodicSendAuthorization struct {
-	// periodicAllowance specifies a struct of `PeriodicAllowance`
-	PeriodicAllowance feegrant.PeriodicAllowance `protobuf:"bytes,1,opt,name=periodic_allowance,json=periodicAllowance,proto3" json:"periodic_allowance"`
+	// spend_limit specifies the maximum amount of tokens that can be spent
+	// by this authorization and will be updated as tokens are spent. If it is
+	// empty, there is no spend limit and any amount of coins can be spent.
+	SpendLimit github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=spend_limit,json=spendLimit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"spend_limit"`
+	// expiration specifies an optional time when this authorization expires
+	Expiration *time.Time `protobuf:"bytes,2,opt,name=expiration,proto3,stdtime" json:"expiration,omitempty"`
+	// period specifies the time duration in which period_spend_limit coins can
+	// be spent before that authorization is reset
+	Period time.Duration `protobuf:"bytes,3,opt,name=period,proto3,stdduration" json:"period"`
+	// period_spend_limit specifies the maximum number of coins that can be spent
+	// in the period
+	PeriodSpendLimit github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=period_spend_limit,json=periodSpendLimit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"period_spend_limit"`
+	// period_can_spend is the number of coins left to be spent before the period_reset time
+	PeriodCanSpend github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,5,rep,name=period_can_spend,json=periodCanSpend,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"period_can_spend"`
+	// period_reset is the time at which this period resets and a new one begins,
+	// it is calculated from the start time of the first transaction after the
+	// last period ended
+	PeriodReset time.Time `protobuf:"bytes,6,opt,name=period_reset,json=periodReset,proto3,stdtime" json:"period_reset"`
 }
 
 func (m *PeriodicSendAuthorization) Reset()         { *m = PeriodicSendAuthorization{} }
@@ -116,11 +138,46 @@ func (m *PeriodicSendAuthorization) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PeriodicSendAuthorization proto.InternalMessageInfo
 
-func (m *PeriodicSendAuthorization) GetPeriodicAllowance() feegrant.PeriodicAllowance {
+func (m *PeriodicSendAuthorization) GetSpendLimit() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
-		return m.PeriodicAllowance
+		return m.SpendLimit
 	}
-	return feegrant.PeriodicAllowance{}
+	return nil
+}
+
+func (m *PeriodicSendAuthorization) GetExpiration() *time.Time {
+	if m != nil {
+		return m.Expiration
+	}
+	return nil
+}
+
+func (m *PeriodicSendAuthorization) GetPeriod() time.Duration {
+	if m != nil {
+		return m.Period
+	}
+	return 0
+}
+
+func (m *PeriodicSendAuthorization) GetPeriodSpendLimit() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.PeriodSpendLimit
+	}
+	return nil
+}
+
+func (m *PeriodicSendAuthorization) GetPeriodCanSpend() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.PeriodCanSpend
+	}
+	return nil
+}
+
+func (m *PeriodicSendAuthorization) GetPeriodReset() time.Time {
+	if m != nil {
+		return m.PeriodReset
+	}
+	return time.Time{}
 }
 
 func init() {
@@ -131,29 +188,36 @@ func init() {
 func init() { proto.RegisterFile("cosmos/bank/v1beta1/authz.proto", fileDescriptor_a4d2a37888ea779f) }
 
 var fileDescriptor_a4d2a37888ea779f = []byte{
-	// 337 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4f, 0xce, 0x2f, 0xce,
-	0xcd, 0x2f, 0xd6, 0x4f, 0x4a, 0xcc, 0xcb, 0xd6, 0x2f, 0x33, 0x4c, 0x4a, 0x2d, 0x49, 0x34, 0xd4,
-	0x4f, 0x2c, 0x2d, 0xc9, 0xa8, 0xd2, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x86, 0x28, 0xd0,
-	0x03, 0x29, 0xd0, 0x83, 0x2a, 0x90, 0x12, 0x49, 0xcf, 0x4f, 0xcf, 0x07, 0xcb, 0xeb, 0x83, 0x58,
-	0x10, 0xa5, 0x52, 0x92, 0x10, 0xa5, 0xf1, 0x10, 0x09, 0xa8, 0x3e, 0x88, 0x94, 0x1c, 0xdc, 0x9a,
-	0xe2, 0x54, 0xb8, 0x35, 0xc9, 0xf9, 0x99, 0x79, 0x50, 0x79, 0x35, 0xa8, 0x7c, 0x5a, 0x6a, 0x6a,
-	0x7a, 0x51, 0x62, 0x5e, 0x09, 0x5c, 0x0d, 0x4c, 0x00, 0xa2, 0x4e, 0x69, 0x0a, 0x23, 0x97, 0x60,
-	0x70, 0x6a, 0x5e, 0x8a, 0x63, 0x69, 0x49, 0x46, 0x7e, 0x51, 0x66, 0x55, 0x62, 0x49, 0x66, 0x7e,
-	0x9e, 0x50, 0x0e, 0x17, 0x77, 0x71, 0x41, 0x6a, 0x5e, 0x4a, 0x7c, 0x4e, 0x66, 0x6e, 0x66, 0x89,
-	0x04, 0xa3, 0x02, 0xb3, 0x06, 0xb7, 0x91, 0xa4, 0x1e, 0xdc, 0xe5, 0xc5, 0xa9, 0x30, 0x97, 0xeb,
-	0x39, 0xe7, 0x67, 0xe6, 0x39, 0x19, 0x9c, 0xb8, 0x27, 0xcf, 0xb0, 0xea, 0xbe, 0xbc, 0x46, 0x7a,
-	0x66, 0x49, 0x46, 0x69, 0x92, 0x5e, 0x72, 0x7e, 0x2e, 0xd4, 0xb9, 0x50, 0x4a, 0xb7, 0x38, 0x25,
-	0x5b, 0xbf, 0xa4, 0xb2, 0x20, 0xb5, 0x18, 0xac, 0xa1, 0x38, 0x88, 0x0b, 0x6c, 0xbe, 0x0f, 0xc8,
-	0x78, 0x2b, 0xc1, 0x53, 0x5b, 0x74, 0x79, 0x51, 0x1c, 0xa0, 0xd4, 0xcf, 0xc8, 0x25, 0x19, 0x90,
-	0x5a, 0x94, 0x99, 0x9f, 0x92, 0x99, 0x8c, 0xe9, 0xbc, 0x78, 0x2e, 0xa1, 0x02, 0xa8, 0x64, 0x7c,
-	0x62, 0x4e, 0x4e, 0x7e, 0x79, 0x62, 0x5e, 0x72, 0xaa, 0x04, 0xa3, 0x02, 0xa3, 0x06, 0xb7, 0x91,
-	0x16, 0xcc, 0x95, 0x70, 0x8f, 0xc2, 0x5c, 0x0a, 0x33, 0xcf, 0x11, 0xa6, 0xc3, 0x89, 0x05, 0xe4,
-	0xec, 0x20, 0xc1, 0x02, 0x74, 0x09, 0x2c, 0x2e, 0x72, 0x72, 0x3e, 0xf1, 0x48, 0x8e, 0xf1, 0xc2,
-	0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58, 0x8e, 0xe1,
-	0xc6, 0x63, 0x39, 0x86, 0x28, 0x4d, 0xbc, 0x9e, 0xae, 0x80, 0xa4, 0x04, 0xb0, 0xdf, 0x93, 0xd8,
-	0xc0, 0x81, 0x6e, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0xb5, 0x2f, 0x71, 0x6e, 0x25, 0x02, 0x00,
-	0x00,
+	// 457 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x54, 0x31, 0x8f, 0xd3, 0x30,
+	0x18, 0x4d, 0xb8, 0x52, 0x21, 0x07, 0x10, 0x17, 0x18, 0x92, 0x0e, 0xc9, 0xe9, 0x06, 0x54, 0x86,
+	0x73, 0xb8, 0x63, 0x83, 0x05, 0x52, 0x24, 0x16, 0x06, 0xd4, 0x63, 0x62, 0x89, 0x9c, 0xc4, 0x97,
+	0x5a, 0x6d, 0xec, 0x28, 0x76, 0x50, 0xdb, 0x5f, 0xd1, 0x81, 0x81, 0xdf, 0xc0, 0xcc, 0x8f, 0xa8,
+	0x98, 0x3a, 0x21, 0x26, 0x8a, 0xda, 0x3f, 0x82, 0x62, 0x3b, 0xa1, 0x14, 0x04, 0x4b, 0xa5, 0x9b,
+	0xea, 0xfa, 0xbd, 0xf7, 0xbd, 0xf7, 0xbd, 0x44, 0x01, 0x7e, 0xc2, 0x78, 0xce, 0x78, 0x10, 0x23,
+	0x3a, 0x0e, 0xde, 0x9f, 0xc7, 0x58, 0xa0, 0xf3, 0x00, 0x55, 0x62, 0x34, 0x87, 0x45, 0xc9, 0x04,
+	0xb3, 0xef, 0x2b, 0x02, 0xac, 0x09, 0x50, 0x13, 0x7a, 0x0f, 0x32, 0x96, 0x31, 0x89, 0x07, 0xf5,
+	0x49, 0x51, 0x7b, 0xae, 0xa2, 0x46, 0x0a, 0xd0, 0x3a, 0x05, 0x79, 0xad, 0x0d, 0xc7, 0xad, 0x4d,
+	0xc2, 0x08, 0xd5, 0xf8, 0x43, 0x8d, 0x5f, 0x61, 0x9c, 0x95, 0x88, 0x8a, 0x96, 0xd3, 0x5c, 0x34,
+	0x16, 0x19, 0x63, 0xd9, 0x04, 0x07, 0xf2, 0x5f, 0x5c, 0x5d, 0x05, 0x88, 0xce, 0x34, 0xe4, 0xef,
+	0x43, 0x82, 0xe4, 0x98, 0x0b, 0x94, 0x17, 0x4d, 0x86, 0x7d, 0x42, 0x5a, 0x95, 0x48, 0x10, 0xa6,
+	0x33, 0x9c, 0x7e, 0x30, 0xc1, 0xf1, 0x25, 0xa6, 0xe9, 0x8b, 0x4a, 0x8c, 0x58, 0x49, 0xe6, 0x12,
+	0xb3, 0x27, 0xc0, 0xe2, 0x05, 0xa6, 0x69, 0x34, 0x21, 0x39, 0x11, 0x8e, 0x79, 0x72, 0xd4, 0xb7,
+	0x2e, 0x5c, 0xd8, 0xb6, 0xc2, 0x71, 0xd3, 0x0a, 0x1c, 0x30, 0x42, 0xc3, 0xc7, 0xcb, 0xef, 0xbe,
+	0xf1, 0x69, 0xed, 0xf7, 0x33, 0x22, 0x46, 0x55, 0x0c, 0x13, 0x96, 0xeb, 0x2a, 0xf4, 0xcf, 0x19,
+	0x4f, 0xc7, 0x81, 0x98, 0x15, 0x98, 0x4b, 0x01, 0x1f, 0x02, 0x39, 0xff, 0x75, 0x3d, 0xfe, 0xe9,
+	0xf1, 0x97, 0xcf, 0x67, 0x77, 0x7e, 0x0b, 0x70, 0xfa, 0xb5, 0x03, 0xdc, 0x37, 0xb8, 0x24, 0x2c,
+	0x25, 0xc9, 0x35, 0xc7, 0xb3, 0x9f, 0x03, 0x80, 0xa7, 0x05, 0x51, 0xb5, 0x39, 0x37, 0x4e, 0xcc,
+	0xbe, 0x75, 0xd1, 0x83, 0xaa, 0x57, 0xd8, 0xf4, 0x0a, 0xdf, 0x36, 0xc5, 0x87, 0x9d, 0xc5, 0xda,
+	0x37, 0x87, 0x3b, 0x1a, 0xfb, 0x19, 0xe8, 0x16, 0x72, 0x19, 0xe7, 0x48, 0xaa, 0xdd, 0x3f, 0xd4,
+	0x2f, 0xf5, 0x53, 0x09, 0x6f, 0xd5, 0x51, 0x3f, 0xd6, 0x03, 0xb4, 0xc4, 0x9e, 0x01, 0x5b, 0x9d,
+	0xa2, 0xdd, 0x9d, 0x3b, 0x87, 0xdf, 0xf9, 0x9e, 0xb2, 0xb9, 0xfc, 0xb5, 0x79, 0x05, 0xf4, 0x5d,
+	0x94, 0x20, 0xaa, 0xec, 0x9d, 0x9b, 0x87, 0x37, 0xbe, 0xab, 0x4c, 0x06, 0x88, 0x4a, 0x6f, 0xfb,
+	0x15, 0xb8, 0xad, 0x6d, 0x4b, 0xcc, 0xb1, 0x70, 0xba, 0xff, 0xad, 0x5c, 0xb6, 0x26, 0x6b, 0xb7,
+	0x94, 0x72, 0x58, 0x0b, 0xff, 0xf2, 0x62, 0x85, 0x83, 0xe5, 0xc6, 0x33, 0x57, 0x1b, 0xcf, 0xfc,
+	0xb1, 0xf1, 0xcc, 0xc5, 0xd6, 0x33, 0x56, 0x5b, 0xcf, 0xf8, 0xb6, 0xf5, 0x8c, 0x77, 0x8f, 0xfe,
+	0x99, 0x77, 0xaa, 0x3e, 0x16, 0x32, 0x76, 0xdc, 0x95, 0x11, 0x9e, 0xfc, 0x0c, 0x00, 0x00, 0xff,
+	0xff, 0x13, 0xd2, 0x09, 0x6a, 0x48, 0x04, 0x00, 0x00,
 }
 
 func (m *SendAuthorization) Marshal() (dAtA []byte, err error) {
@@ -213,16 +277,74 @@ func (m *PeriodicSendAuthorization) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	_ = i
 	var l int
 	_ = l
-	{
-		size, err := m.PeriodicAllowance.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintAuthz(dAtA, i, uint64(size))
+	n1, err1 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.PeriodReset, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.PeriodReset):])
+	if err1 != nil {
+		return 0, err1
 	}
+	i -= n1
+	i = encodeVarintAuthz(dAtA, i, uint64(n1))
 	i--
-	dAtA[i] = 0xa
+	dAtA[i] = 0x32
+	if len(m.PeriodCanSpend) > 0 {
+		for iNdEx := len(m.PeriodCanSpend) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.PeriodCanSpend[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintAuthz(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if len(m.PeriodSpendLimit) > 0 {
+		for iNdEx := len(m.PeriodSpendLimit) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.PeriodSpendLimit[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintAuthz(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	n2, err2 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.Period, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.Period):])
+	if err2 != nil {
+		return 0, err2
+	}
+	i -= n2
+	i = encodeVarintAuthz(dAtA, i, uint64(n2))
+	i--
+	dAtA[i] = 0x1a
+	if m.Expiration != nil {
+		n3, err3 := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.Expiration, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(*m.Expiration):])
+		if err3 != nil {
+			return 0, err3
+		}
+		i -= n3
+		i = encodeVarintAuthz(dAtA, i, uint64(n3))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.SpendLimit) > 0 {
+		for iNdEx := len(m.SpendLimit) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.SpendLimit[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintAuthz(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -258,7 +380,31 @@ func (m *PeriodicSendAuthorization) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.PeriodicAllowance.Size()
+	if len(m.SpendLimit) > 0 {
+		for _, e := range m.SpendLimit {
+			l = e.Size()
+			n += 1 + l + sovAuthz(uint64(l))
+		}
+	}
+	if m.Expiration != nil {
+		l = github_com_gogo_protobuf_types.SizeOfStdTime(*m.Expiration)
+		n += 1 + l + sovAuthz(uint64(l))
+	}
+	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.Period)
+	n += 1 + l + sovAuthz(uint64(l))
+	if len(m.PeriodSpendLimit) > 0 {
+		for _, e := range m.PeriodSpendLimit {
+			l = e.Size()
+			n += 1 + l + sovAuthz(uint64(l))
+		}
+	}
+	if len(m.PeriodCanSpend) > 0 {
+		for _, e := range m.PeriodCanSpend {
+			l = e.Size()
+			n += 1 + l + sovAuthz(uint64(l))
+		}
+	}
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.PeriodReset)
 	n += 1 + l + sovAuthz(uint64(l))
 	return n
 }
@@ -384,7 +530,7 @@ func (m *PeriodicSendAuthorization) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PeriodicAllowance", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field SpendLimit", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -411,7 +557,178 @@ func (m *PeriodicSendAuthorization) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.PeriodicAllowance.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.SpendLimit = append(m.SpendLimit, types.Coin{})
+			if err := m.SpendLimit[len(m.SpendLimit)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Expiration", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthz
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAuthz
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuthz
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Expiration == nil {
+				m.Expiration = new(time.Time)
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(m.Expiration, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Period", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthz
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAuthz
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuthz
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.Period, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PeriodSpendLimit", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthz
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAuthz
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuthz
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PeriodSpendLimit = append(m.PeriodSpendLimit, types.Coin{})
+			if err := m.PeriodSpendLimit[len(m.PeriodSpendLimit)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PeriodCanSpend", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthz
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAuthz
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuthz
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PeriodCanSpend = append(m.PeriodCanSpend, types.Coin{})
+			if err := m.PeriodCanSpend[len(m.PeriodCanSpend)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PeriodReset", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthz
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAuthz
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuthz
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.PeriodReset, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

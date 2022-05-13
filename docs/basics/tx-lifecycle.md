@@ -68,7 +68,7 @@ are not empty, enforcing nonnegative numbers, and other logic specified in the d
 **_Stateful_** checks validate transactions and messages based on a committed state. Examples
 include checking that the relevant values exist and are able to be transacted with, the address
 has sufficient funds, and the sender is authorized or has the correct ownership to transact.
-At any given moment, full-nodes typically have [multiple versions](../core/baseapp.md#volatile-states)
+At any given moment, full-nodes typically have [multiple versions](../core/baseapp.md#state-updates)
 of the application's internal state for different purposes. For example, nodes will execute state
 changes while in the process of verifying transactions, but still need a copy of the last committed
 state in order to answer queries - they should not respond using state with uncommitted changes.
@@ -79,7 +79,7 @@ through several steps, beginning with decoding `Tx`.
 
 ### Decoding
 
-When `Tx` is received by the application from the underlying consensus engine (e.g. Tendermint), it is still in its [encoded](../core/encoding.md) `[]byte` form and needs to be unmarshaled in order to be processed. Then, the [`runTx`](../core/baseapp.md#runtx-and-runmsgs) function is called to run in `runTxModeCheck` mode, meaning the function will run all checks but exit before executing messages and writing state changes.
+When `Tx` is received by the application from the underlying consensus engine (e.g. Tendermint), it is still in its [encoded](../core/encoding.md) `[]byte` form and needs to be unmarshaled in order to be processed. Then, the transaction is passed to the middlewares defined in `tx.Handler`. The middlewares will performe additional checks defined in their own `CheckTx`, meaning the they will run all checks but exit before executing messages and writing state changes.
 
 ### ValidateBasic
 
@@ -96,13 +96,13 @@ Example, if the message is to send coins from one address to another, `ValidateB
 
 See also [Msg Service Validation](../building-modules/msg-services.md#Validation).
 
-### AnteHandler
+### Middlewares
 
-After the ValidateBasic checks, the `AnteHandler`s are run. Technically, they are optional, but in practice, they are very often present to perform signature verification, gas calculation, fee deduction and other core operations related to blockchain transactions.
+Middlewares implements the `TxHandler` interface and are defined by `tx.Handler` in `BaseApp`. This architecture allows to run the middlewares logic in the `CheckTx` and `DeliverTx` phases. Technically, they are optional, but in practice, they are very often present to perform signature verification, gas calculation, fee deduction and other core operations related to blockchain transactions.
 
-A copy of the cached context is provided to the `AnteHandler`, which performs limited checks specified for the transaction type. Using a copy allows the AnteHandler to do stateful checks for `Tx` without modifying the last committed state, and revert back to the original if the execution fails.
+A copy of the cached context is provided to the middleware, which performs limited checks specified for the transaction type. Using a copy allows the Middleware to do stateful checks for `Tx` without modifying the last committed state, and revert back to the original if the execution fails.
 
-For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth/spec) module `AnteHandler` checks and increments sequence numbers, checks signatures and account numbers, and deducts fees from the first signer of the transaction - all state changes are made using the `checkState`.
+For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth/spec) middlewares can check and increment sequence numbers, check signatures and account numbers, and deduct fees from the first signer of the transaction - all state changes are made using the `checkState`.
 
 ### Gas
 
@@ -201,19 +201,19 @@ Instead of using their `checkState`, full-nodes use `deliverState`:
 * **Decoding:** Since `DeliverTx` is an ABCI call, `Tx` is received in the encoded `[]byte` form.
   Nodes first unmarshal the transaction, using the [`TxConfig`](./app-anatomy#register-codec) defined in the app, then call `runTx` in `runTxModeDeliver`, which is very similar to `CheckTx` but also executes and writes state changes.
 
-* **Checks:** Full-nodes call `validateBasicMsgs` and the `AnteHandler` again. This second check
+* **Checks:** Full-nodes call `validateBasicMsgs` and the `DeliverTx` from the middleware again. This second check
   happens because they may not have seen the same transactions during the addition to Mempool stage\
   and a malicious proposer may have included invalid ones. One difference here is that the
-  `AnteHandler` will not compare `gas-prices` to the node's `min-gas-prices` since that value is local
+  middleware will not compare `gas-prices` to the node's `min-gas-prices` since that value is local
   to each node - differing values across nodes would yield nondeterministic results.
 
-* **`MsgServiceRouter`:** While `CheckTx` would have exited, `DeliverTx` continues to run
-  [`runMsgs`](../core/baseapp.md#runtx-and-runmsgs) to fully execute each `Msg` within the transaction.
+* **`RunMsgsTxHandler`:** While `CheckTx` would have exited, `DeliverTx` continues to run
+  [`RunMsgsTxHandler`](../core/baseapp.md#middlewares) to fully execute each `Msg` within the transaction.
   Since the transaction may have messages from different modules, `BaseApp` needs to know which module
-  to find the appropriate handler. This is achieved using `BaseApp`'s `MsgServiceRouter` so that it can be processed by the module's Protobuf [`Msg` service](../building-modules/msg-services.md).
+  to find the appropriate handler. This is achieved using `RunMsgsTxHandler`'s `MsgServiceRouter` so that it can be processed by the module's Protobuf [`Msg` service](../building-modules/msg-services.md).
   For `LegacyMsg` routing, the `Route` function is called via the [module manager](../building-modules/module-manager.md) to retrieve the route name and find the legacy [`Handler`](../building-modules/msg-services.md#handler-type) within the module.
 
-* **`Msg` service:** a Protobuf `Msg` service, a step up from `AnteHandler`, is responsible for executing each
+* **`Msg` service:** a Protobuf `Msg` service is responsible for executing each
   message in the `Tx` and causes state transitions to persist in `deliverTxState`.
 
 * **Gas:** While a `Tx` is being delivered, a `GasMeter` is used to keep track of how much

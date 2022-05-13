@@ -177,7 +177,7 @@ type runMsgsBranch struct {
 }
 
 // CheckTx implements tx.Handler.CheckTx method.
-// Do nothing during CheckTx.
+// Does nothing during CheckTx.
 func (sh runMsgsBranch) CheckTx(ctx context.Context, req tx.Request, checkReq tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
 	return sh.next.CheckTx(ctx, req, checkReq)
 }

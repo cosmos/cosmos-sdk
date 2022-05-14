@@ -29,10 +29,9 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new parameter configuration for the bank module
-// TODO: Remove the sendEnabledParams arg from this function.
-func NewParams(defaultSendEnabled bool, sendEnabledParams SendEnabledParams) Params {
+func NewParams(defaultSendEnabled bool) Params {
 	return Params{
-		SendEnabled:        sendEnabledParams,
+		SendEnabled:        []*SendEnabled{},
 		DefaultSendEnabled: defaultSendEnabled,
 	}
 }
@@ -40,7 +39,7 @@ func NewParams(defaultSendEnabled bool, sendEnabledParams SendEnabledParams) Par
 // DefaultParams is the default parameter configuration for the bank module
 func DefaultParams() Params {
 	return Params{
-		SendEnabled:        SendEnabledParams{},
+		SendEnabled:        []*SendEnabled{},
 		DefaultSendEnabled: DefaultDefaultSendEnabled,
 	}
 }
@@ -70,10 +69,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 func (se SendEnabled) Validate() error {
 	return sdk.ValidateDenom(se.Denom)
 }
-
-// SendEnabledParams is a collection of parameters indicating if a coin denom is enabled for sending
-// TODO: Delete this.
-type SendEnabledParams []*SendEnabled
 
 func validateSendEnabledParams(i interface{}) error {
 	params, ok := i.([]*SendEnabled)

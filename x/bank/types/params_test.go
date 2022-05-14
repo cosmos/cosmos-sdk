@@ -56,6 +56,7 @@ func Test_sendParamString(t *testing.T) {
 }
 
 func Test_validateParams(t *testing.T) {
+	// TODO: Overhaul this test, probably move it to the sendkeeper tests.
 	params := DefaultParams()
 
 	// default params have no error

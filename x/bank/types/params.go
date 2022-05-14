@@ -59,31 +59,6 @@ func (p Params) String() string {
 	return string(out)
 }
 
-// SendEnabledDenom returns true if the given denom is enabled for sending
-// TODO: Delete this.
-func (p Params) SendEnabledDenom(denom string) bool {
-	for _, pse := range p.SendEnabled {
-		if pse.Denom == denom {
-			return pse.Enabled
-		}
-	}
-	return p.DefaultSendEnabled
-}
-
-// SetSendEnabledParam returns an updated set of Parameters with the given denom
-// send enabled flag set.
-// TODO: Delete this.
-func (p Params) SetSendEnabledParam(denom string, sendEnabled bool) Params {
-	var sendParams SendEnabledParams
-	for _, p := range p.SendEnabled {
-		if p.Denom != denom {
-			sendParams = append(sendParams, NewSendEnabled(p.Denom, p.Enabled))
-		}
-	}
-	sendParams = append(sendParams, NewSendEnabled(denom, sendEnabled))
-	return NewParams(p.DefaultSendEnabled, sendParams)
-}
-
 // ParamSetPairs implements params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{

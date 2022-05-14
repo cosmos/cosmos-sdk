@@ -78,7 +78,7 @@ func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) {
 
 // InputOutputCoins performs multi-send functionality. It accepts a series of
 // inputs that correspond to a series of outputs. It returns an error if the
-// inputs and outputs don't lineup or if any single transfer of tokens fails.
+// inputs and outputs don't line up or if any single transfer of tokens fails.
 func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) error {
 	// Safety check ensuring that when sending coins the keeper must maintain the
 	// Check supply invariant and validity of Coins.
@@ -343,7 +343,7 @@ func (k BaseSendKeeper) BlockedAddr(addr sdk.AccAddress) bool {
 	return k.blockedAddrs[addr.String()]
 }
 
-// IsSendEnabled returns the current SendEnabled status of the provided denom.
+// IsSendEnabledDenom returns the current SendEnabled status of the provided denom.
 func (k BaseSendKeeper) IsSendEnabledDenom(ctx sdk.Context, denom string) bool {
 	return k.getSendEnabledOrDefault(ctx.KVStore(k.storeKey), denom, func() bool { return k.GetParams(ctx).DefaultSendEnabled })
 }
@@ -365,7 +365,7 @@ func (k BaseSendKeeper) DeleteSendEnabled(ctx sdk.Context, denom string) {
 	store.Delete(types.CreateSendEnabledKey(denom))
 }
 
-// IterateSendEnabled iterates over all the SendEnabled entries.
+// IterateSendEnabledEntries iterates over all the SendEnabled entries.
 func (k BaseSendKeeper) IterateSendEnabledEntries(ctx sdk.Context, cb func(denom string, sendEnabled bool) bool) {
 	seStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.SendEnabledPrefix)
 

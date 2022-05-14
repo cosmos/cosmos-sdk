@@ -14,7 +14,7 @@ var (
 	ErrInvalidKey            = sdkerrors.Register(ModuleName, 7, "invalid key")
 
 	// Periodic auth errors
-	// ErrspendLimitExceeded error if there are not enough allowance to cover the fees
+	// ErrSpendLimitExceeded error if there are not enough allowance to cover the fees
 	ErrSpendLimitExceeded = sdkerrors.Register(ModuleName, 8, "spend limit exceeded")
 	// ErrSpendLimitExpired error if the allowance has expired
 	ErrSpendLimitExpired = sdkerrors.Register(ModuleName, 9, "spend allowance expired")

@@ -6,7 +6,6 @@ import (
 
 	"sigs.k8s.io/yaml"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -30,6 +29,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new parameter configuration for the bank module
+// TODO: Remove the sendEnabledParams arg from this function.
 func NewParams(defaultSendEnabled bool, sendEnabledParams SendEnabledParams) Params {
 	return Params{
 		SendEnabled:        sendEnabledParams,
@@ -72,6 +72,7 @@ func (se SendEnabled) Validate() error {
 }
 
 // SendEnabledParams is a collection of parameters indicating if a coin denom is enabled for sending
+// TODO: Delete this.
 type SendEnabledParams []*SendEnabled
 
 func validateSendEnabledParams(i interface{}) error {
@@ -96,20 +97,9 @@ func NewSendEnabled(denom string, sendEnabled bool) *SendEnabled {
 
 // String implements stringer interface
 func (se SendEnabled) String() string {
-	bz, err := codec.ProtoMarshalJSON(&se, nil)
-	if err != nil {
-		panic(err)
-	}
-
-	out, err := yaml.JSONToYAML(bz)
-	if err != nil {
-		panic(err)
-	}
-
-	return string(out)
+	return fmt.Sprintf("%q: %t", se.Denom, se.Enabled)
 }
 
-// TODO: Delete this.
 func validateSendEnabled(i interface{}) error {
 	param, ok := i.(SendEnabled)
 	if !ok {

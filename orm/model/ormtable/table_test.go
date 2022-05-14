@@ -24,6 +24,7 @@ import (
 
 	sdkerrors "cosmossdk.io/errors"
 	queryv1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/query/v1beta1"
+
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
@@ -789,4 +790,19 @@ func TestReadonly(t *testing.T) {
 	})
 	ctx := ormtable.WrapContextDefault(readBackend)
 	assert.ErrorIs(t, ormerrors.ReadOnly, table.Insert(ctx, &testpb.ExampleTable{}))
+}
+
+func TestInsertReturningFieldName(t *testing.T) {
+	table, err := ormtable.Build(ormtable.Options{
+		MessageType: (&testpb.ExampleAutoIncFieldName{}).ProtoReflect().Type(),
+	})
+	backend := testkv.NewSplitMemBackend()
+	ctx := ormtable.WrapContextDefault(backend)
+	store, err := testpb.NewExampleAutoIncFieldNameTable(table)
+	assert.NilError(t, err)
+	foo, err := store.InsertReturningFoo(ctx, &testpb.ExampleAutoIncFieldName{
+		Bar: 45,
+	})
+	assert.NilError(t, err)
+	assert.Equal(t, uint64(1), foo)
 }

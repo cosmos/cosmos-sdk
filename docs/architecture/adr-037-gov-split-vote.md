@@ -10,7 +10,7 @@ Accepted
 
 ## Abstract
 
-This ADR defines a modification to the the governance module that would allow a staker to split their votes into several voting options. For example, it could use 70% of its voting power to vote Yes and 30% of its voting power to vote No.
+This ADR defines a modification to the governance module that would allow a staker to split their votes into several voting options. For example, it could use 70% of its voting power to vote Yes and 30% of its voting power to vote No.
 
 ## Context
 

@@ -184,7 +184,7 @@ type GRPCWebConfig struct {
 // StateSyncConfig defines the state sync snapshot configuration.
 type StateSyncConfig struct {
 	// SnapshotInterval sets the interval at which state sync snapshots are taken.
-	// 0 disables snapshots. Must be a multiple of PruningKeepEvery.
+	// 0 disables snapshots.
 	SnapshotInterval uint64 `mapstructure:"snapshot-interval"`
 
 	// SnapshotKeepRecent sets the number of recent state sync snapshots to keep.

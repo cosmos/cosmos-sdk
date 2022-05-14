@@ -505,10 +505,9 @@ func (suite *IntegrationTestSuite) TestSendEnabled() {
 	suite.Require().NoError(err)
 
 	// Set default send_enabled to !enabled, add a foodenom that overrides default as enabled
-	// TODO: Update this test.
 	params.DefaultSendEnabled = !enabled
-	params = params.SetSendEnabledParam(fooCoin.Denom, enabled)
 	app.BankKeeper.SetParams(ctx, params)
+	app.BankKeeper.SetSendEnabled(ctx, fooCoin.Denom, enabled)
 
 	// Expect our specific override to be enabled, others to be !enabled.
 	suite.Require().Equal(enabled, app.BankKeeper.IsSendEnabledCoin(ctx, fooCoin))

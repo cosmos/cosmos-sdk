@@ -54,8 +54,12 @@ func (p Params) Validate() error {
 
 // String implements the Stringer interface.
 func (p Params) String() string {
-	out, _ := yaml.Marshal(p)
-	return string(out)
+	sendEnabled, _ := yaml.Marshal(p.SendEnabled)
+	d := " "
+	if len(sendEnabled) > 0 && sendEnabled[0] == '-' {
+		d = "\n"
+	}
+	return fmt.Sprintf("default_send_enabled: %t\nsend_enabled:%s%s", p.DefaultSendEnabled, d, sendEnabled)
 }
 
 // ParamSetPairs implements params.ParamSet
@@ -92,7 +96,7 @@ func NewSendEnabled(denom string, sendEnabled bool) *SendEnabled {
 
 // String implements stringer interface
 func (se SendEnabled) String() string {
-	return fmt.Sprintf("%q: %t", se.Denom, se.Enabled)
+	return fmt.Sprintf("denom: %s\nenabled: %t\n", se.Denom, se.Enabled)
 }
 
 func validateSendEnabled(i interface{}) error {

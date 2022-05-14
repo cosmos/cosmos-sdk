@@ -15,6 +15,10 @@ func (gs GenesisState) Validate() error {
 	if len(gs.Params.SendEnabled) > 0 && len(gs.SendEnabled) > 0 {
 		return errors.New("send_enabled defined in both the send_enabled field and in params (deprecated)")
 	}
+	// Note: This Validate method has a concrete receiver, so the changes applied by MigrateSendEnabled are undone at the end of Validate.
+	// The changes are needed in order to properly validate the GenesisState in a backwards compatible way.
+	// It is assumed that at some point, MigrateSendEnabled is called outside this method before the info is used,
+	// gbut possibly not before being validated.
 	gs.MigrateSendEnabled()
 
 	if err := gs.Params.Validate(); err != nil {
@@ -108,7 +112,7 @@ func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.R
 	return &genesisState
 }
 
-// MigrateSendEnabled moves the SendEnabled info from Params into the main genesis SendEnabled field and removes them from Params.
+// MigrateSendEnabled moves the SendEnabled info from Params into the GenesisState.SendEnabled field and removes them from Params.
 // If the main genesis SendEnabled already has one or more entries, this is a noop.
 func (g *GenesisState) MigrateSendEnabled() {
 	if len(g.SendEnabled) == 0 {

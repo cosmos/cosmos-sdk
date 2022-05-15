@@ -1287,17 +1287,13 @@ func TestAltKeyring_UnsafeExportPrivKeyHex(t *testing.T) {
 	_, _, err = kr.NewMnemonic(uid, English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
 
-	unsafeKeyring := NewUnsafe(kr)
-	privKey, err := unsafeKeyring.UnsafeExportPrivKeyHex(uid)
+	privKey, err := kr.(keystore).ExportPrivateKeyObject(uid)
 
 	require.NoError(t, err)
-	require.Equal(t, 64, len(privKey))
-
-	_, err = hex.DecodeString(privKey)
-	require.NoError(t, err)
+	require.Equal(t, 64, len(hex.EncodeToString(privKey.Bytes())))
 
 	// test error on non existing key
-	_, err = unsafeKeyring.UnsafeExportPrivKeyHex("non-existing")
+	_, err = kr.(keystore).ExportPrivateKeyObject("non-existing")
 	require.Error(t, err)
 }
 

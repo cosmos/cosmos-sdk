@@ -63,6 +63,12 @@ service Query {
   rpc DenomOwners(QueryDenomOwnersRequest) returns (QueryDenomOwnersResponse) {
     option (google.api.http).get = "/cosmos/bank/v1beta1/denom_owners/{denom}";
   }
+
+  // SendEnabled queries for SendEnabled entries on a denomination.
+  // Denominations that don't have a specific SendEnabled entry, are not returned and would thus use the default (defined in Params).
+  rpc SendEnabled(QuerySendEnabled) returns (QuerySendEnabledResponse) {
+    option (google.api.http).get = "/cosmos/bank/v1beta1/sendEnabled";
+  }
 }
 
 // QueryBalanceRequest is the request type for the Query/Balance RPC method.
@@ -240,4 +246,19 @@ message QueryDenomOwnersResponse {
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QuerySendEnabled defines the RPC request for looking up SendEnabled entries.
+message QuerySendEnabled {
+  // denoms is the specific denoms you want look up. Leave empty to get all entries.
+  repeated string denoms = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QuerySendEnabledResponse defines the RPC response of a SendEnable query.
+message QuerySendEnabledResponse {
+  repeated SendEnabled send_enabled = 1;
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }

@@ -47,6 +47,9 @@ type QueryClient interface {
 	//
 	// Since: cosmos-sdk 0.46
 	DenomOwners(ctx context.Context, in *QueryDenomOwnersRequest, opts ...grpc.CallOption) (*QueryDenomOwnersResponse, error)
+	// SendEnabled queries for SendEnabled entries on a denomination.
+	// Denominations that don't have a specific SendEnabled entry, are not returned and would thus use the default (defined in Params).
+	SendEnabled(ctx context.Context, in *QuerySendEnabled, opts ...grpc.CallOption) (*QuerySendEnabledResponse, error)
 }
 
 type queryClient struct {
@@ -138,6 +141,15 @@ func (c *queryClient) DenomOwners(ctx context.Context, in *QueryDenomOwnersReque
 	return out, nil
 }
 
+func (c *queryClient) SendEnabled(ctx context.Context, in *QuerySendEnabled, opts ...grpc.CallOption) (*QuerySendEnabledResponse, error) {
+	out := new(QuerySendEnabledResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.Query/SendEnabled", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -167,6 +179,9 @@ type QueryServer interface {
 	//
 	// Since: cosmos-sdk 0.46
 	DenomOwners(context.Context, *QueryDenomOwnersRequest) (*QueryDenomOwnersResponse, error)
+	// SendEnabled queries for SendEnabled entries on a denomination.
+	// Denominations that don't have a specific SendEnabled entry, are not returned and would thus use the default (defined in Params).
+	SendEnabled(context.Context, *QuerySendEnabled) (*QuerySendEnabledResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -200,6 +215,9 @@ func (UnimplementedQueryServer) DenomsMetadata(context.Context, *QueryDenomsMeta
 }
 func (UnimplementedQueryServer) DenomOwners(context.Context, *QueryDenomOwnersRequest) (*QueryDenomOwnersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DenomOwners not implemented")
+}
+func (UnimplementedQueryServer) SendEnabled(context.Context, *QuerySendEnabled) (*QuerySendEnabledResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendEnabled not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -376,6 +394,24 @@ func _Query_DenomOwners_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_SendEnabled_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuerySendEnabled)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).SendEnabled(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.bank.v1beta1.Query/SendEnabled",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).SendEnabled(ctx, req.(*QuerySendEnabled))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -418,6 +454,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DenomOwners",
 			Handler:    _Query_DenomOwners_Handler,
+		},
+		{
+			MethodName: "SendEnabled",
+			Handler:    _Query_SendEnabled_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtime "github.com/tendermint/tendermint/libs/time"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -20,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
@@ -88,6 +90,7 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 	keeper := keeper.NewBaseKeeper(
 		appCodec, app.GetKey(types.StoreKey), authKeeper,
 		app.GetSubspace(types.ModuleName), blockedAddrs,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	return authKeeper, keeper
@@ -1054,7 +1057,9 @@ func (suite *IntegrationTestSuite) TestBalanceTrackingEvents() {
 	)
 
 	suite.app.BankKeeper = keeper.NewBaseKeeper(suite.app.AppCodec(), suite.app.GetKey(types.StoreKey),
-		suite.app.AccountKeeper, suite.app.GetSubspace(types.ModuleName), nil)
+		suite.app.AccountKeeper, suite.app.GetSubspace(types.ModuleName), nil,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
 
 	// set account with multiple permissions
 	suite.app.AccountKeeper.SetModuleAccount(suite.ctx, multiPermAcc)
@@ -1215,7 +1220,9 @@ func (suite *IntegrationTestSuite) TestMintCoinRestrictions() {
 
 	for _, test := range tests {
 		suite.app.BankKeeper = keeper.NewBaseKeeper(suite.app.AppCodec(), suite.app.GetKey(types.StoreKey),
-			suite.app.AccountKeeper, suite.app.GetSubspace(types.ModuleName), nil).WithMintCoinsRestriction(keeper.MintingRestrictionFn(test.restrictionFn))
+			suite.app.AccountKeeper, suite.app.GetSubspace(types.ModuleName), nil,
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		).WithMintCoinsRestriction(keeper.MintingRestrictionFn(test.restrictionFn))
 		for _, testCase := range test.testCases {
 			if testCase.expectPass {
 				suite.Require().NoError(

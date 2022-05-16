@@ -11,8 +11,7 @@ import (
 
 func (k Keeper) AfterValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _ sdk.ValAddress) error {
 	// Update the signing info start height or create a new signing info
-	_, found := k.GetValidatorSigningInfo(ctx, address)
-	if !found {
+	if _, found := k.GetValidatorSigningInfo(ctx, address); !found {
 		signingInfo := types.NewValidatorSigningInfo(
 			address,
 			ctx.BlockHeight(),

@@ -4,10 +4,11 @@
 
 - Dec 06, 2021: Initial Draft.
 - Feb 07, 2022: Draft read and concept-ACKed by the Ledger team.
+- May 16, 2022: Change status to Accepted.
 
 ## Status
 
-Draft. Concept ACK by the Ledger team, but details need to be polished.
+Accepted. Implementation started. Small value renderers details still need to be polished.
 
 ## Abstract
 

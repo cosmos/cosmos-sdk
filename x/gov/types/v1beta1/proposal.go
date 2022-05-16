@@ -247,13 +247,11 @@ func RegisterProposalType(ty string) {
 
 // ContentFromProposalType returns a Content object based on the proposal type.
 func ContentFromProposalType(title, desc, ty string) Content {
-	switch ty {
-	case ProposalTypeText:
+	if strings.EqualFold(ty, ProposalTypeText) {
 		return NewTextProposal(title, desc)
-
-	default:
-		return nil
 	}
+
+	return nil
 }
 
 // IsValidProposalType returns a boolean determining if the proposal type is

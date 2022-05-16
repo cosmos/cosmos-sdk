@@ -3,8 +3,8 @@ go 1.18
 module github.com/cosmos/cosmos-sdk
 
 require (
-	cosmossdk.io/core v0.0.0
 	cosmossdk.io/api v0.1.0-alpha8
+	cosmossdk.io/core v0.0.0
 	cosmossdk.io/errors v1.0.0-beta.6
 	cosmossdk.io/math v1.0.0-beta.2
 	github.com/99designs/keyring v1.1.6
@@ -62,7 +62,10 @@ require (
 	sigs.k8s.io/yaml v1.3.0
 )
 
-require github.com/cosmos/cosmos-sdk/container v1.0.0-alpha.3
+require (
+	github.com/cosmos/cosmos-sdk/api v0.1.0
+	github.com/cosmos/cosmos-sdk/container v1.0.0-alpha.3
+)
 
 require (
 	cloud.google.com/go v0.100.2 // indirect

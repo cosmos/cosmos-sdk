@@ -25,6 +25,7 @@ type SendKeeper interface {
 
 	IsSendEnabledDenom(ctx sdk.Context, denom string) bool
 	SetSendEnabled(ctx sdk.Context, denom string, value bool)
+	SetAllSendEnabled(ctx sdk.Context, sendEnableds []*types.SendEnabled)
 	DeleteSendEnabled(ctx sdk.Context, denom string)
 
 	IsSendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool

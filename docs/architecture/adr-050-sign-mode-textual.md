@@ -77,17 +77,7 @@ Ledger devices have the an Expert mode for advanced users. Expert mode needs to 
 
 > Expert mode enables further, more sophisticated features. This could be useful for advanced users
 
-Strings starting with the `*` character will only be shown in Expert mode. These strings are:
-
-- either hardcoded in the transaction emvelope (see point #7),
-- or, in the transaction body, fields that have the `cosmos.msg.v1.textual.expert` Protobuf field option set to `true`.
-
-```proto
-message MsgMyExample {
-  string signer  = 1;                                         // This field will show on a screen.
-  bytes metadata = 2 [(cosmos.msg.v1.textual.expert) = true]; // This field, encoded as base64, will only show in Expert mode.
-}
-```
+Strings starting with the `*` character will only be shown in Expert mode. These strings are either hardcoded in the transaction envelope (see point #7).
 
 For hardware wallets that don't have an expert mode, all strings MUST be shown on the device.
 
@@ -177,7 +167,7 @@ Hardware devices differ in screen sizes and memory capacities. The above specifi
 
 - if a string is too long, show it on multiple screens,
 - break line between the `key` and `value` from #3,
-- never allow line breaks on a number or a coin value.
+- perform line breaks on a number or a coin values only when necessary. For example, a `sdk.Coins` with multiple denoms would be better shown as one denom per line instead of an coin amount being cut in the middle.
 
 ## Examples
 

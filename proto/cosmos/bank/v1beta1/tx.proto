@@ -16,6 +16,9 @@ service Msg {
 
   // MultiSend defines a method for sending coins from some accounts to other accounts.
   rpc MultiSend(MsgMultiSend) returns (MsgMultiSendResponse);
+
+  // SetSendEnabled is a governance operation for setting the SendEnabled flag on any number of Denoms.
+  rpc SetSendEnabled(MsgSetSendEnabled) returns (MsgSetSendEnabledResponse);
 }
 
 // MsgSend represents a message to send coins from one account to another.
@@ -46,3 +49,15 @@ message MsgMultiSend {
 
 // MsgMultiSendResponse defines the Msg/MultiSend response type.
 message MsgMultiSendResponse {}
+
+// MsgSetSendEnabled is the Msg/SetSendEnabled request type.
+message MsgSetSendEnabled {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  repeated SendEnabled send_enabled = 2;
+}
+
+// MsgSetSendEnabledResponse defines the Msg/SetSendEnabled response type.
+message MsgSetSendEnabledResponse {}

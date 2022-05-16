@@ -2,18 +2,17 @@
 package distributionv1beta1
 
 import (
-	fmt "fmt"
-	io "io"
-	reflect "reflect"
-	sync "sync"
-
 	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/gogo/protobuf/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	io "io"
+	reflect "reflect"
+	sync "sync"
 )
 
 var (
@@ -5374,7 +5373,7 @@ type ValidatorOutstandingRewardsRecord struct {
 
 	// validator_address is the address of the validator.
 	ValidatorAddress string `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
-	// outstanding_rewards represents the outstanding rewards of a validator.
+	// outstanding_rewards represents the oustanding rewards of a validator.
 	OutstandingRewards []*v1beta1.DecCoin `protobuf:"bytes,2,rep,name=outstanding_rewards,json=outstandingRewards,proto3" json:"outstanding_rewards,omitempty"`
 }
 
@@ -5624,7 +5623,7 @@ type ValidatorSlashEventRecord struct {
 
 	// validator_address is the address of the validator.
 	ValidatorAddress string `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
-	// height defines the block height at which the slash event occurred.
+	// height defines the block height at which the slash event occured.
 	Height uint64 `protobuf:"varint,2,opt,name=height,proto3" json:"height,omitempty"`
 	// period is the period of the slash event.
 	Period uint64 `protobuf:"varint,3,opt,name=period,proto3" json:"period,omitempty"`
@@ -5686,7 +5685,7 @@ type GenesisState struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// params defines all the parameters of the module.
+	// params defines all the paramaters of the module.
 	Params *Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
 	// fee_pool defines the fee pool at genesis.
 	FeePool *FeePool `protobuf:"bytes,2,opt,name=fee_pool,json=feePool,proto3" json:"fee_pool,omitempty"`

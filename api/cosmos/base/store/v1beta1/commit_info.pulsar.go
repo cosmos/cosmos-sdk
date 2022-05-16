@@ -3,15 +3,14 @@ package storev1beta1
 
 import (
 	fmt "fmt"
-	io "io"
-	reflect "reflect"
-	sync "sync"
-
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/gogo/protobuf/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	io "io"
+	reflect "reflect"
+	sync "sync"
 )
 
 var _ protoreflect.List = (*_CommitInfo_2_list)(nil)
@@ -1628,7 +1627,7 @@ func (x *StoreInfo) GetCommitId() *CommitID {
 	return nil
 }
 
-// CommitID defines the commitment information when a specific store is
+// CommitID defines the committment information when a specific store is
 // committed.
 type CommitID struct {
 	state         protoimpl.MessageState

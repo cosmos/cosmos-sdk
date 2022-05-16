@@ -2,14 +2,10 @@
 package tendermintv1beta1
 
 import (
-	fmt "fmt"
-	io "io"
-	reflect "reflect"
-	sync "sync"
-
 	v1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
 	p2p "cosmossdk.io/api/tendermint/p2p"
 	types "cosmossdk.io/api/tendermint/types"
+	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/gogo/protobuf/gogoproto"
@@ -18,6 +14,9 @@ import (
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	anypb "google.golang.org/protobuf/types/known/anypb"
+	io "io"
+	reflect "reflect"
+	sync "sync"
 )
 
 var (
@@ -11084,7 +11083,7 @@ func (x *ABCIQueryResponse) GetCodespace() string {
 }
 
 // ProofOp defines an operation used for calculating Merkle root. The data could
-// be arbitrary format, providing necessary data for example neighbouring node
+// be arbitrary format, providing nessecary data for example neighbouring node
 // hash.
 //
 // Note: This type is a duplicate of the ProofOp proto type defined in Tendermint.

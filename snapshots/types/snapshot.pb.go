@@ -146,6 +146,8 @@ func (m *Metadata) GetChunkHashes() [][]byte {
 }
 
 // SnapshotItem is an item contained in a rootmulti.Store snapshot.
+//
+// Since: cosmos-sdk 0.46
 type SnapshotItem struct {
 	// item is the specific type of snapshot item.
 	//
@@ -286,6 +288,8 @@ func (*SnapshotItem) XXX_OneofWrappers() []interface{} {
 }
 
 // SnapshotStoreItem contains metadata about a snapshotted store.
+//
+// Since: cosmos-sdk 0.46
 type SnapshotStoreItem struct {
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 }
@@ -331,6 +335,8 @@ func (m *SnapshotStoreItem) GetName() string {
 }
 
 // SnapshotIAVLItem is an exported IAVL node.
+//
+// Since: cosmos-sdk 0.46
 type SnapshotIAVLItem struct {
 	Key   []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	Value []byte `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
@@ -402,6 +408,8 @@ func (m *SnapshotIAVLItem) GetHeight() int32 {
 }
 
 // SnapshotExtensionMeta contains metadata about an external snapshotter.
+//
+// Since: cosmos-sdk 0.46
 type SnapshotExtensionMeta struct {
 	Name   string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Format uint32 `protobuf:"varint,2,opt,name=format,proto3" json:"format,omitempty"`
@@ -455,6 +463,8 @@ func (m *SnapshotExtensionMeta) GetFormat() uint32 {
 }
 
 // SnapshotExtensionPayload contains payloads of an external snapshotter.
+//
+// Since: cosmos-sdk 0.46
 type SnapshotExtensionPayload struct {
 	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
 }
@@ -500,6 +510,8 @@ func (m *SnapshotExtensionPayload) GetPayload() []byte {
 }
 
 // SnapshotKVItem is an exported Key/Value Pair
+//
+// Since: cosmos-sdk 0.46
 type SnapshotKVItem struct {
 	Key   []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	Value []byte `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
@@ -553,6 +565,8 @@ func (m *SnapshotKVItem) GetValue() []byte {
 }
 
 // SnapshotSchema is an exported schema of smt store
+//
+// Since: cosmos-sdk 0.46
 type SnapshotSchema struct {
 	Keys [][]byte `protobuf:"bytes,1,rep,name=keys,proto3" json:"keys,omitempty"`
 }

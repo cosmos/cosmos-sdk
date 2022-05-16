@@ -4,7 +4,7 @@ order: 3
 
 # Context
 
-The `context` is a data structure intended to be passed from function to function that carries information about the current state of the application. It provides an access to a branched storage (a safe branch of the entire state) as well as useful objects and information like `gasMeter`, `block height`, `consensus parameters` and more. {synopsis}
+The `context` is a data structure intended to be passed from function to function that carries information about the current state of the application. It provides access to a branched storage (a safe branch of the entire state) as well as useful objects and information like `gasMeter`, `block height`, `consensus parameters` and more. {synopsis}
 
 ## Pre-requisites Readings
 
@@ -21,7 +21,7 @@ The Cosmos SDK `Context` is a custom data structure that contains Go's stdlib [`
 * **Multistore:** Every application's `BaseApp` contains a [`CommitMultiStore`](./store.md#multistore) which is provided when a `Context` is created. Calling the `KVStore()` and `TransientStore()` methods allows modules to fetch their respective [`KVStore`](./store.md#base-layer-kvstores) using their unique `StoreKey`.
 * **Header:** The [header](https://docs.tendermint.com/master/spec/core/data_structures.html#header) is a Blockchain type. It carries important information about the state of the blockchain, such as block height and proposer of the current block.
 * **Chain ID:** The unique identification number of the blockchain a block pertains to.
-* **Transaction Bytes:** The `[]byte` representation of a transaction being processed using the context. Every transaction is processed by various parts of the Cosmos SDK and consensus engine (e.g. Tendermint) throughout its [lifecycle](../basics/tx-lifecycle.md), some of which to not have any understanding of transaction types. Thus, transactions are marshaled into the generic `[]byte` type using some kind of [encoding format](./encoding.md) such as [Amino](./encoding.md).
+* **Transaction Bytes:** The `[]byte` representation of a transaction being processed using the context. Every transaction is processed by various parts of the Cosmos SDK and consensus engine (e.g. Tendermint) throughout its [lifecycle](../basics/tx-lifecycle.md), some of which do not have any understanding of transaction types. Thus, transactions are marshaled into the generic `[]byte` type using some kind of [encoding format](./encoding.md) such as [Amino](./encoding.md).
 * **Logger:** A `logger` from the Tendermint libraries. Learn more about logs [here](https://docs.tendermint.com/master/nodes/logging.html). Modules call this method to create their own unique module-specific logger.
 * **VoteInfo:** A list of the ABCI type [`VoteInfo`](https://docs.tendermint.com/master/spec/abci/abci.html#voteinfo), which includes the name of a validator and a boolean indicating whether they have signed the block.
 * **Gas Meters:** Specifically, a [`gasMeter`](../basics/gas-fees.md#main-gas-meter) for the transaction currently being processed using the context and a [`blockGasMeter`](../basics/gas-fees.md#block-gas-meter) for the entire block it belongs to. Users specify how much in fees they wish to pay for the execution of their transaction; these gas meters keep track of how much [gas](../basics/gas-fees.md) has been used in the transaction or block so far. If the gas meter runs out, execution halts.

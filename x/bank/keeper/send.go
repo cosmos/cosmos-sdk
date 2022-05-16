@@ -376,9 +376,13 @@ func (k BaseSendKeeper) DeleteSendEnabled(ctx sdk.Context, denom string) {
 	store.Delete(types.CreateSendEnabledKey(denom))
 }
 
+func (k BaseSendKeeper) getSendEnabledPrefixStore(ctx sdk.Context) sdk.KVStore {
+	return prefix.NewStore(ctx.KVStore(k.storeKey), types.SendEnabledPrefix)
+}
+
 // IterateSendEnabledEntries iterates over all the SendEnabled entries.
 func (k BaseSendKeeper) IterateSendEnabledEntries(ctx sdk.Context, cb func(denom string, sendEnabled bool) bool) {
-	seStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.SendEnabledPrefix)
+	seStore := k.getSendEnabledPrefixStore(ctx)
 
 	iterator := seStore.Iterator(nil, nil)
 	defer iterator.Close()

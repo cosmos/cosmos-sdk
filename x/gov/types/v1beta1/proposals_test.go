@@ -44,11 +44,13 @@ func TestContentFromProposalType(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		content := v1beta1.ContentFromProposalType("title", "foo", test.proposalType)
+		content, ok := v1beta1.ContentFromProposalType("title", "foo", test.proposalType)
 		if test.expectedType == "" {
-			require.Nil(t, content)
+			require.False(t, ok)
 			continue
 		}
+
+		require.True(t, ok)
 		require.NotNil(t, content)
 		require.Equal(t, test.expectedType, content.ProposalType())
 	}

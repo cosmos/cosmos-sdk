@@ -246,12 +246,12 @@ func RegisterProposalType(ty string) {
 }
 
 // ContentFromProposalType returns a Content object based on the proposal type.
-func ContentFromProposalType(title, desc, ty string) Content {
+func ContentFromProposalType(title, desc, ty string) (Content, bool) {
 	if strings.EqualFold(ty, ProposalTypeText) {
-		return NewTextProposal(title, desc)
+		return NewTextProposal(title, desc), true
 	}
 
-	return nil
+	return nil, false
 }
 
 // IsValidProposalType returns a boolean determining if the proposal type is

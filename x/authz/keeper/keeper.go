@@ -60,12 +60,12 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 	skey := grantStoreKey(grantee, granter, updated.MsgTypeURL())
 	grant, found := k.getGrant(ctx, skey)
 	if !found {
-		return sdkerrors.ErrNotFound.Wrap("authorization not found")
+		return authz.ErrNoAuthorizationFound
 	}
 
 	msg, ok := updated.(proto.Message)
 	if !ok {
-		sdkerrors.ErrPackAny.Wrapf("cannot proto marshal %T", updated)
+		return sdkerrors.ErrPackAny.Wrapf("cannot proto marshal %T", updated)
 	}
 
 	any, err := codectypes.NewAnyWithValue(msg)
@@ -76,6 +76,7 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 	grant.Authorization = any
 	store := ctx.KVStore(k.storeKey)
 	store.Set(skey, k.cdc.MustMarshal(&grant))
+
 	return nil
 }
 
@@ -87,19 +88,21 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 	for i, msg := range msgs {
 		signers := msg.GetSigners()
 		if len(signers) != 1 {
-			return nil, sdkerrors.ErrInvalidRequest.Wrap("authorization can be given to msg with only one signer")
+			return nil, authz.ErrAuthorizationNumOfSigners
 		}
 		granter := signers[0]
 
 		// if granter != grantee then check authorization.Accept, otherwise we implicitly accept.
 		if !granter.Equals(grantee) {
-			grant, found := k.getGrant(ctx, grantStoreKey(grantee, granter, sdk.MsgTypeURL(msg)))
+			skey := grantStoreKey(grantee, granter, sdk.MsgTypeURL(msg))
+
+			grant, found := k.getGrant(ctx, skey)
 			if !found {
-				return nil, sdkerrors.ErrUnauthorized.Wrap("authorization not found")
+				return nil, sdkerrors.Wrapf(authz.ErrNoAuthorizationFound, "failed to update grant with key %s", string(skey))
 			}
 
 			if grant.Expiration != nil && grant.Expiration.Before(now) {
-				return nil, sdkerrors.ErrUnauthorized.Wrap("authorization expired")
+				return nil, authz.ErrAuthorizationExpired
 			}
 
 			authorization, err := grant.GetAuthorization()
@@ -193,10 +196,8 @@ func (k Keeper) DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk
 	skey := grantStoreKey(grantee, granter, msgType)
 	grant, found := k.getGrant(ctx, skey)
 	if !found {
-		return sdkerrors.ErrNotFound.Wrap("authorization not found")
+		return sdkerrors.Wrapf(authz.ErrNoAuthorizationFound, "failed to delete grant with key %s", string(skey))
 	}
-
-	store.Delete(skey)
 
 	if grant.Expiration != nil {
 		err := k.removeFromGrantQueue(ctx, skey, granter, grantee, *grant.Expiration)
@@ -204,6 +205,8 @@ func (k Keeper) DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk
 			return err
 		}
 	}
+
+	store.Delete(skey)
 
 	return ctx.EventManager().EmitTypedEvent(&authz.EventRevoke{
 		MsgTypeUrl: msgType,
@@ -252,53 +255,6 @@ func (k Keeper) IterateGrants(ctx sdk.Context,
 		k.cdc.MustUnmarshal(iter.Value(), &grant)
 		if handler(granterAddr, granteeAddr, grant) {
 			break
-		}
-	}
-}
-
-// ExportGenesis returns a GenesisState for a given context.
-func (k Keeper) ExportGenesis(ctx sdk.Context) *authz.GenesisState {
-	var entries []authz.GrantAuthorization
-	k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
-		entries = append(entries, authz.GrantAuthorization{
-			Granter:       granter.String(),
-			Grantee:       grantee.String(),
-			Expiration:    grant.Expiration,
-			Authorization: grant.Authorization,
-		})
-		return false
-	})
-
-	return authz.NewGenesisState(entries)
-}
-
-// InitGenesis new authz genesis
-func (k Keeper) InitGenesis(ctx sdk.Context, data *authz.GenesisState) {
-	now := ctx.BlockTime()
-	for _, entry := range data.Authorization {
-		// ignore expired authorizations
-		if entry.Expiration != nil && entry.Expiration.Before(now) {
-			continue
-		}
-
-		grantee, err := sdk.AccAddressFromBech32(entry.Grantee)
-		if err != nil {
-			panic(err)
-		}
-
-		granter, err := sdk.AccAddressFromBech32(entry.Granter)
-		if err != nil {
-			panic(err)
-		}
-
-		a, ok := entry.Authorization.GetCachedValue().(authz.Authorization)
-		if !ok {
-			panic("expected authorization")
-		}
-
-		err = k.SaveGrant(ctx, grantee, granter, a, entry.Expiration)
-		if err != nil {
-			panic(err)
 		}
 	}
 }
@@ -355,7 +311,7 @@ func (keeper Keeper) removeFromGrantQueue(ctx sdk.Context, grantKey []byte, gran
 	key := GrantQueueKey(expiration, granter, grantee)
 	bz := store.Get(key)
 	if bz == nil {
-		return sdkerrors.ErrLogic.Wrap("can't remove grant from the expire queue, grant key not found")
+		return sdkerrors.Wrap(authz.ErrNoGrantKeyFound, "can't remove grant from the expire queue, grant key not found")
 	}
 
 	var queueItem authz.GrantQueueItem

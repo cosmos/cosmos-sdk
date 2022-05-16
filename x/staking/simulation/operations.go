@@ -135,7 +135,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 
 		var fees sdk.Coins
 
-		coins, hasNeg := spendable.SafeSub(sdk.Coins{selfDelegation})
+		coins, hasNeg := spendable.SafeSub(selfDelegation)
 		if !hasNeg {
 			fees, err = simtypes.RandomFees(r, ctx, coins)
 			if err != nil {
@@ -277,7 +277,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 
 		var fees sdk.Coins
 
-		coins, hasNeg := spendable.SafeSub(sdk.Coins{bondAmt})
+		coins, hasNeg := spendable.SafeSub(bondAmt)
 		if !hasNeg {
 			fees, err = simtypes.RandomFees(r, ctx, coins)
 			if err != nil {
@@ -411,14 +411,15 @@ func SimulateMsgCancelUnbondingDelegate(ak types.AccountKeeper, bk types.BankKee
 		// get random unbonding delegation entry at block height
 		unbondingDelegationEntry := unbondingDelegation.Entries[r.Intn(len(unbondingDelegation.Entries))]
 
+		if unbondingDelegationEntry.CompletionTime.Before(ctx.BlockTime()) {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "unbonding delegation is already processed"), nil, nil
+		}
+
 		if !unbondingDelegationEntry.Balance.IsPositive() {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "delegator receiving balance is negative"), nil, nil
 		}
 
-		cancelBondAmt, err := simtypes.RandPositiveInt(r, unbondingDelegationEntry.Balance)
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "invalid cancelBondAmt amount"), nil, err
-		}
+		cancelBondAmt := simtypes.RandomAmount(r, unbondingDelegationEntry.Balance)
 
 		if cancelBondAmt.IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "cancelBondAmt amount is zero"), nil, nil

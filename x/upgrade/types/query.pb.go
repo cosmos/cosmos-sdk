@@ -582,6 +582,8 @@ type QueryClient interface {
 	// Since: cosmos-sdk 0.43
 	ModuleVersions(ctx context.Context, in *QueryModuleVersionsRequest, opts ...grpc.CallOption) (*QueryModuleVersionsResponse, error)
 	// Returns the account with authority to conduct upgrades
+	//
+	// Since: cosmos-sdk 0.46
 	Authority(ctx context.Context, in *QueryAuthorityRequest, opts ...grpc.CallOption) (*QueryAuthorityResponse, error)
 }
 
@@ -657,6 +659,8 @@ type QueryServer interface {
 	// Since: cosmos-sdk 0.43
 	ModuleVersions(context.Context, *QueryModuleVersionsRequest) (*QueryModuleVersionsResponse, error)
 	// Returns the account with authority to conduct upgrades
+	//
+	// Since: cosmos-sdk 0.46
 	Authority(context.Context, *QueryAuthorityRequest) (*QueryAuthorityResponse, error)
 }
 

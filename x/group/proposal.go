@@ -6,12 +6,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-func (p *Proposal) GetMsgs() []sdk.Msg {
-	msgs, err := tx.GetMsgs(p.Messages, "proposal")
-	if err != nil {
-		panic(err)
-	}
-	return msgs
+func (p *Proposal) GetMsgs() ([]sdk.Msg, error) {
+	return tx.GetMsgs(p.Messages, "proposal")
+
 }
 
 func (p *Proposal) SetMsgs(msgs []sdk.Msg) error {

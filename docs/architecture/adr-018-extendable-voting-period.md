@@ -18,7 +18,7 @@ Thus, we propose the following mechanism:
 
 ### Params
 
-* The current gov param `VotingPeriod` is to be replaced by a `MinVotingPeriod` param.  This is the the default voting period that all governance proposal voting periods start with.
+* The current gov param `VotingPeriod` is to be replaced by a `MinVotingPeriod` param.  This is the default voting period that all governance proposal voting periods start with.
 * There is a new gov param called `MaxVotingPeriodExtension`.
 
 ### Mechanism

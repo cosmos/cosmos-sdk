@@ -570,9 +570,10 @@ func (s *argsTestSuite) TestLogConfigOrError() {
 	}
 	errMulti := errors.FlattenErrors(errs...)
 
-	makeTestLogger := func(testName string, out io.Writer) zerolog.Logger {
+	makeTestLogger := func(testName string, out io.Writer) *zerolog.Logger {
 		output := zerolog.ConsoleWriter{Out: out, TimeFormat: time.Kitchen, NoColor: true}
-		return zerolog.New(output).With().Str("test", testName).Timestamp().Logger()
+		logger := zerolog.New(output).With().Str("test", testName).Timestamp().Logger()
+		return &logger
 	}
 
 	tests := []struct {

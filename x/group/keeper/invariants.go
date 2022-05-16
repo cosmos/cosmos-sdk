@@ -14,7 +14,7 @@ import (
 
 const weightInvariant = "Group-TotalWeight"
 
-// RegisterInvariants registers all group invariants
+// RegisterInvariants registers all group invariants.
 func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper) {
 	ir.RegisterRoute(group.ModuleName, weightInvariant, GroupTotalWeightInvariant(keeper))
 }
@@ -73,7 +73,7 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 				return msg, broken
 			}
 
-			curMemWeight, err := groupmath.NewNonNegativeDecFromString(groupMember.GetMember().GetWeight())
+			curMemWeight, err := groupmath.NewPositiveDecFromString(groupMember.GetMember().GetWeight())
 			if err != nil {
 				msg += fmt.Sprintf("error while parsing non-nengative decimal for group member %s\n%v\n", groupMember.Member.Address, err)
 				return msg, broken

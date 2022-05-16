@@ -20,6 +20,7 @@ import (
 var _ authz.QueryServer = Keeper{}
 
 // Authorizations implements the Query/Grants gRPC method.
+// It returns grants for a granter-grantee pair. If msg type URL is set, it returns grants only for that msg type.
 func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz.QueryGrantsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
@@ -39,7 +40,7 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 	if req.MsgTypeUrl != "" {
 		grant, found := k.getGrant(ctx, grantStoreKey(grantee, granter, req.MsgTypeUrl))
 		if !found {
-			return nil, sdkerrors.ErrNotFound.Wrapf("authorization not found for %s type", req.MsgTypeUrl)
+			return nil, sdkerrors.Wrapf(authz.ErrNoAuthorizationFound, "authorization not found for %s type", req.MsgTypeUrl)
 		}
 
 		authorization, err := grant.GetAuthorization()

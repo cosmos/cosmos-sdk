@@ -327,7 +327,11 @@ func (s *IntegrationTestSuite) TestQueryGroupPolicyInfo() {
 				s.Require().Equal(s.groupPolicies[0].Admin, g.Admin)
 				s.Require().Equal(s.groupPolicies[0].Metadata, g.Metadata)
 				s.Require().Equal(s.groupPolicies[0].Version, g.Version)
-				s.Require().Equal(s.groupPolicies[0].GetDecisionPolicy(), g.GetDecisionPolicy())
+				dp1, err := s.groupPolicies[0].GetDecisionPolicy()
+				s.Require().NoError(err)
+				dp2, err := g.GetDecisionPolicy()
+				s.Require().NoError(err)
+				s.Require().Equal(dp1, dp2)
 			}
 		})
 	}
@@ -398,7 +402,11 @@ func (s *IntegrationTestSuite) TestQueryGroupPoliciesByGroup() {
 					s.Require().Equal(res.GroupPolicies[i].Metadata, tc.expectGroupPolicies[i].Metadata)
 					s.Require().Equal(res.GroupPolicies[i].Version, tc.expectGroupPolicies[i].Version)
 					s.Require().Equal(res.GroupPolicies[i].Admin, tc.expectGroupPolicies[i].Admin)
-					s.Require().Equal(res.GroupPolicies[i].GetDecisionPolicy(), tc.expectGroupPolicies[i].GetDecisionPolicy())
+					dp1, err := s.groupPolicies[i].GetDecisionPolicy()
+					s.Require().NoError(err)
+					dp2, err := tc.expectGroupPolicies[i].GetDecisionPolicy()
+					s.Require().NoError(err)
+					s.Require().Equal(dp1, dp2)
 				}
 			}
 		})
@@ -470,7 +478,11 @@ func (s *IntegrationTestSuite) TestQueryGroupPoliciesByAdmin() {
 					s.Require().Equal(res.GroupPolicies[i].Metadata, tc.expectGroupPolicies[i].Metadata)
 					s.Require().Equal(res.GroupPolicies[i].Version, tc.expectGroupPolicies[i].Version)
 					s.Require().Equal(res.GroupPolicies[i].Admin, tc.expectGroupPolicies[i].Admin)
-					s.Require().Equal(res.GroupPolicies[i].GetDecisionPolicy(), tc.expectGroupPolicies[i].GetDecisionPolicy())
+					dp1, err := s.groupPolicies[i].GetDecisionPolicy()
+					s.Require().NoError(err)
+					dp2, err := tc.expectGroupPolicies[i].GetDecisionPolicy()
+					s.Require().NoError(err)
+					s.Require().Equal(dp1, dp2)
 				}
 			}
 		})
@@ -781,7 +793,7 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 	var txResp sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().Equal(uint32(0), txResp.Code, out.String())
-	proposalId := s.getProposalIdFromTxResponse(txResp)
+	proposalID := s.getProposalIDFromTxResponse(txResp)
 
 	testCases := []struct {
 		name           string
@@ -816,7 +828,7 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 		{
 			"valid proposal id with no votes",
 			[]string{
-				proposalId,
+				proposalID,
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,

@@ -251,7 +251,8 @@ func (e *wrappedError) GRPCStatus() *grpcstatus.Status {
 		if hasStatus, ok := w.(interface {
 			GRPCStatus() *grpcstatus.Status
 		}); ok {
-			return hasStatus.GRPCStatus()
+			status := hasStatus.GRPCStatus()
+			return grpcstatus.New(status.Code(), fmt.Sprintf("%s: %s", status.Message(), e.msg))
 		}
 
 		x, ok := w.(causer)

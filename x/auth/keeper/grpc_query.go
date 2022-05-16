@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"sort"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -94,9 +95,16 @@ func (ak AccountKeeper) ModuleAccounts(c context.Context, req *types.QueryModule
 
 	ctx := sdk.UnwrapSDKContext(c)
 
+	// For deterministic output, sort the permAddrs by module name.
+	sortedPermAddrs := make([]string, 0, len(ak.permAddrs))
+	for moduleName := range ak.permAddrs {
+		sortedPermAddrs = append(sortedPermAddrs, moduleName)
+	}
+	sort.Strings(sortedPermAddrs)
+
 	modAccounts := make([]*codectypes.Any, 0, len(ak.permAddrs))
 
-	for moduleName := range ak.permAddrs {
+	for _, moduleName := range sortedPermAddrs {
 		account := ak.GetModuleAccount(ctx, moduleName)
 		if account == nil {
 			return nil, status.Errorf(codes.NotFound, "account %s not found", moduleName)
@@ -111,6 +119,7 @@ func (ak AccountKeeper) ModuleAccounts(c context.Context, req *types.QueryModule
 	return &types.QueryModuleAccountsResponse{Accounts: modAccounts}, nil
 }
 
+// Bech32Prefix returns the keeper internally stored bech32 prefix.
 func (ak AccountKeeper) Bech32Prefix(ctx context.Context, req *types.Bech32PrefixRequest) (*types.Bech32PrefixResponse, error) {
 	bech32Prefix, err := ak.getBech32Prefix()
 	if err != nil {
@@ -120,6 +129,8 @@ func (ak AccountKeeper) Bech32Prefix(ctx context.Context, req *types.Bech32Prefi
 	return &types.Bech32PrefixResponse{Bech32Prefix: bech32Prefix}, nil
 }
 
+// AddressBytesToString converts an address from bytes to string, using the
+// keeper's bech32 prefix.
 func (ak AccountKeeper) AddressBytesToString(ctx context.Context, req *types.AddressBytesToStringRequest) (*types.AddressBytesToStringResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -137,6 +148,8 @@ func (ak AccountKeeper) AddressBytesToString(ctx context.Context, req *types.Add
 	return &types.AddressBytesToStringResponse{AddressString: text}, nil
 }
 
+// AddressStringToBytes converts an address from string to bytes, using the
+// keeper's bech32 prefix.
 func (ak AccountKeeper) AddressStringToBytes(ctx context.Context, req *types.AddressStringToBytesRequest) (*types.AddressStringToBytesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

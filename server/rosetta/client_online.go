@@ -11,27 +11,32 @@ import (
 	"strconv"
 	"time"
 
-	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/cosmos/cosmos-sdk/version"
+
 	abcitypes "github.com/tendermint/tendermint/abci/types"
-	tmrpc "github.com/tendermint/tendermint/rpc/client"
+
+	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
+	"google.golang.org/grpc/metadata"
+
 	"github.com/tendermint/tendermint/rpc/client/http"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 
 	crgerrs "github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
 	crgtypes "github.com/cosmos/cosmos-sdk/server/rosetta/lib/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-	"github.com/cosmos/cosmos-sdk/version"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	tmrpc "github.com/tendermint/tendermint/rpc/client"
 )
 
 // interface assertion
 var _ crgtypes.Client = (*Client)(nil)
 
-const defaultNodeTimeout = 15 * time.Second
+const defaultNodeTimeout = time.Minute
 
 // Client implements a single network client to interact with cosmos based chains
 type Client struct {
@@ -121,6 +126,14 @@ func (c *Client) Ready() error {
 	if err != nil {
 		return err
 	}
+
+	// to prevent timeout of reading genesis block
+	var height int64 = -1
+	_, err = c.BlockByHeight(ctx, &height)
+	if err != nil {
+		return err
+	}
+
 	_, err = c.bank.TotalSupply(ctx, &bank.QueryTotalSupplyRequest{})
 	if err != nil {
 		return err
@@ -393,6 +406,27 @@ func (c *Client) ConstructionMetadataFromOptions(ctx context.Context, options ma
 	err = constructionOptions.FromMetadata(options)
 	if err != nil {
 		return nil, err
+	}
+
+	// if default fees suggestion is enabled and gas limit or price is unset, use default
+	if c.config.EnableFeeSuggestion {
+		if constructionOptions.GasLimit <= 0 {
+			constructionOptions.GasLimit = uint64(c.config.GasToSuggest)
+		}
+		if constructionOptions.GasPrice == "" {
+			denom := c.config.DenomToSuggest
+			constructionOptions.GasPrice = c.config.GasPrices.AmountOf(denom).String() + denom
+		}
+	}
+
+	if constructionOptions.GasLimit > 0 && constructionOptions.GasPrice != "" {
+		gasPrice, err := sdk.ParseDecCoin(constructionOptions.GasPrice)
+		if err != nil {
+			return nil, err
+		}
+		if !gasPrice.IsPositive() {
+			return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, "gas price must be positive")
+		}
 	}
 
 	signersData := make([]*SignerData, len(constructionOptions.ExpectedSigners))

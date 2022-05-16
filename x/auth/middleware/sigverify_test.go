@@ -55,6 +55,7 @@ func (s *MWTestSuite) TestSetPubKey() {
 	testTx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 	require.NoError(err)
 
+	// DeliverTx
 	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx})
 	require.NoError(err)
 
@@ -65,6 +66,10 @@ func (s *MWTestSuite) TestSetPubKey() {
 		require.True(pubs[i].Equals(pk),
 			"Wrong Pubkey retrieved from AccountKeeper, idx=%d\nexpected=%s\n     got=%s", i, pubs[i], pk)
 	}
+
+	// SimulateTx
+	_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx})
+	require.NoError(err)
 }
 
 func (s *MWTestSuite) TestConsumeSignatureVerificationGas() {

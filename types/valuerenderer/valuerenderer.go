@@ -34,6 +34,11 @@ func (r DefaultValueRenderer) Format(ctx context.Context, v interface{}) ([]stri
 		// TODO get metadata from ctx and state.
 		r, err := formatCoin(v, metadata)
 		return []string{r}, err
+	case sdk.Coins:
+		var metadata bank.Metadata
+		// TODO get metadata from ctx and state.
+		r, err := formatCoins(v, metadata)
+		return []string{r}, err
 	default:
 		return nil, fmt.Errorf("value renderers cannot format value %s of type %T", v, v)
 	}
@@ -131,4 +136,19 @@ func formatCoin(coin sdk.Coin, metadata bank.Metadata) (string, error) {
 
 	vr, err := formatDecimal(dispAmount.String())
 	return vr + " " + dispDenom, err
+}
+
+// formatDecimal formats a sdk.Coins into a value-rendered string, which uses
+// `formatCoin` separated by ", " (a comma and a space).
+func formatCoins(coins sdk.Coins, metadata bank.Metadata) (string, error) {
+	formatted := make([]string, len(coins))
+	for i, coin := range coins {
+		var err error
+		formatted[i], err = formatCoin(coin, metadata)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return strings.Join(formatted, ", "), nil
 }

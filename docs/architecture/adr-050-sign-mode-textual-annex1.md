@@ -55,14 +55,14 @@ Value Renderers describe how values of different Protobuf types should be encode
 
 - `["3cosm", "2000000uatom"]` -> `2 atom, 3 COSM` (assuming the display denoms are `atom` and `COSM`)
 
-### `type_url`
+### `msg_title` instead of Msg `type_url`
 
-- all protobuf messages to be used with `SIGN_MODE_TEXTUAL` CAN have a short name associated with them that can be used in format strings whenever the type url is explicitly referenced via the `cosmos.msg.v1.textual.type_url` Protobuf message option.
+- all protobuf messages to be used with `SIGN_MODE_TEXTUAL` CAN have a short title associated with them that can be used in format strings whenever the type URL is explicitly referenced via the `cosmos.msg.v1.textual.msg_title` Protobuf message option.
 - if this option is not specified for a Msg, then the Protobuf fully qualified name will be used.
 
 ```proto
 message MsgSend {
-  option (cosmos.msg.v1.textual.type_url) = "bank v1 send coins";
+  option (cosmos.msg.v1.textual.msg_title) = "bank send coins";
 }
 ```
 
@@ -70,8 +70,19 @@ message MsgSend {
 
 #### Examples
 
-- `cosmos.bank.v1beta1.MsgSend` -> `bank v1beta1 send coins`
+- `cosmos.bank.v1beta1.MsgSend` -> `bank send coins` (no v1beta1 in string, for bijectivity we map this string to v1beta1)
+- `cosmos.bank.v1.MsgSend` -> `bank v1 send coins` (if `cosmos.bank.v1` is released and used in parallel with `cosmos.bank.v1beta1`)
+- `cosmos.gov.v1beta1.MsgVote` -> `governance vote` (no v1beta1 in string, for bijectivity we map this string to v1beta1)
 - `cosmos.gov.v1.MsgVote` -> `governance v1 vote`
+
+#### Best Pratices
+
+We recommend to use this option only for `Msg`s whose Protobuf fully qualified name can be hard to understand. As such, the two examples above (`MsgSend` and `MsgVote`) are not good examples to be used with `msg_title`. We still allow `msg_title` for chains who might have `Msg`s with complex or non-obvious names.
+
+In those cases, we recommend to drop the version (e.g. `v1`) in the string if there's only one version of the module on chain. This way, the bijective mapping can figure out which message each string corresponds to. If multiple Protobuf versions of the same module exist on the same chain, we recommend keeping the first `msg_title` with version, and the second `msg_title` with version (e.g. `v2`):
+
+- `mychain.mymodule.v1.MsgDo` -> `mymodule do something`
+- `mychain.mymodule.v2.MsgDo` -> `mymodule v2 do something`
 
 ### `repeated`
 

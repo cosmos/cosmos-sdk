@@ -10,8 +10,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 )
 

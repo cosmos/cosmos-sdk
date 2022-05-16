@@ -177,6 +177,8 @@ func (m *QueryAccountRequest) XXX_DiscardUnknown() {
 var xxx_messageInfo_QueryAccountRequest proto.InternalMessageInfo
 
 // QueryModuleAccountsRequest is the request type for the Query/ModuleAccounts RPC method.
+//
+// Since: cosmos-sdk 0.46
 type QueryModuleAccountsRequest struct {
 }
 
@@ -343,6 +345,8 @@ func (m *QueryParamsRequest) XXX_DiscardUnknown() {
 var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
 
 // QueryModuleAccountsResponse is the response type for the Query/ModuleAccounts RPC method.
+//
+// Since: cosmos-sdk 0.46
 type QueryModuleAccountsResponse struct {
 	Accounts []*types.Any `protobuf:"bytes,1,rep,name=accounts,proto3" json:"accounts,omitempty"`
 }
@@ -387,7 +391,9 @@ func (m *QueryModuleAccountsResponse) GetAccounts() []*types.Any {
 	return nil
 }
 
-// Bech32PrefixRequest is the request type for Bech32Prefix rpc method
+// Bech32PrefixRequest is the request type for Bech32Prefix rpc method.
+//
+// Since: cosmos-sdk 0.46
 type Bech32PrefixRequest struct {
 }
 
@@ -424,7 +430,9 @@ func (m *Bech32PrefixRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Bech32PrefixRequest proto.InternalMessageInfo
 
-// Bech32PrefixResponse is the response type for Bech32Prefix rpc method
+// Bech32PrefixResponse is the response type for Bech32Prefix rpc method.
+//
+// Since: cosmos-sdk 0.46
 type Bech32PrefixResponse struct {
 	Bech32Prefix string `protobuf:"bytes,1,opt,name=bech32_prefix,json=bech32Prefix,proto3" json:"bech32_prefix,omitempty"`
 }
@@ -469,7 +477,9 @@ func (m *Bech32PrefixResponse) GetBech32Prefix() string {
 	return ""
 }
 
-// AddressBytesToStringRequest is the request type for AddressString rpc method
+// AddressBytesToStringRequest is the request type for AddressString rpc method.
+//
+// Since: cosmos-sdk 0.46
 type AddressBytesToStringRequest struct {
 	AddressBytes []byte `protobuf:"bytes,1,opt,name=address_bytes,json=addressBytes,proto3" json:"address_bytes,omitempty"`
 }
@@ -514,7 +524,9 @@ func (m *AddressBytesToStringRequest) GetAddressBytes() []byte {
 	return nil
 }
 
-// AddressBytesToStringResponse is the response type for AddressString rpc method
+// AddressBytesToStringResponse is the response type for AddressString rpc method.
+//
+// Since: cosmos-sdk 0.46
 type AddressBytesToStringResponse struct {
 	AddressString string `protobuf:"bytes,1,opt,name=address_string,json=addressString,proto3" json:"address_string,omitempty"`
 }
@@ -559,7 +571,9 @@ func (m *AddressBytesToStringResponse) GetAddressString() string {
 	return ""
 }
 
-// AddressStringToBytesRequest is the request type for AccountBytes rpc method
+// AddressStringToBytesRequest is the request type for AccountBytes rpc method.
+//
+// Since: cosmos-sdk 0.46
 type AddressStringToBytesRequest struct {
 	AddressString string `protobuf:"bytes,1,opt,name=address_string,json=addressString,proto3" json:"address_string,omitempty"`
 }
@@ -604,7 +618,9 @@ func (m *AddressStringToBytesRequest) GetAddressString() string {
 	return ""
 }
 
-// AddressStringToBytesResponse is the response type for AddressBytes rpc method
+// AddressStringToBytesResponse is the response type for AddressBytes rpc method.
+//
+// Since: cosmos-sdk 0.46
 type AddressStringToBytesResponse struct {
 	AddressBytes []byte `protobuf:"bytes,1,opt,name=address_bytes,json=addressBytes,proto3" json:"address_bytes,omitempty"`
 }
@@ -744,12 +760,20 @@ type QueryClient interface {
 	// Params queries all parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// ModuleAccounts returns all the existing module accounts.
+	//
+	// Since: cosmos-sdk 0.46
 	ModuleAccounts(ctx context.Context, in *QueryModuleAccountsRequest, opts ...grpc.CallOption) (*QueryModuleAccountsResponse, error)
-	// Bech32 queries bech32Prefix
+	// Bech32Prefix queries bech32Prefix
+	//
+	// Since: cosmos-sdk 0.46
 	Bech32Prefix(ctx context.Context, in *Bech32PrefixRequest, opts ...grpc.CallOption) (*Bech32PrefixResponse, error)
 	// AddressBytesToString converts Account Address bytes to string
+	//
+	// Since: cosmos-sdk 0.46
 	AddressBytesToString(ctx context.Context, in *AddressBytesToStringRequest, opts ...grpc.CallOption) (*AddressBytesToStringResponse, error)
 	// AddressStringToBytes converts Address string to bytes
+	//
+	// Since: cosmos-sdk 0.46
 	AddressStringToBytes(ctx context.Context, in *AddressStringToBytesRequest, opts ...grpc.CallOption) (*AddressStringToBytesResponse, error)
 }
 
@@ -835,12 +859,20 @@ type QueryServer interface {
 	// Params queries all parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// ModuleAccounts returns all the existing module accounts.
+	//
+	// Since: cosmos-sdk 0.46
 	ModuleAccounts(context.Context, *QueryModuleAccountsRequest) (*QueryModuleAccountsResponse, error)
-	// Bech32 queries bech32Prefix
+	// Bech32Prefix queries bech32Prefix
+	//
+	// Since: cosmos-sdk 0.46
 	Bech32Prefix(context.Context, *Bech32PrefixRequest) (*Bech32PrefixResponse, error)
 	// AddressBytesToString converts Account Address bytes to string
+	//
+	// Since: cosmos-sdk 0.46
 	AddressBytesToString(context.Context, *AddressBytesToStringRequest) (*AddressBytesToStringResponse, error)
 	// AddressStringToBytes converts Address string to bytes
+	//
+	// Since: cosmos-sdk 0.46
 	AddressStringToBytes(context.Context, *AddressStringToBytesRequest) (*AddressStringToBytesResponse, error)
 }
 

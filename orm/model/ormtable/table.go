@@ -153,7 +153,7 @@ type Schema interface {
 type AutoIncrementTable interface {
 	Table
 
-	// InsertReturningID inserts the provided entry in the store and returns the newly
-	// generated ID for the message or an error.
-	InsertReturningID(ctx context.Context, message proto.Message) (newId uint64, err error)
+	// InsertReturningPKey inserts the provided entry in the store and returns the newly
+	// generated primary key for the message or an error.
+	InsertReturningPKey(ctx context.Context, message proto.Message) (newPK uint64, err error)
 }

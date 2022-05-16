@@ -324,6 +324,10 @@ func NewSimApp(
 	)
 	// set the governance module account as the authority for conducting upgrades
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+
+	// RegisterUpgradeHandlers is used for registering any on-chain upgrades
+	app.RegisterUpgradeHandlers()
+
 	app.NFTKeeper = nftkeeper.NewKeeper(keys[nftkeeper.StoreKey], appCodec, app.AccountKeeper, app.BankKeeper)
 
 	// create evidence keeper with router
@@ -605,7 +609,7 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server
-func RegisterSwaggerAPI(ctx client.Context, rtr *mux.Router) {
+func RegisterSwaggerAPI(_ client.Context, rtr *mux.Router) {
 	statikFS, err := fs.New()
 	if err != nil {
 		panic(err)

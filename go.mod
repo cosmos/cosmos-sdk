@@ -62,10 +62,7 @@ require (
 	sigs.k8s.io/yaml v1.3.0
 )
 
-require (
-	github.com/cosmos/cosmos-sdk/api v0.1.0
-	github.com/cosmos/cosmos-sdk/container v1.0.0-alpha.3
-)
+require github.com/cosmos/cosmos-sdk/container v1.0.0-alpha.3
 
 require (
 	cloud.google.com/go v0.100.2 // indirect
@@ -80,6 +77,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.1.1 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/cosmos/cosmos-sdk/api v0.1.0 // indirect
 	github.com/cosmos/ledger-go v0.9.2 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
 	github.com/danieljoos/wincred v1.0.2 // indirect
@@ -161,9 +159,9 @@ require (
 )
 
 replace (
+	cosmossdk.io/api => ./api
 	cosmossdk.io/core => ./core
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
-	github.com/cosmos/cosmos-sdk/api => ./api
 	github.com/cosmos/cosmos-sdk/db => ./db
 
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.

@@ -122,3 +122,12 @@ func TestIsTrueB(t *testing.T) {
 		})
 	}
 }
+
+func TestToBoolB(t *testing.T) {
+	t.Run("true", func(t *testing.T) {
+		assert.Equal(t, types.TrueB, types.ToBoolB(true))
+	})
+	t.Run("false", func(t *testing.T) {
+		assert.Equal(t, types.FalseB, types.ToBoolB(false))
+	})
+}

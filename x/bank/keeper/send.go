@@ -351,11 +351,21 @@ func (k BaseSendKeeper) IsSendEnabledDenom(ctx sdk.Context, denom string) bool {
 // SetSendEnabled sets the SendEnabled flag for a denom to the provided value.
 func (k BaseSendKeeper) SetSendEnabled(ctx sdk.Context, denom string, value bool) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.CreateSendEnabledKey(denom)
-	val := types.TrueB
-	if !value {
-		val = types.FalseB
+	k.setSendEnabledEntry(store, denom, value)
+}
+
+// SetAllSendEnabled sets all the provided SendEnabled entries in the bank store.
+func (k BaseSendKeeper) SetAllSendEnabled(ctx sdk.Context, sendEnableds []*types.SendEnabled) {
+	store := ctx.KVStore(k.storeKey)
+	for _, se := range sendEnableds {
+		k.setSendEnabledEntry(store, se.Denom, se.Enabled)
 	}
+}
+
+// setSendEnabledEntry sets SendEnabled for the given denom to the give value in the provided store.
+func (k BaseSendKeeper) setSendEnabledEntry(store sdk.KVStore, denom string, value bool) {
+	key := types.CreateSendEnabledKey(denom)
+	val := types.ToBoolB(value)
 	store.Set(key, []byte{val})
 }
 

@@ -90,3 +90,11 @@ func CreateSendEnabledKey(denom string) []byte {
 func IsTrueB(bz []byte) bool {
 	return len(bz) == 1 && bz[0] == TrueB
 }
+
+// ToBoolB returns TrueB if v is true, and FalseB if it's false.
+func ToBoolB(v bool) byte {
+	if v {
+		return TrueB
+	}
+	return FalseB
+}

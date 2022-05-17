@@ -8,19 +8,7 @@ import (
 // v0.47 x/bank genesis state. The migration includes:
 // - Move the SendEnabled entries from Params to the new GenesisState.SendEnabled field.
 func MigrateGenState(oldState *types.GenesisState) *types.GenesisState {
-	newParams := types.Params{
-		SendEnabled:        []*types.SendEnabled{},
-		DefaultSendEnabled: oldState.Params.DefaultSendEnabled,
-	}
-	var newSendEnabled []types.SendEnabled
-	for _, se := range oldState.Params.SendEnabled {
-		newSendEnabled = append(newSendEnabled, *se)
-	}
-	return &types.GenesisState{
-		Params:        newParams,
-		Balances:      oldState.Balances,
-		Supply:        oldState.Supply, // NewCoins used here to remove zero coin denoms from supply.
-		DenomMetadata: oldState.DenomMetadata,
-		SendEnabled:   newSendEnabled,
-	}
+	newState := *oldState
+	newState.MigrateSendEnabled()
+	return &newState
 }

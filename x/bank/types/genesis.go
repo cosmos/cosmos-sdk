@@ -113,13 +113,19 @@ func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.R
 }
 
 // MigrateSendEnabled moves the SendEnabled info from Params into the GenesisState.SendEnabled field and removes them from Params.
-// If the main genesis SendEnabled already has one or more entries, this is a noop.
+// If the Params.SendEnabled slice is empty, this is a noop.
+// If the main SendEnabled slice already has entries, the Params.SendEnabled entries are added.
+// In case of the same demon in both, preference is given to the existing (main GenesisState field) entry.
 func (g *GenesisState) MigrateSendEnabled() {
-	if len(g.SendEnabled) == 0 {
-		ses := g.Params.SendEnabled
-		g.SendEnabled = make([]SendEnabled, len(ses))
-		for i, se := range ses {
-			g.SendEnabled[i] = *se
+	if len(g.Params.SendEnabled) > 0 {
+		knownSendEnabled := map[string]bool{}
+		for _, se := range g.SendEnabled {
+			knownSendEnabled[se.Denom] = true
+		}
+		for _, se := range g.Params.SendEnabled {
+			if _, known := knownSendEnabled[se.Denom]; !known {
+				g.SendEnabled = append(g.SendEnabled, *se)
+			}
 		}
 		g.Params.SendEnabled = []*SendEnabled{}
 	}

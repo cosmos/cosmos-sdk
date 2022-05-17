@@ -98,7 +98,6 @@ The available permissions are:
 3. **[Messages](03_messages.md)**
    * [MsgSend](03_messages.md#msgsend)
    * [MsgMultiSend](03_messages.md#msgmultisend)
-   * [MsgSetSendEnabled](03_messages.md#msgsetsendenabled)
 4. **[Events](04_events.md)**
    * [Handlers](04_events.md#handlers)
 5. **[Parameters](05_params.md)**

@@ -1608,6 +1608,32 @@ func (suite *IntegrationTestSuite) TestMigrator_Migrate3to4() {
 	}
 }
 
+func (suite *IntegrationTestSuite) TestSetParams() {
+	ctx, bankKeeper := suite.ctx, suite.app.BankKeeper
+	params := types.NewParams(true)
+	params.SendEnabled = []*types.SendEnabled{
+		{"paramscointrue", true},
+		{"paramscoinfalse", false},
+	}
+	bankKeeper.SetParams(ctx, params)
+
+	suite.Run("stored params are as expected", func() {
+		actual := bankKeeper.GetParams(ctx)
+		suite.Assert().True(actual.DefaultSendEnabled, "DefaultSendEnabled")
+		suite.Assert().Len(actual.SendEnabled, 0, "SendEnabled")
+	})
+
+	suite.Run("send enabled params converted to store", func() {
+		actual := bankKeeper.GetAllSendEnabledEntries(ctx)
+		if suite.Assert().Len(actual, 2) {
+			suite.Equal("paramscoinfalse", actual[0].Denom, "actual[0].Denom")
+			suite.False(actual[0].Enabled, "actual[0].Enabled")
+			suite.Equal("paramscointrue", actual[1].Denom, "actual[1].Denom")
+			suite.True(actual[1].Enabled, "actual[1].Enabled")
+		}
+	})
+}
+
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }

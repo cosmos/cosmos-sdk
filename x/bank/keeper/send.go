@@ -74,7 +74,11 @@ func (k BaseSendKeeper) GetParams(ctx sdk.Context) (params types.Params) {
 
 // SetParams sets the total set of bank parameters.
 func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.paramSpace.SetParamSet(ctx, &params)
+	if len(params.SendEnabled) > 0 {
+		k.SetAllSendEnabled(ctx, params.SendEnabled)
+	}
+	p := types.NewParams(params.DefaultSendEnabled)
+	k.paramSpace.SetParamSet(ctx, &p)
 }
 
 // InputOutputCoins performs multi-send functionality. It accepts a series of

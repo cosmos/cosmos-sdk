@@ -260,10 +260,6 @@ func (k BaseKeeper) SendEnabled(goCtx context.Context, req *types.QuerySendEnabl
 				resp.SendEnabled = append(resp.SendEnabled, types.NewSendEnabled(denom, se))
 			}
 		}
-		resp.Pagination = &query.PageResponse{
-			NextKey: nil,
-			Total:   uint64(len(resp.SendEnabled)),
-		}
 	} else {
 		store := k.getSendEnabledPrefixStore(ctx)
 		var err error

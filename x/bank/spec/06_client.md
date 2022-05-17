@@ -91,6 +91,32 @@ amount: "10000000000"
 denom: stake
 ```
 
+#### send-enabled
+
+The `send-enabled` command allows users to query for all or some SendEnabled entries.
+
+```sh
+simd query bank send-enabled [denom1 ...] [flags]
+```
+
+Example:
+
+```sh
+simd query bank send-enabled
+```
+
+Example output:
+
+```yml
+send_enabled:
+- denom: foocoin
+  enabled: true
+- denom: barcoin
+pagination:
+  next-key: null
+  total: 2 
+```
+
 ### Transactions
 
 The `tx` commands allow users to interact with the `bank` module.
@@ -385,6 +411,44 @@ Example Output:
 {
   "params": {
     "defaultSendEnabled": true
+  }
+}
+```
+
+### SendEnabled
+
+The `SendEnabled` enpoints allows users to query the SendEnabled entries of the `bank` module.
+
+Any denominations NOT returned, use the `Params.DefaultSendEnabled` value.
+
+```sh
+cosmos.bank.v1beta1.Query/SendEnabled
+```
+
+Example:
+
+```sh
+grpcurl -plaintext \
+    localhost:9090 \
+    cosmos.bank.v1beta1.Query/SendEnabled
+```
+
+Example Output:
+
+```json
+{
+  "send_enabled": [
+    {
+      "denom": "foocoin",
+      "enabled": true
+    },
+    {
+      "denom": "barcoin"
+    }
+  ],
+  "pagination": {
+    "next-key": null,
+    "total": 2
   }
 }
 ```

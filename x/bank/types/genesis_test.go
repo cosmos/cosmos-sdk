@@ -3,6 +3,7 @@ package types
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -154,6 +155,139 @@ func TestGenesisStateValidate(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
+		})
+	}
+}
+
+func TestMigrateSendEnabled(t *testing.T) {
+	tests := []struct {
+		name     string
+		oldState *GenesisState
+		newState *GenesisState
+	}{
+		{
+			name: "Balances supply metadata all unchanged",
+			oldState: &GenesisState{
+				Params: Params{},
+				Balances: []Balance{{
+					Address: "balance1",
+					Coins:   sdk.Coins{sdk.NewCoin("balance1coin", sdk.NewInt(8))},
+				}},
+				Supply: sdk.Coins{sdk.NewCoin("supplycoin", sdk.NewInt(800))},
+				DenomMetadata: []Metadata{{
+					Description: "metadesk",
+					DenomUnits:  nil,
+					Base:        "meta",
+					Display:     "meta",
+					Name:        "foo",
+					Symbol:      "META",
+					URI:         "",
+					URIHash:     "",
+				}},
+			},
+			newState: &GenesisState{
+				Params: Params{},
+				Balances: []Balance{{
+					Address: "balance1",
+					Coins:   sdk.Coins{sdk.NewCoin("balance1coin", sdk.NewInt(8))},
+				}},
+				Supply: sdk.Coins{sdk.NewCoin("supplycoin", sdk.NewInt(800))},
+				DenomMetadata: []Metadata{{
+					Description: "metadesk",
+					DenomUnits:  nil,
+					Base:        "meta",
+					Display:     "meta",
+					Name:        "foo",
+					Symbol:      "META",
+					URI:         "",
+					URIHash:     "",
+				}},
+			},
+		},
+
+		{
+			name: "default send enabled true not changed",
+			oldState: &GenesisState{
+				Params: Params{DefaultSendEnabled: true},
+			},
+			newState: &GenesisState{
+				Params: Params{DefaultSendEnabled: true},
+			},
+		},
+		{
+			name: "default send enabled false not changed",
+			oldState: &GenesisState{
+				Params: Params{DefaultSendEnabled: false, SendEnabled: []*SendEnabled{}},
+			},
+			newState: &GenesisState{
+				Params: Params{DefaultSendEnabled: false, SendEnabled: []*SendEnabled{}},
+			},
+		},
+		{
+			name: "send enabled entries moved",
+			oldState: &GenesisState{
+				Params: Params{
+					SendEnabled: []*SendEnabled{
+						{"movecointrue", true},
+						{"movecoinfalse", false},
+					},
+				},
+			},
+			newState: &GenesisState{
+				Params: Params{SendEnabled: []*SendEnabled{}},
+				SendEnabled: []SendEnabled{
+					{"movecointrue", true},
+					{"movecoinfalse", false},
+				},
+			},
+		},
+		{
+			name: "params entries added to existing",
+			oldState: &GenesisState{
+				Params: Params{
+					SendEnabled: []*SendEnabled{
+						{"movecointrue", true},
+						{"movecoinfalse", false},
+					},
+				},
+				SendEnabled: []SendEnabled{
+					{"staycoin", true},
+				},
+			},
+			newState: &GenesisState{
+				Params: Params{SendEnabled: []*SendEnabled{}},
+				SendEnabled: []SendEnabled{
+					{"staycoin", true},
+					{"movecointrue", true},
+					{"movecoinfalse", false},
+				},
+			},
+		},
+		{
+			name: "conflicting params ignored",
+			oldState: &GenesisState{
+				Params: Params{
+					SendEnabled: []*SendEnabled{
+						{"staycoin", false},
+					},
+				},
+				SendEnabled: []SendEnabled{
+					{"staycoin", true},
+				},
+			},
+			newState: &GenesisState{
+				Params: Params{SendEnabled: []*SendEnabled{}},
+				SendEnabled: []SendEnabled{
+					{"staycoin", true},
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.oldState.MigrateSendEnabled()
+			assert.Equal(t, tc.newState, tc.oldState)
 		})
 	}
 }

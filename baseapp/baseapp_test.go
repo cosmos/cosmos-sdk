@@ -5,9 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
-	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -22,10 +20,12 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
-	store "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -39,6 +39,14 @@ var (
 
 type paramStore struct {
 	db *dbm.MemDB
+}
+
+type setupConfig struct {
+	blocks             uint64
+	blockTxs           int
+	snapshotInterval   uint64
+	snapshotKeepRecent uint32
+	pruningOpts        pruningtypes.PruningOptions
 }
 
 func (ps *paramStore) Set(_ sdk.Context, key []byte, value interface{}) {
@@ -121,7 +129,7 @@ func setupBaseApp(t *testing.T, options ...func(*BaseApp)) *BaseApp {
 }
 
 // simple one store baseapp with data and snapshots. Each tx is 1 MB in size (uncompressed).
-func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options ...func(*BaseApp)) (*BaseApp, func()) {
+func setupBaseAppWithSnapshots(t *testing.T, config *setupConfig) (*BaseApp, error) {
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 	routerOpt := func(bapp *BaseApp) {
@@ -132,29 +140,19 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 		}))
 	}
 
-	snapshotInterval := uint64(2)
 	snapshotTimeout := 1 * time.Minute
-	snapshotDir, err := ioutil.TempDir("", "baseapp")
+	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), testutil.GetTempDir(t))
 	require.NoError(t, err)
-	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), snapshotDir)
-	require.NoError(t, err)
-	teardown := func() {
-		os.RemoveAll(snapshotDir)
-	}
 
-	app := setupBaseApp(t, append(options,
-		SetSnapshotStore(snapshotStore),
-		SetSnapshotInterval(snapshotInterval),
-		SetPruning(sdk.PruningOptions{KeepEvery: 1}),
-		routerOpt)...)
+	app := setupBaseApp(t, routerOpt, SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(config.snapshotInterval, uint32(config.snapshotKeepRecent))), SetPruning(config.pruningOpts))
 
 	app.InitChain(abci.RequestInitChain{})
 
 	r := rand.New(rand.NewSource(3920758213583))
 	keyCounter := 0
-	for height := int64(1); height <= int64(blocks); height++ {
+	for height := int64(1); height <= int64(config.blocks); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height}})
-		for txNum := 0; txNum < blockTxs; txNum++ {
+		for txNum := 0; txNum < config.blockTxs; txNum++ {
 			tx := txTest{Msgs: []sdk.Msg{}}
 			for msgNum := 0; msgNum < 100; msgNum++ {
 				key := []byte(fmt.Sprintf("%v", keyCounter))
@@ -173,7 +171,7 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 		app.Commit()
 
 		// Wait for snapshot to be taken, since it happens asynchronously.
-		if uint64(height)%snapshotInterval == 0 {
+		if config.snapshotInterval > 0 && uint64(height)%config.snapshotInterval == 0 {
 			start := time.Now()
 			for {
 				if time.Since(start) > snapshotTimeout {
@@ -189,7 +187,7 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 		}
 	}
 
-	return app, teardown
+	return app, nil
 }
 
 func TestMountStores(t *testing.T) {
@@ -206,7 +204,7 @@ func TestMountStores(t *testing.T) {
 // Test that LoadLatestVersion actually does.
 func TestLoadVersion(t *testing.T) {
 	logger := defaultLogger()
-	pruningOpt := SetPruning(store.PruneNothing)
+	pruningOpt := SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := NewBaseApp(name, logger, db, nil, pruningOpt)
@@ -215,7 +213,7 @@ func TestLoadVersion(t *testing.T) {
 	err := app.LoadLatestVersion() // needed to make stores non-nil
 	require.Nil(t, err)
 
-	emptyCommitID := sdk.CommitID{}
+	emptyCommitID := storetypes.CommitID{}
 
 	// fresh store has zero/empty last commit
 	lastHeight := app.LastBlockHeight()
@@ -227,13 +225,13 @@ func TestLoadVersion(t *testing.T) {
 	header := tmproto.Header{Height: 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	res := app.Commit()
-	commitID1 := sdk.CommitID{Version: 1, Hash: res.Data}
+	commitID1 := storetypes.CommitID{Version: 1, Hash: res.Data}
 
 	// execute a block, collect commit ID
 	header = tmproto.Header{Height: 2}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	res = app.Commit()
-	commitID2 := sdk.CommitID{Version: 2, Hash: res.Data}
+	commitID2 := storetypes.CommitID{Version: 2, Hash: res.Data}
 
 	// reload with LoadLatestVersion
 	app = NewBaseApp(name, logger, db, nil, pruningOpt)
@@ -258,16 +256,16 @@ func useDefaultLoader(app *BaseApp) {
 }
 
 func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
-	rs := rootmulti.NewStore(db)
-	rs.SetPruning(store.PruneNothing)
+	rs := rootmulti.NewStore(db, log.NewNopLogger())
+	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	key := sdk.NewKVStoreKey(storeKey)
-	rs.MountStoreWithDB(key, store.StoreTypeIAVL, nil)
+	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
 	err := rs.LoadLatestVersion()
 	require.Nil(t, err)
 	require.Equal(t, int64(0), rs.LastCommitID().Version)
 
 	// write some data in substore
-	kv, _ := rs.GetStore(key).(store.KVStore)
+	kv, _ := rs.GetStore(key).(storetypes.KVStore)
 	require.NotNil(t, kv)
 	kv.Set(k, v)
 	commitID := rs.Commit()
@@ -275,16 +273,16 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 }
 
 func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
-	rs := rootmulti.NewStore(db)
-	rs.SetPruning(store.PruneDefault)
+	rs := rootmulti.NewStore(db, log.NewNopLogger())
+	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
 	key := sdk.NewKVStoreKey(storeKey)
-	rs.MountStoreWithDB(key, store.StoreTypeIAVL, nil)
+	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
 	err := rs.LoadLatestVersion()
 	require.Nil(t, err)
 	require.Equal(t, ver, rs.LastCommitID().Version)
 
 	// query data in substore
-	kv, _ := rs.GetStore(key).(store.KVStore)
+	kv, _ := rs.GetStore(key).(storetypes.KVStore)
 	require.NotNil(t, kv)
 	require.Equal(t, v, kv.Get(k))
 }
@@ -319,7 +317,7 @@ func TestSetLoader(t *testing.T) {
 			initStore(t, db, tc.origStoreKey, k, v)
 
 			// load the app with the existing db
-			opts := []func(*BaseApp){SetPruning(store.PruneNothing)}
+			opts := []func(*BaseApp){SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))}
 			if tc.setLoader != nil {
 				opts = append(opts, tc.setLoader)
 			}
@@ -342,7 +340,7 @@ func TestSetLoader(t *testing.T) {
 
 func TestVersionSetterGetter(t *testing.T) {
 	logger := defaultLogger()
-	pruningOpt := SetPruning(store.PruneDefault)
+	pruningOpt := SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := NewBaseApp(name, logger, db, nil, pruningOpt)
@@ -362,7 +360,7 @@ func TestVersionSetterGetter(t *testing.T) {
 
 func TestLoadVersionInvalid(t *testing.T) {
 	logger := log.NewNopLogger()
-	pruningOpt := SetPruning(store.PruneNothing)
+	pruningOpt := SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := NewBaseApp(name, logger, db, nil, pruningOpt)
@@ -377,7 +375,7 @@ func TestLoadVersionInvalid(t *testing.T) {
 	header := tmproto.Header{Height: 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	res := app.Commit()
-	commitID1 := sdk.CommitID{Version: 1, Hash: res.Data}
+	commitID1 := storetypes.CommitID{Version: 1, Hash: res.Data}
 
 	// create a new app with the stores mounted under the same cap key
 	app = NewBaseApp(name, logger, db, nil, pruningOpt)
@@ -394,11 +392,7 @@ func TestLoadVersionInvalid(t *testing.T) {
 
 func TestLoadVersionPruning(t *testing.T) {
 	logger := log.NewNopLogger()
-	pruningOptions := store.PruningOptions{
-		KeepRecent: 2,
-		KeepEvery:  3,
-		Interval:   1,
-	}
+	pruningOptions := pruningtypes.NewCustomPruningOptions(10, 15)
 	pruningOpt := SetPruning(pruningOptions)
 	db := dbm.NewMemDB()
 	name := t.Name()
@@ -411,7 +405,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	err := app.LoadLatestVersion() // needed to make stores non-nil
 	require.Nil(t, err)
 
-	emptyCommitID := sdk.CommitID{}
+	emptyCommitID := storetypes.CommitID{}
 
 	// fresh store has zero/empty last commit
 	lastHeight := app.LastBlockHeight()
@@ -419,14 +413,14 @@ func TestLoadVersionPruning(t *testing.T) {
 	require.Equal(t, int64(0), lastHeight)
 	require.Equal(t, emptyCommitID, lastID)
 
-	var lastCommitID sdk.CommitID
+	var lastCommitID storetypes.CommitID
 
 	// Commit seven blocks, of which 7 (latest) is kept in addition to 6, 5
 	// (keep recent) and 3 (keep every).
 	for i := int64(1); i <= 7; i++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: i}})
 		res := app.Commit()
-		lastCommitID = sdk.CommitID{Version: i, Hash: res.Data}
+		lastCommitID = storetypes.CommitID{Version: i, Hash: res.Data}
 	}
 
 	for _, v := range []int64{1, 2, 4} {
@@ -448,7 +442,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	testLoadVersionHelper(t, app, int64(7), lastCommitID)
 }
 
-func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, expectedID sdk.CommitID) {
+func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, expectedID storetypes.CommitID) {
 	lastHeight := app.LastBlockHeight()
 	lastID := app.LastCommitID()
 	require.Equal(t, expectedHeight, lastHeight)
@@ -540,7 +534,7 @@ func TestBaseAppOptionSeal(t *testing.T) {
 		app.SetFauxMerkleMode()
 	})
 	require.Panics(t, func() {
-		app.SetRouter(NewRouter())
+		app.SetRouter(NewLegacyRouter())
 	})
 }
 
@@ -813,7 +807,7 @@ func testTxDecoder(cdc *codec.LegacyAmino) sdk.TxDecoder {
 	}
 }
 
-func anteHandlerTxTest(t *testing.T, capKey sdk.StoreKey, storeKey []byte) sdk.AnteHandler {
+func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte) sdk.AnteHandler {
 	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
 		store := ctx.KVStore(capKey)
 		txTest := tx.(txTest)
@@ -844,7 +838,7 @@ func counterEvent(evType string, msgCount int64) sdk.Events {
 	}
 }
 
-func handlerMsgCounter(t *testing.T, capKey sdk.StoreKey, deliverKey []byte) sdk.Handler {
+func handlerMsgCounter(t *testing.T, capKey storetypes.StoreKey, deliverKey []byte) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 		store := ctx.KVStore(capKey)
@@ -1184,7 +1178,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 	// transaction with no messages
 	{
 		emptyTx := &txTest{}
-		_, result, err := app.Deliver(aminoTxEncoder(), emptyTx)
+		_, result, err := app.SimDeliver(aminoTxEncoder(), emptyTx)
 		require.Error(t, err)
 		require.Nil(t, result)
 
@@ -1211,7 +1205,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 
 		for _, testCase := range testCases {
 			tx := testCase.tx
-			_, result, err := app.Deliver(aminoTxEncoder(), tx)
+			_, result, err := app.SimDeliver(aminoTxEncoder(), tx)
 
 			if testCase.fail {
 				require.Error(t, err)
@@ -1228,7 +1222,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 	// transaction with no known route
 	{
 		unknownRouteTx := txTest{[]sdk.Msg{msgNoRoute{}}, 0, false}
-		_, result, err := app.Deliver(aminoTxEncoder(), unknownRouteTx)
+		_, result, err := app.SimDeliver(aminoTxEncoder(), unknownRouteTx)
 		require.Error(t, err)
 		require.Nil(t, result)
 
@@ -1237,7 +1231,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
 
 		unknownRouteTx = txTest{[]sdk.Msg{msgCounter{}, msgNoRoute{}}, 0, false}
-		_, result, err = app.Deliver(aminoTxEncoder(), unknownRouteTx)
+		_, result, err = app.SimDeliver(aminoTxEncoder(), unknownRouteTx)
 		require.Error(t, err)
 		require.Nil(t, result)
 
@@ -1335,7 +1329,7 @@ func TestTxGasLimits(t *testing.T) {
 
 	for i, tc := range testCases {
 		tx := tc.tx
-		gInfo, result, err := app.Deliver(aminoTxEncoder(), tx)
+		gInfo, result, err := app.SimDeliver(aminoTxEncoder(), tx)
 
 		// check gas used and wanted
 		require.Equal(t, tc.gasUsed, gInfo.GasUsed, fmt.Sprintf("tc #%d; gas: %v, result: %v, err: %s", i, gInfo, result, err))
@@ -1390,8 +1384,8 @@ func TestMaxBlockGasLimits(t *testing.T) {
 
 	app := setupBaseApp(t, anteOpt, routerOpt)
 	app.InitChain(abci.RequestInitChain{
-		ConsensusParams: &abci.ConsensusParams{
-			Block: &abci.BlockParams{
+		ConsensusParams: &tmproto.ConsensusParams{
+			Block: &tmproto.BlockParams{
 				MaxGas: 100,
 			},
 		},
@@ -1425,7 +1419,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 
 		// execute the transaction multiple times
 		for j := 0; j < tc.numDelivers; j++ {
-			_, result, err := app.Deliver(aminoTxEncoder(), tx)
+			_, result, err := app.SimDeliver(aminoTxEncoder(), tx)
 
 			ctx := app.getState(runTxModeDeliver).ctx
 
@@ -1493,7 +1487,7 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 	{
 		tx := newTxCounter(0, 0)
 
-		require.PanicsWithValue(t, customPanicMsg, func() { app.Deliver(aminoTxEncoder(), tx) })
+		require.PanicsWithValue(t, customPanicMsg, func() { app.SimDeliver(aminoTxEncoder(), tx) })
 	}
 }
 
@@ -1615,8 +1609,8 @@ func TestGasConsumptionBadTx(t *testing.T) {
 
 	app := setupBaseApp(t, anteOpt, routerOpt)
 	app.InitChain(abci.RequestInitChain{
-		ConsensusParams: &abci.ConsensusParams{
-			Block: &abci.BlockParams{
+		ConsensusParams: &tmproto.ConsensusParams{
+			Block: &tmproto.BlockParams{
 				MaxGas: 9,
 			},
 		},
@@ -1682,7 +1676,7 @@ func TestQuery(t *testing.T) {
 	require.Equal(t, 0, len(res.Value))
 
 	// query is still empty after a CheckTx
-	_, resTx, err := app.Check(aminoTxEncoder(), tx)
+	_, resTx, err := app.SimCheck(aminoTxEncoder(), tx)
 	require.NoError(t, err)
 	require.NotNil(t, resTx)
 	res = app.Query(query)
@@ -1692,7 +1686,7 @@ func TestQuery(t *testing.T) {
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	_, resTx, err = app.Deliver(aminoTxEncoder(), tx)
+	_, resTx, err = app.SimDeliver(aminoTxEncoder(), tx)
 	require.NoError(t, err)
 	require.NotNil(t, resTx)
 	res = app.Query(query)
@@ -1774,22 +1768,30 @@ func TestGetMaximumBlockGas(t *testing.T) {
 	app.InitChain(abci.RequestInitChain{})
 	ctx := app.NewContext(true, tmproto.Header{})
 
-	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: 0}})
+	app.StoreConsensusParams(ctx, &tmproto.ConsensusParams{Block: &tmproto.BlockParams{MaxGas: 0}})
 	require.Equal(t, uint64(0), app.getMaximumBlockGas(ctx))
 
-	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -1}})
+	app.StoreConsensusParams(ctx, &tmproto.ConsensusParams{Block: &tmproto.BlockParams{MaxGas: -1}})
 	require.Equal(t, uint64(0), app.getMaximumBlockGas(ctx))
 
-	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: 5000000}})
+	app.StoreConsensusParams(ctx, &tmproto.ConsensusParams{Block: &tmproto.BlockParams{MaxGas: 5000000}})
 	require.Equal(t, uint64(5000000), app.getMaximumBlockGas(ctx))
 
-	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -5000000}})
+	app.StoreConsensusParams(ctx, &tmproto.ConsensusParams{Block: &tmproto.BlockParams{MaxGas: -5000000}})
 	require.Panics(t, func() { app.getMaximumBlockGas(ctx) })
 }
 
 func TestListSnapshots(t *testing.T) {
-	app, teardown := setupBaseAppWithSnapshots(t, 5, 4)
-	defer teardown()
+	setupConfig := &setupConfig{
+		blocks:             5,
+		blockTxs:           4,
+		snapshotInterval:   2,
+		snapshotKeepRecent: 2,
+		pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
+	}
+
+	app, err := setupBaseAppWithSnapshots(t, setupConfig)
+	require.NoError(t, err)
 
 	resp := app.ListSnapshots(abci.RequestListSnapshots{})
 	for _, s := range resp.Snapshots {
@@ -1799,14 +1801,153 @@ func TestListSnapshots(t *testing.T) {
 		s.Metadata = nil
 	}
 	assert.Equal(t, abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{
-		{Height: 4, Format: 1, Chunks: 2},
-		{Height: 2, Format: 1, Chunks: 1},
+		{Height: 4, Format: snapshottypes.CurrentFormat, Chunks: 2},
+		{Height: 2, Format: snapshottypes.CurrentFormat, Chunks: 1},
 	}}, resp)
 }
 
+func TestSnapshotWithPruning(t *testing.T) {
+	testcases := map[string]struct {
+		config            *setupConfig
+		expectedSnapshots []*abci.Snapshot
+		expectedErr       error
+	}{
+		"prune nothing with snapshot": {
+			config: &setupConfig{
+				blocks:             20,
+				blockTxs:           2,
+				snapshotInterval:   5,
+				snapshotKeepRecent: 1,
+				pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
+			},
+			expectedSnapshots: []*abci.Snapshot{
+				{Height: 20, Format: 2, Chunks: 5},
+			},
+		},
+		"prune everything with snapshot": {
+			config: &setupConfig{
+				blocks:             20,
+				blockTxs:           2,
+				snapshotInterval:   5,
+				snapshotKeepRecent: 1,
+				pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningEverything),
+			},
+			expectedSnapshots: []*abci.Snapshot{
+				{Height: 20, Format: 2, Chunks: 5},
+			},
+		},
+		"default pruning with snapshot": {
+			config: &setupConfig{
+				blocks:             20,
+				blockTxs:           2,
+				snapshotInterval:   5,
+				snapshotKeepRecent: 1,
+				pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningDefault),
+			},
+			expectedSnapshots: []*abci.Snapshot{
+				{Height: 20, Format: 2, Chunks: 5},
+			},
+		},
+		"custom": {
+			config: &setupConfig{
+				blocks:             25,
+				blockTxs:           2,
+				snapshotInterval:   5,
+				snapshotKeepRecent: 2,
+				pruningOpts:        pruningtypes.NewCustomPruningOptions(12, 12),
+			},
+			expectedSnapshots: []*abci.Snapshot{
+				{Height: 25, Format: 2, Chunks: 6},
+				{Height: 20, Format: 2, Chunks: 5},
+			},
+		},
+		"no snapshots": {
+			config: &setupConfig{
+				blocks:           10,
+				blockTxs:         2,
+				snapshotInterval: 0, // 0 implies disable snapshots
+				pruningOpts:      pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
+			},
+			expectedSnapshots: []*abci.Snapshot{},
+		},
+		"keep all snapshots": {
+			config: &setupConfig{
+				blocks:             10,
+				blockTxs:           2,
+				snapshotInterval:   3,
+				snapshotKeepRecent: 0, // 0 implies keep all snapshots
+				pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
+			},
+			expectedSnapshots: []*abci.Snapshot{
+				{Height: 9, Format: 2, Chunks: 2},
+				{Height: 6, Format: 2, Chunks: 2},
+				{Height: 3, Format: 2, Chunks: 1},
+			},
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			app, err := setupBaseAppWithSnapshots(t, tc.config)
+
+			if tc.expectedErr != nil {
+				require.Error(t, err)
+				require.Equal(t, tc.expectedErr.Error(), err.Error())
+				return
+			}
+			require.NoError(t, err)
+
+			resp := app.ListSnapshots(abci.RequestListSnapshots{})
+			for _, s := range resp.Snapshots {
+				assert.NotEmpty(t, s.Hash)
+				assert.NotEmpty(t, s.Metadata)
+				s.Hash = nil
+				s.Metadata = nil
+			}
+			fmt.Println(resp)
+			assert.Equal(t, abci.ResponseListSnapshots{Snapshots: tc.expectedSnapshots}, resp)
+
+			// Validate that heights were pruned correctly by querying the state at the last height that should be present relative to latest
+			// and the first height that should be pruned.
+			//
+			// Exceptions:
+			//   * Prune nothing: should be able to query all heights (we only test first and latest)
+			//   * Prune default: should be able to query all heights (we only test first and latest)
+			//      * The reason for default behaving this way is that we only commit 20 heights but default has 100_000 keep-recent
+			var lastExistingHeight int64
+			if tc.config.pruningOpts.GetPruningStrategy() == pruningtypes.PruningNothing || tc.config.pruningOpts.GetPruningStrategy() == pruningtypes.PruningDefault {
+				lastExistingHeight = 1
+			} else {
+				// Integer division rounds down so by multiplying back we get the last height at which we pruned
+				lastExistingHeight = int64((tc.config.blocks/tc.config.pruningOpts.Interval)*tc.config.pruningOpts.Interval - tc.config.pruningOpts.KeepRecent)
+			}
+
+			// Query 1
+			res := app.Query(abci.RequestQuery{Path: fmt.Sprintf("/store/%s/key", capKey2.Name()), Data: []byte("0"), Height: lastExistingHeight})
+			require.NotNil(t, res, "height: %d", lastExistingHeight)
+			require.NotNil(t, res.Value, "height: %d", lastExistingHeight)
+
+			// Query 2
+			res = app.Query(abci.RequestQuery{Path: fmt.Sprintf("/store/%s/key", capKey2.Name()), Data: []byte("0"), Height: lastExistingHeight - 1})
+			require.NotNil(t, res, "height: %d", lastExistingHeight-1)
+			if tc.config.pruningOpts.GetPruningStrategy() == pruningtypes.PruningNothing || tc.config.pruningOpts.GetPruningStrategy() == pruningtypes.PruningDefault {
+				// With prune nothing or default, we query height 0 which translates to the latest height.
+				require.NotNil(t, res.Value, "height: %d", lastExistingHeight-1)
+			}
+		})
+	}
+}
+
 func TestLoadSnapshotChunk(t *testing.T) {
-	app, teardown := setupBaseAppWithSnapshots(t, 2, 5)
-	defer teardown()
+	setupConfig := &setupConfig{
+		blocks:             2,
+		blockTxs:           5,
+		snapshotInterval:   2,
+		snapshotKeepRecent: 2,
+		pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
+	}
+	app, err := setupBaseAppWithSnapshots(t, setupConfig)
+	require.NoError(t, err)
 
 	testcases := map[string]struct {
 		height      uint64
@@ -1814,13 +1955,13 @@ func TestLoadSnapshotChunk(t *testing.T) {
 		chunk       uint32
 		expectEmpty bool
 	}{
-		"Existing snapshot": {2, 1, 1, false},
-		"Missing height":    {100, 1, 1, true},
-		"Missing format":    {2, 2, 1, true},
-		"Missing chunk":     {2, 1, 9, true},
-		"Zero height":       {0, 1, 1, true},
+		"Existing snapshot": {2, snapshottypes.CurrentFormat, 1, false},
+		"Missing height":    {100, snapshottypes.CurrentFormat, 1, true},
+		"Missing format":    {2, 3, 1, true},
+		"Missing chunk":     {2, snapshottypes.CurrentFormat, 9, true},
+		"Zero height":       {0, snapshottypes.CurrentFormat, 1, true},
 		"Zero format":       {2, 0, 1, true},
-		"Zero chunk":        {2, 1, 0, false},
+		"Zero chunk":        {2, snapshottypes.CurrentFormat, 0, false},
 	}
 	for name, tc := range testcases {
 		tc := tc
@@ -1841,8 +1982,15 @@ func TestLoadSnapshotChunk(t *testing.T) {
 
 func TestOfferSnapshot_Errors(t *testing.T) {
 	// Set up app before test cases, since it's fairly expensive.
-	app, teardown := setupBaseAppWithSnapshots(t, 0, 0)
-	defer teardown()
+	setupConfig := &setupConfig{
+		blocks:             0,
+		blockTxs:           0,
+		snapshotInterval:   2,
+		snapshotKeepRecent: 2,
+		pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
+	}
+	app, err := setupBaseAppWithSnapshots(t, setupConfig)
+	require.NoError(t, err)
 
 	m := snapshottypes.Metadata{ChunkHashes: [][]byte{{1}, {2}, {3}}}
 	metadata, err := m.Marshal()
@@ -1858,13 +2006,13 @@ func TestOfferSnapshot_Errors(t *testing.T) {
 			Height: 1, Format: 9, Chunks: 3, Hash: hash, Metadata: metadata,
 		}, abci.ResponseOfferSnapshot_REJECT_FORMAT},
 		"incorrect chunk count": {&abci.Snapshot{
-			Height: 1, Format: 1, Chunks: 2, Hash: hash, Metadata: metadata,
+			Height: 1, Format: snapshottypes.CurrentFormat, Chunks: 2, Hash: hash, Metadata: metadata,
 		}, abci.ResponseOfferSnapshot_REJECT},
 		"no chunks": {&abci.Snapshot{
-			Height: 1, Format: 1, Chunks: 0, Hash: hash, Metadata: metadata,
+			Height: 1, Format: snapshottypes.CurrentFormat, Chunks: 0, Hash: hash, Metadata: metadata,
 		}, abci.ResponseOfferSnapshot_REJECT},
 		"invalid metadata serialization": {&abci.Snapshot{
-			Height: 1, Format: 1, Chunks: 0, Hash: hash, Metadata: []byte{3, 1, 4},
+			Height: 1, Format: snapshottypes.CurrentFormat, Chunks: 0, Hash: hash, Metadata: []byte{3, 1, 4},
 		}, abci.ResponseOfferSnapshot_REJECT},
 	}
 	for name, tc := range testcases {
@@ -1896,11 +2044,25 @@ func TestOfferSnapshot_Errors(t *testing.T) {
 }
 
 func TestApplySnapshotChunk(t *testing.T) {
-	source, teardown := setupBaseAppWithSnapshots(t, 4, 10)
-	defer teardown()
+	setupConfig1 := &setupConfig{
+		blocks:             4,
+		blockTxs:           10,
+		snapshotInterval:   2,
+		snapshotKeepRecent: 2,
+		pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
+	}
+	source, err := setupBaseAppWithSnapshots(t, setupConfig1)
+	require.NoError(t, err)
 
-	target, teardown := setupBaseAppWithSnapshots(t, 0, 0)
-	defer teardown()
+	setupConfig2 := &setupConfig{
+		blocks:             0,
+		blockTxs:           0,
+		snapshotInterval:   2,
+		snapshotKeepRecent: 2,
+		pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
+	}
+	target, err := setupBaseAppWithSnapshots(t, setupConfig2)
+	require.NoError(t, err)
 
 	// Fetch latest snapshot to restore
 	respList := source.ListSnapshots(abci.RequestListSnapshots{})
@@ -2014,8 +2176,8 @@ func TestBaseApp_EndBlock(t *testing.T) {
 	name := t.Name()
 	logger := defaultLogger()
 
-	cp := &abci.ConsensusParams{
-		Block: &abci.BlockParams{
+	cp := &tmproto.ConsensusParams{
+		Block: &tmproto.BlockParams{
 			MaxGas: 5000000,
 		},
 	}

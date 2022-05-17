@@ -440,6 +440,13 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams
 	return cp
 }
 
+// AddRunTxRecoveryHandler adds custom app.runTx method panic handlers.
+func (app *BaseApp) AddRunTxRecoveryHandler(handlers ...RecoveryHandler) {
+	for _, h := range handlers {
+		app.runTxRecoveryMiddleware = newRecoveryMiddleware(h, app.runTxRecoveryMiddleware)
+	}
+}
+
 // StoreConsensusParams sets the consensus parameters to the baseapp's param store.
 func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *tmproto.ConsensusParams) {
 	if app.paramStore == nil {

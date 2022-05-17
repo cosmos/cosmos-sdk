@@ -217,6 +217,7 @@ func (app *BaseApp) SetSnapshot(snapshotStore *snapshots.Store, opts snapshottyp
 func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 	app.interfaceRegistry = registry
 	app.grpcQueryRouter.SetInterfaceRegistry(registry)
+	app.msgServiceRouter.SetInterfaceRegistry(registry)
 }
 
 // SetStreamingService is used to set a streaming service into the BaseApp hooks and load the listeners into the multistore

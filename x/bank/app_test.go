@@ -3,6 +3,7 @@ package bank_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -13,6 +14,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 type (
@@ -30,6 +32,7 @@ type (
 		accSeqs          []uint64
 		privKeys         []cryptotypes.PrivKey
 		expectedBalances []expectedBalance
+		expInError       []string
 	}
 )
 
@@ -335,5 +338,89 @@ func TestMsgMultiSendDependent(t *testing.T) {
 		for _, eb := range tc.expectedBalances {
 			simapp.CheckBalance(t, app, eb.addr, eb.coins)
 		}
+	}
+}
+
+func TestMsgSetSendEnabled(t *testing.T) {
+	acc1 := authtypes.NewBaseAccountWithAddress(addr1)
+	genAccs := []authtypes.GenesisAccount{acc1}
+	app := simapp.SetupWithGenesisAccounts(t, genAccs)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 101))))
+	addr1Str := addr1.String()
+	govAddr := app.BankKeeper.GetAuthority()
+	goodGovProp, err := govtypesv1.NewMsgSubmitProposal(
+		[]sdk.Msg{
+			types.NewMsgSetSendEnabled(govAddr, nil, nil, true, true),
+		},
+		sdk.Coins{{"foocoin", sdk.NewInt(5)}},
+		addr1Str,
+		"set default send enabled to true",
+	)
+	require.NoError(t, err, "making goodGovProp")
+	badGovProp, err := govtypesv1.NewMsgSubmitProposal(
+		[]sdk.Msg{
+			types.NewMsgSetSendEnabled(govAddr, []*types.SendEnabled{{"bad coin name!", true}}, nil, true, true),
+		},
+		sdk.Coins{{"foocoin", sdk.NewInt(5)}},
+		addr1Str,
+		"set default send enabled to true",
+	)
+	require.NoError(t, err, "making badGovProp")
+
+	testCases := []appTestCase{
+		{
+			desc:       "wrong authority",
+			expSimPass: false,
+			expPass:    false,
+			msgs: []sdk.Msg{
+				types.NewMsgSetSendEnabled(addr1Str, nil, nil, true, true),
+			},
+			expInError: []string{
+				"incorrect authority",
+				`"cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"`,
+				`"` + addr1Str + `"`,
+				"tx intended signer does not match the given signer",
+			},
+		},
+		{
+			desc:       "submitted good as gov prop",
+			expSimPass: true,
+			expPass:    true,
+			msgs: []sdk.Msg{
+				goodGovProp,
+			},
+			expInError: nil,
+		},
+		{
+			desc:       "submitted bad as gov prop",
+			expSimPass: false,
+			expPass:    false,
+			msgs: []sdk.Msg{
+				badGovProp,
+			},
+			expInError: []string{
+				"invalid denom: bad coin name!",
+				"invalid proposal message",
+			},
+		},
+	}
+
+	seq := uint64(0)
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(tt *testing.T) {
+			header := tmproto.Header{Height: app.LastBlockHeight() + 1}
+			txGen := simapp.MakeTestEncodingConfig().TxConfig
+			_, _, err = simapp.SignCheckDeliver(tt, txGen, app.BaseApp, header, tc.msgs, "", []uint64{0}, []uint64{seq}, tc.expSimPass, tc.expPass, priv1)
+			seq++
+			if len(tc.expInError) > 0 {
+				require.Error(tt, err)
+				for _, exp := range tc.expInError {
+					assert.ErrorContains(tt, err, exp)
+				}
+			} else {
+				require.NoError(tt, err)
+			}
+		})
 	}
 }

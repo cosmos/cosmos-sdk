@@ -239,7 +239,7 @@ Getting all entries:
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			reqPag, err := client.ReadPageRequest(client.WithPageKeyDecoded(cmd.Flags()))
+			reqPag, err := client.ReadPageRequest(client.MustFlagSetWithPageKeyDecoded(cmd.Flags()))
 			if err != nil {
 				return err
 			}

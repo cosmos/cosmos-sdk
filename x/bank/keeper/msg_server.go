@@ -112,7 +112,15 @@ func (k msgServer) SetSendEnabled(goCtx context.Context, msg *types.MsgSetSendEn
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	k.SetAllSendEnabled(ctx, msg.SendEnabled)
+	if len(msg.SendEnabled) > 0 {
+		k.SetAllSendEnabled(ctx, msg.SendEnabled)
+	}
+	if len(msg.UseDefault) > 0 {
+		k.DeleteSendEnabled(ctx, msg.UseDefault...)
+	}
+	if msg.SetDefaultSendEnabled {
+		k.SetParams(ctx, types.NewParams(msg.DefaultSendEnabled))
+	}
 
 	return &types.MsgSetSendEnabledResponse{}, nil
 }

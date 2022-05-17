@@ -47,8 +47,11 @@ type QueryClient interface {
 	//
 	// Since: cosmos-sdk 0.46
 	DenomOwners(ctx context.Context, in *QueryDenomOwnersRequest, opts ...grpc.CallOption) (*QueryDenomOwnersResponse, error)
-	// SendEnabled queries for SendEnabled entries on a denomination.
-	// Denominations that don't have a specific SendEnabled entry, are not returned and would thus use the default (defined in Params).
+	// SendEnabled queries for SendEnabled entries.
+	//
+	// This query only returns denominations that have specific SendEnabled settings.
+	// Any denomination that does not have a specific setting will use the default
+	// params.default_send_enabled, and will not be returned by this query.
 	SendEnabled(ctx context.Context, in *QuerySendEnabled, opts ...grpc.CallOption) (*QuerySendEnabledResponse, error)
 }
 
@@ -179,8 +182,11 @@ type QueryServer interface {
 	//
 	// Since: cosmos-sdk 0.46
 	DenomOwners(context.Context, *QueryDenomOwnersRequest) (*QueryDenomOwnersResponse, error)
-	// SendEnabled queries for SendEnabled entries on a denomination.
-	// Denominations that don't have a specific SendEnabled entry, are not returned and would thus use the default (defined in Params).
+	// SendEnabled queries for SendEnabled entries.
+	//
+	// This query only returns denominations that have specific SendEnabled settings.
+	// Any denomination that does not have a specific setting will use the default
+	// params.default_send_enabled, and will not be returned by this query.
 	SendEnabled(context.Context, *QuerySendEnabled) (*QuerySendEnabledResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }

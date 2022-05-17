@@ -26,7 +26,10 @@ type MsgClient interface {
 	Send(ctx context.Context, in *MsgSend, opts ...grpc.CallOption) (*MsgSendResponse, error)
 	// MultiSend defines a method for sending coins from some accounts to other accounts.
 	MultiSend(ctx context.Context, in *MsgMultiSend, opts ...grpc.CallOption) (*MsgMultiSendResponse, error)
-	// SetSendEnabled is a governance operation for setting the SendEnabled flag on any number of Denoms.
+	// SetSendEnabled is a governance operation for setting the SendEnabled flag
+	// on any number of Denoms. Only the entries to add or update should be
+	// included. Entries that already exist in the store, but that aren't
+	// included in this message, will be left unchanged.
 	SetSendEnabled(ctx context.Context, in *MsgSetSendEnabled, opts ...grpc.CallOption) (*MsgSetSendEnabledResponse, error)
 }
 
@@ -73,7 +76,10 @@ type MsgServer interface {
 	Send(context.Context, *MsgSend) (*MsgSendResponse, error)
 	// MultiSend defines a method for sending coins from some accounts to other accounts.
 	MultiSend(context.Context, *MsgMultiSend) (*MsgMultiSendResponse, error)
-	// SetSendEnabled is a governance operation for setting the SendEnabled flag on any number of Denoms.
+	// SetSendEnabled is a governance operation for setting the SendEnabled flag
+	// on any number of Denoms. Only the entries to add or update should be
+	// included. Entries that already exist in the store, but that aren't
+	// included in this message, will be left unchanged.
 	SetSendEnabled(context.Context, *MsgSetSendEnabled) (*MsgSetSendEnabledResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }

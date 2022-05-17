@@ -27,11 +27,11 @@ type SendKeeper interface {
 	SetSendEnabled(ctx sdk.Context, denom string, value bool)
 	SetAllSendEnabled(ctx sdk.Context, sendEnableds []*types.SendEnabled)
 	DeleteSendEnabled(ctx sdk.Context, denom string)
+	IterateSendEnabledEntries(ctx sdk.Context, cb func(denom string, sendEnabled bool) (stop bool))
+	GetAllSendEnabledEntries(ctx sdk.Context) []types.SendEnabled
 
 	IsSendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool
 	IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
-	IterateSendEnabledEntries(ctx sdk.Context, cb func(denom string, sendEnabled bool) (stop bool))
-	GetAllSendEnabledEntries(ctx sdk.Context) []types.SendEnabled
 
 	BlockedAddr(addr sdk.AccAddress) bool
 }

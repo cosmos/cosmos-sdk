@@ -7,8 +7,9 @@ import (
 
 // bank message types
 const (
-	TypeMsgSend      = "send"
-	TypeMsgMultiSend = "multisend"
+	TypeMsgSend           = "send"
+	TypeMsgMultiSend      = "multisend"
+	TypeMsgSetSendEnabled = "set-send-enabled"
 )
 
 var _ sdk.Msg = &MsgSend{}
@@ -192,10 +193,10 @@ func NewMsgSetSendEnabled(authority string, send_enabled []*SendEnabled) *MsgSet
 }
 
 // Route implements the LegacyMsg interface.
-func (msg MsgSetSendEnabled) Route() string { return sdk.MsgTypeURL(&msg) }
+func (msg MsgSetSendEnabled) Route() string { return RouterKey }
 
 // Type implements the LegacyMsg interface.
-func (msg MsgSetSendEnabled) Type() string { return sdk.MsgTypeURL(&msg) }
+func (msg MsgSetSendEnabled) Type() string { return TypeMsgSetSendEnabled }
 
 // GetSignBytes implements the LegacyMsg interface.
 func (msg MsgSetSendEnabled) GetSignBytes() []byte {

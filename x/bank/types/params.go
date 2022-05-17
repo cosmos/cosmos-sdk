@@ -70,10 +70,12 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	}
 }
 
+// Validate gets any errors with this SendEnabled entry.
 func (se SendEnabled) Validate() error {
 	return sdk.ValidateDenom(se.Denom)
 }
 
+// validateSendEnabledParams is used by the x/params module to validate the params for the bank module.
 func validateSendEnabledParams(i interface{}) error {
 	params, ok := i.([]*SendEnabled)
 	if !ok {
@@ -107,6 +109,7 @@ func (se SendEnabled) String() string {
 	return fmt.Sprintf("denom: %s\nenabled: %t\n", se.Denom, se.Enabled)
 }
 
+// validateSendEnabled is used by the x/params module to validate a single SendEnabled entry.
 func validateSendEnabled(i interface{}) error {
 	param, ok := i.(SendEnabled)
 	if !ok {
@@ -115,6 +118,7 @@ func validateSendEnabled(i interface{}) error {
 	return param.Validate()
 }
 
+// validateIsBool is used by the x/params module to validate that a thing is a bool.
 func validateIsBool(i interface{}) error {
 	_, ok := i.(bool)
 	if !ok {

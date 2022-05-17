@@ -31,7 +31,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 // NewParams creates a new parameter configuration for the bank module
 func NewParams(defaultSendEnabled bool) Params {
 	return Params{
-		SendEnabled:        []*SendEnabled{},
+		SendEnabled:        nil,
 		DefaultSendEnabled: defaultSendEnabled,
 	}
 }
@@ -39,7 +39,7 @@ func NewParams(defaultSendEnabled bool) Params {
 // DefaultParams is the default parameter configuration for the bank module
 func DefaultParams() Params {
 	return Params{
-		SendEnabled:        []*SendEnabled{},
+		SendEnabled:        nil,
 		DefaultSendEnabled: DefaultDefaultSendEnabled,
 	}
 }

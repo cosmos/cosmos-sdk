@@ -220,7 +220,7 @@ func TestMigrateSendEnabled(t *testing.T) {
 				Params: Params{DefaultSendEnabled: false, SendEnabled: []*SendEnabled{}},
 			},
 			newState: &GenesisState{
-				Params: Params{DefaultSendEnabled: false, SendEnabled: []*SendEnabled{}},
+				Params: Params{DefaultSendEnabled: false},
 			},
 		},
 		{
@@ -234,7 +234,7 @@ func TestMigrateSendEnabled(t *testing.T) {
 				},
 			},
 			newState: &GenesisState{
-				Params: Params{SendEnabled: []*SendEnabled{}},
+				Params: Params{},
 				SendEnabled: []SendEnabled{
 					{"movecointrue", true},
 					{"movecoinfalse", false},
@@ -255,7 +255,7 @@ func TestMigrateSendEnabled(t *testing.T) {
 				},
 			},
 			newState: &GenesisState{
-				Params: Params{SendEnabled: []*SendEnabled{}},
+				Params: Params{},
 				SendEnabled: []SendEnabled{
 					{"staycoin", true},
 					{"movecointrue", true},
@@ -276,7 +276,7 @@ func TestMigrateSendEnabled(t *testing.T) {
 				},
 			},
 			newState: &GenesisState{
-				Params: Params{SendEnabled: []*SendEnabled{}},
+				Params: Params{},
 				SendEnabled: []SendEnabled{
 					{"staycoin", true},
 				},

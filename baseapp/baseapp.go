@@ -12,6 +12,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
@@ -711,9 +712,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*sdk.Result, error) {
 	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 	events := sdk.EmptyEvents()
-	txMsgData := &sdk.TxMsgData{
-		Data: make([]*sdk.MsgData, 0, len(msgs)),
-	}
+	msgResponses := make([]*codectypes.Any, len(msgs))
 
 	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
 	for i, msg := range msgs {
@@ -765,18 +764,29 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		// separate each result.
 		events = events.AppendEvents(msgEvents)
 
-		txMsgData.Data = append(txMsgData.Data, &sdk.MsgData{MsgType: sdk.MsgTypeURL(msg), Data: msgResult.Data})
+		// Each individual sdk.Result has exactly one Msg response. We aggregate here.
+		msgResponse := msgResult.MsgResponses[0]
+		if msgResponse == nil {
+			return nil, sdkerrors.ErrLogic.Wrapf("got nil Msg response at index %d for msg %s", i, sdk.MsgTypeURL(msg))
+		}
+		msgResponses[i] = msgResponse
 		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint32(i), msgResult.Log, msgEvents))
 	}
 
-	data, err := proto.Marshal(txMsgData)
+	data, err := makeABCIData(msgResponses)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to marshal tx data")
 	}
 
 	return &sdk.Result{
-		Data:   data,
-		Log:    strings.TrimSpace(msgLogs.String()),
-		Events: events.ToABCIEvents(),
+		Data:         data,
+		Log:          strings.TrimSpace(msgLogs.String()),
+		Events:       events.ToABCIEvents(),
+		MsgResponses: msgResponses,
 	}, nil
+}
+
+// makeABCIData generates the Data field to be sent to ABCI Check/DeliverTx.
+func makeABCIData(msgResponses []*codectypes.Any) ([]byte, error) {
+	return proto.Marshal(&sdk.TxMsgData{MsgResponses: msgResponses})
 }

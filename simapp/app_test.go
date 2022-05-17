@@ -81,9 +81,8 @@ func TestRunMigrations(t *testing.T) {
 	bApp := baseapp.NewBaseApp(appName, logger, db, encCfg.TxConfig.TxDecoder())
 	bApp.SetCommitMultiStoreTracer(nil)
 	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
-	msr := baseapp.NewMsgServiceRouter()
 	app.BaseApp = bApp
-	app.configurator = module.NewConfigurator(app.appCodec, msr, app.GRPCQueryRouter())
+	app.configurator = module.NewConfigurator(app.appCodec, bApp.MsgServiceRouter(), app.GRPCQueryRouter())
 
 	// We register all modules on the Configurator, except x/bank. x/bank will
 	// serve as the test subject on which we run the migration tests.

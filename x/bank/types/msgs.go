@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -14,7 +13,6 @@ const (
 )
 
 var _ sdk.Msg = &MsgSend{}
-var _ sdk.Msg = &MsgSetSendEnabled{}
 
 // NewMsgSend - construct a msg to send coins from one account to another.
 //nolint:interfacer
@@ -182,49 +180,5 @@ func ValidateInputsOutputs(inputs []Input, outputs []Output) error {
 		return ErrInputOutputMismatch
 	}
 
-	return nil
-}
-
-// NewMsgSetSendEnabled Construct a message to set one or more SendEnabled entries.
-func NewMsgSetSendEnabled(authority string, send_enabled []*SendEnabled) *MsgSetSendEnabled {
-	return &MsgSetSendEnabled{
-		Authority:   authority,
-		SendEnabled: send_enabled,
-	}
-}
-
-// Route implements the LegacyMsg interface.
-func (msg MsgSetSendEnabled) Route() string { return RouterKey }
-
-// Type implements the LegacyMsg interface.
-func (msg MsgSetSendEnabled) Type() string { return TypeMsgSetSendEnabled }
-
-// GetSignBytes implements the LegacyMsg interface.
-func (msg MsgSetSendEnabled) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-// GetSigners returns the expected signers for MsgSoftwareUpgrade.
-func (msg MsgSetSendEnabled) GetSigners() []sdk.AccAddress {
-	addr, _ := sdk.AccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{addr}
-}
-
-// ValidateBasic runs basic validation on this MsgSetSendEnabled.
-func (msg MsgSetSendEnabled) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Authority)
-	if err != nil {
-		return err
-	}
-	seen := map[string]bool{}
-	for _, se := range msg.SendEnabled {
-		if _, alreadySeen := seen[se.Denom]; alreadySeen {
-			return fmt.Errorf("duplicate denom entries found for %q", se.Denom)
-		}
-		seen[se.Denom] = true
-		if err = se.Validate(); err != nil {
-			return err
-		}
-	}
 	return nil
 }

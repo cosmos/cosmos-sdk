@@ -104,15 +104,3 @@ func (k msgServer) MultiSend(goCtx context.Context, msg *types.MsgMultiSend) (*t
 
 	return &types.MsgMultiSendResponse{}, nil
 }
-
-func (k msgServer) SetSendEnabled(goCtx context.Context, msg *types.MsgSetSendEnabled) (*types.MsgSetSendEnabledResponse, error) {
-	authority := k.GetAuthority()
-	if authority != msg.Authority {
-		return nil, sdkerrors.ErrorInvalidSigner.Wrapf("expected %q got %q", authority, msg.Authority)
-	}
-
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	k.SetAllSendEnabled(ctx, msg.SendEnabled)
-
-	return &types.MsgSetSendEnabledResponse{}, nil
-}

@@ -3,12 +3,9 @@ package types
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func TestMsgSendRoute(t *testing.T) {
@@ -276,102 +273,4 @@ func TestMsgSendGetSigners(t *testing.T) {
 	res := msg.GetSigners()
 	require.Equal(t, 1, len(res))
 	require.True(t, from.Equals(res[0]))
-}
-
-func TestMsgSetSendEnabledRouteAndType(t *testing.T) {
-	msg := NewMsgSetSendEnabled("", nil)
-	assert.Equal(t, RouterKey, msg.Route(), "route")
-	assert.Equal(t, TypeMsgSetSendEnabled, msg.Type(), "type")
-}
-
-func TestMsgSetSendEnabledGetSignBytes(t *testing.T) {
-	msg := NewMsgSetSendEnabled("cartman", []*SendEnabled{{"casafiestacoin", false}, {"kylecoin", true}})
-	expected := `{"authority":"cartman","send_enabled":[{"denom":"casafiestacoin"},{"denom":"kylecoin","enabled":true}]}`
-	actualBz := msg.GetSignBytes()
-	actual := string(actualBz)
-	assert.Equal(t, expected, actual)
-}
-
-func TestMsgSetSendEnabledGetSigners(t *testing.T) {
-	govModuleAddr := authtypes.NewModuleAddress(govtypes.ModuleName)
-	msg := NewMsgSetSendEnabled(govModuleAddr.String(), nil)
-	expected := []sdk.AccAddress{govModuleAddr}
-	actual := msg.GetSigners()
-	assert.Equal(t, expected, actual)
-}
-
-func TestMsgSetSendEnabledValidateBasic(t *testing.T) {
-	govModuleAddr := authtypes.NewModuleAddress(govtypes.ModuleName).String()
-	tests := []struct {
-		name string
-		msg  MsgSetSendEnabled
-		exp  string
-	}{
-		{
-			name: "valid with two entries",
-			msg: MsgSetSendEnabled{
-				Authority: govModuleAddr,
-				SendEnabled: []*SendEnabled{
-					{"somecoina", true},
-					{"somecoinb", false},
-				},
-			},
-			exp: "",
-		},
-		{
-			name: "bad authority",
-			msg: MsgSetSendEnabled{
-				Authority: "farva",
-				SendEnabled: []*SendEnabled{
-					{"somecoina", true},
-					{"somecoinb", false},
-				},
-			},
-			exp: "decoding bech32 failed: invalid bech32 string length 5",
-		},
-		{
-			name: "bad first denom name",
-			msg: MsgSetSendEnabled{
-				Authority: govModuleAddr,
-				SendEnabled: []*SendEnabled{
-					{"Not A Denom", true},
-					{"somecoinb", false},
-				},
-			},
-			exp: "invalid denom: Not A Denom",
-		},
-		{
-			name: "bad second denom",
-			msg: MsgSetSendEnabled{
-				Authority: govModuleAddr,
-				SendEnabled: []*SendEnabled{
-					{"somecoina", true},
-					{"", false},
-				},
-			},
-			exp: "invalid denom: ",
-		},
-		{
-			name: "duplicate denom",
-			msg: MsgSetSendEnabled{
-				Authority: govModuleAddr,
-				SendEnabled: []*SendEnabled{
-					{"copycoin", true},
-					{"copycoin", false},
-				},
-			},
-			exp: "duplicate denom entries found for \"copycoin\"",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(tt *testing.T) {
-			actual := tc.msg.ValidateBasic()
-			if len(tc.exp) > 0 {
-				require.EqualError(tt, actual, tc.exp)
-			} else {
-				require.NoError(tt, actual)
-			}
-		})
-	}
 }

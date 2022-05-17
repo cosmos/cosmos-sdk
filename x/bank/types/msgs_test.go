@@ -270,6 +270,21 @@ func TestMsgMultiSendGetSigners(t *testing.T) {
 	}
 }
 
+func TestNewMsgSetSendEnabled(t *testing.T) {
+	// Punt. Just setting one to all non-default values and making sure they're as expected.
+	msg := NewMsgSetSendEnabled("milton", []*SendEnabled{{"barrycoin", true}}, []string{"billcoin"}, true, true)
+	assert.Equal(t, "milton", msg.Authority, "msg.Authority")
+	if assert.Len(t, msg.SendEnabled, 1, "msg.SendEnabled length") {
+		assert.Equal(t, "barrycoin", msg.SendEnabled[0].Denom, "msg.SendEnabled[0].Denom")
+		assert.True(t, msg.SendEnabled[0].Enabled, "msg.SendEnabled[0].Enabled")
+	}
+	if assert.Len(t, msg.UseDefault, 1, "msg.UseDefault") {
+		assert.Equal(t, "billcoin", msg.UseDefault[0], "msg.UseDefault[0]")
+	}
+	assert.True(t, msg.SetDefaultSendEnabled, "msg.SetDefaultSendEnabled")
+	assert.True(t, msg.DefaultSendEnabled, "msg.DefaultSendEnabled")
+}
+
 func TestMsgSendGetSigners(t *testing.T) {
 	from := sdk.AccAddress([]byte("input111111111111111"))
 	msg := NewMsgSend(from, sdk.AccAddress{}, sdk.NewCoins())
@@ -279,13 +294,13 @@ func TestMsgSendGetSigners(t *testing.T) {
 }
 
 func TestMsgSetSendEnabledRouteAndType(t *testing.T) {
-	msg := NewMsgSetSendEnabled("", nil)
+	msg := NewMsgSetSendEnabled("", nil, nil, false, false)
 	assert.Equal(t, RouterKey, msg.Route(), "route")
 	assert.Equal(t, TypeMsgSetSendEnabled, msg.Type(), "type")
 }
 
 func TestMsgSetSendEnabledGetSignBytes(t *testing.T) {
-	msg := NewMsgSetSendEnabled("cartman", []*SendEnabled{{"casafiestacoin", false}, {"kylecoin", true}})
+	msg := NewMsgSetSendEnabled("cartman", []*SendEnabled{{"casafiestacoin", false}, {"kylecoin", true}}, nil, false, false)
 	expected := `{"authority":"cartman","send_enabled":[{"denom":"casafiestacoin"},{"denom":"kylecoin","enabled":true}]}`
 	actualBz := msg.GetSignBytes()
 	actual := string(actualBz)
@@ -294,7 +309,7 @@ func TestMsgSetSendEnabledGetSignBytes(t *testing.T) {
 
 func TestMsgSetSendEnabledGetSigners(t *testing.T) {
 	govModuleAddr := authtypes.NewModuleAddress(govtypes.ModuleName)
-	msg := NewMsgSetSendEnabled(govModuleAddr.String(), nil)
+	msg := NewMsgSetSendEnabled(govModuleAddr.String(), nil, nil, false, false)
 	expected := []sdk.AccAddress{govModuleAddr}
 	actual := msg.GetSigners()
 	assert.Equal(t, expected, actual)

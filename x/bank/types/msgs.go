@@ -186,10 +186,13 @@ func ValidateInputsOutputs(inputs []Input, outputs []Output) error {
 }
 
 // NewMsgSetSendEnabled Construct a message to set one or more SendEnabled entries.
-func NewMsgSetSendEnabled(authority string, send_enabled []*SendEnabled) *MsgSetSendEnabled {
+func NewMsgSetSendEnabled(authority string, sendEnabled []*SendEnabled, useDefault []string, setDefaultSendEnabled, defaultSendEnabled bool) *MsgSetSendEnabled {
 	return &MsgSetSendEnabled{
-		Authority:   authority,
-		SendEnabled: send_enabled,
+		Authority:             authority,
+		SendEnabled:           sendEnabled,
+		UseDefault:            useDefault,
+		SetDefaultSendEnabled: setDefaultSendEnabled,
+		DefaultSendEnabled:    defaultSendEnabled,
 	}
 }
 

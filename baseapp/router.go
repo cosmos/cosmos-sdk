@@ -10,10 +10,10 @@ type Router struct {
 	routes map[string]sdk.Handler
 }
 
-var _ sdk.Router = NewLegacyRouter()
+var _ sdk.Router = NewRouter()
 
 // NewRouter returns a reference to a new router.
-func NewLegacyRouter() *Router {
+func NewRouter() *Router {
 	return &Router{
 		routes: make(map[string]sdk.Handler),
 	}

@@ -51,7 +51,7 @@ type BaseApp struct { // nolint: maligned
 	db                dbm.DB               // common DB backend
 	cms               sdk.CommitMultiStore // Main (uncached) state
 	storeLoader       StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
-	router            sdk.Router           // handle any kind of message
+	router            sdk.Router           // handle any kind of legacy message
 	queryRouter       sdk.QueryRouter      // router for redirecting query calls
 	grpcQueryRouter   *GRPCQueryRouter     // router for redirecting gRPC query calls
 	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
@@ -150,7 +150,7 @@ func NewBaseApp(
 		db:               db,
 		cms:              store.NewCommitMultiStore(db),
 		storeLoader:      DefaultStoreLoader,
-		router:           NewLegacyRouter(),
+		router:           NewRouter(),
 		queryRouter:      NewQueryRouter(),
 		grpcQueryRouter:  NewGRPCQueryRouter(),
 		msgServiceRouter: NewMsgServiceRouter(),
@@ -363,7 +363,7 @@ func (app *BaseApp) setIndexEvents(ie []string) {
 	}
 }
 
-// Router returns the router of the BaseApp.
+// Router returns the legacy router of the BaseApp.
 func (app *BaseApp) Router() sdk.Router {
 	if app.sealed {
 		// We cannot return a Router when the app is sealed because we can't have

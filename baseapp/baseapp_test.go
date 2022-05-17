@@ -534,7 +534,7 @@ func TestBaseAppOptionSeal(t *testing.T) {
 		app.SetFauxMerkleMode()
 	})
 	require.Panics(t, func() {
-		app.SetRouter(NewLegacyRouter())
+		app.SetRouter(NewRouter())
 	})
 }
 

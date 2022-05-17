@@ -79,8 +79,16 @@ func validateSendEnabledParams(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	if len(params) > 0 {
-		return errors.New("use of send_enabled in params is no longer supported")
+	// ensure each denom is only registered one time.
+	registered := make(map[string]bool)
+	for _, p := range params {
+		if _, exists := registered[p.Denom]; exists {
+			return fmt.Errorf("duplicate send enabled parameter found: '%s'", p.Denom)
+		}
+		if err := validateSendEnabled(*p); err != nil {
+			return err
+		}
+		registered[p.Denom] = true
 	}
 	return nil
 }

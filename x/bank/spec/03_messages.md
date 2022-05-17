@@ -25,3 +25,16 @@ The message will fail under the following conditions:
 * Any of the `to` addresses are restricted
 * Any of the coins are locked
 * The inputs and outputs do not correctly correspond to one another
+
+## MsgSetSendEnabled
+
+Used with the x/gov module to set create/edit SendEnabled entries.
++++ https://github.com/cosmos/cosmos-sdk/blob/dwedul/11859-send-disabled-change/proto/cosmos/bank/v1beta1/tx.proto#L53-L60
+
+The message will fail under the following conditions:
+
+* The authority is not a bech32 address.
+* The authority is not x/gov module's address.
+* There are multiple SendEnabled entries with the same Denom.
+* One or more SendEnabled entries has an invalid Denom.
+

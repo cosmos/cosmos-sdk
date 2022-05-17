@@ -33,7 +33,7 @@ func processRecovery(recoveryObj interface{}, middleware recoveryMiddleware) err
 	return processRecovery(recoveryObj, next)
 }
 
-// newRecoveryMiddleware creates a RecoveryHandler middleware.
+// newRecoveryMiddleware creates a RecoveryHandler ante.
 func newRecoveryMiddleware(handler RecoveryHandler, next recoveryMiddleware) recoveryMiddleware {
 	return func(recoveryObj interface{}) (recoveryMiddleware, error) {
 		if err := handler(recoveryObj); err != nil {

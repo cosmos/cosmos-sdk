@@ -12,6 +12,7 @@ const (
 )
 
 var _ sdk.Msg = &MsgSend{}
+var _ sdk.Msg = &MsgSetSendEnabled{}
 
 // NewMsgSend - construct a msg to send coins from one account to another.
 //nolint:interfacer
@@ -179,5 +180,40 @@ func ValidateInputsOutputs(inputs []Input, outputs []Output) error {
 		return ErrInputOutputMismatch
 	}
 
+	return nil
+}
+
+// NewMsgSetSendEnabled Construct a message to set one or more SendEnabled entries.
+func NewMsgSetSendEnabled(authority string, send_enabled []*SendEnabled) *MsgSetSendEnabled {
+	return &MsgSetSendEnabled{
+		Authority:   authority,
+		SendEnabled: send_enabled,
+	}
+}
+
+// Route implements the LegacyMsg interface.
+func (msg MsgSetSendEnabled) Route() string { return sdk.MsgTypeURL(&msg) }
+
+// Type implements the LegacyMsg interface.
+func (msg MsgSetSendEnabled) Type() string { return sdk.MsgTypeURL(&msg) }
+
+// GetSignBytes implements the LegacyMsg interface.
+func (msg MsgSetSendEnabled) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners returns the expected signers for MsgSoftwareUpgrade.
+func (msg MsgSetSendEnabled) GetSigners() []sdk.AccAddress {
+	addr, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{addr}
+}
+
+// ValidateBasic runs basic validation on this MsgSetSendEnabled.
+func (msg MsgSetSendEnabled) ValidateBasic() error {
+	for _, denom := range msg.SendEnabled {
+		if err := denom.Validate(); err != nil {
+			return err
+		}
+	}
 	return nil
 }

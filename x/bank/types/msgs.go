@@ -1,7 +1,8 @@
 package types
 
 import (
-	"fmt"
+	fmt "fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -14,7 +15,6 @@ const (
 )
 
 var _ sdk.Msg = &MsgSend{}
-var _ sdk.Msg = &MsgSetSendEnabled{}
 
 // NewMsgSend - construct a msg to send coins from one account to another.
 //nolint:interfacer

@@ -31,10 +31,6 @@ func (m Migrator) Migrate2to3(ctx sdk.Context) error {
 func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 	oldParams := m.keeper.GetParams(ctx)
 	m.keeper.SetAllSendEnabled(ctx, oldParams.GetSendEnabled())
-	newParams := banktypes.Params{
-		SendEnabled:        []*banktypes.SendEnabled{},
-		DefaultSendEnabled: oldParams.DefaultSendEnabled,
-	}
-	m.keeper.SetParams(ctx, newParams)
+	m.keeper.SetParams(ctx, banktypes.NewParams(oldParams.DefaultSendEnabled))
 	return nil
 }

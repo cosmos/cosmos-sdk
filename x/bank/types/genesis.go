@@ -127,6 +127,6 @@ func (g *GenesisState) MigrateSendEnabled() {
 				g.SendEnabled = append(g.SendEnabled, *se)
 			}
 		}
-		g.Params.SendEnabled = []*SendEnabled{}
 	}
+	g.Params.SendEnabled = nil
 }

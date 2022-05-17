@@ -42,9 +42,10 @@ func TestRandomizedGenState(t *testing.T) {
 
 	assert.Equal(t, true, bankGenesis.Params.GetDefaultSendEnabled(), "Params.GetDefaultSendEnabled")
 	assert.Len(t, bankGenesis.Params.GetSendEnabled(), 0, "Params.GetSendEnabled")
-	assert.Len(t, bankGenesis.Balances, 3)
-	assert.Equal(t, "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", bankGenesis.Balances[2].GetAddress().String(), "Balances[2] address")
-	assert.Equal(t, "1000stake", bankGenesis.Balances[2].GetCoins().String(), "Balances[2] coins")
+	if assert.Len(t, bankGenesis.Balances, 3) {
+		assert.Equal(t, "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", bankGenesis.Balances[2].GetAddress().String(), "Balances[2] address")
+		assert.Equal(t, "1000stake", bankGenesis.Balances[2].GetCoins().String(), "Balances[2] coins")
+	}
 	assert.Equal(t, "6000stake", bankGenesis.Supply.String(), "Supply")
 	if assert.Len(t, bankGenesis.SendEnabled, 1, "SendEnabled") {
 		assert.Equal(t, true, bankGenesis.SendEnabled[0].Enabled, "SendEnabled[0] value")

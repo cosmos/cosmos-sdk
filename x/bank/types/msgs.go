@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -211,8 +212,17 @@ func (msg MsgSetSendEnabled) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic runs basic validation on this MsgSetSendEnabled.
 func (msg MsgSetSendEnabled) ValidateBasic() error {
-	for _, denom := range msg.SendEnabled {
-		if err := denom.Validate(); err != nil {
+	_, err := sdk.AccAddressFromBech32(msg.Authority)
+	if err != nil {
+		return err
+	}
+	seen := map[string]bool{}
+	for _, se := range msg.SendEnabled {
+		if _, alreadySeen := seen[se.Denom]; alreadySeen {
+			return fmt.Errorf("duplicate denom entries found for %q", se.Denom)
+		}
+		seen[se.Denom] = true
+		if err = se.Validate(); err != nil {
 			return err
 		}
 	}

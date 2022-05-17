@@ -114,7 +114,7 @@ func Test_validateSendEnabledParams(t *testing.T) {
 		{
 			name: "has entry",
 			arg:  []*SendEnabled{{"foocoin", false}},
-			exp:  "use of send_enabled in params is no longer supported",
+			exp:  "",
 		},
 		{
 			name: "not a slice",

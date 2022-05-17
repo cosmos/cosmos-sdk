@@ -8,7 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
 // kvstoreTx defines a tx for mock purposes. The `key` and `value` fields will
@@ -27,7 +27,7 @@ func (msg *kvstoreTx) ProtoMessage()  {}
 
 var _ sdk.Tx = &kvstoreTx{}
 var _ sdk.Msg = &kvstoreTx{}
-var _ middleware.GasTx = &kvstoreTx{}
+var _ ante.GasTx = &kvstoreTx{}
 
 func NewTx(key, value string) kvstoreTx {
 	bytes := fmt.Sprintf("%s=%s", key, value)

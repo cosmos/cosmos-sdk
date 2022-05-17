@@ -16,7 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authmiddleware "github.com/cosmos/cosmos-sdk/x/auth/middleware"
+	authmiddleware "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -82,7 +82,7 @@ func TestRunMigrations(t *testing.T) {
 	bApp := baseapp.NewBaseApp(appName, logger, db)
 	bApp.SetCommitMultiStoreTracer(nil)
 	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
-	msr := authmiddleware.NewMsgServiceRouter(encCfg.InterfaceRegistry)
+	msr := authante.NewMsgServiceRouter(encCfg.InterfaceRegistry)
 	app.BaseApp = bApp
 	app.configurator = module.NewConfigurator(app.appCodec, msr, app.GRPCQueryRouter())
 

@@ -21,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // Supported ABCI Query prefixes
@@ -262,11 +261,16 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 		return sdkerrors.ResponseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace)
 	}
 
+	data, err := makeABCIData(result)
+	if err != nil {
+		return sdkerrors.ResponseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace)
+	}
+
 	return abci.ResponseCheckTx{
 		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
 		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
 		Log:       result.Log,
-		Data:      result.Data,
+		Data:      data,
 		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
 	}
 }
@@ -295,11 +299,16 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 		return sdkerrors.ResponseDeliverTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace)
 	}
 
+	data, err := makeABCIData(result)
+	if err != nil {
+		return sdkerrors.ResponseDeliverTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace)
+	}
+
 	return abci.ResponseDeliverTx{
 		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
 		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
 		Log:       result.Log,
-		Data:      result.Data,
+		Data:      data,
 		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
 	}
 }
@@ -865,35 +874,6 @@ func SplitABCIQueryPath(requestPath string) (path []string) {
 }
 
 // makeABCIData generates the Data field to be sent to ABCI Check/DeliverTx.
-func makeABCIData(txRes tx.Response) ([]byte, error) {
+func makeABCIData(txRes *sdk.Result) ([]byte, error) {
 	return proto.Marshal(&sdk.TxMsgData{MsgResponses: txRes.MsgResponses})
-}
-
-// convertTxResponseToCheckTx converts a tx.Response into a abci.ResponseCheckTx.
-func convertTxResponseToCheckTx(txRes tx.Response, checkRes tx.ResponseCheckTx) (abci.ResponseCheckTx, error) {
-	data, err := makeABCIData(txRes)
-	if err != nil {
-		return abci.ResponseCheckTx{}, nil
-	}
-
-	return abci.ResponseCheckTx{
-		Data:     data,
-		Log:      txRes.Log,
-		Events:   txRes.Events,
-		Priority: checkRes.Priority,
-	}, nil
-}
-
-// convertTxResponseToDeliverTx converts a tx.Response into a abci.ResponseDeliverTx.
-func convertTxResponseToDeliverTx(txRes tx.Response) (abci.ResponseDeliverTx, error) {
-	data, err := makeABCIData(txRes)
-	if err != nil {
-		return abci.ResponseDeliverTx{}, nil
-	}
-
-	return abci.ResponseDeliverTx{
-		Data:   data,
-		Log:    txRes.Log,
-		Events: txRes.Events,
-	}, nil
 }

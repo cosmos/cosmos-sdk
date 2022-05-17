@@ -18,16 +18,16 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
-func testTxHandler(options middleware.TxHandlerOptions) tx.Handler {
-	return middleware.ComposeMiddlewares(
-		middleware.NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
-		middleware.NewTxDecoderMiddleware(options.TxDecoder),
-		middleware.GasTxMiddleware,
-		middleware.RecoveryTxMiddleware,
-		middleware.NewIndexEventsTxMiddleware(options.IndexEvents),
+func testTxHandler(options ante.TxHandlerOptions) tx.Handler {
+	return ante.ComposeMiddlewares(
+		ante.NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
+		ante.NewTxDecoderMiddleware(options.TxDecoder),
+		ante.GasTxMiddleware,
+		ante.RecoveryTxMiddleware,
+		ante.NewIndexEventsTxMiddleware(options.IndexEvents),
 	)
 }
 
@@ -53,14 +53,14 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 
 	// Set a Route.
 	encCfg := simapp.MakeTestEncodingConfig()
-	legacyRouter := middleware.NewLegacyRouter()
+	legacyRouter := ante.NewLegacyRouter()
 	// We're adding a test legacy route here, which accesses the kvstore
 	// and simply sets the Msg's key/value pair in the kvstore.
 	legacyRouter.AddRoute(sdk.NewRoute("kvstore", KVStoreHandler(capKeyMainStore)))
 	txHandler := testTxHandler(
-		middleware.TxHandlerOptions{
+		ante.TxHandlerOptions{
 			LegacyRouter:     legacyRouter,
-			MsgServiceRouter: middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry),
+			MsgServiceRouter: ante.NewMsgServiceRouter(encCfg.InterfaceRegistry),
 			TxDecoder:        decodeTx,
 		},
 	)

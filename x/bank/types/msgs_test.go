@@ -330,6 +330,7 @@ func TestMsgSetSendEnabledValidateBasic(t *testing.T) {
 					{"somecoina", true},
 					{"somecoinb", false},
 				},
+				UseDefaultFor: []string{"defcoinc", "defcoind"},
 			},
 			exp: "",
 		},
@@ -376,6 +377,14 @@ func TestMsgSetSendEnabledValidateBasic(t *testing.T) {
 				},
 			},
 			exp: "duplicate denom entries found for \"copycoin\"",
+		},
+		{
+			name: "bad denom to delete",
+			msg: MsgSetSendEnabled{
+				Authority:     govModuleAddr,
+				UseDefaultFor: []string{"very \t bad denom string~~~!"},
+			},
+			exp: "invalid denom: very \t bad denom string~~~!",
 		},
 	}
 

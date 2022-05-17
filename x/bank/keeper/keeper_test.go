@@ -1512,9 +1512,7 @@ func (suite *IntegrationTestSuite) TestIterateSendEnabledEntries() {
 		})
 	}
 
-	for _, denom := range denoms {
-		bankKeeper.DeleteSendEnabled(ctx, denom)
-	}
+	bankKeeper.DeleteSendEnabled(ctx, denoms...)
 
 	suite.T().Run("no entries to iterate again after deleting all of them", func(t *testing.T) {
 		count := 0

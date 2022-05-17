@@ -186,11 +186,11 @@ func ValidateInputsOutputs(inputs []Input, outputs []Output) error {
 }
 
 // NewMsgSetSendEnabled Construct a message to set one or more SendEnabled entries.
-func NewMsgSetSendEnabled(authority string, sendEnabled []*SendEnabled, useDefault []string, setDefaultSendEnabled, defaultSendEnabled bool) *MsgSetSendEnabled {
+func NewMsgSetSendEnabled(authority string, sendEnabled []*SendEnabled, useDefaultFor []string, setDefaultSendEnabled, defaultSendEnabled bool) *MsgSetSendEnabled {
 	return &MsgSetSendEnabled{
 		Authority:             authority,
 		SendEnabled:           sendEnabled,
-		UseDefault:            useDefault,
+		UseDefaultFor:         useDefaultFor,
 		SetDefaultSendEnabled: setDefaultSendEnabled,
 		DefaultSendEnabled:    defaultSendEnabled,
 	}
@@ -226,6 +226,11 @@ func (msg MsgSetSendEnabled) ValidateBasic() error {
 		}
 		seen[se.Denom] = true
 		if err = se.Validate(); err != nil {
+			return err
+		}
+	}
+	for _, denom := range msg.UseDefaultFor {
+		if err = sdk.ValidateDenom(denom); err != nil {
 			return err
 		}
 	}

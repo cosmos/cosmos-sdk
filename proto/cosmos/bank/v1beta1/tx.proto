@@ -66,11 +66,11 @@ message MsgSetSendEnabled {
   // send_enabled is the list of entries to add or update.
   repeated SendEnabled send_enabled = 2;
 
-  // use_default is a list of denoms that should use the params.default_send_enabled value.
+  // use_default_for is a list of denoms that should use the params.default_send_enabled value.
   // Denoms listed here will have their SendEnabled entries deleted.
   // If a denom is included that doesn't have a SendEnabled entry,
   // it will be ignored.
-  repeated string use_default = 3;
+  repeated string use_default_for = 3;
 
   // set_default_send_enabled defines whether to update the
   // params.default_send_enabled value. If true, params.default_send_enabled

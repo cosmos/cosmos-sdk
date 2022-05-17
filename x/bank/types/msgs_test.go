@@ -278,8 +278,8 @@ func TestNewMsgSetSendEnabled(t *testing.T) {
 		assert.Equal(t, "barrycoin", msg.SendEnabled[0].Denom, "msg.SendEnabled[0].Denom")
 		assert.True(t, msg.SendEnabled[0].Enabled, "msg.SendEnabled[0].Enabled")
 	}
-	if assert.Len(t, msg.UseDefault, 1, "msg.UseDefault") {
-		assert.Equal(t, "billcoin", msg.UseDefault[0], "msg.UseDefault[0]")
+	if assert.Len(t, msg.UseDefaultFor, 1, "msg.UseDefault") {
+		assert.Equal(t, "billcoin", msg.UseDefaultFor[0], "msg.UseDefault[0]")
 	}
 	assert.True(t, msg.SetDefaultSendEnabled, "msg.SetDefaultSendEnabled")
 	assert.True(t, msg.DefaultSendEnabled, "msg.DefaultSendEnabled")

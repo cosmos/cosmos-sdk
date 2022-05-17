@@ -134,7 +134,7 @@ func TestBaseAppCreateQueryContext(t *testing.T) {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil, nil)
+	app := NewBaseApp(name, logger, db, nil)
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
 	app.Commit()

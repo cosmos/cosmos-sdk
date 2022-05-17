@@ -280,6 +280,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			accNum = acc.GetAccountNumber()
 		}
 		signerData := authsigning.SignerData{
+			Address:       acc.GetAddress().String(),
 			ChainID:       chainID,
 			AccountNumber: accNum,
 			Sequence:      acc.GetSequence(),

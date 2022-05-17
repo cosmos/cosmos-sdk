@@ -12,8 +12,8 @@ var testHandler = func(_ sdk.Context, _ sdk.Msg) (*sdk.Result, error) {
 	return &sdk.Result{}, nil
 }
 
-func TestRouter(t *testing.T) {
-	rtr := NewRouter()
+func TestLegacyRouter(t *testing.T) {
+	rtr := NewLegacyRouter()
 
 	// require panic on invalid route
 	require.Panics(t, func() {

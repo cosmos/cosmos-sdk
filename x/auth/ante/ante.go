@@ -44,10 +44,10 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		NewMempoolFeeDecorator(),
 		NewValidateBasicDecorator(),
 		NewTxTimeoutHeightDecorator(),
-		NewTxPriorityDecorator(),
 		NewValidateMemoDecorator(options.AccountKeeper),
 		NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
 		NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper),
+		NewTxPriorityDecorator(),
 		NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		NewValidateSigCountDecorator(options.AccountKeeper),
 		NewSigGasConsumeDecorator(options.AccountKeeper, sigGasConsumer),

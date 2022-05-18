@@ -60,6 +60,7 @@ type BaseApp struct { // nolint: maligned
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 
 	anteHandler    sdk.AnteHandler  // ante handler for fee and auth
+	postHandler    sdk.AnteHandler  // post handler, optional, e.g. for tips
 	initChainer    sdk.InitChainer  // initialize state with validators and state blob
 	beginBlocker   sdk.BeginBlocker // logic to run before any txs
 	endBlocker     sdk.EndBlocker   // logic to run after all txs, and to determine valset changes

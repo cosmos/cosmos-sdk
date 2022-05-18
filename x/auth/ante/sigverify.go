@@ -284,6 +284,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			ChainID:       chainID,
 			AccountNumber: accNum,
 			Sequence:      acc.GetSequence(),
+			PubKey:        pubKey,
 		}
 
 		if !simulate {

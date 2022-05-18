@@ -1,7 +1,7 @@
 /*
 Package helpers contains functions to build sample data for tests/testgen
 
-In it's own package to avoid poluting the godoc for ics23-iavl
+In it's own package to avoid polluting the godoc for ics23-iavl
 */
 package helpers
 
@@ -56,7 +56,7 @@ func GenerateIavlResult(size int, loc tmproofs.Where) (*IavlResult, error) {
 	return res, nil
 }
 
-// GetKey this returns a key, on Left/Right/Middle
+// GetKey returns a key, on Left/Right/Middle
 func GetKey(allkeys [][]byte, loc tmproofs.Where) []byte {
 	if loc == tmproofs.Left {
 		return allkeys[0]

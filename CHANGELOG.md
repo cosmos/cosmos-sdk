@@ -86,6 +86,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (types) [\#10948](https://github.com/cosmos/cosmos-sdk/issues/10948) Add `app-db-backend` to the `app.toml` config to replace the compile-time `types.DBbackend` variable.
 * (authz)[\#11060](https://github.com/cosmos/cosmos-sdk/pull/11060) Support grant with no expire time.
 * (rosetta) [\#11590](https://github.com/cosmos/cosmos-sdk/pull/11590) Add fee suggestion for rosetta and enable offline mode. Also force set events about Fees to Success to pass reconciliation test.
+* (types) [\#11959](https://github.com/cosmos/cosmos-sdk/pull/11959) Added `sdk.Coins.Find` helper method to find a coin by denom.
 * (x/bank) [\#11859](https://github.com/cosmos/cosmos-sdk/pull/11859) Create the `SetSendEnabled` endpoint for managing the bank's SendEnabled settings.
 
 ### API Breaking Changes

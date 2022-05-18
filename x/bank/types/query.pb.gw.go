@@ -506,7 +506,7 @@ var (
 )
 
 func request_Query_SendEnabled_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QuerySendEnabled
+	var protoReq QuerySendEnabledRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -522,7 +522,7 @@ func request_Query_SendEnabled_0(ctx context.Context, marshaler runtime.Marshale
 }
 
 func local_request_Query_SendEnabled_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QuerySendEnabled
+	var protoReq QuerySendEnabledRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -1036,7 +1036,7 @@ var (
 
 	pattern_Query_DenomOwners_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "bank", "v1beta1", "denom_owners", "denom"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_SendEnabled_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "bank", "v1beta1", "sendEnabled"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_SendEnabled_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "bank", "v1beta1", "send_enabled"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

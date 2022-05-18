@@ -974,7 +974,7 @@ func (s *coinTestSuite) TestSearch() {
 		require.Panics(func() { amountOfCases[0].coins.AmountOf("10Invalid") })
 	})
 
-	zeroCoin := sdk.Coin{"", sdk.ZeroInt()}
+	zeroCoin := sdk.Coin{}
 	findCases := []struct {
 		coins        sdk.Coins
 		denom        string

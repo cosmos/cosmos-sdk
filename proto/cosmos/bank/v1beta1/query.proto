@@ -69,8 +69,8 @@ service Query {
   // This query only returns denominations that have specific SendEnabled settings.
   // Any denomination that does not have a specific setting will use the default
   // params.default_send_enabled, and will not be returned by this query.
-  rpc SendEnabled(QuerySendEnabled) returns (QuerySendEnabledResponse) {
-    option (google.api.http).get = "/cosmos/bank/v1beta1/sendEnabled";
+  rpc SendEnabled(QuerySendEnabledRequest) returns (QuerySendEnabledResponse) {
+    option (google.api.http).get = "/cosmos/bank/v1beta1/send_enabled";
   }
 }
 
@@ -251,8 +251,8 @@ message QueryDenomOwnersResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QuerySendEnabled defines the RPC request for looking up SendEnabled entries.
-message QuerySendEnabled {
+// QuerySendEnabledRequest defines the RPC request for looking up SendEnabled entries.
+message QuerySendEnabledRequest {
   // denoms is the specific denoms you want look up. Leave empty to get all entries.
   repeated string denoms = 1;
   // pagination defines an optional pagination for the request.

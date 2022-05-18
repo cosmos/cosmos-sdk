@@ -248,7 +248,7 @@ Getting all entries:
 				return err
 			}
 			queryClient := types.NewQueryClient(clientCtx)
-			req := &types.QuerySendEnabled{
+			req := &types.QuerySendEnabledRequest{
 				Denoms:     args,
 				Pagination: reqPag,
 			}

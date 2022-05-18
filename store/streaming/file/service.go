@@ -39,7 +39,7 @@ type IntermediateWriter struct {
 	outChan chan<- []byte
 }
 
-// NewIntermediateWriter create an instance of an intermediateWriter that sends to the provided channel
+// NewIntermediateWriter create an instance of an IntermediateWriter that sends to the provided channel
 func NewIntermediateWriter(outChan chan<- []byte) *IntermediateWriter {
 	return &IntermediateWriter{
 		outChan: outChan,

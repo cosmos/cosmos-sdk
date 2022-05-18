@@ -2829,7 +2829,58 @@ func (s *TestSuite) TestLeaveGroup() {
 	}
 }
 
-func submitProposal(ctx context.Context, s *TestSuite, msgs []sdk.Msg, proposers []string) uint64 {
+
+func (s *TestSuite) TestPruneProposals() {
+	addrs := s.addrs
+	expirationTime := time.Hour * 24 * 15 // 15 days
+	groupID := s.groupID
+	accountAddr := s.groupPolicyAddr
+
+	msgSend := &banktypes.MsgSend{
+		FromAddress: s.groupPolicyAddr.String(),
+		ToAddress:   addrs[0].String(),
+		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+	}
+
+	policyReq := &group.MsgCreateGroupPolicy{
+		Admin:   addrs[0].String(),
+		GroupId: groupID,
+	}
+
+	policy := group.NewThresholdDecisionPolicy("100", time.Microsecond, time.Microsecond)
+	err := policyReq.SetDecisionPolicy(policy)
+	s.Require().NoError(err)
+	_, err = s.keeper.CreateGroupPolicy(s.ctx, policyReq)
+	s.Require().NoError(err)
+
+	req := &group.MsgSubmitProposal{
+		GroupPolicyAddress: accountAddr.String(),
+		Proposers:          []string{addrs[1].String()},
+	}
+	err = req.SetMsgs([]sdk.Msg{msgSend})
+	s.Require().NoError(err)
+	submittedProposal, err := s.keeper.SubmitProposal(s.ctx, req)
+	s.Require().NoError(err)
+	queryProposal := group.QueryProposalRequest{ProposalId: submittedProposal.ProposalId}
+	prePrune, err := s.keeper.Proposal(s.ctx, &queryProposal)
+	s.Require().NoError(err)
+	s.Require().Equal(prePrune.Proposal.Id, submittedProposal.ProposalId)
+	// Move Forward in time for 15 days, after voting period end + max_execution_period
+	s.sdkCtx = s.sdkCtx.WithBlockTime(s.sdkCtx.BlockTime().Add(expirationTime))
+
+	// Prune Expired Proposals
+	err = s.keeper.PruneProposals(s.sdkCtx)
+	s.Require().NoError(err)
+	postPrune, err := s.keeper.Proposal(s.ctx, &queryProposal)
+	s.Require().Nil(postPrune)
+	s.Require().Error(err)
+	s.Require().Contains(err.Error(), "load proposal: not found")
+}
+
+func submitProposal(
+	ctx context.Context, s *TestSuite, msgs []sdk.Msg,
+	proposers []string,
+) uint64 {
 	proposalReq := &group.MsgSubmitProposal{
 		GroupPolicyAddress: s.groupPolicyAddr.String(),
 		Proposers:          proposers,

@@ -1,5 +1,5 @@
 <!--
-order: 14
+order: 13
 -->
 
 # Cosmos Blockchain Simulator
@@ -76,7 +76,7 @@ check the Cosmos SDK [Makefile](https://github.com/cosmos/cosmos-sdk/blob/v0.40.
 
 Here are some suggestions when encountering a simulation failure:
 
-* Export the app state at the height were the failure was found. You can do this
+* Export the app state at the height where the failure was found. You can do this
   by passing the `-ExportStatePath` flag to the simulator.
 * Use `-Verbose` logs. They could give you a better hint on all the operations
   involved.
@@ -84,7 +84,7 @@ Here are some suggestions when encountering a simulation failure:
   frequently.
 * Print all the failed invariants at once with `-PrintAllInvariants`.
 * Try using another `-Seed`. If it can reproduce the same error and if it fails
-  sooner you will spend less time running the simulations.
+  sooner, you will spend less time running the simulations.
 * Reduce the `-NumBlocks` . How's the app state at the height previous to the
   failure?
 * Run invariants on every operation with `-SimulateEveryOperation`. _Note_: this

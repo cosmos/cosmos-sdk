@@ -56,7 +56,7 @@ func (m *sequenceMachine) NextVal(t *rapid.T) {
 // CurVal is one of the model commands. It checks that the current value of the
 // sequence matches the model.
 func (m *sequenceMachine) CurVal(t *rapid.T) {
-	// Check the the current value matches the model
+	// Check the current value matches the model
 	require.Equal(t, m.state, m.seq.CurVal(m.store))
 }
 

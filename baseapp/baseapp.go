@@ -765,7 +765,10 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		events = events.AppendEvents(msgEvents)
 
 		// Each individual sdk.Result that went through the MsgServiceRouter
-		// has exactly one Msg response. We aggregate here.
+		// (which should represent 99% of the Msgs now, since everyone should
+		// be using protobuf Msgs) has exactly one Msg response, set inside
+		// `WrapServiceResult`. We take that Msg response, and aggregate it
+		// into an array.
 		if len(msgResult.MsgResponses) > 0 {
 			msgResponse := msgResult.MsgResponses[0]
 			if msgResponse == nil {

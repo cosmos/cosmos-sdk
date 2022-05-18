@@ -44,6 +44,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		NewMempoolFeeDecorator(),
 		NewValidateBasicDecorator(),
 		NewTxTimeoutHeightDecorator(),
+		NewTxPriorityDecorator(),
 		NewValidateMemoDecorator(options.AccountKeeper),
 		NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
 		NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper),

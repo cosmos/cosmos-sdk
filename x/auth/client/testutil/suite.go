@@ -1562,7 +1562,6 @@ func (s *IntegrationTestSuite) TestAuxSigner() {
 }
 
 func (s *IntegrationTestSuite) TestAuxToFee() {
-	s.T().Skip()
 	require := s.Require()
 	val := s.network.Validators[0]
 

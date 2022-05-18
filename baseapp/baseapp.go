@@ -691,6 +691,17 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	// Result if any single message fails or does not have a registered Handler.
 	result, err = app.runMsgs(runMsgCtx, msgs, mode)
 	if err == nil && mode == runTxModeDeliver {
+		// Run optional postHandlers
+		if app.postHandler != nil {
+			newCtx, err := app.postHandler(runMsgCtx, tx, mode == runTxModeSimulate)
+
+			if err != nil {
+				return gInfo, nil, nil, err
+			}
+
+			result.Events = append(result.Events, newCtx.EventManager().ABCIEvents()...)
+		}
+
 		// When block gas exceeds, it'll panic and won't commit the cached store.
 		consumeBlockGas()
 

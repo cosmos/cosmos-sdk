@@ -23,7 +23,7 @@ Protobuf generates a `MsgServer` interface based on a definition of `Msg` servic
 
 When possible, the existing module's [`Keeper`](keeper.md) should implement `MsgServer`, otherwise a `msgServer` struct that embeds the `Keeper` can be created, typically in `./keeper/msg_server.go`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/x/bank/keeper/msg_server.go#L14:L16
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/x/bank/keeper/msg_server.go#L14-L16
 
 `msgServer` methods can retrieve the `sdk.Context` from the `context.Context` parameter method using the `sdk.UnwrapSDKContext`:
 

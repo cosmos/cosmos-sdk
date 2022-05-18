@@ -1,9 +1,6 @@
 package helpers
 
 import (
-	crand "crypto/rand"
-	"encoding/binary"
-	"fmt"
 	rand "math/rand"
 )
 
@@ -24,11 +21,11 @@ func randStr(n int) string {
 	return string(b)
 }
 
-func crandSeed() int64 {
-	var seed int64
-	err := binary.Read(crand.Reader, binary.BigEndian, &seed)
-	if err != nil {
-		panic(fmt.Sprintf("could not read random seed from crypto/rand: %v", err))
-	}
-	return seed
-}
+// func crandSeed() int64 {
+// 	var seed int64
+// 	err := binary.Read(crand.Reader, binary.BigEndian, &seed)
+// 	if err != nil {
+// 		panic(fmt.Sprintf("could not read random seed from crypto/rand: %v", err))
+// 	}
+// 	return seed
+// }

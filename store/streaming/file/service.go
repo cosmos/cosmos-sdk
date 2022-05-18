@@ -62,7 +62,7 @@ func NewStreamingService(writeDir, filePrefix string, storeKeys []types.StoreKey
 	for _, key := range storeKeys {
 		listeners[key] = append(listeners[key], listener)
 	}
-	// check that the writeDir exists and is writeable so that we can catch the error here at initialization if it is not
+	// check that the writeDir exists and is writable so that we can catch the error here at initialization if it is not
 	// we don't open a dstFile until we receive our first ABCI message
 	if err := isDirWriteable(writeDir); err != nil {
 		return nil, err

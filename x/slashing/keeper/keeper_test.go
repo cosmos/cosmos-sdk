@@ -237,7 +237,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	// shouldn't be jailed/kicked yet
 	tstaking.CheckValidator(valAddr, stakingtypes.Bonded, false)
 
-	// validator misses the an additional 500 more blocks, after the cooling off period of SignedBlockWindow (here 1000 blocks).
+	// validator misses an additional 500 more blocks, after the cooling off period of SignedBlockWindow (here 1000 blocks).
 	latest := app.SlashingKeeper.SignedBlocksWindow(ctx) + height
 	for ; height < latest+app.SlashingKeeper.MinSignedPerWindow(ctx); height++ {
 		ctx = ctx.WithBlockHeight(height)

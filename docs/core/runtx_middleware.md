@@ -1,5 +1,5 @@
 <!--
-order: 13
+order: 12
 -->
 
 # RunTx recovery middleware

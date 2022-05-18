@@ -2829,6 +2829,7 @@ func (s *TestSuite) TestLeaveGroup() {
 	}
 }
 
+
 func (s *TestSuite) TestPruneProposals() {
 	addrs := s.addrs
 	expirationTime := time.Hour * 24 * 15 // 15 days

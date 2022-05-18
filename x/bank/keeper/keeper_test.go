@@ -24,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
@@ -93,7 +92,6 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 	keeper := keeper.NewBaseKeeper(
 		appCodec, app.GetKey(types.StoreKey), authKeeper,
 		app.GetSubspace(types.ModuleName), blockedAddrs,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	return authKeeper, keeper
@@ -113,33 +111,6 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	suite.app = app
 	suite.ctx = ctx
 	suite.queryClient = queryClient
-}
-
-func (suite *IntegrationTestSuite) TestGetAuthority() {
-	createKeeperWithAuthority := func(authority string) keeper.BaseKeeper {
-		return keeper.NewBaseKeeper(
-			simapp.MakeTestEncodingConfig().Codec,
-			suite.app.GetKey(types.StoreKey),
-			nil,
-			suite.app.GetSubspace(types.ModuleName),
-			nil,
-			authority,
-		)
-	}
-
-	tests := []string{"", "authority1", "someotherthing"}
-
-	for _, tc := range tests {
-		name := tc
-		if len(name) == 0 {
-			name = "empty"
-		}
-		suite.T().Run(name, func(t *testing.T) {
-			kpr := createKeeperWithAuthority(tc)
-			actual := kpr.GetAuthority()
-			assert.Equal(t, tc, actual)
-		})
-	}
 }
 
 func (suite *IntegrationTestSuite) TestSupply() {
@@ -1088,7 +1059,6 @@ func (suite *IntegrationTestSuite) TestBalanceTrackingEvents() {
 
 	suite.app.BankKeeper = keeper.NewBaseKeeper(suite.app.AppCodec(), suite.app.GetKey(types.StoreKey),
 		suite.app.AccountKeeper, suite.app.GetSubspace(types.ModuleName), nil,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// set account with multiple permissions
@@ -1251,7 +1221,6 @@ func (suite *IntegrationTestSuite) TestMintCoinRestrictions() {
 	for _, test := range tests {
 		suite.app.BankKeeper = keeper.NewBaseKeeper(suite.app.AppCodec(), suite.app.GetKey(types.StoreKey),
 			suite.app.AccountKeeper, suite.app.GetSubspace(types.ModuleName), nil,
-			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		).WithMintCoinsRestriction(keeper.MintingRestrictionFn(test.restrictionFn))
 		for _, testCase := range test.testCases {
 			if testCase.expectPass {

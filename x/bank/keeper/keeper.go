@@ -46,9 +46,6 @@ type Keeper interface {
 	DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
 	UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
 
-	// GetAuthority Gets the address capable of executing governance proposal messages. Usually the gov module account.
-	GetAuthority() string
-
 	types.QueryServer
 }
 
@@ -61,14 +58,9 @@ type BaseKeeper struct {
 	storeKey               storetypes.StoreKey
 	paramSpace             paramtypes.Subspace
 	mintCoinsRestrictionFn MintingRestrictionFn
-	authority              string
 }
 
 type MintingRestrictionFn func(ctx sdk.Context, coins sdk.Coins) error
-
-func (k BaseKeeper) GetAuthority() string {
-	return k.authority
-}
 
 // GetPaginatedTotalSupply queries for the supply, ignoring 0 coins, with a given pagination
 func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error) {
@@ -107,7 +99,6 @@ func NewBaseKeeper(
 	ak types.AccountKeeper,
 	paramSpace paramtypes.Subspace,
 	blockedAddrs map[string]bool,
-	authority string,
 ) BaseKeeper {
 
 	// set KeyTable if it has not already been set
@@ -122,7 +113,6 @@ func NewBaseKeeper(
 		storeKey:               storeKey,
 		paramSpace:             paramSpace,
 		mintCoinsRestrictionFn: func(ctx sdk.Context, coins sdk.Coins) error { return nil },
-		authority:              authority,
 	}
 }
 

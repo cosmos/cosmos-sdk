@@ -136,14 +136,14 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, am.accountKeeper, genesisState)
+	am.accountKeeper.InitGenesis(ctx, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the auth
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs := ExportGenesis(ctx, am.accountKeeper)
+	gs := am.accountKeeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
 }
 

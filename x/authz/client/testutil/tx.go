@@ -85,8 +85,8 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 	val := s.network.Validators[0]
 	grantee := s.grantee
 
-	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
-	pastHour := time.Now().Add(time.Minute * time.Duration(-60)).Unix()
+	twoHours := time.Now().Add(time.Minute * 120).Unix()
+	pastHour := time.Now().Add(-time.Minute * 60).Unix()
 
 	testCases := []struct {
 		name         string
@@ -278,15 +278,14 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
-			out, err := ExecGrant(
+			out, err := CreateGrant(
 				val,
 				tc.args,
 			)
 			if tc.expectErr {
-				s.Require().Error(err)
+				s.Require().Error(err, out)
 			} else {
 				var txResp sdk.TxResponse
 				s.Require().NoError(err)
@@ -310,7 +309,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
 	// send-authorization
-	_, err := ExecGrant(
+	_, err := CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -326,7 +325,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 	s.Require().NoError(err)
 
 	// generic-authorization
-	_, err = ExecGrant(
+	_, err = CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -342,7 +341,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 	s.Require().NoError(err)
 
 	// generic-authorization used for amino testing
-	_, err = ExecGrant(
+	_, err = CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -455,7 +454,7 @@ func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 	grantee := s.grantee
 	tenSeconds := time.Now().Add(time.Second * time.Duration(10)).Unix()
 
-	_, err := ExecGrant(
+	_, err := CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -495,7 +494,7 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 	grantee := s.grantee
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := ExecGrant(
+	_, err := CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -597,7 +596,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 	grantee := s.grantee
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := ExecGrant(
+	_, err := CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -682,7 +681,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 	grantee := s.grantee
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := ExecGrant(
+	_, err := CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -774,7 +773,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 	}
 
 	// test delegate no spend-limit
-	_, err = ExecGrant(
+	_, err = CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -851,7 +850,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 	}
 
 	// test delegating to denied validator
-	_, err = ExecGrant(
+	_, err = CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -886,7 +885,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
 	// granting undelegate msg authorization
-	_, err := ExecGrant(
+	_, err := CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -995,7 +994,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 	}
 
 	// grant undelegate authorization without limit
-	_, err = ExecGrant(
+	_, err = CreateGrant(
 		val,
 		[]string{
 			grantee.String(),

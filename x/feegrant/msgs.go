@@ -3,7 +3,6 @@ package feegrant
 import (
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -77,7 +76,7 @@ func (msg MsgGrantAllowance) Route() string {
 
 // GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgGrantAllowance) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetFeeAllowanceI returns unpacked FeeAllowance
@@ -140,5 +139,5 @@ func (msg MsgRevokeAllowance) Route() string {
 
 // GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgRevokeAllowance) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }

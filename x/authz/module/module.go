@@ -47,7 +47,9 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 // RegisterLegacyAminoCodec registers the authz module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	authz.RegisterLegacyAminoCodec(cdc)
+}
 
 // RegisterInterfaces registers the authz module's interface types
 func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {

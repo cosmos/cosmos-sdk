@@ -43,7 +43,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	// setup 3 accounts
 	s := rand.NewSource(1)
 	r := rand.New(s)
-	accs := suite.getTestingAccounts(r, 3)
+	accs := suite.getTestingAccounts(r, 2)
 
 	expected := []struct {
 		weight     int
@@ -51,8 +51,8 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgName  string
 	}{
 		{simulation.WeightGrant, authz.ModuleName, simulation.TypeMsgGrant},
-		{simulation.WeightRevoke, authz.ModuleName, simulation.TypeMsgRevoke},
 		{simulation.WeightExec, authz.ModuleName, simulation.TypeMsgExec},
+		{simulation.WeightRevoke, authz.ModuleName, simulation.TypeMsgRevoke},
 	}
 
 	for i, w := range weightedOps {
@@ -106,7 +106,7 @@ func (suite *SimTestSuite) TestSimulateGrant() {
 	suite.Require().NoError(err)
 
 	var msg authz.MsgGrant
-	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.app.LegacyAmino().UnmarshalJSON(operationMsg.Msg, &msg)
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(granter.Address.String(), msg.Granter)
 	suite.Require().Equal(grantee.Address.String(), msg.Grantee)
@@ -143,7 +143,7 @@ func (suite *SimTestSuite) TestSimulateRevoke() {
 	suite.Require().NoError(err)
 
 	var msg authz.MsgRevoke
-	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.app.LegacyAmino().UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(granter.Address.String(), msg.Granter)
@@ -179,7 +179,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 
 	var msg authz.MsgExec
 
-	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.app.LegacyAmino().UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(grantee.Address.String(), msg.Grantee)

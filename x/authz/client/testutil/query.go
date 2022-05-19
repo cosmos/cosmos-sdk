@@ -20,7 +20,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 	grantee := s.grantee
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := ExecGrant(
+	_, err := CreateGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -98,7 +98,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorization() {
 	grantee := s.grantee
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := ExecGrant(
+	_, err := CreateGrant(
 		val,
 		[]string{
 			grantee.String(),

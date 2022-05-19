@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/bank interfaces and concrete types
@@ -14,6 +15,7 @@ import (
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgSend{}, "cosmos-sdk/MsgSend", nil)
 	cdc.RegisterConcrete(&MsgMultiSend{}, "cosmos-sdk/MsgMultiSend", nil)
+	cdc.RegisterConcrete(&SendAuthorization{}, "cosmos-sdk/SendAuthorization", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
@@ -30,19 +32,16 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 }
 
 var (
-	amino = codec.NewLegacyAmino()
-
-	// ModuleCdc references the global x/bank module codec. Note, the codec should
-	// ONLY be used in certain instances of tests and for JSON encoding as Amino is
-	// still used for that purpose.
-	//
-	// The actual codec used for serialization should be provided to x/staking and
-	// defined at the application level.
+	amino     = codec.NewLegacyAmino()
 	ModuleCdc = codec.NewAminoCodec(amino)
 )
 
 func init() {
 	RegisterLegacyAminoCodec(amino)
 	cryptocodec.RegisterCrypto(amino)
-	amino.Seal()
+	sdk.RegisterLegacyAminoCodec(amino)
+
+	// Register all Amino interfaces and concrete types on the authz Amino codec so that this can later be
+	// used to properly serialize MsgGrant and MsgExec instances
+	RegisterLegacyAminoCodec(authzcodec.Amino)
 }

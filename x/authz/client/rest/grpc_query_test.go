@@ -1,3 +1,4 @@
+//go:build norace
 // +build norace
 
 package rest_test
@@ -61,7 +62,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().Contains(out.String(), `"code":0`)
 
 	// grant authorization
-	out, err = authztestutil.ExecGrant(val, []string{
+	out, err = authztestutil.CreateGrant(val, []string{
 		newAddr.String(),
 		"send",
 		fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
@@ -177,7 +178,7 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 			false,
 			"",
 			func() {
-				_, err := authztestutil.ExecGrant(val, []string{
+				_, err := authztestutil.CreateGrant(val, []string{
 					s.grantee.String(),
 					"generic",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),

@@ -69,7 +69,7 @@ func (msg MsgCreateVestingAccount) ValidateBasic() error {
 // GetSignBytes returns the bytes all expected signers must sign over for a
 // MsgCreateVestingAccount.
 func (msg MsgCreateVestingAccount) GetSignBytes() []byte {
-	return sdk.MustSortJSON(amino.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners returns the expected signers for a MsgCreateVestingAccount.
@@ -112,7 +112,7 @@ func (msg MsgCreateClawbackVestingAccount) GetSigners() []sdk.AccAddress {
 // GetSignBytes returns the bytes all expected signers must sign over for a
 // MsgCreateClawbackVestingAccount.
 func (msg MsgCreateClawbackVestingAccount) GetSignBytes() []byte {
-	return sdk.MustSortJSON(amino.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic Implements Msg.

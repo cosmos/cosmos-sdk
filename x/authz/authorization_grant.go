@@ -9,12 +9,12 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// NewGrant returns new Grant
-func NewGrant( /*blockTime time.Time, */ a Authorization, expiration time.Time) (Grant, error) {
-	// TODO: add this for 0.45
-	// if !expiration.After(blockTime) {
-	// 	return Grant{}, sdkerrors.ErrInvalidRequest.Wrapf("expiration must be after the current block time (%v), got %v", blockTime.Format(time.RFC3339), expiration.Format(time.RFC3339))
-	// }
+// NewGrant returns new Grant. It returns an error if the expiration is before
+// the current block time, which is passed into the `blockTime` arg.
+func NewGrant(blockTime time.Time, a Authorization, expiration time.Time) (Grant, error) {
+	if !expiration.After(blockTime) {
+		return Grant{}, sdkerrors.ErrInvalidRequest.Wrapf("expiration must be after the current block time (%v), got %v", blockTime.Format(time.RFC3339), expiration.Format(time.RFC3339))
+	}
 	g := Grant{
 		Expiration: expiration,
 	}

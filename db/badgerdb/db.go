@@ -19,9 +19,7 @@ import (
 	"github.com/dgraph-io/ristretto/z"
 )
 
-var (
-	versionsFilename = "versions.csv"
-)
+var versionsFilename = "versions.csv"
 
 var (
 	_ db.DBConnection = (*BadgerDB)(nil)
@@ -74,7 +72,7 @@ type versionManager struct {
 func NewDB(dir string) (*BadgerDB, error) {
 	// Since Badger doesn't support database names, we join both to obtain
 	// the final directory to use for the database.
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return nil, err
 	}
 	opts := badger.DefaultOptions(dir)
@@ -102,7 +100,7 @@ func NewDBWithOptions(opts badger.Options) (*BadgerDB, error) {
 
 // Load metadata CSV file containing valid versions
 func readVersionsFile(path string) (*versionManager, error) {
-	file, err := os.OpenFile(path, os.O_RDONLY|os.O_CREATE, 0644)
+	file, err := os.OpenFile(path, os.O_RDONLY|os.O_CREATE, 0o644)
 	if err != nil {
 		return nil, err
 	}
@@ -143,14 +141,14 @@ func readVersionsFile(path string) (*versionManager, error) {
 
 // Write version metadata to CSV file
 func writeVersionsFile(vm *versionManager, path string) error {
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0644)
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0o644)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 	w := csv.NewWriter(file)
 	rows := [][]string{
-		[]string{"0", strconv.FormatUint(vm.lastTs, 10)},
+		{"0", strconv.FormatUint(vm.lastTs, 10)},
 	}
 	for it := vm.Iterator(); it.Next(); {
 		version := it.Value()

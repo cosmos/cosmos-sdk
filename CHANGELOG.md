@@ -49,6 +49,44 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#11772](https://github.com/cosmos/cosmos-sdk/pull/11772) Limit types.Dec length to avoid overflow.
 * [\#10947](https://github.com/cosmos/cosmos-sdk/pull/10947) Add `AllowancesByGranter` query to the feegrant module
 * [\#9639](https://github.com/cosmos/cosmos-sdk/pull/9639) Check store keys length before accessing them by making sure that `key` is of length `m+1` (for `key[n:m]`)
+<<<<<<< HEAD
+=======
+* (types) [\#9627](https://github.com/cosmos/cosmos-sdk/pull/9627) Fix nil pointer panic on `NewBigIntFromInt`
+* (x/genutil) [\#9574](https://github.com/cosmos/cosmos-sdk/pull/9575) Actually use the `gentx` client tx flags (like `--keyring-dir`)
+* (x/distribution) [\#9599](https://github.com/cosmos/cosmos-sdk/pull/9599) Withdraw rewards event now includes a value attribute even if there are 0 rewards (due to situations like 100% commission).
+* (x/genutil) [\#9638](https://github.com/cosmos/cosmos-sdk/pull/9638) Added missing validator key save when recovering from mnemonic
+* [\#9762](https://github.com/cosmos/cosmos-sdk/pull/9762) The init command uses the chain-id from the client config if --chain-id is not provided
+* [\#9854](https://github.com/cosmos/cosmos-sdk/pull/9854) Fixed the `make proto-gen` to get dynamic container name based on project name for the cosmos based sdks.
+* [\#9980](https://github.com/cosmos/cosmos-sdk/pull/9980) Returning the error when the invalid argument is passed to bank query total supply cli.
+* (server) [#10016](https://github.com/cosmos/cosmos-sdk/issues/10016) Fix marshaling of index-events into server config file.
+* [\#10184](https://github.com/cosmos/cosmos-sdk/pull/10184) Fixed CLI tx commands to no longer explicitly require the chain-id flag as this value can come from a user config.
+* [\#10239](https://github.com/cosmos/cosmos-sdk/pull/10239) Fixed x/bank/044 migrateDenomMetadata.
+* (x/upgrade) [\#10189](https://github.com/cosmos/cosmos-sdk/issues/10189) Removed potential sources of non-determinism in upgrades
+* [\#10258](https://github.com/cosmos/cosmos-sdk/issues/10258) Fixes issue related to segmentation fault on mac m1 arm64
+* [\#10466](https://github.com/cosmos/cosmos-sdk/issues/10466) Fixes error with simulation tests when genesis start time is randomly created after the year 2262
+* [\#10394](https://github.com/cosmos/cosmos-sdk/issues/10394) Fixes issue related to grpc-gateway of account balance by
+  ibc-denom.
+* [\#10593](https://github.com/cosmos/cosmos-sdk/pull/10593) Update swagger-ui to v4.1.0 to fix xss vulnerability.
+* [\#10842](https://github.com/cosmos/cosmos-sdk/pull/10842) Fix error when `--generate-only`, `--max-msgs` fags set while executing `WithdrawAllRewards` command.
+* [\#10897](https://github.com/cosmos/cosmos-sdk/pull/10897) Fix: set a non-zero value on gas overflow.
+* [#9790](https://github.com/cosmos/cosmos-sdk/pull/10687) Fix behavior of `DecCoins.MulDecTruncate`.
+* [\#10990](https://github.com/cosmos/cosmos-sdk/pull/10990) Fixes missing `iavl-cache-size` config parsing in `GetConfig` method.
+* (crypto) [#11027] Remove dependency on Tendermint core for xsalsa20symmetric.
+* (x/authz) [\#10447](https://github.com/cosmos/cosmos-sdk/pull/10447) Fix authz `NewGrant` expiration check.
+* (x/authz) [\#10633](https://github.com/cosmos/cosmos-sdk/pull/10633) Fixed authorization not found error when executing message.
+* [#11222](https://github.com/cosmos/cosmos-sdk/pull/11222) reject query with block height in the future
+* [#11229](https://github.com/cosmos/cosmos-sdk/pull/11229) Handled the error message of `transaction encountered error` from tendermint.
+* (x/authz) [\#11252](https://github.com/cosmos/cosmos-sdk/pull/11252) Allow insufficient funds error for authz simulation
+* (cli) [\#11313](https://github.com/cosmos/cosmos-sdk/pull/11313) Fixes `--gas auto` when executing CLI transactions in `--generate-only` mode
+* (cli) [\#11337](https://github.com/cosmos/cosmos-sdk/pull/11337) Fixes `show-adress` cli cmd
+* (crypto) [\#11298](https://github.com/cosmos/cosmos-sdk/pull/11298) Fix cgo secp signature verification and update libscep256k1 library.
+* (x/authz) [\#11512](https://github.com/cosmos/cosmos-sdk/pull/11512) Fix response of a panic to error, when subtracting balances.
+* (rosetta) [\#11590](https://github.com/cosmos/cosmos-sdk/pull/11590) `/block` returns an error with nil pointer when a request has both of index and hash and increase timeout for huge genesis.
+* (x/feegrant) [\#11813](https://github.com/cosmos/cosmos-sdk/pull/11813) Fix pagination total count in `AllowancesByGranter` query.
+* (simapp) [\#11855](https://github.com/cosmos/cosmos-sdk/pull/11855) Use `sdkmath.Int` instead of `int64` for `SimulationState.InitialStake`.
+* (x/capability) [\#11737](https://github.com/cosmos/cosmos-sdk/pull/11737) Use a fixed length encoding of `Capability` pointer for `FwdCapabilityKey`
+* [\#11983](https://github.com/cosmos/cosmos-sdk/pull/11983) (x/feegrant, x/authz) rename grants query commands to `grants-by-grantee`, `grants-by-granter` cmds.
+>>>>>>> f470d402a (fix: cli `grants-by-grantee`, `grants-by-granter` cmds (#11983))
 
 ## Improvements
 

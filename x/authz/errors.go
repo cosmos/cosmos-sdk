@@ -6,7 +6,7 @@ import (
 
 // x/authz module sentinel errors
 var (
-	//ErrNoAuthorizationFound error if there is no authorization found given a grant key
+	// ErrNoAuthorizationFound error if there is no authorization found given a grant key
 	ErrNoAuthorizationFound = sdkerrors.Register(ModuleName, 2, "authorization not found")
 	// ErrInvalidExpirationTime error if the set expiration time is in the past
 	ErrInvalidExpirationTime = sdkerrors.Register(ModuleName, 3, "expiration time of authorization should be more than current time")

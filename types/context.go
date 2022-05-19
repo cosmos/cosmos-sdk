@@ -61,7 +61,7 @@ func (c Context) EventManager() *EventManager { return c.eventManager }
 
 // clone the header before returning
 func (c Context) BlockHeader() tmproto.Header {
-	var msg = proto.Clone(&c.header).(*tmproto.Header)
+	msg := proto.Clone(&c.header).(*tmproto.Header)
 	return *msg
 }
 

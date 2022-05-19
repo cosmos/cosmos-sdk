@@ -14,7 +14,7 @@ digraph "" {
       "github.com/cosmos/cosmos-sdk/container_test.ProvideKVStoreKey"[color="black", fontcolor="black", penwidth="1.5", shape="box"];
     }
 
-  "[]github.com/cosmos/cosmos-sdk/container_test.Command"[color="lightgrey", comment="auto-group", fontcolor="dimgrey", penwidth="0.5"];
+  "[]github.com/cosmos/cosmos-sdk/container_test.Command"[color="lightgrey", comment="many-per-container", fontcolor="dimgrey", penwidth="0.5"];
   "github.com/cosmos/cosmos-sdk/container.ModuleKey"[color="black", fontcolor="black", penwidth="1.5"];
   "github.com/cosmos/cosmos-sdk/container.OwnModuleKey"[color="lightgrey", fontcolor="dimgrey", penwidth="0.5"];
   "github.com/cosmos/cosmos-sdk/container_test.KVStoreKey"[color="black", fontcolor="black", penwidth="1.5"];

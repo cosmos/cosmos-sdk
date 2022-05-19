@@ -65,7 +65,7 @@ func (vm *VersionManager) Save(target uint64) (uint64, error) {
 }
 
 func findLimit(m map[uint64]struct{}, cmp func(uint64, uint64) bool, init uint64) uint64 {
-	for x, _ := range m {
+	for x := range m {
 		if cmp(x, init) {
 			init = x
 		}
@@ -99,7 +99,7 @@ func (vi *vmIterator) Value() uint64 { return vi.buf }
 func (vm *VersionManager) Iterator() VersionIterator {
 	ch := make(chan uint64)
 	go func() {
-		for ver, _ := range vm.versions {
+		for ver := range vm.versions {
 			ch <- ver
 		}
 		close(ch)
@@ -125,7 +125,7 @@ func (vm *VersionManager) Equal(that VersionSet) bool {
 
 func (vm *VersionManager) Copy() *VersionManager {
 	vmap := make(map[uint64]struct{})
-	for ver, _ := range vm.versions {
+	for ver := range vm.versions {
 		vmap[ver] = struct{}{}
 	}
 	return &VersionManager{versions: vmap, initial: vm.initial, last: vm.last}

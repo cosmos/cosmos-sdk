@@ -28,8 +28,7 @@ func init() {
 	}
 }
 
-type LedgerSECP256K1Mock struct {
-}
+type LedgerSECP256K1Mock struct{}
 
 func (mock LedgerSECP256K1Mock) Close() error {
 	return nil

@@ -52,7 +52,7 @@ func (s *MWTestSuite) TestBranchStore() {
 
 			// testMsgTxHandler is a test txHandler that handles one single TestMsg,
 			// consumes the given `tc.gasToConsume`, and sets the bank store "ok" key to "ok".
-			var testMsgTxHandler = customTxHandler{func(ctx context.Context, req tx.Request) (tx.Response, error) {
+			testMsgTxHandler := customTxHandler{func(ctx context.Context, req tx.Request) (tx.Response, error) {
 				msg, ok := req.Tx.GetMsgs()[0].(*testdata.TestMsg)
 				if !ok {
 					return tx.Response{}, fmt.Errorf("Wrong Msg type, expected %T, got %T", (*testdata.TestMsg)(nil), msg)

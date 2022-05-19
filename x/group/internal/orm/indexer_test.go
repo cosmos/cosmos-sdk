@@ -239,6 +239,7 @@ func TestIndexerOnDelete(t *testing.T) {
 		})
 	}
 }
+
 func TestIndexerOnUpdate(t *testing.T) {
 	myRowID := EncodeSequence(1)
 
@@ -377,7 +378,6 @@ func TestUniqueKeyAddFunc(t *testing.T) {
 		expErr           *sdkerrors.Error
 		expExistingEntry []byte
 	}{
-
 		"create when not exists": {
 			srcKey:           []byte("my-index-key"),
 			expExistingEntry: append(AddLengthPrefix([]byte("my-index-key")), myRowID...),
@@ -421,7 +421,6 @@ func TestMultiKeyAddFunc(t *testing.T) {
 		expErr           *sdkerrors.Error
 		expExistingEntry []byte
 	}{
-
 		"create when not exists": {
 			srcKey:           []byte("my-index-key"),
 			expExistingEntry: append(AddLengthPrefix([]byte("my-index-key")), myRowID...),

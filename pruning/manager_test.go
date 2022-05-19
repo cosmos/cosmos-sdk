@@ -4,7 +4,6 @@ import (
 	"container/list"
 	"errors"
 	"fmt"
-
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -312,7 +311,6 @@ func TestHandleHeight_FlushLoadFromDisk(t *testing.T) {
 }
 
 func TestHandleHeight_DbErr_Panic(t *testing.T) {
-
 	ctrl := gomock.NewController(t)
 
 	// Setup
@@ -367,7 +365,6 @@ func TestHandleHeightSnapshot_FlushLoadFromDisk(t *testing.T) {
 }
 
 func TestHandleHeightSnapshot_DbErr_Panic(t *testing.T) {
-
 	ctrl := gomock.NewController(t)
 
 	// Setup
@@ -509,7 +506,7 @@ func TestLoadPruningHeights(t *testing.T) {
 }
 
 func TestLoadPruningHeights_PruneNothing(t *testing.T) {
-	var manager = pruning.NewManager(db.NewMemDB(), log.NewNopLogger())
+	manager := pruning.NewManager(db.NewMemDB(), log.NewNopLogger())
 	require.NotNil(t, manager)
 
 	manager.SetOptions(types.NewPruningOptions(types.PruningNothing))
@@ -518,7 +515,6 @@ func TestLoadPruningHeights_PruneNothing(t *testing.T) {
 }
 
 func TestGetFlushAndResetPruningHeights_DbErr_Panic(t *testing.T) {
-
 	ctrl := gomock.NewController(t)
 
 	// Setup

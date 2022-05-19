@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"context"
-
 	"encoding/json"
 	"testing"
 	"time"
@@ -192,7 +191,6 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 	s.Require().Equal(genesisState.GroupSeq, exportedGenesisState.GroupSeq)
 	s.Require().Equal(genesisState.GroupPolicySeq, exportedGenesisState.GroupPolicySeq)
 	s.Require().Equal(genesisState.ProposalSeq, exportedGenesisState.ProposalSeq)
-
 }
 
 func (s *GenesisTestSuite) assertGroupPoliciesEqual(g *group.GroupPolicyInfo, other *group.GroupPolicyInfo) {

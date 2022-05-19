@@ -41,7 +41,6 @@ func (cbgh consumeBlockGasHandler) DeliverTx(ctx context.Context, req tx.Request
 		sdkCtx.BlockGasMeter().ConsumeGas(
 			sdkCtx.GasMeter().GasConsumedToLimit(), "block gas meter",
 		)
-
 	}()
 
 	return cbgh.next.DeliverTx(ctx, req)

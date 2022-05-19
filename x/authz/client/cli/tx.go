@@ -51,6 +51,7 @@ func GetTxCmd() *cobra.Command {
 	return AuthorizationTxCmd
 }
 
+// NewCmdGrantAuthorization returns a CLI command handler for creating a MsgGrant transaction.
 func NewCmdGrantAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grant <grantee> <authorization_type=\"send\"|\"generic\"|\"delegate\"|\"unbond\"|\"redelegate\"> --from <granter>",
@@ -189,6 +190,7 @@ func getExpireTime(cmd *cobra.Command) (*time.Time, error) {
 	return &e, nil
 }
 
+// NewCmdRevokeAuthorization returns a CLI command handler for creating a MsgRevoke transaction.
 func NewCmdRevokeAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "revoke [grantee] [msg-type-url] --from=[granter]",
@@ -222,6 +224,7 @@ Example:
 	return cmd
 }
 
+// NewCmdExecAuthorization returns a CLI command handler for creating a MsgExec transaction.
 func NewCmdExecAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "exec [tx-json-file] --from [grantee]",

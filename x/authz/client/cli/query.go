@@ -94,6 +94,7 @@ $ %s query %s grants cosmos1skjw.. cosmos1skjwj.. %s
 	return cmd
 }
 
+// GetQueryGranterGrants returns cmd to query for all grants for a granter.
 func GetQueryGranterGrants() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "granter-grants [granter-addr]",
@@ -142,6 +143,7 @@ $ %s q %s granter-grants cosmos1skj..
 	return cmd
 }
 
+// GetQueryGranteeGrants returns cmd to query for all grants for a grantee.
 func GetQueryGranteeGrants() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grantee-grants [grantee-addr]",

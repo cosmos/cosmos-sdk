@@ -98,13 +98,13 @@ $ %s query %s grants cosmos1skjw.. cosmos1skjwj.. %s
 // GetQueryGranterGrants returns cmd to query for all grants for a granter.
 func GetQueryGranterGrants() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "granter-grants [granter-addr]",
+		Use:   "grants-by-granter [granter-addr]",
 		Args:  cobra.ExactArgs(1),
 		Short: "query authorization grants granted by granter",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query authorization grants granted by granter.
 Examples:
-$ %s q %s granter-grants cosmos1skj..
+$ %s q %s grants-by-granter cosmos1skj..
 `,
 				version.AppName, authz.ModuleName),
 		),
@@ -147,13 +147,13 @@ $ %s q %s granter-grants cosmos1skj..
 // GetQueryGranteeGrants returns cmd to query for all grants for a grantee.
 func GetQueryGranteeGrants() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grantee-grants [grantee-addr]",
+		Use:   "grants-by-grantee [grantee-addr]",
 		Args:  cobra.ExactArgs(1),
 		Short: "query authorization grants granted to a grantee",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query authorization grants granted to a grantee.
 Examples:
-$ %s q %s grantee-grants cosmos1skj..
+$ %s q %s grants-by-grantee cosmos1skj..
 `,
 				version.AppName, authz.ModuleName),
 		),

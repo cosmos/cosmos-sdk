@@ -18,7 +18,6 @@ import (
 func SetGenTxsInAppGenesisState(
 	cdc codec.JSONCodec, txJSONEncoder sdk.TxEncoder, appGenesisState map[string]json.RawMessage, genTxs []sdk.Tx,
 ) (map[string]json.RawMessage, error) {
-
 	genesisState := types.GetGenesisStateFromAppState(cdc, appGenesisState)
 	genTxsBz := make([]json.RawMessage, 0, len(genTxs))
 
@@ -41,7 +40,6 @@ func ValidateAccountInGenesis(
 	appGenesisState map[string]json.RawMessage, genBalIterator types.GenesisBalancesIterator,
 	addr sdk.Address, coins sdk.Coins, cdc codec.JSONCodec,
 ) error {
-
 	var stakingData stakingtypes.GenesisState
 	cdc.MustUnmarshalJSON(appGenesisState[stakingtypes.ModuleName], &stakingData)
 	bondDenom := stakingData.Params.BondDenom
@@ -96,7 +94,6 @@ func DeliverGenTxs(
 	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn,
 	txEncodingConfig client.TxEncodingConfig,
 ) ([]abci.ValidatorUpdate, error) {
-
 	for _, genTx := range genTxs {
 		tx, err := txEncodingConfig.TxJSONDecoder()(genTx)
 		if err != nil {

@@ -1,9 +1,10 @@
 package authz_test
 
 import (
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"testing"
 	"time"
+
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/stretchr/testify/require"
 
@@ -46,6 +47,7 @@ func TestMsgExecAuthorized(t *testing.T) {
 		}
 	}
 }
+
 func TestMsgRevokeAuthorization(t *testing.T) {
 	tests := []struct {
 		title            string
@@ -84,21 +86,35 @@ func TestMsgGrantAuthorization(t *testing.T) {
 		expectErr        bool
 		valBasic         bool
 	}{
-		{"nil granter address",
-			nil, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, &now, false, false},
-		{"nil grantee address",
-			granter, nil, &banktypes.SendAuthorization{SpendLimit: coinsPos}, &now, false, false},
-		{"nil granter and grantee address",
-			nil, nil, &banktypes.SendAuthorization{SpendLimit: coinsPos}, &now, false, false},
-		{"nil authorization should fail",
-			granter, grantee, nil, &now, true, false},
-		{"valid test case",
-			granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, addDatePtr(&now, 1, 0), false, true},
-		{"valid test case with nil expire time",
-			granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, nil, false, true},
+		{
+			"nil granter address",
+			nil, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, &now, false, false,
+		},
+		{
+			"nil grantee address",
+			granter, nil, &banktypes.SendAuthorization{SpendLimit: coinsPos}, &now, false, false,
+		},
+		{
+			"nil granter and grantee address",
+			nil, nil, &banktypes.SendAuthorization{SpendLimit: coinsPos}, &now, false, false,
+		},
+		{
+			"nil authorization should fail",
+			granter, grantee, nil, &now, true, false,
+		},
+		{
+			"valid test case",
+			granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, addDatePtr(&now, 1, 0), false, true,
+		},
+		{
+			"valid test case with nil expire time",
+			granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, nil, false, true,
+		},
 		// we don't access the block time / nor time.Now, so we don't know if it's in the past at this level.
-		{"past expire time should not fail",
-			granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, addDatePtr(&now, 0, -1), false, true},
+		{
+			"past expire time should not fail",
+			granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, addDatePtr(&now, 0, -1), false, true,
+		},
 	}
 	for _, tc := range tests {
 		msg, err := authz.NewMsgGrant(

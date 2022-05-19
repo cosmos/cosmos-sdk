@@ -10,7 +10,6 @@ import (
 )
 
 func TestGenesisStateValidate(t *testing.T) {
-
 	testCases := []struct {
 		name         string
 		genesisState GenesisState
@@ -147,7 +146,6 @@ func TestGenesisStateValidate(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-
 			err := tc.genesisState.Validate()
 
 			if tc.expErr {

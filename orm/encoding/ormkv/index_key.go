@@ -62,7 +62,6 @@ func NewIndexKeyCodec(prefix []byte, messageType protoreflect.MessageType, index
 }
 
 func (cdc IndexKeyCodec) DecodeIndexKey(k, _ []byte) (indexFields, primaryKey []protoreflect.Value, err error) {
-
 	values, err := cdc.DecodeKey(bytes.NewReader(k))
 	// got prefix key
 	if err == io.EOF {

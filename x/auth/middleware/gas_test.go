@@ -102,10 +102,12 @@ var _ tx.Handler = customTxHandler{}
 func (h customTxHandler) DeliverTx(ctx context.Context, req tx.Request) (tx.Response, error) {
 	return h.fn(ctx, req)
 }
+
 func (h customTxHandler) CheckTx(ctx context.Context, req tx.Request, _ tx.RequestCheckTx) (tx.Response, tx.ResponseCheckTx, error) {
 	res, err := h.fn(ctx, req)
 	return res, tx.ResponseCheckTx{}, err
 }
+
 func (h customTxHandler) SimulateTx(ctx context.Context, req tx.Request) (tx.Response, error) {
 	return h.fn(ctx, req)
 }

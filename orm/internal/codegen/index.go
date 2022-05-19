@@ -9,7 +9,6 @@ import (
 )
 
 func (t tableGen) genIndexKeys() {
-
 	// interface that all keys must adhere to
 	t.P("type ", t.indexKeyInterfaceName(), " interface {")
 	t.P("id() uint32")
@@ -112,7 +111,6 @@ func (t tableGen) genIndex(fields string, id uint32, isPrimaryKey bool) {
 	for i := 1; i < len(fieldsSlc)+1; i++ {
 		t.genWithMethods(idxKeyName, fieldsSlc[:i])
 	}
-
 }
 
 func (t tableGen) genIndexInterfaceMethods(id uint32, indexStructName string) {

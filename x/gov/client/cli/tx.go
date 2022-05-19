@@ -35,7 +35,7 @@ const (
 	FlagProposal = "proposal"
 )
 
-// ProposalFlags defines the core required fields of a proposal. It is used to
+// ProposalFlags defines the core required fields of a legacy proposal. It is used to
 // verify that these values are not provided in conjunction with a JSON proposal
 // file.
 var ProposalFlags = []string{
@@ -47,8 +47,8 @@ var ProposalFlags = []string{
 
 // NewTxCmd returns the transaction commands for this module
 // governance ModuleClient is slightly different from other ModuleClients in that
-// it contains a slice of "proposal" child commands. These commands are respective
-// to proposal type handlers that are implemented in other modules but are mounted
+// it contains a slice of legacy "proposal" child commands. These commands are respective
+// to the proposal type handlers that are implemented in other modules but are mounted
 // under the governance CLI (eg. parameter change proposals).
 func NewTxCmd(legacyPropCmds []*cobra.Command) *cobra.Command {
 	govTxCmd := &cobra.Command{
@@ -81,12 +81,12 @@ func NewTxCmd(legacyPropCmds []*cobra.Command) *cobra.Command {
 // NewCmdSubmitProposal implements submitting a proposal transaction command.
 func NewCmdSubmitProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "submit-proposal",
-		Short: "Submit a proposal along with some messages and metadata",
+		Use:   "submit-proposal [path/to/proposal.json]",
+		Short: "Submit a proposal along with some messages, metadata and deposit",
 		Args:  cobra.ExactArgs(1),
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Submit a proposal along with some messages and metadata.
-Messages, metadata and deposit are defined in a JSON file.
+			fmt.Sprintf(`Submit a proposal along with some messages, metadata and deposit.
+They should be defined in a JSON file.
 
 Example:
 $ %s tx gov submit-proposal path/to/proposal.json
@@ -180,7 +180,11 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 				return err
 			}
 
-			content := v1beta1.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
+			content, ok := v1beta1.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
+			if !ok {
+				return fmt.Errorf("failed to create proposal content: unknown proposal type %s", proposal.Type)
+			}
+
 			msg, err := v1beta1.NewMsgSubmitProposal(content, amount, clientCtx.GetFromAddress())
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)

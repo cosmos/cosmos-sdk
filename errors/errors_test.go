@@ -3,14 +3,11 @@ package errors
 import (
 	stdlib "errors"
 	"fmt"
-	"testing"
-
-	grpcstatus "google.golang.org/grpc/status"
-
-	"google.golang.org/grpc/codes"
-
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
+	"testing"
 )
 
 type errorsTestSuite struct {
@@ -221,6 +218,10 @@ func (s *errorsTestSuite) TestGRPCStatus() {
 	// test wrapping
 	s.Require().Equal(codes.Unimplemented, grpcstatus.Code(ErrNotSupported.Wrap("test")))
 	s.Require().Equal(codes.FailedPrecondition, grpcstatus.Code(ErrConflict.Wrapf("test %s", "foo")))
+
+	status, ok = grpcstatus.FromError(ErrNotFound.Wrap("test"))
+	s.Require().True(ok)
+	s.Require().Equal("codespace testtesttest code 38: not found: test", status.Message())
 }
 
 func ExampleWrap() {

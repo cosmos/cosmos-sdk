@@ -1,7 +1,7 @@
 package ormerrors
 
 import (
-	"github.com/cosmos/cosmos-sdk/errors"
+	"cosmossdk.io/errors"
 	"google.golang.org/grpc/codes"
 )
 
@@ -30,7 +30,7 @@ var (
 	BadDecodeEntry                = errors.New(codespace, 17, "bad decode entry")
 	IndexOutOfBounds              = errors.New(codespace, 18, "index out of bounds")
 	InvalidListOptions            = errors.New(codespace, 19, "invalid list options")
-	UnsupportedKeyField           = errors.New(codespace, 20, "unsupported key field")
+	InvalidKeyField               = errors.New(codespace, 20, "invalid key field")
 	UnexpectedError               = errors.New(codespace, 21, "unexpected error")
 	InvalidRangeIterationKeys     = errors.New(codespace, 22, "invalid range iteration keys")
 	JSONImportError               = errors.New(codespace, 23, "json import error")

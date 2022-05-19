@@ -103,7 +103,15 @@ func (sr *StreamReader) ReadMsg(msg proto.Message) error {
 
 // Close implements io.Closer interface
 func (sr *StreamReader) Close() error {
-	sr.protoReader.Close()
-	sr.zReader.Close()
-	return sr.chunkReader.Close()
+	var err error
+	if err1 := sr.protoReader.Close(); err1 != nil {
+		err = err1
+	}
+	if err2 := sr.zReader.Close(); err2 != nil {
+		err = err2
+	}
+	if err3 := sr.chunkReader.Close(); err3 != nil {
+		err = err3
+	}
+	return err
 }

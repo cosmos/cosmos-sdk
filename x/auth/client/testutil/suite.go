@@ -917,7 +917,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 
 	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
 	s.Require().NoError(err)
-	diff, _ := balRes.Balances.SafeSub(intialCoins)
+	diff, _ := balRes.Balances.SafeSub(intialCoins...)
 	s.Require().Equal(sendTokens.Amount, diff.AmountOf(s.cfg.BondDenom))
 
 	// Generate multisig transaction.
@@ -1596,24 +1596,6 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 		tipperArgs         []string
 		feePayerArgs       []string
 	}{
-		{
-			name:     "when --aux and --sign-mode = direct set: error",
-			tipper:   tipper,
-			feePayer: feePayer,
-			tip:      tip,
-			tipperArgs: []string{
-				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
-				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
-				fmt.Sprintf("--%s=true", flags.FlagAux),
-			},
-			expectErrAux: true,
-			feePayerArgs: []string{
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
-			},
-		},
 		{
 			name:     "when --aux and --sign-mode = direct set: error",
 			tipper:   tipper,

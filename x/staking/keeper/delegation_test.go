@@ -117,6 +117,11 @@ func TestDelegation(t *testing.T) {
 		require.Len(t, resDels, 2)
 	}
 
+	// test total bonded for single delegator
+	expBonded := bond1to1.Shares.Add(bond2to1.Shares).Add(bond1to3.Shares)
+	resDelBond := app.StakingKeeper.GetDelegatorBonded(ctx, addrDels[0])
+	require.Equal(t, expBonded, sdk.NewDecFromInt(resDelBond))
+
 	// delete a record
 	app.StakingKeeper.RemoveDelegation(ctx, bond2to3)
 	_, found = app.StakingKeeper.GetDelegation(ctx, addrDels[1], valAddrs[2])
@@ -162,7 +167,8 @@ func TestUnbondingDelegation(t *testing.T) {
 	require.Equal(t, ubd, resUnbond)
 
 	// modify a records, save, and retrieve
-	ubd.Entries[0].Balance = sdk.NewInt(21)
+	expUnbond := sdk.NewInt(21)
+	ubd.Entries[0].Balance = expUnbond
 	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 
 	resUnbonds := app.StakingKeeper.GetUnbondingDelegations(ctx, delAddrs[0], 5)
@@ -174,6 +180,9 @@ func TestUnbondingDelegation(t *testing.T) {
 	resUnbond, found = app.StakingKeeper.GetUnbondingDelegation(ctx, delAddrs[0], valAddrs[0])
 	require.True(t, found)
 	require.Equal(t, ubd, resUnbond)
+
+	resDelUnbond := app.StakingKeeper.GetDelegatorUnbonding(ctx, delAddrs[0])
+	require.Equal(t, expUnbond, resDelUnbond)
 
 	// delete a record
 	app.StakingKeeper.RemoveUnbondingDelegation(ctx, ubd)
@@ -212,7 +221,7 @@ func TestUnbondDelegation(t *testing.T) {
 	app.StakingKeeper.SetDelegation(ctx, delegation)
 
 	bondTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 6)
-	amount, err := app.StakingKeeper.Unbond(ctx, delAddrs[0], valAddrs[0], bondTokens.ToDec())
+	amount, err := app.StakingKeeper.Unbond(ctx, delAddrs[0], valAddrs[0], sdk.NewDecFromInt(bondTokens))
 	require.NoError(t, err)
 	require.Equal(t, bondTokens, amount) // shares to be added to an unbonding delegation
 
@@ -355,7 +364,7 @@ func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 	app.StakingKeeper.SetDelegation(ctx, delegation)
 
 	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
-	_, err := app.StakingKeeper.Undelegate(ctx, val0AccAddr, addrVals[0], app.StakingKeeper.TokensFromConsensusPower(ctx, 6).ToDec())
+	_, err := app.StakingKeeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDecFromInt(app.StakingKeeper.TokensFromConsensusPower(ctx, 6)))
 	require.NoError(t, err)
 
 	// end block
@@ -424,7 +433,7 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 
 	// unbond the all self-delegation to put validator in unbonding state
 	val0AccAddr := sdk.AccAddress(addrVals[0])
-	_, err := app.StakingKeeper.Undelegate(ctx, val0AccAddr, addrVals[0], delTokens.ToDec())
+	_, err := app.StakingKeeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDecFromInt(delTokens))
 	require.NoError(t, err)
 
 	// end block
@@ -499,7 +508,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	ctx = ctx.WithBlockTime(time.Unix(333, 0))
 
 	// unbond the all self-delegation to put validator in unbonding state
-	_, err := app.StakingKeeper.Undelegate(ctx, val0AccAddr, addrVals[0], valTokens.ToDec())
+	_, err := app.StakingKeeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDecFromInt(valTokens))
 	require.NoError(t, err)
 
 	// end block
@@ -522,12 +531,12 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 
 	// unbond some of the other delegation's shares
 	unbondTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 6)
-	_, err = app.StakingKeeper.Undelegate(ctx, addrDels[1], addrVals[0], unbondTokens.ToDec())
+	_, err = app.StakingKeeper.Undelegate(ctx, addrDels[1], addrVals[0], sdk.NewDecFromInt(unbondTokens))
 	require.NoError(t, err)
 
 	// unbond rest of the other delegation's shares
 	remainingTokens := delTokens.Sub(unbondTokens)
-	_, err = app.StakingKeeper.Undelegate(ctx, addrDels[1], addrVals[0], remainingTokens.ToDec())
+	_, err = app.StakingKeeper.Undelegate(ctx, addrDels[1], addrVals[0], sdk.NewDecFromInt(remainingTokens))
 	require.NoError(t, err)
 
 	//  now validator should be deleted from state
@@ -583,14 +592,14 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 	ctx = ctx.WithBlockTime(time.Unix(333, 0))
 
 	// unbond the all self-delegation to put validator in unbonding state
-	_, err := app.StakingKeeper.Undelegate(ctx, val0AccAddr, addrVals[0], valTokens.ToDec())
+	_, err := app.StakingKeeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDecFromInt(valTokens))
 	require.NoError(t, err)
 
 	// end block
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 1)
 
 	// unbond all the remaining delegation
-	_, err = app.StakingKeeper.Undelegate(ctx, addrDels[1], addrVals[0], delTokens.ToDec())
+	_, err = app.StakingKeeper.Undelegate(ctx, addrDels[1], addrVals[0], sdk.NewDecFromInt(delTokens))
 	require.NoError(t, err)
 
 	// validator should still be in state and still be in unbonding state
@@ -827,7 +836,7 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares)
 	app.StakingKeeper.SetDelegation(ctx, delegation)
 
-	_, err := app.StakingKeeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], delTokens.ToDec())
+	_, err := app.StakingKeeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], sdk.NewDecFromInt(delTokens))
 	require.NoError(t, err)
 
 	// end block
@@ -888,7 +897,7 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	ctx = ctx.WithBlockHeader(header)
 
 	// unbond the all self-delegation to put validator in unbonding state
-	_, err := app.StakingKeeper.Undelegate(ctx, val0AccAddr, addrVals[0], delTokens.ToDec())
+	_, err := app.StakingKeeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDecFromInt(delTokens))
 	require.NoError(t, err)
 
 	// end block
@@ -910,7 +919,7 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 
 	// unbond some of the other delegation's shares
 	redelegateTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 6)
-	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrDels[1], addrVals[0], addrVals[1], redelegateTokens.ToDec())
+	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrDels[1], addrVals[0], addrVals[1], sdk.NewDecFromInt(redelegateTokens))
 	require.NoError(t, err)
 
 	// retrieve the unbonding delegation
@@ -967,7 +976,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	ctx = ctx.WithBlockTime(time.Unix(333, 0))
 
 	// unbond the all self-delegation to put validator in unbonding state
-	_, err := app.StakingKeeper.Undelegate(ctx, val0AccAddr, addrVals[0], delTokens.ToDec())
+	_, err := app.StakingKeeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDecFromInt(delTokens))
 	require.NoError(t, err)
 
 	// end block
@@ -984,7 +993,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 
 	// redelegate some of the delegation's shares
 	redelegationTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 6)
-	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrDels[1], addrVals[0], addrVals[1], redelegationTokens.ToDec())
+	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrDels[1], addrVals[0], addrVals[1], sdk.NewDecFromInt(redelegationTokens))
 	require.NoError(t, err)
 
 	// no red should have been found

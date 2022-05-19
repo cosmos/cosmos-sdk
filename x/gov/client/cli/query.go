@@ -90,8 +90,8 @@ $ %s query gov proposal 1
 	return cmd
 }
 
-// GetCmdQueryProposals implements a query proposals command. Command to Get a
-// Proposal Information.
+// GetCmdQueryProposals implements a query proposals command. Command to Get
+// Proposals Information.
 func GetCmdQueryProposals() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "proposals",
@@ -179,7 +179,7 @@ $ %s query gov proposals --page=2 --limit=100
 }
 
 // GetCmdQueryVote implements the query proposal vote command. Command to Get a
-// Proposal Information.
+// Vote Information.
 func GetCmdQueryVote() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "vote [proposal-id] [voter-addr]",
@@ -337,7 +337,7 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 }
 
 // GetCmdQueryDeposit implements the query proposal deposit command. Command to
-// get a specific Deposit Information
+// get a specific Deposit Information.
 func GetCmdQueryDeposit() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deposit [proposal-id] [depositer-addr]",

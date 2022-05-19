@@ -57,7 +57,6 @@ func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.R
 func SetGenesisStateInAppState(
 	cdc codec.JSONCodec, appState map[string]json.RawMessage, genesisState *GenesisState,
 ) map[string]json.RawMessage {
-
 	genesisStateBz := cdc.MustMarshalJSON(genesisState)
 	appState[ModuleName] = genesisStateBz
 	return appState

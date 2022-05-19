@@ -30,7 +30,6 @@ func (signModeDirectAuxHandler) Modes() []signingtypes.SignMode {
 func (signModeDirectAuxHandler) GetSignBytes(
 	mode signingtypes.SignMode, data signing.SignerData, tx sdk.Tx,
 ) ([]byte, error) {
-
 	if mode != signingtypes.SignMode_SIGN_MODE_DIRECT_AUX {
 		return nil, fmt.Errorf("expected %s, got %s", signingtypes.SignMode_SIGN_MODE_DIRECT_AUX, mode)
 	}

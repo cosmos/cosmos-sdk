@@ -10,7 +10,6 @@ import (
 
 // Builder manages options for building CLI commands.
 type Builder struct {
-
 	// flag.Builder embeds the flag builder and its options.
 	flag.Builder
 

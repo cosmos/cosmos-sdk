@@ -73,7 +73,8 @@ func (k Keeper) Update(ctx sdk.Context, token nft.NFT) error {
 func (k Keeper) Transfer(ctx sdk.Context,
 	classID string,
 	nftID string,
-	receiver sdk.AccAddress) error {
+	receiver sdk.AccAddress,
+) error {
 	if !k.HasClass(ctx, classID) {
 		return sdkerrors.Wrap(nft.ErrClassNotExists, classID)
 	}

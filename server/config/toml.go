@@ -276,7 +276,7 @@ func WriteConfigFile(configFilePath string, config interface{}) {
 		panic(err)
 	}
 
-	mustWriteFile(configFilePath, buffer.Bytes(), 0644)
+	mustWriteFile(configFilePath, buffer.Bytes(), 0o644)
 }
 
 func mustWriteFile(filePath string, contents []byte, mode os.FileMode) {

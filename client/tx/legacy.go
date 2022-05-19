@@ -20,7 +20,6 @@ func ConvertTxToStdTx(codec *codec.LegacyAmino, tx signing.Tx) (legacytx.StdTx, 
 
 	err := CopyTx(tx, builder, true)
 	if err != nil {
-
 		return legacytx.StdTx{}, err
 	}
 

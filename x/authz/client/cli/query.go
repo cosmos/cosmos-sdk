@@ -65,7 +65,7 @@ $ %s query %s grants cosmos1skjw.. cosmos1skjwj.. %s
 			if err != nil {
 				return err
 			}
-			var msgAuthorized = ""
+			msgAuthorized := ""
 			if len(args) >= 3 {
 				msgAuthorized = args[2]
 			}
@@ -80,7 +80,8 @@ $ %s query %s grants cosmos1skjw.. cosmos1skjwj.. %s
 					Granter:    granter.String(),
 					Grantee:    grantee.String(),
 					MsgTypeUrl: msgAuthorized,
-					Pagination: pageReq},
+					Pagination: pageReq,
+				},
 			)
 			if err != nil {
 				return err
@@ -94,6 +95,7 @@ $ %s query %s grants cosmos1skjw.. cosmos1skjwj.. %s
 	return cmd
 }
 
+// GetQueryGranterGrants returns cmd to query for all grants for a granter.
 func GetQueryGranterGrants() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grants-by-granter [granter-addr]",
@@ -142,6 +144,7 @@ $ %s q %s grants-by-granter cosmos1skj..
 	return cmd
 }
 
+// GetQueryGranteeGrants returns cmd to query for all grants for a grantee.
 func GetQueryGranteeGrants() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grants-by-grantee [grantee-addr]",

@@ -105,7 +105,8 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 			if err := k.assertMetadataLength(req.MemberUpdates[i].Metadata, "group member metadata"); err != nil {
 				return err
 			}
-			groupMember := group.GroupMember{GroupId: req.GroupId,
+			groupMember := group.GroupMember{
+				GroupId: req.GroupId,
 				Member: &group.Member{
 					Address:  req.MemberUpdates[i].Address,
 					Weight:   req.MemberUpdates[i].Weight,
@@ -333,7 +334,7 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGro
 	// collision with an existing address.
 	for {
 		nextAccVal := k.groupPolicySeq.NextVal(ctx.KVStore(k.key))
-		var buf = make([]byte, 8)
+		buf := make([]byte, 8)
 		binary.BigEndian.PutUint64(buf, nextAccVal)
 
 		parentAcc := address.Module(group.ModuleName, []byte{GroupPolicyTablePrefix})
@@ -871,8 +872,10 @@ type authNGroupReq interface {
 	GetAdmin() string
 }
 
-type actionFn func(m *group.GroupInfo) error
-type groupPolicyActionFn func(m *group.GroupPolicyInfo) error
+type (
+	actionFn            func(m *group.GroupInfo) error
+	groupPolicyActionFn func(m *group.GroupPolicyInfo) error
+)
 
 // doUpdateGroupPolicy first makes sure that the group policy admin initiated the group policy update,
 // before performing the group policy update and emitting an event.

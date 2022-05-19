@@ -18,8 +18,10 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-var initialRegens = sdk.NewCoins(sdk.NewCoin("regen", sdk.NewInt(1000)))
-var initialAtoms = sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(1000)))
+var (
+	initialRegens = sdk.NewCoins(sdk.NewCoin("regen", sdk.NewInt(1000)))
+	initialAtoms  = sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(1000)))
+)
 
 // setupAcctsForTips sets up 2 accounts:
 // - tipper has 1000 regens
@@ -182,7 +184,8 @@ func (s *MWTestSuite) mkFeePayerTxBuilder(
 		Data: &signing.SingleSignatureData{
 			SignMode:  signMode,
 			Signature: nil,
-		}}
+		},
+	}
 	sigsV2 := append([]signing.SignatureV2{tipperSigsV2}, feePayerSigV2)
 	txBuilder.SetSignatures(sigsV2...)
 

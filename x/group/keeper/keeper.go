@@ -211,7 +211,6 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 	k.config = config
 
 	return k
-
 }
 
 // Logger returns a module-specific logger.
@@ -228,7 +227,6 @@ func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
 func (k Keeper) iterateProposalsByVPEnd(ctx sdk.Context, endTime time.Time, cb func(proposal group.Proposal) (bool, error)) error {
 	timeBytes := sdk.FormatTimeBytes(endTime)
 	it, err := k.proposalsByVotingPeriodEnd.PrefixScan(ctx.KVStore(k.key), nil, timeBytes)
-
 	if err != nil {
 		return err
 	}

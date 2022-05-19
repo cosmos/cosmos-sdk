@@ -48,7 +48,6 @@ type BaseSendKeeper struct {
 func NewBaseSendKeeper(
 	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blockedAddrs map[string]bool,
 ) BaseSendKeeper {
-
 	return BaseSendKeeper{
 		BaseViewKeeper: NewBaseViewKeeper(cdc, storeKey, ak),
 		cdc:            cdc,

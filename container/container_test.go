@@ -40,7 +40,7 @@ type Command struct {
 	Run func()
 }
 
-func (Command) IsAutoGroupType() {}
+func (Command) IsManyPerContainerType() {}
 
 func ProvideKVStoreKey(moduleKey container.ModuleKey) KVStoreKey {
 	return KVStoreKey{name: moduleKey.Name()}
@@ -401,19 +401,19 @@ func TestOnePerModule(t *testing.T) {
 	)
 }
 
-type AutoGroupInt int
+type ManyPerContainerInt int
 
-func (AutoGroupInt) IsAutoGroupType() {}
+func (ManyPerContainerInt) IsManyPerContainerType() {}
 
-func TestAutoGroup(t *testing.T) {
-	var xs []AutoGroupInt
+func TestManyPerContainer(t *testing.T) {
+	var xs []ManyPerContainerInt
 	var sum string
 	require.NoError(t,
 		container.Build(
 			container.Provide(
-				func() AutoGroupInt { return 4 },
-				func() AutoGroupInt { return 9 },
-				func(xs []AutoGroupInt) string {
+				func() ManyPerContainerInt { return 4 },
+				func() ManyPerContainerInt { return 9 },
+				func(xs []ManyPerContainerInt) string {
 					sum := 0
 					for _, x := range xs {
 						sum += int(x)
@@ -426,15 +426,15 @@ func TestAutoGroup(t *testing.T) {
 		),
 	)
 	require.Len(t, xs, 2)
-	require.Contains(t, xs, AutoGroupInt(4))
-	require.Contains(t, xs, AutoGroupInt(9))
+	require.Contains(t, xs, ManyPerContainerInt(4))
+	require.Contains(t, xs, ManyPerContainerInt(9))
 	require.Equal(t, "13", sum)
 
-	var z AutoGroupInt
+	var z ManyPerContainerInt
 	require.Error(t,
 		container.Build(
 			container.Provide(
-				func() AutoGroupInt { return 0 },
+				func() ManyPerContainerInt { return 0 },
 			),
 			&z,
 		),

@@ -82,5 +82,4 @@ func LogErrors(logger *zerolog.Logger, msg string, err error) {
 	default:
 		logger.Error().Err(err).Msg(msg)
 	}
-
 }

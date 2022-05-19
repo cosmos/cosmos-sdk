@@ -219,7 +219,7 @@ func getBalance(store kv.Store, address, denom string) (*testpb.Balance, error) 
 		return nil, fmt.Errorf("not found")
 	}
 
-	var balance = testpb.Balance{}
+	balance := testpb.Balance{}
 	err = proto.Unmarshal(bz, &balance)
 	if err != nil {
 		return nil, err

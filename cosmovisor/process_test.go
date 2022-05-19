@@ -32,7 +32,7 @@ func (s *processTestSuite) TestLaunchProcess() {
 	logger := cosmovisor.NewLogger()
 
 	// should run the genesis binary and produce expected output
-	var stdout, stderr = NewBuffer(), NewBuffer()
+	stdout, stderr := NewBuffer(), NewBuffer()
 	currentBin, err := cfg.CurrentBin()
 	require.NoError(err)
 	require.Equal(cfg.GenesisBin(), currentBin)
@@ -91,7 +91,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	launcher, err := cosmovisor.NewLauncher(logger, cfg)
 	require.NoError(err)
 
-	var stdout, stderr = NewBuffer(), NewBuffer()
+	stdout, stderr := NewBuffer(), NewBuffer()
 	args := []string{"some", "args", upgradeFilename}
 	doUpgrade, err := launcher.Run(args, stdout, stderr)
 

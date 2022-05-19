@@ -18,7 +18,6 @@ import (
 // Instead you should do reads and writes separately, or use a helper
 // function like DeleteBy which does this efficiently.
 type Iterator interface {
-
 	// Next advances the iterator and returns true if a valid entry is found.
 	// Next must be called before starting iteration.
 	Next() bool

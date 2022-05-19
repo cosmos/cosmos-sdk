@@ -82,7 +82,7 @@ func TestSetLoader(t *testing.T) {
 	data, err := json.Marshal(upgradeInfo)
 	require.NoError(t, err)
 
-	err = os.WriteFile(upgradeInfoFilePath, data, 0644)
+	err = os.WriteFile(upgradeInfoFilePath, data, 0o644)
 	require.NoError(t, err)
 
 	// make sure it exists before running everything

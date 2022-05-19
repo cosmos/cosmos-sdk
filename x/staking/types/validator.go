@@ -452,7 +452,6 @@ func (v *Validator) MinEqual(other *Validator) bool {
 		v.Jailed == other.Jailed &&
 		v.MinSelfDelegation.Equal(other.MinSelfDelegation) &&
 		v.ConsensusPubkey.Equal(other.ConsensusPubkey)
-
 }
 
 // Equal checks if the receiver equals the parameter
@@ -484,7 +483,6 @@ func (v Validator) ConsPubKey() (cryptotypes.PubKey, error) {
 	}
 
 	return pk, nil
-
 }
 
 // TmConsPublicKey casts Validator.ConsensusPubkey to tmprotocrypto.PubKey.

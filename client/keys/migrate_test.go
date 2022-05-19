@@ -43,7 +43,6 @@ func (s *MigrateTestSuite) SetupSuite() {
 }
 
 func (s *MigrateTestSuite) Test_runListAndShowCmd() {
-
 	// adding LegacyInfo item into keyring
 	multi := multisig.NewLegacyAminoPubKey(
 		1, []cryptotypes.PubKey{
@@ -60,7 +59,7 @@ func (s *MigrateTestSuite) Test_runListAndShowCmd() {
 		Description: "SDK keyring version",
 	}
 
-	//run test simd keys list - to see that the migrated key is there
+	// run test simd keys list - to see that the migrated key is there
 	cmd := ListKeysCmd()
 	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 

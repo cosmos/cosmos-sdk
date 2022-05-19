@@ -97,7 +97,8 @@ func TestRandomizedGenState1(t *testing.T) {
 				Accounts:     simtypes.RandomAccounts(r, 3),
 				InitialStake: sdkmath.NewInt(1000),
 				GenState:     make(map[string]json.RawMessage),
-			}, "invalid memory address or nil pointer dereference"},
+			}, "invalid memory address or nil pointer dereference",
+		},
 	}
 
 	for _, tt := range tests {

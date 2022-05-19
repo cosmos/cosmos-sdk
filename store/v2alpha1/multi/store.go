@@ -892,9 +892,11 @@ func (tlm *traceListenMixin) ListeningEnabled(key types.StoreKey) bool {
 func (tlm *traceListenMixin) TracingEnabled() bool {
 	return tlm.TraceWriter != nil
 }
+
 func (tlm *traceListenMixin) SetTracer(w io.Writer) {
 	tlm.TraceWriter = w
 }
+
 func (tlm *traceListenMixin) SetTraceContext(tc types.TraceContext) {
 	tlm.TraceContext = tc
 }

@@ -153,7 +153,6 @@ func (f fileGen) genStoreConstructor(stores []*protogen.Message) {
 	}
 	f.P("}, nil")
 	f.P("}")
-
 }
 
 func (f fileGen) fieldsToCamelCase(fields string) string {

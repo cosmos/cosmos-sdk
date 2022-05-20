@@ -1,4 +1,4 @@
-package middleware
+package baseapp
 
 import (
 	"fmt"
@@ -6,22 +6,22 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type LegacyRouter struct {
+type Router struct {
 	routes map[string]sdk.Handler
 }
 
-var _ sdk.Router = NewLegacyRouter()
+var _ sdk.Router = NewRouter()
 
 // NewRouter returns a reference to a new router.
-func NewLegacyRouter() *LegacyRouter {
-	return &LegacyRouter{
+func NewRouter() *Router {
+	return &Router{
 		routes: make(map[string]sdk.Handler),
 	}
 }
 
 // AddRoute adds a route path to the router with a given handler. The route must
 // be alphanumeric.
-func (rtr *LegacyRouter) AddRoute(route sdk.Route) sdk.Router {
+func (rtr *Router) AddRoute(route sdk.Route) sdk.Router {
 	if !sdk.IsAlphaNumeric(route.Path()) {
 		panic("route expressions can only contain alphanumeric characters")
 	}
@@ -36,6 +36,6 @@ func (rtr *LegacyRouter) AddRoute(route sdk.Route) sdk.Router {
 // Route returns a handler for a given route path.
 //
 // TODO: Handle expressive matches.
-func (rtr *LegacyRouter) Route(_ sdk.Context, path string) sdk.Handler {
+func (rtr *Router) Route(_ sdk.Context, path string) sdk.Handler {
 	return rtr.routes[path]
 }

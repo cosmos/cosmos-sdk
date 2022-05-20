@@ -46,5 +46,4 @@ func (d tipDecorator) transferTip(ctx sdk.Context, sdkTx sdk.Tx) error {
 	}
 
 	return d.bankKeeper.SendCoins(ctx, tipper, tipTx.FeePayer(), tipTx.GetTip().Amount)
-
 }

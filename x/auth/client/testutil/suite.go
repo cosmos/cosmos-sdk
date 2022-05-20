@@ -1734,7 +1734,7 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			feePayerArgs: []string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
 			},

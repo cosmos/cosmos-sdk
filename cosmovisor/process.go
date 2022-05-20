@@ -92,7 +92,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 	currentUpgrade, err := l.cfg.UpgradeInfo()
 	if err != nil {
-		l.logger.Error().Err(err)
+		return false, err
 	}
 
 	cmdDone := make(chan error)
@@ -195,12 +195,12 @@ func (l *Launcher) doPreUpgrade() error {
 // executePreUpgradeCmd runs the pre-upgrade command defined by the application
 // cfg contains the cosmosvisor config from the env vars
 func (l *Launcher) executePreUpgradeCmd() error {
-	bin, err := l.cfg.CurrentBin()
+	upgradesInfo, err := l.cfg.UpgradeInfo()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed getting upgrade info: %w", err)
 	}
 
-	preUpgradeCmd := exec.Command(bin, "pre-upgrade")
+	preUpgradeCmd := exec.Command(l.cfg.UpgradeBin(upgradesInfo.Name), "pre-upgrade")
 	_, err = preUpgradeCmd.Output()
 	return err
 }

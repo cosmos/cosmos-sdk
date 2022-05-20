@@ -42,6 +42,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#11823](https://github.com/cosmos/cosmos-sdk/pull/11823) Refactor `cosmovisor` CLI to use `cobra`.
 * [\#11731](https://github.com/cosmos/cosmos-sdk/pull/11731) `cosmovisor version -o json` returns the cosmovisor version and the result of `simd --output json --long` in one JSON object.
 
+### Bugfix
+
+* [\#00000](https://github.com/cosmos/cosmos-sdk/pull/00000) Fix cosmosvisor binary usage for pre-upgrade
+
 ## v1.1.0 2022-10-02
 
 ### Features

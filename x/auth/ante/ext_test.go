@@ -1,7 +1,6 @@
 package ante_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,7 +39,7 @@ func (suite *AnteTestSuite) TestRejectExtensionOptionsDecorator() {
 			}
 
 			// set an extension option and check
-			any, err := types.NewAnyWithValue(testdata.NewTestMsg())
+			any, err := codectypes.NewAnyWithValue(testdata.NewTestMsg())
 			suite.Require().NoError(err)
 			extOptsTxBldr.SetExtensionOptions(any)
 			theTx = txBuilder.GetTx()

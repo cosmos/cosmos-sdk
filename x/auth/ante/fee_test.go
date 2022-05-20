@@ -12,7 +12,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 	suite.SetupTest(true) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewMempoolFeeDecorator()
+	mfd := ante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper, nil)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
@@ -86,7 +86,7 @@ func (suite *AnteTestSuite) TestDeductFees() {
 	err = testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
 	suite.Require().NoError(err)
 
-	dfd := ante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, nil)
+	dfd := ante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, nil, nil)
 	antehandler := sdk.ChainAnteDecorators(dfd)
 
 	_, err = antehandler(suite.ctx, tx, false)

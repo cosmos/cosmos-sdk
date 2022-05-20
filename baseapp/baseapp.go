@@ -691,8 +691,8 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	result, err = app.runMsgs(runMsgCtx, msgs, mode)
 	if err == nil {
 		// Run optional postHandlers.
-		// Important: if the postHandler fails, we also revert the runMsgs
-		// state.
+		//
+		// Note: If the postHandler fails, we also revert the runMsgs state.
 		if app.postHandler != nil {
 			newCtx, err := app.postHandler(runMsgCtx, tx, mode == runTxModeSimulate)
 			if err != nil {

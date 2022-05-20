@@ -44,7 +44,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bugfix
 
-* [\#00000](https://github.com/cosmos/cosmos-sdk/pull/00000) Fix cosmosvisor binary usage for pre-upgrade
+* [\#12005](https://github.com/cosmos/cosmos-sdk/pull/12005) Fix cosmosvisor binary usage for pre-upgrade
 
 ## v1.1.0 2022-10-02
 

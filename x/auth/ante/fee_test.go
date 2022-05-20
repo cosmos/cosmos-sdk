@@ -17,6 +17,8 @@ func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(300)))
+	testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)

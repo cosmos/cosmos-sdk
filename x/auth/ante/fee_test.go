@@ -58,8 +58,11 @@ func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 	lowGasPrice := []sdk.DecCoin{atomPrice}
 	suite.ctx = suite.ctx.WithMinGasPrices(lowGasPrice)
 
-	_, err = antehandler(suite.ctx, tx, false)
+	newCtx, err := antehandler(suite.ctx, tx, false)
 	suite.Require().Nil(err, "Decorator should not have errored on fee higher than local gasPrice")
+	// Priority is the smallest amount in any denom. Since we have only 1 fee
+	// of 150atom, the priority here is 150.
+	suite.Require().Equal(feeAmount.AmountOf("atom").Int64(), newCtx.Priority())
 }
 
 func (suite *AnteTestSuite) TestDeductFees() {

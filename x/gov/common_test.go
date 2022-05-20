@@ -80,10 +80,8 @@ func SortByteArrays(src [][]byte) [][]byte {
 
 const contextKeyBadProposal = "contextKeyBadProposal"
 
-var (
-	pubkeys = []cryptotypes.PubKey{
-		ed25519.GenPrivKey().PubKey(),
-		ed25519.GenPrivKey().PubKey(),
-		ed25519.GenPrivKey().PubKey(),
-	}
-)
+var pubkeys = []cryptotypes.PubKey{
+	ed25519.GenPrivKey().PubKey(),
+	ed25519.GenPrivKey().PubKey(),
+	ed25519.GenPrivKey().PubKey(),
+}

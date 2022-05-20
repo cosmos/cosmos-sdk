@@ -125,6 +125,7 @@ func (ms multiStore) SetSnapshotInterval(snapshotInterval uint64) {
 func (ms multiStore) SetInterBlockCache(_ sdk.MultiStorePersistentCache) {
 	panic("not implemented")
 }
+
 func (ms multiStore) SetIAVLCacheSize(size int) {
 	panic("not implemented")
 }

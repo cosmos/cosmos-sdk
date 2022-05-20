@@ -58,7 +58,6 @@ func NewKeeper(
 	legacyRouter v1beta1.Router, router *baseapp.MsgServiceRouter,
 	config types.Config,
 ) Keeper {
-
 	// ensure governance module account is set
 	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))

@@ -170,7 +170,6 @@ func (s *intTestSuite) TestArithInt() {
 			s.Require().Equal(tc.nres, tc.ires.Int64(), "Int arithmetic operation does not match with int64 operation. tc #%d", tcnum)
 		}
 	}
-
 }
 
 func (s *intTestSuite) TestCompInt() {
@@ -394,7 +393,7 @@ func (s *intTestSuite) TestIntEq() {
 }
 
 func TestRoundTripMarshalToInt(t *testing.T) {
-	var values = []int64{
+	values := []int64{
 		0,
 		1,
 		1 << 10,

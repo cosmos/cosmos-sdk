@@ -315,9 +315,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposals() {
 	app, ctx, queryClient := suite.app, suite.ctx, suite.legacyQueryClient
 
-	var (
-		req *v1beta1.QueryProposalsRequest
-	)
+	var req *v1beta1.QueryProposalsRequest
 
 	testCases := []struct {
 		msg      string

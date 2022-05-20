@@ -444,7 +444,24 @@ func NewSimApp(
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetEndBlocker(app.EndBlocker)
 	app.setAnteHandler(encodingConfig.TxConfig, cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents)))
-	app.setPostHandler()
+	// In v0.46, the SDK introduces _postHandlers_. PostHandlers are like
+	// antehandlers, but are run _after_ the `runMsgs` execution. They are also
+	// defined as a chain, and have the same signature as antehandlers.
+	//
+	// In baseapp, postHandlers are run in the same store branch as `runMsgs`,
+	// meaning that both `runMsgs` and `postHandler` state will be committed if
+	// both are successful, and both will be reverted if any of the two fails.
+	//
+	// The SDK exposes a default postHandlers chain, which comprises of only
+	// one decorator: the Transaction Tips decorator. However, some chains do
+	// not need it by default, so the following line is commented out. You can
+	// uncomment it to include the tips decorator, or define your own
+	// postHandler chain. Please note that changing any of the anteHandler or
+	// postHandler chain is likely to be a state-machine breaking change, which
+	// needs a coordinated upgrade.
+	//
+	// Uncomment to enable postHandlers:
+	// app.setPostHandler()
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {

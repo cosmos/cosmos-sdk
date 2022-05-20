@@ -163,13 +163,16 @@ message DepositParams {
 
 // VotingParams defines the params for voting on governance proposals.
 message VotingParams {
-  //  Length of the voting period.
+  // voting_period defines the length of the voting period.
   google.protobuf.Duration voting_period = 1 [
     (gogoproto.nullable)    = false,
     (gogoproto.stdduration) = true,
     (gogoproto.jsontag)     = "voting_period,omitempty",
     (gogoproto.moretags)    = "yaml:\"voting_period\""
   ];
+
+  // proposal_voting_periods defines custom voting periods for proposal types.
+  repeated ProposalVotingPeriod proposal_voting_periods = 2 [(gogoproto.nullable) = false];
 }
 
 // TallyParams defines the params for tallying votes on governance proposals.
@@ -196,5 +199,17 @@ message TallyParams {
     (gogoproto.nullable)   = false,
     (gogoproto.jsontag)    = "veto_threshold,omitempty",
     (gogoproto.moretags)   = "yaml:\"veto_threshold\""
+  ];
+}
+
+// ProposalVotingPeriod defines custom voting periods for a unique governance
+// proposal type.
+message ProposalVotingPeriod {
+  string                   proposal_type = 1;  // e.g. "cosmos.params.v1beta1.ParameterChangeProposal"
+  google.protobuf.Duration voting_period = 2 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag)     = "voting_period,omitempty",
+    (gogoproto.moretags)    = "yaml:\"voting_period\""
   ];
 }

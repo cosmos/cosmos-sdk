@@ -169,8 +169,8 @@ func (q Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 		return &types.QueryParamsResponse{DepositParams: depositParmas}, nil
 
 	case types.ParamVoting:
-		votingParmas := q.GetVotingParams(ctx)
-		return &types.QueryParamsResponse{VotingParams: votingParmas}, nil
+		votingParams := q.GetVotingParams(ctx)
+		return &types.QueryParamsResponse{VotingParams: votingParams}, nil
 
 	case types.ParamTallying:
 		tallyParams := q.GetTallyParams(ctx)

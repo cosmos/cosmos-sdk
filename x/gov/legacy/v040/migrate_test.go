@@ -231,6 +231,7 @@ func TestMigrate(t *testing.T) {
 	},
 	"votes": [],
 	"voting_params": {
+		"proposal_voting_periods": [],
 		"voting_period": "0s"
 	}
 }`

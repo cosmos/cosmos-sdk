@@ -497,16 +497,16 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 	}
 
 	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+		suite.Run(fmt.Sprintf("case %s", testCase.msg), func() {
 			testCase.malleate()
 
 			params, err := queryClient.Params(gocontext.Background(), req)
 
 			if testCase.expPass {
 				suite.Require().NoError(err)
-				suite.Require().Equal(expRes.GetDepositParams(), params.GetDepositParams())
-				suite.Require().Equal(expRes.GetVotingParams(), params.GetVotingParams())
-				suite.Require().Equal(expRes.GetTallyParams(), params.GetTallyParams())
+				suite.Require().True(expRes.GetDepositParams().Equal(params.GetDepositParams()))
+				suite.Require().True(expRes.GetVotingParams().Equal(params.GetVotingParams()))
+				suite.Require().True(expRes.GetTallyParams().Equal(params.GetTallyParams()))
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(params)

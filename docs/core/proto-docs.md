@@ -163,6 +163,11 @@
 - [cosmos/base/snapshots/v1beta1/snapshot.proto](#cosmos/base/snapshots/v1beta1/snapshot.proto)
     - [Metadata](#cosmos.base.snapshots.v1beta1.Metadata)
     - [Snapshot](#cosmos.base.snapshots.v1beta1.Snapshot)
+    - [SnapshotExtensionMeta](#cosmos.base.snapshots.v1beta1.SnapshotExtensionMeta)
+    - [SnapshotExtensionPayload](#cosmos.base.snapshots.v1beta1.SnapshotExtensionPayload)
+    - [SnapshotIAVLItem](#cosmos.base.snapshots.v1beta1.SnapshotIAVLItem)
+    - [SnapshotItem](#cosmos.base.snapshots.v1beta1.SnapshotItem)
+    - [SnapshotStoreItem](#cosmos.base.snapshots.v1beta1.SnapshotStoreItem)
   
 - [cosmos/base/store/v1beta1/commit_info.proto](#cosmos/base/store/v1beta1/commit_info.proto)
     - [CommitID](#cosmos.base.store.v1beta1.CommitID)
@@ -171,11 +176,6 @@
   
 - [cosmos/base/store/v1beta1/listening.proto](#cosmos/base/store/v1beta1/listening.proto)
     - [StoreKVPair](#cosmos.base.store.v1beta1.StoreKVPair)
-  
-- [cosmos/base/store/v1beta1/snapshot.proto](#cosmos/base/store/v1beta1/snapshot.proto)
-    - [SnapshotIAVLItem](#cosmos.base.store.v1beta1.SnapshotIAVLItem)
-    - [SnapshotItem](#cosmos.base.store.v1beta1.SnapshotItem)
-    - [SnapshotStoreItem](#cosmos.base.store.v1beta1.SnapshotStoreItem)
   
 - [cosmos/base/tendermint/v1beta1/query.proto](#cosmos/base/tendermint/v1beta1/query.proto)
     - [GetBlockByHeightRequest](#cosmos.base.tendermint.v1beta1.GetBlockByHeightRequest)
@@ -343,6 +343,7 @@
     - [Deposit](#cosmos.gov.v1beta1.Deposit)
     - [DepositParams](#cosmos.gov.v1beta1.DepositParams)
     - [Proposal](#cosmos.gov.v1beta1.Proposal)
+    - [ProposalVotingPeriod](#cosmos.gov.v1beta1.ProposalVotingPeriod)
     - [TallyParams](#cosmos.gov.v1beta1.TallyParams)
     - [TallyResult](#cosmos.gov.v1beta1.TallyResult)
     - [TextProposal](#cosmos.gov.v1beta1.TextProposal)
@@ -2706,6 +2707,88 @@ Snapshot contains Tendermint state sync snapshot info.
 
 
 
+
+<a name="cosmos.base.snapshots.v1beta1.SnapshotExtensionMeta"></a>
+
+### SnapshotExtensionMeta
+SnapshotExtensionMeta contains metadata about an external snapshotter.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  |  |
+| `format` | [uint32](#uint32) |  |  |
+
+
+
+
+
+
+<a name="cosmos.base.snapshots.v1beta1.SnapshotExtensionPayload"></a>
+
+### SnapshotExtensionPayload
+SnapshotExtensionPayload contains payloads of an external snapshotter.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `payload` | [bytes](#bytes) |  |  |
+
+
+
+
+
+
+<a name="cosmos.base.snapshots.v1beta1.SnapshotIAVLItem"></a>
+
+### SnapshotIAVLItem
+SnapshotIAVLItem is an exported IAVL node.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [bytes](#bytes) |  |  |
+| `value` | [bytes](#bytes) |  |  |
+| `version` | [int64](#int64) |  | version is block height |
+| `height` | [int32](#int32) |  | height is depth of the tree. |
+
+
+
+
+
+
+<a name="cosmos.base.snapshots.v1beta1.SnapshotItem"></a>
+
+### SnapshotItem
+SnapshotItem is an item contained in a rootmulti.Store snapshot.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `store` | [SnapshotStoreItem](#cosmos.base.snapshots.v1beta1.SnapshotStoreItem) |  |  |
+| `iavl` | [SnapshotIAVLItem](#cosmos.base.snapshots.v1beta1.SnapshotIAVLItem) |  |  |
+| `extension` | [SnapshotExtensionMeta](#cosmos.base.snapshots.v1beta1.SnapshotExtensionMeta) |  |  |
+| `extension_payload` | [SnapshotExtensionPayload](#cosmos.base.snapshots.v1beta1.SnapshotExtensionPayload) |  |  |
+
+
+
+
+
+
+<a name="cosmos.base.snapshots.v1beta1.SnapshotStoreItem"></a>
+
+### SnapshotStoreItem
+SnapshotStoreItem contains metadata about a snapshotted store.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  |  |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -2806,71 +2889,6 @@ Since: cosmos-sdk 0.43
 | `delete` | [bool](#bool) |  | true indicates a delete operation, false indicates a set operation |
 | `key` | [bytes](#bytes) |  |  |
 | `value` | [bytes](#bytes) |  |  |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="cosmos/base/store/v1beta1/snapshot.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/base/store/v1beta1/snapshot.proto
-
-
-
-<a name="cosmos.base.store.v1beta1.SnapshotIAVLItem"></a>
-
-### SnapshotIAVLItem
-SnapshotIAVLItem is an exported IAVL node.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `key` | [bytes](#bytes) |  |  |
-| `value` | [bytes](#bytes) |  |  |
-| `version` | [int64](#int64) |  |  |
-| `height` | [int32](#int32) |  |  |
-
-
-
-
-
-
-<a name="cosmos.base.store.v1beta1.SnapshotItem"></a>
-
-### SnapshotItem
-SnapshotItem is an item contained in a rootmulti.Store snapshot.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `store` | [SnapshotStoreItem](#cosmos.base.store.v1beta1.SnapshotStoreItem) |  |  |
-| `iavl` | [SnapshotIAVLItem](#cosmos.base.store.v1beta1.SnapshotIAVLItem) |  |  |
-
-
-
-
-
-
-<a name="cosmos.base.store.v1beta1.SnapshotStoreItem"></a>
-
-### SnapshotStoreItem
-SnapshotStoreItem contains metadata about a snapshotted store.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `name` | [string](#string) |  |  |
 
 
 
@@ -5025,6 +5043,23 @@ Proposal defines the core field members of a governance proposal.
 
 
 
+<a name="cosmos.gov.v1beta1.ProposalVotingPeriod"></a>
+
+### ProposalVotingPeriod
+ProposalVotingPeriod defines custom voting periods for a unique governance
+proposal type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposal_type` | [string](#string) |  | e.g. "cosmos.params.v1beta1.ParameterChangeProposal" |
+| `voting_period` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
+
+
+
+
+
+
 <a name="cosmos.gov.v1beta1.TallyParams"></a>
 
 ### TallyParams
@@ -5104,7 +5139,8 @@ VotingParams defines the params for voting on governance proposals.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `voting_period` | [google.protobuf.Duration](#google.protobuf.Duration) |  | Length of the voting period. |
+| `voting_period` | [google.protobuf.Duration](#google.protobuf.Duration) |  | voting_period defines the length of the voting period. |
+| `proposal_voting_periods` | [ProposalVotingPeriod](#cosmos.gov.v1beta1.ProposalVotingPeriod) | repeated | proposal_voting_periods defines custom voting periods for proposal types. |
 
 
 
@@ -6510,7 +6546,7 @@ Params defines the parameters for the staking module.
 | `historical_entries` | [uint32](#uint32) |  | historical_entries is the number of historical entries to persist. |
 | `bond_denom` | [string](#string) |  | bond_denom defines the bondable coin denomination. |
 | `min_commission_rate` | [string](#string) |  | min_commission_rate is the chain-wide minimum commission rate that a validator can charge their delegators |
-| `min_self_delegation` | [string](#string) |  | min_self_delegation is the chain-wide minimum self delegation a validator can have |
+| `min_self_delegation` | [string](#string) |  | min_self_delegation is the chain-wide minimum amount that a validator has to self delegate |
 
 
 

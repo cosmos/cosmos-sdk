@@ -16,6 +16,11 @@ func (keeper Keeper) GetDepositParams(ctx sdk.Context) types.DepositParams {
 func (keeper Keeper) GetVotingParams(ctx sdk.Context) types.VotingParams {
 	var votingParams types.VotingParams
 	keeper.paramSpace.Get(ctx, types.ParamStoreKeyVotingParams, &votingParams)
+
+	if votingParams.ProposalVotingPeriods == nil {
+		votingParams.ProposalVotingPeriods = []types.ProposalVotingPeriod{}
+	}
+
 	return votingParams
 }
 

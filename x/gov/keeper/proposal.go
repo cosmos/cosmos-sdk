@@ -2,6 +2,10 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -183,15 +187,40 @@ func (keeper Keeper) SetProposalID(ctx sdk.Context, proposalID uint64) {
 	store.Set(types.ProposalIDKey, types.GetProposalIDBytes(proposalID))
 }
 
+// ActivateVotingPeriod moves the governance proposal from the deposit stage to
+// the voting stage, given that enough deposits have been submitted. It is
+// removed from the inactive proposal queue and moved into the active queue.
+// Note, if the proposal's contents has a custom voting period registered, that
+// voting period is used instead of the base voting period.
 func (keeper Keeper) ActivateVotingPeriod(ctx sdk.Context, proposal types.Proposal) {
 	proposal.VotingStartTime = ctx.BlockHeader().Time
-	votingPeriod := keeper.GetVotingParams(ctx).VotingPeriod
-	proposal.VotingEndTime = proposal.VotingStartTime.Add(votingPeriod)
 	proposal.Status = types.StatusVotingPeriod
+
+	votingPeriod := keeper.GetVotingPeriod(ctx, proposal.GetContent())
+	proposal.VotingEndTime = proposal.VotingStartTime.Add(votingPeriod)
+
 	keeper.SetProposal(ctx, proposal)
 
 	keeper.RemoveFromInactiveProposalQueue(ctx, proposal.ProposalId, proposal.DepositEndTime)
 	keeper.InsertActiveProposalQueue(ctx, proposal.ProposalId, proposal.VotingEndTime)
+}
+
+// GetVotingPeriod returns the voting period for the given proposal Content. If
+// the proposal type has a custom voting period registered, we return that.
+// Otherwise, we use the default voting period.
+func (keeper Keeper) GetVotingPeriod(ctx sdk.Context, content types.Content) time.Duration {
+	vpParams := keeper.GetVotingParams(ctx)
+
+	// Check if there exists a registered custom voting period for the proposal
+	// type.
+	for _, pvp := range vpParams.ProposalVotingPeriods {
+		contentProto, ok := content.(proto.Message)
+		if ok && strings.EqualFold(pvp.ProposalType, proto.MessageName(contentProto)) {
+			return pvp.VotingPeriod
+		}
+	}
+
+	return vpParams.VotingPeriod
 }
 
 func (keeper Keeper) MarshalProposal(proposal types.Proposal) ([]byte, error) {

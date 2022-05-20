@@ -118,6 +118,7 @@ func TestMigrateJSON(t *testing.T) {
 		}
 	],
 	"voting_params": {
+		"proposal_voting_periods": [],
 		"voting_period": "0s"
 	}
 }`

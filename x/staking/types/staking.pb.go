@@ -846,7 +846,7 @@ type Params struct {
 	BondDenom string `protobuf:"bytes,5,opt,name=bond_denom,json=bondDenom,proto3" json:"bond_denom,omitempty" yaml:"bond_denom"`
 	// min_commission_rate is the chain-wide minimum commission rate that a validator can charge their delegators
 	MinCommissionRate github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=min_commission_rate,json=minCommissionRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"min_commission_rate" yaml:"min_commission_rate"`
-	// min_commission_rate is the chain-wide minimum commission rate that a validator can charge their delegators
+	// min_self_delegation is the chain-wide minimum amount that a validator has to self delegate
 	MinSelfDelegation github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,7,opt,name=min_self_delegation,json=minSelfDelegation,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"min_self_delegation" yaml:"min_self_delegation"`
 }
 

@@ -94,10 +94,25 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { veto = GenTallyParamsVeto(r) },
 	)
 
+	proposalVotingPeriods := []types.ProposalVotingPeriod{
+		{
+			ProposalType: "cosmos.params.v1beta1.ParameterChangeProposal",
+		},
+	}
+	for _, pvp := range proposalVotingPeriods {
+		var pvpDuration time.Duration
+		simState.AppParams.GetOrGenerate(
+			simState.Cdc, VotingParamsVotingPeriod, &pvpDuration, simState.Rand,
+			func(r *rand.Rand) { pvpDuration = GenVotingParamsVotingPeriod(r) },
+		)
+
+		pvp.VotingPeriod = pvpDuration
+	}
+
 	govGenesis := types.NewGenesisState(
 		startingProposalID,
 		types.NewDepositParams(minDeposit, depositPeriod),
-		types.NewVotingParams(votingPeriod),
+		types.NewVotingParams(votingPeriod, proposalVotingPeriods),
 		types.NewTallyParams(quorum, threshold, veto),
 	)
 

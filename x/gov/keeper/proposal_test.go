@@ -6,8 +6,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
 func (suite *KeeperTestSuite) TestGetSetProposal() {
@@ -124,4 +127,28 @@ func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
 			}
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestGetVotingPeriod() {
+	var (
+		c  types.Content
+		vp time.Duration
+	)
+
+	votingParams := suite.app.GovKeeper.GetVotingParams(suite.ctx)
+	votingParams.ProposalVotingPeriods = append(votingParams.ProposalVotingPeriods, types.ProposalVotingPeriod{
+		ProposalType: proto.MessageName(&paramproposal.ParameterChangeProposal{}),
+		VotingPeriod: time.Hour,
+	})
+	suite.app.GovKeeper.SetVotingParams(suite.ctx, votingParams)
+
+	// require a non-registered proposal type returns the base voting period
+	c = &types.TextProposal{}
+	vp = suite.app.GovKeeper.GetVotingPeriod(suite.ctx, c)
+	suite.Require().Equal(votingParams.VotingPeriod, vp)
+
+	// require a registered proposal type returns the custom voting period
+	c = &paramproposal.ParameterChangeProposal{}
+	vp = suite.app.GovKeeper.GetVotingPeriod(suite.ctx, c)
+	suite.Require().Equal(time.Hour, vp)
 }

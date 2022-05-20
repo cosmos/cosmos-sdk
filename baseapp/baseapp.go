@@ -688,7 +688,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
 	// Result if any single message fails or does not have a registered Handler.
 	result, err = app.runMsgs(runMsgCtx, msgs, mode)
-	if err == nil && mode == runTxModeDeliver {
+	if err == nil {
 		// Run optional postHandlers.
 		// Important: if the postHandler fails, we also revert the runMsgs
 		// state.
@@ -701,14 +701,16 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 			result.Events = append(result.Events, newCtx.EventManager().ABCIEvents()...)
 		}
 
-		// When block gas exceeds, it'll panic and won't commit the cached store.
-		consumeBlockGas()
+		if mode == runTxModeDeliver {
+			// When block gas exceeds, it'll panic and won't commit the cached store.
+			consumeBlockGas()
 
-		msCache.Write()
+			msCache.Write()
 
-		if len(anteEvents) > 0 {
-			// append the events in the order of occurrence
-			result.Events = append(anteEvents, result.Events...)
+			if len(anteEvents) > 0 {
+				// append the events in the order of occurrence
+				result.Events = append(anteEvents, result.Events...)
+			}
 		}
 	}
 

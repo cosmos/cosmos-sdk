@@ -10,9 +10,7 @@ const (
 	TypeMsgSend = "send"
 )
 
-var (
-	_ sdk.Msg = &MsgSend{}
-)
+var _ sdk.Msg = &MsgSend{}
 
 // ValidateBasic implements the Msg.ValidateBasic method.
 func (m MsgSend) ValidateBasic() error {

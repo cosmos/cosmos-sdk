@@ -163,7 +163,7 @@ func TestIterators(t *testing.T) {
 		string([]byte{0x01}):       "1",
 	})
 
-	var testCase = func(t *testing.T, iter types.Iterator, expected []string) {
+	testCase := func(t *testing.T, iter types.Iterator, expected []string) {
 		var i int
 		for i = 0; iter.Valid(); iter.Next() {
 			expectedValue := expected[i]
@@ -260,7 +260,8 @@ func TestCommit(t *testing.T) {
 	testFailedCommit := func(t *testing.T,
 		store *Store,
 		db dbm.DBConnection,
-		opts StoreConfig) {
+		opts StoreConfig,
+	) {
 		if db == nil {
 			db = store.stateDB
 		}
@@ -936,8 +937,8 @@ func TestListeners(t *testing.T) {
 		},
 	}
 
-	var interfaceRegistry = codecTypes.NewInterfaceRegistry()
-	var marshaller = codec.NewProtoCodec(interfaceRegistry)
+	interfaceRegistry := codecTypes.NewInterfaceRegistry()
+	marshaller := codec.NewProtoCodec(interfaceRegistry)
 
 	db := memdb.NewDB()
 	opts := simpleStoreConfig(t)

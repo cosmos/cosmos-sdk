@@ -88,7 +88,7 @@ func EnsureBinary(path string) error {
 	}
 	// Make sure all executable bits are set.
 	oldMode := info.Mode().Perm()
-	newMode := oldMode | 0111 // Set the three execute bits to on (a+x).
+	newMode := oldMode | 0o111 // Set the three execute bits to on (a+x).
 	if oldMode != newMode {
 		return os.Chmod(path, newMode)
 	}

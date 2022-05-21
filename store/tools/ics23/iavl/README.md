@@ -13,7 +13,7 @@ current value). This returns an error if the key does not exist in the tree.
 
 `func CreateNonMembershipProof(tree *iavl.MutableTree, key []byte) (*proofs.CommitmentProof, error)`
 produces a CommitmentProof that the given key doesn't exist in the iavl tree.
-This returns an error if the key does not exist in the tree.
+This returns an error if the key exists in the tree.
 
 Generalized range proofs are lower in priority, as they are just an optimization of the
 two basic proof types, and don't provide any additional capabilities.

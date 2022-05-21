@@ -98,7 +98,6 @@ func TestPaginationLimitCountTotal(t *testing.T) {
 	pr := it.PageResponse()
 	assert.Check(t, pr != nil)
 	assert.Equal(t, uint64(3), pr.Total)
-
 }
 
 func TestImportedMessageIterator(t *testing.T) {
@@ -187,7 +186,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 			assert.Assert(t, it.Next())
 			msg, err := it.GetMessage()
 			assert.NilError(t, err)
-			//t.Logf("data[%d] %v == %v", i, data[i], msg)
+			// t.Logf("data[%d] %v == %v", i, data[i], msg)
 			assert.DeepEqual(t, data[i], msg, protocmp.Transform())
 		}
 		// make sure the iterator is done
@@ -498,7 +497,6 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
 	assertIteratorItems(it, 2, 6, 10)
-
 }
 
 func TestRandomTableData(t *testing.T) {
@@ -604,7 +602,6 @@ func testIndex(t *testing.T, model *IndexModel) {
 			assert.DeepEqual(t, model.data[i], data2[i], protocmp.Transform())
 		}
 	}
-
 }
 
 func reverseData(data []proto.Message) []proto.Message {

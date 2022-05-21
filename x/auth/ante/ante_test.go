@@ -1,4 +1,4 @@
-package middleware_test
+package ante_test
 
 import (
 	"encoding/json"
@@ -7,6 +7,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -14,25 +19,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-var testCoins = sdk.Coins{sdk.NewInt64Coin("atom", 10000000)}
-
 // Test that simulate transaction accurately estimates gas cost
-func (s *MWTestSuite) TestSimulateGasCost() {
-	ctx := s.SetupTest(false) // reset
-	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
+func (suite *AnteTestSuite) TestSimulateGasCost() {
+	suite.SetupTest(false) // reset
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 3, testCoins)
+	accounts := suite.CreateTestAccounts(3)
 	msgs := []sdk.Msg{
 		testdata.NewTestMsg(accounts[0].acc.GetAddress(), accounts[1].acc.GetAddress()),
 		testdata.NewTestMsg(accounts[2].acc.GetAddress(), accounts[0].acc.GetAddress()),
@@ -48,8 +45,8 @@ func (s *MWTestSuite) TestSimulateGasCost() {
 		{
 			"tx with 150atom fee",
 			func() {
-				txBuilder.SetFeeAmount(feeAmount)
-				txBuilder.SetGasLimit(gasLimit)
+				suite.txBuilder.SetFeeAmount(feeAmount)
+				suite.txBuilder.SetGasLimit(gasLimit)
 			},
 			true,
 			true,
@@ -58,11 +55,11 @@ func (s *MWTestSuite) TestSimulateGasCost() {
 		{
 			"with previously estimated gas",
 			func() {
-				simulatedGas := ctx.GasMeter().GasConsumed()
+				simulatedGas := suite.ctx.GasMeter().GasConsumed()
 
 				accSeqs = []uint64{1, 1, 1}
-				txBuilder.SetFeeAmount(feeAmount)
-				txBuilder.SetGasLimit(simulatedGas)
+				suite.txBuilder.SetFeeAmount(feeAmount)
+				suite.txBuilder.SetGasLimit(simulatedGas)
 			},
 			false,
 			true,
@@ -71,18 +68,18 @@ func (s *MWTestSuite) TestSimulateGasCost() {
 	}
 
 	for _, tc := range testCases {
-		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
-			s.runTestCase(ctx, txBuilder, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, ctx.ChainID(), tc)
+			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), tc)
 		})
 	}
 }
 
-// Test various error cases in the TxHandler control flow.
-func (s *MWTestSuite) TestTxHandlerSigErrors() {
-	ctx := s.SetupTest(false) // reset
-	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
+// Test various error cases in the AnteHandler control flow.
+func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
+	suite.SetupTest(false) // reset
 
 	// Same data for every test cases
 	priv0, _, addr0 := testdata.KeyTestPubAddr()
@@ -109,12 +106,12 @@ func (s *MWTestSuite) TestTxHandlerSigErrors() {
 				privs, accNums, accSeqs = []cryptotypes.PrivKey{}, []uint64{}, []uint64{}
 
 				// Create tx manually to test the tx's signers
-				s.Require().NoError(txBuilder.SetMsgs(msgs...))
-				tx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
-				s.Require().NoError(err)
+				suite.Require().NoError(suite.txBuilder.SetMsgs(msgs...))
+				tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+				suite.Require().NoError(err)
 				// tx.GetSigners returns addresses in correct order: addr1, addr2, addr3
 				expectedSigners := []sdk.AccAddress{addr0, addr1, addr2}
-				s.Require().Equal(expectedSigners, tx.GetSigners())
+				suite.Require().Equal(expectedSigners, tx.GetSigners())
 			},
 			false,
 			false,
@@ -141,12 +138,12 @@ func (s *MWTestSuite) TestTxHandlerSigErrors() {
 		{
 			"save the first account, but second is still unrecognized",
 			func() {
-				acc1 := s.app.AccountKeeper.NewAccountWithAddress(ctx, addr0)
-				s.app.AccountKeeper.SetAccount(ctx, acc1)
-				err := s.app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, feeAmount)
-				s.Require().NoError(err)
-				err = s.app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr0, feeAmount)
-				s.Require().NoError(err)
+				acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr0)
+				suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
+				err := suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, feeAmount)
+				suite.Require().NoError(err)
+				err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addr0, feeAmount)
+				suite.Require().NoError(err)
 			},
 			false,
 			false,
@@ -155,21 +152,21 @@ func (s *MWTestSuite) TestTxHandlerSigErrors() {
 	}
 
 	for _, tc := range testCases {
-		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
-			s.runTestCase(ctx, txBuilder, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, ctx.ChainID(), tc)
+			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), tc)
 		})
 	}
 }
 
 // Test logic around account number checking with one signer and many signers.
-func (s *MWTestSuite) TestTxHandlerAccountNumbers() {
-	ctx := s.SetupTest(false) // reset
-	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
+func (suite *AnteTestSuite) TestAnteHandlerAccountNumbers() {
+	suite.SetupTest(false) // reset
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 2, testCoins)
+	accounts := suite.CreateTestAccounts(2)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 
@@ -236,22 +233,22 @@ func (s *MWTestSuite) TestTxHandlerAccountNumbers() {
 	}
 
 	for _, tc := range testCases {
-		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
-			s.runTestCase(ctx, txBuilder, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, ctx.ChainID(), tc)
+			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), tc)
 		})
 	}
 }
 
 // Test logic around account number checking with many signers when BlockHeight is 0.
-func (s *MWTestSuite) TestTxHandlerAccountNumbersAtBlockHeightZero() {
-	ctx := s.SetupTest(false) // setup
-	ctx = ctx.WithBlockHeight(0)
-	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
+func (suite *AnteTestSuite) TestAnteHandlerAccountNumbersAtBlockHeightZero() {
+	suite.SetupTest(false) // setup
+	suite.ctx = suite.ctx.WithBlockHeight(0)
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 2, testCoins)
+	accounts := suite.CreateTestAccounts(2)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 
@@ -320,21 +317,21 @@ func (s *MWTestSuite) TestTxHandlerAccountNumbersAtBlockHeightZero() {
 	}
 
 	for _, tc := range testCases {
-		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
-			s.runTestCase(ctx, txBuilder, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, ctx.ChainID(), tc)
+			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), tc)
 		})
 	}
 }
 
 // Test logic around sequence checking with one signer and many signers.
-func (s *MWTestSuite) TestTxHandlerSequences() {
-	ctx := s.SetupTest(false) // setup
-	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
+func (suite *AnteTestSuite) TestAnteHandlerSequences() {
+	suite.SetupTest(false) // setup
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 3, testCoins)
+	accounts := suite.CreateTestAccounts(3)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 
@@ -432,24 +429,24 @@ func (s *MWTestSuite) TestTxHandlerSequences() {
 	}
 
 	for _, tc := range testCases {
-		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
-			s.runTestCase(ctx, txBuilder, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, ctx.ChainID(), tc)
+			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), tc)
 		})
 	}
 }
 
 // Test logic around fee deduction.
-func (s *MWTestSuite) TestTxHandlerFees() {
-	ctx := s.SetupTest(false) // setup
-	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
+func (suite *AnteTestSuite) TestAnteHandlerFees() {
+	suite.SetupTest(false) // setup
 
 	// Same data for every test cases
 	priv0, _, addr0 := testdata.KeyTestPubAddr()
 
-	acc1 := s.app.AccountKeeper.NewAccountWithAddress(ctx, addr0)
-	s.app.AccountKeeper.SetAccount(ctx, acc1)
+	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr0)
+	suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr0)}
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
@@ -474,8 +471,8 @@ func (s *MWTestSuite) TestTxHandlerFees() {
 		{
 			"signer does not have enough funds to pay the fee",
 			func() {
-				err := testutil.FundAccount(s.app.BankKeeper, ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 149)))
-				s.Require().NoError(err)
+				err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 149)))
+				suite.Require().NoError(err)
 			},
 			false,
 			false,
@@ -486,13 +483,13 @@ func (s *MWTestSuite) TestTxHandlerFees() {
 			func() {
 				accNums = []uint64{acc1.GetAccountNumber()}
 
-				modAcc := s.app.AccountKeeper.GetModuleAccount(ctx, types.FeeCollectorName)
+				modAcc := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 
-				s.Require().True(s.app.BankKeeper.GetAllBalances(ctx, modAcc.GetAddress()).Empty())
-				require.True(sdk.IntEq(s.T(), s.app.BankKeeper.GetAllBalances(ctx, addr0).AmountOf("atom"), sdk.NewInt(149)))
+				suite.Require().True(suite.app.BankKeeper.GetAllBalances(suite.ctx, modAcc.GetAddress()).Empty())
+				require.True(sdk.IntEq(suite.T(), suite.app.BankKeeper.GetAllBalances(suite.ctx, addr0).AmountOf("atom"), sdk.NewInt(149)))
 
-				err := testutil.FundAccount(s.app.BankKeeper, ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 1)))
-				s.Require().NoError(err)
+				err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 1)))
+				suite.Require().NoError(err)
 			},
 			false,
 			true,
@@ -501,10 +498,10 @@ func (s *MWTestSuite) TestTxHandlerFees() {
 		{
 			"signer doesn't have any more funds",
 			func() {
-				modAcc := s.app.AccountKeeper.GetModuleAccount(ctx, types.FeeCollectorName)
+				modAcc := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 
-				require.True(sdk.IntEq(s.T(), s.app.BankKeeper.GetAllBalances(ctx, modAcc.GetAddress()).AmountOf("atom"), sdk.NewInt(150)))
-				require.True(sdk.IntEq(s.T(), s.app.BankKeeper.GetAllBalances(ctx, addr0).AmountOf("atom"), sdk.NewInt(0)))
+				require.True(sdk.IntEq(suite.T(), suite.app.BankKeeper.GetAllBalances(suite.ctx, modAcc.GetAddress()).AmountOf("atom"), sdk.NewInt(150)))
+				require.True(sdk.IntEq(suite.T(), suite.app.BankKeeper.GetAllBalances(suite.ctx, addr0).AmountOf("atom"), sdk.NewInt(0)))
 			},
 			false,
 			false,
@@ -513,21 +510,22 @@ func (s *MWTestSuite) TestTxHandlerFees() {
 	}
 
 	for _, tc := range testCases {
-		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
-			s.runTestCase(ctx, txBuilder, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, ctx.ChainID(), tc)
+			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), tc)
 		})
 	}
 }
 
 // Test logic around memo gas consumption.
-func (s *MWTestSuite) TestTxHandlerMemoGas() {
-	ctx := s.SetupTest(false) // setup
-	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
+func (suite *AnteTestSuite) TestAnteHandlerMemoGas() {
+	suite.SetupTest(false) // setup
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 1, testCoins)
+	accounts := suite.CreateTestAccounts(1)
 	msgs := []sdk.Msg{testdata.NewTestMsg(accounts[0].acc.GetAddress())}
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
 
@@ -553,7 +551,7 @@ func (s *MWTestSuite) TestTxHandlerMemoGas() {
 			func() {
 				feeAmount = sdk.NewCoins(sdk.NewInt64Coin("atom", 0))
 				gasLimit = 801
-				txBuilder.SetMemo("abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
+				suite.txBuilder.SetMemo("abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
 			},
 			false,
 			false,
@@ -564,7 +562,7 @@ func (s *MWTestSuite) TestTxHandlerMemoGas() {
 			func() {
 				feeAmount = sdk.NewCoins(sdk.NewInt64Coin("atom", 0))
 				gasLimit = 50000
-				txBuilder.SetMemo(strings.Repeat("01234567890", 500))
+				suite.txBuilder.SetMemo(strings.Repeat("01234567890", 500))
 			},
 			false,
 			false,
@@ -575,7 +573,7 @@ func (s *MWTestSuite) TestTxHandlerMemoGas() {
 			func() {
 				feeAmount = sdk.NewCoins(sdk.NewInt64Coin("atom", 0))
 				gasLimit = 50000
-				txBuilder.SetMemo(strings.Repeat("0123456789", 10))
+				suite.txBuilder.SetMemo(strings.Repeat("0123456789", 10))
 			},
 			false,
 			true,
@@ -584,20 +582,20 @@ func (s *MWTestSuite) TestTxHandlerMemoGas() {
 	}
 
 	for _, tc := range testCases {
-		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
-			s.runTestCase(ctx, txBuilder, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, ctx.ChainID(), tc)
+			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), tc)
 		})
 	}
 }
 
-func (s *MWTestSuite) TestTxHandlerMultiSigner() {
-	ctx := s.SetupTest(false) // setup
-	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
+func (suite *AnteTestSuite) TestAnteHandlerMultiSigner() {
+	suite.SetupTest(false) // setup
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 3, testCoins)
+	accounts := suite.CreateTestAccounts(3)
 	msg1 := testdata.NewTestMsg(accounts[0].acc.GetAddress(), accounts[1].acc.GetAddress())
 	msg2 := testdata.NewTestMsg(accounts[2].acc.GetAddress(), accounts[0].acc.GetAddress())
 	msg3 := testdata.NewTestMsg(accounts[1].acc.GetAddress(), accounts[2].acc.GetAddress())
@@ -618,7 +616,7 @@ func (s *MWTestSuite) TestTxHandlerMultiSigner() {
 			func() {
 				msgs = []sdk.Msg{msg1, msg2, msg3}
 				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv, accounts[1].priv, accounts[2].priv}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
-				txBuilder.SetMemo("Check signers are in expected order and different account numbers works")
+				suite.txBuilder.SetMemo("Check signers are in expected order and different account numbers works")
 			},
 			false,
 			true,
@@ -657,20 +655,20 @@ func (s *MWTestSuite) TestTxHandlerMultiSigner() {
 	}
 
 	for _, tc := range testCases {
-		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
-			s.runTestCase(ctx, txBuilder, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, ctx.ChainID(), tc)
+			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), tc)
 		})
 	}
 }
 
-func (s *MWTestSuite) TestTxHandlerBadSignBytes() {
-	ctx := s.SetupTest(true) // setup
-	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
+func (suite *AnteTestSuite) TestAnteHandlerBadSignBytes() {
+	suite.SetupTest(false) // setup
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 2, testCoins)
+	accounts := suite.CreateTestAccounts(2)
 	msg0 := testdata.NewTestMsg(accounts[0].acc.GetAddress())
 
 	// Variable data per test case
@@ -688,7 +686,7 @@ func (s *MWTestSuite) TestTxHandlerBadSignBytes() {
 		{
 			"test good tx and signBytes",
 			func() {
-				chainID = ctx.ChainID()
+				chainID = suite.ctx.ChainID()
 				feeAmount = testdata.NewTestFeeAmount()
 				gasLimit = testdata.NewTestGasLimit()
 				msgs = []sdk.Msg{msg0}
@@ -711,7 +709,7 @@ func (s *MWTestSuite) TestTxHandlerBadSignBytes() {
 		{
 			"test wrong accSeqs",
 			func() {
-				chainID = ctx.ChainID() // Back to correct chainID
+				chainID = suite.ctx.ChainID() // Back to correct chainID
 				accSeqs = []uint64{2}
 			},
 			false,
@@ -783,20 +781,20 @@ func (s *MWTestSuite) TestTxHandlerBadSignBytes() {
 	}
 
 	for _, tc := range testCases {
-		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
-			s.runTestCase(ctx, txBuilder, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, chainID, tc)
+			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, chainID, tc)
 		})
 	}
 }
 
-func (s *MWTestSuite) TestTxHandlerSetPubKey() {
-	ctx := s.SetupTest(true) // setup
-	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
+func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
+	suite.SetupTest(false) // setup
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 2, testCoins)
+	accounts := suite.CreateTestAccounts(2)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 
@@ -823,8 +821,8 @@ func (s *MWTestSuite) TestTxHandlerSetPubKey() {
 			"make sure public key has been set (tx itself should fail because of replay protection)",
 			func() {
 				// Make sure public key has been set from previous test.
-				acc0 := s.app.AccountKeeper.GetAccount(ctx, accounts[0].acc.GetAddress())
-				s.Require().Equal(acc0.GetPubKey(), accounts[0].priv.PubKey())
+				acc0 := suite.app.AccountKeeper.GetAccount(suite.ctx, accounts[0].acc.GetAddress())
+				suite.Require().Equal(acc0.GetPubKey(), accounts[0].priv.PubKey())
 			},
 			false,
 			false,
@@ -844,30 +842,30 @@ func (s *MWTestSuite) TestTxHandlerSetPubKey() {
 			"make sure public key is not set, when tx has no pubkey or signature",
 			func() {
 				// Make sure public key has not been set from previous test.
-				acc1 := s.app.AccountKeeper.GetAccount(ctx, accounts[1].acc.GetAddress())
-				s.Require().Nil(acc1.GetPubKey())
+				acc1 := suite.app.AccountKeeper.GetAccount(suite.ctx, accounts[1].acc.GetAddress())
+				suite.Require().Nil(acc1.GetPubKey())
 
 				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[1].priv}, []uint64{1}, []uint64{0}
 				msgs = []sdk.Msg{testdata.NewTestMsg(accounts[1].acc.GetAddress())}
-				txBuilder.SetMsgs(msgs...)
-				txBuilder.SetFeeAmount(feeAmount)
-				txBuilder.SetGasLimit(gasLimit)
+				suite.txBuilder.SetMsgs(msgs...)
+				suite.txBuilder.SetFeeAmount(feeAmount)
+				suite.txBuilder.SetGasLimit(gasLimit)
 
 				// Manually create tx, and remove signature.
-				testTx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
-				s.Require().NoError(err)
-				txBuilder, err := s.clientCtx.TxConfig.WrapTxBuilder(testTx)
-				s.Require().NoError(err)
-				s.Require().NoError(txBuilder.SetSignatures())
+				tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+				suite.Require().NoError(err)
+				txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
+				suite.Require().NoError(err)
+				suite.Require().NoError(txBuilder.SetSignatures())
 
-				// Run txHandler manually, expect ErrNoSignatures.
-				_, _, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: txBuilder.GetTx()}, tx.RequestCheckTx{})
-				s.Require().Error(err)
-				s.Require().True(errors.Is(err, sdkerrors.ErrNoSignatures))
+				// Run anteHandler manually, expect ErrNoSignatures.
+				_, err = suite.anteHandler(suite.ctx, txBuilder.GetTx(), false)
+				suite.Require().Error(err)
+				suite.Require().True(errors.Is(err, sdkerrors.ErrNoSignatures))
 
 				// Make sure public key has not been set.
-				acc1 = s.app.AccountKeeper.GetAccount(ctx, accounts[1].acc.GetAddress())
-				s.Require().Nil(acc1.GetPubKey())
+				acc1 = suite.app.AccountKeeper.GetAccount(suite.ctx, accounts[1].acc.GetAddress())
+				suite.Require().Nil(acc1.GetPubKey())
 
 				// Set incorrect accSeq, to generate incorrect signature.
 				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[1].priv}, []uint64{1}, []uint64{1}
@@ -879,10 +877,10 @@ func (s *MWTestSuite) TestTxHandlerSetPubKey() {
 		{
 			"make sure previous public key has been set after wrong signature",
 			func() {
-				// Make sure public key has been set, as SetPubKeyMiddleware
-				// is called before all signature verification middlewares.
-				acc1 := s.app.AccountKeeper.GetAccount(ctx, accounts[1].acc.GetAddress())
-				s.Require().Equal(acc1.GetPubKey(), accounts[1].priv.PubKey())
+				// Make sure public key has been set, as SetPubKeyDecorator
+				// is called before all signature verification decorators.
+				acc1 := suite.app.AccountKeeper.GetAccount(suite.ctx, accounts[1].acc.GetAddress())
+				suite.Require().Equal(acc1.GetPubKey(), accounts[1].priv.PubKey())
 			},
 			false,
 			false,
@@ -891,10 +889,11 @@ func (s *MWTestSuite) TestTxHandlerSetPubKey() {
 	}
 
 	for _, tc := range testCases {
-		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
-			s.runTestCase(ctx, txBuilder, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, ctx.ChainID(), tc)
+			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), tc)
 		})
 	}
 }
@@ -949,7 +948,8 @@ func TestCountSubkeys(t *testing.T) {
 	multiLevelSubKey1 := kmultisig.NewLegacyAminoPubKey(4, genPubKeys(5))
 	multiLevelSubKey2 := kmultisig.NewLegacyAminoPubKey(4, genPubKeys(5))
 	multiLevelMultiKey := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{
-		multiLevelSubKey1, multiLevelSubKey2, secp256k1.GenPrivKey().PubKey()})
+		multiLevelSubKey1, multiLevelSubKey2, secp256k1.GenPrivKey().PubKey(),
+	})
 	type args struct {
 		pub cryptotypes.PubKey
 	}
@@ -964,17 +964,16 @@ func TestCountSubkeys(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(T *testing.T) {
-			require.Equal(t, tc.want, middleware.CountSubKeys(tc.args.pub))
+			require.Equal(t, tc.want, ante.CountSubKeys(tc.args.pub))
 		})
 	}
 }
 
-func (s *MWTestSuite) TestTxHandlerSigLimitExceeded() {
-	ctx := s.SetupTest(false) // setup
-	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
+func (suite *AnteTestSuite) TestAnteHandlerSigLimitExceeded() {
+	suite.SetupTest(false) // setup
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 8, testCoins)
+	accounts := suite.CreateTestAccounts(8)
 	var addrs []sdk.AccAddress
 	var privs []cryptotypes.PrivKey
 	for i := 0; i < 8; i++ {
@@ -997,25 +996,26 @@ func (s *MWTestSuite) TestTxHandlerSigLimitExceeded() {
 	}
 
 	for _, tc := range testCases {
-		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
-			s.runTestCase(ctx, txBuilder, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, ctx.ChainID(), tc)
+			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), tc)
 		})
 	}
 }
 
 // Test custom SignatureVerificationGasConsumer
-func (s *MWTestSuite) TestCustomSignatureVerificationGasConsumer() {
-	ctx := s.SetupTest(false) // setup
-	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
+func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
+	suite.SetupTest(false) // setup
 
-	txHandler, err := middleware.NewDefaultTxHandler(
-		middleware.TxHandlerOptions{
-			AccountKeeper:   s.app.AccountKeeper,
-			BankKeeper:      s.app.BankKeeper,
-			FeegrantKeeper:  s.app.FeeGrantKeeper,
-			SignModeHandler: s.clientCtx.TxConfig.SignModeHandler(),
+	// setup an ante handler that only accepts PubKeyEd25519
+	anteHandler, err := ante.NewAnteHandler(
+		ante.HandlerOptions{
+			AccountKeeper:   suite.app.AccountKeeper,
+			BankKeeper:      suite.app.BankKeeper,
+			FeegrantKeeper:  suite.app.FeeGrantKeeper,
+			SignModeHandler: suite.clientCtx.TxConfig.SignModeHandler(),
 			SigGasConsumer: func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error {
 				switch pubkey := sig.PubKey.(type) {
 				case *ed25519.PubKey:
@@ -1025,22 +1025,21 @@ func (s *MWTestSuite) TestCustomSignatureVerificationGasConsumer() {
 					return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
 				}
 			},
-			TxDecoder: s.clientCtx.TxConfig.TxDecoder(),
 		},
 	)
-	s.Require().NoError(err)
 
-	s.Require().NoError(err)
+	suite.Require().NoError(err)
+	suite.anteHandler = anteHandler
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 1, testCoins)
-	txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
-	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
-	txBuilder.SetMsgs(testdata.NewTestMsg(accounts[0].acc.GetAddress()))
+	accounts := suite.CreateTestAccounts(1)
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
 
 	// Variable data per test case
 	var (
 		accNums []uint64
+		msgs    []sdk.Msg
 		privs   []cryptotypes.PrivKey
 		accSeqs []uint64
 	)
@@ -1049,6 +1048,7 @@ func (s *MWTestSuite) TestCustomSignatureVerificationGasConsumer() {
 		{
 			"verify that an secp256k1 account gets rejected",
 			func() {
+				msgs = []sdk.Msg{testdata.NewTestMsg(accounts[0].acc.GetAddress())}
 				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
 			},
 			false,
@@ -1058,57 +1058,54 @@ func (s *MWTestSuite) TestCustomSignatureVerificationGasConsumer() {
 	}
 
 	for _, tc := range testCases {
-		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
-			testTx, txBytes, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
-			s.Require().NoError(err)
-			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx, TxBytes: txBytes})
-			s.Require().Error(err)
-			s.Require().True(errors.Is(err, tc.expErr))
+			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), tc)
 		})
 	}
 }
 
-func (s *MWTestSuite) TestTxHandlerReCheck() {
-	ctx := s.SetupTest(false) // setup
+func (suite *AnteTestSuite) TestAnteHandlerReCheck() {
+	suite.SetupTest(false) // setup
 	// Set recheck=true
-	ctx = ctx.WithIsReCheckTx(true)
-	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
+	suite.ctx = suite.ctx.WithIsReCheckTx(true)
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// Same data for every test cases
-	accounts := s.createTestAccounts(ctx, 1, testCoins)
+	accounts := suite.CreateTestAccounts(1)
 
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
-	txBuilder.SetFeeAmount(feeAmount)
-	txBuilder.SetGasLimit(gasLimit)
+	suite.txBuilder.SetFeeAmount(feeAmount)
+	suite.txBuilder.SetGasLimit(gasLimit)
 
 	msg := testdata.NewTestMsg(accounts[0].acc.GetAddress())
 	msgs := []sdk.Msg{msg}
-	s.Require().NoError(txBuilder.SetMsgs(msgs...))
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msgs...))
 
-	txBuilder.SetMemo("thisisatestmemo")
+	suite.txBuilder.SetMemo("thisisatestmemo")
 
 	// test that operations skipped on recheck do not run
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
-	testTx, _, err := s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
-	s.Require().NoError(err)
+	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
 
-	// make signature array empty which would normally cause ValidateBasicMiddleware and SigVerificationMiddleware fail
-	// since these middlewares don't run on recheck, the tx should pass the middleware
-	txBuilder, err = s.clientCtx.TxConfig.WrapTxBuilder(testTx)
-	s.Require().NoError(err)
-	s.Require().NoError(txBuilder.SetSignatures())
+	// make signature array empty which would normally cause ValidateBasicDecorator and SigVerificationDecorator fail
+	// since these decorators don't run on recheck, the tx should pass the antehandler
+	txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
+	suite.Require().NoError(err)
+	suite.Require().NoError(txBuilder.SetSignatures())
 
-	_, _, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: txBuilder.GetTx()}, tx.RequestCheckTx{Type: abci.CheckTxType_Recheck})
-	s.Require().Nil(err, "TxHandler errored on recheck unexpectedly: %v", err)
+	_, err = suite.anteHandler(suite.ctx, txBuilder.GetTx(), false)
+	suite.Require().Nil(err, "AnteHandler errored on recheck unexpectedly: %v", err)
 
-	testTx, _, err = s.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
-	s.Require().NoError(err)
-	txBytes, err := json.Marshal(testTx)
-	s.Require().Nil(err, "Error marshalling tx: %v", err)
-	ctx = ctx.WithTxBytes(txBytes)
+	tx, err = suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
+	txBytes, err := json.Marshal(tx)
+	suite.Require().Nil(err, "Error marshalling tx: %v", err)
+	suite.ctx = suite.ctx.WithTxBytes(txBytes)
 
 	// require that state machine param-dependent checking is still run on recheck since parameters can change between check and recheck
 	testCases := []struct {
@@ -1119,37 +1116,35 @@ func (s *MWTestSuite) TestTxHandlerReCheck() {
 		{"txsize check", types.NewParams(types.DefaultMaxMemoCharacters, types.DefaultTxSigLimit, 10000000, types.DefaultSigVerifyCostED25519, types.DefaultSigVerifyCostSecp256k1)},
 		{"sig verify cost check", types.NewParams(types.DefaultMaxMemoCharacters, types.DefaultTxSigLimit, types.DefaultTxSizeCostPerByte, types.DefaultSigVerifyCostED25519, 100000000)},
 	}
-
 	for _, tc := range testCases {
 		// set testcase parameters
-		s.app.AccountKeeper.SetParams(ctx, tc.params)
+		suite.app.AccountKeeper.SetParams(suite.ctx, tc.params)
 
-		_, _, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx, TxBytes: txBytes}, tx.RequestCheckTx{Type: abci.CheckTxType_Recheck})
+		_, err := suite.anteHandler(suite.ctx, tx, false)
 
-		s.Require().NotNil(err, "tx does not fail on recheck with updated params in test case: %s", tc.name)
+		suite.Require().NotNil(err, "tx does not fail on recheck with updated params in test case: %s", tc.name)
 
 		// reset parameters to default values
-		s.app.AccountKeeper.SetParams(ctx, types.DefaultParams())
+		suite.app.AccountKeeper.SetParams(suite.ctx, types.DefaultParams())
 	}
 
 	// require that local mempool fee check is still run on recheck since validator may change minFee between check and recheck
-	// create new minimum gas price so txhandler fails on recheck
-	ctx = ctx.WithMinGasPrices([]sdk.DecCoin{{
+	// create new minimum gas price so antehandler fails on recheck
+	suite.ctx = suite.ctx.WithMinGasPrices([]sdk.DecCoin{{
 		Denom:  "dnecoin", // fee does not have this denom
 		Amount: sdk.NewDec(5),
 	}})
-	_, _, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, tx.RequestCheckTx{})
-
-	s.Require().NotNil(err, "txhandler on recheck did not fail when mingasPrice was changed")
+	_, err = suite.anteHandler(suite.ctx, tx, false)
+	suite.Require().NotNil(err, "antehandler on recheck did not fail when mingasPrice was changed")
 	// reset min gasprice
-	ctx = ctx.WithMinGasPrices(sdk.DecCoins{})
+	suite.ctx = suite.ctx.WithMinGasPrices(sdk.DecCoins{})
 
-	// remove funds for account so txhandler fails on recheck
-	s.app.AccountKeeper.SetAccount(ctx, accounts[0].acc)
-	balances := s.app.BankKeeper.GetAllBalances(ctx, accounts[0].acc.GetAddress())
-	err = s.app.BankKeeper.SendCoinsFromAccountToModule(ctx, accounts[0].acc.GetAddress(), minttypes.ModuleName, balances)
-	s.Require().NoError(err)
+	// remove funds for account so antehandler fails on recheck
+	suite.app.AccountKeeper.SetAccount(suite.ctx, accounts[0].acc)
+	balances := suite.app.BankKeeper.GetAllBalances(suite.ctx, accounts[0].acc.GetAddress())
+	err = suite.app.BankKeeper.SendCoinsFromAccountToModule(suite.ctx, accounts[0].acc.GetAddress(), minttypes.ModuleName, balances)
+	suite.Require().NoError(err)
 
-	_, _, err = s.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx.Request{Tx: testTx}, tx.RequestCheckTx{})
-	s.Require().NotNil(err, "txhandler on recheck did not fail once feePayer no longer has sufficient funds")
+	_, err = suite.anteHandler(suite.ctx, tx, false)
+	suite.Require().NotNil(err, "antehandler on recheck did not fail once feePayer no longer has sufficient funds")
 }

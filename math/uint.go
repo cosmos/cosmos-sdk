@@ -190,11 +190,8 @@ func (u *Uint) Unmarshal(data []byte) error {
 		return err
 	}
 
-	if u.i.BitLen() > MaxBitLen {
-		return fmt.Errorf("integer out of range; got: %d, max: %d", u.i.BitLen(), MaxBitLen)
-	}
-
-	return nil
+	// Finally check for overflow.
+	return UintOverflow(u.i)
 }
 
 // Size implements the gogo proto custom type interface.
@@ -213,8 +210,9 @@ func UintOverflow(i *big.Int) error {
 	if i.Sign() < 0 {
 		return errors.New("non-positive integer")
 	}
-	if i.BitLen() > 256 {
-		return fmt.Errorf("bit length %d greater than 256", i.BitLen())
+
+	if g, w := i.BitLen(), MaxBitLen; g > w {
+		return fmt.Errorf("integer out of range; got: %d, max: %d", g, w)
 	}
 	return nil
 }

@@ -1561,8 +1561,14 @@ func (s *IntegrationTestSuite) TestAuxSigner() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestAuxToFee() {
+func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
+	// Currently, simapp doesn't have Tips decorator enabled by default in its
+	// posthandlers, so this test will fail.
+	//
+	// TODO Find a way to test Tips integratin test with a custom simapp with
+	// tips posthandler.
 	s.T().Skip()
+
 	require := s.Require()
 	val := s.network.Validators[0]
 
@@ -1578,13 +1584,13 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 	fee := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1000))
 	tip := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(1000))
 
-	s.Require().NoError(s.network.WaitForNextBlock())
+	require.NoError(s.network.WaitForNextBlock())
 	_, err = s.createBankMsg(val, tipper, sdk.NewCoins(tipperInitialBal))
 	require.NoError(err)
-	s.Require().NoError(s.network.WaitForNextBlock())
+	require.NoError(s.network.WaitForNextBlock())
 
 	bal := s.getBalances(val.ClientCtx, tipper, tip.Denom)
-	s.Require().True(bal.Equal(tipperInitialBal.Amount))
+	require.True(bal.Equal(tipperInitialBal.Amount))
 
 	testCases := []struct {
 		name               string
@@ -1735,7 +1741,7 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			feePayerArgs: []string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
 			},
@@ -1792,21 +1798,21 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 					require.NoError(err)
 
 					var txRes sdk.TxResponse
-					s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
+					require.NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
 
 					require.Contains(txRes.RawLog, tc.errMsg)
 				} else {
 					require.NoError(err)
 
 					var txRes sdk.TxResponse
-					s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
+					require.NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
 
-					s.Require().Equal(uint32(0), txRes.Code)
-					s.Require().NotNil(int64(0), txRes.Height)
+					require.Equal(uint32(0), txRes.Code)
+					require.NotNil(int64(0), txRes.Height)
 
 					bal = s.getBalances(val.ClientCtx, tipper, tc.tip.Denom)
 					tipperInitialBal = tipperInitialBal.Sub(tc.tip)
-					s.Require().True(bal.Equal(tipperInitialBal.Amount))
+					require.True(bal.Equal(tipperInitialBal.Amount))
 				}
 			}
 		})

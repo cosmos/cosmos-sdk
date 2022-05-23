@@ -56,6 +56,8 @@ It is strongly recommended to upgrade to these releases as well.
 
 ## [v0.45.14](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.14) - 2023-02-16
 
+## [v0.46.0-rc1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0-rc1) - 2022-05-23
+
 ### Features
 
 * [#14583](https://github.com/cosmos/cosmos-sdk/pull/14583) Add support for Core API.

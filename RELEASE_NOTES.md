@@ -39,7 +39,9 @@ message MsgSubmitProposal {
 }
 ```
 
-For example, instead of broadcasting a `v1beta1.MsgSubmitProposal` with content a `SoftwareUpgradeProposal`, the proposer would submit a `v1.MsgSubmitProposal` with a `cosmos.upgrade.v1beta1.MsgSoftwareUpgrade` message. When the proposal passes, the `sdk.Msg` will be executed by the `Msg` service router (instead of going through the gov proposal handlers).
+For example, instead of broadcasting a `v1beta1.MsgSubmitProposal` with content a `SoftwareUpgradeProposal`, the proposer would submit a `v1.MsgSubmitProposal` with a `/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade` message. When the proposal passes, the `sdk.Msg` will be executed by the `Msg` service router (instead of going through the gov proposal handlers).
+
+The `sdk.Msg`s in the proposal are executed on behalf of the `gov` module account. This means that each of the `sdk.Msg` inside the proposal must have their `GetSigners()` method return exactly one address, which is the `gov` module account's address.
 
 A `metadata` field has also been added to `MsgSubmitProposal` and `MsgVote`, for users to provide optional justification for their action.
 

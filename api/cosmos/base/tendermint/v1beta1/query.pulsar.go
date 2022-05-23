@@ -8,7 +8,7 @@ import (
 	v1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/query/v1beta1"
 	p2p "github.com/cosmos/cosmos-sdk/api/tendermint/p2p"
 	types "github.com/cosmos/cosmos-sdk/api/tendermint/types"
-	_ "github.com/gogo/protobuf/gogoproto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"

@@ -216,6 +216,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth) [\#11482](https://github.com/cosmos/cosmos-sdk/pull/11482) Improve panic message when attempting to register a method handler for a message that does not implement sdk.Msg
 * (x/staking) [\#11596](https://github.com/cosmos/cosmos-sdk/pull/11596) Add (re)delegation getters
 * (errors) [\#11960](https://github.com/cosmos/cosmos-sdk/pull/11960) Removed 'redacted' error message from defaultErrEncoder
+* (ante) []() Index ante events for failed tx.
 
 ### Bug Fixes
 

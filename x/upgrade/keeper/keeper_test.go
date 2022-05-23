@@ -194,10 +194,11 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 
 }
 
-// Test that the protocol version successfully increments after an
+// Test that the app version successfully increments after an
 // upgrade and is successfully set on BaseApp's appVersion.
-func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
-	oldProtocolVersion := s.app.BaseApp.AppVersion()
+func (s *KeeperTestSuite) TestIncrementAppVersion() {
+	oldAppVersion, err := s.app.BaseApp.GetAppVersion(s.ctx)
+	s.Require().NoError(err)
 	s.app.UpgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) { return vm, nil })
 	dummyPlan := types.Plan{
 		Name:   "dummy",
@@ -205,9 +206,10 @@ func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
 		Height: 100,
 	}
 	s.app.UpgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
-	upgradedProtocolVersion := s.app.BaseApp.AppVersion()
+	upgradedAppVersion, err := s.app.BaseApp.GetAppVersion(s.ctx)
+	s.Require().NoError(err)
 
-	s.Require().Equal(oldProtocolVersion+1, upgradedProtocolVersion)
+	s.Require().Equal(oldAppVersion+1, upgradedAppVersion)
 }
 
 // Tests that the underlying state of x/upgrade is set correctly after

@@ -171,6 +171,9 @@ func randomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSO
 			MaxAgeNumBlocks: int64(stakingGenesisState.Params.UnbondingTime / AverageBlockTime),
 			MaxAgeDuration:  stakingGenesisState.Params.UnbondingTime,
 		},
+		Version: &tmproto.VersionParams{
+			AppVersion: uint64(simulation.RandIntBetween(r, 0, 10000)),
+		},
 	}
 
 	bz, err := json.MarshalIndent(&consensusParams, "", " ")

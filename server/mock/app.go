@@ -13,6 +13,7 @@ import (
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -30,6 +31,8 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 
 	// Create BaseApp.
 	baseApp := bam.NewBaseApp("kvstore", logger, db, decodeTx)
+
+	baseApp.SetParamStore(&mock.ParamStore{Db: db})
 
 	// Set mounts for BaseApp's MultiStore.
 	baseApp.MountStores(capKeyMainStore)

@@ -12,6 +12,7 @@ import (
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	snaphotstestutil "github.com/cosmos/cosmos-sdk/testutil/snapshots"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -110,7 +111,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 	for name, tc := range testCases {
 		tc := tc
 
-		tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+		tc.bapp.SetParamStore(&mock.ParamStore{Db: dbm.NewMemDB()})
 		tc.bapp.InitChain(abci.RequestInitChain{
 			ConsensusParams: &abci.ConsensusParams{
 				Evidence: &tmprototypes.EvidenceParams{

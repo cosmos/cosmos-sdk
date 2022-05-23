@@ -3,7 +3,6 @@ package baseapp
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -27,6 +26,7 @@ import (
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	snaphotstestutil "github.com/cosmos/cosmos-sdk/testutil/snapshots"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,49 +39,12 @@ var (
 	capKey2 = sdk.NewKVStoreKey("key2")
 )
 
-type paramStore struct {
-	db *dbm.MemDB
-}
-
 type setupConfig struct {
 	blocks            uint64
 	blockTxs          int
 	snapshotInterval  uint64
 	snapshotKeepEvery uint32
 	pruningOpts       pruningtypes.PruningOptions
-}
-
-func (ps *paramStore) Set(_ sdk.Context, key []byte, value interface{}) {
-	bz, err := json.Marshal(value)
-	if err != nil {
-		panic(err)
-	}
-
-	ps.db.Set(key, bz)
-}
-
-func (ps *paramStore) Has(_ sdk.Context, key []byte) bool {
-	ok, err := ps.db.Has(key)
-	if err != nil {
-		panic(err)
-	}
-
-	return ok
-}
-
-func (ps *paramStore) Get(_ sdk.Context, key []byte, ptr interface{}) {
-	bz, err := ps.db.Get(key)
-	if err != nil {
-		panic(err)
-	}
-
-	if len(bz) == 0 {
-		return
-	}
-
-	if err := json.Unmarshal(bz, ptr); err != nil {
-		panic(err)
-	}
 }
 
 func defaultLogger() log.Logger {
@@ -122,7 +85,7 @@ func setupBaseApp(t *testing.T, options ...func(*BaseApp)) (*BaseApp, error) {
 	require.Equal(t, t.Name(), app.Name())
 
 	app.MountStores(capKey1, capKey2)
-	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	app.SetParamStore(&mock.ParamStore{Db: dbm.NewMemDB()})
 
 	// stores are mounted
 	err := app.LoadLatestVersion()
@@ -218,6 +181,7 @@ func TestLoadVersion(t *testing.T) {
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := NewBaseApp(name, logger, db, nil, pruningOpt)
+	app.SetParamStore(&mock.ParamStore{Db: db})
 
 	// make a cap key and mount the store
 	err := app.LoadLatestVersion() // needed to make stores non-nil
@@ -245,6 +209,7 @@ func TestLoadVersion(t *testing.T) {
 
 	// reload with LoadLatestVersion
 	app = NewBaseApp(name, logger, db, nil, pruningOpt)
+	app.SetParamStore(&mock.ParamStore{Db: db})
 	app.MountStores()
 	err = app.LoadLatestVersion()
 	require.Nil(t, err)
@@ -253,6 +218,7 @@ func TestLoadVersion(t *testing.T) {
 	// reload with LoadVersion, see if you can commit the same block and get
 	// the same result
 	app = NewBaseApp(name, logger, db, nil, pruningOpt)
+	app.SetParamStore(&mock.ParamStore{Db: db})
 	err = app.LoadVersion(1)
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(1), commitID1)
@@ -332,6 +298,7 @@ func TestSetLoader(t *testing.T) {
 				opts = append(opts, tc.setLoader)
 			}
 			app := NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
+			app.SetParamStore(&mock.ParamStore{Db: db})
 			app.MountStores(sdk.NewKVStoreKey(tc.loadStoreKey))
 			err := app.LoadLatestVersion()
 			require.Nil(t, err)
@@ -374,6 +341,7 @@ func TestLoadVersionInvalid(t *testing.T) {
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := NewBaseApp(name, logger, db, nil, pruningOpt)
+	app.SetParamStore(&mock.ParamStore{Db: db})
 
 	err := app.LoadLatestVersion()
 	require.Nil(t, err)
@@ -389,6 +357,7 @@ func TestLoadVersionInvalid(t *testing.T) {
 
 	// create a new app with the stores mounted under the same cap key
 	app = NewBaseApp(name, logger, db, nil, pruningOpt)
+	app.SetParamStore(&mock.ParamStore{Db: db})
 
 	// require we can load the latest version
 	err = app.LoadVersion(1)
@@ -412,6 +381,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	snapshotOpt := SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(3, 1))
 
 	app := NewBaseApp(name, logger, db, nil, pruningOpt, snapshotOpt)
+	app.SetParamStore(&mock.ParamStore{Db: db})
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("key1")
@@ -450,6 +420,7 @@ func TestLoadVersionPruning(t *testing.T) {
 
 	// reload with LoadLatestVersion, check it loads last version
 	app = NewBaseApp(name, logger, db, nil, pruningOpt, snapshotOpt)
+	app.SetParamStore(&mock.ParamStore{Db: db})
 	app.MountStores(capKey)
 
 	err = app.LoadLatestVersion()
@@ -497,6 +468,8 @@ func TestTxDecoder(t *testing.T) {
 // Test that Info returns the latest committed state.
 func TestInfo(t *testing.T) {
 	app := newBaseApp(t.Name())
+	app.SetParamStore(&mock.ParamStore{Db: dbm.NewMemDB()})
+	app.InitChain(abci.RequestInitChain{})
 
 	// ----- test an empty response -------
 	reqInfo := abci.RequestInfo{}
@@ -507,9 +480,11 @@ func TestInfo(t *testing.T) {
 	assert.Equal(t, t.Name(), res.GetData())
 	assert.Equal(t, int64(0), res.LastBlockHeight)
 	require.Equal(t, []uint8(nil), res.LastBlockAppHash)
-	require.Equal(t, app.AppVersion(), res.AppVersion)
-	// ----- test a proper response -------
-	// TODO
+
+	appVersion, err := app.GetAppVersion(app.deliverState.ctx)
+	require.NoError(t, err)
+
+	assert.Equal(t, appVersion, res.AppVersion)
 }
 
 func TestBaseAppOptionSeal(t *testing.T) {
@@ -567,6 +542,7 @@ func TestInitChainer(t *testing.T) {
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
 	app := NewBaseApp(name, logger, db, nil)
+	app.SetParamStore(&mock.ParamStore{Db: db})
 	capKey := sdk.NewKVStoreKey("main")
 	capKey2 := sdk.NewKVStoreKey("key2")
 	app.MountStores(capKey, capKey2)
@@ -623,6 +599,7 @@ func TestInitChainer(t *testing.T) {
 	// reload app
 	app = NewBaseApp(name, logger, db, nil)
 	app.SetInitChainer(initChainer)
+	app.SetParamStore(&mock.ParamStore{Db: db})
 	app.MountStores(capKey, capKey2)
 	err = app.LoadLatestVersion() // needed to make stores non-nil
 	require.Nil(t, err)
@@ -641,11 +618,30 @@ func TestInitChainer(t *testing.T) {
 	require.Equal(t, value, res.Value)
 }
 
+func TestInitChain_ProtocolVersionSetToZero(t *testing.T) {
+	name := t.Name()
+	db := dbm.NewMemDB()
+	logger := defaultLogger()
+	app := NewBaseApp(name, logger, db, nil)
+	app.SetParamStore(&mock.ParamStore{Db: dbm.NewMemDB()})
+
+	app.InitChain(
+		abci.RequestInitChain{
+			InitialHeight: 3,
+		},
+	)
+
+	protocolVersion, err := app.GetAppVersion(app.deliverState.ctx)
+	require.NoError(t, err)
+	require.Equal(t, uint64(0), protocolVersion)
+}
+
 func TestInitChain_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
 	app := NewBaseApp(name, logger, db, nil)
+	app.SetParamStore(&mock.ParamStore{Db: dbm.NewMemDB()})
 
 	app.InitChain(
 		abci.RequestInitChain{
@@ -662,6 +658,7 @@ func TestBeginBlock_WithInitialHeight(t *testing.T) {
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
 	app := NewBaseApp(name, logger, db, nil)
+	app.SetParamStore(&mock.ParamStore{Db: dbm.NewMemDB()})
 
 	app.InitChain(
 		abci.RequestInitChain{
@@ -2221,7 +2218,7 @@ func TestBaseApp_EndBlock(t *testing.T) {
 	}
 
 	app := NewBaseApp(name, logger, db, nil)
-	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	app.SetParamStore(&mock.ParamStore{Db: dbm.NewMemDB()})
 	app.InitChain(abci.RequestInitChain{
 		ConsensusParams: cp,
 	})
@@ -2241,7 +2238,7 @@ func TestBaseApp_EndBlock(t *testing.T) {
 	require.Equal(t, cp.Block.MaxGas, res.ConsensusParamUpdates.Block.MaxGas)
 }
 
-func TestBaseApp_Init(t *testing.T) {
+func TestBaseApp_Init_PruningAndSnapshot(t *testing.T) {
 	db := dbm.NewMemDB()
 	name := t.Name()
 	logger := defaultLogger()
@@ -2405,6 +2402,8 @@ func TestBaseApp_Init(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc.bapp.SetParamStore(&mock.ParamStore{db})
+
 		// Init and validate
 		require.Equal(t, tc.expectedErr, tc.bapp.init())
 		if tc.expectedErr != nil {
@@ -2422,5 +2421,51 @@ func TestBaseApp_Init(t *testing.T) {
 
 		require.Equal(t, tc.expectedSnapshot.Interval, tc.bapp.snapshotManager.GetInterval())
 		require.Equal(t, tc.expectedSnapshot.KeepRecent, tc.bapp.snapshotManager.GetKeepRecent())
+	}
+}
+
+func TestBaseApp_Init_ProtocolVersion(t *testing.T) {
+	const versionNotSet = -1
+
+	testcases := []struct {
+		name            string
+		protocolVersion int64
+	}{
+		{
+			name:            "no app version was set - set to 0",
+			protocolVersion: versionNotSet,
+		},
+		{
+			name:            "app version was set to 10 - 10 kept",
+			protocolVersion: 10,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			app := newBaseApp(t.Name())
+			db := dbm.NewMemDB()
+
+			app.SetParamStore(&mock.ParamStore{db})
+
+			var expectedProtocolVersion uint64
+			if tc.protocolVersion != versionNotSet {
+				// Set version on another app with the same param store (db),
+				// pretending that the app version was set on the app in advance.
+				oldApp := newBaseApp(t.Name())
+				oldApp.SetParamStore(&mock.ParamStore{db})
+				require.NoError(t, oldApp.init())
+
+				expectedProtocolVersion = uint64(tc.protocolVersion)
+				require.NoError(t, oldApp.SetAppVersion(oldApp.checkState.ctx, expectedProtocolVersion))
+			}
+
+			require.NoError(t, app.init())
+
+			actualProtocolVersion, err := app.GetAppVersion(app.checkState.ctx)
+			require.NoError(t, err)
+
+			require.Equal(t, expectedProtocolVersion, actualProtocolVersion)
+		})
 	}
 }

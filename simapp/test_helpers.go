@@ -49,6 +49,9 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 			tmtypes.ABCIPubKeyTypeEd25519,
 		},
 	},
+	Version: &tmproto.VersionParams{
+		AppVersion: 10,
+	},
 }
 
 func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {

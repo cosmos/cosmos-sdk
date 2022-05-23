@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -19,6 +20,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
+	upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/exported"
 )
 
 const (
@@ -114,12 +116,8 @@ type BaseApp struct { // nolint: maligned
 	// ResponseCommit.RetainHeight.
 	minRetainBlocks uint64
 
-	// application's version string
+	// version represents the application software semantic version
 	version string
-
-	// application's protocol version that increments on every upgrade
-	// if BaseApp is passed to the upgrade keeper's NewKeeper method.
-	appVersion uint64
 
 	// recovery handler for app.runTx method
 	runTxRecoveryMiddleware recoveryMiddleware
@@ -131,6 +129,8 @@ type BaseApp struct { // nolint: maligned
 	// which informs Tendermint what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
 }
+
+var _ upgrade.ProtocolVersionManager = (*BaseApp)(nil)
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
 // variadic number of option functions, which act on the BaseApp to set
@@ -170,11 +170,6 @@ func NewBaseApp(
 // Name returns the name of the BaseApp.
 func (app *BaseApp) Name() string {
 	return app.name
-}
-
-// AppVersion returns the application's protocol version.
-func (app *BaseApp) AppVersion() uint64 {
-	return app.appVersion
 }
 
 // Version returns the application's version string.
@@ -314,6 +309,18 @@ func (app *BaseApp) init() error {
 
 	// needed for the export command which inits from store but never calls initchain
 	app.setCheckState(tmproto.Header{})
+
+	// If there is no app version set in the store, we should set it to 0.
+	// Panic on any other error.
+	// If errMsgNoProtocolVersionSet, we assume that appVersion is assigned to be 0.
+	appVersion, err := app.GetAppVersion(app.checkState.ctx)
+	if err != nil && !errors.Is(err, errMsgNoProtocolVersionSet) {
+		return err
+	}
+
+	if err := app.SetAppVersion(app.checkState.ctx, appVersion); err != nil {
+		return err
+	}
 	app.Seal()
 
 	rms, ok := app.cms.(*rootmulti.Store)
@@ -429,6 +436,13 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *abci.ConsensusParams {
 		cp.Validator = &vp
 	}
 
+	if app.paramStore.Has(ctx, ParamStoreKeyVersionParams) {
+		var vp tmproto.VersionParams
+
+		app.paramStore.Get(ctx, ParamStoreKeyVersionParams, &vp)
+		cp.Version = &vp
+	}
+
 	return cp
 }
 
@@ -452,6 +466,9 @@ func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *abci.ConsensusPara
 	app.paramStore.Set(ctx, ParamStoreKeyBlockParams, cp.Block)
 	app.paramStore.Set(ctx, ParamStoreKeyEvidenceParams, cp.Evidence)
 	app.paramStore.Set(ctx, ParamStoreKeyValidatorParams, cp.Validator)
+	app.paramStore.Set(ctx, ParamStoreKeyVersionParams, cp.Version)
+	// We're explicitly not storing the Tendermint app_version in the param store. It's
+	// stored instead in the x/upgrade store, with its own bump logic.
 }
 
 // getMaximumBlockGas gets the maximum gas from the consensus params. It panics

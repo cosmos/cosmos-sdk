@@ -17,6 +17,7 @@ import (
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	store "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -121,6 +122,7 @@ func TestSetLoader(t *testing.T) {
 			opts := []func(*baseapp.BaseApp){baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))}
 
 			origapp := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
+			origapp.SetParamStore(&mock.ParamStore{Db: db})
 			origapp.MountStores(sdk.NewKVStoreKey(tc.origStoreKey))
 			err := origapp.LoadLatestVersion()
 			require.Nil(t, err)
@@ -137,6 +139,7 @@ func TestSetLoader(t *testing.T) {
 
 			// load the new app with the original app db
 			app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
+			app.SetParamStore(&mock.ParamStore{Db: db})
 			app.MountStores(sdk.NewKVStoreKey(tc.loadStoreKey))
 			err = app.LoadLatestVersion()
 			require.Nil(t, err)

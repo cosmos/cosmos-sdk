@@ -456,9 +456,12 @@ func NewSimApp(
 	// one decorator: the Transaction Tips decorator. However, some chains do
 	// not need it by default, so the following line is commented out. You can
 	// uncomment it to include the tips decorator, or define your own
-	// postHandler chain. Please note that changing any of the anteHandler or
-	// postHandler chain is likely to be a state-machine breaking change, which
-	// needs a coordinated upgrade.
+	// postHandler chain. To read more about tips:
+	// https://docs.cosmos.network/main/core/tips.html
+	//
+	// Please note that changing any of the anteHandler or postHandler chain is
+	// likely to be a state-machine breaking change, which needs a coordinated
+	// upgrade.
 	//
 	// Uncomment to enable postHandlers:
 	// app.setPostHandler()

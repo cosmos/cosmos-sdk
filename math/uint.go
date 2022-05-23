@@ -162,8 +162,8 @@ func (u *Uint) MarshalTo(data []byte) (n int, err error) {
 		u.i = new(big.Int)
 	}
 	if u.i.BitLen() == 0 { // The value 0
-		copy(data, []byte{0x30})
-		return 1, nil
+		n = copy(data, []byte{0x30})
+		return n, nil
 	}
 
 	bz, err := u.Marshal()
@@ -171,8 +171,8 @@ func (u *Uint) MarshalTo(data []byte) (n int, err error) {
 		return 0, err
 	}
 
-	copy(data, bz)
-	return len(bz), nil
+	n = copy(data, bz)
+	return n, nil
 }
 
 // Unmarshal implements the gogo proto custom type interface.

@@ -65,15 +65,15 @@ func checkEncodeDecodeSize(t *rapid.T, x protoreflect.Value, cdc ormfield.Codec)
 
 func TestUnsupportedFields(t *testing.T) {
 	_, err := ormfield.GetCodec(nil, false)
-	assert.ErrorContains(t, err, ormerrors.UnsupportedKeyField.Error())
+	assert.ErrorContains(t, err, ormerrors.InvalidKeyField.Error())
 	_, err = ormfield.GetCodec(testutil.GetTestField("repeated"), false)
-	assert.ErrorContains(t, err, ormerrors.UnsupportedKeyField.Error())
+	assert.ErrorContains(t, err, ormerrors.InvalidKeyField.Error())
 	_, err = ormfield.GetCodec(testutil.GetTestField("map"), false)
-	assert.ErrorContains(t, err, ormerrors.UnsupportedKeyField.Error())
+	assert.ErrorContains(t, err, ormerrors.InvalidKeyField.Error())
 	_, err = ormfield.GetCodec(testutil.GetTestField("msg"), false)
-	assert.ErrorContains(t, err, ormerrors.UnsupportedKeyField.Error())
+	assert.ErrorContains(t, err, ormerrors.InvalidKeyField.Error())
 	_, err = ormfield.GetCodec(testutil.GetTestField("oneof"), false)
-	assert.ErrorContains(t, err, ormerrors.UnsupportedKeyField.Error())
+	assert.ErrorContains(t, err, ormerrors.InvalidKeyField.Error())
 }
 
 func TestCompactUInt32(t *testing.T) {

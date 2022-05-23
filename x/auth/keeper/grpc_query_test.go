@@ -1,9 +1,10 @@
 package keeper_test
 
 import (
-	"fmt"
-	"context"
 	"bytes"
+	"context"
+	"fmt"
+	"sort"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,12 +12,11 @@ import (
 )
 
 const addrStr = "cosmos13c3d4wq2t22dl0dstraf8jc3f902e3fsy9n3wv"
+
 var addrBytes = []byte{0x8e, 0x22, 0xda, 0xb8, 0xa, 0x5a, 0x94, 0xdf, 0xbd, 0xb0, 0x58, 0xfa, 0x93, 0xcb, 0x11, 0x49, 0x5e, 0xac, 0xc5, 0x30}
 
 func (suite *KeeperTestSuite) TestGRPCQueryAccounts() {
-	var (
-		req *types.QueryAccountsRequest
-	)
+	var req *types.QueryAccountsRequest
 	_, _, first := testdata.KeyTestPubAddr()
 	_, _, second := testdata.KeyTestPubAddr()
 
@@ -72,9 +72,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccounts() {
 }
 
 func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
-	var (
-		req *types.QueryAccountRequest
-	)
+	var req *types.QueryAccountRequest
 	_, _, addr := testdata.KeyTestPubAddr()
 
 	testCases := []struct {
@@ -198,9 +196,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParameters() {
 }
 
 func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
-	var (
-		req *types.QueryModuleAccountsRequest
-	)
+	var req *types.QueryModuleAccountsRequest
 
 	testCases := []struct {
 		msg       string
@@ -215,7 +211,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 			},
 			true,
 			func(res *types.QueryModuleAccountsResponse) {
-				var mintModuleExists = false
+				mintModuleExists := false
 				for _, acc := range res.Accounts {
 					var account types.AccountI
 					err := suite.app.InterfaceRegistry().UnpackAny(acc, &account)
@@ -238,7 +234,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 			},
 			true,
 			func(res *types.QueryModuleAccountsResponse) {
-				var mintModuleExists = false
+				mintModuleExists := false
 				for _, acc := range res.Accounts {
 					var account types.AccountI
 					err := suite.app.InterfaceRegistry().UnpackAny(acc, &account)
@@ -268,6 +264,17 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
+				// Make sure output is sorted alphabetically.
+				var moduleNames []string
+				for _, any := range res.Accounts {
+					var account types.AccountI
+					err := suite.app.InterfaceRegistry().UnpackAny(any, &account)
+					suite.Require().NoError(err)
+					moduleAccount, ok := account.(types.ModuleAccountI)
+					suite.Require().True(ok)
+					moduleNames = append(moduleNames, moduleAccount.GetName())
+				}
+				suite.Require().True(sort.StringsAreSorted(moduleNames))
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(res)
@@ -289,9 +296,9 @@ func (suite *KeeperTestSuite) TestBech32Prefix() {
 
 func (suite *KeeperTestSuite) TestAddressBytesToString() {
 	testCases := []struct {
-		msg       string
-		req       *types.AddressBytesToStringRequest
-		expPass   bool
+		msg     string
+		req     *types.AddressBytesToStringRequest
+		expPass bool
 	}{
 		{
 			"success",
@@ -324,16 +331,15 @@ func (suite *KeeperTestSuite) TestAddressBytesToString() {
 				suite.Require().Error(err)
 				suite.Require().Nil(res)
 			}
-
 		})
 	}
 }
 
 func (suite *KeeperTestSuite) TestAddressStringToBytes() {
 	testCases := []struct {
-		msg       string
-		req       *types.AddressStringToBytesRequest
-		expPass   bool
+		msg     string
+		req     *types.AddressStringToBytesRequest
+		expPass bool
 	}{
 		{
 			"success",
@@ -352,10 +358,9 @@ func (suite *KeeperTestSuite) TestAddressStringToBytes() {
 		},
 		{
 			"address prefix is incorrect",
-			&types.AddressStringToBytesRequest{AddressString: "regen13c3d4wq2t22dl0dstraf8jc3f902e3fsy9n3wv" },
+			&types.AddressStringToBytesRequest{AddressString: "regen13c3d4wq2t22dl0dstraf8jc3f902e3fsy9n3wv"},
 			false,
 		},
-
 	}
 
 	for _, tc := range testCases {
@@ -372,7 +377,6 @@ func (suite *KeeperTestSuite) TestAddressStringToBytes() {
 				suite.Require().Error(err)
 				suite.Require().Nil(res)
 			}
-
 		})
 	}
 }

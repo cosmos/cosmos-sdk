@@ -34,7 +34,6 @@ func ExportGenesisFileWithTime(
 	genFile, chainID string, validators []tmtypes.GenesisValidator,
 	appState json.RawMessage, genTime time.Time,
 ) error {
-
 	genDoc := tmtypes.GenesisDoc{
 		GenesisTime: genTime,
 		ChainID:     chainID,
@@ -68,12 +67,12 @@ func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic strin
 	nodeID = string(nodeKey.ID)
 
 	pvKeyFile := config.PrivValidator.KeyFile()
-	if err := tmos.EnsureDir(filepath.Dir(pvKeyFile), 0777); err != nil {
+	if err := tmos.EnsureDir(filepath.Dir(pvKeyFile), 0o777); err != nil {
 		return "", nil, err
 	}
 
 	pvStateFile := config.PrivValidator.StateFile()
-	if err := tmos.EnsureDir(filepath.Dir(pvStateFile), 0777); err != nil {
+	if err := tmos.EnsureDir(filepath.Dir(pvStateFile), 0o777); err != nil {
 		return "", nil, err
 	}
 

@@ -32,8 +32,9 @@ type BroadcastReq struct {
 // GetSignCommand returns the sign command
 func GetMultiSignCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "multisign [file] [name] [[signature]...]",
-		Short: "Generate multisig signatures for transactions generated offline",
+		Use:     "multi-sign [file] [name] [[signature]...]",
+		Aliases: []string{"multisign"},
+		Short:   "Generate multisig signatures for transactions generated offline",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Sign transactions created with the --generate-only flag that require multisig signatures.
 
@@ -138,7 +139,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 
 				err = signing.VerifySignature(sig.PubKey, signingData, sig.Data, txCfg.SignModeHandler(), txBuilder.GetTx())
 				if err != nil {
-					addr, _ := sdk.AccAddressFromHex(sig.PubKey.Address().String())
+					addr, _ := sdk.AccAddressFromHexUnsafe(sig.PubKey.Address().String())
 					return fmt.Errorf("couldn't verify signature for address %s", addr)
 				}
 
@@ -191,7 +192,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 			return
 		}
 
-		fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+		fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 		if err != nil {
 			return err
 		}
@@ -258,7 +259,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			txFactory = txFactory.WithSignMode(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 		}
 
-		var infile = os.Stdin
+		infile := os.Stdin
 		if args[0] != "-" {
 			infile, err = os.Open(args[0])
 			defer func() {

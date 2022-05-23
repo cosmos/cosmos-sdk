@@ -26,7 +26,6 @@ const (
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper, bk keeper.Keeper,
 ) simulation.WeightedOperations {
-
 	var weightMsgSend, weightMsgMultiSend int
 	appParams.GetOrGenerate(cdc, OpWeightMsgSend, &weightMsgSend, nil,
 		func(_ *rand.Rand) {
@@ -116,7 +115,6 @@ func sendMsgSend(
 	r *rand.Rand, app *baseapp.BaseApp, bk keeper.Keeper, ak types.AccountKeeper,
 	msg *types.MsgSend, ctx sdk.Context, chainID string, privkeys []cryptotypes.PrivKey,
 ) error {
-
 	var (
 		fees sdk.Coins
 		err  error
@@ -130,7 +128,7 @@ func sendMsgSend(
 	account := ak.GetAccount(ctx, from)
 	spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-	coins, hasNeg := spendable.SafeSub(msg.Amount)
+	coins, hasNeg := spendable.SafeSub(msg.Amount...)
 	if !hasNeg {
 		fees, err = simtypes.RandomFees(r, ctx, coins)
 		if err != nil {
@@ -138,7 +136,7 @@ func sendMsgSend(
 		}
 	}
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
-	tx, err := helpers.GenTx(
+	tx, err := helpers.GenSignedMockTx(
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
@@ -167,7 +165,6 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-
 		// random number of inputs/outputs between [1, 3]
 		inputs := make([]types.Input, r.Intn(3)+1)
 		outputs := make([]types.Output, r.Intn(3)+1)
@@ -219,7 +216,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 				// take random subset of remaining coins for output
 				// and update remaining coins
 				outCoins = simtypes.RandSubsetCoins(r, totalSentCoins)
-				totalSentCoins = totalSentCoins.Sub(outCoins)
+				totalSentCoins = totalSentCoins.Sub(outCoins...)
 			}
 
 			outputs[o] = types.NewOutput(outAddr.Address, outCoins)
@@ -256,7 +253,6 @@ func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keepe
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-
 		inputs := make([]types.Input, 2)
 		outputs := make([]types.Output, moduleAccCount)
 		// collect signer privKeys
@@ -286,7 +282,7 @@ func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keepe
 				// take random subset of remaining coins for output
 				// and update remaining coins
 				outCoins = simtypes.RandSubsetCoins(r, totalSentCoins)
-				totalSentCoins = totalSentCoins.Sub(outCoins)
+				totalSentCoins = totalSentCoins.Sub(outCoins...)
 			}
 
 			outputs[i] = types.NewOutput(moduleAccounts[i].Address, outCoins)
@@ -323,7 +319,6 @@ func sendMsgMultiSend(
 	r *rand.Rand, app *baseapp.BaseApp, bk keeper.Keeper, ak types.AccountKeeper,
 	msg *types.MsgMultiSend, ctx sdk.Context, chainID string, privkeys []cryptotypes.PrivKey,
 ) error {
-
 	accountNumbers := make([]uint64, len(msg.Inputs))
 	sequenceNumbers := make([]uint64, len(msg.Inputs))
 
@@ -351,7 +346,7 @@ func sendMsgMultiSend(
 	feePayer := ak.GetAccount(ctx, addr)
 	spendable := bk.SpendableCoins(ctx, feePayer.GetAddress())
 
-	coins, hasNeg := spendable.SafeSub(msg.Inputs[0].Coins)
+	coins, hasNeg := spendable.SafeSub(msg.Inputs[0].Coins...)
 	if !hasNeg {
 		fees, err = simtypes.RandomFees(r, ctx, coins)
 		if err != nil {
@@ -360,7 +355,7 @@ func sendMsgMultiSend(
 	}
 
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
-	tx, err := helpers.GenTx(
+	tx, err := helpers.GenSignedMockTx(
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
@@ -387,7 +382,6 @@ func sendMsgMultiSend(
 func randomSendFields(
 	r *rand.Rand, ctx sdk.Context, accs []simtypes.Account, bk keeper.Keeper, ak types.AccountKeeper,
 ) (simtypes.Account, simtypes.Account, sdk.Coins, bool) {
-
 	from, _ := simtypes.RandomAcc(r, accs)
 	to, _ := simtypes.RandomAcc(r, accs)
 
@@ -412,7 +406,6 @@ func randomSendFields(
 }
 
 func getModuleAccounts(ak types.AccountKeeper, ctx sdk.Context, moduleAccCount int) []simtypes.Account {
-
 	moduleAccounts := make([]simtypes.Account, moduleAccCount)
 
 	for i := 0; i < moduleAccCount; i++ {

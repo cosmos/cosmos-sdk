@@ -198,7 +198,6 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 			s.Require().False(exists, "invalid case: %s retrieved valid client state", tc.name)
 		}
 	}
-
 }
 
 // Test that the protocol version successfully increments after an
@@ -275,6 +274,42 @@ func (s *KeeperTestSuite) TestLastCompletedUpgrade() {
 	s.T().Log("verify valid upgrade name and height with multiple upgrades")
 	name, height = keeper.GetLastCompletedUpgrade(newCtx)
 	require.Equal("test1", name)
+	require.Equal(int64(15), height)
+}
+
+// This test ensures that `GetLastDoneUpgrade` always returns the last upgrade according to the block height
+// it was executed at, rather than using an ordering based on upgrade names.
+func (s *KeeperTestSuite) TestLastCompletedUpgradeOrdering() {
+	keeper := s.app.UpgradeKeeper
+	require := s.Require()
+
+	// apply first upgrade
+	keeper.SetUpgradeHandler("test-v0.9", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		return vm, nil
+	})
+
+	keeper.ApplyUpgrade(s.ctx, types.Plan{
+		Name:   "test-v0.9",
+		Height: 10,
+	})
+
+	name, height := keeper.GetLastCompletedUpgrade(s.ctx)
+	require.Equal("test-v0.9", name)
+	require.Equal(int64(10), height)
+
+	// apply second upgrade
+	keeper.SetUpgradeHandler("test-v0.10", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		return vm, nil
+	})
+
+	newCtx := s.ctx.WithBlockHeight(15)
+	keeper.ApplyUpgrade(newCtx, types.Plan{
+		Name:   "test-v0.10",
+		Height: 15,
+	})
+
+	name, height = keeper.GetLastCompletedUpgrade(newCtx)
+	require.Equal("test-v0.10", name)
 	require.Equal(int64(15), height)
 }
 

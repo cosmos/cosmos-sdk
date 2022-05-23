@@ -14,6 +14,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -68,7 +69,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	out, err := CreateGrant(val, []string{
 		s.grantee[1].String(),
 		"send",
-		fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
+		fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -88,7 +89,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	out, err = CreateGrant(val, []string{
 		s.grantee[2].String(),
 		"send",
-		fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
+		fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -104,7 +105,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 	s.Require().Equal(int(response.Code), 0)
 	s.Require().NotEqual(int(response.Height), 0)
-
 }
 
 func (s *IntegrationTestSuite) createAccount(uid string) sdk.AccAddress {
@@ -139,9 +139,11 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-var typeMsgSend = bank.SendAuthorization{}.MsgTypeURL()
-var typeMsgVote = sdk.MsgTypeURL(&govv1.MsgVote{})
-var typeMsgSubmitProposal = sdk.MsgTypeURL(&govv1.MsgSubmitProposal{})
+var (
+	typeMsgSend           = bank.SendAuthorization{}.MsgTypeURL()
+	typeMsgVote           = sdk.MsgTypeURL(&govv1.MsgVote{})
+	typeMsgSubmitProposal = sdk.MsgTypeURL(&govv1.MsgSubmitProposal{})
+)
 
 func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 	val := s.network.Validators[0]
@@ -155,45 +157,49 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 		args         []string
 		expectedCode uint32
 		expectErr    bool
+		expErrMsg    string
 	}{
 		{
 			"Invalid granter Address",
 			[]string{
 				"grantee_addr",
 				"send",
-				fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
+				fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, "granter"),
 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
 			},
 			0,
 			true,
+			"key not found",
 		},
 		{
 			"Invalid grantee Address",
 			[]string{
 				"grantee_addr",
 				"send",
-				fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
+				fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
 			},
 			0,
 			true,
+			"invalid separator index",
 		},
 		{
 			"Invalid expiration time",
 			[]string{
 				grantee.String(),
 				"send",
-				fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
+				fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagBroadcastMode),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, pastHour),
 			},
 			0,
 			true,
+			"",
 		},
 		{
 			"fail with error invalid msg-type",
@@ -209,6 +215,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0x1d,
 			false,
+			"",
 		},
 		{
 			"failed with error both validators not allowed",
@@ -226,6 +233,92 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			true,
+			"cannot set both allowed & deny list",
+		},
+		{
+			"invalid bond denom for tx delegate authorization allowed validators",
+			[]string{
+				grantee.String(),
+				"delegate",
+				fmt.Sprintf("--%s=100xyz", cli.FlagSpendLimit),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+				fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, val.ValAddress.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			0,
+			true,
+			"invalid denom",
+		},
+		{
+			"invalid bond denom for tx delegate authorization deny validators",
+			[]string{
+				grantee.String(),
+				"delegate",
+				fmt.Sprintf("--%s=100xyz", cli.FlagSpendLimit),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+				fmt.Sprintf("--%s=%s", cli.FlagDenyValidators, val.ValAddress.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			0,
+			true,
+			"invalid denom",
+		},
+		{
+			"invalid bond denom for tx undelegate authorization",
+			[]string{
+				grantee.String(),
+				"unbond",
+				fmt.Sprintf("--%s=100xyz", cli.FlagSpendLimit),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+				fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, val.ValAddress.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			0,
+			true,
+			"invalid denom",
+		},
+		{
+			"invalid bond denon for tx redelegate authorization",
+			[]string{
+				grantee.String(),
+				"redelegate",
+				fmt.Sprintf("--%s=100xyz", cli.FlagSpendLimit),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+				fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, val.ValAddress.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			0,
+			true,
+			"invalid denom",
+		},
+		{
+			"invalid decimal coin expression with more than single coin",
+			[]string{
+				grantee.String(),
+				"delegate",
+				fmt.Sprintf("--%s=100stake,20xyz", cli.FlagSpendLimit),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+				fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, val.ValAddress.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			0,
+			true,
+			"invalid decimal coin expression",
 		},
 		{
 			"valid tx delegate authorization allowed validators",
@@ -242,6 +335,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			false,
+			"",
 		},
 		{
 			"valid tx delegate authorization deny validators",
@@ -258,6 +352,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			false,
+			"",
 		},
 		{
 			"valid tx undelegate authorization",
@@ -274,6 +369,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			false,
+			"",
 		},
 		{
 			"valid tx redelegate authorization",
@@ -290,13 +386,14 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			false,
+			"",
 		},
 		{
 			"Valid tx send authorization",
 			[]string{
 				grantee.String(),
 				"send",
-				fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
+				fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
@@ -305,6 +402,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			false,
+			"",
 		},
 		{
 			"Valid tx generic authorization",
@@ -320,6 +418,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			false,
+			"",
 		},
 		{
 			"fail when granter = grantee",
@@ -335,6 +434,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			true,
+			"grantee and granter should be different",
 		},
 		{
 			"Valid tx with amino",
@@ -351,6 +451,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			0,
 			false,
+			"",
 		},
 	}
 
@@ -363,6 +464,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			)
 			if tc.expectErr {
 				s.Require().Error(err, out)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				var txResp sdk.TxResponse
 				s.Require().NoError(err)
@@ -391,7 +493,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 		[]string{
 			grantee.String(),
 			"send",
-			fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
+			fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
 			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -563,7 +665,7 @@ func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 	})
 	s.Require().NoError(err)
-	s.Require().Contains(res.String(), "authorization not found")
+	s.Require().Contains(res.String(), authz.ErrNoAuthorizationFound.Error())
 }
 
 func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
@@ -651,7 +753,6 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-
 			cmd := cli.NewCmdExecAuthorization()
 			clientCtx := val.ClientCtx
 
@@ -745,7 +846,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			},
-			4,
+			authz.ErrNoAuthorizationFound.ABCICode(),
 			false,
 			"",
 		},
@@ -844,9 +945,9 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			},
-			4,
+			authz.ErrNoAuthorizationFound.ABCICode(),
 			false,
-			"authorization not found",
+			authz.ErrNoAuthorizationFound.Error(),
 		},
 	}
 
@@ -1065,9 +1166,9 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			},
-			4,
+			authz.ErrNoAuthorizationFound.ABCICode(),
 			false,
-			"authorization not found",
+			authz.ErrNoAuthorizationFound.Error(),
 		},
 	}
 

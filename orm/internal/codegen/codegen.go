@@ -3,19 +3,16 @@ package codegen
 import (
 	"fmt"
 
+	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 
-	v1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
-
 	"github.com/cosmos/cosmos-proto/generator"
-
-	"google.golang.org/protobuf/compiler/protogen"
+	ormv1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1"
 )
 
 const (
 	contextPkg  = protogen.GoImportPath("context")
 	ormListPkg  = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/model/ormlist")
-	ormdbPkg    = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/model/ormdb")
 	ormErrPkg   = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/types/ormerrors")
 	ormTablePkg = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/model/ormtable")
 )
@@ -48,11 +45,11 @@ func PluginRunner(p *protogen.Plugin) error {
 
 func hasTables(file *protogen.File) bool {
 	for _, message := range file.Messages {
-		if proto.GetExtension(message.Desc.Options(), v1alpha1.E_Table).(*v1alpha1.TableDescriptor) != nil {
+		if proto.GetExtension(message.Desc.Options(), ormv1.E_Table).(*ormv1.TableDescriptor) != nil {
 			return true
 		}
 
-		if proto.GetExtension(message.Desc.Options(), v1alpha1.E_Singleton).(*v1alpha1.SingletonDescriptor) != nil {
+		if proto.GetExtension(message.Desc.Options(), ormv1.E_Singleton).(*ormv1.SingletonDescriptor) != nil {
 			return true
 		}
 	}

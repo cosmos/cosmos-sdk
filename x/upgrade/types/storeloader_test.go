@@ -14,6 +14,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -34,8 +35,8 @@ func defaultLogger() log.Logger {
 }
 
 func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
-	rs := rootmulti.NewStore(db)
-	rs.SetPruning(storetypes.PruneNothing)
+	rs := rootmulti.NewStore(db, log.NewNopLogger())
+	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	key := sdk.NewKVStoreKey(storeKey)
 	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
 	err := rs.LoadLatestVersion()
@@ -51,8 +52,8 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 }
 
 func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
-	rs := rootmulti.NewStore(db)
-	rs.SetPruning(storetypes.PruneNothing)
+	rs := rootmulti.NewStore(db, log.NewNopLogger())
+	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	key := sdk.NewKVStoreKey(storeKey)
 	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
 	err := rs.LoadLatestVersion()
@@ -81,7 +82,7 @@ func TestSetLoader(t *testing.T) {
 	data, err := json.Marshal(upgradeInfo)
 	require.NoError(t, err)
 
-	err = os.WriteFile(upgradeInfoFilePath, data, 0644)
+	err = os.WriteFile(upgradeInfoFilePath, data, 0o644)
 	require.NoError(t, err)
 
 	// make sure it exists before running everything
@@ -122,9 +123,9 @@ func TestSetLoader(t *testing.T) {
 			initStore(t, db, tc.origStoreKey, k, v)
 
 			// load the app with the existing db
-			opts := []func(*baseapp.BaseApp){baseapp.SetPruning(storetypes.PruneNothing)}
+			opts := []func(*baseapp.BaseApp){baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))}
 
-			origapp := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, opts...)
+			origapp := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
 			origapp.MountStores(sdk.NewKVStoreKey(tc.origStoreKey))
 			err := origapp.LoadLatestVersion()
 			require.Nil(t, err)
@@ -140,7 +141,7 @@ func TestSetLoader(t *testing.T) {
 			}
 
 			// load the new app with the original app db
-			app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, opts...)
+			app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
 			app.MountStores(sdk.NewKVStoreKey(tc.loadStoreKey))
 			err = app.LoadLatestVersion()
 			require.Nil(t, err)

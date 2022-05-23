@@ -10,7 +10,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -51,10 +50,8 @@ func mockWeightedProposalContent(n int) []simtypes.WeightedProposalContent {
 	wpc := make([]simtypes.WeightedProposalContent, n)
 	for i := 0; i < n; i++ {
 		wpc[i] = MockWeightedProposalContent{i}
-
 	}
 	return wpc
-
 }
 
 // TestWeightedOperations tests the weights of the operations.
@@ -99,7 +96,7 @@ func TestWeightedOperations(t *testing.T) {
 }
 
 // TestSimulateMsgSubmitProposal tests the normal scenario of a valid message of type TypeMsgSubmitProposal.
-// Abnormal scenarios, where the message is created by an errors are not tested here.
+// Abnormal scenarios, where errors occur, are not tested here.
 func TestSimulateMsgSubmitProposal(t *testing.T) {
 	app, ctx := createTestApp(t, false)
 
@@ -117,7 +114,7 @@ func TestSimulateMsgSubmitProposal(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg v1.MsgSubmitProposal
-	err = legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	err = v1.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	require.NoError(t, err)
 
 	require.True(t, operationMsg.OK)
@@ -131,7 +128,7 @@ func TestSimulateMsgSubmitProposal(t *testing.T) {
 }
 
 // TestSimulateMsgDeposit tests the normal scenario of a valid message of type TypeMsgDeposit.
-// Abnormal scenarios, where the message is created by an errors are not tested here.
+// Abnormal scenarios, where errors occur, are not tested here.
 func TestSimulateMsgDeposit(t *testing.T) {
 	app, ctx := createTestApp(t, false)
 	blockTime := time.Now().UTC()
@@ -164,7 +161,7 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg v1.MsgDeposit
-	err = legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	err = v1.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	require.NoError(t, err)
 
 	require.True(t, operationMsg.OK)
@@ -177,7 +174,7 @@ func TestSimulateMsgDeposit(t *testing.T) {
 }
 
 // TestSimulateMsgVote tests the normal scenario of a valid message of type TypeMsgVote.
-// Abnormal scenarios, where the message is created by an errors are not tested here.
+// Abnormal scenarios, where errors occur, are not tested here.
 func TestSimulateMsgVote(t *testing.T) {
 	app, ctx := createTestApp(t, false)
 	blockTime := time.Now().UTC()
@@ -210,7 +207,7 @@ func TestSimulateMsgVote(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg v1.MsgVote
-	legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	v1.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, uint64(1), msg.ProposalId)
@@ -221,7 +218,7 @@ func TestSimulateMsgVote(t *testing.T) {
 }
 
 // TestSimulateMsgVoteWeighted tests the normal scenario of a valid message of type TypeMsgVoteWeighted.
-// Abnormal scenarios, where the message is created by an errors are not tested here.
+// Abnormal scenarios, where errors occur, are not tested here.
 func TestSimulateMsgVoteWeighted(t *testing.T) {
 	app, ctx := createTestApp(t, false)
 	blockTime := time.Now().UTC()
@@ -253,7 +250,7 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg v1.MsgVoteWeighted
-	legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	v1.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, uint64(1), msg.ProposalId)

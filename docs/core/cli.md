@@ -4,7 +4,7 @@ order: 9
 
 # Command-Line Interface
 
-This document describes how commmand-line interface (CLI) works on a high-level, for an [**application**](../basics/app-anatomy.md). A separate document for implementing a CLI for a Cosmos SDK [**module**](../building-modules/intro.md) can be found [here](../building-modules/module-interfaces.md#cli). {synopsis}
+This document describes how command-line interface (CLI) works on a high-level, for an [**application**](../basics/app-anatomy.md). A separate document for implementing a CLI for a Cosmos SDK [**module**](../building-modules/intro.md) can be found [here](../building-modules/module-interfaces.md#cli). {synopsis}
 
 ## Command-Line Interface
 
@@ -120,13 +120,13 @@ Flags are added to commands directly (generally in the [module's CLI file](../bu
 
 ## Environment variables
 
-Each flag is bound to it's respecteve named environment variable. Then name of the environment variable consist of two parts - capital case `basename` followed by flag name of the flag. `-` must be substituted with `_`. For example flag `--home` for application with basename `GAIA` is bound to `GAIA_HOME`. It allows to reduce amount of flags typed for routine operations. For example instead of:
+Each flag is bound to it's respecteve named environment variable. Then name of the environment variable consist of two parts - capital case `basename` followed by flag name of the flag. `-` must be substituted with `_`. For example flag `--home` for application with basename `GAIA` is bound to `GAIA_HOME`. It allows reducing the amount of flags typed for routine operations. For example instead of:
 
 ```sh
 gaia --home=./ --node=<node address> --chain-id="testchain-1" --keyring-backend=test tx ... --from=<key name>
 ```
 
-this will be more convinient:
+this will be more convenient:
 
 ```sh
 # define env variables in .env, .envrc etc

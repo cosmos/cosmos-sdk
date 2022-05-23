@@ -79,7 +79,7 @@ func TestMarshalProtoPubKey(t *testing.T) {
 	var pkI cryptotypes.PubKey
 	err = ccfg.InterfaceRegistry.UnpackAny(&pkAny2, &pkI)
 	require.NoError(err)
-	var pk2 = pkAny2.GetCachedValue().(cryptotypes.PubKey)
+	pk2 := pkAny2.GetCachedValue().(cryptotypes.PubKey)
 	require.True(pk2.Equals(pk))
 
 	// **** test binary serialization ****
@@ -92,7 +92,7 @@ func TestMarshalProtoPubKey(t *testing.T) {
 	require.NoError(err)
 	err = ccfg.InterfaceRegistry.UnpackAny(&pkAny3, &pkI)
 	require.NoError(err)
-	var pk3 = pkAny3.GetCachedValue().(cryptotypes.PubKey)
+	pk3 := pkAny3.GetCachedValue().(cryptotypes.PubKey)
 	require.True(pk3.Equals(pk))
 }
 

@@ -160,7 +160,6 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 				s.Require().NoError(err)
 				tc.postRun(&authorizations)
 			}
-
 		})
 	}
 }
@@ -213,7 +212,6 @@ func (s *IntegrationTestSuite) TestQueryGranterGrantsGRPC() {
 				// FIXME: https://github.com/cosmos/cosmos-sdk/issues/10965
 				require.Len(authorizations.Grants, tc.numItems)
 			}
-
 		})
 	}
 }
@@ -266,7 +264,6 @@ func (s *IntegrationTestSuite) TestQueryGranteeGrantsGRPC() {
 				// FIXME: https://github.com/cosmos/cosmos-sdk/issues/10965
 				require.Len(authorizations.Grants, tc.numItems)
 			}
-
 		})
 	}
 }

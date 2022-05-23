@@ -34,7 +34,7 @@ func (p Proposer) String() string {
 }
 
 // QueryDepositsByTxQuery will query for deposits via a direct txs tags query. It
-// will fetch and build deposits directly from the returned txs and return a
+// will fetch and build deposits directly from the returned txs and returns a
 // JSON marshalled result or any error that occurred.
 //
 // NOTE: SearchTxs is used to facilitate the txs query which does not currently
@@ -103,7 +103,7 @@ func QueryDepositsByTxQuery(clientCtx client.Context, params v1.QueryProposalPar
 }
 
 // QueryVotesByTxQuery will query for votes via a direct txs tags query. It
-// will fetch and build votes directly from the returned txs and return a JSON
+// will fetch and build votes directly from the returned txs and returns a JSON
 // marshalled result or any error that occurred.
 func QueryVotesByTxQuery(clientCtx client.Context, params v1.QueryProposalVotesParams) ([]byte, error) {
 	var (
@@ -298,7 +298,6 @@ func QueryVoteByTxQuery(clientCtx client.Context, params v1.QueryVoteParams) ([]
 // QueryDepositByTxQuery will query for a single deposit via a direct txs tags
 // query.
 func QueryDepositByTxQuery(clientCtx client.Context, params v1.QueryDepositParams) ([]byte, error) {
-
 	// initial deposit was submitted with proposal, so must be queried separately
 	initialDeposit, err := queryInitialDepositByTxQuery(clientCtx, params.ProposalID)
 	if err != nil {
@@ -477,7 +476,6 @@ func queryInitialDepositByTxQuery(clientCtx client.Context, proposalID uint64) (
 			fmt.Sprintf("%s.%s='%d'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, proposalID),
 		},
 	)
-
 	if err != nil {
 		return v1.Deposit{}, err
 	}

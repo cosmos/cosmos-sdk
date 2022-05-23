@@ -85,6 +85,11 @@ var (
 	valAddrCache  *simplelru.LRU
 )
 
+// sentinel errors
+var (
+	ErrEmptyHexAddress = errors.New("decoding address from hex string failed: empty address")
+)
+
 func init() {
 	var err error
 	// in total the cache size is 61k entries. Key is 32 bytes and value is around 50-70 bytes.
@@ -113,8 +118,11 @@ type Address interface {
 
 // Ensure that different address types implement the interface
 var _ Address = AccAddress{}
-var _ Address = ValAddress{}
-var _ Address = ConsAddress{}
+
+var (
+	_ Address = ValAddress{}
+	_ Address = ConsAddress{}
+)
 
 // ----------------------------------------------------------------------------
 // account
@@ -124,8 +132,12 @@ var _ Address = ConsAddress{}
 // When marshaled to a string or JSON, it uses Bech32.
 type AccAddress []byte
 
-// AccAddressFromHex creates an AccAddress from a hex string.
-func AccAddressFromHex(address string) (addr AccAddress, err error) {
+// AccAddressFromHexUnsafe creates an AccAddress from a HEX-encoded string.
+//
+// Note, this function is considered unsafe as it may produce an AccAddress from
+// otherwise invalid input, such as a transaction hash. Please use
+// AccAddressFromBech32.
+func AccAddressFromHexUnsafe(address string) (addr AccAddress, err error) {
 	bz, err := addressBytesFromHexString(address)
 	return AccAddress(bz), err
 }
@@ -214,7 +226,6 @@ func (aa AccAddress) MarshalYAML() (interface{}, error) {
 func (aa *AccAddress) UnmarshalJSON(data []byte) error {
 	var s string
 	err := json.Unmarshal(data, &s)
-
 	if err != nil {
 		return err
 	}
@@ -264,7 +275,7 @@ func (aa AccAddress) String() string {
 		return ""
 	}
 
-	var key = conv.UnsafeBytesToStr(aa)
+	key := conv.UnsafeBytesToStr(aa)
 	accAddrMu.Lock()
 	defer accAddrMu.Unlock()
 	addr, ok := accAddrCache.Get(key)
@@ -414,7 +425,7 @@ func (va ValAddress) String() string {
 		return ""
 	}
 
-	var key = conv.UnsafeBytesToStr(va)
+	key := conv.UnsafeBytesToStr(va)
 	valAddrMu.Lock()
 	defer valAddrMu.Unlock()
 	addr, ok := valAddrCache.Get(key)
@@ -569,7 +580,7 @@ func (ca ConsAddress) String() string {
 		return ""
 	}
 
-	var key = conv.UnsafeBytesToStr(ca)
+	key := conv.UnsafeBytesToStr(ca)
 	consAddrMu.Lock()
 	defer consAddrMu.Unlock()
 	addr, ok := consAddrCache.Get(key)
@@ -642,7 +653,7 @@ func GetFromBech32(bech32str, prefix string) ([]byte, error) {
 
 func addressBytesFromHexString(address string) ([]byte, error) {
 	if len(address) == 0 {
-		return nil, errors.New("decoding Bech32 address failed: must provide an address")
+		return nil, ErrEmptyHexAddress
 	}
 
 	return hex.DecodeString(address)

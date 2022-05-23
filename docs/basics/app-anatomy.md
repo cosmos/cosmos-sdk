@@ -44,7 +44,7 @@ In general, the core of the state-machine is defined in a file called `app.go`. 
 
 The first thing defined in `app.go` is the `type` of the application. It is generally comprised of the following parts:
 
-* **A reference to [`baseapp`](../core/baseapp.md).** The custom application defined in `app.go` is an extension of `baseapp`. When a transaction is relayed by Tendermint to the application, `app` uses `baseapp`'s methods to route them to the appropriate module. `baseapp` implements most of the core logic for the application, including all the [ABCI methods](https://tendermint.com/docs/spec/abci/abci.html#overview) and the [routing logic](../core/baseapp.md#routing).
+* **A reference to [`baseapp`](../core/baseapp.md).** The custom application defined in `app.go` is an extension of `baseapp`. When a transaction is relayed by Tendermint to the application, `app` uses `baseapp`'s methods to route them to the appropriate module. `baseapp` implements most of the core logic for the application, including all the [ABCI methods](https://docs.tendermint.com/master/spec/abci/abci.html) and the [routing logic](../core/baseapp.md#routing).
 * **A list of store keys**. The [store](../core/store.md), which contains the entire state, is implemented as a [`multistore`](../core/store.md#multistore) (i.e. a store of stores) in the Cosmos SDK. Each module uses one or multiple stores in the multistore to persist their part of the state. These stores can be accessed with specific keys that are declared in the `app` type. These keys, along with the `keepers`, are at the heart of the [object-capabilities model](../core/ocap.md) of the Cosmos SDK.
 * **A list of module's `keeper`s.** Each module defines an abstraction called [`keeper`](../building-modules/keeper.md), which handles reads and writes for this module's store(s). The `keeper`'s methods of one module can be called from other modules (if authorized), which is why they are declared in the application's type and exported as interfaces to other modules so that the latter can only access the authorized functions.
 * **A reference to an [`appCodec`](../core/encoding.md).** The application's `appCodec` is used to serialize and deserialize data structures in order to store them, as stores can only persist `[]bytes`. The default codec is [Protocol Buffers](../core/encoding.md).
@@ -53,13 +53,13 @@ The first thing defined in `app.go` is the `type` of the application. It is gene
 
 See an example of application type definition from `simapp`, the Cosmos SDK's own app used for demo and testing purposes:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L145-L187
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/simapp/app.go#L151-L195
 
 ### Constructor Function
 
 This function constructs a new application of the type defined in the section above. It must fulfill the `AppCreator` signature in order to be used in the [`start` command](../core/node.md#start-command) of the application's daemon command.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/server/types/app.go#L48-L50
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/server/types/app.go#L57-L59
 
 Here are the main actions performed by this function:
 
@@ -73,7 +73,7 @@ Here are the main actions performed by this function:
 * Set the remainder of application's parameters:
     * [`InitChainer`](#initchainer): used to initialize the application when it is first started.
     * [`BeginBlocker`, `EndBlocker`](#beginblocker-and-endlbocker): called at the beginning and the end of every block).
-    * [`anteHandler`](../core/baseapp.md#antehandler): used to handle fees and signature verification.
+    * [`TxHandler`](../core/baseapp.md#middleware): to setup middlewares, f.e. used to handle fees and signature verification.
 * Mount the stores.
 * Return the application.
 
@@ -81,7 +81,7 @@ Note that this function only creates an instance of the app, while the actual st
 
 See an example of application constructor from `simapp`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L198-L441
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/simapp/app.go#L207-L456
 
 ### InitChainer
 
@@ -143,10 +143,10 @@ Each module defines two [Protobuf services](https://developers.google.com/protoc
 Each Protobuf `Msg` service method is 1:1 related to a Protobuf request type, which must implement `sdk.Msg` interface.
 Note that `sdk.Msg`s are bundled in [transactions](../core/transactions.md), and each transaction contains one or multiple messages.
 
-When a valid block of transactions is received by the full-node, Tendermint relays each one to the application via [`DeliverTx`](https://tendermint.com/docs/app-dev/abci-spec.html#delivertx). Then, the application handles the transaction:
+When a valid block of transactions is received by the full-node, Tendermint relays each one to the application via [`DeliverTx`](https://docs.tendermint.com/master/spec/abci/apps.html#delivertx). Then, the application handles the transaction:
 
-1. Upon receiving the transaction, the application first unmarshalls it from `[]bytes`.
-2. Then, it verifies a few things about the transaction like [fee payment and signatures](#gas-fees.md#antehandler) before extracting the `Msg`(s) contained in the transaction.
+1. Upon receiving the transaction, the application first unmarshalls it from `[]byte`.
+2. Then, it verifies a few things about the transaction like [fee payment and signatures](./gas-fees.md#middleware) before extracting the `Msg`(s) contained in the transaction.
 3. `sdk.Msg`s are encoded using Protobuf [`Any`s](#register-codec). By analyzing each `Any`'s `type_url`, baseapp's `msgServiceRouter` routes the `sdk.Msg` to the corresponding module's `Msg` service.
 4. If the message is successfully processed, the state is updated.
 
@@ -197,7 +197,7 @@ Generally, the [commands related to a module](../building-modules/module-interfa
 
 #### gRPC
 
-[gRPC](https://grpc.io) is a modern open source high performance RPC framework that has support in multiple languages. It is the recommended way for external clients (such as wallets, browsers and other backend services) to interact with a node.
+[gRPC](https://grpc.io) is a modern open-source high performance RPC framework that has support in multiple languages. It is the recommended way for external clients (such as wallets, browsers and other backend services) to interact with a node.
 
 Each module can expose gRPC endpoints, called [service methods](https://grpc.io/docs/what-is-grpc/core-concepts/#service-definition) and are defined in the [module's Protobuf `query.proto` file](#grpc-query-services). A service method is defined by its name, input arguments and output response. The module then needs to:
 

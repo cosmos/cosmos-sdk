@@ -6,11 +6,11 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authmiddleware "github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
@@ -75,12 +75,13 @@ type Keeper struct {
 	voteByProposalIndex orm.Index
 	voteByVoterIndex    orm.Index
 
-	router *authmiddleware.MsgServiceRouter
+	router *baseapp.MsgServiceRouter
 
 	config group.Config
 }
 
-func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddleware.MsgServiceRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
+// NewKeeper creates a new group keeper.
+func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *baseapp.MsgServiceRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
 	k := Keeper{
 		key:       storeKey,
 		router:    router,
@@ -159,7 +160,7 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 		panic(err.Error())
 	}
 	k.proposalByGroupPolicyIndex, err = orm.NewIndex(proposalTable, ProposalByGroupPolicyIndexPrefix, func(value interface{}) ([]interface{}, error) {
-		account := value.(*group.Proposal).Address
+		account := value.(*group.Proposal).GroupPolicyAddress
 		addr, err := sdk.AccAddressFromBech32(account)
 		if err != nil {
 			return nil, err
@@ -210,7 +211,6 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 	k.config = config
 
 	return k
-
 }
 
 // Logger returns a module-specific logger.
@@ -227,14 +227,13 @@ func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
 func (k Keeper) iterateProposalsByVPEnd(ctx sdk.Context, endTime time.Time, cb func(proposal group.Proposal) (bool, error)) error {
 	timeBytes := sdk.FormatTimeBytes(endTime)
 	it, err := k.proposalsByVotingPeriodEnd.PrefixScan(ctx.KVStore(k.key), nil, timeBytes)
-
 	if err != nil {
 		return err
 	}
 	defer it.Close()
 
 	for {
-		// Important: this following line cannot outside the for loop.
+		// Important: this following line cannot be outside of the for loop.
 		// It seems that when one unmarshals into the same `group.Proposal`
 		// reference, then gogoproto somehow "adds" the new bytes to the old
 		// object for some fields. When running simulations, for proposals with
@@ -274,6 +273,37 @@ func (k Keeper) pruneProposal(ctx sdk.Context, proposalID uint64) error {
 	}
 
 	k.Logger(ctx).Debug(fmt.Sprintf("Pruned proposal %d", proposalID))
+	return nil
+}
+
+// abortProposals iterates through all proposals by group policy index
+// and marks submitted proposals as aborted.
+func (k Keeper) abortProposals(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) error {
+	proposalIt, err := k.proposalByGroupPolicyIndex.Get(ctx.KVStore(k.key), groupPolicyAddr.Bytes())
+	if err != nil {
+		return err
+	}
+	defer proposalIt.Close()
+
+	for {
+		var proposalInfo group.Proposal
+		_, err = proposalIt.LoadNext(&proposalInfo)
+		if errors.ErrORMIteratorDone.Is(err) {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		// Mark all proposals still in the voting phase as aborted.
+		if proposalInfo.Status == group.PROPOSAL_STATUS_SUBMITTED {
+			proposalInfo.Status = group.PROPOSAL_STATUS_ABORTED
+
+			if err := k.proposalTable.Update(ctx.KVStore(k.key), proposalInfo.Id, &proposalInfo); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 
@@ -324,9 +354,12 @@ func (k Keeper) PruneProposals(ctx sdk.Context) error {
 	return nil
 }
 
-func (k Keeper) UpdateTallyOfVPEndProposals(ctx sdk.Context) error {
+// TallyProposalsAtVPEnd iterates over all proposals whose voting period
+// has ended, tallies their votes, prunes them, and updates the proposal's
+// `FinalTallyResult` field.
+func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 	return k.iterateProposalsByVPEnd(ctx, ctx.BlockTime(), func(proposal group.Proposal) (bool, error) {
-		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.Address)
+		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.GroupPolicyAddress)
 		if err != nil {
 			return true, sdkerrors.Wrap(err, "group policy")
 		}
@@ -336,13 +369,23 @@ func (k Keeper) UpdateTallyOfVPEndProposals(ctx sdk.Context) error {
 			return true, sdkerrors.Wrap(err, "group")
 		}
 
-		err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo)
-		if err != nil {
-			return true, sdkerrors.Wrap(err, "doTallyAndUpdate")
-		}
+		proposalId := proposal.Id
+		if proposal.Status == group.PROPOSAL_STATUS_ABORTED || proposal.Status == group.PROPOSAL_STATUS_WITHDRAWN {
+			if err := k.pruneProposal(ctx, proposalId); err != nil {
+				return true, err
+			}
+			if err := k.pruneVotes(ctx, proposalId); err != nil {
+				return true, err
+			}
+		} else {
+			err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo)
+			if err != nil {
+				return true, sdkerrors.Wrap(err, "doTallyAndUpdate")
+			}
 
-		if err := k.proposalTable.Update(ctx.KVStore(k.key), proposal.Id, &proposal); err != nil {
-			return true, sdkerrors.Wrap(err, "proposal update")
+			if err := k.proposalTable.Update(ctx.KVStore(k.key), proposal.Id, &proposal); err != nil {
+				return true, sdkerrors.Wrap(err, "proposal update")
+			}
 		}
 
 		return false, nil

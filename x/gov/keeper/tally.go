@@ -36,7 +36,6 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes bool, 
 	keeper.IterateVotes(ctx, proposal.Id, func(vote v1.Vote) bool {
 		// if validator, just record it in the map
 		voter, err := sdk.AccAddressFromBech32(vote.Voter)
-
 		if err != nil {
 			panic(err)
 		}
@@ -53,7 +52,7 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes bool, 
 
 			if val, ok := currValidators[valAddrStr]; ok {
 				// There is no need to handle the special case that validator address equal to voter address.
-				// Because voter's voting power will tally again even if there will deduct voter's voting power from validator.
+				// Because voter's voting power will tally again even if there will be deduction of voter's voting power from validator.
 				val.DelegatorDeductions = val.DelegatorDeductions.Add(delegation.GetShares())
 				currValidators[valAddrStr] = val
 
@@ -102,7 +101,7 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes bool, 
 	}
 
 	// If there is not enough quorum of votes, the proposal fails
-	percentVoting := totalVotingPower.Quo(keeper.sk.TotalBondedTokens(ctx).ToDec())
+	percentVoting := totalVotingPower.Quo(sdk.NewDecFromInt(keeper.sk.TotalBondedTokens(ctx)))
 	quorum, _ := sdk.NewDecFromStr(tallyParams.Quorum)
 	if percentVoting.LT(quorum) {
 		return false, false, tallyResults

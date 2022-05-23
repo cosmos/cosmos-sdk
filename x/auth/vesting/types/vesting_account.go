@@ -41,7 +41,7 @@ func NewBaseVestingAccount(baseAccount *authtypes.BaseAccount, originalVesting s
 //
 // CONTRACT: Delegated vesting coins and vestingCoins must be sorted.
 func (bva BaseVestingAccount) LockedCoinsFromVesting(vestingCoins sdk.Coins) sdk.Coins {
-	lockedCoins := vestingCoins.Sub(vestingCoins.Min(bva.DelegatedVesting))
+	lockedCoins := vestingCoins.Sub(vestingCoins.Min(bva.DelegatedVesting)...)
 	if lockedCoins == nil {
 		return sdk.Coins{}
 	}
@@ -111,12 +111,12 @@ func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
 
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
-			bva.DelegatedFree = bva.DelegatedFree.Sub(sdk.Coins{xCoin})
+			bva.DelegatedFree = bva.DelegatedFree.Sub(xCoin)
 		}
 
 		if !y.IsZero() {
 			yCoin := sdk.NewCoin(coin.Denom, y)
-			bva.DelegatedVesting = bva.DelegatedVesting.Sub(sdk.Coins{yCoin})
+			bva.DelegatedVesting = bva.DelegatedVesting.Sub(yCoin)
 		}
 	}
 }
@@ -193,8 +193,10 @@ func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 
 // Continuous Vesting Account
 
-var _ vestexported.VestingAccount = (*ContinuousVestingAccount)(nil)
-var _ authtypes.GenesisAccount = (*ContinuousVestingAccount)(nil)
+var (
+	_ vestexported.VestingAccount = (*ContinuousVestingAccount)(nil)
+	_ authtypes.GenesisAccount    = (*ContinuousVestingAccount)(nil)
+)
 
 // NewContinuousVestingAccountRaw creates a new ContinuousVestingAccount object from BaseVestingAccount
 func NewContinuousVestingAccountRaw(bva *BaseVestingAccount, startTime int64) *ContinuousVestingAccount {
@@ -238,7 +240,7 @@ func (cva ContinuousVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coin
 	s := sdk.NewDec(x).Quo(sdk.NewDec(y))
 
 	for _, ovc := range cva.OriginalVesting {
-		vestedAmt := ovc.Amount.ToDec().Mul(s).RoundInt()
+		vestedAmt := sdk.NewDecFromInt(ovc.Amount).Mul(s).RoundInt()
 		vestedCoins = append(vestedCoins, sdk.NewCoin(ovc.Denom, vestedAmt))
 	}
 
@@ -248,7 +250,7 @@ func (cva ContinuousVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coin
 // GetVestingCoins returns the total number of vesting coins. If no coins are
 // vesting, nil is returned.
 func (cva ContinuousVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins {
-	return cva.OriginalVesting.Sub(cva.GetVestedCoins(blockTime))
+	return cva.OriginalVesting.Sub(cva.GetVestedCoins(blockTime)...)
 }
 
 // LockedCoins returns the set of coins that are not spendable (i.e. locked),
@@ -307,8 +309,10 @@ func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
 
 // Periodic Vesting Account
 
-var _ vestexported.VestingAccount = (*PeriodicVestingAccount)(nil)
-var _ authtypes.GenesisAccount = (*PeriodicVestingAccount)(nil)
+var (
+	_ vestexported.VestingAccount = (*PeriodicVestingAccount)(nil)
+	_ authtypes.GenesisAccount    = (*PeriodicVestingAccount)(nil)
+)
 
 // NewPeriodicVestingAccountRaw creates a new PeriodicVestingAccount object from BaseVestingAccount
 func NewPeriodicVestingAccountRaw(bva *BaseVestingAccount, startTime int64, periods Periods) *PeriodicVestingAccount {
@@ -374,7 +378,7 @@ func (pva PeriodicVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins 
 // GetVestingCoins returns the total number of vesting coins. If no coins are
 // vesting, nil is returned.
 func (pva PeriodicVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins {
-	return pva.OriginalVesting.Sub(pva.GetVestedCoins(blockTime))
+	return pva.OriginalVesting.Sub(pva.GetVestedCoins(blockTime)...)
 }
 
 // LockedCoins returns the set of coins that are not spendable (i.e. locked),
@@ -451,8 +455,10 @@ func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 
 // Delayed Vesting Account
 
-var _ vestexported.VestingAccount = (*DelayedVestingAccount)(nil)
-var _ authtypes.GenesisAccount = (*DelayedVestingAccount)(nil)
+var (
+	_ vestexported.VestingAccount = (*DelayedVestingAccount)(nil)
+	_ authtypes.GenesisAccount    = (*DelayedVestingAccount)(nil)
+)
 
 // NewDelayedVestingAccountRaw creates a new DelayedVestingAccount object from BaseVestingAccount
 func NewDelayedVestingAccountRaw(bva *BaseVestingAccount) *DelayedVestingAccount {
@@ -485,7 +491,7 @@ func (dva DelayedVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins {
 // GetVestingCoins returns the total number of vesting coins for a delayed
 // vesting account.
 func (dva DelayedVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins {
-	return dva.OriginalVesting.Sub(dva.GetVestedCoins(blockTime))
+	return dva.OriginalVesting.Sub(dva.GetVestedCoins(blockTime)...)
 }
 
 // LockedCoins returns the set of coins that are not spendable (i.e. locked),
@@ -519,8 +525,10 @@ func (dva DelayedVestingAccount) String() string {
 //-----------------------------------------------------------------------------
 // Permanent Locked Vesting Account
 
-var _ vestexported.VestingAccount = (*PermanentLockedAccount)(nil)
-var _ authtypes.GenesisAccount = (*PermanentLockedAccount)(nil)
+var (
+	_ vestexported.VestingAccount = (*PermanentLockedAccount)(nil)
+	_ authtypes.GenesisAccount    = (*PermanentLockedAccount)(nil)
+)
 
 // NewPermanentLockedAccount returns a PermanentLockedAccount
 func NewPermanentLockedAccount(baseAcc *authtypes.BaseAccount, coins sdk.Coins) *PermanentLockedAccount {

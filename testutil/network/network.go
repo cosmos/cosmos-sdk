@@ -178,21 +178,27 @@ type Logger interface {
 	Logf(format string, args ...interface{})
 }
 
-var _ Logger = (*testing.T)(nil)
-var _ Logger = (*CLILogger)(nil)
+var (
+	_ Logger = (*testing.T)(nil)
+	_ Logger = (*CLILogger)(nil)
+)
 
+// CLILogger wraps a cobra.Command and provides command logging methods.
 type CLILogger struct {
 	cmd *cobra.Command
 }
 
+// Log logs given args.
 func (s CLILogger) Log(args ...interface{}) {
 	s.cmd.Println(args...)
 }
 
+// Logf logs given args according to a format specifier.
 func (s CLILogger) Logf(format string, args ...interface{}) {
 	s.cmd.Printf(format, args...)
 }
 
+// NewCLILogger creates a new CLILogger.
 func NewCLILogger(cmd *cobra.Command) CLILogger {
 	return CLILogger{cmd}
 }
@@ -305,12 +311,12 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		clientDir := filepath.Join(network.BaseDir, nodeDirName, "simcli")
 		gentxsDir := filepath.Join(network.BaseDir, "gentxs")
 
-		err := os.MkdirAll(filepath.Join(nodeDir, "config"), 0755)
+		err := os.MkdirAll(filepath.Join(nodeDir, "config"), 0o755)
 		if err != nil {
 			return nil, err
 		}
 
-		err = os.MkdirAll(clientDir, 0755)
+		err = os.MkdirAll(clientDir, 0o755)
 		if err != nil {
 			return nil, err
 		}

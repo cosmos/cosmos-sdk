@@ -20,7 +20,7 @@ Assuming we have two chains, A and B, we define the following terms:
 
 ## Transaction Tips Flow
 
-The transaction tips flow happens in multipe steps.
+The transaction tips flow happens in multiple steps.
 
 1. The tipper sends via IBC some chain B tokens to chain A. These tokens will cover for fees on the target chain A. This means that chain A's bank module holds some IBC tokens under the tipper's address.
 

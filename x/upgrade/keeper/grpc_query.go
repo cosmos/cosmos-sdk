@@ -71,7 +71,7 @@ func (k Keeper) ModuleVersions(c context.Context, req *types.QueryModuleVersions
 	}, nil
 }
 
-// Authority implements the the Query/Authority gRPC method, returning the account capable of performing upgrades
+// Authority implements the Query/Authority gRPC method, returning the account capable of performing upgrades
 func (k Keeper) Authority(c context.Context, req *types.QueryAuthorityRequest) (*types.QueryAuthorityResponse, error) {
 	return &types.QueryAuthorityResponse{Address: k.authority}, nil
 }

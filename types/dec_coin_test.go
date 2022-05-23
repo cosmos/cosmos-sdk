@@ -399,7 +399,8 @@ func (s *decCoinTestSuite) TestParseDecCoins() {
 			},
 			false,
 		},
-		{"0.0stake,0.004stake,5.04atom", // remove zero coins
+		{
+			"0.0stake,0.004stake,5.04atom", // remove zero coins
 			sdk.DecCoins{
 				sdk.NewDecCoinFromDec("atom", sdk.NewDecWithPrec(5040000000000000000, sdk.Precision)),
 				sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(4000000000000000, sdk.Precision)),
@@ -644,7 +645,8 @@ func (s *decCoinTestSuite) TestDecCoins_GetDenomByIndex() {
 			sdk.DecCoins{
 				sdk.DecCoin{testDenom1, sdk.NewDec(5)},
 				sdk.DecCoin{testDenom2, sdk.NewDec(57)},
-			}, 1, testDenom2, false,
+			},
+			1, testDenom2, false,
 		},
 	}
 
@@ -710,7 +712,6 @@ func (s *decCoinTestSuite) TestDecCoin_IsLT() {
 		expectedResult bool
 		expectedPanic  bool
 	}{
-
 		{"Same Denom - Less than other coin", sdk.DecCoin{testDenom1, sdk.NewDec(3)}, sdk.DecCoin{testDenom1, sdk.NewDec(19)}, true, false},
 
 		{"Same Denom - Greater than other coin", sdk.DecCoin{testDenom1, sdk.NewDec(343340)}, sdk.DecCoin{testDenom1, sdk.NewDec(14)}, false, false},
@@ -748,7 +749,6 @@ func (s *decCoinTestSuite) TestDecCoin_IsGTE() {
 		expectedResult bool
 		expectedPanic  bool
 	}{
-
 		{"Same Denom - Less than other coin", sdk.DecCoin{testDenom1, sdk.NewDec(3)}, sdk.DecCoin{testDenom1, sdk.NewDec(19)}, false, false},
 
 		{"Same Denom - Greater than other coin", sdk.DecCoin{testDenom1, sdk.NewDec(343340)}, sdk.DecCoin{testDenom1, sdk.NewDec(14)}, true, false},
@@ -924,7 +924,6 @@ func (s *decCoinTestSuite) TestDecCoins_MulDecTruncate() {
 }
 
 func (s *decCoinTestSuite) TestDecCoins_QuoDec() {
-
 	testCases := []struct {
 		name           string
 		coins          sdk.DecCoins
@@ -985,22 +984,33 @@ func (s *decCoinTestSuite) TestDecCoin_IsEqual() {
 		expectedResult bool
 		expectedPanic  bool
 	}{
-
-		{"Different Denom Same Amount", sdk.DecCoin{testDenom1, sdk.NewDec(20)},
-			sdk.DecCoin{testDenom2, sdk.NewDec(20)},
-			false, true},
-
-		{"Different Denom Different Amount", sdk.DecCoin{testDenom1, sdk.NewDec(20)},
-			sdk.DecCoin{testDenom2, sdk.NewDec(10)},
-			false, true},
-
-		{"Same Denom Different Amount", sdk.DecCoin{testDenom1, sdk.NewDec(20)},
-			sdk.DecCoin{testDenom1, sdk.NewDec(10)},
-			false, false},
-
-		{"Same Denom Same Amount", sdk.DecCoin{testDenom1, sdk.NewDec(20)},
+		{
+			"Different Denom Same Amount",
 			sdk.DecCoin{testDenom1, sdk.NewDec(20)},
-			true, false},
+			sdk.DecCoin{testDenom2, sdk.NewDec(20)},
+			false, true,
+		},
+
+		{
+			"Different Denom Different Amount",
+			sdk.DecCoin{testDenom1, sdk.NewDec(20)},
+			sdk.DecCoin{testDenom2, sdk.NewDec(10)},
+			false, true,
+		},
+
+		{
+			"Same Denom Different Amount",
+			sdk.DecCoin{testDenom1, sdk.NewDec(20)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(10)},
+			false, false,
+		},
+
+		{
+			"Same Denom Same Amount",
+			sdk.DecCoin{testDenom1, sdk.NewDec(20)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(20)},
+			true, false,
+		},
 	}
 
 	for i, tc := range testCases {

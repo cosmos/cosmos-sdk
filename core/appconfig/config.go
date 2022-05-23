@@ -12,7 +12,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 	"sigs.k8s.io/yaml"
 
-	"github.com/cosmos/cosmos-sdk/container"
+	"cosmossdk.io/container"
 
 	appv1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/app/v1alpha1"
 

@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
-	github.com/cosmos/cosmos-sdk/api v0.1.0-alpha5
+	github.com/cosmos/cosmos-sdk/api v0.1.0
 	github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.4
 	github.com/cosmos/gogoproto v1.4.1-0.20220401124828-90e4c3283529
 	github.com/golang/mock v1.6.0

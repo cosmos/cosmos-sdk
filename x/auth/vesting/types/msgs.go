@@ -3,8 +3,6 @@ package types
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -69,7 +67,7 @@ func (msg MsgCreateVestingAccount) ValidateBasic() error {
 // GetSignBytes returns the bytes all expected signers must sign over for a
 // MsgCreateVestingAccount.
 func (msg MsgCreateVestingAccount) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners returns the expected signers for a MsgCreateVestingAccount.
@@ -117,7 +115,7 @@ func (msg MsgCreatePermanentLockedAccount) ValidateBasic() error {
 // GetSignBytes returns the bytes all expected signers must sign over for a
 // MsgCreatePermanentLockedAccount.
 func (msg MsgCreatePermanentLockedAccount) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners returns the expected signers for a MsgCreatePermanentLockedAccount.
@@ -155,7 +153,7 @@ func (msg MsgCreatePeriodicVestingAccount) GetSigners() []sdk.AccAddress {
 // GetSignBytes returns the bytes all expected signers must sign over for a
 // MsgCreatePeriodicVestingAccount.
 func (msg MsgCreatePeriodicVestingAccount) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic Implements Msg.

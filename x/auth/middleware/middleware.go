@@ -43,11 +43,13 @@ type TxHandlerOptions struct {
 	LegacyRouter     sdk.Router
 	MsgServiceRouter *MsgServiceRouter
 
-	AccountKeeper   AccountKeeper
-	BankKeeper      types.BankKeeper
-	FeegrantKeeper  FeegrantKeeper
-	SignModeHandler authsigning.SignModeHandler
-	SigGasConsumer  func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
+	AccountKeeper          AccountKeeper
+	BankKeeper             types.BankKeeper
+	FeegrantKeeper         FeegrantKeeper
+	SignModeHandler        authsigning.SignModeHandler
+	SigGasConsumer         func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
+	ExtensionOptionChecker ExtensionOptionChecker
+	TxFeeChecker           TxFeeChecker
 }
 
 // NewDefaultTxHandler defines a TxHandler middleware stacks that should work
@@ -74,6 +76,16 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		sigGasConsumer = DefaultSigVerificationGasConsumer
 	}
 
+	var extensionOptionChecker = options.ExtensionOptionChecker
+	if extensionOptionChecker == nil {
+		extensionOptionChecker = rejectExtensionOption
+	}
+
+	var txFeeChecker = options.TxFeeChecker
+	if txFeeChecker == nil {
+		txFeeChecker = checkTxFeeWithValidatorMinGasPrices
+	}
+
 	return ComposeMiddlewares(
 		NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
 		NewTxDecoderMiddleware(options.TxDecoder),
@@ -89,10 +101,8 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		// Choose which events to index in Tendermint. Make sure no events are
 		// emitted outside of this middleware.
 		NewIndexEventsTxMiddleware(options.IndexEvents),
-		// Reject all extension options which can optionally be included in the
-		// tx.
-		RejectExtensionOptionsMiddleware,
-		MempoolFeeMiddleware,
+		// Reject all extension options other than the ones needed by the feemarket.
+		NewExtensionOptionsMiddleware(extensionOptionChecker),
 		ValidateBasicMiddleware,
 		TxTimeoutHeightMiddleware,
 		ValidateMemoMiddleware(options.AccountKeeper),
@@ -101,8 +111,7 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		// ComposeMiddlewares godoc for details.
 		// `DeductFeeMiddleware` and `IncrementSequenceMiddleware` should be put outside of `WithBranchedStore` middleware,
 		// so their storage writes are not discarded when tx fails.
-		DeductFeeMiddleware(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper),
-		TxPriorityMiddleware,
+		DeductFeeMiddleware(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, txFeeChecker),
 		SetPubKeyMiddleware(options.AccountKeeper),
 		ValidateSigCountMiddleware(options.AccountKeeper),
 		SigGasConsumeMiddleware(options.AccountKeeper, sigGasConsumer),

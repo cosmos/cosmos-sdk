@@ -322,6 +322,21 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			false,
 		},
 		{
+			"fail when granter = grantee",
+			[]string{
+				grantee.String(),
+				"generic",
+				fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgVote),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			0,
+			true,
+		},
+		{
 			"Valid tx with amino",
 			[]string{
 				grantee.String(),

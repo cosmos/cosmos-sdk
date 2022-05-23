@@ -151,6 +151,7 @@ var xxx_messageInfo_MsgWithdrawDelegatorReward proto.InternalMessageInfo
 
 // MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward response type.
 type MsgWithdrawDelegatorRewardResponse struct {
+	// Since: cosmos-sdk 0.46
 	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
 }
 
@@ -235,6 +236,7 @@ var xxx_messageInfo_MsgWithdrawValidatorCommission proto.InternalMessageInfo
 
 // MsgWithdrawValidatorCommissionResponse defines the Msg/WithdrawValidatorCommission response type.
 type MsgWithdrawValidatorCommissionResponse struct {
+	// Since: cosmos-sdk 0.46
 	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
 }
 

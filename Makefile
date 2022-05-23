@@ -198,9 +198,9 @@ build-docs:
 	while read -r branch path_prefix; do \
 		echo "building branch $${branch}" ; \
 		(git clean -fdx && git reset --hard && git checkout $${branch} && npm install && VUEPRESS_BASE="/$${path_prefix}/" npm run build) ; \
-		mkdir -p ~/output/$${path_prefix} ; \
-		cp -r .vuepress/dist/* ~/output/$${path_prefix}/ ; \
-		cp ~/output/$${path_prefix}/index.html ~/output ; \
+		mkdir -p output/$${path_prefix} ; \
+		cp -r .vuepress/dist/* output/$${path_prefix}/ ; \
+		cp output/$${path_prefix}/index.html output ; \
 	done < versions ;
 
 .PHONY: build-docs

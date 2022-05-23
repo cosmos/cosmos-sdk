@@ -15,8 +15,9 @@ import (
 )
 
 var (
-	stakeDenom = "stake"
-	feeDenom   = "fee"
+	stakeDenom  = "stake"
+	feeDenom    = "fee"
+	customDenom = "custom"
 )
 
 func TestGetVestedCoinsContVestingAcc(t *testing.T) {
@@ -61,6 +62,20 @@ func TestGetVestingCoinsContVestingAcc(t *testing.T) {
 	// require 50% of coins vesting
 	vestingCoins = cva.GetVestingCoins(now.Add(12 * time.Hour))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, vestingCoins)
+}
+
+func TestAddOriginalVestingContVestingAcc(t *testing.T) {
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+
+	bacc, origCoins := initBaseAccount()
+	cva := types.NewContinuousVestingAccount(bacc, origCoins, now.Unix(), endTime.Unix())
+
+	cva.AddOriginalVesting(origCoins)
+	err := cva.Validate()
+	require.NoError(t, err)
+
+	require.Equal(t, origCoins.Add(origCoins...), cva.OriginalVesting)
 }
 
 func TestSpendableCoinsContVestingAcc(t *testing.T) {
@@ -197,6 +212,19 @@ func TestGetVestingCoinsDelVestingAcc(t *testing.T) {
 	// require no coins vesting at schedule maturation
 	vestingCoins = dva.GetVestingCoins(endTime)
 	require.Nil(t, vestingCoins)
+}
+
+func TestAddOriginalVestingDelVestingAcc(t *testing.T) {
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+
+	bacc, origCoins := initBaseAccount()
+	dva := types.NewDelayedVestingAccount(bacc, origCoins, endTime.Unix())
+
+	dva.AddOriginalVesting(origCoins)
+	err := dva.Validate()
+	require.NoError(t, err)
+	require.Equal(t, origCoins.Add(origCoins...), dva.OriginalVesting)
 }
 
 func TestSpendableCoinsDelVestingAcc(t *testing.T) {
@@ -389,6 +417,59 @@ func TestGetVestingCoinsPeriodicVestingAcc(t *testing.T) {
 	require.Nil(t, vestingCoins)
 }
 
+func TestAddOriginalVestingPeriodicVestingAcc(t *testing.T) {
+	now := tmtime.Now()
+
+	_, _, addr := testdata.KeyTestPubAddr()
+	initialOrigCoins := sdk.Coins{
+		sdk.NewInt64Coin(feeDenom, 1000),
+		sdk.NewInt64Coin(stakeDenom, 100),
+	}
+
+	bacc := authtypes.NewBaseAccountWithAddress(addr)
+
+	initialPeriods := []types.Period{
+		{Length: int64(12 * 60 * 60), Amount: sdk.Coins{
+			sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)},
+		},
+		{Length: int64(6 * 60 * 60), Amount: sdk.Coins{
+			sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)},
+		},
+		{Length: int64(6 * 60 * 60), Amount: sdk.Coins{
+			sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)},
+		},
+	}
+
+	pva := types.NewPeriodicVestingAccount(bacc, initialOrigCoins, now.Unix(), initialPeriods)
+	err := pva.Validate()
+	require.NoError(t, err)
+
+	incOrigCoins := sdk.Coins{
+		sdk.NewInt64Coin(feeDenom, 1),
+		sdk.NewInt64Coin(stakeDenom, 10),
+		sdk.NewInt64Coin(customDenom, 100),
+		sdk.NewInt64Coin("zero-denom", 0),
+	}
+
+	pva.AddOriginalVesting(incOrigCoins)
+	err = pva.Validate()
+	require.NoError(t, err)
+	require.Equal(t, initialOrigCoins.Add(incOrigCoins...), pva.OriginalVesting)
+
+	expectedPeriods := []types.Period{
+		{Length: int64(12 * 60 * 60), Amount: sdk.Coins{
+			sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 55)},
+		},
+		{Length: int64(6 * 60 * 60), Amount: sdk.Coins{
+			sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 27)},
+		},
+		{Length: int64(6 * 60 * 60), Amount: sdk.Coins{
+			sdk.NewInt64Coin(customDenom, 100), sdk.NewInt64Coin(feeDenom, 251), sdk.NewInt64Coin(stakeDenom, 28)},
+		},
+	}
+	require.Equal(t, expectedPeriods, pva.VestingPeriods)
+}
+
 func TestSpendableCoinsPeriodicVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
@@ -560,6 +641,16 @@ func TestGetVestingCoinsPermLockedVestingAcc(t *testing.T) {
 	// require all coins vesting at the end time
 	vestingCoins = plva.GetVestingCoins(endTime)
 	require.Equal(t, origCoins, vestingCoins)
+}
+
+func TestAddOriginalVestingPermLockedVestingAcc(t *testing.T) {
+	bacc, origCoins := initBaseAccount()
+	plva := types.NewPermanentLockedAccount(bacc, origCoins)
+
+	plva.AddOriginalVesting(origCoins)
+	err := plva.Validate()
+	require.NoError(t, err)
+	require.Equal(t, origCoins.Add(origCoins...), plva.OriginalVesting)
 }
 
 func TestSpendableCoinsPermLockedVestingAcc(t *testing.T) {

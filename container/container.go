@@ -7,7 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/cosmos/cosmos-sdk/container/internal/graphviz"
+	"cosmossdk.io/container/internal/graphviz"
 )
 
 type container struct {

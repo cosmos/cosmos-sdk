@@ -3,7 +3,7 @@ package container
 import (
 	"reflect"
 
-	"github.com/cosmos/cosmos-sdk/container/internal/graphviz"
+	"cosmossdk.io/container/internal/graphviz"
 )
 
 type resolver interface {

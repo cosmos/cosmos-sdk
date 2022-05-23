@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/cosmos/cosmos-sdk/container/internal/graphviz"
+	"cosmossdk.io/container/internal/graphviz"
 )
 
 // OnePerModuleType marks a type which

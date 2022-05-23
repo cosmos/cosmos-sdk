@@ -1,4 +1,4 @@
-module github.com/cosmos/cosmos-sdk/container
+module cosmossdk.io/container
 
 go 1.18
 

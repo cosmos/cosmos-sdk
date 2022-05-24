@@ -1,7 +1,7 @@
 package appmodule
 
 import (
-	"cosmossdk.io/container"
+	"github.com/cosmos/cosmos-sdk/container"
 
 	"cosmossdk.io/core/internal"
 )
@@ -18,7 +18,7 @@ func (f funcOption) apply(initializer *internal.ModuleInitializer) error {
 }
 
 // Provide registers providers with the dependency injection system that will be
-// run within the module scope. See cosmossdk.io/container for
+// run within the module scope. See github.com/cosmos/cosmos-sdk/container v1.0.0-alpha.3 for
 // documentation on the dependency injection system.
 func Provide(providers ...interface{}) Option {
 	return funcOption(func(initializer *internal.ModuleInitializer) error {

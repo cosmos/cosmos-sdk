@@ -10,9 +10,9 @@ with particular kinds of accounts.
 
    ```go
    import (
-      "github.com/Stride-Labs/cosmos-sdk/x/evidence"
-      evidencekeeper "github.com/Stride-Labs/cosmos-sdk/x/evidence/keeper"
-      evidencetypes "github.com/Stride-Labs/cosmos-sdk/x/evidence/types"
+      "github.com/cosmos/cosmos-sdk/x/evidence"
+      evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
+      evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
    )
    ```
 
@@ -49,7 +49,7 @@ with particular kinds of accounts.
    }
    ```
 
-5. Create the keeper. Note, the `x/evidence` module depends on the `x/staking` and `x/slashing` modules. Evidence has expected interfaces, these interfaces are linked to slashing and staking. You can find these interfaces [here](https://github.com/Stride-Labs/cosmos-sdk/blob/v0.41.0/x/evidence/types/expected_keepers.go)
+5. Create the keeper. Note, the `x/evidence` module depends on the `x/staking` and `x/slashing` modules. Evidence has expected interfaces, these interfaces are linked to slashing and staking. You can find these interfaces [here](https://github.com/cosmos/cosmos-sdk/blob/v0.41.0/x/evidence/types/expected_keepers.go)
 
    ```go
    func NewApp(...) *App {

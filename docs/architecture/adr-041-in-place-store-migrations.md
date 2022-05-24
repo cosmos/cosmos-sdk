@@ -19,7 +19,7 @@ When a chain upgrade introduces state-breaking changes inside modules, the curre
 This procedure is cumbersome for multiple reasons:
 
 - The procedure takes time. It can take hours to run the `export` command, plus some additional hours to run `InitChain` on the fresh chain using the migrated JSON.
-- The exported JSON file can be heavy (~100MB-1GB), making it difficult to view, edit and transfer, which in turn introduces additional work to solve these problems (such as [streaming genesis](https://github.com/Stride-Labs/cosmos-sdk/issues/6936)).
+- The exported JSON file can be heavy (~100MB-1GB), making it difficult to view, edit and transfer, which in turn introduces additional work to solve these problems (such as [streaming genesis](https://github.com/cosmos/cosmos-sdk/issues/6936)).
 
 ## Decision
 
@@ -75,7 +75,7 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 }
 ```
 
-Each module's migration functions are specific to the module's store evolutions, and are not described in this ADR. An example of x/bank store key migrations after the introduction of ADR-028 length-prefixed addresses can be seen in this [store.go code](https://github.com/Stride-Labs/cosmos-sdk/blob/36f68eb9e041e20a5bb47e216ac5eb8b91f95471/x/bank/legacy/v043/store.go#L41-L62).
+Each module's migration functions are specific to the module's store evolutions, and are not described in this ADR. An example of x/bank store key migrations after the introduction of ADR-028 length-prefixed addresses can be seen in this [store.go code](https://github.com/cosmos/cosmos-sdk/blob/36f68eb9e041e20a5bb47e216ac5eb8b91f95471/x/bank/legacy/v043/store.go#L41-L62).
 
 ### Tracking Module Versions in `x/upgrade`
 
@@ -162,6 +162,6 @@ While modules MUST register their migration functions when bumping ConsensusVers
 
 ## References
 
-- Initial discussion: https://github.com/Stride-Labs/cosmos-sdk/discussions/8429
-- Implementation of `ConsensusVersion` and `RunMigrations`: https://github.com/Stride-Labs/cosmos-sdk/pull/8485
-- Issue discussing `x/upgrade` design: https://github.com/Stride-Labs/cosmos-sdk/issues/8514
+- Initial discussion: https://github.com/cosmos/cosmos-sdk/discussions/8429
+- Implementation of `ConsensusVersion` and `RunMigrations`: https://github.com/cosmos/cosmos-sdk/pull/8485
+- Issue discussing `x/upgrade` design: https://github.com/cosmos/cosmos-sdk/issues/8514

@@ -9,7 +9,7 @@ _Note: If new versions of the application are not set up to run in-place store m
 To install `cosmovisor`, run the following command:
 
 ```
-go get github.com/Stride-Labs/cosmos-sdk/cosmovisor/cmd/cosmovisor
+go get github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor
 ```
 
 ## Command Line Arguments And Environment Variables

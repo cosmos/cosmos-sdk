@@ -4,19 +4,19 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Stride-Labs/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/Stride-Labs/cosmos-sdk/client/flags"
-	clitestutil "github.com/Stride-Labs/cosmos-sdk/testutil/cli"
-	"github.com/Stride-Labs/cosmos-sdk/testutil/network"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	"github.com/Stride-Labs/cosmos-sdk/x/gov/client/cli"
-	"github.com/Stride-Labs/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 type IntegrationTestSuite struct {

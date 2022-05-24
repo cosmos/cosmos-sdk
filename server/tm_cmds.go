@@ -11,9 +11,9 @@ import (
 	tversion "github.com/tendermint/tendermint/version"
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/Stride-Labs/cosmos-sdk/client"
-	cryptocodec "github.com/Stride-Labs/cosmos-sdk/crypto/codec"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/client"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ShowNodeIDCmd - ported from Tendermint, dump node ID to stdout

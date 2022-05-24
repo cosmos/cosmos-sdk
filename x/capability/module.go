@@ -12,16 +12,16 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/Stride-Labs/cosmos-sdk/client"
-	"github.com/Stride-Labs/cosmos-sdk/codec"
-	cdctypes "github.com/Stride-Labs/cosmos-sdk/codec/types"
-	"github.com/Stride-Labs/cosmos-sdk/telemetry"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	"github.com/Stride-Labs/cosmos-sdk/types/module"
-	simtypes "github.com/Stride-Labs/cosmos-sdk/types/simulation"
-	"github.com/Stride-Labs/cosmos-sdk/x/capability/keeper"
-	"github.com/Stride-Labs/cosmos-sdk/x/capability/simulation"
-	"github.com/Stride-Labs/cosmos-sdk/x/capability/types"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/capability/keeper"
+	"github.com/cosmos/cosmos-sdk/x/capability/simulation"
+	"github.com/cosmos/cosmos-sdk/x/capability/types"
 )
 
 var (

@@ -3,7 +3,7 @@ package types
 import (
 	"bytes"
 
-	"github.com/Stride-Labs/cosmos-sdk/types/kv"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 // Iterator over all the keys with a certain prefix in ascending order

@@ -1,9 +1,9 @@
 package crisis
 
 import (
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	sdkerrors "github.com/Stride-Labs/cosmos-sdk/types/errors"
-	"github.com/Stride-Labs/cosmos-sdk/x/crisis/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 // RouterKey

@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Stride-Labs/cosmos-sdk/baseapp"
-	"github.com/Stride-Labs/cosmos-sdk/simapp"
-	"github.com/Stride-Labs/cosmos-sdk/testutil/testdata"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	"github.com/Stride-Labs/cosmos-sdk/types/query"
-	authtypes "github.com/Stride-Labs/cosmos-sdk/x/auth/types"
-	vestingtypes "github.com/Stride-Labs/cosmos-sdk/x/auth/vesting/types"
-	"github.com/Stride-Labs/cosmos-sdk/x/bank/types"
-	minttypes "github.com/Stride-Labs/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 func (suite *IntegrationTestSuite) TestQueryBalance() {

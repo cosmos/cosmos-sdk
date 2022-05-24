@@ -1,11 +1,11 @@
 package types
 
 import (
-	"github.com/Stride-Labs/cosmos-sdk/crypto/keys/secp256k1"
-	cryptotypes "github.com/Stride-Labs/cosmos-sdk/crypto/types"
-	"github.com/Stride-Labs/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // NewTestMsg generates a test message

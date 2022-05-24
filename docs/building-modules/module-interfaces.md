@@ -22,7 +22,7 @@ Transaction commands typically have their own `tx.go` file that lives within the
 
 Here is an example from the `x/bank` module:
 
-+++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.43.0-beta1/x/bank/client/cli/tx.go#L28-L63
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/x/bank/client/cli/tx.go#L28-L63
 
 In the example, `NewSendTxCmd()` creates and returns the transaction command for a transaction that wraps and delivers `MsgSend`. `MsgSend` is the message used to send tokens from one account to another.
 
@@ -42,17 +42,17 @@ In general, the getter function does the following:
 
 Each module must implement `NewTxCmd()`, which aggregates all of the transaction commands of the module. Here is an example from the `x/bank` module:
 
-+++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.43.0-beta1/x/bank/client/cli/tx.go#L13-L26
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/x/bank/client/cli/tx.go#L13-L26
 
 Each module must also implement the `GetTxCmd()` method for `AppModuleBasic` that simply returns `NewTxCmd()`. This allows the root command to easily aggregate all of the transaction commands for each module. Here is an example:
 
-+++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.43.0-beta1/x/bank/module.go#L75-L78
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/x/bank/module.go#L75-L78
 
 ### Query Commands
 
 [Queries](./messages-and-queries.md#queries) allow users to gather information about the application or network state; they are routed by the application and processed by the module in which they are defined. Query commands typically have their own `query.go` file in the module's `./client/cli` folder. Like transaction commands, they are specified in getter functions. Here is an example of a query command from the `x/auth` module:
 
-+++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.43.0-beta1/x/auth/client/cli/query.go#L75-L105
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/x/auth/client/cli/query.go#L75-L105
 
 In the example, `GetAccountCmd()` creates and returns a query command that returns the state of an account based on the provided account address.
 
@@ -72,11 +72,11 @@ In general, the getter function does the following:
 
 Each module must implement `GetQueryCmd()`, which aggregates all of the query commands of the module. Here is an example from the `x/auth` module:
 
-+++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.43.0-beta1/x/auth/client/cli/query.go#L25-L42
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/x/auth/client/cli/query.go#L25-L42
 
 Each module must also implement the `GetQueryCmd()` method for `AppModuleBasic` that returns the `GetQueryCmd()` function. This allows for the root command to easily aggregate all of the query commands for each module. Here is an example:
 
-+++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.43.0-beta1/x/auth/module.go#L80-L83
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/x/auth/module.go#L80-L83
 
 ### Flags
 
@@ -102,13 +102,13 @@ For more detailed information on creating flags, visit the [Cobra Documentation]
 
 As mentioned in [transaction commands](#transaction-commands), there is a set of flags that all transaction commands must add. This is done with the `AddTxFlagsToCmd` method defined in the SDK's `./client/flags` package.
 
-+++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.43.0-beta1/client/flags/flags.go#L94-L120
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/client/flags/flags.go#L94-L120
 
 Since `AddTxFlagsToCmd(cmd *cobra.Command)` includes all of the basic flags required for a transaction command, module developers may choose not to add any of their own (specifying arguments instead may often be more appropriate).
 
 Similarly, there is a `AddQueryFlagsToCmd(cmd *cobra.Command)` to add common flags to a module query command.
 
-+++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.43.0-beta1/client/flags/flags.go#L85-L92
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/client/flags/flags.go#L85-L92
 
 ## gRPC
 
@@ -120,7 +120,7 @@ In order to do that, modules must implement `RegisterGRPCGatewayRoutes(clientCtx
 
 Here's an example from the `x/auth` module:
 
-+++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.43.0-beta1/x/auth/module.go#L68-L73
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/x/auth/module.go#L68-L73
 
 ## gRPC-gateway REST
 
@@ -128,7 +128,7 @@ Applications need to support web services that use HTTP requests (e.g. a web wal
 
 Modules that want to expose REST queries should add `google.api.http` annotations to their `rpc` methods, such as in the example below from the `x/auth` module:
 
-+++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.43.0-beta1/proto/cosmos/auth/v1beta1/query.proto#L13-L29
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/proto/cosmos/auth/v1beta1/query.proto#L13-L29
 
 gRPC gateway is started in-process along with the application and Tendermint. It can be enabled or disabled by setting gRPC Configuration `enable` in [`app.toml`](../run-node/run-node.md#configuring-the-node-using-apptoml).
 

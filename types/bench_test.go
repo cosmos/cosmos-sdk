@@ -3,7 +3,7 @@ package types_test
 import (
 	"testing"
 
-	"github.com/Stride-Labs/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 var coinStrs = []string{

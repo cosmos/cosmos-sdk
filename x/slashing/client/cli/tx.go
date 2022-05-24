@@ -3,11 +3,11 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/Stride-Labs/cosmos-sdk/client"
-	"github.com/Stride-Labs/cosmos-sdk/client/flags"
-	"github.com/Stride-Labs/cosmos-sdk/client/tx"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	"github.com/Stride-Labs/cosmos-sdk/x/slashing/types"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // NewTxCmd returns a root CLI command handler for all x/slashing transaction commands.

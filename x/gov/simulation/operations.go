@@ -5,15 +5,15 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/Stride-Labs/cosmos-sdk/baseapp"
-	"github.com/Stride-Labs/cosmos-sdk/codec"
-	"github.com/Stride-Labs/cosmos-sdk/simapp/helpers"
-	simappparams "github.com/Stride-Labs/cosmos-sdk/simapp/params"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	simtypes "github.com/Stride-Labs/cosmos-sdk/types/simulation"
-	"github.com/Stride-Labs/cosmos-sdk/x/gov/keeper"
-	"github.com/Stride-Labs/cosmos-sdk/x/gov/types"
-	"github.com/Stride-Labs/cosmos-sdk/x/simulation"
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 var initialProposalID = uint64(100000000000000)

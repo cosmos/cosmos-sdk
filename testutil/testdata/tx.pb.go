@@ -117,7 +117,7 @@ func (m *MsgCreateDogResponse) GetName() string {
 }
 
 // TestMsg is msg type for testing protobuf message using any, as defined in
-// https://github.com/Stride-Labs/cosmos-sdk/issues/6213.
+// https://github.com/cosmos/cosmos-sdk/issues/6213.
 type TestMsg struct {
 	Signers []string `protobuf:"bytes,1,rep,name=signers,proto3" json:"signers,omitempty"`
 }

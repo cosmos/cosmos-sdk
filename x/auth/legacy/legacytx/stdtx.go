@@ -1,13 +1,13 @@
 package legacytx
 
 import (
-	"github.com/Stride-Labs/cosmos-sdk/codec/legacy"
-	codectypes "github.com/Stride-Labs/cosmos-sdk/codec/types"
-	cryptotypes "github.com/Stride-Labs/cosmos-sdk/crypto/types"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	sdkerrors "github.com/Stride-Labs/cosmos-sdk/types/errors"
-	txtypes "github.com/Stride-Labs/cosmos-sdk/types/tx"
-	"github.com/Stride-Labs/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 // Interface implementation checks

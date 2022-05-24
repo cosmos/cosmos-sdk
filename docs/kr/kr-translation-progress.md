@@ -18,7 +18,7 @@ Please refer to the official english version of the documentation for the latest
 
 ### [`concepts`](../concepts/)
 
-- Synced until commit [14ebc65](https://github.com/Stride-Labs/cosmos-sdk/commit/14ebc65daffd63e1adf17995c103aac9380207ef#diff-f874f370376bf359320af0543de53fcf)
+- Synced until commit [14ebc65](https://github.com/cosmos/cosmos-sdk/commit/14ebc65daffd63e1adf17995c103aac9380207ef#diff-f874f370376bf359320af0543de53fcf)
 
 ### [`spec`](../spec/)
 
@@ -26,16 +26,16 @@ Please refer to the official english version of the documentation for the latest
 
 ### [`gaia`](../gaia/)
 
-- Synced until commit [288df6f](https://github.com/Stride-Labs/cosmos-sdk/commit/288df6fe69dcef8fa95aca022039f92ba1e98c11#diff-3302fe357e01f0996ddb0f10adec85f0)
+- Synced until commit [288df6f](https://github.com/cosmos/cosmos-sdk/commit/288df6fe69dcef8fa95aca022039f92ba1e98c11#diff-3302fe357e01f0996ddb0f10adec85f0)
 
 ### [`intro`](../intro/)
 
-- Synced until commit [0043912](https://github.com/Stride-Labs/cosmos-sdk/commit/0043912548808b4cfd6ab84ec49ba73bd5f65b5b#diff-e518eaec0d99787e6f75682d54751821)
+- Synced until commit [0043912](https://github.com/cosmos/cosmos-sdk/commit/0043912548808b4cfd6ab84ec49ba73bd5f65b5b#diff-e518eaec0d99787e6f75682d54751821)
 
 ### [`modules`](../modules/)
 
-- Synced until commit [78a2135](https://github.com/Stride-Labs/cosmos-sdk/commit/78a21353da978d6c2a9b711f29b3874ff9ca14ae#diff-449cc65858e8929d15f4a170950e7758)
+- Synced until commit [78a2135](https://github.com/cosmos/cosmos-sdk/commit/78a21353da978d6c2a9b711f29b3874ff9ca14ae#diff-449cc65858e8929d15f4a170950e7758)
 
 ### [`clients`](../clients/)
 
-- Synced until Commit [857a65d](https://github.com/Stride-Labs/cosmos-sdk/commit/857a65dc610cd736a47980b5d4778e5123206a3d#diff-93dd988c16d20a1bce170b86ad89425a)
+- Synced until Commit [857a65d](https://github.com/cosmos/cosmos-sdk/commit/857a65dc610cd736a47980b5d4778e5123206a3d#diff-93dd988c16d20a1bce170b86ad89425a)

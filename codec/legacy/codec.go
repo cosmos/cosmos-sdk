@@ -1,9 +1,9 @@
 package legacy
 
 import (
-	"github.com/Stride-Labs/cosmos-sdk/codec"
-	cryptocodec "github.com/Stride-Labs/cosmos-sdk/crypto/codec"
-	cryptotypes "github.com/Stride-Labs/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // Cdc defines a global generic sealed Amino codec to be used throughout sdk. It

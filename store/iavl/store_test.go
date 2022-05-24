@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Stride-Labs/cosmos-sdk/store/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
 
 	"github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/Stride-Labs/cosmos-sdk/store/types"
-	"github.com/Stride-Labs/cosmos-sdk/types/kv"
+	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 var (

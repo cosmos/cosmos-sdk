@@ -5,8 +5,8 @@ import (
 
 	proto "github.com/gogo/protobuf/proto"
 
-	cdctypes "github.com/Stride-Labs/cosmos-sdk/codec/types"
-	sdkerrors "github.com/Stride-Labs/cosmos-sdk/types/errors"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // NewGrant returns new Grant

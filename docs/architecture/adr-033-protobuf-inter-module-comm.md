@@ -94,7 +94,7 @@ Using this `QueryClient`/`MsgClient` approach has the following key benefits ove
    the two which checks if one module is authorized to send the specified `Msg` to the other module providing a proper
    object capability system (see below).
 3. The router for inter-module communication gives us a convenient place to handle rollback of transactions,
-   enabling atomicy of operations ([currently a problem](https://github.com/Stride-Labs/cosmos-sdk/issues/8030)). Any failure within a module-to-module call would result in a failure of the entire
+   enabling atomicy of operations ([currently a problem](https://github.com/cosmos/cosmos-sdk/issues/8030)). Any failure within a module-to-module call would result in a failure of the entire
    transaction
 
 This mechanism has the added benefits of:
@@ -156,7 +156,7 @@ func (foo *FooMsgServer) Bar(ctx context.Context, req *MsgBarRequest) (*MsgBarRe
 
 This design is also intended to be extensible to cover use cases of more fine grained permissioning like minting by
 denom prefix being restricted to certain modules (as discussed in
-[#7459](https://github.com/Stride-Labs/cosmos-sdk/pull/7459#discussion_r529545528)).
+[#7459](https://github.com/cosmos/cosmos-sdk/pull/7459#discussion_r529545528)).
 
 ### `ModuleKey`s and `ModuleID`s
 
@@ -165,7 +165,7 @@ corresponding "public key". From the [ADR 028](./adr-028-public-key-addresses.md
 or derived accounts that can be used for different pools (ex. staking pools) or managed accounts (ex. group
 accounts). We can also think of module sub-accounts as similar to derived keys - there is a root key and then some
 derivation path. `ModuleID` is a simple struct which contains the module name and optional "derivation" path,
-and forms its address based on the `AddressHash` method from [the ADR-028](https://github.com/Stride-Labs/cosmos-sdk/blob/master/docs/architecture/adr-028-public-key-addresses.md):
+and forms its address based on the `AddressHash` method from [the ADR-028](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-028-public-key-addresses.md):
 
 ```go
 type ModuleID struct {
@@ -323,14 +323,14 @@ proto package.
 
 Services registered against `InternalServer` will be callable from other modules but not by external clients.
 
-An alternative solution to internal-only methods could involve hooks / plugins as discussed [here](https://github.com/Stride-Labs/cosmos-sdk/pull/7459#issuecomment-733807753).
+An alternative solution to internal-only methods could involve hooks / plugins as discussed [here](https://github.com/cosmos/cosmos-sdk/pull/7459#issuecomment-733807753).
 A more detailed evaluation of a hooks / plugin system will be addressed later in follow-ups to this ADR or as a separate
 ADR.
 
 ### Authorization
 
 By default, the inter-module router requires that messages are sent by the first signer returned by `GetSigners`. The
-inter-module router should also accept authorization middleware such as that provided by [ADR 030](https://github.com/Stride-Labs/cosmos-sdk/blob/master/docs/architecture/adr-030-authz-module.md).
+inter-module router should also accept authorization middleware such as that provided by [ADR 030](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-030-authz-module.md).
 This middleware will allow accounts to otherwise specific module accounts to perform actions on their behalf.
 Authorization middleware should take into account the need to grant certain modules effectively "admin" privileges to
 other modules. This will be addressed in separate ADRs or updates to this ADR.
@@ -352,7 +352,7 @@ Other future improvements may include:
 ### MsgServices vs `x/capability`
 
 The `x/capability` module does provide a proper object-capability implementation that can be used by any module in the
-SDK and could even be used for inter-module OCAPs as described in [\#5931](https://github.com/Stride-Labs/cosmos-sdk/issues/5931).
+SDK and could even be used for inter-module OCAPs as described in [\#5931](https://github.com/cosmos/cosmos-sdk/issues/5931).
 
 The advantages of the approach described in this ADR are mostly around how it integrates with other parts of the SDK,
 specifically:
@@ -396,5 +396,5 @@ replacing `Keeper` interfaces altogether.
 - [ADR 021](./adr-021-protobuf-query-encoding.md)
 - [ADR 031](./adr-031-msg-service.md)
 - [ADR 028](./adr-028-public-key-addresses.md)
-- [ADR 030 draft](https://github.com/Stride-Labs/cosmos-sdk/pull/7105)
+- [ADR 030 draft](https://github.com/cosmos/cosmos-sdk/pull/7105)
 - [Object-Capability Model](../docs/core/ocap.md)

@@ -13,14 +13,14 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 
-	"github.com/Stride-Labs/cosmos-sdk/codec"
-	"github.com/Stride-Labs/cosmos-sdk/store/prefix"
-	store "github.com/Stride-Labs/cosmos-sdk/store/types"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	sdkerrors "github.com/Stride-Labs/cosmos-sdk/types/errors"
-	"github.com/Stride-Labs/cosmos-sdk/types/module"
-	xp "github.com/Stride-Labs/cosmos-sdk/x/upgrade/exported"
-	"github.com/Stride-Labs/cosmos-sdk/x/upgrade/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	store "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	xp "github.com/cosmos/cosmos-sdk/x/upgrade/exported"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // UpgradeInfoFileName file to store upgrade information

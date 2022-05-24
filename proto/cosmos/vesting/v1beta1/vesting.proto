@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/auth/v1beta1/auth.proto";
 
-option go_package = "github.com/Stride-Labs/cosmos-sdk/x/auth/vesting/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/auth/vesting/types";
 
 // BaseVestingAccount implements the VestingAccount interface. It contains all
 // the necessary fields needed for any vesting account implementation.
@@ -16,17 +16,17 @@ message BaseVestingAccount {
   cosmos.auth.v1beta1.BaseAccount base_account       = 1 [(gogoproto.embed) = true];
   repeated cosmos.base.v1beta1.Coin original_vesting = 2 [
     (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/Stride-Labs/cosmos-sdk/types.Coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"original_vesting\""
   ];
   repeated cosmos.base.v1beta1.Coin delegated_free = 3 [
     (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/Stride-Labs/cosmos-sdk/types.Coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"delegated_free\""
   ];
   repeated cosmos.base.v1beta1.Coin delegated_vesting = 4 [
     (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/Stride-Labs/cosmos-sdk/types.Coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"delegated_vesting\""
   ];
   int64 end_time = 5 [(gogoproto.moretags) = "yaml:\"end_time\""];
@@ -58,7 +58,7 @@ message Period {
 
   int64    length                          = 1;
   repeated cosmos.base.v1beta1.Coin amount = 2
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/Stride-Labs/cosmos-sdk/types.Coins"];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
 // PeriodicVestingAccount implements the VestingAccount interface. It

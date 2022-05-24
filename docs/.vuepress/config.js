@@ -105,7 +105,7 @@ module.exports = {
             },
             {
               title: "SDK API Reference",
-              path: "https://godoc.org/github.com/Stride-Labs/cosmos-sdk",
+              path: "https://godoc.org/github.com/cosmos/cosmos-sdk",
             },
             {
               title: "REST API Spec",
@@ -213,11 +213,11 @@ module.exports = {
           children: [
             {
               title: "Contributing to the docs",
-              url: "https://github.com/Stride-Labs/cosmos-sdk/blob/master/docs/DOCS_README.md",
+              url: "https://github.com/cosmos/cosmos-sdk/blob/master/docs/DOCS_README.md",
             },
             {
               title: "Source code on GitHub",
-              url: "https://github.com/Stride-Labs/cosmos-sdk/",
+              url: "https://github.com/cosmos/cosmos-sdk/",
             },
           ],
         },

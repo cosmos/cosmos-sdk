@@ -3,10 +3,10 @@ package types_test
 import (
 	"fmt"
 
-	codectypes "github.com/Stride-Labs/cosmos-sdk/codec/types"
-	"github.com/Stride-Labs/cosmos-sdk/crypto/keys/ed25519"
-	cryptotypes "github.com/Stride-Labs/cosmos-sdk/crypto/types"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (

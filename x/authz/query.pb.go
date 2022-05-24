@@ -6,7 +6,7 @@ package authz
 import (
 	context "context"
 	fmt "fmt"
-	query "github.com/Stride-Labs/cosmos-sdk/types/query"
+	query "github.com/cosmos/cosmos-sdk/types/query"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"

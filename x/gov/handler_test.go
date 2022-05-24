@@ -6,13 +6,13 @@ import (
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/Stride-Labs/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	"github.com/Stride-Labs/cosmos-sdk/x/gov"
-	"github.com/Stride-Labs/cosmos-sdk/x/gov/keeper"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 )
 
 func TestInvalidMsg(t *testing.T) {

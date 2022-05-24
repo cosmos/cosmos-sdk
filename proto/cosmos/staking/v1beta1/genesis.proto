@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos.staking.v1beta1;
 
-option go_package = "github.com/Stride-Labs/cosmos-sdk/x/staking/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
 import "gogoproto/gogo.proto";
 import "cosmos/staking/v1beta1/staking.proto";
@@ -14,7 +14,7 @@ message GenesisState {
   // last_total_power tracks the total amounts of bonded tokens recorded during
   // the previous end block.
   bytes last_total_power = 2 [
-    (gogoproto.customtype) = "github.com/Stride-Labs/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags)   = "yaml:\"last_total_power\"",
     (gogoproto.nullable)   = false
   ];

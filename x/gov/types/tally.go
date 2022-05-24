@@ -3,7 +3,7 @@ package types
 import (
 	yaml "gopkg.in/yaml.v2"
 
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ValidatorGovInfo used for tallying

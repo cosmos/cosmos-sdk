@@ -8,12 +8,12 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/Stride-Labs/cosmos-sdk/testutil"
-	"github.com/Stride-Labs/cosmos-sdk/testutil/network"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	grpctypes "github.com/Stride-Labs/cosmos-sdk/types/grpc"
-	"github.com/Stride-Labs/cosmos-sdk/types/query"
-	"github.com/Stride-Labs/cosmos-sdk/x/slashing/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 type IntegrationTestSuite struct {

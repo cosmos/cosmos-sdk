@@ -12,13 +12,13 @@ import (
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/Stride-Labs/cosmos-sdk/store/cachekv"
-	"github.com/Stride-Labs/cosmos-sdk/store/listenkv"
-	"github.com/Stride-Labs/cosmos-sdk/store/tracekv"
-	"github.com/Stride-Labs/cosmos-sdk/store/types"
-	"github.com/Stride-Labs/cosmos-sdk/telemetry"
-	sdkerrors "github.com/Stride-Labs/cosmos-sdk/types/errors"
-	"github.com/Stride-Labs/cosmos-sdk/types/kv"
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 const (

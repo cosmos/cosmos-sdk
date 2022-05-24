@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/Stride-Labs/cosmos-sdk/codec"
-	"github.com/Stride-Labs/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 func TestNewStoreKVPairWriteListener(t *testing.T) {

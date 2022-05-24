@@ -5,11 +5,11 @@ package tx
 
 import (
 	fmt "fmt"
-	types "github.com/Stride-Labs/cosmos-sdk/codec/types"
-	types1 "github.com/Stride-Labs/cosmos-sdk/crypto/types"
-	github_com_cosmos_cosmos_sdk_types "github.com/Stride-Labs/cosmos-sdk/types"
-	types2 "github.com/Stride-Labs/cosmos-sdk/types"
-	signing "github.com/Stride-Labs/cosmos-sdk/types/tx/signing"
+	types "github.com/cosmos/cosmos-sdk/codec/types"
+	types1 "github.com/cosmos/cosmos-sdk/crypto/types"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	types2 "github.com/cosmos/cosmos-sdk/types"
+	signing "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
@@ -256,7 +256,7 @@ type TxBody struct {
 	Messages []*types.Any `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages,omitempty"`
 	// memo is any arbitrary note/comment to be added to the transaction.
 	// WARNING: in clients, any publicly exposed text should not be called memo,
-	// but should be called `note` instead (see https://github.com/Stride-Labs/cosmos-sdk/issues/9122).
+	// but should be called `note` instead (see https://github.com/cosmos/cosmos-sdk/issues/9122).
 	Memo string `protobuf:"bytes,2,opt,name=memo,proto3" json:"memo,omitempty"`
 	// timeout is the block height after which this transaction will not
 	// be processed by the chain
@@ -669,7 +669,7 @@ func (m *ModeInfo_Multi) GetModeInfos() []*ModeInfo {
 // which must be above some miminum to be accepted into the mempool.
 type Fee struct {
 	// amount is the amount of coins to be paid as a fee
-	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/Stride-Labs/cosmos-sdk/types.Coins" json:"amount"`
+	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
 	// gas_limit is the maximum gas that can be used in transaction processing
 	// before an out of gas error occurs
 	GasLimit uint64 `protobuf:"varint,2,opt,name=gas_limit,json=gasLimit,proto3" json:"gas_limit,omitempty"`

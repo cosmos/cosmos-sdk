@@ -3,17 +3,17 @@ package rest
 import (
 	"net/http"
 
-	"github.com/Stride-Labs/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 
 	"github.com/gorilla/mux"
 
-	govrest "github.com/Stride-Labs/cosmos-sdk/x/gov/client/rest"
+	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 
-	"github.com/Stride-Labs/cosmos-sdk/client"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	"github.com/Stride-Labs/cosmos-sdk/types/rest"
-	govtypes "github.com/Stride-Labs/cosmos-sdk/x/gov/types"
-	"github.com/Stride-Labs/cosmos-sdk/x/upgrade/types"
+	"github.com/cosmos/cosmos-sdk/client"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/rest"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 func registerTxHandlers(

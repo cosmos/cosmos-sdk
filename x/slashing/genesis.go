@@ -1,10 +1,10 @@
 package slashing
 
 import (
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	"github.com/Stride-Labs/cosmos-sdk/x/slashing/keeper"
-	"github.com/Stride-Labs/cosmos-sdk/x/slashing/types"
-	stakingtypes "github.com/Stride-Labs/cosmos-sdk/x/staking/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // InitGenesis initialize default parameters

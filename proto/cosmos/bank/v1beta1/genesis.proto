@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/bank/v1beta1/bank.proto";
 
-option go_package = "github.com/Stride-Labs/cosmos-sdk/x/bank/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
 // GenesisState defines the bank module's genesis state.
 message GenesisState {
@@ -18,7 +18,7 @@ message GenesisState {
   // supply represents the total supply. If it is left empty, then supply will be calculated based on the provided
   // balances. Otherwise, it will be used to validate that the sum of the balances equals this amount.
   repeated cosmos.base.v1beta1.Coin supply = 3
-      [(gogoproto.castrepeated) = "github.com/Stride-Labs/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
   // denom_metadata defines the metadata of the differents coins.
   repeated Metadata denom_metadata = 4 [(gogoproto.moretags) = "yaml:\"denom_metadata\"", (gogoproto.nullable) = false];
@@ -35,5 +35,5 @@ message Balance {
 
   // coins defines the different coins this balance holds.
   repeated cosmos.base.v1beta1.Coin coins = 2
-      [(gogoproto.castrepeated) = "github.com/Stride-Labs/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }

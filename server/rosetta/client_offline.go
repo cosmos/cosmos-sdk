@@ -6,9 +6,9 @@ import (
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	crgerrs "github.com/Stride-Labs/cosmos-sdk/server/rosetta/lib/errors"
+	crgerrs "github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
 
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ---------- cosmos-rosetta-gateway.types.NetworkInformationProvider implementation ------------ //

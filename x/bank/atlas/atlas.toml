@@ -1,6 +1,6 @@
 [module]
 description = "The bank module is responsible for handling multi-asset coin transfers between accounts and tracking special-case pseudo-transfers which must work differently with particular kinds of accounts."
-homepage = "https://github.com/Stride-Labs/cosmos-sdk"
+homepage = "https://github.com/cosmos/cosmos-sdk"
 keywords = [
   "tokens",
   "bank",
@@ -13,7 +13,7 @@ keywords = [
 name = "x/bank"
 
 [bug_tracker]
-url = "https://github.com/Stride-Labs/cosmos-sdk/issues"
+url = "https://github.com/cosmos/cosmos-sdk/issues"
 
 [[authors]]
 name = "alexanderbez"
@@ -29,6 +29,6 @@ name = "alessio"
 
 [version]
 documentation = "https://raw.githubusercontent.com/cosmos/cosmos-sdk/master/x/bank/atlas/atlas-v0.39.1.md"
-repo = "https://github.com/Stride-Labs/cosmos-sdk/releases/tag/v0.39.2"
+repo = "https://github.com/cosmos/cosmos-sdk/releases/tag/v0.39.2"
 sdk_compat = "v0.39.x"
 version = "v0.39.2"

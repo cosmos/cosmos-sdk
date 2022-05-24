@@ -11,12 +11,12 @@ import (
 	tmprotocrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 	"gopkg.in/yaml.v2"
 
-	"github.com/Stride-Labs/cosmos-sdk/codec"
-	codectypes "github.com/Stride-Labs/cosmos-sdk/codec/types"
-	cryptocodec "github.com/Stride-Labs/cosmos-sdk/crypto/codec"
-	cryptotypes "github.com/Stride-Labs/cosmos-sdk/crypto/types"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	sdkerrors "github.com/Stride-Labs/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (

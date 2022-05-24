@@ -8,14 +8,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/Stride-Labs/cosmos-sdk/client"
-	"github.com/Stride-Labs/cosmos-sdk/crypto/hd"
-	"github.com/Stride-Labs/cosmos-sdk/testutil"
-	"github.com/Stride-Labs/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
-	"github.com/Stride-Labs/cosmos-sdk/client/flags"
-	"github.com/Stride-Labs/cosmos-sdk/crypto/keyring"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_runExportCmd(t *testing.T) {

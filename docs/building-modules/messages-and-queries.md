@@ -22,7 +22,7 @@ Starting from v0.40, defining Protobuf `Msg` services is the recommended way to 
 
 See an example of a `Msg` service definition from `x/bank` module:
 
-+++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L10-L17
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L10-L17
 
 Each `Msg` service method must have exactly one argument, which must implement the `sdk.Msg` interface, and a Protobuf response. The naming convention is to call the RPC argument `Msg<service-rpc-name>` and the RPC response `Msg<service-rpc-name>Response`. For example:
 
@@ -49,7 +49,7 @@ Amino `LegacyMsg`s can be defined as protobuf messages. The messages definition 
 
 A `LegacyMsg` is typically accompanied by a standard constructor function, that is called from one of the [module's interface](./module-interfaces.md). `message`s also need to implement the `sdk.Msg` interface:
 
-+++ https://github.com/Stride-Labs/cosmos-sdk/blob/4a1b2fba43b1052ca162b3a1e0b6db6db9c26656/types/tx_msg.go#L10-L33
++++ https://github.com/cosmos/cosmos-sdk/blob/4a1b2fba43b1052ca162b3a1e0b6db6db9c26656/types/tx_msg.go#L10-L33
 
 It extends `proto.Message` and contains the following methods:
 
@@ -61,7 +61,7 @@ It extends `proto.Message` and contains the following methods:
 
 See an example implementation of a `message` from the `gov` module:
 
-+++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0-rc1/x/gov/types/msgs.go#L77-L125
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/gov/types/msgs.go#L77-L125
 
 ## Queries
 
@@ -73,7 +73,7 @@ Starting from v0.40, the prefered way to define queries is by using [Protobuf se
 
 Here's an example of such a `Query` service definition:
 
-+++ https://github.com/Stride-Labs/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/proto/cosmos/auth/v1beta1/query.proto#L12-L23
++++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/proto/cosmos/auth/v1beta1/query.proto#L12-L23
 
 As `proto.Message`s, generated `Response` types implement by default `String()` method of [`fmt.Stringer`](https://golang.org/pkg/fmt/#Stringer).
 
@@ -106,9 +106,9 @@ Store queries query directly for store keys. They use `clientCtx.QueryABCI(req a
 
 See following examples:
 
-+++ https://github.com/Stride-Labs/cosmos-sdk/blob/080fcf1df25ccdf97f3029b6b6f83caaf5a235e4/x/ibc/core/client/query.go#L36-L46
++++ https://github.com/cosmos/cosmos-sdk/blob/080fcf1df25ccdf97f3029b6b6f83caaf5a235e4/x/ibc/core/client/query.go#L36-L46
 
-+++ https://github.com/Stride-Labs/cosmos-sdk/blob/080fcf1df25ccdf97f3029b6b6f83caaf5a235e4/baseapp/abci.go#L722-L749
++++ https://github.com/cosmos/cosmos-sdk/blob/080fcf1df25ccdf97f3029b6b6f83caaf5a235e4/baseapp/abci.go#L722-L749
 
 ## Next {hide}
 

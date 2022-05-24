@@ -7,7 +7,7 @@ import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/distribution/v1beta1/distribution.proto";
 
-option go_package = "github.com/Stride-Labs/cosmos-sdk/x/distribution/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/distribution/types";
 
 // Query defines the gRPC querier service for distribution module.
 service Query {
@@ -143,7 +143,7 @@ message QueryDelegationRewardsRequest {
 message QueryDelegationRewardsResponse {
   // rewards defines the rewards accrued by a delegation.
   repeated cosmos.base.v1beta1.DecCoin rewards = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/Stride-Labs/cosmos-sdk/types.DecCoins"];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"];
 }
 
 // QueryDelegationTotalRewardsRequest is the request type for the
@@ -162,7 +162,7 @@ message QueryDelegationTotalRewardsResponse {
   repeated DelegationDelegatorReward rewards = 1 [(gogoproto.nullable) = false];
   // total defines the sum of all the rewards.
   repeated cosmos.base.v1beta1.DecCoin total = 2
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/Stride-Labs/cosmos-sdk/types.DecCoins"];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"];
 }
 
 // QueryDelegatorValidatorsRequest is the request type for the
@@ -214,5 +214,5 @@ message QueryCommunityPoolRequest {}
 message QueryCommunityPoolResponse {
   // pool defines community pool's coins.
   repeated cosmos.base.v1beta1.DecCoin pool = 1
-      [(gogoproto.castrepeated) = "github.com/Stride-Labs/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }

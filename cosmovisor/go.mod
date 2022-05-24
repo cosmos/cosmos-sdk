@@ -1,4 +1,4 @@
-module github.com/Stride-Labs/cosmos-sdk/cosmovisor
+module github.com/cosmos/cosmos-sdk/cosmovisor
 
 go 1.14
 

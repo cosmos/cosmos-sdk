@@ -4,10 +4,10 @@ package testdata;
 import "google/protobuf/any.proto";
 import "testdata.proto";
 
-option go_package = "github.com/Stride-Labs/cosmos-sdk/testutil/testdata";
+option go_package = "github.com/cosmos/cosmos-sdk/testutil/testdata";
 
 // Query tests the protobuf Query service as defined in
-// https://github.com/Stride-Labs/cosmos-sdk/issues/5921.
+// https://github.com/cosmos/cosmos-sdk/issues/5921.
 service Query {
   rpc Echo(EchoRequest) returns (EchoResponse);
   rpc SayHello(SayHelloRequest) returns (SayHelloResponse);

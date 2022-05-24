@@ -1,8 +1,8 @@
 package v040
 
 import (
-	v038distribution "github.com/Stride-Labs/cosmos-sdk/x/distribution/legacy/v038"
-	v040distribution "github.com/Stride-Labs/cosmos-sdk/x/distribution/types"
+	v038distribution "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v038"
+	v040distribution "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // Migrate accepts exported x/distribution genesis state from v0.38 and migrates it

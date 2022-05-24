@@ -157,7 +157,7 @@ In some circumstances, PRs that don't meet the aforementioned criteria might be 
 
 ### Stable Release Exception - Procedure
 
-1. Check that the bug is either fixed or not reproducible in `master`. It is, in general, not appropriate to release bug fixes for stable releases without first testing them in `master`. Please apply the label [v0.43](https://github.com/Stride-Labs/cosmos-sdk/milestone/26) to the issue.
+1. Check that the bug is either fixed or not reproducible in `master`. It is, in general, not appropriate to release bug fixes for stable releases without first testing them in `master`. Please apply the label [v0.43](https://github.com/cosmos/cosmos-sdk/milestone/26) to the issue.
 2. Add a comment to the issue and ensure it contains the following information (see the bug template below):
 
 - **[Impact]** An explanation of the bug on users and justification for backporting the fix to the stable release.

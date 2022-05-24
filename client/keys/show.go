@@ -7,13 +7,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/Stride-Labs/cosmos-sdk/client"
-	"github.com/Stride-Labs/cosmos-sdk/crypto/keyring"
-	"github.com/Stride-Labs/cosmos-sdk/crypto/keys/multisig"
-	"github.com/Stride-Labs/cosmos-sdk/crypto/ledger"
-	cryptotypes "github.com/Stride-Labs/cosmos-sdk/crypto/types"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	sdkerr "github.com/Stride-Labs/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/ledger"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerr "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (

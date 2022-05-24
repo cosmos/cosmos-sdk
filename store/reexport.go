@@ -1,7 +1,7 @@
 package store
 
 import (
-	"github.com/Stride-Labs/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // Import cosmos-sdk/types/store.go for convenience.

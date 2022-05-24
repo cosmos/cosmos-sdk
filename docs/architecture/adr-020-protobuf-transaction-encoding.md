@@ -9,7 +9,7 @@
 - 2020 May 14: Describe public key encoding
 - 2020 June 08: Store `TxBody` and `AuthInfo` as bytes in `SignDoc`; Document `TxRaw` as broadcast and storage type.
 - 2020 August 07: Use ADR 027 for serializing `SignDoc`.
-- 2020 August 19: Move sequence field from `SignDoc` to `SignerInfo`, as discussed in [#6966](https://github.com/Stride-Labs/cosmos-sdk/issues/6966).
+- 2020 August 19: Move sequence field from `SignDoc` to `SignerInfo`, as discussed in [#6966](https://github.com/cosmos/cosmos-sdk/issues/6966).
 - 2020 September 25: Remove `PublicKey` type in favor of `secp256k1.PubKey`, `ed25519.PubKey` and `multisig.LegacyAminoPubKey`.
 - 2020 October 15: Add `GetAccount` and `GetAccountWithHeight` methods to the `AccountRetriever` interface.
 - 2021 Feb 24: The SDK does not use Tendermint's `PubKey` interface anymore, but its own `cryptotypes.PubKey`. Updates to reflect this.
@@ -34,8 +34,8 @@ With this in mind, we will tackle the migration path via two main areas, txs and
 querying. However, this ADR solely focuses on transactions. Querying should be
 addressed in a future ADR, but it should build off of these proposals.
 
-Based on detailed discussions ([\#6030](https://github.com/Stride-Labs/cosmos-sdk/issues/6030)
-and [\#6078](https://github.com/Stride-Labs/cosmos-sdk/issues/6078)), the original
+Based on detailed discussions ([\#6030](https://github.com/cosmos/cosmos-sdk/issues/6030)
+and [\#6078](https://github.com/cosmos/cosmos-sdk/issues/6078)), the original
 design for transactions was changed substantially from an `oneof` /JSON-signing
 approach to the approach described below.
 
@@ -239,7 +239,7 @@ endpoint before broadcasting.
 
 #### `SIGN_MODE_TEXTUAL`
 
-As was discussed extensively in [\#6078](https://github.com/Stride-Labs/cosmos-sdk/issues/6078),
+As was discussed extensively in [\#6078](https://github.com/cosmos/cosmos-sdk/issues/6078),
 there is a desire for a human-readable signing encoding, especially for hardware
 wallets like the [Ledger](https://www.ledger.com) which display
 transaction contents to users before signing. JSON was an attempt at this but
@@ -270,7 +270,7 @@ processors because:
   not `TxBody`)
 
 There are also scenarios where we may choose to safely ignore unknown fields
-(https://github.com/Stride-Labs/cosmos-sdk/issues/6078#issuecomment-624400188) to
+(https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-624400188) to
 provide graceful forwards compatibility with newer clients.
 
 We propose that field numbers with bit 11 set (for most use cases this is
@@ -355,8 +355,8 @@ generate or broadcast a transaction. For example:
 
 ```go
 import "github.com/spf13/cobra"
-import "github.com/Stride-Labs/cosmos-sdk/client"
-import "github.com/Stride-Labs/cosmos-sdk/client/tx"
+import "github.com/cosmos/cosmos-sdk/client"
+import "github.com/cosmos/cosmos-sdk/client/tx"
 
 func NewCmdDoSomething(clientCtx client.Context) *cobra.Command {
 	return &cobra.Command{
@@ -379,7 +379,7 @@ can gracefully transition away from Amino JSON.
 
 ### `SIGN_MODE_DIRECT_AUX`
 
-(\*Documented as option (3) in https://github.com/Stride-Labs/cosmos-sdk/issues/6078#issuecomment-628026933)
+(\*Documented as option (3) in https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-628026933)
 
 We could add a mode `SIGN_MODE_DIRECT_AUX`
 to support scenarios where multiple signatures
@@ -437,7 +437,7 @@ message SignDocAux {
 
 ### `SIGN_MODE_DIRECT_RELAXED`
 
-(_Documented as option (1)(a) in https://github.com/Stride-Labs/cosmos-sdk/issues/6078#issuecomment-628026933_)
+(_Documented as option (1)(a) in https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-628026933_)
 
 This is a variation of `SIGN_MODE_DIRECT` where multiple signers wouldn't need to
 coordinate public keys and signing modes in advance. It would involve an alternate

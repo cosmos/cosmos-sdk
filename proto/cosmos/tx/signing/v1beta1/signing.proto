@@ -4,7 +4,7 @@ package cosmos.tx.signing.v1beta1;
 import "cosmos/crypto/multisig/v1beta1/multisig.proto";
 import "google/protobuf/any.proto";
 
-option go_package = "github.com/Stride-Labs/cosmos-sdk/types/tx/signing";
+option go_package = "github.com/cosmos/cosmos-sdk/types/tx/signing";
 
 // SignMode represents a signing mode with its own security guarantees.
 enum SignMode {

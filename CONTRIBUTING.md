@@ -22,14 +22,14 @@ Contributing to this repo can mean many things such as participating in
 discussion or proposing code changes. To ensure a smooth workflow for all
 contributors, the general procedure for contributing has been established:
 
-1. Start by browsing [new issues](https://github.com/Stride-Labs/cosmos-sdk/issues) and [discussions](https://github.com/Stride-Labs/cosmos-sdk/discussions). If you are looking for something interesting or if you have something in your mind, there is a chance it was has been discussed.
+1. Start by browsing [new issues](https://github.com/cosmos/cosmos-sdk/issues) and [discussions](https://github.com/cosmos/cosmos-sdk/discussions). If you are looking for something interesting or if you have something in your mind, there is a chance it was has been discussed.
 
-- Looking for a good place to start contributing? How about checking out some [good first issues](https://github.com/Stride-Labs/cosmos-sdk/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)?
+- Looking for a good place to start contributing? How about checking out some [good first issues](https://github.com/cosmos/cosmos-sdk/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)?
 
 2. Determine whether a GitHub issue or discussion is more appropriate for your needs:
-1. If want to propose something new that requires specification or an additional design, or you would like to change a process, start with a [new discussion](https://github.com/Stride-Labs/cosmos-sdk/discussions/new). With discussions, we can better handle the design process using discussion threads. A discussion usually leads to one or more issues.
-1. If the issue you want addressed is a specific proposal or a bug, then open a [new issue](https://github.com/Stride-Labs/cosmos-sdk/issues/new/choose).
-1. Review existing [issues](https://github.com/Stride-Labs/cosmos-sdk/issues) to find an issue you'd like to help with.
+1. If want to propose something new that requires specification or an additional design, or you would like to change a process, start with a [new discussion](https://github.com/cosmos/cosmos-sdk/discussions/new). With discussions, we can better handle the design process using discussion threads. A discussion usually leads to one or more issues.
+1. If the issue you want addressed is a specific proposal or a bug, then open a [new issue](https://github.com/cosmos/cosmos-sdk/issues/new/choose).
+1. Review existing [issues](https://github.com/cosmos/cosmos-sdk/issues) to find an issue you'd like to help with.
 1. Participate in thoughtful discussion on that issue.
 1. If you would like to contribute:
    1. Ensure that the proposal has been accepted.
@@ -49,7 +49,7 @@ taken place in a GitHub issue, that PR runs a high likelihood of being rejected.
 
 The Cosmos SDK has many stakeholders contributing and shaping the project. Regen Network Development leads the Cosmos SDK R&D, and welcomes long-term contributors and additional maintainers from other projects. We use self-organizing principles to coordinate and collaborate across organizations in structured "Working Groups" that focus on specific problem domains or architectural components of the Cosmos SDK.
 
-The developers are organized in working groups which are listed on a ["Working Groups & Arch Process" Github Issue](https://github.com/Stride-Labs/cosmos-sdk/issues/9058) (pinned at the top of the [issues list](https://github.com/Stride-Labs/cosmos-sdk/issues)).
+The developers are organized in working groups which are listed on a ["Working Groups & Arch Process" Github Issue](https://github.com/cosmos/cosmos-sdk/issues/9058) (pinned at the top of the [issues list](https://github.com/cosmos/cosmos-sdk/issues)).
 
 The important development announcements are shared on [Discord](https://discord.com/invite/cosmosnetwork) in the \#dev-announcements channel.
 
@@ -64,7 +64,7 @@ If you would like to join one of those calls, then please contact us on [Discord
 
 ## Architecture Decision Records (ADR)
 
-When proposing an architecture decision for the Cosmos SDK, please start by opening an [issue](https://github.com/Stride-Labs/cosmos-sdk/issues/new/choose) or a [discussion](https://github.com/Stride-Labs/cosmos-sdk/discussions/new) with a summary of the proposal. Once the proposal has been discussed and there is rough alignment on a high-level approach to the design, the [ADR creation process](https://github.com/Stride-Labs/cosmos-sdk/blob/master/docs/architecture/PROCESS.md) can begin. We are following this process to ensure all involved parties are in agreement before any party begins coding the proposed implementation. If you would like to see examples of how these are written, please refer to the current [ADRs](https://github.com/Stride-Labs/cosmos-sdk/tree/master/docs/architecture).
+When proposing an architecture decision for the Cosmos SDK, please start by opening an [issue](https://github.com/cosmos/cosmos-sdk/issues/new/choose) or a [discussion](https://github.com/cosmos/cosmos-sdk/discussions/new) with a summary of the proposal. Once the proposal has been discussed and there is rough alignment on a high-level approach to the design, the [ADR creation process](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/PROCESS.md) can begin. We are following this process to ensure all involved parties are in agreement before any party begins coding the proposed implementation. If you would like to see examples of how these are written, please refer to the current [ADRs](https://github.com/cosmos/cosmos-sdk/tree/master/docs/architecture).
 
 ## Development Procedure
 
@@ -268,7 +268,7 @@ is broken up into three distinct stages: **Strategy Discovery**, **Concept Appro
 
 - Architecture Decision Records (ADRs) may be proposed by any contributors or maintainers of the Cosmos SDK,
   and should follow the guidelines outlined in the
-  [ADR Creation Process](https://github.com/Stride-Labs/cosmos-sdk/blob/master/docs/architecture/PROCESS.md)
+  [ADR Creation Process](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/PROCESS.md)
 - After proposal, a time bound period for Request for Comment (RFC) on ADRs commences
 - ADRs are intended to be iterative, and may be merged into `master` while still in a `Proposed` status
 

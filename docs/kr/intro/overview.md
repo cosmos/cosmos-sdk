@@ -6,7 +6,7 @@ order: 1
 
 ## 코스모스 SDK는 무엇인가?
 
-[코스모스 SDK](https://github.com/Stride-Labs/cosmos-sdk)는 코스모스 허브와 같은 다수 자산(multi-asset) 퍼블릭 지분증명 블록체인과 권한증명(PoA, Proof-of-Authority) 블록체인을 만들 수 있는 오픈소스 프레임워크입니다. 코스모스 SDK를 사용하여 만들어진 블록체인은 통상 **애플리케이션 특화 블록체인(application-specific blockchain)**이라 불립니다.
+[코스모스 SDK](https://github.com/cosmos/cosmos-sdk)는 코스모스 허브와 같은 다수 자산(multi-asset) 퍼블릭 지분증명 블록체인과 권한증명(PoA, Proof-of-Authority) 블록체인을 만들 수 있는 오픈소스 프레임워크입니다. 코스모스 SDK를 사용하여 만들어진 블록체인은 통상 **애플리케이션 특화 블록체인(application-specific blockchain)**이라 불립니다.
 
 코스모스 SDK의 목적은 개발자가 간편하게 처음부터 다른 블록체인과 상호환이 가능한 블록체인을 만들 수 있게 하는 것이 목적입니다. 코스모스 SDK는 npm과 같은 프레임워크로 자리잡으며 [텐더민트](https://github.com/tendermint/tendermint) 상의 안전한 블록체인 애플리케이션을 만들 수 있게 자리잡는 것이 목표입니다. SDK 기반 블록체인은 구성적(composable) 모듈을 기반으로 만들어지며, 대다수의 모듈은 오픈 소스로 모든 개발자가 사용할 수 있습니다. 누구나 코스모스 SDK 모듈을 만들 수 있으며, 단순히 블록체인 애플리케이션에 모듈을 불러와 이미 개발된 모듈을 간편하게 사용할 수 있습니다. 또한, 코스모스 SDK는 능력성 기반(capabilities-based) 시스템으로 모듈 간 인터랙션의 보안성을 더욱 직관적으로 설계할 수 있습니다. 능력성 기반 시스템에 대해 더 알고싶으시다면 [이 항목](./ocap.md)을 참고하세요.
 

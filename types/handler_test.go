@@ -6,8 +6,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/Stride-Labs/cosmos-sdk/tests/mocks"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/tests/mocks"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type handlerTestSuite struct {

@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos.distribution.v1beta1;
 
-option go_package            = "github.com/Stride-Labs/cosmos-sdk/x/distribution/types";
+option go_package            = "github.com/cosmos/cosmos-sdk/x/distribution/types";
 option (gogoproto.equal_all) = true;
 
 import "gogoproto/gogo.proto";
@@ -71,7 +71,7 @@ message MsgFundCommunityPool {
   option (gogoproto.goproto_getters) = false;
 
   repeated cosmos.base.v1beta1.Coin amount = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/Stride-Labs/cosmos-sdk/types.Coins"];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   string depositor = 2;
 }
 

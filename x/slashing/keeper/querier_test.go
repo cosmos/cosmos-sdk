@@ -8,11 +8,11 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/Stride-Labs/cosmos-sdk/codec"
-	"github.com/Stride-Labs/cosmos-sdk/simapp"
-	"github.com/Stride-Labs/cosmos-sdk/x/slashing/keeper"
-	"github.com/Stride-Labs/cosmos-sdk/x/slashing/testslashing"
-	"github.com/Stride-Labs/cosmos-sdk/x/slashing/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	"github.com/cosmos/cosmos-sdk/x/slashing/testslashing"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 func TestNewQuerier(t *testing.T) {

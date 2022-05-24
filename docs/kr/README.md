@@ -30,7 +30,7 @@ This documentation is not complete and it's outdated. Please use the English ver
 
 다음 항목은 실제로 작동하는 SDK 기반 블록체인에 필요한 모든 정보를 포함하고 있습니다.
 
-> _NOTE_: 코스모스 SDK 지원 문서의 완성도와 정확성을 높이기 위해 해당 문서는 꾸준히 업데이트 되고 있습니다. 혹시 오류나 제안사항이 있으시다면 [코스모스 포럼](https://forum.cosmos.network) 또는 [깃허브 이슈를](https://github.com/Stride-Labs/cosmos-sdk/issues/new) 통해서 알려주시면 감사하겠습니다.
+> _NOTE_: 코스모스 SDK 지원 문서의 완성도와 정확성을 높이기 위해 해당 문서는 꾸준히 업데이트 되고 있습니다. 혹시 오류나 제안사항이 있으시다면 [코스모스 포럼](https://forum.cosmos.network) 또는 [깃허브 이슈를](https://github.com/cosmos/cosmos-sdk/issues/new) 통해서 알려주시면 감사하겠습니다.
 
 - [인트로](./intro/README.md): 코스모스 SDK에 대한 high-level 소개 자료
 - [Gaia](https://github.com/cosmos/gaia/blob/master/docs/translations/kr/README.md): Gaia 애플리케이션(현재 코스모스 허브 명칭)에 대한 모든 문서들이 있습니다. Gaia 테스트넷에 참여하는 방법에 대한 정보
@@ -46,4 +46,4 @@ This documentation is not complete and it's outdated. Please use the English ver
 
 ## 기여하기
 
-코스모스 도큐멘테이션 또는 코드 업데이트 규칙에 관련해서는 [이 파일](https://github.com/Stride-Labs/cosmos-sdk/blob/master/docs/DOCS_README.md)을 참고해주세요.
+코스모스 도큐멘테이션 또는 코드 업데이트 규칙에 관련해서는 [이 파일](https://github.com/cosmos/cosmos-sdk/blob/master/docs/DOCS_README.md)을 참고해주세요.

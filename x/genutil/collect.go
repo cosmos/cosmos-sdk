@@ -16,12 +16,12 @@ import (
 	cfg "github.com/tendermint/tendermint/config"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/Stride-Labs/cosmos-sdk/client"
-	"github.com/Stride-Labs/cosmos-sdk/codec"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	bankexported "github.com/Stride-Labs/cosmos-sdk/x/bank/exported"
-	"github.com/Stride-Labs/cosmos-sdk/x/genutil/types"
-	stakingtypes "github.com/Stride-Labs/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
+	"github.com/cosmos/cosmos-sdk/x/genutil/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // GenAppStateFromConfig gets the genesis app state from the config

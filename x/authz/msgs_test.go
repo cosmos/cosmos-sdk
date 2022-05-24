@@ -6,10 +6,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	cdctypes "github.com/Stride-Labs/cosmos-sdk/codec/types"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	"github.com/Stride-Labs/cosmos-sdk/x/authz"
-	banktypes "github.com/Stride-Labs/cosmos-sdk/x/bank/types"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 var (

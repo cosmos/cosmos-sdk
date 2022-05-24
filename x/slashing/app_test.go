@@ -8,14 +8,14 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/Stride-Labs/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/Stride-Labs/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/Stride-Labs/cosmos-sdk/simapp"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	authtypes "github.com/Stride-Labs/cosmos-sdk/x/auth/types"
-	banktypes "github.com/Stride-Labs/cosmos-sdk/x/bank/types"
-	"github.com/Stride-Labs/cosmos-sdk/x/slashing/types"
-	stakingtypes "github.com/Stride-Labs/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (

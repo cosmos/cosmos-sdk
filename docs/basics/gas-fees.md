@@ -21,7 +21,7 @@ In the Cosmos SDK, `gas` is a special unit that is used to track the consumption
 
 In the Cosmos SDK, `gas` is a simple alias for `uint64`, and is managed by an object called a _gas meter_. Gas meters implement the `GasMeter` interface
 
-+++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0-rc3/store/types/gas.go#L34-L43
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/store/types/gas.go#L34-L43
 
 where:
 
@@ -71,12 +71,12 @@ The `AnteHandler` is run for every transaction during `CheckTx` and `DeliverTx`,
 type AnteHandler func(ctx Context, tx Tx, simulate bool) (newCtx Context, result Result, abort bool)
 ```
 
-The `anteHandler` is not implemented in the core SDK but in a module. This gives the possibility to developers to choose which version of `AnteHandler` fits their application's needs. That said, most applications today use the default implementation defined in the [`auth` module](https://github.com/Stride-Labs/cosmos-sdk/tree/master/x/auth). Here is what the `anteHandler` is intended to do in a normal Cosmos SDK application:
+The `anteHandler` is not implemented in the core SDK but in a module. This gives the possibility to developers to choose which version of `AnteHandler` fits their application's needs. That said, most applications today use the default implementation defined in the [`auth` module](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth). Here is what the `anteHandler` is intended to do in a normal Cosmos SDK application:
 
 - Verify that the transaction are of the correct type. Transaction types are defined in the module that implements the `anteHandler`, and they follow the transaction interface:
-  +++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0-rc3/types/tx_msg.go#L49-L57
+  +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/tx_msg.go#L49-L57
   This enables developers to play with various types for the transaction of their application. In the default `auth` module, the default transaction type is `Tx`:
-  +++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0-rc3/proto/cosmos/tx/v1beta1/tx.proto#L12-L25
+  +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/proto/cosmos/tx/v1beta1/tx.proto#L12-L25
 - Verify signatures for each [`message`](../building-modules/messages-and-queries.md#messages) contained in the transaction. Each `message` should be signed by one or multiple sender(s), and these signatures must be verified in the `anteHandler`.
 - During `CheckTx`, verify that the gas prices provided with the transaction is greater than the local `min-gas-prices` (as a reminder, gas-prices can be deducted from the following equation: `fees = gas * gas-prices`). `min-gas-prices` is a parameter local to each full-node and used during `CheckTx` to discard transactions that do not provide a minimum amount of fees. This ensure that the mempool cannot be spammed with garbage transactions.
 - Verify that the sender of the transaction has enough funds to cover for the `fees`. When the end-user generates a transaction, they must indicate 2 of the 3 following parameters (the third one being implicit): `fees`, `gas` and `gas-prices`. This signals how much they are willing to pay for nodes to execute their transaction. The provided `gas` value is stored in a parameter called `GasWanted` for later use.

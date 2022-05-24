@@ -41,7 +41,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 Since these migrations are functions that need access to a Keeper's store, use a wrapper around the keepers called `Migrator` as shown in this example:
 
-+++ https://github.com/Stride-Labs/cosmos-sdk/blob/6ac8898fec9bd7ea2c1e5c79e0ed0c3f827beb55/x/bank/keeper/migrations.go#L8-L21
++++ https://github.com/cosmos/cosmos-sdk/blob/6ac8898fec9bd7ea2c1e5c79e0ed0c3f827beb55/x/bank/keeper/migrations.go#L8-L21
 
 ## Writing Migration Scripts
 
@@ -54,4 +54,4 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 }
 ```
 
-To see example code of changes that were implemented in a migration of balance keys, check out [migrateBalanceKeys](https://github.com/Stride-Labs/cosmos-sdk/blob/36f68eb9e041e20a5bb47e216ac5eb8b91f95471/x/bank/legacy/v043/store.go#L41-L62). For context, this code introduced migrations of the bank store that updated addresses to be prefixed by their length in bytes as outlined in [ADR-028](../architecture/adr-028-public-key-addresses.md).
+To see example code of changes that were implemented in a migration of balance keys, check out [migrateBalanceKeys](https://github.com/cosmos/cosmos-sdk/blob/36f68eb9e041e20a5bb47e216ac5eb8b91f95471/x/bank/legacy/v043/store.go#L41-L62). For context, this code introduced migrations of the bank store that updated addresses to be prefixed by their length in bytes as outlined in [ADR-028](../architecture/adr-028-public-key-addresses.md).

@@ -1,7 +1,7 @@
 package feegrant
 
 import (
-	sdkerrors "github.com/Stride-Labs/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Codes for governance errors

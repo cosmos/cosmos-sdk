@@ -3,13 +3,13 @@ package feegrant
 import (
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/Stride-Labs/cosmos-sdk/codec/types"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	sdkerrors "github.com/Stride-Labs/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // TODO: Revisit this once we have propoer gas fee framework.
-// Tracking issues https://github.com/Stride-Labs/cosmos-sdk/issues/9054, https://github.com/Stride-Labs/cosmos-sdk/discussions/9072
+// Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054, https://github.com/cosmos/cosmos-sdk/discussions/9072
 const (
 	gasCostPerIteration = uint64(10)
 )

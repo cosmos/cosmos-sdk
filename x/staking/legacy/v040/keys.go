@@ -1,5 +1,5 @@
 // Package v040 is copy-pasted from:
-// https://github.com/Stride-Labs/cosmos-sdk/blob/v0.41.0/x/staking/types/keys.go
+// https://github.com/cosmos/cosmos-sdk/blob/v0.41.0/x/staking/types/keys.go
 package v040
 
 import (
@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"time"
 
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	v040auth "github.com/Stride-Labs/cosmos-sdk/x/auth/legacy/v040"
-	"github.com/Stride-Labs/cosmos-sdk/x/staking/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	v040auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v040"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (

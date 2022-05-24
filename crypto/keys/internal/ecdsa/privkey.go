@@ -86,7 +86,7 @@ func (sk *PrivKey) Bytes() []byte {
 // NOTE: this now calls the ecdsa Sign function
 // (not method!) directly as the s value of the signature is needed to
 // low-s normalize the signature value
-// See issue: https://github.com/Stride-Labs/cosmos-sdk/issues/9723
+// See issue: https://github.com/cosmos/cosmos-sdk/issues/9723
 // It then raw encodes the signature as two fixed width 32-byte values
 // concatenated, reusing the code copied from secp256k1_nocgo.go
 func (sk *PrivKey) Sign(msg []byte) ([]byte, error) {

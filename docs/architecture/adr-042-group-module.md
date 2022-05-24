@@ -18,8 +18,8 @@ The legacy amino multi-signature mechanism of the Cosmos SDK has certain limitat
 
 - Key rotation is not possible, although this can be solved with [account rekeying](adr-034-account-rekeying.md).
 - Thresholds can't be changed.
-- UX is cumbersome for non-technical users ([#5661](https://github.com/Stride-Labs/cosmos-sdk/issues/5661)).
-- It requires `legacy_amino` sign mode ([#8141](https://github.com/Stride-Labs/cosmos-sdk/issues/8141)).
+- UX is cumbersome for non-technical users ([#5661](https://github.com/cosmos/cosmos-sdk/issues/5661)).
+- It requires `legacy_amino` sign mode ([#8141](https://github.com/cosmos/cosmos-sdk/issues/8141)).
 
 While the group module is not meant to be a total replacement for the current multi-signature accounts, it provides a solution to the limitations described above, with a more flexible key management system where keys can be added, updated or removed, as well as configurable thresholds.
 It's meant to be used with other access control modules such as [`x/feegrant`](./adr-029-fee-grant-module.md) ans [`x/authz`](adr-030-authz-module.md) to simplify key management for individuals and organizations.
@@ -28,7 +28,7 @@ The proof of concept of the group module can be found in https://github.com/rege
 
 ## Decision
 
-We propose merging the `x/group` module with its supporting [ORM/Table Store package](https://github.com/regen-network/regen-ledger/tree/master/orm) ([#7098](https://github.com/Stride-Labs/cosmos-sdk/issues/7098)) into the Cosmos SDK and continuing development here. There will be a dedicated ADR for the ORM package.
+We propose merging the `x/group` module with its supporting [ORM/Table Store package](https://github.com/regen-network/regen-ledger/tree/master/orm) ([#7098](https://github.com/cosmos/cosmos-sdk/issues/7098)) into the Cosmos SDK and continuing development here. There will be a dedicated ADR for the ORM package.
 
 ### Group
 
@@ -236,7 +236,7 @@ This section outlines the current implementation used in the proof of concept of
 
 #### ORM
 
-The [ORM package](https://github.com/Stride-Labs/cosmos-sdk/discussions/9156) defines tables, sequences and secondary indexes which are used in the group module.
+The [ORM package](https://github.com/cosmos/cosmos-sdk/discussions/9156) defines tables, sequences and secondary indexes which are used in the group module.
 
 Groups are stored in state as part of a `groupTable`, the `group_id` being an auto-increment integer. Group members are stored in a `groupMemberTable`.
 
@@ -265,7 +265,7 @@ Inter-module communication introduced by [ADR-033](adr-033-protobuf-inter-module
 
 ## Further Discussions
 
-- Convergence of `/group` and `x/gov` as both support proposals and voting: https://github.com/Stride-Labs/cosmos-sdk/discussions/9066
+- Convergence of `/group` and `x/gov` as both support proposals and voting: https://github.com/cosmos/cosmos-sdk/discussions/9066
 - `x/group` possible future improvements:
   - Execute proposals on submission (https://github.com/regen-network/regen-ledger/issues/288)
   - Withdraw a proposal (https://github.com/regen-network/cosmos-modules/issues/41)
@@ -275,5 +275,5 @@ Inter-module communication introduced by [ADR-033](adr-033-protobuf-inter-module
 
 - Initial specification:
   - https://gist.github.com/aaronc/b60628017352df5983791cad30babe56#group-module
-  - [#5236](https://github.com/Stride-Labs/cosmos-sdk/pull/5236)
-- Proposal to add `x/group` into the SDK: [#7633](https://github.com/Stride-Labs/cosmos-sdk/issues/7633)
+  - [#5236](https://github.com/cosmos/cosmos-sdk/pull/5236)
+- Proposal to add `x/group` into the SDK: [#7633](https://github.com/cosmos/cosmos-sdk/issues/7633)

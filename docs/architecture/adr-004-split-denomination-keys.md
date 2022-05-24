@@ -13,7 +13,7 @@
 
 ## Context
 
-With permissionless IBC, anyone will be able to send arbitrary denominations to any other account. Currently, all non-zero balances are stored along with the account in an `sdk.Coins` struct, which creates a potential denial-of-service concern, as too many denominations will become expensive to load & store each time the account is modified. See issues [5467](https://github.com/Stride-Labs/cosmos-sdk/issues/5467) and [4982](https://github.com/Stride-Labs/cosmos-sdk/issues/4982) for additional context.
+With permissionless IBC, anyone will be able to send arbitrary denominations to any other account. Currently, all non-zero balances are stored along with the account in an `sdk.Coins` struct, which creates a potential denial-of-service concern, as too many denominations will become expensive to load & store each time the account is modified. See issues [5467](https://github.com/cosmos/cosmos-sdk/issues/5467) and [4982](https://github.com/cosmos/cosmos-sdk/issues/4982) for additional context.
 
 Simply rejecting incoming deposits after a denomination count limit doesn't work, since it opens up a griefing vector: someone could send a user lots of nonsensical coins over IBC, and then prevent the user from receiving real denominations (such as staking rewards).
 
@@ -115,6 +115,6 @@ None in particular.
 
 ## References
 
-- Ref: https://github.com/Stride-Labs/cosmos-sdk/issues/4982
-- Ref: https://github.com/Stride-Labs/cosmos-sdk/issues/5467
-- Ref: https://github.com/Stride-Labs/cosmos-sdk/issues/5492
+- Ref: https://github.com/cosmos/cosmos-sdk/issues/4982
+- Ref: https://github.com/cosmos/cosmos-sdk/issues/5467
+- Ref: https://github.com/cosmos/cosmos-sdk/issues/5492

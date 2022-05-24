@@ -7,12 +7,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/Stride-Labs/cosmos-sdk/codec"
-	"github.com/Stride-Labs/cosmos-sdk/codec/types"
-	"github.com/Stride-Labs/cosmos-sdk/simapp"
-	"github.com/Stride-Labs/cosmos-sdk/testutil/testdata"
-	"github.com/Stride-Labs/cosmos-sdk/x/auth/client/cli"
-	"github.com/Stride-Labs/cosmos-sdk/x/auth/legacy/legacytx"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 func createTestCodec() *codec.LegacyAmino {
@@ -119,7 +119,7 @@ func TestAminoCodecUnpackAnyFails(t *testing.T) {
 }
 
 func TestAminoCodecFullDecodeAndEncode(t *testing.T) {
-	// This tx comes from https://github.com/Stride-Labs/cosmos-sdk/issues/8117.
+	// This tx comes from https://github.com/cosmos/cosmos-sdk/issues/8117.
 	txSigned := `{"type":"cosmos-sdk/StdTx","value":{"msg":[{"type":"cosmos-sdk/MsgCreateValidator","value":{"description":{"moniker":"fulltest","identity":"satoshi","website":"example.com","details":"example inc"},"commission":{"rate":"0.500000000000000000","max_rate":"1.000000000000000000","max_change_rate":"0.200000000000000000"},"min_self_delegation":"1000000","delegator_address":"cosmos14pt0q5cwf38zt08uu0n6yrstf3rndzr5057jys","validator_address":"cosmosvaloper14pt0q5cwf38zt08uu0n6yrstf3rndzr52q28gr","pubkey":{"type":"tendermint/PubKeyEd25519","value":"CYrOiM3HtS7uv1B1OAkknZnFYSRpQYSYII8AtMMtev0="},"value":{"denom":"umuon","amount":"700000000"}}}],"fee":{"amount":[{"denom":"umuon","amount":"6000"}],"gas":"160000"},"signatures":[{"pub_key":{"type":"tendermint/PubKeySecp256k1","value":"AwAOXeWgNf1FjMaayrSnrOOKz+Fivr6DiI/i0x0sZCHw"},"signature":"RcnfS/u2yl7uIShTrSUlDWvsXo2p2dYu6WJC8VDVHMBLEQZWc8bsINSCjOnlsIVkUNNe1q/WCA9n3Gy1+0zhYA=="}],"memo":"","timeout_height":"0"}}`
 	var legacyCdc = simapp.MakeTestEncodingConfig().Amino
 	var tx legacytx.StdTx

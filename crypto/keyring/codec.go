@@ -1,9 +1,9 @@
 package keyring
 
 import (
-	"github.com/Stride-Labs/cosmos-sdk/codec"
-	"github.com/Stride-Labs/cosmos-sdk/codec/legacy"
-	"github.com/Stride-Labs/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 )
 
 func init() {

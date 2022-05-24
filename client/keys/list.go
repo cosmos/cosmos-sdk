@@ -3,7 +3,7 @@ package keys
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/Stride-Labs/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 const flagListNames = "list-names"

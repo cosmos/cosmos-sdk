@@ -15,7 +15,7 @@ This ADR defines an address format for all addressable SDK accounts. That includ
 
 ## Context
 
-Issue [\#3685](https://github.com/Stride-Labs/cosmos-sdk/issues/3685) identified that public key
+Issue [\#3685](https://github.com/cosmos/cosmos-sdk/issues/3685) identified that public key
 address spaces are currently overlapping. We confirmed that it significantly decreases security of Cosmos SDK.
 
 ### Problem
@@ -47,7 +47,7 @@ we concatenate a key type with a public key, hash it and take the first 20 bytes
 
 ### Review and Discussions
 
-In [\#5694](https://github.com/Stride-Labs/cosmos-sdk/issues/5694) we discussed various solutions.
+In [\#5694](https://github.com/cosmos/cosmos-sdk/issues/5694) we discussed various solutions.
 We agreed that 20 bytes it's not future proof, and extending the address length is the only way to allow addresses of different types, various signature types, etc.
 This disqualifies the initial proposal.
 
@@ -60,7 +60,7 @@ In the issue we discussed various modifications:
 
 ### Requirements
 
-- Support currently used tools - we don't want to break an ecosystem, or add a long adaptation period. Ref: https://github.com/Stride-Labs/cosmos-sdk/issues/8041
+- Support currently used tools - we don't want to break an ecosystem, or add a long adaptation period. Ref: https://github.com/cosmos/cosmos-sdk/issues/8041
 - Try to keep the address length small - addresses are widely used in state, both as part of a key and object value.
 
 ### Scope

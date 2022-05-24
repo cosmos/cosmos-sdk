@@ -7,11 +7,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/Stride-Labs/cosmos-sdk/client/rpc"
-	"github.com/Stride-Labs/cosmos-sdk/codec/legacy"
-	clitestutil "github.com/Stride-Labs/cosmos-sdk/testutil/cli"
-	"github.com/Stride-Labs/cosmos-sdk/testutil/network"
-	"github.com/Stride-Labs/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/client/rpc"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 )
 
 type IntegrationTestSuite struct {

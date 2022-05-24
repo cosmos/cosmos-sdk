@@ -8,16 +8,16 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Stride-Labs/cosmos-sdk/client"
-	"github.com/Stride-Labs/cosmos-sdk/client/flags"
-	"github.com/Stride-Labs/cosmos-sdk/crypto/keyring"
-	"github.com/Stride-Labs/cosmos-sdk/server"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	authtypes "github.com/Stride-Labs/cosmos-sdk/x/auth/types"
-	authvesting "github.com/Stride-Labs/cosmos-sdk/x/auth/vesting/types"
-	banktypes "github.com/Stride-Labs/cosmos-sdk/x/bank/types"
-	"github.com/Stride-Labs/cosmos-sdk/x/genutil"
-	genutiltypes "github.com/Stride-Labs/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/server"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 const (

@@ -9,14 +9,14 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/Stride-Labs/cosmos-sdk/testutil"
-	"github.com/Stride-Labs/cosmos-sdk/testutil/network"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	grpctypes "github.com/Stride-Labs/cosmos-sdk/types/grpc"
-	"github.com/Stride-Labs/cosmos-sdk/types/rest"
-	"github.com/Stride-Labs/cosmos-sdk/x/gov/client/cli"
-	govtestutil "github.com/Stride-Labs/cosmos-sdk/x/gov/client/testutil"
-	"github.com/Stride-Labs/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 type IntegrationTestSuite struct {

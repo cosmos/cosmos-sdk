@@ -17,7 +17,7 @@ ENV PACKAGES curl make git libc-dev bash gcc linux-headers eudev-dev python3
 RUN apk add --no-cache $PACKAGES
 
 # Set working directory for the build
-WORKDIR /go/src/github.com/Stride-Labs/cosmos-sdk
+WORKDIR /go/src/github.com/cosmos/cosmos-sdk
 
 # Add source files
 COPY . .
@@ -34,7 +34,7 @@ RUN apk add --update ca-certificates
 WORKDIR /root
 
 # Copy over binaries from the build-env
-COPY --from=build-env /go/src/github.com/Stride-Labs/cosmos-sdk/build/simd /usr/bin/simd
+COPY --from=build-env /go/src/github.com/cosmos/cosmos-sdk/build/simd /usr/bin/simd
 
 EXPOSE 26656 26657 1317 9090
 

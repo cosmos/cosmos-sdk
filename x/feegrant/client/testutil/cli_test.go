@@ -5,7 +5,7 @@ package testutil
 import (
 	"testing"
 
-	"github.com/Stride-Labs/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 
 	"github.com/stretchr/testify/suite"
 )

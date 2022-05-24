@@ -54,7 +54,7 @@ Blockchain Node |  |           Consensus           |  |
 
 此函数构造了以上部分中定义的类型的新应用程序。在应用程的 start 命令中使用，它必须具有 AppCreator 签名。
 
-+++ https://github.com/Stride-Labs/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/server/constructors.go#L20
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/server/constructors.go#L20
 
 以下是此功能执行的主要操作：
 
@@ -79,7 +79,7 @@ Blockchain Node |  |           Consensus           |  |
 
 ### InitChainer
 
-InitChainer 用于根据创始文件（即创始账户的代币余额）初始化应用程序的状态。 当应用程序从 Tendermint 引擎收到`InitChain`消息时调用该消息，该消息是在节点以`appBlockHeight == 0`（即创世）启动。 应用程序必须通过[`SetInitChainer`](https://godoc.org/github.com/Stride-Labs/cosmos-sdk/baseapp#BaseApp.SetInitChainer)方法设置其[constructor](https://docs.cosmos.network/master/basics/app-anatomy.html#constructor-function)中的`Initchainer`。
+InitChainer 用于根据创始文件（即创始账户的代币余额）初始化应用程序的状态。 当应用程序从 Tendermint 引擎收到`InitChain`消息时调用该消息，该消息是在节点以`appBlockHeight == 0`（即创世）启动。 应用程序必须通过[`SetInitChainer`](https://godoc.org/github.com/cosmos/cosmos-sdk/baseapp#BaseApp.SetInitChainer)方法设置其[constructor](https://docs.cosmos.network/master/basics/app-anatomy.html#constructor-function)中的`Initchainer`。
 
 通常，`InitChainer`主要由每个应用程序模块的 InitGenesis 函数组成。 这是通过调用模块管理器的 InitGenesis 函数来完成的，而模块管理器的 InitGenesis 函数将依次调用其包含的每个模块的 InitGenesis 函数。 请注意，必须使用模块管理器的 SetOrderInitGenesis 方法设置模块的 InitGenesis 函数的顺序。 这是在 应用程序的构造函数 application-constructor 中完成的，必须在 SetInitChainer 之前调用 SetOrderInitGenesis。
 
@@ -92,7 +92,7 @@ See an example of an `InitChainer` from [`gaia`](https://github.com/cosmos/gaia)
 
 ### BeginBlocker and EndBlocker
 
-该 SDK 为开发人员提供了在其应用程序中实现自定义代码可能性。 这是通过两个名为 `BeginBlocker` 和 `EndBlocker` 的函数实现的。当应用程序分别从 Tendermint 引擎接收到 `BeginBlock` 和 `EndBlock` 消息时，将调用它们，它们分别在每个块的开始和结尾处发生。应用程序必须通过 [SetBeginBlocker](https://godoc.org/github.com/Stride-Labs/cosmos-sdk/baseapp) 和 [SetEndBlocker](https://godoc.org/github.com/Stride-Labs/cosmos-sdk/baseapp#BaseApp.SetEndBlocker) 方法在其 constructor 中设置 `BeginBlocker` 和 `EndBlocker`。
+该 SDK 为开发人员提供了在其应用程序中实现自定义代码可能性。 这是通过两个名为 `BeginBlocker` 和 `EndBlocker` 的函数实现的。当应用程序分别从 Tendermint 引擎接收到 `BeginBlock` 和 `EndBlock` 消息时，将调用它们，它们分别在每个块的开始和结尾处发生。应用程序必须通过 [SetBeginBlocker](https://godoc.org/github.com/cosmos/cosmos-sdk/baseapp) 和 [SetEndBlocker](https://godoc.org/github.com/cosmos/cosmos-sdk/baseapp#BaseApp.SetEndBlocker) 方法在其 constructor 中设置 `BeginBlocker` 和 `EndBlocker`。
 
 通常，`BeginBlocker` 和 `EndBlocker` 函数主要由每个应用程序模块的 `BeginBlock` 和 `EndBlock` 函数组成。 这是通过调用模块管理器的 BeginBlock 和 EndBlock 函数来完成的，而后者又会调用其包含的每个模块的 BeginBLock 和 EndBlock 函数。 请注意，必须分别在模块管理器中使用 SetOrderBeginBlock 和 SetOrderEndBlock 方法来设置模块的 BegingBlock 和 EndBlock 函数必须调用的顺序。这是通过应用程序的构造函数中的模块管理器完成的，必须调用 SetOrderBeginBlock 和 SetOrderEndBlock 方法。 在 SetBeginBlocker 和 SetEndBlocker 函数之前。
 
@@ -137,7 +137,7 @@ AppModule 在模块上公开了一组有用的方法，这些方法有助于将�
 
 模块开发人员在构建自己的模块时会创建自定义消息类型。 通常的做法是在消息的类型声明前加上 `Msg`。 例如，消息类型 `MsgSend` 允许用户传输 tokens：
 
-+++ https://github.com/Stride-Labs/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/bank/internal/types/msgs.go#L10-L15
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/bank/internal/types/msgs.go#L10-L15
 
 它由 `bank` 模块的回调 `handler` 处理，最终会调用 `auth` 模块来写 `keeper` 以更新状态。
 
@@ -155,13 +155,13 @@ AppModule 在模块上公开了一组有用的方法，这些方法有助于将�
 
 处理程序函数返回结果类型为 sdk.Result，该结果通知应用程序消息是否已成功处理：
 
-+++ https://github.com/Stride-Labs/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/result.go#L15-L40
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/result.go#L15-L40
 
 ### Querier
 
 `Queriers` 与 `handlers` 非常相似，除了它们向状态查询用户而不是处理事务。 最终用户从 interface 发起 query，最终用户会提供 `queryRoute` 和一些 `data`。 然后使用 `queryRoute` 通过 `baseapp` 的 `handleQueryCustom` 方法查询到正确的应用程序的 `querier` 函数
 
-+++ https://github.com/Stride-Labs/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/baseapp/abci.go#L395-L453
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/baseapp/abci.go#L395-L453
 
 模块的 Querier 是在名为 querier.go 的文件中定义的，包括：
 
@@ -201,7 +201,7 @@ AppModule 在模块上公开了一组有用的方法，这些方法有助于将�
 
 - `RegisterRoutes` 函数，用于注册路由。从主应用程序的接口 application-interfaces 中为应用程序内使用的每个模块调用此函数。SDK 中使用的路由器是 [Gorilla's mux](https://github.com/gorilla/mux)。
 - 需要公开的每个查询或事务创建功能的自定义请求类型定义。这些自定义请求类型基于 Cosmos SDK 的基本`请求`类型构建：
-  +++ https://github.com/Stride-Labs/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/rest/rest.go#L47-L60
+  +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/rest/rest.go#L47-L60
 
 - 每个请求的一个处理函数可以找到给定的模块。 这些功能实现了服务请求所需的核心逻辑。
 

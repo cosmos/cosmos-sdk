@@ -1,8 +1,8 @@
 package keyring
 
 import (
-	"github.com/Stride-Labs/cosmos-sdk/crypto/hd"
-	cryptotypes "github.com/Stride-Labs/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // Language is a language to create the BIP 39 mnemonic in.

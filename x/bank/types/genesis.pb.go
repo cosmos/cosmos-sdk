@@ -5,8 +5,8 @@ package types
 
 import (
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/Stride-Labs/cosmos-sdk/types"
-	types "github.com/Stride-Labs/cosmos-sdk/types"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
@@ -33,7 +33,7 @@ type GenesisState struct {
 	Balances []Balance `protobuf:"bytes,2,rep,name=balances,proto3" json:"balances"`
 	// supply represents the total supply. If it is left empty, then supply will be calculated based on the provided
 	// balances. Otherwise, it will be used to validate that the sum of the balances equals this amount.
-	Supply github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=supply,proto3,castrepeated=github.com/Stride-Labs/cosmos-sdk/types.Coins" json:"supply"`
+	Supply github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=supply,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"supply"`
 	// denom_metadata defines the metadata of the differents coins.
 	DenomMetadata []Metadata `protobuf:"bytes,4,rep,name=denom_metadata,json=denomMetadata,proto3" json:"denom_metadata" yaml:"denom_metadata"`
 }
@@ -105,7 +105,7 @@ type Balance struct {
 	// address is the address of the balance holder.
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 	// coins defines the different coins this balance holds.
-	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=coins,proto3,castrepeated=github.com/Stride-Labs/cosmos-sdk/types.Coins" json:"coins"`
+	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
 }
 
 func (m *Balance) Reset()         { *m = Balance{} }

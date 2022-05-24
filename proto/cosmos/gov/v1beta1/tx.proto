@@ -7,7 +7,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 
-option go_package = "github.com/Stride-Labs/cosmos-sdk/x/gov/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
 
 // Msg defines the bank Msg service.
 service Msg {
@@ -37,7 +37,7 @@ message MsgSubmitProposal {
   google.protobuf.Any content                       = 1 [(cosmos_proto.accepts_interface) = "Content"];
   repeated cosmos.base.v1beta1.Coin initial_deposit = 2 [
     (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/Stride-Labs/cosmos-sdk/types.Coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"initial_deposit\""
   ];
   string proposer = 3;
@@ -92,7 +92,7 @@ message MsgDeposit {
   uint64   proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
   string   depositor   = 2;
   repeated cosmos.base.v1beta1.Coin amount = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/Stride-Labs/cosmos-sdk/types.Coins"];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
 // MsgDepositResponse defines the Msg/Deposit response type.

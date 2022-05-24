@@ -152,4 +152,4 @@ Proposed
 
 ## References
 
-- [#4554](https://github.com/Stride-Labs/cosmos-sdk/issues/4554)
+- [#4554](https://github.com/cosmos/cosmos-sdk/issues/4554)

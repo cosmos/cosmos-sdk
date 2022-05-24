@@ -6,10 +6,10 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	cryptotypes "github.com/Stride-Labs/cosmos-sdk/crypto/types"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	authtypes "github.com/Stride-Labs/cosmos-sdk/x/auth/types"
-	vestexported "github.com/Stride-Labs/cosmos-sdk/x/auth/vesting/exported"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 )
 
 // Compile-time type assertions

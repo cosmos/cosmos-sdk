@@ -22,7 +22,7 @@ The concrete use cases which motivated this module include:
 
 - the desire to delegate the ability to vote on proposals to other accounts besides the account which one has
   delegated stake
-- "sub-keys" functionality, as originally proposed in [\#4480](https://github.com/Stride-Labs/cosmos-sdk/issues/4480) which
+- "sub-keys" functionality, as originally proposed in [\#4480](https://github.com/cosmos/cosmos-sdk/issues/4480) which
   is a term used to describe the functionality provided by this module together with
   the `fee_grant` module from [ADR 029](./adr-029-fee-grant-module.md) and the [group module](https://github.com/regen-network/cosmos-modules/tree/master/incubator/group).
 
@@ -246,4 +246,4 @@ message GenericAuthorization {
 
 - Initial Hackatom implementation: https://github.com/cosmos-gaians/cosmos-sdk/tree/hackatom/x/delegation
 - Post-Hackatom spec: https://gist.github.com/aaronc/b60628017352df5983791cad30babe56#delegation-module
-- B-Harvest subkeys spec: https://github.com/Stride-Labs/cosmos-sdk/issues/4480
+- B-Harvest subkeys spec: https://github.com/cosmos/cosmos-sdk/issues/4480

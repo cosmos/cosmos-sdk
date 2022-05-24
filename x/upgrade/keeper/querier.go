@@ -3,14 +3,14 @@ package keeper
 import (
 	"encoding/binary"
 
-	"github.com/Stride-Labs/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec"
 
-	"github.com/Stride-Labs/cosmos-sdk/x/upgrade/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	sdkerrors "github.com/Stride-Labs/cosmos-sdk/types/errors"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // NewQuerier creates a querier for upgrade cli and REST endpoints

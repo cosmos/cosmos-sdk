@@ -1,4 +1,4 @@
-**原文路径:https://github.com/Stride-Labs/cosmos-sdk/blob/master/docs/basics/gas-fees.md**
+**原文路径:https://github.com/cosmos/cosmos-sdk/blob/master/docs/basics/gas-fees.md**
 
 # Gas and Fees
 
@@ -17,7 +17,7 @@
 
 在 Cosmos SDK 中 `gas` 是一种简单的 `uint64` 类型，被称之为 `gas meter` 的对象进行管理，Gas meters 实现了 `GasMeter` 接口
 
-+++ https://github.com/Stride-Labs/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/store/types/gas.go#L31-L39
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/store/types/gas.go#L31-L39
 
 这里:
 
@@ -67,15 +67,15 @@ ctx.BlockGasMeter().ConsumeGas(
 type AnteHandler func(ctx Context, tx Tx, simulate bool) (newCtx Context, result Result, abort bool)
 ```
 
-`AnteHandler` 不是在核心 SDK 中实现的，而是在每一个模块中实现的，这使开发者可以使用适合其程序需求的`AnteHandler`版本，也就是说当前大多数应用程序都使用 [`auth` module](https://github.com/Stride-Labs/cosmos-sdk/tree/master/x/auth) 中定义的默认实现。下面是 `AnteHandler` 在普通 Cosmos SDK 程序中的作用:
+`AnteHandler` 不是在核心 SDK 中实现的，而是在每一个模块中实现的，这使开发者可以使用适合其程序需求的`AnteHandler`版本，也就是说当前大多数应用程序都使用 [`auth` module](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth) 中定义的默认实现。下面是 `AnteHandler` 在普通 Cosmos SDK 程序中的作用:
 
 - 验证事务的类型正确。事务类型在实现 `anteHandler` 的模块中定义，它们遵循事务接口：
 
-  +++ https://github.com/Stride-Labs/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/tx_msg.go#L33-L41
+  +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/tx_msg.go#L33-L41
 
   这使开发人员可以使用各种类型的应用程序进行交易。 在默认的 auth 模块中，标准事务类型为 StdTx：
 
-  +++ https://github.com/Stride-Labs/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/auth/types/stdtx.go#L22-L29
+  +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/auth/types/stdtx.go#L22-L29
 
 - 验证交易中包含的每个 [`message`](../building-modules/messages-and-queries.md#messages) 的签名，每个 `message` 应该由一个或多个发送者签名，这些签名必须在 `anteHandler` 中进行验证.
 - 在 `CheckTx` 期间，验证 `transaction` 提供的 `gas prices` 是否大于本地配置 `min-gas-prices`(提醒一下，`gas-prices` 可以从以下等式中扣除`fees = gas * gas-prices`)`min-gas-prices` 是每个独立节点的本地配置，在`CheckTx`期间用于丢弃未提供最低费用的交易。这确保了内存池不会被垃圾交易填充.

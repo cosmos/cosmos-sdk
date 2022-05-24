@@ -3,7 +3,7 @@ package cosmos.genutil.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/Stride-Labs/cosmos-sdk/x/genutil/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/genutil/types";
 
 // GenesisState defines the raw genesis transaction in JSON.
 message GenesisState {

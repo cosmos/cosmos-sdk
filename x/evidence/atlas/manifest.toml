@@ -6,7 +6,7 @@ name = "x/evidence"
 description = "The evidence module is responsible for storing and handling evidence of misbeaviour."
 
 # Link to where the module is located, it can also be a link to your project. (Optional)
-homepage = "https://github.com/Stride-Labs/cosmos-sdk"
+homepage = "https://github.com/cosmos/cosmos-sdk"
 
 #List of key words describing your module (Optional)
 keywords = [
@@ -19,7 +19,7 @@ keywords = [
 [bug_tracker]
 # A URL to a site that provides information or guidance on how to submit or deal
 # with security vulnerabilities and bug reports.
-url = "https://github.com/Stride-Labs/cosmos-sdk/issues"
+url = "https://github.com/cosmos/cosmos-sdk/issues"
 
 # To list multiple authors, multiple [[authors]] need to be created
 [[authors]]
@@ -36,7 +36,7 @@ name = "aaronc"
 # The repository field should be a URL to the source repository for your module.
 # Typically, this will point to the specific GitHub repository release/tag for the
 # module, although this is not enforced or required. (Required)
-repo = "https://github.com/Stride-Labs/cosmos-sdk"
+repo = "https://github.com/cosmos/cosmos-sdk"
 
 # The documentation field specifies a URL to a website hosting the module's documentation. (Optional)
 documentation = "https://raw.githubusercontent.com/cosmos/cosmos-sdk/master/x/evidence/atlas/atlas-v0.41.x.md"

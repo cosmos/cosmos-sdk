@@ -7,7 +7,7 @@
 ## Context
 
 The current implementation of BaseApp does not allow developers to write custom error handlers during panic recovery
-[runTx()](https://github.com/Stride-Labs/cosmos-sdk/blob/bad4ca75f58b182f600396ca350ad844c18fc80b/baseapp/baseapp.go#L539)
+[runTx()](https://github.com/cosmos/cosmos-sdk/blob/bad4ca75f58b182f600396ca350ad844c18fc80b/baseapp/baseapp.go#L539)
 method. We think that this method can be more flexible and can give SDK users more options for customizations without
 the need to rewrite whole BaseApp. Also there's one special case for `sdk.ErrorOutOfGas` error handling, that case
 might be handled in a "standard" way (middleware) alongside the others.
@@ -34,7 +34,7 @@ in order to customize it.
 
 Instead of hardcoding custom error handling into BaseApp we suggest using set of middlewares which can be customized
 externally and will allow developers use as many custom error handlers as they want. Implementation with tests
-can be found [here](https://github.com/Stride-Labs/cosmos-sdk/pull/6053).
+can be found [here](https://github.com/cosmos/cosmos-sdk/pull/6053).
 
 #### Implementation details
 
@@ -209,5 +209,5 @@ This method would prepend handlers to an existing chain.
 
 ## References
 
-- [PR-6053 with proposed solution](https://github.com/Stride-Labs/cosmos-sdk/pull/6053)
-- [Similar solution. ADR-010 Modular AnteHandler](https://github.com/Stride-Labs/cosmos-sdk/blob/v0.38.3/docs/architecture/adr-010-modular-antehandler.md)
+- [PR-6053 with proposed solution](https://github.com/cosmos/cosmos-sdk/pull/6053)
+- [Similar solution. ADR-010 Modular AnteHandler](https://github.com/cosmos/cosmos-sdk/blob/v0.38.3/docs/architecture/adr-010-modular-antehandler.md)

@@ -1,8 +1,8 @@
 package authz
 
 import (
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	authtypes "github.com/Stride-Labs/cosmos-sdk/x/auth/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // AccountKeeper defines the expected account keeper (noalias)

@@ -10,18 +10,18 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/Stride-Labs/cosmos-sdk/client/flags"
-	"github.com/Stride-Labs/cosmos-sdk/crypto/hd"
-	"github.com/Stride-Labs/cosmos-sdk/crypto/keyring"
-	"github.com/Stride-Labs/cosmos-sdk/testutil/network"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	"github.com/Stride-Labs/cosmos-sdk/types/rest"
-	"github.com/Stride-Labs/cosmos-sdk/x/authz"
-	"github.com/Stride-Labs/cosmos-sdk/x/authz/client/cli"
-	authztestutil "github.com/Stride-Labs/cosmos-sdk/x/authz/client/testutil"
-	banktestutil "github.com/Stride-Labs/cosmos-sdk/x/bank/client/testutil"
-	banktypes "github.com/Stride-Labs/cosmos-sdk/x/bank/types"
-	govtypes "github.com/Stride-Labs/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
+	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 type IntegrationTestSuite struct {
@@ -280,7 +280,7 @@ func (s *IntegrationTestSuite) TestQueryGranterGrantsGRPC() {
 				var authorizations authz.QueryGranterGrantsResponse
 				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &authorizations)
 				require.NoError(err)
-				// FIXME: https://github.com/Stride-Labs/cosmos-sdk/issues/10965
+				// FIXME: https://github.com/cosmos/cosmos-sdk/issues/10965
 				require.Len(authorizations.Grants, tc.numItems)
 			}
 
@@ -333,7 +333,7 @@ func (s *IntegrationTestSuite) TestQueryGranteeGrantsGRPC() {
 				var authorizations authz.QueryGranteeGrantsResponse
 				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &authorizations)
 				require.NoError(err)
-				// FIXME: https://github.com/Stride-Labs/cosmos-sdk/issues/10965
+				// FIXME: https://github.com/cosmos/cosmos-sdk/issues/10965
 				require.Len(authorizations.Grants, tc.numItems)
 			}
 

@@ -15,12 +15,12 @@ import (
 
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
-	"github.com/Stride-Labs/cosmos-sdk/codec"
-	cryptocodec "github.com/Stride-Labs/cosmos-sdk/crypto/codec"
-	cryptotypes "github.com/Stride-Labs/cosmos-sdk/crypto/types"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	"github.com/Stride-Labs/cosmos-sdk/types/bech32/legacybech32"
-	v034auth "github.com/Stride-Labs/cosmos-sdk/x/auth/legacy/v034"
+	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
+	v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v034"
 )
 
 const (

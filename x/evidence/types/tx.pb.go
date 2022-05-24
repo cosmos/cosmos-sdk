@@ -7,7 +7,7 @@ import (
 	bytes "bytes"
 	context "context"
 	fmt "fmt"
-	types "github.com/Stride-Labs/cosmos-sdk/codec/types"
+	types "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"

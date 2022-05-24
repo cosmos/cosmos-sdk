@@ -10,9 +10,9 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 
-	"github.com/Stride-Labs/cosmos-sdk/codec"
-	cryptotypes "github.com/Stride-Labs/cosmos-sdk/crypto/types"
-	"github.com/Stride-Labs/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 //-------------------------------------

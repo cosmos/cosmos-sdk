@@ -44,6 +44,6 @@ var sumValue := externalModule.ComputeSumValue(account)
 var sumValue := externalModule.ComputeSumValue(*account)
 ```
 
-在 Cosmos SDK 中，你可以看到[gaia app](https://github.com/Stride-Labs/cosmos-sdk/blob/master/simapp/app.go)中对该原则的实践。
+在 Cosmos SDK 中，你可以看到[gaia app](https://github.com/cosmos/cosmos-sdk/blob/master/simapp/app.go)中对该原则的实践。
 
 +++ https://github.com/cosmos/gaia/blob/master/app/app.go#L197-L209

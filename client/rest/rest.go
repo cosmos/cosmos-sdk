@@ -8,7 +8,7 @@ import (
 
 // DeprecationURL is the URL for migrating deprecated REST endpoints to newer ones.
 // TODO Switch to `/` (not `/master`) once v0.40 docs are deployed.
-// https://github.com/Stride-Labs/cosmos-sdk/issues/8019
+// https://github.com/cosmos/cosmos-sdk/issues/8019
 const DeprecationURL = "https://docs.cosmos.network/master/migrations/rest.html"
 
 // addHTTPDeprecationHeaders is a mux middleware function for adding HTTP

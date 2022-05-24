@@ -7,21 +7,21 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/Stride-Labs/cosmos-sdk/client"
-	"github.com/Stride-Labs/cosmos-sdk/codec"
-	cryptotypes "github.com/Stride-Labs/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 
-	"github.com/Stride-Labs/cosmos-sdk/simapp"
-	"github.com/Stride-Labs/cosmos-sdk/simapp/helpers"
-	"github.com/Stride-Labs/cosmos-sdk/testutil/testdata"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	"github.com/Stride-Labs/cosmos-sdk/types/simulation"
-	"github.com/Stride-Labs/cosmos-sdk/types/tx/signing"
-	"github.com/Stride-Labs/cosmos-sdk/x/auth/ante"
-	authsign "github.com/Stride-Labs/cosmos-sdk/x/auth/signing"
-	"github.com/Stride-Labs/cosmos-sdk/x/auth/tx"
-	authtypes "github.com/Stride-Labs/cosmos-sdk/x/auth/types"
-	"github.com/Stride-Labs/cosmos-sdk/x/feegrant"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {

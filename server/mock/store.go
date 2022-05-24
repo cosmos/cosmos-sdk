@@ -6,9 +6,9 @@ import (
 	protoio "github.com/gogo/protobuf/io"
 	dbm "github.com/tendermint/tm-db"
 
-	snapshottypes "github.com/Stride-Labs/cosmos-sdk/snapshots/types"
-	store "github.com/Stride-Labs/cosmos-sdk/store/types"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	store "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ sdk.MultiStore = multiStore{}

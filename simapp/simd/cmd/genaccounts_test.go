@@ -3,24 +3,24 @@ package cmd_test
 import (
 	"context"
 	"fmt"
-	"github.com/Stride-Labs/cosmos-sdk/crypto/hd"
-	"github.com/Stride-Labs/cosmos-sdk/crypto/keyring"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"testing"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/Stride-Labs/cosmos-sdk/client"
-	"github.com/Stride-Labs/cosmos-sdk/client/flags"
-	"github.com/Stride-Labs/cosmos-sdk/server"
-	"github.com/Stride-Labs/cosmos-sdk/simapp"
-	simcmd "github.com/Stride-Labs/cosmos-sdk/simapp/simd/cmd"
-	"github.com/Stride-Labs/cosmos-sdk/testutil/testdata"
-	"github.com/Stride-Labs/cosmos-sdk/types/module"
-	"github.com/Stride-Labs/cosmos-sdk/x/genutil"
-	genutiltest "github.com/Stride-Labs/cosmos-sdk/x/genutil/client/testutil"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	simcmd "github.com/cosmos/cosmos-sdk/simapp/simd/cmd"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 )
 
 var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})

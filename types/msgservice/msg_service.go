@@ -6,8 +6,8 @@ import (
 
 	"google.golang.org/grpc"
 
-	codectypes "github.com/Stride-Labs/cosmos-sdk/codec/types"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // RegisterMsgServiceDesc registers all type_urls from Msg services described

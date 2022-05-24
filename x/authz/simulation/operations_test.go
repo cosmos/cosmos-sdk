@@ -10,12 +10,12 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/Stride-Labs/cosmos-sdk/simapp"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	simtypes "github.com/Stride-Labs/cosmos-sdk/types/simulation"
-	"github.com/Stride-Labs/cosmos-sdk/x/authz"
-	"github.com/Stride-Labs/cosmos-sdk/x/authz/simulation"
-	banktypes "github.com/Stride-Labs/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	"github.com/cosmos/cosmos-sdk/x/authz/simulation"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type SimTestSuite struct {

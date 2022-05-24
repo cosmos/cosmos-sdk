@@ -30,9 +30,9 @@ the same serialization of a `SignDoc` as defined in
 [ADR-020](./adr-020-protobuf-transaction-encoding.md) without transmitting the
 serialization.
 
-Currently, for block signatures we are using a workaround: we create a new [TxRaw](https://github.com/Stride-Labs/cosmos-sdk/blob/9e85e81e0e8140067dd893421290c191529c148c/proto/cosmos/tx/v1beta1/tx.proto#L30)
-instance (as defined in [adr-020-protobuf-transaction-encoding](https://github.com/Stride-Labs/cosmos-sdk/blob/master/docs/architecture/adr-020-protobuf-transaction-encoding.md#transactions))
-by converting all [Tx](https://github.com/Stride-Labs/cosmos-sdk/blob/9e85e81e0e8140067dd893421290c191529c148c/proto/cosmos/tx/v1beta1/tx.proto#L13)
+Currently, for block signatures we are using a workaround: we create a new [TxRaw](https://github.com/cosmos/cosmos-sdk/blob/9e85e81e0e8140067dd893421290c191529c148c/proto/cosmos/tx/v1beta1/tx.proto#L30)
+instance (as defined in [adr-020-protobuf-transaction-encoding](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-020-protobuf-transaction-encoding.md#transactions))
+by converting all [Tx](https://github.com/cosmos/cosmos-sdk/blob/9e85e81e0e8140067dd893421290c191529c148c/proto/cosmos/tx/v1beta1/tx.proto#L13)
 fields to bytes on the client side. This adds an additional manual
 step when sending and signing transactions.
 
@@ -260,7 +260,7 @@ for all protobuf documents we need in the context of Cosmos SDK signing.
 - Simple enough to keep the barrier to implement transaction signing low
 - It allows us to continue to use 0 and other empty values in SignDoc, avoiding
   the need to work around 0 sequences. This does not imply the change from
-  https://github.com/Stride-Labs/cosmos-sdk/pull/6949 should not be merged, but not
+  https://github.com/cosmos/cosmos-sdk/pull/6949 should not be merged, but not
   too important anymore.
 
 ### Negative

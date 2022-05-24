@@ -6,11 +6,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	cryptotypes "github.com/Stride-Labs/cosmos-sdk/crypto/types"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	"github.com/Stride-Labs/cosmos-sdk/x/staking"
-	"github.com/Stride-Labs/cosmos-sdk/x/staking/keeper"
-	stakingtypes "github.com/Stride-Labs/cosmos-sdk/x/staking/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Helper is a structure which wraps the staking handler

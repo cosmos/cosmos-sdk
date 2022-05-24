@@ -3,7 +3,7 @@ package v039
 import (
 	"time"
 
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (

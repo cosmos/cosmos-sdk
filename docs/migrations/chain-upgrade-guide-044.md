@@ -38,7 +38,7 @@ Validators can use the auto-restart option to prevent unecessary downtime during
 
 ## Migrating app.toml
 
-With the update to `v0.44`, new server configuration options have been added to `app.toml`. The updates include new configuration sections for Rosetta and gRPC Web as well as a new configuration option for State Sync. Check out the default [`app.toml`](https://github.com/Stride-Labs/cosmos-sdk/blob/release/v0.44.x/server/config/toml.go) file in the latest version of `v0.44` for more information.
+With the update to `v0.44`, new server configuration options have been added to `app.toml`. The updates include new configuration sections for Rosetta and gRPC Web as well as a new configuration option for State Sync. Check out the default [`app.toml`](https://github.com/cosmos/cosmos-sdk/blob/release/v0.44.x/server/config/toml.go) file in the latest version of `v0.44` for more information.
 
 ## Example: Simapp Upgrade
 
@@ -113,7 +113,7 @@ Now that our node is initialized and we are ready to start a new `simapp` chain,
 First, install or update `cosmovisor`:
 
 ```
-go get github.com/Stride-Labs/cosmos-sdk/cosmovisor/cmd/cosmovisor
+go get github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor
 ```
 
 Set the required environment variables:
@@ -202,7 +202,7 @@ func (app *SimApp) registerUpgradeHandlers() {
 Add `storetypes` to imports:
 
 ```go
-	storetypes "github.com/Stride-Labs/cosmos-sdk/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 ```
 
 Build the `simd` binary for `v0.44.x` (the upgrade binary):

@@ -3,10 +3,10 @@ package main
 import (
 	"os"
 
-	"github.com/Stride-Labs/cosmos-sdk/server"
-	svrcmd "github.com/Stride-Labs/cosmos-sdk/server/cmd"
-	"github.com/Stride-Labs/cosmos-sdk/simapp"
-	"github.com/Stride-Labs/cosmos-sdk/simapp/simd/cmd"
+	"github.com/cosmos/cosmos-sdk/server"
+	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/simapp/simd/cmd"
 )
 
 func main() {

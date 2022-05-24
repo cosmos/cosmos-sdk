@@ -7,11 +7,11 @@ package v036
 import (
 	"time"
 
-	"github.com/Stride-Labs/cosmos-sdk/codec/legacy"
-	cryptotypes "github.com/Stride-Labs/cosmos-sdk/crypto/types"
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	"github.com/Stride-Labs/cosmos-sdk/types/bech32/legacybech32"
-	v034staking "github.com/Stride-Labs/cosmos-sdk/x/staking/legacy/v034"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
+	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v034"
 )
 
 const (

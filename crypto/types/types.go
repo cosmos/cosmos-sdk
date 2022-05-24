@@ -20,7 +20,7 @@ type PubKey interface {
 // LedgerSecp256k1 keys are not converted to proto.Message yet, this is why
 // they use LedgerPrivKey instead of PrivKey. All other keys must use PrivKey
 // instead of LedgerPrivKey.
-// TODO https://github.com/Stride-Labs/cosmos-sdk/issues/7357.
+// TODO https://github.com/cosmos/cosmos-sdk/issues/7357.
 type LedgerPrivKey interface {
 	Bytes() []byte
 	Sign(msg []byte) ([]byte, error)
@@ -32,7 +32,7 @@ type LedgerPrivKey interface {
 // PrivKey defines a private key and extends proto.Message. For now, it extends
 // LedgerPrivKey (see godoc for LedgerPrivKey). Ultimately, we should remove
 // LedgerPrivKey and add its methods here directly.
-// TODO https://github.com/Stride-Labs/cosmos-sdk/issues/7357.
+// TODO https://github.com/cosmos/cosmos-sdk/issues/7357.
 type PrivKey interface {
 	proto.Message
 	LedgerPrivKey

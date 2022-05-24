@@ -5,10 +5,10 @@ import (
 	"errors"
 	"io"
 
-	"github.com/Stride-Labs/cosmos-sdk/store/cachekv"
-	"github.com/Stride-Labs/cosmos-sdk/store/listenkv"
-	"github.com/Stride-Labs/cosmos-sdk/store/tracekv"
-	"github.com/Stride-Labs/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 var _ types.KVStore = Store{}

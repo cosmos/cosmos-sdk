@@ -3,8 +3,8 @@ package types
 import (
 	"strings"
 
-	sdk "github.com/Stride-Labs/cosmos-sdk/types"
-	sdkerrors "github.com/Stride-Labs/cosmos-sdk/types/errors"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Constants pertaining to a Content object
@@ -18,7 +18,7 @@ const (
 // information for the appropriate handler to process the proposal. Content can
 // have additional fields, which will handled by a proposal's Handler.
 // TODO Try to unify this interface with types/module/simulation
-// https://github.com/Stride-Labs/cosmos-sdk/issues/5853
+// https://github.com/cosmos/cosmos-sdk/issues/5853
 type Content interface {
 	GetTitle() string
 	GetDescription() string

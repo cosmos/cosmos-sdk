@@ -465,4 +465,4 @@ callbacks](https://github.com/cosmos/ibc-go/blob/main/modules/apps/transfer/modu
 
 ## Next {hide}
 
-Learn about [building modules](https://github.com/Stride-Labs/cosmos-sdk/blob/master/docs/building-modules/intro.md) {hide}
+Learn about [building modules](https://github.com/cosmos/cosmos-sdk/blob/master/docs/building-modules/intro.md) {hide}

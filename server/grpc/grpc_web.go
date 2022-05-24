@@ -8,8 +8,8 @@ import (
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"google.golang.org/grpc"
 
-	"github.com/Stride-Labs/cosmos-sdk/server/config"
-	"github.com/Stride-Labs/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/server/config"
+	"github.com/cosmos/cosmos-sdk/server/types"
 )
 
 // StartGRPCWeb starts a gRPC-Web server on the given address.

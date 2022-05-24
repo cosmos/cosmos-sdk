@@ -240,7 +240,7 @@ TestData object
 
 ### [ABANDONED] Custom `msg_title` instead of Msg `type_url`
 
-_This section is in the Annex for informational purposes only, and will be removed in a next update of the ADR._
+_This paragraph is in the Annex for informational purposes only, and will be removed in a next update of the ADR._
 
 <details>
   <summary>Click to see abandoned idea.</summary>

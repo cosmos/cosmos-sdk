@@ -1,8 +1,9 @@
 package common
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 
 	"github.com/stretchr/testify/require"
 

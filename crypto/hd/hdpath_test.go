@@ -89,7 +89,6 @@ func TestParamsFromPath(t *testing.T) {
 		require.Nil(t, params, errStr)
 		require.Error(t, err, errStr)
 	}
-
 }
 
 func TestCreateHDPath(t *testing.T) {

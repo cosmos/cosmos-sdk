@@ -45,6 +45,7 @@ func init() {
 func BenchmarkRejectUnknownFields_serial(b *testing.B) {
 	benchmarkRejectUnknownFields(b, false)
 }
+
 func BenchmarkRejectUnknownFields_parallel(b *testing.B) {
 	benchmarkRejectUnknownFields(b, true)
 }
@@ -82,9 +83,11 @@ func benchmarkRejectUnknownFields(b *testing.B, parallel bool) {
 func BenchmarkProtoUnmarshal_serial(b *testing.B) {
 	benchmarkProtoUnmarshal(b, false)
 }
+
 func BenchmarkProtoUnmarshal_parallel(b *testing.B) {
 	benchmarkProtoUnmarshal(b, true)
 }
+
 func benchmarkProtoUnmarshal(b *testing.B, parallel bool) {
 	b.ReportAllocs()
 

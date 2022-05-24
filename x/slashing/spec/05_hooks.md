@@ -21,6 +21,8 @@ The following hooks impact the slashing state:
 Upon successful first-time bonding of a new validator, we create a new `ValidatorSigningInfo` structure for the
 now-bonded validator, which `StartHeight` of the current block.
 
+If the validator was out of the validator set and gets bonded again, its new bonded height is set.
+
 ```go
 onValidatorBonded(address sdk.ValAddress)
 
@@ -32,7 +34,10 @@ onValidatorBonded(address sdk.ValAddress)
       JailedUntil         : time.Unix(0, 0),
       Tombstone           : false,
       MissedBloskCounter  : 0
+    } else {
+      signingInfo.StartHeight = CurrentHeight
     }
+
     setValidatorSigningInfo(signingInfo)
   }
 

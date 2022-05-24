@@ -134,7 +134,7 @@ func VersionCmd() *cobra.Command {
 func makeKeyMigrateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "key-migrate",
-		Short: "Run TendermintDatabase key migration",
+		Short: "Run Tendermint database key migration",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx, cancel := context.WithCancel(cmd.Context())
 			defer cancel()

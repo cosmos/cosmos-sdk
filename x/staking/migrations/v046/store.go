@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// MigrateStore performs in-place store migrations from v0.43/v0.44 to v0.45.
+// MigrateStore performs in-place store migrations from v0.43/v0.44/v0.45 to v0.46.
 // The migration includes:
 //
 // - Setting the MinCommissionRate param in the paramstore
@@ -19,6 +19,10 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 }
 
 func migrateParamsStore(ctx sdk.Context, paramstore paramtypes.Subspace) {
-	paramstore.WithKeyTable(types.ParamKeyTable())
-	paramstore.Set(ctx, types.KeyMinCommissionRate, types.DefaultMinCommissionRate)
+	if paramstore.HasKeyTable() {
+		paramstore.Set(ctx, types.KeyMinCommissionRate, types.DefaultMinCommissionRate)
+	} else {
+		paramstore.WithKeyTable(types.ParamKeyTable())
+		paramstore.Set(ctx, types.KeyMinCommissionRate, types.DefaultMinCommissionRate)
+	}
 }

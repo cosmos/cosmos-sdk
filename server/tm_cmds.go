@@ -141,8 +141,6 @@ func MakeKeyMigrateCommand() *cobra.Command {
 
 			serverCtx := GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
-			fmt.Println(config)
-			fmt.Println(config.DBDir())
 
 			contexts := []string{
 				// this is ordered to put the

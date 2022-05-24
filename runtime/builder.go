@@ -29,12 +29,12 @@ func (a *AppBuilder) Build(logger log.Logger, db dbm.DB, traceStore io.Writer, b
 	for _, option := range a.app.baseAppOptions {
 		baseAppOptions = append(baseAppOptions, option)
 	}
-	bApp := baseapp.NewBaseApp(a.app.config.AppName, logger, db, baseAppOptions...)
+	// TODO: when the auth module is configured, fill-in txDecoder
+	bApp := baseapp.NewBaseApp(a.app.config.AppName, logger, db, nil, baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(a.app.interfaceRegistry)
 	bApp.MountStores(a.app.storeKeys...)
-	bApp.SetTxHandler(a.app.txHandler)
 
 	a.app.BaseApp = bApp
 	return a.app

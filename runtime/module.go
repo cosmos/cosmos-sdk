@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // BaseAppOption is a container.AutoGroupType which can be used to pass
@@ -81,7 +80,6 @@ type appInputs struct {
 	App                 appWrapper
 	Modules             map[string]AppModuleWrapper
 	BaseAppOptions      []BaseAppOption
-	TxHandler           tx.Handler  `optional:"true"`
 	MsgServiceRegistrar grpc.Server `optional:"true"`
 }
 
@@ -94,7 +92,6 @@ func provideAppBuilder(inputs appInputs) *AppBuilder {
 	app.baseAppOptions = inputs.BaseAppOptions
 	app.config = inputs.Config
 	app.ModuleManager = mm
-	app.txHandler = inputs.TxHandler
 	app.msgServiceRegistrar = inputs.MsgServiceRegistrar
 	return &AppBuilder{app: app}
 }

@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/container"
 
 	"cosmossdk.io/core/appconfig"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -428,6 +429,7 @@ func NewSimApp(
 	app.MountMemoryStores(memKeys)
 
 	// initialize BaseApp
+	app.SetTxDecoder(encodingConfig.TxConfig.TxDecoder())
 	app.SetInitChainer(app.InitChainer)
 	app.setAnteHandler(encodingConfig.TxConfig, cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents)))
 	// In v0.46, the SDK introduces _postHandlers_. PostHandlers are like

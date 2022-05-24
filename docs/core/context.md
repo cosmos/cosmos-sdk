@@ -72,7 +72,7 @@ goes wrong. The pattern of usage for a Context is as follows:
    needs to be done - the branch `ctx` is simply discarded. If successful, the changes made to
    the `CacheMultiStore` can be committed to the original `ctx.ms` via `Write()`.
 
-For example, here is a snippet from the [`runTx`](./baseapp.md#runtx-and-runmsgs) function in [`baseapp`](./baseapp.md):
+For example, here is a snippet from the [`runTx`](./baseapp.md#runtx-antehandler-runmsgs-posthandler) function in [`baseapp`](./baseapp.md):
 
 ```go
 runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)

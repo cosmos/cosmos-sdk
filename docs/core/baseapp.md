@@ -304,7 +304,7 @@ At any point, if `GasConsumed > GasWanted`, the function returns with `Code != 0
 * `Events ([]cmn.KVPair)`: Key-Value tags for filtering and indexing transactions (eg. by account). See [`event`s](./events.md) for more.
 * `Codespace (string)`: Namespace for the Code.
 
-## RunTx, AnteHandler and RunMsgs
+## RunTx, AnteHandler, RunMsgs, PostHandler
 
 ### RunTx
 
@@ -343,6 +343,17 @@ Click [here](../basics/gas-fees.md#antehandler) for more on the `anteHandler`.
 `RunMsgs` is called from `RunTx` with `runTxModeCheck` as parameter to check the existence of a route for each message the transaction, and with `runTxModeDeliver` to actually process the `sdk.Msg`s.
 
 First, it retrieves the `sdk.Msg`'s fully-qualified type name, by checking the `type_url` of the Protobuf `Any` representing the `sdk.Msg`. Then, using the application's [`msgServiceRouter`](#msg-service-router), it checks for the existence of `Msg` service method related to that `type_url`. At this point, if `mode == runTxModeCheck`, `RunMsgs` returns. Otherwise, if `mode == runTxModeDeliver`, the [`Msg` service](../building-modules/msg-services.md) RPC is executed, before `RunMsgs` returns.
+
+### PostHandler
+
+_PostHandler_ are like `AnteHandler` (they share the same signature), but they execute after [`RunMsgs`](#runmsgs).
+
+Like `AnteHandler`s, `PostHandler`s are theoretically optional, one use case for `PostHandler`s is transaction tips (enabled by default in simapp).
+Other use cases like unused gas refund can also be enabled by `PostHandler`s.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/x/auth/posthandler/post.go#L14:L27
+
+Note, when `PostHandler`s fail, the state from `runMsgs` is also reverted, effectively making the transaction fail.
 
 ## Other ABCI Messages
 

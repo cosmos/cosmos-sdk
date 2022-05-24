@@ -454,17 +454,15 @@ func NewSimApp(
 	//
 	// The SDK exposes a default postHandlers chain, which comprises of only
 	// one decorator: the Transaction Tips decorator. However, some chains do
-	// not need it by default, so the following line is commented out. You can
-	// uncomment it to include the tips decorator, or define your own
-	// postHandler chain. To read more about tips:
+	// not need it by default, so feel free to comment the next line if you do
+	// not need tips.
+	// To read more about tips:
 	// https://docs.cosmos.network/main/core/tips.html
 	//
 	// Please note that changing any of the anteHandler or postHandler chain is
 	// likely to be a state-machine breaking change, which needs a coordinated
 	// upgrade.
-	//
-	// Uncomment to enable postHandlers:
-	// app.setPostHandler()
+	app.setPostHandler()
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {

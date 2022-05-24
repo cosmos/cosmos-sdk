@@ -1562,13 +1562,6 @@ func (s *IntegrationTestSuite) TestAuxSigner() {
 }
 
 func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
-	// Currently, simapp doesn't have Tips decorator enabled by default in its
-	// posthandlers, so this test will fail.
-	//
-	// TODO Find a way to test Tips integratin test with a custom simapp with
-	// tips posthandler.
-	s.T().Skip()
-
 	require := s.Require()
 	val := s.network.Validators[0]
 

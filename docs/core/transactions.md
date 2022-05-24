@@ -20,7 +20,7 @@ When users want to interact with an application and make state changes (e.g. sen
 
 Transaction objects are Cosmos SDK types that implement the `Tx` interface
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/types/tx_msg.go#L38-L46
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/types/tx_msg.go#L38-L46
 
 It contains the following methods:
 
@@ -53,7 +53,7 @@ The legacy implementation of the `Tx` interface is the `StdTx` struct from `x/au
 
 The document signed by all signers is `StdSignDoc`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/x/auth/migrations/legacytx/stdsign.go#L38-L52
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/x/auth/migrations/legacytx/stdsign.go#L38-L52
 
 which is encoded into bytes using Amino JSON. Once all signatures are gathered into `StdTx`, `StdTx` is serialized using Amino JSON, and these bytes are broadcasted over the network.
 
@@ -66,7 +66,7 @@ The Cosmos SDK also provides a couple of other sign modes for particular use cas
 `SIGN_MODE_DIRECT_AUX` is a sign mode released in the Cosmos SDK v0.46 which targets transactions with multiple signers. Whereas `SIGN_MODE_DIRECT` expects each signer to sign over both `TxBody` and `AuthInfo` (which includes all other signers' signer infos, i.e. their account sequence, public key and mode info), `SIGN_MODE_DIRECT_AUX` allows N-1 signers to only sign over `TxBody` and _their own_ signer info. Morever, each auxiliary signer (i.e. a signer using `SIGN_MODE_DIRECT_AUX`) doesn't
 need to sign over the fees:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/proto/cosmos/tx/v1beta1/tx.proto#L67-L93
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/tx/v1beta1/tx.proto#L67-L93
 
 The use case is a multi-signer transaction, where one of the signers is appointed to gather all signatures, broadcast the signature and pay for fees, and the others only care about the transaction body. This generally allows for a better multi-signing UX. If Alice, Bob and Charlie are part of a 3-signer transaction, then Alice and Bob can both use `SIGN_MODE_DIRECT_AUX` to sign over the `TxBody` and their own signer info (no need an additional step to gather other signers' ones, like in `SIGN_MODE_DIRECT`), without specifying a fee in their SignDoc. Charlie can then gather both signatures from Alice and Bob, and
 create the final transaction by appending a fee. Note that the fee payer of the transaction (in our case Charlie) must sign over the fees, so must use `SIGN_MODE_DIRECT` or `SIGN_MODE_LEGACY_AMINO_JSON`.

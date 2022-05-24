@@ -53,13 +53,13 @@ The first thing defined in `app.go` is the `type` of the application. It is gene
 
 See an example of application type definition from `simapp`, the Cosmos SDK's own app used for demo and testing purposes:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/simapp/app.go#L151-L195
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/simapp/app.go#L151-L193
 
 ### Constructor Function
 
 This function constructs a new application of the type defined in the section above. It must fulfill the `AppCreator` signature in order to be used in the [`start` command](../core/node.md#start-command) of the application's daemon command.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/server/types/app.go#L57-L59
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/server/types/app.go#L57-L59
 
 Here are the main actions performed by this function:
 
@@ -81,7 +81,7 @@ Note that this function only creates an instance of the app, while the actual st
 
 See an example of application constructor from `simapp`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/simapp/app.go#L207-L456
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/simapp/app.go#L204-L474
 
 ### InitChainer
 

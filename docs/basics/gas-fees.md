@@ -68,9 +68,9 @@ The `AnteHandler` is run for every transaction during `CheckTx` and `DeliverTx`,
 The anteHandler is not implemented in the core Cosmos SDK but in a module. That said, most applications today use the default implementation defined in the [`auth` module](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth). Here is what the `anteHandler` is intended to do in a normal Cosmos SDK application:
 
 * Verify that the transactions are of the correct type. Transaction types are defined in the module that implements the `anteHandler`, and they follow the transaction interface:
-  +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/types/tx_msg.go#L38-L46
+  +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/types/tx_msg.go#L38-L46
   This enables developers to play with various types for the transaction of their application. In the default `auth` module, the default transaction type is `Tx`:
-  +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/proto/cosmos/tx/v1beta1/tx.proto#L13-L26
+  +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/tx/v1beta1/tx.proto#L13-L26
 * Verify signatures for each [`message`](../building-modules/messages-and-queries.md#messages) contained in the transaction. Each `message` should be signed by one or multiple sender(s), and these signatures must be verified in the `anteHandler`.
 * During `CheckTx`, verify that the gas prices provided with the transaction is greater than the local `min-gas-prices` (as a reminder, gas-prices can be deducted from the following equation: `fees = gas * gas-prices`). `min-gas-prices` is a parameter local to each full-node and used during `CheckTx` to discard transactions that do not provide a minimum amount of fees. This ensures that the mempool cannot be spammed with garbage transactions.
 * Verify that the sender of the transaction has enough funds to cover for the `fees`. When the end-user generates a transaction, they must indicate 2 of the 3 following parameters (the third one being implicit): `fees`, `gas` and `gas-prices`. This signals how much they are willing to pay for nodes to execute their transaction. The provided `gas` value is stored in a parameter called `GasWanted` for later use.

@@ -45,7 +45,7 @@ management logic.
 
 The `BaseApp` type holds many important parameters for any Cosmos SDK based application.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/baseapp/baseapp.go#L44-L131
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/baseapp/baseapp.go#L45-L137
 
 Let us go through the most important components.
 
@@ -289,7 +289,7 @@ Before the first transaction of a given block is processed, a [volatile state](#
 
 During the additional fifth step outlined in (2), each read/write to the store increases the value of `GasConsumed`. You can find the default cost of each operation:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/store/types/gas.go#L230-L241
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/store/types/gas.go#L230-L241
 
 At any point, if `GasConsumed > GasWanted`, the function returns with `Code != 0` and `DeliverTx` fails.
 

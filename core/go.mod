@@ -27,6 +27,6 @@ require (
 )
 
 replace (
-	cosmossdk.io/container => ../container
-	cosmossdk.io/container => github.com/cosmos/cosmos-sdk/api
+	cosmossdk.io/container => 	github.com/cosmos/cosmos-sdk/container v1.0.0-alpha.3
+	github.com/cosmos/cosmos-sdk/api => ../api
 )

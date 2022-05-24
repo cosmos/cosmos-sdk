@@ -22,8 +22,8 @@ import (
 // BaseApp options into the container. It should be used carefully.
 type BaseAppOption func(*baseapp.BaseApp)
 
-// IsAutoGroupType indicates that this is a container.AutoGroupType.
-func (b BaseAppOption) IsAutoGroupType() {}
+// IsManyPerContainerType indicates that this is a container.ManyPerContainerType.
+func (b BaseAppOption) IsManyPerContainerType() {}
 
 // appWrapper is used to pass around an instance of *App internally between
 // runtime dependency inject providers that is partially constructed (no

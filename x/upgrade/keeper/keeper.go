@@ -83,6 +83,11 @@ func (k Keeper) SetModuleVersionMap(ctx sdk.Context, vm module.VersionMap) {
 	}
 }
 
+// SetAppVersion sets app version to version
+func (k Keeper) SetAppVersion(ctx sdk.Context, version uint64) error {
+	return k.versionManager.SetAppVersion(ctx, version)
+}
+
 // GetModuleVersionMap returns a map of key module name and value module consensus version
 // as defined in ADR-041.
 func (k Keeper) GetModuleVersionMap(ctx sdk.Context) module.VersionMap {

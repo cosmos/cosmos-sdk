@@ -128,10 +128,10 @@ func VersionCmd() *cobra.Command {
 	}
 }
 
-// MakeKeyMigrateCommand is ported from tendermint's key-migrate command, but
+// makeKeyMigrateCmd is ported from tendermint's key-migrate command, but
 // uses the SDK's own server.Context.
 // ref: https://github.com/tendermint/tendermint/blob/master/UPGRADING.md#database-key-format-changes
-func MakeKeyMigrateCommand() *cobra.Command {
+func makeKeyMigrateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "key-migrate",
 		Short: "Run TendermintDatabase key migration",

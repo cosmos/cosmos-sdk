@@ -261,7 +261,6 @@ jobs:
         if: env.GIT_DIFF
 
   sims-fail:
-    needs: [test-sim-multi-seed-short,test-sim-after-import,test-sim-import-export]
     runs-on: ubuntu-latest
     steps:
       - name: Notify Slack on failure

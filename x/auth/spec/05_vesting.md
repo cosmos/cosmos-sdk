@@ -5,27 +5,27 @@ order: 6
 # Vesting
 
 - [Vesting](#vesting)
-    - [Intro and Requirements](#intro-and-requirements)
-    - [Note](#note)
-    - [Vesting Account Types](#vesting-account-types)
-    - [Vesting Account Specification](#vesting-account-specification)
-        - [Determining Vesting & Vested Amounts](#determining-vesting--vested-amounts)
-            - [Continuously Vesting Accounts](#continuously-vesting-accounts)
-        - [Periodic Vesting Accounts](#periodic-vesting-accounts)
-            - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts)
-        - [Transferring/Sending](#transferringsending)
-            - [Keepers/Handlers](#keepershandlers)
-        - [Delegating](#delegating)
-            - [Keepers/Handlers](#keepershandlers-1)
-        - [Undelegating](#undelegating)
-            - [Keepers/Handlers](#keepershandlers-2)
-    - [Keepers & Handlers](#keepers--handlers)
-    - [Genesis Initialization](#genesis-initialization)
-    - [Examples](#examples)
-        - [Simple](#simple)
-        - [Slashing](#slashing)
-        - [Periodic Vesting](#periodic-vesting)
-    - [Glossary](#glossary)
+  - [Intro and Requirements](#intro-and-requirements)
+  - [Note](#note)
+  - [Vesting Account Types](#vesting-account-types)
+  - [Vesting Account Specification](#vesting-account-specification)
+    - [Determining Vesting & Vested Amounts](#determining-vesting--vested-amounts)
+      - [Continuously Vesting Accounts](#continuously-vesting-accounts)
+    - [Periodic Vesting Accounts](#periodic-vesting-accounts)
+      - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts)
+    - [Transferring/Sending](#transferringsending)
+      - [Keepers/Handlers](#keepershandlers)
+    - [Delegating](#delegating)
+      - [Keepers/Handlers](#keepershandlers-1)
+    - [Undelegating](#undelegating)
+      - [Keepers/Handlers](#keepershandlers-2)
+  - [Keepers & Handlers](#keepers--handlers)
+  - [Genesis Initialization](#genesis-initialization)
+  - [Examples](#examples)
+    - [Simple](#simple)
+    - [Slashing](#slashing)
+    - [Periodic Vesting](#periodic-vesting)
+  - [Glossary](#glossary)
 
 ## Intro and Requirements
 
@@ -44,15 +44,15 @@ different kinds of vesting:
 
 - Delayed vesting, where all coins are vested once `ET` is reached.
 - Continous vesting, where coins begin to vest at `ST` and vest linearly with
-respect to time until `ET` is reached
+  respect to time until `ET` is reached
 - Periodic vesting, where coins begin to vest at `ST` and vest periodically
-according to number of periods and the vesting amount per period.
-The number of periods, length per period, and amount per period are
-configurable. A periodic vesting account is distinguished from a continuous
-vesting account in that coins can be released in staggered tranches. For
-example, a periodic vesting account could be used for vesting arrangements
-where coins are relased quarterly, yearly, or over any other function of
-tokens over time.
+  according to number of periods and the vesting amount per period.
+  The number of periods, length per period, and amount per period are
+  configurable. A periodic vesting account is distinguished from a continuous
+  vesting account in that coins can be released in staggered tranches. For
+  example, a periodic vesting account could be used for vesting arrangements
+  where coins are relased quarterly, yearly, or over any other function of
+  tokens over time.
 
 ## Note
 
@@ -92,19 +92,19 @@ type VestingAccount interface {
 
 ### BaseVestingAccount
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L10-L33
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L10-L33
 
 ### ContinuousVestingAccount
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L35-L43
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L35-L43
 
 ### DelayedVestingAccount
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L45-L53
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L45-L53
 
 ### Period
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L56-L62
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L56-L62
 
 ```go
 // Stores all vesting periods passed as part of a PeriodicVestingAccount
@@ -114,7 +114,7 @@ type Periods []Period
 
 ### PeriodicVestingAccount
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L64-L73
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L64-L73
 
 In order to facilitate less ad-hoc type checking and assertions and to support
 flexibility in account balance usage, the existing `x/bank` `ViewKeeper` interface
@@ -138,17 +138,17 @@ Given a vesting account, we define the following in the proceeding operations:
 
 - `OV`: The original vesting coin amount. It is a constant value.
 - `V`: The number of `OV` coins that are still _vesting_. It is derived by
-`OV`, `StartTime` and `EndTime`. This value is computed on demand and not on a
-per-block basis.
+  `OV`, `StartTime` and `EndTime`. This value is computed on demand and not on a
+  per-block basis.
 - `V'`: The number of `OV` coins that are _vested_ (unlocked). This value is
-computed on demand and not a per-block basis.
+  computed on demand and not a per-block basis.
 - `DV`: The number of delegated _vesting_ coins. It is a variable value. It is
-stored and modified directly in the vesting account.
+  stored and modified directly in the vesting account.
 - `DF`: The number of delegated _vested_ (unlocked) coins. It is a variable
-value. It is stored and modified directly in the vesting account.
+  value. It is stored and modified directly in the vesting account.
 - `BC`: The number of `OV` coins less any coins that are transferred
-(which can be negative or delegated). It is considered to be balance of the
-embedded base account. It is stored and modified directly in the vesting account.
+  (which can be negative or delegated). It is considered to be balance of the
+  embedded base account. It is stored and modified directly in the vesting account.
 
 ### Determining Vesting & Vested Amounts
 
@@ -202,12 +202,12 @@ end of that period is after `T`.
 
 For each Period P:
 
-  1. Compute `X := T - CT`
-  2. IF `X >= P.Length`
-      1. Compute `V' += P.Amount`
-      2. Compute `CT += P.Length`
-      3. ELSE break
-  3. Compute `V := OV - V'`
+1. Compute `X := T - CT`
+2. IF `X >= P.Length`
+   1. Compute `V' += P.Amount`
+   2. Compute `CT += P.Length`
+   3. ELSE break
+3. Compute `V := OV - V'`
 
 ```go
 func (pva PeriodicVestingAccount) GetVestedCoins(t Time) Coins {
@@ -464,90 +464,90 @@ V = 10
 V' = 0
 ```
 
-1. Immediately receives 1 coin
+1.  Immediately receives 1 coin
 
     ```
     BC = 11
     ```
 
-2. Time passes, 2 coins vest
+2.  Time passes, 2 coins vest
 
     ```
     V = 8
     V' = 2
     ```
 
-3. Delegates 4 coins to validator A
+3.  Delegates 4 coins to validator A
 
     ```
     DV = 4
     BC = 7
     ```
 
-4. Sends 3 coins
+4.  Sends 3 coins
 
     ```
     BC = 4
     ```
 
-5. More time passes, 2 more coins vest
+5.  More time passes, 2 more coins vest
 
     ```
     V = 6
     V' = 4
     ```
 
-6. Sends 2 coins. At this point the account cannot send anymore until further
-coins vest or it receives additional coins. It can still however, delegate.
+6.  Sends 2 coins. At this point the account cannot send anymore until further
+    coins vest or it receives additional coins. It can still however, delegate.
 
-    ```
-    BC = 2
-    ```
+        ```
+        BC = 2
+        ```
 
 ### Slashing
 
 Same initial starting conditions as the simple example.
 
-1. Time passes, 5 coins vest
+1.  Time passes, 5 coins vest
 
     ```
     V = 5
     V' = 5
     ```
 
-2. Delegate 5 coins to validator A
+2.  Delegate 5 coins to validator A
 
     ```
     DV = 5
     BC = 5
     ```
 
-3. Delegate 5 coins to validator B
+3.  Delegate 5 coins to validator B
 
     ```
     DF = 5
     BC = 0
     ```
 
-4. Validator A gets slashed by 50%, making the delegation to A now worth 2.5 coins
-5. Undelegate from validator A (2.5 coins)
+4.  Validator A gets slashed by 50%, making the delegation to A now worth 2.5 coins
+5.  Undelegate from validator A (2.5 coins)
 
     ```
     DF = 5 - 2.5 = 2.5
     BC = 0 + 2.5 = 2.5
     ```
 
-6. Undelegate from validator B (5 coins). The account at this point can only
-send 2.5 coins unless it receives more coins or until more coins vest.
-It can still however, delegate.
+6.  Undelegate from validator B (5 coins). The account at this point can only
+    send 2.5 coins unless it receives more coins or until more coins vest.
+    It can still however, delegate.
 
-    ```
-    DV = 5 - 2.5 = 2.5
-    DF = 2.5 - 2.5 = 0
-    BC = 2.5 + 5 = 7.5
-    ```
+        ```
+        DV = 5 - 2.5 = 2.5
+        DF = 2.5 - 2.5 = 0
+        BC = 2.5 + 5 = 7.5
+        ```
 
-    Notice how we have an excess amount of `DV`.
+        Notice how we have an excess amount of `DV`.
 
 ### Periodic Vesting
 
@@ -573,46 +573,46 @@ V' = 0
 
 1. Immediately receives 1 coin
 
-    ```
-    BC = 101
-    ```
+   ```
+   BC = 101
+   ```
 
 2. Vesting period 1 passes, 25 coins vest
 
-    ```
-    V = 75
-    V' = 25
-    ```
+   ```
+   V = 75
+   V' = 25
+   ```
 
 3. During vesting period 2, 5 coins are transfered and 5 coins are delegated
 
-    ```
-    DV = 5
-    BC = 91
-    ```
+   ```
+   DV = 5
+   BC = 91
+   ```
 
 4. Vesting period 2 passes, 25 coins vest
 
-    ```
-    V = 50
-    V' = 50
-    ```
+   ```
+   V = 50
+   V' = 50
+   ```
 
 ## Glossary
 
 - OriginalVesting: The amount of coins (per denomination) that are initially
-part of a vesting account. These coins are set at genesis.
+  part of a vesting account. These coins are set at genesis.
 - StartTime: The BFT time at which a vesting account starts to vest.
 - EndTime: The BFT time at which a vesting account is fully vested.
 - DelegatedFree: The tracked amount of coins (per denomination) that are
-delegated from a vesting account that have been fully vested at time of delegation.
+  delegated from a vesting account that have been fully vested at time of delegation.
 - DelegatedVesting: The tracked amount of coins (per denomination) that are
-delegated from a vesting account that were vesting at time of delegation.
+  delegated from a vesting account that were vesting at time of delegation.
 - ContinuousVestingAccount: A vesting account implementation that vests coins
-linearly over time.
+  linearly over time.
 - DelayedVestingAccount: A vesting account implementation that only fully vests
-all coins at a given time.
+  all coins at a given time.
 - PeriodicVestingAccount: A vesting account implementation that vests coins
-according to a custom vesting schedule.
+  according to a custom vesting schedule.
 - PermanentLockedAccount: It does not ever release coins, locking them indefinitely.
-Coins in this account can still be used for delegating and for governance votes even while locked.
+  Coins in this account can still be used for delegating and for governance votes even while locked.

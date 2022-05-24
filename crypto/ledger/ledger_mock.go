@@ -14,10 +14,10 @@ import (
 
 	"github.com/cosmos/go-bip39"
 
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	csecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/Stride-Labs/cosmos-sdk/crypto/hd"
+	csecp256k1 "github.com/Stride-Labs/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/Stride-Labs/cosmos-sdk/testutil/testdata"
+	sdk "github.com/Stride-Labs/cosmos-sdk/types"
 )
 
 // If ledger support (build tag) has been enabled, which implies a CGO dependency,

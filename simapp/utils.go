@@ -8,12 +8,12 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/Stride-Labs/cosmos-sdk/codec"
+	"github.com/Stride-Labs/cosmos-sdk/simapp/helpers"
+	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	"github.com/Stride-Labs/cosmos-sdk/types/kv"
+	"github.com/Stride-Labs/cosmos-sdk/types/module"
+	simtypes "github.com/Stride-Labs/cosmos-sdk/types/simulation"
 )
 
 // SetupSimulation creates the config, db (levelDB), temporary directory and logger for

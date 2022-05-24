@@ -9,13 +9,13 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/Stride-Labs/cosmos-sdk/client"
+	"github.com/Stride-Labs/cosmos-sdk/client/flags"
+	"github.com/Stride-Labs/cosmos-sdk/codec"
+	"github.com/Stride-Labs/cosmos-sdk/codec/types"
+	"github.com/Stride-Labs/cosmos-sdk/crypto/keyring"
+	"github.com/Stride-Labs/cosmos-sdk/testutil/network"
+	"github.com/Stride-Labs/cosmos-sdk/testutil/testdata"
 )
 
 func TestMain(m *testing.M) {

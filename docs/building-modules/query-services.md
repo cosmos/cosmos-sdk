@@ -15,7 +15,7 @@ A Protobuf Query service processes [`queries`](./messages-and-queries.md#queries
 
 The `querier` type defined in the Cosmos SDK will be deprecated in favor of [gRPC Services](#grpc-service). It specifies the typical structure of a `querier` function:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/9a183ffbcc0163c8deb71c7fd5f8089a83e58f05/types/queryable.go#L9
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/9a183ffbcc0163c8deb71c7fd5f8089a83e58f05/types/queryable.go#L9
 
 Let us break it down:
 
@@ -43,7 +43,7 @@ from the store. Therefore, the SDK provides a function `sdk.UnwrapSDKContext` to
 
 Here's an example implementation for the bank module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/x/bank/keeper/grpc_query.go
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/x/bank/keeper/grpc_query.go
 
 ### Legacy Queriers
 
@@ -70,7 +70,7 @@ This simple switch returns a `querier` function specific to the type of the rece
 
 The `querier` functions themselves are pretty straighforward. They generally fetch a value or values from the state using the [`keeper`](./keeper.md). Then, they marshall the value(s) using the [`codec`](../core/encoding.md) and return the `[]byte` obtained as result.
 
-For a deeper look at `querier`s, see this [example implementation of a `querier` function](https://github.com/cosmos/cosmos-sdk/blob/7f59723d889b69ca19966167f0b3a7fec7a39e53/x/gov/keeper/querier.go) from the bank module.
+For a deeper look at `querier`s, see this [example implementation of a `querier` function](https://github.com/Stride-Labs/cosmos-sdk/blob/7f59723d889b69ca19966167f0b3a7fec7a39e53/x/gov/keeper/querier.go) from the bank module.
 
 ## Next {hide}
 

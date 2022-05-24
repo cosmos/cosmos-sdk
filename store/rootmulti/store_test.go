@@ -10,14 +10,14 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store/cachemulti"
-	"github.com/cosmos/cosmos-sdk/store/iavl"
-	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
-	"github.com/cosmos/cosmos-sdk/store/listenkv"
-	"github.com/cosmos/cosmos-sdk/store/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/Stride-Labs/cosmos-sdk/codec"
+	codecTypes "github.com/Stride-Labs/cosmos-sdk/codec/types"
+	"github.com/Stride-Labs/cosmos-sdk/store/cachemulti"
+	"github.com/Stride-Labs/cosmos-sdk/store/iavl"
+	sdkmaps "github.com/Stride-Labs/cosmos-sdk/store/internal/maps"
+	"github.com/Stride-Labs/cosmos-sdk/store/listenkv"
+	"github.com/Stride-Labs/cosmos-sdk/store/types"
+	sdkerrors "github.com/Stride-Labs/cosmos-sdk/types/errors"
 )
 
 func TestStoreType(t *testing.T) {

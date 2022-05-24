@@ -4,7 +4,7 @@ package cosmos.capability.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos/capability/v1beta1/capability.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/capability/types";
+option go_package = "github.com/Stride-Labs/cosmos-sdk/x/capability/types";
 
 // GenesisOwners defines the capability owners with their corresponding index.
 message GenesisOwners {

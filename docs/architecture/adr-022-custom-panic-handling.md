@@ -7,15 +7,15 @@
 ## Context
 
 The current implementation of BaseApp does not allow developers to write custom error handlers during panic recovery
-[runTx()](https://github.com/cosmos/cosmos-sdk/blob/bad4ca75f58b182f600396ca350ad844c18fc80b/baseapp/baseapp.go#L539)
+[runTx()](https://github.com/Stride-Labs/cosmos-sdk/blob/bad4ca75f58b182f600396ca350ad844c18fc80b/baseapp/baseapp.go#L539)
 method. We think that this method can be more flexible and can give SDK users more options for customizations without
 the need to rewrite whole BaseApp. Also there's one special case for `sdk.ErrorOutOfGas` error handling, that case
 might be handled in a "standard" way (middleware) alongside the others.
 
 We propose middleware-solution, which could help developers implement the following cases:
 
-* add external logging (let's say sending reports to external services like [Sentry](https://sentry.io));
-* call panic for specific error cases;
+- add external logging (let's say sending reports to external services like [Sentry](https://sentry.io));
+- call panic for specific error cases;
 
 It will also make `OutOfGas` case and `default` case one of the middlewares.
 `Default` case wraps recovery object to an error and logs it ([example middleware implementation](#Recovery-middleware)).
@@ -34,7 +34,7 @@ in order to customize it.
 
 Instead of hardcoding custom error handling into BaseApp we suggest using set of middlewares which can be customized
 externally and will allow developers use as many custom error handlers as they want. Implementation with tests
-can be found [here](https://github.com/cosmos/cosmos-sdk/pull/6053).
+can be found [here](https://github.com/Stride-Labs/cosmos-sdk/pull/6053).
 
 #### Implementation details
 
@@ -89,10 +89,10 @@ func newRecoveryMiddleware(handler RecoveryHandler, next recoveryMiddleware) rec
 
 Function receives a `recoveryObj` object and returns:
 
-* (next `recoveryMiddleware`, `nil`) if object wasn't handled (not a target type) by `RecoveryHandler`;
-* (`nil`, not nil `error`) if input object was handled and other middlewares in the chain should not be executed;
-* (`nil`, `nil`) in case of invalid behavior. Panic recovery might not have been properly handled;
-this can be avoided by always using a `default` as a rightmost middleware in the chain (always returns an `error`');
+- (next `recoveryMiddleware`, `nil`) if object wasn't handled (not a target type) by `RecoveryHandler`;
+- (`nil`, not nil `error`) if input object was handled and other middlewares in the chain should not be executed;
+- (`nil`, `nil`) in case of invalid behavior. Panic recovery might not have been properly handled;
+  this can be avoided by always using a `default` as a rightmost middleware in the chain (always returns an `error`');
 
 `OutOfGas` middleware example:
 
@@ -192,9 +192,9 @@ This method would prepend handlers to an existing chain.
 ### Positive
 
 - Developers of Cosmos SDK based projects can add custom panic handlers to:
-    * add error context for custom panic sources (panic inside of custom keepers);
-    * emit `panic()`: passthrough recovery object to the Tendermint core;
-    * other necessary handling;
+  - add error context for custom panic sources (panic inside of custom keepers);
+  - emit `panic()`: passthrough recovery object to the Tendermint core;
+  - other necessary handling;
 - Developers can use standard Cosmos SDK `BaseApp` implementation, rather that rewriting it in their projects;
 - Proposed solution doesn't break the current "standard" `runTx()` flow;
 
@@ -209,5 +209,5 @@ This method would prepend handlers to an existing chain.
 
 ## References
 
-- [PR-6053 with proposed solution](https://github.com/cosmos/cosmos-sdk/pull/6053)
-- [Similar solution. ADR-010 Modular AnteHandler](https://github.com/cosmos/cosmos-sdk/blob/v0.38.3/docs/architecture/adr-010-modular-antehandler.md)
+- [PR-6053 with proposed solution](https://github.com/Stride-Labs/cosmos-sdk/pull/6053)
+- [Similar solution. ADR-010 Modular AnteHandler](https://github.com/Stride-Labs/cosmos-sdk/blob/v0.38.3/docs/architecture/adr-010-modular-antehandler.md)

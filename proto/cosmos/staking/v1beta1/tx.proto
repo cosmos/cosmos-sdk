@@ -9,7 +9,7 @@ import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/staking/v1beta1/staking.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
+option go_package = "github.com/Stride-Labs/cosmos-sdk/x/staking/types";
 
 // Msg defines the staking Msg service.
 service Msg {
@@ -40,7 +40,7 @@ message MsgCreateValidator {
   Description     description         = 1 [(gogoproto.nullable) = false];
   CommissionRates commission          = 2 [(gogoproto.nullable) = false];
   string          min_self_delegation = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "github.com/Stride-Labs/cosmos-sdk/types.Int",
     (gogoproto.moretags)   = "yaml:\"min_self_delegation\"",
     (gogoproto.nullable)   = false
   ];
@@ -66,11 +66,11 @@ message MsgEditValidator {
   // zero with no way to distinguish if an update was intended.
   // REF: #2373
   string commission_rate = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "github.com/Stride-Labs/cosmos-sdk/types.Dec",
     (gogoproto.moretags)   = "yaml:\"commission_rate\""
   ];
   string min_self_delegation = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "github.com/Stride-Labs/cosmos-sdk/types.Int",
     (gogoproto.moretags)   = "yaml:\"min_self_delegation\""
   ];
 }

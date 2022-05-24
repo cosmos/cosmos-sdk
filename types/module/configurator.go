@@ -5,15 +5,15 @@ import (
 
 	"github.com/gogo/protobuf/grpc"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/Stride-Labs/cosmos-sdk/codec"
+	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	sdkerrors "github.com/Stride-Labs/cosmos-sdk/types/errors"
 )
 
 // Configurator provides the hooks to allow modules to configure and register
 // their services in the RegisterServices method. It is designed to eventually
 // support module object capabilities isolation as described in
-// https://github.com/cosmos/cosmos-sdk/issues/7093
+// https://github.com/Stride-Labs/cosmos-sdk/issues/7093
 type Configurator interface {
 	// MsgServer returns a grpc.Server instance which allows registering services
 	// that will handle TxBody.messages in transactions. These Msg's WILL NOT

@@ -65,7 +65,7 @@ To learn more about configuring migration scripts for your modules, see the [Mod
 
 ### Order Of Migrations
 
-By default, all migrations are run in module name alphabetical ascending order, except `x/auth` which is run last. The reason is state dependencies between x/auth and other modules (you can read more in [issue #10606](https://github.com/cosmos/cosmos-sdk/issues/10606)).
+By default, all migrations are run in module name alphabetical ascending order, except `x/auth` which is run last. The reason is state dependencies between x/auth and other modules (you can read more in [issue #10606](https://github.com/Stride-Labs/cosmos-sdk/issues/10606)).
 
 If you want to change the order of migration then you should call `app.mm.SetOrderMigrations(module1, module2, ...)` in your app.go file. The function will panic if you forget to include a module in the argument list.
 

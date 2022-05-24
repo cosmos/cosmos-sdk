@@ -1,7 +1,7 @@
-swagger: '2.0'
+swagger: "2.0"
 info:
   title: Cosmos SDK - Legacy REST and gRPC Gateway docs
-  description: 'A REST interface for state queries, legacy transactions'
+  description: "A REST interface for state queries, legacy transactions"
   version: 1.0.0
 paths:
   /node_info:
@@ -13,7 +13,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: Node status
           schema:
             type: object
@@ -59,7 +59,7 @@ paths:
                     type: string
                   listen_addr:
                     type: string
-                    example: '192.168.56.1:26656'
+                    example: "192.168.56.1:26656"
                   version:
                     description: Tendermint version
                     type: string
@@ -70,11 +70,11 @@ paths:
                     properties:
                       tx_index:
                         type: string
-                        example: 'on'
+                        example: "on"
                       rpc_address:
                         type: string
-                        example: 'tcp://0.0.0.0:26657'
-        '500':
+                        example: "tcp://0.0.0.0:26657"
+        "500":
           description: Failed to query node status
   /syncing:
     get:
@@ -85,14 +85,14 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: Node syncing status
           schema:
             type: object
             properties:
               syncing:
                 type: boolean
-        '500':
+        "500":
           description: Server internal error
   /blocks/latest:
     get:
@@ -102,7 +102,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: The latest block
           schema:
             type: object
@@ -121,7 +121,7 @@ paths:
                         example: 1
                       time:
                         type: string
-                        example: '2017-12-30T05:53:09.287+01:00'
+                        example: "2017-12-30T05:53:09.287+01:00"
                       num_txs:
                         type: number
                         example: 0
@@ -209,7 +209,7 @@ paths:
                         example: 1
                       time:
                         type: string
-                        example: '2017-12-30T05:53:09.287+01:00'
+                        example: "2017-12-30T05:53:09.287+01:00"
                       num_txs:
                         type: number
                         example: 0
@@ -303,16 +303,16 @@ paths:
                               type: string
                             validator_index:
                               type: string
-                              example: '0'
+                              example: "0"
                             height:
                               type: string
-                              example: '0'
+                              example: "0"
                             round:
                               type: string
-                              example: '0'
+                              example: "0"
                             timestamp:
                               type: string
-                              example: '2017-12-30T05:53:09.287+01:00'
+                              example: "2017-12-30T05:53:09.287+01:00"
                             type:
                               type: number
                               example: 2
@@ -335,9 +335,9 @@ paths:
                               type: string
                               example: >-
                                 7uTC74QlknqYWEwg7Vn6M8Om7FuZ0EO4bjvuj6rwH1mTUJrRuMMZvAAqT9VjNgP0RA/TDp6u/92AqrZfXJSpBQ==
-        '500':
+        "500":
           description: Server internal error
-  '/blocks/{height}':
+  "/blocks/{height}":
     get:
       summary: Get a block at a certain height
       tags:
@@ -352,7 +352,7 @@ paths:
           type: number
           x-example: 1
       responses:
-        '200':
+        "200":
           description: The block at a specific height
           schema:
             type: object
@@ -371,7 +371,7 @@ paths:
                         example: 1
                       time:
                         type: string
-                        example: '2017-12-30T05:53:09.287+01:00'
+                        example: "2017-12-30T05:53:09.287+01:00"
                       num_txs:
                         type: number
                         example: 0
@@ -459,7 +459,7 @@ paths:
                         example: 1
                       time:
                         type: string
-                        example: '2017-12-30T05:53:09.287+01:00'
+                        example: "2017-12-30T05:53:09.287+01:00"
                       num_txs:
                         type: number
                         example: 0
@@ -553,16 +553,16 @@ paths:
                               type: string
                             validator_index:
                               type: string
-                              example: '0'
+                              example: "0"
                             height:
                               type: string
-                              example: '0'
+                              example: "0"
                             round:
                               type: string
-                              example: '0'
+                              example: "0"
                             timestamp:
                               type: string
-                              example: '2017-12-30T05:53:09.287+01:00'
+                              example: "2017-12-30T05:53:09.287+01:00"
                             type:
                               type: number
                               example: 2
@@ -585,11 +585,11 @@ paths:
                               type: string
                               example: >-
                                 7uTC74QlknqYWEwg7Vn6M8Om7FuZ0EO4bjvuj6rwH1mTUJrRuMMZvAAqT9VjNgP0RA/TDp6u/92AqrZfXJSpBQ==
-        '400':
+        "400":
           description: Invalid height
-        '404':
+        "404":
           description: Request block height doesn't
-        '500':
+        "500":
           description: Server internal error
   /validatorsets/latest:
     get:
@@ -599,7 +599,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: The validator set at the latest block height
           schema:
             type: object
@@ -621,13 +621,13 @@ paths:
                         cosmosvalconspub1zcjduepq0vu2zgkgk49efa0nqwzndanq5m4c7pa3u4apz4g2r9gspqg6g9cs3k9cuf
                     voting_power:
                       type: string
-                      example: '1000'
+                      example: "1000"
                     proposer_priority:
                       type: string
-                      example: '1000'
-        '500':
+                      example: "1000"
+        "500":
           description: Server internal error
-  '/validatorsets/{height}':
+  "/validatorsets/{height}":
     get:
       summary: Get a validator set a certain height
       tags:
@@ -642,7 +642,7 @@ paths:
           type: number
           x-example: 1
       responses:
-        '200':
+        "200":
           description: The validator set at a specific block height
           schema:
             type: object
@@ -664,17 +664,17 @@ paths:
                         cosmosvalconspub1zcjduepq0vu2zgkgk49efa0nqwzndanq5m4c7pa3u4apz4g2r9gspqg6g9cs3k9cuf
                     voting_power:
                       type: string
-                      example: '1000'
+                      example: "1000"
                     proposer_priority:
                       type: string
-                      example: '1000'
-        '400':
+                      example: "1000"
+        "400":
           description: Invalid height
-        '404':
+        "404":
           description: Block at height not available
-        '500':
+        "500":
           description: Server internal error
-  '/txs/{hash}':
+  "/txs/{hash}":
     get:
       deprecated: true
       summary: Get a Tx by hash
@@ -691,7 +691,7 @@ paths:
           type: string
           x-example: BCBE20E8D46758B96AE5883B792858296AC06E51435490FBDCAE25A72B3CC76B
       responses:
-        '200':
+        "200":
           description: Tx with the provided hash
           schema:
             type: object
@@ -725,7 +725,7 @@ paths:
                               example: stake
                             amount:
                               type: string
-                              example: '50'
+                              example: "50"
                   memo:
                     type: string
                   signature:
@@ -746,10 +746,10 @@ paths:
                             example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
                       account_number:
                         type: string
-                        example: '0'
+                        example: "0"
                       sequence:
                         type: string
-                        example: '0'
+                        example: "0"
               result:
                 type: object
                 properties:
@@ -757,10 +757,10 @@ paths:
                     type: string
                   gas_wanted:
                     type: string
-                    example: '200000'
+                    example: "200000"
                   gas_used:
                     type: string
-                    example: '26354'
+                    example: "26354"
                   tags:
                     type: array
                     items:
@@ -770,7 +770,7 @@ paths:
                           type: string
                         value:
                           type: string
-        '500':
+        "500":
           description: Internal Server Error
   /txs:
     get:
@@ -819,7 +819,7 @@ paths:
           description: transactions on blocks with height less than or equal this value
           x-example: 800000
       responses:
-        '200':
+        "200":
           description: All txs matching the provided events
           schema:
             type: object
@@ -873,7 +873,7 @@ paths:
                                     example: stake
                                   amount:
                                     type: string
-                                    example: '50'
+                                    example: "50"
                         memo:
                           type: string
                         signature:
@@ -894,10 +894,10 @@ paths:
                                   example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
                             account_number:
                               type: string
-                              example: '0'
+                              example: "0"
                             sequence:
                               type: string
-                              example: '0'
+                              example: "0"
                     result:
                       type: object
                       properties:
@@ -905,10 +905,10 @@ paths:
                           type: string
                         gas_wanted:
                           type: string
-                          example: '200000'
+                          example: "200000"
                         gas_used:
                           type: string
-                          example: '26354'
+                          example: "26354"
                         tags:
                           type: array
                           items:
@@ -918,9 +918,9 @@ paths:
                                 type: string
                               value:
                                 type: string
-        '400':
+        "400":
           description: Invalid search events
-        '500':
+        "500":
           description: Internal Server Error
     post:
       tags:
@@ -964,7 +964,7 @@ paths:
                               example: stake
                             amount:
                               type: string
-                              example: '50'
+                              example: "50"
                   memo:
                     type: string
                   signature:
@@ -985,15 +985,15 @@ paths:
                             example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
                       account_number:
                         type: string
-                        example: '0'
+                        example: "0"
                       sequence:
                         type: string
-                        example: '0'
+                        example: "0"
               mode:
                 type: string
                 example: block
       responses:
-        '200':
+        "200":
           description: Tx broadcasting result
           schema:
             type: object
@@ -1030,8 +1030,8 @@ paths:
                   gas_wanted: 10000
                   info: info
                   tags:
-                    - ''
-                    - ''
+                    - ""
+                    - ""
               deliver_tx:
                 type: object
                 properties:
@@ -1064,14 +1064,14 @@ paths:
                   gas_wanted: 10000
                   info: info
                   tags:
-                    - ''
-                    - ''
+                    - ""
+                    - ""
               hash:
                 type: string
                 example: EE5F3404034C524501629B56E0DDC38FAD651F04
               height:
                 type: integer
-        '500':
+        "500":
           description: Internal Server Error
   /txs/encode:
     post:
@@ -1116,7 +1116,7 @@ paths:
                               example: stake
                             amount:
                               type: string
-                              example: '50'
+                              example: "50"
                   memo:
                     type: string
                   signature:
@@ -1137,12 +1137,12 @@ paths:
                             example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
                       account_number:
                         type: string
-                        example: '0'
+                        example: "0"
                       sequence:
                         type: string
-                        example: '0'
+                        example: "0"
       responses:
-        '200':
+        "200":
           description: The tx was successfully decoded and re-encoded
           schema:
             type: object
@@ -1150,9 +1150,9 @@ paths:
               tx:
                 type: string
                 example: The base64-encoded Amino-serialized bytes for the tx
-        '400':
+        "400":
           description: The tx was malformated
-        '500':
+        "500":
           description: Server internal error
   /txs/decode:
     post:
@@ -1180,7 +1180,7 @@ paths:
                 example: >-
                   SvBiXe4KPqijYZoKFFHEzJ8c2HPAfv2EFUcIhx0yPagwEhTy0vPA+GGhCEslKXa4Af0uB+mfShoMCgVzdGFrZRIDMTAwEgQQwJoM
       responses:
-        '200':
+        "200":
           description: The tx was successfully decoded
           schema:
             type: object
@@ -1204,7 +1204,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
               memo:
                 type: string
               signature:
@@ -1225,15 +1225,15 @@ paths:
                         example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '0'
-        '400':
+                    example: "0"
+        "400":
           description: The tx was malformated
-        '500':
+        "500":
           description: Server internal error
-  '/bank/balances/{address}':
+  "/bank/balances/{address}":
     get:
       deprecated: true
       summary: Get the account balances
@@ -1249,7 +1249,7 @@ paths:
           type: string
           x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
       responses:
-        '200':
+        "200":
           description: Account balances
           schema:
             type: array
@@ -1261,10 +1261,10 @@ paths:
                   example: stake
                 amount:
                   type: string
-                  example: '50'
-        '500':
+                  example: "50"
+        "500":
           description: Server internal error
-  '/bank/accounts/{address}/transfers':
+  "/bank/accounts/{address}/transfers":
     post:
       deprecated: true
       summary: Send coins from one account to another
@@ -1303,16 +1303,16 @@ paths:
                     example: Cosmos-Hub
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '1'
+                    example: "1"
                   gas:
                     type: string
-                    example: '200000'
+                    example: "200000"
                   gas_adjustment:
                     type: string
-                    example: '1.2'
+                    example: "1.2"
                   fees:
                     type: array
                     items:
@@ -1323,7 +1323,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
                   simulate:
                     type: boolean
                     example: false
@@ -1340,9 +1340,9 @@ paths:
                       example: stake
                     amount:
                       type: string
-                      example: '50'
+                      example: "50"
       responses:
-        '202':
+        "202":
           description: Tx was succesfully generated
           schema:
             type: object
@@ -1366,7 +1366,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
               memo:
                 type: string
               signature:
@@ -1387,13 +1387,13 @@ paths:
                         example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '0'
-        '400':
+                    example: "0"
+        "400":
           description: Invalid request
-        '500':
+        "500":
           description: Server internal error
   /bank/total:
     get:
@@ -1404,7 +1404,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
@@ -1419,10 +1419,10 @@ paths:
                       example: stake
                     amount:
                       type: string
-                      example: '50'
-        '500':
+                      example: "50"
+        "500":
           description: Internal Server Error
-  '/bank/total/{denomination}':
+  "/bank/total/{denomination}":
     parameters:
       - in: path
         name: denomination
@@ -1438,15 +1438,15 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: string
-        '400':
+        "400":
           description: Invalid coin denomination
-        '500':
+        "500":
           description: Internal Server Error
-  '/auth/accounts/{address}':
+  "/auth/accounts/{address}":
     get:
       deprecated: true
       summary: Get the account information on blockchain
@@ -1462,7 +1462,7 @@ paths:
           type: string
           x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
       responses:
-        '200':
+        "200":
           description: Account information on the blockchain
           schema:
             type: object
@@ -1486,7 +1486,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
                   public_key:
                     type: object
                     properties:
@@ -1496,9 +1496,9 @@ paths:
                         type: string
                   sequence:
                     type: string
-        '500':
+        "500":
           description: Server internel error
-  '/staking/delegators/{delegatorAddr}/delegations':
+  "/staking/delegators/{delegatorAddr}/delegations":
     parameters:
       - in: path
         name: delegatorAddr
@@ -1514,7 +1514,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
@@ -1535,10 +1535,10 @@ paths:
                       example: stake
                     amount:
                       type: string
-                      example: '50'
-        '400':
+                      example: "50"
+        "400":
           description: Invalid delegator address
-        '500':
+        "500":
           description: Internal Server Error
     post:
       summary: Submit delegation
@@ -1564,16 +1564,16 @@ paths:
                     example: Cosmos-Hub
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '1'
+                    example: "1"
                   gas:
                     type: string
-                    example: '200000'
+                    example: "200000"
                   gas_adjustment:
                     type: string
-                    example: '1.2'
+                    example: "1.2"
                   fees:
                     type: array
                     items:
@@ -1584,7 +1584,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
                   simulate:
                     type: boolean
                     example: false
@@ -1607,7 +1607,7 @@ paths:
                     example: stake
                   amount:
                     type: string
-                    example: '50'
+                    example: "50"
       tags:
         - Staking
       consumes:
@@ -1615,7 +1615,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
@@ -1639,7 +1639,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
               memo:
                 type: string
               signature:
@@ -1660,17 +1660,17 @@ paths:
                         example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '0'
-        '400':
+                    example: "0"
+        "400":
           description: Invalid delegator address or delegation request body
-        '401':
+        "401":
           description: Key password is wrong
-        '500':
+        "500":
           description: Internal Server Error
-  '/staking/delegators/{delegatorAddr}/delegations/{validatorAddr}':
+  "/staking/delegators/{delegatorAddr}/delegations/{validatorAddr}":
     parameters:
       - in: path
         name: delegatorAddr
@@ -1692,7 +1692,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
@@ -1711,12 +1711,12 @@ paths:
                     example: stake
                   amount:
                     type: string
-                    example: '50'
-        '400':
+                    example: "50"
+        "400":
           description: Invalid delegator address or validator address
-        '500':
+        "500":
           description: Internal Server Error
-  '/staking/delegators/{delegatorAddr}/unbonding_delegations':
+  "/staking/delegators/{delegatorAddr}/unbonding_delegations":
     parameters:
       - in: path
         name: delegatorAddr
@@ -1732,7 +1732,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
@@ -1751,9 +1751,9 @@ paths:
                   type: integer
                 min_time:
                   type: integer
-        '400':
+        "400":
           description: Invalid delegator address
-        '500':
+        "500":
           description: Internal Server Error
     post:
       summary: Submit an unbonding delegation
@@ -1779,16 +1779,16 @@ paths:
                     example: Cosmos-Hub
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '1'
+                    example: "1"
                   gas:
                     type: string
-                    example: '200000'
+                    example: "200000"
                   gas_adjustment:
                     type: string
-                    example: '1.2'
+                    example: "1.2"
                   fees:
                     type: array
                     items:
@@ -1799,7 +1799,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
                   simulate:
                     type: boolean
                     example: false
@@ -1822,7 +1822,7 @@ paths:
                     example: stake
                   amount:
                     type: string
-                    example: '50'
+                    example: "50"
       tags:
         - Staking
       consumes:
@@ -1830,7 +1830,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
@@ -1854,7 +1854,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
               memo:
                 type: string
               signature:
@@ -1875,17 +1875,17 @@ paths:
                         example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '0'
-        '400':
+                    example: "0"
+        "400":
           description: Invalid delegator address or unbonding delegation request body
-        '401':
+        "401":
           description: Key password is wrong
-        '500':
+        "500":
           description: Internal Server Error
-  '/staking/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}':
+  "/staking/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}":
     parameters:
       - in: path
         name: delegatorAddr
@@ -1907,7 +1907,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
@@ -1929,9 +1929,9 @@ paths:
                       type: string
                     min_time:
                       type: string
-        '400':
+        "400":
           description: Invalid delegator address or validator address
-        '500':
+        "500":
           description: Internal Server Error
   /staking/redelegations:
     parameters:
@@ -1958,15 +1958,15 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
             items:
-              $ref: '#/definitions/Redelegation'
-        '500':
+              $ref: "#/definitions/Redelegation"
+        "500":
           description: Internal Server Error
-  '/staking/delegators/{delegatorAddr}/redelegations':
+  "/staking/delegators/{delegatorAddr}/redelegations":
     parameters:
       - in: path
         name: delegatorAddr
@@ -1999,16 +1999,16 @@ paths:
                     example: Cosmos-Hub
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '1'
+                    example: "1"
                   gas:
                     type: string
-                    example: '200000'
+                    example: "200000"
                   gas_adjustment:
                     type: string
-                    example: '1.2'
+                    example: "1.2"
                   fees:
                     type: array
                     items:
@@ -2019,7 +2019,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
                   simulate:
                     type: boolean
                     example: false
@@ -2040,7 +2040,7 @@ paths:
                 example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
               shares:
                 type: string
-                example: '100'
+                example: "100"
       tags:
         - Staking
       consumes:
@@ -2048,7 +2048,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: Tx was succesfully generated
           schema:
             type: object
@@ -2072,7 +2072,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
               memo:
                 type: string
               signature:
@@ -2093,15 +2093,15 @@ paths:
                         example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '0'
-        '400':
+                    example: "0"
+        "400":
           description: Invalid delegator address or redelegation request body
-        '500':
+        "500":
           description: Internal Server Error
-  '/staking/delegators/{delegatorAddr}/validators':
+  "/staking/delegators/{delegatorAddr}/validators":
     parameters:
       - in: path
         name: delegatorAddr
@@ -2117,7 +2117,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
@@ -2155,36 +2155,36 @@ paths:
                       type: string
                 bond_height:
                   type: string
-                  example: '0'
+                  example: "0"
                 bond_intra_tx_counter:
                   type: integer
                   example: 0
                 unbonding_height:
                   type: string
-                  example: '0'
+                  example: "0"
                 unbonding_time:
                   type: string
-                  example: '1970-01-01T00:00:00Z'
+                  example: "1970-01-01T00:00:00Z"
                 commission:
                   type: object
                   properties:
                     rate:
                       type: string
-                      example: '0'
+                      example: "0"
                     max_rate:
                       type: string
-                      example: '0'
+                      example: "0"
                     max_change_rate:
                       type: string
-                      example: '0'
+                      example: "0"
                     update_time:
                       type: string
-                      example: '1970-01-01T00:00:00Z'
-        '400':
+                      example: "1970-01-01T00:00:00Z"
+        "400":
           description: Invalid delegator address
-        '500':
+        "500":
           description: Internal Server Error
-  '/staking/delegators/{delegatorAddr}/validators/{validatorAddr}':
+  "/staking/delegators/{delegatorAddr}/validators/{validatorAddr}":
     parameters:
       - in: path
         name: delegatorAddr
@@ -2206,7 +2206,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
@@ -2242,34 +2242,34 @@ paths:
                     type: string
               bond_height:
                 type: string
-                example: '0'
+                example: "0"
               bond_intra_tx_counter:
                 type: integer
                 example: 0
               unbonding_height:
                 type: string
-                example: '0'
+                example: "0"
               unbonding_time:
                 type: string
-                example: '1970-01-01T00:00:00Z'
+                example: "1970-01-01T00:00:00Z"
               commission:
                 type: object
                 properties:
                   rate:
                     type: string
-                    example: '0'
+                    example: "0"
                   max_rate:
                     type: string
-                    example: '0'
+                    example: "0"
                   max_change_rate:
                     type: string
-                    example: '0'
+                    example: "0"
                   update_time:
                     type: string
-                    example: '1970-01-01T00:00:00Z'
-        '400':
+                    example: "1970-01-01T00:00:00Z"
+        "400":
           description: Invalid delegator address or validator address
-        '500':
+        "500":
           description: Internal Server Error
   /staking/validators:
     get:
@@ -2300,7 +2300,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
@@ -2338,34 +2338,34 @@ paths:
                       type: string
                 bond_height:
                   type: string
-                  example: '0'
+                  example: "0"
                 bond_intra_tx_counter:
                   type: integer
                   example: 0
                 unbonding_height:
                   type: string
-                  example: '0'
+                  example: "0"
                 unbonding_time:
                   type: string
-                  example: '1970-01-01T00:00:00Z'
+                  example: "1970-01-01T00:00:00Z"
                 commission:
                   type: object
                   properties:
                     rate:
                       type: string
-                      example: '0'
+                      example: "0"
                     max_rate:
                       type: string
-                      example: '0'
+                      example: "0"
                     max_change_rate:
                       type: string
-                      example: '0'
+                      example: "0"
                     update_time:
                       type: string
-                      example: '1970-01-01T00:00:00Z'
-        '500':
+                      example: "1970-01-01T00:00:00Z"
+        "500":
           description: Internal Server Error
-  '/staking/validators/{validatorAddr}':
+  "/staking/validators/{validatorAddr}":
     parameters:
       - in: path
         name: validatorAddr
@@ -2381,7 +2381,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
@@ -2417,36 +2417,36 @@ paths:
                     type: string
               bond_height:
                 type: string
-                example: '0'
+                example: "0"
               bond_intra_tx_counter:
                 type: integer
                 example: 0
               unbonding_height:
                 type: string
-                example: '0'
+                example: "0"
               unbonding_time:
                 type: string
-                example: '1970-01-01T00:00:00Z'
+                example: "1970-01-01T00:00:00Z"
               commission:
                 type: object
                 properties:
                   rate:
                     type: string
-                    example: '0'
+                    example: "0"
                   max_rate:
                     type: string
-                    example: '0'
+                    example: "0"
                   max_change_rate:
                     type: string
-                    example: '0'
+                    example: "0"
                   update_time:
                     type: string
-                    example: '1970-01-01T00:00:00Z'
-        '400':
+                    example: "1970-01-01T00:00:00Z"
+        "400":
           description: Invalid validator address
-        '500':
+        "500":
           description: Internal Server Error
-  '/staking/validators/{validatorAddr}/delegations':
+  "/staking/validators/{validatorAddr}/delegations":
     parameters:
       - in: path
         name: validatorAddr
@@ -2462,7 +2462,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
@@ -2483,12 +2483,12 @@ paths:
                       example: stake
                     amount:
                       type: string
-                      example: '50'
-        '400':
+                      example: "50"
+        "400":
           description: Invalid validator address
-        '500':
+        "500":
           description: Internal Server Error
-  '/staking/validators/{validatorAddr}/unbonding_delegations':
+  "/staking/validators/{validatorAddr}/unbonding_delegations":
     parameters:
       - in: path
         name: validatorAddr
@@ -2504,7 +2504,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
@@ -2523,9 +2523,9 @@ paths:
                   type: integer
                 min_time:
                   type: integer
-        '400':
+        "400":
           description: Invalid validator address
-        '500':
+        "500":
           description: Internal Server Error
   /staking/pool:
     get:
@@ -2536,7 +2536,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
@@ -2553,7 +2553,7 @@ paths:
                 type: string
               prev_bonded_shares:
                 type: string
-        '500':
+        "500":
           description: Internal Server Error
   /staking/parameters:
     get:
@@ -2564,7 +2564,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
@@ -2583,7 +2583,7 @@ paths:
                 type: integer
               bond_denom:
                 type: string
-        '500':
+        "500":
           description: Internal Server Error
   /slashing/signing_infos:
     get:
@@ -2608,7 +2608,7 @@ paths:
           required: true
           x-example: 5
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
@@ -2623,11 +2623,11 @@ paths:
                   type: string
                 missed_blocks_counter:
                   type: string
-        '400':
+        "400":
           description: Invalid validator public key for one of the validators
-        '500':
+        "500":
           description: Internal Server Error
-  '/slashing/validators/{validatorAddr}/unjail':
+  "/slashing/validators/{validatorAddr}/unjail":
     post:
       deprecated: true
       summary: Unjail a jailed validator
@@ -2645,7 +2645,7 @@ paths:
           required: true
           in: path
           x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
-        - description: ''
+        - description: ""
           name: UnjailBody
           in: body
           required: true
@@ -2674,7 +2674,7 @@ paths:
                               example: stake
                             amount:
                               type: string
-                              example: '50'
+                              example: "50"
                   memo:
                     type: string
                   signature:
@@ -2695,12 +2695,12 @@ paths:
                             example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
                       account_number:
                         type: string
-                        example: '0'
+                        example: "0"
                       sequence:
                         type: string
-                        example: '0'
+                        example: "0"
       responses:
-        '200':
+        "200":
           description: Tx was succesfully generated
           schema:
             type: object
@@ -2724,7 +2724,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
               memo:
                 type: string
               signature:
@@ -2745,13 +2745,13 @@ paths:
                         example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '0'
-        '400':
+                    example: "0"
+        "400":
           description: Invalid validator address or base_req
-        '500':
+        "500":
           description: Internal Server Error
   /slashing/parameters:
     get:
@@ -2762,7 +2762,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
@@ -2781,7 +2781,7 @@ paths:
                 type: string
               slash_fraction_downtime:
                 type: string
-        '500':
+        "500":
           description: Internal Server Error
   /gov/proposals:
     post:
@@ -2819,16 +2819,16 @@ paths:
                     example: Cosmos-Hub
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '1'
+                    example: "1"
                   gas:
                     type: string
-                    example: '200000'
+                    example: "200000"
                   gas_adjustment:
                     type: string
-                    example: '1.2'
+                    example: "1.2"
                   fees:
                     type: array
                     items:
@@ -2839,7 +2839,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
                   simulate:
                     type: boolean
                     example: false
@@ -2867,9 +2867,9 @@ paths:
                       example: stake
                     amount:
                       type: string
-                      example: '50'
+                      example: "50"
       responses:
-        '200':
+        "200":
           description: Tx was succesfully generated
           schema:
             type: object
@@ -2893,7 +2893,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
               memo:
                 type: string
               signature:
@@ -2914,13 +2914,13 @@ paths:
                         example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '0'
-        '400':
+                    example: "0"
+        "400":
           description: Invalid proposal body
-        '500':
+        "500":
           description: Internal Server Error
     get:
       deprecated: true
@@ -2949,7 +2949,7 @@ paths:
           required: false
           type: string
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
@@ -2969,18 +2969,18 @@ paths:
                 final_tally_result:
                   type: object
                   properties:
-                    'yes':
+                    "yes":
                       type: string
-                      example: '0.0000000000'
+                      example: "0.0000000000"
                     abstain:
                       type: string
-                      example: '0.0000000000'
-                    'no':
+                      example: "0.0000000000"
+                    "no":
                       type: string
-                      example: '0.0000000000'
+                      example: "0.0000000000"
                     no_with_veto:
                       type: string
-                      example: '0.0000000000'
+                      example: "0.0000000000"
                 submit_time:
                   type: string
                 total_deposit:
@@ -2993,12 +2993,12 @@ paths:
                         example: stake
                       amount:
                         type: string
-                        example: '50'
+                        example: "50"
                 voting_start_time:
                   type: string
-        '400':
+        "400":
           description: Invalid query parameters
-        '500':
+        "500":
           description: Internal Server Error
   /gov/proposals/param_change:
     post:
@@ -3036,16 +3036,16 @@ paths:
                     example: Cosmos-Hub
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '1'
+                    example: "1"
                   gas:
                     type: string
-                    example: '200000'
+                    example: "200000"
                   gas_adjustment:
                     type: string
-                    example: '1.2'
+                    example: "1.2"
                   fees:
                     type: array
                     items:
@@ -3056,7 +3056,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
                   simulate:
                     type: boolean
                     example: false
@@ -3083,7 +3083,7 @@ paths:
                       example: stake
                     amount:
                       type: string
-                      example: '50'
+                      example: "50"
               changes:
                 type: array
                 items:
@@ -3097,11 +3097,11 @@ paths:
                       example: MaxValidators
                     subkey:
                       type: string
-                      example: ''
+                      example: ""
                     value:
                       type: object
       responses:
-        '200':
+        "200":
           description: The transaction was succesfully generated
           schema:
             type: object
@@ -3125,7 +3125,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
               memo:
                 type: string
               signature:
@@ -3146,15 +3146,15 @@ paths:
                         example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '0'
-        '400':
+                    example: "0"
+        "400":
           description: Invalid proposal body
-        '500':
+        "500":
           description: Internal Server Error
-  '/gov/proposals/{proposalId}':
+  "/gov/proposals/{proposalId}":
     get:
       deprecated: true
       summary: Query a proposal
@@ -3168,9 +3168,9 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '2'
+          x-example: "2"
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
@@ -3188,18 +3188,18 @@ paths:
               final_tally_result:
                 type: object
                 properties:
-                  'yes':
+                  "yes":
                     type: string
-                    example: '0.0000000000'
+                    example: "0.0000000000"
                   abstain:
                     type: string
-                    example: '0.0000000000'
-                  'no':
+                    example: "0.0000000000"
+                  "no":
                     type: string
-                    example: '0.0000000000'
+                    example: "0.0000000000"
                   no_with_veto:
                     type: string
-                    example: '0.0000000000'
+                    example: "0.0000000000"
               submit_time:
                 type: string
               total_deposit:
@@ -3212,14 +3212,14 @@ paths:
                       example: stake
                     amount:
                       type: string
-                      example: '50'
+                      example: "50"
               voting_start_time:
                 type: string
-        '400':
+        "400":
           description: Invalid proposal id
-        '500':
+        "500":
           description: Internal Server Error
-  '/gov/proposals/{proposalId}/proposer':
+  "/gov/proposals/{proposalId}/proposer":
     get:
       deprecated: true
       summary: Query proposer
@@ -3233,9 +3233,9 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '2'
+          x-example: "2"
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
@@ -3244,11 +3244,11 @@ paths:
                 type: string
               proposer:
                 type: string
-        '400':
+        "400":
           description: Invalid proposal ID
-        '500':
+        "500":
           description: Internal Server Error
-  '/gov/proposals/{proposalId}/deposits':
+  "/gov/proposals/{proposalId}/deposits":
     get:
       deprecated: true
       summary: Query deposits
@@ -3262,9 +3262,9 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '2'
+          x-example: "2"
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
@@ -3281,16 +3281,16 @@ paths:
                         example: stake
                       amount:
                         type: string
-                        example: '50'
+                        example: "50"
                 proposal_id:
                   type: string
                 depositor:
                   type: string
                   description: bech32 encoded address
                   example: cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27
-        '400':
+        "400":
           description: Invalid proposal id
-        '500':
+        "500":
           description: Internal Server Error
     post:
       deprecated: true
@@ -3308,8 +3308,8 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '2'
-        - description: ''
+          x-example: "2"
+        - description: ""
           name: post_deposit_body
           in: body
           required: true
@@ -3331,16 +3331,16 @@ paths:
                     example: Cosmos-Hub
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '1'
+                    example: "1"
                   gas:
                     type: string
-                    example: '200000'
+                    example: "200000"
                   gas_adjustment:
                     type: string
-                    example: '1.2'
+                    example: "1.2"
                   fees:
                     type: array
                     items:
@@ -3351,7 +3351,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
                   simulate:
                     type: boolean
                     example: false
@@ -3372,9 +3372,9 @@ paths:
                       example: stake
                     amount:
                       type: string
-                      example: '50'
+                      example: "50"
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
@@ -3398,7 +3398,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
               memo:
                 type: string
               signature:
@@ -3419,17 +3419,17 @@ paths:
                         example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '0'
-        '400':
+                    example: "0"
+        "400":
           description: Invalid proposal id or deposit body
-        '401':
+        "401":
           description: Key password is wrong
-        '500':
+        "500":
           description: Internal Server Error
-  '/gov/proposals/{proposalId}/deposits/{depositor}':
+  "/gov/proposals/{proposalId}/deposits/{depositor}":
     get:
       deprecated: true
       summary: Query deposit
@@ -3444,7 +3444,7 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '2'
+          x-example: "2"
         - type: string
           description: Bech32 depositor address
           name: depositor
@@ -3452,7 +3452,7 @@ paths:
           in: path
           x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
@@ -3467,20 +3467,20 @@ paths:
                       example: stake
                     amount:
                       type: string
-                      example: '50'
+                      example: "50"
               proposal_id:
                 type: string
               depositor:
                 type: string
                 description: bech32 encoded address
                 example: cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27
-        '400':
+        "400":
           description: Invalid proposal id or depositor address
-        '404':
+        "404":
           description: Found no deposit
-        '500':
+        "500":
           description: Internal Server Error
-  '/gov/proposals/{proposalId}/votes':
+  "/gov/proposals/{proposalId}/votes":
     get:
       deprecated: true
       summary: Query voters
@@ -3495,9 +3495,9 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '2'
+          x-example: "2"
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
@@ -3510,9 +3510,9 @@ paths:
                   type: string
                 option:
                   type: string
-        '400':
+        "400":
           description: Invalid proposal id
-        '500':
+        "500":
           description: Internal Server Error
     post:
       deprecated: true
@@ -3530,7 +3530,7 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '2'
+          x-example: "2"
         - description: >-
             valid value of `"option"` field can be `"yes"`, `"no"`,
             `"no_with_veto"` and `"abstain"`
@@ -3555,16 +3555,16 @@ paths:
                     example: Cosmos-Hub
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '1'
+                    example: "1"
                   gas:
                     type: string
-                    example: '200000'
+                    example: "200000"
                   gas_adjustment:
                     type: string
-                    example: '1.2'
+                    example: "1.2"
                   fees:
                     type: array
                     items:
@@ -3575,7 +3575,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
                   simulate:
                     type: boolean
                     example: false
@@ -3588,9 +3588,9 @@ paths:
                 example: cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27
               option:
                 type: string
-                example: 'yes'
+                example: "yes"
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
@@ -3614,7 +3614,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
               memo:
                 type: string
               signature:
@@ -3635,17 +3635,17 @@ paths:
                         example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '0'
-        '400':
+                    example: "0"
+        "400":
           description: Invalid proposal id or vote body
-        '401':
+        "401":
           description: Key password is wrong
-        '500':
+        "500":
           description: Internal Server Error
-  '/gov/proposals/{proposalId}/votes/{voter}':
+  "/gov/proposals/{proposalId}/votes/{voter}":
     get:
       deprecated: true
       summary: Query vote
@@ -3660,7 +3660,7 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '2'
+          x-example: "2"
         - type: string
           description: Bech32 voter address
           name: voter
@@ -3668,7 +3668,7 @@ paths:
           in: path
           x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
@@ -3679,13 +3679,13 @@ paths:
                 type: string
               option:
                 type: string
-        '400':
+        "400":
           description: Invalid proposal id or voter address
-        '404':
+        "404":
           description: Found no vote
-        '500':
+        "500":
           description: Internal Server Error
-  '/gov/proposals/{proposalId}/tally':
+  "/gov/proposals/{proposalId}/tally":
     get:
       deprecated: true
       summary: Get a proposal's tally result at the current time
@@ -3703,28 +3703,28 @@ paths:
           name: proposalId
           required: true
           in: path
-          x-example: '2'
+          x-example: "2"
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
             properties:
-              'yes':
+              "yes":
                 type: string
-                example: '0.0000000000'
+                example: "0.0000000000"
               abstain:
                 type: string
-                example: '0.0000000000'
-              'no':
+                example: "0.0000000000"
+              "no":
                 type: string
-                example: '0.0000000000'
+                example: "0.0000000000"
               no_with_veto:
                 type: string
-                example: '0.0000000000'
-        '400':
+                example: "0.0000000000"
+        "400":
           description: Invalid proposal id
-        '500':
+        "500":
           description: Internal Server Error
   /gov/parameters/deposit:
     get:
@@ -3738,7 +3738,7 @@ paths:
       tags:
         - Governance
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
@@ -3753,15 +3753,15 @@ paths:
                       example: stake
                     amount:
                       type: string
-                      example: '50'
+                      example: "50"
               max_deposit_period:
                 type: string
-                example: '86400000000000'
-        '400':
+                example: "86400000000000"
+        "400":
           description: <other_path> is not a valid query request path
-        '404':
+        "404":
           description: Found no deposit parameters
-        '500':
+        "500":
           description: Internal Server Error
   /gov/parameters/tallying:
     get:
@@ -3773,24 +3773,24 @@ paths:
       tags:
         - Governance
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             properties:
               threshold:
                 type: string
-                example: '0.5000000000'
+                example: "0.5000000000"
               veto:
                 type: string
-                example: '0.3340000000'
+                example: "0.3340000000"
               governance_penalty:
                 type: string
-                example: '0.0100000000'
-        '400':
+                example: "0.0100000000"
+        "400":
           description: <other_path> is not a valid query request path
-        '404':
+        "404":
           description: Found no tally parameters
-        '500':
+        "500":
           description: Internal Server Error
   /gov/parameters/voting:
     get:
@@ -3804,20 +3804,20 @@ paths:
       tags:
         - Governance
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             properties:
               voting_period:
                 type: string
-                example: '86400000000000'
-        '400':
+                example: "86400000000000"
+        "400":
           description: <other_path> is not a valid query request path
-        '404':
+        "404":
           description: Found no voting parameters
-        '500':
+        "500":
           description: Internal Server Error
-  '/distribution/delegators/{delegatorAddr}/rewards':
+  "/distribution/delegators/{delegatorAddr}/rewards":
     parameters:
       - in: path
         name: delegatorAddr
@@ -3836,7 +3836,7 @@ paths:
       tags:
         - Distribution
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
@@ -3860,7 +3860,7 @@ paths:
                             example: stake
                           amount:
                             type: string
-                            example: '50'
+                            example: "50"
               total:
                 type: array
                 items:
@@ -3871,10 +3871,10 @@ paths:
                       example: stake
                     amount:
                       type: string
-                      example: '50'
-        '400':
+                      example: "50"
+        "400":
           description: Invalid delegator address
-        '500':
+        "500":
           description: Internal Server Error
     post:
       deprecated: true
@@ -3906,16 +3906,16 @@ paths:
                     example: Cosmos-Hub
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '1'
+                    example: "1"
                   gas:
                     type: string
-                    example: '200000'
+                    example: "200000"
                   gas_adjustment:
                     type: string
-                    example: '1.2'
+                    example: "1.2"
                   fees:
                     type: array
                     items:
@@ -3926,7 +3926,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
                   simulate:
                     type: boolean
                     example: false
@@ -3934,7 +3934,7 @@ paths:
                       Estimate gas for a transaction (cannot be used in
                       conjunction with generate_only)
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
@@ -3958,7 +3958,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
               memo:
                 type: string
               signature:
@@ -3979,17 +3979,17 @@ paths:
                         example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '0'
-        '400':
+                    example: "0"
+        "400":
           description: Invalid delegator address
-        '401':
+        "401":
           description: Key password is wrong
-        '500':
+        "500":
           description: Internal Server Error
-  '/distribution/delegators/{delegatorAddr}/rewards/{validatorAddr}':
+  "/distribution/delegators/{delegatorAddr}/rewards/{validatorAddr}":
     parameters:
       - in: path
         name: delegatorAddr
@@ -4012,7 +4012,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
@@ -4024,10 +4024,10 @@ paths:
                   example: stake
                 amount:
                   type: string
-                  example: '50'
-        '400':
+                  example: "50"
+        "400":
           description: Invalid delegator address
-        '500':
+        "500":
           description: Internal Server Error
     post:
       deprecated: true
@@ -4059,16 +4059,16 @@ paths:
                     example: Cosmos-Hub
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '1'
+                    example: "1"
                   gas:
                     type: string
-                    example: '200000'
+                    example: "200000"
                   gas_adjustment:
                     type: string
-                    example: '1.2'
+                    example: "1.2"
                   fees:
                     type: array
                     items:
@@ -4079,7 +4079,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
                   simulate:
                     type: boolean
                     example: false
@@ -4087,7 +4087,7 @@ paths:
                       Estimate gas for a transaction (cannot be used in
                       conjunction with generate_only)
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
@@ -4111,7 +4111,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
               memo:
                 type: string
               signature:
@@ -4132,17 +4132,17 @@ paths:
                         example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '0'
-        '400':
+                    example: "0"
+        "400":
           description: Invalid delegator address or delegation body
-        '401':
+        "401":
           description: Key password is wrong
-        '500':
+        "500":
           description: Internal Server Error
-  '/distribution/delegators/{delegatorAddr}/withdraw_address':
+  "/distribution/delegators/{delegatorAddr}/withdraw_address":
     parameters:
       - in: path
         name: delegatorAddr
@@ -4161,15 +4161,15 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: string
             description: bech32 encoded address
             example: cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27
-        '400':
+        "400":
           description: Invalid delegator address
-        '500':
+        "500":
           description: Internal Server Error
     post:
       deprecated: true
@@ -4201,16 +4201,16 @@ paths:
                     example: Cosmos-Hub
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '1'
+                    example: "1"
                   gas:
                     type: string
-                    example: '200000'
+                    example: "200000"
                   gas_adjustment:
                     type: string
-                    example: '1.2'
+                    example: "1.2"
                   fees:
                     type: array
                     items:
@@ -4221,7 +4221,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
                   simulate:
                     type: boolean
                     example: false
@@ -4233,7 +4233,7 @@ paths:
                 description: bech32 encoded address
                 example: cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
@@ -4257,7 +4257,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
               memo:
                 type: string
               signature:
@@ -4278,17 +4278,17 @@ paths:
                         example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '0'
-        '400':
+                    example: "0"
+        "400":
           description: Invalid delegator or withdraw address
-        '401':
+        "401":
           description: Key password is wrong
-        '500':
+        "500":
           description: Internal Server Error
-  '/distribution/validators/{validatorAddr}':
+  "/distribution/validators/{validatorAddr}":
     parameters:
       - in: path
         name: validatorAddr
@@ -4305,7 +4305,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
@@ -4324,7 +4324,7 @@ paths:
                       example: stake
                     amount:
                       type: string
-                      example: '50'
+                      example: "50"
               val_commission:
                 type: array
                 items:
@@ -4335,12 +4335,12 @@ paths:
                       example: stake
                     amount:
                       type: string
-                      example: '50'
-        '400':
+                      example: "50"
+        "400":
           description: Invalid validator address
-        '500':
+        "500":
           description: Internal Server Error
-  '/distribution/validators/{validatorAddr}/outstanding_rewards':
+  "/distribution/validators/{validatorAddr}/outstanding_rewards":
     parameters:
       - in: path
         name: validatorAddr
@@ -4356,7 +4356,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
@@ -4368,10 +4368,10 @@ paths:
                   example: stake
                 amount:
                   type: string
-                  example: '50'
-        '500':
+                  example: "50"
+        "500":
           description: Internal Server Error
-  '/distribution/validators/{validatorAddr}/rewards':
+  "/distribution/validators/{validatorAddr}/rewards":
     parameters:
       - in: path
         name: validatorAddr
@@ -4388,7 +4388,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
@@ -4400,10 +4400,10 @@ paths:
                   example: stake
                 amount:
                   type: string
-                  example: '50'
-        '400':
+                  example: "50"
+        "400":
           description: Invalid validator address
-        '500':
+        "500":
           description: Internal Server Error
     post:
       deprecated: true
@@ -4435,16 +4435,16 @@ paths:
                     example: Cosmos-Hub
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '1'
+                    example: "1"
                   gas:
                     type: string
-                    example: '200000'
+                    example: "200000"
                   gas_adjustment:
                     type: string
-                    example: '1.2'
+                    example: "1.2"
                   fees:
                     type: array
                     items:
@@ -4455,7 +4455,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
                   simulate:
                     type: boolean
                     example: false
@@ -4463,7 +4463,7 @@ paths:
                       Estimate gas for a transaction (cannot be used in
                       conjunction with generate_only)
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: object
@@ -4487,7 +4487,7 @@ paths:
                           example: stake
                         amount:
                           type: string
-                          example: '50'
+                          example: "50"
               memo:
                 type: string
               signature:
@@ -4508,15 +4508,15 @@ paths:
                         example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
                   account_number:
                     type: string
-                    example: '0'
+                    example: "0"
                   sequence:
                     type: string
-                    example: '0'
-        '400':
+                    example: "0"
+        "400":
           description: Invalid validator address
-        '401':
+        "401":
           description: Key password is wrong
-        '500':
+        "500":
           description: Internal Server Error
   /distribution/community_pool:
     get:
@@ -4527,7 +4527,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
@@ -4539,8 +4539,8 @@ paths:
                   example: stake
                 amount:
                   type: string
-                  example: '50'
-        '500':
+                  example: "50"
+        "500":
           description: Internal Server Error
   /distribution/parameters:
     get:
@@ -4551,7 +4551,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             properties:
@@ -4561,7 +4561,7 @@ paths:
                 type: string
               community_tax:
                 type: string
-        '500':
+        "500":
           description: Internal Server Error
   /minting/parameters:
     get:
@@ -4572,7 +4572,7 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             properties:
@@ -4588,7 +4588,7 @@ paths:
                 type: string
               blocks_per_year:
                 type: string
-        '500':
+        "500":
           description: Internal Server Error
   /minting/inflation:
     get:
@@ -4599,11 +4599,11 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: string
-        '500':
+        "500":
           description: Internal Server Error
   /minting/annual-provisions:
     get:
@@ -4614,18 +4614,18 @@ paths:
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: string
-        '500':
+        "500":
           description: Internal Server Error
   /cosmos/auth/v1beta1/accounts:
     get:
       summary: Accounts returns all the existing accounts
       operationId: Accounts
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -5076,12 +5076,12 @@ paths:
           format: boolean
       tags:
         - Query
-  '/cosmos/auth/v1beta1/accounts/{address}':
+  "/cosmos/auth/v1beta1/accounts/{address}":
     get:
       summary: Account returns account details based on address.
       operationId: Account
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -5462,7 +5462,7 @@ paths:
       summary: Params queries all parameters.
       operationId: AuthParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -5680,12 +5680,12 @@ paths:
                         }
       tags:
         - Query
-  '/cosmos/bank/v1beta1/balances/{address}':
+  "/cosmos/bank/v1beta1/balances/{address}":
     get:
       summary: AllBalances queries the balance of all coins for a single account.
       operationId: AllBalances
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -5816,12 +5816,12 @@ paths:
           format: boolean
       tags:
         - Query
-  '/cosmos/bank/v1beta1/balances/{address}/{denom}':
+  "/cosmos/bank/v1beta1/balances/{address}/{denom}":
     get:
       summary: Balance queries the balance of a single coin for a single account.
       operationId: Balance
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -5879,7 +5879,7 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/bank/v1beta1/denom_owners/{denom}':
+  "/cosmos/bank/v1beta1/denom_owners/{denom}":
     get:
       summary: >-
         DenomOwners queries for all account addresses that own a particular
@@ -5888,7 +5888,7 @@ paths:
         denomination.
       operationId: DenomOwners
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6041,7 +6041,7 @@ paths:
         denominations.
       operationId: DenomsMetadata
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6104,7 +6104,7 @@ paths:
                         displayed in clients.
                     name:
                       type: string
-                      title: 'name defines the name of the token (eg: Cosmos Atom)'
+                      title: "name defines the name of the token (eg: Cosmos Atom)"
                     symbol:
                       type: string
                       description: >-
@@ -6233,12 +6233,12 @@ paths:
           format: boolean
       tags:
         - Query
-  '/cosmos/bank/v1beta1/denoms_metadata/{denom}':
+  "/cosmos/bank/v1beta1/denoms_metadata/{denom}":
     get:
       summary: DenomsMetadata queries the client metadata of a given coin denomination.
       operationId: DenomMetadata
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6299,7 +6299,7 @@ paths:
                       displayed in clients.
                   name:
                     type: string
-                    title: 'name defines the name of the token (eg: Cosmos Atom)'
+                    title: "name defines the name of the token (eg: Cosmos Atom)"
                   symbol:
                     type: string
                     description: >-
@@ -6362,7 +6362,7 @@ paths:
       summary: Params queries the parameters of x/bank module.
       operationId: BankParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6421,7 +6421,7 @@ paths:
       summary: TotalSupply queries the total supply of all coins.
       operationId: TotalSupply
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6547,12 +6547,12 @@ paths:
           format: boolean
       tags:
         - Query
-  '/cosmos/bank/v1beta1/supply/{denom}':
+  "/cosmos/bank/v1beta1/supply/{denom}":
     get:
       summary: SupplyOf queries the supply of a single coin.
       operationId: SupplyOf
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -6610,7 +6610,7 @@ paths:
       summary: GetLatestBlock returns the latest block.
       operationId: GetLatestBlock
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -7363,12 +7363,12 @@ paths:
                         }
       tags:
         - Service
-  '/cosmos/base/tendermint/v1beta1/blocks/{height}':
+  "/cosmos/base/tendermint/v1beta1/blocks/{height}":
     get:
       summary: GetBlockByHeight queries block for given height.
       operationId: GetBlockByHeight
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -8132,7 +8132,7 @@ paths:
       summary: GetNodeInfo queries the current node info.
       operationId: GetNodeInfo
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -8404,7 +8404,7 @@ paths:
       summary: GetSyncing queries node syncing.
       operationId: GetSyncing
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -8611,7 +8611,7 @@ paths:
       summary: GetLatestValidatorSet queries latest validator-set.
       operationId: GetLatestValidatorSet
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -9078,12 +9078,12 @@ paths:
           format: boolean
       tags:
         - Service
-  '/cosmos/base/tendermint/v1beta1/validatorsets/{height}':
+  "/cosmos/base/tendermint/v1beta1/validatorsets/{height}":
     get:
       summary: GetValidatorSetByHeight queries validator-set at a given height.
       operationId: GetValidatorSetByHeight
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -9560,7 +9560,7 @@ paths:
       summary: CommunityPool queries the community pool coins.
       operationId: CommunityPool
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -9613,14 +9613,14 @@ paths:
                       format: byte
       tags:
         - Query
-  '/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards':
+  "/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards":
     get:
       summary: |-
         DelegationTotalRewards queries the total rewards accrued by a each
         validator.
       operationId: DelegationTotalRewards
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -9706,12 +9706,12 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards/{validator_address}':
+  "/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards/{validator_address}":
     get:
       summary: DelegationRewards queries the total rewards accrued by a delegation.
       operationId: DelegationRewards
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -9773,12 +9773,12 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/distribution/v1beta1/delegators/{delegator_address}/validators':
+  "/cosmos/distribution/v1beta1/delegators/{delegator_address}/validators":
     get:
       summary: DelegatorValidators queries the validators of a delegator.
       operationId: DelegatorValidators
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -9823,12 +9823,12 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/distribution/v1beta1/delegators/{delegator_address}/withdraw_address':
+  "/cosmos/distribution/v1beta1/delegators/{delegator_address}/withdraw_address":
     get:
       summary: DelegatorWithdrawAddress queries withdraw address of a delegator.
       operationId: DelegatorWithdrawAddress
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -9874,7 +9874,7 @@ paths:
       summary: Params queries params of the distribution module.
       operationId: DistributionParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -9919,12 +9919,12 @@ paths:
                       format: byte
       tags:
         - Query
-  '/cosmos/distribution/v1beta1/validators/{validator_address}/commission':
+  "/cosmos/distribution/v1beta1/validators/{validator_address}/commission":
     get:
       summary: ValidatorCommission queries accumulated commission for a validator.
       operationId: ValidatorCommission
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -9984,12 +9984,12 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/distribution/v1beta1/validators/{validator_address}/outstanding_rewards':
+  "/cosmos/distribution/v1beta1/validators/{validator_address}/outstanding_rewards":
     get:
       summary: ValidatorOutstandingRewards queries rewards of a validator address.
       operationId: ValidatorOutstandingRewards
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -10056,12 +10056,12 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/distribution/v1beta1/validators/{validator_address}/slashes':
+  "/cosmos/distribution/v1beta1/validators/{validator_address}/slashes":
     get:
       summary: ValidatorSlashes queries slash events of a validator.
       operationId: ValidatorSlashes
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -10214,7 +10214,7 @@ paths:
       summary: AllEvidence queries all evidence.
       operationId: AllEvidence
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -10667,12 +10667,12 @@ paths:
           format: boolean
       tags:
         - Query
-  '/cosmos/evidence/v1beta1/evidence/{evidence_hash}':
+  "/cosmos/evidence/v1beta1/evidence/{evidence_hash}":
     get:
       summary: Evidence queries evidence based on evidence hash.
       operationId: Evidence
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -11049,12 +11049,12 @@ paths:
           format: byte
       tags:
         - Query
-  '/cosmos/gov/v1beta1/params/{params_type}':
+  "/cosmos/gov/v1beta1/params/{params_type}":
     get:
       summary: Params queries all parameters of the gov module.
       operationId: GovParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -11327,7 +11327,7 @@ paths:
       summary: Proposals queries all proposals based on given status.
       operationId: Proposals
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -11545,11 +11545,11 @@ paths:
                     final_tally_result:
                       type: object
                       properties:
-                        'yes':
+                        "yes":
                           type: string
                         abstain:
                           type: string
-                        'no':
+                        "no":
                           type: string
                         no_with_veto:
                           type: string
@@ -11895,12 +11895,12 @@ paths:
           format: boolean
       tags:
         - Query
-  '/cosmos/gov/v1beta1/proposals/{proposal_id}':
+  "/cosmos/gov/v1beta1/proposals/{proposal_id}":
     get:
       summary: Proposal queries proposal details based on ProposalID.
       operationId: Proposal
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -12114,11 +12114,11 @@ paths:
                   final_tally_result:
                     type: object
                     properties:
-                      'yes':
+                      "yes":
                         type: string
                       abstain:
                         type: string
-                      'no':
+                      "no":
                         type: string
                       no_with_veto:
                         type: string
@@ -12358,12 +12358,12 @@ paths:
           format: uint64
       tags:
         - Query
-  '/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits':
+  "/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits":
     get:
       summary: Deposits queries all deposits of a single proposal.
       operationId: Deposits
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -12675,14 +12675,14 @@ paths:
           format: boolean
       tags:
         - Query
-  '/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}':
+  "/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}":
     get:
       summary: >-
         Deposit queries single deposit information based proposalID,
         depositAddr.
       operationId: Deposit
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -12923,12 +12923,12 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/gov/v1beta1/proposals/{proposal_id}/tally':
+  "/cosmos/gov/v1beta1/proposals/{proposal_id}/tally":
     get:
       summary: TallyResult queries the tally of a proposal vote.
       operationId: TallyResult
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -12936,11 +12936,11 @@ paths:
               tally:
                 type: object
                 properties:
-                  'yes':
+                  "yes":
                     type: string
                   abstain:
                     type: string
-                  'no':
+                  "no":
                     type: string
                   no_with_veto:
                     type: string
@@ -13148,12 +13148,12 @@ paths:
           format: uint64
       tags:
         - Query
-  '/cosmos/gov/v1beta1/proposals/{proposal_id}/votes':
+  "/cosmos/gov/v1beta1/proposals/{proposal_id}/votes":
     get:
       summary: Votes queries votes of a given proposal.
       operationId: Votes
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -13494,12 +13494,12 @@ paths:
           format: boolean
       tags:
         - Query
-  '/cosmos/gov/v1beta1/proposals/{proposal_id}/votes/{voter}':
+  "/cosmos/gov/v1beta1/proposals/{proposal_id}/votes/{voter}":
     get:
-      summary: 'Vote queries voted information based on proposalID, voterAddr.'
+      summary: "Vote queries voted information based on proposalID, voterAddr."
       operationId: Vote
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -13774,7 +13774,7 @@ paths:
       summary: AnnualProvisions current minting annual provisions value.
       operationId: AnnualProvisions
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -13817,7 +13817,7 @@ paths:
       summary: Inflation returns the current minting inflation value.
       operationId: Inflation
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -13860,7 +13860,7 @@ paths:
       summary: Params returns the total set of minting parameters.
       operationId: MintParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -13922,7 +13922,7 @@ paths:
         key.
       operationId: Params
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -13980,7 +13980,7 @@ paths:
       summary: Params queries the parameters of slashing module
       operationId: SlashingParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -14037,7 +14037,7 @@ paths:
       summary: SigningInfos queries signing info of all validators
       operationId: SigningInfos
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -14208,12 +14208,12 @@ paths:
           format: boolean
       tags:
         - Query
-  '/cosmos/slashing/v1beta1/signing_infos/{cons_address}':
+  "/cosmos/slashing/v1beta1/signing_infos/{cons_address}":
     get:
       summary: SigningInfo queries the signing info of given cons address
       operationId: SigningInfo
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -14307,14 +14307,14 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/staking/v1beta1/delegations/{delegator_addr}':
+  "/cosmos/staking/v1beta1/delegations/{delegator_addr}":
     get:
       summary: >-
         DelegatorDelegations queries all delegations of a given delegator
         address.
       operationId: DelegatorDelegations
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -14645,12 +14645,12 @@ paths:
           format: boolean
       tags:
         - Query
-  '/cosmos/staking/v1beta1/delegators/{delegator_addr}/redelegations':
+  "/cosmos/staking/v1beta1/delegators/{delegator_addr}/redelegations":
     get:
       summary: Redelegations queries redelegations of given address.
       operationId: Redelegations
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -15053,7 +15053,7 @@ paths:
           format: boolean
       tags:
         - Query
-  '/cosmos/staking/v1beta1/delegators/{delegator_addr}/unbonding_delegations':
+  "/cosmos/staking/v1beta1/delegators/{delegator_addr}/unbonding_delegations":
     get:
       summary: >-
         DelegatorUnbondingDelegations queries all unbonding delegations of a
@@ -15062,7 +15062,7 @@ paths:
         delegator address.
       operationId: DelegatorUnbondingDelegations
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -15393,14 +15393,14 @@ paths:
           format: boolean
       tags:
         - Query
-  '/cosmos/staking/v1beta1/delegators/{delegator_addr}/validators':
+  "/cosmos/staking/v1beta1/delegators/{delegator_addr}/validators":
     get:
       summary: |-
         DelegatorValidators queries all validators info for given delegator
         address.
       operationId: StakingDelegatorValidators
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -15992,14 +15992,14 @@ paths:
           format: boolean
       tags:
         - Query
-  '/cosmos/staking/v1beta1/delegators/{delegator_addr}/validators/{validator_addr}':
+  "/cosmos/staking/v1beta1/delegators/{delegator_addr}/validators/{validator_addr}":
     get:
       summary: |-
         DelegatorValidator queries validator info for given delegator validator
         pair.
       operationId: DelegatorValidator
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -16517,12 +16517,12 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/staking/v1beta1/historical_info/{height}':
+  "/cosmos/staking/v1beta1/historical_info/{height}":
     get:
       summary: HistoricalInfo queries the historical info for given height.
       operationId: HistoricalInfo
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -17131,7 +17131,7 @@ paths:
       summary: Parameters queries the staking parameters.
       operationId: StakingParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -17361,7 +17361,7 @@ paths:
       summary: Pool queries the pool info.
       operationId: Pool
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -17571,7 +17571,7 @@ paths:
       summary: Validators queries all validators that match the given status.
       operationId: Validators
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -18163,12 +18163,12 @@ paths:
           format: boolean
       tags:
         - Query
-  '/cosmos/staking/v1beta1/validators/{validator_addr}':
+  "/cosmos/staking/v1beta1/validators/{validator_addr}":
     get:
       summary: Validator queries validator info for given validator address.
       operationId: Validator
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -18681,12 +18681,12 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/staking/v1beta1/validators/{validator_addr}/delegations':
+  "/cosmos/staking/v1beta1/validators/{validator_addr}/delegations":
     get:
       summary: ValidatorDelegations queries delegate info for given validator.
       operationId: ValidatorDelegations
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -19014,12 +19014,12 @@ paths:
           format: boolean
       tags:
         - Query
-  '/cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}':
+  "/cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}":
     get:
       summary: Delegation queries delegate info for given validator delegator pair.
       operationId: Delegation
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -19277,14 +19277,14 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}/unbonding_delegation':
+  "/cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}/unbonding_delegation":
     get:
       summary: |-
         UnbondingDelegation queries unbonding info for given validator delegator
         pair.
       operationId: UnbondingDelegation
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -19543,14 +19543,14 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/staking/v1beta1/validators/{validator_addr}/unbonding_delegations':
+  "/cosmos/staking/v1beta1/validators/{validator_addr}/unbonding_delegations":
     get:
       summary: >-
         ValidatorUnbondingDelegations queries unbonding delegations of a
         validator.
       operationId: ValidatorUnbondingDelegations
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -19886,7 +19886,7 @@ paths:
       summary: Simulate simulates executing a transaction for estimating gas usage.
       operationId: Simulate
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -20157,7 +20157,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/cosmos.tx.v1beta1.SimulateRequest'
+            $ref: "#/definitions/cosmos.tx.v1beta1.SimulateRequest"
       tags:
         - Service
   /cosmos/tx/v1beta1/txs:
@@ -20165,10 +20165,10 @@ paths:
       summary: GetTxsEvent fetches txs by event.
       operationId: GetTxsEvent
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/cosmos.tx.v1beta1.GetTxsEventResponse'
+            $ref: "#/definitions/cosmos.tx.v1beta1.GetTxsEventResponse"
         default:
           description: An unexpected error response
           schema:
@@ -20441,7 +20441,7 @@ paths:
       summary: BroadcastTx broadcast transaction.
       operationId: BroadcastTx
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -20465,7 +20465,7 @@ paths:
                     description: Response code.
                   data:
                     type: string
-                    description: 'Result bytes, if any.'
+                    description: "Result bytes, if any."
                   raw_log:
                     type: string
                     description: >-
@@ -20951,15 +20951,15 @@ paths:
               RPC method.
       tags:
         - Service
-  '/cosmos/tx/v1beta1/txs/{hash}':
+  "/cosmos/tx/v1beta1/txs/{hash}":
     get:
       summary: GetTx fetches a tx by hash.
       operationId: GetTx
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/cosmos.tx.v1beta1.GetTxResponse'
+            $ref: "#/definitions/cosmos.tx.v1beta1.GetTxResponse"
         default:
           description: An unexpected error response
           schema:
@@ -21151,18 +21151,18 @@ paths:
                         }
       parameters:
         - name: hash
-          description: 'hash is the tx hash to query, encoded as a hex string.'
+          description: "hash is the tx hash to query, encoded as a hex string."
           in: path
           required: true
           type: string
       tags:
         - Service
-  '/cosmos/upgrade/v1beta1/applied_plan/{name}':
+  "/cosmos/upgrade/v1beta1/applied_plan/{name}":
     get:
       summary: AppliedPlan queries a previously applied upgrade plan by its name.
       operationId: AppliedPlan
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -21378,7 +21378,7 @@ paths:
       summary: CurrentPlan queries the current upgrade plan.
       operationId: CurrentPlan
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -21809,7 +21809,7 @@ paths:
       summary: ModuleVersions queries the list of module versions from state.
       operationId: ModuleVersions
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -22035,7 +22035,7 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/upgrade/v1beta1/upgraded_consensus_state/{last_height}':
+  "/cosmos/upgrade/v1beta1/upgraded_consensus_state/{last_height}":
     get:
       summary: |-
         UpgradedConsensusState queries the consensus state that will serve
@@ -22044,7 +22044,7 @@ paths:
         UpgradedConsensusState RPC not supported with legacy querier
       operationId: UpgradedConsensusState
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -22259,10 +22259,10 @@ paths:
         - Query
   /cosmos/authz/v1beta1/grants:
     get:
-      summary: 'Returns list of `Authorization`, granted to the grantee by the granter.'
+      summary: "Returns list of `Authorization`, granted to the grantee by the granter."
       operationId: Grants
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -22741,12 +22741,12 @@ paths:
           format: boolean
       tags:
         - Query
-  '/cosmos/feegrant/v1beta1/allowance/{granter}/{grantee}':
+  "/cosmos/feegrant/v1beta1/allowance/{granter}/{grantee}":
     get:
       summary: Allowance returns fee granted to the grantee by the granter.
       operationId: Allowance
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -23045,12 +23045,12 @@ paths:
           type: string
       tags:
         - Query
-  '/cosmos/feegrant/v1beta1/allowances/{grantee}':
+  "/cosmos/feegrant/v1beta1/allowances/{grantee}":
     get:
       summary: Allowances returns all the grants for address.
       operationId: Allowances
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -23452,8 +23452,8 @@ definitions:
       gas_wanted: 10000
       info: info
       tags:
-        - ''
-        - ''
+        - ""
+        - ""
   DeliverTxResult:
     type: object
     properties:
@@ -23486,8 +23486,8 @@ definitions:
       gas_wanted: 10000
       info: info
       tags:
-        - ''
-        - ''
+        - ""
+        - ""
   BroadcastTxCommitResult:
     type: object
     properties:
@@ -23523,8 +23523,8 @@ definitions:
           gas_wanted: 10000
           info: info
           tags:
-            - ''
-            - ''
+            - ""
+            - ""
       deliver_tx:
         type: object
         properties:
@@ -23557,8 +23557,8 @@ definitions:
           gas_wanted: 10000
           info: info
           tags:
-            - ''
-            - ''
+            - ""
+            - ""
       hash:
         type: string
         example: EE5F3404034C524501629B56E0DDC38FAD651F04
@@ -23589,7 +23589,7 @@ definitions:
         example: stake
       amount:
         type: string
-        example: '50'
+        example: "50"
   Hash:
     type: string
     example: EE5F3404034C524501629B56E0DDC38FAD651F04
@@ -23624,7 +23624,7 @@ definitions:
                       example: stake
                     amount:
                       type: string
-                      example: '50'
+                      example: "50"
           memo:
             type: string
           signature:
@@ -23645,10 +23645,10 @@ definitions:
                     example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
               account_number:
                 type: string
-                example: '0'
+                example: "0"
               sequence:
                 type: string
-                example: '0'
+                example: "0"
       result:
         type: object
         properties:
@@ -23656,10 +23656,10 @@ definitions:
             type: string
           gas_wanted:
             type: string
-            example: '200000'
+            example: "200000"
           gas_used:
             type: string
-            example: '26354'
+            example: "26354"
           tags:
             type: array
             items:
@@ -23720,7 +23720,7 @@ definitions:
                             example: stake
                           amount:
                             type: string
-                            example: '50'
+                            example: "50"
                 memo:
                   type: string
                 signature:
@@ -23741,10 +23741,10 @@ definitions:
                           example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
                     account_number:
                       type: string
-                      example: '0'
+                      example: "0"
                     sequence:
                       type: string
-                      example: '0'
+                      example: "0"
             result:
               type: object
               properties:
@@ -23752,10 +23752,10 @@ definitions:
                   type: string
                 gas_wanted:
                   type: string
-                  example: '200000'
+                  example: "200000"
                 gas_used:
                   type: string
-                  example: '26354'
+                  example: "26354"
                 tags:
                   type: array
                   items:
@@ -23787,7 +23787,7 @@ definitions:
                   example: stake
                 amount:
                   type: string
-                  example: '50'
+                  example: "50"
       memo:
         type: string
       signature:
@@ -23808,10 +23808,10 @@ definitions:
                 example: Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH
           account_number:
             type: string
-            example: '0'
+            example: "0"
           sequence:
             type: string
-            example: '0'
+            example: "0"
   BlockID:
     type: object
     properties:
@@ -23838,7 +23838,7 @@ definitions:
         example: 1
       time:
         type: string
-        example: '2017-12-30T05:53:09.287+01:00'
+        example: "2017-12-30T05:53:09.287+01:00"
       num_txs:
         type: number
         example: 0
@@ -23911,7 +23911,7 @@ definitions:
             example: 1
           time:
             type: string
-            example: '2017-12-30T05:53:09.287+01:00'
+            example: "2017-12-30T05:53:09.287+01:00"
           num_txs:
             type: number
             example: 0
@@ -24005,16 +24005,16 @@ definitions:
                   type: string
                 validator_index:
                   type: string
-                  example: '0'
+                  example: "0"
                 height:
                   type: string
-                  example: '0'
+                  example: "0"
                 round:
                   type: string
-                  example: '0'
+                  example: "0"
                 timestamp:
                   type: string
-                  example: '2017-12-30T05:53:09.287+01:00'
+                  example: "2017-12-30T05:53:09.287+01:00"
                 type:
                   type: number
                   example: 2
@@ -24054,7 +24054,7 @@ definitions:
                 example: 1
               time:
                 type: string
-                example: '2017-12-30T05:53:09.287+01:00'
+                example: "2017-12-30T05:53:09.287+01:00"
               num_txs:
                 type: number
                 example: 0
@@ -24142,7 +24142,7 @@ definitions:
                 example: 1
               time:
                 type: string
-                example: '2017-12-30T05:53:09.287+01:00'
+                example: "2017-12-30T05:53:09.287+01:00"
               num_txs:
                 type: number
                 example: 0
@@ -24236,16 +24236,16 @@ definitions:
                       type: string
                     validator_index:
                       type: string
-                      example: '0'
+                      example: "0"
                     height:
                       type: string
-                      example: '0'
+                      example: "0"
                     round:
                       type: string
-                      example: '0'
+                      example: "0"
                     timestamp:
                       type: string
-                      example: '2017-12-30T05:53:09.287+01:00'
+                      example: "2017-12-30T05:53:09.287+01:00"
                     type:
                       type: number
                       example: 2
@@ -24285,7 +24285,7 @@ definitions:
               example: stake
             amount:
               type: string
-              example: '50'
+              example: "50"
   DelegatorTotalRewards:
     type: object
     properties:
@@ -24308,7 +24308,7 @@ definitions:
                     example: stake
                   amount:
                     type: string
-                    example: '50'
+                    example: "50"
       total:
         type: array
         items:
@@ -24319,7 +24319,7 @@ definitions:
               example: stake
             amount:
               type: string
-              example: '50'
+              example: "50"
   BaseReq:
     type: object
     properties:
@@ -24335,16 +24335,16 @@ definitions:
         example: Cosmos-Hub
       account_number:
         type: string
-        example: '0'
+        example: "0"
       sequence:
         type: string
-        example: '1'
+        example: "1"
       gas:
         type: string
-        example: '200000'
+        example: "200000"
       gas_adjustment:
         type: string
-        example: '1.2'
+        example: "1.2"
       fees:
         type: array
         items:
@@ -24355,7 +24355,7 @@ definitions:
               example: stake
             amount:
               type: string
-              example: '50'
+              example: "50"
       simulate:
         type: boolean
         example: false
@@ -24375,10 +24375,10 @@ definitions:
           cosmosvalconspub1zcjduepq0vu2zgkgk49efa0nqwzndanq5m4c7pa3u4apz4g2r9gspqg6g9cs3k9cuf
       voting_power:
         type: string
-        example: '1000'
+        example: "1000"
       proposer_priority:
         type: string
-        example: '1000'
+        example: "1000"
   TextProposal:
     type: object
     properties:
@@ -24395,18 +24395,18 @@ definitions:
       final_tally_result:
         type: object
         properties:
-          'yes':
+          "yes":
             type: string
-            example: '0.0000000000'
+            example: "0.0000000000"
           abstain:
             type: string
-            example: '0.0000000000'
-          'no':
+            example: "0.0000000000"
+          "no":
             type: string
-            example: '0.0000000000'
+            example: "0.0000000000"
           no_with_veto:
             type: string
-            example: '0.0000000000'
+            example: "0.0000000000"
       submit_time:
         type: string
       total_deposit:
@@ -24419,7 +24419,7 @@ definitions:
               example: stake
             amount:
               type: string
-              example: '50'
+              example: "50"
       voting_start_time:
         type: string
   Proposer:
@@ -24442,7 +24442,7 @@ definitions:
               example: stake
             amount:
               type: string
-              example: '50'
+              example: "50"
       proposal_id:
         type: string
       depositor:
@@ -24452,18 +24452,18 @@ definitions:
   TallyResult:
     type: object
     properties:
-      'yes':
+      "yes":
         type: string
-        example: '0.0000000000'
+        example: "0.0000000000"
       abstain:
         type: string
-        example: '0.0000000000'
-      'no':
+        example: "0.0000000000"
+      "no":
         type: string
-        example: '0.0000000000'
+        example: "0.0000000000"
       no_with_veto:
         type: string
-        example: '0.0000000000'
+        example: "0.0000000000"
   Vote:
     type: object
     properties:
@@ -24507,31 +24507,31 @@ definitions:
             type: string
       bond_height:
         type: string
-        example: '0'
+        example: "0"
       bond_intra_tx_counter:
         type: integer
         example: 0
       unbonding_height:
         type: string
-        example: '0'
+        example: "0"
       unbonding_time:
         type: string
-        example: '1970-01-01T00:00:00Z'
+        example: "1970-01-01T00:00:00Z"
       commission:
         type: object
         properties:
           rate:
             type: string
-            example: '0'
+            example: "0"
           max_rate:
             type: string
-            example: '0'
+            example: "0"
           max_change_rate:
             type: string
-            example: '0'
+            example: "0"
           update_time:
             type: string
-            example: '1970-01-01T00:00:00Z'
+            example: "1970-01-01T00:00:00Z"
   Delegation:
     type: object
     properties:
@@ -24549,7 +24549,7 @@ definitions:
             example: stake
           amount:
             type: string
-            example: '50'
+            example: "50"
   UnbondingDelegationPair:
     type: object
     properties:
@@ -24608,7 +24608,7 @@ definitions:
       entries:
         type: array
         items:
-          $ref: '#/definitions/Redelegation'
+          $ref: "#/definitions/Redelegation"
   RedelegationEntry:
     type: object
     properties:
@@ -24639,7 +24639,7 @@ definitions:
               example: stake
             amount:
               type: string
-              example: '50'
+              example: "50"
       val_commission:
         type: array
         items:
@@ -24650,7 +24650,7 @@ definitions:
               example: stake
             amount:
               type: string
-              example: '50'
+              example: "50"
   PublicKey:
     type: object
     properties:
@@ -24680,7 +24680,7 @@ definitions:
         example: MaxValidators
       subkey:
         type: string
-        example: ''
+        example: ""
       value:
         type: object
   Supply:
@@ -24696,7 +24696,7 @@ definitions:
               example: stake
             amount:
               type: string
-              example: '50'
+              example: "50"
   cosmos.auth.v1beta1.Params:
     type: object
     properties:
@@ -25598,7 +25598,7 @@ definitions:
           displayed in clients.
       name:
         type: string
-        title: 'name defines the name of the token (eg: Cosmos Atom)'
+        title: "name defines the name of the token (eg: Cosmos Atom)"
       symbol:
         type: string
         description: >-
@@ -25756,7 +25756,7 @@ definitions:
               displayed in clients.
           name:
             type: string
-            title: 'name defines the name of the token (eg: Cosmos Atom)'
+            title: "name defines the name of the token (eg: Cosmos Atom)"
           symbol:
             type: string
             description: >-
@@ -25895,7 +25895,7 @@ definitions:
                 displayed in clients.
             name:
               type: string
-              title: 'name defines the name of the token (eg: Cosmos Atom)'
+              title: "name defines the name of the token (eg: Cosmos Atom)"
             symbol:
               type: string
               description: >-
@@ -31194,11 +31194,11 @@ definitions:
       final_tally_result:
         type: object
         properties:
-          'yes':
+          "yes":
             type: string
           abstain:
             type: string
-          'no':
+          "no":
             type: string
           no_with_veto:
             type: string
@@ -31608,11 +31608,11 @@ definitions:
           final_tally_result:
             type: object
             properties:
-              'yes':
+              "yes":
                 type: string
               abstain:
                 type: string
-              'no':
+              "no":
                 type: string
               no_with_veto:
                 type: string
@@ -31857,11 +31857,11 @@ definitions:
             final_tally_result:
               type: object
               properties:
-                'yes':
+                "yes":
                   type: string
                 abstain:
                   type: string
-                'no':
+                "no":
                   type: string
                 no_with_veto:
                   type: string
@@ -31923,11 +31923,11 @@ definitions:
       tally:
         type: object
         properties:
-          'yes':
+          "yes":
             type: string
           abstain:
             type: string
-          'no':
+          "no":
             type: string
           no_with_veto:
             type: string
@@ -32097,11 +32097,11 @@ definitions:
   cosmos.gov.v1beta1.TallyResult:
     type: object
     properties:
-      'yes':
+      "yes":
         type: string
       abstain:
         type: string
-      'no':
+      "no":
         type: string
       no_with_veto:
         type: string
@@ -32560,7 +32560,7 @@ definitions:
         properties:
           rate:
             type: string
-            description: 'rate is the commission rate charged to delegators, as a fraction.'
+            description: "rate is the commission rate charged to delegators, as a fraction."
           max_rate:
             type: string
             description: >-
@@ -32581,7 +32581,7 @@ definitions:
     properties:
       rate:
         type: string
-        description: 'rate is the commission rate charged to delegators, as a fraction.'
+        description: "rate is the commission rate charged to delegators, as a fraction."
       max_rate:
         type: string
         description: >-
@@ -35968,7 +35968,7 @@ definitions:
         description: Response code.
       data:
         type: string
-        description: 'Result bytes, if any.'
+        description: "Result bytes, if any."
       raw_log:
         type: string
         description: |-
@@ -36246,7 +36246,7 @@ definitions:
       signer_infos:
         type: array
         items:
-          $ref: '#/definitions/cosmos.tx.v1beta1.SignerInfo'
+          $ref: "#/definitions/cosmos.tx.v1beta1.SignerInfo"
         description: >-
           signer_infos defines the signing modes for the required signers. The
           number
@@ -36391,7 +36391,7 @@ definitions:
             description: Response code.
           data:
             type: string
-            description: 'Result bytes, if any.'
+            description: "Result bytes, if any."
           raw_log:
             type: string
             description: |-
@@ -36697,7 +36697,7 @@ definitions:
     type: object
     properties:
       tx:
-        $ref: '#/definitions/cosmos.tx.v1beta1.Tx'
+        $ref: "#/definitions/cosmos.tx.v1beta1.Tx"
         description: tx is the queried transaction.
       tx_response:
         type: object
@@ -36718,7 +36718,7 @@ definitions:
             description: Response code.
           data:
             type: string
-            description: 'Result bytes, if any.'
+            description: "Result bytes, if any."
           raw_log:
             type: string
             description: |-
@@ -36970,7 +36970,7 @@ definitions:
       txs:
         type: array
         items:
-          $ref: '#/definitions/cosmos.tx.v1beta1.Tx'
+          $ref: "#/definitions/cosmos.tx.v1beta1.Tx"
         description: txs is the list of queried transactions.
       tx_responses:
         type: array
@@ -36993,7 +36993,7 @@ definitions:
               description: Response code.
             data:
               type: string
-              description: 'Result bytes, if any.'
+              description: "Result bytes, if any."
             raw_log:
               type: string
               description: |-
@@ -37296,7 +37296,7 @@ definitions:
                - SIGN_MODE_LEGACY_AMINO_JSON: SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses
               Amino JSON and will be removed in the future
       multi:
-        $ref: '#/definitions/cosmos.tx.v1beta1.ModeInfo.Multi'
+        $ref: "#/definitions/cosmos.tx.v1beta1.ModeInfo.Multi"
         title: multi represents a nested multisig signer
     description: ModeInfo describes the signing mode of a single or nested multisig signer.
   cosmos.tx.v1beta1.ModeInfo.Multi:
@@ -37324,7 +37324,7 @@ definitions:
       mode_infos:
         type: array
         items:
-          $ref: '#/definitions/cosmos.tx.v1beta1.ModeInfo'
+          $ref: "#/definitions/cosmos.tx.v1beta1.ModeInfo"
         title: |-
           mode_infos is the corresponding modes of the signers of the multisig
           which could include nested multisig public keys
@@ -37535,7 +37535,7 @@ definitions:
                 "value": "1.212s"
               }
       mode_info:
-        $ref: '#/definitions/cosmos.tx.v1beta1.ModeInfo'
+        $ref: "#/definitions/cosmos.tx.v1beta1.ModeInfo"
         title: |-
           mode_info describes the signing mode of the signer and is a nested
           structure to support nested multisig pubkey's
@@ -37556,7 +37556,7 @@ definitions:
     type: object
     properties:
       tx:
-        $ref: '#/definitions/cosmos.tx.v1beta1.Tx'
+        $ref: "#/definitions/cosmos.tx.v1beta1.Tx"
         description: |-
           tx is the transaction to simulate.
           Deprecated. Send raw tx bytes instead.
@@ -37848,7 +37848,7 @@ definitions:
               called memo,
 
               but should be called `note` instead (see
-              https://github.com/cosmos/cosmos-sdk/issues/9122).
+              https://github.com/Stride-Labs/cosmos-sdk/issues/9122).
           timeout_height:
             type: string
             format: uint64
@@ -38215,7 +38215,7 @@ definitions:
               and can't be handled, they will be ignored
         description: TxBody is the body of a transaction that all signers sign over.
       auth_info:
-        $ref: '#/definitions/cosmos.tx.v1beta1.AuthInfo'
+        $ref: "#/definitions/cosmos.tx.v1beta1.AuthInfo"
         title: |-
           auth_info is the authorization related content of the transaction,
           specifically signers, signer modes and fee
@@ -38425,7 +38425,7 @@ definitions:
           memo,
 
           but should be called `note` instead (see
-          https://github.com/cosmos/cosmos-sdk/issues/9122).
+          https://github.com/Stride-Labs/cosmos-sdk/issues/9122).
       timeout_height:
         type: string
         format: uint64
@@ -38794,7 +38794,7 @@ definitions:
             index:
               type: boolean
               format: boolean
-          description: 'EventAttribute is a single key-value pair, associated with an event.'
+          description: "EventAttribute is a single key-value pair, associated with an event."
     description: >-
       Event allows application developers to attach additional information to
 
@@ -38814,7 +38814,7 @@ definitions:
       index:
         type: boolean
         format: boolean
-    description: 'EventAttribute is a single key-value pair, associated with an event.'
+    description: "EventAttribute is a single key-value pair, associated with an event."
   cosmos.upgrade.v1beta1.ModuleVersion:
     type: object
     properties:

@@ -6,7 +6,7 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	github_com_cosmos_cosmos_sdk_types "github.com/Stride-Labs/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
@@ -154,7 +154,7 @@ var xxx_messageInfo_QueryInflationRequest proto.InternalMessageInfo
 // method.
 type QueryInflationResponse struct {
 	// inflation is the current minting inflation value.
-	Inflation github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=inflation,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"inflation"`
+	Inflation github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=inflation,proto3,customtype=github.com/Stride-Labs/cosmos-sdk/types.Dec" json:"inflation"`
 }
 
 func (m *QueryInflationResponse) Reset()         { *m = QueryInflationResponse{} }
@@ -232,7 +232,7 @@ var xxx_messageInfo_QueryAnnualProvisionsRequest proto.InternalMessageInfo
 // Query/AnnualProvisions RPC method.
 type QueryAnnualProvisionsResponse struct {
 	// annual_provisions is the current minting annual provisions value.
-	AnnualProvisions github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=annual_provisions,json=annualProvisions,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"annual_provisions"`
+	AnnualProvisions github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=annual_provisions,json=annualProvisions,proto3,customtype=github.com/Stride-Labs/cosmos-sdk/types.Dec" json:"annual_provisions"`
 }
 
 func (m *QueryAnnualProvisionsResponse) Reset()         { *m = QueryAnnualProvisionsResponse{} }

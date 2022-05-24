@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/Stride-Labs/cosmos-sdk/codec"
+	"github.com/Stride-Labs/cosmos-sdk/x/bank/types"
 )
 
 func TestMetadataValidate(t *testing.T) {

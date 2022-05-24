@@ -47,9 +47,9 @@ aside: false
 
 ## Get Started
 
-* **[Cosmos SDK Intro](./intro/overview.md)**: High-level overview of the Cosmos SDK.
-* **[Ignite CLI](https://docs.ignite.com)**: A developer-friendly interface to the Cosmos SDK to scaffold, launch, and maintain any crypto application on a sovereign and secured blockchain.
-* **[SDK Tutorials](https://tutorials.cosmos.network/)**: Tutorials that showcase how to build Cosmos SDK-based blockchains from scratch and explain the basic Cosmos SDK principles in the process.
+- **[Cosmos SDK Intro](./intro/overview.md)**: High-level overview of the Cosmos SDK.
+- **[Ignite CLI](https://docs.ignite.com)**: A developer-friendly interface to the Cosmos SDK to scaffold, launch, and maintain any crypto application on a sovereign and secured blockchain.
+- **[SDK Tutorials](https://tutorials.cosmos.network/)**: Tutorials that showcase how to build Cosmos SDK-based blockchains from scratch and explain the basic Cosmos SDK principles in the process.
 
 ## Reference
 
@@ -64,7 +64,7 @@ aside: false
 
 - **[Module Directory](../x/)**: Cosmos SDK module implementations and their respective documentation.
 - **[Specifications](./spec/)**: Specifications of modules and other parts of the Cosmos SDK.
-- **[SDK API Reference](https://godoc.org/github.com/cosmos/cosmos-sdk)**: Godocs of the Cosmos SDK.
+- **[SDK API Reference](https://godoc.org/github.com/Stride-Labs/cosmos-sdk)**: Godocs of the Cosmos SDK.
 - **[REST API spec](https://cosmos.network/rpc/)**: List of endpoints to interact with a `gaia` full-node through REST.
 
 ## Cosmos Hub
@@ -79,5 +79,5 @@ Contact us for information about funding an implementation in another language.
 
 ## Contribute
 
-See the [DOCS_README.md](https://github.com/cosmos/cosmos-sdk/blob/master/docs/DOCS_README.md) for details of the build process and
+See the [DOCS_README.md](https://github.com/Stride-Labs/cosmos-sdk/blob/master/docs/DOCS_README.md) for details of the build process and
 considerations when making changes.

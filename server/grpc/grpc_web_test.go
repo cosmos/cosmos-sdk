@@ -19,11 +19,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
-	"github.com/cosmos/cosmos-sdk/codec"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/Stride-Labs/cosmos-sdk/client/grpc/tmservice"
+	"github.com/Stride-Labs/cosmos-sdk/codec"
+	cryptotypes "github.com/Stride-Labs/cosmos-sdk/crypto/types"
+	"github.com/Stride-Labs/cosmos-sdk/testutil/network"
+	banktypes "github.com/Stride-Labs/cosmos-sdk/x/bank/types"
 )
 
 // https://github.com/improbable-eng/grpc-web/blob/master/go/grpcweb/wrapper_test.go used as a reference

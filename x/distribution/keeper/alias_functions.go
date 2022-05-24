@@ -1,9 +1,9 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	authtypes "github.com/Stride-Labs/cosmos-sdk/x/auth/types"
+	"github.com/Stride-Labs/cosmos-sdk/x/distribution/types"
 )
 
 // get outstanding rewards

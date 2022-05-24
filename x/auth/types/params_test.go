@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/Stride-Labs/cosmos-sdk/x/auth/types"
 )
 
 func TestParamsEqual(t *testing.T) {

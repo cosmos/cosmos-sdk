@@ -31,7 +31,7 @@ if [[ $STAGED_GO_FILES != "" ]]; then
 
     gofmt -w -s $file
     misspell -w $file
-    goimports -w -local github.com/cosmos/cosmos-sdk $file
+    goimports -w -local github.com/Stride-Labs/cosmos-sdk $file
     git add $file
 
   done

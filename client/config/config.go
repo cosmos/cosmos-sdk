@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/Stride-Labs/cosmos-sdk/client"
 )
 
 // Default constants
@@ -83,7 +83,7 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 
 	ctx = ctx.WithKeyring(keyring)
 
-	// https://github.com/cosmos/cosmos-sdk/issues/8986
+	// https://github.com/Stride-Labs/cosmos-sdk/issues/8986
 	client, err := client.NewClientFromNode(conf.Node)
 	if err != nil {
 		return ctx, fmt.Errorf("couldn't get client from nodeURI: %v", err)

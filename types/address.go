@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/golang-lru/simplelru"
 	yaml "gopkg.in/yaml.v2"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/internal/conv"
-	"github.com/cosmos/cosmos-sdk/types/address"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	cryptotypes "github.com/Stride-Labs/cosmos-sdk/crypto/types"
+	"github.com/Stride-Labs/cosmos-sdk/internal/conv"
+	"github.com/Stride-Labs/cosmos-sdk/types/address"
+	"github.com/Stride-Labs/cosmos-sdk/types/bech32"
+	sdkerrors "github.com/Stride-Labs/cosmos-sdk/types/errors"
 )
 
 const (

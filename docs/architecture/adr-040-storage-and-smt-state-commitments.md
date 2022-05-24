@@ -19,12 +19,11 @@ Currently, Cosmos SDK uses IAVL for both state [commitments](https://cryptograph
 IAVL has effectively become an orphaned project within the Cosmos ecosystem and it's proven to be an inefficient state commitment data structure.
 In the current design, IAVL is used for both data storage and as a Merkle Tree for state commitments. IAVL is meant to be a standalone Merkelized key/value database, however it's using a KV DB engine to store all tree nodes. So, each node is stored in a separate record in the KV DB. This causes many inefficiencies and problems:
 
-+ Each object query requires a tree traversal from the root. Subsequent queries for the same object are cached on the SDK level.
-+ Each edge traversal requires a DB query.
-+ Creating snapshots is [expensive](https://github.com/cosmos/cosmos-sdk/issues/7215#issuecomment-684804950). It takes about 30 seconds to export less than 100 MB of state (as of March 2020).
-+ Updates in IAVL may trigger tree reorganization and possible O(log(n)) hashes re-computation, which can become a CPU bottleneck.
-+ The node structure is pretty expensive - it contains a standard tree node elements (key, value, left and right element) and additional metadata such as height, version (which is not required by the SDK). The entire node is hashed, and that hash is used as the key in the underlying database, [ref](https://github.com/cosmos/iavl/blob/master/docs/node/node.md
-).
+- Each object query requires a tree traversal from the root. Subsequent queries for the same object are cached on the SDK level.
+- Each edge traversal requires a DB query.
+- Creating snapshots is [expensive](https://github.com/Stride-Labs/cosmos-sdk/issues/7215#issuecomment-684804950). It takes about 30 seconds to export less than 100 MB of state (as of March 2020).
+- Updates in IAVL may trigger tree reorganization and possible O(log(n)) hashes re-computation, which can become a CPU bottleneck.
+- The node structure is pretty expensive - it contains a standard tree node elements (key, value, left and right element) and additional metadata such as height, version (which is not required by the SDK). The entire node is hashed, and that hash is used as the key in the underlying database, [ref](https://github.com/cosmos/iavl/blob/master/docs/node/node.md).
 
 Moreover, the IAVL project lacks support and a maintainer and we already see better and well-established alternatives. Instead of optimizing the IAVL, we are looking into other solutions for both storage and state commitments.
 
@@ -54,17 +53,17 @@ Above, we propose to use a KV DB. However, for the state machine, we could use a
 
 State Storage requirements:
 
-+ range queries
-+ quick (key, value) access
-+ creating a snapshot
-+ historical versioning
-+ pruning (garbage collection)
+- range queries
+- quick (key, value) access
+- creating a snapshot
+- historical versioning
+- pruning (garbage collection)
 
 State Commitment requirements:
 
-+ fast updates
-+ tree path should be short
-+ pruning (garbage collection)
+- fast updates
+- tree path should be short
+- pruning (garbage collection)
 
 ### LazyLedger SMT for State Commitment
 
@@ -91,12 +90,12 @@ To manage the active snapshots we will either us a DB _max number of snapshots_ 
 
 #### Accessing old state versions
 
-One of the functional requirements is to access old state. This is done through `abci.Query` structure.  The version is specified by a block height (so we query for an object by a key `K` at block height `H`). The number of old versions supported for `abci.Query` is configurable. Accessing an old state is done by using available snapshots.
+One of the functional requirements is to access old state. This is done through `abci.Query` structure. The version is specified by a block height (so we query for an object by a key `K` at block height `H`). The number of old versions supported for `abci.Query` is configurable. Accessing an old state is done by using available snapshots.
 `abci.Query` doesn't need old state of `SC`. So, for efficiency, we should keep `SC` and `SS` in different databases (however using the same DB engine).
 
 Moreover, SDK could provide a way to directly access the state. However, a state machine shouldn't do that - since the number of snapshots is configurable, it would lead to nondeterministic execution.
 
-We positively [validated](https://github.com/cosmos/cosmos-sdk/discussions/8297) a versioning and snapshot mechanism for querying old state with regards to the database we evaluated.
+We positively [validated](https://github.com/Stride-Labs/cosmos-sdk/discussions/8297) a versioning and snapshot mechanism for querying old state with regards to the database we evaluated.
 
 ### State Proofs
 
@@ -104,7 +103,7 @@ For any object stored in State Store (SS), we have corresponding object in `SC`.
 
 ### Rollbacks
 
-We need to be able to process transactions and roll-back state updates if a transaction fails. This can be done in the following way: during transaction processing, we keep all state change requests (writes) in a `CacheWrapper` abstraction (as it's done today). Once we finish the block processing, in the `Endblocker`,  we commit a root store - at that time, all changes are written to the SMT and to the `SS` and a snapshot is created.
+We need to be able to process transactions and roll-back state updates if a transaction fails. This can be done in the following way: during transaction processing, we keep all state change requests (writes) in a `CacheWrapper` abstraction (as it's done today). Once we finish the block processing, in the `Endblocker`, we commit a root store - at that time, all changes are written to the SMT and to the `SS` and a snapshot is created.
 
 ### Committing to an object without saving it
 
@@ -120,18 +119,18 @@ We change the storage layout of the state machine, a storage hard fork and netwo
 
 ### Positive
 
-+ Decoupling state from state commitment introduce better engineering opportunities for further optimizations and better storage patterns.
-+ Performance improvements.
-+ Joining SMT based camp which has wider and proven adoption than IAVL. Example projects which decided on SMT: Ethereum2, Diem (Libra), Trillan, Tezos, LazyLedger.
+- Decoupling state from state commitment introduce better engineering opportunities for further optimizations and better storage patterns.
+- Performance improvements.
+- Joining SMT based camp which has wider and proven adoption than IAVL. Example projects which decided on SMT: Ethereum2, Diem (Libra), Trillan, Tezos, LazyLedger.
 
 ### Negative
 
-+ Storage migration
-+ LL SMT doesn't support pruning - we will need to add and test that functionality.
+- Storage migration
+- LL SMT doesn't support pruning - we will need to add and test that functionality.
 
 ### Neutral
 
-+ Deprecating IAVL, which is one of the core proposals of Cosmos Whitepaper.
+- Deprecating IAVL, which is one of the core proposals of Cosmos Whitepaper.
 
 ## Alternative designs
 
@@ -151,14 +150,14 @@ Use of RDBMS instead of simple KV store for state. Use of RDBMS will require an 
 
 ### Off Chain Store
 
-We were discussing use case where modules can use a support database, which is not automatically committed. Module will responsible for having a sound storage model and can optionally use the feature discussed in __Committing to an object without saving it_ section.
+We were discussing use case where modules can use a support database, which is not automatically committed. Module will responsible for having a sound storage model and can optionally use the feature discussed in \__Committing to an object without saving it_ section.
 
 ## References
 
-+ [IAVL What's Next?](https://github.com/cosmos/cosmos-sdk/issues/7100)
-+ [IAVL overview](https://docs.google.com/document/d/16Z_hW2rSAmoyMENO-RlAhQjAG3mSNKsQueMnKpmcBv0/edit#heading=h.yd2th7x3o1iv) of it's state v0.15
-+ [State commitments and storage report](https://paper.dropbox.com/published/State-commitments-and-storage-review--BDvA1MLwRtOx55KRihJ5xxLbBw-KeEB7eOd11pNrZvVtqUgL3h)
-+ [LazyLedger SMT](https://github.com/lazyledger/smt)
-+ Facebook Diem (Libra) SMT [design](https://developers.diem.com/papers/jellyfish-merkle-tree/2021-01-14.pdf)
-+ [Trillian Revocation Transparency](https://github.com/google/trillian/blob/master/docs/papers/RevocationTransparency.pdf), [Trillian Verifiable Data Structures](https://github.com/google/trillian/blob/master/docs/papers/VerifiableDataStructures.pdf).
-+ Design and implementation [discussion](https://github.com/cosmos/cosmos-sdk/discussions/8297).
+- [IAVL What's Next?](https://github.com/Stride-Labs/cosmos-sdk/issues/7100)
+- [IAVL overview](https://docs.google.com/document/d/16Z_hW2rSAmoyMENO-RlAhQjAG3mSNKsQueMnKpmcBv0/edit#heading=h.yd2th7x3o1iv) of it's state v0.15
+- [State commitments and storage report](https://paper.dropbox.com/published/State-commitments-and-storage-review--BDvA1MLwRtOx55KRihJ5xxLbBw-KeEB7eOd11pNrZvVtqUgL3h)
+- [LazyLedger SMT](https://github.com/lazyledger/smt)
+- Facebook Diem (Libra) SMT [design](https://developers.diem.com/papers/jellyfish-merkle-tree/2021-01-14.pdf)
+- [Trillian Revocation Transparency](https://github.com/google/trillian/blob/master/docs/papers/RevocationTransparency.pdf), [Trillian Verifiable Data Structures](https://github.com/google/trillian/blob/master/docs/papers/VerifiableDataStructures.pdf).
+- Design and implementation [discussion](https://github.com/Stride-Labs/cosmos-sdk/discussions/8297).

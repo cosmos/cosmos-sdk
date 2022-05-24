@@ -11,9 +11,9 @@ In this section we describe the processing of the staking messages and the corre
 A validator is created using the `MsgCreateValidator` message.
 The validator must be created with an initial delegation from the operator.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L16-L17
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L16-L17
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L35-L51
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L35-L51
 
 This message is expected to fail if:
 
@@ -21,9 +21,9 @@ This message is expected to fail if:
 - another validator with this pubkey is already registered
 - the initial self-delegation tokens are of a denom not specified as the bonding denom
 - the commission parameters are faulty, namely:
-    - `MaxRate` is either > 1 or < 0
-    - the initial `Rate` is either negative or > `MaxRate`
-    - the initial `MaxChangeRate` is either negative or > `MaxRate`
+  - `MaxRate` is either > 1 or < 0
+  - the initial `Rate` is either negative or > `MaxRate`
+  - the initial `MaxChangeRate` is either negative or > `MaxRate`
 - the description fields are too large
 
 This message creates and stores the `Validator` object at appropriate indexes.
@@ -36,9 +36,9 @@ in the first end-block.
 The `Description`, `CommissionRate` of a validator can be updated using the
 `MsgEditValidator` message.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L19-L20
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L19-L20
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L56-L76
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L56-L76
 
 This message is expected to fail if:
 
@@ -55,9 +55,9 @@ Within this message the delegator provides coins, and in return receives
 some amount of their validator's (newly created) delegator-shares that are
 assigned to `Delegation.Shares`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L22-L24
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L22-L24
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L81-L90
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L81-L90
 
 This message is expected to fail if:
 
@@ -87,13 +87,13 @@ will not be added to the power index until it is unjailed.
 The `MsgUndelegate` message allows delegators to undelegate their tokens from
 validator.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L30-L32
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L30-L32
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L112-L121
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L112-L121
 
 This message returns a response containing the completion time of the undelegation:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L123-L126
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L123-L126
 
 This message is expected to fail if:
 
@@ -108,11 +108,11 @@ When this message is processed the following actions occur:
 - validator's `DelegatorShares` and the delegation's `Shares` are both reduced by the message `SharesAmount`
 - calculate the token worth of the shares remove that amount tokens held within the validator
 - with those removed tokens, if the validator is:
-    - `Bonded` - add them to an entry in `UnbondingDelegation` (create `UnbondingDelegation` if it doesn't exist) with a completion time a full unbonding period from the current time. Update pool shares to reduce BondedTokens and increase NotBondedTokens by token worth of the shares.
-    - `Unbonding` - add them to an entry in `UnbondingDelegation` (create `UnbondingDelegation` if it doesn't exist) with the same completion time as the validator (`UnbondingMinTime`).
-    - `Unbonded` - then send the coins the message `DelegatorAddr`
+  - `Bonded` - add them to an entry in `UnbondingDelegation` (create `UnbondingDelegation` if it doesn't exist) with a completion time a full unbonding period from the current time. Update pool shares to reduce BondedTokens and increase NotBondedTokens by token worth of the shares.
+  - `Unbonding` - add them to an entry in `UnbondingDelegation` (create `UnbondingDelegation` if it doesn't exist) with the same completion time as the validator (`UnbondingMinTime`).
+  - `Unbonded` - then send the coins the message `DelegatorAddr`
 - if there are no more `Shares` in the delegation, then the delegation object is removed from the store
-    - under this situation if the delegation is the validator's self-delegation then also jail the validator.
+  - under this situation if the delegation is the validator's self-delegation then also jail the validator.
 
 ![Unbond sequence](../../../docs/uml/svg/unbond_sequence.svg)
 
@@ -122,13 +122,13 @@ The redelegation command allows delegators to instantly switch validators. Once
 the unbonding period has passed, the redelegation is automatically completed in
 the EndBlocker.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L26-L28
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L26-L28
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L95-L105
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L95-L105
 
 This message returns a response containing the completion time of the redelegation:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L107-L110
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L107-L110
 
 This message is expected to fail if:
 
@@ -144,11 +144,11 @@ When this message is processed the following actions occur:
 - the source validator's `DelegatorShares` and the delegations `Shares` are both reduced by the message `SharesAmount`
 - calculate the token worth of the shares remove that amount tokens held within the source validator.
 - if the source validator is:
-    - `Bonded` - add an entry to the `Redelegation` (create `Redelegation` if it doesn't exist) with a completion time a full unbonding period from the current time. Update pool shares to reduce BondedTokens and increase NotBondedTokens by token worth of the shares (this may be effectively reversed in the next step however).
-    - `Unbonding` - add an entry to the `Redelegation` (create `Redelegation` if it doesn't exist) with the same completion time as the validator (`UnbondingMinTime`).
-    - `Unbonded` - no action required in this step
+  - `Bonded` - add an entry to the `Redelegation` (create `Redelegation` if it doesn't exist) with a completion time a full unbonding period from the current time. Update pool shares to reduce BondedTokens and increase NotBondedTokens by token worth of the shares (this may be effectively reversed in the next step however).
+  - `Unbonding` - add an entry to the `Redelegation` (create `Redelegation` if it doesn't exist) with the same completion time as the validator (`UnbondingMinTime`).
+  - `Unbonded` - no action required in this step
 - Delegate the token worth to the destination validator, possibly moving tokens back to the bonded state.
 - if there are no more `Shares` in the source delegation, then the source delegation object is removed from the store
-    - under this situation if the delegation is the validator's self-delegation then also jail the validator.
+  - under this situation if the delegation is the validator's self-delegation then also jail the validator.
 
 ![Begin redelegation sequence](../../../docs/uml/svg/begin_redelegation_sequence.svg)

@@ -105,7 +105,7 @@ func (g *basicGasMeter) ConsumeGas(amount Gas, descriptor string) {
 //
 // Use case: This functionality enables refunding gas to the transaction or block gas pools so that
 // EVM-compatible chains can fully support the go-ethereum StateDb interface.
-// See https://github.com/cosmos/cosmos-sdk/pull/9403 for reference.
+// See https://github.com/Stride-Labs/cosmos-sdk/pull/9403 for reference.
 func (g *basicGasMeter) RefundGas(amount Gas, descriptor string) {
 	if g.consumed < amount {
 		panic(ErrorNegativeGasConsumed{Descriptor: descriptor})
@@ -163,7 +163,7 @@ func (g *infiniteGasMeter) ConsumeGas(amount Gas, descriptor string) {
 //
 // Use case: This functionality enables refunding gas to the trasaction or block gas pools so that
 // EVM-compatible chains can fully support the go-ethereum StateDb interface.
-// See https://github.com/cosmos/cosmos-sdk/pull/9403 for reference.
+// See https://github.com/Stride-Labs/cosmos-sdk/pull/9403 for reference.
 func (g *infiniteGasMeter) RefundGas(amount Gas, descriptor string) {
 	if g.consumed < amount {
 		panic(ErrorNegativeGasConsumed{Descriptor: descriptor})

@@ -7,7 +7,7 @@
 - 2020 Apr 27: Convert usages of `oneof` for interfaces to `Any`
 - 2020 May 15: Describe `cosmos_proto` extensions and amino compatibility
 - 2020 Dec 4: Move and rename `MarshalAny` and `UnmarshalAny` into the `codec.Codec` interface.
-- 2021 Feb 24: Remove mentions of `HybridCodec`, which has been abandoned in [#6843](https://github.com/cosmos/cosmos-sdk/pull/6843).
+- 2021 Feb 24: Remove mentions of `HybridCodec`, which has been abandoned in [#6843](https://github.com/Stride-Labs/cosmos-sdk/pull/6843).
 
 ## Status
 
@@ -120,18 +120,18 @@ type Codec interface {
 
 In general, module-level .proto files should define messages which encode interfaces
 using [`google.protobuf.Any`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/any.proto).
-After [extension discussion](https://github.com/cosmos/cosmos-sdk/issues/6030),
+After [extension discussion](https://github.com/Stride-Labs/cosmos-sdk/issues/6030),
 this was chosen as the preferred alternative to application-level `oneof`s
 as in our original protobuf design. The arguments in favor of `Any` can be
 summarized as follows:
 
-* `Any` provides a simpler, more consistent client UX for dealing with
-interfaces than app-level `oneof`s that will need to be coordinated more
-carefully across applications. Creating a generic transaction
-signing library using `oneof`s may be cumbersome and critical logic may need
-to be reimplemented for each chain
-* `Any` provides more resistance against human error than `oneof`
-* `Any` is generally simpler to implement for both modules and apps
+- `Any` provides a simpler, more consistent client UX for dealing with
+  interfaces than app-level `oneof`s that will need to be coordinated more
+  carefully across applications. Creating a generic transaction
+  signing library using `oneof`s may be cumbersome and critical logic may need
+  to be reimplemented for each chain
+- `Any` provides more resistance against human error than `oneof`
+- `Any` is generally simpler to implement for both modules and apps
 
 The main counter-argument to using `Any` centers around its additional space
 and possibly performance overhead. The space overhead could be dealt with using
@@ -150,7 +150,7 @@ and client developer UX.
 ### Safe usage of `Any`
 
 By default, the [gogo protobuf implementation of `Any`](https://godoc.org/github.com/gogo/protobuf/types)
-uses [global type registration]( https://github.com/gogo/protobuf/blob/master/proto/properties.go#L540)
+uses [global type registration](https://github.com/gogo/protobuf/blob/master/proto/properties.go#L540)
 to decode values packed in `Any` into concrete
 go types. This introduces a vulnerability where any malicious module
 in the dependency tree could registry a type with the global protobuf registry
@@ -183,10 +183,10 @@ to communicate the list of concrete types that satisfy an interface to clients.
 
 In .proto files:
 
-* fields which accept interfaces should be annotated with `cosmos_proto.accepts_interface`
-using the same full-qualified name passed as `protoName` to `InterfaceRegistry.RegisterInterface`
-* interface implementations should be annotated with `cosmos_proto.implements_interface`
-using the same full-qualified name passed as `protoName` to `InterfaceRegistry.RegisterInterface`
+- fields which accept interfaces should be annotated with `cosmos_proto.accepts_interface`
+  using the same full-qualified name passed as `protoName` to `InterfaceRegistry.RegisterInterface`
+- interface implementations should be annotated with `cosmos_proto.implements_interface`
+  using the same full-qualified name passed as `protoName` to `InterfaceRegistry.RegisterInterface`
 
 In the future, `protoName`, `cosmos_proto.accepts_interface`, `cosmos_proto.implements_interface`
 may be used via code generation, reflection &/or static linting.
@@ -229,7 +229,7 @@ every module that implements it in order to populate the `InterfaceRegistry`.
 The SDK will provide support methods `MarshalInterface` and `UnmarshalInterface` to hide a complexity of wrapping interface types into `Any` and allow easy serialization.
 
 ```go
-import "github.com/cosmos/cosmos-sdk/codec"
+import "github.com/Stride-Labs/cosmos-sdk/codec"
 
 // note: eviexported.Evidence is an interface type
 func MarshalEvidence(cdc codec.BinaryCodec, e eviexported.Evidence) ([]byte, error) {
@@ -255,7 +255,7 @@ an interface:
 message MsgSubmitEvidence {
   bytes submitter = 1
     [
-      (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
+      (gogoproto.casttype) = "github.com/Stride-Labs/cosmos-sdk/types.AccAddress"
     ];
   google.protobuf.Any evidence = 2;
 }
@@ -375,5 +375,5 @@ seamless.
 
 ## References
 
-1. https://github.com/cosmos/cosmos-sdk/issues/4977
-2. https://github.com/cosmos/cosmos-sdk/issues/5444
+1. https://github.com/Stride-Labs/cosmos-sdk/issues/4977
+2. https://github.com/Stride-Labs/cosmos-sdk/issues/5444

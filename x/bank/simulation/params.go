@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/Stride-Labs/cosmos-sdk/x/simulation"
 
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	simtypes "github.com/Stride-Labs/cosmos-sdk/types/simulation"
+	"github.com/Stride-Labs/cosmos-sdk/x/bank/types"
 )
 
 // ParamChanges defines the parameters that can be modified by param change proposals

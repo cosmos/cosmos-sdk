@@ -4,7 +4,7 @@ This document outlines the process for releasing a new version of Cosmos SDK, wh
 
 ## Major Release Procedure
 
-A _major release_ is an increment of the first number (eg: `v1.2` → `v2.0.0`) or the _point number_ (eg: `v1.1 → v1.2.0`, also called _point release_). Each major release opens a _stable release series_ and receives updates outlined in the [Major Release Maintenance](#major-release-maintenance)_section.
+A _major release_ is an increment of the first number (eg: `v1.2` → `v2.0.0`) or the _point number_ (eg: `v1.1 → v1.2.0`, also called _point release_). Each major release opens a _stable release series_ and receives updates outlined in the [Major Release Maintenance](#major-release-maintenance)\_section.
 
 Before making a new _major_ release we do beta and release candidate releases. For example, for release 1.0.0:
 
@@ -13,26 +13,26 @@ v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → 
 ```
 
 - Release a first beta version on the `master` branch and freeze `master` from receiving any new features. After beta is released, we focus on releasing the release candidate:
-    - finish audits and reviews
-    - kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks)
-    - perform functional tests
-    - add more tests
-    - release new beta version as the bugs are discovered and fixed.
+  - finish audits and reviews
+  - kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks)
+  - perform functional tests
+  - add more tests
+  - release new beta version as the bugs are discovered and fixed.
 - After the team feels that the `master` works fine we create a `release/vY` branch (going forward known a release branch), where `Y` is the version number, with the patch part substituted to `x` (eg: 0.42.x, 1.0.x). Ensure the release branch is protected so that pushes against the release branch are permitted only by the release manager or release coordinator.
-    - **PRs targeting this branch can be merged _only_ when exceptional circumstances arise**
-    - update the GitHub mergify integration by adding instructions for automatically backporting commits from `master` to the `release/vY` using the `backport/Y` label.
+  - **PRs targeting this branch can be merged _only_ when exceptional circumstances arise**
+  - update the GitHub mergify integration by adding instructions for automatically backporting commits from `master` to the `release/vY` using the `backport/Y` label.
 - In the release branch, prepare a new version section in the `CHANGELOG.md`
-    - All links must be link-ified: `$ python ./scripts/linkify_changelog.py CHANGELOG.md`
-    - Copy the entries into a `RELEASE_CHANGELOG.md`, this is needed so the bot knows which entries to add to the release page on GitHub.
-- Create a new annotated git tag for a release candidate  (eg: `git tag -a v1.1.0-rc1`) in the release branch.
-    - from this point we unfreeze master.
-    - the SDK teams collaborate and do their best to run testnets in order to validate the release.
-    - when bugs are found, create a PR for `master`, and backport fixes to the release branch.
-    - create new release candidate tags after bugs are fixed.
+  - All links must be link-ified: `$ python ./scripts/linkify_changelog.py CHANGELOG.md`
+  - Copy the entries into a `RELEASE_CHANGELOG.md`, this is needed so the bot knows which entries to add to the release page on GitHub.
+- Create a new annotated git tag for a release candidate (eg: `git tag -a v1.1.0-rc1`) in the release branch.
+  - from this point we unfreeze master.
+  - the SDK teams collaborate and do their best to run testnets in order to validate the release.
+  - when bugs are found, create a PR for `master`, and backport fixes to the release branch.
+  - create new release candidate tags after bugs are fixed.
 - After the team feels the release branch is stable and everything works, create a full release:
-    - update `CHANGELOG.md`.
-    - create a new annotated git tag (eg `git -a v1.1.0`) in the release branch.
-    - Create a GitHub release.
+  - update `CHANGELOG.md`.
+  - create a new annotated git tag (eg `git -a v1.1.0`) in the release branch.
+  - Create a GitHub release.
 
 Following _semver_ philosophy, point releases after `v1.0`:
 
@@ -69,9 +69,9 @@ Note: not every Major Release is denoted as stable releases.
 
 Only the following major release series have a stable release status:
 
-* **0.42 «Stargate»** is supported until 2022-02-09. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
-* **0.44** is supported until 2022-07-17. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
-* **0.45** is the latest major release and will be supported until 6 months after **0.46.0** release.
+- **0.42 «Stargate»** is supported until 2022-02-09. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
+- **0.44** is supported until 2022-07-17. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
+- **0.45** is the latest major release and will be supported until 6 months after **0.46.0** release.
 
 ## Stable Release Policy
 
@@ -111,60 +111,60 @@ To smoothen the update to the latest stable release, the SDK includes a set of C
 
 ### What qualifies as a Stable Release Update (SRU)?
 
-* **High-impact bugs**
-    * Bugs that may directly cause a security vulnerability.
-    * *Severe regressions* from a Cosmos-SDK's previous release. This includes all sort of issues
+- **High-impact bugs**
+  - Bugs that may directly cause a security vulnerability.
+  - _Severe regressions_ from a Cosmos-SDK's previous release. This includes all sort of issues
     that may cause the core packages or the `x/` modules unusable.
-    * Bugs that may cause **loss of user's data**.
-* Other safe cases:
-    * Bugs which don't fit in the aforementioned categories for which an obvious safe patch is known.
-    * Relatively small yet strictly non-breaking features with strong support from the community.
-    * Relatively small yet strictly non-breaking changes that introduce forward-compatible client
+  - Bugs that may cause **loss of user's data**.
+- Other safe cases:
+  - Bugs which don't fit in the aforementioned categories for which an obvious safe patch is known.
+  - Relatively small yet strictly non-breaking features with strong support from the community.
+  - Relatively small yet strictly non-breaking changes that introduce forward-compatible client
     features to smoothen the migration to successive releases.
-    * Relatively small yet strictly non-breaking CLI improvements.
+  - Relatively small yet strictly non-breaking CLI improvements.
 
 ### What does not qualify as SRU?
 
-* State machine changes.
-* Breaking changes in Protobuf definitions, as specified in [ADR-044](./docs/architecture/adr-044-protobuf-updates-guidelines.md).
-* Changes that introduces API breakages (e.g. public functions and interfaces removal/renaming).
-* Client-breaking changes in gRPC and HTTP request and response types.
-* CLI-breaking changes.
-* Cosmetic fixes, such as formatting or linter warning fixes.
+- State machine changes.
+- Breaking changes in Protobuf definitions, as specified in [ADR-044](./docs/architecture/adr-044-protobuf-updates-guidelines.md).
+- Changes that introduces API breakages (e.g. public functions and interfaces removal/renaming).
+- Client-breaking changes in gRPC and HTTP request and response types.
+- CLI-breaking changes.
+- Cosmetic fixes, such as formatting or linter warning fixes.
 
 ### What pull requests will be included in stable point-releases?
 
 Pull requests that fix bugs and add features that fall in the following categories do not require a **Stable Release Exception** to be granted to be included in a stable point-release:
 
-* **Severe regressions**.
-* Bugs that may cause **client applications** to be **largely unusable**.
-* Bugs that may cause **state corruption or data loss**.
-* Bugs that may directly or indirectly cause a **security vulnerability**.
-* Non-breaking features that are strongly requested by the community.
-* Non-breaking CLI improvements that are strongly requested by the community.
+- **Severe regressions**.
+- Bugs that may cause **client applications** to be **largely unusable**.
+- Bugs that may cause **state corruption or data loss**.
+- Bugs that may directly or indirectly cause a **security vulnerability**.
+- Non-breaking features that are strongly requested by the community.
+- Non-breaking CLI improvements that are strongly requested by the community.
 
 ### What pull requests will NOT be automatically included in stable point-releases?
 
 As rule of thumb, the following changes will **NOT** be automatically accepted into stable point-releases:
 
-* **State machine changes**.
-* **Protobug-breaking changes**, as specified in [ADR-044](./docs/architecture/adr-044-protobuf-updates-       guidelines.md).
-* **Client-breaking changes**, i.e. changes that prevent gRPC, HTTP and RPC clients to continue interacting with the node without any change.
-* **API-breaking changes**, i.e. changes that prevent client applications to *build without modifications* to the client application's source code.
-* **CLI-breaking changes**, i.e. changes that require usage changes for CLI users.
+- **State machine changes**.
+- **Protobug-breaking changes**, as specified in [ADR-044](./docs/architecture/adr-044-protobuf-updates- guidelines.md).
+- **Client-breaking changes**, i.e. changes that prevent gRPC, HTTP and RPC clients to continue interacting with the node without any change.
+- **API-breaking changes**, i.e. changes that prevent client applications to _build without modifications_ to the client application's source code.
+- **CLI-breaking changes**, i.e. changes that require usage changes for CLI users.
 
- In some circumstances, PRs that don't meet the aforementioned criteria might be raised and asked to be granted a *Stable Release Exception*.
+In some circumstances, PRs that don't meet the aforementioned criteria might be raised and asked to be granted a _Stable Release Exception_.
 
 ### Stable Release Exception - Procedure
 
-1. Check that the bug is either fixed or not reproducible in `master`. It is, in general, not appropriate to release bug fixes for stable releases without first testing them in `master`. Please apply the label [v0.43](https://github.com/cosmos/cosmos-sdk/milestone/26) to the issue.
+1. Check that the bug is either fixed or not reproducible in `master`. It is, in general, not appropriate to release bug fixes for stable releases without first testing them in `master`. Please apply the label [v0.43](https://github.com/Stride-Labs/cosmos-sdk/milestone/26) to the issue.
 2. Add a comment to the issue and ensure it contains the following information (see the bug template below):
 
-* **[Impact]** An explanation of the bug on users and justification for backporting the fix to the stable release.
-* A **[Test Case]** section containing detailed instructions on how to reproduce the bug.
-* A **[Regression Potential]** section with a clear assessment on how regressions are most likely to manifest as a result of the pull request that aims to fix the bug in the target stable release.
+- **[Impact]** An explanation of the bug on users and justification for backporting the fix to the stable release.
+- A **[Test Case]** section containing detailed instructions on how to reproduce the bug.
+- A **[Regression Potential]** section with a clear assessment on how regressions are most likely to manifest as a result of the pull request that aims to fix the bug in the target stable release.
 
-3. **Stable Release Managers** will review and discuss the PR. Once *consensus* surrounding the rationale has been reached and the technical review has successfully concluded, the pull request will be merged in the respective point-release target branch (e.g. `release/v0.43.x`) and the PR included in the point-release's respective milestone (e.g. `v0.43.5`).
+3. **Stable Release Managers** will review and discuss the PR. Once _consensus_ surrounding the rationale has been reached and the technical review has successfully concluded, the pull request will be merged in the respective point-release target branch (e.g. `release/v0.43.x`) and the PR included in the point-release's respective milestone (e.g. `v0.43.5`).
 
 #### Stable Release Exception - Bug template
 
@@ -192,12 +192,12 @@ Decisions are made by consensus.
 
 Their responsibilites include:
 
-* Driving the Stable Release Exception process.
-* Approving/rejecting proposed changes to a stable release series.
-* Executing the release process of stable point-releases in compliance with the [Point Release Procedure](CONTRIBUTING.md).
+- Driving the Stable Release Exception process.
+- Approving/rejecting proposed changes to a stable release series.
+- Executing the release process of stable point-releases in compliance with the [Point Release Procedure](CONTRIBUTING.md).
 
 The Stable Release Managers are appointed by the Interchain Foundation. Currently residing Stable Release Managers:
 
-* @clevinson - Cory Levinson
-* @amaurym - Amaury Martiny
-* @robert-zaremba - Robert Zaremba
+- @clevinson - Cory Levinson
+- @amaurym - Amaury Martiny
+- @robert-zaremba - Robert Zaremba

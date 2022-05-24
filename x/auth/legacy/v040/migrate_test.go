@@ -6,14 +6,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	v034 "github.com/cosmos/cosmos-sdk/x/auth/legacy/v034"
-	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v038"
-	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v039"
-	v040auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v040"
+	"github.com/Stride-Labs/cosmos-sdk/client"
+	"github.com/Stride-Labs/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/Stride-Labs/cosmos-sdk/simapp"
+	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	v034 "github.com/Stride-Labs/cosmos-sdk/x/auth/legacy/v034"
+	v038auth "github.com/Stride-Labs/cosmos-sdk/x/auth/legacy/v038"
+	v039auth "github.com/Stride-Labs/cosmos-sdk/x/auth/legacy/v039"
+	v040auth "github.com/Stride-Labs/cosmos-sdk/x/auth/legacy/v040"
 )
 
 func TestMigrate(t *testing.T) {

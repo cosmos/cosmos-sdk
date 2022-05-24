@@ -10,34 +10,34 @@ parent:
 ![banner](docs/cosmos-sdk-image.jpg)
 
 <div align="center">
-  <a href="https://github.com/cosmos/cosmos-sdk/releases/latest">
+  <a href="https://github.com/Stride-Labs/cosmos-sdk/releases/latest">
     <img alt="Version" src="https://img.shields.io/github/tag/cosmos/cosmos-sdk.svg" />
   </a>
-  <a href="https://github.com/cosmos/cosmos-sdk/blob/master/LICENSE">
+  <a href="https://github.com/Stride-Labs/cosmos-sdk/blob/master/LICENSE">
     <img alt="License: Apache-2.0" src="https://img.shields.io/github/license/cosmos/cosmos-sdk.svg" />
   </a>
-  <a href="https://pkg.go.dev/github.com/cosmos/cosmos-sdk?tab=doc">
-    <img alt="GoDoc" src="https://godoc.org/github.com/cosmos/cosmos-sdk?status.svg" />
+  <a href="https://pkg.go.dev/github.com/Stride-Labs/cosmos-sdk?tab=doc">
+    <img alt="GoDoc" src="https://godoc.org/github.com/Stride-Labs/cosmos-sdk?status.svg" />
   </a>
-  <a href="https://goreportcard.com/report/github.com/cosmos/cosmos-sdk">
-    <img alt="Go report card" src="https://goreportcard.com/badge/github.com/cosmos/cosmos-sdk" />
+  <a href="https://goreportcard.com/report/github.com/Stride-Labs/cosmos-sdk">
+    <img alt="Go report card" src="https://goreportcard.com/badge/github.com/Stride-Labs/cosmos-sdk" />
   </a>
   <a href="https://codecov.io/gh/cosmos/cosmos-sdk">
     <img alt="Code Coverage" src="https://codecov.io/gh/cosmos/cosmos-sdk/branch/master/graph/badge.svg" />
   </a>
 </div>
 <div align="center">
-  <a href="https://github.com/cosmos/cosmos-sdk">
+  <a href="https://github.com/Stride-Labs/cosmos-sdk">
     <img alt="Lines Of Code" src="https://tokei.rs/b1/github/cosmos/cosmos-sdk" />
   </a>
   <a href="https://discord.gg/AzefAFd">
     <img alt="Discord" src="https://img.shields.io/discord/669268347736686612.svg" />
   </a>
-  <a href="https://sourcegraph.com/github.com/cosmos/cosmos-sdk?badge">
-    <img alt="Imported by" src="https://sourcegraph.com/github.com/cosmos/cosmos-sdk/-/badge.svg" />
+  <a href="https://sourcegraph.com/github.com/Stride-Labs/cosmos-sdk?badge">
+    <img alt="Imported by" src="https://sourcegraph.com/github.com/Stride-Labs/cosmos-sdk/-/badge.svg" />
   </a>
-    <img alt="Sims" src="https://github.com/cosmos/cosmos-sdk/workflows/Sims/badge.svg" />
-    <img alt="Lint Satus" src="https://github.com/cosmos/cosmos-sdk/workflows/Lint/badge.svg" />
+    <img alt="Sims" src="https://github.com/Stride-Labs/cosmos-sdk/workflows/Sims/badge.svg" />
+    <img alt="Lint Satus" src="https://github.com/Stride-Labs/cosmos-sdk/workflows/Lint/badge.svg" />
 </div>
 
 The Cosmos SDK is a framework for building blockchain applications. [Tendermint Core (BFT Consensus)](https://github.com/tendermint/tendermint) and the Cosmos SDK are written in the Golang programming language. Cosmos SDK is used to build [Gaia](https://github.com/cosmos/gaia), the first implementation of the Cosmos Hub.
@@ -64,8 +64,8 @@ If you want to follow the updates or learn more about the latest design then joi
 
 The Cosmos ecosystem is vast. We will only make a few notable mentions here.
 
-+ [Tools](https://v1.cosmos.network/tools): notable frameworks and modules.
-+ [CosmJS](https://github.com/cosmos/cosmjs): the Swiss Army knife to power JavaScript based client solutions.
+- [Tools](https://v1.cosmos.network/tools): notable frameworks and modules.
+- [CosmJS](https://github.com/cosmos/cosmjs): the Swiss Army knife to power JavaScript based client solutions.
 
 ### Cosmos Hub Mainnet
 

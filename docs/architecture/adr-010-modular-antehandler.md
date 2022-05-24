@@ -14,7 +14,7 @@ For example, let's say a user wants to implement some custom signature verificat
 
 ### Per-Module AnteHandler
 
-One approach is to use the [ModuleManager](https://godoc.org/github.com/cosmos/cosmos-sdk/types/module) and have each module implement its own antehandler if it requires custom antehandler logic. The ModuleManager can then be passed in an AnteHandler order in the same way it has an order for BeginBlockers and EndBlockers. The ModuleManager returns a single AnteHandler function that will take in a tx and run each module's `AnteHandle` in the specified order. The module manager's AnteHandler is set as the baseapp's AnteHandler.
+One approach is to use the [ModuleManager](https://godoc.org/github.com/Stride-Labs/cosmos-sdk/types/module) and have each module implement its own antehandler if it requires custom antehandler logic. The ModuleManager can then be passed in an AnteHandler order in the same way it has an order for BeginBlockers and EndBlockers. The ModuleManager returns a single AnteHandler function that will take in a tx and run each module's `AnteHandle` in the specified order. The module manager's AnteHandler is set as the baseapp's AnteHandler.
 
 Pros:
 
@@ -279,7 +279,7 @@ Since pros and cons are written for each approach, it is omitted from this secti
 
 ## References
 
-- [#4572](https://github.com/cosmos/cosmos-sdk/issues/4572):  Modular AnteHandler Issue
-- [#4582](https://github.com/cosmos/cosmos-sdk/pull/4583): Initial Implementation of Per-Module AnteHandler Approach
+- [#4572](https://github.com/Stride-Labs/cosmos-sdk/issues/4572): Modular AnteHandler Issue
+- [#4582](https://github.com/Stride-Labs/cosmos-sdk/pull/4583): Initial Implementation of Per-Module AnteHandler Approach
 - [Weave Decorator Code](https://github.com/iov-one/weave/blob/master/handler.go#L35)
 - [Weave Design Videos](https://vimeo.com/showcase/6189877)

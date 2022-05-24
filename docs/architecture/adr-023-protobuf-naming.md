@@ -45,11 +45,11 @@ script binaries.
 
 The goal of this ADR is to provide thoughtful naming conventions that:
 
-* encourage a good user experience for when users interact directly with
-.proto files and fully-qualified protobuf names
-* balance conciseness against the possibility of either over-optimizing (making
-names too short and cryptic) or under-optimizing (just accepting bloated names
-with lots of redundant information)
+- encourage a good user experience for when users interact directly with
+  .proto files and fully-qualified protobuf names
+- balance conciseness against the possibility of either over-optimizing (making
+  names too short and cryptic) or under-optimizing (just accepting bloated names
+  with lots of redundant information)
 
 These guidelines are meant to act as a style guide for both the SDK and
 third-party modules.
@@ -58,8 +58,8 @@ As a starting point, we should adopt all of the [DEFAULT](https://buf.build/docs
 checkers in [Buf's](https://buf.build) including [`PACKAGE_DIRECTORY_MATCH`](https://buf.build/docs/lint-checkers#file_layout),
 except:
 
-* [PACKAGE_VERSION_SUFFIX](https://buf.build/docs/lint-checkers#package_version_suffix)
-* [SERVICE_SUFFIX](https://buf.build/docs/lint-checkers#service_suffix)
+- [PACKAGE_VERSION_SUFFIX](https://buf.build/docs/lint-checkers#package_version_suffix)
+- [SERVICE_SUFFIX](https://buf.build/docs/lint-checkers#service_suffix)
 
 Further guidelines to be described below.
 
@@ -120,32 +120,32 @@ With that in mind, different stable versions (i.e. `v1` or `v2`) of a package sh
 different packages and this should be last resort approach for upgrading protobuf schemas. Scenarios where creating
 a `v2` may make sense are:
 
-* we want to create a new module with similar functionality to an existing module and adding `v2` is the most natural
-way to do this. In that case, there are really just two different, but similar modules with different APIs.
-* we want to add a new revamped API for an existing module and it's just too cumbersome to add it to the existing package,
-so putting it in `v2` is cleaner for users. In this case, care should be made to not deprecate support for
-`v1` if it is actively used in immutable smart contracts.
+- we want to create a new module with similar functionality to an existing module and adding `v2` is the most natural
+  way to do this. In that case, there are really just two different, but similar modules with different APIs.
+- we want to add a new revamped API for an existing module and it's just too cumbersome to add it to the existing package,
+  so putting it in `v2` is cleaner for users. In this case, care should be made to not deprecate support for
+  `v1` if it is actively used in immutable smart contracts.
 
 #### Guidelines on unstable (alpha and beta) package versions
 
 The following guidelines are recommended for marking packages as alpha or beta:
 
-* marking something as `alpha` or `beta` should be a last resort and just putting something in the
-stable package (i.e. `v1` or `v2`) should be preferred
-* a package *should* be marked as `alpha` *if and only if* there are active discussions to remove
-or significantly alter the package in the near future
-* a package *should* be marked as `beta` *if and only if* there is an active discussion to
-significantly refactor/rework the functionality in the near future but not remove it
-* modules *can and should* have types in both stable (i.e. `v1` or `v2`) and unstable (`alpha` or `beta`) packages.
+- marking something as `alpha` or `beta` should be a last resort and just putting something in the
+  stable package (i.e. `v1` or `v2`) should be preferred
+- a package _should_ be marked as `alpha` _if and only if_ there are active discussions to remove
+  or significantly alter the package in the near future
+- a package _should_ be marked as `beta` _if and only if_ there is an active discussion to
+  significantly refactor/rework the functionality in the near future but not remove it
+- modules _can and should_ have types in both stable (i.e. `v1` or `v2`) and unstable (`alpha` or `beta`) packages.
 
-*`alpha` and `beta` should not be used to avoid responsibility for maintaining compatibility.*
+_`alpha` and `beta` should not be used to avoid responsibility for maintaining compatibility._
 Whenever code is released into the wild, especially on a blockchain, there is a high cost to changing things. In some
 cases, for instance with immutable smart contracts, a breaking change may be impossible to fix.
 
 When marking something as `alpha` or `beta`, maintainers should ask the questions:
 
-* what is the cost of asking others to change their code vs the benefit of us maintaining the optionality to change it?
-* what is the plan for moving this to `v1` and how will that affect users?
+- what is the cost of asking others to change their code vs the benefit of us maintaining the optionality to change it?
+- what is the plan for moving this to `v1` and how will that affect users?
 
 `alpha` or `beta` should really be used to communicate "changes are planned".
 
@@ -156,11 +156,11 @@ they probably don't want to do that... So now the `v1alpha` package is more or l
 
 The following are guidelines for working with non-stable packages:
 
-* [Buf's recommended version suffix](https://buf.build/docs/lint-checkers#package_version_suffix)
-(ex. `v1alpha1`) _should_ be used for non-stable packages
-* non-stable packages should generally be excluded from breaking change detection
-* immutable smart contract modules (i.e. CosmWasm) _should_ block smart contracts/persistent
-scripts from interacting with `alpha`/`beta` packages
+- [Buf's recommended version suffix](https://buf.build/docs/lint-checkers#package_version_suffix)
+  (ex. `v1alpha1`) _should_ be used for non-stable packages
+- non-stable packages should generally be excluded from breaking change detection
+- immutable smart contract modules (i.e. CosmWasm) _should_ block smart contracts/persistent
+  scripts from interacting with `alpha`/`beta` packages
 
 #### Omit v1 suffix
 
@@ -222,7 +222,7 @@ and `BalanceResponse`.
 
 #### Use just `Query` for the query service
 
-Instead of [Buf's default service suffix recommendation](https://github.com/cosmos/cosmos-sdk/pull/6033),
+Instead of [Buf's default service suffix recommendation](https://github.com/Stride-Labs/cosmos-sdk/pull/6033),
 we should simply use the shorter `Query` for query services.
 
 For other types of gRPC services, we should consider sticking with Buf's
@@ -245,19 +245,19 @@ community-based governance.
 
 ### Positive
 
-* names will be more concise and easier to read and type
-* all transactions using `Any` will be at shorter (`_sdk.x` and `.v1` will be removed)
-* `.proto` file imports will be more standard (without `"third_party/proto"` in
-the path)
-* code generation will be easier for clients because .proto files will be
-in a single `proto/` directory which can be copied rather than scattered
-throughout the SDK
+- names will be more concise and easier to read and type
+- all transactions using `Any` will be at shorter (`_sdk.x` and `.v1` will be removed)
+- `.proto` file imports will be more standard (without `"third_party/proto"` in
+  the path)
+- code generation will be easier for clients because .proto files will be
+  in a single `proto/` directory which can be copied rather than scattered
+  throughout the SDK
 
 ### Negative
 
 ### Neutral
 
-* `.proto`  files will need to be reorganized and refactored
-* some modules may need to be marked as alpha or beta
+- `.proto` files will need to be reorganized and refactored
+- some modules may need to be marked as alpha or beta
 
 ## References

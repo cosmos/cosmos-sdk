@@ -26,76 +26,77 @@ Also, it should be noted that this ADR includes only the simplest form of consen
 ### Considerations
 
 - consensus key mapping information management strategy
-    - store history of each key mapping changes in the kvstore.
-    - the state machine can search corresponding consensus key paired with given validator operator for any arbitrary height in a recent unbonding period.
-    - the state machine does not need any historical mapping information which is past more than unbonding period.
+  - store history of each key mapping changes in the kvstore.
+  - the state machine can search corresponding consensus key paired with given validator operator for any arbitrary height in a recent unbonding period.
+  - the state machine does not need any historical mapping information which is past more than unbonding period.
 - key rotation costs related to LCD and IBC
-    - LCD and IBC will have traffic/computation burden when there exists frequent power changes
-    - In current Tendermint design, consensus key rotations are seen as power changes from LCD or IBC perspective
-    - Therefore, to minimize unnecessary frequent key rotation behavior, we limited maximum number of rotation in recent unbonding period and also applied exponentially increasing rotation fee
+  - LCD and IBC will have traffic/computation burden when there exists frequent power changes
+  - In current Tendermint design, consensus key rotations are seen as power changes from LCD or IBC perspective
+  - Therefore, to minimize unnecessary frequent key rotation behavior, we limited maximum number of rotation in recent unbonding period and also applied exponentially increasing rotation fee
 - limits
-    - a validator cannot rotate its consensus key more than `MaxConsPubKeyRotations` time for any unbonding period, to prevent spam.
-    - parameters can be decided by governance and stored in genesis file.
+  - a validator cannot rotate its consensus key more than `MaxConsPubKeyRotations` time for any unbonding period, to prevent spam.
+  - parameters can be decided by governance and stored in genesis file.
 - key rotation fee
-    - a validator should pay `KeyRotationFee` to rotate the consensus key which is calculated as below
-    - `KeyRotationFee` = (max(`VotingPowerPercentage` *100, 1)* `InitialKeyRotationFee`) * 2^(number of rotations in `ConsPubKeyRotationHistory` in recent unbonding period)
+  - a validator should pay `KeyRotationFee` to rotate the consensus key which is calculated as below
+  - `KeyRotationFee` = (max(`VotingPowerPercentage` _100, 1)_ `InitialKeyRotationFee`) \* 2^(number of rotations in `ConsPubKeyRotationHistory` in recent unbonding period)
 - evidence module
-    - evidence module can search corresponding consensus key for any height from slashing keeper so that it can decide which consensus key is supposed to be used for given height.
+  - evidence module can search corresponding consensus key for any height from slashing keeper so that it can decide which consensus key is supposed to be used for given height.
 - abci.ValidatorUpdate
-    - tendermint already has ability to change a consensus key by ABCI communication(`ValidatorUpdate`).
-    - validator consensus key update can be done via creating new + delete old by change the power to zero.
-    - therefore, we expect we even do not need to change tendermint codebase at all to implement this feature.
+  - tendermint already has ability to change a consensus key by ABCI communication(`ValidatorUpdate`).
+  - validator consensus key update can be done via creating new + delete old by change the power to zero.
+  - therefore, we expect we even do not need to change tendermint codebase at all to implement this feature.
 - new genesis parameters in `staking` module
-    - `MaxConsPubKeyRotations` : maximum number of rotation can be executed by a validator in recent unbonding period. default value 10 is suggested(11th key rotation will be rejected)
-    - `InitialKeyRotationFee` : the initial key rotation fee when no key rotation has happened in recent unbonding period. default value 1atom is suggested(1atom fee for the first key rotation in recent unbonding period)
+  - `MaxConsPubKeyRotations` : maximum number of rotation can be executed by a validator in recent unbonding period. default value 10 is suggested(11th key rotation will be rejected)
+  - `InitialKeyRotationFee` : the initial key rotation fee when no key rotation has happened in recent unbonding period. default value 1atom is suggested(1atom fee for the first key rotation in recent unbonding period)
 
 ### Workflow
 
 1. The validator generates a new consensus keypair.
 2. The validator generates and signs a `MsgRotateConsPubKey` tx with their operator key and new ConsPubKey
 
-    ```go
-    type MsgRotateConsPubKey struct {
-        ValidatorAddress  sdk.ValAddress
-        NewPubKey         crypto.PubKey
-    }
-    ```
+   ```go
+   type MsgRotateConsPubKey struct {
+       ValidatorAddress  sdk.ValAddress
+       NewPubKey         crypto.PubKey
+   }
+   ```
 
 3. `handleMsgRotateConsPubKey` gets `MsgRotateConsPubKey`, calls `RotateConsPubKey` with emits event
 4. `RotateConsPubKey`
-    - checks if `NewPubKey` is not duplicated on `ValidatorsByConsAddr`
-    - checks if the validator is does not exceed parameter `MaxConsPubKeyRotations` by iterating `ConsPubKeyRotationHistory`
-    - checks if the signing account has enough balance to pay `KeyRotationFee`
-    - pays `KeyRotationFee` to community fund
-    - overwrites `NewPubKey` in `validator.ConsPubKey`
-    - deletes old `ValidatorByConsAddr`
-    - `SetValidatorByConsAddr` for `NewPubKey`
-    - Add `ConsPubKeyRotationHistory` for tracking rotation
 
-    ```go
-    type ConsPubKeyRotationHistory struct {
-        OperatorAddress         sdk.ValAddress
-        OldConsPubKey           crypto.PubKey
-        NewConsPubKey           crypto.PubKey
-        RotatedHeight           int64
-    }
-    ```
+   - checks if `NewPubKey` is not duplicated on `ValidatorsByConsAddr`
+   - checks if the validator is does not exceed parameter `MaxConsPubKeyRotations` by iterating `ConsPubKeyRotationHistory`
+   - checks if the signing account has enough balance to pay `KeyRotationFee`
+   - pays `KeyRotationFee` to community fund
+   - overwrites `NewPubKey` in `validator.ConsPubKey`
+   - deletes old `ValidatorByConsAddr`
+   - `SetValidatorByConsAddr` for `NewPubKey`
+   - Add `ConsPubKeyRotationHistory` for tracking rotation
+
+   ```go
+   type ConsPubKeyRotationHistory struct {
+       OperatorAddress         sdk.ValAddress
+       OldConsPubKey           crypto.PubKey
+       NewConsPubKey           crypto.PubKey
+       RotatedHeight           int64
+   }
+   ```
 
 5. `ApplyAndReturnValidatorSetUpdates` checks if there is `ConsPubKeyRotationHistory` with `ConsPubKeyRotationHistory.RotatedHeight == ctx.BlockHeight()` and if so, generates 2 `ValidatorUpdate` , one for a remove validator and one for create new validator
 
-    ```go
-    abci.ValidatorUpdate{
-        PubKey: tmtypes.TM2PB.PubKey(OldConsPubKey),
-        Power:  0,
-    }
+   ```go
+   abci.ValidatorUpdate{
+       PubKey: tmtypes.TM2PB.PubKey(OldConsPubKey),
+       Power:  0,
+   }
 
-    abci.ValidatorUpdate{
-        PubKey: tmtypes.TM2PB.PubKey(NewConsPubKey),
-        Power:  v.ConsensusPower(),
-    }
-    ```
+   abci.ValidatorUpdate{
+       PubKey: tmtypes.TM2PB.PubKey(NewConsPubKey),
+       Power:  v.ConsensusPower(),
+   }
+   ```
 
-6. at `previousVotes` Iteration logic of `AllocateTokens`,  `previousVote` using `OldConsPubKey` match up with `ConsPubKeyRotationHistory`, and replace validator for token allocation
+6. at `previousVotes` Iteration logic of `AllocateTokens`, `previousVote` using `OldConsPubKey` match up with `ConsPubKeyRotationHistory`, and replace validator for token allocation
 7. Migrate `ValidatorSigningInfo` and `ValidatorMissedBlockBitArray` from `OldConsPubKey` to `NewConsPubKey`
 
 - Note : All above features shall be implemented in `staking` module.
@@ -121,5 +122,5 @@ Proposed
 ## References
 
 - on tendermint repo : https://github.com/tendermint/tendermint/issues/1136
-- on cosmos-sdk repo : https://github.com/cosmos/cosmos-sdk/issues/5231
+- on cosmos-sdk repo : https://github.com/Stride-Labs/cosmos-sdk/issues/5231
 - about multiple consensus keys : https://github.com/tendermint/tendermint/issues/1758#issuecomment-545291698

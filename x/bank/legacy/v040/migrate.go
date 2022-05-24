@@ -1,10 +1,10 @@
 package v040
 
 import (
-	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v039"
-	v036supply "github.com/cosmos/cosmos-sdk/x/bank/legacy/v036"
-	v038bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v038"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	v039auth "github.com/Stride-Labs/cosmos-sdk/x/auth/legacy/v039"
+	v036supply "github.com/Stride-Labs/cosmos-sdk/x/bank/legacy/v036"
+	v038bank "github.com/Stride-Labs/cosmos-sdk/x/bank/legacy/v038"
+	"github.com/Stride-Labs/cosmos-sdk/x/bank/types"
 )
 
 // Migrate accepts exported v0.39 x/auth and v0.38 x/bank genesis state and

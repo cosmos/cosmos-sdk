@@ -27,9 +27,9 @@ In the current Cosmos SDK documentation on the [Object-Capability Model](../core
 There is currently not a thriving ecosystem of Cosmos SDK modules. We hypothesize that this is in part due to:
 
 1. lack of a stable v1.0 Cosmos SDK to build modules off of. Module interfaces are changing, sometimes dramatically, from
-point release to point release, often for good reasons, but this does not create a stable foundation to build on.
+   point release to point release, often for good reasons, but this does not create a stable foundation to build on.
 2. lack of a properly implemented object capability or even object-oriented encapsulation system which makes refactors
-of module keeper interfaces inevitable because the current interfaces are poorly constrained.
+   of module keeper interfaces inevitable because the current interfaces are poorly constrained.
 
 ### `x/bank` Case Study
 
@@ -88,14 +88,14 @@ based service interfaces already used by clients for inter-module communication.
 Using this `QueryClient`/`MsgClient` approach has the following key benefits over exposing keepers to external modules:
 
 1. Protobuf types are checked for breaking changes using [buf](https://buf.build/docs/breaking-overview) and because of
-the way protobuf is designed this will give us strong backwards compatibility guarantees while allowing for forward
-evolution.
+   the way protobuf is designed this will give us strong backwards compatibility guarantees while allowing for forward
+   evolution.
 2. The separation between the client and server interfaces will allow us to insert permission checking code in between
-the two which checks if one module is authorized to send the specified `Msg` to the other module providing a proper
-object capability system (see below).
+   the two which checks if one module is authorized to send the specified `Msg` to the other module providing a proper
+   object capability system (see below).
 3. The router for inter-module communication gives us a convenient place to handle rollback of transactions,
-enabling atomicy of operations ([currently a problem](https://github.com/cosmos/cosmos-sdk/issues/8030)). Any failure within a module-to-module call would result in a failure of the entire
-transaction
+   enabling atomicy of operations ([currently a problem](https://github.com/Stride-Labs/cosmos-sdk/issues/8030)). Any failure within a module-to-module call would result in a failure of the entire
+   transaction
 
 This mechanism has the added benefits of:
 
@@ -156,7 +156,7 @@ func (foo *FooMsgServer) Bar(ctx context.Context, req *MsgBarRequest) (*MsgBarRe
 
 This design is also intended to be extensible to cover use cases of more fine grained permissioning like minting by
 denom prefix being restricted to certain modules (as discussed in
-[#7459](https://github.com/cosmos/cosmos-sdk/pull/7459#discussion_r529545528)).
+[#7459](https://github.com/Stride-Labs/cosmos-sdk/pull/7459#discussion_r529545528)).
 
 ### `ModuleKey`s and `ModuleID`s
 
@@ -165,7 +165,7 @@ corresponding "public key". From the [ADR 028](./adr-028-public-key-addresses.md
 or derived accounts that can be used for different pools (ex. staking pools) or managed accounts (ex. group
 accounts). We can also think of module sub-accounts as similar to derived keys - there is a root key and then some
 derivation path. `ModuleID` is a simple struct which contains the module name and optional "derivation" path,
-and forms its address based on the `AddressHash` method from [the ADR-028](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-028-public-key-addresses.md):
+and forms its address based on the `AddressHash` method from [the ADR-028](https://github.com/Stride-Labs/cosmos-sdk/blob/master/docs/architecture/adr-028-public-key-addresses.md):
 
 ```go
 type ModuleID struct {
@@ -323,14 +323,14 @@ proto package.
 
 Services registered against `InternalServer` will be callable from other modules but not by external clients.
 
-An alternative solution to internal-only methods could involve hooks / plugins as discussed [here](https://github.com/cosmos/cosmos-sdk/pull/7459#issuecomment-733807753).
+An alternative solution to internal-only methods could involve hooks / plugins as discussed [here](https://github.com/Stride-Labs/cosmos-sdk/pull/7459#issuecomment-733807753).
 A more detailed evaluation of a hooks / plugin system will be addressed later in follow-ups to this ADR or as a separate
 ADR.
 
 ### Authorization
 
 By default, the inter-module router requires that messages are sent by the first signer returned by `GetSigners`. The
-inter-module router should also accept authorization middleware such as that provided by [ADR 030](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-030-authz-module.md).
+inter-module router should also accept authorization middleware such as that provided by [ADR 030](https://github.com/Stride-Labs/cosmos-sdk/blob/master/docs/architecture/adr-030-authz-module.md).
 This middleware will allow accounts to otherwise specific module accounts to perform actions on their behalf.
 Authorization middleware should take into account the need to grant certain modules effectively "admin" privileges to
 other modules. This will be addressed in separate ADRs or updates to this ADR.
@@ -339,29 +339,29 @@ other modules. This will be addressed in separate ADRs or updates to this ADR.
 
 Other future improvements may include:
 
-* custom code generation that:
-    * simplifies interfaces (ex. generates code with `sdk.Context` instead of `context.Context`)
-    * optimizes inter-module calls - for instance caching resolved methods after first invocation
-* combining `StoreKey`s and `ModuleKey`s into a single interface so that modules have a single OCAPs handle
-* code generation which makes inter-module communication more performant
-* decoupling `ModuleKey` creation from `AppModuleBasic.Name()` so that app's can override root module account names
-* inter-module hooks and plugins
+- custom code generation that:
+  - simplifies interfaces (ex. generates code with `sdk.Context` instead of `context.Context`)
+  - optimizes inter-module calls - for instance caching resolved methods after first invocation
+- combining `StoreKey`s and `ModuleKey`s into a single interface so that modules have a single OCAPs handle
+- code generation which makes inter-module communication more performant
+- decoupling `ModuleKey` creation from `AppModuleBasic.Name()` so that app's can override root module account names
+- inter-module hooks and plugins
 
 ## Alternatives
 
 ### MsgServices vs `x/capability`
 
 The `x/capability` module does provide a proper object-capability implementation that can be used by any module in the
-SDK and could even be used for inter-module OCAPs as described in [\#5931](https://github.com/cosmos/cosmos-sdk/issues/5931).
+SDK and could even be used for inter-module OCAPs as described in [\#5931](https://github.com/Stride-Labs/cosmos-sdk/issues/5931).
 
 The advantages of the approach described in this ADR are mostly around how it integrates with other parts of the SDK,
 specifically:
 
-* protobuf so that:
-    * code generation of interfaces can be leveraged for a better dev UX
-    * module interfaces are versioned and checked for breakage using [buf](https://docs.buf.build/breaking-overview)
-* sub-module accounts as per ADR 028
-* the general `Msg` passing paradigm and the way signers are specified by `GetSigners`
+- protobuf so that:
+  - code generation of interfaces can be leveraged for a better dev UX
+  - module interfaces are versioned and checked for breakage using [buf](https://docs.buf.build/breaking-overview)
+- sub-module accounts as per ADR 028
+- the general `Msg` passing paradigm and the way signers are specified by `GetSigners`
 
 Also, this is a complete replacement for keepers and could be applied to _all_ inter-module communication whereas the
 `x/capability` approach in #5931 would need to be applied method by method.
@@ -379,7 +379,7 @@ replacing `Keeper` interfaces altogether.
 - an alternative to keepers which can more easily lead to stable inter-module interfaces
 - proper inter-module OCAPs
 - improved module developer DevX, as commented on by several particpants on
-    [Architecture Review Call, Dec 3](https://hackmd.io/E0wxxOvRQ5qVmTf6N_k84Q)
+  [Architecture Review Call, Dec 3](https://hackmd.io/E0wxxOvRQ5qVmTf6N_k84Q)
 - lays the groundwork for what can be a greatly simplified `app.go`
 - router can be setup to enforce atomic transactions for moule-to-module calls
 
@@ -396,5 +396,5 @@ replacing `Keeper` interfaces altogether.
 - [ADR 021](./adr-021-protobuf-query-encoding.md)
 - [ADR 031](./adr-031-msg-service.md)
 - [ADR 028](./adr-028-public-key-addresses.md)
-- [ADR 030 draft](https://github.com/cosmos/cosmos-sdk/pull/7105)
+- [ADR 030 draft](https://github.com/Stride-Labs/cosmos-sdk/pull/7105)
 - [Object-Capability Model](../docs/core/ocap.md)

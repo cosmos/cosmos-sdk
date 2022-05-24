@@ -9,11 +9,11 @@
 
 ### Glossary
 
-* denom / denomination key -- unique token identifier.
+- denom / denomination key -- unique token identifier.
 
 ## Context
 
-With permissionless IBC, anyone will be able to send arbitrary denominations to any other account. Currently, all non-zero balances are stored along with the account in an `sdk.Coins` struct, which creates a potential denial-of-service concern, as too many denominations will become expensive to load & store each time the account is modified. See issues [5467](https://github.com/cosmos/cosmos-sdk/issues/5467) and [4982](https://github.com/cosmos/cosmos-sdk/issues/4982) for additional context.
+With permissionless IBC, anyone will be able to send arbitrary denominations to any other account. Currently, all non-zero balances are stored along with the account in an `sdk.Coins` struct, which creates a potential denial-of-service concern, as too many denominations will become expensive to load & store each time the account is modified. See issues [5467](https://github.com/Stride-Labs/cosmos-sdk/issues/5467) and [4982](https://github.com/Stride-Labs/cosmos-sdk/issues/4982) for additional context.
 
 Simply rejecting incoming deposits after a denomination count limit doesn't work, since it opens up a griefing vector: someone could send a user lots of nonsensical coins over IBC, and then prevent the user from receiving real denominations (such as staking rewards).
 
@@ -27,7 +27,7 @@ Balances shall be stored per-account & per-denomination under a denomination- an
 now be stored in & managed by the bank module.
 
 The vesting account interface will replace `SpendableCoins` in favor of `LockedCoins` which does
-not require the account balance anymore. In addition, `TrackDelegation()`  will now accept the
+not require the account balance anymore. In addition, `TrackDelegation()` will now accept the
 account balance of all tokens denominated in the vesting balance instead of loading the entire
 account balance.
 
@@ -101,13 +101,13 @@ Accepted.
 ### Positive
 
 - O(1) reads & writes of balances (with respect to the number of denominations for
-which an account has non-zero balances). Note, this does not relate to the actual
-I/O cost, rather the total number of direct reads needed.
+  which an account has non-zero balances). Note, this does not relate to the actual
+  I/O cost, rather the total number of direct reads needed.
 
 ### Negative
 
 - Slightly less efficient reads/writes when reading & writing all balances of a
-single account in a transaction.
+  single account in a transaction.
 
 ### Neutral
 
@@ -115,6 +115,6 @@ None in particular.
 
 ## References
 
-- Ref: https://github.com/cosmos/cosmos-sdk/issues/4982
-- Ref: https://github.com/cosmos/cosmos-sdk/issues/5467
-- Ref: https://github.com/cosmos/cosmos-sdk/issues/5492
+- Ref: https://github.com/Stride-Labs/cosmos-sdk/issues/4982
+- Ref: https://github.com/Stride-Labs/cosmos-sdk/issues/5467
+- Ref: https://github.com/Stride-Labs/cosmos-sdk/issues/5492

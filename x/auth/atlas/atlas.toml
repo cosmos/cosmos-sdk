@@ -1,6 +1,6 @@
 [module]
 description = "The auth module is responsible for specifying the base transaction and account types for an application, as well as AnteHandler and authentication logic."
-homepage = "https://github.com/cosmos/cosmos-sdk"
+homepage = "https://github.com/Stride-Labs/cosmos-sdk"
 keywords = [
   "authentication",
   "signatures",
@@ -12,7 +12,7 @@ keywords = [
 name = "x/auth"
 
 [bug_tracker]
-url = "https://github.com/cosmos/cosmos-sdk/issues"
+url = "https://github.com/Stride-Labs/cosmos-sdk/issues"
 
 [[authors]]
 name = "alexanderbez"
@@ -28,6 +28,6 @@ name = "alessio"
 
 [version]
 documentation = "https://raw.githubusercontent.com/cosmos/cosmos-sdk/master/x/auth/atlas/atlas-v0.39.1.md"
-repo = "https://github.com/cosmos/cosmos-sdk/releases/tag/v0.39.2"
+repo = "https://github.com/Stride-Labs/cosmos-sdk/releases/tag/v0.39.2"
 sdk_compat = "v0.39.x"
 version = "v0.39.2"

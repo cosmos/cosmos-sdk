@@ -11,7 +11,7 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/Stride-Labs/cosmos-sdk/codec"
 )
 
 // ----------------------------------------------------------------------------

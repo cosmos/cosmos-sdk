@@ -10,11 +10,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/Stride-Labs/cosmos-sdk/client"
+	"github.com/Stride-Labs/cosmos-sdk/client/flags"
+	"github.com/Stride-Labs/cosmos-sdk/crypto/keyring"
+	"github.com/Stride-Labs/cosmos-sdk/testutil"
+	sdk "github.com/Stride-Labs/cosmos-sdk/types"
 )
 
 func Test_runImportCmd(t *testing.T) {

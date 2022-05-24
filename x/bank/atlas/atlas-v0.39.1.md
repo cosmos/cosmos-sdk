@@ -10,20 +10,20 @@ with particular kinds of accounts.
 
    ```go
    import (
-       "github.com/cosmos/cosmos-sdk/x/bank"
+       "github.com/Stride-Labs/cosmos-sdk/x/bank"
    )
    ```
 
 2. Add `AppModuleBasic` to your `ModuleBasics`.
 
-    ```go
-    var (
-      ModuleBasics = module.NewBasicManager(
-        // ...
-        bank.AppModuleBasic{},
-      }
-    )
-    ```
+   ```go
+   var (
+     ModuleBasics = module.NewBasicManager(
+       // ...
+       bank.AppModuleBasic{},
+     }
+   )
+   ```
 
 3. Create the module's parameter subspace in your application constructor.
 
@@ -80,6 +80,7 @@ with particular kinds of accounts.
        // ...
      )
    }
+   ```
 
 ## Genesis
 
@@ -155,54 +156,54 @@ endpoint.
 
 1. Construct an unsigned `MsgSend` transaction.
 
-   | Method | Path                     |
-   | :----- | :----------------------- |
+   | Method | Path                                 |
+   | :----- | :----------------------------------- |
    | `POST` | `/bank/accounts/{address}/transfers` |
 
    Sample payload:
 
    ```json
    {
-       "base_req": {
-           "chain_id": "chain-foo",
-           "from": "cosmos1u3fneykx9carelvurc6av22vpjvptytj9wklk0",
-           "memo": "memo",
-           "fees": [
-               {
-                   "denom": "stake",
-                   "amount": "25000"
-               }
-           ]
-       },
-       "amount": [
-           {
-               "denom": "stake",
-               "amount": "400000000"
-           }
+     "base_req": {
+       "chain_id": "chain-foo",
+       "from": "cosmos1u3fneykx9carelvurc6av22vpjvptytj9wklk0",
+       "memo": "memo",
+       "fees": [
+         {
+           "denom": "stake",
+           "amount": "25000"
+         }
        ]
+     },
+     "amount": [
+       {
+         "denom": "stake",
+         "amount": "400000000"
+       }
+     ]
    }
    ```
 
 2. Query for an account's balance.
 
-   | Method | Path                     |
-   | :----- | :----------------------- |
-   | `GET` | `/bank/balances/{address}` |
+   | Method | Path                       |
+   | :----- | :------------------------- |
+   | `GET`  | `/bank/balances/{address}` |
 
    Sample response:
 
    ```json
    {
-       "height": "0",
-       "result": [
-           {
-               "denom": "node0token",
-               "amount": "1000000000"
-           },
-           {
-               "denom": "stake",
-               "amount": "400000000"
-           }
-       ]
+     "height": "0",
+     "result": [
+       {
+         "denom": "node0token",
+         "amount": "1000000000"
+       },
+       {
+         "denom": "stake",
+         "amount": "400000000"
+       }
+     ]
    }
    ```

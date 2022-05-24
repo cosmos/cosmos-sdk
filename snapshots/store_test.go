@@ -14,14 +14,14 @@ import (
 	"github.com/stretchr/testify/require"
 	db "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/snapshots"
-	"github.com/cosmos/cosmos-sdk/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/Stride-Labs/cosmos-sdk/snapshots"
+	"github.com/Stride-Labs/cosmos-sdk/snapshots/types"
+	"github.com/Stride-Labs/cosmos-sdk/testutil"
 )
 
 func setupStore(t *testing.T) *snapshots.Store {
 	// ioutil.TempDir() is used instead of testing.T.TempDir()
-	// see https://github.com/cosmos/cosmos-sdk/pull/8475 for
+	// see https://github.com/Stride-Labs/cosmos-sdk/pull/8475 for
 	// this change's rationale.
 	tempdir, err := ioutil.TempDir("", "")
 	require.NoError(t, err)

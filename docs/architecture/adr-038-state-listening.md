@@ -14,7 +14,7 @@ This ADR defines a set of changes to enable listening to state changes of indivi
 
 ## Context
 
-Currently, KVStore data can be remotely accessed through [Queries](https://github.com/cosmos/cosmos-sdk/blob/master/docs/building-modules/messages-and-queries.md#queries)
+Currently, KVStore data can be remotely accessed through [Queries](https://github.com/Stride-Labs/cosmos-sdk/blob/master/docs/building-modules/messages-and-queries.md#queries)
 which proceed either through Tendermint and the ABCI, or through the gRPC server.
 In addition to these request/response queries, it would be beneficial to have a means of listening to state changes as they occur in real time.
 
@@ -230,15 +230,15 @@ out to the same files, relying on the `StoreKey` field in the `StoreKVPair` prot
 
 The file naming schema is as such:
 
-* After every `BeginBlock` request a new file is created with the name `block-{N}-begin`, where N is the block number. All
-subsequent state changes are written out to this file until the first `DeliverTx` request is received. At the head of these files,
+- After every `BeginBlock` request a new file is created with the name `block-{N}-begin`, where N is the block number. All
+  subsequent state changes are written out to this file until the first `DeliverTx` request is received. At the head of these files,
   the length-prefixed protobuf encoded `BeginBlock` request is written, and the response is written at the tail.
-* After every `DeliverTx` request a new file is created with the name `block-{N}-tx-{M}` where N is the block number and M
-is the tx number in the block (i.e. 0, 1, 2...). All subsequent state changes are written out to this file until the next
-`DeliverTx` request is received or an `EndBlock` request is received. At the head of these files, the length-prefixed protobuf
+- After every `DeliverTx` request a new file is created with the name `block-{N}-tx-{M}` where N is the block number and M
+  is the tx number in the block (i.e. 0, 1, 2...). All subsequent state changes are written out to this file until the next
+  `DeliverTx` request is received or an `EndBlock` request is received. At the head of these files, the length-prefixed protobuf
   encoded `DeliverTx` request is written, and the response is written at the tail.
-* After every `EndBlock` request a new file is created with the name `block-{N}-end`, where N is the block number. All
-subsequent state changes are written out to this file until the next `BeginBlock` request is received. At the head of these files,
+- After every `EndBlock` request a new file is created with the name `block-{N}-end`, where N is the block number. All
+  subsequent state changes are written out to this file until the next `BeginBlock` request is received. At the head of these files,
   the length-prefixed protobuf encoded `EndBlock` request is written, and the response is written at the tail.
 
 ```go

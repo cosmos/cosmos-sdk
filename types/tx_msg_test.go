@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/Stride-Labs/cosmos-sdk/testutil/testdata"
+	sdk "github.com/Stride-Labs/cosmos-sdk/types"
 )
 
 type testMsgSuite struct {

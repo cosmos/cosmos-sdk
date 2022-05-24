@@ -8,13 +8,13 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/tendermint/tendermint/types/time"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
+	"github.com/Stride-Labs/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/Stride-Labs/cosmos-sdk/simapp"
+	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	"github.com/Stride-Labs/cosmos-sdk/x/evidence"
+	"github.com/Stride-Labs/cosmos-sdk/x/evidence/exported"
+	"github.com/Stride-Labs/cosmos-sdk/x/evidence/keeper"
+	"github.com/Stride-Labs/cosmos-sdk/x/evidence/types"
 )
 
 type GenesisTestSuite struct {

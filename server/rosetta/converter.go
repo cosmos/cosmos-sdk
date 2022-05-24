@@ -6,31 +6,31 @@ import (
 	"fmt"
 	"reflect"
 
-	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
+	auth "github.com/Stride-Labs/cosmos-sdk/x/auth/types"
 
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/btcsuite/btcd/btcec"
 	tmcoretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	crgtypes "github.com/cosmos/cosmos-sdk/server/rosetta/lib/types"
+	crgtypes "github.com/Stride-Labs/cosmos-sdk/server/rosetta/lib/types"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/Stride-Labs/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/Stride-Labs/cosmos-sdk/types/tx/signing"
 
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	crgerrs "github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
+	crgerrs "github.com/Stride-Labs/cosmos-sdk/server/rosetta/lib/errors"
 
-	sdkclient "github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	sdkclient "github.com/Stride-Labs/cosmos-sdk/client"
+	"github.com/Stride-Labs/cosmos-sdk/codec"
+	codectypes "github.com/Stride-Labs/cosmos-sdk/codec/types"
+	cryptotypes "github.com/Stride-Labs/cosmos-sdk/crypto/types"
+	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	authsigning "github.com/Stride-Labs/cosmos-sdk/x/auth/signing"
+	banktypes "github.com/Stride-Labs/cosmos-sdk/x/bank/types"
 )
 
 // Converter is a utility that can be used to convert

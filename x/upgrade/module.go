@@ -9,15 +9,15 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/client/rest"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/Stride-Labs/cosmos-sdk/client"
+	"github.com/Stride-Labs/cosmos-sdk/codec"
+	codectypes "github.com/Stride-Labs/cosmos-sdk/codec/types"
+	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	"github.com/Stride-Labs/cosmos-sdk/types/module"
+	"github.com/Stride-Labs/cosmos-sdk/x/upgrade/client/cli"
+	"github.com/Stride-Labs/cosmos-sdk/x/upgrade/client/rest"
+	"github.com/Stride-Labs/cosmos-sdk/x/upgrade/keeper"
+	"github.com/Stride-Labs/cosmos-sdk/x/upgrade/types"
 )
 
 func init() {

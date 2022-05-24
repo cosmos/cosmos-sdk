@@ -3,20 +3,20 @@ package simulation
 import (
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/authz"
+	"github.com/Stride-Labs/cosmos-sdk/baseapp"
+	"github.com/Stride-Labs/cosmos-sdk/codec"
+	cdctypes "github.com/Stride-Labs/cosmos-sdk/codec/types"
+	"github.com/Stride-Labs/cosmos-sdk/simapp/helpers"
+	simappparams "github.com/Stride-Labs/cosmos-sdk/simapp/params"
+	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	simtypes "github.com/Stride-Labs/cosmos-sdk/types/simulation"
+	"github.com/Stride-Labs/cosmos-sdk/x/authz"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	sdkerrors "github.com/Stride-Labs/cosmos-sdk/types/errors"
+	"github.com/Stride-Labs/cosmos-sdk/x/authz/keeper"
 
-	banktype "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
+	banktype "github.com/Stride-Labs/cosmos-sdk/x/bank/types"
+	"github.com/Stride-Labs/cosmos-sdk/x/simulation"
 )
 
 // authz message types

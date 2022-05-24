@@ -10,8 +10,8 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/cosmos/cosmos-sdk/snapshots/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/Stride-Labs/cosmos-sdk/snapshots/types"
+	sdkerrors "github.com/Stride-Labs/cosmos-sdk/types/errors"
 )
 
 const (

@@ -7,13 +7,13 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/Stride-Labs/cosmos-sdk/simapp"
+	"github.com/Stride-Labs/cosmos-sdk/testutil/testdata"
+	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	"github.com/Stride-Labs/cosmos-sdk/x/crisis"
+	"github.com/Stride-Labs/cosmos-sdk/x/crisis/types"
+	distrtypes "github.com/Stride-Labs/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/Stride-Labs/cosmos-sdk/x/staking/types"
 )
 
 var (

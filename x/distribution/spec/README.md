@@ -23,12 +23,12 @@ whenever changes to parameters which affect the rate of reward distribution
 occurs, withdrawal of rewards must also occur.
 
 - Whenever withdrawing, one must withdraw the maximum amount they are entitled
-   to, leaving nothing in the pool.
+  to, leaving nothing in the pool.
 - Whenever bonding, unbonding, or re-delegating tokens to an existing account, a
-   full withdrawal of the rewards must occur (as the rules for lazy accounting
-   change).
+  full withdrawal of the rewards must occur (as the rules for lazy accounting
+  change).
 - Whenever a validator chooses to change the commission on rewards, all accumulated
-   commission rewards must be simultaneously withdrawn.
+  commission rewards must be simultaneously withdrawn.
 
 The above scenarios are covered in `hooks.md`.
 
@@ -63,7 +63,7 @@ reward withdrawal by other delegators.
 
 If you happen to know that incoming rewards are about to significantly increase,
 you are incentivized to not withdraw until after this event, increasing the
-worth of your existing _accum_. See [#2764](https://github.com/cosmos/cosmos-sdk/issues/2764)
+worth of your existing _accum_. See [#2764](https://github.com/Stride-Labs/cosmos-sdk/issues/2764)
 for further details.
 
 ## Effect on Staking
@@ -85,19 +85,19 @@ to set up a script to periodically withdraw and rebond rewards.
 ## Contents
 
 1. **[Concepts](01_concepts.md)**
-    - [Reference Counting in F1 Fee Distribution](01_concepts.md#reference-counting-in-f1-fee-distribution)
+   - [Reference Counting in F1 Fee Distribution](01_concepts.md#reference-counting-in-f1-fee-distribution)
 2. **[State](02_state.md)**
 3. **[Begin Block](03_begin_block.md)**
 4. **[Messages](04_messages.md)**
-    - [MsgSetWithdrawAddress](04_messages.md#msgsetwithdrawaddress)
-    - [MsgWithdrawDelegatorReward](04_messages.md#msgwithdrawdelegatorreward)
-        - [Withdraw Validator Rewards All](04_messages.md#withdraw-validator-rewards-all)
-    - [Common calculations](04_messages.md#common-calculations-)
+   - [MsgSetWithdrawAddress](04_messages.md#msgsetwithdrawaddress)
+   - [MsgWithdrawDelegatorReward](04_messages.md#msgwithdrawdelegatorreward)
+     - [Withdraw Validator Rewards All](04_messages.md#withdraw-validator-rewards-all)
+   - [Common calculations](04_messages.md#common-calculations-)
 5. **[Hooks](05_hooks.md)**
-    - [Create or modify delegation distribution](05_hooks.md#create-or-modify-delegation-distribution)
-    - [Commission rate change](05_hooks.md#commission-rate-change)
-    - [Change in Validator State](05_hooks.md#change-in-validator-state)
+   - [Create or modify delegation distribution](05_hooks.md#create-or-modify-delegation-distribution)
+   - [Commission rate change](05_hooks.md#commission-rate-change)
+   - [Change in Validator State](05_hooks.md#change-in-validator-state)
 6. **[Events](06_events.md)**
-    - [BeginBlocker](06_events.md#beginblocker)
-    - [Handlers](06_events.md#handlers)
+   - [BeginBlocker](06_events.md#beginblocker)
+   - [Handlers](06_events.md#handlers)
 7. **[Parameters](07_params.md)**

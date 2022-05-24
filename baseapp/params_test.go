@@ -7,7 +7,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/Stride-Labs/cosmos-sdk/baseapp"
 )
 
 func TestValidateBlockParams(t *testing.T) {

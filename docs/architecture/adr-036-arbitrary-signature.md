@@ -61,7 +61,7 @@ Proto definition:
 // MsgSignData defines an arbitrary, general-purpose, off-chain message
 message MsgSignData {
     // Signer is the sdk.AccAddress of the message signer
-    bytes Signer = 1 [(gogoproto.jsontag) = "signer", (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    bytes Signer = 1 [(gogoproto.jsontag) = "signer", (gogoproto.casttype) = "github.com/Stride-Labs/cosmos-sdk/types.AccAddress"];
     // Data represents the raw bytes of the content that is signed (text, json, etc)
     bytes Data = 2 [(gogoproto.jsontag) = "data"];
 }
@@ -127,6 +127,6 @@ Backwards compatibility is maintained as this is a new message spec definition.
 ## References
 
 1. https://github.com/cosmos/ics/pull/33
-2. https://github.com/cosmos/cosmos-sdk/pull/7727#discussion_r515668204
-3. https://github.com/cosmos/cosmos-sdk/pull/7727#issuecomment-722478477
-4. https://github.com/cosmos/cosmos-sdk/pull/7727#issuecomment-721062923
+2. https://github.com/Stride-Labs/cosmos-sdk/pull/7727#discussion_r515668204
+3. https://github.com/Stride-Labs/cosmos-sdk/pull/7727#issuecomment-722478477
+4. https://github.com/Stride-Labs/cosmos-sdk/pull/7727#issuecomment-721062923

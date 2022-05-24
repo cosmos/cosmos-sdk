@@ -2,7 +2,7 @@ package kv
 
 // This code was copied from golang.org/pkg/container/list, but specially adapted
 // for use with kv.Pair to avoid the type assertion CPU expense of using Value with
-// an interface, per https://github.com/cosmos/cosmos-sdk/issues/8810
+// an interface, per https://github.com/Stride-Labs/cosmos-sdk/issues/8810
 //
 // Copyright 2009 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style

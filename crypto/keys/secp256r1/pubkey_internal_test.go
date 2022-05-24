@@ -6,9 +6,9 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/Stride-Labs/cosmos-sdk/codec"
+	"github.com/Stride-Labs/cosmos-sdk/codec/types"
+	cryptotypes "github.com/Stride-Labs/cosmos-sdk/crypto/types"
 )
 
 var _ cryptotypes.PubKey = (*PubKey)(nil)

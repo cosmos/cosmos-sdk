@@ -48,7 +48,7 @@ Usage
 
 To execute a completely pseudo-random simulation:
 
- $ go test -mod=readonly github.com/cosmos/cosmos-sdk/simapp \
+ $ go test -mod=readonly github.com/Stride-Labs/cosmos-sdk/simapp \
 	-run=TestFullAppSimulation \
 	-Enabled=true \
 	-NumBlocks=100 \
@@ -60,7 +60,7 @@ To execute a completely pseudo-random simulation:
 
 To execute simulation from a genesis file:
 
- $ go test -mod=readonly github.com/cosmos/cosmos-sdk/simapp \
+ $ go test -mod=readonly github.com/Stride-Labs/cosmos-sdk/simapp \
  	-run=TestFullAppSimulation \
  	-Enabled=true \
  	-NumBlocks=100 \
@@ -73,7 +73,7 @@ To execute simulation from a genesis file:
 
 To execute simulation from a simulation params file:
 
- $ go test -mod=readonly github.com/cosmos/cosmos-sdk/simapp \
+ $ go test -mod=readonly github.com/Stride-Labs/cosmos-sdk/simapp \
 	-run=TestFullAppSimulation \
 	-Enabled=true \
 	-NumBlocks=100 \
@@ -86,7 +86,7 @@ To execute simulation from a simulation params file:
 
 To export the simulation params to a file at a given block height:
 
- $ go test -mod=readonly github.com/cosmos/cosmos-sdk/simapp \
+ $ go test -mod=readonly github.com/Stride-Labs/cosmos-sdk/simapp \
  	-run=TestFullAppSimulation \
  	-Enabled=true \
  	-NumBlocks=100 \
@@ -101,7 +101,7 @@ To export the simulation params to a file at a given block height:
 
 To export the simulation app state (i.e genesis) to a file:
 
- $ go test -mod=readonly github.com/cosmos/cosmos-sdk/simapp \
+ $ go test -mod=readonly github.com/Stride-Labs/cosmos-sdk/simapp \
  	-run=TestFullAppSimulation \
  	-Enabled=true \
  	-NumBlocks=100 \

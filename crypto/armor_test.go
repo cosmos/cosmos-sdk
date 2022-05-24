@@ -13,13 +13,13 @@ import (
 	"github.com/tendermint/tendermint/crypto/armor"
 	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	"github.com/cosmos/cosmos-sdk/crypto"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/Stride-Labs/cosmos-sdk/codec/legacy"
+	"github.com/Stride-Labs/cosmos-sdk/crypto"
+	"github.com/Stride-Labs/cosmos-sdk/crypto/hd"
+	"github.com/Stride-Labs/cosmos-sdk/crypto/keyring"
+	"github.com/Stride-Labs/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/Stride-Labs/cosmos-sdk/crypto/types"
+	"github.com/Stride-Labs/cosmos-sdk/types"
 )
 
 func TestArmorUnarmorPrivKey(t *testing.T) {

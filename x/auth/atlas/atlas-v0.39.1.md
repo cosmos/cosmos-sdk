@@ -9,20 +9,20 @@ account types for an application, as well as AnteHandler and authentication logi
 
    ```go
    import (
-       "github.com/cosmos/cosmos-sdk/x/auth"
+       "github.com/Stride-Labs/cosmos-sdk/x/auth"
    )
    ```
 
 2. Add `AppModuleBasic` to your `ModuleBasics`.
 
-    ```go
-    var (
-      ModuleBasics = module.NewBasicManager(
-        // ...
-        auth.AppModuleBasic{},
-      }
-    )
-    ```
+   ```go
+   var (
+     ModuleBasics = module.NewBasicManager(
+       // ...
+       auth.AppModuleBasic{},
+     }
+   )
+   ```
 
 3. Create the module's parameter subspace in your application constructor.
 
@@ -78,9 +78,11 @@ account types for an application, as well as AnteHandler and authentication logi
      )
    }
 
+   ```
+
 8. Set the `AnteHandler` if you're using the default provided by `x/auth`. Note,
-the default `AnteHandler` provided by the `x/auth` module depends on the `x/supply`
-module.
+   the default `AnteHandler` provided by the `x/auth` module depends on the `x/supply`
+   module.
 
    ```go
    func NewApp(...) *App {
@@ -103,16 +105,16 @@ Where ever you define the application `Codec`, be sure to register types via:
 
 ```go
 import (
-    "github.com/cosmos/cosmos-sdk/x/auth/vesting"
+    "github.com/Stride-Labs/cosmos-sdk/x/auth/vesting"
 )
 
 func MakeCodec() *codec.Codec {
   var cdc = codec.New()
-  
+
   // ...
   vesting.RegisterCodec(cdc)
   // ...
-  
+
   return cdc
 }
 ```
@@ -189,6 +191,6 @@ the module itself are defined below:
 
 1. Query an account.
 
-   | Method | Path                     |
-   | :----- | :----------------------- |
-   | `GET` | `/auth/accounts/{address}` |
+   | Method | Path                       |
+   | :----- | :------------------------- |
+   | `GET`  | `/auth/accounts/{address}` |

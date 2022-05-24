@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
+	"github.com/Stride-Labs/cosmos-sdk/x/staking/simulation"
 )
 
 func TestParamChanges(t *testing.T) {

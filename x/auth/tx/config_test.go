@@ -5,12 +5,12 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/std"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	"github.com/Stride-Labs/cosmos-sdk/codec"
+	codectypes "github.com/Stride-Labs/cosmos-sdk/codec/types"
+	"github.com/Stride-Labs/cosmos-sdk/std"
+	"github.com/Stride-Labs/cosmos-sdk/testutil/testdata"
+	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	"github.com/Stride-Labs/cosmos-sdk/x/auth/testutil"
 )
 
 func TestGenerator(t *testing.T) {

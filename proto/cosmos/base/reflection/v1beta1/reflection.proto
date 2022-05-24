@@ -3,7 +3,7 @@ package cosmos.base.reflection.v1beta1;
 
 import "google/api/annotations.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/reflection";
+option go_package = "github.com/Stride-Labs/cosmos-sdk/client/grpc/reflection";
 
 // ReflectionService defines a service for interface reflection.
 service ReflectionService {

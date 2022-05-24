@@ -1,7 +1,7 @@
 package authz
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/Stride-Labs/cosmos-sdk/types/errors"
 )
 
 // x/authz module sentinel errors

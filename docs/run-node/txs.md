@@ -52,7 +52,7 @@ Some useful flags to consider in the `tx sign` command:
 #### Signing with Multiple Signers
 
 ::: warning
-Please note that signing a transaction with multiple signers or with a multisig account, where at least one signer uses `SIGN_MODE_DIRECT`, is not yet possible. You may follow [this Github issue](https://github.com/cosmos/cosmos-sdk/issues/8141) for more info.
+Please note that signing a transaction with multiple signers or with a multisig account, where at least one signer uses `SIGN_MODE_DIRECT`, is not yet possible. You may follow [this Github issue](https://github.com/Stride-Labs/cosmos-sdk/issues/8141) for more info.
 :::
 
 Signing with multiple signers is done with the `tx multisign` command. This command assumes that all signers use `SIGN_MODE_LEGACY_AMINO_JSON`. The flow is similar to the `tx sign` command flow, but instead of signing an unsigned transaction file, each signer signs the file signed by previous signer(s). The `tx multisign` command will append signatures to the existing transactions. It is important that signers sign the transaction **in the same order** as given by the transaction, which is retrievable using the `GetSigners()` method.
@@ -93,7 +93,7 @@ Before generating a transaction, a new instance of a `TxBuilder` needs to be cre
 
 ```go
 import (
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/Stride-Labs/cosmos-sdk/simapp"
 )
 
 func sendTx() error {
@@ -112,7 +112,7 @@ We can also set up some keys and addresses that will send and receive the transa
 
 ```go
 import (
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/Stride-Labs/cosmos-sdk/testutil/testdata"
 )
 
 priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -120,11 +120,11 @@ priv2, _, addr2 := testdata.KeyTestPubAddr()
 priv3, _, addr3 := testdata.KeyTestPubAddr()
 ```
 
-Populating the `TxBuilder` can be done via its [methods](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/client/tx_config.go#L32-L45):
+Populating the `TxBuilder` can be done via its [methods](https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0-rc6/client/tx_config.go#L32-L45):
 
 ```go
 import (
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	banktypes "github.com/Stride-Labs/cosmos-sdk/x/bank/types"
 )
 
 func sendTx() error {
@@ -153,7 +153,7 @@ At this point, `TxBuilder`'s underlying transaction is ready to be signed.
 
 ### Signing a Transaction
 
-We set encoding config to use Protobuf, which will use `SIGN_MODE_DIRECT` by default. As per [ADR-020](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/docs/architecture/adr-020-protobuf-transaction-encoding.md), each signer needs to sign the `SignerInfo`s of all other signers. This means that we need to perform two steps sequentially:
+We set encoding config to use Protobuf, which will use `SIGN_MODE_DIRECT` by default. As per [ADR-020](https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0-rc6/docs/architecture/adr-020-protobuf-transaction-encoding.md), each signer needs to sign the `SignerInfo`s of all other signers. This means that we need to perform two steps sequentially:
 
 - for each signer, populate the signer's `SignerInfo` inside `TxBuilder`,
 - once all `SignerInfo`s are populated, for each signer, sign the `SignDoc` (the payload to be signed).
@@ -162,9 +162,9 @@ In the current `TxBuilder`'s API, both steps are done using the same method: `Se
 
 ```go
 import (
-    cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+    cryptotypes "github.com/Stride-Labs/cosmos-sdk/crypto/types"
+	"github.com/Stride-Labs/cosmos-sdk/types/tx/signing"
+	xauthsigning "github.com/Stride-Labs/cosmos-sdk/x/auth/signing"
 )
 
 func sendTx() error {
@@ -250,7 +250,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/Stride-Labs/cosmos-sdk/types/tx"
 )
 
 func sendTx(ctx context.Context) error {
@@ -294,9 +294,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/types/tx"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	"github.com/Stride-Labs/cosmos-sdk/client"
+	"github.com/Stride-Labs/cosmos-sdk/types/tx"
+	authtx "github.com/Stride-Labs/cosmos-sdk/x/auth/tx"
 )
 
 func simulateTx() error {

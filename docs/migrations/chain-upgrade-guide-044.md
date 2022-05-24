@@ -38,13 +38,13 @@ Validators can use the auto-restart option to prevent unecessary downtime during
 
 ## Migrating app.toml
 
-With the update to `v0.44`, new server configuration options have been added to `app.toml`. The updates include new configuration sections for Rosetta and gRPC Web as well as a new configuration option for State Sync. Check out the default [`app.toml`](https://github.com/cosmos/cosmos-sdk/blob/release/v0.44.x/server/config/toml.go) file in the latest version of `v0.44` for more information.
+With the update to `v0.44`, new server configuration options have been added to `app.toml`. The updates include new configuration sections for Rosetta and gRPC Web as well as a new configuration option for State Sync. Check out the default [`app.toml`](https://github.com/Stride-Labs/cosmos-sdk/blob/release/v0.44.x/server/config/toml.go) file in the latest version of `v0.44` for more information.
 
 ## Example: Simapp Upgrade
 
 The following example will walk through the upgrade process using `simapp` as our blockchain application. We will be upgrading `simapp` from v0.42 to v0.44. We will be building the upgrade binary ourselves and enabling the auto-restart option.
 
-*Note: In this example, we will be starting a new chain from `v0.42`. The binary for this version will be the genesis binary. For validators using Cosmovisor for the first time, the binary for the current version of the chain should be used as the genesis binary (i.e. the starting binary). For more information, see [Cosmovisor](../run-node/cosmovisor.html).*
+_Note: In this example, we will be starting a new chain from `v0.42`. The binary for this version will be the genesis binary. For validators using Cosmovisor for the first time, the binary for the current version of the chain should be used as the genesis binary (i.e. the starting binary). For more information, see [Cosmovisor](../run-node/cosmovisor.html)._
 
 ### Initial Setup
 
@@ -113,7 +113,7 @@ Now that our node is initialized and we are ready to start a new `simapp` chain,
 First, install or update `cosmovisor`:
 
 ```
-go get github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor
+go get github.com/Stride-Labs/cosmos-sdk/cosmovisor/cmd/cosmovisor
 ```
 
 Set the required environment variables:
@@ -202,7 +202,7 @@ func (app *SimApp) registerUpgradeHandlers() {
 Add `storetypes` to imports:
 
 ```go
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "github.com/Stride-Labs/cosmos-sdk/store/types"
 ```
 
 Build the `simd` binary for `v0.44.x` (the upgrade binary):

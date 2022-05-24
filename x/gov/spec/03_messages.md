@@ -9,7 +9,7 @@ order: 3
 Proposals can be submitted by any account via a `MsgSubmitProposal`
 transaction.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/tx.proto#L24-L39
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/tx.proto#L24-L39
 
 The `Content` of a `MsgSubmitProposal` message must have an appropriate router
 set in the governance module.
@@ -21,7 +21,7 @@ set in the governance module.
 - Initialise `Proposals` attributes
 - Decrease balance of sender by `InitialDeposit`
 - If `MinDeposit` is reached:
-    - Push `proposalID` in `ProposalProcessingQueue`
+  - Push `proposalID` in `ProposalProcessingQueue`
 - Transfer `InitialDeposit` from the `Proposer` to the governance `ModuleAccount`
 
 A `MsgSubmitProposal` transaction can be handled according to the following
@@ -75,7 +75,7 @@ Once a proposal is submitted, if
 `Proposal.TotalDeposit < ActiveParam.MinDeposit`, Atom holders can send
 `MsgDeposit` transactions to increase the proposal's deposit.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/tx.proto#L61-L72
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/tx.proto#L61-L72
 
 **State modifications:**
 
@@ -83,7 +83,7 @@ Once a proposal is submitted, if
 - Add `deposit` of sender in `proposal.Deposits`
 - Increase `proposal.TotalDeposit` by sender's `deposit`
 - If `MinDeposit` is reached:
-    - Push `proposalID` in `ProposalProcessingQueueEnd`
+  - Push `proposalID` in `ProposalProcessingQueueEnd`
 - Transfer `Deposit` from the `proposer` to the governance `ModuleAccount`
 
 A `MsgDeposit` transaction has to go through a number of checks to be valid.
@@ -141,7 +141,7 @@ Once `ActiveParam.MinDeposit` is reached, voting period starts. From there,
 bonded Atom holders are able to send `MsgVote` transactions to cast their
 vote on the proposal.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/tx.proto#L46-L56
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/tx.proto#L46-L56
 
 **State modifications:**
 

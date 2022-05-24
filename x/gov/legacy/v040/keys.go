@@ -1,5 +1,5 @@
 // Package v040 is copy-pasted from:
-// https://github.com/cosmos/cosmos-sdk/blob/v0.41.0/x/gov/types/keys.go
+// https://github.com/Stride-Labs/cosmos-sdk/blob/v0.41.0/x/gov/types/keys.go
 package v040
 
 import (
@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	v040auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v040"
+	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	v040auth "github.com/Stride-Labs/cosmos-sdk/x/auth/legacy/v040"
 )
 
 const (

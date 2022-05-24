@@ -5,21 +5,21 @@ import (
 	"fmt"
 	"time"
 
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	minttypes "github.com/Stride-Labs/cosmos-sdk/x/mint/types"
 
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/Stride-Labs/cosmos-sdk/baseapp"
+	"github.com/Stride-Labs/cosmos-sdk/crypto/keys/ed25519"
+	cryptotypes "github.com/Stride-Labs/cosmos-sdk/crypto/types"
+	"github.com/Stride-Labs/cosmos-sdk/simapp"
+	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	authtypes "github.com/Stride-Labs/cosmos-sdk/x/auth/types"
+	"github.com/Stride-Labs/cosmos-sdk/x/evidence/exported"
+	"github.com/Stride-Labs/cosmos-sdk/x/evidence/keeper"
+	"github.com/Stride-Labs/cosmos-sdk/x/evidence/types"
+	"github.com/Stride-Labs/cosmos-sdk/x/staking"
 )
 
 var (

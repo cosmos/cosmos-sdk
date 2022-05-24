@@ -179,7 +179,7 @@ func ComputeMastersFromSeed(seed []byte) (secret [32]byte, chainCode [32]byte) {
 // using the given chainCode.
 func DerivePrivateKeyForPath(privKeyBytes, chainCode [32]byte, path string) ([]byte, error) {
 	// First step is to trim the right end path separator lest we panic.
-	// See issue https://github.com/cosmos/cosmos-sdk/issues/8557
+	// See issue https://github.com/Stride-Labs/cosmos-sdk/issues/8557
 	path = strings.TrimRightFunc(path, func(r rune) bool { return r == filepath.Separator })
 	data := privKeyBytes
 	parts := strings.Split(path, "/")

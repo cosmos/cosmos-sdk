@@ -65,7 +65,7 @@ type CapabilityKeeper struct {
 }
 ```
 
-The `CapabilityKeeper` provides the ability to create *scoped* sub-keepers which are tied to a
+The `CapabilityKeeper` provides the ability to create _scoped_ sub-keepers which are tied to a
 particular module name. These `ScopedCapabilityKeeper`s must be created at application initialisation
 and passed to modules, which can then use them to claim capabilities they receive and retrieve
 capabilities which they own by name, in addition to creating new capabilities & authenticating capabilities
@@ -118,7 +118,7 @@ func (ck CapabilityKeeper) InitialiseAndSeal(ctx Context) {
 
   persistentStore := ctx.KVStore(ck.persistentKey)
   map := ctx.KVStore(ck.memKey)
-  
+
   // initialise memory store for all names in persistent store
   for index, value := range persistentStore.Iter() {
     capability = &CapabilityKey{index: index}
@@ -149,26 +149,26 @@ func (sck ScopedCapabilityKeeper) NewCapability(ctx Context, name string) (Capab
 
   // fetch the current index
   index := persistentStore.Get("index")
-  
+
   // create a new capability
   capability := &CapabilityKey{index: index}
-  
+
   // set persistent store
   persistentStore.Set(index, Set.singleton(sck.moduleName + "/" + name))
-  
+
   // update the index
   index++
   persistentStore.Set("index", index)
-  
+
   // set forward mapping in memory store from capability to name
   memStore.Set(sck.moduleName + "/fwd/" + capability, name)
-  
+
   // set reverse mapping in memory store from name to index
   memStore.Set(sck.moduleName + "/rev/" + name, index)
 
   // set the in-memory mapping from index to capability pointer
   capMap[index] = capability
-  
+
   // return the newly created capability
   return capability
 }
@@ -341,4 +341,4 @@ Proposed.
 
 ## References
 
-- [Original discussion](https://github.com/cosmos/cosmos-sdk/pull/5230#discussion_r343978513)
+- [Original discussion](https://github.com/Stride-Labs/cosmos-sdk/pull/5230#discussion_r343978513)

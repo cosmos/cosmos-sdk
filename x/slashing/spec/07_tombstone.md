@@ -73,7 +73,7 @@ to keep track of the highest infraction amount for every single slashing period.
 
 > Note: Currently, according to the `slashing` module spec, a new slashing period
 > is created every time a validator is unbonded then rebonded. This should probably
-> be changed to jailed/unjailed. See issue [#3205](https://github.com/cosmos/cosmos-sdk/issues/3205)
+> be changed to jailed/unjailed. See issue [#3205](https://github.com/Stride-Labs/cosmos-sdk/issues/3205)
 > for further details. For the remainder of this, I will assume that we only start
 > a new slashing period when a validator gets unjailed.
 

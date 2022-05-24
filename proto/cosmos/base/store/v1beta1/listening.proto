@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos.base.store.v1beta1;
 
-option go_package = "github.com/cosmos/cosmos-sdk/store/types";
+option go_package = "github.com/Stride-Labs/cosmos-sdk/store/types";
 
 // StoreKVPair is a KVStore KVPair used for listening to state changes (Sets and Deletes)
 // It optionally includes the StoreKey for the originating KVStore and a Boolean flag to distinguish between Sets and

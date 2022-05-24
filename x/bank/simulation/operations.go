@@ -3,17 +3,17 @@ package simulation
 import (
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/Stride-Labs/cosmos-sdk/baseapp"
+	"github.com/Stride-Labs/cosmos-sdk/codec"
+	cryptotypes "github.com/Stride-Labs/cosmos-sdk/crypto/types"
+	"github.com/Stride-Labs/cosmos-sdk/simapp/helpers"
+	simappparams "github.com/Stride-Labs/cosmos-sdk/simapp/params"
+	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	simtypes "github.com/Stride-Labs/cosmos-sdk/types/simulation"
+	"github.com/Stride-Labs/cosmos-sdk/x/bank/keeper"
+	"github.com/Stride-Labs/cosmos-sdk/x/bank/types"
+	distributiontypes "github.com/Stride-Labs/cosmos-sdk/x/distribution/types"
+	"github.com/Stride-Labs/cosmos-sdk/x/simulation"
 )
 
 // Simulation operation weights constants

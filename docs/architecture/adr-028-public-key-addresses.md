@@ -15,7 +15,7 @@ This ADR defines an address format for all addressable SDK accounts. That includ
 
 ## Context
 
-Issue [\#3685](https://github.com/cosmos/cosmos-sdk/issues/3685) identified that public key
+Issue [\#3685](https://github.com/Stride-Labs/cosmos-sdk/issues/3685) identified that public key
 address spaces are currently overlapping. We confirmed that it significantly decreases security of Cosmos SDK.
 
 ### Problem
@@ -47,21 +47,21 @@ we concatenate a key type with a public key, hash it and take the first 20 bytes
 
 ### Review and Discussions
 
-In [\#5694](https://github.com/cosmos/cosmos-sdk/issues/5694) we discussed various solutions.
+In [\#5694](https://github.com/Stride-Labs/cosmos-sdk/issues/5694) we discussed various solutions.
 We agreed that 20 bytes it's not future proof, and extending the address length is the only way to allow addresses of different types, various signature types, etc.
 This disqualifies the initial proposal.
 
 In the issue we discussed various modifications:
 
-+ Choice of the hash function.
-+ Move the prefix out of the hash function: `keyTypePrefix + sha256(keybytes)[:20]` [post-hash-prefix-proposal].
-+ Use double hashing: `sha256(keyTypePrefix + sha256(keybytes)[:20])`.
-+ Increase to keybytes hash slice from 20 byte to 32 or 40 bytes. We concluded that 32 bytes, produced by a good hash functions is future secure.
+- Choice of the hash function.
+- Move the prefix out of the hash function: `keyTypePrefix + sha256(keybytes)[:20]` [post-hash-prefix-proposal].
+- Use double hashing: `sha256(keyTypePrefix + sha256(keybytes)[:20])`.
+- Increase to keybytes hash slice from 20 byte to 32 or 40 bytes. We concluded that 32 bytes, produced by a good hash functions is future secure.
 
 ### Requirements
 
-+ Support currently used tools - we don't want to break an ecosystem, or add a long adaptation period. Ref: https://github.com/cosmos/cosmos-sdk/issues/8041
-+ Try to keep the address length small - addresses are widely used in state, both as part of a key and object value.
+- Support currently used tools - we don't want to break an ecosystem, or add a long adaptation period. Ref: https://github.com/Stride-Labs/cosmos-sdk/issues/8041
+- Try to keep the address length small - addresses are widely used in state, both as part of a key and object value.
 
 ### Scope
 
@@ -116,10 +116,10 @@ Moreover the cryptographer motivated the choice of adding `typ` in the hash to p
 
 We use the `address.Hash` function for generating addresses for all accounts represented by a single key:
 
-* simple public keys: `address.Hash(keyType, pubkey)`
+- simple public keys: `address.Hash(keyType, pubkey)`
 
-+ aggregated keys (eg: BLS): `address.Hash(keyType, aggregatedPubKey)`
-+ modules: `address.Hash("module", moduleName)`
+* aggregated keys (eg: BLS): `address.Hash(keyType, aggregatedPubKey)`
+* modules: `address.Hash("module", moduleName)`
 
 ### Composed Addresses
 
@@ -194,7 +194,7 @@ func Module(moduleName string, key []byte) []byte{
 }
 ```
 
-**Example**  A lending BTC pool address would be:
+**Example** A lending BTC pool address would be:
 
 ```
 btcPool := address.Module("lending", btc.Addrress()})
@@ -218,7 +218,7 @@ func Derive(address []byte, derivationKey []byte) []byte {
 
 Note: `Module` is a special case of the more general _derived_ address, where we set the `"module"` string for the _from address_.
 
-**Example**  For a cosmwasm smart-contract address we could use the following construction:
+**Example** For a cosmwasm smart-contract address we could use the following construction:
 
 ```
 smartContractAddr := Derived(Module("cosmwasm", smartContractsNamespace), []{smartContractKey})
@@ -280,50 +280,50 @@ End of Dec 2020 we had a session with [Alan Szepieniec](https://scholar.google.b
 
 Alan general observations:
 
-+ we don’t need 2-preimage resistance
-+ we need 32bytes address space for collision resistance
-+ when an attacker can control an input for object with an address then we have a problem with birthday attack
-+ there is an issue with smart-contracts for hashing
-+ sha2 mining can be use to breaking address pre-image
+- we don’t need 2-preimage resistance
+- we need 32bytes address space for collision resistance
+- when an attacker can control an input for object with an address then we have a problem with birthday attack
+- there is an issue with smart-contracts for hashing
+- sha2 mining can be use to breaking address pre-image
 
 Hashing algorithm
 
-+ any attack breaking blake3 will break blake2
-+ Alan is pretty confident about the current security analysis of the blake hash algorithm. It was a finalist, and the author is well known in security analysis.
+- any attack breaking blake3 will break blake2
+- Alan is pretty confident about the current security analysis of the blake hash algorithm. It was a finalist, and the author is well known in security analysis.
 
 Algorithm:
 
-+ Alan recommends to hash the prefix: `address(pub_key) = hash(hash(key_type) + pub_key)[:32]`, main benefits:
-    + we are free to user arbitrary long prefix names
-    + we still don’t risk collisions
-    + switch tables
-+ discussion about penalization -> about adding prefix post hash
-+ Aaron asked about post hash prefixes (`address(pub_key) = key_type + hash(pub_key)`) and differences. Alan noted that this approach has longer address space and it’s stronger.
+- Alan recommends to hash the prefix: `address(pub_key) = hash(hash(key_type) + pub_key)[:32]`, main benefits:
+  - we are free to user arbitrary long prefix names
+  - we still don’t risk collisions
+  - switch tables
+- discussion about penalization -> about adding prefix post hash
+- Aaron asked about post hash prefixes (`address(pub_key) = key_type + hash(pub_key)`) and differences. Alan noted that this approach has longer address space and it’s stronger.
 
 Algorithm for complex / composed keys:
 
-+ merging tree like addresses with same algorithm are fine
+- merging tree like addresses with same algorithm are fine
 
 Module addresses: Should module addresses have different size to differentiate it?
 
-+ we will need to set a pre-image prefix for module addresse to keept them in 32-byte space: `hash(hash('module') + module_key)`
-+ Aaron observation: we already need to deal with variable length (to not break secp256k1 keys).
+- we will need to set a pre-image prefix for module addresse to keept them in 32-byte space: `hash(hash('module') + module_key)`
+- Aaron observation: we already need to deal with variable length (to not break secp256k1 keys).
 
 Discssion about arithmetic hash function for ZKP
 
-+ Posseidon / Rescue
-+ Problem: much bigger risk because we don’t know much techniques and history of crypto-analysis of arithmetic constructions. It’s still a new ground and area of active research.
+- Posseidon / Rescue
+- Problem: much bigger risk because we don’t know much techniques and history of crypto-analysis of arithmetic constructions. It’s still a new ground and area of active research.
 
 Post quantum signature size
 
-+ Alan suggestion: Falcon: speed / size ration - very good.
-+ Aaron - should we think about it?
+- Alan suggestion: Falcon: speed / size ration - very good.
+- Aaron - should we think about it?
   Alan: based on early extrapolation this thing will get able to break EC cryptography in 2050 . But that’s a lot of uncertainty. But there is magic happening with recurions / linking / simulation and that can speedup the progress.
 
 Other ideas
 
-+ Let’s say we use same key and two different address algorithms for 2 different use cases. Is it still safe to use it? Alan: if we want to hide the public key (which is not our use case), then it’s less secure but there are fixes.
+- Let’s say we use same key and two different address algorithms for 2 different use cases. Is it still safe to use it? Alan: if we want to hide the public key (which is not our use case), then it’s less secure but there are fixes.
 
 ### References
 
-+ [Notes](https://hackmd.io/_NGWI4xZSbKzj1BkCqyZMw)
+- [Notes](https://hackmd.io/_NGWI4xZSbKzj1BkCqyZMw)

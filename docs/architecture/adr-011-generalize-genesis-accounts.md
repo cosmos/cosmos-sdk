@@ -63,7 +63,7 @@ The `auth` codec must have all custom account types registered to marshal them. 
 An example custom account definition:
 
 ```go
-import authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+import authtypes "github.com/Stride-Labs/cosmos-sdk/x/auth/types"
 
 // Register the module account type with the auth module codec so it can decode module accounts stored in a genesis file
 func init() {
@@ -164,7 +164,6 @@ Proposed
 ### Neutral
 
 - `genaccounts` module no longer exists
-- accounts in genesis files are stored under `accounts` in `auth` rather than in the `genaccounts` module.
--`add-genesis-account` cli command now in `auth`
+- accounts in genesis files are stored under `accounts` in `auth` rather than in the `genaccounts` module. -`add-genesis-account` cli command now in `auth`
 
 ## References

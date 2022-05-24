@@ -10,32 +10,32 @@ with particular kinds of accounts.
 
    ```go
    import (
-      "github.com/cosmos/cosmos-sdk/x/evidence"
-      evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
-      evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
+      "github.com/Stride-Labs/cosmos-sdk/x/evidence"
+      evidencekeeper "github.com/Stride-Labs/cosmos-sdk/x/evidence/keeper"
+      evidencetypes "github.com/Stride-Labs/cosmos-sdk/x/evidence/types"
    )
    ```
 
 2. Add `AppModuleBasic` to your `ModuleBasics`.
 
-    ```go
-    var (
-      ModuleBasics = module.NewBasicManager(
-        // ...
-        evidence.AppModuleBasic{},
-      }
-    )
-    ```
+   ```go
+   var (
+     ModuleBasics = module.NewBasicManager(
+       // ...
+       evidence.AppModuleBasic{},
+     }
+   )
+   ```
 
 3. Add the evidence keeper to your apps struct.
 
-    ```go
-      type app struct {
-        // ...
-        EvidenceKeeper   evidencekeeper.Keeper
-        // ...
-      }
-    ```
+   ```go
+     type app struct {
+       // ...
+       EvidenceKeeper   evidencekeeper.Keeper
+       // ...
+     }
+   ```
 
 4. Add the evidence store key to the group of store keys.
 
@@ -49,7 +49,7 @@ with particular kinds of accounts.
    }
    ```
 
-5. Create the keeper. Note, the `x/evidence` module depends on the `x/staking` and `x/slashing` modules. Evidence has expected interfaces, these interfaces are linked to slashing and staking. You can find these interfaces [here](https://github.com/cosmos/cosmos-sdk/blob/v0.41.0/x/evidence/types/expected_keepers.go)
+5. Create the keeper. Note, the `x/evidence` module depends on the `x/staking` and `x/slashing` modules. Evidence has expected interfaces, these interfaces are linked to slashing and staking. You can find these interfaces [here](https://github.com/Stride-Labs/cosmos-sdk/blob/v0.41.0/x/evidence/types/expected_keepers.go)
 
    ```go
    func NewApp(...) *App {
@@ -76,16 +76,16 @@ with particular kinds of accounts.
 
 7. Set the `x/evidence` module begin blocker order.
 
-    ```go
-    func NewApp(...) *App {
-     // ...
-      app.mm.SetOrderBeginBlockers(
-        // ...
-        evidencetypes.ModuleName,
-        // ...
-      )
-    }
-    ```
+   ```go
+   func NewApp(...) *App {
+    // ...
+     app.mm.SetOrderBeginBlockers(
+       // ...
+       evidencetypes.ModuleName,
+       // ...
+     )
+   }
+   ```
 
 8. Set the `x/evidence` module genesis order.
 
@@ -107,6 +107,7 @@ with particular kinds of accounts.
        // ...
      )
    }
+   ```
 
 ## Genesis
 
@@ -120,6 +121,7 @@ type GenesisState struct {
 ```
 
 ## Messages
+
 <!-- todo: change to v0.41 when its available -->
 
 View supported messages at [docs.cosmos.network/v0.40/modules/evidence](https://docs.cosmos.network/v0.40/modules/evidence/03_messages.html)

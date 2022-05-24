@@ -3,7 +3,7 @@ package cosmos.base.store.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/store/types";
+option go_package = "github.com/Stride-Labs/cosmos-sdk/store/types";
 
 // CommitInfo defines commit information used by the multi-store when committing
 // a version/height.

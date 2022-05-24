@@ -30,9 +30,9 @@ the same serialization of a `SignDoc` as defined in
 [ADR-020](./adr-020-protobuf-transaction-encoding.md) without transmitting the
 serialization.
 
-Currently, for block signatures we are using a workaround: we create a new [TxRaw](https://github.com/cosmos/cosmos-sdk/blob/9e85e81e0e8140067dd893421290c191529c148c/proto/cosmos/tx/v1beta1/tx.proto#L30)
-instance (as defined in [adr-020-protobuf-transaction-encoding](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-020-protobuf-transaction-encoding.md#transactions))
-by converting all [Tx](https://github.com/cosmos/cosmos-sdk/blob/9e85e81e0e8140067dd893421290c191529c148c/proto/cosmos/tx/v1beta1/tx.proto#L13)
+Currently, for block signatures we are using a workaround: we create a new [TxRaw](https://github.com/Stride-Labs/cosmos-sdk/blob/9e85e81e0e8140067dd893421290c191529c148c/proto/cosmos/tx/v1beta1/tx.proto#L30)
+instance (as defined in [adr-020-protobuf-transaction-encoding](https://github.com/Stride-Labs/cosmos-sdk/blob/master/docs/architecture/adr-020-protobuf-transaction-encoding.md#transactions))
+by converting all [Tx](https://github.com/Stride-Labs/cosmos-sdk/blob/9e85e81e0e8140067dd893421290c191529c148c/proto/cosmos/tx/v1beta1/tx.proto#L13)
 fields to bytes on the client side. This adds an additional manual
 step when sending and signing transactions.
 
@@ -84,21 +84,21 @@ with the following additions:
 4. `repeated` fields of scalar numeric types must use
    [packed encoding](https://developers.google.com/protocol-buffers/docs/encoding#packed)
 5. Varint encoding must not be longer than needed:
-    * No trailing zero bytes (in little endian, i.e. no leading zeroes in big
-      endian). Per rule 3 above, the default value of `0` must be omitted, so
-      this rule does not apply in such cases.
-    * The maximum value for a varint must be `FF FF FF FF FF FF FF FF FF 01`.
-      In other words, when decoded, the highest 6 bits of the 70-bit unsigned
-      integer must be `0`. (10-byte varints are 10 groups of 7 bits, i.e.
-      70 bits, of which only the lowest 70-6=64 are useful.)
-    * The maximum value for 32-bit values in varint encoding must be `FF FF FF FF 0F`
-      with one exception (below). In other words, when decoded, the highest 38
-      bits of the 70-bit unsigned integer must be `0`.
-        * The one exception to the above is _negative_ `int32`, which must be
-          encoded using the full 10 bytes for sign extension<sup>2</sup>.
-    * The maximum value for Boolean values in varint encoding must be `01` (i.e.
-      it must be `0` or `1`). Per rule 3 above, the default value of `0` must
-      be omitted, so if a Boolean is included it must have a value of `1`.
+   - No trailing zero bytes (in little endian, i.e. no leading zeroes in big
+     endian). Per rule 3 above, the default value of `0` must be omitted, so
+     this rule does not apply in such cases.
+   - The maximum value for a varint must be `FF FF FF FF FF FF FF FF FF 01`.
+     In other words, when decoded, the highest 6 bits of the 70-bit unsigned
+     integer must be `0`. (10-byte varints are 10 groups of 7 bits, i.e.
+     70 bits, of which only the lowest 70-6=64 are useful.)
+   - The maximum value for 32-bit values in varint encoding must be `FF FF FF FF 0F`
+     with one exception (below). In other words, when decoded, the highest 38
+     bits of the 70-bit unsigned integer must be `0`.
+     - The one exception to the above is _negative_ `int32`, which must be
+       encoded using the full 10 bytes for sign extension<sup>2</sup>.
+   - The maximum value for Boolean values in varint encoding must be `01` (i.e.
+     it must be `0` or `1`). Per rule 3 above, the default value of `0` must
+     be omitted, so if a Boolean is included it must have a value of `1`.
 
 While rule number 1. and 2. should be pretty straight forward and describe the
 default behavior of all protobuf encoders the author is aware of, the 3rd rule
@@ -260,7 +260,7 @@ for all protobuf documents we need in the context of Cosmos SDK signing.
 - Simple enough to keep the barrier to implement transaction signing low
 - It allows us to continue to use 0 and other empty values in SignDoc, avoiding
   the need to work around 0 sequences. This does not imply the change from
-  https://github.com/cosmos/cosmos-sdk/pull/6949 should not be merged, but not
+  https://github.com/Stride-Labs/cosmos-sdk/pull/6949 should not be merged, but not
   too important anymore.
 
 ### Negative

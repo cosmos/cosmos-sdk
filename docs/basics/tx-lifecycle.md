@@ -83,9 +83,8 @@ When `Tx` is received by the application from the underlying consensus engine (e
 
 ### ValidateBasic
 
-Messages ([`sdk.Msg`](../core/transactions.md#messages)) are extracted from transactions (`Tx`). The `ValidateBasic` method of the `sdk.Msg` interface implemented by the module developer is run for each transaction. 
-To discard obviously invalid messages, the BaseApp` type calls the `ValidateBasic` method very early in the processing of the message in the [`CheckTx`](../core/baseapp.md#checktx) and [`DeliverTx`](../core/baseapp.md#delivertx)) transactions.
-`ValidateBasic` can include only **stateless** checks (the checks that do not require access to the state). 
+Messages ([`sdk.Msg`](../core/transactions.md#messages)) are extracted from transactions (`Tx`). The `ValidateBasic` method of the `sdk.Msg` interface implemented by the module developer is run for each transaction.
+To discard obviously invalid messages, the BaseApp`type calls the`ValidateBasic` method very early in the processing of the message in the [`CheckTx`](../core/baseapp.md#checktx) and [`DeliverTx`](../core/baseapp.md#delivertx)) transactions. `ValidateBasic` can include only **stateless** checks (the checks that do not require access to the state).
 
 #### Guideline
 
@@ -102,7 +101,7 @@ After the ValidateBasic checks, the `AnteHandler`s are run. Technically, they ar
 
 A copy of the cached context is provided to the `AnteHandler`, which performs limited checks specified for the transaction type. Using a copy allows the AnteHandler to do stateful checks for `Tx` without modifying the last committed state, and revert back to the original if the execution fails.
 
-For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module `AnteHandler` checks and increments sequence numbers, checks signatures and account numbers, and deducts fees from the first signer of the transaction - all state changes are made using the `checkState`.
+For example, the [`auth`](https://github.com/Stride-Labs/cosmos-sdk/tree/master/x/auth/spec) module `AnteHandler` checks and increments sequence numbers, checks signatures and account numbers, and deducts fees from the first signer of the transaction - all state changes are made using the `checkState`.
 
 ### Gas
 

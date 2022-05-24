@@ -10,7 +10,7 @@ import "tendermint/types/block.proto";
 import "tendermint/types/types.proto";
 
 option (gogoproto.goproto_registration) = true;
-option go_package                       = "github.com/cosmos/cosmos-sdk/types/tx";
+option go_package                       = "github.com/Stride-Labs/cosmos-sdk/types/tx";
 
 // Service defines a gRPC service for interacting with transactions.
 service Service {

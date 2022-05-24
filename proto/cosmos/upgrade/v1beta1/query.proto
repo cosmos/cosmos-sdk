@@ -5,7 +5,7 @@ import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
 import "cosmos/upgrade/v1beta1/upgrade.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
+option go_package = "github.com/Stride-Labs/cosmos-sdk/x/upgrade/types";
 
 // Query defines the gRPC upgrade querier service.
 service Query {

@@ -7,13 +7,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	v040gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v040"
-	v043gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v043"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/Stride-Labs/cosmos-sdk/simapp"
+	"github.com/Stride-Labs/cosmos-sdk/testutil"
+	"github.com/Stride-Labs/cosmos-sdk/testutil/testdata"
+	sdk "github.com/Stride-Labs/cosmos-sdk/types"
+	v040gov "github.com/Stride-Labs/cosmos-sdk/x/gov/legacy/v040"
+	v043gov "github.com/Stride-Labs/cosmos-sdk/x/gov/legacy/v043"
+	"github.com/Stride-Labs/cosmos-sdk/x/gov/types"
 )
 
 func TestMigrateStore(t *testing.T) {

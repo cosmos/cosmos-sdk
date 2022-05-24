@@ -3,7 +3,7 @@ package types
 import (
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/Stride-Labs/cosmos-sdk/codec"
 )
 
 // WriteListener interface for streaming data out from a listenkv.Store

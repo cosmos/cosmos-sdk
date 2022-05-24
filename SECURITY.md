@@ -1,7 +1,7 @@
 # Security
 
 > **IMPORTANT**: If you find a security issue, you can contact our team directly at
-security@tendermint.com, or report it to our [bug bounty program](https://hackerone.com/tendermint) on HackerOne. *DO NOT* open a public issue on the repository.
+> security@tendermint.com, or report it to our [bug bounty program](https://hackerone.com/tendermint) on HackerOne. _DO NOT_ open a public issue on the repository.
 
 ## Bug Bounty
 
@@ -17,49 +17,49 @@ in for Tendermint and other lower-level libraries (eg. [IAVL](https://github.com
 
 ### Core packages
 
-- [`/baseapp`](https://github.com/cosmos/cosmos-sdk/tree/master/baseapp)
-- [`/crypto`](https://github.com/cosmos/cosmos-sdk/tree/master/crypto)
-- [`/types`](https://github.com/cosmos/cosmos-sdk/tree/master/types)
-- [`/store`](https://github.com/cosmos/cosmos-sdk/tree/master/store)
+- [`/baseapp`](https://github.com/Stride-Labs/cosmos-sdk/tree/master/baseapp)
+- [`/crypto`](https://github.com/Stride-Labs/cosmos-sdk/tree/master/crypto)
+- [`/types`](https://github.com/Stride-Labs/cosmos-sdk/tree/master/types)
+- [`/store`](https://github.com/Stride-Labs/cosmos-sdk/tree/master/store)
 
 ### Modules
 
-- [`x/auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth)
-- [`x/bank`](https://github.com/cosmos/cosmos-sdk/tree/master/x/bank)
-- [`x/capability`](https://github.com/cosmos/cosmos-sdk/tree/master/x/capability)
-- [`x/staking`](https://github.com/cosmos/cosmos-sdk/tree/master/x/staking)
-- [`x/slashing`](https://github.com/cosmos/cosmos-sdk/tree/master/x/slashing)
-- [`x/evidence`](https://github.com/cosmos/cosmos-sdk/tree/master/x/evidence)
-- [`x/distribution`](https://github.com/cosmos/cosmos-sdk/tree/master/x/distribution)
-- [`x/ibc`](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc)
-- [`x/ibc-transfer`](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc-transfer)
-- [`x/mint`](https://github.com/cosmos/cosmos-sdk/tree/master/x/mint)
+- [`x/auth`](https://github.com/Stride-Labs/cosmos-sdk/tree/master/x/auth)
+- [`x/bank`](https://github.com/Stride-Labs/cosmos-sdk/tree/master/x/bank)
+- [`x/capability`](https://github.com/Stride-Labs/cosmos-sdk/tree/master/x/capability)
+- [`x/staking`](https://github.com/Stride-Labs/cosmos-sdk/tree/master/x/staking)
+- [`x/slashing`](https://github.com/Stride-Labs/cosmos-sdk/tree/master/x/slashing)
+- [`x/evidence`](https://github.com/Stride-Labs/cosmos-sdk/tree/master/x/evidence)
+- [`x/distribution`](https://github.com/Stride-Labs/cosmos-sdk/tree/master/x/distribution)
+- [`x/ibc`](https://github.com/Stride-Labs/cosmos-sdk/tree/master/x/ibc)
+- [`x/ibc-transfer`](https://github.com/Stride-Labs/cosmos-sdk/tree/master/x/ibc-transfer)
+- [`x/mint`](https://github.com/Stride-Labs/cosmos-sdk/tree/master/x/mint)
 
 We are interested in bugs in other modules, however the above are most likely to
 have significant vulnerabilities, due to the complexity / nuance involved. We
-also recommend you to read the [specification](https://github.com/cosmos/cosmos-sdk/blob/master/docs/building-modules/README.md) of each module before digging into
+also recommend you to read the [specification](https://github.com/Stride-Labs/cosmos-sdk/blob/master/docs/building-modules/README.md) of each module before digging into
 the code.
 
 ### How we process Tx parameters
 
 - Integer operations on tx parameters, especially `sdk.Int` / `sdk.Dec`
 - Gas calculation & parameter choices
-- Tx signature verification (see [`x/auth/ante`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/ante))
+- Tx signature verification (see [`x/auth/ante`](https://github.com/Stride-Labs/cosmos-sdk/tree/master/x/auth/ante))
 - Possible Node DoS vectors (perhaps due to gas weighting / non constant timing)
 
 ### Handling private keys
 
 - HD key derivation, local and Ledger, and all key-management functionality
 - Side-channel attack vectors with our implementations
-    - e.g. key exfiltration based on time or memory-access patterns when decrypting privkey
-  
+  - e.g. key exfiltration based on time or memory-access patterns when decrypting privkey
+
 ## Disclosure Process
 
 The Cosmos SDK team uses the following disclosure process:
 
 1. After a security report is received, the Cosmos SDK team works to verify the issue and confirm its severity level using Common Vulnerability Scoring System (CVSS).
 1. The Cosmos SDK team collaborates with the Tendermint and Gaia teams to determine the vulnerability’s potential impact on the Cosmos Hub and partners.
-1. Patches are prepared in private repositories for eligible releases of Cosmos SDK. See [Stable Releases](https://github.com/cosmos/cosmos-sdk/blob/master/STABLE_RELEASES.md) for a list of eligible releases.
+1. Patches are prepared in private repositories for eligible releases of Cosmos SDK. See [Stable Releases](https://github.com/Stride-Labs/cosmos-sdk/blob/master/STABLE_RELEASES.md) for a list of eligible releases.
 1. If it is determined that a CVE-ID is required, we request a CVE through a CVE Numbering Authority.
 1. We notify the community that a security release is coming to give users time to prepare their systems for the update. Notifications can include forum posts, tweets, and emails to partners and validators.
 1. 24 hours after the notification, fixes are applied publicly and new releases are issued.
@@ -103,7 +103,7 @@ The following timeline is an example of triage and response. Each task identifie
 
 1. Request CVE number (ADMIN)
 1. Gather emails and other contact info for validators (COMMS LEAD)
-1. Test fixes on a testnet  (COSMOS SDK ENG)
+1. Test fixes on a testnet (COSMOS SDK ENG)
 1. Write “Security Advisory” for forum (COSMOS SDK LEAD)
 
 #### 24 Hours Before Release Time
@@ -119,7 +119,7 @@ The following timeline is an example of triage and response. Each task identifie
 1. Cut Gaia release for eligible versions (GAIA ENG)
 1. Post “Security releases” on forum (COSMOS SDK LEAD)
 1. Post new Tweet linking to forum post (COMMS LEAD)
-1. Remind everyone using social channels (Telegram, Discord)  that the release is out (COMMS LEAD)
+1. Remind everyone using social channels (Telegram, Discord) that the release is out (COMMS LEAD)
 1. Send emails to validators and other users (COMMS LEAD)
 1. Publish Security Advisory and CVE if the CVE has no sensitive information (ADMIN)
 

@@ -34,7 +34,7 @@ type Keeper struct {
 
 For example, here is the type definition of the `keeper` from the `staking` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/3bafd8255a502e5a9cee07391cf8261538245dfd/x/staking/keeper/keeper.go#L23-L33
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/3bafd8255a502e5a9cee07391cf8261538245dfd/x/staking/keeper/keeper.go#L23-L33
 
 Let us go through the different parameters:
 
@@ -48,7 +48,7 @@ Of course, it is possible to define different types of internal `keeper`s for th
 
 `Keeper`s primarily expose getter and setter methods for the store(s) managed by their module. These methods should remain as simple as possible and strictly be limited to getting or setting the requested value, as validity checks should have already been performed via the `ValidateBasic()` method of the [`message`](./messages-and-queries.md#messages) and the [`Msg` server](./msg-services.md) when `keeper`s' methods are called.
 
-Typically, a *getter* method will have the following signature
+Typically, a _getter_ method will have the following signature
 
 ```go
 func (k Keeper) Get(ctx sdk.Context, key string) returnType
@@ -60,7 +60,7 @@ and the method will go through the following steps:
 2. If it exists, get the `[]byte` value stored at location `[]byte(key)` using the `Get(key []byte)` method of the store.
 3. Unmarshall the retrieved value from `[]byte` to `returnType` using the codec `cdc`. Return the value.
 
-Similarly, a *setter* method will have the following signature
+Similarly, a _setter_ method will have the following signature
 
 ```go
 func (k Keeper) Set(ctx sdk.Context, key string, value valueType)
@@ -72,13 +72,13 @@ and the method will go through the following steps:
 2. Marshal `value` to `[]byte` using the codec `cdc`.
 3. Set the encoded value in the store at location `key` using the `Set(key []byte, value []byte)` method of the store.
 
-For more, see an example of `keeper`'s [methods implementation from the `staking` module](https://github.com/cosmos/cosmos-sdk/blob/3bafd8255a502e5a9cee07391cf8261538245dfd/x/staking/keeper/keeper.go).
+For more, see an example of `keeper`'s [methods implementation from the `staking` module](https://github.com/Stride-Labs/cosmos-sdk/blob/3bafd8255a502e5a9cee07391cf8261538245dfd/x/staking/keeper/keeper.go).
 
 The [module `KVStore`](../core/store.md#kvstore-and-commitkvstore-interfaces) also provides an `Iterator()` method which returns an `Iterator` object to iterate over a domain of keys.
 
 This is an example from the `auth` module to iterate accounts:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/bf8809ef9840b4f5369887a38d8345e2380a567f/x/auth/keeper/account.go#L70-L83
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/bf8809ef9840b4f5369887a38d8345e2380a567f/x/auth/keeper/account.go#L70-L83
 
 ## Next {hide}
 

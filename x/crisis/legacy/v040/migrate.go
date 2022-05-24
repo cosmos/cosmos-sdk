@@ -1,8 +1,8 @@
 package v040
 
 import (
-	v039crisis "github.com/cosmos/cosmos-sdk/x/crisis/legacy/v039"
-	v040crisis "github.com/cosmos/cosmos-sdk/x/crisis/types"
+	v039crisis "github.com/Stride-Labs/cosmos-sdk/x/crisis/legacy/v039"
+	v040crisis "github.com/Stride-Labs/cosmos-sdk/x/crisis/types"
 )
 
 // Migrate accepts exported v0.39 x/crisis genesis state and

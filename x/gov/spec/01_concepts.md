@@ -14,9 +14,9 @@ The governance process is divided in a few steps that are outlined below:
   confirmed and vote opens. Bonded Atom holders can then send `TxGovVote`
   transactions to vote on the proposal.
 - If the proposal involves a software upgrade:
-    - **Signal:** Validators start signaling that they are ready to switch to the
+  - **Signal:** Validators start signaling that they are ready to switch to the
     new version.
-    - **Switch:** Once more than 75% of validators have signaled that they are
+  - **Switch:** Once more than 75% of validators have signaled that they are
     ready to switch, their software automatically flips to the new version.
 
 ## Proposal submission
@@ -126,9 +126,9 @@ Often times the entity owning that address might not be a single individual. For
 
 To represent weighted vote on chain, we use the following Protobuf message.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-alpha1/proto/cosmos/gov/v1beta1/gov.proto#L32-L40
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.43.0-alpha1/proto/cosmos/gov/v1beta1/gov.proto#L32-L40
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-alpha1/proto/cosmos/gov/v1beta1/gov.proto#L126-L137
++++ https://github.com/Stride-Labs/cosmos-sdk/blob/v0.43.0-alpha1/proto/cosmos/gov/v1beta1/gov.proto#L126-L137
 
 For a weighted vote to be valid, the `options` field must not contain duplicate vote options, and the sum of weights of all options must be equal to 1.
 

@@ -197,6 +197,8 @@ var errPanicWithMsg = Wrapf(ErrPanic, "panic message redacted to hide potentiall
 // generic internal error instance. If the error is an ABCI Error, that error is
 // simply returned.
 func Redact(err error) error {
+	// FOR DEBUGGING ONLY, RETURN THE RAW ERROR MESSAGE
+	return err
 	if ErrPanic.Is(err) {
 		return errPanicWithMsg
 	}

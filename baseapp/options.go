@@ -218,7 +218,7 @@ func (app *BaseApp) SetSnapshot(snapshotStore *snapshots.Store, opts snapshottyp
 		return
 	}
 	app.cms.SetSnapshotInterval(opts.Interval)
-	app.snapshotManager = snapshots.NewManager(snapshotStore, opts, app.cms, map[string]snapshottypes.ExtensionSnapshotter{}, app.logger)
+	app.snapshotManager = snapshots.NewManager(snapshotStore, opts, app.cms, nil, app.logger)
 }
 
 // SetInterfaceRegistry sets the InterfaceRegistry.

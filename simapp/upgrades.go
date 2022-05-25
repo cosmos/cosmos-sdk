@@ -18,7 +18,7 @@ const UpgradeName = "v045-to-v046"
 func (app SimApp) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(UpgradeName,
 		func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+			return app.ModuleManager.RunMigrations(ctx, app.configurator, fromVM)
 		})
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()

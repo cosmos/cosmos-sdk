@@ -59,23 +59,25 @@ It extends `proto.Message` and contains the following methods:
 * `GetSignBytes() []byte`: Return the canonical byte representation of the message. Used to generate a signature.
 * `GetSigners() []AccAddress`: Return the list of signers. The Cosmos SDK will make sure that each `message` contained in a transaction is signed by all the signers listed in the list returned by this method.
 
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/x/auth/migrations/legacytx/stdsign.go#L20-L36
+
 See an example implementation of a `message` from the `gov` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/gov/types/msgs.go#L77-L125
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/x/gov/types/v1/msgs.go#L106-L138
 
 ## Queries
 
-A `query` is a request for information made by end-users of applications through an interface and processed by a full-node. A `query` is received by a full-node through its consensus engine and relayed to the application via the ABCI. It is then routed to the appropriate module via `BaseApp`'s `queryrouter` so that it can be processed by the module's query service (./query-services.md). For a deeper look at the lifecycle of a `query`, click [here](../basics/query-lifecycle.md).
+A `query` is a request for information made by end-users of applications through an interface and processed by a full-node. A `query` is received by a full-node through its consensus engine and relayed to the application via the ABCI. It is then routed to the appropriate module via `BaseApp`'s `QueryRouter` so that it can be processed by the module's query service (./query-services.md). For a deeper look at the lifecycle of a `query`, click [here](../basics/query-lifecycle.md).
 
 ### gRPC Queries
 
-Starting from v0.40, the preferred way to define queries is by using [Protobuf services](https://developers.google.com/protocol-buffers/docs/proto#services). A `Query` service should be created per module in `query.proto`. This service lists endpoints starting with `rpc`.
+Queries should be defined using [Protobuf services](https://developers.google.com/protocol-buffers/docs/proto#services). A `Query` service should be created per module in `query.proto`. This service lists endpoints starting with `rpc`.
 
 Here's an example of such a `Query` service definition:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/proto/cosmos/auth/v1beta1/query.proto#L12-L23
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/auth/v1beta1/query.proto#L13-L59
 
-As `proto.Message`s, generated `Response` types implement by default `String()` method of [`fmt.Stringer`](https://golang.org/pkg/fmt/#Stringer).
+As `proto.Message`s, generated `Response` types implement by default `String()` method of [`fmt.Stringer`](https://pkg.go.dev/fmt#Stringer).
 
 A `RegisterQueryServer` method is also generated and should be used to register the module's query server in the `RegisterServices` method from the [`AppModule` interface](./module-manager.md#appmodule).
 
@@ -98,7 +100,7 @@ The `path` for each `query` must be defined by the module developer in the modul
 
 * A [`querier`](./query-services.md#legacy-queriers), to process the `query` once it has been [routed to the module](../core/baseapp.md#query-routing).
 * [Query commands](./module-interfaces.md#query-commands) in the module's CLI file, where the `path` for each `query` is specified.
-* `query` return types. Typically defined in a file `types/querier.go`, they specify the result type of each of the module's `queries`. These custom types must implement the `String()` method of [`fmt.Stringer`](https://golang.org/pkg/fmt/#Stringer).
+* `query` return types. Typically defined in a file `types/querier.go`, they specify the result type of each of the module's `queries`. These custom types must implement the `String()` method of [`fmt.Stringer`](https://pkg.go.dev/fmt#Stringer).
 
 ### Store Queries
 
@@ -106,9 +108,7 @@ Store queries query directly for store keys. They use `clientCtx.QueryABCI(req a
 
 See following examples:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/080fcf1df25ccdf97f3029b6b6f83caaf5a235e4/x/ibc/core/client/query.go#L36-L46
-
-+++ https://github.com/cosmos/cosmos-sdk/blob/080fcf1df25ccdf97f3029b6b6f83caaf5a235e4/baseapp/abci.go#L722-L749
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/baseapp/abci.go#L756-L777
 
 ## Next {hide}
 

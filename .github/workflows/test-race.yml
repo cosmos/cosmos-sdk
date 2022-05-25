@@ -114,9 +114,9 @@ jobs:
              ~/.cache/go-build
              ~/Library/Caches/go-build
              ~\AppData\Local\go-build
-          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-race-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-             ${{ runner.os }}-go-${{ matrix.go-version }}-
+             ${{ runner.os }}-go-race-${{ matrix.go-version }}-
       - uses: actions/download-artifact@v3
         with:
           name: "${{ github.sha }}-${{ matrix.part }}"

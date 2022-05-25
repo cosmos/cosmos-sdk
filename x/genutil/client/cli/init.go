@@ -83,7 +83,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			// default mamaki configs TODO: move to the app to be more explicit
 			// in what we are setting as defaults
-			config.Consensus.TimeoutCommit = time.Second * 15
+			config.Consensus.TimeoutCommit = time.Second * 25
 			config.Consensus.SkipTimeoutCommit = false
 			config.Mempool.KeepInvalidTxsInCache = true
 			config.Mempool.TTLNumBlocks = 15

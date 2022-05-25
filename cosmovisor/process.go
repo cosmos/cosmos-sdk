@@ -227,7 +227,7 @@ func IsSkipUpgradeHeight(args []string, upgradeInfo upgradetypes.Plan) bool {
 
 // UpgradeSkipHeights gets all the heights provided when
 // 		simd start --unsafe-skip-upgrades <height1> <optional_height_2> ... <optional_height_N>
-// TODO we are using cobra, we do need to parse the args like that
+// TODO we are using cobra, we might not need to parse the args like that
 func UpgradeSkipHeights(args []string) []int {
 	var heights []int
 	for i, arg := range args {

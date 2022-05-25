@@ -221,9 +221,9 @@ jobs:
              ~/.cache/go-build
              ~/Library/Caches/go-build
              ~\AppData\Local\go-build
-          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-rosetta-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-             ${{ runner.os }}-go-${{ matrix.go-version }}-
+             ${{ runner.os }}-go-rosetta-${{ matrix.go-version }}-
       - name: test rosetta
         run: |
           make test-rosetta
@@ -314,9 +314,9 @@ jobs:
              ~/.cache/go-build
              ~/Library/Caches/go-build
              ~\AppData\Local\go-build
-          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-sim-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-             ${{ runner.os }}-go-${{ matrix.go-version }}-
+             ${{ runner.os }}-go-sim-${{ matrix.go-version }}-
       - uses: actions/cache@v3
         with:
           path: ~/go/bin

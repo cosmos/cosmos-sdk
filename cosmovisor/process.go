@@ -74,12 +74,18 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 			return false, err
 		}
 
+		if err := DoUpgrade(l.logger, l.cfg, l.fw.currentInfo); err != nil {
+			return false, err
+		}
+
 		if err = l.doPreUpgrade(); err != nil {
 			return false, err
 		}
+
+		return true, nil
 	}
 
-	return true, DoUpgrade(l.logger, l.cfg, l.fw.currentInfo)
+	return false, nil
 }
 
 // WaitForUpgradeOrExit checks upgrade plan file created by the app.
@@ -92,7 +98,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 	currentUpgrade, err := l.cfg.UpgradeInfo()
 	if err != nil {
-		return false, err
+		l.logger.Error().Err(err)
 	}
 
 	cmdDone := make(chan error)
@@ -161,8 +167,9 @@ func (l Launcher) doBackup() error {
 	return nil
 }
 
-// doPreUpgrade runs the pre-upgrade command defined by the application and handles respective error codes
-// cfg contains the cosmovisor config from env var
+// doPreUpgrade runs the pre-upgrade command defined by the application and handles respective error codes.
+// cfg contains the cosmovisor config from env var.
+// doPreUpgrade runs the new APP binary in order to process the upgrade (post-upgrade for cosmovisor).
 func (l *Launcher) doPreUpgrade() error {
 	counter := 0
 	for {
@@ -178,9 +185,11 @@ func (l *Launcher) doPreUpgrade() error {
 				l.logger.Info().Msg("pre-upgrade command does not exist. continuing the upgrade.")
 				return nil
 			}
+
 			if err.(*exec.ExitError).ProcessState.ExitCode() == 30 {
 				return fmt.Errorf("pre-upgrade command failed : %w", err)
 			}
+
 			if err.(*exec.ExitError).ProcessState.ExitCode() == 31 {
 				l.logger.Error().Err(err).Int("attempt", counter).Msg("pre-upgrade command failed. retrying")
 				continue
@@ -195,12 +204,12 @@ func (l *Launcher) doPreUpgrade() error {
 // executePreUpgradeCmd runs the pre-upgrade command defined by the application
 // cfg contains the cosmosvisor config from the env vars
 func (l *Launcher) executePreUpgradeCmd() error {
-	upgradesInfo, err := l.cfg.UpgradeInfo()
+	bin, err := l.cfg.CurrentBin()
 	if err != nil {
-		return fmt.Errorf("failed getting upgrade info: %w", err)
+		return fmt.Errorf("error while getting current binary path: %w", err)
 	}
 
-	preUpgradeCmd := exec.Command(l.cfg.UpgradeBin(upgradesInfo.Name), "pre-upgrade")
+	preUpgradeCmd := exec.Command(bin, "pre-upgrade")
 	_, err = preUpgradeCmd.Output()
 	return err
 }
@@ -218,6 +227,7 @@ func IsSkipUpgradeHeight(args []string, upgradeInfo upgradetypes.Plan) bool {
 
 // UpgradeSkipHeights gets all the heights provided when
 // 		simd start --unsafe-skip-upgrades <height1> <optional_height_2> ... <optional_height_N>
+// TODO we are using cobra, we do need to parse the args like that
 func UpgradeSkipHeights(args []string) []int {
 	var heights []int
 	for i, arg := range args {

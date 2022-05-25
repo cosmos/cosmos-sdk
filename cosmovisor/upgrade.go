@@ -26,6 +26,7 @@ func DoUpgrade(logger *zerolog.Logger, cfg *Config, info upgradetypes.Plan) erro
 		// we have the binary - do it
 		return cfg.SetCurrentUpgrade(info)
 	}
+
 	// if auto-download is disabled, we fail
 	if !cfg.AllowDownloadBinaries {
 		return fmt.Errorf("binary not present, downloading disabled: %w", err)

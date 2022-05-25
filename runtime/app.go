@@ -81,12 +81,12 @@ func (a *App) Load(loadLatest bool) error {
 	if len(a.config.InitGenesis) != 0 {
 		a.ModuleManager.SetOrderInitGenesis(a.config.InitGenesis...)
 		a.SetInitChainer(a.InitChainer)
-		// set export order to init order by default
-		a.ModuleManager.SetOrderExportGenesis(a.config.InitGenesis...)
 	}
 
 	if len(a.config.ExportGenesis) != 0 {
 		a.ModuleManager.SetOrderExportGenesis(a.config.ExportGenesis...)
+	} else if len(a.config.InitGenesis) != 0 {
+		a.ModuleManager.SetOrderExportGenesis(a.config.InitGenesis...)
 	}
 
 	if len(a.config.BeginBlockers) != 0 {

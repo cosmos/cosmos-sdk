@@ -113,7 +113,7 @@ jobs:
             go.mod
             go.sum
       - name: Get data from build cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
            # In order:
            # * Module download cache
@@ -208,7 +208,7 @@ jobs:
             go.mod
             go.sum
       - name: Get data from build cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
            # In order:
            # * Module download cache
@@ -245,7 +245,7 @@ jobs:
             go.mod
             go.sum
       - name: Get data from build cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
            # In order:
            # * Module download cache
@@ -302,7 +302,7 @@ jobs:
             go.mod
             go.sum
       - name: Get data from build cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
            # In order:
            # * Module download cache

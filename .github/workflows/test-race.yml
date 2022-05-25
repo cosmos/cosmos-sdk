@@ -106,19 +106,17 @@ jobs:
         with:
            # In order:
            # * Module download cache
-           # * Linter cache (Linux)
            # * Build cache (Linux)
            # * Build cache (Mac)
            # * Build cache (Windows)
           path: |
              ~/go/pkg/mod
-             ~/.cache/golangci-lint
              ~/.cache/go-build
              ~/Library/Caches/go-build
              ~\AppData\Local\go-build
-          key: ${{ runner.os }}-go-linter-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-             ${{ runner.os }}-go-linter-${{ matrix.go-version }}-
+             ${{ runner.os }}-go-${{ matrix.go-version }}-
       - uses: actions/download-artifact@v3
         with:
           name: "${{ github.sha }}-${{ matrix.part }}"

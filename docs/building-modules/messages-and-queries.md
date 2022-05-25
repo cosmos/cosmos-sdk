@@ -18,11 +18,11 @@ When a transaction is relayed from the underlying consensus engine to the Cosmos
 
 ### `Msg` Services
 
-Starting from v0.40, defining Protobuf `Msg` services is the recommended way to handle messages. A Protobuf `Msg` service should be created for each module, typically in `tx.proto` (see more info about [conventions and naming](../core/encoding.md#faq)). It must have an RPC service method defined for each message in the module.
+Defining Protobuf `Msg` services is the recommended way to handle messages. A Protobuf `Msg` service should be created for each module, typically in `tx.proto` (see more info about [conventions and naming](../core/encoding.md#faq)). It must have an RPC service method defined for each message in the module.
 
 See an example of a `Msg` service definition from `x/bank` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L10-L17
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L12-L19
 
 Each `Msg` service method must have exactly one argument, which must implement the `sdk.Msg` interface, and a Protobuf response. The naming convention is to call the RPC argument `Msg<service-rpc-name>` and the RPC response `Msg<service-rpc-name>Response`. For example:
 
@@ -49,7 +49,7 @@ Amino `LegacyMsg`s can be defined as protobuf messages. The messages definition 
 
 A `LegacyMsg` is typically accompanied by a standard constructor function, that is called from one of the [module's interface](./module-interfaces.md). `message`s also need to implement the `sdk.Msg` interface:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/4a1b2fba43b1052ca162b3a1e0b6db6db9c26656/types/tx_msg.go#L10-L33
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/types/tx_msg.go#L10-L22
 
 It extends `proto.Message` and contains the following methods:
 

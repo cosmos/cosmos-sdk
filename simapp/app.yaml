@@ -3,6 +3,8 @@ modules:
     config:
       "@type": cosmos.app.runtime.v1alpha1.Module
 
+      app_name: SimApp
+
       # During begin block slashing happens after distr.BeginBlocker so that
       # there is nothing left over in the validator fee pool, so as to keep the
       # CanWithdrawInvariant invariant.

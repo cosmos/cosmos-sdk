@@ -30,6 +30,7 @@ message Module {
   repeated string init_genesis = 4;
 
   // export_genesis specifies the order in which to export module genesis data.
-  // If this is left empty no module genesis data will be exported.
+  // If this is left empty, the init_genesis order will be used for export genesis
+  // if it is specified.
   repeated string export_genesis = 5;
 }

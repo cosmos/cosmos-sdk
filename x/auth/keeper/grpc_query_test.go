@@ -191,3 +191,84 @@ func (suite *KeeperTestSuite) TestGRPCQueryParameters() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
+	var (
+		req *types.QueryModuleAccountsRequest
+	)
+
+	testCases := []struct {
+		msg       string
+		malleate  func()
+		expPass   bool
+		posttests func(res *types.QueryModuleAccountsResponse)
+	}{
+		{
+			"success",
+			func() {
+				req = &types.QueryModuleAccountsRequest{}
+			},
+			true,
+			func(res *types.QueryModuleAccountsResponse) {
+				var mintModuleExists = false
+				for _, acc := range res.Accounts {
+					var account types.AccountI
+					err := suite.app.InterfaceRegistry().UnpackAny(acc, &account)
+					suite.Require().NoError(err)
+
+					moduleAccount, ok := account.(types.ModuleAccountI)
+
+					suite.Require().True(ok)
+					if moduleAccount.GetName() == "mint" {
+						mintModuleExists = true
+					}
+				}
+				suite.Require().True(mintModuleExists)
+			},
+		},
+		{
+			"invalid module name",
+			func() {
+				req = &types.QueryModuleAccountsRequest{}
+			},
+			true,
+			func(res *types.QueryModuleAccountsResponse) {
+				var mintModuleExists = false
+				for _, acc := range res.Accounts {
+					var account types.AccountI
+					err := suite.app.InterfaceRegistry().UnpackAny(acc, &account)
+					suite.Require().NoError(err)
+
+					moduleAccount, ok := account.(types.ModuleAccountI)
+
+					suite.Require().True(ok)
+					if moduleAccount.GetName() == "falseCase" {
+						mintModuleExists = true
+					}
+				}
+				suite.Require().False(mintModuleExists)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.ctx)
+
+			res, err := suite.queryClient.ModuleAccounts(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(res)
+			}
+
+			tc.posttests(res)
+		})
+	}
+}

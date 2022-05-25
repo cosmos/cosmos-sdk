@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -43,6 +44,7 @@ func GetQueryCmd() *cobra.Command {
 		GetAccountCmd(),
 		GetAccountsCmd(),
 		QueryParamsCmd(),
+		QueryModuleAccountsCmd(),
 	)
 
 	return cmd
@@ -139,6 +141,33 @@ func GetAccountsCmd() *cobra.Command {
 
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "all-accounts")
+
+	return cmd
+}
+
+// QueryAllModuleAccountsCmd returns a list of all the existing module accounts with their account information and permissions
+func QueryModuleAccountsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "module-accounts",
+		Short: "Query all module accounts",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.ModuleAccounts(context.Background(), &types.QueryModuleAccountsRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }

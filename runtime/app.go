@@ -83,6 +83,10 @@ func (a *App) Load(loadLatest bool) error {
 		a.SetInitChainer(a.InitChainer)
 	}
 
+	if len(a.config.ExportGenesis) != 0 {
+		a.ModuleManager.SetOrderExportGenesis(a.config.ExportGenesis...)
+	}
+
 	if len(a.config.BeginBlockers) != 0 {
 		a.ModuleManager.SetOrderBeginBlockers(a.config.BeginBlockers...)
 		a.SetBeginBlocker(a.BeginBlocker)

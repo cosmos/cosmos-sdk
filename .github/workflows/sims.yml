@@ -3,7 +3,7 @@ name: Sims
 # This workflow will run on all Pull Requests, if a .go, .mod or .sum file have been changed
 on:
   schedule:
-    - cron: "* */2 * * *"
+    - cron: "* 0,12 * * *"
   release:
     types: [published]
 

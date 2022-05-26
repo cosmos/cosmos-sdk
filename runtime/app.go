@@ -159,7 +159,7 @@ func (a *App) RegisterTendermintService(clientCtx client.Context) {
 // FindStoreKey fetches a registered StoreKey from the App in linear time.
 //
 // NOTE: This should only be used in testing.
-func (a *App) FindStoreKey(storeKey string) storetypes.StoreKey {
+func (a *App) UnsafeFindStoreKey(storeKey string) storetypes.StoreKey {
 	i := slices.IndexFunc(a.storeKeys, func(s storetypes.StoreKey) bool { return s.Name() == storeKey })
 	if i == -1 {
 		return nil

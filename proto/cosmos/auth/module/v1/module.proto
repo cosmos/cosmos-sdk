@@ -3,8 +3,8 @@ syntax = "proto3";
 package cosmos.auth.module.v1;
 
 import "cosmos/app/v1alpha1/module.proto";
-import "google/protobuf/any.proto";
 
+// Module is the config object for the auth module.
 message Module {
   option (cosmos.app.v1alpha1.module) = {
     go_import: "github.com/cosmos/cosmos-sdk/x/auth"

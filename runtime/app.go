@@ -156,8 +156,6 @@ func (a *App) RegisterTendermintService(clientCtx client.Context) {
 	)
 }
 
-var _ servertypes.Application = &App{}
-
 // UnsafeFindStoreKey FindStoreKey fetches a registered StoreKey from the App in linear time.
 //
 // NOTE: This should only be used in testing.
@@ -169,3 +167,5 @@ func (a *App) UnsafeFindStoreKey(storeKey string) storetypes.StoreKey {
 
 	return a.storeKeys[i]
 }
+
+var _ servertypes.Application = &App{}

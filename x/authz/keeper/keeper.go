@@ -8,13 +8,13 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
@@ -26,12 +26,12 @@ const gasCostPerIteration = uint64(20)
 type Keeper struct {
 	storeKey   storetypes.StoreKey
 	cdc        codec.BinaryCodec
-	router     *middleware.MsgServiceRouter
+	router     *baseapp.MsgServiceRouter
 	authKeeper authkeeper.AccountKeeper
 }
 
 // NewKeeper constructs a message authorization Keeper
-func NewKeeper(storeKey storetypes.StoreKey, cdc codec.BinaryCodec, router *middleware.MsgServiceRouter, ak authkeeper.AccountKeeper) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, cdc codec.BinaryCodec, router *baseapp.MsgServiceRouter, ak authkeeper.AccountKeeper) Keeper {
 	return Keeper{
 		storeKey:   storeKey,
 		cdc:        cdc,
@@ -83,7 +83,7 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 // DispatchActions attempts to execute the provided messages via authorization
 // grants from the message signer to the grantee.
 func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) ([][]byte, error) {
-	var results = make([][]byte, len(msgs))
+	results := make([][]byte, len(msgs))
 	now := ctx.BlockTime()
 	for i, msg := range msgs {
 		signers := msg.GetSigners()
@@ -245,7 +245,8 @@ func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, grant
 // It should not be used in query or msg services without charging additional gas.
 // The iteration stops when the handler function returns true or the iterator exhaust.
 func (k Keeper) IterateGrants(ctx sdk.Context,
-	handler func(granterAddr sdk.AccAddress, granteeAddr sdk.AccAddress, grant authz.Grant) bool) {
+	handler func(granterAddr sdk.AccAddress, granteeAddr sdk.AccAddress, grant authz.Grant) bool,
+) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, GrantKey)
 	defer iter.Close()
@@ -274,7 +275,8 @@ func (keeper Keeper) getGrantQueueItem(ctx sdk.Context, expiration time.Time, gr
 }
 
 func (k Keeper) setGrantQueueItem(ctx sdk.Context, expiration time.Time,
-	granter sdk.AccAddress, grantee sdk.AccAddress, queueItems *authz.GrantQueueItem) error {
+	granter sdk.AccAddress, grantee sdk.AccAddress, queueItems *authz.GrantQueueItem,
+) error {
 	store := ctx.KVStore(k.storeKey)
 	bz, err := k.cdc.Marshal(queueItems)
 	if err != nil {
@@ -286,8 +288,7 @@ func (k Keeper) setGrantQueueItem(ctx sdk.Context, expiration time.Time,
 }
 
 // insertIntoGrantQueue inserts a grant key into the grant queue
-func (keeper Keeper) insertIntoGrantQueue(ctx sdk.Context, granter, grantee sdk.AccAddress, msgType string,
-	expiration time.Time) error {
+func (keeper Keeper) insertIntoGrantQueue(ctx sdk.Context, granter, grantee sdk.AccAddress, msgType string, expiration time.Time) error {
 	queueItems, err := keeper.getGrantQueueItem(ctx, expiration, granter, grantee)
 	if err != nil {
 		return err

@@ -39,7 +39,6 @@ func (ak AccountKeeper) Accounts(c context.Context, req *types.QueryAccountsRequ
 		accounts = append(accounts, any)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "paginate: %v", err)
 	}
@@ -59,7 +58,6 @@ func (ak AccountKeeper) Account(c context.Context, req *types.QueryAccountReques
 
 	ctx := sdk.UnwrapSDKContext(c)
 	addr, err := sdk.AccAddressFromBech32(req.Address)
-
 	if err != nil {
 		return nil, err
 	}

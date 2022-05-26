@@ -23,7 +23,7 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	genesisState := simapp.GenesisStateWithSingleValidator(t, app)
 	stateBytes, err := tmjson.Marshal(genesisState)
 	require.NoError(t, err)
-	
+
 	app.InitChain(
 		abcitypes.RequestInitChain{
 			AppStateBytes: stateBytes,

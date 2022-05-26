@@ -162,8 +162,8 @@ func (u *Uint) MarshalTo(data []byte) (n int, err error) {
 		u.i = new(big.Int)
 	}
 	if u.i.BitLen() == 0 { // The value 0
-		copy(data, []byte{0x30})
-		return 1, nil
+		n = copy(data, []byte{0x30})
+		return n, nil
 	}
 
 	bz, err := u.Marshal()
@@ -171,8 +171,8 @@ func (u *Uint) MarshalTo(data []byte) (n int, err error) {
 		return 0, err
 	}
 
-	copy(data, bz)
-	return len(bz), nil
+	n = copy(data, bz)
+	return n, nil
 }
 
 // Unmarshal implements the gogo proto custom type interface.
@@ -190,11 +190,8 @@ func (u *Uint) Unmarshal(data []byte) error {
 		return err
 	}
 
-	if u.i.BitLen() > MaxBitLen {
-		return fmt.Errorf("integer out of range; got: %d, max: %d", u.i.BitLen(), MaxBitLen)
-	}
-
-	return nil
+	// Finally check for overflow.
+	return UintOverflow(u.i)
 }
 
 // Size implements the gogo proto custom type interface.
@@ -213,8 +210,9 @@ func UintOverflow(i *big.Int) error {
 	if i.Sign() < 0 {
 		return errors.New("non-positive integer")
 	}
-	if i.BitLen() > 256 {
-		return fmt.Errorf("bit length %d greater than 256", i.BitLen())
+
+	if g, w := i.BitLen(), MaxBitLen; g > w {
+		return fmt.Errorf("integer out of range; got: %d, max: %d", g, w)
 	}
 	return nil
 }

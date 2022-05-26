@@ -17,9 +17,13 @@ service Msg {
   rpc CreateVestingAccount(MsgCreateVestingAccount) returns (MsgCreateVestingAccountResponse);
   // CreatePermanentLockedAccount defines a method that enables creating a permanent
   // locked account.
+  //
+  // Since: cosmos-sdk 0.46
   rpc CreatePermanentLockedAccount(MsgCreatePermanentLockedAccount) returns (MsgCreatePermanentLockedAccountResponse);
   // CreatePeriodicVestingAccount defines a method that enables creating a
   // periodic vesting account.
+  //
+  // Since: cosmos-sdk 0.46
   rpc CreatePeriodicVestingAccount(MsgCreatePeriodicVestingAccount) returns (MsgCreatePeriodicVestingAccountResponse);
 }
 
@@ -44,6 +48,8 @@ message MsgCreateVestingAccountResponse {}
 
 // MsgCreatePermanentLockedAccount defines a message that enables creating a permanent
 // locked account.
+//
+// Since: cosmos-sdk 0.46
 message MsgCreatePermanentLockedAccount {
   option (gogoproto.equal) = true;
 
@@ -54,10 +60,14 @@ message MsgCreatePermanentLockedAccount {
 }
 
 // MsgCreatePermanentLockedAccountResponse defines the Msg/CreatePermanentLockedAccount response type.
+//
+// Since: cosmos-sdk 0.46
 message MsgCreatePermanentLockedAccountResponse {}
 
 // MsgCreateVestingAccount defines a message that enables creating a vesting
 // account.
+//
+// Since: cosmos-sdk 0.46
 message MsgCreatePeriodicVestingAccount {
   option (cosmos.msg.v1.signer) = "from_address";
 
@@ -71,4 +81,6 @@ message MsgCreatePeriodicVestingAccount {
 
 // MsgCreateVestingAccountResponse defines the Msg/CreatePeriodicVestingAccount
 // response type.
+//
+// Since: cosmos-sdk 0.46
 message MsgCreatePeriodicVestingAccountResponse {}

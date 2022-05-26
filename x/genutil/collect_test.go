@@ -45,7 +45,7 @@ func TestCollectTxsHandlesDirectories(t *testing.T) {
 
 	// 1. We'll insert a directory as the first element before JSON file.
 	subDirPath := filepath.Join(testDir, "_adir")
-	if err := os.MkdirAll(subDirPath, 0755); err != nil {
+	if err := os.MkdirAll(subDirPath, 0o755); err != nil {
 		t.Fatal(err)
 	}
 

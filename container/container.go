@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/goccy/go-graphviz/cgraph"
 	"github.com/pkg/errors"
+
+	"github.com/cosmos/cosmos-sdk/container/internal/graphviz"
 )
 
 type container struct {
@@ -38,10 +39,8 @@ func newContainer(cfg *debugConfig) *container {
 
 func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]reflect.Value, error) {
 	loc := provider.Location
-	graphNode, err := c.locationGraphNode(loc, moduleKey)
-	if err != nil {
-		return nil, err
-	}
+	graphNode := c.locationGraphNode(loc, moduleKey)
+
 	markGraphNodeAsFailed(graphNode)
 
 	if c.callerMap[loc] {
@@ -83,22 +82,18 @@ func (c *container) getResolver(typ reflect.Type) (resolver, error) {
 	}
 
 	elemType := typ
-	if isAutoGroupSliceType(elemType) || isOnePerModuleMapType(elemType) {
+	if isManyPerContainerSliceType(elemType) || isOnePerModuleMapType(elemType) {
 		elemType = elemType.Elem()
 	}
 
-	var typeGraphNode *cgraph.Node
-	var err error
+	var typeGraphNode *graphviz.Node
 
-	if isAutoGroupType(elemType) {
-		c.logf("Registering resolver for auto-group type %v", elemType)
+	if isManyPerContainerType(elemType) {
+		c.logf("Registering resolver for many-per-container type %v", elemType)
 		sliceType := reflect.SliceOf(elemType)
 
-		typeGraphNode, err = c.typeGraphNode(sliceType)
-		if err != nil {
-			return nil, err
-		}
-		typeGraphNode.SetComment("auto-group")
+		typeGraphNode = c.typeGraphNode(sliceType)
+		typeGraphNode.SetComment("many-per-container")
 
 		r := &groupResolver{
 			typ:       elemType,
@@ -112,10 +107,7 @@ func (c *container) getResolver(typ reflect.Type) (resolver, error) {
 		c.logf("Registering resolver for one-per-module type %v", elemType)
 		mapType := reflect.MapOf(stringType, elemType)
 
-		typeGraphNode, err = c.typeGraphNode(mapType)
-		if err != nil {
-			return nil, err
-		}
+		typeGraphNode = c.typeGraphNode(mapType)
 		typeGraphNode.SetComment("one-per-module")
 
 		r := &onePerModuleResolver{
@@ -136,11 +128,7 @@ func (c *container) getResolver(typ reflect.Type) (resolver, error) {
 var stringType = reflect.TypeOf("")
 
 func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (interface{}, error) {
-	providerGraphNode, err := c.locationGraphNode(provider.Location, key)
-	if err != nil {
-		return nil, err
-	}
-
+	providerGraphNode := c.locationGraphNode(provider.Location, key)
 	hasModuleKeyParam := false
 	hasOwnModuleKeyParam := false
 	for _, in := range provider.Inputs {
@@ -153,8 +141,8 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 			hasOwnModuleKeyParam = true
 		}
 
-		if isAutoGroupType(typ) {
-			return nil, fmt.Errorf("auto-group type %v can't be used as an input parameter", typ)
+		if isManyPerContainerType(typ) {
+			return nil, fmt.Errorf("many-per-container type %v can't be used as an input parameter", typ)
 		} else if isOnePerModuleType(typ) {
 			return nil, fmt.Errorf("one-per-module type %v can't be used as an input parameter", typ)
 		}
@@ -164,11 +152,11 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 			return nil, err
 		}
 
-		var typeGraphNode *cgraph.Node
+		var typeGraphNode *graphviz.Node
 		if vr != nil {
 			typeGraphNode = vr.typeGraphNode()
 		} else {
-			typeGraphNode, err = c.typeGraphNode(typ)
+			typeGraphNode = c.typeGraphNode(typ)
 			if err != nil {
 				return nil, err
 			}
@@ -196,8 +184,8 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 					typ, typ.Elem())
 			}
 
-			// auto-group slices of auto-group types
-			if isAutoGroupSliceType(typ) {
+			// many-per-container slices of many-per-container types
+			if isManyPerContainerSliceType(typ) {
 				typ = typ.Elem()
 			}
 
@@ -215,11 +203,7 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 			} else {
 				c.logf("Registering resolver for simple type %v", typ)
 
-				typeGraphNode, err := c.typeGraphNode(typ)
-				if err != nil {
-					return nil, err
-				}
-
+				typeGraphNode := c.typeGraphNode(typ)
 				vr = &simpleResolver{
 					node:        sp,
 					typ:         typ,
@@ -260,11 +244,7 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 					typ, provider.Location, existing.describeLocation())
 			}
 
-			typeGraphNode, err := c.typeGraphNode(typ)
-			if err != nil {
-				return reflect.Value{}, err
-			}
-
+			typeGraphNode := c.typeGraphNode(typ)
 			c.resolvers[typ] = &moduleDepResolver{
 				typ:         typ,
 				idxInValues: i,
@@ -282,17 +262,9 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 
 func (c *container) supply(value reflect.Value, location Location) error {
 	typ := value.Type()
-	locGrapNode, err := c.locationGraphNode(location, nil)
-	if err != nil {
-		return err
-	}
+	locGrapNode := c.locationGraphNode(location, nil)
 	markGraphNodeAsUsed(locGrapNode)
-
-	typeGraphNode, err := c.typeGraphNode(typ)
-	if err != nil {
-		return err
-	}
-
+	typeGraphNode := c.typeGraphNode(typ)
 	c.addGraphEdge(locGrapNode, typeGraphNode)
 
 	if existing, ok := c.resolvers[typ]; ok {
@@ -312,10 +284,7 @@ func (c *container) supply(value reflect.Value, location Location) error {
 func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Location) (reflect.Value, error) {
 	c.resolveStack = append(c.resolveStack, resolveFrame{loc: caller, typ: in.Type})
 
-	typeGraphNode, err := c.typeGraphNode(in.Type)
-	if err != nil {
-		return reflect.Value{}, err
-	}
+	typeGraphNode := c.typeGraphNode(in.Type)
 
 	if in.Type == moduleKeyType {
 		if moduleKey == nil {
@@ -392,6 +361,8 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 		},
 		Location: loc,
 	}
+	callerGraphNode := c.locationGraphNode(loc, nil)
+	callerGraphNode.SetShape("hexagon")
 
 	desc, err := expandStructArgsProvider(desc)
 	if err != nil {
@@ -443,10 +414,13 @@ func (c container) formatResolveStack() string {
 	return buf.String()
 }
 
-func markGraphNodeAsUsed(node *cgraph.Node) {
+func markGraphNodeAsUsed(node *graphviz.Node) {
 	node.SetColor("black")
+	node.SetPenWidth("1.5")
+	node.SetFontColor("black")
 }
 
-func markGraphNodeAsFailed(node *cgraph.Node) {
+func markGraphNodeAsFailed(node *graphviz.Node) {
 	node.SetColor("red")
+	node.SetFontColor("red")
 }

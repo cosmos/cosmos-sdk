@@ -6,11 +6,11 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authmiddleware "github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
@@ -75,13 +75,13 @@ type Keeper struct {
 	voteByProposalIndex orm.Index
 	voteByVoterIndex    orm.Index
 
-	router *authmiddleware.MsgServiceRouter
+	router *baseapp.MsgServiceRouter
 
 	config group.Config
 }
 
 // NewKeeper creates a new group keeper.
-func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddleware.MsgServiceRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *baseapp.MsgServiceRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
 	k := Keeper{
 		key:       storeKey,
 		router:    router,
@@ -211,7 +211,6 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 	k.config = config
 
 	return k
-
 }
 
 // Logger returns a module-specific logger.
@@ -228,7 +227,6 @@ func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
 func (k Keeper) iterateProposalsByVPEnd(ctx sdk.Context, endTime time.Time, cb func(proposal group.Proposal) (bool, error)) error {
 	timeBytes := sdk.FormatTimeBytes(endTime)
 	it, err := k.proposalsByVotingPeriodEnd.PrefixScan(ctx.KVStore(k.key), nil, timeBytes)
-
 	if err != nil {
 		return err
 	}

@@ -25,3 +25,6 @@ modules:
   - name: params
     config:
       "@type": cosmos.params.module.v1.Module
+  - name: capability
+    config:
+      "@type": cosmos.capability.module.v1.Module

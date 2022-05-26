@@ -12,11 +12,13 @@ func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 	suite.SetupTest(true) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewMempoolFeeDecorator()
+	mfd := ante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper, nil)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(300)))
+	testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
@@ -56,8 +58,11 @@ func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 	lowGasPrice := []sdk.DecCoin{atomPrice}
 	suite.ctx = suite.ctx.WithMinGasPrices(lowGasPrice)
 
-	_, err = antehandler(suite.ctx, tx, false)
+	newCtx, err := antehandler(suite.ctx, tx, false)
 	suite.Require().Nil(err, "Decorator should not have errored on fee higher than local gasPrice")
+	// Priority is the smallest amount in any denom. Since we have only 1 fee
+	// of 150atom, the priority here is 150.
+	suite.Require().Equal(feeAmount.AmountOf("atom").Int64(), newCtx.Priority())
 }
 
 func (suite *AnteTestSuite) TestDeductFees() {
@@ -86,7 +91,7 @@ func (suite *AnteTestSuite) TestDeductFees() {
 	err = testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
 	suite.Require().NoError(err)
 
-	dfd := ante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, nil)
+	dfd := ante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, nil, nil)
 	antehandler := sdk.ChainAnteDecorators(dfd)
 
 	_, err = antehandler(suite.ctx, tx, false)

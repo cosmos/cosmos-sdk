@@ -36,6 +36,10 @@ import (
 var (
 	capKey1 = sdk.NewKVStoreKey("key1")
 	capKey2 = sdk.NewKVStoreKey("key2")
+
+	// testTxPriority is the CheckTx priority that we set in the test
+	// antehandler.
+	testTxPriority = int64(42)
 )
 
 type paramStore struct {
@@ -826,6 +830,8 @@ func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte
 			counterEvent("ante_handler", txTest.Counter),
 		)
 
+		ctx = ctx.WithPriority(testTxPriority)
+
 		return ctx, nil
 	}
 }
@@ -933,6 +939,7 @@ func TestCheckTx(t *testing.T) {
 		txBytes, err := codec.Marshal(tx)
 		require.NoError(t, err)
 		r := app.CheckTx(abci.RequestCheckTx{Tx: txBytes})
+		require.Equal(t, testTxPriority, r.Priority)
 		require.Empty(t, r.GetEvents())
 		require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
 	}

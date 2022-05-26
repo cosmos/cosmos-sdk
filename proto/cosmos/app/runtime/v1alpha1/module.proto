@@ -28,4 +28,9 @@ message Module {
   // to call in the order in which they should be called. If this is left empty
   // no init genesis function will be registered.
   repeated string init_genesis = 4;
+
+  // export_genesis specifies the order in which to export module genesis data.
+  // If this is left empty, the init_genesis order will be used for export genesis
+  // if it is specified.
+  repeated string export_genesis = 5;
 }

@@ -5,9 +5,8 @@ import (
 	"io"
 	"sort"
 
-	"github.com/cosmos/cosmos-sdk/container"
-
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
 )
 
 func init() {
@@ -28,7 +27,7 @@ func provideRuntimeState() *runtimeState {
 	return &runtimeState{}
 }
 
-func provideStoreKey(key container.ModuleKey, state *runtimeState) StoreKey {
+func provideStoreKey(key depinject.ModuleKey, state *runtimeState) StoreKey {
 	sk := StoreKey{name: key.Name()}
 	state.storeKeys = append(state.storeKeys, sk)
 	return sk

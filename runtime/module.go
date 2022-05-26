@@ -5,10 +5,9 @@ import (
 
 	"github.com/gogo/protobuf/grpc"
 
-	"github.com/cosmos/cosmos-sdk/container"
-
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -18,11 +17,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-// BaseAppOption is a container.AutoGroupType which can be used to pass
-// BaseApp options into the container. It should be used carefully.
+// BaseAppOption is a depinject.AutoGroupType which can be used to pass
+// BaseApp options into the depinject. It should be used carefully.
 type BaseAppOption func(*baseapp.BaseApp)
 
-// IsManyPerContainerType indicates that this is a container.ManyPerContainerType.
+// IsManyPerContainerType indicates that this is a depinject.ManyPerContainerType.
 func (b BaseAppOption) IsManyPerContainerType() {}
 
 // appWrapper is used to pass around an instance of *App internally between
@@ -74,7 +73,7 @@ func provideCodecs(moduleBasics map[string]AppModuleBasicWrapper) (
 }
 
 type appInputs struct {
-	container.In
+	depinject.In
 
 	Config              *runtimev1alpha1.Module
 	App                 appWrapper
@@ -100,19 +99,19 @@ func registerStoreKey(wrapper appWrapper, key storetypes.StoreKey) {
 	wrapper.storeKeys = append(wrapper.storeKeys, key)
 }
 
-func provideKVStoreKey(key container.ModuleKey, app appWrapper) *storetypes.KVStoreKey {
+func provideKVStoreKey(key depinject.ModuleKey, app appWrapper) *storetypes.KVStoreKey {
 	storeKey := storetypes.NewKVStoreKey(key.Name())
 	registerStoreKey(app, storeKey)
 	return storeKey
 }
 
-func provideTransientStoreKey(key container.ModuleKey, app appWrapper) *storetypes.TransientStoreKey {
+func provideTransientStoreKey(key depinject.ModuleKey, app appWrapper) *storetypes.TransientStoreKey {
 	storeKey := storetypes.NewTransientStoreKey(fmt.Sprintf("transient:%s", key.Name()))
 	registerStoreKey(app, storeKey)
 	return storeKey
 }
 
-func provideMemoryStoreKey(key container.ModuleKey, app appWrapper) *storetypes.MemoryStoreKey {
+func provideMemoryStoreKey(key depinject.ModuleKey, app appWrapper) *storetypes.MemoryStoreKey {
 	storeKey := storetypes.NewMemoryStoreKey(fmt.Sprintf("memory:%s", key.Name()))
 	registerStoreKey(app, storeKey)
 	return storeKey

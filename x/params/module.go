@@ -11,9 +11,8 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
-
-	"github.com/cosmos/cosmos-sdk/container"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -184,6 +183,6 @@ func provideModule(
 	return k, runtime.WrapAppModule(m), baseappOpt
 }
 
-func provideSubSpace(key container.ModuleKey, k keeper.Keeper) types.Subspace {
+func provideSubSpace(key depinject.ModuleKey, k keeper.Keeper) types.Subspace {
 	return k.Subspace(key.Name())
 }

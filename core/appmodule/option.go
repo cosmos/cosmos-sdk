@@ -1,9 +1,8 @@
 package appmodule
 
 import (
-	"github.com/cosmos/cosmos-sdk/container"
-
 	"cosmossdk.io/core/internal"
+	"cosmossdk.io/depinject"
 )
 
 // Option is a functional option for implementing modules.
@@ -18,12 +17,12 @@ func (f funcOption) apply(initializer *internal.ModuleInitializer) error {
 }
 
 // Provide registers providers with the dependency injection system that will be
-// run within the module scope. See github.com/cosmos/cosmos-sdk/container v1.0.0-alpha.3 for
+// run within the module scope. See cosmossdk.io/depinject v1.0.0-alpha.3 for
 // documentation on the dependency injection system.
 func Provide(providers ...interface{}) Option {
 	return funcOption(func(initializer *internal.ModuleInitializer) error {
 		for _, provider := range providers {
-			desc, err := container.ExtractProviderDescriptor(provider)
+			desc, err := depinject.ExtractProviderDescriptor(provider)
 			if err != nil {
 				return err
 			}

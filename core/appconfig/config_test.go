@@ -7,18 +7,17 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	"github.com/cosmos/cosmos-sdk/container"
-
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/internal"
 	"cosmossdk.io/core/internal/testpb"
 	_ "cosmossdk.io/core/internal/testpb"
+	"cosmossdk.io/depinject"
 )
 
-func expectContainerErrorContains(t *testing.T, option container.Config, contains string) {
+func expectContainerErrorContains(t *testing.T, option depinject.Config, contains string) {
 	t.Helper()
-	err := container.Build(option)
+	err := depinject.Build(option)
 	assert.ErrorContains(t, err, contains)
 }
 
@@ -70,7 +69,7 @@ modules:
   config:
    "@type": testpb.TestModuleB
 `))
-	assert.NilError(t, container.Build(opt, &app))
+	assert.NilError(t, depinject.Build(opt, &app))
 	buf := &bytes.Buffer{}
 	app(buf)
 	const expected = `got store key a

@@ -15,9 +15,8 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/container"
-
 	"cosmossdk.io/core/appconfig"
+	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -217,7 +216,7 @@ func NewSimApp(
 	var appCodec codec.Codec
 	var legacyAmino *codec.LegacyAmino
 	var interfaceRegistry codectypes.InterfaceRegistry
-	err := container.Build(appConfig,
+	err := depinject.Build(appConfig,
 		&appBuilder,
 		&paramsKeeper,
 		&appCodec,
@@ -325,7 +324,7 @@ func NewSimApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-			// register the governance hooks
+		// register the governance hooks
 		),
 	)
 	// set the governance module account as the authority for conducting upgrades

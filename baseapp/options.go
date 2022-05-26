@@ -153,6 +153,14 @@ func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 	app.anteHandler = ah
 }
 
+func (app *BaseApp) SetPostHandler(ph sdk.AnteHandler) {
+	if app.sealed {
+		panic("SetPostHandler() on sealed BaseApp")
+	}
+
+	app.postHandler = ph
+}
+
 func (app *BaseApp) SetAddrPeerFilter(pf sdk.PeerFilter) {
 	if app.sealed {
 		panic("SetAddrPeerFilter() on sealed BaseApp")
@@ -229,4 +237,9 @@ func (app *BaseApp) SetStreamingService(s StreamingService) {
 	// register the StreamingService within the BaseApp
 	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context
 	app.abciListeners = append(app.abciListeners, s)
+}
+
+// SetTxDecoder sets the TxDecoder if it wasn't provided in the BaseApp constructor.
+func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
+	app.txDecoder = txDecoder
 }

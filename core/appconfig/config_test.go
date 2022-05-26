@@ -16,7 +16,7 @@ import (
 	_ "cosmossdk.io/core/internal/testpb"
 )
 
-func expectContainerErrorContains(t *testing.T, option container.Option, contains string) {
+func expectContainerErrorContains(t *testing.T, option container.Config, contains string) {
 	t.Helper()
 	err := container.Build(option)
 	assert.ErrorContains(t, err, contains)

@@ -376,11 +376,27 @@ func TestMsgSetSendEnabled(t *testing.T) {
 			msgs: []sdk.Msg{
 				types.NewMsgSetSendEnabled(addr1Str, nil, nil, true, true),
 			},
+			accSeqs: []uint64{0},
 			expInError: []string{
 				"incorrect authority",
 				`"cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"`,
 				`"` + addr1Str + `"`,
 				"tx intended signer does not match the given signer",
+			},
+		},
+		{
+			desc:       "right authority wrong signer",
+			expSimPass: false,
+			expPass:    false,
+			msgs: []sdk.Msg{
+				types.NewMsgSetSendEnabled(govAddr, nil, nil, true, true),
+			},
+			accSeqs: []uint64{1}, // wrong signer, so this sequence doesn't actually get used.
+			expInError: []string{
+				"pubKey does not match signer address",
+				govAddr,
+				"with signer index: 0",
+				"invalid pubkey",
 			},
 		},
 		{
@@ -390,6 +406,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 			msgs: []sdk.Msg{
 				goodGovProp,
 			},
+			accSeqs:    []uint64{1},
 			expInError: nil,
 		},
 		{
@@ -399,6 +416,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 			msgs: []sdk.Msg{
 				badGovProp,
 			},
+			accSeqs: []uint64{2},
 			expInError: []string{
 				"invalid denom: bad coin name!",
 				"invalid proposal message",
@@ -406,13 +424,11 @@ func TestMsgSetSendEnabled(t *testing.T) {
 		},
 	}
 
-	seq := uint64(0)
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(tt *testing.T) {
 			header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 			txGen := simapp.MakeTestEncodingConfig().TxConfig
-			_, _, err = simapp.SignCheckDeliver(tt, txGen, app.BaseApp, header, tc.msgs, "", []uint64{0}, []uint64{seq}, tc.expSimPass, tc.expPass, priv1)
-			seq++
+			_, _, err = simapp.SignCheckDeliver(tt, txGen, app.BaseApp, header, tc.msgs, "", []uint64{0}, tc.accSeqs, tc.expSimPass, tc.expPass, priv1)
 			if len(tc.expInError) > 0 {
 				require.Error(tt, err)
 				for _, exp := range tc.expInError {

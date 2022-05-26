@@ -241,7 +241,7 @@ func NewSimApp(
 	)
 	// NOTE: The testingkey is just mounted for testing purposes. Actual applications should
 	// not include this key.
-	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, "testingkey")
+	memKeys := sdk.NewMemoryStoreKeys("testingkey")
 
 	// configure state listening capabilities using AppOptions
 	// we are doing nothing with the returned streamingServices and waitGroup in this case
@@ -426,7 +426,7 @@ func NewSimApp(
 
 	// initialize stores
 	app.MountKVStores(keys)
-	// app.MountMemoryStores(memKeys)
+	app.MountMemoryStores(memKeys)
 
 	// initialize BaseApp
 	app.SetTxDecoder(encodingConfig.TxConfig.TxDecoder())
@@ -544,7 +544,17 @@ func (app *SimApp) InterfaceRegistry() codectypes.InterfaceRegistry {
 //
 // NOTE: This is solely to be used for testing purposes.
 func (app *SimApp) GetKey(storeKey string) *storetypes.KVStoreKey {
-	return app.keys[storeKey]
+	kvsk := app.keys[storeKey]
+	if kvsk != nil {
+		return kvsk
+	}
+
+	sk := app.UnsafeFindStoreKey(storeKey)
+	kvStoreKey, ok := sk.(*storetypes.KVStoreKey)
+	if !ok {
+		return nil
+	}
+	return kvStoreKey
 }
 
 // GetTKey returns the TransientStoreKey for the provided store key.
@@ -558,7 +568,18 @@ func (app *SimApp) GetTKey(storeKey string) *storetypes.TransientStoreKey {
 //
 // NOTE: This is solely used for testing purposes.
 func (app *SimApp) GetMemKey(storeKey string) *storetypes.MemoryStoreKey {
-	return app.memKeys[storeKey]
+	kvsk := app.memKeys[storeKey]
+	if kvsk != nil {
+		return kvsk
+	}
+
+	sk := app.UnsafeFindStoreKey(storeKey)
+	kvStoreKey, ok := sk.(*storetypes.MemoryStoreKey)
+	if !ok {
+		return nil
+	}
+
+	return kvStoreKey
 }
 
 // GetSubspace returns a param subspace for a given module name.

@@ -569,18 +569,18 @@ func (app *SimApp) GetTKey(storeKey string) *storetypes.TransientStoreKey {
 //
 // NOTE: This is solely used for testing purposes.
 func (app *SimApp) GetMemKey(storeKey string) *storetypes.MemoryStoreKey {
-	kvsk := app.memKeys[storeKey]
-	if kvsk != nil {
-		return kvsk
+	msk := app.memKeys[storeKey]
+	if msk != nil {
+		return msk
 	}
 
 	sk := app.UnsafeFindStoreKey(storeKey)
-	kvStoreKey, ok := sk.(*storetypes.MemoryStoreKey)
+	memStoreKey, ok := sk.(*storetypes.MemoryStoreKey)
 	if !ok {
 		return nil
 	}
 
-	return kvStoreKey
+	return memStoreKey
 }
 
 // GetSubspace returns a param subspace for a given module name.

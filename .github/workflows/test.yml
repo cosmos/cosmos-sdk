@@ -36,7 +36,8 @@ jobs:
             **/go.mod
             **/go.sum
       - name: Get data from Go build cache
-        if: env.GIT_DIFF
+        # if: env.GIT_DIFF
+        if: ${{ false }}
         uses: actions/cache@v3
         with:
           path: |
@@ -73,7 +74,8 @@ jobs:
             go.mod
             go.sum
       - name: Get data from Go build cache
-        if: env.GIT_DIFF
+        # if: env.GIT_DIFF
+        if: ${{ false }}
         uses: actions/cache@v3
         with:
           path: |
@@ -138,7 +140,8 @@ jobs:
             go.mod
             go.sum
       - name: Get data from Go build cache
-        if: env.GIT_DIFF
+        # if: env.GIT_DIFF
+        if: ${{ false }}
         uses: actions/cache@v3
         with:
           path: |
@@ -224,7 +227,8 @@ jobs:
             go.mod
             go.sum
       - name: Get data from Go build cache
-        if: env.GIT_DIFF
+        # if: env.GIT_DIFF
+        if: ${{ false }}
         uses: actions/cache@v3
         with:
           path: |
@@ -253,7 +257,8 @@ jobs:
             go.mod
             go.sum
       - name: Get data from Go build cache
-        if: env.GIT_DIFF
+        # if: env.GIT_DIFF
+        if: ${{ false }}
         uses: actions/cache@v3
         with:
           path: |

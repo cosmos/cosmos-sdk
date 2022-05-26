@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
@@ -44,8 +43,6 @@ type App struct {
 	beginBlockers     []func(sdk.Context, abci.RequestBeginBlock)
 	endBlockers       []func(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 	baseAppOptions    []BaseAppOption
-
-	msgServiceRegistrar grpc.Server
 }
 
 // RegisterModules registers the provided modules with the module manager and
@@ -73,10 +70,8 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 
 // Load finishes all initialization operations and loads the app.
 func (a *App) Load(loadLatest bool) error {
-	if a.msgServiceRegistrar != nil {
-		configurator := module.NewConfigurator(a.cdc, a.msgServiceRegistrar, a.GRPCQueryRouter())
-		a.ModuleManager.RegisterServices(configurator)
-	}
+	configurator := module.NewConfigurator(a.cdc, a.MsgServiceRouter(), a.GRPCQueryRouter())
+	a.ModuleManager.RegisterServices(configurator)
 
 	if len(a.config.InitGenesis) != 0 {
 		a.ModuleManager.SetOrderInitGenesis(a.config.InitGenesis...)

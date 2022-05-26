@@ -3,13 +3,10 @@ package runtime
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/grpc"
-
 	"github.com/cosmos/cosmos-sdk/container"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	"cosmossdk.io/core/appmodule"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -76,11 +73,10 @@ func provideCodecs(moduleBasics map[string]AppModuleBasicWrapper) (
 type appInputs struct {
 	container.In
 
-	Config              *runtimev1alpha1.Module
-	App                 appWrapper
-	Modules             map[string]AppModuleWrapper
-	BaseAppOptions      []BaseAppOption
-	MsgServiceRegistrar grpc.Server `optional:"true"`
+	Config         *runtimev1alpha1.Module
+	App            appWrapper
+	Modules        map[string]AppModuleWrapper
+	BaseAppOptions []BaseAppOption
 }
 
 func provideAppBuilder(inputs appInputs) *AppBuilder {
@@ -92,7 +88,6 @@ func provideAppBuilder(inputs appInputs) *AppBuilder {
 	app.baseAppOptions = inputs.BaseAppOptions
 	app.config = inputs.Config
 	app.ModuleManager = mm
-	app.msgServiceRegistrar = inputs.MsgServiceRegistrar
 	return &AppBuilder{app: app}
 }
 

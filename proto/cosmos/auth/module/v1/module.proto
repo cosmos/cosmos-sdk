@@ -15,14 +15,6 @@ message Module {
 
   // module_account_permissions are module account permissions.
   repeated ModuleAccountPermission module_account_permissions = 2;
-
-  // account_constructor is an optional AccountI constructor config object that can be provided
-  // to override the default BaseAccount constructor. The provided config object must have
-  // an `NewAccount() AccountI` method defined. If this is left empty, the default constructor
-  // will be used
-  google.protobuf.Any account_constructor = 3;
-
-  google.protobuf.Any random_genesis_accounts_provider = 4;
 }
 
 // ModuleAccountPermission represents permissions for a module account.
@@ -34,7 +26,3 @@ message ModuleAccountPermission {
   // values are minter, burner and staking.
   repeated string permissions = 2;
 }
-
-message DefaultAccountConstructor {}
-
-message DefaultRandomGenesisAccountsProvider {}

@@ -43,8 +43,11 @@ func TestMsgSubmitProposal(t *testing.T) {
 	}
 
 	for i, tc := range tests {
+		content, ok := ContentFromProposalType(tc.title, tc.description, tc.proposalType)
+		require.True(t, ok)
+
 		msg, err := NewMsgSubmitProposal(
-			ContentFromProposalType(tc.title, tc.description, tc.proposalType),
+			content,
 			tc.initialDeposit,
 			tc.proposerAddr,
 		)

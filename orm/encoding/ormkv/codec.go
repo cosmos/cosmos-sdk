@@ -6,7 +6,6 @@ import "google.golang.org/protobuf/reflect/protoreflect"
 // kv-store backing an ORM instance. EntryCodec's enable full logical decoding
 // of ORM data.
 type EntryCodec interface {
-
 	// DecodeEntry decodes a kv-pair into an Entry.
 	DecodeEntry(k, v []byte) (Entry, error)
 

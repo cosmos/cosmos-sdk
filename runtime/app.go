@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"google.golang.org/grpc"
 
-	runtimev1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/app/runtime/v1alpha1"
+	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -19,7 +20,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
@@ -34,18 +34,18 @@ import (
 // See simapp/app.go for an example of this setup.
 type App struct {
 	*baseapp.BaseApp
-	ModuleManager       *module.Manager
-	config              *runtimev1alpha1.Module
-	storeKeys           []storetypes.StoreKey
-	interfaceRegistry   codectypes.InterfaceRegistry
-	cdc                 codec.Codec
-	amino               *codec.LegacyAmino
-	basicManager        module.BasicManager
-	beginBlockers       []func(sdk.Context, abci.RequestBeginBlock)
-	endBlockers         []func(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
-	baseAppOptions      []BaseAppOption
-	txHandler           tx.Handler
-	msgServiceRegistrar grpc.ServiceRegistrar
+	ModuleManager     *module.Manager
+	config            *runtimev1alpha1.Module
+	storeKeys         []storetypes.StoreKey
+	interfaceRegistry codectypes.InterfaceRegistry
+	cdc               codec.Codec
+	amino             *codec.LegacyAmino
+	basicManager      module.BasicManager
+	beginBlockers     []func(sdk.Context, abci.RequestBeginBlock)
+	endBlockers       []func(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
+	baseAppOptions    []BaseAppOption
+
+	msgServiceRegistrar grpc.Server
 }
 
 // RegisterModules registers the provided modules with the module manager and
@@ -81,6 +81,12 @@ func (a *App) Load(loadLatest bool) error {
 	if len(a.config.InitGenesis) != 0 {
 		a.ModuleManager.SetOrderInitGenesis(a.config.InitGenesis...)
 		a.SetInitChainer(a.InitChainer)
+	}
+
+	if len(a.config.ExportGenesis) != 0 {
+		a.ModuleManager.SetOrderExportGenesis(a.config.ExportGenesis...)
+	} else if len(a.config.InitGenesis) != 0 {
+		a.ModuleManager.SetOrderExportGenesis(a.config.InitGenesis...)
 	}
 
 	if len(a.config.BeginBlockers) != 0 {

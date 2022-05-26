@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-// Iterates over iterKVCache items.
+// memIterator iterates over iterKVCache items.
 // if key is nil, means it was deleted.
 // Implements Iterator.
 type memIterator struct {

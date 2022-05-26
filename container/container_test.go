@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/golden"
 
 	"github.com/cosmos/cosmos-sdk/container"
 )
@@ -39,7 +40,7 @@ type Command struct {
 	Run func()
 }
 
-func (Command) IsAutoGroupType() {}
+func (Command) IsManyPerContainerType() {}
 
 func ProvideKVStoreKey(moduleKey container.ModuleKey) KVStoreKey {
 	return KVStoreKey{name: moduleKey.Name()}
@@ -81,6 +82,13 @@ func (ModuleB) Provide(dependencies BDependencies) (BProvides, Handler, error) {
 	}, Handler{}, nil
 }
 
+var scenarioConfig = container.Configs(
+	container.Provide(ProvideMsgClientA),
+	container.ProvideInModule("runtime", ProvideKVStoreKey),
+	container.ProvideInModule("a", wrapMethod0(ModuleA{})),
+	container.ProvideInModule("b", wrapMethod0(ModuleB{})),
+)
+
 func TestScenario(t *testing.T) {
 	var (
 		handlers map[string]Handler
@@ -90,12 +98,7 @@ func TestScenario(t *testing.T) {
 	)
 	require.NoError(t,
 		container.Build(
-			container.Options(
-				container.Provide(ProvideMsgClientA),
-				container.ProvideInModule("runtime", ProvideKVStoreKey),
-				container.ProvideInModule("a", wrapMethod0(ModuleA{})),
-				container.ProvideInModule("b", wrapMethod0(ModuleB{})),
-			),
+			scenarioConfig,
 			&handlers,
 			&commands,
 			&a,
@@ -167,7 +170,7 @@ func TestBadCtr(t *testing.T) {
 }
 
 func TestTrivial(t *testing.T) {
-	require.NoError(t, container.Build(container.Options()))
+	require.NoError(t, container.Build(container.Configs()))
 }
 
 func TestErrorFunc(t *testing.T) {
@@ -227,7 +230,7 @@ func TestModuleScoped(t *testing.T) {
 	var y float64
 	require.Error(t,
 		container.Build(
-			container.Options(
+			container.Configs(
 				container.Provide(
 					func(container.ModuleKey) int { return 0 },
 					func() int { return 1 },
@@ -242,7 +245,7 @@ func TestModuleScoped(t *testing.T) {
 
 	require.Error(t,
 		container.Build(
-			container.Options(
+			container.Configs(
 				container.Provide(
 					func() int { return 0 },
 					func(container.ModuleKey) int { return 1 },
@@ -257,7 +260,7 @@ func TestModuleScoped(t *testing.T) {
 
 	require.Error(t,
 		container.Build(
-			container.Options(
+			container.Configs(
 				container.Provide(
 					func(container.ModuleKey) int { return 0 },
 					func(container.ModuleKey) int { return 1 },
@@ -272,7 +275,7 @@ func TestModuleScoped(t *testing.T) {
 
 	require.NoError(t,
 		container.Build(
-			container.Options(
+			container.Configs(
 				container.Provide(
 					func(container.ModuleKey) int { return 0 },
 				),
@@ -286,7 +289,7 @@ func TestModuleScoped(t *testing.T) {
 
 	require.Error(t,
 		container.Build(
-			container.Options(
+			container.Configs(
 				container.Provide(
 					func(container.ModuleKey) int { return 0 },
 				),
@@ -301,7 +304,7 @@ func TestModuleScoped(t *testing.T) {
 	var z float32
 	require.NoError(t,
 		container.Build(
-			container.Options(
+			container.Configs(
 				container.Provide(
 					func(container.ModuleKey) int { return 0 },
 				),
@@ -323,7 +326,7 @@ func (OnePerModuleInt) IsOnePerModuleType() {}
 func TestOnePerModule(t *testing.T) {
 	var x OnePerModuleInt
 	require.Error(t,
-		container.Build(container.Options(), &x),
+		container.Build(container.Configs(), &x),
 		"bad input type",
 	)
 
@@ -331,7 +334,7 @@ func TestOnePerModule(t *testing.T) {
 	var z string
 	require.NoError(t,
 		container.Build(
-			container.Options(
+			container.Configs(
 				container.ProvideInModule("a",
 					func() OnePerModuleInt { return 3 },
 				),
@@ -391,26 +394,26 @@ func TestOnePerModule(t *testing.T) {
 
 	require.NoError(t,
 		container.Build(
-			container.Options(),
+			container.Configs(),
 			&m,
 		),
 		"no providers",
 	)
 }
 
-type AutoGroupInt int
+type ManyPerContainerInt int
 
-func (AutoGroupInt) IsAutoGroupType() {}
+func (ManyPerContainerInt) IsManyPerContainerType() {}
 
-func TestAutoGroup(t *testing.T) {
-	var xs []AutoGroupInt
+func TestManyPerContainer(t *testing.T) {
+	var xs []ManyPerContainerInt
 	var sum string
 	require.NoError(t,
 		container.Build(
 			container.Provide(
-				func() AutoGroupInt { return 4 },
-				func() AutoGroupInt { return 9 },
-				func(xs []AutoGroupInt) string {
+				func() ManyPerContainerInt { return 4 },
+				func() ManyPerContainerInt { return 9 },
+				func(xs []ManyPerContainerInt) string {
 					sum := 0
 					for _, x := range xs {
 						sum += int(x)
@@ -423,15 +426,15 @@ func TestAutoGroup(t *testing.T) {
 		),
 	)
 	require.Len(t, xs, 2)
-	require.Contains(t, xs, AutoGroupInt(4))
-	require.Contains(t, xs, AutoGroupInt(9))
+	require.Contains(t, xs, ManyPerContainerInt(4))
+	require.Contains(t, xs, ManyPerContainerInt(9))
 	require.Equal(t, "13", sum)
 
-	var z AutoGroupInt
+	var z ManyPerContainerInt
 	require.Error(t,
 		container.Build(
 			container.Provide(
-				func() AutoGroupInt { return 0 },
+				func() ManyPerContainerInt { return 0 },
 			),
 			&z,
 		),
@@ -440,7 +443,7 @@ func TestAutoGroup(t *testing.T) {
 
 	require.NoError(t,
 		container.Build(
-			container.Options(),
+			container.Configs(),
 			&xs,
 		),
 		"no providers",
@@ -459,7 +462,7 @@ func TestSupply(t *testing.T) {
 
 	require.Error(t,
 		container.Build(
-			container.Options(
+			container.Configs(
 				container.Supply(3),
 				container.Provide(func() int { return 4 }),
 			),
@@ -470,7 +473,7 @@ func TestSupply(t *testing.T) {
 
 	require.Error(t,
 		container.Build(
-			container.Options(
+			container.Configs(
 				container.Supply(3),
 				container.Provide(func() int { return 4 }),
 			),
@@ -504,7 +507,7 @@ type TestOutput struct {
 
 func TestStructArgs(t *testing.T) {
 	var input TestInput
-	require.Error(t, container.Build(container.Options(), &input))
+	require.Error(t, container.Build(container.Configs(), &input))
 
 	require.NoError(t, container.Build(
 		container.Supply(1.3),
@@ -539,7 +542,7 @@ func TestStructArgs(t *testing.T) {
 	))
 }
 
-func TestLogging(t *testing.T) {
+func TestDebugOptions(t *testing.T) {
 	var logOut string
 	var dotGraph string
 
@@ -563,10 +566,10 @@ func TestLogging(t *testing.T) {
 				dotGraph = g
 			}),
 			container.LogVisualizer(),
-			container.FileVisualizer(graphfile.Name(), "svg"),
+			container.FileVisualizer(graphfile.Name()),
 			container.StdoutLogger(),
 		),
-		container.Options(),
+		container.Configs(),
 	))
 
 	require.Contains(t, logOut, "digraph")
@@ -578,7 +581,26 @@ func TestLogging(t *testing.T) {
 
 	graphfileContents, err := os.ReadFile(graphfile.Name())
 	require.NoError(t, err)
-	require.Contains(t, string(graphfileContents), "<svg")
+	require.Contains(t, string(graphfileContents), "digraph")
+}
+
+func TestGraphAndLogOutput(t *testing.T) {
+	var graphOut string
+	var b KeeperB
+	debugOpts := container.DebugOptions(
+		container.Visualizer(func(dotGraph string) {
+			graphOut = dotGraph
+		}))
+	require.NoError(t, container.BuildDebug(debugOpts, scenarioConfig, &b))
+	golden.Assert(t, graphOut, "example.dot")
+
+	badConfig := container.Configs(
+		container.ProvideInModule("runtime", ProvideKVStoreKey),
+		container.ProvideInModule("a", wrapMethod0(ModuleA{})),
+		container.ProvideInModule("b", wrapMethod0(ModuleB{})),
+	)
+	require.Error(t, container.BuildDebug(debugOpts, badConfig, &b))
+	golden.Assert(t, graphOut, "example_error.dot")
 }
 
 func TestConditionalDebugging(t *testing.T) {
@@ -595,7 +617,7 @@ func TestConditionalDebugging(t *testing.T) {
 	var input TestInput
 	require.Error(t, container.BuildDebug(
 		conditionalDebugOpt,
-		container.Options(),
+		container.Configs(),
 		&input,
 	))
 	require.Contains(t, logs, `Initializing logger`)
@@ -607,7 +629,7 @@ func TestConditionalDebugging(t *testing.T) {
 	success = false
 	require.NoError(t, container.BuildDebug(
 		conditionalDebugOpt,
-		container.Options(),
+		container.Configs(),
 	))
 	require.Empty(t, logs)
 	require.True(t, success)

@@ -216,7 +216,7 @@ func NewSimApp(
 	var appCodec codec.Codec
 	var legacyAmino *codec.LegacyAmino
 	var interfaceRegistry codectypes.InterfaceRegistry
-	err := depinject.Build(appConfig,
+	err := depinject.Inject(appConfig,
 		&appBuilder,
 		&paramsKeeper,
 		&appCodec,

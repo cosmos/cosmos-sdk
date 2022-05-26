@@ -17,7 +17,7 @@ import (
 
 func expectContainerErrorContains(t *testing.T, option depinject.Config, contains string) {
 	t.Helper()
-	err := depinject.Build(option)
+	err := depinject.Inject(option)
 	assert.ErrorContains(t, err, contains)
 }
 
@@ -69,7 +69,7 @@ modules:
   config:
    "@type": testpb.TestModuleB
 `))
-	assert.NilError(t, depinject.Build(opt, &app))
+	assert.NilError(t, depinject.Inject(opt, &app))
 	buf := &bytes.Buffer{}
 	app(buf)
 	const expected = `got store key a

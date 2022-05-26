@@ -325,7 +325,7 @@ func NewSimApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// register the governance hooks
+			// register the governance hooks
 		),
 	)
 	// set the governance module account as the authority for conducting upgrades
@@ -545,7 +545,17 @@ func (app *SimApp) InterfaceRegistry() codectypes.InterfaceRegistry {
 //
 // NOTE: This is solely to be used for testing purposes.
 func (app *SimApp) GetKey(storeKey string) *storetypes.KVStoreKey {
-	return app.keys[storeKey]
+	kvsk := app.keys[storeKey]
+	if kvsk != nil {
+		return kvsk
+	}
+
+	sk := app.FindStoreKey(storeKey)
+	kvStoreKey, ok := sk.(*storetypes.KVStoreKey)
+	if !ok {
+		return nil
+	}
+	return kvStoreKey
 }
 
 // GetTKey returns the TransientStoreKey for the provided store key.

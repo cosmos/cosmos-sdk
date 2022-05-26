@@ -550,7 +550,7 @@ func (app *SimApp) GetKey(storeKey string) *storetypes.KVStoreKey {
 		return kvsk
 	}
 
-	sk := app.FindStoreKey(storeKey)
+	sk := app.UnsafeFindStoreKey(storeKey)
 	kvStoreKey, ok := sk.(*storetypes.KVStoreKey)
 	if !ok {
 		return nil

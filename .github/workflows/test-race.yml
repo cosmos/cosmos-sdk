@@ -48,10 +48,21 @@ jobs:
             **/**.go
             **/go.mod
             **/go.sum
+      - name: Get data from Go build cache
+        uses: actions/cache@v3
+        if: env.GIT_DIFF
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/golangci-lint
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
       - name: Build
+        if: env.GIT_DIFF
         run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make build
 
       - name: Build cosmovisor
+        if: env.GIT_DIFF
         run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make cosmovisor
 
   split-test-files:
@@ -101,31 +112,25 @@ jobs:
             **/**.go
             go.mod
             go.sum
-      - name: Get data from build cache
+      - name: Get data from Go build cache
         uses: actions/cache@v3
+        if: env.GIT_DIFF
         with:
-           # In order:
-           # * Module download cache
-           # * Build cache (Linux)
-           # * Build cache (Mac)
-           # * Build cache (Windows)
           path: |
-             ~/go/pkg/mod
-             ~/.cache/go-build
-             ~/Library/Caches/go-build
-             ~\AppData\Local\go-build
-          key: ${{ runner.os }}-go-race-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-             ${{ runner.os }}-go-race-${{ matrix.go-version }}-
+            ~/go/pkg/mod
+            ~/.cache/golangci-lint
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
       - uses: actions/download-artifact@v3
+        if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-${{ matrix.part }}"
-        if: env.GIT_DIFF
       - name: test & coverage report creation
+        if: env.GIT_DIFF
         run: |
           xargs --arg-file=pkgs.txt.part.${{ matrix.part }} go test -mod=readonly -timeout 30m -race -tags='cgo ledger test_ledger_mock'
-        if: env.GIT_DIFF
       - uses: actions/upload-artifact@v3
+        if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-${{ matrix.part }}-race-output"
           path: ./${{ matrix.part }}-race-output.txt

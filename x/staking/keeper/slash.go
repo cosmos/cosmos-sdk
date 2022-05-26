@@ -320,12 +320,6 @@ func (k Keeper) UnbondSlashingProtectedModules(ctx sdk.Context, valAddr sdk.ValA
 		if !found {
 			continue
 		}
-		// we need to withdraw the delegation reward before the unbond to keep the earned reward
-		if k.distrKeeper.HasDelegatorStartingInfo(ctx, valAddr, moduleAddress) {
-			if _, err := k.distrKeeper.WithdrawDelegationRewards(ctx, moduleAddress, valAddr); err != nil {
-				return unbondedAmount, err
-			}
-		}
 		unbondedDelegation, err := k.UnbondAndUndelegateCoins(ctx, moduleAddress, valAddr, delegation.Shares)
 		if err != nil {
 			return unbondedAmount, err

@@ -62,7 +62,10 @@ require (
 	sigs.k8s.io/yaml v1.3.0
 )
 
-require github.com/cosmos/cosmos-sdk/container v1.0.0-alpha.4
+require (
+	github.com/cosmos/cosmos-sdk/container v1.0.0-alpha.4
+	golang.org/x/exp v0.0.0-20220428152302-39d4317da171
+)
 
 require (
 	cloud.google.com/go v0.100.2 // indirect
@@ -138,7 +141,6 @@ require (
 	github.com/zondax/hid v0.9.1-0.20220302062450-5552068d2266 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	go.opencensus.io v0.23.0 // indirect
-	golang.org/x/exp v0.0.0-20220428152302-39d4317da171 // indirect
 	golang.org/x/net v0.0.0-20220412020605-290c469a71a5 // indirect
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect

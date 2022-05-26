@@ -2,15 +2,16 @@
 package runtimev1alpha1
 
 import (
-	_ "cosmossdk.io/api/cosmos/app/v1alpha1"
 	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
+	_ "cosmossdk.io/api/cosmos/app/v1alpha1"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	io "io"
-	reflect "reflect"
-	sync "sync"
 )
 
 var _ protoreflect.List = (*_Module_2_list)(nil)
@@ -963,7 +964,8 @@ type Module struct {
 	// no init genesis function will be registered.
 	InitGenesis []string `protobuf:"bytes,4,rep,name=init_genesis,json=initGenesis,proto3" json:"init_genesis,omitempty"`
 	// export_genesis specifies the order in which to export module genesis data.
-	// If this is left empty the order specified in init_genesis will be used.
+	// If this is left empty, the init_genesis order will be used for export genesis
+	// if it is specified.
 	ExportGenesis []string `protobuf:"bytes,5,rep,name=export_genesis,json=exportGenesis,proto3" json:"export_genesis,omitempty"`
 }
 

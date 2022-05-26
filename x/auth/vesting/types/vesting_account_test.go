@@ -329,17 +329,17 @@ func TestGetVestedCoinsPeriodicVestingAcc(t *testing.T) {
 	vestedCoins = pva.GetVestedCoins(endTime)
 	require.Equal(t, origCoins, vestedCoins)
 
-	// require no coins vested during first vesting period
+	// require 50% of first period coins vested during first vesting period
 	vestedCoins = pva.GetVestedCoins(now.Add(6 * time.Hour))
-	require.Nil(t, vestedCoins)
+	require.Equal(t, vestedCoins, sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)})
 
 	// require 50% of coins vested after period 1
 	vestedCoins = pva.GetVestedCoins(now.Add(12 * time.Hour))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, vestedCoins)
 
-	// require period 2 coins don't vest until period is over
+	// require 50% of period 2 coins vested until 15 hours
 	vestedCoins = pva.GetVestedCoins(now.Add(15 * time.Hour))
-	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, vestedCoins)
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 625), sdk.NewInt64Coin(stakeDenom, 62)}, vestedCoins)
 
 	// require 75% of coins vested after period 2
 	vestedCoins = pva.GetVestedCoins(now.Add(18 * time.Hour))
@@ -376,9 +376,9 @@ func TestGetVestingCoinsPeriodicVestingAcc(t *testing.T) {
 	vestingCoins = pva.GetVestingCoins(now.Add(12 * time.Hour))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, vestingCoins)
 
-	// require 50% of coins vesting after period 1, but before period 2 completes.
+	// require 37.5% of coins vesting after period 1, but before period 2 completes.
 	vestingCoins = pva.GetVestingCoins(now.Add(15 * time.Hour))
-	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, vestingCoins)
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 375), sdk.NewInt64Coin(stakeDenom, 38)}, vestingCoins)
 
 	// require 25% of coins vesting after period 2
 	vestingCoins = pva.GetVestingCoins(now.Add(18 * time.Hour))

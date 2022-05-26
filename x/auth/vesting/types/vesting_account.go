@@ -359,6 +359,11 @@ func (pva PeriodicVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins 
 	for _, period := range pva.VestingPeriods {
 		x := blockTime.Unix() - currentPeriodStartTime
 		if x < period.Length {
+			coins, _ := sdk.NewDecCoinsFromCoins(period.Amount...).
+				MulDec(sdk.NewDec(x).QuoInt64(period.Length)).
+				TruncateDecimal()
+			vestedCoins = vestedCoins.Add(coins...)
+
 			break
 		}
 

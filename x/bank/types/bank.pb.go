@@ -32,7 +32,8 @@ type Params struct {
 	// Deprecated: Use of SendEnabled in params is deprecated.
 	// For genesis, use the newly added send_enabled field in the genesis object.
 	// Storage, lookup, and manipulation of this information is now in the keeper.
-	// As of v0.47.0, it only exists here for backwards compatibility of genesis files.
+	// This version only still exists after v0.46 for backwards compatibility of
+	// genesis files.
 	SendEnabled        []*SendEnabled `protobuf:"bytes,1,rep,name=send_enabled,json=sendEnabled,proto3" json:"send_enabled,omitempty"` // Deprecated: Do not use.
 	DefaultSendEnabled bool           `protobuf:"varint,2,opt,name=default_send_enabled,json=defaultSendEnabled,proto3" json:"default_send_enabled,omitempty"`
 }

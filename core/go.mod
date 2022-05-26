@@ -5,7 +5,7 @@ go 1.18
 require (
 	cosmossdk.io/api v0.1.0-alpha8
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
-	cosmossdk.io/depinject v1.0.0-alpha.4
+	github.com/cosmos/cosmos-sdk/depinject v1.0.0-alpha.4
 	google.golang.org/protobuf v1.28.0
 	gotest.tools/v3 v3.2.0
 	sigs.k8s.io/yaml v1.3.0
@@ -26,4 +26,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
-replace github.com/cosmos/cosmos-sdk/api => ../api
+replace (
+	github.com/cosmos/cosmos-sdk/api => ../api
+	github.com/cosmos/cosmos-sdk/depinject => ../depinject
+)

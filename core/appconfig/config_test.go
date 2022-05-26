@@ -12,7 +12,7 @@ import (
 	"cosmossdk.io/core/internal"
 	"cosmossdk.io/core/internal/testpb"
 	_ "cosmossdk.io/core/internal/testpb"
-	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/depinject"
 )
 
 func expectContainerErrorContains(t *testing.T, option depinject.Config, contains string) {

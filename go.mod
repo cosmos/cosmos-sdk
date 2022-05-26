@@ -62,7 +62,7 @@ require (
 	sigs.k8s.io/yaml v1.3.0
 )
 
-require cosmossdk.io/depinject v1.0.0-alpha.4
+require github.com/cosmos/cosmos-sdk/depinject v1.0.0-alpha.4
 
 require (
 	cloud.google.com/go v0.100.2 // indirect
@@ -155,7 +155,7 @@ require (
 )
 
 replace (
-	cosmossdk.io/depinject => ./depinject
+	github.com/cosmos/cosmos-sdk/depinject => ./depinject
 	cosmossdk.io/api => ./api
 	cosmossdk.io/core => ./core
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76

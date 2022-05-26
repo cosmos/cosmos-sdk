@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/depinject"
 )
 
 type StructIn struct {

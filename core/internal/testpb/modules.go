@@ -6,7 +6,7 @@ import (
 	"sort"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/depinject"
 )
 
 func init() {

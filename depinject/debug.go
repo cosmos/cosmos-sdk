@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"reflect"
 
-	"cosmossdk.io/depinject/internal/graphviz"
+	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
 )
 
 // DebugOption is a functional option for running a container that controls

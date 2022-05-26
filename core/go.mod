@@ -27,6 +27,6 @@ require (
 )
 
 replace (
-	github.com/cosmos/cosmos-sdk/api => ../api
+	cosmossdk.io/api => ../api
 	github.com/cosmos/cosmos-sdk/depinject => ../depinject
 )

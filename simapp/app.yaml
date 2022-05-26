@@ -29,7 +29,7 @@ modules:
       module_account_permissions:
         - account: fee_collector
         - account: distribution
-        - account: minter
+        - account: mint
           permissions: [ minter ]
         - account: bonded_tokens_pool
           permissions: [ burner, staking ]

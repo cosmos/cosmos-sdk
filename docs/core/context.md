@@ -72,9 +72,29 @@ goes wrong. The pattern of usage for a Context is as follows:
    needs to be done - the branch `ctx` is simply discarded. If successful, the changes made to
    the `CacheMultiStore` can be committed to the original `ctx.ms` via `Write()`.
 
-For example, here is a snippet from the [`CustomTxHandlerMiddleware`](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/baseapp/custom_txhandler_test.go#L23) used in tests:
+For example, here is a snippet from the [`runTx`](./baseapp.md#runtx-antehandler-runmsgs-posthandler) function in [`baseapp`](./baseapp.md):
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/baseapp/custom_txhandler_test.go#L62:L97
+```go
+runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)
+result = app.runMsgs(runMsgCtx, msgs, mode)
+result.GasWanted = gasWanted
+if mode != runTxModeDeliver {
+  return result
+}
+if result.IsOK() {
+  msCache.Write()
+}
+```
+
+Here is the process:
+
+1. Prior to calling `runMsgs` on the message(s) in the transaction, it uses `app.cacheTxContext()`
+   to branch and cache the context and multistore.
+2. `runMsgCtx` - the context with branched store, is used in `runMsgs` to return a result.
+3. If the process is running in [`checkTxMode`](./baseapp.md#checktx), there is no need to write the
+   changes - the result is returned immediately.
+4. If the process is running in [`deliverTxMode`](./baseapp.md#delivertx) and the result indicates
+   a successful run over all the messages, the branched multistore is written back to the original.
 
 ## Next {hide}
 

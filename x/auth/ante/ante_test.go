@@ -1324,7 +1324,7 @@ func TestAnteHandlerReCheck(t *testing.T) {
 	// make signature array empty which would normally cause ValidateBasicDecorator and SigVerificationDecorator fail
 	// since these decorators don't run on recheck, the tx should pass the antehandler
 	txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
-	require.NoError(t, err)
+	suite.Require().NoError(err)
 
 	suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(3)
 	_, err = suite.anteHandler(suite.ctx, txBuilder.GetTx(), false)

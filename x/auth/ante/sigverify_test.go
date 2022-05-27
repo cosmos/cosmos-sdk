@@ -64,72 +64,64 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 		params   types.Params
 		malleate func(*gastestutil.MockMeter)
 	}
-	tests := []struct {
-		name      string
-		args      args
-		shouldErr bool
-	}{
-		{
-			"PubKeyEd25519",
-			args{nil, ed25519.GenPrivKey().PubKey(), params, func(mm *gastestutil.MockMeter) {
-				mm.EXPECT().Consume(p.SigVerifyCostED25519, "ante verify: ed25519").Times(1)
-			}},
-			true,
-		},
-		{
-			"PubKeySecp256k1",
-			args{nil, secp256k1.GenPrivKey().PubKey(), params, func(mm *gastestutil.MockMeter) {
-				mm.EXPECT().Consume(p.SigVerifyCostSecp256k1, "ante verify: secp256k1").Times(1)
-			}},
-			false,
-		},
-		{
-			"PubKeySecp256r1",
-			args{nil, skR1.PubKey(), params, func(mm *gastestutil.MockMeter) {
-				mm.EXPECT().Consume(p.SigVerifyCostSecp256r1(), "ante verify: secp256r1").Times(1)
-			}},
-			false,
-		},
-		{
-			"Multisig",
-			args{multisignature1, multisigKey1, params, func(mm *gastestutil.MockMeter) {
-				// 5 signatures
-				mm.EXPECT().Consume(p.SigVerifyCostSecp256k1, "ante verify: secp256k1").Times(5)
-			}},
-			false,
-		},
-		{
-			"Multisig simulation",
-			args{multisigSimulationSignature, multisigKey1, params, func(mm *gastestutil.MockMeter) {
-				mm.EXPECT().Consume(p.SigVerifyCostSecp256k1, "ante verify: secp256k1").Times(int(multisigKey1.Threshold))
-			}},
-			false,
-		},
-		{
-			"unknown key",
-			args{nil, nil, params, func(mm *gastestutil.MockMeter) {}},
-			true,
-		},
+
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
+
+	spkd := ante.NewSetPubKeyDecorator(suite.app.AccountKeeper)
+	svd := ante.NewSigVerificationDecorator(suite.app.AccountKeeper, suite.clientCtx.TxConfig.SignModeHandler())
+	antehandler := sdk.ChainAnteDecorators(spkd, svd)
+
+	type testCase struct {
+		name        string
+		privs       []cryptotypes.PrivKey
+		accNums     []uint64
+		accSeqs     []uint64
+		invalidSigs bool
+		recheck     bool
+		shouldErr   bool
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			sigV2 := signing.SignatureV2{
-				PubKey:   tt.args.pubkey,
-				Data:     tt.args.sig,
-				Sequence: 0, // Arbitrary account sequence
-			}
+	validSigs := false
+	testCases := []testCase{
+		{"no signers", []cryptotypes.PrivKey{}, []uint64{}, []uint64{}, validSigs, false, true},
+		{"not enough signers", []cryptotypes.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}, validSigs, false, true},
+		{"wrong order signers", []cryptotypes.PrivKey{priv3, priv2, priv1}, []uint64{2, 1, 0}, []uint64{0, 0, 0}, validSigs, false, true},
+		{"wrong accnums", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{7, 8, 9}, []uint64{0, 0, 0}, validSigs, false, true},
+		{"wrong sequences", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{3, 4, 5}, validSigs, false, true},
+		{"valid tx", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}, validSigs, false, false},
+		{"no err on recheck", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 0, 0}, []uint64{0, 0, 0}, !validSigs, true, false},
+	}
+	for i, tc := range testCases {
+		suite.ctx = suite.ctx.WithIsReCheckTx(tc.recheck)
+		suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder() // Create new txBuilder for each test
 
-			ctrl := gomock.NewController(t)
-			mockMeter := gastestutil.NewMockMeter(ctrl)
-			tt.args.malleate(mockMeter)
-			err := ante.DefaultSigVerificationGasConsumer(mockMeter, sigV2, tt.args.params)
+		suite.Require().NoError(suite.txBuilder.SetMsgs(msgs...))
+		suite.txBuilder.SetFeeAmount(feeAmount)
+		suite.txBuilder.SetGasLimit(gasLimit)
 
-			if tt.shouldErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
+		tx, err := suite.CreateTestTx(tc.privs, tc.accNums, tc.accSeqs, suite.ctx.ChainID())
+		suite.Require().NoError(err)
+		if tc.invalidSigs {
+			txSigs, _ := tx.GetSignaturesV2()
+			badSig, _ := tc.privs[0].Sign([]byte("unrelated message"))
+			txSigs[0] = signing.SignatureV2{
+				PubKey: tc.privs[0].PubKey(),
+				Data: &signing.SingleSignatureData{
+					SignMode:  suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
+					Signature: badSig,
+				},
+				Sequence: tc.accSeqs[0],
 			}
-		})
+			suite.txBuilder.SetSignatures(txSigs...)
+			tx = suite.txBuilder.GetTx()
+		}
+
+		_, err = antehandler(suite.ctx, tx, false)
+		if tc.shouldErr {
+			suite.Require().NotNil(err, "TestCase %d: %s did not error as expected", i, tc.name)
+		} else {
+			suite.Require().Nil(err, "TestCase %d: %s errored unexpectedly. Err: %v", i, tc.name, err)
+		}
 	}
 }
 
@@ -212,15 +204,13 @@ func TestSigVerification(t *testing.T) {
 	}
 	validSigs := false
 	testCases := []testCase{
-		{"no signers", []cryptotypes.PrivKey{}, []uint64{}, []uint64{}, validSigs, false, true, true},
-		{"not enough signers", []cryptotypes.PrivKey{priv1, priv2}, []uint64{accs[0].GetAccountNumber(), accs[1].GetAccountNumber()}, []uint64{0, 0}, validSigs, false, true, true},
-		{"wrong order signers", []cryptotypes.PrivKey{priv3, priv2, priv1}, []uint64{accs[2].GetAccountNumber(), accs[1].GetAccountNumber(), accs[0].GetAccountNumber()}, []uint64{0, 0, 0}, validSigs, false, true, true},
-		{"wrong accnums", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{7, 8, 9}, []uint64{0, 0, 0}, validSigs, false, true, true},
-		{"wrong sequences", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{accs[0].GetAccountNumber(), accs[1].GetAccountNumber(), accs[2].GetAccountNumber()}, []uint64{3, 4, 5}, validSigs, false, true, true},
-		{"valid tx", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{accs[0].GetAccountNumber(), accs[1].GetAccountNumber(), accs[2].GetAccountNumber()}, []uint64{0, 0, 0}, validSigs, false, true, false},
-		{"sigverify tx with wrong order signers", []cryptotypes.PrivKey{priv3, priv2, priv1}, []uint64{accs[0].GetAccountNumber(), accs[1].GetAccountNumber(), accs[2].GetAccountNumber()}, []uint64{0, 0, 0}, validSigs, false, true, true},
-		{"skip sigverify tx with wrong order signers", []cryptotypes.PrivKey{priv3, priv2, priv1}, []uint64{accs[0].GetAccountNumber(), accs[1].GetAccountNumber(), accs[2].GetAccountNumber()}, []uint64{0, 0, 0}, validSigs, false, false, false},
-		{"no err on recheck", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 0, 0}, []uint64{0, 0, 0}, !validSigs, true, true, false},
+		{"no signers", []cryptotypes.PrivKey{}, []uint64{}, []uint64{}, false, true},
+		{"not enough signers", []cryptotypes.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}, false, true},
+		{"wrong order signers", []cryptotypes.PrivKey{priv3, priv2, priv1}, []uint64{2, 1, 0}, []uint64{0, 0, 0}, false, true},
+		{"wrong accnums", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{7, 8, 9}, []uint64{0, 0, 0}, false, true},
+		{"wrong sequences", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{3, 4, 5}, false, true},
+		{"valid tx", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}, false, false},
+		{"no err on recheck", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}, true, false},
 	}
 
 	for i, tc := range testCases {

@@ -252,7 +252,14 @@ func (svd SigVerificationDecorator) ValidateTx(ctx context.Context, tx transacti
 		}
 	}
 
-	return nil
+// Verify all signatures for a tx and return an error if any are invalid. Note,
+// the SigVerificationDecorator will not check signatures on ReCheck.
+//
+// CONTRACT: Pubkeys are set in context for all signers before this decorator runs
+// CONTRACT: Tx must implement SigVerifiableTx interface
+type SigVerificationDecorator struct {
+	ak              AccountKeeper
+	signModeHandler authsigning.SignModeHandler
 }
 
 // authenticate the authentication of the TX for a specific tx signer.
@@ -292,14 +299,10 @@ func (svd SigVerificationDecorator) authenticate(ctx context.Context, tx authsig
 		}
 	}
 
-	err := svd.consumeSignatureGas(ctx, acc.GetPubKey(), sig)
-	if err != nil {
-		return err
-	}
-
-	err = svd.verifySig(ctx, tx, acc, sig, newlyCreated)
-	if err != nil {
-		return err
+func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	sigTx, ok := tx.(authsigning.SigVerifiableTx)
+	if !ok {
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
 	err = svd.increaseSequence(tx, acc)
@@ -354,7 +357,8 @@ func (svd SigVerificationDecorator) verifySig(ctx context.Context, tx sdk.Tx, ac
 		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 	}
 
-		if !simulate {
+		// no need to verify signatures on recheck tx
+		if !simulate && !ctx.IsReCheckTx() {
 			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, svd.signModeHandler, tx)
 			if err != nil {
 				var errMsg string

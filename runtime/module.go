@@ -1,10 +1,9 @@
 package runtime
 
 import (
-	"fmt"
-
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	"cosmossdk.io/core/appmodule"
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -12,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"golang.org/x/exp/slices"
 )
 
 // BaseAppOption is a container.AutoGroupType which can be used to pass
@@ -95,30 +93,38 @@ func registerStoreKey(wrapper appWrapper, key storetypes.StoreKey) {
 	wrapper.storeKeys = append(wrapper.storeKeys, key)
 }
 
-func storeKeyName(config *runtimev1alpha1.Module, moduleKey container.ModuleKey) string {
-	i := slices.IndexFunc(config.ModuleStoreKeys, func(msk *runtimev1alpha1.ModuleStoreKey) bool {
-		return msk.ModuleName == moduleKey.Name()
-	})
-	if i == -1 {
-		return moduleKey.Name()
+func storeKeyOverride(config *runtimev1alpha1.Module, moduleName string) *runtimev1alpha1.StoreKeyConfig {
+	for _, cfg := range config.OverrideStoreKeys {
+		if cfg.ModuleName == moduleName {
+			return cfg
+		}
 	}
-	return config.ModuleStoreKeys[i].StoreKey
+	return nil
 }
 
 func provideKVStoreKey(config *runtimev1alpha1.Module, key container.ModuleKey, app appWrapper) *storetypes.KVStoreKey {
-	storeKey := storetypes.NewKVStoreKey(storeKeyName(config, key))
+	override := storeKeyOverride(config, key.Name())
+
+	var storeKeyName string
+	if override != nil {
+		storeKeyName = override.KvStoreKey
+	} else {
+		storeKeyName = key.Name()
+	}
+
+	storeKey := storetypes.NewKVStoreKey(storeKeyName)
 	registerStoreKey(app, storeKey)
 	return storeKey
 }
 
-func provideTransientStoreKey(config *runtimev1alpha1.Module, key container.ModuleKey, app appWrapper) *storetypes.TransientStoreKey {
-	storeKey := storetypes.NewTransientStoreKey(fmt.Sprintf("transient:%s", storeKeyName(config, key)))
+func provideTransientStoreKey(key container.ModuleKey, app appWrapper) *storetypes.TransientStoreKey {
+	storeKey := storetypes.NewTransientStoreKey(fmt.Sprintf("transient:%s", key.Name()))
 	registerStoreKey(app, storeKey)
 	return storeKey
 }
 
-func provideMemoryStoreKey(config *runtimev1alpha1.Module, key container.ModuleKey, app appWrapper) *storetypes.MemoryStoreKey {
-	storeKey := storetypes.NewMemoryStoreKey(fmt.Sprintf("memory:%s", storeKeyName(config, key)))
+func provideMemoryStoreKey(key container.ModuleKey, app appWrapper) *storetypes.MemoryStoreKey {
+	storeKey := storetypes.NewMemoryStoreKey(fmt.Sprintf("memory:%s", key.Name()))
 	registerStoreKey(app, storeKey)
 	return storeKey
 }

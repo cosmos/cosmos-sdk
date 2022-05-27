@@ -67,7 +67,7 @@ func (o *mapOfOnePerModuleResolver) resolve(c *container, _ *moduleKey, caller L
 				return reflect.Value{}, err
 			}
 			idx := o.idxMap[key]
-			if len(values) < idx {
+			if len(values) <= idx {
 				return reflect.Value{}, errors.Errorf("expected value of type %T at index %d", o.typ, idx)
 			}
 			value := values[idx]

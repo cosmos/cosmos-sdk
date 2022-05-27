@@ -146,7 +146,7 @@ $ %s q %s grants-by-granter cosmos1skj..
 func GetQueryGranteeGrants() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "grants-by-grantee [grantee-addr]",
-		Aliases: []string{"grants"},
+		Aliases: []string{"grantee-grants"},
 		Args:    cobra.ExactArgs(1),
 		Short:   "query authorization grants granted to a grantee",
 		Long: strings.TrimSpace(

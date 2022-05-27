@@ -85,12 +85,12 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 	}
 
 	// deduct the fees
-	if !fee.IsZero() {
-		err := DeductFees(dfd.bankKeeper, ctx, deductFeesFromAcc, fee)
-		if err != nil {
-			return err
-		}
-	}
+	// if !fee.IsZero() {
+	// 	err := DeductFees(dfd.bankKeeper, ctx, deductFeesFromAcc, fee)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	events := sdk.Events{sdk.NewEvent(sdk.EventTypeTx,
 		sdk.NewAttribute(sdk.AttributeKeyFee, fee.String()),

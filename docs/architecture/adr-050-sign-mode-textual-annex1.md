@@ -23,7 +23,7 @@ Value Renderers describe how values of different Protobuf types should be encode
   - protobuf numeric integer types (`int{32,64}`, `uint{32,64}`, `sint{32,64}`, `fixed{32,64}`, `sfixed{32,64}`)
   - strings whose `customtype` is `github.com/cosmos/cosmos-sdk/types.Int` or `github.com/cosmos/cosmos-sdk/types.Dec`
   - bytes whose `customtype` is `github.com/cosmos/cosmos-sdk/types.Int` or `github.com/cosmos/cosmos-sdk/types.Dec`
-- Trailing zeroes are always removed
+- Trailing decimal zeroes are always removed
 - Formatting with `'`s for every three integral digits.
 - Usage of `.` to denote the decimal delimiter.
 

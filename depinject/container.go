@@ -1,4 +1,4 @@
-package container
+package depinject
 
 import (
 	"bytes"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/cosmos/cosmos-sdk/container/internal/graphviz"
+	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
 )
 
 type container struct {

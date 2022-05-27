@@ -1,4 +1,4 @@
-package container
+package depinject
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"reflect"
 
-	"github.com/cosmos/cosmos-sdk/container/internal/graphviz"
+	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
 )
 
 // DebugOption is a functional option for running a container that controls

@@ -70,33 +70,33 @@ Here's an example code to override default `app.toml` template.
 
 The `initAppConfig()` also allows overriding the default Cosmos SDK's [server config](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/server/config/config.go#L235). One example is the `min-gas-prices` config, which defines the minimum gas prices a validator is willing to accept for processing a transaction. By default, the Cosmos SDK sets this parameter to `""` (empty string), which forces all validators to tweak their own `app.toml` and set a non-empty value, or else the node will halt on startup. This might not be the best UX for validators, so the chain developer can set a default `app.toml` value for validators inside this `initAppConfig()` function.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/aa9b055ddb46aacd4737335a92d0b8a82d577341/simapp/simd/cmd/root.go#L101-L116
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/simapp/simd/cmd/root.go#L119-L134
 
 The root-level `status` and `keys` subcommands are common across most applications and do not interact with application state. The bulk of an application's functionality - what users can actually _do_ with it - is enabled by its `tx` and `query` commands.
 
 ### Transaction Commands
 
-[Transactions](./transactions.md) are objects wrapping [`Msg`s](../building-modules/messages-and-queries.md#messages) that trigger state changes. To enable the creation of transactions using the CLI interface, a function `txCmd` is generally added to the `rootCmd`:
+[Transactions](./transactions.md) are objects wrapping [`Msg`s](../building-modules/messages-and-queries.md#messages) that trigger state changes. To enable the creation of transactions using the CLI interface, a function `txCommand` is generally added to the `rootCmd`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/cmd/root.go#L86-L92
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/simapp/simd/cmd/root.go#L175-L181
 
-This `txCmd` function adds all the transaction available to end-users for the application. This typically includes:
+This `txCommand` function adds all the transaction available to end-users for the application. This typically includes:
 
 * **Sign command** from the [`auth`](../../x/auth/spec/README.md) module that signs messages in a transaction. To enable multisig, add the `auth` module's `MultiSign` command. Since every transaction requires some sort of signature in order to be valid, the signing command is necessary for every application.
 * **Broadcast command** from the Cosmos SDK client tools, to broadcast transactions.
 * **All [module transaction commands](../building-modules/module-interfaces.md#transaction-commands)** the application is dependent on, retrieved by using the [basic module manager's](../building-modules/module-manager.md#basic-manager) `AddTxCommands()` function.
 
-Here is an example of a `txCmd` aggregating these subcommands from the `simapp` application:
+Here is an example of a `txCommand` aggregating these subcommands from the `simapp` application:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/cmd/root.go#L123-L149
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/simapp/simd/cmd/root.go#L215-L240
 
 ### Query Commands
 
-[**Queries**](../building-modules/messages-and-queries.md#queries) are objects that allow users to retrieve information about the application's state. To enable the creation of transactions using the CLI interface, a function `txCmd` is generally added to the `rootCmd`:
+[**Queries**](../building-modules/messages-and-queries.md#queries) are objects that allow users to retrieve information about the application's state. To enable the creation of queries using the CLI interface, a function `queryCommand` is generally added to the `rootCmd`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/cmd/root.go#L86-L92
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/simapp/simd/cmd/root.go#L175-L181
 
-This `queryCmd` function adds all the queries available to end-users for the application. This typically includes:
+This `queryCommand` function adds all the queries available to end-users for the application. This typically includes:
 
 * **QueryTx** and/or other transaction query commands] from the `auth` module which allow the user to search for a transaction by inputting its hash, a list of tags, or a block height. These queries allow users to see if transactions have been included in a block.
 * **Account command** from the `auth` module, which displays the state (e.g. account balance) of an account given an address.
@@ -104,9 +104,9 @@ This `queryCmd` function adds all the queries available to end-users for the app
 * **Block command** from the Cosmos SDK rpc client tools, which displays the block data for a given height.
 * **All [module query commands](../building-modules/module-interfaces.md#query-commands)** the application is dependent on, retrieved by using the [basic module manager's](../building-modules/module-manager.md#basic-manager) `AddQueryCommands()` function.
 
-Here is an example of a `queryCmd` aggregating subcommands from the `simapp` application:
+Here is an example of a `queryCommand` aggregating subcommands from the `simapp` application:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/cmd/root.go#L99-L121
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/simapp/simd/cmd/root.go#L191-L213
 
 ## Flags
 
@@ -116,7 +116,7 @@ A _persistent_ flag (as opposed to a _local_ flag) added to a command transcends
 
 Flags are added to commands directly (generally in the [module's CLI file](../building-modules/module-interfaces.md#flags) where module commands are defined) and no flag except for the `rootCmd` persistent flags has to be added at application level. It is common to add a _persistent_ flag for `--chain-id`, the unique identifier of the blockchain the application pertains to, to the root command. Adding this flag can be done in the `main()` function. Adding this flag makes sense as the chain ID should not be changing across commands in this application CLI. Here is an example from the `simapp` application:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/cmd/root.go#L118-L119
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/simapp/simd/cmd/root.go#L210-L210
 
 ## Environment variables
 
@@ -145,7 +145,7 @@ It is vital that the root command of an application uses `PersistentPreRun()` co
 
 Here is an example of an `PersistentPreRun()` function from `simapp`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/cmd/root.go#L54-L60
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/simapp/simd/cmd/root.go#L56-L79
 
 The `SetCmdClientContextHandler` call reads persistent flags via `ReadPersistentCommandFlags` which creates a `client.Context` and sets that on the root command's `Context`.
 

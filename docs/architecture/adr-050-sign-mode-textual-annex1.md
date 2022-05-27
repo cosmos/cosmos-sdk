@@ -181,14 +181,14 @@ See example above with `message Vote{}`.
 - Rendered as:
 
 ```
-Any: <type_url>
+Object: <type_url>
 > <value rendered underlying message>
 ```
 
 #### Examples
 
 ```
-Any: /cosmos.gov.v1.Vote
+Object: /cosmos.gov.v1.Vote
 > Proposal id: 4
 > Vote: cosmos1abc...def
 > Options: 2 WeightedVoteOptions

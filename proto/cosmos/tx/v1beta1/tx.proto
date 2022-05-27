@@ -92,6 +92,35 @@ message SignDocDirectAux {
   Tip tip = 6;
 }
 
+// SignDocTextual  is the type used for generating sign bytes for
+// SIGN_MODE_TEXTUAL.
+//
+// Since: cosmos-sdk TBD
+message SignDocTextual {
+  // screens is a an array of strings, encoded as a \n-delimited string. Each string
+  // corresponds to one "screen" on the hardware wallet device, with no (or little)
+  // additional formatting done by the hardware wallet itself.
+  repeated string screens = 1;
+
+  // public_key is the public key of the signing account.
+  google.protobuf.Any public_key = 2;
+
+  // chain_id is the identifier of the chain this transaction targets.
+  // It prevents signed transactions from being used on another chain by an
+  // attacker.
+  string chain_id = 3;
+
+  // account_number is the account number of the account in state.
+  uint64 account_number = 4;
+
+  // sequence is the sequence number of the signing account.
+  uint64 sequence = 5;
+
+  // Tip is the optional tip used for meta-transactions. It should be left
+  // empty if the signer is not the tipper for this transaction.
+  Tip tip = 6;
+}
+
 // TxBody is the body of a transaction that all signers sign over.
 message TxBody {
   // messages is a list of messages to be executed. The required signers of

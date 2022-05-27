@@ -415,6 +415,7 @@ func NewSimApp(
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
+		params.NewAppModule(app.ParamsKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
@@ -543,7 +544,17 @@ func (app *SimApp) InterfaceRegistry() codectypes.InterfaceRegistry {
 //
 // NOTE: This is solely to be used for testing purposes.
 func (app *SimApp) GetKey(storeKey string) *storetypes.KVStoreKey {
-	return app.keys[storeKey]
+	kvsk := app.keys[storeKey]
+	if kvsk != nil {
+		return kvsk
+	}
+
+	sk := app.UnsafeFindStoreKey(storeKey)
+	kvStoreKey, ok := sk.(*storetypes.KVStoreKey)
+	if !ok {
+		return nil
+	}
+	return kvStoreKey
 }
 
 // GetTKey returns the TransientStoreKey for the provided store key.

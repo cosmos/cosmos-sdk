@@ -243,6 +243,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		tmCfg := ctx.Config
 		tmCfg.Consensus.TimeoutCommit = cfg.TimeoutCommit
 		tmCfg.Mode = config.ModeValidator
+		tmCfg.P2P.UseLegacy = true
 
 		// Only allow the first validator to expose an RPC, API and gRPC
 		// server/client due to Tendermint in-process constraints.

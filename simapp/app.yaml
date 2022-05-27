@@ -22,6 +22,10 @@ modules:
                       feegrant, nft, group,
                       params, upgrade, vesting ]
 
+      module_store_keys:
+        - module_name: auth
+          store_key: acc
+
   - name: auth
     config:
       "@type": cosmos.auth.module.v1.Module

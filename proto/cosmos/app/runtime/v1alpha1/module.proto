@@ -33,4 +33,18 @@ message Module {
   // If this is left empty, the init_genesis order will be used for export genesis
   // if it is specified.
   repeated string export_genesis = 5;
+
+  // module_store_keys is an optional list of overrides for the module store keys
+  // used in keeper construction.
+  repeated ModuleStoreKey module_store_keys = 6;
+}
+
+// ModuleStoreKey may be supplied to override the default module store key, which
+// is the module name.
+message ModuleStoreKey {
+  // name of the module to override the store key of
+  string module_name = 1;
+
+  // the store key to use instead of the module name.
+  string store_key = 2;
 }

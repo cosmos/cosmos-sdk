@@ -3,18 +3,12 @@ package runtime
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/grpc"
-
-	"github.com/cosmos/cosmos-sdk/container"
-
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	"cosmossdk.io/core/appmodule"
-	"github.com/cosmos/cosmos-sdk/depinject"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/container"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/std"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -109,7 +103,7 @@ func storeKeyOverride(config *runtimev1alpha1.Module, moduleName string) *runtim
 	return nil
 }
 
-func provideKVStoreKey(config *runtimev1alpha1.Module, key container.ModuleKey, app appWrapper) *storetypes.KVStoreKey {
+func provideKVStoreKey(config *runtimev1alpha1.Module, key depinject.ModuleKey, app appWrapper) *storetypes.KVStoreKey {
 	override := storeKeyOverride(config, key.Name())
 
 	var storeKeyName string

@@ -400,7 +400,7 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 		p2pPort, _ := fs.GetUint(FlagP2PPort)
 		nodeID, _ := fs.GetString(FlagNodeID)
 
-		if nodeID != "" && ip != "" {
+		if nodeID != "" && ip != "" && p2pPort > 0 {
 			txf = txf.WithMemo(fmt.Sprintf("%s@%s:%d", nodeID, ip, p2pPort))
 		}
 	}

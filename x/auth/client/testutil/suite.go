@@ -231,7 +231,7 @@ func (s *IntegrationTestSuite) TestCLISignGenOnly() {
 
 func (s *IntegrationTestSuite) TestCLISignBatch() {
 	val := s.network.Validators[0]
-	var sendTokens = sdk.NewCoins(
+	sendTokens := sdk.NewCoins(
 		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
 		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
 	)
@@ -284,7 +284,7 @@ func (s *IntegrationTestSuite) TestCLISignAminoJSON() {
 	require := s.Require()
 	val1 := s.network.Validators[0]
 	txCfg := val1.ClientCtx.TxConfig
-	var sendTokens = sdk.NewCoins(
+	sendTokens := sdk.NewCoins(
 		sdk.NewCoin(fmt.Sprintf("%stoken", val1.Moniker), sdk.NewInt(10)),
 		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
 	)
@@ -1561,7 +1561,7 @@ func (s *IntegrationTestSuite) TestAuxSigner() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestAuxToFee() {
+func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
 	require := s.Require()
 	val := s.network.Validators[0]
 
@@ -1577,13 +1577,13 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 	fee := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1000))
 	tip := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(1000))
 
-	s.Require().NoError(s.network.WaitForNextBlock())
+	require.NoError(s.network.WaitForNextBlock())
 	_, err = s.createBankMsg(val, tipper, sdk.NewCoins(tipperInitialBal))
 	require.NoError(err)
-	s.Require().NoError(s.network.WaitForNextBlock())
+	require.NoError(s.network.WaitForNextBlock())
 
 	bal := s.getBalances(val.ClientCtx, tipper, tip.Denom)
-	s.Require().True(bal.Equal(tipperInitialBal.Amount))
+	require.True(bal.Equal(tipperInitialBal.Amount))
 
 	testCases := []struct {
 		name               string
@@ -1734,7 +1734,7 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			feePayerArgs: []string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
 			},
@@ -1791,21 +1791,21 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 					require.NoError(err)
 
 					var txRes sdk.TxResponse
-					s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
+					require.NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
 
 					require.Contains(txRes.RawLog, tc.errMsg)
 				} else {
 					require.NoError(err)
 
 					var txRes sdk.TxResponse
-					s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
+					require.NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
 
-					s.Require().Equal(uint32(0), txRes.Code)
-					s.Require().NotNil(int64(0), txRes.Height)
+					require.Equal(uint32(0), txRes.Code)
+					require.NotNil(int64(0), txRes.Height)
 
 					bal = s.getBalances(val.ClientCtx, tipper, tc.tip.Denom)
 					tipperInitialBal = tipperInitialBal.Sub(tc.tip)
-					s.Require().True(bal.Equal(tipperInitialBal.Amount))
+					require.True(bal.Equal(tipperInitialBal.Amount))
 				}
 			}
 		})
@@ -1813,7 +1813,8 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 }
 
 func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.AccAddress, amount sdk.Coins, extraFlags ...string) (testutil.BufferWriter, error) {
-	flags := []string{fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+	flags := []string{
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees,
 			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),

@@ -42,9 +42,8 @@ func debugErrEncoder(err error) string {
 	return fmt.Sprintf("%+v", err)
 }
 
-// The defaultErrEncoder applies Redact on the error before encoding it with its internal error message.
 func defaultErrEncoder(err error) string {
-	return Redact(err).Error()
+	return err.Error()
 }
 
 type coder interface {
@@ -110,20 +109,4 @@ func errIsNil(err error) bool {
 		return val.IsNil()
 	}
 	return false
-}
-
-var errPanicWithMsg = Wrapf(ErrPanic, "error message redacted to hide potential sensitive info. Use the '--trace' flag if you are running a node to see the full stack trace error")
-
-// Redact replaces an error that is not initialized as an ABCI Error with a
-// generic internal error instance. If the error is an ABCI Error, that error is
-// simply returned.
-func Redact(err error) error {
-	if ErrPanic.Is(err) {
-		return errPanicWithMsg
-	}
-	if abciCode(err) == internalABCICode {
-		return errInternal
-	}
-
-	return err
 }

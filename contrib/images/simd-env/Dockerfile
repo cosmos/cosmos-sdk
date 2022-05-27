@@ -7,6 +7,8 @@ COPY go.mod go.sum /work/
 COPY db/go.mod db/go.sum /work/db/
 COPY errors/go.mod errors/go.sum /work/errors/
 COPY math/go.mod math/go.sum /work/math/
+COPY api/go.mod api/go.sum /work/api/
+COPY core/go.mod core/go.sum /work/core/
 
 RUN go mod download
 COPY ./ /work

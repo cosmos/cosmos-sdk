@@ -46,7 +46,8 @@ func TestWeightedOperations(t *testing.T) {
 		weight     int
 		opMsgRoute string
 		opMsgName  string
-	}{{simappparams.DefaultWeightMsgCreateValidator, types.ModuleName, types.TypeMsgCreateValidator},
+	}{
+		{simappparams.DefaultWeightMsgCreateValidator, types.ModuleName, types.TypeMsgCreateValidator},
 		{simappparams.DefaultWeightMsgEditValidator, types.ModuleName, types.TypeMsgEditValidator},
 		{simappparams.DefaultWeightMsgDelegate, types.ModuleName, types.TypeMsgDelegate},
 		{simappparams.DefaultWeightMsgUndelegate, types.ModuleName, types.TypeMsgUndelegate},
@@ -380,5 +381,4 @@ func setupValidatorRewards(app *simapp.SimApp, ctx sdk.Context, valAddress sdk.V
 	// setup current revards
 	currentRewards := distrtypes.NewValidatorCurrentRewards(decCoins, 3)
 	app.DistrKeeper.SetValidatorCurrentRewards(ctx, valAddress, currentRewards)
-
 }

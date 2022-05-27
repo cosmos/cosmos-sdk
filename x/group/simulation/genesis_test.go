@@ -43,5 +43,4 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, int(groupGenesis.ProposalSeq), len(simState.Accounts))
 	require.Len(t, groupGenesis.Proposals, len(simState.Accounts))
 	require.Len(t, groupGenesis.Votes, len(simState.Accounts))
-
 }

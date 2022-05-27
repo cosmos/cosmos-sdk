@@ -1,0 +1,27 @@
+modules:
+  - name: runtime
+    config:
+      "@type": cosmos.app.runtime.v1alpha1.Module
+
+      app_name: SimApp
+
+      # During begin block slashing happens after distr.BeginBlocker so that
+      # there is nothing left over in the validator fee pool, so as to keep the
+      # CanWithdrawInvariant invariant.
+      # NOTE: staking module is required if HistoricalEntries param > 0
+      # NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
+      begin_blockers: [ upgrade, capability, mint, distribution, slashing,
+                        evidence, staking, auth, bank, gov, crisis, genutil,
+                        authz, feegrant, nft, group,
+                        params, vesting ]
+
+      end_blockers: [ crisis, gov, staking,
+                      capability, auth, bank, distribution,
+                      slashing, mint,
+                      genutil, evidence, authz,
+                      feegrant, nft, group,
+                      params, upgrade, vesting ]
+
+  - name: params
+    config:
+      "@type": cosmos.params.module.v1.Module

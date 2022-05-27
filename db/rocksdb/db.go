@@ -71,7 +71,7 @@ type dbOptions struct {
 // NewDB creates a new RocksDB key-value database with inside the given directory.
 // If dir does not exist, it will be created.
 func NewDB(dir string) (*dbManager, error) {
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return nil, err
 	}
 
@@ -100,7 +100,7 @@ func NewDB(dir string) (*dbManager, error) {
 		cpCache: checkpointCache{cache: map[uint64]*cpCacheEntry{}},
 	}
 
-	err := os.MkdirAll(mgr.checkpointsDir(), 0755)
+	err := os.MkdirAll(mgr.checkpointsDir(), 0o755)
 	if err != nil {
 		return nil, err
 	}

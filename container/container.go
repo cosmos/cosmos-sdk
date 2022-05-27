@@ -82,18 +82,18 @@ func (c *container) getResolver(typ reflect.Type) (resolver, error) {
 	}
 
 	elemType := typ
-	if isAutoGroupSliceType(elemType) || isOnePerModuleMapType(elemType) {
+	if isManyPerContainerSliceType(elemType) || isOnePerModuleMapType(elemType) {
 		elemType = elemType.Elem()
 	}
 
 	var typeGraphNode *graphviz.Node
 
-	if isAutoGroupType(elemType) {
-		c.logf("Registering resolver for auto-group type %v", elemType)
+	if isManyPerContainerType(elemType) {
+		c.logf("Registering resolver for many-per-container type %v", elemType)
 		sliceType := reflect.SliceOf(elemType)
 
 		typeGraphNode = c.typeGraphNode(sliceType)
-		typeGraphNode.SetComment("auto-group")
+		typeGraphNode.SetComment("many-per-container")
 
 		r := &groupResolver{
 			typ:       elemType,
@@ -141,8 +141,8 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 			hasOwnModuleKeyParam = true
 		}
 
-		if isAutoGroupType(typ) {
-			return nil, fmt.Errorf("auto-group type %v can't be used as an input parameter", typ)
+		if isManyPerContainerType(typ) {
+			return nil, fmt.Errorf("many-per-container type %v can't be used as an input parameter", typ)
 		} else if isOnePerModuleType(typ) {
 			return nil, fmt.Errorf("one-per-module type %v can't be used as an input parameter", typ)
 		}
@@ -184,8 +184,8 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 					typ, typ.Elem())
 			}
 
-			// auto-group slices of auto-group types
-			if isAutoGroupSliceType(typ) {
+			// many-per-container slices of many-per-container types
+			if isManyPerContainerSliceType(typ) {
 				typ = typ.Elem()
 			}
 

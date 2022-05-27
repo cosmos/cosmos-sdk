@@ -95,7 +95,7 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 		l.logger.Error().Err(err)
 	}
 
-	var cmdDone = make(chan error)
+	cmdDone := make(chan error)
 	go func() {
 		cmdDone <- cmd.Wait()
 	}()
@@ -212,7 +212,6 @@ func IsSkipUpgradeHeight(args []string, upgradeInfo upgradetypes.Plan) bool {
 		if h == int(upgradeInfo.Height) {
 			return true
 		}
-
 	}
 	return false
 }

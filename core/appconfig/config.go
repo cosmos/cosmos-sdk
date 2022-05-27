@@ -14,13 +14,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/container"
 
-	appv1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/app/v1alpha1"
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 
 	"cosmossdk.io/core/internal"
 )
 
 // LoadJSON loads an app config in JSON format.
-func LoadJSON(bz []byte) container.Option {
+func LoadJSON(bz []byte) container.Config {
 	config := &appv1alpha1.Config{}
 	err := protojson.Unmarshal(bz, config)
 	if err != nil {
@@ -31,7 +31,7 @@ func LoadJSON(bz []byte) container.Option {
 }
 
 // LoadYAML loads an app config in YAML format.
-func LoadYAML(bz []byte) container.Option {
+func LoadYAML(bz []byte) container.Config {
 	j, err := yaml.YAMLToJSON(bz)
 	if err != nil {
 		return container.Error(err)
@@ -42,8 +42,8 @@ func LoadYAML(bz []byte) container.Option {
 
 // Compose composes a v1alpha1 app config into a container option by resolving
 // the required modules and composing their options.
-func Compose(appConfig *appv1alpha1.Config) container.Option {
-	opts := []container.Option{
+func Compose(appConfig *appv1alpha1.Config) container.Config {
+	opts := []container.Config{
 		container.Supply(appConfig),
 	}
 
@@ -99,7 +99,7 @@ func Compose(appConfig *appv1alpha1.Config) container.Option {
 		}
 	}
 
-	return container.Options(opts...)
+	return container.Configs(opts...)
 }
 
 func dumpRegisteredModules(modules map[protoreflect.FullName]*internal.ModuleInitializer) string {

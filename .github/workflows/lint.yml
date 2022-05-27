@@ -25,6 +25,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
+          args: --out-format=github-actions
           skip-cache: false
           skip-pkg-cache: false
           skip-build-cache: false

@@ -84,8 +84,8 @@ $ %s query feegrant grant [granter] [grantee]
 // GetCmdQueryFeeGrantsByGrantee returns cmd to query for all grants for a grantee.
 func GetCmdQueryFeeGrantsByGrantee() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "grants [grantee]",
-		Aliases: []string{"grants-by-grantee"},
+		Use:     "grants-by-grantee [grantee]",
+		Aliases: []string{"grants"},
 		Args:    cobra.ExactArgs(1),
 		Short:   "Query all grants of a grantee",
 		Long: strings.TrimSpace(
@@ -134,10 +134,9 @@ $ %s query feegrant grants-by-grantee [grantee]
 // GetCmdQueryFeeGrantsByGranter returns cmd to query for all grants by a granter.
 func GetCmdQueryFeeGrantsByGranter() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "grants [granter]",
-		Aliases: []string{"grants-by-granter"},
-		Args:    cobra.ExactArgs(1),
-		Short:   "Query all grants by a granter",
+		Use:   "grants-by-granter [granter]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query all grants by a granter",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Queries all the grants issued for a granter address.
 

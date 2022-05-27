@@ -181,13 +181,25 @@ See example above with `message Vote{}`.
 - Rendered as:
 
 ```
-<type_url>
+Any: <type_url>
 > <value rendered underlying message>
 ```
 
 #### Examples
 
-TODO
+```
+Any: /cosmos.gov.v1.Vote
+> Proposal id: 4
+> Vote: cosmos1abc...def
+> Options: 2 WeightedVoteOptions
+> Options (1/2): WeightedVoteOption object
+>> Option: Yes
+>> Weight: 0.7
+> Options (2/2): WeightedVoteOption object
+>> Option: No
+>> Weight: 0.3
+> End of Options
+```
 
 ### `google.protobuf.Timestamp`
 

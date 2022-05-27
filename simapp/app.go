@@ -15,9 +15,8 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/container"
-
 	"cosmossdk.io/core/appconfig"
+	"github.com/cosmos/cosmos-sdk/depinject"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -218,7 +217,7 @@ func NewSimApp(
 	var appCodec codec.Codec
 	var legacyAmino *codec.LegacyAmino
 	var interfaceRegistry codectypes.InterfaceRegistry
-	err := container.Build(appConfig,
+	err := depinject.Inject(appConfig,
 		&appBuilder,
 		&paramsKeeper,
 		&capabilityKeeper,

@@ -35,6 +35,7 @@ import (
 type App struct {
 	*baseapp.BaseApp
 	ModuleManager     *module.Manager
+	configurator      module.Configurator
 	config            *runtimev1alpha1.Module
 	storeKeys         []storetypes.StoreKey
 	interfaceRegistry codectypes.InterfaceRegistry
@@ -71,8 +72,8 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 
 // Load finishes all initialization operations and loads the app.
 func (a *App) Load(loadLatest bool) error {
-	configurator := module.NewConfigurator(a.cdc, a.MsgServiceRouter(), a.GRPCQueryRouter())
-	a.ModuleManager.RegisterServices(configurator)
+	a.configurator = module.NewConfigurator(a.cdc, a.MsgServiceRouter(), a.GRPCQueryRouter())
+	a.ModuleManager.RegisterServices(a.configurator)
 
 	if len(a.config.InitGenesis) != 0 {
 		a.ModuleManager.SetOrderInitGenesis(a.config.InitGenesis...)
@@ -149,6 +150,10 @@ func (a *App) RegisterTendermintService(clientCtx client.Context) {
 		a.interfaceRegistry,
 		a.Query,
 	)
+}
+
+func (a *App) Configurator() module.Configurator {
+	return a.configurator
 }
 
 // UnsafeFindStoreKey FindStoreKey fetches a registered StoreKey from the App in linear time.

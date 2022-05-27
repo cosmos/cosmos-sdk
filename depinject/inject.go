@@ -1,4 +1,4 @@
-package container
+package depinject
 
 // Build builds the container specified by containerConfig and extracts the
 // requested outputs from the container or returns an error. It is the single
@@ -10,22 +10,22 @@ package container
 //  var x int
 //  Build(Provide(func() int { return 1 }), &x)
 //
-// Build uses the debug mode provided by AutoDebug which means there will be
+// Inject uses the debug mode provided by AutoDebug which means there will be
 // verbose debugging information if there is an error and nothing upon success.
-// Use BuildDebug to configure debug behavior.
-func Build(containerConfig Config, outputs ...interface{}) error {
+// Use InjectDebug to configure debug behavior.
+func Inject(containerConfig Config, outputs ...interface{}) error {
 	loc := LocationFromCaller(1)
-	return build(loc, AutoDebug(), containerConfig, outputs...)
+	return inject(loc, AutoDebug(), containerConfig, outputs...)
 }
 
-// BuildDebug is a version of Build which takes an optional DebugOption for
+// InjectDebug is a version of Inject which takes an optional DebugOption for
 // logging and visualization.
-func BuildDebug(debugOpt DebugOption, config Config, outputs ...interface{}) error {
+func InjectDebug(debugOpt DebugOption, config Config, outputs ...interface{}) error {
 	loc := LocationFromCaller(1)
-	return build(loc, debugOpt, config, outputs...)
+	return inject(loc, debugOpt, config, outputs...)
 }
 
-func build(loc Location, debugOpt DebugOption, config Config, outputs ...interface{}) error {
+func inject(loc Location, debugOpt DebugOption, config Config, outputs ...interface{}) error {
 	cfg, err := newDebugConfig()
 	if err != nil {
 		return err
@@ -38,7 +38,7 @@ func build(loc Location, debugOpt DebugOption, config Config, outputs ...interfa
 		}
 	}()
 
-	err = doBuild(cfg, loc, debugOpt, config, outputs...)
+	err = doInject(cfg, loc, debugOpt, config, outputs...)
 	if err != nil {
 		cfg.logf("Error: %v", err)
 		if cfg.onError != nil {
@@ -59,7 +59,7 @@ func build(loc Location, debugOpt DebugOption, config Config, outputs ...interfa
 	}
 }
 
-func doBuild(cfg *debugConfig, loc Location, debugOpt DebugOption, config Config, outputs ...interface{}) error {
+func doInject(cfg *debugConfig, loc Location, debugOpt DebugOption, config Config, outputs ...interface{}) error {
 	defer cfg.generateGraph() // always generate graph on exit
 
 	if debugOpt != nil {

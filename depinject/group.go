@@ -1,4 +1,4 @@
-package container
+package depinject
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/cosmos/cosmos-sdk/container/internal/graphviz"
+	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
 )
 
 // ManyPerContainerType marks a type which automatically gets grouped together. For an ManyPerContainerType T,

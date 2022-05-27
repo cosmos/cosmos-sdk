@@ -481,11 +481,12 @@ SIGN_MODE_TEXTUAL is purely additive, and doesn't break any backwards compatibil
 
 ### Negative
 
-- If the transaction is complex, the string array can be arbitrarily long, and some users might just skip some screens and blind sign.
 - Some fields are still encoded in non-human-readable ways, such as public keys in base64.
 - New ledger app needs to be released, still unclear
 
 ### Neutral
+
+- If the transaction is complex, the string array can be arbitrarily long, and some users might just skip some screens and blind sign.
 
 ## Further Discussions
 

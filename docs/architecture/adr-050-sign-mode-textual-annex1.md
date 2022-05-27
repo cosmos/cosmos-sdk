@@ -7,7 +7,7 @@
 
 ## Status
 
-Draft. Concept ACK by the Ledger team, but details need to be polished.
+Accepted. Implementation started. Small value renderers details still need to be polished.
 
 ## Abstract
 
@@ -258,9 +258,6 @@ message MsgSend {
 
 #### Examples
 
-- `cosmos.bank.v1beta1.MsgSend` -> `bank send coins` (no v1beta1 in string, for bijectivity we map this string to v1beta1)
-- `cosmos.bank.v1.MsgSend` -> `bank v1 send coins` (if `cosmos.bank.v1` is released and used in parallel with `cosmos.bank.v1beta1`)
-- `cosmos.gov.v1beta1.MsgVote` -> `governance vote` (no v1beta1 in string, for bijectivity we map this string to v1beta1)
 - `cosmos.gov.v1.MsgVote` -> `governance v1 vote`
 
 #### Best Pratices

@@ -23,15 +23,18 @@ jobs:
             go.mod
             go.sum
       - name: Get data from Go build cache
-        # if: env.GIT_DIFF
-        if: ${{ false }}
+        if: env.GIT_DIFF
         uses: actions/cache@v3
         with:
           path: |
-            ~/go/pkg/mod
-            ~/.cache/golangci-lint
-            ~/.cache/go-build
-          key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
+              ~/go/pkg/mod
+              ~/.cache/golangci-lint
+              ~/.cache/go-build
+              ~/Library/Caches/go-build
+              ~\AppData\Local\go-build
+          key: ${{ runner.os }}-go-linter-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+              ${{ runner.os }}-go-linter-${{ matrix.go-version }}-
       - name: golangci-lint
         if: env.GIT_DIFF
         uses: golangci/golangci-lint-action@v3

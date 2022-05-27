@@ -211,6 +211,7 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 		conf.P2P.RecvRate = 5120000
 		conf.P2P.SendRate = 5120000
 		conf.Consensus.TimeoutCommit = 5 * time.Second
+		conf.P2P.UseLegacy = true
 		if err := tmcfg.WriteConfigFile(rootDir, conf); err != nil {
 			return nil, fmt.Errorf("error writing config file: %w", err)
 		}

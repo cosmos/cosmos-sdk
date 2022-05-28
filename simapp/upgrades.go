@@ -46,7 +46,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 				"genutil":      1,
 			}
 
-			return app.ModuleManager.RunMigrations(ctx, app.configurator, fromVM)
+			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
 		})
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()

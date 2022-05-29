@@ -186,9 +186,6 @@ type SimApp struct {
 
 	// simulation manager
 	sm *module.SimulationManager
-
-	// module configurator
-	configurator module.Configurator
 }
 
 func init() {
@@ -213,6 +210,7 @@ func NewSimApp(
 ) *SimApp {
 	var appBuilder *runtime.AppBuilder
 	var paramsKeeper paramskeeper.Keeper
+	var accountKeeper authkeeper.AccountKeeper
 	var appCodec codec.Codec
 	var legacyAmino *codec.LegacyAmino
 	var interfaceRegistry codectypes.InterfaceRegistry
@@ -222,6 +220,7 @@ func NewSimApp(
 		&appCodec,
 		&legacyAmino,
 		&interfaceRegistry,
+		&accountKeeper,
 	)
 	if err != nil {
 		panic(err)
@@ -230,7 +229,7 @@ func NewSimApp(
 	runtimeApp := appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 
 	keys := sdk.NewKVStoreKeys(
-		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
+		banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, capabilitytypes.StoreKey,
@@ -259,15 +258,14 @@ func NewSimApp(
 	app.ParamsKeeper = paramsKeeper
 	initParamsKeeper(paramsKeeper)
 
+	app.AccountKeeper = accountKeeper
+
 	app.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, keys[capabilitytypes.StoreKey], memKeys[capabilitytypes.MemStoreKey])
 	// Applications that wish to enforce statically created ScopedKeepers should call `Seal` after creating
 	// their scoped modules in `NewApp` with `ScopeToModule`
 	app.CapabilityKeeper.Seal()
 
 	// add keepers
-	app.AccountKeeper = authkeeper.NewAccountKeeper(
-		appCodec, keys[authtypes.StoreKey], app.GetSubspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
-	)
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.ModuleAccountAddrs(),
 	)
@@ -355,7 +353,6 @@ func NewSimApp(
 			app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx,
 			encodingConfig.TxConfig,
 		),
-		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
@@ -395,8 +392,6 @@ func NewSimApp(
 
 	app.ModuleManager.RegisterInvariants(&app.CrisisKeeper)
 	app.ModuleManager.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
-	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
-	app.ModuleManager.RegisterServices(app.configurator)
 
 	// add test gRPC service for testing gRPC queries in isolation
 	testdata_pulsar.RegisterQueryServer(app.GRPCQueryRouter(), testdata_pulsar.QueryImpl{})
@@ -617,7 +612,6 @@ func GetMaccPerms() map[string][]string {
 
 // initParamsKeeper init params keeper and its subspaces
 func initParamsKeeper(paramsKeeper paramskeeper.Keeper) {
-	paramsKeeper.Subspace(authtypes.ModuleName)
 	paramsKeeper.Subspace(banktypes.ModuleName)
 	paramsKeeper.Subspace(stakingtypes.ModuleName)
 	paramsKeeper.Subspace(minttypes.ModuleName)

@@ -211,6 +211,7 @@ func NewSimApp(
 	var appBuilder *runtime.AppBuilder
 	var paramsKeeper paramskeeper.Keeper
 	var accountKeeper authkeeper.AccountKeeper
+	var feegrantKeeper feegrantkeeper.Keeper
 	var appCodec codec.Codec
 	var legacyAmino *codec.LegacyAmino
 	var interfaceRegistry codectypes.InterfaceRegistry
@@ -221,6 +222,7 @@ func NewSimApp(
 		&legacyAmino,
 		&interfaceRegistry,
 		&accountKeeper,
+		&feegrantKeeper,
 	)
 	if err != nil {
 		panic(err)
@@ -231,9 +233,9 @@ func NewSimApp(
 	keys := sdk.NewKVStoreKeys(
 		banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
-		govtypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
-		evidencetypes.StoreKey, capabilitytypes.StoreKey,
-		authzkeeper.StoreKey, nftkeeper.StoreKey, group.StoreKey,
+		govtypes.StoreKey, upgradetypes.StoreKey, evidencetypes.StoreKey,
+		capabilitytypes.StoreKey, authzkeeper.StoreKey, nftkeeper.StoreKey,
+		group.StoreKey,
 	)
 	// NOTE: The testingkey is just mounted for testing purposes. Actual applications should
 	// not include this key.
@@ -287,7 +289,7 @@ func NewSimApp(
 		app.GetSubspace(crisistypes.ModuleName), invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName,
 	)
 
-	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(appCodec, keys[feegrant.StoreKey], app.AccountKeeper)
+	app.FeeGrantKeeper = feegrantKeeper //feegrantkeeper.NewKeeper(appCodec, keys[feegrant.StoreKey], app.AccountKeeper)
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks

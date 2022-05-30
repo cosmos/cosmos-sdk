@@ -1,6 +1,6 @@
 syntax="proto3";
 
-option go_package = "github.com/cosmos/cosmos-proto/testpb";
+option go_package = "github.com/cosmos/cosmos-sdk/types/textual/internal/testpb";
 
 import "google/protobuf/descriptor.proto";
 import "cosmos_proto/cosmos.proto";

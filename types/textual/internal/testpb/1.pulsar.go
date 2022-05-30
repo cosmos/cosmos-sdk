@@ -3,6 +3,7 @@ package testpb
 
 import (
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
@@ -17,6 +18,10 @@ var (
 	md_A        protoreflect.MessageDescriptor
 	fd_A_UINT32 protoreflect.FieldDescriptor
 	fd_A_UINT64 protoreflect.FieldDescriptor
+	fd_A_INT32  protoreflect.FieldDescriptor
+	fd_A_INT64  protoreflect.FieldDescriptor
+	fd_A_SDKINT protoreflect.FieldDescriptor
+	fd_A_SDKDEC protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -24,6 +29,10 @@ func init() {
 	md_A = File__1_proto.Messages().ByName("A")
 	fd_A_UINT32 = md_A.Fields().ByName("UINT32")
 	fd_A_UINT64 = md_A.Fields().ByName("UINT64")
+	fd_A_INT32 = md_A.Fields().ByName("INT32")
+	fd_A_INT64 = md_A.Fields().ByName("INT64")
+	fd_A_SDKINT = md_A.Fields().ByName("SDKINT")
+	fd_A_SDKDEC = md_A.Fields().ByName("SDKDEC")
 }
 
 var _ protoreflect.Message = (*fastReflection_A)(nil)
@@ -103,6 +112,30 @@ func (x *fastReflection_A) Range(f func(protoreflect.FieldDescriptor, protorefle
 			return
 		}
 	}
+	if x.INT32 != int32(0) {
+		value := protoreflect.ValueOfInt32(x.INT32)
+		if !f(fd_A_INT32, value) {
+			return
+		}
+	}
+	if x.INT64 != int64(0) {
+		value := protoreflect.ValueOfInt64(x.INT64)
+		if !f(fd_A_INT64, value) {
+			return
+		}
+	}
+	if x.SDKINT != "" {
+		value := protoreflect.ValueOfString(x.SDKINT)
+		if !f(fd_A_SDKINT, value) {
+			return
+		}
+	}
+	if x.SDKDEC != "" {
+		value := protoreflect.ValueOfString(x.SDKDEC)
+		if !f(fd_A_SDKDEC, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -122,6 +155,14 @@ func (x *fastReflection_A) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.UINT32 != uint32(0)
 	case "A.UINT64":
 		return x.UINT64 != uint64(0)
+	case "A.INT32":
+		return x.INT32 != int32(0)
+	case "A.INT64":
+		return x.INT64 != int64(0)
+	case "A.SDKINT":
+		return x.SDKINT != ""
+	case "A.SDKDEC":
+		return x.SDKDEC != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: A"))
@@ -142,6 +183,14 @@ func (x *fastReflection_A) Clear(fd protoreflect.FieldDescriptor) {
 		x.UINT32 = uint32(0)
 	case "A.UINT64":
 		x.UINT64 = uint64(0)
+	case "A.INT32":
+		x.INT32 = int32(0)
+	case "A.INT64":
+		x.INT64 = int64(0)
+	case "A.SDKINT":
+		x.SDKINT = ""
+	case "A.SDKDEC":
+		x.SDKDEC = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: A"))
@@ -164,6 +213,18 @@ func (x *fastReflection_A) Get(descriptor protoreflect.FieldDescriptor) protoref
 	case "A.UINT64":
 		value := x.UINT64
 		return protoreflect.ValueOfUint64(value)
+	case "A.INT32":
+		value := x.INT32
+		return protoreflect.ValueOfInt32(value)
+	case "A.INT64":
+		value := x.INT64
+		return protoreflect.ValueOfInt64(value)
+	case "A.SDKINT":
+		value := x.SDKINT
+		return protoreflect.ValueOfString(value)
+	case "A.SDKDEC":
+		value := x.SDKDEC
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: A"))
@@ -188,6 +249,14 @@ func (x *fastReflection_A) Set(fd protoreflect.FieldDescriptor, value protorefle
 		x.UINT32 = uint32(value.Uint())
 	case "A.UINT64":
 		x.UINT64 = value.Uint()
+	case "A.INT32":
+		x.INT32 = int32(value.Int())
+	case "A.INT64":
+		x.INT64 = value.Int()
+	case "A.SDKINT":
+		x.SDKINT = value.Interface().(string)
+	case "A.SDKDEC":
+		x.SDKDEC = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: A"))
@@ -212,6 +281,14 @@ func (x *fastReflection_A) Mutable(fd protoreflect.FieldDescriptor) protoreflect
 		panic(fmt.Errorf("field UINT32 of message A is not mutable"))
 	case "A.UINT64":
 		panic(fmt.Errorf("field UINT64 of message A is not mutable"))
+	case "A.INT32":
+		panic(fmt.Errorf("field INT32 of message A is not mutable"))
+	case "A.INT64":
+		panic(fmt.Errorf("field INT64 of message A is not mutable"))
+	case "A.SDKINT":
+		panic(fmt.Errorf("field SDKINT of message A is not mutable"))
+	case "A.SDKDEC":
+		panic(fmt.Errorf("field SDKDEC of message A is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: A"))
@@ -229,6 +306,14 @@ func (x *fastReflection_A) NewField(fd protoreflect.FieldDescriptor) protoreflec
 		return protoreflect.ValueOfUint32(uint32(0))
 	case "A.UINT64":
 		return protoreflect.ValueOfUint64(uint64(0))
+	case "A.INT32":
+		return protoreflect.ValueOfInt32(int32(0))
+	case "A.INT64":
+		return protoreflect.ValueOfInt64(int64(0))
+	case "A.SDKINT":
+		return protoreflect.ValueOfString("")
+	case "A.SDKDEC":
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: A"))
@@ -304,6 +389,20 @@ func (x *fastReflection_A) ProtoMethods() *protoiface.Methods {
 		if x.UINT64 != 0 {
 			n += 1 + runtime.Sov(uint64(x.UINT64))
 		}
+		if x.INT32 != 0 {
+			n += 1 + runtime.Sov(uint64(x.INT32))
+		}
+		if x.INT64 != 0 {
+			n += 1 + runtime.Sov(uint64(x.INT64))
+		}
+		l = len(x.SDKINT)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.SDKDEC)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -332,6 +431,30 @@ func (x *fastReflection_A) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.SDKDEC) > 0 {
+			i -= len(x.SDKDEC)
+			copy(dAtA[i:], x.SDKDEC)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.SDKDEC)))
+			i--
+			dAtA[i] = 0x32
+		}
+		if len(x.SDKINT) > 0 {
+			i -= len(x.SDKINT)
+			copy(dAtA[i:], x.SDKINT)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.SDKINT)))
+			i--
+			dAtA[i] = 0x2a
+		}
+		if x.INT64 != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.INT64))
+			i--
+			dAtA[i] = 0x20
+		}
+		if x.INT32 != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.INT32))
+			i--
+			dAtA[i] = 0x18
 		}
 		if x.UINT64 != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.UINT64))
@@ -430,6 +553,108 @@ func (x *fastReflection_A) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
+			case 3:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field INT32", wireType)
+				}
+				x.INT32 = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.INT32 |= int32(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 4:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field INT64", wireType)
+				}
+				x.INT64 = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.INT64 |= int64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field SDKINT", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.SDKINT = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field SDKDEC", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.SDKDEC = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -951,6 +1176,10 @@ type A struct {
 
 	UINT32 uint32 `protobuf:"varint,1,opt,name=UINT32,proto3" json:"UINT32,omitempty"`
 	UINT64 uint64 `protobuf:"varint,2,opt,name=UINT64,proto3" json:"UINT64,omitempty"`
+	INT32  int32  `protobuf:"varint,3,opt,name=INT32,proto3" json:"INT32,omitempty"`
+	INT64  int64  `protobuf:"varint,4,opt,name=INT64,proto3" json:"INT64,omitempty"`
+	SDKINT string `protobuf:"bytes,5,opt,name=SDKINT,proto3" json:"SDKINT,omitempty"`
+	SDKDEC string `protobuf:"bytes,6,opt,name=SDKDEC,proto3" json:"SDKDEC,omitempty"`
 }
 
 func (x *A) Reset() {
@@ -985,6 +1214,34 @@ func (x *A) GetUINT64() uint64 {
 		return x.UINT64
 	}
 	return 0
+}
+
+func (x *A) GetINT32() int32 {
+	if x != nil {
+		return x.INT32
+	}
+	return 0
+}
+
+func (x *A) GetINT64() int64 {
+	if x != nil {
+		return x.INT64
+	}
+	return 0
+}
+
+func (x *A) GetSDKINT() string {
+	if x != nil {
+		return x.SDKINT
+	}
+	return ""
+}
+
+func (x *A) GetSDKDEC() string {
+	if x != nil {
+		return x.SDKDEC
+	}
+	return ""
 }
 
 type B struct {
@@ -1027,19 +1284,28 @@ var File__1_proto protoreflect.FileDescriptor
 var file__1_proto_rawDesc = []byte{
 	0x0a, 0x07, 0x31, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x20, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
 	0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x64, 0x65, 0x73, 0x63, 0x72,
-	0x69, 0x70, 0x74, 0x6f, 0x72, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x33, 0x0a, 0x01, 0x41,
-	0x12, 0x16, 0x0a, 0x06, 0x55, 0x49, 0x4e, 0x54, 0x33, 0x32, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d,
-	0x52, 0x06, 0x55, 0x49, 0x4e, 0x54, 0x33, 0x32, 0x12, 0x16, 0x0a, 0x06, 0x55, 0x49, 0x4e, 0x54,
-	0x36, 0x34, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x06, 0x55, 0x49, 0x4e, 0x54, 0x36, 0x34,
-	0x22, 0x11, 0x0a, 0x01, 0x42, 0x12, 0x0c, 0x0a, 0x01, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x01, 0x78, 0x2a, 0x1f, 0x0a, 0x0b, 0x45, 0x6e, 0x75, 0x6d, 0x65, 0x72, 0x61, 0x74, 0x69,
-	0x6f, 0x6e, 0x12, 0x07, 0x0a, 0x03, 0x4f, 0x6e, 0x65, 0x10, 0x00, 0x12, 0x07, 0x0a, 0x03, 0x54,
-	0x77, 0x6f, 0x10, 0x01, 0x42, 0x4c, 0x42, 0x06, 0x31, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01,
-	0x5a, 0x40, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74,
-	0x79, 0x70, 0x65, 0x73, 0x2f, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x72, 0x65, 0x6e, 0x64, 0x65, 0x72,
-	0x65, 0x72, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x74, 0x65, 0x73, 0x74,
-	0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x69, 0x70, 0x74, 0x6f, 0x72, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x19, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xaf, 0x01, 0x0a, 0x01, 0x41, 0x12, 0x16, 0x0a, 0x06,
+	0x55, 0x49, 0x4e, 0x54, 0x33, 0x32, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x06, 0x55, 0x49,
+	0x4e, 0x54, 0x33, 0x32, 0x12, 0x16, 0x0a, 0x06, 0x55, 0x49, 0x4e, 0x54, 0x36, 0x34, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x04, 0x52, 0x06, 0x55, 0x49, 0x4e, 0x54, 0x36, 0x34, 0x12, 0x14, 0x0a, 0x05,
+	0x49, 0x4e, 0x54, 0x33, 0x32, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x49, 0x4e, 0x54,
+	0x33, 0x32, 0x12, 0x14, 0x0a, 0x05, 0x49, 0x4e, 0x54, 0x36, 0x34, 0x18, 0x04, 0x20, 0x01, 0x28,
+	0x03, 0x52, 0x05, 0x49, 0x4e, 0x54, 0x36, 0x34, 0x12, 0x26, 0x0a, 0x06, 0x53, 0x44, 0x4b, 0x49,
+	0x4e, 0x54, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x42, 0x0e, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x06, 0x53, 0x44, 0x4b, 0x49, 0x4e, 0x54,
+	0x12, 0x26, 0x0a, 0x06, 0x53, 0x44, 0x4b, 0x44, 0x45, 0x43, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09,
+	0x42, 0x0e, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63,
+	0x52, 0x06, 0x53, 0x44, 0x4b, 0x44, 0x45, 0x43, 0x22, 0x11, 0x0a, 0x01, 0x42, 0x12, 0x0c, 0x0a,
+	0x01, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x01, 0x78, 0x2a, 0x1f, 0x0a, 0x0b, 0x45,
+	0x6e, 0x75, 0x6d, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x07, 0x0a, 0x03, 0x4f, 0x6e,
+	0x65, 0x10, 0x00, 0x12, 0x07, 0x0a, 0x03, 0x54, 0x77, 0x6f, 0x10, 0x01, 0x42, 0x46, 0x42, 0x06,
+	0x31, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x3a, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,
+	0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2f, 0x74, 0x65, 0x78,
+	0x74, 0x75, 0x61, 0x6c, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x74, 0x65,
+	0x73, 0x74, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (

@@ -1,14 +1,17 @@
-package valuerenderer
+package textual
 
 import (
 	"context"
 	"fmt"
 	"strings"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/descriptorpb"
+
+	cosmos_proto "github.com/cosmos/cosmos-proto"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 const thousandSeparator string = "'"
@@ -24,31 +27,33 @@ type adr050ValueRenderer struct{}
 
 var _ ValueRenderer = adr050ValueRenderer{}
 
-func (r adr050ValueRenderer) Format(ctx context.Context, v proto.Message) ([]string, error) {
-	fields := v.ProtoReflect().Descriptor().Fields()
-	fieldsLen := fields.Len()
-
+func (r adr050ValueRenderer) Format(ctx context.Context, fd protoreflect.FieldDescriptor, v protoreflect.Value) ([]string, error) {
 	result := []string{}
-	for i := 0; i < fieldsLen; i++ {
-		fd := fields.Get(i)            // Field descriptor
-		fv := v.ProtoReflect().Get(fd) // Field value
-
-		switch {
-		case fd.Kind() == protoreflect.Uint32Kind ||
-			fd.Kind() == protoreflect.Uint64Kind ||
-			fd.Kind() == protoreflect.Int32Kind ||
-			fd.Kind() == protoreflect.Int64Kind:
-			{
-				formatted, err := formatInteger(fv.String())
-				if err != nil {
-					return nil, err
-				}
-
-				result = append(result, formatted)
+	switch {
+	case fd.Kind() == protoreflect.Uint32Kind ||
+		fd.Kind() == protoreflect.Uint64Kind ||
+		fd.Kind() == protoreflect.Int32Kind ||
+		fd.Kind() == protoreflect.Int64Kind ||
+		(fd.Kind() == protoreflect.StringKind && isCosmosScalar(fd, "cosmos.Int")):
+		{
+			formatted, err := formatInteger(v.String())
+			if err != nil {
+				return nil, err
 			}
-		default:
-			return nil, fmt.Errorf("value renderers cannot format value %s of type %s", fv, fd.Kind())
+
+			result = append(result, formatted)
 		}
+	case fd.Kind() == protoreflect.StringKind && isCosmosScalar(fd, "cosmos.Dec"):
+		{
+			formatted, err := formatDecimal(v.String())
+			if err != nil {
+				return nil, err
+			}
+
+			result = append(result, formatted)
+		}
+	default:
+		return nil, fmt.Errorf("value renderers cannot format value %s of type %s", v, fd.Kind())
 	}
 
 	return result, nil
@@ -56,6 +61,14 @@ func (r adr050ValueRenderer) Format(ctx context.Context, v proto.Message) ([]str
 
 func (r adr050ValueRenderer) Parse(context.Context, []string) (proto.Message, error) {
 	panic("implement me")
+}
+
+func isCosmosScalar(fd protoreflect.FieldDescriptor, scalar string) bool {
+	opts := fd.Options().(*descriptorpb.FieldOptions)
+	if proto.GetExtension(opts, cosmos_proto.E_Scalar).(string) == scalar {
+		return true
+	}
+	return true
 }
 
 // formatInteger formats an integer into a value-rendered string. This function

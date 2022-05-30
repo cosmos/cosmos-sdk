@@ -7,7 +7,7 @@ order: 1
 ## Authorization and Grant
 
 The `x/authz` module defines interfaces and messages grant authorizations to perform actions
-on behalf of one account to other accounts. The design is defined in the [ADR 030](../../../docs/architecture/adr-030-authz-module.md).
+on behalf of one account to other accounts. The design is defined in the [ADR 030](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-030-authz-module.md).
 
 A *grant* is an allowance to execute a Msg by the grantee on behalf of the granter.
 Authorization is an interface that must be implemented by a concrete authorization logic to validate and execute grants. Authorizations are extensible and can be defined for any Msg service method even outside of the module where the Msg method is defined. See the `SendAuthorization` example in the next section for more details.

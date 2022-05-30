@@ -67,7 +67,7 @@ First, the important parameters that are initialized during the bootstrapping of
 * [gRPC Query Router](#grpc-query-router): The `grpcQueryRouter` facilitates the routing of gRPC queries to the
   appropriate module for it to be processed. These queries are not ABCI messages themselves, but they
   are relayed to the relevant module's gRPC `Query` service.
-* [`TxDecoder`](https://godoc.org/github.com/cosmos/cosmos-sdk/types#TxDecoder): It is used to decode
+* [`TxDecoder`](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/types#TxDecoder): It is used to decode
   raw transaction bytes relayed by the underlying Tendermint engine.
 * [`ParamStore`](#paramstore): The parameter store used to get and set application consensus parameters.
 * [`AnteHandler`](#antehandler): This handler is used to handle signature verification, fee payment,

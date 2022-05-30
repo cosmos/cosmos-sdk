@@ -38,7 +38,7 @@ The `main.go` file needs to have a `main()` function that creates a root command
 * **instantiating the `codec`** by calling the application's `MakeCodec()` function (called `MakeTestEncodingConfig` in `simapp`). The [`codec`](../core/encoding.md) is used to encode and decode data structures for the application - stores can only persist `[]byte`s so the developer must define a serialization format for their data structures or use the default, Protobuf.
 * **adding subcommand** for all the possible user interactions, including [transaction commands](#transaction-commands) and [query commands](#query-commands).
 
-The `main()` function finally creates an executor and [execute](https://godoc.org/github.com/spf13/cobra#Command.Execute) the root command. See an example of `main()` function from the `simapp` application:
+The `main()` function finally creates an executor and [execute](https://pkg.go.dev/github.com/spf13/cobra#Command.Execute) the root command. See an example of `main()` function from the `simapp` application:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/simapp/simd/main.go#L12-L24
 

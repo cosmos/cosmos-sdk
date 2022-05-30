@@ -72,7 +72,7 @@ The first thing that is created in the execution of a CLI command is a `client.C
 * **Account Decoder**: The account decoder from the [`auth`](../../x/auth/spec/README.md) module, which translates `[]byte`s into accounts.
 * **RPC Client**: The Tendermint RPC Client, or node, to which the request will be relayed to.
 * **Keyring**: A [Key Manager](../basics/accounts.md#keyring) used to sign transactions and handle other operations with keys.
-* **Output Writer**: A [Writer](https://golang.org/pkg/io/#Writer) used to output the response.
+* **Output Writer**: A [Writer](https://pkg.go.dev/io/#Writer) used to output the response.
 * **Configurations**: The flags configured by the user for this command, including `--height`, specifying the height of the blockchain to query and `--indent`, which indicates to add an indent to the JSON response.
 
 The `client.Context` also contains various functions such as `Query()` which retrieves the RPC Client and makes an ABCI call to relay a query to a full-node.

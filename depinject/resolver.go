@@ -1,9 +1,9 @@
-package container
+package depinject
 
 import (
 	"reflect"
 
-	"github.com/cosmos/cosmos-sdk/container/internal/graphviz"
+	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
 )
 
 type resolver interface {

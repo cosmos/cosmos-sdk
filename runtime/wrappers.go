@@ -14,7 +14,7 @@ func WrapAppModule(appModule module.AppModule) AppModuleWrapper {
 	return AppModuleWrapper{AppModule: appModule}
 }
 
-// IsOnePerModuleType identifies this type as a container.OnePerModuleType.
+// IsOnePerModuleType identifies this type as a depinject.OnePerModuleType.
 func (AppModuleWrapper) IsOnePerModuleType() {}
 
 // AppModuleBasicWrapper is a type used for injecting a module.AppModuleBasic
@@ -29,5 +29,5 @@ func WrapAppModuleBasic(basic module.AppModuleBasic) AppModuleBasicWrapper {
 	return AppModuleBasicWrapper{AppModuleBasic: basic}
 }
 
-// IsOnePerModuleType identifies this type as a container.OnePerModuleType.
+// IsOnePerModuleType identifies this type as a depinject.OnePerModuleType.
 func (AppModuleBasicWrapper) IsOnePerModuleType() {}

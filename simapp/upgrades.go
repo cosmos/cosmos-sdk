@@ -17,35 +17,7 @@ const UpgradeName = "v045-to-v046"
 
 func (app SimApp) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(UpgradeName,
-		func(ctx sdk.Context, plan upgradetypes.Plan, _ module.VersionMap) (module.VersionMap, error) {
-			// We set fromVersion to 1 to avoid running InitGenesis for modules for
-			// in-store migrations.
-			// 
-			// If you wish to skip any module migrations, i.e. they were already migrated
-			// in an older version, you can use `modulename.AppModule{}.ConsensusVersion()`
-			// instead of `1` below.
-			// 
-			// For example:
-			// "auth":	auth.AppModule{}.ConsensusVersion()
-			fromVM := map[string]uint64{
-				"auth":         1,
-				"authz":        1,
-				"bank":         1,
-				"capability":   1,
-				"crisis":       1,
-				"distribution": 1,
-				"evidence":     1,
-				"feegrant":     1,
-				"gov":          1,
-				"mint":         1,
-				"params":       1,
-				"slashing":     1,
-				"staking":      1,
-				"upgrade":      1,
-				"vesting":      1,
-				"genutil":      1,
-			}
-
+		func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 		})
 

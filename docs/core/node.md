@@ -55,13 +55,13 @@ In practice, the [constructor of the application](../basics/app-anatomy.md#const
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/simd/cmd/root.go#L170-L215
 
-Then, the instance of `app` is used to instanciate a new Tendermint node:
+Then, the instance of `app` is used to instantiate a new Tendermint node:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/server/start.go#L235-L244
 
 The Tendermint node can be created with `app` because the latter satisfies the [`abci.Application` interface](https://github.com/tendermint/tendermint/blob/v0.34.0/abci/types/application.go#L7-L32) (given that `app` extends [`baseapp`](./baseapp.md)). As part of the `NewNode` method, Tendermint makes sure that the height of the application (i.e. number of blocks since genesis) is equal to the height of the Tendermint node. The difference between these two heights should always be negative or null. If it is strictly negative, `NewNode` will replay blocks until the height of the application reaches the height of the Tendermint node. Finally, if the height of the application is `0`, the Tendermint node will call [`InitChain`](./baseapp.md#initchain) on the application to initialize the state from the genesis file.
 
-Once the Tendermint node is instanciated and in sync with the application, the node can be started:
+Once the Tendermint node is instantiated and in sync with the application, the node can be started:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/server/start.go#L250-L252
 

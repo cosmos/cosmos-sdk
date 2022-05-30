@@ -20,6 +20,7 @@ import (
 var _ authz.QueryServer = Keeper{}
 
 // Authorizations implements the Query/Grants gRPC method.
+// It returns grants for a granter-grantee pair. If msg type URL is set, it returns grants only for that msg type.
 func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz.QueryGrantsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
@@ -39,7 +40,7 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 	if req.MsgTypeUrl != "" {
 		grant, found := k.getGrant(ctx, grantStoreKey(grantee, granter, req.MsgTypeUrl))
 		if !found {
-			return nil, sdkerrors.ErrNotFound.Wrapf("authorization not found for %s type", req.MsgTypeUrl)
+			return nil, sdkerrors.Wrapf(authz.ErrNoAuthorizationFound, "authorization not found for %s type", req.MsgTypeUrl)
 		}
 
 		authorization, err := grant.GetAuthorization()
@@ -118,8 +119,7 @@ func (k Keeper) GranterGrants(c context.Context, req *authz.QueryGranterGrantsRe
 	authzStore := prefix.NewStore(store, grantStoreKey(nil, granter, ""))
 
 	var grants []*authz.GrantAuthorization
-	pageRes, err := query.FilteredPaginate(authzStore, req.Pagination, func(key []byte, value []byte,
-		accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(authzStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		auth, err := unmarshalAuthorization(k.cdc, value)
 		if err != nil {
 			return false, err
@@ -171,8 +171,7 @@ func (k Keeper) GranteeGrants(c context.Context, req *authz.QueryGranteeGrantsRe
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), GrantKey)
 
 	var authorizations []*authz.GrantAuthorization
-	pageRes, err := query.FilteredPaginate(store, req.Pagination, func(key []byte, value []byte,
-		accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(store, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		auth, err := unmarshalAuthorization(k.cdc, value)
 		if err != nil {
 			return false, err

@@ -11,7 +11,6 @@ import (
 )
 
 type (
-	PruningOptions            = types2.PruningOptions
 	Queryable                 = types2.Queryable
 	KVStore                   = types2.KVStore
 	Iterator                  = types2.Iterator
@@ -150,14 +149,14 @@ type (
 	GasConfig = types.GasConfig
 )
 
-func NewGasMeter(limit Gas) GasMeter {
-	return types.NewGasMeter(limit)
-}
-
 type (
 	ErrorOutOfGas    = types.ErrorOutOfGas
 	ErrorGasOverflow = types.ErrorGasOverflow
 )
+
+func NewGasMeter(limit Gas) GasMeter {
+	return types.NewGasMeter(limit)
+}
 
 func NewInfiniteGasMeter() GasMeter {
 	return types.NewInfiniteGasMeter()

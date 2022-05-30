@@ -36,12 +36,11 @@ type isOut interface{ isOut() }
 var isOutType = reflect.TypeOf((*isOut)(nil)).Elem()
 
 func expandStructArgsProvider(provider ProviderDescriptor) (ProviderDescriptor, error) {
-	var foundStructArgs bool
+	var structArgsInInput bool
 	var newIn []ProviderInput
-
 	for _, in := range provider.Inputs {
 		if in.Type.AssignableTo(isInType) {
-			foundStructArgs = true
+			structArgsInInput = true
 			inTypes, err := structArgsInTypes(in.Type)
 			if err != nil {
 				return ProviderDescriptor{}, err
@@ -52,17 +51,9 @@ func expandStructArgsProvider(provider ProviderDescriptor) (ProviderDescriptor, 
 		}
 	}
 
-	var newOut []ProviderOutput
-	for _, out := range provider.Outputs {
-		if out.Type.AssignableTo(isOutType) {
-			foundStructArgs = true
-			newOut = append(newOut, structArgsOutTypes(out.Type)...)
-		} else {
-			newOut = append(newOut, out)
-		}
-	}
+	newOut, structArgsInOutput := expandStructArgsOutTypes(provider.Outputs)
 
-	if foundStructArgs {
+	if structArgsInInput || structArgsInOutput {
 		return ProviderDescriptor{
 			Inputs:   newIn,
 			Outputs:  newOut,
@@ -135,6 +126,20 @@ func structArgsInTypes(typ reflect.Type) ([]ProviderInput, error) {
 		})
 	}
 	return res, nil
+}
+
+func expandStructArgsOutTypes(outputs []ProviderOutput) ([]ProviderOutput, bool) {
+	foundStructArgs := false
+	var newOut []ProviderOutput
+	for _, out := range outputs {
+		if out.Type.AssignableTo(isOutType) {
+			foundStructArgs = true
+			newOut = append(newOut, structArgsOutTypes(out.Type)...)
+		} else {
+			newOut = append(newOut, out)
+		}
+	}
+	return newOut, foundStructArgs
 }
 
 func structArgsOutTypes(typ reflect.Type) []ProviderOutput {

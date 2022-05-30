@@ -142,7 +142,7 @@ func (s *Store) Delete(key []byte) {
 }
 
 func (s *Store) Commit() error {
-	return s.tree.Save()
+	return s.tree.Commit()
 }
 
 func (ms dbMapStore) Get(key []byte) ([]byte, error) {

@@ -12,7 +12,7 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/any.proto";
 
 // Member represents a group member with an account address,
-// non-zero weight and metadata.
+// non-zero weight, metadata and added_at timestamp.
 message Member {
 
   // address is the member's account address.
@@ -28,11 +28,20 @@ message Member {
   google.protobuf.Timestamp added_at = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
 
-// Members defines a repeated slice of Member objects.
-message Members {
 
-  // members is the list of members.
-  repeated Member members = 1 [(gogoproto.nullable) = false];
+// MemberRequest represents a group member to be used in Msg server requests.
+// Contrary to `Member`, it doesn't have any `added_at` field
+// since this field cannot be set as part of requests.
+message MemberRequest {
+
+  // address is the member's account address.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // weight is the member's voting weight that should be greater than 0.
+  string weight = 2;
+
+  // metadata is any arbitrary metadata attached to the member.
+  string metadata = 3;
 }
 
 // ThresholdDecisionPolicy is a decision policy where a proposal passes when it
@@ -167,7 +176,7 @@ message GroupPolicyInfo {
   uint64 version = 5;
 
   // decision_policy specifies the group policy's decision policy.
-  google.protobuf.Any decision_policy = 6 [(cosmos_proto.accepts_interface) = "DecisionPolicy"];
+  google.protobuf.Any decision_policy = 6 [(cosmos_proto.accepts_interface) = "cosmos.group.v1.DecisionPolicy"];
 
   // created_at is a timestamp specifying when a group policy was created.
   google.protobuf.Timestamp created_at = 7 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
@@ -221,7 +230,7 @@ message Proposal {
   // accordingly updated.
   google.protobuf.Timestamp voting_period_end = 10 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 
-  // executor_result is the final result based on the votes and election rule. Initial value is NotRun.
+  // executor_result is the final result of the proposal execution. Initial value is NotRun.
   ProposalExecutorResult executor_result = 11;
 
   // messages is a list of `sdk.Msg`s that will be executed if the proposal passes.

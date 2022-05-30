@@ -54,7 +54,7 @@ A `LegacyMsg` is typically accompanied by a standard constructor function, that 
 It extends `proto.Message` and contains the following methods:
 
 * `Route() string`: Name of the route for this message. Typically all `message`s in a module have the same route, which is most often the module's name.
-* `Type() string`: Type of the message, used primarly in [events](../core/events.md). This should return a message-specific `string`, typically the denomination of the message itself.
+* `Type() string`: Type of the message, used primarily in [events](../core/events.md). This should return a message-specific `string`, typically the denomination of the message itself.
 * [`ValidateBasic() error`](../basics/tx-lifecycle.md#ValidateBasic).
 * `GetSignBytes() []byte`: Return the canonical byte representation of the message. Used to generate a signature.
 * `GetSigners() []AccAddress`: Return the list of signers. The Cosmos SDK will make sure that each `message` contained in a transaction is signed by all the signers listed in the list returned by this method.
@@ -69,7 +69,7 @@ A `query` is a request for information made by end-users of applications through
 
 ### gRPC Queries
 
-Starting from v0.40, the prefered way to define queries is by using [Protobuf services](https://developers.google.com/protocol-buffers/docs/proto#services). A `Query` service should be created per module in `query.proto`. This service lists endpoints starting with `rpc`.
+Starting from v0.40, the preferred way to define queries is by using [Protobuf services](https://developers.google.com/protocol-buffers/docs/proto#services). A `Query` service should be created per module in `query.proto`. This service lists endpoints starting with `rpc`.
 
 Here's an example of such a `Query` service definition:
 
@@ -81,7 +81,7 @@ A `RegisterQueryServer` method is also generated and should be used to register 
 
 ### Legacy Queries
 
-Before the introduction of Protobuf and gRPC in the Cosmos SDK, there was usually no specific `query` object defined by module developers, contrary to `message`s. Instead, the Cosmos SDK took the simpler approach of using a simple `path` to define each `query`. The `path` contains the `query` type and all the arguments needed in order to process it. For most module queries, the `path` should look like the following:
+Before the introduction of Protobuf and gRPC in the Cosmos SDK, there was usually no specific `query` object defined by module developers, contrary to `message`s. Instead, the Cosmos SDK took the simpler approach of using a simple `path` to define each `query`. The `path` contains the `query` type and all the arguments needed to process it. For most module queries, the `path` should look like the following:
 
 ```text
 queryCategory/queryRoute/queryType/arg1/arg2/...

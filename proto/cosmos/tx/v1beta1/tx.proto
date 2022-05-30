@@ -238,11 +238,11 @@ message AuxSignerData {
   // AuxSignerData across different chains, the bech32 prefix of the target
   // chain (where the final transaction is broadcasted) should be used.
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // sign_doc is the SIGN_MOD_DIRECT_AUX sign doc that the auxiliary signer
+  // sign_doc is the SIGN_MODE_DIRECT_AUX sign doc that the auxiliary signer
   // signs. Note: we use the same sign doc even if we're signing with
   // LEGACY_AMINO_JSON.
   SignDocDirectAux sign_doc = 2;
-  // mode is the signing mode of the single signer
+  // mode is the signing mode of the single signer.
   cosmos.tx.signing.v1beta1.SignMode mode = 3;
   // sig is the signature of the sign doc.
   bytes sig = 4;

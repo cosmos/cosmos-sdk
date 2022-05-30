@@ -24,6 +24,7 @@ func NewTxCmd() *cobra.Command {
 	return slashingTxCmd
 }
 
+// NewUnjailTxCmd returns a CLI command handler for creating a MsgUnjail transaction.
 func NewUnjailTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unjail",

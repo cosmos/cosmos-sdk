@@ -242,7 +242,7 @@ func TestSpendableCoinsDelVestingAcc(t *testing.T) {
 	delegatedAmount := sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 50))
 	dva.TrackDelegation(now.Add(12*time.Hour), origCoins, delegatedAmount)
 	lockedCoins = dva.LockedCoins(now.Add(12 * time.Hour))
-	require.True(t, lockedCoins.IsEqual(origCoins.Sub(delegatedAmount)))
+	require.True(t, lockedCoins.IsEqual(origCoins.Sub(delegatedAmount...)))
 }
 
 func TestTrackDelegationDelVestingAcc(t *testing.T) {
@@ -362,7 +362,8 @@ func TestGetVestedCoinsPeriodicVestingAcc(t *testing.T) {
 	vestedCoins = pva.GetVestedCoins(now.Add(18 * time.Hour))
 	require.Equal(t,
 		sdk.Coins{
-			sdk.NewInt64Coin(feeDenom, 750), sdk.NewInt64Coin(stakeDenom, 75)}, vestedCoins)
+			sdk.NewInt64Coin(feeDenom, 750), sdk.NewInt64Coin(stakeDenom, 75),
+		}, vestedCoins)
 
 	// require 100% of coins vested
 	vestedCoins = pva.GetVestedCoins(now.Add(48 * time.Hour))
@@ -600,7 +601,7 @@ func TestSpendableCoinsPermLockedVestingAcc(t *testing.T) {
 	delegatedAmount := sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 50))
 	plva.TrackDelegation(now.Add(12*time.Hour), origCoins, delegatedAmount)
 	lockedCoins = plva.LockedCoins(now.Add(12 * time.Hour))
-	require.True(t, lockedCoins.IsEqual(origCoins.Sub(delegatedAmount)))
+	require.True(t, lockedCoins.IsEqual(origCoins.Sub(delegatedAmount...)))
 }
 
 func TestTrackDelegationPermLockedVestingAcc(t *testing.T) {
@@ -809,6 +810,7 @@ func (s *VestingAccountTestSuite) TestDelayedVestingAccountMarshal() {
 	_, err = app.AccountKeeper.UnmarshalAccount(bz[:len(bz)/2])
 	require.NotNil(err)
 }
+
 func (s *VestingAccountTestSuite) TestPermanentLockedAccountMarshal() {
 	app := s.app
 	require := s.Require()

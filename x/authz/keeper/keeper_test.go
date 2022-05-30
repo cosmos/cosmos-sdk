@@ -118,7 +118,6 @@ func (s *TestSuite) TestKeeperIter() {
 		s.Require().Contains([]sdk.AccAddress{granterAddr, granter2Addr}, granter)
 		return true
 	})
-
 }
 
 func (s *TestSuite) TestDispatchAction() {
@@ -220,7 +219,7 @@ func (s *TestSuite) TestDispatchAction() {
 				require.Len(authzs, 1)
 				authorization := authzs[0].(*banktypes.SendAuthorization)
 				require.NotNil(authorization)
-				require.Equal(authorization.SpendLimit, coins100.Sub(coins10))
+				require.Equal(authorization.SpendLimit, coins100.Sub(coins10...))
 			},
 		},
 		{
@@ -265,7 +264,6 @@ func (s *TestSuite) TestDispatchAction() {
 			tc.postRun()
 		})
 	}
-
 }
 
 // Tests that all msg events included in an authz MsgExec tx

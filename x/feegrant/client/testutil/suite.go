@@ -316,7 +316,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 	alreadyExistedGrantee := s.addedGrantee
 	clientCtx := val.ClientCtx
 
-	fromAddr, fromName, _, err := client.GetFromFields(clientCtx.Keyring, granter.String(), clientCtx.GenerateOnly)
+	fromAddr, fromName, _, err := client.GetFromFields(clientCtx, clientCtx.Keyring, granter.String())
 	s.Require().Equal(fromAddr, granter)
 	s.Require().NoError(err)
 
@@ -663,7 +663,7 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 				},
 				commonFlags...,
 			),
-			false, 4, &sdk.TxResponse{},
+			false, 38, &sdk.TxResponse{},
 		},
 		{
 			"Valid revoke",

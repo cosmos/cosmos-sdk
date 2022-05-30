@@ -13,6 +13,7 @@ import (
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	prefixdb "github.com/cosmos/cosmos-sdk/db/prefix"
 	util "github.com/cosmos/cosmos-sdk/internal"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -56,7 +57,7 @@ func ErrStoreNotFound(key string) error {
 // StoreParams is used to define a schema and other options and pass them to the MultiStore constructor.
 type StoreParams struct {
 	// Version pruning options for backing DBs.
-	Pruning types.PruningOptions
+	Pruning pruningtypes.PruningOptions
 	// The minimum allowed version number.
 	InitialVersion uint64
 	// The optional backing DB to use for the state commitment Merkle tree data.
@@ -100,7 +101,7 @@ type Store struct {
 	mtx  sync.RWMutex
 
 	// Copied from StoreParams
-	Pruning        types.PruningOptions
+	Pruning        pruningtypes.PruningOptions
 	InitialVersion uint64
 	*traceListenMixin
 
@@ -141,7 +142,7 @@ func newSchemaBuilder() SchemaBuilder {
 // pruning with PruneDefault, no listeners and no tracer.
 func DefaultStoreParams() StoreParams {
 	return StoreParams{
-		Pruning:          types.PruneDefault,
+		Pruning:          pruningtypes.NewPruningOptions(pruningtypes.PruningDefault),
 		SchemaBuilder:    newSchemaBuilder(),
 		storeKeys:        storeKeys{},
 		traceListenMixin: newTraceListenMixin(),
@@ -194,12 +195,12 @@ func validSubStoreType(sst types.StoreType) bool {
 }
 
 // Returns true iff both schema maps match exactly (including mem/tran stores)
-func (this StoreSchema) equal(that StoreSchema) bool {
-	if len(this) != len(that) {
+func (ss StoreSchema) equal(that StoreSchema) bool {
+	if len(ss) != len(that) {
 		return false
 	}
 	for key, val := range that {
-		myval, has := this[key]
+		myval, has := ss[key]
 		if !has {
 			return false
 		}
@@ -283,7 +284,7 @@ func NewStore(db dbm.DBConnection, opts StoreParams) (ret *Store, err error) {
 		}
 		// Version sets of each DB must match
 		if !versions.Equal(scVersions) {
-			err = fmt.Errorf("Storage and StateCommitment DB have different version history") //nolint:stylecheck
+			err = fmt.Errorf("different version history between Storage and StateCommitment DB ")
 			return
 		}
 		err = opts.StateCommitmentDB.Revert()
@@ -573,7 +574,7 @@ func (s *Store) Commit() types.CommitID {
 }
 
 // Performs necessary pruning via callback
-func pruneVersions(current int64, opts types.PruningOptions, prune func(int64)) {
+func pruneVersions(current int64, opts pruningtypes.PruningOptions, prune func(int64)) {
 	previous := current - 1
 	if opts.Interval != 0 && current%int64(opts.Interval) == 0 {
 		// The range of newly prunable versions
@@ -720,6 +721,20 @@ func (rs *Store) GetAllVersions() []uint64 {
 	return ret
 }
 
+// PruneSnapshotHeight prunes the given height according to the prune strategy.
+// If PruneNothing, this is a no-op.
+// If other strategy, this height is persisted until it is
+// less than <current height> - KeepRecent and <current height> % Interval == 0
+func (rs *Store) PruneSnapshotHeight(height int64) {
+	panic("not implemented")
+}
+
+// SetSnapshotInterval sets the interval at which the snapshots are taken.
+// It is used by the store to determine which heights to retain until after the snapshot is complete.
+func (rs *Store) SetSnapshotInterval(snapshotInterval uint64) {
+	panic("not implemented")
+}
+
 // parsePath expects a format like /<storeName>[/<subpath>]
 // Must start with /, subpath may be empty
 // Returns error if it doesn't start with /
@@ -797,7 +812,7 @@ func (rs *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		// TODO: actual IBC compatible proof. This is a placeholder so unit tests can pass
 		res.ProofOps, err = substore.GetProof(res.Key)
 		if err != nil {
-			return sdkerrors.QueryResult(fmt.Errorf("Merkle proof creation failed for key: %v", res.Key), false) //nolint: stylecheck // proper name
+			return sdkerrors.QueryResult(fmt.Errorf("merkle proof creation failed for key: %v", res.Key), false)
 		}
 
 	case "/subspace":
@@ -941,6 +956,7 @@ func (tlm *traceListenMixin) ListeningEnabled(key types.StoreKey) bool {
 func (tlm *traceListenMixin) TracingEnabled() bool {
 	return tlm.TraceWriter != nil
 }
+
 func (tlm *traceListenMixin) SetTracer(w io.Writer) {
 	tlm.TraceWriter = w
 }
@@ -981,5 +997,5 @@ func (tlm *traceListenMixin) wrapTraceListen(store types.KVStore, skey types.Sto
 	return store
 }
 
-func (s *Store) GetPruning() types.PruningOptions   { return s.Pruning }
-func (s *Store) SetPruning(po types.PruningOptions) { s.Pruning = po }
+func (s *Store) GetPruning() pruningtypes.PruningOptions   { return s.Pruning }
+func (s *Store) SetPruning(po pruningtypes.PruningOptions) { s.Pruning = po }

@@ -11,7 +11,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
@@ -37,7 +37,7 @@ var (
 	_ authsigning.Tx                   = &wrapper{}
 	_ client.TxBuilder                 = &wrapper{}
 	_ tx.TipTx                         = &wrapper{}
-	_ middleware.HasExtensionOptionsTx = &wrapper{}
+	_ ante.HasExtensionOptionsTx = &wrapper{}
 	_ ExtensionOptionsTxBuilder        = &wrapper{}
 	_ tx.TipTx                         = &wrapper{}
 )

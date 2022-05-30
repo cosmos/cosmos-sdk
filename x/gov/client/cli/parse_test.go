@@ -60,17 +60,57 @@ func TestParseSubmitLegacyProposalFlags(t *testing.T) {
 
 	// no --proposal, only flags
 	fs.Set(FlagProposal, "")
-	fs.Set(FlagTitle, proposal1.Title)
-	fs.Set(FlagDescription, proposal1.Description)
-	fs.Set(FlagProposalType, proposal1.Type)
-	fs.Set(FlagDeposit, proposal1.Deposit)
-	proposal2, err := parseSubmitLegacyProposalFlags(fs)
+	flagTestCases := map[string]struct {
+		pTitle       string
+		pDescription string
+		pType        string
+		expErr       bool
+		errMsg       string
+	}{
+		"valid flags": {
+			pTitle:       proposal1.Title,
+			pDescription: proposal1.Description,
+			pType:        proposal1.Type,
+		},
+		"empty type": {
+			pTitle:       proposal1.Title,
+			pDescription: proposal1.Description,
+			expErr:       true,
+			errMsg:       "proposal type is required",
+		},
+		"empty title": {
+			pDescription: proposal1.Description,
+			pType:        proposal1.Type,
+			expErr:       true,
+			errMsg:       "proposal title is required",
+		},
+		"empty description": {
+			pTitle: proposal1.Title,
+			pType:  proposal1.Type,
+			expErr: true,
+			errMsg: "proposal description is required",
+		},
+	}
+	for name, tc := range flagTestCases {
+		t.Run(name, func(t *testing.T) {
+			fs.Set(FlagTitle, tc.pTitle)
+			fs.Set(FlagDescription, tc.pDescription)
+			fs.Set(FlagProposalType, tc.pType)
+			fs.Set(FlagDeposit, proposal1.Deposit)
+			proposal2, err := parseSubmitLegacyProposalFlags(fs)
 
-	require.Nil(t, err, "unexpected error")
-	require.Equal(t, proposal1.Title, proposal2.Title)
-	require.Equal(t, proposal1.Description, proposal2.Description)
-	require.Equal(t, proposal1.Type, proposal2.Type)
-	require.Equal(t, proposal1.Deposit, proposal2.Deposit)
+			if tc.expErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.errMsg)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, proposal1.Title, proposal2.Title)
+				require.Equal(t, proposal1.Description, proposal2.Description)
+				require.Equal(t, proposal1.Type, proposal2.Type)
+				require.Equal(t, proposal1.Deposit, proposal2.Deposit)
+			}
+		})
+	}
 
 	err = okJSON.Close()
 	require.Nil(t, err, "unexpected error")

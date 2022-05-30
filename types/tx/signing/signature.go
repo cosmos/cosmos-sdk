@@ -92,7 +92,6 @@ var _, _ codectypes.UnpackInterfacesMessage = &SignatureDescriptors{}, &Signatur
 func (sds *SignatureDescriptors) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, sig := range sds.Signatures {
 		err := sig.UnpackInterfaces(unpacker)
-
 		if err != nil {
 			return err
 		}

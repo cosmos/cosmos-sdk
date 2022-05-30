@@ -132,18 +132,11 @@ func (i MultiKeyIndex) GetPaginated(store sdk.KVStore, searchKey interface{}, pa
 //
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
 func (i MultiKeyIndex) PrefixScan(store sdk.KVStore, startI interface{}, endI interface{}) (Iterator, error) {
-	start, err := getPrefixScanKeyBytes(startI)
-	if err != nil {
-		return nil, err
-	}
-	end, err := getPrefixScanKeyBytes(endI)
+	start, end, err := getStartEndBz(startI, endI)
 	if err != nil {
 		return nil, err
 	}
 
-	if start != nil && end != nil && bytes.Compare(start, end) >= 0 {
-		return NewInvalidIterator(), sdkerrors.Wrap(errors.ErrORMInvalidArgument, "start must be less than end")
-	}
 	pStore := prefix.NewStore(store, []byte{i.prefix})
 	it := pStore.Iterator(start, end)
 	return indexIterator{store: store, it: it, rowGetter: i.rowGetter, indexKey: i.indexKey}, nil
@@ -159,21 +152,33 @@ func (i MultiKeyIndex) PrefixScan(store sdk.KVStore, startI interface{}, endI in
 //
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
 func (i MultiKeyIndex) ReversePrefixScan(store sdk.KVStore, startI interface{}, endI interface{}) (Iterator, error) {
-	start, err := getPrefixScanKeyBytes(startI)
-	if err != nil {
-		return nil, err
-	}
-	end, err := getPrefixScanKeyBytes(endI)
+	start, end, err := getStartEndBz(startI, endI)
 	if err != nil {
 		return nil, err
 	}
 
-	if start != nil && end != nil && bytes.Compare(start, end) >= 0 {
-		return NewInvalidIterator(), sdkerrors.Wrap(errors.ErrORMInvalidArgument, "start must be less than end")
-	}
 	pStore := prefix.NewStore(store, []byte{i.prefix})
 	it := pStore.ReverseIterator(start, end)
 	return indexIterator{store: store, it: it, rowGetter: i.rowGetter, indexKey: i.indexKey}, nil
+}
+
+// getStartEndBz gets the start and end bytes to be passed into the SDK store
+// iterator.
+func getStartEndBz(startI interface{}, endI interface{}) ([]byte, []byte, error) {
+	start, err := getPrefixScanKeyBytes(startI)
+	if err != nil {
+		return nil, nil, err
+	}
+	end, err := getPrefixScanKeyBytes(endI)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if start != nil && end != nil && bytes.Compare(start, end) >= 0 {
+		return nil, nil, sdkerrors.Wrap(errors.ErrORMInvalidArgument, "start must be less than end")
+	}
+
+	return start, end, nil
 }
 
 func getPrefixScanKeyBytes(keyI interface{}) ([]byte, error) {

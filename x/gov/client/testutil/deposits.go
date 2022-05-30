@@ -42,6 +42,7 @@ func (s *DepositTestSuite) SetupSuite() {
 
 	deposits := sdk.Coins{
 		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(0)),
+		sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens),
 		sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens.Sub(sdk.NewInt(50))),
 	}
 	s.deposits = deposits
@@ -103,10 +104,6 @@ func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 	_, err := MsgDeposit(clientCtx, val.Address.String(), proposalID, depositAmount)
 	s.Require().NoError(err)
 
-	// waiting for voting period to end
-	_, err = s.network.WaitForHeight(2)
-	s.Require().NoError(err)
-
 	// query deposit
 	deposit := s.queryDeposit(val, proposalID, false, "")
 	s.Require().NotNil(deposit)
@@ -120,10 +117,27 @@ func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 	s.Require().Equal(sdk.Coins(deposits.Deposits[0].Amount).String(), depositAmount)
 }
 
-func (s *DepositTestSuite) TestQueryProposalNotEnoughDeposits() {
+func (s *DepositTestSuite) TestQueryDepositsWithInitialDeposit() {
+	val := s.network.Validators[0]
+	proposalID := s.proposalIDs[1]
+
+	// query deposit
+	deposit := s.queryDeposit(val, proposalID, false, "")
+	s.Require().NotNil(deposit)
+	s.Require().Equal(sdk.Coins(deposit.Amount).String(), s.deposits[1].String())
+
+	// query deposits
+	deposits := s.queryDeposits(val, proposalID, false, "")
+	s.Require().NotNil(deposits)
+	s.Require().Len(deposits.Deposits, 1)
+	// verify initial deposit
+	s.Require().Equal(sdk.Coins(deposits.Deposits[0].Amount).String(), s.deposits[1].String())
+}
+
+func (s *DepositTestSuite) TestQueryProposalAfterVotingPeriod() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
-	proposalID := s.proposalIDs[1]
+	proposalID := s.proposalIDs[2]
 
 	// query proposal
 	args := []string{proposalID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
@@ -131,57 +145,17 @@ func (s *DepositTestSuite) TestQueryProposalNotEnoughDeposits() {
 	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
 
-	// waiting for deposit period to end
+	// waiting for deposit and voting period to end
 	time.Sleep(20 * time.Second)
 
 	// query proposal
 	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().Error(err)
 	s.Require().Contains(err.Error(), fmt.Sprintf("proposal %s doesn't exist", proposalID))
-}
-
-func (s *DepositTestSuite) TestRejectedProposalDeposits() {
-	// resetting state required (proposal is getting removed from state and proposalID is not in sequence)
-	s.TearDownSuite()
-	s.SetupNewSuite()
-
-	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx
-	initialDeposit := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens)
-	id := 1
-	proposalID := fmt.Sprintf("%d", id)
-
-	s.submitProposal(val, initialDeposit, id)
 
 	// query deposits
-	var deposits v1.QueryDepositsResponse
-	args := []string{proposalID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
-	cmd := cli.GetCmdQueryDeposits()
-	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
-	s.Require().NoError(err)
-	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(out.Bytes(), &deposits))
-	s.Require().Equal(len(deposits.Deposits), 1)
-	// verify initial deposit
-	s.Require().Equal(sdk.Coins(deposits.Deposits[0].Amount).String(), initialDeposit.String())
-
-	// vote
-	_, err = MsgVote(clientCtx, val.Address.String(), proposalID, "no")
-	s.Require().NoError(err)
-
-	_, err = s.network.WaitForHeight(3)
-	s.Require().NoError(err)
-
-	args = []string{proposalID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
-	cmd = cli.GetCmdQueryProposal()
-	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	s.Require().NoError(err)
-
-	// query deposits
-	depositsRes := s.queryDeposits(val, proposalID, false, "")
-	s.Require().NotNil(depositsRes)
-	s.Require().Len(depositsRes.Deposits, 1)
-	// verify initial deposit
-	s.Require().Equal(sdk.Coins(depositsRes.Deposits[0].Amount).String(), initialDeposit.String())
+	deposits := s.queryDeposits(val, proposalID, true, "proposal 3 doesn't exist")
+	s.Require().Nil(deposits)
 }
 
 func (s *DepositTestSuite) queryDeposits(val *network.Validator, proposalID string, exceptErr bool, message string) *v1.QueryDepositsResponse {

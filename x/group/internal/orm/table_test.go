@@ -97,7 +97,7 @@ func TestCreate(t *testing.T) {
 			ctx := NewMockContext()
 			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
-			var anyPrefix = [2]byte{0x10}
+			anyPrefix := [2]byte{0x10}
 			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc)
 			require.NoError(t, err)
 
@@ -154,7 +154,7 @@ func TestUpdate(t *testing.T) {
 			ctx := NewMockContext()
 			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
-			var anyPrefix = [2]byte{0x10}
+			anyPrefix := [2]byte{0x10}
 			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc)
 			require.NoError(t, err)
 
@@ -203,7 +203,7 @@ func TestDelete(t *testing.T) {
 			ctx := NewMockContext()
 			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
-			var anyPrefix = [2]byte{0x10}
+			anyPrefix := [2]byte{0x10}
 			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc)
 			require.NoError(t, err)
 

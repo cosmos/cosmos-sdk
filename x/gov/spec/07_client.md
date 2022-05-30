@@ -392,10 +392,10 @@ Example:
 simd tx gov submit-legacy-proposal --title="Test Proposal" --description="testing" --type="Text" --deposit="100000000stake" --from cosmos1..
 ```
 
-Example (`legacy-cancel-software-upgrade`):
+Example (`cancel-software-upgrade`):
 
 ```bash
-simd tx gov submit-legacy-proposal legacy-cancel-software-upgrade --title="Test Proposal" --description="testing" --deposit="100000000stake" --from cosmos1..
+simd tx gov submit-legacy-proposal cancel-software-upgrade --title="Test Proposal" --description="testing" --deposit="100000000stake" --from cosmos1..
 ```
 
 Example (`community-pool-spend`):
@@ -435,10 +435,10 @@ simd tx gov submit-legacy-proposal param-change proposal.json --from cosmos1..
 }
 ```
 
-Example (`legacy-software-upgrade`):
+Example (`software-upgrade`):
 
 ```bash
-simd tx gov submit-legacy-proposal legacy-software-upgrade v2 --title="Test Proposal" --description="testing, testing, 1, 2, 3" --upgrade-height 1000000 --from cosmos1..
+simd tx gov submit-legacy-proposal software-upgrade v2 --title="Test Proposal" --description="testing, testing, 1, 2, 3" --upgrade-height 1000000 --from cosmos1..
 ```
 
 #### vote

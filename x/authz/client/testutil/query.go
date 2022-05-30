@@ -25,7 +25,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 		[]string{
 			grantee.String(),
 			"send",
-			fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
+			fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
 			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -103,7 +103,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorization() {
 		[]string{
 			grantee.String(),
 			"send",
-			fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
+			fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
 			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -161,7 +161,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorization() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			`{"@type":"/cosmos.bank.v1beta1.SendAuthorization","spend_limit":[{"denom":"steak","amount":"100"}]}`,
+			`{"@type":"/cosmos.bank.v1beta1.SendAuthorization","spend_limit":[{"denom":"stake","amount":"100"}]}`,
 		},
 	}
 	for _, tc := range testCases {

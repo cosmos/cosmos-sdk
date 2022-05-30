@@ -3,6 +3,8 @@ package multi
 import (
 	"io"
 
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/db"
 	dbutil "github.com/cosmos/cosmos-sdk/internal/db"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
@@ -34,7 +36,7 @@ type readonlyKVStore struct {
 // NewV1MultiStoreAsV2 constructs a v1 CommitMultiStore from v2.StoreParams
 func NewV1MultiStoreAsV2(database db.DBConnection, opts StoreParams) (v2.CommitMultiStore, error) {
 	adapter := dbutil.ConnectionAsTmdb(database)
-	cms := rootmulti.NewStore(adapter)
+	cms := rootmulti.NewStore(adapter, log.NewNopLogger())
 	for name, typ := range opts.StoreSchema {
 		switch typ {
 		case v2.StoreTypePersistent:

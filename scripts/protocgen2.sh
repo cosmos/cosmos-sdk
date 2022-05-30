@@ -17,3 +17,6 @@ echo "Generating API module"
 
 echo "Generate Pulsar Test Data"
 (cd testutil/testdata; buf generate --template buf.gen.pulsar.yaml)
+
+echo "Generate SIGN_MODE_TEXTUAL Test Data"
+(cd types/valuerenderer/internal/testpb; buf generate --template buf.gen.pulsar.yaml)

@@ -7,44 +7,54 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 const thousandSeparator string = "'"
 
-// ValueRenderer defines an interface to produce formated output for Int,Dec,Coin types as well as parse a string to Coin or Uint.
-type ValueRenderer interface {
-	Format(context.Context, interface{}) ([]string, error)
-	Parse(context.Context, []string) (interface{}, error)
+// NewADR050ValueRenderer returns a new ValueRenderer based on the ADR-050
+// spec.
+func NewADR050ValueRenderer() ValueRenderer {
+	return adr050ValueRenderer{}
 }
 
-type DefaultValueRenderer struct{}
+// adr050ValueRenderer is a value renderer based on the ADR-050 spec.
+type adr050ValueRenderer struct{}
 
-var _ ValueRenderer = DefaultValueRenderer{}
+var _ ValueRenderer = adr050ValueRenderer{}
 
-func (r DefaultValueRenderer) Format(ctx context.Context, v interface{}) ([]string, error) {
-	switch v := v.(type) {
-	case sdk.Int:
-		r, err := formatInteger(v.String())
-		return []string{r}, err
-	case sdk.Dec:
-		r, err := formatDecimal(v.String())
-		return []string{r}, err
-	case sdk.Coin:
-		var metadata bank.Metadata
-		// TODO get metadata from ctx and state.
-		r, err := formatCoin(v, metadata)
-		return []string{r}, err
-	case sdk.Coins:
-		var metadata bank.Metadata
-		// TODO get metadata from ctx and state.
-		r, err := formatCoins(v, metadata)
-		return []string{r}, err
-	default:
-		return nil, fmt.Errorf("value renderers cannot format value %s of type %T", v, v)
+func (r adr050ValueRenderer) Format(ctx context.Context, v proto.Message) ([]string, error) {
+	fields := v.ProtoReflect().Descriptor().Fields()
+	fieldsLen := fields.Len()
+
+	result := []string{}
+	for i := 0; i < fieldsLen; i++ {
+		fd := fields.Get(i)            // Field descriptor
+		fv := v.ProtoReflect().Get(fd) // Field value
+
+		switch {
+		case fd.Kind() == protoreflect.Uint32Kind ||
+			fd.Kind() == protoreflect.Uint64Kind ||
+			fd.Kind() == protoreflect.Int32Kind ||
+			fd.Kind() == protoreflect.Int64Kind:
+			{
+				formatted, err := formatInteger(fv.String())
+				if err != nil {
+					return nil, err
+				}
+
+				result = append(result, formatted)
+			}
+		default:
+			return nil, fmt.Errorf("value renderers cannot format value %s of type %s", fv, fd.Kind())
+		}
 	}
+
+	return result, nil
 }
 
-func (r DefaultValueRenderer) Parse(context.Context, []string) (interface{}, error) {
+func (r adr050ValueRenderer) Parse(context.Context, []string) (proto.Message, error) {
 	panic("implement me")
 }
 

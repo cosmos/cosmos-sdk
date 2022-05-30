@@ -1,0 +1,24 @@
+syntax="proto3";
+
+option go_package = "github.com/cosmos/cosmos-proto/testpb";
+
+import "google/protobuf/descriptor.proto";
+import "cosmos_proto/cosmos.proto";
+
+enum Enumeration {
+  One = 0;
+  Two = 1;
+}
+
+message A {
+  uint32 UINT32 = 1;
+  uint64 UINT64 = 2;
+  int32 INT32 = 3;
+  int64 INT64 = 4;
+  string SDKINT = 5 [(cosmos_proto.scalar) = "cosmos.Int"];
+  string SDKDEC = 6 [(cosmos_proto.scalar) = "cosmos.Dec"];
+}
+
+message B {
+  string x = 1;
+}

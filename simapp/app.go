@@ -475,9 +475,7 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig, indexEventsStr []str
 
 func (app *SimApp) setPostHandler() {
 	postHandler, err := posthandler.NewPostHandler(
-		posthandler.HandlerOptions{
-			BankKeeper: app.BankKeeper,
-		},
+		posthandler.HandlerOptions{},
 	)
 	if err != nil {
 		panic(err)

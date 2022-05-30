@@ -15,11 +15,12 @@ The `context` is a data structure intended to be passed from function to functio
 
 The Cosmos SDK `Context` is a custom data structure that contains Go's stdlib [`context`](https://golang.org/pkg/context) as its base, and has many additional types within its definition that are specific to the Cosmos SDK. The `Context` is integral to transaction processing in that it allows modules to easily access their respective [store](./store.md#base-layer-kvstores) in the [`multistore`](./store.md#multistore) and retrieve transactional context such as the block header and gas meter.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/context.go#L16-L39
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/types/context.go#L17-L42
 
-* **Context:** The base type is a Go [Context](https://golang.org/pkg/context), which is explained further in the [Go Context Package](#go-context-package) section below.
+* **Base Context:** The base type is a Go [Context](https://golang.org/pkg/context), which is explained further in the [Go Context Package](#go-context-package) section below.
 * **Multistore:** Every application's `BaseApp` contains a [`CommitMultiStore`](./store.md#multistore) which is provided when a `Context` is created. Calling the `KVStore()` and `TransientStore()` methods allows modules to fetch their respective [`KVStore`](./store.md#base-layer-kvstores) using their unique `StoreKey`.
 * **Header:** The [header](https://docs.tendermint.com/master/spec/core/data_structures.html#header) is a Blockchain type. It carries important information about the state of the blockchain, such as block height and proposer of the current block.
+* **Header Hash:** The current block header hash, obtained during `abci.RequestBeginBlock`.
 * **Chain ID:** The unique identification number of the blockchain a block pertains to.
 * **Transaction Bytes:** The `[]byte` representation of a transaction being processed using the context. Every transaction is processed by various parts of the Cosmos SDK and consensus engine (e.g. Tendermint) throughout its [lifecycle](../basics/tx-lifecycle.md), some of which do not have any understanding of transaction types. Thus, transactions are marshaled into the generic `[]byte` type using some kind of [encoding format](./encoding.md) such as [Amino](./encoding.md).
 * **Logger:** A `logger` from the Tendermint libraries. Learn more about logs [here](https://docs.tendermint.com/master/nodes/logging.html). Modules call this method to create their own unique module-specific logger.
@@ -30,6 +31,7 @@ The Cosmos SDK `Context` is a custom data structure that contains Go's stdlib [`
 * **Consensus Params:** The ABCI type [Consensus Parameters](https://docs.tendermint.com/master/spec/abci/apps.html#consensus-parameters), which specify certain limits for the blockchain, such as maximum gas for a block.
 * **Event Manager:** The event manager allows any caller with access to a `Context` to emit [`Events`](./events.md). Modules may define module specific
   `Events` by defining various `Types` and `Attributes` or use the common definitions found in `types/`. Clients can subscribe or query for these `Events`. These `Events` are collected throughout `DeliverTx`, `BeginBlock`, and `EndBlock` and are returned to Tendermint for indexing. For example:
+* **Priority:** The transaction priority, only relevant in `CheckTx`.
 
 ```go
 ctx.EventManager().EmitEvent(sdk.NewEvent(

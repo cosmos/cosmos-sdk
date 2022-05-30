@@ -4,7 +4,7 @@ order: 14
 
 # Transaction Tips
 
-Transaction tips are a mechanism to pay for transaction fees using another denom than the native fee denom of the chain. {synopsis}
+Transaction tips are a mechanism to pay for transaction fees using another denom than the native fee denom of the chain. They are still in beta, and are not included by default in the SDK. {synopsis}
 
 ## Context
 
@@ -72,27 +72,42 @@ In both cases, using `SIGN_MODE_LEGACY_AMINO_JSON` is recommended only if hardwa
 
 ## Enabling Tips on your Chain
 
-The transaction tips functionality is introduced in Cosmos SDK v0.46, so earlier versions do not have support for tips. If you're using v0.46 or later, then enabling tips on your chain is as simple as adding the `TipMiddleware` in your middleware stack:
+The transaction tips functionality is introduced in Cosmos SDK v0.46, so earlier versions do not have support for tips. It is however not included by default in a v0.46 app. Enabling tips on your chain is done by adding the `TipDecorator` in your posthandler chain:
 
 ```go
-// NewTxHandler defines a TxHandler middleware stack.
-func NewTxHandler(options TxHandlerOptions) (tx.Handler, error) {
-    // --snip--
+// HandlerOptions are the options required for constructing a default SDK PostHandler.
+type HandlerOptions struct {
+	BankKeeper types.BankKeeper
+}
 
-    return ComposeMiddlewares(
-        // base tx handler that executes Msgs
-        NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
-        // --snip other middlewares--
+// MyPostHandler returns a posthandler chain with the TipDecorator.
+func MyPostHandler(options HandlerOptions) (sdk.AnteHandler, error) {
+    if options.BankKeeper == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "bank keeper is required for posthandler")
+	}
 
-        // Add the TipMiddleware
-        NewTipMiddleware(options.BankKeeper),
-    )
+	postDecorators := []sdk.AnteDecorator{
+		posthandler.NewTipDecorator(options.bankKeeper),
+	}
+
+	return sdk.ChainAnteDecorators(postDecorators...), nil
+}
+
+func (app *SimApp) setPostHandler() {
+	postHandler, err := MyPostHandler(
+		HandlerOptions{
+			BankKeeper: app.BankKeeper,
+		},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	app.SetPostHandler(postHandler)
 }
 ```
 
-Notice that `NewTipMiddleware` needs a reference to the BankKeeper, for transferring the tip to the fee payer.
-
-If you are using the Cosmos SDK's default middleware stack `NewDefaultTxHandler()`, then the tip middleware is included by default.
+Notice that `NewTipDecorator` needs a reference to the BankKeeper, for transferring the tip to the fee payer.
 
 ## CLI Usage
 
@@ -170,7 +185,7 @@ For the fee payer, the SDK added a new method on the existing `TxBuilder` to imp
 txBuilder := clientCtx.TxConfig.NewTxBuilder()
 err := txBuilder.AddAuxSignerData(auxSignerData)
 if err != nil {
-    return err
+	return err
 }
 
 // A lot of fields will be populated in txBuilder, such as its Msgs, tip
@@ -184,6 +199,6 @@ txBuilder.SetGasLimit(...)
 // Usual signing code
 err = authclient.SignTx(...)
 if err != nil {
-    return err
+	return err
 }
 ```

@@ -4,10 +4,11 @@
 
 * 20.08.2021: Initial draft.
 * 07.12.2021: Update `tx.Handler` interface ([\#10693](https://github.com/cosmos/cosmos-sdk/pull/10693)).
+* 17.05.2022: ADR is abandoned, as middlewares are deemed too hard to reason about.
 
 ## Status
 
-ACCEPTED
+ABANDONED. Replacement is being discussed in [#11955](https://github.com/cosmos/cosmos-sdk/issues/11955).
 
 ## Abstract
 

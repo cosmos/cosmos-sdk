@@ -118,7 +118,6 @@ func (s *TestSuite) TestKeeperIter() {
 		s.Require().Contains([]sdk.AccAddress{granterAddr, granter2Addr}, granter)
 		return true
 	})
-
 }
 
 func (s *TestSuite) TestDispatchAction() {
@@ -265,7 +264,6 @@ func (s *TestSuite) TestDispatchAction() {
 			tc.postRun()
 		})
 	}
-
 }
 
 // Tests that all msg events included in an authz MsgExec tx

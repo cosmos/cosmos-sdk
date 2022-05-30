@@ -87,7 +87,6 @@ func (q Keeper) Proposals(c context.Context, req *v1.QueryProposalsRequest) (*v1
 
 		return false, nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -149,7 +148,6 @@ func (q Keeper) Votes(c context.Context, req *v1.QueryVotesRequest) (*v1.QueryVo
 		votes = append(votes, &vote)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -238,7 +236,6 @@ func (q Keeper) Deposits(c context.Context, req *v1.QueryDepositsRequest) (*v1.Q
 		deposits = append(deposits, &deposit)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

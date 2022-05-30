@@ -35,7 +35,11 @@ func ModuleAccountInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
 
 		macc := keeper.GetGovernanceAccount(ctx)
 		balances := bk.GetAllBalances(ctx, macc.GetAddress())
-		broken := !balances.IsEqual(expectedDeposits)
+
+		// Require that the deposit balances are <= than the x/gov module's total
+		// balances. We use the <= operator since external funds can be sent to x/gov
+		// module's account and so the balance can be larger.
+		broken := !balances.IsAllGTE(expectedDeposits)
 
 		return sdk.FormatInvariant(types.ModuleName, "deposits",
 			fmt.Sprintf("\tgov ModuleAccount coins: %s\n\tsum of deposit amounts:  %s\n",

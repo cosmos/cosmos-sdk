@@ -105,7 +105,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 	s.Require().Equal(int(response.Code), 0)
 	s.Require().NotEqual(int(response.Height), 0)
-
 }
 
 func (s *IntegrationTestSuite) createAccount(uid string) sdk.AccAddress {
@@ -140,9 +139,11 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-var typeMsgSend = bank.SendAuthorization{}.MsgTypeURL()
-var typeMsgVote = sdk.MsgTypeURL(&govv1.MsgVote{})
-var typeMsgSubmitProposal = sdk.MsgTypeURL(&govv1.MsgSubmitProposal{})
+var (
+	typeMsgSend           = bank.SendAuthorization{}.MsgTypeURL()
+	typeMsgVote           = sdk.MsgTypeURL(&govv1.MsgVote{})
+	typeMsgSubmitProposal = sdk.MsgTypeURL(&govv1.MsgSubmitProposal{})
+)
 
 func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 	val := s.network.Validators[0]
@@ -752,7 +753,6 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-
 			cmd := cli.NewCmdExecAuthorization()
 			clientCtx := val.ClientCtx
 

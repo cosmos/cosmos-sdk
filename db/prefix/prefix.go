@@ -24,9 +24,11 @@ type prefixW struct {
 	prefix []byte
 }
 
-var _ db.DBReader = (*prefixR)(nil)
-var _ db.DBReadWriter = (*prefixRW)(nil)
-var _ db.DBWriter = (*prefixW)(nil)
+var (
+	_ db.DBReader     = (*prefixR)(nil)
+	_ db.DBReadWriter = (*prefixRW)(nil)
+	_ db.DBWriter     = (*prefixW)(nil)
+)
 
 // NewPrefixReader returns a DBReader that only has access to the subset of DB keys
 // that contain the given prefix.

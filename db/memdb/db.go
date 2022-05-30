@@ -178,7 +178,7 @@ func (dbm *MemDB) Revert() error {
 	if !has {
 		return fmt.Errorf("bad version history: version %v not saved", last)
 	}
-	for ver, _ := range dbm.saved {
+	for ver := range dbm.saved {
 		if ver > last {
 			delete(dbm.saved, ver)
 		}

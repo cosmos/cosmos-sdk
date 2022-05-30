@@ -5,11 +5,9 @@ type Handler func(ctx Context, msg Msg) (*Result, error)
 
 // AnteHandler authenticates transactions, before their internal messages are handled.
 // If newCtx.IsZero(), ctx is used instead.
-// DEPRECATED: use middleware instead
 type AnteHandler func(ctx Context, tx Tx, simulate bool) (newCtx Context, err error)
 
 // AnteDecorator wraps the next AnteHandler to perform custom pre- and post-processing.
-// DEPRECATED: use middleware instead
 type AnteDecorator interface {
 	AnteHandle(ctx Context, tx Tx, simulate bool, next AnteHandler) (newCtx Context, err error)
 }
@@ -28,7 +26,6 @@ type AnteDecorator interface {
 // transactions to be processed with an infinite gasmeter and open a DOS attack vector.
 // Use `ante.SetUpContextDecorator` or a custom Decorator with similar functionality.
 // Returns nil when no AnteDecorator are supplied.
-// DEPRECATED: use middleware instead
 func ChainAnteDecorators(chain ...AnteDecorator) AnteHandler {
 	if len(chain) == 0 {
 		return nil

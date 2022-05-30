@@ -46,7 +46,7 @@ and percentage. Any chain developer can extend upon these two, by creating
 custom decision policies, as long as they adhere to the `DecisionPolicy`
 interface:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/x/group/types.go#L23-L37
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/x/group/types.go#L27-L41
 
 ### Threshold decision policy
 
@@ -96,11 +96,11 @@ Tallying is the counting of all votes on a proposal. It happens only once in
 the lifecycle of a proposal, but can be triggered by two factors, whichever
 happens first:
 
-- either someone tries to execute the proposal (see next section), which can
+* either someone tries to execute the proposal (see next section), which can
   happen on a `Msg/Exec` transaction, or a `Msg/{SubmitProposal,Vote}`
   transaction with the `Exec` field set. When a proposal execution is attempted,
   a tally is done first to make sure the proposal passes.
-- or on `EndBlock` when the proposal's voting period end just passed.
+* or on `EndBlock` when the proposal's voting period end just passed.
 
 If the tally result passes the decision policy's rules, then the proposal is
 marked as `PROPOSAL_STATUS_ACCEPTED`, or else it is marked as
@@ -140,18 +140,18 @@ Proposals and votes are automatically pruned to avoid state bloat.
 
 Votes are pruned:
 
-- either after a successful tally, i.e. a tally whose result passes the decision
+* either after a successful tally, i.e. a tally whose result passes the decision
   policy's rules, which can be trigged by a `Msg/Exec` or a
   `Msg/{SubmitProposal,Vote}` with the `Exec` field set,
-- or on `EndBlock` right after the proposal's voting period end. This applies to proposals with status `aborted` or `withdrawn` too.
+* or on `EndBlock` right after the proposal's voting period end. This applies to proposals with status `aborted` or `withdrawn` too.
 
 whichever happens first.
 
 Proposals are pruned:
 
-- on `EndBlock` whose proposal status is `withdrawn` or `aborted` on proposal's voting period end before tallying,
-- and either after a successful proposal execution,
-- or on `EndBlock` right after the proposal's `voting_period_end` +
+* on `EndBlock` whose proposal status is `withdrawn` or `aborted` on proposal's voting period end before tallying,
+* and either after a successful proposal execution,
+* or on `EndBlock` right after the proposal's `voting_period_end` +
   `max_execution_period` (defined as an app-wide configuration) is passed,
 
 whichever happens first.

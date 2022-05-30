@@ -36,6 +36,7 @@ func GenAppStateFromConfig(cdc codec.JSONCodec, txEncodingConfig client.TxEncodi
 	}
 
 	config.P2P.PersistentPeers = persistentPeers
+	config.P2P.BootstrapPeers = persistentPeers
 	cfg.WriteConfigFile(config.RootDir, config)
 
 	// if there are no gen txs to be processed, return the default empty state

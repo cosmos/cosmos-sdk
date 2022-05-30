@@ -16,5 +16,5 @@ import (
 // separate one for a different language.
 type ValueRenderer interface {
 	Format(context.Context, protoreflect.FieldDescriptor, protoreflect.Value) ([]string, error)
-	Parse(context.Context, []string) (proto.Message, error)
+	Parse(context.Context, protoreflect.FieldDescriptor, []string) (proto.Message, error)
 }

@@ -59,10 +59,12 @@ func (r adr050ValueRenderer) Format(ctx context.Context, fd protoreflect.FieldDe
 	return result, nil
 }
 
-func (r adr050ValueRenderer) Parse(context.Context, []string) (proto.Message, error) {
+func (r adr050ValueRenderer) Parse(context.Context, protoreflect.FieldDescriptor, []string) (proto.Message, error) {
 	panic("implement me")
 }
 
+// isCosmosScalar returns true if a field has the `cosmos_proto.scalar` field
+// option.
 func isCosmosScalar(fd protoreflect.FieldDescriptor, scalar string) bool {
 	opts := fd.Options().(*descriptorpb.FieldOptions)
 	if proto.GetExtension(opts, cosmos_proto.E_Scalar).(string) == scalar {

@@ -141,6 +141,10 @@ func formatGoType(r textual.ValueRenderer, v interface{}) ([]string, error) {
 		return r.Format(context.Background(), a.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name("UINT32")), protoreflect.ValueOf(v))
 	case uint64:
 		return r.Format(context.Background(), a.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name("UINT64")), protoreflect.ValueOf(v))
+	case int32:
+		return r.Format(context.Background(), a.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name("INT32")), protoreflect.ValueOf(v))
+	case int64:
+		return r.Format(context.Background(), a.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name("INT64")), protoreflect.ValueOf(v))
 	case math.Int:
 		return r.Format(context.Background(), a.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name("SDKINT")), protoreflect.ValueOf(v.String()))
 	case sdk.Dec:

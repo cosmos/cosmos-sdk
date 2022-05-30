@@ -17,6 +17,7 @@ const UpgradeName = "v045-to-v046"
 
 func (app SimApp) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(UpgradeName,
+<<<<<<< HEAD
 		func(ctx sdk.Context, plan upgradetypes.Plan, _ module.VersionMap) (module.VersionMap, error) {
 			// We set fromVersion to 1 to avoid running InitGenesis for modules for
 			// in-store migrations.
@@ -47,6 +48,10 @@ func (app SimApp) RegisterUpgradeHandlers() {
 			}
 
 			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+=======
+		func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
+>>>>>>> ca0b8f96b (fix: Fix v0.45->v0.46 migration (#12028))
 		})
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()

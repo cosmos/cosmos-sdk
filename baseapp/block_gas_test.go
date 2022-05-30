@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -27,7 +28,7 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-var blockMaxGas = uint64(simapp.DefaultConsensusParams.Block.MaxGas)
+var blockMaxGas = uint64(testutil.DefaultConsensusParams.Block.MaxGas)
 
 func TestBaseApp_BlockGas(t *testing.T) {
 	testcases := []struct {
@@ -72,7 +73,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			require.NoError(t, err)
 			app.InitChain(abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: simapp.DefaultConsensusParams,
+				ConsensusParams: testutil.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
 			})
 

@@ -23,18 +23,10 @@ import (
 const UpgradeName = "v050-to-v051"
 
 func (app SimApp) RegisterUpgradeHandlers() {
-	app.UpgradeKeeper.SetUpgradeHandler(
-		UpgradeName,
-		func(ctx context.Context, _ upgradetypes.Plan, fromVM appmodule.VersionMap) (appmodule.VersionMap, error) {
-			// sync accounts and auth module account number
-			err := authkeeper.MigrateAccountNumberUnsafe(ctx, &app.AuthKeeper)
-			if err != nil {
-				return nil, err
-			}
-
-			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
-		},
-	)
+	app.UpgradeKeeper.SetUpgradeHandler(UpgradeName,
+		func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+		})
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {

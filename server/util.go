@@ -349,6 +349,8 @@ func AddCommands[T types.Application](rootCmd *cobra.Command, appCreator types.A
 		VersionCmd(),
 		tmcmd.ResetAllCmd,
 		tmcmd.ResetStateCmd,
+		tmcmd.InspectCmd,
+		makeKeyMigrateCmd(),
 	)
 
 	startCmd := StartCmd(appCreator, defaultNodeHome)

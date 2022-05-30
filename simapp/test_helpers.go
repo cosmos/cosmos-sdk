@@ -28,6 +28,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
@@ -90,7 +91,7 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 		app.InitChain(
 			abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: DefaultConsensusParams,
+				ConsensusParams: testutil.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
 			},
 		)
@@ -205,7 +206,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	app.InitChain(
 		abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: DefaultConsensusParams,
+			ConsensusParams: testutil.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
 		},
 	)

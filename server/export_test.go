@@ -148,7 +148,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 	app.InitChain(
 		abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: simapp.DefaultConsensusParams,
+			ConsensusParams: testutil.DefaultConsensusParams,
 			AppStateBytes:   genDoc.AppState,
 		},
 	)

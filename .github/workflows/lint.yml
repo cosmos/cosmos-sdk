@@ -23,7 +23,7 @@ jobs:
             go.sum
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
-        if: env.GIT_DIFF
+        # if: env.GIT_DIFF
         with:
           version: latest
           skip-cache: false

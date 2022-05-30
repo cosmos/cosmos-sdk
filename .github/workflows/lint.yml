@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.17
+          go-version: 1.18
       - uses: technote-space/get-diff-action@v6.0.1
         with:
           PATTERNS: |
@@ -25,7 +25,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         # if: env.GIT_DIFF
         with:
-          version: latest
+          # version: latest
           skip-cache: false
           skip-pkg-cache: false
           skip-build-cache: false

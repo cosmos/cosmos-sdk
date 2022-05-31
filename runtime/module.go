@@ -3,26 +3,22 @@ package runtime
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/grpc"
-
-	"github.com/cosmos/cosmos-sdk/container"
-
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	"cosmossdk.io/core/appmodule"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/std"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-// BaseAppOption is a container.AutoGroupType which can be used to pass
-// BaseApp options into the container. It should be used carefully.
+// BaseAppOption is a depinject.AutoGroupType which can be used to pass
+// BaseApp options into the depinject. It should be used carefully.
 type BaseAppOption func(*baseapp.BaseApp)
 
-// IsManyPerContainerType indicates that this is a container.ManyPerContainerType.
+// IsManyPerContainerType indicates that this is a depinject.ManyPerContainerType.
 func (b BaseAppOption) IsManyPerContainerType() {}
 
 // appWrapper is used to pass around an instance of *App internally between
@@ -74,13 +70,12 @@ func provideCodecs(moduleBasics map[string]AppModuleBasicWrapper) (
 }
 
 type appInputs struct {
-	container.In
+	depinject.In
 
-	Config              *runtimev1alpha1.Module
-	App                 appWrapper
-	Modules             map[string]AppModuleWrapper
-	BaseAppOptions      []BaseAppOption
-	MsgServiceRegistrar grpc.Server `optional:"true"`
+	Config         *runtimev1alpha1.Module
+	App            appWrapper
+	Modules        map[string]AppModuleWrapper
+	BaseAppOptions []BaseAppOption
 }
 
 func provideAppBuilder(inputs appInputs) *AppBuilder {
@@ -92,7 +87,6 @@ func provideAppBuilder(inputs appInputs) *AppBuilder {
 	app.baseAppOptions = inputs.BaseAppOptions
 	app.config = inputs.Config
 	app.ModuleManager = mm
-	app.msgServiceRegistrar = inputs.MsgServiceRegistrar
 	return &AppBuilder{app: app}
 }
 
@@ -100,19 +94,37 @@ func registerStoreKey(wrapper appWrapper, key storetypes.StoreKey) {
 	wrapper.storeKeys = append(wrapper.storeKeys, key)
 }
 
-func provideKVStoreKey(key container.ModuleKey, app appWrapper) *storetypes.KVStoreKey {
-	storeKey := storetypes.NewKVStoreKey(key.Name())
+func storeKeyOverride(config *runtimev1alpha1.Module, moduleName string) *runtimev1alpha1.StoreKeyConfig {
+	for _, cfg := range config.OverrideStoreKeys {
+		if cfg.ModuleName == moduleName {
+			return cfg
+		}
+	}
+	return nil
+}
+
+func provideKVStoreKey(config *runtimev1alpha1.Module, key depinject.ModuleKey, app appWrapper) *storetypes.KVStoreKey {
+	override := storeKeyOverride(config, key.Name())
+
+	var storeKeyName string
+	if override != nil {
+		storeKeyName = override.KvStoreKey
+	} else {
+		storeKeyName = key.Name()
+	}
+
+	storeKey := storetypes.NewKVStoreKey(storeKeyName)
 	registerStoreKey(app, storeKey)
 	return storeKey
 }
 
-func provideTransientStoreKey(key container.ModuleKey, app appWrapper) *storetypes.TransientStoreKey {
+func provideTransientStoreKey(key depinject.ModuleKey, app appWrapper) *storetypes.TransientStoreKey {
 	storeKey := storetypes.NewTransientStoreKey(fmt.Sprintf("transient:%s", key.Name()))
 	registerStoreKey(app, storeKey)
 	return storeKey
 }
 
-func provideMemoryStoreKey(key container.ModuleKey, app appWrapper) *storetypes.MemoryStoreKey {
+func provideMemoryStoreKey(key depinject.ModuleKey, app appWrapper) *storetypes.MemoryStoreKey {
 	storeKey := storetypes.NewMemoryStoreKey(fmt.Sprintf("memory:%s", key.Name()))
 	registerStoreKey(app, storeKey)
 	return storeKey

@@ -163,6 +163,3 @@ replace (
 )
 
 retract v0.43.0
-
-// DEV
-replace github.com/lazyledger/smt => ../smt

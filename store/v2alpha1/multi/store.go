@@ -504,27 +504,23 @@ func (rs *Store) getSubstore(key string) (*substore, error) {
 	pfx := substorePrefix(key)
 	stateRW := prefixdb.NewPrefixReadWriter(rs.stateTxn, pfx)
 	stateCommitmentRW := prefixdb.NewPrefixReadWriter(rs.stateCommitmentTxn, pfx)
-
 	var stateCommitmentStore *smt.Store
-	data := prefixdb.NewPrefixReadWriter(stateRW, dataPrefix)
+
 	rootHash, err := stateRW.Get(substoreMerkleRootKey)
 	if err != nil {
 		return nil, err
 	}
 	if rootHash != nil {
-		stateCommitmentStore = loadSMT(stateCommitmentRW, data, rootHash)
+		stateCommitmentStore = loadSMT(stateCommitmentRW, rootHash)
 	} else {
-		params := smt.StoreParams{
-			TreeData:  prefixdb.NewPrefixReadWriter(stateCommitmentRW, smtPrefix),
-			ValueData: data,
-		}
-		stateCommitmentStore = smt.NewStore(params)
+		smtdb := prefixdb.NewPrefixReadWriter(stateCommitmentRW, smtPrefix)
+		stateCommitmentStore = smt.NewStore(smtdb)
 	}
 
 	return &substore{
 		root:                 rs,
 		name:                 key,
-		dataBucket:           data,
+		dataBucket:           prefixdb.NewPrefixReadWriter(stateRW, dataPrefix),
 		stateCommitmentStore: stateCommitmentStore,
 	}, nil
 }
@@ -535,7 +531,7 @@ func (s *substore) refresh(rootHash []byte) {
 	stateRW := prefixdb.NewPrefixReadWriter(s.root.stateTxn, pfx)
 	stateCommitmentRW := prefixdb.NewPrefixReadWriter(s.root.stateCommitmentTxn, pfx)
 	s.dataBucket = prefixdb.NewPrefixReadWriter(stateRW, dataPrefix)
-	s.stateCommitmentStore = loadSMT(stateCommitmentRW, s.dataBucket, rootHash)
+	s.stateCommitmentStore = loadSMT(stateCommitmentRW, rootHash)
 }
 
 // Commit implements Committer.
@@ -587,20 +583,26 @@ func pruneVersions(current int64, opts pruningtypes.PruningOptions, prune func(i
 	}
 }
 
-// Calculates root hashes and commits to DB. Does not verify target version or perform pruning.
-func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
-	storeHashes := make(map[string][]byte, len(s.schema))
+func (s *Store) getMerkleRoots() (ret map[string][]byte, err error) {
+	ret = map[string][]byte{}
 	for key := range s.schema {
 		sub, has := s.substoreCache[key.Name()]
 		if !has {
-			if sub, err = s.getSubstore(key.Name()); err != nil {
+			sub, err = s.getSubstore(key.Name())
+			if err != nil {
 				return
 			}
 		}
-		if err = sub.stateCommitmentStore.Commit(); err != nil {
-			return
-		}
-		storeHashes[key.Name()] = sub.stateCommitmentStore.Root()
+		ret[key.Name()] = sub.stateCommitmentStore.Root()
+	}
+	return
+}
+
+// Calculates root hashes and commits to DB. Does not verify target version or perform pruning.
+func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
+	storeHashes, err := s.getMerkleRoots()
+	if err != nil {
+		return
 	}
 	// Update substore Merkle roots
 	for key, storeHash := range storeHashes {
@@ -844,12 +846,9 @@ func (rs *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	return res
 }
 
-func loadSMT(sc, data dbm.DBReadWriter, root []byte) *smt.Store {
-	params := smt.StoreParams{
-		TreeData:  prefixdb.NewPrefixReadWriter(sc, smtPrefix),
-		ValueData: data,
-	}
-	return smt.LoadStore(params, root)
+func loadSMT(stateCommitmentTxn dbm.DBReadWriter, root []byte) *smt.Store {
+	smtdb := prefixdb.NewPrefixReadWriter(stateCommitmentTxn, smtPrefix)
+	return smt.LoadStore(smtdb, root)
 }
 
 // Returns closest index and whether it's a match

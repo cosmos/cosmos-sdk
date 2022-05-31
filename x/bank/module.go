@@ -2,9 +2,9 @@ package bank
 
 import (
 	"context"
+	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"encoding/json"
 	"fmt"
-	authmodulev1 "github.com/cosmos/cosmos-sdk/api/cosmos/auth/module/v1"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"

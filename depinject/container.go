@@ -13,7 +13,8 @@ import (
 type container struct {
 	*debugConfig
 
-	resolvers map[reflect.Type]resolver
+	resolvers      map[reflect.Type]resolver
+	keyedResolvers map[string]resolver
 
 	moduleKeys map[string]*moduleKey
 
@@ -29,11 +30,12 @@ type resolveFrame struct {
 
 func newContainer(cfg *debugConfig) *container {
 	return &container{
-		debugConfig: cfg,
-		resolvers:   map[reflect.Type]resolver{},
-		moduleKeys:  map[string]*moduleKey{},
-		callerStack: nil,
-		callerMap:   map[Location]bool{},
+		debugConfig:    cfg,
+		resolvers:      map[reflect.Type]resolver{},
+		keyedResolvers: map[string]resolver{},
+		moduleKeys:     map[string]*moduleKey{},
+		callerStack:    nil,
+		callerMap:      map[Location]bool{},
 	}
 }
 
@@ -76,8 +78,10 @@ func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]
 	return out, nil
 }
 
-func (c *container) getResolver(typ reflect.Type) (resolver, error) {
-	if vr, ok := c.resolvers[typ]; ok {
+func (c *container) getResolver(typ reflect.Type, key string) (resolver, error) {
+	if vr, ok := c.keyedResolvers[key]; ok {
+		return vr, nil
+	} else if vr, ok := c.resolvers[typ]; ok {
 		return vr, nil
 	}
 
@@ -147,7 +151,7 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 			return nil, fmt.Errorf("one-per-module type %v can't be used as an input parameter", typ)
 		}
 
-		vr, err := c.getResolver(typ)
+		vr, err := c.getResolver(typ, in.Key)
 		if err != nil {
 			return nil, err
 		}
@@ -189,7 +193,7 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 				typ = typ.Elem()
 			}
 
-			vr, err := c.getResolver(typ)
+			vr, err := c.getResolver(typ, out.Key)
 			if err != nil {
 				return nil, err
 			}
@@ -211,6 +215,10 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 					idxInValues: i,
 				}
 				c.resolvers[typ] = vr
+
+				if out.Key != "" {
+					c.keyedResolvers[out.Key] = vr
+				}
 			}
 
 			c.addGraphEdge(providerGraphNode, vr.typeGraphNode())
@@ -245,12 +253,17 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 			}
 
 			typeGraphNode := c.typeGraphNode(typ)
-			c.resolvers[typ] = &moduleDepResolver{
+			mdr := &moduleDepResolver{
 				typ:         typ,
 				idxInValues: i,
 				node:        node,
 				valueMap:    map[*moduleKey]reflect.Value{},
 				graphNode:   typeGraphNode,
+			}
+			c.resolvers[typ] = mdr
+
+			if out.Key != "" {
+				c.keyedResolvers[out.Key] = mdr
 			}
 
 			c.addGraphEdge(providerGraphNode, typeGraphNode)
@@ -304,7 +317,7 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 		return reflect.ValueOf(OwnModuleKey{moduleKey}), nil
 	}
 
-	vr, err := c.getResolver(in.Type)
+	vr, err := c.getResolver(in.Type, in.Key)
 	if err != nil {
 		return reflect.Value{}, err
 	}

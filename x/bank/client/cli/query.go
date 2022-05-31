@@ -243,19 +243,23 @@ Getting all entries:
 			if err != nil {
 				return err
 			}
+
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
+
 			queryClient := types.NewQueryClient(clientCtx)
 			req := &types.QuerySendEnabledRequest{
 				Denoms:     args,
 				Pagination: reqPag,
 			}
+
 			res, err := queryClient.SendEnabled(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
+
 			return clientCtx.PrintProto(res)
 		},
 	}

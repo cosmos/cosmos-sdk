@@ -707,11 +707,13 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 			consumeBlockGas()
 
 			msCache.Write()
+		}
 
-			if len(anteEvents) > 0 {
-				// append the events in the order of occurrence
-				result.Events = append(anteEvents, result.Events...)
-			}
+		// append the events in the order of occurrence
+		// note: in CheckTx, result.Events is empty, so we would only get
+		// the anteEvents.
+		if len(anteEvents) > 0 {
+			result.Events = append(anteEvents, result.Events...)
 		}
 	}
 

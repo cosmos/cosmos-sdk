@@ -1,0 +1,64 @@
+on:
+  push:
+    tags:
+      - "cosmovisor-v*"
+
+name: Automated release cosmovisor
+
+jobs:
+  build:
+    name: Build and upload release assets
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.20
+        id: go
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          draft: false
+          prerelease: true
+
+      # build & upload cosmovisor
+
+      - name: Build cosmovisor
+        run: make cosmovisor
+
+      - name: Upload cosmovisor
+        id: upload-cosmovisor-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: cosmovisor/cosmovisor
+          asset_name: cosmovisor
+          asset_content_type: application/bin
+
+      # build & upload cosmovisor arm64
+
+      - name: Build cosmovisor arm64
+        run: GOARCH=arm64 make build
+
+      - name: Upload cosmovisor arm64
+        id: upload-cosmovisor-release-asset-arm
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: cosmovisor/cosmovisor
+          asset_name: cosmovisor-arm
+          asset_content_type: application/bin

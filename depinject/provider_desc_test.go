@@ -29,6 +29,11 @@ type KeyedIn struct {
 	X string `key:"theKey"`
 }
 
+type KeyedOut struct {
+	depinject.Out
+	X string `key:"theKey"`
+}
+
 func TestExtractProviderDescriptor(t *testing.T) {
 	var (
 		intType     = reflect.TypeOf(0)
@@ -93,10 +98,17 @@ func TestExtractProviderDescriptor(t *testing.T) {
 			true,
 		},
 		{
-			name:    "keyed lookup",
+			name:    "keyed input",
 			ctr:     func(_ KeyedIn) int { return 0 },
 			wantIn:  []depinject.ProviderInput{{Type: stringType, Key: "theKey"}},
 			wantOut: []depinject.ProviderOutput{{Type: intType}},
+			wantErr: false,
+		},
+		{
+			name:    "keyed output",
+			ctr:     func(s string) KeyedOut { return KeyedOut{X: "foo"} },
+			wantIn:  []depinject.ProviderInput{{Type: stringType}},
+			wantOut: []depinject.ProviderOutput{{Type: stringType, Key: "theKey"}},
 			wantErr: false,
 		},
 	}

@@ -79,7 +79,7 @@ func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]
 }
 
 func (c *container) getResolver(typ reflect.Type, key string) (resolver, error) {
-	if vr, ok := c.keyedResolvers[key]; ok {
+	if vr, ok := c.keyedResolvers[key]; key != "" && ok {
 		return vr, nil
 	} else if vr, ok := c.resolvers[typ]; ok {
 		return vr, nil

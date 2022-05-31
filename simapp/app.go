@@ -436,12 +436,7 @@ func NewSimApp(
 	// meaning that both `runMsgs` and `postHandler` state will be committed if
 	// both are successful, and both will be reverted if any of the two fails.
 	//
-	// The SDK exposes a default postHandlers chain, which comprises of only
-	// one decorator: the Transaction Tips decorator. However, some chains do
-	// not need it by default, so feel free to comment the next line if you do
-	// not need tips.
-	// To read more about tips:
-	// https://docs.cosmos.network/main/core/tips.html
+	// The SDK exposes a default empty postHandlers chain.
 	//
 	// Please note that changing any of the anteHandler or postHandler chain is
 	// likely to be a state-machine breaking change, which needs a coordinated
@@ -480,9 +475,7 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig, indexEventsStr []str
 
 func (app *SimApp) setPostHandler() {
 	postHandler, err := posthandler.NewPostHandler(
-		posthandler.HandlerOptions{
-			BankKeeper: app.BankKeeper,
-		},
+		posthandler.HandlerOptions{},
 	)
 	if err != nil {
 		panic(err)

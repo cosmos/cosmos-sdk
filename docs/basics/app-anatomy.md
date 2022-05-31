@@ -53,13 +53,13 @@ The first thing defined in `app.go` is the `type` of the application. It is gene
 
 See an example of application type definition from `simapp`, the Cosmos SDK's own app used for demo and testing purposes:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/simapp/app.go#L151-L195
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/simapp/app.go#L151-L193
 
 ### Constructor Function
 
 This function constructs a new application of the type defined in the section above. It must fulfill the `AppCreator` signature in order to be used in the [`start` command](../core/node.md#start-command) of the application's daemon command.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/server/types/app.go#L57-L59
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/server/types/app.go#L57-L59
 
 Here are the main actions performed by this function:
 
@@ -73,7 +73,7 @@ Here are the main actions performed by this function:
 * Set the remainder of application's parameters:
     * [`InitChainer`](#initchainer): used to initialize the application when it is first started.
     * [`BeginBlocker`, `EndBlocker`](#beginblocker-and-endlbocker): called at the beginning and the end of every block).
-    * [`TxHandler`](../core/baseapp.md#middleware): to setup middlewares, f.e. used to handle fees and signature verification.
+    * [`anteHandler`](../core/baseapp.md#antehandler): used to handle fees and signature verification.
 * Mount the stores.
 * Return the application.
 
@@ -81,7 +81,7 @@ Note that this function only creates an instance of the app, while the actual st
 
 See an example of application constructor from `simapp`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/simapp/app.go#L207-L456
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/simapp/app.go#L204-L474
 
 ### InitChainer
 
@@ -146,7 +146,7 @@ Note that `sdk.Msg`s are bundled in [transactions](../core/transactions.md), and
 When a valid block of transactions is received by the full-node, Tendermint relays each one to the application via [`DeliverTx`](https://docs.tendermint.com/master/spec/abci/apps.html#delivertx). Then, the application handles the transaction:
 
 1. Upon receiving the transaction, the application first unmarshalls it from `[]byte`.
-2. Then, it verifies a few things about the transaction like [fee payment and signatures](./gas-fees.md#middleware) before extracting the `Msg`(s) contained in the transaction.
+2. Then, it verifies a few things about the transaction like [fee payment and signatures](./gas-fees.md#antehandler) before extracting the `Msg`(s) contained in the transaction.
 3. `sdk.Msg`s are encoded using Protobuf [`Any`s](#register-codec). By analyzing each `Any`'s `type_url`, baseapp's `msgServiceRouter` routes the `sdk.Msg` to the corresponding module's `Msg` service.
 4. If the message is successfully processed, the state is updated.
 

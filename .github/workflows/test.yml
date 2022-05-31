@@ -35,11 +35,28 @@ jobs:
             **/**.go
             **/go.mod
             **/go.sum
+      - name: Get data from Go build cache
+        # if: env.GIT_DIFF
+        if: ${{ false }}
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/golangci-lint
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
       - name: Build
         run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make build
 
       - name: Build cosmovisor
         run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make cosmovisor
+
+      - name: Install runsim
+        run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
+      - uses: actions/cache@v3
+        with:
+          path: ~/go/bin
+          key: ${{ runner.os }}-go-runsim-binary
 
   test-submodules:
     runs-on: ubuntu-latest
@@ -56,6 +73,16 @@ jobs:
             **/**.go
             go.mod
             go.sum
+      - name: Get data from Go build cache
+        # if: env.GIT_DIFF
+        if: ${{ false }}
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/golangci-lint
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
       - name: Run submodule tests and create test coverage profile.
         # GIT_DIFF is passed to the scripts
         run: bash scripts/module-tests.sh
@@ -112,24 +139,16 @@ jobs:
             **/**.go
             go.mod
             go.sum
-      - name: Get data from build cache
+      - name: Get data from Go build cache
+        # if: env.GIT_DIFF
+        if: ${{ false }}
         uses: actions/cache@v3
         with:
-           # In order:
-           # * Module download cache
-           # * Linter cache (Linux)
-           # * Build cache (Linux)
-           # * Build cache (Mac)
-           # * Build cache (Windows)
           path: |
-             ~/go/pkg/mod
-             ~/.cache/golangci-lint
-             ~/.cache/go-build
-             ~/Library/Caches/go-build
-             ~\AppData\Local\go-build
-          key: ${{ runner.os }}-go-linter-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-             ${{ runner.os }}-go-linter-${{ matrix.go-version }}-
+            ~/go/pkg/mod
+            ~/.cache/golangci-lint
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
       - uses: actions/download-artifact@v3
         with:
           name: "${{ github.sha }}-${{ matrix.part }}"
@@ -207,23 +226,16 @@ jobs:
             **/**.go
             go.mod
             go.sum
-      - name: Get data from build cache
+      - name: Get data from Go build cache
+        # if: env.GIT_DIFF
+        if: ${{ false }}
         uses: actions/cache@v3
         with:
-           # In order:
-           # * Module download cache
-           # * Build cache (Linux)
-           # * Build cache (Mac)
-           # * Build cache (Windows)
           path: |
-             ~/go/pkg/mod
-             ~/.cache/golangci-lint
-             ~/.cache/go-build
-             ~/Library/Caches/go-build
-             ~\AppData\Local\go-build
-          key: ${{ runner.os }}-go-rosetta-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-             ${{ runner.os }}-go-rosetta-${{ matrix.go-version }}-
+            ~/go/pkg/mod
+            ~/.cache/golangci-lint
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
       - name: test rosetta
         run: |
           make test-rosetta
@@ -244,22 +256,16 @@ jobs:
             **/**.go
             go.mod
             go.sum
-      - name: Get data from build cache
+      - name: Get data from Go build cache
+        # if: env.GIT_DIFF
+        if: ${{ false }}
         uses: actions/cache@v3
         with:
-           # In order:
-           # * Module download cache
-           # * Build cache (Linux)
-           # * Build cache (Mac)
-           # * Build cache (Windows)
           path: |
-             ~/go/pkg/mod
-             ~/.cache/go-build
-             ~/Library/Caches/go-build
-             ~\AppData\Local\go-build
-          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-             ${{ runner.os }}-go-${{ matrix.go-version }}-
+            ~/go/pkg/mod
+            ~/.cache/golangci-lint
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
       - name: start localnet
         run: |
           make clean localnet-start
@@ -269,25 +275,9 @@ jobs:
           ./contrib/localnet_liveness.sh 100 5 50 localhost
         if: env.GIT_DIFF
 
-  install-runsim:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.18
-      - name: Display go version
-        run: go version
-      - name: Install runsim
-        run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
-      - uses: actions/cache@v3
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
-
   test-sim-nondeterminism:
     runs-on: ubuntu-latest
-    needs: [build, install-runsim]
+    needs: [build]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -301,26 +291,6 @@ jobs:
             **/**.go
             go.mod
             go.sum
-      - name: Get data from build cache
-        uses: actions/cache@v3
-        with:
-           # In order:
-           # * Module download cache
-           # * Build cache (Linux)
-           # * Build cache (Mac)
-           # * Build cache (Windows)
-          path: |
-             ~/go/pkg/mod
-             ~/.cache/go-build
-             ~/Library/Caches/go-build
-             ~\AppData\Local\go-build
-          key: ${{ runner.os }}-go-sim-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-             ${{ runner.os }}-go-sim-${{ matrix.go-version }}-
-      - uses: actions/cache@v3
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
         if: env.GIT_DIFF
       - name: test-sim-nondeterminism
         run: |

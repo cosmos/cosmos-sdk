@@ -133,7 +133,7 @@ For a weighted vote to be valid, the `options` field must not contain duplicate 
 ### Quorum
 
 Quorum is defined as the minimum percentage of voting power that needs to be
-casted on a proposal for the result to be valid.
+cast on a proposal for the result to be valid.
 
 ### Threshold
 

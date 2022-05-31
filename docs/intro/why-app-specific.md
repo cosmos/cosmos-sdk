@@ -66,7 +66,7 @@ decentralized applications built with Smart Contracts are inherently capped in p
 
 Security is hard to quantify, and greatly varies from platform to platform. That said here are some important benefits an application-specific blockchain can bring in terms of security:
 
-* Developers can choose proven programming languages like Golang when building their application-specific blockchains, as opposed to smart contract programming languages that are often more immature.
+* Developers can choose proven programming languages like Go when building their application-specific blockchains, as opposed to smart contract programming languages that are often more immature.
 * Developers are not constrained by the cryptographic functions made available by the underlying virtual-machines. They can use their own custom cryptography, and rely on well-audited crypto libraries.
 * Developers do not have to worry about potential bugs or exploitable mechanisms in the underlying virtual-machine, making it easier to reason about the security of the application.
 

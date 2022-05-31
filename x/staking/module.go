@@ -4,9 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	store "github.com/cosmos/cosmos-sdk/store/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"math/rand"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -71,7 +76,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the staking module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
@@ -170,6 +175,27 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 // updates.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return EndBlocker(ctx, am.keeper)
+}
+
+func init() {
+	//appmodule.Register(&modulev1.Module{}, appmodule.Provide(provideModuleBasic, provideModule))
+}
+
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+func provideModule(
+	kvStoreKey *store.KVStoreKey,
+	ak authkeeper.AccountKeeper,
+	bk bankkeeper.Keeper,
+	cdc codec.Codec,
+	paramsKeeper paramskeeper.Keeper,
+) (keeper.Keeper, runtime.AppModuleWrapper) {
+
+	k := keeper.NewKeeper(cdc, kvStoreKey, ak, bk, paramsKeeper.Subspace(types.ModuleName))
+	m := NewAppModule(cdc, k, ak, bk)
+	return k, runtime.WrapAppModule(m)
 }
 
 // AppModuleSimulation functions

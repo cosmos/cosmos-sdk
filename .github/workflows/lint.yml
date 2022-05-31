@@ -26,7 +26,7 @@ jobs:
         # if: env.GIT_DIFF
         with:
           version: latest
-          skip-cache: false
-          skip-pkg-cache: false
-          skip-build-cache: false
+          # skip-cache: false
+          # skip-pkg-cache: false
+          # skip-build-cache: false
         

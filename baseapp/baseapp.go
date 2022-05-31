@@ -709,7 +709,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 			msCache.Write()
 		}
 
-		if len(anteEvents) > 0 && mode == runTxModeDeliver || mode == runTxModeSimulate {
+		if len(anteEvents) > 0 && (mode == runTxModeDeliver || mode == runTxModeSimulate) {
 			// append the events in the order of occurrence
 			result.Events = append(anteEvents, result.Events...)
 		}

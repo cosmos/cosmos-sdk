@@ -1,5 +1,5 @@
 <!--
-order: 12
+order: 11
 -->
 
 # Object-Capability Model
@@ -65,10 +65,9 @@ value. The preferred method signature should take a copy instead.
 sumValue := externalModule.ComputeSumValue(*account)
 ```
 
-In the Cosmos SDK, you can see the application of this principle in the
-gaia app.
+In the Cosmos SDK, you can see the application of this principle in simapp.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.41.4/simapp/app.go#L249-L273
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/simapp/app.go#L258-L283
 
 The following diagram shows the current dependencies between keepers.
 

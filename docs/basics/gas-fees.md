@@ -21,14 +21,16 @@ In the Cosmos SDK, `gas` is a special unit that is used to track the consumption
 
 In the Cosmos SDK, `gas` is a simple alias for `uint64`, and is managed by an object called a _gas meter_. Gas meters implement the `GasMeter` interface
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/store/types/gas.go#L34-L43
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/store/types/gas.go#L40-L51
 
 where:
 
 * `GasConsumed()` returns the amount of gas that was consumed by the gas meter instance.
 * `GasConsumedToLimit()` returns the amount of gas that was consumed by gas meter instance, or the limit if it is reached.
+* `GasRemaining()` returns the gas left in the GasMeter.
 * `Limit()` returns the limit of the gas meter instance. `0` if the gas meter is infinite.
 * `ConsumeGas(amount Gas, descriptor string)` consumes the amount of `gas` provided. If the `gas` overflows, it panics with the `descriptor` message. If the gas meter is not infinite, it panics if `gas` consumed goes above the limit.
+* `RefundGas()` deducts the given amount from the gas consumed. This functionality enables refunding gas to the transaction or block gas pools so that EVM-compatible chains can fully support the go-ethereum StateDB interface.
 * `IsPastLimit()` returns `true` if the amount of gas consumed by the gas meter instance is strictly above the limit, `false` otherwise.
 * `IsOutOfGas()` returns `true` if the amount of gas consumed by the gas meter instance is above or equal to the limit, `false` otherwise.
 
@@ -38,7 +40,7 @@ The gas meter is generally held in [`ctx`](../core/context.md), and consuming ga
 ctx.GasMeter().ConsumeGas(amount, "description")
 ```
 
-By default, the Cosmos SDK makes use of two different gas meters, the [main gas meter](#main-gas-metter[) and the [block gas meter](#block-gas-meter).
+By default, the Cosmos SDK makes use of two different gas meters, the [main gas meter](#main-gas-metter) and the [block gas meter](#block-gas-meter).
 
 ### Main Gas Meter
 
@@ -50,7 +52,7 @@ Gas consumption can be done manually, generally by the module developer in the [
 
 `ctx.BlockGasMeter()` is the gas meter used to track gas consumption per block and make sure it does not go above a certain limit. A new instance of the `BlockGasMeter` is created each time [`BeginBlock`](../core/baseapp.md#beginblock) is called. The `BlockGasMeter` is finite, and the limit of gas per block is defined in the application's consensus parameters. By default, Cosmos SDK applications use the default consensus parameters provided by Tendermint:
 
-+++ https://github.com/tendermint/tendermint/blob/v0.34.0-rc6/types/params.go#L34-L41
++++ https://github.com/tendermint/tendermint/blob/v0.35.4/types/params.go#L78-L117
 
 When a new [transaction](../core/transactions.md) is being processed via `DeliverTx`, the current value of `BlockGasMeter` is checked to see if it is above the limit. If it is, `DeliverTx` returns immediately. This can happen even with the first transaction in a block, as `BeginBlock` itself can consume gas. If not, the transaction is processed normally. At the end of `DeliverTx`, the gas tracked by `ctx.BlockGasMeter()` is increased by the amount consumed to process the transaction:
 

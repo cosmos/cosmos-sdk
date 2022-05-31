@@ -211,6 +211,7 @@ func NewSimApp(
 	var appBuilder *runtime.AppBuilder
 	var paramsKeeper paramskeeper.Keeper
 	var accountKeeper authkeeper.AccountKeeper
+	var bankKeeper bankkeeper.Keeper
 	var appCodec codec.Codec
 	var legacyAmino *codec.LegacyAmino
 	var interfaceRegistry codectypes.InterfaceRegistry
@@ -221,6 +222,7 @@ func NewSimApp(
 		&legacyAmino,
 		&interfaceRegistry,
 		&accountKeeper,
+		&bankKeeper,
 	)
 	if err != nil {
 		panic(err)
@@ -229,7 +231,7 @@ func NewSimApp(
 	runtimeApp := appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 
 	keys := sdk.NewKVStoreKeys(
-		banktypes.StoreKey, stakingtypes.StoreKey,
+		stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, capabilitytypes.StoreKey,
@@ -266,9 +268,8 @@ func NewSimApp(
 	app.CapabilityKeeper.Seal()
 
 	// add keepers
-	app.BankKeeper = bankkeeper.NewBaseKeeper(
-		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.ModuleAccountAddrs(),
-	)
+	app.BankKeeper = bankKeeper
+
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName),
 	)
@@ -351,7 +352,6 @@ func NewSimApp(
 			encodingConfig.TxConfig,
 		),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
-		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
 		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
@@ -607,7 +607,6 @@ func GetMaccPerms() map[string][]string {
 
 // initParamsKeeper init params keeper and its subspaces
 func initParamsKeeper(paramsKeeper paramskeeper.Keeper) {
-	paramsKeeper.Subspace(banktypes.ModuleName)
 	paramsKeeper.Subspace(stakingtypes.ModuleName)
 	paramsKeeper.Subspace(minttypes.ModuleName)
 	paramsKeeper.Subspace(distrtypes.ModuleName)

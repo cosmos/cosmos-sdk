@@ -11,8 +11,8 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"cosmossdk.io/core/appmodule"
 	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	"cosmossdk.io/core/appmodule"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"

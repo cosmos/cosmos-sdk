@@ -3,9 +3,13 @@ package simapp
 import (
 	"bytes"
 	"context"
+	"cosmossdk.io/core/appconfig"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/depinject"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -504,4 +508,26 @@ type EmptyAppOptions struct{}
 // Get implements AppOptions
 func (ao EmptyAppOptions) Get(o string) interface{} {
 	return nil
+}
+
+// LoadAppConfig loads SimApp's app.yaml DI config into memory for testing purposes.
+func LoadAppConfig() depinject.Config {
+	yaml, err := os.ReadFile("app.yaml")
+	if err != nil {
+		panic("Unable to read app.yaml")
+	}
+	return appconfig.LoadYAML(yaml)
+}
+
+// ModuleAccountAddrs provides a list of blocked module accounts from configuration in app.yaml
+//
+// Ported from SimApp
+func ModuleAccountAddrs() map[string]bool {
+	cfg := LoadAppConfig()
+	var blockedAddresses bank.BlockedAddresses
+	err := depinject.Inject(cfg, &blockedAddresses)
+	if err != nil {
+		panic("unable to load DI container")
+	}
+	return blockedAddresses
 }

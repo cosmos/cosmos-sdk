@@ -3,15 +3,18 @@ package bank
 import (
 	"context"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"encoding/json"
 	"fmt"
 	store "github.com/cosmos/cosmos-sdk/store/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"math/rand"
 	"time"
 
+	"cosmossdk.io/core/appmodule"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -204,26 +207,36 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 
 // App Wiring
 
+func init() {
+	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(
+			provideModuleBasic,
+			provideBlockedAddresses,
+			provideModule))
+}
+
 func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-func provideModule(
-	config *authmodulev1.Module,
-	accountKeeper types.AccountKeeper,
-	cdc codec.Codec,
-	subspace paramtypes.Subspace,
-	key *store.KVStoreKey) keeper.BaseKeeper {
+type BlockedAddresses map[string]bool
 
+func provideBlockedAddresses(config *authmodulev1.Module) BlockedAddresses {
 	modAccAddrs := make(map[string]bool)
 	for _, permission := range config.ModuleAccountPermissions {
 		modAccAddrs[authtypes.NewModuleAddress(permission.Account).String()] = true
 	}
+	return modAccAddrs
+}
 
-	// TODO
-	// subspace provider?
+func provideModule(
+	addresses BlockedAddresses,
+	accountKeeper authkeeper.AccountKeeper,
+	cdc codec.Codec,
+	subspace paramtypes.Subspace,
+	key *store.KVStoreKey) (keeper.Keeper, runtime.AppModuleWrapper) {
 
-	bankKeeper := keeper.NewBaseKeeper(cdc, key, accountKeeper, subspace, modAccAddrs)
-
-	return bankKeeper
+	bankKeeper := keeper.NewBaseKeeper(cdc, key, accountKeeper, subspace, addresses)
+	m := NewAppModule(cdc, bankKeeper, accountKeeper)
+	return bankKeeper, runtime.WrapAppModule(m)
 }

@@ -349,8 +349,8 @@ func (f Factory) getSimPK() (cryptotypes.PubKey, error) {
 		pk cryptotypes.PubKey = &secp256k1.PubKey{} // use default public key type
 	)
 
-	// use the first element from the list of keys in order to generate a valid
-	// pubkey that supports multiple algorithms
+	// Use the first element from the list of keys in order to generate a valid
+	// pubkey that supports multiple algorithms.
 	if f.simulateAndExecute && f.keybase != nil {
 		records, _ := f.keybase.List()
 		if len(records) == 0 {

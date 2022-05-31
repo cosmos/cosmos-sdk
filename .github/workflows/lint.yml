@@ -22,10 +22,10 @@ jobs:
             go.mod
             go.sum
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v2
         # if: env.GIT_DIFF
         with:
-          # version: latest
+          version: latest
           skip-cache: false
           skip-pkg-cache: false
           skip-build-cache: false

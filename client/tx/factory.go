@@ -338,10 +338,11 @@ func (f Factory) BuildSimTx(msgs ...sdk.Msg) ([]byte, error) {
 	return f.txConfig.TxEncoder()(txb.GetTx())
 }
 
-// getSimPK gets the public key to use for building a simulation tx
-// note we should only check for keys in the keybase if we are in simulate and execute mode
-// (f.e. when using --gas=auto - ref #11283)
-// when using --dry-run, we are is simulation mode only and should not check the keybase
+// getSimPK gets the public key to use for building a simulation tx.
+// Note, we should only check for keys in the keybase if we are in simulate and execute mode,
+// e.g. when using --gas=auto.
+// When using --dry-run, we are is simulation mode only and should not check the keybase.
+// Ref: https://github.com/cosmos/cosmos-sdk/issues/11283
 func (f Factory) getSimPK() (cryptotypes.PubKey, error) {
 	var (
 		ok bool

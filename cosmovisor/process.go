@@ -194,7 +194,7 @@ func (l *Launcher) doPreUpgrade() error {
 }
 
 // executePreUpgradeCmd runs the pre-upgrade command defined by the application
-// cfg contains the cosmosvisor config from the env vars
+// cfg contains the cosmovisor config from the env vars
 func (l *Launcher) executePreUpgradeCmd() error {
 	bin, err := l.cfg.CurrentBin()
 	if err != nil {

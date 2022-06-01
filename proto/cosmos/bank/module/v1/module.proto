@@ -9,4 +9,7 @@ message Module {
   option (cosmos.app.v1alpha1.module) = {
     go_import: "github.com/cosmos/cosmos-sdk/x/bank"
   };
+
+  // blocked_module_accounts configures exceptional module accounts which should be blocked from receiving funds
+  repeated string blocked_module_accounts = 1;
 }

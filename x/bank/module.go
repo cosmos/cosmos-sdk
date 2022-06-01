@@ -2,14 +2,13 @@ package bank
 
 import (
 	"context"
-	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/depinject"
 	store "github.com/cosmos/cosmos-sdk/store/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/tendermint/tendermint/crypto"
 
 	"math/rand"
 	"time"
@@ -211,7 +210,6 @@ func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(
 			provideModuleBasic,
-			provideBlockedAddresses,
 			provideModule))
 }
 
@@ -219,20 +217,10 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type BlockedAddresses map[string]bool
-
-func provideBlockedAddresses(config *authmodulev1.Module) BlockedAddresses {
-	modAccAddrs := make(map[string]bool)
-	for _, permission := range config.ModuleAccountPermissions {
-		modAccAddrs[authtypes.NewModuleAddress(permission.Account).String()] = true
-	}
-	return modAccAddrs
-}
-
 type bankInputs struct {
 	depinject.In
 
-	Addresses     BlockedAddresses
+	Config        *modulev1.Module
 	AccountKeeper types.AccountKeeper `key:"cosmos.auth.module.v1.AccountKeeper"`
 	Cdc           codec.Codec
 	Subspace      paramtypes.Subspace
@@ -240,7 +228,23 @@ type bankInputs struct {
 }
 
 func provideModule(in bankInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
-	bankKeeper := keeper.NewBaseKeeper(in.Cdc, in.Key, in.AccountKeeper, in.Subspace, in.Addresses)
+	// configure blocked module accounts.
+	//
+	// default behavior for blockedAddresses is to regard any module mentioned in AccountKeeper's module account
+	// permissions as blocked.
+	blockedAddresses := make(map[string]bool)
+	if len(in.Config.BlockedModuleAccounts) != 0 {
+		for _, moduleName := range in.Config.BlockedModuleAccounts {
+			addr := sdk.AccAddress(crypto.AddressHash([]byte(moduleName)))
+			blockedAddresses[addr.String()] = true
+		}
+	} else {
+		for _, permission := range in.AccountKeeper.GetModulePermissions() {
+			blockedAddresses[permission.GetAddress().String()] = true
+		}
+	}
+
+	bankKeeper := keeper.NewBaseKeeper(in.Cdc, in.Key, in.AccountKeeper, in.Subspace, blockedAddresses)
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper)
 	return bankKeeper, runtime.WrapAppModule(m)
 }

@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/depinject"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"os"
 	"strconv"
 	"testing"
@@ -524,10 +524,10 @@ func LoadAppConfig() depinject.Config {
 // Ported from SimApp
 func ModuleAccountAddrs() map[string]bool {
 	cfg := LoadAppConfig()
-	var blockedAddresses bank.BlockedAddresses
-	err := depinject.Inject(cfg, &blockedAddresses)
+	var bk bankkeeper.Keeper
+	err := depinject.Inject(cfg, &bk)
 	if err != nil {
 		panic("unable to load DI container")
 	}
-	return blockedAddresses
+	return bk.GetBlockedAddresses()
 }

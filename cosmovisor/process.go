@@ -201,9 +201,13 @@ func (l *Launcher) executePreUpgradeCmd() error {
 		return fmt.Errorf("error while getting current binary path: %w", err)
 	}
 
-	preUpgradeCmd := exec.Command(bin, "pre-upgrade")
-	_, err = preUpgradeCmd.Output()
-	return err
+	result, err := exec.Command(bin, "pre-upgrade").Output()
+	if err != nil {
+		return err
+	}
+
+	l.logger.Info().Bytes("result", result).Msg("pre-upgrade result")
+	return nil
 }
 
 // IsSkipUpgradeHeight checks if pre-upgrade script must be run.

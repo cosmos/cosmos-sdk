@@ -25,7 +25,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         # if: env.GIT_DIFF
         with:
-          version: latest
+          version: 1.45
           # skip-cache: false
           # skip-pkg-cache: false
           # skip-build-cache: false

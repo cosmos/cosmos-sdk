@@ -154,8 +154,8 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 
 	am.keeper.InitMemStore(ctx)
 
-	if am.sealKeeper {
-		am.keeper.UnsafeSeal()
+	if am.sealKeeper && !am.keeper.IsSealed() {
+		am.keeper.Seal()
 	}
 }
 

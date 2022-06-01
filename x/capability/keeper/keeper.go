@@ -100,9 +100,9 @@ func (k *Keeper) Seal() {
 	k.sealed = true
 }
 
-// UnsafeSeal does the same as Seal() without doing any checks.
-func (k *Keeper) UnsafeSeal() {
-	k.sealed = true
+// IsSealed returns if the keeper is sealed.
+func (k *Keeper) IsSealed() bool {
+	return k.sealed
 }
 
 // InitMemStore will assure that the module store is a memory store (it will panic if it's not)

@@ -615,7 +615,7 @@ func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPC() {
 		req       *tx.GetBlockWithTxsRequest
 		expErr    bool
 		expErrMsg string
-		expTxLen  int
+		expTxsLen int
 	}{
 		{"nil request", nil, true, "request cannot be nil", 0},
 		{"empty request", &tx.GetBlockWithTxsRequest{}, true, "height must not be less than 1 or greater than the current height", 0},
@@ -635,8 +635,8 @@ func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPC() {
 				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				s.Require().NoError(err)
-				s.Require().Equal(tc.expTxLen, len(grpcRes.Txs))
-				if tc.expTxLen > 0 {
+				s.Require().Equal(tc.expTxsLen, len(grpcRes.Txs))
+				if tc.expTxsLen > 0 {
 					s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
 				}
 				s.Require().Equal(grpcRes.Block.Header.Height, tc.req.Height)

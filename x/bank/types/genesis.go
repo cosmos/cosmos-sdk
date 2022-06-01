@@ -15,11 +15,6 @@ func (gs GenesisState) Validate() error {
 	if len(gs.Params.SendEnabled) > 0 && len(gs.SendEnabled) > 0 {
 		return errors.New("send_enabled defined in both the send_enabled field and in params (deprecated)")
 	}
-	// Note: This Validate method has a concrete receiver, so the changes applied by MigrateSendEnabled are undone at the end of Validate.
-	// The changes are needed in order to properly validate the GenesisState in a backwards compatible way.
-	// It is assumed that at some point, MigrateSendEnabled is called outside this method before the info is used,
-	// gbut possibly not before being validated.
-	gs.MigrateSendEnabled()
 
 	if err := gs.Params.Validate(); err != nil {
 		return err
@@ -31,7 +26,7 @@ func (gs GenesisState) Validate() error {
 
 	totalSupply := sdk.Coins{}
 
-	for _, p := range gs.SendEnabled {
+	for _, p := range gs.GetAllSendEnabled() {
 		if _, exists := seenSendEnabled[p.Denom]; exists {
 			return fmt.Errorf("duplicate send enabled found: '%s'", p.Denom)
 		}
@@ -117,16 +112,26 @@ func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.R
 // If the main SendEnabled slice already has entries, the Params.SendEnabled entries are added.
 // In case of the same demon in both, preference is given to the existing (main GenesisState field) entry.
 func (g *GenesisState) MigrateSendEnabled() {
-	if len(g.Params.SendEnabled) > 0 {
-		knownSendEnabled := map[string]bool{}
-		for _, se := range g.SendEnabled {
-			knownSendEnabled[se.Denom] = true
-		}
-		for _, se := range g.Params.SendEnabled {
-			if _, known := knownSendEnabled[se.Denom]; !known {
-				g.SendEnabled = append(g.SendEnabled, *se)
-			}
+	g.SendEnabled = g.GetAllSendEnabled()
+	g.Params.SendEnabled = nil
+}
+
+// GetAllSendEnabled returns all the SendEnabled entries from both the SendEnabled field and the Params.
+// If a denom has an entry in both, the entry in the SendEnabled field takes precedence over one in Params.
+func (g GenesisState) GetAllSendEnabled() []SendEnabled {
+	if len(g.Params.SendEnabled) == 0 {
+		return g.SendEnabled
+	}
+	rv := make([]SendEnabled, len(g.SendEnabled))
+	knownSendEnabled := map[string]bool{}
+	for i, se := range g.SendEnabled {
+		rv[i] = se
+		knownSendEnabled[se.Denom] = true
+	}
+	for _, se := range g.Params.SendEnabled {
+		if _, known := knownSendEnabled[se.Denom]; !known {
+			rv = append(rv, *se)
 		}
 	}
-	g.Params.SendEnabled = nil
+	return rv
 }

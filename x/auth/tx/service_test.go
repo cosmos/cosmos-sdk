@@ -621,9 +621,9 @@ func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPC() {
 		{"empty request", &tx.GetBlockWithTxsRequest{}, true, "height must not be less than 1 or greater than the current height", 0},
 		{"bad height", &tx.GetBlockWithTxsRequest{Height: 99999999}, true, "height must not be less than 1 or greater than the current height", 0},
 		{"bad pagination", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 1000, Limit: 100}}, true, "out of range", 0},
-		{"good request", &tx.GetBlockWithTxsRequest{Height: s.txHeight}, false, "", 2},
+		{"good request", &tx.GetBlockWithTxsRequest{Height: s.txHeight}, false, "", 1},
 		{"with pagination request", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 0, Limit: 1}}, false, "", 1},
-		{"page all request", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 0, Limit: 100}}, false, "", 2},
+		{"page all request", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 0, Limit: 100}}, false, "", 1},
 		{"block with 0 tx", &tx.GetBlockWithTxsRequest{Height: s.txHeight - 1, Pagination: &query.PageRequest{Offset: 0, Limit: 100}}, false, "", 0},
 	}
 	for _, tc := range testCases {
@@ -635,7 +635,6 @@ func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPC() {
 				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				s.Require().NoError(err)
-				s.Require().Equal(tc.expTxsLen, len(grpcRes.Txs))
 				if tc.expTxsLen > 0 {
 					s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
 				}

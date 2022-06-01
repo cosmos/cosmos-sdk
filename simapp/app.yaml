@@ -46,3 +46,7 @@ modules:
   - name: params
     config:
       "@type": cosmos.params.module.v1.Module
+
+  - name: bank
+    config:
+      "@type": cosmos.bank.module.v1.Module

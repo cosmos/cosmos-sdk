@@ -120,9 +120,16 @@ func structArgsInTypes(typ reflect.Type) ([]ProviderInput, error) {
 			}
 		}
 
+		var key string
+		keyTag, keyFound := f.Tag.Lookup("key")
+		if keyFound {
+			key = keyTag
+		}
+
 		res = append(res, ProviderInput{
 			Type:     f.Type,
 			Optional: optional,
+			Key:      key,
 		})
 	}
 	return res, nil
@@ -151,8 +158,15 @@ func structArgsOutTypes(typ reflect.Type) []ProviderOutput {
 			continue
 		}
 
+		var key string
+		keyTag, keyFound := f.Tag.Lookup("key")
+		if keyFound {
+			key = keyTag
+		}
+
 		res = append(res, ProviderOutput{
 			Type: f.Type,
+			Key:  key,
 		})
 	}
 	return res

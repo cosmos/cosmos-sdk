@@ -26,7 +26,6 @@ func TestCoinTestSuite(t *testing.T) {
 }
 
 func (s *coinTestSuite) SetupSuite() {
-	s.T().Parallel()
 	zero := sdk.NewInt(0)
 	one := sdk.OneInt()
 	two := sdk.NewInt(2)

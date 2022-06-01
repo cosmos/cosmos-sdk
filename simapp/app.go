@@ -198,9 +198,9 @@ func init() {
 }
 
 //go:embed app.yaml
-var appConfigYaml []byte
+var AppConfigYaml []byte
 
-var appConfig = appconfig.LoadYAML(appConfigYaml)
+var appConfig = appconfig.LoadYAML(AppConfigYaml)
 
 // NewSimApp returns a reference to an initialized SimApp.
 func NewSimApp(

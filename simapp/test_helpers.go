@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/depinject"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -510,20 +509,11 @@ func (ao EmptyAppOptions) Get(o string) interface{} {
 	return nil
 }
 
-// LoadAppConfig loads SimApp's app.yaml DI config into memory for testing purposes.
-func LoadAppConfig() depinject.Config {
-	yaml, err := os.ReadFile("app.yaml")
-	if err != nil {
-		panic("Unable to read app.yaml")
-	}
-	return appconfig.LoadYAML(yaml)
-}
-
 // ModuleAccountAddrs provides a list of blocked module accounts from configuration in app.yaml
 //
 // Ported from SimApp
 func ModuleAccountAddrs() map[string]bool {
-	cfg := LoadAppConfig()
+	cfg := appconfig.LoadYAML(AppConfigYaml)
 	var bk bankkeeper.Keeper
 	err := depinject.Inject(cfg, &bk)
 	if err != nil {

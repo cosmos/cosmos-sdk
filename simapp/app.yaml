@@ -50,11 +50,12 @@ modules:
   - name: bank
     config:
       "@type": cosmos.bank.module.v1.Module
-      blocked_module_accounts:
-        - fee_collector
-        - distribution
-        - mint
-        - bonded_tokens_pool
-        - not_bonded_tokens_pool
-        - gov
-        - nft
+#      uncomment to provide a block list different from the modules mentioned in auth.module_account_permissions
+#      blocked_module_accounts:
+#        - fee_collector
+#        - distribution
+#        - mint
+#        - bonded_tokens_pool
+#        - not_bonded_tokens_pool
+#        - gov
+#        - nft

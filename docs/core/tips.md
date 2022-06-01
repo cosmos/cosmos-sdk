@@ -72,10 +72,12 @@ In both cases, using `SIGN_MODE_LEGACY_AMINO_JSON` is recommended only if hardwa
 
 ## Enabling Tips on your Chain
 
-The transaction tips functionality is introduced in Cosmos SDK v0.46, so earlier versions do not have support for tips. It is however not included by default in a v0.46 app. Enabling tips on your chain is done by adding the `TipDecorator` in your posthandler chain:
+The transaction tips functionality is introduced in Cosmos SDK v0.46, so earlier versions do not have support for tips. It is however not included by default in a v0.46 app. Sending a transaction with tips to a chain which didn't enable tips will result in a no-op, i.e. the `tip` field in the transaction will be ignored.
+
+Enabling tips on a chain is done by adding the `TipDecorator` in the posthandler chain:
 
 ```go
-// HandlerOptions are the options required for constructing a default SDK PostHandler.
+// HandlerOptions are the options required for constructing a SDK PostHandler which supports tips.
 type HandlerOptions struct {
 	BankKeeper types.BankKeeper
 }

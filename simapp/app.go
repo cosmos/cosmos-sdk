@@ -198,9 +198,9 @@ func init() {
 }
 
 //go:embed app.yaml
-var AppConfigYaml []byte
+var appConfigYaml []byte
 
-var appConfig = appconfig.LoadYAML(AppConfigYaml)
+var AppConfig = appconfig.LoadYAML(appConfigYaml)
 
 // NewSimApp returns a reference to an initialized SimApp.
 func NewSimApp(
@@ -215,7 +215,7 @@ func NewSimApp(
 	var appCodec codec.Codec
 	var legacyAmino *codec.LegacyAmino
 	var interfaceRegistry codectypes.InterfaceRegistry
-	err := depinject.Inject(appConfig,
+	err := depinject.Inject(AppConfig,
 		&appBuilder,
 		&paramsKeeper,
 		&appCodec,

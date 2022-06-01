@@ -3,7 +3,6 @@ package simapp
 import (
 	"bytes"
 	"context"
-	"cosmossdk.io/core/appconfig"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -513,9 +512,8 @@ func (ao EmptyAppOptions) Get(o string) interface{} {
 //
 // Ported from SimApp
 func ModuleAccountAddrs() map[string]bool {
-	cfg := appconfig.LoadYAML(AppConfigYaml)
 	var bk bankkeeper.Keeper
-	err := depinject.Inject(cfg, &bk)
+	err := depinject.Inject(AppConfig, &bk)
 	if err != nil {
 		panic("unable to load DI container")
 	}

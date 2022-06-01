@@ -151,7 +151,7 @@ func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 	return accNumber
 }
 
-// GetModulePermissions fetches per-module account permissions
+// GetModulePermissions fetches per-module account permissions.
 func (ak AccountKeeper) GetModulePermissions() map[string]types.PermissionsForAddress {
 	return ak.permAddrs
 }

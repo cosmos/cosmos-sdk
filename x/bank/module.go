@@ -233,8 +233,8 @@ func provideModule(in bankInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
 	// default behavior for blockedAddresses is to regard any module mentioned in AccountKeeper's module account
 	// permissions as blocked.
 	blockedAddresses := make(map[string]bool)
-	if len(in.Config.BlockedModuleAccounts) != 0 {
-		for _, moduleName := range in.Config.BlockedModuleAccounts {
+	if len(in.Config.BlockedModuleAccountsOverride) != 0 {
+		for _, moduleName := range in.Config.BlockedModuleAccountsOverride {
 			addr := sdk.AccAddress(crypto.AddressHash([]byte(moduleName)))
 			blockedAddresses[addr.String()] = true
 		}

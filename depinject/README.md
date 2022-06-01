@@ -1,12 +1,73 @@
-# Cosmos SDK Dependency Injection `container` Module
+# Cosmos SDK Dependency Injection `depinject` Module
 
 ## Overview
 
-TODO
+`depinject` is a dependency injection framework for the Cosmos SDK. This module together with `core/appconfig` are meant
+to simplify the definition of a blockchain by replacing most of app.go's boilerplate code with a configuration file (YAML or JSON).
 
 ## Usage
 
-TODO
+### `depinject` example 
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"cosmossdk.io/depinject"
+)
+
+type AnotherInt int
+
+func main() {
+	var x int
+	var y AnotherInt
+	fmt.Println(x, y)
+	depinject.Inject(
+		depinject.Provide(
+			func() int { return 1 },
+			func() AnotherInt { return AnotherInt(2) },
+		),
+		&x,
+		&y,
+	)
+	fmt.Println(x, y)
+}
+```
+
+### Full example in real app
+
+```go
+//go:embed app.yaml
+var appConfigYaml []byte
+
+var appConfig = appconfig.LoadYAML(appConfigYaml)
+
+func NewSimApp(
+	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
+	homePath string, invCheckPeriod uint, encodingConfig simappparams.EncodingConfig,
+	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
+) *SimApp {
+	var appBuilder *runtime.AppBuilder
+	var paramsKeeper paramskeeper.Keeper
+	var accountKeeper authkeeper.AccountKeeper
+	var appCodec codec.Codec
+	var legacyAmino *codec.LegacyAmino
+	var interfaceRegistry codectypes.InterfaceRegistry
+	err := depinject.Inject(appConfig,
+		&appBuilder,
+		&paramsKeeper,
+		&appCodec,
+		&legacyAmino,
+		&interfaceRegistry,
+		&accountKeeper,
+	)
+	if err != nil {
+		panic(err)
+	}
+...
+```
 
 ## Debugging
 

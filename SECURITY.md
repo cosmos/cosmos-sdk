@@ -13,7 +13,7 @@ this [blog post](https://blog.cosmos.network/bug-bounty-program-for-tendermint-c
 
 The following is a list of examples of the kinds of bugs we're most interested
 in for the Cosmos SDK. See [here](https://github.com/tendermint/tendermint/blob/master/SECURITY.md) for vulnerabilities we are interested
-in for Tendermint and other lower-level libraries (eg. [IAVL](https://github.com/tendermint/iavl)).
+in for Tendermint and other lower-level libraries (eg. [IAVL](https://github.com/cosmos/iavl)).
 
 ### Core packages
 

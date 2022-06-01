@@ -22,6 +22,7 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 			IP:                      ip,
 			ChainID:                 chainID,
 			NodeID:                  nodeID,
+			P2PPort:                 26656,
 			PubKey:                  valPubKey,
 			Moniker:                 moniker,
 			Amount:                  amount,

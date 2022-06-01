@@ -1562,6 +1562,9 @@ func (s *IntegrationTestSuite) TestAuxSigner() {
 }
 
 func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
+	// Skipping this test as it needs a simapp with the TipDecorator in post handler.
+	s.T().Skip()
+
 	require := s.Require()
 	val := s.network.Validators[0]
 

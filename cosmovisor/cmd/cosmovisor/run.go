@@ -40,7 +40,7 @@ func Run(logger *zerolog.Logger, args []string, options ...RunOption) error {
 	}
 
 	doUpgrade, err := launcher.Run(args, runCfg.StdOut, runCfg.StdErr)
-	// if RestartAfterUpgrade, we launch after a successful upgrade (with that condition launcher.Run returns nil)
+	// if RestartAfterUpgrade, we launch after a successful upgrade (given that condition launcher.Run returns nil)
 	for cfg.RestartAfterUpgrade && err == nil && doUpgrade {
 		logger.Info().Str("app", cfg.Name).Msg("upgrade detected, relaunching")
 		doUpgrade, err = launcher.Run(args, runCfg.StdOut, runCfg.StdErr)

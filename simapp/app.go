@@ -211,6 +211,7 @@ func NewSimApp(
 	var appBuilder *runtime.AppBuilder
 	var paramsKeeper paramskeeper.Keeper
 	var accountKeeper authkeeper.AccountKeeper
+	var groupKeeper groupkeeper.Keeper
 	var appCodec codec.Codec
 	var legacyAmino *codec.LegacyAmino
 	var interfaceRegistry codectypes.InterfaceRegistry
@@ -221,6 +222,7 @@ func NewSimApp(
 		&legacyAmino,
 		&interfaceRegistry,
 		&accountKeeper,
+		&groupKeeper,
 	)
 	if err != nil {
 		panic(err)
@@ -233,7 +235,7 @@ func NewSimApp(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, capabilitytypes.StoreKey,
-		authzkeeper.StoreKey, nftkeeper.StoreKey, group.StoreKey,
+		authzkeeper.StoreKey, nftkeeper.StoreKey,
 	)
 	// NOTE: The testingkey is just mounted for testing purposes. Actual applications should
 	// not include this key.
@@ -297,12 +299,13 @@ func NewSimApp(
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(keys[authzkeeper.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper)
 
-	groupConfig := group.DefaultConfig()
+	// groupConfig := group.DefaultConfig()
 	/*
 		Example of setting group params:
 		groupConfig.MaxMetadataLen = 1000
 	*/
-	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper, groupConfig)
+	app.GroupKeeper = groupKeeper
+	// app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper, groupConfig)
 
 	// register the proposal types
 	govRouter := govv1beta1.NewRouter()

@@ -21,10 +21,6 @@ func TestEventsTestSuite(t *testing.T) {
 	suite.Run(t, new(eventsTestSuite))
 }
 
-func (s *eventsTestSuite) SetupSuite() {
-	s.T().Parallel()
-}
-
 func (s *eventsTestSuite) TestAppendEvents() {
 	e1 := sdk.NewEvent("transfer", sdk.NewAttribute("sender", "foo"))
 	e2 := sdk.NewEvent("transfer", sdk.NewAttribute("sender", "bar"))

@@ -6,8 +6,8 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	store "github.com/cosmos/cosmos-sdk/store/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
@@ -229,14 +229,18 @@ func provideBlockedAddresses(config *authmodulev1.Module) BlockedAddresses {
 	return modAccAddrs
 }
 
-func provideModule(
-	addresses BlockedAddresses,
-	accountKeeper authkeeper.AccountKeeper,
-	cdc codec.Codec,
-	subspace paramtypes.Subspace,
-	key *store.KVStoreKey) (keeper.Keeper, runtime.AppModuleWrapper) {
+type bankInputs struct {
+	depinject.In
 
-	bankKeeper := keeper.NewBaseKeeper(cdc, key, accountKeeper, subspace, addresses)
-	m := NewAppModule(cdc, bankKeeper, accountKeeper)
+	Addresses     BlockedAddresses
+	AccountKeeper types.AccountKeeper `key:"cosmos.auth.module.v1.AccountKeeper"`
+	Cdc           codec.Codec
+	Subspace      paramtypes.Subspace
+	Key           *store.KVStoreKey
+}
+
+func provideModule(in bankInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
+	bankKeeper := keeper.NewBaseKeeper(in.Cdc, in.Key, in.AccountKeeper, in.Subspace, in.Addresses)
+	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper)
 	return bankKeeper, runtime.WrapAppModule(m)
 }

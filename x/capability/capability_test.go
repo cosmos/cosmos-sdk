@@ -39,7 +39,7 @@ func (suite *CapabilityTestSuite) SetupTest() {
 	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1})
 	suite.keeper = keeper
 	suite.cdc = cdc
-	suite.module = capability.NewAppModule(cdc, *keeper)
+	suite.module = capability.NewAppModule(cdc, *keeper, true)
 }
 
 // The following test case mocks a specific bug discovered in https://github.com/cosmos/cosmos-sdk/issues/9800
@@ -63,7 +63,7 @@ func (suite *CapabilityTestSuite) TestInitializeMemStore() {
 	// Mock app beginblock and ensure that no gas has been consumed and memstore is initialized
 	ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{}).WithBlockGasMeter(sdk.NewGasMeter(50))
 	prevGas := ctx.BlockGasMeter().GasConsumed()
-	restartedModule := capability.NewAppModule(suite.cdc, *newKeeper)
+	restartedModule := capability.NewAppModule(suite.cdc, *newKeeper, true)
 	restartedModule.BeginBlock(ctx, abci.RequestBeginBlock{})
 	suite.Require().True(newKeeper.IsInitialized(ctx), "memstore initialized flag not set")
 	gasUsed := ctx.BlockGasMeter().GasConsumed()

@@ -90,12 +90,15 @@ type AppModule struct {
 	AppModuleBasic
 
 	keeper keeper.Keeper
+
+	sealKeeper bool
 }
 
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, sealKeeper bool) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
 		keeper:         keeper,
+		sealKeeper:     sealKeeper,
 	}
 }
 
@@ -150,6 +153,10 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	am.keeper.InitMemStore(ctx)
+
+	if am.sealKeeper {
+		am.keeper.UnsafeSeal()
+	}
 }
 
 // EndBlock executes all ABCI EndBlock logic respective to the capability module. It
@@ -174,9 +181,10 @@ func provideModule(
 	kvStoreKey *store.KVStoreKey,
 	memStoreKey *store.MemoryStoreKey,
 	cdc codec.Codec,
+	config *modulev1.Module,
 ) (*keeper.Keeper, runtime.AppModuleWrapper) {
 	k := keeper.NewKeeper(cdc, kvStoreKey, memStoreKey)
-	m := NewAppModule(cdc, *k)
+	m := NewAppModule(cdc, *k, config.SealKeeper)
 	return k, runtime.WrapAppModule(m)
 }
 

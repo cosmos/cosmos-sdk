@@ -100,6 +100,11 @@ func (k *Keeper) Seal() {
 	k.sealed = true
 }
 
+// UnsafeSeal does the same as Seal() without doing any checks.
+func (k *Keeper) UnsafeSeal() {
+	k.sealed = true
+}
+
 // InitMemStore will assure that the module store is a memory store (it will panic if it's not)
 // and willl initialize it. The function is safe to be called multiple times.
 // InitMemStore must be called every time the app starts before the keeper is used (so

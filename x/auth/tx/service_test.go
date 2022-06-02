@@ -615,14 +615,16 @@ func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPC() {
 		req       *tx.GetBlockWithTxsRequest
 		expErr    bool
 		expErrMsg string
+		expTxsLen int
 	}{
-		{"nil request", nil, true, "request cannot be nil"},
-		{"empty request", &tx.GetBlockWithTxsRequest{}, true, "height must not be less than 1 or greater than the current height"},
-		{"bad height", &tx.GetBlockWithTxsRequest{Height: 99999999}, true, "height must not be less than 1 or greater than the current height"},
-		{"bad pagination", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 1000, Limit: 100}}, true, "out of range"},
-		{"good request", &tx.GetBlockWithTxsRequest{Height: s.txHeight}, false, ""},
-		{"with pagination request", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 0, Limit: 1}}, false, ""},
-		{"page all request", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 0, Limit: 100}}, false, ""},
+		{"nil request", nil, true, "request cannot be nil", 0},
+		{"empty request", &tx.GetBlockWithTxsRequest{}, true, "height must not be less than 1 or greater than the current height", 0},
+		{"bad height", &tx.GetBlockWithTxsRequest{Height: 99999999}, true, "height must not be less than 1 or greater than the current height", 0},
+		{"bad pagination", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 1000, Limit: 100}}, true, "out of range", 0},
+		{"good request", &tx.GetBlockWithTxsRequest{Height: s.txHeight}, false, "", 1},
+		{"with pagination request", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 0, Limit: 1}}, false, "", 1},
+		{"page all request", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 0, Limit: 100}}, false, "", 1},
+		{"block with 0 tx", &tx.GetBlockWithTxsRequest{Height: s.txHeight - 1, Pagination: &query.PageRequest{Offset: 0, Limit: 100}}, false, "", 0},
 	}
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
@@ -633,7 +635,9 @@ func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPC() {
 				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				s.Require().NoError(err)
-				s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
+				if tc.expTxsLen > 0 {
+					s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
+				}
 				s.Require().Equal(grpcRes.Block.Header.Height, tc.req.Height)
 				if tc.req.Pagination != nil {
 					s.Require().LessOrEqual(len(grpcRes.Txs), int(tc.req.Pagination.Limit))

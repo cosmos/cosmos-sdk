@@ -47,6 +47,9 @@ type AccountKeeperI interface {
 
 	// Fetch the next account number, and increment the internal counter.
 	GetNextAccountNumber(sdk.Context) uint64
+
+	// GetModulePermissions fetches per-module account permissions
+	GetModulePermissions() map[string]types.PermissionsForAddress
 }
 
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
@@ -146,6 +149,11 @@ func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 	store.Set(types.GlobalAccountNumberKey, bz)
 
 	return accNumber
+}
+
+// GetModulePermissions fetches per-module account permissions.
+func (ak AccountKeeper) GetModulePermissions() map[string]types.PermissionsForAddress {
+	return ak.permAddrs
 }
 
 // ValidatePermissions validates that the module account has been granted

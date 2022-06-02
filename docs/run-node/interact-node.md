@@ -109,16 +109,16 @@ Assuming the state at that block has not yet been pruned by the node, this query
 
 The following snippet shows how to query the state using gRPC inside a Go program. The idea is to create a gRPC connection, and use the Protobuf-generated client code to query the gRPC server.
 
-#### Install cosmos sdk
+#### Install Cosmos SDK
 
 Add below line to `go.mod` to replace protobuf, read more [#8469](https://github.com/cosmos/cosmos-sdk/issues/8469)
 
-```
+```go
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 ```
 
 ```bash
-$ go get github.com/cosmos/cosmos-sdk@main
+go get github.com/cosmos/cosmos-sdk@main
 ```
 
 ```go

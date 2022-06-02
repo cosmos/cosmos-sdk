@@ -4,7 +4,7 @@ order: 14
 
 # Transaction Tips
 
-Transaction tips are a mechanism to pay for transaction fees using another denom than the native fee denom of the chain. {synopsis}
+Transaction tips are a mechanism to pay for transaction fees using another denom than the native fee denom of the chain. They are still in beta, and are not included by default in the SDK. {synopsis}
 
 ## Context
 
@@ -26,15 +26,15 @@ The transaction tips flow happens in multiple steps.
 
 2. The tipper drafts a transaction to be executed on the chain A. It can include chain A `Msg`s. However, instead of creating a normal transaction, they create the following `AuxSignerData` document:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta1/proto/cosmos/tx/v1beta1/tx.proto#L230-L249
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/tx/v1beta1/tx.proto#L230-L249
 
 where we have defined `SignDocDirectAux` as:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta1/proto/cosmos/tx/v1beta1/tx.proto#L67-L93
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/tx/v1beta1/tx.proto#L67-L93
 
 where `Tip` is defined as
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta1/proto/cosmos/tx/v1beta1/tx.proto#L219-L228
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/tx/v1beta1/tx.proto#L219-L228
 
 Notice that this document doesn't sign over the final chain A fees. Instead, it includes a `Tip` field. It also doesn't include the whole `AuthInfo` object as in `SIGN_MODE_DIRECT`, only the minimum information needed by the tipper
 
@@ -72,27 +72,44 @@ In both cases, using `SIGN_MODE_LEGACY_AMINO_JSON` is recommended only if hardwa
 
 ## Enabling Tips on your Chain
 
-The transaction tips functionality is introduced in Cosmos SDK v0.46, so earlier versions do not have support for tips. If you're using v0.46 or later, then enabling tips on your chain is as simple as adding the `TipMiddleware` in your middleware stack:
+The transaction tips functionality is introduced in Cosmos SDK v0.46, so earlier versions do not have support for tips. It is however not included by default in a v0.46 app. Sending a transaction with tips to a chain which didn't enable tips will result in a no-op, i.e. the `tip` field in the transaction will be ignored.
+
+Enabling tips on a chain is done by adding the `TipDecorator` in the posthandler chain:
 
 ```go
-// NewTxHandler defines a TxHandler middleware stack.
-func NewTxHandler(options TxHandlerOptions) (tx.Handler, error) {
-    // --snip--
+// HandlerOptions are the options required for constructing a SDK PostHandler which supports tips.
+type HandlerOptions struct {
+	BankKeeper types.BankKeeper
+}
 
-    return ComposeMiddlewares(
-        // base tx handler that executes Msgs
-        NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
-        // --snip other middlewares--
+// MyPostHandler returns a posthandler chain with the TipDecorator.
+func MyPostHandler(options HandlerOptions) (sdk.AnteHandler, error) {
+    if options.BankKeeper == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "bank keeper is required for posthandler")
+	}
 
-        // Add the TipMiddleware
-        NewTipMiddleware(options.BankKeeper),
-    )
+	postDecorators := []sdk.AnteDecorator{
+		posthandler.NewTipDecorator(options.bankKeeper),
+	}
+
+	return sdk.ChainAnteDecorators(postDecorators...), nil
+}
+
+func (app *SimApp) setPostHandler() {
+	postHandler, err := MyPostHandler(
+		HandlerOptions{
+			BankKeeper: app.BankKeeper,
+		},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	app.SetPostHandler(postHandler)
 }
 ```
 
-Notice that `NewTipMiddleware` needs a reference to the BankKeeper, for transferring the tip to the fee payer.
-
-If you are using the Cosmos SDK's default middleware stack `NewDefaultTxHandler()`, then the tip middleware is included by default.
+Notice that `NewTipDecorator` needs a reference to the BankKeeper, for transferring the tip to the fee payer.
 
 ## CLI Usage
 
@@ -135,7 +152,7 @@ For both commands, the flag `--sign-mode=amino-json` is still available for hard
 
 ## Programmatic Usage
 
-For the tipper, the SDK exposes a new transaction builder, the `AuxTxBuilder`, for generating an `AuxSignerData`. The API of `AuxTxBuilder` is defined [in `client/tx`](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta1/client/tx/aux_builder.go#L16), and can be used as follows:
+For the tipper, the SDK exposes a new transaction builder, the `AuxTxBuilder`, for generating an `AuxSignerData`. The API of `AuxTxBuilder` is defined [in `client/tx`](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/client/tx/aux_builder.go#L16), and can be used as follows:
 
 ```go
 // Note: there's no need to use clientCtx.TxConfig anymore.
@@ -170,7 +187,7 @@ For the fee payer, the SDK added a new method on the existing `TxBuilder` to imp
 txBuilder := clientCtx.TxConfig.NewTxBuilder()
 err := txBuilder.AddAuxSignerData(auxSignerData)
 if err != nil {
-    return err
+	return err
 }
 
 // A lot of fields will be populated in txBuilder, such as its Msgs, tip
@@ -184,6 +201,6 @@ txBuilder.SetGasLimit(...)
 // Usual signing code
 err = authclient.SignTx(...)
 if err != nil {
-    return err
+	return err
 }
 ```

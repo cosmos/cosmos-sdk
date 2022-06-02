@@ -6,6 +6,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/depinject"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"strconv"
 	"testing"
 	"time"
@@ -504,4 +506,16 @@ type EmptyAppOptions struct{}
 // Get implements AppOptions
 func (ao EmptyAppOptions) Get(o string) interface{} {
 	return nil
+}
+
+// ModuleAccountAddrs provides a list of blocked module accounts from configuration in app.yaml
+//
+// Ported from SimApp
+func ModuleAccountAddrs() map[string]bool {
+	var bk bankkeeper.Keeper
+	err := depinject.Inject(AppConfig, &bk)
+	if err != nil {
+		panic("unable to load DI container")
+	}
+	return bk.GetBlockedAddresses()
 }

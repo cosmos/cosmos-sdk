@@ -70,7 +70,8 @@ func isCosmosScalar(fd protoreflect.FieldDescriptor, scalar string) bool {
 	if proto.GetExtension(opts, cosmos_proto.E_Scalar).(string) == scalar {
 		return true
 	}
-	return true
+
+	return false
 }
 
 // formatInteger formats an integer into a value-rendered string. This function

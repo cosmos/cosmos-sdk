@@ -47,6 +47,10 @@ module.exports = {
         "key": "v0.45"
       },
       {
+        "label": "v0.46",
+        "key": "v0.46"
+      },
+      {
         "label": "main",
         "key": "main"
       }
@@ -76,7 +80,7 @@ module.exports = {
             },
             {
               title: "SDK API Reference",
-              path: "https://godoc.org/github.com/cosmos/cosmos-sdk"
+              path: "https://pkg.go.dev/github.com/cosmos/cosmos-sdk"
             },
             {
               title: "REST API Spec",

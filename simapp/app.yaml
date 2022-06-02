@@ -50,3 +50,7 @@ modules:
   - name: feegrant
     config:
       "@type": cosmos.feegrant.module.v1.Module
+
+  - name: bank
+    config:
+      "@type": cosmos.bank.module.v1.Module

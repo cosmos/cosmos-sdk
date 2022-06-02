@@ -200,7 +200,7 @@ func init() {
 //go:embed app.yaml
 var appConfigYaml []byte
 
-var appConfig = appconfig.LoadYAML(appConfigYaml)
+var AppConfig = appconfig.LoadYAML(appConfigYaml)
 
 // NewSimApp returns a reference to an initialized SimApp.
 func NewSimApp(
@@ -214,7 +214,7 @@ func NewSimApp(
 
 	var appBuilder *runtime.AppBuilder
 
-	err := depinject.Inject(appConfig,
+	err := depinject.Inject(AppConfig,
 		&appBuilder,
 		&app.ParamsKeeper,
 		&app.CapabilityKeeper,
@@ -230,11 +230,10 @@ func NewSimApp(
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 
 	app.keys = sdk.NewKVStoreKeys(
-		banktypes.StoreKey, stakingtypes.StoreKey,
-		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
-		govtypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
-		evidencetypes.StoreKey, authzkeeper.StoreKey, nftkeeper.StoreKey,
-		group.StoreKey,
+		stakingtypes.StoreKey, minttypes.StoreKey, distrtypes.StoreKey,
+		slashingtypes.StoreKey, govtypes.StoreKey, upgradetypes.StoreKey,
+		feegrant.StoreKey, evidencetypes.StoreKey, authzkeeper.StoreKey,
+		nftkeeper.StoreKey, group.StoreKey,
 	)
 	// NOTE: The testingkey is just mounted for testing purposes. Actual applications should
 	// not include this key.
@@ -249,9 +248,6 @@ func NewSimApp(
 	initParamsKeeper(app.ParamsKeeper)
 
 	// add keepers
-	app.BankKeeper = bankkeeper.NewBaseKeeper(
-		app.appCodec, app.keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.ModuleAccountAddrs(),
-	)
 	stakingKeeper := stakingkeeper.NewKeeper(
 		app.appCodec, app.keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName),
 	)
@@ -334,7 +330,6 @@ func NewSimApp(
 			encodingConfig.TxConfig,
 		),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
-		bank.NewAppModule(app.appCodec, app.BankKeeper, app.AccountKeeper),
 		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants),
 		feegrantmodule.NewAppModule(app.appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
 		gov.NewAppModule(app.appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
@@ -479,16 +474,6 @@ func (app *SimApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height)
 }
 
-// ModuleAccountAddrs returns all the app's module account addresses.
-func (app *SimApp) ModuleAccountAddrs() map[string]bool {
-	modAccAddrs := make(map[string]bool)
-	for acc := range maccPerms {
-		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
-	}
-
-	return modAccAddrs
-}
-
 // LegacyAmino returns SimApp's amino codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
@@ -598,7 +583,6 @@ func GetMaccPerms() map[string][]string {
 
 // initParamsKeeper init params keeper and its subspaces
 func initParamsKeeper(paramsKeeper paramskeeper.Keeper) {
-	paramsKeeper.Subspace(banktypes.ModuleName)
 	paramsKeeper.Subspace(stakingtypes.ModuleName)
 	paramsKeeper.Subspace(minttypes.ModuleName)
 	paramsKeeper.Subspace(distrtypes.ModuleName)

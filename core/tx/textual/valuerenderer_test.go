@@ -162,6 +162,7 @@ func TestValueRendererSwitchCase(t *testing.T) {
 		{"sdk.Int", sdk.NewInt(1), false},
 		{"sdk.Dec", sdk.NewDec(1), false},
 		{"*basev1beta1.Coin", &basev1beta1.Coin{Amount: "1", Denom: "foobar"}, false},
+		{"[]*basev1beta1.Coin", []*basev1beta1.Coin{{Amount: "1", Denom: "foobar"}}, false},
 		{"float32", float32(1), true},
 		{"float64", float64(1), true},
 	}
@@ -184,30 +185,32 @@ func TestValueRendererSwitchCase(t *testing.T) {
 // formatGoType is like ValueRenderer's Format(), but taking a Go type as input
 // value.
 func formatGoType(r ValueRenderer, v interface{}) ([]string, error) {
-	a, b := testpb.A{}, testpb.B{}
+	a, b := (&testpb.A{}).ProtoReflect().Descriptor().Fields(), (&testpb.B{}).ProtoReflect().Descriptor().Fields()
 
 	switch v := v.(type) {
 	// Valid types for SIGN_MODE_TEXTUAL
 	case uint32:
-		return r.Format(context.Background(), a.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name("UINT32")), protoreflect.ValueOf(v))
+		return r.Format(context.Background(), a.ByName(protoreflect.Name("UINT32")), protoreflect.ValueOf(v))
 	case uint64:
-		return r.Format(context.Background(), a.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name("UINT64")), protoreflect.ValueOf(v))
+		return r.Format(context.Background(), a.ByName(protoreflect.Name("UINT64")), protoreflect.ValueOf(v))
 	case int32:
-		return r.Format(context.Background(), a.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name("INT32")), protoreflect.ValueOf(v))
+		return r.Format(context.Background(), a.ByName(protoreflect.Name("INT32")), protoreflect.ValueOf(v))
 	case int64:
-		return r.Format(context.Background(), a.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name("INT64")), protoreflect.ValueOf(v))
+		return r.Format(context.Background(), a.ByName(protoreflect.Name("INT64")), protoreflect.ValueOf(v))
 	case math.Int:
-		return r.Format(context.Background(), a.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name("SDKINT")), protoreflect.ValueOf(v.String()))
+		return r.Format(context.Background(), a.ByName(protoreflect.Name("SDKINT")), protoreflect.ValueOf(v.String()))
 	case sdk.Dec:
-		return r.Format(context.Background(), a.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name("SDKDEC")), protoreflect.ValueOf(v.String()))
+		return r.Format(context.Background(), a.ByName(protoreflect.Name("SDKDEC")), protoreflect.ValueOf(v.String()))
 	case *basev1beta1.Coin:
-		return r.Format(context.Background(), a.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name("COIN")), protoreflect.ValueOf(v.ProtoReflect()))
+		return r.Format(context.Background(), a.ByName(protoreflect.Name("COIN")), protoreflect.ValueOf(v.ProtoReflect()))
+	case []*basev1beta1.Coin:
+		return r.Format(context.Background(), a.ByName(protoreflect.Name("COINS")), (&testpb.A{COINS: v}).ProtoReflect().Get(a.ByName(protoreflect.Name("COINS"))))
 
 	// Invalid types for SIGN_MODE_TEXTUAL
 	case float32:
-		return r.Format(context.Background(), b.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name("FLOAT")), protoreflect.ValueOf(v))
+		return r.Format(context.Background(), b.ByName(protoreflect.Name("FLOAT")), protoreflect.ValueOf(v))
 	case float64:
-		return r.Format(context.Background(), b.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name("FLOAT")), protoreflect.ValueOf(v))
+		return r.Format(context.Background(), b.ByName(protoreflect.Name("FLOAT")), protoreflect.ValueOf(v))
 
 	default:
 		return nil, fmt.Errorf("value %s of type %T not recognized", v, v)

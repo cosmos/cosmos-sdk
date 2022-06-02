@@ -212,8 +212,8 @@ type stakingOutputs struct {
 }
 
 func provideModule(in stakingInputs) stakingOutputs {
-	k := keeper.NewKeeper(in.CDC, in.Key, in.AccountKeeper, in.BankKeeper, in.Subspace)
-	m := NewAppModule(in.CDC, k, in.AccountKeeper, in.BankKeeper)
+	k := keeper.NewKeeper(in.Cdc, in.Key, in.AccountKeeper, in.BankKeeper, in.Subspace)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper)
 	return stakingOutputs{StakingKeeper: k, Module: runtime.WrapAppModule(m)}
 }
 

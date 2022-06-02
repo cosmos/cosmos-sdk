@@ -223,6 +223,7 @@ func NewSimApp(
 		&app.interfaceRegistry,
 		&app.AccountKeeper,
 		&app.BankKeeper,
+		&app.FeeGrantKeeper,
 	)
 	if err != nil {
 		panic(err)
@@ -233,8 +234,8 @@ func NewSimApp(
 	app.keys = sdk.NewKVStoreKeys(
 		stakingtypes.StoreKey, minttypes.StoreKey, distrtypes.StoreKey,
 		slashingtypes.StoreKey, govtypes.StoreKey, upgradetypes.StoreKey,
-		feegrant.StoreKey, evidencetypes.StoreKey, authzkeeper.StoreKey,
-		nftkeeper.StoreKey, group.StoreKey,
+		evidencetypes.StoreKey, authzkeeper.StoreKey, nftkeeper.StoreKey,
+		group.StoreKey,
 	)
 	// NOTE: The testingkey is just mounted for testing purposes. Actual applications should
 	// not include this key.
@@ -266,8 +267,6 @@ func NewSimApp(
 	app.CrisisKeeper = crisiskeeper.NewKeeper(
 		app.GetSubspace(crisistypes.ModuleName), invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName,
 	)
-
-	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(app.appCodec, app.keys[feegrant.StoreKey], app.AccountKeeper)
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
@@ -332,7 +331,6 @@ func NewSimApp(
 		),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
 		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants),
-		feegrantmodule.NewAppModule(app.appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
 		gov.NewAppModule(app.appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
 		mint.NewAppModule(app.appCodec, app.MintKeeper, app.AccountKeeper, nil),
 		slashing.NewAppModule(app.appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),

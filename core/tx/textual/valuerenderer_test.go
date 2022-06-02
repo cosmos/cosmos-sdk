@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	"cosmossdk.io/core/tx/textual"
+	"cosmossdk.io/core/tx/textual/internal/testpb"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/textual"
-	"github.com/cosmos/cosmos-sdk/types/textual/internal/testpb"
 )
 
 func TestFormatInteger(t *testing.T) {

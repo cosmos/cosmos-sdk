@@ -2,13 +2,15 @@ package staking
 
 import (
 	"context"
+	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
+	"cosmossdk.io/core/appmodule"
 	"encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"math/rand"
 
@@ -178,7 +180,7 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 }
 
 func init() {
-	//appmodule.Register(&modulev1.Module{}, appmodule.Provide(provideModuleBasic, provideModule))
+	appmodule.Register(&modulev1.Module{}, appmodule.Provide(provideModuleBasic, provideModule))
 }
 
 func provideModuleBasic() runtime.AppModuleBasicWrapper {
@@ -190,10 +192,9 @@ func provideModule(
 	ak authkeeper.AccountKeeper,
 	bk bankkeeper.Keeper,
 	cdc codec.Codec,
-	paramsKeeper paramskeeper.Keeper,
+	subSpace paramstypes.Subspace,
 ) (keeper.Keeper, runtime.AppModuleWrapper) {
-
-	k := keeper.NewKeeper(cdc, kvStoreKey, ak, bk, paramsKeeper.Subspace(types.ModuleName))
+	k := keeper.NewKeeper(cdc, kvStoreKey, ak, bk, subSpace)
 	m := NewAppModule(cdc, k, ak, bk)
 	return k, runtime.WrapAppModule(m)
 }

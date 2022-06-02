@@ -231,7 +231,7 @@ type bankInputs struct {
 type bankOutputs struct {
 	depinject.Out
 
-	BankKeeper keeper.Keeper `key:"cosmos.bank.v1.BankKeeper"`
+	BankKeeper keeper.Keeper `key:"cosmos.bank.v1.Keeper"`
 	Module     runtime.AppModuleWrapper
 }
 

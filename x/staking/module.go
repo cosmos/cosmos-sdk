@@ -198,16 +198,23 @@ type stakingInputs struct {
 
 	Config        *modulev1.Module
 	AccountKeeper types.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
-	BankKeeper    types.BankKeeper    `key:"cosmos.bank.v1.BankKeeper"`
+	BankKeeper    types.BankKeeper    `key:"cosmos.bank.v1.Keeper"`
 	CDC           codec.Codec
 	Subspace      paramstypes.Subspace
 	Key           *store.KVStoreKey
 }
 
-func provideModule(in stakingInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
+type stakingOutputs struct {
+	depinject.Out
+
+	StakingKeeper keeper.Keeper `key:"cosmos.staking.v1.Keeper"`
+	Module        runtime.AppModuleWrapper
+}
+
+func provideModule(in stakingInputs) stakingOutputs {
 	k := keeper.NewKeeper(in.CDC, in.Key, in.AccountKeeper, in.BankKeeper, in.Subspace)
 	m := NewAppModule(in.CDC, k, in.AccountKeeper, in.BankKeeper)
-	return k, runtime.WrapAppModule(m)
+	return stakingOutputs{StakingKeeper: k, Module: runtime.WrapAppModule(m)}
 }
 
 // AppModuleSimulation functions

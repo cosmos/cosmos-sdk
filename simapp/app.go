@@ -211,6 +211,7 @@ func NewSimApp(
 	var appBuilder *runtime.AppBuilder
 	var paramsKeeper paramskeeper.Keeper
 	var accountKeeper authkeeper.AccountKeeper
+	var authzKeeper authzkeeper.Keeper
 	var bankKeeper bankkeeper.Keeper
 	var appCodec codec.Codec
 	var legacyAmino *codec.LegacyAmino
@@ -223,6 +224,7 @@ func NewSimApp(
 		&interfaceRegistry,
 		&accountKeeper,
 		&bankKeeper,
+		&authzKeeper,
 	)
 	if err != nil {
 		panic(err)
@@ -235,7 +237,7 @@ func NewSimApp(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, capabilitytypes.StoreKey,
-		authzkeeper.StoreKey, nftkeeper.StoreKey, group.StoreKey,
+		nftkeeper.StoreKey, group.StoreKey,
 	)
 	// NOTE: The testingkey is just mounted for testing purposes. Actual applications should
 	// not include this key.
@@ -296,7 +298,7 @@ func NewSimApp(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
 
-	app.AuthzKeeper = authzkeeper.NewKeeper(keys[authzkeeper.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper)
+	app.AuthzKeeper = authzKeeper
 
 	groupConfig := group.DefaultConfig()
 	/*

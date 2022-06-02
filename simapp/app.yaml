@@ -50,3 +50,7 @@ modules:
   - name: bank
     config:
       "@type": cosmos.bank.module.v1.Module
+  
+  - name: authz
+    config:
+      "@type": cosmos.authz.module.v1.Module

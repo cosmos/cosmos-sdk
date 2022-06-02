@@ -5,13 +5,19 @@ import (
 	"encoding/json"
 	"math/rand"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	modulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
+	"cosmossdk.io/core/appmodule"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -77,7 +83,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEn
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the authz module.
-func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
+func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwruntime.ServeMux) {
 	if err := authz.RegisterQueryHandlerClient(context.Background(), mux, authz.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
@@ -198,4 +204,26 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		simState.AppParams, simState.Cdc,
 		am.accountKeeper, am.bankKeeper, am.keeper, am.cdc,
 	)
+}
+
+func init() {
+	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(),
+	)
+}
+
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+func provideModule(
+	kvStoreKey *store.KVStoreKey,
+	cdc codec.Codec,
+	ak authz.AccountKeeper,
+	bk authz.BankKeeper,
+	registry cdctypes.InterfaceRegistry,
+) (keeper.Keeper, runtime.AppModuleWrapper) {
+	k := keeper.NewKeeper(kvStoreKey, cdc, baseapp.NewMsgServiceRouter(), ak)
+	m := NewAppModule(cdc, k, ak, bk, registry)
+	return k, runtime.WrapAppModule(m)
 }

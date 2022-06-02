@@ -158,7 +158,7 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	// all files other than *.info
 	newPath := filepath.Join(tempDir, "random")
 	require.NoError(t, os.Mkdir(newPath, 0755))
-	items, err := os.ReadDir(newPath)
+	items, err := os.ReadDir(tempDir)
 	require.GreaterOrEqual(t, len(items), 2)
 	keyS, err = kb.List()
 	require.NoError(t, err)

@@ -12,6 +12,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/core/tx/textual/internal/testpb"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -123,8 +124,8 @@ func TestFormatCoins(t *testing.T) {
 	for _, tc := range testcases {
 		// Create the metadata array to pass into formatCoins
 		metadatas := make([]*bankv1beta1.Metadata, len(tc.coins))
-		sdkCoins := sdk.NewCoins(tc.coins...)
-		for i, coin := range sdkCoins {
+
+		for i, coin := range tc.coins {
 			m := tc.metadataMap[coin.Denom]
 			metadatas[i] = &bankv1beta1.Metadata{
 				Display:    m.Denom,
@@ -132,7 +133,7 @@ func TestFormatCoins(t *testing.T) {
 			}
 		}
 
-		output, err := formatCoins(sdkCoins, metadatas)
+		output, err := formatCoins(tc.coins, metadatas)
 		require.NoError(t, err)
 
 		require.Equal(t, tc.expRes, output)
@@ -140,7 +141,7 @@ func TestFormatCoins(t *testing.T) {
 }
 
 type coinsTest struct {
-	coins       []sdk.Coin
+	coins       sdk.Coins
 	metadataMap map[string]coinTestMetadata
 	expRes      string
 }
@@ -150,12 +151,43 @@ func (t *coinsTest) UnmarshalJSON(b []byte) error {
 	return json.Unmarshal(b, &a)
 }
 
+func TestValueRendererSwitchCase(t *testing.T) {
+	testcases := []struct {
+		name   string
+		v      interface{}
+		expErr bool
+	}{
+		{"uint32", uint32(1), false},
+		{"uint64", uint64(1), false},
+		{"sdk.Int", sdk.NewInt(1), false},
+		{"sdk.Dec", sdk.NewDec(1), false},
+		{"*basev1beta1.Coin", &basev1beta1.Coin{Amount: "1", Denom: "foobar"}, false},
+		{"float32", float32(1), true},
+		{"float64", float64(1), true},
+	}
+
+	r := NewADR050ValueRenderer()
+	for _, tc := range testcases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := formatGoType(r, tc.v)
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+
+	}
+}
+
 // formatGoType is like ValueRenderer's Format(), but taking a Go type as input
 // value.
 func formatGoType(r ValueRenderer, v interface{}) ([]string, error) {
-	a := testpb.A{}
+	a, b := testpb.A{}, testpb.B{}
 
 	switch v := v.(type) {
+	// Valid types for SIGN_MODE_TEXTUAL
 	case uint32:
 		return r.Format(context.Background(), a.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name("UINT32")), protoreflect.ValueOf(v))
 	case uint64:
@@ -168,12 +200,16 @@ func formatGoType(r ValueRenderer, v interface{}) ([]string, error) {
 		return r.Format(context.Background(), a.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name("SDKINT")), protoreflect.ValueOf(v.String()))
 	case sdk.Dec:
 		return r.Format(context.Background(), a.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name("SDKDEC")), protoreflect.ValueOf(v.String()))
+	case *basev1beta1.Coin:
+		return r.Format(context.Background(), a.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name("COIN")), protoreflect.ValueOf(v.ProtoReflect()))
+
+	// Invalid types for SIGN_MODE_TEXTUAL
+	case float32:
+		return r.Format(context.Background(), b.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name("FLOAT")), protoreflect.ValueOf(v))
+	case float64:
+		return r.Format(context.Background(), b.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name("FLOAT")), protoreflect.ValueOf(v))
 
 	default:
 		return nil, fmt.Errorf("value %s of type %T not recognized", v, v)
 	}
-}
-
-func TestValueRendererSwitchCase(t *testing.T) {
-
 }

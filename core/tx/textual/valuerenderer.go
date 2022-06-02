@@ -32,6 +32,7 @@ var _ ValueRenderer = adr050ValueRenderer{}
 func (r adr050ValueRenderer) Format(ctx context.Context, fd protoreflect.FieldDescriptor, v protoreflect.Value) ([]string, error) {
 	result := []string{}
 	switch {
+	// Integers
 	case fd.Kind() == protoreflect.Uint32Kind ||
 		fd.Kind() == protoreflect.Uint64Kind ||
 		fd.Kind() == protoreflect.Int32Kind ||
@@ -45,6 +46,7 @@ func (r adr050ValueRenderer) Format(ctx context.Context, fd protoreflect.FieldDe
 
 			result = append(result, formatted)
 		}
+	// Decimals
 	case fd.Kind() == protoreflect.StringKind && isCosmosScalar(fd, "cosmos.Dec"):
 		{
 			formatted, err := formatDecimal(v.String())
@@ -54,21 +56,39 @@ func (r adr050ValueRenderer) Format(ctx context.Context, fd protoreflect.FieldDe
 
 			result = append(result, formatted)
 		}
+	// Coins
 	case fd.Kind() == protoreflect.MessageKind && (&basev1beta1.Coin{}).ProtoReflect().Descriptor() == fd.Message():
 		{
-			sdkCoin, err := convertApiCoinToSdkCoin(v.Interface().(*basev1beta1.Coin))
-			if err != nil {
-				return nil, err
+			if fd.Cardinality() != protoreflect.Repeated {
+				sdkCoin, err := convertApiCoinToSdkCoin(v.Interface().(protoreflect.Message).Interface().(*basev1beta1.Coin))
+				if err != nil {
+					return nil, err
+				}
+
+				// TODO Insert the correct metadata from state.
+				formatted, err := formatCoin(sdkCoin, nil)
+				if err != nil {
+					return nil, err
+				}
+
+				result = append(result, formatted)
+			} else {
+				sdkCoins, err := convertApiCoinsToSdkCoins(v.Interface().([]*basev1beta1.Coin))
+				if err != nil {
+					return nil, err
+				}
+
+				// TODO Insert the correct metadata from state.
+				formatted, err := formatCoins(sdkCoins, nil)
+				if err != nil {
+					return nil, err
+				}
+
+				result = append(result, formatted)
 			}
 
-			// TODO Insert the correct metadata from state.
-			formatted, err := formatCoin(sdkCoin, nil)
-			if err != nil {
-				return nil, err
-			}
-
-			result = append(result, formatted)
 		}
+
 	default:
 		return nil, fmt.Errorf("value renderers cannot format value %s of type %s", v, fd.Kind())
 	}
@@ -142,13 +162,14 @@ func formatDecimal(v string) (string, error) {
 // display denom, and an optional error.
 func formatCoin(coin sdk.Coin, metadata *bankv1beta1.Metadata) (string, error) {
 	coinDenom := coin.Denom
-	dispDenom := metadata.Display
 
 	// Return early if no display denom or display denom is the current coin denom.
-	if dispDenom == "" || coinDenom == dispDenom {
+	if metadata == nil || metadata.Display == "" || coinDenom == metadata.Display {
 		vr, err := formatDecimal(coin.Amount.String())
 		return vr + " " + coin.Denom, err
 	}
+
+	dispDenom := metadata.Display
 
 	// Find exponents of both denoms.
 	var coinExp, dispExp uint32

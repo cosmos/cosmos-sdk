@@ -3,6 +3,7 @@ package testpb
 
 import (
 	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	binary "encoding/binary"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
@@ -11,7 +12,9 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	_ "google.golang.org/protobuf/types/descriptorpb"
 	io "io"
+	math "math"
 	reflect "reflect"
+	sort "sort"
 	sync "sync"
 )
 
@@ -908,15 +911,109 @@ func (x *fastReflection_A) ProtoMethods() *protoiface.Methods {
 	}
 }
 
+var _ protoreflect.Map = (*_B_3_map)(nil)
+
+type _B_3_map struct {
+	m *map[string]*B
+}
+
+func (x *_B_3_map) Len() int {
+	if x.m == nil {
+		return 0
+	}
+	return len(*x.m)
+}
+
+func (x *_B_3_map) Range(f func(protoreflect.MapKey, protoreflect.Value) bool) {
+	if x.m == nil {
+		return
+	}
+	for k, v := range *x.m {
+		mapKey := (protoreflect.MapKey)(protoreflect.ValueOfString(k))
+		mapValue := protoreflect.ValueOfMessage(v.ProtoReflect())
+		if !f(mapKey, mapValue) {
+			break
+		}
+	}
+}
+
+func (x *_B_3_map) Has(key protoreflect.MapKey) bool {
+	if x.m == nil {
+		return false
+	}
+	keyUnwrapped := key.String()
+	concreteValue := keyUnwrapped
+	_, ok := (*x.m)[concreteValue]
+	return ok
+}
+
+func (x *_B_3_map) Clear(key protoreflect.MapKey) {
+	if x.m == nil {
+		return
+	}
+	keyUnwrapped := key.String()
+	concreteKey := keyUnwrapped
+	delete(*x.m, concreteKey)
+}
+
+func (x *_B_3_map) Get(key protoreflect.MapKey) protoreflect.Value {
+	if x.m == nil {
+		return protoreflect.Value{}
+	}
+	keyUnwrapped := key.String()
+	concreteKey := keyUnwrapped
+	v, ok := (*x.m)[concreteKey]
+	if !ok {
+		return protoreflect.Value{}
+	}
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_B_3_map) Set(key protoreflect.MapKey, value protoreflect.Value) {
+	if !key.IsValid() || !value.IsValid() {
+		panic("invalid key or value provided")
+	}
+	keyUnwrapped := key.String()
+	concreteKey := keyUnwrapped
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*B)
+	(*x.m)[concreteKey] = concreteValue
+}
+
+func (x *_B_3_map) Mutable(key protoreflect.MapKey) protoreflect.Value {
+	keyUnwrapped := key.String()
+	concreteKey := keyUnwrapped
+	v, ok := (*x.m)[concreteKey]
+	if ok {
+		return protoreflect.ValueOfMessage(v.ProtoReflect())
+	}
+	newValue := new(B)
+	(*x.m)[concreteKey] = newValue
+	return protoreflect.ValueOfMessage(newValue.ProtoReflect())
+}
+
+func (x *_B_3_map) NewValue() protoreflect.Value {
+	v := new(B)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_B_3_map) IsValid() bool {
+	return x.m != nil
+}
+
 var (
-	md_B   protoreflect.MessageDescriptor
-	fd_B_x protoreflect.FieldDescriptor
+	md_B        protoreflect.MessageDescriptor
+	fd_B_FLOAT  protoreflect.FieldDescriptor
+	fd_B_DOUBLE protoreflect.FieldDescriptor
+	fd_B_MAP    protoreflect.FieldDescriptor
 )
 
 func init() {
 	file__1_proto_init()
 	md_B = File__1_proto.Messages().ByName("B")
-	fd_B_x = md_B.Fields().ByName("x")
+	fd_B_FLOAT = md_B.Fields().ByName("FLOAT")
+	fd_B_DOUBLE = md_B.Fields().ByName("DOUBLE")
+	fd_B_MAP = md_B.Fields().ByName("MAP")
 }
 
 var _ protoreflect.Message = (*fastReflection_B)(nil)
@@ -984,9 +1081,21 @@ func (x *fastReflection_B) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_B) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.X != "" {
-		value := protoreflect.ValueOfString(x.X)
-		if !f(fd_B_x, value) {
+	if x.FLOAT != float32(0) || math.Signbit(float64(x.FLOAT)) {
+		value := protoreflect.ValueOfFloat32(x.FLOAT)
+		if !f(fd_B_FLOAT, value) {
+			return
+		}
+	}
+	if x.DOUBLE != float64(0) || math.Signbit(x.DOUBLE) {
+		value := protoreflect.ValueOfFloat64(x.DOUBLE)
+		if !f(fd_B_DOUBLE, value) {
+			return
+		}
+	}
+	if len(x.MAP) != 0 {
+		value := protoreflect.ValueOfMap(&_B_3_map{m: &x.MAP})
+		if !f(fd_B_MAP, value) {
 			return
 		}
 	}
@@ -1005,8 +1114,12 @@ func (x *fastReflection_B) Range(f func(protoreflect.FieldDescriptor, protorefle
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_B) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "B.x":
-		return x.X != ""
+	case "B.FLOAT":
+		return x.FLOAT != float32(0) || math.Signbit(float64(x.FLOAT))
+	case "B.DOUBLE":
+		return x.DOUBLE != float64(0) || math.Signbit(x.DOUBLE)
+	case "B.MAP":
+		return len(x.MAP) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: B"))
@@ -1023,8 +1136,12 @@ func (x *fastReflection_B) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_B) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "B.x":
-		x.X = ""
+	case "B.FLOAT":
+		x.FLOAT = float32(0)
+	case "B.DOUBLE":
+		x.DOUBLE = float64(0)
+	case "B.MAP":
+		x.MAP = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: B"))
@@ -1041,9 +1158,18 @@ func (x *fastReflection_B) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_B) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "B.x":
-		value := x.X
-		return protoreflect.ValueOfString(value)
+	case "B.FLOAT":
+		value := x.FLOAT
+		return protoreflect.ValueOfFloat32(value)
+	case "B.DOUBLE":
+		value := x.DOUBLE
+		return protoreflect.ValueOfFloat64(value)
+	case "B.MAP":
+		if len(x.MAP) == 0 {
+			return protoreflect.ValueOfMap(&_B_3_map{})
+		}
+		mapValue := &_B_3_map{m: &x.MAP}
+		return protoreflect.ValueOfMap(mapValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: B"))
@@ -1064,8 +1190,14 @@ func (x *fastReflection_B) Get(descriptor protoreflect.FieldDescriptor) protoref
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_B) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "B.x":
-		x.X = value.Interface().(string)
+	case "B.FLOAT":
+		x.FLOAT = float32(value.Float())
+	case "B.DOUBLE":
+		x.DOUBLE = value.Float()
+	case "B.MAP":
+		mv := value.Map()
+		cmv := mv.(*_B_3_map)
+		x.MAP = *cmv.m
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: B"))
@@ -1086,8 +1218,16 @@ func (x *fastReflection_B) Set(fd protoreflect.FieldDescriptor, value protorefle
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_B) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "B.x":
-		panic(fmt.Errorf("field x of message B is not mutable"))
+	case "B.MAP":
+		if x.MAP == nil {
+			x.MAP = make(map[string]*B)
+		}
+		value := &_B_3_map{m: &x.MAP}
+		return protoreflect.ValueOfMap(value)
+	case "B.FLOAT":
+		panic(fmt.Errorf("field FLOAT of message B is not mutable"))
+	case "B.DOUBLE":
+		panic(fmt.Errorf("field DOUBLE of message B is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: B"))
@@ -1101,8 +1241,13 @@ func (x *fastReflection_B) Mutable(fd protoreflect.FieldDescriptor) protoreflect
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_B) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "B.x":
-		return protoreflect.ValueOfString("")
+	case "B.FLOAT":
+		return protoreflect.ValueOfFloat32(float32(0))
+	case "B.DOUBLE":
+		return protoreflect.ValueOfFloat64(float64(0))
+	case "B.MAP":
+		m := make(map[string]*B)
+		return protoreflect.ValueOfMap(&_B_3_map{m: &m})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: B"))
@@ -1172,9 +1317,37 @@ func (x *fastReflection_B) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		l = len(x.X)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
+		if x.FLOAT != 0 || math.Signbit(float64(x.FLOAT)) {
+			n += 5
+		}
+		if x.DOUBLE != 0 || math.Signbit(x.DOUBLE) {
+			n += 9
+		}
+		if len(x.MAP) > 0 {
+			SiZeMaP := func(k string, v *B) {
+				l := 0
+				if v != nil {
+					l = options.Size(v)
+				}
+				l += 1 + runtime.Sov(uint64(l))
+				mapEntrySize := 1 + len(k) + runtime.Sov(uint64(len(k))) + l
+				n += mapEntrySize + 1 + runtime.Sov(uint64(mapEntrySize))
+			}
+			if options.Deterministic {
+				sortme := make([]string, 0, len(x.MAP))
+				for k := range x.MAP {
+					sortme = append(sortme, k)
+				}
+				sort.Strings(sortme)
+				for _, k := range sortme {
+					v := x.MAP[k]
+					SiZeMaP(k, v)
+				}
+			} else {
+				for k, v := range x.MAP {
+					SiZeMaP(k, v)
+				}
+			}
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -1205,12 +1378,67 @@ func (x *fastReflection_B) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if len(x.X) > 0 {
-			i -= len(x.X)
-			copy(dAtA[i:], x.X)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.X)))
+		if len(x.MAP) > 0 {
+			MaRsHaLmAp := func(k string, v *B) (protoiface.MarshalOutput, error) {
+				baseI := i
+				encoded, err := options.Marshal(v)
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x12
+				i -= len(k)
+				copy(dAtA[i:], k)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(k)))
+				i--
+				dAtA[i] = 0xa
+				i = runtime.EncodeVarint(dAtA, i, uint64(baseI-i))
+				i--
+				dAtA[i] = 0x1a
+				return protoiface.MarshalOutput{}, nil
+			}
+			if options.Deterministic {
+				keysForMAP := make([]string, 0, len(x.MAP))
+				for k := range x.MAP {
+					keysForMAP = append(keysForMAP, string(k))
+				}
+				sort.Slice(keysForMAP, func(i, j int) bool {
+					return keysForMAP[i] < keysForMAP[j]
+				})
+				for iNdEx := len(keysForMAP) - 1; iNdEx >= 0; iNdEx-- {
+					v := x.MAP[string(keysForMAP[iNdEx])]
+					out, err := MaRsHaLmAp(keysForMAP[iNdEx], v)
+					if err != nil {
+						return out, err
+					}
+				}
+			} else {
+				for k := range x.MAP {
+					v := x.MAP[k]
+					out, err := MaRsHaLmAp(k, v)
+					if err != nil {
+						return out, err
+					}
+				}
+			}
+		}
+		if x.DOUBLE != 0 || math.Signbit(x.DOUBLE) {
+			i -= 8
+			binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(x.DOUBLE))))
 			i--
-			dAtA[i] = 0xa
+			dAtA[i] = 0x11
+		}
+		if x.FLOAT != 0 || math.Signbit(float64(x.FLOAT)) {
+			i -= 4
+			binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(x.FLOAT))))
+			i--
+			dAtA[i] = 0xd
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -1262,10 +1490,32 @@ func (x *fastReflection_B) ProtoMethods() *protoiface.Methods {
 			}
 			switch fieldNum {
 			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field X", wireType)
+				if wireType != 5 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field FLOAT", wireType)
 				}
-				var stringLen uint64
+				var v uint32
+				if (iNdEx + 4) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				v = uint32(binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+				iNdEx += 4
+				x.FLOAT = float32(math.Float32frombits(v))
+			case 2:
+				if wireType != 1 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DOUBLE", wireType)
+				}
+				var v uint64
+				if (iNdEx + 8) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				v = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+				iNdEx += 8
+				x.DOUBLE = float64(math.Float64frombits(v))
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MAP", wireType)
+				}
+				var msglen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -1275,23 +1525,120 @@ func (x *fastReflection_B) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
+					msglen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
+				if msglen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + intStringLen
+				postIndex := iNdEx + msglen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.X = string(dAtA[iNdEx:postIndex])
+				if x.MAP == nil {
+					x.MAP = make(map[string]*B)
+				}
+				var mapkey string
+				var mapvalue *B
+				for iNdEx < postIndex {
+					entryPreIndex := iNdEx
+					var wire uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+						}
+						if iNdEx >= l {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						wire |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					fieldNum := int32(wire >> 3)
+					if fieldNum == 1 {
+						var stringLenmapkey uint64
+						for shift := uint(0); ; shift += 7 {
+							if shift >= 64 {
+								return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+							}
+							if iNdEx >= l {
+								return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+							}
+							b := dAtA[iNdEx]
+							iNdEx++
+							stringLenmapkey |= uint64(b&0x7F) << shift
+							if b < 0x80 {
+								break
+							}
+						}
+						intStringLenmapkey := int(stringLenmapkey)
+						if intStringLenmapkey < 0 {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+						}
+						postStringIndexmapkey := iNdEx + intStringLenmapkey
+						if postStringIndexmapkey < 0 {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+						}
+						if postStringIndexmapkey > l {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+						}
+						mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+						iNdEx = postStringIndexmapkey
+					} else if fieldNum == 2 {
+						var mapmsglen int
+						for shift := uint(0); ; shift += 7 {
+							if shift >= 64 {
+								return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+							}
+							if iNdEx >= l {
+								return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+							}
+							b := dAtA[iNdEx]
+							iNdEx++
+							mapmsglen |= int(b&0x7F) << shift
+							if b < 0x80 {
+								break
+							}
+						}
+						if mapmsglen < 0 {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+						}
+						postmsgIndex := iNdEx + mapmsglen
+						if postmsgIndex < 0 {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+						}
+						if postmsgIndex > l {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+						}
+						mapvalue = &B{}
+						if err := options.Unmarshal(dAtA[iNdEx:postmsgIndex], mapvalue); err != nil {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+						}
+						iNdEx = postmsgIndex
+					} else {
+						iNdEx = entryPreIndex
+						skippy, err := runtime.Skip(dAtA[iNdEx:])
+						if err != nil {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+						}
+						if (skippy < 0) || (iNdEx+skippy) < 0 {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+						}
+						if (iNdEx + skippy) > postIndex {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+						}
+						iNdEx += skippy
+					}
+				}
+				x.MAP[mapkey] = mapvalue
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -1483,7 +1830,9 @@ type B struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	X string `protobuf:"bytes,1,opt,name=x,proto3" json:"x,omitempty"`
+	FLOAT  float32       `protobuf:"fixed32,1,opt,name=FLOAT,proto3" json:"FLOAT,omitempty"`
+	DOUBLE float64       `protobuf:"fixed64,2,opt,name=DOUBLE,proto3" json:"DOUBLE,omitempty"`
+	MAP    map[string]*B `protobuf:"bytes,3,rep,name=MAP,proto3" json:"MAP,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
 func (x *B) Reset() {
@@ -1506,11 +1855,25 @@ func (*B) Descriptor() ([]byte, []int) {
 	return file__1_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *B) GetX() string {
+func (x *B) GetFLOAT() float32 {
 	if x != nil {
-		return x.X
+		return x.FLOAT
 	}
-	return ""
+	return 0
+}
+
+func (x *B) GetDOUBLE() float64 {
+	if x != nil {
+		return x.DOUBLE
+	}
+	return 0
+}
+
+func (x *B) GetMAP() map[string]*B {
+	if x != nil {
+		return x.MAP
+	}
+	return nil
 }
 
 var File__1_proto protoreflect.FileDescriptor
@@ -1539,14 +1902,22 @@ var file__1_proto_rawDesc = []byte{
 	0x6e, 0x52, 0x04, 0x43, 0x4f, 0x49, 0x4e, 0x12, 0x2f, 0x0a, 0x05, 0x43, 0x4f, 0x49, 0x4e, 0x53,
 	0x18, 0x08, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
 	0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69,
-	0x6e, 0x52, 0x05, 0x43, 0x4f, 0x49, 0x4e, 0x53, 0x22, 0x11, 0x0a, 0x01, 0x42, 0x12, 0x0c, 0x0a,
-	0x01, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x01, 0x78, 0x2a, 0x1f, 0x0a, 0x0b, 0x45,
-	0x6e, 0x75, 0x6d, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x07, 0x0a, 0x03, 0x4f, 0x6e,
-	0x65, 0x10, 0x00, 0x12, 0x07, 0x0a, 0x03, 0x54, 0x77, 0x6f, 0x10, 0x01, 0x42, 0x38, 0x42, 0x06,
-	0x31, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2c, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x63, 0x6f, 0x72, 0x65, 0x2f, 0x74, 0x78, 0x2f, 0x74,
-	0x65, 0x78, 0x74, 0x75, 0x61, 0x6c, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f,
-	0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6e, 0x52, 0x05, 0x43, 0x4f, 0x49, 0x4e, 0x53, 0x22, 0x8c, 0x01, 0x0a, 0x01, 0x42, 0x12, 0x14,
+	0x0a, 0x05, 0x46, 0x4c, 0x4f, 0x41, 0x54, 0x18, 0x01, 0x20, 0x01, 0x28, 0x02, 0x52, 0x05, 0x46,
+	0x4c, 0x4f, 0x41, 0x54, 0x12, 0x16, 0x0a, 0x06, 0x44, 0x4f, 0x55, 0x42, 0x4c, 0x45, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x01, 0x52, 0x06, 0x44, 0x4f, 0x55, 0x42, 0x4c, 0x45, 0x12, 0x1d, 0x0a, 0x03,
+	0x4d, 0x41, 0x50, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0b, 0x2e, 0x42, 0x2e, 0x4d, 0x41,
+	0x50, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x03, 0x4d, 0x41, 0x50, 0x1a, 0x3a, 0x0a, 0x08, 0x4d,
+	0x41, 0x50, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x18, 0x0a, 0x05, 0x76, 0x61, 0x6c,
+	0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x02, 0x2e, 0x42, 0x52, 0x05, 0x76, 0x61,
+	0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x2a, 0x1f, 0x0a, 0x0b, 0x45, 0x6e, 0x75, 0x6d, 0x65,
+	0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x07, 0x0a, 0x03, 0x4f, 0x6e, 0x65, 0x10, 0x00, 0x12,
+	0x07, 0x0a, 0x03, 0x54, 0x77, 0x6f, 0x10, 0x01, 0x42, 0x38, 0x42, 0x06, 0x31, 0x50, 0x72, 0x6f,
+	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2c, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e,
+	0x69, 0x6f, 0x2f, 0x63, 0x6f, 0x72, 0x65, 0x2f, 0x74, 0x78, 0x2f, 0x74, 0x65, 0x78, 0x74, 0x75,
+	0x61, 0x6c, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x74, 0x65, 0x73, 0x74,
+	0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1562,21 +1933,24 @@ func file__1_proto_rawDescGZIP() []byte {
 }
 
 var file__1_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file__1_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file__1_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file__1_proto_goTypes = []interface{}{
 	(Enumeration)(0),     // 0: Enumeration
 	(*A)(nil),            // 1: A
 	(*B)(nil),            // 2: B
-	(*v1beta1.Coin)(nil), // 3: cosmos.base.v1beta1.Coin
+	nil,                  // 3: B.MAPEntry
+	(*v1beta1.Coin)(nil), // 4: cosmos.base.v1beta1.Coin
 }
 var file__1_proto_depIdxs = []int32{
-	3, // 0: A.COIN:type_name -> cosmos.base.v1beta1.Coin
-	3, // 1: A.COINS:type_name -> cosmos.base.v1beta1.Coin
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	4, // 0: A.COIN:type_name -> cosmos.base.v1beta1.Coin
+	4, // 1: A.COINS:type_name -> cosmos.base.v1beta1.Coin
+	3, // 2: B.MAP:type_name -> B.MAPEntry
+	2, // 3: B.MAPEntry.value:type_name -> B
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file__1_proto_init() }
@@ -1616,7 +1990,7 @@ func file__1_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file__1_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   2,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

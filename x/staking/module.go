@@ -204,6 +204,7 @@ type stakingInputs struct {
 	Key           *store.KVStoreKey
 }
 
+// Dependency Injection Outputs
 type stakingOutputs struct {
 	depinject.Out
 

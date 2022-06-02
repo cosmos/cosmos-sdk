@@ -38,6 +38,8 @@ type GenesisState struct {
 	// denom_metadata defines the metadata of the different coins.
 	DenomMetadata []Metadata `protobuf:"bytes,4,rep,name=denom_metadata,json=denomMetadata,proto3" json:"denom_metadata"`
 	// send_enabled defines the denoms where send is enabled or disabled.
+	//
+	// Since: cosmos-sdk 0.47
 	SendEnabled []SendEnabled `protobuf:"bytes,5,rep,name=send_enabled,json=sendEnabled,proto3" json:"send_enabled"`
 }
 

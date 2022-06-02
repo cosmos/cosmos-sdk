@@ -4204,8 +4204,8 @@ type Params struct {
 	// Deprecated: Use of SendEnabled in params is deprecated.
 	// For genesis, use the newly added send_enabled field in the genesis object.
 	// Storage, lookup, and manipulation of this information is now in the keeper.
-	// This version only still exists after v0.46 for backwards compatibility of
-	// genesis files.
+	//
+	// As of cosmos-sdk 0.47, this only exists for backwards compatibility of genesis files.
 	//
 	// Deprecated: Do not use.
 	SendEnabled        []*SendEnabled `protobuf:"bytes,1,rep,name=send_enabled,json=sendEnabled,proto3" json:"send_enabled,omitempty"`

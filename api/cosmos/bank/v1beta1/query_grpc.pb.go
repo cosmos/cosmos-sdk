@@ -52,6 +52,8 @@ type QueryClient interface {
 	// This query only returns denominations that have specific SendEnabled settings.
 	// Any denomination that does not have a specific setting will use the default
 	// params.default_send_enabled, and will not be returned by this query.
+	//
+	// Since: cosmos-sdk 0.47
 	SendEnabled(ctx context.Context, in *QuerySendEnabledRequest, opts ...grpc.CallOption) (*QuerySendEnabledResponse, error)
 }
 
@@ -187,6 +189,8 @@ type QueryServer interface {
 	// This query only returns denominations that have specific SendEnabled settings.
 	// Any denomination that does not have a specific setting will use the default
 	// params.default_send_enabled, and will not be returned by this query.
+	//
+	// Since: cosmos-sdk 0.47
 	SendEnabled(context.Context, *QuerySendEnabledRequest) (*QuerySendEnabledResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }

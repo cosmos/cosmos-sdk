@@ -961,6 +961,8 @@ func (m *QueryDenomOwnersResponse) GetPagination() *query.PageResponse {
 }
 
 // QuerySendEnabledRequest defines the RPC request for looking up SendEnabled entries.
+//
+// Since: cosmos-sdk 0.47
 type QuerySendEnabledRequest struct {
 	// denoms is the specific denoms you want look up. Leave empty to get all entries.
 	Denoms []string `protobuf:"bytes,1,rep,name=denoms,proto3" json:"denoms,omitempty"`
@@ -1016,6 +1018,8 @@ func (m *QuerySendEnabledRequest) GetPagination() *query.PageRequest {
 }
 
 // QuerySendEnabledResponse defines the RPC response of a SendEnable query.
+//
+// Since: cosmos-sdk 0.47
 type QuerySendEnabledResponse struct {
 	SendEnabled []*SendEnabled `protobuf:"bytes,1,rep,name=send_enabled,json=sendEnabled,proto3" json:"send_enabled,omitempty"`
 	// pagination defines the pagination in the response.
@@ -1210,6 +1214,8 @@ type QueryClient interface {
 	// This query only returns denominations that have specific SendEnabled settings.
 	// Any denomination that does not have a specific setting will use the default
 	// params.default_send_enabled, and will not be returned by this query.
+	//
+	// Since: cosmos-sdk 0.47
 	SendEnabled(ctx context.Context, in *QuerySendEnabledRequest, opts ...grpc.CallOption) (*QuerySendEnabledResponse, error)
 }
 
@@ -1343,6 +1349,8 @@ type QueryServer interface {
 	// This query only returns denominations that have specific SendEnabled settings.
 	// Any denomination that does not have a specific setting will use the default
 	// params.default_send_enabled, and will not be returned by this query.
+	//
+	// Since: cosmos-sdk 0.47
 	SendEnabled(context.Context, *QuerySendEnabledRequest) (*QuerySendEnabledResponse, error)
 }
 

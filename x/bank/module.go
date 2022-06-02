@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/depinject"
 	store "github.com/cosmos/cosmos-sdk/store/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/tendermint/tendermint/crypto"
 
@@ -229,6 +231,7 @@ type bankInputs struct {
 	Cdc           codec.Codec
 	Subspace      paramtypes.Subspace
 	Key           *store.KVStoreKey
+	Authority     string
 }
 
 func provideModule(in bankInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
@@ -247,8 +250,12 @@ func provideModule(in bankInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
 			blockedAddresses[permission.GetAddress().String()] = true
 		}
 	}
+	authority := in.Authority
+	if len(authority) == 0 {
+		authority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	}
 
-	bankKeeper := keeper.NewBaseKeeper(in.Cdc, in.Key, in.AccountKeeper, in.Subspace, blockedAddresses)
+	bankKeeper := keeper.NewBaseKeeper(in.Cdc, in.Key, in.AccountKeeper, in.Subspace, blockedAddresses, authority)
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper)
 	return bankKeeper, runtime.WrapAppModule(m)
 }

@@ -173,6 +173,28 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 	return []abci.ValidatorUpdate{}
 }
 
+func init() {
+	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(),
+	)
+}
+
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+func provideModule(
+	kvStoreKey *store.KVStoreKey,
+	cdc codec.Codec,
+	ak authz.AccountKeeper,
+	bk authz.BankKeeper,
+	registry cdctypes.InterfaceRegistry,
+) (keeper.Keeper, runtime.AppModuleWrapper) {
+	k := keeper.NewKeeper(kvStoreKey, cdc, baseapp.NewMsgServiceRouter(), ak)
+	m := NewAppModule(cdc, k, ak, bk, registry)
+	return k, runtime.WrapAppModule(m)
+}
+
 // ____________________________________________________________________________
 
 // AppModuleSimulation functions
@@ -204,26 +226,4 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		simState.AppParams, simState.Cdc,
 		am.accountKeeper, am.bankKeeper, am.keeper, am.cdc,
 	)
-}
-
-func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(),
-	)
-}
-
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
-}
-
-func provideModule(
-	kvStoreKey *store.KVStoreKey,
-	cdc codec.Codec,
-	ak authz.AccountKeeper,
-	bk authz.BankKeeper,
-	registry cdctypes.InterfaceRegistry,
-) (keeper.Keeper, runtime.AppModuleWrapper) {
-	k := keeper.NewKeeper(kvStoreKey, cdc, baseapp.NewMsgServiceRouter(), ak)
-	m := NewAppModule(cdc, k, ak, bk, registry)
-	return k, runtime.WrapAppModule(m)
 }

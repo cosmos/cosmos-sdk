@@ -46,3 +46,12 @@ modules:
   - name: params
     config:
       "@type": cosmos.params.module.v1.Module
+
+  - name: bank
+    config:
+      "@type": cosmos.bank.module.v1.Module
+
+  - name: capability
+    config:
+      "@type": cosmos.capability.module.v1.Module
+      seal_keeper: true

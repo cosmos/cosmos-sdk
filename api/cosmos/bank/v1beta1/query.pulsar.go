@@ -11122,6 +11122,8 @@ func (x *QueryDenomOwnersResponse) GetPagination() *v1beta11.PageResponse {
 }
 
 // QuerySendEnabledRequest defines the RPC request for looking up SendEnabled entries.
+//
+// Since: cosmos-sdk 0.47
 type QuerySendEnabledRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -11168,6 +11170,8 @@ func (x *QuerySendEnabledRequest) GetPagination() *v1beta11.PageRequest {
 }
 
 // QuerySendEnabledResponse defines the RPC response of a SendEnable query.
+//
+// Since: cosmos-sdk 0.47
 type QuerySendEnabledResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

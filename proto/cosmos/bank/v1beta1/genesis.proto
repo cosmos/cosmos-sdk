@@ -25,6 +25,8 @@ message GenesisState {
   repeated Metadata denom_metadata = 4 [(gogoproto.nullable) = false];
 
   // send_enabled defines the denoms where send is enabled or disabled.
+  //
+  // Since: cosmos-sdk 0.47
   repeated SendEnabled send_enabled = 5 [(gogoproto.nullable) = false];
 }
 

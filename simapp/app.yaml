@@ -54,3 +54,4 @@ modules:
   - name: authz
     config:
       "@type": cosmos.authz.module.v1.Module
+      

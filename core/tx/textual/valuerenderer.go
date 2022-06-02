@@ -3,15 +3,17 @@ package textual
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"
 
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 const thousandSeparator string = "'"
@@ -46,6 +48,21 @@ func (r adr050ValueRenderer) Format(ctx context.Context, fd protoreflect.FieldDe
 	case fd.Kind() == protoreflect.StringKind && isCosmosScalar(fd, "cosmos.Dec"):
 		{
 			formatted, err := formatDecimal(v.String())
+			if err != nil {
+				return nil, err
+			}
+
+			result = append(result, formatted)
+		}
+	case fd.Kind() == protoreflect.MessageKind && (&basev1beta1.Coin{}).ProtoReflect().Descriptor() == fd.Message():
+		{
+			sdkCoin, err := convertApiCoinToSdkCoin(v.Interface().(*basev1beta1.Coin))
+			if err != nil {
+				return nil, err
+			}
+
+			// TODO Insert the correct metadata from state.
+			formatted, err := formatCoin(sdkCoin, nil)
 			if err != nil {
 				return nil, err
 			}
@@ -121,24 +138,25 @@ func formatDecimal(v string) (string, error) {
 }
 
 // formatDecimal formats a sdk.Coin into a value-rendered string, using the
-// given metadata about the denom.
-func formatCoin(coin sdk.Coin, metadata bank.Metadata) (string, error) {
-	curDenom := coin.Denom
+// given metadata about the denom. It returns the formatted coin string, the
+// display denom, and an optional error.
+func formatCoin(coin sdk.Coin, metadata *bankv1beta1.Metadata) (string, error) {
+	coinDenom := coin.Denom
 	dispDenom := metadata.Display
 
 	// Return early if no display denom or display denom is the current coin denom.
-	if dispDenom == "" || curDenom == dispDenom {
-		vr, err := formatInteger(coin.Amount.String())
+	if dispDenom == "" || coinDenom == dispDenom {
+		vr, err := formatDecimal(coin.Amount.String())
 		return vr + " " + coin.Denom, err
 	}
 
 	// Find exponents of both denoms.
-	var curExp, dispExp uint32
-	foundCurExp, foundDispExp := false, false
+	var coinExp, dispExp uint32
+	foundCoinExp, foundDispExp := false, false
 	for _, unit := range metadata.DenomUnits {
-		if curDenom == unit.Denom {
-			curExp = unit.Exponent
-			foundCurExp = true
+		if coinDenom == unit.Denom {
+			coinExp = unit.Exponent
+			foundCoinExp = true
 		}
 		if dispDenom == unit.Denom {
 			dispExp = unit.Exponent
@@ -147,17 +165,28 @@ func formatCoin(coin sdk.Coin, metadata bank.Metadata) (string, error) {
 	}
 
 	// If we didn't find either exponent, then we return early.
-	if !foundCurExp || !foundDispExp {
+	if !foundCoinExp || !foundDispExp {
 		vr, err := formatInteger(coin.Amount.String())
 		return vr + " " + coin.Denom, err
 	}
 
-	exponentDiff := int64(curExp) - int64(dispExp)
-	var dispAmount sdk.Dec
+	exponentDiff := int64(coinExp) - int64(dispExp)
+	var (
+		dispAmount sdk.Dec
+		err        error
+	)
 	if exponentDiff > 0 {
-		dispAmount = sdk.NewDecFromInt(coin.Amount).Mul(sdk.NewDec(10).Power(uint64(exponentDiff)))
+		dispAmount, err = sdk.NewDecFromStr(coin.Amount.String())
+		if err != nil {
+			return "", err
+		}
+		dispAmount = dispAmount.Mul(sdk.NewDec(10).Power(uint64(exponentDiff)))
 	} else {
-		dispAmount = sdk.NewDecFromInt(coin.Amount).Quo(sdk.NewDec(10).Power(uint64(-exponentDiff)))
+		dispAmount, err = sdk.NewDecFromStr(coin.Amount.String())
+		if err != nil {
+			return "", err
+		}
+		dispAmount = dispAmount.Quo(sdk.NewDec(10).Power(uint64(-exponentDiff)))
 	}
 
 	vr, err := formatDecimal(dispAmount.String())
@@ -165,16 +194,53 @@ func formatCoin(coin sdk.Coin, metadata bank.Metadata) (string, error) {
 }
 
 // formatDecimal formats a sdk.Coins into a value-rendered string, which uses
-// `formatCoin` separated by ", " (a comma and a space).
-func formatCoins(coins sdk.Coins, metadata bank.Metadata) (string, error) {
+// `formatCoin` separated by ", " (a comma and a space). It expects
+func formatCoins(coins sdk.Coins, metadata []*bankv1beta1.Metadata) (string, error) {
+	if len(coins) != len(metadata) {
+		return "", fmt.Errorf("formatCoins expect one metadata for each coin; expected %d, got %d", len(coins), len(metadata))
+	}
+
 	formatted := make([]string, len(coins))
 	for i, coin := range coins {
 		var err error
-		formatted[i], err = formatCoin(coin, metadata)
+		formatted[i], err = formatCoin(coin, metadata[i])
 		if err != nil {
 			return "", err
 		}
 	}
 
+	// Sort the formatted coins by display denom.
+	sort.SliceStable(formatted, func(i, j int) bool {
+		denomI := strings.Split(formatted[i], " ")[1]
+		denomJ := strings.Split(formatted[j], " ")[1]
+
+		return denomI < denomJ
+	})
+
 	return strings.Join(formatted, ", "), nil
+}
+
+// convertApiCoinToSdkCoin converts *basev1beta1.Coin to sdk.Coin.
+func convertApiCoinToSdkCoin(coin *basev1beta1.Coin) (sdk.Coin, error) {
+	amt, ok := sdk.NewIntFromString(coin.Amount)
+	if !ok {
+		return sdk.Coin{}, fmt.Errorf("cannot convert %s to sdk.Int", coin.Amount)
+	}
+
+	return sdk.NewCoin(coin.Denom, amt), nil
+}
+
+// convertApiCoinsToSdkCoins converts []*basev1beta1.Coin to sdk.Coins.
+func convertApiCoinsToSdkCoins(coins []*basev1beta1.Coin) (sdk.Coins, error) {
+	sdkCoins := make([]sdk.Coin, len(coins))
+	for i, c := range coins {
+		sdkCoin, err := convertApiCoinToSdkCoin(c)
+		if err != nil {
+			return nil, err
+		}
+
+		sdkCoins[i] = sdkCoin
+	}
+
+	return sdk.NewCoins(sdkCoins...), nil
 }

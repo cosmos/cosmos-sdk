@@ -1,4 +1,4 @@
-package textual_test
+package textual
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"cosmossdk.io/core/tx/textual"
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/core/tx/textual/internal/testpb"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,7 +25,7 @@ func TestFormatInteger(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	r := textual.NewADR050ValueRenderer()
+	r := NewADR050ValueRenderer()
 
 	for _, tc := range testcases {
 		// Test integers as protobuf uint64
@@ -65,7 +65,7 @@ func TestFormatDecimal(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	r := textual.NewADR050ValueRenderer()
+	r := NewADR050ValueRenderer()
 
 	for _, tc := range testcases {
 		d, err := sdk.NewDecFromStr(tc[0])
@@ -77,43 +77,25 @@ func TestFormatDecimal(t *testing.T) {
 	}
 }
 
-// func TestFormatCoin(t *testing.T) {
-// 	var testcases []coinTest
-// 	raw, err := ioutil.ReadFile("./internal/fixtures/coins.json")
-// 	require.NoError(t, err)
-// 	err = json.Unmarshal(raw, &testcases)
-// 	require.NoError(t, err)
+func TestFormatCoin(t *testing.T) {
+	var testcases []coinTest
+	raw, err := ioutil.ReadFile("./internal/fixtures/coin.json")
+	require.NoError(t, err)
+	err = json.Unmarshal(raw, &testcases)
+	require.NoError(t, err)
 
-// 	r :=textual.NewADR050ValueRenderer()
+	for _, tc := range testcases {
+		metadata := &bankv1beta1.Metadata{
+			Display:    tc.metadata.Denom,
+			DenomUnits: []*bankv1beta1.DenomUnit{{Denom: tc.coin.Denom, Exponent: 0}, {Denom: tc.metadata.Denom, Exponent: tc.metadata.Exponent}},
+		}
 
-// 	for _, tc := range testcases {
-// 		output, err := formatCoin(tc.coin, bank.Metadata{
-// 			Display:    tc.metadata.Denom,
-// 			DenomUnits: []*bank.DenomUnit{{Denom: tc.coin.Denom, Exponent: 0}, {Denom: tc.metadata.Denom, Exponent: tc.metadata.Exponent}},
-// 		})
-// 		require.NoError(t, err)
+		output, err := formatCoin(sdk.NewCoin(tc.coin.Denom, tc.coin.Amount), metadata)
+		require.NoError(t, err)
 
-// 		require.Equal(t, tc.expRes, output)
-// 	}
-// }
-
-// func TestFormatCoins(t *testing.T) {
-// 	var testcases []coinTest
-// 	raw, err := ioutil.ReadFile("./internal/fixtures/coins.json")
-// 	require.NoError(t, err)
-// 	err = json.Unmarshal(raw, &testcases)
-// 	require.NoError(t, err)
-
-// 	for _, tc := range testcases {
-// 		output, err := formatCoins(sdk.NewCoins(tc.coin), bank.Metadata{
-// 			Display:    tc.metadata.Denom,
-// 			DenomUnits: []*bank.DenomUnit{{Denom: tc.coin.Denom, Exponent: 0}, {Denom: tc.metadata.Denom, Exponent: tc.metadata.Exponent}},
-// 		})
-// 		require.NoError(t, err)
-
-// 		require.Equal(t, tc.expRes, output)
-// 	}
-// }
+		require.Equal(t, tc.expRes, output)
+	}
+}
 
 type coinTestMetadata struct {
 	Denom    string `json:"denom"`
@@ -131,9 +113,46 @@ func (t *coinTest) UnmarshalJSON(b []byte) error {
 	return json.Unmarshal(b, &a)
 }
 
+func TestFormatCoins(t *testing.T) {
+	var testcases []coinsTest
+	raw, err := ioutil.ReadFile("./internal/fixtures/coins.json")
+	require.NoError(t, err)
+	err = json.Unmarshal(raw, &testcases)
+	require.NoError(t, err)
+
+	for _, tc := range testcases {
+		// Create the metadata array to pass into formatCoins
+		metadatas := make([]*bankv1beta1.Metadata, len(tc.coins))
+		sdkCoins := sdk.NewCoins(tc.coins...)
+		for i, coin := range sdkCoins {
+			m := tc.metadataMap[coin.Denom]
+			metadatas[i] = &bankv1beta1.Metadata{
+				Display:    m.Denom,
+				DenomUnits: []*bankv1beta1.DenomUnit{{Denom: coin.Denom, Exponent: 0}, {Denom: m.Denom, Exponent: m.Exponent}},
+			}
+		}
+
+		output, err := formatCoins(sdkCoins, metadatas)
+		require.NoError(t, err)
+
+		require.Equal(t, tc.expRes, output)
+	}
+}
+
+type coinsTest struct {
+	coins       []sdk.Coin
+	metadataMap map[string]coinTestMetadata
+	expRes      string
+}
+
+func (t *coinsTest) UnmarshalJSON(b []byte) error {
+	a := []interface{}{&t.coins, &t.metadataMap, &t.expRes}
+	return json.Unmarshal(b, &a)
+}
+
 // formatGoType is like ValueRenderer's Format(), but taking a Go type as input
 // value.
-func formatGoType(r textual.ValueRenderer, v interface{}) ([]string, error) {
+func formatGoType(r ValueRenderer, v interface{}) ([]string, error) {
 	a := testpb.A{}
 
 	switch v := v.(type) {
@@ -153,4 +172,8 @@ func formatGoType(r textual.ValueRenderer, v interface{}) ([]string, error) {
 	default:
 		return nil, fmt.Errorf("value %s of type %T not recognized", v, v)
 	}
+}
+
+func TestValueRendererSwitchCase(t *testing.T) {
+
 }

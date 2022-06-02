@@ -1,9 +1,10 @@
 syntax="proto3";
 
-option go_package = "github.com/cosmos/cosmos-sdk/types/textual/internal/testpb";
+option go_package = "cosmossdk.io/core/tx/textual/internal/testpb";
 
 import "google/protobuf/descriptor.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 enum Enumeration {
   One = 0;
@@ -17,6 +18,8 @@ message A {
   int64 INT64 = 4;
   string SDKINT = 5 [(cosmos_proto.scalar) = "cosmos.Int"];
   string SDKDEC = 6 [(cosmos_proto.scalar) = "cosmos.Dec"];
+  cosmos.base.v1beta1.Coin COIN = 7;
+  repeated cosmos.base.v1beta1.Coin COINS = 8;
 }
 
 message B {

@@ -1,26 +1,52 @@
 [
-  [{"amount": "1", "denom": "ucosm"}, { "denom": "COSM", "exponent": 6 }, "0.000001 COSM"],
-  [{"amount": "10", "denom": "ucosm"}, { "denom": "COSM", "exponent": 6 }, "0.00001 COSM"],
-  [{"amount": "100", "denom": "ucosm"}, { "denom": "COSM", "exponent": 6 }, "0.0001 COSM"],
-  [{"amount": "1000", "denom": "ucosm"}, { "denom": "COSM", "exponent": 6 }, "0.001 COSM"],
-  [{"amount": "10000", "denom": "ucosm"}, { "denom": "COSM", "exponent": 6 }, "0.01 COSM"],
-  [{"amount": "100000", "denom": "ucosm"}, { "denom": "COSM", "exponent": 6 }, "0.1 COSM"],
-  [{"amount": "1000000", "denom": "ucosm"}, { "denom": "COSM", "exponent": 6 }, "1 COSM"],
-  [{"amount": "10000000", "denom": "ucosm"}, { "denom": "COSM", "exponent": 6 }, "10 COSM"],
-  [{"amount": "1", "denom": "ucosm"}, { "denom": "COSM", "exponent": 2 }, "0.01 COSM"],
-  [{"amount": "10", "denom": "ucosm"}, { "denom": "COSM", "exponent": 2 }, "0.1 COSM"],
-  [{"amount": "100", "denom": "ucosm"}, { "denom": "COSM", "exponent": 2 }, "1 COSM"],
-  [{"amount": "1000", "denom": "ucosm"}, { "denom": "COSM", "exponent": 2 }, "10 COSM"],
-  [{"amount": "10000", "denom": "ucosm"}, { "denom": "COSM", "exponent": 2 }, "100 COSM"],
-  [{"amount": "100000", "denom": "ucosm"}, { "denom": "COSM", "exponent": 2 }, "1'000 COSM"],
-  [{"amount": "1000000", "denom": "ucosm"}, { "denom": "COSM", "exponent": 2 }, "10'000 COSM"],
-  [{"amount": "10000000", "denom": "ucosm"}, { "denom": "COSM", "exponent": 2 }, "100'000 COSM"],
-  [{"amount": "1", "denom": "point"}, { "denom": "POINT", "exponent": 0 }, "1 POINT"],
-  [{"amount": "10", "denom": "point"}, { "denom": "POINT", "exponent": 0 }, "10 POINT"],
-  [{"amount": "100", "denom": "point"}, { "denom": "POINT", "exponent": 0 }, "100 POINT"],
-  [{"amount": "1000", "denom": "point"}, { "denom": "POINT", "exponent": 0 }, "1'000 POINT"],
-  [{"amount": "10000", "denom": "point"}, { "denom": "POINT", "exponent": 0 }, "10'000 POINT"],
-  [{"amount": "100000", "denom": "point"}, { "denom": "POINT", "exponent": 0 }, "100'000 POINT"],
-  [{"amount": "1000000", "denom": "point"}, { "denom": "POINT", "exponent": 0 }, "1'000'000 POINT"],
-  [{"amount": "10000000", "denom": "point"}, { "denom": "POINT", "exponent": 0 }, "10'000'000 POINT"]
+  [
+    [
+      { "amount": "1", "denom": "ucosm" },
+      { "amount": "3", "denom": "ustake" }
+    ],
+    {
+      "ucosm": { "denom": "COSM", "exponent": 6 },
+      "ustake": { "denom": "STAKE", "exponent": 6 }
+    },
+    "0.000001 COSM, 0.000003 STAKE"
+  ],
+  [
+    [
+      { "amount": "3", "denom": "ustake" },
+      { "amount": "1", "denom": "ucosm" }
+    ],
+    {
+      "ucosm": { "denom": "COSM", "exponent": 6 },
+      "ustake": { "denom": "STAKE", "exponent": 6 }
+    },
+    "0.000001 COSM, 0.000003 STAKE"
+  ],
+  [
+    [
+      { "amount": "1", "denom": "uaa" },
+      { "amount": "2", "denom": "ubb" },
+      { "amount": "3", "denom": "uatom" }
+    ],
+    {
+      "uaa": { "denom": "AA", "exponent": 6 },
+      "ubb": { "denom": "BB", "exponent": 6 },
+      "uatom": { "denom": "atom", "exponent": 6 }
+    },
+    "0.000001 AA, 0.000002 BB, 0.000003 atom"
+  ],
+  [
+    [
+      { "amount": "4", "denom": "uxc1" },
+      { "amount": "3", "denom": "uxc" },
+      { "amount": "2", "denom": "uxb" },
+      { "amount": "1", "denom": "uxa" }
+    ],
+    {
+      "uxa": { "denom": "xA", "exponent": 6 },
+      "uxb": { "denom": "xB", "exponent": 6 },
+      "uxc": { "denom": "xC", "exponent": 6 },
+      "uxc1": { "denom": "xC1", "exponent": 6 }
+    },
+    "0.000001 xA, 0.000002 xB, 0.000003 xC, 0.000004 xC1"
+  ]
 ]

@@ -2,6 +2,7 @@
 package testpb
 
 import (
+	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
@@ -14,6 +15,57 @@ import (
 	sync "sync"
 )
 
+var _ protoreflect.List = (*_A_8_list)(nil)
+
+type _A_8_list struct {
+	list *[]*v1beta1.Coin
+}
+
+func (x *_A_8_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_A_8_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_A_8_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_A_8_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_A_8_list) AppendMutable() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_A_8_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_A_8_list) NewElement() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_A_8_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
 	md_A        protoreflect.MessageDescriptor
 	fd_A_UINT32 protoreflect.FieldDescriptor
@@ -22,6 +74,8 @@ var (
 	fd_A_INT64  protoreflect.FieldDescriptor
 	fd_A_SDKINT protoreflect.FieldDescriptor
 	fd_A_SDKDEC protoreflect.FieldDescriptor
+	fd_A_COIN   protoreflect.FieldDescriptor
+	fd_A_COINS  protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -33,6 +87,8 @@ func init() {
 	fd_A_INT64 = md_A.Fields().ByName("INT64")
 	fd_A_SDKINT = md_A.Fields().ByName("SDKINT")
 	fd_A_SDKDEC = md_A.Fields().ByName("SDKDEC")
+	fd_A_COIN = md_A.Fields().ByName("COIN")
+	fd_A_COINS = md_A.Fields().ByName("COINS")
 }
 
 var _ protoreflect.Message = (*fastReflection_A)(nil)
@@ -136,6 +192,18 @@ func (x *fastReflection_A) Range(f func(protoreflect.FieldDescriptor, protorefle
 			return
 		}
 	}
+	if x.COIN != nil {
+		value := protoreflect.ValueOfMessage(x.COIN.ProtoReflect())
+		if !f(fd_A_COIN, value) {
+			return
+		}
+	}
+	if len(x.COINS) != 0 {
+		value := protoreflect.ValueOfList(&_A_8_list{list: &x.COINS})
+		if !f(fd_A_COINS, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -163,6 +231,10 @@ func (x *fastReflection_A) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.SDKINT != ""
 	case "A.SDKDEC":
 		return x.SDKDEC != ""
+	case "A.COIN":
+		return x.COIN != nil
+	case "A.COINS":
+		return len(x.COINS) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: A"))
@@ -191,6 +263,10 @@ func (x *fastReflection_A) Clear(fd protoreflect.FieldDescriptor) {
 		x.SDKINT = ""
 	case "A.SDKDEC":
 		x.SDKDEC = ""
+	case "A.COIN":
+		x.COIN = nil
+	case "A.COINS":
+		x.COINS = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: A"))
@@ -225,6 +301,15 @@ func (x *fastReflection_A) Get(descriptor protoreflect.FieldDescriptor) protoref
 	case "A.SDKDEC":
 		value := x.SDKDEC
 		return protoreflect.ValueOfString(value)
+	case "A.COIN":
+		value := x.COIN
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "A.COINS":
+		if len(x.COINS) == 0 {
+			return protoreflect.ValueOfList(&_A_8_list{})
+		}
+		listValue := &_A_8_list{list: &x.COINS}
+		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: A"))
@@ -257,6 +342,12 @@ func (x *fastReflection_A) Set(fd protoreflect.FieldDescriptor, value protorefle
 		x.SDKINT = value.Interface().(string)
 	case "A.SDKDEC":
 		x.SDKDEC = value.Interface().(string)
+	case "A.COIN":
+		x.COIN = value.Message().Interface().(*v1beta1.Coin)
+	case "A.COINS":
+		lv := value.List()
+		clv := lv.(*_A_8_list)
+		x.COINS = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: A"))
@@ -277,6 +368,17 @@ func (x *fastReflection_A) Set(fd protoreflect.FieldDescriptor, value protorefle
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_A) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "A.COIN":
+		if x.COIN == nil {
+			x.COIN = new(v1beta1.Coin)
+		}
+		return protoreflect.ValueOfMessage(x.COIN.ProtoReflect())
+	case "A.COINS":
+		if x.COINS == nil {
+			x.COINS = []*v1beta1.Coin{}
+		}
+		value := &_A_8_list{list: &x.COINS}
+		return protoreflect.ValueOfList(value)
 	case "A.UINT32":
 		panic(fmt.Errorf("field UINT32 of message A is not mutable"))
 	case "A.UINT64":
@@ -314,6 +416,12 @@ func (x *fastReflection_A) NewField(fd protoreflect.FieldDescriptor) protoreflec
 		return protoreflect.ValueOfString("")
 	case "A.SDKDEC":
 		return protoreflect.ValueOfString("")
+	case "A.COIN":
+		m := new(v1beta1.Coin)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "A.COINS":
+		list := []*v1beta1.Coin{}
+		return protoreflect.ValueOfList(&_A_8_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: A"))
@@ -403,6 +511,16 @@ func (x *fastReflection_A) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		if x.COIN != nil {
+			l = options.Size(x.COIN)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if len(x.COINS) > 0 {
+			for _, e := range x.COINS {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -431,6 +549,36 @@ func (x *fastReflection_A) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.COINS) > 0 {
+			for iNdEx := len(x.COINS) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.COINS[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x42
+			}
+		}
+		if x.COIN != nil {
+			encoded, err := options.Marshal(x.COIN)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x3a
 		}
 		if len(x.SDKDEC) > 0 {
 			i -= len(x.SDKDEC)
@@ -654,6 +802,76 @@ func (x *fastReflection_A) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				x.SDKDEC = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 7:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field COIN", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.COIN == nil {
+					x.COIN = &v1beta1.Coin{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.COIN); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 8:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field COINS", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.COINS = append(x.COINS, &v1beta1.Coin{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.COINS[len(x.COINS)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -1174,12 +1392,14 @@ type A struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	UINT32 uint32 `protobuf:"varint,1,opt,name=UINT32,proto3" json:"UINT32,omitempty"`
-	UINT64 uint64 `protobuf:"varint,2,opt,name=UINT64,proto3" json:"UINT64,omitempty"`
-	INT32  int32  `protobuf:"varint,3,opt,name=INT32,proto3" json:"INT32,omitempty"`
-	INT64  int64  `protobuf:"varint,4,opt,name=INT64,proto3" json:"INT64,omitempty"`
-	SDKINT string `protobuf:"bytes,5,opt,name=SDKINT,proto3" json:"SDKINT,omitempty"`
-	SDKDEC string `protobuf:"bytes,6,opt,name=SDKDEC,proto3" json:"SDKDEC,omitempty"`
+	UINT32 uint32          `protobuf:"varint,1,opt,name=UINT32,proto3" json:"UINT32,omitempty"`
+	UINT64 uint64          `protobuf:"varint,2,opt,name=UINT64,proto3" json:"UINT64,omitempty"`
+	INT32  int32           `protobuf:"varint,3,opt,name=INT32,proto3" json:"INT32,omitempty"`
+	INT64  int64           `protobuf:"varint,4,opt,name=INT64,proto3" json:"INT64,omitempty"`
+	SDKINT string          `protobuf:"bytes,5,opt,name=SDKINT,proto3" json:"SDKINT,omitempty"`
+	SDKDEC string          `protobuf:"bytes,6,opt,name=SDKDEC,proto3" json:"SDKDEC,omitempty"`
+	COIN   *v1beta1.Coin   `protobuf:"bytes,7,opt,name=COIN,proto3" json:"COIN,omitempty"`
+	COINS  []*v1beta1.Coin `protobuf:"bytes,8,rep,name=COINS,proto3" json:"COINS,omitempty"`
 }
 
 func (x *A) Reset() {
@@ -1244,6 +1464,20 @@ func (x *A) GetSDKDEC() string {
 	return ""
 }
 
+func (x *A) GetCOIN() *v1beta1.Coin {
+	if x != nil {
+		return x.COIN
+	}
+	return nil
+}
+
+func (x *A) GetCOINS() []*v1beta1.Coin {
+	if x != nil {
+		return x.COINS
+	}
+	return nil
+}
+
 type B struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -1286,7 +1520,9 @@ var file__1_proto_rawDesc = []byte{
 	0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x64, 0x65, 0x73, 0x63, 0x72,
 	0x69, 0x70, 0x74, 0x6f, 0x72, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x19, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xaf, 0x01, 0x0a, 0x01, 0x41, 0x12, 0x16, 0x0a, 0x06,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62,
+	0x61, 0x73, 0x65, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69, 0x6e,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x8f, 0x02, 0x0a, 0x01, 0x41, 0x12, 0x16, 0x0a, 0x06,
 	0x55, 0x49, 0x4e, 0x54, 0x33, 0x32, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x06, 0x55, 0x49,
 	0x4e, 0x54, 0x33, 0x32, 0x12, 0x16, 0x0a, 0x06, 0x55, 0x49, 0x4e, 0x54, 0x36, 0x34, 0x18, 0x02,
 	0x20, 0x01, 0x28, 0x04, 0x52, 0x06, 0x55, 0x49, 0x4e, 0x54, 0x36, 0x34, 0x12, 0x14, 0x0a, 0x05,
@@ -1297,15 +1533,20 @@ var file__1_proto_rawDesc = []byte{
 	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x06, 0x53, 0x44, 0x4b, 0x49, 0x4e, 0x54,
 	0x12, 0x26, 0x0a, 0x06, 0x53, 0x44, 0x4b, 0x44, 0x45, 0x43, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09,
 	0x42, 0x0e, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63,
-	0x52, 0x06, 0x53, 0x44, 0x4b, 0x44, 0x45, 0x43, 0x22, 0x11, 0x0a, 0x01, 0x42, 0x12, 0x0c, 0x0a,
+	0x52, 0x06, 0x53, 0x44, 0x4b, 0x44, 0x45, 0x43, 0x12, 0x2d, 0x0a, 0x04, 0x43, 0x4f, 0x49, 0x4e,
+	0x18, 0x07, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69,
+	0x6e, 0x52, 0x04, 0x43, 0x4f, 0x49, 0x4e, 0x12, 0x2f, 0x0a, 0x05, 0x43, 0x4f, 0x49, 0x4e, 0x53,
+	0x18, 0x08, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69,
+	0x6e, 0x52, 0x05, 0x43, 0x4f, 0x49, 0x4e, 0x53, 0x22, 0x11, 0x0a, 0x01, 0x42, 0x12, 0x0c, 0x0a,
 	0x01, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x01, 0x78, 0x2a, 0x1f, 0x0a, 0x0b, 0x45,
 	0x6e, 0x75, 0x6d, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x07, 0x0a, 0x03, 0x4f, 0x6e,
-	0x65, 0x10, 0x00, 0x12, 0x07, 0x0a, 0x03, 0x54, 0x77, 0x6f, 0x10, 0x01, 0x42, 0x46, 0x42, 0x06,
-	0x31, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x3a, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,
-	0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2f, 0x74, 0x65, 0x78,
-	0x74, 0x75, 0x61, 0x6c, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x74, 0x65,
-	0x73, 0x74, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x65, 0x10, 0x00, 0x12, 0x07, 0x0a, 0x03, 0x54, 0x77, 0x6f, 0x10, 0x01, 0x42, 0x38, 0x42, 0x06,
+	0x31, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2c, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x63, 0x6f, 0x72, 0x65, 0x2f, 0x74, 0x78, 0x2f, 0x74,
+	0x65, 0x78, 0x74, 0x75, 0x61, 0x6c, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f,
+	0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1323,16 +1564,19 @@ func file__1_proto_rawDescGZIP() []byte {
 var file__1_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file__1_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file__1_proto_goTypes = []interface{}{
-	(Enumeration)(0), // 0: Enumeration
-	(*A)(nil),        // 1: A
-	(*B)(nil),        // 2: B
+	(Enumeration)(0),     // 0: Enumeration
+	(*A)(nil),            // 1: A
+	(*B)(nil),            // 2: B
+	(*v1beta1.Coin)(nil), // 3: cosmos.base.v1beta1.Coin
 }
 var file__1_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	3, // 0: A.COIN:type_name -> cosmos.base.v1beta1.Coin
+	3, // 1: A.COINS:type_name -> cosmos.base.v1beta1.Coin
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file__1_proto_init() }

@@ -199,7 +199,7 @@ type stakingInputs struct {
 	Config        *modulev1.Module
 	AccountKeeper types.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
 	BankKeeper    types.BankKeeper    `key:"cosmos.bank.v1.Keeper"`
-	CDC           codec.Codec
+	Cdc           codec.Codec
 	Subspace      paramstypes.Subspace
 	Key           *store.KVStoreKey
 }

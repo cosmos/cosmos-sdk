@@ -6,14 +6,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/db/memdb"
 	serverTypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store/streaming"
 	"github.com/cosmos/cosmos-sdk/store/streaming/file"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/stretchr/testify/require"
 )
@@ -49,7 +50,7 @@ func TestStreamingServiceConstructor(t *testing.T) {
 }
 
 func TestLoadStreamingServices(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := memdb.NewDB()
 	encCdc := simapp.MakeTestEncodingConfig()
 	keys := sdk.NewKVStoreKeys("mockKey1", "mockKey2")
 	bApp := baseapp.NewBaseApp("appName", log.NewNopLogger(), db, nil)

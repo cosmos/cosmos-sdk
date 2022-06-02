@@ -311,7 +311,7 @@ func (a appCreator) appExport(
 		return servertypes.ExportedApp{}, errors.New("application home not set")
 	}
 
-	simApp := simapp.NewSimApp(logger, db, traceStore, false, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
+	simApp = simapp.NewSimApp(logger, db, traceStore, false, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
 	if height != -1 {
 		return simApp.ExportAppStateAndValidatorsAt(forZeroHeight, jailAllowedAddrs, height)
 	}

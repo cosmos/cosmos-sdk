@@ -1797,8 +1797,6 @@ func TestLoadSnapshotChunk(t *testing.T) {
 }
 
 func TestOfferSnapshot_Errors(t *testing.T) {
-	t.Skip("disabled pending MultiStore snapshot implementation")
-
 	// Set up app before test cases, since it's fairly expensive.
 	setupConfig := &setupConfig{
 		blocks:             0,

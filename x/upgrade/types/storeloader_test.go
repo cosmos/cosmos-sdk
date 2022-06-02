@@ -127,7 +127,7 @@ func TestSetLoader(t *testing.T) {
 				baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)),
 				baseapp.SetSubstores(tc.origStoreKey),
 			}
-			origapp := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, opts...)
+			origapp := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
 			require.NoError(t, origapp.Init())
 
 			for i := int64(2); i <= upgradeHeight-1; i++ {
@@ -139,7 +139,7 @@ func TestSetLoader(t *testing.T) {
 
 			// load the new app with the original app db
 			opts = []baseapp.AppOption{
-				baseapp.SetPruning(storetypes.PruneNothing),
+				baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)),
 				baseapp.SetSubstores(tc.loadStoreKey),
 			}
 			if tc.setLoader != nil {

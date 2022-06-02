@@ -219,11 +219,6 @@ func NewSimApp(
 	legacyAmino := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 
-	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
-	bApp.SetCommitMultiStoreTracer(traceStore)
-	bApp.SetVersion(version.Version)
-	bApp.SetInterfaceRegistry(interfaceRegistry)
-
 	keys := sdk.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
@@ -268,7 +263,13 @@ func NewSimApp(
 	}
 	baseAppOptions = append(baseAppOptions, baseapp.StoreOption(setNamespaces))
 
-	bApp := baseapp.NewBaseApp(appName, logger, db, baseAppOptions...)
+	// set the governance module account as the authority for conducting upgrades
+	upgradeKeeper := upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	if upgradeOpt := GetUpgradeStoreOption(upgradeKeeper); upgradeOpt != nil {
+		baseAppOptions = append(baseAppOptions, upgradeOpt)
+	}
+
+	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
@@ -363,9 +364,9 @@ func NewSimApp(
 		// register the governance hooks
 		),
 	)
-	// set the governance module account as the authority for conducting upgrades
-	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
+	upgradeKeeper.SetVersionSetter(app.BaseApp)
+	app.UpgradeKeeper = upgradeKeeper
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades
 	app.RegisterUpgradeHandlers()
 

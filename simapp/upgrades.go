@@ -1,11 +1,13 @@
 package simapp
 
 import (
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/nft"
+	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -15,16 +17,36 @@ import (
 // when an application is migrating from Cosmos SDK version v0.45.x to v0.46.x.
 const UpgradeName = "v045-to-v046"
 
+func GetUpgradeStoreOption(keeper upgradekeeper.Keeper) baseapp.StoreOption {
+	upgradeInfo, err := keeper.ReadUpgradeInfoFromDisk()
+	if err != nil {
+		panic(err)
+	}
+
+	if upgradeInfo.Name == UpgradeName && !keeper.IsSkipHeight(upgradeInfo.Height) {
+		storeUpgrades := storetypes.StoreUpgrades{
+			Added: []string{
+				group.ModuleName,
+				nft.ModuleName,
+			},
+		}
+
+		// configure store loader that checks if version == upgradeHeight and applies store upgrades
+		return upgradetypes.UpgradeStoreOption(uint64(upgradeInfo.Height), &storeUpgrades)
+	}
+	return nil
+}
+
 func (app SimApp) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(UpgradeName,
 		func(ctx sdk.Context, plan upgradetypes.Plan, _ module.VersionMap) (module.VersionMap, error) {
 			// We set fromVersion to 1 to avoid running InitGenesis for modules for
 			// in-store migrations.
-			// 
+			//
 			// If you wish to skip any module migrations, i.e. they were already migrated
 			// in an older version, you can use `modulename.AppModule{}.ConsensusVersion()`
 			// instead of `1` below.
-			// 
+			//
 			// For example:
 			// "auth":	auth.AppModule{}.ConsensusVersion()
 			fromVM := map[string]uint64{
@@ -48,21 +70,4 @@ func (app SimApp) RegisterUpgradeHandlers() {
 
 			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 		})
-
-	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
-	if err != nil {
-		panic(err)
-	}
-
-	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{
-				group.ModuleName,
-				nft.ModuleName,
-			},
-		}
-
-		// configure store loader that checks if version == upgradeHeight and applies store upgrades
-		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
-	}
 }

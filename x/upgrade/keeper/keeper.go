@@ -363,7 +363,7 @@ func (k Keeper) IsSkipHeight(height int64) bool {
 
 // DumpUpgradeInfoToDisk writes upgrade information to UpgradeInfoFileName.
 func (k Keeper) DumpUpgradeInfoToDisk(height int64, p types.Plan) error {
-	upgradeInfoFilePath, err := GetUpgradeInfoPath(k.getHomeDir())
+	upgradeInfoFilePath, err := k.GetUpgradeInfoPath()
 	if err != nil {
 		return err
 	}
@@ -382,8 +382,8 @@ func (k Keeper) DumpUpgradeInfoToDisk(height int64, p types.Plan) error {
 }
 
 // GetUpgradeInfoPath returns the upgrade info file path
-func GetUpgradeInfoPath(homePath string) (string, error) {
-	upgradeInfoFileDir := path.Join(homePath, "data")
+func (k Keeper) GetUpgradeInfoPath() (string, error) {
+	upgradeInfoFileDir := path.Join(k.getHomeDir(), "data")
 	err := tmos.EnsureDir(upgradeInfoFileDir, os.ModePerm)
 	if err != nil {
 		return "", err
@@ -401,10 +401,10 @@ func (k Keeper) getHomeDir() string {
 // written to disk by the old binary when panicking. An error is returned if
 // the upgrade path directory cannot be created or if the file exists and
 // cannot be read or if the upgrade info fails to unmarshal.
-func ReadUpgradeInfoFromDisk(homePath string) (types.Plan, error) {
+func (k Keeper) ReadUpgradeInfoFromDisk() (types.Plan, error) {
 	var upgradeInfo types.Plan
 
-	upgradeInfoPath, err := GetUpgradeInfoPath(homePath)
+	upgradeInfoPath, err := k.GetUpgradeInfoPath()
 	if err != nil {
 		return upgradeInfo, err
 	}
@@ -426,8 +426,9 @@ func ReadUpgradeInfoFromDisk(homePath string) (types.Plan, error) {
 	return upgradeInfo, nil
 }
 
-func (k Keeper) ReadUpgradeInfoFromDisk() (types.Plan, error) {
-	return ReadUpgradeInfoFromDisk(k.getHomeDir())
+// SetVersionSetter upgrades versionSetter.
+func (k *Keeper) SetVersionSetter(vs xp.ProtocolVersionSetter) {
+	k.versionSetter = vs
 }
 
 // SetDowngradeVerified updates downgradeVerified.

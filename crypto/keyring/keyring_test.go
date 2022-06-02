@@ -154,7 +154,7 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, len(keyS))
 
-	// create some random directory inside the keyring directoty to check migrate ignores
+	// create some random directory inside the keyring directory to check migrate ignores
 	// all files other than *.info
 	newPath := filepath.Join(tempDir, "random")
 	require.NoError(t, os.Mkdir(newPath, 0755))

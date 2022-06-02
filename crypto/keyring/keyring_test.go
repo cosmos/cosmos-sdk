@@ -3,6 +3,8 @@ package keyring
 import (
 	"encoding/hex"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -59,7 +61,8 @@ func TestNewKeyring(t *testing.T) {
 
 func TestKeyManagementKeyRing(t *testing.T) {
 	cdc := getCodec()
-	kb, err := New("keybasename", "test", t.TempDir(), nil, cdc)
+	tempDir := t.TempDir()
+	kb, err := New("keybasename", "test", tempDir, nil, cdc)
 	require.NoError(t, err)
 	require.NotNil(t, cdc)
 
@@ -150,6 +153,15 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	keyS, err = kb.List()
 	require.NoError(t, err)
 	require.Equal(t, 1, len(keyS))
+
+	// create some random directory inside the keyring directoty to check migrate ignores
+	// all files other than *.info
+	newPath := filepath.Join(tempDir, "random")
+	require.NoError(t, os.Mkdir(newPath, 0755))
+	items, err := os.ReadDir(newPath)
+	require.GreaterOrEqual(t, len(items), 2)
+	keyS, err = kb.List()
+	require.NoError(t, err)
 
 	// addr cache gets nuked - and test skip flag
 	require.NoError(t, kb.Delete(n2))

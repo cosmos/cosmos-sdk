@@ -222,6 +222,7 @@ func NewSimApp(
 		&app.legacyAmino,
 		&app.interfaceRegistry,
 		&app.AccountKeeper,
+		&app.BankKeeper,
 	)
 	if err != nil {
 		panic(err)

@@ -212,6 +212,7 @@ func NewSimApp(
 	var paramsKeeper paramskeeper.Keeper
 	var accountKeeper authkeeper.AccountKeeper
 	var bankKeeper bankkeeper.Keeper
+	var stakingKeeper stakingkeeper.Keeper
 	var appCodec codec.Codec
 	var legacyAmino *codec.LegacyAmino
 	var interfaceRegistry codectypes.InterfaceRegistry
@@ -223,6 +224,7 @@ func NewSimApp(
 		&interfaceRegistry,
 		&accountKeeper,
 		&bankKeeper,
+		&stakingKeeper,
 	)
 	if err != nil {
 		panic(err)
@@ -231,7 +233,6 @@ func NewSimApp(
 	runtimeApp := appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 
 	keys := sdk.NewKVStoreKeys(
-		stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, capabilitytypes.StoreKey,
@@ -270,9 +271,6 @@ func NewSimApp(
 	// add keepers
 	app.BankKeeper = bankKeeper
 
-	stakingKeeper := stakingkeeper.NewKeeper(
-		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName),
-	)
 	app.MintKeeper = mintkeeper.NewKeeper(
 		appCodec, keys[minttypes.StoreKey], app.GetSubspace(minttypes.ModuleName), &stakingKeeper,
 		app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName,
@@ -323,7 +321,7 @@ func NewSimApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// register the governance hooks
+			// register the governance hooks
 		),
 	)
 	// set the governance module account as the authority for conducting upgrades
@@ -359,7 +357,6 @@ func NewSimApp(
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper, nil),
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
@@ -596,7 +593,6 @@ func GetMaccPerms() map[string][]string {
 
 // initParamsKeeper init params keeper and its subspaces
 func initParamsKeeper(paramsKeeper paramskeeper.Keeper) {
-	paramsKeeper.Subspace(stakingtypes.ModuleName)
 	paramsKeeper.Subspace(minttypes.ModuleName)
 	paramsKeeper.Subspace(distrtypes.ModuleName)
 	paramsKeeper.Subspace(slashingtypes.ModuleName)

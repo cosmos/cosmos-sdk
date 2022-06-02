@@ -1,6 +1,6 @@
 package depinject
 
-// Build builds the container specified by containerConfig and extracts the
+// Inject builds the container specified by containerConfig and extracts the
 // requested outputs from the container or returns an error. It is the single
 // entry point for building and running a dependency injection container.
 // Each of the values specified as outputs must be pointers to types that

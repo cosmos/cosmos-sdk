@@ -9,7 +9,7 @@ order: 3
 Proposals can be submitted by any account via a `MsgSubmitProposal`
 transaction.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/5bde3686c4538ce53356af6e9fe40b34e4ce4a06/proto/cosmos/gov/v1/tx.proto#L33-L43
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/gov/v1/tx.proto#L33-L43
 
 All `sdk.Msgs` passed into the `messages` field of a `MsgSubmitProposal` message
 must be registered in the app's `MsgServiceRouter`. Each of these messages must
@@ -78,7 +78,7 @@ Once a proposal is submitted, if
 `Proposal.TotalDeposit < ActiveParam.MinDeposit`, Atom holders can send
 `MsgDeposit` transactions to increase the proposal's deposit.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/tx.proto#L61-L72
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/gov/v1/tx.proto#L90-L97
 
 **State modifications:**
 
@@ -144,7 +144,7 @@ Once `ActiveParam.MinDeposit` is reached, voting period starts. From there,
 bonded Atom holders are able to send `MsgVote` transactions to cast their
 vote on the proposal.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/tx.proto#L46-L56
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/gov/v1/tx.proto#L64-L72
 
 **State modifications:**
 

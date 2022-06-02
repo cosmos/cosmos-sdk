@@ -28,7 +28,7 @@ After that line, add the following:
 
 ```go
 rootCmd.AddCommand(
-  server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler)
+  server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Codec)
 )
 ```
 

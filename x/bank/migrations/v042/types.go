@@ -49,7 +49,7 @@ func AddressFromBalancesStore(key []byte) sdk.AccAddress {
 // SupplyI defines an inflationary supply interface for modules that handle
 // token supply.
 // It is copy-pasted from:
-// https://github.com/cosmos/cosmos-sdk/blob/v042.3/x/bank/exported/exported.go
+// https://github.com/cosmos/cosmos-sdk/blob/v0.42.3/x/bank/exported/exported.go
 // where we stripped off the unnecessary methods.
 //
 // It is used in the migration script, because we save this interface as an Any

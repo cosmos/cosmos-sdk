@@ -82,7 +82,7 @@ func TestFullAppSimulation(t *testing.T) {
 		AppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		SimulationOperations(app, app.AppCodec(), config),
-		app.ModuleAccountAddrs(),
+		ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
 	)
@@ -120,7 +120,7 @@ func TestAppImportExport(t *testing.T) {
 		AppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		SimulationOperations(app, app.AppCodec(), config),
-		app.ModuleAccountAddrs(),
+		ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
 	)
@@ -229,7 +229,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		AppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		SimulationOperations(app, app.AppCodec(), config),
-		app.ModuleAccountAddrs(),
+		ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
 	)
@@ -277,7 +277,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		AppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		SimulationOperations(newApp, newApp.AppCodec(), config),
-		app.ModuleAccountAddrs(),
+		ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
 	)
@@ -328,7 +328,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				AppStateFn(app.AppCodec(), app.SimulationManager()),
 				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 				SimulationOperations(app, app.AppCodec(), config),
-				app.ModuleAccountAddrs(),
+				ModuleAccountAddrs(),
 				config,
 				app.AppCodec(),
 			)

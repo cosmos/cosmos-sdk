@@ -2,16 +2,17 @@ package staking
 
 import (
 	"context"
-	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
-	"cosmossdk.io/core/appmodule"
 	"encoding/json"
 	"fmt"
+	"math/rand"
+
+	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
+	"cosmossdk.io/core/appmodule"
 	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"math/rand"
 
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -197,7 +198,7 @@ type stakingInputs struct {
 
 	Config        *modulev1.Module
 	AccountKeeper types.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
-	BankKeeper    types.BankKeeper    `key:"cosmos.auth.v1.BankKeeper"`
+	BankKeeper    types.BankKeeper    `key:"cosmos.bank.v1.BankKeeper"`
 	CDC           codec.Codec
 	Subspace      paramstypes.Subspace
 	Key           *store.KVStoreKey

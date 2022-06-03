@@ -72,16 +72,16 @@ func (s *viewSubstore) GetStoreType() types.StoreType {
 	return types.StoreTypePersistent
 }
 
-func (st *viewSubstore) CacheWrap() types.CacheWrap {
-	return cachekv.NewStore(st)
+func (s *viewSubstore) CacheWrap() types.CacheWrap {
+	return cachekv.NewStore(s)
 }
 
-func (st *viewSubstore) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
-	return cachekv.NewStore(tracekv.NewStore(st, w, tc))
+func (s *viewSubstore) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
+	return cachekv.NewStore(tracekv.NewStore(s, w, tc))
 }
 
-func (st *viewSubstore) CacheWrapWithListeners(storeKey types.StoreKey, listeners []types.WriteListener) types.CacheWrap {
-	return cachekv.NewStore(listenkv.NewStore(st, storeKey, listeners))
+func (s *viewSubstore) CacheWrapWithListeners(storeKey types.StoreKey, listeners []types.WriteListener) types.CacheWrap {
+	return cachekv.NewStore(listenkv.NewStore(s, storeKey, listeners))
 }
 
 func (s *viewStore) getMerkleRoots() (ret map[string][]byte, err error) {
@@ -140,36 +140,36 @@ func (store *Store) getView(version int64) (ret *viewStore, err error) {
 		substoreCache:       map[string]*viewSubstore{},
 		schema:              pr.StoreSchema,
 	}
-	return
+	return ret, err
 }
 
-func (vs *viewStore) GetKVStore(skey types.StoreKey) types.KVStore {
+func (s *viewStore) GetKVStore(skey types.StoreKey) types.KVStore {
 	key := skey.Name()
-	if _, has := vs.schema[key]; !has {
+	if _, has := s.schema[key]; !has {
 		panic(ErrStoreNotFound(key))
 	}
-	ret, err := vs.getSubstore(key)
+	ret, err := s.getSubstore(key)
 	if err != nil {
 		panic(err)
 	}
-	vs.substoreCache[key] = ret
+	s.substoreCache[key] = ret
 	return ret
 }
 
 // Reads but does not update substore cache
-func (vs *viewStore) getSubstore(key string) (*viewSubstore, error) {
-	if cached, has := vs.substoreCache[key]; has {
+func (s *viewStore) getSubstore(key string) (*viewSubstore, error) {
+	if cached, has := s.substoreCache[key]; has {
 		return cached, nil
 	}
 	pfx := substorePrefix(key)
-	stateR := prefixdb.NewReader(vs.stateView, pfx)
-	stateCommitmentR := prefixdb.NewReader(vs.stateCommitmentView, pfx)
+	stateR := prefixdb.NewReader(s.stateView, pfx)
+	stateCommitmentR := prefixdb.NewReader(s.stateCommitmentView, pfx)
 	rootHash, err := stateR.Get(merkleRootKey)
 	if err != nil {
 		return nil, err
 	}
 	return &viewSubstore{
-		root:                 vs,
+		root:                 s,
 		name:                 key,
 		dataBucket:           prefixdb.NewReader(stateR, dataPrefix),
 		indexBucket:          prefixdb.NewReader(stateR, indexPrefix),

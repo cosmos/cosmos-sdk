@@ -54,5 +54,4 @@ func TestContentFromProposalType(t *testing.T) {
 		require.NotNil(t, content)
 		require.Equal(t, test.expectedType, content.ProposalType())
 	}
-
 }

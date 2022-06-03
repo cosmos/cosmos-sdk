@@ -729,7 +729,7 @@ func parsePath(path string) (storeName string, subpath string, err error) {
 // If latest-1 is not present, use latest (which must be present)
 // if you care to have the latest data to see a tx results, you must
 // explicitly set the height you want to see
-func (rs *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
+func (s *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	if len(req.Data) == 0 {
 		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrTxDecode, "query cannot be zero length"), false)
 	}
@@ -737,7 +737,7 @@ func (rs *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	// if height is 0, use the latest height
 	height := req.Height
 	if height == 0 {
-		versions, err := rs.stateDB.Versions()
+		versions, err := s.stateDB.Versions()
 		if err != nil {
 			return sdkerrors.QueryResult(errors.New("failed to get version info"), false)
 		}
@@ -757,7 +757,7 @@ func (rs *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	if err != nil {
 		return sdkerrors.QueryResult(sdkerrors.Wrapf(err, "failed to parse path"), false)
 	}
-	view, err := rs.getView(height)
+	view, err := s.getView(height)
 	if err != nil {
 		if errors.Is(err, dbm.ErrVersionDoesNotExist) {
 			err = sdkerrors.ErrInvalidHeight
@@ -765,7 +765,7 @@ func (rs *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		return sdkerrors.QueryResult(sdkerrors.Wrapf(err, "failed to access height"), false)
 	}
 
-	if _, has := rs.schema[storeName]; !has {
+	if _, has := s.schema[storeName]; !has {
 		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "no such store: %s", storeName), false)
 	}
 	substore, err := view.getSubstore(storeName)

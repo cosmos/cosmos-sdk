@@ -15,7 +15,7 @@ var _ types.KVStore = Store{}
 
 // Wrapper type for dbm.Db with implementation of KVStore
 type Store struct {
-	DB dbm.DBReadWriter
+	DB dbm.ReadWriter
 }
 
 // Get wraps the underlying DB's Get method panicing on error.

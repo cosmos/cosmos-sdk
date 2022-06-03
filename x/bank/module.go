@@ -231,8 +231,8 @@ type bankInputs struct {
 type bankOutputs struct {
 	depinject.Out
 
-	Keeper keeper.Keeper `key:"cosmos.bank.v1.Keeper"`
-	Module runtime.AppModuleWrapper
+	BankKeeper keeper.Keeper `key:"cosmos.bank.v1.Keeper"`
+	Module     runtime.AppModuleWrapper
 }
 
 func provideModule(in bankInputs) bankOutputs {
@@ -254,5 +254,5 @@ func provideModule(in bankInputs) bankOutputs {
 
 	bankKeeper := keeper.NewBaseKeeper(in.Cdc, in.Key, in.AccountKeeper, in.Subspace, blockedAddresses)
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper)
-	return bankOutputs{Keeper: bankKeeper, Module: runtime.WrapAppModule(m)}
+	return bankOutputs{BankKeeper: bankKeeper, Module: runtime.WrapAppModule(m)}
 }

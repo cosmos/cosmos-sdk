@@ -323,10 +323,10 @@ func (keeper Keeper) removeFromGrantQueue(ctx sdk.Context, grantKey []byte, gran
 	_, _, msgType := parseGrantStoreKey(grantKey)
 	queueItems := queueItem.MsgTypeUrls
 
-	for index, typeUrl := range queueItems {
+	for index, typeURL := range queueItems {
 		ctx.GasMeter().ConsumeGas(gasCostPerIteration, "grant queue")
 
-		if typeUrl == msgType {
+		if typeURL == msgType {
 			end := len(queueItem.MsgTypeUrls) - 1
 			queueItems[index] = queueItems[end]
 			queueItems = queueItems[:end]
@@ -363,8 +363,8 @@ func (k Keeper) DequeueAndDeleteExpiredGrants(ctx sdk.Context) error {
 
 		store.Delete(iterator.Key())
 
-		for _, typeUrl := range queueItem.MsgTypeUrls {
-			store.Delete(grantStoreKey(grantee, granter, typeUrl))
+		for _, typeURL := range queueItem.MsgTypeUrls {
+			store.Delete(grantStoreKey(grantee, granter, typeURL))
 		}
 	}
 

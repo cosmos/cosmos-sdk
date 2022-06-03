@@ -21,10 +21,10 @@ func TestMigrateJSON(t *testing.T) {
 
 	oldState := types.DefaultGenesisState()
 
-	newState, err := v046.MigrateJSON(oldState)
+	newState, err := v046.MigrateJSON(*oldState)
 	require.NoError(t, err)
 
-	bz, err := clientCtx.Codec.MarshalJSON(newState)
+	bz, err := clientCtx.Codec.MarshalJSON(&newState)
 	require.NoError(t, err)
 
 	// Indent the JSON bz correctly.

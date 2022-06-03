@@ -4,5 +4,6 @@ use (
 	./api
 	./cosmovisor
 	./db
+	./depinject
 	./math
 )

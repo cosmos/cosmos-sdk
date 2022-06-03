@@ -176,7 +176,10 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(),
+		appmodule.Provide(
+			provideModule,
+			provideModuleBasic,
+		),
 	)
 }
 

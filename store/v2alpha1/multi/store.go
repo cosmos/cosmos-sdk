@@ -296,12 +296,11 @@ func NewStore(db dbm.Connection, opts StoreConfig) (ret *Store, err error) {
 		}
 		reg.reserved = make([]string, len(opts.reserved))
 		copy(reg.reserved, opts.reserved)
-	} else {
-		if !reg.equal(opts.StoreSchema) {
-			err = errors.New("loaded schema does not match configured schema")
-			return
-		}
+	} else if !reg.equal(opts.StoreSchema) {
+		err = errors.New("loaded schema does not match configured schema")
+		return
 	}
+
 	// Apply migrations, then clear old schema and write the new one
 	for _, upgrades := range opts.Upgrades {
 		err = reg.migrate(ret, upgrades)
@@ -336,7 +335,7 @@ func NewStore(db dbm.Connection, opts StoreConfig) (ret *Store, err error) {
 		}
 	}
 	ret.schema = reg.StoreSchema
-	return
+	return ret, err
 }
 
 func (s *Store) Close() error {
@@ -444,18 +443,18 @@ func substorePrefix(key string) []byte {
 }
 
 // GetKVStore implements BasicMultiStore.
-func (rs *Store) GetKVStore(skey types.StoreKey) types.KVStore {
+func (s *Store) GetKVStore(skey types.StoreKey) types.KVStore {
 	key := skey.Name()
 	var parent types.KVStore
-	typ, has := rs.schema[key]
+	typ, has := s.schema[key]
 	if !has {
 		panic(ErrStoreNotFound(key))
 	}
 	switch typ {
 	case types.StoreTypeMemory:
-		parent = rs.mem
+		parent = s.mem
 	case types.StoreTypeTransient:
-		parent = rs.tran
+		parent = s.tran
 	case types.StoreTypePersistent:
 	default:
 		panic(fmt.Errorf("StoreType not supported: %v", typ)) // should never happen
@@ -464,27 +463,27 @@ func (rs *Store) GetKVStore(skey types.StoreKey) types.KVStore {
 	if parent != nil { // store is non-persistent
 		ret = prefix.NewStore(parent, []byte(key))
 	} else { // store is persistent
-		sub, err := rs.getSubstore(key)
+		sub, err := s.getSubstore(key)
 		if err != nil {
 			panic(err)
 		}
-		rs.substoreCache[key] = sub
+		s.substoreCache[key] = sub
 		ret = sub
 	}
 	// Wrap with trace/listen if needed. Note: we don't cache this, so users must get a new substore after
 	// modifying tracers/listeners.
-	return rs.wrapTraceListen(ret, skey)
+	return s.wrapTraceListen(ret, skey)
 }
 
 // Gets a persistent substore. This reads, but does not update the substore cache.
 // Use it in cases where we need to access a store internally (e.g. read/write Merkle keys, queries)
-func (rs *Store) getSubstore(key string) (*substore, error) {
-	if cached, has := rs.substoreCache[key]; has {
+func (s *Store) getSubstore(key string) (*substore, error) {
+	if cached, has := s.substoreCache[key]; has {
 		return cached, nil
 	}
 	pfx := substorePrefix(key)
-	stateRW := prefixdb.NewReadWriter(rs.stateTxn, pfx)
-	stateCommitmentRW := prefixdb.NewReadWriter(rs.stateCommitmentTxn, pfx)
+	stateRW := prefixdb.NewReadWriter(s.stateTxn, pfx)
+	stateCommitmentRW := prefixdb.NewReadWriter(s.stateCommitmentTxn, pfx)
 	var stateCommitmentStore *smt.Store
 
 	rootHash, err := stateRW.Get(substoreMerkleRootKey)
@@ -499,7 +498,7 @@ func (rs *Store) getSubstore(key string) (*substore, error) {
 	}
 
 	return &substore{
-		root:                 rs,
+		root:                 s,
 		name:                 key,
 		dataBucket:           prefixdb.NewReadWriter(stateRW, dataPrefix),
 		indexBucket:          prefixdb.NewReadWriter(stateRW, indexPrefix),
@@ -671,20 +670,20 @@ func (s *Store) LastCommitID() types.CommitID {
 }
 
 // SetInitialVersion implements CommitMultiStore.
-func (rs *Store) SetInitialVersion(version uint64) error {
-	rs.InitialVersion = uint64(version)
+func (s *Store) SetInitialVersion(version uint64) error {
+	s.InitialVersion = version
 	return nil
 }
 
 // GetVersion implements CommitMultiStore.
-func (rs *Store) GetVersion(version int64) (types.BasicMultiStore, error) {
-	return rs.getView(version)
+func (s *Store) GetVersion(version int64) (types.BasicMultiStore, error) {
+	return s.getView(version)
 }
 
 // CacheMultiStore implements BasicMultiStore.
-func (rs *Store) CacheMultiStore() types.CacheMultiStore {
+func (s *Store) CacheMultiStore() types.CacheMultiStore {
 	return &cacheStore{
-		source:           rs,
+		source:           s,
 		substores:        map[string]types.CacheKVStore{},
 		traceListenMixin: newTraceListenMixin(),
 	}
@@ -694,13 +693,13 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 // If PruneNothing, this is a no-op.
 // If other strategy, this height is persisted until it is
 // less than <current height> - KeepRecent and <current height> % Interval == 0
-func (rs *Store) PruneSnapshotHeight(height int64) {
+func (s *Store) PruneSnapshotHeight(height int64) {
 	panic("not implemented")
 }
 
 // SetSnapshotInterval sets the interval at which the snapshots are taken.
 // It is used by the store to determine which heights to retain until after the snapshot is complete.
-func (rs *Store) SetSnapshotInterval(snapshotInterval uint64) {
+func (s *Store) SetSnapshotInterval(snapshotInterval uint64) {
 	panic("not implemented")
 }
 

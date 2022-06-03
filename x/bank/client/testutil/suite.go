@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"cosmossdk.io/math"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
@@ -658,7 +659,7 @@ func (s *IntegrationTestSuite) TestNewMultiSendTxCmd() {
 	}
 }
 
-func NewCoin(denom string, amount sdk.Int) *sdk.Coin {
+func NewCoin(denom string, amount math.Int) *sdk.Coin {
 	coin := sdk.NewCoin(denom, amount)
 	return &coin
 }

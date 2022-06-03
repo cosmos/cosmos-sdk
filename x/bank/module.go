@@ -2,16 +2,16 @@ package bank
 
 import (
 	"context"
-	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"encoding/json"
 	"fmt"
+	"math/rand"
+	"time"
+
+	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"github.com/cosmos/cosmos-sdk/depinject"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/tendermint/tendermint/crypto"
-
-	"math/rand"
-	"time"
 
 	"cosmossdk.io/core/appmodule"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -231,7 +231,14 @@ type bankInputs struct {
 	Key           *store.KVStoreKey
 }
 
-func provideModule(in bankInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
+type bankOutputs struct {
+	depinject.Out
+
+	BankKeeper keeper.Keeper `key:"cosmos.bank.v1.Keeper"`
+	Module     runtime.AppModuleWrapper
+}
+
+func provideModule(in bankInputs) bankOutputs {
 	// configure blocked module accounts.
 	//
 	// default behavior for blockedAddresses is to regard any module mentioned in AccountKeeper's module account
@@ -250,5 +257,5 @@ func provideModule(in bankInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
 
 	bankKeeper := keeper.NewBaseKeeper(in.Cdc, in.Key, in.AccountKeeper, in.Subspace, blockedAddresses)
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper)
-	return bankKeeper, runtime.WrapAppModule(m)
+	return bankOutputs{BankKeeper: bankKeeper, Module: runtime.WrapAppModule(m)}
 }

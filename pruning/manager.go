@@ -13,7 +13,7 @@ import (
 )
 
 // Manager is an abstraction to handle the logic needed for
-// determinging when to prune old heights of the store
+// determining when to prune old heights of the store
 // based on the strategy described by the pruning options.
 type Manager struct {
 	db               dbm.DB

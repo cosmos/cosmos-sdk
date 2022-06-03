@@ -11,7 +11,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
@@ -34,12 +34,12 @@ type wrapper struct {
 }
 
 var (
-	_ authsigning.Tx                   = &wrapper{}
-	_ client.TxBuilder                 = &wrapper{}
-	_ tx.TipTx                         = &wrapper{}
-	_ middleware.HasExtensionOptionsTx = &wrapper{}
-	_ ExtensionOptionsTxBuilder        = &wrapper{}
-	_ tx.TipTx                         = &wrapper{}
+	_ authsigning.Tx             = &wrapper{}
+	_ client.TxBuilder           = &wrapper{}
+	_ tx.TipTx                   = &wrapper{}
+	_ ante.HasExtensionOptionsTx = &wrapper{}
+	_ ExtensionOptionsTxBuilder  = &wrapper{}
+	_ tx.TipTx                   = &wrapper{}
 )
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.

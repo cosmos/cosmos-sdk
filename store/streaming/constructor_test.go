@@ -52,7 +52,7 @@ func TestLoadStreamingServices(t *testing.T) {
 	db := dbm.NewMemDB()
 	encCdc := simapp.MakeTestEncodingConfig()
 	keys := sdk.NewKVStoreKeys("mockKey1", "mockKey2")
-	bApp := baseapp.NewBaseApp("appName", log.NewNopLogger(), db)
+	bApp := baseapp.NewBaseApp("appName", log.NewNopLogger(), db, nil)
 
 	testCases := map[string]struct {
 		appOpts            serverTypes.AppOptions
@@ -81,7 +81,6 @@ func TestLoadStreamingServices(t *testing.T) {
 			require.Equal(t, tc.activeStreamersLen, len(activeStreamers))
 		})
 	}
-
 }
 
 type streamingAppOptions struct {

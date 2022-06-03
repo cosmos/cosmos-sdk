@@ -315,7 +315,6 @@ func TestEndBlockerPruning(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestEndBlockerTallying(t *testing.T) {
@@ -505,9 +504,7 @@ func TestEndBlockerTallying(t *testing.T) {
 	}
 }
 
-func submitProposal(
-	app *simapp.SimApp, ctx context.Context, msgs []sdk.Msg,
-	proposers []string, groupPolicyAddr sdk.AccAddress) (uint64, error) {
+func submitProposal(app *simapp.SimApp, ctx context.Context, msgs []sdk.Msg, proposers []string, groupPolicyAddr sdk.AccAddress) (uint64, error) {
 	proposalReq := &group.MsgSubmitProposal{
 		GroupPolicyAddress: groupPolicyAddr.String(),
 		Proposers:          proposers,
@@ -527,7 +524,8 @@ func submitProposal(
 
 func submitProposalAndVote(
 	app *simapp.SimApp, ctx context.Context, msgs []sdk.Msg,
-	proposers []string, groupPolicyAddr sdk.AccAddress, voteOption group.VoteOption) (uint64, error) {
+	proposers []string, groupPolicyAddr sdk.AccAddress, voteOption group.VoteOption,
+) (uint64, error) {
 	myProposalID, err := submitProposal(app, ctx, msgs, proposers, groupPolicyAddr)
 	if err != nil {
 		return 0, err

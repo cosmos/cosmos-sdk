@@ -41,7 +41,6 @@ func (k Keeper) Subspaces(
 	goCtx context.Context,
 	req *proposal.QuerySubspacesRequest,
 ) (*proposal.QuerySubspacesResponse, error) {
-
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}

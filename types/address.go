@@ -117,9 +117,11 @@ type Address interface {
 }
 
 // Ensure that different address types implement the interface
-var _ Address = AccAddress{}
-var _ Address = ValAddress{}
-var _ Address = ConsAddress{}
+var (
+	_ Address = AccAddress{}
+	_ Address = ValAddress{}
+	_ Address = ConsAddress{}
+)
 
 // ----------------------------------------------------------------------------
 // account
@@ -223,7 +225,6 @@ func (aa AccAddress) MarshalYAML() (interface{}, error) {
 func (aa *AccAddress) UnmarshalJSON(data []byte) error {
 	var s string
 	err := json.Unmarshal(data, &s)
-
 	if err != nil {
 		return err
 	}
@@ -273,7 +274,7 @@ func (aa AccAddress) String() string {
 		return ""
 	}
 
-	var key = conv.UnsafeBytesToStr(aa)
+	key := conv.UnsafeBytesToStr(aa)
 	accAddrMu.Lock()
 	defer accAddrMu.Unlock()
 	addr, ok := accAddrCache.Get(key)
@@ -284,7 +285,7 @@ func (aa AccAddress) String() string {
 }
 
 // Format implements the fmt.Formatter interface.
-// nolint: errcheck
+
 func (aa AccAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
@@ -423,7 +424,7 @@ func (va ValAddress) String() string {
 		return ""
 	}
 
-	var key = conv.UnsafeBytesToStr(va)
+	key := conv.UnsafeBytesToStr(va)
 	valAddrMu.Lock()
 	defer valAddrMu.Unlock()
 	addr, ok := valAddrCache.Get(key)
@@ -434,7 +435,7 @@ func (va ValAddress) String() string {
 }
 
 // Format implements the fmt.Formatter interface.
-// nolint: errcheck
+
 func (va ValAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
@@ -578,7 +579,7 @@ func (ca ConsAddress) String() string {
 		return ""
 	}
 
-	var key = conv.UnsafeBytesToStr(ca)
+	key := conv.UnsafeBytesToStr(ca)
 	consAddrMu.Lock()
 	defer consAddrMu.Unlock()
 	addr, ok := consAddrCache.Get(key)
@@ -613,7 +614,7 @@ func MustBech32ifyAddressBytes(prefix string, bs []byte) string {
 }
 
 // Format implements the fmt.Formatter interface.
-// nolint: errcheck
+
 func (ca ConsAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':

@@ -119,8 +119,7 @@ func (k Keeper) GranterGrants(c context.Context, req *authz.QueryGranterGrantsRe
 	authzStore := prefix.NewStore(store, grantStoreKey(nil, granter, ""))
 
 	var grants []*authz.GrantAuthorization
-	pageRes, err := query.FilteredPaginate(authzStore, req.Pagination, func(key []byte, value []byte,
-		accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(authzStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		auth, err := unmarshalAuthorization(k.cdc, value)
 		if err != nil {
 			return false, err
@@ -172,8 +171,7 @@ func (k Keeper) GranteeGrants(c context.Context, req *authz.QueryGranteeGrantsRe
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), GrantKey)
 
 	var authorizations []*authz.GrantAuthorization
-	pageRes, err := query.FilteredPaginate(store, req.Pagination, func(key []byte, value []byte,
-		accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(store, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		auth, err := unmarshalAuthorization(k.cdc, value)
 		if err != nil {
 			return false, err

@@ -24,6 +24,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 	"google.golang.org/grpc"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -84,9 +85,9 @@ type Config struct {
 	Mnemonics        []string                   // custom user-provided validator operator mnemonics
 	BondDenom        string                     // the staking bond denomination
 	MinGasPrices     string                     // the minimum gas prices each validator will accept
-	AccountTokens    sdk.Int                    // the amount of unique validator tokens (e.g. 1000node0)
-	StakingTokens    sdk.Int                    // the amount of tokens each validator has available to stake
-	BondedTokens     sdk.Int                    // the amount of tokens each validator stakes
+	AccountTokens    math.Int                   // the amount of unique validator tokens (e.g. 1000node0)
+	StakingTokens    math.Int                   // the amount of tokens each validator has available to stake
+	BondedTokens     math.Int                   // the amount of tokens each validator stakes
 	PruningStrategy  string                     // the pruning strategy each validator will have
 	EnableTMLogging  bool                       // enable Tendermint logging to STDOUT
 	CleanupDir       bool                       // remove base temporary directory during cleanup
@@ -178,8 +179,10 @@ type Logger interface {
 	Logf(format string, args ...interface{})
 }
 
-var _ Logger = (*testing.T)(nil)
-var _ Logger = (*CLILogger)(nil)
+var (
+	_ Logger = (*testing.T)(nil)
+	_ Logger = (*CLILogger)(nil)
+)
 
 // CLILogger wraps a cobra.Command and provides command logging methods.
 type CLILogger struct {
@@ -309,12 +312,12 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		clientDir := filepath.Join(network.BaseDir, nodeDirName, "simcli")
 		gentxsDir := filepath.Join(network.BaseDir, "gentxs")
 
-		err := os.MkdirAll(filepath.Join(nodeDir, "config"), 0755)
+		err := os.MkdirAll(filepath.Join(nodeDir, "config"), 0o755)
 		if err != nil {
 			return nil, err
 		}
 
-		err = os.MkdirAll(clientDir, 0755)
+		err = os.MkdirAll(clientDir, 0o755)
 		if err != nil {
 			return nil, err
 		}

@@ -55,7 +55,7 @@ func TestProofOpInterface(t *testing.T) {
 	assert.Equal(t, key, tmProofOp.Key, key)
 	assert.NotEmpty(t, tmProofOp.Data)
 
-	//decode
+	// decode
 	decoded, err := smtstore.ProofDecoder(tmProofOp)
 	assert.NoError(t, err)
 	assert.NotNil(t, decoded)

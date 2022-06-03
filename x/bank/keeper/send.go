@@ -27,6 +27,7 @@ type SendKeeper interface {
 	IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
 
 	BlockedAddr(addr sdk.AccAddress) bool
+	GetBlockedAddresses() map[string]bool
 }
 
 var _ SendKeeper = (*BaseSendKeeper)(nil)
@@ -48,7 +49,6 @@ type BaseSendKeeper struct {
 func NewBaseSendKeeper(
 	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blockedAddrs map[string]bool,
 ) BaseSendKeeper {
-
 	return BaseSendKeeper{
 		BaseViewKeeper: NewBaseViewKeeper(cdc, storeKey, ak),
 		cdc:            cdc,
@@ -322,4 +322,9 @@ func (k BaseSendKeeper) IsSendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool {
 // receiving funds.
 func (k BaseSendKeeper) BlockedAddr(addr sdk.AccAddress) bool {
 	return k.blockedAddrs[addr.String()]
+}
+
+// GetBlockedAddresses returns the full list of addresses restricted from receiving funds.
+func (k BaseSendKeeper) GetBlockedAddresses() map[string]bool {
+	return k.blockedAddrs
 }

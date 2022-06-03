@@ -20,9 +20,7 @@ import (
 	legacybech32 "github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
 )
 
-var (
-	flagPubkeyType = "type"
-)
+var flagPubkeyType = "type"
 
 // Cmd creates a main CLI command
 func Cmd() *cobra.Command {
@@ -178,7 +176,6 @@ $ %s debug pubkey-raw cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			cmd.Println("Bech32 Acc:", accPub)
 			cmd.Println("Bech32 Validator Operator:", valPub)
 			if pubkeyType == "ed25519" {
-
 				cmd.Println("Bech32 Validator Consensus:", consensusPub)
 			}
 
@@ -200,7 +197,6 @@ $ %s debug addr cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			`, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			addrString := args[0]
 			var addr []byte
 
@@ -216,7 +212,6 @@ $ %s debug addr cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 
 					if err3 != nil {
 						return fmt.Errorf("expected hex or bech32. Got errors: hex: %v, bech32 acc: %v, bech32 val: %v", err, err2, err3)
-
 					}
 				}
 			}

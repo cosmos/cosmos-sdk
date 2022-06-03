@@ -139,7 +139,6 @@ func (m MsgUpdateGroupMetadata) GetSigners() []sdk.AccAddress {
 func (m MsgUpdateGroupMetadata) ValidateBasic() error {
 	if m.GroupId == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "group id")
-
 	}
 	_, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
@@ -183,7 +182,6 @@ func (m MsgUpdateGroupMembers) GetSigners() []sdk.AccAddress {
 func (m MsgUpdateGroupMembers) ValidateBasic() error {
 	if m.GroupId == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "group id")
-
 	}
 	_, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
@@ -204,8 +202,10 @@ func (m *MsgUpdateGroupMembers) GetGroupID() uint64 {
 	return m.GroupId
 }
 
-var _ sdk.Msg = &MsgCreateGroupWithPolicy{}
-var _ types.UnpackInterfacesMessage = MsgCreateGroupWithPolicy{}
+var (
+	_ sdk.Msg                       = &MsgCreateGroupWithPolicy{}
+	_ types.UnpackInterfacesMessage = MsgCreateGroupWithPolicy{}
+)
 
 // NewMsgCreateGroupWithPolicy creates a new MsgCreateGroupWithPolicy.
 func NewMsgCreateGroupWithPolicy(admin string, members []MemberRequest, groupMetadata string, groupPolicyMetadata string, groupPolicyAsAdmin bool, decisionPolicy DecisionPolicy) (*MsgCreateGroupWithPolicy, error) {
@@ -379,8 +379,10 @@ func (m MsgUpdateGroupPolicyAdmin) ValidateBasic() error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgUpdateGroupPolicyDecisionPolicy{}
-var _ types.UnpackInterfacesMessage = MsgUpdateGroupPolicyDecisionPolicy{}
+var (
+	_ sdk.Msg                       = &MsgUpdateGroupPolicyDecisionPolicy{}
+	_ types.UnpackInterfacesMessage = MsgUpdateGroupPolicyDecisionPolicy{}
+)
 
 // NewMsgUpdateGroupPolicyDecisionPolicy creates a new MsgUpdateGroupPolicyDecisionPolicy.
 func NewMsgUpdateGroupPolicyDecisionPolicy(admin sdk.AccAddress, address sdk.AccAddress, decisionPolicy DecisionPolicy) (*MsgUpdateGroupPolicyDecisionPolicy, error) {
@@ -510,8 +512,10 @@ func (m MsgUpdateGroupPolicyMetadata) ValidateBasic() error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgCreateGroupPolicy{}
-var _ types.UnpackInterfacesMessage = MsgCreateGroupPolicy{}
+var (
+	_ sdk.Msg                       = &MsgCreateGroupPolicy{}
+	_ types.UnpackInterfacesMessage = MsgCreateGroupPolicy{}
+)
 
 // NewMsgCreateGroupPolicy creates a new MsgCreateGroupPolicy.
 func NewMsgCreateGroupPolicy(admin sdk.AccAddress, group uint64, metadata string, decisionPolicy DecisionPolicy) (*MsgCreateGroupPolicy, error) {

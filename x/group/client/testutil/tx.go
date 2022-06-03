@@ -2413,10 +2413,8 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			if tc.expectLogErr {
 				s.Require().Contains(execResp.RawLog, tc.errMsg)
 			}
-
 		})
 	}
-
 }
 
 func (s *IntegrationTestSuite) getGroupIDFromTxResponse(txResp sdk.TxResponse) string {
@@ -2536,7 +2534,7 @@ func (s *IntegrationTestSuite) createGroupThresholdPolicyWithBalance(adminAddres
 			s.commonFlags...,
 		),
 	)
-	var txResp = sdk.TxResponse{}
+	txResp := sdk.TxResponse{}
 	s.Require().NoError(err, out.String())
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().Equal(uint32(0), txResp.Code, out.String())

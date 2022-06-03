@@ -174,7 +174,6 @@ func provideModule(
 	cdc codec.Codec,
 	amino *codec.LegacyAmino,
 ) (keeper.Keeper, runtime.AppModuleWrapper, runtime.BaseAppOption) {
-
 	k := keeper.NewKeeper(cdc, amino, kvStoreKey, transientStoreKey)
 	m := NewAppModule(k)
 	baseappOpt := func(app *baseapp.BaseApp) {

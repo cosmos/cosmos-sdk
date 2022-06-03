@@ -34,6 +34,8 @@ type Factory struct {
 	memo               string
 	fees               sdk.Coins
 	tip                *tx.Tip
+	feeGranter         sdk.AccAddress
+	feePayer           sdk.AccAddress
 	gasPrices          sdk.DecCoins
 	signMode           signing.SignMode
 	simulateAndExecute bool
@@ -79,6 +81,8 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 		gasAdjustment:      gasAdj,
 		memo:               memo,
 		signMode:           signMode,
+		feeGranter:         clientCtx.FeeGranter,
+		feePayer:           clientCtx.FeePayer,
 	}
 
 	feesStr, _ := flagSet.GetString(flags.FlagFees)
@@ -225,6 +229,18 @@ func (f Factory) WithTimeoutHeight(height uint64) Factory {
 	return f
 }
 
+// WithFeeGranter returns a copy of the Factory with an updated fee granter.
+func (f Factory) WithFeeGranter(fg sdk.AccAddress) Factory {
+	f.feeGranter = fg
+	return f
+}
+
+// WithFeePayer returns a copy of the Factory with an updated fee granter.
+func (f Factory) WithFeePayer(fp sdk.AccAddress) Factory {
+	f.feePayer = fp
+	return f
+}
+
 // BuildUnsignedTx builds a transaction to be signed given a set of messages.
 // Once created, the fee, memo, and messages are set.
 func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
@@ -264,6 +280,8 @@ func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
 	tx.SetMemo(f.memo)
 	tx.SetFeeAmount(fees)
 	tx.SetGasLimit(f.gas)
+	tx.SetFeeGranter(f.feeGranter)
+	tx.SetFeePayer(f.feePayer)
 	tx.SetTimeoutHeight(f.TimeoutHeight())
 
 	return tx, nil

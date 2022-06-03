@@ -10,7 +10,6 @@ linters:
     - deadcode
     - depguard
     - dogsled
-    - errcheck
     - exportloopref
     - goconst
     - gocritic

@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"

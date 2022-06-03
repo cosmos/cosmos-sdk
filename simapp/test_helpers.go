@@ -20,8 +20,6 @@ import (
 
 	"cosmossdk.io/math"
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
-	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

@@ -6,11 +6,12 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/depinject"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/depinject"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"

@@ -15,7 +15,7 @@ type rocksDBBatch struct {
 	mgr   *dbManager
 }
 
-var _ db.DBWriter = (*rocksDBBatch)(nil)
+var _ db.Writer = (*rocksDBBatch)(nil)
 
 func (mgr *dbManager) newRocksDBBatch() *rocksDBBatch {
 	return &rocksDBBatch{

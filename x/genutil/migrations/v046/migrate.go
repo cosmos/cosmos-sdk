@@ -37,7 +37,7 @@ func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 		var old stakingtypes.GenesisState
 		clientCtx.Codec.MustUnmarshalJSON(appState[v043staking.ModuleName], &old)
 
-		// delete deprecated x/gov genesis state
+		// delete deprecated x/staking genesis state
 		delete(appState, v043staking.ModuleName)
 
 		// Migrate relative source genesis application state and marshal it into

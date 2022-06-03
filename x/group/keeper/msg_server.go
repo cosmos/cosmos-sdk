@@ -161,7 +161,7 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 				if err != nil {
 					return err
 				}
-				// Substract previous weight from the group total weight.
+				// Subtract previous weight from the group total weight.
 				totalWeight, err = math.SubNonNegative(totalWeight, previousMemberWeight)
 				if err != nil {
 					return err

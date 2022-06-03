@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -70,7 +71,7 @@ func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.P
 	supply := sdk.NewCoins()
 
 	pageRes, err := query.Paginate(supplyStore, pagination, func(key, value []byte) error {
-		var amount sdk.Int
+		var amount math.Int
 		err := amount.Unmarshal(value)
 		if err != nil {
 			return fmt.Errorf("unable to convert amount string to Int %v", err)
@@ -228,7 +229,7 @@ func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
 		}
 	}
 
-	var amount sdk.Int
+	var amount math.Int
 	err := amount.Unmarshal(bz)
 	if err != nil {
 		panic(fmt.Errorf("unable to unmarshal supply value %v", err))
@@ -532,7 +533,7 @@ func (k BaseViewKeeper) IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bo
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		var amount sdk.Int
+		var amount math.Int
 		err := amount.Unmarshal(iterator.Value())
 		if err != nil {
 			panic(fmt.Errorf("unable to unmarshal supply value %v", err))

@@ -43,10 +43,10 @@ type dbTxn struct {
 type dbWriter struct{ dbTxn }
 
 var (
-	_ db.DBConnection = (*MemDB)(nil)
-	_ db.DBReader     = (*dbTxn)(nil)
-	_ db.DBWriter     = (*dbWriter)(nil)
-	_ db.DBReadWriter = (*dbWriter)(nil)
+	_ db.Connection = (*MemDB)(nil)
+	_ db.Reader     = (*dbTxn)(nil)
+	_ db.Writer     = (*dbWriter)(nil)
+	_ db.ReadWriter = (*dbWriter)(nil)
 )
 
 // item is a btree.Item with byte slices as keys and values
@@ -84,7 +84,7 @@ func (dbm *MemDB) Versions() (db.VersionSet, error) {
 }
 
 // Reader implements DBConnection.
-func (dbm *MemDB) Reader() db.DBReader {
+func (dbm *MemDB) Reader() db.Reader {
 	dbm.mtx.RLock()
 	defer dbm.mtx.RUnlock()
 	ret := dbm.newTxn(dbm.btree)
@@ -92,7 +92,7 @@ func (dbm *MemDB) Reader() db.DBReader {
 }
 
 // ReaderAt implements DBConnection.
-func (dbm *MemDB) ReaderAt(version uint64) (db.DBReader, error) {
+func (dbm *MemDB) ReaderAt(version uint64) (db.Reader, error) {
 	dbm.mtx.RLock()
 	defer dbm.mtx.RUnlock()
 	tree, ok := dbm.saved[version]
@@ -104,12 +104,12 @@ func (dbm *MemDB) ReaderAt(version uint64) (db.DBReader, error) {
 }
 
 // Writer implements DBConnection.
-func (dbm *MemDB) Writer() db.DBWriter {
+func (dbm *MemDB) Writer() db.Writer {
 	return dbm.ReadWriter()
 }
 
 // ReadWriter implements DBConnection.
-func (dbm *MemDB) ReadWriter() db.DBReadWriter {
+func (dbm *MemDB) ReadWriter() db.ReadWriter {
 	dbm.mtx.RLock()
 	defer dbm.mtx.RUnlock()
 	atomic.AddInt32(&dbm.openWriters, 1)

@@ -11,7 +11,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	modulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -127,19 +126,11 @@ type genutilInputs struct {
 
 	AccountKeeper types.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
 	StakingKeeper types.StakingKeeper `key:"cosmos.staking.v1.Keeper"`
+	DeliverTx     func(abci.RequestDeliverTx) abci.ResponseDeliverTx
 	Config        client.TxConfig
 }
 
-func provideModule(in genutilInputs) (runtime.AppModuleWrapper, runtime.BaseAppOption) {
-	// this is a total hack to get access to baseapp
-	var bApp *baseapp.BaseApp
-	m := NewAppModule(in.AccountKeeper, in.StakingKeeper, func(tx abci.RequestDeliverTx) abci.ResponseDeliverTx {
-		if bApp == nil {
-			panic("BaseApp not initialized!")
-		}
-		return bApp.DeliverTx(tx)
-	}, in.Config)
-	return runtime.WrapAppModule(m), func(app *baseapp.BaseApp) {
-		bApp = app
-	}
+func provideModule(in genutilInputs) runtime.AppModuleWrapper {
+	m := NewAppModule(in.AccountKeeper, in.StakingKeeper, in.DeliverTx, in.Config)
+	return runtime.WrapAppModule(m)
 }

@@ -42,7 +42,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (cli) [#12028](https://github.com/cosmos/cosmos-sdk/pull/12028) Add the `tendermint key-migrate` to perform Tendermint v0.35 DB key migration.
 
 ### Improvements
-
+* [#12134](https://github.com/cosmos/cosmos-sdk/pull/12134) Use canonical golangci-lint github action, set to use the latest golangci-lint at all times
 * [#12089](https://github.com/cosmos/cosmos-sdk/pull/12089) Mark the `TipDecorator` as beta, don't include it in simapp by default.
 
 ### Bug Fixes

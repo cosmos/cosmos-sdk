@@ -113,7 +113,10 @@ func (l *List) remove(e *Element) *Element {
 }
 
 // move moves e to next to at and returns e.
+<<<<<<< HEAD
 
+=======
+>>>>>>> f5978a59841173e88853ac228023991397be2e47
 func (l *List) move(e, at *Element) *Element {
 	if e == at {
 		return e

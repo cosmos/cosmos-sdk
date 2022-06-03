@@ -16,6 +16,7 @@ import (
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -183,15 +184,19 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-func provideModule(
-	kvStoreKey *store.KVStoreKey,
-	cdc codec.Codec,
-	ak authz.AccountKeeper,
-	bk authz.BankKeeper,
-	registry cdctypes.InterfaceRegistry,
-) (keeper.Keeper, runtime.AppModuleWrapper) {
-	k := keeper.NewKeeper(kvStoreKey, cdc, baseapp.NewMsgServiceRouter(), ak)
-	m := NewAppModule(cdc, k, ak, bk, registry)
+type authzInputs struct {
+	depinject.In
+
+	KVStoreKey    *store.KVStoreKey
+	Cdc           codec.Codec
+	AccountKeeper authz.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
+	BankKeeper    authz.BankKeeper    `key:"cosmos.bank.v1.Keeper"`
+	Registry      cdctypes.InterfaceRegistry
+}
+
+func provideModule(in authzInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
+	k := keeper.NewKeeper(in.KVStoreKey, in.Cdc, baseapp.NewMsgServiceRouter(), in.AccountKeeper)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
 	return k, runtime.WrapAppModule(m)
 }
 

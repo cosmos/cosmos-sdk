@@ -10,8 +10,12 @@ import (
 	"testing"
 	"time"
 
+<<<<<<< HEAD
 	"github.com/cosmos/cosmos-sdk/depinject"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+=======
+
+>>>>>>> 848b2f621471a72be41e4cb523a20f8d452e4a8e
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -22,6 +26,8 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/depinject"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"

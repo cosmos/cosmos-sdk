@@ -59,6 +59,5 @@ func (k BaseKeeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		k.GetAllDenomMetaData(ctx),
 		k.GetAllSendEnabledEntries(ctx),
 	)
-	rv.MigrateSendEnabled()
 	return rv
 }

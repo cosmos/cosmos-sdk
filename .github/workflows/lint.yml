@@ -1,12 +1,12 @@
 name: Lint
 # Lint runs golangci-lint over the entire cosmos-sdk repository
-# This workflow is run on every pull request and push to master
+# This workflow is run on every pull request and push to main
 # The `golangci` will pass without running if no *.{go, mod, sum} files have been changed.
 on:
   pull_request:
   push:
     branches:
-      - master
+      - main
 jobs:
   golangci:
     name: golangci-lint
@@ -22,10 +22,20 @@ jobs:
             **/**.go
             go.mod
             go.sum
+      - name: Get data from Go build cache
+        # if: env.GIT_DIFF
+        if: ${{ false }}
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/golangci-lint
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
       - name: golangci-lint
+        if: env.GIT_DIFF
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
           args: --out-format=tab
           skip-go-installation: true
-        if: env.GIT_DIFF

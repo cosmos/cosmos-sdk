@@ -3,6 +3,7 @@ package client_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"os"
 	"strings"
 	"testing"
@@ -25,7 +26,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestContext_PrintObject(t *testing.T) {
+func TestContext_PrintProto(t *testing.T) {
 	ctx := client.Context{}
 
 	animal := &testdata.Dog{
@@ -39,9 +40,7 @@ func TestContext_PrintObject(t *testing.T) {
 		X:      10,
 	}
 
-	//
 	// proto
-	//
 	registry := testdata.NewTestInterfaceRegistry()
 	ctx = ctx.WithCodec(codec.NewProtoCodec(registry))
 
@@ -68,15 +67,28 @@ func TestContext_PrintObject(t *testing.T) {
   size: big
 x: "10"
 `, buf.String())
+}
 
-	//
+func TestContext_PrintObjectLegacy(t *testing.T) {
+	ctx := client.Context{}
+
+	animal := &testdata.Dog{
+		Size_: "big",
+		Name:  "Spot",
+	}
+	any, err := types.NewAnyWithValue(animal)
+	require.NoError(t, err)
+	hasAnimal := &testdata.HasAnimal{
+		Animal: any,
+		X:      10,
+	}
+
 	// amino
-	//
 	amino := testdata.NewTestAmino()
 	ctx = ctx.WithLegacyAmino(&codec.LegacyAmino{Amino: amino})
 
 	// json
-	buf = &bytes.Buffer{}
+	buf := &bytes.Buffer{}
 	ctx = ctx.WithOutput(buf)
 	ctx.OutputFormat = "json"
 	err = ctx.PrintObjectLegacy(hasAnimal)
@@ -100,6 +112,35 @@ value:
       name: Spot
       size: big
   x: "10"
+`, buf.String())
+}
+
+func TestContext_PrintRaw(t *testing.T) {
+	ctx := client.Context{}
+	hasAnimal := json.RawMessage(`{"animal":{"@type":"/testdata.Dog","size":"big","name":"Spot"},"x":"10"}`)
+
+	// json
+	buf := &bytes.Buffer{}
+	ctx = ctx.WithOutput(buf)
+	ctx.OutputFormat = "json"
+	err := ctx.PrintRaw(hasAnimal)
+	require.NoError(t, err)
+	require.Equal(t,
+		`{"animal":{"@type":"/testdata.Dog","size":"big","name":"Spot"},"x":"10"}
+`, buf.String())
+
+	// yaml
+	buf = &bytes.Buffer{}
+	ctx = ctx.WithOutput(buf)
+	ctx.OutputFormat = "text"
+	err = ctx.PrintRaw(hasAnimal)
+	require.NoError(t, err)
+	require.Equal(t,
+		`animal:
+  '@type': /testdata.Dog
+  name: Spot
+  size: big
+x: "10"
 `, buf.String())
 }
 

@@ -11,11 +11,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rs/zerolog"
-
 	cverrors "github.com/cosmos/cosmos-sdk/cosmovisor/errors"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/rs/zerolog"
 )
 
 // environment variable names
@@ -184,11 +183,11 @@ func GetConfigFromEnv() (*Config, error) {
 }
 
 // LogConfigOrError logs either the config details or the error.
-func LogConfigOrError(logger zerolog.Logger, cfg *Config, err error) {
+func LogConfigOrError(logger *zerolog.Logger, cfg *Config, err error) {
 	if cfg == nil && err == nil {
 		return
 	}
-	logger.Info().Msg("Configuration:")
+	logger.Info().Msg("configuration:")
 	switch {
 	case err != nil:
 		cverrors.LogErrors(logger, "configuration errors found", err)
@@ -227,9 +226,9 @@ func (cfg *Config) validate() []error {
 	// if UnsafeSkipBackup is false, check if the DataBackupPath valid
 	switch {
 	case cfg.DataBackupPath == "":
-		errs = append(errs, errors.New(EnvDataBackupPath + " must not be empty"))
+		errs = append(errs, fmt.Errorf("%s must not be empty", EnvDataBackupPath))
 	case !filepath.IsAbs(cfg.DataBackupPath):
-		errs = append(errs, errors.New(cfg.DataBackupPath + " must be an absolute path"))
+		errs = append(errs, fmt.Errorf("%s must be an absolute path", cfg.DataBackupPath))
 	default:
 		switch info, err := os.Stat(cfg.DataBackupPath); {
 		case err != nil:
@@ -281,9 +280,9 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) error {
 	return f.Close()
 }
 
-func (cfg *Config) UpgradeInfo() upgradetypes.Plan {
+func (cfg *Config) UpgradeInfo() (upgradetypes.Plan, error) {
 	if cfg.currentUpgrade.Name != "" {
-		return cfg.currentUpgrade
+		return cfg.currentUpgrade, nil
 	}
 
 	filename := filepath.Join(cfg.Root(), currentLink, upgradekeeper.UpgradeInfoFileName)
@@ -300,12 +299,11 @@ func (cfg *Config) UpgradeInfo() upgradetypes.Plan {
 		goto returnError
 	}
 	cfg.currentUpgrade = u
-	return cfg.currentUpgrade
+	return cfg.currentUpgrade, nil
 
 returnError:
-	Logger.Error().Err(err).Str("filename", filename).Msg("failed to read")
 	cfg.currentUpgrade.Name = "_"
-	return cfg.currentUpgrade
+	return cfg.currentUpgrade, fmt.Errorf("failed to read %q: %w", filename, err)
 }
 
 // checks and validates env option

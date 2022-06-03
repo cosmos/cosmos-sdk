@@ -51,6 +51,7 @@ func GetTxCmd() *cobra.Command {
 	return AuthorizationTxCmd
 }
 
+// NewCmdGrantAuthorization returns a CLI command handler for creating a MsgGrant transaction.
 func NewCmdGrantAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grant <grantee> <authorization_type=\"send\"|\"generic\"|\"delegate\"|\"unbond\"|\"redelegate\"> --from <granter>",
@@ -118,15 +119,25 @@ Examples:
 
 				var delegateLimit *sdk.Coin
 				if limit != "" {
-					spendLimit, err := sdk.ParseCoinsNormalized(limit)
+					spendLimit, err := sdk.ParseCoinNormalized(limit)
+					if err != nil {
+						return err
+					}
+					queryClient := staking.NewQueryClient(clientCtx)
+
+					res, err := queryClient.Params(cmd.Context(), &staking.QueryParamsRequest{})
 					if err != nil {
 						return err
 					}
 
-					if !spendLimit.IsAllPositive() {
+					if spendLimit.Denom != res.Params.BondDenom {
+						return fmt.Errorf("invalid denom %s; coin denom should match the current bond denom %s", spendLimit.Denom, res.Params.BondDenom)
+					}
+
+					if !spendLimit.IsPositive() {
 						return fmt.Errorf("spend-limit should be greater than zero")
 					}
-					delegateLimit = &spendLimit[0]
+					delegateLimit = &spendLimit
 				}
 
 				allowed, err := bech32toValidatorAddresses(allowValidators)
@@ -189,6 +200,7 @@ func getExpireTime(cmd *cobra.Command) (*time.Time, error) {
 	return &e, nil
 }
 
+// NewCmdRevokeAuthorization returns a CLI command handler for creating a MsgRevoke transaction.
 func NewCmdRevokeAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "revoke [grantee] [msg-type-url] --from=[granter]",
@@ -222,6 +234,7 @@ Example:
 	return cmd
 }
 
+// NewCmdExecAuthorization returns a CLI command handler for creating a MsgExec transaction.
 func NewCmdExecAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "exec [tx-json-file] --from [grantee]",
@@ -235,7 +248,6 @@ Example:
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err

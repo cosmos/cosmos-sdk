@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -70,7 +71,7 @@ func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.P
 	supply := sdk.NewCoins()
 
 	pageRes, err := query.Paginate(supplyStore, pagination, func(key, value []byte) error {
-		var amount sdk.Int
+		var amount math.Int
 		err := amount.Unmarshal(value)
 		if err != nil {
 			return fmt.Errorf("unable to convert amount string to Int %v", err)
@@ -100,7 +101,6 @@ func NewBaseKeeper(
 	paramSpace paramtypes.Subspace,
 	blockedAddrs map[string]bool,
 ) BaseKeeper {
-
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -229,7 +229,7 @@ func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
 		}
 	}
 
-	var amount sdk.Int
+	var amount math.Int
 	err := amount.Unmarshal(bz)
 	if err != nil {
 		panic(fmt.Errorf("unable to unmarshal supply value %v", err))
@@ -318,7 +318,6 @@ func (k BaseKeeper) SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metada
 func (k BaseKeeper) SendCoinsFromModuleToAccount(
 	ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins,
 ) error {
-
 	senderAddr := k.ak.GetModuleAddress(senderModule)
 	if senderAddr == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
@@ -336,7 +335,6 @@ func (k BaseKeeper) SendCoinsFromModuleToAccount(
 func (k BaseKeeper) SendCoinsFromModuleToModule(
 	ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins,
 ) error {
-
 	senderAddr := k.ak.GetModuleAddress(senderModule)
 	if senderAddr == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
@@ -355,7 +353,6 @@ func (k BaseKeeper) SendCoinsFromModuleToModule(
 func (k BaseKeeper) SendCoinsFromAccountToModule(
 	ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins,
 ) error {
-
 	recipientAcc := k.ak.GetModuleAccount(ctx, recipientModule)
 	if recipientAcc == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule))
@@ -370,7 +367,6 @@ func (k BaseKeeper) SendCoinsFromAccountToModule(
 func (k BaseKeeper) DelegateCoinsFromAccountToModule(
 	ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins,
 ) error {
-
 	recipientAcc := k.ak.GetModuleAccount(ctx, recipientModule)
 	if recipientAcc == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule))
@@ -389,7 +385,6 @@ func (k BaseKeeper) DelegateCoinsFromAccountToModule(
 func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 	ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins,
 ) error {
-
 	acc := k.ak.GetModuleAccount(ctx, senderModule)
 	if acc == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
@@ -538,7 +533,7 @@ func (k BaseViewKeeper) IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bo
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		var amount sdk.Int
+		var amount math.Int
 		err := amount.Unmarshal(iterator.Value())
 		if err != nil {
 			panic(fmt.Errorf("unable to unmarshal supply value %v", err))

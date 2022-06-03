@@ -75,7 +75,7 @@ func ConvertCoin(coin Coin, denom string) (Coin, error) {
 		return NewCoin(denom, coin.Amount), nil
 	}
 
-	return NewCoin(denom, coin.Amount.ToDec().Mul(srcUnit).Quo(dstUnit).TruncateInt()), nil
+	return NewCoin(denom, NewDecFromInt(coin.Amount).Mul(srcUnit).Quo(dstUnit).TruncateInt()), nil
 }
 
 // ConvertDecCoin attempts to convert a decimal coin to a given denomination. If the given

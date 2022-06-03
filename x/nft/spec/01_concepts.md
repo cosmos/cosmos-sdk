@@ -6,7 +6,7 @@ order: 1
 
 ## Class
 
-`x/nft` module defines a struct `Class` to describe the common characteristics of a class of nft, under this class, you can create a variety of nft, which is equivalent to an erc721 contract for Ethereum. The design is defined in the [ADR 043](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-043-nft-module.md).
+`x/nft` module defines a struct `Class` to describe the common characteristics of a class of nft, under this class, you can create a variety of nft, which is equivalent to an erc721 contract for Ethereum. The design is defined in the [ADR 043](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-043-nft-module.md).
 
 ## NFT
 

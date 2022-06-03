@@ -119,7 +119,7 @@ message QueryValidatorRequest {
 
 // QueryValidatorResponse is response type for the Query/Validator RPC method
 message QueryValidatorResponse {
-  // validator defines the the validator info.
+  // validator defines the validator info.
   Validator validator = 1 [(gogoproto.nullable) = false];
 }
 
@@ -289,7 +289,7 @@ message QueryDelegatorValidatorsRequest {
 // QueryDelegatorValidatorsResponse is response type for the
 // Query/DelegatorValidators RPC method.
 message QueryDelegatorValidatorsResponse {
-  // validators defines the the validators' info of a delegator.
+  // validators defines the validators' info of a delegator.
   repeated Validator validators = 1 [(gogoproto.nullable) = false];
 
   // pagination defines the pagination in the response.
@@ -312,7 +312,7 @@ message QueryDelegatorValidatorRequest {
 // QueryDelegatorValidatorResponse response type for the
 // Query/DelegatorValidator RPC method.
 message QueryDelegatorValidatorResponse {
-  // validator defines the the validator info.
+  // validator defines the validator info.
   Validator validator = 1 [(gogoproto.nullable) = false];
 }
 

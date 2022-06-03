@@ -29,7 +29,7 @@ are only used for genesis can take advantage of the `Module` patterns without ha
 
 The `AppModuleBasic` interface defines the independent methods modules need to implement.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/325be6ff215db457c6fc7668109640cd7fdac461/types/module/module.go#L49-L63
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/types/module/module.go#L47-L60
 
 Let us go through the methods:
 
@@ -38,7 +38,6 @@ Let us go through the methods:
 * `RegisterInterfaces(codectypes.InterfaceRegistry)`: Registers a module's interface types and their concrete implementations as `proto.Message`.
 * `DefaultGenesis(codec.JSONCodec)`: Returns a default [`GenesisState`](./genesis.md#genesisstate) for the module, marshalled to `json.RawMessage`. The default `GenesisState` need to be defined by the module developer and is primarily used for testing.
 * `ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage)`: Used to validate the `GenesisState` defined by a module, given in its `json.RawMessage` form. It will usually unmarshall the `json` before running a custom [`ValidateGenesis`](./genesis.md#validategenesis) function defined by the module developer.
-* `RegisterRESTRoutes(client.Context, *mux.Router)`: Registers the REST routes for the module. These routes will be used to map REST request to the module in order to process them. See [gRPC and REST](../core/grpc_rest.md) for more.
 * `RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)`: Registers gRPC routes for the module.
 * `GetTxCmd()`: Returns the root [`Tx` command](./module-interfaces.md#tx) for the module. The subcommands of this root command are used by end-users to generate new transactions containing [`message`s](./messages-and-queries.md#queries) defined in the module.
 * `GetQueryCmd()`: Return the root [`query` command](./module-interfaces.md#query) for the module. The subcommands of this root command are used by end-users to generate new queries to the subset of the state defined by the module.
@@ -49,7 +48,7 @@ All the `AppModuleBasic` of an application are managed by the [`BasicManager`](#
 
 The `AppModuleGenesis` interface is a simple embedding of the `AppModuleBasic` interface with two added methods.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/325be6ff215db457c6fc7668109640cd7fdac461/types/module/module.go#L152-L158
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/types/module/module.go#L140-L146
 
 Let us go through the two added methods:
 
@@ -62,14 +61,14 @@ It does not have its own manager, and exists separately from [`AppModule`](#appm
 
 The `AppModule` interface defines the inter-dependent methods that modules need to implement.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/b4cce159bcc6a32ac78245c6866dd87c73f3720d/types/module/module.go#L160-L182
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/types/module/module.go#L148-L176
 
 `AppModule`s are managed by the [module manager](#manager). This interface embeds the `AppModuleGenesis` interface so that the manager can access all the independent and genesis inter-dependent methods of the module. This means that a concrete type implementing the `AppModule` interface must either implement all the methods of `AppModuleGenesis` (and by extension `AppModuleBasic`), or include a concrete type that does as parameter.
 
 Let us go through the methods of `AppModule`:
 
 * `RegisterInvariants(sdk.InvariantRegistry)`: Registers the [`invariants`](./invariants.md) of the module. If an invariant deviates from its predicted value, the [`InvariantRegistry`](./invariants.md#registry) triggers appropriate logic (most often the chain will be halted).
-* `Route()`: Returns the route for [`message`s](./messages-and-queries.md#messages) to be routed to the module by [`BaseApp`](../core/baseapp.md#message-routing).
+* `Route()` (deprecated): Returns the route for [`message`s](./messages-and-queries.md#messages) to be routed to the module by [`BaseApp`](../core/baseapp.md#message-routing).
 * `QuerierRoute()` (deprecated): Returns the name of the module's query route, for [`queries`](./messages-and-queries.md#queries) to be routes to the module by [`BaseApp`](../core/baseapp.md#query-routing).
 * `LegacyQuerierHandler(*codec.LegacyAmino)` (deprecated): Returns a [`querier`](./query-services.md#legacy-queriers) given the query `path`, in order to process the `query`.
 * `RegisterServices(Configurator)`: Allows a module to register services.
@@ -106,16 +105,15 @@ Module managers are used to manage collections of `AppModuleBasic` and `AppModul
 
 The `BasicManager` is a structure that lists all the `AppModuleBasic` of an application:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/325be6ff215db457c6fc7668109640cd7fdac461/types/module/module.go#L65-L66
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/types/module/module.go#L62-L72
 
 It implements the following methods:
 
-* `NewBasicManager(modules ...AppModuleBasic)`: Constructor function. It takes a list of the application's `AppModuleBasic` and builds a new `BasicManager`. This function is generally called in the `init()` function of [`app.go`](../basics/app-anatomy.md#core-application-file) to quickly initialize the independent elements of the application's modules (click [here](https://github.com/cosmos/gaia/blob/master/app/app.go#L59-L74) to see an example).
+* `NewBasicManager(modules ...AppModuleBasic)`: Constructor function. It takes a list of the application's `AppModuleBasic` and builds a new `BasicManager`. This function is generally called in the `init()` function of [`app.go`](../basics/app-anatomy.md#core-application-file) to quickly initialize the independent elements of the application's modules (click [here](https://github.com/cosmos/gaia/blob/main/app/app.go#L59-L74) to see an example).
 * `RegisterLegacyAminoCodec(cdc *codec.LegacyAmino)`: Registers the [`codec.LegacyAmino`s](../core/encoding.md#amino) of each of the application's `AppModuleBasic`. This function is usually called early on in the [application's construction](../basics/app-anatomy.md#constructor).
 * `RegisterInterfaces(registry codectypes.InterfaceRegistry)`: Registers interface types and implementations of each of the application's `AppModuleBasic`.
 * `DefaultGenesis(cdc codec.JSONCodec)`: Provides default genesis information for modules in the application by calling the [`DefaultGenesis(cdc codec.JSONCodec)`](./genesis.md#defaultgenesis) function of each module. It is used to construct a default genesis file for the application.
 * `ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEncodingConfig, genesis map[string]json.RawMessage)`: Validates the genesis information modules by calling the [`ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage)`](./genesis.md#validategenesis) function of each module.
-* `RegisterRESTRoutes(ctx client.Context, rtr *mux.Router)`: Registers REST routes for modules by calling the [`RegisterRESTRoutes`](./module-interfaces.md#register-routes) function of each module. This function is usually called function from the `main.go` function of the [application's command-line interface](../core/cli.md).
 * `RegisterGRPCGatewayRoutes(clientCtx client.Context, rtr *runtime.ServeMux)`: Registers gRPC routes for modules.
 * `AddTxCommands(rootTxCmd *cobra.Command)`: Adds modules' transaction commands to the application's [`rootTxCommand`](../core/cli.md#transaction-commands). This function is usually called function from the `main.go` function of the [application's command-line interface](../core/cli.md).
 * `AddQueryCommands(rootQueryCmd *cobra.Command)`: Adds modules' query commands to the application's [`rootQueryCommand`](../core/cli.md#query-commands). This function is usually called function from the `main.go` function of the [application's command-line interface](../core/cli.md).
@@ -124,7 +122,7 @@ It implements the following methods:
 
 The `Manager` is a structure that holds all the `AppModule` of an application, and defines the order of execution between several key components of these modules:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/325be6ff215db457c6fc7668109640cd7fdac461/types/module/module.go#L223-L231
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/types/module/module.go#L216-L225
 
 The module manager is used throughout the application whenever an action on a collection of modules is required. It implements the following methods:
 
@@ -135,6 +133,7 @@ The module manager is used throughout the application whenever an action on a co
 * `SetOrderExportGenesis(moduleNames ...string)`: Sets the order in which the [`ExportGenesis`](./genesis.md#exportgenesis) function of each module will be called in case of an export. This function is generally called from the application's main [constructor function](../basics/app-anatomy.md#constructor-function).
 * `SetOrderBeginBlockers(moduleNames ...string)`: Sets the order in which the `BeginBlock()` function of each module will be called at the beginning of each block. This function is generally called from the application's main [constructor function](../basics/app-anatomy.md#constructor-function).
 * `SetOrderEndBlockers(moduleNames ...string)`: Sets the order in which the `EndBlock()` function of each module will be called at the end of each block. This function is generally called from the application's main [constructor function](../basics/app-anatomy.md#constructor-function).
+* `SetOrderMigrations(moduleNames ...string)`: Sets the order of migrations to be run. If not set then migrations will be run with an order defined in `DefaultMigrationsOrder`.
 * `RegisterInvariants(ir sdk.InvariantRegistry)`: Registers the [invariants](./invariants.md) of each module.
 * `RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter, legacyQuerierCdc *codec.LegacyAmino)`: Registers legacy [`Msg`](./messages-and-queries.md#messages) and [`querier`](./query-services.md#legacy-queriers) routes.
 * `RegisterServices(cfg Configurator)`: Registers all module services.
@@ -145,7 +144,7 @@ The module manager is used throughout the application whenever an action on a co
 
 Here's an example of a concrete integration within an application:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/2323f1ac0e9a69a0da6b43693061036134193464/simapp/app.go#L315-L362
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/simapp/app.go#L342-L409
 
 ## Next {hide}
 

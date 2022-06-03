@@ -9,13 +9,12 @@ import (
 
 // Re-export relevant original store types
 type (
-	StoreKey       = v1.StoreKey
-	StoreType      = v1.StoreType
-	CommitID       = v1.CommitID
-	StoreUpgrades  = v1.StoreUpgrades
-	StoreRename    = v1.StoreRename
-	Iterator       = v1.Iterator
-	PruningOptions = v1.PruningOptions
+	StoreKey      = v1.StoreKey
+	StoreType     = v1.StoreType
+	CommitID      = v1.CommitID
+	StoreUpgrades = v1.StoreUpgrades
+	StoreRename   = v1.StoreRename
+	Iterator      = v1.Iterator
 
 	TraceContext  = v1.TraceContext
 	WriteListener = v1.WriteListener
@@ -46,10 +45,6 @@ const (
 )
 
 var (
-	PruneDefault    = v1.PruneDefault
-	PruneEverything = v1.PruneEverything
-	PruneNothing    = v1.PruneNothing
-
 	NewKVStoreKey                = v1.NewKVStoreKey
 	PrefixEndBytes               = v1.PrefixEndBytes
 	KVStorePrefixIterator        = v1.KVStorePrefixIterator

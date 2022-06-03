@@ -149,7 +149,7 @@ and client developer UX.
 
 ### Safe usage of `Any`
 
-By default, the [gogo protobuf implementation of `Any`](https://godoc.org/github.com/gogo/protobuf/types)
+By default, the [gogo protobuf implementation of `Any`](https://pkg.go.dev/github.com/gogo/protobuf/types)
 uses [global type registration]( https://github.com/gogo/protobuf/blob/master/proto/properties.go#L540)
 to decode values packed in `Any` into concrete
 go types. This introduces a vulnerability where any malicious module

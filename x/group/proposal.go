@@ -8,7 +8,6 @@ import (
 
 func (p *Proposal) GetMsgs() ([]sdk.Msg, error) {
 	return tx.GetMsgs(p.Messages, "proposal")
-
 }
 
 func (p *Proposal) SetMsgs(msgs []sdk.Msg) error {

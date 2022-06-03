@@ -231,7 +231,8 @@ var _ orm.Validateable = GroupPolicyInfo{}
 
 // NewGroupPolicyInfo creates a new GroupPolicyInfo instance
 func NewGroupPolicyInfo(address sdk.AccAddress, group uint64, admin sdk.AccAddress, metadata string,
-	version uint64, decisionPolicy DecisionPolicy, createdAt time.Time) (GroupPolicyInfo, error) {
+	version uint64, decisionPolicy DecisionPolicy, createdAt time.Time,
+) (GroupPolicyInfo, error) {
 	p := GroupPolicyInfo{
 		Address:   address.String(),
 		GroupId:   group,
@@ -348,15 +349,26 @@ func (g GroupMember) ValidateBasic() error {
 		return sdkerrors.Wrap(errors.ErrEmpty, "group member's group id")
 	}
 
-	err := g.Member.ValidateBasic()
+	err := MemberToMemberRequest(g.Member).ValidateBasic()
 	if err != nil {
 		return sdkerrors.Wrap(err, "group member")
 	}
 	return nil
 }
 
-func (p Proposal) ValidateBasic() error {
+// MemberToMemberRequest converts a `Member` (used for storage)
+// to a `MemberRequest` (used in requests). The only difference
+// between the two is that `MemberRequest` doesn't have any `AddedAt` field
+// since it cannot be set as part of requests.
+func MemberToMemberRequest(m *Member) MemberRequest {
+	return MemberRequest{
+		Address:  m.Address,
+		Weight:   m.Weight,
+		Metadata: m.Metadata,
+	}
+}
 
+func (p Proposal) ValidateBasic() error {
 	if p.Id == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
 	}
@@ -400,7 +412,6 @@ func (v Vote) PrimaryKeyFields() []interface{} {
 var _ orm.Validateable = Vote{}
 
 func (v Vote) ValidateBasic() error {
-
 	_, err := sdk.AccAddressFromBech32(v.Voter)
 	if err != nil {
 		return sdkerrors.Wrap(err, "voter")

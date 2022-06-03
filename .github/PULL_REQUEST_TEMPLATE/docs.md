@@ -15,9 +15,9 @@ please add links to any relevant follow up issues.*
 I have...
 
 - [ ] included the correct `docs:` prefix in the PR title
-- [ ] targeted the correct branch (see [PR Targeting](https://github.com/cosmos/cosmos-sdk/blob/master/CONTRIBUTING.md#pr-targeting))
+- [ ] targeted the correct branch (see [PR Targeting](https://github.com/cosmos/cosmos-sdk/blob/main/CONTRIBUTING.md#pr-targeting))
 - [ ] provided a link to the relevant issue or specification
-- [ ] followed the [documentation writing guidelines](https://github.com/cosmos/cosmos-sdk/blob/master/docs/DOC_WRITING_GUIDELINES.md)
+- [ ] followed the [documentation writing guidelines](https://github.com/cosmos/cosmos-sdk/blob/main/docs/DOC_WRITING_GUIDELINES.md)
 - [ ] reviewed "Files changed" and left comments if necessary
 - [ ] confirmed all CI checks have passed
 

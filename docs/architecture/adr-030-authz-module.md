@@ -6,6 +6,7 @@
 * 2020-10-12: Updated Draft
 * 2020-11-13: Accepted
 * 2020-05-06: proto API updates, use `sdk.Msg` instead of `sdk.ServiceMsg` (the latter concept was removed from Cosmos SDK)
+* 2022-04-20: Updated the `SendAuthorization` proto docs to clarify the `SpendLimit` is a required field. (Generic authorization can be used with bank msg type url to create limit less bank authorization)
 
 ## Status
 
@@ -87,8 +88,8 @@ a `SpendLimit` and updates it down to zero:
 ```go
 type SendAuthorization struct {
 	// SpendLimit specifies the maximum amount of tokens that can be spent
-	// by this authorization and will be updated as tokens are spent. If it is
-	// empty, there is no spend limit and any amount of coins can be spent.
+	// by this authorization and will be updated as tokens are spent. This field is required. (Generic authorization 
+	// can be used with bank msg type url to create limit less bank authorization).
 	SpendLimit sdk.Coins
 }
 

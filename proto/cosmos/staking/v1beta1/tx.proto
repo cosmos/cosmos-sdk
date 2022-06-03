@@ -35,6 +35,8 @@ service Msg {
 
   // CancelUnbondingDelegation defines a method for performing canceling the unbonding delegation
   // and delegate back to previous validator.
+  //
+  // Since: cosmos-sdk 0.46
   rpc CancelUnbondingDelegation(MsgCancelUnbondingDelegation) returns (MsgCancelUnbondingDelegationResponse);
 }
 
@@ -142,6 +144,8 @@ message MsgUndelegateResponse {
 }
 
 // MsgCancelUnbondingDelegation defines the SDK message for performing a cancel unbonding delegation for delegator
+//
+// Since: cosmos-sdk 0.46
 message MsgCancelUnbondingDelegation{
   option (cosmos.msg.v1.signer) = "delegator_address";
   option (gogoproto.equal)           = false;
@@ -156,4 +160,6 @@ message MsgCancelUnbondingDelegation{
 }
 
 // MsgCancelUnbondingDelegationResponse
+//
+// Since: cosmos-sdk 0.46
 message MsgCancelUnbondingDelegationResponse{}

@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/math"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -60,14 +62,13 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	accountStore := k.getAccountStore(sdkCtx, addr)
 
 	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, value []byte) error {
-		var amount sdk.Int
+		var amount math.Int
 		if err := amount.Unmarshal(value); err != nil {
 			return err
 		}
 		balances = append(balances, sdk.NewCoin(string(key), amount))
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
 	}
@@ -167,7 +168,6 @@ func (k BaseKeeper) DenomsMetadata(c context.Context, req *types.QueryDenomsMeta
 		metadatas = append(metadatas, metadata)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -204,7 +204,6 @@ func (k BaseKeeper) DenomOwners(
 	goCtx context.Context,
 	req *types.QueryDenomOwnersRequest,
 ) (*types.QueryDenomOwnersResponse, error) {
-
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -239,7 +238,6 @@ func (k BaseKeeper) DenomOwners(
 			return true, nil
 		},
 	)
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

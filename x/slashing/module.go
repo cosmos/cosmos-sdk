@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -68,11 +67,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 	return types.ValidateGenesis(data)
 }
 
-// RegisterRESTRoutes registers the REST routes for the slashing module.
-// Deprecated: RegisterRESTRoutes is deprecated. `x/slashing` legacy REST implementation
-// has been removed from the SDK.
-func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {}
-
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the slashig module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
@@ -97,11 +91,11 @@ type AppModule struct {
 	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
-	stakingKeeper stakingkeeper.Keeper
+	stakingKeeper *stakingkeeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, sk stakingkeeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, sk *stakingkeeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
@@ -148,14 +142,14 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, am.keeper, am.stakingKeeper, &genesisState)
+	am.keeper.InitGenesis(ctx, am.stakingKeeper, &genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the slashing
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs := ExportGenesis(ctx, am.keeper)
+	gs := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
 }
 

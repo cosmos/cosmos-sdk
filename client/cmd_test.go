@@ -70,6 +70,7 @@ func TestSetCmdClientContextHandler(t *testing.T) {
 		}
 
 		c.Flags().String(flags.FlagChainID, "", "network chain ID")
+		c.Flags().String(flags.FlagHome, "", "home dir")
 
 		return c
 	}
@@ -89,6 +90,14 @@ func TestSetCmdClientContextHandler(t *testing.T) {
 			initClientCtx.WithChainID("new-chain-id"),
 			[]string{
 				fmt.Sprintf("--%s=new-chain-id", flags.FlagChainID),
+			},
+		},
+		{
+			"flags set with space",
+			initClientCtx.WithHomeDir("/tmp/dir"),
+			[]string{
+				fmt.Sprintf("--%s", flags.FlagHome),
+				"/tmp/dir",
 			},
 		},
 	}

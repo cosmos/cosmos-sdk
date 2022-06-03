@@ -10,20 +10,17 @@ parent:
 ![banner](docs/cosmos-sdk-image.jpg)
 
 <div align="center">
-  <a href="https://github.com/cosmos/cosmos-sdk/releases/latest">
-    <img alt="Version" src="https://img.shields.io/github/tag/cosmos/cosmos-sdk.svg" />
-  </a>
-  <a href="https://github.com/cosmos/cosmos-sdk/blob/master/LICENSE">
+  <a href="https://github.com/cosmos/cosmos-sdk/blob/main/LICENSE">
     <img alt="License: Apache-2.0" src="https://img.shields.io/github/license/cosmos/cosmos-sdk.svg" />
   </a>
   <a href="https://pkg.go.dev/github.com/cosmos/cosmos-sdk?tab=doc">
-    <img alt="GoDoc" src="https://godoc.org/github.com/cosmos/cosmos-sdk?status.svg" />
+    <img alt="GoDoc" src="https://pkg.go.dev/github.com/cosmos/cosmos-sdk?status.svg" />
   </a>
   <a href="https://goreportcard.com/report/github.com/cosmos/cosmos-sdk">
     <img alt="Go report card" src="https://goreportcard.com/badge/github.com/cosmos/cosmos-sdk" />
   </a>
   <a href="https://codecov.io/gh/cosmos/cosmos-sdk">
-    <img alt="Code Coverage" src="https://codecov.io/gh/cosmos/cosmos-sdk/branch/master/graph/badge.svg" />
+    <img alt="Code Coverage" src="https://codecov.io/gh/cosmos/cosmos-sdk/branch/main/graph/badge.svg" />
   </a>
 </div>
 <div align="center">

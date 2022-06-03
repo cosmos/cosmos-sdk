@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	"cosmossdk.io/math"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,7 +33,7 @@ var (
 // Delegator address and validator address are the same.
 func NewMsgCreateValidator(
 	valAddr sdk.ValAddress, pubKey cryptotypes.PubKey, //nolint:interfacer
-	selfDelegation sdk.Coin, description Description, commission CommissionRates, minSelfDelegation sdk.Int,
+	selfDelegation sdk.Coin, description Description, commission CommissionRates, minSelfDelegation math.Int,
 ) (*MsgCreateValidator, error) {
 	var pkAny *codectypes.Any
 	if pubKey != nil {
@@ -79,7 +79,7 @@ func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgCreateValidator) GetSignBytes() []byte {
-	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	bz := ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -140,7 +140,7 @@ func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) 
 
 // NewMsgEditValidator creates a new MsgEditValidator instance
 //nolint:interfacer
-func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec, newMinSelfDelegation *sdk.Int) *MsgEditValidator {
+func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec, newMinSelfDelegation *math.Int) *MsgEditValidator {
 	return &MsgEditValidator{
 		Description:       description,
 		CommissionRate:    newRate,
@@ -163,7 +163,7 @@ func (msg MsgEditValidator) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes implements the sdk.Msg interface.
 func (msg MsgEditValidator) GetSignBytes() []byte {
-	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	bz := ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -217,7 +217,7 @@ func (msg MsgDelegate) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes implements the sdk.Msg interface.
 func (msg MsgDelegate) GetSignBytes() []byte {
-	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	bz := ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -267,7 +267,7 @@ func (msg MsgBeginRedelegate) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes implements the sdk.Msg interface.
 func (msg MsgBeginRedelegate) GetSignBytes() []byte {
-	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	bz := ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -317,7 +317,7 @@ func (msg MsgUndelegate) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes implements the sdk.Msg interface.
 func (msg MsgUndelegate) GetSignBytes() []byte {
-	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	bz := ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -365,7 +365,7 @@ func (msg MsgCancelUnbondingDelegation) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes implements the sdk.Msg interface.
 func (msg MsgCancelUnbondingDelegation) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic implements the sdk.Msg interface.

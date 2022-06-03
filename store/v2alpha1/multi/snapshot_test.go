@@ -17,6 +17,7 @@ import (
 
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/db/memdb"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/types"
@@ -24,7 +25,7 @@ import (
 
 func multiStoreConfig(t *testing.T, stores int) StoreConfig {
 	opts := DefaultStoreConfig()
-	opts.Pruning = types.PruneNothing
+	opts.Pruning = pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)
 
 	for i := 0; i < stores; i++ {
 		sKey := types.NewKVStoreKey(fmt.Sprintf("store%d", i))

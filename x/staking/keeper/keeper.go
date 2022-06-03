@@ -32,7 +32,7 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec, key storetypes.StoreKey, ak types.AccountKeeper, bk types.BankKeeper,
 	ps paramtypes.Subspace,
-) Keeper {
+) *Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
@@ -47,7 +47,7 @@ func NewKeeper(
 		panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
 	}
 
-	return Keeper{
+	return &Keeper{
 		storeKey:   key,
 		cdc:        cdc,
 		authKeeper: ak,
@@ -63,14 +63,12 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // Set the validator hooks
-func (k *Keeper) SetHooks(sh types.StakingHooks) *Keeper {
+func (k *Keeper) SetHooks(sh types.StakingHooks) {
 	if k.hooks != nil {
 		panic("cannot set validator hooks twice")
 	}
 
 	k.hooks = sh
-
-	return k
 }
 
 // Load the last total validator power.

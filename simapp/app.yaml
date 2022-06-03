@@ -59,3 +59,7 @@ modules:
     config:
       "@type": cosmos.capability.module.v1.Module
       seal_keeper: true
+      
+  - name: staking
+    config:
+      "@type": cosmos.staking.module.v1.Module

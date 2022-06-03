@@ -137,7 +137,7 @@ func (ms dbMapStore) Get(key []byte) ([]byte, error) {
 		return nil, err
 	}
 	if val == nil {
-		return nil, &smt.InvalidKeyError{key}
+		return nil, &smt.InvalidKeyError{Key: key}
 	}
 	return val, nil
 }

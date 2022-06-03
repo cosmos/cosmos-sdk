@@ -76,14 +76,14 @@ func (dbm *MemDB) Close() error {
 	return nil
 }
 
-// Versions implements DBConnection.
+// Versions implements Connection.
 func (dbm *MemDB) Versions() (db.VersionSet, error) {
 	dbm.mtx.RLock()
 	defer dbm.mtx.RUnlock()
 	return dbm.vmgr, nil
 }
 
-// Reader implements DBConnection.
+// Reader implements Connection.
 func (dbm *MemDB) Reader() db.Reader {
 	dbm.mtx.RLock()
 	defer dbm.mtx.RUnlock()
@@ -91,7 +91,7 @@ func (dbm *MemDB) Reader() db.Reader {
 	return &ret
 }
 
-// ReaderAt implements DBConnection.
+// ReaderAt implements Connection.
 func (dbm *MemDB) ReaderAt(version uint64) (db.Reader, error) {
 	dbm.mtx.RLock()
 	defer dbm.mtx.RUnlock()
@@ -103,12 +103,12 @@ func (dbm *MemDB) ReaderAt(version uint64) (db.Reader, error) {
 	return &ret, nil
 }
 
-// Writer implements DBConnection.
+// Writer implements Connection.
 func (dbm *MemDB) Writer() db.Writer {
 	return dbm.ReadWriter()
 }
 
-// ReadWriter implements DBConnection.
+// ReadWriter implements Connection.
 func (dbm *MemDB) ReadWriter() db.ReadWriter {
 	dbm.mtx.RLock()
 	defer dbm.mtx.RUnlock()
@@ -134,12 +134,12 @@ func (dbm *MemDB) save(target uint64) (uint64, error) {
 	return target, nil
 }
 
-// SaveVersion implements DBConnection.
+// SaveVersion implements Connection.
 func (dbm *MemDB) SaveNextVersion() (uint64, error) {
 	return dbm.save(0)
 }
 
-// SaveNextVersion implements DBConnection.
+// SaveNextVersion implements Connection.
 func (dbm *MemDB) SaveVersion(target uint64) error {
 	if target == 0 {
 		return db.ErrInvalidVersion
@@ -148,7 +148,7 @@ func (dbm *MemDB) SaveVersion(target uint64) error {
 	return err
 }
 
-// DeleteVersion implements DBConnection.
+// DeleteVersion implements Connection.
 func (dbm *MemDB) DeleteVersion(target uint64) error {
 	dbm.mtx.Lock()
 	defer dbm.mtx.Unlock()
@@ -300,7 +300,7 @@ func (dbm *MemDB) Print() error {
 	return nil
 }
 
-// Stats implements DBConnection.
+// Stats implements Connection.
 func (dbm *MemDB) Stats() map[string]string {
 	dbm.mtx.RLock()
 	defer dbm.mtx.RUnlock()

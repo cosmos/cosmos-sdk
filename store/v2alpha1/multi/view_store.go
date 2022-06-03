@@ -123,7 +123,7 @@ func (store *Store) getView(version int64) (ret *viewStore, err error) {
 		}()
 	}
 	// Now read this version's schema
-	schemaView := prefixdb.NewPrefixReader(stateView, schemaPrefix)
+	schemaView := prefixdb.NewReader(stateView, schemaPrefix)
 	defer func() {
 		if err != nil {
 			err = util.CombineErrors(err, schemaView.Discard(), "schemaView.Discard also failed")
@@ -162,8 +162,8 @@ func (vs *viewStore) getSubstore(key string) (*viewSubstore, error) {
 		return cached, nil
 	}
 	pfx := substorePrefix(key)
-	stateR := prefixdb.NewPrefixReader(vs.stateView, pfx)
-	stateCommitmentR := prefixdb.NewPrefixReader(vs.stateCommitmentView, pfx)
+	stateR := prefixdb.NewReader(vs.stateView, pfx)
+	stateCommitmentR := prefixdb.NewReader(vs.stateCommitmentView, pfx)
 	rootHash, err := stateR.Get(merkleRootKey)
 	if err != nil {
 		return nil, err
@@ -171,8 +171,8 @@ func (vs *viewStore) getSubstore(key string) (*viewSubstore, error) {
 	return &viewSubstore{
 		root:                 vs,
 		name:                 key,
-		dataBucket:           prefixdb.NewPrefixReader(stateR, dataPrefix),
-		indexBucket:          prefixdb.NewPrefixReader(stateR, indexPrefix),
+		dataBucket:           prefixdb.NewReader(stateR, dataPrefix),
+		indexBucket:          prefixdb.NewReader(stateR, indexPrefix),
 		stateCommitmentStore: loadSMT(dbm.ReaderAsReadWriter(stateCommitmentR), rootHash),
 	}, nil
 }

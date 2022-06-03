@@ -201,7 +201,7 @@ func (b *BadgerDB) Close() error {
 	return b.db.Close()
 }
 
-// Versions implements DBConnection.
+// Versions implements Connection.
 // Returns a VersionSet that is valid until the next call to SaveVersion or DeleteVersion.
 func (b *BadgerDB) Versions() (db.VersionSet, error) {
 	b.mtx.RLock()
@@ -219,12 +219,12 @@ func (b *BadgerDB) save(target uint64) (uint64, error) {
 	return b.vmgr.Save(target)
 }
 
-// SaveNextVersion implements DBConnection.
+// SaveNextVersion implements Connection.
 func (b *BadgerDB) SaveNextVersion() (uint64, error) {
 	return b.save(0)
 }
 
-// SaveVersion implements DBConnection.
+// SaveVersion implements Connection.
 func (b *BadgerDB) SaveVersion(target uint64) error {
 	if target == 0 {
 		return db.ErrInvalidVersion

@@ -32,16 +32,16 @@ var (
 
 // NewReadereader returns a DBReader that only has access to the subset of DB keys
 // that contain the given prefix.
-func NewReadereader(dbr db.Reader, prefix []byte) Reader {
+func NewReader(dbr db.Reader, prefix []byte) Reader {
 	return Reader{
 		prefix: prefix,
 		db:     dbr,
 	}
 }
 
-// NewReadereadWriter returns a DBReader that only has access to the subset of DB keys
+// NewReadWriter returns a DBReader that only has access to the subset of DB keys
 // that contain the given prefix.
-func NewReadereadWriter(dbrw db.ReadWriter, prefix []byte) ReadWriter {
+func NewReadWriter(dbrw db.ReadWriter, prefix []byte) ReadWriter {
 	return ReadWriter{
 		prefix: prefix,
 		db:     dbrw,
@@ -50,7 +50,7 @@ func NewReadereadWriter(dbrw db.ReadWriter, prefix []byte) ReadWriter {
 
 // NewWriterriter returns a DBWriter that reads/writes only from the subset of DB keys
 // that contain the given prefix
-func NewWriterriter(dbw db.Writer, prefix []byte) Writer {
+func NewWriter(dbw db.Writer, prefix []byte) Writer {
 	return Writer{
 		prefix: prefix,
 		db:     dbw,
@@ -136,22 +136,22 @@ func (pdb ReadWriter) Delete(key []byte) error {
 
 // Get implements DBReadWriter.
 func (pdb ReadWriter) Get(key []byte) ([]byte, error) {
-	return NewReadereader(pdb.db, pdb.prefix).Get(key)
+	return NewReader(pdb.db, pdb.prefix).Get(key)
 }
 
 // Has implements DBReadWriter.
 func (pdb ReadWriter) Has(key []byte) (bool, error) {
-	return NewReadereader(pdb.db, pdb.prefix).Has(key)
+	return NewReader(pdb.db, pdb.prefix).Has(key)
 }
 
 // Iterator implements DBReadWriter.
 func (pdb ReadWriter) Iterator(start, end []byte) (db.Iterator, error) {
-	return NewReadereader(pdb.db, pdb.prefix).Iterator(start, end)
+	return NewReader(pdb.db, pdb.prefix).Iterator(start, end)
 }
 
 // ReverseIterator implements DBReadWriter.
 func (pdb ReadWriter) ReverseIterator(start, end []byte) (db.Iterator, error) {
-	return NewReadereader(pdb.db, pdb.prefix).ReverseIterator(start, end)
+	return NewReader(pdb.db, pdb.prefix).ReverseIterator(start, end)
 }
 
 // Close implements DBReadWriter.

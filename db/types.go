@@ -26,7 +26,7 @@ var (
 	ErrInvalidVersion = errors.New("invalid version")
 )
 
-// DBConnection represents a connection to a versioned database.
+// Connection represents a connection to a versioned database.
 // Records are accessed via transaction objects, and must be safe for concurrent creation
 // and read and write access.
 // Past versions are only accessible read-only.

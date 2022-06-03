@@ -62,7 +62,7 @@ type StoreConfig struct {
 	InitialVersion uint64
 	// The backing DB to use for the state commitment Merkle tree data.
 	// If nil, Merkle data is stored in the state storage DB under a separate prefix.
-	StateCommitmentDB dbm.DBConnection
+	StateCommitmentDB dbm.Connection
 
 	prefixRegistry
 	PersistentCache types.MultiStorePersistentCache
@@ -82,10 +82,10 @@ type StoreSchema map[string]types.StoreType
 // * The state commitment store of each substore consists of a independent SMT.
 // * The state commitment of the root store consists of a Merkle map of all registered persistent substore names to the root hash of their corresponding SMTs
 type Store struct {
-	stateDB            dbm.DBConnection
-	stateTxn           dbm.DBReadWriter
-	StateCommitmentDB  dbm.DBConnection
-	stateCommitmentTxn dbm.DBReadWriter
+	stateDB            dbm.Connection
+	stateTxn           dbm.ReadWriter
+	StateCommitmentDB  dbm.Connection
+	stateCommitmentTxn dbm.ReadWriter
 
 	schema StoreSchema
 	mem    *mem.Store
@@ -104,8 +104,8 @@ type Store struct {
 type substore struct {
 	root                 *Store
 	name                 string
-	dataBucket           dbm.DBReadWriter
-	indexBucket          dbm.DBReadWriter
+	dataBucket           dbm.ReadWriter
+	indexBucket          dbm.ReadWriter
 	stateCommitmentStore *smt.Store
 }
 
@@ -118,8 +118,8 @@ type cacheStore struct {
 
 // Read-only store for querying past versions
 type viewStore struct {
-	stateView           dbm.DBReader
-	stateCommitmentView dbm.DBReader
+	stateView           dbm.Reader
+	stateCommitmentView dbm.Reader
 	substoreCache       map[string]*viewSubstore
 	schema              StoreSchema
 }
@@ -127,8 +127,8 @@ type viewStore struct {
 type viewSubstore struct {
 	root                 *viewStore
 	name                 string
-	dataBucket           dbm.DBReader
-	indexBucket          dbm.DBReader
+	dataBucket           dbm.Reader
+	indexBucket          dbm.Reader
 	stateCommitmentStore *smt.Store
 }
 
@@ -193,7 +193,7 @@ func (ss StoreSchema) equal(that StoreSchema) bool {
 }
 
 // Parses a schema from the DB
-func readSavedSchema(bucket dbm.DBReader) (*prefixRegistry, error) {
+func readSavedSchema(bucket dbm.Reader) (*prefixRegistry, error) {
 	ret := prefixRegistry{StoreSchema: StoreSchema{}}
 	it, err := bucket.Iterator(nil, nil)
 	if err != nil {
@@ -215,7 +215,7 @@ func readSavedSchema(bucket dbm.DBReader) (*prefixRegistry, error) {
 
 // NewStore constructs a MultiStore directly from a database.
 // Creates a new store if no data exists; otherwise loads existing data.
-func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
+func NewStore(db dbm.Connection, opts StoreConfig) (ret *Store, err error) {
 	versions, err := db.Versions()
 	if err != nil {
 		return
@@ -277,7 +277,7 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 	}
 
 	// Now load the substore schema
-	schemaView := prefixdb.NewPrefixReader(ret.stateDB.Reader(), schemaPrefix)
+	schemaView := prefixdb.NewReader(ret.stateDB.Reader(), schemaPrefix)
 	defer func() {
 		if err != nil {
 			err = util.CombineErrors(err, schemaView.Discard(), "schemaView.Discard also failed")
@@ -309,7 +309,7 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 			return
 		}
 	}
-	schemaWriter := prefixdb.NewPrefixWriter(ret.stateTxn, schemaPrefix)
+	schemaWriter := prefixdb.NewWriter(ret.stateTxn, schemaPrefix)
 	it, err := schemaView.Iterator(nil, nil)
 	if err != nil {
 		return
@@ -368,7 +368,7 @@ func (pr *prefixRegistry) migrate(store *Store, upgrades types.StoreUpgrades) er
 		delete(pr.StoreSchema, key)
 
 		pfx := substorePrefix(key)
-		subReader := prefixdb.NewPrefixReader(reader, pfx)
+		subReader := prefixdb.NewReader(reader, pfx)
 		it, err := subReader.Iterator(nil, nil)
 		if err != nil {
 			return err
@@ -378,7 +378,7 @@ func (pr *prefixRegistry) migrate(store *Store, upgrades types.StoreUpgrades) er
 		}
 		it.Close()
 		if store.StateCommitmentDB != nil {
-			subReader = prefixdb.NewPrefixReader(scReader, pfx)
+			subReader = prefixdb.NewReader(scReader, pfx)
 			it, err = subReader.Iterator(nil, nil)
 			if err != nil {
 				return err
@@ -406,8 +406,8 @@ func (pr *prefixRegistry) migrate(store *Store, upgrades types.StoreUpgrades) er
 
 		oldPrefix := substorePrefix(rename.OldKey)
 		newPrefix := substorePrefix(rename.NewKey)
-		subReader := prefixdb.NewPrefixReader(reader, oldPrefix)
-		subWriter := prefixdb.NewPrefixWriter(store.stateTxn, newPrefix)
+		subReader := prefixdb.NewReader(reader, oldPrefix)
+		subWriter := prefixdb.NewWriter(store.stateTxn, newPrefix)
 		it, err := subReader.Iterator(nil, nil)
 		if err != nil {
 			return err
@@ -417,8 +417,8 @@ func (pr *prefixRegistry) migrate(store *Store, upgrades types.StoreUpgrades) er
 		}
 		it.Close()
 		if store.StateCommitmentDB != nil {
-			subReader = prefixdb.NewPrefixReader(scReader, oldPrefix)
-			subWriter = prefixdb.NewPrefixWriter(store.stateCommitmentTxn, newPrefix)
+			subReader = prefixdb.NewReader(scReader, oldPrefix)
+			subWriter = prefixdb.NewWriter(store.stateCommitmentTxn, newPrefix)
 			it, err = subReader.Iterator(nil, nil)
 			if err != nil {
 				return err
@@ -483,8 +483,8 @@ func (rs *Store) getSubstore(key string) (*substore, error) {
 		return cached, nil
 	}
 	pfx := substorePrefix(key)
-	stateRW := prefixdb.NewPrefixReadWriter(rs.stateTxn, pfx)
-	stateCommitmentRW := prefixdb.NewPrefixReadWriter(rs.stateCommitmentTxn, pfx)
+	stateRW := prefixdb.NewReadWriter(rs.stateTxn, pfx)
+	stateCommitmentRW := prefixdb.NewReadWriter(rs.stateCommitmentTxn, pfx)
 	var stateCommitmentStore *smt.Store
 
 	rootHash, err := stateRW.Get(substoreMerkleRootKey)
@@ -494,15 +494,15 @@ func (rs *Store) getSubstore(key string) (*substore, error) {
 	if rootHash != nil {
 		stateCommitmentStore = loadSMT(stateCommitmentRW, rootHash)
 	} else {
-		smtdb := prefixdb.NewPrefixReadWriter(stateCommitmentRW, smtPrefix)
+		smtdb := prefixdb.NewReadWriter(stateCommitmentRW, smtPrefix)
 		stateCommitmentStore = smt.NewStore(smtdb)
 	}
 
 	return &substore{
 		root:                 rs,
 		name:                 key,
-		dataBucket:           prefixdb.NewPrefixReadWriter(stateRW, dataPrefix),
-		indexBucket:          prefixdb.NewPrefixReadWriter(stateRW, indexPrefix),
+		dataBucket:           prefixdb.NewReadWriter(stateRW, dataPrefix),
+		indexBucket:          prefixdb.NewReadWriter(stateRW, indexPrefix),
 		stateCommitmentStore: stateCommitmentStore,
 	}, nil
 }
@@ -510,10 +510,10 @@ func (rs *Store) getSubstore(key string) (*substore, error) {
 // Resets a substore's state after commit (because root stateTxn has been discarded)
 func (s *substore) refresh(rootHash []byte) {
 	pfx := substorePrefix(s.name)
-	stateRW := prefixdb.NewPrefixReadWriter(s.root.stateTxn, pfx)
-	stateCommitmentRW := prefixdb.NewPrefixReadWriter(s.root.stateCommitmentTxn, pfx)
-	s.dataBucket = prefixdb.NewPrefixReadWriter(stateRW, dataPrefix)
-	s.indexBucket = prefixdb.NewPrefixReadWriter(stateRW, indexPrefix)
+	stateRW := prefixdb.NewReadWriter(s.root.stateTxn, pfx)
+	stateCommitmentRW := prefixdb.NewReadWriter(s.root.stateCommitmentTxn, pfx)
+	s.dataBucket = prefixdb.NewReadWriter(stateRW, dataPrefix)
+	s.indexBucket = prefixdb.NewReadWriter(stateRW, indexPrefix)
 	s.stateCommitmentStore = loadSMT(stateCommitmentRW, rootHash)
 }
 
@@ -584,7 +584,7 @@ func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
 	// Update substore Merkle roots
 	for key, storeHash := range storeHashes {
 		pfx := substorePrefix(key)
-		stateW := prefixdb.NewPrefixReadWriter(s.stateTxn, pfx)
+		stateW := prefixdb.NewReadWriter(s.stateTxn, pfx)
 		if err = stateW.Set(substoreMerkleRootKey, storeHash); err != nil {
 			return
 		}
@@ -816,8 +816,8 @@ func (rs *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	return res
 }
 
-func loadSMT(stateCommitmentTxn dbm.DBReadWriter, root []byte) *smt.Store {
-	smtdb := prefixdb.NewPrefixReadWriter(stateCommitmentTxn, smtPrefix)
+func loadSMT(stateCommitmentTxn dbm.ReadWriter, root []byte) *smt.Store {
+	smtdb := prefixdb.NewReadWriter(stateCommitmentTxn, smtPrefix)
 	return smt.LoadStore(smtdb, root)
 }
 

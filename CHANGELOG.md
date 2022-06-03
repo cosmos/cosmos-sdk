@@ -45,6 +45,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#12134](https://github.com/cosmos/cosmos-sdk/pull/12134) Use canonical golangci-lint github action, set to use the latest golangci-lint at all times
 * [#12089](https://github.com/cosmos/cosmos-sdk/pull/12089) Mark the `TipDecorator` as beta, don't include it in simapp by default.
 
+### API Breaking Changes
+
+* (x/staking) [#12102](https://github.com/cosmos/cosmos-sdk/pull/12102) Staking keeper now is passed by reference instead of copy. Keeper's SetHooks no longer returns keeper. It updates the keeper in place instead.
+
 ### Bug Fixes
 
 * (cli) [#12127](https://github.com/cosmos/cosmos-sdk/pull/12127) Fix the CLI not always taking into account `--fee-payer` and `--fee-granter` flags.

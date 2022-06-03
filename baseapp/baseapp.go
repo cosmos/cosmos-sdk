@@ -216,6 +216,9 @@ func (app *BaseApp) MountStores(keys ...storetypes.StoreKey) {
 		case *storetypes.TransientStoreKey:
 			app.MountStore(key, storetypes.StoreTypeTransient)
 
+		case *storetypes.MemoryStoreKey:
+			app.MountStore(key, storetypes.StoreTypeMemory)
+
 		default:
 			panic(fmt.Sprintf("Unrecognized store key type :%T", key))
 		}

@@ -5,13 +5,19 @@ import (
 	"encoding/json"
 	"math/rand"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"cosmossdk.io/core/appmodule"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	modulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/depinject"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -86,7 +92,7 @@ func (a AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.Tx
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the feegrant module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwruntime.ServeMux) {
 	if err := feegrant.RegisterQueryHandlerClient(context.Background(), mux, feegrant.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
@@ -184,6 +190,34 @@ func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	EndBlocker(ctx, am.keeper)
 	return []abci.ValidatorUpdate{}
+}
+
+func init() {
+	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(
+			provideModuleBasic,
+			provideModule,
+		))
+}
+
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+type feegrantInputs struct {
+	depinject.In
+
+	Key           *store.KVStoreKey
+	Cdc           codec.Codec
+	AccountKeeper feegrant.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
+	BankKeeper    feegrant.BankKeeper    `key:"cosmos.bank.v1.Keeper"`
+	Registry      cdctypes.InterfaceRegistry
+}
+
+func provideModule(in feegrantInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
+	k := keeper.NewKeeper(in.Cdc, in.Key, in.AccountKeeper)
+	m := NewAppModule(in.Cdc, in.AccountKeeper, in.BankKeeper, k, in.Registry)
+	return k, runtime.WrapAppModule(m)
 }
 
 // AppModuleSimulation functions

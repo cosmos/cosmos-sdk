@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"math/rand"
+
+	"github.com/cosmos/cosmos-sdk/depinject"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 

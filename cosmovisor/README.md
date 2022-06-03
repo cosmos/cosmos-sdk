@@ -1,4 +1,4 @@
-# Cosmosvisor
+# Cosmovisor
 
 `cosmovisor` is a small process manager for Cosmos SDK application binaries that monitors the governance module for incoming chain upgrade proposals. If it sees a proposal that gets approved, `cosmovisor` can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
 
@@ -312,6 +312,7 @@ cp ./build/simd $DAEMON_HOME/cosmovisor/upgrades/test1/bin
 ```
 
 Open a new terminal window and submit an upgrade proposal along with a deposit and a vote (these commands must be run within 20 seconds of each other):
+Note, when using a `v0.46+` chain, replace `submit-proposal` by `submit-legacy-proposal`.
 
 ```sh
 ./build/simd tx gov submit-proposal software-upgrade test1 --title upgrade --description upgrade --upgrade-height 200 --from validator --yes

@@ -55,7 +55,7 @@ func (s *viewSubstore) Iterator(start, end []byte) types.Iterator {
 	if err != nil {
 		panic(err)
 	}
-	return dbutil.DBToStoreIterator(iter)
+	return dbutil.ToStoreIterator(iter)
 }
 
 // ReverseIterator implements KVStore.
@@ -64,7 +64,7 @@ func (s *viewSubstore) ReverseIterator(start, end []byte) types.Iterator {
 	if err != nil {
 		panic(err)
 	}
-	return dbutil.DBToStoreIterator(iter)
+	return dbutil.ToStoreIterator(iter)
 }
 
 // GetStoreType implements Store.

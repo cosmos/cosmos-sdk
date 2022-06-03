@@ -498,7 +498,7 @@ func (ca ConsAddress) Equals(ca2 Address) bool {
 
 // Returns boolean for whether an ConsAddress is empty
 func (ca ConsAddress) Empty() bool {
-	return ca == nil || len(ca) == 0
+	return len(ca) == 0
 }
 
 // Marshal returns the raw address bytes. It is needed for protobuf

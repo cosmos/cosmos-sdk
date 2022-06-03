@@ -99,13 +99,8 @@ func (bitCurve *BitCurve) IsOnCurve(x, y *big.Int) bool {
 	x3 := new(big.Int).Mul(x, x) // x²
 	x3.Mul(x3, x)                // x³
 
-<<<<<<< HEAD
-	x3.Add(x3, BitCurve.B) // x³+B
-	x3.Mod(x3, BitCurve.P) // (x³+B)%P
-=======
 	x3.Add(x3, bitCurve.B) // x³+B
 	x3.Mod(x3, bitCurve.P) // (x³+B)%P
->>>>>>> f5978a59841173e88853ac228023991397be2e47
 
 	return x3.Cmp(y2) == 0
 }

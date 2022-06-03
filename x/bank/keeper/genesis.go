@@ -10,7 +10,6 @@ import (
 
 // InitGenesis initializes the bank module's state from a given genesis state.
 func (k BaseKeeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
-
 	k.SetParams(ctx, genState.Params)
 
 	for _, se := range genState.GetAllSendEnabled() {
@@ -60,6 +59,5 @@ func (k BaseKeeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		k.GetAllDenomMetaData(ctx),
 		k.GetAllSendEnabledEntries(ctx),
 	)
-	rv.MigrateSendEnabled()
 	return rv
 }

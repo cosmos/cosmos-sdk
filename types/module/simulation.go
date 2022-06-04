@@ -3,6 +3,7 @@ package module
 import (
 	"encoding/json"
 	"math/rand"
+	"sort"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
@@ -59,6 +60,8 @@ func NewSimulationManagerFromAppModules(modules map[string]AppModule, overrideMo
 	for moduleName := range modules {
 		appModuleNamesSorted = append(appModuleNamesSorted, moduleName)
 	}
+
+	sort.Strings(appModuleNamesSorted)
 
 	for _, moduleName := range appModuleNamesSorted {
 		// for every module, see if we override it. If so, use override.

@@ -103,6 +103,11 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		clientCtx = clientCtx.WithSimulation(dryRun)
 	}
 
+	if !clientCtx.Concurrency || flagSet.Changed(flags.FlagConcurrency) {
+		concurrency, _ := flagSet.GetBool(flags.FlagConcurrency)
+		clientCtx = clientCtx.WithConcurrency(concurrency)
+	}
+
 	if clientCtx.KeyringDir == "" || flagSet.Changed(flags.FlagKeyringDir) {
 		keyringDir, _ := flagSet.GetString(flags.FlagKeyringDir)
 

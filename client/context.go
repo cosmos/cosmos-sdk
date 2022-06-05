@@ -254,6 +254,11 @@ func (ctx Context) WithInterfaceRegistry(interfaceRegistry codectypes.InterfaceR
 	return ctx
 }
 
+func (ctx Context) WithConcurrency(concurrency bool) Context {
+	ctx.Concurrency = concurrency
+	return ctx
+}
+
 // WithViper returns the context with Viper field. This Viper instance is used to read
 // client-side config from the config file.
 func (ctx Context) WithViper(prefix string) Context {

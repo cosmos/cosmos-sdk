@@ -15,6 +15,7 @@ const (
 	output         = "text"
 	node           = "tcp://localhost:26657"
 	broadcastMode  = "sync"
+	concurrency    = false
 )
 
 type ClientConfig struct {
@@ -23,11 +24,12 @@ type ClientConfig struct {
 	Output         string `mapstructure:"output" json:"output"`
 	Node           string `mapstructure:"node" json:"node"`
 	BroadcastMode  string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
+	Concurrency    bool   `mapstructure:"concurrency" json:"concurrency"`
 }
 
 // defaultClientConfig returns the reference to ClientConfig with default values.
 func defaultClientConfig() *ClientConfig {
-	return &ClientConfig{chainID, keyringBackend, output, node, broadcastMode}
+	return &ClientConfig{chainID, keyringBackend, output, node, broadcastMode, concurrency}
 }
 
 func (c *ClientConfig) SetChainID(chainID string) {
@@ -48,6 +50,10 @@ func (c *ClientConfig) SetNode(node string) {
 
 func (c *ClientConfig) SetBroadcastMode(broadcastMode string) {
 	c.BroadcastMode = broadcastMode
+}
+
+func (c *ClientConfig) SetConcurrency(concurrency bool) {
+	c.Concurrency = concurrency
 }
 
 // ReadFromClientConfig reads values from client.toml file and updates them in client Context

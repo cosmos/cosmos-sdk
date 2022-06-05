@@ -43,6 +43,7 @@ type Context struct {
 	KeyringDir        string
 	From              string
 	BroadcastMode     string
+	Concurrency       bool
 	FromName          string
 	SignModeStr       string
 	UseLedger         bool

@@ -206,6 +206,7 @@ func NewSimApp(
 	homePath string, invCheckPeriod uint, encodingConfig simappparams.EncodingConfig,
 	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
+<<<<<<< HEAD
 	appCodec := encodingConfig.Codec
 	legacyAmino := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
@@ -221,6 +222,39 @@ func NewSimApp(
 		govtypes.StoreKey, paramstypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, capabilitytypes.StoreKey,
 		authzkeeper.StoreKey, nftkeeper.StoreKey, group.StoreKey,
+=======
+	app := &SimApp{
+		invCheckPeriod: invCheckPeriod,
+	}
+
+	var appBuilder *runtime.AppBuilder
+	var msgServiceRouter *baseapp.MsgServiceRouter
+
+	err := depinject.Inject(AppConfig,
+		&appBuilder,
+		&app.ParamsKeeper,
+		&app.CapabilityKeeper,
+		&app.appCodec,
+		&app.legacyAmino,
+		&app.interfaceRegistry,
+		&app.AccountKeeper,
+		&app.BankKeeper,
+		&app.FeeGrantKeeper,
+		&app.StakingKeeper,
+		&msgServiceRouter,
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	app.App = appBuilder.Build(logger, db, traceStore, msgServiceRouter, baseAppOptions...)
+
+	app.keys = sdk.NewKVStoreKeys(
+		minttypes.StoreKey, distrtypes.StoreKey,
+		slashingtypes.StoreKey, govtypes.StoreKey, upgradetypes.StoreKey,
+		evidencetypes.StoreKey, authzkeeper.StoreKey, nftkeeper.StoreKey,
+		group.StoreKey,
+>>>>>>> 2b7aca73d (feat: add MsgServiceRouter to Baseapp (and runtime's provideCodecs) (#12168))
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	// NOTE: The testingkey is just mounted for testing purposes. Actual applications should

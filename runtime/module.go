@@ -43,7 +43,8 @@ func provideCodecs(moduleBasics map[string]AppModuleBasicWrapper) (
 	codec.Codec,
 	*codec.LegacyAmino,
 	appWrapper,
-	codec.ProtoCodecMarshaler) {
+	codec.ProtoCodecMarshaler,
+) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	amino := codec.NewLegacyAmino()
 

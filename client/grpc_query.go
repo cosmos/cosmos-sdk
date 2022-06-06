@@ -156,7 +156,7 @@ func (f failingInterfaceRegistry) UnpackAny(any *types.Any, iface interface{}) e
 	return errCodecNotSet
 }
 
-func (f failingInterfaceRegistry) Resolve(typeUrl string) (proto.Message, error) {
+func (f failingInterfaceRegistry) Resolve(typeURL string) (proto.Message, error) {
 	return nil, errCodecNotSet
 }
 

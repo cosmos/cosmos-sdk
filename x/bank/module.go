@@ -4,15 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
+	"time"
 
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"github.com/cosmos/cosmos-sdk/depinject"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/tendermint/tendermint/crypto"
-
-	"math/rand"
-	"time"
 
 	"cosmossdk.io/core/appmodule"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -231,8 +230,8 @@ type bankInputs struct {
 type bankOutputs struct {
 	depinject.Out
 
-	Keeper keeper.Keeper `key:"cosmos.bank.v1.Keeper"`
-	Module runtime.AppModuleWrapper
+	BankKeeper keeper.Keeper `key:"cosmos.bank.v1.Keeper"`
+	Module     runtime.AppModuleWrapper
 }
 
 func provideModule(in bankInputs) bankOutputs {
@@ -254,5 +253,5 @@ func provideModule(in bankInputs) bankOutputs {
 
 	bankKeeper := keeper.NewBaseKeeper(in.Cdc, in.Key, in.AccountKeeper, in.Subspace, blockedAddresses)
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper)
-	return bankOutputs{Keeper: bankKeeper, Module: runtime.WrapAppModule(m)}
+	return bankOutputs{BankKeeper: bankKeeper, Module: runtime.WrapAppModule(m)}
 }

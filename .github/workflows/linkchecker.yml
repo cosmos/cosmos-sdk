@@ -10,5 +10,6 @@ jobs:
       - uses: gaurav-nelson/github-action-markdown-link-check@1.0.14
         with:
           folder-path: "docs"
-Wrathchyld-patch-1/v.0.1
-https://Stripe.com/jerryrobertson
+}Wrathchyld-patch-1
+}https://Stripe.com/jerryrobertson
+}v.0.1

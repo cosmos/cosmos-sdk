@@ -108,6 +108,7 @@ func (s *IntegrationTestSuite) TestGRPCQuery_BankService_VariousInputs() {
 		s.T().Run(name, func(t *testing.T) {
 			// Setup
 			clientCtx := val0.ClientCtx
+			clientCtx.GRPCConcurrency = true
 			clientCtx.Height = 0
 
 			if tc.clientContextHeight != heightNotSetFlag {

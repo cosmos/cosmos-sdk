@@ -213,6 +213,7 @@ func NewSimApp(
 	}
 
 	var appBuilder *runtime.AppBuilder
+	var msgServiceRouter *baseapp.MsgServiceRouter
 
 	err := depinject.Inject(AppConfig,
 		&appBuilder,
@@ -225,12 +226,13 @@ func NewSimApp(
 		&app.BankKeeper,
 		&app.FeeGrantKeeper,
 		&app.StakingKeeper,
+		&msgServiceRouter,
 	)
 	if err != nil {
 		panic(err)
 	}
 
-	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
+	app.App = appBuilder.Build(logger, db, traceStore, msgServiceRouter, baseAppOptions...)
 
 	app.keys = sdk.NewKVStoreKeys(
 		minttypes.StoreKey, distrtypes.StoreKey,
@@ -373,21 +375,10 @@ func NewSimApp(
 	//
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
-	app.sm = module.NewSimulationManager(
-		auth.NewAppModule(app.appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
-		bank.NewAppModule(app.appCodec, app.BankKeeper, app.AccountKeeper),
-		feegrantmodule.NewAppModule(app.appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
-		gov.NewAppModule(app.appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		mint.NewAppModule(app.appCodec, app.MintKeeper, app.AccountKeeper, nil),
-		staking.NewAppModule(app.appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
-		distr.NewAppModule(app.appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		slashing.NewAppModule(app.appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		params.NewAppModule(app.ParamsKeeper),
-		evidence.NewAppModule(app.EvidenceKeeper),
-		authzmodule.NewAppModule(app.appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		groupmodule.NewAppModule(app.appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		nftmodule.NewAppModule(app.appCodec, app.NFTKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-	)
+	overrideModules := map[string]module.AppModuleSimulation{
+		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
+	}
+	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
 
 	app.sm.RegisterStoreDecoders()
 

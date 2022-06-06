@@ -56,8 +56,8 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 	// As a result, we direct them to the ABCI flow where they get syncronized.
 	_, isSimulationRequest := req.(*tx.SimulateRequest)
 	isTendermintQuery := strings.Contains(method, "tendermint")
-	grpcConcurrentEnabled := ctx.Concurrency
-	isGRPCAllowed := !isTendermintQuery && !isSimulationRequest && isConcurrentQuery
+	grpcConcurrentEnabled := ctx.GRPCConcurrency
+	isGRPCAllowed := !isTendermintQuery && !isSimulationRequest && grpcConcurrentEnabled
 
 	requestedHeight, err := selectHeight(ctx, grpcCtx)
 	if err != nil {

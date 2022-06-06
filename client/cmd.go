@@ -103,7 +103,7 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		clientCtx = clientCtx.WithSimulation(dryRun)
 	}
 
-	if !clientCtx.Concurrency || flagSet.Changed(flags.FlagConcurrency) {
+	if !clientCtx.GRPCConcurrency || flagSet.Changed(flags.FlagConcurrency) {
 		concurrency, _ := flagSet.GetBool(flags.FlagConcurrency)
 		clientCtx = clientCtx.WithConcurrency(concurrency)
 	}

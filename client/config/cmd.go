@@ -59,7 +59,7 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		case flags.FlagBroadcastMode:
 			cmd.Println(conf.BroadcastMode)
 		case flags.FlagConcurrency:
-			cmd.Println(conf.Concurrency)
+			cmd.Println(conf.GRPCConcurrency)
 		default:
 			err := errUnknownConfigKey(key)
 			return fmt.Errorf("couldn't get the value for the key: %v, error:  %v", key, err)
@@ -81,7 +81,7 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		case flags.FlagBroadcastMode:
 			conf.SetBroadcastMode(value)
 		case flags.FlagConcurrency:
-			cmd.Println(conf.Concurrency)
+			cmd.Println(conf.GRPCConcurrency)
 		default:
 			return errUnknownConfigKey(key)
 		}

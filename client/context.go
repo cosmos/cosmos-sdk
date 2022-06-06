@@ -43,7 +43,7 @@ type Context struct {
 	KeyringDir        string
 	From              string
 	BroadcastMode     string
-	Concurrency       bool
+	GRPCConcurrency   bool
 	FromName          string
 	SignModeStr       string
 	UseLedger         bool
@@ -254,8 +254,8 @@ func (ctx Context) WithInterfaceRegistry(interfaceRegistry codectypes.InterfaceR
 	return ctx
 }
 
-func (ctx Context) WithConcurrency(concurrency bool) Context {
-	ctx.Concurrency = concurrency
+func (ctx Context) WithConcurrency(grpcConcurrency bool) Context {
+	ctx.GRPCConcurrency = grpcConcurrency
 	return ctx
 }
 

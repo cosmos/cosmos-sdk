@@ -175,6 +175,7 @@ func TestSelectHeight(t *testing.T) {
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
 			clientCtx := client.Context{}
+			clientCtx.GRPCConcurrency = true
 			if tc.clientContextHeight != heightNotSetFlag {
 				clientCtx = clientCtx.WithHeight(tc.clientContextHeight)
 			}

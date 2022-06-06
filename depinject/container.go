@@ -130,7 +130,9 @@ func (c *container) getResolver(typ reflect.Type) (resolver, error) {
 				c.logf("Found candidate resolver, implicitly binding interface %v to implementing type %v.", typ, k)
 				if found {
 					// TODO provide example YAML binding when the implementation is done
-					panic(fmt.Sprintf("<stub> Multiple implementations found for interface %v.  Specify an explicit type binding in app.yaml", typ))
+					msg := fmt.Sprintf("<stub> Multiple implementations found for interface %v.  Specify an explicit type binding in app.yaml", typ)
+					c.logf(msg)
+					panic(msg)
 				}
 				res = r
 				found = true

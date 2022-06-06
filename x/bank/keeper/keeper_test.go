@@ -1289,6 +1289,45 @@ func (suite *IntegrationTestSuite) TestIsSendEnabledDenom() {
 	}
 }
 
+func (suite *IntegrationTestSuite) TestGetSendEnabledEntry() {
+	ctx, bankKeeper := suite.ctx, suite.app.BankKeeper
+
+	bankKeeper.SetAllSendEnabled(ctx, []*types.SendEnabled{
+		{Denom: "gettruecoin", Enabled: true},
+		{Denom: "getfalsecoin", Enabled: false},
+	})
+
+	tests := []struct {
+		denom string
+		expSE types.SendEnabled
+		expF  bool
+	}{
+		{
+			denom: "missing",
+			expSE: types.SendEnabled{},
+			expF:  false,
+		},
+		{
+			denom: "gettruecoin",
+			expSE: types.SendEnabled{Denom: "gettruecoin", Enabled: true},
+			expF:  true,
+		},
+		{
+			denom: "getfalsecoin",
+			expSE: types.SendEnabled{Denom: "getfalsecoin", Enabled: false},
+			expF:  true,
+		},
+	}
+
+	for _, tc := range tests {
+		suite.T().Run(tc.denom, func(t *testing.T) {
+			actualSE, actualF := bankKeeper.GetSendEnabledEntry(ctx, tc.denom)
+			assert.Equal(t, tc.expF, actualF, "found")
+			assert.Equal(t, tc.expSE, actualSE, "SendEnabled")
+		})
+	}
+}
+
 func (suite *IntegrationTestSuite) TestSetSendEnabled() {
 	ctx, bankKeeper := suite.ctx, suite.app.BankKeeper
 

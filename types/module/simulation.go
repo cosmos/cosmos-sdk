@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"math/rand"
+	"sort"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -45,6 +46,38 @@ func NewSimulationManager(modules ...AppModuleSimulation) *SimulationManager {
 		Modules:       modules,
 		StoreDecoders: make(sdk.StoreDecoderRegistry),
 	}
+}
+
+// NewSimulationManagerFromAppModules creates a new SimulationManager object.
+//
+// First it sets any SimulationModule provided by overrideModules, and ignores any AppModule
+// with the same moduleName.
+// Then it attempts to cast every provided AppModule into an AppModuleSimulation.
+// If the cast succeeds, its included, otherwise it is excluded.
+func NewSimulationManagerFromAppModules(modules map[string]AppModule, overrideModules map[string]AppModuleSimulation) *SimulationManager {
+	simModules := []AppModuleSimulation{}
+	appModuleNamesSorted := make([]string, 0, len(modules))
+	for moduleName := range modules {
+		appModuleNamesSorted = append(appModuleNamesSorted, moduleName)
+	}
+
+	sort.Strings(appModuleNamesSorted)
+
+	for _, moduleName := range appModuleNamesSorted {
+		// for every module, see if we override it. If so, use override.
+		// Else, if we can cast the app module into a simulation module add it.
+		// otherwise no simulation module.
+		if simModule, ok := overrideModules[moduleName]; ok {
+			simModules = append(simModules, simModule)
+		} else {
+			appModule := modules[moduleName]
+			if simModule, ok := appModule.(AppModuleSimulation); ok {
+				simModules = append(simModules, simModule)
+			}
+			// cannot cast, so we continue
+		}
+	}
+	return NewSimulationManager(simModules...)
 }
 
 // GetProposalContents returns each module's proposal content generator function

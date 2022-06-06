@@ -127,7 +127,7 @@ func (c *container) getResolver(typ reflect.Type) (resolver, error) {
 		var found bool
 		for k, r := range c.resolvers {
 			if k.Implements(typ) {
-				c.logf("Found candidate type %v implementing %v", k, typ)
+				c.logf("Found candidate resolver, implicitly binding interface %v to implementing type %v.", typ, k)
 				if found {
 					// TODO provide example YAML binding when the implementation is done
 					panic(fmt.Sprintf("<stub> Multiple implementations found for interface %v.  Specify an explicit type binding in app.yaml", typ))

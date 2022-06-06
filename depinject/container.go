@@ -3,11 +3,9 @@ package depinject
 import (
 	"bytes"
 	"fmt"
-	"reflect"
-
-	"github.com/pkg/errors"
-
 	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
+	"github.com/pkg/errors"
+	"reflect"
 )
 
 type container struct {
@@ -77,6 +75,7 @@ func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]
 }
 
 func (c *container) getResolver(typ reflect.Type) (resolver, error) {
+	c.logf("Resolving %v", typ)
 	if vr, ok := c.resolvers[typ]; ok {
 		return vr, nil
 	}
@@ -122,7 +121,24 @@ func (c *container) getResolver(typ reflect.Type) (resolver, error) {
 		c.resolvers[mapType] = &mapOfOnePerModuleResolver{r}
 	}
 
-	return c.resolvers[typ], nil
+	res := c.resolvers[typ]
+
+	if res == nil && typ.Kind() == reflect.Interface {
+		var found bool
+		for k, r := range c.resolvers {
+			if k.Implements(typ) {
+				c.logf("Found candidate type %v implementing %v", k, typ)
+				if found {
+					// TODO provide example YAML binding when the implementation is done
+					panic(fmt.Sprintf("<stub> Multiple implementations found for interface %v.  Specify an explicit type binding in app.yaml", typ))
+				}
+				res = r
+				found = true
+			}
+		}
+	}
+
+	return res, nil
 }
 
 var stringType = reflect.TypeOf("")

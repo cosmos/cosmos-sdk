@@ -644,35 +644,37 @@ type AlsoDuck interface {
 }
 
 type Mallard struct{}
+type Canvasback struct{}
 
-func (duck Mallard) quack() {}
-
-type KeyedOutput struct {
-	depinject.Out
-	Duck Duck
-}
-
-type KeyedInput struct {
-	depinject.In
-	AlsoDuck AlsoDuck
-}
+func (duck Mallard) quack()    {}
+func (duck Canvasback) quack() {}
 
 type Pond struct {
 	Duck AlsoDuck
 }
 
-func TestKeyedInputOutput(t *testing.T) {
+func TestImplicitBindings(t *testing.T) {
 	var pond Pond
 
 	require.NoError(t,
 		depinject.Inject(
 			depinject.Provide(
-				func() KeyedOutput { return KeyedOutput{Duck: Mallard{}} },
-				func(in KeyedInput) Pond {
-					require.NotNil(t, in.AlsoDuck)
-					return Pond{Duck: in.AlsoDuck}
+				func() Mallard { return Mallard{} },
+				func(duck Duck) Pond {
+					require.NotNil(t, duck)
+					return Pond{Duck: duck}
 				}),
 			&pond))
 
 	require.NotNil(t, pond)
+
+	require.Error(t,
+		depinject.Inject(
+			depinject.Provide(
+				func() Mallard { return Mallard{} },
+				func() Canvasback { return Canvasback{} },
+				func(duck Duck) Pond {
+					return Pond{Duck: duck}
+				}),
+			&pond))
 }

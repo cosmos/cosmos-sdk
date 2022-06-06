@@ -58,7 +58,7 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 			cmd.Println(conf.Node)
 		case flags.FlagBroadcastMode:
 			cmd.Println(conf.BroadcastMode)
-		case flags.FlagConcurrency:
+		case flags.FlagGRPCConcurrency:
 			cmd.Println(conf.GRPCConcurrency)
 		default:
 			err := errUnknownConfigKey(key)
@@ -80,7 +80,7 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 			conf.SetNode(value)
 		case flags.FlagBroadcastMode:
 			conf.SetBroadcastMode(value)
-		case flags.FlagConcurrency:
+		case flags.FlagGRPCConcurrency:
 			cmd.Println(conf.GRPCConcurrency)
 		default:
 			return errUnknownConfigKey(key)

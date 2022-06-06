@@ -103,9 +103,9 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		clientCtx = clientCtx.WithSimulation(dryRun)
 	}
 
-	if !clientCtx.GRPCConcurrency || flagSet.Changed(flags.FlagConcurrency) {
-		concurrency, _ := flagSet.GetBool(flags.FlagConcurrency)
-		clientCtx = clientCtx.WithConcurrency(concurrency)
+	if !clientCtx.GRPCConcurrency || flagSet.Changed(flags.FlagGRPCConcurrency) {
+		grpcConcurrency, _ := flagSet.GetBool(flags.FlagGRPCConcurrency)
+		clientCtx = clientCtx.WithConcurrency(grpcConcurrency)
 	}
 
 	if clientCtx.KeyringDir == "" || flagSet.Changed(flags.FlagKeyringDir) {

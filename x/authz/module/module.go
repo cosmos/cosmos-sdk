@@ -191,15 +191,16 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 type authzInputs struct {
 	depinject.In
 
-	KVStoreKey    *store.KVStoreKey
-	Cdc           codec.Codec
-	AccountKeeper authz.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
-	BankKeeper    authz.BankKeeper    `key:"cosmos.bank.v1.Keeper"`
-	Registry      cdctypes.InterfaceRegistry
+	KVStoreKey       *store.KVStoreKey
+	Cdc              codec.Codec
+	AccountKeeper    authz.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
+	BankKeeper       authz.BankKeeper    `key:"cosmos.bank.v1.Keeper"`
+	Registry         cdctypes.InterfaceRegistry
+	MsgServiceRouter *baseapp.MsgServiceRouter
 }
 
 func provideModule(in authzInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
-	k := keeper.NewKeeper(in.KVStoreKey, in.Cdc, baseapp.NewMsgServiceRouter(), in.AccountKeeper)
+	k := keeper.NewKeeper(in.KVStoreKey, in.Cdc, in.MsgServiceRouter, in.AccountKeeper)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
 	return k, runtime.WrapAppModule(m)
 }

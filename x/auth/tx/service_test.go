@@ -442,6 +442,7 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPC() {
 
 func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() {
 	val := s.network.Validators[0]
+	val.ClientCtx.GRPCConcurrency = true
 	txBuilder := s.mkTxBuilder()
 	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)

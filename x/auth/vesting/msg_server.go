@@ -19,6 +19,10 @@ type msgServer struct {
 	types.BankKeeper
 }
 
+type baseAccountGetter interface {
+	GetBaseAccount() *authtypes.BaseAccount
+}
+
 // NewMsgServerImpl returns an implementation of the vesting MsgServer interface,
 // wrapping the corresponding AccountKeeper and BankKeeper.
 func NewMsgServerImpl(k keeper.AccountKeeper, bk types.BankKeeper) types.MsgServer {
@@ -53,12 +57,18 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
 	}
 
-	baseAccount := ak.NewAccountWithAddress(ctx, to)
-	if _, ok := baseAccount.(*authtypes.BaseAccount); !ok {
+	account := ak.NewAccountWithAddress(ctx, to)
+	baseAccount, ok := account.(*authtypes.BaseAccount)
+	if !ok {
+		if getter, ok := account.(baseAccountGetter); ok {
+			baseAccount = getter.GetBaseAccount()
+		}
+	}
+	if baseAccount == nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid account type; expected: BaseAccount, got: %T", baseAccount)
 	}
 
-	baseVestingAccount := types.NewBaseVestingAccount(baseAccount.(*authtypes.BaseAccount), msg.Amount.Sort(), msg.EndTime)
+	baseVestingAccount := types.NewBaseVestingAccount(baseAccount, msg.Amount.Sort(), msg.EndTime)
 
 	var acc authtypes.AccountI
 

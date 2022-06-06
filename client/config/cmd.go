@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"strconv"
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
@@ -81,7 +82,8 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		case flags.FlagBroadcastMode:
 			conf.SetBroadcastMode(value)
 		case flags.FlagGRPCConcurrency:
-			cmd.Println(conf.GRPCConcurrency)
+			valuebool, _ := strconv.ParseBool(value)
+			conf.SetGRPCConcurrency(valuebool)
 		default:
 			return errUnknownConfigKey(key)
 		}

@@ -52,7 +52,7 @@ func (c *ClientConfig) SetBroadcastMode(broadcastMode string) {
 	c.BroadcastMode = broadcastMode
 }
 
-func (c *ClientConfig) SetConcurrency(grpConcurrency bool) {
+func (c *ClientConfig) SetGRPCConcurrency(grpConcurrency bool) {
 	c.GRPCConcurrency = grpcConcurrency
 }
 

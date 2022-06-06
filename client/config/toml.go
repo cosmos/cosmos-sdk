@@ -29,7 +29,7 @@ broadcast-mode = "{{ .BroadcastMode }}"
 # Concurrency defines if node queries should be done in parallel.
 # This is experimental and has led to node failures, so enable with caution.
 # The default value is false.
-concurrency = {{ .Concurrency }}
+grpc-concurrency = {{ .GRPCConcurrency }}
 `
 
 // writeConfigToFile parses defaultConfigTemplate, renders config using the template and writes it to

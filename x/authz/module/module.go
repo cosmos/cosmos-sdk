@@ -178,8 +178,8 @@ func init() {
 	appmodule.Register(
 		&modulev1.Module{},
 		appmodule.Provide(
-			provideModule,
 			provideModuleBasic,
+			provideModule,
 		),
 	)
 }

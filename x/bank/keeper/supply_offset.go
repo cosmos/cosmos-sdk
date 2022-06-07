@@ -115,3 +115,22 @@ func (k BaseViewKeeper) IterateTotalSupplyWithOffsets(ctx sdk.Context, cb func(s
 		}
 	}
 }
+
+// getGenesisSupplyOffsets returns supply offset for genesis, encoded with denom in state
+func (k BaseViewKeeper) getGenesisSupplyOffsets(ctx sdk.Context) []types.GenesisSupplyOffset {
+	store := ctx.KVStore(k.storeKey)
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
+
+	iterator := supplyStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	supplyOffsets := []types.GenesisSupplyOffset{}
+	for ; iterator.Valid(); iterator.Next() {
+		supplyOffset := types.GenesisSupplyOffset{
+			Denom:  string(iterator.Key()),
+			Offset: k.GetSupplyOffset(ctx, string(iterator.Key())),
+		}
+		supplyOffsets = append(supplyOffsets, supplyOffset)
+	}
+	return supplyOffsets
+}

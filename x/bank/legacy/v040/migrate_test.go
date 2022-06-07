@@ -48,7 +48,7 @@ func TestMigrate(t *testing.T) {
 	}
 
 	migrated := v040bank.Migrate(bankGenState, authGenState, supplyGenState)
-	expected := `{"params":{"send_enabled":[],"default_send_enabled":true},"balances":[{"address":"cosmos1xxkueklal9vejv9unqu80w9vptyepfa95pd53u","coins":[{"denom":"stake","amount":"50"}]},{"address":"cosmos15v50ymp6n5dn73erkqtmq0u8adpl8d3ujv2e74","coins":[{"denom":"stake","amount":"50"}]}],"supply":[{"denom":"stake","amount":"1000"}],"denom_metadata":[]}`
+	expected := `{"params":{"send_enabled":[],"default_send_enabled":true},"balances":[{"address":"cosmos1xxkueklal9vejv9unqu80w9vptyepfa95pd53u","coins":[{"denom":"stake","amount":"50"}]},{"address":"cosmos15v50ymp6n5dn73erkqtmq0u8adpl8d3ujv2e74","coins":[{"denom":"stake","amount":"50"}]}],"supply":[{"denom":"stake","amount":"1000"}],"denom_metadata":[],"supply_offsets":[]}`
 
 	bz, err := clientCtx.Codec.MarshalJSON(migrated)
 	require.NoError(t, err)

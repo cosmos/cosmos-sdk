@@ -39,6 +39,10 @@ func (k BaseKeeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	for _, meta := range genState.DenomMetadata {
 		k.SetDenomMetaData(ctx, meta)
 	}
+
+	for _, supplyOffset := range genState.SupplyOffsets {
+		k.setSupplyOffset(ctx, supplyOffset.Denom, supplyOffset.Offset)
+	}
 }
 
 // ExportGenesis returns the bank module's genesis state.
@@ -53,5 +57,6 @@ func (k BaseKeeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		k.GetAccountsBalances(ctx),
 		totalSupply,
 		k.GetAllDenomMetaData(ctx),
+		k.getGenesisSupplyOffsets(ctx),
 	)
 }

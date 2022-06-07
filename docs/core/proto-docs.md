@@ -89,6 +89,7 @@
 - [cosmos/bank/v1beta1/genesis.proto](#cosmos/bank/v1beta1/genesis.proto)
     - [Balance](#cosmos.bank.v1beta1.Balance)
     - [GenesisState](#cosmos.bank.v1beta1.GenesisState)
+    - [GenesisSupplyOffset](#cosmos.bank.v1beta1.GenesisSupplyOffset)
   
 - [cosmos/bank/v1beta1/query.proto](#cosmos/bank/v1beta1/query.proto)
     - [QueryAllBalancesRequest](#cosmos.bank.v1beta1.QueryAllBalancesRequest)
@@ -1738,6 +1739,24 @@ GenesisState defines the bank module's genesis state.
 | `balances` | [Balance](#cosmos.bank.v1beta1.Balance) | repeated | balances is an array containing the balances of all the accounts. |
 | `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply represents the total supply. If it is left empty, then supply will be calculated based on the provided balances. Otherwise, it will be used to validate that the sum of the balances equals this amount. |
 | `denom_metadata` | [Metadata](#cosmos.bank.v1beta1.Metadata) | repeated | denom_metadata defines the metadata of the differents coins. |
+| `supply_offsets` | [GenesisSupplyOffset](#cosmos.bank.v1beta1.GenesisSupplyOffset) | repeated | supply_offsets defines the amount of supply offset. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.GenesisSupplyOffset"></a>
+
+### GenesisSupplyOffset
+GenesisSupplyOffset encodes the supply offsets, just for genesis.
+The offsets are serialized directly by denom in state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | Denom |
+| `offset` | [string](#string) |  | SupplyOffset |
 
 
 

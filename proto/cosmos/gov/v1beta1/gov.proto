@@ -205,7 +205,7 @@ message TallyParams {
 // ProposalVotingPeriod defines custom voting periods for a unique governance
 // proposal type.
 message ProposalVotingPeriod {
-  string                   proposal_type = 1;  // e.g. "cosmos.params.v1beta1.ParameterChangeProposal"
+  string                   proposal_type = 1; // e.g. "cosmos.params.v1beta1.ParameterChangeProposal"
   google.protobuf.Duration voting_period = 2 [
     (gogoproto.nullable)    = false,
     (gogoproto.stdduration) = true,

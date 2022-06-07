@@ -80,7 +80,6 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 		config := init.ConfigProtoMessage.ProtoReflect().Type().New().Interface()
 		err = anypb.UnmarshalTo(module.Config, config, proto.UnmarshalOptions{})
 		if err != nil {
-
 			return depinject.Error(err)
 		}
 

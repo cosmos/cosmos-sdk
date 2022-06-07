@@ -214,10 +214,9 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 }
 
 type nftInputs struct {
-	depinject.Out
+	depinject.In
 
 	Key      *store.KVStoreKey
-	Config   *modulev1.Module
 	Cdc      codec.Codec
 	Subspace paramstypes.Subspace
 	Registry cdctypes.InterfaceRegistry

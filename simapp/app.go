@@ -332,7 +332,6 @@ func NewSimApp(
 		evidence.NewAppModule(app.EvidenceKeeper),
 		authzmodule.NewAppModule(app.appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		groupmodule.NewAppModule(app.appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		nftmodule.NewAppModule(app.appCodec, app.NFTKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 	); err != nil {
 		panic(err)
 	}

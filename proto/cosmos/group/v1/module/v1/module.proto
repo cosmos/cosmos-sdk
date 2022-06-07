@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package cosmos.group.module.v1;
+package cosmos.group.v1.module.v1;
 
 import "cosmos/app/v1alpha1/module.proto";
 

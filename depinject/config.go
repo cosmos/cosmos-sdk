@@ -48,14 +48,16 @@ func provide(ctr *container, key *moduleKey, providers []interface{}) error {
 	return nil
 }
 
-// Prefer defines a container configuration
+// Prefer defines a container configuration for an explicit interface binding of inTypeName to outTypeName
+// in global scope.
 func Prefer(inTypeName string, outTypeName string) Config {
 	return containerConfig(func(ctr *container) error {
 		return prefer(ctr, inTypeName, outTypeName, "")
 	})
 }
 
-// PreferInModule defines a container configuration
+// PreferInModule defines a container configuration for an explicit interface binding of inTypeName to outTypeName
+// in the scope of the module with name moduleName.
 func PreferInModule(moduleName string, inTypeName string, outTypeName string) Config {
 	return containerConfig(func(ctr *container) error {
 		return prefer(ctr, inTypeName, outTypeName, moduleName)

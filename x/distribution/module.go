@@ -22,6 +22,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	"github.com/cosmos/cosmos-sdk/x/distribution/simulation"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // ConsensusVersion defines the current x/distribution module consensus version.
@@ -97,14 +102,23 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	types.RegisterMsgServer(registrar, keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(registrar, keeper.NewQuerier(am.keeper))
 
-	return nil
+	keeper        keeper.Keeper
+	accountKeeper types.AccountKeeper
+	bankKeeper    types.BankKeeper
+	stakingKeeper types.StakingKeeper
 }
 
-// RegisterMigrations registers the distribution module's migrations.
-func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
-	m := keeper.NewMigrator(am.keeper)
-	if err := mr.Register(types.ModuleName, 1, m.Migrate1to2); err != nil {
-		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %w", types.ModuleName, err)
+// NewAppModule creates a new AppModule object
+func NewAppModule(
+	cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper,
+	bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper,
+) AppModule {
+	return AppModule{
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		keeper:         keeper,
+		accountKeeper:  accountKeeper,
+		bankKeeper:     bankKeeper,
+		stakingKeeper:  stakingKeeper,
 	}
 
 	if err := mr.Register(types.ModuleName, 2, m.Migrate2to3); err != nil {

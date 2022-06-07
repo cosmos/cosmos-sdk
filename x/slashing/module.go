@@ -21,6 +21,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/simsx"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // ConsensusVersion defines the current x/slashing module consensus version.
@@ -103,8 +108,20 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper, am.stakingKeeper.ValidatorAddressCodec())
 
-	if err := mr.Register(types.ModuleName, 1, m.Migrate1to2); err != nil {
-		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %w", types.ModuleName, err)
+	keeper        keeper.Keeper
+	accountKeeper types.AccountKeeper
+	bankKeeper    types.BankKeeper
+	stakingKeeper types.StakingKeeper
+}
+
+// NewAppModule creates a new AppModule object
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper) AppModule {
+	return AppModule{
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		keeper:         keeper,
+		accountKeeper:  ak,
+		bankKeeper:     bk,
+		stakingKeeper:  sk,
 	}
 
 	if err := mr.Register(types.ModuleName, 2, m.Migrate2to3); err != nil {

@@ -67,7 +67,6 @@ jobs:
   test-sim-after-import:
     runs-on: ubuntu-latest
     needs: [build, install-runsim]
-    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v3
         with:
@@ -88,7 +87,6 @@ jobs:
   test-sim-multi-seed-short:
     runs-on: ubuntu-latest
     needs: [build, install-runsim]
-    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v3
         with:

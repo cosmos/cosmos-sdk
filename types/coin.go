@@ -411,7 +411,7 @@ func (coins Coins) SafeSub(coinsB ...Coin) (Coins, bool) {
 }
 
 // MulInt performs the scalar multiplication of coins with a `multiplier`
-// All coins are multipled by x
+// All coins are multiplied by x
 // e.g.
 // {2A, 3B} * 2 = {4A, 6B}
 // {2A} * 0 panics

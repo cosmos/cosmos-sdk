@@ -11,7 +11,6 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
@@ -54,7 +53,7 @@ type BaseApp struct { // nolint: maligned
 	queryRouter       sdk.QueryRouter      // router for redirecting query calls
 	grpcQueryRouter   *GRPCQueryRouter     // router for redirecting gRPC query calls
 	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
-	interfaceRegistry types.InterfaceRegistry
+	interfaceRegistry codectypes.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 
 	anteHandler    sdk.AnteHandler  // ante handler for fee and auth
@@ -199,6 +198,11 @@ func (app *BaseApp) Trace() bool {
 // MsgServiceRouter returns the MsgServiceRouter of a BaseApp.
 func (app *BaseApp) MsgServiceRouter() *MsgServiceRouter { return app.msgServiceRouter }
 
+// SetMsgServiceRouter sets the MsgServiceRouter of a BaseApp.
+func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
+	app.msgServiceRouter = msgServiceRouter
+}
+
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
 // multistore.
 func (app *BaseApp) MountStores(keys ...storetypes.StoreKey) {
@@ -215,6 +219,9 @@ func (app *BaseApp) MountStores(keys ...storetypes.StoreKey) {
 
 		case *storetypes.TransientStoreKey:
 			app.MountStore(key, storetypes.StoreTypeTransient)
+
+		case *storetypes.MemoryStoreKey:
+			app.MountStore(key, storetypes.StoreTypeMemory)
 
 		default:
 			panic(fmt.Sprintf("Unrecognized store key type :%T", key))

@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"math/rand"
+
+	"github.com/cosmos/cosmos-sdk/depinject"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
@@ -218,8 +219,8 @@ func provideModule(
 	config *modulev1.Module,
 	key *store.KVStoreKey,
 	cdc codec.Codec,
-	subspace paramtypes.Subspace) authOutputs {
-
+	subspace paramtypes.Subspace,
+) authOutputs {
 	maccPerms := map[string][]string{}
 	for _, permission := range config.ModuleAccountPermissions {
 		maccPerms[permission.Account] = permission.Permissions

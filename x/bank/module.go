@@ -230,7 +230,7 @@ type bankInputs struct {
 type bankOutputs struct {
 	depinject.Out
 
-	BankKeeper keeper.Keeper
+	BankKeeper keeper.BaseKeeper
 	Module     runtime.AppModuleWrapper
 }
 

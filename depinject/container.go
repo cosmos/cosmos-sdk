@@ -126,7 +126,7 @@ func (c *container) getResolver(typ reflect.Type) (resolver, error) {
 	if res == nil && typ.Kind() == reflect.Interface {
 		var found bool
 		for k, r := range c.resolvers {
-			if k.Implements(typ) {
+			if k.Kind() != reflect.Interface && k.Implements(typ) {
 				c.logf("Found candidate resolver, implicitly binding interface %v to implementing type %v.", typ, k)
 				if found {
 					return nil, &ErrMultipleImplicitInterfaceBindings{Interface: typ}

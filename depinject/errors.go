@@ -18,7 +18,7 @@ func (err ErrMultipleImplicitInterfaceBindings) Error() string {
 }
 
 type ErrExplicitBindingNotFound struct {
-	Preference Preference
+	Preference preference
 	Interface  reflect.Type
 	error
 }

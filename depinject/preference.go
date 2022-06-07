@@ -5,10 +5,10 @@ import (
 	"reflect"
 )
 
-// Preference defines a type binding preference to bind Interface to type Implementation when being provided as a
+// preference defines a type binding preference to bind Interface to type Implementation when being provided as a
 // dependency to the module with ModuleName.  If ModuleName is empty then the type binding is applied globally,
 // not module-scoped.
-type Preference struct {
+type preference struct {
 	Interface      string
 	Implementation string
 	ModuleName     string
@@ -18,7 +18,7 @@ func fullyQualifiedTypeName(typ reflect.Type) string {
 	return fmt.Sprintf("%s/%v", typ.PkgPath(), typ)
 }
 
-func findPreference(ps []Preference, typ reflect.Type, key *moduleKey) (Preference, bool) {
+func findPreference(ps []preference, typ reflect.Type, key *moduleKey) (preference, bool) {
 	if key != nil {
 		for _, p := range ps {
 			if p.Interface == fullyQualifiedTypeName(typ) && (key.name == p.ModuleName) {
@@ -33,5 +33,5 @@ func findPreference(ps []Preference, typ reflect.Type, key *moduleKey) (Preferen
 		}
 	}
 
-	return Preference{}, false
+	return preference{}, false
 }

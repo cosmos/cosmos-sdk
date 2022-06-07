@@ -13,7 +13,7 @@ type container struct {
 	*debugConfig
 
 	resolvers   map[reflect.Type]resolver
-	preferences []Preference
+	preferences []preference
 
 	moduleKeys map[string]*moduleKey
 
@@ -32,7 +32,7 @@ func newContainer(cfg *debugConfig) *container {
 		debugConfig: cfg,
 		resolvers:   map[reflect.Type]resolver{},
 		moduleKeys:  map[string]*moduleKey{},
-		preferences: []Preference{},
+		preferences: []preference{},
 		callerStack: nil,
 		callerMap:   map[Location]bool{},
 	}
@@ -449,7 +449,7 @@ func (c container) formatResolveStack() string {
 	return buf.String()
 }
 
-func (c *container) addPreference(p Preference) {
+func (c *container) addPreference(p preference) {
 	c.preferences = append(c.preferences, p)
 }
 

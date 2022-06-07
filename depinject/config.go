@@ -65,7 +65,7 @@ func PreferInModule(moduleName string, inTypeName string, outTypeName string) Co
 }
 
 func prefer(ctr *container, inTypeName string, outTypeName string, moduleName string) error {
-	ctr.addPreference(Preference{
+	ctr.addPreference(preference{
 		Interface:      inTypeName,
 		Implementation: outTypeName,
 		ModuleName:     moduleName,

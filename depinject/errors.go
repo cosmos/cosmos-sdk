@@ -20,15 +20,15 @@ func (err ErrMultipleImplicitInterfaceBindings) Error() string {
 	return fmt.Sprintf("Multiple implementations found for interface %v: %v", err.Interface, err.Matches)
 }
 
-// ErrExplicitBindingNotFound defines an error condition where an explicit binding of Interface type was marked as a
+// ErrNoTypeForExplicitBindingFound defines an error condition where an explicit binding of Interface type was marked as a
 // Preference but no provider for the requested type implementation was found in the container.
-type ErrExplicitBindingNotFound struct {
+type ErrNoTypeForExplicitBindingFound struct {
 	Preference preference
 	Interface  reflect.Type
 	error
 }
 
-func (err ErrExplicitBindingNotFound) Error() string {
+func (err ErrNoTypeForExplicitBindingFound) Error() string {
 	p := err.Preference
 	if p.ModuleName != "" {
 		return fmt.Sprintf("Given the explicit interface binding %s in module %s, a provider of type %s was not found.",

@@ -146,7 +146,7 @@ func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, err
 				return fullyQualifiedTypeName(t) == p.Implementation
 			})
 			if i == -1 {
-				return nil, &ErrExplicitBindingNotFound{Preference: p}
+				return nil, &ErrNoTypeForExplicitBindingFound{Preference: p}
 			}
 			c.logf("Registering resolver %v for interface type %v by explicit preference", matches[i], typ)
 			res = c.resolvers[matches[i]]

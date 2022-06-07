@@ -24,11 +24,7 @@ const (
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper,
-<<<<<<< HEAD
-	bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper,
-=======
 	bk types.BankKeeper, k keeper.Keeper, sk types.StakingKeeper,
->>>>>>> 7c4e4c1a4 (chore: remove direct reliance on staking from slashing (#12177))
 ) simulation.WeightedOperations {
 	var weightMsgUnjail int
 	appParams.GetOrGenerate(cdc, OpWeightMsgUnjail, &weightMsgUnjail, nil,
@@ -40,7 +36,7 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgUnjail,
-			SimulateMsgUnjail(ak, bk, k, sk.(*stakingkeeper.Keeper)),
+			SimulateMsgUnjail(ak, bk, k, sk.(stakingkeeper.Keeper)),
 		),
 	}
 }

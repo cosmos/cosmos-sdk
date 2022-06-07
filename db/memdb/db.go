@@ -209,7 +209,7 @@ func (tx *dbTxn) Has(key []byte) (bool, error) {
 	if len(key) == 0 {
 		return false, db.ErrKeyEmpty
 	}
-	return tx.btree.Has(newKey(key)), nil
+	return (*btree.BTreeG[btree.Item])(tx.btree).Has(newKey(key)), nil
 }
 
 // Set implements DBWriter.

@@ -520,28 +520,9 @@ func NewSimApp(
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
 	overrideModules := map[string]module.AppModuleSimulation{
-		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AuthKeeper, app.AccountsKeeper, authsims.RandomGenesisAccounts, nil),
+		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
 	}
-	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
-
-	// create, start, and load the unordered tx manager
-	utxDataDir := filepath.Join(homePath, "data")
-	app.UnorderedTxManager = unorderedtx.NewManager(utxDataDir)
-	app.UnorderedTxManager.Start()
-
-	if err := app.UnorderedTxManager.OnInit(); err != nil {
-		panic(fmt.Errorf("failed to initialize unordered tx manager: %w", err))
-	}
-
-	// register custom snapshot extensions (if any)
-	if manager := app.SnapshotManager(); manager != nil {
-		err := manager.RegisterExtensions(
-			unorderedtx.NewSnapshotter(app.UnorderedTxManager),
-		)
-		if err != nil {
-			panic(fmt.Errorf("failed to register snapshot extension: %w", err))
-		}
-	}
+	app.sm = module.NewSimulationManagerFromAppModules(app.mm.Modules, overrideModules)
 
 	app.sm.RegisterStoreDecoders()
 

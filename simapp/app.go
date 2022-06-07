@@ -213,6 +213,7 @@ func NewSimApp(
 	}
 
 	var appBuilder *runtime.AppBuilder
+	var msgServiceRouter *baseapp.MsgServiceRouter
 
 	err := depinject.Inject(AppConfig,
 		&appBuilder,
@@ -225,12 +226,13 @@ func NewSimApp(
 		&app.BankKeeper,
 		&app.FeeGrantKeeper,
 		&app.StakingKeeper,
+		&msgServiceRouter,
 	)
 	if err != nil {
 		panic(err)
 	}
 
-	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
+	app.App = appBuilder.Build(logger, db, traceStore, msgServiceRouter, baseAppOptions...)
 
 	app.keys = sdk.NewKVStoreKeys(
 		minttypes.StoreKey, distrtypes.StoreKey,

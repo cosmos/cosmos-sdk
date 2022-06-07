@@ -369,12 +369,12 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 			return true, sdkerrors.Wrap(err, "group")
 		}
 
-		proposalId := proposal.Id
+		proposalID := proposal.Id
 		if proposal.Status == group.PROPOSAL_STATUS_ABORTED || proposal.Status == group.PROPOSAL_STATUS_WITHDRAWN {
-			if err := k.pruneProposal(ctx, proposalId); err != nil {
+			if err := k.pruneProposal(ctx, proposalID); err != nil {
 				return true, err
 			}
-			if err := k.pruneVotes(ctx, proposalId); err != nil {
+			if err := k.pruneVotes(ctx, proposalID); err != nil {
 				return true, err
 			}
 		} else {

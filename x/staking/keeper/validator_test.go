@@ -1113,7 +1113,7 @@ func TestUpdateValidatorCommission(t *testing.T) {
 	}
 }
 
-func applyValidatorSetUpdates(t *testing.T, ctx sdk.Context, k keeper.Keeper, expectedUpdatesLen int) []abci.ValidatorUpdate {
+func applyValidatorSetUpdates(t *testing.T, ctx sdk.Context, k *keeper.Keeper, expectedUpdatesLen int) []abci.ValidatorUpdate {
 	updates, err := k.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.NoError(t, err)
 	if expectedUpdatesLen >= 0 {

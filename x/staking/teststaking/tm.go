@@ -1,11 +1,11 @@
 package teststaking
 
 import (
+	"cosmossdk.io/math"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -20,7 +20,7 @@ func GetTmConsPubKey(v types.Validator) (tmcrypto.PubKey, error) {
 }
 
 // ToTmValidator casts an SDK validator to a tendermint type Validator.
-func ToTmValidator(v types.Validator, r sdk.Int) (*tmtypes.Validator, error) {
+func ToTmValidator(v types.Validator, r math.Int) (*tmtypes.Validator, error) {
 	tmPk, err := GetTmConsPubKey(v)
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func ToTmValidator(v types.Validator, r sdk.Int) (*tmtypes.Validator, error) {
 }
 
 // ToTmValidators casts all validators to the corresponding tendermint type.
-func ToTmValidators(v types.Validators, r sdk.Int) ([]*tmtypes.Validator, error) {
+func ToTmValidators(v types.Validators, r math.Int) ([]*tmtypes.Validator, error) {
 	validators := make([]*tmtypes.Validator, len(v))
 	var err error
 	for i, val := range v {

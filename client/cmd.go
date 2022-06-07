@@ -268,7 +268,7 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		isAux, _ := flagSet.GetBool(flags.FlagAux)
 		clientCtx = clientCtx.WithAux(isAux)
 		if isAux {
-			// If the user didn't explicity set an --output flag, use JSON by
+			// If the user didn't explicitly set an --output flag, use JSON by
 			// default.
 			if clientCtx.OutputFormat == "" || !flagSet.Changed(cli.OutputFlag) {
 				clientCtx = clientCtx.WithOutputFormat("json")

@@ -12,8 +12,9 @@ import (
 type container struct {
 	*debugConfig
 
-	resolvers   map[reflect.Type]resolver
-	preferences []preference
+	resolvers          map[reflect.Type]resolver
+	preferences        []preference
+	preferredResolvers map[string]resolver
 
 	moduleKeys map[string]*moduleKey
 
@@ -29,12 +30,13 @@ type resolveFrame struct {
 
 func newContainer(cfg *debugConfig) *container {
 	return &container{
-		debugConfig: cfg,
-		resolvers:   map[reflect.Type]resolver{},
-		moduleKeys:  map[string]*moduleKey{},
-		preferences: []preference{},
-		callerStack: nil,
-		callerMap:   map[Location]bool{},
+		debugConfig:        cfg,
+		resolvers:          map[reflect.Type]resolver{},
+		moduleKeys:         map[string]*moduleKey{},
+		preferences:        []preference{},
+		preferredResolvers: map[string]resolver{},
+		callerStack:        nil,
+		callerMap:          map[Location]bool{},
 	}
 }
 
@@ -79,6 +81,10 @@ func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]
 
 func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, error) {
 	c.logf("Resolving %v", typ)
+	if vr, ok := c.preferredResolvers[fullyQualifiedModuleTypeName(typ, key)]; ok {
+		return vr, nil
+	}
+
 	if vr, ok := c.resolvers[typ]; ok {
 		return vr, nil
 	}
@@ -137,6 +143,7 @@ func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, err
 		if len(matches) == 1 {
 			res = c.resolvers[matches[0]]
 			c.logf("Implicitly registering resolver %v for interface type %v", matches[0], typ)
+			c.preferredResolvers[fullyQualifiedModuleTypeName(typ, key)] = res
 		} else if len(matches) > 1 {
 			p, found := findPreference(c.preferences, typ, key)
 			if !found {
@@ -150,10 +157,7 @@ func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, err
 			}
 			c.logf("Registering resolver %v for interface type %v by explicit preference", matches[i], typ)
 			res = c.resolvers[matches[i]]
-		}
-
-		if len(matches) > 0 {
-			c.resolvers[typ] = res
+			c.preferredResolvers[fullyQualifiedModuleTypeName(typ, key)] = res
 		}
 	}
 

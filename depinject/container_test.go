@@ -725,4 +725,24 @@ func TestExplicitModuleBindings(t *testing.T) {
 			&pond))
 
 	require.IsType(t, pond.Duck, Mallard{})
+
+	require.ErrorContains(t,
+		depinject.Inject(
+			depinject.Configs(
+				depinject.PreferInModule(
+					"foo",
+					"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Duck",
+					"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Mallard"),
+				depinject.Provide(
+					func(depinject.ModuleKey) Mallard { return Mallard{} },
+					func(depinject.ModuleKey) Canvasback { return Canvasback{} },
+					func(duck Duck) Pond {
+						return Pond{Duck: duck}
+					}),
+				depinject.ProvideInModule(
+					"foo",
+					func(duck Duck) Pond {
+						return Pond{Duck: duck}
+					})),
+			&pond), "Multiple implementations found for interface")
 }

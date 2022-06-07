@@ -18,6 +18,13 @@ func fullyQualifiedTypeName(typ reflect.Type) string {
 	return fmt.Sprintf("%s/%v", typ.PkgPath(), typ)
 }
 
+func fullyQualifiedModuleTypeName(typ reflect.Type, key *moduleKey) string {
+	if key == nil {
+		return fmt.Sprintf("%s;", fullyQualifiedTypeName(typ))
+	}
+	return fmt.Sprintf("%s;%s", fullyQualifiedTypeName(typ), key.name)
+}
+
 func findPreference(ps []preference, typ reflect.Type, key *moduleKey) (preference, bool) {
 	if key != nil {
 		for _, p := range ps {

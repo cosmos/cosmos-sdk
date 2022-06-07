@@ -24,11 +24,7 @@ const (
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
-func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper,
-	bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper,
-) simulation.WeightedOperations {
-
+func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk types.StakingKeeper) simulation.WeightedOperations {
 	var weightMsgSetWithdrawAddress int
 	appParams.GetOrGenerate(cdc, OpWeightMsgSetWithdrawAddress, &weightMsgSetWithdrawAddress, nil,
 		func(_ *rand.Rand) {
@@ -57,6 +53,8 @@ func WeightedOperations(
 		},
 	)
 
+	stakeKeeper := sk.(stakingkeeper.Keeper)
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgSetWithdrawAddress,
@@ -64,15 +62,15 @@ func WeightedOperations(
 		),
 		simulation.NewWeightedOperation(
 			weightMsgWithdrawDelegationReward,
-			SimulateMsgWithdrawDelegatorReward(ak, bk, k, sk),
+			SimulateMsgWithdrawDelegatorReward(ak, bk, k, stakeKeeper),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgWithdrawValidatorCommission,
-			SimulateMsgWithdrawValidatorCommission(ak, bk, k, sk),
+			SimulateMsgWithdrawValidatorCommission(ak, bk, k, stakeKeeper),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgFundCommunityPool,
-			SimulateMsgFundCommunityPool(ak, bk, k, sk),
+			SimulateMsgFundCommunityPool(ak, bk, k, stakeKeeper),
 		),
 	}
 }

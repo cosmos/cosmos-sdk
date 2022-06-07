@@ -166,10 +166,12 @@ func DelegatorSharesInvariant(k *Keeper) sdk.Invariant {
 		validators := k.GetAllValidators(ctx)
 		validatorsDelegationShares := map[string]sdk.Dec{}
 
+		// initialize a map: validator -> its delegation shares
 		for _, validator := range validators {
 			validatorsDelegationShares[validator.GetOperator().String()] = sdk.ZeroDec()
 		}
 
+		// iterate through all the delegations to calculate the total delegation shares for each validator
 		delegations := k.GetAllDelegations(ctx)
 		for _, delegation := range delegations {
 			delegationValidatorAddr := delegation.GetValidatorAddr().String()
@@ -177,6 +179,7 @@ func DelegatorSharesInvariant(k *Keeper) sdk.Invariant {
 			validatorsDelegationShares[delegationValidatorAddr] = validatorDelegationShares.Add(delegation.Shares)
 		}
 
+		// for each validator, check if its total delegation shares calculated from the step above equals to its expected delegation shares
 		for _, validator := range validators {
 			expValTotalDelShares := validator.GetDelegatorShares()
 			calculatedValTotalDelShares := validatorsDelegationShares[validator.GetOperator().String()]

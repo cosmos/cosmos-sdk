@@ -187,12 +187,15 @@ type groupInputs struct {
 }
 
 func provideModule(in groupInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
-	groupConfig := group.DefaultConfig()
-	/*
-		Example of setting group params:
-		groupConfig.MaxMetadataLen = 1000
-	*/
-	k := keeper.NewKeeper(in.KVStoreKey, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, groupConfig)
+	var groupConfig modulev1.Config
+	if groupConfig.MaxMetadataLen == 0 {
+		groupConfig = modulev1.Config{MaxMetadataLen: group.DefaultConfig().MaxMetadataLen}
+		/*
+			Example of setting group params:
+			groupConfig.MaxMetadataLen = 1000
+		*/
+	}
+	k := keeper.NewKeeper(in.KVStoreKey, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, group.Config{groupConfig.MaxExecutionPeriod.AsDuration(), groupConfig.MaxMetadataLen})
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
 	return k, runtime.WrapAppModule(m)
 }

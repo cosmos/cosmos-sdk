@@ -24,15 +24,7 @@ const (
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
-<<<<<<< HEAD
-func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper,
-	bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper,
-) simulation.WeightedOperations {
-
-=======
 func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk types.StakingKeeper) simulation.WeightedOperations {
->>>>>>> 7c4e4c1a4 (chore: remove direct reliance on staking from slashing (#12177))
 	var weightMsgSetWithdrawAddress int
 	appParams.GetOrGenerate(cdc, OpWeightMsgSetWithdrawAddress, &weightMsgSetWithdrawAddress, nil,
 		func(_ *rand.Rand) {
@@ -61,7 +53,7 @@ func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak ty
 		},
 	)
 
-	stakeKeeper := sk.(*stakingkeeper.Keeper)
+	stakeKeeper := sk.(stakingkeeper.Keeper)
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(

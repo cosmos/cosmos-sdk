@@ -94,21 +94,13 @@ type AppModule struct {
 	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
-<<<<<<< HEAD
-	stakingKeeper stakingkeeper.Keeper
-=======
 	stakingKeeper types.StakingKeeper
->>>>>>> 7c4e4c1a4 (chore: remove direct reliance on staking from slashing (#12177))
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(
 	cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper,
-<<<<<<< HEAD
-	bankKeeper types.BankKeeper, stakingKeeper stakingkeeper.Keeper,
-=======
 	bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper,
->>>>>>> 7c4e4c1a4 (chore: remove direct reliance on staking from slashing (#12177))
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},

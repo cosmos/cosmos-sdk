@@ -653,7 +653,7 @@ type Pond struct {
 	Duck AlsoDuck
 }
 
-func TestImplicitBindings(t *testing.T) {
+func TestImplicitAndExplicitBindings(t *testing.T) {
 	var pond Pond
 
 	require.NoError(t,
@@ -668,13 +668,61 @@ func TestImplicitBindings(t *testing.T) {
 
 	require.NotNil(t, pond)
 
-	require.Error(t,
+	multImplProvider := depinject.Provide(
+		func() Mallard { return Mallard{} },
+		func() Canvasback { return Canvasback{} },
+		func(duck Duck) Pond {
+			return Pond{Duck: duck}
+		})
+	canvasbackPref := depinject.Prefer(
+		"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Duck",
+		"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Canvasback")
+
+	require.ErrorContains(t, depinject.Inject(multImplProvider, &pond), "Multiple implementations")
+
+	require.NoError(t,
 		depinject.Inject(
-			depinject.Provide(
-				func() Mallard { return Mallard{} },
-				func() Canvasback { return Canvasback{} },
-				func(duck Duck) Pond {
-					return Pond{Duck: duck}
-				}),
+			depinject.Configs(canvasbackPref, multImplProvider),
 			&pond))
+
+	require.IsType(t, pond.Duck, Canvasback{})
+
+}
+
+func TestExplicitModuleBindings(t *testing.T) {
+	var pond Pond
+
+	require.ErrorContains(t,
+		depinject.Inject(
+			depinject.Configs(
+				depinject.PreferInModule(
+					"foo",
+					"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Duck",
+					"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.DoesNotExist"),
+				depinject.Provide(
+					func(depinject.ModuleKey) Mallard { return Mallard{} },
+					func(depinject.ModuleKey) Canvasback { return Canvasback{} }),
+				depinject.ProvideInModule("foo",
+					func(duck Duck) Pond {
+						return Pond{Duck: duck}
+					})),
+			&pond), "Given the explicit interface binding")
+
+	require.NoError(t,
+		depinject.Inject(
+			depinject.Configs(
+				depinject.PreferInModule(
+					"foo",
+					"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Duck",
+					"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Mallard"),
+				depinject.Provide(
+					func(depinject.ModuleKey) Mallard { return Mallard{} },
+					func(depinject.ModuleKey) Canvasback { return Canvasback{} }),
+				depinject.ProvideInModule("foo",
+					func(duck Duck) Pond {
+						return Pond{Duck: duck}
+					})),
+			&pond))
+
+	require.IsType(t, pond.Duck, Mallard{})
 }

@@ -48,6 +48,30 @@ func provide(ctr *container, key *moduleKey, providers []interface{}) error {
 	return nil
 }
 
+// Prefer defines a container configuration
+func Prefer(inTypeName string, outTypeName string) Config {
+	return containerConfig(func(ctr *container) error {
+		return prefer(ctr, inTypeName, outTypeName, "")
+	})
+}
+
+// PreferInModule defines a container configuration
+func PreferInModule(moduleName string, inTypeName string, outTypeName string) Config {
+	return containerConfig(func(ctr *container) error {
+		return prefer(ctr, inTypeName, outTypeName, moduleName)
+	})
+}
+
+func prefer(ctr *container, inTypeName string, outTypeName string, moduleName string) error {
+	ctr.addPreference(Preference{
+		Interface:      inTypeName,
+		Implementation: outTypeName,
+		ModuleName:     moduleName,
+	})
+
+	return nil
+}
+
 func Supply(values ...interface{}) Config {
 	loc := LocationFromCaller(1)
 	return containerConfig(func(ctr *container) error {

@@ -5,13 +5,15 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
 	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 	"reflect"
 )
 
 type container struct {
 	*debugConfig
 
-	resolvers map[reflect.Type]resolver
+	resolvers   map[reflect.Type]resolver
+	preferences []Preference
 
 	moduleKeys map[string]*moduleKey
 
@@ -30,6 +32,7 @@ func newContainer(cfg *debugConfig) *container {
 		debugConfig: cfg,
 		resolvers:   map[reflect.Type]resolver{},
 		moduleKeys:  map[string]*moduleKey{},
+		preferences: []Preference{},
 		callerStack: nil,
 		callerMap:   map[Location]bool{},
 	}
@@ -74,7 +77,7 @@ func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]
 	return out, nil
 }
 
-func (c *container) getResolver(typ reflect.Type) (resolver, error) {
+func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, error) {
 	c.logf("Resolving %v", typ)
 	if vr, ok := c.resolvers[typ]; ok {
 		return vr, nil
@@ -124,19 +127,32 @@ func (c *container) getResolver(typ reflect.Type) (resolver, error) {
 	res := c.resolvers[typ]
 
 	if res == nil && typ.Kind() == reflect.Interface {
-		var found bool
-		for k, r := range c.resolvers {
+		var matches []reflect.Type
+		for k := range c.resolvers {
 			if k.Kind() != reflect.Interface && k.Implements(typ) {
-				c.logf("Found candidate resolver, implicitly binding interface %v to implementing type %v.", typ, k)
-				if found {
-					return nil, &ErrMultipleImplicitInterfaceBindings{Interface: typ}
-				}
-				res = r
-				found = true
+				matches = append(matches, k)
 			}
 		}
 
-		if found {
+		if len(matches) == 1 {
+			res = c.resolvers[matches[0]]
+			c.logf("Implicitly registering resolver %v for interface type %v", matches[0], typ)
+		} else if len(matches) > 1 {
+			p, found := findPreference(c.preferences, typ, key)
+			if !found {
+				return nil, &ErrMultipleImplicitInterfaceBindings{Interface: typ, Matches: matches}
+			}
+			i := slices.IndexFunc(matches, func(t reflect.Type) bool {
+				return fullyQualifiedTypeName(t) == p.Implementation
+			})
+			if i == -1 {
+				return nil, &ErrExplicitBindingNotFound{Preference: p}
+			}
+			c.logf("Registering resolver %v for interface type %v by explicit preference", matches[i], typ)
+			res = c.resolvers[matches[i]]
+		}
+
+		if len(matches) > 0 {
 			c.resolvers[typ] = res
 		}
 	}
@@ -166,7 +182,7 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 			return nil, fmt.Errorf("one-per-module type %v can't be used as an input parameter", typ)
 		}
 
-		vr, err := c.getResolver(typ)
+		vr, err := c.getResolver(typ, key)
 		if err != nil {
 			return nil, err
 		}
@@ -208,7 +224,7 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 				typ = typ.Elem()
 			}
 
-			vr, err := c.getResolver(typ)
+			vr, err := c.getResolver(typ, key)
 			if err != nil {
 				return nil, err
 			}
@@ -323,7 +339,7 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 		return reflect.ValueOf(OwnModuleKey{moduleKey}), nil
 	}
 
-	vr, err := c.getResolver(in.Type)
+	vr, err := c.getResolver(in.Type, moduleKey)
 	if err != nil {
 		return reflect.Value{}, err
 	}
@@ -431,6 +447,10 @@ func (c container) formatResolveStack() string {
 		_, _ = fmt.Fprintf(buf, "\t\t%v for %s\n", rk.typ, rk.loc)
 	}
 	return buf.String()
+}
+
+func (c *container) addPreference(p Preference) {
+	c.preferences = append(c.preferences, p)
 }
 
 func markGraphNodeAsUsed(node *graphviz.Node) {

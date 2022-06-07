@@ -184,16 +184,15 @@ type groupInputs struct {
 	BankKeeper       group.BankKeeper    `key:"cosmos.bank.v1.Keeper"`
 	Registry         cdctypes.InterfaceRegistry
 	MsgServiceRouter *baseapp.MsgServiceRouter
-	groupConfig      group.Config
 }
 
 func provideModule(in groupInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
-	in.groupConfig = group.DefaultConfig()
+	groupConfig := group.DefaultConfig()
 	/*
 		Example of setting group params:
 		groupConfig.MaxMetadataLen = 1000
 	*/
-	k := keeper.NewKeeper(in.KVStoreKey, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, in.groupConfig)
+	k := keeper.NewKeeper(in.KVStoreKey, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, groupConfig)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
 	return k, runtime.WrapAppModule(m)
 }

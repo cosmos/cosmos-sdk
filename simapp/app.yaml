@@ -66,4 +66,4 @@ modules:
 
   - name: group
     config:
-      "@type": cosmos.group.module.v1.Module
+      "@type": cosmos.group.v1.module.v1.Module

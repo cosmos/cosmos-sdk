@@ -382,6 +382,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Module is the config object of the group module.
 type Module struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

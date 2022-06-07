@@ -35,6 +35,8 @@ type Keeper interface {
 	GetSupplyWithOffset(ctx sdk.Context, denom string) sdk.Coin
 	GetPaginatedTotalSupplyWithOffsets(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error)
 	IterateTotalSupplyWithOffsets(ctx sdk.Context, cb func(sdk.Coin) bool)
+	GetBaseDenom(ctx sdk.Context, denom string) (string, bool)
+
 	GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool)
 	SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)
 	IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool)
@@ -52,8 +54,6 @@ type Keeper interface {
 
 	DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
 	UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
-
-	types.QueryServer
 }
 
 // BaseKeeper manages transfers between accounts. It implements the Keeper interface.
@@ -328,13 +328,60 @@ func (k BaseKeeper) IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metad
 	}
 }
 
-// SetDenomMetaData sets the denominations metadata
-func (k BaseKeeper) SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata) {
+// SetDenomMetaData sets denomination metadata. It also stores a reverse lookup
+// key from each of the denom's base units to the base denom itself, allowing a
+// caller to be able to query for the base denom without knowing it ahead of time,
+// only requiring knowledge of any given denom unit. E.g. a caller could fetch
+// the base denom of an ATOM IBC asset using the denom unit of 'uatom'.
+//
+// Note, it is the caller's responsibility to ensure they are not overwriting
+// denomination metadata for assets with the same base denom, or rather to
+// ensure that metadata cannot exist for more than one base denom. The same
+// applies for base units. In other words, the caller must ensure base denoms
+// and their denom units are globally unique.
+func (k BaseKeeper) SetDenomMetaData(ctx sdk.Context, denomMetadata types.Metadata) {
 	store := ctx.KVStore(k.storeKey)
-	denomMetaDataStore := prefix.NewStore(store, types.DenomMetadataKey(denomMetaData.Base))
+	denomMetaDataStore := prefix.NewStore(store, types.DenomMetadataKey(denomMetadata.Base))
 
-	m := k.cdc.MustMarshal(&denomMetaData)
-	denomMetaDataStore.Set([]byte(denomMetaData.Base), m)
+	m := k.cdc.MustMarshal(&denomMetadata)
+	denomMetaDataStore.Set([]byte(denomMetadata.Base), m)
+
+	// Store denom units under a separate store that acts as a reverse lookup index
+	// to the base denom and the corresponding metadata.
+	denomMetadataReverseStore := prefix.NewStore(store, types.DenomMetadataReversePrefix)
+	for _, unit := range denomMetadata.DenomUnits {
+		denomMetadataReverseStore.Set([]byte(unit.Denom), []byte(denomMetadata.Base))
+	}
+}
+
+// GetBaseDenom queries for a base denom, given a denom that can either be the
+// base denom itself, or a metadata denom unit, that maps to the base denom. There
+// are three cases where we can find the base denom:
+//
+// 1. The denom provided is already the base denom, which means we'll have
+// supply for it.
+// 2. The denom provided is already the base denom, which we can get from
+// metadata, but that does not necessarily need to exist.
+// 3. The denom provided is a metadata denom unit that maps to the base denom.
+//
+// We can skip case (2) as case (1) should handle that for us. If the base denom
+// exists, we return (<baseDenom>, true), otherwise, we return ("", false).
+func (k BaseKeeper) GetBaseDenom(ctx sdk.Context, denom string) (string, bool) {
+	store := ctx.KVStore(k.storeKey)
+
+	// first, check if the provided denom is already the base denom
+	if k.HasSupply(ctx, denom) {
+		return denom, true
+	}
+
+	// otherwise, check for a denom unit and return the corresponding base denom
+	reversePrefixStore := prefix.NewStore(store, types.DenomMetadataReversePrefix)
+	if bz := reversePrefixStore.Get([]byte(denom)); len(bz) > 0 {
+		// the value is the base denom
+		return string(bz), true
+	}
+
+	return "", false
 }
 
 // SendCoinsFromModuleToAccount transfers coins from a ModuleAccount to an AccAddress.

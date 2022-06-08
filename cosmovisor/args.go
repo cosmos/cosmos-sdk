@@ -2,7 +2,6 @@ package cosmovisor
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -23,6 +22,7 @@ const (
 	EnvName                 = "DAEMON_NAME"
 	EnvDownloadBin          = "DAEMON_ALLOW_DOWNLOAD_BINARIES"
 	EnvRestartUpgrade       = "DAEMON_RESTART_AFTER_UPGRADE"
+	EnvRestartDelay         = "DAEMON_RESTART_DELAY"
 	EnvSkipBackup           = "UNSAFE_SKIP_BACKUP"
 	EnvDataBackupPath       = "DAEMON_DATA_BACKUP_DIR"
 	EnvInterval             = "DAEMON_POLL_INTERVAL"
@@ -45,6 +45,7 @@ type Config struct {
 	Name                  string
 	AllowDownloadBinaries bool
 	RestartAfterUpgrade   bool
+	RestartDelay          time.Duration
 	PollInterval          time.Duration
 	UnsafeSkipBackup      bool
 	DataBackupPath        string
@@ -95,6 +96,13 @@ func (cfg *Config) SymLinkToGenesis() (string, error) {
 	}
 	// and return the genesis binary
 	return cfg.GenesisBin(), nil
+}
+
+// WaitRestartDelay wait the defined restart delay
+func (cfg *Config) WaitRestartDelay() {
+	if cfg.RestartDelay > 0 {
+		time.Sleep(cfg.RestartDelay)
+	}
 }
 
 // CurrentBin is the path to the currently selected binary (genesis if no link is set)
@@ -152,21 +160,26 @@ func GetConfigFromEnv() (*Config, error) {
 
 	interval := os.Getenv(EnvInterval)
 	if interval != "" {
-		var intervalUInt uint64
-		intervalUInt, err = strconv.ParseUint(interval, 10, 32)
-		if err == nil {
-			cfg.PollInterval = time.Millisecond * time.Duration(intervalUInt)
+		val, err := parseEnvDuration(interval)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("invalid: %s: %w", EnvInterval, err))
 		} else {
-			cfg.PollInterval, err = time.ParseDuration(interval)
-		}
-		switch {
-		case err != nil:
-			errs = append(errs, fmt.Errorf("invalid %s: could not parse \"%s\" into either a duration or uint (milliseconds)", EnvInterval, interval))
-		case cfg.PollInterval <= 0:
-			errs = append(errs, fmt.Errorf("invalid %s: must be greater than 0", EnvInterval))
+			cfg.PollInterval = val
 		}
 	} else {
 		cfg.PollInterval = 300 * time.Millisecond
+	}
+
+	restartDelay := os.Getenv(EnvRestartDelay)
+	if restartDelay != "" {
+		val, err := parseEnvDuration(restartDelay)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("invalid: %s: %w", EnvRestartDelay, err))
+		} else {
+			cfg.RestartDelay = val
+		}
+	} else {
+		cfg.RestartDelay = 0 // default value but still setting for clarity
 	}
 
 	envPreupgradeMaxRetriesVal := os.Getenv(EnvPreupgradeMaxRetries)
@@ -180,6 +193,27 @@ func GetConfigFromEnv() (*Config, error) {
 		return nil, cverrors.FlattenErrors(errs...)
 	}
 	return cfg, nil
+}
+
+func parseEnvDuration(input string) (time.Duration, error) {
+	var duration time.Duration
+
+	inputUInt, err := strconv.ParseUint(input, 10, 32)
+	if err == nil {
+		duration = time.Millisecond * time.Duration(inputUInt)
+	} else {
+		duration, err = time.ParseDuration(input)
+	}
+
+	if err != nil {
+		return 0, fmt.Errorf("could not parse \"%s\" into either a duration or uint (milliseconds)", input)
+	}
+
+	if duration <= 0 {
+		return 0, fmt.Errorf("must be greater than 0")
+	}
+
+	return duration, nil
 }
 
 // LogConfigOrError logs either the config details or the error.
@@ -201,15 +235,18 @@ func LogConfigOrError(logger *zerolog.Logger, cfg *Config, err error) {
 // and that Name is set
 func (cfg *Config) validate() []error {
 	var errs []error
+
+	// validate EnvName
 	if cfg.Name == "" {
-		errs = append(errs, errors.New(EnvName+" is not set"))
+		errs = append(errs, fmt.Errorf("%s is not set", EnvName))
 	}
 
+	// validate EnvHome
 	switch {
 	case cfg.Home == "":
-		errs = append(errs, errors.New(EnvHome+" is not set"))
+		errs = append(errs, fmt.Errorf("%s is not set", EnvHome))
 	case !filepath.IsAbs(cfg.Home):
-		errs = append(errs, errors.New(EnvHome+" must be an absolute path"))
+		errs = append(errs, fmt.Errorf("%s must be an absolute path", EnvHome))
 	default:
 		switch info, err := os.Stat(cfg.Root()); {
 		case err != nil:
@@ -223,7 +260,8 @@ func (cfg *Config) validate() []error {
 	if cfg.UnsafeSkipBackup == true {
 		return errs
 	}
-	// if UnsafeSkipBackup is false, check if the DataBackupPath valid
+
+	// if UnsafeSkipBackup is false, validate DataBackupPath
 	switch {
 	case cfg.DataBackupPath == "":
 		errs = append(errs, fmt.Errorf("%s must not be empty", EnvDataBackupPath))
@@ -327,11 +365,13 @@ func (cfg Config) DetailString() string {
 		{EnvName, cfg.Name},
 		{EnvDownloadBin, fmt.Sprintf("%t", cfg.AllowDownloadBinaries)},
 		{EnvRestartUpgrade, fmt.Sprintf("%t", cfg.RestartAfterUpgrade)},
+		{EnvRestartDelay, fmt.Sprintf("%s", cfg.RestartDelay)},
 		{EnvInterval, fmt.Sprintf("%s", cfg.PollInterval)},
 		{EnvSkipBackup, fmt.Sprintf("%t", cfg.UnsafeSkipBackup)},
 		{EnvDataBackupPath, cfg.DataBackupPath},
 		{EnvPreupgradeMaxRetries, fmt.Sprintf("%d", cfg.PreupgradeMaxRetries)},
 	}
+
 	derivedEntries := []struct{ name, value string }{
 		{"Root Dir", cfg.Root()},
 		{"Upgrade Dir", cfg.BaseUpgradeDir()},

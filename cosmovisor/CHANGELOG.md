@@ -39,6 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [\#XXXXX](https://github.com/cosmos/cosmos-sdk/pull/XXXXX) Add a `DAEMON_RESTART_DELAY` for allowing a node operator to define a delay between the node halt (for upgrade) and backup.
 * [\#11823](https://github.com/cosmos/cosmos-sdk/pull/11823) Refactor `cosmovisor` CLI to use `cobra`.
 * [\#11731](https://github.com/cosmos/cosmos-sdk/pull/11731) `cosmovisor version -o json` returns the cosmovisor version and the result of `simd --output json --long` in one JSON object.
 

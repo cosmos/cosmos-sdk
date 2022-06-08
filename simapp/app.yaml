@@ -67,3 +67,4 @@ modules:
   - name: group
     config:
       "@type": cosmos.group.v1.module.v1.Module
+      max_metadata_len: 255

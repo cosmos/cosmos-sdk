@@ -16,14 +16,16 @@ import (
 )
 
 var (
-	md_Module              protoreflect.MessageDescriptor
-	fd_Module_group_config protoreflect.FieldDescriptor
+	md_Module                      protoreflect.MessageDescriptor
+	fd_Module_max_execution_period protoreflect.FieldDescriptor
+	fd_Module_max_metadata_len     protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_group_v1_module_v1_module_proto_init()
 	md_Module = File_cosmos_group_v1_module_v1_module_proto.Messages().ByName("Module")
-	fd_Module_group_config = md_Module.Fields().ByName("group_config")
+	fd_Module_max_execution_period = md_Module.Fields().ByName("max_execution_period")
+	fd_Module_max_metadata_len = md_Module.Fields().ByName("max_metadata_len")
 }
 
 var _ protoreflect.Message = (*fastReflection_Module)(nil)
@@ -91,9 +93,15 @@ func (x *fastReflection_Module) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_Module) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.GroupConfig != nil {
-		value := protoreflect.ValueOfMessage(x.GroupConfig.ProtoReflect())
-		if !f(fd_Module_group_config, value) {
+	if x.MaxExecutionPeriod != nil {
+		value := protoreflect.ValueOfMessage(x.MaxExecutionPeriod.ProtoReflect())
+		if !f(fd_Module_max_execution_period, value) {
+			return
+		}
+	}
+	if x.MaxMetadataLen != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.MaxMetadataLen)
+		if !f(fd_Module_max_metadata_len, value) {
 			return
 		}
 	}
@@ -112,8 +120,10 @@ func (x *fastReflection_Module) Range(f func(protoreflect.FieldDescriptor, proto
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_Module) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.group.v1.module.v1.Module.group_config":
-		return x.GroupConfig != nil
+	case "cosmos.group.v1.module.v1.Module.max_execution_period":
+		return x.MaxExecutionPeriod != nil
+	case "cosmos.group.v1.module.v1.Module.max_metadata_len":
+		return x.MaxMetadataLen != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.module.v1.Module"))
@@ -130,8 +140,10 @@ func (x *fastReflection_Module) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Module) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.group.v1.module.v1.Module.group_config":
-		x.GroupConfig = nil
+	case "cosmos.group.v1.module.v1.Module.max_execution_period":
+		x.MaxExecutionPeriod = nil
+	case "cosmos.group.v1.module.v1.Module.max_metadata_len":
+		x.MaxMetadataLen = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.module.v1.Module"))
@@ -148,9 +160,12 @@ func (x *fastReflection_Module) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_Module) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.group.v1.module.v1.Module.group_config":
-		value := x.GroupConfig
+	case "cosmos.group.v1.module.v1.Module.max_execution_period":
+		value := x.MaxExecutionPeriod
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "cosmos.group.v1.module.v1.Module.max_metadata_len":
+		value := x.MaxMetadataLen
+		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.module.v1.Module"))
@@ -171,8 +186,10 @@ func (x *fastReflection_Module) Get(descriptor protoreflect.FieldDescriptor) pro
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Module) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.group.v1.module.v1.Module.group_config":
-		x.GroupConfig = value.Message().Interface().(*Config)
+	case "cosmos.group.v1.module.v1.Module.max_execution_period":
+		x.MaxExecutionPeriod = value.Message().Interface().(*durationpb.Duration)
+	case "cosmos.group.v1.module.v1.Module.max_metadata_len":
+		x.MaxMetadataLen = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.module.v1.Module"))
@@ -193,11 +210,13 @@ func (x *fastReflection_Module) Set(fd protoreflect.FieldDescriptor, value proto
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Module) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1.module.v1.Module.group_config":
-		if x.GroupConfig == nil {
-			x.GroupConfig = new(Config)
+	case "cosmos.group.v1.module.v1.Module.max_execution_period":
+		if x.MaxExecutionPeriod == nil {
+			x.MaxExecutionPeriod = new(durationpb.Duration)
 		}
-		return protoreflect.ValueOfMessage(x.GroupConfig.ProtoReflect())
+		return protoreflect.ValueOfMessage(x.MaxExecutionPeriod.ProtoReflect())
+	case "cosmos.group.v1.module.v1.Module.max_metadata_len":
+		panic(fmt.Errorf("field max_metadata_len of message cosmos.group.v1.module.v1.Module is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.module.v1.Module"))
@@ -211,9 +230,11 @@ func (x *fastReflection_Module) Mutable(fd protoreflect.FieldDescriptor) protore
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_Module) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1.module.v1.Module.group_config":
-		m := new(Config)
+	case "cosmos.group.v1.module.v1.Module.max_execution_period":
+		m := new(durationpb.Duration)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "cosmos.group.v1.module.v1.Module.max_metadata_len":
+		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.module.v1.Module"))
@@ -283,9 +304,12 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		if x.GroupConfig != nil {
-			l = options.Size(x.GroupConfig)
+		if x.MaxExecutionPeriod != nil {
+			l = options.Size(x.MaxExecutionPeriod)
 			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.MaxMetadataLen != 0 {
+			n += 1 + runtime.Sov(uint64(x.MaxMetadataLen))
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -316,8 +340,13 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.GroupConfig != nil {
-			encoded, err := options.Marshal(x.GroupConfig)
+		if x.MaxMetadataLen != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.MaxMetadataLen))
+			i--
+			dAtA[i] = 0x10
+		}
+		if x.MaxExecutionPeriod != nil {
+			encoded, err := options.Marshal(x.MaxExecutionPeriod)
 			if err != nil {
 				return protoiface.MarshalOutput{
 					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -377,470 +406,6 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 			}
 			if fieldNum <= 0 {
 				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Module: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field GroupConfig", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.GroupConfig == nil {
-					x.GroupConfig = &Config{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.GroupConfig); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var (
-	md_Config                      protoreflect.MessageDescriptor
-	fd_Config_max_execution_period protoreflect.FieldDescriptor
-	fd_Config_max_metadata_len     protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_cosmos_group_v1_module_v1_module_proto_init()
-	md_Config = File_cosmos_group_v1_module_v1_module_proto.Messages().ByName("Config")
-	fd_Config_max_execution_period = md_Config.Fields().ByName("max_execution_period")
-	fd_Config_max_metadata_len = md_Config.Fields().ByName("max_metadata_len")
-}
-
-var _ protoreflect.Message = (*fastReflection_Config)(nil)
-
-type fastReflection_Config Config
-
-func (x *Config) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_Config)(x)
-}
-
-func (x *Config) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_group_v1_module_v1_module_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_Config_messageType fastReflection_Config_messageType
-var _ protoreflect.MessageType = fastReflection_Config_messageType{}
-
-type fastReflection_Config_messageType struct{}
-
-func (x fastReflection_Config_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_Config)(nil)
-}
-func (x fastReflection_Config_messageType) New() protoreflect.Message {
-	return new(fastReflection_Config)
-}
-func (x fastReflection_Config_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_Config
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_Config) Descriptor() protoreflect.MessageDescriptor {
-	return md_Config
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_Config) Type() protoreflect.MessageType {
-	return _fastReflection_Config_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_Config) New() protoreflect.Message {
-	return new(fastReflection_Config)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_Config) Interface() protoreflect.ProtoMessage {
-	return (*Config)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_Config) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.MaxExecutionPeriod != nil {
-		value := protoreflect.ValueOfMessage(x.MaxExecutionPeriod.ProtoReflect())
-		if !f(fd_Config_max_execution_period, value) {
-			return
-		}
-	}
-	if x.MaxMetadataLen != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.MaxMetadataLen)
-		if !f(fd_Config_max_metadata_len, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_Config) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "cosmos.group.v1.module.v1.Config.max_execution_period":
-		return x.MaxExecutionPeriod != nil
-	case "cosmos.group.v1.module.v1.Config.max_metadata_len":
-		return x.MaxMetadataLen != uint64(0)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.module.v1.Config"))
-		}
-		panic(fmt.Errorf("message cosmos.group.v1.module.v1.Config does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Config) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "cosmos.group.v1.module.v1.Config.max_execution_period":
-		x.MaxExecutionPeriod = nil
-	case "cosmos.group.v1.module.v1.Config.max_metadata_len":
-		x.MaxMetadataLen = uint64(0)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.module.v1.Config"))
-		}
-		panic(fmt.Errorf("message cosmos.group.v1.module.v1.Config does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_Config) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "cosmos.group.v1.module.v1.Config.max_execution_period":
-		value := x.MaxExecutionPeriod
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.group.v1.module.v1.Config.max_metadata_len":
-		value := x.MaxMetadataLen
-		return protoreflect.ValueOfUint64(value)
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.module.v1.Config"))
-		}
-		panic(fmt.Errorf("message cosmos.group.v1.module.v1.Config does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Config) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "cosmos.group.v1.module.v1.Config.max_execution_period":
-		x.MaxExecutionPeriod = value.Message().Interface().(*durationpb.Duration)
-	case "cosmos.group.v1.module.v1.Config.max_metadata_len":
-		x.MaxMetadataLen = value.Uint()
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.module.v1.Config"))
-		}
-		panic(fmt.Errorf("message cosmos.group.v1.module.v1.Config does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Config) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "cosmos.group.v1.module.v1.Config.max_execution_period":
-		if x.MaxExecutionPeriod == nil {
-			x.MaxExecutionPeriod = new(durationpb.Duration)
-		}
-		return protoreflect.ValueOfMessage(x.MaxExecutionPeriod.ProtoReflect())
-	case "cosmos.group.v1.module.v1.Config.max_metadata_len":
-		panic(fmt.Errorf("field max_metadata_len of message cosmos.group.v1.module.v1.Config is not mutable"))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.module.v1.Config"))
-		}
-		panic(fmt.Errorf("message cosmos.group.v1.module.v1.Config does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_Config) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "cosmos.group.v1.module.v1.Config.max_execution_period":
-		m := new(durationpb.Duration)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.group.v1.module.v1.Config.max_metadata_len":
-		return protoreflect.ValueOfUint64(uint64(0))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.module.v1.Config"))
-		}
-		panic(fmt.Errorf("message cosmos.group.v1.module.v1.Config does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_Config) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1.module.v1.Config", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_Config) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Config) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_Config) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_Config) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*Config)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		if x.MaxExecutionPeriod != nil {
-			l = options.Size(x.MaxExecutionPeriod)
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.MaxMetadataLen != 0 {
-			n += 1 + runtime.Sov(uint64(x.MaxMetadataLen))
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*Config)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if x.MaxMetadataLen != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.MaxMetadataLen))
-			i--
-			dAtA[i] = 0x10
-		}
-		if x.MaxExecutionPeriod != nil {
-			encoded, err := options.Marshal(x.MaxExecutionPeriod)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0xa
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*Config)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Config: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Config: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -952,8 +517,10 @@ type Module struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// group_config is the config for group module.
-	GroupConfig *Config `protobuf:"bytes,1,opt,name=group_config,json=groupConfig,proto3" json:"group_config,omitempty"`
+	// max_execution_period defines the max duration after a proposal's voting period ends that members can send a MsgExec to execute the proposal.
+	MaxExecutionPeriod *durationpb.Duration `protobuf:"bytes,1,opt,name=max_execution_period,json=maxExecutionPeriod,proto3" json:"max_execution_period,omitempty"`
+	// max_metadata_len defines the max length of the metadata bytes field for various entities within the group module. Defaults to 255 if not explicitly set.
+	MaxMetadataLen uint64 `protobuf:"varint,2,opt,name=max_metadata_len,json=maxMetadataLen,proto3" json:"max_metadata_len,omitempty"`
 }
 
 func (x *Module) Reset() {
@@ -976,53 +543,14 @@ func (*Module) Descriptor() ([]byte, []int) {
 	return file_cosmos_group_v1_module_v1_module_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Module) GetGroupConfig() *Config {
-	if x != nil {
-		return x.GroupConfig
-	}
-	return nil
-}
-
-// Config represents the config for initialising the group module.
-type Config struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// max_execution_period defines the max duration after a proposal's voting period ends that members can send a MsgExec to execute the proposal.
-	MaxExecutionPeriod *durationpb.Duration `protobuf:"bytes,1,opt,name=max_execution_period,json=maxExecutionPeriod,proto3" json:"max_execution_period,omitempty"`
-	// max_metadata_len defines the max length of the metadata bytes field for various entities within the group module. Defaults to 255 if not explicitly set.
-	MaxMetadataLen uint64 `protobuf:"varint,2,opt,name=max_metadata_len,json=maxMetadataLen,proto3" json:"max_metadata_len,omitempty"`
-}
-
-func (x *Config) Reset() {
-	*x = Config{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_group_v1_module_v1_module_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Config) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Config) ProtoMessage() {}
-
-// Deprecated: Use Config.ProtoReflect.Descriptor instead.
-func (*Config) Descriptor() ([]byte, []int) {
-	return file_cosmos_group_v1_module_v1_module_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *Config) GetMaxExecutionPeriod() *durationpb.Duration {
+func (x *Module) GetMaxExecutionPeriod() *durationpb.Duration {
 	if x != nil {
 		return x.MaxExecutionPeriod
 	}
 	return nil
 }
 
-func (x *Config) GetMaxMetadataLen() uint64 {
+func (x *Module) GetMaxMetadataLen() uint64 {
 	if x != nil {
 		return x.MaxMetadataLen
 	}
@@ -1041,24 +569,19 @@ var file_cosmos_group_v1_module_v1_module_proto_rawDesc = []byte{
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e, 0x67, 0x6f, 0x6f,
 	0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x64, 0x75, 0x72,
-	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x7c, 0x0a, 0x06, 0x4d,
-	0x6f, 0x64, 0x75, 0x6c, 0x65, 0x12, 0x44, 0x0a, 0x0c, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x63,
-	0x6f, 0x6e, 0x66, 0x69, 0x67, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x2e, 0x6d, 0x6f,
-	0x64, 0x75, 0x6c, 0x65, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x0b,
-	0x67, 0x72, 0x6f, 0x75, 0x70, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x3a, 0x2c, 0xba, 0xc0, 0x96,
-	0xda, 0x01, 0x26, 0x0a, 0x24, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64,
-	0x6b, 0x2f, 0x78, 0x2f, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x22, 0x89, 0x01, 0x0a, 0x06, 0x43, 0x6f,
-	0x6e, 0x66, 0x69, 0x67, 0x12, 0x55, 0x0a, 0x14, 0x6d, 0x61, 0x78, 0x5f, 0x65, 0x78, 0x65, 0x63,
-	0x75, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x19, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x08, 0xc8,
-	0xde, 0x1f, 0x00, 0x98, 0xdf, 0x1f, 0x01, 0x52, 0x12, 0x6d, 0x61, 0x78, 0x45, 0x78, 0x65, 0x63,
-	0x75, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x12, 0x28, 0x0a, 0x10, 0x6d,
-	0x61, 0x78, 0x5f, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5f, 0x6c, 0x65, 0x6e, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0e, 0x6d, 0x61, 0x78, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
-	0x74, 0x61, 0x4c, 0x65, 0x6e, 0x42, 0xea, 0x01, 0x0a, 0x1d, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xb7, 0x01, 0x0a, 0x06,
+	0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x12, 0x55, 0x0a, 0x14, 0x6d, 0x61, 0x78, 0x5f, 0x65, 0x78,
+	0x65, 0x63, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42,
+	0x08, 0xc8, 0xde, 0x1f, 0x00, 0x98, 0xdf, 0x1f, 0x01, 0x52, 0x12, 0x6d, 0x61, 0x78, 0x45, 0x78,
+	0x65, 0x63, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x12, 0x28, 0x0a,
+	0x10, 0x6d, 0x61, 0x78, 0x5f, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5f, 0x6c, 0x65,
+	0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0e, 0x6d, 0x61, 0x78, 0x4d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0x4c, 0x65, 0x6e, 0x3a, 0x2c, 0xba, 0xc0, 0x96, 0xda, 0x01, 0x26, 0x0a,
+	0x24, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x78, 0x2f,
+	0x67, 0x72, 0x6f, 0x75, 0x70, 0x42, 0xea, 0x01, 0x0a, 0x1d, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x2e, 0x6d, 0x6f,
 	0x64, 0x75, 0x6c, 0x65, 0x2e, 0x76, 0x31, 0x42, 0x0b, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x50,
 	0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x33, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64,
@@ -1088,20 +611,18 @@ func file_cosmos_group_v1_module_v1_module_proto_rawDescGZIP() []byte {
 	return file_cosmos_group_v1_module_v1_module_proto_rawDescData
 }
 
-var file_cosmos_group_v1_module_v1_module_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_cosmos_group_v1_module_v1_module_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_cosmos_group_v1_module_v1_module_proto_goTypes = []interface{}{
 	(*Module)(nil),              // 0: cosmos.group.v1.module.v1.Module
-	(*Config)(nil),              // 1: cosmos.group.v1.module.v1.Config
-	(*durationpb.Duration)(nil), // 2: google.protobuf.Duration
+	(*durationpb.Duration)(nil), // 1: google.protobuf.Duration
 }
 var file_cosmos_group_v1_module_v1_module_proto_depIdxs = []int32{
-	1, // 0: cosmos.group.v1.module.v1.Module.group_config:type_name -> cosmos.group.v1.module.v1.Config
-	2, // 1: cosmos.group.v1.module.v1.Config.max_execution_period:type_name -> google.protobuf.Duration
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	1, // 0: cosmos.group.v1.module.v1.Module.max_execution_period:type_name -> google.protobuf.Duration
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_group_v1_module_v1_module_proto_init() }
@@ -1122,18 +643,6 @@ func file_cosmos_group_v1_module_v1_module_proto_init() {
 				return nil
 			}
 		}
-		file_cosmos_group_v1_module_v1_module_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Config); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1141,7 +650,7 @@ func file_cosmos_group_v1_module_v1_module_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_group_v1_module_v1_module_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

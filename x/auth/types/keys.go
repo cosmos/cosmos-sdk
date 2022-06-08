@@ -1,6 +1,8 @@
 package types
 
 import (
+	"strconv"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -24,9 +26,16 @@ var (
 
 	// param key for global account number
 	GlobalAccountNumberKey = []byte("globalAccountNumber")
+
+	// AccountNumberStoreKeyPrefix prefix for account-by-id store
+	AccountNumberStoreKeyPrefix = []byte("accountNumber")
 )
 
 // AddressStoreKey turn an address to key used to get it from the account store
 func AddressStoreKey(addr sdk.AccAddress) []byte {
 	return append(AddressStoreKeyPrefix, addr.Bytes()...)
+}
+
+func AccountNumberStoreKey(accountNumber uint64) []byte {
+	return append(AccountNumberStoreKeyPrefix, []byte(strconv.Itoa(int(accountNumber)))...)
 }

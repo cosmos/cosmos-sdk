@@ -28,6 +28,8 @@ type QueryClient interface {
 	Accounts(ctx context.Context, in *QueryAccountsRequest, opts ...grpc.CallOption) (*QueryAccountsResponse, error)
 	// Account returns account details based on address.
 	Account(ctx context.Context, in *QueryAccountRequest, opts ...grpc.CallOption) (*QueryAccountResponse, error)
+	// AccountById returns account details based on account id
+	AccountById(ctx context.Context, in *QueryAccountByIdRequest, opts ...grpc.CallOption) (*QueryAccountByIdResponse, error)
 	// Params queries all parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// ModuleAccounts returns all the existing module accounts.
@@ -68,6 +70,15 @@ func (c *queryClient) Accounts(ctx context.Context, in *QueryAccountsRequest, op
 func (c *queryClient) Account(ctx context.Context, in *QueryAccountRequest, opts ...grpc.CallOption) (*QueryAccountResponse, error) {
 	out := new(QueryAccountResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.auth.v1beta1.Query/Account", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AccountById(ctx context.Context, in *QueryAccountByIdRequest, opts ...grpc.CallOption) (*QueryAccountByIdResponse, error) {
+	out := new(QueryAccountByIdResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.auth.v1beta1.Query/AccountById", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -129,6 +140,8 @@ type QueryServer interface {
 	Accounts(context.Context, *QueryAccountsRequest) (*QueryAccountsResponse, error)
 	// Account returns account details based on address.
 	Account(context.Context, *QueryAccountRequest) (*QueryAccountResponse, error)
+	// AccountById returns account details based on account id
+	AccountById(context.Context, *QueryAccountByIdRequest) (*QueryAccountByIdResponse, error)
 	// Params queries all parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// ModuleAccounts returns all the existing module accounts.
@@ -159,6 +172,9 @@ func (UnimplementedQueryServer) Accounts(context.Context, *QueryAccountsRequest)
 }
 func (UnimplementedQueryServer) Account(context.Context, *QueryAccountRequest) (*QueryAccountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Account not implemented")
+}
+func (UnimplementedQueryServer) AccountById(context.Context, *QueryAccountByIdRequest) (*QueryAccountByIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AccountById not implemented")
 }
 func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
@@ -220,6 +236,24 @@ func _Query_Account_Handler(srv interface{}, ctx context.Context, dec func(inter
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Account(ctx, req.(*QueryAccountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_AccountById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAccountByIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AccountById(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.auth.v1beta1.Query/AccountById",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AccountById(ctx, req.(*QueryAccountByIdRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -328,6 +362,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Account",
 			Handler:    _Query_Account_Handler,
+		},
+		{
+			MethodName: "AccountById",
+			Handler:    _Query_AccountById_Handler,
 		},
 		{
 			MethodName: "Params",

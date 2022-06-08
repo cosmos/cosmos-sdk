@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -41,6 +42,7 @@ func GetQueryCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		GetAccountCmd(),
+		GetAccountByIdCmd(),
 		GetAccountsCmd(),
 		QueryParamsCmd(),
 		QueryModuleAccountsCmd(),
@@ -112,6 +114,46 @@ func GetAccountCmd() *cobra.Command {
 				if !catchingUp {
 					return errors.Wrapf(err, "your node may be syncing, please check node status using `/status`")
 				}
+				return err
+			}
+
+			return clientCtx.PrintProto(res.Account)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetAccountByIdCmd returns a query account that will display the state of the
+// account at a given account id.
+func GetAccountByIdCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "account-by-id [id]",
+		Short: "Query for account by account id",
+		Args:  cobra.ExactArgs(1),
+		Example: fmt.Sprintf(
+			"%s q auth account-by-id 1", version.AppName,
+		),
+		Long: strings.TrimSpace(`Query the account by id:
+
+$ <appd> query auth account-by-id [id]
+`),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			id, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.AccountById(cmd.Context(), &types.QueryAccountByIdRequest{Id: uint64(id)})
+			if err != nil {
 				return err
 			}
 

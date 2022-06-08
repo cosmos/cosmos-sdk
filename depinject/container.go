@@ -481,13 +481,14 @@ func (c *container) addPreference(p preference) {
 }
 
 func (c *container) addResolver(typ reflect.Type, r resolver) {
-	c.resolversByType[typ] = r
+	//c.resolversByType[typ] = r
 	c.resolvers[fullyQualifiedTypeName(typ)] = r
 }
 
 func (c *container) resolverByType(typ reflect.Type) (resolver, bool) {
-	res, found := c.resolversByType[typ]
-	return res, found
+	//res, found := c.resolversByType[typ]
+	//return res, found
+	return c.resolverByTypeName(fullyQualifiedTypeName(typ))
 }
 
 func (c *container) resolverByTypeName(typeName string) (resolver, bool) {

@@ -48,7 +48,7 @@ require (
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.12.0
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.7.2
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.16.0
@@ -62,7 +62,10 @@ require (
 	sigs.k8s.io/yaml v1.3.0
 )
 
-require github.com/cosmos/cosmos-sdk/depinject v1.0.0-alpha.4
+require (
+	github.com/cosmos/cosmos-sdk/depinject v1.0.0-alpha.4
+	golang.org/x/exp v0.0.0-20220428152302-39d4317da171
+)
 
 require (
 	cloud.google.com/go v0.100.2 // indirect
@@ -149,7 +152,7 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
 )
 

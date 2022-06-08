@@ -87,7 +87,7 @@ func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, err
 		return pr, nil
 	}
 
-	if vr, ok := c.resolvers[typ]; ok {
+	if vr, ok := c.resolverByType(typ); ok {
 		return vr, nil
 	}
 
@@ -111,8 +111,8 @@ func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, err
 			graphNode: typeGraphNode,
 		}
 
-		c.resolvers[elemType] = r
-		c.resolvers[sliceType] = &sliceGroupResolver{r}
+		c.addResolver(elemType, r)
+		c.addResolver(sliceType, &sliceGroupResolver{r})
 	} else if isOnePerModuleType(elemType) {
 		c.logf("Registering resolver for one-per-module type %v", elemType)
 		mapType := reflect.MapOf(stringType, elemType)
@@ -128,11 +128,11 @@ func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, err
 			graphNode: typeGraphNode,
 		}
 
-		c.resolvers[elemType] = r
-		c.resolvers[mapType] = &mapOfOnePerModuleResolver{r}
+		c.addResolver(elemType, r)
+		c.addResolver(mapType, &mapOfOnePerModuleResolver{r})
 	}
 
-	res := c.resolvers[typ]
+	res, _ := c.resolverByType(typ)
 
 	if res == nil && typ.Kind() == reflect.Interface {
 		var matches []reflect.Type
@@ -145,7 +145,7 @@ func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, err
 		if len(matches) == 1 {
 			res = c.resolvers[matches[0]]
 			c.logf("Implicitly registering resolver %v for interface type %v", matches[0], typ)
-			c.resolvers[typ] = res
+			c.addResolver(typ, res)
 		} else if len(matches) > 1 {
 			return nil, &ErrMultipleImplicitInterfaceBindings{Interface: typ, Matches: matches}
 		}
@@ -270,7 +270,7 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 					graphNode:   typeGraphNode,
 					idxInValues: i,
 				}
-				c.resolvers[typ] = vr
+				c.addResolver(typ, vr)
 			}
 
 			c.addGraphEdge(providerGraphNode, vr.typeGraphNode())
@@ -298,20 +298,20 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 
 			c.logf("Registering resolver for module-scoped type %v", typ)
 
-			existing, ok := c.resolvers[typ]
+			existing, ok := c.resolverByType(typ)
 			if ok {
 				return nil, errors.Errorf("duplicate provision of type %v by module-scoped provider %s\n\talready provided by %s",
 					typ, provider.Location, existing.describeLocation())
 			}
 
 			typeGraphNode := c.typeGraphNode(typ)
-			c.resolvers[typ] = &moduleDepResolver{
+			c.addResolver(typ, &moduleDepResolver{
 				typ:         typ,
 				idxInValues: i,
 				node:        node,
 				valueMap:    map[*moduleKey]reflect.Value{},
 				graphNode:   typeGraphNode,
-			}
+			})
 
 			c.addGraphEdge(providerGraphNode, typeGraphNode)
 		}
@@ -327,16 +327,16 @@ func (c *container) supply(value reflect.Value, location Location) error {
 	typeGraphNode := c.typeGraphNode(typ)
 	c.addGraphEdge(locGrapNode, typeGraphNode)
 
-	if existing, ok := c.resolvers[typ]; ok {
+	if existing, ok := c.resolverByType(typ); ok {
 		return duplicateDefinitionError(typ, location, existing.describeLocation())
 	}
 
-	c.resolvers[typ] = &supplyResolver{
+	c.addResolver(typ, &supplyResolver{
 		typ:       typ,
 		value:     value,
 		loc:       location,
 		graphNode: typeGraphNode,
-	}
+	})
 
 	return nil
 }
@@ -476,6 +476,15 @@ func (c container) formatResolveStack() string {
 
 func (c *container) addPreference(p preference) {
 	c.preferences[preferenceKeyFromTypeName(p.interfaceName, p.moduleKey)] = p
+}
+
+func (c *container) addResolver(typ reflect.Type, r resolver) {
+	c.resolvers[typ] = r
+}
+
+func (c *container) resolverByType(typ reflect.Type) (resolver, bool) {
+	res, found := c.resolvers[typ]
+	return res, found
 }
 
 func markGraphNodeAsUsed(node *graphviz.Node) {

@@ -5,7 +5,7 @@ import (
 	"reflect"
 )
 
-// preference defines a type binding preference to bind Interface to type implTypeName when being provided as a
+// preference defines a type binding preference to bind interfaceName to type implTypeName when being provided as a
 // dependency to the module with ModuleName.  If ModuleName is empty then the type binding is applied globally,
 // not module-scoped.
 type preference struct {

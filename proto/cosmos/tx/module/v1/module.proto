@@ -6,7 +6,9 @@ import "cosmos/app/v1alpha1/module.proto";
 
 // Module is the config object of the tx module.
 message Module {
-  option (cosmos.app.v1alpha1.module) = {
-    go_import: "github.com/cosmos/cosmos-sdk/types/tx"
-  };
+  // enable_ante_handler defines whether the ante handler are set in the app.
+  bool enable_ante_handler = 1;
+
+  // enable_post_handler defines whether the post handler are set in the app.
+  bool enable_post_handler = 2;
 }

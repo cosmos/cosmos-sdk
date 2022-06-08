@@ -35,7 +35,7 @@ func (a *AppBuilder) Build(
 	for _, option := range a.app.baseAppOptions {
 		baseAppOptions = append(baseAppOptions, option)
 	}
-	// TODO: when the auth module is configured, fill-in txDecoder
+
 	bApp := baseapp.NewBaseApp(a.app.config.AppName, logger, db, nil, baseAppOptions...)
 	bApp.SetMsgServiceRouter(msgServiceRouter)
 	bApp.SetCommitMultiStoreTracer(traceStore)

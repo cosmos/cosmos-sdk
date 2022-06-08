@@ -82,6 +82,8 @@ modules:
   - name: tx
     config:
       "@type": cosmos.tx.module.v1.Module
+      enable_ante_handler: true
+      enable_post_handler: true
 
   - name: feegrant
     config:

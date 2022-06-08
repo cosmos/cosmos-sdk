@@ -16,7 +16,11 @@ type preference struct {
 }
 
 func fullyQualifiedTypeName(typ reflect.Type) string {
-	return fmt.Sprintf("%s/%v", typ.PkgPath(), typ)
+	pkgType := typ
+	if typ.Kind() == reflect.Pointer || typ.Kind() == reflect.Slice || typ.Kind() == reflect.Map || typ.Kind() == reflect.Array {
+		pkgType = typ.Elem()
+	}
+	return fmt.Sprintf("%s/%v", pkgType.PkgPath(), typ)
 }
 
 func preferenceKeyFromTypeName(typeName string, key *moduleKey) string {

@@ -214,7 +214,7 @@ func NewSimApp(
 	var appBuilder *runtime.AppBuilder
 	var msgServiceRouter *baseapp.MsgServiceRouter
 
-	err := depinject.Inject(AppConfig,
+	if err := depinject.Inject(AppConfig,
 		&appBuilder,
 		&app.ParamsKeeper,
 		&app.CapabilityKeeper,
@@ -225,9 +225,9 @@ func NewSimApp(
 		&app.BankKeeper,
 		&app.FeeGrantKeeper,
 		&app.StakingKeeper,
+		&app.NFTKeeper,
 		&msgServiceRouter,
-	)
-	if err != nil {
+	); err != nil {
 		panic(err)
 	}
 
@@ -236,8 +236,7 @@ func NewSimApp(
 	app.keys = sdk.NewKVStoreKeys(
 		minttypes.StoreKey, distrtypes.StoreKey,
 		slashingtypes.StoreKey, govtypes.StoreKey, upgradetypes.StoreKey,
-		evidencetypes.StoreKey, authzkeeper.StoreKey, nftkeeper.StoreKey,
-		group.StoreKey,
+		evidencetypes.StoreKey, authzkeeper.StoreKey, group.StoreKey,
 	)
 	// NOTE: The testingkey is just mounted for testing purposes. Actual applications should
 	// not include this key.
@@ -303,8 +302,6 @@ func NewSimApp(
 	// set the governance module account as the authority for conducting upgrades
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, app.keys[upgradetypes.StoreKey], app.appCodec, homePath, app.BaseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
-	app.NFTKeeper = nftkeeper.NewKeeper(app.keys[nftkeeper.StoreKey], app.appCodec, app.AccountKeeper, app.BankKeeper)
-
 	// create evidence keeper with router
 	evidenceKeeper := evidencekeeper.NewKeeper(
 		app.appCodec, app.keys[evidencetypes.StoreKey], app.StakingKeeper, app.SlashingKeeper,
@@ -320,7 +317,7 @@ func NewSimApp(
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
-	err = app.RegisterModules(
+	if err := app.RegisterModules(
 		genutil.NewAppModule(
 			app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx,
 			encodingConfig.TxConfig,
@@ -335,9 +332,7 @@ func NewSimApp(
 		evidence.NewAppModule(app.EvidenceKeeper),
 		authzmodule.NewAppModule(app.appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		groupmodule.NewAppModule(app.appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		nftmodule.NewAppModule(app.appCodec, app.NFTKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-	)
-	if err != nil {
+	); err != nil {
 		panic(err)
 	}
 
@@ -404,8 +399,7 @@ func NewSimApp(
 	// upgrade.
 	app.setPostHandler()
 
-	err = app.Load(loadLatest)
-	if err != nil {
+	if err := app.Load(loadLatest); err != nil {
 		panic(err)
 	}
 

@@ -32,7 +32,7 @@ func main() {
 		&x,
 		&y,
 	)
-	fmt.Println(x, y)
+	fmt.Printf("After (%v, %v)\n", x, y)
 }
 ```
 

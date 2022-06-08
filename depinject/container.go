@@ -184,7 +184,7 @@ func (c *container) getPreferredResolver(typ reflect.Type, key *moduleKey) (reso
 
 	}
 
-	return nil, NewErrNoTypeForExplicitBindingFound(pref)
+	return nil, newErrNoTypeForExplicitBindingFound(pref)
 }
 
 var stringType = reflect.TypeOf("")

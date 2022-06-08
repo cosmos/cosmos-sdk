@@ -41,7 +41,7 @@ type ErrNoTypeForExplicitBindingFound struct {
 	error
 }
 
-func NewErrNoTypeForExplicitBindingFound(p preference) ErrNoTypeForExplicitBindingFound {
+func newErrNoTypeForExplicitBindingFound(p preference) ErrNoTypeForExplicitBindingFound {
 	var moduleName string
 	if p.moduleKey != nil {
 		moduleName = p.moduleKey.name

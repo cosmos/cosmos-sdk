@@ -1,10 +1,9 @@
 package group
 
 import (
-	"fmt"
-
+	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // NewGenesisState creates a new genesis state with default values.
@@ -29,7 +28,7 @@ func (s GenesisState) Validate() error {
 
 		// check that group with group policy's GroupId exists
 		if _, exists := groups[g.GroupId]; !exists {
-			return sdkerrors.Wrap(sdkerrors.ErrNotFound, fmt.Sprintf("group with GroupId %d doesn't exist", g.GroupId))
+			return errorstypes.ErrNotFound.Wrapf("group with GroupId %d doesn't exist", g.GroupId)
 		}
 
 		if err := g.ValidateBasic(); err != nil {
@@ -42,7 +41,7 @@ func (s GenesisState) Validate() error {
 
 		// check that group with group member's GroupId exists
 		if _, exists := groups[g.GroupId]; !exists {
-			return sdkerrors.Wrap(sdkerrors.ErrNotFound, fmt.Sprintf("group member with GroupId %d doesn't exist", g.GroupId))
+			return errorstypes.ErrNotFound.Wrapf("group member with GroupId %d doesn't exist", g.GroupId)
 		}
 
 		if err := g.ValidateBasic(); err != nil {
@@ -55,7 +54,7 @@ func (s GenesisState) Validate() error {
 
 		// check that group policy with proposal address exists
 		if _, exists := groupPolicies[p.GroupPolicyAddress]; !exists {
-			return sdkerrors.Wrap(sdkerrors.ErrNotFound, fmt.Sprintf("group policy account with address %s doesn't correspond to proposal address", p.GroupPolicyAddress))
+			return errorstypes.ErrNotFound.Wrapf("group policy account with address %s doesn't correspond to proposal address", p.GroupPolicyAddress)
 		}
 
 		if err := p.ValidateBasic(); err != nil {
@@ -72,7 +71,7 @@ func (s GenesisState) Validate() error {
 
 		// check that proposal exists
 		if _, exists := proposals[v.ProposalId]; !exists {
-			return sdkerrors.Wrap(sdkerrors.ErrNotFound, fmt.Sprintf("proposal with ProposalId %d doesn't exist", v.ProposalId))
+			return errorstypes.ErrNotFound.Wrapf("proposal with ProposalId %d doesn't exist", v.ProposalId)
 		}
 	}
 	return nil

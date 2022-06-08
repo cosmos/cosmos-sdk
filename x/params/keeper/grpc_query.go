@@ -7,7 +7,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
@@ -25,7 +24,7 @@ func (k Keeper) Params(c context.Context, req *proposal.QueryParamsRequest) (*pr
 
 	ss, ok := k.GetSubspace(req.Subspace)
 	if !ok {
-		return nil, sdkerrors.Wrap(proposal.ErrUnknownSubspace, req.Subspace)
+		return nil, proposal.ErrUnknownSubspace.Wrap(req.Subspace)
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)

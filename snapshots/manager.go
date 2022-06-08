@@ -12,8 +12,9 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Manager manages snapshot and restore operations for an app, making sure only a single
@@ -107,10 +108,10 @@ func (m *Manager) begin(op operation) error {
 // beginLocked begins an operation while already holding the mutex.
 func (m *Manager) beginLocked(op operation) error {
 	if op == opNone {
-		return sdkerrors.Wrap(sdkerrors.ErrLogic, "can't begin a none operation")
+		return errorstypes.ErrLogic.Wrap("can't begin a none operation")
 	}
 	if m.operation != opNone {
-		return sdkerrors.Wrapf(sdkerrors.ErrConflict, "a %v operation is in progress", m.operation)
+		return errorstypes.ErrConflict.Wrapf("a %v operation is in progress", m.operation)
 	}
 	m.operation = op
 	return nil
@@ -156,7 +157,7 @@ func (m *Manager) GetSnapshotBlockRetentionHeights() int64 {
 // Create creates a snapshot and returns its metadata.
 func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 	if m == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "no snapshot store configured")
+		return nil, errorstypes.ErrLogic.Wrap("no snapshot store configured")
 	}
 
 	defer m.multistore.PruneSnapshotHeight(int64(height))
@@ -172,8 +173,7 @@ func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 		return nil, sdkerrors.Wrap(err, "failed to examine latest snapshot")
 	}
 	if latest != nil && latest.Height >= height {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrConflict,
-			"a more recent snapshot already exists at height %v", latest.Height)
+		return nil, errorstypes.ErrConflict.Wrapf("a more recent snapshot already exists at height %v", latest.Height)
 	}
 
 	// Spawn goroutine to generate snapshot chunks and pass their io.ReadClosers through a channel
@@ -271,7 +271,7 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 		return sdkerrors.Wrapf(types.ErrUnknownFormat, "snapshot format %v", snapshot.Format)
 	}
 	if snapshot.Height == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrLogic, "cannot restore snapshot at height 0")
+		return sdkerrors.Wrap(errorstypes.ErrLogic, "cannot restore snapshot at height 0")
 	}
 	if snapshot.Height > uint64(math.MaxInt64) {
 		return sdkerrors.Wrapf(types.ErrInvalidMetadata,
@@ -322,11 +322,11 @@ func (m *Manager) restoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.Re
 		}
 		metadata := next.GetExtension()
 		if metadata == nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrLogic, "unknown snapshot item %T", next.Item)
+			return errorstypes.ErrLogic.Wrapf("unknown snapshot item %T", next.Item)
 		}
 		extension, ok := m.extensions[metadata.Name]
 		if !ok {
-			return sdkerrors.Wrapf(sdkerrors.ErrLogic, "unknown extension snapshotter %s", metadata.Name)
+			return errorstypes.ErrLogic.Wrapf("unknown extension snapshotter %s", metadata.Name)
 		}
 		if !IsFormatSupported(extension, metadata.Format) {
 			return sdkerrors.Wrapf(types.ErrUnknownFormat, "format %v for extension %s", metadata.Format, metadata.Name)
@@ -345,11 +345,11 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 	if m.operation != opRestore {
-		return false, sdkerrors.Wrap(sdkerrors.ErrLogic, "no restore operation in progress")
+		return false, errorstypes.ErrLogic.Wrap("no restore operation in progress")
 	}
 
 	if int(m.restoreChunkIndex) >= len(m.restoreChunkHashes) {
-		return false, sdkerrors.Wrap(sdkerrors.ErrLogic, "received unexpected chunk")
+		return false, errorstypes.ErrLogic.Wrap("received unexpected chunk")
 	}
 
 	// Check if any errors have occurred yet.
@@ -359,7 +359,7 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 		if done.err != nil {
 			return false, done.err
 		}
-		return false, sdkerrors.Wrap(sdkerrors.ErrLogic, "restore ended unexpectedly")
+		return false, errorstypes.ErrLogic.Wrap("restore ended unexpectedly")
 	default:
 	}
 
@@ -384,7 +384,7 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 			return false, done.err
 		}
 		if !done.complete {
-			return false, sdkerrors.Wrap(sdkerrors.ErrLogic, "restore ended prematurely")
+			return false, errorstypes.ErrLogic.Wrap("restore ended prematurely")
 		}
 		return true, nil
 	}

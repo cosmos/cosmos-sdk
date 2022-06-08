@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "cosmossdk.io/errors"
 )
 
 // Get a free address for a test tendermint server

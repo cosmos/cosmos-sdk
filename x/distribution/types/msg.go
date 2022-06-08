@@ -2,7 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // distribution message types
@@ -41,10 +41,10 @@ func (msg MsgSetWithdrawAddress) GetSignBytes() []byte {
 // quick validity check
 func (msg MsgSetWithdrawAddress) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
+		return errorstypes.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
 	}
 	if _, err := sdk.AccAddressFromBech32(msg.WithdrawAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid withdraw address: %s", err)
+		return errorstypes.ErrInvalidAddress.Wrapf("invalid withdraw address: %s", err)
 	}
 
 	return nil
@@ -75,10 +75,10 @@ func (msg MsgWithdrawDelegatorReward) GetSignBytes() []byte {
 // quick validity check
 func (msg MsgWithdrawDelegatorReward) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
+		return errorstypes.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
 	}
 	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
+		return errorstypes.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
 	return nil
 }
@@ -107,7 +107,7 @@ func (msg MsgWithdrawValidatorCommission) GetSignBytes() []byte {
 // quick validity check
 func (msg MsgWithdrawValidatorCommission) ValidateBasic() error {
 	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
+		return errorstypes.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
 	return nil
 }
@@ -144,10 +144,10 @@ func (msg MsgFundCommunityPool) GetSignBytes() []byte {
 // ValidateBasic performs basic MsgFundCommunityPool message validation.
 func (msg MsgFundCommunityPool) ValidateBasic() error {
 	if !msg.Amount.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+		return errorstypes.ErrInvalidCoins.Wrap(msg.Amount.String())
 	}
 	if _, err := sdk.AccAddressFromBech32(msg.Depositor); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
+		return errorstypes.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
 	}
 	return nil
 }

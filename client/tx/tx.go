@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -214,7 +214,7 @@ func checkMultipleSigners(tx authsigning.Tx) error {
 	for _, sig := range sigsV2 {
 		directSigners += countDirectSigners(sig.Data)
 		if directSigners > 1 {
-			return sdkerrors.ErrNotSupported.Wrap("txs signed with CLI can have maximum 1 DIRECT signer")
+			return errorstypes.ErrNotSupported.Wrap("txs signed with CLI can have maximum 1 DIRECT signer")
 		}
 	}
 
@@ -363,7 +363,7 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx
 
 	if f.tip != nil {
 		if _, err := sdk.AccAddressFromBech32(f.tip.Tipper); err != nil {
-			return tx.AuxSignerData{}, sdkerrors.ErrInvalidAddress.Wrap("tipper must be a bech32 address")
+			return tx.AuxSignerData{}, errorstypes.ErrInvalidAddress.Wrap("tipper must be a bech32 address")
 		}
 		b.SetTip(f.tip)
 	}

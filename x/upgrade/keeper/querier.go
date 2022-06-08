@@ -3,14 +3,12 @@ package keeper
 import (
 	"encoding/binary"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // NewQuerier creates a querier for upgrade cli and REST endpoints
@@ -25,7 +23,7 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 			return queryApplied(ctx, req, k, legacyQuerierCdc)
 
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])
+			return nil, errorstypes.ErrUnknownRequest.Wrapf("unknown %s query endpoint: %s", types.ModuleName, path[0])
 		}
 	}
 }
@@ -38,7 +36,7 @@ func queryCurrent(ctx sdk.Context, _ abci.RequestQuery, k Keeper, legacyQuerierC
 
 	res, err := legacyQuerierCdc.MarshalJSON(&plan)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, errorstypes.ErrJSONMarshal.Wrap(err.Error())
 	}
 
 	return res, nil
@@ -49,7 +47,7 @@ func queryApplied(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerie
 
 	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+		return nil, errorstypes.ErrJSONUnmarshal.Wrap(err.Error())
 	}
 
 	applied := k.GetDoneHeight(ctx, params.Name)

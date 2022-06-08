@@ -12,7 +12,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type MockClient struct {
@@ -42,9 +42,9 @@ func CreateContextWithErrorAndMode(err error, mode string) Context {
 // Test the correct code is returned when
 func TestBroadcastError(t *testing.T) {
 	errors := map[error]uint32{
-		tmtypes.ErrTxInCache:       sdkerrors.ErrTxInMempoolCache.ABCICode(),
-		tmtypes.ErrTxTooLarge{}:    sdkerrors.ErrTxTooLarge.ABCICode(),
-		tmtypes.ErrMempoolIsFull{}: sdkerrors.ErrMempoolIsFull.ABCICode(),
+		tmtypes.ErrTxInCache:       errorstypes.ErrTxInMempoolCache.ABCICode(),
+		tmtypes.ErrTxTooLarge{}:    errorstypes.ErrTxTooLarge.ABCICode(),
+		tmtypes.ErrMempoolIsFull{}: errorstypes.ErrMempoolIsFull.ABCICode(),
 	}
 
 	modes := []string{

@@ -6,7 +6,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // MaxGasWanted defines the max gas allowed.
@@ -52,44 +52,32 @@ func (t *Tx) ValidateBasic() error {
 	}
 
 	if fee.GasLimit > MaxGasWanted {
-		return sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"invalid gas supplied; %d > %d", fee.GasLimit, MaxGasWanted,
-		)
+		return errorstypes.ErrInvalidRequest.Wrapf("invalid gas supplied; %d > %d", fee.GasLimit, MaxGasWanted)
 	}
 
 	if fee.Amount.IsAnyNil() {
-		return sdkerrors.Wrapf(
-			sdkerrors.ErrInsufficientFee,
-			"invalid fee provided: null",
-		)
+		return errorstypes.ErrInsufficientFee.Wrap("invalid fee provided: null")
 	}
 
 	if fee.Amount.IsAnyNegative() {
-		return sdkerrors.Wrapf(
-			sdkerrors.ErrInsufficientFee,
-			"invalid fee provided: %s", fee.Amount,
-		)
+		return errorstypes.ErrInsufficientFee.Wrapf("invalid fee provided: %s", fee.Amount)
 	}
 
 	if fee.Payer != "" {
 		_, err := sdk.AccAddressFromBech32(fee.Payer)
 		if err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid fee payer address (%s)", err)
+			return errorstypes.ErrInvalidAddress.Wrapf("Invalid fee payer address (%s)", err)
 		}
 	}
 
 	sigs := t.Signatures
 
 	if len(sigs) == 0 {
-		return sdkerrors.ErrNoSignatures
+		return errorstypes.ErrNoSignatures
 	}
 
 	if len(sigs) != len(t.GetSigners()) {
-		return sdkerrors.Wrapf(
-			sdkerrors.ErrUnauthorized,
-			"wrong number of signers; expected %d, got %d", len(t.GetSigners()), len(sigs),
-		)
+		return errorstypes.ErrUnauthorized.Wrapf("wrong number of signers; expected %d, got %d", len(t.GetSigners()), len(sigs))
 	}
 
 	return nil

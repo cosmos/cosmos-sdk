@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -40,7 +40,7 @@ func (k msgServer) Send(goCtx context.Context, msg *types.MsgSend) (*types.MsgSe
 	}
 
 	if k.BlockedAddr(to) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
+		return nil, errorstypes.ErrUnauthorized.Wrapf("%s is not allowed to receive funds", msg.ToAddress)
 	}
 
 	err = k.SendCoins(ctx, from, to, msg.Amount)
@@ -86,7 +86,7 @@ func (k msgServer) MultiSend(goCtx context.Context, msg *types.MsgMultiSend) (*t
 			panic(err)
 		}
 		if k.BlockedAddr(accAddr) {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive transactions", out.Address)
+			return nil, errorstypes.ErrUnauthorized.Wrapf("%s is not allowed to receive transactions", out.Address)
 		}
 	}
 

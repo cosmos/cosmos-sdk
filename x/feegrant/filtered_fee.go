@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // TODO: Revisit this once we have propoer gas fee framework.
@@ -31,7 +31,7 @@ func (a *AllowedMsgAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error
 func NewAllowedMsgAllowance(allowance FeeAllowanceI, allowedMsgs []string) (*AllowedMsgAllowance, error) {
 	msg, ok := allowance.(proto.Message)
 	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", msg)
+		return nil, errorstypes.ErrPackAny.Wrapf("cannot proto marshal %T", msg)
 	}
 	any, err := types.NewAnyWithValue(msg)
 	if err != nil {
@@ -48,7 +48,7 @@ func NewAllowedMsgAllowance(allowance FeeAllowanceI, allowedMsgs []string) (*All
 func (a *AllowedMsgAllowance) GetAllowance() (FeeAllowanceI, error) {
 	allowance, ok := a.Allowance.GetCachedValue().(FeeAllowanceI)
 	if !ok {
-		return nil, sdkerrors.Wrap(ErrNoAllowance, "failed to get allowance")
+		return nil, ErrNoAllowance.Wrap("failed to get allowance")
 	}
 
 	return allowance, nil
@@ -59,7 +59,7 @@ func (a *AllowedMsgAllowance) SetAllowance(allowance FeeAllowanceI) error {
 	var err error
 	a.Allowance, err = types.NewAnyWithValue(allowance.(proto.Message))
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", allowance)
+		return errorstypes.ErrPackAny.Wrapf("cannot proto marshal %T", allowance)
 	}
 
 	return nil
@@ -68,7 +68,7 @@ func (a *AllowedMsgAllowance) SetAllowance(allowance FeeAllowanceI) error {
 // Accept method checks for the filtered messages has valid expiry
 func (a *AllowedMsgAllowance) Accept(ctx sdk.Context, fee sdk.Coins, msgs []sdk.Msg) (bool, error) {
 	if !a.allMsgTypesAllowed(ctx, msgs) {
-		return false, sdkerrors.Wrap(ErrMessageNotAllowed, "message does not exist in allowed messages")
+		return false, ErrMessageNotAllowed.Wrap("message does not exist in allowed messages")
 	}
 
 	allowance, err := a.GetAllowance()
@@ -111,10 +111,10 @@ func (a *AllowedMsgAllowance) allMsgTypesAllowed(ctx sdk.Context, msgs []sdk.Msg
 // ValidateBasic implements FeeAllowance and enforces basic sanity checks
 func (a *AllowedMsgAllowance) ValidateBasic() error {
 	if a.Allowance == nil {
-		return sdkerrors.Wrap(ErrNoAllowance, "allowance should not be empty")
+		return ErrNoAllowance.Wrap("allowance should not be empty")
 	}
 	if len(a.AllowedMessages) == 0 {
-		return sdkerrors.Wrap(ErrNoMessages, "allowed messages shouldn't be empty")
+		return ErrNoMessages.Wrap("allowed messages shouldn't be empty")
 	}
 
 	allowance, err := a.GetAllowance()

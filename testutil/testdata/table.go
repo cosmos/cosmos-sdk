@@ -1,8 +1,10 @@
 package testdata
 
-import "github.com/cosmos/cosmos-sdk/types/errors"
+import (
+	sdkerrors "cosmossdk.io/errors"
+)
 
-var ErrTest = errors.Register("table_testdata", 2, "test")
+var ErrTest = sdkerrors.Register("table_testdata", 2, "test")
 
 func (g TableModel) PrimaryKeyFields() []interface{} {
 	return []interface{}{g.Id}
@@ -10,7 +12,7 @@ func (g TableModel) PrimaryKeyFields() []interface{} {
 
 func (g TableModel) ValidateBasic() error {
 	if g.Name == "" {
-		return errors.Wrap(ErrTest, "name")
+		return sdkerrors.Wrap(ErrTest, "name")
 	}
 	return nil
 }

@@ -1,9 +1,9 @@
 package orm
 
 import (
+	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var (
@@ -130,7 +130,7 @@ func (a AutoUInt64Table) Export(store sdk.KVStore, dest ModelSlicePtr) (uint64, 
 // data should be a slice of structs that implement PrimaryKeyed.
 func (a AutoUInt64Table) Import(store sdk.KVStore, data interface{}, seqValue uint64) error {
 	if err := a.seq.InitVal(store, seqValue); err != nil {
-		return errors.Wrap(err, "sequence")
+		return sdkerrors.Wrap(err, "sequence")
 	}
 	return a.table.Import(store, data, seqValue)
 }

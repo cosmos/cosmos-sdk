@@ -4,8 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
@@ -39,7 +38,7 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *feegrant.MsgGrantA
 
 	// Checking for duplicate entry
 	if f, _ := k.Keeper.GetAllowance(ctx, granter, grantee); f != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee allowance already exists")
+		return nil, errorstypes.ErrInvalidRequest.Wrap("fee allowance already exists")
 	}
 
 	allowance, err := msg.GetFeeAllowanceI()

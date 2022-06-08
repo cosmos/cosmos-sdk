@@ -60,7 +60,7 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 			return queryType2(ctx, path[1:], req, keeper)
 
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])
+			return nil, errorstypes.ErrUnknownRequest.Wrapf("unknown %s query endpoint: %s", types.ModuleName, path[0])
 		}
 	}
 }

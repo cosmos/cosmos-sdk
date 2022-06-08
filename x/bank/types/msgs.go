@@ -2,7 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // bank message types
@@ -28,19 +28,19 @@ func (msg MsgSend) Type() string { return TypeMsgSend }
 // ValidateBasic Implements Msg.
 func (msg MsgSend) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid from address: %s", err)
+		return errorstypes.ErrInvalidAddress.Wrapf("invalid from address: %s", err)
 	}
 
 	if _, err := sdk.AccAddressFromBech32(msg.ToAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid to address: %s", err)
+		return errorstypes.ErrInvalidAddress.Wrapf("invalid to address: %s", err)
 	}
 
 	if !msg.Amount.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+		return errorstypes.ErrInvalidCoins.Wrap(msg.Amount.String())
 	}
 
 	if !msg.Amount.IsAllPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+		return errorstypes.ErrInvalidCoins.Wrap(msg.Amount.String())
 	}
 
 	return nil
@@ -104,15 +104,15 @@ func (msg MsgMultiSend) GetSigners() []sdk.AccAddress {
 // ValidateBasic - validate transaction input
 func (in Input) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(in.Address); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid input address: %s", err)
+		return errorstypes.ErrInvalidAddress.Wrapf("invalid input address: %s", err)
 	}
 
 	if !in.Coins.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, in.Coins.String())
+		return errorstypes.ErrInvalidCoins.Wrap(in.Coins.String())
 	}
 
 	if !in.Coins.IsAllPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, in.Coins.String())
+		return errorstypes.ErrInvalidCoins.Wrap(in.Coins.String())
 	}
 
 	return nil
@@ -130,15 +130,15 @@ func NewInput(addr sdk.AccAddress, coins sdk.Coins) Input {
 // ValidateBasic - validate transaction output
 func (out Output) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(out.Address); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid output address: %s", err)
+		return errorstypes.ErrInvalidAddress.Wrapf("invalid output address: %s", err)
 	}
 
 	if !out.Coins.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, out.Coins.String())
+		return errorstypes.ErrInvalidCoins.Wrap(out.Coins.String())
 	}
 
 	if !out.Coins.IsAllPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, out.Coins.String())
+		return errorstypes.ErrInvalidCoins.Wrap(out.Coins.String())
 	}
 
 	return nil

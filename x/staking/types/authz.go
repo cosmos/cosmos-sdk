@@ -2,7 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
@@ -45,7 +45,7 @@ func (a StakeAuthorization) MsgTypeURL() string {
 
 func (a StakeAuthorization) ValidateBasic() error {
 	if a.MaxTokens != nil && a.MaxTokens.IsNegative() {
-		return sdkerrors.Wrapf(authz.ErrNegativeMaxTokens, "negative coin amount: %v", a.MaxTokens)
+		return authz.ErrNegativeMaxTokens.Wrap("negative coin amount: %v", a.MaxTokens)
 	}
 	if a.AuthorizationType == AuthorizationType_AUTHORIZATION_TYPE_UNSPECIFIED {
 		return authz.ErrUnknownAuthorizationType
@@ -70,7 +70,7 @@ func (a StakeAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRe
 		validatorAddress = msg.ValidatorDstAddress
 		amount = msg.Amount
 	default:
-		return authz.AcceptResponse{}, sdkerrors.ErrInvalidRequest.Wrap("unknown msg type")
+		return authz.AcceptResponse{}, errorstypes.ErrInvalidRequest.Wrap("unknown msg type")
 	}
 
 	isValidatorExists := false
@@ -87,12 +87,12 @@ func (a StakeAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRe
 	for _, validator := range denyList {
 		ctx.GasMeter().ConsumeGas(gasCostPerIteration, "stake authorization")
 		if validator == validatorAddress {
-			return authz.AcceptResponse{}, sdkerrors.ErrUnauthorized.Wrapf("cannot delegate/undelegate to %s validator", validator)
+			return authz.AcceptResponse{}, errorstypes.ErrUnauthorized.Wrapf("cannot delegate/undelegate to %s validator", validator)
 		}
 	}
 
 	if len(allowedList) > 0 && !isValidatorExists {
-		return authz.AcceptResponse{}, sdkerrors.ErrUnauthorized.Wrapf("cannot delegate/undelegate to %s validator", validatorAddress)
+		return authz.AcceptResponse{}, errorstypes.ErrUnauthorized.Wrapf("cannot delegate/undelegate to %s validator", validatorAddress)
 	}
 
 	if a.MaxTokens == nil {
@@ -117,11 +117,11 @@ func (a StakeAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRe
 
 func validateAllowAndDenyValidators(allowed []sdk.ValAddress, denied []sdk.ValAddress) ([]string, []string, error) {
 	if len(allowed) == 0 && len(denied) == 0 {
-		return nil, nil, sdkerrors.ErrInvalidRequest.Wrap("both allowed & deny list cannot be empty")
+		return nil, nil, errorstypes.ErrInvalidRequest.Wrap("both allowed & deny list cannot be empty")
 	}
 
 	if len(allowed) > 0 && len(denied) > 0 {
-		return nil, nil, sdkerrors.ErrInvalidRequest.Wrap("cannot set both allowed & deny list")
+		return nil, nil, errorstypes.ErrInvalidRequest.Wrap("cannot set both allowed & deny list")
 	}
 
 	allowedValidators := make([]string, len(allowed))
@@ -150,6 +150,6 @@ func normalizeAuthzType(authzType AuthorizationType) (string, error) {
 	case AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE:
 		return sdk.MsgTypeURL(&MsgBeginRedelegate{}), nil
 	default:
-		return "", sdkerrors.Wrapf(authz.ErrUnknownAuthorizationType, "cannot normalize authz type with %T", authzType)
+		return "", authz.ErrUnknownAuthorizationType.Wrapf("cannot normalize authz type with %T", authzType)
 	}
 }

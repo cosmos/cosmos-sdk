@@ -13,8 +13,9 @@ import (
 	"github.com/gogo/protobuf/proto"
 	db "github.com/tendermint/tm-db"
 
+	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -34,7 +35,7 @@ type Store struct {
 // NewStore creates a new snapshot store.
 func NewStore(db db.DB, dir string) (*Store, error) {
 	if dir == "" {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "snapshot directory not given")
+		return nil, errorstypes.ErrLogic.Wrap("snapshot directory not given")
 	}
 	err := os.MkdirAll(dir, 0o755)
 	if err != nil {
@@ -54,8 +55,7 @@ func (s *Store) Delete(height uint64, format uint32) error {
 	saving := s.saving[height]
 	s.mtx.Unlock()
 	if saving {
-		return sdkerrors.Wrapf(sdkerrors.ErrConflict,
-			"snapshot for height %v format %v is currently being saved", height, format)
+		return errorstypes.ErrConflict.Wrapf("snapshot for height %v format %v is currently being saved", height, format)
 	}
 	err := s.db.DeleteSync(encodeKey(height, format))
 	if err != nil {
@@ -225,7 +225,7 @@ func (s *Store) Save(
 ) (*types.Snapshot, error) {
 	defer DrainChunks(chunks)
 	if height == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "snapshot height cannot be 0")
+		return nil, errorstypes.ErrLogic.Wrap("snapshot height cannot be 0")
 	}
 
 	s.mtx.Lock()
@@ -233,8 +233,7 @@ func (s *Store) Save(
 	s.saving[height] = true
 	s.mtx.Unlock()
 	if saving {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrConflict,
-			"a snapshot for height %v is already being saved", height)
+		return nil, errorstypes.ErrConflict.Wrapf("a snapshot for height %v is already being saved", height)
 	}
 	defer func() {
 		s.mtx.Lock()
@@ -247,8 +246,7 @@ func (s *Store) Save(
 		return nil, err
 	}
 	if exists {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrConflict,
-			"snapshot already exists for height %v format %v", height, format)
+		return nil, errorstypes.ErrConflict.Wrapf("snapshot already exists for height %v format %v", height, format)
 	}
 
 	snapshot := &types.Snapshot{
@@ -321,10 +319,10 @@ func (s *Store) pathChunk(height uint64, format uint32, chunk uint32) string {
 // decodeKey decodes a snapshot key.
 func decodeKey(k []byte) (uint64, uint32, error) {
 	if len(k) != 13 {
-		return 0, 0, sdkerrors.Wrapf(sdkerrors.ErrLogic, "invalid snapshot key with length %v", len(k))
+		return 0, 0, errorstypes.ErrLogic.Wrapf("invalid snapshot key with length %v", len(k))
 	}
 	if k[0] != keyPrefixSnapshot {
-		return 0, 0, sdkerrors.Wrapf(sdkerrors.ErrLogic, "invalid snapshot key prefix %x", k[0])
+		return 0, 0, errorstypes.ErrLogic.Wrapf("invalid snapshot key prefix %x", k[0])
 	}
 	height := binary.BigEndian.Uint64(k[1:9])
 	format := binary.BigEndian.Uint32(k[9:13])

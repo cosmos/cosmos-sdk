@@ -18,7 +18,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -115,7 +115,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 			},
 			false,
 			false,
-			sdkerrors.ErrNoSignatures,
+			errorstypes.ErrNoSignatures,
 		},
 		{
 			"num sigs dont match GetSigners",
@@ -124,7 +124,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 			},
 			false,
 			false,
-			sdkerrors.ErrUnauthorized,
+			errorstypes.ErrUnauthorized,
 		},
 		{
 			"unrecognized account",
@@ -133,7 +133,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 			},
 			false,
 			false,
-			sdkerrors.ErrUnknownAddress,
+			errorstypes.ErrUnknownAddress,
 		},
 		{
 			"save the first account, but second is still unrecognized",
@@ -147,7 +147,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 			},
 			false,
 			false,
-			sdkerrors.ErrUnknownAddress,
+			errorstypes.ErrUnknownAddress,
 		},
 	}
 
@@ -198,7 +198,7 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbers() {
 			},
 			false,
 			false,
-			sdkerrors.ErrUnauthorized,
+			errorstypes.ErrUnauthorized,
 		},
 		{
 			"new tx from correct account number",
@@ -219,7 +219,7 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbers() {
 			},
 			false,
 			false,
-			sdkerrors.ErrUnauthorized,
+			errorstypes.ErrUnauthorized,
 		},
 		{
 			"new tx with correct account numbers",
@@ -280,7 +280,7 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbersAtBlockHeightZero() {
 			},
 			false,
 			false,
-			sdkerrors.ErrUnauthorized,
+			errorstypes.ErrUnauthorized,
 		},
 		{
 			"new tx from correct account number",
@@ -302,7 +302,7 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbersAtBlockHeightZero() {
 			},
 			false,
 			false,
-			sdkerrors.ErrUnauthorized,
+			errorstypes.ErrUnauthorized,
 		},
 		{
 			"new tx with another signer and correct account numbers",
@@ -363,7 +363,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSequences() {
 			},
 			false,
 			false,
-			sdkerrors.ErrWrongSequence,
+			errorstypes.ErrWrongSequence,
 		},
 		{
 			"fix sequence, should pass",
@@ -392,7 +392,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSequences() {
 			func() {},
 			false,
 			false,
-			sdkerrors.ErrWrongSequence,
+			errorstypes.ErrWrongSequence,
 		},
 		{
 			"tx from just second signer with incorrect sequence fails",
@@ -403,7 +403,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSequences() {
 			},
 			false,
 			false,
-			sdkerrors.ErrWrongSequence,
+			errorstypes.ErrWrongSequence,
 		},
 		{
 			"fix the sequence and it passes",
@@ -466,7 +466,7 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 			},
 			false,
 			false,
-			sdkerrors.ErrInsufficientFunds,
+			errorstypes.ErrInsufficientFunds,
 		},
 		{
 			"signer does not have enough funds to pay the fee",
@@ -476,7 +476,7 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 			},
 			false,
 			false,
-			sdkerrors.ErrInsufficientFunds,
+			errorstypes.ErrInsufficientFunds,
 		},
 		{
 			"signer as enough funds, should pass",
@@ -505,7 +505,7 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 			},
 			false,
 			false,
-			sdkerrors.ErrInsufficientFunds,
+			errorstypes.ErrInsufficientFunds,
 		},
 	}
 
@@ -543,7 +543,7 @@ func (suite *AnteTestSuite) TestAnteHandlerMemoGas() {
 			},
 			false,
 			false,
-			sdkerrors.ErrOutOfGas,
+			errorstypes.ErrOutOfGas,
 		},
 		{
 			"tx with memo doesn't have enough gas",
@@ -554,7 +554,7 @@ func (suite *AnteTestSuite) TestAnteHandlerMemoGas() {
 			},
 			false,
 			false,
-			sdkerrors.ErrOutOfGas,
+			errorstypes.ErrOutOfGas,
 		},
 		{
 			"memo too large",
@@ -565,7 +565,7 @@ func (suite *AnteTestSuite) TestAnteHandlerMemoGas() {
 			},
 			false,
 			false,
-			sdkerrors.ErrMemoTooLarge,
+			errorstypes.ErrMemoTooLarge,
 		},
 		{
 			"tx with memo has enough gas",
@@ -703,7 +703,7 @@ func (suite *AnteTestSuite) TestAnteHandlerBadSignBytes() {
 			},
 			false,
 			false,
-			sdkerrors.ErrUnauthorized,
+			errorstypes.ErrUnauthorized,
 		},
 		{
 			"test wrong accSeqs",
@@ -713,7 +713,7 @@ func (suite *AnteTestSuite) TestAnteHandlerBadSignBytes() {
 			},
 			false,
 			false,
-			sdkerrors.ErrWrongSequence,
+			errorstypes.ErrWrongSequence,
 		},
 		{
 			"test wrong accNums",
@@ -723,7 +723,7 @@ func (suite *AnteTestSuite) TestAnteHandlerBadSignBytes() {
 			},
 			false,
 			false,
-			sdkerrors.ErrUnauthorized,
+			errorstypes.ErrUnauthorized,
 		},
 		{
 			"test wrong msg",
@@ -732,7 +732,7 @@ func (suite *AnteTestSuite) TestAnteHandlerBadSignBytes() {
 			},
 			false,
 			false,
-			sdkerrors.ErrInvalidPubKey,
+			errorstypes.ErrInvalidPubKey,
 		},
 		{
 			"test wrong fee gas",
@@ -743,7 +743,7 @@ func (suite *AnteTestSuite) TestAnteHandlerBadSignBytes() {
 			},
 			false,
 			false,
-			sdkerrors.ErrUnauthorized,
+			errorstypes.ErrUnauthorized,
 		},
 		{
 			"test wrong fee amount",
@@ -754,7 +754,7 @@ func (suite *AnteTestSuite) TestAnteHandlerBadSignBytes() {
 			},
 			false,
 			false,
-			sdkerrors.ErrUnauthorized,
+			errorstypes.ErrUnauthorized,
 		},
 		{
 			"test wrong signer if public key exist",
@@ -765,7 +765,7 @@ func (suite *AnteTestSuite) TestAnteHandlerBadSignBytes() {
 			},
 			false,
 			false,
-			sdkerrors.ErrInvalidPubKey,
+			errorstypes.ErrInvalidPubKey,
 		},
 		{
 			"test wrong signer if public doesn't exist",
@@ -775,7 +775,7 @@ func (suite *AnteTestSuite) TestAnteHandlerBadSignBytes() {
 			},
 			false,
 			false,
-			sdkerrors.ErrInvalidPubKey,
+			errorstypes.ErrInvalidPubKey,
 		},
 	}
 
@@ -825,7 +825,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 			},
 			false,
 			false,
-			sdkerrors.ErrWrongSequence,
+			errorstypes.ErrWrongSequence,
 		},
 		{
 			"test public key not found",
@@ -835,7 +835,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 			},
 			false,
 			false,
-			sdkerrors.ErrInvalidPubKey,
+			errorstypes.ErrInvalidPubKey,
 		},
 		{
 			"make sure public key is not set, when tx has no pubkey or signature",
@@ -860,7 +860,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 				// Run anteHandler manually, expect ErrNoSignatures.
 				_, err = suite.anteHandler(suite.ctx, txBuilder.GetTx(), false)
 				suite.Require().Error(err)
-				suite.Require().True(errors.Is(err, sdkerrors.ErrNoSignatures))
+				suite.Require().True(errors.Is(err, errorstypes.ErrNoSignatures))
 
 				// Make sure public key has not been set.
 				acc1 = suite.app.AccountKeeper.GetAccount(suite.ctx, accounts[1].acc.GetAddress())
@@ -871,7 +871,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 			},
 			false,
 			false,
-			sdkerrors.ErrWrongSequence,
+			errorstypes.ErrWrongSequence,
 		},
 		{
 			"make sure previous public key has been set after wrong signature",
@@ -883,7 +883,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 			},
 			false,
 			false,
-			sdkerrors.ErrWrongSequence,
+			errorstypes.ErrWrongSequence,
 		},
 	}
 
@@ -990,7 +990,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSigLimitExceeded() {
 			func() {},
 			false,
 			false,
-			sdkerrors.ErrTooManySignatures,
+			errorstypes.ErrTooManySignatures,
 		},
 	}
 
@@ -1021,7 +1021,7 @@ func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
 					meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
 					return nil
 				default:
-					return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
+					return errorstypes.ErrInvalidPubKey.Wrapf("unrecognized public key type: %T", pubkey)
 				}
 			},
 		},
@@ -1052,7 +1052,7 @@ func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
 			},
 			false,
 			false,
-			sdkerrors.ErrInvalidPubKey,
+			errorstypes.ErrInvalidPubKey,
 		},
 	}
 

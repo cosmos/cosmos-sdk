@@ -6,7 +6,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
@@ -113,7 +113,7 @@ func (b *AuxTxBuilder) SetSignMode(mode signing.SignMode) error {
 	switch mode {
 	case signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
 	default:
-		return sdkerrors.ErrInvalidRequest.Wrapf("AuxTxBuilder can only sign with %s or %s", signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+		return errorstypes.ErrInvalidRequest.Wrapf("AuxTxBuilder can only sign with %s or %s", signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
 
 	b.auxSignerData.Mode = mode
@@ -155,17 +155,17 @@ func (b *AuxTxBuilder) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any
 func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 	auxTx := b.auxSignerData
 	if auxTx == nil {
-		return nil, sdkerrors.ErrLogic.Wrap("aux tx is nil, call setters on AuxTxBuilder first")
+		return nil, errorstypes.ErrLogic.Wrap("aux tx is nil, call setters on AuxTxBuilder first")
 	}
 
 	body := b.body
 	if body == nil {
-		return nil, sdkerrors.ErrLogic.Wrap("tx body is nil, call setters on AuxTxBuilder first")
+		return nil, errorstypes.ErrLogic.Wrap("tx body is nil, call setters on AuxTxBuilder first")
 	}
 
 	sd := auxTx.SignDoc
 	if sd == nil {
-		return nil, sdkerrors.ErrLogic.Wrap("sign doc is nil, call setters on AuxTxBuilder first")
+		return nil, errorstypes.ErrLogic.Wrap("sign doc is nil, call setters on AuxTxBuilder first")
 	}
 
 	bodyBz, err := proto.Marshal(body)
@@ -202,7 +202,7 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 			)
 		}
 	default:
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf("got unknown sign mode %s", b.auxSignerData.Mode)
+		return nil, errorstypes.ErrInvalidRequest.Wrapf("got unknown sign mode %s", b.auxSignerData.Mode)
 	}
 
 	return signBz, nil

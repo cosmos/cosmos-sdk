@@ -3,7 +3,7 @@ package ante
 import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type HasExtensionOptionsTx interface {
@@ -56,7 +56,7 @@ func checkExtOpts(tx sdk.Tx, checker ExtensionOptionChecker) error {
 	if hasExtOptsTx, ok := tx.(HasExtensionOptionsTx); ok {
 		for _, opt := range hasExtOptsTx.GetExtensionOptions() {
 			if !checker(opt) {
-				return sdkerrors.ErrUnknownExtensionOptions
+				return errorstypes.ErrUnknownExtensionOptions
 			}
 		}
 	}

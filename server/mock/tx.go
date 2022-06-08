@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // An sdk.Tx which is its own sdk.Msg.
@@ -77,7 +77,7 @@ func decodeTx(txBytes []byte) (sdk.Tx, error) {
 		k, v := split[0], split[1]
 		tx = kvstoreTx{k, v, txBytes}
 	} else {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "too many '='")
+		return nil, errorstypes.ErrTxDecode.Wrap("too many '='")
 	}
 
 	return tx, nil

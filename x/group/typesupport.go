@@ -2,7 +2,6 @@ package group
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
@@ -23,7 +22,7 @@ func (ms MemberRequests) ValidateBasic() error {
 		}
 		addr := member.Address
 		if _, exists := index[addr]; exists {
-			return sdkerrors.Wrapf(errors.ErrDuplicate, "address: %s", addr)
+			return errors.ErrDuplicate.Wrapf("address: %s", addr)
 		}
 		index[addr] = struct{}{}
 	}
@@ -40,7 +39,7 @@ func (a accAddresses) ValidateBasic() error {
 		accAddr := a[i]
 		addr := string(accAddr)
 		if _, exists := index[addr]; exists {
-			return sdkerrors.Wrapf(errors.ErrDuplicate, "address: %s", accAddr.String())
+			return errors.ErrDuplicate.Wrapf("address: %s", accAddr.String())
 		}
 		index[addr] = struct{}{}
 	}

@@ -85,7 +85,7 @@ type HandlerOptions struct {
 // MyPostHandler returns a posthandler chain with the TipDecorator.
 func MyPostHandler(options HandlerOptions) (sdk.AnteHandler, error) {
     if options.BankKeeper == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "bank keeper is required for posthandler")
+		return nil, errorstypes.ErrLogic.Wrap("bank keeper is required for posthandler")
 	}
 
 	postDecorators := []sdk.AnteDecorator{

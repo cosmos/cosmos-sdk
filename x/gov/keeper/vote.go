@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
@@ -13,10 +12,10 @@ import (
 func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, options v1.WeightedVoteOptions, metadata string) error {
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
-		return sdkerrors.Wrapf(types.ErrUnknownProposal, "%d", proposalID)
+		return types.ErrUnknownProposal.Wrapf("%d", proposalID)
 	}
 	if proposal.Status != v1.StatusVotingPeriod {
-		return sdkerrors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
+		return types.ErrInactiveProposal.Wrapf("%d", proposalID)
 	}
 	err := keeper.assertMetadataLength(metadata)
 	if err != nil {
@@ -25,7 +24,7 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 
 	for _, option := range options {
 		if !v1.ValidWeightedVoteOption(*option) {
-			return sdkerrors.Wrap(types.ErrInvalidVote, option.String())
+			return types.ErrInvalidVote.Wrap(option.String())
 		}
 	}
 

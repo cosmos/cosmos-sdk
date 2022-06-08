@@ -1,10 +1,8 @@
 package types
 
-// DONTCOVER
+import sdkerrors "cosmossdk.io/errors"
 
-import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-)
+// DONTCOVER
 
 // x/capability module sentinel errors
 var (

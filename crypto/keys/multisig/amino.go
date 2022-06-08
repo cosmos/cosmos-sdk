@@ -3,7 +3,7 @@ package multisig
 import (
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // tmMultisig implements a K of N threshold multisig. It is used for
@@ -36,7 +36,7 @@ func protoToTm(protoPk *LegacyAminoPubKey) (tmMultisig, error) {
 	for i, pk := range protoPk.PubKeys {
 		pks[i], ok = pk.GetCachedValue().(cryptotypes.PubKey)
 		if !ok {
-			return tmMultisig{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (cryptotypes.PubKey)(nil), pk.GetCachedValue())
+			return tmMultisig{}, errorstypes.ErrInvalidType.Wrapf("expected %T, got %T", (cryptotypes.PubKey)(nil), pk.GetCachedValue())
 		}
 	}
 

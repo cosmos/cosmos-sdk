@@ -4,12 +4,13 @@ import (
 	"reflect"
 	"testing"
 
+	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -39,15 +40,15 @@ func TestTypeSafeRowGetter(t *testing.T) {
 			srcModelType: reflect.TypeOf(testdata.TableModel{}),
 			expObj:       md,
 		},
-		"unknown rowID should return sdkerrors.ErrNotFound": {
+		"unknown rowID should return errorstypes.ErrNotFound": {
 			srcRowID:     EncodeSequence(2),
 			srcModelType: reflect.TypeOf(testdata.TableModel{}),
-			expErr:       sdkerrors.ErrNotFound,
+			expErr:       errorstypes.ErrNotFound,
 		},
-		"wrong type should cause sdkerrors.ErrInvalidType": {
+		"wrong type should cause errorstypes.ErrInvalidType": {
 			srcRowID:     EncodeSequence(1),
 			srcModelType: reflect.TypeOf(testdata.Cat{}),
-			expErr:       sdkerrors.ErrInvalidType,
+			expErr:       errorstypes.ErrInvalidType,
 		},
 		"empty rowID not allowed": {
 			srcRowID:     []byte{},

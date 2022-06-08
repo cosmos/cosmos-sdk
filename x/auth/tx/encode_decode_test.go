@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -67,7 +67,7 @@ func TestUnknownFields(t *testing.T) {
 			},
 			authInfo:       &testdata.TestUpdatedAuthInfo{},
 			shouldErr:      false,
-			shouldAminoErr: fmt.Sprintf("%s: %s", aminoNonCriticalFieldsError, sdkerrors.ErrInvalidRequest.Error()),
+			shouldAminoErr: fmt.Sprintf("%s: %s", aminoNonCriticalFieldsError, errorstypes.ErrInvalidRequest.Error()),
 		},
 		{
 			name: "critical fields in TxBody should error on decode",

@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"time"
 
+	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
@@ -58,7 +59,7 @@ func (p ThresholdDecisionPolicy) ValidateBasic() error {
 	}
 
 	if p.Windows == nil || p.Windows.VotingPeriod == 0 {
-		return sdkerrors.Wrap(errors.ErrInvalid, "voting period cannot be zero")
+		return errors.ErrInvalid.Wrap("voting period cannot be zero")
 	}
 
 	return nil
@@ -137,7 +138,7 @@ func (p *ThresholdDecisionPolicy) Validate(g GroupInfo, config Config) error {
 	}
 
 	if p.Windows.MinExecutionPeriod > p.Windows.VotingPeriod+config.MaxExecutionPeriod {
-		return sdkerrors.Wrap(errors.ErrInvalid, "min_execution_period should be smaller than voting_period + max_execution_period")
+		return errors.ErrInvalid.Wrap("min_execution_period should be smaller than voting_period + max_execution_period")
 	}
 	return nil
 }
@@ -160,11 +161,11 @@ func (p PercentageDecisionPolicy) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "percentage threshold")
 	}
 	if percentage.Cmp(math.NewDecFromInt64(1)) == 1 {
-		return sdkerrors.Wrap(errors.ErrInvalid, "percentage must be > 0 and <= 1")
+		return errors.ErrInvalid.Wrap("percentage must be > 0 and <= 1")
 	}
 
 	if p.Windows == nil || p.Windows.VotingPeriod == 0 {
-		return sdkerrors.Wrap(errors.ErrInvalid, "voting period cannot be 0")
+		return errors.ErrInvalid.Wrap("voting period cannot be 0")
 	}
 
 	return nil
@@ -172,7 +173,7 @@ func (p PercentageDecisionPolicy) ValidateBasic() error {
 
 func (p *PercentageDecisionPolicy) Validate(g GroupInfo, config Config) error {
 	if p.Windows.MinExecutionPeriod > p.Windows.VotingPeriod+config.MaxExecutionPeriod {
-		return sdkerrors.Wrap(errors.ErrInvalid, "min_execution_period should be smaller than voting_period + max_execution_period")
+		return errors.ErrInvalid.Wrap("min_execution_period should be smaller than voting_period + max_execution_period")
 	}
 	return nil
 }
@@ -262,7 +263,7 @@ func (g *GroupPolicyInfo) SetDecisionPolicy(decisionPolicy DecisionPolicy) error
 func (g GroupPolicyInfo) GetDecisionPolicy() (DecisionPolicy, error) {
 	decisionPolicy, ok := g.DecisionPolicy.GetCachedValue().(DecisionPolicy)
 	if !ok {
-		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (DecisionPolicy)(nil), g.DecisionPolicy.GetCachedValue())
+		return nil, errorstypes.ErrInvalidType.Wrapf("expected %T, got %T", (DecisionPolicy)(nil), g.DecisionPolicy.GetCachedValue())
 	}
 
 	return decisionPolicy, nil
@@ -280,7 +281,7 @@ func (g GroupInfo) PrimaryKeyFields() []interface{} {
 
 func (g GroupInfo) ValidateBasic() error {
 	if g.Id == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "group's GroupId")
+		return errors.ErrEmpty.Wrap("group's GroupId")
 	}
 
 	_, err := sdk.AccAddressFromBech32(g.Admin)
@@ -292,7 +293,7 @@ func (g GroupInfo) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "total weight")
 	}
 	if g.Version == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "version")
+		return errors.ErrEmpty.Wrap("version")
 	}
 	return nil
 }
@@ -320,10 +321,10 @@ func (g GroupPolicyInfo) ValidateBasic() error {
 	}
 
 	if g.GroupId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "group policy's group id")
+		return errors.ErrEmpty.Wrap("group policy's group id")
 	}
 	if g.Version == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "group policy version")
+		return errors.ErrEmpty.Wrap("group policy version")
 	}
 	policy, err := g.GetDecisionPolicy()
 	if err != nil {
@@ -346,7 +347,7 @@ func (g GroupMember) PrimaryKeyFields() []interface{} {
 
 func (g GroupMember) ValidateBasic() error {
 	if g.GroupId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "group member's group id")
+		return errors.ErrEmpty.Wrap("group member's group id")
 	}
 
 	err := MemberToMemberRequest(g.Member).ValidateBasic()
@@ -370,17 +371,17 @@ func MemberToMemberRequest(m *Member) MemberRequest {
 
 func (p Proposal) ValidateBasic() error {
 	if p.Id == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
+		return errors.ErrEmpty.Wrap("proposal id")
 	}
 	_, err := sdk.AccAddressFromBech32(p.GroupPolicyAddress)
 	if err != nil {
 		return sdkerrors.Wrap(err, "proposal group policy address")
 	}
 	if p.GroupVersion == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "proposal group version")
+		return errors.ErrEmpty.Wrap("proposal group version")
 	}
 	if p.GroupPolicyVersion == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "proposal group policy version")
+		return errors.ErrEmpty.Wrap("proposal group policy version")
 	}
 	_, err = p.FinalTallyResult.GetYesCount()
 	if err != nil {
@@ -417,13 +418,13 @@ func (v Vote) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "voter")
 	}
 	if v.ProposalId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "voter ProposalId")
+		return errors.ErrEmpty.Wrap("voter ProposalId")
 	}
 	if v.Option == VOTE_OPTION_UNSPECIFIED {
-		return sdkerrors.Wrap(errors.ErrEmpty, "voter vote option")
+		return errors.ErrEmpty.Wrap("voter vote option")
 	}
 	if _, ok := VoteOption_name[int32(v.Option)]; !ok {
-		return sdkerrors.Wrap(errors.ErrInvalid, "vote option")
+		return errors.ErrInvalid.Wrap("vote option")
 	}
 	return nil
 }
@@ -500,7 +501,7 @@ func (t *TallyResult) operation(vote Vote, weight string, op operation) error {
 		}
 		t.NoWithVetoCount = vetoCount.String()
 	default:
-		return sdkerrors.Wrapf(errors.ErrInvalid, "unknown vote option %s", vote.Option.String())
+		return errors.ErrInvalid.Wrapf("unknown vote option %s", vote.Option.String())
 	}
 	return nil
 }

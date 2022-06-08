@@ -2,7 +2,7 @@ package nft
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -15,21 +15,21 @@ var _ sdk.Msg = &MsgSend{}
 // ValidateBasic implements the Msg.ValidateBasic method.
 func (m MsgSend) ValidateBasic() error {
 	if err := ValidateClassID(m.ClassId); err != nil {
-		return sdkerrors.Wrapf(ErrInvalidID, "Invalid class id (%s)", m.ClassId)
+		return ErrInvalidID.Wrapf("Invalid class id (%s)", m.ClassId)
 	}
 
 	if err := ValidateNFTID(m.Id); err != nil {
-		return sdkerrors.Wrapf(ErrInvalidID, "Invalid nft id (%s)", m.Id)
+		return ErrInvalidID.Wrapf("Invalid nft id (%s)", m.Id)
 	}
 
 	_, err := sdk.AccAddressFromBech32(m.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", m.Sender)
+		return errorstypes.ErrInvalidAddress.Wrapf("Invalid sender address (%s)", m.Sender)
 	}
 
 	_, err = sdk.AccAddressFromBech32(m.Receiver)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid receiver address (%s)", m.Receiver)
+		return errorstypes.ErrInvalidAddress.Wrapf("Invalid receiver address (%s)", m.Receiver)
 	}
 	return nil
 }

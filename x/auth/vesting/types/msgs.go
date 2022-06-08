@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // TypeMsgCreateVestingAccount defines the type value for a MsgCreateVestingAccount.
@@ -43,22 +43,22 @@ func (msg MsgCreateVestingAccount) Type() string { return TypeMsgCreateVestingAc
 // ValidateBasic Implements Msg.
 func (msg MsgCreateVestingAccount) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid 'from' address: %s", err)
+		return errorstypes.ErrInvalidAddress.Wrapf("invalid 'from' address: %s", err)
 	}
 	if _, err := sdk.AccAddressFromBech32(msg.ToAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
+		return errorstypes.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
 	}
 
 	if !msg.Amount.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+		return errorstypes.ErrInvalidCoins.Wrap(msg.Amount.String())
 	}
 
 	if !msg.Amount.IsAllPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+		return errorstypes.ErrInvalidCoins.Wrap(msg.Amount.String())
 	}
 
 	if msg.EndTime <= 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid end time")
+		return errorstypes.ErrInvalidRequest.Wrap("invalid end time")
 	}
 
 	return nil
@@ -95,18 +95,18 @@ func (msg MsgCreatePermanentLockedAccount) Type() string { return TypeMsgCreateP
 // ValidateBasic Implements Msg.
 func (msg MsgCreatePermanentLockedAccount) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err)
+		return errorstypes.ErrInvalidAddress.Wrapf("invalid sender address: %s", err)
 	}
 	if _, err := sdk.AccAddressFromBech32(msg.ToAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
+		return errorstypes.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
 	}
 
 	if !msg.Amount.IsValid() {
-		return sdkerrors.ErrInvalidCoins.Wrap(msg.Amount.String())
+		return errorstypes.ErrInvalidCoins.Wrap(msg.Amount.String())
 	}
 
 	if !msg.Amount.IsAllPositive() {
-		return sdkerrors.ErrInvalidCoins.Wrap(msg.Amount.String())
+		return errorstypes.ErrInvalidCoins.Wrap(msg.Amount.String())
 	}
 
 	return nil
@@ -167,11 +167,11 @@ func (msg MsgCreatePeriodicVestingAccount) ValidateBasic() error {
 		return err
 	}
 	if err := sdk.VerifyAddressFormat(from); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %s", err)
+		return errorstypes.ErrInvalidAddress.Wrapf("invalid sender address: %s", err)
 	}
 
 	if err := sdk.VerifyAddressFormat(to); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid recipient address: %s", err)
+		return errorstypes.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
 	}
 
 	if msg.StartTime < 1 {

@@ -7,9 +7,10 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/tendermint/tendermint/libs/log"
 
+	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
@@ -55,7 +56,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 
 	// If we didn't find any grant, we don't return any error.
 	// All other kinds of errors are returned.
-	if err != nil && !sdkerrors.IsOf(err, sdkerrors.ErrNotFound) {
+	if err != nil && !sdkerrors.IsOf(err, errorstypes.ErrNotFound) {
 		return err
 	}
 
@@ -75,7 +76,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	if err != nil {
 		return err
 	} else if newExp != nil && newExp.Before(ctx.BlockTime()) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "expiration is before current block time")
+		return errorstypes.ErrInvalidRequest.Wrap("expiration is before current block time")
 	} else if oldExp == nil && newExp != nil {
 		// when old oldExp is nil there won't be any key added before to queue.
 		// add the new key to queue directly.
@@ -190,7 +191,7 @@ func (k Keeper) getGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.Ac
 	key := feegrant.FeeAllowanceKey(granter, grantee)
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return nil, sdkerrors.ErrNotFound.Wrap("fee-grant not found")
+		return nil, errorstypes.ErrNotFound.Wrap("fee-grant not found")
 	}
 
 	var feegrant feegrant.Grant

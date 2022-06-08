@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const n1 = "cosmos.info"
@@ -214,7 +214,7 @@ func (s *MigrationTestSuite) TestMigrateErrUnknownItemKey() {
 
 	incorrectItemKey := n1 + "1"
 	_, err := s.ks.migrate(incorrectItemKey)
-	s.Require().EqualError(err, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, infoKey(incorrectItemKey)).Error())
+	s.Require().EqualError(err, errorstypes.ErrKeyNotFound.Wrap(infoKey(incorrectItemKey)).Error())
 }
 
 func (s *MigrationTestSuite) TestMigrateErrEmptyItemData() {
@@ -227,7 +227,7 @@ func (s *MigrationTestSuite) TestMigrateErrEmptyItemData() {
 	s.Require().NoError(s.ks.SetItem(item))
 
 	_, err := s.ks.migrate(n1)
-	s.Require().EqualError(err, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, n1).Error())
+	s.Require().EqualError(err, errorstypes.ErrKeyNotFound.Wrap(n1).Error())
 }
 
 func TestMigrationTestSuite(t *testing.T) {

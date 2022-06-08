@@ -1,11 +1,12 @@
 package legacytx
 
 import (
+	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
@@ -110,23 +111,20 @@ func (stdTx StdTx) ValidateBasic() error {
 	stdSigs := stdTx.GetSignatures()
 
 	if stdTx.Fee.Gas > tx.MaxGasWanted {
-		return sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest,
+		return errorstypes.ErrInvalidRequest.Wrapf(
 			"invalid gas supplied; %d > %d", stdTx.Fee.Gas, tx.MaxGasWanted,
 		)
 	}
 	if stdTx.Fee.Amount.IsAnyNegative() {
-		return sdkerrors.Wrapf(
-			sdkerrors.ErrInsufficientFee,
+		return errorstypes.ErrInsufficientFee.Wrapf(
 			"invalid fee provided: %s", stdTx.Fee.Amount,
 		)
 	}
 	if len(stdSigs) == 0 {
-		return sdkerrors.ErrNoSignatures
+		return errorstypes.ErrNoSignatures
 	}
 	if len(stdSigs) != len(stdTx.GetSigners()) {
-		return sdkerrors.Wrapf(
-			sdkerrors.ErrUnauthorized,
+		return errorstypes.ErrUnauthorized.Wrapf(
 			"wrong number of signers; expected %d, got %d", len(stdTx.GetSigners()), len(stdSigs),
 		)
 	}

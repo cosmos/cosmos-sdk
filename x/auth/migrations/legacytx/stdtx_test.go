@@ -8,6 +8,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -15,7 +16,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
@@ -170,7 +171,7 @@ func TestTxValidateBasic(t *testing.T) {
 	err := tx.ValidateBasic()
 	require.Error(t, err)
 	_, code, _ := sdkerrors.ABCIInfo(err, false)
-	require.Equal(t, sdkerrors.ErrInsufficientFee.ABCICode(), code)
+	require.Equal(t, errorstypes.ErrInsufficientFee.ABCICode(), code)
 
 	// require to fail validation when no signatures exist
 	privs, accNums, seqs := []cryptotypes.PrivKey{}, []uint64{}, []uint64{}
@@ -179,7 +180,7 @@ func TestTxValidateBasic(t *testing.T) {
 	err = tx.ValidateBasic()
 	require.Error(t, err)
 	_, code, _ = sdkerrors.ABCIInfo(err, false)
-	require.Equal(t, sdkerrors.ErrNoSignatures.ABCICode(), code)
+	require.Equal(t, errorstypes.ErrNoSignatures.ABCICode(), code)
 
 	// require to fail validation when signatures do not match expected signers
 	privs, accNums, seqs = []cryptotypes.PrivKey{priv1}, []uint64{0, 1}, []uint64{0, 0}
@@ -188,7 +189,7 @@ func TestTxValidateBasic(t *testing.T) {
 	err = tx.ValidateBasic()
 	require.Error(t, err)
 	_, code, _ = sdkerrors.ABCIInfo(err, false)
-	require.Equal(t, sdkerrors.ErrUnauthorized.ABCICode(), code)
+	require.Equal(t, errorstypes.ErrUnauthorized.ABCICode(), code)
 
 	// require to fail with invalid gas supplied
 	badFee = NewTestStdFee()
@@ -198,7 +199,7 @@ func TestTxValidateBasic(t *testing.T) {
 	err = tx.ValidateBasic()
 	require.Error(t, err)
 	_, code, _ = sdkerrors.ABCIInfo(err, false)
-	require.Equal(t, sdkerrors.ErrInvalidRequest.ABCICode(), code)
+	require.Equal(t, errorstypes.ErrInvalidRequest.ABCICode(), code)
 
 	// require to pass when above criteria are matched
 	privs, accNums, seqs = []cryptotypes.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}

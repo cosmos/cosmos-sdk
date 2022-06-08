@@ -1,15 +1,15 @@
 package keeper
 
 import (
+	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
 // SaveClass defines a method for creating a new nft class
 func (k Keeper) SaveClass(ctx sdk.Context, class nft.Class) error {
 	if k.HasClass(ctx, class.Id) {
-		return sdkerrors.Wrap(nft.ErrClassExists, class.Id)
+		return nft.ErrClassExists.Wrap(class.Id)
 	}
 	bz, err := k.cdc.Marshal(&class)
 	if err != nil {
@@ -23,7 +23,7 @@ func (k Keeper) SaveClass(ctx sdk.Context, class nft.Class) error {
 // UpdateClass defines a method for updating a exist nft class
 func (k Keeper) UpdateClass(ctx sdk.Context, class nft.Class) error {
 	if !k.HasClass(ctx, class.Id) {
-		return sdkerrors.Wrap(nft.ErrClassNotExists, class.Id)
+		return nft.ErrClassNotExists.Wrap(class.Id)
 	}
 	bz, err := k.cdc.Marshal(&class)
 	if err != nil {

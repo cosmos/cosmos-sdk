@@ -6,7 +6,7 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // NewGrant returns new Grant. Expiration is optional and noop if null.
@@ -14,11 +14,11 @@ import (
 // which is passed into the `blockTime` arg.
 func NewGrant(blockTime time.Time, a Authorization, expiration *time.Time) (Grant, error) {
 	if expiration != nil && !expiration.After(blockTime) {
-		return Grant{}, sdkerrors.Wrapf(ErrInvalidExpirationTime, "expiration must be after the current block time (%v), got %v", blockTime.Format(time.RFC3339), expiration.Format(time.RFC3339))
+		return Grant{}, ErrInvalidExpirationTime.Wrapf("expiration must be after the current block time (%v), got %v", blockTime.Format(time.RFC3339), expiration.Format(time.RFC3339))
 	}
 	msg, ok := a.(proto.Message)
 	if !ok {
-		return Grant{}, sdkerrors.ErrPackAny.Wrapf("cannot proto marshal %T", a)
+		return Grant{}, errorstypes.ErrPackAny.Wrapf("cannot proto marshal %T", a)
 	}
 	any, err := cdctypes.NewAnyWithValue(msg)
 	if err != nil {
@@ -41,12 +41,12 @@ func (g Grant) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 // GetAuthorization returns the cached value from the Grant.Authorization if present.
 func (g Grant) GetAuthorization() (Authorization, error) {
 	if g.Authorization == nil {
-		return nil, sdkerrors.ErrInvalidType.Wrap("authorization is nil")
+		return nil, errorstypes.ErrInvalidType.Wrap("authorization is nil")
 	}
 	av := g.Authorization.GetCachedValue()
 	a, ok := av.(Authorization)
 	if !ok {
-		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (Authorization)(nil), av)
+		return nil, errorstypes.ErrInvalidType.Wrapf("expected %T, got %T", (Authorization)(nil), av)
 	}
 	return a, nil
 }
@@ -55,7 +55,7 @@ func (g Grant) ValidateBasic() error {
 	av := g.Authorization.GetCachedValue()
 	a, ok := av.(Authorization)
 	if !ok {
-		return sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (Authorization)(nil), av)
+		return errorstypes.ErrInvalidType.Wrapf("expected %T, got %T", (Authorization)(nil), av)
 	}
 	return a.ValidateBasic()
 }

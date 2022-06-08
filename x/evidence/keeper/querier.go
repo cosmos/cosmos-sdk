@@ -4,7 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 
@@ -26,7 +26,7 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 			res, err = queryAllEvidence(ctx, req, k, legacyQuerierCdc)
 
 		default:
-			err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])
+			err = errorstypes.ErrUnknownRequest.Wrapf("unknown %s query endpoint: %s", types.ModuleName, path[0])
 		}
 
 		return res, err
@@ -38,17 +38,17 @@ func queryEvidence(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQueri
 
 	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+		return nil, errorstypes.ErrJSONUnmarshal.Wrap(err.Error())
 	}
 
 	evidence, ok := k.GetEvidence(ctx, params.EvidenceHash)
 	if !ok {
-		return nil, sdkerrors.Wrap(types.ErrNoEvidenceExists, params.EvidenceHash.String())
+		return nil, types.ErrNoEvidenceExists.Wrap(params.EvidenceHash.String())
 	}
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, evidence)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, errorstypes.ErrJSONMarshal.Wrap(err.Error())
 	}
 
 	return res, nil
@@ -59,7 +59,7 @@ func queryAllEvidence(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQu
 
 	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+		return nil, errorstypes.ErrJSONUnmarshal.Wrap(err.Error())
 	}
 
 	evidence := k.GetAllEvidence(ctx)
@@ -73,7 +73,7 @@ func queryAllEvidence(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQu
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, evidence)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, errorstypes.ErrJSONMarshal.Wrap(err.Error())
 	}
 
 	return res, nil

@@ -5,8 +5,6 @@ import (
 	"sort"
 
 	"sigs.k8s.io/yaml"
-
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // NewCapability returns a reference to a new Capability to be used as an
@@ -47,7 +45,7 @@ func (co *CapabilityOwners) Set(owner Owner) error {
 	i, ok := co.Get(owner)
 	if ok {
 		// owner already exists at co.Owners[i]
-		return sdkerrors.Wrapf(ErrOwnerClaimed, owner.String())
+		return ErrOwnerClaimed.Wrap(owner.String())
 	}
 
 	// owner does not exist in the set of owners, so we insert at position i

@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // KeyTestPubAddr generates a new secp256k1 keypair.
@@ -76,7 +75,7 @@ func (msg *TestMsg) GetSigners() []sdk.AccAddress {
 func (msg *TestMsg) ValidateBasic() error {
 	for _, addr := range msg.Signers {
 		if _, err := sdk.AccAddressFromBech32(addr); err != nil {
-			return sdkerrors.ErrInvalidAddress.Wrapf("invalid signer address: %s", err)
+			return errorstypes.ErrInvalidAddress.Wrapf("invalid signer address: %s", err)
 		}
 	}
 	return nil

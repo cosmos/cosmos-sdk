@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type bech32Codec struct {
@@ -25,7 +25,7 @@ func (bc bech32Codec) StringToBytes(text string) ([]byte, error) {
 	}
 
 	if hrp != bc.bech32Prefix {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "hrp does not match bech32Prefix")
+		return nil, errorstypes.ErrLogic.Wrap("hrp does not match bech32Prefix")
 	}
 
 	if err := sdk.VerifyAddressFormat(bz); err != nil {

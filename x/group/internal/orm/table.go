@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"reflect"
 
+	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
@@ -80,14 +81,14 @@ func (a table) Create(store sdk.KVStore, rowID RowID, obj codec.ProtoMarshaler) 
 }
 
 // Update updates the given object under the rowID key. It expects the key to
-// exists already and fails with an `sdkerrors.ErrNotFound` otherwise. Any caller must
+// exists already and fails with an `errorstypes.ErrNotFound` otherwise. Any caller must
 // therefore make sure that this contract is fulfilled. Parameters must not be
 // nil.
 //
 // Update triggers all "after set" hooks that may add or remove secondary index keys.
 func (a table) Update(store sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler) error {
 	if !a.Has(store, rowID) {
-		return sdkerrors.ErrNotFound
+		return errorstypes.ErrNotFound
 	}
 
 	return a.Set(store, rowID, newValue)
@@ -141,7 +142,7 @@ func assertValid(obj codec.ProtoMarshaler) error {
 }
 
 // Delete removes the object under the rowID key. It expects the key to exists
-// already and fails with a `sdkerrors.ErrNotFound` otherwise. Any caller must therefore
+// already and fails with a `errorstypes.ErrNotFound` otherwise. Any caller must therefore
 // make sure that this contract is fulfilled.
 //
 // Delete iterates through the registered callbacks that remove secondary index
@@ -176,11 +177,11 @@ func (a table) Has(store sdk.KVStore, key RowID) bool {
 }
 
 // GetOne load the object persisted for the given RowID into the dest parameter.
-// If none exists or `rowID==nil` then `sdkerrors.ErrNotFound` is returned instead.
+// If none exists or `rowID==nil` then `errorstypes.ErrNotFound` is returned instead.
 // Parameters must not be nil - we don't allow creation of values with empty keys.
 func (a table) GetOne(store sdk.KVStore, rowID RowID, dest codec.ProtoMarshaler) error {
 	if len(rowID) == 0 {
-		return sdkerrors.ErrNotFound
+		return errorstypes.ErrNotFound
 	}
 	x := NewTypeSafeRowGetter(a.prefix, a.model, a.cdc)
 	return x(store, rowID, dest)
@@ -204,7 +205,7 @@ func (a table) GetOne(store sdk.KVStore, rowID RowID, dest codec.ProtoMarshaler)
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
 func (a table) PrefixScan(store sdk.KVStore, start, end RowID) (Iterator, error) {
 	if start != nil && end != nil && bytes.Compare(start, end) >= 0 {
-		return NewInvalidIterator(), sdkerrors.Wrap(errors.ErrORMInvalidArgument, "start must be before end")
+		return NewInvalidIterator(), errors.ErrORMInvalidArgument.Wrap("start must be before end")
 	}
 	pStore := prefix.NewStore(store, a.prefix[:])
 	return &typeSafeIterator{
@@ -225,7 +226,7 @@ func (a table) PrefixScan(store sdk.KVStore, start, end RowID) (Iterator, error)
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
 func (a table) ReversePrefixScan(store sdk.KVStore, start, end RowID) (Iterator, error) {
 	if start != nil && end != nil && bytes.Compare(start, end) >= 0 {
-		return NewInvalidIterator(), sdkerrors.Wrap(errors.ErrORMInvalidArgument, "start must be before end")
+		return NewInvalidIterator(), errors.ErrORMInvalidArgument.Wrap("start must be before end")
 	}
 	pStore := prefix.NewStore(store, a.prefix[:])
 	return &typeSafeIterator{
@@ -264,14 +265,14 @@ func (a table) Import(store sdk.KVStore, data interface{}, _ uint64) error {
 	// Provided data must be a slice
 	modelSlice := reflect.ValueOf(data)
 	if modelSlice.Kind() != reflect.Slice {
-		return sdkerrors.Wrap(errors.ErrORMInvalidArgument, "data must be a slice")
+		return errors.ErrORMInvalidArgument.Wrap("data must be a slice")
 	}
 
 	// Import values from slice
 	for i := 0; i < modelSlice.Len(); i++ {
 		obj, ok := modelSlice.Index(i).Interface().(PrimaryKeyed)
 		if !ok {
-			return sdkerrors.Wrapf(errors.ErrORMInvalidArgument, "unsupported type :%s", reflect.TypeOf(data).Elem().Elem())
+			return errors.ErrORMInvalidArgument.Wrapf("unsupported type :%s", reflect.TypeOf(data).Elem().Elem())
 		}
 		err := a.Create(store, PrimaryKey(obj), obj)
 		if err != nil {

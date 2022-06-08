@@ -2,17 +2,17 @@ package multi
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"sort"
 
 	protoio "github.com/gogo/protobuf/io"
 
+	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	types "github.com/cosmos/cosmos-sdk/store/v2alpha1"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Snapshot implements snapshottypes.Snapshotter.
@@ -21,13 +21,13 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 		return snapshottypes.ErrInvalidSnapshotVersion
 	}
 	if height > uint64(rs.LastCommitID().Version) {
-		return sdkerrors.Wrapf(sdkerrors.ErrLogic, "cannot snapshot future height %v", height)
+		return errorstypes.ErrLogic.Wrapf("cannot snapshot future height %v", height)
 	}
 
 	// get the saved snapshot at height
 	vs, err := rs.getView(int64(height))
 	if err != nil {
-		return sdkerrors.Wrap(err, fmt.Sprintf("error while get the version at height %d", height))
+		return sdkerrors.Wrapf(err, "error while get the version at height %d", height)
 	}
 
 	// sending the snapshot store schema
@@ -103,7 +103,7 @@ func (rs *Store) Restore(
 	}
 
 	if rs.LastCommitID().Version != 0 {
-		return snapshottypes.SnapshotItem{}, sdkerrors.Wrapf(sdkerrors.ErrLogic, "cannot restore snapshot for non empty store at height %v", height)
+		return snapshottypes.SnapshotItem{}, errorstypes.ErrLogic.Wrapf("cannot restore snapshot for non empty store at height %v", height)
 	}
 
 	var subStore *substore
@@ -130,29 +130,29 @@ loop:
 			}
 
 			if !rs.schema.equal(receivedStoreSchema) {
-				return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(sdkerrors.ErrLogic, "received schema does not match app schema")
+				return snapshottypes.SnapshotItem{}, errorstypes.ErrLogic.Wrap("received schema does not match app schema")
 			}
 
 		case *snapshottypes.SnapshotItem_Store:
 			storeName := item.Store.GetName()
 			// checking the store schema is received or not
 			if !storeSchemaReceived {
-				return snapshottypes.SnapshotItem{}, sdkerrors.Wrapf(sdkerrors.ErrLogic, "received store name before store schema %s", storeName)
+				return snapshottypes.SnapshotItem{}, errorstypes.ErrLogic.Wrapf("received store name before store schema %s", storeName)
 			}
 			// checking the store schema exists or not
 			if _, has := rs.schema[storeName]; !has {
-				return snapshottypes.SnapshotItem{}, sdkerrors.Wrapf(sdkerrors.ErrLogic, "store is missing from schema %s", storeName)
+				return snapshottypes.SnapshotItem{}, errorstypes.ErrLogic.Wrapf("store is missing from schema %s", storeName)
 			}
 
 			// get the substore
 			subStore, err = rs.getSubstore(storeName)
 			if err != nil {
-				return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, fmt.Sprintf("error while getting the substore for key %s", storeName))
+				return snapshottypes.SnapshotItem{}, sdkerrors.Wrapf(err, "error while getting the substore for key %s", storeName)
 			}
 
 		case *snapshottypes.SnapshotItem_KV:
 			if subStore == nil {
-				return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(sdkerrors.ErrLogic, "received KV Item before store item")
+				return snapshottypes.SnapshotItem{}, errorstypes.ErrLogic.Wrapf("received KV Item before store item")
 			}
 			// update the key/value SMT.Store
 			subStore.Set(item.KV.Key, item.KV.Value)
@@ -165,7 +165,7 @@ loop:
 	// commit the all key/values to store
 	_, err := rs.commit(height)
 	if err != nil {
-		return snapshotItem, sdkerrors.Wrap(err, fmt.Sprintf("error during commit the store at height %d", height))
+		return snapshotItem, sdkerrors.Wrapf(err, "error during commit the store at height %d", height)
 	}
 
 	return snapshotItem, nil

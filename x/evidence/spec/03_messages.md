@@ -27,15 +27,15 @@ as follows:
 ```go
 func SubmitEvidence(ctx Context, evidence Evidence) error {
   if _, ok := GetEvidence(ctx, evidence.Hash()); ok {
-    return sdkerrors.Wrap(types.ErrEvidenceExists, evidence.Hash().String())
+    return types.ErrEvidenceExists.Wrap(evidence.Hash().String())
   }
   if !router.HasRoute(evidence.Route()) {
-    return sdkerrors.Wrap(types.ErrNoEvidenceHandlerExists, evidence.Route())
+    return types.ErrNoEvidenceHandlerExists.Wrap(evidence.Route())
   }
 
   handler := router.GetRoute(evidence.Route())
   if err := handler(ctx, evidence); err != nil {
-    return sdkerrors.Wrap(types.ErrInvalidEvidence, err.Error())
+    return types.ErrInvalidEvidence.Wrap(err.Error())
   }
 
   ctx.EventManager().EmitEvent(

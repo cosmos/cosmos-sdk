@@ -20,7 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
@@ -1363,7 +1363,7 @@ func (s *IntegrationTestSuite) TestNewCancelUnbondingDelegationCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, sdkerrors.ErrNotFound.ABCICode(), &sdk.TxResponse{},
+			false, errorstypes.ErrNotFound.ABCICode(), &sdk.TxResponse{},
 		},
 		{
 			"Invalid unbonding amount (higher than the unbonding amount)",
@@ -1375,7 +1375,7 @@ func (s *IntegrationTestSuite) TestNewCancelUnbondingDelegationCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, sdkerrors.ErrInvalidRequest.ABCICode(), &sdk.TxResponse{},
+			false, errorstypes.ErrInvalidRequest.ABCICode(), &sdk.TxResponse{},
 		},
 		{
 			"valid transaction of canceling unbonding delegation",
@@ -1397,7 +1397,7 @@ func (s *IntegrationTestSuite) TestNewCancelUnbondingDelegationCmd() {
 		s.Run(tc.name, func() {
 			cmd := cli.NewCancelUnbondingDelegation()
 			clientCtx := val.ClientCtx
-			if !tc.expectErr && tc.expectedCode != sdkerrors.ErrNotFound.ABCICode() {
+			if !tc.expectErr && tc.expectedCode != errorstypes.ErrNotFound.ABCICode() {
 				getCreationHeight := func() int64 {
 					// fethichg the unbonding delegations
 					resp, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/unbonding_delegations", val.APIAddress, val.Address.String()))

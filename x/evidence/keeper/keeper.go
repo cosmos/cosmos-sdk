@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
@@ -65,7 +64,7 @@ func (k *Keeper) SetRouter(rtr types.Router) {
 // no handler exists, an error is returned.
 func (k Keeper) GetEvidenceHandler(evidenceRoute string) (types.Handler, error) {
 	if !k.router.HasRoute(evidenceRoute) {
-		return nil, sdkerrors.Wrap(types.ErrNoEvidenceHandlerExists, evidenceRoute)
+		return nil, types.ErrNoEvidenceHandlerExists.Wrap(evidenceRoute)
 	}
 
 	return k.router.GetRoute(evidenceRoute), nil
@@ -77,15 +76,15 @@ func (k Keeper) GetEvidenceHandler(evidenceRoute string) (types.Handler, error) 
 // persisted.
 func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence exported.Evidence) error {
 	if _, ok := k.GetEvidence(ctx, evidence.Hash()); ok {
-		return sdkerrors.Wrap(types.ErrEvidenceExists, evidence.Hash().String())
+		return types.ErrEvidenceExists.Wrap(evidence.Hash().String())
 	}
 	if !k.router.HasRoute(evidence.Route()) {
-		return sdkerrors.Wrap(types.ErrNoEvidenceHandlerExists, evidence.Route())
+		return types.ErrNoEvidenceHandlerExists.Wrap(evidence.Route())
 	}
 
 	handler := k.router.GetRoute(evidence.Route())
 	if err := handler(ctx, evidence); err != nil {
-		return sdkerrors.Wrap(types.ErrInvalidEvidence, err.Error())
+		return types.ErrInvalidEvidence.Wrap(err.Error())
 	}
 
 	ctx.EventManager().EmitEvent(

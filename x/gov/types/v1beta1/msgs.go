@@ -8,7 +8,7 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -84,21 +84,21 @@ func (m MsgSubmitProposal) Type() string { return TypeMsgSubmitProposal }
 // ValidateBasic implements Msg
 func (m MsgSubmitProposal) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Proposer); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
+		return errorstypes.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
 	}
 	if !m.InitialDeposit.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.InitialDeposit.String())
+		return errorstypes.ErrInvalidCoins.Wrap(m.InitialDeposit.String())
 	}
 	if m.InitialDeposit.IsAnyNegative() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.InitialDeposit.String())
+		return errorstypes.ErrInvalidCoins.Wrap(m.InitialDeposit.String())
 	}
 
 	content := m.GetContent()
 	if content == nil {
-		return sdkerrors.Wrap(types.ErrInvalidProposalContent, "missing content")
+		return types.ErrInvalidProposalContent.Wrap("missing content")
 	}
 	if !IsValidProposalType(content.ProposalType()) {
-		return sdkerrors.Wrap(types.ErrInvalidProposalType, content.ProposalType())
+		return types.ErrInvalidProposalType.Wrap(content.ProposalType())
 	}
 	if err := content.ValidateBasic(); err != nil {
 		return err
@@ -146,13 +146,13 @@ func (msg MsgDeposit) Type() string { return TypeMsgDeposit }
 // ValidateBasic implements Msg
 func (msg MsgDeposit) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Depositor); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
+		return errorstypes.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
 	}
 	if !msg.Amount.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+		return errorstypes.ErrInvalidCoins.Wrap(msg.Amount.String())
 	}
 	if msg.Amount.IsAnyNegative() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+		return errorstypes.ErrInvalidCoins.Wrap(msg.Amount.String())
 	}
 
 	return nil
@@ -191,10 +191,10 @@ func (msg MsgVote) Type() string { return TypeMsgVote }
 // ValidateBasic implements Msg
 func (msg MsgVote) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Voter); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
+		return errorstypes.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
 	}
 	if !ValidVoteOption(msg.Option) {
-		return sdkerrors.Wrap(types.ErrInvalidVote, msg.Option.String())
+		return types.ErrInvalidVote.Wrap(msg.Option.String())
 	}
 
 	return nil
@@ -233,31 +233,31 @@ func (msg MsgVoteWeighted) Type() string { return TypeMsgVoteWeighted }
 // ValidateBasic implements Msg
 func (msg MsgVoteWeighted) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Voter); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
+		return errorstypes.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
 	}
 	if len(msg.Options) == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, WeightedVoteOptions(msg.Options).String())
+		return errorstypes.ErrInvalidRequest.Wrap(WeightedVoteOptions(msg.Options).String())
 	}
 
 	totalWeight := sdk.NewDec(0)
 	usedOptions := make(map[VoteOption]bool)
 	for _, option := range msg.Options {
 		if !ValidWeightedVoteOption(option) {
-			return sdkerrors.Wrap(types.ErrInvalidVote, option.String())
+			return types.ErrInvalidVote.Wrap(option.String())
 		}
 		totalWeight = totalWeight.Add(option.Weight)
 		if usedOptions[option.Option] {
-			return sdkerrors.Wrap(types.ErrInvalidVote, "Duplicated vote option")
+			return types.ErrInvalidVote.Wrap("Duplicated vote option")
 		}
 		usedOptions[option.Option] = true
 	}
 
 	if totalWeight.GT(sdk.NewDec(1)) {
-		return sdkerrors.Wrap(types.ErrInvalidVote, "Total weight overflow 1.00")
+		return types.ErrInvalidVote.Wrap("Total weight overflow 1.00")
 	}
 
 	if totalWeight.LT(sdk.NewDec(1)) {
-		return sdkerrors.Wrap(types.ErrInvalidVote, "Total weight lower than 1.00")
+		return types.ErrInvalidVote.Wrap("Total weight lower than 1.00")
 	}
 
 	return nil

@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -79,7 +79,7 @@ func (s *StdTxBuilder) SetFeePayer(_ sdk.AccAddress) {}
 
 // AddAuxSignerData returns an error for StdTxBuilder.
 func (s *StdTxBuilder) AddAuxSignerData(_ tx.AuxSignerData) error {
-	return sdkerrors.ErrLogic.Wrap("cannot use AuxSignerData with StdTxBuilder")
+	return errorstypes.ErrLogic.Wrap("cannot use AuxSignerData with StdTxBuilder")
 }
 
 // StdTxConfig is a context.TxConfig for StdTx
@@ -188,14 +188,14 @@ type Unmarshaler func(bytes []byte, ptr interface{}) error
 func mkDecoder(unmarshaler Unmarshaler) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		if len(txBytes) == 0 {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "tx bytes are empty")
+			return nil, errorstypes.ErrTxDecode.Wrap("tx bytes are empty")
 		}
 		tx := StdTx{}
 		// StdTx.Msg is an interface. The concrete types
 		// are registered by MakeTxCodec
 		err := unmarshaler(txBytes, &tx)
 		if err != nil {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
+			return nil, errorstypes.ErrTxDecode.Wrap(err.Error())
 		}
 		return tx, nil
 	}

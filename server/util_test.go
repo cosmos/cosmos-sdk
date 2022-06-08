@@ -23,7 +23,7 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
@@ -440,7 +440,7 @@ func TestEmptyMinGasPrices(t *testing.T) {
 		return server.InterceptConfigsPreRunHandler(cmd, "", nil, tmcfg.DefaultConfig())
 	}
 	err = cmd.ExecuteContext(ctx)
-	require.Errorf(t, err, sdkerrors.ErrAppConfig.Error())
+	require.Errorf(t, err, errorstypes.ErrAppConfig.Error())
 }
 
 type mapGetter map[string]interface{}

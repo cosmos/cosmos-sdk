@@ -41,7 +41,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // AppModuleBasic is the standard form for basic non-dependant elements of an application module.
@@ -419,7 +419,7 @@ type VersionMap map[string]uint64
 func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM VersionMap) (VersionMap, error) {
 	c, ok := cfg.(configurator)
 	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
+		return nil, errorstypes.ErrInvalidType.Wrapf("expected %T, got %T", configurator{}, cfg)
 	}
 	modules := m.OrderMigrations
 	if modules == nil {
@@ -451,7 +451,7 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 			// The module manager assumes only one module will update the
 			// validator set, and it can't be a new module.
 			if len(moduleValUpdates) > 0 {
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic, "validator InitGenesis update is already set by another module")
+				return nil, errorstypes.ErrLogic.Wrap("validator InitGenesis update is already set by another module")
 			}
 		}
 

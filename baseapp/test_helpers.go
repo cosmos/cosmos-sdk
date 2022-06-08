@@ -4,7 +4,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // SimCheck defines a CheckTx helper function that used in tests and simulations.
@@ -14,7 +14,7 @@ func (app *BaseApp) SimCheck(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *
 	// this helper is only used in tests/simulation, it's fine.
 	bz, err := txEncoder(tx)
 	if err != nil {
-		return sdk.GasInfo{}, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
+		return sdk.GasInfo{}, nil, errorstypes.ErrInvalidRequest.Wrapf("%s", err)
 	}
 	gasInfo, result, _, _, err := app.runTx(runTxModeCheck, bz)
 	return gasInfo, result, err
@@ -30,7 +30,7 @@ func (app *BaseApp) SimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo,
 	// See comment for Check().
 	bz, err := txEncoder(tx)
 	if err != nil {
-		return sdk.GasInfo{}, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
+		return sdk.GasInfo{}, nil, errorstypes.ErrInvalidRequest.Wrapf("%s", err)
 	}
 	gasInfo, result, _, _, err := app.runTx(runTxModeDeliver, bz)
 	return gasInfo, result, err

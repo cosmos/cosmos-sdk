@@ -14,7 +14,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -480,7 +480,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))).String()),
 			},
 			false,
-			sdkerrors.ErrInsufficientFee.ABCICode(),
+			errorstypes.ErrInsufficientFee.ABCICode(),
 			&sdk.TxResponse{},
 		},
 		{
@@ -498,7 +498,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 				"--gas=10",
 			},
 			false,
-			sdkerrors.ErrOutOfGas.ABCICode(),
+			errorstypes.ErrOutOfGas.ABCICode(),
 			&sdk.TxResponse{},
 		},
 	}
@@ -615,7 +615,7 @@ func (s *IntegrationTestSuite) TestNewMultiSendTxCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))).String()),
 			},
 			false,
-			sdkerrors.ErrInsufficientFee.ABCICode(),
+			errorstypes.ErrInsufficientFee.ABCICode(),
 			&sdk.TxResponse{},
 		},
 		{
@@ -633,7 +633,7 @@ func (s *IntegrationTestSuite) TestNewMultiSendTxCmd() {
 				"--gas=10",
 			},
 			false,
-			sdkerrors.ErrOutOfGas.ABCICode(),
+			errorstypes.ErrOutOfGas.ABCICode(),
 			&sdk.TxResponse{},
 		},
 	}

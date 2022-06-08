@@ -5,10 +5,9 @@ import (
 	"compress/zlib"
 	"io"
 
+	sdkerrors "cosmossdk.io/errors"
 	protoio "github.com/gogo/protobuf/io"
 	"github.com/gogo/protobuf/proto"
-
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (

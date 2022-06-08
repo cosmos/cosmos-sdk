@@ -100,11 +100,11 @@ func (a SendAuthorization) MsgTypeURL() string {
 func (a SendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
 	mSend, ok := msg.(*MsgSend)
 	if !ok {
-		return authz.AcceptResponse{}, sdkerrors.ErrInvalidType.Wrap("type mismatch")
+		return authz.AcceptResponse{}, errorstypes.ErrInvalidType.Wrap("type mismatch")
 	}
 	limitLeft, isNegative := a.SpendLimit.SafeSub(mSend.Amount)
 	if isNegative {
-		return authz.AcceptResponse{}, sdkerrors.ErrInsufficientFunds.Wrapf("requested amount is more than spend limit")
+		return authz.AcceptResponse{}, errorstypes.ErrInsufficientFunds.Wrapf("requested amount is more than spend limit")
 	}
 	if limitLeft.IsZero() {
 		return authz.AcceptResponse{Accept: true, Delete: true}, nil
@@ -120,10 +120,10 @@ using the `Authorization` interface with no need to change the underlying
 
 ##### Small notes on `AcceptResponse`
 
-- The `AcceptResponse.Accept` field will be set to `true` if the authorization is accepted.
+* The `AcceptResponse.Accept` field will be set to `true` if the authorization is accepted.
 However, if it is rejected, the function `Accept` will raise an error (without setting `AcceptResponse.Accept` to `false`).
 
-- The `AcceptResponse.Updated` field will be set to a non-nil value only if there is a real change to the authorization.
+* The `AcceptResponse.Updated` field will be set to a non-nil value only if there is a real change to the authorization.
 If authorization remains the same (as is, for instance, always the case for a [`GenericAuthorization`](#genericauthorization)),
 the field will be `nil`.
 

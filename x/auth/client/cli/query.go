@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -110,7 +111,7 @@ func GetAccountCmd() *cobra.Command {
 				}
 				catchingUp := status.SyncInfo.CatchingUp
 				if !catchingUp {
-					return errors.Wrapf(err, "your node may be syncing, please check node status using `/status`")
+					return sdkerrors.Wrapf(err, "your node may be syncing, please check node status using `/status`")
 				}
 				return err
 			}

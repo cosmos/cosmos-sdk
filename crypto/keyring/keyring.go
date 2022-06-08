@@ -22,7 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/go-bip39"
 )
 
@@ -480,7 +480,7 @@ func (ks keystore) KeyByAddress(address sdk.Address) (*Record, error) {
 
 func wrapKeyNotFound(err error, msg string) error {
 	if err == keyring.ErrKeyNotFound {
-		return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, msg)
+		return errorstypes.ErrKeyNotFound.Wrap(msg)
 	}
 	return err
 }
@@ -511,7 +511,7 @@ func (ks keystore) List() ([]*Record, error) {
 		}
 
 		if len(item.Data) == 0 {
-			return nil, sdkerrors.ErrKeyNotFound.Wrap(key)
+			return nil, errorstypes.ErrKeyNotFound.Wrap(key)
 		}
 
 		k, err := ks.protoUnmarshalRecord(item.Data)
@@ -913,7 +913,7 @@ func (ks keystore) migrate(key string) (*Record, error) {
 	}
 
 	if len(item.Data) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
+		return nil, errorstypes.ErrKeyNotFound.Wrap(key)
 	}
 
 	// 2. Try to deserialize using proto

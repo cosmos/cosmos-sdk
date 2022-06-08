@@ -5,9 +5,10 @@ import (
 	"encoding/binary"
 	"fmt"
 
+	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
@@ -120,7 +121,7 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 			switch err := k.groupMemberTable.GetOne(ctx.KVStore(k.key), orm.PrimaryKey(&groupMember), &prevGroupMember); {
 			case err == nil:
 				found = true
-			case sdkerrors.ErrNotFound.Is(err):
+			case errorstypes.ErrNotFound.Is(err):
 				found = false
 			default:
 				return sdkerrors.Wrap(err, "get group member")
@@ -135,7 +136,7 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 			if newMemberWeight.IsZero() {
 				// We can't delete a group member that doesn't already exist.
 				if !found {
-					return sdkerrors.Wrap(sdkerrors.ErrNotFound, "unknown member")
+					return errorstypes.ErrNotFound.Wrap("unknown member")
 				}
 
 				previousMemberWeight, err := math.NewPositiveDecFromString(prevGroupMember.Member.Weight)
@@ -320,7 +321,7 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGro
 	}
 	// Only current group admin is authorized to create a group policy for this
 	if !groupAdmin.Equals(admin) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "not group admin")
+		return nil, errorstypes.ErrUnauthorized.Wrap("not group admin")
 	}
 
 	err = policy.Validate(g, k.config)
@@ -484,7 +485,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 	// Only members of the group can submit a new proposal.
 	for i := range proposers {
 		if !k.groupMemberTable.Has(ctx.KVStore(k.key), orm.PrimaryKey(&group.GroupMember{GroupId: g.Id, Member: &group.Member{Address: proposers[i]}})) {
-			return nil, sdkerrors.Wrapf(errors.ErrUnauthorized, "not in group: %s", proposers[i])
+			return nil, errors.ErrUnauthorized.Wrapf("not in group: %s", proposers[i])
 		}
 	}
 
@@ -574,7 +575,7 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawPr
 
 	// Ensure the proposal can be withdrawn.
 	if proposal.Status != group.PROPOSAL_STATUS_SUBMITTED {
-		return nil, sdkerrors.Wrapf(errors.ErrInvalid, "cannot withdraw a proposal with the status of %s", proposal.Status.String())
+		return nil, errors.ErrInvalid.Wrapf("cannot withdraw a proposal with the status of %s", proposal.Status.String())
 	}
 
 	var policyInfo group.GroupPolicyInfo
@@ -584,7 +585,7 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, req *group.MsgWithdrawPr
 
 	// check address is the group policy admin he is in proposers list..
 	if address != policyInfo.Admin && !isProposer(proposal, address) {
-		return nil, sdkerrors.Wrapf(errors.ErrUnauthorized, "given address is neither group policy admin nor in proposers: %s", address)
+		return nil, errors.ErrUnauthorized.Wrapf("given address is neither group policy admin nor in proposers: %s", address)
 	}
 
 	proposal.Status = group.PROPOSAL_STATUS_WITHDRAWN
@@ -616,10 +617,10 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 	}
 	// Ensure that we can still accept votes for this proposal.
 	if proposal.Status != group.PROPOSAL_STATUS_SUBMITTED {
-		return nil, sdkerrors.Wrap(errors.ErrInvalid, "proposal not open for voting")
+		return nil, errors.ErrInvalid.Wrap("proposal not open for voting")
 	}
 	if ctx.BlockTime().After(proposal.VotingPeriodEnd) {
-		return nil, sdkerrors.Wrap(errors.ErrExpired, "voting period has ended already")
+		return nil, errors.ErrExpired.Wrap("voting period has ended already")
 	}
 
 	policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.GroupPolicyAddress)
@@ -721,7 +722,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 	}
 
 	if proposal.Status != group.PROPOSAL_STATUS_SUBMITTED && proposal.Status != group.PROPOSAL_STATUS_ACCEPTED {
-		return nil, sdkerrors.Wrapf(errors.ErrInvalid, "not possible to exec with proposal status %s", proposal.Status.String())
+		return nil, errors.ErrInvalid.Wrapf("not possible to exec with proposal status %s", proposal.Status.String())
 	}
 
 	policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.GroupPolicyAddress)
@@ -858,8 +859,8 @@ func (k Keeper) getGroupMember(ctx sdk.Context, member *group.GroupMember) (*gro
 		orm.PrimaryKey(member), &groupMember); {
 	case err == nil:
 		break
-	case sdkerrors.ErrNotFound.Is(err):
-		return nil, sdkerrors.ErrNotFound.Wrapf("%s is not part of group %d", member.Member.Address, member.GroupId)
+	case errorstypes.ErrNotFound.Is(err):
+		return nil, errorstypes.ErrNotFound.Wrapf("%s is not part of group %d", member.Member.Address, member.GroupId)
 	default:
 		return nil, err
 	}
@@ -897,7 +898,7 @@ func (k Keeper) doUpdateGroupPolicy(ctx sdk.Context, groupPolicy string, admin s
 
 	// Only current group policy admin is authorized to update a group policy.
 	if groupPolicyAdmin.String() != groupPolicyInfo.Admin {
-		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "not group policy admin")
+		return errorstypes.ErrUnauthorized.Wrap("not group policy admin")
 	}
 
 	if err := action(&groupPolicyInfo); err != nil {
@@ -948,7 +949,7 @@ func (k Keeper) doAuthenticated(ctx sdk.Context, req authNGroupReq, action actio
 		return sdkerrors.Wrap(err, "request admin")
 	}
 	if !admin.Equals(reqAdmin) {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "not group admin; got %s, expected %s", req.GetAdmin(), group.Admin)
+		return errorstypes.ErrUnauthorized.Wrapf("not group admin; got %s, expected %s", req.GetAdmin(), group.Admin)
 	}
 	if err := action(&group); err != nil {
 		return sdkerrors.Wrap(err, errNote)
@@ -960,7 +961,7 @@ func (k Keeper) doAuthenticated(ctx sdk.Context, req authNGroupReq, action actio
 // is greater than a pre-defined maxMetadataLen.
 func (k Keeper) assertMetadataLength(metadata string, description string) error {
 	if metadata != "" && uint64(len(metadata)) > k.config.MaxMetadataLen {
-		return sdkerrors.Wrapf(errors.ErrMaxLimit, description)
+		return errors.ErrMaxLimit.Wrap(description)
 	}
 	return nil
 }

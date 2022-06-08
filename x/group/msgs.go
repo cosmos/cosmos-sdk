@@ -3,11 +3,12 @@ package group
 import (
 	proto "github.com/gogo/protobuf/proto"
 
+	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	errors "github.com/cosmos/cosmos-sdk/x/group/errors"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 )
 
@@ -88,7 +89,7 @@ func (m MsgUpdateGroupAdmin) GetSigners() []sdk.AccAddress {
 // ValidateBasic does a sanity check on the provided data
 func (m MsgUpdateGroupAdmin) ValidateBasic() error {
 	if m.GroupId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "group id")
+		return errors.ErrEmpty.Wrap("group id")
 	}
 
 	admin, err := sdk.AccAddressFromBech32(m.Admin)
@@ -102,7 +103,7 @@ func (m MsgUpdateGroupAdmin) ValidateBasic() error {
 	}
 
 	if admin.Equals(newAdmin) {
-		return sdkerrors.Wrap(errors.ErrInvalid, "new and old admin are the same")
+		return errors.ErrInvalid.Wrap("new and old admin are the same")
 	}
 	return nil
 }
@@ -138,7 +139,7 @@ func (m MsgUpdateGroupMetadata) GetSigners() []sdk.AccAddress {
 // ValidateBasic does a sanity check on the provided data
 func (m MsgUpdateGroupMetadata) ValidateBasic() error {
 	if m.GroupId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "group id")
+		return errors.ErrEmpty.Wrap("group id")
 	}
 	_, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
@@ -181,7 +182,7 @@ func (m MsgUpdateGroupMembers) GetSigners() []sdk.AccAddress {
 // ValidateBasic does a sanity check on the provided data
 func (m MsgUpdateGroupMembers) ValidateBasic() error {
 	if m.GroupId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "group id")
+		return errors.ErrEmpty.Wrap("group id")
 	}
 	_, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
@@ -189,7 +190,7 @@ func (m MsgUpdateGroupMembers) ValidateBasic() error {
 	}
 
 	if len(m.MemberUpdates) == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "member updates")
+		return errors.ErrEmpty.Wrap("member updates")
 	}
 	members := MemberRequests{Members: m.MemberUpdates}
 	if err := members.ValidateBasic(); err != nil {
@@ -226,7 +227,7 @@ func NewMsgCreateGroupWithPolicy(admin string, members []MemberRequest, groupMet
 func (m *MsgCreateGroupWithPolicy) GetDecisionPolicy() (DecisionPolicy, error) {
 	decisionPolicy, ok := m.DecisionPolicy.GetCachedValue().(DecisionPolicy)
 	if !ok {
-		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (DecisionPolicy)(nil), m.DecisionPolicy.GetCachedValue())
+		return nil, errorstypes.ErrInvalidType.Wrapf("expected %T, got %T", (DecisionPolicy)(nil), m.DecisionPolicy.GetCachedValue())
 	}
 	return decisionPolicy, nil
 }
@@ -318,7 +319,7 @@ func (m MsgCreateGroupPolicy) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "admin")
 	}
 	if m.GroupId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "group id")
+		return errors.ErrEmpty.Wrap("group id")
 	}
 
 	policy, err := m.GetDecisionPolicy()
@@ -374,7 +375,7 @@ func (m MsgUpdateGroupPolicyAdmin) ValidateBasic() error {
 	}
 
 	if admin.Equals(newAdmin) {
-		return sdkerrors.Wrap(errors.ErrInvalid, "new and old admin are same")
+		return errors.ErrInvalid.Wrap("new and old admin are same")
 	}
 	return nil
 }
@@ -400,7 +401,7 @@ func NewMsgUpdateGroupPolicyDecisionPolicy(admin sdk.AccAddress, address sdk.Acc
 func (m *MsgUpdateGroupPolicyDecisionPolicy) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
 	msg, ok := decisionPolicy.(proto.Message)
 	if !ok {
-		return sdkerrors.ErrInvalidType.Wrapf("can't proto marshal %T", msg)
+		return errorstypes.ErrInvalidType.Wrapf("can't proto marshal %T", msg)
 	}
 	any, err := types.NewAnyWithValue(msg)
 	if err != nil {
@@ -461,7 +462,7 @@ func (m MsgUpdateGroupPolicyDecisionPolicy) ValidateBasic() error {
 func (m *MsgUpdateGroupPolicyDecisionPolicy) GetDecisionPolicy() (DecisionPolicy, error) {
 	decisionPolicy, ok := m.DecisionPolicy.GetCachedValue().(DecisionPolicy)
 	if !ok {
-		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (DecisionPolicy)(nil), m.DecisionPolicy.GetCachedValue())
+		return nil, errorstypes.ErrInvalidType.Wrapf("expected %T, got %T", (DecisionPolicy)(nil), m.DecisionPolicy.GetCachedValue())
 	}
 
 	return decisionPolicy, nil
@@ -546,7 +547,7 @@ func (m *MsgCreateGroupPolicy) GetMetadata() string {
 func (m *MsgCreateGroupPolicy) GetDecisionPolicy() (DecisionPolicy, error) {
 	decisionPolicy, ok := m.DecisionPolicy.GetCachedValue().(DecisionPolicy)
 	if !ok {
-		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (DecisionPolicy)(nil), m.DecisionPolicy.GetCachedValue())
+		return nil, errorstypes.ErrInvalidType.Wrapf("expected %T, got %T", (DecisionPolicy)(nil), m.DecisionPolicy.GetCachedValue())
 	}
 	return decisionPolicy, nil
 }
@@ -616,7 +617,7 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 	}
 
 	if len(m.Proposers) == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "proposers")
+		return errors.ErrEmpty.Wrap("proposers")
 	}
 
 	addrs, err := m.getProposerAccAddresses()
@@ -705,7 +706,7 @@ func (m MsgWithdrawProposal) ValidateBasic() error {
 	}
 
 	if m.ProposalId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
+		return errors.ErrEmpty.Wrap("proposal id")
 	}
 
 	return nil
@@ -742,13 +743,13 @@ func (m MsgVote) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "voter")
 	}
 	if m.ProposalId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
+		return errors.ErrEmpty.Wrap("proposal id")
 	}
 	if m.Option == VOTE_OPTION_UNSPECIFIED {
-		return sdkerrors.Wrap(errors.ErrEmpty, "vote option")
+		return errors.ErrEmpty.Wrap("vote option")
 	}
 	if _, ok := VoteOption_name[int32(m.Option)]; !ok {
-		return sdkerrors.Wrap(errors.ErrInvalid, "vote option")
+		return errors.ErrInvalid.Wrap("vote option")
 	}
 	return nil
 }
@@ -784,7 +785,7 @@ func (m MsgExec) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "signer")
 	}
 	if m.ProposalId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
+		return errors.ErrEmpty.Wrap("proposal id")
 	}
 	return nil
 }
@@ -822,7 +823,7 @@ func (m MsgLeaveGroup) ValidateBasic() error {
 	}
 
 	if m.GroupId == 0 {
-		return sdkerrors.Wrap(errors.ErrEmpty, "group-id")
+		return errors.ErrEmpty.Wrap("group-id")
 	}
 	return nil
 }

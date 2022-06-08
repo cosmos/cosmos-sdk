@@ -29,7 +29,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -193,7 +193,7 @@ func getDelegatorUnbondingDelegationsSum(ctx sdk.Context, address, bondDenom str
 		Path: delegatorUnbondingDelegationsPath,
 	}
 	resp, err := queryFn(ctx, req)
-	if err != nil && !errors.Is(err, sdkerrors.ErrNotFound) {
+	if err != nil && !errors.Is(err, errorstypes.ErrNotFound) {
 		e, ok := status.FromError(err)
 		if ok && e.Code() == codes.NotFound {
 			return nil, nil

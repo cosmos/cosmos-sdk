@@ -1,19 +1,17 @@
 package errors
 
-import (
-	"github.com/cosmos/cosmos-sdk/types/errors"
-)
+import sdkerrors "cosmossdk.io/errors"
 
 // groupCodespace is the codespace for all errors defined in group package
 const groupCodespace = "group"
 
 var (
-	ErrEmpty        = errors.Register(groupCodespace, 2, "value is empty")
-	ErrDuplicate    = errors.Register(groupCodespace, 3, "duplicate value")
-	ErrMaxLimit     = errors.Register(groupCodespace, 4, "limit exceeded")
-	ErrType         = errors.Register(groupCodespace, 5, "invalid type")
-	ErrInvalid      = errors.Register(groupCodespace, 6, "invalid value")
-	ErrUnauthorized = errors.Register(groupCodespace, 7, "unauthorized")
-	ErrModified     = errors.Register(groupCodespace, 8, "modified")
-	ErrExpired      = errors.Register(groupCodespace, 9, "expired")
+	ErrEmpty        = sdkerrors.Register(groupCodespace, 2, "value is empty")
+	ErrDuplicate    = sdkerrors.Register(groupCodespace, 3, "duplicate value")
+	ErrMaxLimit     = sdkerrors.Register(groupCodespace, 4, "limit exceeded")
+	ErrType         = sdkerrors.Register(groupCodespace, 5, "invalid type")
+	ErrInvalid      = sdkerrors.Register(groupCodespace, 6, "invalid value")
+	ErrUnauthorized = sdkerrors.Register(groupCodespace, 7, "unauthorized")
+	ErrModified     = sdkerrors.Register(groupCodespace, 8, "modified")
+	ErrExpired      = sdkerrors.Register(groupCodespace, 9, "expired")
 )

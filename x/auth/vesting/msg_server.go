@@ -9,7 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
@@ -50,11 +50,11 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 	}
 
 	if bk.BlockedAddr(to) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
+		return nil, errorstypes.ErrUnauthorized.Wrapf("%s is not allowed to receive funds", msg.ToAddress)
 	}
 
 	if acc := ak.GetAccount(ctx, to); acc != nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
+		return nil, errorstypes.ErrInvalidRequest.Wrapf("account %s already exists", msg.ToAddress)
 	}
 
 	account := ak.NewAccountWithAddress(ctx, to)
@@ -65,7 +65,7 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 		}
 	}
 	if baseAccount == nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid account type; expected: BaseAccount, got: %T", baseAccount)
+		return nil, errorstypes.ErrInvalidRequest.Wrapf("invalid account type; expected: BaseAccount, got: %T", baseAccount)
 	}
 
 	baseVestingAccount := types.NewBaseVestingAccount(baseAccount, msg.Amount.Sort(), msg.EndTime)
@@ -128,18 +128,18 @@ func (s msgServer) CreatePermanentLockedAccount(goCtx context.Context, msg *type
 	}
 
 	if bk.BlockedAddr(to) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
+		return nil, errorstypes.ErrUnauthorized.Wrapf("%s is not allowed to receive funds", msg.ToAddress)
 	}
 
 	if acc := ak.GetAccount(ctx, to); acc != nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
+		return nil, errorstypes.ErrInvalidRequest.Wrapf("account %s already exists", msg.ToAddress)
 	}
 
 	baseAccountI := ak.NewAccountWithAddress(ctx, to)
 
 	baseAcc, ok := baseAccountI.(*authtypes.BaseAccount)
 	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid account type; expected: BaseAccount, got: %T", baseAccountI)
+		return nil, errorstypes.ErrInvalidRequest.Wrapf("invalid account type; expected: BaseAccount, got: %T", baseAccountI)
 	}
 
 	var acc authtypes.AccountI = types.NewPermanentLockedAccount(baseAcc, msg.Amount)
@@ -191,7 +191,7 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 	}
 
 	if acc := ak.GetAccount(ctx, to); acc != nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
+		return nil, errorstypes.ErrInvalidRequest.Wrapf("account %s already exists", msg.ToAddress)
 	}
 
 	var totalCoins sdk.Coins

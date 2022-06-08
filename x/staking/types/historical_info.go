@@ -3,14 +3,12 @@ package types
 import (
 	"sort"
 
-	"cosmossdk.io/math"
-
 	"github.com/gogo/protobuf/proto"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // NewHistoricalInfo will create a historical information struct from header and valset
@@ -46,11 +44,11 @@ func UnmarshalHistoricalInfo(cdc codec.BinaryCodec, value []byte) (hi Historical
 // ValidateBasic will ensure HistoricalInfo is not nil and sorted
 func ValidateBasic(hi HistoricalInfo) error {
 	if len(hi.Valset) == 0 {
-		return sdkerrors.Wrap(ErrInvalidHistoricalInfo, "validator set is empty")
+		return ErrInvalidHistoricalInfo.Wrap("validator set is empty")
 	}
 
 	if !sort.IsSorted(Validators(hi.Valset)) {
-		return sdkerrors.Wrap(ErrInvalidHistoricalInfo, "validator set is not sorted by address")
+		return ErrInvalidHistoricalInfo.Wrap("validator set is not sorted by address")
 	}
 
 	return nil

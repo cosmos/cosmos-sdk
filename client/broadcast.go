@@ -11,7 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
@@ -56,22 +56,22 @@ func CheckTendermintError(err error, tx tmtypes.Tx) *sdk.TxResponse {
 	switch {
 	case strings.Contains(errStr, strings.ToLower(tmtypes.ErrTxInCache.Error())):
 		return &sdk.TxResponse{
-			Code:      sdkerrors.ErrTxInMempoolCache.ABCICode(),
-			Codespace: sdkerrors.ErrTxInMempoolCache.Codespace(),
+			Code:      errorstypes.ErrTxInMempoolCache.ABCICode(),
+			Codespace: errorstypes.ErrTxInMempoolCache.Codespace(),
 			TxHash:    txHash,
 		}
 
 	case strings.Contains(errStr, "mempool is full"):
 		return &sdk.TxResponse{
-			Code:      sdkerrors.ErrMempoolIsFull.ABCICode(),
-			Codespace: sdkerrors.ErrMempoolIsFull.Codespace(),
+			Code:      errorstypes.ErrMempoolIsFull.ABCICode(),
+			Codespace: errorstypes.ErrMempoolIsFull.Codespace(),
 			TxHash:    txHash,
 		}
 
 	case strings.Contains(errStr, "tx too large"):
 		return &sdk.TxResponse{
-			Code:      sdkerrors.ErrTxTooLarge.ABCICode(),
-			Codespace: sdkerrors.ErrTxTooLarge.Codespace(),
+			Code:      errorstypes.ErrTxTooLarge.ABCICode(),
+			Codespace: errorstypes.ErrTxTooLarge.Codespace(),
 			TxHash:    txHash,
 		}
 

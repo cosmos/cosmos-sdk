@@ -7,7 +7,7 @@ import (
 	v1Store "github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // MigrateFromV1 will migrate the state from iavl to smt
@@ -29,7 +29,7 @@ func MigrateFromV1(rootMultiStore *v1Store.Store, store2db dbm.DBConnection, sto
 		case *transient.Store, *mem.Store:
 			continue
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic, "don't know how to migrate store %q of type %T", keyName, store)
+			return nil, errorstypes.ErrLogic.Wrapf("don't know how to migrate store %q of type %T", keyName, store)
 		}
 	}
 

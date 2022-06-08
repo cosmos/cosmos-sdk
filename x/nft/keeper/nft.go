@@ -3,18 +3,17 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
 // Mint defines a method for minting a new nft
 func (k Keeper) Mint(ctx sdk.Context, token nft.NFT, receiver sdk.AccAddress) error {
 	if !k.HasClass(ctx, token.ClassId) {
-		return sdkerrors.Wrap(nft.ErrClassNotExists, token.ClassId)
+		return nft.ErrClassNotExists.Wrap(token.ClassId)
 	}
 
 	if k.HasNFT(ctx, token.ClassId, token.Id) {
-		return sdkerrors.Wrap(nft.ErrNFTExists, token.Id)
+		return nft.ErrNFTExists.Wrap(token.Id)
 	}
 
 	k.setNFT(ctx, token)
@@ -33,11 +32,11 @@ func (k Keeper) Mint(ctx sdk.Context, token nft.NFT, receiver sdk.AccAddress) er
 // Note: When the upper module uses this method, it needs to authenticate nft
 func (k Keeper) Burn(ctx sdk.Context, classID string, nftID string) error {
 	if !k.HasClass(ctx, classID) {
-		return sdkerrors.Wrap(nft.ErrClassNotExists, classID)
+		return nft.ErrClassNotExists.Wrap(classID)
 	}
 
 	if !k.HasNFT(ctx, classID, nftID) {
-		return sdkerrors.Wrap(nft.ErrNFTNotExists, nftID)
+		return nft.ErrNFTNotExists.Wrap(nftID)
 	}
 
 	owner := k.GetOwner(ctx, classID, nftID)
@@ -58,11 +57,11 @@ func (k Keeper) Burn(ctx sdk.Context, classID string, nftID string) error {
 // Note: When the upper module uses this method, it needs to authenticate nft
 func (k Keeper) Update(ctx sdk.Context, token nft.NFT) error {
 	if !k.HasClass(ctx, token.ClassId) {
-		return sdkerrors.Wrap(nft.ErrClassNotExists, token.ClassId)
+		return nft.ErrClassNotExists.Wrap(token.ClassId)
 	}
 
 	if !k.HasNFT(ctx, token.ClassId, token.Id) {
-		return sdkerrors.Wrap(nft.ErrNFTNotExists, token.Id)
+		return nft.ErrNFTNotExists.Wrap(token.Id)
 	}
 	k.setNFT(ctx, token)
 	return nil
@@ -76,11 +75,11 @@ func (k Keeper) Transfer(ctx sdk.Context,
 	receiver sdk.AccAddress,
 ) error {
 	if !k.HasClass(ctx, classID) {
-		return sdkerrors.Wrap(nft.ErrClassNotExists, classID)
+		return nft.ErrClassNotExists.Wrap(classID)
 	}
 
 	if !k.HasNFT(ctx, classID, nftID) {
-		return sdkerrors.Wrap(nft.ErrNFTNotExists, nftID)
+		return nft.ErrNFTNotExists.Wrap(nftID)
 	}
 
 	owner := k.GetOwner(ctx, classID, nftID)

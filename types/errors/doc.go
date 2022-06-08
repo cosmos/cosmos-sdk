@@ -1,6 +1,4 @@
-// Package errors provides a shared set of errors for use in the SDK,
-// aliases functionality in the cosmossdk.io/errors module
-// that used to be in this package, and provides some helpers for converting
+// Package errors provides a shared set of errors for use in the SDK, and provides some helpers for converting
 // errors to ABCI response code.
 //
 // New code should generally import cosmossdk.io/errors directly

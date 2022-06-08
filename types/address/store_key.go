@@ -1,8 +1,6 @@
 package address
 
-import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-)
+import errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 
 // MaxAddrLen is the maximum allowed length (in bytes) for an address.
 const MaxAddrLen = 255
@@ -16,7 +14,7 @@ func LengthPrefix(bz []byte) ([]byte, error) {
 	}
 
 	if bzLen > MaxAddrLen {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "address length should be max %d bytes, got %d", MaxAddrLen, bzLen)
+		return nil, errorstypes.ErrUnknownAddress.Wrapf("address length should be max %d bytes, got %d", MaxAddrLen, bzLen)
 	}
 
 	return append([]byte{byte(bzLen)}, bz...), nil

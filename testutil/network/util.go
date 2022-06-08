@@ -14,10 +14,10 @@ import (
 	"github.com/tendermint/tendermint/rpc/client/local"
 	"github.com/tendermint/tendermint/types"
 
+	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	srvtypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -61,7 +61,7 @@ func startInProcess(cfg Config, val *Validator) error {
 		}
 		val.RPCClient, err = local.New(node)
 		if err != nil {
-			return errors.Wrap(err, "failed to create a local node")
+			return sdkerrors.Wrap(err, "failed to create a local node")
 		}
 	}
 

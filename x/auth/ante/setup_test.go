@@ -4,7 +4,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
@@ -72,7 +72,7 @@ func (suite *AnteTestSuite) TestRecoverPanic() {
 
 	suite.Require().NotNil(err, "Did not return error on OutOfGas panic")
 
-	suite.Require().True(sdkerrors.ErrOutOfGas.Is(err), "Returned error is not an out of gas error")
+	suite.Require().True(errorstypes.ErrOutOfGas.Is(err), "Returned error is not an out of gas error")
 	suite.Require().Equal(gasLimit, newCtx.GasMeter().Limit())
 
 	antehandler = sdk.ChainAnteDecorators(sud, PanicDecorator{})

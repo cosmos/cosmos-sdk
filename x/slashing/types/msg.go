@@ -2,7 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // slashing message types
@@ -37,7 +37,7 @@ func (msg MsgUnjail) GetSignBytes() []byte {
 // ValidateBasic does a sanity check on the provided message
 func (msg MsgUnjail) ValidateBasic() error {
 	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddr); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("validator input address: %s", err)
+		return errorstypes.ErrInvalidAddress.Wrapf("validator input address: %s", err)
 	}
 	return nil
 }

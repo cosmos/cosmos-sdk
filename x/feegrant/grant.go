@@ -5,7 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorstypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var _ types.UnpackInterfacesMessage = &Grant{}
@@ -15,7 +15,7 @@ var _ types.UnpackInterfacesMessage = &Grant{}
 func NewGrant(granter, grantee sdk.AccAddress, feeAllowance FeeAllowanceI) (Grant, error) {
 	msg, ok := feeAllowance.(proto.Message)
 	if !ok {
-		return Grant{}, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", feeAllowance)
+		return Grant{}, errorstypes.ErrPackAny.Wrapf("cannot proto marshal %T", feeAllowance)
 	}
 
 	any, err := types.NewAnyWithValue(msg)
@@ -34,13 +34,13 @@ func NewGrant(granter, grantee sdk.AccAddress, feeAllowance FeeAllowanceI) (Gran
 // FeeAllowanceGrant
 func (a Grant) ValidateBasic() error {
 	if a.Granter == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
+		return errorstypes.ErrInvalidAddress.Wrap("missing granter address")
 	}
 	if a.Grantee == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
+		return errorstypes.ErrInvalidAddress.Wrap("missing grantee address")
 	}
 	if a.Grantee == a.Granter {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
+		return errorstypes.ErrInvalidAddress.Wrap("cannot self-grant fee authorization")
 	}
 
 	f, err := a.GetGrant()
@@ -55,7 +55,7 @@ func (a Grant) ValidateBasic() error {
 func (a Grant) GetGrant() (FeeAllowanceI, error) {
 	allowance, ok := a.Allowance.GetCachedValue().(FeeAllowanceI)
 	if !ok {
-		return nil, sdkerrors.Wrap(ErrNoAllowance, "failed to get allowance")
+		return nil, ErrNoAllowance.Wrap("failed to get allowance")
 	}
 
 	return allowance, nil

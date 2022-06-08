@@ -69,8 +69,9 @@ func (k Keeper) BatchBurn(ctx sdk.Context, classID string, nftIDs []string) erro
 // BatchUpdate defines a method for updating a batch of exist nfts
 // Note: When the upper module uses this method, it needs to authenticate nft
 func (k Keeper) BatchUpdate(ctx sdk.Context, tokens []nft.NFT) error {
+	classIDs := make(map[string]bool, len(tokens))
 	for _, token := range tokens {
-		if !k.HasClass(ctx, token.ClassId) {
+		if !classIDs[token.ClassId] && !k.HasClass(ctx, token.ClassId) {
 			return sdkerrors.Wrap(nft.ErrClassNotExists, token.ClassId)
 		}
 
@@ -89,11 +90,11 @@ func (k Keeper) BatchTransfer(ctx sdk.Context,
 	nftIDs []string,
 	receiver sdk.AccAddress,
 ) error {
-	for _, nftID := range nftIDs {
-		if !k.HasClass(ctx, classID) {
-			return sdkerrors.Wrap(nft.ErrClassNotExists, classID)
-		}
+	if !k.HasClass(ctx, classID) {
+		return sdkerrors.Wrap(nft.ErrClassNotExists, classID)
+	}
 
+	for _, nftID := range nftIDs {
 		if !k.HasNFT(ctx, classID, nftID) {
 			return sdkerrors.Wrap(nft.ErrNFTNotExists, nftID)
 		}

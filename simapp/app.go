@@ -33,6 +33,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	tx "github.com/cosmos/cosmos-sdk/types/tx/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -214,6 +215,10 @@ func NewSimApp(
 	var appBuilder *runtime.AppBuilder
 	var msgServiceRouter *baseapp.MsgServiceRouter
 
+	// set custom tx config that will be injected in modules
+	txModuleOptions := make([]tx.TxModuleOption, 0)
+	txModuleOptions = append(txModuleOptions, tx.SetCustomTxConfig(encodingConfig.TxConfig))
+
 	if err := depinject.Inject(AppConfig,
 		&appBuilder,
 		&app.ParamsKeeper,
@@ -227,6 +232,7 @@ func NewSimApp(
 		&app.StakingKeeper,
 		&app.NFTKeeper,
 		&msgServiceRouter,
+		&txModuleOptions,
 	); err != nil {
 		panic(err)
 	}

@@ -598,17 +598,17 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	path := req.Path
 	storeName, subpath, err := parsePath(path)
 	if err != nil {
-		return errorstypes.QueryResult(err, false)
+		return sdkerrors.QueryResult(err, false)
 	}
 
 	store := rs.GetStoreByName(storeName)
 	if store == nil {
-		return errorstypes.QueryResult(errorstypes.ErrUnknownRequest.Wrapf("no such store: %s", storeName), false)
+		return sdkerrors.QueryResult(errorstypes.ErrUnknownRequest.Wrapf("no such store: %s", storeName), false)
 	}
 
 	queryable, ok := store.(types.Queryable)
 	if !ok {
-		return errorstypes.QueryResult(errorstypes.ErrUnknownRequest.Wrapf("store %s (type %T) doesn't support queries", storeName, store), false)
+		return sdkerrors.QueryResult(errorstypes.ErrUnknownRequest.Wrapf("store %s (type %T) doesn't support queries", storeName, store), false)
 	}
 
 	// trim the path and make the query
@@ -620,7 +620,7 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	}
 
 	if res.ProofOps == nil || len(res.ProofOps.Ops) == 0 {
-		return errorstypes.QueryResult(errorstypes.ErrInvalidRequest.Wrapf("proof is unexpectedly empty; ensure height has not been pruned"), false)
+		return sdkerrors.QueryResult(errorstypes.ErrInvalidRequest.Wrapf("proof is unexpectedly empty; ensure height has not been pruned"), false)
 	}
 
 	// If the request's height is the latest height we've committed, then utilize
@@ -633,7 +633,7 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	} else {
 		commitInfo, err = getCommitInfo(rs.db, res.Height)
 		if err != nil {
-			return errorstypes.QueryResult(err, false)
+			return sdkerrors.QueryResult(err, false)
 		}
 	}
 

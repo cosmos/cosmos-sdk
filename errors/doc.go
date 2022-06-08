@@ -18,7 +18,7 @@ information by using Wrap function, for example:
 
    func safeDiv(val, div int) (int, err) {
 	   if div == 0 {
-		   return 0, errors.Wrapf(ErrZeroDivision, "cannot divide %d", val)
+		   return 0, ErrZeroDivision.Wrapf("cannot divide %d", val)
 	   }
 	   return val / div, nil
    }
@@ -30,5 +30,6 @@ Stacktrace information can be printed using %+v and %v formats.
   %+v is the full stack trace
   %v  appends a compressed [filename:line] where the error was created
 
+Moreover, it provides some helpers for converting errors to ABCI response code.
 */
 package errors

@@ -732,7 +732,7 @@ func parsePath(path string) (storeName string, subpath string, err error) {
 // explicitly set the height you want to see
 func (rs *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	if len(req.Data) == 0 {
-		return errorstypes.QueryResult(errorstypes.ErrTxDecode.Wrap("query cannot be zero length"), false)
+		return sdkerrors.QueryResult(errorstypes.ErrTxDecode.Wrap("query cannot be zero length"), false)
 	}
 
 	// if height is 0, use the latest height
@@ -740,7 +740,7 @@ func (rs *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	if height == 0 {
 		versions, err := rs.stateDB.Versions()
 		if err != nil {
-			return errorstypes.QueryResult(errors.New("failed to get version info"), false)
+			return sdkerrors.QueryResult(errors.New("failed to get version info"), false)
 		}
 		latest := versions.Last()
 		if versions.Exists(latest - 1) {
@@ -750,28 +750,28 @@ func (rs *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		}
 	}
 	if height < 0 {
-		return errorstypes.QueryResult(fmt.Errorf("height overflow: %v", height), false)
+		return sdkerrors.QueryResult(fmt.Errorf("height overflow: %v", height), false)
 	}
 	res.Height = height
 
 	storeName, subpath, err := parsePath(req.Path)
 	if err != nil {
-		return errorstypes.QueryResult(sdkerrors.Wrapf(err, "failed to parse path"), false)
+		return sdkerrors.QueryResult(sdkerrors.Wrapf(err, "failed to parse path"), false)
 	}
 	view, err := rs.getView(height)
 	if err != nil {
 		if errors.Is(err, dbm.ErrVersionDoesNotExist) {
 			err = errorstypes.ErrInvalidHeight
 		}
-		return errorstypes.QueryResult(sdkerrors.Wrapf(err, "failed to access height"), false)
+		return sdkerrors.QueryResult(sdkerrors.Wrapf(err, "failed to access height"), false)
 	}
 
 	if _, has := rs.schema[storeName]; !has {
-		return errorstypes.QueryResult(errorstypes.ErrUnknownRequest.Wrapf("no such store: %s", storeName), false)
+		return sdkerrors.QueryResult(errorstypes.ErrUnknownRequest.Wrapf("no such store: %s", storeName), false)
 	}
 	substore, err := view.getSubstore(storeName)
 	if err != nil {
-		return errorstypes.QueryResult(sdkerrors.Wrapf(err, "failed to access store: %s", storeName), false)
+		return sdkerrors.QueryResult(sdkerrors.Wrapf(err, "failed to access store: %s", storeName), false)
 	}
 
 	switch subpath {
@@ -785,7 +785,7 @@ func (rs *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		// TODO: actual IBC compatible proof. This is a placeholder so unit tests can pass
 		res.ProofOps, err = substore.GetProof(res.Key)
 		if err != nil {
-			return errorstypes.QueryResult(fmt.Errorf("merkle proof creation failed for key: %v", res.Key), false)
+			return sdkerrors.QueryResult(fmt.Errorf("merkle proof creation failed for key: %v", res.Key), false)
 		}
 
 	case "/subspace":
@@ -811,7 +811,7 @@ func (rs *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		res.Value = bz
 
 	default:
-		return errorstypes.QueryResult(errorstypes.ErrUnknownRequest.Wrapf("unexpected query path: %v", req.Path), false)
+		return sdkerrors.QueryResult(errorstypes.ErrUnknownRequest.Wrapf("unexpected query path: %v", req.Path), false)
 	}
 
 	return res

@@ -157,6 +157,7 @@ require (
 replace (
 	cosmossdk.io/api => ./api
 	cosmossdk.io/core => ./core
+	cosmossdk.io/errors => ./errors // should be removed when new version tagged
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
 	github.com/cosmos/cosmos-sdk/db => ./db
 	github.com/cosmos/cosmos-sdk/depinject => ./depinject

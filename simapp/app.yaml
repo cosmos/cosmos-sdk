@@ -10,17 +10,49 @@ modules:
       # CanWithdrawInvariant invariant.
       # NOTE: staking module is required if HistoricalEntries param > 0
       # NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
-      begin_blockers: [ upgrade, capability, mint, distribution, slashing,
-                        evidence, staking, auth, bank, gov, crisis, genutil,
-                        authz, feegrant, nft, group,
-                        params, vesting ]
+      begin_blockers:
+        [
+          upgrade,
+          capability,
+          mint,
+          distribution,
+          slashing,
+          evidence,
+          staking,
+          auth,
+          bank,
+          gov,
+          crisis,
+          genutil,
+          authz,
+          feegrant,
+          nft,
+          group,
+          params,
+          vesting,
+        ]
 
-      end_blockers: [ crisis, gov, staking,
-                      capability, auth, bank, distribution,
-                      slashing, mint,
-                      genutil, evidence, authz,
-                      feegrant, nft, group,
-                      params, upgrade, vesting ]
+      end_blockers:
+        [
+          crisis,
+          gov,
+          staking,
+          capability,
+          auth,
+          bank,
+          distribution,
+          slashing,
+          mint,
+          genutil,
+          evidence,
+          authz,
+          feegrant,
+          nft,
+          group,
+          params,
+          upgrade,
+          vesting,
+        ]
 
       override_store_keys:
         - module_name: auth
@@ -34,13 +66,13 @@ modules:
         - account: fee_collector
         - account: distribution
         - account: mint
-          permissions: [ minter ]
+          permissions: [minter]
         - account: bonded_tokens_pool
-          permissions: [ burner, staking ]
+          permissions: [burner, staking]
         - account: not_bonded_tokens_pool
-          permissions: [ burner, staking ]
+          permissions: [burner, staking]
         - account: gov
-          permissions: [ burner ]
+          permissions: [burner]
         - account: nft
 
   - name: params
@@ -54,12 +86,20 @@ modules:
   - name: bank
     config:
       "@type": cosmos.bank.module.v1.Module
+  
+  - name: authz
+    config:
+      "@type": cosmos.authz.module.v1.Module
 
   - name: capability
     config:
       "@type": cosmos.capability.module.v1.Module
       seal_keeper: true
-      
+
   - name: staking
     config:
       "@type": cosmos.staking.module.v1.Module
+
+  - name: nft
+    config:
+      "@type": cosmos.nft.module.v1.Module

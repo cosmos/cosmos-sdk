@@ -23,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	_ "github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
@@ -215,7 +214,7 @@ func NewSimApp(
 	var appBuilder *runtime.AppBuilder
 	var msgServiceRouter *baseapp.MsgServiceRouter
 
-	err := depinject.Inject(AppConfig,
+	if err := depinject.Inject(AppConfig,
 		&appBuilder,
 		&app.ParamsKeeper,
 		&app.CapabilityKeeper,
@@ -224,11 +223,12 @@ func NewSimApp(
 		&app.interfaceRegistry,
 		&app.AccountKeeper,
 		&app.BankKeeper,
+		&app.AuthzKeeper,
 		&app.FeeGrantKeeper,
 		&app.StakingKeeper,
+		&app.NFTKeeper,
 		&msgServiceRouter,
-	)
-	if err != nil {
+	); err != nil {
 		panic(err)
 	}
 
@@ -237,7 +237,7 @@ func NewSimApp(
 	app.keys = sdk.NewKVStoreKeys(
 		minttypes.StoreKey, distrtypes.StoreKey,
 		slashingtypes.StoreKey, govtypes.StoreKey, upgradetypes.StoreKey,
-		evidencetypes.StoreKey, authzkeeper.StoreKey, nftkeeper.StoreKey,
+		evidencetypes.StoreKey,
 		group.StoreKey,
 	)
 	// NOTE: The testingkey is just mounted for testing purposes. Actual applications should
@@ -271,8 +271,6 @@ func NewSimApp(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
 
-	app.AuthzKeeper = authzkeeper.NewKeeper(app.keys[authzkeeper.StoreKey], app.appCodec, app.MsgServiceRouter(), app.AccountKeeper)
-
 	groupConfig := group.DefaultConfig()
 	/*
 		Example of setting group params:
@@ -304,8 +302,6 @@ func NewSimApp(
 	// set the governance module account as the authority for conducting upgrades
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, app.keys[upgradetypes.StoreKey], app.appCodec, homePath, app.BaseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
-	app.NFTKeeper = nftkeeper.NewKeeper(app.keys[nftkeeper.StoreKey], app.appCodec, app.AccountKeeper, app.BankKeeper)
-
 	// create evidence keeper with router
 	evidenceKeeper := evidencekeeper.NewKeeper(
 		app.appCodec, app.keys[evidencetypes.StoreKey], app.StakingKeeper, app.SlashingKeeper,
@@ -321,7 +317,7 @@ func NewSimApp(
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
-	err = app.RegisterModules(
+	if err := app.RegisterModules(
 		genutil.NewAppModule(
 			app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx,
 			encodingConfig.TxConfig,
@@ -334,11 +330,8 @@ func NewSimApp(
 		distr.NewAppModule(app.appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
-		authzmodule.NewAppModule(app.appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		groupmodule.NewAppModule(app.appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		nftmodule.NewAppModule(app.appCodec, app.NFTKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-	)
-	if err != nil {
+	); err != nil {
 		panic(err)
 	}
 
@@ -405,8 +398,7 @@ func NewSimApp(
 	// upgrade.
 	app.setPostHandler()
 
-	err = app.Load(loadLatest)
-	if err != nil {
+	if err := app.Load(loadLatest); err != nil {
 		panic(err)
 	}
 

@@ -5,6 +5,7 @@
 //go:build !gofuzz && cgo
 // +build !gofuzz,cgo
 
+//nolint
 package secp256k1
 
 import (
@@ -21,7 +22,7 @@ extern int secp256k1_ext_scalar_mul(const secp256k1_context* ctx, const unsigned
 */
 import "C"
 
-func (bitCurve *BitCurve) ScalarMult(bx, by *big.Int, scalar []byte) (*big.Int, *big.Int) {
+func (BitCurve *BitCurve) ScalarMult(Bx, By *big.Int, scalar []byte) (*big.Int, *big.Int) {
 	// Ensure scalar is exactly 32 bytes. We pad always, even if
 	// scalar is 32 bytes long, to avoid a timing side channel.
 	if len(scalar) > 32 {
@@ -34,8 +35,8 @@ func (bitCurve *BitCurve) ScalarMult(bx, by *big.Int, scalar []byte) (*big.Int, 
 
 	// Do the multiplication in C, updating point.
 	point := make([]byte, 64)
-	readBits(bx, point[:32])
-	readBits(by, point[32:])
+	readBits(Bx, point[:32])
+	readBits(By, point[32:])
 
 	pointPtr := (*C.uchar)(unsafe.Pointer(&point[0]))
 	scalarPtr := (*C.uchar)(unsafe.Pointer(&scalar[0]))

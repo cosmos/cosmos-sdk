@@ -48,7 +48,7 @@ type txOutputs struct {
 func provideModule(in txInputs) txOutputs {
 	baseAppOption := func(app *baseapp.BaseApp) {
 
-		if in.Config.EnableAnteHandler {
+		if !in.Config.DisableAnteHandler {
 			// AnteHandlers
 			anteHandler, err := newAnteHandler(in)
 			if err != nil {
@@ -57,7 +57,7 @@ func provideModule(in txInputs) txOutputs {
 			app.SetAnteHandler(anteHandler)
 		}
 
-		if in.Config.EnablePostHandler {
+		if !in.Config.DisableAnteHandler {
 			// PostHandlers
 			// In v0.46, the SDK introduces _postHandlers_. PostHandlers are like
 			// antehandlers, but are run _after_ the `runMsgs` execution. They are also

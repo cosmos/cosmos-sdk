@@ -14,16 +14,16 @@ import (
 )
 
 var (
-	md_Module                     protoreflect.MessageDescriptor
-	fd_Module_enable_ante_handler protoreflect.FieldDescriptor
-	fd_Module_enable_post_handler protoreflect.FieldDescriptor
+	md_Module                      protoreflect.MessageDescriptor
+	fd_Module_disable_ante_handler protoreflect.FieldDescriptor
+	fd_Module_disable_post_handler protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_tx_module_v1_module_proto_init()
 	md_Module = File_cosmos_tx_module_v1_module_proto.Messages().ByName("Module")
-	fd_Module_enable_ante_handler = md_Module.Fields().ByName("enable_ante_handler")
-	fd_Module_enable_post_handler = md_Module.Fields().ByName("enable_post_handler")
+	fd_Module_disable_ante_handler = md_Module.Fields().ByName("disable_ante_handler")
+	fd_Module_disable_post_handler = md_Module.Fields().ByName("disable_post_handler")
 }
 
 var _ protoreflect.Message = (*fastReflection_Module)(nil)
@@ -91,15 +91,15 @@ func (x *fastReflection_Module) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_Module) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.EnableAnteHandler != false {
-		value := protoreflect.ValueOfBool(x.EnableAnteHandler)
-		if !f(fd_Module_enable_ante_handler, value) {
+	if x.DisableAnteHandler != false {
+		value := protoreflect.ValueOfBool(x.DisableAnteHandler)
+		if !f(fd_Module_disable_ante_handler, value) {
 			return
 		}
 	}
-	if x.EnablePostHandler != false {
-		value := protoreflect.ValueOfBool(x.EnablePostHandler)
-		if !f(fd_Module_enable_post_handler, value) {
+	if x.DisablePostHandler != false {
+		value := protoreflect.ValueOfBool(x.DisablePostHandler)
+		if !f(fd_Module_disable_post_handler, value) {
 			return
 		}
 	}
@@ -118,10 +118,10 @@ func (x *fastReflection_Module) Range(f func(protoreflect.FieldDescriptor, proto
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_Module) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.tx.module.v1.Module.enable_ante_handler":
-		return x.EnableAnteHandler != false
-	case "cosmos.tx.module.v1.Module.enable_post_handler":
-		return x.EnablePostHandler != false
+	case "cosmos.tx.module.v1.Module.disable_ante_handler":
+		return x.DisableAnteHandler != false
+	case "cosmos.tx.module.v1.Module.disable_post_handler":
+		return x.DisablePostHandler != false
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.tx.module.v1.Module"))
@@ -138,10 +138,10 @@ func (x *fastReflection_Module) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Module) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.tx.module.v1.Module.enable_ante_handler":
-		x.EnableAnteHandler = false
-	case "cosmos.tx.module.v1.Module.enable_post_handler":
-		x.EnablePostHandler = false
+	case "cosmos.tx.module.v1.Module.disable_ante_handler":
+		x.DisableAnteHandler = false
+	case "cosmos.tx.module.v1.Module.disable_post_handler":
+		x.DisablePostHandler = false
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.tx.module.v1.Module"))
@@ -158,11 +158,11 @@ func (x *fastReflection_Module) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_Module) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.tx.module.v1.Module.enable_ante_handler":
-		value := x.EnableAnteHandler
+	case "cosmos.tx.module.v1.Module.disable_ante_handler":
+		value := x.DisableAnteHandler
 		return protoreflect.ValueOfBool(value)
-	case "cosmos.tx.module.v1.Module.enable_post_handler":
-		value := x.EnablePostHandler
+	case "cosmos.tx.module.v1.Module.disable_post_handler":
+		value := x.DisablePostHandler
 		return protoreflect.ValueOfBool(value)
 	default:
 		if descriptor.IsExtension() {
@@ -184,10 +184,10 @@ func (x *fastReflection_Module) Get(descriptor protoreflect.FieldDescriptor) pro
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Module) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.tx.module.v1.Module.enable_ante_handler":
-		x.EnableAnteHandler = value.Bool()
-	case "cosmos.tx.module.v1.Module.enable_post_handler":
-		x.EnablePostHandler = value.Bool()
+	case "cosmos.tx.module.v1.Module.disable_ante_handler":
+		x.DisableAnteHandler = value.Bool()
+	case "cosmos.tx.module.v1.Module.disable_post_handler":
+		x.DisablePostHandler = value.Bool()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.tx.module.v1.Module"))
@@ -208,10 +208,10 @@ func (x *fastReflection_Module) Set(fd protoreflect.FieldDescriptor, value proto
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Module) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.tx.module.v1.Module.enable_ante_handler":
-		panic(fmt.Errorf("field enable_ante_handler of message cosmos.tx.module.v1.Module is not mutable"))
-	case "cosmos.tx.module.v1.Module.enable_post_handler":
-		panic(fmt.Errorf("field enable_post_handler of message cosmos.tx.module.v1.Module is not mutable"))
+	case "cosmos.tx.module.v1.Module.disable_ante_handler":
+		panic(fmt.Errorf("field disable_ante_handler of message cosmos.tx.module.v1.Module is not mutable"))
+	case "cosmos.tx.module.v1.Module.disable_post_handler":
+		panic(fmt.Errorf("field disable_post_handler of message cosmos.tx.module.v1.Module is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.tx.module.v1.Module"))
@@ -225,9 +225,9 @@ func (x *fastReflection_Module) Mutable(fd protoreflect.FieldDescriptor) protore
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_Module) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.tx.module.v1.Module.enable_ante_handler":
+	case "cosmos.tx.module.v1.Module.disable_ante_handler":
 		return protoreflect.ValueOfBool(false)
-	case "cosmos.tx.module.v1.Module.enable_post_handler":
+	case "cosmos.tx.module.v1.Module.disable_post_handler":
 		return protoreflect.ValueOfBool(false)
 	default:
 		if fd.IsExtension() {
@@ -298,10 +298,10 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		if x.EnableAnteHandler {
+		if x.DisableAnteHandler {
 			n += 2
 		}
-		if x.EnablePostHandler {
+		if x.DisablePostHandler {
 			n += 2
 		}
 		if x.unknownFields != nil {
@@ -333,9 +333,9 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.EnablePostHandler {
+		if x.DisablePostHandler {
 			i--
-			if x.EnablePostHandler {
+			if x.DisablePostHandler {
 				dAtA[i] = 1
 			} else {
 				dAtA[i] = 0
@@ -343,9 +343,9 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x10
 		}
-		if x.EnableAnteHandler {
+		if x.DisableAnteHandler {
 			i--
-			if x.EnableAnteHandler {
+			if x.DisableAnteHandler {
 				dAtA[i] = 1
 			} else {
 				dAtA[i] = 0
@@ -404,7 +404,7 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 			switch fieldNum {
 			case 1:
 				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field EnableAnteHandler", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DisableAnteHandler", wireType)
 				}
 				var v int
 				for shift := uint(0); ; shift += 7 {
@@ -421,10 +421,10 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
-				x.EnableAnteHandler = bool(v != 0)
+				x.DisableAnteHandler = bool(v != 0)
 			case 2:
 				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field EnablePostHandler", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DisablePostHandler", wireType)
 				}
 				var v int
 				for shift := uint(0); ; shift += 7 {
@@ -441,7 +441,7 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
-				x.EnablePostHandler = bool(v != 0)
+				x.DisablePostHandler = bool(v != 0)
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -496,10 +496,10 @@ type Module struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// enable_ante_handler defines whether the ante handler are set in the app.
-	EnableAnteHandler bool `protobuf:"varint,1,opt,name=enable_ante_handler,json=enableAnteHandler,proto3" json:"enable_ante_handler,omitempty"`
-	// enable_post_handler defines whether the post handler are set in the app.
-	EnablePostHandler bool `protobuf:"varint,2,opt,name=enable_post_handler,json=enablePostHandler,proto3" json:"enable_post_handler,omitempty"`
+	// disable_ante_handler defines whether the ante handler are disabled in the app.
+	DisableAnteHandler bool `protobuf:"varint,1,opt,name=disable_ante_handler,json=disableAnteHandler,proto3" json:"disable_ante_handler,omitempty"`
+	// disable_post_handler defines whether the post handler are disabled in the app.
+	DisablePostHandler bool `protobuf:"varint,2,opt,name=disable_post_handler,json=disablePostHandler,proto3" json:"disable_post_handler,omitempty"`
 }
 
 func (x *Module) Reset() {
@@ -522,16 +522,16 @@ func (*Module) Descriptor() ([]byte, []int) {
 	return file_cosmos_tx_module_v1_module_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Module) GetEnableAnteHandler() bool {
+func (x *Module) GetDisableAnteHandler() bool {
 	if x != nil {
-		return x.EnableAnteHandler
+		return x.DisableAnteHandler
 	}
 	return false
 }
 
-func (x *Module) GetEnablePostHandler() bool {
+func (x *Module) GetDisablePostHandler() bool {
 	if x != nil {
-		return x.EnablePostHandler
+		return x.DisablePostHandler
 	}
 	return false
 }
@@ -544,27 +544,27 @@ var file_cosmos_tx_module_v1_module_proto_rawDesc = []byte{
 	0x74, 0x6f, 0x12, 0x13, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x74, 0x78, 0x2e, 0x6d, 0x6f,
 	0x64, 0x75, 0x6c, 0x65, 0x2e, 0x76, 0x31, 0x1a, 0x20, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f,
 	0x61, 0x70, 0x70, 0x2f, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2f, 0x6d, 0x6f, 0x64,
-	0x75, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x68, 0x0a, 0x06, 0x4d, 0x6f, 0x64,
-	0x75, 0x6c, 0x65, 0x12, 0x2e, 0x0a, 0x13, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x5f, 0x61, 0x6e,
-	0x74, 0x65, 0x5f, 0x68, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08,
-	0x52, 0x11, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x41, 0x6e, 0x74, 0x65, 0x48, 0x61, 0x6e, 0x64,
-	0x6c, 0x65, 0x72, 0x12, 0x2e, 0x0a, 0x13, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x5f, 0x70, 0x6f,
-	0x73, 0x74, 0x5f, 0x68, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08,
-	0x52, 0x11, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x50, 0x6f, 0x73, 0x74, 0x48, 0x61, 0x6e, 0x64,
-	0x6c, 0x65, 0x72, 0x42, 0xc4, 0x01, 0x0a, 0x17, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x74, 0x78, 0x2e, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x76, 0x31, 0x42,
-	0x0b, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2d,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69,
-	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x74, 0x78, 0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c,
-	0x65, 0x2f, 0x76, 0x31, 0x3b, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x76, 0x31, 0xa2, 0x02, 0x03,
-	0x43, 0x54, 0x4d, 0xaa, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x54, 0x78, 0x2e,
-	0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x5c, 0x54, 0x78, 0x5c, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x5c, 0x56, 0x31, 0xe2,
-	0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x54, 0x78, 0x5c, 0x4d, 0x6f, 0x64, 0x75,
-	0x6c, 0x65, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
-	0x61, 0xea, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x54, 0x78, 0x3a, 0x3a,
-	0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x75, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x74, 0x0a, 0x06, 0x4d, 0x6f, 0x64,
+	0x75, 0x6c, 0x65, 0x12, 0x30, 0x0a, 0x14, 0x64, 0x69, 0x73, 0x61, 0x62, 0x6c, 0x65, 0x5f, 0x61,
+	0x6e, 0x74, 0x65, 0x5f, 0x68, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x08, 0x52, 0x12, 0x64, 0x69, 0x73, 0x61, 0x62, 0x6c, 0x65, 0x41, 0x6e, 0x74, 0x65, 0x48, 0x61,
+	0x6e, 0x64, 0x6c, 0x65, 0x72, 0x12, 0x30, 0x0a, 0x14, 0x64, 0x69, 0x73, 0x61, 0x62, 0x6c, 0x65,
+	0x5f, 0x70, 0x6f, 0x73, 0x74, 0x5f, 0x68, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0x72, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x08, 0x52, 0x12, 0x64, 0x69, 0x73, 0x61, 0x62, 0x6c, 0x65, 0x50, 0x6f, 0x73, 0x74,
+	0x48, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0x72, 0x3a, 0x06, 0xba, 0xc0, 0x96, 0xda, 0x01, 0x00, 0x42,
+	0xc4, 0x01, 0x0a, 0x17, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x74,
+	0x78, 0x2e, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x76, 0x31, 0x42, 0x0b, 0x4d, 0x6f, 0x64,
+	0x75, 0x6c, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2d, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2f, 0x74, 0x78, 0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2f, 0x76, 0x31,
+	0x3b, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x54, 0x4d, 0xaa,
+	0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x54, 0x78, 0x2e, 0x4d, 0x6f, 0x64, 0x75,
+	0x6c, 0x65, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x54,
+	0x78, 0x5c, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1f, 0x43, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x54, 0x78, 0x5c, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x5c, 0x56,
+	0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x16,
+	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x54, 0x78, 0x3a, 0x3a, 0x4d, 0x6f, 0x64, 0x75,
+	0x6c, 0x65, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (

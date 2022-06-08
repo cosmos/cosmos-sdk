@@ -30,6 +30,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+//nolint // this file shouldn't be linted because we want to use it in its original and unmodified form.
 package secp256k1
 
 import (
@@ -143,20 +144,20 @@ func (bitCurve *BitCurve) Add(x1, y1, x2, y2 *big.Int) (*big.Int, *big.Int) {
 
 // addJacobian takes two points in Jacobian coordinates, (x1, y1, z1) and
 // (x2, y2, z2) and returns their sum, also in Jacobian form.
-func (bitCurve *BitCurve) addJacobian(x1, y1, z1, x2, y2, z2 *big.Int) (*big.Int, *big.Int, *big.Int) {
+func (BitCurve *BitCurve) addJacobian(x1, y1, z1, x2, y2, z2 *big.Int) (*big.Int, *big.Int, *big.Int) {
 	// See http://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-add-2007-bl
 	z1z1 := new(big.Int).Mul(z1, z1)
-	z1z1.Mod(z1z1, bitCurve.P)
+	z1z1.Mod(z1z1, BitCurve.P)
 	z2z2 := new(big.Int).Mul(z2, z2)
-	z2z2.Mod(z2z2, bitCurve.P)
+	z2z2.Mod(z2z2, BitCurve.P)
 
 	u1 := new(big.Int).Mul(x1, z2z2)
-	u1.Mod(u1, bitCurve.P)
+	u1.Mod(u1, BitCurve.P)
 	u2 := new(big.Int).Mul(x2, z1z1)
-	u2.Mod(u2, bitCurve.P)
+	u2.Mod(u2, BitCurve.P)
 	h := new(big.Int).Sub(u2, u1)
 	if h.Sign() == -1 {
-		h.Add(h, bitCurve.P)
+		h.Add(h, BitCurve.P)
 	}
 	i := new(big.Int).Lsh(h, 1)
 	i.Mul(i, i)
@@ -164,13 +165,13 @@ func (bitCurve *BitCurve) addJacobian(x1, y1, z1, x2, y2, z2 *big.Int) (*big.Int
 
 	s1 := new(big.Int).Mul(y1, z2)
 	s1.Mul(s1, z2z2)
-	s1.Mod(s1, bitCurve.P)
+	s1.Mod(s1, BitCurve.P)
 	s2 := new(big.Int).Mul(y2, z1)
 	s2.Mul(s2, z1z1)
-	s2.Mod(s2, bitCurve.P)
+	s2.Mod(s2, BitCurve.P)
 	r := new(big.Int).Sub(s2, s1)
 	if r.Sign() == -1 {
-		r.Add(r, bitCurve.P)
+		r.Add(r, BitCurve.P)
 	}
 	r.Lsh(r, 1)
 	v := new(big.Int).Mul(u1, i)
@@ -180,7 +181,7 @@ func (bitCurve *BitCurve) addJacobian(x1, y1, z1, x2, y2, z2 *big.Int) (*big.Int
 	x3.Sub(x3, j)
 	x3.Sub(x3, v)
 	x3.Sub(x3, v)
-	x3.Mod(x3, bitCurve.P)
+	x3.Mod(x3, BitCurve.P)
 
 	y3 := new(big.Int).Set(r)
 	v.Sub(v, x3)
@@ -188,33 +189,33 @@ func (bitCurve *BitCurve) addJacobian(x1, y1, z1, x2, y2, z2 *big.Int) (*big.Int
 	s1.Mul(s1, j)
 	s1.Lsh(s1, 1)
 	y3.Sub(y3, s1)
-	y3.Mod(y3, bitCurve.P)
+	y3.Mod(y3, BitCurve.P)
 
 	z3 := new(big.Int).Add(z1, z2)
 	z3.Mul(z3, z3)
 	z3.Sub(z3, z1z1)
 	if z3.Sign() == -1 {
-		z3.Add(z3, bitCurve.P)
+		z3.Add(z3, BitCurve.P)
 	}
 	z3.Sub(z3, z2z2)
 	if z3.Sign() == -1 {
-		z3.Add(z3, bitCurve.P)
+		z3.Add(z3, BitCurve.P)
 	}
 	z3.Mul(z3, h)
-	z3.Mod(z3, bitCurve.P)
+	z3.Mod(z3, BitCurve.P)
 
 	return x3, y3, z3
 }
 
 // Double returns 2*(x,y)
-func (bitCurve *BitCurve) Double(x1, y1 *big.Int) (*big.Int, *big.Int) {
+func (BitCurve *BitCurve) Double(x1, y1 *big.Int) (*big.Int, *big.Int) {
 	z1 := new(big.Int).SetInt64(1)
-	return bitCurve.affineFromJacobian(bitCurve.doubleJacobian(x1, y1, z1))
+	return BitCurve.affineFromJacobian(BitCurve.doubleJacobian(x1, y1, z1))
 }
 
 // doubleJacobian takes a point in Jacobian coordinates, (x, y, z), and
 // returns its double, also in Jacobian form.
-func (bitCurve *BitCurve) doubleJacobian(x, y, z *big.Int) (*big.Int, *big.Int, *big.Int) {
+func (BitCurve *BitCurve) doubleJacobian(x, y, z *big.Int) (*big.Int, *big.Int, *big.Int) {
 	// See http://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
 
 	a := new(big.Int).Mul(x, x) // X1²
@@ -232,24 +233,24 @@ func (bitCurve *BitCurve) doubleJacobian(x, y, z *big.Int) (*big.Int, *big.Int, 
 
 	x3 := new(big.Int).Mul(big.NewInt(2), d) // 2*D
 	x3.Sub(f, x3)                            // F-2*D
-	x3.Mod(x3, bitCurve.P)
+	x3.Mod(x3, BitCurve.P)
 
 	y3 := new(big.Int).Sub(d, x3)                  // D-X3
 	y3.Mul(e, y3)                                  // E*(D-X3)
 	y3.Sub(y3, new(big.Int).Mul(big.NewInt(8), c)) // E*(D-X3)-8*C
-	y3.Mod(y3, bitCurve.P)
+	y3.Mod(y3, BitCurve.P)
 
 	z3 := new(big.Int).Mul(y, z) // Y1*Z1
 	z3.Mul(big.NewInt(2), z3)    // 3*Y1*Z1
-	z3.Mod(z3, bitCurve.P)
+	z3.Mod(z3, BitCurve.P)
 
 	return x3, y3, z3
 }
 
 // ScalarBaseMult returns k*G, where G is the base point of the group and k is
 // an integer in big-endian form.
-func (bitCurve *BitCurve) ScalarBaseMult(k []byte) (*big.Int, *big.Int) {
-	return bitCurve.ScalarMult(bitCurve.Gx, bitCurve.Gy, k)
+func (BitCurve *BitCurve) ScalarBaseMult(k []byte) (*big.Int, *big.Int) {
+	return BitCurve.ScalarMult(BitCurve.Gx, BitCurve.Gy, k)
 }
 
 // Marshal converts a point into the form specified in section 4.3.6 of ANSI

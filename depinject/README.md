@@ -48,23 +48,38 @@ var appConfigYaml []byte
 var appConfig = appconfig.LoadYAML(appConfigYaml)
 
 func NewSimApp(
-	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
-	homePath string, invCheckPeriod uint, encodingConfig simappparams.EncodingConfig,
-	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
+	logger log.Logger,
+	db dbm.DB,
+	traceStore io.Writer,
+	loadLatest bool,
+	skipUpgradeHeights map[int64]bool,
+	homePath string,
+	invCheckPeriod uint,
+	encodingConfig simappparams.EncodingConfig,
+	appOpts servertypes.AppOptions,
+	baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
-	var appBuilder *runtime.AppBuilder
-	var paramsKeeper paramskeeper.Keeper
-	var accountKeeper authkeeper.AccountKeeper
-	var appCodec codec.Codec
-	var legacyAmino *codec.LegacyAmino
-	var interfaceRegistry codectypes.InterfaceRegistry
-	err := depinject.Inject(appConfig,
+	app := &SimApp{
+		invCheckPeriod: invCheckPeriod,
+	}
+
+	var (
+		appBuilder *runtime.AppBuilder
+		msgServiceRouter *baseapp.MsgServiceRouter
+	)
+
+	err := depinject.Inject(AppConfig,
 		&appBuilder,
-		&paramsKeeper,
-		&appCodec,
-		&legacyAmino,
-		&interfaceRegistry,
-		&accountKeeper,
+		&app.ParamsKeeper,
+		&app.CapabilityKeeper,
+		&app.appCodec,
+		&app.legacyAmino,
+		&app.interfaceRegistry,
+		&app.AccountKeeper,
+		&app.BankKeeper,
+		&app.FeeGrantKeeper,
+		&app.StakingKeeper,
+		&msgServiceRouter,
 	)
 	if err != nil {
 		panic(err)

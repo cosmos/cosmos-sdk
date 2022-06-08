@@ -2446,7 +2446,7 @@ func (s *IntegrationTestSuite) createCLIProposal(groupPolicyAddress, proposer, s
 	msgJSON, err := s.cfg.Codec.MarshalInterfaceJSON(&msg)
 	s.Require().NoError(err)
 
-	p := client.CLIProposal{
+	p := client.Proposal{
 		GroupPolicyAddress: groupPolicyAddress,
 		Messages:           []json.RawMessage{msgJSON},
 		Metadata:           metadata,

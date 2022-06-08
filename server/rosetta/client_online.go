@@ -16,6 +16,7 @@ import (
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/tendermint/tendermint/rpc/client/http"
@@ -98,7 +99,7 @@ func NewClient(cfg *Config) (*Client, error) {
 
 // Bootstrap is gonna connect the client to the endpoints
 func (c *Client) Bootstrap() error {
-	grpcConn, err := grpc.Dial(c.config.GRPCEndpoint, grpc.WithInsecure())
+	grpcConn, err := grpc.Dial(c.config.GRPCEndpoint, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
 	}

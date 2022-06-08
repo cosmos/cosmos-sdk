@@ -33,7 +33,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&HasHasAnimal{},
 	)
 	registry.RegisterImplementations(
-		(*tx.TxExtensionOptionI)(nil),
+		(*tx.ExtensionOptionI)(nil),
 		&Cat{},
 	)
 

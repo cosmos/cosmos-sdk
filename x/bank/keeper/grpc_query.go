@@ -12,16 +12,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-var _ types.QueryServer = Querier{}
-
-// Querier defines a wrapper around the x/bank keeper and implements the gRPC
-// query interface.
-type Querier struct {
-	BaseKeeper
-}
+var _ types.QueryServer = BaseKeeper{}
 
 // Balance implements the Query/Balance gRPC method
-func (q Querier) Balance(ctx context.Context, req *types.QueryBalanceRequest) (*types.QueryBalanceResponse, error) {
+func (k BaseKeeper) Balance(ctx context.Context, req *types.QueryBalanceRequest) (*types.QueryBalanceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -40,13 +34,13 @@ func (q Querier) Balance(ctx context.Context, req *types.QueryBalanceRequest) (*
 		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
 	}
 
-	balance := q.GetBalance(sdkCtx, address, req.Denom)
+	balance := k.GetBalance(sdkCtx, address, req.Denom)
 
 	return &types.QueryBalanceResponse{Balance: &balance}, nil
 }
 
 // AllBalances implements the Query/AllBalances gRPC method
-func (q Querier) AllBalances(ctx context.Context, req *types.QueryAllBalancesRequest) (*types.QueryAllBalancesResponse, error) {
+func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalancesRequest) (*types.QueryAllBalancesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -63,14 +57,14 @@ func (q Querier) AllBalances(ctx context.Context, req *types.QueryAllBalancesReq
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	balances := sdk.NewCoins()
-	accountStore := q.getAccountStore(sdkCtx, addr)
+	accountStore := k.getAccountStore(sdkCtx, addr)
 
 	pageRes, err := query.Paginate(accountStore, req.Pagination, func(_, value []byte) error {
 		var result sdk.Coin
-		if err := q.cdc.Unmarshal(value, &result); err != nil {
+		err := k.cdc.Unmarshal(value, &result)
+		if err != nil {
 			return err
 		}
-
 		balances = append(balances, result)
 		return nil
 	})
@@ -83,9 +77,9 @@ func (q Querier) AllBalances(ctx context.Context, req *types.QueryAllBalancesReq
 }
 
 // TotalSupply implements the Query/TotalSupply gRPC method
-func (q Querier) TotalSupply(ctx context.Context, req *types.QueryTotalSupplyRequest) (*types.QueryTotalSupplyResponse, error) {
+func (k BaseKeeper) TotalSupply(ctx context.Context, req *types.QueryTotalSupplyRequest) (*types.QueryTotalSupplyResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	totalSupply, pageRes, err := q.GetPaginatedTotalSupplyWithOffsets(sdkCtx, req.Pagination)
+	totalSupply, pageRes, err := k.GetPaginatedTotalSupplyWithOffsets(sdkCtx, req.Pagination)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -94,7 +88,7 @@ func (q Querier) TotalSupply(ctx context.Context, req *types.QueryTotalSupplyReq
 }
 
 // SupplyOf implements the Query/SupplyOf gRPC method
-func (q Querier) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest) (*types.QuerySupplyOfResponse, error) {
+func (k BaseKeeper) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest) (*types.QuerySupplyOfResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -104,15 +98,15 @@ func (q Querier) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest) (*
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	supply := q.GetSupplyWithOffset(ctx, req.Denom)
+	supply := k.GetSupplyWithOffset(ctx, req.Denom)
 
 	return &types.QuerySupplyOfResponse{Amount: sdk.NewCoin(req.Denom, supply.Amount)}, nil
 }
 
 // TotalSupply implements the Query/TotalSupplyWithoutOffset gRPC method
-func (q Querier) TotalSupplyWithoutOffset(ctx context.Context, req *types.QueryTotalSupplyWithoutOffsetRequest) (*types.QueryTotalSupplyWithoutOffsetResponse, error) {
+func (k BaseKeeper) TotalSupplyWithoutOffset(ctx context.Context, req *types.QueryTotalSupplyWithoutOffsetRequest) (*types.QueryTotalSupplyWithoutOffsetResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	totalSupply, pageRes, err := q.GetPaginatedTotalSupply(sdkCtx, req.Pagination)
+	totalSupply, pageRes, err := k.GetPaginatedTotalSupply(sdkCtx, req.Pagination)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -121,7 +115,7 @@ func (q Querier) TotalSupplyWithoutOffset(ctx context.Context, req *types.QueryT
 }
 
 // SupplyOf implements the Query/SupplyOf gRPC method
-func (q Querier) SupplyOfWithoutOffset(c context.Context, req *types.QuerySupplyOfWithoutOffsetRequest) (*types.QuerySupplyOfWithoutOffsetResponse, error) {
+func (k BaseKeeper) SupplyOfWithoutOffset(c context.Context, req *types.QuerySupplyOfWithoutOffsetRequest) (*types.QuerySupplyOfWithoutOffsetResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -131,38 +125,36 @@ func (q Querier) SupplyOfWithoutOffset(c context.Context, req *types.QuerySupply
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	supply := q.GetSupply(ctx, req.Denom)
+	supply := k.GetSupply(ctx, req.Denom)
 
 	return &types.QuerySupplyOfWithoutOffsetResponse{Amount: sdk.NewCoin(req.Denom, supply.Amount)}, nil
 }
 
 // Params implements the gRPC service handler for querying x/bank parameters.
-func (q Querier) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (k BaseKeeper) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	params := q.GetParams(sdkCtx)
+	params := k.GetParams(sdkCtx)
 
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
 // DenomsMetadata implements Query/DenomsMetadata gRPC method.
-func (q Querier) DenomsMetadata(c context.Context, req *types.QueryDenomsMetadataRequest) (*types.QueryDenomsMetadataResponse, error) {
+func (k BaseKeeper) DenomsMetadata(c context.Context, req *types.QueryDenomsMetadataRequest) (*types.QueryDenomsMetadataResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	store := prefix.NewStore(ctx.KVStore(q.storeKey), types.DenomMetadataPrefix)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.DenomMetadataPrefix)
 
 	metadatas := []types.Metadata{}
 	pageRes, err := query.Paginate(store, req.Pagination, func(_, value []byte) error {
 		var metadata types.Metadata
-		if err := q.cdc.Unmarshal(value, &metadata); err != nil {
-			return err
-		}
+		k.cdc.MustUnmarshal(value, &metadata)
 
 		metadatas = append(metadatas, metadata)
 		return nil
@@ -179,7 +171,7 @@ func (q Querier) DenomsMetadata(c context.Context, req *types.QueryDenomsMetadat
 }
 
 // DenomMetadata implements Query/DenomMetadata gRPC method.
-func (q Querier) DenomMetadata(c context.Context, req *types.QueryDenomMetadataRequest) (*types.QueryDenomMetadataResponse, error) {
+func (k BaseKeeper) DenomMetadata(c context.Context, req *types.QueryDenomMetadataRequest) (*types.QueryDenomMetadataResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -190,7 +182,7 @@ func (q Querier) DenomMetadata(c context.Context, req *types.QueryDenomMetadataR
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	metadata, found := q.GetDenomMetaData(ctx, req.Denom)
+	metadata, found := k.GetDenomMetaData(ctx, req.Denom)
 	if !found {
 		return nil, status.Errorf(codes.NotFound, "client metadata for denom %s", req.Denom)
 	}
@@ -198,22 +190,4 @@ func (q Querier) DenomMetadata(c context.Context, req *types.QueryDenomMetadataR
 	return &types.QueryDenomMetadataResponse{
 		Metadata: metadata,
 	}, nil
-}
-
-func (q Querier) BaseDenom(c context.Context, req *types.QueryBaseDenomRequest) (*types.QueryBaseDenomResponse, error) {
-	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
-	}
-	if req.Denom == "" {
-		return nil, status.Error(codes.InvalidArgument, "invalid denom")
-	}
-
-	ctx := sdk.UnwrapSDKContext(c)
-
-	baseDenom, ok := q.GetBaseDenom(ctx, req.Denom)
-	if !ok {
-		return nil, status.Errorf(codes.NotFound, "base denom not found for: %s", req.Denom)
-	}
-
-	return &types.QueryBaseDenomResponse{BaseDenom: baseDenom}, nil
 }

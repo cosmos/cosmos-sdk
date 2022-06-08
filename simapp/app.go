@@ -23,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	_ "github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
@@ -215,7 +214,7 @@ func NewSimApp(
 	var appBuilder *runtime.AppBuilder
 	var msgServiceRouter *baseapp.MsgServiceRouter
 
-	err := depinject.Inject(AppConfig,
+	if err := depinject.Inject(AppConfig,
 		&appBuilder,
 		&app.ParamsKeeper,
 		&app.CapabilityKeeper,
@@ -227,9 +226,9 @@ func NewSimApp(
 		&app.FeeGrantKeeper,
 		&app.StakingKeeper,
 		&app.GroupKeeper,
+		&app.NFTKeeper,
 		&msgServiceRouter,
-	)
-	if err != nil {
+	); err != nil {
 		panic(err)
 	}
 
@@ -297,8 +296,6 @@ func NewSimApp(
 	// set the governance module account as the authority for conducting upgrades
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, app.keys[upgradetypes.StoreKey], app.appCodec, homePath, app.BaseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
-	app.NFTKeeper = nftkeeper.NewKeeper(app.keys[nftkeeper.StoreKey], app.appCodec, app.AccountKeeper, app.BankKeeper)
-
 	// create evidence keeper with router
 	evidenceKeeper := evidencekeeper.NewKeeper(
 		app.appCodec, app.keys[evidencetypes.StoreKey], app.StakingKeeper, app.SlashingKeeper,
@@ -314,7 +311,7 @@ func NewSimApp(
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
-	err = app.RegisterModules(
+	if err := app.RegisterModules(
 		genutil.NewAppModule(
 			app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx,
 			encodingConfig.TxConfig,
@@ -329,8 +326,7 @@ func NewSimApp(
 		evidence.NewAppModule(app.EvidenceKeeper),
 		authzmodule.NewAppModule(app.appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		nftmodule.NewAppModule(app.appCodec, app.NFTKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-	)
-	if err != nil {
+	); err != nil {
 		panic(err)
 	}
 
@@ -397,8 +393,7 @@ func NewSimApp(
 	// upgrade.
 	app.setPostHandler()
 
-	err = app.Load(loadLatest)
-	if err != nil {
+	if err := app.Load(loadLatest); err != nil {
 		panic(err)
 	}
 

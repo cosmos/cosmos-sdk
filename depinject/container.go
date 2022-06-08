@@ -11,9 +11,8 @@ import (
 type container struct {
 	*debugConfig
 
-	resolversByType map[reflect.Type]resolver
-	resolvers       map[string]resolver
-	preferences     map[string]preference
+	resolvers   map[string]resolver
+	preferences map[string]preference
 
 	moduleKeys map[string]*moduleKey
 
@@ -29,13 +28,12 @@ type resolveFrame struct {
 
 func newContainer(cfg *debugConfig) *container {
 	return &container{
-		debugConfig:     cfg,
-		resolversByType: map[reflect.Type]resolver{},
-		resolvers:       map[string]resolver{},
-		moduleKeys:      map[string]*moduleKey{},
-		preferences:     map[string]preference{},
-		callerStack:     nil,
-		callerMap:       map[Location]bool{},
+		debugConfig: cfg,
+		resolvers:   map[string]resolver{},
+		moduleKeys:  map[string]*moduleKey{},
+		preferences: map[string]preference{},
+		callerStack: nil,
+		callerMap:   map[Location]bool{},
 	}
 }
 
@@ -137,19 +135,21 @@ func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, err
 	res, _ := c.resolverByType(typ)
 
 	if res == nil && typ.Kind() == reflect.Interface {
-		var matches []reflect.Type
-		for k := range c.resolversByType {
-			if k.Kind() != reflect.Interface && k.Implements(typ) {
-				matches = append(matches, k)
+		matches := map[reflect.Type]reflect.Type{}
+		var resolverType reflect.Type
+		for _, r := range c.resolvers {
+			if r.getType().Kind() != reflect.Interface && r.getType().Implements(typ) {
+				resolverType = r.getType()
+				matches[resolverType] = resolverType
 			}
 		}
 
 		if len(matches) == 1 {
-			res = c.resolversByType[matches[0]]
-			c.logf("Implicitly registering resolver %v for interface type %v", matches[0], typ)
+			res, _ = c.resolverByType(resolverType)
+			c.logf("Implicitly registering resolver %v for interface type %v", resolverType, typ)
 			c.addResolver(typ, res)
 		} else if len(matches) > 1 {
-			return nil, &ErrMultipleImplicitInterfaceBindings{Interface: typ, Matches: matches}
+			return nil, newErrMultipleImplicitInterfaceBindings(typ, matches)
 		}
 	}
 
@@ -481,7 +481,6 @@ func (c *container) addPreference(p preference) {
 }
 
 func (c *container) addResolver(typ reflect.Type, r resolver) {
-	c.resolversByType[typ] = r
 	c.resolvers[fullyQualifiedTypeName(typ)] = r
 }
 

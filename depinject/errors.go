@@ -16,8 +16,20 @@ type ErrMultipleImplicitInterfaceBindings struct {
 	Matches   []reflect.Type
 }
 
+func newErrMultipleImplicitInterfaceBindings(i reflect.Type, matches map[reflect.Type]reflect.Type) ErrMultipleImplicitInterfaceBindings {
+	var ms []reflect.Type
+	for k := range matches {
+		ms = append(ms, k)
+	}
+	return ErrMultipleImplicitInterfaceBindings{Interface: i, Matches: ms}
+}
+
 func (err ErrMultipleImplicitInterfaceBindings) Error() string {
-	return fmt.Sprintf("Multiple implementations found for interface %v: %v", err.Interface, err.Matches)
+	matchesStr := ""
+	for _, m := range err.Matches {
+		matchesStr = fmt.Sprintf("%s %s", matchesStr, fullyQualifiedTypeName(m))
+	}
+	return fmt.Sprintf("Multiple implementations found for interface %v: %v", err.Interface, matchesStr)
 }
 
 // ErrNoTypeForExplicitBindingFound defines an error condition where an explicit binding of PreferredType was marked as

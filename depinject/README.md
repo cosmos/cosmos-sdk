@@ -21,9 +21,12 @@ import (
 type AnotherInt int
 
 func main() {
-	var x int
-	var y AnotherInt
-	fmt.Println(x, y)
+	var (
+	  x int
+	  y AnotherInt
+	)
+
+	fmt.Printf("Before (%v, %v)\n", x, y)
 	depinject.Inject(
 		depinject.Provide(
 			func() int { return 1 },
@@ -32,7 +35,7 @@ func main() {
 		&x,
 		&y,
 	)
-	fmt.Println(x, y)
+	fmt.Printf("After (%v, %v)\n", x, y)
 }
 ```
 

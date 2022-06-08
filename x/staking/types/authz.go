@@ -45,7 +45,7 @@ func (a StakeAuthorization) MsgTypeURL() string {
 
 func (a StakeAuthorization) ValidateBasic() error {
 	if a.MaxTokens != nil && a.MaxTokens.IsNegative() {
-		return authz.ErrNegativeMaxTokens.Wrap("negative coin amount: %v", a.MaxTokens)
+		return authz.ErrNegativeMaxTokens.Wrapf("negative coin amount: %v", a.MaxTokens)
 	}
 	if a.AuthorizationType == AuthorizationType_AUTHORIZATION_TYPE_UNSPECIFIED {
 		return authz.ErrUnknownAuthorizationType

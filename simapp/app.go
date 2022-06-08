@@ -1,6 +1,7 @@
 package simapp
 
 import (
+	_ "embed"
 	"encoding/json"
 	"io"
 	"net/http"

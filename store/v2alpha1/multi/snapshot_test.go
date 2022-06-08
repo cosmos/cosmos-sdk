@@ -35,7 +35,7 @@ func multiStoreConfig(t *testing.T, stores int) StoreConfig {
 	return opts
 }
 
-func newMultiStoreWithGeneratedData(t *testing.T, db dbm.DBConnection, stores int, storeKeys uint64) *Store {
+func newMultiStoreWithGeneratedData(t *testing.T, db dbm.Connection, stores int, storeKeys uint64) *Store {
 	cfg := multiStoreConfig(t, stores)
 	store, err := NewStore(db, cfg)
 	require.NoError(t, err)
@@ -68,7 +68,7 @@ func newMultiStoreWithGeneratedData(t *testing.T, db dbm.DBConnection, stores in
 	return store
 }
 
-func newMultiStoreWithBasicData(t *testing.T, db dbm.DBConnection, stores int) *Store {
+func newMultiStoreWithBasicData(t *testing.T, db dbm.Connection, stores int) *Store {
 	cfg := multiStoreConfig(t, stores)
 	store, err := NewStore(db, cfg)
 	require.NoError(t, err)
@@ -85,7 +85,7 @@ func newMultiStoreWithBasicData(t *testing.T, db dbm.DBConnection, stores int) *
 	return store
 }
 
-func newMultiStore(t *testing.T, db dbm.DBConnection, stores int) *Store {
+func newMultiStore(t *testing.T, db dbm.Connection, stores int) *Store {
 	cfg := multiStoreConfig(t, stores)
 	store, err := NewStore(db, cfg)
 	require.NoError(t, err)

@@ -49,7 +49,14 @@ func provide(ctr *container, key *moduleKey, providers []interface{}) error {
 }
 
 // Prefer defines a container configuration for an explicit interface binding of inTypeName to outTypeName
-// in global scope.
+// in global scope, for example,
+//
+// Prefer(
+//	"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Duck",
+//	"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Canvasback")
+//
+// configures the container to *always* provide a Canvasback instance when an input of interface type Duck is
+// requested as an input.
 func Prefer(inTypeName string, outTypeName string) Config {
 	return containerConfig(func(ctr *container) error {
 		return prefer(ctr, inTypeName, outTypeName, "")
@@ -57,7 +64,15 @@ func Prefer(inTypeName string, outTypeName string) Config {
 }
 
 // PreferInModule defines a container configuration for an explicit interface binding of inTypeName to outTypeName
-// in the scope of the module with name moduleName.
+// in the scope of the module with name moduleName.  For example, given the configuration
+//
+// PreferInModule(
+//  "moduleFoo",
+//	"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Duck",
+//	"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Canvasback")
+//
+// where Duck is an interface and Canvasback implements Duck, the container will attempt to provide a Canvasback
+// instance where Duck is requested as an input, but only within the scope of module "moduleFoo".
 func PreferInModule(moduleName string, inTypeName string, outTypeName string) Config {
 	return containerConfig(func(ctr *container) error {
 		return prefer(ctr, inTypeName, outTypeName, moduleName)

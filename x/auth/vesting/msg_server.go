@@ -70,15 +70,14 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 
 	baseVestingAccount := types.NewBaseVestingAccount(baseAccount, msg.Amount.Sort(), msg.EndTime)
 
-	var acc authtypes.AccountI
-
+	var vestingAccount authtypes.AccountI
 	if msg.Delayed {
-		acc = types.NewDelayedVestingAccountRaw(baseVestingAccount)
+		vestingAccount = types.NewDelayedVestingAccountRaw(baseVestingAccount)
 	} else {
-		acc = types.NewContinuousVestingAccountRaw(baseVestingAccount, ctx.BlockTime().Unix())
+		vestingAccount = types.NewContinuousVestingAccountRaw(baseVestingAccount, ctx.BlockTime().Unix())
 	}
 
-	ak.SetAccount(ctx, acc)
+	ak.SetAccount(ctx, vestingAccount)
 
 	defer func() {
 		telemetry.IncrCounter(1, "new", "account")
@@ -135,16 +134,19 @@ func (s msgServer) CreatePermanentLockedAccount(goCtx context.Context, msg *type
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
 	}
 
-	baseAccountI := ak.NewAccountWithAddress(ctx, to)
-
-	baseAcc, ok := baseAccountI.(*authtypes.BaseAccount)
+	account := ak.NewAccountWithAddress(ctx, to)
+	baseAccount, ok := account.(*authtypes.BaseAccount)
 	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid account type; expected: BaseAccount, got: %T", baseAccountI)
+		if getter, ok := account.(baseAccountGetter); ok {
+			baseAccount = getter.GetBaseAccount()
+		}
+	}
+	if baseAccount == nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid account type; expected: BaseAccount, got: %T", baseAccount)
 	}
 
-	var acc authtypes.AccountI = types.NewPermanentLockedAccount(baseAcc, msg.Amount)
-
-	ak.SetAccount(ctx, acc)
+	vestingAccount := types.NewPermanentLockedAccount(baseAccount, msg.Amount)
+	ak.SetAccount(ctx, vestingAccount)
 
 	defer func() {
 		telemetry.IncrCounter(1, "new", "account")
@@ -200,11 +202,19 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 		totalCoins = totalCoins.Add(period.Amount...)
 	}
 
-	baseAccount := ak.NewAccountWithAddress(ctx, to)
+	account := ak.NewAccountWithAddress(ctx, to)
+	baseAccount, ok := account.(*authtypes.BaseAccount)
+	if !ok {
+		if getter, ok := account.(baseAccountGetter); ok {
+			baseAccount = getter.GetBaseAccount()
+		}
+	}
+	if baseAccount == nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid account type; expected: BaseAccount, got: %T", baseAccount)
+	}
 
-	acc := types.NewPeriodicVestingAccount(baseAccount.(*authtypes.BaseAccount), totalCoins.Sort(), msg.StartTime, msg.VestingPeriods)
-
-	ak.SetAccount(ctx, acc)
+	vestingAccount := types.NewPeriodicVestingAccount(baseAccount, totalCoins.Sort(), msg.StartTime, msg.VestingPeriods)
+	ak.SetAccount(ctx, vestingAccount)
 
 	defer func() {
 		telemetry.IncrCounter(1, "new", "account")

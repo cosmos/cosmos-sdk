@@ -8,7 +8,7 @@ package depinject
 //
 // Ex:
 //  var x int
-//  Build(Provide(func() int { return 1 }), &x)
+//  Inject(Provide(func() int { return 1 }), &x)
 //
 // Inject uses the debug mode provided by AutoDebug which means there will be
 // verbose debugging information if there is an error and nothing upon success.

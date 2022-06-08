@@ -63,7 +63,10 @@ require (
 	sigs.k8s.io/yaml v1.3.0
 )
 
-require github.com/cosmos/cosmos-sdk/depinject v1.0.0-alpha.4
+require (
+	github.com/cosmos/cosmos-sdk/depinject v1.0.0-alpha.4
+	github.com/cosmos/cosmos-sdk/store/tools/ics23 v0.0.0-20220608170201-b0e82f964070
+)
 
 require (
 	cloud.google.com/go v0.100.2 // indirect

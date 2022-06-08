@@ -178,7 +178,7 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 type groupInputs struct {
 	depinject.In
 
-	KVStoreKey       *store.KVStoreKey
+	Key              *store.KVStoreKey
 	Cdc              codec.Codec
 	AccountKeeper    group.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
 	BankKeeper       group.BankKeeper    `key:"cosmos.bank.v1.Keeper"`
@@ -195,7 +195,7 @@ func provideModule(in groupInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
 			groupConfig.MaxMetadataLen = 1000
 		*/
 	}
-	k := keeper.NewKeeper(in.KVStoreKey, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, group.Config{groupConfig.MaxExecutionPeriod.AsDuration(), groupConfig.MaxMetadataLen})
+	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, group.Config{MaxExecutionPeriod: groupConfig.MaxExecutionPeriod.AsDuration(), MaxMetadataLen: groupConfig.MaxMetadataLen})
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
 	return k, runtime.WrapAppModule(m)
 }

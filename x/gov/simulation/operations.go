@@ -28,6 +28,7 @@ var (
 )
 
 // Simulation operation weights constants
+//nolint:gosec // these are not hard-coded credentials.
 const (
 	OpWeightMsgDeposit      = "op_weight_msg_deposit"
 	OpWeightMsgVote         = "op_weight_msg_vote"
@@ -436,7 +437,7 @@ func randomProposalID(r *rand.Rand, k keeper.Keeper,
 	}
 
 	proposal, ok := k.GetProposal(ctx, proposalID)
-	if !ok || v1.ProposalStatus(proposal.Status) != status {
+	if !ok || proposal.Status != status {
 		return proposalID, false
 	}
 

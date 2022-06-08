@@ -368,33 +368,33 @@ func MemberToMemberRequest(m *Member) MemberRequest {
 	}
 }
 
-func (p Proposal) ValidateBasic() error {
-	if p.Id == 0 {
+func (g Proposal) ValidateBasic() error {
+	if g.Id == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
 	}
-	_, err := sdk.AccAddressFromBech32(p.GroupPolicyAddress)
+	_, err := sdk.AccAddressFromBech32(g.GroupPolicyAddress)
 	if err != nil {
 		return sdkerrors.Wrap(err, "proposal group policy address")
 	}
-	if p.GroupVersion == 0 {
+	if g.GroupVersion == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "proposal group version")
 	}
-	if p.GroupPolicyVersion == 0 {
+	if g.GroupPolicyVersion == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "proposal group policy version")
 	}
-	_, err = p.FinalTallyResult.GetYesCount()
+	_, err = g.FinalTallyResult.GetYesCount()
 	if err != nil {
 		return sdkerrors.Wrap(err, "proposal FinalTallyResult yes count")
 	}
-	_, err = p.FinalTallyResult.GetNoCount()
+	_, err = g.FinalTallyResult.GetNoCount()
 	if err != nil {
 		return sdkerrors.Wrap(err, "proposal FinalTallyResult no count")
 	}
-	_, err = p.FinalTallyResult.GetAbstainCount()
+	_, err = g.FinalTallyResult.GetAbstainCount()
 	if err != nil {
 		return sdkerrors.Wrap(err, "proposal FinalTallyResult abstain count")
 	}
-	_, err = p.FinalTallyResult.GetNoWithVetoCount()
+	_, err = g.FinalTallyResult.GetNoWithVetoCount()
 	if err != nil {
 		return sdkerrors.Wrap(err, "proposal FinalTallyResult veto count")
 	}

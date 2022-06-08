@@ -5,16 +5,14 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
 	"github.com/pkg/errors"
-	"golang.org/x/exp/slices"
 	"reflect"
 )
 
 type container struct {
 	*debugConfig
 
-	resolvers          map[reflect.Type]resolver
-	preferences        []preference
-	preferredResolvers map[string]resolver
+	resolvers   map[reflect.Type]resolver
+	preferences map[string]preference
 
 	moduleKeys map[string]*moduleKey
 
@@ -30,13 +28,12 @@ type resolveFrame struct {
 
 func newContainer(cfg *debugConfig) *container {
 	return &container{
-		debugConfig:        cfg,
-		resolvers:          map[reflect.Type]resolver{},
-		moduleKeys:         map[string]*moduleKey{},
-		preferences:        []preference{},
-		preferredResolvers: map[string]resolver{},
-		callerStack:        nil,
-		callerMap:          map[Location]bool{},
+		debugConfig: cfg,
+		resolvers:   map[reflect.Type]resolver{},
+		moduleKeys:  map[string]*moduleKey{},
+		preferences: map[string]preference{},
+		callerStack: nil,
+		callerMap:   map[Location]bool{},
 	}
 }
 
@@ -81,8 +78,13 @@ func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]
 
 func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, error) {
 	c.logf("Resolving %v", typ)
-	if vr, ok := c.preferredResolvers[fullyQualifiedModuleTypeName(typ, key)]; ok {
-		return vr, nil
+
+	pr, err := c.getPreferredResolver(typ, key)
+	if err != nil {
+		return nil, err
+	}
+	if pr != nil {
+		return pr, nil
 	}
 
 	if vr, ok := c.resolvers[typ]; ok {
@@ -143,25 +145,44 @@ func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, err
 		if len(matches) == 1 {
 			res = c.resolvers[matches[0]]
 			c.logf("Implicitly registering resolver %v for interface type %v", matches[0], typ)
-			c.preferredResolvers[fullyQualifiedModuleTypeName(typ, key)] = res
+			c.resolvers[typ] = res
 		} else if len(matches) > 1 {
-			p, found := findPreference(c.preferences, typ, key)
-			if !found {
-				return nil, &ErrMultipleImplicitInterfaceBindings{Interface: typ, Matches: matches}
-			}
-			i := slices.IndexFunc(matches, func(t reflect.Type) bool {
-				return fullyQualifiedTypeName(t) == p.Implementation
-			})
-			if i == -1 {
-				return nil, &ErrNoTypeForExplicitBindingFound{Preference: p}
-			}
-			c.logf("Registering resolver %v for interface type %v by explicit preference", matches[i], typ)
-			res = c.resolvers[matches[i]]
-			c.preferredResolvers[fullyQualifiedModuleTypeName(typ, key)] = res
+			return nil, &ErrMultipleImplicitInterfaceBindings{Interface: typ, Matches: matches}
 		}
 	}
 
 	return res, nil
+}
+
+func (c *container) getPreferredResolver(typ reflect.Type, key *moduleKey) (resolver, error) {
+	var pref preference
+	var found bool
+
+	// module scoped binding takes precedence
+	pref, found = c.preferences[preferenceKeyFromType(typ, key)]
+
+	// fallback to global scope binding
+	if !found {
+		pref, found = c.preferences[preferenceKeyFromType(typ, nil)]
+	}
+
+	if !found {
+		return nil, nil
+	}
+
+	if pref.resolver != nil {
+		return pref.resolver, nil
+	}
+
+	for k, res := range c.resolvers {
+		if fullyQualifiedTypeName(k) == pref.implTypeName {
+			c.logf("Registering resolver %v for interface type %v by explicit preference", k, typ)
+			pref.resolver = res
+			return res, nil
+		}
+	}
+
+	return nil, NewErrNoTypeForExplicitBindingFound(pref)
 }
 
 var stringType = reflect.TypeOf("")
@@ -454,7 +475,7 @@ func (c container) formatResolveStack() string {
 }
 
 func (c *container) addPreference(p preference) {
-	c.preferences = append(c.preferences, p)
+	c.preferences[preferenceKeyFromTypeName(p.interfaceName, p.moduleKey)] = p
 }
 
 func markGraphNodeAsUsed(node *graphviz.Node) {

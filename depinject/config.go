@@ -65,10 +65,14 @@ func PreferInModule(moduleName string, inTypeName string, outTypeName string) Co
 }
 
 func prefer(ctr *container, inTypeName string, outTypeName string, moduleName string) error {
+	var mk *moduleKey
+	if moduleName != "" {
+		mk = &moduleKey{name: moduleName}
+	}
 	ctr.addPreference(preference{
-		Interface:      inTypeName,
-		Implementation: outTypeName,
-		ModuleName:     moduleName,
+		interfaceName: inTypeName,
+		implTypeName:  outTypeName,
+		moduleKey:     mk,
 	})
 
 	return nil

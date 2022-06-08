@@ -708,6 +708,7 @@ func TestExplicitModuleBindings(t *testing.T) {
 					})),
 			&pond), "Given the explicit interface binding")
 
+	// naive module-scope binding test
 	require.NoError(t,
 		depinject.Inject(
 			depinject.Configs(
@@ -726,6 +727,7 @@ func TestExplicitModuleBindings(t *testing.T) {
 
 	require.IsType(t, pond.Duck, Mallard{})
 
+	// module-scoped explicit binding does not interfere with global scope bindings.
 	require.ErrorContains(t,
 		depinject.Inject(
 			depinject.Configs(
@@ -739,6 +741,23 @@ func TestExplicitModuleBindings(t *testing.T) {
 					func(duck Duck) Pond {
 						return Pond{Duck: duck}
 					}),
+				depinject.ProvideInModule(
+					"foo",
+					func(duck Duck) Pond {
+						return Pond{Duck: duck}
+					})),
+			&pond), "Multiple implementations found for interface")
+
+	// default to global binding if no module scoped binding was found
+	require.NoError(t,
+		depinject.Inject(
+			depinject.Configs(
+				depinject.Prefer(
+					"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Duck",
+					"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Mallard"),
+				depinject.Provide(
+					func(depinject.ModuleKey) Mallard { return Mallard{} },
+					func(depinject.ModuleKey) Canvasback { return Canvasback{} }),
 				depinject.ProvideInModule(
 					"foo",
 					func(duck Duck) Pond {

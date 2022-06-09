@@ -90,10 +90,7 @@ func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddres
 
 // SetDelegation sets a delegation.
 func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
-	delegatorAddress, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
-	if err != nil {
-		panic(err)
-	}
+	delegatorAddress := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress)
 
 	store := ctx.KVStore(k.storeKey)
 	b := types.MustMarshalDelegation(k.cdc, delegation)
@@ -102,10 +99,8 @@ func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 
 // RemoveDelegation removes a delegation
 func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) error {
-	delegatorAddress, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
-	if err != nil {
-		panic(err)
-	}
+	delegatorAddress := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress)
+
 	// TODO: Consider calling hooks outside of the store wrapper functions, it's unobvious.
 	if err := k.BeforeDelegationRemoved(ctx, delegatorAddress, delegation.GetValidatorAddr()); err != nil {
 		return err
@@ -275,10 +270,8 @@ func (k Keeper) HasMaxUnbondingDelegationEntries(ctx sdk.Context, delegatorAddr 
 
 // SetUnbondingDelegation sets the unbonding delegation and associated index.
 func (k Keeper) SetUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
-	delegatorAddress, err := sdk.AccAddressFromBech32(ubd.DelegatorAddress)
-	if err != nil {
-		panic(err)
-	}
+	delegatorAddress := sdk.MustAccAddressFromBech32(ubd.DelegatorAddress)
+
 	store := ctx.KVStore(k.storeKey)
 	bz := types.MustMarshalUBD(k.cdc, ubd)
 	addr, err := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
@@ -292,10 +285,7 @@ func (k Keeper) SetUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDeleg
 
 // RemoveUnbondingDelegation removes the unbonding delegation object and associated index.
 func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
-	delegatorAddress, err := sdk.AccAddressFromBech32(ubd.DelegatorAddress)
-	if err != nil {
-		panic(err)
-	}
+	delegatorAddress := sdk.MustAccAddressFromBech32(ubd.DelegatorAddress)
 
 	store := ctx.KVStore(k.storeKey)
 	addr, err := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
@@ -470,10 +460,7 @@ func (k Keeper) HasMaxRedelegationEntries(ctx sdk.Context, delegatorAddr sdk.Acc
 
 // SetRedelegation set a redelegation and associated index.
 func (k Keeper) SetRedelegation(ctx sdk.Context, red types.Redelegation) {
-	delegatorAddress, err := sdk.AccAddressFromBech32(red.DelegatorAddress)
-	if err != nil {
-		panic(err)
-	}
+	delegatorAddress := sdk.MustAccAddressFromBech32(red.DelegatorAddress)
 
 	store := ctx.KVStore(k.storeKey)
 	bz := types.MustMarshalRED(k.cdc, red)
@@ -530,10 +517,8 @@ func (k Keeper) IterateRedelegations(ctx sdk.Context, fn func(index int64, red t
 
 // RemoveRedelegation removes a redelegation object and associated index.
 func (k Keeper) RemoveRedelegation(ctx sdk.Context, red types.Redelegation) {
-	delegatorAddress, err := sdk.AccAddressFromBech32(red.DelegatorAddress)
-	if err != nil {
-		panic(err)
-	}
+	delegatorAddress := sdk.MustAccAddressFromBech32(red.DelegatorAddress)
+
 	store := ctx.KVStore(k.storeKey)
 	valSrcAddr, err := sdk.ValAddressFromBech32(red.ValidatorSrcAddress)
 	if err != nil {
@@ -653,10 +638,7 @@ func (k Keeper) Delegate(
 		return sdk.ZeroDec(), err
 	}
 
-	delegatorAddress, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
-	if err != nil {
-		panic(err)
-	}
+	delegatorAddress := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress)
 
 	// if subtractAccount is true then we are
 	// performing a delegation and not a redelegation, thus the source tokens are

@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/depinject"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
@@ -38,7 +39,7 @@ type txOutputs struct {
 	depinject.Out
 
 	TxConfig      client.TxConfig
-	BaseAppOption func(*baseapp.BaseApp)
+	BaseAppOption runtime.BaseAppOption
 }
 
 func provideModule(in txInputs) txOutputs {

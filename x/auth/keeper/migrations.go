@@ -4,6 +4,8 @@ import (
 	"github.com/gogo/protobuf/grpc"
 
 	v043 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v043"
+	v046 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v046"
+
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,4 +42,8 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 	})
 
 	return iterErr
+}
+
+func (m Migrator) MapAccAddrsToAccNum(ctx sdk.Context) error {
+	return v046.MigrateStore(ctx, m.keeper.key, m.keeper.cdc)
 }

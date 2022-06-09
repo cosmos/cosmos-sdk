@@ -132,9 +132,9 @@ func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, err
 		c.addResolver(mapType, &mapOfOnePerModuleResolver{r})
 	}
 
-	res, _ := c.resolverByType(typ)
+	res, found := c.resolverByType(typ)
 
-	if res == nil && typ.Kind() == reflect.Interface {
+	if !found && typ.Kind() == reflect.Interface {
 		matches := map[reflect.Type]reflect.Type{}
 		var resolverType reflect.Type
 		for _, r := range c.resolvers {

@@ -122,11 +122,11 @@ func fullTypeName(typeName string) string {
 }
 
 func (s *preferSuite) ThereIsAGlobalPreferenceForA(preferredType string, interfaceType string) {
-	s.addConfig(depinject.Prefer(fullTypeName(interfaceType), fullTypeName(preferredType)))
+	s.addConfig(depinject.BindInterface(fullTypeName(interfaceType), fullTypeName(preferredType)))
 }
 
 func (s *preferSuite) ThereIsAPreferenceForAInModule(preferredType string, interfaceType string, moduleName string) {
-	s.addConfig(depinject.PreferInModule(moduleName, fullTypeName(interfaceType), fullTypeName(preferredType)))
+	s.addConfig(depinject.BindInterfaceInModule(moduleName, fullTypeName(interfaceType), fullTypeName(preferredType)))
 }
 
 func (s *preferSuite) ModuleWantsADuck(module string) {

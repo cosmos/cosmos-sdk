@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"math"
 	"sort"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -139,6 +140,68 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
 			ctx := sdk.WrapSDKContext(suite.ctx)
 
 			res, err := suite.queryClient.Account(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(res)
+			}
+
+			tc.posttests(res)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGRPCQueryAccountAddressById() {
+	var req *types.QueryAccountAddressByIdRequest
+	_, _, addr := testdata.KeyTestPubAddr()
+
+	testCases := []struct {
+		msg       string
+		malleate  func()
+		expPass   bool
+		posttests func(res *types.QueryAccountAddressByIdResponse)
+	}{
+		{
+			"invalid request",
+			func() {
+				req = &types.QueryAccountAddressByIdRequest{Id: -1}
+			},
+			false,
+			func(res *types.QueryAccountAddressByIdResponse) {},
+		},
+		{
+			"account address not found",
+			func() {
+				req = &types.QueryAccountAddressByIdRequest{Id: math.MaxInt64}
+			},
+			false,
+			func(res *types.QueryAccountAddressByIdResponse) {},
+		},
+		{
+			"success",
+			func() {
+				account := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
+				suite.app.AccountKeeper.SetAccount(suite.ctx, account)
+				req = &types.QueryAccountAddressByIdRequest{Id: int64(account.GetAccountNumber())}
+			},
+			true,
+			func(res *types.QueryAccountAddressByIdResponse) {
+				suite.Require().NotNil(res.AccountAddress)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.ctx)
+
+			res, err := suite.queryClient.AccountAddressById(ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

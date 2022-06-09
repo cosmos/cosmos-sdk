@@ -1,6 +1,3 @@
-//go:build norace
-// +build norace
-
 package testutil
 
 import (

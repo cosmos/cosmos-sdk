@@ -120,15 +120,15 @@ In the above situation registering a preference for a given interface binding ma
 ```golang
 depinject.Inject(
   depinject.Configs(
-  depinject.Prefer(
-    "duck.Duck",
-    "duck.Mallard"),
-   depinject.Provide(
-     func() Mallard { return Mallard{} },
-     func() Canvasback { return Canvasback{} }),
-     func(duck Duck) APond {
-       return Pond{Duck: duck}
-    }),
+    depinject.Prefer(
+      "duck.Duck",
+      "duck.Mallard"),
+     depinject.Provide(
+       func() Mallard { return Mallard{} },
+       func() Canvasback { return Canvasback{} },
+       func(duck Duck) APond {
+         return Pond{Duck: duck}
+      })),
    &pond)
 ```
 
@@ -137,7 +137,7 @@ Now `depinject` has enough information to provide `Mallard` as an input to `APon
 ### Full example in real app
 
 ```go
-//ego:embed app.yaml
+//go:embed app.yaml
 var appConfigYaml []byte
 
 var appConfig = appconfig.LoadYAML(appConfigYaml)

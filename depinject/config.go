@@ -48,43 +48,43 @@ func provide(ctr *container, key *moduleKey, providers []interface{}) error {
 	return nil
 }
 
-// Prefer defines a container configuration for an explicit interface binding of inTypeName to outTypeName
+// BindInterface defines a container configuration for an explicit interface binding of inTypeName to outTypeName
 // in global scope, for example,
 //
-// Prefer(
+// BindInterface(
 //	"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Duck",
 //	"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Canvasback")
 //
 // configures the container to *always* provide a Canvasback instance when an input of interface type Duck is
 // requested as an input.
-func Prefer(inTypeName string, outTypeName string) Config {
+func BindInterface(inTypeName string, outTypeName string) Config {
 	return containerConfig(func(ctr *container) error {
-		return prefer(ctr, inTypeName, outTypeName, "")
+		return bindInterface(ctr, inTypeName, outTypeName, "")
 	})
 }
 
-// PreferInModule defines a container configuration for an explicit interface binding of inTypeName to outTypeName
+// BindInterfaceInModule defines a container configuration for an explicit interface binding of inTypeName to outTypeName
 // in the scope of the module with name moduleName.  For example, given the configuration
 //
-// PreferInModule(
+// BindInterfaceInModule(
 //  "moduleFoo",
 //	"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Duck",
 //	"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Canvasback")
 //
 // where Duck is an interface and Canvasback implements Duck, the container will attempt to provide a Canvasback
 // instance where Duck is requested as an input from module "moduleFoo".
-func PreferInModule(moduleName string, inTypeName string, outTypeName string) Config {
+func BindInterfaceInModule(moduleName string, inTypeName string, outTypeName string) Config {
 	return containerConfig(func(ctr *container) error {
-		return prefer(ctr, inTypeName, outTypeName, moduleName)
+		return bindInterface(ctr, inTypeName, outTypeName, moduleName)
 	})
 }
 
-func prefer(ctr *container, inTypeName string, outTypeName string, moduleName string) error {
+func bindInterface(ctr *container, inTypeName string, outTypeName string, moduleName string) error {
 	var mk *moduleKey
 	if moduleName != "" {
 		mk = &moduleKey{name: moduleName}
 	}
-	ctr.addPreference(preference{
+	ctr.addBinding(interfaceBinding{
 		interfaceName: inTypeName,
 		implTypeName:  outTypeName,
 		moduleKey:     mk,

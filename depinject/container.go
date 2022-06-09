@@ -11,8 +11,8 @@ import (
 type container struct {
 	*debugConfig
 
-	resolvers   map[string]resolver
-	preferences map[string]preference
+	resolvers         map[string]resolver
+	interfaceBindings map[string]interfaceBinding
 
 	moduleKeys map[string]*moduleKey
 
@@ -26,14 +26,24 @@ type resolveFrame struct {
 	typ reflect.Type
 }
 
+// interfaceBinding defines a type binding for interfaceName to type implTypeName when being provided as a
+// dependency to the module identified by moduleKey.  If moduleKey is nil then the type binding is applied globally,
+// not module-scoped.
+type interfaceBinding struct {
+	interfaceName string
+	implTypeName  string
+	moduleKey     *moduleKey
+	resolver      resolver
+}
+
 func newContainer(cfg *debugConfig) *container {
 	return &container{
-		debugConfig: cfg,
-		resolvers:   map[string]resolver{},
-		moduleKeys:  map[string]*moduleKey{},
-		preferences: map[string]preference{},
-		callerStack: nil,
-		callerMap:   map[Location]bool{},
+		debugConfig:       cfg,
+		resolvers:         map[string]resolver{},
+		moduleKeys:        map[string]*moduleKey{},
+		interfaceBindings: map[string]interfaceBinding{},
+		callerStack:       nil,
+		callerMap:         map[Location]bool{},
 	}
 }
 
@@ -79,7 +89,7 @@ func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]
 func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, error) {
 	c.logf("Resolving %v", typ)
 
-	pr, err := c.getPreferredResolver(typ, key)
+	pr, err := c.getExplicitResolver(typ, key)
 	if err != nil {
 		return nil, err
 	}
@@ -156,16 +166,16 @@ func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, err
 	return res, nil
 }
 
-func (c *container) getPreferredResolver(typ reflect.Type, key *moduleKey) (resolver, error) {
-	var pref preference
+func (c *container) getExplicitResolver(typ reflect.Type, key *moduleKey) (resolver, error) {
+	var pref interfaceBinding
 	var found bool
 
 	// module scoped binding takes precedence
-	pref, found = c.preferences[preferenceKeyFromType(typ, key)]
+	pref, found = c.interfaceBindings[bindingKeyFromType(typ, key)]
 
 	// fallback to global scope binding
 	if !found {
-		pref, found = c.preferences[preferenceKeyFromType(typ, nil)]
+		pref, found = c.interfaceBindings[bindingKeyFromType(typ, nil)]
 	}
 
 	if !found {
@@ -178,7 +188,7 @@ func (c *container) getPreferredResolver(typ reflect.Type, key *moduleKey) (reso
 
 	res, ok := c.resolverByTypeName(pref.implTypeName)
 	if ok {
-		//c.logf("Registering resolver %v for interface type %v by explicit preference", res.getType(), typ)
+		c.logf("Registering resolver %v for interface type %v by explicit binding", res.getType(), typ)
 		pref.resolver = res
 		return res, nil
 
@@ -476,8 +486,27 @@ func (c container) formatResolveStack() string {
 	return buf.String()
 }
 
-func (c *container) addPreference(p preference) {
-	c.preferences[preferenceKeyFromTypeName(p.interfaceName, p.moduleKey)] = p
+func fullyQualifiedTypeName(typ reflect.Type) string {
+	pkgType := typ
+	if typ.Kind() == reflect.Pointer || typ.Kind() == reflect.Slice || typ.Kind() == reflect.Map || typ.Kind() == reflect.Array {
+		pkgType = typ.Elem()
+	}
+	return fmt.Sprintf("%s/%v", pkgType.PkgPath(), typ)
+}
+
+func bindingKeyFromTypeName(typeName string, key *moduleKey) string {
+	if key == nil {
+		return fmt.Sprintf("%s;", typeName)
+	}
+	return fmt.Sprintf("%s;%s", typeName, key.name)
+}
+
+func bindingKeyFromType(typ reflect.Type, key *moduleKey) string {
+	return bindingKeyFromTypeName(fullyQualifiedTypeName(typ), key)
+}
+
+func (c *container) addBinding(p interfaceBinding) {
+	c.interfaceBindings[bindingKeyFromTypeName(p.interfaceName, p.moduleKey)] = p
 }
 
 func (c *container) addResolver(typ reflect.Type, r resolver) {

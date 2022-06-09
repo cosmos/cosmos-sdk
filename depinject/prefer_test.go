@@ -2,9 +2,10 @@ package depinject_test
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/regen-network/gocuke"
 	"github.com/stretchr/testify/assert"
@@ -121,11 +122,11 @@ func fullTypeName(typeName string) string {
 }
 
 func (s *preferSuite) ThereIsAGlobalPreferenceForA(preferredType string, interfaceType string) {
-	s.addConfig(depinject.Prefer(mungeTypeName(interfaceType), mungeTypeName(preferredType)))
+	s.addConfig(depinject.Prefer(fullTypeName(interfaceType), fullTypeName(preferredType)))
 }
 
 func (s *preferSuite) ThereIsAPreferenceForAInModule(preferredType string, interfaceType string, moduleName string) {
-	s.addConfig(depinject.PreferInModule(moduleName, mungeTypeName(interfaceType), mungeTypeName(preferredType)))
+	s.addConfig(depinject.PreferInModule(moduleName, fullTypeName(interfaceType), fullTypeName(preferredType)))
 }
 
 func (s *preferSuite) ModuleWantsADuck(module string) {

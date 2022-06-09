@@ -196,17 +196,9 @@ func GetConfigFromEnv() (*Config, error) {
 }
 
 func parseEnvDuration(input string) (time.Duration, error) {
-	var duration time.Duration
-
-	inputUInt, err := strconv.ParseUint(input, 10, 32)
-	if err == nil {
-		duration = time.Millisecond * time.Duration(inputUInt)
-	} else {
-		duration, err = time.ParseDuration(input)
-	}
-
+	duration, err := time.ParseDuration(input)
 	if err != nil {
-		return 0, fmt.Errorf("could not parse \"%s\" into either a duration or uint (milliseconds)", input)
+		return 0, fmt.Errorf("could not parse \"%s\" into a duration", input)
 	}
 
 	if duration <= 0 {

@@ -47,6 +47,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [\#12005](https://github.com/cosmos/cosmos-sdk/pull/12005) Fix cosmovisor binary usage for pre-upgrade
 
+### CLI Breaking Changes
+
+* [\#12188](https://github.com/cosmos/cosmos-sdk/pull/12188) Remove the possibility to set a time with only a number. `DAEMON_POLL_INTERVAL` env variable now only supports a duration (e.g. `100ms`, `30s`, `20m`).
+
 ## v1.1.0 2022-10-02
 
 ### Features

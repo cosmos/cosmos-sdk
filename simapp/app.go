@@ -227,6 +227,7 @@ func NewSimApp(
 		&app.FeeGrantKeeper,
 		&app.StakingKeeper,
 		&app.NFTKeeper,
+		&app.CrisisKeeper,
 		&msgServiceRouter,
 	); err != nil {
 		panic(err)

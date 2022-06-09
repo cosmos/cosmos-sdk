@@ -1,11 +1,16 @@
 package crisis
 
 import (
+	modulev1 "cosmossdk.io/api/cosmos/crisis/module/v1"
+	"cosmossdk.io/core/appmodule"
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/depinject"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"time"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -60,7 +65,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the capability module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *runtime.ServeMux) {}
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *gwruntime.ServeMux) {}
 
 // GetTxCmd returns the root tx command for the crisis module.
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -163,4 +168,45 @@ func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	EndBlocker(ctx, *am.keeper)
 	return []abci.ValidatorUpdate{}
+}
+
+func init() {
+	appmodule.Register(
+		&modulev1.Module{},
+		appmodule.Provide(
+			provideModuleBasic,
+			provideModule,
+		),
+	)
+}
+
+type crisisInputs struct {
+	depinject.In
+
+	Cdc        codec.Codec
+	Config     modulev1.Module
+	Subspace   paramstypes.Subspace
+	BankKeeper types.SupplyKeeper `key:"cosmos.bank.v1.Keeper"`
+}
+
+type crisisOutputs struct {
+	depinject.Out
+
+	CrisisKeeper keeper.Keeper `key:"cosmos.crisis.v1.Keeper"`
+	Module       runtime.AppModuleWrapper
+}
+
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+func provideModule(in crisisInputs) crisisOutputs {
+	k := keeper.NewKeeper(
+		in.Subspace,
+		uint(in.Config.InvalidCheckPeriod),
+		in.BankKeeper,
+		in.Config.FeeCollectorName,
+	)
+	m := NewAppModule(&k, in.Config.SkipGenesisInvariants)
+	return crisisOutputs{CrisisKeeper: k, Module: runtime.WrapAppModule(m)}
 }

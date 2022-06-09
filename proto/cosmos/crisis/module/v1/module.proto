@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package cosmos.crisis.module.v1;
+
+import "cosmos/app/v1alpha1/module.proto";
+
+// Module is the config object of the crisis module.
+message Module {
+  option (cosmos.app.v1alpha1.module) = {
+    go_import: "github.com/cosmos/cosmos-sdk/x/crisis"
+  };
+
+  // Invalid Check Period
+  uint32 invalid_check_period = 1;
+
+  string fee_collector_name = 2;
+
+  bool skip_genesis_invariants = 3;
+}

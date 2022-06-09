@@ -103,3 +103,7 @@ modules:
   - name: nft
     config:
       "@type": cosmos.nft.module.v1.Module
+
+  - name: crisis
+    config:
+      "@type": cosmos.crisis.module.v1.Module

@@ -36,6 +36,6 @@ func AddressStoreKey(addr sdk.AccAddress) []byte {
 	return append(AddressStoreKeyPrefix, addr.Bytes()...)
 }
 
-func AccountNumberStoreKey(accountNumber uint64) []byte {
+func AccountNumberStoreKey(accountNumber int64) []byte {
 	return append(AccountNumberStoreKeyPrefix, []byte(strconv.Itoa(int(accountNumber)))...)
 }

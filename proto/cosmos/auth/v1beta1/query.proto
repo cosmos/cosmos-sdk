@@ -24,9 +24,9 @@ service Query {
     option (google.api.http).get = "/cosmos/auth/v1beta1/accounts/{address}";
   }
 
-  // AccountById returns account details based on account id 
-  rpc AccountById(QueryAccountByIdRequest) returns (QueryAccountByIdResponse) {
-    option (google.api.http).get = "/cosmos/auth/v1beta1/account_by_id/{id}";
+  // AccountAddressById returns account address based on account id 
+  rpc AccountAddressById(QueryAccountAddressByIdRequest) returns (QueryAccountAddressByIdResponse) {
+    option (google.api.http).get = "/cosmos/auth/v1beta1/address_by_id/{id}";
   }
 
   // Params queries all parameters.
@@ -158,13 +158,13 @@ message AddressStringToBytesResponse {
   bytes address_bytes = 1;
 }
 
-// QueryAccountByIdRequest is the request type for AccountById rpc method
-message QueryAccountByIdRequest{
-  uint64 id = 1;
+// QueryAccountAddressByIdRequest is the request type for AccountAddressById rpc method
+message QueryAccountAddressByIdRequest{
+  int64 id = 1;
 }
 
-// QueryAccountByIdResponse is the response type for AccountById rpc method
-message QueryAccountByIdResponse {
+// QueryAccountAddressByIdResponse is the response type for AccountAddressById rpc method
+message QueryAccountAddressByIdResponse {
   // account defines the account of the corresponding address.
-  google.protobuf.Any account = 1 [(cosmos_proto.accepts_interface) = "AccountI"];
+  string account_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }

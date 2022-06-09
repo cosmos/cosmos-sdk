@@ -28,8 +28,8 @@ type QueryClient interface {
 	Accounts(ctx context.Context, in *QueryAccountsRequest, opts ...grpc.CallOption) (*QueryAccountsResponse, error)
 	// Account returns account details based on address.
 	Account(ctx context.Context, in *QueryAccountRequest, opts ...grpc.CallOption) (*QueryAccountResponse, error)
-	// AccountById returns account details based on account id
-	AccountById(ctx context.Context, in *QueryAccountByIdRequest, opts ...grpc.CallOption) (*QueryAccountByIdResponse, error)
+	// AccountAddressById returns account address based on account id
+	AccountAddressById(ctx context.Context, in *QueryAccountAddressByIdRequest, opts ...grpc.CallOption) (*QueryAccountAddressByIdResponse, error)
 	// Params queries all parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// ModuleAccounts returns all the existing module accounts.
@@ -76,9 +76,9 @@ func (c *queryClient) Account(ctx context.Context, in *QueryAccountRequest, opts
 	return out, nil
 }
 
-func (c *queryClient) AccountById(ctx context.Context, in *QueryAccountByIdRequest, opts ...grpc.CallOption) (*QueryAccountByIdResponse, error) {
-	out := new(QueryAccountByIdResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.auth.v1beta1.Query/AccountById", in, out, opts...)
+func (c *queryClient) AccountAddressById(ctx context.Context, in *QueryAccountAddressByIdRequest, opts ...grpc.CallOption) (*QueryAccountAddressByIdResponse, error) {
+	out := new(QueryAccountAddressByIdResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.auth.v1beta1.Query/AccountAddressById", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -140,8 +140,8 @@ type QueryServer interface {
 	Accounts(context.Context, *QueryAccountsRequest) (*QueryAccountsResponse, error)
 	// Account returns account details based on address.
 	Account(context.Context, *QueryAccountRequest) (*QueryAccountResponse, error)
-	// AccountById returns account details based on account id
-	AccountById(context.Context, *QueryAccountByIdRequest) (*QueryAccountByIdResponse, error)
+	// AccountAddressById returns account address based on account id
+	AccountAddressById(context.Context, *QueryAccountAddressByIdRequest) (*QueryAccountAddressByIdResponse, error)
 	// Params queries all parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// ModuleAccounts returns all the existing module accounts.
@@ -173,8 +173,8 @@ func (UnimplementedQueryServer) Accounts(context.Context, *QueryAccountsRequest)
 func (UnimplementedQueryServer) Account(context.Context, *QueryAccountRequest) (*QueryAccountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Account not implemented")
 }
-func (UnimplementedQueryServer) AccountById(context.Context, *QueryAccountByIdRequest) (*QueryAccountByIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AccountById not implemented")
+func (UnimplementedQueryServer) AccountAddressById(context.Context, *QueryAccountAddressByIdRequest) (*QueryAccountAddressByIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AccountAddressById not implemented")
 }
 func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
@@ -240,20 +240,20 @@ func _Query_Account_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_AccountById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryAccountByIdRequest)
+func _Query_AccountAddressById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAccountAddressByIdRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).AccountById(ctx, in)
+		return srv.(QueryServer).AccountAddressById(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.auth.v1beta1.Query/AccountById",
+		FullMethod: "/cosmos.auth.v1beta1.Query/AccountAddressById",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).AccountById(ctx, req.(*QueryAccountByIdRequest))
+		return srv.(QueryServer).AccountAddressById(ctx, req.(*QueryAccountAddressByIdRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -364,8 +364,8 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Query_Account_Handler,
 		},
 		{
-			MethodName: "AccountById",
-			Handler:    _Query_AccountById_Handler,
+			MethodName: "AccountAddressById",
+			Handler:    _Query_AccountAddressById_Handler,
 		},
 		{
 			MethodName: "Params",

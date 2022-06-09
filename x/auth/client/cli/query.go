@@ -42,7 +42,7 @@ func GetQueryCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		GetAccountCmd(),
-		GetAccountByIdCmd(),
+		GetAccountAddressByIdCmd(),
 		GetAccountsCmd(),
 		QueryParamsCmd(),
 		QueryModuleAccountsCmd(),
@@ -126,19 +126,18 @@ func GetAccountCmd() *cobra.Command {
 	return cmd
 }
 
-// GetAccountByIdCmd returns a query account that will display the state of the
-// account at a given account id.
-func GetAccountByIdCmd() *cobra.Command {
+// GetAccountAddressByIdCmd returns a query account address that will display the address of given account id.
+func GetAccountAddressByIdCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "account-by-id [id]",
-		Short: "Query for account by account id",
+		Use:   "address-by-id [id]",
+		Short: "Query for account address by account id",
 		Args:  cobra.ExactArgs(1),
 		Example: fmt.Sprintf(
-			"%s q auth account-by-id 1", version.AppName,
+			"%s q auth address-by-id 1", version.AppName,
 		),
 		Long: strings.TrimSpace(`Query the account by id:
 
-$ <appd> query auth account-by-id [id]
+$ <appd> query auth address-by-id [id]
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -146,18 +145,18 @@ $ <appd> query auth account-by-id [id]
 				return err
 			}
 
-			id, err := strconv.Atoi(args[0])
+			id, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil {
 				return err
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.AccountById(cmd.Context(), &types.QueryAccountByIdRequest{Id: uint64(id)})
+			res, err := queryClient.AccountAddressById(cmd.Context(), &types.QueryAccountAddressByIdRequest{Id: id})
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintProto(res.Account)
+			return clientCtx.PrintProto(res)
 		},
 	}
 

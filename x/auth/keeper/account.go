@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"github.com/cosmos/cosmos-sdk/internal/conv"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -31,8 +32,8 @@ func (ak AccountKeeper) HasAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
 	return store.Has(types.AddressStoreKey(addr))
 }
 
-// HasAccountById checks account exsits by id
-func (ak AccountKeeper) HasAccountById(ctx sdk.Context, id uint64) bool {
+// HasAccountAddressById checks account address exsits by id.
+func (ak AccountKeeper) HasAccountAddressById(ctx sdk.Context, id int64) bool {
 	store := ctx.KVStore(ak.key)
 	return store.Has(types.AccountNumberStoreKey(id))
 }
@@ -48,15 +49,15 @@ func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.A
 	return ak.decodeAccount(bz)
 }
 
-// GetAccount implements AccountKeeperI.
-func (ak AccountKeeper) GetAccountById(ctx sdk.Context, id uint64) types.AccountI {
+// GetAccountAddressById returns account address by id.
+func (ak AccountKeeper) GetAccountAddressById(ctx sdk.Context, id int64) string {
 	store := ctx.KVStore(ak.key)
 	bz := store.Get(types.AccountNumberStoreKey(id))
 	if bz == nil {
-		return nil
+		return ""
 	}
 
-	return ak.decodeAccount(bz)
+	return conv.UnsafeBytesToStr(bz)
 }
 
 // GetAllAccounts returns all accounts in the accountKeeper.
@@ -80,7 +81,7 @@ func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc types.AccountI) {
 	}
 
 	store.Set(types.AddressStoreKey(addr), bz)
-	store.Set(types.AccountNumberStoreKey(acc.GetAccountNumber()), bz)
+	store.Set(types.AccountNumberStoreKey(int64(acc.GetAccountNumber())), conv.UnsafeStrToBytes(addr.String()))
 }
 
 // RemoveAccount removes an account for the account mapper store.
@@ -89,6 +90,7 @@ func (ak AccountKeeper) RemoveAccount(ctx sdk.Context, acc types.AccountI) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(ak.key)
 	store.Delete(types.AddressStoreKey(addr))
+	store.Delete(types.AccountNumberStoreKey(int64(acc.GetAccountNumber())))
 }
 
 // IterateAccounts iterates over all the stored accounts and performs a callback function.

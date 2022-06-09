@@ -5982,25 +5982,25 @@ func (x *fastReflection_AddressStringToBytesResponse) ProtoMethods() *protoiface
 }
 
 var (
-	md_QueryAccountByIdRequest    protoreflect.MessageDescriptor
-	fd_QueryAccountByIdRequest_id protoreflect.FieldDescriptor
+	md_QueryAccountAddressByIdRequest    protoreflect.MessageDescriptor
+	fd_QueryAccountAddressByIdRequest_id protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_auth_v1beta1_query_proto_init()
-	md_QueryAccountByIdRequest = File_cosmos_auth_v1beta1_query_proto.Messages().ByName("QueryAccountByIdRequest")
-	fd_QueryAccountByIdRequest_id = md_QueryAccountByIdRequest.Fields().ByName("id")
+	md_QueryAccountAddressByIdRequest = File_cosmos_auth_v1beta1_query_proto.Messages().ByName("QueryAccountAddressByIdRequest")
+	fd_QueryAccountAddressByIdRequest_id = md_QueryAccountAddressByIdRequest.Fields().ByName("id")
 }
 
-var _ protoreflect.Message = (*fastReflection_QueryAccountByIdRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_QueryAccountAddressByIdRequest)(nil)
 
-type fastReflection_QueryAccountByIdRequest QueryAccountByIdRequest
+type fastReflection_QueryAccountAddressByIdRequest QueryAccountAddressByIdRequest
 
-func (x *QueryAccountByIdRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_QueryAccountByIdRequest)(x)
+func (x *QueryAccountAddressByIdRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryAccountAddressByIdRequest)(x)
 }
 
-func (x *QueryAccountByIdRequest) slowProtoReflect() protoreflect.Message {
+func (x *QueryAccountAddressByIdRequest) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_auth_v1beta1_query_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -6012,43 +6012,43 @@ func (x *QueryAccountByIdRequest) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_QueryAccountByIdRequest_messageType fastReflection_QueryAccountByIdRequest_messageType
-var _ protoreflect.MessageType = fastReflection_QueryAccountByIdRequest_messageType{}
+var _fastReflection_QueryAccountAddressByIdRequest_messageType fastReflection_QueryAccountAddressByIdRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryAccountAddressByIdRequest_messageType{}
 
-type fastReflection_QueryAccountByIdRequest_messageType struct{}
+type fastReflection_QueryAccountAddressByIdRequest_messageType struct{}
 
-func (x fastReflection_QueryAccountByIdRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_QueryAccountByIdRequest)(nil)
+func (x fastReflection_QueryAccountAddressByIdRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryAccountAddressByIdRequest)(nil)
 }
-func (x fastReflection_QueryAccountByIdRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_QueryAccountByIdRequest)
+func (x fastReflection_QueryAccountAddressByIdRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryAccountAddressByIdRequest)
 }
-func (x fastReflection_QueryAccountByIdRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryAccountByIdRequest
+func (x fastReflection_QueryAccountAddressByIdRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryAccountAddressByIdRequest
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_QueryAccountByIdRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryAccountByIdRequest
+func (x *fastReflection_QueryAccountAddressByIdRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryAccountAddressByIdRequest
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_QueryAccountByIdRequest) Type() protoreflect.MessageType {
-	return _fastReflection_QueryAccountByIdRequest_messageType
+func (x *fastReflection_QueryAccountAddressByIdRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryAccountAddressByIdRequest_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_QueryAccountByIdRequest) New() protoreflect.Message {
-	return new(fastReflection_QueryAccountByIdRequest)
+func (x *fastReflection_QueryAccountAddressByIdRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryAccountAddressByIdRequest)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_QueryAccountByIdRequest) Interface() protoreflect.ProtoMessage {
-	return (*QueryAccountByIdRequest)(x)
+func (x *fastReflection_QueryAccountAddressByIdRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryAccountAddressByIdRequest)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -6056,10 +6056,10 @@ func (x *fastReflection_QueryAccountByIdRequest) Interface() protoreflect.ProtoM
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_QueryAccountByIdRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Id != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.Id)
-		if !f(fd_QueryAccountByIdRequest_id, value) {
+func (x *fastReflection_QueryAccountAddressByIdRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Id != int64(0) {
+		value := protoreflect.ValueOfInt64(x.Id)
+		if !f(fd_QueryAccountAddressByIdRequest_id, value) {
 			return
 		}
 	}
@@ -6076,15 +6076,15 @@ func (x *fastReflection_QueryAccountByIdRequest) Range(f func(protoreflect.Field
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_QueryAccountByIdRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_QueryAccountAddressByIdRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountByIdRequest.id":
-		return x.Id != uint64(0)
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIdRequest.id":
+		return x.Id != int64(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountByIdRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountByIdRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6094,15 +6094,15 @@ func (x *fastReflection_QueryAccountByIdRequest) Has(fd protoreflect.FieldDescri
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryAccountByIdRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_QueryAccountAddressByIdRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountByIdRequest.id":
-		x.Id = uint64(0)
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIdRequest.id":
+		x.Id = int64(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountByIdRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountByIdRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6112,16 +6112,16 @@ func (x *fastReflection_QueryAccountByIdRequest) Clear(fd protoreflect.FieldDesc
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_QueryAccountByIdRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryAccountAddressByIdRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountByIdRequest.id":
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIdRequest.id":
 		value := x.Id
-		return protoreflect.ValueOfUint64(value)
+		return protoreflect.ValueOfInt64(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountByIdRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountByIdRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdRequest does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -6135,15 +6135,15 @@ func (x *fastReflection_QueryAccountByIdRequest) Get(descriptor protoreflect.Fie
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryAccountByIdRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_QueryAccountAddressByIdRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountByIdRequest.id":
-		x.Id = value.Uint()
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIdRequest.id":
+		x.Id = value.Int()
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountByIdRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountByIdRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6157,40 +6157,40 @@ func (x *fastReflection_QueryAccountByIdRequest) Set(fd protoreflect.FieldDescri
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryAccountByIdRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryAccountAddressByIdRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountByIdRequest.id":
-		panic(fmt.Errorf("field id of message cosmos.auth.v1beta1.QueryAccountByIdRequest is not mutable"))
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIdRequest.id":
+		panic(fmt.Errorf("field id of message cosmos.auth.v1beta1.QueryAccountAddressByIdRequest is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountByIdRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountByIdRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_QueryAccountByIdRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryAccountAddressByIdRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountByIdRequest.id":
-		return protoreflect.ValueOfUint64(uint64(0))
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIdRequest.id":
+		return protoreflect.ValueOfInt64(int64(0))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountByIdRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountByIdRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_QueryAccountByIdRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_QueryAccountAddressByIdRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.auth.v1beta1.QueryAccountByIdRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.auth.v1beta1.QueryAccountAddressByIdRequest", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -6198,7 +6198,7 @@ func (x *fastReflection_QueryAccountByIdRequest) WhichOneof(d protoreflect.Oneof
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_QueryAccountByIdRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_QueryAccountAddressByIdRequest) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -6209,7 +6209,7 @@ func (x *fastReflection_QueryAccountByIdRequest) GetUnknown() protoreflect.RawFi
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryAccountByIdRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_QueryAccountAddressByIdRequest) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -6221,7 +6221,7 @@ func (x *fastReflection_QueryAccountByIdRequest) SetUnknown(fields protoreflect.
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_QueryAccountByIdRequest) IsValid() bool {
+func (x *fastReflection_QueryAccountAddressByIdRequest) IsValid() bool {
 	return x != nil
 }
 
@@ -6231,9 +6231,9 @@ func (x *fastReflection_QueryAccountByIdRequest) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_QueryAccountByIdRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_QueryAccountAddressByIdRequest) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*QueryAccountByIdRequest)
+		x := input.Message.Interface().(*QueryAccountAddressByIdRequest)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6258,7 +6258,7 @@ func (x *fastReflection_QueryAccountByIdRequest) ProtoMethods() *protoiface.Meth
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*QueryAccountByIdRequest)
+		x := input.Message.Interface().(*QueryAccountAddressByIdRequest)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6293,7 +6293,7 @@ func (x *fastReflection_QueryAccountByIdRequest) ProtoMethods() *protoiface.Meth
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*QueryAccountByIdRequest)
+		x := input.Message.Interface().(*QueryAccountAddressByIdRequest)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6325,10 +6325,10 @@ func (x *fastReflection_QueryAccountByIdRequest) ProtoMethods() *protoiface.Meth
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAccountByIdRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAccountAddressByIdRequest: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAccountByIdRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAccountAddressByIdRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -6345,7 +6345,7 @@ func (x *fastReflection_QueryAccountByIdRequest) ProtoMethods() *protoiface.Meth
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Id |= uint64(b&0x7F) << shift
+					x.Id |= int64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -6386,25 +6386,25 @@ func (x *fastReflection_QueryAccountByIdRequest) ProtoMethods() *protoiface.Meth
 }
 
 var (
-	md_QueryAccountByIdResponse         protoreflect.MessageDescriptor
-	fd_QueryAccountByIdResponse_account protoreflect.FieldDescriptor
+	md_QueryAccountAddressByIdResponse                 protoreflect.MessageDescriptor
+	fd_QueryAccountAddressByIdResponse_account_address protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_auth_v1beta1_query_proto_init()
-	md_QueryAccountByIdResponse = File_cosmos_auth_v1beta1_query_proto.Messages().ByName("QueryAccountByIdResponse")
-	fd_QueryAccountByIdResponse_account = md_QueryAccountByIdResponse.Fields().ByName("account")
+	md_QueryAccountAddressByIdResponse = File_cosmos_auth_v1beta1_query_proto.Messages().ByName("QueryAccountAddressByIdResponse")
+	fd_QueryAccountAddressByIdResponse_account_address = md_QueryAccountAddressByIdResponse.Fields().ByName("account_address")
 }
 
-var _ protoreflect.Message = (*fastReflection_QueryAccountByIdResponse)(nil)
+var _ protoreflect.Message = (*fastReflection_QueryAccountAddressByIdResponse)(nil)
 
-type fastReflection_QueryAccountByIdResponse QueryAccountByIdResponse
+type fastReflection_QueryAccountAddressByIdResponse QueryAccountAddressByIdResponse
 
-func (x *QueryAccountByIdResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_QueryAccountByIdResponse)(x)
+func (x *QueryAccountAddressByIdResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryAccountAddressByIdResponse)(x)
 }
 
-func (x *QueryAccountByIdResponse) slowProtoReflect() protoreflect.Message {
+func (x *QueryAccountAddressByIdResponse) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_auth_v1beta1_query_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -6416,43 +6416,43 @@ func (x *QueryAccountByIdResponse) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_QueryAccountByIdResponse_messageType fastReflection_QueryAccountByIdResponse_messageType
-var _ protoreflect.MessageType = fastReflection_QueryAccountByIdResponse_messageType{}
+var _fastReflection_QueryAccountAddressByIdResponse_messageType fastReflection_QueryAccountAddressByIdResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryAccountAddressByIdResponse_messageType{}
 
-type fastReflection_QueryAccountByIdResponse_messageType struct{}
+type fastReflection_QueryAccountAddressByIdResponse_messageType struct{}
 
-func (x fastReflection_QueryAccountByIdResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_QueryAccountByIdResponse)(nil)
+func (x fastReflection_QueryAccountAddressByIdResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryAccountAddressByIdResponse)(nil)
 }
-func (x fastReflection_QueryAccountByIdResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_QueryAccountByIdResponse)
+func (x fastReflection_QueryAccountAddressByIdResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryAccountAddressByIdResponse)
 }
-func (x fastReflection_QueryAccountByIdResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryAccountByIdResponse
+func (x fastReflection_QueryAccountAddressByIdResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryAccountAddressByIdResponse
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_QueryAccountByIdResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryAccountByIdResponse
+func (x *fastReflection_QueryAccountAddressByIdResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryAccountAddressByIdResponse
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_QueryAccountByIdResponse) Type() protoreflect.MessageType {
-	return _fastReflection_QueryAccountByIdResponse_messageType
+func (x *fastReflection_QueryAccountAddressByIdResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryAccountAddressByIdResponse_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_QueryAccountByIdResponse) New() protoreflect.Message {
-	return new(fastReflection_QueryAccountByIdResponse)
+func (x *fastReflection_QueryAccountAddressByIdResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryAccountAddressByIdResponse)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_QueryAccountByIdResponse) Interface() protoreflect.ProtoMessage {
-	return (*QueryAccountByIdResponse)(x)
+func (x *fastReflection_QueryAccountAddressByIdResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryAccountAddressByIdResponse)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -6460,10 +6460,10 @@ func (x *fastReflection_QueryAccountByIdResponse) Interface() protoreflect.Proto
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_QueryAccountByIdResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Account != nil {
-		value := protoreflect.ValueOfMessage(x.Account.ProtoReflect())
-		if !f(fd_QueryAccountByIdResponse_account, value) {
+func (x *fastReflection_QueryAccountAddressByIdResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.AccountAddress != "" {
+		value := protoreflect.ValueOfString(x.AccountAddress)
+		if !f(fd_QueryAccountAddressByIdResponse_account_address, value) {
 			return
 		}
 	}
@@ -6480,15 +6480,15 @@ func (x *fastReflection_QueryAccountByIdResponse) Range(f func(protoreflect.Fiel
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_QueryAccountByIdResponse) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_QueryAccountAddressByIdResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountByIdResponse.account":
-		return x.Account != nil
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIdResponse.account_address":
+		return x.AccountAddress != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountByIdResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountByIdResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6498,15 +6498,15 @@ func (x *fastReflection_QueryAccountByIdResponse) Has(fd protoreflect.FieldDescr
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryAccountByIdResponse) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_QueryAccountAddressByIdResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountByIdResponse.account":
-		x.Account = nil
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIdResponse.account_address":
+		x.AccountAddress = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountByIdResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountByIdResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6516,16 +6516,16 @@ func (x *fastReflection_QueryAccountByIdResponse) Clear(fd protoreflect.FieldDes
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_QueryAccountByIdResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryAccountAddressByIdResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountByIdResponse.account":
-		value := x.Account
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIdResponse.account_address":
+		value := x.AccountAddress
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountByIdResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountByIdResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -6539,15 +6539,15 @@ func (x *fastReflection_QueryAccountByIdResponse) Get(descriptor protoreflect.Fi
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryAccountByIdResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_QueryAccountAddressByIdResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountByIdResponse.account":
-		x.Account = value.Message().Interface().(*anypb.Any)
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIdResponse.account_address":
+		x.AccountAddress = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountByIdResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountByIdResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6561,44 +6561,40 @@ func (x *fastReflection_QueryAccountByIdResponse) Set(fd protoreflect.FieldDescr
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryAccountByIdResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryAccountAddressByIdResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountByIdResponse.account":
-		if x.Account == nil {
-			x.Account = new(anypb.Any)
-		}
-		return protoreflect.ValueOfMessage(x.Account.ProtoReflect())
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIdResponse.account_address":
+		panic(fmt.Errorf("field account_address of message cosmos.auth.v1beta1.QueryAccountAddressByIdResponse is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountByIdResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountByIdResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_QueryAccountByIdResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryAccountAddressByIdResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountByIdResponse.account":
-		m := new(anypb.Any)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIdResponse.account_address":
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountByIdResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountByIdResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_QueryAccountByIdResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_QueryAccountAddressByIdResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.auth.v1beta1.QueryAccountByIdResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.auth.v1beta1.QueryAccountAddressByIdResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -6606,7 +6602,7 @@ func (x *fastReflection_QueryAccountByIdResponse) WhichOneof(d protoreflect.Oneo
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_QueryAccountByIdResponse) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_QueryAccountAddressByIdResponse) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -6617,7 +6613,7 @@ func (x *fastReflection_QueryAccountByIdResponse) GetUnknown() protoreflect.RawF
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryAccountByIdResponse) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_QueryAccountAddressByIdResponse) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -6629,7 +6625,7 @@ func (x *fastReflection_QueryAccountByIdResponse) SetUnknown(fields protoreflect
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_QueryAccountByIdResponse) IsValid() bool {
+func (x *fastReflection_QueryAccountAddressByIdResponse) IsValid() bool {
 	return x != nil
 }
 
@@ -6639,9 +6635,9 @@ func (x *fastReflection_QueryAccountByIdResponse) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_QueryAccountByIdResponse) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_QueryAccountAddressByIdResponse) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*QueryAccountByIdResponse)
+		x := input.Message.Interface().(*QueryAccountAddressByIdResponse)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6653,8 +6649,8 @@ func (x *fastReflection_QueryAccountByIdResponse) ProtoMethods() *protoiface.Met
 		var n int
 		var l int
 		_ = l
-		if x.Account != nil {
-			l = options.Size(x.Account)
+		l = len(x.AccountAddress)
+		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
@@ -6667,7 +6663,7 @@ func (x *fastReflection_QueryAccountByIdResponse) ProtoMethods() *protoiface.Met
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*QueryAccountByIdResponse)
+		x := input.Message.Interface().(*QueryAccountAddressByIdResponse)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6686,17 +6682,10 @@ func (x *fastReflection_QueryAccountByIdResponse) ProtoMethods() *protoiface.Met
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.Account != nil {
-			encoded, err := options.Marshal(x.Account)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+		if len(x.AccountAddress) > 0 {
+			i -= len(x.AccountAddress)
+			copy(dAtA[i:], x.AccountAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.AccountAddress)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -6711,7 +6700,7 @@ func (x *fastReflection_QueryAccountByIdResponse) ProtoMethods() *protoiface.Met
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*QueryAccountByIdResponse)
+		x := input.Message.Interface().(*QueryAccountAddressByIdResponse)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6743,17 +6732,17 @@ func (x *fastReflection_QueryAccountByIdResponse) ProtoMethods() *protoiface.Met
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAccountByIdResponse: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAccountAddressByIdResponse: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAccountByIdResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAccountAddressByIdResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Account", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field AccountAddress", wireType)
 				}
-				var msglen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -6763,27 +6752,23 @@ func (x *fastReflection_QueryAccountByIdResponse) ProtoMethods() *protoiface.Met
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					msglen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if msglen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + msglen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.Account == nil {
-					x.Account = &anypb.Any{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Account); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
+				x.AccountAddress = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -7344,17 +7329,17 @@ func (x *AddressStringToBytesResponse) GetAddressBytes() []byte {
 	return nil
 }
 
-// QueryAccountByIdRequest is the request type for AccountById rpc method
-type QueryAccountByIdRequest struct {
+// QueryAccountAddressByIdRequest is the request type for AccountAddressById rpc method
+type QueryAccountAddressByIdRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id int64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
-func (x *QueryAccountByIdRequest) Reset() {
-	*x = QueryAccountByIdRequest{}
+func (x *QueryAccountAddressByIdRequest) Reset() {
+	*x = QueryAccountAddressByIdRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_auth_v1beta1_query_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -7362,36 +7347,36 @@ func (x *QueryAccountByIdRequest) Reset() {
 	}
 }
 
-func (x *QueryAccountByIdRequest) String() string {
+func (x *QueryAccountAddressByIdRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*QueryAccountByIdRequest) ProtoMessage() {}
+func (*QueryAccountAddressByIdRequest) ProtoMessage() {}
 
-// Deprecated: Use QueryAccountByIdRequest.ProtoReflect.Descriptor instead.
-func (*QueryAccountByIdRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use QueryAccountAddressByIdRequest.ProtoReflect.Descriptor instead.
+func (*QueryAccountAddressByIdRequest) Descriptor() ([]byte, []int) {
 	return file_cosmos_auth_v1beta1_query_proto_rawDescGZIP(), []int{14}
 }
 
-func (x *QueryAccountByIdRequest) GetId() uint64 {
+func (x *QueryAccountAddressByIdRequest) GetId() int64 {
 	if x != nil {
 		return x.Id
 	}
 	return 0
 }
 
-// QueryAccountByIdResponse is the response type for AccountById rpc method
-type QueryAccountByIdResponse struct {
+// QueryAccountAddressByIdResponse is the response type for AccountAddressById rpc method
+type QueryAccountAddressByIdResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	// account defines the account of the corresponding address.
-	Account *anypb.Any `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
+	AccountAddress string `protobuf:"bytes,1,opt,name=account_address,json=accountAddress,proto3" json:"account_address,omitempty"`
 }
 
-func (x *QueryAccountByIdResponse) Reset() {
-	*x = QueryAccountByIdResponse{}
+func (x *QueryAccountAddressByIdResponse) Reset() {
+	*x = QueryAccountAddressByIdResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_auth_v1beta1_query_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -7399,22 +7384,22 @@ func (x *QueryAccountByIdResponse) Reset() {
 	}
 }
 
-func (x *QueryAccountByIdResponse) String() string {
+func (x *QueryAccountAddressByIdResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*QueryAccountByIdResponse) ProtoMessage() {}
+func (*QueryAccountAddressByIdResponse) ProtoMessage() {}
 
-// Deprecated: Use QueryAccountByIdResponse.ProtoReflect.Descriptor instead.
-func (*QueryAccountByIdResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use QueryAccountAddressByIdResponse.ProtoReflect.Descriptor instead.
+func (*QueryAccountAddressByIdResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_auth_v1beta1_query_proto_rawDescGZIP(), []int{15}
 }
 
-func (x *QueryAccountByIdResponse) GetAccount() *anypb.Any {
+func (x *QueryAccountAddressByIdResponse) GetAccountAddress() string {
 	if x != nil {
-		return x.Account
+		return x.AccountAddress
 	}
-	return nil
+	return ""
 }
 
 var File_cosmos_auth_v1beta1_query_proto protoreflect.FileDescriptor
@@ -7499,106 +7484,108 @@ var file_cosmos_auth_v1beta1_query_proto_rawDesc = []byte{
 	0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x23, 0x0a, 0x0d, 0x61, 0x64,
 	0x64, 0x72, 0x65, 0x73, 0x73, 0x5f, 0x62, 0x79, 0x74, 0x65, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28,
 	0x0c, 0x52, 0x0c, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x74, 0x65, 0x73, 0x22,
-	0x29, 0x0a, 0x17, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42,
-	0x79, 0x49, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x22, 0x58, 0x0a, 0x18, 0x51, 0x75,
-	0x65, 0x72, 0x79, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x79, 0x49, 0x64, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3c, 0x0a, 0x07, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e,
-	0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
-	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x42, 0x0c, 0xca,
-	0xb4, 0x2d, 0x08, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x49, 0x52, 0x07, 0x61, 0x63, 0x63,
-	0x6f, 0x75, 0x6e, 0x74, 0x32, 0xdb, 0x09, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x88,
-	0x01, 0x0a, 0x08, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x12, 0x29, 0x2e, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x25, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1f, 0x12, 0x1d, 0x2f, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x75, 0x74, 0x68, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x12, 0x8f, 0x01, 0x0a, 0x07, 0x41, 0x63,
-	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x28, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61,
+	0x30, 0x0a, 0x1e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x41,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x49, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x02, 0x69,
+	0x64, 0x22, 0x64, 0x0a, 0x1f, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e,
+	0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x49, 0x64, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x41, 0x0a, 0x0f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x5f,
+	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2,
+	0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x32, 0xf0, 0x09, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x12, 0x88, 0x01, 0x0a, 0x08, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x12, 0x29,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e,
+	0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x25, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1f, 0x12, 0x1d, 0x2f,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x75, 0x74, 0x68, 0x2f, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x12, 0x8f, 0x01, 0x0a,
+	0x07, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x28, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x29, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x63,
+	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2f, 0x82,
+	0xd3, 0xe4, 0x93, 0x02, 0x29, 0x12, 0x27, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61,
+	0x75, 0x74, 0x68, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x61, 0x63, 0x63, 0x6f,
+	0x75, 0x6e, 0x74, 0x73, 0x2f, 0x7b, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x7d, 0x12, 0xb0,
+	0x01, 0x0a, 0x12, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x42, 0x79, 0x49, 0x64, 0x12, 0x33, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61,
 	0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72,
-	0x79, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
-	0x29, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x63, 0x63, 0x6f, 0x75,
-	0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2f, 0x82, 0xd3, 0xe4, 0x93,
-	0x02, 0x29, 0x12, 0x27, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x75, 0x74, 0x68,
-	0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
-	0x73, 0x2f, 0x7b, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x7d, 0x12, 0x9b, 0x01, 0x0a, 0x0b,
-	0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x79, 0x49, 0x64, 0x12, 0x2c, 0x2e, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x79,
-	0x49, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2d, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x79, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42,
+	0x79, 0x49, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x34, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x41, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x49, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x22, 0x2f, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x29, 0x12, 0x27, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2f, 0x61, 0x75, 0x74, 0x68, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x61,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x5f, 0x62, 0x79, 0x5f, 0x69, 0x64, 0x2f, 0x7b, 0x69, 0x64,
+	0x7d, 0x12, 0x80, 0x01, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x27, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61,
+	0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x23, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1d, 0x12, 0x1b, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2f, 0x61, 0x75, 0x74, 0x68, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x70, 0x61,
+	0x72, 0x61, 0x6d, 0x73, 0x12, 0xa1, 0x01, 0x0a, 0x0e, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x41,
+	0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x12, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75,
+	0x65, 0x72, 0x79, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
+	0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x30, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e,
+	0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2c, 0x82, 0xd3, 0xe4, 0x93,
+	0x02, 0x26, 0x12, 0x24, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x75, 0x74, 0x68,
+	0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x5f,
+	0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x12, 0x88, 0x01, 0x0a, 0x0c, 0x42, 0x65, 0x63,
+	0x68, 0x33, 0x32, 0x50, 0x72, 0x65, 0x66, 0x69, 0x78, 0x12, 0x28, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
 	0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x79, 0x49, 0x64,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2f, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x29,
-	0x12, 0x27, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x75, 0x74, 0x68, 0x2f, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x5f, 0x62,
-	0x79, 0x5f, 0x69, 0x64, 0x2f, 0x7b, 0x69, 0x64, 0x7d, 0x12, 0x80, 0x01, 0x0a, 0x06, 0x50, 0x61,
-	0x72, 0x61, 0x6d, 0x73, 0x12, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75,
-	0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79,
-	0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x23, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1d, 0x12,
-	0x1b, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x75, 0x74, 0x68, 0x2f, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0xa1, 0x01, 0x0a,
-	0x0e, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x12,
-	0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4d, 0x6f, 0x64, 0x75, 0x6c,
-	0x65, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x30, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4d, 0x6f, 0x64, 0x75,
-	0x6c, 0x65, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x2c, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x26, 0x12, 0x24, 0x2f, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x75, 0x74, 0x68, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x5f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73,
-	0x12, 0x88, 0x01, 0x0a, 0x0c, 0x42, 0x65, 0x63, 0x68, 0x33, 0x32, 0x50, 0x72, 0x65, 0x66, 0x69,
-	0x78, 0x12, 0x28, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x42, 0x65, 0x63, 0x68, 0x33, 0x32, 0x50, 0x72,
-	0x65, 0x66, 0x69, 0x78, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x29, 0x2e, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2e, 0x42, 0x65, 0x63, 0x68, 0x33, 0x32, 0x50, 0x72, 0x65, 0x66, 0x69, 0x78, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x23, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1d, 0x12, 0x1b,
-	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x75, 0x74, 0x68, 0x2f, 0x76, 0x31, 0x62,
-	0x65, 0x74, 0x61, 0x31, 0x2f, 0x62, 0x65, 0x63, 0x68, 0x33, 0x32, 0x12, 0xb0, 0x01, 0x0a, 0x14,
-	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x74, 0x65, 0x73, 0x54, 0x6f, 0x53, 0x74,
-	0x72, 0x69, 0x6e, 0x67, 0x12, 0x30, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75,
-	0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x42, 0x79, 0x74, 0x65, 0x73, 0x54, 0x6f, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x31, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x41, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x74, 0x65, 0x73, 0x54, 0x6f, 0x53, 0x74, 0x72, 0x69, 0x6e,
-	0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x33, 0x82, 0xd3, 0xe4, 0x93, 0x02,
-	0x2d, 0x12, 0x2b, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x75, 0x74, 0x68, 0x2f,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x62, 0x65, 0x63, 0x68, 0x33, 0x32, 0x2f, 0x7b,
-	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x5f, 0x62, 0x79, 0x74, 0x65, 0x73, 0x7d, 0x12, 0xb1,
-	0x01, 0x0a, 0x14, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
-	0x54, 0x6f, 0x42, 0x79, 0x74, 0x65, 0x73, 0x12, 0x30, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x41, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x54, 0x6f, 0x42, 0x79, 0x74,
-	0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x31, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
-	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x54, 0x6f, 0x42,
-	0x79, 0x74, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x34, 0x82, 0xd3,
-	0xe4, 0x93, 0x02, 0x2e, 0x12, 0x2c, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x75,
-	0x74, 0x68, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x62, 0x65, 0x63, 0x68, 0x33,
-	0x32, 0x2f, 0x7b, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x5f, 0x73, 0x74, 0x72, 0x69, 0x6e,
-	0x67, 0x7d, 0x42, 0xc5, 0x01, 0x0a, 0x17, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x0a,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x30, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63,
+	0x42, 0x65, 0x63, 0x68, 0x33, 0x32, 0x50, 0x72, 0x65, 0x66, 0x69, 0x78, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x29, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74,
+	0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x42, 0x65, 0x63, 0x68, 0x33, 0x32,
+	0x50, 0x72, 0x65, 0x66, 0x69, 0x78, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x23,
+	0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1d, 0x12, 0x1b, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f,
+	0x61, 0x75, 0x74, 0x68, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x62, 0x65, 0x63,
+	0x68, 0x33, 0x32, 0x12, 0xb0, 0x01, 0x0a, 0x14, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42,
+	0x79, 0x74, 0x65, 0x73, 0x54, 0x6f, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x12, 0x30, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x74, 0x65, 0x73, 0x54,
+	0x6f, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x31,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x74, 0x65,
+	0x73, 0x54, 0x6f, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x22, 0x33, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2d, 0x12, 0x2b, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2f, 0x61, 0x75, 0x74, 0x68, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f,
+	0x62, 0x65, 0x63, 0x68, 0x33, 0x32, 0x2f, 0x7b, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x5f,
+	0x62, 0x79, 0x74, 0x65, 0x73, 0x7d, 0x12, 0xb1, 0x01, 0x0a, 0x14, 0x41, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x54, 0x6f, 0x42, 0x79, 0x74, 0x65, 0x73, 0x12,
+	0x30, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72,
+	0x69, 0x6e, 0x67, 0x54, 0x6f, 0x42, 0x79, 0x74, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x31, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53,
+	0x74, 0x72, 0x69, 0x6e, 0x67, 0x54, 0x6f, 0x42, 0x79, 0x74, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x34, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2e, 0x12, 0x2c, 0x2f, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x75, 0x74, 0x68, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0x3b, 0x61, 0x75, 0x74, 0x68, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02,
-	0x03, 0x43, 0x41, 0x58, 0xaa, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x75,
-	0x74, 0x68, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x13, 0x43, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x75, 0x74, 0x68, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0xe2, 0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x75, 0x74, 0x68, 0x5c, 0x56,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
-	0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x41, 0x75, 0x74,
-	0x68, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x61, 0x31, 0x2f, 0x62, 0x65, 0x63, 0x68, 0x33, 0x32, 0x2f, 0x7b, 0x61, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x5f, 0x73, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x7d, 0x42, 0xc5, 0x01, 0x0a, 0x17, 0x63,
+	0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f,
+	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x30, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e,
+	0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x75,
+	0x74, 0x68, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x61, 0x75, 0x74, 0x68, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x41, 0x58, 0xaa, 0x02, 0x13, 0x43,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0xca, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x75, 0x74, 0x68,
+	0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x5c, 0x41, 0x75, 0x74, 0x68, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47,
+	0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x41, 0x75, 0x74, 0x68, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -7615,26 +7602,26 @@ func file_cosmos_auth_v1beta1_query_proto_rawDescGZIP() []byte {
 
 var file_cosmos_auth_v1beta1_query_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_cosmos_auth_v1beta1_query_proto_goTypes = []interface{}{
-	(*QueryAccountsRequest)(nil),         // 0: cosmos.auth.v1beta1.QueryAccountsRequest
-	(*QueryAccountsResponse)(nil),        // 1: cosmos.auth.v1beta1.QueryAccountsResponse
-	(*QueryAccountRequest)(nil),          // 2: cosmos.auth.v1beta1.QueryAccountRequest
-	(*QueryModuleAccountsRequest)(nil),   // 3: cosmos.auth.v1beta1.QueryModuleAccountsRequest
-	(*QueryParamsResponse)(nil),          // 4: cosmos.auth.v1beta1.QueryParamsResponse
-	(*QueryAccountResponse)(nil),         // 5: cosmos.auth.v1beta1.QueryAccountResponse
-	(*QueryParamsRequest)(nil),           // 6: cosmos.auth.v1beta1.QueryParamsRequest
-	(*QueryModuleAccountsResponse)(nil),  // 7: cosmos.auth.v1beta1.QueryModuleAccountsResponse
-	(*Bech32PrefixRequest)(nil),          // 8: cosmos.auth.v1beta1.Bech32PrefixRequest
-	(*Bech32PrefixResponse)(nil),         // 9: cosmos.auth.v1beta1.Bech32PrefixResponse
-	(*AddressBytesToStringRequest)(nil),  // 10: cosmos.auth.v1beta1.AddressBytesToStringRequest
-	(*AddressBytesToStringResponse)(nil), // 11: cosmos.auth.v1beta1.AddressBytesToStringResponse
-	(*AddressStringToBytesRequest)(nil),  // 12: cosmos.auth.v1beta1.AddressStringToBytesRequest
-	(*AddressStringToBytesResponse)(nil), // 13: cosmos.auth.v1beta1.AddressStringToBytesResponse
-	(*QueryAccountByIdRequest)(nil),      // 14: cosmos.auth.v1beta1.QueryAccountByIdRequest
-	(*QueryAccountByIdResponse)(nil),     // 15: cosmos.auth.v1beta1.QueryAccountByIdResponse
-	(*v1beta1.PageRequest)(nil),          // 16: cosmos.base.query.v1beta1.PageRequest
-	(*anypb.Any)(nil),                    // 17: google.protobuf.Any
-	(*v1beta1.PageResponse)(nil),         // 18: cosmos.base.query.v1beta1.PageResponse
-	(*Params)(nil),                       // 19: cosmos.auth.v1beta1.Params
+	(*QueryAccountsRequest)(nil),            // 0: cosmos.auth.v1beta1.QueryAccountsRequest
+	(*QueryAccountsResponse)(nil),           // 1: cosmos.auth.v1beta1.QueryAccountsResponse
+	(*QueryAccountRequest)(nil),             // 2: cosmos.auth.v1beta1.QueryAccountRequest
+	(*QueryModuleAccountsRequest)(nil),      // 3: cosmos.auth.v1beta1.QueryModuleAccountsRequest
+	(*QueryParamsResponse)(nil),             // 4: cosmos.auth.v1beta1.QueryParamsResponse
+	(*QueryAccountResponse)(nil),            // 5: cosmos.auth.v1beta1.QueryAccountResponse
+	(*QueryParamsRequest)(nil),              // 6: cosmos.auth.v1beta1.QueryParamsRequest
+	(*QueryModuleAccountsResponse)(nil),     // 7: cosmos.auth.v1beta1.QueryModuleAccountsResponse
+	(*Bech32PrefixRequest)(nil),             // 8: cosmos.auth.v1beta1.Bech32PrefixRequest
+	(*Bech32PrefixResponse)(nil),            // 9: cosmos.auth.v1beta1.Bech32PrefixResponse
+	(*AddressBytesToStringRequest)(nil),     // 10: cosmos.auth.v1beta1.AddressBytesToStringRequest
+	(*AddressBytesToStringResponse)(nil),    // 11: cosmos.auth.v1beta1.AddressBytesToStringResponse
+	(*AddressStringToBytesRequest)(nil),     // 12: cosmos.auth.v1beta1.AddressStringToBytesRequest
+	(*AddressStringToBytesResponse)(nil),    // 13: cosmos.auth.v1beta1.AddressStringToBytesResponse
+	(*QueryAccountAddressByIdRequest)(nil),  // 14: cosmos.auth.v1beta1.QueryAccountAddressByIdRequest
+	(*QueryAccountAddressByIdResponse)(nil), // 15: cosmos.auth.v1beta1.QueryAccountAddressByIdResponse
+	(*v1beta1.PageRequest)(nil),             // 16: cosmos.base.query.v1beta1.PageRequest
+	(*anypb.Any)(nil),                       // 17: google.protobuf.Any
+	(*v1beta1.PageResponse)(nil),            // 18: cosmos.base.query.v1beta1.PageResponse
+	(*Params)(nil),                          // 19: cosmos.auth.v1beta1.Params
 }
 var file_cosmos_auth_v1beta1_query_proto_depIdxs = []int32{
 	16, // 0: cosmos.auth.v1beta1.QueryAccountsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
@@ -7643,28 +7630,27 @@ var file_cosmos_auth_v1beta1_query_proto_depIdxs = []int32{
 	19, // 3: cosmos.auth.v1beta1.QueryParamsResponse.params:type_name -> cosmos.auth.v1beta1.Params
 	17, // 4: cosmos.auth.v1beta1.QueryAccountResponse.account:type_name -> google.protobuf.Any
 	17, // 5: cosmos.auth.v1beta1.QueryModuleAccountsResponse.accounts:type_name -> google.protobuf.Any
-	17, // 6: cosmos.auth.v1beta1.QueryAccountByIdResponse.account:type_name -> google.protobuf.Any
-	0,  // 7: cosmos.auth.v1beta1.Query.Accounts:input_type -> cosmos.auth.v1beta1.QueryAccountsRequest
-	2,  // 8: cosmos.auth.v1beta1.Query.Account:input_type -> cosmos.auth.v1beta1.QueryAccountRequest
-	14, // 9: cosmos.auth.v1beta1.Query.AccountById:input_type -> cosmos.auth.v1beta1.QueryAccountByIdRequest
-	6,  // 10: cosmos.auth.v1beta1.Query.Params:input_type -> cosmos.auth.v1beta1.QueryParamsRequest
-	3,  // 11: cosmos.auth.v1beta1.Query.ModuleAccounts:input_type -> cosmos.auth.v1beta1.QueryModuleAccountsRequest
-	8,  // 12: cosmos.auth.v1beta1.Query.Bech32Prefix:input_type -> cosmos.auth.v1beta1.Bech32PrefixRequest
-	10, // 13: cosmos.auth.v1beta1.Query.AddressBytesToString:input_type -> cosmos.auth.v1beta1.AddressBytesToStringRequest
-	12, // 14: cosmos.auth.v1beta1.Query.AddressStringToBytes:input_type -> cosmos.auth.v1beta1.AddressStringToBytesRequest
-	1,  // 15: cosmos.auth.v1beta1.Query.Accounts:output_type -> cosmos.auth.v1beta1.QueryAccountsResponse
-	5,  // 16: cosmos.auth.v1beta1.Query.Account:output_type -> cosmos.auth.v1beta1.QueryAccountResponse
-	15, // 17: cosmos.auth.v1beta1.Query.AccountById:output_type -> cosmos.auth.v1beta1.QueryAccountByIdResponse
-	4,  // 18: cosmos.auth.v1beta1.Query.Params:output_type -> cosmos.auth.v1beta1.QueryParamsResponse
-	7,  // 19: cosmos.auth.v1beta1.Query.ModuleAccounts:output_type -> cosmos.auth.v1beta1.QueryModuleAccountsResponse
-	9,  // 20: cosmos.auth.v1beta1.Query.Bech32Prefix:output_type -> cosmos.auth.v1beta1.Bech32PrefixResponse
-	11, // 21: cosmos.auth.v1beta1.Query.AddressBytesToString:output_type -> cosmos.auth.v1beta1.AddressBytesToStringResponse
-	13, // 22: cosmos.auth.v1beta1.Query.AddressStringToBytes:output_type -> cosmos.auth.v1beta1.AddressStringToBytesResponse
-	15, // [15:23] is the sub-list for method output_type
-	7,  // [7:15] is the sub-list for method input_type
-	7,  // [7:7] is the sub-list for extension type_name
-	7,  // [7:7] is the sub-list for extension extendee
-	0,  // [0:7] is the sub-list for field type_name
+	0,  // 6: cosmos.auth.v1beta1.Query.Accounts:input_type -> cosmos.auth.v1beta1.QueryAccountsRequest
+	2,  // 7: cosmos.auth.v1beta1.Query.Account:input_type -> cosmos.auth.v1beta1.QueryAccountRequest
+	14, // 8: cosmos.auth.v1beta1.Query.AccountAddressById:input_type -> cosmos.auth.v1beta1.QueryAccountAddressByIdRequest
+	6,  // 9: cosmos.auth.v1beta1.Query.Params:input_type -> cosmos.auth.v1beta1.QueryParamsRequest
+	3,  // 10: cosmos.auth.v1beta1.Query.ModuleAccounts:input_type -> cosmos.auth.v1beta1.QueryModuleAccountsRequest
+	8,  // 11: cosmos.auth.v1beta1.Query.Bech32Prefix:input_type -> cosmos.auth.v1beta1.Bech32PrefixRequest
+	10, // 12: cosmos.auth.v1beta1.Query.AddressBytesToString:input_type -> cosmos.auth.v1beta1.AddressBytesToStringRequest
+	12, // 13: cosmos.auth.v1beta1.Query.AddressStringToBytes:input_type -> cosmos.auth.v1beta1.AddressStringToBytesRequest
+	1,  // 14: cosmos.auth.v1beta1.Query.Accounts:output_type -> cosmos.auth.v1beta1.QueryAccountsResponse
+	5,  // 15: cosmos.auth.v1beta1.Query.Account:output_type -> cosmos.auth.v1beta1.QueryAccountResponse
+	15, // 16: cosmos.auth.v1beta1.Query.AccountAddressById:output_type -> cosmos.auth.v1beta1.QueryAccountAddressByIdResponse
+	4,  // 17: cosmos.auth.v1beta1.Query.Params:output_type -> cosmos.auth.v1beta1.QueryParamsResponse
+	7,  // 18: cosmos.auth.v1beta1.Query.ModuleAccounts:output_type -> cosmos.auth.v1beta1.QueryModuleAccountsResponse
+	9,  // 19: cosmos.auth.v1beta1.Query.Bech32Prefix:output_type -> cosmos.auth.v1beta1.Bech32PrefixResponse
+	11, // 20: cosmos.auth.v1beta1.Query.AddressBytesToString:output_type -> cosmos.auth.v1beta1.AddressBytesToStringResponse
+	13, // 21: cosmos.auth.v1beta1.Query.AddressStringToBytes:output_type -> cosmos.auth.v1beta1.AddressStringToBytesResponse
+	14, // [14:22] is the sub-list for method output_type
+	6,  // [6:14] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_auth_v1beta1_query_proto_init() }
@@ -7843,7 +7829,7 @@ func file_cosmos_auth_v1beta1_query_proto_init() {
 			}
 		}
 		file_cosmos_auth_v1beta1_query_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryAccountByIdRequest); i {
+			switch v := v.(*QueryAccountAddressByIdRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -7855,7 +7841,7 @@ func file_cosmos_auth_v1beta1_query_proto_init() {
 			}
 		}
 		file_cosmos_auth_v1beta1_query_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryAccountByIdResponse); i {
+			switch v := v.(*QueryAccountAddressByIdResponse); i {
 			case 0:
 				return &v.state
 			case 1:

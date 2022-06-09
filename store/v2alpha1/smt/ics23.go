@@ -31,7 +31,7 @@ func createIcs23Proof(store *Store, key []byte) (*ics23.CommitmentProof, error) 
 		if err != nil {
 			return nil, err
 		}
-		ret.Proof = &ics23.CommitmentProof_Exist{&ics23.ExistenceProof{
+		ret.Proof = &ics23.CommitmentProof_Exist{Exist: &ics23.ExistenceProof{
 			Key:   path[:],
 			Value: value,
 			Leaf:  ics23.SmtSpec.LeafSpec,
@@ -42,7 +42,7 @@ func createIcs23Proof(store *Store, key []byte) (*ics23.CommitmentProof, error) 
 		if err != nil {
 			return nil, err
 		}
-		ret.Proof = &ics23.CommitmentProof_Nonexist{nonexist}
+		ret.Proof = &ics23.CommitmentProof_Nonexist{Nonexist: nonexist}
 	}
 	return ret, nil
 }

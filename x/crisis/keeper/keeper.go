@@ -76,7 +76,7 @@ func (k Keeper) AssertInvariants(ctx sdk.Context) {
 	invarRoutes := k.Routes()
 	n := len(invarRoutes)
 	for i, ir := range invarRoutes {
-		logger.Info("asserting crisis invariants", "inv", fmt.Sprint(i, "/", n), "name", ir.FullRoute())
+		logger.Info("asserting crisis invariants", "inv", fmt.Sprint(i+1, "/", n), "name", ir.FullRoute())
 		if res, stop := ir.Invar(ctx); stop {
 			// TODO: Include app name as part of context to allow for this to be
 			// variable.

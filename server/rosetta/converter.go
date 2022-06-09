@@ -212,7 +212,6 @@ func (c converter) UnsignedTx(ops []*rosettatypes.Operation) (tx authsigning.Tx,
 	}
 
 	return builder.GetTx(), nil
-
 }
 
 // Msg unmarshals the rosetta metadata to the given sdk.Msg
@@ -334,7 +333,6 @@ func (c converter) BalanceOps(status string, events []abci.Event) []*rosettatype
 // has changed and rosetta needs to reflect those changes too.
 // The balance operations are multiple, one for each denom.
 func sdkEventToBalanceOperations(status string, event abci.Event) (operations []*rosettatypes.Operation, isBalanceEvent bool) {
-
 	var (
 		accountIdentifier string
 		coinChange        sdk.Coins
@@ -345,16 +343,8 @@ func sdkEventToBalanceOperations(status string, event abci.Event) (operations []
 	default:
 		return nil, false
 	case banktypes.EventTypeCoinSpent:
-<<<<<<< HEAD
-		spender, err := sdk.AccAddressFromBech32((string)(event.Attributes[0].Value))
-		if err != nil {
-			panic(err)
-		}
+		spender := sdk.MustAccAddressFromBech32((string)(event.Attributes[0].Value))
 		coins, err := sdk.ParseCoinsNormalized((string)(event.Attributes[1].Value))
-=======
-		spender := sdk.MustAccAddressFromBech32(event.Attributes[0].Value)
-		coins, err := sdk.ParseCoinsNormalized(event.Attributes[1].Value)
->>>>>>> 82e13b168 (chore(types): add MustAccAddressFromBech32 util func (#12201))
 		if err != nil {
 			panic(err)
 		}
@@ -364,16 +354,8 @@ func sdkEventToBalanceOperations(status string, event abci.Event) (operations []
 		accountIdentifier = spender.String()
 
 	case banktypes.EventTypeCoinReceived:
-<<<<<<< HEAD
-		receiver, err := sdk.AccAddressFromBech32((string)(event.Attributes[0].Value))
-		if err != nil {
-			panic(err)
-		}
+		receiver := sdk.MustAccAddressFromBech32((string)(event.Attributes[0].Value))
 		coins, err := sdk.ParseCoinsNormalized((string)(event.Attributes[1].Value))
-=======
-		receiver := sdk.MustAccAddressFromBech32(event.Attributes[0].Value)
-		coins, err := sdk.ParseCoinsNormalized(event.Attributes[1].Value)
->>>>>>> 82e13b168 (chore(types): add MustAccAddressFromBech32 util func (#12201))
 		if err != nil {
 			panic(err)
 		}
@@ -526,7 +508,7 @@ func (c converter) HashToTxType(hashBytes []byte) (txType TransactionType, realH
 // StatusToSyncStatus converts a tendermint status to rosetta sync status
 func (c converter) SyncStatus(status *tmcoretypes.ResultStatus) *rosettatypes.SyncStatus {
 	// determine sync status
-	var stage = StatusPeerSynced
+	stage := StatusPeerSynced
 	if status.SyncInfo.CatchingUp {
 		stage = StatusPeerSyncing
 	}
@@ -594,7 +576,6 @@ func (c converter) Peers(peers []tmcoretypes.Peer) []*rosettatypes.Peer {
 // OpsAndSigners takes transactions bytes and returns the operation, is signed is true it will return
 // the account identifiers which have signed the transaction
 func (c converter) OpsAndSigners(txBytes []byte) (ops []*rosettatypes.Operation, signers []*rosettatypes.AccountIdentifier, err error) {
-
 	rosTx, err := c.ToRosetta().Tx(txBytes, nil)
 	if err != nil {
 		return nil, nil, err
@@ -688,7 +669,6 @@ func (c converter) PubKey(pubKey *rosettatypes.PublicKey) (cryptotypes.PubKey, e
 
 // SigningComponents takes a sdk tx and construction metadata and returns signable components
 func (c converter) SigningComponents(tx authsigning.Tx, metadata *ConstructionMetadata, rosPubKeys []*rosettatypes.PublicKey) (txBytes []byte, payloadsToSign []*rosettatypes.SigningPayload, err error) {
-
 	// verify metadata correctness
 	feeAmount, err := sdk.ParseCoinsNormalized(metadata.GasPrice)
 	if err != nil {

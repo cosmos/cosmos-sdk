@@ -65,11 +65,8 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 	if err != nil {
 		return nil, err
 	}
-<<<<<<< HEAD
+
 	err := k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, types.NewNonSplitVoteOption(msg.Option))
-=======
-	err = k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, v1.NewNonSplitVoteOption(msg.Option), msg.Metadata)
->>>>>>> 82e13b168 (chore(types): add MustAccAddressFromBech32 util func (#12201))
 	if err != nil {
 		return nil, err
 	}

@@ -15,7 +15,7 @@ import (
 
 func TestPrefer(t *testing.T) {
 	gocuke.NewRunner(t, &preferSuite{}).
-		Path("features/prefer.feature").
+		Path("features/bindings.feature").
 		Step(`we try to resolve a "Duck" in global scope`, (*preferSuite).WeTryToResolveADuckInGlobalScope).
 		Step(`module "(\w+)" wants a "Duck"`, (*preferSuite).ModuleWantsADuck).
 		Run()

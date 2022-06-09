@@ -256,7 +256,7 @@ func (c MsgExecLegacyContent) ValidateBasic() error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m MsgExecLegacyContent) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (c MsgExecLegacyContent) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var content v1beta1.Content
-	return unpacker.UnpackAny(m.Content, &content)
+	return unpacker.UnpackAny(c.Content, &content)
 }

@@ -14,6 +14,7 @@ import (
 )
 
 // Simulation operation weights constants
+//nolint:gosec // These aren't harcoded credentials.
 const (
 	OpWeightMsgGrantAllowance  = "op_weight_msg_grant_fee_allowance"
 	OpWeightMsgRevokeAllowance = "op_weight_msg_grant_revoke_allowance"
@@ -116,14 +117,8 @@ func SimulateMsgRevokeAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeepe
 		var granterAddr sdk.AccAddress
 		var granteeAddr sdk.AccAddress
 		k.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool {
-			granter, err := sdk.AccAddressFromBech32(grant.Granter)
-			if err != nil {
-				panic(err)
-			}
-			grantee, err := sdk.AccAddressFromBech32(grant.Grantee)
-			if err != nil {
-				panic(err)
-			}
+			granter := sdk.MustAccAddressFromBech32(grant.Granter)
+			grantee := sdk.MustAccAddressFromBech32(grant.Grantee)
 			granterAddr = granter
 			granteeAddr = grantee
 			hasGrant = true

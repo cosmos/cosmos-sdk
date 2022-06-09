@@ -67,6 +67,9 @@ Feature: interface type resolution
       When module "B" wants a "Duck"
       Then there is a "multiple implicit interface bindings" error
 
+    # this case is called a "journey" scenario which tests a bunch of things together
+    # most tests should be short and to the point like the ones above but one or two long ones
+    # are good to test more things together &/or do integration tests
     Example: two module-scoped preferences and a global preference
       Given "Mallard" and "Canvasback" are provided
       * there is a global preference for a "Mallard" "Duck"

@@ -168,6 +168,11 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 	keeper.IterateDeposits(ctx, proposalID, func(deposit types.Deposit) bool {
 		depositor := sdk.MustAccAddressFromBech32(deposit.Depositor)
 
+		err := keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, depositor, deposit.Amount)
+		if err != nil {
+			panic(err)
+		}
+
 		store.Delete(types.DepositKey(proposalID, depositor))
 		return false
 	})

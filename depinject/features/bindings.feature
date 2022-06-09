@@ -17,7 +17,7 @@ Feature: interface type resolution
       Then there is a "Multiple implementations found" error
 
   Rule: bindings must point to a real type
-    Example: a binding type is not provided
+    Example: a bound type is not provided
       Given "Mallard" is provided
       And there is a global binding for a "Marbled" "Duck"
       When we try to resolve a "Duck" in global scope
@@ -51,7 +51,7 @@ Feature: interface type resolution
       When module "A" wants a "Duck"
       Then module "A" resolves a "Mallard"
 
-  Rule: module-scoped binding only apply to module-scoped resolution
+  Rule: module-scoped bindings only apply to module-scoped resolution
     Example: a module-scoped binding doesn't work for global scope
       Given "Mallard" is provided
       * "Canvasback" is provided

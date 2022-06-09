@@ -16,10 +16,6 @@ import (
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 )
 
-//
-// New App Wiring Setup
-//
-
 func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(provideModule),
@@ -41,8 +37,7 @@ type txInputs struct {
 type txOutputs struct {
 	depinject.Out
 
-	TxConfig      client.TxConfig
-	BaseAppOption func(app *baseapp.BaseApp)
+	BaseAppOption func(*baseapp.BaseApp)
 }
 
 func provideModule(in txInputs) txOutputs {
@@ -85,7 +80,7 @@ func provideModule(in txInputs) txOutputs {
 		app.SetTxDecoder(in.TxConfig.TxDecoder())
 	}
 
-	return txOutputs{TxConfig: in.TxConfig, BaseAppOption: baseAppOption}
+	return txOutputs{BaseAppOption: baseAppOption}
 }
 
 func newAnteHandler(in txInputs) (sdk.AnteHandler, error) {

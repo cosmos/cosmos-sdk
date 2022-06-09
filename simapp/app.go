@@ -212,8 +212,7 @@ func NewSimApp(
 	var appBuilder *runtime.AppBuilder
 	var msgServiceRouter *baseapp.MsgServiceRouter
 
-	if err := depinject.Inject(
-		AppConfig,
+	if err := depinject.Inject(AppConfig,
 		&appBuilder,
 		&app.ParamsKeeper,
 		&app.CapabilityKeeper,

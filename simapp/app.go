@@ -35,7 +35,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/module" // import for side effects
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/module" // import for side-effects
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -211,13 +211,9 @@ func NewSimApp(
 
 	var appBuilder *runtime.AppBuilder
 	var msgServiceRouter *baseapp.MsgServiceRouter
-	var txBaseAppOption func(*baseapp.BaseApp)
 
 	if err := depinject.Inject(
-		depinject.Configs(
-			AppConfig,
-			depinject.Supply(&encodingConfig.TxConfig),
-		),
+		AppConfig,
 		&appBuilder,
 		&app.ParamsKeeper,
 		&app.CapabilityKeeper,
@@ -232,12 +228,11 @@ func NewSimApp(
 		&app.NFTKeeper,
 		&app.SlashingKeeper,
 		&msgServiceRouter,
-		&txBaseAppOption,
 	); err != nil {
 		panic(err)
 	}
 
-	app.App = appBuilder.Build(logger, db, traceStore, msgServiceRouter, append(baseAppOptions, txBaseAppOption)...)
+	app.App = appBuilder.Build(logger, db, traceStore, msgServiceRouter, baseAppOptions...)
 
 	app.keys = sdk.NewKVStoreKeys(
 		minttypes.StoreKey, distrtypes.StoreKey,

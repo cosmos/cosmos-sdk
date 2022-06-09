@@ -195,7 +195,7 @@ func (aa AccAddress) Equals(aa2 Address) bool {
 
 // Returns boolean for whether an AccAddress is empty
 func (aa AccAddress) Empty() bool {
-	return aa == nil || len(aa) == 0
+	return len(aa) == 0
 }
 
 // Marshal returns the raw address bytes. It is needed for protobuf
@@ -285,7 +285,7 @@ func (aa AccAddress) String() string {
 }
 
 // Format implements the fmt.Formatter interface.
-// nolint: errcheck
+
 func (aa AccAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
@@ -343,7 +343,7 @@ func (va ValAddress) Equals(va2 Address) bool {
 
 // Returns boolean for whether an AccAddress is empty
 func (va ValAddress) Empty() bool {
-	return va == nil || len(va) == 0
+	return len(va) == 0
 }
 
 // Marshal returns the raw address bytes. It is needed for protobuf
@@ -435,7 +435,7 @@ func (va ValAddress) String() string {
 }
 
 // Format implements the fmt.Formatter interface.
-// nolint: errcheck
+
 func (va ValAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
@@ -498,7 +498,7 @@ func (ca ConsAddress) Equals(ca2 Address) bool {
 
 // Returns boolean for whether an ConsAddress is empty
 func (ca ConsAddress) Empty() bool {
-	return ca == nil || len(ca) == 0
+	return len(ca) == 0
 }
 
 // Marshal returns the raw address bytes. It is needed for protobuf
@@ -614,7 +614,7 @@ func MustBech32ifyAddressBytes(prefix string, bs []byte) string {
 }
 
 // Format implements the fmt.Formatter interface.
-// nolint: errcheck
+
 func (ca ConsAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':

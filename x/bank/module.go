@@ -7,13 +7,21 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
+	"github.com/cosmos/cosmos-sdk/depinject"
+	store "github.com/cosmos/cosmos-sdk/store/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/tendermint/tendermint/crypto"
+
+	"cosmossdk.io/core/appmodule"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -61,7 +69,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingCo
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the bank module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
@@ -194,4 +202,56 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	return simulation.WeightedOperations(
 		simState.AppParams, simState.Cdc, am.accountKeeper, am.keeper,
 	)
+}
+
+// App Wiring
+
+func init() {
+	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(
+			provideModuleBasic,
+			provideModule))
+}
+
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+type bankInputs struct {
+	depinject.In
+
+	Config        *modulev1.Module
+	AccountKeeper types.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
+	Cdc           codec.Codec
+	Subspace      paramtypes.Subspace
+	Key           *store.KVStoreKey
+}
+
+type bankOutputs struct {
+	depinject.Out
+
+	BankKeeper keeper.Keeper `key:"cosmos.bank.v1.Keeper"`
+	Module     runtime.AppModuleWrapper
+}
+
+func provideModule(in bankInputs) bankOutputs {
+	// configure blocked module accounts.
+	//
+	// default behavior for blockedAddresses is to regard any module mentioned in AccountKeeper's module account
+	// permissions as blocked.
+	blockedAddresses := make(map[string]bool)
+	if len(in.Config.BlockedModuleAccountsOverride) != 0 {
+		for _, moduleName := range in.Config.BlockedModuleAccountsOverride {
+			addr := sdk.AccAddress(crypto.AddressHash([]byte(moduleName)))
+			blockedAddresses[addr.String()] = true
+		}
+	} else {
+		for _, permission := range in.AccountKeeper.GetModulePermissions() {
+			blockedAddresses[permission.GetAddress().String()] = true
+		}
+	}
+
+	bankKeeper := keeper.NewBaseKeeper(in.Cdc, in.Key, in.AccountKeeper, in.Subspace, blockedAddresses)
+	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper)
+	return bankOutputs{BankKeeper: bankKeeper, Module: runtime.WrapAppModule(m)}
 }

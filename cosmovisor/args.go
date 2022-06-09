@@ -170,6 +170,7 @@ func GetConfigFromEnv() (*Config, error) {
 		cfg.PollInterval = 300 * time.Millisecond
 	}
 
+	cfg.RestartDelay = 0 // default value but makes it explicit
 	restartDelay := os.Getenv(EnvRestartDelay)
 	if restartDelay != "" {
 		val, err := parseEnvDuration(restartDelay)
@@ -178,8 +179,6 @@ func GetConfigFromEnv() (*Config, error) {
 		} else {
 			cfg.RestartDelay = val
 		}
-	} else {
-		cfg.RestartDelay = 0 // default value but still setting for clarity
 	}
 
 	envPreupgradeMaxRetriesVal := os.Getenv(EnvPreupgradeMaxRetries)

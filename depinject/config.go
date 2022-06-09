@@ -49,14 +49,12 @@ func provide(ctr *container, key *moduleKey, providers []interface{}) error {
 }
 
 // BindInterface defines a container configuration for an explicit interface binding of inTypeName to outTypeName
-// in global scope, for example,
+// in global scope.  The example below demonstrates a configuration where the container always provides a Canvasback
+// instance when an interface of type Duck is requested as an input.
 //
 // BindInterface(
 //	"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Duck",
 //	"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Canvasback")
-//
-// configures the container to *always* provide a Canvasback instance when an input of interface type Duck is
-// requested as an input.
 func BindInterface(inTypeName string, outTypeName string) Config {
 	return containerConfig(func(ctr *container) error {
 		return bindInterface(ctr, inTypeName, outTypeName, "")
@@ -64,15 +62,14 @@ func BindInterface(inTypeName string, outTypeName string) Config {
 }
 
 // BindInterfaceInModule defines a container configuration for an explicit interface binding of inTypeName to outTypeName
-// in the scope of the module with name moduleName.  For example, given the configuration
+// in the scope of the module with name moduleName.  The example below demonstrates a configuration where the container
+// provides a Canvasback instance when an interface of type Duck is requested as an input, but only in the scope of
+// "moduleFoo".
 //
 // BindInterfaceInModule(
 //  "moduleFoo",
 //	"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Duck",
 //	"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Canvasback")
-//
-// where Duck is an interface and Canvasback implements Duck, the container will attempt to provide a Canvasback
-// instance where Duck is requested as an input from module "moduleFoo".
 func BindInterfaceInModule(moduleName string, inTypeName string, outTypeName string) Config {
 	return containerConfig(func(ctr *container) error {
 		return bindInterface(ctr, inTypeName, outTypeName, moduleName)

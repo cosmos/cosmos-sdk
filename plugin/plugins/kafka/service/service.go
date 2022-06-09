@@ -332,9 +332,11 @@ func (kss *KafkaStreamingService) writeStateChange(ctx sdk.Context, event int64,
 			EventTypeId: int64(i + 1),
 		}
 		if err := kss.codec.UnmarshalLengthPrefixed(stateChange, kvPair); err != nil {
+			kss.stateCacheLock.Unlock()
 			return err
 		}
 		if err := kss.writeAsJsonToKafka(ctx, StateChangeTopic, key, kvPair); err != nil {
+			kss.stateCacheLock.Unlock()
 			return err
 		}
 	}

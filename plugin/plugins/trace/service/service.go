@@ -256,9 +256,11 @@ func (tss *TraceStreamingService) writeStateChange(ctx sdk.Context, event string
 	for i, stateChange := range tss.stateCache {
 		key := fmt.Sprintf(LogMsgFmt, tss.currentBlockNumber, event, eventId, StateChangeEventType, i+1)
 		if err := kodec.UnmarshalLengthPrefixed(stateChange, kvPair); err != nil {
+			tss.stateCacheLock.Unlock()
 			return err
 		}
 		if err := tss.writeEventReqRes(ctx, key, kvPair); err != nil {
+			tss.stateCacheLock.Unlock()
 			return err
 		}
 	}

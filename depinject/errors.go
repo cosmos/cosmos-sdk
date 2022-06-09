@@ -27,9 +27,9 @@ func newErrMultipleImplicitInterfaceBindings(i reflect.Type, matches map[reflect
 func (err ErrMultipleImplicitInterfaceBindings) Error() string {
 	matchesStr := ""
 	for _, m := range err.Matches {
-		matchesStr = fmt.Sprintf("%s %s", matchesStr, fullyQualifiedTypeName(m))
+		matchesStr = fmt.Sprintf("%s\n  %s", matchesStr, fullyQualifiedTypeName(m))
 	}
-	return fmt.Sprintf("Multiple implementations found for interface %v: %v", err.Interface, matchesStr)
+	return fmt.Sprintf("Multiple implementations found for interface %v: %s", err.Interface, matchesStr)
 }
 
 // ErrNoTypeForExplicitBindingFound defines an error condition where an explicit binding of PreferredType was marked as

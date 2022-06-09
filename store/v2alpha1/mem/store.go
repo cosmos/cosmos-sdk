@@ -17,7 +17,7 @@ var (
 // commits and thus between blocks. State in Memory store is not committed as part of app state but maintained privately by each node
 type Store struct {
 	dbadapter.Store
-	conn dbm.DBConnection
+	conn dbm.Connection
 }
 
 // NewStore constructs a new in-memory store.

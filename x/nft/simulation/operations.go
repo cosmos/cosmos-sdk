@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
+//nolint:gosec // these are not hardcoded credentials.
 const (
 	// OpWeightMsgSend Simulation operation weights constants
 	OpWeightMsgSend = "op_weight_msg_send"

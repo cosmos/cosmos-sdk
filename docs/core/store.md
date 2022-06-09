@@ -249,7 +249,7 @@ An interface providing only the basic CRUD functionality (`Get`, `Set`, `Has`, a
 This is the new interface (or, set of interfaces) for the main client store, replacing the role of `store/types.MultiStore` (v1). There are a few significant differences in behavior compared with v1:
 
 * Commits are atomic and are performed on the entire store state; individual substores cannot be committed separately and cannot have different version numbers.
-* The store's current version and version history track that of the backing `db.DBConnection`. Past versions are accessible read-only.
+* The store's current version and version history track that of the backing `db.Connection`. Past versions are accessible read-only.
 * The set of valid substores is defined at initialization and cannot be updated dynamically in an existing store instance.
 
 ### `CommitMultiStore`

@@ -72,7 +72,7 @@ func Prefer(inTypeName string, outTypeName string) Config {
 //	"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Canvasback")
 //
 // where Duck is an interface and Canvasback implements Duck, the container will attempt to provide a Canvasback
-// instance where Duck is requested as an input, but only within the scope of module "moduleFoo".
+// instance where Duck is requested as an input from module "moduleFoo".
 func PreferInModule(moduleName string, inTypeName string, outTypeName string) Config {
 	return containerConfig(func(ctr *container) error {
 		return prefer(ctr, inTypeName, outTypeName, moduleName)

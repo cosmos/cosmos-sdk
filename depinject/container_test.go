@@ -700,8 +700,8 @@ func TestExplicitModuleBindings(t *testing.T) {
 					"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Duck",
 					"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.DoesNotExist"),
 				depinject.Provide(
-					func(depinject.ModuleKey) Mallard { return Mallard{} },
-					func(depinject.ModuleKey) Canvasback { return Canvasback{} }),
+					func() Mallard { return Mallard{} },
+					func() Canvasback { return Canvasback{} }),
 				depinject.ProvideInModule("foo",
 					func(duck Duck) Pond {
 						return Pond{Duck: duck}

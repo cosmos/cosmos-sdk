@@ -32,10 +32,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	_ "github.com/cosmos/cosmos-sdk/types/tx/module" // import tx module for side-effects
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx" // import tx module for side-effects
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"

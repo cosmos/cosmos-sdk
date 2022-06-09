@@ -7,11 +7,13 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/depinject"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 )
@@ -25,9 +27,8 @@ func init() {
 type txInputs struct {
 	depinject.In
 
-	Config *modulev1.Module
-
-	TxConfig client.TxConfig
+	Config              *modulev1.Module
+	ProtoCodecMarshaler codec.ProtoCodecMarshaler
 
 	AccountKeeper  authkeeper.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
 	BankKeeper     bankkeeper.Keeper        `key:"cosmos.bank.v1.Keeper"`
@@ -37,15 +38,17 @@ type txInputs struct {
 type txOutputs struct {
 	depinject.Out
 
+	TxConfig      client.TxConfig
 	BaseAppOption func(*baseapp.BaseApp)
 }
 
 func provideModule(in txInputs) txOutputs {
+	txConfig := tx.NewTxConfig(in.ProtoCodecMarshaler, tx.DefaultSignModes)
 	baseAppOption := func(app *baseapp.BaseApp) {
 
 		if !in.Config.DisableAnteHandler {
 			// AnteHandlers
-			anteHandler, err := newAnteHandler(in)
+			anteHandler, err := newAnteHandler(txConfig, in)
 			if err != nil {
 				panic(err)
 			}
@@ -77,18 +80,18 @@ func provideModule(in txInputs) txOutputs {
 		}
 
 		// TxDecoder
-		app.SetTxDecoder(in.TxConfig.TxDecoder())
+		app.SetTxDecoder(txConfig.TxDecoder())
 	}
 
-	return txOutputs{BaseAppOption: baseAppOption}
+	return txOutputs{TxConfig: txConfig, BaseAppOption: baseAppOption}
 }
 
-func newAnteHandler(in txInputs) (sdk.AnteHandler, error) {
+func newAnteHandler(txConfig client.TxConfig, in txInputs) (sdk.AnteHandler, error) {
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
 			AccountKeeper:   in.AccountKeeper,
 			BankKeeper:      in.BankKeeper,
-			SignModeHandler: in.TxConfig.SignModeHandler(),
+			SignModeHandler: txConfig.SignModeHandler(),
 			FeegrantKeeper:  in.FeeGrantKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},

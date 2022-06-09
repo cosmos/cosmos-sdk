@@ -100,7 +100,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
 )
 
-const appName = "SimApp"
+const appName = "SimApp" //nolint:deadcode,unused // we need this
 
 var (
 	// DefaultNodeHome default home directories for the application daemon

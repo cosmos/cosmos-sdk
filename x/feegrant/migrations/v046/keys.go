@@ -25,6 +25,7 @@ var (
 // - <0x01><exp_bytes><len(grantee_address_bytes)><grantee_address_bytes><len(granter_address_bytes)><granter_address_bytes>
 func FeeAllowancePrefixQueue(exp *time.Time, key []byte) []byte {
 	// no need of appending len(exp_bytes) here, `FormatTimeBytes` gives const length everytime.
+	//nolint:gocritic // we want to use append the way it's used here.
 	allowanceByExpTimeKey := append(FeeAllowanceQueueKeyPrefix, sdk.FormatTimeBytes(*exp)...)
 	return append(allowanceByExpTimeKey, key...)
 }

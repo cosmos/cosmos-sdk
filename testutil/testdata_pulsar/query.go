@@ -1,3 +1,4 @@
+//nolint:revive,gocritic // later we could resolve this by changing how we generate things, but was not sure how this file is generated and if that woud pose a breaking change.
 package testdata_pulsar
 
 import (

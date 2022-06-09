@@ -860,6 +860,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			var response sdk.TxResponse
+			//nolint:gocritic // rewriting this into a switch statement didn't make sense.
 			if tc.expectErrMsg != "" {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 				s.Require().Contains(response.RawLog, tc.expectErrMsg)

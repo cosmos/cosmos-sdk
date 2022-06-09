@@ -298,10 +298,8 @@ func (g GroupInfo) ValidateBasic() error {
 }
 
 func (g GroupPolicyInfo) PrimaryKeyFields() []interface{} {
-	addr, err := sdk.AccAddressFromBech32(g.Address)
-	if err != nil {
-		panic(err)
-	}
+	addr := sdk.MustAccAddressFromBech32(g.Address)
+
 	return []interface{}{addr.Bytes()}
 }
 
@@ -337,10 +335,8 @@ func (g GroupPolicyInfo) ValidateBasic() error {
 }
 
 func (g GroupMember) PrimaryKeyFields() []interface{} {
-	addr, err := sdk.AccAddressFromBech32(g.Member.Address)
-	if err != nil {
-		panic(err)
-	}
+	addr := sdk.MustAccAddressFromBech32(g.Member.Address)
+
 	return []interface{}{g.GroupId, addr.Bytes()}
 }
 
@@ -402,10 +398,8 @@ func (p Proposal) ValidateBasic() error {
 }
 
 func (v Vote) PrimaryKeyFields() []interface{} {
-	addr, err := sdk.AccAddressFromBech32(v.Voter)
-	if err != nil {
-		panic(err)
-	}
+	addr := sdk.MustAccAddressFromBech32(v.Voter)
+
 	return []interface{}{v.ProposalId, addr.Bytes()}
 }
 

@@ -2,13 +2,13 @@
 
 package tests
 
-/*
-// TODO: Retrofit to the right parameters for CreateNonmembershipProof
 import (
 	"encoding/json"
 	"testing"
 
 	iavlproofs "github.com/cosmos/cosmos-sdk/store/tools/ics23/iavl"
+	"github.com/cosmos/iavl"
+	db "github.com/tendermint/tm-db"
 )
 
 type serialize struct {
@@ -25,7 +25,14 @@ func FuzzStoreInternalProofsCreateNonmembershipProof(f *testing.F) {
 		if len(sz.Data) == 0 || len(sz.Key) == 0 {
 			return
 		}
-		icp, err := iavlproofs.CreateNonMembershipProof(sz.Data, []byte(sz.Key))
+		tree, err := iavl.NewMutableTree(db.NewMemDB(), 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for k, v := range sz.Data {
+			tree.Set([]byte(k), v)
+		}
+		icp, err := iavlproofs.CreateNonMembershipProof(tree, []byte(sz.Key))
 		if err != nil {
 			return
 		}
@@ -34,4 +41,3 @@ func FuzzStoreInternalProofsCreateNonmembershipProof(f *testing.F) {
 		}
 	})
 }
-*/

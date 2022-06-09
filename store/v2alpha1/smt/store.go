@@ -30,19 +30,19 @@ var (
 // Store Implements types.KVStore and CommitKVStore.
 type Store struct {
 	tree   *smt.SparseMerkleTree
-	values dbm.DBReadWriter
+	values dbm.ReadWriter
 	// Map hashed keys back to preimage
-	preimages dbm.DBReadWriter
+	preimages dbm.ReadWriter
 }
 
 // An smt.MapStore that wraps Get to raise smt.InvalidKeyError;
 // smt.SparseMerkleTree expects this error to be returned when a key is not found
-type dbMapStore struct{ dbm.DBReadWriter }
+type dbMapStore struct{ dbm.ReadWriter }
 
-func NewStore(db dbm.DBReadWriter) *Store {
-	nodes := prefix.NewPrefixReadWriter(db, nodesPrefix)
-	values := prefix.NewPrefixReadWriter(db, valuesPrefix)
-	preimages := prefix.NewPrefixReadWriter(db, preimagesPrefix)
+func NewStore(db dbm.ReadWriter) *Store {
+	nodes := prefix.NewReadWriter(db, nodesPrefix)
+	values := prefix.NewReadWriter(db, valuesPrefix)
+	preimages := prefix.NewReadWriter(db, preimagesPrefix)
 	return &Store{
 		tree:      smt.NewSparseMerkleTree(dbMapStore{nodes}, dbMapStore{values}, sha256.New()),
 		values:    values,
@@ -50,10 +50,10 @@ func NewStore(db dbm.DBReadWriter) *Store {
 	}
 }
 
-func LoadStore(db dbm.DBReadWriter, root []byte) *Store {
-	nodes := prefix.NewPrefixReadWriter(db, nodesPrefix)
-	values := prefix.NewPrefixReadWriter(db, valuesPrefix)
-	preimages := prefix.NewPrefixReadWriter(db, preimagesPrefix)
+func LoadStore(db dbm.ReadWriter, root []byte) *Store {
+	nodes := prefix.NewReadWriter(db, nodesPrefix)
+	values := prefix.NewReadWriter(db, valuesPrefix)
+	preimages := prefix.NewReadWriter(db, preimagesPrefix)
 	return &Store{
 		tree:      smt.ImportSparseMerkleTree(dbMapStore{nodes}, dbMapStore{values}, sha256.New(), root),
 		values:    values,
@@ -132,12 +132,12 @@ func (s *Store) Delete(key []byte) {
 }
 
 func (ms dbMapStore) Get(key []byte) ([]byte, error) {
-	val, err := ms.DBReadWriter.Get(key)
+	val, err := ms.ReadWriter.Get(key)
 	if err != nil {
 		return nil, err
 	}
 	if val == nil {
-		return nil, &smt.InvalidKeyError{key}
+		return nil, &smt.InvalidKeyError{Key: key}
 	}
 	return val, nil
 }

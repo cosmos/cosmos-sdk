@@ -338,10 +338,7 @@ func sdkEventToBalanceOperations(status string, event abci.Event) (operations []
 	default:
 		return nil, false
 	case banktypes.EventTypeCoinSpent:
-		spender, err := sdk.AccAddressFromBech32(event.Attributes[0].Value)
-		if err != nil {
-			panic(err)
-		}
+		spender := sdk.MustAccAddressFromBech32(event.Attributes[0].Value)
 		coins, err := sdk.ParseCoinsNormalized(event.Attributes[1].Value)
 		if err != nil {
 			panic(err)
@@ -352,10 +349,7 @@ func sdkEventToBalanceOperations(status string, event abci.Event) (operations []
 		accountIdentifier = spender.String()
 
 	case banktypes.EventTypeCoinReceived:
-		receiver, err := sdk.AccAddressFromBech32(event.Attributes[0].Value)
-		if err != nil {
-			panic(err)
-		}
+		receiver := sdk.MustAccAddressFromBech32(event.Attributes[0].Value)
 		coins, err := sdk.ParseCoinsNormalized(event.Attributes[1].Value)
 		if err != nil {
 			panic(err)

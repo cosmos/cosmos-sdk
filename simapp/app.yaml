@@ -103,3 +103,7 @@ modules:
   - name: nft
     config:
       "@type": cosmos.nft.module.v1.Module
+
+  - name: slashing
+    config:
+      "@type": cosmos.slashing.module.v1.Module

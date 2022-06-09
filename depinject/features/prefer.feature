@@ -5,11 +5,10 @@ Feature: interface type resolution
     And two implementations Mallard and Canvasback
 
   Rule: interface types resolve to a concrete type implicitly if there is only one matching implementation
-  provided in the container
     Example: only one implementation
       Given "Mallard" is provided
       When we try to resolve a "Duck" in global scope
-      Then "Mallard" is resolved
+      Then "Mallard" is resolved in global scope
 
     Example: two implementations
       Given "Mallard" and "Canvasback" are provided
@@ -36,12 +35,12 @@ Feature: interface type resolution
       When module "A" wants a "Duck"
       Then there is a "can't resolve" error
 
-  Rule: preferences in global scope apply to both global and module-scoped resolution, if there is no module-scoped preference
+  Rule: preferences in global scope apply to both global and module-scoped resolution (if there is no module-scoped preference)
     Example: global resolution
       Given "Mallard" and "Canvasback" are provided
       And there is a global preference for a "Mallard" "Duck"
       When we try to resolve a "Duck" in global scope
-      Then "Mallard" is resolved
+      Then "Mallard" is resolved in global scope
 
     Example: module-scoped resolution
       Given "Mallard" and "Canvasback" are provided
@@ -79,3 +78,4 @@ Feature: interface type resolution
       Then module "A" resolves a "Canvasback"
       * module "B" resolves a "Mallard"
       * module "C" resolves a "Mallard"
+      * "Mallard" is resolved in global scope

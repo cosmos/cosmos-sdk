@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"time"
 
 	"cosmossdk.io/core/appmodule"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	modulev1 "cosmossdk.io/api/cosmos/group/v1/module/v1"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -192,6 +194,8 @@ func provideModule(in groupInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
 		Example of setting group params:
 		in.Config.MaxMetadataLen = 1000
 	*/
+
+	in.Config.MaxExecutionPeriod = &durationpb.Duration{Seconds: int64((2 * time.Hour * 24 * 7).Seconds())}
 	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, group.Config{MaxExecutionPeriod: in.Config.MaxExecutionPeriod.AsDuration(), MaxMetadataLen: in.Config.MaxMetadataLen})
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
 	return k, runtime.WrapAppModule(m)

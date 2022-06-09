@@ -19,7 +19,7 @@ import (
 
 var _ types.QueryServer = AccountKeeper{}
 
-func (ak AccountKeeper) AccountAddressById(c context.Context, req *types.QueryAccountAddressByIdRequest) (*types.QueryAccountAddressByIdResponse, error) {
+func (ak AccountKeeper) AccountAddressByID(c context.Context, req *types.QueryAccountAddressByIDRequest) (*types.QueryAccountAddressByIDResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -29,12 +29,12 @@ func (ak AccountKeeper) AccountAddressById(c context.Context, req *types.QueryAc
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	address := ak.GetAccountAddressById(ctx, req.GetId())
+	address := ak.GetAccountAddressByID(ctx, req.GetId())
 	if len(address) == 0 {
 		return nil, status.Errorf(codes.NotFound, "account address not found with id %d", req.Id)
 	}
 
-	return &types.QueryAccountAddressByIdResponse{AccountAddress: address}, nil
+	return &types.QueryAccountAddressByIDResponse{AccountAddress: address}, nil
 }
 
 func (ak AccountKeeper) Accounts(c context.Context, req *types.QueryAccountsRequest) (*types.QueryAccountsResponse, error) {

@@ -282,7 +282,7 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	s.Require().Error(err)
 }
 
-func (s *IntegrationTestSuite) TestCliGetAccountAddressById() {
+func (s *IntegrationTestSuite) TestCliGetAccountAddressByID() {
 	require := s.Require()
 	val1 := s.network.Validators[0]
 	testCases := []struct {
@@ -310,7 +310,7 @@ func (s *IntegrationTestSuite) TestCliGetAccountAddressById() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			cmd := authcli.GetAccountAddressByIdCmd()
+			cmd := authcli.GetAccountAddressByIDCmd()
 			clientCtx := val1.ClientCtx
 
 			queryResJSON, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -318,7 +318,7 @@ func (s *IntegrationTestSuite) TestCliGetAccountAddressById() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				var res types.QueryAccountAddressByIdResponse
+				var res types.QueryAccountAddressByIDResponse
 				require.NoError(val1.ClientCtx.Codec.UnmarshalJSON(queryResJSON.Bytes(), &res))
 				require.NotNil(res.GetAccountAddress())
 			}

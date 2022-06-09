@@ -1,8 +1,6 @@
 package types
 
 import (
-	"strconv"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -37,5 +35,5 @@ func AddressStoreKey(addr sdk.AccAddress) []byte {
 }
 
 func AccountNumberStoreKey(accountNumber int64) []byte {
-	return append(AccountNumberStoreKeyPrefix, []byte(strconv.Itoa(int(accountNumber)))...)
+	return append(AccountNumberStoreKeyPrefix, sdk.Uint64ToBigEndian(uint64(accountNumber))...)
 }

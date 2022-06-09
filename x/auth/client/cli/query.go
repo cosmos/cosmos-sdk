@@ -42,7 +42,7 @@ func GetQueryCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		GetAccountCmd(),
-		GetAccountAddressByIdCmd(),
+		GetAccountAddressByIDCmd(),
 		GetAccountsCmd(),
 		QueryParamsCmd(),
 		QueryModuleAccountsCmd(),
@@ -126,15 +126,13 @@ func GetAccountCmd() *cobra.Command {
 	return cmd
 }
 
-// GetAccountAddressByIdCmd returns a query account address that will display the account address of a given account id.
-func GetAccountAddressByIdCmd() *cobra.Command {
+// GetAccountAddressByIDCmd returns a query account address that will display the account address of a given account id.
+func GetAccountAddressByIDCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "address-by-id [id]",
-		Short: "Query for account address by account id",
-		Args:  cobra.ExactArgs(1),
-		Example: fmt.Sprintf(
-			"%s q auth address-by-id 1", version.AppName,
-		),
+		Use:     "address-by-id [id]",
+		Short:   "Query for account address by account id",
+		Args:    cobra.ExactArgs(1),
+		Example: fmt.Sprintf("%s q auth address-by-id 1", version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -147,7 +145,7 @@ func GetAccountAddressByIdCmd() *cobra.Command {
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.AccountAddressById(cmd.Context(), &types.QueryAccountAddressByIdRequest{Id: id})
+			res, err := queryClient.AccountAddressByID(cmd.Context(), &types.QueryAccountAddressByIDRequest{Id: id})
 			if err != nil {
 				return err
 			}

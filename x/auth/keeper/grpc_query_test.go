@@ -154,41 +154,41 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGRPCQueryAccountAddressById() {
-	var req *types.QueryAccountAddressByIdRequest
+func (suite *KeeperTestSuite) TestGRPCQueryAccountAddressByID() {
+	var req *types.QueryAccountAddressByIDRequest
 	_, _, addr := testdata.KeyTestPubAddr()
 
 	testCases := []struct {
 		msg       string
 		malleate  func()
 		expPass   bool
-		posttests func(res *types.QueryAccountAddressByIdResponse)
+		posttests func(res *types.QueryAccountAddressByIDResponse)
 	}{
 		{
 			"invalid request",
 			func() {
-				req = &types.QueryAccountAddressByIdRequest{Id: -1}
+				req = &types.QueryAccountAddressByIDRequest{Id: -1}
 			},
 			false,
-			func(res *types.QueryAccountAddressByIdResponse) {},
+			func(res *types.QueryAccountAddressByIDResponse) {},
 		},
 		{
 			"account address not found",
 			func() {
-				req = &types.QueryAccountAddressByIdRequest{Id: math.MaxInt64}
+				req = &types.QueryAccountAddressByIDRequest{Id: math.MaxInt64}
 			},
 			false,
-			func(res *types.QueryAccountAddressByIdResponse) {},
+			func(res *types.QueryAccountAddressByIDResponse) {},
 		},
 		{
 			"valid request",
 			func() {
 				account := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
 				suite.app.AccountKeeper.SetAccount(suite.ctx, account)
-				req = &types.QueryAccountAddressByIdRequest{Id: int64(account.GetAccountNumber())}
+				req = &types.QueryAccountAddressByIDRequest{Id: int64(account.GetAccountNumber())}
 			},
 			true,
-			func(res *types.QueryAccountAddressByIdResponse) {
+			func(res *types.QueryAccountAddressByIDResponse) {
 				suite.Require().NotNil(res.AccountAddress)
 			},
 		},
@@ -201,7 +201,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccountAddressById() {
 			tc.malleate()
 			ctx := sdk.WrapSDKContext(suite.ctx)
 
-			res, err := suite.queryClient.AccountAddressById(ctx, req)
+			res, err := suite.queryClient.AccountAddressByID(ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

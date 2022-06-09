@@ -5982,25 +5982,25 @@ func (x *fastReflection_AddressStringToBytesResponse) ProtoMethods() *protoiface
 }
 
 var (
-	md_QueryAccountAddressByIdRequest    protoreflect.MessageDescriptor
-	fd_QueryAccountAddressByIdRequest_id protoreflect.FieldDescriptor
+	md_QueryAccountAddressByIDRequest    protoreflect.MessageDescriptor
+	fd_QueryAccountAddressByIDRequest_id protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_auth_v1beta1_query_proto_init()
-	md_QueryAccountAddressByIdRequest = File_cosmos_auth_v1beta1_query_proto.Messages().ByName("QueryAccountAddressByIdRequest")
-	fd_QueryAccountAddressByIdRequest_id = md_QueryAccountAddressByIdRequest.Fields().ByName("id")
+	md_QueryAccountAddressByIDRequest = File_cosmos_auth_v1beta1_query_proto.Messages().ByName("QueryAccountAddressByIDRequest")
+	fd_QueryAccountAddressByIDRequest_id = md_QueryAccountAddressByIDRequest.Fields().ByName("id")
 }
 
-var _ protoreflect.Message = (*fastReflection_QueryAccountAddressByIdRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_QueryAccountAddressByIDRequest)(nil)
 
-type fastReflection_QueryAccountAddressByIdRequest QueryAccountAddressByIdRequest
+type fastReflection_QueryAccountAddressByIDRequest QueryAccountAddressByIDRequest
 
-func (x *QueryAccountAddressByIdRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_QueryAccountAddressByIdRequest)(x)
+func (x *QueryAccountAddressByIDRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryAccountAddressByIDRequest)(x)
 }
 
-func (x *QueryAccountAddressByIdRequest) slowProtoReflect() protoreflect.Message {
+func (x *QueryAccountAddressByIDRequest) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_auth_v1beta1_query_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -6012,43 +6012,43 @@ func (x *QueryAccountAddressByIdRequest) slowProtoReflect() protoreflect.Message
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_QueryAccountAddressByIdRequest_messageType fastReflection_QueryAccountAddressByIdRequest_messageType
-var _ protoreflect.MessageType = fastReflection_QueryAccountAddressByIdRequest_messageType{}
+var _fastReflection_QueryAccountAddressByIDRequest_messageType fastReflection_QueryAccountAddressByIDRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryAccountAddressByIDRequest_messageType{}
 
-type fastReflection_QueryAccountAddressByIdRequest_messageType struct{}
+type fastReflection_QueryAccountAddressByIDRequest_messageType struct{}
 
-func (x fastReflection_QueryAccountAddressByIdRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_QueryAccountAddressByIdRequest)(nil)
+func (x fastReflection_QueryAccountAddressByIDRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryAccountAddressByIDRequest)(nil)
 }
-func (x fastReflection_QueryAccountAddressByIdRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_QueryAccountAddressByIdRequest)
+func (x fastReflection_QueryAccountAddressByIDRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryAccountAddressByIDRequest)
 }
-func (x fastReflection_QueryAccountAddressByIdRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryAccountAddressByIdRequest
+func (x fastReflection_QueryAccountAddressByIDRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryAccountAddressByIDRequest
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_QueryAccountAddressByIdRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryAccountAddressByIdRequest
+func (x *fastReflection_QueryAccountAddressByIDRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryAccountAddressByIDRequest
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_QueryAccountAddressByIdRequest) Type() protoreflect.MessageType {
-	return _fastReflection_QueryAccountAddressByIdRequest_messageType
+func (x *fastReflection_QueryAccountAddressByIDRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryAccountAddressByIDRequest_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_QueryAccountAddressByIdRequest) New() protoreflect.Message {
-	return new(fastReflection_QueryAccountAddressByIdRequest)
+func (x *fastReflection_QueryAccountAddressByIDRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryAccountAddressByIDRequest)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_QueryAccountAddressByIdRequest) Interface() protoreflect.ProtoMessage {
-	return (*QueryAccountAddressByIdRequest)(x)
+func (x *fastReflection_QueryAccountAddressByIDRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryAccountAddressByIDRequest)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -6056,10 +6056,10 @@ func (x *fastReflection_QueryAccountAddressByIdRequest) Interface() protoreflect
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_QueryAccountAddressByIdRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_QueryAccountAddressByIDRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Id != int64(0) {
 		value := protoreflect.ValueOfInt64(x.Id)
-		if !f(fd_QueryAccountAddressByIdRequest_id, value) {
+		if !f(fd_QueryAccountAddressByIDRequest_id, value) {
 			return
 		}
 	}
@@ -6076,15 +6076,15 @@ func (x *fastReflection_QueryAccountAddressByIdRequest) Range(f func(protoreflec
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_QueryAccountAddressByIdRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_QueryAccountAddressByIDRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountAddressByIdRequest.id":
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIDRequest.id":
 		return x.Id != int64(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIDRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIDRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6094,15 +6094,15 @@ func (x *fastReflection_QueryAccountAddressByIdRequest) Has(fd protoreflect.Fiel
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryAccountAddressByIdRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_QueryAccountAddressByIDRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountAddressByIdRequest.id":
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIDRequest.id":
 		x.Id = int64(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIDRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIDRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6112,16 +6112,16 @@ func (x *fastReflection_QueryAccountAddressByIdRequest) Clear(fd protoreflect.Fi
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_QueryAccountAddressByIdRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryAccountAddressByIDRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountAddressByIdRequest.id":
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIDRequest.id":
 		value := x.Id
 		return protoreflect.ValueOfInt64(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIDRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIDRequest does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -6135,15 +6135,15 @@ func (x *fastReflection_QueryAccountAddressByIdRequest) Get(descriptor protorefl
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryAccountAddressByIdRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_QueryAccountAddressByIDRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountAddressByIdRequest.id":
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIDRequest.id":
 		x.Id = value.Int()
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIDRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIDRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6157,40 +6157,40 @@ func (x *fastReflection_QueryAccountAddressByIdRequest) Set(fd protoreflect.Fiel
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryAccountAddressByIdRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryAccountAddressByIDRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountAddressByIdRequest.id":
-		panic(fmt.Errorf("field id of message cosmos.auth.v1beta1.QueryAccountAddressByIdRequest is not mutable"))
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIDRequest.id":
+		panic(fmt.Errorf("field id of message cosmos.auth.v1beta1.QueryAccountAddressByIDRequest is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIDRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIDRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_QueryAccountAddressByIdRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryAccountAddressByIDRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountAddressByIdRequest.id":
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIDRequest.id":
 		return protoreflect.ValueOfInt64(int64(0))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIDRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIDRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_QueryAccountAddressByIdRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_QueryAccountAddressByIDRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.auth.v1beta1.QueryAccountAddressByIdRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.auth.v1beta1.QueryAccountAddressByIDRequest", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -6198,7 +6198,7 @@ func (x *fastReflection_QueryAccountAddressByIdRequest) WhichOneof(d protoreflec
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_QueryAccountAddressByIdRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_QueryAccountAddressByIDRequest) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -6209,7 +6209,7 @@ func (x *fastReflection_QueryAccountAddressByIdRequest) GetUnknown() protoreflec
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryAccountAddressByIdRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_QueryAccountAddressByIDRequest) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -6221,7 +6221,7 @@ func (x *fastReflection_QueryAccountAddressByIdRequest) SetUnknown(fields protor
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_QueryAccountAddressByIdRequest) IsValid() bool {
+func (x *fastReflection_QueryAccountAddressByIDRequest) IsValid() bool {
 	return x != nil
 }
 
@@ -6231,9 +6231,9 @@ func (x *fastReflection_QueryAccountAddressByIdRequest) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_QueryAccountAddressByIdRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_QueryAccountAddressByIDRequest) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*QueryAccountAddressByIdRequest)
+		x := input.Message.Interface().(*QueryAccountAddressByIDRequest)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6258,7 +6258,7 @@ func (x *fastReflection_QueryAccountAddressByIdRequest) ProtoMethods() *protoifa
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*QueryAccountAddressByIdRequest)
+		x := input.Message.Interface().(*QueryAccountAddressByIDRequest)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6293,7 +6293,7 @@ func (x *fastReflection_QueryAccountAddressByIdRequest) ProtoMethods() *protoifa
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*QueryAccountAddressByIdRequest)
+		x := input.Message.Interface().(*QueryAccountAddressByIDRequest)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6325,10 +6325,10 @@ func (x *fastReflection_QueryAccountAddressByIdRequest) ProtoMethods() *protoifa
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAccountAddressByIdRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAccountAddressByIDRequest: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAccountAddressByIdRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAccountAddressByIDRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -6386,25 +6386,25 @@ func (x *fastReflection_QueryAccountAddressByIdRequest) ProtoMethods() *protoifa
 }
 
 var (
-	md_QueryAccountAddressByIdResponse                 protoreflect.MessageDescriptor
-	fd_QueryAccountAddressByIdResponse_account_address protoreflect.FieldDescriptor
+	md_QueryAccountAddressByIDResponse                 protoreflect.MessageDescriptor
+	fd_QueryAccountAddressByIDResponse_account_address protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_auth_v1beta1_query_proto_init()
-	md_QueryAccountAddressByIdResponse = File_cosmos_auth_v1beta1_query_proto.Messages().ByName("QueryAccountAddressByIdResponse")
-	fd_QueryAccountAddressByIdResponse_account_address = md_QueryAccountAddressByIdResponse.Fields().ByName("account_address")
+	md_QueryAccountAddressByIDResponse = File_cosmos_auth_v1beta1_query_proto.Messages().ByName("QueryAccountAddressByIDResponse")
+	fd_QueryAccountAddressByIDResponse_account_address = md_QueryAccountAddressByIDResponse.Fields().ByName("account_address")
 }
 
-var _ protoreflect.Message = (*fastReflection_QueryAccountAddressByIdResponse)(nil)
+var _ protoreflect.Message = (*fastReflection_QueryAccountAddressByIDResponse)(nil)
 
-type fastReflection_QueryAccountAddressByIdResponse QueryAccountAddressByIdResponse
+type fastReflection_QueryAccountAddressByIDResponse QueryAccountAddressByIDResponse
 
-func (x *QueryAccountAddressByIdResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_QueryAccountAddressByIdResponse)(x)
+func (x *QueryAccountAddressByIDResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryAccountAddressByIDResponse)(x)
 }
 
-func (x *QueryAccountAddressByIdResponse) slowProtoReflect() protoreflect.Message {
+func (x *QueryAccountAddressByIDResponse) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_auth_v1beta1_query_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -6416,43 +6416,43 @@ func (x *QueryAccountAddressByIdResponse) slowProtoReflect() protoreflect.Messag
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_QueryAccountAddressByIdResponse_messageType fastReflection_QueryAccountAddressByIdResponse_messageType
-var _ protoreflect.MessageType = fastReflection_QueryAccountAddressByIdResponse_messageType{}
+var _fastReflection_QueryAccountAddressByIDResponse_messageType fastReflection_QueryAccountAddressByIDResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryAccountAddressByIDResponse_messageType{}
 
-type fastReflection_QueryAccountAddressByIdResponse_messageType struct{}
+type fastReflection_QueryAccountAddressByIDResponse_messageType struct{}
 
-func (x fastReflection_QueryAccountAddressByIdResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_QueryAccountAddressByIdResponse)(nil)
+func (x fastReflection_QueryAccountAddressByIDResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryAccountAddressByIDResponse)(nil)
 }
-func (x fastReflection_QueryAccountAddressByIdResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_QueryAccountAddressByIdResponse)
+func (x fastReflection_QueryAccountAddressByIDResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryAccountAddressByIDResponse)
 }
-func (x fastReflection_QueryAccountAddressByIdResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryAccountAddressByIdResponse
+func (x fastReflection_QueryAccountAddressByIDResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryAccountAddressByIDResponse
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_QueryAccountAddressByIdResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryAccountAddressByIdResponse
+func (x *fastReflection_QueryAccountAddressByIDResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryAccountAddressByIDResponse
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_QueryAccountAddressByIdResponse) Type() protoreflect.MessageType {
-	return _fastReflection_QueryAccountAddressByIdResponse_messageType
+func (x *fastReflection_QueryAccountAddressByIDResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryAccountAddressByIDResponse_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_QueryAccountAddressByIdResponse) New() protoreflect.Message {
-	return new(fastReflection_QueryAccountAddressByIdResponse)
+func (x *fastReflection_QueryAccountAddressByIDResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryAccountAddressByIDResponse)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_QueryAccountAddressByIdResponse) Interface() protoreflect.ProtoMessage {
-	return (*QueryAccountAddressByIdResponse)(x)
+func (x *fastReflection_QueryAccountAddressByIDResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryAccountAddressByIDResponse)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -6460,10 +6460,10 @@ func (x *fastReflection_QueryAccountAddressByIdResponse) Interface() protoreflec
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_QueryAccountAddressByIdResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_QueryAccountAddressByIDResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.AccountAddress != "" {
 		value := protoreflect.ValueOfString(x.AccountAddress)
-		if !f(fd_QueryAccountAddressByIdResponse_account_address, value) {
+		if !f(fd_QueryAccountAddressByIDResponse_account_address, value) {
 			return
 		}
 	}
@@ -6480,15 +6480,15 @@ func (x *fastReflection_QueryAccountAddressByIdResponse) Range(f func(protorefle
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_QueryAccountAddressByIdResponse) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_QueryAccountAddressByIDResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountAddressByIdResponse.account_address":
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIDResponse.account_address":
 		return x.AccountAddress != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIDResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIDResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6498,15 +6498,15 @@ func (x *fastReflection_QueryAccountAddressByIdResponse) Has(fd protoreflect.Fie
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryAccountAddressByIdResponse) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_QueryAccountAddressByIDResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountAddressByIdResponse.account_address":
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIDResponse.account_address":
 		x.AccountAddress = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIDResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIDResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6516,16 +6516,16 @@ func (x *fastReflection_QueryAccountAddressByIdResponse) Clear(fd protoreflect.F
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_QueryAccountAddressByIdResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryAccountAddressByIDResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountAddressByIdResponse.account_address":
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIDResponse.account_address":
 		value := x.AccountAddress
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIDResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIDResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -6539,15 +6539,15 @@ func (x *fastReflection_QueryAccountAddressByIdResponse) Get(descriptor protoref
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryAccountAddressByIdResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_QueryAccountAddressByIDResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountAddressByIdResponse.account_address":
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIDResponse.account_address":
 		x.AccountAddress = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIDResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIDResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6561,40 +6561,40 @@ func (x *fastReflection_QueryAccountAddressByIdResponse) Set(fd protoreflect.Fie
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryAccountAddressByIdResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryAccountAddressByIDResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountAddressByIdResponse.account_address":
-		panic(fmt.Errorf("field account_address of message cosmos.auth.v1beta1.QueryAccountAddressByIdResponse is not mutable"))
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIDResponse.account_address":
+		panic(fmt.Errorf("field account_address of message cosmos.auth.v1beta1.QueryAccountAddressByIDResponse is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIDResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIDResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_QueryAccountAddressByIdResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryAccountAddressByIDResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.QueryAccountAddressByIdResponse.account_address":
+	case "cosmos.auth.v1beta1.QueryAccountAddressByIDResponse.account_address":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIdResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIDResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIdResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.QueryAccountAddressByIDResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_QueryAccountAddressByIdResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_QueryAccountAddressByIDResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.auth.v1beta1.QueryAccountAddressByIdResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.auth.v1beta1.QueryAccountAddressByIDResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -6602,7 +6602,7 @@ func (x *fastReflection_QueryAccountAddressByIdResponse) WhichOneof(d protorefle
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_QueryAccountAddressByIdResponse) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_QueryAccountAddressByIDResponse) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -6613,7 +6613,7 @@ func (x *fastReflection_QueryAccountAddressByIdResponse) GetUnknown() protorefle
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryAccountAddressByIdResponse) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_QueryAccountAddressByIDResponse) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -6625,7 +6625,7 @@ func (x *fastReflection_QueryAccountAddressByIdResponse) SetUnknown(fields proto
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_QueryAccountAddressByIdResponse) IsValid() bool {
+func (x *fastReflection_QueryAccountAddressByIDResponse) IsValid() bool {
 	return x != nil
 }
 
@@ -6635,9 +6635,9 @@ func (x *fastReflection_QueryAccountAddressByIdResponse) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_QueryAccountAddressByIdResponse) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_QueryAccountAddressByIDResponse) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*QueryAccountAddressByIdResponse)
+		x := input.Message.Interface().(*QueryAccountAddressByIDResponse)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6663,7 +6663,7 @@ func (x *fastReflection_QueryAccountAddressByIdResponse) ProtoMethods() *protoif
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*QueryAccountAddressByIdResponse)
+		x := input.Message.Interface().(*QueryAccountAddressByIDResponse)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6700,7 +6700,7 @@ func (x *fastReflection_QueryAccountAddressByIdResponse) ProtoMethods() *protoif
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*QueryAccountAddressByIdResponse)
+		x := input.Message.Interface().(*QueryAccountAddressByIDResponse)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6732,10 +6732,10 @@ func (x *fastReflection_QueryAccountAddressByIdResponse) ProtoMethods() *protoif
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAccountAddressByIdResponse: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAccountAddressByIDResponse: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAccountAddressByIdResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAccountAddressByIDResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -7329,8 +7329,8 @@ func (x *AddressStringToBytesResponse) GetAddressBytes() []byte {
 	return nil
 }
 
-// QueryAccountAddressByIdRequest is the request type for AccountAddressById rpc method
-type QueryAccountAddressByIdRequest struct {
+// QueryAccountAddressByIDRequest is the request type for AccountAddressById rpc method
+type QueryAccountAddressByIDRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -7338,8 +7338,8 @@ type QueryAccountAddressByIdRequest struct {
 	Id int64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
-func (x *QueryAccountAddressByIdRequest) Reset() {
-	*x = QueryAccountAddressByIdRequest{}
+func (x *QueryAccountAddressByIDRequest) Reset() {
+	*x = QueryAccountAddressByIDRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_auth_v1beta1_query_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -7347,36 +7347,35 @@ func (x *QueryAccountAddressByIdRequest) Reset() {
 	}
 }
 
-func (x *QueryAccountAddressByIdRequest) String() string {
+func (x *QueryAccountAddressByIDRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*QueryAccountAddressByIdRequest) ProtoMessage() {}
+func (*QueryAccountAddressByIDRequest) ProtoMessage() {}
 
-// Deprecated: Use QueryAccountAddressByIdRequest.ProtoReflect.Descriptor instead.
-func (*QueryAccountAddressByIdRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use QueryAccountAddressByIDRequest.ProtoReflect.Descriptor instead.
+func (*QueryAccountAddressByIDRequest) Descriptor() ([]byte, []int) {
 	return file_cosmos_auth_v1beta1_query_proto_rawDescGZIP(), []int{14}
 }
 
-func (x *QueryAccountAddressByIdRequest) GetId() int64 {
+func (x *QueryAccountAddressByIDRequest) GetId() int64 {
 	if x != nil {
 		return x.Id
 	}
 	return 0
 }
 
-// QueryAccountAddressByIdResponse is the response type for AccountAddressById rpc method
-type QueryAccountAddressByIdResponse struct {
+// QueryAccountAddressByIDResponse is the response type for AccountAddressById rpc method
+type QueryAccountAddressByIDResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// account defines the account of the corresponding address.
 	AccountAddress string `protobuf:"bytes,1,opt,name=account_address,json=accountAddress,proto3" json:"account_address,omitempty"`
 }
 
-func (x *QueryAccountAddressByIdResponse) Reset() {
-	*x = QueryAccountAddressByIdResponse{}
+func (x *QueryAccountAddressByIDResponse) Reset() {
+	*x = QueryAccountAddressByIDResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_auth_v1beta1_query_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -7384,18 +7383,18 @@ func (x *QueryAccountAddressByIdResponse) Reset() {
 	}
 }
 
-func (x *QueryAccountAddressByIdResponse) String() string {
+func (x *QueryAccountAddressByIDResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*QueryAccountAddressByIdResponse) ProtoMessage() {}
+func (*QueryAccountAddressByIDResponse) ProtoMessage() {}
 
-// Deprecated: Use QueryAccountAddressByIdResponse.ProtoReflect.Descriptor instead.
-func (*QueryAccountAddressByIdResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use QueryAccountAddressByIDResponse.ProtoReflect.Descriptor instead.
+func (*QueryAccountAddressByIDResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_auth_v1beta1_query_proto_rawDescGZIP(), []int{15}
 }
 
-func (x *QueryAccountAddressByIdResponse) GetAccountAddress() string {
+func (x *QueryAccountAddressByIDResponse) GetAccountAddress() string {
 	if x != nil {
 		return x.AccountAddress
 	}
@@ -7485,10 +7484,10 @@ var file_cosmos_auth_v1beta1_query_proto_rawDesc = []byte{
 	0x64, 0x72, 0x65, 0x73, 0x73, 0x5f, 0x62, 0x79, 0x74, 0x65, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28,
 	0x0c, 0x52, 0x0c, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x74, 0x65, 0x73, 0x22,
 	0x30, 0x0a, 0x1e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x41,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x49, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x49, 0x44, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
 	0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x02, 0x69,
 	0x64, 0x22, 0x64, 0x0a, 0x1f, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e,
-	0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x49, 0x64, 0x52, 0x65, 0x73, 0x70,
+	0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x49, 0x44, 0x52, 0x65, 0x73, 0x70,
 	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x41, 0x0a, 0x0f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x5f,
 	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2,
 	0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
@@ -7513,13 +7512,13 @@ var file_cosmos_auth_v1beta1_query_proto_rawDesc = []byte{
 	0x75, 0x74, 0x68, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x61, 0x63, 0x63, 0x6f,
 	0x75, 0x6e, 0x74, 0x73, 0x2f, 0x7b, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x7d, 0x12, 0xb0,
 	0x01, 0x0a, 0x12, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x42, 0x79, 0x49, 0x64, 0x12, 0x33, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61,
+	0x73, 0x42, 0x79, 0x49, 0x44, 0x12, 0x33, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61,
 	0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72,
 	0x79, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42,
-	0x79, 0x49, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x34, 0x2e, 0x63, 0x6f, 0x73,
+	0x79, 0x49, 0x44, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x34, 0x2e, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
 	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x41, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x49, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x49, 0x44, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
 	0x22, 0x2f, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x29, 0x12, 0x27, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
 	0x73, 0x2f, 0x61, 0x75, 0x74, 0x68, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x61,
 	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x5f, 0x62, 0x79, 0x5f, 0x69, 0x64, 0x2f, 0x7b, 0x69, 0x64,
@@ -7616,8 +7615,8 @@ var file_cosmos_auth_v1beta1_query_proto_goTypes = []interface{}{
 	(*AddressBytesToStringResponse)(nil),    // 11: cosmos.auth.v1beta1.AddressBytesToStringResponse
 	(*AddressStringToBytesRequest)(nil),     // 12: cosmos.auth.v1beta1.AddressStringToBytesRequest
 	(*AddressStringToBytesResponse)(nil),    // 13: cosmos.auth.v1beta1.AddressStringToBytesResponse
-	(*QueryAccountAddressByIdRequest)(nil),  // 14: cosmos.auth.v1beta1.QueryAccountAddressByIdRequest
-	(*QueryAccountAddressByIdResponse)(nil), // 15: cosmos.auth.v1beta1.QueryAccountAddressByIdResponse
+	(*QueryAccountAddressByIDRequest)(nil),  // 14: cosmos.auth.v1beta1.QueryAccountAddressByIDRequest
+	(*QueryAccountAddressByIDResponse)(nil), // 15: cosmos.auth.v1beta1.QueryAccountAddressByIDResponse
 	(*v1beta1.PageRequest)(nil),             // 16: cosmos.base.query.v1beta1.PageRequest
 	(*anypb.Any)(nil),                       // 17: google.protobuf.Any
 	(*v1beta1.PageResponse)(nil),            // 18: cosmos.base.query.v1beta1.PageResponse
@@ -7632,7 +7631,7 @@ var file_cosmos_auth_v1beta1_query_proto_depIdxs = []int32{
 	17, // 5: cosmos.auth.v1beta1.QueryModuleAccountsResponse.accounts:type_name -> google.protobuf.Any
 	0,  // 6: cosmos.auth.v1beta1.Query.Accounts:input_type -> cosmos.auth.v1beta1.QueryAccountsRequest
 	2,  // 7: cosmos.auth.v1beta1.Query.Account:input_type -> cosmos.auth.v1beta1.QueryAccountRequest
-	14, // 8: cosmos.auth.v1beta1.Query.AccountAddressById:input_type -> cosmos.auth.v1beta1.QueryAccountAddressByIdRequest
+	14, // 8: cosmos.auth.v1beta1.Query.AccountAddressByID:input_type -> cosmos.auth.v1beta1.QueryAccountAddressByIDRequest
 	6,  // 9: cosmos.auth.v1beta1.Query.Params:input_type -> cosmos.auth.v1beta1.QueryParamsRequest
 	3,  // 10: cosmos.auth.v1beta1.Query.ModuleAccounts:input_type -> cosmos.auth.v1beta1.QueryModuleAccountsRequest
 	8,  // 11: cosmos.auth.v1beta1.Query.Bech32Prefix:input_type -> cosmos.auth.v1beta1.Bech32PrefixRequest
@@ -7640,7 +7639,7 @@ var file_cosmos_auth_v1beta1_query_proto_depIdxs = []int32{
 	12, // 13: cosmos.auth.v1beta1.Query.AddressStringToBytes:input_type -> cosmos.auth.v1beta1.AddressStringToBytesRequest
 	1,  // 14: cosmos.auth.v1beta1.Query.Accounts:output_type -> cosmos.auth.v1beta1.QueryAccountsResponse
 	5,  // 15: cosmos.auth.v1beta1.Query.Account:output_type -> cosmos.auth.v1beta1.QueryAccountResponse
-	15, // 16: cosmos.auth.v1beta1.Query.AccountAddressById:output_type -> cosmos.auth.v1beta1.QueryAccountAddressByIdResponse
+	15, // 16: cosmos.auth.v1beta1.Query.AccountAddressByID:output_type -> cosmos.auth.v1beta1.QueryAccountAddressByIDResponse
 	4,  // 17: cosmos.auth.v1beta1.Query.Params:output_type -> cosmos.auth.v1beta1.QueryParamsResponse
 	7,  // 18: cosmos.auth.v1beta1.Query.ModuleAccounts:output_type -> cosmos.auth.v1beta1.QueryModuleAccountsResponse
 	9,  // 19: cosmos.auth.v1beta1.Query.Bech32Prefix:output_type -> cosmos.auth.v1beta1.Bech32PrefixResponse
@@ -7829,7 +7828,7 @@ func file_cosmos_auth_v1beta1_query_proto_init() {
 			}
 		}
 		file_cosmos_auth_v1beta1_query_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryAccountAddressByIdRequest); i {
+			switch v := v.(*QueryAccountAddressByIDRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -7841,7 +7840,7 @@ func file_cosmos_auth_v1beta1_query_proto_init() {
 			}
 		}
 		file_cosmos_auth_v1beta1_query_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryAccountAddressByIdResponse); i {
+			switch v := v.(*QueryAccountAddressByIDResponse); i {
 			case 0:
 				return &v.state
 			case 1:

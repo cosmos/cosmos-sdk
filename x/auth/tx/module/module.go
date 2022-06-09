@@ -7,15 +7,11 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/depinject"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func init() {
@@ -27,29 +23,26 @@ func init() {
 type txInputs struct {
 	depinject.In
 
-	Config              *modulev1.Module
-	ProtoCodecMarshaler codec.ProtoCodecMarshaler
+	Config   *modulev1.Module
+	TxConfig *client.TxConfig
 
-	AccountKeeper  *authkeeper.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper" optional:"true"`
-	BankKeeper     bankkeeper.Keeper         `key:"cosmos.bank.v1.Keeper" optional:"true"`
-	FeeGrantKeeper *feegrantkeeper.Keeper    `key:"cosmos.feegrant.v1.Keeper" optional:"true"`
+	AccountKeeper  ante.AccountKeeper   `key:"cosmos.auth.v1.AccountKeeper" optional:"true"`
+	BankKeeper     authtypes.BankKeeper `key:"cosmos.bank.v1.Keeper" optional:"true"`
+	FeeGrantKeeper ante.FeegrantKeeper  `key:"cosmos.feegrant.v1.Keeper" optional:"true"`
 }
 
 type txOutputs struct {
 	depinject.Out
 
-	TxConfig      client.TxConfig
 	BaseAppOption func(*baseapp.BaseApp)
 }
 
 func provideModule(in txInputs) txOutputs {
-	txConfig := tx.NewTxConfig(in.ProtoCodecMarshaler, tx.DefaultSignModes)
-
 	baseAppOption := func(app *baseapp.BaseApp) {
 
 		if !in.Config.SkipAnteHandler {
 			// AnteHandlers
-			anteHandler, err := newAnteHandler(txConfig, in)
+			anteHandler, err := newAnteHandler(in)
 			if err != nil {
 				panic(err)
 			}
@@ -81,14 +74,14 @@ func provideModule(in txInputs) txOutputs {
 		}
 
 		// TxDecoder
-		app.SetTxDecoder(txConfig.TxDecoder())
+		app.SetTxDecoder((*in.TxConfig).TxDecoder())
 	}
 
-	return txOutputs{TxConfig: txConfig, BaseAppOption: baseAppOption}
+	return txOutputs{BaseAppOption: baseAppOption}
 }
 
-func newAnteHandler(txConfig client.TxConfig, in txInputs) (sdk.AnteHandler, error) {
-	if in.AccountKeeper == nil || in.BankKeeper == nil {
+func newAnteHandler(in txInputs) (sdk.AnteHandler, error) {
+	if in.BankKeeper == nil {
 		return nil, fmt.Errorf("both AccountKeeper and BankKeeper are required")
 	}
 
@@ -96,7 +89,7 @@ func newAnteHandler(txConfig client.TxConfig, in txInputs) (sdk.AnteHandler, err
 		ante.HandlerOptions{
 			AccountKeeper:   in.AccountKeeper,
 			BankKeeper:      in.BankKeeper,
-			SignModeHandler: txConfig.SignModeHandler(),
+			SignModeHandler: (*in.TxConfig).SignModeHandler(),
 			FeegrantKeeper:  in.FeeGrantKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},

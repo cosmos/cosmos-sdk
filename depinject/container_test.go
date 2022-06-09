@@ -728,6 +728,8 @@ func TestExplicitModuleBindings(t *testing.T) {
 	require.IsType(t, pond.Duck, Mallard{})
 
 	// module-scoped explicit binding does not interfere with global scope bindings.
+	// PreferInModule should result in successful resolution of Duck in module-scope, but in global scope there should
+	// be a MultipleImplementations error.
 	require.ErrorContains(t,
 		depinject.Inject(
 			depinject.Configs(

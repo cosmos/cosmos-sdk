@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/golang/protobuf/proto" // nolint: staticcheck
@@ -52,9 +53,10 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
 	}
 
-	page, limit, err := pagination.ParsePagination(req.Pagination)
-	if err != nil {
-		return nil, err
+	page := int(req.Page)
+	limit := int(req.Limit)
+	if limit == 0 {
+		limit = query.DefaultLimit
 	}
 	orderBy := parseOrderBy(req.OrderBy)
 
@@ -88,9 +90,7 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 	return &txtypes.GetTxsEventResponse{
 		Txs:         txsList,
 		TxResponses: result.Txs,
-		Pagination: &pagination.PageResponse{
-			Total: result.TotalCount,
-		},
+		Total:       result.TotalCount,
 	}, nil
 }
 

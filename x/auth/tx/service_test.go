@@ -206,55 +206,56 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 		req       *tx.GetTxsEventRequest
 		expErr    bool
 		expErrMsg string
+		expLen    int
 	}{
 		{
 			"nil request",
 			nil,
-			true, "request cannot be nil",
+			true, "request cannot be nil", 0,
 		},
 		{
 			"empty request",
 			&tx.GetTxsEventRequest{},
-			true, "must declare at least one event to search",
+			true, "must declare at least one event to search", 0,
 		},
 		{
 			"request with dummy event",
 			&tx.GetTxsEventRequest{Events: []string{"foobar"}},
-			true, "event foobar should be of the format: {eventType}.{eventAttribute}={value}",
+			true, "event foobar should be of the format: {eventType}.{eventAttribute}={value}", 0,
 		},
 		{
 			"request with order-by",
 			&tx.GetTxsEventRequest{
 				Events:  []string{bankMsgSendEventAction},
 				OrderBy: tx.OrderBy_ORDER_BY_ASC,
+				Page:    1,
 			},
-			false, "",
+			false, "", 0,
 		},
 		{
-			"without pagination",
+			"without pagination limit",
 			&tx.GetTxsEventRequest{
 				Events: []string{bankMsgSendEventAction},
+				Page:   1,
 			},
-			false, "",
+			false, "", 0,
 		},
 		{
-			"with pagination",
+			"with pagination limit",
 			&tx.GetTxsEventRequest{
 				Events: []string{bankMsgSendEventAction},
-				Pagination: &query.PageRequest{
-					CountTotal: false,
-					Offset:     0,
-					Limit:      1,
-				},
+				Page:   1,
+				Limit:  1,
 			},
-			false, "",
+			false, "", 1,
 		},
 		{
 			"with multi events",
 			&tx.GetTxsEventRequest{
 				Events: []string{bankMsgSendEventAction, "message.module='bank'"},
+				Page:   1,
 			},
-			false, "",
+			false, "", 0,
 		},
 	}
 	for _, tc := range testCases {
@@ -268,7 +269,9 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 				s.Require().NoError(err)
 				s.Require().GreaterOrEqual(len(grpcRes.Txs), 1)
 				s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
-
+				if tc.expLen != 0 {
+					s.Require().Equal(len(grpcRes.Txs), tc.expLen)
+				}
 				// Make sure fields are populated.
 				// ref: https://github.com/cosmos/cosmos-sdk/issues/8680
 				// ref: https://github.com/cosmos/cosmos-sdk/issues/8681

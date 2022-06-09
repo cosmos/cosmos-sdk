@@ -98,7 +98,7 @@ func (cfg *Config) SymLinkToGenesis() (string, error) {
 	return cfg.GenesisBin(), nil
 }
 
-// WaitRestartDelay wait the defined restart delay
+// WaitRestartDelay will block and wait until the RestartDelay has elapsed.
 func (cfg *Config) WaitRestartDelay() {
 	if cfg.RestartDelay > 0 {
 		time.Sleep(cfg.RestartDelay)

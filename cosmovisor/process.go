@@ -69,6 +69,8 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	}
 
 	if !IsSkipUpgradeHeight(args, l.fw.currentInfo) {
+		l.cfg.WaitRestartDelay()
+
 		if err := l.doBackup(); err != nil {
 			return false, err
 		}

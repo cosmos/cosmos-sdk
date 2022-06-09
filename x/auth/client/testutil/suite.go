@@ -301,7 +301,7 @@ func (s *IntegrationTestSuite) TestCliGetAccountAddressById() {
 			true,
 		},
 		{
-			"success account id",
+			"valid account id",
 			[]string{fmt.Sprint(0), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 		},

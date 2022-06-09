@@ -181,7 +181,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccountAddressById() {
 			func(res *types.QueryAccountAddressByIdResponse) {},
 		},
 		{
-			"success",
+			"valid request",
 			func() {
 				account := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
 				suite.app.AccountKeeper.SetAccount(suite.ctx, account)

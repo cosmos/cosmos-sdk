@@ -126,7 +126,7 @@ func GetAccountCmd() *cobra.Command {
 	return cmd
 }
 
-// GetAccountAddressByIdCmd returns a query account address that will display the address of given account id.
+// GetAccountAddressByIdCmd returns a query account address that will display the account address of a given account id.
 func GetAccountAddressByIdCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "address-by-id [id]",
@@ -135,10 +135,6 @@ func GetAccountAddressByIdCmd() *cobra.Command {
 		Example: fmt.Sprintf(
 			"%s q auth address-by-id 1", version.AppName,
 		),
-		Long: strings.TrimSpace(`Query the account by id:
-
-$ <appd> query auth address-by-id [id]
-`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {

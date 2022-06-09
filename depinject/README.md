@@ -47,7 +47,7 @@ another provider function or state stored outside the DI container, as is the ca
 ### Interface type resolution
 
 `depinject` supports interface types as inputs to provider functions.  In the SDK's case this pattern is used to decouple
-`Keeper` dependencies between modules.  For example `x/bank` expects an [AccountKeeper] interface as [input to provideModule](https://github.com/cosmos/cosmos-sdk/blob/de343d458aa68c19630177807d6f0e2e6deaf7a9/x/bank/module.go#L224).
+`Keeper` dependencies between modules.  For example `x/bank` expects an [AccountKeeper](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/x/bank/types#AccountKeeper) interface as [input to provideModule](https://github.com/cosmos/cosmos-sdk/blob/de343d458aa68c19630177807d6f0e2e6deaf7a9/x/bank/module.go#L224).
 Concretely `SimApp` uses the implementation in `x/auth`, but this design allows for this loose coupling to change.
 
 Given the following types

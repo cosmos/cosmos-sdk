@@ -42,6 +42,7 @@ var (
 )
 
 // Simulation operation weights constants
+//nolint:gosec // these are not hardcoded credentials.
 const (
 	OpMsgCreateGroup                     = "op_weight_msg_create_group"
 	OpMsgUpdateGroupAdmin                = "op_weight_msg_update_group_admin"
@@ -432,7 +433,7 @@ func SimulateMsgSubmitProposal(ak group.AccountKeeper, bk group.BankKeeper, k ke
 
 		// Pick a random member from the group
 		ctx := sdk.WrapSDKContext(sdkCtx)
-		acc, account, err := randomMember(r, k, ak, ctx, accounts, groupID)
+		acc, account, err := randomMember(ctx, r, k, ak, accounts, groupID)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgSubmitProposal, ""), nil, err
 		}
@@ -962,7 +963,7 @@ func SimulateMsgVote(ak group.AccountKeeper,
 
 		// Pick a random member from the group
 		ctx := sdk.WrapSDKContext(sdkCtx)
-		acc, account, err := randomMember(r, k, ak, ctx, accounts, g.Id)
+		acc, account, err := randomMember(ctx, r, k, ak, accounts, g.Id)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, ""), nil, err
 		}
@@ -1139,7 +1140,7 @@ func SimulateMsgLeaveGroup(k keeper.Keeper, ak group.AccountKeeper, bk group.Ban
 		}
 
 		// Pick a random member from the group
-		acc, account, err := randomMember(r, k, ak, ctx, accounts, groupInfo.Id)
+		acc, account, err := randomMember(ctx, r, k, ak, accounts, groupInfo.Id)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, ""), nil, err
 		}
@@ -1252,8 +1253,8 @@ func randomGroupPolicy(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 	return groupInfo, groupPolicyInfo, acc, account, nil
 }
 
-func randomMember(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
-	ctx context.Context, accounts []simtypes.Account, groupID uint64,
+func randomMember(ctx context.Context, r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
+	accounts []simtypes.Account, groupID uint64,
 ) (acc simtypes.Account, account authtypes.AccountI, err error) {
 	res, err := k.GroupMembers(ctx, &group.QueryGroupMembersRequest{
 		GroupId: groupID,
@@ -1280,9 +1281,8 @@ func randIntInRange(r *rand.Rand, l int) int {
 	}
 	if l == 1 {
 		return 0
-	} else {
-		return simtypes.RandIntBetween(r, 0, l-1)
 	}
+	return simtypes.RandIntBetween(r, 0, l-1)
 }
 
 func findAccount(accounts []simtypes.Account, addr string) (idx int) {

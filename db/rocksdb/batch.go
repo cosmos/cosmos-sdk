@@ -15,7 +15,7 @@ type rocksDBBatch struct {
 	mgr   *dbManager
 }
 
-var _ db.DBWriter = (*rocksDBBatch)(nil)
+var _ db.Writer = (*rocksDBBatch)(nil)
 
 func (mgr *dbManager) newRocksDBBatch() *rocksDBBatch {
 	return &rocksDBBatch{
@@ -24,7 +24,7 @@ func (mgr *dbManager) newRocksDBBatch() *rocksDBBatch {
 	}
 }
 
-// Set implements DBWriter.
+// Set implements Writer.
 func (b *rocksDBBatch) Set(key, value []byte) error {
 	if err := dbutil.ValidateKv(key, value); err != nil {
 		return err
@@ -36,7 +36,7 @@ func (b *rocksDBBatch) Set(key, value []byte) error {
 	return nil
 }
 
-// Delete implements DBWriter.
+// Delete implements Writer.
 func (b *rocksDBBatch) Delete(key []byte) error {
 	if len(key) == 0 {
 		return db.ErrKeyEmpty
@@ -48,7 +48,7 @@ func (b *rocksDBBatch) Delete(key []byte) error {
 	return nil
 }
 
-// Write implements DBWriter.
+// Write implements Writer.
 func (b *rocksDBBatch) Commit() (err error) {
 	if b.batch == nil {
 		return db.ErrTransactionClosed
@@ -58,7 +58,7 @@ func (b *rocksDBBatch) Commit() (err error) {
 	return
 }
 
-// Close implements DBWriter.
+// Close implements Writer.
 func (b *rocksDBBatch) Discard() error {
 	if b.batch != nil {
 		defer atomic.AddInt32(&b.mgr.openWriters, -1)

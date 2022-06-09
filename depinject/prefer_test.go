@@ -116,7 +116,7 @@ func (s *preferSuite) ThereIsNoError() {
 	assert.NoError(s, s.err)
 }
 
-func mungeTypeName(typeName string) string {
+func fullTypeName(typeName string) string {
 	return fmt.Sprintf("github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.%s", typeName)
 }
 

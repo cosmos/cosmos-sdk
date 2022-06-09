@@ -30,9 +30,9 @@ type txInputs struct {
 	Config              *modulev1.Module
 	ProtoCodecMarshaler codec.ProtoCodecMarshaler
 
-	AccountKeeper  authkeeper.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
-	BankKeeper     bankkeeper.Keeper        `key:"cosmos.bank.v1.Keeper"`
-	FeeGrantKeeper feegrantkeeper.Keeper    `key:"cosmos.feegrant.v1.Keeper"`
+	AccountKeeper  *authkeeper.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper" optional:"true"`
+	BankKeeper     bankkeeper.Keeper         `key:"cosmos.bank.v1.Keeper" optional:"true"`
+	FeeGrantKeeper *feegrantkeeper.Keeper    `key:"cosmos.feegrant.v1.Keeper" optional:"true"`
 }
 
 type txOutputs struct {
@@ -44,9 +44,10 @@ type txOutputs struct {
 
 func provideModule(in txInputs) txOutputs {
 	txConfig := tx.NewTxConfig(in.ProtoCodecMarshaler, tx.DefaultSignModes)
+
 	baseAppOption := func(app *baseapp.BaseApp) {
 
-		if !in.Config.DisableAnteHandler {
+		if !in.Config.SkipAnteHandler {
 			// AnteHandlers
 			anteHandler, err := newAnteHandler(txConfig, in)
 			if err != nil {
@@ -55,7 +56,7 @@ func provideModule(in txInputs) txOutputs {
 			app.SetAnteHandler(anteHandler)
 		}
 
-		if !in.Config.DisableAnteHandler {
+		if !in.Config.SkipPostHandler {
 			// PostHandlers
 			// In v0.46, the SDK introduces _postHandlers_. PostHandlers are like
 			// antehandlers, but are run _after_ the `runMsgs` execution. They are also
@@ -87,6 +88,10 @@ func provideModule(in txInputs) txOutputs {
 }
 
 func newAnteHandler(txConfig client.TxConfig, in txInputs) (sdk.AnteHandler, error) {
+	if in.AccountKeeper == nil || in.BankKeeper == nil {
+		return nil, fmt.Errorf("both AccountKeeper and BankKeeper are required")
+	}
+
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
 			AccountKeeper:   in.AccountKeeper,

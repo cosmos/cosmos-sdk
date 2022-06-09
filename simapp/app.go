@@ -211,7 +211,6 @@ func NewSimApp(
 
 	var appBuilder *runtime.AppBuilder
 	var msgServiceRouter *baseapp.MsgServiceRouter
-	var txOptions func(*baseapp.BaseApp)
 
 	if err := depinject.Inject(AppConfig,
 		&appBuilder,
@@ -228,12 +227,11 @@ func NewSimApp(
 		&app.NFTKeeper,
 		&app.SlashingKeeper,
 		&msgServiceRouter,
-		&txOptions,
 	); err != nil {
 		panic(err)
 	}
 
-	app.App = appBuilder.Build(logger, db, traceStore, msgServiceRouter, append(baseAppOptions, txOptions)...)
+	app.App = appBuilder.Build(logger, db, traceStore, msgServiceRouter, baseAppOptions...)
 
 	app.keys = sdk.NewKVStoreKeys(
 		minttypes.StoreKey, distrtypes.StoreKey,
@@ -352,7 +350,7 @@ func NewSimApp(
 	// app.mm.SetOrderMigrations(custom order)
 
 	app.ModuleManager.RegisterInvariants(&app.CrisisKeeper)
-	app.ModuleManager.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino) // should it be app.legacyAmino here?
+	app.ModuleManager.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
 
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
 	// Make sure it's called after `app.mm` and `app.configurator` are set.

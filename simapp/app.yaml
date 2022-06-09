@@ -82,8 +82,6 @@ modules:
   - name: tx
     config:
       "@type": cosmos.tx.module.v1.Module
-      disable_ante_handler: false
-      disable_post_handler: false
 
   - name: feegrant
     config:
@@ -92,7 +90,7 @@ modules:
   - name: bank
     config:
       "@type": cosmos.bank.module.v1.Module
-  
+
   - name: authz
     config:
       "@type": cosmos.authz.module.v1.Module

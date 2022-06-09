@@ -35,10 +35,12 @@ func (k Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr sdk.Ac
 		return err
 	}
 
-	err = k.assertVoteOptionsLen(options)
-	if err != nil {
-		return err
-	}
+	store := ctx.KVStore(keeper.storeKey)
+	bz := keeper.cdc.MustMarshal(&vote)
+	addr := sdk.MustAccAddressFromBech32(vote.Voter)
+
+	store.Set(types.VoteKey(vote.ProposalId, addr), bz)
+}
 
 	for _, option := range options {
 		switch proposal.ProposalType {

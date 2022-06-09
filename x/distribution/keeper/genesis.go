@@ -23,15 +23,15 @@ func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) error 
 	}
 
 	for _, dwi := range data.DelegatorWithdrawInfos {
-		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(dwi.DelegatorAddress)
-		if err != nil {
-			return err
-		}
-		withdrawAddress, err := k.authKeeper.AddressCodec().StringToBytes(dwi.WithdrawAddress)
-		if err != nil {
-			return err
-		}
-		err = k.DelegatorsWithdrawAddress.Set(ctx, delegatorAddress, withdrawAddress)
+		delegatorAddress := sdk.MustAccAddressFromBech32(dwi.DelegatorAddress)
+		withdrawAddress := sdk.MustAccAddressFromBech32(dwi.WithdrawAddress)
+		k.SetDelegatorWithdrawAddr(ctx, delegatorAddress, withdrawAddress)
+	}
+
+	var previousProposer sdk.ConsAddress
+	if data.PreviousProposer != "" {
+		var err error
+		previousProposer, err = sdk.ConsAddressFromBech32(data.PreviousProposer)
 		if err != nil {
 			return err
 		}
@@ -83,15 +83,9 @@ func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) error 
 		if err != nil {
 			return err
 		}
-		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(del.DelegatorAddress)
-		if err != nil {
-			return err
-		}
+		delegatorAddress := sdk.MustAccAddressFromBech32(del.DelegatorAddress)
 
-		err = k.DelegatorStartingInfo.Set(ctx, collections.Join(sdk.ValAddress(valAddr), sdk.AccAddress(delegatorAddress)), del.StartingInfo)
-		if err != nil {
-			return err
-		}
+		k.SetDelegatorStartingInfo(ctx, valAddr, delegatorAddress, del.StartingInfo)
 	}
 	for _, evt := range data.ValidatorSlashEvents {
 		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(evt.ValidatorAddress)

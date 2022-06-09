@@ -121,17 +121,10 @@ func (t *Tx) GetSigners(cdc codec.Codec) ([][]byte, []protoreflect.Message, erro
 
 	// ensure any specified fee payer is included in the required signers (at the end)
 	feePayer := t.AuthInfo.Fee.Payer
-	var feePayerAddr []byte
-	if feePayer != "" {
-		var err error
-		feePayerAddr, err = cdc.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(feePayer)
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-	if feePayerAddr != nil && !seen[string(feePayerAddr)] {
-		signers = append(signers, feePayerAddr)
-		seen[string(feePayerAddr)] = true
+	if feePayer != "" && !seen[feePayer] {
+		payerAddr := sdk.MustAccAddressFromBech32(feePayer)
+		signers = append(signers, payerAddr)
+		seen[feePayer] = true
 	}
 
 	return signers, reflectMsgs, nil
@@ -148,11 +141,7 @@ func (t *Tx) GetFee() sdk.Coins {
 func (t *Tx) FeePayer(cdc codec.Codec) []byte {
 	feePayer := t.AuthInfo.Fee.Payer
 	if feePayer != "" {
-		feePayerAddr, err := cdc.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(feePayer)
-		if err != nil {
-			panic(err)
-		}
-		return feePayerAddr
+		return sdk.MustAccAddressFromBech32(feePayer)
 	}
 	// use first signer as default if no payer specified
 	signers, _, err := t.GetSigners(cdc)
@@ -163,15 +152,10 @@ func (t *Tx) FeePayer(cdc codec.Codec) []byte {
 	return signers[0]
 }
 
-func (t *Tx) FeeGranter(cdc codec.Codec) []byte {
-	feeGranter := t.AuthInfo.Fee.Granter
-	if feeGranter != "" {
-		feeGranterAddr, err := cdc.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(feeGranter)
-		if err != nil {
-			panic(err)
-		}
-
-		return feeGranterAddr
+func (t *Tx) FeeGranter() sdk.AccAddress {
+	feePayer := t.AuthInfo.Fee.Granter
+	if feePayer != "" {
+		return sdk.MustAccAddressFromBech32(feePayer)
 	}
 	return nil
 }

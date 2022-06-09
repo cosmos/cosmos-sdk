@@ -109,29 +109,16 @@ var marshalOption = proto.MarshalOptions{
 	Deterministic: true,
 }
 
-func (w *builder) getTx() (*gogoTxWrapper, error) {
-	anyMsgs, err := msgsV1toAnyV2(w.msgs)
-	if err != nil {
-		return nil, err
-	}
-	body := &txv1beta1.TxBody{
-		Messages:                    anyMsgs,
-		Memo:                        w.memo,
-		TimeoutHeight:               w.timeoutHeight,
-		TimeoutTimestamp:            timestamppb.New(w.timeoutTimestamp),
-		Unordered:                   w.unordered,
-		ExtensionOptions:            intoAnyV2(w.extensionOptions),
-		NonCriticalExtensionOptions: intoAnyV2(w.nonCriticalExtensionOptions),
+func (w *wrapper) FeePayer() sdk.AccAddress {
+	feePayer := w.tx.AuthInfo.Fee.Payer
+	if feePayer != "" {
+		return sdk.MustAccAddressFromBech32(feePayer)
 	}
 
-	fee, err := w.getFee()
-	if err != nil {
-		return nil, fmt.Errorf("unable to parse fee: %w", err)
-	}
-	authInfo := &txv1beta1.AuthInfo{
-		SignerInfos: intoV2SignerInfo(w.signerInfos),
-		Fee:         fee,
-		Tip:         nil, // deprecated
+func (w *wrapper) FeeGranter() sdk.AccAddress {
+	feePayer := w.tx.AuthInfo.Fee.Granter
+	if feePayer != "" {
+		return sdk.MustAccAddressFromBech32(feePayer)
 	}
 
 	bodyBytes, err := marshalOption.Marshal(body)

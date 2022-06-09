@@ -374,12 +374,7 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 			return math.ZeroInt(), err
 		}
 
-		sharesToUnbond, err := dstVal.SharesFromTokensTruncated(slashAmount)
-		if sharesToUnbond.IsZero() {
-			continue
-		} else if err != nil {
-			return math.ZeroInt(), err
-		}
+		delegatorAddress := sdk.MustAccAddressFromBech32(redelegation.DelegatorAddress)
 
 		// Delegations can be dynamic hence need to be looked up on every redelegation entry loop.
 		delegation, err := k.Delegations.Get(ctx, collections.Join(sdk.AccAddress(delegatorAddress), sdk.ValAddress(valDstAddr)))

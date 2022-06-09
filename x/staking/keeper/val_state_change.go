@@ -56,10 +56,7 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]appmodule.Validato
 		if err != nil {
 			return nil, err
 		}
-		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(dvPair.DelegatorAddress)
-		if err != nil {
-			return nil, err
-		}
+		delegatorAddress := sdk.MustAccAddressFromBech32(dvPair.DelegatorAddress)
 
 		balances, err := k.CompleteUnbonding(ctx, delegatorAddress, addr)
 		if err != nil {
@@ -91,10 +88,7 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]appmodule.Validato
 		if err != nil {
 			return nil, err
 		}
-		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(dvvTriplet.DelegatorAddress)
-		if err != nil {
-			return nil, err
-		}
+		delegatorAddress := sdk.MustAccAddressFromBech32(dvvTriplet.DelegatorAddress)
 
 		balances, err := k.CompleteRedelegation(
 			ctx,

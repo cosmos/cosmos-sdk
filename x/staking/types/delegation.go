@@ -46,8 +46,17 @@ func UnmarshalDelegation(cdc codec.BinaryCodec, value []byte) (delegation Delega
 	return delegation, err
 }
 
-func (d Delegation) GetDelegatorAddr() string {
-	return d.DelegatorAddress
+func (d Delegation) GetDelegatorAddr() sdk.AccAddress {
+	delAddr := sdk.MustAccAddressFromBech32(d.DelegatorAddress)
+
+	return delAddr
+}
+func (d Delegation) GetValidatorAddr() sdk.ValAddress {
+	addr, err := sdk.ValAddressFromBech32(d.ValidatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return addr
 }
 
 func (d Delegation) GetValidatorAddr() string {

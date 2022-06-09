@@ -190,6 +190,16 @@ func MustAccAddressFromBech32(address string) AccAddress {
 	return addr
 }
 
+// MustAccAddressFromBech32 calls AccAddressFromBech32 and panics on error.
+func MustAccAddressFromBech32(address string) AccAddress {
+	addr, err := AccAddressFromBech32(address)
+	if err != nil {
+		panic(err)
+	}
+
+	return addr
+}
+
 // AccAddressFromBech32 creates an AccAddress from a Bech32 string.
 // Deprecated: Use an address.Codec to convert addresses from and to string/bytes.
 func AccAddressFromBech32(address string) (addr AccAddress, err error) {

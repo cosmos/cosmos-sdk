@@ -248,15 +248,7 @@ func defaultCalculateVoteResultsAndVotingPower(
 	votesToRemove := []collections.Pair[uint64, sdk.AccAddress]{}
 	if err := k.Votes.Walk(ctx, rng, func(key collections.Pair[uint64, sdk.AccAddress], vote v1.Vote) (bool, error) {
 		// if validator, just record it in the map
-		voter, err := k.authKeeper.AddressCodec().StringToBytes(vote.Voter)
-		if err != nil {
-			return false, err
-		}
-
-		valAddrStr, err := k.sk.ValidatorAddressCodec().BytesToString(voter)
-		if err != nil {
-			return false, err
-		}
+		voter := sdk.MustAccAddressFromBech32(vote.Voter)
 
 		if val, ok := validators[valAddrStr]; ok {
 			val.Vote = vote.Options

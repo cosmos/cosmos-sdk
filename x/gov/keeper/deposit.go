@@ -18,12 +18,12 @@ import (
 )
 
 // SetDeposit sets a Deposit to the gov store
-func (k Keeper) SetDeposit(ctx context.Context, deposit v1.Deposit) error {
-	depositor, err := k.authKeeper.AddressCodec().StringToBytes(deposit.Depositor)
-	if err != nil {
-		return err
-	}
-	return k.Deposits.Set(ctx, collections.Join(deposit.ProposalId, sdk.AccAddress(depositor)), deposit)
+func (keeper Keeper) SetDeposit(ctx sdk.Context, deposit types.Deposit) {
+	store := ctx.KVStore(keeper.storeKey)
+	bz := keeper.cdc.MustMarshal(&deposit)
+	depositor := sdk.MustAccAddressFromBech32(deposit.Depositor)
+
+	store.Set(types.DepositKey(deposit.ProposalId, depositor), bz)
 }
 
 // GetDeposits returns all the deposits of a proposal
@@ -57,8 +57,11 @@ func (k Keeper) RefundAndDeleteDeposits(ctx context.Context, proposalID uint64) 
 		if err != nil {
 			return false, err
 		}
-		err = k.Deposits.Remove(ctx, key)
-		return false, err
+
+		depositor := sdk.MustAccAddressFromBech32(deposit.Depositor)
+
+		store.Delete(types.DepositKey(proposalID, depositor))
+		return false
 	})
 }
 
@@ -211,40 +214,10 @@ func (k Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destAddres
 		return err
 	}
 
-	for _, deposit := range deposits {
-		depositorAddress, err := k.authKeeper.AddressCodec().StringToBytes(deposit.Depositor)
-		if err != nil {
-			return err
-		}
+	keeper.IterateDeposits(ctx, proposalID, func(deposit types.Deposit) bool {
+		depositor := sdk.MustAccAddressFromBech32(deposit.Depositor)
 
-		var remainingAmount sdk.Coins
-
-		for _, coin := range deposit.Amount {
-			burnAmount := sdkmath.LegacyNewDecFromInt(coin.Amount).Mul(rate).TruncateInt()
-			// remaining amount = deposits amount - burn amount
-			remainingAmount = remainingAmount.Add(
-				sdk.NewCoin(
-					coin.Denom,
-					coin.Amount.Sub(burnAmount),
-				),
-			)
-			cancellationCharges = cancellationCharges.Add(
-				sdk.NewCoin(
-					coin.Denom,
-					burnAmount,
-				),
-			)
-		}
-
-		if !remainingAmount.IsZero() {
-			err := k.bankKeeper.SendCoinsFromModuleToAccount(
-				ctx, types.ModuleName, depositorAddress, remainingAmount,
-			)
-			if err != nil {
-				return err
-			}
-		}
-		err = k.Deposits.Remove(ctx, collections.Join(deposit.ProposalId, sdk.AccAddress(depositorAddress)))
+		err := keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, depositor, deposit.Amount)
 		if err != nil {
 			return err
 		}

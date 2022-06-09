@@ -105,17 +105,10 @@ func (k msgServer) MultiSend(ctx context.Context, msg *types.MsgMultiSend) (*typ
 	}
 
 	for _, out := range msg.Outputs {
-		if base, ok := k.Keeper.(BaseKeeper); ok {
-			accAddr, err := base.ak.AddressCodec().StringToBytes(out.Address)
-			if err != nil {
-				return nil, err
-			}
+		accAddr := sdk.MustAccAddressFromBech32(out.Address)
 
-			if k.BlockedAddr(accAddr) {
-				return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", out.Address)
-			}
-		} else {
-			return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid keeper type: %T", k.Keeper)
+		if k.BlockedAddr(accAddr) {
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive transactions", out.Address)
 		}
 	}
 

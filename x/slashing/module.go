@@ -6,16 +6,22 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	modulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
+	"cosmossdk.io/core/appmodule"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/depinject"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
@@ -67,7 +73,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the slashig module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
@@ -165,6 +171,49 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
+
+// _____________________________________________________________________________________
+
+func init() {
+	appmodule.Register(
+		&modulev1.Module{},
+		appmodule.Provide(
+			provideModuleBasic,
+			provideModule,
+		),
+	)
+}
+
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+type slashingInputs struct {
+	depinject.In
+
+	Key           *store.KVStoreKey
+	Cdc           codec.Codec
+	AccountKeeper types.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
+	BankKeeper    types.BankKeeper    `key:"cosmos.bank.v1.Keeper"`
+	StakingKeeper types.StakingKeeper `key:"cosmos.staking.v1.Keeper"`
+	Subspace      paramstypes.Subspace
+}
+
+type outputInputs struct {
+	depinject.Out
+
+	Keeper keeper.Keeper `key:"cosmos.slashing.v1.Keeper"`
+	Module runtime.AppModuleWrapper
+}
+
+func provideModule(in slashingInputs) outputInputs {
+
+	k := keeper.NewKeeper(in.Cdc, in.Key, in.StakingKeeper, in.Subspace)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper)
+	return outputInputs{Keeper: k, Module: runtime.WrapAppModule(m)}
+}
+
+// _____________________________________________________________________________________
 
 // AppModuleSimulation functions
 

@@ -33,11 +33,11 @@ func (err ErrMultipleImplicitInterfaceBindings) Error() string {
 }
 
 // ErrNoTypeForExplicitBindingFound defines an error condition where an explicit binding of PreferredType was marked as
-// preference for PreferredInterface, but no provider for the requested PreferredType was found in the container.
+// a preference for Interface, but no provider for the requested PreferredType was found in the container.
 type ErrNoTypeForExplicitBindingFound struct {
-	PreferredType      string
-	PreferredInterface string
-	ModuleName         string
+	PreferredType string
+	Interface     string
+	ModuleName    string
 	error
 }
 
@@ -48,19 +48,19 @@ func newErrNoTypeForExplicitBindingFound(p preference) ErrNoTypeForExplicitBindi
 	}
 
 	return ErrNoTypeForExplicitBindingFound{
-		PreferredType:      p.implTypeName,
-		PreferredInterface: p.interfaceName,
-		ModuleName:         moduleName,
+		PreferredType: p.implTypeName,
+		Interface:     p.interfaceName,
+		ModuleName:    moduleName,
 	}
 }
 
 func (err ErrNoTypeForExplicitBindingFound) Error() string {
 	if err.ModuleName != "" {
 		return fmt.Sprintf("Given the explicit interface binding %s in module %s, a provider of type %s was not found.",
-			err.PreferredInterface, err.ModuleName, err.PreferredType)
+			err.Interface, err.ModuleName, err.PreferredType)
 	} else {
 		return fmt.Sprintf("Given the explicit interface binding %s, a provider of type %s was not found.",
-			err.PreferredInterface, err.PreferredType)
+			err.Interface, err.PreferredType)
 	}
 
 }

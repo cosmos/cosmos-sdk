@@ -23,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -34,10 +33,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/module" // import for side-effects
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -377,61 +375,13 @@ func NewSimApp(
 	app.MountMemoryStores(app.memKeys)
 
 	// initialize BaseApp
-	app.SetTxDecoder(encodingConfig.TxConfig.TxDecoder())
 	app.SetInitChainer(app.InitChainer)
-	app.setAnteHandler(encodingConfig.TxConfig, cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents)))
-	// In v0.46, the SDK introduces _postHandlers_. PostHandlers are like
-	// antehandlers, but are run _after_ the `runMsgs` execution. They are also
-	// defined as a chain, and have the same signature as antehandlers.
-	//
-	// In baseapp, postHandlers are run in the same store branch as `runMsgs`,
-	// meaning that both `runMsgs` and `postHandler` state will be committed if
-	// both are successful, and both will be reverted if any of the two fails.
-	//
-	// The SDK exposes a default empty postHandlers chain.
-	//
-	// Please note that changing any of the anteHandler or postHandler chain is
-	// likely to be a state-machine breaking change, which needs a coordinated
-	// upgrade.
-	app.setPostHandler()
 
 	if err := app.Load(loadLatest); err != nil {
 		panic(err)
 	}
 
 	return app
-}
-
-func (app *SimApp) setAnteHandler(txConfig client.TxConfig, indexEventsStr []string) {
-	indexEvents := map[string]struct{}{}
-	for _, e := range indexEventsStr {
-		indexEvents[e] = struct{}{}
-	}
-	anteHandler, err := ante.NewAnteHandler(
-		ante.HandlerOptions{
-			AccountKeeper:   app.AccountKeeper,
-			BankKeeper:      app.BankKeeper,
-			SignModeHandler: txConfig.SignModeHandler(),
-			FeegrantKeeper:  app.FeeGrantKeeper,
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-		},
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	app.SetAnteHandler(anteHandler)
-}
-
-func (app *SimApp) setPostHandler() {
-	postHandler, err := posthandler.NewPostHandler(
-		posthandler.HandlerOptions{},
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	app.SetPostHandler(postHandler)
 }
 
 // Name returns the name of the App

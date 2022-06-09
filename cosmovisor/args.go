@@ -198,7 +198,7 @@ func GetConfigFromEnv() (*Config, error) {
 func parseEnvDuration(input string) (time.Duration, error) {
 	duration, err := time.ParseDuration(input)
 	if err != nil {
-		return 0, fmt.Errorf("could not parse \"%s\" into a duration", input)
+		return 0, fmt.Errorf("could not parse '%s' into a duration", input)
 	}
 
 	if duration <= 0 {

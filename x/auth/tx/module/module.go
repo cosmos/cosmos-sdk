@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 )
 
 func init() {
@@ -26,9 +27,9 @@ type txInputs struct {
 	Config   *modulev1.Module
 	TxConfig *client.TxConfig
 
-	AccountKeeper  ante.AccountKeeper   `key:"cosmos.auth.v1.AccountKeeper" optional:"true"`
-	BankKeeper     authtypes.BankKeeper `key:"cosmos.bank.v1.Keeper" optional:"true"`
-	FeeGrantKeeper ante.FeegrantKeeper  `key:"cosmos.feegrant.v1.Keeper" optional:"true"`
+	AccountKeeper  ante.AccountKeeper    `key:"cosmos.auth.v1.AccountKeeper" optional:"true"`
+	BankKeeper     authtypes.BankKeeper  `key:"cosmos.bank.v1.Keeper" optional:"true"`
+	FeeGrantKeeper feegrantkeeper.Keeper `key:"cosmos.feegrant.v1.Keeper" optional:"true"`
 }
 
 type txOutputs struct {

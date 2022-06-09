@@ -46,8 +46,8 @@ func provideModule(in txInputs) txOutputs {
 
 	baseAppOption := func(app *baseapp.BaseApp) {
 
+		// AnteHandlers
 		if !in.Config.SkipAnteHandler {
-			// AnteHandlers
 			anteHandler, err := newAnteHandler(txConfig, in)
 			if err != nil {
 				panic(err)
@@ -55,8 +55,8 @@ func provideModule(in txInputs) txOutputs {
 			app.SetAnteHandler(anteHandler)
 		}
 
+		// PostHandlers
 		if !in.Config.SkipPostHandler {
-			// PostHandlers
 			// In v0.46, the SDK introduces _postHandlers_. PostHandlers are like
 			// antehandlers, but are run _after_ the `runMsgs` execution. They are also
 			// defined as a chain, and have the same signature as antehandlers.

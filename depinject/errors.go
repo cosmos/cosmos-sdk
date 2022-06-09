@@ -33,7 +33,7 @@ func (err ErrMultipleImplicitInterfaceBindings) Error() string {
 }
 
 // ErrNoTypeForExplicitBindingFound defines an error condition where an explicit binding of PreferredType was marked as
-// a preference for Interface, but no provider for the requested PreferredType was found in the container.
+// a interfaceBinding for Interface, but no provider for the requested PreferredType was found in the container.
 type ErrNoTypeForExplicitBindingFound struct {
 	PreferredType string
 	Interface     string
@@ -41,7 +41,7 @@ type ErrNoTypeForExplicitBindingFound struct {
 	error
 }
 
-func newErrNoTypeForExplicitBindingFound(p preference) ErrNoTypeForExplicitBindingFound {
+func newErrNoTypeForExplicitBindingFound(p interfaceBinding) ErrNoTypeForExplicitBindingFound {
 	var moduleName string
 	if p.moduleKey != nil {
 		moduleName = p.moduleKey.name

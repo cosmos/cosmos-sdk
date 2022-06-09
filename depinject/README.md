@@ -106,14 +106,14 @@ depinject.Inject(
 
 A specific binding preference for `Duck` is required.
 
-#### `Prefer` API
+#### `BindInterface` API
 
-In the above situation registering a preference for a given interface binding may look like
+In the above situation registering a binding for a given interface binding may look like
 
 ```golang
 depinject.Inject(
   depinject.Configs(
-    depinject.Prefer(
+    depinject.BindInterface(
       "duck.Duck",
       "duck.Mallard"),
      depinject.Provide(

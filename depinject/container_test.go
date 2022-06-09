@@ -674,7 +674,7 @@ func TestImplicitAndExplicitBindings(t *testing.T) {
 		func(duck Duck) Pond {
 			return Pond{Duck: duck}
 		})
-	canvasbackPref := depinject.Prefer(
+	canvasbackPref := depinject.BindInterface(
 		"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Duck",
 		"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Canvasback")
 
@@ -695,7 +695,7 @@ func TestExplicitModuleBindings(t *testing.T) {
 	require.ErrorContains(t,
 		depinject.Inject(
 			depinject.Configs(
-				depinject.PreferInModule(
+				depinject.BindInterfaceInModule(
 					"foo",
 					"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Duck",
 					"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.DoesNotExist"),
@@ -712,7 +712,7 @@ func TestExplicitModuleBindings(t *testing.T) {
 	require.NoError(t,
 		depinject.Inject(
 			depinject.Configs(
-				depinject.PreferInModule(
+				depinject.BindInterfaceInModule(
 					"foo",
 					"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Duck",
 					"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Mallard"),
@@ -728,12 +728,12 @@ func TestExplicitModuleBindings(t *testing.T) {
 	require.IsType(t, pond.Duck, Mallard{})
 
 	// module-scoped explicit binding does not interfere with global scope bindings.
-	// PreferInModule should result in successful resolution of Duck in module-scope, but in global scope there should
+	// BindInterfaceInModule should result in successful resolution of Duck in module-scope, but in global scope there should
 	// be a MultipleImplementations error.
 	require.ErrorContains(t,
 		depinject.Inject(
 			depinject.Configs(
-				depinject.PreferInModule(
+				depinject.BindInterfaceInModule(
 					"foo",
 					"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Duck",
 					"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Mallard"),
@@ -754,7 +754,7 @@ func TestExplicitModuleBindings(t *testing.T) {
 	require.NoError(t,
 		depinject.Inject(
 			depinject.Configs(
-				depinject.Prefer(
+				depinject.BindInterface(
 					"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Duck",
 					"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Mallard"),
 				depinject.Provide(

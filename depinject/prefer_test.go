@@ -1,6 +1,9 @@
 package depinject_test
 
 import (
+	"fmt"
+	"github.com/stretchr/testify/require"
+	"reflect"
 	"testing"
 
 	"github.com/regen-network/gocuke"
@@ -13,7 +16,7 @@ func TestPrefer(t *testing.T) {
 	gocuke.NewRunner(t, &preferSuite{}).
 		Path("features/prefer.feature").
 		Step(`we try to resolve a "Duck" in global scope`, (*preferSuite).WeTryToResolveADuckInGlobalScope).
-		Step(`module (\w+) wants a "Duck"`, (*preferSuite).ModuleWantsADuck).
+		Step(`module "(\w+)" wants a "Duck"`, (*preferSuite).ModuleWantsADuck).
 		Run()
 }
 
@@ -84,35 +87,61 @@ func (s *preferSuite) resolvePond() *Pond {
 		return s.pond
 	}
 
-	s.err = depinject.Inject(depinject.Configs(s.configs...), s.pond)
+	s.addConfig(depinject.Provide(func(ducks []DuckWrapper) Pond { return Pond{Ducks: ducks} }))
+	var pond Pond
+	s.err = depinject.Inject(depinject.Configs(s.configs...), &pond)
+	s.pond = &pond
 	return s.pond
 }
 
-func (s *preferSuite) IsResolvedInGlobalScope(a string) {
+func (s *preferSuite) IsResolvedInGlobalScope(typeName string) {
 	pond := s.resolvePond()
-	for _, _ = range pond.Ducks {
-		// TODO check that the duck with no module name (global)
-		// is the expected type of duck
+	found := false
+	for _, dw := range pond.Ducks {
+		if dw.Module == "" {
+			require.Contains(s, reflect.TypeOf(dw.Duck).Name(), typeName)
+			found = true
+		}
 	}
+	assert.True(s, found)
 }
 
-func (s *preferSuite) ThereIsAError(a string) {
-	assert.ErrorContains(s, s.err, a)
+func (s *preferSuite) ThereIsAError(expectedErrorMsg string) {
+	s.resolvePond()
+	assert.ErrorContains(s, s.err, expectedErrorMsg)
 }
 
-func (s *preferSuite) ThereIsAGlobalPreferenceForA(a string, b string) {
+func (s *preferSuite) ThereIsNoError() {
+	s.resolvePond()
+	assert.NoError(s, s.err)
 }
 
-func (s *preferSuite) ThereIsAPreferenceForAInModule(a string, b string, c string) {
+func mungeTypeName(typeName string) string {
+	return fmt.Sprintf("github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.%s", typeName)
+}
+
+func (s *preferSuite) ThereIsAGlobalPreferenceForA(preferredType string, interfaceType string) {
+	s.addConfig(depinject.Prefer(mungeTypeName(interfaceType), mungeTypeName(preferredType)))
+}
+
+func (s *preferSuite) ThereIsAPreferenceForAInModule(preferredType string, interfaceType string, moduleName string) {
+	s.addConfig(depinject.PreferInModule(moduleName, mungeTypeName(interfaceType), mungeTypeName(preferredType)))
 }
 
 func (s *preferSuite) ModuleWantsADuck(module string) {
+	s.addConfig(depinject.ProvideInModule(module, func(duck Duck) DuckWrapper {
+		return DuckWrapper{Module: module, Duck: duck}
+	}))
 }
 
 func (s *preferSuite) ModuleResolvesA(module string, duckType string) {
 	pond := s.resolvePond()
-	for _, _ = range pond.Ducks {
-		// TODO check that the duck with module name (global)
-		// is the expected type of duck
+	moduleFound := false
+	for _, dw := range pond.Ducks {
+		if dw.Module == module {
+			assert.Contains(s, reflect.TypeOf(dw.Duck).Name(), duckType)
+			moduleFound = true
+		}
 	}
+	assert.True(s, moduleFound)
 }

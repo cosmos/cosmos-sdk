@@ -12,29 +12,29 @@ Feature: interface type resolution
 
     Example: two implementations
       Given "Mallard" is provided
-      And "Canvasback" is provided
+      * "Canvasback" is provided
       When we try to resolve a "Duck" in global scope
-      Then there is a "multiple implicit interface bindings" error
+      Then there is a "Multiple implementations found" error
 
   Rule: preferences must point to a real type
-    Example:
+    Example: a preferred type is not provided
       Given "Mallard" is provided
       And there is a global preference for a "Marbled" "Duck"
       When we try to resolve a "Duck" in global scope
-      Then there is a "no type for explicit binding" error
+      Then there is a "No type for explicit binding" error
 
   Rule: preferences supersede implicit type resolution
     Example: global scope
       Given "Canvasback" is provided
       And there is a global preference for a "Mallard" "Duck"
       When we try to resolve a "Duck" in global scope
-      Then there is a "can't resolve" error
+      Then there is a "No type for explicit binding" error
 
     Example: module scope
       Given "Canvasback" is provided
       And there is a preference for a "Mallard" "Duck" in module "A"
       When module "A" wants a "Duck"
-      Then there is a "can't resolve" error
+      Then there is a "No type for explicit binding" error
 
   Rule: preferences in global scope apply to both global and module-scoped resolution (if there is no module-scoped preference)
     Example: global resolution
@@ -57,7 +57,7 @@ Feature: interface type resolution
       * "Canvasback" is provided
       * there is a preference for a "Canvasback" "Duck" in module "A"
       When we try to resolve a "Duck" in global scope
-      Then there is a "multiple implicit interface bindings" error
+      Then there is a "Multiple implementations found" error
 
     Example: a module-scoped binding works for that module
       Given "Mallard" is provided
@@ -71,7 +71,7 @@ Feature: interface type resolution
       * "Canvasback" is provided
       * there is a preference for a "Canvasback" "Duck" in module "A"
       When module "B" wants a "Duck"
-      Then there is a "multiple implicit interface bindings" error
+      Then there is a "Multiple implementations found" error
 
     # this case is called a "journey" scenario which tests a bunch of things together
     # most tests should be short and to the point like the ones above but one or two long ones
@@ -86,7 +86,9 @@ Feature: interface type resolution
       When module "A" wants a "Duck"
       * module "B" wants a "Duck"
       * module "C" wants a "Duck"
-      Then module "A" resolves a "Canvasback"
+      * we try to resolve a "Duck" in global scope
+      Then there is no error
+      * module "A" resolves a "Canvasback"
       * module "B" resolves a "Mallard"
       * module "C" resolves a "Marbled"
       * "Marbled" is resolved in global scope

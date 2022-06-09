@@ -56,10 +56,10 @@ func newErrNoTypeForExplicitBindingFound(p preference) ErrNoTypeForExplicitBindi
 
 func (err ErrNoTypeForExplicitBindingFound) Error() string {
 	if err.ModuleName != "" {
-		return fmt.Sprintf("Given the explicit interface binding %s in module %s, a provider of type %s was not found.",
+		return fmt.Sprintf("No type for explicit binding found.  Given the explicit interface binding %s in module %s, a provider of type %s was not found.",
 			err.Interface, err.ModuleName, err.PreferredType)
 	} else {
-		return fmt.Sprintf("Given the explicit interface binding %s, a provider of type %s was not found.",
+		return fmt.Sprintf("No type for explicit binding found.  Given the explicit interface binding %s, a provider of type %s was not found.",
 			err.Interface, err.PreferredType)
 	}
 

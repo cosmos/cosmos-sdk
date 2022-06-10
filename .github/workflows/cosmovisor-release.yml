@@ -6,7 +6,7 @@ on:
       - "cosmovisor/v*.*.*"
 jobs:
   goreleaser:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     steps:
       - uses: actions/checkout@v3
         with:

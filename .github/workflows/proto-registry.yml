@@ -10,7 +10,7 @@ on:
 
 jobs:
   push:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     steps:
       - uses: actions/checkout@v3
       - uses: bufbuild/buf-setup-action@v1.5.0

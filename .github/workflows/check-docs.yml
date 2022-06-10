@@ -12,7 +12,7 @@ jobs:
     if: ${{ github.event.label.name == 'docs' }}
 
     name: Check docs build
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v3

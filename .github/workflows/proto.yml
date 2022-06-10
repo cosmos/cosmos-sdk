@@ -13,7 +13,7 @@ on:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     timeout-minutes: 5
     steps:
     - uses: actions/checkout@v3
@@ -23,7 +23,7 @@ jobs:
         input: 'proto'
 
   break-check:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     steps:
       - uses: actions/checkout@v3
       - uses: bufbuild/buf-setup-action@v1.5.0

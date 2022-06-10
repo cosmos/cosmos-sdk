@@ -12,7 +12,7 @@ on:
 
 jobs:
   auth:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     steps:
       - uses: actions/checkout@v3
       - uses: technote-space/get-diff-action@v6.0.1
@@ -27,7 +27,7 @@ jobs:
           dry-run: ${{ github.event_name != 'pull_request' }}
         if: env.GIT_DIFF
   bank:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     steps:
       - uses: actions/checkout@v3
       - uses: technote-space/get-diff-action@v6.0.1
@@ -42,7 +42,7 @@ jobs:
           dry-run: ${{ github.event_name != 'pull_request' }}
         if: env.GIT_DIFF
   evidence:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     steps:
       - uses: actions/checkout@v3
       - uses: technote-space/get-diff-action@v6.0.1

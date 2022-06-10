@@ -6,7 +6,7 @@ permissions:
 
 jobs:
   dependency-review:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     steps:
       - name: "Checkout Repository"
         uses: actions/checkout@v3

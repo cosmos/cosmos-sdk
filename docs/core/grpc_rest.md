@@ -77,7 +77,7 @@ Independently from the Cosmos SDK, Tendermint also exposes a RPC server. This RP
 Some Tendermint RPC endpoints are directly related to the Cosmos SDK:
 
 * `/abci_query`: this endpoint will query the application for state. As the `path` parameter, you can send the following strings:
-    * any Protobuf fully-qualified service method, such as `/cosmos.bank.v1beta1.QueryAllBalances`. The `data` field should then include the method's request parameter(s) encoded as bytes using Protobuf.
+    * any Protobuf fully-qualified service method, such as `/cosmos.bank.v1beta1.Query/AllBalances`. The `data` field should then include the method's request parameter(s) encoded as bytes using Protobuf.
     * `/app/simulate`: this will simulate a transaction, and return some information such as gas used.
     * `/app/version`: this will return the application's version.
     * `/store/{path}`: this will query the store directly.

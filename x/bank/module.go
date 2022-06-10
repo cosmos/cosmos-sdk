@@ -4,15 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
+	"time"
 
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"github.com/cosmos/cosmos-sdk/depinject"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/tendermint/tendermint/crypto"
-
-	"math/rand"
-	"time"
 
 	"cosmossdk.io/core/appmodule"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -222,7 +221,7 @@ type bankInputs struct {
 	depinject.In
 
 	Config        *modulev1.Module
-	AccountKeeper types.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
+	AccountKeeper types.AccountKeeper
 	Cdc           codec.Codec
 	Subspace      paramtypes.Subspace
 	Key           *store.KVStoreKey
@@ -231,7 +230,7 @@ type bankInputs struct {
 type bankOutputs struct {
 	depinject.Out
 
-	BankKeeper keeper.Keeper `key:"cosmos.bank.v1.Keeper"`
+	BankKeeper keeper.BaseKeeper
 	Module     runtime.AppModuleWrapper
 }
 

@@ -22,6 +22,10 @@ type simpleResolver struct {
 	graphNode   *graphviz.Node
 }
 
+func (s *simpleResolver) getType() reflect.Type {
+	return s.typ
+}
+
 func (s *simpleResolver) describeLocation() string {
 	return s.node.provider.Location.String()
 }

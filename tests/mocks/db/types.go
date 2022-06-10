@@ -11,31 +11,31 @@ import (
 	gomock "github.com/golang/mock/gomock"
 )
 
-// MockDBConnection is a mock of DBConnection interface.
-type MockDBConnection struct {
+// MockConnection is a mock of Connection interface.
+type MockConnection struct {
 	ctrl     *gomock.Controller
-	recorder *MockDBConnectionMockRecorder
+	recorder *MockConnectionMockRecorder
 }
 
-// MockDBConnectionMockRecorder is the mock recorder for MockDBConnection.
-type MockDBConnectionMockRecorder struct {
-	mock *MockDBConnection
+// MockConnectionMockRecorder is the mock recorder for MockConnection.
+type MockConnectionMockRecorder struct {
+	mock *MockConnection
 }
 
-// NewMockDBConnection creates a new mock instance.
-func NewMockDBConnection(ctrl *gomock.Controller) *MockDBConnection {
-	mock := &MockDBConnection{ctrl: ctrl}
-	mock.recorder = &MockDBConnectionMockRecorder{mock}
+// NewMockConnection creates a new mock instance.
+func NewMockConnection(ctrl *gomock.Controller) *MockConnection {
+	mock := &MockConnection{ctrl: ctrl}
+	mock.recorder = &MockConnectionMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockDBConnection) EXPECT() *MockDBConnectionMockRecorder {
+func (m *MockConnection) EXPECT() *MockConnectionMockRecorder {
 	return m.recorder
 }
 
 // Close mocks base method.
-func (m *MockDBConnection) Close() error {
+func (m *MockConnection) Close() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Close")
 	ret0, _ := ret[0].(error)
@@ -43,13 +43,13 @@ func (m *MockDBConnection) Close() error {
 }
 
 // Close indicates an expected call of Close.
-func (mr *MockDBConnectionMockRecorder) Close() *gomock.Call {
+func (mr *MockConnectionMockRecorder) Close() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockDBConnection)(nil).Close))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockConnection)(nil).Close))
 }
 
 // DeleteVersion mocks base method.
-func (m *MockDBConnection) DeleteVersion(arg0 uint64) error {
+func (m *MockConnection) DeleteVersion(arg0 uint64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteVersion", arg0)
 	ret0, _ := ret[0].(error)
@@ -57,56 +57,56 @@ func (m *MockDBConnection) DeleteVersion(arg0 uint64) error {
 }
 
 // DeleteVersion indicates an expected call of DeleteVersion.
-func (mr *MockDBConnectionMockRecorder) DeleteVersion(arg0 interface{}) *gomock.Call {
+func (mr *MockConnectionMockRecorder) DeleteVersion(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteVersion", reflect.TypeOf((*MockDBConnection)(nil).DeleteVersion), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteVersion", reflect.TypeOf((*MockConnection)(nil).DeleteVersion), arg0)
 }
 
 // ReadWriter mocks base method.
-func (m *MockDBConnection) ReadWriter() db.DBReadWriter {
+func (m *MockConnection) ReadWriter() db.ReadWriter {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ReadWriter")
-	ret0, _ := ret[0].(db.DBReadWriter)
+	ret0, _ := ret[0].(db.ReadWriter)
 	return ret0
 }
 
 // ReadWriter indicates an expected call of ReadWriter.
-func (mr *MockDBConnectionMockRecorder) ReadWriter() *gomock.Call {
+func (mr *MockConnectionMockRecorder) ReadWriter() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadWriter", reflect.TypeOf((*MockDBConnection)(nil).ReadWriter))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadWriter", reflect.TypeOf((*MockConnection)(nil).ReadWriter))
 }
 
 // Reader mocks base method.
-func (m *MockDBConnection) Reader() db.DBReader {
+func (m *MockConnection) Reader() db.Reader {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Reader")
-	ret0, _ := ret[0].(db.DBReader)
+	ret0, _ := ret[0].(db.Reader)
 	return ret0
 }
 
 // Reader indicates an expected call of Reader.
-func (mr *MockDBConnectionMockRecorder) Reader() *gomock.Call {
+func (mr *MockConnectionMockRecorder) Reader() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Reader", reflect.TypeOf((*MockDBConnection)(nil).Reader))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Reader", reflect.TypeOf((*MockConnection)(nil).Reader))
 }
 
 // ReaderAt mocks base method.
-func (m *MockDBConnection) ReaderAt(arg0 uint64) (db.DBReader, error) {
+func (m *MockConnection) ReaderAt(arg0 uint64) (db.Reader, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ReaderAt", arg0)
-	ret0, _ := ret[0].(db.DBReader)
+	ret0, _ := ret[0].(db.Reader)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ReaderAt indicates an expected call of ReaderAt.
-func (mr *MockDBConnectionMockRecorder) ReaderAt(arg0 interface{}) *gomock.Call {
+func (mr *MockConnectionMockRecorder) ReaderAt(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReaderAt", reflect.TypeOf((*MockDBConnection)(nil).ReaderAt), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReaderAt", reflect.TypeOf((*MockConnection)(nil).ReaderAt), arg0)
 }
 
 // Revert mocks base method.
-func (m *MockDBConnection) Revert() error {
+func (m *MockConnection) Revert() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Revert")
 	ret0, _ := ret[0].(error)
@@ -114,13 +114,13 @@ func (m *MockDBConnection) Revert() error {
 }
 
 // Revert indicates an expected call of Revert.
-func (mr *MockDBConnectionMockRecorder) Revert() *gomock.Call {
+func (mr *MockConnectionMockRecorder) Revert() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Revert", reflect.TypeOf((*MockDBConnection)(nil).Revert))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Revert", reflect.TypeOf((*MockConnection)(nil).Revert))
 }
 
 // SaveNextVersion mocks base method.
-func (m *MockDBConnection) SaveNextVersion() (uint64, error) {
+func (m *MockConnection) SaveNextVersion() (uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveNextVersion")
 	ret0, _ := ret[0].(uint64)
@@ -129,13 +129,13 @@ func (m *MockDBConnection) SaveNextVersion() (uint64, error) {
 }
 
 // SaveNextVersion indicates an expected call of SaveNextVersion.
-func (mr *MockDBConnectionMockRecorder) SaveNextVersion() *gomock.Call {
+func (mr *MockConnectionMockRecorder) SaveNextVersion() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveNextVersion", reflect.TypeOf((*MockDBConnection)(nil).SaveNextVersion))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveNextVersion", reflect.TypeOf((*MockConnection)(nil).SaveNextVersion))
 }
 
 // SaveVersion mocks base method.
-func (m *MockDBConnection) SaveVersion(arg0 uint64) error {
+func (m *MockConnection) SaveVersion(arg0 uint64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveVersion", arg0)
 	ret0, _ := ret[0].(error)
@@ -143,13 +143,13 @@ func (m *MockDBConnection) SaveVersion(arg0 uint64) error {
 }
 
 // SaveVersion indicates an expected call of SaveVersion.
-func (mr *MockDBConnectionMockRecorder) SaveVersion(arg0 interface{}) *gomock.Call {
+func (mr *MockConnectionMockRecorder) SaveVersion(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveVersion", reflect.TypeOf((*MockDBConnection)(nil).SaveVersion), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveVersion", reflect.TypeOf((*MockConnection)(nil).SaveVersion), arg0)
 }
 
 // Versions mocks base method.
-func (m *MockDBConnection) Versions() (db.VersionSet, error) {
+func (m *MockConnection) Versions() (db.VersionSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Versions")
 	ret0, _ := ret[0].(db.VersionSet)
@@ -158,23 +158,23 @@ func (m *MockDBConnection) Versions() (db.VersionSet, error) {
 }
 
 // Versions indicates an expected call of Versions.
-func (mr *MockDBConnectionMockRecorder) Versions() *gomock.Call {
+func (mr *MockConnectionMockRecorder) Versions() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Versions", reflect.TypeOf((*MockDBConnection)(nil).Versions))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Versions", reflect.TypeOf((*MockConnection)(nil).Versions))
 }
 
 // Writer mocks base method.
-func (m *MockDBConnection) Writer() db.DBWriter {
+func (m *MockConnection) Writer() db.Writer {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Writer")
-	ret0, _ := ret[0].(db.DBWriter)
+	ret0, _ := ret[0].(db.Writer)
 	return ret0
 }
 
 // Writer indicates an expected call of Writer.
-func (mr *MockDBConnectionMockRecorder) Writer() *gomock.Call {
+func (mr *MockConnectionMockRecorder) Writer() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Writer", reflect.TypeOf((*MockDBConnection)(nil).Writer))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Writer", reflect.TypeOf((*MockConnection)(nil).Writer))
 }
 
 // MockDBReader is a mock of DBReader interface.

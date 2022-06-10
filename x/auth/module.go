@@ -211,7 +211,7 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 type authOutputs struct {
 	depinject.Out
 
-	AccountKeeper keeper.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
+	AccountKeeper keeper.AccountKeeper
 	Module        runtime.AppModuleWrapper
 }
 
@@ -219,8 +219,8 @@ func provideModule(
 	config *modulev1.Module,
 	key *store.KVStoreKey,
 	cdc codec.Codec,
-	subspace paramtypes.Subspace) authOutputs {
-
+	subspace paramtypes.Subspace,
+) authOutputs {
 	maccPerms := map[string][]string{}
 	for _, permission := range config.ModuleAccountPermissions {
 		maccPerms[permission.Account] = permission.Permissions

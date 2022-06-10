@@ -105,9 +105,15 @@ jobs:
   sims-fail:
     needs:
       [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
-    if: ${{ failure() }}
+    if: ${{ failure() && steps.last_status.outputs.last_status == 'success' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Get previous workflow status
+        uses: Mercymeilya/last-workflow-status@v0.3
+        id: last_status
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Notify Slack on failure
         uses: rtCamp/action-slack-notify@12e36fc18b0689399306c2e0b3e0f2978b7f1ee7
         env:
@@ -122,9 +128,15 @@ jobs:
   sims-success:
     needs:
       [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
-    if: ${{ success() }}
+    if: ${{ success() && steps.last_status.outputs.last_status == 'failure' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Get previous workflow status
+        uses: Mercymeilya/last-workflow-status@v0.3
+        id: last_status
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Notify Slack on failure
         uses: rtCamp/action-slack-notify@12e36fc18b0689399306c2e0b3e0f2978b7f1ee7
         env:

@@ -36,7 +36,7 @@ type Context struct {
 	checkTx       bool
 	recheckTx     bool // if recheckTx == true, then checkTx must also be true
 	minGasPrice   DecCoins
-	consParams    *tmproto.ConsensusParams
+	consParams    *abci.ConsensusParams
 	eventManager  *EventManager
 	priority      int64 // The tx priority, only relevant in CheckTx
 }
@@ -217,7 +217,7 @@ func (c Context) WithMinGasPrices(gasPrices DecCoins) Context {
 }
 
 // WithConsensusParams returns a Context with an updated consensus params
-func (c Context) WithConsensusParams(params *tmproto.ConsensusParams) Context {
+func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {
 	c.consParams = params
 	return c
 }

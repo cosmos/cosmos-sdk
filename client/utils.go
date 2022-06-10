@@ -74,5 +74,5 @@ func ReadPageRequest(flagSet *pflag.FlagSet) (*query.PageRequest, error) {
 // NewClientFromNode sets up Client implementation that communicates with a Tendermint node over
 // JSON RPC and WebSockets
 func NewClientFromNode(nodeURI string) (*rpchttp.HTTP, error) {
-	return rpchttp.New(nodeURI)
+	return rpchttp.New(nodeURI, "/websocket")
 }

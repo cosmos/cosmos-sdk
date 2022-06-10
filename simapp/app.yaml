@@ -79,6 +79,10 @@ modules:
     config:
       "@type": cosmos.params.module.v1.Module
 
+  - name: tx
+    config:
+      "@type": cosmos.tx.module.v1.Module
+
   - name: feegrant
     config:
       "@type": cosmos.feegrant.module.v1.Module
@@ -86,7 +90,7 @@ modules:
   - name: bank
     config:
       "@type": cosmos.bank.module.v1.Module
-  
+
   - name: authz
     config:
       "@type": cosmos.authz.module.v1.Module

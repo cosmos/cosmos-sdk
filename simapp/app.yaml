@@ -104,6 +104,7 @@ modules:
     config:
       "@type": cosmos.group.v1.module.v1.Module
       max_metadata_len: 255
+      max_execution_period: "1209600s"
       
   - name: nft
     config:

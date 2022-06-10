@@ -13,7 +13,7 @@ message Module {
   };
 
   // max_execution_period defines the max duration after a proposal's voting period ends that members can send a MsgExec to execute the proposal.
-  google.protobuf.Duration max_execution_period = 1 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+  string max_execution_period = 1;
   
   // max_metadata_len defines the max length of the metadata bytes field for various entities within the group module. Defaults to 255 if not explicitly set.
   uint64 max_metadata_len = 2;

@@ -125,7 +125,7 @@ type genutilInputs struct {
 	depinject.In
 
 	AccountKeeper types.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
-	StakingKeeper types.StakingKeeper `key:"cosmos.staking.v1.Keeper"`
+	StakingKeeper types.StakingKeeper
 	DeliverTx     func(abci.RequestDeliverTx) abci.ResponseDeliverTx
 	Config        client.TxConfig
 }

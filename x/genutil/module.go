@@ -124,7 +124,7 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 type genutilInputs struct {
 	depinject.In
 
-	AccountKeeper types.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
+	AccountKeeper types.AccountKeeper 
 	StakingKeeper types.StakingKeeper
 	DeliverTx     func(abci.RequestDeliverTx) abci.ResponseDeliverTx
 	Config        client.TxConfig

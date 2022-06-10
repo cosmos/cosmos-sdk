@@ -8,34 +8,34 @@ import (
 )
 
 type (
-	dbDeleteVersionFails struct{ dbm.DBConnection }
-	dbRWCommitFails      struct{ dbm.DBConnection }
-	dbRWCrudFails        struct{ dbm.DBConnection }
-	dbSaveVersionFails   struct{ dbm.DBConnection }
+	dbDeleteVersionFails struct{ dbm.Connection }
+	dbRWCommitFails      struct{ dbm.Connection }
+	dbRWCrudFails        struct{ dbm.Connection }
+	dbSaveVersionFails   struct{ dbm.Connection }
 	dbRevertFails        struct {
-		dbm.DBConnection
+		dbm.Connection
 		// order of calls to fail on (eg. [1, 0] => first call fails; second succeeds)
 		failOn []bool
 	}
 )
 
 type dbVersionsIs struct {
-	dbm.DBConnection
+	dbm.Connection
 	vset dbm.VersionSet
 }
 type (
-	dbVersionsFails struct{ dbm.DBConnection }
-	rwCommitFails   struct{ dbm.DBReadWriter }
+	dbVersionsFails struct{ dbm.Connection }
+	rwCommitFails   struct{ dbm.ReadWriter }
 	rwCrudFails     struct {
-		dbm.DBReadWriter
+		dbm.ReadWriter
 		onKey []byte
 	}
 )
 
 func (dbVersionsFails) Versions() (dbm.VersionSet, error) { return nil, errors.New("dbVersionsFails") }
 func (db dbVersionsIs) Versions() (dbm.VersionSet, error) { return db.vset, nil }
-func (db dbRWCrudFails) ReadWriter() dbm.DBReadWriter {
-	return rwCrudFails{db.DBConnection.ReadWriter(), nil}
+func (db dbRWCrudFails) ReadWriter() dbm.ReadWriter {
+	return rwCrudFails{db.Connection.ReadWriter(), nil}
 }
 func (dbSaveVersionFails) SaveVersion(uint64) error { return errors.New("dbSaveVersionFails") }
 func (db dbRevertFails) Revert() error {
@@ -46,7 +46,7 @@ func (db dbRevertFails) Revert() error {
 	if fail {
 		return errors.New("dbRevertFails")
 	}
-	return db.DBConnection.Revert()
+	return db.Connection.Revert()
 }
 func (dbDeleteVersionFails) DeleteVersion(uint64) error { return errors.New("dbDeleteVersionFails") }
 func (tx rwCommitFails) Commit() error {
@@ -54,34 +54,34 @@ func (tx rwCommitFails) Commit() error {
 	return errors.New("rwCommitFails")
 }
 
-func (db dbRWCommitFails) ReadWriter() dbm.DBReadWriter {
-	return rwCommitFails{db.DBConnection.ReadWriter()}
+func (db dbRWCommitFails) ReadWriter() dbm.ReadWriter {
+	return rwCommitFails{db.Connection.ReadWriter()}
 }
 
 func (rw rwCrudFails) Get(k []byte) ([]byte, error) {
 	if rw.onKey == nil || bytes.Equal(rw.onKey, k) {
 		return nil, errors.New("rwCrudFails.Get")
 	}
-	return rw.DBReadWriter.Get(k)
+	return rw.ReadWriter.Get(k)
 }
 
 func (rw rwCrudFails) Has(k []byte) (bool, error) {
 	if rw.onKey == nil || bytes.Equal(rw.onKey, k) {
 		return false, errors.New("rwCrudFails.Has")
 	}
-	return rw.DBReadWriter.Has(k)
+	return rw.ReadWriter.Has(k)
 }
 
 func (rw rwCrudFails) Set(k []byte, v []byte) error {
 	if rw.onKey == nil || bytes.Equal(rw.onKey, k) {
 		return errors.New("rwCrudFails.Set")
 	}
-	return rw.DBReadWriter.Set(k, v)
+	return rw.ReadWriter.Set(k, v)
 }
 
 func (rw rwCrudFails) Delete(k []byte) error {
 	if rw.onKey == nil || bytes.Equal(rw.onKey, k) {
 		return errors.New("rwCrudFails.Delete")
 	}
-	return rw.DBReadWriter.Delete(k)
+	return rw.ReadWriter.Delete(k)
 }

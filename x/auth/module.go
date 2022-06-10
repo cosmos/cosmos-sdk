@@ -6,13 +6,15 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/cosmos/cosmos-sdk/depinject"
+
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"cosmossdk.io/core/appmodule"
 	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	"cosmossdk.io/core/appmodule"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -206,12 +208,19 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
+type authOutputs struct {
+	depinject.Out
+
+	AccountKeeper keeper.AccountKeeper
+	Module        runtime.AppModuleWrapper
+}
+
 func provideModule(
 	config *modulev1.Module,
 	key *store.KVStoreKey,
 	cdc codec.Codec,
-	subspace paramtypes.Subspace) (keeper.AccountKeeper, runtime.AppModuleWrapper) {
-
+	subspace paramtypes.Subspace,
+) authOutputs {
 	maccPerms := map[string][]string{}
 	for _, permission := range config.ModuleAccountPermissions {
 		maccPerms[permission.Account] = permission.Permissions
@@ -219,5 +228,5 @@ func provideModule(
 
 	k := keeper.NewAccountKeeper(cdc, key, subspace, types.ProtoBaseAccount, maccPerms, config.Bech32Prefix)
 	m := NewAppModule(cdc, k, simulation.RandomGenesisAccounts)
-	return k, runtime.WrapAppModule(m)
+	return authOutputs{AccountKeeper: k, Module: runtime.WrapAppModule(m)}
 }

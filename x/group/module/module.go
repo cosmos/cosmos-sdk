@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
-	"time"
 
 	"cosmossdk.io/core/appmodule"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -195,11 +194,7 @@ func provideModule(in groupInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
 		in.Config.MaxExecutionPeriod = "1209600s"
 	*/
 
-	maxExecutionPeriod, err := time.ParseDuration(in.Config.MaxExecutionPeriod)
-	if err != nil {
-		panic(fmt.Errorf("max execution period should be a duration: %w", err))
-	}
-	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, group.Config{MaxExecutionPeriod: maxExecutionPeriod, MaxMetadataLen: in.Config.MaxMetadataLen})
+	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, group.Config{MaxExecutionPeriod: in.Config.MaxExecutionPeriod.AsDuration(), MaxMetadataLen: in.Config.MaxMetadataLen})
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
 	return k, runtime.WrapAppModule(m)
 }

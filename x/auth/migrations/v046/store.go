@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-func mapAccountAddressToAccountId(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
+func mapAccountAddressToAccountID(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.AddressStoreKeyPrefix)
 
@@ -28,5 +28,5 @@ func mapAccountAddressToAccountId(ctx sdk.Context, storeKey storetypes.StoreKey,
 // migration includes:
 // - Add an Account number as an index to get the account address
 func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
-	return mapAccountAddressToAccountId(ctx, storeKey, cdc)
+	return mapAccountAddressToAccountID(ctx, storeKey, cdc)
 }

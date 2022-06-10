@@ -26,14 +26,8 @@ jobs:
           go-version: 1.18
       - name: Display go version
         run: go version
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
       - name: Get data from Go build cache
-        # if: env.GIT_DIFF
+        # 
         if: ${{ false }}
         uses: actions/cache@v3
         with:

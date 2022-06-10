@@ -13,7 +13,7 @@ on:
 
 jobs:
   lint:
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
     - uses: actions/checkout@v3

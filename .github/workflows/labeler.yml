@@ -4,7 +4,7 @@ on:
 
 jobs:
   labeler:
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/labeler@main
         with:

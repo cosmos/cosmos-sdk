@@ -209,8 +209,8 @@ type feegrantInputs struct {
 
 	Key           *store.KVStoreKey
 	Cdc           codec.Codec
-	AccountKeeper feegrant.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
-	BankKeeper    feegrant.BankKeeper    `key:"cosmos.bank.v1.Keeper"`
+	AccountKeeper feegrant.AccountKeeper
+	BankKeeper    feegrant.BankKeeper
 	Registry      cdctypes.InterfaceRegistry
 }
 

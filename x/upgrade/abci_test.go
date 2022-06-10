@@ -68,9 +68,9 @@ func TestRequireName(t *testing.T) {
 	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }
 
-func TestRequireFutureBlock(t *testing.T) {
+func TestRequireNotPastBlock(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
-	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: s.ctx.BlockHeight()}})
+	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: s.ctx.BlockHeight() - 1}})
 	require.NotNil(t, err)
 	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }

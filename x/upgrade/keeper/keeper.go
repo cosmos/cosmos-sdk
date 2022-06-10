@@ -145,14 +145,16 @@ func (k Keeper) getModuleVersion(ctx sdk.Context, name string) (uint64, bool) {
 // ScheduleUpgrade schedules an upgrade based on the specified plan.
 // If there is another Plan already scheduled, it will overwrite it
 // (implicitly cancelling the current plan)
-// ScheduleUpgrade will also write the upgraded client to the upgraded client path
-// if an upgraded client is specified in the plan
+// ScheduleUpgrade will also write the upgraded IBC ClientState to the upgraded client
+// path if it is specified in the plan.
 func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 	if err := plan.ValidateBasic(); err != nil {
 		return err
 	}
 
-	if plan.Height <= ctx.BlockHeight() {
+	// NOTE: allow for the possibility of chains to schedule upgrades in begin block of the same block
+	// as a strategy for emergency hard fork recoveries
+	if plan.Height < ctx.BlockHeight() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "upgrade cannot be scheduled in the past")
 	}
 

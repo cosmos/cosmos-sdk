@@ -5,7 +5,7 @@ on:
 
 jobs:
   stale:
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/stale@v5
         with:

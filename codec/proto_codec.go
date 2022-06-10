@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	legacyproto "github.com/golang/protobuf/proto"
+	legacyproto "github.com/golang/protobuf/proto" //nolint:staticcheck // we're aware this is deprecated and using it anyhow.
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/proto"
 

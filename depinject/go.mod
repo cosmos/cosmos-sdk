@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.7.2
 	golang.org/x/exp v0.0.0-20220428152302-39d4317da171
 	gotest.tools/v3 v3.2.0
 )

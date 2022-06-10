@@ -9,10 +9,10 @@ import (
 
 	abciclient "github.com/tendermint/tendermint/abci/client"
 	tmos "github.com/tendermint/tendermint/libs/os"
-	tmtime "github.com/tendermint/tendermint/libs/time"
 	"github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/rpc/client/local"
 	"github.com/tendermint/tendermint/types"
+	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"

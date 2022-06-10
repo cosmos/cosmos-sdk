@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
-	tmtime "github.com/tendermint/tendermint/libs/time"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -2828,7 +2828,6 @@ func (s *TestSuite) TestLeaveGroup() {
 		})
 	}
 }
-
 
 func (s *TestSuite) TestPruneProposals() {
 	addrs := s.addrs

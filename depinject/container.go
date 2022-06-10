@@ -3,9 +3,10 @@ package depinject
 import (
 	"bytes"
 	"fmt"
+	"reflect"
+
 	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
 	"github.com/pkg/errors"
-	"reflect"
 )
 
 type container struct {

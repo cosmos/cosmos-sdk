@@ -12,7 +12,6 @@ import (
 var (
 	SuccessABCICode    = errorsmod.SuccessABCICode
 	ABCIInfo           = errorsmod.ABCIInfo
-	Redact             = errorsmod.Redact
 	UndefinedCodespace = errorsmod.UndefinedCodespace
 	Register           = errorsmod.Register
 	ABCIError          = errorsmod.ABCIError

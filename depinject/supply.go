@@ -13,6 +13,10 @@ type supplyResolver struct {
 	graphNode *graphviz.Node
 }
 
+func (s supplyResolver) getType() reflect.Type {
+	return s.typ
+}
+
 func (s supplyResolver) describeLocation() string {
 	return s.loc.String()
 }

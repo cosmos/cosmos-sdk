@@ -211,7 +211,7 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 type authOutputs struct {
 	depinject.Out
 
-	AccountKeeper keeper.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
+	AccountKeeper keeper.AccountKeeper
 	Module        runtime.AppModuleWrapper
 }
 

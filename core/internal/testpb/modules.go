@@ -95,4 +95,8 @@ type keeperB struct {
 	a   KeeperA
 }
 
-type KeeperB interface{}
+type KeeperB interface {
+	isKeeperB()
+}
+
+func (k keeperB) isKeeperB() {}

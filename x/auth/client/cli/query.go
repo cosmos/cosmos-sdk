@@ -126,7 +126,7 @@ func GetAccountCmd() *cobra.Command {
 	return cmd
 }
 
-// GetAccountAddressByIDCmd returns a query account address that will display the account address of a given account id.
+// GetAccountAddressByIDCmd returns a query account that will display the account address of a given account id.
 func GetAccountAddressByIDCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "address-by-id [id]",

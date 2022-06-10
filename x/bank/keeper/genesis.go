@@ -12,6 +12,10 @@ import (
 func (k BaseKeeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
 
+	for _, se := range genState.GetAllSendEnabled() {
+		k.SetSendEnabled(ctx, se.Denom, se.Enabled)
+	}
+
 	totalSupply := sdk.Coins{}
 	genState.Balances = types.SanitizeGenesisBalances(genState.Balances)
 
@@ -45,10 +49,12 @@ func (k BaseKeeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(fmt.Errorf("unable to fetch total supply %v", err))
 	}
 
-	return types.NewGenesisState(
+	rv := types.NewGenesisState(
 		k.GetParams(ctx),
 		k.GetAccountsBalances(ctx),
 		totalSupply,
 		k.GetAllDenomMetaData(ctx),
+		k.GetAllSendEnabledEntries(ctx),
 	)
+	return rv
 }

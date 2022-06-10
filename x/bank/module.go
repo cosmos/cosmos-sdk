@@ -231,7 +231,6 @@ type bankInputs struct {
 	Cdc           codec.Codec
 	Subspace      paramtypes.Subspace
 	Key           *store.KVStoreKey
-	Authority     string
 }
 
 type bankOutputs struct {
@@ -257,10 +256,9 @@ func provideModule(in bankInputs) bankOutputs {
 			blockedAddresses[permission.GetAddress().String()] = true
 		}
 	}
-	authority := in.Authority
-	if len(authority) == 0 {
-		authority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
-	}
+
+	// TODO: Allow injection of this Authority value once depinject allows definition of strings for injection.
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
 
 	bankKeeper := keeper.NewBaseKeeper(in.Cdc, in.Key, in.AccountKeeper, in.Subspace, blockedAddresses, authority)
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper)

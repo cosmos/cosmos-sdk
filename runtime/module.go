@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // BaseAppOption is a depinject.AutoGroupType which can be used to pass
@@ -34,6 +35,7 @@ func init() {
 			provideKVStoreKey,
 			provideTransientStoreKey,
 			provideMemoryStoreKey,
+			provideDeliverTx,
 		),
 	)
 }
@@ -44,6 +46,7 @@ func provideCodecs(moduleBasics map[string]AppModuleBasicWrapper) (
 	*codec.LegacyAmino,
 	appWrapper,
 	codec.ProtoCodecMarshaler,
+	*baseapp.MsgServiceRouter,
 ) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	amino := codec.NewLegacyAmino()
@@ -67,7 +70,7 @@ func provideCodecs(moduleBasics map[string]AppModuleBasicWrapper) (
 		basicManager:      basicManager,
 	}
 
-	return interfaceRegistry, cdc, amino, app, cdc
+	return interfaceRegistry, cdc, amino, app, cdc, baseapp.NewMsgServiceRouter()
 }
 
 type appInputs struct {
@@ -129,4 +132,10 @@ func provideMemoryStoreKey(key depinject.ModuleKey, app appWrapper) *storetypes.
 	storeKey := storetypes.NewMemoryStoreKey(fmt.Sprintf("memory:%s", key.Name()))
 	registerStoreKey(app, storeKey)
 	return storeKey
+}
+
+func provideDeliverTx(app appWrapper) func(abci.RequestDeliverTx) abci.ResponseDeliverTx {
+	return func(tx abci.RequestDeliverTx) abci.ResponseDeliverTx {
+		return app.BaseApp.DeliverTx(tx)
+	}
 }

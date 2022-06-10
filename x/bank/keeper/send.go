@@ -24,6 +24,7 @@ type SendKeeper interface {
 	SetParams(ctx sdk.Context, params types.Params)
 
 	IsSendEnabledDenom(ctx sdk.Context, denom string) bool
+	GetSendEnabledEntry(ctx sdk.Context, denom string) (types.SendEnabled, bool)
 	SetSendEnabled(ctx sdk.Context, denom string, value bool)
 	SetAllSendEnabled(ctx sdk.Context, sendEnableds []*types.SendEnabled)
 	DeleteSendEnabled(ctx sdk.Context, denoms ...string)
@@ -356,6 +357,16 @@ func (k BaseSendKeeper) GetBlockedAddresses() map[string]bool {
 // IsSendEnabledDenom returns the current SendEnabled status of the provided denom.
 func (k BaseSendKeeper) IsSendEnabledDenom(ctx sdk.Context, denom string) bool {
 	return k.getSendEnabledOrDefault(ctx.KVStore(k.storeKey), denom, func() bool { return k.GetParams(ctx).DefaultSendEnabled })
+}
+
+// GetSendEnabledEntry gets a SendEnabled entry for the given denom.
+// The second return argument is true iff a specific entry exists for the given denom.
+func (k BaseSendKeeper) GetSendEnabledEntry(ctx sdk.Context, denom string) (types.SendEnabled, bool) {
+	sendEnabled, found := k.getSendEnabled(ctx.KVStore(k.storeKey), denom)
+	if !found {
+		return types.SendEnabled{}, false
+	}
+	return types.SendEnabled{Denom: denom, Enabled: sendEnabled}, true
 }
 
 // SetSendEnabled sets the SendEnabled flag for a denom to the provided value.

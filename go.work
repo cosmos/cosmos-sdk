@@ -1,6 +1,7 @@
 go 1.18
 
 use (
+	./
 	./api
 	./client/v2
 	./core
@@ -10,5 +11,5 @@ use (
 	./errors
 	./math
 	./orm
-//	./store/tools/ics23
+	./store/tools/ics23
 )

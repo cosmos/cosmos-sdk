@@ -137,7 +137,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Notify Slack on failure
+      - name: Notify Slack on success
         uses: rtCamp/action-slack-notify@12e36fc18b0689399306c2e0b3e0f2978b7f1ee7
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}

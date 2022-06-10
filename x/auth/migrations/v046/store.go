@@ -18,7 +18,7 @@ func mapAccountAddressToAccountId(ctx sdk.Context, storeKey storetypes.StoreKey,
 		if err := cdc.UnmarshalInterface(iterator.Value(), &acc); err != nil {
 			return err
 		}
-		store.Set(types.AccountNumberStoreKey(int64(acc.GetAccountNumber())), conv.UnsafeStrToBytes(acc.GetAddress().String()))
+		store.Set(types.AccountNumberStoreKey(acc.GetAccountNumber()), conv.UnsafeStrToBytes(acc.GetAddress().String()))
 	}
 
 	return nil

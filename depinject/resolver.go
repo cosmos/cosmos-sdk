@@ -11,4 +11,5 @@ type resolver interface {
 	resolve(*container, *moduleKey, Location) (reflect.Value, error)
 	describeLocation() string
 	typeGraphNode() *graphviz.Node
+	getType() reflect.Type
 }

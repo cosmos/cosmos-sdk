@@ -37,6 +37,10 @@ type onePerModuleResolver struct {
 	graphNode *graphviz.Node
 }
 
+func (o *onePerModuleResolver) getType() reflect.Type {
+	return o.mapType
+}
+
 type mapOfOnePerModuleResolver struct {
 	*onePerModuleResolver
 }

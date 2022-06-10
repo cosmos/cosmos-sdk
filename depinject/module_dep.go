@@ -20,6 +20,10 @@ type moduleDepResolver struct {
 	graphNode   *graphviz.Node
 }
 
+func (s moduleDepResolver) getType() reflect.Type {
+	return s.typ
+}
+
 func (s moduleDepResolver) describeLocation() string {
 	return s.node.provider.Location.String()
 }

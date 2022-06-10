@@ -9,7 +9,7 @@ on:
 
 jobs:
   main:
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: ubuntu-latest
     steps:
       - uses: amannn/action-semantic-pull-request@v4.5.0
         env:

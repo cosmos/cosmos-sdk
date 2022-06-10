@@ -207,7 +207,6 @@ type outputInputs struct {
 }
 
 func provideModule(in slashingInputs) outputInputs {
-
 	k := keeper.NewKeeper(in.Cdc, in.Key, in.StakingKeeper, in.Subspace)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper)
 	return outputInputs{Keeper: k, Module: runtime.WrapAppModule(m)}

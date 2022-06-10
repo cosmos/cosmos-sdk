@@ -72,6 +72,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	}
 
 	newExp, err := feeAllowance.ExpiresAt()
+	//nolint:gocritic // gocritic recommends making this a switch statement and this felt like taking things too far.
 	if err != nil {
 		return err
 	} else if newExp != nil && newExp.Before(ctx.BlockTime()) {

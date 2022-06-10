@@ -1299,6 +1299,7 @@ func (s *IntegrationTestSuite) TestGetAccountsCmd() {
 
 func TestGetBroadcastCommandOfflineFlag(t *testing.T) {
 	clientCtx := client.Context{}.WithOffline(true)
+	//nolint:staticcheck // this is intentionally setting a new value to clientCtx to affect later commands.
 	clientCtx = clientCtx.WithTxConfig(simapp.MakeTestEncodingConfig().TxConfig)
 
 	cmd := authcli.GetBroadcastCommand()
@@ -1789,6 +1790,7 @@ func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
 					tc.feePayerArgs...,
 				)
 
+				//nolint:gocritic // rewriting this as a switch statement didn't make sense.
 				if tc.expectErrBroadCast {
 					require.Error(err)
 				} else if tc.errMsg != "" {

@@ -1,3 +1,4 @@
+//nolint:unused // this file is triggering many unused liter errors and shouldn't be linted for that reason.
 package multi
 
 import (
@@ -41,6 +42,7 @@ func (dbSaveVersionFails) SaveVersion(uint64) error { return errors.New("dbSaveV
 func (db dbRevertFails) Revert() error {
 	fail := false
 	if len(db.failOn) > 0 {
+		//nolint:staticcheck // staticcheck doesn't understand this properly, and don't want to modify out of caution.
 		fail, db.failOn = db.failOn[0], db.failOn[1:]
 	}
 	if fail {

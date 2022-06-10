@@ -50,7 +50,7 @@ func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.A
 }
 
 // GetAccountAddressById returns account address by id.
-func (ak AccountKeeper) GetAccountAddressByID(ctx sdk.Context, id int64) string {
+func (ak AccountKeeper) GetAccountAddressByID(ctx sdk.Context, id uint64) string {
 	store := ctx.KVStore(ak.key)
 	bz := store.Get(types.AccountNumberStoreKey(uint64(id)))
 	if bz == nil {

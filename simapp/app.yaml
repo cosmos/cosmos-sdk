@@ -111,3 +111,7 @@ modules:
   - name: slashing
     config:
       "@type": cosmos.slashing.module.v1.Module
+
+  - name: genutil
+    config:
+      "@type": cosmos.genutil.module.v1.Module

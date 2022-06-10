@@ -161,6 +161,6 @@ var (
 	// ErrAppConfig defines an error occurred if min-gas-prices field in BaseConfig is empty.
 	ErrAppConfig = Register(RootCodespace, 40, "error in app.toml")
 
-	// ErrPanic is only set when we recover from a panic
+	// ErrPanic should only be set when we recovering from a panic
 	ErrPanic = errorsmod.ErrPanic
 )

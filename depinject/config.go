@@ -48,6 +48,48 @@ func provide(ctr *container, key *moduleKey, providers []interface{}) error {
 	return nil
 }
 
+// BindInterface defines a container configuration for an explicit interface binding of inTypeName to outTypeName
+// in global scope.  The example below demonstrates a configuration where the container always provides a Canvasback
+// instance when an interface of type Duck is requested as an input.
+//
+// BindInterface(
+//	"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Duck",
+//	"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Canvasback")
+func BindInterface(inTypeName string, outTypeName string) Config {
+	return containerConfig(func(ctr *container) error {
+		return bindInterface(ctr, inTypeName, outTypeName, "")
+	})
+}
+
+// BindInterfaceInModule defines a container configuration for an explicit interface binding of inTypeName to outTypeName
+// in the scope of the module with name moduleName.  The example below demonstrates a configuration where the container
+// provides a Canvasback instance when an interface of type Duck is requested as an input, but only in the scope of
+// "moduleFoo".
+//
+// BindInterfaceInModule(
+//  "moduleFoo",
+//	"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Duck",
+//	"github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.Canvasback")
+func BindInterfaceInModule(moduleName string, inTypeName string, outTypeName string) Config {
+	return containerConfig(func(ctr *container) error {
+		return bindInterface(ctr, inTypeName, outTypeName, moduleName)
+	})
+}
+
+func bindInterface(ctr *container, inTypeName string, outTypeName string, moduleName string) error {
+	var mk *moduleKey
+	if moduleName != "" {
+		mk = &moduleKey{name: moduleName}
+	}
+	ctr.addBinding(interfaceBinding{
+		interfaceName: inTypeName,
+		implTypeName:  outTypeName,
+		moduleKey:     mk,
+	})
+
+	return nil
+}
+
 func Supply(values ...interface{}) Config {
 	loc := LocationFromCaller(1)
 	return containerConfig(func(ctr *container) error {

@@ -225,7 +225,7 @@ type bankInputs struct {
 	depinject.In
 
 	Config        *modulev1.Module
-	AccountKeeper types.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
+	AccountKeeper types.AccountKeeper
 	Cdc           codec.Codec
 	Subspace      paramtypes.Subspace
 	Key           *store.KVStoreKey
@@ -234,7 +234,7 @@ type bankInputs struct {
 type bankOutputs struct {
 	depinject.Out
 
-	BankKeeper keeper.Keeper `key:"cosmos.bank.v1.Keeper"`
+	BankKeeper keeper.BaseKeeper
 	Module     runtime.AppModuleWrapper
 }
 

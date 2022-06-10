@@ -158,7 +158,7 @@ message AddressStringToBytesResponse {
   bytes address_bytes = 1;
 }
 
-// QueryAccountAddressByIDRequest is the request type for AccountAddressById rpc method
+// QueryAccountAddressByIDRequest is the request type for AccountAddressByID rpc method
 message QueryAccountAddressByIDRequest{
   int64 id = 1;
 }

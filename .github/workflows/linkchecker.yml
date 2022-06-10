@@ -4,7 +4,7 @@ on:
     - cron: '* */24 * * *'
 jobs:
   markdown-link-check:
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: gaurav-nelson/github-action-markdown-link-check@1.0.14

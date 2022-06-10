@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:

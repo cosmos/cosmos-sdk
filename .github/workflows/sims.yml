@@ -107,7 +107,7 @@ jobs:
     if: always()
     steps:
       - name: Get previous workflow status
-        uses: Mercymeilya/last-workflow-status@v0.3
+        uses: julienrbrt/last-workflow-status@v0.4
         id: last_status
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

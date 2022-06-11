@@ -108,6 +108,7 @@ jobs:
     needs:
       [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
     runs-on: ubuntu-latest
+    if: always()
     steps:
       - name: Get previous workflow status
         uses: Mercymeilya/last-workflow-status@v0.3

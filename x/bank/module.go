@@ -114,6 +114,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/bank from version 2 to 3: %v", err))
 	}
+
+	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/bank from version 3 to 4: %v", err))
+	}
 }
 
 // NewAppModule creates a new AppModule object
@@ -166,7 +170,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 3 }
+func (AppModule) ConsensusVersion() uint64 { return 4 }
 
 // BeginBlock performs a no-op.
 func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}

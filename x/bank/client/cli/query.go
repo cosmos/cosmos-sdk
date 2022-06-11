@@ -33,6 +33,7 @@ func GetQueryCmd() *cobra.Command {
 		GetBalancesCmd(),
 		GetCmdQueryTotalSupply(),
 		GetCmdDenomsMetadata(),
+		GetCmdQuerySendEnabled(),
 	)
 
 	return cmd
@@ -210,6 +211,61 @@ To query for the total supply of a specific coin denomination use:
 	cmd.Flags().String(FlagDenom, "", "The specific balance denomination to query for")
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "all supply totals")
+
+	return cmd
+}
+
+func GetCmdQuerySendEnabled() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "send-enabled [denom1 ...]",
+		Short: "Query for send enabled entries",
+		Long: strings.TrimSpace(`Query for send enabled entries that have been specifically set.
+
+To look up one or more specific denoms, supply them as arguments to this command.
+To look up all denoms, do not provide any arguemnts.
+`,
+		),
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`Getting one specific entry:
+  $ %[1]s query %[2]s send-enabled foocoin
+
+Getting two specific entries:
+  $ %[1]s query %[2]s send-enabled foocoin barcoin
+
+Getting all entries:
+  $ %[1]s query %[2]s send-enabled
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			reqPag, err := client.ReadPageRequest(client.MustFlagSetWithPageKeyDecoded(cmd.Flags()))
+			if err != nil {
+				return err
+			}
+
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			req := &types.QuerySendEnabledRequest{
+				Denoms:     args,
+				Pagination: reqPag,
+			}
+
+			res, err := queryClient.SendEnabled(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "send enabled entries")
 
 	return cmd
 }

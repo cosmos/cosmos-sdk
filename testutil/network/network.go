@@ -33,7 +33,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
@@ -126,6 +128,39 @@ func DefaultConfig() Config {
 		KeyringOptions:    []keyring.Option{},
 		PrintMnemonic:     false,
 	}
+}
+
+func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
+	cfg := DefaultConfig()
+	var appBuilder *runtime.AppBuilder
+	var msgServiceRouter *baseapp.MsgServiceRouter
+
+	if err := depinject.Inject(appConfig,
+		&appBuilder,
+		&msgServiceRouter,
+	); err != nil {
+		return Config{}, err
+	}
+
+	cfg.GenesisState = appBuilder.DefaultGenesis()
+	cfg.AppConstructor = func(val Validator) servertypes.Application {
+		app := appBuilder.Build(
+			val.Ctx.Logger,
+			dbm.NewMemDB(),
+			nil,
+			msgServiceRouter,
+			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
+			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+		)
+
+		if err := app.Load(true); err != nil {
+			panic(err)
+		}
+
+		return app
+	}
+
+	return cfg, nil
 }
 
 type (

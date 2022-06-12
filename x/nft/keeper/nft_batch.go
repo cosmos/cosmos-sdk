@@ -22,10 +22,6 @@ func (k Keeper) BatchMint(ctx sdk.Context,
 // BatchBurn defines a method for burning a batch of nfts from a specific classID.
 // Note: When the upper module uses this method, it needs to authenticate nft
 func (k Keeper) BatchBurn(ctx sdk.Context, classID string, nftIDs []string) error {
-	if !k.HasClass(ctx, classID) {
-		return sdkerrors.Wrap(nft.ErrClassNotExists, classID)
-	}
-
 	for _, nftID := range nftIDs {
 		if err := k.Burn(ctx, classID, nftID); err != nil {
 			return err

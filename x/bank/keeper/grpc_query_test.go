@@ -453,3 +453,133 @@ func (suite *IntegrationTestSuite) TestGRPCDenomOwners() {
 
 	suite.Require().True(true)
 }
+
+func (suite *IntegrationTestSuite) TestQuerySendEnabled() {
+	ctx, bankKeeper := suite.ctx, suite.app.BankKeeper
+
+	bankKeeper.SetSendEnabled(ctx, "falsestcoin", false)
+	bankKeeper.SetSendEnabled(ctx, "truestcoin", true)
+
+	tests := []struct {
+		name string
+		req  *types.QuerySendEnabledRequest
+		exp  *types.QuerySendEnabledResponse
+	}{
+		{
+			name: "nil denoms list",
+			req:  &types.QuerySendEnabledRequest{Denoms: []string{}},
+			exp: &types.QuerySendEnabledResponse{
+				SendEnabled: []*types.SendEnabled{
+					{"falsestcoin", false},
+					{"truestcoin", true},
+				},
+				Pagination: &query.PageResponse{
+					NextKey: nil,
+					Total:   2,
+				},
+			},
+		},
+		{
+			name: "empty denoms list",
+			req:  &types.QuerySendEnabledRequest{Denoms: []string{}},
+			exp: &types.QuerySendEnabledResponse{
+				SendEnabled: []*types.SendEnabled{
+					{"falsestcoin", false},
+					{"truestcoin", true},
+				},
+				Pagination: &query.PageResponse{
+					NextKey: nil,
+					Total:   2,
+				},
+			},
+		},
+		{
+			name: "limit 1",
+			req: &types.QuerySendEnabledRequest{
+				Pagination: &query.PageRequest{
+					Limit:      1,
+					CountTotal: true,
+				},
+			},
+			exp: &types.QuerySendEnabledResponse{
+				SendEnabled: []*types.SendEnabled{
+					{"falsestcoin", false},
+				},
+				Pagination: &query.PageResponse{
+					NextKey: []byte("truestcoin"),
+					Total:   2,
+				},
+			},
+		},
+		{
+			name: "just truestcoin",
+			req:  &types.QuerySendEnabledRequest{Denoms: []string{"truestcoin"}},
+			exp: &types.QuerySendEnabledResponse{
+				SendEnabled: []*types.SendEnabled{
+					{"truestcoin", true},
+				},
+				Pagination: nil,
+			},
+		},
+		{
+			name: "just falsestcoin",
+			req:  &types.QuerySendEnabledRequest{Denoms: []string{"falsestcoin"}},
+			exp: &types.QuerySendEnabledResponse{
+				SendEnabled: []*types.SendEnabled{
+					{"falsestcoin", false},
+				},
+				Pagination: nil,
+			},
+		},
+		{
+			name: "just an unknown coin",
+			req:  &types.QuerySendEnabledRequest{Denoms: []string{"unknowniercoin"}},
+			exp: &types.QuerySendEnabledResponse{
+				SendEnabled: nil,
+				Pagination:  nil,
+			},
+		},
+		{
+			name: "both truestcoin falsestcoin",
+			req:  &types.QuerySendEnabledRequest{Denoms: []string{"truestcoin", "falsestcoin"}},
+			exp: &types.QuerySendEnabledResponse{
+				SendEnabled: []*types.SendEnabled{
+					{"truestcoin", true},
+					{"falsestcoin", false},
+				},
+				Pagination: nil,
+			},
+		},
+		{
+			name: "both truestcoin falsestcoin and an unknown",
+			req:  &types.QuerySendEnabledRequest{Denoms: []string{"truestcoin", "falsestcoin", "unknownestcoin"}},
+			exp: &types.QuerySendEnabledResponse{
+				SendEnabled: []*types.SendEnabled{
+					{"truestcoin", true},
+					{"falsestcoin", false},
+				},
+				Pagination: nil,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			resp, err := suite.queryClient.SendEnabled(gocontext.Background(), tc.req)
+			suite.Require().NoError(err)
+			if !suite.Assert().Equal(tc.exp, resp) {
+				if !suite.Assert().Len(resp.SendEnabled, len(tc.exp.SendEnabled)) {
+					for i := range tc.exp.SendEnabled {
+						suite.Assert().Equal(tc.exp.SendEnabled[i].Denom, resp.SendEnabled[i].Denom, fmt.Sprintf("SendEnabled[%d].Denom", i))
+						suite.Assert().Equal(tc.exp.SendEnabled[i].Enabled, resp.SendEnabled[i].Enabled, fmt.Sprintf("SendEnabled[%d].Enabled", i))
+					}
+				}
+				if !suite.Assert().Equal(tc.exp.Pagination, resp.Pagination, "Pagination") && tc.exp.Pagination != nil && resp.Pagination != nil {
+					suite.Assert().Equal(tc.exp.Pagination.NextKey, resp.Pagination.NextKey, "Pagination.NextKey")
+					suite.Assert().Equal(tc.exp.Pagination.Total, resp.Pagination.Total, "Pagination.Total")
+				}
+			}
+			suite.Require().Equal(tc.exp, resp)
+		})
+	}
+}

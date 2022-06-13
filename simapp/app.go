@@ -226,6 +226,7 @@ func NewSimApp(
 		&app.StakingKeeper,
 		&app.NFTKeeper,
 		&app.SlashingKeeper,
+		&app.MintKeeper,
 		&msgServiceRouter,
 	); err != nil {
 		panic(err)
@@ -234,8 +235,9 @@ func NewSimApp(
 	app.App = appBuilder.Build(logger, db, traceStore, msgServiceRouter, baseAppOptions...)
 
 	app.keys = sdk.NewKVStoreKeys(
-		minttypes.StoreKey, distrtypes.StoreKey,
-		govtypes.StoreKey, upgradetypes.StoreKey,
+		distrtypes.StoreKey,
+		govtypes.StoreKey,
+		upgradetypes.StoreKey,
 		evidencetypes.StoreKey,
 		group.StoreKey,
 	)
@@ -251,10 +253,6 @@ func NewSimApp(
 
 	initParamsKeeper(app.ParamsKeeper)
 
-	app.MintKeeper = mintkeeper.NewKeeper(
-		app.appCodec, app.keys[minttypes.StoreKey], app.GetSubspace(minttypes.ModuleName), app.StakingKeeper,
-		app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName,
-	)
 	app.DistrKeeper = distrkeeper.NewKeeper(
 		app.appCodec, app.keys[distrtypes.StoreKey], app.GetSubspace(distrtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		app.StakingKeeper, authtypes.FeeCollectorName,
@@ -317,7 +315,6 @@ func NewSimApp(
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
 		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants),
 		gov.NewAppModule(app.appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		mint.NewAppModule(app.appCodec, app.MintKeeper, app.AccountKeeper, nil),
 		distr.NewAppModule(app.appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
@@ -503,7 +500,6 @@ func GetMaccPerms() map[string][]string {
 
 // initParamsKeeper init params keeper and its subspaces
 func initParamsKeeper(paramsKeeper paramskeeper.Keeper) {
-	paramsKeeper.Subspace(minttypes.ModuleName)
 	paramsKeeper.Subspace(distrtypes.ModuleName)
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govv1.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)

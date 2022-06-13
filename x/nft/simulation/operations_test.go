@@ -85,7 +85,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
 		// will fail
 		suite.Require().Equal(expected[i].weight, w.Weight(), "weight should be the same")
-		// suite.Require().Equal(expected[i].opMsgRoute, operationMsg.Route, "route should be the same") // TODO returns 'nft' instead of '/cosmos.nft.v1beta1.MsgSend'
+		suite.Require().Contains(expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
 		suite.Require().Equal(expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")
 	}
 }

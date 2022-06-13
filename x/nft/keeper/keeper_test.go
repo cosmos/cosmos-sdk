@@ -9,11 +9,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/nft"
 	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
 	"github.com/cosmos/cosmos-sdk/x/nft/testutil"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 const (
@@ -34,13 +36,25 @@ type TestSuite struct {
 	ctx         sdk.Context
 	addrs       []sdk.AccAddress
 	queryClient nft.QueryClient
-
-	nftKeeper keeper.Keeper
+	nftKeeper   keeper.Keeper
 }
 
 func (s *TestSuite) SetupTest() {
-	var interfaceRegistry codectypes.InterfaceRegistry
-	app := runtime.Setup(s.T(), testutil.AppConfig, &s.nftKeeper, &interfaceRegistry)
+	var (
+		interfaceRegistry codectypes.InterfaceRegistry
+		bankKeeper        bankkeeper.Keeper
+		stakingKeeper     stakingkeeper.Keeper
+		nftKeeper         keeper.Keeper
+	)
+
+	app, err := simtestutil.Setup(
+		testutil.AppConfig,
+		&interfaceRegistry,
+		&nftKeeper,
+		&bankKeeper,
+		&stakingKeeper,
+	)
+	s.Require().NoError(err)
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
@@ -50,7 +64,8 @@ func (s *TestSuite) SetupTest() {
 
 	s.ctx = ctx
 	s.queryClient = queryClient
-	// s.addrs = simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(30000000))
+	s.addrs = simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 3, sdk.NewInt(30000000))
+	s.nftKeeper = nftKeeper
 }
 
 func TestTestSuite(t *testing.T) {

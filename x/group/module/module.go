@@ -187,7 +187,14 @@ type groupInputs struct {
 	MsgServiceRouter *baseapp.MsgServiceRouter
 }
 
-func provideModule(in groupInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
+type groupOutputs struct {
+	depinject.Out
+
+	GroupKeeper keeper.Keeper `key:"cosmos.group.v1.Keeper"`
+	Module      runtime.AppModuleWrapper
+}
+
+func provideModule(in groupInputs) groupOutputs {
 	/*
 		Example of setting group params:
 		in.Config.MaxMetadataLen = 1000
@@ -196,7 +203,7 @@ func provideModule(in groupInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
 
 	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, group.Config{MaxExecutionPeriod: in.Config.MaxExecutionPeriod.AsDuration(), MaxMetadataLen: in.Config.MaxMetadataLen})
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
-	return k, runtime.WrapAppModule(m)
+	return groupOutputs{GroupKeeper: k, Module: runtime.WrapAppModule(m)}
 }
 
 // ____________________________________________________________________________

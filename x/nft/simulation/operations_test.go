@@ -34,15 +34,16 @@ type SimTestSuite struct {
 	app               *runtime.App
 	codec             codec.Codec
 	interfaceRegistry codectypes.InterfaceRegistry
+	accountKeeper     authkeeper.AccountKeeper
 	bankKeeper        bankkeeper.Keeper
 	stakingKeeper     *stakingkeeper.Keeper
-	accountKeeper     authkeeper.AccountKeeper
 	nftKeeper         nftkeeper.Keeper
 }
 
 func (suite *SimTestSuite) SetupTest() {
 	app, err := simtestutil.Setup(
 		testutil.AppConfig,
+		&suite.codec,
 		&suite.interfaceRegistry,
 		&suite.accountKeeper,
 		&suite.bankKeeper,

@@ -1,21 +1,19 @@
-package app
+package appmodule
 
 import (
 	"context"
 
 	"google.golang.org/grpc"
 
-	"github.com/cosmos/cosmos-sdk/container"
+	"github.com/cosmos/cosmos-sdk/depinject"
 )
 
-func NewHandler() *Handler {
-	return &Handler{}
-}
-
-// Handler describes an ABCI app handler.
+// Handler describes an ABCI app module handler. It can be injected into a
+// depinject container as a one-per-module type (in the pointer variant).
 type Handler struct {
-	MsgServices   []ServiceImpl
-	QueryServices []ServiceImpl
+	// Services are the msg and query services for the module. Msg services
+	// must be annotated with the option cosmos.msg.v1.service = true.
+	Services []ServiceImpl
 
 	// BeginBlocker doesn't take or return any special arguments as this
 	// is the most stable across Tendermint versions and most common need
@@ -36,8 +34,10 @@ type Handler struct {
 // option is set true on the service, then it is registered as a msg service,
 // otherwise it is registered as a query service.
 func (h *Handler) RegisterService(desc *grpc.ServiceDesc, impl interface{}) {
-	//TODO implement me
-	panic("implement me")
+	h.Services = append(h.Services, ServiceImpl{
+		Desc: desc,
+		Impl: impl,
+	})
 }
 
 // ServiceImpl describes a gRPC service implementation to be registered with
@@ -49,5 +49,5 @@ type ServiceImpl struct {
 
 func (h *Handler) IsOnePerModuleType() {}
 
-var _ container.OnePerModuleType = &Handler{}
+var _ depinject.OnePerModuleType = &Handler{}
 var _ grpc.ServiceRegistrar = &Handler{}

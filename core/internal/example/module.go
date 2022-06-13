@@ -2,70 +2,39 @@ package example
 
 import (
 	"context"
-	"embed"
-	"fmt"
-	"github.com/cosmos/cosmos-sdk/core/extension"
+
 	"github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/container"
-	"github.com/cosmos/cosmos-sdk/core/app"
-	"github.com/cosmos/cosmos-sdk/core/blockinfo"
-	"github.com/cosmos/cosmos-sdk/core/event"
-	"github.com/cosmos/cosmos-sdk/core/module"
-	"github.com/cosmos/cosmos-sdk/core/store"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/blockinfo"
+	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/gas"
+	"cosmossdk.io/core/store"
+	"github.com/cosmos/cosmos-sdk/depinject"
 )
-
-// go:embed proto_image.bin.gz
-var pinnedProtoImage embed.FS
 
 func init() {
 	// register the module with the app-wiring dependency injection framework
-	module.Register(&Module{}, pinnedProtoImage,
-		module.Provide(func(inputs Inputs) *app.Handler {
-			s := keeper{
-				kvStoreKey:       inputs.KVStoreKey,
-				blockInfoService: inputs.BlockInfoService,
-			}
-
-			inputs.ExtResolver.Register(&msgRegisterNameValidator{})
-
-			h := app.NewHandler()
-			RegisterMsgServer(h, s)
-			RegisterQueryServer(h, s)
+	appmodule.Register(&Module{},
+		appmodule.Provide(func(k keeper) *appmodule.Handler {
+			h := &appmodule.Handler{}
+			RegisterMsgServer(h, k)
+			RegisterQueryServer(h, k)
 			return h
 		}),
 	)
 }
 
 // the module's dependency injection inputs
-type Inputs struct {
-	container.In
-
-	KVStoreKey       *store.KVStoreKey
-	BlockInfoService blockinfo.Service
-	ExtResolver      extension.Resolver
-}
-
-// implement ValidateBasic
-type msgRegisterNameValidator struct{ *MsgRegisterName }
-
-func (m msgRegisterNameValidator) ValidateBasic() error {
-	if m.Sender == "" {
-		return fmt.Errorf("missing signer")
-	}
-
-	if m.Name == "" {
-		return fmt.Errorf("missing signer")
-	}
-
-	return nil
-}
-
 type keeper struct {
-	kvStoreKey       *store.KVStoreKey
-	blockInfoService blockinfo.Service
+	depinject.In
+
+	KVStoreKey       store.KVStoreKey
+	BlockInfoService blockinfo.Service
+	EventService     event.Service
+	GasService       gas.Service
 }
 
 const (
@@ -78,13 +47,13 @@ func nameInfoKey(name string) []byte {
 
 // implement MsgServer
 func (s keeper) RegisterName(ctx context.Context, msg *MsgRegisterName) (*MsgRegisterNameResponse, error) {
-	kvStore := s.kvStoreKey.Open(ctx)
+	kvStore := s.KVStoreKey.Open(ctx)
 	key := nameInfoKey(msg.Name)
 	if kvStore.Has(key) {
 		return nil, status.Error(codes.AlreadyExists, "name already registered")
 	}
 
-	height := s.blockInfoService.GetBlockInfo(ctx).Height()
+	height := s.BlockInfoService.GetBlockInfo(ctx).Height()
 	bz, err := proto.Marshal(&NameInfo{
 		Owner:            msg.Sender,
 		RegisteredHeight: height,
@@ -94,7 +63,7 @@ func (s keeper) RegisterName(ctx context.Context, msg *MsgRegisterName) (*MsgReg
 	}
 
 	kvStore.Set(key, bz)
-	err = event.GetManager(ctx).Emit(&EventRegisterName{
+	err = s.EventService.GetManager(ctx).Emit(&EventRegisterName{
 		Name:  msg.Name,
 		Owner: msg.Sender,
 	})
@@ -103,7 +72,7 @@ func (s keeper) RegisterName(ctx context.Context, msg *MsgRegisterName) (*MsgReg
 
 // implement QueryServer
 func (s keeper) Name(ctx context.Context, request *QueryNameRequest) (*QueryNameResponse, error) {
-	kvStore := s.kvStoreKey.Open(ctx)
+	kvStore := s.KVStoreKey.Open(ctx)
 	key := nameInfoKey(request.Name)
 	bz := kvStore.Get(key)
 	if bz == nil {

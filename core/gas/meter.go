@@ -4,6 +4,27 @@ import "context"
 
 type Gas = uint64
 
+// Service represents a gas service which can retrieve and set a gas meter in a context.
+// gas.Service is a core API type that should be provided by the runtime module being used to
+// build an app via depinject.
+type Service interface {
+	// GetMeter returns the current transaction-level gas meter. A non-nil meter
+	// is always returned. When one is unavailable in the context an infinite gas meter
+	// will be returned.
+	GetMeter(context.Context)
+
+	// GetBlockMeter returns the current block-level gas meter. A non-nil meter
+	// is always returned. When one is unavailable in the context an infinite gas meter
+	// will be returned.
+	GetBlockMeter(context.Context)
+
+	// WithMeter returns a new context with the provided transaction-level gas meter.
+	WithMeter(ctx context.Context, meter Meter) context.Context
+
+	// WithMeter returns a new context with the provided block-level gas meter.
+	WithBlockMeter(ctx context.Context, meter Meter) context.Context
+}
+
 // Meter represents a gas meter.
 type Meter interface {
 	GasConsumed() Gas
@@ -15,28 +36,4 @@ type Meter interface {
 	IsPastLimit() bool
 	IsOutOfGas() bool
 	String() string
-}
-
-// GetMeter returns the current transaction-level gas meter. A non-nil meter
-// is always returned. When one is unavailable in the context a dummy instance
-// will be returned.
-func GetMeter(ctx context.Context) Meter {
-	panic("TODO")
-}
-
-// GetBlockMeter returns the current block-level gas meter. A non-nil meter
-// is always returned. When one is unavailable in the context a dummy instance
-// will be returned.
-func GetBlockMeter(ctx context.Context) Meter {
-	panic("TODO")
-}
-
-// WithMeter returns a new context with the provided transaction-level gas meter.
-func WithMeter(ctx context.Context, meter Meter) context.Context {
-	panic("TODO")
-}
-
-// WithMeter returns a new context with the provided block-level gas meter.
-func WithBlockMeter(ctx context.Context, meter Meter) context.Context {
-	panic("TODO")
 }

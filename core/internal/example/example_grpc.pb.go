@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             (unknown)
-// source: example.proto
+// source: example/example.proto
 
 package example
 
@@ -105,7 +105,7 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "example.proto",
+	Metadata: "example/example.proto",
 }
 
 // QueryClient is the client API for Query service.
@@ -191,5 +191,5 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "example.proto",
+	Metadata: "example/example.proto",
 }

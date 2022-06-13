@@ -6,6 +6,17 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// Service represents an event service which can retrieve and set an event manager in a context.
+// event.Service is a core API type that should be provided by the runtime module being used to
+// build an app via depinject.
+type Service interface {
+	// GetManager returns the event manager for the context or a no-op event manager if one isn't attached.
+	GetManager(context.Context) Manager
+
+	// WithManager returns a new context with the provided event manager attached.
+	WithManager(context.Context, Manager) context.Context
+}
+
 // Manager represents an event manager.
 type Manager interface {
 	Emit(proto.Message) error
@@ -15,15 +26,4 @@ type Manager interface {
 // LegacyEventAttribute is a legacy (untyped) event attribute.
 type LegacyEventAttribute struct {
 	Key, Value string
-}
-
-// GetManager will always return a non-nil event manager with a no-op event
-// manager being returned if there is no manager in the context.
-func GetManager(ctx context.Context) Manager {
-	panic("TODO")
-}
-
-// WithManager creates a new context with the provided event manager.
-func WithManager(ctx context.Context, manager Manager) context.Context {
-	panic("TODO")
 }

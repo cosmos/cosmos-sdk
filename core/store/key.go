@@ -8,41 +8,32 @@ type Key interface {
 	Open(context.Context) KVStore
 }
 
-//
-type KVStoreKey struct {
-	name string
+// KVStoreKey represents a unique, non-forgeable handle to a regular merkle-tree
+// backed KVStore. It should be provided as a module-scoped dependency by the runtime
+// module being used to build the app.
+type KVStoreKey interface {
+	Key
+
+	// IsKVStoreKey marks this interface as a regular kv-store key.
+	IsKVStoreKey()
 }
 
-func (K KVStoreKey) Open(ctx context.Context) KVStore {
-	//TODO implement me
-	panic("implement me")
+// MemoryStoreKey represents a unique, non-forgeable handle to a memory-backed
+// KVStore. It should be provided as a module-scoped dependency by the runtime
+// module being used to build the app.
+type MemoryStoreKey interface {
+	Key
+
+	// IsMemoryStoreKey marks this interface as a memory store key.
+	IsMemoryStoreKey()
 }
 
-type IndexStoreKey struct {
-	name string
-}
+// TransientStoreKey represents a unique, non-forgeable handle to a memory-backed
+// KVStore which is reset at the start of every block. It should be provided as
+// a module-scoped dependency by the runtime module being used to build the app.
+type TransientStoreKey interface {
+	Key
 
-func (i IndexStoreKey) Open(ctx context.Context) KVStore {
-	//TODO implement me
-	panic("implement me")
+	// IsTransientStoreKey marks this interface as a transient store key.
+	IsTransientStoreKey()
 }
-
-type MemoryStoreKey struct {
-	name string
-}
-
-func (m MemoryStoreKey) Open(ctx context.Context) KVStore {
-	//TODO implement me
-	panic("implement me")
-}
-
-type TransientStoreKey struct {
-	name string
-}
-
-func (t TransientStoreKey) Open(ctx context.Context) KVStore {
-	//TODO implement me
-	panic("implement me")
-}
-
-var _, _, _, _ Key = &KVStoreKey{}, &IndexStoreKey{}, &MemoryStoreKey{}, &TransientStoreKey{}

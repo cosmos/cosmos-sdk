@@ -132,17 +132,33 @@ func DefaultConfig() Config {
 
 func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	cfg := DefaultConfig()
-	var appBuilder *runtime.AppBuilder
-	var msgServiceRouter *baseapp.MsgServiceRouter
+
+	var (
+		appBuilder        *runtime.AppBuilder
+		msgServiceRouter  *baseapp.MsgServiceRouter
+		txConfig          client.TxConfig
+		legacyAmino       *codec.LegacyAmino
+		codec             codec.Codec
+		interfaceRegistry codectypes.InterfaceRegistry
+	)
 
 	if err := depinject.Inject(appConfig,
 		&appBuilder,
 		&msgServiceRouter,
+		&txConfig,
+		&codec,
+		&legacyAmino,
+		&interfaceRegistry,
 	); err != nil {
 		return Config{}, err
 	}
 
+	cfg.Codec = codec
+	cfg.TxConfig = txConfig
+	cfg.LegacyAmino = legacyAmino
+	cfg.InterfaceRegistry = interfaceRegistry
 	cfg.GenesisState = appBuilder.DefaultGenesis()
+
 	cfg.AppConstructor = func(val Validator) servertypes.Application {
 		app := appBuilder.Build(
 			val.Ctx.Logger,

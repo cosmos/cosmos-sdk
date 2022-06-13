@@ -3,14 +3,12 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	tmtime "github.com/tendermint/tendermint/libs/time"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/depinject"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/nft"
 	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
@@ -40,17 +38,11 @@ type TestSuite struct {
 }
 
 func (s *TestSuite) SetupTest() {
-	cfg, err := network.DefaultConfigWithAppConfig(testutil.AppConfig)
-	require.NoError(s.T(), err)
+	app := runtime.Setup(s.T(), testutil.AppConfig, &s.nftKeeper)
 
-	if err := depinject.Inject(testutil.AppConfig, &s.nftKeeper); err != nil {
-		s.T().Fatal("Failed to inject dependencies")
-	}
-
-	// ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	ctx := sdk.Context{}
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, cfg.InterfaceRegistry)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	nft.RegisterQueryServer(queryHelper, s.nftKeeper)
 	queryClient := nft.NewQueryClient(queryHelper)
 

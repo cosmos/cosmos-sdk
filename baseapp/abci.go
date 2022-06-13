@@ -922,10 +922,12 @@ func convertTxResponseToCheckTx(txRes tx.Response, checkRes tx.ResponseCheckTx) 
 	}
 
 	return abci.ResponseCheckTx{
-		Data:     data,
-		Log:      txRes.Log,
-		Events:   txRes.Events,
-		Priority: checkRes.Priority,
+		Data:      data,
+		Log:       txRes.Log,
+		Events:    txRes.Events,
+		Priority:  checkRes.Priority,
+		GasUsed:   int64(txRes.GasUsed),
+		GasWanted: int64(txRes.GasWanted),
 	}, nil
 }
 
@@ -937,8 +939,10 @@ func convertTxResponseToDeliverTx(txRes tx.Response) (abci.ResponseDeliverTx, er
 	}
 
 	return abci.ResponseDeliverTx{
-		Data:   data,
-		Log:    txRes.Log,
-		Events: txRes.Events,
+		Data:      data,
+		Log:       txRes.Log,
+		Events:    txRes.Events,
+		GasUsed:   int64(txRes.GasUsed),
+		GasWanted: int64(txRes.GasWanted),
 	}, nil
 }

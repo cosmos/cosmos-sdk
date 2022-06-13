@@ -3,7 +3,7 @@ modules:
     config:
       "@type": cosmos.app.runtime.v1alpha1.Module
 
-      app_name: NftApp
+      app_name: EvidenceApp
 
       begin_blockers: [slashing, evidence, staking, auth, bank, genutil, params]
       end_blockers: [staking, auth, bank, slashing, genutil, evidence, params]

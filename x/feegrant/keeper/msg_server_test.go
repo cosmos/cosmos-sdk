@@ -218,5 +218,4 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 			}
 		})
 	}
-
 }

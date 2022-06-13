@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 
 	"github.com/gogo/protobuf/proto"
 
@@ -63,7 +62,7 @@ func (m MsgSubmitEvidence) ValidateBasic() error {
 // GetSignBytes returns the raw bytes a signer is expected to sign when submitting
 // a MsgSubmitEvidence message.
 func (m MsgSubmitEvidence) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&m))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 // GetSigners returns the single expected signer for a MsgSubmitEvidence.

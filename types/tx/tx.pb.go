@@ -263,8 +263,12 @@ type SignDocDirectAux struct {
 	AccountNumber uint64 `protobuf:"varint,4,opt,name=account_number,json=accountNumber,proto3" json:"account_number,omitempty"`
 	// sequence is the sequence number of the signing account.
 	Sequence uint64 `protobuf:"varint,5,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	// Tip is the optional tip used for meta-transactions. It should be left
-	// empty if the signer is not the tipper for this transaction.
+	// Tip is the optional tip used for transactions fees paid in another denom.
+	// It should be left empty if the signer is not the tipper for this
+	// transaction.
+	//
+	// This field is ignored if the chain didn't enable tips, i.e. didn't add the
+	// `TipDecorator` in its posthandler.
 	Tip *Tip `protobuf:"bytes,6,opt,name=tip,proto3" json:"tip,omitempty"`
 }
 
@@ -451,7 +455,10 @@ type AuthInfo struct {
 	// based on the cost of evaluating the body and doing signature verification
 	// of the signers. This can be estimated via simulation.
 	Fee *Fee `protobuf:"bytes,2,opt,name=fee,proto3" json:"fee,omitempty"`
-	// Tip is the optional tip used for meta-transactions.
+	// Tip is the optional tip used for transactions fees paid in another denom.
+	//
+	// This field is ignored if the chain didn't enable tips, i.e. didn't add the
+	// `TipDecorator` in its posthandler.
 	//
 	// Since: cosmos-sdk 0.46
 	Tip *Tip `protobuf:"bytes,3,opt,name=tip,proto3" json:"tip,omitempty"`
@@ -922,11 +929,11 @@ type AuxSignerData struct {
 	// AuxSignerData across different chains, the bech32 prefix of the target
 	// chain (where the final transaction is broadcasted) should be used.
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	// sign_doc is the SIGN_MOD_DIRECT_AUX sign doc that the auxiliary signer
+	// sign_doc is the SIGN_MODE_DIRECT_AUX sign doc that the auxiliary signer
 	// signs. Note: we use the same sign doc even if we're signing with
 	// LEGACY_AMINO_JSON.
 	SignDoc *SignDocDirectAux `protobuf:"bytes,2,opt,name=sign_doc,json=signDoc,proto3" json:"sign_doc,omitempty"`
-	// mode is the signing mode of the single signer
+	// mode is the signing mode of the single signer.
 	Mode signing.SignMode `protobuf:"varint,3,opt,name=mode,proto3,enum=cosmos.tx.signing.v1beta1.SignMode" json:"mode,omitempty"`
 	// sig is the signature of the sign doc.
 	Sig []byte `protobuf:"bytes,4,opt,name=sig,proto3" json:"sig,omitempty"`

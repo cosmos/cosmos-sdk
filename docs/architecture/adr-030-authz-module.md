@@ -6,6 +6,7 @@
 * 2020-10-12: Updated Draft
 * 2020-11-13: Accepted
 * 2020-05-06: proto API updates, use `sdk.Msg` instead of `sdk.ServiceMsg` (the latter concept was removed from Cosmos SDK)
+* 2022-04-20: Updated the `SendAuthorization` proto docs to clarify the `SpendLimit` is a required field. (Generic authorization can be used with bank msg type url to create limit less bank authorization)
 
 ## Status
 
@@ -87,8 +88,8 @@ a `SpendLimit` and updates it down to zero:
 ```go
 type SendAuthorization struct {
 	// SpendLimit specifies the maximum amount of tokens that can be spent
-	// by this authorization and will be updated as tokens are spent. If it is
-	// empty, there is no spend limit and any amount of coins can be spent.
+	// by this authorization and will be updated as tokens are spent. This field is required. (Generic authorization 
+	// can be used with bank msg type url to create limit less bank authorization).
 	SpendLimit sdk.Coins
 }
 
@@ -116,6 +117,15 @@ func (a SendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRes
 A different type of capability for `MsgSend` could be implemented
 using the `Authorization` interface with no need to change the underlying
 `bank` module.
+
+##### Small notes on `AcceptResponse`
+
+- The `AcceptResponse.Accept` field will be set to `true` if the authorization is accepted.
+However, if it is rejected, the function `Accept` will raise an error (without setting `AcceptResponse.Accept` to `false`).
+
+- The `AcceptResponse.Updated` field will be set to a non-nil value only if there is a real change to the authorization.
+If authorization remains the same (as is, for instance, always the case for a [`GenericAuthorization`](#genericauthorization)),
+the field will be `nil`.
 
 ### `Msg` Service
 

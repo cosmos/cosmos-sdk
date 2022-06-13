@@ -1,6 +1,7 @@
 syntax = "proto3";
 package cosmos.base.tendermint.v1beta1;
 
+import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
 import "tendermint/p2p/types.proto";
@@ -17,14 +18,17 @@ service Service {
   rpc GetNodeInfo(GetNodeInfoRequest) returns (GetNodeInfoResponse) {
     option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/node_info";
   }
+
   // GetSyncing queries node syncing.
   rpc GetSyncing(GetSyncingRequest) returns (GetSyncingResponse) {
     option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/syncing";
   }
+
   // GetLatestBlock returns the latest block.
   rpc GetLatestBlock(GetLatestBlockRequest) returns (GetLatestBlockResponse) {
     option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/blocks/latest";
   }
+
   // GetBlockByHeight queries block for given height.
   rpc GetBlockByHeight(GetBlockByHeightRequest) returns (GetBlockByHeightResponse) {
     option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/blocks/{height}";
@@ -34,9 +38,19 @@ service Service {
   rpc GetLatestValidatorSet(GetLatestValidatorSetRequest) returns (GetLatestValidatorSetResponse) {
     option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/validatorsets/latest";
   }
+
   // GetValidatorSetByHeight queries validator-set at a given height.
   rpc GetValidatorSetByHeight(GetValidatorSetByHeightRequest) returns (GetValidatorSetByHeightResponse) {
     option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/validatorsets/{height}";
+  }
+
+  // ABCIQuery defines a query handler that supports ABCI queries directly to the
+  // application, bypassing Tendermint completely. The ABCI query must contain
+  // a valid and supported path, including app, custom, p2p, and store.
+  //
+  // Since: cosmos-sdk 0.46
+  rpc ABCIQuery(ABCIQueryRequest) returns (ABCIQueryResponse) {
+    option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/abci_query";
   }
 }
 
@@ -135,4 +149,48 @@ message Module {
   string version = 2;
   // checksum
   string sum = 3;
+}
+
+// ABCIQueryRequest defines the request structure for the ABCIQuery gRPC query.
+message ABCIQueryRequest {
+  bytes  data   = 1;
+  string path   = 2;
+  int64  height = 3;
+  bool   prove  = 4;
+}
+
+// ABCIQueryResponse defines the response structure for the ABCIQuery gRPC query.
+//
+// Note: This type is a duplicate of the ResponseQuery proto type defined in
+// Tendermint.
+message ABCIQueryResponse {
+  uint32 code = 1;
+  // DEPRECATED: use "value" instead
+  reserved 2;
+  string   log       = 3;  // nondeterministic
+  string   info      = 4;  // nondeterministic
+  int64    index     = 5;
+  bytes    key       = 6;
+  bytes    value     = 7;
+  ProofOps proof_ops = 8;
+  int64    height    = 9;
+  string   codespace = 10;
+}
+
+// ProofOp defines an operation used for calculating Merkle root. The data could
+// be arbitrary format, providing nessecary data for example neighbouring node
+// hash.
+//
+// Note: This type is a duplicate of the ProofOp proto type defined in Tendermint.
+message ProofOp {
+  string type = 1;
+  bytes  key  = 2;
+  bytes  data = 3;
+}
+
+// ProofOps is Merkle proof defined by the list of ProofOps.
+//
+// Note: This type is a duplicate of the ProofOps proto type defined in Tendermint.
+message ProofOps {
+  repeated ProofOp ops = 1 [(gogoproto.nullable) = false];
 }

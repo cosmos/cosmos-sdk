@@ -16,8 +16,7 @@ var (
 	// errInternal should never be exposed, but we reserve this code for non-specified errors
 	errInternal = Register(UndefinedCodespace, 1, "internal")
 
-	// ErrPanic is only set when we recover from a panic, so we know to
-	// redact potentially sensitive system info
+	// ErrPanic should only be set when we recovering from a panic
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")
 )
 
@@ -242,6 +241,27 @@ func (e *wrappedError) Is(target error) bool {
 // Unwrap implements the built-in errors.Unwrap
 func (e *wrappedError) Unwrap() error {
 	return e.parent
+}
+
+// GRPCStatus gets the gRPC status from the wrapped error or returns an unknown gRPC status.
+func (e *wrappedError) GRPCStatus() *grpcstatus.Status {
+	w := e.Cause()
+	for {
+		if hasStatus, ok := w.(interface {
+			GRPCStatus() *grpcstatus.Status
+		}); ok {
+			status := hasStatus.GRPCStatus()
+			return grpcstatus.New(status.Code(), fmt.Sprintf("%s: %s", status.Message(), e.msg))
+		}
+
+		x, ok := w.(causer)
+		if ok {
+			w = x.Cause()
+		}
+		if x == nil {
+			return grpcstatus.New(grpccodes.Unknown, e.msg)
+		}
+	}
 }
 
 // Recover captures a panic and stop its propagation. If panic happens it is

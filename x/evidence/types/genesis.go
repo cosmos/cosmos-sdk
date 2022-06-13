@@ -37,7 +37,7 @@ func DefaultGenesisState() *GenesisState {
 	}
 }
 
-// Validate performs basic gensis state validation returning an error upon any
+// Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
 	for _, e := range gs.Evidence {

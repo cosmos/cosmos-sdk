@@ -6,11 +6,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 // InitGenesis - store genesis parameters
-func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, data *v1beta2.GenesisState) {
+func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, data *v1.GenesisState) {
 	k.SetProposalID(ctx, data.StartingProposalId)
 	k.SetDepositParams(ctx, *data.DepositParams)
 	k.SetVotingParams(ctx, *data.VotingParams)
@@ -34,9 +34,9 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 
 	for _, proposal := range data.Proposals {
 		switch proposal.Status {
-		case v1beta2.StatusDepositPeriod:
+		case v1.StatusDepositPeriod:
 			k.InsertInactiveProposalQueue(ctx, proposal.Id, *proposal.DepositEndTime)
-		case v1beta2.StatusVotingPeriod:
+		case v1.StatusVotingPeriod:
 			k.InsertActiveProposalQueue(ctx, proposal.Id, *proposal.VotingEndTime)
 		}
 		k.SetProposal(ctx, *proposal)
@@ -55,15 +55,15 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 }
 
 // ExportGenesis - output genesis parameters
-func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *v1beta2.GenesisState {
+func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *v1.GenesisState {
 	startingProposalID, _ := k.GetProposalID(ctx)
 	depositParams := k.GetDepositParams(ctx)
 	votingParams := k.GetVotingParams(ctx)
 	tallyParams := k.GetTallyParams(ctx)
 	proposals := k.GetProposals(ctx)
 
-	var proposalsDeposits v1beta2.Deposits
-	var proposalsVotes v1beta2.Votes
+	var proposalsDeposits v1.Deposits
+	var proposalsVotes v1.Votes
 	for _, proposal := range proposals {
 		deposits := k.GetDeposits(ctx, proposal.Id)
 		proposalsDeposits = append(proposalsDeposits, deposits...)
@@ -72,7 +72,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *v1beta2.GenesisState {
 		proposalsVotes = append(proposalsVotes, votes...)
 	}
 
-	return &v1beta2.GenesisState{
+	return &v1.GenesisState{
 		StartingProposalId: startingProposalID,
 		Deposits:           proposalsDeposits,
 		Votes:              proposalsVotes,

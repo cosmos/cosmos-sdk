@@ -165,7 +165,7 @@ corresponding "public key". From the [ADR 028](./adr-028-public-key-addresses.md
 or derived accounts that can be used for different pools (ex. staking pools) or managed accounts (ex. group
 accounts). We can also think of module sub-accounts as similar to derived keys - there is a root key and then some
 derivation path. `ModuleID` is a simple struct which contains the module name and optional "derivation" path,
-and forms its address based on the `AddressHash` method from [the ADR-028](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-028-public-key-addresses.md):
+and forms its address based on the `AddressHash` method from [the ADR-028](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-028-public-key-addresses.md):
 
 ```go
 type ModuleID struct {
@@ -330,7 +330,7 @@ ADR.
 ### Authorization
 
 By default, the inter-module router requires that messages are sent by the first signer returned by `GetSigners`. The
-inter-module router should also accept authorization middleware such as that provided by [ADR 030](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-030-authz-module.md).
+inter-module router should also accept authorization middleware such as that provided by [ADR 030](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-030-authz-module.md).
 This middleware will allow accounts to otherwise specific module accounts to perform actions on their behalf.
 Authorization middleware should take into account the need to grant certain modules effectively "admin" privileges to
 other modules. This will be addressed in separate ADRs or updates to this ADR.

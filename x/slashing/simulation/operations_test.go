@@ -1,7 +1,6 @@
 package simulation_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"math/rand"
 	"testing"
 	"time"
@@ -100,7 +99,7 @@ func TestSimulateMsgUnjail(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg types.MsgUnjail
-	legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, types.TypeMsgUnjail, msg.Type())

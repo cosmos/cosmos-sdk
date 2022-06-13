@@ -6,14 +6,14 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
 // Keeper defines the governance module Keeper
@@ -33,14 +33,14 @@ type Keeper struct {
 	// The (unexposed) keys used to access the stores from the Context.
 	storeKey storetypes.StoreKey
 
-	// The codec codec for binary encoding/decoding.
+	// The codec for binary encoding/decoding.
 	cdc codec.BinaryCodec
 
 	// Legacy Proposal router
 	legacyRouter v1beta1.Router
 
 	// Msg server router
-	router *middleware.MsgServiceRouter
+	router *baseapp.MsgServiceRouter
 
 	config types.Config
 }
@@ -55,10 +55,9 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace types.ParamSubspace,
 	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper,
-	legacyRouter v1beta1.Router, router *middleware.MsgServiceRouter,
+	legacyRouter v1beta1.Router, router *baseapp.MsgServiceRouter,
 	config types.Config,
 ) Keeper {
-
 	// ensure governance module account is set
 	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -104,7 +103,7 @@ func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // Router returns the gov keeper's router
-func (keeper Keeper) Router() *middleware.MsgServiceRouter {
+func (keeper Keeper) Router() *baseapp.MsgServiceRouter {
 	return keeper.router
 }
 
@@ -150,7 +149,7 @@ func (keeper Keeper) RemoveFromInactiveProposalQueue(ctx sdk.Context, proposalID
 
 // IterateActiveProposalsQueue iterates over the proposals in the active proposal queue
 // and performs a callback function
-func (keeper Keeper) IterateActiveProposalsQueue(ctx sdk.Context, endTime time.Time, cb func(proposal v1beta2.Proposal) (stop bool)) {
+func (keeper Keeper) IterateActiveProposalsQueue(ctx sdk.Context, endTime time.Time, cb func(proposal v1.Proposal) (stop bool)) {
 	iterator := keeper.ActiveProposalQueueIterator(ctx, endTime)
 
 	defer iterator.Close()
@@ -169,7 +168,7 @@ func (keeper Keeper) IterateActiveProposalsQueue(ctx sdk.Context, endTime time.T
 
 // IterateInactiveProposalsQueue iterates over the proposals in the inactive proposal queue
 // and performs a callback function
-func (keeper Keeper) IterateInactiveProposalsQueue(ctx sdk.Context, endTime time.Time, cb func(proposal v1beta2.Proposal) (stop bool)) {
+func (keeper Keeper) IterateInactiveProposalsQueue(ctx sdk.Context, endTime time.Time, cb func(proposal v1.Proposal) (stop bool)) {
 	iterator := keeper.InactiveProposalQueueIterator(ctx, endTime)
 
 	defer iterator.Close()
@@ -200,8 +199,8 @@ func (keeper Keeper) InactiveProposalQueueIterator(ctx sdk.Context, endTime time
 
 // assertMetadataLength returns an error if given metadata length
 // is greater than a pre-defined maxMetadataLen.
-func (k Keeper) assertMetadataLength(metadata string) error {
-	if metadata != "" && uint64(len(metadata)) > k.config.MaxMetadataLen {
+func (keeper Keeper) assertMetadataLength(metadata string) error {
+	if metadata != "" && uint64(len(metadata)) > keeper.config.MaxMetadataLen {
 		return types.ErrMetadataTooLong.Wrapf("got metadata with length %d", len(metadata))
 	}
 	return nil

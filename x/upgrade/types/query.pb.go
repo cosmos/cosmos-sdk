@@ -407,6 +407,8 @@ func (m *QueryModuleVersionsResponse) GetModuleVersions() []*ModuleVersion {
 }
 
 // QueryAuthorityRequest is the request type for Query/Authority
+//
+// Since: cosmos-sdk 0.46
 type QueryAuthorityRequest struct {
 }
 
@@ -444,6 +446,8 @@ func (m *QueryAuthorityRequest) XXX_DiscardUnknown() {
 var xxx_messageInfo_QueryAuthorityRequest proto.InternalMessageInfo
 
 // QueryAuthorityResponse is the response type for Query/Authority
+//
+// Since: cosmos-sdk 0.46
 type QueryAuthorityResponse struct {
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 }
@@ -578,6 +582,8 @@ type QueryClient interface {
 	// Since: cosmos-sdk 0.43
 	ModuleVersions(ctx context.Context, in *QueryModuleVersionsRequest, opts ...grpc.CallOption) (*QueryModuleVersionsResponse, error)
 	// Returns the account with authority to conduct upgrades
+	//
+	// Since: cosmos-sdk 0.46
 	Authority(ctx context.Context, in *QueryAuthorityRequest, opts ...grpc.CallOption) (*QueryAuthorityResponse, error)
 }
 
@@ -653,6 +659,8 @@ type QueryServer interface {
 	// Since: cosmos-sdk 0.43
 	ModuleVersions(context.Context, *QueryModuleVersionsRequest) (*QueryModuleVersionsResponse, error)
 	// Returns the account with authority to conduct upgrades
+	//
+	// Since: cosmos-sdk 0.46
 	Authority(context.Context, *QueryAuthorityRequest) (*QueryAuthorityResponse, error)
 }
 

@@ -118,7 +118,7 @@ func (u uniqueKeyIndex) onInsert(store kv.Store, message protoreflect.Message) e
 	}
 
 	if has {
-		return ormerrors.UniqueKeyViolation
+		return ormerrors.UniqueKeyViolation.Wrapf("%q", u.fields)
 	}
 
 	return store.Set(k, v)
@@ -143,7 +143,7 @@ func (u uniqueKeyIndex) onUpdate(store kv.Store, new, existing protoreflect.Mess
 	}
 
 	if has {
-		return ormerrors.UniqueKeyViolation
+		return ormerrors.UniqueKeyViolation.Wrapf("%q", u.fields)
 	}
 
 	existingKey, err := keyCodec.EncodeKey(existingValues)
@@ -190,8 +190,10 @@ func (u uniqueKeyIndex) Fields() string {
 	return u.fields.String()
 }
 
-var _ indexer = &uniqueKeyIndex{}
-var _ UniqueIndex = &uniqueKeyIndex{}
+var (
+	_ indexer     = &uniqueKeyIndex{}
+	_ UniqueIndex = &uniqueKeyIndex{}
+)
 
 // isNonTrivialUniqueKey checks if unique key fields are non-trivial, meaning that they
 // don't contain the full primary key. If they contain the full primary key, then

@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -25,11 +26,8 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	}
 
 	defer func() {
-		db.Close()
-		err = os.RemoveAll(dir)
-		if err != nil {
-			b.Fatal(err)
-		}
+		require.NoError(b, db.Close())
+		require.NoError(b, os.RemoveAll(dir))
 	}()
 
 	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, MakeTestEncodingConfig(), EmptyAppOptions{}, interBlockCacheOpt())
@@ -42,7 +40,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		AppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		SimulationOperations(app, app.AppCodec(), config),
-		app.ModuleAccountAddrs(),
+		ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
 	)
@@ -75,11 +73,8 @@ func BenchmarkInvariants(b *testing.B) {
 	config.AllInvariants = false
 
 	defer func() {
-		db.Close()
-		err = os.RemoveAll(dir)
-		if err != nil {
-			b.Fatal(err)
-		}
+		require.NoError(b, db.Close())
+		require.NoError(b, os.RemoveAll(dir))
 	}()
 
 	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, MakeTestEncodingConfig(), EmptyAppOptions{}, interBlockCacheOpt())
@@ -92,7 +87,7 @@ func BenchmarkInvariants(b *testing.B) {
 		AppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		SimulationOperations(app, app.AppCodec(), config),
-		app.ModuleAccountAddrs(),
+		ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
 	)

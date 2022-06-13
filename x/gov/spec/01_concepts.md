@@ -67,7 +67,7 @@ according to the final tally of the proposal:
 * All refunded or burned deposits are removed from the state. Events are issued when
   burning or refunding a deposit.
 
-## Voting
+## Vote
 
 ### Participants
 
@@ -118,34 +118,41 @@ option that casts a `NoWithVeto` vote._
 
 ### Weighted Votes
 
-[ADR-037](../../../docs/architecture/adr-037-gov-split-vote.md) introduces the weighted vote feature which allows a staker to split their votes into several voting options. For example, it could use 70% of its voting power to vote Yes and 30% of its voting power to vote No.
+[ADR-037](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-037-gov-split-vote.md) introduces the weighted vote feature which allows a staker to split their votes into several voting options. For example, it could use 70% of its voting power to vote Yes and 30% of its voting power to vote No.
 
 Often times the entity owning that address might not be a single individual. For example, a company might have different stakeholders who want to vote differently, and so it makes sense to allow them to split their voting power. Currently, it is not possible for them to do "passthrough voting" and giving their users voting rights over their tokens. However, with this system, exchanges can poll their users for voting preferences, and then vote on-chain proportionally to the results of the poll.
 
 To represent weighted vote on chain, we use the following Protobuf message.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-alpha1/proto/cosmos/gov/v1beta1/gov.proto#L32-L40
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/gov/v1beta1/gov.proto#L33-L43
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-alpha1/proto/cosmos/gov/v1beta1/gov.proto#L126-L137
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/gov/v1beta1/gov.proto#L136-L150
 
 For a weighted vote to be valid, the `options` field must not contain duplicate vote options, and the sum of weights of all options must be equal to 1.
 
 ### Quorum
 
 Quorum is defined as the minimum percentage of voting power that needs to be
-casted on a proposal for the result to be valid.
+cast on a proposal for the result to be valid.
 
 ### Threshold
 
 Threshold is defined as the minimum proportion of `Yes` votes (excluding
 `Abstain` votes) for the proposal to be accepted.
 
-Initially, the threshold is set at 50% with a possibility to veto if more than
-1/3rd of votes (excluding `Abstain` votes) are `NoWithVeto` votes. This means
-that proposals are accepted if the proportion of `Yes` votes (excluding
-`Abstain` votes) at the end of the voting period is superior to 50% and if the
-proportion of `NoWithVeto` votes is inferior to 1/3 (excluding `Abstain`
-votes).
+Initially, the threshold is set at 50% of `Yes` votes, excluding `Abstain`
+votes. A possibility to veto exists if more than 1/3rd of all votes are
+`NoWithVeto` votes.  Note, both of these values are derived from the `TallyParams`
+on-chain parameter, which is modifiable by governance.
+This means that proposals are accepted iff:
+
+* There exist bonded tokens.
+* Quorum has been achieved.
+* The proportion of `Abstain` votes is inferior to 1/1.
+* The proportion of `NoWithVeto` votes is inferior to 1/3, including
+  `Abstain` votes.
+* The proportion of `Yes` votes, excluding `Abstain` votes, at the end of
+  the voting period is superior to 1/2.
 
 ### Inheritance
 
@@ -156,7 +163,7 @@ If a delegator does not vote, it will inherit its validator vote.
 * If the delegator votes after its validator, it will override its validator
   vote with its own. If the proposal is urgent, it is possible
   that the vote will close before delegators have a chance to react and
-  override their validator's vote. This is not a problem, as proposals require more than 2/3rd of the total voting power to pass before the end of the voting period. If more than 2/3rd of validators collude, they can censor the votes of delegators anyway.
+  override their validator's vote. This is not a problem, as proposals require more than 2/3rd of the total voting power to pass before the end of the voting period. Because as little as 1/3 + 1 validation power could collude to censor transactions, non-collusion is already assumed for ranges exceeding this threshold.
 
 ### Validator’s punishment for non-voting
 
@@ -169,7 +176,7 @@ Later, we may add permissioned keys that could only sign txs from certain module
 ## Software Upgrade
 
 If proposals are of type `SoftwareUpgradeProposal`, then nodes need to upgrade
-their software to the new version that was voted. This process is divided in
+their software to the new version that was voted. This process is divided into
 two steps.
 
 ### Signal

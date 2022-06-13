@@ -22,17 +22,17 @@ The actual implementation of `BeginBlocker` and `EndBlocker` in `abci.go` are ve
 * If needed, they use the `keeper` and `ctx` to trigger state-transitions.
 * If needed, they can emit [`events`](../core/events.md) via the `ctx`'s `EventManager`.
 
-A specificity of the `EndBlocker` is that it can return validator updates to the underlying consensus engine in the form of an [`[]abci.ValidatorUpdates`](https://tendermint.com/docs/app-dev/abci-spec.html#validatorupdate). This is the preferred way to implement custom validator changes.
+A specificity of the `EndBlocker` is that it can return validator updates to the underlying consensus engine in the form of an [`[]abci.ValidatorUpdates`](https://docs.tendermint.com/master/spec/abci/abci.html#validatorupdate). This is the preferred way to implement custom validator changes.
 
 It is possible for developers to define the order of execution between the `BeginBlocker`/`EndBlocker` functions of each of their application's modules via the module's manager `SetOrderBeginBlocker`/`SetOrderEndBlocker` methods. For more on the module manager, click [here](./module-manager.md#manager).
 
-See an example implementation of `BeginBlocker` from the `distr` module:
+See an example implementation of `BeginBlocker` from the `distribution` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/f33749263f4ecc796115ad6e789cb0f7cddf9148/x/distribution/abci.go#L14-L38
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/x/distribution/abci.go#L14-L38
 
 and an example implementation of `EndBlocker` from the `staking` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/f33749263f4ecc796115ad6e789cb0f7cddf9148/x/staking/abci.go#L22-L27
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/x/staking/abci.go#L22-L27
 
 ## Next {hide}
 

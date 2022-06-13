@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"cosmossdk.io/math"
 	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -32,10 +33,8 @@ const (
 	DefaultHistoricalEntries uint32 = 10000
 )
 
-var (
-	// DefaultMinCommissionRate is set to 0%
-	DefaultMinCommissionRate = sdk.ZeroDec()
-)
+// DefaultMinCommissionRate is set to 0%
+var DefaultMinCommissionRate = sdk.ZeroDec()
 
 var (
 	KeyUnbondingTime     = []byte("UnbondingTime")
@@ -206,7 +205,7 @@ func validateBondDenom(i interface{}) error {
 }
 
 func ValidatePowerReduction(i interface{}) error {
-	v, ok := i.(sdk.Int)
+	v, ok := i.(math.Int)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

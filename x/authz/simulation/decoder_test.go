@@ -21,7 +21,8 @@ func TestDecodeStore(t *testing.T) {
 	dec := simulation.NewDecodeStore(cdc)
 
 	now := time.Now().UTC()
-	grant, _ := authz.NewGrant(now, banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("foo", 123))), now.Add(1))
+	e := now.Add(1)
+	grant, _ := authz.NewGrant(now, banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("foo", 123))), &e)
 	grantBz, err := cdc.Marshal(&grant)
 	require.NoError(t, err)
 	kvPairs := kv.Pairs{

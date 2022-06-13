@@ -2,10 +2,11 @@ package module
 
 import (
 	"encoding/json"
-
 	"math/rand"
+	"sort"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -45,6 +46,38 @@ func NewSimulationManager(modules ...AppModuleSimulation) *SimulationManager {
 		Modules:       modules,
 		StoreDecoders: make(sdk.StoreDecoderRegistry),
 	}
+}
+
+// NewSimulationManagerFromAppModules creates a new SimulationManager object.
+//
+// First it sets any SimulationModule provided by overrideModules, and ignores any AppModule
+// with the same moduleName.
+// Then it attempts to cast every provided AppModule into an AppModuleSimulation.
+// If the cast succeeds, its included, otherwise it is excluded.
+func NewSimulationManagerFromAppModules(modules map[string]AppModule, overrideModules map[string]AppModuleSimulation) *SimulationManager {
+	simModules := []AppModuleSimulation{}
+	appModuleNamesSorted := make([]string, 0, len(modules))
+	for moduleName := range modules {
+		appModuleNamesSorted = append(appModuleNamesSorted, moduleName)
+	}
+
+	sort.Strings(appModuleNamesSorted)
+
+	for _, moduleName := range appModuleNamesSorted {
+		// for every module, see if we override it. If so, use override.
+		// Else, if we can cast the app module into a simulation module add it.
+		// otherwise no simulation module.
+		if simModule, ok := overrideModules[moduleName]; ok {
+			simModules = append(simModules, simModule)
+		} else {
+			appModule := modules[moduleName]
+			if simModule, ok := appModule.(AppModuleSimulation); ok {
+				simModules = append(simModules, simModule)
+			}
+			// cannot cast, so we continue
+		}
+	}
+	return NewSimulationManager(simModules...)
 }
 
 // GetProposalContents returns each module's proposal content generator function
@@ -103,7 +136,7 @@ type SimulationState struct {
 	Rand         *rand.Rand                           // random number
 	GenState     map[string]json.RawMessage           // genesis state
 	Accounts     []simulation.Account                 // simulation accounts
-	InitialStake int64                                // initial coins per account
+	InitialStake sdkmath.Int                          // initial coins per account
 	NumBonded    int64                                // number of initially bonded accounts
 	GenTimestamp time.Time                            // genesis timestamp
 	UnbondTime   time.Duration                        // staking unbond time stored to use it as the slashing maximum evidence duration

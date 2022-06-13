@@ -149,7 +149,7 @@ func assertValid(obj codec.ProtoMarshaler) error {
 func (a table) Delete(store sdk.KVStore, rowID RowID) error {
 	pStore := prefix.NewStore(store, a.prefix[:])
 
-	var oldValue = reflect.New(a.model).Interface().(codec.ProtoMarshaler)
+	oldValue := reflect.New(a.model).Interface().(codec.ProtoMarshaler)
 	if err := a.GetOne(store, rowID, oldValue); err != nil {
 		return sdkerrors.Wrap(err, "load old value")
 	}

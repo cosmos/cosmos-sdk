@@ -149,7 +149,7 @@ func (status *ProposalStatus) Unmarshal(data []byte) error {
 }
 
 // Format implements the fmt.Formatter interface.
-// nolint: errcheck
+
 func (status ProposalStatus) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
@@ -246,14 +246,12 @@ func RegisterProposalType(ty string) {
 }
 
 // ContentFromProposalType returns a Content object based on the proposal type.
-func ContentFromProposalType(title, desc, ty string) Content {
-	switch ty {
-	case ProposalTypeText:
-		return NewTextProposal(title, desc)
-
-	default:
-		return nil
+func ContentFromProposalType(title, desc, ty string) (Content, bool) {
+	if strings.EqualFold(ty, ProposalTypeText) {
+		return NewTextProposal(title, desc), true
 	}
+
+	return nil, false
 }
 
 // IsValidProposalType returns a boolean determining if the proposal type is

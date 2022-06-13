@@ -1,10 +1,10 @@
 package snapshots
 
 import (
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"io"
 	"math"
 
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -61,7 +61,7 @@ func (w *ChunkWriter) CloseWithError(err error) {
 		w.closed = true
 		close(w.ch)
 		if w.pipe != nil {
-			w.pipe.CloseWithError(err)
+			_ = w.pipe.CloseWithError(err) // CloseWithError always returns nil
 		}
 	}
 }

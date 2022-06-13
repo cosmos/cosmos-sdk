@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
+//nolint:gosec // these are not hardcoded credentials.
 const (
 	// OpWeightMsgSend Simulation operation weights constants
 	OpWeightMsgSend = "op_weight_msg_send"
@@ -27,9 +28,7 @@ const (
 	WeightSend = 100
 )
 
-var (
-	TypeMsgSend = sdk.MsgTypeURL(&nft.MsgSend{})
-)
+var TypeMsgSend = sdk.MsgTypeURL(&nft.MsgSend{})
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
@@ -38,11 +37,9 @@ func WeightedOperations(
 	cdc codec.JSONCodec,
 	ak nft.AccountKeeper,
 	bk nft.BankKeeper,
-	k keeper.Keeper) simulation.WeightedOperations {
-
-	var (
-		weightMsgSend int
-	)
+	k keeper.Keeper,
+) simulation.WeightedOperations {
+	var weightMsgSend int
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgSend, &weightMsgSend, nil,
 		func(_ *rand.Rand) {
@@ -63,7 +60,8 @@ func SimulateMsgSend(
 	cdc *codec.ProtoCodec,
 	ak nft.AccountKeeper,
 	bk nft.BankKeeper,
-	k keeper.Keeper) simtypes.Operation {
+	k keeper.Keeper,
+) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -81,7 +79,7 @@ func SimulateMsgSend(
 			return simtypes.NoOpMsg(nft.ModuleName, TypeMsgSend, err.Error()), nil, err
 		}
 
-		spendLimit := spendableCoins.Sub(fees)
+		spendLimit := spendableCoins.Sub(fees...)
 		if spendLimit == nil {
 			return simtypes.NoOpMsg(nft.ModuleName, TypeMsgSend, "spend limit is nil"), nil, nil
 		}
@@ -99,7 +97,7 @@ func SimulateMsgSend(
 		}
 
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenSignedMockTx(
 			txCfg,
 			[]sdk.Msg{msg},
 			fees,

@@ -15,8 +15,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	v046 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
 func TestMigrateJSON(t *testing.T) {
@@ -57,7 +57,7 @@ func TestMigrateJSON(t *testing.T) {
 	// Make sure the migrated proposal's Msg signer is the gov acct.
 	require.Equal(t,
 		authtypes.NewModuleAddress(types.ModuleName).String(),
-		migrated.Proposals[0].Messages[0].GetCachedValue().(*v1beta2.MsgExecLegacyContent).Authority,
+		migrated.Proposals[0].Messages[0].GetCachedValue().(*v1.MsgExecLegacyContent).Authority,
 	)
 
 	bz, err := clientCtx.Codec.MarshalJSON(migrated)
@@ -95,7 +95,7 @@ func TestMigrateJSON(t *testing.T) {
 			"id": "1",
 			"messages": [
 				{
-					"@type": "/cosmos.gov.v1beta2.MsgExecLegacyContent",
+					"@type": "/cosmos.gov.v1.MsgExecLegacyContent",
 					"authority": "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
 					"content": {
 						"@type": "/cosmos.gov.v1beta1.TextProposal",

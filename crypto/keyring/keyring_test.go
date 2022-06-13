@@ -3,6 +3,8 @@ package keyring
 import (
 	"encoding/hex"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -59,7 +61,8 @@ func TestNewKeyring(t *testing.T) {
 
 func TestKeyManagementKeyRing(t *testing.T) {
 	cdc := getCodec()
-	kb, err := New("keybasename", "test", t.TempDir(), nil, cdc)
+	tempDir := t.TempDir()
+	kb, err := New("keybasename", "test", tempDir, nil, cdc)
 	require.NoError(t, err)
 	require.NotNil(t, cdc)
 
@@ -150,6 +153,15 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	keyS, err = kb.List()
 	require.NoError(t, err)
 	require.Equal(t, 1, len(keyS))
+
+	// create some random directory inside the keyring directory to check migrate ignores
+	// all files other than *.info
+	newPath := filepath.Join(tempDir, "random")
+	require.NoError(t, os.Mkdir(newPath, 0o755))
+	items, err := os.ReadDir(tempDir)
+	require.GreaterOrEqual(t, len(items), 2)
+	keyS, err = kb.List()
+	require.NoError(t, err)
 
 	// addr cache gets nuked - and test skip flag
 	require.NoError(t, kb.Delete(n2))
@@ -1077,19 +1089,19 @@ func TestNonConsistentKeyring_SavePubKey(t *testing.T) {
 	priv := ed25519.GenPrivKey()
 	pub := priv.PubKey()
 
-	k, err := kr.SaveOfflineKey(key, pub)
-	require.Nil(t, err)
+	_, err = kr.SaveOfflineKey(key, pub)
+	require.NoError(t, err)
 
 	// broken keyring state test
 	unsafeKr, ok := kr.(keystore)
 	require.True(t, ok)
 	// we lost public key for some reason, but still have an address record
-	unsafeKr.db.Remove(infoKey(key))
+	require.NoError(t, unsafeKr.db.Remove(infoKey(key)))
 	list, err = kr.List()
 	require.NoError(t, err)
 	require.Equal(t, 0, len(list))
 
-	k, err = kr.SaveOfflineKey(key, pub)
+	k, err := kr.SaveOfflineKey(key, pub)
 	require.Nil(t, err)
 	pubKey, err := k.GetPubKey()
 	require.NoError(t, err)
@@ -1287,17 +1299,13 @@ func TestAltKeyring_UnsafeExportPrivKeyHex(t *testing.T) {
 	_, _, err = kr.NewMnemonic(uid, English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
 
-	unsafeKeyring := NewUnsafe(kr)
-	privKey, err := unsafeKeyring.UnsafeExportPrivKeyHex(uid)
+	privKey, err := kr.(keystore).ExportPrivateKeyObject(uid)
 
 	require.NoError(t, err)
-	require.Equal(t, 64, len(privKey))
-
-	_, err = hex.DecodeString(privKey)
-	require.NoError(t, err)
+	require.Equal(t, 64, len(hex.EncodeToString(privKey.Bytes())))
 
 	// test error on non existing key
-	_, err = unsafeKeyring.UnsafeExportPrivKeyHex("non-existing")
+	_, err = kr.(keystore).ExportPrivateKeyObject("non-existing")
 	require.Error(t, err)
 }
 

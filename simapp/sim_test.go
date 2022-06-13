@@ -9,12 +9,13 @@ import (
 	"strings"
 	"testing"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
@@ -66,7 +67,7 @@ func TestFullAppSimulation(t *testing.T) {
 	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
-		db.Close()
+		require.NoError(t, db.Close())
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 
@@ -81,7 +82,7 @@ func TestFullAppSimulation(t *testing.T) {
 		AppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		SimulationOperations(app, app.AppCodec(), config),
-		app.ModuleAccountAddrs(),
+		ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
 	)
@@ -104,7 +105,7 @@ func TestAppImportExport(t *testing.T) {
 	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
-		db.Close()
+		require.NoError(t, db.Close())
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 
@@ -119,7 +120,7 @@ func TestAppImportExport(t *testing.T) {
 		AppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		SimulationOperations(app, app.AppCodec(), config),
-		app.ModuleAccountAddrs(),
+		ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
 	)
@@ -144,7 +145,7 @@ func TestAppImportExport(t *testing.T) {
 	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
-		newDB.Close()
+		require.NoError(t, newDB.Close())
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
 
@@ -168,27 +169,29 @@ func TestAppImportExport(t *testing.T) {
 
 	ctxA := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 	ctxB := newApp.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
-	newApp.mm.InitGenesis(ctxB, app.AppCodec(), genesisState)
+	newApp.ModuleManager.InitGenesis(ctxB, app.AppCodec(), genesisState)
 	newApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
 
 	fmt.Printf("comparing stores...\n")
 
 	storeKeysPrefixes := []StoreKeysPrefixes{
-		{app.keys[authtypes.StoreKey], newApp.keys[authtypes.StoreKey], [][]byte{}},
-		{app.keys[stakingtypes.StoreKey], newApp.keys[stakingtypes.StoreKey],
+		{app.GetKey(authtypes.StoreKey), newApp.GetKey(authtypes.StoreKey), [][]byte{}},
+		{
+			app.GetKey(stakingtypes.StoreKey), newApp.GetKey(stakingtypes.StoreKey),
 			[][]byte{
 				stakingtypes.UnbondingQueueKey, stakingtypes.RedelegationQueueKey, stakingtypes.ValidatorQueueKey,
 				stakingtypes.HistoricalInfoKey,
-			}}, // ordering may change but it doesn't matter
-		{app.keys[slashingtypes.StoreKey], newApp.keys[slashingtypes.StoreKey], [][]byte{}},
-		{app.keys[minttypes.StoreKey], newApp.keys[minttypes.StoreKey], [][]byte{}},
-		{app.keys[distrtypes.StoreKey], newApp.keys[distrtypes.StoreKey], [][]byte{}},
-		{app.keys[banktypes.StoreKey], newApp.keys[banktypes.StoreKey], [][]byte{banktypes.BalancesPrefix}},
-		{app.keys[paramtypes.StoreKey], newApp.keys[paramtypes.StoreKey], [][]byte{}},
-		{app.keys[govtypes.StoreKey], newApp.keys[govtypes.StoreKey], [][]byte{}},
-		{app.keys[evidencetypes.StoreKey], newApp.keys[evidencetypes.StoreKey], [][]byte{}},
-		{app.keys[capabilitytypes.StoreKey], newApp.keys[capabilitytypes.StoreKey], [][]byte{}},
-		{app.keys[authzkeeper.StoreKey], newApp.keys[authzkeeper.StoreKey], [][]byte{authzkeeper.GrantKey, authzkeeper.GrantQueuePrefix}},
+			},
+		}, // ordering may change but it doesn't matter
+		{app.GetKey(slashingtypes.StoreKey), newApp.GetKey(slashingtypes.StoreKey), [][]byte{}},
+		{app.GetKey(minttypes.StoreKey), newApp.GetKey(minttypes.StoreKey), [][]byte{}},
+		{app.GetKey(distrtypes.StoreKey), newApp.GetKey(distrtypes.StoreKey), [][]byte{}},
+		{app.GetKey(banktypes.StoreKey), newApp.GetKey(banktypes.StoreKey), [][]byte{banktypes.BalancesPrefix}},
+		{app.GetKey(paramtypes.StoreKey), newApp.GetKey(paramtypes.StoreKey), [][]byte{}},
+		{app.GetKey(govtypes.StoreKey), newApp.GetKey(govtypes.StoreKey), [][]byte{}},
+		{app.GetKey(evidencetypes.StoreKey), newApp.GetKey(evidencetypes.StoreKey), [][]byte{}},
+		{app.GetKey(capabilitytypes.StoreKey), newApp.GetKey(capabilitytypes.StoreKey), [][]byte{}},
+		{app.GetKey(authzkeeper.StoreKey), newApp.GetKey(authzkeeper.StoreKey), [][]byte{authzkeeper.GrantKey, authzkeeper.GrantQueuePrefix}},
 	}
 
 	for _, skp := range storeKeysPrefixes {
@@ -211,7 +214,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
-		db.Close()
+		require.NoError(t, db.Close())
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 
@@ -226,7 +229,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		AppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		SimulationOperations(app, app.AppCodec(), config),
-		app.ModuleAccountAddrs(),
+		ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
 	)
@@ -256,7 +259,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
-		newDB.Close()
+		require.NoError(t, newDB.Close())
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
 
@@ -274,7 +277,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		AppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		SimulationOperations(newApp, newApp.AppCodec(), config),
-		app.ModuleAccountAddrs(),
+		ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
 	)
@@ -325,7 +328,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				AppStateFn(app.AppCodec(), app.SimulationManager()),
 				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 				SimulationOperations(app, app.AppCodec(), config),
-				app.ModuleAccountAddrs(),
+				ModuleAccountAddrs(),
 				config,
 				app.AppCodec(),
 			)

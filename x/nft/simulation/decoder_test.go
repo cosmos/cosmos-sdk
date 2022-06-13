@@ -6,8 +6,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/nft"
@@ -22,10 +23,8 @@ var (
 )
 
 func TestDecodeStore(t *testing.T) {
-	cfg, err := network.DefaultConfigWithAppConfig(testutil.AppConfig)
-	require.NoError(t, err)
-
-	cdc := cfg.Codec
+	var cdc codec.Codec
+	depinject.Inject(testutil.AppConfig, &cdc)
 	dec := simulation.NewDecodeStore(cdc)
 
 	class := nft.Class{

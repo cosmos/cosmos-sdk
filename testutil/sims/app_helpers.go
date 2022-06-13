@@ -47,7 +47,9 @@ var DefaultConsensusParams = &tmproto.ConsensusParams{
 }
 
 // Setup initializes a new runtime.App. A Nop logger is set in runtime.App.
-func Setup(appConfig depinject.Config, extraInject ...interface{}) (*runtime.App, error) {
+// appConfig usually load from a `app.yaml` with `appconfig.LoadYAML`, defines the application configuration.
+// extraOutputs defines the extra outputs to be assigned by the dependency injector (depinject).
+func Setup(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.App, error) {
 	//
 	// create app
 	//
@@ -57,7 +59,7 @@ func Setup(appConfig depinject.Config, extraInject ...interface{}) (*runtime.App
 
 	if err := depinject.Inject(
 		appConfig,
-		append(extraInject, &appBuilder, &msgServiceRouter, &codec)...,
+		append(extraOutputs, &appBuilder, &msgServiceRouter, &codec)...,
 	); err != nil {
 		return nil, fmt.Errorf("failed to inject dependencies: %w", err)
 	}

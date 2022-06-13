@@ -8,7 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/nft"
@@ -17,15 +18,15 @@ import (
 )
 
 func TestRandomizedGenState(t *testing.T) {
-	cfg, err := network.DefaultConfigWithAppConfig(testutil.AppConfig)
-	require.NoError(t, err)
+	var cdc codec.Codec
+	depinject.Inject(testutil.AppConfig, &cdc)
 
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
 	simState := module.SimulationState{
 		AppParams:    make(simtypes.AppParams),
-		Cdc:          cfg.Codec,
+		Cdc:          cdc,
 		Rand:         r,
 		NumBonded:    3,
 		Accounts:     simtypes.RandomAccounts(r, 3),

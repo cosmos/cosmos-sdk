@@ -5,9 +5,9 @@ modules:
 
       app_name: TestNFTApp
 
-      begin_blockers: [mint, staking, auth, bank, genutil, nft, params]
-      end_blockers: [mint, staking, auth, bank, genutil, nft, params]
-      init_genesis: [auth, bank, mint, staking, genutil, nft, params]
+      begin_blockers: [mint, staking, auth, bank, mint, genutil, nft, params]
+      end_blockers: [mint, staking, auth, bank, mint, genutil, nft, params]
+      init_genesis: [auth, bank, mint, staking, mint, genutil, nft, params]
 
   - name: auth
     config:
@@ -35,10 +35,6 @@ modules:
     config:
       "@type": cosmos.tx.module.v1.Module
 
-  - name: nft
-    config:
-      "@type": cosmos.nft.module.v1.Module
-
   - name: staking
     config:
       "@type": cosmos.staking.module.v1.Module
@@ -46,3 +42,11 @@ modules:
   - name: genutil
     config:
       "@type": cosmos.genutil.module.v1.Module
+
+  - name: mint
+    config:
+      "@type": cosmos.mint.module.v1.Module
+
+  - name: nft
+    config:
+      "@type": cosmos.nft.module.v1.Module

@@ -20,7 +20,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	modulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
 	"github.com/cosmos/cosmos-sdk/x/nft"
@@ -218,7 +217,6 @@ type nftInputs struct {
 
 	Key      *store.KVStoreKey
 	Cdc      codec.Codec
-	Subspace paramstypes.Subspace
 	Registry cdctypes.InterfaceRegistry
 
 	AccountKeeper nft.AccountKeeper

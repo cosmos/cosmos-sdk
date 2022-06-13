@@ -1,3 +1,4 @@
+// Package gas provides a basic API for app modules to track gas usage.
 package gas
 
 import "context"

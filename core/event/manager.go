@@ -1,3 +1,4 @@
+// Package event provides a basic API for app modules to emit events.
 package event
 
 import (

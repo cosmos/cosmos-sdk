@@ -1,3 +1,6 @@
+// Package blockinfo provides an API for app modules to get basic
+// information about blocks that is available against any underlying Tendermint
+// core version (or other consensus layer that could be used in the future).
 package blockinfo
 
 import (
@@ -13,6 +16,8 @@ import (
 // core API type that should be provided by the runtime module being used to
 // build an app via depinject.
 type Service interface {
+
+	// GetBlockInfo returns the current block info for the context.
 	GetBlockInfo(ctx context.Context) BlockInfo
 }
 

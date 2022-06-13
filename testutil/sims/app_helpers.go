@@ -177,7 +177,7 @@ func GenesisStateWithValSet(codec codec.Codec, genesisState map[string]json.RawM
 	})
 
 	// update total supply
-	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{}, []banktypes.SendEnabled{})
+	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{})
 	genesisState[banktypes.ModuleName] = codec.MustMarshalJSON(bankGenesis)
 
 	return genesisState, nil

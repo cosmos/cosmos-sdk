@@ -19,12 +19,13 @@ func TestParamChanges(t *testing.T) {
 		simValue    string
 		subspace    string
 	}{
+		{"bank/SendEnabled", "SendEnabled", "[]", "bank"},
 		{"bank/DefaultSendEnabled", "DefaultSendEnabled", "true", "bank"},
 	}
 
 	paramChanges := simulation.ParamChanges(r)
 
-	require.Len(t, paramChanges, len(expected))
+	require.Len(t, paramChanges, 2)
 
 	for i, p := range paramChanges {
 		require.Equal(t, expected[i].composedKey, p.ComposedKey())

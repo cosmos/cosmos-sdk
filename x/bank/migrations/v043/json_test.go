@@ -77,7 +77,6 @@ func TestMigrateJSON(t *testing.T) {
 		"default_send_enabled": false,
 		"send_enabled": []
 	},
-	"send_enabled": [],
 	"supply": [
 		{
 			"amount": "20",

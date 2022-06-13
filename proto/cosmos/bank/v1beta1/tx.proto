@@ -46,4 +46,3 @@ message MsgMultiSend {
 
 // MsgMultiSendResponse defines the Msg/MultiSend response type.
 message MsgMultiSendResponse {}
-

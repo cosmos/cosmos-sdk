@@ -7,9 +7,8 @@ import (
 
 // bank message types
 const (
-	TypeMsgSend           = "send"
-	TypeMsgMultiSend      = "multisend"
-	TypeMsgSetSendEnabled = "set-send-enabled"
+	TypeMsgSend      = "send"
+	TypeMsgMultiSend = "multisend"
 )
 
 var _ sdk.Msg = &MsgSend{}

@@ -61,17 +61,15 @@ Restricted permission to mint per module could be achieved by using baseKeeper w
 // between accounts.
 type Keeper interface {
     SendKeeper
-    WithMintCoinsRestriction(MintingRestrictionFn) BaseKeeper
+    WithMintCoinsRestriction(NewRestrictionFn BankMintingRestrictionFn) BaseKeeper 
 
     InitGenesis(sdk.Context, *types.GenesisState)
     ExportGenesis(sdk.Context) *types.GenesisState
 
     GetSupply(ctx sdk.Context, denom string) sdk.Coin
-    HasSupply(ctx sdk.Context, denom string) bool
     GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error)
     IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bool)
     GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool)
-    HasDenomMetaData(ctx sdk.Context, denom string) bool
     SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)
     IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool)
 
@@ -85,9 +83,6 @@ type Keeper interface {
 
     DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
     UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
-
-    // GetAuthority Gets the address capable of executing governance proposal messages. Usually the gov module account.
-    GetAuthority() string
 
     types.QueryServer
 }
@@ -109,13 +104,6 @@ type SendKeeper interface {
 
     GetParams(ctx sdk.Context) types.Params
     SetParams(ctx sdk.Context, params types.Params)
-
-    IsSendEnabledDenom(ctx sdk.Context, denom string) bool
-    SetSendEnabled(ctx sdk.Context, denom string, value bool)
-    SetAllSendEnabled(ctx sdk.Context, sendEnableds []*types.SendEnabled)
-    DeleteSendEnabled(ctx sdk.Context, denom string)
-    IterateSendEnabledEntries(ctx sdk.Context, cb func(denom string, sendEnabled bool) (stop bool))
-    GetAllSendEnabledEntries(ctx sdk.Context) []types.SendEnabled
 
     IsSendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool
     IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error

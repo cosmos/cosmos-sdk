@@ -156,11 +156,6 @@ func (a *App) Configurator() module.Configurator {
 	return a.configurator
 }
 
-// InterfaceRegistry returns the application's interface registry.
-func (a *App) InterfaceRegistry() codectypes.InterfaceRegistry {
-	return a.interfaceRegistry
-}
-
 // UnsafeFindStoreKey FindStoreKey fetches a registered StoreKey from the App in linear time.
 //
 // NOTE: This should only be used in testing.

@@ -221,14 +221,14 @@ type nftInputs struct {
 	Subspace paramstypes.Subspace
 	Registry cdctypes.InterfaceRegistry
 
-	AccountKeeper nft.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
-	BankKeeper    nft.BankKeeper    `key:"cosmos.bank.v1.Keeper"`
+	AccountKeeper nft.AccountKeeper
+	BankKeeper    nft.BankKeeper
 }
 
 type nftOutputs struct {
 	depinject.Out
 
-	NFTKeeper keeper.Keeper `key:"cosmos.nft.v1.Keeper"`
+	NFTKeeper keeper.Keeper
 	Module    runtime.AppModuleWrapper
 }
 

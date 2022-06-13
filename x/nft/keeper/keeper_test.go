@@ -8,6 +8,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/nft"
@@ -38,11 +39,12 @@ type TestSuite struct {
 }
 
 func (s *TestSuite) SetupTest() {
-	app := runtime.Setup(s.T(), testutil.AppConfig, &s.nftKeeper)
+	var interfaceRegistry codectypes.InterfaceRegistry
+	app := runtime.Setup(s.T(), testutil.AppConfig, &s.nftKeeper, &interfaceRegistry)
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
 	nft.RegisterQueryServer(queryHelper, s.nftKeeper)
 	queryClient := nft.NewQueryClient(queryHelper)
 

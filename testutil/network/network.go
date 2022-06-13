@@ -158,7 +158,6 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	cfg.LegacyAmino = legacyAmino
 	cfg.InterfaceRegistry = interfaceRegistry
 	cfg.GenesisState = appBuilder.DefaultGenesis()
-
 	cfg.AppConstructor = func(val Validator) servertypes.Application {
 		app := appBuilder.Build(
 			val.Ctx.Logger,

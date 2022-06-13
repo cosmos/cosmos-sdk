@@ -3,7 +3,7 @@ modules:
     config:
       "@type": cosmos.app.runtime.v1alpha1.Module
 
-      app_name: NftApp
+      app_name: TestNFTApp
 
       begin_blockers: [staking, auth, bank, genutil, nft, params]
       end_blockers: [staking, auth, bank, genutil, nft, params]

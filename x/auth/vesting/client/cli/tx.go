@@ -104,19 +104,20 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 		Where periods.json contains:
 
 		An array of coin strings and unix epoch times for coins to vest
-{ "start_time": 1625204910,
-"period":[
- {
-  "coins": "10test",
-  "length_seconds":2592000 //30 days
- },
- {
-	"coins": "10test",
-	"length_seconds":2592000 //30 days
- },
-]
-	}
-		`,
+{ 
+	"start_time": 1625204910,
+	"periods":[
+		{
+			"coins": "10test",
+			"length_seconds":2592000
+		},
+		{
+			"coins": "10test",
+			"length_seconds":2592000 //30 days
+		}
+	]
+}
+`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)

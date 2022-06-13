@@ -12,7 +12,6 @@ import (
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // File for storing in-package BaseApp optional functions,
@@ -146,12 +145,20 @@ func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
 	app.endBlocker = endBlocker
 }
 
-func (app *BaseApp) SetTxHandler(txHandler tx.Handler) {
+func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 	if app.sealed {
-		panic("SetTxHandler() on sealed BaseApp")
+		panic("SetAnteHandler() on sealed BaseApp")
 	}
 
-	app.txHandler = txHandler
+	app.anteHandler = ah
+}
+
+func (app *BaseApp) SetPostHandler(ph sdk.AnteHandler) {
+	if app.sealed {
+		panic("SetPostHandler() on sealed BaseApp")
+	}
+
+	app.postHandler = ph
 }
 
 func (app *BaseApp) SetAddrPeerFilter(pf sdk.PeerFilter) {
@@ -193,6 +200,14 @@ func (app *BaseApp) SetStoreLoader(loader StoreLoader) {
 	app.storeLoader = loader
 }
 
+// SetRouter allows us to customize the router.
+func (app *BaseApp) SetRouter(router sdk.Router) {
+	if app.sealed {
+		panic("SetRouter() on sealed BaseApp")
+	}
+	app.router = router
+}
+
 // SetSnapshot sets the snapshot store and options.
 func (app *BaseApp) SetSnapshot(snapshotStore *snapshots.Store, opts snapshottypes.SnapshotOptions) {
 	if app.sealed {
@@ -210,6 +225,7 @@ func (app *BaseApp) SetSnapshot(snapshotStore *snapshots.Store, opts snapshottyp
 func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 	app.interfaceRegistry = registry
 	app.grpcQueryRouter.SetInterfaceRegistry(registry)
+	app.msgServiceRouter.SetInterfaceRegistry(registry)
 }
 
 // SetStreamingService is used to set a streaming service into the BaseApp hooks and load the listeners into the multistore
@@ -221,4 +237,9 @@ func (app *BaseApp) SetStreamingService(s StreamingService) {
 	// register the StreamingService within the BaseApp
 	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context
 	app.abciListeners = append(app.abciListeners, s)
+}
+
+// SetTxDecoder sets the TxDecoder if it wasn't provided in the BaseApp constructor.
+func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
+	app.txDecoder = txDecoder
 }

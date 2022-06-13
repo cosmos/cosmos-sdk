@@ -27,7 +27,7 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	expiration2 := expiration.AddDate(1, 0, 0)
 	smallCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10))
 
-	var save = func(grantee sdk.AccAddress, exp *time.Time) {
+	save := func(grantee sdk.AccAddress, exp *time.Time) {
 		err := app.AuthzKeeper.SaveGrant(ctx, grantee, granter, banktypes.NewSendAuthorization(smallCoins), exp)
 		require.NoError(t, err, "Grant from %s", grantee.String())
 	}
@@ -40,7 +40,7 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	authz.RegisterQueryServer(queryHelper, app.AuthzKeeper)
 	queryClient := authz.NewQueryClient(queryHelper)
 
-	var checkGrants = func(ctx sdk.Context, expectedNum int) {
+	checkGrants := func(ctx sdk.Context, expectedNum int) {
 		authzmodule.BeginBlocker(ctx, app.AuthzKeeper)
 
 		res, err := queryClient.GranterGrants(ctx.Context(), &authz.QueryGranterGrantsRequest{

@@ -9,7 +9,7 @@ const (
 	EventTypeTransfer = "transfer"
 
 	AttributeKeyRecipient = "recipient"
-	AttributeKeySender    = "sender"
+	AttributeKeySender    = sdk.AttributeKeySender
 
 	AttributeValueCategory = ModuleName
 

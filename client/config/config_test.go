@@ -26,10 +26,12 @@ const (
 // initClientContext initiates client Context for tests
 func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 	home := t.TempDir()
+	chainId := "test-chain"
 	clientCtx := client.Context{}.
 		WithHomeDir(home).
 		WithViper("").
-		WithCodec(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()))
+		WithCodec(codec.NewProtoCodec(codectypes.NewInterfaceRegistry())).
+		WithChainID(chainId)
 
 	require.NoError(t, clientCtx.Viper.BindEnv(nodeEnv))
 	if envVar != "" {
@@ -38,6 +40,7 @@ func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 
 	clientCtx, err := config.ReadFromClientConfig(clientCtx)
 	require.NoError(t, err)
+	require.Equal(t, clientCtx.ChainID, chainId)
 
 	return clientCtx, func() { _ = os.RemoveAll(home) }
 }

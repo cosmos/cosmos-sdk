@@ -166,7 +166,7 @@ func (coin Coin) IsNegative() bool {
 
 // IsNil returns true if the coin amount is nil and false otherwise.
 func (coin Coin) IsNil() bool {
-	return coin.Amount.i == nil
+	return coin.Amount.BigInt() == nil
 }
 
 //-----------------------------------------------------------------------------
@@ -410,6 +410,71 @@ func (coins Coins) SafeSub(coinsB ...Coin) (Coins, bool) {
 	return diff, diff.IsAnyNegative()
 }
 
+// MulInt performs the scalar multiplication of coins with a `multiplier`
+// All coins are multiplied by x
+// e.g.
+// {2A, 3B} * 2 = {4A, 6B}
+// {2A} * 0 panics
+// Note, if IsValid was true on Coins, IsValid stays true.
+func (coins Coins) MulInt(x Int) Coins {
+	coins, ok := coins.SafeMulInt(x)
+	if !ok {
+		panic("multiplying by zero is an invalid operation on coins")
+	}
+
+	return coins
+}
+
+// SafeMulInt performs the same arithmetic as MulInt but returns false
+// if the `multiplier` is zero because it makes IsValid return false.
+func (coins Coins) SafeMulInt(x Int) (Coins, bool) {
+	if x.IsZero() {
+		return nil, false
+	}
+
+	res := make(Coins, len(coins))
+	for i, coin := range coins {
+		coin := coin
+		res[i] = NewCoin(coin.Denom, coin.Amount.Mul(x))
+	}
+
+	return res, true
+}
+
+// QuoInt performs the scalar division of coins with a `divisor`
+// All coins are divided by x and trucated.
+// e.g.
+// {2A, 30B} / 2 = {1A, 15B}
+// {2A} / 2 = {1A}
+// {4A} / {8A} = {0A}
+// {2A} / 0 = panics
+// Note, if IsValid was true on Coins, IsValid stays true,
+// unless the `divisor` is greater than the smallest coin amount.
+func (coins Coins) QuoInt(x Int) Coins {
+	coins, ok := coins.SafeQuoInt(x)
+	if !ok {
+		panic("dividing by zero is an invalid operation on coins")
+	}
+
+	return coins
+}
+
+// SafeQuoInt performs the same arithmetic as QuoInt but returns an error
+// if the division cannot be done.
+func (coins Coins) SafeQuoInt(x Int) (Coins, bool) {
+	if x.IsZero() {
+		return nil, false
+	}
+
+	var res Coins
+	for _, coin := range coins {
+		coin := coin
+		res = append(res, NewCoin(coin.Denom, coin.Amount.Quo(x)))
+	}
+
+	return res, true
+}
+
 // Max takes two valid Coins inputs and returns a valid Coins result
 // where for every denom D, AmountOf(D) of the result is the maximum
 // of AmountOf(D) of the inputs.  Note that the result might be not
@@ -638,28 +703,37 @@ func (coins Coins) AmountOf(denom string) Int {
 // AmountOfNoDenomValidation returns the amount of a denom from coins
 // without validating the denomination.
 func (coins Coins) AmountOfNoDenomValidation(denom string) Int {
+	if ok, c := coins.Find(denom); ok {
+		return c.Amount
+	}
+	return ZeroInt()
+}
+
+// Find returns true and coin if the denom exists in coins. Otherwise it returns false
+// and a zero coin. Uses binary search.
+// CONTRACT: coins must be valid (sorted).
+func (coins Coins) Find(denom string) (bool, Coin) {
 	switch len(coins) {
 	case 0:
-		return ZeroInt()
+		return false, Coin{}
 
 	case 1:
 		coin := coins[0]
 		if coin.Denom == denom {
-			return coin.Amount
+			return true, coin
 		}
-		return ZeroInt()
+		return false, Coin{}
 
 	default:
-		// Binary search the amount of coins remaining
 		midIdx := len(coins) / 2 // 2:1, 3:1, 4:2
 		coin := coins[midIdx]
 		switch {
 		case denom < coin.Denom:
-			return coins[:midIdx].AmountOfNoDenomValidation(denom)
+			return coins[:midIdx].Find(denom)
 		case denom == coin.Denom:
-			return coin.Amount
+			return true, coin
 		default:
-			return coins[midIdx+1:].AmountOfNoDenomValidation(denom)
+			return coins[midIdx+1:].Find(denom)
 		}
 	}
 }

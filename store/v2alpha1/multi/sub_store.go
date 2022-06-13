@@ -73,7 +73,7 @@ type contentsIterator struct {
 func (s *substore) newSubstoreIterator(source dbm.Iterator) *contentsIterator {
 	locker := s.root.mtx.RLocker()
 	locker.Lock()
-	return &contentsIterator{dbutil.DBToStoreIterator(source), locker}
+	return &contentsIterator{dbutil.ToStoreIterator(source), locker}
 }
 
 func (it *contentsIterator) Close() error {

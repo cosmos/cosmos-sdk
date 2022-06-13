@@ -13,8 +13,10 @@ import (
 	crgtypes "github.com/cosmos/cosmos-sdk/server/rosetta/lib/types"
 )
 
-const DefaultRetries = 5
-const DefaultRetryWait = 5 * time.Second
+const (
+	DefaultRetries   = 5
+	DefaultRetryWait = 5 * time.Second
+)
 
 // Settings define the rosetta server settings
 type Settings struct {
@@ -55,9 +57,7 @@ func NewServer(settings Settings) (Server, error) {
 		return Server{}, fmt.Errorf("cannot build asserter: %w", err)
 	}
 
-	var (
-		adapter crgtypes.API
-	)
+	var adapter crgtypes.API
 	switch settings.Offline {
 	case true:
 		adapter, err = newOfflineAdapter(settings)

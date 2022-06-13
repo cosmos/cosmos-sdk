@@ -24,7 +24,6 @@ const (
 
 // NewProposal creates a new Proposal instance
 func NewProposal(messages []sdk.Msg, id uint64, metadata string, submitTime, depositEndTime time.Time) (Proposal, error) {
-
 	msgs, err := sdktx.SetMsgs(messages)
 	if err != nil {
 		return Proposal{}, err
@@ -107,7 +106,7 @@ func (status *ProposalStatus) Unmarshal(data []byte) error {
 }
 
 // Format implements the fmt.Formatter interface.
-// nolint: errcheck
+
 func (status ProposalStatus) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':

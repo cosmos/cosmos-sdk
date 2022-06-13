@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/gorilla/mux"
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
@@ -13,9 +12,9 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/tests/mocks"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -41,7 +40,6 @@ func TestBasicManager(t *testing.T) {
 	mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(nil), gomock.Eq(wantDefaultGenesis["mockAppModuleBasic1"])).Times(1).Return(errFoo)
 	mockAppModuleBasic1.EXPECT().RegisterLegacyAminoCodec(gomock.Eq(legacyAmino)).Times(1)
 	mockAppModuleBasic1.EXPECT().RegisterInterfaces(gomock.Eq(interfaceRegistry)).Times(1)
-	mockAppModuleBasic1.EXPECT().RegisterRESTRoutes(gomock.Eq(client.Context{}), gomock.Eq(&mux.Router{})).Times(1)
 	mockAppModuleBasic1.EXPECT().GetTxCmd().Times(1).Return(nil)
 	mockAppModuleBasic1.EXPECT().GetQueryCmd().Times(1).Return(nil)
 
@@ -57,8 +55,6 @@ func TestBasicManager(t *testing.T) {
 	require.Equal(t, map[string]string(nil), data)
 
 	require.True(t, errors.Is(errFoo, mm.ValidateGenesis(cdc, nil, wantDefaultGenesis)))
-
-	mm.RegisterRESTRoutes(client.Context{}, &mux.Router{})
 
 	mockCmd := &cobra.Command{Use: "root"}
 	mm.AddTxCommands(mockCmd)
@@ -213,7 +209,8 @@ func TestManager_InitGenesis(t *testing.T) {
 	// test panic
 	genesisData = map[string]json.RawMessage{
 		"module1": json.RawMessage(`{"key": "value"}`),
-		"module2": json.RawMessage(`{"key": "value"}`)}
+		"module2": json.RawMessage(`{"key": "value"}`),
+	}
 	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
 	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{{}})
 	require.Panics(t, func() { mm.InitGenesis(ctx, cdc, genesisData) })
@@ -239,7 +236,8 @@ func TestManager_ExportGenesis(t *testing.T) {
 
 	want := map[string]json.RawMessage{
 		"module1": json.RawMessage(`{"key1": "value1"}`),
-		"module2": json.RawMessage(`{"key2": "value2"}`)}
+		"module2": json.RawMessage(`{"key2": "value2"}`),
+	}
 	require.Equal(t, want, mm.ExportGenesis(ctx, cdc))
 }
 

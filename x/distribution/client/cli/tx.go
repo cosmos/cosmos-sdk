@@ -52,7 +52,6 @@ func newSplitAndApply(
 	genOrBroadcastFn newGenerateOrBroadcastFunc, clientCtx client.Context,
 	fs *pflag.FlagSet, msgs []sdk.Msg, chunkSize int,
 ) error {
-
 	if chunkSize == 0 {
 		return genOrBroadcastFn(clientCtx, fs, msgs...)
 	}
@@ -75,6 +74,7 @@ func newSplitAndApply(
 	return nil
 }
 
+// NewWithdrawRewardsCmd returns a CLI command handler for creating a MsgWithdrawDelegatorReward transaction.
 func NewWithdrawRewardsCmd() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
@@ -120,6 +120,7 @@ $ %s tx distribution withdraw-rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 
 	return cmd
 }
 
+// NewWithdrawAllRewardsCmd returns a CLI command handler for creating a MsgWithdrawDelegatorReward transaction.
 func NewWithdrawAllRewardsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw-all-rewards",
@@ -183,6 +184,7 @@ $ %[1]s tx distribution withdraw-all-rewards --from mykey
 	return cmd
 }
 
+// NewSetWithdrawAddrCmd returns a CLI command handler for creating a MsgSetWithdrawAddress transaction.
 func NewSetWithdrawAddrCmd() *cobra.Command {
 	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 
@@ -221,6 +223,7 @@ $ %s tx distribution set-withdraw-addr %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 	return cmd
 }
 
+// NewFundCommunityPoolCmd returns a CLI command handler for creating a MsgFundCommunityPool transaction.
 func NewFundCommunityPoolCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "fund-community-pool [amount]",

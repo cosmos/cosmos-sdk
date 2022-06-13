@@ -43,16 +43,14 @@ _V<sub>u</sub>_ : validator unbonded
 
 ### Single Double Sign Infraction
 
-<----------------->
-[----------C<sub>1</sub>----D<sub>1</sub>,V<sub>u</sub>-----]
+\[----------C<sub>1</sub>----D<sub>1</sub>,V<sub>u</sub>-----\]
 
 A single infraction is committed then later discovered, at which point the
 validator is unbonded and slashed at the full amount for the infraction.
 
 ### Multiple Double Sign Infractions
 
-<--------------------------->
-[----------C<sub>1</sub>--C<sub>2</sub>---C<sub>3</sub>---D<sub>1</sub>,D<sub>2</sub>,D<sub>3</sub>V<sub>u</sub>-----]
+\[----------C<sub>1</sub>--C<sub>2</sub>---C<sub>3</sub>---D<sub>1</sub>,D<sub>2</sub>,D<sub>3</sub>V<sub>u</sub>-----\]
 
 Multiple infractions are committed and then later discovered, at which point the
 validator is jailed and slashed for only one infraction. Because the validator

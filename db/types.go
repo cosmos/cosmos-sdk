@@ -26,23 +26,23 @@ var (
 	ErrInvalidVersion = errors.New("invalid version")
 )
 
-// DBConnection represents a connection to a versioned database.
+// Connection represents a connection to a versioned database.
 // Records are accessed via transaction objects, and must be safe for concurrent creation
 // and read and write access.
 // Past versions are only accessible read-only.
-type DBConnection interface {
+type Connection interface {
 	// Reader opens a read-only transaction at the current working version.
-	Reader() DBReader
+	Reader() Reader
 
 	// ReaderAt opens a read-only transaction at a specified version.
 	// Returns ErrVersionDoesNotExist for invalid versions.
-	ReaderAt(uint64) (DBReader, error)
+	ReaderAt(uint64) (Reader, error)
 
 	// ReadWriter opens a read-write transaction at the current version.
-	ReadWriter() DBReadWriter
+	ReadWriter() ReadWriter
 
 	// Writer opens a write-only transaction at the current version.
-	Writer() DBWriter
+	Writer() Writer
 
 	// Versions returns all saved versions as an immutable set which is safe for concurrent access.
 	Versions() (VersionSet, error)
@@ -74,7 +74,7 @@ type DBConnection interface {
 //
 // Keys cannot be nil or empty, while values cannot be nil. Keys and values should be considered
 // read-only, both when returned and when given, and must be copied before they are modified.
-type DBReader interface {
+type Reader interface {
 	// Get fetches the value of the given key, or nil if it does not exist.
 	// CONTRACT: key, value readonly []byte
 	Get([]byte) ([]byte, error)
@@ -110,7 +110,7 @@ type DBReader interface {
 // Callers must call Commit or Discard when done with the transaction.
 //
 // This can be used to wrap a write-optimized batch object if provided by the backend implementation.
-type DBWriter interface {
+type Writer interface {
 	// Set sets the value for the given key, replacing it if it already exists.
 	// CONTRACT: key, value readonly []byte
 	Set([]byte, []byte) error
@@ -127,9 +127,9 @@ type DBWriter interface {
 }
 
 // DBReadWriter is a transaction interface that allows both reading and writing.
-type DBReadWriter interface {
-	DBReader
-	DBWriter
+type ReadWriter interface {
+	Reader
+	Writer
 }
 
 // Iterator represents an iterator over a domain of keys. Callers must call Close when done.
@@ -138,7 +138,7 @@ type DBReadWriter interface {
 //
 // Callers must make sure the iterator is valid before calling any methods on it, otherwise
 // these methods will panic. This is in part caused by most backend databases using this convention.
-// Note that the iterator is invalid on contruction: Next() must be called to initialize it to its
+// Note that the iterator is invalid on construction: Next() must be called to initialize it to its
 // starting position.
 //
 // As with DBReader, keys and values should be considered read-only, and must be copied before they are

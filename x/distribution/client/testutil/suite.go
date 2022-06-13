@@ -472,7 +472,8 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, 0, nil, []string{},
+			true, 0, nil,
+			[]string{},
 		},
 		{
 			"valid transaction",
@@ -483,7 +484,8 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, []string{
+			false, 0, &sdk.TxResponse{},
+			[]string{
 				"/cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse",
 			},
 		},
@@ -497,7 +499,8 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, []string{
+			false, 0, &sdk.TxResponse{},
+			[]string{
 				"/cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse",
 				"/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse",
 			},
@@ -570,7 +573,8 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, 0, nil, []string{},
+			true, 0, nil,
+			[]string{},
 		},
 		{
 			"valid transaction",
@@ -580,7 +584,8 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, []string{
+			false, 0, &sdk.TxResponse{},
+			[]string{
 				"/cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse",
 			},
 		},
@@ -590,7 +595,6 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			cmd := cli.NewWithdrawAllRewardsCmd()
 			clientCtx := val.ClientCtx
 
@@ -757,11 +761,13 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 }`
 
 	// fund some tokens to the community pool
-	args := []string{sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431))).String(),
+	args := []string{
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431))).String(),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String())}
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	}
 
 	invalidPropFile := testutil.WriteToNewTempFile(s.T(), invalidProp)
 	cmd := cli.NewFundCommunityPoolCmd()

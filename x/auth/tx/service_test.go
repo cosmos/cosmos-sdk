@@ -79,7 +79,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	)
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &s.txRes))
-	s.Require().Equal(uint32(0), s.txRes.Code)
+	s.Require().Equal(uint32(0), s.txRes.Code, s.txRes)
 
 	out, err = bankcli.MsgSendExec(
 		val.ClientCtx,
@@ -151,10 +151,8 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
 				// - tx.* events: tx.fee, tx.acc_seq, tx.signature
 				// - Sending Amount to recipient: coin_spent, coin_received, transfer and message.sender=<val1>
 				// - Msg events: message.module=bank and message.action=/cosmos.bank.v1beta1.MsgSend
-				s.Require().Equal(len(res.GetResult().GetEvents()), 13)
-				s.Require().Len(res.GetResult().MsgResponses, 1)
-				// Check the result and gas used are correct.
-				s.Require().True(res.GetGasInfo().GetGasUsed() > 0) // Gas used sometimes change, just check it's not empty.
+				s.Require().Equal(len(res.GetResult().GetEvents()), 13) // 1 coin recv 1 coin spent, 1 transfer, 3 messages.
+				s.Require().True(res.GetGasInfo().GetGasUsed() > 0)     // Gas used sometimes change, just check it's not empty.
 			}
 		})
 	}
@@ -194,9 +192,9 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
 				err = val.ClientCtx.Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				// Check the result and gas used are correct.
-				s.Require().Equal(len(result.GetResult().GetEvents()), 13) // See TestSimulateTx_GRPC for the 13 events.
 				s.Require().Len(result.GetResult().MsgResponses, 1)
-				s.Require().True(result.GetGasInfo().GetGasUsed() > 0) // Gas used sometimes change, just check it's not empty.
+				s.Require().Equal(len(result.GetResult().GetEvents()), 13) // See TestSimulateTx_GRPC for the 13 events.
+				s.Require().True(result.GetGasInfo().GetGasUsed() > 0)     // Gas used sometimes change, jus
 			}
 		})
 	}
@@ -617,14 +615,16 @@ func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPC() {
 		req       *tx.GetBlockWithTxsRequest
 		expErr    bool
 		expErrMsg string
+		expTxsLen int
 	}{
-		{"nil request", nil, true, "request cannot be nil"},
-		{"empty request", &tx.GetBlockWithTxsRequest{}, true, "height must not be less than 1 or greater than the current height"},
-		{"bad height", &tx.GetBlockWithTxsRequest{Height: 99999999}, true, "height must not be less than 1 or greater than the current height"},
-		{"bad pagination", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 1000, Limit: 100}}, true, "out of range"},
-		{"good request", &tx.GetBlockWithTxsRequest{Height: s.txHeight}, false, ""},
-		{"with pagination request", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 0, Limit: 1}}, false, ""},
-		{"page all request", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 0, Limit: 100}}, false, ""},
+		{"nil request", nil, true, "request cannot be nil", 0},
+		{"empty request", &tx.GetBlockWithTxsRequest{}, true, "height must not be less than 1 or greater than the current height", 0},
+		{"bad height", &tx.GetBlockWithTxsRequest{Height: 99999999}, true, "height must not be less than 1 or greater than the current height", 0},
+		{"bad pagination", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 1000, Limit: 100}}, true, "out of range", 0},
+		{"good request", &tx.GetBlockWithTxsRequest{Height: s.txHeight}, false, "", 1},
+		{"with pagination request", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 0, Limit: 1}}, false, "", 1},
+		{"page all request", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 0, Limit: 100}}, false, "", 1},
+		{"block with 0 tx", &tx.GetBlockWithTxsRequest{Height: s.txHeight - 1, Pagination: &query.PageRequest{Offset: 0, Limit: 100}}, false, "", 0},
 	}
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
@@ -635,7 +635,9 @@ func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPC() {
 				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				s.Require().NoError(err)
-				s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
+				if tc.expTxsLen > 0 {
+					s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
+				}
 				s.Require().Equal(grpcRes.Block.Header.Height, tc.req.Height)
 				if tc.req.Pagination != nil {
 					s.Require().LessOrEqual(len(grpcRes.Txs), int(tc.req.Pagination.Limit))

@@ -180,7 +180,11 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 				return err
 			}
 
-			content := v1beta1.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
+			content, ok := v1beta1.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
+			if !ok {
+				return fmt.Errorf("failed to create proposal content: unknown proposal type %s", proposal.Type)
+			}
+
 			msg, err := v1beta1.NewMsgSubmitProposal(content, amount, clientCtx.GetFromAddress())
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)

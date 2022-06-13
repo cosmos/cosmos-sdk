@@ -6,8 +6,14 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/gorilla/mux"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
+	"cosmossdk.io/core/appmodule"
+	"github.com/cosmos/cosmos-sdk/depinject"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	store "github.com/cosmos/cosmos-sdk/store/types"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -24,7 +30,7 @@ import (
 )
 
 const (
-	consensusVersion uint64 = 4
+	consensusVersion uint64 = 3
 )
 
 var (
@@ -71,13 +77,8 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 	return ValidateGenesis(&data)
 }
 
-// RegisterRESTRoutes registers the REST routes for the staking module.
-// Deprecated: RegisterRESTRoutes is deprecated. `x/staking` legacy REST implementation
-// has been removed from the SDK.
-func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {}
-
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the staking module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
@@ -97,13 +98,13 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper        keeper.Keeper
+	keeper        *keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper *keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
@@ -155,14 +156,13 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 
 	cdc.MustUnmarshalJSON(data, &genesisState)
 
-	return InitGenesis(ctx, am.keeper, am.accountKeeper, am.bankKeeper, &genesisState)
+	return am.keeper.InitGenesis(ctx, &genesisState)
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the staking
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs := ExportGenesis(ctx, am.keeper)
-	return cdc.MustMarshalJSON(gs)
+	return cdc.MustMarshalJSON(am.keeper.ExportGenesis(ctx))
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
@@ -177,6 +177,45 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 // updates.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return EndBlocker(ctx, am.keeper)
+}
+
+func init() {
+	appmodule.Register(
+		&modulev1.Module{},
+		appmodule.Provide(
+			provideModuleBasic,
+			provideModule,
+		),
+	)
+}
+
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+type stakingInputs struct {
+	depinject.In
+
+	Config        *modulev1.Module
+	AccountKeeper types.AccountKeeper
+	BankKeeper    types.BankKeeper
+	Cdc           codec.Codec
+	Subspace      paramstypes.Subspace
+	Key           *store.KVStoreKey
+}
+
+// Dependency Injection Outputs
+type stakingOutputs struct {
+	depinject.Out
+
+	StakingKeeper *keeper.Keeper
+	Module        runtime.AppModuleWrapper
+}
+
+func provideModule(in stakingInputs) stakingOutputs {
+	k := keeper.NewKeeper(in.Cdc, in.Key, in.AccountKeeper, in.BankKeeper, in.Subspace)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper)
+	return stakingOutputs{StakingKeeper: k, Module: runtime.WrapAppModule(m)}
 }
 
 // AppModuleSimulation functions

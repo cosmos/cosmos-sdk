@@ -119,3 +119,7 @@ modules:
   - name: mint
     config:
       "@type": cosmos.mint.module.v1.Module
+
+  - name: evidence
+    config:
+      "@type": cosmos.evidence.module.v1.Module

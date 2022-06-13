@@ -5,9 +5,9 @@ modules:
 
       app_name: TestNFTApp
 
-      begin_blockers: [staking, auth, bank, genutil, nft, params]
-      end_blockers: [staking, auth, bank, genutil, nft, params]
-      init_genesis: [auth, bank, staking, genutil, nft, params]
+      begin_blockers: [mint, staking, auth, bank, genutil, nft, params]
+      end_blockers: [mint, staking, auth, bank, genutil, nft, params]
+      init_genesis: [auth, bank, mint, staking, genutil, nft, params]
 
   - name: auth
     config:
@@ -15,6 +15,8 @@ modules:
       bech32_prefix: cosmos
       module_account_permissions:
         - account: fee_collector
+        - account: mint
+          permissions: [minter]
         - account: bonded_tokens_pool
           permissions: [burner, staking]
         - account: not_bonded_tokens_pool

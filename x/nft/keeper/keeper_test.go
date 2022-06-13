@@ -43,7 +43,7 @@ func (s *TestSuite) SetupTest() {
 	var (
 		interfaceRegistry codectypes.InterfaceRegistry
 		bankKeeper        bankkeeper.Keeper
-		stakingKeeper     stakingkeeper.Keeper
+		stakingKeeper     *stakingkeeper.Keeper
 		nftKeeper         keeper.Keeper
 	)
 

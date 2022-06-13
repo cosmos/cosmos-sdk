@@ -59,11 +59,10 @@ func (s *TestSuite) SetupTest() {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
-	nft.RegisterQueryServer(queryHelper, s.nftKeeper)
-	queryClient := nft.NewQueryClient(queryHelper)
+	nft.RegisterQueryServer(queryHelper, nftKeeper)
 
 	s.ctx = ctx
-	s.queryClient = queryClient
+	s.queryClient = nft.NewQueryClient(queryHelper)
 	s.addrs = simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 3, sdk.NewInt(30000000))
 	s.nftKeeper = nftKeeper
 }

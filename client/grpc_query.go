@@ -4,11 +4,12 @@ import (
 	gocontext "context"
 	"errors"
 	"fmt"
+	"reflect"
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	proto "github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc/encoding"
-	"reflect"
-	"strconv"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -155,7 +156,7 @@ func (f failingInterfaceRegistry) UnpackAny(any *types.Any, iface interface{}) e
 	return errCodecNotSet
 }
 
-func (f failingInterfaceRegistry) Resolve(typeUrl string) (proto.Message, error) {
+func (f failingInterfaceRegistry) Resolve(typeURL string) (proto.Message, error) {
 	return nil, errCodecNotSet
 }
 

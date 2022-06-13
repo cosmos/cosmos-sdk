@@ -279,7 +279,7 @@ func (s *TestSuite) TestTransfer() {
 	err = s.app.NFTKeeper.Mint(s.ctx, expNFT, s.addrs[0])
 	s.Require().NoError(err)
 
-	//valid owner
+	// valid owner
 	err = s.app.NFTKeeper.Transfer(s.ctx, testClassID, testID, s.addrs[1])
 	s.Require().NoError(err)
 

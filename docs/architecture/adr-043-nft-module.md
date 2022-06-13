@@ -337,4 +337,4 @@ Other networks in the Cosmos ecosystem could design and implement their own NFT 
 
 * Initial discussion: https://github.com/cosmos/cosmos-sdk/discussions/9065
 * x/nft: initialize module: https://github.com/cosmos/cosmos-sdk/pull/9174
-* [ADR 033](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-033-protobuf-inter-module-comm.md)
+* [ADR 033](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-033-protobuf-inter-module-comm.md)

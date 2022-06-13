@@ -98,7 +98,7 @@ Where members.json contains:
 				return err
 			}
 
-			members, err := parseMembers(clientCtx, args[2])
+			members, err := parseMembers(args[2])
 			if err != nil {
 				return err
 			}
@@ -166,7 +166,7 @@ Set a member's weight to "0" to delete it.
 				return err
 			}
 
-			members, err := parseMembers(clientCtx, args[2])
+			members, err := parseMembers(args[2])
 			if err != nil {
 				return err
 			}
@@ -330,7 +330,7 @@ where members.json contains:
 				return err
 			}
 
-			members, err := parseMembers(clientCtx, args[3])
+			members, err := parseMembers(args[3])
 			if err != nil {
 				return err
 			}

@@ -2,6 +2,7 @@ package client
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -303,6 +304,12 @@ func (ctx Context) PrintObjectLegacy(toPrint interface{}) error {
 		return err
 	}
 	return ctx.printOutput(out)
+}
+
+// PrintRaw is a variant of PrintProto that doesn't require a proto.Message type
+// and uses a raw JSON message. No marshaling is performed.
+func (ctx Context) PrintRaw(toPrint json.RawMessage) error {
+	return ctx.printOutput(toPrint)
 }
 
 func (ctx Context) printOutput(out []byte) error {

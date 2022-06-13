@@ -11,7 +11,7 @@ import (
 	pfx "github.com/cosmos/cosmos-sdk/db/prefix"
 )
 
-func fillDBWithStuff(t *testing.T, dbw db.DBWriter) {
+func fillDBWithStuff(t *testing.T, dbw db.Writer) {
 	// Under "key" prefix
 	require.NoError(t, dbw.Set([]byte("key"), []byte("value")))
 	require.NoError(t, dbw.Set([]byte("key1"), []byte("value1")))
@@ -24,16 +24,16 @@ func fillDBWithStuff(t *testing.T, dbw db.DBWriter) {
 	require.NoError(t, dbw.Commit())
 }
 
-func mockDBWithStuff(t *testing.T) db.DBConnection {
+func mockDBWithStuff(t *testing.T) db.Connection {
 	dbm := memdb.NewDB()
 	fillDBWithStuff(t, dbm.Writer())
 	return dbm
 }
 
-func makePrefixReader(t *testing.T, dbc db.DBConnection, pre []byte) db.DBReader {
+func makePrefixReader(t *testing.T, dbc db.Connection, pre []byte) db.Reader {
 	view := dbc.Reader()
 	require.NotNil(t, view)
-	return pfx.NewPrefixReader(view, pre)
+	return pfx.NewReader(view, pre)
 }
 
 func TestPrefixDBSimple(t *testing.T) {
@@ -137,7 +137,7 @@ func TestPrefixDBViewVersion(t *testing.T) {
 	fillDBWithStuff(t, dbm.Writer())
 	id, err := dbm.SaveNextVersion()
 	require.NoError(t, err)
-	pdb := pfx.NewPrefixReadWriter(dbm.ReadWriter(), prefix)
+	pdb := pfx.NewReadWriter(dbm.ReadWriter(), prefix)
 
 	pdb.Set([]byte("1"), []byte("newvalue1"))
 	pdb.Delete([]byte("2"))
@@ -147,7 +147,7 @@ func TestPrefixDBViewVersion(t *testing.T) {
 	dbview, err := dbm.ReaderAt(id)
 	require.NotNil(t, dbview)
 	require.NoError(t, err)
-	view := pfx.NewPrefixReader(dbview, prefix)
+	view := pfx.NewReader(dbview, prefix)
 	require.NotNil(t, view)
 	defer view.Discard()
 

@@ -770,7 +770,7 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 
 	member := s.voter
 
-	var commonFlags = []string{
+	commonFlags := []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -793,7 +793,7 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 	var txResp sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().Equal(uint32(0), txResp.Code, out.String())
-	proposalId := s.getProposalIdFromTxResponse(txResp)
+	proposalID := s.getProposalIDFromTxResponse(txResp)
 
 	testCases := []struct {
 		name           string
@@ -828,7 +828,7 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 		{
 			"valid proposal id with no votes",
 			[]string{
-				proposalId,
+				proposalID,
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
@@ -872,5 +872,4 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 			}
 		})
 	}
-
 }

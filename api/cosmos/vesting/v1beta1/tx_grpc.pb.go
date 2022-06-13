@@ -27,9 +27,13 @@ type MsgClient interface {
 	CreateVestingAccount(ctx context.Context, in *MsgCreateVestingAccount, opts ...grpc.CallOption) (*MsgCreateVestingAccountResponse, error)
 	// CreatePermanentLockedAccount defines a method that enables creating a permanent
 	// locked account.
+	//
+	// Since: cosmos-sdk 0.46
 	CreatePermanentLockedAccount(ctx context.Context, in *MsgCreatePermanentLockedAccount, opts ...grpc.CallOption) (*MsgCreatePermanentLockedAccountResponse, error)
 	// CreatePeriodicVestingAccount defines a method that enables creating a
 	// periodic vesting account.
+	//
+	// Since: cosmos-sdk 0.46
 	CreatePeriodicVestingAccount(ctx context.Context, in *MsgCreatePeriodicVestingAccount, opts ...grpc.CallOption) (*MsgCreatePeriodicVestingAccountResponse, error)
 }
 
@@ -77,9 +81,13 @@ type MsgServer interface {
 	CreateVestingAccount(context.Context, *MsgCreateVestingAccount) (*MsgCreateVestingAccountResponse, error)
 	// CreatePermanentLockedAccount defines a method that enables creating a permanent
 	// locked account.
+	//
+	// Since: cosmos-sdk 0.46
 	CreatePermanentLockedAccount(context.Context, *MsgCreatePermanentLockedAccount) (*MsgCreatePermanentLockedAccountResponse, error)
 	// CreatePeriodicVestingAccount defines a method that enables creating a
 	// periodic vesting account.
+	//
+	// Since: cosmos-sdk 0.46
 	CreatePeriodicVestingAccount(context.Context, *MsgCreatePeriodicVestingAccount) (*MsgCreatePeriodicVestingAccountResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }

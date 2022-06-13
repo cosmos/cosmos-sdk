@@ -13,7 +13,7 @@ This document specifies the auth module of the Cosmos SDK.
 
 The auth module is responsible for specifying the base transaction and account types
 for an application, since the SDK itself is agnostic to these particulars. It contains
-the ante handler, where all basic transaction validity checks (signatures, nonces, auxiliary fields)
+the middlewares, where all basic transaction validity checks (signatures, nonces, auxiliary fields)
 are performed, and exposes the account keeper, which allows other modules to read, write, and modify accounts.
 
 This module is used in the Cosmos Hub.
@@ -25,7 +25,6 @@ This module is used in the Cosmos Hub.
 2. **[State](02_state.md)**
    * [Accounts](02_state.md#accounts)
 3. **[AnteHandlers](03_antehandlers.md)**
-   * [Handlers](03_antehandlers.md#handlers)
 4. **[Keepers](04_keepers.md)**
    * [Account Keeper](04_keepers.md#account-keeper)
 5. **[Vesting](05_vesting.md)**

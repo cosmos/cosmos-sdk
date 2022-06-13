@@ -6,22 +6,26 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/gorilla/mux"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	modulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
+	"cosmossdk.io/core/appmodule"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/depinject"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 var (
@@ -68,13 +72,8 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 	return types.ValidateGenesis(data)
 }
 
-// RegisterRESTRoutes registers the REST routes for the slashing module.
-// Deprecated: RegisterRESTRoutes is deprecated. `x/slashing` legacy REST implementation
-// has been removed from the SDK.
-func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {}
-
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the slashig module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
@@ -97,11 +96,11 @@ type AppModule struct {
 	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
-	stakingKeeper stakingkeeper.Keeper
+	stakingKeeper types.StakingKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, sk stakingkeeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
@@ -148,14 +147,14 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, am.keeper, am.stakingKeeper, &genesisState)
+	am.keeper.InitGenesis(ctx, am.stakingKeeper, &genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the slashing
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs := ExportGenesis(ctx, am.keeper)
+	gs := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
 }
 
@@ -172,6 +171,49 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
+
+// _____________________________________________________________________________________
+
+func init() {
+	appmodule.Register(
+		&modulev1.Module{},
+		appmodule.Provide(
+			provideModuleBasic,
+			provideModule,
+		),
+	)
+}
+
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+type slashingInputs struct {
+	depinject.In
+
+	Key           *store.KVStoreKey
+	Cdc           codec.Codec
+	AccountKeeper types.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
+	BankKeeper    types.BankKeeper    `key:"cosmos.bank.v1.Keeper"`
+	StakingKeeper types.StakingKeeper `key:"cosmos.staking.v1.Keeper"`
+	Subspace      paramstypes.Subspace
+}
+
+type outputInputs struct {
+	depinject.Out
+
+	Keeper keeper.Keeper `key:"cosmos.slashing.v1.Keeper"`
+	Module runtime.AppModuleWrapper
+}
+
+func provideModule(in slashingInputs) outputInputs {
+
+	k := keeper.NewKeeper(in.Cdc, in.Key, in.StakingKeeper, in.Subspace)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper)
+	return outputInputs{Keeper: k, Module: runtime.WrapAppModule(m)}
+}
+
+// _____________________________________________________________________________________
 
 // AppModuleSimulation functions
 

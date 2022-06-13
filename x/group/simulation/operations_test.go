@@ -162,7 +162,7 @@ func (suite *SimTestSuite) TestSimulateCreateGroupPolicy() {
 	_, err := suite.app.GroupKeeper.CreateGroup(sdk.WrapSDKContext(suite.ctx),
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
-			Members: []group.Member{
+			Members: []group.MemberRequest{
 				{
 					Address: acc.Address.String(),
 					Weight:  "1",
@@ -205,7 +205,7 @@ func (suite *SimTestSuite) TestSimulateSubmitProposal() {
 	groupRes, err := suite.app.GroupKeeper.CreateGroup(ctx,
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
-			Members: []group.Member{
+			Members: []group.MemberRequest{
 				{
 					Address: acc.Address.String(),
 					Weight:  "1",
@@ -259,7 +259,7 @@ func (suite *SimTestSuite) TestWithdrawProposal() {
 	groupRes, err := suite.app.GroupKeeper.CreateGroup(ctx,
 		&group.MsgCreateGroup{
 			Admin: addr,
-			Members: []group.Member{
+			Members: []group.MemberRequest{
 				{
 					Address: addr,
 					Weight:  "1",
@@ -325,7 +325,7 @@ func (suite *SimTestSuite) TestSimulateVote() {
 	groupRes, err := suite.app.GroupKeeper.CreateGroup(ctx,
 		&group.MsgCreateGroup{
 			Admin: addr,
-			Members: []group.Member{
+			Members: []group.MemberRequest{
 				{
 					Address: addr,
 					Weight:  "1",
@@ -392,7 +392,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	groupRes, err := suite.app.GroupKeeper.CreateGroup(ctx,
 		&group.MsgCreateGroup{
 			Admin: addr,
-			Members: []group.Member{
+			Members: []group.MemberRequest{
 				{
 					Address: addr,
 					Weight:  "1",
@@ -465,7 +465,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupAdmin() {
 	_, err := suite.app.GroupKeeper.CreateGroup(sdk.WrapSDKContext(suite.ctx),
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
-			Members: []group.Member{
+			Members: []group.MemberRequest{
 				{
 					Address: acc.Address.String(),
 					Weight:  "1",
@@ -507,7 +507,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupMetadata() {
 	_, err := suite.app.GroupKeeper.CreateGroup(sdk.WrapSDKContext(suite.ctx),
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
-			Members: []group.Member{
+			Members: []group.MemberRequest{
 				{
 					Address: acc.Address.String(),
 					Weight:  "1",
@@ -549,7 +549,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupMembers() {
 	_, err := suite.app.GroupKeeper.CreateGroup(sdk.WrapSDKContext(suite.ctx),
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
-			Members: []group.Member{
+			Members: []group.MemberRequest{
 				{
 					Address: acc.Address.String(),
 					Weight:  "1",
@@ -592,7 +592,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyAdmin() {
 	groupRes, err := suite.app.GroupKeeper.CreateGroup(ctx,
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
-			Members: []group.Member{
+			Members: []group.MemberRequest{
 				{
 					Address: acc.Address.String(),
 					Weight:  "1",
@@ -645,7 +645,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyDecisionPolicy() {
 	groupRes, err := suite.app.GroupKeeper.CreateGroup(ctx,
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
-			Members: []group.Member{
+			Members: []group.MemberRequest{
 				{
 					Address: acc.Address.String(),
 					Weight:  "1",
@@ -698,7 +698,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyMetadata() {
 	groupRes, err := suite.app.GroupKeeper.CreateGroup(ctx,
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
-			Members: []group.Member{
+			Members: []group.MemberRequest{
 				{
 					Address: acc.Address.String(),
 					Weight:  "1",
@@ -756,7 +756,7 @@ func (suite *SimTestSuite) TestSimulateLeaveGroup() {
 	groupRes, err := suite.app.GroupKeeper.CreateGroup(ctx,
 		&group.MsgCreateGroup{
 			Admin: admin.Address.String(),
-			Members: []group.Member{
+			Members: []group.MemberRequest{
 				{
 					Address: member1.Address.String(),
 					Weight:  "1",

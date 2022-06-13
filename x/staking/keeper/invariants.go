@@ -9,7 +9,7 @@ import (
 )
 
 // RegisterInvariants registers all staking invariants
-func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
+func RegisterInvariants(ir sdk.InvariantRegistry, k *Keeper) {
 	ir.RegisterRoute(types.ModuleName, "module-accounts",
 		ModuleAccountInvariants(k))
 	ir.RegisterRoute(types.ModuleName, "nonnegative-power",
@@ -21,7 +21,7 @@ func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
 }
 
 // AllInvariants runs all invariants of the staking module.
-func AllInvariants(k Keeper) sdk.Invariant {
+func AllInvariants(k *Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		res, stop := ModuleAccountInvariants(k)(ctx)
 		if stop {
@@ -44,7 +44,7 @@ func AllInvariants(k Keeper) sdk.Invariant {
 
 // ModuleAccountInvariants checks that the bonded and notBonded ModuleAccounts pools
 // reflects the tokens actively bonded and not bonded
-func ModuleAccountInvariants(k Keeper) sdk.Invariant {
+func ModuleAccountInvariants(k *Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		bonded := sdk.ZeroInt()
 		notBonded := sdk.ZeroInt()
@@ -91,7 +91,7 @@ func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 }
 
 // NonNegativePowerInvariant checks that all stored validators have >= 0 power.
-func NonNegativePowerInvariant(k Keeper) sdk.Invariant {
+func NonNegativePowerInvariant(k *Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		var (
 			msg    string
@@ -126,7 +126,7 @@ func NonNegativePowerInvariant(k Keeper) sdk.Invariant {
 }
 
 // PositiveDelegationInvariant checks that all stored delegations have > 0 shares.
-func PositiveDelegationInvariant(k Keeper) sdk.Invariant {
+func PositiveDelegationInvariant(k *Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		var (
 			msg   string
@@ -156,7 +156,7 @@ func PositiveDelegationInvariant(k Keeper) sdk.Invariant {
 // DelegatorSharesInvariant checks whether all the delegator shares which persist
 // in the delegator object add up to the correct total delegator shares
 // amount stored in each validator.
-func DelegatorSharesInvariant(k Keeper) sdk.Invariant {
+func DelegatorSharesInvariant(k *Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		var (
 			msg    string
@@ -164,20 +164,30 @@ func DelegatorSharesInvariant(k Keeper) sdk.Invariant {
 		)
 
 		validators := k.GetAllValidators(ctx)
+		validatorsDelegationShares := map[string]sdk.Dec{}
+
+		// initialize a map: validator -> its delegation shares
 		for _, validator := range validators {
-			valTotalDelShares := validator.GetDelegatorShares()
-			totalDelShares := sdk.ZeroDec()
+			validatorsDelegationShares[validator.GetOperator().String()] = sdk.ZeroDec()
+		}
 
-			delegations := k.GetValidatorDelegations(ctx, validator.GetOperator())
-			for _, delegation := range delegations {
-				totalDelShares = totalDelShares.Add(delegation.Shares)
-			}
+		// iterate through all the delegations to calculate the total delegation shares for each validator
+		delegations := k.GetAllDelegations(ctx)
+		for _, delegation := range delegations {
+			delegationValidatorAddr := delegation.GetValidatorAddr().String()
+			validatorDelegationShares := validatorsDelegationShares[delegationValidatorAddr]
+			validatorsDelegationShares[delegationValidatorAddr] = validatorDelegationShares.Add(delegation.Shares)
+		}
 
-			if !valTotalDelShares.Equal(totalDelShares) {
+		// for each validator, check if its total delegation shares calculated from the step above equals to its expected delegation shares
+		for _, validator := range validators {
+			expValTotalDelShares := validator.GetDelegatorShares()
+			calculatedValTotalDelShares := validatorsDelegationShares[validator.GetOperator().String()]
+			if !calculatedValTotalDelShares.Equal(expValTotalDelShares) {
 				broken = true
 				msg += fmt.Sprintf("broken delegator shares invariance:\n"+
 					"\tvalidator.DelegatorShares: %v\n"+
-					"\tsum of Delegator.Shares: %v\n", valTotalDelShares, totalDelShares)
+					"\tsum of Delegator.Shares: %v\n", expValTotalDelShares, calculatedValTotalDelShares)
 			}
 		}
 

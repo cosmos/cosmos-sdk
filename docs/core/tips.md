@@ -1,10 +1,10 @@
 <!--
-order: 15
+order: 14
 -->
 
 # Transaction Tips
 
-Transaction tips are a mechanism to pay for transaction fees using another denom than the native fee denom of the chain. {synopsis}
+Transaction tips are a mechanism to pay for transaction fees using another denom than the native fee denom of the chain. They are still in beta, and are not included by default in the SDK. {synopsis}
 
 ## Context
 
@@ -14,27 +14,27 @@ Transaction tips is a new solution for cross-chain transaction fees payment, whe
 
 Assuming we have two chains, A and B, we define the following terms:
 
-- **the tipper**: this is the initiator of the transaction, who wants to execute a `Msg` on chain A, but doesn't have any native chain A tokens, only chain B tokens. In our example above, the tipper is the Osmosis (chain B) user wanting to vote on a Cosmos Hub (chain A) proposal.
-- **the fee payer**: this is the party that will relay and broadcast the final transaction on chain A, and has chain A tokens. The tipper doesn't need to trust the feepayer.
-- **the target chain**: the chain where the `Msg` is executed, chain A in this case.
+* **the tipper**: this is the initiator of the transaction, who wants to execute a `Msg` on chain A, but doesn't have any native chain A tokens, only chain B tokens. In our example above, the tipper is the Osmosis (chain B) user wanting to vote on a Cosmos Hub (chain A) proposal.
+* **the fee payer**: this is the party that will relay and broadcast the final transaction on chain A, and has chain A tokens. The tipper doesn't need to trust the feepayer.
+* **the target chain**: the chain where the `Msg` is executed, chain A in this case.
 
 ## Transaction Tips Flow
 
-The transaction tips flow happens in multipe steps.
+The transaction tips flow happens in multiple steps.
 
 1. The tipper sends via IBC some chain B tokens to chain A. These tokens will cover for fees on the target chain A. This means that chain A's bank module holds some IBC tokens under the tipper's address.
 
 2. The tipper drafts a transaction to be executed on the chain A. It can include chain A `Msg`s. However, instead of creating a normal transaction, they create the following `AuxSignerData` document:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta1/proto/cosmos/tx/v1beta1/tx.proto#L230-L249
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/tx/v1beta1/tx.proto#L230-L249
 
 where we have defined `SignDocDirectAux` as:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta1/proto/cosmos/tx/v1beta1/tx.proto#L67-L93
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/tx/v1beta1/tx.proto#L67-L93
 
 where `Tip` is defined as
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta1/proto/cosmos/tx/v1beta1/tx.proto#L219-L228
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/tx/v1beta1/tx.proto#L219-L228
 
 Notice that this document doesn't sign over the final chain A fees. Instead, it includes a `Tip` field. It also doesn't include the whole `AuthInfo` object as in `SIGN_MODE_DIRECT`, only the minimum information needed by the tipper
 
@@ -42,12 +42,12 @@ Notice that this document doesn't sign over the final chain A fees. Instead, it 
 
 4. From the signed `AuxSignerData` document, the fee payer constructs a transaction, using the following algorithm:
 
-- use as `TxBody` the exact `AuxSignerData.SignDocDirectAux.body_bytes`, to not alter the original intent of the tipper,
-- create an `AuthInfo` with:
-  - `AuthInfo.Tip` copied from `AuxSignerData.SignDocDirectAux.Tip`,
-  - `AuthInfo.Fee` chosen by the fee payer, which should cover for the transaction gas, but also be small enough so that the tip/fee exchange rate is economically interesting for the fee payer,
-  - `AuthInfo.SignerInfos` has two signers: the first signer is the tipper, using the public key, sequence and sign mode specified in `AuxSignerData`; and the second signer is the fee payer, using their favorite sign mode,
-- a `Signatures` array with two items: the tipper's signature from `AuxSignerData.Sig`, and the final fee payer's signature.
+* use as `TxBody` the exact `AuxSignerData.SignDocDirectAux.body_bytes`, to not alter the original intent of the tipper,
+* create an `AuthInfo` with:
+    * `AuthInfo.Tip` copied from `AuxSignerData.SignDocDirectAux.Tip`,
+    * `AuthInfo.Fee` chosen by the fee payer, which should cover for the transaction gas, but also be small enough so that the tip/fee exchange rate is economically interesting for the fee payer,
+    * `AuthInfo.SignerInfos` has two signers: the first signer is the tipper, using the public key, sequence and sign mode specified in `AuxSignerData`; and the second signer is the fee payer, using their favorite sign mode,
+* a `Signatures` array with two items: the tipper's signature from `AuxSignerData.Sig`, and the final fee payer's signature.
 
 5. Broadcast the final transaction signed by the two parties to the target chain. Once included, the Cosmos SDK will trigger a transfer of the `Tip` specified in the transaction from the tipper address to the fee payer address.
 
@@ -63,8 +63,8 @@ In the future, we imagine a market where fee payers will compete to include tran
 
 As we mentioned in the flow above, the tipper signs over the `SignDocDirectAux`, and the fee payer signs over the whole final transaction. As such, both parties might use different sign modes.
 
-- The tipper MUST use `SIGN_MODE_DIRECT_AUX` or `SIGN_MODE_LEGACY_AMINO_JSON`. That is because the tipper needs to sign over the body, the tip, but not the other signers' information and not over the fee (which is unknown to the tipper).
-- The fee payer MUST use `SIGN_MODE_DIRECT` or `SIGN_MODE_LEGACY_AMINO_JSON`. The fee payer signs over the whole transaction.
+* The tipper MUST use `SIGN_MODE_DIRECT_AUX` or `SIGN_MODE_LEGACY_AMINO_JSON`. That is because the tipper needs to sign over the body, the tip, but not the other signers' information and not over the fee (which is unknown to the tipper).
+* The fee payer MUST use `SIGN_MODE_DIRECT` or `SIGN_MODE_LEGACY_AMINO_JSON`. The fee payer signs over the whole transaction.
 
 For example, if the fee payer signs the whole transaction with `SIGN_MODE_DIRECT_AUX`, it will be rejected by the node, as that would introduce malleability issues (`SIGN_MODE_DIRECT_AUX` doesn't sign over fees).
 
@@ -72,27 +72,44 @@ In both cases, using `SIGN_MODE_LEGACY_AMINO_JSON` is recommended only if hardwa
 
 ## Enabling Tips on your Chain
 
-The transaction tips functionality is introduced in Cosmos SDK v0.46, so earlier versions do not have support for tips. If you're using v0.46 or later, then enabling tips on your chain is as simple as adding the `TipMiddleware` in your middleware stack:
+The transaction tips functionality is introduced in Cosmos SDK v0.46, so earlier versions do not have support for tips. It is however not included by default in a v0.46 app. Sending a transaction with tips to a chain which didn't enable tips will result in a no-op, i.e. the `tip` field in the transaction will be ignored.
+
+Enabling tips on a chain is done by adding the `TipDecorator` in the posthandler chain:
 
 ```go
-// NewTxHandler defines a TxHandler middleware stack.
-func NewTxHandler(options TxHandlerOptions) (tx.Handler, error) {
-    // --snip--
+// HandlerOptions are the options required for constructing a SDK PostHandler which supports tips.
+type HandlerOptions struct {
+	BankKeeper types.BankKeeper
+}
 
-    return ComposeMiddlewares(
-        // base tx handler that executes Msgs
-        NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
-        // --snip other middlewares--
+// MyPostHandler returns a posthandler chain with the TipDecorator.
+func MyPostHandler(options HandlerOptions) (sdk.AnteHandler, error) {
+    if options.BankKeeper == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "bank keeper is required for posthandler")
+	}
 
-        // Add the TipMiddleware
-        NewTipMiddleware(options.BankKeeper),
-    )
+	postDecorators := []sdk.AnteDecorator{
+		posthandler.NewTipDecorator(options.bankKeeper),
+	}
+
+	return sdk.ChainAnteDecorators(postDecorators...), nil
+}
+
+func (app *SimApp) setPostHandler() {
+	postHandler, err := MyPostHandler(
+		HandlerOptions{
+			BankKeeper: app.BankKeeper,
+		},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	app.SetPostHandler(postHandler)
 }
 ```
 
-Notice that `NewTipMiddleware` needs a reference to the BankKeeper, for transferring the tip to the fee payer.
-
-If you are using the Cosmos SDK's default middleware stack `NewDefaultTxHandler()`, then the tip middleware is included by default.
+Notice that `NewTipDecorator` needs a reference to the BankKeeper, for transferring the tip to the fee payer.
 
 ## CLI Usage
 
@@ -135,7 +152,7 @@ For both commands, the flag `--sign-mode=amino-json` is still available for hard
 
 ## Programmatic Usage
 
-For the tipper, the SDK exposes a new transaction builder, the `AuxTxBuilder`, for generating an `AuxSignerData`. The API of `AuxTxBuilder` is defined [in `client/tx`](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta1/client/tx/aux_builder.go#L16), and can be used as follows:
+For the tipper, the SDK exposes a new transaction builder, the `AuxTxBuilder`, for generating an `AuxSignerData`. The API of `AuxTxBuilder` is defined [in `client/tx`](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/client/tx/aux_builder.go#L16), and can be used as follows:
 
 ```go
 // Note: there's no need to use clientCtx.TxConfig anymore.
@@ -170,7 +187,7 @@ For the fee payer, the SDK added a new method on the existing `TxBuilder` to imp
 txBuilder := clientCtx.TxConfig.NewTxBuilder()
 err := txBuilder.AddAuxSignerData(auxSignerData)
 if err != nil {
-    return err
+	return err
 }
 
 // A lot of fields will be populated in txBuilder, such as its Msgs, tip
@@ -184,6 +201,6 @@ txBuilder.SetGasLimit(...)
 // Usual signing code
 err = authclient.SignTx(...)
 if err != nil {
-    return err
+	return err
 }
 ```

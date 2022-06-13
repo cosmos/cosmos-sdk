@@ -16,7 +16,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-const n1 = "cosmos"
+const n1 = "cosmos.info"
 
 type MigrationTestSuite struct {
 	suite.Suite
@@ -57,8 +57,7 @@ func (s *MigrationTestSuite) TestMigrateLegacyLocalKey() {
 
 	s.Require().NoError(s.ks.SetItem(item))
 
-	_, migrated, err := s.ks.migrate(n1)
-	s.Require().True(migrated)
+	_, err := s.ks.migrate(n1)
 	s.Require().NoError(err)
 }
 
@@ -76,8 +75,7 @@ func (s *MigrationTestSuite) TestMigrateLegacyLedgerKey() {
 
 	s.Require().NoError(s.ks.SetItem(item))
 
-	_, migrated, err := s.ks.migrate(n1)
-	s.Require().True(migrated)
+	_, err := s.ks.migrate(n1)
 	s.Require().NoError(err)
 }
 
@@ -93,8 +91,7 @@ func (s *MigrationTestSuite) TestMigrateLegacyOfflineKey() {
 
 	s.Require().NoError(s.ks.SetItem(item))
 
-	_, migrated, err := s.ks.migrate(n1)
-	s.Require().True(migrated)
+	_, err := s.ks.migrate(n1)
 	s.Require().NoError(err)
 }
 
@@ -117,8 +114,7 @@ func (s *MigrationTestSuite) TestMigrateLegacyMultiKey() {
 
 	s.Require().NoError(s.ks.SetItem(item))
 
-	_, migrated, err := s.ks.migrate(n1)
-	s.Require().True(migrated)
+	_, err = s.ks.migrate(n1)
 	s.Require().NoError(err)
 }
 
@@ -137,7 +133,7 @@ func (s *MigrationTestSuite) TestMigrateLocalRecord() {
 
 	s.Require().NoError(s.ks.SetItem(item))
 
-	k2, migrated, err := s.ks.migrate(n1)
+	k2, err := s.ks.migrate(n1)
 	s.Require().Equal(k2.Name, k1.Name)
 
 	pub, err := k2.GetPubKey()
@@ -148,7 +144,6 @@ func (s *MigrationTestSuite) TestMigrateLocalRecord() {
 	s.Require().NoError(err)
 	s.Require().Equal(priv, s.priv)
 
-	s.Require().False(migrated)
 	s.Require().NoError(err)
 }
 
@@ -162,8 +157,7 @@ func (s *MigrationTestSuite) TestMigrateOneRandomItemError() {
 
 	s.Require().NoError(s.ks.SetItem(errItem))
 
-	_, migrated, err := s.ks.migrate(n1)
-	s.Require().False(migrated)
+	_, err := s.ks.migrate(n1)
 	s.Require().Error(err)
 }
 
@@ -197,14 +191,12 @@ func (s *MigrationTestSuite) TestMigrateAllLegacyMultiOffline() {
 
 	s.Require().NoError(s.ks.SetItem(item))
 
-	migrated, err := s.kb.MigrateAll()
-	s.Require().True(migrated)
+	err = s.kb.MigrateAll()
 	s.Require().NoError(err)
 }
 
 func (s *MigrationTestSuite) TestMigrateAllNoItem() {
-	migrated, err := s.kb.MigrateAll()
-	s.Require().False(migrated)
+	err := s.kb.MigrateAll()
 	s.Require().NoError(err)
 }
 
@@ -221,9 +213,8 @@ func (s *MigrationTestSuite) TestMigrateErrUnknownItemKey() {
 	s.Require().NoError(s.ks.SetItem(item))
 
 	incorrectItemKey := n1 + "1"
-	_, migrated, err := s.ks.migrate(incorrectItemKey)
-	s.Require().False(migrated)
-	s.Require().EqualError(err, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, incorrectItemKey).Error())
+	_, err := s.ks.migrate(incorrectItemKey)
+	s.Require().EqualError(err, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, infoKey(incorrectItemKey)).Error())
 }
 
 func (s *MigrationTestSuite) TestMigrateErrEmptyItemData() {
@@ -235,10 +226,10 @@ func (s *MigrationTestSuite) TestMigrateErrEmptyItemData() {
 
 	s.Require().NoError(s.ks.SetItem(item))
 
-	_, migrated, err := s.ks.migrate(n1)
-	s.Require().False(migrated)
+	_, err := s.ks.migrate(n1)
 	s.Require().EqualError(err, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, n1).Error())
 }
+
 func TestMigrationTestSuite(t *testing.T) {
 	suite.Run(t, new(MigrationTestSuite))
 }

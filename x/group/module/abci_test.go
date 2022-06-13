@@ -26,7 +26,7 @@ func TestEndBlockerPruning(t *testing.T) {
 	addr3 := addrs[2]
 
 	// Initial group, group policy and balance setup
-	members := []group.Member{
+	members := []group.MemberRequest{
 		{Address: addr1.String(), Weight: "1"}, {Address: addr2.String(), Weight: "2"},
 	}
 
@@ -315,7 +315,6 @@ func TestEndBlockerPruning(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestEndBlockerTallying(t *testing.T) {
@@ -325,7 +324,7 @@ func TestEndBlockerTallying(t *testing.T) {
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 4, sdk.NewInt(30000000))
 
 	// Initial group, group policy and balance setup
-	members := []group.Member{
+	members := []group.MemberRequest{
 		{Address: addrs[1].String(), Weight: "1"}, {Address: addrs[2].String(), Weight: "2"},
 	}
 
@@ -505,9 +504,7 @@ func TestEndBlockerTallying(t *testing.T) {
 	}
 }
 
-func submitProposal(
-	app *simapp.SimApp, ctx context.Context, msgs []sdk.Msg,
-	proposers []string, groupPolicyAddr sdk.AccAddress) (uint64, error) {
+func submitProposal(app *simapp.SimApp, ctx context.Context, msgs []sdk.Msg, proposers []string, groupPolicyAddr sdk.AccAddress) (uint64, error) {
 	proposalReq := &group.MsgSubmitProposal{
 		GroupPolicyAddress: groupPolicyAddr.String(),
 		Proposers:          proposers,
@@ -527,7 +524,8 @@ func submitProposal(
 
 func submitProposalAndVote(
 	app *simapp.SimApp, ctx context.Context, msgs []sdk.Msg,
-	proposers []string, groupPolicyAddr sdk.AccAddress, voteOption group.VoteOption) (uint64, error) {
+	proposers []string, groupPolicyAddr sdk.AccAddress, voteOption group.VoteOption,
+) (uint64, error) {
 	myProposalID, err := submitProposal(app, ctx, msgs, proposers, groupPolicyAddr)
 	if err != nil {
 		return 0, err

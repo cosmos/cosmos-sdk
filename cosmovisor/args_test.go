@@ -31,6 +31,7 @@ type cosmovisorEnv struct {
 	Name                 string
 	DownloadBin          string
 	RestartUpgrade       string
+	RestartDelay         string
 	SkipBackup           string
 	DataBackupPath       string
 	Interval             string
@@ -44,6 +45,7 @@ func (c cosmovisorEnv) ToMap() map[string]string {
 		EnvName:                 c.Name,
 		EnvDownloadBin:          c.DownloadBin,
 		EnvRestartUpgrade:       c.RestartUpgrade,
+		EnvRestartDelay:         c.RestartDelay,
 		EnvSkipBackup:           c.SkipBackup,
 		EnvDataBackupPath:       c.DataBackupPath,
 		EnvInterval:             c.Interval,
@@ -62,6 +64,8 @@ func (c *cosmovisorEnv) Set(envVar, envVal string) {
 		c.DownloadBin = envVal
 	case EnvRestartUpgrade:
 		c.RestartUpgrade = envVal
+	case EnvRestartDelay:
+		c.RestartDelay = envVal
 	case EnvSkipBackup:
 		c.SkipBackup = envVal
 	case EnvDataBackupPath:
@@ -354,12 +358,13 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 	absPath, perr := filepath.Abs(relPath)
 	s.Require().NoError(perr)
 
-	newConfig := func(home, name, dataBackupPath string, downloadBin, restartUpgrade, skipBackup bool, interval, preupgradeMaxRetries int) *Config {
+	newConfig := func(home, name string, downloadBin, restartUpgrade bool, restartDelay int, skipBackup bool, dataBackupPath string, interval int, preupgradeMaxRetries int) *Config {
 		return &Config{
 			Home:                  home,
 			Name:                  name,
 			AllowDownloadBinaries: downloadBin,
 			RestartAfterUpgrade:   restartUpgrade,
+			RestartDelay:          time.Millisecond * time.Duration(restartDelay),
 			PollInterval:          time.Millisecond * time.Duration(interval),
 			UnsafeSkipBackup:      skipBackup,
 			DataBackupPath:        dataBackupPath,
@@ -373,160 +378,201 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 		expectedCfg      *Config
 		expectedErrCount int
 	}{
-		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvDataBackupPath, EnvDataBackupPath, EnvInterval, EnvPreupgradeMaxRetries
 		{
-			name:             "all bad",
-			envVals:          cosmovisorEnv{"", "", "bad", "bad", "bad", "", "bad", "bad"},
+			name: "all bad",
+			envVals: cosmovisorEnv{
+				Home:                 "",
+				Name:                 "",
+				DownloadBin:          "bad",
+				RestartUpgrade:       "bad",
+				RestartDelay:         "bad",
+				SkipBackup:           "bad",
+				DataBackupPath:       "bad",
+				Interval:             "bad",
+				PreupgradeMaxRetries: "bad",
+			},
 			expectedCfg:      nil,
-			expectedErrCount: 8,
+			expectedErrCount: 9,
 		},
 		{
 			name:             "all good",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "true", "", "303", "1"},
-			expectedCfg:      newConfig(absPath, "testname", absPath, true, false, true, 303, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "600ms", "true", "", "303ms", "1"},
+			expectedCfg:      newConfig(absPath, "testname", true, false, 600, true, absPath, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "nothing set",
-			envVals:          cosmovisorEnv{"", "", "", "", "", "", "", ""},
+			envVals:          cosmovisorEnv{"", "", "", "", "", "", "", "", ""},
 			expectedCfg:      nil,
 			expectedErrCount: 3,
 		},
 		// Note: Home and Name tests are done in TestValidate
 		{
 			name:             "download bin bad",
-			envVals:          cosmovisorEnv{absPath, "testname", "bad", "false", "true", "", "303", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "bad", "false", "600ms", "true", "", "303ms", "1"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "download bin not set",
-			envVals:          cosmovisorEnv{absPath, "testname", "", "false", "true", "", "303", "1"},
-			expectedCfg:      newConfig(absPath, "testname", absPath, false, false, true, 303, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "", "false", "600ms", "true", "", "303ms", "1"},
+			expectedCfg:      newConfig(absPath, "testname", false, false, 600, true, absPath, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "download bin true",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "true", "", "303", "1"},
-			expectedCfg:      newConfig(absPath, "testname", absPath, true, false, true, 303, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "600ms", "true", "", "303ms", "1"},
+			expectedCfg:      newConfig(absPath, "testname", true, false, 600, true, absPath, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "download bin false",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "true", "", "303", "1"},
-			expectedCfg:      newConfig(absPath, "testname", absPath, false, false, true, 303, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "600ms", "true", "", "303ms", "1"},
+			expectedCfg:      newConfig(absPath, "testname", false, false, 600, true, absPath, 303, 1),
 			expectedErrCount: 0,
 		},
-		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvDataBackupPath, EnvInterval, EnvPreupgradeMaxRetries
 		{
 			name:             "restart upgrade bad",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "bad", "true", "", "303", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "bad", "600ms", "true", "", "303ms", "1"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "restart upgrade not set",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "", "true", "", "303", "1"},
-			expectedCfg:      newConfig(absPath, "testname", absPath, true, true, true, 303, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "", "600ms", "true", "", "303ms", "1"},
+			expectedCfg:      newConfig(absPath, "testname", true, true, 600, true, absPath, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "restart upgrade true",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "true", "", "303", "1"},
-			expectedCfg:      newConfig(absPath, "testname", absPath, true, true, true, 303, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "600ms", "true", "", "303ms", "1"},
+			expectedCfg:      newConfig(absPath, "testname", true, true, 600, true, absPath, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "restart upgrade true",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "true", "", "303", "1"},
-			expectedCfg:      newConfig(absPath, "testname", absPath, true, false, true, 303, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "600ms", "true", "", "303ms", "1"},
+			expectedCfg:      newConfig(absPath, "testname", true, false, 600, true, absPath, 303, 1),
 			expectedErrCount: 0,
 		},
-		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvDataBackupPath, EnvInterval, EnvPreupgradeMaxRetries
 		{
 			name:             "skip unsafe backups bad",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "bad", "", "303", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "600ms", "bad", "", "303ms", "1"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "skip unsafe backups not set",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "", "", "303", "1"},
-			expectedCfg:      newConfig(absPath, "testname", absPath, true, false, false, 303, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "600ms", "", "", "303ms", "1"},
+			expectedCfg:      newConfig(absPath, "testname", true, false, 600, false, absPath, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "skip unsafe backups true",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "true", "", "303", "1"},
-			expectedCfg:      newConfig(absPath, "testname", absPath, true, false, true, 303, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "600ms", "true", "", "303ms", "1"},
+			expectedCfg:      newConfig(absPath, "testname", true, false, 600, true, absPath, 303, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "skip unsafe backups false",
-			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "false", "", "303", "1"},
-			expectedCfg:      newConfig(absPath, "testname", absPath, true, false, false, 303, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "600ms", "false", "", "303ms", "1"},
+			expectedCfg:      newConfig(absPath, "testname", true, false, 600, false, absPath, 303, 1),
 			expectedErrCount: 0,
 		},
-		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvDataBackupPath, EnvInterval, EnvPreupgradeMaxRetries
 		{
 			name:             "poll interval bad",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "", "bad", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "600ms", "false", "", "bad", "1"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "poll interval 0",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "", "0", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "600ms", "false", "", "0", "1"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "poll interval not set",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "", "", "1"},
-			expectedCfg:      newConfig(absPath, "testname", absPath, false, false, false, 300, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "600ms", "false", "", "", "1"},
+			expectedCfg:      newConfig(absPath, "testname", false, false, 600, false, absPath, 300, 1),
 			expectedErrCount: 0,
 		},
 		{
-			name:             "poll interval 987",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "", "987", "1"},
-			expectedCfg:      newConfig(absPath, "testname", absPath, false, false, false, 987, 1),
-			expectedErrCount: 0,
+			name:             "poll interval 600",
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "600ms", "false", "", "600", "1"},
+			expectedCfg:      nil,
+			expectedErrCount: 1,
 		},
 		{
 			name:             "poll interval 1s",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "", "1s", "1"},
-			expectedCfg:      newConfig(absPath, "testname", absPath, false, false, false, 1000, 1),
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "600ms", "false", "", "1s", "1"},
+			expectedCfg:      newConfig(absPath, "testname", false, false, 600, false, absPath, 1000, 1),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "poll interval -3m",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "", "-3m", "1"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "600ms", "false", "", "-3m", "1"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
-		// EnvHome, EnvName, EnvDownloadBin, EnvRestartUpgrade, EnvSkipBackup, EnvDataBackupPath, EnvInterval, EnvPreupgradeMaxRetries
+		{
+			name:             "restart delay bad",
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "bad", "false", "", "303ms", "1"},
+			expectedCfg:      nil,
+			expectedErrCount: 1,
+		},
+		{
+			name:             "restart delay 0",
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "0", "false", "", "303ms", "1"},
+			expectedCfg:      nil,
+			expectedErrCount: 1,
+		},
+		{
+			name:             "restart delay not set",
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "", "false", "", "303ms", "1"},
+			expectedCfg:      newConfig(absPath, "testname", false, false, 0, false, absPath, 303, 1),
+			expectedErrCount: 0,
+		},
+		{
+			name:             "restart delay 600",
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "600", "false", "", "300ms", "1"},
+			expectedCfg:      nil,
+			expectedErrCount: 1,
+		},
+		{
+			name:             "restart delay 1s",
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "1s", "false", "", "303ms", "1"},
+			expectedCfg:      newConfig(absPath, "testname", false, false, 1000, false, absPath, 303, 1),
+			expectedErrCount: 0,
+		},
+		{
+			name:             "restart delay -3m",
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "-3m", "false", "", "303ms", "1"},
+			expectedCfg:      nil,
+			expectedErrCount: 1,
+		},
 		{
 			name:             "prepupgrade max retries bad",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "", "406", "bad"},
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "600ms", "false", "", "406ms", "bad"},
 			expectedCfg:      nil,
 			expectedErrCount: 1,
 		},
 		{
 			name:             "prepupgrade max retries 0",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "", "406", "0"},
-			expectedCfg:      newConfig(absPath, "testname", absPath, false, false, false, 406, 0),
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "600ms", "false", "", "406ms", "0"},
+			expectedCfg:      newConfig(absPath, "testname", false, false, 600, false, absPath, 406, 0),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "prepupgrade max retries not set",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "", "406", ""},
-			expectedCfg:      newConfig(absPath, "testname", absPath, false, false, false, 406, 0),
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "600ms", "false", "", "406ms", ""},
+			expectedCfg:      newConfig(absPath, "testname", false, false, 600, false, absPath, 406, 0),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "prepupgrade max retries 5",
-			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "false", "", "406", "5"},
-			expectedCfg:      newConfig(absPath, "testname", absPath, false, false, false, 406, 5),
+			envVals:          cosmovisorEnv{absPath, "testname", "false", "false", "600ms", "false", "", "406ms", "5"},
+			expectedCfg:      newConfig(absPath, "testname", false, false, 600, false, absPath, 406, 5),
 			expectedErrCount: 0,
 		},
 	}

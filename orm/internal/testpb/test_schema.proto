@@ -116,3 +116,13 @@ message SimpleExample {
   string unique = 2;
   string not_unique = 3;
 }
+
+// ExampleAutoIncFieldName is a table for testing InsertReturning<FieldName>.
+message ExampleAutoIncFieldName {
+  option (cosmos.orm.v1.table) = {
+    id: 6
+    primary_key: {fields: "foo" auto_increment: true}
+  };
+  uint64 foo = 1;
+  uint64 bar = 2;
+}

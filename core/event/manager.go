@@ -19,7 +19,11 @@ type Service interface {
 
 // Manager represents an event manager.
 type Manager interface {
+
+	// Emit emits a typed protobuf event.
 	Emit(proto.Message) error
+
+	// EmitLegacy emits a legacy (untyped) tendermint event.
 	EmitLegacy(eventType string, attrs ...LegacyEventAttribute) error
 }
 

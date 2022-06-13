@@ -19,8 +19,16 @@ type Service interface {
 // BlockInfo represents basic block info independent of any specific Tendermint
 // core version.
 type BlockInfo interface {
+
+	// ChainID returns the chain ID.
 	ChainID() string
+
+	// Height returns the current block height.
 	Height() int64
+
+	// Time returns the current block timestamp.
 	Time() *timestamppb.Timestamp
+
+	// Hash returns the current block hash.
 	Hash() []byte
 }

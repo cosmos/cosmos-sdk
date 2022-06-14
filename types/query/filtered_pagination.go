@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
+	proto "github.com/gogo/protobuf/proto"
 )
 
 // FilteredPaginate does pagination of all the results in the PrefixStore based on the
@@ -113,4 +114,119 @@ func FilteredPaginate(
 	}
 
 	return res, nil
+}
+
+func GenericFilteredPaginated[V proto.Message](
+	prefixStore types.KVStore,
+	pageRequest *PageRequest,
+	onResult func(key []byte, value V) (V, error),
+) ([]V, *PageResponse, error) {
+	// if the PageRequest is nil, use default PageRequest
+	if pageRequest == nil {
+		pageRequest = &PageRequest{}
+	}
+
+	offset := pageRequest.Offset
+	key := pageRequest.Key
+	limit := pageRequest.Limit
+	countTotal := pageRequest.CountTotal
+	reverse := pageRequest.Reverse
+	results := []V{}
+
+	if offset > 0 && key != nil {
+		return nil, nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
+	}
+
+	if limit == 0 {
+		limit = DefaultLimit
+
+		// count total results when the limit is zero/not supplied
+		countTotal = true
+	}
+
+	if len(key) != 0 {
+		iterator := getIterator(prefixStore, key, reverse)
+		defer iterator.Close()
+
+		var numHits uint64
+		var nextKey []byte
+
+		for ; iterator.Valid(); iterator.Next() {
+			if numHits == limit {
+				nextKey = iterator.Key()
+				break
+			}
+
+			if iterator.Error() != nil {
+				return nil, nil, iterator.Error()
+			}
+
+			var protoMsg *V
+			err := proto.Unmarshal(iterator.Value(), *protoMsg)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			val, err := onResult(iterator.Key(), *protoMsg)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			if protoMsg != nil {
+				results = append(results, val)
+				numHits++
+			}
+		}
+
+		return nil, &PageResponse{
+			NextKey: nextKey,
+		}, nil
+	}
+
+	iterator := getIterator(prefixStore, nil, reverse)
+	defer iterator.Close()
+
+	end := offset + limit
+
+	var numHits uint64
+	var nextKey []byte
+
+	for ; iterator.Valid(); iterator.Next() {
+		if iterator.Error() != nil {
+			return nil, nil, iterator.Error()
+		}
+
+		var protoMsg *V
+		err := proto.Unmarshal(iterator.Value(), *protoMsg)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		val, err := onResult(iterator.Key(), *protoMsg)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if protoMsg != nil {
+			results = append(results, val)
+			numHits++
+		}
+
+		if numHits == end+1 {
+			if nextKey == nil {
+				nextKey = iterator.Key()
+			}
+
+			if !countTotal {
+				break
+			}
+		}
+	}
+
+	res := &PageResponse{NextKey: nextKey}
+	if countTotal {
+		res.Total = numHits
+	}
+
+	return results, res, nil
 }

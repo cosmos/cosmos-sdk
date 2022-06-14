@@ -6,8 +6,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	proto "github.com/gogo/protobuf/proto"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -64,34 +62,20 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 	key := grantStoreKey(grantee, granter, "")
 	grantsStore := prefix.NewStore(store, key)
 
-	var authorizations []*authz.Grant
-	pageRes, err := query.FilteredPaginate(grantsStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		auth, err := unmarshalAuthorization(k.cdc, value)
+	authorizations, pageRes, err := query.GenericFilteredPaginated(grantsStore, req.Pagination, func(key []byte, value *authz.Grant) (*authz.Grant, error) {
+		auth, err := value.GetAuthorization()
 		if err != nil {
-			return false, err
+			return nil, err
 		}
 
-		auth1, err := auth.GetAuthorization()
+		authorizationAny, err := codectypes.NewAnyWithValue(auth)
 		if err != nil {
-			return false, err
+			return nil, status.Errorf(codes.Internal, err.Error())
 		}
-
-		if accumulate {
-			msg, ok := auth1.(proto.Message)
-			if !ok {
-				return false, status.Errorf(codes.Internal, "can't protomarshal %T", msg)
-			}
-
-			authorizationAny, err := codectypes.NewAnyWithValue(msg)
-			if err != nil {
-				return false, status.Errorf(codes.Internal, err.Error())
-			}
-			authorizations = append(authorizations, &authz.Grant{
-				Authorization: authorizationAny,
-				Expiration:    auth.Expiration,
-			})
-		}
-		return true, nil
+		return &authz.Grant{
+			Authorization: authorizationAny,
+			Expiration:    value.Expiration,
+		}, nil
 	})
 	if err != nil {
 		return nil, err

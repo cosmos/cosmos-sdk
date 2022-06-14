@@ -23,7 +23,7 @@ type HandlerTestSuite struct {
 
 	ctx           sdk.Context
 	govHandler    govv1beta1.Handler
-	stakingKeeper stakingkeeper.Keeper
+	stakingKeeper *stakingkeeper.Keeper
 }
 
 func (suite *HandlerTestSuite) SetupTest() {

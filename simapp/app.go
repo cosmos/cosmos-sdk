@@ -224,6 +224,7 @@ func NewSimApp(
 		&app.AuthzKeeper,
 		&app.FeeGrantKeeper,
 		&app.StakingKeeper,
+		&app.GroupKeeper,
 		&app.NFTKeeper,
 		&app.SlashingKeeper,
 		&app.MintKeeper,
@@ -239,7 +240,6 @@ func NewSimApp(
 		distrtypes.StoreKey,
 		govtypes.StoreKey,
 		upgradetypes.StoreKey,
-		group.StoreKey,
 	)
 	// NOTE: The testingkey is just mounted for testing purposes. Actual applications should
 	// not include this key.
@@ -264,13 +264,6 @@ func NewSimApp(
 	app.StakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
-
-	groupConfig := group.DefaultConfig()
-	/*
-		Example of setting group params:
-		groupConfig.MaxMetadataLen = 1000
-	*/
-	app.GroupKeeper = groupkeeper.NewKeeper(app.keys[group.StoreKey], app.appCodec, app.MsgServiceRouter(), app.AccountKeeper, groupConfig)
 
 	// register the proposal types
 	govRouter := govv1beta1.NewRouter()
@@ -310,7 +303,6 @@ func NewSimApp(
 		gov.NewAppModule(app.appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
 		distr.NewAppModule(app.appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper),
-		groupmodule.NewAppModule(app.appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 	); err != nil {
 		panic(err)
 	}

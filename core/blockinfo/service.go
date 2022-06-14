@@ -16,7 +16,6 @@ import (
 // core API type that should be provided by the runtime module being used to
 // build an app via depinject.
 type Service interface {
-
 	// GetBlockInfo returns the current block info for the context.
 	GetBlockInfo(ctx context.Context) BlockInfo
 }
@@ -24,7 +23,6 @@ type Service interface {
 // BlockInfo represents basic block info independent of any specific Tendermint
 // core version.
 type BlockInfo interface {
-
 	// ChainID returns the chain ID.
 	ChainID() string
 

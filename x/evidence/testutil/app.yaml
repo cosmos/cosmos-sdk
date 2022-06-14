@@ -3,11 +3,11 @@ modules:
     config:
       "@type": cosmos.app.runtime.v1alpha1.Module
 
-      app_name: NFTApp
+      app_name: EvidenceApp
 
-      begin_blockers: [mint, staking, auth, bank, mint, genutil, nft, params]
-      end_blockers: [mint, staking, auth, bank, mint, genutil, nft, params]
-      init_genesis: [auth, bank, mint, staking, mint, genutil, nft, params]
+      begin_blockers: [slashing, evidence, staking, auth, bank, genutil, params]
+      end_blockers: [staking, auth, bank, slashing, genutil, evidence, params]
+      init_genesis: [auth, bank, staking, slashing, genutil, evidence, params]
 
   - name: auth
     config:
@@ -15,8 +15,6 @@ modules:
       bech32_prefix: cosmos
       module_account_permissions:
         - account: fee_collector
-        - account: mint
-          permissions: [minter]
         - account: bonded_tokens_pool
           permissions: [burner, staking]
         - account: not_bonded_tokens_pool
@@ -39,14 +37,14 @@ modules:
     config:
       "@type": cosmos.staking.module.v1.Module
 
+  - name: slashing
+    config:
+      "@type": cosmos.slashing.module.v1.Module
+
   - name: genutil
     config:
       "@type": cosmos.genutil.module.v1.Module
 
-  - name: mint
+  - name: evidence
     config:
-      "@type": cosmos.mint.module.v1.Module
-
-  - name: nft
-    config:
-      "@type": cosmos.nft.module.v1.Module
+      "@type": cosmos.evidence.module.v1.Module

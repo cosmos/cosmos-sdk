@@ -23,7 +23,6 @@ type Service interface {
 // BlockInfo represents basic block info independent of any specific Tendermint
 // core version.
 type BlockInfo interface {
-
 	// ChainID returns the chain ID.
 	ChainID() string
 

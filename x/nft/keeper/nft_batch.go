@@ -22,7 +22,7 @@ func (k Keeper) BatchMint(ctx sdk.Context,
 		}
 
 		checked[token.ClassId] = true
-		k.MintWithNoCheck(ctx, token, receiver)
+		k.mintWithNoCheck(ctx, token, receiver)
 	}
 	return nil
 }
@@ -37,7 +37,7 @@ func (k Keeper) BatchBurn(ctx sdk.Context, classID string, nftIDs []string) erro
 		if !k.HasNFT(ctx, classID, nftID) {
 			return sdkerrors.Wrap(nft.ErrNFTNotExists, nftID)
 		}
-		if err := k.BurnWithNoCheck(ctx, classID, nftID); err != nil {
+		if err := k.burnWithNoCheck(ctx, classID, nftID); err != nil {
 			return err
 		}
 	}
@@ -57,7 +57,7 @@ func (k Keeper) BatchUpdate(ctx sdk.Context, tokens []nft.NFT) error {
 			return sdkerrors.Wrap(nft.ErrNFTNotExists, token.Id)
 		}
 		checked[token.ClassId] = true
-		k.UpdateWithNoCheck(ctx, token)
+		k.updateWithNoCheck(ctx, token)
 	}
 	return nil
 }
@@ -76,7 +76,7 @@ func (k Keeper) BatchTransfer(ctx sdk.Context,
 		if !k.HasNFT(ctx, classID, nftID) {
 			return sdkerrors.Wrap(nft.ErrNFTNotExists, nftID)
 		}
-		if err := k.TransferWithNoCheck(ctx, classID, nftID, receiver); err != nil {
+		if err := k.transferWithNoCheck(ctx, classID, nftID, receiver); err != nil {
 			return sdkerrors.Wrap(nft.ErrNFTNotExists, nftID)
 		}
 	}

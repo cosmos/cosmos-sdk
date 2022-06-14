@@ -7,9 +7,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/nft"
 
 	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
@@ -96,7 +96,7 @@ func SimulateMsgSend(
 			Receiver: receiver.Address.String(),
 		}
 
-		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
+		txCfg := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		tx, err := helpers.GenSignedMockTx(
 			txCfg,
 			[]sdk.Msg{msg},

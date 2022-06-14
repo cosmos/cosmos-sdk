@@ -29,7 +29,7 @@ func (ak AccountKeeper) AccountAddressByID(c context.Context, req *types.QueryAc
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	address := ak.GetAccountAddressByID(ctx, req.GetId())
+	address := ak.GetAccountAddressByID(ctx, uint64(req.GetId()))
 	if len(address) == 0 {
 		return nil, status.Errorf(codes.NotFound, "account address not found with id %d", req.Id)
 	}

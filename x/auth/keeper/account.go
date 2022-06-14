@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"github.com/cosmos/cosmos-sdk/internal/conv"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -56,8 +55,7 @@ func (ak AccountKeeper) GetAccountAddressByID(ctx sdk.Context, id uint64) string
 	if bz == nil {
 		return ""
 	}
-
-	return conv.UnsafeBytesToStr(bz)
+	return sdk.AccAddress(bz).String()
 }
 
 // GetAllAccounts returns all accounts in the accountKeeper.
@@ -81,7 +79,7 @@ func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc types.AccountI) {
 	}
 
 	store.Set(types.AddressStoreKey(addr), bz)
-	store.Set(types.AccountNumberStoreKey(acc.GetAccountNumber()), conv.UnsafeStrToBytes(addr.String()))
+	store.Set(types.AccountNumberStoreKey(acc.GetAccountNumber()), addr.Bytes())
 }
 
 // RemoveAccount removes an account for the account mapper store.

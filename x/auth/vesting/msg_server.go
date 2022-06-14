@@ -3,15 +3,13 @@ package vesting
 import (
 	"context"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	"github.com/armon/go-metrics"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
@@ -19,7 +17,6 @@ import (
 type msgServer struct {
 	keeper.AccountKeeper
 	types.BankKeeper
-	types.StakingKeeper
 }
 
 // NewMsgServerImpl returns an implementation of the vesting MsgServer interface,
@@ -57,22 +54,18 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
 	}
 
-	baseAccount := ak.NewAccountWithAddress(ctx, to)
-	if _, ok := baseAccount.(*authtypes.BaseAccount); !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid account type; expected: BaseAccount, got: %T", baseAccount)
-	}
+	baseAccount := authtypes.NewBaseAccountWithAddress(to)
+	baseAccount = ak.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
+	baseVestingAccount := types.NewBaseVestingAccount(baseAccount, msg.Amount.Sort(), msg.EndTime)
 
-	baseVestingAccount := types.NewBaseVestingAccount(baseAccount.(*authtypes.BaseAccount), msg.Amount.Sort(), msg.EndTime)
-
-	var acc authtypes.AccountI
-
+	var vestingAccount authtypes.AccountI
 	if msg.Delayed {
-		acc = types.NewDelayedVestingAccountRaw(baseVestingAccount)
+		vestingAccount = types.NewDelayedVestingAccountRaw(baseVestingAccount)
 	} else {
-		acc = types.NewContinuousVestingAccountRaw(baseVestingAccount, ctx.BlockTime().Unix())
+		vestingAccount = types.NewContinuousVestingAccountRaw(baseVestingAccount, ctx.BlockTime().Unix())
 	}
 
-	ak.SetAccount(ctx, acc)
+	ak.SetAccount(ctx, vestingAccount)
 
 	defer func() {
 		telemetry.IncrCounter(1, "new", "account")
@@ -127,33 +120,12 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 	for _, period := range msg.VestingPeriods {
 		totalCoins = totalCoins.Add(period.Amount...)
 	}
-	totalCoins = totalCoins.Sort()
 
-	madeNewAcc := false
-	acc := ak.GetAccount(ctx, to)
+	baseAccount := authtypes.NewBaseAccountWithAddress(to)
+	baseAccount = ak.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
+	vestingAccount := types.NewPermanentLockedAccount(baseAccount, msg.Amount)
 
-	if acc != nil {
-		pva, isPeriodic := acc.(exported.GrantAccount)
-		switch {
-		case !msg.Merge && isPeriodic:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists; consider using --merge", msg.ToAddress)
-		case !msg.Merge && !isPeriodic:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
-		case msg.Merge && !isPeriodic:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrNotSupported, "account %s must be a periodic vesting account", msg.ToAddress)
-		}
-		grantAction := types.NewPeriodicGrantAction(s.StakingKeeper, msg.GetStartTime(), msg.GetVestingPeriods(), totalCoins)
-		err := pva.AddGrant(ctx, grantAction)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		baseAccount := ak.NewAccountWithAddress(ctx, to)
-		acc = types.NewPeriodicVestingAccount(baseAccount.(*authtypes.BaseAccount), totalCoins, msg.StartTime, msg.VestingPeriods)
-		madeNewAcc = true
-	}
-
-	ak.SetAccount(ctx, acc)
+	ak.SetAccount(ctx, vestingAccount)
 
 	if madeNewAcc {
 		defer func() {
@@ -209,26 +181,11 @@ func (s msgServer) CreateClawbackVestingAccount(goCtx context.Context, msg *type
 		vestingCoins = vestingCoins.Add(period.Amount...)
 	}
 
-	lockupCoins := sdk.NewCoins()
-	for _, period := range msg.LockupPeriods {
-		lockupCoins = lockupCoins.Add(period.Amount...)
-	}
+	baseAccount := authtypes.NewBaseAccountWithAddress(to)
+	baseAccount = ak.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
+	vestingAccount := types.NewPeriodicVestingAccount(baseAccount, totalCoins.Sort(), msg.StartTime, msg.VestingPeriods)
 
-	if !vestingCoins.IsZero() && len(msg.LockupPeriods) == 0 {
-		// If lockup absent, default to an instant unlock schedule
-		msg.LockupPeriods = []types.Period{
-			{Length: 0, Amount: vestingCoins},
-		}
-		lockupCoins = vestingCoins
-	}
-
-	if !lockupCoins.IsZero() && len(msg.VestingPeriods) == 0 {
-		// If vesting absent, default to an instant vesting schedule
-		msg.VestingPeriods = []types.Period{
-			{Length: 0, Amount: lockupCoins},
-		}
-		vestingCoins = lockupCoins
-	}
+	ak.SetAccount(ctx, vestingAccount)
 
 	// The vesting and lockup schedules must describe the same total amount.
 	// IsEqual can panic, so use (a == b) <=> (a <= b && b <= a).

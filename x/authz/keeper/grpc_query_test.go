@@ -198,7 +198,8 @@ func (suite *TestSuite) TestGRPCQueryGranterGrants() {
 		},
 		{
 			"valid case, pagination",
-			func() {},
+			func() {
+			},
 			false,
 			authz.QueryGranterGrantsRequest{
 				Granter: addrs[0].String(),

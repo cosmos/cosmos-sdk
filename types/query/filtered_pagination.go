@@ -3,8 +3,8 @@ package query
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	proto "github.com/gogo/protobuf/proto"
 )
 
 // FilteredPaginate does pagination of all the results in the PrefixStore based on the
@@ -116,11 +116,12 @@ func FilteredPaginate(
 	return res, nil
 }
 
-func GenericFilteredPaginated[V proto.Message](
+func GenericFilteredPaginate[V any, F codec.ProtoMarshaler](
+	cdc codec.BinaryCodec,
 	prefixStore types.KVStore,
 	pageRequest *PageRequest,
-	onResult func(key []byte, value V) (V, error),
-) ([]V, *PageResponse, error) {
+	onResult func(key []byte, value V) (F, error),
+) ([]F, *PageResponse, error) {
 	// if the PageRequest is nil, use default PageRequest
 	if pageRequest == nil {
 		pageRequest = &PageRequest{}
@@ -131,7 +132,7 @@ func GenericFilteredPaginated[V proto.Message](
 	limit := pageRequest.Limit
 	countTotal := pageRequest.CountTotal
 	reverse := pageRequest.Reverse
-	results := []V{}
+	results := []F{}
 
 	if offset > 0 && key != nil {
 		return nil, nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
@@ -161,18 +162,18 @@ func GenericFilteredPaginated[V proto.Message](
 				return nil, nil, iterator.Error()
 			}
 
-			var protoMsg *V
-			err := proto.Unmarshal(iterator.Value(), *protoMsg)
+			protoMsg := any(new(V))
+			err := cdc.Unmarshal(iterator.Value(), protoMsg.(codec.ProtoMarshaler))
 			if err != nil {
 				return nil, nil, err
 			}
 
-			val, err := onResult(iterator.Key(), *protoMsg)
+			val, err := onResult(iterator.Key(), *(protoMsg.(*V)))
 			if err != nil {
 				return nil, nil, err
 			}
 
-			if protoMsg != nil {
+			if any(val) != nil {
 				results = append(results, val)
 				numHits++
 			}
@@ -196,19 +197,22 @@ func GenericFilteredPaginated[V proto.Message](
 			return nil, nil, iterator.Error()
 		}
 
-		var protoMsg *V
-		err := proto.Unmarshal(iterator.Value(), *protoMsg)
+		protoMsg := any(new(V))
+		err := cdc.Unmarshal(iterator.Value(), protoMsg.(codec.ProtoMarshaler))
 		if err != nil {
 			return nil, nil, err
 		}
 
-		val, err := onResult(iterator.Key(), *protoMsg)
+		val, err := onResult(iterator.Key(), *(protoMsg.(*V)))
 		if err != nil {
 			return nil, nil, err
 		}
 
-		if protoMsg != nil {
-			results = append(results, val)
+		if any(val) != nil {
+			// Previously this was the "accumulate" flag
+			if numHits >= offset && numHits < end {
+				results = append(results, val)
+			}
 			numHits++
 		}
 

@@ -5,12 +5,9 @@ modules:
 
       app_name: EvidenceApp
 
-      begin_blockers:
-        [mint, slashing, evidence, staking, auth, bank, genutil, params]
-      end_blockers:
-        [mint, staking, auth, bank, slashing, genutil, evidence, params]
-      init_genesis:
-        [auth, bank, staking, slashing, mint, genutil, evidence, params]
+      begin_blockers: [slashing, evidence, staking, auth, bank, genutil, params]
+      end_blockers: [staking, auth, bank, slashing, genutil, evidence, params]
+      init_genesis: [auth, bank, staking, slashing, genutil, evidence, params]
 
   - name: auth
     config:
@@ -49,10 +46,6 @@ modules:
   - name: genutil
     config:
       "@type": cosmos.genutil.module.v1.Module
-
-  - name: mint
-    config:
-      "@type": cosmos.mint.module.v1.Module
 
   - name: evidence
     config:

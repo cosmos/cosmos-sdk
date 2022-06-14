@@ -13,7 +13,6 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -54,17 +53,16 @@ func Setup(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.Ap
 	// create app
 	//
 	var appBuilder *runtime.AppBuilder
-	var msgServiceRouter *baseapp.MsgServiceRouter
 	var codec codec.Codec
 
 	if err := depinject.Inject(
 		appConfig,
-		append(extraOutputs, &appBuilder, &msgServiceRouter, &codec)...,
+		append(extraOutputs, &appBuilder, &codec)...,
 	); err != nil {
 		return nil, fmt.Errorf("failed to inject dependencies: %w", err)
 	}
 
-	app := appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil, msgServiceRouter)
+	app := appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil)
 	if err := app.Load(true); err != nil {
 		return nil, fmt.Errorf("failed to load app: %w", err)
 	}

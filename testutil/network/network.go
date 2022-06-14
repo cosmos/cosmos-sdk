@@ -25,6 +25,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -135,7 +136,6 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 
 	var (
 		appBuilder        *runtime.AppBuilder
-		msgServiceRouter  *baseapp.MsgServiceRouter
 		txConfig          client.TxConfig
 		legacyAmino       *codec.LegacyAmino
 		codec             codec.Codec
@@ -143,8 +143,6 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	)
 
 	if err := depinject.Inject(appConfig,
-		&appBuilder,
-		&msgServiceRouter,
 		&txConfig,
 		&codec,
 		&legacyAmino,
@@ -159,11 +157,19 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	cfg.InterfaceRegistry = interfaceRegistry
 	cfg.GenesisState = appBuilder.DefaultGenesis()
 	cfg.AppConstructor = func(val Validator) servertypes.Application {
+		// we build a unique app instance for every validator here
+		var (
+			appBuilder *runtime.AppBuilder
+		)
+		if err := depinject.Inject(appConfig,
+			&appBuilder,
+		); err != nil {
+			panic(err)
+		}
 		app := appBuilder.Build(
 			val.Ctx.Logger,
 			dbm.NewMemDB(),
 			nil,
-			msgServiceRouter,
 			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)

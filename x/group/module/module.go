@@ -181,8 +181,8 @@ type groupInputs struct {
 	Config           *modulev1.Module
 	Key              *store.KVStoreKey
 	Cdc              codec.Codec
-	AccountKeeper    group.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
-	BankKeeper       group.BankKeeper    `key:"cosmos.bank.v1.Keeper"`
+	AccountKeeper    group.AccountKeeper
+	BankKeeper       group.BankKeeper
 	Registry         cdctypes.InterfaceRegistry
 	MsgServiceRouter *baseapp.MsgServiceRouter
 }
@@ -190,7 +190,7 @@ type groupInputs struct {
 type groupOutputs struct {
 	depinject.Out
 
-	GroupKeeper keeper.Keeper `key:"cosmos.group.v1.Keeper"`
+	GroupKeeper keeper.Keeper
 	Module      runtime.AppModuleWrapper
 }
 

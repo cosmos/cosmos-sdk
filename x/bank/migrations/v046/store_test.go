@@ -5,18 +5,21 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	v043 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v043"
 	v046 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v046"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestMigrateStore(t *testing.T) {
-	encCfg := simapp.MakeTestEncodingConfig()
+	var encCfg codec.Codec
+	depinject.Inject(banktestutil.AppConfig, &encCfg)
 	bankKey := sdk.NewKVStoreKey("bank")
 	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(bankKey)
@@ -30,13 +33,13 @@ func TestMigrateStore(t *testing.T) {
 	)
 
 	for _, b := range balances {
-		bz, err := encCfg.Codec.Marshal(&b)
+		bz, err := encCfg.Marshal(&b)
 		require.NoError(t, err)
 
 		prefixAccStore.Set([]byte(b.Denom), bz)
 	}
 
-	require.NoError(t, v046.MigrateStore(ctx, bankKey, encCfg.Codec))
+	require.NoError(t, v046.MigrateStore(ctx, bankKey, encCfg))
 
 	for _, b := range balances {
 		addrPrefixStore := prefix.NewStore(store, types.CreateAccountBalancesPrefix(addr))
@@ -54,7 +57,8 @@ func TestMigrateStore(t *testing.T) {
 }
 
 func TestMigrateDenomMetaData(t *testing.T) {
-	encCfg := simapp.MakeTestEncodingConfig()
+	var encCfg codec.Codec
+	depinject.Inject(banktestutil.AppConfig, &encCfg)
 	bankKey := sdk.NewKVStoreKey("bank")
 	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(bankKey)
@@ -90,12 +94,12 @@ func TestMigrateDenomMetaData(t *testing.T) {
 		key := append(v043.DenomMetadataPrefix, []byte(metaData[i].Base)...)
 		// keys before 0.45 had denom two times in the key
 		key = append(key, []byte(metaData[i].Base)...)
-		bz, err := encCfg.Codec.Marshal(&metaData[i])
+		bz, err := encCfg.Marshal(&metaData[i])
 		require.NoError(t, err)
 		denomMetadataStore.Set(key, bz)
 	}
 
-	require.NoError(t, v046.MigrateStore(ctx, bankKey, encCfg.Codec))
+	require.NoError(t, v046.MigrateStore(ctx, bankKey, encCfg))
 
 	denomMetadataStore = prefix.NewStore(store, v043.DenomMetadataPrefix)
 	denomMetadataIter := denomMetadataStore.Iterator(nil, nil)
@@ -112,7 +116,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 		require.Equal(t, string(newKey)[1:], metaData[i].Base, "idx: %d", i)
 		bz = denomMetadataStore.Get(denomMetadataIter.Key())
 		require.NotNil(t, bz)
-		err := encCfg.Codec.Unmarshal(bz, &result)
+		err := encCfg.Unmarshal(bz, &result)
 		require.NoError(t, err)
 		assertMetaDataEqual(t, metaData[i], result)
 		i++

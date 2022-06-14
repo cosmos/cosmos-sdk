@@ -7,18 +7,26 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v043bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v043"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestMigrateJSON(t *testing.T) {
-	encodingConfig := simapp.MakeTestEncodingConfig()
+	var cdc codec.Codec
+	depinject.Inject(testutil.AppConfig, &cdc)
+	var registry codectypes.InterfaceRegistry
+	depinject.Inject(testutil.AppConfig, &registry)
+	var txConfig client.TxConfig
+	depinject.Inject(testutil.AppConfig, &txConfig)
 	clientCtx := client.Context{}.
-		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
-		WithTxConfig(encodingConfig.TxConfig).
-		WithCodec(encodingConfig.Codec)
+		WithInterfaceRegistry(registry).
+		WithTxConfig(txConfig).
+		WithCodec(cdc)
 
 	voter, err := sdk.AccAddressFromBech32("cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh")
 	require.NoError(t, err)

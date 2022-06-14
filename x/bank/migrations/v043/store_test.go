@@ -5,18 +5,21 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v042bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v042"
 	v043bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v043"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestSupplyMigration(t *testing.T) {
-	encCfg := simapp.MakeTestEncodingConfig()
+	var cdc codec.Codec
+	depinject.Inject(banktestutil.AppConfig, &cdc)
 	bankKey := sdk.NewKVStoreKey("bank")
 	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(bankKey)
@@ -28,12 +31,12 @@ func TestSupplyMigration(t *testing.T) {
 	// Old supply was stored as a single blob under the `SupplyKey`.
 	var oldSupply v042bank.SupplyI
 	oldSupply = &types.Supply{Total: sdk.Coins{oldFooCoin, oldBarCoin, oldFooBarCoin}}
-	oldSupplyBz, err := encCfg.Codec.MarshalInterface(oldSupply)
+	oldSupplyBz, err := cdc.MarshalInterface(oldSupply)
 	require.NoError(t, err)
 	store.Set(v042bank.SupplyKey, oldSupplyBz)
 
 	// Run migration.
-	err = v043bank.MigrateStore(ctx, bankKey, encCfg.Codec)
+	err = v043bank.MigrateStore(ctx, bankKey, cdc)
 	require.NoError(t, err)
 
 	// New supply is indexed by denom.
@@ -65,7 +68,8 @@ func TestSupplyMigration(t *testing.T) {
 }
 
 func TestBalanceKeysMigration(t *testing.T) {
-	encCfg := simapp.MakeTestEncodingConfig()
+	var cdc codec.Codec
+	depinject.Inject(banktestutil.AppConfig, &cdc)
 	bankKey := sdk.NewKVStoreKey("bank")
 	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(bankKey)
@@ -75,19 +79,19 @@ func TestBalanceKeysMigration(t *testing.T) {
 	// set 10 foo coin
 	fooCoin := sdk.NewCoin("foo", sdk.NewInt(10))
 	oldFooKey := append(append(v042bank.BalancesPrefix, addr...), []byte(fooCoin.Denom)...)
-	fooBz, err := encCfg.Codec.Marshal(&fooCoin)
+	fooBz, err := cdc.Marshal(&fooCoin)
 	require.NoError(t, err)
 	store.Set(oldFooKey, fooBz)
 
 	// set 0 foobar coin
 	fooBarCoin := sdk.NewCoin("foobar", sdk.NewInt(0))
 	oldKeyFooBar := append(append(v042bank.BalancesPrefix, addr...), []byte(fooBarCoin.Denom)...)
-	fooBarBz, err := encCfg.Codec.Marshal(&fooBarCoin)
+	fooBarBz, err := cdc.Marshal(&fooBarCoin)
 	require.NoError(t, err)
 	store.Set(oldKeyFooBar, fooBarBz)
 	require.NotNil(t, store.Get(oldKeyFooBar)) // before store migation zero values can also exist in store.
 
-	err = v043bank.MigrateStore(ctx, bankKey, encCfg.Codec)
+	err = v043bank.MigrateStore(ctx, bankKey, cdc)
 	require.NoError(t, err)
 
 	newKey := append(types.CreateAccountBalancesPrefix(addr), []byte(fooCoin.Denom)...)

@@ -5,11 +5,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -25,36 +27,37 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
+	registry cdctypes.InterfaceRegistry,
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper, bk keeper.Keeper,
 ) simulation.WeightedOperations {
 	var weightMsgSend, weightMsgMultiSend int
 	appParams.GetOrGenerate(cdc, OpWeightMsgSend, &weightMsgSend, nil,
 		func(_ *rand.Rand) {
-			weightMsgSend = simappparams.DefaultWeightMsgSend
+			weightMsgSend = sims.DefaultWeightMsgSend
 		},
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgMultiSend, &weightMsgMultiSend, nil,
 		func(_ *rand.Rand) {
-			weightMsgMultiSend = simappparams.DefaultWeightMsgMultiSend
+			weightMsgMultiSend = sims.DefaultWeightMsgMultiSend
 		},
 	)
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgSend,
-			SimulateMsgSend(ak, bk),
+			SimulateMsgSend(codec.NewProtoCodec(registry), ak, bk),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgMultiSend,
-			SimulateMsgMultiSend(ak, bk),
+			SimulateMsgMultiSend(codec.NewProtoCodec(registry), ak, bk),
 		),
 	}
 }
 
 // SimulateMsgSend tests and runs a single msg send where both
 // accounts already exist.
-func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operation {
+func SimulateMsgSend(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -72,7 +75,7 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operatio
 
 		msg := types.NewMsgSend(from.Address, to.Address, coins)
 
-		err := sendMsgSend(r, app, bk, ak, msg, ctx, chainID, []cryptotypes.PrivKey{from.PrivKey})
+		err := sendMsgSend(cdc, r, app, bk, ak, msg, ctx, chainID, []cryptotypes.PrivKey{from.PrivKey})
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
 		}
@@ -83,7 +86,7 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operatio
 
 // SimulateMsgSendToModuleAccount tests and runs a single msg send where both
 // accounts already exist.
-func SimulateMsgSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keeper, moduleAccCount int) simtypes.Operation {
+func SimulateMsgSendToModuleAccount(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk keeper.Keeper, moduleAccCount int) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -102,7 +105,7 @@ func SimulateMsgSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keeper, mo
 
 		msg := types.NewMsgSend(from.Address, to.Address, coins)
 
-		err := sendMsgSend(r, app, bk, ak, msg, ctx, chainID, []cryptotypes.PrivKey{from.PrivKey})
+		err := sendMsgSend(cdc, r, app, bk, ak, msg, ctx, chainID, []cryptotypes.PrivKey{from.PrivKey})
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
 		}
@@ -112,7 +115,7 @@ func SimulateMsgSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keeper, mo
 }
 
 // sendMsgSend sends a transaction with a MsgSend from a provided random account.
-func sendMsgSend(
+func sendMsgSend(cdc *codec.ProtoCodec,
 	r *rand.Rand, app *baseapp.BaseApp, bk keeper.Keeper, ak types.AccountKeeper,
 	msg *types.MsgSend, ctx sdk.Context, chainID string, privkeys []cryptotypes.PrivKey,
 ) error {
@@ -136,7 +139,9 @@ func sendMsgSend(
 			return err
 		}
 	}
-	txGen := simappparams.MakeTestEncodingConfig().TxConfig
+
+	txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
+
 	tx, err := helpers.GenSignedMockTx(
 		txGen,
 		[]sdk.Msg{msg},
@@ -161,7 +166,7 @@ func sendMsgSend(
 
 // SimulateMsgMultiSend tests and runs a single msg multisend, with randomized, capped number of inputs/outputs.
 // all accounts in msg fields exist in state
-func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operation {
+func SimulateMsgMultiSend(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -239,7 +244,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 			Inputs:  inputs,
 			Outputs: outputs,
 		}
-		err := sendMsgMultiSend(r, app, bk, ak, msg, ctx, chainID, privs)
+		err := sendMsgMultiSend(cdc, r, app, bk, ak, msg, ctx, chainID, privs)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
 		}
@@ -249,7 +254,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 }
 
 // SimulateMsgMultiSendToModuleAccount sends coins to Module Accounts
-func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keeper, moduleAccCount int) simtypes.Operation {
+func SimulateMsgMultiSendToModuleAccount(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk keeper.Keeper, moduleAccCount int) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -305,7 +310,7 @@ func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keepe
 			Inputs:  inputs,
 			Outputs: outputs,
 		}
-		err := sendMsgMultiSend(r, app, bk, ak, msg, ctx, chainID, privs)
+		err := sendMsgMultiSend(cdc, r, app, bk, ak, msg, ctx, chainID, privs)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
 		}
@@ -316,7 +321,7 @@ func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keepe
 
 // sendMsgMultiSend sends a transaction with a MsgMultiSend from a provided random
 // account.
-func sendMsgMultiSend(
+func sendMsgMultiSend(cdc *codec.ProtoCodec,
 	r *rand.Rand, app *baseapp.BaseApp, bk keeper.Keeper, ak types.AccountKeeper,
 	msg *types.MsgMultiSend, ctx sdk.Context, chainID string, privkeys []cryptotypes.PrivKey,
 ) error {
@@ -349,7 +354,8 @@ func sendMsgMultiSend(
 		}
 	}
 
-	txGen := simappparams.MakeTestEncodingConfig().TxConfig
+	txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
+
 	tx, err := helpers.GenSignedMockTx(
 		txGen,
 		[]sdk.Msg{msg},

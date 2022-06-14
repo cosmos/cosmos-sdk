@@ -1,7 +1,6 @@
-package params
+package sims
 
 // Default simulation operation weights for messages and gov proposals
-// Deprecated: use the DefaultWeight* constants instead located in testuitl/sims
 const (
 	DefaultWeightMsgSend                        int = 100
 	DefaultWeightMsgMultiSend                   int = 10

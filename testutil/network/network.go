@@ -159,9 +159,7 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	cfg.AppConstructor = func(val Validator) servertypes.Application {
 		// we build a unique app instance for every validator here
 		var appBuilder *runtime.AppBuilder
-		if err := depinject.Inject(appConfig,
-			&appBuilder,
-		); err != nil {
+		if err := depinject.Inject(appConfig,&appBuilder); err != nil {
 			panic(err)
 		}
 		app := appBuilder.Build(

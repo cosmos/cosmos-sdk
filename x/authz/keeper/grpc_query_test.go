@@ -255,6 +255,15 @@ func (suite *TestSuite) TestGRPCQueryGranteeGrants() {
 			1,
 		},
 		{
+			"valid case, no authorization found",
+			func() {},
+			false,
+			authz.QueryGranteeGrantsRequest{
+				Grantee: addrs[2].String(),
+			},
+			0,
+		},
+		{
 			"valid case, multiple authorization",
 			func() {
 				suite.createSendAuthorization(addrs[0], addrs[2])

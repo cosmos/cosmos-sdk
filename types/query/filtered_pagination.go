@@ -135,7 +135,7 @@ func GenericFilteredPaginate[V any, F codec.ProtoMarshaler](
 	results := []F{}
 
 	if offset > 0 && key != nil {
-		return nil, nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
+		return results, nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
 	}
 
 	if limit == 0 {
@@ -173,13 +173,13 @@ func GenericFilteredPaginate[V any, F codec.ProtoMarshaler](
 				return nil, nil, err
 			}
 
-			if any(val) != nil {
+			if val.Size() != 0 {
 				results = append(results, val)
 				numHits++
 			}
 		}
 
-		return nil, &PageResponse{
+		return results, &PageResponse{
 			NextKey: nextKey,
 		}, nil
 	}
@@ -208,7 +208,7 @@ func GenericFilteredPaginate[V any, F codec.ProtoMarshaler](
 			return nil, nil, err
 		}
 
-		if any(val) != nil {
+		if val.Size() != 0 {
 			// Previously this was the "accumulate" flag
 			if numHits >= offset && numHits < end {
 				results = append(results, val)

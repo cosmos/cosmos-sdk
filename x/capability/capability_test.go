@@ -8,12 +8,15 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/capability/keeper"
+	"github.com/cosmos/cosmos-sdk/x/capability/testutil"
 	"github.com/cosmos/cosmos-sdk/x/capability/types"
 )
 
@@ -22,24 +25,21 @@ type CapabilityTestSuite struct {
 
 	cdc    codec.Codec
 	ctx    sdk.Context
-	app    *simapp.SimApp
+	app    *runtime.App
 	keeper *keeper.Keeper
 	module module.AppModule
 }
 
 func (suite *CapabilityTestSuite) SetupTest() {
-	checkTx := false
-	app := simapp.Setup(suite.T(), checkTx)
-	cdc := app.AppCodec()
-
-	// create new keeper so we can define custom scoping before init and seal
-	keeper := keeper.NewKeeper(cdc, app.GetKey(types.StoreKey), app.GetMemKey(types.MemStoreKey))
+	app, err := simtestutil.Setup(testutil.AppConfig,
+		&suite.cdc,
+		&suite.keeper,
+	)
+	suite.Require().NoError(err)
 
 	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1})
-	suite.keeper = keeper
-	suite.cdc = cdc
-	suite.module = capability.NewAppModule(cdc, *keeper, true)
+	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
+	suite.module = app.ModuleManager.Modules[types.ModuleName]
 }
 
 // The following test case mocks a specific bug discovered in https://github.com/cosmos/cosmos-sdk/issues/9800
@@ -52,7 +52,7 @@ func (suite *CapabilityTestSuite) TestInitializeMemStore() {
 	suite.Require().NotNil(cap1)
 
 	// mock statesync by creating new keeper that shares persistent state but loses in-memory map
-	newKeeper := keeper.NewKeeper(suite.cdc, suite.app.GetKey(types.StoreKey), suite.app.GetMemKey("testingkey"))
+	newKeeper := keeper.NewKeeper(suite.cdc, suite.app.UnsafeFindStoreKey(types.StoreKey), suite.app.UnsafeFindStoreKey("testingkey").(*storetypes.MemoryStoreKey))
 	newSk1 := newKeeper.ScopeToModule(banktypes.ModuleName)
 
 	// Mock App startup

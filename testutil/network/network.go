@@ -138,20 +138,20 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 		appBuilder        *runtime.AppBuilder
 		txConfig          client.TxConfig
 		legacyAmino       *codec.LegacyAmino
-		codec             codec.Codec
+		cdc               codec.Codec
 		interfaceRegistry codectypes.InterfaceRegistry
 	)
 
 	if err := depinject.Inject(appConfig,
 		&txConfig,
-		&codec,
+		&cdc,
 		&legacyAmino,
 		&interfaceRegistry,
 	); err != nil {
 		return Config{}, err
 	}
 
-	cfg.Codec = codec
+	cfg.Codec = cdc
 	cfg.TxConfig = txConfig
 	cfg.LegacyAmino = legacyAmino
 	cfg.InterfaceRegistry = interfaceRegistry
@@ -159,7 +159,7 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	cfg.AppConstructor = func(val Validator) servertypes.Application {
 		// we build a unique app instance for every validator here
 		var appBuilder *runtime.AppBuilder
-		if err := depinject.Inject(appConfig,&appBuilder); err != nil {
+		if err := depinject.Inject(appConfig, &appBuilder); err != nil {
 			panic(err)
 		}
 		app := appBuilder.Build(

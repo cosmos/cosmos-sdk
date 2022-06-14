@@ -96,7 +96,7 @@ func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) 
 		}
 	})
 
-	return
+	return err
 }
 
 // InterceptConfigsPreRunHandler performs a pre-run function for the root daemon
@@ -283,6 +283,7 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 		tmcmd.ResetAllCmd,
 		tmcmd.ResetStateCmd,
 		tmcmd.InspectCmd,
+		makeKeyMigrateCmd(),
 	)
 
 	startCmd := StartCmd(appCreator, defaultNodeHome)
@@ -400,7 +401,7 @@ func addrToIP(addr net.Addr) net.IP {
 	return ip
 }
 
-func openDB(rootDir string, backendType dbm.BackendType) (dbm.DBConnection, error) {
+func openDB(rootDir string, backendType dbm.BackendType) (dbm.Connection, error) {
 	dataDir := filepath.Join(rootDir, "data")
 	return dbm.NewDB("application", backendType, dataDir)
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -1562,6 +1563,9 @@ func (s *IntegrationTestSuite) TestAuxSigner() {
 }
 
 func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
+	// Skipping this test as it needs a simapp with the TipDecorator in post handler.
+	s.T().Skip()
+
 	require := s.Require()
 	val := s.network.Validators[0]
 
@@ -1824,7 +1828,7 @@ func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.
 	return bankcli.MsgSendExec(val.ClientCtx, val.Address, toAddr, amount, flags...)
 }
 
-func (s *IntegrationTestSuite) getBalances(clientCtx client.Context, addr sdk.AccAddress, denom string) sdk.Int {
+func (s *IntegrationTestSuite) getBalances(clientCtx client.Context, addr sdk.AccAddress, denom string) math.Int {
 	resp, err := bankcli.QueryBalancesExec(clientCtx, addr)
 	s.Require().NoError(err)
 

@@ -16,6 +16,8 @@ type tipDecorator struct {
 
 // NewTipDecorator returns a new decorator for handling transactions with
 // tips.
+//
+// IMPORTANT: This decorator is still in beta, please use it at your own risk.
 func NewTipDecorator(bankKeeper types.BankKeeper) sdk.AnteDecorator {
 	return tipDecorator{
 		bankKeeper: bankKeeper,

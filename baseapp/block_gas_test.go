@@ -17,6 +17,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/db/memdb"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -27,7 +28,7 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-var blockMaxGas = uint64(simapp.DefaultConsensusParams.Block.MaxGas)
+var blockMaxGas = uint64(simtestutil.DefaultConsensusParams.Block.MaxGas)
 
 func TestBaseApp_BlockGas(t *testing.T) {
 	testcases := []struct {
@@ -61,18 +62,18 @@ func TestBaseApp_BlockGas(t *testing.T) {
 					return &sdk.Result{}, nil
 				}))
 			}
+
 			encCfg := simapp.MakeTestEncodingConfig()
-			encCfg.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
-			encCfg.InterfaceRegistry.RegisterImplementations((*sdk.Msg)(nil),
+			app = simapp.NewSimApp(log.NewNopLogger(), memdb.NewDB(), nil, true, map[int64]bool{}, "", 0, encCfg, simapp.EmptyAppOptions{}, baseapp.AppOptionFunc(routerOpt))
+			app.InterfaceRegistry().RegisterImplementations((*sdk.Msg)(nil),
 				&testdata.TestMsg{},
 			)
-			app = simapp.NewSimApp(log.NewNopLogger(), memdb.NewDB(), nil, true, map[int64]bool{}, "", 0, encCfg, simapp.EmptyAppOptions{}, baseapp.AppOptionFunc(routerOpt))
 			genState := simapp.GenesisStateWithSingleValidator(t, app)
 			stateBytes, err := tmjson.MarshalIndent(genState, "", " ")
 			require.NoError(t, err)
 			app.InitChain(abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: simapp.DefaultConsensusParams,
+				ConsensusParams: simtestutil.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
 			})
 

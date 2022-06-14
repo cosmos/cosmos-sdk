@@ -37,9 +37,9 @@ var (
 )
 
 // Factored out so the same tests can be run on Store and adaptor (v1asv2)
-type storeConstructor = func(dbm.DBConnection, StoreParams) (types.CommitMultiStore, error)
+type storeConstructor = func(dbm.Connection, StoreParams) (types.CommitMultiStore, error)
 
-func multistoreConstructor(db dbm.DBConnection, params StoreParams) (types.CommitMultiStore, error) {
+func multistoreConstructor(db dbm.Connection, params StoreParams) (types.CommitMultiStore, error) {
 	return NewStore(db, params)
 }
 
@@ -58,7 +58,7 @@ func storeParams123(t *testing.T) StoreParams {
 	return opts
 }
 
-func newSubStoreWithData(t *testing.T, db dbm.DBConnection, storeData map[string]string) (*Store, types.KVStore) {
+func newSubStoreWithData(t *testing.T, db dbm.Connection, storeData map[string]string) (*Store, types.KVStore) {
 	root, err := NewStore(db, storeParams1(t))
 	require.NoError(t, err)
 
@@ -311,7 +311,7 @@ func TestCommit(t *testing.T) {
 	// test that we can recover from a failed commit
 	testFailedCommit := func(t *testing.T,
 		store *Store,
-		db dbm.DBConnection,
+		db dbm.Connection,
 		opts StoreParams) {
 		if db == nil {
 			db = store.stateDB
@@ -350,7 +350,7 @@ func TestCommit(t *testing.T) {
 	// committed data that belongs to no version: non-atomic behavior from the Store user's perspective.
 	// So, that data must be reverted when the store is reloaded.
 	t.Run("recover after failed SaveVersion and Revert", func(t *testing.T) {
-		var db dbm.DBConnection
+		var db dbm.Connection
 		db = dbSaveVersionFails{memdb.NewDB()}
 		// Revert should succeed in initial NewStore call, but fail during Commit
 		db = dbRevertFails{db, []bool{false, true}}
@@ -366,7 +366,7 @@ func TestCommit(t *testing.T) {
 		testFailedCommit(t, store, nil, opts)
 	})
 	t.Run("recover after failed StateCommitmentDB SaveVersion and Revert", func(t *testing.T) {
-		var db dbm.DBConnection
+		var db dbm.Connection
 		db = dbSaveVersionFails{memdb.NewDB()}
 		db = dbRevertFails{db, []bool{false, true}}
 		opts.StateCommitmentDB = db
@@ -463,7 +463,7 @@ func doTestPruning(t *testing.T, ctor storeConstructor, sepDBs bool) {
 	for tci, tc := range testCases {
 		opts := storeParams1(t)
 		opts.Pruning = tc.PruningOptions
-		dbs := []dbm.DBConnection{memdb.NewDB()}
+		dbs := []dbm.Connection{memdb.NewDB()}
 		if sepDBs {
 			dbs = append(dbs, memdb.NewDB())
 			opts.StateCommitmentDB = dbs[1]

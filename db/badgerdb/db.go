@@ -1,3 +1,5 @@
+//go:build badgerdb
+
 package badgerdb
 
 import (
@@ -22,11 +24,11 @@ import (
 var versionsFilename = "versions.csv"
 
 var (
-	_ db.DBConnection = (*BadgerDB)(nil)
-	_ db.DBReader     = (*badgerTxn)(nil)
-	_ db.DBWriter     = (*badgerWriter)(nil)
-	_ db.DBReadWriter = (*badgerWriter)(nil)
-	_ db.VersionSet   = (*versionManager)(nil)
+	_ db.Connection = (*BadgerDB)(nil)
+	_ db.Reader     = (*badgerTxn)(nil)
+	_ db.Writer     = (*badgerWriter)(nil)
+	_ db.ReadWriter = (*badgerWriter)(nil)
+	_ db.VersionSet = (*versionManager)(nil)
 )
 
 // BadgerDB is a connection to a BadgerDB key-value database.
@@ -69,7 +71,7 @@ type versionManager struct {
 }
 
 func init() {
-	creator := func(name string, dir string) (db.DBConnection, error) {
+	creator := func(name string, dir string) (db.Connection, error) {
 		dir = filepath.Join(dir, name)
 		return NewDB(dir)
 	}
@@ -175,14 +177,14 @@ func writeVersionsFile(vm *versionManager, path string) error {
 	return w.WriteAll(rows)
 }
 
-func (b *BadgerDB) Reader() db.DBReader {
+func (b *BadgerDB) Reader() db.Reader {
 	b.mtx.RLock()
 	ts := b.vmgr.lastTs
 	b.mtx.RUnlock()
 	return &badgerTxn{txn: b.db.NewTransactionAt(ts, false), db: b}
 }
 
-func (b *BadgerDB) ReaderAt(version uint64) (db.DBReader, error) {
+func (b *BadgerDB) ReaderAt(version uint64) (db.Reader, error) {
 	b.mtx.RLock()
 	defer b.mtx.RUnlock()
 	ts, has := b.vmgr.versionTs(version)
@@ -192,7 +194,7 @@ func (b *BadgerDB) ReaderAt(version uint64) (db.DBReader, error) {
 	return &badgerTxn{txn: b.db.NewTransactionAt(ts, false), db: b}, nil
 }
 
-func (b *BadgerDB) ReadWriter() db.DBReadWriter {
+func (b *BadgerDB) ReadWriter() db.ReadWriter {
 	atomic.AddInt32(&b.openWriters, 1)
 	b.mtx.RLock()
 	ts := b.vmgr.lastTs
@@ -200,7 +202,7 @@ func (b *BadgerDB) ReadWriter() db.DBReadWriter {
 	return &badgerWriter{badgerTxn{txn: b.db.NewTransactionAt(ts, true), db: b}, false}
 }
 
-func (b *BadgerDB) Writer() db.DBWriter {
+func (b *BadgerDB) Writer() db.Writer {
 	// Badger has a WriteBatch, but it doesn't support conflict detection
 	return b.ReadWriter()
 }
@@ -215,7 +217,7 @@ func (b *BadgerDB) Close() error {
 	return b.db.Close()
 }
 
-// Versions implements DBConnection.
+// Versions implements Connection.
 // Returns a VersionSet that is valid until the next call to SaveVersion or DeleteVersion.
 func (b *BadgerDB) Versions() (db.VersionSet, error) {
 	b.mtx.RLock()
@@ -237,12 +239,12 @@ func (b *BadgerDB) save(target uint64) (uint64, error) {
 	return v, writeVersionsFile(b.vmgr, filepath.Join(b.db.Opts().Dir, versionsFilename))
 }
 
-// SaveNextVersion implements DBConnection.
+// SaveNextVersion implements Connection.
 func (b *BadgerDB) SaveNextVersion() (uint64, error) {
 	return b.save(0)
 }
 
-// SaveVersion implements DBConnection.
+// SaveVersion implements Connection.
 func (b *BadgerDB) SaveVersion(target uint64) error {
 	if target == 0 {
 		return db.ErrInvalidVersion

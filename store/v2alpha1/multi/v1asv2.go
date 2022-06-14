@@ -34,7 +34,7 @@ type readonlyKVStore struct {
 }
 
 // NewV1MultiStoreAsV2 constructs a v1 CommitMultiStore from v2.StoreParams
-func NewV1MultiStoreAsV2(database db.DBConnection, opts StoreParams) (v2.CommitMultiStore, error) {
+func NewV1MultiStoreAsV2(database db.Connection, opts StoreParams) (v2.CommitMultiStore, error) {
 	adapter := dbutil.ConnectionAsTmdb(database)
 	cms := rootmulti.NewStore(adapter, log.NewNopLogger())
 	for name, typ := range opts.StoreSchema {

@@ -13,13 +13,14 @@ The `context` is a data structure intended to be passed from function to functio
 
 ## Context Definition
 
-The Cosmos SDK `Context` is a custom data structure that contains Go's stdlib [`context`](https://golang.org/pkg/context) as its base, and has many additional types within its definition that are specific to the Cosmos SDK. The `Context` is integral to transaction processing in that it allows modules to easily access their respective [store](./store.md#base-layer-kvstores) in the [`multistore`](./store.md#multistore) and retrieve transactional context such as the block header and gas meter.
+The Cosmos SDK `Context` is a custom data structure that contains Go's stdlib [`context`](https://pkg.go.dev/context) as its base, and has many additional types within its definition that are specific to the Cosmos SDK. The `Context` is integral to transaction processing in that it allows modules to easily access their respective [store](./store.md#base-layer-kvstores) in the [`multistore`](./store.md#multistore) and retrieve transactional context such as the block header and gas meter.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/context.go#L16-L39
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/types/context.go#L17-L42
 
-* **Context:** The base type is a Go [Context](https://golang.org/pkg/context), which is explained further in the [Go Context Package](#go-context-package) section below.
+* **Base Context:** The base type is a Go [Context](https://pkg.go.dev/context), which is explained further in the [Go Context Package](#go-context-package) section below.
 * **Multistore:** Every application's `BaseApp` contains a [`CommitMultiStore`](./store.md#multistore) which is provided when a `Context` is created. Calling the `KVStore()` and `TransientStore()` methods allows modules to fetch their respective [`KVStore`](./store.md#base-layer-kvstores) using their unique `StoreKey`.
 * **Header:** The [header](https://docs.tendermint.com/master/spec/core/data_structures.html#header) is a Blockchain type. It carries important information about the state of the blockchain, such as block height and proposer of the current block.
+* **Header Hash:** The current block header hash, obtained during `abci.RequestBeginBlock`.
 * **Chain ID:** The unique identification number of the blockchain a block pertains to.
 * **Transaction Bytes:** The `[]byte` representation of a transaction being processed using the context. Every transaction is processed by various parts of the Cosmos SDK and consensus engine (e.g. Tendermint) throughout its [lifecycle](../basics/tx-lifecycle.md), some of which do not have any understanding of transaction types. Thus, transactions are marshaled into the generic `[]byte` type using some kind of [encoding format](./encoding.md) such as [Amino](./encoding.md).
 * **Logger:** A `logger` from the Tendermint libraries. Learn more about logs [here](https://docs.tendermint.com/master/nodes/logging.html). Modules call this method to create their own unique module-specific logger.
@@ -30,6 +31,7 @@ The Cosmos SDK `Context` is a custom data structure that contains Go's stdlib [`
 * **Consensus Params:** The ABCI type [Consensus Parameters](https://docs.tendermint.com/master/spec/abci/apps.html#consensus-parameters), which specify certain limits for the blockchain, such as maximum gas for a block.
 * **Event Manager:** The event manager allows any caller with access to a `Context` to emit [`Events`](./events.md). Modules may define module specific
   `Events` by defining various `Types` and `Attributes` or use the common definitions found in `types/`. Clients can subscribe or query for these `Events`. These `Events` are collected throughout `DeliverTx`, `BeginBlock`, and `EndBlock` and are returned to Tendermint for indexing. For example:
+* **Priority:** The transaction priority, only relevant in `CheckTx`.
 
 ```go
 ctx.EventManager().EmitEvent(sdk.NewEvent(
@@ -40,7 +42,7 @@ ctx.EventManager().EmitEvent(sdk.NewEvent(
 
 ## Go Context Package
 
-A basic `Context` is defined in the [Golang Context Package](https://golang.org/pkg/context). A `Context`
+A basic `Context` is defined in the [Golang Context Package](https://pkg.go.dev/context). A `Context`
 is an immutable data structure that carries request-scoped data across APIs and processes. Contexts
 are also designed to enable concurrency and to be used in goroutines.
 
@@ -51,7 +53,7 @@ to create a child context from its parent using a `With` function. For example:
 childCtx = parentCtx.WithBlockHeader(header)
 ```
 
-The [Golang Context Package](https://golang.org/pkg/context) documentation instructs developers to
+The [Golang Context Package](https://pkg.go.dev/context) documentation instructs developers to
 explicitly pass a context `ctx` as the first argument of a process.
 
 ## Store branching
@@ -72,9 +74,29 @@ goes wrong. The pattern of usage for a Context is as follows:
    needs to be done - the branch `ctx` is simply discarded. If successful, the changes made to
    the `CacheMultiStore` can be committed to the original `ctx.ms` via `Write()`.
 
-For example, here is a snippet from the [`CustomTxHandlerMiddleware`](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/baseapp/custom_txhandler_test.go#L23) used in tests:
+For example, here is a snippet from the [`runTx`](./baseapp.md#runtx-antehandler-runmsgs-posthandler) function in [`baseapp`](./baseapp.md):
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-beta2/baseapp/custom_txhandler_test.go#L62:L97
+```go
+runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)
+result = app.runMsgs(runMsgCtx, msgs, mode)
+result.GasWanted = gasWanted
+if mode != runTxModeDeliver {
+  return result
+}
+if result.IsOK() {
+  msCache.Write()
+}
+```
+
+Here is the process:
+
+1. Prior to calling `runMsgs` on the message(s) in the transaction, it uses `app.cacheTxContext()`
+   to branch and cache the context and multistore.
+2. `runMsgCtx` - the context with branched store, is used in `runMsgs` to return a result.
+3. If the process is running in [`checkTxMode`](./baseapp.md#checktx), there is no need to write the
+   changes - the result is returned immediately.
+4. If the process is running in [`deliverTxMode`](./baseapp.md#delivertx) and the result indicates
+   a successful run over all the messages, the branched multistore is written back to the original.
 
 ## Next {hide}
 

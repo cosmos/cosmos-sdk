@@ -2,7 +2,10 @@ package testutil
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 
+	"cosmossdk.io/math"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
@@ -387,6 +390,38 @@ func (s *IntegrationTestSuite) TestNewSendTxCmdGenOnly() {
 	s.Require().Equal([]sdk.Msg{types.NewMsgSend(from, to, amount)}, tx.GetMsgs())
 }
 
+func (s *IntegrationTestSuite) TestNewSendTxCmdDryRun() {
+	val := s.network.Validators[0]
+
+	clientCtx := val.ClientCtx
+
+	from := val.Address
+	to := val.Address
+	amount := sdk.NewCoins(
+		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+	)
+	args := []string{
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagDryRun),
+	}
+
+	oldSterr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	_, err := MsgSendExec(clientCtx, from, to, amount, args...)
+	s.Require().NoError(err)
+
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = oldSterr
+
+	s.Require().Regexp("gas estimate: [0-9]+", string(out))
+}
+
 func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 	val := s.network.Validators[0]
 
@@ -624,7 +659,7 @@ func (s *IntegrationTestSuite) TestNewMultiSendTxCmd() {
 	}
 }
 
-func NewCoin(denom string, amount sdk.Int) *sdk.Coin {
+func NewCoin(denom string, amount math.Int) *sdk.Coin {
 	coin := sdk.NewCoin(denom, amount)
 	return &coin
 }

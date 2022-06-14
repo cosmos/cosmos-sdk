@@ -3,6 +3,8 @@ package db
 import (
 	"fmt"
 	"strings"
+
+	_ "github.com/cosmos/cosmos-sdk/db/internal/backends"
 )
 
 type BackendType string
@@ -23,7 +25,7 @@ const (
 	BadgerDBBackend BackendType = "badgerdb"
 )
 
-type DBCreator func(name string, dir string) (DBConnection, error)
+type DBCreator func(name string, dir string) (Connection, error)
 
 var backends = map[BackendType]DBCreator{}
 
@@ -36,7 +38,7 @@ func RegisterCreator(backend BackendType, creator DBCreator, force bool) {
 }
 
 // NewDB creates a new database of type backend with the given name.
-func NewDB(name string, backend BackendType, dir string) (DBConnection, error) {
+func NewDB(name string, backend BackendType, dir string) (Connection, error) {
 	creator, ok := backends[backend]
 	if !ok {
 		keys := make([]string, 0, len(backends))

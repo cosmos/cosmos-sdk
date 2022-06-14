@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/db/memdb"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -78,7 +79,7 @@ func TestImportExportQueues(t *testing.T) {
 	app2.InitChain(
 		abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: simapp.DefaultConsensusParams,
+			ConsensusParams: simtestutil.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
 		},
 	)

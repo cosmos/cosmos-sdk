@@ -6,13 +6,15 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/nft"
 	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
 	"github.com/cosmos/cosmos-sdk/x/nft/simulation"
+	"github.com/cosmos/cosmos-sdk/x/nft/testutil"
 )
 
 var (
@@ -21,7 +23,8 @@ var (
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := simapp.MakeTestEncodingConfig().Codec
+	var cdc codec.Codec
+	depinject.Inject(testutil.AppConfig, &cdc)
 	dec := simulation.NewDecodeStore(cdc)
 
 	class := nft.Class{

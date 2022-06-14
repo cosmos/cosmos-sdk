@@ -10,7 +10,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/snapshots"
@@ -66,14 +65,14 @@ type BaseApp struct { // nolint: maligned
 	// initialized on creation
 	logger            log.Logger
 	name              string // application name from abci.Info
-	db                dbm.DBConnection
+	db                dbm.Connection
 	storeOpts         []StoreOption        // options to configure root store
 	store             sdk.CommitMultiStore // Main (uncached) state
 	router            sdk.Router           // handle any kind of legacy message
 	queryRouter       sdk.QueryRouter      // router for redirecting query calls
 	grpcQueryRouter   *GRPCQueryRouter     // router for redirecting gRPC query calls
 	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
-	interfaceRegistry types.InterfaceRegistry
+	interfaceRegistry codectypes.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 
 	anteHandler    sdk.AnteHandler  // ante handler for fee and auth
@@ -170,7 +169,7 @@ func (opt StoreOption) Order() OptionOrder { return OptionOrderDefault }
 //
 // NOTE: The db is used to store the version number for now.
 func NewBaseApp(
-	name string, logger log.Logger, db dbm.DBConnection, txDecoder sdk.TxDecoder, options ...AppOption,
+	name string, logger log.Logger, db dbm.Connection, txDecoder sdk.TxDecoder, options ...AppOption,
 ) *BaseApp {
 	app := &BaseApp{
 		logger:           logger,
@@ -250,6 +249,11 @@ func (app *BaseApp) loadStore() error {
 
 // MsgServiceRouter returns the MsgServiceRouter of a BaseApp.
 func (app *BaseApp) MsgServiceRouter() *MsgServiceRouter { return app.msgServiceRouter }
+
+// SetMsgServiceRouter sets the MsgServiceRouter of a BaseApp.
+func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
+	app.msgServiceRouter = msgServiceRouter
+}
 
 func (app *BaseApp) CloseStore() error {
 	return app.store.Close()
@@ -652,11 +656,11 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 			consumeBlockGas()
 
 			msCache.Write()
+		}
 
-			if len(anteEvents) > 0 {
-				// append the events in the order of occurrence
-				result.Events = append(anteEvents, result.Events...)
-			}
+		if len(anteEvents) > 0 && (mode == runTxModeDeliver || mode == runTxModeSimulate) {
+			// append the events in the order of occurrence
+			result.Events = append(anteEvents, result.Events...)
 		}
 	}
 

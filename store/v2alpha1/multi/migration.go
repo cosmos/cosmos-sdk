@@ -11,7 +11,7 @@ import (
 )
 
 // MigrateFromV1 will migrate the state from iavl to smt
-func MigrateFromV1(rootMultiStore *v1Store.Store, store2db dbm.DBConnection, storeConfig StoreParams) (*Store, error) {
+func MigrateFromV1(rootMultiStore *v1Store.Store, store2db dbm.Connection, storeConfig StoreParams) (*Store, error) {
 	type namedStore struct {
 		*iavl.Store
 		name string

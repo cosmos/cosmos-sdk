@@ -17,7 +17,7 @@ const (
 )
 
 func init() {
-	creator := func(name string, dir string) (db.DBConnection, error) {
+	creator := func(name string, dir string) (db.Connection, error) {
 		return NewDB(), nil
 	}
 	db.RegisterCreator(db.MemDBBackend, creator, false)
@@ -50,10 +50,10 @@ type dbTxn struct {
 type dbWriter struct{ dbTxn }
 
 var (
-	_ db.DBConnection = (*MemDB)(nil)
-	_ db.DBReader     = (*dbTxn)(nil)
-	_ db.DBWriter     = (*dbWriter)(nil)
-	_ db.DBReadWriter = (*dbWriter)(nil)
+	_ db.Connection = (*MemDB)(nil)
+	_ db.Reader     = (*dbTxn)(nil)
+	_ db.Writer     = (*dbWriter)(nil)
+	_ db.ReadWriter = (*dbWriter)(nil)
 )
 
 // item is a btree.Item with byte slices as keys and values
@@ -83,23 +83,23 @@ func (dbm *MemDB) Close() error {
 	return nil
 }
 
-// Versions implements DBConnection.
+// Versions implements Connection.
 func (dbm *MemDB) Versions() (db.VersionSet, error) {
 	dbm.mtx.RLock()
 	defer dbm.mtx.RUnlock()
 	return dbm.vmgr, nil
 }
 
-// Reader implements DBConnection.
-func (dbm *MemDB) Reader() db.DBReader {
+// Reader implements Connection.
+func (dbm *MemDB) Reader() db.Reader {
 	dbm.mtx.RLock()
 	defer dbm.mtx.RUnlock()
 	ret := dbm.newTxn(dbm.btree)
 	return &ret
 }
 
-// ReaderAt implements DBConnection.
-func (dbm *MemDB) ReaderAt(version uint64) (db.DBReader, error) {
+// ReaderAt implements Connection.
+func (dbm *MemDB) ReaderAt(version uint64) (db.Reader, error) {
 	dbm.mtx.RLock()
 	defer dbm.mtx.RUnlock()
 	tree, ok := dbm.saved[version]
@@ -110,13 +110,13 @@ func (dbm *MemDB) ReaderAt(version uint64) (db.DBReader, error) {
 	return &ret, nil
 }
 
-// Writer implements DBConnection.
-func (dbm *MemDB) Writer() db.DBWriter {
+// Writer implements Connection.
+func (dbm *MemDB) Writer() db.Writer {
 	return dbm.ReadWriter()
 }
 
-// ReadWriter implements DBConnection.
-func (dbm *MemDB) ReadWriter() db.DBReadWriter {
+// ReadWriter implements Connection.
+func (dbm *MemDB) ReadWriter() db.ReadWriter {
 	dbm.mtx.RLock()
 	defer dbm.mtx.RUnlock()
 	atomic.AddInt32(&dbm.openWriters, 1)
@@ -141,12 +141,12 @@ func (dbm *MemDB) save(target uint64) (uint64, error) {
 	return target, nil
 }
 
-// SaveVersion implements DBConnection.
+// SaveVersion implements Connection.
 func (dbm *MemDB) SaveNextVersion() (uint64, error) {
 	return dbm.save(0)
 }
 
-// SaveNextVersion implements DBConnection.
+// SaveNextVersion implements Connection.
 func (dbm *MemDB) SaveVersion(target uint64) error {
 	if target == 0 {
 		return db.ErrInvalidVersion
@@ -155,7 +155,7 @@ func (dbm *MemDB) SaveVersion(target uint64) error {
 	return err
 }
 
-// DeleteVersion implements DBConnection.
+// DeleteVersion implements Connection.
 func (dbm *MemDB) DeleteVersion(target uint64) error {
 	dbm.mtx.Lock()
 	defer dbm.mtx.Unlock()
@@ -326,7 +326,7 @@ func (dbm *MemDB) Print() error {
 	return nil
 }
 
-// Stats implements DBConnection.
+// Stats implements Connection.
 func (dbm *MemDB) Stats() map[string]string {
 	dbm.mtx.RLock()
 	defer dbm.mtx.RUnlock()

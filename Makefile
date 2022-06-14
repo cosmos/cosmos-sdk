@@ -244,18 +244,26 @@ CURRENT_DIR = $(shell pwd)
 run-tests:
 ifneq (,$(shell which tparse 2>/dev/null))
 	@echo "Starting unit tests"; \
+	finalec=0; \
 	for module in $(SUB_MODULES); do \
 		cd ${CURRENT_DIR}/$$module; \
 		echo "Running unit tests for module $$module"; \
 		go test -mod=readonly -json $(ARGS) $(TEST_PACKAGES) ./... | tparse; \
-    done
+		ec=$$?; \
+		if [ "$$ec" -ne '0' ]; then finalec=$$ec; fi; \
+	done; \
+	exit $$finalec
 else
 	@echo "Starting unit tests"; \
+	finalec=0; \
 	for module in $(SUB_MODULES); do \
 		cd ${CURRENT_DIR}/$$module; \
 		echo "Running unit tests for module $$module"; \
 		go test -mod=readonly $(ARGS) $(TEST_PACKAGES) ./... ; \
-	done
+		ec=$$?; \
+		if [ "$$ec" -ne '0' ]; then finalec=$$ec; fi; \
+	done; \
+	exit $$finalec
 endif
 
 .PHONY: run-tests test test-all $(TEST_TARGETS)

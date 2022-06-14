@@ -16,16 +16,17 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// DoUpgrade will be called after the log message has been parsed and the process has terminated.
+// UpgradeBinary will be called after the log message has been parsed and the process has terminated.
 // We can now make any changes to the underlying directory without interference and leave it
 // in a state, so we can make a proper restart
-func DoUpgrade(logger *zerolog.Logger, cfg *Config, info upgradetypes.Plan) error {
-	// Simplest case is to switch the link
+func UpgradeBinary(logger *zerolog.Logger, cfg *Config, info upgradetypes.Plan) error {
+	// simplest case is to switch the link
 	err := EnsureBinary(cfg.UpgradeBin(info.Name))
 	if err == nil {
 		// we have the binary - do it
 		return cfg.SetCurrentUpgrade(info)
 	}
+
 	// if auto-download is disabled, we fail
 	if !cfg.AllowDownloadBinaries {
 		return fmt.Errorf("binary not present, downloading disabled: %w", err)

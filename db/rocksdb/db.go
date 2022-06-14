@@ -22,17 +22,17 @@ var (
 )
 
 var (
-	_ db.DBConnection = (*RocksDB)(nil)
-	_ db.DBReader     = (*dbTxn)(nil)
-	_ db.DBWriter     = (*dbWriter)(nil)
-	_ db.DBReadWriter = (*dbWriter)(nil)
+	_ db.Connection = (*RocksDB)(nil)
+	_ db.Reader     = (*dbTxn)(nil)
+	_ db.Writer     = (*dbWriter)(nil)
+	_ db.ReadWriter = (*dbWriter)(nil)
 )
 
 // RocksDB is a connection to a RocksDB key-value database.
 type RocksDB = dbManager
 
 type dbManager struct {
-	current *dbConnection
+	current *Connection
 	dir     string
 	opts    dbOptions
 	vmgr    *db.VersionManager
@@ -42,7 +42,7 @@ type dbManager struct {
 	cpCache     checkpointCache
 }
 
-type dbConnection = gorocksdb.OptimisticTransactionDB
+type Connection = gorocksdb.OptimisticTransactionDB
 
 type checkpointCache struct {
 	cache map[uint64]*cpCacheEntry
@@ -50,7 +50,7 @@ type checkpointCache struct {
 }
 
 type cpCacheEntry struct {
-	cxn       *dbConnection
+	cxn       *Connection
 	openCount uint
 }
 
@@ -166,7 +166,7 @@ func (mgr *dbManager) checkpointPath(version uint64) (string, error) {
 	return dbPath, nil
 }
 
-func (mgr *dbManager) openCheckpoint(version uint64) (*dbConnection, error) {
+func (mgr *dbManager) openCheckpoint(version uint64) (*Connection, error) {
 	mgr.cpCache.mtx.Lock()
 	defer mgr.cpCache.mtx.Unlock()
 	cp, has := mgr.cpCache.cache[version]
@@ -186,7 +186,7 @@ func (mgr *dbManager) openCheckpoint(version uint64) (*dbConnection, error) {
 	return db, nil
 }
 
-func (mgr *dbManager) Reader() db.DBReader {
+func (mgr *dbManager) Reader() db.Reader {
 	mgr.mtx.RLock()
 	defer mgr.mtx.RUnlock()
 	return &dbTxn{
@@ -197,7 +197,7 @@ func (mgr *dbManager) Reader() db.DBReader {
 	}
 }
 
-func (mgr *dbManager) ReaderAt(version uint64) (db.DBReader, error) {
+func (mgr *dbManager) ReaderAt(version uint64) (db.Reader, error) {
 	mgr.mtx.RLock()
 	defer mgr.mtx.RUnlock()
 	d, err := mgr.openCheckpoint(version)
@@ -212,7 +212,7 @@ func (mgr *dbManager) ReaderAt(version uint64) (db.DBReader, error) {
 	}, nil
 }
 
-func (mgr *dbManager) ReadWriter() db.DBReadWriter {
+func (mgr *dbManager) ReadWriter() db.ReadWriter {
 	mgr.mtx.RLock()
 	defer mgr.mtx.RUnlock()
 	atomic.AddInt32(&mgr.openWriters, 1)
@@ -222,7 +222,7 @@ func (mgr *dbManager) ReadWriter() db.DBReadWriter {
 	}}
 }
 
-func (mgr *dbManager) Writer() db.DBWriter {
+func (mgr *dbManager) Writer() db.Writer {
 	mgr.mtx.RLock()
 	defer mgr.mtx.RUnlock()
 	atomic.AddInt32(&mgr.openWriters, 1)
@@ -235,12 +235,12 @@ func (mgr *dbManager) Versions() (db.VersionSet, error) {
 	return mgr.vmgr, nil
 }
 
-// SaveNextVersion implements DBConnection.
+// SaveNextVersion implements Connection.
 func (mgr *dbManager) SaveNextVersion() (uint64, error) {
 	return mgr.save(0)
 }
 
-// SaveVersion implements DBConnection.
+// SaveVersion implements Connection.
 func (mgr *dbManager) SaveVersion(target uint64) error {
 	if target == 0 {
 		return db.ErrInvalidVersion
@@ -350,14 +350,14 @@ func (mgr *dbManager) restoreFromCheckpoint(version uint64, path string) error {
 	return nil
 }
 
-// Close implements DBConnection.
+// Close implements Connection.
 func (mgr *dbManager) Close() error {
 	mgr.current.Close()
 	mgr.opts.destroy()
 	return nil
 }
 
-// Stats implements DBConnection.
+// Stats implements Connection.
 func (mgr *dbManager) Stats() map[string]string {
 	keys := []string{"rocksdb.stats"}
 	stats := make(map[string]string, len(keys))
@@ -367,7 +367,7 @@ func (mgr *dbManager) Stats() map[string]string {
 	return stats
 }
 
-// Get implements DBReader.
+// Get implements Reader.
 func (tx *dbTxn) Get(key []byte) ([]byte, error) {
 	if tx.txn == nil {
 		return nil, db.ErrTransactionClosed
@@ -382,7 +382,7 @@ func (tx *dbTxn) Get(key []byte) ([]byte, error) {
 	return moveSliceToBytes(res), nil
 }
 
-// Get implements DBReader.
+// Get implements Reader.
 func (tx *dbWriter) Get(key []byte) ([]byte, error) {
 	if tx.txn == nil {
 		return nil, db.ErrTransactionClosed

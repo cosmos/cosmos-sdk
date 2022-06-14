@@ -56,7 +56,7 @@ type (
 
 	// AppCreator is a function that allows us to lazily initialize an
 	// application using various configurations.
-	AppCreator func(log.Logger, dbm.DBConnection, io.Writer, AppOptions) Application
+	AppCreator func(log.Logger, dbm.Connection, io.Writer, AppOptions) Application
 
 	// ModuleInitFlags takes a start command and adds modules specific init flags.
 	ModuleInitFlags func(startCmd *cobra.Command)
@@ -76,5 +76,5 @@ type (
 
 	// AppExporter is a function that dumps all app state to
 	// JSON-serializable structure and returns the current validator set.
-	AppExporter func(log.Logger, dbm.DBConnection, io.Writer, int64, bool, []string, AppOptions) (ExportedApp, error)
+	AppExporter func(log.Logger, dbm.Connection, io.Writer, int64, bool, []string, AppOptions) (ExportedApp, error)
 )

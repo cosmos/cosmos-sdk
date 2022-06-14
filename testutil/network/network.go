@@ -23,6 +23,7 @@ import (
 	tmclient "github.com/tendermint/tendermint/rpc/client"
 	"google.golang.org/grpc"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -32,7 +33,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/db/memdb"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
@@ -84,9 +87,9 @@ type Config struct {
 	Mnemonics        []string                   // custom user-provided validator operator mnemonics
 	BondDenom        string                     // the staking bond denomination
 	MinGasPrices     string                     // the minimum gas prices each validator will accept
-	AccountTokens    sdk.Int                    // the amount of unique validator tokens (e.g. 1000node0)
-	StakingTokens    sdk.Int                    // the amount of tokens each validator has available to stake
-	BondedTokens     sdk.Int                    // the amount of tokens each validator stakes
+	AccountTokens    math.Int                   // the amount of unique validator tokens (e.g. 1000node0)
+	StakingTokens    math.Int                   // the amount of tokens each validator has available to stake
+	BondedTokens     math.Int                   // the amount of tokens each validator stakes
 	PruningStrategy  string                     // the pruning strategy each validator will have
 	EnableTMLogging  bool                       // enable Tendermint logging to STDOUT
 	CleanupDir       bool                       // remove base temporary directory during cleanup
@@ -125,6 +128,54 @@ func DefaultConfig() Config {
 		KeyringOptions:    []keyring.Option{},
 		PrintMnemonic:     false,
 	}
+}
+
+func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
+	cfg := DefaultConfig()
+
+	var (
+		appBuilder        *runtime.AppBuilder
+		msgServiceRouter  *baseapp.MsgServiceRouter
+		txConfig          client.TxConfig
+		legacyAmino       *codec.LegacyAmino
+		codec             codec.Codec
+		interfaceRegistry codectypes.InterfaceRegistry
+	)
+
+	if err := depinject.Inject(appConfig,
+		&appBuilder,
+		&msgServiceRouter,
+		&txConfig,
+		&codec,
+		&legacyAmino,
+		&interfaceRegistry,
+	); err != nil {
+		return Config{}, err
+	}
+
+	cfg.Codec = codec
+	cfg.TxConfig = txConfig
+	cfg.LegacyAmino = legacyAmino
+	cfg.InterfaceRegistry = interfaceRegistry
+	cfg.GenesisState = appBuilder.DefaultGenesis()
+	cfg.AppConstructor = func(val Validator) servertypes.Application {
+		app := appBuilder.Build(
+			val.Ctx.Logger,
+			dbm.NewMemDB(),
+			nil,
+			msgServiceRouter,
+			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
+			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+		)
+
+		if err := app.Load(true); err != nil {
+			panic(err)
+		}
+
+		return app
+	}
+
+	return cfg, nil
 }
 
 type (

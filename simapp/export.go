@@ -44,7 +44,8 @@ func (app *SimApp) ExportAppStateAndValidatorsAt(
 		exportHeight = 0
 		app.prepForZeroHeightGenesis(ctx, jailAllowedAddrs)
 	}
-	genState := app.mm.ExportGenesis(ctx, app.appCodec)
+
+	genState := app.ModuleManager.ExportGenesis(ctx, app.appCodec)
 	appState, err := json.MarshalIndent(genState, "", "  ")
 	if err != nil {
 		return servertypes.ExportedApp{}, err
@@ -99,10 +100,8 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 			panic(err)
 		}
 
-		delAddr, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
-		if err != nil {
-			panic(err)
-		}
+		delAddr := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress)
+
 		_, _ = app.DistrKeeper.WithdrawDelegationRewards(ctx, delAddr, valAddr)
 	}
 
@@ -136,10 +135,7 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 		if err != nil {
 			panic(err)
 		}
-		delAddr, err := sdk.AccAddressFromBech32(del.DelegatorAddress)
-		if err != nil {
-			panic(err)
-		}
+		delAddr := sdk.MustAccAddressFromBech32(del.DelegatorAddress)
 
 		if err := app.DistrKeeper.Hooks().BeforeDelegationCreated(ctx, delAddr, valAddr); err != nil {
 			// never called as BeforeDelegationCreated always returns nil
@@ -177,7 +173,7 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 
 	// Iterate through validators by power descending, reset bond heights, and
 	// update bond intra-tx counters.
-	store := ctx.KVStore(app.keys[stakingtypes.StoreKey])
+	store := ctx.KVStore(app.GetKey(stakingtypes.StoreKey))
 	iter := sdk.KVStoreReversePrefixIterator(store, stakingtypes.ValidatorsKey)
 	counter := int16(0)
 

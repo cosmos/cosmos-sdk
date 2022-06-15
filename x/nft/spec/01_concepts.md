@@ -14,6 +14,6 @@ The full name of NFT is Non-Fungible Tokens. Because of the irreplaceable nature
 
 ## App Wiring
 
-The minimal app-wiring configuration for this `x/nft` is as follows:
+The minimal app-wiring configuration for `x/nft` is as follows:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/main/x/nft/testutil/app.yaml

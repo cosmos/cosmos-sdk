@@ -232,17 +232,18 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 			false, "", 3,
 		},
 		{
-			"without pagination limit",
+			"without pagination",
 			&tx.GetTxsEventRequest{
 				Events: []string{bankMsgSendEventAction},
 			},
 			false, "", 3,
 		},
 		{
-			"with pagination limit",
+			"with pagination",
 			&tx.GetTxsEventRequest{
 				Events: []string{bankMsgSendEventAction},
-				Limit:  1,
+				Page: 2,
+				Limit: 2,
 			},
 			false, "", 1,
 		},
@@ -292,14 +293,14 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
 			"must declare at least one event to search", 0,
 		},
 		{
-			"without pagination limit",
+			"without pagination",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, bankMsgSendEventAction),
 			false,
 			"", 3,
 		},
 		{
-			"with pagination limit",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&limit=%d", val.APIAddress, bankMsgSendEventAction, 1),
+			"with pagination",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&page=%d&limit=%d", val.APIAddress, bankMsgSendEventAction, 2, 2),
 			false,
 			"", 1,
 		},
@@ -348,7 +349,6 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
 				s.Require().Equal("foobar", result.Txs[0].Body.Memo)
 				s.Require().NotZero(result.TxResponses[0].Height)
 				s.Require().Equal(len(result.Txs), tc.expLen)
-
 			}
 		})
 	}

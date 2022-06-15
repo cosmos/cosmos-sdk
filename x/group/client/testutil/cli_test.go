@@ -4,7 +4,6 @@
 package testutil
 
 import (
-	_ "embed"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"

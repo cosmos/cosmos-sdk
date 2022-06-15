@@ -14,16 +14,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params/keeper"
 	"github.com/cosmos/cosmos-sdk/x/params/testutil"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
+
+// StakingKeeper defines the expected staking keeper
+type StakingKeeper interface {
+	MaxValidators(ctx sdk.Context) (res uint32)
+}
 
 type HandlerTestSuite struct {
 	suite.Suite
 
 	ctx           sdk.Context
 	govHandler    govv1beta1.Handler
-	stakingKeeper *stakingkeeper.Keeper
+	stakingKeeper StakingKeeper
 }
 
 func (suite *HandlerTestSuite) SetupTest() {

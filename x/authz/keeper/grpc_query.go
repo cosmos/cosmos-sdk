@@ -61,7 +61,7 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 	key := grantStoreKey(grantee, granter, "")
 	grantsStore := prefix.NewStore(store, key)
 
-	authorizations, pageRes, err := query.GenericFilteredPaginate(k.cdc, grantsStore, req.Pagination, func(key []byte, auth authz.Grant) (*authz.Grant, error) {
+	authorizations, pageRes, err := query.GenericFilteredPaginate(k.cdc, grantsStore, req.Pagination, func(key []byte, auth *authz.Grant) (*authz.Grant, error) {
 		auth1, err := auth.GetAuthorization()
 		if err != nil {
 			return nil, err
@@ -101,7 +101,7 @@ func (k Keeper) GranterGrants(c context.Context, req *authz.QueryGranterGrantsRe
 	store := ctx.KVStore(k.storeKey)
 	authzStore := prefix.NewStore(store, grantStoreKey(nil, granter, ""))
 
-	grants, pageRes, err := query.GenericFilteredPaginate(k.cdc, authzStore, req.Pagination, func(key []byte, auth authz.Grant) (*authz.GrantAuthorization, error) {
+	grants, pageRes, err := query.GenericFilteredPaginate(k.cdc, authzStore, req.Pagination, func(key []byte, auth *authz.Grant) (*authz.GrantAuthorization, error) {
 		auth1, err := auth.GetAuthorization()
 		if err != nil {
 			return nil, err
@@ -146,7 +146,7 @@ func (k Keeper) GranteeGrants(c context.Context, req *authz.QueryGranteeGrantsRe
 	ctx := sdk.UnwrapSDKContext(c)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), GrantKey)
 
-	authorizations, pageRes, err := query.GenericFilteredPaginate(k.cdc, store, req.Pagination, func(key []byte, auth authz.Grant) (*authz.GrantAuthorization, error) {
+	authorizations, pageRes, err := query.GenericFilteredPaginate(k.cdc, store, req.Pagination, func(key []byte, auth *authz.Grant) (*authz.GrantAuthorization, error) {
 		auth1, err := auth.GetAuthorization()
 		if err != nil {
 			return nil, err

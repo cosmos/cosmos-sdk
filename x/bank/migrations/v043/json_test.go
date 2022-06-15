@@ -17,12 +17,12 @@ import (
 )
 
 func TestMigrateJSON(t *testing.T) {
-	var cdc codec.Codec
-	depinject.Inject(testutil.AppConfig, &cdc)
-	var registry codectypes.InterfaceRegistry
-	depinject.Inject(testutil.AppConfig, &registry)
-	var txConfig client.TxConfig
-	depinject.Inject(testutil.AppConfig, &txConfig)
+	var (
+		cdc      codec.Codec
+		registry codectypes.InterfaceRegistry
+		txConfig client.TxConfig
+	)
+	depinject.Inject(testutil.AppConfig, &cdc, &registry, &txConfig)
 	clientCtx := client.Context{}.
 		WithInterfaceRegistry(registry).
 		WithTxConfig(txConfig).

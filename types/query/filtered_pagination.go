@@ -125,7 +125,7 @@ func GenericFilteredPaginate[T codec.ProtoMarshaler, F codec.ProtoMarshaler](
 	prefixStore types.KVStore,
 	pageRequest *PageRequest,
 	onResult func(key []byte, value T) (F, error),
-	constructor func() T,
+	c func() T,
 ) ([]F, *PageResponse, error) {
 	// if the PageRequest is nil, use default PageRequest
 	if pageRequest == nil {
@@ -167,7 +167,7 @@ func GenericFilteredPaginate[T codec.ProtoMarshaler, F codec.ProtoMarshaler](
 				return nil, nil, iterator.Error()
 			}
 
-			protoMsg := constructor()
+			protoMsg := c()
 
 			err := cdc.Unmarshal(iterator.Value(), protoMsg)
 			if err != nil {
@@ -205,7 +205,7 @@ func GenericFilteredPaginate[T codec.ProtoMarshaler, F codec.ProtoMarshaler](
 			return nil, nil, iterator.Error()
 		}
 
-		protoMsg := constructor()
+		protoMsg := c()
 
 		err := cdc.Unmarshal(iterator.Value(), protoMsg)
 		if err != nil {

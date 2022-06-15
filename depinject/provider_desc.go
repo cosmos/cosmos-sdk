@@ -28,12 +28,10 @@ type ProviderDescriptor struct {
 type ProviderInput struct {
 	Type     reflect.Type
 	Optional bool
-	Key      string
 }
 
 type ProviderOutput struct {
 	Type reflect.Type
-	Key  string
 }
 
 func ExtractProviderDescriptor(provider interface{}) (ProviderDescriptor, error) {

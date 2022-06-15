@@ -5,14 +5,14 @@ module github.com/cosmos/cosmos-sdk
 require (
 	cosmossdk.io/api v0.1.0-alpha8
 	cosmossdk.io/core v0.0.0
-	cosmossdk.io/errors v1.0.0-beta.6
+	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.0-beta.2
 	github.com/99designs/keyring v1.1.6
 	github.com/armon/go-metrics v0.4.0
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.22.1
 	github.com/cockroachdb/apd/v2 v2.0.2
-	github.com/coinbase/rosetta-sdk-go v0.7.9
+	github.com/coinbase/rosetta-sdk-go v0.7.10
 	github.com/confio/ics23/go v0.7.0
 	github.com/cosmos/btcutil v1.0.4
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
@@ -30,7 +30,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/hashicorp/go-getter v1.6.1
+	github.com/hashicorp/go-getter v1.6.2
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
 	github.com/hdevalence/ed25519consensus v0.0.0-20220222234857-c00d1f31bab3
 	github.com/improbable-eng/grpc-web v0.15.0
@@ -43,7 +43,7 @@ require (
 	github.com/prometheus/common v0.34.0
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
-	github.com/rs/zerolog v1.26.1
+	github.com/rs/zerolog v1.27.0
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/pflag v1.0.5
@@ -63,7 +63,10 @@ require (
 	sigs.k8s.io/yaml v1.3.0
 )
 
-require github.com/cosmos/cosmos-sdk/depinject v1.0.0-alpha.4
+require (
+	github.com/cosmos/cosmos-sdk/depinject v1.0.0-alpha.4
+	github.com/cosmos/cosmos-sdk/store/tools/ics23 v0.0.0-20220608170201-b0e82f964070
+)
 
 require (
 	cloud.google.com/go v0.100.2 // indirect
@@ -114,6 +117,7 @@ require (
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/lib/pq v1.10.6 // indirect
 	github.com/libp2p/go-buffer-pool v0.0.2 // indirect
+	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect

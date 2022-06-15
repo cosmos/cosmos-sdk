@@ -25,6 +25,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -33,7 +34,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
@@ -126,6 +129,56 @@ func DefaultConfig() Config {
 		KeyringOptions:    []keyring.Option{},
 		PrintMnemonic:     false,
 	}
+}
+
+func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
+	cfg := DefaultConfig()
+
+	var (
+		appBuilder        *runtime.AppBuilder
+		txConfig          client.TxConfig
+		legacyAmino       *codec.LegacyAmino
+		cdc               codec.Codec
+		interfaceRegistry codectypes.InterfaceRegistry
+	)
+
+	if err := depinject.Inject(appConfig,
+		&appBuilder,
+		&txConfig,
+		&cdc,
+		&legacyAmino,
+		&interfaceRegistry,
+	); err != nil {
+		return Config{}, err
+	}
+
+	cfg.Codec = cdc
+	cfg.TxConfig = txConfig
+	cfg.LegacyAmino = legacyAmino
+	cfg.InterfaceRegistry = interfaceRegistry
+	cfg.GenesisState = appBuilder.DefaultGenesis()
+	cfg.AppConstructor = func(val Validator) servertypes.Application {
+		// we build a unique app instance for every validator here
+		var appBuilder *runtime.AppBuilder
+		if err := depinject.Inject(appConfig, &appBuilder); err != nil {
+			panic(err)
+		}
+		app := appBuilder.Build(
+			val.Ctx.Logger,
+			dbm.NewMemDB(),
+			nil,
+			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
+			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+		)
+
+		if err := app.Load(true); err != nil {
+			panic(err)
+		}
+
+		return app
+	}
+
+	return cfg, nil
 }
 
 type (

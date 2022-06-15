@@ -571,7 +571,7 @@ func (suite *AnteTestSuite) TestAnteHandlerMemoGas() {
 			"tx with memo has enough gas",
 			func() {
 				feeAmount = sdk.NewCoins(sdk.NewInt64Coin("atom", 0))
-				gasLimit = 50000
+				gasLimit = 60000
 				suite.txBuilder.SetMemo(strings.Repeat("0123456789", 10))
 			},
 			false,

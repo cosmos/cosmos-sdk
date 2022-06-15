@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -11,14 +12,29 @@ import (
 // Validate performs basic validation of supply genesis data returning an
 // error for any failed validation criteria.
 func (gs GenesisState) Validate() error {
+	if len(gs.Params.SendEnabled) > 0 && len(gs.SendEnabled) > 0 {
+		return errors.New("send_enabled defined in both the send_enabled field and in params (deprecated)")
+	}
+
 	if err := gs.Params.Validate(); err != nil {
 		return err
 	}
 
+	seenSendEnabled := make(map[string]bool)
 	seenBalances := make(map[string]bool)
 	seenMetadatas := make(map[string]bool)
 
 	totalSupply := sdk.Coins{}
+
+	for _, p := range gs.GetAllSendEnabled() {
+		if _, exists := seenSendEnabled[p.Denom]; exists {
+			return fmt.Errorf("duplicate send enabled found: '%s'", p.Denom)
+		}
+		if err := p.Validate(); err != nil {
+			return err
+		}
+		seenSendEnabled[p.Denom] = true
+	}
 
 	for _, balance := range gs.Balances {
 		if seenBalances[balance.Address] {
@@ -62,18 +78,21 @@ func (gs GenesisState) Validate() error {
 }
 
 // NewGenesisState creates a new genesis state.
-func NewGenesisState(params Params, balances []Balance, supply sdk.Coins, denomMetaData []Metadata) *GenesisState {
-	return &GenesisState{
+func NewGenesisState(params Params, balances []Balance, supply sdk.Coins, denomMetaData []Metadata, sendEnabled []SendEnabled) *GenesisState {
+	rv := &GenesisState{
 		Params:        params,
 		Balances:      balances,
 		Supply:        supply,
 		DenomMetadata: denomMetaData,
+		SendEnabled:   sendEnabled,
 	}
+	rv.MigrateSendEnabled()
+	return rv
 }
 
 // DefaultGenesisState returns a default bank module genesis state.
 func DefaultGenesisState() *GenesisState {
-	return NewGenesisState(DefaultParams(), []Balance{}, sdk.Coins{}, []Metadata{})
+	return NewGenesisState(DefaultParams(), []Balance{}, sdk.Coins{}, []Metadata{}, []SendEnabled{})
 }
 
 // GetGenesisStateFromAppState returns x/bank GenesisState given raw application
@@ -86,4 +105,33 @@ func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.R
 	}
 
 	return &genesisState
+}
+
+// MigrateSendEnabled moves the SendEnabled info from Params into the GenesisState.SendEnabled field and removes them from Params.
+// If the Params.SendEnabled slice is empty, this is a noop.
+// If the main SendEnabled slice already has entries, the Params.SendEnabled entries are added.
+// In case of the same demon in both, preference is given to the existing (main GenesisState field) entry.
+func (g *GenesisState) MigrateSendEnabled() {
+	g.SendEnabled = g.GetAllSendEnabled()
+	g.Params.SendEnabled = nil
+}
+
+// GetAllSendEnabled returns all the SendEnabled entries from both the SendEnabled field and the Params.
+// If a denom has an entry in both, the entry in the SendEnabled field takes precedence over one in Params.
+func (g GenesisState) GetAllSendEnabled() []SendEnabled {
+	if len(g.Params.SendEnabled) == 0 {
+		return g.SendEnabled
+	}
+	rv := make([]SendEnabled, len(g.SendEnabled))
+	knownSendEnabled := map[string]bool{}
+	for i, se := range g.SendEnabled {
+		rv[i] = se
+		knownSendEnabled[se.Denom] = true
+	}
+	for _, se := range g.Params.SendEnabled {
+		if _, known := knownSendEnabled[se.Denom]; !known {
+			rv = append(rv, *se)
+		}
+	}
+	return rv
 }

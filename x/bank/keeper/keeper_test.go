@@ -24,6 +24,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -80,34 +81,44 @@ type IntegrationTestSuite struct {
 	StakingKeeper stakingkeeper.Keeper
 }
 
-func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool) (authkeeper.AccountKeeper, keeper.BaseKeeper) {
-	// app := suite.app
-	maccPerms := simapp.GetMaccPerms()
-	appCodec := simapp.MakeTestEncodingConfig().Codec
+// func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool) (authkeeper.AccountKeeper, keeper.BaseKeeper) {
+// 	// app := suite.app
+// 	maccPerms := simapp.GetMaccPerms()
+// 	appCodec := simapp.MakeTestEncodingConfig().Codec
 
-	maccPerms[holder] = nil
-	maccPerms[authtypes.Burner] = []string{authtypes.Burner}
-	maccPerms[authtypes.Minter] = []string{authtypes.Minter}
-	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
-	maccPerms[randomPerm] = []string{"random"}
-	authKeeper := authkeeper.NewAccountKeeper(
-		appCodec, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
-		authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
-	)
-	keeper := keeper.NewBaseKeeper(
-		appCodec, app.GetKey(types.StoreKey), authKeeper,
-		app.GetSubspace(types.ModuleName), blockedAddrs,
-	)
+// 	maccPerms[holder] = nil
+// 	maccPerms[authtypes.Burner] = []string{authtypes.Burner}
+// 	maccPerms[authtypes.Minter] = []string{authtypes.Minter}
+// 	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
+// 	maccPerms[randomPerm] = []string{"random"}
 
-	return authKeeper, keeper
-}
+// 	authKeeper := authkeeper.NewAccountKeeper(
+// 		appCodec, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
+// 		authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
+// 	)
+// 	keeper := keeper.NewBaseKeeper(
+// 		appCodec, app.GetKey(types.StoreKey), authKeeper,
+// 		app.GetSubspace(types.ModuleName), blockedAddrs,
+// 	)
+
+// 	return authKeeper, keeper
+// }
 
 func (suite *IntegrationTestSuite) SetupTest() {
-	var interfaceRegistry codectypes.InterfaceRegistry
+
+	var (
+		interfaceRegistry codectypes.InterfaceRegistry
+		bankKeeper        bankkeeper.Keeper
+		stakingKeeper     stakingkeeper.Keeper
+		authKeeper        authkeeper.AccountKeeper
+	)
 
 	app, err := simtestutil.Setup(
 		testutil.AppConfig,
 		&interfaceRegistry,
+		&authKeeper,
+		&bankKeeper,
+		&stakingKeeper,
 	)
 	suite.Require().NoError(err)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
@@ -121,6 +132,9 @@ func (suite *IntegrationTestSuite) SetupTest() {
 
 	suite.ctx = ctx
 	suite.queryClient = queryClient
+	suite.AccountKeeper = authKeeper
+	suite.BankKeeper = bankKeeper
+	suite.StakingKeeper = stakingKeeper
 }
 
 func (suite *IntegrationTestSuite) TestSupply() {
@@ -481,21 +495,21 @@ func (suite *IntegrationTestSuite) TestValidateBalance() {
 	addr1 := sdk.AccAddress([]byte("addr1_______________"))
 	addr2 := sdk.AccAddress([]byte("addr2_______________"))
 
-	suite.Require().Error(app.BankKeeper.ValidateBalance(ctx, addr1))
+	suite.Require().Error(suite.BankKeeper.ValidateBalance(ctx, addr1))
 
-	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	app.AccountKeeper.SetAccount(ctx, acc)
+	acc := suite.AccountKeeper.NewAccountWithAddress(ctx, addr1)
+	suite.AccountKeeper.SetAccount(ctx, acc)
 
 	balances := sdk.NewCoins(newFooCoin(100))
-	suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, addr1, balances))
-	suite.Require().NoError(app.BankKeeper.ValidateBalance(ctx, addr1))
+	suite.Require().NoError(testutil.FundAccount(suite.BankKeeper, ctx, addr1, balances))
+	suite.Require().NoError(suite.BankKeeper.ValidateBalance(ctx, addr1))
 
 	bacc := authtypes.NewBaseAccountWithAddress(addr2)
 	vacc := vesting.NewContinuousVestingAccount(bacc, balances.Add(balances...), now.Unix(), endTime.Unix())
 
-	app.AccountKeeper.SetAccount(ctx, vacc)
-	suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, addr2, balances))
-	suite.Require().Error(app.BankKeeper.ValidateBalance(ctx, addr2))
+	suite.AccountKeeper.SetAccount(ctx, vacc)
+	suite.Require().NoError(testutil.FundAccount(suite.BankKeeper, ctx, addr2, balances))
+	suite.Require().Error(suite.BankKeeper.ValidateBalance(ctx, addr2))
 }
 
 func (suite *IntegrationTestSuite) TestSendEnabled() {
@@ -545,16 +559,16 @@ func (suite *IntegrationTestSuite) TestHasBalance() {
 	ctx := suite.ctx
 	addr := sdk.AccAddress([]byte("addr1_______________"))
 
-	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
-	app.AccountKeeper.SetAccount(ctx, acc)
+	acc := suite.AccountKeeper.NewAccountWithAddress(ctx, addr)
+	suite.AccountKeeper.SetAccount(ctx, acc)
 
 	balances := sdk.NewCoins(newFooCoin(100))
-	suite.Require().False(app.BankKeeper.HasBalance(ctx, addr, newFooCoin(99)))
+	suite.Require().False(suite.BankKeeper.HasBalance(ctx, addr, newFooCoin(99)))
 
-	suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, addr, balances))
-	suite.Require().False(app.BankKeeper.HasBalance(ctx, addr, newFooCoin(101)))
-	suite.Require().True(app.BankKeeper.HasBalance(ctx, addr, newFooCoin(100)))
-	suite.Require().True(app.BankKeeper.HasBalance(ctx, addr, newFooCoin(1)))
+	suite.Require().NoError(testutil.FundAccount(suite.BankKeeper, ctx, addr, balances))
+	suite.Require().False(suite.BankKeeper.HasBalance(ctx, addr, newFooCoin(101)))
+	suite.Require().True(suite.BankKeeper.HasBalance(ctx, addr, newFooCoin(100)))
+	suite.Require().True(suite.BankKeeper.HasBalance(ctx, addr, newFooCoin(1)))
 }
 
 func (suite *IntegrationTestSuite) TestMsgSendEvents() {

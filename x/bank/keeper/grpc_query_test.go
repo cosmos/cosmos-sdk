@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -17,7 +19,7 @@ import (
 )
 
 func (suite *IntegrationTestSuite) TestQueryBalance() {
-	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
+	ctx, queryClient := suite.ctx, suite.queryClient
 	_, _, addr := testdata.KeyTestPubAddr()
 
 	_, err := queryClient.Balance(gocontext.Background(), &types.QueryBalanceRequest{})
@@ -33,10 +35,10 @@ func (suite *IntegrationTestSuite) TestQueryBalance() {
 	suite.True(res.Balance.IsZero())
 
 	origCoins := sdk.NewCoins(newFooCoin(50), newBarCoin(30))
-	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+	acc := suite.AccountKeeper.NewAccountWithAddress(ctx, addr)
 
-	app.AccountKeeper.SetAccount(ctx, acc)
-	suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, acc.GetAddress(), origCoins))
+	suite.AccountKeeper.SetAccount(ctx, acc)
+	suite.Require().NoError(testutil.FundAccount(suite.BankKeeper, ctx, acc.GetAddress(), origCoins))
 
 	res, err = queryClient.Balance(gocontext.Background(), req)
 	suite.Require().NoError(err)
@@ -45,7 +47,7 @@ func (suite *IntegrationTestSuite) TestQueryBalance() {
 }
 
 func (suite *IntegrationTestSuite) TestQueryAllBalances() {
-	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
+	ctx, queryClient := suite.ctx, suite.queryClient
 	_, _, addr := testdata.KeyTestPubAddr()
 	_, err := queryClient.AllBalances(gocontext.Background(), &types.QueryAllBalancesRequest{})
 	suite.Require().Error(err)
@@ -65,10 +67,10 @@ func (suite *IntegrationTestSuite) TestQueryAllBalances() {
 	barCoins := newBarCoin(30)
 
 	origCoins := sdk.NewCoins(fooCoins, barCoins)
-	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+	acc := suite.AccountKeeper.NewAccountWithAddress(ctx, addr)
 
-	app.AccountKeeper.SetAccount(ctx, acc)
-	suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, acc.GetAddress(), origCoins))
+	suite.AccountKeeper.SetAccount(ctx, acc)
+	suite.Require().NoError(testutil.FundAccount(suite.BankKeeper, ctx, acc.GetAddress(), origCoins))
 
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
 	suite.Require().NoError(err)
@@ -90,7 +92,7 @@ func (suite *IntegrationTestSuite) TestQueryAllBalances() {
 }
 
 func (suite *IntegrationTestSuite) TestSpendableBalances() {
-	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
+	ctx, queryClient := suite.ctx, suite.queryClient
 	_, _, addr := testdata.KeyTestPubAddr()
 	ctx = ctx.WithBlockTime(time.Now())
 
@@ -113,7 +115,7 @@ func (suite *IntegrationTestSuite) TestSpendableBalances() {
 	barCoins := newBarCoin(30)
 
 	origCoins := sdk.NewCoins(fooCoins, barCoins)
-	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+	acc := suite.AccountKeeper.NewAccountWithAddress(ctx, addr)
 	acc = vestingtypes.NewContinuousVestingAccount(
 		acc.(*authtypes.BaseAccount),
 		sdk.NewCoins(fooCoins),
@@ -121,13 +123,21 @@ func (suite *IntegrationTestSuite) TestSpendableBalances() {
 		ctx.BlockTime().Add(time.Hour).Unix(),
 	)
 
-	app.AccountKeeper.SetAccount(ctx, acc)
-	suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, acc.GetAddress(), origCoins))
+	suite.AccountKeeper.SetAccount(ctx, acc)
+	suite.Require().NoError(testutil.FundAccount(suite.BankKeeper, ctx, acc.GetAddress(), origCoins))
+
+	var interfaceRegistry codectypes.InterfaceRegistry
+
+	_, err = simtestutil.Setup(
+		testutil.AppConfig,
+		&interfaceRegistry,
+	)
+	suite.Require().NoError(err)
 
 	// move time forward for some tokens to vest
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(30 * time.Minute))
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.BankKeeper)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
+	types.RegisterQueryServer(queryHelper, suite.BankKeeper)
 	queryClient = types.NewQueryClient(queryHelper)
 
 	res, err = queryClient.SpendableBalances(sdk.WrapSDKContext(ctx), req)
@@ -140,7 +150,7 @@ func (suite *IntegrationTestSuite) TestSpendableBalances() {
 }
 
 func (suite *IntegrationTestSuite) TestQueryTotalSupply() {
-	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
+	ctx, queryClient := suite.ctx, suite.queryClient
 	res, err := queryClient.TotalSupply(gocontext.Background(), &types.QueryTotalSupplyRequest{})
 	suite.Require().NoError(err)
 	genesisSupply := res.Supply
@@ -148,7 +158,7 @@ func (suite *IntegrationTestSuite) TestQueryTotalSupply() {
 	testCoins := sdk.NewCoins(sdk.NewInt64Coin("test", 400000000))
 	suite.
 		Require().
-		NoError(app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, testCoins))
+		NoError(suite.BankKeeper.MintCoins(ctx, minttypes.ModuleName, testCoins))
 
 	res, err = queryClient.TotalSupply(gocontext.Background(), &types.QueryTotalSupplyRequest{})
 	suite.Require().NoError(err)
@@ -160,14 +170,14 @@ func (suite *IntegrationTestSuite) TestQueryTotalSupply() {
 }
 
 func (suite *IntegrationTestSuite) TestQueryTotalSupplyOf() {
-	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
+	ctx, queryClient := suite.ctx, suite.queryClient
 
 	test1Supply := sdk.NewInt64Coin("test1", 4000000)
 	test2Supply := sdk.NewInt64Coin("test2", 700000000)
 	expectedTotalSupply := sdk.NewCoins(test1Supply, test2Supply)
 	suite.
 		Require().
-		NoError(app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, expectedTotalSupply))
+		NoError(suite.BankKeeper.MintCoins(ctx, minttypes.ModuleName, expectedTotalSupply))
 
 	_, err := queryClient.SupplyOf(gocontext.Background(), &types.QuerySupplyOfRequest{})
 	suite.Require().Error(err)
@@ -183,7 +193,7 @@ func (suite *IntegrationTestSuite) TestQueryParams() {
 	res, err := suite.queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
-	suite.Require().Equal(suite.app.BankKeeper.GetParams(suite.ctx), res.GetParams())
+	suite.Require().Equal(suite.BankKeeper.GetParams(suite.ctx), res.GetParams())
 }
 
 func (suite *IntegrationTestSuite) QueryDenomsMetadataRequest() {
@@ -254,8 +264,8 @@ func (suite *IntegrationTestSuite) QueryDenomsMetadataRequest() {
 					Display: "eth",
 				}
 
-				suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metadataAtom)
-				suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metadataEth)
+				suite.BankKeeper.SetDenomMetaData(suite.ctx, metadataAtom)
+				suite.BankKeeper.SetDenomMetaData(suite.ctx, metadataEth)
 				expMetadata = []types.Metadata{metadataAtom, metadataEth}
 				req = &types.QueryDenomsMetadataRequest{
 					Pagination: &query.PageRequest{
@@ -336,7 +346,7 @@ func (suite *IntegrationTestSuite) QueryDenomMetadataRequest() {
 					Display: "atom",
 				}
 
-				suite.app.BankKeeper.SetDenomMetaData(suite.ctx, expMetadata)
+				suite.BankKeeper.SetDenomMetaData(suite.ctx, expMetadata)
 				req = &types.QueryDenomMetadataRequest{
 					Denom: expMetadata.Base,
 				}
@@ -455,7 +465,7 @@ func (suite *IntegrationTestSuite) TestGRPCDenomOwners() {
 }
 
 func (suite *IntegrationTestSuite) TestQuerySendEnabled() {
-	ctx, bankKeeper := suite.ctx, suite.app.BankKeeper
+	ctx, bankKeeper := suite.ctx, suite.BankKeeper
 
 	bankKeeper.SetSendEnabled(ctx, "falsestcoin", false)
 	bankKeeper.SetSendEnabled(ctx, "truestcoin", true)

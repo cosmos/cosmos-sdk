@@ -51,7 +51,7 @@ message GetTxsEventRequest {
   // Deprecated: use page and limit instead.
   cosmos.base.query.v1beta1.PageRequest pagination = 2 [deprecated = true];;
   OrderBy                               order_by   = 3;
-  // page is the page number to query, starts at 1.
+  // page is the page number to query, starts at 1. If not provided, will default to first page.
   uint64 page = 4;
   // limit is the total number of results to be returned in the result page.
   // If left empty it will default to a value to be set by each app.

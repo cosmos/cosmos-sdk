@@ -228,23 +228,20 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 			&tx.GetTxsEventRequest{
 				Events:  []string{bankMsgSendEventAction},
 				OrderBy: tx.OrderBy_ORDER_BY_ASC,
-				Page:    1,
 			},
-			false, "", 0,
+			false, "", 3,
 		},
 		{
 			"without pagination limit",
 			&tx.GetTxsEventRequest{
 				Events: []string{bankMsgSendEventAction},
-				Page:   1,
 			},
-			false, "", 0,
+			false, "", 3,
 		},
 		{
 			"with pagination limit",
 			&tx.GetTxsEventRequest{
 				Events: []string{bankMsgSendEventAction},
-				Page:   1,
 				Limit:  1,
 			},
 			false, "", 1,
@@ -253,9 +250,8 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 			"with multi events",
 			&tx.GetTxsEventRequest{
 				Events: []string{bankMsgSendEventAction, "message.module='bank'"},
-				Page:   1,
 			},
-			false, "", 0,
+			false, "", 3,
 		},
 	}
 	for _, tc := range testCases {
@@ -269,9 +265,7 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 				s.Require().NoError(err)
 				s.Require().GreaterOrEqual(len(grpcRes.Txs), 1)
 				s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
-				if tc.expLen != 0 {
-					s.Require().Equal(len(grpcRes.Txs), tc.expLen)
-				}
+				s.Require().Equal(len(grpcRes.Txs), tc.expLen)
 				// Make sure fields are populated.
 				// ref: https://github.com/cosmos/cosmos-sdk/issues/8680
 				// ref: https://github.com/cosmos/cosmos-sdk/issues/8681
@@ -289,54 +283,55 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
 		url       string
 		expErr    bool
 		expErrMsg string
+		expLen    int
 	}{
 		{
 			"empty params",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress),
 			true,
-			"must declare at least one event to search",
+			"must declare at least one event to search", 0,
 		},
 		{
-			"without pagination",
+			"without pagination limit",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, bankMsgSendEventAction),
 			false,
-			"",
+			"", 3,
 		},
 		{
-			"with pagination",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, bankMsgSendEventAction, 0, 10),
+			"with pagination limit",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&limit=%d", val.APIAddress, bankMsgSendEventAction, 1),
 			false,
-			"",
+			"", 1,
 		},
 		{
 			"valid request: order by asc",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=ORDER_BY_ASC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			false,
-			"",
+			"", 3,
 		},
 		{
 			"valid request: order by desc",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=ORDER_BY_DESC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			false,
-			"",
+			"", 3,
 		},
 		{
 			"invalid request: invalid order by",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=invalid_order", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			true,
-			"is not a valid tx.OrderBy",
+			"is not a valid tx.OrderBy", 0,
 		},
 		{
 			"expect pass with multiple-events",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			false,
-			"",
+			"", 3,
 		},
 		{
 			"expect pass with escape event",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action%3D'/cosmos.bank.v1beta1.MsgSend'"),
 			false,
-			"",
+			"", 3,
 		},
 	}
 	for _, tc := range testCases {
@@ -352,6 +347,8 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
 				s.Require().GreaterOrEqual(len(result.Txs), 1)
 				s.Require().Equal("foobar", result.Txs[0].Body.Memo)
 				s.Require().NotZero(result.TxResponses[0].Height)
+				s.Require().Equal(len(result.Txs), tc.expLen)
+
 			}
 		})
 	}

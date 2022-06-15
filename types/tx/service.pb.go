@@ -111,7 +111,7 @@ type GetTxsEventRequest struct {
 	// Deprecated: use page and limit instead.
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"` // Deprecated: Do not use.
 	OrderBy    OrderBy            `protobuf:"varint,3,opt,name=order_by,json=orderBy,proto3,enum=cosmos.tx.v1beta1.OrderBy" json:"order_by,omitempty"`
-	// page is the page number to query, starts at 0.
+	// page is the page number to query, starts at 1. If not provided, will default to first page.
 	Page uint64 `protobuf:"varint,4,opt,name=page,proto3" json:"page,omitempty"`
 	// limit is the total number of results to be returned in the result page.
 	// If left empty it will default to a value to be set by each app.

@@ -26,6 +26,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
+// UpgradeInfoFileName file to store upgrade information
+const UpgradeInfoFileName string = "upgrade-info.json"
+
+// upgrade defines a comparable structure for sorting upgrades.
+type upgrade struct {
+	Name        string
+	BlockHeight int64
+}
+
 type Keeper struct {
 	appmodule.Environment
 
@@ -319,8 +328,22 @@ func encodeDoneKey(name string, height int64) []byte {
 func (k Keeper) GetLastCompletedUpgrade(ctx sdk.Context) (string, int64) {
 	iter := sdk.KVStoreReversePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
 	defer iter.Close()
-	if iter.Valid() {
-		return parseDoneKey(iter.Key()), int64(binary.BigEndian.Uint64(iter.Value()))
+
+	var upgrades []upgrade
+	for ; iter.Valid(); iter.Next() {
+		name := parseDoneKey(iter.Key())
+		value := int64(sdk.BigEndianToUint64(iter.Value()))
+
+		upgrades = append(upgrades, upgrade{Name: name, BlockHeight: value})
+	}
+
+	// sort upgrades in descending order by block height
+	sort.SliceStable(upgrades, func(i, j int) bool {
+		return upgrades[i].BlockHeight > upgrades[j].BlockHeight
+	})
+
+	if len(upgrades) > 0 {
+		return upgrades[0].Name, upgrades[0].BlockHeight
 	}
 
 	return "", 0

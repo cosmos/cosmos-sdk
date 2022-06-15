@@ -4,7 +4,7 @@ modules:
       "@type": cosmos.app.runtime.v1alpha1.Module
       app_name: AuthzApp
       begin_blockers: [staking, auth, bank,gov, genutil, authz, params]
-      end_blockers: [gov, staking, auth, bank, genutil, authz, params]
+      end_blockers: [staking, auth, bank, gov, genutil, authz, params]
       init_genesis: [auth, bank, staking, gov, genutil, authz, params]
 
   - name: auth

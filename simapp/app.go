@@ -227,6 +227,8 @@ func NewSimApp(
 		&app.GroupKeeper,
 		&app.NFTKeeper,
 		&app.SlashingKeeper,
+		&app.MintKeeper,
+		&app.EvidenceKeeper,
 		&msgServiceRouter,
 	); err != nil {
 		panic(err)
@@ -235,9 +237,9 @@ func NewSimApp(
 	app.App = appBuilder.Build(logger, db, traceStore, msgServiceRouter, baseAppOptions...)
 
 	app.keys = sdk.NewKVStoreKeys(
-		minttypes.StoreKey, distrtypes.StoreKey,
-		govtypes.StoreKey, upgradetypes.StoreKey,
-		evidencetypes.StoreKey,
+		distrtypes.StoreKey,
+		govtypes.StoreKey,
+		upgradetypes.StoreKey,
 	)
 	// NOTE: The testingkey is just mounted for testing purposes. Actual applications should
 	// not include this key.
@@ -251,10 +253,6 @@ func NewSimApp(
 
 	initParamsKeeper(app.ParamsKeeper)
 
-	app.MintKeeper = mintkeeper.NewKeeper(
-		app.appCodec, app.keys[minttypes.StoreKey], app.GetSubspace(minttypes.ModuleName), app.StakingKeeper,
-		app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName,
-	)
 	app.DistrKeeper = distrkeeper.NewKeeper(
 		app.appCodec, app.keys[distrtypes.StoreKey], app.GetSubspace(distrtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		app.StakingKeeper, authtypes.FeeCollectorName,
@@ -291,13 +289,6 @@ func NewSimApp(
 	// set the governance module account as the authority for conducting upgrades
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, app.keys[upgradetypes.StoreKey], app.appCodec, homePath, app.BaseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
-	// create evidence keeper with router
-	evidenceKeeper := evidencekeeper.NewKeeper(
-		app.appCodec, app.keys[evidencetypes.StoreKey], app.StakingKeeper, app.SlashingKeeper,
-	)
-	// If evidence needs to be handled for the app, set routes in router here and seal
-	app.EvidenceKeeper = *evidenceKeeper
-
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -310,10 +301,8 @@ func NewSimApp(
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
 		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants),
 		gov.NewAppModule(app.appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		mint.NewAppModule(app.appCodec, app.MintKeeper, app.AccountKeeper, nil),
 		distr.NewAppModule(app.appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper),
-		evidence.NewAppModule(app.EvidenceKeeper),
 	); err != nil {
 		panic(err)
 	}
@@ -495,7 +484,6 @@ func GetMaccPerms() map[string][]string {
 
 // initParamsKeeper init params keeper and its subspaces
 func initParamsKeeper(paramsKeeper paramskeeper.Keeper) {
-	paramsKeeper.Subspace(minttypes.ModuleName)
 	paramsKeeper.Subspace(distrtypes.ModuleName)
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govv1.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)

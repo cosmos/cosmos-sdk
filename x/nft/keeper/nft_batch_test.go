@@ -87,7 +87,7 @@ func (s *TestSuite) TestBatchMint() {
 			func(tokens []nft.NFT) {
 				s.saveClass(tokens)
 				idx := rand.Intn(len(tokens))
-				s.app.NFTKeeper.Mint(s.ctx, tokens[idx], receiver)
+				s.nftKeeper.Mint(s.ctx, tokens[idx], receiver)
 			},
 			[]nft.NFT{
 				{ClassId: "classID1", Id: "nftID1"},
@@ -103,31 +103,31 @@ func (s *TestSuite) TestBatchMint() {
 			s.SetupTest() // reset
 			tc.malleate(tc.tokens)
 
-			err := s.app.NFTKeeper.BatchMint(s.ctx, tc.tokens, receiver)
+			err := s.nftKeeper.BatchMint(s.ctx, tc.tokens, receiver)
 			if tc.expPass {
 				s.Require().NoError(err)
 
 				classMap := groupByClassID(tc.tokens)
 				for classID, tokens := range classMap {
 					for _, token := range tokens {
-						actNFT, has := s.app.NFTKeeper.GetNFT(s.ctx, token.ClassId, token.Id)
+						actNFT, has := s.nftKeeper.GetNFT(s.ctx, token.ClassId, token.Id)
 						s.Require().True(has)
 						s.Require().EqualValues(token, actNFT)
 
-						owner := s.app.NFTKeeper.GetOwner(s.ctx, token.ClassId, token.Id)
+						owner := s.nftKeeper.GetOwner(s.ctx, token.ClassId, token.Id)
 						s.Require().True(receiver.Equals(owner))
 					}
 
-					actNFTs := s.app.NFTKeeper.GetNFTsOfClass(s.ctx, classID)
+					actNFTs := s.nftKeeper.GetNFTsOfClass(s.ctx, classID)
 					s.Require().EqualValues(tokens, actNFTs)
 
-					actNFTs = s.app.NFTKeeper.GetNFTsOfClassByOwner(s.ctx, classID, receiver)
+					actNFTs = s.nftKeeper.GetNFTsOfClassByOwner(s.ctx, classID, receiver)
 					s.Require().EqualValues(tokens, actNFTs)
 
-					balance := s.app.NFTKeeper.GetBalance(s.ctx, classID, receiver)
+					balance := s.nftKeeper.GetBalance(s.ctx, classID, receiver)
 					s.Require().EqualValues(len(tokens), balance)
 
-					supply := s.app.NFTKeeper.GetTotalSupply(s.ctx, classID)
+					supply := s.nftKeeper.GetTotalSupply(s.ctx, classID)
 					s.Require().EqualValues(len(tokens), supply)
 				}
 				return
@@ -157,7 +157,7 @@ func (s *TestSuite) TestBatchBurn() {
 			"success",
 			func() {
 				s.saveClass(tokens)
-				s.app.NFTKeeper.BatchMint(s.ctx, tokens, receiver)
+				s.nftKeeper.BatchMint(s.ctx, tokens, receiver)
 			},
 			"classID1",
 			[]string{"nftID1", "nftID2"},
@@ -186,11 +186,11 @@ func (s *TestSuite) TestBatchBurn() {
 			s.SetupTest() // reset
 			tc.malleate()
 
-			err := s.app.NFTKeeper.BatchBurn(s.ctx, tc.classID, tc.nftIDs)
+			err := s.nftKeeper.BatchBurn(s.ctx, tc.classID, tc.nftIDs)
 			if tc.expPass {
 				s.Require().NoError(err)
 				for _, nftID := range tc.nftIDs {
-					s.Require().False(s.app.NFTKeeper.HasNFT(s.ctx, tc.classID, nftID))
+					s.Require().False(s.nftKeeper.HasNFT(s.ctx, tc.classID, nftID))
 				}
 				return
 			}
@@ -218,7 +218,7 @@ func (s *TestSuite) TestBatchUpdate() {
 			"success",
 			func() {
 				s.saveClass(tokens)
-				s.app.NFTKeeper.BatchMint(s.ctx, tokens, receiver)
+				s.nftKeeper.BatchMint(s.ctx, tokens, receiver)
 			},
 			[]nft.NFT{
 				{ClassId: "classID1", Id: "nftID1", Uri: "nftID1_URI"},
@@ -253,11 +253,11 @@ func (s *TestSuite) TestBatchUpdate() {
 			s.SetupTest() // reset
 			tc.malleate()
 
-			err := s.app.NFTKeeper.BatchUpdate(s.ctx, tc.tokens)
+			err := s.nftKeeper.BatchUpdate(s.ctx, tc.tokens)
 			if tc.expPass {
 				s.Require().NoError(err)
 				for _, token := range tc.tokens {
-					actToken, found := s.app.NFTKeeper.GetNFT(s.ctx, token.ClassId, token.Id)
+					actToken, found := s.nftKeeper.GetNFT(s.ctx, token.ClassId, token.Id)
 					s.Require().True(found)
 					s.Require().EqualValues(token, actToken)
 				}
@@ -289,7 +289,7 @@ func (s *TestSuite) TestBatchTransfer() {
 			"success",
 			func() {
 				s.saveClass(tokens)
-				s.app.NFTKeeper.BatchMint(s.ctx, tokens, owner)
+				s.nftKeeper.BatchMint(s.ctx, tokens, owner)
 			},
 			"classID1",
 			[]string{"nftID1", "nftID2"},
@@ -299,7 +299,7 @@ func (s *TestSuite) TestBatchTransfer() {
 			"failed with not exist classID",
 			func() {
 				s.saveClass(tokens)
-				s.app.NFTKeeper.BatchMint(s.ctx, tokens, receiver)
+				s.nftKeeper.BatchMint(s.ctx, tokens, receiver)
 			},
 			"classID3",
 			[]string{"nftID1", "nftID2"},
@@ -321,11 +321,11 @@ func (s *TestSuite) TestBatchTransfer() {
 			s.SetupTest() // reset
 			tc.malleate()
 
-			err := s.app.NFTKeeper.BatchTransfer(s.ctx, tc.classID, tc.nftIDs, receiver)
+			err := s.nftKeeper.BatchTransfer(s.ctx, tc.classID, tc.nftIDs, receiver)
 			if tc.expPass {
 				s.Require().NoError(err)
 				for _, nftID := range tc.nftIDs {
-					actOwner := s.app.NFTKeeper.GetOwner(s.ctx, tc.classID, nftID)
+					actOwner := s.nftKeeper.GetOwner(s.ctx, tc.classID, nftID)
 					s.Require().EqualValues(receiver, actOwner)
 				}
 				return
@@ -350,14 +350,14 @@ func groupByClassID(tokens []nft.NFT) map[string][]nft.NFT {
 func (s *TestSuite) saveClass(tokens []nft.NFT) {
 	classMap := groupByClassID(tokens)
 	for classID := range classMap {
-		err := s.app.NFTKeeper.SaveClass(s.ctx, nft.Class{Id: classID})
+		err := s.nftKeeper.SaveClass(s.ctx, nft.Class{Id: classID})
 		s.Require().NoError(err)
 	}
 }
 
 func (s *TestSuite) mintNFT(tokens []nft.NFT, receiver sdk.AccAddress) {
 	for _, token := range tokens {
-		err := s.app.NFTKeeper.Mint(s.ctx, token, receiver)
+		err := s.nftKeeper.Mint(s.ctx, token, receiver)
 		s.Require().NoError(err)
 	}
 }

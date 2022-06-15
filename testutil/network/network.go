@@ -143,6 +143,7 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	)
 
 	if err := depinject.Inject(appConfig,
+		&appBuilder,
 		&txConfig,
 		&cdc,
 		&legacyAmino,

@@ -1,0 +1,49 @@
+modules:
+  - name: runtime
+    config:
+      "@type": cosmos.app.runtime.v1alpha1.Module
+
+      app_name: GroupApp
+
+      begin_blockers: [staking, auth, bank, genutil, authz, group, params]
+      end_blockers: [staking, auth, bank, genutil, authz, group, params]
+      init_genesis: [auth, bank, staking, genutil, authz, group, params]
+
+  - name: auth
+    config:
+      "@type": cosmos.auth.module.v1.Module
+      bech32_prefix: cosmos
+      module_account_permissions:
+        - account: fee_collector
+        - account: bonded_tokens_pool
+          permissions: [burner, staking]
+        - account: not_bonded_tokens_pool
+          permissions: [burner, staking]
+
+  - name: bank
+    config:
+      "@type": cosmos.bank.module.v1.Module
+
+  - name: params
+    config:
+      "@type": cosmos.params.module.v1.Module
+
+  - name: tx
+    config:
+      "@type": cosmos.tx.module.v1.Module
+
+  - name: staking
+    config:
+      "@type": cosmos.staking.module.v1.Module
+
+  - name: authz
+    config:
+      "@type": cosmos.authz.module.v1.Module
+
+  - name: group
+    config:
+      "@type": cosmos.group.v1.module.v1.Module
+
+  - name: genutil
+    config:
+      "@type": cosmos.genutil.module.v1.Module

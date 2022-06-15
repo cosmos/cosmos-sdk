@@ -61,7 +61,7 @@ func (t TimestampCodec) Encode(value protoreflect.Value, w io.Writer) error {
 		nanosBz[i] = byte(nanosInt)
 		nanosInt >>= 8
 	}
-	nanosBz[0] = nanosBz[0] & 0xC0
+	nanosBz[0] = nanosBz[0] | 0xC0
 	_, err = w.Write(nanosBz[:])
 	return err
 }
@@ -113,7 +113,7 @@ func (t TimestampCodec) Decode(r Reader) (protoreflect.Value, error) {
 		return protoreflect.Value{}, io.EOF
 	}
 
-	var nanos = int32(b0)
+	var nanos = int32(b0) & 0x3F // clear first two bits
 	for i := 0; i < 3; i++ {
 		nanos <<= 8
 		nanos |= int32(nanosBz[i])

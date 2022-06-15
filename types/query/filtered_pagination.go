@@ -47,8 +47,10 @@ func FilteredPaginate(
 		iterator := getIterator(prefixStore, key, reverse)
 		defer iterator.Close()
 
-		var numHits uint64
-		var nextKey []byte
+		var (
+			numHits uint64
+			nextKey []byte
+		)
 
 		for ; iterator.Valid(); iterator.Next() {
 			if numHits == limit {
@@ -80,8 +82,10 @@ func FilteredPaginate(
 
 	end := offset + limit
 
-	var numHits uint64
-	var nextKey []byte
+	var (
+		numHits uint64
+		nextKey []byte
+	)
 
 	for ; iterator.Valid(); iterator.Next() {
 		if iterator.Error() != nil {
@@ -195,8 +199,10 @@ func GenericFilteredPaginate[T codec.ProtoMarshaler, F codec.ProtoMarshaler](
 
 	end := offset + limit
 
-	var numHits uint64
-	var nextKey []byte
+	var (
+		numHits uint64
+		nextKey []byte
+	)
 
 	for ; iterator.Valid(); iterator.Next() {
 		if iterator.Error() != nil {

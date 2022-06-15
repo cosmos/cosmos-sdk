@@ -2,7 +2,6 @@ package query
 
 import (
 	"fmt"
-	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/types"
@@ -126,6 +125,7 @@ func GenericFilteredPaginate[T codec.ProtoMarshaler, F codec.ProtoMarshaler](
 	prefixStore types.KVStore,
 	pageRequest *PageRequest,
 	onResult func(key []byte, value T) (F, error),
+	constructor func() T,
 ) ([]F, *PageResponse, error) {
 	// if the PageRequest is nil, use default PageRequest
 	if pageRequest == nil {
@@ -167,18 +167,14 @@ func GenericFilteredPaginate[T codec.ProtoMarshaler, F codec.ProtoMarshaler](
 				return nil, nil, iterator.Error()
 			}
 
-			// initialize the proto message
-			va := reflect.ValueOf(new(T)).Elem()
-			v := reflect.New(va.Type().Elem())
-			va.Set(v)
-			protoMsg := va.Interface().(codec.ProtoMarshaler)
+			protoMsg := constructor()
 
 			err := cdc.Unmarshal(iterator.Value(), protoMsg)
 			if err != nil {
 				return nil, nil, err
 			}
 
-			val, err := onResult(iterator.Key(), protoMsg.(T))
+			val, err := onResult(iterator.Key(), protoMsg)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -209,18 +205,14 @@ func GenericFilteredPaginate[T codec.ProtoMarshaler, F codec.ProtoMarshaler](
 			return nil, nil, iterator.Error()
 		}
 
-		// initialize the proto message
-		va := reflect.ValueOf(new(T)).Elem()
-		v := reflect.New(va.Type().Elem())
-		va.Set(v)
-		protoMsg := va.Interface().(codec.ProtoMarshaler)
+		protoMsg := constructor()
 
 		err := cdc.Unmarshal(iterator.Value(), protoMsg)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		val, err := onResult(iterator.Key(), (protoMsg).(T))
+		val, err := onResult(iterator.Key(), protoMsg)
 		if err != nil {
 			return nil, nil, err
 		}

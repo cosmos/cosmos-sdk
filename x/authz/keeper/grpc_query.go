@@ -75,6 +75,8 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 			Authorization: authorizationAny,
 			Expiration:    auth.Expiration,
 		}, nil
+	}, func() *authz.Grant {
+		return &authz.Grant{}
 	})
 	if err != nil {
 		return nil, err
@@ -120,6 +122,8 @@ func (k Keeper) GranterGrants(c context.Context, req *authz.QueryGranterGrantsRe
 			Expiration:    auth.Expiration,
 		}, nil
 
+	}, func() *authz.Grant {
+		return &authz.Grant{}
 	})
 
 	if err != nil {
@@ -168,6 +172,8 @@ func (k Keeper) GranteeGrants(c context.Context, req *authz.QueryGranteeGrantsRe
 			Granter:       granter.String(),
 			Grantee:       grantee.String(),
 		}, nil
+	}, func() *authz.Grant {
+		return &authz.Grant{}
 	})
 	if err != nil {
 		return nil, err

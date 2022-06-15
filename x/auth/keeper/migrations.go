@@ -44,7 +44,9 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 	return iterErr
 }
 
-func (m Migrator) MapAccAddrsToAccNum(ctx sdk.Context) error {
+// Migrate2to3 migrates from consensus version 2 to version 3. Specifically, for each account
+// we index the account's ID to their address.
+func (m Migrator) Migrate2to3(ctx sdk.Context) error {
 	return v046.MigrateStore(ctx, m.keeper.key, m.keeper.cdc)
 }
 

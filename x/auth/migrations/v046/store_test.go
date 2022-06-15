@@ -51,7 +51,7 @@ func TestMigrateMapAccAddressToAccNumberKey(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.doMigration {
-				require.NoError(t, m.MapAccAddrsToAccNum(ctx))
+				require.NoError(t, m.Migrate2to3(ctx))
 			}
 
 			//  get the account address by acc id

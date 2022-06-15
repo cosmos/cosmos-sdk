@@ -51,7 +51,9 @@ func (m Migrator) Migrate2to3(ctx sdk.Context) error {
 }
 
 // V45_SetAccount implements V45_SetAccount
-// set the account without map to accAddr to accNumber
+// set the account without map to accAddr to accNumber.
+//
+// NOTE: This is used for testing purposes only.
 func (m Migrator) V45_SetAccount(ctx sdk.Context, acc types.AccountI) error {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(m.keeper.key)

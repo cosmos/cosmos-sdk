@@ -47,3 +47,18 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 func (m Migrator) MapAccAddrsToAccNum(ctx sdk.Context) error {
 	return v046.MigrateStore(ctx, m.keeper.key, m.keeper.cdc)
 }
+
+// V45_SetAccount implements V45_SetAccount
+// set the account without map to accAddr to accNumber
+func (m Migrator) V45_SetAccount(ctx sdk.Context, acc types.AccountI) error {
+	addr := acc.GetAddress()
+	store := ctx.KVStore(m.keeper.key)
+
+	bz, err := m.keeper.MarshalAccount(acc)
+	if err != nil {
+		return err
+	}
+
+	store.Set(types.AddressStoreKey(addr), bz)
+	return nil
+}

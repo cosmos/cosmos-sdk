@@ -45,6 +45,7 @@ type App struct {
 	beginBlockers     []func(sdk.Context, abci.RequestBeginBlock)
 	endBlockers       []func(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 	baseAppOptions    []BaseAppOption
+	msgServiceRouter  *baseapp.MsgServiceRouter
 }
 
 // RegisterModules registers the provided modules with the module manager and

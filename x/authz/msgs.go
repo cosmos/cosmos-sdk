@@ -219,6 +219,16 @@ func (msg MsgExec) ValidateBasic() error {
 		return sdkerrors.ErrInvalidRequest.Wrapf("messages cannot be empty")
 	}
 
+	msgs, err := msg.GetMessages()
+	if err != nil {
+		return err
+	}
+	for _, msg := range msgs {
+		if err = msg.ValidateBasic(); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

@@ -3,6 +3,8 @@ package runtime
 import (
 	"fmt"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	"cosmossdk.io/core/appmodule"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -34,6 +36,7 @@ func init() {
 			provideKVStoreKey,
 			provideTransientStoreKey,
 			provideMemoryStoreKey,
+			provideDeliverTx,
 		),
 	)
 }
@@ -60,15 +63,17 @@ func provideCodecs(moduleBasics map[string]AppModuleBasicWrapper) (
 	std.RegisterLegacyAminoCodec(amino)
 
 	cdc := codec.NewProtoCodec(interfaceRegistry)
+	msgServiceRouter := baseapp.NewMsgServiceRouter()
 	app := &App{
 		storeKeys:         nil,
 		interfaceRegistry: interfaceRegistry,
 		cdc:               cdc,
 		amino:             amino,
 		basicManager:      basicManager,
+		msgServiceRouter:  msgServiceRouter,
 	}
 
-	return interfaceRegistry, cdc, amino, app, cdc, baseapp.NewMsgServiceRouter()
+	return interfaceRegistry, cdc, amino, app, cdc, msgServiceRouter
 }
 
 type appInputs struct {
@@ -130,4 +135,10 @@ func provideMemoryStoreKey(key depinject.ModuleKey, app appWrapper) *storetypes.
 	storeKey := storetypes.NewMemoryStoreKey(fmt.Sprintf("memory:%s", key.Name()))
 	registerStoreKey(app, storeKey)
 	return storeKey
+}
+
+func provideDeliverTx(app appWrapper) func(abci.RequestDeliverTx) abci.ResponseDeliverTx {
+	return func(tx abci.RequestDeliverTx) abci.ResponseDeliverTx {
+		return app.BaseApp.DeliverTx(tx)
+	}
 }

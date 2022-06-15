@@ -1,4 +1,4 @@
-package params
+package sims
 
 // Default simulation operation weights for messages and gov proposals
 const (
@@ -21,6 +21,7 @@ const (
 
 	DefaultWeightCommunitySpendProposal int = 5
 	DefaultWeightTextProposal           int = 5
+	DefaultWeightParamChangeProposal    int = 5
 
 	// feegrant
 	DefaultWeightGrantAllowance  int = 100

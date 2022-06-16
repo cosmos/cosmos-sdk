@@ -142,7 +142,7 @@ type ViewKeeper interface {
 
 ### PermanentLockedAccount
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/vesting/v1beta1/vesting.proto#L55-L64
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/vesting/v1beta1/vesting.proto#L66-L76
 
 ## Vesting Account Specification
 

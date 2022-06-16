@@ -9,14 +9,14 @@ on:
 
 jobs:
   cleanup-runs:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     steps:
       - uses: rokroskar/workflow-run-cleanup-action@master
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
     if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/main'"
   build:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
       - uses: actions/checkout@v3
@@ -28,7 +28,7 @@ jobs:
       - run: make build
 
   install-runsim:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     needs: build
     steps:
       - uses: actions/setup-go@v3
@@ -44,7 +44,7 @@ jobs:
           key: ${{ runner.os }}-go-runsim-binary
 
   test-sim-import-export:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     needs: [build, install-runsim]
     steps:
       - uses: actions/checkout@v3
@@ -64,7 +64,7 @@ jobs:
           make test-sim-import-export
 
   test-sim-after-import:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     needs: [build, install-runsim]
     steps:
       - uses: actions/checkout@v3
@@ -84,7 +84,7 @@ jobs:
           make test-sim-after-import
 
   test-sim-multi-seed-short:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     needs: [build, install-runsim]
     timeout-minutes: 60
     steps:
@@ -104,11 +104,38 @@ jobs:
         run: |
           make test-sim-multi-seed-short
 
-  sims-fail:
+  sims-notify-success:
     needs:
       [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
-    if: ${{ failure() }}
     runs-on: ubuntu-latest
+    if: ${{ success() }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Get previous workflow status
+        uses: ./.github/actions/last-workflow-status
+        id: last_status
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify Slack on success
+        if: ${{ steps.last_status.outputs.last_status == 'failure' }}
+        uses: rtCamp/action-slack-notify@12e36fc18b0689399306c2e0b3e0f2978b7f1ee7
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: cosmos-sdk-sims
+          SLACK_USERNAME: Sim Tests release/0.45.x
+          SLACK_ICON_EMOJI: ":white_check_mark:"
+          SLACK_COLOR: good
+          SLACK_MESSAGE: 0.45.x Sims are passing
+          SLACK_FOOTER: ""
+
+  sims-notify-failure:
+    needs:
+      [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
+    runs-on: ubuntu-latest
+    if: ${{ failure() }}
     steps:
       - name: Notify Slack on failure
         uses: rtCamp/action-slack-notify@12e36fc18b0689399306c2e0b3e0f2978b7f1ee7

@@ -209,9 +209,14 @@ func NewSimApp(
 		invCheckPeriod: invCheckPeriod,
 	}
 
+	govAuth := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	extraConfig := depinject.Supply(
+		bank.Authority(govAuth),
+	)
+
 	var appBuilder *runtime.AppBuilder
 
-	if err := depinject.Inject(AppConfig,
+	if err := depinject.Inject(depinject.Configs(AppConfig, extraConfig),
 		&appBuilder,
 		&app.ParamsKeeper,
 		&app.CapabilityKeeper,
@@ -285,7 +290,7 @@ func NewSimApp(
 		),
 	)
 	// set the governance module account as the authority for conducting upgrades
-	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, app.keys[upgradetypes.StoreKey], app.appCodec, homePath, app.BaseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, app.keys[upgradetypes.StoreKey], app.appCodec, homePath, app.BaseApp, govAuth)
 
 	/****  Module Options ****/
 

@@ -10,8 +10,6 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"github.com/cosmos/cosmos-sdk/depinject"
 	store "github.com/cosmos/cosmos-sdk/store/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/tendermint/tendermint/crypto"
 
@@ -231,7 +229,11 @@ type bankInputs struct {
 	Cdc           codec.Codec
 	Subspace      paramtypes.Subspace
 	Key           *store.KVStoreKey
+	Authority     Authority
 }
+
+// Authority is a typed string so that it can be injected
+type Authority string
 
 type bankOutputs struct {
 	depinject.Out
@@ -257,10 +259,7 @@ func provideModule(in bankInputs) bankOutputs {
 		}
 	}
 
-	// TODO: Allow injection of this Authority value once depinject allows definition of strings for injection.
-	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
-
-	bankKeeper := keeper.NewBaseKeeper(in.Cdc, in.Key, in.AccountKeeper, in.Subspace, blockedAddresses, authority)
+	bankKeeper := keeper.NewBaseKeeper(in.Cdc, in.Key, in.AccountKeeper, in.Subspace, blockedAddresses, string(in.Authority))
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper)
 	return bankOutputs{BankKeeper: bankKeeper, Module: runtime.WrapAppModule(m)}
 }

@@ -10,8 +10,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -232,11 +232,11 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 				_ = suite.setAccountBalance(addr2, 1)
 
 				msg := banktypes.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)})
-				tx, err := helpers.GenSignedMockTx(
+				tx, err := simtestutil.GenSignedMockTx(
 					suite.encodingConfig.TxConfig,
 					[]sdk.Msg{msg},
 					sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)},
-					helpers.DefaultGenTxGas,
+					simtestutil.DefaultGenTxGas,
 					suite.ctx.ChainID(),
 					[]uint64{7},
 					[]uint64{0},

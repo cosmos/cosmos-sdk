@@ -12,14 +12,14 @@ permissions:
 
 jobs:
   cleanup-runs:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     steps:
       - uses: rokroskar/workflow-run-cleanup-action@master
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
     if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/main'"
   build:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     strategy:
       matrix:
         go-arch: ["amd64", "arm", "arm64"]
@@ -59,7 +59,7 @@ jobs:
           key: ${{ runner.os }}-go-runsim-binary
 
   test-submodules:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     container: tendermintdev/docker-tm-db-testing
     steps:
       - uses: actions/checkout@v3
@@ -93,7 +93,7 @@ jobs:
           path: ./coverage-go-submod-profile.out
 
   split-test-files:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -122,7 +122,7 @@ jobs:
           path: ./pkgs.txt.part.03
 
   tests:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     needs: split-test-files
     strategy:
       fail-fast: false
@@ -163,7 +163,7 @@ jobs:
           path: ./${{ matrix.part }}profile.out
 
   upload-coverage-report:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     needs: tests
     steps:
       - uses: actions/checkout@v3
@@ -215,7 +215,7 @@ jobs:
         if: env.GIT_DIFF
 
   test-rosetta:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
@@ -242,7 +242,7 @@ jobs:
         # if: env.GIT_DIFF
 
   liveness-test:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v3
@@ -276,7 +276,7 @@ jobs:
         if: env.GIT_DIFF
 
   test-sim-nondeterminism:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     needs: [build]
     steps:
       - uses: actions/checkout@v3

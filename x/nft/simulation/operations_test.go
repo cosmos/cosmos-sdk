@@ -54,6 +54,13 @@ func (suite *SimTestSuite) SetupTest() {
 
 	suite.app = app
 	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+
+	suite.app.BeginBlock(abci.RequestBeginBlock{
+		Header: tmproto.Header{
+			Height:  suite.app.LastBlockHeight() + 1,
+			AppHash: suite.app.LastCommitID().Hash,
+		},
+	})
 }
 
 func (suite *SimTestSuite) TestWeightedOperations() {
@@ -80,12 +87,14 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}
 
 	for i, w := range weightedOps {
-		operationMsg, _, _ := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
+		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
+		suite.Require().NoError(err)
+
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
 		// will fail
 		suite.Require().Equal(expected[i].weight, w.Weight(), "weight should be the same")
-		suite.Require().Contains(expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
+		suite.Require().Equal(expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
 		suite.Require().Equal(expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")
 	}
 }
@@ -112,14 +121,6 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	accounts := suite.getTestingAccounts(r, 2)
 	blockTime := time.Now().UTC()
 	ctx := suite.ctx.WithBlockTime(blockTime)
-
-	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
-			Height:  suite.app.LastBlockHeight() + 1,
-			AppHash: suite.app.LastCommitID().Hash,
-		},
-	})
 
 	// execute operation
 	registry := suite.interfaceRegistry

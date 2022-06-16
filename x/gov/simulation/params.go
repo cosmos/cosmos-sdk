@@ -14,12 +14,13 @@ import (
 )
 
 const (
-	keyVotingParams  = "votingparams"
-	keyDepositParams = "depositparams"
-	keyTallyParams   = "tallyparams"
-	subkeyQuorum     = "quorum"
-	subkeyThreshold  = "threshold"
-	subkeyVeto       = "veto"
+	keyVotingParams          = "votingparams"
+	keyDepositParams         = "depositparams"
+	keyTallyParams           = "tallyparams"
+	subkeyQuorum             = "quorum"
+	subkeyThreshold          = "threshold"
+	subkeyExpeditedThreshold = "expedited_threshold"
+	subkeyVeto               = "veto"
 )
 
 // ParamChanges defines the parameters that can be modified by param change proposals
@@ -29,6 +30,11 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 		simulation.NewSimParamChange(types.ModuleName, keyVotingParams,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf(`{"voting_period": "%d"}`, GenVotingParamsVotingPeriod(r))
+			},
+		),
+		simulation.NewSimParamChange(types.ModuleName, keyVotingParams,
+			func(r *rand.Rand) string {
+				return fmt.Sprintf(`{"expedited_voting_period": "%d"}`, GenVotingParamsExpeditedVotingPeriod(r))
 			},
 		),
 		simulation.NewSimParamChange(types.ModuleName, keyDepositParams,
@@ -44,6 +50,7 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 				}{
 					{subkeyQuorum, GenTallyParamsQuorum(r)},
 					{subkeyThreshold, GenTallyParamsThreshold(r)},
+					{subkeyExpeditedThreshold, GenTallyParamsExpeditedThreshold(r)},
 					{subkeyVeto, GenTallyParamsVeto(r)},
 				}
 

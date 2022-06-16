@@ -114,6 +114,7 @@ func TestMigrate(t *testing.T) {
 				"no_with_veto": "0",
 				"yes": "0"
 			},
+			"is_expedited": false,
 			"proposal_id": "0",
 			"status": "PROPOSAL_STATUS_UNSPECIFIED",
 			"submit_time": "0001-01-01T00:00:00Z",
@@ -141,6 +142,7 @@ func TestMigrate(t *testing.T) {
 				"no_with_veto": "0",
 				"yes": "0"
 			},
+			"is_expedited": false,
 			"proposal_id": "0",
 			"status": "PROPOSAL_STATUS_UNSPECIFIED",
 			"submit_time": "0001-01-01T00:00:00Z",
@@ -161,6 +163,7 @@ func TestMigrate(t *testing.T) {
 				"no_with_veto": "0",
 				"yes": "0"
 			},
+			"is_expedited": false,
 			"proposal_id": "0",
 			"status": "PROPOSAL_STATUS_UNSPECIFIED",
 			"submit_time": "0001-01-01T00:00:00Z",
@@ -188,6 +191,7 @@ func TestMigrate(t *testing.T) {
 				"no_with_veto": "0",
 				"yes": "0"
 			},
+			"is_expedited": false,
 			"proposal_id": "0",
 			"status": "PROPOSAL_STATUS_UNSPECIFIED",
 			"submit_time": "0001-01-01T00:00:00Z",
@@ -215,6 +219,7 @@ func TestMigrate(t *testing.T) {
 				"no_with_veto": "0",
 				"yes": "0"
 			},
+			"is_expedited": false,
 			"proposal_id": "0",
 			"status": "PROPOSAL_STATUS_UNSPECIFIED",
 			"submit_time": "0001-01-01T00:00:00Z",
@@ -225,12 +230,14 @@ func TestMigrate(t *testing.T) {
 	],
 	"starting_proposal_id": "0",
 	"tally_params": {
+		"expedited_threshold": "0",
 		"quorum": "0",
 		"threshold": "0",
 		"veto_threshold": "0"
 	},
 	"votes": [],
 	"voting_params": {
+		"expedited_voting_period": "0s",
 		"proposal_voting_periods": [],
 		"voting_period": "0s"
 	}

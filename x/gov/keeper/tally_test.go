@@ -20,7 +20,7 @@ func TestTallyNoOneVotes(t *testing.T) {
 	createValidators(t, ctx, app, []int64{5, 5, 5})
 
 	tp := TestProposal
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, false)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalId
 	proposal.Status = types.StatusVotingPeriod
@@ -44,7 +44,7 @@ func TestTallyNoQuorum(t *testing.T) {
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(10000000))
 
 	tp := TestProposal
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, false)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalId
 	proposal.Status = types.StatusVotingPeriod
@@ -67,7 +67,7 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 	addrs, _ := createValidators(t, ctx, app, []int64{5, 5, 5})
 	tp := TestProposal
 
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, false)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalId
 	proposal.Status = types.StatusVotingPeriod
@@ -93,7 +93,7 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 	valAccAddrs, _ := createValidators(t, ctx, app, []int64{5, 6, 0})
 
 	tp := TestProposal
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, false)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalId
 	proposal.Status = types.StatusVotingPeriod
@@ -117,7 +117,7 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 	valAccAddrs, _ := createValidators(t, ctx, app, []int64{5, 6, 0})
 
 	tp := TestProposal
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, false)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalId
 	proposal.Status = types.StatusVotingPeriod
@@ -142,7 +142,7 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 	valAccAddrs, _ := createValidators(t, ctx, app, []int64{6, 6, 7})
 
 	tp := TestProposal
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, false)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalId
 	proposal.Status = types.StatusVotingPeriod
@@ -168,7 +168,7 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 	valAccAddrs, _ := createValidators(t, ctx, app, []int64{6, 6, 7})
 
 	tp := TestProposal
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, false)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalId
 	proposal.Status = types.StatusVotingPeriod
@@ -194,7 +194,7 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 	valAccAddrs, _ := createValidators(t, ctx, app, []int64{6, 6, 7})
 
 	tp := TestProposal
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, false)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalId
 	proposal.Status = types.StatusVotingPeriod
@@ -221,7 +221,7 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 	valAccAddr1, valAccAddr2 := valAccAddrs[0], valAccAddrs[1]
 
 	tp := TestProposal
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, false)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalId
 	proposal.Status = types.StatusVotingPeriod
@@ -255,7 +255,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	_ = staking.EndBlocker(ctx, app.StakingKeeper)
 
 	tp := TestProposal
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, false)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalId
 	proposal.Status = types.StatusVotingPeriod
@@ -291,7 +291,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	_ = staking.EndBlocker(ctx, app.StakingKeeper)
 
 	tp := TestProposal
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, false)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalId
 	proposal.Status = types.StatusVotingPeriod
@@ -330,7 +330,7 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	_ = staking.EndBlocker(ctx, app.StakingKeeper)
 
 	tp := TestProposal
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, false)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalId
 	proposal.Status = types.StatusVotingPeriod
@@ -372,7 +372,7 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	_ = staking.EndBlocker(ctx, app.StakingKeeper)
 
 	tp := TestProposal
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, false)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalId
 	proposal.Status = types.StatusVotingPeriod
@@ -415,7 +415,7 @@ func TestTallyJailedValidator(t *testing.T) {
 	app.StakingKeeper.Jail(ctx, sdk.ConsAddress(consAddr.Bytes()))
 
 	tp := TestProposal
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, false)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalId
 	proposal.Status = types.StatusVotingPeriod
@@ -448,7 +448,7 @@ func TestTallyValidatorMultipleDelegations(t *testing.T) {
 	require.NoError(t, err)
 
 	tp := TestProposal
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, false)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalId
 	proposal.Status = types.StatusVotingPeriod

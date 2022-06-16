@@ -28,6 +28,7 @@ type PlanRequest struct {
 	BaseReq       rest.BaseReq `json:"base_req" yaml:"base_req"`
 	Title         string       `json:"title" yaml:"title"`
 	Description   string       `json:"description" yaml:"description"`
+	IsExpedited   bool         `json:"is_expedited" yaml:"is_expedited"`
 	Deposit       sdk.Coins    `json:"deposit" yaml:"deposit"`
 	UpgradeName   string       `json:"upgrade_name" yaml:"upgrade_name"`
 	UpgradeHeight int64        `json:"upgrade_height" yaml:"upgrade_height"`
@@ -39,6 +40,7 @@ type CancelRequest struct {
 	BaseReq     rest.BaseReq `json:"base_req" yaml:"base_req"`
 	Title       string       `json:"title" yaml:"title"`
 	Description string       `json:"description" yaml:"description"`
+	IsExpedited bool         `json:"is_expedited" yaml:"is_expedited"`
 	Deposit     sdk.Coins    `json:"deposit" yaml:"deposit"`
 }
 
@@ -76,7 +78,7 @@ func newPostPlanHandler(clientCtx client.Context) http.HandlerFunc {
 
 		plan := types.Plan{Name: req.UpgradeName, Height: req.UpgradeHeight, Info: req.UpgradeInfo}
 		content := types.NewSoftwareUpgradeProposal(req.Title, req.Description, plan)
-		msg, err := govtypes.NewMsgSubmitProposal(content, req.Deposit, fromAddr)
+		msg, err := govtypes.NewMsgSubmitProposal(content, req.Deposit, fromAddr, req.IsExpedited)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -108,7 +110,7 @@ func newCancelPlanHandler(clientCtx client.Context) http.HandlerFunc {
 
 		content := types.NewCancelSoftwareUpgradeProposal(req.Title, req.Description)
 
-		msg, err := govtypes.NewMsgSubmitProposal(content, req.Deposit, fromAddr)
+		msg, err := govtypes.NewMsgSubmitProposal(content, req.Deposit, fromAddr, req.IsExpedited)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}

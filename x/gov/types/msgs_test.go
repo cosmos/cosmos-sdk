@@ -27,19 +27,20 @@ func init() {
 func TestMsgSubmitProposal(t *testing.T) {
 	tests := []struct {
 		title, description string
+		isExpedited        bool
 		proposalType       string
 		proposerAddr       sdk.AccAddress
 		initialDeposit     sdk.Coins
 		expectPass         bool
 	}{
-		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsPos, true},
-		{"", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsPos, false},
-		{"Test Proposal", "", ProposalTypeText, addrs[0], coinsPos, false},
-		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, sdk.AccAddress{}, coinsPos, false},
-		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsZero, true},
-		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsMulti, true},
-		{strings.Repeat("#", MaxTitleLength*2), "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsMulti, false},
-		{"Test Proposal", strings.Repeat("#", MaxDescriptionLength*2), ProposalTypeText, addrs[0], coinsMulti, false},
+		{"Test Proposal", "the purpose of this proposal is to test", true, ProposalTypeText, addrs[0], coinsPos, true},
+		{"", "the purpose of this proposal is to test", false, ProposalTypeText, addrs[0], coinsPos, false},
+		{"Test Proposal", "", true, ProposalTypeText, addrs[0], coinsPos, false},
+		{"Test Proposal", "the purpose of this proposal is to test", false, ProposalTypeText, sdk.AccAddress{}, coinsPos, false},
+		{"Test Proposal", "the purpose of this proposal is to test", true, ProposalTypeText, addrs[0], coinsZero, true},
+		{"Test Proposal", "the purpose of this proposal is to test", false, ProposalTypeText, addrs[0], coinsMulti, true},
+		{strings.Repeat("#", MaxTitleLength*2), "the purpose of this proposal is to test", true, ProposalTypeText, addrs[0], coinsMulti, false},
+		{"Test Proposal", strings.Repeat("#", MaxDescriptionLength*2), true, ProposalTypeText, addrs[0], coinsMulti, false},
 	}
 
 	for i, tc := range tests {
@@ -47,6 +48,7 @@ func TestMsgSubmitProposal(t *testing.T) {
 			ContentFromProposalType(tc.title, tc.description, tc.proposalType),
 			tc.initialDeposit,
 			tc.proposerAddr,
+			tc.isExpedited,
 		)
 
 		require.NoError(t, err)
@@ -164,7 +166,7 @@ func TestMsgVoteWeighted(t *testing.T) {
 
 // this tests that Amino JSON MsgSubmitProposal.GetSignBytes() still works with Content as Any using the ModuleCdc
 func TestMsgSubmitProposal_GetSignBytes(t *testing.T) {
-	msg, err := NewMsgSubmitProposal(NewTextProposal("test", "abcd"), sdk.NewCoins(), sdk.AccAddress{})
+	msg, err := NewMsgSubmitProposal(NewTextProposal("test", "abcd"), sdk.NewCoins(), sdk.AccAddress{}, false)
 	require.NoError(t, err)
 	var bz []byte
 	require.NotPanics(t, func() {

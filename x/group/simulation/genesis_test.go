@@ -18,7 +18,6 @@ import (
 )
 
 func TestRandomizedGenState(t *testing.T) {
-	// app := simapp.Setup(t, false)
 	var cdc codec.Codec
 	err := depinject.Inject(testutil.AppConfig, &cdc)
 	require.NoError(t, err)

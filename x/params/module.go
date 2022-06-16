@@ -155,6 +155,10 @@ func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Validato
 	return []abci.ValidatorUpdate{}
 }
 
+//
+// New App Wiring Setup
+//
+
 func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(
@@ -168,18 +172,31 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-func provideModule(
-	kvStoreKey *store.KVStoreKey,
-	transientStoreKey *store.TransientStoreKey,
-	cdc codec.Codec,
-	amino *codec.LegacyAmino,
-) (keeper.Keeper, runtime.AppModuleWrapper, runtime.BaseAppOption) {
-	k := keeper.NewKeeper(cdc, amino, kvStoreKey, transientStoreKey)
-	m := NewAppModule(k)
+type paramsInputs struct {
+	depinject.In
+
+	KvStoreKey        *store.KVStoreKey
+	TransientStoreKey *store.TransientStoreKey
+	Cdc               codec.Codec
+	LegacyAmino       *codec.LegacyAmino
+}
+
+type paramsOutputs struct {
+	depinject.Out
+
+	ParamsKeeper  keeper.Keeper
+	BaseAppOption runtime.BaseAppOption
+	Module        runtime.AppModuleWrapper
+}
+
+func provideModule(in paramsInputs) paramsOutputs {
+	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.KvStoreKey, in.TransientStoreKey)
 	baseappOpt := func(app *baseapp.BaseApp) {
 		app.SetParamStore(k.Subspace(baseapp.Paramspace).WithKeyTable(types.ConsensusParamsKeyTable()))
 	}
-	return k, runtime.WrapAppModule(m), baseappOpt
+	m := runtime.WrapAppModule(NewAppModule(k))
+
+	return paramsOutputs{ParamsKeeper: k, BaseAppOption: baseappOpt, Module: m}
 }
 
 func provideSubSpace(key depinject.ModuleKey, k keeper.Keeper) types.Subspace {

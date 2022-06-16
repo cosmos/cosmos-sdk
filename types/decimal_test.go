@@ -402,11 +402,12 @@ func (s *decimalTestSuite) TestApproxRoot() {
 		{sdk.SmallestDec(), 2, sdk.NewDecWithPrec(1, 9)},                                       // 1e-18 ^ (0.5) => 1e-9
 		{sdk.SmallestDec(), 3, sdk.MustNewDecFromStr("0.000000999999999997")},                  // 1e-18 ^ (1/3) => 1e-6
 		{sdk.NewDecWithPrec(1, 8), 3, sdk.MustNewDecFromStr("0.002154434690031900")},           // 1e-8 ^ (1/3) ≈ 0.00215443469
+		{sdk.MustNewDecFromStr("9000002314687921634000000000000000000021394871242000000000000000"), 2, sdk.MustNewDecFromStr("94868342004527103646332858502867.899477053226766107")},
 	}
 
 	// In the case of 1e-8 ^ (1/3), the result repeats every 5 iterations starting from iteration 24
 	// (i.e. 24, 29, 34, ... give the same result) and never converges enough. The maximum number of
-	// iterations (100) causes the result at iteration 100 to be returned, regardless of convergence.
+	// iterations (300) causes the result at iteration 300 to be returned, regardless of convergence.
 
 	for i, tc := range testCases {
 		res, err := tc.input.ApproxRoot(tc.root)

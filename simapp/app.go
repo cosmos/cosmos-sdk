@@ -210,7 +210,6 @@ func NewSimApp(
 	}
 
 	var appBuilder *runtime.AppBuilder
-	var msgServiceRouter *baseapp.MsgServiceRouter
 
 	if err := depinject.Inject(AppConfig,
 		&appBuilder,
@@ -229,12 +228,11 @@ func NewSimApp(
 		&app.SlashingKeeper,
 		&app.MintKeeper,
 		&app.EvidenceKeeper,
-		&msgServiceRouter,
 	); err != nil {
 		panic(err)
 	}
 
-	app.App = appBuilder.Build(logger, db, traceStore, msgServiceRouter, baseAppOptions...)
+	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 
 	app.keys = sdk.NewKVStoreKeys(
 		distrtypes.StoreKey,

@@ -7,10 +7,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/capability/keeper"
+	"github.com/cosmos/cosmos-sdk/x/capability/testutil"
 	"github.com/cosmos/cosmos-sdk/x/capability/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -19,21 +20,16 @@ type KeeperTestSuite struct {
 	suite.Suite
 
 	ctx    sdk.Context
-	app    *simapp.SimApp
 	keeper *keeper.Keeper
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	checkTx := false
-	app := simapp.Setup(suite.T(), checkTx)
-	cdc := app.AppCodec()
+	app, err := simtestutil.Setup(testutil.AppConfig,
+		&suite.keeper,
+	)
+	suite.Require().NoError(err)
 
-	// create new keeper so we can define custom scoping before init and seal
-	keeper := keeper.NewKeeper(cdc, app.GetKey(types.StoreKey), app.GetMemKey(types.MemStoreKey))
-
-	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1})
-	suite.keeper = keeper
+	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
 }
 
 func (suite *KeeperTestSuite) TestSeal() {

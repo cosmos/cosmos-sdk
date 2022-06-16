@@ -1,4 +1,4 @@
-package helpers
+package sims
 
 import (
 	"math/rand"
@@ -10,12 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
-)
-
-// SimAppChainID hardcoded chainID for simulation
-const (
-	DefaultGenTxGas = 10000000
-	SimAppChainID   = "simulation-app"
 )
 
 // GenSignedMockTx generates a signed mock transaction.

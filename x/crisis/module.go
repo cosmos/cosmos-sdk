@@ -184,7 +184,7 @@ type crisisInputs struct {
 	depinject.In
 
 	Cdc        codec.Codec
-	Config     modulev1.Module
+	Config     *modulev1.Module
 	Subspace   paramstypes.Subspace
 	BankKeeper types.SupplyKeeper `key:"cosmos.bank.v1.Keeper"`
 }

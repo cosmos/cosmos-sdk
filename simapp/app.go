@@ -256,9 +256,6 @@ func NewSimApp(
 		app.appCodec, app.keys[distrtypes.StoreKey], app.GetSubspace(distrtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		app.StakingKeeper, authtypes.FeeCollectorName,
 	)
-	//app.CrisisKeeper = crisiskeeper.NewKeeper(
-	//	app.GetSubspace(crisistypes.ModuleName), invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName,
-	//)
 
 	app.StakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
@@ -485,5 +482,4 @@ func GetMaccPerms() map[string][]string {
 func initParamsKeeper(paramsKeeper paramskeeper.Keeper) {
 	paramsKeeper.Subspace(distrtypes.ModuleName)
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govv1.ParamKeyTable())
-	//paramsKeeper.Subspace(crisistypes.ModuleName)
 }

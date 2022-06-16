@@ -54,7 +54,7 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 	}
 
 	page := int(req.Page)
-	// tm node.TxSearch that is used for querying txs defines pages starting from 1,
+	// Tendermint node.TxSearch that is used for querying txs defines pages starting from 1,
 	// so we default to 1 if not provided in the request.
 	if page == 0 {
 		page = 1

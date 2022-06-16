@@ -108,7 +108,7 @@ type GetTxsEventRequest struct {
 	// events is the list of transaction event type.
 	Events []string `protobuf:"bytes,1,rep,name=events,proto3" json:"events,omitempty"`
 	// pagination defines a pagination for the request.
-	// Deprecated: use page and limit instead.
+	// Deprecated post v0.46.x: use page and limit instead.
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"` // Deprecated: Do not use.
 	OrderBy    OrderBy            `protobuf:"varint,3,opt,name=order_by,json=orderBy,proto3,enum=cosmos.tx.v1beta1.OrderBy" json:"order_by,omitempty"`
 	// page is the page number to query, starts at 1. If not provided, will default to first page.
@@ -195,7 +195,7 @@ type GetTxsEventResponse struct {
 	// tx_responses is the list of queried TxResponses.
 	TxResponses []*types.TxResponse `protobuf:"bytes,2,rep,name=tx_responses,json=txResponses,proto3" json:"tx_responses,omitempty"`
 	// pagination defines a pagination for the response.
-	// Deprecated: use total instead.
+	// Deprecated post v0.46.x: use total instead.
 	Pagination *query.PageResponse `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"` // Deprecated: Do not use.
 	// total is total number of results available
 	Total uint64 `protobuf:"varint,4,opt,name=total,proto3" json:"total,omitempty"`

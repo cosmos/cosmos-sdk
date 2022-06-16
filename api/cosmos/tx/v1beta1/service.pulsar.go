@@ -5682,7 +5682,7 @@ type GetTxsEventRequest struct {
 	// events is the list of transaction event type.
 	Events []string `protobuf:"bytes,1,rep,name=events,proto3" json:"events,omitempty"`
 	// pagination defines a pagination for the request.
-	// Deprecated: use page and limit instead.
+	// Deprecated post v0.46.x: use page and limit instead.
 	//
 	// Deprecated: Do not use.
 	Pagination *v1beta1.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -5762,7 +5762,7 @@ type GetTxsEventResponse struct {
 	// tx_responses is the list of queried TxResponses.
 	TxResponses []*v1beta11.TxResponse `protobuf:"bytes,2,rep,name=tx_responses,json=txResponses,proto3" json:"tx_responses,omitempty"`
 	// pagination defines a pagination for the response.
-	// Deprecated: use total instead.
+	// Deprecated post v0.46.x: use total instead.
 	//
 	// Deprecated: Do not use.
 	Pagination *v1beta1.PageResponse `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`

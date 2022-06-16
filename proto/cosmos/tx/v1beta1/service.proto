@@ -48,7 +48,7 @@ message GetTxsEventRequest {
   // events is the list of transaction event type.
   repeated string events = 1;
   // pagination defines a pagination for the request.
-  // Deprecated: use page and limit instead.
+  // Deprecated post v0.46.x: use page and limit instead.
   cosmos.base.query.v1beta1.PageRequest pagination = 2 [deprecated = true];;
   OrderBy                               order_by   = 3;
   // page is the page number to query, starts at 1. If not provided, will default to first page.
@@ -76,7 +76,7 @@ message GetTxsEventResponse {
   // tx_responses is the list of queried TxResponses.
   repeated cosmos.base.abci.v1beta1.TxResponse tx_responses = 2;
   // pagination defines a pagination for the response.
-  // Deprecated: use total instead.
+  // Deprecated post v0.46.x: use total instead.
   cosmos.base.query.v1beta1.PageResponse pagination = 3 [deprecated = true];
   // total is total number of results available
   uint64 total = 4;

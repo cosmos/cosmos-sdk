@@ -5,12 +5,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 // TestMigrateMapAccAddressToAccNumberKey test cases for state migration of map to accAddr to accNum
@@ -22,12 +23,12 @@ func TestMigrateMapAccAddressToAccNumberKey(t *testing.T) {
 	randAccNumber := uint64(rand.Intn(100000-10000) + 10000)
 	acc := types.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), randAccNumber, 0)
 
-	ctx := app.App.BaseApp.NewContext(false, tmproto.Header{
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{
 		Time: time.Now(),
 	})
 
-	// migrator
 	m := keeper.NewMigrator(app.AccountKeeper, app.GRPCQueryRouter())
+
 	// set the account to store with map acc addr to acc number
 	require.NoError(t, m.V45_SetAccount(ctx, acc))
 

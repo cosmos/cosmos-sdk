@@ -3,6 +3,7 @@ package baseapp
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -1821,17 +1822,34 @@ func TestListSnapshots(t *testing.T) {
 	require.NoError(t, err)
 	defer teardown()
 
+	expected := abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{
+		{Height: 4, Format: 1, Chunks: 2},
+		{Height: 2, Format: 1, Chunks: 1},
+	}}
+
 	resp := app.ListSnapshots(abci.RequestListSnapshots{})
-	for _, s := range resp.Snapshots {
+	queryResponse := app.Query(abci.RequestQuery{
+		Path: "/app/snapshots",
+	})
+
+	queryListSnapshotsResp := abci.ResponseListSnapshots{}
+	err = json.Unmarshal(queryResponse.Value, &queryListSnapshotsResp)
+	require.NoError(t, err)
+
+	for i, s := range resp.Snapshots {
+		querySnapshot := queryListSnapshotsResp.Snapshots[i]
+		// we check that the query snapshot and function snapshot are equal
+		// Then we check that the hash and metadata are not empty. We atm
+		// do not have a good way to generate the expected value for these.
+		assert.Equal(t, *s, *querySnapshot)
 		assert.NotEmpty(t, s.Hash)
 		assert.NotEmpty(t, s.Metadata)
+		// Set hash and metadata to nil, so we can check the other snapshot
+		// fields against expected
 		s.Hash = nil
 		s.Metadata = nil
 	}
-	assert.Equal(t, abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{
-		{Height: 4, Format: 1, Chunks: 2},
-		{Height: 2, Format: 1, Chunks: 1},
-	}}, resp)
+	assert.Equal(t, expected, resp)
 }
 
 func TestSnapshotWithPruning(t *testing.T) {

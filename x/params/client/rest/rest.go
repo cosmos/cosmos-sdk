@@ -33,9 +33,9 @@ func postProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		content := proposal.NewParameterChangeProposal(req.Title, req.Description, req.Changes.ToParamChanges())
+		content := proposal.NewParameterChangeProposal(req.Title, req.Description, req.IsExpedited, req.Changes.ToParamChanges())
 
-		msg, err := govtypes.NewMsgSubmitProposal(content, req.Deposit, req.Proposer)
+		msg, err := govtypes.NewMsgSubmitProposal(content, req.Deposit, req.Proposer, req.IsExpedited)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}

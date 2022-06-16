@@ -3,10 +3,10 @@ package query_test
 import (
 	gocontext "context"
 	"fmt"
-	"github.com/tendermint/tendermint/libs/log"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
@@ -19,6 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -63,7 +64,7 @@ func (s *paginationTestSuite) TestParsePagination() {
 func (s *paginationTestSuite) TestPagination() {
 	app, ctx, _ := setupTest()
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.BankKeeper)
+	types.RegisterQueryServer(queryHelper, bankkeeper.Querier{BaseKeeper: app.BankKeeper.(bankkeeper.BaseKeeper)})
 	queryClient := types.NewQueryClient(queryHelper)
 
 	var balances sdk.Coins
@@ -172,7 +173,7 @@ func (s *paginationTestSuite) TestPagination() {
 func (s *paginationTestSuite) TestReversePagination() {
 	app, ctx, _ := setupTest()
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.BankKeeper)
+	types.RegisterQueryServer(queryHelper, bankkeeper.Querier{BaseKeeper: app.BankKeeper.(bankkeeper.BaseKeeper)})
 	queryClient := types.NewQueryClient(queryHelper)
 
 	var balances sdk.Coins

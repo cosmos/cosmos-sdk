@@ -46,11 +46,24 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
 			false,
 		},
 		{
-			"valid request",
+			"valid request - not expedited",
 			func() {
 				req = &types.QueryProposalRequest{ProposalId: 1}
 				testProposal := types.NewTextProposal("Proposal", "testing proposal")
-				submittedProposal, err := app.GovKeeper.SubmitProposal(ctx, testProposal)
+				submittedProposal, err := app.GovKeeper.SubmitProposal(ctx, testProposal, false)
+				suite.Require().NoError(err)
+				suite.Require().NotEmpty(submittedProposal)
+
+				expProposal = submittedProposal
+			},
+			true,
+		},
+		{
+			"valid request - expedited",
+			func() {
+				req = &types.QueryProposalRequest{ProposalId: 2}
+				testProposal := types.NewTextProposal("Proposal", "testing proposal")
+				submittedProposal, err := app.GovKeeper.SubmitProposal(ctx, testProposal, true)
 				suite.Require().NoError(err)
 				suite.Require().NotEmpty(submittedProposal)
 
@@ -106,7 +119,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 				for i := 0; i < 5; i++ {
 					num := strconv.Itoa(i + 1)
 					testProposal := types.NewTextProposal("Proposal"+num, "testing proposal "+num)
-					proposal, err := app.GovKeeper.SubmitProposal(ctx, testProposal)
+					proposal, err := app.GovKeeper.SubmitProposal(ctx, testProposal, false)
 					suite.Require().NotEmpty(proposal)
 					suite.Require().NoError(err)
 					testProposals = append(testProposals, proposal)
@@ -274,7 +287,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 			"no votes present",
 			func() {
 				var err error
-				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal)
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, false)
 				suite.Require().NoError(err)
 
 				req = &types.QueryVoteRequest{
@@ -379,7 +392,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 			"create a proposal and get votes",
 			func() {
 				var err error
-				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal)
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, false)
 				suite.Require().NoError(err)
 
 				req = &types.QueryVotesRequest{
@@ -460,7 +473,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 				req = &types.QueryParamsRequest{ParamsType: types.ParamDeposit}
 				expRes = &types.QueryParamsResponse{
 					DepositParams: types.DefaultDepositParams(),
-					TallyParams:   types.NewTallyParams(sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0)),
+					TallyParams:   types.NewTallyParams(sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0)),
 				}
 			},
 			true,
@@ -471,7 +484,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 				req = &types.QueryParamsRequest{ParamsType: types.ParamVoting}
 				expRes = &types.QueryParamsResponse{
 					VotingParams: types.DefaultVotingParams(),
-					TallyParams:  types.NewTallyParams(sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0)),
+					TallyParams:  types.NewTallyParams(sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0)),
 				}
 			},
 			true,
@@ -570,7 +583,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 			"no deposits proposal",
 			func() {
 				var err error
-				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal)
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, false)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(proposal)
 
@@ -659,7 +672,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposits() {
 			"create a proposal and get deposits",
 			func() {
 				var err error
-				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal)
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, false)
 				suite.Require().NoError(err)
 
 				req = &types.QueryDepositsRequest{
@@ -751,7 +764,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 			"create a proposal and get tally",
 			func() {
 				var err error
-				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal)
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, false)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(proposal)
 

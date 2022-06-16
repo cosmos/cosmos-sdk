@@ -15,15 +15,19 @@ import (
 
 // Default period for deposits & voting
 const (
-	DefaultPeriod time.Duration = time.Hour * 24 * 2 // 2 days
+	DefaultPeriod          time.Duration = time.Hour * 24 * 2 // 2 days
+	DefaultExpeditedPeriod time.Duration = time.Hour * 24     // 1 day
 )
 
 // Default governance params
 var (
-	DefaultMinDepositTokens = sdk.NewInt(10000000)
-	DefaultQuorum           = sdk.NewDecWithPrec(334, 3)
-	DefaultThreshold        = sdk.NewDecWithPrec(5, 1)
-	DefaultVetoThreshold    = sdk.NewDecWithPrec(334, 3)
+	DefaultMinDepositTokens   = sdk.NewInt(10000000)
+	DefaultQuorum             = sdk.NewDecWithPrec(334, 3)
+	DefaultThreshold          = sdk.NewDecWithPrec(5, 1)
+	DefaultExpeditedThreshold = sdk.NewDecWithPrec(667, 3)
+	DefaultVetoThreshold      = sdk.NewDecWithPrec(334, 3)
+
+	DefaultProposalVotingPeriods []ProposalVotingPeriod = []ProposalVotingPeriod{}
 )
 
 // Parameter store key
@@ -112,22 +116,31 @@ func validateDepositParams(i interface{}) error {
 }
 
 // NewTallyParams creates a new TallyParams object
-func NewTallyParams(quorum, threshold, vetoThreshold sdk.Dec) TallyParams {
+func NewTallyParams(quorum, threshold, expeditedThreshold, vetoThreshold sdk.Dec) TallyParams {
 	return TallyParams{
-		Quorum:        quorum,
-		Threshold:     threshold,
-		VetoThreshold: vetoThreshold,
+		Quorum:             quorum,
+		Threshold:          threshold,
+		ExpeditedThreshold: expeditedThreshold,
+		VetoThreshold:      vetoThreshold,
 	}
 }
 
 // DefaultTallyParams default parameters for tallying
 func DefaultTallyParams() TallyParams {
-	return NewTallyParams(DefaultQuorum, DefaultThreshold, DefaultVetoThreshold)
+	return NewTallyParams(DefaultQuorum, DefaultThreshold, DefaultExpeditedThreshold, DefaultVetoThreshold)
+}
+
+// GetThreshold returns threshold based on the value isExpedited
+func (tp TallyParams) GetThreshold(isExpedited bool) sdk.Dec {
+	if isExpedited {
+		return tp.ExpeditedThreshold
+	}
+	return tp.Threshold
 }
 
 // Equal checks equality of TallyParams
 func (tp TallyParams) Equal(other TallyParams) bool {
-	return tp.Quorum.Equal(other.Quorum) && tp.Threshold.Equal(other.Threshold) && tp.VetoThreshold.Equal(other.VetoThreshold)
+	return tp.Quorum.Equal(other.Quorum) && tp.Threshold.Equal(other.Threshold) && tp.ExpeditedThreshold.Equal(other.ExpeditedThreshold) && tp.VetoThreshold.Equal(other.VetoThreshold)
 }
 
 // String implements stringer insterface
@@ -152,7 +165,16 @@ func validateTallyParams(i interface{}) error {
 		return fmt.Errorf("vote threshold must be positive: %s", v.Threshold)
 	}
 	if v.Threshold.GT(sdk.OneDec()) {
-		return fmt.Errorf("vote threshold too large: %s", v)
+		return fmt.Errorf("vote threshold too large: %s", v.Threshold)
+	}
+	if !v.ExpeditedThreshold.IsPositive() {
+		return fmt.Errorf("expedited ote threshold must be positive: %s", v.ExpeditedThreshold)
+	}
+	if v.ExpeditedThreshold.GT(sdk.OneDec()) {
+		return fmt.Errorf("expedited vote threshold too large: %s", v.ExpeditedThreshold)
+	}
+	if v.ExpeditedThreshold.LTE(v.Threshold) {
+		return fmt.Errorf("expedited vote threshold %s, must be greater than the regular threshold %s", v.ExpeditedThreshold, v.Threshold)
 	}
 	if !v.VetoThreshold.IsPositive() {
 		return fmt.Errorf("veto threshold must be positive: %s", v.Threshold)
@@ -165,16 +187,25 @@ func validateTallyParams(i interface{}) error {
 }
 
 // NewVotingParams creates a new VotingParams object
-func NewVotingParams(votingPeriod time.Duration, pvps []ProposalVotingPeriod) VotingParams {
+func NewVotingParams(votingPeriod time.Duration, expeditedPeriod time.Duration, pvps []ProposalVotingPeriod) VotingParams {
 	return VotingParams{
 		VotingPeriod:          votingPeriod,
+		ExpeditedVotingPeriod: expeditedPeriod,
 		ProposalVotingPeriods: pvps,
 	}
 }
 
 // DefaultVotingParams default parameters for voting
 func DefaultVotingParams() VotingParams {
-	return NewVotingParams(DefaultPeriod, []ProposalVotingPeriod{})
+	return NewVotingParams(DefaultPeriod, DefaultExpeditedPeriod, DefaultProposalVotingPeriods)
+}
+
+// GetVotingPeriod returns voting period based on whether isExpedited is requested.
+func (vp VotingParams) GetVotingPeriod(isExpedited bool) time.Duration {
+	if isExpedited {
+		return vp.ExpeditedVotingPeriod
+	}
+	return vp.VotingPeriod
 }
 
 // Equal checks equality of TallyParams
@@ -197,6 +228,14 @@ func validateVotingParams(i interface{}) error {
 
 	if v.VotingPeriod <= 0 {
 		return fmt.Errorf("voting period must be positive: %s", v.VotingPeriod)
+	}
+
+	if v.ExpeditedVotingPeriod <= 0 {
+		return fmt.Errorf("expedited voting period must be positive: %s", v.ExpeditedVotingPeriod)
+	}
+
+	if v.ExpeditedVotingPeriod >= v.VotingPeriod {
+		return fmt.Errorf("expedited voting period %s must be strictly less that the regular voting period %s", v.ExpeditedVotingPeriod, v.VotingPeriod)
 	}
 
 	for _, pvp := range v.ProposalVotingPeriods {

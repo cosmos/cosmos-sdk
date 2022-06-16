@@ -55,6 +55,12 @@ service Query {
   rpc DenomsMetadata(QueryDenomsMetadataRequest) returns (QueryDenomsMetadataResponse) {
     option (google.api.http).get = "/cosmos/bank/v1beta1/denoms_metadata";
   }
+
+  // BaseDenom queries for a base denomination given a denom that can either be
+  // the base denom itself or a metadata denom unit that maps to the base denom.
+  rpc BaseDenom(QueryBaseDenomRequest) returns (QueryBaseDenomResponse) {
+    option (google.api.http).get = "/cosmos/bank/v1beta1/base_denom";
+  }
 }
 
 // QueryBalanceRequest is the request type for the Query/Balance RPC method.
@@ -207,4 +213,14 @@ message QueryDenomMetadataRequest {
 message QueryDenomMetadataResponse {
   // metadata describes and provides all the client information for the requested token.
   Metadata metadata = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryBaseDenomRequest defines the request type for the BaseDenom gRPC method.
+message QueryBaseDenomRequest {
+  string denom = 1;
+}
+
+// QueryBaseDenomResponse defines the response type for the BaseDenom gRPC method.
+message QueryBaseDenomResponse {
+  string base_denom = 1;
 }

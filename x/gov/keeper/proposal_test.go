@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"testing"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
@@ -11,40 +12,84 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	"github.com/stretchr/testify/require"
 )
 
 func (suite *KeeperTestSuite) TestGetSetProposal() {
-	tp := TestProposal
-	proposal, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, tp)
-	suite.Require().NoError(err)
-	proposalID := proposal.ProposalId
-	suite.app.GovKeeper.SetProposal(suite.ctx, proposal)
 
-	gotProposal, ok := suite.app.GovKeeper.GetProposal(suite.ctx, proposalID)
-	suite.Require().True(ok)
-	suite.Require().True(proposal.Equal(gotProposal))
+	testcases := map[string]struct {
+		proposal    types.Content
+		isExpedited bool
+	}{
+		"regular proposal": {},
+		"expedited proposal": {
+			isExpedited: true,
+		},
+	}
+
+	for _, tc := range testcases {
+		tp := TestProposal
+		proposal, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, tp, tc.isExpedited)
+		suite.Require().NoError(err)
+		proposalID := proposal.ProposalId
+		suite.app.GovKeeper.SetProposal(suite.ctx, proposal)
+
+		gotProposal, ok := suite.app.GovKeeper.GetProposal(suite.ctx, proposalID)
+		suite.Require().True(ok)
+		suite.Require().True(proposal.Equal(gotProposal))
+	}
 }
 
 func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
-	tp := TestProposal
-	proposal, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, tp)
-	suite.Require().NoError(err)
+	testcases := []struct {
+		name        string
+		proposal    types.Content
+		isExpedited bool
+	}{
+		{
+			name:        "expedited",
+			isExpedited: true,
+		},
+		{
+			name: "not expedited",
+		},
+	}
 
-	suite.Require().True(proposal.VotingStartTime.Equal(time.Time{}))
+	for _, tc := range testcases {
+		suite.T().Run(tc.name, func(t *testing.T) {
+			tp := TestProposal
+			proposal, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, tp, tc.isExpedited)
+			suite.Require().NoError(err)
 
-	suite.app.GovKeeper.ActivateVotingPeriod(suite.ctx, proposal)
+			suite.Require().True(proposal.VotingStartTime.Equal(time.Time{}))
 
-	suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
+			suite.app.GovKeeper.ActivateVotingPeriod(suite.ctx, proposal)
 
-	proposal, ok := suite.app.GovKeeper.GetProposal(suite.ctx, proposal.ProposalId)
-	suite.Require().True(ok)
+			suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
 
-	activeIterator := suite.app.GovKeeper.ActiveProposalQueueIterator(suite.ctx, proposal.VotingEndTime)
-	suite.Require().True(activeIterator.Valid())
+			proposal, ok := suite.app.GovKeeper.GetProposal(suite.ctx, proposal.ProposalId)
+			suite.Require().True(ok)
 
-	proposalID := types.GetProposalIDFromBytes(activeIterator.Value())
-	suite.Require().Equal(proposalID, proposal.ProposalId)
-	activeIterator.Close()
+			activeIterator := suite.app.GovKeeper.ActiveProposalQueueIterator(suite.ctx, proposal.VotingEndTime)
+			suite.Require().True(activeIterator.Valid())
+
+			proposalID := types.GetProposalIDFromBytes(activeIterator.Value())
+			suite.Require().Equal(proposalID, proposal.ProposalId)
+			require.NoError(t, activeIterator.Close())
+
+			votingParams := suite.app.GovKeeper.GetVotingParams(suite.ctx)
+
+			if tc.isExpedited {
+				require.Equal(t, proposal.VotingEndTime, proposal.VotingStartTime.Add(votingParams.ExpeditedVotingPeriod))
+			} else {
+				require.Equal(t, proposal.VotingEndTime, proposal.VotingStartTime.Add(votingParams.VotingPeriod))
+			}
+
+			// teardown
+			suite.app.GovKeeper.RemoveFromActiveProposalQueue(suite.ctx, proposalID, proposal.VotingEndTime)
+			suite.app.GovKeeper.DeleteProposal(suite.ctx, proposalID)
+		})
+	}
 }
 
 type invalidProposalRoute struct{ types.TextProposal }
@@ -54,20 +99,21 @@ func (invalidProposalRoute) ProposalRoute() string { return "nonexistingroute" }
 func (suite *KeeperTestSuite) TestSubmitProposal() {
 	testCases := []struct {
 		content     types.Content
+		isExpedited bool
 		expectedErr error
 	}{
-		{&types.TextProposal{Title: "title", Description: "description"}, nil},
+		{&types.TextProposal{Title: "title", Description: "description"}, true, nil},
 		// Keeper does not check the validity of title and description, no error
-		{&types.TextProposal{Title: "", Description: "description"}, nil},
-		{&types.TextProposal{Title: strings.Repeat("1234567890", 100), Description: "description"}, nil},
-		{&types.TextProposal{Title: "title", Description: ""}, nil},
-		{&types.TextProposal{Title: "title", Description: strings.Repeat("1234567890", 1000)}, nil},
+		{&types.TextProposal{Title: "", Description: "description"}, true, nil},
+		{&types.TextProposal{Title: strings.Repeat("1234567890", 100), Description: "description"}, true, nil},
+		{&types.TextProposal{Title: "title", Description: ""}, true, nil},
+		{&types.TextProposal{Title: "title", Description: strings.Repeat("1234567890", 1000)}, true, nil},
 		// error only when invalid route
-		{&invalidProposalRoute{}, types.ErrNoProposalHandlerExists},
+		{&invalidProposalRoute{}, true, types.ErrNoProposalHandlerExists},
 	}
 
 	for i, tc := range testCases {
-		_, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, tc.content)
+		_, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, tc.content, tc.isExpedited)
 		suite.Require().True(errors.Is(tc.expectedErr, err), "tc #%d; got: %v, expected: %v", i, err, tc.expectedErr)
 	}
 }
@@ -80,7 +126,7 @@ func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
 
 	for _, s := range status {
 		for i := 0; i < 50; i++ {
-			p, err := types.NewProposal(TestProposal, proposalID, time.Now(), time.Now())
+			p, err := types.NewProposal(TestProposal, proposalID, time.Now(), time.Now(), false)
 			suite.Require().NoError(err)
 
 			p.Status = s

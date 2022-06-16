@@ -43,10 +43,12 @@ func SimulateParamChangeProposalContent(paramChangePool []simulation.ParamChange
 		title := fmt.Sprintf("title from SimulateParamChangeProposalContent-%d", numProposals)
 		desc := fmt.Sprintf("desc from SimulateParamChangeProposalContent-%d. Random short desc: %s",
 			numProposals, simulation.RandStringOfLength(r, 20))
+		isExpedited := r.Intn(2) == 0
 		numProposals++
 		return proposal.NewParameterChangeProposal(
 			title,        // title
 			desc,         // description
+			isExpedited,  // flag indicating whether the proposal is expedited
 			paramChanges, // set of changes
 		)
 	}

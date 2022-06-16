@@ -20,6 +20,7 @@ import (
 const (
 	FlagTitle        = "title"
 	FlagDescription  = "description"
+	FlagIsExpedited  = "is-expedited"
 	FlagProposalType = "type"
 	FlagDeposit      = "deposit"
 	flagVoter        = "voter"
@@ -31,6 +32,7 @@ const (
 type proposal struct {
 	Title       string
 	Description string
+	IsExpedited bool
 	Type        string
 	Deposit     string
 }
@@ -98,7 +100,7 @@ Where proposal.json contains:
 
 Which is equivalent to:
 
-$ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --from mykey
+$ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --is-expedited=true --from mykey
 `,
 				version.AppName, version.AppName,
 			),
@@ -119,9 +121,14 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 				return err
 			}
 
+			isExpedited, err := cmd.Flags().GetBool(FlagIsExpedited)
+			if err != nil {
+				return err
+			}
+
 			content := types.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
 
-			msg, err := types.NewMsgSubmitProposal(content, amount, clientCtx.GetFromAddress())
+			msg, err := types.NewMsgSubmitProposal(content, amount, clientCtx.GetFromAddress(), isExpedited)
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}
@@ -132,6 +139,7 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 
 	cmd.Flags().String(FlagTitle, "", "The proposal title")
 	cmd.Flags().String(FlagDescription, "", "The proposal description")
+	cmd.Flags().Bool(FlagIsExpedited, false, "If true, makes the proposal an expedited one")
 	cmd.Flags().String(FlagProposalType, "", "The proposal Type")
 	cmd.Flags().String(FlagDeposit, "", "The proposal deposit")
 	cmd.Flags().String(FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")

@@ -22,6 +22,10 @@ message GenesisState {
 
   // denom_metadata defines the metadata of the differents coins.
   repeated Metadata denom_metadata = 4 [(gogoproto.moretags) = "yaml:\"denom_metadata\"", (gogoproto.nullable) = false];
+
+  // supply_offsets defines the amount of supply offset.
+  repeated GenesisSupplyOffset supply_offsets = 5
+      [(gogoproto.moretags) = "yaml:\"supply_offsets\"", (gogoproto.nullable) = false];
 }
 
 // Balance defines an account address and balance pair used in the bank module's
@@ -36,4 +40,17 @@ message Balance {
   // coins defines the different coins this balance holds.
   repeated cosmos.base.v1beta1.Coin coins = 2
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+// GenesisSupplyOffset encodes the supply offsets, just for genesis.
+// The offsets are serialized directly by denom in state.
+message GenesisSupplyOffset {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // Denom
+  string denom = 1;
+
+  // SupplyOffset
+  string offset = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }

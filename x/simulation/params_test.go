@@ -46,9 +46,11 @@ func TestNewWeightedProposalContent(t *testing.T) {
 type testContent struct {
 }
 
-func (t testContent) GetTitle() string       { return "" }
-func (t testContent) GetDescription() string { return "" }
-func (t testContent) ProposalRoute() string  { return "" }
-func (t testContent) ProposalType() string   { return "" }
-func (t testContent) ValidateBasic() error   { return nil }
-func (t testContent) String() string         { return "" }
+func (t testContent) GetTitle() string                { return "" }
+func (t testContent) GetDescription() string          { return "" }
+func (t testContent) GetIsExpedited() bool            { return false }
+func (t testContent) SetIsExpedited(isExpedited bool) {}
+func (t testContent) ProposalRoute() string           { return "" }
+func (t testContent) ProposalType() string            { return "" }
+func (t testContent) ValidateBasic() error            { return nil }
+func (t testContent) String() string                  { return "" }

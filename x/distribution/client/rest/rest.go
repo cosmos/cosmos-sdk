@@ -44,7 +44,7 @@ func postProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		content := types.NewCommunityPoolSpendProposal(req.Title, req.Description, req.Recipient, req.Amount)
 
-		msg, err := govtypes.NewMsgSubmitProposal(content, req.Deposit, req.Proposer)
+		msg, err := govtypes.NewMsgSubmitProposal(content, req.Deposit, req.Proposer, req.IsExpedited)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}

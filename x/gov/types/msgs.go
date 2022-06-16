@@ -27,10 +27,11 @@ var (
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
 //nolint:interfacer
-func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) (*MsgSubmitProposal, error) {
+func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress, IsExpedited bool) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
 		InitialDeposit: initialDeposit,
 		Proposer:       proposer.String(),
+		IsExpedited:    IsExpedited,
 	}
 	err := m.SetContent(content)
 	if err != nil {

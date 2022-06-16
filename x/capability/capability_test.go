@@ -7,6 +7,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -26,10 +27,17 @@ type CapabilityTestSuite struct {
 	cdc    codec.Codec
 	ctx    sdk.Context
 	keeper *keeper.Keeper
+	memKey *storetypes.MemoryStoreKey
 }
 
 func (suite *CapabilityTestSuite) SetupTest() {
-	app, err := simtestutil.Setup(testutil.AppConfig,
+	suite.memKey = storetypes.NewMemoryStoreKey("testingkey")
+
+	app, err := simtestutil.SetupWithBaseAppOption(testutil.AppConfig,
+		func(ba *baseapp.BaseApp) {
+			ba.MountStores(suite.memKey)
+		},
+		false,
 		&suite.cdc,
 		&suite.keeper,
 	)
@@ -49,7 +57,7 @@ func (suite *CapabilityTestSuite) TestInitializeMemStore() {
 	suite.Require().NotNil(cap1)
 
 	// mock statesync by creating new keeper that shares persistent state but loses in-memory map
-	newKeeper := keeper.NewKeeper(suite.cdc, suite.app.UnsafeFindStoreKey(types.StoreKey).(*storetypes.KVStoreKey), suite.app.UnsafeFindStoreKey(types.MemStoreKey).(*storetypes.MemoryStoreKey))
+	newKeeper := keeper.NewKeeper(suite.cdc, suite.app.UnsafeFindStoreKey(types.StoreKey).(*storetypes.KVStoreKey), suite.memKey)
 	newSk1 := newKeeper.ScopeToModule(banktypes.ModuleName)
 
 	// Mock App startup

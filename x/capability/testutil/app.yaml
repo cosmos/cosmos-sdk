@@ -43,4 +43,4 @@ modules:
   - name: capability
     config:
       "@type": cosmos.capability.module.v1.Module
-      seal_keeper: false
+      seal_keeper: true

@@ -32,7 +32,7 @@ func (suite *CapabilityTestSuite) TestGenesis() {
 	// create new app that does not share persistent or in-memory state
 	// and initialize app from exported genesis state above.
 	var newKeeper *keeper.Keeper
-	newApp, err := simtestutil.Setup(testutil.AppConfig, &newKeeper)
+	newApp, err := simtestutil.SetupAtGenesis(testutil.AppConfig, &newKeeper)
 	suite.Require().NoError(err)
 
 	newSk1 := newKeeper.ScopeToModule(banktypes.ModuleName)

@@ -159,9 +159,7 @@ type SimApp struct {
 	invCheckPeriod uint
 
 	// keys to access the substores
-	keys    map[string]*storetypes.KVStoreKey
-	tkeys   map[string]*storetypes.TransientStoreKey
-	memKeys map[string]*storetypes.MemoryStoreKey
+	keys map[string]*storetypes.KVStoreKey
 
 	// keepers
 	AccountKeeper    authkeeper.AccountKeeper
@@ -405,13 +403,6 @@ func (app *SimApp) GetKey(storeKey string) *storetypes.KVStoreKey {
 		return nil
 	}
 	return kvStoreKey
-}
-
-// GetTKey returns the TransientStoreKey for the provided store key.
-//
-// NOTE: This is solely to be used for testing purposes.
-func (app *SimApp) GetTKey(storeKey string) *storetypes.TransientStoreKey {
-	return app.tkeys[storeKey]
 }
 
 // GetSubspace returns a param subspace for a given module name.

@@ -19,6 +19,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
+
+	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/x/group/module"
 )
@@ -83,6 +85,48 @@ func (s *TestSuite) SetupTest() {
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
+}
+
+func (s *TestSuite) TestCreateGroupWithLotsOfMembers() {
+	// for i := 50; i < 68; i++ {
+	// 	membersResp := s.createGroupAndGetMembers(i)
+	// 	s.Require().Equal(len(membersResp), i)
+	// }
+	s.createGroupAndGetMembers(67)
+}
+
+func (s *TestSuite) createGroupAndGetMembers(numMembers int) []*group.GroupMember {
+	addressPool := simapp.AddTestAddrsIncremental(s.app, s.sdkCtx, numMembers, sdk.NewInt(30000000))
+	members := make([]group.MemberRequest, numMembers)
+	for i := 0; i < len(members); i++ {
+		members[i] = group.MemberRequest{
+			Address: addressPool[i].String(),
+			Weight:  "1",
+		}
+
+	}
+
+	g, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
+		Admin:   members[0].Address,
+		Members: members,
+	})
+	s.Require().NoErrorf(err, "failed to create group with %d members", len(members))
+	s.T().Logf("group %d created with %d members", g.GroupId, len(members))
+
+	for i := 0; i < len(members); i++ {
+		m := group.GroupMember{GroupId: g.GroupId, Member: &group.Member{Address: members[i].Address}}
+		pk := orm.PrimaryKey(&m)
+		r, err := s.keeper.GroupMember(s.ctx, m)
+		s.Require().NoError(err)
+		s.T().Logf("got %d %v %v from group %d", i, pk, r, g.GroupId)
+	}
+
+	groupMemberResp, err := s.keeper.GroupMembers(s.ctx, &group.QueryGroupMembersRequest{GroupId: g.GroupId})
+	s.Require().NoError(err)
+
+	s.T().Logf("got %d members from group %d", len(groupMemberResp.Members), g.GroupId)
+
+	return groupMemberResp.Members
 }
 
 func (s *TestSuite) TestCreateGroup() {

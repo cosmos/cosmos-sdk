@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -262,11 +262,11 @@ func SimulateMsgCreateGroup(cdc *codec.ProtoCodec, ak group.AccountKeeper, bk gr
 		msg := &group.MsgCreateGroup{Admin: accAddr, Members: members, Metadata: simtypes.RandStringOfLength(r, 10)}
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
-		tx, err := helpers.GenSignedMockTx(
+		tx, err := simtestutil.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
-			helpers.DefaultGenTxGas,
+			simtestutil.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -321,11 +321,11 @@ func SimulateMsgCreateGroupWithPolicy(cdc *codec.ProtoCodec, ak group.AccountKee
 		}
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
-		tx, err := helpers.GenSignedMockTx(
+		tx, err := simtestutil.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
-			helpers.DefaultGenTxGas,
+			simtestutil.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -380,11 +380,11 @@ func SimulateMsgCreateGroupPolicy(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 		}
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
-		tx, err := helpers.GenSignedMockTx(
+		tx, err := simtestutil.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
-			helpers.DefaultGenTxGas,
+			simtestutil.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -455,11 +455,11 @@ func SimulateMsgSubmitProposal(cdc *codec.ProtoCodec, ak group.AccountKeeper, bk
 		}
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
-		tx, err := helpers.GenSignedMockTx(
+		tx, err := simtestutil.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
-			helpers.DefaultGenTxGas,
+			simtestutil.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -514,11 +514,11 @@ func SimulateMsgUpdateGroupAdmin(cdc *codec.ProtoCodec, ak group.AccountKeeper, 
 		}
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
-		tx, err := helpers.GenSignedMockTx(
+		tx, err := simtestutil.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
-			helpers.DefaultGenTxGas,
+			simtestutil.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -564,11 +564,11 @@ func SimulateMsgUpdateGroupMetadata(cdc *codec.ProtoCodec, ak group.AccountKeepe
 		}
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
-		tx, err := helpers.GenSignedMockTx(
+		tx, err := simtestutil.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
-			helpers.DefaultGenTxGas,
+			simtestutil.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -643,11 +643,11 @@ func SimulateMsgUpdateGroupMembers(cdc *codec.ProtoCodec, ak group.AccountKeeper
 		}
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
-		tx, err := helpers.GenSignedMockTx(
+		tx, err := simtestutil.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
-			helpers.DefaultGenTxGas,
+			simtestutil.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -702,11 +702,11 @@ func SimulateMsgUpdateGroupPolicyAdmin(cdc *codec.ProtoCodec, ak group.AccountKe
 		}
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
-		tx, err := helpers.GenSignedMockTx(
+		tx, err := simtestutil.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
-			helpers.DefaultGenTxGas,
+			simtestutil.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -763,11 +763,11 @@ func SimulateMsgUpdateGroupPolicyDecisionPolicy(cdc *codec.ProtoCodec, ak group.
 		}
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
-		tx, err := helpers.GenSignedMockTx(
+		tx, err := simtestutil.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
-			helpers.DefaultGenTxGas,
+			simtestutil.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -814,11 +814,11 @@ func SimulateMsgUpdateGroupPolicyMetadata(cdc *codec.ProtoCodec, ak group.Accoun
 		}
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
-		tx, err := helpers.GenSignedMockTx(
+		tx, err := simtestutil.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
-			helpers.DefaultGenTxGas,
+			simtestutil.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -916,11 +916,11 @@ func SimulateMsgWithdrawProposal(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 		}
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
-		tx, err := helpers.GenSignedMockTx(
+		tx, err := simtestutil.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
-			helpers.DefaultGenTxGas,
+			simtestutil.DefaultGenTxGas,
 			chainID,
 			[]uint64{proposerAcc.GetAccountNumber()},
 			[]uint64{proposerAcc.GetSequence()},
@@ -1021,11 +1021,11 @@ func SimulateMsgVote(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 			Metadata:   simtypes.RandStringOfLength(r, 10),
 		}
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
-		tx, err := helpers.GenSignedMockTx(
+		tx, err := simtestutil.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
-			helpers.DefaultGenTxGas,
+			simtestutil.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -1099,11 +1099,11 @@ func SimulateMsgExec(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 			Executor:   acc.Address.String(),
 		}
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
-		tx, err := helpers.GenSignedMockTx(
+		tx, err := simtestutil.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
-			helpers.DefaultGenTxGas,
+			simtestutil.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -1161,11 +1161,11 @@ func SimulateMsgLeaveGroup(cdc *codec.ProtoCodec, k keeper.Keeper, ak group.Acco
 		}
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
-		tx, err := helpers.GenSignedMockTx(
+		tx, err := simtestutil.GenSignedMockTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
-			helpers.DefaultGenTxGas,
+			simtestutil.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},

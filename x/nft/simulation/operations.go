@@ -106,16 +106,16 @@ func SimulateMsgSend(
 			[]uint64{senderAcc.GetSequence()},
 			sender.PrivKey,
 		)
+
 		if err != nil {
 			return simtypes.NoOpMsg(nft.ModuleName, TypeMsgSend, "unable to generate mock tx"), nil, err
 		}
 
-		_, _, err = app.SimDeliver(txCfg.TxEncoder(), tx)
-		if err != nil {
+		if _, _, err = app.SimDeliver(txCfg.TxEncoder(), tx); err != nil {
 			return simtypes.NoOpMsg(nft.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", cdc), nil, err
+		return simtypes.NewOperationMsg(msg, true, "", cdc), nil, nil
 	}
 }
 

@@ -5,14 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"sort"
+
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"golang.org/x/exp/maps"
 
 	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/appmodule"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -185,6 +189,7 @@ func init() {
 		appmodule.Provide(
 			provideModuleBasic,
 			provideModule,
+			provideSetStakingHooks,
 		),
 	)
 }
@@ -216,6 +221,40 @@ func provideModule(in stakingInputs) stakingOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.Key, in.AccountKeeper, in.BankKeeper, in.Subspace)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper)
 	return stakingOutputs{StakingKeeper: k, Module: runtime.WrapAppModule(m)}
+}
+
+func provideSetStakingHooks(
+	config *modulev1.Module,
+	stakingHooks map[string]types.StakingHooksWrapper,
+	keeper *keeper.Keeper,
+) (runtime.BaseAppOption, error) {
+	modNames := maps.Keys(stakingHooks)
+	order := config.HooksOrder
+	if len(order) == 0 {
+		order = modNames
+		sort.Strings(order)
+	}
+
+	if len(order) != len(modNames) {
+		return nil, fmt.Errorf("len(hooks_order: %v) != len(hooks modules: %v)", order, modNames)
+	}
+
+	if len(modNames) == 0 {
+		return func(app *baseapp.BaseApp) {}, nil
+	}
+
+	var multiHooks types.MultiStakingHooks
+	for _, modName := range order {
+		hook, ok := stakingHooks[modName]
+		if !ok {
+			return nil, fmt.Errorf("can't find staking hooks for module %s", modName)
+		}
+
+		multiHooks = append(multiHooks, hook)
+	}
+
+	keeper.SetHooks(multiHooks)
+	return func(*baseapp.BaseApp) {}, nil
 }
 
 // AppModuleSimulation functions

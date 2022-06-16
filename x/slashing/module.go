@@ -8,6 +8,8 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	"cosmossdk.io/core/appmodule"
+	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -204,13 +206,17 @@ type outputInputs struct {
 
 	Keeper keeper.Keeper `key:"cosmos.slashing.v1.Keeper"`
 	Module runtime.AppModuleWrapper
+	Hooks  staking.StakingHooksWrapper
 }
 
 func provideModule(in slashingInputs) outputInputs {
-
 	k := keeper.NewKeeper(in.Cdc, in.Key, in.StakingKeeper, in.Subspace)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper)
-	return outputInputs{Keeper: k, Module: runtime.WrapAppModule(m)}
+	return outputInputs{
+		Keeper: k,
+		Module: runtime.WrapAppModule(m),
+		Hooks:  staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
+	}
 }
 
 // _____________________________________________________________________________________

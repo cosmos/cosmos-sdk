@@ -12,7 +12,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/capability/keeper"
@@ -27,7 +26,6 @@ type CapabilityTestSuite struct {
 	ctx    sdk.Context
 	app    *runtime.App
 	keeper *keeper.Keeper
-	module module.AppModule
 }
 
 func (suite *CapabilityTestSuite) SetupTest() {
@@ -39,7 +37,6 @@ func (suite *CapabilityTestSuite) SetupTest() {
 
 	suite.app = app
 	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
-	suite.module = app.ModuleManager.Modules[types.ModuleName]
 }
 
 // The following test case mocks a specific bug discovered in https://github.com/cosmos/cosmos-sdk/issues/9800
@@ -52,7 +49,7 @@ func (suite *CapabilityTestSuite) TestInitializeMemStore() {
 	suite.Require().NotNil(cap1)
 
 	// mock statesync by creating new keeper that shares persistent state but loses in-memory map
-	newKeeper := keeper.NewKeeper(suite.cdc, suite.app.UnsafeFindStoreKey(types.StoreKey), suite.app.UnsafeFindStoreKey("testingkey").(*storetypes.MemoryStoreKey))
+	newKeeper := keeper.NewKeeper(suite.cdc, suite.app.UnsafeFindStoreKey(types.StoreKey), storetypes.NewMemoryStoreKey("testingkey"))
 	newSk1 := newKeeper.ScopeToModule(banktypes.ModuleName)
 
 	// Mock App startup

@@ -120,6 +120,13 @@ func FilteredPaginate(
 	return res, nil
 }
 
+// GenericFilteredPaginate does pagination of all the results in the PrefixStore based on the
+// provided PageRequest. `onResult` should be used to filter or transform the results.
+// `c` is a constructor function that needs to return a new instance of the type T.
+// If key is provided, the pagination uses the optimized querying.
+// If offset is used, the pagination uses lazy filtering i.e., searches through all the records.
+// The resulting slice (of type F) can be of a different type than the one being iterated through
+// (type T), so it's possible to do any necessary transformation inside the onResult function.
 func GenericFilteredPaginate[T codec.ProtoMarshaler, F codec.ProtoMarshaler](
 	cdc codec.BinaryCodec,
 	prefixStore types.KVStore,
@@ -154,8 +161,10 @@ func GenericFilteredPaginate[T codec.ProtoMarshaler, F codec.ProtoMarshaler](
 		iterator := getIterator(prefixStore, key, reverse)
 		defer iterator.Close()
 
-		var numHits uint64
-		var nextKey []byte
+		var (
+			numHits uint64
+			nextKey []byte
+		)
 
 		for ; iterator.Valid(); iterator.Next() {
 			if numHits == limit {

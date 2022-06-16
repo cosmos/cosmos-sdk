@@ -59,6 +59,7 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 	if page == 0 {
 		page = 1
 	}
+
 	limit := int(req.Limit)
 	if limit == 0 {
 		limit = query.DefaultLimit

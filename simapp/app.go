@@ -256,9 +256,6 @@ func NewSimApp(
 		app.appCodec, app.keys[distrtypes.StoreKey], app.GetSubspace(distrtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		app.StakingKeeper, authtypes.FeeCollectorName,
 	)
-	app.SlashingKeeper = slashingkeeper.NewKeeper(
-		app.appCodec, app.keys[slashingtypes.StoreKey], app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName),
-	)
 	//app.CrisisKeeper = crisiskeeper.NewKeeper(
 	//	app.GetSubspace(crisistypes.ModuleName), invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName,
 	//)

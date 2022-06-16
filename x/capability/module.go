@@ -228,5 +228,8 @@ func provideModule(in capabilityInputs) capabilityOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.KvStoreKey, in.MemStoreKey)
 	m := NewAppModule(in.Cdc, *k, in.Config.SealKeeper)
 
-	return capabilityOutputs{CapabilityKeeper: k, Module: runtime.WrapAppModule(m)}
+	return capabilityOutputs{
+		CapabilityKeeper: k,
+		Module:           runtime.WrapAppModule(m),
+	}
 }

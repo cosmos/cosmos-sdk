@@ -22,9 +22,9 @@ import (
 type CapabilityTestSuite struct {
 	suite.Suite
 
+	app    *runtime.App
 	cdc    codec.Codec
 	ctx    sdk.Context
-	app    *runtime.App
 	keeper *keeper.Keeper
 }
 
@@ -49,7 +49,7 @@ func (suite *CapabilityTestSuite) TestInitializeMemStore() {
 	suite.Require().NotNil(cap1)
 
 	// mock statesync by creating new keeper that shares persistent state but loses in-memory map
-	newKeeper := keeper.NewKeeper(suite.cdc, suite.app.UnsafeFindStoreKey(types.StoreKey), storetypes.NewMemoryStoreKey("testingkey"))
+	newKeeper := keeper.NewKeeper(suite.cdc, suite.app.UnsafeFindStoreKey(types.StoreKey).(*storetypes.KVStoreKey), suite.app.UnsafeFindStoreKey(types.MemStoreKey).(*storetypes.MemoryStoreKey))
 	newSk1 := newKeeper.ScopeToModule(banktypes.ModuleName)
 
 	// Mock App startup

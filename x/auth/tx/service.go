@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/golang/protobuf/proto" //nolint: staticcheck
@@ -51,6 +52,17 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
 	}
 
+	page := int(req.Page)
+	// Tendermint node.TxSearch that is used for querying txs defines pages starting from 1,
+	// so we default to 1 if not provided in the request.
+	if page == 0 {
+		page = 1
+	}
+
+	limit := int(req.Limit)
+	if limit == 0 {
+		limit = query.DefaultLimit
+	}
 	orderBy := parseOrderBy(req.OrderBy)
 
 	result, err := QueryTxsByEvents(s.clientCtx, int(req.Page), int(req.Limit), req.Query, orderBy)

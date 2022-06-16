@@ -30,11 +30,11 @@ func QueryTxsByEvents(clientCtx client.Context, page, limit int, query, orderBy 
 	// CometBFT node.TxSearch that is used for querying txs defines pages
 	// starting from 1, so we default to 1 if not provided in the request.
 	if page <= 0 {
-		page = 1
+		return nil, errors.New("page must be greater than 0")
 	}
 
 	if limit <= 0 {
-		limit = querytypes.DefaultLimit
+		return nil, errors.New("limit must be greater than 0")
 	}
 
 	node, err := clientCtx.GetNode()

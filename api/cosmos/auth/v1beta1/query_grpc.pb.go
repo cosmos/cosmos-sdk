@@ -43,7 +43,7 @@ type QueryClient interface {
 	Accounts(ctx context.Context, in *QueryAccountsRequest, opts ...grpc.CallOption) (*QueryAccountsResponse, error)
 	// Account returns account details based on address.
 	Account(ctx context.Context, in *QueryAccountRequest, opts ...grpc.CallOption) (*QueryAccountResponse, error)
-	// AccountAddressByID returns account address based on account number.
+	// AccountAddressByID returns account address based on account id
 	AccountAddressByID(ctx context.Context, in *QueryAccountAddressByIDRequest, opts ...grpc.CallOption) (*QueryAccountAddressByIDResponse, error)
 	// Params queries all parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
@@ -93,6 +93,15 @@ func (c *queryClient) AccountAddressByID(ctx context.Context, in *QueryAccountAd
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(QueryAccountAddressByIDResponse)
 	err := c.cc.Invoke(ctx, Query_AccountAddressByID_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AccountAddressByID(ctx context.Context, in *QueryAccountAddressByIDRequest, opts ...grpc.CallOption) (*QueryAccountAddressByIDResponse, error) {
+	out := new(QueryAccountAddressByIDResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.auth.v1beta1.Query/AccountAddressByID", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +190,7 @@ type QueryServer interface {
 	Accounts(context.Context, *QueryAccountsRequest) (*QueryAccountsResponse, error)
 	// Account returns account details based on address.
 	Account(context.Context, *QueryAccountRequest) (*QueryAccountResponse, error)
-	// AccountAddressByID returns account address based on account number.
+	// AccountAddressByID returns account address based on account id
 	AccountAddressByID(context.Context, *QueryAccountAddressByIDRequest) (*QueryAccountAddressByIDResponse, error)
 	// Params queries all parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
@@ -304,7 +313,7 @@ func _Query_AccountAddressByID_Handler(srv interface{}, ctx context.Context, dec
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Query_AccountAddressByID_FullMethodName,
+		FullMethod: "/cosmos.auth.v1beta1.Query/AccountAddressByID",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).AccountAddressByID(ctx, req.(*QueryAccountAddressByIDRequest))

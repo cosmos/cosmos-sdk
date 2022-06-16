@@ -705,8 +705,9 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 		},
 		{
 			"tx with memo has enough gas",
-			func(suite *AnteTestSuite) TestCaseArgs {
-				accs := suite.CreateTestAccounts(1)
+			func() {
+				feeAmount = sdk.NewCoins(sdk.NewInt64Coin("atom", 0))
+				gasLimit = 60000
 				suite.txBuilder.SetMemo(strings.Repeat("0123456789", 10))
 				return TestCaseArgs{
 					feeAmount: sdk.NewCoins(sdk.NewInt64Coin("atom", 0)),

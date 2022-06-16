@@ -181,6 +181,109 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccountAddressByID() {
 			func(res *types.QueryAccountAddressByIDResponse) {},
 		},
 		{
+			"valid request",
+			func() {
+				account := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
+				suite.app.AccountKeeper.SetAccount(suite.ctx, account)
+				req = &types.QueryAccountAddressByIDRequest{Id: int64(account.GetAccountNumber())}
+			},
+			true,
+			func(res *types.QueryAccountAddressByIDResponse) {
+				suite.Require().NotNil(res.AccountAddress)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.ctx)
+
+			res, err := suite.queryClient.AccountAddressByID(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(res)
+			}
+
+			tc.posttests(res)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGRPCQueryParameters() {
+	var (
+		req       *types.QueryParamsRequest
+		expParams types.Params
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"success",
+			func() {
+				req = &types.QueryParamsRequest{}
+				expParams = suite.app.AccountKeeper.GetParams(suite.ctx)
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.ctx)
+
+			res, err := suite.queryClient.Params(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(expParams, res.Params)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(res)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
+	var req *types.QueryModuleAccountsRequest
+
+	testCases := []struct {
+		msg       string
+		malleate  func()
+		expPass   bool
+		posttests func(res *types.QueryAccountAddressByIDResponse)
+	}{
+		{
+			"invalid request",
+			func() {
+				req = &types.QueryAccountAddressByIDRequest{Id: -1}
+			},
+			false,
+			func(res *types.QueryAccountAddressByIDResponse) {},
+		},
+		{
+			"account address not found",
+			func() {
+				req = &types.QueryAccountAddressByIDRequest{Id: math.MaxInt64}
+			},
+			false,
+			func(res *types.QueryAccountAddressByIDResponse) {},
+		},
+		{
 			"valid account-id",
 			func() {
 				account := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)

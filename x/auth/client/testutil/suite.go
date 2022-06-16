@@ -29,6 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -142,6 +143,50 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	// Sign batch malformed tx file signature only.
 	_, err = TxSignBatchExec(val.ClientCtx, val.Address, malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--signature-only")
 	s.Require().Error(err)
+}
+
+func (s *IntegrationTestSuite) TestCliGetAccountAddressByID() {
+	require := s.Require()
+	val1 := s.network.Validators[0]
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"not enough args",
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+		},
+		{
+			"invalid account id",
+			[]string{fmt.Sprint(-1), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+		},
+		{
+			"valid account id",
+			[]string{fmt.Sprint(0), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := authcli.GetAccountAddressByIDCmd()
+			clientCtx := val1.ClientCtx
+
+			queryResJSON, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				var res types.QueryAccountAddressByIDResponse
+				require.NoError(val1.ClientCtx.Codec.UnmarshalJSON(queryResJSON.Bytes(), &res))
+				require.NotNil(res.GetAccountAddress())
+			}
+		})
+	}
 }
 
 func (s *IntegrationTestSuite) TestCLISignAminoJSON() {

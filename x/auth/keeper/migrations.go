@@ -1,7 +1,12 @@
 package keeper
 
 import (
-	"context"
+	"github.com/gogo/protobuf/grpc"
+
+	v043 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v043"
+	v046 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v046"
+
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v5 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v5"
@@ -64,4 +69,27 @@ func (m Migrator) V45SetAccount(ctx context.Context, acc sdk.AccountI) error {
 // NOTE(tip): exists for legacy compatibility
 func addressStoreKey(addr sdk.AccAddress) []byte {
 	return append(types.AddressStoreKeyPrefix, addr.Bytes()...)
+}
+
+// Migrate2to3 migrates from consensus version 2 to version 3. Specifically, for each account
+// we index the account's ID to their address.
+func (m Migrator) Migrate2to3(ctx sdk.Context) error {
+	return v046.MigrateStore(ctx, m.keeper.key, m.keeper.cdc)
+}
+
+// V45_SetAccount implements V45_SetAccount
+// set the account without map to accAddr to accNumber.
+//
+// NOTE: This is used for testing purposes only.
+func (m Migrator) V45_SetAccount(ctx sdk.Context, acc types.AccountI) error {
+	addr := acc.GetAddress()
+	store := ctx.KVStore(m.keeper.key)
+
+	bz, err := m.keeper.MarshalAccount(acc)
+	if err != nil {
+		return err
+	}
+
+	store.Set(types.AddressStoreKey(addr), bz)
+	return nil
 }

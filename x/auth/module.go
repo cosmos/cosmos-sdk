@@ -131,7 +131,10 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
-	return types.ValidateGenesis(data)
+	err = cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // InitGenesis performs genesis initialization for the auth module.
@@ -145,25 +148,16 @@ func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error
 
 // ExportGenesis returns the exported genesis state as raw bytes for the auth
 // module.
-func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
-	gs, err := am.accountKeeper.ExportGenesis(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return am.cdc.MarshalJSON(gs)
+func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
+	gs := am.accountKeeper.ExportGenesis(ctx)
+	return cdc.MustMarshalJSON(gs)
 }
 
-// TxValidator implements appmodulev2.HasTxValidator.
-// It replaces auth ante handlers for server/v2
-func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
-	validators := []appmodulev2.TxValidator[sdk.Tx]{
-		ante.NewValidateBasicDecorator(am.accountKeeper.GetEnvironment()),
-		ante.NewTxTimeoutHeightDecorator(am.accountKeeper.GetEnvironment()),
-		ante.NewValidateMemoDecorator(am.accountKeeper),
-		ante.NewConsumeGasForTxSizeDecorator(am.accountKeeper),
-		ante.NewValidateSigCountDecorator(am.accountKeeper),
-		ante.NewExtensionOptionsDecorator(am.extOptChecker),
-	}
+// ConsensusVersion implements AppModule/ConsensusVersion.
+func (AppModule) ConsensusVersion() uint64 { return 3 }
+
+// BeginBlock returns the begin blocker for the auth module.
+func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
 	sdkTx, ok := tx.(sdk.Tx)
 	if !ok {

@@ -34,7 +34,7 @@ func TestHandlerTestSuite(t *testing.T) {
 }
 
 func testProposal(changes ...proposal.ParamChange) *proposal.ParameterChangeProposal {
-	return proposal.NewParameterChangeProposal("title", "description", changes)
+	return proposal.NewParameterChangeProposal("title", "description", false, changes)
 }
 
 func (suite *HandlerTestSuite) TestProposalHandler() {

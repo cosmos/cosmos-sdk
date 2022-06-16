@@ -28,6 +28,7 @@ type (
 	ParamChangeProposalJSON struct {
 		Title       string           `json:"title" yaml:"title"`
 		Description string           `json:"description" yaml:"description"`
+		IsExpedited bool             `json:"is_expedited" yaml:"is_expedited"`
 		Changes     ParamChangesJSON `json:"changes" yaml:"changes"`
 		Deposit     string           `json:"deposit" yaml:"deposit"`
 	}
@@ -38,6 +39,7 @@ type (
 
 		Title       string           `json:"title" yaml:"title"`
 		Description string           `json:"description" yaml:"description"`
+		IsExpedited bool             `json:"is_expedited" yaml:"is_expedited"`
 		Changes     ParamChangesJSON `json:"changes" yaml:"changes"`
 		Proposer    sdk.AccAddress   `json:"proposer" yaml:"proposer"`
 		Deposit     sdk.Coins        `json:"deposit" yaml:"deposit"`

@@ -50,6 +50,18 @@ func ValidateGenesis(data *GenesisState) error {
 			threshold.String())
 	}
 
+	expeditedThreshold := data.TallyParams.ExpeditedThreshold
+	if expeditedThreshold.IsNegative() || expeditedThreshold.GT(sdk.OneDec()) {
+		return fmt.Errorf("governance expedited vote threshold should be positive and less or equal to one, is %s",
+			expeditedThreshold)
+	}
+
+	if expeditedThreshold.LTE(threshold) {
+		return fmt.Errorf("expedited governance vote threshold %s should be greater than the regular threshold %s",
+			expeditedThreshold,
+			threshold)
+	}
+
 	veto := data.TallyParams.VetoThreshold
 	if veto.IsNegative() || veto.GT(sdk.OneDec()) {
 		return fmt.Errorf("governance vote veto threshold should be positive and less or equal to one, is %s",

@@ -39,7 +39,7 @@ func newPostProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		proposalType := gcutils.NormalizeProposalType(req.ProposalType)
 		content := types.ContentFromProposalType(req.Title, req.Description, proposalType)
 
-		msg, err := types.NewMsgSubmitProposal(content, req.InitialDeposit, req.Proposer)
+		msg, err := types.NewMsgSubmitProposal(content, req.InitialDeposit, req.Proposer, req.IsExpedited)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}

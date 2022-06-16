@@ -13,14 +13,18 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// DefaultStartingProposalID is 1
-const DefaultStartingProposalID uint64 = 1
+const (
+	// DefaultStartingProposalID is 1
+	DefaultStartingProposalID uint64 = 1
+
+	errMsgFmtNotProtoMessage = "%T does not implement proto.Message"
+)
 
 // NewProposal creates a new Proposal instance
-func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Time) (Proposal, error) {
+func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Time, isExpedited bool) (Proposal, error) {
 	msg, ok := content.(proto.Message)
 	if !ok {
-		return Proposal{}, fmt.Errorf("%T does not implement proto.Message", content)
+		return Proposal{}, fmt.Errorf(errMsgFmtNotProtoMessage, content)
 	}
 
 	any, err := types.NewAnyWithValue(msg)
@@ -36,6 +40,7 @@ func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Tim
 		TotalDeposit:     sdk.NewCoins(),
 		SubmitTime:       submitTime,
 		DepositEndTime:   depositEndTime,
+		IsExpedited:      isExpedited,
 	}
 
 	return p, nil

@@ -85,7 +85,9 @@ func TestWeightedOperations(t *testing.T) {
 	}
 
 	for i, w := range weightesOps {
-		operationMsg, _, _ := w.Op()(r, app.BaseApp, ctx, accs, ctx.ChainID())
+		operationMsg, _, err := w.Op()(r, app.BaseApp, ctx, accs, ctx.ChainID())
+		require.NoError(t, err)
+
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
 		// will fail

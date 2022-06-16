@@ -8,7 +8,6 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
-	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -21,8 +20,10 @@ import (
 // Simulation operation weights constants
 //nolint:gosec // these are not hardcoded credentials.
 const (
-	OpWeightMsgSend      = "op_weight_msg_send"
-	OpWeightMsgMultiSend = "op_weight_msg_multisend"
+	OpWeightMsgSend               = "op_weight_msg_send"
+	OpWeightMsgMultiSend          = "op_weight_msg_multisend"
+	DefaultWeightMsgSend      int = 100
+	DefaultWeightMsgMultiSend int = 10
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -33,13 +34,13 @@ func WeightedOperations(
 	var weightMsgSend, weightMsgMultiSend int
 	appParams.GetOrGenerate(cdc, OpWeightMsgSend, &weightMsgSend, nil,
 		func(_ *rand.Rand) {
-			weightMsgSend = sims.DefaultWeightMsgSend
+			weightMsgSend = DefaultWeightMsgSend
 		},
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgMultiSend, &weightMsgMultiSend, nil,
 		func(_ *rand.Rand) {
-			weightMsgMultiSend = sims.DefaultWeightMsgMultiSend
+			weightMsgMultiSend = DefaultWeightMsgMultiSend
 		},
 	)
 

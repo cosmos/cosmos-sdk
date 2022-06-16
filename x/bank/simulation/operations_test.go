@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -67,8 +66,8 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{sims.DefaultWeightMsgSend, types.ModuleName, types.TypeMsgSend},
-		{sims.DefaultWeightMsgMultiSend, types.ModuleName, types.TypeMsgMultiSend},
+		{simulation.DefaultWeightMsgSend, types.ModuleName, types.TypeMsgSend},
+		{simulation.DefaultWeightMsgMultiSend, types.ModuleName, types.TypeMsgMultiSend},
 	}
 
 	for i, w := range weightesOps {

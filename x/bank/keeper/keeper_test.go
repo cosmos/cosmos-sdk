@@ -15,8 +15,11 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -28,6 +31,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
@@ -81,28 +85,36 @@ type IntegrationTestSuite struct {
 	StakingKeeper stakingkeeper.Keeper
 }
 
-// func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool) (authkeeper.AccountKeeper, keeper.BaseKeeper) {
-// 	// app := suite.app
-// 	maccPerms := simapp.GetMaccPerms()
-// 	appCodec := simapp.MakeTestEncodingConfig().Codec
+func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool) (authkeeper.AccountKeeper, keeper.BaseKeeper) {
+	// app := suite.app
+	maccPerms := simapp.GetMaccPerms()
 
-// 	maccPerms[holder] = nil
-// 	maccPerms[authtypes.Burner] = []string{authtypes.Burner}
-// 	maccPerms[authtypes.Minter] = []string{authtypes.Minter}
-// 	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
-// 	maccPerms[randomPerm] = []string{"random"}
+	maccPerms[holder] = nil
+	maccPerms[authtypes.Burner] = []string{authtypes.Burner}
+	maccPerms[authtypes.Minter] = []string{authtypes.Minter}
+	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
+	maccPerms[randomPerm] = []string{"random"}
 
-// 	authKeeper := authkeeper.NewAccountKeeper(
-// 		appCodec, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
-// 		authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
-// 	)
-// 	keeper := keeper.NewBaseKeeper(
-// 		appCodec, app.GetKey(types.StoreKey), authKeeper,
-// 		app.GetSubspace(types.ModuleName), blockedAddrs,
-// 	)
+	var (
+		keys        map[string]*storetypes.KVStoreKey
+		paramKeeper paramskeeper.Keeper
+		appCodec    codec.Codec
+	)
 
-// 	return authKeeper, keeper
-// }
+	depinject.Inject(testutil.AppConfig, &appCodec, &suite.BankKeeper, &appCodec, &suite.AccountKeeper, &paramKeeper, &keys)
+
+	subSpace, _ := paramKeeper.GetSubspace(types.ModuleName)
+	authKeeper := authkeeper.NewAccountKeeper(
+		appCodec, app.GetKey(types.StoreKey), subSpace,
+		authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
+	)
+	keeper := keeper.NewBaseKeeper(
+		appCodec, app.GetKey(types.StoreKey), authKeeper,
+		subSpace, blockedAddrs,
+	)
+
+	return authKeeper, keeper
+}
 
 func (suite *IntegrationTestSuite) SetupTest() {
 
@@ -287,7 +299,7 @@ func (suite *IntegrationTestSuite) TestSupply_MintCoins() {
 func (suite *IntegrationTestSuite) TestSupply_BurnCoins() {
 	ctx := suite.ctx
 	// add module accounts to supply keeper
-	authKeeper, keeper := suite.initKeepersWithmAccPerms(make(map[string]bool))
+	// authKeeper, keeper := suite.initKeepersWithmAccPerms(make(map[string]bool))
 
 	// set burnerAcc balance
 	authKeeper.SetModuleAccount(ctx, burnerAcc)

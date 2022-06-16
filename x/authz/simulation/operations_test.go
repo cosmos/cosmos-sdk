@@ -57,6 +57,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	for i, w := range weightedOps {
 		op, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
 		require.NoError(err)
+
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
 		// will fail

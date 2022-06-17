@@ -7,14 +7,20 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/testslashing"
 	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
@@ -28,25 +34,49 @@ type KeeperTestSuite struct {
 	slashingKeeper    slashingkeeper.Keeper
 	stakingKeeper     *stakingkeeper.Keeper
 	bankKeeper        bankkeeper.Keeper
+	accountKeeper     authkeeper.AccountKeeper
 	interfaceRegistry codectypes.InterfaceRegistry
-	// queryClient       slashingtypes.QueryClient
+	addrDels          []sdk.AccAddress
+	queryClient       slashingtypes.QueryClient
 }
 
 func (s *KeeperTestSuite) SetupTest() {
 	app, err := simtestutil.Setup(
 		testutil.AppConfig,
 		&s.bankKeeper,
+		&s.accountKeeper,
 		&s.slashingKeeper,
 		&s.stakingKeeper,
 		&s.interfaceRegistry,
 	)
 	s.Require().NoError(err)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	s.accountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	s.bankKeeper.SetParams(ctx, banktypes.DefaultParams())
+	s.slashingKeeper.SetParams(ctx, testslashing.TestParams())
+
+	addrDels := simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 5, s.stakingKeeper.TokensFromConsensusPower(ctx, 200))
+
+	info1 := types.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[0]), int64(4), int64(3),
+		time.Unix(2, 0), false, int64(10))
+	info2 := types.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[1]), int64(5), int64(4),
+		time.Unix(2, 0), false, int64(10))
+
+	s.slashingKeeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[0]), info1)
+	s.slashingKeeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[1]), info2)
+
 	s.stakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(s.slashingKeeper.Hooks()),
 	)
 
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, s.interfaceRegistry)
+	types.RegisterQueryServer(queryHelper, s.slashingKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
+	s.queryClient = queryClient
+
+	s.addrDels = addrDels
+	s.ctx = ctx
 }
 
 func (s *KeeperTestSuite) TestUnJailNotBonded() {
@@ -115,10 +145,9 @@ func (s *KeeperTestSuite) TestUnJailNotBonded() {
 // Ensure that SigningInfo.StartHeight is set correctly
 // and that they are not immediately jailed
 func (s *KeeperTestSuite) TestHandleNewValidator() {
-
 	ctx := s.ctx
 
-	addrDels := simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 1, s.stakingKeeper.TokensFromConsensusPower(ctx, 200))
+	addrDels := simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 1, s.stakingKeeper.TokensFromConsensusPower(ctx, 0))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
 	pks := simapp.CreateTestPubKeys(1)
 	addr, val := valAddrs[0], pks[0]

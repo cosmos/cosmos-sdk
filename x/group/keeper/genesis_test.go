@@ -47,7 +47,7 @@ var (
 func (s *GenesisTestSuite) SetupSuite() {
 	checkTx := false
 	var groupKeeper keeper.Keeper
-	app, err := simtestutil.Setup(
+	app, err := simtestutil.SetupAtGenesis(
 		testutil.AppConfig,
 		&s.interfaceRegistry,
 		&groupKeeper,

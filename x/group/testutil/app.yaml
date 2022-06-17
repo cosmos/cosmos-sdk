@@ -6,8 +6,8 @@ modules:
       app_name: GroupApp
 
       begin_blockers: [mint, staking, auth, bank, genutil, group, params]
-      end_blockers: [mint, staking, auth, bank, genutil, group, params]
-      init_genesis: [auth, bank, mint, staking, genutil, group, params]
+      end_blockers: [staking, auth, bank, mint, genutil, group, params]
+      init_genesis: [auth, bank, staking, mint, genutil, group, params]
 
   - name: auth
     config:

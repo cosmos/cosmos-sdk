@@ -215,9 +215,12 @@ func (msg MsgSetSendEnabled) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic runs basic validation on this MsgSetSendEnabled.
 func (msg MsgSetSendEnabled) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Authority)
-	if err != nil {
-		return err
+	var err error
+	if len(msg.Authority) > 0 {
+		_, err = sdk.AccAddressFromBech32(msg.Authority)
+		if err != nil {
+			return err
+		}
 	}
 	seen := map[string]bool{}
 	for _, se := range msg.SendEnabled {

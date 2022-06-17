@@ -13,6 +13,7 @@ import (
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	types0 "github.com/cosmos/cosmos-sdk/types"
 	module "github.com/cosmos/cosmos-sdk/types/module"
+	proto "github.com/gogo/protobuf/proto"
 	gomock "github.com/golang/mock/gomock"
 	runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	cobra "github.com/spf13/cobra"
@@ -228,17 +229,17 @@ func (mr *MockAppModuleGenesisMockRecorder) GetTxCmd() *gomock.Call {
 }
 
 // InitGenesis mocks base method.
-func (m *MockAppModuleGenesis) InitGenesis(arg0 types0.Context, arg1 codec.JSONCodec, arg2 json.RawMessage) []types1.ValidatorUpdate {
+func (m *MockAppModuleGenesis) InitGenesis(arg0 types0.Context, arg1 proto.Message) []types1.ValidatorUpdate {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InitGenesis", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "InitGenesis", arg0, arg1)
 	ret0, _ := ret[0].([]types1.ValidatorUpdate)
 	return ret0
 }
 
 // InitGenesis indicates an expected call of InitGenesis.
-func (mr *MockAppModuleGenesisMockRecorder) InitGenesis(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockAppModuleGenesisMockRecorder) InitGenesis(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitGenesis", reflect.TypeOf((*MockAppModuleGenesis)(nil).InitGenesis), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitGenesis", reflect.TypeOf((*MockAppModuleGenesis)(nil).InitGenesis), arg0, arg1)
 }
 
 // Name mocks base method.
@@ -289,6 +290,20 @@ func (m *MockAppModuleGenesis) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino)
 func (mr *MockAppModuleGenesisMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockAppModuleGenesis)(nil).RegisterLegacyAminoCodec), arg0)
+}
+
+// UnmarshalGenesis mocks base method.
+func (m *MockAppModuleGenesis) UnmarshalGenesis(arg0 codec.JSONCodec, arg1 json.RawMessage) proto.Message {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UnmarshalGenesis", arg0, arg1)
+	ret0, _ := ret[0].(proto.Message)
+	return ret0
+}
+
+// UnmarshalGenesis indicates an expected call of UnmarshalGenesis.
+func (mr *MockAppModuleGenesisMockRecorder) UnmarshalGenesis(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnmarshalGenesis", reflect.TypeOf((*MockAppModuleGenesis)(nil).UnmarshalGenesis), arg0, arg1)
 }
 
 // ValidateGenesis mocks base method.
@@ -425,17 +440,17 @@ func (mr *MockAppModuleMockRecorder) GetTxCmd() *gomock.Call {
 }
 
 // InitGenesis mocks base method.
-func (m *MockAppModule) InitGenesis(arg0 types0.Context, arg1 codec.JSONCodec, arg2 json.RawMessage) []types1.ValidatorUpdate {
+func (m *MockAppModule) InitGenesis(arg0 types0.Context, arg1 proto.Message) []types1.ValidatorUpdate {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InitGenesis", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "InitGenesis", arg0, arg1)
 	ret0, _ := ret[0].([]types1.ValidatorUpdate)
 	return ret0
 }
 
 // InitGenesis indicates an expected call of InitGenesis.
-func (mr *MockAppModuleMockRecorder) InitGenesis(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockAppModuleMockRecorder) InitGenesis(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitGenesis", reflect.TypeOf((*MockAppModule)(nil).InitGenesis), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitGenesis", reflect.TypeOf((*MockAppModule)(nil).InitGenesis), arg0, arg1)
 }
 
 // LegacyQuerierHandler mocks base method.
@@ -552,6 +567,20 @@ func (m *MockAppModule) Route() types0.Route {
 func (mr *MockAppModuleMockRecorder) Route() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Route", reflect.TypeOf((*MockAppModule)(nil).Route))
+}
+
+// UnmarshalGenesis mocks base method.
+func (m *MockAppModule) UnmarshalGenesis(arg0 codec.JSONCodec, arg1 json.RawMessage) proto.Message {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UnmarshalGenesis", arg0, arg1)
+	ret0, _ := ret[0].(proto.Message)
+	return ret0
+}
+
+// UnmarshalGenesis indicates an expected call of UnmarshalGenesis.
+func (mr *MockAppModuleMockRecorder) UnmarshalGenesis(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnmarshalGenesis", reflect.TypeOf((*MockAppModule)(nil).UnmarshalGenesis), arg0, arg1)
 }
 
 // ValidateGenesis mocks base method.

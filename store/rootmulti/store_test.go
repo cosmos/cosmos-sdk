@@ -3,10 +3,12 @@ package rootmulti
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"math/rand"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/stretchr/testify/require"
@@ -15,6 +17,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/pruning/mock"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
@@ -23,6 +26,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
+
+const dbErr = "db error"
 
 func TestStoreType(t *testing.T) {
 	db := dbm.NewMemDB()
@@ -767,6 +772,95 @@ func TestCacheWraps(t *testing.T) {
 
 	cacheWrappedWithListeners := multi.CacheWrapWithListeners(nil, nil)
 	require.IsType(t, cachemulti.Store{}, cacheWrappedWithListeners)
+}
+
+func TestSetAppVersion(t *testing.T) {
+	testcases := map[string]struct {
+		expectError bool
+	}{
+		"no error": {},
+		"error": {
+			expectError: true,
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			var db dbm.DB
+			if tc.expectError {
+				ctrl := gomock.NewController(t)
+				dbMock := mock.NewMockDB(ctrl)
+				dbMock.EXPECT().SetSync(gomock.Any(), gomock.Any()).Return(errors.New(dbErr)).Times(1)
+				db = dbMock
+			} else {
+				db = dbm.NewMemDB()
+			}
+
+			store := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+
+			err := store.SetAppVersion(0)
+
+			if tc.expectError {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestGetAppVersion(t *testing.T) {
+	testcases := map[string]struct {
+		store          *Store
+		isPreSet       bool
+		expectedVerson uint64
+		expectError    bool
+	}{
+		"no app version pre-set": {
+			store:          newMultiStoreWithMounts(dbm.NewMemDB(), pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)),
+			expectedVerson: 0,
+		},
+		"app version pre-set": {
+			store:          newMultiStoreWithMounts(dbm.NewMemDB(), pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)),
+			expectedVerson: 5,
+			isPreSet:       true,
+		},
+		"db err": {
+			expectError:    true,
+			expectedVerson: 5,
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+
+			var db dbm.DB
+			if tc.expectError {
+				ctrl := gomock.NewController(t)
+				dbMock := mock.NewMockDB(ctrl)
+				dbMock.EXPECT().Get(gomock.Any()).Return(nil, errors.New(dbErr)).Times(1)
+				db = dbMock
+			} else {
+				db = dbm.NewMemDB()
+			}
+
+			store := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+
+			if tc.isPreSet {
+				require.NoError(t, store.SetAppVersion(5))
+			}
+
+			appVersion, err := store.GetAppVersion()
+
+			if tc.expectError {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedVerson, appVersion)
+		})
+	}
 }
 
 //-----------------------------------------------------------------------

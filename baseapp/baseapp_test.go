@@ -53,8 +53,12 @@ func defaultLogger() log.Logger {
 }
 
 func newBaseApp(name string, options ...func(*BaseApp)) *BaseApp {
-	logger := defaultLogger()
 	db := dbm.NewMemDB()
+	return newBaseAppWithDB(name, db, options...)
+}
+
+func newBaseAppWithDB(name string, db dbm.DB, options ...func(*BaseApp)) *BaseApp {
+	logger := defaultLogger()
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 	return NewBaseApp(name, logger, db, testTxDecoder(codec), options...)
@@ -482,7 +486,7 @@ func TestInfo(t *testing.T) {
 	assert.Equal(t, int64(0), res.LastBlockHeight)
 	require.Equal(t, []uint8(nil), res.LastBlockAppHash)
 
-	appVersion, err := app.GetAppVersion(app.deliverState.ctx)
+	appVersion, err := app.GetAppVersion()
 	require.NoError(t, err)
 
 	assert.Equal(t, appVersion, res.AppVersion)
@@ -619,7 +623,9 @@ func TestInitChainer(t *testing.T) {
 	require.Equal(t, value, res.Value)
 }
 
-func TestInitChain_ProtocolVersionSetToZero(t *testing.T) {
+func TestInitChain_AppVersionSetToZero(t *testing.T) {
+	const expectedAppVersion = uint64(0)
+
 	name := t.Name()
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
@@ -632,9 +638,35 @@ func TestInitChain_ProtocolVersionSetToZero(t *testing.T) {
 		},
 	)
 
-	protocolVersion, err := app.GetAppVersion(app.deliverState.ctx)
+	protocolVersion, err := app.GetAppVersion()
 	require.NoError(t, err)
-	require.Equal(t, uint64(0), protocolVersion)
+	require.Equal(t, expectedAppVersion, protocolVersion)
+
+	consensusParams := app.GetConsensusParams(app.checkState.ctx)
+
+	require.Equal(t, expectedAppVersion, consensusParams.Version.AppVersion)
+}
+
+func TestInitChain_NonZeroAppVersionInRequestPanic(t *testing.T) {
+	name := t.Name()
+	db := dbm.NewMemDB()
+	logger := defaultLogger()
+	app := NewBaseApp(name, logger, db, nil)
+	app.SetParamStore(&mock.ParamStore{Db: dbm.NewMemDB()})
+
+	sut := func() {
+		app.InitChain(
+			abci.RequestInitChain{
+				InitialHeight: 3,
+				ConsensusParams: &abci.ConsensusParams{
+					Version: &tmproto.VersionParams{
+						AppVersion: 10,
+					},
+				},
+			},
+		)
+	}
+	require.Panics(t, sut)
 }
 
 func TestInitChain_WithInitialHeight(t *testing.T) {
@@ -1823,8 +1855,8 @@ func TestListSnapshots(t *testing.T) {
 	defer teardown()
 
 	expected := abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{
-		{Height: 4, Format: 1, Chunks: 2},
-		{Height: 2, Format: 1, Chunks: 1},
+		{Height: 4, Format: 2, Chunks: 2},
+		{Height: 2, Format: 2, Chunks: 1},
 	}}
 
 	resp := app.ListSnapshots(abci.RequestListSnapshots{})
@@ -1867,7 +1899,7 @@ func TestSnapshotWithPruning(t *testing.T) {
 				pruningOpts:       pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
 			},
 			expectedSnapshots: []*abci.Snapshot{
-				{Height: 20, Format: 1, Chunks: 5},
+				{Height: 20, Format: 2, Chunks: 5},
 			},
 		},
 		"prune everything with snapshot": {
@@ -1879,7 +1911,7 @@ func TestSnapshotWithPruning(t *testing.T) {
 				pruningOpts:       pruningtypes.NewPruningOptions(pruningtypes.PruningEverything),
 			},
 			expectedSnapshots: []*abci.Snapshot{
-				{Height: 20, Format: 1, Chunks: 5},
+				{Height: 20, Format: 2, Chunks: 5},
 			},
 		},
 		"default pruning with snapshot": {
@@ -1891,7 +1923,7 @@ func TestSnapshotWithPruning(t *testing.T) {
 				pruningOpts:       pruningtypes.NewPruningOptions(pruningtypes.PruningDefault),
 			},
 			expectedSnapshots: []*abci.Snapshot{
-				{Height: 20, Format: 1, Chunks: 5},
+				{Height: 20, Format: 2, Chunks: 5},
 			},
 		},
 		"custom": {
@@ -1903,8 +1935,8 @@ func TestSnapshotWithPruning(t *testing.T) {
 				pruningOpts:       pruningtypes.NewCustomPruningOptions(12, 12),
 			},
 			expectedSnapshots: []*abci.Snapshot{
-				{Height: 25, Format: 1, Chunks: 6},
-				{Height: 20, Format: 1, Chunks: 5},
+				{Height: 25, Format: 2, Chunks: 6},
+				{Height: 20, Format: 2, Chunks: 5},
 			},
 		},
 		"no snapshots": {
@@ -1925,9 +1957,9 @@ func TestSnapshotWithPruning(t *testing.T) {
 				pruningOpts:       pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
 			},
 			expectedSnapshots: []*abci.Snapshot{
-				{Height: 9, Format: 1, Chunks: 2},
-				{Height: 6, Format: 1, Chunks: 2},
-				{Height: 3, Format: 1, Chunks: 1},
+				{Height: 9, Format: 2, Chunks: 2},
+				{Height: 6, Format: 2, Chunks: 2},
+				{Height: 3, Format: 2, Chunks: 1},
 			},
 		},
 	}
@@ -2004,13 +2036,13 @@ func TestLoadSnapshotChunk(t *testing.T) {
 		chunk       uint32
 		expectEmpty bool
 	}{
-		"Existing snapshot": {2, 1, 1, false},
-		"Missing height":    {100, 1, 1, true},
-		"Missing format":    {2, 2, 1, true},
-		"Missing chunk":     {2, 1, 9, true},
-		"Zero height":       {0, 1, 1, true},
+		"Existing snapshot": {2, 2, 1, false},
+		"Missing height":    {100, 2, 1, true},
+		"Missing format":    {2, 1, 1, true},
+		"Missing chunk":     {2, 2, 9, true},
+		"Zero height":       {0, 2, 1, true},
 		"Zero format":       {2, 0, 1, true},
-		"Zero chunk":        {2, 1, 0, false},
+		"Zero chunk":        {2, 2, 0, false},
 	}
 	for name, tc := range testcases {
 		tc := tc
@@ -2056,13 +2088,13 @@ func TestOfferSnapshot_Errors(t *testing.T) {
 			Height: 1, Format: 9, Chunks: 3, Hash: hash, Metadata: metadata,
 		}, abci.ResponseOfferSnapshot_REJECT_FORMAT},
 		"incorrect chunk count": {&abci.Snapshot{
-			Height: 1, Format: 1, Chunks: 2, Hash: hash, Metadata: metadata,
+			Height: 1, Format: 2, Chunks: 2, Hash: hash, Metadata: metadata,
 		}, abci.ResponseOfferSnapshot_REJECT},
 		"no chunks": {&abci.Snapshot{
-			Height: 1, Format: 1, Chunks: 0, Hash: hash, Metadata: metadata,
+			Height: 1, Format: 2, Chunks: 0, Hash: hash, Metadata: metadata,
 		}, abci.ResponseOfferSnapshot_REJECT},
 		"invalid metadata serialization": {&abci.Snapshot{
-			Height: 1, Format: 1, Chunks: 0, Hash: hash, Metadata: []byte{3, 1, 4},
+			Height: 1, Format: 2, Chunks: 0, Hash: hash, Metadata: []byte{3, 1, 4},
 		}, abci.ResponseOfferSnapshot_REJECT},
 	}
 	for name, tc := range testcases {
@@ -2442,12 +2474,12 @@ func TestBaseApp_Init_PruningAndSnapshot(t *testing.T) {
 	}
 }
 
-func TestBaseApp_Init_ProtocolVersion(t *testing.T) {
-	const versionNotSet = -1
+func TestBaseApp_Init_AppVersion(t *testing.T) {
+	const versionNotSet = 0
 
 	testcases := []struct {
 		name            string
-		protocolVersion int64
+		protocolVersion uint64
 	}{
 		{
 			name:            "no app version was set - set to 0",
@@ -2461,29 +2493,23 @@ func TestBaseApp_Init_ProtocolVersion(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			app := newBaseApp(t.Name())
 			db := dbm.NewMemDB()
+			app := newBaseAppWithDB(t.Name(), db)
 
-			app.SetParamStore(&mock.ParamStore{db})
-
-			var expectedProtocolVersion uint64
 			if tc.protocolVersion != versionNotSet {
-				// Set version on another app with the same param store (db),
-				// pretending that the app version was set on the app in advance.
-				oldApp := newBaseApp(t.Name())
-				oldApp.SetParamStore(&mock.ParamStore{db})
-				require.NoError(t, oldApp.init())
-
-				expectedProtocolVersion = uint64(tc.protocolVersion)
-				require.NoError(t, oldApp.SetAppVersion(oldApp.checkState.ctx, expectedProtocolVersion))
+				err := app.cms.SetAppVersion(tc.protocolVersion)
+				require.NoError(t, err)
 			}
+
+			// recreate app
+			app = newBaseAppWithDB(t.Name(), db)
 
 			require.NoError(t, app.init())
 
-			actualProtocolVersion, err := app.GetAppVersion(app.checkState.ctx)
+			actualProtocolVersion, err := app.GetAppVersion()
 			require.NoError(t, err)
 
-			require.Equal(t, expectedProtocolVersion, actualProtocolVersion)
+			require.Equal(t, tc.protocolVersion, actualProtocolVersion)
 		})
 	}
 }

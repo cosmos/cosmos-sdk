@@ -1,7 +1,6 @@
 package baseapp
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -130,7 +129,7 @@ type BaseApp struct { // nolint: maligned
 	indexEvents map[string]struct{}
 }
 
-var _ upgrade.ProtocolVersionManager = (*BaseApp)(nil)
+var _ upgrade.AppVersionManager = (*BaseApp)(nil)
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
 // variadic number of option functions, which act on the BaseApp to set
@@ -310,15 +309,12 @@ func (app *BaseApp) init() error {
 	// needed for the export command which inits from store but never calls initchain
 	app.setCheckState(tmproto.Header{})
 
-	// If there is no app version set in the store, we should set it to 0.
-	// Panic on any other error.
-	// If errMsgNoProtocolVersionSet, we assume that appVersion is assigned to be 0.
-	appVersion, err := app.GetAppVersion(app.checkState.ctx)
-	if err != nil && !errors.Is(err, errMsgNoProtocolVersionSet) {
+	appVersion, err := app.GetAppVersion()
+	if err != nil {
 		return err
 	}
 
-	if err := app.SetAppVersion(app.checkState.ctx, appVersion); err != nil {
+	if err := app.SetAppVersion(appVersion); err != nil {
 		return err
 	}
 	app.Seal()
@@ -436,13 +432,13 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *abci.ConsensusParams {
 		cp.Validator = &vp
 	}
 
-	if app.paramStore.Has(ctx, ParamStoreKeyVersionParams) {
-		var vp tmproto.VersionParams
-
-		app.paramStore.Get(ctx, ParamStoreKeyVersionParams, &vp)
-		cp.Version = &vp
+	appVersion, err := app.cms.GetAppVersion()
+	if err != nil {
+		panic(err)
 	}
-
+	cp.Version = &tmproto.VersionParams{
+		AppVersion: appVersion,
+	}
 	return cp
 }
 
@@ -466,9 +462,11 @@ func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *abci.ConsensusPara
 	app.paramStore.Set(ctx, ParamStoreKeyBlockParams, cp.Block)
 	app.paramStore.Set(ctx, ParamStoreKeyEvidenceParams, cp.Evidence)
 	app.paramStore.Set(ctx, ParamStoreKeyValidatorParams, cp.Validator)
-	app.paramStore.Set(ctx, ParamStoreKeyVersionParams, cp.Version)
-	// We're explicitly not storing the Tendermint app_version in the param store. It's
-	// stored instead in the x/upgrade store, with its own bump logic.
+	// We do not store version param here because it is
+	// persisted in the multi-store which is used as the single source of truth.
+	// The reason for storing the version in multi-store is to be able
+	// to serialize it for state-sync snapshots. The app version is then
+	// deserialized by the state-synching node to be validated in Tendermint.
 }
 
 // getMaximumBlockGas gets the maximum gas from the consensus params. It panics

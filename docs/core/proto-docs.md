@@ -168,6 +168,7 @@
 - [cosmos/base/snapshots/v1beta1/snapshot.proto](#cosmos/base/snapshots/v1beta1/snapshot.proto)
     - [Metadata](#cosmos.base.snapshots.v1beta1.Metadata)
     - [Snapshot](#cosmos.base.snapshots.v1beta1.Snapshot)
+    - [SnapshotAppVersion](#cosmos.base.snapshots.v1beta1.SnapshotAppVersion)
     - [SnapshotExtensionMeta](#cosmos.base.snapshots.v1beta1.SnapshotExtensionMeta)
     - [SnapshotExtensionPayload](#cosmos.base.snapshots.v1beta1.SnapshotExtensionPayload)
     - [SnapshotIAVLItem](#cosmos.base.snapshots.v1beta1.SnapshotIAVLItem)
@@ -2788,6 +2789,21 @@ Snapshot contains Tendermint state sync snapshot info.
 
 
 
+<a name="cosmos.base.snapshots.v1beta1.SnapshotAppVersion"></a>
+
+### SnapshotAppVersion
+SnapshotAppVersion contains the app version.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `version` | [uint64](#uint64) |  |  |
+
+
+
+
+
+
 <a name="cosmos.base.snapshots.v1beta1.SnapshotExtensionMeta"></a>
 
 ### SnapshotExtensionMeta
@@ -2849,6 +2865,7 @@ SnapshotItem is an item contained in a rootmulti.Store snapshot.
 | `iavl` | [SnapshotIAVLItem](#cosmos.base.snapshots.v1beta1.SnapshotIAVLItem) |  |  |
 | `extension` | [SnapshotExtensionMeta](#cosmos.base.snapshots.v1beta1.SnapshotExtensionMeta) |  |  |
 | `extension_payload` | [SnapshotExtensionPayload](#cosmos.base.snapshots.v1beta1.SnapshotExtensionPayload) |  |  |
+| `app_version` | [SnapshotAppVersion](#cosmos.base.snapshots.v1beta1.SnapshotAppVersion) |  |  |
 
 
 

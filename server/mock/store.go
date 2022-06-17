@@ -143,6 +143,14 @@ func (ms multiStore) Restore(
 	panic("not implemented")
 }
 
+func (ms multiStore) SetAppVersion(_ uint64) error {
+	panic("not implemented")
+}
+
+func (ms multiStore) GetAppVersion() (uint64, error) {
+	panic("not implemented")
+}
+
 var _ sdk.KVStore = kvStore{}
 
 type kvStore struct {

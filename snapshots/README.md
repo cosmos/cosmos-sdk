@@ -130,9 +130,21 @@ message Metadata {
 }
 ```
 
-The `format` is currently `1`, defined in `snapshots.types.CurrentFormat`. This
+The `format` is currently `2`, defined in `snapshots.types.CurrentFormat`. This
 must be increased whenever the binary snapshot format changes, and it may be
 useful to support past formats in newer versions.
+
+CurrentFormat of 1 is the original format introduced at the time state-sync
+was implemented.
+CurrentFormat of 2 serializes the app version in addition to the original 
+snapshot data.
+
+Format 1 has been causing issues with state sync due to missing the app
+version. As a result, Tendermint would fail to finalize the snapshot 
+application on the state-synching node since the node did not update
+its app version. Therefore, CurrentFormat 1 is now deprecated and, instead,
+format 2 should be used going forward. Contrary to the recommendation above,
+supporting format 2 is not compatible with format 1.
 
 The `hash` is a SHA-256 hash of the entire binary snapshot, used to guard
 against IO corruption and non-determinism across nodes. Note that this is not

@@ -18,7 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	xp "github.com/cosmos/cosmos-sdk/x/upgrade/exported"
+	vm "github.com/cosmos/cosmos-sdk/x/upgrade/exported"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -31,7 +31,7 @@ type Keeper struct {
 	storeKey           sdk.StoreKey                    // key to access x/upgrade store
 	cdc                codec.BinaryCodec               // App-wide binary codec
 	upgradeHandlers    map[string]types.UpgradeHandler // map of plan name to upgrade handler
-	versionManager     xp.ProtocolVersionManager       // implements setting the app version field on BaseApp
+	versionManager     vm.AppVersionManager            // implements setting the app version field on BaseApp
 }
 
 // NewKeeper constructs an upgrade Keeper which requires the following arguments:
@@ -40,7 +40,7 @@ type Keeper struct {
 // cdc - the app-wide binary codec
 // homePath - root directory of the application's config
 // vs - the interface implemented by baseapp which allows setting baseapp's app version field
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionManager) Keeper {
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc codec.BinaryCodec, homePath string, vs vm.AppVersionManager) Keeper {
 	return Keeper{
 		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,
@@ -85,7 +85,7 @@ func (k Keeper) SetModuleVersionMap(ctx sdk.Context, vm module.VersionMap) {
 
 // SetAppVersion sets app version to version
 func (k Keeper) SetAppVersion(ctx sdk.Context, version uint64) error {
-	return k.versionManager.SetAppVersion(ctx, version)
+	return k.versionManager.SetAppVersion(version)
 }
 
 // GetModuleVersionMap returns a map of key module name and value module consensus version
@@ -292,11 +292,11 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 
 	if k.versionManager != nil {
 		// increment the app version and set it in state and baseapp
-		appVersion, err := k.versionManager.GetAppVersion(ctx)
+		appVersion, err := k.versionManager.GetAppVersion()
 		if err != nil {
 			panic(err)
 		}
-		if err := k.versionManager.SetAppVersion(ctx, appVersion+1); err != nil {
+		if err := k.versionManager.SetAppVersion(appVersion + 1); err != nil {
 			panic(err)
 		}
 	}

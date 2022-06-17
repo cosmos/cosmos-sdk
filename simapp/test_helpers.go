@@ -50,7 +50,7 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 		},
 	},
 	Version: &tmproto.VersionParams{
-		AppVersion: 10,
+		AppVersion: 0, // must be 0 during chain initialization.
 	},
 }
 

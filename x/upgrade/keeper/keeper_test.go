@@ -197,8 +197,9 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 // Test that the app version successfully increments after an
 // upgrade and is successfully set on BaseApp's appVersion.
 func (s *KeeperTestSuite) TestIncrementAppVersion() {
-	oldAppVersion, err := s.app.BaseApp.GetAppVersion(s.ctx)
+	oldAppVersion, err := s.app.BaseApp.GetAppVersion()
 	s.Require().NoError(err)
+	s.Require().Equal(uint64(0), oldAppVersion)
 	s.app.UpgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) { return vm, nil })
 	dummyPlan := types.Plan{
 		Name:   "dummy",
@@ -206,9 +207,8 @@ func (s *KeeperTestSuite) TestIncrementAppVersion() {
 		Height: 100,
 	}
 	s.app.UpgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
-	upgradedAppVersion, err := s.app.BaseApp.GetAppVersion(s.ctx)
+	upgradedAppVersion, err := s.app.BaseApp.GetAppVersion()
 	s.Require().NoError(err)
-
 	s.Require().Equal(oldAppVersion+1, upgradedAppVersion)
 }
 

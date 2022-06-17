@@ -161,7 +161,7 @@ func TestManager_Restore(t *testing.T) {
 	// Restore errors on chunk and chunkhashes mismatch
 	err = manager.Restore(types.Snapshot{
 		Height:   3,
-		Format:   1,
+		Format:   2,
 		Hash:     []byte{1, 2, 3},
 		Chunks:   4,
 		Metadata: types.Metadata{ChunkHashes: checksums(chunks)},
@@ -171,7 +171,7 @@ func TestManager_Restore(t *testing.T) {
 	// Starting a restore works
 	err = manager.Restore(types.Snapshot{
 		Height:   3,
-		Format:   1,
+		Format:   2,
 		Hash:     []byte{1, 2, 3},
 		Chunks:   1,
 		Metadata: types.Metadata{ChunkHashes: checksums(chunks)},
@@ -221,7 +221,7 @@ func TestManager_Restore(t *testing.T) {
 	target.items = nil
 	err = manager.Restore(types.Snapshot{
 		Height:   3,
-		Format:   1,
+		Format:   2,
 		Hash:     []byte{1, 2, 3},
 		Chunks:   1,
 		Metadata: types.Metadata{ChunkHashes: checksums(chunks)},

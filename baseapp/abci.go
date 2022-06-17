@@ -24,6 +24,17 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+const initialAppVersion = 0
+
+type AppVersionError struct {
+	Actual  uint64
+	Initial uint64
+}
+
+func (e *AppVersionError) Error() string {
+	return fmt.Sprintf("app version (%d) is not initial (%d)", e.Actual, e.Initial)
+}
+
 // InitChain implements the ABCI interface. It runs the initialization logic
 // directly on the CommitMultiStore.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
@@ -46,7 +57,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	app.setDeliverState(initHeader)
 	app.setCheckState(initHeader)
 
-	if err := app.SetAppVersion(app.deliverState.ctx, 0); err != nil {
+	if err := app.SetAppVersion(initialAppVersion); err != nil {
 		panic(err)
 	}
 
@@ -54,6 +65,12 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// done after the deliver state and context have been set as it's persisted
 	// to state.
 	if req.ConsensusParams != nil {
+		// When InitChain is called, the app version should either be absent and determined by the application
+		// or set to 0. Panic if it's not.
+		if req.ConsensusParams.Version != nil && req.ConsensusParams.Version.AppVersion != initialAppVersion {
+			panic(AppVersionError{Actual: req.ConsensusParams.Version.AppVersion, Initial: initialAppVersion})
+		}
+
 		app.StoreConsensusParams(app.deliverState.ctx, req.ConsensusParams)
 	}
 
@@ -112,7 +129,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 	lastCommitID := app.cms.LastCommitID()
 
-	appVersion, err := app.GetAppVersion(app.checkState.ctx)
+	appVersion, err := app.GetAppVersion()
 	if err != nil {
 		app.logger.Error("failed to get app version", err)
 	}

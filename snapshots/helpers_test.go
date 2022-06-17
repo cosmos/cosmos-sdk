@@ -152,11 +152,11 @@ func (m *mockSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
 }
 
 func (m *mockSnapshotter) SnapshotFormat() uint32 {
-	return 1
+	return 2
 }
 
 func (m *mockSnapshotter) SupportedFormats() []uint32 {
-	return []uint32{1}
+	return []uint32{2}
 }
 
 // setupBusyManager creates a manager with an empty store that is busy creating a snapshot at height 1.

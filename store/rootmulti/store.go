@@ -5,6 +5,7 @@ import (
 	"io"
 	"math"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -29,11 +30,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	vm "github.com/cosmos/cosmos-sdk/x/upgrade/exported"
 )
 
 const (
 	latestVersionKey = "s/latest"
 	commitInfoKeyFmt = "s/%d" // s/<version>
+	appVersionKey    = "s/appversion"
 
 	proofsPath = "proofs"
 )
@@ -71,6 +74,7 @@ type Store struct {
 
 var (
 	_ types.CommitMultiStore = (*Store)(nil)
+	_ vm.AppVersionManager   = (*Store)(nil)
 	_ types.Queryable        = (*Store)(nil)
 )
 
@@ -705,6 +709,22 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 		return strings.Compare(stores[i].name, stores[j].name) == -1
 	})
 
+	appVersion, err := rs.GetAppVersion()
+	if err != nil {
+		return err
+	}
+
+	err = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
+		Item: &snapshottypes.SnapshotItem_AppVersion{
+			AppVersion: &snapshottypes.SnapshotAppVersion{
+				Version: appVersion,
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
 	// Export each IAVL store. Stores are serialized as a stream of SnapshotItem Protobuf
 	// messages. The first item contains a SnapshotStore with store metadata (i.e. name),
 	// and the following messages contain a SnapshotNode (i.e. an ExportNode). Store changes
@@ -817,6 +837,12 @@ loop:
 			err := importer.Add(node)
 			if err != nil {
 				return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "IAVL node import failed")
+			}
+
+		case *snapshottypes.SnapshotItem_AppVersion:
+			err := rs.SetAppVersion(uint64(item.AppVersion.Version))
+			if err != nil {
+				return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "IAVL node import failed - error saving app version from received snapshot")
 			}
 
 		default:
@@ -973,6 +999,29 @@ func (rs *Store) getCommitInfoFromDb(ver int64) (*types.CommitInfo, error) {
 	}
 
 	return cInfo, nil
+}
+
+func (rs *Store) SetAppVersion(appVersion uint64) error {
+	if err := rs.db.SetSync([]byte(appVersionKey), []byte(strconv.Itoa(int(appVersion)))); err != nil {
+		return fmt.Errorf("error on write %w", err)
+	}
+	return nil
+}
+
+func (rs *Store) GetAppVersion() (uint64, error) {
+	bz, err := rs.db.Get([]byte(appVersionKey))
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to get app version")
+	} else if bz == nil {
+		return 0, nil
+	}
+
+	appVersion, err := strconv.ParseUint(string(bz), 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return appVersion, nil
 }
 
 func (rs *Store) doProofsQuery(req abci.RequestQuery) abci.ResponseQuery {

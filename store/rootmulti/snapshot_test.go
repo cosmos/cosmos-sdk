@@ -122,13 +122,13 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 		format      uint32
 		chunkHashes []string
 	}{
-		{1, []string{
-			"503e5b51b657055b77e88169fadae543619368744ad15f1de0736c0a20482f24",
-			"e1a0daaa738eeb43e778aefd2805e3dd720798288a410b06da4b8459c4d8f72e",
-			"aa048b4ee0f484965d7b3b06822cf0772cdcaad02f3b1b9055e69f2cb365ef3c",
-			"7921eaa3ed4921341e504d9308a9877986a879fe216a099c86e8db66fcba4c63",
-			"a4a864e6c02c9fca5837ec80dc84f650b25276ed7e4820cf7516ced9f9901b86",
-			"ca2879ac6e7205d257440131ba7e72bef784cd61642e32b847729e543c1928b9",
+		{2, []string{
+			"9c22e62a24bf69177c1ed7116b47ba73200d7e77b3fea6a486b21591eefe331f",
+			"5395363de5e10b03bbc2907af1843d3c8ed52fc16b01292d0db0157b47172e97",
+			"71a0b594863b63f6341092ceee1a8d508722af4bed2db1fb3f1c58775b95459c",
+			"0864b7d52db6d2e6fee11db2399d042b52179221012eb20f969e28843a2e20ad",
+			"7e57a64b4a344e58fa95549f07a784a1247dca38a7db5b034ee2bd2f2011936f",
+			"534b87533ca86f404b59c34f0dc451b36c02a2dacfc51abf2863668bd40e0d04",
 		}},
 	}
 	for _, tc := range testcases {
@@ -179,7 +179,11 @@ func TestMultistoreSnapshot_Errors(t *testing.T) {
 }
 
 func TestMultistoreSnapshotRestore(t *testing.T) {
+	const expectedAppVersion = uint64(10)
+
 	source := newMultiStoreWithMixedMountsAndBasicData(dbm.NewMemDB())
+	require.NoError(t, source.SetAppVersion(expectedAppVersion))
+
 	target := newMultiStoreWithMixedMounts(dbm.NewMemDB())
 	version := uint64(source.LastCommitID().Version)
 	require.EqualValues(t, 3, version)
@@ -209,6 +213,11 @@ func TestMultistoreSnapshotRestore(t *testing.T) {
 	nextItem, err := target.Restore(version, snapshottypes.CurrentFormat, streamReader)
 	require.NoError(t, err)
 	require.Equal(t, *dummyExtensionItem.GetExtension(), *nextItem.GetExtension())
+
+	// check that the app version is restored from a snapshot.
+	appVersion, err := target.GetAppVersion()
+	require.NoError(t, err)
+	require.Equal(t, expectedAppVersion, appVersion)
 
 	assert.Equal(t, source.LastCommitID(), target.LastCommitID())
 	for key, sourceStore := range source.GetStores() {

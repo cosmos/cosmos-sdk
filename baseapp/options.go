@@ -1,11 +1,9 @@
 package baseapp
 
 import (
-	"errors"
 	"fmt"
 	"io"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -14,11 +12,6 @@ import (
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-)
-
-var (
-	errMsgNilParamStore        = errors.New("paramStore was nil")
-	errMsgNoProtocolVersionSet = errors.New("param store did not have the app version set")
 )
 
 // File for storing in-package BaseApp optional functions,
@@ -107,31 +100,19 @@ func (app *BaseApp) SetVersion(v string) {
 }
 
 // SetAppVersion sets the application's app version
-func (app *BaseApp) SetAppVersion(ctx sdk.Context, v uint64) error {
-	if app.paramStore == nil {
-		return errMsgNilParamStore
-	}
-
-	av := &tmproto.VersionParams{AppVersion: v}
-	app.paramStore.Set(ctx, ParamStoreKeyVersionParams, av)
-	return nil
+func (app *BaseApp) SetAppVersion(v uint64) error {
+	return app.cms.SetAppVersion(v)
 }
 
 // GetAppVersion gets the application's app version
-// an error, if any.
-func (app *BaseApp) GetAppVersion(ctx sdk.Context) (uint64, error) {
-	if app.paramStore == nil {
-		return 0, errMsgNilParamStore
+// or error, if any.
+func (app *BaseApp) GetAppVersion() (uint64, error) {
+	appVersion, err := app.cms.GetAppVersion()
+	if err != nil {
+		return 0, err
+
 	}
-
-	if !app.paramStore.Has(ctx, ParamStoreKeyVersionParams) {
-		return 0, errMsgNoProtocolVersionSet
-	}
-
-	av := &tmproto.VersionParams{}
-	app.paramStore.Get(ctx, ParamStoreKeyVersionParams, av)
-
-	return av.AppVersion, nil
+	return appVersion, nil
 }
 
 func (app *BaseApp) SetDB(db dbm.DB) {

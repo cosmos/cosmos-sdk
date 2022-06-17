@@ -3,11 +3,11 @@ modules:
     config:
       "@type": cosmos.app.runtime.v1alpha1.Module
 
-      app_name: MintApp
+      app_name: DistrApp
 
-      begin_blockers: [mint, staking, auth, bank, genutil, params]
-      end_blockers: [staking, auth, bank, mint, genutil, params]
-      init_genesis: [auth, bank, staking, mint, genutil, params]
+      begin_blockers: [distribution, staking, auth, bank, genutil, params]
+      end_blockers: [staking, auth, bank, distribution, genutil, params]
+      init_genesis: [auth, bank, distribution, staking, mint, genutil, params]
 
   - name: auth
     config:
@@ -15,8 +15,6 @@ modules:
       bech32_prefix: cosmos
       module_account_permissions:
         - account: fee_collector
-        - account: mint
-          permissions: [minter]
         - account: bonded_tokens_pool
           permissions: [burner, staking]
         - account: not_bonded_tokens_pool
@@ -42,6 +40,6 @@ modules:
     config:
       "@type": cosmos.genutil.module.v1.Module
 
-  - name: mint
+  - name: distribution
     config:
-      "@type": cosmos.mint.module.v1.Module
+      "@type": cosmos.distribution.module.v1.Module

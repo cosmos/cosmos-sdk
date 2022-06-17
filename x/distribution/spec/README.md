@@ -101,6 +101,7 @@ to set up a script to periodically withdraw and rebond rewards.
     * [BeginBlocker](06_events.md#beginblocker)
     * [Handlers](06_events.md#handlers)
 7. **[Parameters](07_params.md)**
-8. **[Parameters](07_params.md)**
+8. **[Client](08_client.md)**
     * [CLI](08_client.md#cli)
     * [gRPC](08_client.md#grpc)
+9. **[App Wiring](09_app_wiring.md)**

@@ -46,6 +46,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#12089](https://github.com/cosmos/cosmos-sdk/pull/12089) Mark the `TipDecorator` as beta, don't include it in simapp by default.
 * [#12153](https://github.com/cosmos/cosmos-sdk/pull/12153) Add a new `NewSimulationManagerFromAppModules` constructor, to simplify simulation wiring.
 * [#12187](https://github.com/cosmos/cosmos-sdk/pull/12187) Add batch operation for x/nft module.
+* [#12295](https://github.com/cosmos/cosmos-sdk/pull/12295) Change `AppModuleGenesis` interface to allow concurent modules' genesis states unmarshaling
 
 ### API Breaking Changes
 

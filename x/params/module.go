@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"math/rand"
 
+	"github.com/gogo/protobuf/proto"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -94,8 +95,13 @@ func NewAppModule(k keeper.Keeper) AppModule {
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // InitGenesis performs a no-op.
-func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONCodec, _ json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(_ sdk.Context, _ proto.Message) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
+}
+
+// UnmarshalGenesis performs a no-op.
+func (am AppModule) UnmarshalGenesis(cdc codec.JSONCodec, data json.RawMessage) proto.Message {
+	return nil
 }
 
 // Deprecated: Route returns the message routing key for the params module.

@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/gogo/protobuf/proto"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/spf13/cobra"
@@ -151,12 +152,15 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 // InitGenesis performs genesis initialization for the staking module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, genesisState proto.Message) []abci.ValidatorUpdate {
+	return am.keeper.InitGenesis(ctx, genesisState.(*types.GenesisState))
+}
+
+// UnmarshalGenesis unmarshals the genesis state for the staking module.
+func (am AppModule) UnmarshalGenesis(cdc codec.JSONCodec, data json.RawMessage) proto.Message {
 	var genesisState types.GenesisState
-
 	cdc.MustUnmarshalJSON(data, &genesisState)
-
-	return am.keeper.InitGenesis(ctx, &genesisState)
+	return &genesisState
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the staking

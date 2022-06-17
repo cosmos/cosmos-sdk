@@ -8,6 +8,7 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	"cosmossdk.io/core/appmodule"
+	"github.com/gogo/protobuf/proto"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -144,11 +145,16 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 // InitGenesis performs genesis initialization for the slashing module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, genesisState proto.Message) []abci.ValidatorUpdate {
+	am.keeper.InitGenesis(ctx, am.stakingKeeper, genesisState.(*types.GenesisState))
+	return []abci.ValidatorUpdate{}
+}
+
+// UnmarshalGenesis unmarshals the genesis state for the slashing module.
+func (am AppModule) UnmarshalGenesis(cdc codec.JSONCodec, data json.RawMessage) proto.Message {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	am.keeper.InitGenesis(ctx, am.stakingKeeper, &genesisState)
-	return []abci.ValidatorUpdate{}
+	return &genesisState
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the slashing

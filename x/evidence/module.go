@@ -7,6 +7,7 @@ import (
 	"math/rand"
 
 	"cosmossdk.io/core/appmodule"
+	"github.com/gogo/protobuf/proto"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -152,15 +153,16 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
 // InitGenesis performs the evidence module's genesis initialization It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
-	var gs types.GenesisState
-	err := cdc.UnmarshalJSON(bz, &gs)
-	if err != nil {
-		panic(fmt.Sprintf("failed to unmarshal %s genesis state: %s", types.ModuleName, err))
-	}
-
-	InitGenesis(ctx, am.keeper, &gs)
+func (am AppModule) InitGenesis(ctx sdk.Context, genesisState proto.Message) []abci.ValidatorUpdate {
+	InitGenesis(ctx, am.keeper, genesisState.(*types.GenesisState))
 	return []abci.ValidatorUpdate{}
+}
+
+// UnmarshalGenesis unmarshals the genesis state for the evidence module.
+func (am AppModule) UnmarshalGenesis(cdc codec.JSONCodec, data json.RawMessage) proto.Message {
+	var genesisState types.GenesisState
+	cdc.MustUnmarshalJSON(data, &genesisState)
+	return &genesisState
 }
 
 // ExportGenesis returns the evidence module's exported genesis state as raw JSON bytes.

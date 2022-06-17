@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
-	"time"
 
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"github.com/cosmos/cosmos-sdk/depinject"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/gogo/protobuf/proto"
 	"github.com/tendermint/tendermint/crypto"
 
 	"cosmossdk.io/core/appmodule"
@@ -22,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -152,14 +151,16 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 
 // InitGenesis performs genesis initialization for the bank module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
-	start := time.Now()
+func (am AppModule) InitGenesis(ctx sdk.Context, genesisState proto.Message) []abci.ValidatorUpdate {
+	am.keeper.InitGenesis(ctx, genesisState.(*types.GenesisState))
+	return []abci.ValidatorUpdate{}
+}
+
+// UnmarshalGenesis unmarshals the genesis state for the bank module.
+func (am AppModule) UnmarshalGenesis(cdc codec.JSONCodec, data json.RawMessage) proto.Message {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	telemetry.MeasureSince(start, "InitGenesis", "crisis", "unmarshal")
-
-	am.keeper.InitGenesis(ctx, &genesisState)
-	return []abci.ValidatorUpdate{}
+	return &genesisState
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the bank

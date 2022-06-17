@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/core/appmodule"
+	"github.com/gogo/protobuf/proto"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -92,14 +93,19 @@ func NewAppModule(accountKeeper types.AccountKeeper,
 
 // InitGenesis performs genesis initialization for the genutil module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
-	var genesisState types.GenesisState
-	cdc.MustUnmarshalJSON(data, &genesisState)
-	validators, err := InitGenesis(ctx, am.stakingKeeper, am.deliverTx, genesisState, am.txEncodingConfig)
+func (am AppModule) InitGenesis(ctx sdk.Context, genesisState proto.Message) []abci.ValidatorUpdate {
+	validators, err := InitGenesis(ctx, am.stakingKeeper, am.deliverTx, *genesisState.(*types.GenesisState), am.txEncodingConfig)
 	if err != nil {
 		panic(err)
 	}
 	return validators
+}
+
+// UnmarshalGenesis unmarshals the genesis state for the genutil module.
+func (am AppModule) UnmarshalGenesis(cdc codec.JSONCodec, data json.RawMessage) proto.Message {
+	var genesisState types.GenesisState
+	cdc.MustUnmarshalJSON(data, &genesisState)
+	return &genesisState
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the genutil
@@ -124,7 +130,7 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 type genutilInputs struct {
 	depinject.In
 
-	AccountKeeper types.AccountKeeper 
+	AccountKeeper types.AccountKeeper
 	StakingKeeper types.StakingKeeper
 	DeliverTx     func(abci.RequestDeliverTx) abci.ResponseDeliverTx
 	Config        client.TxConfig

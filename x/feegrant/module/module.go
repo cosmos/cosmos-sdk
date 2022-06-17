@@ -6,6 +6,7 @@ import (
 	"math/rand"
 
 	"cosmossdk.io/core/appmodule"
+	"github.com/gogo/protobuf/proto"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -157,15 +158,19 @@ func (AppModule) QuerierRoute() string {
 
 // InitGenesis performs genesis initialization for the feegrant module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
-	var gs feegrant.GenesisState
-	cdc.MustUnmarshalJSON(bz, &gs)
-
-	err := am.keeper.InitGenesis(ctx, &gs)
+func (am AppModule) InitGenesis(ctx sdk.Context, genesisState proto.Message) []abci.ValidatorUpdate {
+	err := am.keeper.InitGenesis(ctx, genesisState.(*feegrant.GenesisState))
 	if err != nil {
 		panic(err)
 	}
 	return []abci.ValidatorUpdate{}
+}
+
+// UnmarshalGenesis unmarshals the genesis state for the feegrant module.
+func (am AppModule) UnmarshalGenesis(cdc codec.JSONCodec, data json.RawMessage) proto.Message {
+	var genesisState feegrant.GenesisState
+	cdc.MustUnmarshalJSON(data, &genesisState)
+	return &genesisState
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the feegrant

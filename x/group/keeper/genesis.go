@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"encoding/json"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -11,9 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
-func (k Keeper) InitGenesis(ctx types.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
-	var genesisState group.GenesisState
-	cdc.MustUnmarshalJSON(data, &genesisState)
+func (k Keeper) InitGenesis(ctx types.Context, genesisState group.GenesisState) []abci.ValidatorUpdate {
 
 	if err := k.groupTable.Import(ctx.KVStore(k.key), genesisState.Groups, genesisState.GroupSeq); err != nil {
 		panic(errors.Wrap(err, "groups"))

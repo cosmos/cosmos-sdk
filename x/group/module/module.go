@@ -7,6 +7,7 @@ import (
 	"math/rand"
 
 	"cosmossdk.io/core/appmodule"
+	"github.com/gogo/protobuf/proto"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -131,8 +132,16 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 
 // InitGenesis performs genesis initialization for the group module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
-	am.keeper.InitGenesis(ctx, cdc, data)
+func (am AppModule) UnmarshalGenesis(cdc codec.JSONCodec, data json.RawMessage) proto.Message {
+	var genesisState group.GenesisState
+	cdc.MustUnmarshalJSON(data, &genesisState)
+
+	return &genesisState
+}
+
+// UnmarshalGenesis unmarshals the genesis state for the group module.
+func (am AppModule) InitGenesis(ctx sdk.Context, genesisState proto.Message) []abci.ValidatorUpdate {
+	am.keeper.InitGenesis(ctx, *genesisState.(*group.GenesisState))
 	return []abci.ValidatorUpdate{}
 }
 

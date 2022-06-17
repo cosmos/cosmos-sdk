@@ -45,18 +45,15 @@ var (
 )
 
 func (s *GenesisTestSuite) SetupSuite() {
-	checkTx := false
-	var groupKeeper keeper.Keeper
 	app, err := simtestutil.SetupAtGenesis(
 		testutil.AppConfig,
 		&s.interfaceRegistry,
-		&groupKeeper,
+		&s.keeper,
 	)
 	s.Require().NoError(err)
 
 	s.app = app
-	s.sdkCtx = app.BaseApp.NewUncachedContext(checkTx, tmproto.Header{})
-	s.keeper = groupKeeper
+	s.sdkCtx = app.BaseApp.NewUncachedContext(false, tmproto.Header{})
 	s.cdc = codec.NewProtoCodec(s.interfaceRegistry)
 	s.ctx = sdk.WrapSDKContext(s.sdkCtx)
 }

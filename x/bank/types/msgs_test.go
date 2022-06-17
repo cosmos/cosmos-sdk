@@ -336,6 +336,18 @@ func TestMsgSetSendEnabledValidateBasic(t *testing.T) {
 			exp: "",
 		},
 		{
+			name: "valid with two entries but no authority",
+			msg: MsgSetSendEnabled{
+				Authority: "",
+				SendEnabled: []*SendEnabled{
+					{"somecoina", true},
+					{"somecoinb", false},
+				},
+				UseDefaultFor: []string{"defcoinc", "defcoind"},
+			},
+			exp: "",
+		},
+		{
 			name: "bad authority",
 			msg: MsgSetSendEnabled{
 				Authority: "farva",

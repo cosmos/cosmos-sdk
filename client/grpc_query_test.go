@@ -66,6 +66,22 @@ func (s *IntegrationTestSuite) TestGRPCQuery_TestService() {
 	s.Require().Equal("hello", testRes.Message)
 }
 
+func (s *IntegrationTestSuite) TestGRPCConcurrency() {
+	val0 := s.network.Validators[0]
+	clientCtx := val0.ClientCtx
+	clientCtx.GRPCConcurrency = true
+	in := &testdata.EchoRequest{Message: "hello"}
+	out := &testdata.EchoResponse{}
+	err := clientCtx.Invoke(context.Background(), "/testdata.Query/Echo", in, out)
+	s.Require().NoError(err)
+	s.Require().Equal("hello", out.Message)
+
+	clientCtx.GRPCConcurrency = false
+	err = clientCtx.Invoke(context.Background(), "/testdata.Query/Echo", in, out)
+	s.Require().NoError(err)
+	s.Require().Equal("hello", out.Message)
+}
+
 func (s *IntegrationTestSuite) TestGRPCQuery_BankService_VariousInputs() {
 	val0 := s.network.Validators[0]
 

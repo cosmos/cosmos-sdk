@@ -205,7 +205,7 @@ func provideModule(in crisisInputs) crisisOutputs {
 		in.Subspace,
 		uint(in.Config.InvalidCheckPeriod),
 		in.BankKeeper,
-		in.Config.FeeCollectorName,
+		authtypes.FeeCollectorName,
 	)
 	m := NewAppModule(&k, in.Config.SkipGenesisInvariants)
 	return crisisOutputs{CrisisKeeper: k, Module: runtime.WrapAppModule(m)}

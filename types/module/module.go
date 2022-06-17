@@ -37,11 +37,14 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"sync"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/gogo/protobuf/proto"
 )
 
 // AppModuleBasic is the standard form for basic non-dependant elements of an application module.
@@ -141,7 +144,8 @@ func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 type AppModuleGenesis interface {
 	AppModuleBasic
 
-	InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate
+	UnmarshalGenesis(codec.JSONCodec, json.RawMessage) proto.Message
+	InitGenesis(sdk.Context, proto.Message) []abci.ValidatorUpdate
 	ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage
 }
 
@@ -226,6 +230,7 @@ type Manager struct {
 
 // NewManager creates a new Manager object
 func NewManager(modules ...AppModule) *Manager {
+
 	moduleMap := make(map[string]AppModule)
 	modulesStr := make([]string, 0, len(modules))
 	for _, module := range modules {
@@ -299,19 +304,38 @@ func (m *Manager) RegisterServices(cfg Configurator) {
 	}
 }
 
-// InitGenesis performs init genesis functionality for modules. Exactly one
-// module must return a non-empty validator set update to correctly initialize
-// the chain.
+func (m *Manager) UnmarshalGenesis(cdc codec.JSONCodec, genesisData map[string]json.RawMessage) map[string]proto.Message {
+	var wg sync.WaitGroup
+	genesisStates := map[string]proto.Message{}
+	for _, moduleName := range m.OrderInitGenesis {
+		if genesisData[moduleName] == nil {
+			continue
+		}
+
+		wg.Add(1)
+		go func(moduleName string) {
+			defer wg.Done()
+			genesisStates[moduleName] = m.Modules[moduleName].UnmarshalGenesis(cdc, genesisData[moduleName])
+		}(moduleName)
+	}
+	wg.Wait()
+	return genesisStates
+}
+
+// InitGenesis performs init genesis functionality for modules
 func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData map[string]json.RawMessage) abci.ResponseInitChain {
 	var validatorUpdates []abci.ValidatorUpdate
 	ctx.Logger().Info("initializing blockchain state from genesis.json")
+
+	genesisStates := m.UnmarshalGenesis(cdc, genesisData)
+
 	for _, moduleName := range m.OrderInitGenesis {
 		if genesisData[moduleName] == nil {
 			continue
 		}
 		ctx.Logger().Debug("running initialization for module", "module", moduleName)
 
-		moduleValUpdates := m.Modules[moduleName].InitGenesis(ctx, cdc, genesisData[moduleName])
+		moduleValUpdates := m.Modules[moduleName].InitGenesis(ctx, genesisStates[moduleName])
 
 		// use these validator updates if provided, the module manager assumes
 		// only one module will update the validator set
@@ -447,7 +471,8 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 			}
 		} else {
 			ctx.Logger().Info(fmt.Sprintf("adding a new module: %s", moduleName))
-			moduleValUpdates := module.InitGenesis(ctx, c.cdc, module.DefaultGenesis(c.cdc))
+			moduleDefaultGensisState := module.UnmarshalGenesis(c.cdc, module.DefaultGenesis(c.cdc))
+			moduleValUpdates := module.InitGenesis(ctx, moduleDefaultGensisState)
 			// The module manager assumes only one module will update the
 			// validator set, and it can't be a new module.
 			if len(moduleValUpdates) > 0 {

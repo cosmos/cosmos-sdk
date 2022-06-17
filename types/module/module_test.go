@@ -203,7 +203,8 @@ func TestManager_InitGenesis(t *testing.T) {
 	genesisData := map[string]json.RawMessage{"module1": json.RawMessage(`{"key": "value"}`)}
 
 	// this should panic since the validator set is empty even after init genesis
-	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return(nil)
+	mockAppModule1.EXPECT().UnmarshalGenesis(gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return(nil)
+	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Nil()).Times(1).Return(nil)
 	require.Panics(t, func() { mm.InitGenesis(ctx, cdc, genesisData) })
 
 	// test panic
@@ -211,8 +212,11 @@ func TestManager_InitGenesis(t *testing.T) {
 		"module1": json.RawMessage(`{"key": "value"}`),
 		"module2": json.RawMessage(`{"key": "value"}`),
 	}
-	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
-	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{{}})
+	mockAppModule1.EXPECT().UnmarshalGenesis(gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return(nil)
+	mockAppModule2.EXPECT().UnmarshalGenesis(gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return(nil)
+
+	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Nil()).Times(1).Return([]abci.ValidatorUpdate{{}})
+	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Nil()).Times(1).Return([]abci.ValidatorUpdate{{}})
 	require.Panics(t, func() { mm.InitGenesis(ctx, cdc, genesisData) })
 }
 

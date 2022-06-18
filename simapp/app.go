@@ -226,6 +226,7 @@ func NewSimApp(
 		&app.SlashingKeeper,
 		&app.MintKeeper,
 		&app.EvidenceKeeper,
+		&app.DistrKeeper,
 	); err != nil {
 		panic(err)
 	}
@@ -233,7 +234,6 @@ func NewSimApp(
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 
 	app.keys = sdk.NewKVStoreKeys(
-		distrtypes.StoreKey,
 		govtypes.StoreKey,
 		upgradetypes.StoreKey,
 	)
@@ -246,10 +246,6 @@ func NewSimApp(
 
 	initParamsKeeper(app.ParamsKeeper)
 
-	app.DistrKeeper = distrkeeper.NewKeeper(
-		app.appCodec, app.keys[distrtypes.StoreKey], app.GetSubspace(distrtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
-		app.StakingKeeper, authtypes.FeeCollectorName,
-	)
 	app.CrisisKeeper = crisiskeeper.NewKeeper(
 		app.GetSubspace(crisistypes.ModuleName), invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName,
 	)
@@ -294,7 +290,6 @@ func NewSimApp(
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
 		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants),
 		gov.NewAppModule(app.appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		distr.NewAppModule(app.appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 	); err != nil {
 		panic(err)
@@ -451,7 +446,6 @@ func GetMaccPerms() map[string][]string {
 
 // initParamsKeeper init params keeper and its subspaces
 func initParamsKeeper(paramsKeeper paramskeeper.Keeper) {
-	paramsKeeper.Subspace(distrtypes.ModuleName)
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govv1.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 }

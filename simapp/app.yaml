@@ -109,7 +109,7 @@ modules:
       "@type": cosmos.group.v1.module.v1.Module
       max_metadata_len: 255
       max_execution_period: "1209600s"
-      
+
   - name: nft
     config:
       "@type": cosmos.nft.module.v1.Module
@@ -129,3 +129,7 @@ modules:
   - name: evidence
     config:
       "@type": cosmos.evidence.module.v1.Module
+
+  - name: distribution
+    config:
+      "@type": cosmos.distribution.module.v1.Module

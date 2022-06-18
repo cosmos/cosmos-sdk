@@ -4,6 +4,7 @@
 
 * 2021-05-01: Initial Draft
 * 2021-07-02: Review updates
+* 2022-06-15: Add batch operation
 
 ## Status
 

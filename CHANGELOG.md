@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/upgrade) [#12264](https://github.com/cosmos/cosmos-sdk/pull/12264) Fix `GetLastCompleteUpgrade` to properly return the latest upgrade.
 * (x/crisis) [#12208](https://github.com/cosmos/cosmos-sdk/pull/12208) Fix progress index of crisis invariant assertion logs.
+* (vesting) [#12299](https://github.com/cosmos/cosmos-sdk/pull/12299) Replace https://github.com/cosmos/cosmos-sdk/pull/12190 to use `NewBaseAccountWithAddress` in create vesting account message handlers (backport #12190).
 
 ## [v0.45.5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.5) - 2022-06-09
 

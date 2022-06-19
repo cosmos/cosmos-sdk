@@ -129,3 +129,7 @@ modules:
   - name: evidence
     config:
       "@type": cosmos.evidence.module.v1.Module
+
+  - name: distribution
+    config:
+      "@type": cosmos.distribution.module.v1.Module

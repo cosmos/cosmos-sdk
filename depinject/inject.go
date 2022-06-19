@@ -31,6 +31,9 @@ func inject(loc Location, debugOpt DebugOption, config Config, outputs ...interf
 		return err
 	}
 
+	// always generate graph on exit
+	defer cfg.generateGraph()
+
 	// debug cleanup
 	defer func() {
 		for _, f := range cfg.cleanup {
@@ -58,9 +61,6 @@ func inject(loc Location, debugOpt DebugOption, config Config, outputs ...interf
 }
 
 func doInject(cfg *debugConfig, loc Location, debugOpt DebugOption, config Config, outputs ...interface{}) error {
-	// always generate graph on exit
-	defer cfg.generateGraph()
-
 	if debugOpt != nil {
 		if err := debugOpt.applyConfig(cfg); err != nil {
 			return err

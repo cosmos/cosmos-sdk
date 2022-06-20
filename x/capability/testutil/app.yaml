@@ -1,0 +1,46 @@
+modules:
+  - name: runtime
+    config:
+      "@type": cosmos.app.runtime.v1alpha1.Module
+
+      app_name: CapabilityApp
+
+      begin_blockers: [capability, staking, auth, bank, genutil, params]
+      end_blockers: [staking, capability, auth, bank, genutil, params]
+      init_genesis: [capability, auth, bank, staking, genutil, params]
+
+  - name: auth
+    config:
+      "@type": cosmos.auth.module.v1.Module
+      bech32_prefix: cosmos
+      module_account_permissions:
+        - account: fee_collector
+        - account: bonded_tokens_pool
+          permissions: [burner, staking]
+        - account: not_bonded_tokens_pool
+          permissions: [burner, staking]
+
+  - name: bank
+    config:
+      "@type": cosmos.bank.module.v1.Module
+
+  - name: params
+    config:
+      "@type": cosmos.params.module.v1.Module
+
+  - name: tx
+    config:
+      "@type": cosmos.tx.module.v1.Module
+
+  - name: staking
+    config:
+      "@type": cosmos.staking.module.v1.Module
+
+  - name: genutil
+    config:
+      "@type": cosmos.genutil.module.v1.Module
+
+  - name: capability
+    config:
+      "@type": cosmos.capability.module.v1.Module
+      seal_keeper: true

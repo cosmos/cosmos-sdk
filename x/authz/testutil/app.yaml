@@ -3,9 +3,9 @@ modules:
     config:
       "@type": cosmos.app.runtime.v1alpha1.Module
       app_name: AuthzApp
-      begin_blockers: [staking, auth, bank,gov, genutil, authz, params]
-      end_blockers: [staking, auth, bank, gov, genutil, authz, params]
-      init_genesis: [auth, bank, staking, gov, genutil, authz, params]
+      begin_blockers: [mint, staking, auth, bank, gov, genutil, authz, params]
+      end_blockers: [mint, staking, auth, bank, gov, genutil, authz, params]
+      init_genesis: [auth, bank, staking, mint, gov, genutil, authz, params]
 
   - name: auth
     config:
@@ -13,6 +13,8 @@ modules:
       bech32_prefix: cosmos
       module_account_permissions:
         - account: fee_collector
+        - account: mint
+          permissions: [minter]
         - account: bonded_tokens_pool
           permissions: [burner, staking]
         - account: not_bonded_tokens_pool
@@ -43,3 +45,7 @@ modules:
   - name: genutil
     config:
       "@type": cosmos.genutil.module.v1.Module
+
+  - name: mint
+    config:
+      "@type": cosmos.mint.module.v1.Module

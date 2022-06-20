@@ -224,6 +224,8 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			testProposal := TestProposal
 
+			depositMultiplier := getDepositMultiplier(tc.isExpedited)
+
 			app := simapp.Setup(false)
 			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 			addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
@@ -242,7 +244,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			require.False(t, activeQueue.Valid())
 			activeQueue.Close()
 
-			proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 5))}
+			proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 5*depositMultiplier))}
 			newProposalMsg, err := types.NewMsgSubmitProposal(testProposal, proposalCoins, addrs[0], tc.isExpedited)
 			require.NoError(t, err)
 
@@ -319,15 +321,15 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 func TestProposalPassedEndblocker(t *testing.T) {
 	testcases := []struct {
 		name        string
-		IsExpedited bool
+		isExpedited bool
 	}{
 		{
 			name:        "regular text",
-			IsExpedited: false,
+			isExpedited: false,
 		},
 		{
 			name:        "text expedited",
-			IsExpedited: true,
+			isExpedited: true,
 		},
 	}
 
@@ -335,9 +337,11 @@ func TestProposalPassedEndblocker(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			testProposal := TestProposal
 
+			depositMultiplier := getDepositMultiplier(tc.isExpedited)
+
 			app := simapp.Setup(false)
 			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-			addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
+			addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens.Mul(sdk.NewInt(depositMultiplier)))
 
 			SortAddresses(addrs)
 
@@ -356,10 +360,10 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			require.NotNil(t, macc)
 			initialModuleAccCoins := app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
 
-			proposal, err := app.GovKeeper.SubmitProposal(ctx, testProposal, tc.IsExpedited)
+			proposal, err := app.GovKeeper.SubmitProposal(ctx, testProposal, tc.isExpedited)
 			require.NoError(t, err)
 
-			proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 10))}
+			proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 10*depositMultiplier))}
 			newDepositMsg := types.NewMsgDeposit(addrs[0], proposal.ProposalId, proposalCoins)
 
 			handleAndCheck(t, handler, ctx, newDepositMsg)
@@ -415,9 +419,11 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			testProposal := TestProposal
 
+			depositMultiplier := getDepositMultiplier(true)
+
 			app := simapp.Setup(false)
 			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-			addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
+			addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens.Mul(sdk.NewInt(depositMultiplier)))
 
 			SortAddresses(addrs)
 
@@ -447,7 +453,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			submitterInitialBalance := app.BankKeeper.GetAllBalances(ctx, addrs[0])
 			depositorInitialBalance := app.BankKeeper.GetAllBalances(ctx, addrs[1])
 
-			proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 5))}
+			proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 5*depositMultiplier))}
 			newProposalMsg, err := types.NewMsgSubmitProposal(testProposal, proposalCoins, addrs[0], true)
 			require.NoError(t, err)
 
@@ -638,4 +644,14 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 
 	// validate that the proposal fails/has been rejected
 	gov.EndBlocker(ctx, app.GovKeeper)
+}
+
+// With expedited proposal's minimum deposit set higher than the default deposit, we must
+// initialize and deposit an amount depositMultiplier times larger
+// than the regular min deposit amount.
+func getDepositMultiplier(isExpedited bool) int64 {
+	if !isExpedited {
+		return 1
+	}
+	return types.DefaultMinExpeditedDepositTokens.Quo(types.DefaultMinDepositTokens).Int64()
 }

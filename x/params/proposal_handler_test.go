@@ -64,16 +64,28 @@ func (suite *HandlerTestSuite) TestProposalHandler() {
 			testProposal(proposal.ParamChange{
 				Subspace: govtypes.ModuleName,
 				Key:      string(govtypes.ParamStoreKeyDepositParams),
-				Value:    `{"min_deposit": [{"denom": "uatom","amount": "64000000"}]}`,
+				Value:    `{"min_deposit": [{"denom": "uatom","amount": "64000000"}],"min_expedited_deposit": [{"denom": "uatom","amount": "64000001"}]}`,
 			}),
 			func() {
 				depositParams := suite.app.GovKeeper.GetDepositParams(suite.ctx)
 				suite.Require().Equal(govtypes.DepositParams{
-					MinDeposit:       sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(64000000))),
-					MaxDepositPeriod: govtypes.DefaultPeriod,
+					MinDeposit:          sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(64000000))),
+					MaxDepositPeriod:    govtypes.DefaultPeriod,
+					MinExpeditedDeposit: sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(64000001))),
 				}, depositParams)
 			},
 			false,
+		},
+		{
+			"min_deposit equals to min_expedited_deposit",
+			testProposal(proposal.ParamChange{
+				Subspace: govtypes.ModuleName,
+				Key:      string(govtypes.ParamStoreKeyDepositParams),
+				Value:    `{"min_deposit": [{"denom": "uatom","amount": "64000000"}],"min_expedited_deposit": [{"denom": "uatom","amount": "64000000"}]}`,
+			}),
+			func() {
+			},
+			true,
 		},
 	}
 

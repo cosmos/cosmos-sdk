@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/depinject"
+	types2 "github.com/cosmos/cosmos-sdk/server/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -184,6 +185,7 @@ func init() {
 type crisisInputs struct {
 	depinject.In
 
+	appOptions types2.AppOptions
 	Cdc        codec.Codec
 	Config     *modulev1.Module
 	Subspace   paramstypes.Subspace
@@ -208,6 +210,8 @@ func provideModule(in crisisInputs) crisisOutputs {
 		in.BankKeeper,
 		authtypes.FeeCollectorName,
 	)
+	//m := NewAppModule(&k, in.appOptions)
+
 	m := NewAppModule(&k, in.Config.SkipGenesisInvariants)
 	return crisisOutputs{CrisisKeeper: k, Module: runtime.WrapAppModule(m)}
 }

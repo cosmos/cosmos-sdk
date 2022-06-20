@@ -6,34 +6,119 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
+	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// TestWeightedOperations tests the weights of the operations.
-func TestWeightedOperations(t *testing.T) {
+type SimTestSuite struct {
+	suite.Suite
+
+	ctx sdk.Context
+
+	app               *runtime.App
+	legacyAmino       *codec.LegacyAmino
+	codec             codec.Codec
+	interfaceRegistry codectypes.InterfaceRegistry
+	accountKeeper     authkeeper.AccountKeeper
+	bankKeeper        bankkeeper.Keeper
+	stakingKeeper     *stakingkeeper.Keeper
+	slashingKeeper    slashingkeeper.Keeper
+	mintKeeper        mintkeeper.Keeper
+	accs              []simtypes.Account
+}
+
+func (suite *SimTestSuite) SetupTest() {
+	app, err := simtestutil.Setup(
+		testutil.AppConfig,
+		&suite.legacyAmino,
+		&suite.codec,
+		&suite.interfaceRegistry,
+		&suite.accountKeeper,
+		&suite.bankKeeper,
+		&suite.stakingKeeper,
+		&suite.mintKeeper,
+		&suite.slashingKeeper,
+	)
+	suite.Require().NoError(err)
+	suite.app = app
+	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+
 	s := rand.NewSource(1)
 	r := rand.New(s)
-	app, ctx, accs := createTestApp(t, false, r, 3)
+	accounts := simtypes.RandomAccounts(r, 3)
+
+	// create validator set with single validator
+	// account := accounts[0]s
+	// tmPk, err := cryptocodec.ToTmPubKeyInterface(account.PubKey)
+	suite.Require().NoError(err)
+	// validator := tmtypes.NewValidator(tmPk, 1)
+
+	// valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+
+	// generate genesis account
+	// senderPrivKey := secp256k1.GenPrivKey()
+	// acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	// balance := banktypes.Balance{
+	// 	Address: acc.GetAddress().String(),
+	// 	Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
+	// }
+
+	// app := simapp.SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{acc}, balance)
+
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	initAmt := suite.stakingKeeper.TokensFromConsensusPower(ctx, 200)
+	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
+
+	// remove genesis validator account
+	accs := accounts[1:]
+
+	// add coins to the accounts
+	for _, account := range accs {
+		acc := suite.accountKeeper.NewAccountWithAddress(ctx, account.Address)
+		suite.accountKeeper.SetAccount(ctx, acc)
+		suite.Require().NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, account.Address, initCoins))
+	}
+
+	suite.mintKeeper.SetParams(ctx, minttypes.DefaultParams())
+	suite.mintKeeper.SetMinter(ctx, minttypes.DefaultInitialMinter())
+	suite.accs = accounts
+}
+
+// TestWeightedOperations tests the weights of the operations.
+func (suite *SimTestSuite) TestWeightedOperations(t *testing.T) {
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	app, ctx, accs := suite.app, suite.ctx, suite.accs
 	ctx.WithChainID("test-chain")
 
-	cdc := app.AppCodec()
+	cdc := suite.codec
 	appParams := make(simtypes.AppParams)
 
 	expected := []struct {
@@ -42,7 +127,7 @@ func TestWeightedOperations(t *testing.T) {
 		opMsgName  string
 	}{{simappparams.DefaultWeightMsgUnjail, types.ModuleName, types.TypeMsgUnjail}}
 
-	weightesOps := simulation.WeightedOperations(appParams, cdc, app.AccountKeeper, app.BankKeeper, app.SlashingKeeper, app.StakingKeeper)
+	weightesOps := simulation.WeightedOperations(appParams, cdc, suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)
 	for i, w := range weightesOps {
 		operationMsg, _, err := w.Op()(r, app.BaseApp, ctx, accs, ctx.ChainID())
 		require.NoError(t, err)
@@ -50,9 +135,9 @@ func TestWeightedOperations(t *testing.T) {
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
 		// will fail
-		require.Equal(t, expected[i].weight, w.Weight(), "weight should be the same")
-		require.Equal(t, expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
-		require.Equal(t, expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")
+		suite.Require().Equal(t, expected[i].weight, w.Weight(), "weight should be the same")
+		suite.Require().Equal(t, expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
+		suite.Require().Equal(t, expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")
 	}
 }
 
@@ -141,7 +226,7 @@ func createTestApp(t *testing.T, isCheckTx bool, r *rand.Rand, n int) (*simapp.S
 	for _, account := range accs {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, account.Address)
 		app.AccountKeeper.SetAccount(ctx, acc)
-		require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, account.Address, initCoins))
+		require.NoError(t, banktestutil.FundAccount(app.BankKeeper, ctx, account.Address, initCoins))
 	}
 
 	app.MintKeeper.SetParams(ctx, minttypes.DefaultParams())

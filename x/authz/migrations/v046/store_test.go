@@ -4,21 +4,24 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	v046 "github.com/cosmos/cosmos-sdk/x/authz/migrations/v046"
+	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMigration(t *testing.T) {
-	encCfg := simapp.MakeTestEncodingConfig()
-	cdc := encCfg.Codec
+	var cdc codec.Codec
+	depinject.Inject(authztestutil.AppConfig, &cdc)
+
 	authzKey := sdk.NewKVStoreKey("authz")
 	ctx := testutil.DefaultContext(authzKey, sdk.NewTransientStoreKey("transient_test"))
 	granter1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())

@@ -36,13 +36,11 @@ var s TestSuite
 func setupTest(t *testing.T, height int64, skip map[int64]bool) TestSuite {
 	db := dbm.NewMemDB()
 	app := simapp.NewSimappWithCustomOptions(t, false, simapp.SetupOptions{
-		Logger:             log.NewNopLogger(),
-		SkipUpgradeHeights: skip,
-		DB:                 db,
-		InvCheckPeriod:     0,
-		HomePath:           simapp.DefaultNodeHome,
-		EncConfig:          simapp.MakeTestEncodingConfig(),
-		AppOpts:            simapp.EmptyAppOptions{},
+		Logger:         log.NewNopLogger(),
+		DB:             db,
+		InvCheckPeriod: 0,
+		EncConfig:      simapp.MakeTestEncodingConfig(),
+		AppOpts:        simapp.EmptyAppOptions{},
 	})
 
 	s.keeper = app.UpgradeKeeper

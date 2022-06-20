@@ -5,16 +5,20 @@ import (
 	"encoding/json"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"cosmossdk.io/core/appmodule"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/server"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -172,6 +176,7 @@ type upgradeInputs struct {
 	Key    *store.KVStoreKey
 	Cdc    codec.Codec
 
+	AppOpts servertypes.AppOptions
 	BaseApp *baseapp.BaseApp
 }
 
@@ -183,8 +188,13 @@ type upgradeOutputs struct {
 }
 
 func provideModule(in upgradeInputs) upgradeOutputs {
+	skipUpgradeHeights := make(map[int64]bool)
+	for _, h := range cast.ToIntSlice(in.AppOpts.Get(server.FlagUnsafeSkipUpgrades)) {
+		skipUpgradeHeights[int64(h)] = true
+	}
+
 	// set the governance module account as the authority for conducting upgrades
-	k := keeper.NewKeeper(nil, in.Key, in.Cdc, "", in.BaseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, cast.ToString(in.AppOpts.Get(flags.FlagHome)), in.BaseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	m := NewAppModule(k)
 
 	return upgradeOutputs{UpgradeKeeper: k, Module: runtime.WrapAppModule(m)}

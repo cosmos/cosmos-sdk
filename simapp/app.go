@@ -98,8 +98,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
 )
 
-const appName = "SimApp"
-
 var (
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
@@ -199,17 +197,18 @@ var AppConfig = appconfig.LoadYAML(appConfigYaml)
 
 // NewSimApp returns a reference to an initialized SimApp.
 func NewSimApp(
-	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
-	homePath string, invCheckPeriod uint, encodingConfig simappparams.EncodingConfig,
+	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, invCheckPeriod uint, encodingConfig simappparams.EncodingConfig,
 	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
-	app := &SimApp{
-		invCheckPeriod: invCheckPeriod,
-	}
 
-	var appBuilder *runtime.AppBuilder
+	var (
+		appBuilder *runtime.AppBuilder
+		app        = &SimApp{invCheckPeriod: invCheckPeriod}
+		// merge the app.yaml and the appOpts in one config
+		appConfig = depinject.Configs(AppConfig, depinject.Supply(appOpts))
+	)
 
-	if err := depinject.Inject(AppConfig,
+	if err := depinject.Inject(appConfig,
 		&appBuilder,
 		&app.ParamsKeeper,
 		&app.CapabilityKeeper,

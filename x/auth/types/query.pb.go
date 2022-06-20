@@ -665,7 +665,7 @@ func (m *AddressStringToBytesResponse) GetAddressBytes() []byte {
 	return nil
 }
 
-// QueryAccountAddressByIDRequest is the request type for AccountAddressById rpc method
+// QueryAccountAddressByIDRequest is the request type for AccountAddressByID rpc method
 type QueryAccountAddressByIDRequest struct {
 	Id int64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 }
@@ -710,7 +710,7 @@ func (m *QueryAccountAddressByIDRequest) GetId() int64 {
 	return 0
 }
 
-// QueryAccountAddressByIDResponse is the response type for AccountAddressById rpc method
+// QueryAccountAddressByIDResponse is the response type for AccountAddressByID rpc method
 type QueryAccountAddressByIDResponse struct {
 	AccountAddress string `protobuf:"bytes,1,opt,name=account_address,json=accountAddress,proto3" json:"account_address,omitempty"`
 }

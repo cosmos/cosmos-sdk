@@ -5,7 +5,7 @@ modules:
 
       app_name: MintApp
 
-      begin_blockers: [staking, auth, bank, mint, genutil, params]
+      begin_blockers: [mint, staking, auth, bank, genutil, params]
       end_blockers: [staking, auth, bank, mint, genutil, params]
       init_genesis: [auth, bank, staking, mint, genutil, params]
 

@@ -201,7 +201,7 @@ type slashingInputs struct {
 	Subspace      paramstypes.Subspace
 }
 
-type outputInputs struct {
+type slashingOutputs struct {
 	depinject.Out
 
 	Keeper keeper.Keeper `key:"cosmos.slashing.v1.Keeper"`
@@ -209,10 +209,10 @@ type outputInputs struct {
 	Hooks  staking.StakingHooksWrapper
 }
 
-func provideModule(in slashingInputs) outputInputs {
+func provideModule(in slashingInputs) slashingOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.Key, in.StakingKeeper, in.Subspace)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper)
-	return outputInputs{
+	return slashingOutputs{
 		Keeper: k,
 		Module: runtime.WrapAppModule(m),
 		Hooks:  staking.StakingHooksWrapper{StakingHooks: k.Hooks()},

@@ -5,11 +5,6 @@ on:
   pull_request:
     paths:
       - "proto/**"
-  push:
-    branches:
-      - main
-    paths:
-      - "proto/**"
 
 jobs:
   lint:
@@ -30,4 +25,4 @@ jobs:
       - uses: bufbuild/buf-breaking-action@v1
         with:
           input: "proto"
-          against: "https://github.com/${{ github.repository }}.git#branch=${{ env.GITHUB_HEAD_REF }},ref=HEAD~1,subdir=proto"
+          against: "https://github.com/${{ github.repository }}.git#branch=${{ github.event.pull_request.base.ref }},ref=HEAD~1,subdir=proto"

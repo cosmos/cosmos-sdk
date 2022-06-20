@@ -13,61 +13,13 @@ import (
 	sync "sync"
 )
 
-var _ protoreflect.List = (*_Module_1_list)(nil)
-
-type _Module_1_list struct {
-	list *[]string
-}
-
-func (x *_Module_1_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_Module_1_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfString((*x.list)[i])
-}
-
-func (x *_Module_1_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.String()
-	concreteValue := valueUnwrapped
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_Module_1_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.String()
-	concreteValue := valueUnwrapped
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_Module_1_list) AppendMutable() protoreflect.Value {
-	panic(fmt.Errorf("AppendMutable can not be called on message Module at list field BlockedModuleAccountsOverride as it is not of Message kind"))
-}
-
-func (x *_Module_1_list) Truncate(n int) {
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_Module_1_list) NewElement() protoreflect.Value {
-	v := ""
-	return protoreflect.ValueOfString(v)
-}
-
-func (x *_Module_1_list) IsValid() bool {
-	return x.list != nil
-}
-
 var (
-	md_Module                                  protoreflect.MessageDescriptor
-	fd_Module_blocked_module_accounts_override protoreflect.FieldDescriptor
+	md_Module protoreflect.MessageDescriptor
 )
 
 func init() {
-	file_cosmos_bank_module_v1_module_proto_init()
-	md_Module = File_cosmos_bank_module_v1_module_proto.Messages().ByName("Module")
-	fd_Module_blocked_module_accounts_override = md_Module.Fields().ByName("blocked_module_accounts_override")
+	file_cosmos_upgrade_module_v1_module_proto_init()
+	md_Module = File_cosmos_upgrade_module_v1_module_proto.Messages().ByName("Module")
 }
 
 var _ protoreflect.Message = (*fastReflection_Module)(nil)
@@ -79,7 +31,7 @@ func (x *Module) ProtoReflect() protoreflect.Message {
 }
 
 func (x *Module) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_bank_module_v1_module_proto_msgTypes[0]
+	mi := &file_cosmos_upgrade_module_v1_module_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -135,12 +87,6 @@ func (x *fastReflection_Module) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_Module) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.BlockedModuleAccountsOverride) != 0 {
-		value := protoreflect.ValueOfList(&_Module_1_list{list: &x.BlockedModuleAccountsOverride})
-		if !f(fd_Module_blocked_module_accounts_override, value) {
-			return
-		}
-	}
 }
 
 // Has reports whether a field is populated.
@@ -156,13 +102,11 @@ func (x *fastReflection_Module) Range(f func(protoreflect.FieldDescriptor, proto
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_Module) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.bank.module.v1.Module.blocked_module_accounts_override":
-		return len(x.BlockedModuleAccountsOverride) != 0
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.module.v1.Module"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.upgrade.module.v1.Module"))
 		}
-		panic(fmt.Errorf("message cosmos.bank.module.v1.Module does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.upgrade.module.v1.Module does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -174,13 +118,11 @@ func (x *fastReflection_Module) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Module) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.bank.module.v1.Module.blocked_module_accounts_override":
-		x.BlockedModuleAccountsOverride = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.module.v1.Module"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.upgrade.module.v1.Module"))
 		}
-		panic(fmt.Errorf("message cosmos.bank.module.v1.Module does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.upgrade.module.v1.Module does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -192,17 +134,11 @@ func (x *fastReflection_Module) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_Module) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.bank.module.v1.Module.blocked_module_accounts_override":
-		if len(x.BlockedModuleAccountsOverride) == 0 {
-			return protoreflect.ValueOfList(&_Module_1_list{})
-		}
-		listValue := &_Module_1_list{list: &x.BlockedModuleAccountsOverride}
-		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.module.v1.Module"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.upgrade.module.v1.Module"))
 		}
-		panic(fmt.Errorf("message cosmos.bank.module.v1.Module does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.upgrade.module.v1.Module does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -218,15 +154,11 @@ func (x *fastReflection_Module) Get(descriptor protoreflect.FieldDescriptor) pro
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Module) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.bank.module.v1.Module.blocked_module_accounts_override":
-		lv := value.List()
-		clv := lv.(*_Module_1_list)
-		x.BlockedModuleAccountsOverride = *clv.list
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.module.v1.Module"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.upgrade.module.v1.Module"))
 		}
-		panic(fmt.Errorf("message cosmos.bank.module.v1.Module does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.upgrade.module.v1.Module does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -242,17 +174,11 @@ func (x *fastReflection_Module) Set(fd protoreflect.FieldDescriptor, value proto
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Module) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.bank.module.v1.Module.blocked_module_accounts_override":
-		if x.BlockedModuleAccountsOverride == nil {
-			x.BlockedModuleAccountsOverride = []string{}
-		}
-		value := &_Module_1_list{list: &x.BlockedModuleAccountsOverride}
-		return protoreflect.ValueOfList(value)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.module.v1.Module"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.upgrade.module.v1.Module"))
 		}
-		panic(fmt.Errorf("message cosmos.bank.module.v1.Module does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.upgrade.module.v1.Module does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -261,14 +187,11 @@ func (x *fastReflection_Module) Mutable(fd protoreflect.FieldDescriptor) protore
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_Module) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.bank.module.v1.Module.blocked_module_accounts_override":
-		list := []string{}
-		return protoreflect.ValueOfList(&_Module_1_list{list: &list})
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.bank.module.v1.Module"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.upgrade.module.v1.Module"))
 		}
-		panic(fmt.Errorf("message cosmos.bank.module.v1.Module does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.upgrade.module.v1.Module does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -278,7 +201,7 @@ func (x *fastReflection_Module) NewField(fd protoreflect.FieldDescriptor) protor
 func (x *fastReflection_Module) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.bank.module.v1.Module", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.upgrade.module.v1.Module", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -333,12 +256,6 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		if len(x.BlockedModuleAccountsOverride) > 0 {
-			for _, s := range x.BlockedModuleAccountsOverride {
-				l = len(s)
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
-		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -367,15 +284,6 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.BlockedModuleAccountsOverride) > 0 {
-			for iNdEx := len(x.BlockedModuleAccountsOverride) - 1; iNdEx >= 0; iNdEx-- {
-				i -= len(x.BlockedModuleAccountsOverride[iNdEx])
-				copy(dAtA[i:], x.BlockedModuleAccountsOverride[iNdEx])
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.BlockedModuleAccountsOverride[iNdEx])))
-				i--
-				dAtA[i] = 0xa
-			}
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -426,38 +334,6 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Module: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
-			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BlockedModuleAccountsOverride", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.BlockedModuleAccountsOverride = append(x.BlockedModuleAccountsOverride, string(dAtA[iNdEx:postIndex]))
-				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -497,7 +373,7 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 // versions:
 // 	protoc-gen-go v1.27.0
 // 	protoc        (unknown)
-// source: cosmos/bank/module/v1/module.proto
+// source: cosmos/upgrade/module/v1/module.proto
 
 const (
 	// Verify that this generated code is sufficiently up-to-date.
@@ -506,22 +382,17 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Module is the config object of the bank module.
+// Module is the config object of the upgrade module.
 type Module struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	// blocked_module_accounts configures exceptional module accounts which should be blocked from receiving funds.
-	// If left empty it defaults to the list of account names supplied in the auth module configuration as
-	// module_account_permissions
-	BlockedModuleAccountsOverride []string `protobuf:"bytes,1,rep,name=blocked_module_accounts_override,json=blockedModuleAccountsOverride,proto3" json:"blocked_module_accounts_override,omitempty"`
 }
 
 func (x *Module) Reset() {
 	*x = Module{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_bank_module_v1_module_proto_msgTypes[0]
+		mi := &file_cosmos_upgrade_module_v1_module_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -535,66 +406,56 @@ func (*Module) ProtoMessage() {}
 
 // Deprecated: Use Module.ProtoReflect.Descriptor instead.
 func (*Module) Descriptor() ([]byte, []int) {
-	return file_cosmos_bank_module_v1_module_proto_rawDescGZIP(), []int{0}
+	return file_cosmos_upgrade_module_v1_module_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Module) GetBlockedModuleAccountsOverride() []string {
-	if x != nil {
-		return x.BlockedModuleAccountsOverride
-	}
-	return nil
-}
+var File_cosmos_upgrade_module_v1_module_proto protoreflect.FileDescriptor
 
-var File_cosmos_bank_module_v1_module_proto protoreflect.FileDescriptor
-
-var file_cosmos_bank_module_v1_module_proto_rawDesc = []byte{
-	0x0a, 0x22, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x6d, 0x6f,
-	0x64, 0x75, 0x6c, 0x65, 0x2f, 0x76, 0x31, 0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x12, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e,
-	0x6b, 0x2e, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x76, 0x31, 0x1a, 0x20, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x70, 0x70, 0x2f, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31,
-	0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x7e, 0x0a,
-	0x06, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x12, 0x47, 0x0a, 0x20, 0x62, 0x6c, 0x6f, 0x63, 0x6b,
-	0x65, 0x64, 0x5f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x5f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e,
-	0x74, 0x73, 0x5f, 0x6f, 0x76, 0x65, 0x72, 0x72, 0x69, 0x64, 0x65, 0x18, 0x01, 0x20, 0x03, 0x28,
-	0x09, 0x52, 0x1d, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x65, 0x64, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65,
-	0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x4f, 0x76, 0x65, 0x72, 0x72, 0x69, 0x64, 0x65,
-	0x3a, 0x2b, 0xba, 0xc0, 0x96, 0xda, 0x01, 0x25, 0x0a, 0x23, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,
-	0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x78, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x42, 0xd0, 0x01,
-	0x0a, 0x19, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e,
-	0x6b, 0x2e, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x76, 0x31, 0x42, 0x0b, 0x4d, 0x6f, 0x64,
-	0x75, 0x6c, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2f,
-	0x76, 0x31, 0x3b, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x42,
-	0x4d, 0xaa, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x42, 0x61, 0x6e, 0x6b, 0x2e,
-	0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x5c, 0x42, 0x61, 0x6e, 0x6b, 0x5c, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x5c, 0x56,
-	0x31, 0xe2, 0x02, 0x21, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x42, 0x61, 0x6e, 0x6b, 0x5c,
-	0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74,
-	0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x18, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a,
-	0x42, 0x61, 0x6e, 0x6b, 0x3a, 0x3a, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x3a, 0x3a, 0x56, 0x31,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+var file_cosmos_upgrade_module_v1_module_proto_rawDesc = []byte{
+	0x0a, 0x25, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x75, 0x70, 0x67, 0x72, 0x61, 0x64, 0x65,
+	0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2f, 0x76, 0x31, 0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c,
+	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x18, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x75, 0x70, 0x67, 0x72, 0x61, 0x64, 0x65, 0x2e, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x76,
+	0x31, 0x1a, 0x20, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x70, 0x70, 0x2f, 0x76, 0x31,
+	0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x22, 0x38, 0x0a, 0x06, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x3a, 0x2e, 0xba,
+	0xc0, 0x96, 0xda, 0x01, 0x28, 0x0a, 0x26, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f,
+	0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d,
+	0x73, 0x64, 0x6b, 0x2f, 0x78, 0x2f, 0x75, 0x70, 0x67, 0x72, 0x61, 0x64, 0x65, 0x42, 0xe2, 0x01,
+	0x0a, 0x1c, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x75, 0x70, 0x67,
+	0x72, 0x61, 0x64, 0x65, 0x2e, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x76, 0x31, 0x42, 0x0b,
+	0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x32, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x75, 0x70, 0x67, 0x72, 0x61, 0x64, 0x65, 0x2f, 0x6d,
+	0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2f, 0x76, 0x31, 0x3b, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x76,
+	0x31, 0xa2, 0x02, 0x03, 0x43, 0x55, 0x4d, 0xaa, 0x02, 0x18, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x55, 0x70, 0x67, 0x72, 0x61, 0x64, 0x65, 0x2e, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e,
+	0x56, 0x31, 0xca, 0x02, 0x18, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x55, 0x70, 0x67, 0x72,
+	0x61, 0x64, 0x65, 0x5c, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x24,
+	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x55, 0x70, 0x67, 0x72, 0x61, 0x64, 0x65, 0x5c, 0x4d,
+	0x6f, 0x64, 0x75, 0x6c, 0x65, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x1b, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x55,
+	0x70, 0x67, 0x72, 0x61, 0x64, 0x65, 0x3a, 0x3a, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x3a, 0x3a,
+	0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
-	file_cosmos_bank_module_v1_module_proto_rawDescOnce sync.Once
-	file_cosmos_bank_module_v1_module_proto_rawDescData = file_cosmos_bank_module_v1_module_proto_rawDesc
+	file_cosmos_upgrade_module_v1_module_proto_rawDescOnce sync.Once
+	file_cosmos_upgrade_module_v1_module_proto_rawDescData = file_cosmos_upgrade_module_v1_module_proto_rawDesc
 )
 
-func file_cosmos_bank_module_v1_module_proto_rawDescGZIP() []byte {
-	file_cosmos_bank_module_v1_module_proto_rawDescOnce.Do(func() {
-		file_cosmos_bank_module_v1_module_proto_rawDescData = protoimpl.X.CompressGZIP(file_cosmos_bank_module_v1_module_proto_rawDescData)
+func file_cosmos_upgrade_module_v1_module_proto_rawDescGZIP() []byte {
+	file_cosmos_upgrade_module_v1_module_proto_rawDescOnce.Do(func() {
+		file_cosmos_upgrade_module_v1_module_proto_rawDescData = protoimpl.X.CompressGZIP(file_cosmos_upgrade_module_v1_module_proto_rawDescData)
 	})
-	return file_cosmos_bank_module_v1_module_proto_rawDescData
+	return file_cosmos_upgrade_module_v1_module_proto_rawDescData
 }
 
-var file_cosmos_bank_module_v1_module_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
-var file_cosmos_bank_module_v1_module_proto_goTypes = []interface{}{
-	(*Module)(nil), // 0: cosmos.bank.module.v1.Module
+var file_cosmos_upgrade_module_v1_module_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_cosmos_upgrade_module_v1_module_proto_goTypes = []interface{}{
+	(*Module)(nil), // 0: cosmos.upgrade.module.v1.Module
 }
-var file_cosmos_bank_module_v1_module_proto_depIdxs = []int32{
+var file_cosmos_upgrade_module_v1_module_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
 	0, // [0:0] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
@@ -602,13 +463,13 @@ var file_cosmos_bank_module_v1_module_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for field type_name
 }
 
-func init() { file_cosmos_bank_module_v1_module_proto_init() }
-func file_cosmos_bank_module_v1_module_proto_init() {
-	if File_cosmos_bank_module_v1_module_proto != nil {
+func init() { file_cosmos_upgrade_module_v1_module_proto_init() }
+func file_cosmos_upgrade_module_v1_module_proto_init() {
+	if File_cosmos_upgrade_module_v1_module_proto != nil {
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file_cosmos_bank_module_v1_module_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_cosmos_upgrade_module_v1_module_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Module); i {
 			case 0:
 				return &v.state
@@ -625,18 +486,18 @@ func file_cosmos_bank_module_v1_module_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_cosmos_bank_module_v1_module_proto_rawDesc,
+			RawDescriptor: file_cosmos_upgrade_module_v1_module_proto_rawDesc,
 			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_cosmos_bank_module_v1_module_proto_goTypes,
-		DependencyIndexes: file_cosmos_bank_module_v1_module_proto_depIdxs,
-		MessageInfos:      file_cosmos_bank_module_v1_module_proto_msgTypes,
+		GoTypes:           file_cosmos_upgrade_module_v1_module_proto_goTypes,
+		DependencyIndexes: file_cosmos_upgrade_module_v1_module_proto_depIdxs,
+		MessageInfos:      file_cosmos_upgrade_module_v1_module_proto_msgTypes,
 	}.Build()
-	File_cosmos_bank_module_v1_module_proto = out.File
-	file_cosmos_bank_module_v1_module_proto_rawDesc = nil
-	file_cosmos_bank_module_v1_module_proto_goTypes = nil
-	file_cosmos_bank_module_v1_module_proto_depIdxs = nil
+	File_cosmos_upgrade_module_v1_module_proto = out.File
+	file_cosmos_upgrade_module_v1_module_proto_rawDesc = nil
+	file_cosmos_upgrade_module_v1_module_proto_goTypes = nil
+	file_cosmos_upgrade_module_v1_module_proto_depIdxs = nil
 }

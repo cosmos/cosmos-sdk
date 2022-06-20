@@ -227,16 +227,14 @@ func NewSimApp(
 		&app.MintKeeper,
 		&app.EvidenceKeeper,
 		&app.DistrKeeper,
+		&app.UpgradeKeeper,
 	); err != nil {
 		panic(err)
 	}
 
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 
-	app.keys = sdk.NewKVStoreKeys(
-		govtypes.StoreKey,
-		upgradetypes.StoreKey,
-	)
+	app.keys = sdk.NewKVStoreKeys(govtypes.StoreKey)
 
 	// configure state listening capabilities using AppOptions
 	// we are doing nothing with the returned streamingServices and waitGroup in this case
@@ -275,8 +273,6 @@ func NewSimApp(
 		// register the governance hooks
 		),
 	)
-	// set the governance module account as the authority for conducting upgrades
-	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, app.keys[upgradetypes.StoreKey], app.appCodec, homePath, app.BaseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	/****  Module Options ****/
 
@@ -289,7 +285,6 @@ func NewSimApp(
 	if err := app.RegisterModules(
 		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants),
 		gov.NewAppModule(app.appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		upgrade.NewAppModule(app.UpgradeKeeper),
 	); err != nil {
 		panic(err)
 	}

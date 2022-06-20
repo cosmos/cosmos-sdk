@@ -5,19 +5,37 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
+	"github.com/cosmos/cosmos-sdk/x/authz/testutil"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func TestExpiredGrantsQueue(t *testing.T) {
-	app := simapp.Setup(t, false)
+	var interfaceRegistry codectypes.InterfaceRegistry
+	var authzKeeper keeper.Keeper
+	var bankKeeper bankkeeper.Keeper
+	var stakingKeeper *stakingkeeper.Keeper
+
+	app, err := simtestutil.Setup(
+		testutil.AppConfig,
+		&interfaceRegistry,
+		&authzKeeper,
+		&bankKeeper,
+		&stakingKeeper,
+	)
+	require.NoError(t, err)
+
 	ctx := app.BaseApp.NewContext(false, types.Header{})
-	addrs := simapp.AddTestAddrsIncremental(app, ctx, 5, sdk.NewInt(30000000))
+	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 5, sdk.NewInt(30000000))
 	granter := addrs[0]
 	grantee1 := addrs[1]
 	grantee2 := addrs[2]
@@ -28,7 +46,7 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	smallCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10))
 
 	save := func(grantee sdk.AccAddress, exp *time.Time) {
-		err := app.AuthzKeeper.SaveGrant(ctx, grantee, granter, banktypes.NewSendAuthorization(smallCoins), exp)
+		err := authzKeeper.SaveGrant(ctx, grantee, granter, banktypes.NewSendAuthorization(smallCoins), exp)
 		require.NoError(t, err, "Grant from %s", grantee.String())
 	}
 	save(grantee1, &expiration)
@@ -36,12 +54,12 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	save(grantee3, &expiration2)
 	save(grantee4, nil)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	authz.RegisterQueryServer(queryHelper, app.AuthzKeeper)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
+	authz.RegisterQueryServer(queryHelper, authzKeeper)
 	queryClient := authz.NewQueryClient(queryHelper)
 
 	checkGrants := func(ctx sdk.Context, expectedNum int) {
-		authzmodule.BeginBlocker(ctx, app.AuthzKeeper)
+		authzmodule.BeginBlocker(ctx, authzKeeper)
 
 		res, err := queryClient.GranterGrants(ctx.Context(), &authz.QueryGranterGrantsRequest{
 			Granter: granter.String(),

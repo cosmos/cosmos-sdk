@@ -6,16 +6,24 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"cosmossdk.io/core/appmodule"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/depinject"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	modulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/simulation"
@@ -60,7 +68,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEn
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the distribution module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwruntime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
@@ -197,4 +205,44 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	return simulation.WeightedOperations(
 		simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper, am.stakingKeeper,
 	)
+}
+
+//
+// New App Wiring Setup
+//
+
+func init() {
+	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(provideModuleBasic, provideModule),
+	)
+}
+
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+type distrInputs struct {
+	depinject.In
+
+	Key      *store.KVStoreKey
+	Cdc      codec.Codec
+	Subspace paramstypes.Subspace
+
+	AccountKeeper types.AccountKeeper
+	BankKeeper    types.BankKeeper
+	StakingKeeper types.StakingKeeper
+}
+
+type distrOutputs struct {
+	depinject.Out
+
+	DistrKeeper keeper.Keeper
+	Module      runtime.AppModuleWrapper
+}
+
+func provideModule(in distrInputs) distrOutputs {
+	k := keeper.NewKeeper(in.Cdc, in.Key, in.Subspace, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, authtypes.FeeCollectorName)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper)
+
+	return distrOutputs{DistrKeeper: k, Module: runtime.WrapAppModule(m)}
 }

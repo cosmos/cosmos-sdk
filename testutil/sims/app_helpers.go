@@ -55,11 +55,30 @@ var DefaultConsensusParams = &tmproto.ConsensusParams{
 // appConfig usually load from a `app.yaml` with `appconfig.LoadYAML`, defines the application configuration.
 // extraOutputs defines the extra outputs to be assigned by the dependency injector (depinject).
 func Setup(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.App, error) {
+	return SetupWithBaseAppOption(appConfig, nil, false, extraOutputs...)
+}
+
+// SetupAtGenesis initializes a new runtime.App at genesis. A Nop logger is set in runtime.App.
+// appConfig usually load from a `app.yaml` with `appconfig.LoadYAML`, defines the application configuration.
+// extraOutputs defines the extra outputs to be assigned by the dependency injector (depinject).
+func SetupAtGenesis(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.App, error) {
+	return SetupWithBaseAppOption(appConfig, nil, true, extraOutputs...)
+}
+
+// SetupWithBaseAppOption initializes a new runtime.App. A Nop logger is set in runtime.App.
+// appConfig usually load from a `app.yaml` with `appconfig.LoadYAML`, defines the application configuration.
+// baseAppOption defines the additional operations that must be run on baseapp before app start.
+// extraOutputs defines the extra outputs to be assigned by the dependency injector (depinject).
+// genesis defines if the app started should already have produced block or not.
+func SetupWithBaseAppOption(appConfig depinject.Config, baseAppOption runtime.BaseAppOption, genesis bool, extraOutputs ...interface{}) (*runtime.App, error) {
 	//
 	// create app
 	//
-	var appBuilder *runtime.AppBuilder
-	var codec codec.Codec
+	var (
+		app        *runtime.App
+		appBuilder *runtime.AppBuilder
+		codec      codec.Codec
+	)
 
 	if err := depinject.Inject(
 		appConfig,
@@ -68,7 +87,11 @@ func Setup(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.Ap
 		return nil, fmt.Errorf("failed to inject dependencies: %w", err)
 	}
 
-	app := appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil)
+	if baseAppOption != nil {
+		app = appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil, baseAppOption)
+	} else {
+		app = appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil)
+	}
 	if err := app.Load(true); err != nil {
 		return nil, fmt.Errorf("failed to load app: %w", err)
 	}
@@ -113,6 +136,17 @@ func Setup(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.Ap
 			AppStateBytes:   stateBytes,
 		},
 	)
+
+	// commit genesis changes
+	if !genesis {
+		app.Commit()
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
+			Height:             app.LastBlockHeight() + 1,
+			AppHash:            app.LastCommitID().Hash,
+			ValidatorsHash:     valSet.Hash(),
+			NextValidatorsHash: valSet.Hash(),
+		}})
+	}
 
 	return app, nil
 }

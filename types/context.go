@@ -28,6 +28,7 @@ type Context struct {
 	header        tmproto.Header
 	headerHash    tmbytes.HexBytes
 	chainID       string
+	isGenesis     bool
 	txBytes       []byte
 	logger        log.Logger
 	voteInfo      []abci.VoteInfo
@@ -49,6 +50,7 @@ func (c Context) MultiStore() MultiStore      { return c.ms }
 func (c Context) BlockHeight() int64          { return c.header.Height }
 func (c Context) BlockTime() time.Time        { return c.header.Time }
 func (c Context) ChainID() string             { return c.chainID }
+func (c Context) IsGenesis() bool             { return c.isGenesis }
 func (c Context) TxBytes() []byte             { return c.txBytes }
 func (c Context) Logger() log.Logger          { return c.logger }
 func (c Context) VoteInfos() []abci.VoteInfo  { return c.voteInfo }
@@ -193,6 +195,12 @@ func (c Context) WithIsReCheckTx(isRecheckTx bool) Context {
 		c.checkTx = true
 	}
 	c.recheckTx = isRecheckTx
+	return c
+}
+
+// WithIsGenesis sets isGenesis
+func (c Context) WithIsGenesis(isGenesis bool) Context {
+	c.isGenesis = isGenesis
 	return c
 }
 

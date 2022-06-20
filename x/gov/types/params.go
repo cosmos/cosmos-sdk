@@ -21,11 +21,12 @@ const (
 
 // Default governance params
 var (
-	DefaultMinDepositTokens   = sdk.NewInt(10000000)
-	DefaultQuorum             = sdk.NewDecWithPrec(334, 3)
-	DefaultThreshold          = sdk.NewDecWithPrec(5, 1)
-	DefaultExpeditedThreshold = sdk.NewDecWithPrec(667, 3)
-	DefaultVetoThreshold      = sdk.NewDecWithPrec(334, 3)
+	DefaultMinDepositTokens          = sdk.NewInt(10000000)
+	DefaultMinExpeditedDepositTokens = sdk.NewInt(10000000 * 5)
+	DefaultQuorum                    = sdk.NewDecWithPrec(334, 3)
+	DefaultThreshold                 = sdk.NewDecWithPrec(5, 1)
+	DefaultExpeditedThreshold        = sdk.NewDecWithPrec(667, 3)
+	DefaultVetoThreshold             = sdk.NewDecWithPrec(334, 3)
 
 	DefaultProposalVotingPeriods []ProposalVotingPeriod = []ProposalVotingPeriod{}
 )
@@ -73,10 +74,11 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewDepositParams creates a new DepositParams object
-func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration) DepositParams {
+func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration, minExpeditedDeposit sdk.Coins) DepositParams {
 	return DepositParams{
-		MinDeposit:       minDeposit,
-		MaxDepositPeriod: maxDepositPeriod,
+		MinDeposit:          minDeposit,
+		MaxDepositPeriod:    maxDepositPeriod,
+		MinExpeditedDeposit: minExpeditedDeposit,
 	}
 }
 
@@ -85,6 +87,7 @@ func DefaultDepositParams() DepositParams {
 	return NewDepositParams(
 		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinDepositTokens)),
 		DefaultPeriod,
+		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinExpeditedDepositTokens)),
 	)
 }
 
@@ -105,11 +108,19 @@ func validateDepositParams(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if !v.MinDeposit.IsValid() {
-		return fmt.Errorf("invalid minimum deposit: %s", v.MinDeposit)
+	minDeposit := v.MinDeposit
+	if !minDeposit.IsValid() {
+		return fmt.Errorf("invalid minimum deposit: %s", minDeposit)
 	}
 	if v.MaxDepositPeriod <= 0 {
 		return fmt.Errorf("maximum deposit period must be positive: %d", v.MaxDepositPeriod)
+	}
+	minExpeditedDeposit := v.MinExpeditedDeposit
+	if !minExpeditedDeposit.IsValid() {
+		return fmt.Errorf("invalid minimum expedited deposit: %s", minExpeditedDeposit)
+	}
+	if minExpeditedDeposit.IsAllLTE(minDeposit) {
+		return fmt.Errorf("minimum expedited deposit %s must be greater than expedited deposit %s", minExpeditedDeposit, minDeposit)
 	}
 
 	return nil

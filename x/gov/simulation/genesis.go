@@ -17,6 +17,7 @@ import (
 // Simulation parameter constants
 const (
 	DepositParamsMinDeposit           = "deposit_params_min_deposit"
+	DepositParamsMinExpeditedDeposit  = "deposit_params_min_expedited_deposit"
 	DepositParamsDepositPeriod        = "deposit_params_deposit_period"
 	VotingParamsVotingPeriod          = "voting_params_voting_period"
 	ExpeditedVotingParamsVotingPeriod = "expedited_voting_params_voting_period"
@@ -41,7 +42,12 @@ func GenDepositParamsDepositPeriod(r *rand.Rand) time.Duration {
 
 // GenDepositParamsMinDeposit randomized DepositParamsMinDeposit
 func GenDepositParamsMinDeposit(r *rand.Rand) sdk.Coins {
-	return sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(simulation.RandIntBetween(r, 1, 1e3))))
+	return sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(simulation.RandIntBetween(r, 1, 1e3/2))))
+}
+
+// GenDepositParamsMinExpeditedDeposit randomized DepositParamsMinExpeditedDeposit
+func GenDepositParamsMinExpeditedDeposit(r *rand.Rand) sdk.Coins {
+	return sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(simulation.RandIntBetween(r, 1e3/2, 1e3))))
 }
 
 // GenVotingParamsVotingPeriod randomized VotingParamsVotingPeriod
@@ -82,6 +88,12 @@ func RandomizedGenState(simState *module.SimulationState) {
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, DepositParamsMinDeposit, &minDeposit, simState.Rand,
 		func(r *rand.Rand) { minDeposit = GenDepositParamsMinDeposit(r) },
+	)
+
+	var minExpeditedDeposit sdk.Coins
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, DepositParamsMinExpeditedDeposit, &minExpeditedDeposit, simState.Rand,
+		func(r *rand.Rand) { minExpeditedDeposit = GenDepositParamsMinExpeditedDeposit(r) },
 	)
 
 	var depositPeriod time.Duration
@@ -143,7 +155,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	govGenesis := types.NewGenesisState(
 		startingProposalID,
-		types.NewDepositParams(minDeposit, depositPeriod),
+		types.NewDepositParams(minDeposit, depositPeriod, minExpeditedDeposit),
 		types.NewVotingParams(votingPeriod, expeditedVotingPeriod, proposalVotingPeriods),
 		types.NewTallyParams(quorum, threshold, expeditedThreshold, veto),
 	)

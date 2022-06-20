@@ -68,9 +68,22 @@ func ValidateGenesis(data *GenesisState) error {
 			veto.String())
 	}
 
-	if !data.DepositParams.MinDeposit.IsValid() {
+	minDeposit := data.DepositParams.MinDeposit
+	if !minDeposit.IsValid() {
 		return fmt.Errorf("governance deposit amount must be a valid sdk.Coins amount, is %s",
-			data.DepositParams.MinDeposit.String())
+			minDeposit.String())
+	}
+
+	minExpeditedDeposit := data.DepositParams.MinExpeditedDeposit
+	if !minExpeditedDeposit.IsValid() {
+		return fmt.Errorf("governance expedited deposit amount must be a valid sdk.Coins amount, is %s",
+			minExpeditedDeposit.String())
+	}
+
+	if minExpeditedDeposit.IsAllLTE(minDeposit) {
+		return fmt.Errorf("governance min expedited deposit amount %s must be greater than regular min deposit %s",
+			minExpeditedDeposit.String(),
+			minDeposit.String())
 	}
 
 	return nil

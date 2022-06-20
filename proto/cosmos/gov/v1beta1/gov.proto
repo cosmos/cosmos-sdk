@@ -160,6 +160,14 @@ message DepositParams {
     (gogoproto.jsontag)     = "max_deposit_period,omitempty",
     (gogoproto.moretags)    = "yaml:\"max_deposit_period\""
   ];
+
+  //  Minimum expedited deposit for a proposal to enter voting period.
+  repeated cosmos.base.v1beta1.Coin min_expedited_deposit = 3 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags)     = "yaml:\"min_expedited_deposit\"",
+    (gogoproto.jsontag)      = "min_expedited_deposit,omitempty"
+  ];
 }
 
 // VotingParams defines the params for voting on governance proposals.

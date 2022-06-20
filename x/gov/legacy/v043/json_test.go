@@ -50,7 +50,8 @@ func TestMigrateJSON(t *testing.T) {
 	expected := `{
 	"deposit_params": {
 		"max_deposit_period": "0s",
-		"min_deposit": []
+		"min_deposit": [],
+		"min_expedited_deposit": []
 	},
 	"deposits": [],
 	"proposals": [],

@@ -85,6 +85,16 @@ func (p Proposal) GetTitle() string {
 	return content.GetTitle()
 }
 
+// GetMinDepositFromParams returns min expedited deposit from depositParams if
+// the proposal is expedited. Otherwise, returns the regular min deposit from
+// depositParams.
+func (p Proposal) GetMinDepositFromParams(depositParams DepositParams) sdk.Coins {
+	if p.IsExpedited {
+		return depositParams.MinExpeditedDeposit
+	}
+	return depositParams.MinDeposit
+}
+
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (p Proposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var content Content

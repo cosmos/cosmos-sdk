@@ -35,8 +35,9 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		logger.Info(
 			"proposal did not meet minimum deposit; deleted",
 			"proposal", proposal.ProposalId,
+			"is_expedited", proposal.IsExpedited,
 			"title", proposal.GetTitle(),
-			"min_deposit", keeper.GetDepositParams(ctx).MinDeposit.String(),
+			"min_deposit", proposal.GetMinDepositFromParams(keeper.GetDepositParams(ctx)).String(),
 			"total_deposit", proposal.TotalDeposit.String(),
 		)
 

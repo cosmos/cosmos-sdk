@@ -306,15 +306,21 @@ func (m *Manager) RegisterServices(cfg Configurator) {
 func (m *Manager) UnmarshalGenesis(cdc codec.JSONCodec, genesisData map[string]json.RawMessage) map[string]proto.Message {
 	var wg sync.WaitGroup
 	genesisStates := map[string]proto.Message{}
+	genesisStatesMutexs := map[string]*sync.Mutex{}
+	for _, moduleName := range m.OrderInitGenesis {
+		genesisStatesMutexs[moduleName] = &sync.Mutex{}
+	}
+
 	for _, moduleName := range m.OrderInitGenesis {
 		if genesisData[moduleName] == nil {
 			continue
 		}
-
 		wg.Add(1)
 		go func(moduleName string) {
 			defer wg.Done()
+			genesisStatesMutexs[moduleName].Lock()
 			genesisStates[moduleName] = m.Modules[moduleName].UnmarshalGenesis(cdc, genesisData[moduleName])
+			genesisStatesMutexs[moduleName].Unlock()
 		}(moduleName)
 	}
 	wg.Wait()

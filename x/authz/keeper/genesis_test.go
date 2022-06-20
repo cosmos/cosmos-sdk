@@ -23,14 +23,12 @@ type GenesisTestSuite struct {
 }
 
 func (suite *GenesisTestSuite) SetupTest() {
-	var authzKeeper keeper.Keeper
 	app, err := simtestutil.Setup(
 		testutil.AppConfig,
-		&authzKeeper,
+		&suite.keeper,
 	)
 	suite.Require().NoError(err)
 
-	suite.keeper = authzKeeper
 	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
 }
 

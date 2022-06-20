@@ -27,3 +27,4 @@ The following contents explains how to use params module for master and user mod
     * [Key](02_subspace.md#key)
     * [KeyTable](02_subspace.md#keytable)
     * [ParamSet](02_subspace.md#paramset)
+3. * **[App-Wiring](03_app_wiring.md)**

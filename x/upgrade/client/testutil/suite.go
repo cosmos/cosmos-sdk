@@ -6,11 +6,14 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/testutil"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -21,24 +24,27 @@ func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	app     *simapp.SimApp
-	cfg     network.Config
-	network *network.Network
-	ctx     sdk.Context
+	upgradeKeeper keeper.Keeper
+	cfg           network.Config
+	network       *network.Network
+	ctx           sdk.Context
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-	app := simapp.Setup(s.T(), false)
-	s.app = app
+
+	appConfig := depinject.Configs(testutil.AppConfig, depinject.Supply(simtestutil.EmptyAppOptions{}))
+
+	app, err := simtestutil.Setup(appConfig, &s.upgradeKeeper)
+	s.Require().NoError(err)
+
 	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 
-	cfg := network.DefaultConfig()
+	cfg, err := network.DefaultConfigWithAppConfig(appConfig)
+	s.Require().NoError(err)
 	cfg.NumValidators = 1
-
 	s.cfg = cfg
 
-	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), cfg)
 	s.Require().NoError(err)
 }
@@ -80,8 +86,8 @@ func (s *IntegrationTestSuite) TestModuleVersionsCLI() {
 	// avoid printing as yaml from CLI command
 	clientCtx.OutputFormat = "JSON"
 
-	vm := s.app.UpgradeKeeper.GetModuleVersionMap(s.ctx)
-	mv := s.app.UpgradeKeeper.GetModuleVersions(s.ctx)
+	vm := s.upgradeKeeper.GetModuleVersionMap(s.ctx)
+	mv := s.upgradeKeeper.GetModuleVersions(s.ctx)
 	s.Require().NotEmpty(vm)
 
 	for _, tc := range testCases {

@@ -137,3 +137,7 @@ modules:
   - name: vesting
     config:
       "@type": cosmos.vesting.module.v1.Module
+
+  - name: upgrade
+    config:
+      "@type": cosmos.upgrade.module.v1.Module

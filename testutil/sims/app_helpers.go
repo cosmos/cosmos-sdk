@@ -13,12 +13,15 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/server"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -219,4 +222,26 @@ func GenesisStateWithValSet(codec codec.Codec, genesisState map[string]json.RawM
 	genesisState[banktypes.ModuleName] = codec.MustMarshalJSON(bankGenesis)
 
 	return genesisState, nil
+}
+
+// EmptyAppOptions is a stub implementing AppOptions
+type EmptyAppOptions struct{}
+
+// Get implements AppOptions
+func (ao EmptyAppOptions) Get(o string) interface{} {
+	return nil
+}
+
+// AppOptionsMap is a stub implementing AppOptions which can get data from a map
+type AppOptionsMap map[string]interface{}
+
+func (m AppOptionsMap) Get(key string) interface{} {
+	return m[key]
+}
+
+func NewCustomAppOptions(skipUpgradeHeights []int64, homePath string) servertypes.AppOptions {
+	return AppOptionsMap{
+		server.FlagUnsafeSkipUpgrades: skipUpgradeHeights,
+		flags.FlagHome:                homePath,
+	}
 }

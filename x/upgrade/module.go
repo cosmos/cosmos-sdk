@@ -10,7 +10,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"cosmossdk.io/core/appmodule"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -177,7 +176,7 @@ type upgradeInputs struct {
 	Cdc    codec.Codec
 
 	AppOpts servertypes.AppOptions
-	BaseApp *baseapp.BaseApp
+	// BaseApp *baseapp.BaseApp
 }
 
 type upgradeOutputs struct {
@@ -194,7 +193,7 @@ func provideModule(in upgradeInputs) upgradeOutputs {
 	}
 
 	// set the governance module account as the authority for conducting upgrades
-	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, cast.ToString(in.AppOpts.Get(flags.FlagHome)), in.BaseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, cast.ToString(in.AppOpts.Get(flags.FlagHome)), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	m := NewAppModule(k)
 
 	return upgradeOutputs{UpgradeKeeper: k, Module: runtime.WrapAppModule(m)}

@@ -44,6 +44,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -64,7 +65,7 @@ func NewAppConstructor(encodingCfg params.EncodingConfig) AppConstructor {
 		return simapp.NewSimApp(
 			val.Ctx.Logger, dbm.NewMemDB(), nil, true, 0,
 			encodingCfg,
-			simapp.NewCustomAppOptions(nil, val.Ctx.Config.RootDir),
+			simtestutil.NewCustomAppOptions(nil, val.Ctx.Config.RootDir),
 			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)

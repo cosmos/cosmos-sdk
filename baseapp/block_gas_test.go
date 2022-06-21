@@ -64,7 +64,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			}
 
 			encCfg := simapp.MakeTestEncodingConfig()
-			app = simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, 0, encCfg, simapp.EmptyAppOptions{}, routerOpt)
+			app = simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, 0, encCfg, simtestutil.EmptyAppOptions{}, routerOpt)
 			app.InterfaceRegistry().RegisterImplementations((*sdk.Msg)(nil),
 				&testdata.TestMsg{},
 			)

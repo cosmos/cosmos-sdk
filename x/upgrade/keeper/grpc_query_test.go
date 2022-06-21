@@ -9,28 +9,37 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/depinject"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/testutil"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type UpgradeTestSuite struct {
 	suite.Suite
 
-	app         *simapp.SimApp
-	ctx         sdk.Context
-	queryClient types.QueryClient
+	upgradeKeeper keeper.Keeper
+	ctx           sdk.Context
+	queryClient   types.QueryClient
 }
 
 func (suite *UpgradeTestSuite) SetupTest() {
-	suite.app = simapp.Setup(suite.T(), false)
-	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
+	var interfaceRegistry codectypes.InterfaceRegistry
 
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, suite.app.UpgradeKeeper)
+	appConfig := depinject.Configs(testutil.AppConfig, depinject.Supply(simtestutil.EmptyAppOptions{}))
+	app, err := simtestutil.Setup(appConfig, &interfaceRegistry, &suite.upgradeKeeper)
+	suite.NoError(err)
+
+	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, interfaceRegistry)
+	types.RegisterQueryServer(queryHelper, suite.upgradeKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
@@ -57,7 +66,7 @@ func (suite *UpgradeTestSuite) TestQueryCurrentPlan() {
 			"with current upgrade plan",
 			func() {
 				plan := types.Plan{Name: "test-plan", Height: 5}
-				suite.app.UpgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
+				suite.upgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
 
 				req = &types.QueryCurrentPlanRequest{}
 				expResponse = types.QueryCurrentPlanResponse{Plan: &plan}
@@ -110,13 +119,13 @@ func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
 
 				planName := "test-plan"
 				plan := types.Plan{Name: planName, Height: expHeight}
-				suite.app.UpgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
+				suite.upgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
 
 				suite.ctx = suite.ctx.WithBlockHeight(expHeight)
-				suite.app.UpgradeKeeper.SetUpgradeHandler(planName, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+				suite.upgradeKeeper.SetUpgradeHandler(planName, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 					return vm, nil
 				})
-				suite.app.UpgradeKeeper.ApplyUpgrade(suite.ctx, plan)
+				suite.upgradeKeeper.ApplyUpgrade(suite.ctx, plan)
 
 				req = &types.QueryAppliedPlanRequest{Name: planName}
 			},
@@ -170,8 +179,8 @@ func (suite *UpgradeTestSuite) TestModuleVersions() {
 		},
 	}
 
-	vm := suite.app.UpgradeKeeper.GetModuleVersionMap(suite.ctx)
-	mv := suite.app.UpgradeKeeper.GetModuleVersions(suite.ctx)
+	vm := suite.upgradeKeeper.GetModuleVersionMap(suite.ctx)
+	mv := suite.upgradeKeeper.GetModuleVersions(suite.ctx)
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {

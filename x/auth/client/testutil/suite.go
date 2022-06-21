@@ -15,6 +15,7 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -1829,17 +1830,19 @@ func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
 					genTxFile.Name(),
 					tc.feePayerArgs...,
 				)
-
-				if tc.expectErrBroadCast {
+				switch {
+				case tc.expectErrBroadCast:
 					require.Error(err)
-				} else if tc.errMsg != "" {
+
+				case tc.errMsg != "":
 					require.NoError(err)
 
 					var txRes sdk.TxResponse
 					require.NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
 
 					require.Contains(txRes.RawLog, tc.errMsg)
-				} else {
+
+				default:
 					require.NoError(err)
 
 					var txRes sdk.TxResponse

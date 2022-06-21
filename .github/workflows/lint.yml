@@ -32,10 +32,6 @@ jobs:
             ~/.cache/golangci-lint
             ~/.cache/go-build
           key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
-      - name: golangci-lint
+      - name: Run golangci-lint
         if: env.GIT_DIFF
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: latest
-          args: --out-format=tab
-          skip-go-installation: true
+        run: make lint

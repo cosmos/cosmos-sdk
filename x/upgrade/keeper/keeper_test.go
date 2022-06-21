@@ -41,6 +41,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	appConfig := depinject.Configs(testutil.AppConfig, depinject.Supply(simtestutil.NewCustomAppOptions(nil, homeDir)))
 	app, err := simtestutil.Setup(appConfig, &s.upgradeKeeper, &bankKeeper, &stakingKeeper)
 	s.NoError(err)
+	s.upgradeKeeper.SetVersionSetter(app.BaseApp)
 
 	s.T().Log("home dir:", homeDir)
 	s.homeDir = homeDir

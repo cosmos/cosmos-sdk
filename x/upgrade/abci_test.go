@@ -40,6 +40,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) TestSuite {
 
 	appConfig := depinject.Configs(testutil.AppConfig, depinject.Supply(simtestutil.NewCustomAppOptions(maps.Keys(skip), "")))
 	app, err := simtestutil.Setup(appConfig, &s.keeper, &legacyAmino)
+	s.keeper.SetVersionSetter(app.BaseApp)
 	require.NoError(t, err)
 
 	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: height, Time: time.Now()})

@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	gocontext "context"
+	"context"
 	"fmt"
 	"testing"
 
@@ -35,6 +35,7 @@ func (suite *UpgradeTestSuite) SetupTest() {
 	appConfig := depinject.Configs(testutil.AppConfig, depinject.Supply(simtestutil.EmptyAppOptions{}))
 	app, err := simtestutil.Setup(appConfig, &interfaceRegistry, &suite.upgradeKeeper)
 	suite.NoError(err)
+	suite.upgradeKeeper.SetVersionSetter(app.BaseApp)
 
 	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -81,7 +82,7 @@ func (suite *UpgradeTestSuite) TestQueryCurrentPlan() {
 
 			tc.malleate()
 
-			res, err := suite.queryClient.CurrentPlan(gocontext.Background(), req)
+			res, err := suite.queryClient.CurrentPlan(context.Background(), req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -139,7 +140,7 @@ func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
 
 			tc.malleate()
 
-			res, err := suite.queryClient.AppliedPlan(gocontext.Background(), req)
+			res, err := suite.queryClient.AppliedPlan(context.Background(), req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -186,7 +187,7 @@ func (suite *UpgradeTestSuite) TestModuleVersions() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			res, err := suite.queryClient.ModuleVersions(gocontext.Background(), &tc.req)
+			res, err := suite.queryClient.ModuleVersions(context.Background(), &tc.req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -215,7 +216,7 @@ func (suite *UpgradeTestSuite) TestModuleVersions() {
 }
 
 func (suite *UpgradeTestSuite) TestAuthority() {
-	res, err := suite.queryClient.Authority(gocontext.Background(), &types.QueryAuthorityRequest{})
+	res, err := suite.queryClient.Authority(context.Background(), &types.QueryAuthorityRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Equal(authtypes.NewModuleAddress(govtypes.ModuleName).String(), res.Address)
 }

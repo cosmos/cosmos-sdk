@@ -24,7 +24,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -275,11 +274,11 @@ func SignCheckDeliver(
 	t *testing.T, txCfg client.TxConfig, app *bam.BaseApp, header tmproto.Header, msgs []sdk.Msg,
 	chainID string, accNums, accSeqs []uint64, expSimPass, expPass bool, priv ...cryptotypes.PrivKey,
 ) (sdk.GasInfo, *sdk.Result, error) {
-	tx, err := helpers.GenSignedMockTx(
+	tx, err := simtestutil.GenSignedMockTx(
 		txCfg,
 		msgs,
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
-		helpers.DefaultGenTxGas,
+		simtestutil.DefaultGenTxGas,
 		chainID,
 		accNums,
 		accSeqs,
@@ -325,11 +324,11 @@ func GenSequenceOfTxs(txGen client.TxConfig, msgs []sdk.Msg, accNums []uint64, i
 	txs := make([]sdk.Tx, numToGenerate)
 	var err error
 	for i := 0; i < numToGenerate; i++ {
-		txs[i], err = helpers.GenSignedMockTx(
+		txs[i], err = simtestutil.GenSignedMockTx(
 			txGen,
 			msgs,
 			sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
-			helpers.DefaultGenTxGas,
+			simtestutil.DefaultGenTxGas,
 			"",
 			accNums,
 			initSeqNums,

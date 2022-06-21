@@ -5,9 +5,9 @@ modules:
 
       app_name: NFTApp
 
-      begin_blockers: [mint, staking, auth, bank, mint, genutil, nft, params]
-      end_blockers: [mint, staking, auth, bank, mint, genutil, nft, params]
-      init_genesis: [auth, bank, mint, staking, mint, genutil, nft, params]
+      begin_blockers: [staking, auth, bank, mint, genutil, nft, params]
+      end_blockers: [staking, auth, bank, mint, genutil, nft, params]
+      init_genesis: [auth, bank, staking, mint, genutil, nft, params]
 
   - name: auth
     config:

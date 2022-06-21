@@ -137,6 +137,11 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err != nil {
 		panic(err)
 	}
+
+	err = cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // InitGenesis performs genesis initialization for the auth module. It returns
@@ -156,7 +161,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 2 }
+func (AppModule) ConsensusVersion() uint64 { return 3 }
 
 // BeginBlock returns the begin blocker for the auth module.
 func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
@@ -208,6 +213,15 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
+type authInputs struct {
+	depinject.In
+
+	Config   *modulev1.Module
+	Key      *store.KVStoreKey
+	Cdc      codec.Codec
+	Subspace paramtypes.Subspace
+}
+
 type authOutputs struct {
 	depinject.Out
 
@@ -215,18 +229,14 @@ type authOutputs struct {
 	Module        runtime.AppModuleWrapper
 }
 
-func provideModule(
-	config *modulev1.Module,
-	key *store.KVStoreKey,
-	cdc codec.Codec,
-	subspace paramtypes.Subspace,
-) authOutputs {
+func provideModule(in authInputs) authOutputs {
 	maccPerms := map[string][]string{}
-	for _, permission := range config.ModuleAccountPermissions {
+	for _, permission := range in.Config.ModuleAccountPermissions {
 		maccPerms[permission.Account] = permission.Permissions
 	}
 
-	k := keeper.NewAccountKeeper(cdc, key, subspace, types.ProtoBaseAccount, maccPerms, config.Bech32Prefix)
-	m := NewAppModule(cdc, k, simulation.RandomGenesisAccounts)
+	k := keeper.NewAccountKeeper(in.Cdc, in.Key, in.Subspace, types.ProtoBaseAccount, maccPerms, in.Config.Bech32Prefix)
+	m := NewAppModule(in.Cdc, k, simulation.RandomGenesisAccounts)
+
 	return authOutputs{AccountKeeper: k, Module: runtime.WrapAppModule(m)}
 }

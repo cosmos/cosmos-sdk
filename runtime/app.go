@@ -45,6 +45,7 @@ type App struct {
 	beginBlockers     []func(sdk.Context, abci.RequestBeginBlock)
 	endBlockers       []func(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 	baseAppOptions    []BaseAppOption
+	msgServiceRouter  *baseapp.MsgServiceRouter
 }
 
 // RegisterModules registers the provided modules with the module manager and
@@ -156,7 +157,7 @@ func (a *App) Configurator() module.Configurator {
 	return a.configurator
 }
 
-// UnsafeFindStoreKey FindStoreKey fetches a registered StoreKey from the App in linear time.
+// UnsafeFindStoreKey fetches a registered StoreKey from the App in linear time.
 //
 // NOTE: This should only be used in testing.
 func (a *App) UnsafeFindStoreKey(storeKey string) storetypes.StoreKey {

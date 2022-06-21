@@ -1,4 +1,4 @@
-package helpers
+package sims
 
 import (
 	"math/rand"
@@ -12,14 +12,8 @@ import (
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-// SimAppChainID hardcoded chainID for simulation
-const (
-	DefaultGenTxGas = 10000000
-	SimAppChainID   = "simulation-app"
-)
-
 // GenSignedMockTx generates a signed mock transaction.
-func GenSignedMockTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums, accSeqs []uint64, priv ...cryptotypes.PrivKey) (sdk.Tx, error) {
+func GenSignedMockTx(txConfig client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums, accSeqs []uint64, priv ...cryptotypes.PrivKey) (sdk.Tx, error) {
 	sigs := make([]signing.SignatureV2, len(priv))
 
 	// create a random length memo
@@ -27,7 +21,7 @@ func GenSignedMockTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas 
 
 	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
 
-	signMode := gen.SignModeHandler().DefaultMode()
+	signMode := txConfig.SignModeHandler().DefaultMode()
 
 	// 1st round: set SignatureV2 with empty signatures, to set correct
 	// signer infos.
@@ -41,7 +35,7 @@ func GenSignedMockTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas 
 		}
 	}
 
-	tx := gen.NewTxBuilder()
+	tx := txConfig.NewTxBuilder()
 	err := tx.SetMsgs(msgs...)
 	if err != nil {
 		return nil, err
@@ -63,7 +57,7 @@ func GenSignedMockTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas 
 			Sequence:      accSeqs[i],
 			PubKey:        p.PubKey(),
 		}
-		signBytes, err := gen.SignModeHandler().GetSignBytes(signMode, signerData, tx.GetTx())
+		signBytes, err := txConfig.SignModeHandler().GetSignBytes(signMode, signerData, tx.GetTx())
 		if err != nil {
 			panic(err)
 		}

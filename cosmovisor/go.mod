@@ -4,11 +4,11 @@ go 1.18
 
 require (
 	github.com/cosmos/cosmos-sdk v0.46.0-rc1
-	github.com/hashicorp/go-getter v1.6.1
+	github.com/hashicorp/go-getter v1.6.2
 	github.com/otiai10/copy v1.7.0
 	github.com/rs/zerolog v1.27.0
 	github.com/spf13/cobra v1.4.0
-	github.com/stretchr/testify v1.7.2
+	github.com/stretchr/testify v1.7.3
 	github.com/tendermint/tendermint v0.35.6
 )
 

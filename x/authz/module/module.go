@@ -193,16 +193,23 @@ type authzInputs struct {
 
 	Key              *store.KVStoreKey
 	Cdc              codec.Codec
-	AccountKeeper    authz.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
-	BankKeeper       authz.BankKeeper    `key:"cosmos.bank.v1.Keeper"`
+	AccountKeeper    authz.AccountKeeper
+	BankKeeper       authz.BankKeeper
 	Registry         cdctypes.InterfaceRegistry
 	MsgServiceRouter *baseapp.MsgServiceRouter
 }
 
-func provideModule(in authzInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
+type authzOutputs struct {
+	depinject.Out
+
+	AuthzKeeper keeper.Keeper
+	Module      runtime.AppModuleWrapper
+}
+
+func provideModule(in authzInputs) authzOutputs {
 	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
-	return k, runtime.WrapAppModule(m)
+	return authzOutputs{AuthzKeeper: k, Module: runtime.WrapAppModule(m)}
 }
 
 // ____________________________________________________________________________
@@ -233,7 +240,8 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
+		am.registry,
 		simState.AppParams, simState.Cdc,
-		am.accountKeeper, am.bankKeeper, am.keeper, am.cdc,
+		am.accountKeeper, am.bankKeeper, am.keeper,
 	)
 }

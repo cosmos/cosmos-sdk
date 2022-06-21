@@ -221,11 +221,11 @@ func provideModule(in stakingInputs) stakingOutputs {
 
 func invokeSetStakingHooks(
 	config *modulev1.Module,
-	stakingHooks map[string]types.StakingHooksWrapper,
 	keeper *keeper.Keeper,
+	stakingHooks map[string]types.StakingHooksWrapper,
 ) error {
 	// all arguments to invokers are optional
-	if keeper == nil {
+	if keeper == nil || config == nil {
 		return nil
 	}
 

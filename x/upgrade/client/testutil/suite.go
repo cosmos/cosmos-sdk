@@ -36,10 +36,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	appConfig := depinject.Configs(testutil.AppConfig, depinject.Supply(simtestutil.EmptyAppOptions{}))
 
 	app, err := simtestutil.Setup(appConfig, &s.upgradeKeeper)
-	s.upgradeKeeper.SetVersionSetter(app.BaseApp)
 	s.Require().NoError(err)
 
 	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+
+	s.upgradeKeeper.SetVersionSetter(app.BaseApp)
+	s.upgradeKeeper.SetModuleVersionMap(s.ctx, app.ModuleManager.GetVersionMap())
 
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)

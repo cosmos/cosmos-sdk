@@ -35,9 +35,10 @@ func (suite *UpgradeTestSuite) SetupTest() {
 	appConfig := depinject.Configs(testutil.AppConfig, depinject.Supply(simtestutil.EmptyAppOptions{}))
 	app, err := simtestutil.Setup(appConfig, &interfaceRegistry, &suite.upgradeKeeper)
 	suite.NoError(err)
-	suite.upgradeKeeper.SetVersionSetter(app.BaseApp)
-
 	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+
+	suite.upgradeKeeper.SetVersionSetter(app.BaseApp)
+	suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, app.ModuleManager.GetVersionMap())
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, interfaceRegistry)
 	types.RegisterQueryServer(queryHelper, suite.upgradeKeeper)

@@ -12,6 +12,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
+	"golang.org/x/exp/maps"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,7 +41,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) TestSuite {
 		DB:             db,
 		InvCheckPeriod: 0,
 		EncConfig:      simapp.MakeTestEncodingConfig(),
-		AppOpts:        simapp.EmptyAppOptions{},
+		AppOpts:        simapp.NewCustomAppOptions(maps.Keys(skip), ""),
 	})
 
 	s.keeper = app.UpgradeKeeper

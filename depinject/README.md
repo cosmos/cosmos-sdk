@@ -52,8 +52,6 @@ func NewSimApp(
 	db dbm.DB,
 	traceStore io.Writer,
 	loadLatest bool,
-	skipUpgradeHeights map[int64]bool,
-	homePath string,
 	invCheckPeriod uint,
 	encodingConfig simappparams.EncodingConfig,
 	appOpts servertypes.AppOptions,
@@ -106,7 +104,8 @@ Here is an example Graphviz rendering of a dependency graph build which failed:
 ![Graphviz Error Example](./testdata/example_error.svg)
 
 Graphviz DOT files can be converted into SVG's for viewing in a web browser using the `dot` command-line tool, ex:
-```
+
+```txt
 > dot -Tsvg debug_container.dot > debug_container.svg
 ```
 

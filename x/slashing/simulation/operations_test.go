@@ -9,23 +9,18 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -50,6 +45,7 @@ type SimTestSuite struct {
 	bankKeeper        bankkeeper.Keeper
 	stakingKeeper     *stakingkeeper.Keeper
 	slashingKeeper    slashingkeeper.Keeper
+	distrKeeper       distributionkeeper.Keeper
 	mintKeeper        mintkeeper.Keeper
 	accs              []simtypes.Account
 }
@@ -65,7 +61,9 @@ func (suite *SimTestSuite) SetupTest() {
 		&suite.stakingKeeper,
 		&suite.mintKeeper,
 		&suite.slashingKeeper,
+		&suite.distrKeeper,
 	)
+
 	suite.Require().NoError(err)
 	suite.app = app
 	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
@@ -74,33 +72,12 @@ func (suite *SimTestSuite) SetupTest() {
 	r := rand.New(s)
 	accounts := simtypes.RandomAccounts(r, 3)
 
-	// create validator set with single validator
-	// account := accounts[0]s
-	// tmPk, err := cryptocodec.ToTmPubKeyInterface(account.PubKey)
-	suite.Require().NoError(err)
-	// validator := tmtypes.NewValidator(tmPk, 1)
-
-	// valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
-
-	// generate genesis account
-	// senderPrivKey := secp256k1.GenPrivKey()
-	// acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
-	// balance := banktypes.Balance{
-	// 	Address: acc.GetAddress().String(),
-	// 	Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
-	// }
-
-	// app := simapp.SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{acc}, balance)
-
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	initAmt := suite.stakingKeeper.TokensFromConsensusPower(ctx, 200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
-	// remove genesis validator account
-	accs := accounts[1:]
-
 	// add coins to the accounts
-	for _, account := range accs {
+	for _, account := range accounts {
 		acc := suite.accountKeeper.NewAccountWithAddress(ctx, account.Address)
 		suite.accountKeeper.SetAccount(ctx, acc)
 		suite.Require().NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, account.Address, initCoins))
@@ -143,11 +120,11 @@ func (suite *SimTestSuite) TestWeightedOperations(t *testing.T) {
 
 // TestSimulateMsgUnjail tests the normal scenario of a valid message of type types.MsgUnjail.
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
-func TestSimulateMsgUnjail(t *testing.T) {
+func (suite *SimTestSuite) TestSimulateMsgUnjail(t *testing.T) {
 	// setup 3 accounts
 	s := rand.NewSource(5)
 	r := rand.New(s)
-	app, ctx, accounts := createTestApp(t, false, r, 3)
+	app, ctx, accounts := suite.app, suite.ctx, suite.accs
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
@@ -155,33 +132,33 @@ func TestSimulateMsgUnjail(t *testing.T) {
 	accounts = accounts[1:]
 
 	// setup accounts[0] as validator0
-	validator0 := getTestingValidator0(t, app, ctx, accounts)
+	validator0 := suite.getTestingValidator0(ctx, accounts)
 
 	// setup validator0 by consensus address
-	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator0)
+	suite.stakingKeeper.SetValidatorByConsAddr(ctx, validator0)
 	val0ConsAddress, err := validator0.GetConsAddr()
 	require.NoError(t, err)
 	info := types.NewValidatorSigningInfo(val0ConsAddress, int64(4), int64(3),
 		time.Unix(2, 0), false, int64(10))
-	app.SlashingKeeper.SetValidatorSigningInfo(ctx, val0ConsAddress, info)
+	suite.slashingKeeper.SetValidatorSigningInfo(ctx, val0ConsAddress, info)
 
 	// put validator0 in jail
-	app.StakingKeeper.Jail(ctx, val0ConsAddress)
+	suite.stakingKeeper.Jail(ctx, val0ConsAddress)
 
 	// setup self delegation
-	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 2)
+	delTokens := suite.stakingKeeper.TokensFromConsensusPower(ctx, 2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	val0AccAddress, err := sdk.ValAddressFromBech32(validator0.OperatorAddress)
 	require.NoError(t, err)
 	selfDelegation := stakingtypes.NewDelegation(val0AccAddress.Bytes(), validator0.GetOperator(), issuedShares)
-	app.StakingKeeper.SetDelegation(ctx, selfDelegation)
-	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), val0AccAddress.Bytes(), distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
+	suite.stakingKeeper.SetDelegation(ctx, selfDelegation)
+	suite.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), val0AccAddress.Bytes(), distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
 
 	// begin a new block
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
 
 	// execute operation
-	op := simulation.SimulateMsgUnjail(app.AccountKeeper, app.BankKeeper, app.SlashingKeeper, app.StakingKeeper)
+	op := simulation.SimulateMsgUnjail(suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 
@@ -194,65 +171,25 @@ func TestSimulateMsgUnjail(t *testing.T) {
 	require.Len(t, futureOperations, 0)
 }
 
-// returns context and an app with updated mint keeper
-func createTestApp(t *testing.T, isCheckTx bool, r *rand.Rand, n int) (*simapp.SimApp, sdk.Context, []simtypes.Account) {
-	accounts := simtypes.RandomAccounts(r, n)
-	// create validator set with single validator
-	account := accounts[0]
-	tmPk, err := cryptocodec.ToTmPubKeyInterface(account.PubKey)
-	require.NoError(t, err)
-	validator := tmtypes.NewValidator(tmPk, 1)
-
-	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
-
-	// generate genesis account
-	senderPrivKey := secp256k1.GenPrivKey()
-	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
-	balance := banktypes.Balance{
-		Address: acc.GetAddress().String(),
-		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
-	}
-
-	app := simapp.SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{acc}, balance)
-
-	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
-	initAmt := app.StakingKeeper.TokensFromConsensusPower(ctx, 200)
-	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
-
-	// remove genesis validator account
-	accs := accounts[1:]
-
-	// add coins to the accounts
-	for _, account := range accs {
-		acc := app.AccountKeeper.NewAccountWithAddress(ctx, account.Address)
-		app.AccountKeeper.SetAccount(ctx, acc)
-		require.NoError(t, banktestutil.FundAccount(app.BankKeeper, ctx, account.Address, initCoins))
-	}
-
-	app.MintKeeper.SetParams(ctx, minttypes.DefaultParams())
-	app.MintKeeper.SetMinter(ctx, minttypes.DefaultInitialMinter())
-
-	return app, ctx, accounts
-}
-
-func getTestingValidator0(t *testing.T, app *simapp.SimApp, ctx sdk.Context, accounts []simtypes.Account) stakingtypes.Validator {
+func (suite *SimTestSuite) getTestingValidator0(ctx sdk.Context, accounts []simtypes.Account) stakingtypes.Validator {
 	commission0 := stakingtypes.NewCommission(sdk.ZeroDec(), sdk.OneDec(), sdk.OneDec())
-	return getTestingValidator(t, app, ctx, accounts, commission0, 0)
+	return suite.getTestingValidator(commission0, 0)
 }
 
-func getTestingValidator(t *testing.T, app *simapp.SimApp, ctx sdk.Context, accounts []simtypes.Account, commission stakingtypes.Commission, n int) stakingtypes.Validator {
+func (suite *SimTestSuite) getTestingValidator(commission stakingtypes.Commission, n int) stakingtypes.Validator {
+	ctx, accounts := suite.ctx, suite.accs
 	account := accounts[n]
 	valPubKey := account.ConsKey.PubKey()
 	valAddr := sdk.ValAddress(account.PubKey.Address().Bytes())
 	validator, err := stakingtypes.NewValidator(valAddr, valPubKey, stakingtypes.Description{})
-	require.NoError(t, err)
+	suite.Require().NoError(err)
 	validator, err = validator.SetInitialCommission(commission)
-	require.NoError(t, err)
+	suite.Require().NoError(err)
 
 	validator.DelegatorShares = sdk.NewDec(100)
 	validator.Tokens = sdk.NewInt(1000000)
 
-	app.StakingKeeper.SetValidator(ctx, validator)
+	suite.stakingKeeper.SetValidator(ctx, validator)
 
 	return validator
 }

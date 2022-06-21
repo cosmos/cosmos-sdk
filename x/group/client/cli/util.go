@@ -32,10 +32,10 @@ func parseMembers(membersFile string) ([]group.MemberRequest, error) {
 
 func execFromString(execStr string) group.Exec {
 	exec := group.Exec_EXEC_UNSPECIFIED
-	switch execStr {
-	case ExecTry:
+	if execStr == ExecTry {
 		exec = group.Exec_EXEC_TRY
 	}
+
 	return exec
 }
 

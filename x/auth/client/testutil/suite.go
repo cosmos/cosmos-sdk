@@ -30,7 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
@@ -318,7 +317,7 @@ func (s *IntegrationTestSuite) TestCliGetAccountAddressByID() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				var res types.QueryAccountAddressByIDResponse
+				var res authtypes.QueryAccountAddressByIDResponse
 				require.NoError(val1.ClientCtx.Codec.UnmarshalJSON(queryResJSON.Bytes(), &res))
 				require.NotNil(res.GetAccountAddress())
 			}
@@ -1343,9 +1342,6 @@ func (s *IntegrationTestSuite) TestGetAccountsCmd() {
 }
 
 func TestGetBroadcastCommandOfflineFlag(t *testing.T) {
-	clientCtx := client.Context{}.WithOffline(true)
-	clientCtx = clientCtx.WithTxConfig(simapp.MakeTestEncodingConfig().TxConfig)
-
 	cmd := authcli.GetBroadcastCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 	cmd.SetArgs([]string{fmt.Sprintf("--%s=true", flags.FlagOffline), ""})

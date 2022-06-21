@@ -12,7 +12,6 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
@@ -186,11 +185,8 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
-		appmodule.Provide(
-			provideModuleBasic,
-			provideModule,
-			provideSetStakingHooks,
-		),
+		appmodule.Provide(provideModuleBasic, provideModule),
+		appmodule.Invoke(invokeSetStakingHooks),
 	)
 }
 
@@ -223,11 +219,16 @@ func provideModule(in stakingInputs) stakingOutputs {
 	return stakingOutputs{StakingKeeper: k, Module: runtime.WrapAppModule(m)}
 }
 
-func provideSetStakingHooks(
+func invokeSetStakingHooks(
 	config *modulev1.Module,
 	stakingHooks map[string]types.StakingHooksWrapper,
 	keeper *keeper.Keeper,
-) (runtime.BaseAppOption, error) {
+) error {
+	// all arguments to invokers are optional
+	if keeper == nil {
+		return nil
+	}
+
 	modNames := maps.Keys(stakingHooks)
 	order := config.HooksOrder
 	if len(order) == 0 {
@@ -236,25 +237,25 @@ func provideSetStakingHooks(
 	}
 
 	if len(order) != len(modNames) {
-		return nil, fmt.Errorf("len(hooks_order: %v) != len(hooks modules: %v)", order, modNames)
+		return fmt.Errorf("len(hooks_order: %v) != len(hooks modules: %v)", order, modNames)
 	}
 
 	if len(modNames) == 0 {
-		return func(app *baseapp.BaseApp) {}, nil
+		return nil
 	}
 
 	var multiHooks types.MultiStakingHooks
 	for _, modName := range order {
 		hook, ok := stakingHooks[modName]
 		if !ok {
-			return nil, fmt.Errorf("can't find staking hooks for module %s", modName)
+			return fmt.Errorf("can't find staking hooks for module %s", modName)
 		}
 
 		multiHooks = append(multiHooks, hook)
 	}
 
 	keeper.SetHooks(multiHooks)
-	return func(*baseapp.BaseApp) {}, nil
+	return nil
 }
 
 // AppModuleSimulation functions

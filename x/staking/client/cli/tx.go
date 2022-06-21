@@ -123,7 +123,7 @@ func NewEditValidatorCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
+			valAddr := clientCtx.GetFromAddress()
 			moniker, _ := cmd.Flags().GetString(FlagEditMoniker)
 			identity, _ := cmd.Flags().GetString(FlagIdentity)
 			website, _ := cmd.Flags().GetString(FlagWebsite)

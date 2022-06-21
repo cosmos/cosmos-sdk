@@ -1,3 +1,4 @@
+// nolint:unused
 package multi
 
 import (
@@ -23,6 +24,7 @@ type dbVersionsIs struct {
 	dbm.Connection
 	vset dbm.VersionSet
 }
+
 type (
 	dbVersionsFails struct{ dbm.Connection }
 	rwCommitFails   struct{ dbm.ReadWriter }

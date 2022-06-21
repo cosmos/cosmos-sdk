@@ -176,7 +176,7 @@ type upgradeInputs struct {
 	Cdc    codec.Codec
 
 	AppOpts servertypes.AppOptions
-	// BaseApp *baseapp.BaseApp
+	// ProtocolVersionSetter xp.ProtocolVersionSetter
 }
 
 type upgradeOutputs struct {

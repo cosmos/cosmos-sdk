@@ -1,6 +1,4 @@
-name: Sims release/0.46.x
-# Sims workflow runs multiple types of simulations (nondeterminism, import-export, after-import, multi-seed-short)
-# This workflow will run on all Pull Requests, if a .go, .mod or .sum file have been changed
+name: Legacy App Testing
 on:
   schedule:
     - cron: "0 0,12 * * *"

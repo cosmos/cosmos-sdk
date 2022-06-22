@@ -9,6 +9,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -648,8 +649,8 @@ func dirtyTrackingFields(ctx sdk.Context, vesting exported.VestingAccount, app *
 func createValidator(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers int64) (sdk.AccAddress, sdk.ValAddress) {
 	valTokens := sdk.TokensFromConsensusPower(powers, sdk.DefaultPowerReduction)
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 1, valTokens)
-	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
-	pks := simapp.CreateTestPubKeys(1)
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
+	pks := simtestutil.CreateTestPubKeys(1)
 	cdc := simapp.MakeTestEncodingConfig().Codec
 
 	app.StakingKeeper = stakingkeeper.NewKeeper(

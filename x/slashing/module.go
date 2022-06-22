@@ -204,7 +204,7 @@ type slashingInputs struct {
 type slashingOutputs struct {
 	depinject.Out
 
-	Keeper keeper.Keeper `key:"cosmos.slashing.v1.Keeper"`
+	Keeper keeper.Keeper
 	Module runtime.AppModuleWrapper
 	Hooks  staking.StakingHooksWrapper
 }

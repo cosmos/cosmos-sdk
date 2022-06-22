@@ -1548,6 +1548,7 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 	require.Equal(sdk.NewCoins(val0Coin, val1Coin), queryRes.Balances)
 }
 
+// TODO to re-enable in #12274
 func (s *IntegrationTestSuite) TestAuxSigner() {
 	// Skipping this test as it needs a simapp with the TipDecorator in post handler.
 	s.T().Skip()
@@ -1608,7 +1609,6 @@ func (s *IntegrationTestSuite) TestAuxSigner() {
 }
 
 // TODO to re-enable in #12274
-
 func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
 	// Skipping this test as it needs a simapp with the TipDecorator in post handler.
 	s.T().Skip()

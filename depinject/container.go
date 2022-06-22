@@ -3,9 +3,11 @@ package depinject
 import (
 	"bytes"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
-	"github.com/pkg/errors"
 	"reflect"
+
+	"github.com/pkg/errors"
+
+	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
 )
 
 type container struct {
@@ -13,12 +15,18 @@ type container struct {
 
 	resolvers         map[string]resolver
 	interfaceBindings map[string]interfaceBinding
+	invokers          []invoker
 
 	moduleKeys map[string]*moduleKey
 
 	resolveStack []resolveFrame
 	callerStack  []Location
 	callerMap    map[Location]bool
+}
+
+type invoker struct {
+	fn     *ProviderDescriptor
+	modKey *moduleKey
 }
 
 type resolveFrame struct {
@@ -353,6 +361,26 @@ func (c *container) supply(value reflect.Value, location Location) error {
 	return nil
 }
 
+func (c *container) addInvoker(provider *ProviderDescriptor, key *moduleKey) error {
+	// make sure there are no outputs
+	if len(provider.Outputs) > 0 {
+		return fmt.Errorf("invoker function %s should not return any outputs", provider.Location)
+	}
+
+	// make all inputs optional
+	for i, input := range provider.Inputs {
+		input.Optional = true
+		provider.Inputs[i] = input
+	}
+
+	c.invokers = append(c.invokers, invoker{
+		fn:     provider,
+		modKey: key,
+	})
+
+	return nil
+}
+
 func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Location) (reflect.Value, error) {
 	c.resolveStack = append(c.resolveStack, resolveFrame{loc: caller, typ: in.Type})
 
@@ -462,6 +490,14 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 		return err
 	}
 	c.logf("Done building container")
+	c.logf("Calling invokers")
+	for _, inv := range c.invokers {
+		_, err := c.call(inv.fn, inv.modKey)
+		if err != nil {
+			return err
+		}
+	}
+	c.logf("Done calling invokers")
 
 	return nil
 }

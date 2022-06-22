@@ -23,6 +23,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	modulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
@@ -244,11 +245,16 @@ type distrOutputs struct {
 
 	DistrKeeper keeper.Keeper
 	Module      runtime.AppModuleWrapper
+	Hooks       staking.StakingHooksWrapper
 }
 
 func provideModule(in distrInputs) distrOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.Key, in.Subspace, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, authtypes.FeeCollectorName)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper)
 
-	return distrOutputs{DistrKeeper: k, Module: runtime.WrapAppModule(m)}
+	return distrOutputs{
+		DistrKeeper: k,
+		Module:      runtime.WrapAppModule(m),
+		Hooks:       staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
+	}
 }

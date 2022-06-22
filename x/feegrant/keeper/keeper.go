@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/tendermint/tendermint/libs/log"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -72,20 +73,24 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	}
 
 	newExp, err := feeAllowance.ExpiresAt()
-	//nolint:gocritic // gocritic recommends making this a switch statement and this felt like taking things too far.
-	if err != nil {
+	switch {
+	case err != nil:
 		return err
-	} else if newExp != nil && newExp.Before(ctx.BlockTime()) {
+
+	case newExp != nil && newExp.Before(ctx.BlockTime()):
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "expiration is before current block time")
-	} else if oldExp == nil && newExp != nil {
+
+	case oldExp == nil && newExp != nil:
 		// when old oldExp is nil there won't be any key added before to queue.
 		// add the new key to queue directly.
 		k.addToFeeAllowanceQueue(ctx, key[1:], newExp)
-	} else if oldExp != nil && newExp == nil {
+
+	case oldExp != nil && newExp == nil:
 		// when newExp is nil no need of adding the key to the pruning queue
 		// remove the old key from queue.
 		k.removeFromGrantQueue(ctx, oldExp, key[1:])
-	} else if oldExp != nil && newExp != nil && !oldExp.Equal(*newExp) {
+
+	case oldExp != nil && newExp != nil && !oldExp.Equal(*newExp):
 		// `key` formed here with the prefix of `FeeAllowanceKeyPrefix` (which is `0x00`)
 		// remove the 1st byte and reuse the remaining key as it is.
 

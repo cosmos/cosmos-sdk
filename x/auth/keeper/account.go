@@ -31,6 +31,12 @@ func (ak AccountKeeper) HasAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
 	return store.Has(types.AddressStoreKey(addr))
 }
 
+// HasAccountAddressByID checks account address exists by id.
+func (ak AccountKeeper) HasAccountAddressByID(ctx sdk.Context, id uint64) bool {
+	store := ctx.KVStore(ak.key)
+	return store.Has(types.AccountNumberStoreKey(id))
+}
+
 // GetAccount implements AccountKeeperI.
 func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI {
 	store := ctx.KVStore(ak.key)
@@ -40,6 +46,16 @@ func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.A
 	}
 
 	return ak.decodeAccount(bz)
+}
+
+// GetAccountAddressById returns account address by id.
+func (ak AccountKeeper) GetAccountAddressByID(ctx sdk.Context, id uint64) string {
+	store := ctx.KVStore(ak.key)
+	bz := store.Get(types.AccountNumberStoreKey(id))
+	if bz == nil {
+		return ""
+	}
+	return sdk.AccAddress(bz).String()
 }
 
 // GetAllAccounts returns all accounts in the accountKeeper.
@@ -63,6 +79,7 @@ func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc types.AccountI) {
 	}
 
 	store.Set(types.AddressStoreKey(addr), bz)
+	store.Set(types.AccountNumberStoreKey(acc.GetAccountNumber()), addr.Bytes())
 }
 
 // RemoveAccount removes an account for the account mapper store.
@@ -71,6 +88,7 @@ func (ak AccountKeeper) RemoveAccount(ctx sdk.Context, acc types.AccountI) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(ak.key)
 	store.Delete(types.AddressStoreKey(addr))
+	store.Delete(types.AccountNumberStoreKey(acc.GetAccountNumber()))
 }
 
 // IterateAccounts iterates over all the stored accounts and performs a callback function.

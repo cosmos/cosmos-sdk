@@ -286,7 +286,8 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 	if overwriteSig {
 		sigs = []signing.SignatureV2{sig}
 	} else {
-		sigs = append(prevSignatures, sig) //nolint:gocritic // this simly doesn't look like something that should change because of linting.
+		sigs = append(sigs, prevSignatures...)
+		sigs = append(sigs, sig)
 	}
 	if err := txBuilder.SetSignatures(sigs...); err != nil {
 		return err

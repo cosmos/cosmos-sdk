@@ -9,9 +9,12 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/params/keeper"
+	"github.com/cosmos/cosmos-sdk/x/params/testutil"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
@@ -19,18 +22,23 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app *simapp.SimApp
-	ctx sdk.Context
-
-	queryClient proposal.QueryClient
+	ctx          sdk.Context
+	paramsKeeper keeper.Keeper
+	queryClient  proposal.QueryClient
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	suite.app = simapp.Setup(suite.T(), false)
-	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
+	var interfaceRegistry codectypes.InterfaceRegistry
 
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
-	proposal.RegisterQueryServer(queryHelper, suite.app.ParamsKeeper)
+	app, err := simtestutil.Setup(
+		testutil.AppConfig,
+		&suite.paramsKeeper,
+	)
+	suite.Require().NoError(err)
+
+	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, interfaceRegistry)
+	proposal.RegisterQueryServer(queryHelper, suite.paramsKeeper)
 	suite.queryClient = proposal.NewQueryClient(queryHelper)
 }
 

@@ -15,6 +15,7 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -279,6 +280,50 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	// Sign batch malformed tx file signature only.
 	_, err = TxSignBatchExec(val.ClientCtx, val.Address, malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--signature-only")
 	s.Require().Error(err)
+}
+
+func (s *IntegrationTestSuite) TestCliGetAccountAddressByID() {
+	require := s.Require()
+	val1 := s.network.Validators[0]
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"not enough args",
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+		},
+		{
+			"invalid account id",
+			[]string{fmt.Sprint(-1), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+		},
+		{
+			"valid account id",
+			[]string{fmt.Sprint(0), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := authcli.GetAccountAddressByIDCmd()
+			clientCtx := val1.ClientCtx
+
+			queryResJSON, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				var res authtypes.QueryAccountAddressByIDResponse
+				require.NoError(val1.ClientCtx.Codec.UnmarshalJSON(queryResJSON.Bytes(), &res))
+				require.NotNil(res.GetAccountAddress())
+			}
+		})
+	}
 }
 
 func (s *IntegrationTestSuite) TestCLISignAminoJSON() {
@@ -1298,10 +1343,6 @@ func (s *IntegrationTestSuite) TestGetAccountsCmd() {
 }
 
 func TestGetBroadcastCommandOfflineFlag(t *testing.T) {
-	clientCtx := client.Context{}.WithOffline(true)
-	//nolint:staticcheck // this is intentionally setting a new value to clientCtx to affect later commands.
-	clientCtx = clientCtx.WithTxConfig(simapp.MakeTestEncodingConfig().TxConfig)
-
 	cmd := authcli.GetBroadcastCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 	cmd.SetArgs([]string{fmt.Sprintf("--%s=true", flags.FlagOffline), ""})
@@ -1789,18 +1830,19 @@ func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
 					genTxFile.Name(),
 					tc.feePayerArgs...,
 				)
-
-				//nolint:gocritic // rewriting this as a switch statement didn't make sense.
-				if tc.expectErrBroadCast {
+				switch {
+				case tc.expectErrBroadCast:
 					require.Error(err)
-				} else if tc.errMsg != "" {
+
+				case tc.errMsg != "":
 					require.NoError(err)
 
 					var txRes sdk.TxResponse
 					require.NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
 
 					require.Contains(txRes.RawLog, tc.errMsg)
-				} else {
+
+				default:
 					require.NoError(err)
 
 					var txRes sdk.TxResponse

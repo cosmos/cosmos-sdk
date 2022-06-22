@@ -1,4 +1,4 @@
-//nolint:unused // this file is triggering many unused liter errors and shouldn't be linted for that reason.
+// nolint:unused
 package multi
 
 import (
@@ -24,6 +24,7 @@ type dbVersionsIs struct {
 	dbm.Connection
 	vset dbm.VersionSet
 }
+
 type (
 	dbVersionsFails struct{ dbm.Connection }
 	rwCommitFails   struct{ dbm.ReadWriter }
@@ -42,8 +43,7 @@ func (dbSaveVersionFails) SaveVersion(uint64) error { return errors.New("dbSaveV
 func (db dbRevertFails) Revert() error {
 	fail := false
 	if len(db.failOn) > 0 {
-		//nolint:staticcheck // staticcheck doesn't understand this properly, and don't want to modify out of caution.
-		fail, db.failOn = db.failOn[0], db.failOn[1:]
+		fail, db.failOn = db.failOn[0], db.failOn[1:] // nolint:staticcheck
 	}
 	if fail {
 		return errors.New("dbRevertFails")

@@ -2556,29 +2556,6 @@ func (s *IntegrationTestSuite) createGroupThresholdPolicyWithBalance(adminAddres
 	return groupPolicyAddress
 }
 
-// fundAllGroupPolicies sends tokens to all group policies of a given group ID.
-//nolint:unused // used in tests
-func (s *IntegrationTestSuite) fundAllGroupPolicies(groupID string, tokens sdk.Coin) {
-	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx
-
-	out, err := cli.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{groupID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
-	s.Require().NoError(err, out.String())
-	var res group.QueryGroupPoliciesByGroupResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
-
-	for _, policy := range res.GroupPolicies {
-		address := policy.Address
-		addr, err := sdk.AccAddressFromBech32(address)
-		s.Require().NoError(err)
-		_, err = banktestutil.MsgSendExec(clientCtx, val.Address, addr,
-			sdk.NewCoins(tokens),
-			s.commonFlags...,
-		)
-		s.Require().NoError(err)
-	}
-}
-
 func (s *IntegrationTestSuite) newValidMembers(weights, membersAddress []string) group.MemberRequests {
 	s.Require().Equal(len(weights), len(membersAddress))
 	membersValid := group.MemberRequests{}

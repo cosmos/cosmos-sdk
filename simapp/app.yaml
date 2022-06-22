@@ -104,6 +104,12 @@ modules:
     config:
       "@type": cosmos.staking.module.v1.Module
 
+  - name: group
+    config:
+      "@type": cosmos.group.v1.module.v1.Module
+      max_metadata_len: 255
+      max_execution_period: "1209600s"
+
   - name: nft
     config:
       "@type": cosmos.nft.module.v1.Module
@@ -115,3 +121,23 @@ modules:
   - name: genutil
     config:
       "@type": cosmos.genutil.module.v1.Module
+
+  - name: mint
+    config:
+      "@type": cosmos.mint.module.v1.Module
+
+  - name: evidence
+    config:
+      "@type": cosmos.evidence.module.v1.Module
+
+  - name: distribution
+    config:
+      "@type": cosmos.distribution.module.v1.Module
+
+  - name: vesting
+    config:
+      "@type": cosmos.vesting.module.v1.Module
+
+  - name: upgrade
+    config:
+      "@type": cosmos.upgrade.module.v1.Module

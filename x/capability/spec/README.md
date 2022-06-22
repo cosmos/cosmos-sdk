@@ -75,3 +75,4 @@ func NewApp(...) *App {
 
 1. **[Concepts](01_concepts.md)**
 1. **[State](02_state.md)**
+1. **[App Wiring](03_app_wiring.md)**

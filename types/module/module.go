@@ -226,7 +226,7 @@ type Manager struct {
 	OrderBeginBlockers []string
 	OrderEndBlockers   []string
 	OrderMigrations    []string
-	*sync.Mutex
+	mtx sync.Mutex
 }
 
 // NewManager creates a new Manager object

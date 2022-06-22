@@ -79,9 +79,7 @@ func Logger(logger func(string)) DebugOption {
 	})
 }
 
-const (
-	debugContainerDot = "debug_container.dot"
-)
+const debugContainerDot = "debug_container.dot"
 
 // Debug is a default debug option which sends log output to stderr, dumps
 // the container in the graphviz DOT and SVG formats to debug_container.dot
@@ -155,8 +153,7 @@ func deleteIfExists(filename string) {
 func DebugOptions(options ...DebugOption) DebugOption {
 	return debugOption(func(c *debugConfig) error {
 		for _, opt := range options {
-			err := opt.applyConfig(c)
-			if err != nil {
+			if err := opt.applyConfig(c); err != nil {
 				return err
 			}
 		}

@@ -16,7 +16,7 @@ import (
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	var accountKeeper authkeeper.AccountKeeper
 
-	app, err := simtestutil.Setup(testutil.AppConfig, &accountKeeper)
+	app, err := simtestutil.SetupAtGenesis(testutil.AppConfig, &accountKeeper)
 	require.NoError(t, err)
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})

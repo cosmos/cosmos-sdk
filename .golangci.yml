@@ -22,7 +22,6 @@ linters:
     - misspell
     - nakedret
     - nolintlint
-    - revive
     - staticcheck
     - structcheck
     - stylecheck

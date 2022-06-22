@@ -380,9 +380,21 @@ func (k Keeper) DeleteValidatorQueue(ctx sdk.Context, val types.Validator) {
 	addrs := k.GetUnbondingValidators(ctx, val.UnbondingTime, val.UnbondingHeight)
 	newAddrs := []string{}
 
+	// since address string may change due to Bech32 prefix change, we parse the addresses into bytes
+	// format for normalization
+	deletingAddr, err := sdk.ValAddressFromBech32(val.OperatorAddress)
+	if err != nil {
+		panic(err)
+	}
+
 	for _, addr := range addrs {
-		if addr != val.OperatorAddress {
-			newAddrs = append(newAddrs, addr)
+		storedAddr, err := sdk.ValAddressFromBech32(addr)
+		if err != nil {
+			// even if we don't panic here, it will panic in UnbondAllMatureValidators at unbond time
+			panic(err)
+		}
+		if !storedAddr.Equals(deletingAddr) {
+			newAddrs = append(newAddrs, storedAddr.String())
 		}
 	}
 

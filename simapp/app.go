@@ -204,7 +204,9 @@ func NewSimApp(
 
 	var (
 		appBuilder *runtime.AppBuilder
-		app        = &SimApp{invCheckPeriod: invCheckPeriod}
+		//app        = &SimApp{invCheckPeriod: invCheckPeriod}
+		app = &SimApp{}
+
 		// merge the app.yaml and the appOpts in one config
 		appConfig = depinject.Configs(AppConfig, depinject.Supply(appOpts))
 	)
@@ -245,9 +247,9 @@ func NewSimApp(
 
 	initParamsKeeper(app.ParamsKeeper)
 
-	app.CrisisKeeper = crisiskeeper.NewKeeper(
-		app.GetSubspace(crisistypes.ModuleName), invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName,
-	)
+	//app.CrisisKeeper = crisiskeeper.NewKeeper(
+	//	app.GetSubspace(crisistypes.ModuleName), invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName,
+	//)
 
 	app.StakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),

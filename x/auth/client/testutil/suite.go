@@ -1608,7 +1608,6 @@ func (s *IntegrationTestSuite) TestAuxSigner() {
 	}
 }
 
-// TODO to re-enable in #12274
 func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
 	// Skipping this test as it needs a simapp with the TipDecorator in post handler.
 	s.T().Skip()

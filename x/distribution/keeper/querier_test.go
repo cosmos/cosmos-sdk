@@ -116,20 +116,19 @@ func getQueriedCommunityPool(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmi
 
 func TestQueries(t *testing.T) {
 	var (
-		cdc           *codec.LegacyAmino
 		bankKeeper    bankkeeper.Keeper
 		distrKeeper   keeper.Keeper
 		stakingKeeper *stakingkeeper.Keeper
 	)
 
 	app, err := simtestutil.Setup(testutil.AppConfig,
-		&cdc,
 		&bankKeeper,
 		&distrKeeper,
 		&stakingKeeper,
 	)
 	require.NoError(t, err)
 
+	cdc := codec.NewLegacyAmino()
 	types.RegisterLegacyAminoCodec(cdc)
 	banktypes.RegisterLegacyAminoCodec(cdc)
 

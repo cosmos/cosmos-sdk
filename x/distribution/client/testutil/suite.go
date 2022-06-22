@@ -753,6 +753,8 @@ func (s *IntegrationTestSuite) TestNewFundCommunityPoolCmd() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
+	s.T().Skip() // TODO to re-enable in #12274
+
 	val := s.network.Validators[0]
 	invalidProp := `{
   "title": "",

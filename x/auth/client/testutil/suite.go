@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	// "cosmossdk.io/math"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -36,8 +36,8 @@ import (
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	// govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
-	// govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 type IntegrationTestSuite struct {
@@ -1548,317 +1548,322 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 	require.Equal(sdk.NewCoins(val0Coin, val1Coin), queryRes.Balances)
 }
 
-// func (s *IntegrationTestSuite) TestAuxSigner() {
-// 	require := s.Require()
-// 	val := s.network.Validators[0]
-// 	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10))
+func (s *IntegrationTestSuite) TestAuxSigner() {
+	// Skipping this test as it needs a simapp with the TipDecorator in post handler.
+	s.T().Skip()
 
-// 	testCases := []struct {
-// 		name      string
-// 		args      []string
-// 		expectErr bool
-// 	}{
-// 		{
-// 			"error with SIGN_MODE_DIRECT_AUX and --aux unset",
-// 			[]string{
-// 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
-// 			},
-// 			true,
-// 		},
-// 		{
-// 			"no error with SIGN_MDOE_DIRECT_AUX mode and generate-only set (ignores generate-only)",
-// 			[]string{
-// 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
-// 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-// 			},
-// 			false,
-// 		},
-// 		{
-// 			"no error with SIGN_MDOE_DIRECT_AUX mode and generate-only, tip flag set",
-// 			[]string{
-// 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
-// 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-// 				fmt.Sprintf("--%s=%s", flags.FlagTip, val0Coin.String()),
-// 			},
-// 			false,
-// 		},
-// 	}
+	require := s.Require()
+	val := s.network.Validators[0]
+	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10))
 
-// 	for _, tc := range testCases {
-// 		tc := tc
-// 		s.Run(tc.name, func() {
-// 			_, err := govtestutil.MsgSubmitLegacyProposal(
-// 				val.ClientCtx,
-// 				val.Address.String(),
-// 				"test",
-// 				"test desc",
-// 				govtypes.ProposalTypeText,
-// 				tc.args...,
-// 			)
-// 			if tc.expectErr {
-// 				require.Error(err)
-// 			} else {
-// 				require.NoError(err)
-// 			}
-// 		})
-// 	}
-// }
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"error with SIGN_MODE_DIRECT_AUX and --aux unset",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+			},
+			true,
+		},
+		{
+			"no error with SIGN_MDOE_DIRECT_AUX mode and generate-only set (ignores generate-only)",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+			},
+			false,
+		},
+		{
+			"no error with SIGN_MDOE_DIRECT_AUX mode and generate-only, tip flag set",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+				fmt.Sprintf("--%s=%s", flags.FlagTip, val0Coin.String()),
+			},
+			false,
+		},
+	}
 
-// func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
-// 	// Skipping this test as it needs a simapp with the TipDecorator in post handler.
-// 	s.T().Skip()
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			_, err := govtestutil.MsgSubmitLegacyProposal(
+				val.ClientCtx,
+				val.Address.String(),
+				"test",
+				"test desc",
+				govtypes.ProposalTypeText,
+				tc.args...,
+			)
+			if tc.expectErr {
+				require.Error(err)
+			} else {
+				require.NoError(err)
+			}
+		})
+	}
+}
 
-// 	require := s.Require()
-// 	val := s.network.Validators[0]
+// TODO to re-enable in #12274
 
-// 	kb := s.network.Validators[0].ClientCtx.Keyring
-// 	acc, _, err := kb.NewMnemonic("tipperAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-// 	require.NoError(err)
+func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
+	// Skipping this test as it needs a simapp with the TipDecorator in post handler.
+	s.T().Skip()
 
-// 	tipper, err := acc.GetAddress()
-// 	require.NoError(err)
-// 	tipperInitialBal := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10000))
+	require := s.Require()
+	val := s.network.Validators[0]
 
-// 	feePayer := val.Address
-// 	fee := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1000))
-// 	tip := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(1000))
+	kb := s.network.Validators[0].ClientCtx.Keyring
+	acc, _, err := kb.NewMnemonic("tipperAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	require.NoError(err)
 
-// 	require.NoError(s.network.WaitForNextBlock())
-// 	_, err = s.createBankMsg(val, tipper, sdk.NewCoins(tipperInitialBal))
-// 	require.NoError(err)
-// 	require.NoError(s.network.WaitForNextBlock())
+	tipper, err := acc.GetAddress()
+	require.NoError(err)
+	tipperInitialBal := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10000))
 
-// 	bal := s.getBalances(val.ClientCtx, tipper, tip.Denom)
-// 	require.True(bal.Equal(tipperInitialBal.Amount))
+	feePayer := val.Address
+	fee := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1000))
+	tip := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(1000))
 
-// 	testCases := []struct {
-// 		name               string
-// 		tipper             sdk.AccAddress
-// 		feePayer           sdk.AccAddress
-// 		tip                sdk.Coin
-// 		expectErrAux       bool
-// 		expectErrBroadCast bool
-// 		errMsg             string
-// 		tipperArgs         []string
-// 		feePayerArgs       []string
-// 	}{
-// 		{
-// 			name:     "when --aux and --sign-mode = direct set: error",
-// 			tipper:   tipper,
-// 			feePayer: feePayer,
-// 			tip:      tip,
-// 			tipperArgs: []string{
-// 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
-// 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
-// 				fmt.Sprintf("--%s=true", flags.FlagAux),
-// 			},
-// 			expectErrAux: true,
-// 			feePayerArgs: []string{
-// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
-// 			},
-// 		},
-// 		{
-// 			name:     "both tipper, fee payer uses AMINO: no error",
-// 			tipper:   tipper,
-// 			feePayer: feePayer,
-// 			tip:      tip,
-// 			tipperArgs: []string{
-// 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
-// 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
-// 				fmt.Sprintf("--%s=true", flags.FlagAux),
-// 			},
-// 			feePayerArgs: []string{
-// 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
-// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
-// 			},
-// 		},
-// 		{
-// 			name:     "tipper uses DIRECT_AUX, fee payer uses AMINO: no error",
-// 			tipper:   tipper,
-// 			feePayer: feePayer,
-// 			tip:      tip,
-// 			tipperArgs: []string{
-// 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
-// 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
-// 				fmt.Sprintf("--%s=true", flags.FlagAux),
-// 			},
-// 			feePayerArgs: []string{
-// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-// 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
-// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
-// 			},
-// 		},
-// 		{
-// 			name:     "--tip flag unset: no error",
-// 			tipper:   tipper,
-// 			feePayer: feePayer,
-// 			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdk.NewInt(0)},
-// 			tipperArgs: []string{
-// 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
-// 				fmt.Sprintf("--%s=true", flags.FlagAux),
-// 			},
-// 			feePayerArgs: []string{
-// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-// 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
-// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
-// 			},
-// 		},
-// 		{
-// 			name:     "legacy amino json: no error",
-// 			tipper:   tipper,
-// 			feePayer: feePayer,
-// 			tip:      tip,
-// 			tipperArgs: []string{
-// 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
-// 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
-// 				fmt.Sprintf("--%s=true", flags.FlagAux),
-// 			},
-// 			feePayerArgs: []string{
-// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
-// 			},
-// 		},
-// 		{
-// 			name:     "tipper uses direct aux, fee payer uses direct: happy case",
-// 			tipper:   tipper,
-// 			feePayer: feePayer,
-// 			tip:      tip,
-// 			tipperArgs: []string{
-// 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
-// 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
-// 				fmt.Sprintf("--%s=true", flags.FlagAux),
-// 			},
-// 			feePayerArgs: []string{
-// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
-// 			},
-// 		},
-// 		{
-// 			name:     "chain-id mismatch: error",
-// 			tipper:   tipper,
-// 			feePayer: feePayer,
-// 			tip:      tip,
-// 			tipperArgs: []string{
-// 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
-// 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
-// 				fmt.Sprintf("--%s=true", flags.FlagAux),
-// 			},
-// 			expectErrAux: false,
-// 			feePayerArgs: []string{
-// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
-// 				fmt.Sprintf("--%s=%s", flags.FlagChainID, "foobar"),
-// 			},
-// 			expectErrBroadCast: true,
-// 		},
-// 		{
-// 			name:     "wrong denom in tip: error",
-// 			tipper:   tipper,
-// 			feePayer: feePayer,
-// 			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdk.NewInt(0)},
-// 			tipperArgs: []string{
-// 				fmt.Sprintf("--%s=%s", flags.FlagTip, "1000wrongDenom"),
-// 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
-// 				fmt.Sprintf("--%s=true", flags.FlagAux),
-// 			},
-// 			feePayerArgs: []string{
-// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-// 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
-// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
-// 			},
-// 			errMsg: "insufficient funds",
-// 		},
-// 		{
-// 			name:     "insufficient fees: error",
-// 			tipper:   tipper,
-// 			feePayer: feePayer,
-// 			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdk.NewInt(0)},
-// 			tipperArgs: []string{
-// 				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
-// 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
-// 				fmt.Sprintf("--%s=true", flags.FlagAux),
-// 			},
-// 			feePayerArgs: []string{
-// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-// 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
-// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
-// 			},
-// 			errMsg: "insufficient fees",
-// 		},
-// 	}
+	require.NoError(s.network.WaitForNextBlock())
+	_, err = s.createBankMsg(val, tipper, sdk.NewCoins(tipperInitialBal))
+	require.NoError(err)
+	require.NoError(s.network.WaitForNextBlock())
 
-// 	for _, tc := range testCases {
-// 		tc := tc
-// 		s.Run(tc.name, func() {
-// 			res, err := govtestutil.MsgSubmitLegacyProposal(
-// 				val.ClientCtx,
-// 				tipper.String(),
-// 				"test",
-// 				"test desc",
-// 				govtypes.ProposalTypeText,
-// 				tc.tipperArgs...,
-// 			)
+	bal := s.getBalances(val.ClientCtx, tipper, tip.Denom)
+	require.True(bal.Equal(tipperInitialBal.Amount))
 
-// 			if tc.expectErrAux {
-// 				require.Error(err)
-// 			} else {
-// 				require.NoError(err)
-// 				genTxFile := testutil.WriteToNewTempFile(s.T(), string(res.Bytes()))
+	testCases := []struct {
+		name               string
+		tipper             sdk.AccAddress
+		feePayer           sdk.AccAddress
+		tip                sdk.Coin
+		expectErrAux       bool
+		expectErrBroadCast bool
+		errMsg             string
+		tipperArgs         []string
+		feePayerArgs       []string
+	}{
+		{
+			name:     "when --aux and --sign-mode = direct set: error",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      tip,
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
+				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			expectErrAux: true,
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+			},
+		},
+		{
+			name:     "both tipper, fee payer uses AMINO: no error",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      tip,
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+			},
+		},
+		{
+			name:     "tipper uses DIRECT_AUX, fee payer uses AMINO: no error",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      tip,
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+			},
+		},
+		{
+			name:     "--tip flag unset: no error",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdk.NewInt(0)},
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+			},
+		},
+		{
+			name:     "legacy amino json: no error",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      tip,
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+			},
+		},
+		{
+			name:     "tipper uses direct aux, fee payer uses direct: happy case",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      tip,
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+			},
+		},
+		{
+			name:     "chain-id mismatch: error",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      tip,
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			expectErrAux: false,
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagChainID, "foobar"),
+			},
+			expectErrBroadCast: true,
+		},
+		{
+			name:     "wrong denom in tip: error",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdk.NewInt(0)},
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagTip, "1000wrongDenom"),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
+			},
+			errMsg: "insufficient funds",
+		},
+		{
+			name:     "insufficient fees: error",
+			tipper:   tipper,
+			feePayer: feePayer,
+			tip:      sdk.Coin{Denom: fmt.Sprintf("%stoken", val.Moniker), Amount: sdk.NewInt(0)},
+			tipperArgs: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
+				fmt.Sprintf("--%s=true", flags.FlagAux),
+			},
+			feePayerArgs: []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
+			},
+			errMsg: "insufficient fees",
+		},
+	}
 
-// 				// broadcast the tx
-// 				res, err = TxAuxToFeeExec(
-// 					val.ClientCtx,
-// 					genTxFile.Name(),
-// 					tc.feePayerArgs...,
-// 				)
-// 				switch {
-// 				case tc.expectErrBroadCast:
-// 					require.Error(err)
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			res, err := govtestutil.MsgSubmitLegacyProposal(
+				val.ClientCtx,
+				tipper.String(),
+				"test",
+				"test desc",
+				govtypes.ProposalTypeText,
+				tc.tipperArgs...,
+			)
 
-// 				case tc.errMsg != "":
-// 					require.NoError(err)
+			if tc.expectErrAux {
+				require.Error(err)
+			} else {
+				require.NoError(err)
+				genTxFile := testutil.WriteToNewTempFile(s.T(), string(res.Bytes()))
 
-// 					var txRes sdk.TxResponse
-// 					require.NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
+				// broadcast the tx
+				res, err = TxAuxToFeeExec(
+					val.ClientCtx,
+					genTxFile.Name(),
+					tc.feePayerArgs...,
+				)
+				switch {
+				case tc.expectErrBroadCast:
+					require.Error(err)
 
-// 					require.Contains(txRes.RawLog, tc.errMsg)
+				case tc.errMsg != "":
+					require.NoError(err)
 
-// 				default:
-// 					require.NoError(err)
+					var txRes sdk.TxResponse
+					require.NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
 
-// 					var txRes sdk.TxResponse
-// 					require.NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
+					require.Contains(txRes.RawLog, tc.errMsg)
 
-// 					require.Equal(uint32(0), txRes.Code)
-// 					require.NotNil(int64(0), txRes.Height)
+				default:
+					require.NoError(err)
 
-// 					bal = s.getBalances(val.ClientCtx, tipper, tc.tip.Denom)
-// 					tipperInitialBal = tipperInitialBal.Sub(tc.tip)
-// 					require.True(bal.Equal(tipperInitialBal.Amount))
-// 				}
-// 			}
-// 		})
-// 	}
-// }
+					var txRes sdk.TxResponse
+					require.NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
+
+					require.Equal(uint32(0), txRes.Code)
+					require.NotNil(int64(0), txRes.Height)
+
+					bal = s.getBalances(val.ClientCtx, tipper, tc.tip.Denom)
+					tipperInitialBal = tipperInitialBal.Sub(tc.tip)
+					require.True(bal.Equal(tipperInitialBal.Amount))
+				}
+			}
+		})
+	}
+}
 
 func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.AccAddress, amount sdk.Coins, extraFlags ...string) (testutil.BufferWriter, error) {
 	flags := []string{
@@ -1872,13 +1877,13 @@ func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.
 	return bankcli.MsgSendExec(val.ClientCtx, val.Address, toAddr, amount, flags...)
 }
 
-// func (s *IntegrationTestSuite) getBalances(clientCtx client.Context, addr sdk.AccAddress, denom string) math.Int {
-// 	resp, err := bankcli.QueryBalancesExec(clientCtx, addr)
-// 	s.Require().NoError(err)
+func (s *IntegrationTestSuite) getBalances(clientCtx client.Context, addr sdk.AccAddress, denom string) math.Int {
+	resp, err := bankcli.QueryBalancesExec(clientCtx, addr)
+	s.Require().NoError(err)
 
-// 	var balRes banktypes.QueryAllBalancesResponse
-// 	err = clientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
-// 	s.Require().NoError(err)
-// 	startTokens := balRes.Balances.AmountOf(denom)
-// 	return startTokens
-// }
+	var balRes banktypes.QueryAllBalancesResponse
+	err = clientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
+	s.Require().NoError(err)
+	startTokens := balRes.Balances.AmountOf(denom)
+	return startTokens
+}

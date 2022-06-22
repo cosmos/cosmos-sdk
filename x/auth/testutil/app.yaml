@@ -21,7 +21,6 @@ modules:
           permissions: [burner, staking]
         - account: not_bonded_tokens_pool
           permissions: [burner, staking]
-        - account: nft
 
   - name: bank
     config:

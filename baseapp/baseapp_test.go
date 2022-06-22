@@ -1609,8 +1609,8 @@ func TestListSnapshots(t *testing.T) {
 	require.NoError(t, err)
 
 	expected := abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{
-		{Height: 4, Format: 1, Chunks: 2},
-		{Height: 2, Format: 1, Chunks: 1},
+		{Height: 4, Format: snapshottypes.CurrentFormat, Chunks: 2},
+		{Height: 2, Format: snapshottypes.CurrentFormat, Chunks: 1},
 	}}
 
 	resp := app.ListSnapshots(abci.RequestListSnapshots{})
@@ -2033,4 +2033,163 @@ func TestBaseApp_EndBlock(t *testing.T) {
 	require.Len(t, res.GetValidatorUpdates(), 1)
 	require.Equal(t, int64(100), res.GetValidatorUpdates()[0].Power)
 	require.Equal(t, cp.Block.MaxGas, res.ConsensusParamUpdates.Block.MaxGas)
+}
+
+func TestBaseApp_Init(t *testing.T) {
+	db := memdb.NewDB()
+	name := t.Name()
+	logger := defaultLogger()
+
+	snapshotStore, err := snapshots.NewStore(memdb.NewDB(), testutil.GetTempDir(t))
+	require.NoError(t, err)
+
+	testCases := map[string]struct {
+		bapp             *BaseApp
+		expectedPruning  pruningtypes.PruningOptions
+		expectedSnapshot snapshottypes.SnapshotOptions
+		expectedErr      error
+	}{
+		"snapshot but no pruning": {
+			NewBaseApp(name, logger, db, nil,
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(1500, 2)),
+			),
+			pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
+			snapshottypes.NewSnapshotOptions(1500, 2),
+			// if no pruning is set, the default is PruneNothing
+			nil,
+		},
+		"pruning everything only": {
+			NewBaseApp(name, logger, db, nil,
+				SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningEverything)),
+			),
+			pruningtypes.NewPruningOptions(pruningtypes.PruningEverything),
+			snapshottypes.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
+			nil,
+		},
+		"pruning nothing only": {
+			NewBaseApp(name, logger, db, nil,
+				SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)),
+			),
+			pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
+			snapshottypes.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
+			nil,
+		},
+		"pruning default only": {
+			NewBaseApp(name, logger, db, nil,
+				SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningDefault)),
+			),
+			pruningtypes.NewPruningOptions(pruningtypes.PruningDefault),
+			snapshottypes.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
+			nil,
+		},
+		"pruning custom only": {
+			NewBaseApp(name, logger, db, nil,
+				SetPruning(pruningtypes.NewCustomPruningOptions(10, 10)),
+			),
+			pruningtypes.NewCustomPruningOptions(10, 10),
+			snapshottypes.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
+			nil,
+		},
+		"pruning everything and snapshots": {
+			NewBaseApp(name, logger, db, nil,
+				SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningEverything)),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(1500, 2)),
+			),
+			pruningtypes.NewPruningOptions(pruningtypes.PruningEverything),
+			snapshottypes.NewSnapshotOptions(1500, 2),
+			nil,
+		},
+		"pruning nothing and snapshots": {
+			NewBaseApp(name, logger, db, nil,
+				SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(1500, 2)),
+			),
+			pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
+			snapshottypes.NewSnapshotOptions(1500, 2),
+			nil,
+		},
+		"pruning default and snapshots": {
+			NewBaseApp(name, logger, db, nil,
+				SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningDefault)),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(1500, 2)),
+			),
+			pruningtypes.NewPruningOptions(pruningtypes.PruningDefault),
+			snapshottypes.NewSnapshotOptions(1500, 2),
+			nil,
+		},
+		"pruning custom and snapshots": {
+			NewBaseApp(name, logger, db, nil,
+				SetPruning(pruningtypes.NewCustomPruningOptions(10, 10)),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(1500, 2)),
+			),
+			pruningtypes.NewCustomPruningOptions(10, 10),
+			snapshottypes.NewSnapshotOptions(1500, 2),
+			nil,
+		},
+		"error custom pruning 0 interval": {
+			NewBaseApp(name, logger, db, nil,
+				SetPruning(pruningtypes.NewCustomPruningOptions(10, 0)),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(1500, 2)),
+			),
+			pruningtypes.NewCustomPruningOptions(10, 0),
+			snapshottypes.NewSnapshotOptions(1500, 2),
+			pruningtypes.ErrPruningIntervalZero,
+		},
+		"error custom pruning too small interval": {
+			NewBaseApp(name, logger, db, nil,
+				SetPruning(pruningtypes.NewCustomPruningOptions(10, 9)),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(1500, 2)),
+			),
+			pruningtypes.NewCustomPruningOptions(10, 9),
+			snapshottypes.NewSnapshotOptions(1500, 2),
+			pruningtypes.ErrPruningIntervalTooSmall,
+		},
+		"error custom pruning too small keep recent": {
+			NewBaseApp(name, logger, db, nil,
+				SetPruning(pruningtypes.NewCustomPruningOptions(9, 10)),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(1500, 2)),
+			),
+			pruningtypes.NewCustomPruningOptions(9, 10),
+			snapshottypes.NewSnapshotOptions(1500, 2),
+			pruningtypes.ErrPruningKeepRecentTooSmall,
+		},
+		"snapshot zero interval - manager not set": {
+			NewBaseApp(name, logger, db, nil,
+				SetPruning(pruningtypes.NewCustomPruningOptions(10, 10)),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(0, 2)),
+			),
+			pruningtypes.NewCustomPruningOptions(10, 10),
+			snapshottypes.NewSnapshotOptions(snapshottypes.SnapshotIntervalOff, 0),
+			nil,
+		},
+		"snapshot zero keep recent - allowed": {
+			NewBaseApp(name, logger, db, nil,
+				SetPruning(pruningtypes.NewCustomPruningOptions(10, 10)),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(1500, 0)),
+			),
+			pruningtypes.NewCustomPruningOptions(10, 10),
+			snapshottypes.NewSnapshotOptions(1500, 0), // 0 snapshot-keep-recent means keep all
+			nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		// Init and validate
+		require.Equal(t, tc.expectedErr, tc.bapp.Init())
+		if tc.expectedErr != nil {
+			continue
+		}
+
+		// Check that settings were set correctly
+		actualPruning := tc.bapp.store.GetPruning()
+		require.Equal(t, tc.expectedPruning, actualPruning)
+
+		if tc.expectedSnapshot.Interval == snapshottypes.SnapshotIntervalOff {
+			require.Nil(t, tc.bapp.snapshotManager)
+			continue
+		}
+
+		require.Equal(t, tc.expectedSnapshot.Interval, tc.bapp.snapshotManager.GetInterval())
+		require.Equal(t, tc.expectedSnapshot.KeepRecent, tc.bapp.snapshotManager.GetKeepRecent())
+	}
 }

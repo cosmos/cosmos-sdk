@@ -17,8 +17,6 @@ import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/gogo/protobuf/proto"
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-
 
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"

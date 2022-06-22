@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -87,8 +86,8 @@ func (s *KeeperTestSuite) TestUnJailNotBonded() {
 	s.stakingKeeper.SetParams(ctx, p)
 
 	addrDels := simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 6, s.stakingKeeper.TokensFromConsensusPower(ctx, 200))
-	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
-	pks := simapp.CreateTestPubKeys(6)
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
+	pks := simtestutil.CreateTestPubKeys(6)
 	tstaking := teststaking.NewHelper(s.T(), ctx, s.stakingKeeper)
 
 	// create max (5) validators all with the same power
@@ -148,8 +147,8 @@ func (s *KeeperTestSuite) TestHandleNewValidator() {
 	ctx := s.ctx
 
 	addrDels := simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 1, s.stakingKeeper.TokensFromConsensusPower(ctx, 0))
-	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
-	pks := simapp.CreateTestPubKeys(1)
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
+	pks := simtestutil.CreateTestPubKeys(1)
 	addr, val := valAddrs[0], pks[0]
 	tstaking := teststaking.NewHelper(s.T(), ctx, s.stakingKeeper)
 	ctx = ctx.WithBlockHeight(s.slashingKeeper.SignedBlocksWindow(ctx) + 1)
@@ -194,8 +193,8 @@ func (s *KeeperTestSuite) TestHandleAlreadyJailed() {
 	ctx := s.ctx
 
 	addrDels := simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 1, s.stakingKeeper.TokensFromConsensusPower(ctx, 200))
-	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
-	pks := simapp.CreateTestPubKeys(1)
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
+	pks := simtestutil.CreateTestPubKeys(1)
 	addr, val := valAddrs[0], pks[0]
 	power := int64(100)
 	tstaking := teststaking.NewHelper(s.T(), ctx, s.stakingKeeper)
@@ -252,7 +251,7 @@ func (s *KeeperTestSuite) TestValidatorDippingInAndOut() {
 	s.stakingKeeper.SetParams(ctx, params)
 	power := int64(100)
 
-	pks := simapp.CreateTestPubKeys(3)
+	pks := simtestutil.CreateTestPubKeys(3)
 	simtestutil.AddTestAddrsFromPubKeys(s.bankKeeper, s.stakingKeeper, ctx, pks, s.stakingKeeper.TokensFromConsensusPower(ctx, 200))
 
 	addr, val := pks[0].Address(), pks[0]

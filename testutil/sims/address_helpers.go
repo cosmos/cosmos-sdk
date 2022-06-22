@@ -135,3 +135,14 @@ func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
 	}
 	return &ed25519.PubKey{Key: pkBytes}
 }
+
+// ConvertAddrsToValAddrs converts the provided addresses to ValAddress.
+func ConvertAddrsToValAddrs(addrs []sdk.AccAddress) []sdk.ValAddress {
+	valAddrs := make([]sdk.ValAddress, len(addrs))
+
+	for i, addr := range addrs {
+		valAddrs[i] = sdk.ValAddress(addr)
+	}
+
+	return valAddrs
+}

@@ -38,7 +38,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	)
 
 	homeDir := filepath.Join(s.T().TempDir(), "x_upgrade_keeper_test")
-	appConfig := depinject.Configs(testutil.AppConfig, depinject.Supply(simtestutil.NewCustomAppOptions(nil, homeDir)))
+	appConfig := depinject.Configs(testutil.AppConfig, depinject.Supply(simtestutil.NewAppOptionsWithFlagHome(homeDir)))
 	app, err := simtestutil.Setup(appConfig, &s.upgradeKeeper, &bankKeeper, &stakingKeeper)
 	s.NoError(err)
 	s.upgradeKeeper.SetVersionSetter(app.BaseApp)

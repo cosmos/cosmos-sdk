@@ -12,8 +12,10 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"golang.org/x/exp/maps"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/depinject"
+	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -36,9 +38,15 @@ type TestSuite struct {
 var s TestSuite
 
 func setupTest(t *testing.T, height int64, skip map[int64]bool) TestSuite {
-	var legacyAmino *codec.LegacyAmino
+	var (
+		legacyAmino *codec.LegacyAmino
+		appOptions  = make(simtestutil.AppOptionsMap, 0)
+	)
 
-	appConfig := depinject.Configs(testutil.AppConfig, depinject.Supply(simtestutil.NewCustomAppOptions(maps.Keys(skip), "")))
+	appOptions[server.FlagUnsafeSkipUpgrades] = maps.Keys(skip)
+	appOptions[flags.FlagHome] = t.TempDir()
+
+	appConfig := depinject.Configs(testutil.AppConfig, depinject.Supply(appOptions))
 	app, err := simtestutil.Setup(appConfig, &s.keeper, &legacyAmino)
 	s.keeper.SetVersionSetter(app.BaseApp)
 	require.NoError(t, err)

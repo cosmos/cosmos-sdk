@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/depinject"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -33,9 +32,7 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	appConfig := depinject.Configs(testutil.AppConfig, depinject.Supply(simtestutil.EmptyAppOptions{}))
-
-	app, err := simtestutil.Setup(appConfig, &s.upgradeKeeper)
+	app, err := simtestutil.Setup(testutil.AppConfig, &s.upgradeKeeper)
 	s.Require().NoError(err)
 
 	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{})

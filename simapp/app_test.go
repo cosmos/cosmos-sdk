@@ -45,7 +45,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 		DB:             db,
 		InvCheckPeriod: 0,
 		EncConfig:      encCfg,
-		AppOpts:        simtestutil.NewCustomAppOptions(nil, DefaultNodeHome),
+		AppOpts:        simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome),
 	})
 
 	for acc := range maccPerms {
@@ -60,7 +60,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 
 	logger2, _ := log.NewDefaultLogger("plain", "info", false)
 	// Making a new app object with the db, so that initchain hasn't been called
-	app2 := NewSimApp(logger2, db, nil, true, 0, encCfg, simtestutil.NewCustomAppOptions(nil, DefaultNodeHome))
+	app2 := NewSimApp(logger2, db, nil, true, 0, encCfg, simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome))
 	_, err := app2.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 }
@@ -74,7 +74,7 @@ func TestRunMigrations(t *testing.T) {
 	db := dbm.NewMemDB()
 	encCfg := MakeTestEncodingConfig()
 	logger, _ := log.NewDefaultLogger("plain", "info", false)
-	app := NewSimApp(logger, db, nil, true, 0, encCfg, simtestutil.NewCustomAppOptions(nil, DefaultNodeHome))
+	app := NewSimApp(logger, db, nil, true, 0, encCfg, simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome))
 
 	// Create a new baseapp and configurator for the purpose of this test.
 	bApp := baseapp.NewBaseApp(app.Name(), logger, db, encCfg.TxConfig.TxDecoder())
@@ -207,7 +207,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	db := dbm.NewMemDB()
 	encCfg := MakeTestEncodingConfig()
 	logger, _ := log.NewDefaultLogger("plain", "info", false)
-	app := NewSimApp(logger, db, nil, true, 0, encCfg, simtestutil.NewCustomAppOptions(nil, DefaultNodeHome))
+	app := NewSimApp(logger, db, nil, true, 0, encCfg, simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome))
 	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 
 	// Create a mock module. This module will serve as the new module we're
@@ -256,7 +256,7 @@ func TestUpgradeStateOnGenesis(t *testing.T) {
 		DB:             db,
 		InvCheckPeriod: 0,
 		EncConfig:      encCfg,
-		AppOpts:        simtestutil.NewCustomAppOptions(nil, DefaultNodeHome),
+		AppOpts:        simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome),
 	})
 
 	// make sure the upgrade keeper has version map in state

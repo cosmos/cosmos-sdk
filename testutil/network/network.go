@@ -65,7 +65,7 @@ func NewAppConstructor(encodingCfg params.EncodingConfig) AppConstructor {
 		return simapp.NewSimApp(
 			val.Ctx.Logger, dbm.NewMemDB(), nil, true, 0,
 			encodingCfg,
-			simtestutil.NewCustomAppOptions(nil, val.Ctx.Config.RootDir),
+			simtestutil.NewAppOptionsWithFlagHome(val.Ctx.Config.RootDir),
 			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)

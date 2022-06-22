@@ -20,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -239,9 +238,8 @@ func (m AppOptionsMap) Get(key string) interface{} {
 	return m[key]
 }
 
-func NewCustomAppOptions(skipUpgradeHeights []int64, homePath string) servertypes.AppOptions {
+func NewAppOptionsWithFlagHome(homePath string) servertypes.AppOptions {
 	return AppOptionsMap{
-		server.FlagUnsafeSkipUpgrades: skipUpgradeHeights,
-		flags.FlagHome:                homePath,
+		flags.FlagHome: homePath,
 	}
 }

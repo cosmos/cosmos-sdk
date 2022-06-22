@@ -10,7 +10,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -32,8 +31,7 @@ type UpgradeTestSuite struct {
 func (suite *UpgradeTestSuite) SetupTest() {
 	var interfaceRegistry codectypes.InterfaceRegistry
 
-	appConfig := depinject.Configs(testutil.AppConfig, depinject.Supply(simtestutil.EmptyAppOptions{}))
-	app, err := simtestutil.Setup(appConfig, &interfaceRegistry, &suite.upgradeKeeper)
+	app, err := simtestutil.Setup(testutil.AppConfig, &interfaceRegistry, &suite.upgradeKeeper)
 	suite.NoError(err)
 	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 

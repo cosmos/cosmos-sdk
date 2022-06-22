@@ -6,13 +6,12 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/testutil"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -32,14 +31,15 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	app, err := simtestutil.Setup(testutil.AppConfig, &s.upgradeKeeper)
-	s.Require().NoError(err)
+	app := simapp.Setup(s.T(), false)
+	s.upgradeKeeper = app.UpgradeKeeper
 
 	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 
 	s.upgradeKeeper.SetVersionSetter(app.BaseApp)
 	s.upgradeKeeper.SetModuleVersionMap(s.ctx, app.ModuleManager.GetVersionMap())
 
+	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 }

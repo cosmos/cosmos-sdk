@@ -226,7 +226,7 @@ type Manager struct {
 	OrderBeginBlockers []string
 	OrderEndBlockers   []string
 	OrderMigrations    []string
-	mtx sync.Mutex
+	mtx                sync.Mutex
 }
 
 // NewManager creates a new Manager object
@@ -244,7 +244,7 @@ func NewManager(modules ...AppModule) *Manager {
 		OrderExportGenesis: modulesStr,
 		OrderBeginBlockers: modulesStr,
 		OrderEndBlockers:   modulesStr,
-		Mutex:              &sync.Mutex{},
+		mtx:                sync.Mutex{},
 	}
 }
 
@@ -316,9 +316,9 @@ func (m *Manager) UnmarshalGenesis(cdc codec.JSONCodec, genesisData map[string]j
 		wg.Add(1)
 		go func(moduleName string) {
 			defer wg.Done()
-			m.Lock()
+			m.mtx.Lock()
 			genesisStates[moduleName] = m.Modules[moduleName].UnmarshalGenesis(cdc, genesisData[moduleName])
-			m.Unlock()
+			m.mtx.Unlock()
 		}(moduleName)
 	}
 	wg.Wait()

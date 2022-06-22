@@ -27,7 +27,6 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -123,10 +122,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 		addr := sdk.AccAddress(addr)
 		suite.accountKeeper.SetAccount(suite.ctx, authtypes.NewBaseAccount(addr, pubkeys[i], uint64(i), 0))
 	}
-
-	suite.stakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(suite.slashingKeeper.Hooks()),
-	)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.interfaceRegistry)
 	types.RegisterQueryServer(queryHelper, evidenceKeeper)

@@ -61,6 +61,10 @@ func (k *Keeper) SetVersionSetter(vs xp.ProtocolVersionSetter) {
 	k.versionSetter = vs
 }
 
+func (k *Keeper) GetVersionSetter() xp.ProtocolVersionSetter {
+	return k.versionSetter
+}
+
 // SetUpgradeHandler sets an UpgradeHandler for the upgrade specified by name. This handler will be called when the upgrade
 // with this name is applied. In order for an upgrade with the given name to proceed, a handler for this upgrade
 // must be set even if it is a no-op function.

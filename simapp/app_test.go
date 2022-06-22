@@ -265,4 +265,6 @@ func TestUpgradeStateOnGenesis(t *testing.T) {
 	for v, i := range app.ModuleManager.Modules {
 		require.Equal(t, vm[v], i.ConsensusVersion())
 	}
+
+	require.NotNil(t, app.UpgradeKeeper.GetVersionSetter())
 }

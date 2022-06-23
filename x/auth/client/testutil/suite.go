@@ -1550,7 +1550,6 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 
 // TODO to re-enable in #12274
 func (s *IntegrationTestSuite) TestAuxSigner() {
-	// Skipping this test as it needs a simapp with the TipDecorator in post handler.
 	s.T().Skip()
 
 	require := s.Require()

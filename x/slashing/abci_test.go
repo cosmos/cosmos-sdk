@@ -36,10 +36,6 @@ func TestBeginBlocker(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	stakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(slashingKeeper.Hooks()),
-	)
-
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	pks := simtestutil.CreateTestPubKeys(1)

@@ -246,11 +246,11 @@ func (k Keeper) GetLastCompletedUpgrade(ctx sdk.Context) (string, int64) {
 	var latest upgrade
 	var found bool
 	for ; iter.Valid(); iter.Next() {
-		value := int64(sdk.BigEndianToUint64(iter.Value()))
-		if !found || value >= latest.BlockHeight {
+		upgradeHeight := int64(sdk.BigEndianToUint64(iter.Value()))
+		if !found || upgradeHeight >= latest.BlockHeight {
 			found = true
 			name := parseDoneKey(iter.Key())
-			latest = upgrade{Name: name, BlockHeight: value}
+			latest = upgrade{Name: name, BlockHeight: upgradeHeight}
 		}
 	}
 

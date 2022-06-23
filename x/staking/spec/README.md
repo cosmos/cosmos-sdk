@@ -54,3 +54,5 @@ network.
     * [EndBlocker](07_events.md#endblocker)
     * [Msg's](07_events.md#msg's)
 8. **[Parameters](08_params.md)**
+9. **[Client](09_client.md)**
+10. **[App Wiring](10_app_wiring.md)**

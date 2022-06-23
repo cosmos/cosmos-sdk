@@ -20,7 +20,8 @@ import (
 
 func TestDecodeStore(t *testing.T) {
 	var cdc codec.Codec
-	depinject.Inject(testutil.AppConfig, &cdc)
+	err := depinject.Inject(testutil.AppConfig, &cdc)
+	require.NoError(t, err)
 
 	dec := simulation.NewDecodeStore(cdc)
 

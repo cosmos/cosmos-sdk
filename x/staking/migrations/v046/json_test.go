@@ -7,17 +7,31 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	v046 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v046"
+	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestMigrateJSON(t *testing.T) {
-	encodingConfig := simapp.MakeTestEncodingConfig()
+	var (
+		cdc               codec.Codec
+		txConfig          client.TxConfig
+		interfaceRegistry codectypes.InterfaceRegistry
+	)
+
+	err := depinject.Inject(testutil.AppConfig,
+		&cdc,
+		&txConfig,
+	)
+	require.NoError(t, err)
+
 	clientCtx := client.Context{}.
-		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
-		WithTxConfig(encodingConfig.TxConfig).
-		WithCodec(encodingConfig.Codec)
+		WithInterfaceRegistry(interfaceRegistry).
+		WithTxConfig(txConfig).
+		WithCodec(cdc)
 
 	oldState := types.DefaultGenesisState()
 

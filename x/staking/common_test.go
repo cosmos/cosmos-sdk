@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -13,6 +14,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -37,22 +39,20 @@ var (
 
 // getBaseSimappWithCustomKeeper Returns a simapp with custom StakingKeeper
 // to avoid messing with the hooks.
-func getBaseSimappWithCustomKeeper(t *testing.T) (*codec.LegacyAmino, *simapp.SimApp, sdk.Context) {
-	app := simapp.Setup(t, false)
+func getBaseSimappWithCustomKeeper(t *testing.T) (*codec.LegacyAmino, *keeper.Keeper, sdk.Context) {
+	var (
+		stakingKeeper *keeper.Keeper
+		appCodec      codec.Codec
+	)
+
+	app, err := simtestutil.Setup(testutil.AppConfig, &stakingKeeper, &appCodec)
+	require.NoError(t, err)
+
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	appCodec := app.AppCodec()
+	stakingKeeper.SetParams(ctx, types.DefaultParams())
 
-	app.StakingKeeper = keeper.NewKeeper(
-		appCodec,
-		app.GetKey(types.StoreKey),
-		app.AccountKeeper,
-		app.BankKeeper,
-		app.GetSubspace(types.ModuleName),
-	)
-	app.StakingKeeper.SetParams(ctx, types.DefaultParams())
-
-	return codec.NewLegacyAmino(), app, ctx
+	return codec.NewLegacyAmino(), stakingKeeper, ctx
 }
 
 // generateAddresses generates numAddrs of normal AccAddrs and ValAddrs

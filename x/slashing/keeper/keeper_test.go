@@ -8,6 +8,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/testslashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -24,8 +25,8 @@ func TestUnJailNotBonded(t *testing.T) {
 	app.StakingKeeper.SetParams(ctx, p)
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 6, app.StakingKeeper.TokensFromConsensusPower(ctx, 200))
-	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
-	pks := simapp.CreateTestPubKeys(6)
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
+	pks := simtestutil.CreateTestPubKeys(6)
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// create max (5) validators all with the same power
@@ -86,8 +87,8 @@ func TestHandleNewValidator(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, app.StakingKeeper.TokensFromConsensusPower(ctx, 200))
-	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
-	pks := simapp.CreateTestPubKeys(1)
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
+	pks := simtestutil.CreateTestPubKeys(1)
 	addr, val := valAddrs[0], pks[0]
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 	ctx = ctx.WithBlockHeight(app.SlashingKeeper.SignedBlocksWindow(ctx) + 1)
@@ -132,8 +133,8 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, app.StakingKeeper.TokensFromConsensusPower(ctx, 200))
-	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
-	pks := simapp.CreateTestPubKeys(1)
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
+	pks := simtestutil.CreateTestPubKeys(1)
 	addr, val := valAddrs[0], pks[0]
 	power := int64(100)
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
@@ -190,7 +191,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	app.StakingKeeper.SetParams(ctx, params)
 	power := int64(100)
 
-	pks := simapp.CreateTestPubKeys(3)
+	pks := simtestutil.CreateTestPubKeys(3)
 	simapp.AddTestAddrsFromPubKeys(app, ctx, pks, app.StakingKeeper.TokensFromConsensusPower(ctx, 200))
 
 	addr, val := pks[0].Address(), pks[0]

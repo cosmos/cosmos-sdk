@@ -7329,7 +7329,7 @@ func (x *AddressStringToBytesResponse) GetAddressBytes() []byte {
 	return nil
 }
 
-// QueryAccountAddressByIDRequest is the request type for AccountAddressById rpc method
+// QueryAccountAddressByIDRequest is the request type for AccountAddressByID rpc method
 type QueryAccountAddressByIDRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -7365,7 +7365,7 @@ func (x *QueryAccountAddressByIDRequest) GetId() int64 {
 	return 0
 }
 
-// QueryAccountAddressByIDResponse is the response type for AccountAddressById rpc method
+// QueryAccountAddressByIDResponse is the response type for AccountAddressByID rpc method
 type QueryAccountAddressByIDResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

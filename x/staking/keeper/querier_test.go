@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
@@ -211,7 +212,7 @@ func TestQueryDelegation(t *testing.T) {
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]
 	addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
 
-	pubKeys := simapp.CreateTestPubKeys(2)
+	pubKeys := simtestutil.CreateTestPubKeys(2)
 	pk1, pk2 := pubKeys[0], pubKeys[1]
 
 	// Create Validators and Delegation
@@ -458,7 +459,7 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc.LegacyAmino)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 100, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
-	pubKeys := simapp.CreateTestPubKeys(1)
+	pubKeys := simtestutil.CreateTestPubKeys(1)
 
 	valAddress := sdk.ValAddress(addrs[0])
 

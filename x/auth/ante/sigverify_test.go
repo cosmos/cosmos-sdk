@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -67,7 +66,6 @@ func (suite *AnteTestSuite) TestSetPubKey() {
 func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 	params := types.DefaultParams()
 	msg := []byte{1, 2, 3, 4}
-	cdc := simapp.MakeTestEncodingConfig().Amino
 
 	p := types.DefaultParams()
 	skR1, _ := secp256r1.GenPrivKey()
@@ -77,7 +75,7 @@ func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 	expectedCost1 := expectedGasCostByKeys(pkSet1)
 	for i := 0; i < len(pkSet1); i++ {
 		stdSig := legacytx.StdSignature{PubKey: pkSet1[i], Signature: sigSet1[i]}
-		sigV2, err := legacytx.StdSignatureToSignatureV2(cdc, stdSig)
+		sigV2, err := legacytx.StdSignatureToSignatureV2(suite.clientCtx.LegacyAmino, stdSig)
 		suite.Require().NoError(err)
 		err = multisig.AddSignatureV2(multisignature1, sigV2, pkSet1)
 		suite.Require().NoError(err)

@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -72,21 +71,19 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, tmproto.Header{}).WithBlockHeight(1)
 	suite.accountKeeper.SetParams(suite.ctx, authtypes.DefaultParams())
 
-	// Set up TxConfig.
-	encodingConfig := simapp.MakeTestEncodingConfig()
 	// We're using TestMsg encoding in some tests, so register it here.
-	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
-	testdata.RegisterInterfaces(encodingConfig.InterfaceRegistry)
+	legacyAmino.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
+	testdata.RegisterInterfaces(suite.interfaceRegistry)
 
 	suite.clientCtx = client.Context{}.
-		WithTxConfig(encodingConfig.TxConfig)
+		WithTxConfig(txConfig)
 
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
 			AccountKeeper:   suite.accountKeeper,
 			BankKeeper:      suite.bankKeeper,
 			FeegrantKeeper:  suite.feeGrantKeeper,
-			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
+			SignModeHandler: txConfig.SignModeHandler(),
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
 	)

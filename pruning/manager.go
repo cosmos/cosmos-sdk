@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/pruning/types"
@@ -16,8 +15,6 @@ import (
 // determining when to prune old heights of the store
 // based on the strategy described by the pruning options.
 type Manager struct {
-	db               dbm.DB
-	logger           log.Logger
 	opts             types.PruningOptions
 	snapshotInterval uint64
 	// Although pruneHeights happen in the same goroutine with the normal execution,
@@ -49,14 +46,12 @@ var (
 	pruneSnapshotHeightsKey = []byte("s/prunesnapshotheights")
 )
 
-// NewManager returns a new Manager with the given db and logger.
+// NewManager returns a new Manager with the given db.
 // The retuned manager uses a pruning strategy of "nothing" which
 // keeps all heights. Users of the Manager may change the strategy
 // by calling SetOptions.
-func NewManager(db dbm.DB, logger log.Logger) *Manager {
+func NewManager() *Manager {
 	return &Manager{
-		db:                   db,
-		logger:               logger,
 		opts:                 types.NewPruningOptions(types.PruningNothing),
 		pruneHeights:         []int64{},
 		pruneSnapshotHeights: list.New(),
@@ -75,7 +70,7 @@ func (m *Manager) GetOptions() types.PruningOptions {
 
 // GetFlushAndResetPruningHeights returns all heights to be pruned during the next call to Prune().
 // It also flushes and resets the pruning heights.
-func (m *Manager) GetFlushAndResetPruningHeights() ([]int64, error) {
+func (m *Manager) GetFlushAndResetPruningHeights(db dbm.DB) ([]int64, error) {
 	if m.opts.GetPruningStrategy() == types.PruningNothing {
 		return []int64{}, nil
 	}
@@ -83,7 +78,7 @@ func (m *Manager) GetFlushAndResetPruningHeights() ([]int64, error) {
 	defer m.pruneHeightsMx.Unlock()
 
 	// flush the updates to disk so that it is not lost if crash happens.
-	if err := m.db.SetSync(pruneHeightsKey, int64SliceToBytes(m.pruneHeights)); err != nil {
+	if err := db.SetSync(pruneHeightsKey, int64SliceToBytes(m.pruneHeights)); err != nil {
 		return nil, err
 	}
 
@@ -99,7 +94,7 @@ func (m *Manager) GetFlushAndResetPruningHeights() ([]int64, error) {
 // the pruning strategy. Returns previousHeight, if it was kept to be pruned at the next call to Prune(), 0 otherwise.
 // previousHeight must be greater than 0 for the handling to take effect since valid heights start at 1 and 0 represents
 // the latest height. The latest height cannot be pruned. As a result, if previousHeight is less than or equal to 0, 0 is returned.
-func (m *Manager) HandleHeight(previousHeight int64) int64 {
+func (m *Manager) HandleHeight(previousHeight int64, db dbm.DB) int64 {
 	if m.opts.GetPruningStrategy() == types.PruningNothing || previousHeight <= 0 {
 		return 0
 	}
@@ -128,7 +123,7 @@ func (m *Manager) HandleHeight(previousHeight int64) int64 {
 		}
 
 		// flush the updates to disk so that they are not lost if crash happens.
-		if err := m.db.SetSync(pruneHeightsKey, int64SliceToBytes(m.pruneHeights)); err != nil {
+		if err := db.SetSync(pruneHeightsKey, int64SliceToBytes(m.pruneHeights)); err != nil {
 			panic(err)
 		}
 	}()
@@ -155,7 +150,7 @@ func (m *Manager) HandleHeight(previousHeight int64) int64 {
 // height defined by the pruning strategy. Flushes the update to disk and panics if the flush fails
 // The input height must be greater than 0 and pruning strategy any but pruning nothing.
 // If one of these conditions is not met, this function does nothing.
-func (m *Manager) HandleHeightSnapshot(height int64) {
+func (m *Manager) HandleHeightSnapshot(height int64, db dbm.DB) {
 	if m.opts.GetPruningStrategy() == types.PruningNothing || height <= 0 {
 		return
 	}
@@ -163,11 +158,10 @@ func (m *Manager) HandleHeightSnapshot(height int64) {
 	m.pruneSnapshotHeightsMx.Lock()
 	defer m.pruneSnapshotHeightsMx.Unlock()
 
-	m.logger.Debug("HandleHeightSnapshot", "height", height)
 	m.pruneSnapshotHeights.PushBack(height)
 
 	// flush the updates to disk so that they are not lost if crash happens.
-	if err := m.db.SetSync(pruneSnapshotHeightsKey, listToBytes(m.pruneSnapshotHeights)); err != nil {
+	if err := db.SetSync(pruneSnapshotHeightsKey, listToBytes(m.pruneSnapshotHeights)); err != nil {
 		panic(err)
 	}
 }

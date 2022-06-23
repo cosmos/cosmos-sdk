@@ -50,12 +50,6 @@ func (k Keeper) getGroupPolicyInfo(ctx sdk.Context, accountAddress string) (grou
 	return obj, k.groupPolicyTable.GetOne(ctx.KVStore(k.key), orm.PrimaryKey(&group.GroupPolicyInfo{Address: accountAddress}), &obj)
 }
 
-func (k Keeper) GroupMember(goCtx context.Context, gm group.GroupMember) (group.GroupMember, error) {
-	var m group.GroupMember
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	return m, k.groupMemberTable.GetOne(ctx.KVStore(k.key), orm.PrimaryKey(&gm), &m)
-}
-
 // GroupMembers queries all members of a group.
 func (k Keeper) GroupMembers(goCtx context.Context, request *group.QueryGroupMembersRequest) (*group.QueryGroupMembersResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

@@ -5,8 +5,8 @@ modules:
 
       app_name: DistrApp
 
-      begin_blockers: [distribution, staking, auth, bank, genutil, params]
-      end_blockers: [staking, auth, bank, distribution, genutil, params]
+      begin_blockers: [mint, distribution, staking, auth, bank, genutil, params]
+      end_blockers: [staking, auth, bank, distribution, mint, genutil, params]
       init_genesis: [auth, bank, distribution, staking, mint, genutil, params]
 
   - name: auth
@@ -15,6 +15,9 @@ modules:
       bech32_prefix: cosmos
       module_account_permissions:
         - account: fee_collector
+        - account: distribution
+        - account: mint
+          permissions: [minter]
         - account: bonded_tokens_pool
           permissions: [burner, staking]
         - account: not_bonded_tokens_pool
@@ -39,6 +42,10 @@ modules:
   - name: genutil
     config:
       "@type": cosmos.genutil.module.v1.Module
+
+  - name: mint
+    config:
+      "@type": cosmos.mint.module.v1.Module
 
   - name: distribution
     config:

@@ -220,6 +220,6 @@ func GetPeriodReset(duration int64) time.Time {
 	return time.Now().Add(GetPeriod(duration))
 }
 
-func GetPeriod(duration int64) time.Duration {
-	return time.Duration(duration) * time.Second
+func GetPeriod(seconds int64) time.Duration {
+	return time.Duration(seconds) * time.Second
 }

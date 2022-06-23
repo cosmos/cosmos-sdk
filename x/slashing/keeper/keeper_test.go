@@ -65,10 +65,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.slashingKeeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[0]), info1)
 	s.slashingKeeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[1]), info2)
 
-	s.stakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(s.slashingKeeper.Hooks()),
-	)
-
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, s.interfaceRegistry)
 	types.RegisterQueryServer(queryHelper, s.slashingKeeper)
 	queryClient := types.NewQueryClient(queryHelper)

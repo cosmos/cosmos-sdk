@@ -2,18 +2,27 @@ package sims
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"strconv"
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 type GenerateAccountStrategy func(int) []sdk.AccAddress
+
+// AddTestAddrs constructs and returns accNum amount of accounts with an
+// initial balance of accAmt in random order
+func AddTestAddrs(bankKeeper bankkeeper.Keeper, stakingKeeper *stakingkeeper.Keeper, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
+	return addTestAddrs(bankKeeper, stakingKeeper, ctx, accNum, accAmt, CreateRandomAccounts)
+}
 
 // AddTestAddrsIncremental constructs and returns accNum amount of accounts with an initial balance of accAmt in random order
 func AddTestAddrsIncremental(bankKeeper bankkeeper.Keeper, stakingKeeper *stakingkeeper.Keeper, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
@@ -93,4 +102,44 @@ func TestAddr(addr string, bech string) (sdk.AccAddress, error) {
 	}
 
 	return res, nil
+}
+
+// ConvertAddrsToValAddrs converts the provided addresses to ValAddress.
+func ConvertAddrsToValAddrs(addrs []sdk.AccAddress) []sdk.ValAddress {
+	valAddrs := make([]sdk.ValAddress, len(addrs))
+
+	for i, addr := range addrs {
+		valAddrs[i] = sdk.ValAddress(addr)
+	}
+
+	return valAddrs
+}
+
+// CreateTestPubKeys returns a total of numPubKeys public keys in ascending order.
+func CreateTestPubKeys(numPubKeys int) []cryptotypes.PubKey {
+	var publicKeys []cryptotypes.PubKey
+	var buffer bytes.Buffer
+
+	// start at 10 to avoid changing 1 to 01, 2 to 02, etc
+	for i := 100; i < (numPubKeys + 100); i++ {
+		numString := strconv.Itoa(i)
+		buffer.WriteString("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AF") // base pubkey string
+		buffer.WriteString(numString)                                                       // adding on final two digits to make pubkeys unique
+		publicKeys = append(publicKeys, NewPubKeyFromHex(buffer.String()))
+		buffer.Reset()
+	}
+
+	return publicKeys
+}
+
+// NewPubKeyFromHex returns a PubKey from a hex string.
+func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
+	pkBytes, err := hex.DecodeString(pk)
+	if err != nil {
+		panic(err)
+	}
+	if len(pkBytes) != ed25519.PubKeySize {
+		panic(errors.Wrap(errors.ErrInvalidPubKey, "invalid pubkey size"))
+	}
+	return &ed25519.PubKey{Key: pkBytes}
 }

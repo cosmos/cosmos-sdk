@@ -58,8 +58,6 @@ func GetTxCmd() *cobra.Command {
 func NewCmdGrantAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:        "grant <grantee> <authorization_type=\"send\"|\"generic\"|\"delegate\"|\"unbond\"|\"redelegate\"> --from <granter>",
-		Aliases:    nil,
-		SuggestFor: nil,
 		Short:      "Grant authorization to an address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`create a new grant authorization to an address to execute a transaction on your behalf:

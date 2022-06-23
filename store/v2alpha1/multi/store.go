@@ -13,6 +13,8 @@ import (
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	prefixdb "github.com/cosmos/cosmos-sdk/db/prefix"
 	util "github.com/cosmos/cosmos-sdk/internal"
+	dbutil "github.com/cosmos/cosmos-sdk/internal/db"
+	"github.com/cosmos/cosmos-sdk/pruning"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
@@ -101,9 +103,10 @@ type Store struct {
 	mtx  sync.RWMutex
 
 	// Copied from StoreParams
-	Pruning        pruningtypes.PruningOptions
 	InitialVersion uint64
 	*traceListenMixin
+
+	pruningManager *pruning.Manager
 
 	PersistentCache types.MultiStorePersistentCache
 	substoreCache   map[string]*substore
@@ -250,7 +253,18 @@ func readSavedSchema(bucket dbm.Reader) (*SchemaBuilder, error) {
 
 // NewStore constructs a MultiStore directly from a database.
 // Creates a new store if no data exists; otherwise loads existing data.
-func NewStore(db dbm.Connection, opts StoreParams) (ret *Store, err error) {
+func NewStore(db dbm.DBConnection, opts StoreParams) (ret *Store, err error) {
+	pruningManager := pruning.NewManager()
+	pruningManager.SetOptions(opts.Pruning)
+	{ // load any pruned heights we missed from disk to be pruned on the next run
+		r := db.Reader()
+		defer r.Discard()
+		tmdb := dbutil.ReadWriterAsTmdb(dbm.ReaderAsReadWriter(r))
+		if err = pruningManager.LoadPruningHeights(tmdb); err != nil {
+			return
+		}
+	}
+
 	versions, err := db.Versions()
 	if err != nil {
 		return
@@ -301,14 +315,11 @@ func NewStore(db dbm.Connection, opts StoreParams) (ret *Store, err error) {
 		stateCommitmentTxn: stateCommitmentTxn,
 		mem:                mem.NewStore(),
 		tran:               transient.NewStore(),
-
-		substoreCache: map[string]*substore{},
-
-		traceListenMixin: opts.traceListenMixin,
-		PersistentCache:  opts.PersistentCache,
-
-		Pruning:        opts.Pruning,
-		InitialVersion: opts.InitialVersion,
+		substoreCache:      map[string]*substore{},
+		traceListenMixin:   opts.traceListenMixin,
+		PersistentCache:    opts.PersistentCache,
+		pruningManager:     pruningManager,
+		InitialVersion:     opts.InitialVersion,
 	}
 
 	// Now load the substore schema
@@ -386,6 +397,7 @@ func NewStore(db dbm.Connection, opts StoreParams) (ret *Store, err error) {
 		}
 		ret.schema[skey] = typ
 	}
+
 	return
 }
 
@@ -557,30 +569,54 @@ func (s *Store) Commit() types.CommitID {
 		panic(err)
 	}
 
-	pruneVersions(cid.Version, s.Pruning, func(ver int64) {
-		s.stateDB.DeleteVersion(uint64(ver))
-
-		if s.StateCommitmentDB != nil {
-			s.StateCommitmentDB.DeleteVersion(uint64(ver))
-		}
-	})
+	if err = s.handlePruning(cid.Version); err != nil {
+		panic(err)
+	}
 
 	s.tran.Commit()
 	return *cid
 }
 
-// Performs necessary pruning via callback
-func pruneVersions(current int64, opts pruningtypes.PruningOptions, prune func(int64)) {
-	previous := current - 1
-	if opts.Interval != 0 && current%int64(opts.Interval) == 0 {
-		// The range of newly prunable versions
-		lastPrunable := previous - int64(opts.KeepRecent)
-		firstPrunable := lastPrunable - int64(opts.Interval)
+func (rs *Store) handlePruning(current int64) error {
+	// Pass DB txn to pruning manager via adapter; running txns must be refreshed after this.
+	// This is hacky but needed in order to restrict to a single txn (for memdb compatibility)
+	// since the manager calls SetSync internally.
+	rs.stateTxn.Discard()
+	defer rs.refreshTransactions(true)
+	db := rs.stateDB.ReadWriter()
+	rs.pruningManager.HandleHeight(current-1, dbutil.ReadWriterAsTmdb(db)) // we should never prune the current version.
+	db.Discard()
+	if !rs.pruningManager.ShouldPruneAtHeight(current) {
+		return nil
+	}
+	db = rs.stateDB.ReadWriter()
+	defer db.Discard()
+	pruningHeights, err := rs.pruningManager.GetFlushAndResetPruningHeights(dbutil.ReadWriterAsTmdb(db))
+	if err != nil {
+		return err
+	}
+	return pruneVersions(pruningHeights, func(ver int64) error {
+		if err := rs.stateDB.DeleteVersion(uint64(ver)); err != nil {
+			return fmt.Errorf("error pruning StateDB: %w", err)
+		}
 
-		for version := firstPrunable; version <= lastPrunable; version++ {
-			prune(version)
+		if rs.StateCommitmentDB != nil {
+			if err := rs.StateCommitmentDB.DeleteVersion(uint64(ver)); err != nil {
+				return fmt.Errorf("error pruning StateCommitmentDB: %w", err)
+			}
+		}
+		return nil
+	})
+}
+
+// Performs necessary pruning via callback
+func pruneVersions(heights []int64, prune func(int64) error) error {
+	for _, height := range heights {
+		if err := prune(height); err != nil {
+			return err
 		}
 	}
+	return nil
 }
 
 func (s *Store) getMerkleRoots() (ret map[string][]byte, err error) {
@@ -629,14 +665,11 @@ func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
 		return
 	}
 
-	stateTxn := s.stateDB.ReadWriter()
 	defer func() {
 		if err != nil {
-			err = util.CombineErrors(err, stateTxn.Discard(), "stateTxn.Discard also failed")
+			err = util.CombineErrors(err, s.stateTxn.Discard(), "stateTxn.Discard also failed")
 		}
 	}()
-	stateCommitmentTxn := stateTxn
-
 	// If DBs are not separate, StateCommitment state has been committed & snapshotted
 	if s.StateCommitmentDB != nil {
 		// if any error is encountered henceforth, we must revert the state and SC dbs
@@ -662,17 +695,38 @@ func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
 		if err != nil {
 			return
 		}
-		stateCommitmentTxn = s.StateCommitmentDB.ReadWriter()
 	}
 
-	s.stateTxn = stateTxn
-	s.stateCommitmentTxn = stateCommitmentTxn
+	// flush is complete, refresh our DB read/writers
+	if err = s.refreshTransactions(false); err != nil {
+		return
+	}
+
+	return &types.CommitID{Version: int64(target), Hash: rootHash}, nil
+}
+
+// Resets the txn objects in the store (does not discard current txns), then propagates
+// them to cached substores.
+// justState indicates we only need to refresh the stateDB txn.
+func (s *Store) refreshTransactions(onlyState bool) error {
+	s.stateTxn = s.stateDB.ReadWriter()
+	if s.StateCommitmentDB != nil {
+		if !onlyState {
+			s.stateCommitmentTxn = s.StateCommitmentDB.ReadWriter()
+		}
+	} else {
+		s.stateCommitmentTxn = s.stateTxn
+	}
+
+	storeHashes, err := s.getMerkleRoots()
+	if err != nil {
+		return err
+	}
 	// the state of all live substores must be refreshed
 	for key, sub := range s.substoreCache {
 		sub.refresh(storeHashes[key])
 	}
-
-	return &types.CommitID{Version: int64(target), Hash: rootHash}, nil
+	return nil
 }
 
 // LastCommitID implements Committer.
@@ -727,14 +781,18 @@ func (s *Store) GetAllVersions() []uint64 {
 // If PruneNothing, this is a no-op.
 // If other strategy, this height is persisted until it is
 // less than <current height> - KeepRecent and <current height> % Interval == 0
-func (s *Store) PruneSnapshotHeight(height int64) {
-	panic("not implemented")
+func (rs *Store) PruneSnapshotHeight(height int64) {
+	rs.stateTxn.Discard()
+	defer rs.refreshTransactions(true)
+	db := rs.stateDB.ReadWriter()
+	defer db.Discard()
+	rs.pruningManager.HandleHeightSnapshot(height, dbutil.ReadWriterAsTmdb(db))
 }
 
 // SetSnapshotInterval sets the interval at which the snapshots are taken.
 // It is used by the store to determine which heights to retain until after the snapshot is complete.
-func (s *Store) SetSnapshotInterval(snapshotInterval uint64) {
-	panic("not implemented")
+func (rs *Store) SetSnapshotInterval(snapshotInterval uint64) {
+	rs.pruningManager.SetSnapshotInterval(snapshotInterval)
 }
 
 // parsePath expects a format like /<storeName>[/<subpath>]
@@ -996,5 +1054,10 @@ func (tlm *traceListenMixin) wrapTraceListen(store types.KVStore, skey types.Sto
 	return store
 }
 
-func (s *Store) GetPruning() pruningtypes.PruningOptions   { return s.Pruning }
-func (s *Store) SetPruning(po pruningtypes.PruningOptions) { s.Pruning = po }
+func (s *Store) GetPruning() pruningtypes.PruningOptions {
+	return s.pruningManager.GetOptions()
+}
+
+func (s *Store) SetPruning(po pruningtypes.PruningOptions) {
+	s.pruningManager.SetOptions(po)
+}

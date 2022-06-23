@@ -79,7 +79,7 @@ func NewStore(db dbm.DB, logger log.Logger) *Store {
 		keysByName:     make(map[string]types.StoreKey),
 		listeners:      make(map[types.StoreKey][]types.WriteListener),
 		removalMap:     make(map[types.StoreKey]bool),
-		pruningManager: pruning.NewManager(db, logger),
+		pruningManager: pruning.NewManager(),
 	}
 }
 
@@ -320,7 +320,7 @@ func moveKVStoreData(oldDB types.KVStore, newDB types.KVStore) error {
 // If other strategy, this height is persisted until it is
 // less than <current height> - KeepRecent and <current height> % Interval == 0
 func (rs *Store) PruneSnapshotHeight(height int64) {
-	rs.pruningManager.HandleHeightSnapshot(height)
+	rs.pruningManager.HandleHeightSnapshot(height, rs.db)
 }
 
 // SetInterBlockCache sets the Store's internal inter-block (persistent) cache.
@@ -533,7 +533,7 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 }
 
 func (rs *Store) handlePruning(version int64) error {
-	rs.pruningManager.HandleHeight(version - 1) // we should never prune the current version.
+	rs.pruningManager.HandleHeight(version-1, rs.db) // we should never prune the current version.
 	if !rs.pruningManager.ShouldPruneAtHeight(version) {
 		return nil
 	}
@@ -543,7 +543,7 @@ func (rs *Store) handlePruning(version int64) error {
 }
 
 func (rs *Store) pruneStores() error {
-	pruningHeights, err := rs.pruningManager.GetFlushAndResetPruningHeights()
+	pruningHeights, err := rs.pruningManager.GetFlushAndResetPruningHeights(rs.db)
 	if err != nil {
 		return err
 	}
@@ -933,7 +933,7 @@ func (rs *Store) RollbackToVersion(target int64) int64 {
 		return current
 	}
 	for ; current > target; current-- {
-		rs.pruningManager.HandleHeight(current)
+		rs.pruningManager.HandleHeight(current, rs.db)
 	}
 	if err := rs.pruneStores(); err != nil {
 		panic(err)

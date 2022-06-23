@@ -454,10 +454,10 @@ func doTestPruning(t *testing.T, ctor storeConstructor, sepDBs bool) {
 		pruningtypes.PruningOptions
 		kept []uint64
 	}{
+		{pruningtypes.NewPruningOptions(pruningtypes.PruningNothing), []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
+		{pruningtypes.NewPruningOptions(pruningtypes.PruningEverything), []uint64{8, 9, 10}},
 		{pruningtypes.NewCustomPruningOptions(2, 10), []uint64{8, 9, 10}},
 		{pruningtypes.NewCustomPruningOptions(0, 10), []uint64{10}},
-		{pruningtypes.NewPruningOptions(pruningtypes.PruningEverything), []uint64{8, 9, 10}},
-		{pruningtypes.NewPruningOptions(pruningtypes.PruningNothing), []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
 	}
 
 	for tci, tc := range testCases {
@@ -486,7 +486,7 @@ func doTestPruning(t *testing.T, ctor storeConstructor, sepDBs bool) {
 			kept := sliceToSet(tc.kept)
 			for v := uint64(1); v <= 10; v++ {
 				_, has := kept[v]
-				require.Equal(t, has, versions.Exists(v), "Version = %v; tc #%d", v, tci)
+				require.Equal(t, has, versions.Exists(v), "version = %v; tc #%d", v, tci)
 			}
 		}
 	}

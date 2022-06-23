@@ -6,7 +6,9 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/db"
+	"github.com/cosmos/cosmos-sdk/db/memdb"
 	dbutil "github.com/cosmos/cosmos-sdk/internal/db"
+	"github.com/cosmos/cosmos-sdk/pruning"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	v1 "github.com/cosmos/cosmos-sdk/store/types"
 	v2 "github.com/cosmos/cosmos-sdk/store/v2alpha1"
@@ -20,7 +22,10 @@ var (
 
 type store1as2 struct {
 	*rootmulti.Store
-	database *dbutil.TmdbAdapter
+	database *dbutil.TmdbConnAdapter
+	// Mirror the pruning state in rootmulti.Store
+	pruner  *pruning.Manager
+	pruneDB *memdb.MemDB
 }
 
 type cacheStore1as2 struct {
@@ -49,6 +54,10 @@ func NewV1MultiStoreAsV2(database db.Connection, opts StoreParams) (v2.CommitMul
 		cms.MountStoreWithDB(skey, typ, nil)
 	}
 	cms.SetPruning(opts.Pruning)
+	pruner := pruning.NewManager()
+	pruner.SetOptions(opts.Pruning)
+	pruner.LoadPruningHeights(adapter)
+
 	err := cms.SetInitialVersion(int64(opts.InitialVersion))
 	if err != nil {
 		return nil, err
@@ -62,7 +71,12 @@ func NewV1MultiStoreAsV2(database db.Connection, opts StoreParams) (v2.CommitMul
 	}
 	cms.SetTracer(opts.TraceWriter)
 	cms.SetTracingContext(opts.TraceContext)
-	return &store1as2{cms, adapter}, nil
+	return &store1as2{
+		Store:    cms,
+		database: adapter,
+		pruner:   pruner,
+		pruneDB:  memdb.NewDB(),
+	}, nil
 }
 
 // MultiStore
@@ -90,15 +104,25 @@ func (s *store1as2) Close() error {
 }
 
 func (s *store1as2) Commit() v2.CommitID {
-	ret := s.Store.Commit()
+	cid := s.Store.Commit()
 	_, err := s.database.Commit()
 	if err != nil {
 		panic(err)
 	}
-	pruneVersions(ret.Version, s.GetPruning(), func(ver int64) {
-		s.database.Connection.DeleteVersion(uint64(ver))
+
+	db := dbutil.ConnectionAsTmdb(s.pruneDB)
+	s.pruner.HandleHeight(cid.Version-1, db)
+	if !s.pruner.ShouldPruneAtHeight(cid.Version) {
+		return cid
+	}
+	pruningHeights, err := s.pruner.GetFlushAndResetPruningHeights(db)
+	if err != nil {
+		panic(err)
+	}
+	pruneVersions(pruningHeights, func(ver int64) error {
+		return s.database.Connection.DeleteVersion(uint64(ver))
 	})
-	return ret
+	return cid
 }
 
 func (s *store1as2) SetInitialVersion(ver uint64) error {

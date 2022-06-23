@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strconv"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
@@ -36,6 +38,7 @@ func GetTxCmd() *cobra.Command {
 
 	txCmd.AddCommand(
 		NewMsgCreateVestingAccountCmd(),
+		NewMsgCreateCliffVestingAccountCmd(),
 		NewMsgCreateClawbackVestingAccountCmd(),
 		NewMsgClawbackCmd(),
 	)
@@ -259,5 +262,52 @@ func NewMsgClawbackCmd() *cobra.Command {
 
 	cmd.Flags().String(FlagDest, "", "Address of destination (defaults to funder)")
 	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// NewMsgCreateDelayedVestingAccountCmd returns a CLI command handler for creating a
+// NewMsgCreateDelayedVestingAccountCmd transaction.
+// This is hacky, but meant to mitigate the pain of a very specific use case.
+// Namely, make it easy to make cliff locks to an address.
+func NewMsgCreateCliffVestingAccountCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create-cliff-vesting-account [to_address] [amount] [cliff_duration]",
+		Short: "Create a new cliff vesting account funded with an allocation of tokens.",
+		Long: `Create a new delayed vesting account funded with an allocation of tokens. All vesting accouts created will have their start time
+set by the committed block's time. The cliff duration should be specified in hours.`,
+		Args: cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			toAddr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			amount, err := sdk.ParseCoinsNormalized(args[1])
+			if err != nil {
+				return err
+			}
+
+			cliffDuration, err := time.ParseDuration(args[2])
+			if err != nil {
+				err = errors.Wrap(err, "duration incorrectly formatted, see https://pkg.go.dev/time#ParseDuration")
+				return err
+			}
+			cliffVesting := true
+
+			endTime := time.Now().Add(cliffDuration)
+			endEpochTime := endTime.Unix()
+
+			msg := types.NewMsgCreateVestingAccount(clientCtx.GetFromAddress(), toAddr, amount, endEpochTime, cliffVesting)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
 	return cmd
 }

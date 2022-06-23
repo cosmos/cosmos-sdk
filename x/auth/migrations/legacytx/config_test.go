@@ -9,8 +9,8 @@ import (
 	cryptoAmino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/helpersuite"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+	txtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil/tx"
 )
 
 func testCodec() *codec.LegacyAmino {
@@ -24,5 +24,5 @@ func testCodec() *codec.LegacyAmino {
 func TestStdTxConfig(t *testing.T) {
 	cdc := testCodec()
 	txGen := legacytx.StdTxConfig{Cdc: cdc}
-	suite.Run(t, helpersuite.NewTxConfigTestSuite(txGen))
+	suite.Run(t, txtestutil.NewTxConfigTestSuite(txGen))
 }

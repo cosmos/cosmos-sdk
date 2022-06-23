@@ -1,4 +1,4 @@
-package helpersuite
+package tx
 
 import (
 	"bytes"

@@ -2,6 +2,7 @@ package types
 
 import (
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -103,3 +104,9 @@ type StakingHooks interface {
 	AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error
 	BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error
 }
+
+// StakingHooksWrapper is a wrapper for modules to inject StakingHooks using depinject.
+type StakingHooksWrapper struct{ StakingHooks }
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (StakingHooksWrapper) IsOnePerModuleType() {}

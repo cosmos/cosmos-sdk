@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+
 	"github.com/cosmos/cosmos-sdk/depinject"
 )
 
@@ -21,6 +22,7 @@ type ModuleInitializer struct {
 	ConfigProtoMessage proto.Message
 	Error              error
 	Providers          []depinject.ProviderDescriptor
+	Invokers           []depinject.ProviderDescriptor
 }
 
 // ModulesByProtoMessageName should be used to retrieve modules by their protobuf name.

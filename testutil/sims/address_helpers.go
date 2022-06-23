@@ -27,6 +27,12 @@ func AddTestAddrsFromPubKeys(bankKeeper bankkeeper.Keeper, stakingKeeper *stakin
 	}
 }
 
+// AddTestAddrs constructs and returns accNum amount of accounts with an
+// initial balance of accAmt in random order
+func AddTestAddrs(bankKeeper bankkeeper.Keeper, stakingKeeper *stakingkeeper.Keeper, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
+	return addTestAddrs(bankKeeper, stakingKeeper, ctx, accNum, accAmt, CreateRandomAccounts)
+}
+
 // AddTestAddrsIncremental constructs and returns accNum amount of accounts with an initial balance of accAmt in random order
 func AddTestAddrsIncremental(bankKeeper bankkeeper.Keeper, stakingKeeper *stakingkeeper.Keeper, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
 	return addTestAddrs(bankKeeper, stakingKeeper, ctx, accNum, accAmt, CreateIncrementalAccounts)
@@ -107,6 +113,17 @@ func TestAddr(addr string, bech string) (sdk.AccAddress, error) {
 	return res, nil
 }
 
+// ConvertAddrsToValAddrs converts the provided addresses to ValAddress.
+func ConvertAddrsToValAddrs(addrs []sdk.AccAddress) []sdk.ValAddress {
+	valAddrs := make([]sdk.ValAddress, len(addrs))
+
+	for i, addr := range addrs {
+		valAddrs[i] = sdk.ValAddress(addr)
+	}
+
+	return valAddrs
+}
+
 // CreateTestPubKeys returns a total of numPubKeys public keys in ascending order.
 func CreateTestPubKeys(numPubKeys int) []cryptotypes.PubKey {
 	var publicKeys []cryptotypes.PubKey
@@ -134,15 +151,4 @@ func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
 		panic(errors.Wrap(errors.ErrInvalidPubKey, "invalid pubkey size"))
 	}
 	return &ed25519.PubKey{Key: pkBytes}
-}
-
-// ConvertAddrsToValAddrs converts the provided addresses to ValAddress.
-func ConvertAddrsToValAddrs(addrs []sdk.AccAddress) []sdk.ValAddress {
-	valAddrs := make([]sdk.ValAddress, len(addrs))
-
-	for i, addr := range addrs {
-		valAddrs[i] = sdk.ValAddress(addr)
-	}
-
-	return valAddrs
 }

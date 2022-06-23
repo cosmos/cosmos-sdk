@@ -206,13 +206,16 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 }
 
 func provideModule(in crisisInputs) crisisOutputs {
+	invalidCheckPeriod := cast.ToUint(in.AppOpts.Get(server.FlagInvCheckPeriod))
+
 	k := keeper.NewKeeper(
 		in.Subspace,
-		uint(in.Config.InvalidCheckPeriod),
+		invalidCheckPeriod,
 		in.BankKeeper,
 		authtypes.FeeCollectorName,
 	)
-	skipGenesisInvariants := cast.ToBool(in.AppOpts.Get(server.FlagInvCheckPeriod))
+	skipGenesisInvariants := cast.ToBool(in.AppOpts.Get(FlagSkipGenesisInvariants))
+
 	m := NewAppModule(&k, skipGenesisInvariants)
 	return crisisOutputs{CrisisKeeper: k, Module: runtime.WrapAppModule(m)}
 }

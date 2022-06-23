@@ -37,19 +37,17 @@ import (
 
 // SetupOptions defines arguments that are passed into `Simapp` constructor.
 type SetupOptions struct {
-	Logger             log.Logger
-	DB                 *dbm.MemDB
-	InvCheckPeriod     uint
-	HomePath           string
-	SkipUpgradeHeights map[int64]bool
-	EncConfig          params.EncodingConfig
-	AppOpts            types.AppOptions
+	Logger         log.Logger
+	DB             *dbm.MemDB
+	InvCheckPeriod uint
+	EncConfig      params.EncodingConfig
+	AppOpts        types.AppOptions
 }
 
 func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeTestEncodingConfig()
-	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
+	app := NewSimApp(log.NewNopLogger(), db, nil, true, invCheckPeriod, encCdc, simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome))
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Codec)
 	}
@@ -75,7 +73,7 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
 	}
 
-	app := NewSimApp(options.Logger, options.DB, nil, true, options.SkipUpgradeHeights, options.HomePath, options.InvCheckPeriod, options.EncConfig, options.AppOpts)
+	app := NewSimApp(options.Logger, options.DB, nil, true, options.InvCheckPeriod, options.EncConfig, options.AppOpts)
 	genesisState := NewDefaultGenesisState(app.appCodec)
 	genesisState, err = simtestutil.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 	require.NoError(t, err)
@@ -376,14 +374,6 @@ func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
 		panic(errors.Wrap(errors.ErrInvalidPubKey, "invalid pubkey size"))
 	}
 	return &ed25519.PubKey{Key: pkBytes}
-}
-
-// EmptyAppOptions is a stub implementing AppOptions
-type EmptyAppOptions struct{}
-
-// Get implements AppOptions
-func (ao EmptyAppOptions) Get(o string) interface{} {
-	return nil
 }
 
 // ModuleAccountAddrs provides a list of blocked module accounts from configuration in app.yaml

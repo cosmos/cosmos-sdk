@@ -3,11 +3,11 @@ modules:
     config:
       "@type": cosmos.app.runtime.v1alpha1.Module
 
-      app_name: AuthApp
+      app_name: UpgradeApp
 
-      begin_blockers: [staking, auth, bank, genutil, params, vesting]
-      end_blockers: [staking, auth, bank, genutil, params, vesting]
-      init_genesis: [auth, bank, staking, genutil, params, vesting]
+      begin_blockers: [upgrade, mint, staking, auth, bank, genutil, params]
+      end_blockers: [staking, auth, bank, mint, genutil, params, upgrade]
+      init_genesis: [auth, bank, staking, mint, genutil, params, upgrade]
 
   - name: auth
     config:
@@ -42,6 +42,10 @@ modules:
     config:
       "@type": cosmos.genutil.module.v1.Module
 
-  - name: vesting
+  - name: mint
     config:
-      "@type": cosmos.vesting.module.v1.Module
+      "@type": cosmos.mint.module.v1.Module
+
+  - name: upgrade
+    config:
+      "@type": cosmos.upgrade.module.v1.Module

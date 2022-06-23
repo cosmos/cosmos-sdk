@@ -42,7 +42,7 @@ type SetupOptions struct {
 func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeTestEncodingConfig()
-	app := NewSimApp(log.NewNopLogger(), db, nil, true, invCheckPeriod, encCdc, simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome))
+	app := NewSimApp(log.NewNopLogger(), db, nil, true, invCheckPeriod, encCdc, simtestutil.NewAppOptionsWithFlagHomeAndInvalidCheckPeriod(DefaultNodeHome, invCheckPeriod))
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Codec)
 	}

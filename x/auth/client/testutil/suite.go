@@ -15,14 +15,16 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"cosmossdk.io/math"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -1351,8 +1353,10 @@ func TestGetBroadcastCommandOfflineFlag(t *testing.T) {
 }
 
 func TestGetBroadcastCommandWithoutOfflineFlag(t *testing.T) {
+	var txCfg client.TxConfig
+	_, err := simtestutil.Setup(authtestutil.AppConfig, &txCfg)
+	require.NoError(t, err)
 	clientCtx := client.Context{}
-	txCfg := simapp.MakeTestEncodingConfig().TxConfig
 	clientCtx = clientCtx.WithTxConfig(txCfg)
 
 	ctx := context.Background()

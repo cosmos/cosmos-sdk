@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"sort"
 	"strings"
 	"testing"
@@ -20,7 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 
-	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
+	// "github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/x/group/module"
 )
@@ -88,11 +89,10 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *TestSuite) TestCreateGroupWithLotsOfMembers() {
-	// for i := 50; i < 68; i++ {
-	// 	membersResp := s.createGroupAndGetMembers(i)
-	// 	s.Require().Equal(len(membersResp), i)
-	// }
-	s.createGroupAndGetMembers(67)
+	for i := 50; i < 70; i++ {
+		membersResp := s.createGroupAndGetMembers(i)
+		s.Require().Equal(len(membersResp), i)
+	}
 }
 
 func (s *TestSuite) createGroupAndGetMembers(numMembers int) []*group.GroupMember {
@@ -103,7 +103,6 @@ func (s *TestSuite) createGroupAndGetMembers(numMembers int) []*group.GroupMembe
 			Address: addressPool[i].String(),
 			Weight:  "1",
 		}
-
 	}
 
 	g, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
@@ -112,14 +111,6 @@ func (s *TestSuite) createGroupAndGetMembers(numMembers int) []*group.GroupMembe
 	})
 	s.Require().NoErrorf(err, "failed to create group with %d members", len(members))
 	s.T().Logf("group %d created with %d members", g.GroupId, len(members))
-
-	for i := 0; i < len(members); i++ {
-		m := group.GroupMember{GroupId: g.GroupId, Member: &group.Member{Address: members[i].Address}}
-		pk := orm.PrimaryKey(&m)
-		r, err := s.keeper.GroupMember(s.ctx, m)
-		s.Require().NoError(err)
-		s.T().Logf("got %d %v %v from group %d", i, pk, r, g.GroupId)
-	}
 
 	groupMemberResp, err := s.keeper.GroupMembers(s.ctx, &group.QueryGroupMembersRequest{GroupId: g.GroupId})
 	s.Require().NoError(err)
@@ -212,7 +203,8 @@ func (s *TestSuite) TestCreateGroup() {
 			res, err := s.keeper.CreateGroup(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
-				_, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: uint64(seq + 1)})
+				g, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: uint64(seq + 1)})
+				fmt.Printf("%v", g)
 				s.Require().Error(err)
 				return
 			}

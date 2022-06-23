@@ -170,9 +170,7 @@ func (a table) Has(store sdk.KVStore, key RowID) bool {
 		return false
 	}
 	pStore := prefix.NewStore(store, a.prefix[:])
-	it := pStore.Iterator(PrefixRange(key))
-	defer it.Close()
-	return it.Valid()
+	return pStore.Has(key)
 }
 
 // GetOne load the object persisted for the given RowID into the dest parameter.

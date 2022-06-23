@@ -36,9 +36,9 @@ func (suite *AnteTestSuite) TestSetPubKey() {
 	msgs := make([]sdk.Msg, len(addrs))
 	// set accounts and create msg for each address
 	for i, addr := range addrs {
-		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
+		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
 		require.NoError(acc.SetAccountNumber(uint64(i)))
-		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+		suite.accountKeeper.SetAccount(suite.ctx, acc)
 		msgs[i] = testdata.NewTestMsg(addr)
 	}
 	require.NoError(suite.txBuilder.SetMsgs(msgs...))
@@ -49,7 +49,7 @@ func (suite *AnteTestSuite) TestSetPubKey() {
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	require.NoError(err)
 
-	spkd := ante.NewSetPubKeyDecorator(suite.app.AccountKeeper)
+	spkd := ante.NewSetPubKeyDecorator(suite.accountKeeper)
 	antehandler := sdk.ChainAnteDecorators(spkd)
 
 	ctx, err := antehandler(suite.ctx, tx, false)
@@ -57,7 +57,7 @@ func (suite *AnteTestSuite) TestSetPubKey() {
 
 	// Require that all accounts have pubkey set after Decorator runs
 	for i, addr := range addrs {
-		pk, err := suite.app.AccountKeeper.GetPubKey(ctx, addr)
+		pk, err := suite.accountKeeper.GetPubKey(ctx, addr)
 		require.NoError(err, "Error on retrieving pubkey from account")
 		require.True(pubs[i].Equals(pk),
 			"Wrong Pubkey retrieved from AccountKeeper, idx=%d\nexpected=%s\n     got=%s", i, pubs[i], pk)
@@ -135,17 +135,17 @@ func (suite *AnteTestSuite) TestSigVerification() {
 	msgs := make([]sdk.Msg, len(addrs))
 	// set accounts and create msg for each address
 	for i, addr := range addrs {
-		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
+		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
 		suite.Require().NoError(acc.SetAccountNumber(uint64(i)))
-		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+		suite.accountKeeper.SetAccount(suite.ctx, acc)
 		msgs[i] = testdata.NewTestMsg(addr)
 	}
 
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 
-	spkd := ante.NewSetPubKeyDecorator(suite.app.AccountKeeper)
-	svd := ante.NewSigVerificationDecorator(suite.app.AccountKeeper, suite.clientCtx.TxConfig.SignModeHandler())
+	spkd := ante.NewSetPubKeyDecorator(suite.accountKeeper)
+	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, suite.clientCtx.TxConfig.SignModeHandler())
 	antehandler := sdk.ChainAnteDecorators(spkd, svd)
 
 	type testCase struct {
@@ -208,8 +208,6 @@ func (suite *AnteTestSuite) TestSigVerification() {
 // In the meantime, we want to make double-sure amino compatibility works.
 // ref: https://github.com/cosmos/cosmos-sdk/issues/7229
 func (suite *AnteTestSuite) TestSigVerification_ExplicitAmino() {
-	suite.app, suite.ctx = createTestApp(suite.T(), true)
-	suite.ctx = suite.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
 	aminoCdc := codec.NewLegacyAmino()
@@ -221,9 +219,9 @@ func (suite *AnteTestSuite) TestSigVerification_ExplicitAmino() {
 
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
-			AccountKeeper:   suite.app.AccountKeeper,
-			BankKeeper:      suite.app.BankKeeper,
-			FeegrantKeeper:  suite.app.FeeGrantKeeper,
+			AccountKeeper:   suite.accountKeeper,
+			BankKeeper:      suite.bankKeeper,
+			FeegrantKeeper:  suite.feeGrantKeeper,
 			SignModeHandler: txConfig.SignModeHandler(),
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
@@ -247,17 +245,17 @@ func (suite *AnteTestSuite) TestSigVerification_ExplicitAmino() {
 	msgs := make([]sdk.Msg, len(addrs))
 	// set accounts and create msg for each address
 	for i, addr := range addrs {
-		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
+		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
 		suite.Require().NoError(acc.SetAccountNumber(uint64(i)))
-		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+		suite.accountKeeper.SetAccount(suite.ctx, acc)
 		msgs[i] = testdata.NewTestMsg(addr)
 	}
 
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 
-	spkd := ante.NewSetPubKeyDecorator(suite.app.AccountKeeper)
-	svd := ante.NewSigVerificationDecorator(suite.app.AccountKeeper, suite.clientCtx.TxConfig.SignModeHandler())
+	spkd := ante.NewSetPubKeyDecorator(suite.accountKeeper)
+	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, suite.clientCtx.TxConfig.SignModeHandler())
 	antehandler := sdk.ChainAnteDecorators(spkd, svd)
 
 	type testCase struct {
@@ -323,7 +321,7 @@ func (suite *AnteTestSuite) runSigDecorators(params types.Params, _ bool, privs 
 
 	// Make block-height non-zero to include accNum in SignBytes
 	suite.ctx = suite.ctx.WithBlockHeight(1)
-	suite.app.AccountKeeper.SetParams(suite.ctx, params)
+	suite.accountKeeper.SetParams(suite.ctx, params)
 
 	msgs := make([]sdk.Msg, len(privs))
 	accNums := make([]uint64, len(privs))
@@ -331,9 +329,9 @@ func (suite *AnteTestSuite) runSigDecorators(params types.Params, _ bool, privs 
 	// set accounts and create msg for each address
 	for i, priv := range privs {
 		addr := sdk.AccAddress(priv.PubKey().Address())
-		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
+		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
 		suite.Require().NoError(acc.SetAccountNumber(uint64(i)))
-		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+		suite.accountKeeper.SetAccount(suite.ctx, acc)
 		msgs[i] = testdata.NewTestMsg(addr)
 		accNums[i] = uint64(i)
 		accSeqs[i] = uint64(0)
@@ -348,9 +346,9 @@ func (suite *AnteTestSuite) runSigDecorators(params types.Params, _ bool, privs 
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 
-	spkd := ante.NewSetPubKeyDecorator(suite.app.AccountKeeper)
-	svgc := ante.NewSigGasConsumeDecorator(suite.app.AccountKeeper, ante.DefaultSigVerificationGasConsumer)
-	svd := ante.NewSigVerificationDecorator(suite.app.AccountKeeper, suite.clientCtx.TxConfig.SignModeHandler())
+	spkd := ante.NewSetPubKeyDecorator(suite.accountKeeper)
+	svgc := ante.NewSigGasConsumeDecorator(suite.accountKeeper, ante.DefaultSigVerificationGasConsumer)
+	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, suite.clientCtx.TxConfig.SignModeHandler())
 	antehandler := sdk.ChainAnteDecorators(spkd, svgc, svd)
 
 	// Determine gas consumption of antehandler with default params
@@ -366,15 +364,15 @@ func (suite *AnteTestSuite) TestIncrementSequenceDecorator() {
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	priv, _, addr := testdata.KeyTestPubAddr()
-	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
+	acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
 	suite.Require().NoError(acc.SetAccountNumber(uint64(50)))
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+	suite.accountKeeper.SetAccount(suite.ctx, acc)
 
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	suite.Require().NoError(suite.txBuilder.SetMsgs(msgs...))
 	privs := []cryptotypes.PrivKey{priv}
-	accNums := []uint64{suite.app.AccountKeeper.GetAccount(suite.ctx, addr).GetAccountNumber()}
-	accSeqs := []uint64{suite.app.AccountKeeper.GetAccount(suite.ctx, addr).GetSequence()}
+	accNums := []uint64{suite.accountKeeper.GetAccount(suite.ctx, addr).GetAccountNumber()}
+	accSeqs := []uint64{suite.accountKeeper.GetAccount(suite.ctx, addr).GetSequence()}
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 	suite.txBuilder.SetFeeAmount(feeAmount)
@@ -383,7 +381,7 @@ func (suite *AnteTestSuite) TestIncrementSequenceDecorator() {
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 
-	isd := ante.NewIncrementSequenceDecorator(suite.app.AccountKeeper)
+	isd := ante.NewIncrementSequenceDecorator(suite.accountKeeper)
 	antehandler := sdk.ChainAnteDecorators(isd)
 
 	testCases := []struct {
@@ -401,6 +399,6 @@ func (suite *AnteTestSuite) TestIncrementSequenceDecorator() {
 	for i, tc := range testCases {
 		_, err := antehandler(tc.ctx, tx, tc.simulate)
 		suite.Require().NoError(err, "unexpected error; tc #%d, %v", i, tc)
-		suite.Require().Equal(tc.expectedSeq, suite.app.AccountKeeper.GetAccount(suite.ctx, addr).GetSequence())
+		suite.Require().Equal(tc.expectedSeq, suite.accountKeeper.GetAccount(suite.ctx, addr).GetSequence())
 	}
 }

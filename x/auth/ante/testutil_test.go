@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	"github.com/stretchr/testify/suite"
@@ -14,13 +15,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 )
 
 // TestAccount represents an account used in the tests in x/auth/ante.
@@ -33,26 +41,36 @@ type TestAccount struct {
 type AnteTestSuite struct {
 	suite.Suite
 
-	app         *simapp.SimApp
-	anteHandler sdk.AnteHandler
-	ctx         sdk.Context
-	clientCtx   client.Context
-	txBuilder   client.TxBuilder
-}
-
-// returns context and app with params set on account keeper
-func createTestApp(t *testing.T, isCheckTx bool) (*simapp.SimApp, sdk.Context) {
-	app := simapp.Setup(t, isCheckTx)
-	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
-	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-
-	return app, ctx
+	interfaceRegistry codectypes.InterfaceRegistry
+	anteHandler       sdk.AnteHandler
+	ctx               sdk.Context
+	clientCtx         client.Context
+	txBuilder         client.TxBuilder
+	accountKeeper     keeper.AccountKeeper
+	bankKeeper        bankkeeper.Keeper
+	feeGrantKeeper    feegrantkeeper.Keeper
 }
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
 func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
-	suite.app, suite.ctx = createTestApp(suite.T(), isCheckTx)
-	suite.ctx = suite.ctx.WithBlockHeight(1)
+	var (
+		txConfig    client.TxConfig
+		legacyAmino *codec.LegacyAmino
+	)
+
+	app, err := simtestutil.Setup(
+		testutil.AppConfig,
+		&suite.accountKeeper,
+		&suite.bankKeeper,
+		&suite.feeGrantKeeper,
+		&suite.interfaceRegistry,
+		&txConfig,
+		&legacyAmino,
+	)
+	suite.Require().NoError(err)
+
+	suite.ctx = app.BaseApp.NewContext(isCheckTx, tmproto.Header{}).WithBlockHeight(1)
+	suite.accountKeeper.SetParams(suite.ctx, authtypes.DefaultParams())
 
 	// Set up TxConfig.
 	encodingConfig := simapp.MakeTestEncodingConfig()
@@ -65,9 +83,9 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
-			AccountKeeper:   suite.app.AccountKeeper,
-			BankKeeper:      suite.app.BankKeeper,
-			FeegrantKeeper:  suite.app.FeeGrantKeeper,
+			AccountKeeper:   suite.accountKeeper,
+			BankKeeper:      suite.bankKeeper,
+			FeegrantKeeper:  suite.feeGrantKeeper,
 			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
@@ -84,17 +102,17 @@ func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 
 	for i := 0; i < numAccs; i++ {
 		priv, _, addr := testdata.KeyTestPubAddr()
-		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
+		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
 		err := acc.SetAccountNumber(uint64(i))
 		suite.Require().NoError(err)
-		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+		suite.accountKeeper.SetAccount(suite.ctx, acc)
 		someCoins := sdk.Coins{
 			sdk.NewInt64Coin("atom", 10000000),
 		}
-		err = suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, someCoins)
+		err = suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, someCoins)
 		suite.Require().NoError(err)
 
-		err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addr, someCoins)
+		err = suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addr, someCoins)
 		suite.Require().NoError(err)
 
 		accounts = append(accounts, TestAccount{acc, priv})

@@ -29,7 +29,6 @@ func (a *AppBuilder) Build(
 	logger log.Logger,
 	db dbm.DB,
 	traceStore io.Writer,
-	msgServiceRouter *baseapp.MsgServiceRouter,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
 	for _, option := range a.app.baseAppOptions {
@@ -37,7 +36,7 @@ func (a *AppBuilder) Build(
 	}
 
 	bApp := baseapp.NewBaseApp(a.app.config.AppName, logger, db, nil, baseAppOptions...)
-	bApp.SetMsgServiceRouter(msgServiceRouter)
+	bApp.SetMsgServiceRouter(a.app.msgServiceRouter)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(a.app.interfaceRegistry)

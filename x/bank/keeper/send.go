@@ -74,10 +74,13 @@ func (k BaseSendKeeper) GetParams(ctx sdk.Context) (params types.Params) {
 }
 
 // SetParams sets the total set of bank parameters.
+//
+// nolint:staticcheck
 func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) {
 	if len(params.SendEnabled) > 0 {
 		k.SetAllSendEnabled(ctx, params.SendEnabled)
 	}
+
 	p := types.NewParams(params.DefaultSendEnabled)
 	k.paramSpace.SetParamSet(ctx, &p)
 }

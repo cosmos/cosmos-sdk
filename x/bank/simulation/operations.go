@@ -7,7 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -141,13 +142,12 @@ func sendMsgSend(cdc *codec.ProtoCodec,
 		}
 	}
 
-	txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
-
-	tx, err := helpers.GenSignedMockTx(
+	txGen := simappparams.MakeTestEncodingConfig().TxConfig
+	tx, err := simtestutil.GenSignedMockTx(
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
-		helpers.DefaultGenTxGas,
+		simtestutil.DefaultGenTxGas,
 		chainID,
 		[]uint64{account.GetAccountNumber()},
 		[]uint64{account.GetSequence()},
@@ -355,13 +355,13 @@ func sendMsgMultiSend(cdc *codec.ProtoCodec,
 		}
 	}
 
-	txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
+	txGen := simappparams.MakeTestEncodingConfig().TxConfig
+	tx, err := simtestutil.GenSignedMockTx(
 
-	tx, err := helpers.GenSignedMockTx(
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
-		helpers.DefaultGenTxGas,
+		simtestutil.DefaultGenTxGas,
 		chainID,
 		accountNumbers,
 		sequenceNumbers,

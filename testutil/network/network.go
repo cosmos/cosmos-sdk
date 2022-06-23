@@ -25,6 +25,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -43,6 +44,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -61,9 +63,9 @@ type AppConstructor = func(val Validator) servertypes.Application
 func NewAppConstructor(encodingCfg params.EncodingConfig) AppConstructor {
 	return func(val Validator) servertypes.Application {
 		return simapp.NewSimApp(
-			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
+			val.Ctx.Logger, dbm.NewMemDB(), nil, true, 0,
 			encodingCfg,
-			simapp.EmptyAppOptions{},
+			simtestutil.NewAppOptionsWithFlagHome(val.Ctx.Config.RootDir),
 			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)
@@ -135,35 +137,37 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 
 	var (
 		appBuilder        *runtime.AppBuilder
-		msgServiceRouter  *baseapp.MsgServiceRouter
 		txConfig          client.TxConfig
 		legacyAmino       *codec.LegacyAmino
-		codec             codec.Codec
+		cdc               codec.Codec
 		interfaceRegistry codectypes.InterfaceRegistry
 	)
 
 	if err := depinject.Inject(appConfig,
 		&appBuilder,
-		&msgServiceRouter,
 		&txConfig,
-		&codec,
+		&cdc,
 		&legacyAmino,
 		&interfaceRegistry,
 	); err != nil {
 		return Config{}, err
 	}
 
-	cfg.Codec = codec
+	cfg.Codec = cdc
 	cfg.TxConfig = txConfig
 	cfg.LegacyAmino = legacyAmino
 	cfg.InterfaceRegistry = interfaceRegistry
 	cfg.GenesisState = appBuilder.DefaultGenesis()
 	cfg.AppConstructor = func(val Validator) servertypes.Application {
+		// we build a unique app instance for every validator here
+		var appBuilder *runtime.AppBuilder
+		if err := depinject.Inject(appConfig, &appBuilder); err != nil {
+			panic(err)
+		}
 		app := appBuilder.Build(
 			val.Ctx.Logger,
 			dbm.NewMemDB(),
 			nil,
-			msgServiceRouter,
 			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)

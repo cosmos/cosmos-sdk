@@ -64,7 +64,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			}
 
 			encCfg := simapp.MakeTestEncodingConfig()
-			app = simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, map[int64]bool{}, "", 0, encCfg, simapp.EmptyAppOptions{}, routerOpt)
+			app = simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, 0, encCfg, simtestutil.EmptyAppOptions{}, routerOpt)
 			app.InterfaceRegistry().RegisterImplementations((*sdk.Msg)(nil),
 				&testdata.TestMsg{},
 			)
@@ -124,7 +124,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				require.Equal(t, []byte("ok"), okValue)
 			}
 			// check block gas is always consumed
-			baseGas := uint64(63724) // baseGas is the gas consumed before tx msg
+			baseGas := uint64(70184) // baseGas is the gas consumed before tx msg
 			expGasConsumed := addUint64Saturating(tc.gasToConsume, baseGas)
 			if expGasConsumed > txtypes.MaxGasWanted {
 				// capped by gasLimit

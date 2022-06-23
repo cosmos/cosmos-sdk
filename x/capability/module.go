@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -165,29 +166,6 @@ func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Valid
 	return []abci.ValidatorUpdate{}
 }
 
-func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(
-			provideModuleBasic,
-			provideModule,
-		))
-}
-
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
-}
-
-func provideModule(
-	kvStoreKey *store.KVStoreKey,
-	memStoreKey *store.MemoryStoreKey,
-	cdc codec.Codec,
-	config *modulev1.Module,
-) (*keeper.Keeper, runtime.AppModuleWrapper) {
-	k := keeper.NewKeeper(cdc, kvStoreKey, memStoreKey)
-	m := NewAppModule(cdc, *k, config.SealKeeper)
-	return k, runtime.WrapAppModule(m)
-}
-
 // GenerateGenesisState creates a randomized GenState of the capability module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
@@ -211,4 +189,47 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return nil
+}
+
+//
+// New App Wiring Setup
+//
+
+func init() {
+	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(
+			provideModuleBasic,
+			provideModule,
+		))
+}
+
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+type capabilityInputs struct {
+	depinject.In
+
+	Config *modulev1.Module
+
+	KvStoreKey  *store.KVStoreKey
+	MemStoreKey *store.MemoryStoreKey
+	Cdc         codec.Codec
+}
+
+type capabilityOutputs struct {
+	depinject.Out
+
+	CapabilityKeeper *keeper.Keeper
+	Module           runtime.AppModuleWrapper
+}
+
+func provideModule(in capabilityInputs) capabilityOutputs {
+	k := keeper.NewKeeper(in.Cdc, in.KvStoreKey, in.MemStoreKey)
+	m := NewAppModule(in.Cdc, *k, in.Config.SealKeeper)
+
+	return capabilityOutputs{
+		CapabilityKeeper: k,
+		Module:           runtime.WrapAppModule(m),
+	}
 }

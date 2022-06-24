@@ -18,6 +18,15 @@ import (
 
 type GenerateAccountStrategy func(int) []sdk.AccAddress
 
+// AddTestAddrsFromPubKeys adds the addresses into the SimApp providing only the public keys.
+func AddTestAddrsFromPubKeys(bankKeeper bankkeeper.Keeper, stakingKeeper *stakingkeeper.Keeper, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt math.Int) {
+	initCoins := sdk.NewCoins(sdk.NewCoin(stakingKeeper.BondDenom(ctx), accAmt))
+
+	for _, pk := range pubKeys {
+		initAccountWithCoins(bankKeeper, ctx, sdk.AccAddress(pk.Address()), initCoins)
+	}
+}
+
 // AddTestAddrs constructs and returns accNum amount of accounts with an
 // initial balance of accAmt in random order
 func AddTestAddrs(bankKeeper bankkeeper.Keeper, stakingKeeper *stakingkeeper.Keeper, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {

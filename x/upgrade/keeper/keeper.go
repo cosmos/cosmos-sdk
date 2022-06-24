@@ -243,8 +243,10 @@ func (k Keeper) GetLastCompletedUpgrade(ctx sdk.Context) (string, int64) {
 	iter := sdk.KVStoreReversePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
 	defer iter.Close()
 
-	var latest upgrade
-	var found bool
+	var (
+		latest upgrade
+		found  bool
+	)
 	for ; iter.Valid(); iter.Next() {
 		upgradeHeight := int64(sdk.BigEndianToUint64(iter.Value()))
 		if !found || upgradeHeight >= latest.BlockHeight {

@@ -59,6 +59,8 @@ var (
 
 // MultiStore defines a minimal interface for accessing root state.
 type MultiStore interface {
+	// Returns true iff the store key is present in the schema.
+	HasKVStore(StoreKey) bool
 	// Returns a KVStore which has access only to the namespace of the StoreKey.
 	// Panics if the key is not found in the schema.
 	GetKVStore(StoreKey) KVStore

@@ -45,6 +45,11 @@ func (s *viewStore) GetKVStore(skey types.StoreKey) types.KVStore {
 	return ret
 }
 
+func (vs *viewStore) HasKVStore(skey types.StoreKey) bool {
+	_, has := vs.schema[skey.Name()]
+	return has
+}
+
 // Reads but does not update substore cache
 func (s *viewStore) getSubstore(key string) (*viewSubstore, error) {
 	if cached, has := s.substoreCache[key]; has {

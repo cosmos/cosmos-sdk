@@ -99,6 +99,10 @@ func doTestMultiStoreBasic(t *testing.T, ctor storeConstructor) {
 	store, err := ctor(memdb.NewDB(), opts)
 	require.NoError(t, err)
 
+	require.True(t, store.HasKVStore(skey_1))
+	require.False(t, store.HasKVStore(skey_2))
+	require.Panics(t, func() { store.GetKVStore(skey_2) })
+
 	store_1 := store.GetKVStore(skey_1)
 	require.NotNil(t, store_1)
 	store_1.Set([]byte{0}, []byte{0})

@@ -77,6 +77,11 @@ func (ms multiStore) GetKVStore(key storetypes.StoreKey) sdk.KVStore {
 	return ms.kv[key]
 }
 
+func (ms multiStore) HasKVStore(key storetypes.StoreKey) bool {
+	_, has := ms.kv[key]
+	return has
+}
+
 func (ms multiStore) SetInitialVersion(version uint64) error {
 	panic("not implemented")
 }

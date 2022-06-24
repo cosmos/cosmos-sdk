@@ -97,6 +97,10 @@ func (s *store1as2) GetVersion(ver int64) (v2.MultiStore, error) {
 	return viewStore1as2{cacheStore1as2{ret}}, err
 }
 
+func (s *store1as2) HasKVStore(skey v2.StoreKey) bool {
+	return s.Store.GetCommitKVStore(skey) != nil
+}
+
 // CommitMultiStore
 
 func (s *store1as2) Close() error {
@@ -143,6 +147,10 @@ func (s cacheStore1as2) CacheWrap() v2.CacheMultiStore {
 func (s cacheStore1as2) SetTracer(w io.Writer) { s.CacheMultiStore.SetTracer(w) }
 func (s cacheStore1as2) SetTracingContext(tc v2.TraceContext) {
 	s.CacheMultiStore.SetTracingContext(tc)
+}
+
+func (s cacheStore1as2) HasKVStore(skey v2.StoreKey) bool {
+	return s.CacheMultiStore.GetKVStore(skey) != nil
 }
 
 func (s viewStore1as2) GetKVStore(skey v2.StoreKey) v2.KVStore {

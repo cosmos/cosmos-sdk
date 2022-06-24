@@ -33,6 +33,10 @@ func (cs *cacheStore) GetKVStore(skey types.StoreKey) types.KVStore {
 	return cs.wrapTraceListen(sub, skey)
 }
 
+func (cs *cacheStore) HasKVStore(skey types.StoreKey) bool {
+	return cs.source.HasKVStore(skey)
+}
+
 // Write implements CacheMultiStore.
 func (cs *cacheStore) Write() {
 	for _, sub := range cs.substores {

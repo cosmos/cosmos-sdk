@@ -459,6 +459,12 @@ func (s *Store) GetKVStore(skey types.StoreKey) types.KVStore {
 	return s.wrapTraceListen(ret, skey)
 }
 
+// HasKVStore implements MultiStore.
+func (rs *Store) HasKVStore(skey types.StoreKey) bool {
+	_, has := rs.schema[skey]
+	return has
+}
+
 // Gets a persistent substore. This reads, but does not update the substore cache.
 // Use it in cases where we need to access a store internally (e.g. read/write Merkle keys, queries)
 func (s *Store) getSubstore(key string) (*substore, error) {

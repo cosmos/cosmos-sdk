@@ -133,3 +133,11 @@ modules:
   - name: distribution
     config:
       "@type": cosmos.distribution.module.v1.Module
+
+  - name: vesting
+    config:
+      "@type": cosmos.vesting.module.v1.Module
+
+  - name: upgrade
+    config:
+      "@type": cosmos.upgrade.module.v1.Module

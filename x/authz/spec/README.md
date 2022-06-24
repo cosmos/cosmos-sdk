@@ -28,3 +28,4 @@ granting arbitrary privileges from one account (the granter) to another account 
     * [CLI](05_client.md#cli)
     * [gRPC](05_client.md#grpc)
     * [REST](05_client.md#rest)
+6. **[App Wiring](06_app_wiring.md)**

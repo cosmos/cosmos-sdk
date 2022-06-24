@@ -43,3 +43,4 @@ This module is used in the Cosmos Hub.
       * [REST](07_client.md#rest)
    * **[Vesting](07_client.md#vesting)**
       * [CLI](07_client.md#vesting#cli)
+8. **[App Wiring](08_app_wiring.md)**

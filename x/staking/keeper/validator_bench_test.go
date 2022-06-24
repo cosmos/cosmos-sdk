@@ -3,7 +3,7 @@ package keeper_test
 import "testing"
 
 func BenchmarkGetValidator(b *testing.B) {
-	// 900 is the max number we are allowed to use in order to avoid simapp.CreateTestPubKeys
+	// 900 is the max number we are allowed to use in order to avoid simtestutil.CreateTestPubKeys
 	// panic: encoding/hex: odd length hex string
 	powersNumber := 900
 

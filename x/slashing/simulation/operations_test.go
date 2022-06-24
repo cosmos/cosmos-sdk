@@ -33,6 +33,7 @@ import (
 type SimTestSuite struct {
 	suite.Suite
 
+	r   *rand.Rand
 	ctx sdk.Context
 
 	app               *runtime.App
@@ -67,23 +68,22 @@ func (suite *SimTestSuite) SetupTest() {
 	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 
 	s := rand.NewSource(1)
-	r := rand.New(s)
-	accounts := simtypes.RandomAccounts(r, 3)
+	suite.r = rand.New(s)
+	accounts := simtypes.RandomAccounts(suite.r, 3)
+	suite.accs = accounts
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	initAmt := suite.stakingKeeper.TokensFromConsensusPower(ctx, 200)
+	initAmt := suite.stakingKeeper.TokensFromConsensusPower(suite.ctx, 200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	// add coins to the accounts
-	for _, account := range accounts {
-		acc := suite.accountKeeper.NewAccountWithAddress(ctx, account.Address)
-		suite.accountKeeper.SetAccount(ctx, acc)
-		suite.Require().NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, account.Address, initCoins))
+	for _, account := range suite.accs {
+		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
+		suite.accountKeeper.SetAccount(suite.ctx, acc)
+		suite.Require().NoError(banktestutil.FundAccount(suite.bankKeeper, suite.ctx, account.Address, initCoins))
 	}
 
-	suite.mintKeeper.SetParams(ctx, minttypes.DefaultParams())
-	suite.mintKeeper.SetMinter(ctx, minttypes.DefaultInitialMinter())
-	suite.accs = accounts
+	suite.mintKeeper.SetParams(suite.ctx, minttypes.DefaultParams())
+	suite.mintKeeper.SetMinter(suite.ctx, minttypes.DefaultInitialMinter())
 }
 
 func TestSimTestSuite(t *testing.T) {
@@ -92,8 +92,6 @@ func TestSimTestSuite(t *testing.T) {
 
 // TestWeightedOperations tests the weights of the operations.
 func (suite *SimTestSuite) TestWeightedOperations() {
-	s := rand.NewSource(1)
-	r := rand.New(s)
 	app, ctx, accs := suite.app, suite.ctx, suite.accs
 	ctx.WithChainID("test-chain")
 
@@ -108,7 +106,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 
 	weightesOps := simulation.WeightedOperations(appParams, cdc, suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)
 	for i, w := range weightesOps {
-		operationMsg, _, err := w.Op()(r, app.BaseApp, ctx, accs, ctx.ChainID())
+		operationMsg, _, err := w.Op()(suite.r, app.BaseApp, ctx, accs, ctx.ChainID())
 		suite.Require().NoError(err)
 
 		// the following checks are very much dependent from the ordering of the output given
@@ -123,10 +121,8 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 // TestSimulateMsgUnjail tests the normal scenario of a valid message of type types.MsgUnjail.
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgUnjail() {
-	// setup 3 accounts
-	s := rand.NewSource(5)
-	r := rand.New(s)
 	app, ctx, accounts := suite.app, suite.ctx, suite.accs
+
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
@@ -161,7 +157,7 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 
 	// execute operation
 	op := simulation.SimulateMsgUnjail(codec.NewProtoCodec(suite.interfaceRegistry), suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)
-	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
+	operationMsg, futureOperations, err := op(suite.r, app.BaseApp, ctx, accounts, "")
 	suite.Require().NoError(err)
 
 	var msg types.MsgUnjail

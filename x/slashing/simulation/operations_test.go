@@ -126,9 +126,6 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
-	// remove genesis validator account
-	accounts = accounts[1:]
-
 	// setup accounts[0] as validator0
 	validator0 := suite.getTestingValidator0(ctx, accounts)
 
@@ -165,7 +162,7 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(types.TypeMsgUnjail, msg.Type())
-	suite.Require().Equal("cosmosvaloper17s94pzwhsn4ah25tec27w70n65h5t2scgxzkv2", msg.ValidatorAddr)
+	suite.Require().Equal("cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddr)
 	suite.Require().Len(futureOperations, 0)
 }
 

@@ -61,3 +61,20 @@ pull_request_rules:
       backport:
         branches:
           - v0.45.0x-osmo-v8
+
+  - name: backport patches to v0.45.0x-osmo-v9 branch
+    conditions:
+      - base=osmosis-main
+      - label=A:backport/v0.45.0x-osmo-v9
+    actions:
+      backport:
+        branches:
+          - v0.45.0x-osmo-v9
+  - name: backport patches to v0.45.0x-osmo-v11 branch
+    conditions:
+      - base=osmosis-main
+      - label=A:backport/v0.45.0x-osmo-v11
+    actions:
+      backport:
+        branches:
+          - v0.45.0x-osmo-v11

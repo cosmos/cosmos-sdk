@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -87,8 +86,12 @@ func (suite *SimTestSuite) SetupTest() {
 	suite.accs = accounts
 }
 
+func TestSimTestSuite(t *testing.T) {
+	suite.Run(t, new(SimTestSuite))
+}
+
 // TestWeightedOperations tests the weights of the operations.
-func (suite *SimTestSuite) TestWeightedOperations(t *testing.T) {
+func (suite *SimTestSuite) TestWeightedOperations() {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	app, ctx, accs := suite.app, suite.ctx, suite.accs
@@ -106,20 +109,20 @@ func (suite *SimTestSuite) TestWeightedOperations(t *testing.T) {
 	weightesOps := simulation.WeightedOperations(appParams, cdc, suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)
 	for i, w := range weightesOps {
 		operationMsg, _, err := w.Op()(r, app.BaseApp, ctx, accs, ctx.ChainID())
-		require.NoError(t, err)
+		suite.Require().NoError(err)
 
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
 		// will fail
-		suite.Require().Equal(t, expected[i].weight, w.Weight(), "weight should be the same")
-		suite.Require().Equal(t, expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
-		suite.Require().Equal(t, expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")
+		suite.Require().Equal(expected[i].weight, w.Weight(), "weight should be the same")
+		suite.Require().Equal(expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
+		suite.Require().Equal(expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")
 	}
 }
 
 // TestSimulateMsgUnjail tests the normal scenario of a valid message of type types.MsgUnjail.
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
-func (suite *SimTestSuite) TestSimulateMsgUnjail(t *testing.T) {
+func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	// setup 3 accounts
 	s := rand.NewSource(5)
 	r := rand.New(s)
@@ -136,7 +139,7 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail(t *testing.T) {
 	// setup validator0 by consensus address
 	suite.stakingKeeper.SetValidatorByConsAddr(ctx, validator0)
 	val0ConsAddress, err := validator0.GetConsAddr()
-	require.NoError(t, err)
+	suite.Require().NoError(err)
 	info := types.NewValidatorSigningInfo(val0ConsAddress, int64(4), int64(3),
 		time.Unix(2, 0), false, int64(10))
 	suite.slashingKeeper.SetValidatorSigningInfo(ctx, val0ConsAddress, info)
@@ -148,7 +151,7 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail(t *testing.T) {
 	delTokens := suite.stakingKeeper.TokensFromConsensusPower(ctx, 2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	val0AccAddress, err := sdk.ValAddressFromBech32(validator0.OperatorAddress)
-	require.NoError(t, err)
+	suite.Require().NoError(err)
 	selfDelegation := stakingtypes.NewDelegation(val0AccAddress.Bytes(), validator0.GetOperator(), issuedShares)
 	suite.stakingKeeper.SetDelegation(ctx, selfDelegation)
 	suite.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), val0AccAddress.Bytes(), distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
@@ -159,15 +162,15 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail(t *testing.T) {
 	// execute operation
 	op := simulation.SimulateMsgUnjail(codec.NewProtoCodec(suite.interfaceRegistry), suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
-	require.NoError(t, err)
+	suite.Require().NoError(err)
 
 	var msg types.MsgUnjail
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
-	require.True(t, operationMsg.OK)
-	require.Equal(t, types.TypeMsgUnjail, msg.Type())
-	require.Equal(t, "cosmosvaloper17s94pzwhsn4ah25tec27w70n65h5t2scgxzkv2", msg.ValidatorAddr)
-	require.Len(t, futureOperations, 0)
+	suite.Require().True(operationMsg.OK)
+	suite.Require().Equal(types.TypeMsgUnjail, msg.Type())
+	suite.Require().Equal("cosmosvaloper17s94pzwhsn4ah25tec27w70n65h5t2scgxzkv2", msg.ValidatorAddr)
+	suite.Require().Len(futureOperations, 0)
 }
 
 func (suite *SimTestSuite) getTestingValidator0(ctx sdk.Context, accounts []simtypes.Account) stakingtypes.Validator {

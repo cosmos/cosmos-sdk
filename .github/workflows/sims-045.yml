@@ -9,6 +9,9 @@ on:
 
 jobs:
   cleanup-runs:
+    permissions:
+      actions: write  # for rokroskar/workflow-run-cleanup-action to obtain workflow name & cancel it
+      contents: read  # for rokroskar/workflow-run-cleanup-action to obtain branch
     runs-on: buildjet-4vcpu-ubuntu-2004
     steps:
       - uses: rokroskar/workflow-run-cleanup-action@master
@@ -28,6 +31,8 @@ jobs:
       - run: make build
 
   install-runsim:
+    permissions:
+      contents: none
     runs-on: buildjet-4vcpu-ubuntu-2004
     needs: build
     steps:
@@ -132,6 +137,8 @@ jobs:
           SLACK_FOOTER: ""
 
   sims-notify-failure:
+    permissions:
+      contents: none
     needs:
       [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
     runs-on: ubuntu-latest

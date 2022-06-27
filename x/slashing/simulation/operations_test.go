@@ -6,43 +6,104 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
+	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// TestWeightedOperations tests the weights of the operations.
-func TestWeightedOperations(t *testing.T) {
+type SimTestSuite struct {
+	suite.Suite
+
+	ctx sdk.Context
+
+	app               *runtime.App
+	legacyAmino       *codec.LegacyAmino
+	codec             codec.Codec
+	interfaceRegistry codectypes.InterfaceRegistry
+	accountKeeper     authkeeper.AccountKeeper
+	bankKeeper        bankkeeper.Keeper
+	stakingKeeper     *stakingkeeper.Keeper
+	slashingKeeper    slashingkeeper.Keeper
+	distrKeeper       distributionkeeper.Keeper
+	mintKeeper        mintkeeper.Keeper
+	accs              []simtypes.Account
+}
+
+func (suite *SimTestSuite) SetupTest() {
+	app, err := simtestutil.Setup(
+		testutil.AppConfig,
+		&suite.legacyAmino,
+		&suite.codec,
+		&suite.interfaceRegistry,
+		&suite.accountKeeper,
+		&suite.bankKeeper,
+		&suite.stakingKeeper,
+		&suite.mintKeeper,
+		&suite.slashingKeeper,
+		&suite.distrKeeper,
+	)
+
+	suite.Require().NoError(err)
+	suite.app = app
+	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+
 	s := rand.NewSource(1)
 	r := rand.New(s)
-	app, ctx, accs := createTestApp(t, false, r, 3)
+	accounts := simtypes.RandomAccounts(r, 3)
+
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	initAmt := suite.stakingKeeper.TokensFromConsensusPower(ctx, 200)
+	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
+
+	// add coins to the accounts
+	for _, account := range accounts {
+		acc := suite.accountKeeper.NewAccountWithAddress(ctx, account.Address)
+		suite.accountKeeper.SetAccount(ctx, acc)
+		suite.Require().NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, account.Address, initCoins))
+	}
+
+	suite.mintKeeper.SetParams(ctx, minttypes.DefaultParams())
+	suite.mintKeeper.SetMinter(ctx, minttypes.DefaultInitialMinter())
+	suite.accs = accounts
+}
+
+// TestWeightedOperations tests the weights of the operations.
+func (suite *SimTestSuite) TestWeightedOperations(t *testing.T) {
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	app, ctx, accs := suite.app, suite.ctx, suite.accs
 	ctx.WithChainID("test-chain")
 
-	cdc := app.AppCodec()
+	cdc := suite.codec
 	appParams := make(simtypes.AppParams)
 
 	expected := []struct {
 		weight     int
 		opMsgRoute string
 		opMsgName  string
-	}{{simappparams.DefaultWeightMsgUnjail, types.ModuleName, types.TypeMsgUnjail}}
+	}{{simtestutil.DefaultWeightMsgUnjail, types.ModuleName, types.TypeMsgUnjail}}
 
-	weightesOps := simulation.WeightedOperations(appParams, cdc, app.AccountKeeper, app.BankKeeper, app.SlashingKeeper, app.StakingKeeper)
+	weightesOps := simulation.WeightedOperations(appParams, cdc, suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)
 	for i, w := range weightesOps {
 		operationMsg, _, err := w.Op()(r, app.BaseApp, ctx, accs, ctx.ChainID())
 		require.NoError(t, err)
@@ -50,19 +111,19 @@ func TestWeightedOperations(t *testing.T) {
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
 		// will fail
-		require.Equal(t, expected[i].weight, w.Weight(), "weight should be the same")
-		require.Equal(t, expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
-		require.Equal(t, expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")
+		suite.Require().Equal(t, expected[i].weight, w.Weight(), "weight should be the same")
+		suite.Require().Equal(t, expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
+		suite.Require().Equal(t, expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")
 	}
 }
 
 // TestSimulateMsgUnjail tests the normal scenario of a valid message of type types.MsgUnjail.
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
-func TestSimulateMsgUnjail(t *testing.T) {
+func (suite *SimTestSuite) TestSimulateMsgUnjail(t *testing.T) {
 	// setup 3 accounts
 	s := rand.NewSource(5)
 	r := rand.New(s)
-	app, ctx, accounts := createTestApp(t, false, r, 3)
+	app, ctx, accounts := suite.app, suite.ctx, suite.accs
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
@@ -70,33 +131,33 @@ func TestSimulateMsgUnjail(t *testing.T) {
 	accounts = accounts[1:]
 
 	// setup accounts[0] as validator0
-	validator0 := getTestingValidator0(t, app, ctx, accounts)
+	validator0 := suite.getTestingValidator0(ctx, accounts)
 
 	// setup validator0 by consensus address
-	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator0)
+	suite.stakingKeeper.SetValidatorByConsAddr(ctx, validator0)
 	val0ConsAddress, err := validator0.GetConsAddr()
 	require.NoError(t, err)
 	info := types.NewValidatorSigningInfo(val0ConsAddress, int64(4), int64(3),
 		time.Unix(2, 0), false, int64(10))
-	app.SlashingKeeper.SetValidatorSigningInfo(ctx, val0ConsAddress, info)
+	suite.slashingKeeper.SetValidatorSigningInfo(ctx, val0ConsAddress, info)
 
 	// put validator0 in jail
-	app.StakingKeeper.Jail(ctx, val0ConsAddress)
+	suite.stakingKeeper.Jail(ctx, val0ConsAddress)
 
 	// setup self delegation
-	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 2)
+	delTokens := suite.stakingKeeper.TokensFromConsensusPower(ctx, 2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	val0AccAddress, err := sdk.ValAddressFromBech32(validator0.OperatorAddress)
 	require.NoError(t, err)
 	selfDelegation := stakingtypes.NewDelegation(val0AccAddress.Bytes(), validator0.GetOperator(), issuedShares)
-	app.StakingKeeper.SetDelegation(ctx, selfDelegation)
-	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), val0AccAddress.Bytes(), distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
+	suite.stakingKeeper.SetDelegation(ctx, selfDelegation)
+	suite.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), val0AccAddress.Bytes(), distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
 
 	// begin a new block
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
 
 	// execute operation
-	op := simulation.SimulateMsgUnjail(app.AccountKeeper, app.BankKeeper, app.SlashingKeeper, app.StakingKeeper)
+	op := simulation.SimulateMsgUnjail(codec.NewProtoCodec(suite.interfaceRegistry), suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 
@@ -109,65 +170,25 @@ func TestSimulateMsgUnjail(t *testing.T) {
 	require.Len(t, futureOperations, 0)
 }
 
-// returns context and an app with updated mint keeper
-func createTestApp(t *testing.T, isCheckTx bool, r *rand.Rand, n int) (*simapp.SimApp, sdk.Context, []simtypes.Account) {
-	accounts := simtypes.RandomAccounts(r, n)
-	// create validator set with single validator
-	account := accounts[0]
-	tmPk, err := cryptocodec.ToTmPubKeyInterface(account.PubKey)
-	require.NoError(t, err)
-	validator := tmtypes.NewValidator(tmPk, 1)
-
-	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
-
-	// generate genesis account
-	senderPrivKey := secp256k1.GenPrivKey()
-	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
-	balance := banktypes.Balance{
-		Address: acc.GetAddress().String(),
-		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
-	}
-
-	app := simapp.SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{acc}, balance)
-
-	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
-	initAmt := app.StakingKeeper.TokensFromConsensusPower(ctx, 200)
-	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
-
-	// remove genesis validator account
-	accs := accounts[1:]
-
-	// add coins to the accounts
-	for _, account := range accs {
-		acc := app.AccountKeeper.NewAccountWithAddress(ctx, account.Address)
-		app.AccountKeeper.SetAccount(ctx, acc)
-		require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, account.Address, initCoins))
-	}
-
-	app.MintKeeper.SetParams(ctx, minttypes.DefaultParams())
-	app.MintKeeper.SetMinter(ctx, minttypes.DefaultInitialMinter())
-
-	return app, ctx, accounts
-}
-
-func getTestingValidator0(t *testing.T, app *simapp.SimApp, ctx sdk.Context, accounts []simtypes.Account) stakingtypes.Validator {
+func (suite *SimTestSuite) getTestingValidator0(ctx sdk.Context, accounts []simtypes.Account) stakingtypes.Validator {
 	commission0 := stakingtypes.NewCommission(sdk.ZeroDec(), sdk.OneDec(), sdk.OneDec())
-	return getTestingValidator(t, app, ctx, accounts, commission0, 0)
+	return suite.getTestingValidator(commission0, 0)
 }
 
-func getTestingValidator(t *testing.T, app *simapp.SimApp, ctx sdk.Context, accounts []simtypes.Account, commission stakingtypes.Commission, n int) stakingtypes.Validator {
+func (suite *SimTestSuite) getTestingValidator(commission stakingtypes.Commission, n int) stakingtypes.Validator {
+	ctx, accounts := suite.ctx, suite.accs
 	account := accounts[n]
 	valPubKey := account.ConsKey.PubKey()
 	valAddr := sdk.ValAddress(account.PubKey.Address().Bytes())
 	validator, err := stakingtypes.NewValidator(valAddr, valPubKey, stakingtypes.Description{})
-	require.NoError(t, err)
+	suite.Require().NoError(err)
 	validator, err = validator.SetInitialCommission(commission)
-	require.NoError(t, err)
+	suite.Require().NoError(err)
 
 	validator.DelegatorShares = sdk.NewDec(100)
 	validator.Tokens = sdk.NewInt(1000000)
 
-	app.StakingKeeper.SetValidator(ctx, validator)
+	suite.stakingKeeper.SetValidator(ctx, validator)
 
 	return validator
 }

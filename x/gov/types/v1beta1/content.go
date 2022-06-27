@@ -18,3 +18,9 @@ type Content interface {
 // Handler defines a function that handles a proposal after it has passed the
 // governance process.
 type Handler func(ctx sdk.Context, content Content) error
+
+// RouteHandlerWrapper is a wrapper for modules to inject RouteHandlers using depinject.
+type RouteHandlerWrapper struct{ Handler }
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (RouteHandlerWrapper) IsOnePerModuleType() {}

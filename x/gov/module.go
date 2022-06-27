@@ -4,11 +4,13 @@ package gov
 
 import (
 	"context"
+	"cosmossdk.io/core/appmodule"
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"math/rand"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -74,7 +76,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the gov module.
-func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := v1.RegisterQueryHandlerClient(context.Background(), mux, v1.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
@@ -126,6 +128,34 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,
 	}
+}
+
+func init() {
+	appmodule.Register(
+		//&modulev1.Module{}
+		appmodule.Provide(provideModuleBasic, provideModule),
+		appmodule.Invoke(invokeAddRoutes))
+}
+
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+func provideModule(cdc codec.Codec, ak types.AccountKeeper, bk types.BankKeeper) (runtime.AppModuleWrapper, v1beta1.RouteHandlerWrapper) {
+	// TODO
+	keeper := nil
+	return runtime.WrapAppModule(NewAppModule(cdc, keeper, ak, bk)), v1beta1.RouteHandlerWrapper{Handler: v1beta1.ProposalHandler}
+}
+
+func invokeAddRoutes( // keeper GovKeeper,
+	routes map[string]v1beta1.RouteHandlerWrapper) {
+	router := v1beta1.NewRouter()
+	for s, wrapper := range routes {
+		router.AddRoute(s, wrapper.Handler)
+	}
+	// TODO
+	// set legacyHandler on govKeeper after construction.  requires refactor.  legacyRouter must not be sealed after construction
+	// but should be sealed after this operation
 }
 
 // Name returns the gov module's name.

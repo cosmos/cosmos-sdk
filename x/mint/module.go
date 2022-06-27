@@ -27,10 +27,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	"github.com/cosmos/cosmos-sdk/x/mint/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // ConsensusVersion defines the current x/mint module consensus version.
-const ConsensusVersion = 1
+const ConsensusVersion = 2
 
 var (
 	_ module.AppModule           = AppModule{}
@@ -51,10 +52,14 @@ func (AppModuleBasic) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the mint module's types on the given LegacyAmino codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
+}
 
 // RegisterInterfaces registers the module's interface types
-func (b AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
+func (b AppModuleBasic) RegisterInterfaces(r cdctypes.InterfaceRegistry) {
+	types.RegisterInterfaces(r)
+}
 
 // DefaultGenesis returns default genesis state as raw bytes for the mint
 // module.
@@ -94,6 +99,9 @@ type AppModule struct {
 	keeper     keeper.Keeper
 	authKeeper types.AccountKeeper
 
+	// legacySubspace is used solely for migration of x/params managed parameters
+	legacySubspace paramstypes.Subspace
+
 	// inflationCalculator is used to calculate the inflation rate during BeginBlock.
 	// If inflationCalculator is nil, the default inflation calculation logic is used.
 	inflationCalculator types.InflationCalculationFn
@@ -101,15 +109,23 @@ type AppModule struct {
 
 // NewAppModule creates a new AppModule object. If the InflationCalculationFn
 // argument is nil, then the SDK's default inflation function will be used.
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper, ic types.InflationCalculationFn) AppModule {
+func NewAppModule(
+	cdc codec.Codec,
+	keeper keeper.Keeper,
+	ak types.AccountKeeper,
+	ic types.InflationCalculationFn,
+	ss paramstypes.Subspace,
+) AppModule {
 	if ic == nil {
 		ic = types.DefaultInflationCalculationFn
 	}
+
 	return AppModule{
 		AppModuleBasic:      AppModuleBasic{cdc: cdc},
 		keeper:              keeper,
 		authKeeper:          ak,
 		inflationCalculator: ic,
+		legacySubspace:      ss,
 	}
 }
 
@@ -140,12 +156,11 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
-	// TODO: ...
-	// m := keeper.NewMigrator(am.keeper)
-	// err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
-	// if err != nil {
-	// 	panic(err)
-	// }
+	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
+	err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
+	if err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
+	}
 }
 
 // InitGenesis performs genesis initialization for the mint module. It returns
@@ -206,9 +221,9 @@ func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weighte
 	return nil
 }
 
-//
+// ============================================================================
 // New App Wiring Setup
-//
+// ============================================================================
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
@@ -225,6 +240,9 @@ type mintInputs struct {
 
 	Key *store.KVStoreKey
 	Cdc codec.Codec
+
+	// LegacySubspace is used solely for migration of x/params managed parameters
+	LegacySubspace paramstypes.Subspace
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
@@ -248,7 +266,7 @@ func provideModule(in mintInputs) mintOutputs {
 		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, nil)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, nil, in.LegacySubspace)
 
 	return mintOutputs{MintKeeper: k, Module: runtime.WrapAppModule(m)}
 }

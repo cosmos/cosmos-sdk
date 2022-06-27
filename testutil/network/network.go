@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"net/http"
 	"net/url"
 	"os"
@@ -62,10 +63,14 @@ type AppConstructor = func(val Validator) servertypes.Application
 // NewAppConstructor returns a new simapp AppConstructor
 func NewAppConstructor(encodingCfg params.EncodingConfig) AppConstructor {
 	return func(val Validator) servertypes.Application {
+		appOptions := make(simtestutil.AppOptionsMap, 0)
+		appOptions[flags.FlagHome] = val.Ctx.Config.RootDir
+		appOptions[server.FlagInvCheckPeriod] = 0
+
 		return simapp.NewSimApp(
-			val.Ctx.Logger, dbm.NewMemDB(), nil, true, 0,
+			val.Ctx.Logger, dbm.NewMemDB(), nil, true,
 			encodingCfg,
-			simtestutil.NewAppOptionsWithFlagHome(val.Ctx.Config.RootDir),
+			appOptions,
 			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)

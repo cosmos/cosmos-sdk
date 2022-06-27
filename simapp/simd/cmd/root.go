@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"github.com/spf13/viper"
 	"io"
 	"os"
 	"path/filepath"
@@ -278,7 +279,6 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 
 	return simapp.NewSimApp(
 		logger, db, traceStore, true,
-		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		a.encCfg,
 		appOpts,
 		baseapp.SetPruning(pruningOpts),
@@ -307,14 +307,23 @@ func (a appCreator) appExport(
 		return servertypes.ExportedApp{}, errors.New("application home not set")
 	}
 
+	viperAppOpts, ok := appOpts.(*viper.Viper)
+	if !ok {
+		return servertypes.ExportedApp{}, errors.New("appOpts is not viper.Viper")
+	}
+
+	// overwrite the FlagInvCheckPeriod
+	viperAppOpts.Set(server.FlagInvCheckPeriod, 1)
+	appOpts = viperAppOpts
+
 	if height != -1 {
-		simApp = simapp.NewSimApp(logger, db, traceStore, false, uint(1), a.encCfg, appOpts)
+		simApp = simapp.NewSimApp(logger, db, traceStore, false, a.encCfg, appOpts)
 
 		if err := simApp.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		simApp = simapp.NewSimApp(logger, db, traceStore, true, uint(1), a.encCfg, appOpts)
+		simApp = simapp.NewSimApp(logger, db, traceStore, true, a.encCfg, appOpts)
 	}
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)

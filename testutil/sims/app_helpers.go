@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/server"
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -242,12 +241,5 @@ func (m AppOptionsMap) Get(key string) interface{} {
 func NewAppOptionsWithFlagHome(homePath string) servertypes.AppOptions {
 	return AppOptionsMap{
 		flags.FlagHome: homePath,
-	}
-}
-
-func NewAppOptionsWithFlagHomeAndInvalidCheckPeriod(homePath string, invalidCheckPeriod uint) servertypes.AppOptions {
-	return AppOptionsMap{
-		flags.FlagHome:            homePath,
-		server.FlagInvCheckPeriod: invalidCheckPeriod,
 	}
 }

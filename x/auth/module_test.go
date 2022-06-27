@@ -1,6 +1,8 @@
 package auth_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/server"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -18,7 +20,11 @@ import (
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	db := dbm.NewMemDB()
 	encCdc := simapp.MakeTestEncodingConfig()
-	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, 5, encCdc, simtestutil.NewAppOptionsWithFlagHome(simapp.DefaultNodeHome))
+	appOptions := make(simtestutil.AppOptionsMap, 0)
+	appOptions[flags.FlagHome] = simapp.DefaultNodeHome
+	appOptions[server.FlagInvCheckPeriod] = 5
+
+	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, encCdc, appOptions)
 
 	genesisState := simapp.GenesisStateWithSingleValidator(t, app)
 	stateBytes, err := tmjson.Marshal(genesisState)

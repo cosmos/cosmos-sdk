@@ -2,6 +2,8 @@ package gov_test
 
 import (
 	"encoding/json"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/server"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -74,7 +76,11 @@ func TestImportExportQueues(t *testing.T) {
 	}
 
 	db := dbm.NewMemDB()
-	app2 := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, 0, simapp.MakeTestEncodingConfig(), simtestutil.NewAppOptionsWithFlagHome(simapp.DefaultNodeHome))
+	appOptions := make(simtestutil.AppOptionsMap, 0)
+	appOptions[flags.FlagHome] = simapp.DefaultNodeHome
+	appOptions[server.FlagInvCheckPeriod] = 0
+
+	app2 := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, simapp.MakeTestEncodingConfig(), appOptions)
 
 	app2.InitChain(
 		abci.RequestInitChain{

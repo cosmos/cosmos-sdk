@@ -20,7 +20,7 @@ message Config {
   // field's configuration is global (not module specific) and should be of the form:
   //
   // golang_bindings:
-  //   - interfaceType: implementationType
+  //   interfaceType: implementationType
   map<string, string> golang_bindings = 2;
 }
 
@@ -47,6 +47,6 @@ message ModuleConfig {
   // field's configuration is module specific and should be of the form:
   //
   // golang_bindings:
-  //   - interfaceType: implementationType
+  //   interfaceType: implementationType
   map<string, string> golang_bindings = 3;
 }

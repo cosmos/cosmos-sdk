@@ -100,4 +100,21 @@ modules:
    "@type": testpb.TestNoGoImportModule
 `))
 	expectContainerErrorContains(t, opt, "module should have ModuleDescriptor.go_import specified")
+
+}
+
+func TestGolangBindings(t *testing.T) {
+	opt := appconfig.LoadYAML([]byte(`
+golang_bindings:
+  interfaceType/package.name: implementationType/package.name
+  interfaceType/package.nameTwo: implementationType/package.nameTwo
+modules:
+  - name: a
+    config:
+      "@type": testpb.TestModuleA
+    golang_bindings:
+      interfaceType/package.name: implementationType/package.name
+      interfaceType/package.nameTwo: implementationType/package.nameTwo
+`))
+	assert.NilError(t, depinject.Inject(opt))
 }

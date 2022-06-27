@@ -1,3 +1,5 @@
+golang_bindings:
+  github.com/cosmos/cosmos-sdk/x/bank/types/types.AccountKeeper: github.com/cosmos/cosmos-sdk/x/auth/keeper/keeper.AccountKeeper
 modules:
   - name: runtime
     config:

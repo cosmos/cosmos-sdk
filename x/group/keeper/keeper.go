@@ -306,7 +306,7 @@ func (k Keeper) proposalsByGroupPolicy(ctx sdk.Context, groupPolicyAddr sdk.AccA
 			break
 		}
 		if err != nil {
-			return nil, err
+			return proposals, err
 		}
 
 		proposals = append(proposals, proposalInfo)
@@ -347,7 +347,7 @@ func (k Keeper) votesByProposal(ctx sdk.Context, proposalID uint64) ([]group.Vot
 			break
 		}
 		if err != nil {
-			return nil, err
+			return votes, err
 		}
 		votes = append(votes, vote)
 	}

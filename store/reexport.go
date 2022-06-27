@@ -1,30 +1,31 @@
 package store
 
 import (
-	"github.com/cosmos/cosmos-sdk/store/types"
+	v1 "github.com/cosmos/cosmos-sdk/store/types"
+	v2 "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 )
 
 // Import cosmos-sdk/types/store.go for convenience.
 type (
-	Store            = types.Store
-	Committer        = types.Committer
-	CommitStore      = types.CommitStore
-	MultiStore       = types.MultiStore
-	CacheMultiStore  = types.CacheMultiStore
-	CommitMultiStore = types.CommitMultiStore
-	KVStore          = types.KVStore
-	KVPair           = types.KVPair
-	Iterator         = types.Iterator
-	CacheKVStore     = types.CacheKVStore
-	CommitKVStore    = types.CommitKVStore
-	CacheWrapper     = types.CacheWrapper
-	CacheWrap        = types.CacheWrap
-	CommitID         = types.CommitID
-	Key              = types.StoreKey
-	Type             = types.StoreType
-	Queryable        = types.Queryable
-	TraceContext     = types.TraceContext
-	Gas              = types.Gas
-	GasMeter         = types.GasMeter
-	GasConfig        = types.GasConfig
+	Store            = v1.Store
+	Committer        = v1.Committer
+	CommitStore      = v1.CommitStore
+	MultiStore       = v2.MultiStore
+	CacheMultiStore  = v2.CacheMultiStore
+	CommitMultiStore = v2.CommitMultiStore
+	KVStore          = v1.KVStore
+	KVPair           = v1.KVPair
+	Iterator         = v1.Iterator
+	CacheKVStore     = v1.CacheKVStore
+	CommitKVStore    = v1.CommitKVStore
+	CacheWrapper     = v1.CacheWrapper
+	CacheWrap        = v1.CacheWrap
+	CommitID         = v1.CommitID
+	Key              = v1.StoreKey
+	Type             = v1.StoreType
+	Queryable        = v1.Queryable
+	TraceContext     = v1.TraceContext
+	Gas              = v1.Gas
+	GasMeter         = v1.GasMeter
+	GasConfig        = v1.GasConfig
 )

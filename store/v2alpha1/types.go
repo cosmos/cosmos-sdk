@@ -9,30 +9,26 @@ import (
 
 // Re-export relevant original store types
 type (
-	StoreKey      = v1.StoreKey
-	StoreType     = v1.StoreType
-	CommitID      = v1.CommitID
-	StoreUpgrades = v1.StoreUpgrades
-	StoreRename   = v1.StoreRename
-	Iterator      = v1.Iterator
-
-	TraceContext  = v1.TraceContext
-	WriteListener = v1.WriteListener
-
-	BasicKVStore  = v1.BasicKVStore
-	KVStore       = v1.KVStore
-	Committer     = v1.Committer
-	CommitKVStore = v1.CommitKVStore
-	CacheKVStore  = v1.CacheKVStore
-	Queryable     = v1.Queryable
-	CacheWrap     = v1.CacheWrap
-
+	StoreKey          = v1.StoreKey
+	StoreType         = v1.StoreType
+	CommitID          = v1.CommitID
+	StoreUpgrades     = v1.StoreUpgrades
+	StoreRename       = v1.StoreRename
+	Iterator          = v1.Iterator
+	TraceContext      = v1.TraceContext
+	WriteListener     = v1.WriteListener
+	BasicKVStore      = v1.BasicKVStore
+	KVStore           = v1.KVStore
+	Committer         = v1.Committer
+	CommitKVStore     = v1.CommitKVStore
+	CacheKVStore      = v1.CacheKVStore
+	Queryable         = v1.Queryable
+	CacheWrap         = v1.CacheWrap
 	KVStoreKey        = v1.KVStoreKey
 	MemoryStoreKey    = v1.MemoryStoreKey
 	TransientStoreKey = v1.TransientStoreKey
-
-	KVPair      = v1.KVPair
-	StoreKVPair = v1.StoreKVPair
+	KVPair            = v1.KVPair
+	StoreKVPair       = v1.StoreKVPair
 )
 
 // Re-export relevant constants, values and utility functions
@@ -45,21 +41,17 @@ const (
 )
 
 var (
-	NewKVStoreKey                = v1.NewKVStoreKey
-	NewMemoryStoreKey            = v1.NewMemoryStoreKey
-	NewTransientStoreKey         = v1.NewTransientStoreKey
-	PrefixEndBytes               = v1.PrefixEndBytes
-	KVStorePrefixIterator        = v1.KVStorePrefixIterator
-	KVStoreReversePrefixIterator = v1.KVStoreReversePrefixIterator
-
-	NewStoreKVPairWriteListener = v1.NewStoreKVPairWriteListener
-
-	AssertValidKey   = v1.AssertValidKey
-	AssertValidValue = v1.AssertValidValue
-
-	CommitmentOpDecoder = v1.CommitmentOpDecoder
-	ProofOpFromMap      = v1.ProofOpFromMap
-
+	NewKVStoreKey                 = v1.NewKVStoreKey
+	NewMemoryStoreKey             = v1.NewMemoryStoreKey
+	NewTransientStoreKey          = v1.NewTransientStoreKey
+	PrefixEndBytes                = v1.PrefixEndBytes
+	KVStorePrefixIterator         = v1.KVStorePrefixIterator
+	KVStoreReversePrefixIterator  = v1.KVStoreReversePrefixIterator
+	NewStoreKVPairWriteListener   = v1.NewStoreKVPairWriteListener
+	AssertValidKey                = v1.AssertValidKey
+	AssertValidValue              = v1.AssertValidValue
+	CommitmentOpDecoder           = v1.CommitmentOpDecoder
+	ProofOpFromMap                = v1.ProofOpFromMap
 	ProofOpSMTCommitment          = v1.ProofOpSMTCommitment
 	ProofOpSimpleMerkleCommitment = v1.ProofOpSimpleMerkleCommitment
 	NewSmtCommitmentOp            = v1.NewSmtCommitmentOp

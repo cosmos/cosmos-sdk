@@ -6,11 +6,12 @@ import (
 	"fmt"
 	"math/rand"
 
+	modulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
+	"cosmossdk.io/core/appmodule"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"cosmossdk.io/core/appmodule"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -21,14 +22,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
-	modulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mint/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	"github.com/cosmos/cosmos-sdk/x/mint/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
+
+// ConsensusVersion defines the current x/mint module consensus version.
+const ConsensusVersion = 1
 
 var (
 	_ module.AppModule           = AppModule{}
@@ -135,7 +137,15 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+
+	// TODO: ...
+	// m := keeper.NewMigrator(am.keeper)
+	// err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
+	// if err != nil {
+	// 	panic(err)
+	// }
 }
 
 // InitGenesis performs genesis initialization for the mint module. It returns
@@ -156,7 +166,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 1 }
+func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the mint module.
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
@@ -213,9 +223,8 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 type mintInputs struct {
 	depinject.In
 
-	Key      *store.KVStoreKey
-	Cdc      codec.Codec
-	Subspace paramstypes.Subspace
+	Key *store.KVStoreKey
+	Cdc codec.Codec
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
@@ -230,7 +239,15 @@ type mintOutputs struct {
 }
 
 func provideModule(in mintInputs) mintOutputs {
-	k := keeper.NewKeeper(in.Cdc, in.Key, in.Subspace, in.StakingKeeper, in.AccountKeeper, in.BankKeeper, authtypes.FeeCollectorName)
+	k := keeper.NewKeeper(
+		in.Cdc,
+		in.Key,
+		in.StakingKeeper,
+		in.AccountKeeper,
+		in.BankKeeper,
+		authtypes.FeeCollectorName,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, nil)
 
 	return mintOutputs{MintKeeper: k, Module: runtime.WrapAppModule(m)}

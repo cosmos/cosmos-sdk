@@ -50,6 +50,11 @@ func NewKeeper(
 	}
 }
 
+// GetAuthority returns the x/mint module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
+}
+
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
@@ -75,10 +80,16 @@ func (k Keeper) SetMinter(ctx sdk.Context, minter types.Minter) {
 }
 
 // SetParams sets the x/mint module parameters.
-func (k Keeper) SetParams(ctx sdk.Context, p types.Params) {
+func (k Keeper) SetParams(ctx sdk.Context, p types.Params) error {
+	if err := p.Validate(); err != nil {
+		return err
+	}
+
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&p)
 	store.Set(types.ParamsKey, bz)
+
+	return nil
 }
 
 // GetParams returns the current x/mint module parameters.

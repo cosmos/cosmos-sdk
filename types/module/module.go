@@ -316,8 +316,9 @@ func (m *Manager) UnmarshalGenesis(cdc codec.JSONCodec, genesisData map[string]j
 		wg.Add(1)
 		go func(moduleName string) {
 			defer wg.Done()
+			moduleGenesis := m.Modules[moduleName].UnmarshalGenesis(cdc, genesisData[moduleName])
 			m.mtx.Lock()
-			genesisStates[moduleName] = m.Modules[moduleName].UnmarshalGenesis(cdc, genesisData[moduleName])
+			genesisStates[moduleName] = moduleGenesis
 			m.mtx.Unlock()
 		}(moduleName)
 	}

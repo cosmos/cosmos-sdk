@@ -1,6 +1,7 @@
 package simulation_test
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -8,9 +9,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,8 +36,9 @@ import (
 type SimTestSuite struct {
 	suite.Suite
 
-	r   *rand.Rand
-	ctx sdk.Context
+	ctx      sdk.Context
+	r        *rand.Rand
+	accounts []simtypes.Account
 
 	app               *runtime.App
 	legacyAmino       *codec.LegacyAmino
@@ -46,12 +50,31 @@ type SimTestSuite struct {
 	slashingKeeper    slashingkeeper.Keeper
 	distrKeeper       distributionkeeper.Keeper
 	mintKeeper        mintkeeper.Keeper
-	accs              []simtypes.Account
 }
 
 func (suite *SimTestSuite) SetupTest() {
-	app, err := simtestutil.Setup(
+	s := rand.NewSource(1)
+	suite.r = rand.New(s)
+	accounts := simtypes.RandomAccounts(suite.r, 4)
+
+	// create validator (non random as using a seed)
+	createValidator := func() (*tmtypes.ValidatorSet, error) {
+		account := accounts[0]
+		tmPk, err := cryptocodec.ToTmPubKeyInterface(account.PubKey)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create pubkey: %w", err)
+		}
+
+		validator := tmtypes.NewValidator(tmPk, 1)
+
+		return tmtypes.NewValidatorSet([]*tmtypes.Validator{validator}), nil
+	}
+
+	app, err := simtestutil.SetupWithConfiguration(
 		testutil.AppConfig,
+		createValidator,
+		nil,
+		false,
 		&suite.legacyAmino,
 		&suite.codec,
 		&suite.interfaceRegistry,
@@ -67,16 +90,14 @@ func (suite *SimTestSuite) SetupTest() {
 	suite.app = app
 	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 
-	s := rand.NewSource(1)
-	suite.r = rand.New(s)
-	accounts := simtypes.RandomAccounts(suite.r, 3)
-	suite.accs = accounts
+	// remove genesis validator account
+	suite.accounts = accounts[1:]
 
 	initAmt := suite.stakingKeeper.TokensFromConsensusPower(suite.ctx, 200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	// add coins to the accounts
-	for _, account := range suite.accs {
+	for _, account := range suite.accounts {
 		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
 		suite.accountKeeper.SetAccount(suite.ctx, acc)
 		suite.Require().NoError(banktestutil.FundAccount(suite.bankKeeper, suite.ctx, account.Address, initCoins))
@@ -92,10 +113,7 @@ func TestSimTestSuite(t *testing.T) {
 
 // TestWeightedOperations tests the weights of the operations.
 func (suite *SimTestSuite) TestWeightedOperations() {
-	app, ctx, accs := suite.app, suite.ctx, suite.accs
-	ctx.WithChainID("test-chain")
-
-	cdc := suite.codec
+	ctx := suite.ctx.WithChainID("test-chain")
 	appParams := make(simtypes.AppParams)
 
 	expected := []struct {
@@ -104,9 +122,9 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgName  string
 	}{{simtestutil.DefaultWeightMsgUnjail, types.ModuleName, types.TypeMsgUnjail}}
 
-	weightesOps := simulation.WeightedOperations(appParams, cdc, suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)
+	weightesOps := simulation.WeightedOperations(appParams, suite.codec, suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)
 	for i, w := range weightesOps {
-		operationMsg, _, err := w.Op()(suite.r, app.BaseApp, ctx, accs, ctx.ChainID())
+		operationMsg, _, err := w.Op()(suite.r, suite.app.BaseApp, ctx, suite.accounts, ctx.ChainID())
 		suite.Require().NoError(err)
 
 		// the following checks are very much dependent from the ordering of the output given
@@ -121,13 +139,12 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 // TestSimulateMsgUnjail tests the normal scenario of a valid message of type types.MsgUnjail.
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgUnjail() {
-	app, ctx, accounts := suite.app, suite.ctx, suite.accs
-
 	blockTime := time.Now().UTC()
-	ctx = ctx.WithBlockTime(blockTime)
+	ctx := suite.ctx.WithBlockTime(blockTime)
 
 	// setup accounts[0] as validator0
-	validator0 := suite.getTestingValidator0(ctx, accounts)
+	validator0, err := getTestingValidator0(ctx, suite.stakingKeeper, suite.accounts)
+	suite.Require().NoError(err)
 
 	// setup validator0 by consensus address
 	suite.stakingKeeper.SetValidatorByConsAddr(ctx, validator0)
@@ -150,11 +167,11 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	suite.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), val0AccAddress.Bytes(), distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
 
 	// begin a new block
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash, Time: blockTime}})
 
 	// execute operation
 	op := simulation.SimulateMsgUnjail(codec.NewProtoCodec(suite.interfaceRegistry), suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)
-	operationMsg, futureOperations, err := op(suite.r, app.BaseApp, ctx, accounts, "")
+	operationMsg, futureOperations, err := op(suite.r, suite.app.BaseApp, ctx, suite.accounts, "")
 	suite.Require().NoError(err)
 
 	var msg types.MsgUnjail
@@ -162,29 +179,33 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(types.TypeMsgUnjail, msg.Type())
-	suite.Require().Equal("cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddr)
+	suite.Require().Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", msg.ValidatorAddr)
 	suite.Require().Len(futureOperations, 0)
 }
 
-func (suite *SimTestSuite) getTestingValidator0(ctx sdk.Context, accounts []simtypes.Account) stakingtypes.Validator {
+func getTestingValidator0(ctx sdk.Context, stakingKeeper *stakingkeeper.Keeper, accounts []simtypes.Account) (stakingtypes.Validator, error) {
 	commission0 := stakingtypes.NewCommission(sdk.ZeroDec(), sdk.OneDec(), sdk.OneDec())
-	return suite.getTestingValidator(commission0, 0)
+	return getTestingValidator(ctx, stakingKeeper, accounts, commission0, 0)
 }
 
-func (suite *SimTestSuite) getTestingValidator(commission stakingtypes.Commission, n int) stakingtypes.Validator {
-	ctx, accounts := suite.ctx, suite.accs
+func getTestingValidator(ctx sdk.Context, stakingKeeper *stakingkeeper.Keeper, accounts []simtypes.Account, commission stakingtypes.Commission, n int) (stakingtypes.Validator, error) {
 	account := accounts[n]
 	valPubKey := account.ConsKey.PubKey()
 	valAddr := sdk.ValAddress(account.PubKey.Address().Bytes())
 	validator, err := stakingtypes.NewValidator(valAddr, valPubKey, stakingtypes.Description{})
-	suite.Require().NoError(err)
+	if err != nil {
+		return stakingtypes.Validator{}, fmt.Errorf("failed to create validator: %w", err)
+	}
+
 	validator, err = validator.SetInitialCommission(commission)
-	suite.Require().NoError(err)
+	if err != nil {
+		return stakingtypes.Validator{}, fmt.Errorf("failed to set initial commission: %w", err)
+	}
 
 	validator.DelegatorShares = sdk.NewDec(100)
 	validator.Tokens = sdk.NewInt(1000000)
 
-	suite.stakingKeeper.SetValidator(ctx, validator)
+	stakingKeeper.SetValidator(ctx, validator)
 
-	return validator
+	return validator, nil
 }

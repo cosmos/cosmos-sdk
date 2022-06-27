@@ -248,10 +248,6 @@ func NewSimApp(
 		app.GetSubspace(crisistypes.ModuleName), invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName,
 	)
 
-	app.StakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
-	)
-
 	// register the proposal types
 	govRouter := govv1beta1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).

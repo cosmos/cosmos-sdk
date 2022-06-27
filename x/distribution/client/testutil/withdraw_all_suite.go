@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	"github.com/stretchr/testify/suite"
 )
@@ -24,7 +25,8 @@ type WithdrawAllTestSuite struct {
 }
 
 func (s *WithdrawAllTestSuite) SetupSuite() {
-	cfg := network.DefaultConfig()
+	cfg, err := network.DefaultConfigWithAppConfig(testutil.AppConfig)
+	s.Require().NoError(err)
 	cfg.NumValidators = 2
 	s.cfg = cfg
 

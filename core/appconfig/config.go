@@ -13,6 +13,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+
 	"github.com/cosmos/cosmos-sdk/depinject"
 
 	"cosmossdk.io/core/internal"
@@ -94,6 +95,10 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 
 		for _, provider := range init.Providers {
 			opts = append(opts, depinject.ProvideInModule(module.Name, provider))
+		}
+
+		for _, invoker := range init.Invokers {
+			opts = append(opts, depinject.InvokeInModule(module.Name, invoker))
 		}
 	}
 

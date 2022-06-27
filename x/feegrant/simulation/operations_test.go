@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -101,12 +100,12 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgName  string
 	}{
 		{
-			simappparams.DefaultWeightGrantAllowance,
+			simulation.DefaultWeightGrantAllowance,
 			feegrant.MsgGrantAllowance{}.Route(),
 			simulation.TypeMsgGrantAllowance,
 		},
 		{
-			simappparams.DefaultWeightRevokeAllowance,
+			simulation.DefaultWeightRevokeAllowance,
 			feegrant.MsgRevokeAllowance{}.Route(),
 			simulation.TypeMsgRevokeAllowance,
 		},

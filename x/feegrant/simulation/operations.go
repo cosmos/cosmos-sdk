@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -18,8 +17,10 @@ import (
 // Simulation operation weights constants
 //nolint:gosec // These aren't harcoded credentials.
 const (
-	OpWeightMsgGrantAllowance  = "op_weight_msg_grant_fee_allowance"
-	OpWeightMsgRevokeAllowance = "op_weight_msg_grant_revoke_allowance"
+	OpWeightMsgGrantAllowance        = "op_weight_msg_grant_fee_allowance"
+	OpWeightMsgRevokeAllowance       = "op_weight_msg_grant_revoke_allowance"
+	DefaultWeightGrantAllowance  int = 100
+	DefaultWeightRevokeAllowance int = 100
 )
 
 var (
@@ -42,13 +43,13 @@ func WeightedOperations(
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgGrantAllowance, &weightMsgGrantAllowance, nil,
 		func(_ *rand.Rand) {
-			weightMsgGrantAllowance = simappparams.DefaultWeightGrantAllowance
+			weightMsgGrantAllowance = DefaultWeightGrantAllowance
 		},
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgRevokeAllowance, &weightMsgRevokeAllowance, nil,
 		func(_ *rand.Rand) {
-			weightMsgRevokeAllowance = simappparams.DefaultWeightRevokeAllowance
+			weightMsgRevokeAllowance = DefaultWeightRevokeAllowance
 		},
 	)
 

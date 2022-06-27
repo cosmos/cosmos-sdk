@@ -9,6 +9,9 @@ on:
 
 jobs:
   cleanup-runs:
+    permissions:
+      actions: write  # for rokroskar/workflow-run-cleanup-action to obtain workflow name & cancel it
+      contents: read  # for rokroskar/workflow-run-cleanup-action to obtain branch
     runs-on: buildjet-4vcpu-ubuntu-2004
     steps:
       - uses: rokroskar/workflow-run-cleanup-action@master
@@ -17,6 +20,9 @@ jobs:
     if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/main'"
 
   build:
+    permissions:
+      contents: read  # for actions/checkout to fetch code
+      pull-requests: read  # for technote-space/get-diff-action to get git reference
     runs-on: buildjet-4vcpu-ubuntu-2004
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
@@ -130,6 +136,8 @@ jobs:
           SLACK_FOOTER: ""
 
   sims-notify-failure:
+    permissions:
+      contents: none
     needs:
       [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
     runs-on: ubuntu-latest

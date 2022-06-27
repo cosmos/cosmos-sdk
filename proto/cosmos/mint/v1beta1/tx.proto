@@ -17,7 +17,7 @@ service Msg {
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 }
 
-// MsgSoftwareUpgrade is the Msg/SoftwareUpgrade request type.
+// MsgUpdateParams is the Msg/UpdateParams request type.
 //
 // Since: cosmos-sdk 0.47
 message MsgUpdateParams {

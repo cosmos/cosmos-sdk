@@ -12,8 +12,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -61,7 +61,7 @@ func TestReadTxFromFile(t *testing.T) {
 		txCfg             client.TxConfig
 		interfaceRegistry codectypes.InterfaceRegistry
 	)
-	_, err := simtestutil.Setup(
+	err := depinject.Inject(
 		authtestutil.AppConfig,
 		&interfaceRegistry,
 		&txCfg,
@@ -100,7 +100,7 @@ func TestReadTxFromFile(t *testing.T) {
 func TestBatchScanner_Scan(t *testing.T) {
 	t.Parallel()
 	var txGen client.TxConfig
-	_, err := simtestutil.Setup(
+	err := depinject.Inject(
 		authtestutil.AppConfig,
 		&txGen,
 	)

@@ -5,14 +5,13 @@ import (
 
 	"github.com/spf13/pflag"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/simapp/params"
-	"github.com/cosmos/cosmos-sdk/testutil"
+	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/stretchr/testify/assert"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,7 +21,7 @@ func Test_splitAndCall_NoMessages(t *testing.T) {
 	clientCtx := client.Context{}
 
 	err := newSplitAndApply(nil, clientCtx, nil, nil, 10)
-	assert.NoError(t, err, "")
+	require.NoError(t, err, "")
 }
 
 func Test_splitAndCall_Splitting(t *testing.T) {
@@ -47,27 +46,28 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 		func(clientCtx client.Context, fs *pflag.FlagSet, msgs ...sdk.Msg) error {
 			callCount++
 
-			assert.NotNil(t, clientCtx)
-			assert.NotNil(t, msgs)
+			require.NotNil(t, clientCtx)
+			require.NotNil(t, msgs)
 
 			if callCount < 3 {
-				assert.Equal(t, len(msgs), 2)
+				require.Equal(t, len(msgs), 2)
 			} else {
-				assert.Equal(t, len(msgs), 1)
+				require.Equal(t, len(msgs), 1)
 			}
 
 			return nil
 		},
 		clientCtx, nil, msgs, chunkSize)
 
-	assert.NoError(t, err, "")
-	assert.Equal(t, 3, callCount)
+	require.NoError(t, err, "")
+	require.Equal(t, 3, callCount)
 }
 
 func TestParseProposal(t *testing.T) {
-	encodingConfig := params.MakeTestEncodingConfig()
+	interfaceRegistry := types.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
 
-	okJSON := testutil.WriteToNewTempFile(t, `
+	okJSON := sdktestutil.WriteToNewTempFile(t, `
 {
   "title": "Community Pool Spend",
   "description": "Pay me some Atoms!",
@@ -77,7 +77,7 @@ func TestParseProposal(t *testing.T) {
 }
 `)
 
-	proposal, err := ParseCommunityPoolSpendProposalWithDeposit(encodingConfig.Codec, okJSON.Name())
+	proposal, err := ParseCommunityPoolSpendProposalWithDeposit(cdc, okJSON.Name())
 	require.NoError(t, err)
 
 	require.Equal(t, "Community Pool Spend", proposal.Title)

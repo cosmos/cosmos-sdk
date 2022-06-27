@@ -309,6 +309,7 @@ func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
 	}
 	defer it.Close()
 
+	var votes []group.Vote
 	for {
 		var vote group.Vote
 		_, err = it.LoadNext(&vote)
@@ -318,8 +319,11 @@ func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
 		if err != nil {
 			return err
 		}
+		votes = append(votes, vote)
+	}
 
-		err = k.voteTable.Delete(store, &vote)
+	for _, v := range votes {
+		err = k.voteTable.Delete(store, &v)
 		if err != nil {
 			return err
 		}

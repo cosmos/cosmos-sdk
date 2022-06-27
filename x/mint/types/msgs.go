@@ -16,7 +16,7 @@ func (m *MsgUpdateParams) GetSigners() []sdk.AccAddress {
 // ValidateBasic does a sanity check on the provided data.
 func (m *MsgUpdateParams) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
-		return sdkerrors.Wrap(err, "authority")
+		return sdkerrors.Wrap(err, "invalid authority address")
 	}
 
 	if err := m.Params.Validate(); err != nil {

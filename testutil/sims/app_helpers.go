@@ -67,19 +67,19 @@ func createDefaultRandomValidatorSet() (*tmtypes.ValidatorSet, error) {
 	return tmtypes.NewValidatorSet([]*tmtypes.Validator{validator}), nil
 }
 
-// Setup initializes a new runtime.App.
+// Setup initializes a new runtime.App and can inject values into extraOutputs.
 // It uses SetupWithConfiguration under the hood.
 func Setup(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.App, error) {
 	return SetupWithConfiguration(appConfig, createDefaultRandomValidatorSet, nil, false, extraOutputs...)
 }
 
-// SetupAtGenesis initializes a new runtime.App at genesis.
+// SetupAtGenesis initializes a new runtime.App at genesis and can inject values into extraOutputs.
 // It uses SetupWithConfiguration under the hood.
 func SetupAtGenesis(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.App, error) {
 	return SetupWithConfiguration(appConfig, createDefaultRandomValidatorSet, nil, true, extraOutputs...)
 }
 
-// SetupAtGenesis initializes a new runtime.App at genesis.
+// SetupWithBaseAppOption initializes a new runtime.App and can inject values into extraOutputs.
 // With specific baseApp options. It uses SetupWithConfiguration under the hood.
 func SetupWithBaseAppOption(appConfig depinject.Config, baseAppOption runtime.BaseAppOption, extraOutputs ...interface{}) (*runtime.App, error) {
 	return SetupWithConfiguration(appConfig, createDefaultRandomValidatorSet, baseAppOption, false, extraOutputs...)

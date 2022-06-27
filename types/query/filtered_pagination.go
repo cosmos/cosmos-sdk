@@ -177,7 +177,7 @@ func GenericFilteredPaginate[T codec.ProtoMarshaler, F codec.ProtoMarshaler](
 				return nil, nil, iterator.Error()
 			}
 
-			protoMsg := c()
+			protoMsg := constructor()
 
 			err := cdc.Unmarshal(iterator.Value(), protoMsg)
 			if err != nil {
@@ -215,7 +215,7 @@ func GenericFilteredPaginate[T codec.ProtoMarshaler, F codec.ProtoMarshaler](
 			return nil, nil, iterator.Error()
 		}
 
-		protoMsg := c()
+		protoMsg := constructor()
 
 		err := cdc.Unmarshal(iterator.Value(), protoMsg)
 		if err != nil {

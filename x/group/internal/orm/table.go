@@ -250,11 +250,9 @@ func (a table) Export(store sdk.KVStore, dest ModelSlicePtr) (uint64, error) {
 // data should be a slice of structs that implement PrimaryKeyed.
 func (a table) Import(store sdk.KVStore, data interface{}, _ uint64) error {
 	// Clear all data
-	pStore := prefix.NewStore(store, a.prefix[:])
-	it := pStore.Iterator(nil, nil)
-	defer it.Close()
-	for ; it.Valid(); it.Next() {
-		if err := a.Delete(store, it.Key()); err != nil {
+	keys := a.keys(store)
+	for _, key := range keys {
+		if err := a.Delete(store, key); err != nil {
 			return err
 		}
 	}
@@ -278,6 +276,18 @@ func (a table) Import(store sdk.KVStore, data interface{}, _ uint64) error {
 	}
 
 	return nil
+}
+
+func (a table) keys(store sdk.KVStore) [][]byte {
+	pStore := prefix.NewStore(store, a.prefix[:])
+	it := pStore.Iterator(nil, nil)
+	defer it.Close()
+
+	var keys [][]byte
+	for ; it.Valid(); it.Next() {
+		keys = append(keys, it.Key())
+	}
+	return keys
 }
 
 // typeSafeIterator is initialized with a type safe RowGetter only.

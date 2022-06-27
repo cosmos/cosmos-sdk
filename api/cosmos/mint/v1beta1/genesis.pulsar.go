@@ -548,7 +548,13 @@ type GenesisState struct {
 
 	// minter is a space for holding current inflation information.
 	Minter *Minter `protobuf:"bytes,1,opt,name=minter,proto3" json:"minter,omitempty"`
-	// params defines all the paramaters of the module.
+	// params defines all the parameters of the module.
+	//
+	// Deprecated: Use governance to submit a MsgUpdateParams message to instruct
+	// the x/mint module to update the relevant parameters.
+	//
+	// Since the cosmos-sdk 0.47 version, this only exists for backwards
+	// compatibility of genesis state.
 	Params *Params `protobuf:"bytes,2,opt,name=params,proto3" json:"params,omitempty"`
 }
 

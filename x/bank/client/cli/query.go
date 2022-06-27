@@ -222,7 +222,7 @@ func GetCmdQuerySendEnabled() *cobra.Command {
 		Long: strings.TrimSpace(`Query for send enabled entries that have been specifically set.
 
 To look up one or more specific denoms, supply them as arguments to this command.
-To look up all denoms, do not provide any arguemnts.
+To look up all denoms, do not provide any arguments.
 `,
 		),
 		Example: strings.TrimSpace(

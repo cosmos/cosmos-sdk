@@ -8,12 +8,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-var PKs = simapp.CreateTestPubKeys(500)
+var PKs = simtestutil.CreateTestPubKeys(500)
 
 func init() {
 	sdk.DefaultPowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
@@ -43,7 +44,7 @@ func ValEq(t *testing.T, exp, got types.Validator) (*testing.T, bool, string, ty
 // generateAddresses generates numAddrs of normal AccAddrs and ValAddrs
 func generateAddresses(app *simapp.SimApp, ctx sdk.Context, numAddrs int) ([]sdk.AccAddress, []sdk.ValAddress) {
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, numAddrs, sdk.NewInt(10000))
-	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
+	addrVals := simtestutil.ConvertAddrsToValAddrs(addrDels)
 
 	return addrDels, addrVals
 }

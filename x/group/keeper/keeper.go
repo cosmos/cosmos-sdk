@@ -272,22 +272,12 @@ func (k Keeper) pruneProposal(ctx sdk.Context, proposalID uint64) error {
 // abortProposals iterates through all proposals by group policy index
 // and marks submitted proposals as aborted.
 func (k Keeper) abortProposals(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) error {
-	proposalIt, err := k.proposalByGroupPolicyIndex.Get(ctx.KVStore(k.key), groupPolicyAddr.Bytes())
+	proposals, err := k.proposalsByGroupPolicy(ctx, groupPolicyAddr)
 	if err != nil {
 		return err
 	}
-	defer proposalIt.Close()
 
-	for {
-		var proposalInfo group.Proposal
-		_, err = proposalIt.LoadNext(&proposalInfo)
-		if errors.ErrORMIteratorDone.Is(err) {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
+	for _, proposalInfo := range proposals {
 		// Mark all proposals still in the voting phase as aborted.
 		if proposalInfo.Status == group.PROPOSAL_STATUS_SUBMITTED {
 			proposalInfo.Status = group.PROPOSAL_STATUS_ABORTED
@@ -300,12 +290,52 @@ func (k Keeper) abortProposals(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) 
 	return nil
 }
 
+// proposalsByGroupPolicy returns all proposals for a given group policy.
+func (k Keeper) proposalsByGroupPolicy(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) ([]group.Proposal, error) {
+	proposalIt, err := k.proposalByGroupPolicyIndex.Get(ctx.KVStore(k.key), groupPolicyAddr.Bytes())
+	if err != nil {
+		return nil, err
+	}
+	defer proposalIt.Close()
+
+	var proposals []group.Proposal
+	for {
+		var proposalInfo group.Proposal
+		_, err = proposalIt.LoadNext(&proposalInfo)
+		if errors.ErrORMIteratorDone.Is(err) {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		proposals = append(proposals, proposalInfo)
+	}
+	return proposals, nil
+}
+
 // pruneVotes prunes all votes for a proposal from state.
 func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
-	store := ctx.KVStore(k.key)
-	it, err := k.voteByProposalIndex.Get(store, proposalID)
+	votes, err := k.votesByProposal(ctx, proposalID)
 	if err != nil {
 		return err
+	}
+
+	for _, v := range votes {
+		err = k.voteTable.Delete(ctx.KVStore(k.key), &v)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// votesByProposal returns all votes for a given proposal.
+func (k Keeper) votesByProposal(ctx sdk.Context, proposalID uint64) ([]group.Vote, error) {
+	it, err := k.voteByProposalIndex.Get(ctx.KVStore(k.key), proposalID)
+	if err != nil {
+		return nil, err
 	}
 	defer it.Close()
 
@@ -317,19 +347,11 @@ func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
 			break
 		}
 		if err != nil {
-			return err
+			return nil, err
 		}
 		votes = append(votes, vote)
 	}
-
-	for _, v := range votes {
-		err = k.voteTable.Delete(store, &v)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return votes, nil
 }
 
 // PruneProposals prunes all proposals that are expired, i.e. whose

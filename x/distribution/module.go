@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"math/rand"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -241,7 +241,7 @@ type distrOutputs struct {
 	DistrKeeper keeper.Keeper
 	Module      runtime.AppModuleWrapper
 	Hooks       staking.StakingHooksWrapper
-	GovHandler  v1beta1.RouteHandlerWrapper
+	GovHandler  govv1beta1.RoutedHandler
 }
 
 func provideModule(in distrInputs) distrOutputs {
@@ -252,6 +252,6 @@ func provideModule(in distrInputs) distrOutputs {
 		DistrKeeper: k,
 		Module:      runtime.WrapAppModule(m),
 		Hooks:       staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
-		GovHandler:  v1beta1.RouteHandlerWrapper{Handler: NewCommunityPoolSpendProposalHandler(k)},
+		GovHandler:  govv1beta1.RoutedHandler{Handler: NewCommunityPoolSpendProposalHandler(k), RouteKey: types.RouterKey},
 	}
 }

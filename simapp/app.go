@@ -274,7 +274,6 @@ func NewSimApp(
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
 	if err := app.RegisterModules(
-
 		gov.NewAppModule(app.appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
 	); err != nil {
 		panic(err)

@@ -200,7 +200,6 @@ func NewSimApp(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, encodingConfig simappparams.EncodingConfig,
 	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
-
 	var (
 		appBuilder *runtime.AppBuilder
 		app        = &SimApp{}

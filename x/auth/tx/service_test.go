@@ -242,8 +242,8 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 			"with pagination",
 			&tx.GetTxsEventRequest{
 				Events: []string{bankMsgSendEventAction},
-				Page: 2,
-				Limit: 2,
+				Page:   2,
+				Limit:  2,
 			},
 			false, "", 1,
 		},

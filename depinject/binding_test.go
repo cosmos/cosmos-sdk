@@ -25,9 +25,11 @@ type Duck interface {
 	quack()
 }
 
-type Mallard struct{}
-type Canvasback struct{}
-type Marbled struct{}
+type (
+	Mallard    struct{}
+	Canvasback struct{}
+	Marbled    struct{}
+)
 
 func (duck Mallard) quack()    {}
 func (duck Canvasback) quack() {}

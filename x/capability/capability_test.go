@@ -37,7 +37,6 @@ func (suite *CapabilityTestSuite) SetupTest() {
 		func(ba *baseapp.BaseApp) {
 			ba.MountStores(suite.memKey)
 		},
-		false,
 		&suite.cdc,
 		&suite.keeper,
 	)

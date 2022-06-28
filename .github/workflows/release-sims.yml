@@ -1,0 +1,41 @@
+name: Release Sims
+# Release Sims workflow runs long-lived (multi-seed & large block size) simulations
+# This workflow only runs on a pull request when the branch contains rc** (rc1/vX.X.x)
+on:
+  pull_request:
+    branches:
+      - "rc**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'skip-sims')"
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          make build
+
+  install-runsim:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: install runsim
+        run: |
+          export GO111MODULE="on" && go install github.com/cosmos/tools/cmd/runsim@v1.0.0
+      - uses: actions/cache@v2.1.6
+        with:
+          path: ~/go/bin
+          key: ${{ runner.os }}-go-runsim-binary
+
+  test-sim-multi-seed-long:
+    runs-on: ubuntu-latest
+    needs: [build, install-runsim]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2.1.6
+        with:
+          path: ~/go/bin
+          key: ${{ runner.os }}-go-runsim-binary
+      - name: test-sim-multi-seed-long
+        run: |
+          make test-sim-multi-seed-long

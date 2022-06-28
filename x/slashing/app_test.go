@@ -72,6 +72,7 @@ func TestSlashingMsgs(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	banktestutil.FundAccount(bankKeeper, ctx, addr1, sdk.Coins{genCoin})
+	app.Commit()
 	checkBalance(t, ctx, bankKeeper, addr1, sdk.Coins{genCoin})
 
 	description := stakingtypes.NewDescription("foo_moniker", "", "", "", "")
@@ -83,7 +84,7 @@ func TestSlashingMsgs(t *testing.T) {
 	require.NoError(t, err)
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
-	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
+	_, _, err = simtestutil.SignCheckDeliver(txConfig, app.BaseApp, header, []sdk.Msg{createValidatorMsg}, simtestutil.SimAppChainID, []uint64{0}, []uint64{0}, true, true, priv1)
 	require.NoError(t, err)
 	checkBalance(t, ctx, bankKeeper, addr1, sdk.Coins{genCoin.Sub(bondCoin)})
 
@@ -100,7 +101,7 @@ func TestSlashingMsgs(t *testing.T) {
 
 	// unjail should fail with unknown validator
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
-	_, res, err := simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{unjailMsg}, "", []uint64{0}, []uint64{1}, false, false, priv1)
+	_, res, err := simtestutil.SignCheckDeliver(txConfig, app.BaseApp, header, []sdk.Msg{unjailMsg}, simtestutil.SimAppChainID, []uint64{0}, []uint64{1}, false, false, priv1)
 	require.Error(t, err)
 	require.Nil(t, res)
 	require.True(t, errors.Is(types.ErrValidatorNotJailed, err))

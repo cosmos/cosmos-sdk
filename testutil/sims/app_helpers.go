@@ -4,10 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
@@ -15,7 +13,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	bam "github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -253,12 +251,11 @@ func NewAppOptionsWithFlagHome(homePath string) servertypes.AppOptions {
 // block commitment with the given transaction. A test assertion is made using
 // the parameter 'expPass' against the result. A corresponding result is
 // returned.
-func SignCheckDeliver(
-	t *testing.T, txCfg client.TxConfig, app *bam.BaseApp, header tmproto.Header, msgs []sdk.Msg,
+func SignCheckDeliver(txConfig client.TxConfig, ba *baseapp.BaseApp, header tmproto.Header, msgs []sdk.Msg,
 	chainID string, accNums, accSeqs []uint64, expSimPass, expPass bool, priv ...cryptotypes.PrivKey,
 ) (sdk.GasInfo, *sdk.Result, error) {
 	tx, err := GenSignedMockTx(
-		txCfg,
+		txConfig,
 		msgs,
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
 		DefaultGenTxGas,
@@ -267,35 +264,58 @@ func SignCheckDeliver(
 		accSeqs,
 		priv...,
 	)
-	require.NoError(t, err)
-	txBytes, err := txCfg.TxEncoder()(tx)
-	require.Nil(t, err)
+	if err != nil {
+		return sdk.GasInfo{}, nil, err
+	}
+
+	txBytes, err := txConfig.TxEncoder()(tx)
+	if err != nil {
+		return sdk.GasInfo{}, nil, err
+	}
 
 	// Must simulate now as CheckTx doesn't run Msgs anymore
-	_, res, err := app.Simulate(txBytes)
-
+	_, res, err := ba.Simulate(txBytes)
 	if expSimPass {
-		require.NoError(t, err)
-		require.NotNil(t, res)
+		if err != nil {
+			return sdk.GasInfo{}, nil, err
+		}
+
+		if res == nil {
+			return sdk.GasInfo{}, nil, fmt.Errorf("Simulate() returned no result")
+		}
 	} else {
-		require.Error(t, err)
-		require.Nil(t, res)
+		if err == nil {
+			return sdk.GasInfo{}, nil, fmt.Errorf("Simulate() passed but should have failed")
+		}
+
+		if res != nil {
+			return sdk.GasInfo{}, nil, fmt.Errorf("Simulate() returned a result")
+		}
 	}
 
 	// Simulate a sending a transaction and committing a block
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	gInfo, res, err := app.SimDeliver(txCfg.TxEncoder(), tx)
-
+	ba.BeginBlock(abci.RequestBeginBlock{Header: header})
+	gInfo, res, err := ba.SimDeliver(txConfig.TxEncoder(), tx)
 	if expPass {
-		require.NoError(t, err)
-		require.NotNil(t, res)
+		if err != nil {
+			return gInfo, nil, err
+		}
+
+		if res == nil {
+			return gInfo, nil, fmt.Errorf("SimDeliver() returned no result")
+		}
 	} else {
-		require.Error(t, err)
-		require.Nil(t, res)
+		if err == nil {
+			return gInfo, nil, fmt.Errorf("SimDeliver() passed but should have failed")
+		}
+
+		if res != nil {
+			return gInfo, nil, fmt.Errorf("SimDeliver() returned a result")
+		}
 	}
 
-	app.EndBlock(abci.RequestEndBlock{})
-	app.Commit()
+	ba.EndBlock(abci.RequestEndBlock{})
+	ba.Commit()
 
 	return gInfo, res, err
 }

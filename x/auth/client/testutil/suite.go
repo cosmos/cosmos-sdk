@@ -15,6 +15,7 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -30,7 +31,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
@@ -318,7 +318,7 @@ func (s *IntegrationTestSuite) TestCliGetAccountAddressByID() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				var res types.QueryAccountAddressByIDResponse
+				var res authtypes.QueryAccountAddressByIDResponse
 				require.NoError(val1.ClientCtx.Codec.UnmarshalJSON(queryResJSON.Bytes(), &res))
 				require.NotNil(res.GetAccountAddress())
 			}
@@ -1343,9 +1343,6 @@ func (s *IntegrationTestSuite) TestGetAccountsCmd() {
 }
 
 func TestGetBroadcastCommandOfflineFlag(t *testing.T) {
-	clientCtx := client.Context{}.WithOffline(true)
-	clientCtx = clientCtx.WithTxConfig(simapp.MakeTestEncodingConfig().TxConfig)
-
 	cmd := authcli.GetBroadcastCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 	cmd.SetArgs([]string{fmt.Sprintf("--%s=true", flags.FlagOffline), ""})
@@ -1551,7 +1548,10 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 	require.Equal(sdk.NewCoins(val0Coin, val1Coin), queryRes.Balances)
 }
 
+// TODO to re-enable in #12274
 func (s *IntegrationTestSuite) TestAuxSigner() {
+	s.T().Skip()
+
 	require := s.Require()
 	val := s.network.Validators[0]
 	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10))
@@ -1833,17 +1833,19 @@ func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
 					genTxFile.Name(),
 					tc.feePayerArgs...,
 				)
-
-				if tc.expectErrBroadCast {
+				switch {
+				case tc.expectErrBroadCast:
 					require.Error(err)
-				} else if tc.errMsg != "" {
+
+				case tc.errMsg != "":
 					require.NoError(err)
 
 					var txRes sdk.TxResponse
 					require.NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
 
 					require.Contains(txRes.RawLog, tc.errMsg)
-				} else {
+
+				default:
 					require.NoError(err)
 
 					var txRes sdk.TxResponse

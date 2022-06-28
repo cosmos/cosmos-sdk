@@ -13,12 +13,14 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -51,31 +53,8 @@ var DefaultConsensusParams = &tmproto.ConsensusParams{
 	},
 }
 
-// Setup initializes a new runtime.App. A Nop logger is set in runtime.App.
-// appConfig usually load from a `app.yaml` with `appconfig.LoadYAML`, defines the application configuration.
-// extraOutputs defines the extra outputs to be assigned by the dependency injector (depinject).
-func Setup(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.App, error) {
-	//
-	// create app
-	//
-	var appBuilder *runtime.AppBuilder
-	var codec codec.Codec
-
-	if err := depinject.Inject(
-		appConfig,
-		append(extraOutputs, &appBuilder, &codec)...,
-	); err != nil {
-		return nil, fmt.Errorf("failed to inject dependencies: %w", err)
-	}
-
-	app := appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil)
-	if err := app.Load(true); err != nil {
-		return nil, fmt.Errorf("failed to load app: %w", err)
-	}
-
-	//
-	// create genesis and validator
-	//
+// createDefaultRandomValidatorSet creates a validator set with one random validator
+func createDefaultRandomValidatorSet() (*tmtypes.ValidatorSet, error) {
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey(context.TODO())
 	if err != nil {
@@ -84,7 +63,63 @@ func Setup(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.Ap
 
 	// create validator set with single validator
 	validator := tmtypes.NewValidator(pubKey, 1)
-	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+
+	return tmtypes.NewValidatorSet([]*tmtypes.Validator{validator}), nil
+}
+
+// Setup initializes a new runtime.App and can inject values into extraOutputs.
+// It uses SetupWithConfiguration under the hood.
+func Setup(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.App, error) {
+	return SetupWithConfiguration(appConfig, createDefaultRandomValidatorSet, nil, false, extraOutputs...)
+}
+
+// SetupAtGenesis initializes a new runtime.App at genesis and can inject values into extraOutputs.
+// It uses SetupWithConfiguration under the hood.
+func SetupAtGenesis(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.App, error) {
+	return SetupWithConfiguration(appConfig, createDefaultRandomValidatorSet, nil, true, extraOutputs...)
+}
+
+// SetupWithBaseAppOption initializes a new runtime.App and can inject values into extraOutputs.
+// With specific baseApp options. It uses SetupWithConfiguration under the hood.
+func SetupWithBaseAppOption(appConfig depinject.Config, baseAppOption runtime.BaseAppOption, extraOutputs ...interface{}) (*runtime.App, error) {
+	return SetupWithConfiguration(appConfig, createDefaultRandomValidatorSet, baseAppOption, false, extraOutputs...)
+}
+
+// SetupWithConfiguration initializes a new runtime.App. A Nop logger is set in runtime.App.
+// appConfig usually load from a `app.yaml` with `appconfig.LoadYAML`, defines the application configuration.
+// validatorSet defines a custom validator set to be validating the app.
+// baseAppOption defines the additional operations that must be run on baseapp before app start.
+// genesis defines if the app started should already have produced block or not.
+// extraOutputs defines the extra outputs to be assigned by the dependency injector (depinject).
+func SetupWithConfiguration(appConfig depinject.Config, validatorSet func() (*tmtypes.ValidatorSet, error), baseAppOption runtime.BaseAppOption, genesis bool, extraOutputs ...interface{}) (*runtime.App, error) {
+	// create the app with depinject
+	var (
+		app        *runtime.App
+		appBuilder *runtime.AppBuilder
+		codec      codec.Codec
+	)
+
+	if err := depinject.Inject(
+		appConfig,
+		append(extraOutputs, &appBuilder, &codec)...,
+	); err != nil {
+		return nil, fmt.Errorf("failed to inject dependencies: %w", err)
+	}
+
+	if baseAppOption != nil {
+		app = appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil, baseAppOption)
+	} else {
+		app = appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil)
+	}
+	if err := app.Load(true); err != nil {
+		return nil, fmt.Errorf("failed to load app: %w", err)
+	}
+
+	// create validator set
+	valSet, err := validatorSet()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create validator set")
+	}
 
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
@@ -113,6 +148,17 @@ func Setup(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.Ap
 			AppStateBytes:   stateBytes,
 		},
 	)
+
+	// commit genesis changes
+	if !genesis {
+		app.Commit()
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
+			Height:             app.LastBlockHeight() + 1,
+			AppHash:            app.LastCommitID().Hash,
+			ValidatorsHash:     valSet.Hash(),
+			NextValidatorsHash: valSet.Hash(),
+		}})
+	}
 
 	return app, nil
 }
@@ -185,4 +231,25 @@ func GenesisStateWithValSet(codec codec.Codec, genesisState map[string]json.RawM
 	genesisState[banktypes.ModuleName] = codec.MustMarshalJSON(bankGenesis)
 
 	return genesisState, nil
+}
+
+// EmptyAppOptions is a stub implementing AppOptions
+type EmptyAppOptions struct{}
+
+// Get implements AppOptions
+func (ao EmptyAppOptions) Get(o string) interface{} {
+	return nil
+}
+
+// AppOptionsMap is a stub implementing AppOptions which can get data from a map
+type AppOptionsMap map[string]interface{}
+
+func (m AppOptionsMap) Get(key string) interface{} {
+	return m[key]
+}
+
+func NewAppOptionsWithFlagHome(homePath string) servertypes.AppOptions {
+	return AppOptionsMap{
+		flags.FlagHome: homePath,
+	}
 }

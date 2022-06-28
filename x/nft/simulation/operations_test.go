@@ -54,13 +54,6 @@ func (suite *SimTestSuite) SetupTest() {
 
 	suite.app = app
 	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
-
-	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
-			Height:  suite.app.LastBlockHeight() + 1,
-			AppHash: suite.app.LastCommitID().Hash,
-		},
-	})
 }
 
 func (suite *SimTestSuite) TestWeightedOperations() {
@@ -121,6 +114,14 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	accounts := suite.getTestingAccounts(r, 2)
 	blockTime := time.Now().UTC()
 	ctx := suite.ctx.WithBlockTime(blockTime)
+
+	// begin new block
+	suite.app.BeginBlock(abci.RequestBeginBlock{
+		Header: tmproto.Header{
+			Height:  suite.app.LastBlockHeight() + 1,
+			AppHash: suite.app.LastCommitID().Hash,
+		},
+	})
 
 	// execute operation
 	registry := suite.interfaceRegistry

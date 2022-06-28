@@ -6,9 +6,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	proto "github.com/gogo/protobuf/proto"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -56,6 +53,7 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 		}, nil
 	}
 
+<<<<<<< HEAD
 	var authorizations []*authz.Grant
 	pageRes, err := query.FilteredPaginate(authStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		auth, err := unmarshalAuthorization(k.cdc, value)
@@ -77,8 +75,28 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 				Authorization: authorizationAny,
 				Expiration:    auth.Expiration,
 			})
+=======
+	store := ctx.KVStore(k.storeKey)
+	key := grantStoreKey(grantee, granter, "")
+	grantsStore := prefix.NewStore(store, key)
+
+	authorizations, pageRes, err := query.GenericFilteredPaginate(k.cdc, grantsStore, req.Pagination, func(key []byte, auth *authz.Grant) (*authz.Grant, error) {
+		auth1, err := auth.GetAuthorization()
+		if err != nil {
+			return nil, err
 		}
-		return true, nil
+
+		authorizationAny, err := codectypes.NewAnyWithValue(auth1)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, err.Error())
+>>>>>>> e5daf6bde (feat: add query.GenericFilteredPaginated (#12253))
+		}
+		return &authz.Grant{
+			Authorization: authorizationAny,
+			Expiration:    auth.Expiration,
+		}, nil
+	}, func() *authz.Grant {
+		return &authz.Grant{}
 	})
 	if err != nil {
 		return nil, err
@@ -105,15 +123,21 @@ func (k Keeper) GranterGrants(c context.Context, req *authz.QueryGranterGrantsRe
 	store := ctx.KVStore(k.storeKey)
 	authzStore := prefix.NewStore(store, grantStoreKey(nil, granter, ""))
 
+<<<<<<< HEAD
 	var grants []*authz.GrantAuthorization
 	pageRes, err := query.FilteredPaginate(authzStore, req.Pagination, func(key []byte, value []byte,
 		accumulate bool,
 	) (bool, error) {
 		auth, err := unmarshalAuthorization(k.cdc, value)
+=======
+	grants, pageRes, err := query.GenericFilteredPaginate(k.cdc, authzStore, req.Pagination, func(key []byte, auth *authz.Grant) (*authz.GrantAuthorization, error) {
+		auth1, err := auth.GetAuthorization()
+>>>>>>> e5daf6bde (feat: add query.GenericFilteredPaginated (#12253))
 		if err != nil {
-			return false, err
+			return nil, err
 		}
 
+<<<<<<< HEAD
 		auth1 := auth.GetAuthorization()
 		if accumulate {
 			any, err := codectypes.NewAnyWithValue(auth1)
@@ -130,7 +154,25 @@ func (k Keeper) GranterGrants(c context.Context, req *authz.QueryGranterGrantsRe
 			})
 		}
 		return true, nil
+=======
+		any, err := codectypes.NewAnyWithValue(auth1)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
+
+		grantee := firstAddressFromGrantStoreKey(key)
+		return &authz.GrantAuthorization{
+			Granter:       granter.String(),
+			Grantee:       grantee.String(),
+			Authorization: any,
+			Expiration:    auth.Expiration,
+		}, nil
+
+	}, func() *authz.Grant {
+		return &authz.Grant{}
+>>>>>>> e5daf6bde (feat: add query.GenericFilteredPaginated (#12253))
 	})
+
 	if err != nil {
 		return nil, err
 	}
@@ -155,20 +197,26 @@ func (k Keeper) GranteeGrants(c context.Context, req *authz.QueryGranteeGrantsRe
 	ctx := sdk.UnwrapSDKContext(c)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), GrantKey)
 
+<<<<<<< HEAD
 	var authorizations []*authz.GrantAuthorization
 	pageRes, err := query.FilteredPaginate(store, req.Pagination, func(key []byte, value []byte,
 		accumulate bool,
 	) (bool, error) {
 		auth, err := unmarshalAuthorization(k.cdc, value)
+=======
+	authorizations, pageRes, err := query.GenericFilteredPaginate(k.cdc, store, req.Pagination, func(key []byte, auth *authz.Grant) (*authz.GrantAuthorization, error) {
+		auth1, err := auth.GetAuthorization()
+>>>>>>> e5daf6bde (feat: add query.GenericFilteredPaginated (#12253))
 		if err != nil {
-			return false, err
+			return nil, err
 		}
 
 		granter, g := addressesFromGrantStoreKey(append(GrantKey, key...))
 		if !g.Equals(grantee) {
-			return false, nil
+			return nil, nil
 		}
 
+<<<<<<< HEAD
 		auth1 := auth.GetAuthorization()
 		if accumulate {
 			any, err := codectypes.NewAnyWithValue(auth1)
@@ -182,8 +230,21 @@ func (k Keeper) GranteeGrants(c context.Context, req *authz.QueryGranteeGrantsRe
 				Granter:       granter.String(),
 				Grantee:       grantee.String(),
 			})
+=======
+		authorizationAny, err := codectypes.NewAnyWithValue(auth1)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, err.Error())
+>>>>>>> e5daf6bde (feat: add query.GenericFilteredPaginated (#12253))
 		}
-		return true, nil
+
+		return &authz.GrantAuthorization{
+			Authorization: authorizationAny,
+			Expiration:    auth.Expiration,
+			Granter:       granter.String(),
+			Grantee:       grantee.String(),
+		}, nil
+	}, func() *authz.Grant {
+		return &authz.Grant{}
 	})
 	if err != nil {
 		return nil, err
@@ -193,10 +254,4 @@ func (k Keeper) GranteeGrants(c context.Context, req *authz.QueryGranteeGrantsRe
 		Grants:     authorizations,
 		Pagination: pageRes,
 	}, nil
-}
-
-// unmarshal an authorization from a store value
-func unmarshalAuthorization(cdc codec.BinaryCodec, value []byte) (v authz.Grant, err error) {
-	err = cdc.Unmarshal(value, &v)
-	return v, err
 }

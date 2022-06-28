@@ -10,10 +10,8 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-var (
-	// DefaultDefaultSendEnabled is the value that DefaultSendEnabled will have from DefaultParams().
-	DefaultDefaultSendEnabled = true
-)
+// DefaultDefaultSendEnabled is the value that DefaultSendEnabled will have from DefaultParams().
+var DefaultDefaultSendEnabled = true
 
 var (
 	// KeySendEnabled is store's key for SendEnabled Params

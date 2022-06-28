@@ -197,7 +197,7 @@ type crisisInputs struct {
 type crisisOutputs struct {
 	depinject.Out
 
-	CrisisKeeper keeper.Keeper `key:"cosmos.crisis.v1.Keeper"`
+	CrisisKeeper *keeper.Keeper `key:"cosmos.crisis.v1.Keeper"`
 	Module       runtime.AppModuleWrapper
 }
 
@@ -221,5 +221,5 @@ func provideModule(in crisisInputs) crisisOutputs {
 	skipGenesisInvariants := cast.ToBool(in.AppOpts.Get(FlagSkipGenesisInvariants))
 
 	m := NewAppModule(k, skipGenesisInvariants)
-	return crisisOutputs{CrisisKeeper: *k, Module: runtime.WrapAppModule(m)}
+	return crisisOutputs{CrisisKeeper: k, Module: runtime.WrapAppModule(m)}
 }

@@ -9,9 +9,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 	"math/rand"
+	"sort"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -136,12 +141,20 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper,
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
-		appmodule.Provide(provideModuleBasic, provideModule),
-		appmodule.Invoke(invokeAddRoutes))
+		appmodule.Provide(provideModuleBasic, provideKeyTable, provideModule),
+		appmodule.Invoke(invokeAddRoutes, invokeSetHooks))
 }
 
 func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+func provideKeyTable(k depinject.ModuleKey) *paramtypes.KeyTable {
+	if k.Name() == "gov" {
+		return nil
+	}
+	kt := v1.ParamKeyTable()
+	return &kt
 }
 
 func provideModule(
@@ -152,7 +165,7 @@ func provideModule(
 	msgServiceRouter *baseapp.MsgServiceRouter,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
-	sk types.StakingKeeper) (runtime.AppModuleWrapper, v1beta1.RoutedHandler) {
+	sk types.StakingKeeper) (runtime.AppModuleWrapper, keeper.Keeper, v1beta1.HandlerRoute) {
 
 	kConfig := types.DefaultConfig()
 	if config.MaxMetadataLen != 0 {
@@ -161,17 +174,51 @@ func provideModule(
 
 	k := keeper.NewKeeper(cdc, key, subSpace, ak, bk, sk, msgServiceRouter, kConfig)
 	m := NewAppModule(cdc, k, ak, bk)
-	return runtime.WrapAppModule(m), v1beta1.RoutedHandler{Handler: v1beta1.ProposalHandler, RouteKey: types.RouterKey}
+	hr := v1beta1.HandlerRoute{Handler: v1beta1.ProposalHandler, RouteKey: types.RouterKey}
+
+	return runtime.WrapAppModule(m), k, hr
 }
 
-func invokeAddRoutes(
-	keeper keeper.Keeper,
-	routes []v1beta1.RoutedHandler) {
+func invokeAddRoutes(keeper *keeper.Keeper, routes []v1beta1.HandlerRoute) {
+	if keeper == nil || routes == nil {
+		return
+	}
+
+	// Default route order is a lexical sort by RouteKey.
+	// TODO order by configuration
+	slices.SortFunc(routes, func(x, y v1beta1.HandlerRoute) bool {
+		return x.RouteKey < y.RouteKey
+	})
+
 	router := v1beta1.NewRouter()
 	for _, r := range routes {
 		router.AddRoute(r.RouteKey, r.Handler)
 	}
 	keeper.SetLegacyRouter(router)
+}
+
+func invokeSetHooks(keeper *keeper.Keeper, govHooks map[string]types.GovHooksWrapper) error {
+	if keeper == nil || govHooks == nil {
+		return nil
+	}
+
+	// Default ordering
+	// TODO supply ordering by configuration
+	modNames := maps.Keys(govHooks)
+	order := modNames
+	sort.Strings(order)
+
+	var multiHooks types.MultiGovHooks
+	for _, modName := range order {
+		hook, ok := govHooks[modName]
+		if !ok {
+			return fmt.Errorf("can't find staking hooks for module %s", modName)
+		}
+		multiHooks = append(multiHooks, hook)
+	}
+
+	keeper.SetHooks(multiHooks)
+	return nil
 }
 
 // Name returns the gov module's name.

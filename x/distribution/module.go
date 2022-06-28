@@ -241,7 +241,7 @@ type distrOutputs struct {
 	DistrKeeper keeper.Keeper
 	Module      runtime.AppModuleWrapper
 	Hooks       staking.StakingHooksWrapper
-	GovHandler  govv1beta1.RoutedHandler
+	GovHandler  govv1beta1.HandlerRoute
 }
 
 func provideModule(in distrInputs) distrOutputs {
@@ -252,6 +252,6 @@ func provideModule(in distrInputs) distrOutputs {
 		DistrKeeper: k,
 		Module:      runtime.WrapAppModule(m),
 		Hooks:       staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
-		GovHandler:  govv1beta1.RoutedHandler{Handler: NewCommunityPoolSpendProposalHandler(k), RouteKey: types.RouterKey},
+		GovHandler:  govv1beta1.HandlerRoute{Handler: NewCommunityPoolSpendProposalHandler(k), RouteKey: types.RouterKey},
 	}
 }

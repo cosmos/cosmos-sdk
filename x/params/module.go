@@ -188,7 +188,7 @@ type paramsOutputs struct {
 	ParamsKeeper  keeper.Keeper
 	BaseAppOption runtime.BaseAppOption
 	Module        runtime.AppModuleWrapper
-	GovHandler    govv1beta1.RoutedHandler
+	GovHandler    govv1beta1.HandlerRoute
 }
 
 func provideModule(in paramsInputs) paramsOutputs {
@@ -197,11 +197,26 @@ func provideModule(in paramsInputs) paramsOutputs {
 		app.SetParamStore(k.Subspace(baseapp.Paramspace).WithKeyTable(types.ConsensusParamsKeyTable()))
 	}
 	m := runtime.WrapAppModule(NewAppModule(k))
-	govHandler := govv1beta1.RoutedHandler{RouteKey: proposal.RouterKey, Handler: NewParamChangeProposalHandler(k)}
+	govHandler := govv1beta1.HandlerRoute{RouteKey: proposal.RouterKey, Handler: NewParamChangeProposalHandler(k)}
 
 	return paramsOutputs{ParamsKeeper: k, BaseAppOption: baseappOpt, Module: m, GovHandler: govHandler}
 }
 
-func provideSubSpace(key depinject.ModuleKey, k keeper.Keeper) types.Subspace {
-	return k.Subspace(key.Name())
+// TODO
+// optional paramtypes.KeyTable?
+type subSpaceInputs struct {
+	depinject.In
+
+	Key      depinject.ModuleKey
+	Keeper   keeper.Keeper
+	KeyTable *types.KeyTable `optional:"true"`
+}
+
+func provideSubSpace(in subSpaceInputs) types.Subspace {
+	if in.KeyTable == nil {
+		return in.Keeper.Subspace(in.Key.Name())
+	} else {
+		kt := *in.KeyTable
+		return in.Keeper.Subspace(in.Key.Name()).WithKeyTable(kt)
+	}
 }

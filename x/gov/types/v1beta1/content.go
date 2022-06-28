@@ -19,10 +19,10 @@ type Content interface {
 // governance process.
 type Handler func(ctx sdk.Context, content Content) error
 
-type RoutedHandler struct {
+type HandlerRoute struct {
 	Handler  Handler
 	RouteKey string
 }
 
-// ManyPerContainer implements the depinject.ManyPerContainer interface.
-func (RoutedHandler) ManyPerContainer() {}
+// IsManyPerContainerType implements the depinject.ManyPerContainerType interface.
+func (HandlerRoute) IsManyPerContainerType() {}

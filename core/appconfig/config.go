@@ -101,20 +101,14 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 			opts = append(opts, depinject.InvokeInModule(module.Name, invoker))
 		}
 
-		//module.GolangBindings.ProtoReflect().Range(func(fd protoreflect.FieldDescriptor, value protoreflect.Value) bool {
-		//	return true
-		//})
-
+		for _, binding := range module.GolangBindings {
+			opts = append(opts, depinject.BindInterfaceInModule(module.Name, binding.InterfaceType, binding.Implementation))
+		}
 	}
 
-	//appConfig.GolangBindings.ProtoReflect().Range(func(fd protoreflect.FieldDescriptor, value protoreflect.Value) bool {
-	//	opts = append(opts, depinject.BindInterface(fd.TextName(), value.String()))
-	//	return true
-	//})
-
-	//for interfaceType, implementation := range appConfig.GolangBindings {
-	//	opts = append(opts, depinject.BindInterface(interfaceType, implementation))
-	//}
+	for _, binding := range appConfig.GolangBindings {
+		opts = append(opts, depinject.BindInterface(binding.InterfaceType, binding.Implementation))
+	}
 
 	return depinject.Configs(opts...)
 }

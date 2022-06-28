@@ -1284,14 +1284,14 @@ func (x *fastReflection_ModuleConfig) ProtoMethods() *protoiface.Methods {
 
 var (
 	md_GolangBinding                protoreflect.MessageDescriptor
-	fd_GolangBinding_interface      protoreflect.FieldDescriptor
+	fd_GolangBinding_interface_type protoreflect.FieldDescriptor
 	fd_GolangBinding_implementation protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_app_v1alpha1_config_proto_init()
 	md_GolangBinding = File_cosmos_app_v1alpha1_config_proto.Messages().ByName("GolangBinding")
-	fd_GolangBinding_interface = md_GolangBinding.Fields().ByName("interface")
+	fd_GolangBinding_interface_type = md_GolangBinding.Fields().ByName("interface_type")
 	fd_GolangBinding_implementation = md_GolangBinding.Fields().ByName("implementation")
 }
 
@@ -1360,9 +1360,9 @@ func (x *fastReflection_GolangBinding) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_GolangBinding) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Interface_ != "" {
-		value := protoreflect.ValueOfString(x.Interface_)
-		if !f(fd_GolangBinding_interface, value) {
+	if x.InterfaceType != "" {
+		value := protoreflect.ValueOfString(x.InterfaceType)
+		if !f(fd_GolangBinding_interface_type, value) {
 			return
 		}
 	}
@@ -1387,8 +1387,8 @@ func (x *fastReflection_GolangBinding) Range(f func(protoreflect.FieldDescriptor
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_GolangBinding) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.app.v1alpha1.GolangBinding.interface":
-		return x.Interface_ != ""
+	case "cosmos.app.v1alpha1.GolangBinding.interface_type":
+		return x.InterfaceType != ""
 	case "cosmos.app.v1alpha1.GolangBinding.implementation":
 		return x.Implementation != ""
 	default:
@@ -1407,8 +1407,8 @@ func (x *fastReflection_GolangBinding) Has(fd protoreflect.FieldDescriptor) bool
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_GolangBinding) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.app.v1alpha1.GolangBinding.interface":
-		x.Interface_ = ""
+	case "cosmos.app.v1alpha1.GolangBinding.interface_type":
+		x.InterfaceType = ""
 	case "cosmos.app.v1alpha1.GolangBinding.implementation":
 		x.Implementation = ""
 	default:
@@ -1427,8 +1427,8 @@ func (x *fastReflection_GolangBinding) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_GolangBinding) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.app.v1alpha1.GolangBinding.interface":
-		value := x.Interface_
+	case "cosmos.app.v1alpha1.GolangBinding.interface_type":
+		value := x.InterfaceType
 		return protoreflect.ValueOfString(value)
 	case "cosmos.app.v1alpha1.GolangBinding.implementation":
 		value := x.Implementation
@@ -1453,8 +1453,8 @@ func (x *fastReflection_GolangBinding) Get(descriptor protoreflect.FieldDescript
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_GolangBinding) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.app.v1alpha1.GolangBinding.interface":
-		x.Interface_ = value.Interface().(string)
+	case "cosmos.app.v1alpha1.GolangBinding.interface_type":
+		x.InterfaceType = value.Interface().(string)
 	case "cosmos.app.v1alpha1.GolangBinding.implementation":
 		x.Implementation = value.Interface().(string)
 	default:
@@ -1477,8 +1477,8 @@ func (x *fastReflection_GolangBinding) Set(fd protoreflect.FieldDescriptor, valu
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_GolangBinding) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.app.v1alpha1.GolangBinding.interface":
-		panic(fmt.Errorf("field interface of message cosmos.app.v1alpha1.GolangBinding is not mutable"))
+	case "cosmos.app.v1alpha1.GolangBinding.interface_type":
+		panic(fmt.Errorf("field interface_type of message cosmos.app.v1alpha1.GolangBinding is not mutable"))
 	case "cosmos.app.v1alpha1.GolangBinding.implementation":
 		panic(fmt.Errorf("field implementation of message cosmos.app.v1alpha1.GolangBinding is not mutable"))
 	default:
@@ -1494,7 +1494,7 @@ func (x *fastReflection_GolangBinding) Mutable(fd protoreflect.FieldDescriptor) 
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_GolangBinding) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.app.v1alpha1.GolangBinding.interface":
+	case "cosmos.app.v1alpha1.GolangBinding.interface_type":
 		return protoreflect.ValueOfString("")
 	case "cosmos.app.v1alpha1.GolangBinding.implementation":
 		return protoreflect.ValueOfString("")
@@ -1567,7 +1567,7 @@ func (x *fastReflection_GolangBinding) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		l = len(x.Interface_)
+		l = len(x.InterfaceType)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -1611,10 +1611,10 @@ func (x *fastReflection_GolangBinding) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x12
 		}
-		if len(x.Interface_) > 0 {
-			i -= len(x.Interface_)
-			copy(dAtA[i:], x.Interface_)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Interface_)))
+		if len(x.InterfaceType) > 0 {
+			i -= len(x.InterfaceType)
+			copy(dAtA[i:], x.InterfaceType)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.InterfaceType)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -1669,7 +1669,7 @@ func (x *fastReflection_GolangBinding) ProtoMethods() *protoiface.Methods {
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Interface_", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field InterfaceType", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -1697,7 +1697,7 @@ func (x *fastReflection_GolangBinding) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Interface_ = string(dAtA[iNdEx:postIndex])
+				x.InterfaceType = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
@@ -1795,10 +1795,7 @@ type Config struct {
 	Modules []*ModuleConfig `protobuf:"bytes,1,rep,name=modules,proto3" json:"modules,omitempty"`
 	// golang_bindings specifies explicit interface to implementation type bindings which
 	// depinject uses to resolve interface inputs to provider functions.  The scope of this
-	// field's configuration is global (not module specific) and should be of the form:
-	//
-	// golang_bindings:
-	//   interfaceType: implementationType
+	// field's configuration is global (not module specific).
 	GolangBindings []*GolangBinding `protobuf:"bytes,2,rep,name=golang_bindings,json=golangBindings,proto3" json:"golang_bindings,omitempty"`
 }
 
@@ -1858,10 +1855,7 @@ type ModuleConfig struct {
 	Config *anypb.Any `protobuf:"bytes,2,opt,name=config,proto3" json:"config,omitempty"`
 	// golang_bindings specifies explicit interface to implementation type bindings which
 	// depinject uses to resolve interface inputs to provider functions.  The scope of this
-	// field's configuration is module specific and should be of the form:
-	//
-	// golang_bindings:
-	//   interfaceType: implementationType
+	// field's configuration is module specific.
 	GolangBindings []*GolangBinding `protobuf:"bytes,3,rep,name=golang_bindings,json=golangBindings,proto3" json:"golang_bindings,omitempty"`
 }
 
@@ -1906,12 +1900,15 @@ func (x *ModuleConfig) GetGolangBindings() []*GolangBinding {
 	return nil
 }
 
+// GolangBinding is an explicit interface type to implementing type binding for dependency injection.
 type GolangBinding struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Interface_     string `protobuf:"bytes,1,opt,name=interface,proto3" json:"interface,omitempty"`
+	// interface_type is the interface type which will be bound to a specific implementation type
+	InterfaceType string `protobuf:"bytes,1,opt,name=interface_type,json=interfaceType,proto3" json:"interface_type,omitempty"`
+	// implementation is the implementing type which will be supplied when an input of type interface is requested
 	Implementation string `protobuf:"bytes,2,opt,name=implementation,proto3" json:"implementation,omitempty"`
 }
 
@@ -1935,9 +1932,9 @@ func (*GolangBinding) Descriptor() ([]byte, []int) {
 	return file_cosmos_app_v1alpha1_config_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *GolangBinding) GetInterface_() string {
+func (x *GolangBinding) GetInterfaceType() string {
 	if x != nil {
-		return x.Interface_
+		return x.InterfaceType
 	}
 	return ""
 }
@@ -1976,25 +1973,26 @@ var file_cosmos_app_v1alpha1_config_proto_rawDesc = []byte{
 	0x03, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x70, 0x70,
 	0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x47, 0x6f, 0x6c, 0x61, 0x6e, 0x67,
 	0x42, 0x69, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x0e, 0x67, 0x6f, 0x6c, 0x61, 0x6e, 0x67, 0x42,
-	0x69, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x73, 0x22, 0x55, 0x0a, 0x0d, 0x47, 0x6f, 0x6c, 0x61, 0x6e,
-	0x67, 0x42, 0x69, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x12, 0x1c, 0x0a, 0x09, 0x69, 0x6e, 0x74, 0x65,
-	0x72, 0x66, 0x61, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x69, 0x6e, 0x74,
-	0x65, 0x72, 0x66, 0x61, 0x63, 0x65, 0x12, 0x26, 0x0a, 0x0e, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x6d,
-	0x65, 0x6e, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e,
-	0x69, 0x6d, 0x70, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0xc6,
-	0x01, 0x0a, 0x17, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x70,
-	0x70, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x42, 0x0b, 0x43, 0x6f, 0x6e, 0x66,
-	0x69, 0x67, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x30, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2f, 0x61, 0x70, 0x70, 0x2f, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x3b,
-	0x61, 0x70, 0x70, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x41,
-	0x58, 0xaa, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x70, 0x70, 0x2e, 0x56,
-	0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0xca, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x5c, 0x41, 0x70, 0x70, 0x5c, 0x56, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0xe2, 0x02, 0x1f,
-	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x70, 0x70, 0x5c, 0x56, 0x31, 0x61, 0x6c, 0x70,
-	0x68, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea,
-	0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x41, 0x70, 0x70, 0x3a, 0x3a, 0x56,
-	0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x69, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x73, 0x22, 0x5e, 0x0a, 0x0d, 0x47, 0x6f, 0x6c, 0x61, 0x6e,
+	0x67, 0x42, 0x69, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x12, 0x25, 0x0a, 0x0e, 0x69, 0x6e, 0x74, 0x65,
+	0x72, 0x66, 0x61, 0x63, 0x65, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x0d, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x66, 0x61, 0x63, 0x65, 0x54, 0x79, 0x70, 0x65, 0x12,
+	0x26, 0x0a, 0x0e, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x6d, 0x65,
+	0x6e, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0xc6, 0x01, 0x0a, 0x17, 0x63, 0x6f, 0x6d, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70,
+	0x68, 0x61, 0x31, 0x42, 0x0b, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x50, 0x72, 0x6f, 0x74, 0x6f,
+	0x50, 0x01, 0x5a, 0x30, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f,
+	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x70, 0x70, 0x2f,
+	0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x3b, 0x61, 0x70, 0x70, 0x76, 0x31, 0x61, 0x6c,
+	0x70, 0x68, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x41, 0x58, 0xaa, 0x02, 0x13, 0x43, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x70, 0x70, 0x2e, 0x56, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31,
+	0xca, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x70, 0x70, 0x5c, 0x56, 0x31,
+	0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0xe2, 0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c,
+	0x41, 0x70, 0x70, 0x5c, 0x56, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42,
+	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x3a, 0x3a, 0x41, 0x70, 0x70, 0x3a, 0x3a, 0x56, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (

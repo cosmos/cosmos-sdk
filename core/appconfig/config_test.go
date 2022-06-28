@@ -83,18 +83,18 @@ result: goodbye
 
 	opt = appconfig.LoadYAML([]byte(`
 golang_bindings:
-  - interface: interfaceType/package.name 
+  - interfaceType: interfaceType/package.name 
     implementation: implementationType/package.name
-  - interface: interfaceType/package.nameTwo 
+  - interfaceType: interfaceType/package.nameTwo 
     implementation: implementationType/package.nameTwo
 modules:
   - name: a
     config:
       "@type": testpb.TestModuleA
     golang_bindings:
-      - interface: interfaceType/package.name 
+      - interfaceType: interfaceType/package.name 
         implementation: implementationType/package.name
-      - interface: interfaceType/package.nameTwo 
+      - interfaceType: interfaceType/package.nameTwo 
         implementation: implementationType/package.nameTwo
 `))
 	assert.NilError(t, depinject.Inject(opt))

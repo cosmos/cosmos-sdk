@@ -21,26 +21,6 @@ func expectContainerErrorContains(t *testing.T, option depinject.Config, contain
 	assert.ErrorContains(t, err, contains)
 }
 
-func TestGolangBindings(t *testing.T) {
-	opt := appconfig.LoadYAML([]byte(`
-golang_bindings:
-  - interface: interfaceType/package.name 
-    implementation: implementationType/package.name
-  - interface: interfaceType/package.nameTwo 
-    implementation: implementationType/package.nameTwo
-modules:
-  - name: a
-    config:
-      "@type": testpb.TestModuleA
-    golang_bindings:
-      - interface: interfaceType/package.name 
-        implementation: implementationType/package.name
-      - interface: interfaceType/package.nameTwo 
-        implementation: implementationType/package.nameTwo
-`))
-	assert.NilError(t, depinject.Inject(opt))
-}
-
 func TestCompose(t *testing.T) {
 	opt := appconfig.LoadJSON([]byte(`{"modules":[{}]}`))
 	expectContainerErrorContains(t, opt, "module is missing name")
@@ -100,6 +80,24 @@ running module handler b
 result: goodbye
 `
 	assert.Equal(t, expected, buf.String())
+
+	opt = appconfig.LoadYAML([]byte(`
+golang_bindings:
+  - interface: interfaceType/package.name 
+    implementation: implementationType/package.name
+  - interface: interfaceType/package.nameTwo 
+    implementation: implementationType/package.nameTwo
+modules:
+  - name: a
+    config:
+      "@type": testpb.TestModuleA
+    golang_bindings:
+      - interface: interfaceType/package.name 
+        implementation: implementationType/package.name
+      - interface: interfaceType/package.nameTwo 
+        implementation: implementationType/package.nameTwo
+`))
+	assert.NilError(t, depinject.Inject(opt))
 
 	// module registration failures:
 	appmodule.Register(&testpb.TestNoModuleOptionModule{})

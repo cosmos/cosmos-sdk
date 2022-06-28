@@ -39,7 +39,6 @@ func TestIntegrationTestSuite(t *testing.T) {
 }
 
 func (s *IntegrationTestSuite) SetupTest() {
-
 	app, err := simtestutil.Setup(
 		grouptestutil.AppConfig,
 		&s.interfaceRegistry,

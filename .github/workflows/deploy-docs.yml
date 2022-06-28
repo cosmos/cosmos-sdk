@@ -32,7 +32,7 @@ jobs:
           make build-docs LEDGER_ENABLED=false
 
       - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@v4.3.3
+        uses: JamesIves/github-pages-deploy-action@v4.3.4
         with:
           branch: gh-pages
           folder: ~/output

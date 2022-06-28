@@ -452,7 +452,7 @@ func (d Dec) ApproxRoot(root uint64) (guess Dec, err error) {
 
 	delta := OneDec()
 
-	// here we do a rough estimation of bit lenght the root value should have
+	// first we do a rough estimation of the bit length the root value should have
 	rootF := float64(root)
 	dBitLen := float64(d.i.BitLen())
 	guessBitLen := int(dBitLen/rootF + 18*((rootF-1)/rootF)*log2of10)

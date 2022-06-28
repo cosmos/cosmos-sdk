@@ -211,6 +211,7 @@ func provideModule(in crisisInputs) crisisOutputs {
 	if feeCollectorName == "" {
 		feeCollectorName = authtypes.FeeCollectorName
 	}
+
 	k := keeper.NewKeeper(
 		in.Subspace,
 		invalidCheckPeriod,
@@ -219,6 +220,6 @@ func provideModule(in crisisInputs) crisisOutputs {
 	)
 	skipGenesisInvariants := cast.ToBool(in.AppOpts.Get(FlagSkipGenesisInvariants))
 
-	m := NewAppModule(&k, skipGenesisInvariants)
-	return crisisOutputs{CrisisKeeper: k, Module: runtime.WrapAppModule(m)}
+	m := NewAppModule(k, skipGenesisInvariants)
+	return crisisOutputs{CrisisKeeper: *k, Module: runtime.WrapAppModule(m)}
 }

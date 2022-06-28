@@ -2,6 +2,7 @@ package cli
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -29,6 +30,7 @@ func NewTxCmd() *cobra.Command {
 // NewMsgVerifyInvariantTxCmd returns a CLI command handler for creating a
 // MsgVerifyInvariant transaction.
 func NewMsgVerifyInvariantTxCmd() *cobra.Command {
+	fmt.Println("Command Called")
 	cmd := &cobra.Command{
 		Use:   "invariant-broken [module-name] [invariant-route]",
 		Short: "Submit proof that an invariant broken to halt the chain",
@@ -49,7 +51,7 @@ func NewMsgVerifyInvariantTxCmd() *cobra.Command {
 			senderAddr := clientCtx.GetFromAddress()
 
 			msg := types.NewMsgVerifyInvariant(senderAddr, moduleName, route)
-
+			fmt.Println("msg", msg)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

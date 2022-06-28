@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -81,17 +80,17 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 			doc.AppState = exported.AppState
 			doc.Validators = exported.Validators
 			doc.InitialHeight = exported.Height
-			doc.ConsensusParams = &abci.ConsensusParams{
-				Block: &abci.BlockParams{
+			doc.ConsensusParams = &tmproto.ConsensusParams{
+				Block: tmproto.BlockParams{
 					MaxBytes: exported.ConsensusParams.Block.MaxBytes,
 					MaxGas:   exported.ConsensusParams.Block.MaxGas,
 				},
-				Evidence: &tmproto.EvidenceParams{
+				Evidence: tmproto.EvidenceParams{
 					MaxAgeNumBlocks: exported.ConsensusParams.Evidence.MaxAgeNumBlocks,
 					MaxAgeDuration:  exported.ConsensusParams.Evidence.MaxAgeDuration,
 					MaxBytes:        exported.ConsensusParams.Evidence.MaxBytes,
 				},
-				Validator: &tmproto.ValidatorParams{
+				Validator: tmproto.ValidatorParams{
 					PubKeyTypes: exported.ConsensusParams.Validator.PubKeyTypes,
 				},
 			}

@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/armon/go-metrics"
-	tmstrings "github.com/tendermint/tendermint/libs/strings"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -70,7 +69,15 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 
 	cp := ctx.ConsensusParams()
 	if cp != nil && cp.Validator != nil {
-		if !tmstrings.StringInSlice(pk.Type(), cp.Validator.PubKeyTypes) {
+		pkType := pk.Type()
+		hasKeyType := false
+		for _, keyType := range cp.Validator.PubKeyTypes {
+			if pkType == keyType {
+				hasKeyType = true
+				break
+			}
+		}
+		if !hasKeyType {
 			return nil, sdkerrors.Wrapf(
 				types.ErrValidatorPubKeyTypeNotSupported,
 				"got: %s, expected: %s", pk.Type(), cp.Validator.PubKeyTypes,

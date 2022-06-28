@@ -1,4 +1,6 @@
-option go_package = "github.com/tendermint/tendermint/proto/tendermint/p2p";
+syntax = "proto3";
+package tendermint.p2p;
+option  go_package = "github.com/tendermint/tendermint/proto/tendermint/p2p";
 
 import "gogoproto/gogo.proto";
 

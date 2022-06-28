@@ -85,6 +85,38 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }
 
+func (s *TestSuite) TestCreateGroupWithLotsOfMembers() {
+	for i := 50; i < 70; i++ {
+		membersResp := s.createGroupAndGetMembers(i)
+		s.Require().Equal(len(membersResp), i)
+	}
+}
+
+func (s *TestSuite) createGroupAndGetMembers(numMembers int) []*group.GroupMember {
+	addressPool := simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, s.sdkCtx, numMembers, sdk.NewInt(30000000))
+	members := make([]group.MemberRequest, numMembers)
+	for i := 0; i < len(members); i++ {
+		members[i] = group.MemberRequest{
+			Address: addressPool[i].String(),
+			Weight:  "1",
+		}
+	}
+
+	g, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
+		Admin:   members[0].Address,
+		Members: members,
+	})
+	s.Require().NoErrorf(err, "failed to create group with %d members", len(members))
+	s.T().Logf("group %d created with %d members", g.GroupId, len(members))
+
+	groupMemberResp, err := s.groupKeeper.GroupMembers(s.ctx, &group.QueryGroupMembersRequest{GroupId: g.GroupId})
+	s.Require().NoError(err)
+
+	s.T().Logf("got %d members from group %d", len(groupMemberResp.Members), g.GroupId)
+
+	return groupMemberResp.Members
+}
+
 func (s *TestSuite) TestCreateGroup() {
 	addrs := s.addrs
 	addr1 := addrs[0]

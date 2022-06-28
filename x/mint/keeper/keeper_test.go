@@ -9,14 +9,16 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	app *simapp.SimApp
-	ctx sdk.Context
+	app       *simapp.SimApp
+	ctx       sdk.Context
+	msgServer types.MsgServer
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -29,6 +31,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 
 	s.app = app
 	s.ctx = ctx
+	s.msgServer = keeper.NewMsgServerImpl(s.app.MintKeeper)
 }
 
 func (s *IntegrationTestSuite) TestParams() {

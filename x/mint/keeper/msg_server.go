@@ -15,8 +15,7 @@ type msgServer struct {
 	Keeper
 }
 
-// NewMsgServerImpl returns an implementation of the upgrade MsgServer interface
-// for the provided Keeper.
+// NewMsgServerImpl returns an implementation of the x/mint MsgServer interface.
 func NewMsgServerImpl(k Keeper) types.MsgServer {
 	return &msgServer{
 		Keeper: k,

@@ -179,7 +179,47 @@ circular dependency graphs of providers, many of the above tools are designed to
 between modules.
 
 One of the key tactics for resolving circular dependencies is to use different providers and/or invokers to allow a
-circular dependency between components. For example, say the slashing module depends on the staking module but the
-staking module also depends on the staking module indirectly (in the form of "staking hooks"). 
+circular dependency between components. For example, say the slashing keeper depends on the keeper module but the
+staking keeper also depends on the staking module indirectly (in the form of "staking hooks"). The slashing module
+can declare a dependency directly on the staking keeper (using an interface to avoid actually importing the staking
+keeper package). It can also provide an instance of the slashing keeper wrapped as staking hooks in a `OnePerModuleType`
+we'll call `StakingHooksWrapper`. Now, if the staking module directly depended on the staking hooks wrappers
+(`map[string]StakingHooksWrapper`) we would have a circular dependency graph and `depinject` would fail. To fix this,
+the staking module can define an invoker which depends on `map[string]StakingHooksWrapper` and the staking keeper
+(which was provided by the staking module already in a separate provided). In this way `depinject` will be able to
+satisfy this dependency graph which allows staking and slashing to depend on each other in this order:
+* provide staking keeper -> slashing keeper
+* provide slashing keeper wrapped as `StakingHooksWrapper` 
+* get `map[string]StakingHooksWrapper` and the staking keeper and wire them together
 
 ## 3. Testing and Debugging The Module
+
+In order to test and debug the module configuration, we need to build an app config, generally defined in a YAML file.
+This configuration should be passed first to `appconfig.LoadYAML` to get an `depinject.Config` instance. Then the
+`depinject.Config` can be passed to `depinject.Inject` and we can try to resolve dependencies in the app config. Ex:
+
+```go
+//go:embed app.yaml
+var appConfig []byte
+
+var AppConfig = appconfig.LoadYAML(appConfig)
+
+func TestModule(t *testing.T) {
+	var keeper Keeper
+	assert.NilError(t, depinject.Inject(AppConfig, &keeper))
+}
+```
+
+### Debugging `depinject` Graphs
+
+Whenever there is an error in a `depinject` graph, by default `depinject` will dump a bunch of logging output to the
+console, print the error message, and save the dependency graph in [GraphViz](https://graphviz.org) DOT format to
+the file `debug_container.dot`. Inspecting the GraphViz output by converting it to an SVG and viewing it in a web
+browser or using some other GraphViz tool is *highly recommended*.
+
+If `depinject` does not return an error but there is still some weird issue wiring up modules, inspecting the GraphViz
+and logging output is still *highly recommended* and can be done using `depinject.InjectDebug` with the debug option
+`depinject.Debug`.
+
+App developers should attempt to familiarize themselves with the GraphViz graph of their app to see which modules
+depend on which other modules.

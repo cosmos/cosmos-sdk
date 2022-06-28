@@ -46,7 +46,6 @@ func provideModule(in txInputs) txOutputs {
 	txConfig := tx.NewTxConfig(in.ProtoCodecMarshaler, tx.DefaultSignModes)
 
 	baseAppOption := func(app *baseapp.BaseApp) {
-
 		// AnteHandlers
 		if !in.Config.SkipAnteHandler {
 			anteHandler, err := newAnteHandler(txConfig, in)

@@ -54,7 +54,7 @@ var (
 	}
 	testEndBlockRes = abci.ResponseEndBlock{
 		Events:                []abci.Event{},
-		ConsensusParamUpdates: &types1.ConsensusParams{},
+		ConsensusParamUpdates: &abci.ConsensusParams{},
 		ValidatorUpdates:      []abci.ValidatorUpdate{},
 	}
 	mockTxBytes1      = []byte{9, 8, 7, 6, 5, 4, 3, 2, 1}

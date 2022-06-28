@@ -3,6 +3,7 @@ package params
 import (
 	"context"
 	"encoding/json"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"math/rand"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -187,6 +188,7 @@ type paramsOutputs struct {
 	ParamsKeeper  keeper.Keeper
 	BaseAppOption runtime.BaseAppOption
 	Module        runtime.AppModuleWrapper
+	GovHandler    govv1beta1.RoutedHandler
 }
 
 func provideModule(in paramsInputs) paramsOutputs {
@@ -195,8 +197,9 @@ func provideModule(in paramsInputs) paramsOutputs {
 		app.SetParamStore(k.Subspace(baseapp.Paramspace).WithKeyTable(types.ConsensusParamsKeyTable()))
 	}
 	m := runtime.WrapAppModule(NewAppModule(k))
+	govHandler := govv1beta1.RoutedHandler{RouteKey: proposal.RouterKey, Handler: NewParamChangeProposalHandler(k)}
 
-	return paramsOutputs{ParamsKeeper: k, BaseAppOption: baseappOpt, Module: m}
+	return paramsOutputs{ParamsKeeper: k, BaseAppOption: baseappOpt, Module: m, GovHandler: govHandler}
 }
 
 func provideSubSpace(key depinject.ModuleKey, k keeper.Keeper) types.Subspace {

@@ -4,10 +4,13 @@ package gov
 
 import (
 	"context"
+	modulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	"math/rand"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -132,7 +135,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper,
 
 func init() {
 	appmodule.Register(
-		//&modulev1.Module{}
+		&modulev1.Module{},
 		appmodule.Provide(provideModuleBasic, provideModule),
 		appmodule.Invoke(invokeAddRoutes))
 }
@@ -141,21 +144,34 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-func provideModule(cdc codec.Codec, ak types.AccountKeeper, bk types.BankKeeper) (runtime.AppModuleWrapper, v1beta1.RouteHandlerWrapper) {
-	// TODO
-	keeper := nil
-	return runtime.WrapAppModule(NewAppModule(cdc, keeper, ak, bk)), v1beta1.RouteHandlerWrapper{Handler: v1beta1.ProposalHandler}
+func provideModule(
+	config *modulev1.Module,
+	cdc codec.Codec,
+	key *store.KVStoreKey,
+	subSpace types.ParamSubspace,
+	msgServiceRouter *baseapp.MsgServiceRouter,
+	ak types.AccountKeeper,
+	bk types.BankKeeper,
+	sk types.StakingKeeper) (runtime.AppModuleWrapper, v1beta1.RoutedHandler) {
+
+	kConfig := types.DefaultConfig()
+	if config.MaxMetadataLen != 0 {
+		kConfig.MaxMetadataLen = config.MaxMetadataLen
+	}
+
+	k := keeper.NewKeeper(cdc, key, subSpace, ak, bk, sk, msgServiceRouter, kConfig)
+	m := NewAppModule(cdc, k, ak, bk)
+	return runtime.WrapAppModule(m), v1beta1.RoutedHandler{Handler: v1beta1.ProposalHandler, RouteKey: types.RouterKey}
 }
 
-func invokeAddRoutes( // keeper GovKeeper,
-	routes map[string]v1beta1.RouteHandlerWrapper) {
+func invokeAddRoutes(
+	keeper keeper.Keeper,
+	routes []v1beta1.RoutedHandler) {
 	router := v1beta1.NewRouter()
-	for s, wrapper := range routes {
-		router.AddRoute(s, wrapper.Handler)
+	for _, r := range routes {
+		router.AddRoute(r.RouteKey, r.Handler)
 	}
-	// TODO
-	// set legacyHandler on govKeeper after construction.  requires refactor.  legacyRouter must not be sealed after construction
-	// but should be sealed after this operation
+	keeper.SetLegacyRouter(router)
 }
 
 // Name returns the gov module's name.

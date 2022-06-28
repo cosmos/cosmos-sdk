@@ -46,7 +46,6 @@ type TestSuite struct {
 }
 
 func (s *TestSuite) SetupTest() {
-
 	app, err := simtestutil.Setup(
 		grouptestutil.AppConfig,
 		&s.interfaceRegistry,

@@ -48,10 +48,6 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // RegisterRoute register the routes for each of the invariants
 func (k *Keeper) RegisterRoute(moduleName, route string, invar sdk.Invariant) {
-	fmt.Println("-----Register Route for crisis on invariants")
-	fmt.Println(moduleName, route)
-	fmt.Println("-----Register Route for crisis on invariants")
-
 	invarRoute := types.NewInvarRoute(moduleName, route, invar)
 	k.routes = append(k.routes, invarRoute)
 }

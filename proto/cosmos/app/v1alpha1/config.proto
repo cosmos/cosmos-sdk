@@ -56,6 +56,6 @@ message GolangBinding {
   // interface is the interface type which will be bound to a specific implementation type
   string interface = 1;
 
-  // implementation is the implementing type which will be supplied as an input of type interface
+  // implementation is the implementing type which will be supplied when an input of type interface is requested
   string implementation = 2;
 }

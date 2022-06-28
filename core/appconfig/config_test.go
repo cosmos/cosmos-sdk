@@ -24,15 +24,19 @@ func expectContainerErrorContains(t *testing.T, option depinject.Config, contain
 func TestGolangBindings(t *testing.T) {
 	opt := appconfig.LoadYAML([]byte(`
 golang_bindings:
-  interfaceType/package.name: implementationType/package.name
-  interfaceType/package.nameTwo: implementationType/package.nameTwo
+  - interface: interfaceType/package.name 
+    implementation: implementationType/package.name
+  - interface: interfaceType/package.nameTwo 
+    implementation: implementationType/package.nameTwo
 modules:
   - name: a
     config:
       "@type": testpb.TestModuleA
     golang_bindings:
-      interfaceType/package.name: implementationType/package.name
-      interfaceType/package.nameTwo: implementationType/package.nameTwo
+      - interface: interfaceType/package.name 
+        implementation: implementationType/package.name
+      - interface: interfaceType/package.nameTwo 
+        implementation: implementationType/package.nameTwo
 `))
 	assert.NilError(t, depinject.Inject(opt))
 }

@@ -21,7 +21,7 @@ message Config {
   //
   // golang_bindings:
   //   interfaceType: implementationType
-  map<string, string> golang_bindings = 2;
+   repeated GolangBinding golang_bindings = 2;
 }
 
 // ModuleConfig is a module configuration for an app.
@@ -38,7 +38,7 @@ message ModuleConfig {
   // they can migrate from in the ModuleDescriptor.can_migration_from field.
   string name = 1;
 
-  // config is the config object for the module. Module config messages should
+  // config is the config object for the module. Module config messages shouldA
   // define a ModuleDescriptor using the cosmos.app.v1alpha1.is_module extension.
   google.protobuf.Any config = 2;
 
@@ -48,5 +48,14 @@ message ModuleConfig {
   //
   // golang_bindings:
   //   interfaceType: implementationType
-  map<string, string> golang_bindings = 3;
+  repeated GolangBinding golang_bindings = 3;
+}
+
+// GolangBinding is an explicit interface type to implementing type binding for dependency injection.
+message GolangBinding {
+  // interface is the interface type which will be bound to a specific implementation type
+  string interface = 1;
+
+  // implementation is the implementing type which will be supplied as an input of type interface
+  string implementation = 2;
 }

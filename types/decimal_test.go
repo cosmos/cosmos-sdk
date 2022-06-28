@@ -54,6 +54,10 @@ func (s *decimalTestSuite) mustNewDecFromStr(str string) (d sdk.Dec) {
 	return d
 }
 
+func TestApproxRoot(t *testing.T) {
+
+}
+
 func (s *decimalTestSuite) TestNewDecFromStr() {
 	largeBigInt, ok := new(big.Int).SetString("3144605511029693144278234343371835", 10)
 	s.Require().True(ok)
@@ -419,21 +423,20 @@ func (s *decimalTestSuite) TestPower() {
 
 func (s *decimalTestSuite) TestApproxRoot() {
 	testCases := []struct {
-		input    sdk.Dec
-		root     uint64
-		expected sdk.Dec
+		input sdk.Dec
+		root  uint64
 	}{
-		{sdk.OneDec(), 10, sdk.OneDec()},                                                       // 1.0 ^ (0.1) => 1.0
-		{sdk.NewDecWithPrec(25, 2), 2, sdk.NewDecWithPrec(5, 1)},                               // 0.25 ^ (0.5) => 0.5
-		{sdk.NewDecWithPrec(4, 2), 2, sdk.NewDecWithPrec(2, 1)},                                // 0.04 ^ (0.5) => 0.2
-		{sdk.NewDecFromInt(sdk.NewInt(27)), 3, sdk.NewDecFromInt(sdk.NewInt(3))},               // 27 ^ (1/3) => 3
-		{sdk.NewDecFromInt(sdk.NewInt(-81)), 4, sdk.NewDecFromInt(sdk.NewInt(-3))},             // -81 ^ (0.25) => -3
-		{sdk.NewDecFromInt(sdk.NewInt(2)), 2, sdk.NewDecWithPrec(1414213562373095049, 18)},     // 2 ^ (0.5) => 1.414213562373095049
-		{sdk.NewDecWithPrec(1005, 3), 31536000, sdk.MustNewDecFromStr("1.000000000158153904")}, // 1.005 ^ (1/31536000) ≈ 1.00000000016
-		{sdk.SmallestDec(), 2, sdk.NewDecWithPrec(1, 9)},                                       // 1e-18 ^ (0.5) => 1e-9
-		{sdk.SmallestDec(), 3, sdk.MustNewDecFromStr("0.000000999999999997")},                  // 1e-18 ^ (1/3) => 1e-6
-		{sdk.NewDecWithPrec(1, 8), 3, sdk.MustNewDecFromStr("0.002154434690031900")},           // 1e-8 ^ (1/3) ≈ 0.00215443469
-		{sdk.MustNewDecFromStr("9000002314687921634000000000000000000021394871242000000000000000"), 2, sdk.MustNewDecFromStr("94868342004527103646332858502867.899477053226766107")},
+		{sdk.OneDec(), 10},                      // 1.0 ^ (0.1) => 1.0
+		{sdk.NewDecWithPrec(25, 2), 2},          // 0.25 ^ (0.5) => 0.5
+		{sdk.NewDecWithPrec(4, 2), 2},           // 0.04 ^ (0.5) => 0.2
+		{sdk.NewDecFromInt(sdk.NewInt(27)), 3},  // 27 ^ (1/3) => 3
+		{sdk.NewDecFromInt(sdk.NewInt(-81)), 4}, // -81 ^ (0.25) => -3
+		{sdk.NewDecFromInt(sdk.NewInt(2)), 2},   // 2 ^ (0.5) => 1.414213562373095049
+		{sdk.SmallestDec(), 2},                  // 1e-18 ^ (0.5) => 1e-9
+		{sdk.SmallestDec(), 3},                  // 1e-18 ^ (1/3) => 1e-6
+		{sdk.NewDecWithPrec(1, 8), 3},           // 1e-8 ^ (1/3) ≈ 0.00215443469
+		{sdk.MustNewDecFromStr("9000002314687921634000000000000000000021394871242000000000000000"), 2},
+		{sdk.MustNewDecFromStr("9000002314687921630909090904000000000000000000021394871242000000000000000000"), 3},
 	}
 
 	// In the case of 1e-8 ^ (1/3), the result repeats every 5 iterations starting from iteration 24
@@ -443,7 +446,26 @@ func (s *decimalTestSuite) TestApproxRoot() {
 	for i, tc := range testCases {
 		res, err := tc.input.ApproxRoot(tc.root)
 		s.Require().NoError(err)
-		s.Require().True(tc.expected.Sub(res).Abs().LTE(sdk.SmallestDec()), "unexpected result for test case %d, input: %v", i, tc.input)
+		fmt.Println(res.Add(sdk.SmallestDec()).Power(tc.root))
+
+		// diff = res ^ root - input
+		diff := res.Power(tc.root).Abs().Sub(tc.input.Abs())
+		fmt.Println(diff, "diff")
+
+		// we calculate res ^ root and compare it with the input
+		if diff.Abs().GT(sdk.SmallestDec()) {
+			// if diff is negative, res is smaller than the actual root value
+			// try adding 1e-18 to res, then calculate a new diff
+			if diff.IsNegative() {
+				newDiff := res.Add(sdk.SmallestDec()).Power(tc.root).Abs().Sub(tc.input.Abs())
+				// if new diff is not positive then we've not hit the best result
+				s.Require().True(newDiff.IsPositive(), "unexpected result for test case %d, input: %v", i, tc.input)
+			} else {
+				newDiff := res.Sub(sdk.SmallestDec()).Power(tc.root).Abs().Sub(tc.input.Abs())
+				// if new diff is not negative then we've not hit the best result
+				s.Require().True(newDiff.IsNegative(), "unexpected result for test case %d, input: %v", i, tc.input)
+			}
+		}
 	}
 }
 

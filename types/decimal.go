@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"math/big"
 	"strconv"
 	"strings"
@@ -44,6 +45,9 @@ var (
 	zeroInt              = big.NewInt(0)
 	oneInt               = big.NewInt(1)
 	tenInt               = big.NewInt(10)
+	minusOneDec          = MustNewDecFromStr("-1")
+	log2of10             = math.Log2(10)
+	zeroDec              = ZeroDec()
 )
 
 // Decimal errors
@@ -420,7 +424,7 @@ func (d Dec) QuoInt64Mut(i int64) Dec {
 // using Newton's method (where n is positive). The algorithm starts with some guess and
 // computes the sequence of improved guesses until an answer converges to an
 // approximate answer.  It returns `|d|.ApproxRoot() * -1` if input is negative.
-// A maximum number of 100 iterations is used a backup boundary condition for
+// A maximum number of 300 iterations is used a backup boundary condition for
 // cases where the answer never converges enough to satisfy the main condition.
 func (d Dec) ApproxRoot(root uint64) (guess Dec, err error) {
 	defer func() {
@@ -446,20 +450,69 @@ func (d Dec) ApproxRoot(root uint64) (guess Dec, err error) {
 		return OneDec(), nil
 	}
 
-	guess, delta := OneDec(), OneDec()
+	delta := OneDec()
 
-	for iter := 0; delta.Abs().GT(SmallestDec()) && iter < maxApproxRootIterations; iter++ {
+	// here we do a rough estimation of bit lenght the root value should have
+	rootF := float64(root)
+	dBitLen := float64(d.i.BitLen())
+	guessBitLen := int(dBitLen/rootF + 18*((rootF-1)/rootF)*log2of10)
+	guess = Dec{
+		i: new(big.Int).SetBit(zeroInt, guessBitLen, 1),
+	}
+
+	// this is used to keep track of the best value we can hit, in case of non-convergence.
+	iterationSinceBestGuess := 0
+	bestGuess := ZeroDec()
+	smallestDiff := minusOneDec
+
+	for iter := 0; delta.Abs().GT(zeroDec) && iter < maxApproxRootIterations; iter++ {
+		// catch out of bounds panic, calculate next guess = (guess + previous guess) / 2
+		// instead of using the regular newton method
+		defer func() {
+			if r := recover(); r != nil {
+				delta.QuoInt64Mut(2)
+				guess.SubMut(delta)
+			}
+		}()
+
+		// this is where all the panics occurs
+		// if panic occurs, calculate next guess with the defer code above
 		prev := guess.Power(root - 1)
 		if prev.IsZero() {
 			prev = SmallestDec()
 		}
+
 		delta.Set(d).QuoMut(prev)
 		delta.SubMut(guess)
 		delta.QuoInt64Mut(int64(root))
 
+		// Handling non-convergence
+		// if iter > 150 we might oscillate around the true root value (due to precision, large numbers etc),
+		// so we need to keep record of the best guess
+		// and set condition to stop the oscillation.
+		if iter > 150 {
+			prev.MulMut(guess)
+			diff := d.Sub(prev).Abs()
+			if diff.LT(smallestDiff) || smallestDiff.IsNegative() {
+				smallestDiff = diff
+				iterationSinceBestGuess = 0
+				bestGuess.Set(guess)
+			} else {
+				iterationSinceBestGuess++
+				// condition to stop the oscillation: if our guess is not better after 20 iter
+				if iterationSinceBestGuess > 20 {
+					break
+				}
+			}
+		}
+
 		guess.AddMut(delta)
 	}
 
+	// return the best guess in case of non-convergence.
+	if !bestGuess.IsZero() {
+		return bestGuess, nil
+	}
 	return guess, nil
 }
 

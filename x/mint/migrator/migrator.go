@@ -29,5 +29,4 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 	m.legacySubspace.GetParamSet(ctx, &currParams)
 
 	return m.keeper.SetParams(ctx, currParams)
-
 }

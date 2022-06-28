@@ -3,7 +3,9 @@ package simapp
 import (
 	"context"
 	"encoding/json"
+	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -256,7 +258,9 @@ func SignCheckDeliver(
 	t *testing.T, txCfg client.TxConfig, app *bam.BaseApp, header tmproto.Header, msgs []sdk.Msg,
 	chainID string, accNums, accSeqs []uint64, expSimPass, expPass bool, priv ...cryptotypes.PrivKey,
 ) (sdk.GasInfo, *sdk.Result, error) {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	tx, err := simtestutil.GenSignedMockTx(
+		r,
 		txCfg,
 		msgs,
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
@@ -304,9 +308,11 @@ func SignCheckDeliver(
 // every transaction.
 func GenSequenceOfTxs(txGen client.TxConfig, msgs []sdk.Msg, accNums []uint64, initSeqNums []uint64, numToGenerate int, priv ...cryptotypes.PrivKey) ([]sdk.Tx, error) {
 	txs := make([]sdk.Tx, numToGenerate)
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	var err error
 	for i := 0; i < numToGenerate; i++ {
 		txs[i], err = simtestutil.GenSignedMockTx(
+			r,
 			txGen,
 			msgs,
 			sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},

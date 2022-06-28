@@ -52,14 +52,6 @@ func (suite *SimTestSuite) SetupTest() {
 	suite.Require().NoError(err)
 
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
-	// suite.addrs = simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, suite.ctx, 4, sdk.NewInt(30000000))
-	// suite.msgSrvr = keeper.NewMsgServerImpl(suite.feegrantKeeper)
-	// suite.atom = sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(555)))
-
-	// suite.app = app
-	// suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{
-	// Time: time.Now(),
-	// })
 }
 
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {

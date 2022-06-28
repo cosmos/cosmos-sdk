@@ -9,7 +9,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
-	//"github.com/spf13/cast"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -204,8 +203,7 @@ func NewSimApp(
 
 	var (
 		appBuilder *runtime.AppBuilder
-		//app        = &SimApp{invCheckPeriod: invCheckPeriod}
-		app = &SimApp{}
+		app        = &SimApp{}
 
 		// merge the app.yaml and the appOpts in one config
 		appConfig = depinject.Configs(AppConfig, depinject.Supply(appOpts))
@@ -246,10 +244,6 @@ func NewSimApp(
 	}
 
 	initParamsKeeper(app.ParamsKeeper)
-
-	//app.CrisisKeeper = crisiskeeper.NewKeeper(
-	//	app.GetSubspace(crisistypes.ModuleName), invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName,
-	//)
 
 	// register the proposal types
 	govRouter := govv1beta1.NewRouter()

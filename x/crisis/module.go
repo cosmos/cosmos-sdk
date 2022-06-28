@@ -191,13 +191,13 @@ type crisisInputs struct {
 	Cdc        codec.Codec
 	Config     *modulev1.Module
 	Subspace   paramstypes.Subspace
-	BankKeeper types.SupplyKeeper `key:"cosmos.bank.v1.Keeper"`
+	BankKeeper types.SupplyKeeper
 }
 
 type crisisOutputs struct {
 	depinject.Out
 
-	CrisisKeeper *keeper.Keeper `key:"cosmos.crisis.v1.Keeper"`
+	CrisisKeeper *keeper.Keeper
 	Module       runtime.AppModuleWrapper
 }
 

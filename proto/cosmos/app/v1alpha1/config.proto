@@ -35,7 +35,7 @@ message ModuleConfig {
   // they can migrate from in the ModuleDescriptor.can_migration_from field.
   string name = 1;
 
-  // config is the config object for the module. Module config messages shouldA
+  // config is the config object for the module. Module config messages should
   // define a ModuleDescriptor using the cosmos.app.v1alpha1.is_module extension.
   google.protobuf.Any config = 2;
 

@@ -11,12 +11,13 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	abciclient "github.com/tendermint/tendermint/abci/client"
 	"github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	tmos "github.com/tendermint/tendermint/libs/os"
-	tmservice "github.com/tendermint/tendermint/libs/service"
 	"github.com/tendermint/tendermint/node"
+	"github.com/tendermint/tendermint/p2p"
+	pvm "github.com/tendermint/tendermint/privval"
+	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/rpc/client/local"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"google.golang.org/grpc"
@@ -273,13 +274,13 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 	app := appCreator(ctx.Logger, db, traceWriter, ctx.Viper)
 
-	genDoc, err := tmtypes.GenesisDocFromFile(cfg.GenesisFile())
+	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
 	if err != nil {
 		return err
 	}
 
 	var (
-		tmNode   tmservice.Service
+		tmNode   *node.Node
 		gRPCOnly = ctx.Viper.GetBool(flagGRPCOnly)
 	)
 	if gRPCOnly {
@@ -288,11 +289,20 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	} else {
 		ctx.Logger.Info("starting node with ABCI Tendermint in-process")
 
-		tmNode, err = node.New(cfg, ctx.Logger, abciclient.NewLocalCreator(app), genDoc)
+		genDocProvider := node.DefaultGenesisDocProviderFunc(cfg)
+		tmNode, err := node.NewNode(
+			cfg,
+			pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
+			nodeKey,
+			proxy.NewLocalClientCreator(app),
+			genDocProvider,
+			node.DefaultDBProvider,
+			node.DefaultMetricsProvider(cfg.Instrumentation),
+			ctx.Logger,
+		)
 		if err != nil {
 			return err
 		}
-
 		if err := tmNode.Start(); err != nil {
 			return err
 		}
@@ -302,17 +312,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	// service if API or gRPC is enabled, and avoid doing so in the general
 	// case, because it spawns a new local tendermint RPC client.
 	if (config.API.Enable || config.GRPC.Enable) && tmNode != nil {
-		node, ok := tmNode.(local.NodeService)
-		if !ok {
-			return fmt.Errorf("unable to set node type; please try re-installing the binary")
-		}
-
-		localNode, err := local.New(node)
-		if err != nil {
-			return err
-		}
-
-		clientCtx = clientCtx.WithClient(localNode)
+		clientCtx = clientCtx.WithClient(local.New(tmNode))
 
 		app.RegisterTxService(clientCtx)
 		app.RegisterTendermintService(clientCtx)

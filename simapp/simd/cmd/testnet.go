@@ -228,7 +228,6 @@ func initTestnetFiles(
 		nodeConfig.SetRoot(nodeDir)
 		nodeConfig.Moniker = nodeDirName
 		nodeConfig.RPC.ListenAddress = "tcp://0.0.0.0:26657"
-		nodeConfig.Mode = tmconfig.ModeValidator
 
 		if err := os.MkdirAll(filepath.Join(nodeDir, "config"), nodeDirPerm); err != nil {
 			_ = os.RemoveAll(args.outputDir)

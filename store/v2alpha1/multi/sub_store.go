@@ -2,9 +2,7 @@ package multi
 
 import (
 	"io"
-	"sync"
 
-	dbm "github.com/cosmos/cosmos-sdk/db"
 	dbutil "github.com/cosmos/cosmos-sdk/internal/db"
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
@@ -57,29 +55,13 @@ func (s *substore) Delete(key []byte) {
 	_ = s.dataBucket.Delete(key)
 }
 
-type contentsIterator struct {
-	types.Iterator
-	locker sync.Locker
-}
-
-func (s *substore) newSubstoreIterator(source dbm.Iterator) *contentsIterator {
-	locker := s.root.mtx.RLocker()
-	locker.Lock()
-	return &contentsIterator{dbutil.ToStoreIterator(source), locker}
-}
-
-func (it *contentsIterator) Close() error {
-	defer it.locker.Unlock()
-	return it.Iterator.Close()
-}
-
 // Iterator implements KVStore.
 func (s *substore) Iterator(start, end []byte) types.Iterator {
 	iter, err := s.dataBucket.Iterator(start, end)
 	if err != nil {
 		panic(err)
 	}
-	return s.newSubstoreIterator(iter)
+	return dbutil.DBToStoreIterator(iter)
 }
 
 // ReverseIterator implements KVStore.
@@ -88,7 +70,7 @@ func (s *substore) ReverseIterator(start, end []byte) types.Iterator {
 	if err != nil {
 		panic(err)
 	}
-	return s.newSubstoreIterator(iter)
+	return dbutil.DBToStoreIterator(iter)
 }
 
 // GetStoreType implements Store.

@@ -141,48 +141,6 @@ func newSchemaBuilder() SchemaBuilder {
 	return SchemaBuilder{StoreSchema: StoreSchema{}}
 }
 
-// DefaultStoreParams returns a MultiStore config with an empty schema, a single backing DB,
-// pruning with PruneDefault, no listeners and no tracer.
-func DefaultStoreParams() StoreParams {
-	return StoreParams{
-		Pruning:          pruningtypes.NewPruningOptions(pruningtypes.PruningDefault),
-		SchemaBuilder:    newSchemaBuilder(),
-		storeKeys:        storeKeys{},
-		traceListenMixin: newTraceListenMixin(),
-	}
-}
-
-func (par *StoreParams) RegisterSubstore(skey types.StoreKey, typ types.StoreType) error {
-	if !validSubStoreType(typ) {
-		return fmt.Errorf("StoreType not supported: %v", typ)
-	}
-	var ok bool
-	switch typ {
-	case types.StoreTypePersistent:
-		_, ok = skey.(*types.KVStoreKey)
-	case types.StoreTypeMemory:
-		_, ok = skey.(*types.MemoryStoreKey)
-	case types.StoreTypeTransient:
-		_, ok = skey.(*types.TransientStoreKey)
-	}
-	if !ok {
-		return fmt.Errorf("invalid StoreKey for %v: %T", typ, skey)
-	}
-	if err := par.registerName(skey.Name(), typ); err != nil {
-		return err
-	}
-	par.storeKeys[skey.Name()] = skey
-	return nil
-}
-
-func (par *StoreParams) storeKey(key string) (types.StoreKey, error) {
-	skey, ok := par.storeKeys[key]
-	if !ok {
-		return nil, fmt.Errorf("StoreKey instance not mapped: %s", key)
-	}
-	return skey, nil
-}
-
 // Returns true for valid store types for a MultiStore schema
 func validSubStoreType(sst types.StoreType) bool {
 	switch sst {
@@ -279,8 +237,7 @@ func NewStore(db dbm.DBConnection, opts StoreParams) (ret *Store, err error) {
 	// To abide by atomicity constraints, revert the DB to the last saved version, in case it contains
 	// committed data in the "working" version.
 	// This should only happen if Store.Commit previously failed.
-	err = db.Revert()
-	if err != nil {
+	if err = db.Revert(); err != nil {
 		return
 	}
 	stateTxn := db.ReadWriter()
@@ -292,8 +249,7 @@ func NewStore(db dbm.DBConnection, opts StoreParams) (ret *Store, err error) {
 	stateCommitmentTxn := stateTxn
 	if opts.StateCommitmentDB != nil {
 		var scVersions dbm.VersionSet
-		scVersions, err = opts.StateCommitmentDB.Versions()
-		if err != nil {
+		if scVersions, err = opts.StateCommitmentDB.Versions(); err != nil {
 			return
 		}
 		// Version sets of each DB must match
@@ -301,8 +257,7 @@ func NewStore(db dbm.DBConnection, opts StoreParams) (ret *Store, err error) {
 			err = fmt.Errorf("different version history between Storage and StateCommitment DB ")
 			return
 		}
-		err = opts.StateCommitmentDB.Revert()
-		if err != nil {
+		if err = opts.StateCommitmentDB.Revert(); err != nil {
 			return
 		}
 		stateCommitmentTxn = opts.StateCommitmentDB.ReadWriter()
@@ -333,8 +288,7 @@ func NewStore(db dbm.DBConnection, opts StoreParams) (ret *Store, err error) {
 	writeSchema := func(sch StoreSchema) {
 		schemaWriter := prefixdb.NewWriter(ret.stateTxn, schemaPrefix)
 		var it dbm.Iterator
-		it, err = schemaView.Iterator(nil, nil)
-		if err != nil {
+		if it, err = schemaView.Iterator(nil, nil); err != nil {
 			return
 		}
 		for it.Next() {
@@ -343,12 +297,10 @@ func NewStore(db dbm.DBConnection, opts StoreParams) (ret *Store, err error) {
 				return
 			}
 		}
-		err = it.Close()
-		if err != nil {
+		if err = it.Close(); err != nil {
 			return
 		}
-		err = schemaView.Discard()
-		if err != nil {
+		if err = schemaView.Discard(); err != nil {
 			return
 		}
 		// NB. the migrated contents and schema are not committed until the next store.Commit
@@ -642,9 +594,8 @@ func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
 	}
 	// Update substore Merkle roots
 	for key, storeHash := range storeHashes {
-		pfx := substorePrefix(key)
-		stateW := prefixdb.NewReadWriter(s.stateTxn, pfx)
-		if err = stateW.Set(substoreMerkleRootKey, storeHash); err != nil {
+		w := prefixdb.NewPrefixReadWriter(s.stateTxn, substorePrefix(key))
+		if err = w.Set(substoreMerkleRootKey, storeHash); err != nil {
 			return
 		}
 	}
@@ -660,8 +611,7 @@ func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
 			err = util.CombineErrors(err, s.stateDB.Revert(), "stateDB.Revert also failed")
 		}
 	}()
-	err = s.stateDB.SaveVersion(target)
-	if err != nil {
+	if err = s.stateDB.SaveVersion(target); err != nil {
 		return
 	}
 
@@ -691,8 +641,7 @@ func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
 			}
 		}()
 
-		err = s.StateCommitmentDB.SaveVersion(target)
-		if err != nil {
+		if err = s.StateCommitmentDB.SaveVersion(target); err != nil {
 			return
 		}
 	}

@@ -84,6 +84,25 @@ func SetSubstores(keys ...storetypes.StoreKey) StoreOption {
 	}
 }
 
+func SetSubstoresFromMaps(
+	keys map[string]*storetypes.KVStoreKey,
+	tkeys map[string]*storetypes.TransientStoreKey,
+	memKeys map[string]*storetypes.MemoryStoreKey,
+) StoreOption {
+	return func(params *multi.StoreParams, _ uint64) error {
+		if err := multi.RegisterSubstoresFromMap(params, keys); err != nil {
+			return err
+		}
+		if err := multi.RegisterSubstoresFromMap(params, tkeys); err != nil {
+			return err
+		}
+		if err := multi.RegisterSubstoresFromMap(params, memKeys); err != nil {
+			return err
+		}
+		return nil
+	}
+}
+
 // SetSnapshot sets the snapshot store.
 func SetSnapshot(snapshotStore *snapshots.Store, opts snapshottypes.SnapshotOptions) AppOption {
 	return AppOptionOrdered{

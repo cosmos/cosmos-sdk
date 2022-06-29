@@ -106,7 +106,6 @@ func SimulateMsgSend(
 			[]uint64{senderAcc.GetSequence()},
 			sender.PrivKey,
 		)
-
 		if err != nil {
 			return simtypes.NoOpMsg(nft.ModuleName, TypeMsgSend, "unable to generate mock tx"), nil, err
 		}

@@ -26,13 +26,11 @@ import (
 
 func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	suite.SetupTest(false)
-	// setup
-	app, ctx := suite.app, suite.ctx
 
-	protoTxCfg := tx.NewTxConfig(codec.NewProtoCodec(app.InterfaceRegistry()), tx.DefaultSignModes)
+	protoTxCfg := tx.NewTxConfig(codec.NewProtoCodec(suite.interfaceRegistry), tx.DefaultSignModes)
 
 	// this just tests our handler
-	dfd := ante.NewDeductFeeDecorator(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, nil)
+	dfd := ante.NewDeductFeeDecorator(suite.accountKeeper, suite.bankKeeper, suite.feeGrantKeeper, nil)
 	feeAnteHandler := sdk.ChainAnteDecorators(dfd)
 
 	// this tests the whole stack
@@ -46,21 +44,21 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	priv5, _, addr5 := testdata.KeyTestPubAddr()
 
 	// Set addr1 with insufficient funds
-	err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(10))})
+	err := testutil.FundAccount(suite.bankKeeper, suite.ctx, addr1, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(10))})
 	suite.Require().NoError(err)
 
 	// Set addr2 with more funds
-	err = testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr2, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(99999))})
+	err = testutil.FundAccount(suite.bankKeeper, suite.ctx, addr2, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(99999))})
 	suite.Require().NoError(err)
 
 	// grant fee allowance from `addr2` to `addr3` (plenty to pay)
-	err = app.FeeGrantKeeper.GrantAllowance(ctx, addr2, addr3, &feegrant.BasicAllowance{
+	err = suite.feeGrantKeeper.GrantAllowance(suite.ctx, addr2, addr3, &feegrant.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
 	})
 	suite.Require().NoError(err)
 
 	// grant low fee allowance (20atom), to check the tx requesting more than allowed.
-	err = app.FeeGrantKeeper.GrantAllowance(ctx, addr2, addr4, &feegrant.BasicAllowance{
+	err = suite.feeGrantKeeper.GrantAllowance(suite.ctx, addr2, addr4, &feegrant.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 20)),
 	})
 	suite.Require().NoError(err)
@@ -138,22 +136,22 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 			fee := sdk.NewCoins(sdk.NewInt64Coin("atom", tc.fee))
 			msgs := []sdk.Msg{testdata.NewTestMsg(tc.signer)}
 
-			acc := app.AccountKeeper.GetAccount(ctx, tc.signer)
+			acc := suite.accountKeeper.GetAccount(suite.ctx, tc.signer)
 			privs, accNums, seqs := []cryptotypes.PrivKey{tc.signerKey}, []uint64{0}, []uint64{0}
 			if acc != nil {
 				accNums, seqs = []uint64{acc.GetAccountNumber()}, []uint64{acc.GetSequence()}
 			}
 
-			tx, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, simtestutil.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)
+			tx, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, simtestutil.DefaultGenTxGas, suite.ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)
 			suite.Require().NoError(err)
-			_, err = feeAnteHandler(ctx, tx, false) // tests only feegrant ante
+			_, err = feeAnteHandler(suite.ctx, tx, false) // tests only feegrant ante
 			if tc.valid {
 				suite.Require().NoError(err)
 			} else {
 				suite.Require().Error(err)
 			}
 
-			_, err = anteHandlerStack(ctx, tx, false) // tests while stack
+			_, err = anteHandlerStack(suite.ctx, tx, false) // tests while stack
 			if tc.valid {
 				suite.Require().NoError(err)
 			} else {

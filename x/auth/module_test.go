@@ -17,17 +17,6 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	app, err := simtestutil.SetupAtGenesis(testutil.AppConfig, &accountKeeper)
 	require.NoError(t, err)
 
-	// genesisState := simapp.GenesisStateWithSingleValidator(t, app)
-	// stateBytes, err := tmjson.Marshal(genesisState)
-	// require.NoError(t, err)
-
-	// app.InitChain(
-	// 	abcitypes.RequestInitChain{
-	// 		AppStateBytes: stateBytes,
-	// 		ChainId:       "test-chain-id",
-	// 	},
-	// )
-
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	acc := accountKeeper.GetAccount(ctx, types.NewModuleAddress(types.FeeCollectorName))
 	require.NotNil(t, acc)

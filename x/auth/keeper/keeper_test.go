@@ -11,8 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/apptestutils"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
@@ -42,7 +42,7 @@ type KeeperTestSuite struct {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	app, err := simtestutil.Setup(
-		testutil.AppConfig,
+		apptestutils.AppConfig,
 		&suite.legacyAmino,
 		&suite.interfaceRegistry,
 		&suite.accountKeeper,
@@ -135,31 +135,16 @@ func (suite *KeeperTestSuite) TestGetSetParams() {
 	suite.Require().Equal(params, actualParams)
 }
 
-// func (suite *KeeperTestSuite) TestSupply_ValidatePermissions() {
-// 	app := suite.app
+func (suite *KeeperTestSuite) TestSupply_ValidatePermissions() {
 
-// 	// add module accounts to supply keeper
-// 	maccPerms := simapp.GetMaccPerms()
-// 	maccPerms[holder] = nil
-// 	maccPerms[types.Burner] = []string{types.Burner}
-// 	maccPerms[types.Minter] = []string{types.Minter}
-// 	maccPerms[multiPerm] = []string{types.Burner, types.Minter, types.Staking}
-// 	maccPerms[randomPerm] = []string{"random"}
+	err := suite.accountKeeper.ValidatePermissions(multiPermAcc)
+	suite.Require().NoError(err)
 
-// 	cdc := simapp.MakeTestEncodingConfig().Codec
-// 	keeper := keeper.NewAccountKeeper(
-// 		cdc, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
-// 		types.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
-// 	)
+	err = suite.accountKeeper.ValidatePermissions(randomPermAcc)
+	suite.Require().NoError(err)
 
-// 	err := keeper.ValidatePermissions(multiPermAcc)
-// 	suite.Require().NoError(err)
-
-// 	err = keeper.ValidatePermissions(randomPermAcc)
-// 	suite.Require().NoError(err)
-
-// 	// unregistered permissions
-// 	otherAcc := types.NewEmptyModuleAccount("other", "other")
-// 	err = suite.accountKeeper.ValidatePermissions(otherAcc)
-// 	suite.Require().Error(err)
-// }
+	// unregistered permissions
+	otherAcc := types.NewEmptyModuleAccount("other", "other")
+	err = suite.accountKeeper.ValidatePermissions(otherAcc)
+	suite.Require().Error(err)
+}

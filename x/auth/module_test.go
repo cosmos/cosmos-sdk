@@ -7,14 +7,14 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/x/auth/apptestutils"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	var accountKeeper keeper.AccountKeeper
-	app, err := simtestutil.SetupAtGenesis(testutil.AppConfig, &accountKeeper)
+	app, err := simtestutil.SetupAtGenesis(apptestutils.AppConfig, &accountKeeper)
 	require.NoError(t, err)
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})

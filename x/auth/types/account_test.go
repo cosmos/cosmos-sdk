@@ -13,8 +13,8 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/apptestutils"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -64,7 +64,7 @@ func TestBaseSequence(t *testing.T) {
 func TestBaseAccountMarshal(t *testing.T) {
 	var accountKeeper authkeeper.AccountKeeper
 
-	_, err := simtestutil.Setup(testutil.AppConfig, &accountKeeper)
+	_, err := simtestutil.Setup(apptestutils.AppConfig, &accountKeeper)
 	require.NoError(t, err)
 	_, pub, addr := testdata.KeyTestPubAddr()
 	acc := types.NewBaseAccountWithAddress(addr)

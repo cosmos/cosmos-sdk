@@ -1,4 +1,4 @@
-package cli
+package cli_test
 
 import (
 	"context"
@@ -8,22 +8,32 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/apptestutils"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 )
 
 func TestGetCommandEncode(t *testing.T) {
-	encodingConfig := simappparams.MakeTestEncodingConfig()
+	var (
+		txCfg       client.TxConfig
+		legacyAmino *codec.LegacyAmino
+		codec       codec.Codec
+	)
 
-	cmd := GetEncodeCommand()
+	err := depinject.Inject(
+		authtestutil.AppConfig,
+		&txCfg,
+		&legacyAmino,
+		&codec,
+	)
+	require.NoError(t, err)
+
+	cmd := cli.GetEncodeCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
-
-	authtypes.RegisterLegacyAminoCodec(encodingConfig.Amino)
-	sdk.RegisterLegacyAminoCodec(encodingConfig.Amino)
-
-	txCfg := encodingConfig.TxConfig
 
 	// Build a test transaction
 	builder := txCfg.NewTxBuilder()
@@ -38,8 +48,8 @@ func TestGetCommandEncode(t *testing.T) {
 
 	ctx := context.Background()
 	clientCtx := client.Context{}.
-		WithTxConfig(encodingConfig.TxConfig).
-		WithCodec(encodingConfig.Codec)
+		WithTxConfig(txCfg).
+		WithCodec(codec)
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	cmd.SetArgs([]string{txFileName})
@@ -54,7 +64,7 @@ func TestGetCommandDecode(t *testing.T) {
 		WithTxConfig(encodingConfig.TxConfig).
 		WithCodec(encodingConfig.Codec)
 
-	cmd := GetDecodeCommand()
+	cmd := cli.GetDecodeCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 
 	sdk.RegisterLegacyAminoCodec(encodingConfig.Amino)

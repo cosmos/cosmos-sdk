@@ -5,8 +5,8 @@ import (
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/apptestutils"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
@@ -14,7 +14,7 @@ import (
 func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 	b.ReportAllocs()
 	var accountKeeper keeper.AccountKeeper
-	app, err := simtestutil.Setup(testutil.AppConfig, &accountKeeper)
+	app, err := simtestutil.Setup(apptestutils.AppConfig, &accountKeeper)
 	require.NoError(b, err)
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
@@ -37,7 +37,7 @@ func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 func BenchmarkAccountMapperSetAccount(b *testing.B) {
 	b.ReportAllocs()
 	var accountKeeper keeper.AccountKeeper
-	app, err := simtestutil.Setup(testutil.AppConfig, &accountKeeper)
+	app, err := simtestutil.Setup(apptestutils.AppConfig, &accountKeeper)
 	require.NoError(b, err)
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})

@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-// GetValidatorSigningInfo retruns the ValidatorSigningInfo for a specific validator
+// GetValidatorSigningInfo returns the ValidatorSigningInfo for a specific validator
 // ConsAddress
 func (k Keeper) GetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress) (info types.ValidatorSigningInfo, found bool) {
 	store := ctx.KVStore(k.storeKey)

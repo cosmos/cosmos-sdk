@@ -1,7 +1,6 @@
 package baseapp
 
 import (
-	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -29,14 +28,6 @@ func (app *BaseApp) DeliverState() *state {
 // This method is only accessible in baseapp tests.
 func (app *BaseApp) Store() types.CommitMultiStore {
 	return app.store
-}
-
-// GetSnapshotManager() is an exported method to be able to access baseapp's snapshot
-// manager in tests.
-//
-// This method is only accessible in baseapp tests.
-func (app *BaseApp) GetSnapshotManager() *snapshots.Manager {
-	return app.snapshotManager
 }
 
 // GetMaximumBlockGas return maximum blocks gas.

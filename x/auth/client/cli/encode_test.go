@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/depinject"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/cli"
@@ -58,18 +57,27 @@ func TestGetCommandEncode(t *testing.T) {
 }
 
 func TestGetCommandDecode(t *testing.T) {
-	encodingConfig := simappparams.MakeTestEncodingConfig()
+	var (
+		txCfg       client.TxConfig
+		legacyAmino *codec.LegacyAmino
+		codec       codec.Codec
+	)
+
+	err := depinject.Inject(
+		authtestutil.AppConfig,
+		&txCfg,
+		&legacyAmino,
+		&codec,
+	)
+	require.NoError(t, err)
 
 	clientCtx := client.Context{}.
-		WithTxConfig(encodingConfig.TxConfig).
-		WithCodec(encodingConfig.Codec)
+		WithTxConfig(txCfg).
+		WithCodec(codec)
 
 	cmd := cli.GetDecodeCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 
-	sdk.RegisterLegacyAminoCodec(encodingConfig.Amino)
-
-	txCfg := encodingConfig.TxConfig
 	clientCtx = clientCtx.WithTxConfig(txCfg)
 
 	// Build a test transaction

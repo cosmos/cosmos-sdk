@@ -3,9 +3,10 @@ package simapp
 import (
 	"context"
 	"encoding/json"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
-	"testing"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -34,11 +35,10 @@ import (
 
 // SetupOptions defines arguments that are passed into `Simapp` constructor.
 type SetupOptions struct {
-	Logger         log.Logger
-	DB             *dbm.MemDB
-	InvCheckPeriod uint
-	EncConfig      params.EncodingConfig
-	AppOpts        types.AppOptions
+	Logger    log.Logger
+	DB        *dbm.MemDB
+	EncConfig params.EncodingConfig
+	AppOpts   types.AppOptions
 }
 
 func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {

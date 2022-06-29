@@ -202,7 +202,7 @@ func NewSimApp(
 ) *SimApp {
 	var (
 		appBuilder *runtime.AppBuilder
-		app        = &SimApp{}
+		app        *SimApp
 
 		// merge the app.yaml and the appOpts in one config
 		appConfig = depinject.Configs(AppConfig, depinject.Supply(appOpts))

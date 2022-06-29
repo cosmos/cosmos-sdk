@@ -169,7 +169,7 @@ func validateGoalBonded(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.IsNegative() {
+	if v.IsNegative() || v.IsZero() {
 		return fmt.Errorf("goal bonded cannot be negative: %s", v)
 	}
 	if v.GT(sdk.OneDec()) {

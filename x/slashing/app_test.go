@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -58,7 +59,7 @@ func TestSlashingMsgs(t *testing.T) {
 	}
 
 	app := simapp.SetupWithGenesisAccounts(t, accs, balances...)
-	simapp.CheckBalance(t, app, addr1, sdk.Coins{genCoin})
+	require.True(t, simtestutil.CheckBalance(app.BaseApp, app.BankKeeper, addr1, sdk.Coins{genCoin}))
 
 	description := stakingtypes.NewDescription("foo_moniker", "", "", "", "")
 	commission := stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
@@ -70,9 +71,9 @@ func TestSlashingMsgs(t *testing.T) {
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	txGen := simapp.MakeTestEncodingConfig().TxConfig
-	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
+	_, _, err = simtestutil.SignCheckDeliver(txGen, app.BaseApp, header, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
 	require.NoError(t, err)
-	simapp.CheckBalance(t, app, addr1, sdk.Coins{genCoin.Sub(bondCoin)})
+	require.True(t, simtestutil.CheckBalance(app.BaseApp, app.BankKeeper, addr1, sdk.Coins{genCoin.Sub(bondCoin)}))
 
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -87,7 +88,7 @@ func TestSlashingMsgs(t *testing.T) {
 
 	// unjail should fail with unknown validator
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
-	_, res, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{unjailMsg}, "", []uint64{0}, []uint64{1}, false, false, priv1)
+	_, res, err := simtestutil.SignCheckDeliver(txGen, app.BaseApp, header, []sdk.Msg{unjailMsg}, "", []uint64{0}, []uint64{1}, false, false, priv1)
 	require.Error(t, err)
 	require.Nil(t, res)
 	require.True(t, errors.Is(types.ErrValidatorNotJailed, err))

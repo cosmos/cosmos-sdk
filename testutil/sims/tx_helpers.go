@@ -1,9 +1,14 @@
 package sims
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -73,4 +78,77 @@ func GenSignedMockTx(txConfig client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins,
 	}
 
 	return tx.GetTx(), nil
+}
+
+// SignCheckDeliver checks a generated signed transaction and simulates a
+// block commitment with the given transaction. A test assertion is made using
+// the parameter 'expPass' against the result. A corresponding result is
+// returned.
+func SignCheckDeliver(txConfig client.TxConfig, ba *baseapp.BaseApp, header tmproto.Header, msgs []sdk.Msg,
+	chainID string, accNums, accSeqs []uint64, expSimPass, expPass bool, priv ...cryptotypes.PrivKey,
+) (sdk.GasInfo, *sdk.Result, error) {
+	tx, err := GenSignedMockTx(
+		txConfig,
+		msgs,
+		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
+		DefaultGenTxGas,
+		chainID,
+		accNums,
+		accSeqs,
+		priv...,
+	)
+	if err != nil {
+		return sdk.GasInfo{}, nil, err
+	}
+
+	txBytes, err := txConfig.TxEncoder()(tx)
+	if err != nil {
+		return sdk.GasInfo{}, nil, err
+	}
+
+	// Must simulate now as CheckTx doesn't run Msgs anymore
+	_, res, err := ba.Simulate(txBytes)
+	if expSimPass {
+		if err != nil {
+			return sdk.GasInfo{}, nil, err
+		}
+
+		if res == nil {
+			return sdk.GasInfo{}, nil, fmt.Errorf("Simulate() returned no result")
+		}
+	} else {
+		if err == nil {
+			return sdk.GasInfo{}, nil, fmt.Errorf("Simulate() passed but should have failed")
+		}
+
+		if res != nil {
+			return sdk.GasInfo{}, nil, fmt.Errorf("Simulate() returned a result")
+		}
+	}
+
+	// Simulate a sending a transaction and committing a block
+	ba.BeginBlock(abci.RequestBeginBlock{Header: header})
+	gInfo, res, err := ba.SimDeliver(txConfig.TxEncoder(), tx)
+	if expPass {
+		if err != nil {
+			return gInfo, nil, err
+		}
+
+		if res == nil {
+			return gInfo, nil, fmt.Errorf("SimDeliver() returned no result")
+		}
+	} else {
+		if err == nil {
+			return gInfo, nil, fmt.Errorf("SimDeliver() passed but should have failed")
+		}
+
+		if res != nil {
+			return gInfo, nil, fmt.Errorf("SimDeliver() returned a result")
+		}
+	}
+
+	ba.EndBlock(abci.RequestEndBlock{})
+	ba.Commit()
+
+	return gInfo, res, err
 }

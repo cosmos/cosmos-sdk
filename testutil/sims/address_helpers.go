@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,6 +15,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type GenerateAccountStrategy func(int) []sdk.AccAddress
@@ -111,6 +113,12 @@ func TestAddr(addr string, bech string) (sdk.AccAddress, error) {
 	}
 
 	return res, nil
+}
+
+// CheckBalance checks the balance of an account.
+func CheckBalance(ba *baseapp.BaseApp, bankKeeper bankkeeper.Keeper, addr sdk.AccAddress, balances sdk.Coins) bool {
+	ctxCheck := ba.NewContext(true, tmproto.Header{})
+	return balances.IsEqual(bankKeeper.GetAllBalances(ctxCheck, addr))
 }
 
 // ConvertAddrsToValAddrs converts the provided addresses to ValAddress.

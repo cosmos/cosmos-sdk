@@ -4,54 +4,49 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
-func TestCancelUnbondingDelegation(t *testing.T) {
-	// setup the app
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
-	bondDenom := app.StakingKeeper.BondDenom(ctx)
+func (suite *KeeperTestSuite) TestCancelUnbondingDelegation() {
+	msgServer := keeper.NewMsgServerImpl(suite.stakingKeeper)
+	bondDenom := suite.stakingKeeper.BondDenom(suite.ctx)
 
 	// set the not bonded pool module account
-	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
-	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 5)
+	notBondedPool := suite.stakingKeeper.GetNotBondedPool(suite.ctx)
+	startTokens := suite.stakingKeeper.TokensFromConsensusPower(suite.ctx, 5)
 
-	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), startTokens))))
-	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
+	suite.Require().NoError(testutil.FundModuleAccount(suite.bankKeeper, suite.ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(suite.stakingKeeper.BondDenom(suite.ctx), startTokens))))
+	suite.accountKeeper.SetModuleAccount(suite.ctx, notBondedPool)
 
-	moduleBalance := app.BankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), app.StakingKeeper.BondDenom(ctx))
-	require.Equal(t, sdk.NewInt64Coin(bondDenom, startTokens.Int64()), moduleBalance)
+	moduleBalance := suite.bankKeeper.GetBalance(suite.ctx, notBondedPool.GetAddress(), suite.stakingKeeper.BondDenom(suite.ctx))
+	suite.Require().Equal(sdk.NewInt64Coin(bondDenom, startTokens.Int64()), moduleBalance)
 
 	// accounts
-	delAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(10000))
-	validators := app.StakingKeeper.GetValidators(ctx, 10)
-	require.Equal(t, len(validators), 1)
+	delAddrs := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, suite.ctx, 2, sdk.NewInt(10000))
+	validators := suite.stakingKeeper.GetValidators(suite.ctx, 10)
+	suite.Require().Equal(len(validators), 1)
 
 	validatorAddr, err := sdk.ValAddressFromBech32(validators[0].OperatorAddress)
-	require.NoError(t, err)
+	suite.Require().NoError(err)
 	delegatorAddr := delAddrs[0]
 
 	// setting the ubd entry
-	unbondingAmount := sdk.NewInt64Coin(app.StakingKeeper.BondDenom(ctx), 5)
+	unbondingAmount := sdk.NewInt64Coin(suite.stakingKeeper.BondDenom(suite.ctx), 5)
 	ubd := types.NewUnbondingDelegation(
 		delegatorAddr, validatorAddr, 10,
-		ctx.BlockTime().Add(time.Minute*10),
+		suite.ctx.BlockTime().Add(time.Minute*10),
 		unbondingAmount.Amount,
 	)
 
 	// set and retrieve a record
-	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
-	resUnbond, found := app.StakingKeeper.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
-	require.True(t, found)
-	require.Equal(t, ubd, resUnbond)
+	suite.stakingKeeper.SetUnbondingDelegation(suite.ctx, ubd)
+	resUnbond, found := suite.stakingKeeper.GetUnbondingDelegation(suite.ctx, delegatorAddr, validatorAddr)
+	suite.Require().True(found)
+	suite.Require().Equal(ubd, resUnbond)
 
 	testCases := []struct {
 		Name      string
@@ -64,7 +59,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 			req: types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: resUnbond.DelegatorAddress,
 				ValidatorAddress: resUnbond.ValidatorAddress,
-				Amount:           sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(4)),
+				Amount:           sdk.NewCoin(suite.stakingKeeper.BondDenom(suite.ctx), sdk.NewInt(4)),
 				CreationHeight:   0,
 			},
 		},
@@ -131,14 +126,14 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		t.Run(testCase.Name, func(t *testing.T) {
-			_, err := msgServer.CancelUnbondingDelegation(ctx, &testCase.req)
+		suite.T().Run(testCase.Name, func(t *testing.T) {
+			_, err := msgServer.CancelUnbondingDelegation(suite.ctx, &testCase.req)
 			if testCase.ExceptErr {
-				require.Error(t, err)
+				suite.Require().Error(err)
 			} else {
-				require.NoError(t, err)
-				balanceForNotBondedPool := app.BankKeeper.GetBalance(ctx, sdk.AccAddress(notBondedPool.GetAddress()), bondDenom)
-				require.Equal(t, balanceForNotBondedPool, moduleBalance.Sub(testCase.req.Amount))
+				suite.Require().NoError(err)
+				balanceForNotBondedPool := suite.bankKeeper.GetBalance(suite.ctx, sdk.AccAddress(notBondedPool.GetAddress()), bondDenom)
+				suite.Require().Equal(balanceForNotBondedPool, moduleBalance.Sub(testCase.req.Amount))
 				moduleBalance = moduleBalance.Sub(testCase.req.Amount)
 			}
 		})

@@ -3,72 +3,88 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app         *simapp.SimApp
 	ctx         sdk.Context
-	addrs       []sdk.AccAddress
-	vals        []types.Validator
 	queryClient types.QueryClient
 	msgServer   types.MsgServer
+
+	app         *runtime.App
+	codec       codec.Codec
+	txConfig    client.TxConfig
+	legacyAmino *codec.LegacyAmino
+
+	accountKeeper authkeeper.AccountKeeper
+	bankKeeper    bankkeeper.Keeper
+	stakingKeeper *keeper.Keeper
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	app := simapp.Setup(suite.T(), false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	var (
+		interfaceRegistry codectypes.InterfaceRegistry
+		paramsKeeper      paramskeeper.Keeper
+	)
 
-	querier := keeper.Querier{Keeper: app.StakingKeeper}
+	app, err := simtestutil.Setup(
+		testutil.AppConfig,
+		&interfaceRegistry,
+		&paramsKeeper,
+		&suite.codec,
+		&suite.txConfig,
+		&suite.legacyAmino,
+		&suite.accountKeeper,
+		&suite.bankKeeper,
+		&suite.stakingKeeper,
+	)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
+	suite.Require().NoError(err)
+	suite.app = app
+	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+
+	querier := keeper.Querier{Keeper: suite.stakingKeeper}
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, interfaceRegistry)
 	types.RegisterQueryServer(queryHelper, querier)
-	queryClient := types.NewQueryClient(queryHelper)
+	suite.queryClient = types.NewQueryClient(queryHelper)
+	suite.msgServer = keeper.NewMsgServerImpl(suite.stakingKeeper)
 
-	suite.msgServer = keeper.NewMsgServerImpl(app.StakingKeeper)
-
-	addrs, _, validators := createValidators(suite.T(), ctx, app, []int64{9, 8, 7})
-	header := tmproto.Header{
-		ChainID: "HelloChain",
-		Height:  5,
-	}
-
-	// sort a copy of the validators, so that original validators does not
-	// have its order changed
-	sortedVals := make([]types.Validator, len(validators))
-	copy(sortedVals, validators)
-	hi := types.NewHistoricalInfo(header, sortedVals, app.StakingKeeper.PowerReduction(ctx))
-	app.StakingKeeper.SetHistoricalInfo(ctx, 5, &hi)
-
-	suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals = app, ctx, queryClient, addrs, validators
+	// overwrite with custom StakingKeeper to avoid messing with the hooks.
+	stakingSubspace, ok := paramsKeeper.GetSubspace(types.ModuleName)
+	suite.Require().True(ok)
+	suite.stakingKeeper = keeper.NewKeeper(suite.codec, app.UnsafeFindStoreKey(types.StoreKey), suite.accountKeeper, suite.bankKeeper, stakingSubspace)
 }
 
-func TestParams(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
+func (suite *KeeperTestSuite) TestParams() {
 	expParams := types.DefaultParams()
 
 	// check that the empty keeper loads the default
-	resParams := app.StakingKeeper.GetParams(ctx)
-	require.True(t, expParams.Equal(resParams))
+	resParams := suite.stakingKeeper.GetParams(suite.ctx)
+	suite.Require().True(expParams.Equal(resParams))
 
 	// modify a params, save, and retrieve
 	expParams.MaxValidators = 777
-	app.StakingKeeper.SetParams(ctx, expParams)
-	resParams = app.StakingKeeper.GetParams(ctx)
-	require.True(t, expParams.Equal(resParams))
+	suite.stakingKeeper.SetParams(suite.ctx, expParams)
+	resParams = suite.stakingKeeper.GetParams(suite.ctx)
+	suite.Require().True(expParams.Equal(resParams))
 }
 
 func TestKeeperTestSuite(t *testing.T) {

@@ -391,21 +391,13 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 			return sdkerrors.Wrap(err, "group")
 		}
 
-		proposalId := proposal.Id
 		if proposal.Status == group.PROPOSAL_STATUS_ABORTED || proposal.Status == group.PROPOSAL_STATUS_WITHDRAWN {
-<<<<<<< HEAD
-			if err := k.pruneProposal(ctx, proposalId); err != nil {
-				return true, err
-			}
-			if err := k.pruneVotes(ctx, proposalId); err != nil {
-				return true, err
-=======
+			proposalID := proposal.Id
 			if err := k.pruneProposal(ctx, proposalID); err != nil {
 				return err
 			}
 			if err := k.pruneVotes(ctx, proposalID); err != nil {
 				return err
->>>>>>> 18306a1a4 (fix: deadlock when querying group members (#12342))
 			}
 		} else {
 			err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo)

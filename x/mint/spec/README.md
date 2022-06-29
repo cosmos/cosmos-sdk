@@ -24,4 +24,3 @@ parent:
     * [CLI](06_client.md#cli)
     * [gRPC](06_client.md#grpc)
     * [REST](06_client.md#rest)
-7. **[App Wiring](07_app_wiring.md)**

@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -64,7 +64,7 @@ func TestBaseSequence(t *testing.T) {
 func TestBaseAccountMarshal(t *testing.T) {
 	var accountKeeper authkeeper.AccountKeeper
 
-	_, err := simtestutil.Setup(testutil.AppConfig, &accountKeeper)
+	err := depinject.Inject(testutil.AppConfig, &accountKeeper)
 	require.NoError(t, err)
 	_, pub, addr := testdata.KeyTestPubAddr()
 	acc := types.NewBaseAccountWithAddress(addr)

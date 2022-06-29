@@ -9,7 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
@@ -30,7 +30,7 @@ func TestDecodeStore(t *testing.T) {
 		cdc           codec.Codec
 		accountKeeper authkeeper.AccountKeeper
 	)
-	_, err := simtestutil.Setup(testutil.AppConfig, &cdc, &accountKeeper)
+	err := depinject.Inject(testutil.AppConfig, &cdc, &accountKeeper)
 	require.NoError(t, err)
 
 	acc := types.NewBaseAccountWithAddress(delAddr1)

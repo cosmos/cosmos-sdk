@@ -21,7 +21,7 @@ modules:
           permissions: [burner, staking]
         - account: not_bonded_tokens_pool
           permissions: [burner, staking]
-        - account: multiple permissions account # the following permissions are for testing purpose
+        - account: multiple permissions account # dummy permissions
           permissions: [burner, minter, staking]
         - account: random permission
           permissions: [random]

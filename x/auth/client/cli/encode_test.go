@@ -13,8 +13,8 @@ import (
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/apptestutils"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
 )
 
 func TestGetCommandEncode(t *testing.T) {

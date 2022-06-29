@@ -11,8 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/apptestutils"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
@@ -42,7 +42,7 @@ type KeeperTestSuite struct {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	app, err := simtestutil.Setup(
-		apptestutils.AppConfig,
+		testutil.AppConfig,
 		&suite.legacyAmino,
 		&suite.interfaceRegistry,
 		&suite.accountKeeper,

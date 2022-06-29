@@ -14,8 +14,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/apptestutils"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 )
 
 var (
@@ -44,7 +44,7 @@ func TestBuilderWithAux(t *testing.T) {
 		txConfig          client.TxConfig
 	)
 
-	err := depinject.Inject(apptestutils.AppConfig,
+	err := depinject.Inject(testutil.AppConfig,
 		&interfaceRegistry,
 		&txConfig,
 	)

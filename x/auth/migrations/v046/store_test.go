@@ -7,8 +7,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	"github.com/cosmos/cosmos-sdk/x/auth/apptestutils"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
@@ -22,7 +22,7 @@ func TestMigrateMapAccAddressToAccNumberKey(t *testing.T) {
 	)
 
 	app, err := simtestutil.Setup(
-		apptestutils.AppConfig,
+		testutil.AppConfig,
 		&accountKeeper,
 	)
 	require.NoError(t, err)

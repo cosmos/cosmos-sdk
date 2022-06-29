@@ -15,7 +15,7 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"cosmossdk.io/math"
-	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/apptestutils"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"

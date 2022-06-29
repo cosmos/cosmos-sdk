@@ -19,8 +19,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/apptestutils"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -58,7 +58,7 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	)
 
 	app, err := simtestutil.Setup(
-		apptestutils.AppConfig,
+		testutil.AppConfig,
 		&suite.accountKeeper,
 		&suite.bankKeeper,
 		&suite.feeGrantKeeper,

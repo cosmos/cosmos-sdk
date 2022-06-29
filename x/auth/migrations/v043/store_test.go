@@ -12,8 +12,8 @@ import (
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/apptestutils"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -29,7 +29,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 		stakingKeeper *stakingkeeper.Keeper
 	)
 	app, err := simtestutil.Setup(
-		apptestutils.AppConfig,
+		testutil.AppConfig,
 		&accountKeeper,
 		&bankKeeper,
 		&stakingKeeper,

@@ -12,7 +12,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/apptestutils"
+	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -55,7 +55,7 @@ func TestValidateGenesisDuplicateAccounts(t *testing.T) {
 
 func TestGenesisAccountIterator(t *testing.T) {
 	var cdc codec.Codec
-	depinject.Inject(apptestutils.AppConfig, &cdc)
+	depinject.Inject(testutil.AppConfig, &cdc)
 
 	acc1 := types.NewBaseAccountWithAddress(sdk.AccAddress(addr1))
 	acc2 := types.NewBaseAccountWithAddress(sdk.AccAddress(addr2))

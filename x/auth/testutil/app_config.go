@@ -1,4 +1,4 @@
-package apptestutils
+package testutil
 
 import (
 	_ "embed"

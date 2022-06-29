@@ -8,15 +8,25 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/codec"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/simulation"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/testutil"
 )
 
 func TestRandomizedGenState(t *testing.T) {
-	app := simapp.Setup(t, false)
+	var feegrantKeeper keeper.Keeper
+	var cdc codec.Codec
+
+	_, err := simtestutil.Setup(testutil.AppConfig,
+		&feegrantKeeper,
+		&cdc,
+	)
+	require.NoError(t, err)
 
 	s := rand.NewSource(1)
 	r := rand.New(s)
@@ -25,7 +35,7 @@ func TestRandomizedGenState(t *testing.T) {
 
 	simState := module.SimulationState{
 		AppParams:    make(simtypes.AppParams),
-		Cdc:          app.AppCodec(),
+		Cdc:          cdc,
 		Rand:         r,
 		NumBonded:    3,
 		Accounts:     accounts,

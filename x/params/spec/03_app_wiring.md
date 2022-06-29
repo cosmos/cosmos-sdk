@@ -1,4 +1,3 @@
-
 # App Wiring
 
 The minimal app-wiring configuration for `x/params` is as follows:

@@ -1,8 +1,6 @@
 package auth_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/server"
 	"testing"
 
 	"github.com/stretchr/testify/require"

@@ -170,7 +170,7 @@ func validateGoalBonded(i interface{}) error {
 	}
 
 	if v.IsNegative() || v.IsZero() {
-		return fmt.Errorf("goal bonded cannot be negative: %s", v)
+		return fmt.Errorf("goal bonded must be positive: %s", v)
 	}
 	if v.GT(sdk.OneDec()) {
 		return fmt.Errorf("goal bonded too large: %s", v)

@@ -1,11 +1,20 @@
 package crisis
 
 import (
+	modulev1 "cosmossdk.io/api/cosmos/crisis/module/v1"
+	"cosmossdk.io/core/appmodule"
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/depinject"
+	"github.com/cosmos/cosmos-sdk/server"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cast"
 	"time"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -60,7 +69,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the capability module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *runtime.ServeMux) {}
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *gwruntime.ServeMux) {}
 
 // GetTxCmd returns the root tx command for the crisis module.
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -163,4 +172,54 @@ func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	EndBlocker(ctx, *am.keeper)
 	return []abci.ValidatorUpdate{}
+}
+
+func init() {
+	appmodule.Register(
+		&modulev1.Module{},
+		appmodule.Provide(
+			provideModuleBasic,
+			provideModule,
+		),
+	)
+}
+
+type crisisInputs struct {
+	depinject.In
+
+	AppOpts    servertypes.AppOptions
+	Cdc        codec.Codec
+	Config     *modulev1.Module
+	Subspace   paramstypes.Subspace
+	BankKeeper types.SupplyKeeper
+}
+
+type crisisOutputs struct {
+	depinject.Out
+
+	CrisisKeeper *keeper.Keeper
+	Module       runtime.AppModuleWrapper
+}
+
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+func provideModule(in crisisInputs) crisisOutputs {
+	invalidCheckPeriod := cast.ToUint(in.AppOpts.Get(server.FlagInvCheckPeriod))
+	feeCollectorName := in.Config.FeeCollectorName
+	if feeCollectorName == "" {
+		feeCollectorName = authtypes.FeeCollectorName
+	}
+
+	k := keeper.NewKeeper(
+		in.Subspace,
+		invalidCheckPeriod,
+		in.BankKeeper,
+		feeCollectorName,
+	)
+	skipGenesisInvariants := cast.ToBool(in.AppOpts.Get(FlagSkipGenesisInvariants))
+
+	m := NewAppModule(k, skipGenesisInvariants)
+	return crisisOutputs{CrisisKeeper: k, Module: runtime.WrapAppModule(m)}
 }

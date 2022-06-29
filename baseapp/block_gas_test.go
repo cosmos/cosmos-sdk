@@ -2,6 +2,7 @@ package baseapp_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/server"
 	"math"
 	"testing"
 
@@ -64,7 +65,10 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			}
 
 			encCfg := simapp.MakeTestEncodingConfig()
-			app = simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, 0, encCfg, simtestutil.EmptyAppOptions{}, routerOpt)
+			appOptions := make(simtestutil.AppOptionsMap, 0)
+			appOptions[server.FlagInvCheckPeriod] = 0
+
+			app = simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, encCfg, appOptions, routerOpt)
 			app.InterfaceRegistry().RegisterImplementations((*sdk.Msg)(nil),
 				&testdata.TestMsg{},
 			)

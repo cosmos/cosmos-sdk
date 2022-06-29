@@ -2,7 +2,6 @@ package cli
 
 import (
 	"errors"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -49,7 +48,6 @@ func NewMsgVerifyInvariantTxCmd() *cobra.Command {
 			senderAddr := clientCtx.GetFromAddress()
 
 			msg := types.NewMsgVerifyInvariant(senderAddr, moduleName, route)
-
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

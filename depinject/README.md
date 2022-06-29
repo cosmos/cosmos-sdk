@@ -52,14 +52,11 @@ func NewSimApp(
 	db dbm.DB,
 	traceStore io.Writer,
 	loadLatest bool,
-	invCheckPeriod uint,
 	encodingConfig simappparams.EncodingConfig,
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
-	app := &SimApp{
-		invCheckPeriod: invCheckPeriod,
-	}
+	app := &SimApp{}
 
 	var (
 		appBuilder *runtime.AppBuilder

@@ -141,3 +141,7 @@ modules:
   - name: upgrade
     config:
       "@type": cosmos.upgrade.module.v1.Module
+      
+  - name: crisis
+    config:
+      "@type": cosmos.crisis.module.v1.Module

@@ -76,9 +76,3 @@ by the `Handler` should be persisted.
 // slashing and potential jailing.
 type Handler func(sdk.Context, Evidence) error
 ```
-
-## App Wiring
-
-The minimal app-wiring configuration for `x/evidence` is as follows:
-
-+++ https://github.com/cosmos/cosmos-sdk/blob/main/x/evidence/testutil/app.yaml

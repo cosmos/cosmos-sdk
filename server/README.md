@@ -88,7 +88,6 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts server.A
 
 	return simapp.NewSimApp(
 		logger, db, traceStore, true,
-		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),

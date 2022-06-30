@@ -24,11 +24,10 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mint/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/mint/exported"
 	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	"github.com/cosmos/cosmos-sdk/x/mint/migrator"
 	"github.com/cosmos/cosmos-sdk/x/mint/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // ConsensusVersion defines the current x/mint module consensus version.
@@ -101,7 +100,7 @@ type AppModule struct {
 	authKeeper types.AccountKeeper
 
 	// legacySubspace is used solely for migration of x/params managed parameters
-	legacySubspace paramstypes.Subspace
+	legacySubspace exported.Subspace
 
 	// inflationCalculator is used to calculate the inflation rate during BeginBlock.
 	// If inflationCalculator is nil, the default inflation calculation logic is used.
@@ -115,7 +114,7 @@ func NewAppModule(
 	keeper keeper.Keeper,
 	ak types.AccountKeeper,
 	ic types.InflationCalculationFn,
-	ss paramstypes.Subspace,
+	ss exported.Subspace,
 ) AppModule {
 	if ic == nil {
 		ic = types.DefaultInflationCalculationFn
@@ -157,7 +156,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
-	m := migrator.New(am.keeper, am.legacySubspace)
+	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
 
 	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
@@ -243,7 +242,7 @@ type mintInputs struct {
 	Cdc codec.Codec
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace paramstypes.Subspace
+	LegacySubspace exported.Subspace
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper

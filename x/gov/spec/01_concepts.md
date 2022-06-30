@@ -201,3 +201,8 @@ nodes, non-validating full nodes and light-nodes) are expected to switch to the
 new version of the software.
 
 _Note: Not clear how the flip is handled programmatically._
+
+## Legacy Proposal
+
+A legacy proposal allows to submit `software-upgrade` and to `cancel-software-upgrade` proposals.
+These two types of proposal are not yet supported by `submit-proposal`.

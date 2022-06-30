@@ -8,6 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
+var ParamsKey = []byte{0x00}
+
 const (
 	// ModuleName is the name of the module
 	ModuleName = "slashing"

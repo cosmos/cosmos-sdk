@@ -236,6 +236,7 @@ func SimulateMsgFundCommunityPool(txConfig client.TxConfig, ak types.AccountKeep
 		msg := types.NewMsgFundCommunityPool(fundAmount, funder.Address)
 
 		txCtx := simulation.OperationInput{
+			R:             r,
 			App:           app,
 			TxGen:         txConfig,
 			Cdc:           nil,

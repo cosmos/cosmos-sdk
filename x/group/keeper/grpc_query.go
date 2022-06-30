@@ -325,7 +325,8 @@ func (k Keeper) getVotesByVoter(ctx context.Context, voter sdk.AccAddress, pageR
 }
 
 // TallyResult computes the live tally result of a proposal.
-func (k Keeper) TallyResult(ctx context.Context, request *group.QueryTallyResultRequest) (*group.QueryTallyResultResponse, error) {
+func (k Keeper) TallyResult(goCtx context.Context, request *group.QueryTallyResultRequest) (*group.QueryTallyResultResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	proposalID := request.ProposalId
 
 	proposal, err := k.getProposal(ctx, proposalID)

@@ -289,12 +289,12 @@ func (k Keeper) CreateGroupWithPolicy(ctx context.Context, msg *group.MsgCreateG
 	}
 	groupID := groupRes.GroupId
 
-	// NOTE: group policy message validation is performed in the CreateGroupPolicy method
-	groupPolicyRes, err := k.CreateGroupPolicy(ctx, &group.MsgCreateGroupPolicy{
-		Admin:          msg.Admin,
+	var groupPolicyAddr sdk.AccAddress
+	groupPolicyRes, err := k.CreateGroupPolicy(goCtx, &group.MsgCreateGroupPolicy{
+		Admin:          req.Admin,
 		GroupId:        groupID,
-		Metadata:       msg.GroupPolicyMetadata,
-		DecisionPolicy: msg.DecisionPolicy,
+		Metadata:       req.GroupPolicyMetadata,
+		DecisionPolicy: req.DecisionPolicy,
 	})
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "group policy response")
@@ -303,8 +303,8 @@ func (k Keeper) CreateGroupWithPolicy(ctx context.Context, msg *group.MsgCreateG
 	if msg.GroupPolicyAsAdmin {
 		updateAdminReq := &group.MsgUpdateGroupAdmin{
 			GroupId:  groupID,
-			Admin:    msg.Admin,
-			NewAdmin: groupPolicyRes.Address,
+			Admin:    req.Admin,
+			NewAdmin: groupPolicyAddress,
 		}
 		_, err = k.UpdateGroupAdmin(ctx, updateAdminReq)
 		if err != nil {
@@ -322,7 +322,7 @@ func (k Keeper) CreateGroupWithPolicy(ctx context.Context, msg *group.MsgCreateG
 		}
 	}
 
-	return &group.MsgCreateGroupWithPolicyResponse{GroupId: groupID, GroupPolicyAddress: groupPolicyRes.Address}, nil
+	return &group.MsgCreateGroupWithPolicyResponse{GroupId: groupID, GroupPolicyAddress: groupPolicyAddress}, nil
 }
 
 func (k Keeper) CreateGroupPolicy(ctx context.Context, msg *group.MsgCreateGroupPolicy) (*group.MsgCreateGroupPolicyResponse, error) {

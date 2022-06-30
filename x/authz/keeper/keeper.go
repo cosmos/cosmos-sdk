@@ -404,9 +404,24 @@ func (k Keeper) getGrantQueueItem(ctx context.Context, expiration time.Time, gra
 		return &authz.GrantQueueItem{}, nil
 	}
 
-	var queueItems authz.GrantQueueItem
-	if err := k.cdc.Unmarshal(bz, &queueItems); err != nil {
-		return nil, err
+	_, _, msgType := parseGrantStoreKey(grantKey)
+	queueItems := queueItem.MsgTypeUrls
+
+	for index, typeURL := range queueItems {
+		ctx.GasMeter().ConsumeGas(gasCostPerIteration, "grant queue")
+
+		if typeURL == msgType {
+			end := len(queueItem.MsgTypeUrls) - 1
+			queueItems[index] = queueItems[end]
+			queueItems = queueItems[:end]
+
+			if err := keeper.setGrantQueueItem(ctx, expiration, granter, grantee, &authz.GrantQueueItem{
+				MsgTypeUrls: queueItems,
+			}); err != nil {
+				return err
+			}
+			break
+		}
 	}
 	return &queueItems, nil
 }
@@ -437,10 +452,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *authz.GenesisState) {
 			}
 		}
 
-		// limit the amount of iterations to avoid taking too much time
-		count++
-		if count == limit {
-			return nil
+		for _, typeURL := range queueItem.MsgTypeUrls {
+			store.Delete(grantStoreKey(grantee, granter, typeURL))
 		}
 	}
 

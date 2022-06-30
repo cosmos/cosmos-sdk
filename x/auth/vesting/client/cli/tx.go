@@ -33,6 +33,7 @@ func GetTxCmd() *cobra.Command {
 	txCmd.AddCommand(
 		NewMsgCreateVestingAccountCmd(),
 		NewMsgCreatePeriodicVestingAccountCmd(),
+		NewMsgDonateAllVestingTokensCmd(),
 	)
 
 	return txCmd
@@ -162,6 +163,34 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewMsgDonateAllVestingTokensCmd returns a CLI command handler for creating a
+// MsgDonateAllVestingTokens transaction.
+func NewMsgDonateAllVestingTokensCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "donate-all-vesting-tokens",
+		Short: "Donate all vesting tokens of a vesting account to community pool.",
+		Long: `Donate all vesting tokens of a vesting account to community pool. 
+		The account must not have any delegated vesting tokens to prevent complex
+		vesting logic changes. After donation, the account will be changed to normal 
+		"BaseAccount".`,
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgDonateAllVestingTokens(clientCtx.GetFromAddress())
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

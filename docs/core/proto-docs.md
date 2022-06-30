@@ -594,6 +594,8 @@
     - [MsgCreatePeriodicVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccountResponse)
     - [MsgCreateVestingAccount](#cosmos.vesting.v1beta1.MsgCreateVestingAccount)
     - [MsgCreateVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreateVestingAccountResponse)
+    - [MsgDonateAllVestingTokens](#cosmos.vesting.v1beta1.MsgDonateAllVestingTokens)
+    - [MsgDonateAllVestingTokensResponse](#cosmos.vesting.v1beta1.MsgDonateAllVestingTokensResponse)
   
     - [Msg](#cosmos.vesting.v1beta1.Msg)
   
@@ -8458,7 +8460,7 @@ Since: cosmos-sdk 0.43
 <a name="cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccount"></a>
 
 ### MsgCreatePeriodicVestingAccount
-MsgCreateVestingAccount defines a message that enables creating a vesting
+MsgCreatePeriodicVestingAccount defines a message that enables creating a vesting
 account.
 
 
@@ -8477,7 +8479,7 @@ account.
 <a name="cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccountResponse"></a>
 
 ### MsgCreatePeriodicVestingAccountResponse
-MsgCreateVestingAccountResponse defines the Msg/CreatePeriodicVestingAccount
+MsgCreatePeriodicVestingAccountResponse defines the Msg/CreatePeriodicVestingAccount
 response type.
 
 
@@ -8514,6 +8516,33 @@ MsgCreateVestingAccountResponse defines the Msg/CreateVestingAccount response ty
 
 
 
+
+<a name="cosmos.vesting.v1beta1.MsgDonateAllVestingTokens"></a>
+
+### MsgDonateAllVestingTokens
+MsgDonateAllVestingTokens defines a message that enables donating all vesting
+token to community pool.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `from_address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.vesting.v1beta1.MsgDonateAllVestingTokensResponse"></a>
+
+### MsgDonateAllVestingTokensResponse
+MsgDonateAllVestingTokensResponse defines the Msg/MsgDonateAllVestingTokens
+response type.
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -8530,6 +8559,7 @@ Msg defines the bank Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `CreateVestingAccount` | [MsgCreateVestingAccount](#cosmos.vesting.v1beta1.MsgCreateVestingAccount) | [MsgCreateVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreateVestingAccountResponse) | CreateVestingAccount defines a method that enables creating a vesting account. | |
 | `CreatePeriodicVestingAccount` | [MsgCreatePeriodicVestingAccount](#cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccount) | [MsgCreatePeriodicVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccountResponse) | CreatePeriodicVestingAccount defines a method that enables creating a periodic vesting account. | |
+| `DonateAllVestingTokens` | [MsgDonateAllVestingTokens](#cosmos.vesting.v1beta1.MsgDonateAllVestingTokens) | [MsgDonateAllVestingTokensResponse](#cosmos.vesting.v1beta1.MsgDonateAllVestingTokensResponse) | DonateAllVestingTokens defines a method that enables donating all vesting tokens to community pool | |
 
  <!-- end services -->
 

@@ -15,6 +15,9 @@ service Msg {
   // CreatePeriodicVestingAccount defines a method that enables creating a
   // periodic vesting account.
   rpc CreatePeriodicVestingAccount(MsgCreatePeriodicVestingAccount) returns (MsgCreatePeriodicVestingAccountResponse);
+  // DonateAllVestingTokens defines a method that enables donating all vesting 
+  // tokens to community pool
+  rpc DonateAllVestingTokens(MsgDonateAllVestingTokens) returns (MsgDonateAllVestingTokensResponse);
 }
 
 // MsgCreateVestingAccount defines a message that enables creating a vesting
@@ -35,7 +38,7 @@ message MsgCreateVestingAccount {
 message MsgCreateVestingAccountResponse {}
 
 
-// MsgCreateVestingAccount defines a message that enables creating a vesting
+// MsgCreatePeriodicVestingAccount defines a message that enables creating a vesting
 // account.
 message MsgCreatePeriodicVestingAccount {
   option (gogoproto.equal) = false;
@@ -46,6 +49,18 @@ message MsgCreatePeriodicVestingAccount {
   repeated Period vesting_periods = 4 [(gogoproto.nullable) = false];
 }
 
-// MsgCreateVestingAccountResponse defines the Msg/CreatePeriodicVestingAccount
+// MsgCreatePeriodicVestingAccountResponse defines the Msg/CreatePeriodicVestingAccount
 // response type.
 message MsgCreatePeriodicVestingAccountResponse {}
+
+// MsgDonateAllVestingTokens defines a message that enables donating all vesting
+// token to community pool.
+message MsgDonateAllVestingTokens {
+  option (gogoproto.equal) = false;
+
+  string from_address = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
+}
+
+// MsgDonateAllVestingTokensResponse defines the Msg/MsgDonateAllVestingTokens
+// response type.
+message MsgDonateAllVestingTokensResponse {}

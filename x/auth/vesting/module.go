@@ -14,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
@@ -78,13 +79,15 @@ type AppModule struct {
 
 	accountKeeper keeper.AccountKeeper
 	bankKeeper    types.BankKeeper
+	distrKeeper   types.DistrKeeper
 }
 
-func NewAppModule(ak keeper.AccountKeeper, bk types.BankKeeper) AppModule {
+func NewAppModule(ak keeper.AccountKeeper, bk types.BankKeeper, dk types.DistrKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		accountKeeper:  ak,
 		bankKeeper:     bk,
+		distrKeeper:    dk,
 	}
 }
 
@@ -93,7 +96,7 @@ func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // Route returns the module's message router and handler.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, NewHandler(am.accountKeeper, am.bankKeeper))
+	return sdk.NewRoute(types.RouterKey, NewHandler(am.accountKeeper, am.bankKeeper, am.distrKeeper))
 }
 
 // QuerierRoute returns an empty string as the module contains no query
@@ -102,7 +105,7 @@ func (AppModule) QuerierRoute() string { return "" }
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), NewMsgServerImpl(am.accountKeeper, am.bankKeeper))
+	types.RegisterMsgServer(cfg.MsgServer(), NewMsgServerImpl(am.accountKeeper, am.bankKeeper, am.distrKeeper))
 }
 
 // LegacyQuerierHandler performs a no-op.

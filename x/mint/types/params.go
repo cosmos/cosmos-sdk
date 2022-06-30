@@ -126,6 +126,7 @@ func validateGoalBonded(v math.LegacyDec) error {
 	if v.IsNil() {
 		return fmt.Errorf("goal bonded cannot be nil: %s", v)
 	}
+
 	if v.IsNegative() || v.IsZero() {
 		return fmt.Errorf("goal bonded must be positive: %s", v)
 	}

@@ -138,11 +138,11 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 		{
 			"save the first account, but second is still unrecognized",
 			func() {
-				acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr0)
-				suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
-				err := suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, feeAmount)
+				acc1 := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr0)
+				suite.accountKeeper.SetAccount(suite.ctx, acc1)
+				err := suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, feeAmount)
 				suite.Require().NoError(err)
-				err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addr0, feeAmount)
+				err = suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addr0, feeAmount)
 				suite.Require().NoError(err)
 			},
 			false,
@@ -445,8 +445,8 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 	// Same data for every test cases
 	priv0, _, addr0 := testdata.KeyTestPubAddr()
 
-	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr0)
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
+	acc1 := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr0)
+	suite.accountKeeper.SetAccount(suite.ctx, acc1)
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr0)}
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
@@ -471,7 +471,7 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 		{
 			"signer does not have enough funds to pay the fee",
 			func() {
-				err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 149)))
+				err := testutil.FundAccount(suite.bankKeeper, suite.ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 149)))
 				suite.Require().NoError(err)
 			},
 			false,
@@ -483,12 +483,12 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 			func() {
 				accNums = []uint64{acc1.GetAccountNumber()}
 
-				modAcc := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
+				modAcc := suite.accountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 
-				suite.Require().True(suite.app.BankKeeper.GetAllBalances(suite.ctx, modAcc.GetAddress()).Empty())
-				require.True(sdk.IntEq(suite.T(), suite.app.BankKeeper.GetAllBalances(suite.ctx, addr0).AmountOf("atom"), sdk.NewInt(149)))
+				suite.Require().True(suite.bankKeeper.GetAllBalances(suite.ctx, modAcc.GetAddress()).Empty())
+				require.True(sdk.IntEq(suite.T(), suite.bankKeeper.GetAllBalances(suite.ctx, addr0).AmountOf("atom"), sdk.NewInt(149)))
 
-				err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 1)))
+				err := testutil.FundAccount(suite.bankKeeper, suite.ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 1)))
 				suite.Require().NoError(err)
 			},
 			false,
@@ -498,10 +498,10 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 		{
 			"signer doesn't have any more funds",
 			func() {
-				modAcc := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
+				modAcc := suite.accountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 
-				require.True(sdk.IntEq(suite.T(), suite.app.BankKeeper.GetAllBalances(suite.ctx, modAcc.GetAddress()).AmountOf("atom"), sdk.NewInt(150)))
-				require.True(sdk.IntEq(suite.T(), suite.app.BankKeeper.GetAllBalances(suite.ctx, addr0).AmountOf("atom"), sdk.NewInt(0)))
+				require.True(sdk.IntEq(suite.T(), suite.bankKeeper.GetAllBalances(suite.ctx, modAcc.GetAddress()).AmountOf("atom"), sdk.NewInt(150)))
+				require.True(sdk.IntEq(suite.T(), suite.bankKeeper.GetAllBalances(suite.ctx, addr0).AmountOf("atom"), sdk.NewInt(0)))
 			},
 			false,
 			false,
@@ -820,7 +820,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 			"make sure public key has been set (tx itself should fail because of replay protection)",
 			func() {
 				// Make sure public key has been set from previous test.
-				acc0 := suite.app.AccountKeeper.GetAccount(suite.ctx, accounts[0].acc.GetAddress())
+				acc0 := suite.accountKeeper.GetAccount(suite.ctx, accounts[0].acc.GetAddress())
 				suite.Require().Equal(acc0.GetPubKey(), accounts[0].priv.PubKey())
 			},
 			false,
@@ -841,7 +841,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 			"make sure public key is not set, when tx has no pubkey or signature",
 			func() {
 				// Make sure public key has not been set from previous test.
-				acc1 := suite.app.AccountKeeper.GetAccount(suite.ctx, accounts[1].acc.GetAddress())
+				acc1 := suite.accountKeeper.GetAccount(suite.ctx, accounts[1].acc.GetAddress())
 				suite.Require().Nil(acc1.GetPubKey())
 
 				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[1].priv}, []uint64{1}, []uint64{0}
@@ -863,7 +863,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 				suite.Require().True(errors.Is(err, sdkerrors.ErrNoSignatures))
 
 				// Make sure public key has not been set.
-				acc1 = suite.app.AccountKeeper.GetAccount(suite.ctx, accounts[1].acc.GetAddress())
+				acc1 = suite.accountKeeper.GetAccount(suite.ctx, accounts[1].acc.GetAddress())
 				suite.Require().Nil(acc1.GetPubKey())
 
 				// Set incorrect accSeq, to generate incorrect signature.
@@ -878,7 +878,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 			func() {
 				// Make sure public key has been set, as SetPubKeyDecorator
 				// is called before all signature verification decorators.
-				acc1 := suite.app.AccountKeeper.GetAccount(suite.ctx, accounts[1].acc.GetAddress())
+				acc1 := suite.accountKeeper.GetAccount(suite.ctx, accounts[1].acc.GetAddress())
 				suite.Require().Equal(acc1.GetPubKey(), accounts[1].priv.PubKey())
 			},
 			false,
@@ -1011,9 +1011,9 @@ func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
 	// setup an ante handler that only accepts PubKeyEd25519
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
-			AccountKeeper:   suite.app.AccountKeeper,
-			BankKeeper:      suite.app.BankKeeper,
-			FeegrantKeeper:  suite.app.FeeGrantKeeper,
+			AccountKeeper:   suite.accountKeeper,
+			BankKeeper:      suite.bankKeeper,
+			FeegrantKeeper:  suite.feeGrantKeeper,
 			SignModeHandler: suite.clientCtx.TxConfig.SignModeHandler(),
 			SigGasConsumer: func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error {
 				switch pubkey := sig.PubKey.(type) {
@@ -1116,14 +1116,14 @@ func (suite *AnteTestSuite) TestAnteHandlerReCheck() {
 	}
 	for _, tc := range testCases {
 		// set testcase parameters
-		suite.app.AccountKeeper.SetParams(suite.ctx, tc.params)
+		suite.accountKeeper.SetParams(suite.ctx, tc.params)
 
 		_, err := suite.anteHandler(suite.ctx, tx, false)
 
 		suite.Require().NotNil(err, "tx does not fail on recheck with updated params in test case: %s", tc.name)
 
 		// reset parameters to default values
-		suite.app.AccountKeeper.SetParams(suite.ctx, types.DefaultParams())
+		suite.accountKeeper.SetParams(suite.ctx, types.DefaultParams())
 	}
 
 	// require that local mempool fee check is still run on recheck since validator may change minFee between check and recheck
@@ -1138,9 +1138,9 @@ func (suite *AnteTestSuite) TestAnteHandlerReCheck() {
 	suite.ctx = suite.ctx.WithMinGasPrices(sdk.DecCoins{})
 
 	// remove funds for account so antehandler fails on recheck
-	suite.app.AccountKeeper.SetAccount(suite.ctx, accounts[0].acc)
-	balances := suite.app.BankKeeper.GetAllBalances(suite.ctx, accounts[0].acc.GetAddress())
-	err = suite.app.BankKeeper.SendCoinsFromAccountToModule(suite.ctx, accounts[0].acc.GetAddress(), minttypes.ModuleName, balances)
+	suite.accountKeeper.SetAccount(suite.ctx, accounts[0].acc)
+	balances := suite.bankKeeper.GetAllBalances(suite.ctx, accounts[0].acc.GetAddress())
+	err = suite.bankKeeper.SendCoinsFromAccountToModule(suite.ctx, accounts[0].acc.GetAddress(), minttypes.ModuleName, balances)
 	suite.Require().NoError(err)
 
 	_, err = suite.anteHandler(suite.ctx, tx, false)

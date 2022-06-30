@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	txtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil/tx"
+	txtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutilhelpers/tx"
 )
 
 func TestGenerator(t *testing.T) {

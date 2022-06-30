@@ -12,13 +12,13 @@ func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 	suite.SetupTest(true) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper, nil)
+	mfd := ante.NewDeductFeeDecorator(suite.accountKeeper, suite.bankKeeper, suite.feeGrantKeeper, nil)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(300)))
-	testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
+	testutil.FundAccount(suite.bankKeeper, suite.ctx, addr1, coins)
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
@@ -85,13 +85,13 @@ func (suite *AnteTestSuite) TestDeductFees() {
 	suite.Require().NoError(err)
 
 	// Set account with insufficient funds
-	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+	acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr1)
+	suite.accountKeeper.SetAccount(suite.ctx, acc)
 	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(10)))
-	err = testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
+	err = testutil.FundAccount(suite.bankKeeper, suite.ctx, addr1, coins)
 	suite.Require().NoError(err)
 
-	dfd := ante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, nil, nil)
+	dfd := ante.NewDeductFeeDecorator(suite.accountKeeper, suite.bankKeeper, nil, nil)
 	antehandler := sdk.ChainAnteDecorators(dfd)
 
 	_, err = antehandler(suite.ctx, tx, false)
@@ -99,8 +99,8 @@ func (suite *AnteTestSuite) TestDeductFees() {
 	suite.Require().NotNil(err, "Tx did not error when fee payer had insufficient funds")
 
 	// Set account with sufficient funds
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-	err = testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200))))
+	suite.accountKeeper.SetAccount(suite.ctx, acc)
+	err = testutil.FundAccount(suite.bankKeeper, suite.ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200))))
 	suite.Require().NoError(err)
 
 	_, err = antehandler(suite.ctx, tx, false)

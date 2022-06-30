@@ -100,7 +100,12 @@ func GenAndDeliverTxWithRandFees(txCtx OperationInput) (simtypes.OperationMsg, [
 // GenAndDeliverTx generates a transactions and delivers it.
 func GenAndDeliverTx(txCtx OperationInput, fees sdk.Coins) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 	account := txCtx.AccountKeeper.GetAccount(txCtx.Context, txCtx.SimAccount.Address)
+<<<<<<< HEAD
 	tx, err := helpers.GenSignedMockTx(
+=======
+	tx, err := simtestutil.GenSignedMockTx(
+		txCtx.R,
+>>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 		txCtx.TxGen,
 		[]sdk.Msg{txCtx.Msg},
 		fees,

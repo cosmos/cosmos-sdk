@@ -60,6 +60,11 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operatio
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		from, to, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
 
+		// if coins slice is empty, we can not create valid types.MsgSend
+		if len(coins) == 0 {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, "empty coins slice"), nil, nil
+		}
+
 		// Check send_enabled status of each coin denom
 		if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, err.Error()), nil, nil
@@ -93,6 +98,10 @@ func SimulateMsgSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keeper, mo
 
 		spendable := bk.SpendableCoins(ctx, from.Address)
 		coins := simtypes.RandSubsetCoins(r, spendable)
+		// if coins slice is empty, we can not create valid types.MsgSend
+		if len(coins) == 0 {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, "empty coins slice"), nil, nil
+		}
 
 		// Check send_enabled status of each coin denom
 		if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {
@@ -136,7 +145,12 @@ func sendMsgSend(
 		}
 	}
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
+<<<<<<< HEAD
 	tx, err := helpers.GenSignedMockTx(
+=======
+	tx, err := simtestutil.GenSignedMockTx(
+		r,
+>>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
@@ -349,7 +363,12 @@ func sendMsgMultiSend(
 	}
 
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
+<<<<<<< HEAD
 	tx, err := helpers.GenSignedMockTx(
+=======
+	tx, err := simtestutil.GenSignedMockTx(
+		r,
+>>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 		txGen,
 		[]sdk.Msg{msg},
 		fees,

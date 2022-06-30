@@ -86,8 +86,14 @@ func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Kee
 
 		msg := types.NewMsgUnjail(validator.GetOperator())
 
+<<<<<<< HEAD
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenSignedMockTx(
+=======
+		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
+		tx, err := simtestutil.GenSignedMockTx(
+			r,
+>>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 			txGen,
 			[]sdk.Msg{msg},
 			fees,

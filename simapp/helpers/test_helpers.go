@@ -2,7 +2,6 @@ package helpers
 
 import (
 	"math/rand"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -19,12 +18,14 @@ const (
 )
 
 // GenSignedMockTx generates a signed mock transaction.
+<<<<<<< HEAD:simapp/helpers/test_helpers.go
 func GenSignedMockTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums, accSeqs []uint64, priv ...cryptotypes.PrivKey) (sdk.Tx, error) {
+=======
+func GenSignedMockTx(r *rand.Rand, txConfig client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums, accSeqs []uint64, priv ...cryptotypes.PrivKey) (sdk.Tx, error) {
+>>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374)):testutil/sims/tx_helpers.go
 	sigs := make([]signing.SignatureV2, len(priv))
 
 	// create a random length memo
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-
 	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
 
 	signMode := gen.SignModeHandler().DefaultMode()

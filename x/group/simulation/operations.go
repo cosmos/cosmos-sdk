@@ -259,8 +259,14 @@ func SimulateMsgCreateGroup(ak group.AccountKeeper, bk group.BankKeeper) simtype
 		members := genGroupMembers(r, accounts)
 		msg := &group.MsgCreateGroup{Admin: accAddr, Members: members, Metadata: simtypes.RandStringOfLength(r, 10)}
 
+<<<<<<< HEAD
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenSignedMockTx(
+=======
+		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
+		tx, err := simtestutil.GenSignedMockTx(
+			r,
+>>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -318,8 +324,14 @@ func SimulateMsgCreateGroupWithPolicy(ak group.AccountKeeper, bk group.BankKeepe
 			return simtypes.NoOpMsg(group.ModuleName, msg.Type(), "unable to set decision policy"), nil, err
 		}
 
+<<<<<<< HEAD
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenSignedMockTx(
+=======
+		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
+		tx, err := simtestutil.GenSignedMockTx(
+			r,
+>>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -377,8 +389,14 @@ func SimulateMsgCreateGroupPolicy(ak group.AccountKeeper, bk group.BankKeeper, k
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgCreateGroupPolicy, err.Error()), nil, err
 		}
 
+<<<<<<< HEAD
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenSignedMockTx(
+=======
+		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
+		tx, err := simtestutil.GenSignedMockTx(
+			r,
+>>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -452,8 +470,14 @@ func SimulateMsgSubmitProposal(ak group.AccountKeeper, bk group.BankKeeper, k ke
 			Metadata:           simtypes.RandStringOfLength(r, 10),
 		}
 
+<<<<<<< HEAD
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenSignedMockTx(
+=======
+		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
+		tx, err := simtestutil.GenSignedMockTx(
+			r,
+>>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -511,8 +535,14 @@ func SimulateMsgUpdateGroupAdmin(ak group.AccountKeeper, bk group.BankKeeper, k 
 			NewAdmin: newAdmin.Address.String(),
 		}
 
+<<<<<<< HEAD
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenSignedMockTx(
+=======
+		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
+		tx, err := simtestutil.GenSignedMockTx(
+			r,
+>>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -561,8 +591,14 @@ func SimulateMsgUpdateGroupMetadata(ak group.AccountKeeper, bk group.BankKeeper,
 			Metadata: simtypes.RandStringOfLength(r, 10),
 		}
 
+<<<<<<< HEAD
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenSignedMockTx(
+=======
+		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
+		tx, err := simtestutil.GenSignedMockTx(
+			r,
+>>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -640,8 +676,14 @@ func SimulateMsgUpdateGroupMembers(ak group.AccountKeeper,
 			MemberUpdates: members,
 		}
 
+<<<<<<< HEAD
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenSignedMockTx(
+=======
+		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
+		tx, err := simtestutil.GenSignedMockTx(
+			r,
+>>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -699,8 +741,14 @@ func SimulateMsgUpdateGroupPolicyAdmin(ak group.AccountKeeper, bk group.BankKeep
 			NewAdmin:           newAdmin.Address.String(),
 		}
 
+<<<<<<< HEAD
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenSignedMockTx(
+=======
+		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
+		tx, err := simtestutil.GenSignedMockTx(
+			r,
+>>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -760,8 +808,14 @@ func SimulateMsgUpdateGroupPolicyDecisionPolicy(ak group.AccountKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgUpdateGroupPolicyDecisionPolicy, err.Error()), nil, err
 		}
 
+<<<<<<< HEAD
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenSignedMockTx(
+=======
+		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
+		tx, err := simtestutil.GenSignedMockTx(
+			r,
+>>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -811,8 +865,14 @@ func SimulateMsgUpdateGroupPolicyMetadata(ak group.AccountKeeper,
 			Metadata:           simtypes.RandStringOfLength(r, 10),
 		}
 
+<<<<<<< HEAD
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenSignedMockTx(
+=======
+		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
+		tx, err := simtestutil.GenSignedMockTx(
+			r,
+>>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -913,8 +973,14 @@ func SimulateMsgWithdrawProposal(ak group.AccountKeeper,
 			Address:    proposer.Address.String(),
 		}
 
+<<<<<<< HEAD
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenSignedMockTx(
+=======
+		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
+		tx, err := simtestutil.GenSignedMockTx(
+			r,
+>>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -1018,8 +1084,14 @@ func SimulateMsgVote(ak group.AccountKeeper,
 			Option:     group.VOTE_OPTION_YES,
 			Metadata:   simtypes.RandStringOfLength(r, 10),
 		}
+<<<<<<< HEAD
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenSignedMockTx(
+=======
+		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
+		tx, err := simtestutil.GenSignedMockTx(
+			r,
+>>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -1096,8 +1168,14 @@ func SimulateMsgExec(ak group.AccountKeeper,
 			ProposalId: uint64(proposalID),
 			Executor:   acc.Address.String(),
 		}
+<<<<<<< HEAD
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenSignedMockTx(
+=======
+		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
+		tx, err := simtestutil.GenSignedMockTx(
+			r,
+>>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -1158,8 +1236,14 @@ func SimulateMsgLeaveGroup(k keeper.Keeper, ak group.AccountKeeper, bk group.Ban
 			GroupId: groupInfo.Id,
 		}
 
+<<<<<<< HEAD
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenSignedMockTx(
+=======
+		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
+		tx, err := simtestutil.GenSignedMockTx(
+			r,
+>>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 			txGen,
 			[]sdk.Msg{msg},
 			fees,

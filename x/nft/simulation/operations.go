@@ -95,8 +95,14 @@ func SimulateMsgSend(
 			Receiver: receiver.Address.String(),
 		}
 
+<<<<<<< HEAD
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenSignedMockTx(
+=======
+		txCfg := tx.NewTxConfig(cdc, tx.DefaultSignModes)
+		tx, err := simtestutil.GenSignedMockTx(
+			r,
+>>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 			txCfg,
 			[]sdk.Msg{msg},
 			fees,

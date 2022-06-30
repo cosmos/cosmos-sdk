@@ -3,8 +3,6 @@ package simapp
 import (
 	"time"
 
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	"cosmossdk.io/core/appconfig"
@@ -52,7 +50,7 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 	Modules: []*appv1alpha1.ModuleConfig{
 		{
 			Name: "runtime",
-			Config: MakeConfig(&runtimev1alpha1.Module{
+			Config: appconfig.WrapAny(&runtimev1alpha1.Module{
 				AppName: "SimApp",
 				// During begin block slashing happens after distr.BeginBlocker so that
 				// there is nothing left over in the validator fee pool, so as to keep the
@@ -109,15 +107,15 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 		},
 		{
 			Name: authtypes.ModuleName,
-			Config: MakeConfig(&authmodulev1.Module{
+			Config: appconfig.WrapAny(&authmodulev1.Module{
 				Bech32Prefix: "cosmos",
 				ModuleAccountPermissions: []*authmodulev1.ModuleAccountPermission{
-					{Account: "fee_collector"},
+					{Account: authtypes.FeeCollectorName},
 					{Account: distrtypes.ModuleName},
-					{Account: minttypes.ModuleName, Permissions: []string{"minter"}},
-					{Account: "bonded_tokens_pool", Permissions: []string{"burner", stakingtypes.ModuleName}},
-					{Account: "not_bonded_tokens_pool", Permissions: []string{"burner", stakingtypes.ModuleName}},
-					{Account: govtypes.ModuleName, Permissions: []string{"burner"}},
+					{Account: minttypes.ModuleName, Permissions: []string{authtypes.Minter}},
+					{Account: stakingtypes.BondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
+					{Account: stakingtypes.NotBondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
+					{Account: govtypes.ModuleName, Permissions: []string{authtypes.Burner}},
 					{Account: nft.ModuleName},
 				},
 			}),
@@ -125,81 +123,74 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 
 		{
 			Name:   vestingtypes.ModuleName,
-			Config: MakeConfig(&vestingmodulev1.Module{}),
+			Config: appconfig.WrapAny(&vestingmodulev1.Module{}),
 		},
 		{
 			Name:   banktypes.ModuleName,
-			Config: MakeConfig(&bankmodulev1.Module{}),
+			Config: appconfig.WrapAny(&bankmodulev1.Module{}),
 		},
 		{
 			Name:   stakingtypes.ModuleName,
-			Config: MakeConfig(&stakingmodulev1.Module{}),
+			Config: appconfig.WrapAny(&stakingmodulev1.Module{}),
 		},
 		{
 			Name:   slashingtypes.ModuleName,
-			Config: MakeConfig(&slashingmodulev1.Module{}),
+			Config: appconfig.WrapAny(&slashingmodulev1.Module{}),
 		},
 		{
 			Name:   paramstypes.ModuleName,
-			Config: MakeConfig(&paramsmodulev1.Module{}),
+			Config: appconfig.WrapAny(&paramsmodulev1.Module{}),
 		},
 		{
 			Name:   "tx",
-			Config: MakeConfig(&txmodulev1.Module{}),
+			Config: appconfig.WrapAny(&txmodulev1.Module{}),
 		},
 		{
 			Name:   genutiltypes.ModuleName,
-			Config: MakeConfig(&genutilmodulev1.Module{}),
+			Config: appconfig.WrapAny(&genutilmodulev1.Module{}),
 		},
 		{
 			Name:   authz.ModuleName,
-			Config: MakeConfig(&authzmodulev1.Module{}),
+			Config: appconfig.WrapAny(&authzmodulev1.Module{}),
 		},
 		{
 			Name:   upgradetypes.ModuleName,
-			Config: MakeConfig(&upgrademodulev1.Module{}),
+			Config: appconfig.WrapAny(&upgrademodulev1.Module{}),
 		},
 		{
 			Name:   distrtypes.ModuleName,
-			Config: MakeConfig(&distrmodulev1.Module{}),
+			Config: appconfig.WrapAny(&distrmodulev1.Module{}),
 		},
 		{
 			Name: capabilitytypes.ModuleName,
-			Config: MakeConfig(&capabilitymodulev1.Module{
+			Config: appconfig.WrapAny(&capabilitymodulev1.Module{
 				SealKeeper: true,
 			}),
 		},
 		{
 			Name:   evidencetypes.ModuleName,
-			Config: MakeConfig(&evidencemodulev1.Module{}),
+			Config: appconfig.WrapAny(&evidencemodulev1.Module{}),
 		},
 		{
 			Name:   minttypes.ModuleName,
-			Config: MakeConfig(&mintmodulev1.Module{}),
+			Config: appconfig.WrapAny(&mintmodulev1.Module{}),
 		},
 		{
 			Name: group.ModuleName,
-			Config: MakeConfig(&groupmodulev1.Module{
+			Config: appconfig.WrapAny(&groupmodulev1.Module{
 				MaxExecutionPeriod: durationpb.New(time.Second * 1209600),
 				MaxMetadataLen:     255,
 			}),
 		},
 		{
 			Name:   nft.ModuleName,
-			Config: MakeConfig(&nftmodulev1.Module{}),
+			Config: appconfig.WrapAny(&nftmodulev1.Module{}),
 		},
 		{
 			Name:   feegrant.ModuleName,
-			Config: MakeConfig(&feegrantmodulev1.Module{}),
+			Config: appconfig.WrapAny(&feegrantmodulev1.Module{}),
 		},
 	},
 })
 
-func MakeConfig(config protoreflect.ProtoMessage) *anypb.Any {
-	m, err := anypb.New(config)
-	if err != nil {
-		panic(err)
-	}
-
-	return m
-}
+// Alternatively this configuration can be set as yaml or json: https://github.com/cosmos/cosmos-sdk/blob/91b1d83f1339e235a1dfa929ecc00084101a19e3/simapp/app.yaml

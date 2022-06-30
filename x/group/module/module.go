@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	modulev1 "cosmossdk.io/api/cosmos/group/v1/module/v1"
+	modulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

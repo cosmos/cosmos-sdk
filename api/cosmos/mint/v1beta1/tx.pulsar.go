@@ -883,7 +883,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// MsgSoftwareUpgrade is the Msg/SoftwareUpgrade request type.
+// MsgUpdateParams is the Msg/UpdateParams request type.
 //
 // Since: cosmos-sdk 0.47
 type MsgUpdateParams struct {

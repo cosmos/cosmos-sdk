@@ -12,11 +12,5 @@ message GenesisState {
   Minter minter = 1 [(gogoproto.nullable) = false];
 
   // params defines all the parameters of the module.
-  //
-  // Deprecated: Use governance to submit a MsgUpdateParams message to instruct
-  // the x/mint module to update the relevant parameters.
-  //
-  // Since the cosmos-sdk 0.47 version, this only exists for backwards
-  // compatibility of genesis state.
   Params params = 2 [(gogoproto.nullable) = false];
 }

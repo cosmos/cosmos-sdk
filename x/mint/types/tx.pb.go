@@ -30,7 +30,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgSoftwareUpgrade is the Msg/SoftwareUpgrade request type.
+// MsgUpdateParams is the Msg/UpdateParams request type.
 //
 // Since: cosmos-sdk 0.47
 type MsgUpdateParams struct {

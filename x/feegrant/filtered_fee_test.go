@@ -23,10 +23,12 @@ import (
 )
 
 func TestFilteredFeeValidAllow(t *testing.T) {
-	var interfaceRegistry codectypes.InterfaceRegistry
-	var bankKeeper bankkeeper.Keeper
-	var stakingKeeper *stakingkeeper.Keeper
-	var feegrantKeeper keeper.Keeper
+	var (
+		interfaceRegistry codectypes.InterfaceRegistry
+		bankKeeper        bankkeeper.Keeper
+		stakingKeeper     *stakingkeeper.Keeper
+		feegrantKeeper    keeper.Keeper
+	)
 
 	app, err := simtestutil.Setup(testutil.AppConfig,
 		&feegrantKeeper,

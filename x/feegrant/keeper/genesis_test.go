@@ -28,10 +28,12 @@ type GenesisTestSuite struct {
 func (suite *GenesisTestSuite) SetupTest() {
 	checkTx := false
 
-	var interfaceRegistry codectypes.InterfaceRegistry
-	var bankKeeper bankkeeper.Keeper
-	var stakingKeeper *stakingkeeper.Keeper
-	var cdc codec.Codec
+	var (
+		interfaceRegistry codectypes.InterfaceRegistry
+		bankKeeper        bankkeeper.Keeper
+		stakingKeeper     *stakingkeeper.Keeper
+		cdc               codec.Codec
+	)
 
 	app, err := simtestutil.Setup(testutil.AppConfig,
 		&suite.feegrantKeeper,

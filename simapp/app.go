@@ -230,8 +230,6 @@ func NewSimApp(
 		tmos.Exit(err.Error())
 	}
 
-	initParamsKeeper(app.ParamsKeeper)
-
 	/****  Module Options ****/
 
 	// Sets the version setter for the upgrade module
@@ -384,8 +382,4 @@ func GetMaccPerms() map[string][]string {
 		dupMaccPerms[k] = v
 	}
 	return dupMaccPerms
-}
-
-// initParamsKeeper init params keeper and its subspaces
-func initParamsKeeper(paramsKeeper paramskeeper.Keeper) {
 }

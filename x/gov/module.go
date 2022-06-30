@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	"golang.org/x/exp/maps"
@@ -147,26 +148,38 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-func provideModule(
-	config *modulev1.Module,
-	cdc codec.Codec,
-	key *store.KVStoreKey,
-	subSpace types.ParamSubspace,
-	msgServiceRouter *baseapp.MsgServiceRouter,
-	ak types.AccountKeeper,
-	bk types.BankKeeper,
-	sk types.StakingKeeper) (runtime.AppModuleWrapper, *keeper.Keeper, v1beta1.HandlerRoute) {
+type govInputs struct {
+	depinject.In
 
+	Config           *modulev1.Module
+	Cdc              codec.Codec
+	Key              *store.KVStoreKey
+	Subspace         types.ParamSubspace
+	MsgServiceRouter *baseapp.MsgServiceRouter
+	AccountKeeper    types.AccountKeeper
+	BankKeeper       types.BankKeeper
+	StakingKeeper    types.StakingKeeper
+}
+
+type govOutputs struct {
+	depinject.Out
+
+	Module       runtime.AppModuleWrapper
+	Keeper       *keeper.Keeper
+	HandlerRoute v1beta1.HandlerRoute
+}
+
+func provideModule(in govInputs) govOutputs {
 	kConfig := types.DefaultConfig()
-	if config.MaxMetadataLen != 0 {
-		kConfig.MaxMetadataLen = config.MaxMetadataLen
+	if in.Config.MaxMetadataLen != 0 {
+		kConfig.MaxMetadataLen = in.Config.MaxMetadataLen
 	}
 
-	k := keeper.NewKeeper(cdc, key, subSpace, ak, bk, sk, msgServiceRouter, kConfig)
-	m := NewAppModule(cdc, k, ak, bk)
+	k := keeper.NewKeeper(in.Cdc, in.Key, in.Subspace, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.MsgServiceRouter, kConfig)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper)
 	hr := v1beta1.HandlerRoute{Handler: v1beta1.ProposalHandler, RouteKey: types.RouterKey}
 
-	return runtime.WrapAppModule(m), k, hr
+	return govOutputs{Module: runtime.WrapAppModule(m), Keeper: k, HandlerRoute: hr}
 }
 
 func invokeAddRoutes(keeper *keeper.Keeper, routes []v1beta1.HandlerRoute) {
@@ -175,7 +188,7 @@ func invokeAddRoutes(keeper *keeper.Keeper, routes []v1beta1.HandlerRoute) {
 	}
 
 	// Default route order is a lexical sort by RouteKey.
-	// TODO order by configuration
+	// Explicit ordering can be added to the module config if required.
 	slices.SortFunc(routes, func(x, y v1beta1.HandlerRoute) bool {
 		return x.RouteKey < y.RouteKey
 	})
@@ -192,8 +205,8 @@ func invokeSetHooks(keeper *keeper.Keeper, govHooks map[string]types.GovHooksWra
 		return nil
 	}
 
-	// Default ordering
-	// TODO supply ordering by configuration
+	// Default ordering is lexical by module name.
+	// Explicit ordering can be added to the module config if required.
 	modNames := maps.Keys(govHooks)
 	order := modNames
 	sort.Strings(order)

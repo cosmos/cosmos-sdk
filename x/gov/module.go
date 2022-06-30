@@ -9,10 +9,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
+	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
+	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 	"math/rand"
@@ -123,13 +124,13 @@ func (a AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry
 type AppModule struct {
 	AppModuleBasic
 
-	keeper        keeper.Keeper
+	keeper        *keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper *keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
@@ -141,20 +142,18 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper,
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
-		appmodule.Provide(provideModuleBasic, provideKeyTable, provideModule),
+		appmodule.Provide(provideModuleBasic, provideModule),
 		appmodule.Invoke(invokeAddRoutes, invokeSetHooks))
 }
 
 func provideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
-}
-
-func provideKeyTable(k depinject.ModuleKey) *paramtypes.KeyTable {
-	if k.Name() == "gov" {
-		return nil
-	}
-	kt := v1.ParamKeyTable()
-	return &kt
+	return runtime.WrapAppModuleBasic(NewAppModuleBasic(
+		[]govclient.ProposalHandler{
+			paramsclient.ProposalHandler,
+			distrclient.ProposalHandler,
+			upgradeclient.LegacyProposalHandler,
+			upgradeclient.LegacyCancelProposalHandler},
+	))
 }
 
 func provideModule(
@@ -165,7 +164,7 @@ func provideModule(
 	msgServiceRouter *baseapp.MsgServiceRouter,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
-	sk types.StakingKeeper) (runtime.AppModuleWrapper, keeper.Keeper, v1beta1.HandlerRoute) {
+	sk types.StakingKeeper) (runtime.AppModuleWrapper, *keeper.Keeper, v1beta1.HandlerRoute) {
 
 	kConfig := types.DefaultConfig()
 	if config.MaxMetadataLen != 0 {

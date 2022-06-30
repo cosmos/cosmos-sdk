@@ -3,6 +3,7 @@ package params
 import (
 	"context"
 	"encoding/json"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"math/rand"
 
@@ -166,6 +167,7 @@ func init() {
 			provideModuleBasic,
 			provideModule,
 			provideSubSpace,
+			provideKeyTable,
 		))
 }
 
@@ -210,6 +212,15 @@ type subSpaceInputs struct {
 	Key      depinject.ModuleKey
 	Keeper   keeper.Keeper
 	KeyTable *types.KeyTable `optional:"true"`
+}
+
+func provideKeyTable(k depinject.ModuleKey) *types.KeyTable {
+	// TODO there must be a better way?
+	if k.Name() != "gov" {
+		return nil
+	}
+	kt := v1.ParamKeyTable()
+	return &kt
 }
 
 func provideSubSpace(in subSpaceInputs) types.Subspace {

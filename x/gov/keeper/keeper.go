@@ -56,7 +56,7 @@ func NewKeeper(
 	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace types.ParamSubspace,
 	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper,
 	router *baseapp.MsgServiceRouter, config types.Config,
-) Keeper {
+) *Keeper {
 	// ensure governance module account is set
 	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -67,7 +67,7 @@ func NewKeeper(
 		config.MaxMetadataLen = types.DefaultConfig().MaxMetadataLen
 	}
 
-	return Keeper{
+	return &Keeper{
 		storeKey:   key,
 		paramSpace: paramSpace,
 		authKeeper: authKeeper,

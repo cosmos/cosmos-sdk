@@ -36,10 +36,7 @@ const (
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
-func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper,
-	bk types.BankKeeper, k keeper.Keeper, wContents []simtypes.WeightedProposalContent,
-) simulation.WeightedOperations {
+func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, wContents []simtypes.WeightedProposalContent) simulation.WeightedOperations {
 	var (
 		weightMsgDeposit      int
 		weightMsgVote         int
@@ -103,9 +100,7 @@ func WeightedOperations(
 // SimulateMsgSubmitProposal simulates creating a msg Submit Proposal
 // voting on the proposal, and subsequently slashing the proposal. It is implemented using
 // future operations.
-func SimulateMsgSubmitProposal(
-	ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, contentSim simtypes.ContentSimulatorFn,
-) simtypes.Operation {
+func SimulateMsgSubmitProposal(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, contentSim simtypes.ContentSimulatorFn) simtypes.Operation {
 	// The states are:
 	// column 1: All validators vote
 	// column 2: 90% vote
@@ -223,7 +218,7 @@ func SimulateMsgSubmitProposal(
 }
 
 // SimulateMsgDeposit generates a MsgDeposit with random values.
-func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -273,13 +268,11 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 }
 
 // SimulateMsgVote generates a MsgVote with random values.
-func SimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper) simtypes.Operation {
 	return operationSimulateMsgVote(ak, bk, k, simtypes.Account{}, -1)
 }
 
-func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper,
-	simAccount simtypes.Account, proposalIDInt int64,
-) simtypes.Operation {
+func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, simAccount simtypes.Account, proposalIDInt int64) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -327,13 +320,11 @@ func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k kee
 }
 
 // SimulateMsgVoteWeighted generates a MsgVoteWeighted with random values.
-func SimulateMsgVoteWeighted(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgVoteWeighted(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper) simtypes.Operation {
 	return operationSimulateMsgVoteWeighted(ak, bk, k, simtypes.Account{}, -1)
 }
 
-func operationSimulateMsgVoteWeighted(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper,
-	simAccount simtypes.Account, proposalIDInt int64,
-) simtypes.Operation {
+func operationSimulateMsgVoteWeighted(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, simAccount simtypes.Account, proposalIDInt int64) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -384,9 +375,7 @@ func operationSimulateMsgVoteWeighted(ak types.AccountKeeper, bk types.BankKeepe
 // deposit amount between (0, min(balance, minDepositAmount))
 // This is to simulate multiple users depositing to get the
 // proposal above the minimum deposit amount
-func randomDeposit(r *rand.Rand, ctx sdk.Context,
-	ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, addr sdk.AccAddress,
-) (deposit sdk.Coins, skip bool, err error) {
+func randomDeposit(r *rand.Rand, ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, addr sdk.AccAddress) (deposit sdk.Coins, skip bool, err error) {
 	account := ak.GetAccount(ctx, addr)
 	spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
@@ -420,9 +409,7 @@ func randomDeposit(r *rand.Rand, ctx sdk.Context,
 // (defined in gov GenesisState) and the latest proposal ID
 // that matches a given Status.
 // It does not provide a default ID.
-func randomProposalID(r *rand.Rand, k keeper.Keeper,
-	ctx sdk.Context, status v1.ProposalStatus,
-) (proposalID uint64, found bool) {
+func randomProposalID(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context, status v1.ProposalStatus) (proposalID uint64, found bool) {
 	proposalID, _ = k.GetProposalID(ctx)
 
 	switch {

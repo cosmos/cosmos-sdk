@@ -391,7 +391,6 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 			return sdkerrors.Wrap(err, "group")
 		}
 
-<<<<<<< HEAD
 		if proposal.Status == group.PROPOSAL_STATUS_ABORTED || proposal.Status == group.PROPOSAL_STATUS_WITHDRAWN {
 			proposalID := proposal.Id
 			if err := k.pruneProposal(ctx, proposalID); err != nil {
@@ -399,15 +398,6 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 			}
 			if err := k.pruneVotes(ctx, proposalID); err != nil {
 				return err
-=======
-		proposalID := proposal.Id
-		if proposal.Status == group.PROPOSAL_STATUS_ABORTED || proposal.Status == group.PROPOSAL_STATUS_WITHDRAWN {
-			if err := k.pruneProposal(ctx, proposalID); err != nil {
-				return true, err
-			}
-			if err := k.pruneVotes(ctx, proposalID); err != nil {
-				return true, err
->>>>>>> b7097c3b1 (chore!: var-naming linter errors (#12135))
 			}
 		} else {
 			err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo)

@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 	"math/rand"
@@ -140,7 +141,7 @@ func NewAppModule(cdc codec.Codec, keeper *keeper.Keeper, ak types.AccountKeeper
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
-		appmodule.Provide(provideModuleBasic, provideModule),
+		appmodule.Provide(provideModuleBasic, provideModule, provideKeyTable),
 		appmodule.Invoke(invokeAddRoutes, invokeSetHooks))
 }
 
@@ -180,6 +181,14 @@ func provideModule(in govInputs) govOutputs {
 	hr := v1beta1.HandlerRoute{Handler: v1beta1.ProposalHandler, RouteKey: types.RouterKey}
 
 	return govOutputs{Module: runtime.WrapAppModule(m), Keeper: k, HandlerRoute: hr}
+}
+
+func provideKeyTable(k depinject.ModuleKey) *paramtypes.KeyTable {
+	if k.Name() != types.ModuleName {
+		return nil
+	}
+	kt := v1.ParamKeyTable()
+	return &kt
 }
 
 func invokeAddRoutes(keeper *keeper.Keeper, routes []v1beta1.HandlerRoute) {

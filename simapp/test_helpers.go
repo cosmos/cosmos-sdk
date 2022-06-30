@@ -18,9 +18,11 @@ import (
 	"cosmossdk.io/math"
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/depinject"
+	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
@@ -34,17 +36,21 @@ import (
 
 // SetupOptions defines arguments that are passed into `Simapp` constructor.
 type SetupOptions struct {
-	Logger         log.Logger
-	DB             *dbm.MemDB
-	InvCheckPeriod uint
-	EncConfig      params.EncodingConfig
-	AppOpts        types.AppOptions
+	Logger    log.Logger
+	DB        *dbm.MemDB
+	EncConfig params.EncodingConfig
+	AppOpts   types.AppOptions
 }
 
 func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeTestEncodingConfig()
-	app := NewSimApp(log.NewNopLogger(), db, nil, true, invCheckPeriod, encCdc, simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome))
+
+	appOptions := make(simtestutil.AppOptionsMap, 0)
+	appOptions[flags.FlagHome] = DefaultNodeHome
+	appOptions[server.FlagInvCheckPeriod] = invCheckPeriod
+
+	app := NewSimApp(log.NewNopLogger(), db, nil, true, encCdc, appOptions)
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Codec)
 	}
@@ -70,7 +76,7 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
 	}
 
-	app := NewSimApp(options.Logger, options.DB, nil, true, options.InvCheckPeriod, options.EncConfig, options.AppOpts)
+	app := NewSimApp(options.Logger, options.DB, nil, true, options.EncConfig, options.AppOpts)
 	genesisState := NewDefaultGenesisState(app.appCodec)
 	genesisState, err = simtestutil.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 	require.NoError(t, err)

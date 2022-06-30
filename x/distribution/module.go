@@ -226,6 +226,7 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 type distrInputs struct {
 	depinject.In
 
+	Config   *modulev1.Module
 	Key      *store.KVStoreKey
 	Cdc      codec.Codec
 	Subspace paramstypes.Subspace
@@ -245,7 +246,12 @@ type distrOutputs struct {
 }
 
 func provideModule(in distrInputs) distrOutputs {
-	k := keeper.NewKeeper(in.Cdc, in.Key, in.Subspace, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, authtypes.FeeCollectorName)
+	feeCollectorName := in.Config.FeeCollectorName
+	if feeCollectorName == "" {
+		feeCollectorName = authtypes.FeeCollectorName
+	}
+
+	k := keeper.NewKeeper(in.Cdc, in.Key, in.Subspace, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, feeCollectorName)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper)
 
 	return distrOutputs{

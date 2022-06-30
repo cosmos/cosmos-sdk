@@ -46,7 +46,7 @@ var (
 	tenInt               = big.NewInt(10)
 	minusOneDec          = MustNewDecFromStr("-1")
 	log2of10             = MustNewDecFromStr("3.32192809489")
-	eightTeenDec         = NewDecWithPrec(18, 0)
+	eightTeenDec         = MustNewDecFromStr("18")
 	zeroDec              = ZeroDec()
 )
 

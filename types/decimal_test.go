@@ -446,11 +446,9 @@ func (s *decimalTestSuite) TestApproxRoot() {
 	for i, tc := range testCases {
 		res, err := tc.input.ApproxRoot(tc.root)
 		s.Require().NoError(err)
-		fmt.Println(res.Add(sdk.SmallestDec()).Power(tc.root))
 
 		// diff = res ^ root - input
 		diff := res.Power(tc.root).Abs().Sub(tc.input.Abs())
-		fmt.Println(diff, "diff")
 
 		// we calculate res ^ root and compare it with the input
 		if diff.Abs().GT(sdk.SmallestDec()) {

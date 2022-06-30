@@ -248,12 +248,12 @@ func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreat
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "group response")
 	}
-	groupId := groupRes.GroupId
+	groupID := groupRes.GroupId
 
 	var groupPolicyAddr sdk.AccAddress
 	groupPolicyRes, err := k.CreateGroupPolicy(goCtx, &group.MsgCreateGroupPolicy{
 		Admin:          req.Admin,
-		GroupId:        groupId,
+		GroupId:        groupID,
 		Metadata:       req.GroupPolicyMetadata,
 		DecisionPolicy: req.DecisionPolicy,
 	})
@@ -270,7 +270,7 @@ func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreat
 
 	if req.GroupPolicyAsAdmin {
 		updateAdminReq := &group.MsgUpdateGroupAdmin{
-			GroupId:  groupId,
+			GroupId:  groupID,
 			Admin:    req.Admin,
 			NewAdmin: groupPolicyAddress,
 		}
@@ -290,7 +290,7 @@ func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreat
 		}
 	}
 
-	return &group.MsgCreateGroupWithPolicyResponse{GroupId: groupId, GroupPolicyAddress: groupPolicyAddress}, nil
+	return &group.MsgCreateGroupWithPolicyResponse{GroupId: groupID, GroupPolicyAddress: groupPolicyAddress}, nil
 }
 
 func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGroupPolicy) (*group.MsgCreateGroupPolicyResponse, error) {

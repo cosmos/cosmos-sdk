@@ -46,7 +46,7 @@ func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 
 	appOptions := make(simtestutil.AppOptionsMap, 0)
 	appOptions[flags.FlagHome] = DefaultNodeHome
-	appOptions[server.FlagInvCheckPeriod] = FlagPeriodValue
+	appOptions[server.FlagInvCheckPeriod] = invCheckPeriod
 
 	app := NewSimApp(log.NewNopLogger(), db, nil, true, encCdc, appOptions)
 	if withGenesis {

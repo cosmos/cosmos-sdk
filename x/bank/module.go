@@ -208,7 +208,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 }
 
-// App Wiring
+// New App Wiring Setup
 
 func init() {
 	appmodule.Register(&modulev1.Module{},

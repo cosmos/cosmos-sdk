@@ -110,6 +110,7 @@ func querySupplyOf(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQueri
 	}
 
 	amount := k.GetSupply(ctx, params.Denom)
+	amount.Amount = amount.Amount.Add(k.GetSupplyOffset(ctx, params.Denom))
 	supply := sdk.NewCoin(params.Denom, amount.Amount)
 
 	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, supply)

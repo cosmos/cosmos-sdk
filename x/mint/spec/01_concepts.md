@@ -26,9 +26,3 @@ It can be broken down in the following way:
    rate will stay constant
 * If the inflation rate is above the goal %-bonded the inflation rate will
    decrease until a minimum value is reached
-
-## App Wiring
-
-The minimal app-wiring configuration for `x/mint` is as follows:
-
-+++ https://github.com/cosmos/cosmos-sdk/blob/main/x/mint/testutil/app.yaml

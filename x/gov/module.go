@@ -11,9 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
-	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
-	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
-	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 	"math/rand"
@@ -147,13 +144,7 @@ func init() {
 }
 
 func provideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(NewAppModuleBasic(
-		[]govclient.ProposalHandler{
-			paramsclient.ProposalHandler,
-			distrclient.ProposalHandler,
-			upgradeclient.LegacyProposalHandler,
-			upgradeclient.LegacyCancelProposalHandler},
-	))
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
 func provideModule(

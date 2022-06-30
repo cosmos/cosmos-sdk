@@ -116,12 +116,8 @@ func NewTypeSafeRowGetter(prefixKey [2]byte, model reflect.Type, cdc codec.Codec
 			return err
 		}
 
-		pStore := prefixstore.New(store, prefixKey[:])
-		bz, err := pStore.Get(rowID)
-		if err != nil {
-			return err
-		}
-
+		pStore := prefix.NewStore(store, prefixKey[:])
+		bz := pStore.Get(rowID)
 		if len(bz) == 0 {
 			return sdkerrors.ErrNotFound
 		}

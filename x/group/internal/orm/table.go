@@ -185,12 +185,8 @@ func (a table) Has(store storetypes.KVStore, key RowID) bool {
 	if len(key) == 0 {
 		return false
 	}
-	pStore := prefixstore.New(store, a.prefix[:])
-	has, err := pStore.Has(key)
-	if err != nil {
-		panic(err)
-	}
-	return has
+	pStore := prefix.NewStore(store, a.prefix[:])
+	return pStore.Has(key)
 }
 
 // GetOne load the object persisted for the given RowID into the dest parameter.
@@ -311,12 +307,9 @@ func (a table) Import(store storetypes.KVStore, data interface{}, _ uint64) erro
 	return nil
 }
 
-func (a table) keys(store storetypes.KVStore) [][]byte {
-	pStore := prefixstore.New(store, a.prefix[:])
-	it, err := pStore.ReverseIterator(nil, nil)
-	if err != nil {
-		panic(err)
-	}
+func (a table) keys(store sdk.KVStore) [][]byte {
+	pStore := prefix.NewStore(store, a.prefix[:])
+	it := pStore.Iterator(nil, nil)
 	defer it.Close()
 
 	var keys [][]byte

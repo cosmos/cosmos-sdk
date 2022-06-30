@@ -241,7 +241,7 @@ func (k Keeper) GetGroupPolicySeq(ctx sdk.Context) uint64 {
 }
 
 // proposalsByVPEnd returns all proposals whose voting_period_end is after the `endTime` time argument.
-func (k Keeper) proposalsByVPEnd(ctx context.Context, endTime time.Time) (proposals []group.Proposal, err error) {
+func (k Keeper) proposalsByVPEnd(ctx sdk.Context, endTime time.Time) (proposals []group.Proposal, err error) {
 	timeBytes := sdk.FormatTimeBytes(endTime)
 	it, err := k.proposalsByVotingPeriodEnd.PrefixScan(k.KVStoreService.OpenKVStore(ctx), nil, timeBytes)
 	if err != nil {
@@ -286,7 +286,7 @@ func (k Keeper) pruneProposal(ctx context.Context, proposalID uint64) error {
 
 // abortProposals iterates through all proposals by group policy index
 // and marks submitted proposals as aborted.
-func (k Keeper) abortProposals(ctx context.Context, groupPolicyAddr sdk.AccAddress) error {
+func (k Keeper) abortProposals(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) error {
 	proposals, err := k.proposalsByGroupPolicy(ctx, groupPolicyAddr)
 	if err != nil {
 		return err
@@ -297,7 +297,7 @@ func (k Keeper) abortProposals(ctx context.Context, groupPolicyAddr sdk.AccAddre
 		if proposalInfo.Status == group.PROPOSAL_STATUS_SUBMITTED {
 			proposalInfo.Status = group.PROPOSAL_STATUS_ABORTED
 
-			if err := k.proposalTable.Update(k.KVStoreService.OpenKVStore(ctx), proposalInfo.Id, &proposalInfo); err != nil {
+			if err := k.proposalTable.Update(ctx.KVStore(k.key), proposalInfo.Id, &proposalInfo); err != nil {
 				return err
 			}
 		}
@@ -306,8 +306,8 @@ func (k Keeper) abortProposals(ctx context.Context, groupPolicyAddr sdk.AccAddre
 }
 
 // proposalsByGroupPolicy returns all proposals for a given group policy.
-func (k Keeper) proposalsByGroupPolicy(ctx context.Context, groupPolicyAddr sdk.AccAddress) ([]group.Proposal, error) {
-	proposalIt, err := k.proposalByGroupPolicyIndex.Get(k.KVStoreService.OpenKVStore(ctx), groupPolicyAddr.Bytes())
+func (k Keeper) proposalsByGroupPolicy(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) ([]group.Proposal, error) {
+	proposalIt, err := k.proposalByGroupPolicyIndex.Get(ctx.KVStore(k.key), groupPolicyAddr.Bytes())
 	if err != nil {
 		return nil, err
 	}
@@ -330,14 +330,14 @@ func (k Keeper) proposalsByGroupPolicy(ctx context.Context, groupPolicyAddr sdk.
 }
 
 // pruneVotes prunes all votes for a proposal from state.
-func (k Keeper) pruneVotes(ctx context.Context, proposalID uint64) error {
+func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
 	votes, err := k.votesByProposal(ctx, proposalID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	for _, v := range votes {
-		err = k.voteTable.Delete(k.KVStoreService.OpenKVStore(ctx), &v)
+		err = k.voteTable.Delete(ctx.KVStore(k.key), &v)
 		if err != nil {
 			return err
 		}
@@ -347,8 +347,8 @@ func (k Keeper) pruneVotes(ctx context.Context, proposalID uint64) error {
 }
 
 // votesByProposal returns all votes for a given proposal.
-func (k Keeper) votesByProposal(ctx context.Context, proposalID uint64) ([]group.Vote, error) {
-	it, err := k.voteByProposalIndex.Get(k.KVStoreService.OpenKVStore(ctx), proposalID)
+func (k Keeper) votesByProposal(ctx sdk.Context, proposalID uint64) ([]group.Vote, error) {
+	it, err := k.voteByProposalIndex.Get(ctx.KVStore(k.key), proposalID)
 	if err != nil {
 		return nil, err
 	}
@@ -372,25 +372,14 @@ func (k Keeper) votesByProposal(ctx context.Context, proposalID uint64) ([]group
 // PruneProposals prunes all proposals that are expired, i.e. whose
 // `voting_period + max_execution_period` is greater than the current block
 // time.
-func (k Keeper) PruneProposals(ctx context.Context) error {
-	endTime := k.HeaderService.HeaderInfo(ctx).Time.Add(-k.config.MaxExecutionPeriod)
-	proposals, err := k.proposalsByVPEnd(ctx, endTime)
+func (k Keeper) PruneProposals(ctx sdk.Context) error {
+	proposals, err := k.proposalsByVPEnd(ctx, ctx.BlockTime().Add(-k.config.MaxExecutionPeriod))
 	if err != nil {
 		return nil
 	}
 	for _, proposal := range proposals {
 		err := k.pruneProposal(ctx, proposal.Id)
 		if err != nil {
-			return err
-		}
-		// Emit event for proposal finalized with its result
-		if err := k.EventService.EventManager(ctx).Emit(
-			&group.EventProposalPruned{
-				ProposalId:  proposal.Id,
-				Status:      proposal.Status,
-				TallyResult: &proposal.FinalTallyResult,
-			},
-		); err != nil {
 			return err
 		}
 	}
@@ -401,77 +390,40 @@ func (k Keeper) PruneProposals(ctx context.Context) error {
 // TallyProposalsAtVPEnd iterates over all proposals whose voting period
 // has ended, tallies their votes, prunes them, and updates the proposal's
 // `FinalTallyResult` field.
-func (k Keeper) TallyProposalsAtVPEnd(ctx context.Context) error {
-	proposals, err := k.proposalsByVPEnd(ctx, k.HeaderService.HeaderInfo(ctx).Time)
+func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
+	proposals, err := k.proposalsByVPEnd(ctx, ctx.BlockTime())
 	if err != nil {
 		return nil
 	}
 	for _, proposal := range proposals {
 		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.GroupPolicyAddress)
 		if err != nil {
-			return errorsmod.Wrap(err, "group policy")
+			return sdkerrors.Wrap(err, "group policy")
 		}
 
 		electorate, err := k.getGroupInfo(ctx, policyInfo.GroupId)
 		if err != nil {
-			return errorsmod.Wrap(err, "group")
+			return sdkerrors.Wrap(err, "group")
 		}
 
-		proposalID := proposal.Id
 		if proposal.Status == group.PROPOSAL_STATUS_ABORTED || proposal.Status == group.PROPOSAL_STATUS_WITHDRAWN {
+			proposalID := proposal.Id
 			if err := k.pruneProposal(ctx, proposalID); err != nil {
 				return err
 			}
 			if err := k.pruneVotes(ctx, proposalID); err != nil {
 				return err
 			}
-			// Emit event for proposal finalized with its result
-			if err := k.EventService.EventManager(ctx).Emit(
-				&group.EventProposalPruned{
-					ProposalId: proposal.Id,
-					Status:     proposal.Status,
-				},
-			); err != nil {
-				return err
-			}
-		} else if proposal.Status == group.PROPOSAL_STATUS_SUBMITTED {
-			if err := k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo); err != nil {
-				return errorsmod.Wrap(err, "doTallyAndUpdate")
+		} else {
+			err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo)
+			if err != nil {
+				return sdkerrors.Wrap(err, "doTallyAndUpdate")
 			}
 
-			if err := k.proposalTable.Update(k.KVStoreService.OpenKVStore(ctx), proposal.Id, &proposal); err != nil {
-				return errorsmod.Wrap(err, "proposal update")
+			if err := k.proposalTable.Update(ctx.KVStore(k.key), proposal.Id, &proposal); err != nil {
+				return sdkerrors.Wrap(err, "proposal update")
 			}
 		}
-		// Note: We do nothing if the proposal has been marked as ACCEPTED or
-		// REJECTED.
-	}
-	return nil
-}
-
-// assertMetadataLength returns an error if given metadata length
-// is greater than defined MaxMetadataLen in the module configuration
-func (k Keeper) assertMetadataLength(metadata, description string) error {
-	if uint64(len(metadata)) > k.config.MaxMetadataLen {
-		return errors.ErrMetadataTooLong.Wrap(description)
-	}
-	return nil
-}
-
-// assertSummaryLength returns an error if given summary length
-// is greater than defined MaxProposalSummaryLen in the module configuration
-func (k Keeper) assertSummaryLength(summary string) error {
-	if uint64(len(summary)) > k.config.MaxProposalSummaryLen {
-		return errors.ErrSummaryTooLong
-	}
-	return nil
-}
-
-// assertTitleLength returns an error if given summary length
-// is greater than defined MaxProposalTitleLen in the module configuration
-func (k Keeper) assertTitleLength(title string) error {
-	if uint64(len(title)) > k.config.MaxProposalTitleLen {
-		return errors.ErrTitleTooLong
 	}
 	return nil
 }

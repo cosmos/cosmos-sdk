@@ -158,6 +158,16 @@ func checkUniqueIndexKey(store storetypes.KVStore, secondaryIndexKeyBytes []byte
 	return nil
 }
 
+// checkUniqueIndexKey checks that the given secondary index key is unique
+func checkUniqueIndexKey(store sdk.KVStore, secondaryIndexKeyBytes []byte) error {
+	it := store.Iterator(PrefixRange(secondaryIndexKeyBytes))
+	defer it.Close()
+	if it.Valid() {
+		return errors.ErrORMUniqueConstraint
+	}
+	return nil
+}
+
 // multiKeyAddFunc allows multiple entries for a key
 func multiKeyAddFunc(store storetypes.KVStore, secondaryIndexKey interface{}, rowID RowID) error {
 	secondaryIndexKeyBytes, err := keyPartBytes(secondaryIndexKey, false)

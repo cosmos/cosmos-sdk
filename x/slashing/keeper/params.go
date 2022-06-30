@@ -9,63 +9,32 @@ import (
 
 // SignedBlocksWindow - sliding window for downtime slashing
 func (k Keeper) SignedBlocksWindow(ctx sdk.Context) (res int64) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.KeySignedBlocksWindow)
-	if bz == nil {
-		return res
-	}
-	k.legacyAmino.Unmarshal(bz, &res)
-	return res
+	return k.GetParams(ctx).SignedBlocksWindow
 }
 
 // MinSignedPerWindow - minimum blocks signed per window
 func (k Keeper) MinSignedPerWindow(ctx sdk.Context) int64 {
-	var minSignedPerWindow sdk.Dec
-
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.KeyMinSignedPerWindow)
-	if bz == nil {
-		return minSignedPerWindow.RoundInt64()
-	}
-	k.legacyAmino.Unmarshal(bz, &minSignedPerWindow)
+	params := k.GetParams(ctx)
 	signedBlocksWindow := k.SignedBlocksWindow(ctx)
 
 	// NOTE: RoundInt64 will never panic as minSignedPerWindow is
 	//       less than 1.
-	return minSignedPerWindow.MulInt64(signedBlocksWindow).RoundInt64()
+	return params.MinSignedPerWindow.MulInt64(signedBlocksWindow).RoundInt64()
 }
 
 // DowntimeJailDuration - Downtime unbond duration
 func (k Keeper) DowntimeJailDuration(ctx sdk.Context) (res time.Duration) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.KeyDowntimeJailDuration)
-	if bz == nil {
-		return res
-	}
-	k.legacyAmino.Unmarshal(bz, &res)
-	return res
+	return k.GetParams(ctx).DowntimeJailDuration
 }
 
 // SlashFractionDoubleSign - fraction of power slashed in case of double sign
 func (k Keeper) SlashFractionDoubleSign(ctx sdk.Context) (res sdk.Dec) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.KeySlashFractionDoubleSign)
-	if bz == nil {
-		return res
-	}
-	k.legacyAmino.Unmarshal(bz, &res)
-	return res
+	return k.GetParams(ctx).SlashFractionDoubleSign
 }
 
 // SlashFractionDowntime - fraction of power slashed for downtime
 func (k Keeper) SlashFractionDowntime(ctx sdk.Context) (res sdk.Dec) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.KeySlashFractionDowntime)
-	if bz == nil {
-		return res
-	}
-	k.legacyAmino.Unmarshal(bz, &res)
-	return res
+	return k.GetParams(ctx).SlashFractionDowntime
 }
 
 // GetParams returns the current x/slashing module parameters.

@@ -19,7 +19,6 @@ import (
 	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/rpc/client/local"
-	tmtypes "github.com/tendermint/tendermint/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -280,8 +279,9 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	}
 
 	var (
-		tmNode   *node.Node
-		gRPCOnly = ctx.Viper.GetBool(flagGRPCOnly)
+		tmNode         *node.Node
+		gRPCOnly       = ctx.Viper.GetBool(flagGRPCOnly)
+		genDocProvider node.GenesisDocProvider
 	)
 	if gRPCOnly {
 		ctx.Logger.Info("starting node in gRPC only mode; Tendermint is disabled")
@@ -289,7 +289,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	} else {
 		ctx.Logger.Info("starting node with ABCI Tendermint in-process")
 
-		genDocProvider := node.DefaultGenesisDocProviderFunc(cfg)
+		genDocProvider = node.DefaultGenesisDocProviderFunc(cfg)
 		tmNode, err := node.NewNode(
 			cfg,
 			pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
@@ -320,7 +320,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 	var apiSrv *api.Server
 	if config.API.Enable {
-		genDoc, err := tmtypes.GenesisDocFromFile(cfg.GenesisFile())
+		genDoc, err := genDocProvider()
 		if err != nil {
 			return err
 		}

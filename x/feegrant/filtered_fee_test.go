@@ -8,18 +8,38 @@ import (
 	"github.com/stretchr/testify/require"
 	ocproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/depinject"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/testutil"
+	feegranttestutil "github.com/cosmos/cosmos-sdk/x/feegrant/testutil"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 func TestFilteredFeeValidAllow(t *testing.T) {
-	app := simapp.Setup(t, false)
+	var (
+		interfaceRegistry codectypes.InterfaceRegistry
+		bankKeeper        bankkeeper.Keeper
+		stakingKeeper     *stakingkeeper.Keeper
+		feegrantKeeper    keeper.Keeper
+	)
 
-	ctx := app.BaseApp.NewContext(false, ocproto.Header{
-		Time: time.Now(),
-	})
+	app, err := simtestutil.Setup(testutil.AppConfig,
+		&feegrantKeeper,
+		&bankKeeper,
+		&stakingKeeper,
+		&interfaceRegistry,
+	)
+	require.NoError(t, err)
+
+	ctx := app.BaseApp.NewContext(false, ocproto.Header{Time: time.Now()})
+
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 10))
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 	smallAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 43))
@@ -167,7 +187,8 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 				require.NoError(t, err)
 
 				// save the grant
-				cdc := simapp.MakeTestEncodingConfig().Codec
+				var cdc codec.Codec
+				depinject.Inject(feegranttestutil.AppConfig, &cdc)
 				bz, err := cdc.Marshal(&newGrant)
 				require.NoError(t, err)
 

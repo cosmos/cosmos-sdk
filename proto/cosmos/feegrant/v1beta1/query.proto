@@ -20,6 +20,12 @@ service Query {
   rpc Allowances(QueryAllowancesRequest) returns (QueryAllowancesResponse) {
     option (google.api.http).get = "/cosmos/feegrant/v1beta1/allowances/{grantee}";
   }
+
+  // AllowancesByGranter returns all the grants given by an address
+  // Since v0.46
+  rpc AllowancesByGranter(QueryAllowancesByGranterRequest) returns (QueryAllowancesByGranterResponse) {
+    option (google.api.http).get = "/cosmos/feegrant/v1beta1/issued/{granter}";
+  }
 }
 
 // QueryAllowanceRequest is the request type for the Query/Allowance RPC method.
@@ -48,6 +54,23 @@ message QueryAllowancesRequest {
 // QueryAllowancesResponse is the response type for the Query/Allowances RPC method.
 message QueryAllowancesResponse {
   // allowances are allowance's granted for grantee by granter.
+  repeated cosmos.feegrant.v1beta1.Grant allowances = 1;
+
+  // pagination defines an pagination for the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryAllowancesByGranterRequest is the request type for the Query/AllowancesByGranter RPC method.
+message QueryAllowancesByGranterRequest {
+  string granter = 1;
+
+  // pagination defines an pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryAllowancesByGranterResponse is the response type for the Query/AllowancesByGranter RPC method.
+message QueryAllowancesByGranterResponse {
+  // allowances that have been issued by the granter.
   repeated cosmos.feegrant.v1beta1.Grant allowances = 1;
 
   // pagination defines an pagination for the response.

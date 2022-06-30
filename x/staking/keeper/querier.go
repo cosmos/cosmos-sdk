@@ -497,10 +497,8 @@ func RedelegationsToRedelegationResponses(
 			panic(err)
 		}
 
-		delegatorAddress, err := sdk.AccAddressFromBech32(redel.DelegatorAddress)
-		if err != nil {
-			panic(err)
-		}
+		delegatorAddress := sdk.MustAccAddressFromBech32(redel.DelegatorAddress)
+
 		val, found := k.GetValidator(ctx, valDstAddr)
 		if !found {
 			return nil, types.ErrNoValidatorFound

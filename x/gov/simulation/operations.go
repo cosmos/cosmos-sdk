@@ -155,7 +155,12 @@ func SimulateMsgSubmitProposal(
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+<<<<<<< HEAD
 		tx, err := helpers.GenTx(
+=======
+		tx, err := simtestutil.GenSignedMockTx(
+			r,
+>>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -242,6 +247,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 		}
 
 		txCtx := simulation.OperationInput{
+			R:             r,
 			App:           app,
 			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
 			Cdc:           nil,

@@ -73,7 +73,7 @@ func (s *TestSuite) TestBatchMint() {
 		{
 			"faild with not exist class",
 			func(tokens []nft.NFT) {
-				//do nothing
+				// do nothing
 			},
 			[]nft.NFT{
 				{ClassId: "classID1", Id: "nftID1"},
@@ -197,7 +197,6 @@ func (s *TestSuite) TestBatchBurn() {
 			s.Require().Error(err)
 		})
 	}
-
 }
 
 func (s *TestSuite) TestBatchUpdate() {
@@ -266,7 +265,6 @@ func (s *TestSuite) TestBatchUpdate() {
 			s.Require().Error(err)
 		})
 	}
-
 }
 
 func (s *TestSuite) TestBatchTransfer() {
@@ -333,7 +331,6 @@ func (s *TestSuite) TestBatchTransfer() {
 			s.Require().Error(err)
 		})
 	}
-
 }
 
 func groupByClassID(tokens []nft.NFT) map[string][]nft.NFT {

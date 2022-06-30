@@ -13,8 +13,4 @@ const (
 	DefaultWeightMsgUndelegate                int = 100
 	DefaultWeightMsgBeginRedelegate           int = 100
 	DefaultWeightMsgCancelUnbondingDelegation int = 100
-
-	// feegrant
-	DefaultWeightGrantAllowance  int = 100
-	DefaultWeightRevokeAllowance int = 100
 )

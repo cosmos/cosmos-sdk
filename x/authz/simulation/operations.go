@@ -258,6 +258,10 @@ func SimulateMsgExec(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.Ban
 
 		granterspendableCoins := bk.SpendableCoins(ctx, granterAddr)
 		coins := simtypes.RandSubsetCoins(r, granterspendableCoins)
+		// if coins slice is empty, we can not create valid banktype.MsgSend
+		if len(coins) == 0 {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "empty coins slice"), nil, nil
+		}
 
 		// Check send_enabled status of each sent coin denom
 		if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {

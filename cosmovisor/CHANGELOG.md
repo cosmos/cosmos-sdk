@@ -56,7 +56,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * [\#10285](https://github.com/cosmos/cosmos-sdk/pull/10316) Added `run` command to run the associated app.
-* [\#10649](https://github.com/cosmos/cosmos-sdk/pull/10649) Customize backup directory. Added new env variable: `DAEMON_BACKUP_DIR`. If it is set, cosmovisor will backup the app data in ``DAEMON_BACKUP_DIR` before running the update.
+* [\#10649](https://github.com/cosmos/cosmos-sdk/pull/10649) Customize backup directory. Added new env variable: `DAEMON_DATA_BACKUP_DIR`. If it is set, cosmovisor will backup the app data in `DAEMON_DATA_BACKUP_DIR` before running the update.
 
 ### Deprecated
 

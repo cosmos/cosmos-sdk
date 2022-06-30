@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"math/big"
 	"strconv"
 	"strings"
@@ -46,7 +45,8 @@ var (
 	oneInt               = big.NewInt(1)
 	tenInt               = big.NewInt(10)
 	minusOneDec          = MustNewDecFromStr("-1")
-	log2of10             = math.Log2(10)
+	log2of10             = MustNewDecFromStr("3.32192809489")
+	eightTeenDec         = NewDecWithPrec(18, 0)
 	zeroDec              = ZeroDec()
 )
 
@@ -453,11 +453,13 @@ func (d Dec) ApproxRoot(root uint64) (guess Dec, err error) {
 	delta := OneDec()
 
 	// first we do a rough estimation of the bit length the root value should have
-	rootF := float64(root)
-	dBitLen := float64(d.i.BitLen())
-	guessBitLen := int(dBitLen/rootF + 18*((rootF-1)/rootF)*log2of10)
+	rootInt64 := int64(root)
+	dBitLen := NewDecWithPrec(int64(d.i.BitLen()), 0)
+
+	// guessBitLen = ceil(dBitLen/root + 18 * (root-1)/root * log2(10))
+	guessBitLen := (dBitLen.QuoInt64(rootInt64)).Add((eightTeenDec.MulInt64(rootInt64 - 1).QuoInt64(rootInt64)).Mul(log2of10)).Ceil()
 	guess = Dec{
-		i: new(big.Int).SetBit(zeroInt, guessBitLen, 1),
+		i: new(big.Int).SetBit(zeroInt, int(guessBitLen.RoundInt64()), 1),
 	}
 
 	// this is used to keep track of the best value we can hit, in case of non-convergence.

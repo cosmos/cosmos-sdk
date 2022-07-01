@@ -2259,13 +2259,7 @@ type GenesisState struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// params defines all the paramaters of the module.
-	//
-	// Deprecated: Use governance to submit a MsgUpdateParams message to instruct
-	// the x/slashing module to update the relevant parameters.
-	//
-	// Since the cosmos-sdk 0.47 version, this only exists for backwards
-	// compatibility of genesis state.
+	// params defines all the parameters of the module.
 	Params *Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
 	// signing_infos represents a map between validator addresses and their
 	// signing infos.

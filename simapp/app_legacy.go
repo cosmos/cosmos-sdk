@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"cosmossdk.io/core/appconfig"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -104,10 +103,6 @@ import (
 )
 
 const appName = "SimApp"
-
-// Not used in legacy apps, here just to satisfy other files and avoid using build
-// tags everywhere. Only used in tests.
-var AppConfig = appconfig.LoadYAML([]byte{})
 
 var (
 	// DefaultNodeHome default home directories for the application daemon

@@ -3,7 +3,6 @@ package params
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"math/rand"
 
@@ -166,7 +165,7 @@ func init() {
 		appmodule.Provide(
 			provideModuleBasic,
 			provideModule,
-			provideSubSpace,
+			provideSubspace,
 		))
 }
 
@@ -203,7 +202,7 @@ func provideModule(in paramsInputs) paramsOutputs {
 	return paramsOutputs{ParamsKeeper: k, BaseAppOption: baseappOpt, Module: m, GovHandler: govHandler}
 }
 
-type subSpaceInputs struct {
+type subspaceInputs struct {
 	depinject.In
 
 	Key       depinject.ModuleKey
@@ -211,19 +210,12 @@ type subSpaceInputs struct {
 	KeyTables map[string]types.KeyTable
 }
 
-// TODO pull up to configuration
-var keyTableSubspacesConfig = map[string]string{"gov": "gov"}
-
-func provideSubSpace(in subSpaceInputs) (types.Subspace, error) {
+func provideSubspace(in subspaceInputs) types.Subspace {
 	moduleName := in.Key.Name()
-	var _, exists = keyTableSubspacesConfig[moduleName]
+	var kt, exists = in.KeyTables[moduleName]
 	if !exists {
-		return in.Keeper.Subspace(moduleName), nil
+		return in.Keeper.Subspace(moduleName)
 	} else {
-		var kt, ok = in.KeyTables[moduleName]
-		if !ok {
-			return *new(types.Subspace), fmt.Errorf("a KeyTable is required for module %s but no provider was found", moduleName)
-		}
-		return in.Keeper.Subspace(moduleName).WithKeyTable(kt), nil
+		return in.Keeper.Subspace(moduleName).WithKeyTable(kt)
 	}
 }

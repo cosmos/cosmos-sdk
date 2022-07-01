@@ -19,12 +19,7 @@ var (
 // version 3. Specifically, it takes the parameters that are currently stored
 // and managed by the x/params modules and stores them directly into the x/slashing
 // module state.
-func Migrate(
-	ctx sdk.Context,
-	store sdk.KVStore,
-	legacySubspace exported.Subspace,
-	cdc codec.BinaryCodec,
-) error {
+func Migrate(ctx sdk.Context, store sdk.KVStore, legacySubspace exported.Subspace, cdc codec.BinaryCodec) error {
 	var currParams types.Params
 	legacySubspace.GetParamSet(ctx, &currParams)
 

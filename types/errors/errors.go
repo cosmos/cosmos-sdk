@@ -161,6 +161,10 @@ var (
 	// ErrAppConfig defines an error occurred if min-gas-prices field in BaseConfig is empty.
 	ErrAppConfig = Register(RootCodespace, 40, "error in app.toml")
 
+	// ErrInvalidGasLimit defines an error when an invalid GasWanted value is
+	// supplied.
+	ErrInvalidGasLimit = Register(RootCodespace, 41, "invalid gas limit")
+
 	// ErrPanic should only be set when we recovering from a panic
 	ErrPanic = errorsmod.ErrPanic
 )

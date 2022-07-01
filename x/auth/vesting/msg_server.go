@@ -179,7 +179,7 @@ func (s msgServer) DonateAllVestingTokens(goCtx context.Context, msg *types.MsgD
 
 	vestingAcc, ok := acc.(exported.VestingAccount)
 	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s not vesting account", msg.FromAddress)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s is not vesting account", msg.FromAddress)
 	}
 
 	if !vestingAcc.GetDelegatedVesting().IsZero() {

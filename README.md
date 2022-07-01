@@ -32,6 +32,4 @@ parent:
   </a>
   <a href="discord.gg/onomy">
     <img alt="Discord" src="https://img.shields.io/discord/669268347736686612.svg" />
-</div>
-
-For more, please go to the [Onomy SDK](./docs/).
+    </div>

@@ -52,10 +52,7 @@ func (suite *SimTestSuite) SetupTest() {
 
 	suite.accountKeeper.EXPECT().GetModuleAddress(nft.ModuleName).Return(addrs[0]).AnyTimes()
 
-	// keys := sdk.NewK(nft.StoreKey)
 	ctx, db, cms := testutil.DefaultContextWithDB(key, sdk.NewTransientStoreKey("transient_test"))
-	// ads := ctx.KVStore(keys[nft.StoreKey])
-	// panic(ads)
 	suite.baseApp = baseapp.NewBaseApp(
 		"nft",
 		log.NewNopLogger(),

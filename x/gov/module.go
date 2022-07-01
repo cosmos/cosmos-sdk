@@ -183,12 +183,8 @@ func provideModule(in govInputs) govOutputs {
 	return govOutputs{Module: runtime.WrapAppModule(m), Keeper: k, HandlerRoute: hr}
 }
 
-func provideKeyTable(k depinject.ModuleKey) *paramtypes.KeyTable {
-	if k.Name() != types.ModuleName {
-		return nil
-	}
-	kt := v1.ParamKeyTable()
-	return &kt
+func provideKeyTable() paramtypes.KeyTable {
+	return v1.ParamKeyTable()
 }
 
 func invokeAddRoutes(keeper *keeper.Keeper, routes []v1beta1.HandlerRoute) {

@@ -20,6 +20,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -105,7 +106,7 @@ import (
 const appName = "SimApp"
 
 // Not used in legacy apps, here just to satisfy other files and avoid using build
-// tags everywhere.
+// tags everywhere. Only used in tests.
 var AppConfig = appconfig.LoadYAML([]byte{})
 
 var (
@@ -329,6 +330,7 @@ func NewSimApp(
 	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {
 		skipUpgradeHeights[int64(h)] = true
 	}
+	homePath := cast.ToString(appOpts.Get(flags.FlagHome))
 	// set the governance module account as the authority for conducting upgrades
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 

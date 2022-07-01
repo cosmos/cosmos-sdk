@@ -1,0 +1,24 @@
+syntax = "proto3";
+package cosmos.distribution.v1beta1;
+
+option go_package            = "github.com/cosmos/cosmos-sdk/x/distribution/types";
+option (gogoproto.equal_all) = true;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
+
+// This message is the structure of each auto delegation config to be sotored in the state
+message AutoDelegation {
+    string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+    string next_record = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];    // Id of the next node to make a linked list (points to the delegator address as the key)
+    string prev_record = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];    // Id of the previous node to make a linked list (points to the delegator address as the key)
+    repeated cosmos.base.v1beta1.Coin min_balance = 5
+        [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+message HeadPointer{
+    string first_record = 1; // For sake of performance, we keep the key of the first record
+    string current_record = 2; // It keeps the index of the AutoDelegation node in the linked list to iterate over the list
+}

@@ -26,6 +26,11 @@ service Msg {
   // FundCommunityPool defines a method to allow an account to directly
   // fund the community pool.
   rpc FundCommunityPool(MsgFundCommunityPool) returns (MsgFundCommunityPoolResponse);
+  
+  // MsgSetAutoDelegation defines a method to activate/update the auto delegation
+  rpc SetAutoDelegation(MsgSetAutoDelegation) returns (MsgSetAutoDelegationResponse);
+  
+  rpc UnSetAutoDelegation(MsgUnSetAutoDelegation) returns (MsgUnSetAutoDelegationResponse);
 }
 
 // MsgSetWithdrawAddress sets the withdraw address for
@@ -95,3 +100,31 @@ message MsgFundCommunityPool {
 
 // MsgFundCommunityPoolResponse defines the Msg/FundCommunityPool response type.
 message MsgFundCommunityPoolResponse {}
+
+
+// MsgSetAutoDelegation sets the auto delegation for the given account
+message MsgSetAutoDelegation {
+  
+  option (cosmos.msg.v1.signer) = "delegator_address";
+
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+  
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated cosmos.base.v1beta1.Coin min_balance = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+
+}
+message MsgSetAutoDelegationResponse {}
+
+// MsgUnSetAutoDelegation removes the auto delegation for the given account
+message MsgUnSetAutoDelegation {
+  option (cosmos.msg.v1.signer) = "delegator_address";
+
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+  
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+message MsgUnSetAutoDelegationResponse {}
+

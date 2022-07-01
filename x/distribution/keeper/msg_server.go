@@ -143,3 +143,51 @@ func (k msgServer) FundCommunityPool(goCtx context.Context, msg *types.MsgFundCo
 
 	return &types.MsgFundCommunityPoolResponse{}, nil
 }
+
+func (k msgServer) SetAutoDelegation(goCtx context.Context, msg *types.MsgSetAutoDelegation) (*types.MsgSetAutoDelegationResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	err := k.Keeper.SetAutoDelegation(ctx, types.AutoDelegation{
+		DelegatorAddress: msg.DelegatorAddress,
+		MinBalance:       msg.MinBalance,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeyAction, types.SetAutoDelegationEventKey),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.MinBalance.String()),
+		),
+	)
+
+	return &types.MsgSetAutoDelegationResponse{}, nil
+}
+
+func (k msgServer) UnSetAutoDelegation(goCtx context.Context, msg *types.MsgUnSetAutoDelegation) (*types.MsgUnSetAutoDelegationResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := k.Keeper.UnSetAutoDelegation(ctx, delAddr); err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeyAction, types.UnSetAutoDelegationEventKey),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
+		),
+	)
+
+	return &types.MsgUnSetAutoDelegationResponse{}, nil
+}

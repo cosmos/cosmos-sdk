@@ -41,6 +41,8 @@ func NewTxCmd() *cobra.Command {
 		NewWithdrawAllRewardsCmd(),
 		NewSetWithdrawAddrCmd(),
 		NewFundCommunityPoolCmd(),
+		NewSetAutoDelegationCmd(),
+		NewUnSetAutoDelegationCmd(),
 	)
 
 	return distTxCmd
@@ -323,6 +325,80 @@ Where proposal.json contains:
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	return cmd
+}
+
+// NewSetAutoDelegationCmd returns a CLI command handler for creating a MsgSetAutoDelegation transaction.
+func NewSetAutoDelegationCmd() *cobra.Command {
+
+	cmd := &cobra.Command{
+		Use:   "set-auto-delegation [min-balance] --from <delegator-address>",
+		Args:  cobra.ExactArgs(1),
+		Short: "Activates/Updates automatic delegation of the staking reward tokens to the set of validators",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Activates/Updates automatic delegation of the staking reward tokens to the set of validators.
+
+Example:
+$ %s tx distribution set-auto-delegation 100stake --from my-key
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			minBalance, err := sdk.ParseCoinsNormalized(args[0])
+			if err != nil {
+				return err
+			}
+
+			delAddr := clientCtx.GetFromAddress()
+
+			msg := types.NewMsgSetAutoDelegation(delAddr, minBalance)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewUnSetAutoDelegationCmd returns a CLI command handler for creating a MsgUnSetAutoDelegation transaction.
+func NewUnSetAutoDelegationCmd() *cobra.Command {
+
+	cmd := &cobra.Command{
+		Use:   "unset-auto-delegation --from <delegator-address>",
+		Args:  cobra.ExactArgs(0),
+		Short: "Deactivates and removes the automatic delegation information",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Removes the automatic delegation information.
+
+Example:
+$ %s tx distribution unset-auto-delegation --from my-key
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			delAddr := clientCtx.GetFromAddress()
+
+			msg := types.NewMsgUnSetAutoDelegation(delAddr)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }

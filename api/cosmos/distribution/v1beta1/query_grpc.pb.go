@@ -41,6 +41,8 @@ type QueryClient interface {
 	DelegatorWithdrawAddress(ctx context.Context, in *QueryDelegatorWithdrawAddressRequest, opts ...grpc.CallOption) (*QueryDelegatorWithdrawAddressResponse, error)
 	// CommunityPool queries the community pool coins.
 	CommunityPool(ctx context.Context, in *QueryCommunityPoolRequest, opts ...grpc.CallOption) (*QueryCommunityPoolResponse, error)
+	// CommunityPool queries the community pool coins.
+	AutoDelegation(ctx context.Context, in *QueryAutoDelegationRequest, opts ...grpc.CallOption) (*QueryAutoDelegationResponse, error)
 }
 
 type queryClient struct {
@@ -132,6 +134,15 @@ func (c *queryClient) CommunityPool(ctx context.Context, in *QueryCommunityPoolR
 	return out, nil
 }
 
+func (c *queryClient) AutoDelegation(ctx context.Context, in *QueryAutoDelegationRequest, opts ...grpc.CallOption) (*QueryAutoDelegationResponse, error) {
+	out := new(QueryAutoDelegationResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Query/AutoDelegation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -155,6 +166,8 @@ type QueryServer interface {
 	DelegatorWithdrawAddress(context.Context, *QueryDelegatorWithdrawAddressRequest) (*QueryDelegatorWithdrawAddressResponse, error)
 	// CommunityPool queries the community pool coins.
 	CommunityPool(context.Context, *QueryCommunityPoolRequest) (*QueryCommunityPoolResponse, error)
+	// CommunityPool queries the community pool coins.
+	AutoDelegation(context.Context, *QueryAutoDelegationRequest) (*QueryAutoDelegationResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -188,6 +201,9 @@ func (UnimplementedQueryServer) DelegatorWithdrawAddress(context.Context, *Query
 }
 func (UnimplementedQueryServer) CommunityPool(context.Context, *QueryCommunityPoolRequest) (*QueryCommunityPoolResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CommunityPool not implemented")
+}
+func (UnimplementedQueryServer) AutoDelegation(context.Context, *QueryAutoDelegationRequest) (*QueryAutoDelegationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AutoDelegation not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -364,6 +380,24 @@ func _Query_CommunityPool_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_AutoDelegation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAutoDelegationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AutoDelegation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.distribution.v1beta1.Query/AutoDelegation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AutoDelegation(ctx, req.(*QueryAutoDelegationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -406,6 +440,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CommunityPool",
 			Handler:    _Query_CommunityPool_Handler,
+		},
+		{
+			MethodName: "AutoDelegation",
+			Handler:    _Query_AutoDelegation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

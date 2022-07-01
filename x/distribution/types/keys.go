@@ -42,6 +42,10 @@ const (
 // - 0x07<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorCurrentCommission
 //
 // - 0x08<valAddrLen (1 Byte)><valAddr_Bytes><height>: ValidatorSlashEvent
+//
+// - 0x09<valAddrLen (1 Byte)><valAddr_Bytes>: auto delegation records (info)
+//
+// - 0x0a<valAddrLen (1 Byte)><valAddr_Bytes>: auto delegation head pointer
 var (
 	FeePoolKey                        = []byte{0x00} // key for global distribution state
 	ProposerKey                       = []byte{0x01} // key for the proposer operator address
@@ -53,6 +57,18 @@ var (
 	ValidatorCurrentRewardsPrefix        = []byte{0x06} // key for current validator rewards
 	ValidatorAccumulatedCommissionPrefix = []byte{0x07} // key for accumulated validator commission
 	ValidatorSlashEventPrefix            = []byte{0x08} // key for validator slash fraction
+
+	DelegatorAutoDelegationPrefix   = []byte{0x09} // Prefix key for auto delegation info
+	HeadPointerAutoDelegationPrefix = []byte{0x0a} // Prefix key for the head pointer of the linked list
+)
+
+const (
+	AutoDelegationEventKey      = "AutoDelegation"
+	SetAutoDelegationEventKey   = "SetAutoDelegation"
+	UnSetAutoDelegationEventKey = "UnSetAutoDelegation"
+	ValidatorAddressEventKey    = "Validator"
+	DelegatorAddressEventKey    = "Delegator"
+	AmountEventKey              = "Amount"
 )
 
 // GetValidatorOutstandingRewardsAddress creates an address from a validator's outstanding rewards key.
@@ -212,4 +228,14 @@ func GetValidatorSlashEventKey(v sdk.ValAddress, height, period uint64) []byte {
 	prefix := GetValidatorSlashEventKeyPrefix(v, height)
 
 	return append(prefix, periodBz...)
+}
+
+// GetDelegatorAutoDelegationKey creates the key for a delegator's withdraw addr.
+func GetDelegatorAutoDelegationKey(delAddr sdk.AccAddress) []byte {
+	return append(DelegatorAutoDelegationPrefix, address.MustLengthPrefix(delAddr.Bytes())...)
+}
+
+// GetDelegatorAutoDelegationKey creates the key for a delegator's withdraw addr.
+func GetHeadPointerAutoDelegationPrefix() []byte {
+	return HeadPointerAutoDelegationPrefix
 }

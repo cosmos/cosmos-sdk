@@ -246,3 +246,23 @@ func (k Keeper) CommunityPool(c context.Context, req *types.QueryCommunityPoolRe
 
 	return &types.QueryCommunityPoolResponse{Pool: pool}, nil
 }
+
+// ValidatorOutstandingRewards queries rewards of a validator address
+func (k Keeper) AutoDelegation(c context.Context, req *types.QueryAutoDelegationRequest) (*types.QueryAutoDelegationResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	res, found := k.GetAutoDelegation(ctx, delAddr)
+	if !found {
+		return nil, status.Error(codes.NotFound, "auto delegation not found")
+	}
+
+	return &types.QueryAutoDelegationResponse{
+		DelegatorAddress: res.DelegatorAddress,
+		MinBalance:       res.MinBalance,
+	}, nil
+}

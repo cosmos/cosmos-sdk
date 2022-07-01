@@ -63,6 +63,11 @@ service Query {
   rpc CommunityPool(QueryCommunityPoolRequest) returns (QueryCommunityPoolResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/community_pool";
   }
+
+  // CommunityPool queries the community pool coins.
+  rpc AutoDelegation(QueryAutoDelegationRequest) returns (QueryAutoDelegationResponse) {
+    option (google.api.http).get = "/cosmos/distribution/v1beta1/auto_delegation";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -216,4 +221,18 @@ message QueryCommunityPoolResponse {
   // pool defines community pool's coins.
   repeated cosmos.base.v1beta1.DecCoin pool = 1
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+}
+
+
+// QueryAutoDelegationRequest is the request for the Query/AutoDelegation RPC method
+message QueryAutoDelegationRequest {
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// QueryAutoDelegation is the response type for the Query/AutoDelegation
+// RPC method.
+message QueryAutoDelegationResponse {
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated cosmos.base.v1beta1.Coin min_balance = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }

@@ -359,6 +359,155 @@ func (m *MsgFundCommunityPoolResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgFundCommunityPoolResponse proto.InternalMessageInfo
 
+// MsgSetAutoDelegation sets the auto delegation for the given account
+type MsgSetAutoDelegation struct {
+	DelegatorAddress string                                   `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
+	MinBalance       github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=min_balance,json=minBalance,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"min_balance"`
+}
+
+func (m *MsgSetAutoDelegation) Reset()         { *m = MsgSetAutoDelegation{} }
+func (m *MsgSetAutoDelegation) String() string { return proto.CompactTextString(m) }
+func (*MsgSetAutoDelegation) ProtoMessage()    {}
+func (*MsgSetAutoDelegation) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed4f433d965e58ca, []int{8}
+}
+func (m *MsgSetAutoDelegation) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetAutoDelegation) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetAutoDelegation.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetAutoDelegation) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetAutoDelegation.Merge(m, src)
+}
+func (m *MsgSetAutoDelegation) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetAutoDelegation) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetAutoDelegation.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetAutoDelegation proto.InternalMessageInfo
+
+type MsgSetAutoDelegationResponse struct {
+}
+
+func (m *MsgSetAutoDelegationResponse) Reset()         { *m = MsgSetAutoDelegationResponse{} }
+func (m *MsgSetAutoDelegationResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSetAutoDelegationResponse) ProtoMessage()    {}
+func (*MsgSetAutoDelegationResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed4f433d965e58ca, []int{9}
+}
+func (m *MsgSetAutoDelegationResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetAutoDelegationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetAutoDelegationResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetAutoDelegationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetAutoDelegationResponse.Merge(m, src)
+}
+func (m *MsgSetAutoDelegationResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetAutoDelegationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetAutoDelegationResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetAutoDelegationResponse proto.InternalMessageInfo
+
+// MsgUnSetAutoDelegation removes the auto delegation for the given account
+type MsgUnSetAutoDelegation struct {
+	DelegatorAddress string `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
+}
+
+func (m *MsgUnSetAutoDelegation) Reset()         { *m = MsgUnSetAutoDelegation{} }
+func (m *MsgUnSetAutoDelegation) String() string { return proto.CompactTextString(m) }
+func (*MsgUnSetAutoDelegation) ProtoMessage()    {}
+func (*MsgUnSetAutoDelegation) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed4f433d965e58ca, []int{10}
+}
+func (m *MsgUnSetAutoDelegation) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUnSetAutoDelegation) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUnSetAutoDelegation.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUnSetAutoDelegation) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUnSetAutoDelegation.Merge(m, src)
+}
+func (m *MsgUnSetAutoDelegation) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUnSetAutoDelegation) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUnSetAutoDelegation.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUnSetAutoDelegation proto.InternalMessageInfo
+
+type MsgUnSetAutoDelegationResponse struct {
+}
+
+func (m *MsgUnSetAutoDelegationResponse) Reset()         { *m = MsgUnSetAutoDelegationResponse{} }
+func (m *MsgUnSetAutoDelegationResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUnSetAutoDelegationResponse) ProtoMessage()    {}
+func (*MsgUnSetAutoDelegationResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed4f433d965e58ca, []int{11}
+}
+func (m *MsgUnSetAutoDelegationResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUnSetAutoDelegationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUnSetAutoDelegationResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUnSetAutoDelegationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUnSetAutoDelegationResponse.Merge(m, src)
+}
+func (m *MsgUnSetAutoDelegationResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUnSetAutoDelegationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUnSetAutoDelegationResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUnSetAutoDelegationResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgSetWithdrawAddress)(nil), "cosmos.distribution.v1beta1.MsgSetWithdrawAddress")
 	proto.RegisterType((*MsgSetWithdrawAddressResponse)(nil), "cosmos.distribution.v1beta1.MsgSetWithdrawAddressResponse")
@@ -368,6 +517,10 @@ func init() {
 	proto.RegisterType((*MsgWithdrawValidatorCommissionResponse)(nil), "cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse")
 	proto.RegisterType((*MsgFundCommunityPool)(nil), "cosmos.distribution.v1beta1.MsgFundCommunityPool")
 	proto.RegisterType((*MsgFundCommunityPoolResponse)(nil), "cosmos.distribution.v1beta1.MsgFundCommunityPoolResponse")
+	proto.RegisterType((*MsgSetAutoDelegation)(nil), "cosmos.distribution.v1beta1.MsgSetAutoDelegation")
+	proto.RegisterType((*MsgSetAutoDelegationResponse)(nil), "cosmos.distribution.v1beta1.MsgSetAutoDelegationResponse")
+	proto.RegisterType((*MsgUnSetAutoDelegation)(nil), "cosmos.distribution.v1beta1.MsgUnSetAutoDelegation")
+	proto.RegisterType((*MsgUnSetAutoDelegationResponse)(nil), "cosmos.distribution.v1beta1.MsgUnSetAutoDelegationResponse")
 }
 
 func init() {
@@ -375,44 +528,51 @@ func init() {
 }
 
 var fileDescriptor_ed4f433d965e58ca = []byte{
-	// 589 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x55, 0x41, 0x6b, 0x13, 0x41,
-	0x14, 0xde, 0xb1, 0x52, 0xe8, 0x78, 0x30, 0x59, 0xa2, 0x4d, 0xb7, 0x3a, 0x29, 0x8b, 0x48, 0x10,
-	0xba, 0x6b, 0x22, 0x28, 0xc6, 0x83, 0x98, 0x58, 0x6f, 0x41, 0x49, 0x41, 0xc1, 0x4b, 0xd9, 0x64,
-	0x86, 0xe9, 0x60, 0x76, 0x27, 0xec, 0x4c, 0x92, 0xf6, 0xa8, 0x08, 0xea, 0x41, 0x10, 0xfc, 0x01,
-	0xf6, 0x28, 0x9e, 0x3c, 0xf8, 0x0f, 0xbc, 0x04, 0xbd, 0x14, 0x4f, 0x9e, 0x54, 0x92, 0x83, 0xfe,
-	0x0c, 0x49, 0x76, 0x76, 0x9b, 0x90, 0x4d, 0xb6, 0xb5, 0xd2, 0xd3, 0x2c, 0xf3, 0xde, 0xf7, 0xcd,
-	0xf7, 0xbd, 0x7d, 0x6f, 0x06, 0x5e, 0x6a, 0x70, 0xe1, 0x72, 0x61, 0x63, 0x26, 0xa4, 0xcf, 0xea,
-	0x6d, 0xc9, 0xb8, 0x67, 0x77, 0x0a, 0x75, 0x22, 0x9d, 0x82, 0x2d, 0x77, 0xac, 0x96, 0xcf, 0x25,
-	0xd7, 0x57, 0x83, 0x2c, 0x6b, 0x3c, 0xcb, 0x52, 0x59, 0x46, 0x86, 0x72, 0xca, 0x47, 0x79, 0xf6,
-	0xf0, 0x2b, 0x80, 0x18, 0x48, 0x11, 0xd7, 0x1d, 0x41, 0x22, 0xc2, 0x06, 0x67, 0x9e, 0x8a, 0xaf,
-	0x04, 0xf1, 0xad, 0x00, 0xa8, 0xf8, 0x83, 0xd0, 0xb2, 0x82, 0xba, 0x82, 0xda, 0x9d, 0xc2, 0x70,
-	0x09, 0x02, 0xe6, 0x67, 0x00, 0xcf, 0x55, 0x05, 0xdd, 0x24, 0xf2, 0x11, 0x93, 0xdb, 0xd8, 0x77,
-	0xba, 0x77, 0x30, 0xf6, 0x89, 0x10, 0xfa, 0x06, 0x4c, 0x63, 0xd2, 0x24, 0xd4, 0x91, 0xdc, 0xdf,
-	0x72, 0x82, 0xcd, 0x2c, 0x58, 0x03, 0xf9, 0xa5, 0x72, 0xf6, 0xdb, 0xa7, 0xf5, 0x8c, 0xe2, 0x57,
-	0xe9, 0x9b, 0xd2, 0x67, 0x1e, 0xad, 0xa5, 0x22, 0x48, 0x48, 0x53, 0x81, 0xa9, 0xae, 0x62, 0x8e,
-	0x58, 0x4e, 0x25, 0xb0, 0x9c, 0xed, 0x4e, 0x6a, 0x29, 0xa1, 0x97, 0x7b, 0x39, 0xed, 0xcf, 0x5e,
-	0x4e, 0x7b, 0xf6, 0xfb, 0xe3, 0x95, 0x69, 0x59, 0x66, 0x0e, 0x5e, 0x8c, 0x35, 0x51, 0x23, 0xa2,
-	0xc5, 0x3d, 0x41, 0xcc, 0x2f, 0x00, 0x1a, 0x55, 0x41, 0xc3, 0xf0, 0xdd, 0x90, 0xa1, 0x46, 0xba,
-	0x8e, 0x8f, 0xff, 0x97, 0xd7, 0x0d, 0x98, 0xee, 0x38, 0x4d, 0x86, 0x27, 0x68, 0x92, 0xcc, 0xa6,
-	0x22, 0xc8, 0x61, 0xdd, 0xbe, 0x02, 0xd0, 0x9c, 0x6d, 0x26, 0xf4, 0xac, 0x37, 0xe0, 0xa2, 0xe3,
-	0xf2, 0xb6, 0x27, 0xb3, 0x60, 0x6d, 0x21, 0x7f, 0xa6, 0xb8, 0x62, 0xa9, 0xf3, 0x87, 0xfd, 0x13,
-	0xb6, 0x9a, 0x55, 0xe1, 0xcc, 0x2b, 0x5f, 0xed, 0xfd, 0xc8, 0x69, 0x1f, 0x7e, 0xe6, 0xf2, 0x94,
-	0xc9, 0xed, 0x76, 0xdd, 0x6a, 0x70, 0x57, 0xf5, 0x8f, 0x5a, 0xd6, 0x05, 0x7e, 0x62, 0xcb, 0xdd,
-	0x16, 0x11, 0x23, 0x80, 0xa8, 0x29, 0x6a, 0xf3, 0x05, 0x80, 0x68, 0x4c, 0xcb, 0xc3, 0xd0, 0x4b,
-	0x85, 0xbb, 0x2e, 0x13, 0x82, 0x71, 0x2f, 0xbe, 0x2a, 0xe0, 0x98, 0x55, 0x99, 0x62, 0x34, 0x5f,
-	0x03, 0x78, 0x79, 0xbe, 0x92, 0x93, 0xad, 0xcc, 0x57, 0x00, 0x33, 0x55, 0x41, 0xef, 0xb5, 0x3d,
-	0x3c, 0x94, 0xd0, 0xf6, 0x98, 0xdc, 0x7d, 0xc0, 0x79, 0xf3, 0x44, 0x4e, 0xd7, 0xaf, 0xc3, 0x25,
-	0x4c, 0x5a, 0x5c, 0x30, 0xc9, 0xfd, 0xc4, 0x16, 0x3c, 0x48, 0x2d, 0x9d, 0x1f, 0xaf, 0xf2, 0xc1,
-	0xbe, 0x89, 0xe0, 0x85, 0x38, 0x33, 0x61, 0x49, 0x8b, 0xbd, 0xd3, 0x70, 0xa1, 0x2a, 0xa8, 0xfe,
-	0x1c, 0x40, 0x3d, 0xe6, 0x32, 0x29, 0x5a, 0x73, 0xae, 0x3b, 0x2b, 0x76, 0x76, 0x8d, 0xd2, 0xd1,
-	0x31, 0xd1, 0x1f, 0x7e, 0x0b, 0xe0, 0xf2, 0xac, 0x61, 0xbf, 0x91, 0xc4, 0x3b, 0x03, 0x68, 0xdc,
-	0xfe, 0x47, 0x60, 0xa4, 0xea, 0x1d, 0x80, 0xab, 0xf3, 0x26, 0xe5, 0xd6, 0x61, 0x0f, 0x88, 0x01,
-	0x1b, 0x95, 0x63, 0x80, 0x23, 0x85, 0x4f, 0x01, 0x4c, 0x4f, 0x77, 0x6c, 0x21, 0x89, 0x7a, 0x0a,
-	0x62, 0xdc, 0x3c, 0x32, 0x24, 0xd4, 0x50, 0xbe, 0xff, 0xbe, 0x8f, 0x40, 0xaf, 0x8f, 0xc0, 0x7e,
-	0x1f, 0x81, 0x5f, 0x7d, 0x04, 0xde, 0x0c, 0x90, 0xb6, 0x3f, 0x40, 0xda, 0xf7, 0x01, 0xd2, 0x1e,
-	0x17, 0xe6, 0x8e, 0xc2, 0xce, 0xe4, 0xab, 0x3b, 0x9a, 0x8c, 0xfa, 0xe2, 0xe8, 0xa9, 0xbb, 0xf6,
-	0x37, 0x00, 0x00, 0xff, 0xff, 0x8b, 0x65, 0x3b, 0xae, 0x99, 0x07, 0x00, 0x00,
+	// 691 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0x41, 0x6b, 0xd4, 0x40,
+	0x14, 0xce, 0xb4, 0x50, 0xe8, 0xf4, 0x60, 0x1b, 0x6b, 0xbb, 0x4d, 0x35, 0x5b, 0x82, 0x48, 0x11,
+	0x9a, 0x98, 0x16, 0x14, 0xdb, 0x83, 0x74, 0xd7, 0x7a, 0x5b, 0x94, 0x2d, 0x2a, 0x78, 0x29, 0xc9,
+	0x66, 0x48, 0x07, 0x37, 0x33, 0x4b, 0x66, 0xd2, 0x6d, 0x4f, 0xa2, 0x08, 0xd5, 0x83, 0x20, 0xf8,
+	0x03, 0xec, 0x51, 0x3c, 0x79, 0xf0, 0x1f, 0x78, 0x29, 0x7a, 0x29, 0x1e, 0xc4, 0x93, 0xca, 0xf6,
+	0xa0, 0xe0, 0x9f, 0x90, 0xdd, 0x4c, 0xd2, 0x5d, 0x92, 0xdd, 0x6c, 0xdb, 0xb5, 0xa7, 0x2c, 0x79,
+	0xef, 0xfb, 0xe6, 0xfb, 0xde, 0xbe, 0xf7, 0x32, 0xf0, 0x72, 0x85, 0x32, 0x8f, 0x32, 0xc3, 0xc1,
+	0x8c, 0xfb, 0xd8, 0x0e, 0x38, 0xa6, 0xc4, 0xd8, 0x32, 0x6d, 0xc4, 0x2d, 0xd3, 0xe0, 0xdb, 0x7a,
+	0xcd, 0xa7, 0x9c, 0xca, 0xb3, 0x61, 0x96, 0xde, 0x9e, 0xa5, 0x8b, 0x2c, 0x65, 0xd2, 0xa5, 0x2e,
+	0x6d, 0xe5, 0x19, 0xcd, 0x5f, 0x21, 0x44, 0x51, 0x05, 0xb1, 0x6d, 0x31, 0x14, 0x13, 0x56, 0x28,
+	0x26, 0x22, 0x3e, 0x13, 0xc6, 0x37, 0x42, 0xa0, 0xe0, 0x0f, 0x43, 0xd3, 0x02, 0xea, 0x31, 0xd7,
+	0xd8, 0x32, 0x9b, 0x8f, 0x30, 0xa0, 0x7d, 0x02, 0xf0, 0x42, 0x89, 0xb9, 0xeb, 0x88, 0x3f, 0xc4,
+	0x7c, 0xd3, 0xf1, 0xad, 0xfa, 0xaa, 0xe3, 0xf8, 0x88, 0x31, 0x79, 0x0d, 0x4e, 0x38, 0xa8, 0x8a,
+	0x5c, 0x8b, 0x53, 0x7f, 0xc3, 0x0a, 0x5f, 0xe6, 0xc0, 0x1c, 0x98, 0x1f, 0x2d, 0xe4, 0xbe, 0x7e,
+	0x5c, 0x98, 0x14, 0xfc, 0x22, 0x7d, 0x9d, 0xfb, 0x98, 0xb8, 0xe5, 0xf1, 0x18, 0x12, 0xd1, 0x14,
+	0xe1, 0x78, 0x5d, 0x30, 0xc7, 0x2c, 0x43, 0x19, 0x2c, 0xe7, 0xea, 0x9d, 0x5a, 0x96, 0xd5, 0x17,
+	0x7b, 0x79, 0xe9, 0xcf, 0x5e, 0x5e, 0x7a, 0xf6, 0xfb, 0xc3, 0xd5, 0xa4, 0x2c, 0x2d, 0x0f, 0x2f,
+	0xa5, 0x9a, 0x28, 0x23, 0x56, 0xa3, 0x84, 0x21, 0xed, 0x33, 0x80, 0x4a, 0x89, 0xb9, 0x51, 0xf8,
+	0x76, 0xc4, 0x50, 0x46, 0x75, 0xcb, 0x77, 0x06, 0xe5, 0x75, 0x0d, 0x4e, 0x6c, 0x59, 0x55, 0xec,
+	0x74, 0xd0, 0x64, 0x99, 0x1d, 0x8f, 0x21, 0xfd, 0xba, 0x7d, 0x09, 0xa0, 0xd6, 0xdd, 0x4c, 0xe4,
+	0x59, 0xae, 0xc0, 0x11, 0xcb, 0xa3, 0x01, 0xe1, 0x39, 0x30, 0x37, 0x3c, 0x3f, 0xb6, 0x38, 0xa3,
+	0x8b, 0xf3, 0x9b, 0xfd, 0x13, 0xb5, 0x9a, 0x5e, 0xa4, 0x98, 0x14, 0xae, 0xed, 0xff, 0xc8, 0x4b,
+	0xef, 0x7f, 0xe6, 0xe7, 0x5d, 0xcc, 0x37, 0x03, 0x5b, 0xaf, 0x50, 0x4f, 0xf4, 0x8f, 0x78, 0x2c,
+	0x30, 0xe7, 0xb1, 0xc1, 0x77, 0x6a, 0x88, 0xb5, 0x00, 0xac, 0x2c, 0xa8, 0xb5, 0x5d, 0x00, 0xd5,
+	0x36, 0x2d, 0x0f, 0x22, 0x2f, 0x45, 0xea, 0x79, 0x98, 0x31, 0x4c, 0x49, 0x7a, 0x55, 0xc0, 0x29,
+	0xab, 0x92, 0x60, 0xd4, 0x5e, 0x01, 0x78, 0xa5, 0xb7, 0x92, 0xb3, 0xad, 0xcc, 0x17, 0x00, 0x27,
+	0x4b, 0xcc, 0xbd, 0x13, 0x10, 0xa7, 0x29, 0x21, 0x20, 0x98, 0xef, 0xdc, 0xa3, 0xb4, 0x7a, 0x26,
+	0xa7, 0xcb, 0xd7, 0xe1, 0xa8, 0x83, 0x6a, 0x94, 0x61, 0x4e, 0xfd, 0xcc, 0x16, 0x3c, 0x4a, 0x5d,
+	0x9e, 0x6a, 0xaf, 0xf2, 0xd1, 0x7b, 0x4d, 0x85, 0x17, 0xd3, 0xcc, 0xc4, 0x03, 0xf6, 0x37, 0x74,
+	0xbb, 0x8e, 0xf8, 0x6a, 0xc0, 0xa9, 0x68, 0x49, 0xf1, 0xef, 0x0f, 0x62, 0xb4, 0xaa, 0x70, 0xcc,
+	0xc3, 0x64, 0xc3, 0xb6, 0xaa, 0x16, 0xa9, 0xa0, 0xdc, 0xd0, 0xe0, 0x2b, 0x07, 0x3d, 0x4c, 0x0a,
+	0x21, 0x7d, 0xe6, 0x04, 0x86, 0xd5, 0x48, 0x98, 0x8d, 0xab, 0xf1, 0x04, 0x4e, 0x95, 0x98, 0x7b,
+	0x9f, 0xfc, 0xaf, 0x72, 0x64, 0x0a, 0x9c, 0x6b, 0x4d, 0x65, 0x8a, 0x80, 0x48, 0xe2, 0xe2, 0xb7,
+	0x11, 0x38, 0x5c, 0x62, 0xae, 0xfc, 0x1c, 0x40, 0x39, 0x65, 0xfb, 0x2f, 0xea, 0x3d, 0xbe, 0x4f,
+	0x7a, 0xea, 0xb2, 0x55, 0x96, 0x8f, 0x8f, 0x89, 0x47, 0xf2, 0x0d, 0x80, 0xd3, 0xdd, 0xb6, 0xf3,
+	0x8d, 0x2c, 0xde, 0x2e, 0x40, 0xe5, 0xd6, 0x09, 0x81, 0xb1, 0xaa, 0xb7, 0x00, 0xce, 0xf6, 0x5a,
+	0x6d, 0x2b, 0xfd, 0x1e, 0x90, 0x02, 0x56, 0x8a, 0xa7, 0x00, 0xc7, 0x0a, 0x9f, 0x02, 0x38, 0x91,
+	0x5c, 0x31, 0x66, 0x16, 0x75, 0x02, 0xa2, 0xdc, 0x3c, 0x36, 0xa4, 0x43, 0x43, 0xb2, 0xd3, 0xcd,
+	0x3e, 0xba, 0xa1, 0x13, 0x92, 0xad, 0xa1, 0x6b, 0x3b, 0xcb, 0xbb, 0x00, 0x9e, 0x4f, 0x9b, 0xb7,
+	0xa5, 0x2c, 0xca, 0x14, 0x90, 0xb2, 0x72, 0x02, 0x50, 0xa4, 0xa4, 0x70, 0xf7, 0x5d, 0x43, 0x05,
+	0xfb, 0x0d, 0x15, 0x1c, 0x34, 0x54, 0xf0, 0xab, 0xa1, 0x82, 0xd7, 0x87, 0xaa, 0x74, 0x70, 0xa8,
+	0x4a, 0xdf, 0x0f, 0x55, 0xe9, 0x91, 0xd9, 0x73, 0x1f, 0x6d, 0x77, 0x5e, 0x1a, 0x5b, 0xeb, 0xc9,
+	0x1e, 0x69, 0xdd, 0xd4, 0x96, 0xfe, 0x05, 0x00, 0x00, 0xff, 0xff, 0x47, 0x36, 0x9c, 0x73, 0x58,
+	0x0a, 0x00, 0x00,
 }
 
 func (this *MsgSetWithdrawAddressResponse) Equal(that interface{}) bool {
@@ -515,6 +675,48 @@ func (this *MsgFundCommunityPoolResponse) Equal(that interface{}) bool {
 	}
 	return true
 }
+func (this *MsgSetAutoDelegationResponse) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*MsgSetAutoDelegationResponse)
+	if !ok {
+		that2, ok := that.(MsgSetAutoDelegationResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	return true
+}
+func (this *MsgUnSetAutoDelegationResponse) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*MsgUnSetAutoDelegationResponse)
+	if !ok {
+		that2, ok := that.(MsgUnSetAutoDelegationResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	return true
+}
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
@@ -540,6 +742,9 @@ type MsgClient interface {
 	// FundCommunityPool defines a method to allow an account to directly
 	// fund the community pool.
 	FundCommunityPool(ctx context.Context, in *MsgFundCommunityPool, opts ...grpc.CallOption) (*MsgFundCommunityPoolResponse, error)
+	// MsgSetAutoDelegation defines a method to activate/update the auto delegation
+	SetAutoDelegation(ctx context.Context, in *MsgSetAutoDelegation, opts ...grpc.CallOption) (*MsgSetAutoDelegationResponse, error)
+	UnSetAutoDelegation(ctx context.Context, in *MsgUnSetAutoDelegation, opts ...grpc.CallOption) (*MsgUnSetAutoDelegationResponse, error)
 }
 
 type msgClient struct {
@@ -586,6 +791,24 @@ func (c *msgClient) FundCommunityPool(ctx context.Context, in *MsgFundCommunityP
 	return out, nil
 }
 
+func (c *msgClient) SetAutoDelegation(ctx context.Context, in *MsgSetAutoDelegation, opts ...grpc.CallOption) (*MsgSetAutoDelegationResponse, error) {
+	out := new(MsgSetAutoDelegationResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/SetAutoDelegation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UnSetAutoDelegation(ctx context.Context, in *MsgUnSetAutoDelegation, opts ...grpc.CallOption) (*MsgUnSetAutoDelegationResponse, error) {
+	out := new(MsgUnSetAutoDelegationResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/UnSetAutoDelegation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// SetWithdrawAddress defines a method to change the withdraw address
@@ -600,6 +823,9 @@ type MsgServer interface {
 	// FundCommunityPool defines a method to allow an account to directly
 	// fund the community pool.
 	FundCommunityPool(context.Context, *MsgFundCommunityPool) (*MsgFundCommunityPoolResponse, error)
+	// MsgSetAutoDelegation defines a method to activate/update the auto delegation
+	SetAutoDelegation(context.Context, *MsgSetAutoDelegation) (*MsgSetAutoDelegationResponse, error)
+	UnSetAutoDelegation(context.Context, *MsgUnSetAutoDelegation) (*MsgUnSetAutoDelegationResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -617,6 +843,12 @@ func (*UnimplementedMsgServer) WithdrawValidatorCommission(ctx context.Context, 
 }
 func (*UnimplementedMsgServer) FundCommunityPool(ctx context.Context, req *MsgFundCommunityPool) (*MsgFundCommunityPoolResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FundCommunityPool not implemented")
+}
+func (*UnimplementedMsgServer) SetAutoDelegation(ctx context.Context, req *MsgSetAutoDelegation) (*MsgSetAutoDelegationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetAutoDelegation not implemented")
+}
+func (*UnimplementedMsgServer) UnSetAutoDelegation(ctx context.Context, req *MsgUnSetAutoDelegation) (*MsgUnSetAutoDelegationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnSetAutoDelegation not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -695,6 +927,42 @@ func _Msg_FundCommunityPool_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SetAutoDelegation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetAutoDelegation)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SetAutoDelegation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.distribution.v1beta1.Msg/SetAutoDelegation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SetAutoDelegation(ctx, req.(*MsgSetAutoDelegation))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UnSetAutoDelegation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUnSetAutoDelegation)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UnSetAutoDelegation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.distribution.v1beta1.Msg/UnSetAutoDelegation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UnSetAutoDelegation(ctx, req.(*MsgUnSetAutoDelegation))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.distribution.v1beta1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -714,6 +982,14 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "FundCommunityPool",
 			Handler:    _Msg_FundCommunityPool_Handler,
+		},
+		{
+			MethodName: "SetAutoDelegation",
+			Handler:    _Msg_SetAutoDelegation_Handler,
+		},
+		{
+			MethodName: "UnSetAutoDelegation",
+			Handler:    _Msg_UnSetAutoDelegation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -988,6 +1264,126 @@ func (m *MsgFundCommunityPoolResponse) MarshalToSizedBuffer(dAtA []byte) (int, e
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgSetAutoDelegation) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetAutoDelegation) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetAutoDelegation) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.MinBalance) > 0 {
+		for iNdEx := len(m.MinBalance) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.MinBalance[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.DelegatorAddress) > 0 {
+		i -= len(m.DelegatorAddress)
+		copy(dAtA[i:], m.DelegatorAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.DelegatorAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetAutoDelegationResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetAutoDelegationResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetAutoDelegationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUnSetAutoDelegation) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUnSetAutoDelegation) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUnSetAutoDelegation) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.DelegatorAddress) > 0 {
+		i -= len(m.DelegatorAddress)
+		copy(dAtA[i:], m.DelegatorAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.DelegatorAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUnSetAutoDelegationResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUnSetAutoDelegationResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUnSetAutoDelegationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -1105,6 +1501,56 @@ func (m *MsgFundCommunityPool) Size() (n int) {
 }
 
 func (m *MsgFundCommunityPoolResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgSetAutoDelegation) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.DelegatorAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.MinBalance) > 0 {
+		for _, e := range m.MinBalance {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgSetAutoDelegationResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUnSetAutoDelegation) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.DelegatorAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgUnSetAutoDelegationResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1790,6 +2236,304 @@ func (m *MsgFundCommunityPoolResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgFundCommunityPoolResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetAutoDelegation) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetAutoDelegation: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetAutoDelegation: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DelegatorAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MinBalance", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MinBalance = append(m.MinBalance, types.Coin{})
+			if err := m.MinBalance[len(m.MinBalance)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetAutoDelegationResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetAutoDelegationResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetAutoDelegationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUnSetAutoDelegation) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUnSetAutoDelegation: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUnSetAutoDelegation: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DelegatorAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUnSetAutoDelegationResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUnSetAutoDelegationResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUnSetAutoDelegationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

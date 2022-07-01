@@ -34,6 +34,9 @@ type MsgClient interface {
 	// FundCommunityPool defines a method to allow an account to directly
 	// fund the community pool.
 	FundCommunityPool(ctx context.Context, in *MsgFundCommunityPool, opts ...grpc.CallOption) (*MsgFundCommunityPoolResponse, error)
+	// MsgSetAutoDelegation defines a method to activate/update the auto delegation
+	SetAutoDelegation(ctx context.Context, in *MsgSetAutoDelegation, opts ...grpc.CallOption) (*MsgSetAutoDelegationResponse, error)
+	UnSetAutoDelegation(ctx context.Context, in *MsgUnSetAutoDelegation, opts ...grpc.CallOption) (*MsgUnSetAutoDelegationResponse, error)
 }
 
 type msgClient struct {
@@ -80,6 +83,24 @@ func (c *msgClient) FundCommunityPool(ctx context.Context, in *MsgFundCommunityP
 	return out, nil
 }
 
+func (c *msgClient) SetAutoDelegation(ctx context.Context, in *MsgSetAutoDelegation, opts ...grpc.CallOption) (*MsgSetAutoDelegationResponse, error) {
+	out := new(MsgSetAutoDelegationResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/SetAutoDelegation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UnSetAutoDelegation(ctx context.Context, in *MsgUnSetAutoDelegation, opts ...grpc.CallOption) (*MsgUnSetAutoDelegationResponse, error) {
+	out := new(MsgUnSetAutoDelegationResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/UnSetAutoDelegation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -96,6 +117,9 @@ type MsgServer interface {
 	// FundCommunityPool defines a method to allow an account to directly
 	// fund the community pool.
 	FundCommunityPool(context.Context, *MsgFundCommunityPool) (*MsgFundCommunityPoolResponse, error)
+	// MsgSetAutoDelegation defines a method to activate/update the auto delegation
+	SetAutoDelegation(context.Context, *MsgSetAutoDelegation) (*MsgSetAutoDelegationResponse, error)
+	UnSetAutoDelegation(context.Context, *MsgUnSetAutoDelegation) (*MsgUnSetAutoDelegationResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -114,6 +138,12 @@ func (UnimplementedMsgServer) WithdrawValidatorCommission(context.Context, *MsgW
 }
 func (UnimplementedMsgServer) FundCommunityPool(context.Context, *MsgFundCommunityPool) (*MsgFundCommunityPoolResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FundCommunityPool not implemented")
+}
+func (UnimplementedMsgServer) SetAutoDelegation(context.Context, *MsgSetAutoDelegation) (*MsgSetAutoDelegationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetAutoDelegation not implemented")
+}
+func (UnimplementedMsgServer) UnSetAutoDelegation(context.Context, *MsgUnSetAutoDelegation) (*MsgUnSetAutoDelegationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnSetAutoDelegation not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -200,6 +230,42 @@ func _Msg_FundCommunityPool_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SetAutoDelegation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetAutoDelegation)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SetAutoDelegation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.distribution.v1beta1.Msg/SetAutoDelegation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SetAutoDelegation(ctx, req.(*MsgSetAutoDelegation))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UnSetAutoDelegation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUnSetAutoDelegation)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UnSetAutoDelegation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.distribution.v1beta1.Msg/UnSetAutoDelegation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UnSetAutoDelegation(ctx, req.(*MsgUnSetAutoDelegation))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -222,6 +288,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "FundCommunityPool",
 			Handler:    _Msg_FundCommunityPool_Handler,
+		},
+		{
+			MethodName: "SetAutoDelegation",
+			Handler:    _Msg_SetAutoDelegation_Handler,
+		},
+		{
+			MethodName: "UnSetAutoDelegation",
+			Handler:    _Msg_UnSetAutoDelegation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

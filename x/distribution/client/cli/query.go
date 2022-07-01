@@ -31,6 +31,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryValidatorSlashes(),
 		GetCmdQueryDelegatorRewards(),
 		GetCmdQueryCommunityPool(),
+		GetCmdQueryAutoDelegation(),
 	)
 
 	return distQueryCmd
@@ -308,6 +309,50 @@ $ %s query distribution community-pool
 			queryClient := types.NewQueryClient(clientCtx)
 
 			res, err := queryClient.CommunityPool(cmd.Context(), &types.QueryCommunityPoolRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+// GetCmdQueryAutoDelegation returns the command for fetching auto delegation set by the user.
+func GetCmdQueryAutoDelegation() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "auto-delegation [delegator-address]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query the auto delegation information",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query the auto delegation that configured by the user.
+
+Example:
+$ %s query distribution auto-delegation my-address
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			delAddr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.AutoDelegation(cmd.Context(),
+				&types.QueryAutoDelegationRequest{
+					DelegatorAddress: delAddr.String(),
+				},
+			)
 			if err != nil {
 				return err
 			}

@@ -1,3 +1,5 @@
+//go:build !legacy_simapp
+
 package simapp
 
 import (
@@ -150,8 +152,6 @@ type SimApp struct {
 	legacyAmino       *codec.LegacyAmino
 	appCodec          codec.Codec
 	interfaceRegistry codectypes.InterfaceRegistry
-
-	invCheckPeriod uint
 
 	// keys to access the substores
 	keys map[string]*storetypes.KVStoreKey

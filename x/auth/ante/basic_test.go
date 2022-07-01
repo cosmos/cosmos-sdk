@@ -73,7 +73,7 @@ func (suite *AnteTestSuite) TestValidateMemo() {
 	suite.Require().NoError(err)
 
 	// require that long memos get rejected
-	vmd := ante.NewValidateMemoDecorator(suite.app.AccountKeeper)
+	vmd := ante.NewValidateMemoDecorator(suite.accountKeeper)
 	antehandler := sdk.ChainAnteDecorators(vmd)
 	_, err = antehandler(suite.ctx, invalidTx, false)
 
@@ -99,7 +99,7 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 
-	cgtsd := ante.NewConsumeGasForTxSizeDecorator(suite.app.AccountKeeper)
+	cgtsd := ante.NewConsumeGasForTxSizeDecorator(suite.accountKeeper)
 	antehandler := sdk.ChainAnteDecorators(cgtsd)
 
 	testCases := []struct {
@@ -125,7 +125,7 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 			txBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
 			suite.Require().Nil(err, "Cannot marshal tx: %v", err)
 
-			params := suite.app.AccountKeeper.GetParams(suite.ctx)
+			params := suite.accountKeeper.GetParams(suite.ctx)
 			expectedGas := sdk.Gas(len(txBytes)) * params.TxSizeCostPerByte
 
 			// Set suite.ctx with TxBytes manually
@@ -133,7 +133,7 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 
 			// track how much gas is necessary to retrieve parameters
 			beforeGas := suite.ctx.GasMeter().GasConsumed()
-			suite.app.AccountKeeper.GetParams(suite.ctx)
+			suite.accountKeeper.GetParams(suite.ctx)
 			afterGas := suite.ctx.GasMeter().GasConsumed()
 			expectedGas += afterGas - beforeGas
 

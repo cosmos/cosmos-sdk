@@ -11,9 +11,3 @@ order: 1
 ## NFT
 
 The full name of NFT is Non-Fungible Tokens. Because of the irreplaceable nature of NFT, it means that it can be used to represent unique things. The nft implemented by this module is fully compatible with Ethereum ERC721 standard.
-
-## App Wiring
-
-The minimal app-wiring configuration for `x/nft` is as follows:
-
-+++ https://github.com/cosmos/cosmos-sdk/blob/main/x/nft/testutil/app.yaml

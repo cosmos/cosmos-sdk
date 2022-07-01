@@ -82,7 +82,6 @@ func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSla
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	events := make([]types.ValidatorSlashEvent, 0)
 	store := ctx.KVStore(k.storeKey)
 	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
 	if err != nil {
@@ -90,27 +89,25 @@ func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSla
 	}
 	slashesStore := prefix.NewStore(store, types.GetValidatorSlashEventPrefix(valAddr))
 
-	pageRes, err := query.FilteredPaginate(slashesStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var result types.ValidatorSlashEvent
-		err := k.cdc.Unmarshal(value, &result)
-		if err != nil {
-			return false, err
-		}
-
+	events, pageRes, err := query.GenericFilteredPaginate(k.cdc, slashesStore, req.Pagination, func(key []byte, result *types.ValidatorSlashEvent) (*types.ValidatorSlashEvent, error) {
 		if result.ValidatorPeriod < req.StartingHeight || result.ValidatorPeriod > req.EndingHeight {
-			return false, nil
+			return nil, nil
 		}
 
-		if accumulate {
-			events = append(events, result)
-		}
-		return true, nil
+		return result, nil
+	}, func() *types.ValidatorSlashEvent {
+		return &types.ValidatorSlashEvent{}
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.QueryValidatorSlashesResponse{Slashes: events, Pagination: pageRes}, nil
+	slashes := []types.ValidatorSlashEvent{}
+	for _, event := range events {
+		slashes = append(slashes, *event)
+	}
+
+	return &types.QueryValidatorSlashesResponse{Slashes: slashes, Pagination: pageRes}, nil
 }
 
 // DelegationRewards the total rewards accrued by a delegation

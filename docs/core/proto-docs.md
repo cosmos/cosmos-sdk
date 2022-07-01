@@ -79,9 +79,7 @@
   
 - [cosmos/bank/v1beta1/bank.proto](#cosmos/bank/v1beta1/bank.proto)
     - [DenomUnit](#cosmos.bank.v1beta1.DenomUnit)
-    - [Input](#cosmos.bank.v1beta1.Input)
     - [Metadata](#cosmos.bank.v1beta1.Metadata)
-    - [Output](#cosmos.bank.v1beta1.Output)
     - [Params](#cosmos.bank.v1beta1.Params)
     - [SendEnabled](#cosmos.bank.v1beta1.SendEnabled)
     - [Supply](#cosmos.bank.v1beta1.Supply)
@@ -116,8 +114,6 @@
     - [Query](#cosmos.bank.v1beta1.Query)
   
 - [cosmos/bank/v1beta1/tx.proto](#cosmos/bank/v1beta1/tx.proto)
-    - [MsgMultiSend](#cosmos.bank.v1beta1.MsgMultiSend)
-    - [MsgMultiSendResponse](#cosmos.bank.v1beta1.MsgMultiSendResponse)
     - [MsgSend](#cosmos.bank.v1beta1.MsgSend)
     - [MsgSendResponse](#cosmos.bank.v1beta1.MsgSendResponse)
   
@@ -1588,22 +1584,6 @@ denomination unit of the basic token.
 
 
 
-<a name="cosmos.bank.v1beta1.Input"></a>
-
-### Input
-Input models transaction input.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
-| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-
-
-
-
-
-
 <a name="cosmos.bank.v1beta1.Metadata"></a>
 
 ### Metadata
@@ -1623,22 +1603,6 @@ Since: cosmos-sdk 0.43 |
 | `symbol` | [string](#string) |  | symbol is the token symbol usually shown on exchanges (eg: ATOM). This can be the same as the display.
 
 Since: cosmos-sdk 0.43 |
-
-
-
-
-
-
-<a name="cosmos.bank.v1beta1.Output"></a>
-
-### Output
-Output models transaction outputs.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
-| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
 
 
@@ -2131,32 +2095,6 @@ Query defines the gRPC querier service.
 
 
 
-<a name="cosmos.bank.v1beta1.MsgMultiSend"></a>
-
-### MsgMultiSend
-MsgMultiSend represents an arbitrary multi-in, multi-out send message.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `inputs` | [Input](#cosmos.bank.v1beta1.Input) | repeated |  |
-| `outputs` | [Output](#cosmos.bank.v1beta1.Output) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.bank.v1beta1.MsgMultiSendResponse"></a>
-
-### MsgMultiSendResponse
-MsgMultiSendResponse defines the Msg/MultiSend response type.
-
-
-
-
-
-
 <a name="cosmos.bank.v1beta1.MsgSend"></a>
 
 ### MsgSend
@@ -2198,7 +2136,6 @@ Msg defines the bank Msg service.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Send` | [MsgSend](#cosmos.bank.v1beta1.MsgSend) | [MsgSendResponse](#cosmos.bank.v1beta1.MsgSendResponse) | Send defines a method for sending coins from one account to another account. | |
-| `MultiSend` | [MsgMultiSend](#cosmos.bank.v1beta1.MsgMultiSend) | [MsgMultiSendResponse](#cosmos.bank.v1beta1.MsgMultiSendResponse) | MultiSend defines a method for sending coins from some accounts to other accounts. | |
 
  <!-- end services -->
 

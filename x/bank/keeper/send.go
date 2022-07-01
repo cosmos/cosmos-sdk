@@ -16,7 +16,6 @@ import (
 type SendKeeper interface {
 	ViewKeeper
 
-	InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) error
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 	SendManyCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddrs []sdk.AccAddress, amts []sdk.Coins) error
 
@@ -68,67 +67,6 @@ func (k BaseSendKeeper) GetParams(ctx sdk.Context) (params types.Params) {
 // SetParams sets the total set of bank parameters.
 func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
-}
-
-// InputOutputCoins performs multi-send functionality. It accepts a series of
-// inputs that correspond to a series of outputs. It returns an error if the
-// inputs and outputs don't lineup or if any single transfer of tokens fails.
-func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) error {
-	// Safety check ensuring that when sending coins the keeper must maintain the
-	// Check supply invariant and validity of Coins.
-	if err := types.ValidateInputsOutputs(inputs, outputs); err != nil {
-		return err
-	}
-
-	for _, in := range inputs {
-		inAddress, err := sdk.AccAddressFromBech32(in.Address)
-		if err != nil {
-			return err
-		}
-
-		err = k.subUnlockedCoins(ctx, inAddress, in.Coins)
-		if err != nil {
-			return err
-		}
-
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				sdk.EventTypeMessage,
-				sdk.NewAttribute(types.AttributeKeySender, in.Address),
-			),
-		)
-	}
-
-	for _, out := range outputs {
-		outAddress, err := sdk.AccAddressFromBech32(out.Address)
-		if err != nil {
-			return err
-		}
-		err = k.addCoins(ctx, outAddress, out.Coins)
-		if err != nil {
-			return err
-		}
-
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeTransfer,
-				sdk.NewAttribute(types.AttributeKeyRecipient, out.Address),
-				sdk.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
-			),
-		)
-
-		// Create account if recipient does not exist.
-		//
-		// NOTE: This should ultimately be removed in favor a more flexible approach
-		// such as delegated fee messages.
-		accExists := k.ak.HasAccount(ctx, outAddress)
-		if !accExists {
-			defer telemetry.IncrCounter(1, "new", "account")
-			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, outAddress))
-		}
-	}
-
-	return nil
 }
 
 // SendCoins transfers amt coins from a sending account to a receiving account.

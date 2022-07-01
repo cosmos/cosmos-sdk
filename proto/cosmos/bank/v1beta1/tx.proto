@@ -11,9 +11,6 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 service Msg {
   // Send defines a method for sending coins from one account to another account.
   rpc Send(MsgSend) returns (MsgSendResponse);
-
-  // MultiSend defines a method for sending coins from some accounts to other accounts.
-  rpc MultiSend(MsgMultiSend) returns (MsgMultiSendResponse);
 }
 
 // MsgSend represents a message to send coins from one account to another.
@@ -29,14 +26,3 @@ message MsgSend {
 
 // MsgSendResponse defines the Msg/Send response type.
 message MsgSendResponse {}
-
-// MsgMultiSend represents an arbitrary multi-in, multi-out send message.
-message MsgMultiSend {
-  option (gogoproto.equal) = false;
-
-  repeated Input  inputs  = 1 [(gogoproto.nullable) = false];
-  repeated Output outputs = 2 [(gogoproto.nullable) = false];
-}
-
-// MsgMultiSendResponse defines the Msg/MultiSend response type.
-message MsgMultiSendResponse {}

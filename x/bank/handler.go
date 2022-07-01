@@ -19,10 +19,6 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := msgServer.Send(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
-		case *types.MsgMultiSend:
-			res, err := msgServer.MultiSend(sdk.WrapSDKContext(ctx), msg)
-			return sdk.WrapServiceResult(ctx, res, err)
-
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized bank message type: %T", msg)
 		}

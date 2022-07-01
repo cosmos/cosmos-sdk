@@ -23,26 +23,6 @@ message SendEnabled {
   bool   enabled                      = 2;
 }
 
-// Input models transaction input.
-message Input {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
-  string   address                        = 1;
-  repeated cosmos.base.v1beta1.Coin coins = 2
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-}
-
-// Output models transaction outputs.
-message Output {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
-  string   address                        = 1;
-  repeated cosmos.base.v1beta1.Coin coins = 2
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-}
-
 // Supply represents a struct that passively keeps track of the total supply
 // amounts in the network.
 // This message is deprecated now that supply is indexed by denom.

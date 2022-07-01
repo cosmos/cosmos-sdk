@@ -24,3 +24,18 @@ func DefaultContext(key storetypes.StoreKey, tkey storetypes.StoreKey) sdk.Conte
 
 	return ctx
 }
+
+func DefaultContextWithDB(key storetypes.StoreKey, tkey storetypes.StoreKey) (sdk.Context, *dbm.MemDB, store.CommitMultiStore) {
+	db := dbm.NewMemDB()
+	cms := store.NewCommitMultiStore(db)
+	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
+	cms.MountStoreWithDB(tkey, storetypes.StoreTypeTransient, db)
+	err := cms.LoadLatestVersion()
+	if err != nil {
+		panic(err)
+	}
+
+	ctx := sdk.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())
+
+	return ctx, db, cms
+}

@@ -112,7 +112,13 @@ message GenesisState {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  // params defines all the paramaters of the module.
+  // params defines all the parameters of the module.
+  //
+  // Deprecated: Use governance to submit a MsgUpdateParams message to instruct
+  // the x/distribution module to update the relevant parameters.
+  //
+  // Since the cosmos-sdk 0.47 version, this only exists for backwards
+  // compatibility of genesis state.
   Params params = 1 [(gogoproto.nullable) = false];
 
   // fee_pool defines the fee pool at genesis.

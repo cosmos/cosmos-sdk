@@ -118,12 +118,10 @@ func (k Keeper) AutoDelegationBeginBlocker(ctx sdk.Context) {
 					Address: res.Rewards[i].ValidatorAddress,
 					Amount:  res.Rewards[i].Reward[r].Amount.RoundInt(),
 				}
-			} else {
-				if res.Rewards[i].Reward[r].Amount.RoundInt().LT(validatorsToDelegate[res.Rewards[i].Reward[r].Denom].Amount) {
-					validatorsToDelegate[res.Rewards[i].Reward[r].Denom] = validatorRewardMap{
-						Address: res.Rewards[i].ValidatorAddress,
-						Amount:  res.Rewards[i].Reward[r].Amount.RoundInt(),
-					}
+			} else if res.Rewards[i].Reward[r].Amount.RoundInt().LT(validatorsToDelegate[res.Rewards[i].Reward[r].Denom].Amount) {
+				validatorsToDelegate[res.Rewards[i].Reward[r].Denom] = validatorRewardMap{
+					Address: res.Rewards[i].ValidatorAddress,
+					Amount:  res.Rewards[i].Reward[r].Amount.RoundInt(),
 				}
 			}
 		}

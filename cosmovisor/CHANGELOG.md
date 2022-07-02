@@ -39,15 +39,24 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [\#12188](https://github.com/cosmos/cosmos-sdk/pull/12188) Add a `DAEMON_RESTART_DELAY` for allowing a node operator to define a delay between the node halt (for upgrade) and backup.
 * [\#11823](https://github.com/cosmos/cosmos-sdk/pull/11823) Refactor `cosmovisor` CLI to use `cobra`.
 * [\#11731](https://github.com/cosmos/cosmos-sdk/pull/11731) `cosmovisor version -o json` returns the cosmovisor version and the result of `simd --output json --long` in one JSON object.
+
+### Bugfix
+
+* [\#12005](https://github.com/cosmos/cosmos-sdk/pull/12005) Fix cosmovisor binary usage for pre-upgrade
+
+### CLI Breaking Changes
+
+* [\#12188](https://github.com/cosmos/cosmos-sdk/pull/12188) Remove the possibility to set a time with only a number. `DAEMON_POLL_INTERVAL` env variable now only supports a duration (e.g. `100ms`, `30s`, `20m`).
 
 ## v1.1.0 2022-10-02
 
 ### Features
 
 * [\#10285](https://github.com/cosmos/cosmos-sdk/pull/10316) Added `run` command to run the associated app.
-* [\#10649](https://github.com/cosmos/cosmos-sdk/pull/10649) Customize backup directory. Added new env variable: `DAEMON_BACKUP_DIR`. If it is set, cosmovisor will backup the app data in ``DAEMON_BACKUP_DIR` before running the update.
+* [\#10649](https://github.com/cosmos/cosmos-sdk/pull/10649) Customize backup directory. Added new env variable: `DAEMON_DATA_BACKUP_DIR`. If it is set, cosmovisor will backup the app data in `DAEMON_DATA_BACKUP_DIR` before running the update.
 
 ### Deprecated
 

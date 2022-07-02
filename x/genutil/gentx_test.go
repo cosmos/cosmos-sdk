@@ -3,21 +3,22 @@ package genutil_test
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -181,7 +182,7 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 			cdc := suite.encodingConfig.Codec
 
 			suite.app.StakingKeeper.SetParams(suite.ctx, stakingtypes.DefaultParams())
-			stakingGenesisState := staking.ExportGenesis(suite.ctx, suite.app.StakingKeeper)
+			stakingGenesisState := suite.app.StakingKeeper.ExportGenesis(suite.ctx)
 			suite.Require().Equal(stakingGenesisState.Params, stakingtypes.DefaultParams())
 			stakingGenesis, err := cdc.MarshalJSON(stakingGenesisState) // TODO switch this to use Marshaler
 			suite.Require().NoError(err)
@@ -198,7 +199,6 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 			} else {
 				suite.Require().Error(err)
 			}
-
 		})
 	}
 }
@@ -233,12 +233,14 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 				_ = suite.setAccountBalance(addr1, 50)
 				_ = suite.setAccountBalance(addr2, 1)
 
+				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				msg := banktypes.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)})
-				tx, err := helpers.GenSignedMockTx(
+				tx, err := simtestutil.GenSignedMockTx(
+					r,
 					suite.encodingConfig.TxConfig,
 					[]sdk.Msg{msg},
 					sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)},
-					helpers.DefaultGenTxGas,
+					simtestutil.DefaultGenTxGas,
 					suite.ctx.ChainID(),
 					[]uint64{7},
 					[]uint64{0},

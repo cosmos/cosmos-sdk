@@ -355,13 +355,14 @@ func TestGetBackendResolver(t *testing.T) {
 	})
 	assert.ErrorContains(t, err, "unsupported")
 
-	_, err = ormdb.NewModuleDB(&ormv1alpha1.ModuleSchemaDescriptor{SchemaFile: []*ormv1alpha1.ModuleSchemaDescriptor_FileEntry{
-		{
-			Id:            1,
-			ProtoFileName: testpb.File_testpb_bank_proto.Path(),
-			StorageType:   ormv1alpha1.StorageType_STORAGE_TYPE_MEMORY,
+	_, err = ormdb.NewModuleDB(&ormv1alpha1.ModuleSchemaDescriptor{
+		SchemaFile: []*ormv1alpha1.ModuleSchemaDescriptor_FileEntry{
+			{
+				Id:            1,
+				ProtoFileName: testpb.File_testpb_bank_proto.Path(),
+				StorageType:   ormv1alpha1.StorageType_STORAGE_TYPE_MEMORY,
+			},
 		},
-	},
 	}, ormdb.ModuleDBOptions{
 		GetBackendResolver: getResolver,
 	})

@@ -12,6 +12,7 @@ import (
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -56,7 +57,7 @@ func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*simapp.Si
 
 func initValidators(t testing.TB, power int64, numAddrs int, powers []int64) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress, []types.Validator) {
 	app, ctx, addrs, valAddrs := bootstrapValidatorTest(t, power, numAddrs)
-	pks := simapp.CreateTestPubKeys(numAddrs)
+	pks := simtestutil.CreateTestPubKeys(numAddrs)
 
 	vs := make([]types.Validator, len(powers))
 	for i, power := range powers {
@@ -252,7 +253,7 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 func TestValidatorBasics(t *testing.T) {
 	app, ctx, _, addrVals := bootstrapValidatorTest(t, 1000, 20)
 
-	//construct the validators
+	// construct the validators
 	var validators [3]types.Validator
 	powers := []int64{9, 8, 7}
 	for i, power := range powers {
@@ -357,7 +358,8 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 		app.StakingKeeper.PowerReduction(ctx).MulRaw(100),
 		app.StakingKeeper.PowerReduction(ctx),
 		app.StakingKeeper.PowerReduction(ctx).MulRaw(400),
-		app.StakingKeeper.PowerReduction(ctx).MulRaw(200)}
+		app.StakingKeeper.PowerReduction(ctx).MulRaw(200),
+	}
 	n := len(amts)
 	var validators [5]types.Validator
 	for i, amt := range amts {
@@ -450,7 +452,8 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 		app.StakingKeeper.PowerReduction(ctx).MulRaw(100),
 		app.StakingKeeper.PowerReduction(ctx),
 		app.StakingKeeper.PowerReduction(ctx).MulRaw(400),
-		app.StakingKeeper.PowerReduction(ctx).MulRaw(200)}
+		app.StakingKeeper.PowerReduction(ctx).MulRaw(200),
+	}
 
 	var validators [5]types.Validator
 	for i, amt := range amts {
@@ -1111,7 +1114,7 @@ func TestUpdateValidatorCommission(t *testing.T) {
 	}
 }
 
-func applyValidatorSetUpdates(t *testing.T, ctx sdk.Context, k keeper.Keeper, expectedUpdatesLen int) []abci.ValidatorUpdate {
+func applyValidatorSetUpdates(t *testing.T, ctx sdk.Context, k *keeper.Keeper, expectedUpdatesLen int) []abci.ValidatorUpdate {
 	updates, err := k.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.NoError(t, err)
 	if expectedUpdatesLen >= 0 {

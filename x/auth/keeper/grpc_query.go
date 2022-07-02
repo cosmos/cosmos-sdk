@@ -19,6 +19,24 @@ import (
 
 var _ types.QueryServer = AccountKeeper{}
 
+func (ak AccountKeeper) AccountAddressByID(c context.Context, req *types.QueryAccountAddressByIDRequest) (*types.QueryAccountAddressByIDResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if req.Id < 0 {
+		return nil, status.Error(codes.InvalidArgument, "Invalid account id")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	address := ak.GetAccountAddressByID(ctx, uint64(req.GetId()))
+	if len(address) == 0 {
+		return nil, status.Errorf(codes.NotFound, "account address not found with id %d", req.Id)
+	}
+
+	return &types.QueryAccountAddressByIDResponse{AccountAddress: address}, nil
+}
+
 func (ak AccountKeeper) Accounts(c context.Context, req *types.QueryAccountsRequest) (*types.QueryAccountsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -39,7 +57,6 @@ func (ak AccountKeeper) Accounts(c context.Context, req *types.QueryAccountsRequ
 		accounts = append(accounts, any)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "paginate: %v", err)
 	}
@@ -59,7 +76,6 @@ func (ak AccountKeeper) Account(c context.Context, req *types.QueryAccountReques
 
 	ctx := sdk.UnwrapSDKContext(c)
 	addr, err := sdk.AccAddressFromBech32(req.Address)
-
 	if err != nil {
 		return nil, err
 	}
@@ -119,6 +135,7 @@ func (ak AccountKeeper) ModuleAccounts(c context.Context, req *types.QueryModule
 	return &types.QueryModuleAccountsResponse{Accounts: modAccounts}, nil
 }
 
+// Bech32Prefix returns the keeper internally stored bech32 prefix.
 func (ak AccountKeeper) Bech32Prefix(ctx context.Context, req *types.Bech32PrefixRequest) (*types.Bech32PrefixResponse, error) {
 	bech32Prefix, err := ak.getBech32Prefix()
 	if err != nil {
@@ -128,6 +145,8 @@ func (ak AccountKeeper) Bech32Prefix(ctx context.Context, req *types.Bech32Prefi
 	return &types.Bech32PrefixResponse{Bech32Prefix: bech32Prefix}, nil
 }
 
+// AddressBytesToString converts an address from bytes to string, using the
+// keeper's bech32 prefix.
 func (ak AccountKeeper) AddressBytesToString(ctx context.Context, req *types.AddressBytesToStringRequest) (*types.AddressBytesToStringResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -145,6 +164,8 @@ func (ak AccountKeeper) AddressBytesToString(ctx context.Context, req *types.Add
 	return &types.AddressBytesToStringResponse{AddressString: text}, nil
 }
 
+// AddressStringToBytes converts an address from string to bytes, using the
+// keeper's bech32 prefix.
 func (ak AccountKeeper) AddressStringToBytes(ctx context.Context, req *types.AddressStringToBytesRequest) (*types.AddressStringToBytesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

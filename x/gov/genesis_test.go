@@ -11,15 +11,14 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -54,9 +53,9 @@ func TestImportExportQueues(t *testing.T) {
 	require.True(t, proposal1.Status == v1.StatusDepositPeriod)
 	require.True(t, proposal2.Status == v1.StatusVotingPeriod)
 
-	authGenState := auth.ExportGenesis(ctx, app.AccountKeeper)
+	authGenState := app.AccountKeeper.ExportGenesis(ctx)
 	bankGenState := app.BankKeeper.ExportGenesis(ctx)
-	stakingGenState := staking.ExportGenesis(ctx, app.StakingKeeper)
+	stakingGenState := app.StakingKeeper.ExportGenesis(ctx)
 	distributionGenState := app.DistrKeeper.ExportGenesis(ctx)
 
 	// export the state and import it into a new app
@@ -75,12 +74,12 @@ func TestImportExportQueues(t *testing.T) {
 	}
 
 	db := dbm.NewMemDB()
-	app2 := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, simapp.DefaultNodeHome, 0, simapp.MakeTestEncodingConfig(), simapp.EmptyAppOptions{})
+	app2 := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, simapp.MakeTestEncodingConfig(), simtestutil.NewAppOptionsWithFlagHome(simapp.DefaultNodeHome))
 
 	app2.InitChain(
 		abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: simapp.DefaultConsensusParams,
+			ConsensusParams: simtestutil.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
 		},
 	)

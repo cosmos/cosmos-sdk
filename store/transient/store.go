@@ -8,8 +8,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-var _ types.Committer = (*Store)(nil)
-var _ types.KVStore = (*Store)(nil)
+var (
+	_ types.Committer = (*Store)(nil)
+	_ types.KVStore   = (*Store)(nil)
+)
 
 // Store is a wrapper for a MemDB with Commiter implementation
 type Store struct {

@@ -2,34 +2,35 @@ package keeper_test
 
 import (
 	"context"
-
 	"encoding/json"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
+	"github.com/cosmos/cosmos-sdk/x/group/testutil"
 )
 
 type GenesisTestSuite struct {
 	suite.Suite
 
-	app    *simapp.SimApp
-	ctx    context.Context
-	sdkCtx sdk.Context
-	keeper keeper.Keeper
-	cdc    *codec.ProtoCodec
+	app               *runtime.App
+	ctx               context.Context
+	sdkCtx            sdk.Context
+	keeper            keeper.Keeper
+	cdc               *codec.ProtoCodec
+	interfaceRegistry codectypes.InterfaceRegistry
 }
 
 func TestGenesisTestSuite(t *testing.T) {
@@ -44,15 +45,16 @@ var (
 )
 
 func (s *GenesisTestSuite) SetupSuite() {
-	checkTx := false
-	db := dbm.NewMemDB()
-	encCdc := simapp.MakeTestEncodingConfig()
-	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, simapp.DefaultNodeHome, 5, encCdc, simapp.EmptyAppOptions{})
+	app, err := simtestutil.SetupAtGenesis(
+		testutil.AppConfig,
+		&s.interfaceRegistry,
+		&s.keeper,
+	)
+	s.Require().NoError(err)
 
 	s.app = app
-	s.sdkCtx = app.BaseApp.NewUncachedContext(checkTx, tmproto.Header{})
-	s.keeper = app.GroupKeeper
-	s.cdc = codec.NewProtoCodec(app.InterfaceRegistry())
+	s.sdkCtx = app.BaseApp.NewUncachedContext(false, tmproto.Header{})
+	s.cdc = codec.NewProtoCodec(s.interfaceRegistry)
 	s.ctx = sdk.WrapSDKContext(s.sdkCtx)
 }
 
@@ -192,7 +194,6 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 	s.Require().Equal(genesisState.GroupSeq, exportedGenesisState.GroupSeq)
 	s.Require().Equal(genesisState.GroupPolicySeq, exportedGenesisState.GroupPolicySeq)
 	s.Require().Equal(genesisState.ProposalSeq, exportedGenesisState.ProposalSeq)
-
 }
 
 func (s *GenesisTestSuite) assertGroupPoliciesEqual(g *group.GroupPolicyInfo, other *group.GroupPolicyInfo) {

@@ -65,7 +65,7 @@ require (
 	sigs.k8s.io/yaml v1.3.0
 )
 
-require github.com/cosmos/cosmos-sdk/store/tools/ics23 v0.0.0-20220624043538-4b6b3b765b4c
+require github.com/cosmos/cosmos-sdk/store/tools/ics23 v0.0.0-20220701212348-686c50d11361
 
 require (
 	4d63.com/gochecknoglobals v0.1.0 // indirect

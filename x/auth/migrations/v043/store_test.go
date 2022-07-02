@@ -51,7 +51,6 @@ func TestMigrateVestingAccounts(t *testing.T) {
 		{
 			"delayed vesting has vested, multiple delegations less than the total account balance",
 			func(ctx sdk.Context, validator stakingtypes.Validator, delegatorAddr sdk.AccAddress) {
-
 				baseAccount := authtypes.NewBaseAccountWithAddress(delegatorAddr)
 				vestedCoins := sdk.NewCoins(sdk.NewCoin(stakingKeeper.BondDenom(ctx), sdk.NewInt(200)))
 				delayedAccount := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().Unix())
@@ -561,7 +560,6 @@ func TestMigrateVestingAccounts(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-
 			accountKeeper.SetParams(ctx, authtypes.DefaultParams())
 			addrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 1, sdk.NewInt(tc.tokenAmount))
 			delegatorAddr := addrs[0]
@@ -621,7 +619,6 @@ func trackingCorrected(ctx sdk.Context, t *testing.T, ak keeper.AccountKeeper, a
 }
 
 func cleartTrackingFields(ctx sdk.Context, vesting exported.VestingAccount, accountKeeper keeper.AccountKeeper) error {
-
 	switch t := vesting.(type) {
 	case *types.DelayedVestingAccount:
 		t.DelegatedFree = nil
@@ -643,7 +640,6 @@ func cleartTrackingFields(ctx sdk.Context, vesting exported.VestingAccount, acco
 }
 
 func dirtyTrackingFields(ctx sdk.Context, vesting exported.VestingAccount, accountKeeper keeper.AccountKeeper) error {
-
 	dirt := sdk.NewCoins(sdk.NewInt64Coin("stake", 42))
 
 	switch t := vesting.(type) {
@@ -667,7 +663,6 @@ func dirtyTrackingFields(ctx sdk.Context, vesting exported.VestingAccount, accou
 }
 
 func createValidator(t *testing.T, ctx sdk.Context, bankKeeper bankkeeper.Keeper, stakingKeeper *stakingkeeper.Keeper, powers int64) (sdk.AccAddress, sdk.ValAddress) {
-
 	valTokens := sdk.TokensFromConsensusPower(powers, sdk.DefaultPowerReduction)
 	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 1, valTokens)
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)

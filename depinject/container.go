@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"reflect"
 
-
 	"github.com/pkg/errors"
 
 	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"

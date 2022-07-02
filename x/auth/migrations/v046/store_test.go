@@ -17,9 +17,7 @@ import (
 
 // TestMigrateMapAccAddressToAccNumberKey test cases for state migration of map to accAddr to accNum
 func TestMigrateMapAccAddressToAccNumberKey(t *testing.T) {
-	var (
-		accountKeeper keeper.AccountKeeper
-	)
+	var accountKeeper keeper.AccountKeeper
 
 	app, err := simtestutil.Setup(
 		testutil.AppConfig,

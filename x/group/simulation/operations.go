@@ -263,6 +263,7 @@ func SimulateMsgCreateGroup(cdc *codec.ProtoCodec, ak group.AccountKeeper, bk gr
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
+			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -322,6 +323,7 @@ func SimulateMsgCreateGroupWithPolicy(cdc *codec.ProtoCodec, ak group.AccountKee
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
+			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -381,6 +383,7 @@ func SimulateMsgCreateGroupPolicy(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
+			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -456,6 +459,7 @@ func SimulateMsgSubmitProposal(cdc *codec.ProtoCodec, ak group.AccountKeeper, bk
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
+			r,
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -515,6 +519,7 @@ func SimulateMsgUpdateGroupAdmin(cdc *codec.ProtoCodec, ak group.AccountKeeper, 
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
+			r,
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -565,6 +570,7 @@ func SimulateMsgUpdateGroupMetadata(cdc *codec.ProtoCodec, ak group.AccountKeepe
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
+			r,
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -644,6 +650,7 @@ func SimulateMsgUpdateGroupMembers(cdc *codec.ProtoCodec, ak group.AccountKeeper
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
+			r,
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -703,6 +710,7 @@ func SimulateMsgUpdateGroupPolicyAdmin(cdc *codec.ProtoCodec, ak group.AccountKe
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
+			r,
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -764,6 +772,7 @@ func SimulateMsgUpdateGroupPolicyDecisionPolicy(cdc *codec.ProtoCodec, ak group.
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
+			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -815,6 +824,7 @@ func SimulateMsgUpdateGroupPolicyMetadata(cdc *codec.ProtoCodec, ak group.Accoun
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
+			r,
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -917,6 +927,7 @@ func SimulateMsgWithdrawProposal(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
+			r,
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -1022,6 +1033,7 @@ func SimulateMsgVote(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 		}
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
+			r,
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -1100,6 +1112,7 @@ func SimulateMsgExec(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 		}
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
+			r,
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,
@@ -1162,6 +1175,7 @@ func SimulateMsgLeaveGroup(cdc *codec.ProtoCodec, k keeper.Keeper, ak group.Acco
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
+			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,

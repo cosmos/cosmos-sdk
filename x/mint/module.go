@@ -213,6 +213,7 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 type mintInputs struct {
 	depinject.In
 
+	Config   *modulev1.Module
 	Key      *store.KVStoreKey
 	Cdc      codec.Codec
 	Subspace paramstypes.Subspace
@@ -230,8 +231,13 @@ type mintOutputs struct {
 }
 
 func provideModule(in mintInputs) mintOutputs {
-	k := keeper.NewKeeper(in.Cdc, in.Key, in.Subspace, in.StakingKeeper, in.AccountKeeper, in.BankKeeper, authtypes.FeeCollectorName)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, nil)
+	feeCollectorName := in.Config.FeeCollectorName
+	if feeCollectorName == "" {
+		feeCollectorName = authtypes.FeeCollectorName
+	}
+
+	k := keeper.NewKeeper(in.Cdc, in.Key, in.Subspace, in.StakingKeeper, in.AccountKeeper, in.BankKeeper, feeCollectorName)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, nil) // TODO: allow to set inflation calculation function
 
 	return mintOutputs{MintKeeper: k, Module: runtime.WrapAppModule(m)}
 }

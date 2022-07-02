@@ -124,6 +124,7 @@ func SimulateMsgGrant(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.Ba
 		}
 		txCfg := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
+			r,
 			txCfg,
 			[]sdk.Msg{msg},
 			fees,
@@ -194,6 +195,7 @@ func SimulateMsgRevoke(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.B
 		txCfg := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		account := ak.GetAccount(ctx, granterAddr)
 		tx, err := simtestutil.GenSignedMockTx(
+			r,
 			txCfg,
 			[]sdk.Msg{&msg},
 			fees,
@@ -256,6 +258,10 @@ func SimulateMsgExec(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.Ban
 
 		granterspendableCoins := bk.SpendableCoins(ctx, granterAddr)
 		coins := simtypes.RandSubsetCoins(r, granterspendableCoins)
+		// if coins slice is empty, we can not create valid banktype.MsgSend
+		if len(coins) == 0 {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "empty coins slice"), nil, nil
+		}
 
 		// Check send_enabled status of each sent coin denom
 		if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {
@@ -283,6 +289,7 @@ func SimulateMsgExec(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.Ban
 		txCfg := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		granteeAcc := ak.GetAccount(ctx, granteeAddr)
 		tx, err := simtestutil.GenSignedMockTx(
+			r,
 			txCfg,
 			[]sdk.Msg{&msgExec},
 			fees,

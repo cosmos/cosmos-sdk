@@ -1,15 +1,16 @@
 name: golangci-lint
 on:
   push:
-  pull_request:
-  workflow_dispatch:
+    branches:
+      - main
 permissions:
   contents: read
-  # Optional: allow read access to pull request. Use with `only-new-issues` option.
-  # pull-requests: read
+
 jobs:
   golangci:
-    name: lint
+    permissions:
+      pull-requests: read  # for technote-space/get-diff-action to get git reference
+    name: golangci-lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-go@v3

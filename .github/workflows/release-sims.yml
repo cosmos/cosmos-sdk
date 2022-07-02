@@ -6,6 +6,9 @@ on:
     branches:
       - "rc**"
 
+permissions:
+  contents: read
+
 jobs:
   test-sim-multi-seed-long:
     runs-on: buildjet-4vcpu-ubuntu-2004

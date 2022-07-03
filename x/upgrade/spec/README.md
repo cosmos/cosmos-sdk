@@ -29,4 +29,3 @@ recover from.
     * [CLI](04_client.md#cli)
     * [REST](04_client.md#rest)
     * [gRPC](04_client.md#grpc)
-5. **[App Wiring](05_app_wiring.md)

@@ -104,4 +104,3 @@ to set up a script to periodically withdraw and rebond rewards.
 8. **[Client](08_client.md)**
     * [CLI](08_client.md#cli)
     * [gRPC](08_client.md#grpc)
-9. **[App Wiring](09_app_wiring.md)**

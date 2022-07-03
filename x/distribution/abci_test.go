@@ -37,7 +37,6 @@ type validator struct {
 
 // Context in https://github.com/cosmos/cosmos-sdk/issues/9161
 func TestVerifyProposerRewardAssignement(t *testing.T) {
-
 	var (
 		bankKeeper    bankkeeper.Keeper
 		stakingKeeper *stakingkeeper.Keeper

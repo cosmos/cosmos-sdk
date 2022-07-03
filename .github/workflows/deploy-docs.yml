@@ -9,8 +9,13 @@ on:
       - "docs/**"
       - "x/**/*.md"
 
+permissions:
+  contents: read
+
 jobs:
   build-and-deploy:
+    permissions:
+      contents: write  # for JamesIves/github-pages-deploy-action to push changes in repo
     runs-on: ubuntu-latest
     container:
       image: tendermintdev/docker-website-deployment
@@ -27,7 +32,7 @@ jobs:
           make build-docs LEDGER_ENABLED=false
 
       - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@v4.3.3
+        uses: JamesIves/github-pages-deploy-action@v4.3.4
         with:
           branch: gh-pages
           folder: ~/output

@@ -1,4 +1,4 @@
-package baseapp
+package server
 
 import (
 	"net/http"

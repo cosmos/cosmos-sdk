@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/core/appconfig"
 
 	"github.com/cosmos/cosmos-sdk/depinject"
+	"github.com/cosmos/cosmos-sdk/server"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -408,7 +409,7 @@ func (app *SimApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICon
 	app.App.RegisterAPIRoutes(apiSvr, apiConfig)
 
 	// register swagger API (using common function from baseapp package) from root so that other applications can override easily
-	baseapp.RegisterSwaggerAPI(apiSvr.ClientCtx, apiSvr.Router, apiConfig.Swagger)
+	server.RegisterSwaggerAPI(apiSvr.ClientCtx, apiSvr.Router, apiConfig.Swagger)
 }
 
 // GetMaccPerms returns a copy of the module account permissions

@@ -42,7 +42,7 @@ There are two types of fee allowances present at the moment:
 
 * `basic` is the instance of `BasicAllowance` which is optional for periodic fee allowance. If empty, the grant will have no `expiration` and no `spend_limit`.
 
-* `period` is the specific period of time, after each period passes, `period_spend_limit` will be reset.
+* `period` is the specific period of time, after each period passes, `period_can_spend` will be reset.
 
 * `period_spend_limit` specifies the maximum number of coins that can be spent in the period.
 

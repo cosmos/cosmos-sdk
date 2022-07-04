@@ -8,66 +8,96 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 )
 
-func (suite *AnteTestSuite) TestEnsureMempoolFees() {
-	suite.SetupTest(true) // setup
-	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+func (s *AnteTestSuite) TestDeductFeeDecorator_ZeroGas() {
+	s.SetupTest(true) // setup
+	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper, nil)
+	mfd := ante.NewDeductFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, nil)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(300)))
-	testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
+	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+
+	// msg and signatures
+	msg := testdata.NewTestMsg(addr1)
+	s.Require().NoError(s.txBuilder.SetMsgs(msg))
+
+	// set zero gas
+	s.txBuilder.SetGasLimit(0)
+
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
+	s.Require().NoError(err)
+
+	// Set IsCheckTx to true
+	s.ctx = s.ctx.WithIsCheckTx(true)
+
+	_, err = antehandler(s.ctx, tx, false)
+	s.Require().Error(err)
+}
+
+func (s *AnteTestSuite) TestEnsureMempoolFees() {
+	s.SetupTest(true) // setup
+	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
+
+	mfd := ante.NewDeductFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, nil)
+	antehandler := sdk.ChainAnteDecorators(mfd)
+
+	// keys and addresses
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(300)))
+	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
-	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
-	suite.txBuilder.SetFeeAmount(feeAmount)
-	suite.txBuilder.SetGasLimit(gasLimit)
+	s.Require().NoError(s.txBuilder.SetMsgs(msg))
+	s.txBuilder.SetFeeAmount(feeAmount)
+	s.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-	suite.Require().NoError(err)
+	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
+	s.Require().NoError(err)
 
 	// Set high gas price so standard test fee fails
 	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(200).Quo(sdk.NewDec(100000)))
 	highGasPrice := []sdk.DecCoin{atomPrice}
-	suite.ctx = suite.ctx.WithMinGasPrices(highGasPrice)
+	s.ctx = s.ctx.WithMinGasPrices(highGasPrice)
 
 	// Set IsCheckTx to true
-	suite.ctx = suite.ctx.WithIsCheckTx(true)
+	s.ctx = s.ctx.WithIsCheckTx(true)
 
 	// antehandler errors with insufficient fees
-	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().NotNil(err, "Decorator should have errored on too low fee for local gasPrice")
+	_, err = antehandler(s.ctx, tx, false)
+	s.Require().NotNil(err, "Decorator should have errored on too low fee for local gasPrice")
 
 	// Set IsCheckTx to false
-	suite.ctx = suite.ctx.WithIsCheckTx(false)
+	s.ctx = s.ctx.WithIsCheckTx(false)
 
 	// antehandler should not error since we do not check minGasPrice in DeliverTx
-	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().Nil(err, "MempoolFeeDecorator returned error in DeliverTx")
+	_, err = antehandler(s.ctx, tx, false)
+	s.Require().Nil(err, "MempoolFeeDecorator returned error in DeliverTx")
 
 	// Set IsCheckTx back to true for testing sufficient mempool fee
-	suite.ctx = suite.ctx.WithIsCheckTx(true)
+	s.ctx = s.ctx.WithIsCheckTx(true)
 
 	atomPrice = sdk.NewDecCoinFromDec("atom", sdk.NewDec(0).Quo(sdk.NewDec(100000)))
 	lowGasPrice := []sdk.DecCoin{atomPrice}
-	suite.ctx = suite.ctx.WithMinGasPrices(lowGasPrice)
+	s.ctx = s.ctx.WithMinGasPrices(lowGasPrice)
 
-	newCtx, err := antehandler(suite.ctx, tx, false)
-	suite.Require().Nil(err, "Decorator should not have errored on fee higher than local gasPrice")
+	newCtx, err := antehandler(s.ctx, tx, false)
+	s.Require().Nil(err, "Decorator should not have errored on fee higher than local gasPrice")
 	// Priority is the smallest amount in any denom. Since we have only 1 fee
 	// of 150atom, the priority here is 150.
-	suite.Require().Equal(feeAmount.AmountOf("atom").Int64(), newCtx.Priority())
+	s.Require().Equal(feeAmount.AmountOf("atom").Int64(), newCtx.Priority())
 }
 
-func (suite *AnteTestSuite) TestDeductFees() {
-	suite.SetupTest(false) // setup
-	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+func (s *AnteTestSuite) TestDeductFees() {
+	s.SetupTest(false) // setup
+	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -76,34 +106,34 @@ func (suite *AnteTestSuite) TestDeductFees() {
 	msg := testdata.NewTestMsg(addr1)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
-	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
-	suite.txBuilder.SetFeeAmount(feeAmount)
-	suite.txBuilder.SetGasLimit(gasLimit)
+	s.Require().NoError(s.txBuilder.SetMsgs(msg))
+	s.txBuilder.SetFeeAmount(feeAmount)
+	s.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-	suite.Require().NoError(err)
+	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
+	s.Require().NoError(err)
 
 	// Set account with insufficient funds
-	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+	acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
+	s.app.AccountKeeper.SetAccount(s.ctx, acc)
 	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(10)))
-	err = testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
-	suite.Require().NoError(err)
+	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	s.Require().NoError(err)
 
-	dfd := ante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, nil, nil)
+	dfd := ante.NewDeductFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, nil, nil)
 	antehandler := sdk.ChainAnteDecorators(dfd)
 
-	_, err = antehandler(suite.ctx, tx, false)
+	_, err = antehandler(s.ctx, tx, false)
 
-	suite.Require().NotNil(err, "Tx did not error when fee payer had insufficient funds")
+	s.Require().NotNil(err, "Tx did not error when fee payer had insufficient funds")
 
 	// Set account with sufficient funds
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-	err = testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200))))
-	suite.Require().NoError(err)
+	s.app.AccountKeeper.SetAccount(s.ctx, acc)
+	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200))))
+	s.Require().NoError(err)
 
-	_, err = antehandler(suite.ctx, tx, false)
+	_, err = antehandler(s.ctx, tx, false)
 
-	suite.Require().Nil(err, "Tx errored after account has been set with sufficient funds")
+	s.Require().Nil(err, "Tx errored after account has been set with sufficient funds")
 }

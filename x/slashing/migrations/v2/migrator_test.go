@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/slashing/exported"
 	v2 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -28,7 +28,7 @@ func (ms mockSubspace) GetParamSet(ctx sdk.Context, ps exported.ParamSet) {
 }
 
 func TestMigrate(t *testing.T) {
-	encCfg := moduletestutil.MakeTestEncodingConfig(mint.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(slashing.AppModuleBasic{})
 	cdc := encCfg.Codec
 
 	storeKey := sdk.NewKVStoreKey(v2.ModuleName)

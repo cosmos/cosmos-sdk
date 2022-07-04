@@ -12,20 +12,13 @@ func (s *AnteTestSuite) TestDeductFeeDecorator_ZeroGas() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-<<<<<<< HEAD
-	mfd := ante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper, nil)
-=======
-	mfd := ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, s.feeGrantKeeper, nil)
->>>>>>> 74f265c94 (fix!: prevent 0 gas txs (#12416))
+	mfd := ante.NewDeductFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, nil)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(300)))
-<<<<<<< HEAD
-	testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
-=======
-	testutil.FundAccount(s.bankKeeper, s.ctx, addr1, coins)
+	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
@@ -49,14 +42,13 @@ func (s *AnteTestSuite) TestEnsureMempoolFees() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, s.feeGrantKeeper, nil)
+	mfd := ante.NewDeductFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, nil)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(300)))
-	testutil.FundAccount(s.bankKeeper, s.ctx, addr1, coins)
->>>>>>> 74f265c94 (fix!: prevent 0 gas txs (#12416))
+	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
@@ -123,23 +115,13 @@ func (s *AnteTestSuite) TestDeductFees() {
 	s.Require().NoError(err)
 
 	// Set account with insufficient funds
-<<<<<<< HEAD
-	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+	acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
+	s.app.AccountKeeper.SetAccount(s.ctx, acc)
 	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(10)))
-	err = testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
-	suite.Require().NoError(err)
-
-	dfd := ante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, nil, nil)
-=======
-	acc := s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
-	s.accountKeeper.SetAccount(s.ctx, acc)
-	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(10)))
-	err = testutil.FundAccount(s.bankKeeper, s.ctx, addr1, coins)
+	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
 	s.Require().NoError(err)
 
-	dfd := ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, nil, nil)
->>>>>>> 74f265c94 (fix!: prevent 0 gas txs (#12416))
+	dfd := ante.NewDeductFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, nil, nil)
 	antehandler := sdk.ChainAnteDecorators(dfd)
 
 	_, err = antehandler(s.ctx, tx, false)
@@ -147,15 +129,9 @@ func (s *AnteTestSuite) TestDeductFees() {
 	s.Require().NotNil(err, "Tx did not error when fee payer had insufficient funds")
 
 	// Set account with sufficient funds
-<<<<<<< HEAD
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-	err = testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200))))
-	suite.Require().NoError(err)
-=======
-	s.accountKeeper.SetAccount(s.ctx, acc)
-	err = testutil.FundAccount(s.bankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200))))
+	s.app.AccountKeeper.SetAccount(s.ctx, acc)
+	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200))))
 	s.Require().NoError(err)
->>>>>>> 74f265c94 (fix!: prevent 0 gas txs (#12416))
 
 	_, err = antehandler(s.ctx, tx, false)
 

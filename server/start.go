@@ -278,18 +278,19 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		return err
 	}
 
+	genDocProvider := node.DefaultGenesisDocProviderFunc(cfg)
+
 	var (
-		tmNode         *node.Node
-		gRPCOnly       = ctx.Viper.GetBool(flagGRPCOnly)
-		genDocProvider node.GenesisDocProvider
+		tmNode   *node.Node
+		gRPCOnly = ctx.Viper.GetBool(flagGRPCOnly)
 	)
+
 	if gRPCOnly {
 		ctx.Logger.Info("starting node in gRPC only mode; Tendermint is disabled")
 		config.GRPC.Enable = true
 	} else {
 		ctx.Logger.Info("starting node with ABCI Tendermint in-process")
 
-		genDocProvider = node.DefaultGenesisDocProviderFunc(cfg)
 		tmNode, err := node.NewNode(
 			cfg,
 			pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),

@@ -10,7 +10,6 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/snapshots"
@@ -92,7 +91,7 @@ func newMultiStoreWithMixedMountsAndBasicData(db dbm.DB) *rootmulti.Store {
 }
 
 func assertStoresEqual(t *testing.T, expect, actual types.CommitKVStore, msgAndArgs ...interface{}) {
-	assert.Equal(t, expect.LastCommitID(), actual.LastCommitID())
+	require.Equal(t, expect.LastCommitID(), actual.LastCommitID())
 	expectIter := expect.Iterator(nil, nil)
 	expectMap := map[string][]byte{}
 	for ; expectIter.Valid(); expectIter.Next() {
@@ -107,7 +106,7 @@ func assertStoresEqual(t *testing.T, expect, actual types.CommitKVStore, msgAndA
 	}
 	require.NoError(t, actualIter.Error())
 
-	assert.Equal(t, expectMap, actualMap, msgAndArgs...)
+	require.Equal(t, expectMap, actualMap, msgAndArgs...)
 }
 
 func TestMultistoreSnapshot_Checksum(t *testing.T) {
@@ -150,7 +149,7 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 				require.NoError(t, err)
 				hashes = append(hashes, hex.EncodeToString(hasher.Sum(nil)))
 			}
-			assert.Equal(t, tc.chunkHashes, hashes,
+			require.Equal(t, tc.chunkHashes, hashes,
 				"Snapshot output for format %v has changed", tc.format)
 		})
 	}
@@ -172,7 +171,7 @@ func TestMultistoreSnapshot_Errors(t *testing.T) {
 			err := store.Snapshot(tc.height, nil)
 			require.Error(t, err)
 			if tc.expectType != nil {
-				assert.True(t, errors.Is(err, tc.expectType))
+				require.True(t, errors.Is(err, tc.expectType))
 			}
 		})
 	}
@@ -210,13 +209,13 @@ func TestMultistoreSnapshotRestore(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, *dummyExtensionItem.GetExtension(), *nextItem.GetExtension())
 
-	assert.Equal(t, source.LastCommitID(), target.LastCommitID())
+	require.Equal(t, source.LastCommitID(), target.LastCommitID())
 	for _, key := range source.StoreKeysByName() {
 		sourceStore := source.GetStoreByName(key.Name()).(types.CommitKVStore)
 		targetStore := target.GetStoreByName(key.Name()).(types.CommitKVStore)
 		switch sourceStore.GetStoreType() {
 		case types.StoreTypeTransient:
-			assert.False(t, targetStore.Iterator(nil, nil).Valid(),
+			require.False(t, targetStore.Iterator(nil, nil).Valid(),
 				"transient store %v not empty", key.Name())
 		default:
 			assertStoresEqual(t, sourceStore, targetStore, "store %q not equal", key.Name())

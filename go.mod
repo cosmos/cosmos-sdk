@@ -66,6 +66,8 @@ require (
 	sigs.k8s.io/yaml v1.3.0
 )
 
+require gotest.tools/v3 v3.2.0
+
 require (
 	4d63.com/gochecknoglobals v0.1.0 // indirect
 	cloud.google.com/go v0.100.2 // indirect

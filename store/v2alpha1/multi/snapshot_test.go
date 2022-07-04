@@ -12,7 +12,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	dbm "github.com/cosmos/cosmos-sdk/db"
@@ -108,7 +107,7 @@ func TestMultistoreSnapshot_Errors(t *testing.T) {
 			streamWriter := snapshots.NewStreamWriter(chunks)
 			err := store.Snapshot(tc.height, streamWriter)
 			if tc.expectType != nil {
-				assert.True(t, errors.Is(err, tc.expectType))
+				require.True(t, errors.Is(err, tc.expectType))
 			}
 		})
 	}
@@ -131,7 +130,7 @@ func TestMultistoreRestore_Errors(t *testing.T) {
 			_, err := store.Restore(tc.height, tc.format, nil)
 			require.Error(t, err)
 			if tc.expectErrorType != nil {
-				assert.True(t, errors.Is(err, tc.expectErrorType))
+				require.True(t, errors.Is(err, tc.expectErrorType))
 			}
 		})
 	}
@@ -173,7 +172,7 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 				require.NoError(t, err)
 				hashes = append(hashes, hex.EncodeToString(hasher.Sum(nil)))
 			}
-			assert.Equal(t, tc.chunkHashes, hashes, "Snapshot output for format %v has changed", tc.format)
+			require.Equal(t, tc.chunkHashes, hashes, "Snapshot output for format %v has changed", tc.format)
 		})
 	}
 }
@@ -213,14 +212,14 @@ func TestMultistoreSnapshotRestore(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, *dummyExtensionItem.GetExtension(), *nextItem.GetExtension())
 
-	assert.Equal(t, source.LastCommitID(), target.LastCommitID())
+	require.Equal(t, source.LastCommitID(), target.LastCommitID())
 
 	for sKey := range source.schema {
 		sourceSubStore, err := source.getSubstore(sKey)
 		require.NoError(t, err)
 		targetSubStore, err := target.getSubstore(sKey)
 		require.NoError(t, err)
-		require.Equal(t, sourceSubStore, targetSubStore)
+		require.True(t, sourceSubStore.root.schema.equal(targetSubStore.root.schema))
 	}
 
 	// checking snapshot restoring for store with existed schema and without existing versions

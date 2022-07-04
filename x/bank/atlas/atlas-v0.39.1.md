@@ -110,6 +110,28 @@ type MsgSend struct {
 }
 ```
 
+### `MsgMultiSend`
+
+The `x/bank` module also allows for multiple inputs and outputs. The sum of all
+inputs must be equivalent to the sum of all outputs.
+
+```go
+type Input struct {
+  Address sdk.AccAddress `json:"address" yaml:"address"`
+  Coins   sdk.Coins      `json:"coins" yaml:"coins"`
+}
+
+type Output struct {
+  Address sdk.AccAddress `json:"address" yaml:"address"`
+  Coins   sdk.Coins      `json:"coins" yaml:"coins"`
+}
+
+type MsgMultiSend struct {
+  Inputs  []Input  `json:"inputs" yaml:"inputs"`
+  Outputs []Output `json:"outputs" yaml:"outputs"`
+}
+```
+
 ## Client
 
 ### CLI
@@ -121,7 +143,10 @@ The `x/bank` supports the following transactional commands.
    ```sh
    app tx send [from_key_or_address] [to_address] [amount] [...flags]
    ```
-   
+
+Note, the `x/bank` module does not natively support constructing a `MsgMultiSend`
+message. This type of message must be constructed manually, but it may be signed
+and broadcasted via the CLI.
 
 ### REST
 

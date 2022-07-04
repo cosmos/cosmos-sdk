@@ -8,7 +8,7 @@ require (
 	github.com/cosmos/gorocksdb v1.2.0
 	github.com/dgraph-io/badger/v3 v3.2103.2
 	github.com/dgraph-io/ristretto v0.1.0
-	github.com/google/btree v1.0.1
+	github.com/google/btree v1.1.2
 	github.com/stretchr/testify v1.8.0
 )
 

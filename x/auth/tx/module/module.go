@@ -30,9 +30,9 @@ type txInputs struct {
 	Config              *modulev1.Module
 	ProtoCodecMarshaler codec.ProtoCodecMarshaler
 
-	AccountKeeper  ante.AccountKeeper    `key:"cosmos.auth.v1.AccountKeeper" optional:"true"`
-	BankKeeper     authtypes.BankKeeper  `key:"cosmos.bank.v1.Keeper" optional:"true"`
-	FeeGrantKeeper feegrantkeeper.Keeper `key:"cosmos.feegrant.v1.Keeper" optional:"true"`
+	AccountKeeper  ante.AccountKeeper    `optional:"true"`
+	BankKeeper     authtypes.BankKeeper  `optional:"true"`
+	FeeGrantKeeper feegrantkeeper.Keeper `optional:"true"`
 }
 
 type txOutputs struct {
@@ -46,7 +46,6 @@ func provideModule(in txInputs) txOutputs {
 	txConfig := tx.NewTxConfig(in.ProtoCodecMarshaler, tx.DefaultSignModes)
 
 	baseAppOption := func(app *baseapp.BaseApp) {
-
 		// AnteHandlers
 		if !in.Config.SkipAnteHandler {
 			anteHandler, err := newAnteHandler(txConfig, in)

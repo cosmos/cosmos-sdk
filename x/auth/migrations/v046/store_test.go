@@ -6,8 +6,10 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
+
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -15,19 +17,25 @@ import (
 
 // TestMigrateMapAccAddressToAccNumberKey test cases for state migration of map to accAddr to accNum
 func TestMigrateMapAccAddressToAccNumberKey(t *testing.T) {
-	app := simapp.Setup(t, false)
+	var (
+		accountKeeper keeper.AccountKeeper
+	)
+
+	app, err := simtestutil.Setup(
+		testutil.AppConfig,
+		&accountKeeper,
+	)
+	require.NoError(t, err)
 
 	// new base account
 	senderPrivKey := secp256k1.GenPrivKey()
 	randAccNumber := uint64(rand.Intn(100000-10000) + 10000)
 	acc := types.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), randAccNumber, 0)
 
-	ctx := app.App.BaseApp.NewContext(false, tmproto.Header{
-		Time: time.Now(),
-	})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
 
 	// migrator
-	m := keeper.NewMigrator(app.AccountKeeper, app.GRPCQueryRouter())
+	m := keeper.NewMigrator(accountKeeper, app.GRPCQueryRouter())
 	// set the account to store with map acc addr to acc number
 	require.NoError(t, m.V45_SetAccount(ctx, acc))
 
@@ -55,7 +63,7 @@ func TestMigrateMapAccAddressToAccNumberKey(t *testing.T) {
 			}
 
 			//  get the account address by acc id
-			accAddr := app.AccountKeeper.GetAccountAddressByID(ctx, tc.accNum)
+			accAddr := accountKeeper.GetAccountAddressByID(ctx, tc.accNum)
 
 			if tc.doMigration {
 				require.Equal(t, accAddr, acc.Address)

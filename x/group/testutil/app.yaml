@@ -5,9 +5,9 @@ modules:
 
       app_name: GroupApp
 
-      begin_blockers: [staking, auth, bank, genutil, authz, group, params]
-      end_blockers: [staking, auth, bank, genutil, authz, group, params]
-      init_genesis: [auth, bank, staking, genutil, authz, group, params]
+      begin_blockers: [mint, staking, auth, bank, genutil, group, params]
+      end_blockers: [staking, auth, bank, mint, genutil, group, params]
+      init_genesis: [auth, bank, staking, mint, genutil, group, params]
 
   - name: auth
     config:
@@ -15,6 +15,8 @@ modules:
       bech32_prefix: cosmos
       module_account_permissions:
         - account: fee_collector
+        - account: mint
+          permissions: [minter]
         - account: bonded_tokens_pool
           permissions: [burner, staking]
         - account: not_bonded_tokens_pool
@@ -36,14 +38,14 @@ modules:
     config:
       "@type": cosmos.staking.module.v1.Module
 
-  - name: authz
-    config:
-      "@type": cosmos.authz.module.v1.Module
-
   - name: group
     config:
-      "@type": cosmos.group.v1.module.v1.Module
+      "@type": cosmos.group.module.v1.Module
 
   - name: genutil
     config:
       "@type": cosmos.genutil.module.v1.Module
+
+  - name: mint
+    config:
+      "@type": cosmos.mint.module.v1.Module

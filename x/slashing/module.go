@@ -8,6 +8,8 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	"cosmossdk.io/core/appmodule"
+	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -193,24 +195,28 @@ type slashingInputs struct {
 
 	Key           *store.KVStoreKey
 	Cdc           codec.Codec
-	AccountKeeper types.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
-	BankKeeper    types.BankKeeper    `key:"cosmos.bank.v1.Keeper"`
-	StakingKeeper types.StakingKeeper `key:"cosmos.staking.v1.Keeper"`
+	AccountKeeper types.AccountKeeper
+	BankKeeper    types.BankKeeper
+	StakingKeeper types.StakingKeeper
 	Subspace      paramstypes.Subspace
 }
 
-type outputInputs struct {
+type slashingOutputs struct {
 	depinject.Out
 
-	Keeper keeper.Keeper `key:"cosmos.slashing.v1.Keeper"`
+	Keeper keeper.Keeper
 	Module runtime.AppModuleWrapper
+	Hooks  staking.StakingHooksWrapper
 }
 
-func provideModule(in slashingInputs) outputInputs {
-
+func provideModule(in slashingInputs) slashingOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.Key, in.StakingKeeper, in.Subspace)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper)
-	return outputInputs{Keeper: k, Module: runtime.WrapAppModule(m)}
+	return slashingOutputs{
+		Keeper: k,
+		Module: runtime.WrapAppModule(m),
+		Hooks:  staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
+	}
 }
 
 // _____________________________________________________________________________________

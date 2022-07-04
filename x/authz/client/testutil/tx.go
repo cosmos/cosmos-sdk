@@ -858,14 +858,17 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 			cmd := cli.NewCmdExecAuthorization()
 			clientCtx := val.ClientCtx
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			var response sdk.TxResponse
-			if tc.expectErrMsg != "" {
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			switch {
+			case tc.expectErrMsg != "":
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 				s.Require().Contains(response.RawLog, tc.expectErrMsg)
-			} else if tc.expectErr {
+
+			case tc.expectErr:
 				s.Require().Error(err)
-			} else {
+
+			default:
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 				s.Require().Equal(tc.expectedCode, response.Code, out.String())

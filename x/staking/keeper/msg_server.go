@@ -68,7 +68,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	}
 
 	cp := ctx.ConsensusParams()
-	if cp != nil {
+	if cp != nil && cp.Validator != nil {
 		pkType := pk.Type()
 		hasKeyType := false
 		for _, keyType := range cp.Validator.PubKeyTypes {

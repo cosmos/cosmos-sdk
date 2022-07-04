@@ -4,17 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/require"
-
-	// TODO We don't need to import these API types if we use gogo's registry
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/14647
-	_ "cosmossdk.io/api/cosmos/bank/v1beta1"
-	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/header"
-	coretesting "cosmossdk.io/core/testing"
-	storetypes "cosmossdk.io/store/types"
+	"github.com/stretchr/testify/suite"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -39,6 +30,8 @@ import (
 	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	txtestutil "github.com/cosmos/cosmos-sdk/x/auth/tx/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 // TestAccount represents an account used in the tests in x/auth/ante.
@@ -98,57 +91,57 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	grpcQueryRouter := baseapp.NewGRPCQueryRouter()
 	grpcQueryRouter.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
 
-	suite.consensusKeeper = antetestutil.NewMockConsensusKeeper(ctrl)
-	suite.consensusKeeper.EXPECT().BlockParams(gomock.Any()).Return(uint64(simtestutil.DefaultConsensusParams.Block.MaxGas), uint64(simtestutil.DefaultConsensusParams.Block.MaxBytes), nil).AnyTimes()
+func TestAnteTestSuite(t *testing.T) {
+	suite.Run(t, new(AnteTestSuite))
+}
 
-	suite.env = runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcQueryRouter), runtime.EnvWithMsgRouterService(msgRouter))
-	suite.accountKeeper = keeper.NewAccountKeeper(
-		runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger()), suite.encCfg.Codec, types.ProtoBaseAccount, suite.acctsModKeeper, maccPerms, authcodec.NewBech32Codec("cosmos"),
-		sdk.Bech32MainPrefix, types.NewModuleAddress("gov").String(),
-	)
-	suite.accountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
-	err := suite.accountKeeper.Params.Set(suite.ctx, types.DefaultParams())
-	require.NoError(t, err)
+// SetupTest setups a new test, with new app, context, and anteHandler.
+func (s *AnteTestSuite) SetupTest(isCheckTx bool) {
+	s.app, s.ctx = createTestApp(s.T(), isCheckTx)
+	s.ctx = s.ctx.WithBlockHeight(1)
 
 	// We're using TestMsg encoding in some tests, so register it here.
 	suite.encCfg.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg")
 	testdata.RegisterInterfaces(suite.encCfg.InterfaceRegistry)
 
-	suite.clientCtx = client.Context{}.
-		WithTxConfig(suite.encCfg.TxConfig).
-		WithClient(clitestutil.NewMockCometRPCWithResponseQueryValue(nil))
+	s.clientCtx = client.Context{}.
+		WithTxConfig(encodingConfig.TxConfig)
 
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
-			AccountKeeper:   suite.accountKeeper,
-			BankKeeper:      suite.bankKeeper,
-			ConsensusKeeper: suite.consensusKeeper,
-			FeegrantKeeper:  suite.feeGrantKeeper,
-			SignModeHandler: suite.encCfg.TxConfig.SignModeHandler(),
+			AccountKeeper:   s.app.AccountKeeper,
+			BankKeeper:      s.app.BankKeeper,
+			FeegrantKeeper:  s.app.FeeGrantKeeper,
+			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 			Environment:     suite.env,
 		},
 	)
 
-	require.NoError(t, err)
-	suite.anteHandler = anteHandler
-
-	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
-
-	return suite
+	s.Require().NoError(err)
+	s.anteHandler = anteHandler
 }
 
-func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
+// CreateTestAccounts creates `numAccs` accounts, and return all relevant
+// information about them including their private keys.
+func (s *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 	var accounts []TestAccount
 
 	for i := 0; i < numAccs; i++ {
 		priv, _, addr := testdata.KeyTestPubAddr()
-		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
-		err := acc.SetAccountNumber(uint64(i + 1000))
-		if err != nil {
-			panic(err)
+		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr)
+		err := acc.SetAccountNumber(uint64(i))
+		s.Require().NoError(err)
+		s.app.AccountKeeper.SetAccount(s.ctx, acc)
+		someCoins := sdk.Coins{
+			sdk.NewInt64Coin("atom", 10000000),
 		}
-		suite.accountKeeper.SetAccount(suite.ctx, acc)
+		err = s.app.BankKeeper.MintCoins(s.ctx, minttypes.ModuleName, someCoins)
+		s.Require().NoError(err)
+
+		err = s.app.BankKeeper.SendCoinsFromModuleToAccount(s.ctx, minttypes.ModuleName, addr, someCoins)
+		s.Require().NoError(err)
+
 		accounts = append(accounts, TestAccount{acc, priv})
 	}
 
@@ -238,11 +231,7 @@ func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCase
 }
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.
-func (suite *AnteTestSuite) CreateTestTx(
-	ctx sdk.Context, privs []cryptotypes.PrivKey,
-	accNums, accSeqs []uint64,
-	chainID string, signMode signing.SignMode,
-) (xauthsigning.Tx, error) {
+func (s *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) (xauthsigning.Tx, error) {
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
 	var sigsV2 []signing.SignatureV2
@@ -250,7 +239,7 @@ func (suite *AnteTestSuite) CreateTestTx(
 		sigV2 := signing.SignatureV2{
 			PubKey: priv.PubKey(),
 			Data: &signing.SingleSignatureData{
-				SignMode:  signMode,
+				SignMode:  s.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
 				Signature: nil,
 			},
 			Sequence: accSeqs[i],
@@ -258,7 +247,7 @@ func (suite *AnteTestSuite) CreateTestTx(
 
 		sigsV2 = append(sigsV2, sigV2)
 	}
-	err := suite.txBuilder.SetSignatures(sigsV2...)
+	err := s.txBuilder.SetSignatures(sigsV2...)
 	if err != nil {
 		return nil, err
 	}
@@ -274,18 +263,63 @@ func (suite *AnteTestSuite) CreateTestTx(
 			PubKey:        priv.PubKey(),
 		}
 		sigV2, err := tx.SignWithPrivKey(
-			ctx, signMode, signerData,
-			suite.txBuilder, priv, suite.clientCtx.TxConfig, accSeqs[i])
+			s.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,
+			s.txBuilder, priv, s.clientCtx.TxConfig, accSeqs[i])
 		if err != nil {
 			return nil, err
 		}
 
 		sigsV2 = append(sigsV2, sigV2)
 	}
-	err = suite.txBuilder.SetSignatures(sigsV2...)
+	err = s.txBuilder.SetSignatures(sigsV2...)
 	if err != nil {
 		return nil, err
 	}
 
-	return suite.txBuilder.GetTx(), nil
+	return s.txBuilder.GetTx(), nil
+}
+
+// TestCase represents a test case used in test tables.
+type TestCase struct {
+	desc     string
+	malleate func()
+	simulate bool
+	expPass  bool
+	expErr   error
+}
+
+// CreateTestTx is a helper function to create a tx given multiple inputs.
+func (s *AnteTestSuite) RunTestCase(privs []cryptotypes.PrivKey, msgs []sdk.Msg, feeAmount sdk.Coins, gasLimit uint64, accNums, accSeqs []uint64, chainID string, tc TestCase) {
+	s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+		s.Require().NoError(s.txBuilder.SetMsgs(msgs...))
+		s.txBuilder.SetFeeAmount(feeAmount)
+		s.txBuilder.SetGasLimit(gasLimit)
+
+		// Theoretically speaking, ante handler unit tests should only test
+		// ante handlers, but here we sometimes also test the tx creation
+		// process.
+		tx, txErr := s.CreateTestTx(privs, accNums, accSeqs, chainID)
+		newCtx, anteErr := s.anteHandler(s.ctx, tx, tc.simulate)
+
+		if tc.expPass {
+			s.Require().NoError(txErr)
+			s.Require().NoError(anteErr)
+			s.Require().NotNil(newCtx)
+
+			s.ctx = newCtx
+		} else {
+			switch {
+			case txErr != nil:
+				s.Require().Error(txErr)
+				s.Require().True(errors.Is(txErr, tc.expErr))
+
+			case anteErr != nil:
+				s.Require().Error(anteErr)
+				s.Require().True(errors.Is(anteErr, tc.expErr))
+
+			default:
+				s.Fail("expected one of txErr,anteErr to be an error")
+			}
+		}
+	})
 }

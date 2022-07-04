@@ -46,15 +46,17 @@ func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKee
 	return dfd
 }
 
-// SetMinGasPrices sets the minimum-gas-prices value in the state of DeductFeeDecorator
-func (dfd *DeductFeeDecorator) SetMinGasPrices(minGasPrices sdk.DecCoins) {
-	dfd.minGasPrices = minGasPrices
-}
+func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+	feeTx, ok := tx.(sdk.FeeTx)
+	if !ok {
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+	}
 
-// AnteHandle implements an AnteHandler decorator for the DeductFeeDecorator
-func (dfd *DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (sdk.Context, error) {
-	dfd.minGasPrices = ctx.MinGasPrices()
-	txPriority, err := dfd.innerValidateTx(ctx, tx)
+	if ctx.BlockHeight() > 0 && feeTx.GetGas() == 0 {
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidGasLimit, "must provide positive gas")
+	}
+
+	fee, priority, err := dfd.txFeeChecker(ctx, tx)
 	if err != nil {
 		return ctx, err
 	}

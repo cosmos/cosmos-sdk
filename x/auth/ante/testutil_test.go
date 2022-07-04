@@ -40,11 +40,24 @@ type AnteTestSuite struct {
 	txBuilder   client.TxBuilder
 }
 
+<<<<<<< HEAD
 // returns context and app with params set on account keeper
 func createTestApp(t *testing.T, isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(t, isCheckTx)
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+=======
+func TestAnteTestSuite(t *testing.T) {
+	suite.Run(t, new(AnteTestSuite))
+}
+
+// SetupTest setups a new test, with new app, context, and anteHandler.
+func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
+	var (
+		txConfig    client.TxConfig
+		legacyAmino *codec.LegacyAmino
+	)
+>>>>>>> 74f265c94 (fix!: prevent 0 gas txs (#12416))
 
 	return app, ctx
 }
@@ -193,8 +206,4 @@ func (suite *AnteTestSuite) RunTestCase(privs []cryptotypes.PrivKey, msgs []sdk.
 			}
 		}
 	})
-}
-
-func TestAnteTestSuite(t *testing.T) {
-	suite.Run(t, new(AnteTestSuite))
 }

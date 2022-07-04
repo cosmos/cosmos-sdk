@@ -47,6 +47,9 @@ func ShowValidatorCmd() *cobra.Command {
 
 			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			pk, err := privValidator.GetPubKey()
+			if err != nil {
+				return err
+			}
 
 			sdkPK, err := cryptocodec.FromTmPubKeyInterface(pk)
 			if err != nil {

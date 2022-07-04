@@ -9,12 +9,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
+// TestEncodingConfig defines an encoding configuration that is used for testing
+// purposes. Note, MakeTestEncodingConfig takes a series of AppModuleBasic types
+// which should only contain the relevant module being tested and any potential
+// dependencies.
 type TestEncodingConfig struct {
 	InterfaceRegistry types.InterfaceRegistry
 	Codec             codec.Codec
 	TxConfig          client.TxConfig
 	Amino             *codec.LegacyAmino
-	bm                module.BasicManager
 }
 
 func MakeTestEncodingConfig(modules ...module.AppModuleBasic) TestEncodingConfig {

@@ -36,6 +36,7 @@ type KeeperTestSuite struct {
 	bankKeeper        bankkeeper.Keeper
 	distrKeeper       keeper.Keeper
 	stakingKeeper     *stakingkeeper.Keeper
+	msgServer         types.MsgServer
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -60,6 +61,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.valAddrs = simtestutil.ConvertAddrsToValAddrs(suite.addrs)
 
 	suite.distrKeeper.SetParams(suite.ctx, types.DefaultParams())
+	suite.msgServer = keeper.NewMsgServerImpl(suite.distrKeeper)
 }
 
 func (suite *KeeperTestSuite) TestGRPCParams() {

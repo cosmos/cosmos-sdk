@@ -1,4 +1,4 @@
-package db
+package types
 
 type readerRWAdapter struct{ Reader }
 

@@ -1,11 +1,9 @@
-//go:build rocksdb
-
 package rocksdb
 
 import (
 	"bytes"
 
-	"github.com/cosmos/cosmos-sdk/db"
+	"github.com/cosmos/cosmos-sdk/db/types"
 	"github.com/cosmos/gorocksdb"
 )
 
@@ -18,7 +16,7 @@ type rocksDBIterator struct {
 	primed bool
 }
 
-var _ db.Iterator = (*rocksDBIterator)(nil)
+var _ types.Iterator = (*rocksDBIterator)(nil)
 
 func newRocksDBIterator(source *gorocksdb.Iterator, start, end []byte, isReverse bool) *rocksDBIterator {
 	if isReverse {

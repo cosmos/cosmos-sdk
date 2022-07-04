@@ -3,36 +3,36 @@
 package prefix
 
 import (
-	"github.com/cosmos/cosmos-sdk/db"
+	"github.com/cosmos/cosmos-sdk/db/types"
 )
 
 // prefixed Reader
 type Reader struct {
-	db     db.Reader
+	db     types.Reader
 	prefix []byte
 }
 
 // prefixed ReadWriter
 type ReadWriter struct {
-	db     db.ReadWriter
+	db     types.ReadWriter
 	prefix []byte
 }
 
 // prefixed Writer
 type Writer struct {
-	db     db.Writer
+	db     types.Writer
 	prefix []byte
 }
 
 var (
-	_ db.Reader     = (*Reader)(nil)
-	_ db.ReadWriter = (*ReadWriter)(nil)
-	_ db.Writer     = (*Writer)(nil)
+	_ types.Reader     = (*Reader)(nil)
+	_ types.ReadWriter = (*ReadWriter)(nil)
+	_ types.Writer     = (*Writer)(nil)
 )
 
 // NewReadereader returns a DBReader that only has access to the subset of DB keys
 // that contain the given prefix.
-func NewReader(dbr db.Reader, prefix []byte) Reader {
+func NewReader(dbr types.Reader, prefix []byte) Reader {
 	return Reader{
 		prefix: prefix,
 		db:     dbr,
@@ -41,7 +41,7 @@ func NewReader(dbr db.Reader, prefix []byte) Reader {
 
 // NewReadWriter returns a DBReader that only has access to the subset of DB keys
 // that contain the given prefix.
-func NewReadWriter(dbrw db.ReadWriter, prefix []byte) ReadWriter {
+func NewReadWriter(dbrw types.ReadWriter, prefix []byte) ReadWriter {
 	return ReadWriter{
 		prefix: prefix,
 		db:     dbrw,
@@ -50,7 +50,7 @@ func NewReadWriter(dbrw db.ReadWriter, prefix []byte) ReadWriter {
 
 // NewWriterriter returns a DBWriter that reads/writes only from the subset of DB keys
 // that contain the given prefix
-func NewWriter(dbw db.Writer, prefix []byte) Writer {
+func NewWriter(dbw types.Writer, prefix []byte) Writer {
 	return Writer{
 		prefix: prefix,
 		db:     dbw,
@@ -64,7 +64,7 @@ func prefixed(prefix, key []byte) []byte {
 // Get implements DBReader.
 func (pdb Reader) Get(key []byte) ([]byte, error) {
 	if len(key) == 0 {
-		return nil, db.ErrKeyEmpty
+		return nil, types.ErrKeyEmpty
 	}
 	return pdb.db.Get(prefixed(pdb.prefix, key))
 }
@@ -72,15 +72,15 @@ func (pdb Reader) Get(key []byte) ([]byte, error) {
 // Has implements DBReader.
 func (pdb Reader) Has(key []byte) (bool, error) {
 	if len(key) == 0 {
-		return false, db.ErrKeyEmpty
+		return false, types.ErrKeyEmpty
 	}
 	return pdb.db.Has(prefixed(pdb.prefix, key))
 }
 
 // Iterator implements DBReader.
-func (pdb Reader) Iterator(start, end []byte) (db.Iterator, error) {
+func (pdb Reader) Iterator(start, end []byte) (types.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, db.ErrKeyEmpty
+		return nil, types.ErrKeyEmpty
 	}
 
 	var pend []byte
@@ -97,9 +97,9 @@ func (pdb Reader) Iterator(start, end []byte) (db.Iterator, error) {
 }
 
 // ReverseIterator implements DBReader.
-func (pdb Reader) ReverseIterator(start, end []byte) (db.Iterator, error) {
+func (pdb Reader) ReverseIterator(start, end []byte) (types.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
-		return nil, db.ErrKeyEmpty
+		return nil, types.ErrKeyEmpty
 	}
 
 	var pend []byte
@@ -121,7 +121,7 @@ func (pdb Reader) Discard() error { return pdb.db.Discard() }
 // Set implements DBReadWriter.
 func (pdb ReadWriter) Set(key []byte, value []byte) error {
 	if len(key) == 0 {
-		return db.ErrKeyEmpty
+		return types.ErrKeyEmpty
 	}
 	return pdb.db.Set(prefixed(pdb.prefix, key), value)
 }
@@ -129,7 +129,7 @@ func (pdb ReadWriter) Set(key []byte, value []byte) error {
 // Delete implements DBReadWriter.
 func (pdb ReadWriter) Delete(key []byte) error {
 	if len(key) == 0 {
-		return db.ErrKeyEmpty
+		return types.ErrKeyEmpty
 	}
 	return pdb.db.Delete(prefixed(pdb.prefix, key))
 }
@@ -145,12 +145,12 @@ func (pdb ReadWriter) Has(key []byte) (bool, error) {
 }
 
 // Iterator implements DBReadWriter.
-func (pdb ReadWriter) Iterator(start, end []byte) (db.Iterator, error) {
+func (pdb ReadWriter) Iterator(start, end []byte) (types.Iterator, error) {
 	return NewReader(pdb.db, pdb.prefix).Iterator(start, end)
 }
 
 // ReverseIterator implements DBReadWriter.
-func (pdb ReadWriter) ReverseIterator(start, end []byte) (db.Iterator, error) {
+func (pdb ReadWriter) ReverseIterator(start, end []byte) (types.Iterator, error) {
 	return NewReader(pdb.db, pdb.prefix).ReverseIterator(start, end)
 }
 
@@ -163,7 +163,7 @@ func (pdb ReadWriter) Discard() error { return pdb.db.Discard() }
 // Set implements DBReadWriter.
 func (pdb Writer) Set(key []byte, value []byte) error {
 	if len(key) == 0 {
-		return db.ErrKeyEmpty
+		return types.ErrKeyEmpty
 	}
 	return pdb.db.Set(prefixed(pdb.prefix, key), value)
 }
@@ -171,7 +171,7 @@ func (pdb Writer) Set(key []byte, value []byte) error {
 // Delete implements DBWriter.
 func (pdb Writer) Delete(key []byte) error {
 	if len(key) == 0 {
-		return db.ErrKeyEmpty
+		return types.ErrKeyEmpty
 	}
 	return pdb.db.Delete(prefixed(pdb.prefix, key))
 }

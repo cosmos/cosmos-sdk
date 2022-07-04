@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/db"
+	"github.com/cosmos/cosmos-sdk/db/types"
 	"github.com/google/btree"
 )
 
@@ -24,7 +24,7 @@ type memDBIterator struct {
 	end    []byte
 }
 
-var _ db.Iterator = (*memDBIterator)(nil)
+var _ types.Iterator = (*memDBIterator)(nil)
 
 // newMemDBIterator creates a new memDBIterator.
 // A visitor is passed to the btree which streams items to the iterator over a channel. Advancing

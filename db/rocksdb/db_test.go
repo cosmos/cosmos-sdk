@@ -1,5 +1,3 @@
-//go:build rocksdb
-
 package rocksdb
 
 import (
@@ -9,11 +7,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/db/dbtest"
+	"github.com/cosmos/cosmos-sdk/db/types"
 )
 
-func load(t *testing.T, dir string) db.Connection {
+func load(t *testing.T, dir string) types.Connection {
 	d, err := NewDB(dir)
 	require.NoError(t, err)
 	return d

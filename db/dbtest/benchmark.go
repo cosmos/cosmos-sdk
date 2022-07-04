@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	dbm "github.com/cosmos/cosmos-sdk/db"
+	"github.com/cosmos/cosmos-sdk/db/types"
 )
 
 func Int64ToBytes(i int64) []byte {
@@ -21,7 +21,7 @@ func BytesToInt64(buf []byte) int64 {
 	return int64(binary.BigEndian.Uint64(buf))
 }
 
-func BenchmarkRangeScans(b *testing.B, db dbm.ReadWriter, dbSize int64) {
+func BenchmarkRangeScans(b *testing.B, db types.ReadWriter, dbSize int64) {
 	b.StopTimer()
 
 	rangeSize := int64(10000)
@@ -40,7 +40,7 @@ func BenchmarkRangeScans(b *testing.B, db dbm.ReadWriter, dbSize int64) {
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		start := rand.Int63n(dbSize - rangeSize)
+		start := rand.Int63n(dbSize - rangeSize) // nolint: gosec
 		end := start + rangeSize
 		iter, err := db.Iterator(Int64ToBytes(start), Int64ToBytes(end))
 		require.NoError(b, err)
@@ -53,7 +53,7 @@ func BenchmarkRangeScans(b *testing.B, db dbm.ReadWriter, dbSize int64) {
 	}
 }
 
-func BenchmarkRandomReadsWrites(b *testing.B, db dbm.ReadWriter) {
+func BenchmarkRandomReadsWrites(b *testing.B, db types.ReadWriter) {
 	b.StopTimer()
 
 	// create dummy data
@@ -67,7 +67,7 @@ func BenchmarkRandomReadsWrites(b *testing.B, db dbm.ReadWriter) {
 
 	for i := 0; i < b.N; i++ {
 		{
-			idx := rand.Int63n(numItems)
+			idx := rand.Int63n(numItems) // nolint: gosec
 			internal[idx]++
 			val := internal[idx]
 			idxBytes := Int64ToBytes(idx)
@@ -80,7 +80,7 @@ func BenchmarkRandomReadsWrites(b *testing.B, db dbm.ReadWriter) {
 		}
 
 		{
-			idx := rand.Int63n(numItems)
+			idx := rand.Int63n(numItems) // nolint: gosec
 			valExp := internal[idx]
 			idxBytes := Int64ToBytes(idx)
 			valBytes, err := db.Get(idxBytes)

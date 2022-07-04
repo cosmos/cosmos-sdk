@@ -3,8 +3,8 @@ package memdb
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/db/dbtest"
+	"github.com/cosmos/cosmos-sdk/db/types"
 )
 
 func BenchmarkMemDBRangeScans1M(b *testing.B) {
@@ -28,7 +28,7 @@ func BenchmarkMemDBRandomReadsWrites(b *testing.B) {
 	dbtest.BenchmarkRandomReadsWrites(b, dbm.ReadWriter())
 }
 
-func load(t *testing.T, _ string) db.Connection {
+func load(t *testing.T, _ string) types.Connection {
 	return NewDB()
 }
 

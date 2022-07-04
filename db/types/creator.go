@@ -1,10 +1,8 @@
-package db
+package types
 
 import (
 	"fmt"
 	"strings"
-
-	_ "github.com/cosmos/cosmos-sdk/db/internal/backends"
 )
 
 type BackendType string

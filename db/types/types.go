@@ -1,4 +1,4 @@
-package db
+package types
 
 import "errors"
 
@@ -49,31 +49,31 @@ type Connection interface {
 
 	// SaveNextVersion saves the current contents of the database and returns the next version ID,
 	// which will be `Versions().Last()+1`.
-	// Returns an error if any open DBWriter transactions exist.
+	// Returns an error if any open Writer transactions exist.
 	// TODO: rename to something more descriptive?
 	SaveNextVersion() (uint64, error)
 
 	// SaveVersion attempts to save database at a specific version ID, which must be greater than or
 	// equal to what would be returned by `SaveNextVersion`.
-	// Returns an error if any open DBWriter transactions exist.
+	// Returns an error if any open Writer transactions exist.
 	SaveVersion(uint64) error
 
 	// DeleteVersion deletes a saved version. Returns ErrVersionDoesNotExist for invalid versions.
 	DeleteVersion(uint64) error
 
 	// Revert reverts the DB state to the last saved version; if none exist, this clears the DB.
-	// Returns an error if any open DBWriter transactions exist.
+	// Returns an error if any open Writer transactions exist.
 	Revert() error
 
 	// RevertTo reverts the DB state to the given version. Returns ErrVersionDoesNotExist for invalid versions.
-	// Returns an error if any open DBWriter transactions exist.
+	// Returns an error if any open Writer transactions exist.
 	RevertTo(uint64) error
 
 	// Close closes the database connection.
 	Close() error
 }
 
-// DBReader is a read-only transaction interface. It is safe for concurrent access.
+// Reader is a read-only transaction interface. It is safe for concurrent access.
 // Callers must call Discard when done with the transaction.
 //
 // Keys cannot be nil or empty, while values cannot be nil. Keys and values should be considered
@@ -108,7 +108,7 @@ type Reader interface {
 	Discard() error
 }
 
-// DBWriter is a write-only transaction interface.
+// Writer is a write-only transaction interface.
 // It is safe for concurrent writes, following an optimistic (OCC) strategy, detecting any write
 // conflicts and returning an error on commit, rather than locking the DB.
 // Callers must call Commit or Discard when done with the transaction.
@@ -130,7 +130,7 @@ type Writer interface {
 	Discard() error
 }
 
-// DBReadWriter is a transaction interface that allows both reading and writing.
+// ReadWriter is a transaction interface that allows both reading and writing.
 type ReadWriter interface {
 	Reader
 	Writer
@@ -145,7 +145,7 @@ type ReadWriter interface {
 // Note that the iterator is invalid on construction: Next() must be called to initialize it to its
 // starting position.
 //
-// As with DBReader, keys and values should be considered read-only, and must be copied before they are
+// As with Reader, keys and values should be considered read-only, and must be copied before they are
 // modified.
 //
 // Typical usage:

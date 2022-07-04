@@ -6,12 +6,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/db"
+	"github.com/cosmos/cosmos-sdk/db/types"
 )
 
 // Test that a type satisfies the behavior of VersionSet
-func DoTestVersionSet(t *testing.T, new func([]uint64) db.VersionSet) {
-	vm := db.NewVersionManager(nil)
+func DoTestVersionSet(t *testing.T, new func([]uint64) types.VersionSet) {
+	vm := types.NewVersionManager(nil)
 	require.Equal(t, uint64(0), vm.Last())
 	require.Equal(t, 0, vm.Count())
 	require.True(t, vm.Equal(vm))
@@ -50,17 +50,17 @@ func DoTestVersionSet(t *testing.T, new func([]uint64) db.VersionSet) {
 	require.NoError(t, err)
 	require.False(t, vm.Exists(id5)) // true copy is made
 
-	vm2 := db.NewVersionManager([]uint64{id2, id3})
+	vm2 := types.NewVersionManager([]uint64{id2, id3})
 	require.True(t, vm.Equal(vm2))
 
-	vm = db.NewVersionManager([]uint64{1, 2, 3, 5, 10})
+	vm = types.NewVersionManager([]uint64{1, 2, 3, 5, 10})
 	vm.DeleteAbove(10)
 	require.Equal(t, []uint64{1, 2, 3, 5, 10}, allVersions(vm))
 	vm.DeleteAbove(4)
 	require.Equal(t, []uint64{1, 2, 3}, allVersions(vm))
 }
 
-func allVersions(vm *db.VersionManager) (all []uint64) {
+func allVersions(vm *types.VersionManager) (all []uint64) {
 	for it := vm.Iterator(); it.Next(); {
 		all = append(all, it.Value())
 	}

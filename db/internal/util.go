@@ -3,15 +3,15 @@ package util
 import (
 	"fmt"
 
-	dbm "github.com/cosmos/cosmos-sdk/db"
+	"github.com/cosmos/cosmos-sdk/db/types"
 )
 
 func ValidateKv(key, value []byte) error {
 	if len(key) == 0 {
-		return dbm.ErrKeyEmpty
+		return types.ErrKeyEmpty
 	}
 	if value == nil {
-		return dbm.ErrValueNil
+		return types.ErrValueNil
 	}
 	return nil
 }

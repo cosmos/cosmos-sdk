@@ -5,21 +5,18 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/libs/log"
 	tmtime "github.com/tendermint/tendermint/libs/time"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/store"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module/testutil"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/nft"
 	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
 	"github.com/cosmos/cosmos-sdk/x/nft/module"
-	nftTestutil "github.com/cosmos/cosmos-sdk/x/nft/testutil"
+	nfttestutil "github.com/cosmos/cosmos-sdk/x/nft/testutil"
 )
 
 const (
@@ -42,30 +39,25 @@ type TestSuite struct {
 	queryClient nft.QueryClient
 	nftKeeper   keeper.Keeper
 
-	encCfg testutil.TestEncodingConfig
+	encCfg moduletestutil.TestEncodingConfig
 }
 
 func (s *TestSuite) SetupTest() {
 	// suite setup
 	s.addrs = simtestutil.CreateIncrementalAccounts(3)
-	s.encCfg = testutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+	s.encCfg = moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
-	mkey := sdk.NewKVStoreKey(nft.StoreKey)
-	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db)
-	cms.MountStoreWithDB(mkey, storetypes.StoreTypeIAVL, nil)
-	err := cms.LoadLatestVersion()
-	s.Require().NoError(err)
-	ctx := sdk.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())
-	ctx = ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
+	key := sdk.NewKVStoreKey(nft.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(key, sdk.NewTransientStoreKey("transient_test"))
+	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
 
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
-	accountKeeper := nftTestutil.NewMockAccountKeeper(ctrl)
-	bankKeeper := nftTestutil.NewMockBankKeeper(ctrl)
+	accountKeeper := nfttestutil.NewMockAccountKeeper(ctrl)
+	bankKeeper := nfttestutil.NewMockBankKeeper(ctrl)
 	accountKeeper.EXPECT().GetModuleAddress("nft").Return(s.addrs[0]).AnyTimes()
 
-	nftKeeper := keeper.NewKeeper(mkey, s.encCfg.Codec, accountKeeper, bankKeeper)
+	nftKeeper := keeper.NewKeeper(key, s.encCfg.Codec, accountKeeper, bankKeeper)
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, s.encCfg.InterfaceRegistry)
 	nft.RegisterQueryServer(queryHelper, nftKeeper)
 

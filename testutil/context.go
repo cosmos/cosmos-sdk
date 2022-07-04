@@ -25,7 +25,13 @@ func DefaultContext(key storetypes.StoreKey, tkey storetypes.StoreKey) sdk.Conte
 	return ctx
 }
 
-func DefaultContextWithDB(key storetypes.StoreKey, tkey storetypes.StoreKey) (sdk.Context, *dbm.MemDB, store.CommitMultiStore) {
+type TestContext struct {
+	Ctx sdk.Context
+	DB  *dbm.MemDB
+	CMS store.CommitMultiStore
+}
+
+func DefaultContextWithDB(key storetypes.StoreKey, tkey storetypes.StoreKey) TestContext {
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
@@ -37,5 +43,5 @@ func DefaultContextWithDB(key storetypes.StoreKey, tkey storetypes.StoreKey) (sd
 
 	ctx := sdk.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())
 
-	return ctx, db, cms
+	return TestContext{ctx, db, cms}
 }

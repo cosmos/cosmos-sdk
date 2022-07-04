@@ -408,7 +408,7 @@ func (app *SimApp) SimulationManager() *module.SimulationManager {
 func (app *SimApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	app.App.RegisterAPIRoutes(apiSvr, apiConfig)
 
-	// register swagger API (using common function from baseapp package) from root so that other applications can override easily
+	// register swagger API (using common function from server package) from root so that other applications can override easily
 	server.RegisterSwaggerAPI(apiSvr.ClientCtx, apiSvr.Router, apiConfig.Swagger)
 }
 

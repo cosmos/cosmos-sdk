@@ -58,6 +58,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	suite.addrs = simtestutil.AddTestAddrs(suite.bankKeeper, suite.stakingKeeper, ctx, 2, sdk.NewInt(1000000000))
 	suite.valAddrs = simtestutil.ConvertAddrsToValAddrs(suite.addrs)
+
+	suite.distrKeeper.SetParams(suite.ctx, types.DefaultParams())
 }
 
 func (suite *KeeperTestSuite) TestGRPCParams() {

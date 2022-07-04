@@ -19,8 +19,7 @@ var _ types.QueryServer = Keeper{}
 // Params queries params of distribution module
 func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	var params types.Params
-	k.paramSpace.GetParamSet(ctx, &params)
+	params := k.GetParams(ctx)
 
 	return &types.QueryParamsResponse{Params: params}, nil
 }

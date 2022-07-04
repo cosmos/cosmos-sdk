@@ -95,8 +95,6 @@ func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]
 }
 
 func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, error) {
-	c.logf("Resolving %v", typ)
-
 	pr, err := c.getExplicitResolver(typ, key)
 	if err != nil {
 		return nil, err
@@ -417,7 +415,7 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 
 		markGraphNodeAsFailed(typeGraphNode)
 		return reflect.Value{}, errors.Errorf("can't resolve type %v for %s:\n%s",
-			in.Type, caller, c.formatResolveStack())
+			fullyQualifiedTypeName(in.Type), caller, c.formatResolveStack())
 	}
 
 	res, err := vr.resolve(c, moduleKey, caller)

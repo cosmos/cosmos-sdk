@@ -42,6 +42,8 @@ const (
 // - 0x07<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorCurrentCommission
 //
 // - 0x08<valAddrLen (1 Byte)><valAddr_Bytes><height>: ValidatorSlashEvent
+//
+// - 0x09: Params
 var (
 	FeePoolKey                        = []byte{0x00} // key for global distribution state
 	ProposerKey                       = []byte{0x01} // key for the proposer operator address

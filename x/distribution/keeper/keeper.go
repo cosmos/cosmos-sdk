@@ -50,6 +50,11 @@ func NewKeeper(
 	}
 }
 
+// GetAuthority returns the x/distribution module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
+}
+
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)

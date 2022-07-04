@@ -16,13 +16,13 @@ type msgServer struct {
 	Keeper
 }
 
+var _ types.MsgServer = msgServer{}
+
 // NewMsgServerImpl returns an implementation of the distribution MsgServer interface
 // for the provided Keeper.
 func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
-
-var _ types.MsgServer = msgServer{}
 
 func (k msgServer) SetWithdrawAddress(goCtx context.Context, msg *types.MsgSetWithdrawAddress) (*types.MsgSetWithdrawAddressResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

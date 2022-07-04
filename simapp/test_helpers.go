@@ -3,7 +3,8 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
-	"os"
+	"math/rand"
+	"strconv"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
@@ -233,17 +234,88 @@ func NewTestNetworkFixture() network.TestFixture {
 	if err != nil {
 		panic(fmt.Sprintf("failed creating temporary directory: %v", err))
 	}
-	defer os.RemoveAll(dir)
+	if !bytes.Equal(bechres, res) {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+// CheckBalance checks the balance of an account.
+func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, balances sdk.Coins) {
+	ctxCheck := app.BaseApp.NewContext(true, tmproto.Header{})
+	require.True(t, balances.IsEqual(app.BankKeeper.GetAllBalances(ctxCheck, addr)))
+}
+
+// SignCheckDeliver checks a generated signed transaction and simulates a
+// block commitment with the given transaction. A test assertion is made using
+// the parameter 'expPass' against the result. A corresponding result is
+// returned.
+func SignCheckDeliver(
+	t *testing.T, txCfg client.TxConfig, app *bam.BaseApp, header tmproto.Header, msgs []sdk.Msg,
+	chainID string, accNums, accSeqs []uint64, expSimPass, expPass bool, priv ...cryptotypes.PrivKey,
+) (sdk.GasInfo, *sdk.Result, error) {
+
+	tx, err := helpers.GenTx(
+		rand.New(rand.NewSource(time.Now().UnixNano())),
+		txCfg,
+		msgs,
+		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
+		helpers.DefaultGenTxGas,
+		chainID,
+		accNums,
+		accSeqs,
+		priv...,
+	)
+	require.NoError(t, err)
+	txBytes, err := txCfg.TxEncoder()(tx)
+	require.Nil(t, err)
 
 	app := NewSimApp(log.NewNopLogger(), coretesting.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(dir))
 
-	appCtr := func(val network.ValidatorI) servertypes.Application {
-		return NewSimApp(
-			val.GetLogger(), coretesting.NewMemDB(), nil, true,
-			simtestutil.NewAppOptionsWithFlagHome(client.GetConfigFromViper(val.GetViper()).RootDir),
-			bam.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
-			bam.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
-			bam.SetChainID(val.GetViper().GetString(flags.FlagChainID)),
+	if expSimPass {
+		require.NoError(t, err)
+		require.NotNil(t, res)
+	} else {
+		require.Error(t, err)
+		require.Nil(t, res)
+	}
+
+	// Simulate a sending a transaction and committing a block
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	gInfo, res, err := app.Deliver(txCfg.TxEncoder(), tx)
+
+	if expPass {
+		require.NoError(t, err)
+		require.NotNil(t, res)
+	} else {
+		require.Error(t, err)
+		require.Nil(t, res)
+	}
+
+	app.EndBlock(abci.RequestEndBlock{})
+	app.Commit()
+
+	return gInfo, res, err
+}
+
+// GenSequenceOfTxs generates a set of signed transactions of messages, such
+// that they differ only by having the sequence numbers incremented between
+// every transaction.
+func GenSequenceOfTxs(txGen client.TxConfig, msgs []sdk.Msg, accNums []uint64, initSeqNums []uint64, numToGenerate int, priv ...cryptotypes.PrivKey) ([]sdk.Tx, error) {
+	txs := make([]sdk.Tx, numToGenerate)
+	var err error
+	for i := 0; i < numToGenerate; i++ {
+		txs[i], err = helpers.GenTx(
+			rand.New(rand.NewSource(time.Now().UnixNano())),
+			txGen,
+			msgs,
+			sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
+			helpers.DefaultGenTxGas,
+			"",
+			accNums,
+			initSeqNums,
+			priv...,
 		)
 	}
 

@@ -157,6 +157,4 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
-
-	return &types.MsgUpdateParamsResponse{}, nil
 }

@@ -48,7 +48,7 @@ func (s *TestSuite) SetupTest() {
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
 	key := sdk.NewKVStoreKey(nft.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(key, sdk.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
 
 	// gomock initializations

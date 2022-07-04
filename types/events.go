@@ -91,7 +91,7 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 	for k, v := range attrMap {
 		attrs = append(attrs, abci.EventAttribute{
 			Key:   []byte(k),
-			Value: []byte(v),
+			Value: v,
 		})
 	}
 

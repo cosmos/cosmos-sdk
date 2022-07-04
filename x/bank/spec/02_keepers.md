@@ -15,40 +15,13 @@ permissions are limited in the way that you expect.
 ## Blocklisting Addresses
 
 The `x/bank` module accepts a map of addresses that are considered blocklisted
-from directly and explicitly receiving funds through means such as `MsgSend` and
-`MsgMultiSend` and direct API calls like `SendCoinsFromModuleToAccount`.
+from directly and explicitly receiving funds through means such as `MsgSend` and direct API calls like `SendCoinsFromModuleToAccount`.
 
 Typically, these addresses are module accounts. If these addresses receive funds
 outside the expected rules of the state machine, invariants are likely to be
 broken and could result in a halted network.
 
 By providing the `x/bank` module with a blocklisted set of addresses, an error occurs for the operation if a user or client attempts to directly or indirectly send funds to a blocklisted account, for example, by using [IBC](https://ibc.cosmos.network).
-
-## Common Types
-
-### Input
-
-An input of a multiparty transfer
-
-```protobuf
-// Input models transaction input.
-message Input {
-  string   address                        = 1;
-  repeated cosmos.base.v1beta1.Coin coins = 2;
-}
-```
-
-### Output
-
-An output of a multiparty transfer.
-
-```protobuf
-// Output models transaction outputs.
-message Output {
-  string   address                        = 1;
-  repeated cosmos.base.v1beta1.Coin coins = 2;
-}
-```
 
 ## BaseKeeper
 
@@ -104,7 +77,6 @@ accounts. The send keeper does not alter the total supply (mint or burn coins).
 type SendKeeper interface {
     ViewKeeper
 
-    InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) error
     SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 
     GetParams(ctx sdk.Context) types.Params

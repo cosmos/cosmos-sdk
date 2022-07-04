@@ -24,8 +24,6 @@ const _ = grpc.SupportPackageIsVersion7
 type MsgClient interface {
 	// Send defines a method for sending coins from one account to another account.
 	Send(ctx context.Context, in *MsgSend, opts ...grpc.CallOption) (*MsgSendResponse, error)
-	// MultiSend defines a method for sending coins from some accounts to other accounts.
-	MultiSend(ctx context.Context, in *MsgMultiSend, opts ...grpc.CallOption) (*MsgMultiSendResponse, error)
 }
 
 type msgClient struct {
@@ -45,23 +43,12 @@ func (c *msgClient) Send(ctx context.Context, in *MsgSend, opts ...grpc.CallOpti
 	return out, nil
 }
 
-func (c *msgClient) MultiSend(ctx context.Context, in *MsgMultiSend, opts ...grpc.CallOption) (*MsgMultiSendResponse, error) {
-	out := new(MsgMultiSendResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.Msg/MultiSend", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
 type MsgServer interface {
 	// Send defines a method for sending coins from one account to another account.
 	Send(context.Context, *MsgSend) (*MsgSendResponse, error)
-	// MultiSend defines a method for sending coins from some accounts to other accounts.
-	MultiSend(context.Context, *MsgMultiSend) (*MsgMultiSendResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -71,9 +58,6 @@ type UnimplementedMsgServer struct {
 
 func (UnimplementedMsgServer) Send(context.Context, *MsgSend) (*MsgSendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Send not implemented")
-}
-func (UnimplementedMsgServer) MultiSend(context.Context, *MsgMultiSend) (*MsgMultiSendResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method MultiSend not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -106,24 +90,6 @@ func _Msg_Send_Handler(srv interface{}, ctx context.Context, dec func(interface{
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_MultiSend_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgMultiSend)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).MultiSend(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.bank.v1beta1.Msg/MultiSend",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).MultiSend(ctx, req.(*MsgMultiSend))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -134,10 +100,6 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Send",
 			Handler:    _Msg_Send_Handler,
-		},
-		{
-			MethodName: "MultiSend",
-			Handler:    _Msg_MultiSend_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

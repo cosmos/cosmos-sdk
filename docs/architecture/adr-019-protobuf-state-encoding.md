@@ -172,7 +172,7 @@ type InterfaceRegistry interface {
     // RegisterImplementations registers impls as a concrete implementations of
     // the interface iface
     // Ex:
-    //  registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSend{}, &MsgMultiSend{})
+    //  registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSend{})
     RegisterImplementations(iface interface{}, impls ...proto.Message)
 
 }

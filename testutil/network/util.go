@@ -34,10 +34,13 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 
 	nodeKey, err := p2p.LoadOrGenNodeKey(tmCfg.NodeKeyFile())
+	if err != nil {
+		return err
+	}
 
 	app := cfg.AppConstructor(*val)
-
 	genDocProvider := node.DefaultGenesisDocProviderFunc(tmCfg)
+
 	tmNode, err := node.NewNode(
 		tmCfg,
 		pvm.LoadOrGenFilePV(tmCfg.PrivValidatorKeyFile(), tmCfg.PrivValidatorStateFile()),
@@ -48,7 +51,6 @@ func startInProcess(cfg Config, val *Validator) error {
 		node.DefaultMetricsProvider(tmCfg.Instrumentation),
 		logger.With("module", val.Moniker),
 	)
-
 	if err != nil {
 		return err
 	}

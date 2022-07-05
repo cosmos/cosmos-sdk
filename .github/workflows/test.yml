@@ -277,7 +277,7 @@ jobs:
 
   test-sim-nondeterminism:
     runs-on: buildjet-4vcpu-ubuntu-2004
-    # needs: [build]
+    needs: [build]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3

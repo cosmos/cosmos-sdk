@@ -37,6 +37,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.46.0-rc2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0-rc2) - 2022-07-05
+
 ### Features
 
 * (cli) [#12028](https://github.com/cosmos/cosmos-sdk/pull/12028) Add the `tendermint key-migrate` to perform Tendermint v0.35 DB key migration.

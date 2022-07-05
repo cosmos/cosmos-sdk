@@ -40,7 +40,9 @@ Since **v0.45.15**, the v0.45.x line of the Cosmos SDK has reached end-of-life.
 Any release after **v0.45.15** is a security release that contains security fixes.
 It is strongly recommended to upgrade to these releases as well.
 
-## [v0.45.16](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.16) - 2023-05-11
+## [v0.46.0-rc2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0-rc2) - 2022-07-05
+
+### Features
 
 ### Security Bug Fixes
 
@@ -50,6 +52,7 @@ It is strongly recommended to upgrade to these releases as well.
 
 ### Improvements
 
+* (deps) Downgrade to Tendermint [v0.34.20-rc0](https://github.com/tendermint/tendermint/releases/tag/v0.34.20-rc0).
 * [#12089](https://github.com/cosmos/cosmos-sdk/pull/12089) Mark the `TipDecorator` as beta, don't include it in simapp by default.
 * [#12153](https://github.com/cosmos/cosmos-sdk/pull/12153) Add a new `NewSimulationManagerFromAppModules` constructor, to simplify simulation wiring.
 

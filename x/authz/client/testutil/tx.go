@@ -77,9 +77,11 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-var typeMsgSend = bank.SendAuthorization{}.MsgTypeURL()
-var typeMsgVote = sdk.MsgTypeURL(&govtypes.MsgVote{})
-var typeMsgSubmitProposal = sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{})
+var (
+	typeMsgSend           = bank.SendAuthorization{}.MsgTypeURL()
+	typeMsgVote           = sdk.MsgTypeURL(&govtypes.MsgVote{})
+	typeMsgSubmitProposal = sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{})
+)
 
 func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 	val := s.network.Validators[0]
@@ -575,7 +577,6 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-
 			cmd := cli.NewCmdExecAuthorization()
 			clientCtx := val.ClientCtx
 

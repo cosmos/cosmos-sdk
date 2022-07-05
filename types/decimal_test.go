@@ -54,10 +54,14 @@ func (s *decimalTestSuite) TestNewDecFromStr() {
 		{"0.8", false, sdk.NewDecWithPrec(8, 1)},
 		{"0.11111", false, sdk.NewDecWithPrec(11111, 5)},
 		{"314460551102969.3144278234343371835", true, sdk.NewDec(3141203149163817869)},
-		{"314460551102969314427823434337.1835718092488231350",
-			true, sdk.NewDecFromBigIntWithPrec(largeBigInt, 4)},
-		{"314460551102969314427823434337.1835",
-			false, sdk.NewDecFromBigIntWithPrec(largeBigInt, 4)},
+		{
+			"314460551102969314427823434337.1835718092488231350",
+			true, sdk.NewDecFromBigIntWithPrec(largeBigInt, 4),
+		},
+		{
+			"314460551102969314427823434337.1835",
+			false, sdk.NewDecFromBigIntWithPrec(largeBigInt, 4),
+		},
 		{".", true, sdk.Dec{}},
 		{".0", true, sdk.NewDec(0)},
 		{"1.", true, sdk.NewDec(1)},
@@ -165,7 +169,6 @@ func (s *decimalTestSuite) TestEqualities() {
 		s.Require().Equal(tc.lt, tc.d1.LT(tc.d2), "LT result is incorrect, tc %d", tcIndex)
 		s.Require().Equal(tc.eq, tc.d1.Equal(tc.d2), "equality result is incorrect, tc %d", tcIndex)
 	}
-
 }
 
 func (s *decimalTestSuite) TestDecsEqual() {
@@ -209,19 +212,27 @@ func (s *decimalTestSuite) TestArithmetic() {
 		{sdk.NewDec(1), sdk.NewDec(-1), sdk.NewDec(-1), sdk.NewDec(-1), sdk.NewDec(-1), sdk.NewDec(-1), sdk.NewDec(-1), sdk.NewDec(0), sdk.NewDec(2)},
 		{sdk.NewDec(-1), sdk.NewDec(1), sdk.NewDec(-1), sdk.NewDec(-1), sdk.NewDec(-1), sdk.NewDec(-1), sdk.NewDec(-1), sdk.NewDec(0), sdk.NewDec(-2)},
 
-		{sdk.NewDec(3), sdk.NewDec(7), sdk.NewDec(21), sdk.NewDec(21),
+		{
+			sdk.NewDec(3), sdk.NewDec(7), sdk.NewDec(21), sdk.NewDec(21),
 			sdk.NewDecWithPrec(428571428571428571, 18), sdk.NewDecWithPrec(428571428571428572, 18), sdk.NewDecWithPrec(428571428571428571, 18),
-			sdk.NewDec(10), sdk.NewDec(-4)},
-		{sdk.NewDec(2), sdk.NewDec(4), sdk.NewDec(8), sdk.NewDec(8), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1),
-			sdk.NewDec(6), sdk.NewDec(-2)},
+			sdk.NewDec(10), sdk.NewDec(-4),
+		},
+		{
+			sdk.NewDec(2), sdk.NewDec(4), sdk.NewDec(8), sdk.NewDec(8), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1),
+			sdk.NewDec(6), sdk.NewDec(-2),
+		},
 
 		{sdk.NewDec(100), sdk.NewDec(100), sdk.NewDec(10000), sdk.NewDec(10000), sdk.NewDec(1), sdk.NewDec(1), sdk.NewDec(1), sdk.NewDec(200), sdk.NewDec(0)},
 
-		{sdk.NewDecWithPrec(15, 1), sdk.NewDecWithPrec(15, 1), sdk.NewDecWithPrec(225, 2), sdk.NewDecWithPrec(225, 2),
-			sdk.NewDec(1), sdk.NewDec(1), sdk.NewDec(1), sdk.NewDec(3), sdk.NewDec(0)},
-		{sdk.NewDecWithPrec(3333, 4), sdk.NewDecWithPrec(333, 4), sdk.NewDecWithPrec(1109889, 8), sdk.NewDecWithPrec(1109889, 8),
+		{
+			sdk.NewDecWithPrec(15, 1), sdk.NewDecWithPrec(15, 1), sdk.NewDecWithPrec(225, 2), sdk.NewDecWithPrec(225, 2),
+			sdk.NewDec(1), sdk.NewDec(1), sdk.NewDec(1), sdk.NewDec(3), sdk.NewDec(0),
+		},
+		{
+			sdk.NewDecWithPrec(3333, 4), sdk.NewDecWithPrec(333, 4), sdk.NewDecWithPrec(1109889, 8), sdk.NewDecWithPrec(1109889, 8),
 			sdk.MustNewDecFromStr("10.009009009009009009"), sdk.MustNewDecFromStr("10.009009009009009010"), sdk.MustNewDecFromStr("10.009009009009009009"),
-			sdk.NewDecWithPrec(3666, 4), sdk.NewDecWithPrec(3, 1)},
+			sdk.NewDecWithPrec(3666, 4), sdk.NewDecWithPrec(3, 1),
+		},
 	}
 
 	for tcIndex, tc := range tests {

@@ -16,7 +16,8 @@ type QueryDelegatorTotalRewardsResponse struct {
 
 // NewQueryDelegatorTotalRewardsResponse constructs a QueryDelegatorTotalRewardsResponse
 func NewQueryDelegatorTotalRewardsResponse(rewards []DelegationDelegatorReward,
-	total sdk.DecCoins) QueryDelegatorTotalRewardsResponse {
+	total sdk.DecCoins,
+) QueryDelegatorTotalRewardsResponse {
 	return QueryDelegatorTotalRewardsResponse{Rewards: rewards, Total: total}
 }
 
@@ -35,6 +36,7 @@ func (res QueryDelegatorTotalRewardsResponse) String() string {
 // NewDelegationDelegatorReward constructs a DelegationDelegatorReward.
 //nolint:interfacer
 func NewDelegationDelegatorReward(valAddr sdk.ValAddress,
-	reward sdk.DecCoins) DelegationDelegatorReward {
+	reward sdk.DecCoins,
+) DelegationDelegatorReward {
 	return DelegationDelegatorReward{ValidatorAddress: valAddr.String(), Reward: reward}
 }

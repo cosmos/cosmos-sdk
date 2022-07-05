@@ -30,7 +30,7 @@ func BenchmarkParseCoin(b *testing.B) {
 }
 
 func BenchmarkUintMarshal(b *testing.B) {
-	var values = []uint64{
+	values := []uint64{
 		0,
 		1,
 		1 << 10,
@@ -55,7 +55,7 @@ func BenchmarkUintMarshal(b *testing.B) {
 }
 
 func BenchmarkIntMarshal(b *testing.B) {
-	var values = []int64{
+	values := []int64{
 		0,
 		1,
 		1 << 10,

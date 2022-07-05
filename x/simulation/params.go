@@ -5,11 +5,9 @@ import (
 	"encoding/json"
 	"math/rand"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	"github.com/cometbft/cometbft/types"
-
-	"cosmossdk.io/core/address"
-	stakingtypes "cosmossdk.io/x/staking/types"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -185,8 +183,8 @@ func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulato
 
 // Consensus Params
 
-// RandomConsensusParams returns random simulation consensus parameters, it extracts the Evidence from the Staking genesis state.
-func RandomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSONCodec, maxGas int64) *cmtproto.ConsensusParams {
+// randomConsensusParams returns random simulation consensus parameters, it extracts the Evidence from the Staking genesis state.
+func randomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSONCodec) *abci.ConsensusParams {
 	var genesisState map[string]json.RawMessage
 	err := json.Unmarshal(appState, &genesisState)
 	if err != nil {
@@ -194,8 +192,8 @@ func RandomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSO
 	}
 
 	stakingGenesisState := stakingtypes.GetGenesisStateFromAppState(cdc, genesisState)
-	consensusParams := &cmtproto.ConsensusParams{
-		Block: &cmtproto.BlockParams{
+	consensusParams := &abci.ConsensusParams{
+		Block: &abci.BlockParams{
 			MaxBytes: int64(simulation.RandIntBetween(r, 20000000, 30000000)),
 			MaxGas:   maxGas,
 		},

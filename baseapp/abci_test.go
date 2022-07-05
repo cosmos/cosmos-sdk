@@ -19,7 +19,6 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmprototypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	coretesting "cosmossdk.io/core/testing"
@@ -2523,49 +2522,12 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	require.Len(t, resp.Txs, 0) // this is actually a failure, but we don't want to halt the chain
 	require.NoError(t, err)     // we don't error here
 
-	prepPropReq.LocalLastCommit.Votes = []abci.ExtendedVoteInfo{} // reset votes
-	resp, err = suite.baseApp.PrepareProposal(prepPropReq)
-	require.NoError(t, err)
-	require.Len(t, resp.Txs, 0)
-
-	procPropRes, err := suite.baseApp.ProcessProposal(&abci.ProcessProposalRequest{Height: 1, Txs: resp.Txs})
-	require.NoError(t, err)
-	require.Equal(t, abci.PROCESS_PROPOSAL_STATUS_ACCEPT, procPropRes.Status)
-
-	_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: resp.Txs})
-	require.NoError(t, err)
-
-	// The average price will be nil during the first block, given that we don't have
-	// any vote extensions on block 1 in PrepareProposal
-	avgPrice := getFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1).Get([]byte("avgPrice"))
-	require.Nil(t, avgPrice)
-	_, err = suite.baseApp.Commit()
-	require.NoError(t, err)
-
-	// Now onto the second block, this time we process vote extensions from the
-	// previous block (which we sign now)
-	for i, ve := range allVEs {
-		cve := cmtproto.CanonicalVoteExtension{
-			Extension: ve,
-			Height:    1,
-			Round:     int64(0),
-			ChainId:   suite.baseApp.ChainID(),
-		}
-
-		bz, err := marshalDelimitedFn(&cve)
-		require.NoError(t, err)
-
-		privKey := privKeys[i]
-		extSig, err := privKey.Sign(bz)
-		require.NoError(t, err)
-
-		prepPropReq.LocalLastCommit.Votes = append(prepPropReq.LocalLastCommit.Votes, abci.ExtendedVoteInfo{
-			VoteExtension:      ve,
-			BlockIdFlag:        cmtproto.BlockIDFlagCommit,
-			ExtensionSignature: extSig,
-			Validator: abci.Validator{
-				Address: vals[i].Bytes(),
-				Power:   666,
+		tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+		tc.bapp.InitChain(abci.RequestInitChain{
+			ConsensusParams: &abci.ConsensusParams{
+				Evidence: &tmproto.EvidenceParams{
+					MaxAgeNumBlocks: tc.maxAgeBlocks,
+				},
 			},
 		})
 	}

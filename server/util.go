@@ -170,25 +170,11 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 		return nil, err
 	}
 
-	return serverCtx, nil
-}
-
-// CreateSDKLogger creates the default SDK logger.
-// It reads the log level and format from the server context.
-func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
-	var opts []log.Option
-	if ctx.Viper.GetString(flags.FlagLogFormat) == flags.OutputFormatJSON {
-		opts = append(opts, log.OutputJSONOption())
-	}
-	opts = append(opts,
-		log.ColorOption(!ctx.Viper.GetBool(flags.FlagLogNoColor)),
-		// We use CometBFT flag (cmtcli.TraceFlag) for trace logging.
-		log.TraceOption(ctx.Viper.GetBool(FlagTrace)))
-
-	// check and set filter level or keys for the logger if any
-	logLvlStr := ctx.Viper.GetString(flags.FlagLogLevel)
-	if logLvlStr == "" {
-		return log.NewLogger(out, opts...), nil
+	var logWriter io.Writer
+	if strings.ToLower(serverCtx.Viper.GetString(flags.FlagLogFormat)) == tmcfg.LogFormatPlain {
+		logWriter = zerolog.ConsoleWriter{Out: os.Stderr}
+	} else {
+		logWriter = os.Stderr
 	}
 
 	logLvl, err := zerolog.ParseLevel(logLvlStr)
@@ -259,17 +245,11 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 			return nil, fmt.Errorf("error in config file: %w", err)
 		}
 
-		defaultCometCfg := cmtcfg.DefaultConfig()
-		// The SDK is opinionated about those comet values, so we set them here.
-		// We verify first that the user has not changed them for not overriding them.
-		if conf.Consensus.TimeoutCommit == defaultCometCfg.Consensus.TimeoutCommit {
-			conf.Consensus.TimeoutCommit = 5 * time.Second
-		}
-		if conf.RPC.PprofListenAddress == defaultCometCfg.RPC.PprofListenAddress {
-			conf.RPC.PprofListenAddress = "localhost:6060"
-		}
-
-		cmtcfg.WriteConfigFile(cmtCfgFile, conf)
+		conf.RPC.PprofListenAddress = "localhost:6060"
+		conf.P2P.RecvRate = 5120000
+		conf.P2P.SendRate = 5120000
+		conf.Consensus.TimeoutCommit = 5 * time.Second
+		tmcfg.WriteConfigFile(tmCfgFile, conf)
 
 	case err != nil:
 		return nil, err
@@ -349,8 +329,6 @@ func AddCommands[T types.Application](rootCmd *cobra.Command, appCreator types.A
 		VersionCmd(),
 		tmcmd.ResetAllCmd,
 		tmcmd.ResetStateCmd,
-		tmcmd.InspectCmd,
-		makeKeyMigrateCmd(),
 	)
 
 	startCmd := StartCmd(appCreator, defaultNodeHome)

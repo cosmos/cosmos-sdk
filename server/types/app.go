@@ -5,16 +5,12 @@ import (
 	"io"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
-	cmttypes "github.com/cometbft/cometbft/types"
-	"github.com/cosmos/gogoproto/grpc"
-
-	"cosmossdk.io/core/server"
-	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/log"
-	"cosmossdk.io/store/snapshots"
-	storetypes "cosmossdk.io/store/types"
+	"github.com/gogo/protobuf/grpc"
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmtypes "github.com/tendermint/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/api"
@@ -83,7 +79,7 @@ type (
 		// Height is the app's latest block height.
 		Height int64
 		// ConsensusParams are the exported consensus params for ABCI.
-		ConsensusParams cmtproto.ConsensusParams
+		ConsensusParams *abci.ConsensusParams
 	}
 
 	// AppExporter is a function that dumps all app state to

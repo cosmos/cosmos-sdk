@@ -96,9 +96,18 @@ func NewAppModule(accountKeeper types.AccountKeeper,
 	})
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the genutil module.
-func (am AppModule) ExportGenesis(context.Context) (json.RawMessage, error) {
-	return am.DefaultGenesis(), nil
+// InitGenesis performs genesis initialization for the genutil module. It returns
+// no validator updates.
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+	var genesisState types.GenesisState
+	cdc.MustUnmarshalJSON(data, &genesisState)
+
+	validators, err := InitGenesis(ctx, am.stakingKeeper, am.deliverTx, genesisState, am.txEncodingConfig)
+	if err != nil {
+		panic(err)
+	}
+
+	return validators
 }
 
 // GenTxValidator returns the genutil module's genesis transaction validator.

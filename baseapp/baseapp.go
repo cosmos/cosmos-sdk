@@ -490,9 +490,18 @@ func (app *BaseApp) setDeliverState(header tmproto.Header) {
 
 // GetConsensusParams returns the current consensus parameters from the BaseApp's
 // ParamStore. If the BaseApp has no ParamStore defined, nil is returned.
-func (app *BaseApp) GetConsensusParams(ctx context.Context) cmtproto.ConsensusParams {
+func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *abci.ConsensusParams {
 	if app.paramStore == nil {
-		return cmtproto.ConsensusParams{}
+		return nil
+	}
+
+	cp := new(abci.ConsensusParams)
+
+	if app.paramStore.Has(ctx, ParamStoreKeyBlockParams) {
+		var bp abci.BlockParams
+
+		app.paramStore.Get(ctx, ParamStoreKeyBlockParams, &bp)
+		cp.Block = &bp
 	}
 
 	cp, err := app.paramStore.Get(ctx)
@@ -524,7 +533,24 @@ func (app *BaseApp) AddRunTxRecoveryHandler(handlers ...RecoveryHandler) {
 	}
 }
 
-// GetMaximumBlockGas gets the maximum gas from the consensus params. It panics
+// StoreConsensusParams sets the consensus parameters to the baseapp's param store.
+func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *abci.ConsensusParams) {
+	if app.paramStore == nil {
+		panic("cannot store consensus params with no params store set")
+	}
+
+	if cp == nil {
+		return
+	}
+
+	app.paramStore.Set(ctx, ParamStoreKeyBlockParams, cp.Block)
+	app.paramStore.Set(ctx, ParamStoreKeyEvidenceParams, cp.Evidence)
+	app.paramStore.Set(ctx, ParamStoreKeyValidatorParams, cp.Validator)
+	// We're explicitly not storing the Tendermint app_version in the param store. It's
+	// stored instead in the x/upgrade store, with its own bump logic.
+}
+
+// getMaximumBlockGas gets the maximum gas from the consensus params. It panics
 // if maximum block gas is less than negative one and returns zero if negative
 // one.
 func (app *BaseApp) GetMaximumBlockGas(ctx sdk.Context) uint64 {

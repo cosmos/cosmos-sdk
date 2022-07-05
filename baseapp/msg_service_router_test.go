@@ -1,7 +1,7 @@
 package baseapp_test
 
 import (
-	"context"
+	"os"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
@@ -35,6 +35,10 @@ func TestRegisterMsgService(t *testing.T) {
 	require.NoError(t, err)
 	app := appBuilder.Build(coretesting.NewMemDB(), nil)
 
+	// Create an encoding config that doesn't register testdata Msg services.
+	encCfg := simapp.MakeTestEncodingConfig()
+	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
+	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	require.Panics(t, func() {
 		testdata.RegisterMsgServer(
 			app.MsgServiceRouter(),
@@ -55,19 +59,11 @@ func TestRegisterMsgService(t *testing.T) {
 
 func TestRegisterMsgServiceTwice(t *testing.T) {
 	// Setup baseapp.
-	var (
-		appBuilder *runtime.AppBuilder
-		registry   codectypes.InterfaceRegistry
-	)
-	err := depinject.Inject(
-		depinject.Configs(
-			makeMinimalConfig(),
-			depinject.Supply(log.NewTestLogger(t)),
-		), &appBuilder, &registry)
-	require.NoError(t, err)
-	db := coretesting.NewMemDB()
-	app := appBuilder.Build(db, nil)
-	testdata.RegisterInterfaces(registry)
+	db := dbm.NewMemDB()
+	encCfg := simapp.MakeTestEncodingConfig()
+	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
+	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
 
 	// First time registering service shouldn't panic.
 	require.NotPanics(t, func() {
@@ -123,30 +119,11 @@ func TestHybridHandlerByMsgName(t *testing.T) {
 
 func TestMsgService(t *testing.T) {
 	priv, _, _ := testdata.KeyTestPubAddr()
-
-	var (
-		appBuilder        *runtime.AppBuilder
-		cdc               codec.Codec
-		interfaceRegistry codectypes.InterfaceRegistry
-	)
-	err := depinject.Inject(
-		depinject.Configs(
-			makeMinimalConfig(),
-			depinject.Supply(log.NewNopLogger()),
-		), &appBuilder, &cdc, &interfaceRegistry)
-	require.NoError(t, err)
-	app := appBuilder.Build(coretesting.NewMemDB(), nil)
-	signingCtx := interfaceRegistry.SigningContext()
-
-	// patch in TxConfig instead of using an output from x/auth/tx
-	txConfig := authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
-	// set the TxDecoder in the BaseApp for minimal tx simulations
-	app.SetTxDecoder(txConfig.TxDecoder())
-
-	defaultSignMode, err := authsigning.APISignModeToInternal(txConfig.SignModeHandler().DefaultMode())
-	require.NoError(t, err)
-
-	testdata.RegisterInterfaces(interfaceRegistry)
+	encCfg := simapp.MakeTestEncodingConfig()
+	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
+	db := dbm.NewMemDB()
+	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
+	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	testdata.RegisterMsgServer(
 		app.MsgServiceRouter(),
 		testdata.MsgServerImpl{},

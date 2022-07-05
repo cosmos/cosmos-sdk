@@ -7,12 +7,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/gov"
-	"cosmossdk.io/x/gov/client/utils"
-	v1 "cosmossdk.io/x/gov/types/v1"
-	"cosmossdk.io/x/gov/types/v1beta1"
+	"github.com/tendermint/tendermint/rpc/client/mock"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"

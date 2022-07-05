@@ -140,8 +140,14 @@ func (app *BaseApp) InitChain(req *abci.InitChainRequest) (*abci.InitChainRespon
 	}, nil
 }
 
-// Info implements the ABCI interface. It returns information about the application.
-func (app *BaseApp) Info(_ *abci.InfoRequest) (*abci.InfoResponse, error) {
+// SetOption implements the ABCI interface.
+func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOption) {
+	// TODO: Implement!
+	return
+}
+
+// Info implements the ABCI interface.
+func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 	lastCommitID := app.cms.LastCommitID()
 	appVersion := InitialAppVersion
 	if lastCommitID.Version > 0 {

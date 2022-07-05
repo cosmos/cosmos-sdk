@@ -8,6 +8,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
@@ -2416,6 +2418,180 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 			s.Require().NoError(err)
 			s.Require().Equal(resp.GetProposal().FinalTallyResult, spec.tallyRes)
 			s.Require().Equal(resp.GetProposal().Status, spec.expStatus)
+		})
+	}
+}
+
+func (s *TestSuite) TestLeaveGroup() {
+	addrs := simapp.AddTestAddrsIncremental(s.app, s.sdkCtx, 7, sdk.NewInt(3000000))
+	admin1 := addrs[0]
+	member1 := addrs[1]
+	member2 := addrs[2]
+	member3 := addrs[3]
+	member4 := addrs[4]
+	admin2 := addrs[5]
+	admin3 := addrs[6]
+	require := s.Require()
+
+	members := []group.MemberRequest{
+		{
+			Address:  member1.String(),
+			Weight:   "1",
+			Metadata: "metadata",
+		},
+		{
+			Address:  member2.String(),
+			Weight:   "2",
+			Metadata: "metadata",
+		},
+		{
+			Address:  member3.String(),
+			Weight:   "3",
+			Metadata: "metadata",
+		},
+	}
+	policy := group.NewThresholdDecisionPolicy(
+		"3",
+		time.Hour,
+		time.Hour,
+	)
+	_, groupID1 := s.createGroupAndGroupPolicy(admin1, members, policy)
+
+	members = []group.MemberRequest{
+		{
+			Address:  member1.String(),
+			Weight:   "1",
+			Metadata: "metadata",
+		},
+	}
+	_, groupID2 := s.createGroupAndGroupPolicy(admin2, members, nil)
+
+	members = []group.MemberRequest{
+		{
+			Address:  member1.String(),
+			Weight:   "1",
+			Metadata: "metadata",
+		},
+		{
+			Address:  member2.String(),
+			Weight:   "2",
+			Metadata: "metadata",
+		},
+	}
+	policy = &group.PercentageDecisionPolicy{
+		Percentage: "0.5",
+		Windows:    &group.DecisionPolicyWindows{VotingPeriod: time.Hour},
+	}
+
+	_, groupID3 := s.createGroupAndGroupPolicy(admin3, members, policy)
+	testCases := []struct {
+		name           string
+		req            *group.MsgLeaveGroup
+		expErr         bool
+		errMsg         string
+		expMembersSize int
+		memberWeight   math.Dec
+	}{
+		{
+			"expect error: group not found",
+			&group.MsgLeaveGroup{
+				GroupId: 100000,
+				Address: member1.String(),
+			},
+			true,
+			"group: not found",
+			0,
+			math.NewDecFromInt64(0),
+		},
+		{
+			"expect error: member not part of group",
+			&group.MsgLeaveGroup{
+				GroupId: groupID1,
+				Address: member4.String(),
+			},
+			true,
+			"not part of group",
+			0,
+			math.NewDecFromInt64(0),
+		},
+		{
+			"valid testcase: decision policy is not present (and group total weight can be 0)",
+			&group.MsgLeaveGroup{
+				GroupId: groupID2,
+				Address: member1.String(),
+			},
+			false,
+			"",
+			0,
+			math.NewDecFromInt64(1),
+		},
+		{
+			"valid testcase: threshold decision policy",
+			&group.MsgLeaveGroup{
+				GroupId: groupID1,
+				Address: member3.String(),
+			},
+			false,
+			"",
+			2,
+			math.NewDecFromInt64(3),
+		},
+		{
+			"valid request: can leave group policy threshold more than group weight",
+			&group.MsgLeaveGroup{
+				GroupId: groupID1,
+				Address: member2.String(),
+			},
+			false,
+			"",
+			1,
+			math.NewDecFromInt64(2),
+		},
+		{
+			"valid request: can leave group (percentage decision policy)",
+			&group.MsgLeaveGroup{
+				GroupId: groupID3,
+				Address: member2.String(),
+			},
+			false,
+			"",
+			1,
+			math.NewDecFromInt64(2),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			var groupWeight1 math.Dec
+			if !tc.expErr {
+				groupRes, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: tc.req.GroupId})
+				require.NoError(err)
+				groupWeight1, err = math.NewNonNegativeDecFromString(groupRes.Info.TotalWeight)
+				require.NoError(err)
+			}
+
+			res, err := s.keeper.LeaveGroup(s.ctx, tc.req)
+			if tc.expErr {
+				require.Error(err)
+				require.Contains(err.Error(), tc.errMsg)
+			} else {
+				require.NoError(err)
+				require.NotNil(res)
+				res, err := s.keeper.GroupMembers(s.ctx, &group.QueryGroupMembersRequest{
+					GroupId: tc.req.GroupId,
+				})
+				require.NoError(err)
+				require.Len(res.Members, tc.expMembersSize)
+
+				groupRes, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: tc.req.GroupId})
+				require.NoError(err)
+				groupWeight2, err := math.NewNonNegativeDecFromString(groupRes.Info.TotalWeight)
+				require.NoError(err)
+
+				rWeight, err := groupWeight1.Sub(tc.memberWeight)
+				require.NoError(err)
+				require.Equal(rWeight.Cmp(groupWeight2), 0)
+			}
 		})
 	}
 }

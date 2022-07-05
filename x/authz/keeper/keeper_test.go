@@ -8,16 +8,8 @@ import (
 	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
-
-	"cosmossdk.io/core/header"
-	coretesting "cosmossdk.io/core/testing"
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/authz"
-	authzkeeper "cosmossdk.io/x/authz/keeper"
-	authzmodule "cosmossdk.io/x/authz/module"
-	authztestutil "cosmossdk.io/x/authz/testutil"
-	banktypes "cosmossdk.io/x/bank/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"

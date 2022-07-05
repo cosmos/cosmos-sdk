@@ -2,7 +2,7 @@ package simapp
 
 import (
 	"encoding/json"
-	"fmt"
+	"os"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
@@ -44,8 +44,9 @@ import (
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
-	db := coretesting.NewMemDB()
-	logger := log.NewTestLogger(t)
+	encCfg := MakeTestEncodingConfig()
+	db := dbm.NewMemDB()
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	app := NewSimappWithCustomOptions(t, false, SetupOptions{
 		Logger:  logger.With("instance", "first"),
 		DB:      db,
@@ -79,6 +80,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	_, err = app.Commit()
 	require.NoError(t, err)
 
+	logger2 := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	// Making a new app object with the db, so that initchain hasn't been called
 	app2 := NewSimApp(logger.With("instance", "second"), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
 	_, err = app2.ExportAppStateAndValidators(false, []string{}, []string{})
@@ -86,9 +88,10 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 }
 
 func TestRunMigrations(t *testing.T) {
-	db := coretesting.NewMemDB()
-	logger := log.NewTestLogger(t)
-	app := NewSimApp(logger.With("instance", "simapp"), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
+	db := dbm.NewMemDB()
+	encCfg := MakeTestEncodingConfig()
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
 
 	// Create a new baseapp and configurator for the purpose of this test.
 	bApp := baseapp.NewBaseApp(app.Name(), logger.With("instance", "baseapp"), db, app.TxConfig().TxDecoder())
@@ -232,9 +235,11 @@ func TestRunMigrations(t *testing.T) {
 }
 
 func TestInitGenesisOnMigration(t *testing.T) {
-	db := coretesting.NewMemDB()
-	app := NewSimApp(log.NewTestLogger(t), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
-	ctx := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
+	db := dbm.NewMemDB()
+	encCfg := MakeTestEncodingConfig()
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
+	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 
 	// Create a mock module. This module will serve as the new module we're
 	// adding during a migration.
@@ -271,7 +276,9 @@ func TestInitGenesisOnMigration(t *testing.T) {
 }
 
 func TestUpgradeStateOnGenesis(t *testing.T) {
-	db := coretesting.NewMemDB()
+	encCfg := MakeTestEncodingConfig()
+	db := dbm.NewMemDB()
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	app := NewSimappWithCustomOptions(t, false, SetupOptions{
 		Logger:  log.NewTestLogger(t),
 		DB:      db,

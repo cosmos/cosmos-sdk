@@ -1,6 +1,8 @@
 package simapp
 
 import (
+	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -33,6 +35,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
+
+// DefaultConsensusParams defines the default Tendermint consensus params used in
+// SimApp testing.
+var DefaultConsensusParams = &abci.ConsensusParams{
+	Block: &abci.BlockParams{
+		MaxBytes: 200000,
+		MaxGas:   2000000,
+	},
+	Evidence: &tmproto.EvidenceParams{
+		MaxAgeNumBlocks: 302400,
+		MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
+		MaxBytes:        10000,
+	},
+	Validator: &tmproto.ValidatorParams{
+		PubKeyTypes: []string{
+			tmtypes.ABCIPubKeyTypeEd25519,
+		},
+	},
+}
 
 // SetupOptions defines arguments that are passed into `Simapp` constructor.
 type SetupOptions struct {
@@ -156,7 +177,18 @@ func SetupWithGenesisValSet(t *testing.T, valSet *cmttypes.ValidatorSet, genAccs
 		Height:             app.LastBlockHeight() + 1,
 		Hash:               app.LastCommitID().Hash,
 		NextValidatorsHash: valSet.Hash(),
-	})
+	}})
+
+	return app
+}
+
+// SetupWithGenesisAccounts initializes a new SimApp with the provided genesis
+// accounts and possible balances.
+func SetupWithGenesisAccounts(t *testing.T, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
+	t.Helper()
+
+	privVal := mock.NewPV()
+	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)
 
 	return app

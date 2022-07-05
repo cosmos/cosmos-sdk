@@ -112,7 +112,7 @@ func TestInterceptConfigsPreRunHandlerReadsConfigToml(t *testing.T) {
 		t.Fatalf("creating config.toml file failed: %v", err)
 	}
 
-	_, err = fmt.Fprintf(writer, "db_backend = '%s'\n", testDbBackend)
+	_, err = writer.WriteString(fmt.Sprintf("db_backend = '%s'\n", testDbBackend))
 	if err != nil {
 		t.Fatalf("Failed writing string to config.toml: %v", err)
 	}

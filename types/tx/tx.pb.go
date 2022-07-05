@@ -266,8 +266,13 @@ type SignDocDirectAux struct {
 	AccountNumber uint64 `protobuf:"varint,4,opt,name=account_number,json=accountNumber,proto3" json:"account_number,omitempty"`
 	// sequence is the sequence number of the signing account.
 	Sequence uint64 `protobuf:"varint,5,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	// tips have been deprecated and should not be used
-	Tip *Tip `protobuf:"bytes,6,opt,name=tip,proto3" json:"tip,omitempty"` // Deprecated: Do not use.
+	// Tip is the optional tip used for transactions fees paid in another denom.
+	// It should be left empty if the signer is not the tipper for this
+	// transaction.
+	//
+	// This field is ignored if the chain didn't enable tips, i.e. didn't add the
+	// `TipDecorator` in its posthandler.
+	Tip *Tip `protobuf:"bytes,6,opt,name=tip,proto3" json:"tip,omitempty"`
 }
 
 func (m *SignDocDirectAux) Reset()         { *m = SignDocDirectAux{} }
@@ -487,6 +492,9 @@ type AuthInfo struct {
 	// of the signers. This can be estimated via simulation.
 	Fee *Fee `protobuf:"bytes,2,opt,name=fee,proto3" json:"fee,omitempty"`
 	// Tip is the optional tip used for transactions fees paid in another denom.
+	//
+	// This field is ignored if the chain didn't enable tips, i.e. didn't add the
+	// `TipDecorator` in its posthandler.
 	//
 	// This field is ignored if the chain didn't enable tips, i.e. didn't add the
 	// `TipDecorator` in its posthandler.

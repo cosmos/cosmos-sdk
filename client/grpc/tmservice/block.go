@@ -4,9 +4,7 @@ import (
 	"context"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-
-	"github.com/cosmos/cosmos-sdk/client"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
 func getBlock(ctx context.Context, clientCtx client.Context, height *int64) (*ctypes.ResultBlock, error) {

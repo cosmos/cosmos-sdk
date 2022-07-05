@@ -16,6 +16,12 @@ import (
 	"github.com/cometbft/cometbft/privval"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/go-bip39"
+	cfg "github.com/tendermint/tendermint/config"
+	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
+	tmos "github.com/tendermint/tendermint/libs/os"
+	"github.com/tendermint/tendermint/p2p"
+	"github.com/tendermint/tendermint/privval"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -89,18 +95,7 @@ func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic, keyT
 	)
 
 	if len(mnemonic) == 0 {
-		switch keyType {
-		case "ed25519":
-			filePV = loadOrGenFilePV(tmed25519.GenPrivKey(), pvKeyFile, pvStateFile)
-		case "bls12_381":
-			privKey, err = cmtbls12381.GenPrivKey()
-			if err != nil {
-				return "", nil, err
-			}
-			filePV = loadOrGenFilePV(privKey, pvKeyFile, pvStateFile)
-		default:
-			filePV = loadOrGenFilePV(tmed25519.GenPrivKey(), pvKeyFile, pvStateFile)
-		}
+		filePV = privval.LoadOrGenFilePV(pvKeyFile, pvStateFile)
 	} else {
 		switch keyType {
 		case "ed25519":

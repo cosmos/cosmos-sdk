@@ -170,7 +170,7 @@ func InitCmd(mm genesisMM) *cobra.Command {
 			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)
 
 			cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
-			return displayInfo(cmd.ErrOrStderr(), toPrint)
+			return displayInfo(toPrint)
 		},
 	}
 

@@ -6,16 +6,9 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
-
-	coreevent "cosmossdk.io/core/event"
-	"cosmossdk.io/core/header"
-	coretesting "cosmossdk.io/core/testing"
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/bank/keeper"
-	banktestutil "cosmossdk.io/x/bank/testutil"
-	banktypes "cosmossdk.io/x/bank/types"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -1364,10 +1357,23 @@ func (suite *KeeperTestSuite) TestMsgSendEvents() {
 
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 
-	acc0StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[0])
-	suite.Require().NoError(err)
-	acc1StrAddr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[1])
-	suite.Require().NoError(err)
+	suite.Require().NoError(app.BankKeeper.SendCoins(ctx, addr, addr2, newCoins))
+	event1 := sdk.Event{
+		Type:       types.EventTypeTransfer,
+		Attributes: []abci.EventAttribute{},
+	}
+	event1.Attributes = append(
+		event1.Attributes,
+		abci.EventAttribute{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr2.String())},
+	)
+	event1.Attributes = append(
+		event1.Attributes,
+		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
+	)
+	event1.Attributes = append(
+		event1.Attributes,
+		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())},
+	)
 
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
 	suite.mockFundAccount(accAddrs[0])
@@ -1385,6 +1391,10 @@ func (suite *KeeperTestSuite) TestMsgSendEvents() {
 			}, nil
 		},
 	}
+	event2.Attributes = append(
+		event2.Attributes,
+		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
+	)
 
 	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	// events are shifted due to the funding account events
@@ -1438,8 +1448,15 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	suite.mockInputOutputCoins([]sdk.AccountI{acc0}, accAddrs[2:4])
 	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
 
-	events = ctx.EventManager().ABCIEvents()
-	require.Equal(10, len(events)) // 10 events because account funding causes extra minting + coin_spent + coin_recv events
+	event1 := sdk.Event{
+		Type:       sdk.EventTypeMessage,
+		Attributes: []abci.EventAttribute{},
+	}
+	event1.Attributes = append(
+		event1.Attributes,
+		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
+	)
+	suite.Require().Equal(abci.Event(event1), events[7])
 
 	// Set addr's coins and accAddrs[1]'s coins
 	suite.mockFundAccount(accAddrs[0])
@@ -1478,21 +1495,38 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 			return attrs, nil
 		},
 	}
+	event2.Attributes = append(
+		event2.Attributes,
+		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr2.String())},
+	)
+	event3 := sdk.Event{
+		Type:       types.EventTypeTransfer,
+		Attributes: []abci.EventAttribute{},
+	}
+	event3.Attributes = append(
+		event3.Attributes,
+		abci.EventAttribute{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr3.String())},
+	)
+	event3.Attributes = append(
+		event3.Attributes,
+		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())})
+	event4 := sdk.Event{
+		Type:       types.EventTypeTransfer,
+		Attributes: []abci.EventAttribute{},
+	}
+	event4.Attributes = append(
+		event4.Attributes,
+		abci.EventAttribute{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr4.String())},
+	)
+	event4.Attributes = append(
+		event4.Attributes,
+		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins2.String())},
+	)
 	// events are shifted due to the funding account events
-	require.Equal(event1.Type, events[22].Type)
-	attrs1, err := event1.Attributes()
-	require.NoError(err)
-	for i := range attrs1 {
-		require.Equal(attrs1[i].Key, events[22].Attributes[i].Key)
-		require.Equal(attrs1[i].Value, events[22].Attributes[i].Value)
-	}
-	require.Equal(event2.Type, events[24].Type)
-	attrs2, err := event2.Attributes()
-	require.NoError(err)
-	for i := range attrs2 {
-		require.Equal(attrs2[i].Key, events[24].Attributes[i].Key)
-		require.Equal(attrs2[i].Value, events[24].Attributes[i].Value)
-	}
+	suite.Require().Equal(abci.Event(event1), events[21])
+	suite.Require().Equal(abci.Event(event2), events[23])
+	suite.Require().Equal(abci.Event(event3), events[25])
+	suite.Require().Equal(abci.Event(event4), events[27])
 }
 
 func (suite *KeeperTestSuite) TestSpendableCoins() {

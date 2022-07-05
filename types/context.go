@@ -38,29 +38,22 @@ but please do not over-use it. We try to keep all data structured
 and standard additions here would be better just to add to the Context struct
 */
 type Context struct {
-	baseCtx              context.Context
-	ms                   storetypes.MultiStore
-	header               cmtproto.Header // Deprecated: Use HeaderService for height, time, and chainID and CometService for the rest
-	headerHash           []byte          // Deprecated: Use HeaderService for hash
-	chainID              string          // Deprecated: Use HeaderService for chainID and CometService for the rest
-	txBytes              []byte
-	logger               log.Logger
-	voteInfo             []abci.VoteInfo // Deprecated: use Cometinfo.LastCommit.Votes instead, will be removed after 0.52
-	gasMeter             storetypes.GasMeter
-	blockGasMeter        storetypes.GasMeter
-	checkTx              bool // Deprecated: use execMode instead, will be removed after 0.52
-	recheckTx            bool // if recheckTx == true, then checkTx must also be true // Deprecated: use execMode instead, will be removed after 0.52
-	sigverifyTx          bool // when run simulation, because the private key corresponding to the account in the genesis.json randomly generated, we must skip the sigverify.
-	execMode             ExecMode
-	minGasPrice          DecCoins
-	consParams           cmtproto.ConsensusParams
-	eventManager         EventManagerI
-	priority             int64 // The tx priority, only relevant in CheckTx
-	kvGasConfig          storetypes.GasConfig
-	transientKVGasConfig storetypes.GasConfig
-	streamingManager     storetypes.StreamingManager
-	cometInfo            comet.Info
-	headerInfo           header.Info
+	baseCtx       context.Context
+	ms            MultiStore
+	header        tmproto.Header
+	headerHash    tmbytes.HexBytes
+	chainID       string
+	txBytes       []byte
+	logger        log.Logger
+	voteInfo      []abci.VoteInfo
+	gasMeter      GasMeter
+	blockGasMeter GasMeter
+	checkTx       bool
+	recheckTx     bool // if recheckTx == true, then checkTx must also be true
+	minGasPrice   DecCoins
+	consParams    *abci.ConsensusParams
+	eventManager  *EventManager
+	priority      int64 // The tx priority, only relevant in CheckTx
 }
 
 // Proposed rename, not done to avoid API breakage
@@ -95,10 +88,8 @@ func (c Context) HeaderHash() []byte {
 	return hash
 }
 
-// Deprecated: getting consensus params from the context is deprecated and will be removed after 0.52
-// Querying the consensus module for the parameters is required in server/v2
-func (c Context) ConsensusParams() cmtproto.ConsensusParams {
-	return c.consParams
+func (c Context) ConsensusParams() *abci.ConsensusParams {
+	return proto.Clone(c.consParams).(*abci.ConsensusParams)
 }
 
 func (c Context) Deadline() (deadline time.Time, ok bool) {
@@ -270,7 +261,7 @@ func (c Context) WithMinGasPrices(gasPrices DecCoins) Context {
 }
 
 // WithConsensusParams returns a Context with an updated consensus params
-func (c Context) WithConsensusParams(params cmtproto.ConsensusParams) Context {
+func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {
 	c.consParams = params
 	return c
 }

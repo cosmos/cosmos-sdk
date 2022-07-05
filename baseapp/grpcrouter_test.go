@@ -2,6 +2,7 @@ package baseapp_test
 
 import (
 	"context"
+	"os"
 	"sync"
 	"testing"
 
@@ -99,16 +100,11 @@ func TestGRPCRouterHybridHandlers(t *testing.T) {
 
 func TestRegisterQueryServiceTwice(t *testing.T) {
 	// Setup baseapp.
-	var appBuilder *runtime.AppBuilder
-	err := depinject.Inject(
-		depinject.Configs(
-			makeMinimalConfig(),
-			depinject.Supply(log.NewTestLogger(t)),
-		),
-		&appBuilder)
-	require.NoError(t, err)
-	db := coretesting.NewMemDB()
-	app := appBuilder.Build(db, nil)
+	db := dbm.NewMemDB()
+	encCfg := simapp.MakeTestEncodingConfig()
+	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
+	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
 
 	// First time registering service shouldn't panic.
 	require.NotPanics(t, func() {

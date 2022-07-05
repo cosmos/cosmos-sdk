@@ -3,10 +3,18 @@ package network
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"net"
-	"os"
+	"io/ioutil"
 	"path/filepath"
+	"time"
+
+	tmos "github.com/tendermint/tendermint/libs/os"
+	"github.com/tendermint/tendermint/node"
+	"github.com/tendermint/tendermint/p2p"
+	pvm "github.com/tendermint/tendermint/privval"
+	"github.com/tendermint/tendermint/proxy"
+	"github.com/tendermint/tendermint/rpc/client/local"
+	"github.com/tendermint/tendermint/types"
+	tmtime "github.com/tendermint/tendermint/types/time"
 
 	cmtcfg "github.com/cometbft/cometbft/config"
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
@@ -42,44 +50,19 @@ func startInProcess(cfg Config, val *Validator) error {
 		return err
 	}
 
-	nodeKey, err := p2p.LoadOrGenNodeKey(cmtCfg.NodeKeyFile())
+	nodeKey, err := p2p.LoadOrGenNodeKey(tmCfg.NodeKeyFile())
 	if err != nil {
 		return err
 	}
 
-	app := cfg.AppConstructor(val)
-	val.app = app
+	app := cfg.AppConstructor(*val)
+	genDocProvider := node.DefaultGenesisDocProviderFunc(tmCfg)
 
-	appGenesisProvider := func() (node.ChecksummedGenesisDoc, error) {
-		appGenesis, err := genutiltypes.AppGenesisFromFile(cmtCfg.GenesisFile())
-		if err != nil {
-			return node.ChecksummedGenesisDoc{
-				Sha256Checksum: []byte{},
-			}, err
-		}
-		gen, err := appGenesis.ToGenesisDoc()
-		if err != nil {
-			return node.ChecksummedGenesisDoc{
-				Sha256Checksum: []byte{},
-			}, err
-		}
-		return node.ChecksummedGenesisDoc{GenesisDoc: gen, Sha256Checksum: make([]byte, 0)}, nil
-	}
-
-	cmtApp := server.NewCometABCIWrapper(app)
-	pv, err := pvm.LoadOrGenFilePV(cmtCfg.PrivValidatorKeyFile(), cmtCfg.PrivValidatorStateFile(), func() (cmtcrypto.PrivKey, error) {
-		return ed25519.GenPrivKey(), nil
-	})
-	if err != nil {
-		return err
-	}
-
-	tmNode, err := node.NewNode( //resleak:notresource
-		context.TODO(),
-		cmtCfg,
-		pv,
+	tmNode, err := node.NewNode(
+		tmCfg,
+		pvm.LoadOrGenFilePV(tmCfg.PrivValidatorKeyFile(), tmCfg.PrivValidatorStateFile()),
 		nodeKey,
-		proxy.NewCommittingClientCreator(app),
+		proxy.NewLocalClientCreator(app),
 		genDocProvider,
 		node.DefaultDBProvider,
 		node.DefaultMetricsProvider(tmCfg.Instrumentation),
@@ -94,8 +77,10 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 	val.tmNode = tmNode
 
-	if val.rPCAddress != "" {
-		val.rPCClient = local.New(tmNode)
+	val.tmNode = tmNode
+
+	if val.RPCAddress != "" {
+		val.RPCClient = local.New(tmNode)
 	}
 
 	// We'll need a RPC client if the validator exposes a gRPC or REST endpoint.

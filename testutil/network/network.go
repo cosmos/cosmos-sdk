@@ -20,18 +20,11 @@ import (
 
 	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/registry"
-	coretesting "cosmossdk.io/core/testing"
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
-	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/math/unsafe"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	banktypes "cosmossdk.io/x/bank/types"
-	stakingtypes "cosmossdk.io/x/staking/types"
+	tmrand "github.com/tendermint/tendermint/libs/rand"
+	"github.com/tendermint/tendermint/node"
+	tmclient "github.com/tendermint/tendermint/rpc/client"
+	dbm "github.com/tendermint/tm-db"
+	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -266,11 +259,28 @@ type (
 		Config Config
 	}
 
-	// Logger is a network logger interface that exposes testnet-level Log() methods for an in-process testing network
-	// This is not to be confused with logging that may happen at an individual node or validator level
-	Logger interface {
-		Log(args ...interface{})
-		Logf(format string, args ...interface{})
+	// Validator defines an in-process Tendermint validator node. Through this object,
+	// a client can make RPC and API calls and interact with any client command
+	// or handler.
+	Validator struct {
+		AppConfig  *srvconfig.Config
+		ClientCtx  client.Context
+		Ctx        *server.Context
+		Dir        string
+		NodeID     string
+		PubKey     cryptotypes.PubKey
+		Moniker    string
+		APIAddress string
+		RPCAddress string
+		P2PAddress string
+		Address    sdk.AccAddress
+		ValAddress sdk.ValAddress
+		RPCClient  tmclient.Client
+
+		tmNode  *node.Node
+		api     *api.Server
+		grpc    *grpc.Server
+		grpcWeb *http.Server
 	}
 )
 
@@ -340,11 +350,9 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		appCfg.API.Swagger = false
 		appCfg.Telemetry.Enabled = false
 
-		viper := viper.New()
-		// Create default cometbft config for each validator
-		cmtCfg := client.GetConfigFromViper(viper)
-
-		cmtCfg.Consensus.TimeoutCommit = cfg.TimeoutCommit
+		ctx := server.NewDefaultContext()
+		tmCfg := ctx.Config
+		tmCfg.Consensus.TimeoutCommit = cfg.TimeoutCommit
 
 		// Only allow the first validator to expose an RPC, API and gRPC
 		// server/client due to CometBFT in-process constraints.
@@ -548,10 +556,8 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		if err != nil {
 			return nil, err
 		}
-		err = srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config", "app.toml"), appCfg)
-		if err != nil {
-			return nil, err
-		}
+
+		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config", "app.toml"), appCfg)
 
 		// Provide ChainID here since we can't modify it in the Comet config.
 		viper.Set(flags.FlagChainID, cfg.ChainID)

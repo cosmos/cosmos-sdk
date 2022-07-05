@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -390,6 +391,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 	telemetry.IncrCounter(1, "query", "count")
 	telemetry.IncrCounter(1, "query", req.Path)
+	defer telemetry.MeasureSince(time.Now(), req.Path)
 
 	// handle gRPC routes first rather than calling splitPath because '/' characters
 	// are used as part of gRPC paths

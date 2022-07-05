@@ -708,7 +708,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 			}
 
 			buf := bufio.NewReader(buf)
-			pass, err := input.GetPassword("Enter keyring passphrase:", buf)
+			pass, err := input.GetPassword("[", maxPassphraseEntryAttempts ,"/", failureCounter ,"]Enter keyring passphrase:", buf)
 			if err != nil {
 				// NOTE: LGTM.io reports a false positive alert that states we are printing the password,
 				// but we only log the error.

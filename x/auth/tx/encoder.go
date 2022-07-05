@@ -39,13 +39,7 @@ func DefaultJSONTxEncoder(cdc codec.Codec) sdk.TxEncoder {
 		if err != nil {
 			return nil, err
 		}
-		// 3) Umarshal the bytes to a "v1" (gogoproto) Tx
-		v1Tx := &sdktx.Tx{}
-		err = gogoproto.Unmarshal(bz, v1Tx)
-		if err != nil {
-			return nil, err
-		}
-		// 4) Marshal the "v1" (gogoproto) to Amino ProtoJSON
-		return cdc.MarshalJSON(v1Tx)
+
+		return nil, fmt.Errorf("expected %T, got %T", &wrapper{}, tx)
 	}
 }

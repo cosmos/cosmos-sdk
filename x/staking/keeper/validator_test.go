@@ -139,7 +139,7 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 	require := s.Require()
 
 	// construct the validators
-	var validators [3]stakingtypes.Validator
+	var validators [3]types.Validator
 	powers := []int64{9, 8, 7}
 	for i, power := range powers {
 		validators[i] = testutil.NewValidator(s.T(), sdk.ValAddress(PKs[i].Address().Bytes()), PKs[i])
@@ -238,13 +238,157 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 	require.ErrorIs(err, stakingtypes.ErrNoValidatorFound)
 }
 
-func (s *KeeperTestSuite) TestUpdateValidatorByPowerIndex() {
-	ctx, keeper := s.ctx, s.stakingKeeper
-	require := s.Require()
+// test how the validators are sorted, tests GetBondedValidatorsByPower
+func TestGetValidatorSortingUnmixed(t *testing.T) {
+	app, ctx, addrs, _ := bootstrapValidatorTest(t, 1000, 20)
 
-	valPubKey := PKs[0]
-	valAddr := sdk.ValAddress(valPubKey.Address().Bytes())
-	valTokens := keeper.TokensFromConsensusPower(ctx, 100)
+	// initialize some validators into the state
+	amts := []sdk.Int{
+		sdk.NewIntFromUint64(0),
+		app.StakingKeeper.PowerReduction(ctx).MulRaw(100),
+		app.StakingKeeper.PowerReduction(ctx),
+		app.StakingKeeper.PowerReduction(ctx).MulRaw(400),
+		app.StakingKeeper.PowerReduction(ctx).MulRaw(200),
+	}
+	n := len(amts)
+	var validators [5]types.Validator
+	for i, amt := range amts {
+		validators[i] = teststaking.NewValidator(t, sdk.ValAddress(addrs[i]), PKs[i])
+		validators[i].Status = types.Bonded
+		validators[i].Tokens = amt
+		validators[i].DelegatorShares = sdk.NewDecFromInt(amt)
+		keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[i], true)
+	}
+
+	// first make sure everything made it in to the gotValidator group
+	resValidators := app.StakingKeeper.GetBondedValidatorsByPower(ctx)
+	assert.Equal(t, n, len(resValidators))
+	assert.Equal(t, sdk.NewInt(400).Mul(app.StakingKeeper.PowerReduction(ctx)), resValidators[0].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, sdk.NewInt(200).Mul(app.StakingKeeper.PowerReduction(ctx)), resValidators[1].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, sdk.NewInt(100).Mul(app.StakingKeeper.PowerReduction(ctx)), resValidators[2].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, sdk.NewInt(1).Mul(app.StakingKeeper.PowerReduction(ctx)), resValidators[3].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, sdk.NewInt(0), resValidators[4].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, validators[3].OperatorAddress, resValidators[0].OperatorAddress, "%v", resValidators)
+	assert.Equal(t, validators[4].OperatorAddress, resValidators[1].OperatorAddress, "%v", resValidators)
+	assert.Equal(t, validators[1].OperatorAddress, resValidators[2].OperatorAddress, "%v", resValidators)
+	assert.Equal(t, validators[2].OperatorAddress, resValidators[3].OperatorAddress, "%v", resValidators)
+	assert.Equal(t, validators[0].OperatorAddress, resValidators[4].OperatorAddress, "%v", resValidators)
+
+	// test a basic increase in voting power
+	validators[3].Tokens = sdk.NewInt(500).Mul(app.StakingKeeper.PowerReduction(ctx))
+	keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
+	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
+	require.Equal(t, len(resValidators), n)
+	assert.True(ValEq(t, validators[3], resValidators[0]))
+
+	// test a decrease in voting power
+	validators[3].Tokens = sdk.NewInt(300).Mul(app.StakingKeeper.PowerReduction(ctx))
+	keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
+	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
+	require.Equal(t, len(resValidators), n)
+	assert.True(ValEq(t, validators[3], resValidators[0]))
+	assert.True(ValEq(t, validators[4], resValidators[1]))
+
+	// test equal voting power, different age
+	validators[3].Tokens = sdk.NewInt(200).Mul(app.StakingKeeper.PowerReduction(ctx))
+	ctx = ctx.WithBlockHeight(10)
+	keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
+	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
+	require.Equal(t, len(resValidators), n)
+	assert.True(ValEq(t, validators[3], resValidators[0]))
+	assert.True(ValEq(t, validators[4], resValidators[1]))
+
+	// no change in voting power - no change in sort
+	ctx = ctx.WithBlockHeight(20)
+	keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[4], true)
+	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
+	require.Equal(t, len(resValidators), n)
+	assert.True(ValEq(t, validators[3], resValidators[0]))
+	assert.True(ValEq(t, validators[4], resValidators[1]))
+
+	// change in voting power of both validators, both still in v-set, no age change
+	validators[3].Tokens = sdk.NewInt(300).Mul(app.StakingKeeper.PowerReduction(ctx))
+	validators[4].Tokens = sdk.NewInt(300).Mul(app.StakingKeeper.PowerReduction(ctx))
+	keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
+	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
+	require.Equal(t, len(resValidators), n)
+	ctx = ctx.WithBlockHeight(30)
+	keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[4], true)
+	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
+	require.Equal(t, len(resValidators), n, "%v", resValidators)
+	assert.True(ValEq(t, validators[3], resValidators[0]))
+	assert.True(ValEq(t, validators[4], resValidators[1]))
+}
+
+func TestGetValidatorSortingMixed(t *testing.T) {
+	app, ctx, addrs, _ := bootstrapValidatorTest(t, 1000, 20)
+	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
+	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
+
+	require.NoError(t, simapp.FundModuleAccount(app.BankKeeper, ctx, bondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), app.StakingKeeper.TokensFromConsensusPower(ctx, 501)))))
+	require.NoError(t, simapp.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), app.StakingKeeper.TokensFromConsensusPower(ctx, 0)))))
+
+	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
+	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
+
+	// now 2 max resValidators
+	params := app.StakingKeeper.GetParams(ctx)
+	params.MaxValidators = 2
+	app.StakingKeeper.SetParams(ctx, params)
+
+	// initialize some validators into the state
+	amts := []sdk.Int{
+		sdk.NewIntFromUint64(0),
+		app.StakingKeeper.PowerReduction(ctx).MulRaw(100),
+		app.StakingKeeper.PowerReduction(ctx),
+		app.StakingKeeper.PowerReduction(ctx).MulRaw(400),
+		app.StakingKeeper.PowerReduction(ctx).MulRaw(200),
+	}
+
+	var validators [5]types.Validator
+	for i, amt := range amts {
+		validators[i] = teststaking.NewValidator(t, sdk.ValAddress(addrs[i]), PKs[i])
+		validators[i].DelegatorShares = sdk.NewDecFromInt(amt)
+		validators[i].Status = types.Bonded
+		validators[i].Tokens = amt
+		keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[i], true)
+	}
+
+	val0, found := app.StakingKeeper.GetValidator(ctx, sdk.ValAddress(addrs[0]))
+	require.True(t, found)
+	val1, found := app.StakingKeeper.GetValidator(ctx, sdk.ValAddress(addrs[1]))
+	require.True(t, found)
+	val2, found := app.StakingKeeper.GetValidator(ctx, sdk.ValAddress(addrs[2]))
+	require.True(t, found)
+	val3, found := app.StakingKeeper.GetValidator(ctx, sdk.ValAddress(addrs[3]))
+	require.True(t, found)
+	val4, found := app.StakingKeeper.GetValidator(ctx, sdk.ValAddress(addrs[4]))
+	require.True(t, found)
+	require.Equal(t, types.Bonded, val0.Status)
+	require.Equal(t, types.Unbonding, val1.Status)
+	require.Equal(t, types.Unbonding, val2.Status)
+	require.Equal(t, types.Bonded, val3.Status)
+	require.Equal(t, types.Bonded, val4.Status)
+
+	// first make sure everything made it in to the gotValidator group
+	resValidators := app.StakingKeeper.GetBondedValidatorsByPower(ctx)
+	// The validators returned should match the max validators
+	assert.Equal(t, 2, len(resValidators))
+	assert.Equal(t, sdk.NewInt(400).Mul(app.StakingKeeper.PowerReduction(ctx)), resValidators[0].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, sdk.NewInt(200).Mul(app.StakingKeeper.PowerReduction(ctx)), resValidators[1].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, validators[3].OperatorAddress, resValidators[0].OperatorAddress, "%v", resValidators)
+	assert.Equal(t, validators[4].OperatorAddress, resValidators[1].OperatorAddress, "%v", resValidators)
+}
+
+// TODO separate out into multiple tests
+func TestGetValidatorsEdgeCases(t *testing.T) {
+	app, ctx, addrs, _ := bootstrapValidatorTest(t, 1000, 20)
+
+	// set max validators to 2
+	params := app.StakingKeeper.GetParams(ctx)
+	nMax := uint32(2)
+	params.MaxValidators = nMax
+	app.StakingKeeper.SetParams(ctx, params)
 
 	// add a validator
 	validator := testutil.NewValidator(s.T(), valAddr, PKs[0])

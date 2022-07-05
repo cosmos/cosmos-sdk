@@ -155,10 +155,17 @@ type Address interface {
 }
 
 // Ensure that different address types implement the interface
+var _ Address = AccAddress{}
+
 var (
-	_ Address = AccAddress{}
 	_ Address = ValAddress{}
 	_ Address = ConsAddress{}
+)
+
+var (
+	_ yaml.Marshaler = AccAddress{}
+	_ yaml.Marshaler = ValAddress{}
+	_ yaml.Marshaler = ConsAddress{}
 )
 
 // ----------------------------------------------------------------------------
@@ -301,15 +308,11 @@ func (aa AccAddress) String() string {
 	}
 
 	key := conv.UnsafeBytesToStr(aa)
-
-	if IsAddrCacheEnabled() {
-		accAddrMu.Lock()
-		defer accAddrMu.Unlock()
-
-		addr, ok := accAddrCache.Get(key)
-		if ok {
-			return addr.(string)
-		}
+	accAddrMu.Lock()
+	defer accAddrMu.Unlock()
+	addr, ok := accAddrCache.Get(key)
+	if ok {
+		return addr.(string)
 	}
 	return cacheBech32Addr(GetConfig().GetBech32AccountAddrPrefix(), aa, accAddrCache, key)
 }
@@ -455,15 +458,11 @@ func (va ValAddress) String() string {
 	}
 
 	key := conv.UnsafeBytesToStr(va)
-
-	if IsAddrCacheEnabled() {
-		valAddrMu.Lock()
-		defer valAddrMu.Unlock()
-
-		addr, ok := valAddrCache.Get(key)
-		if ok {
-			return addr.(string)
-		}
+	valAddrMu.Lock()
+	defer valAddrMu.Unlock()
+	addr, ok := valAddrCache.Get(key)
+	if ok {
+		return addr.(string)
 	}
 	return cacheBech32Addr(GetConfig().GetBech32ValidatorAddrPrefix(), va, valAddrCache, key)
 }
@@ -604,15 +603,11 @@ func (ca ConsAddress) String() string {
 	}
 
 	key := conv.UnsafeBytesToStr(ca)
-
-	if IsAddrCacheEnabled() {
-		consAddrMu.Lock()
-		defer consAddrMu.Unlock()
-
-		addr, ok := consAddrCache.Get(key)
-		if ok {
-			return addr.(string)
-		}
+	consAddrMu.Lock()
+	defer consAddrMu.Unlock()
+	addr, ok := consAddrCache.Get(key)
+	if ok {
+		return addr.(string)
 	}
 	return cacheBech32Addr(GetConfig().GetBech32ConsensusAddrPrefix(), ca, consAddrCache, key)
 }

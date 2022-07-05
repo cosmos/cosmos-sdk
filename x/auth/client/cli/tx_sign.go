@@ -483,8 +483,13 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txFactory tx.Factory, 
 			}
 		}
 
-		err = authclient.SignTxWithSignerAddress(
-			txFactory, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline, overwrite)
+		outputDoc, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
+		if outputDoc == "" {
+			cmd.Printf("%s\n", json)
+			return nil
+		}
+
+		fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 		if err != nil {
 			return err
 		}

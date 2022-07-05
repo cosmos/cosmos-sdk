@@ -14,10 +14,8 @@ const (
 	StoreKey = ModuleName
 )
 
-var (
-	// FeeAllowanceKeyPrefix is the set of the kvstore for fee allowance data
-	// - 0x00<allowance_key_bytes>: allowance
-	FeeAllowanceKeyPrefix = collections.NewPrefix(0)
+// FeeAllowanceKeyPrefix is the set of the kvstore for fee allowance data
+var FeeAllowanceKeyPrefix = []byte{0x00}
 
 // FeeAllowanceKey is the canonical key to store a grant from granter to grantee
 // We store by grantee first to allow searching by everyone who granted to you

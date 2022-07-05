@@ -29,65 +29,16 @@ type setter interface {
 type MigrateTestSuite struct {
 	suite.Suite
 
-	dir     string
-	appName string
-	cdc     codec.Codec
-	priv    cryptotypes.PrivKey
-	pub     cryptotypes.PubKey
-}
-
-func TestMigrateTestSuite(t *testing.T) {
-	suite.Run(t, new(MigrateTestSuite))
-}
-
-func (s *MigrateTestSuite) SetupSuite() {
-	s.dir = s.T().TempDir()
-	s.cdc = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
-	s.appName = "cosmos"
-	s.priv = cryptotypes.PrivKey(secp256k1.GenPrivKey())
-	s.pub = s.priv.PubKey()
-}
-
-func (s *MigrateTestSuite) Test_runListAndShowCmd() {
-	// adding LegacyInfo item into keyring
-	multi := multisig.NewLegacyAminoPubKey(
-		1, []cryptotypes.PubKey{
-			s.pub,
-		},
-	)
-	legacyMultiInfo, err := keyring.NewLegacyMultiInfo(s.appName, multi)
-	s.Require().NoError(err)
-	serializedLegacyMultiInfo := keyring.MarshalInfo(legacyMultiInfo)
-
-	item := design99keyring.Item{
-		Key:         s.appName + ".info",
-		Data:        serializedLegacyMultiInfo,
-		Description: "SDK keyring version",
-	}
-
-	// run test simd keys list - to see that the migrated key is there
-	cmd := ListKeysCmd()
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
-
-	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
-	kb, err := keyring.New(s.appName, keyring.BackendTest, s.dir, mockIn, s.cdc)
-	s.Require().NoError(err)
-
-	setter, ok := kb.(setter)
-	s.Require().True(ok)
-	s.Require().NoError(setter.SetItem(item))
-
-	clientCtx := client.Context{}.
-		WithKeyring(kb).
-		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
-		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
-		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
-
-	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+	cmd := MigrateCommand()
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
+	// mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
+	mockIn, mockOut := testutil.ApplyMockIO(cmd)
 
 	cmd.SetArgs([]string{
-		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, s.dir),
-		fmt.Sprintf("--%s=false", flagListNames),
+		kbHome,
+		// fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=true", flags.FlagDryRun),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 
 	s.Require().NoError(cmd.ExecuteContext(ctx))

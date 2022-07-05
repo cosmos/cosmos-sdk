@@ -138,7 +138,7 @@ func (t *Tx) GetFee() sdk.Coins {
 	return t.AuthInfo.Fee.Amount
 }
 
-func (t *Tx) FeePayer(cdc codec.Codec) []byte {
+func (t *Tx) FeePayer() sdk.AccAddress {
 	feePayer := t.AuthInfo.Fee.Payer
 	if feePayer != "" {
 		return sdk.MustAccAddressFromBech32(feePayer)

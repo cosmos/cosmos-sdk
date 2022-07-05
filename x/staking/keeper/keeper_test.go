@@ -550,54 +550,22 @@ func (s *KeeperTestSuite) TestValidatorQueueMigrationToColls() {
 	s.Require().NoError(err)
 }
 
+func TestParams(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
 func (s *KeeperTestSuite) TestRedelegationQueueMigrationToColls() {
 	s.SetupTest()
 
-	addrs, valAddrs := createValAddrs(101)
-	err := testutil.DiffCollectionsMigration(
-		s.ctx,
-		s.key,
-		100,
-		func(i int64) {
-			date := time.Unix(i, i)
-			dvvTriplets := stakingtypes.DVVTriplets{
-				Triplets: []stakingtypes.DVVTriplet{
-					{
-						DelegatorAddress:    s.addressToString(addrs[i]),
-						ValidatorSrcAddress: s.valAddressToString(valAddrs[i]),
-						ValidatorDstAddress: s.valAddressToString(valAddrs[i+1]),
-					},
-				},
-			}
-			bz, err := s.cdc.Marshal(&dvvTriplets)
-			s.Require().NoError(err)
-			s.ctx.KVStore(s.key).Set(getRedelegationTimeKey(date), bz)
-		},
-		"58722ccde0cacda42aa81d71d7da1123b2c4a8e35d961d55f1507c3f10ffbc96",
-	)
-	s.Require().NoError(err)
+	// check that the empty keeper loads the default
+	resParams := app.StakingKeeper.GetParams(ctx)
+	require.True(t, expParams.Equal(resParams))
 
-	err = testutil.DiffCollectionsMigration(
-		s.ctx,
-		s.key,
-		100,
-		func(i int64) {
-			date := time.Unix(i, i)
-			dvvTriplets := stakingtypes.DVVTriplets{
-				Triplets: []stakingtypes.DVVTriplet{
-					{
-						DelegatorAddress:    s.addressToString(addrs[i]),
-						ValidatorSrcAddress: s.valAddressToString(valAddrs[i]),
-						ValidatorDstAddress: s.valAddressToString(valAddrs[i+1]),
-					},
-				},
-			}
-			err := s.stakingKeeper.SetRedelegationQueueTimeSlice(s.ctx, date, dvvTriplets.Triplets)
-			s.Require().NoError(err)
-		},
-		"58722ccde0cacda42aa81d71d7da1123b2c4a8e35d961d55f1507c3f10ffbc96",
-	)
-	s.Require().NoError(err)
+	// modify a params, save, and retrieve
+	expParams.MaxValidators = 777
+	app.StakingKeeper.SetParams(ctx, expParams)
+	resParams = app.StakingKeeper.GetParams(ctx)
+	require.True(t, expParams.Equal(resParams))
 }
 
 func TestKeeperTestSuite(t *testing.T) {

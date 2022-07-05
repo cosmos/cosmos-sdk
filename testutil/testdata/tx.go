@@ -98,6 +98,14 @@ func (msg *TestMsg) GetSigners() []sdk.AccAddress {
 	return signers
 }
 
+func (msg *TestMsg) GetSigners() []sdk.AccAddress {
+	addrs := make([]sdk.AccAddress, len(msg.Signers))
+	for i, in := range msg.Signers {
+		addr, err := sdk.AccAddressFromBech32(in)
+		if err != nil {
+			panic(err)
+		}
+
 func (msg *TestMsg) ValidateBasic() error {
 	for _, addr := range msg.Signers {
 		if _, err := sdk.AccAddressFromBech32(addr); err != nil {

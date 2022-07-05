@@ -30,7 +30,7 @@ const (
 var Secp256k1 = secp256k1Algo{}
 
 type (
-	DeriveFn   func(mnemonic, bip39Passphrase, hdPath string) ([]byte, error)
+	DeriveFn   func(mnemonic string, bip39Passphrase, hdPath string) ([]byte, error)
 	GenerateFn func(bz []byte) types.PrivKey
 )
 

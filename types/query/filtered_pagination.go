@@ -20,10 +20,9 @@ func FilteredPaginate(
 	pageRequest *PageRequest,
 	onResult func(key, value []byte, accumulate bool) (bool, error),
 ) (*PageResponse, error) {
-	pageRequest = initPageRequestDefaults(pageRequest)
-
-	if pageRequest.Offset > 0 && pageRequest.Key != nil {
-		return nil, errors.New("invalid request, either offset or key is expected, got both")
+	// if the PageRequest is nil, use default PageRequest
+	if pageRequest == nil {
+		pageRequest = &PageRequest{}
 	}
 
 	var (

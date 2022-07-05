@@ -64,9 +64,31 @@ func (k Querier) AllEvidence(ctx context.Context, req *types.QueryAllEvidenceReq
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
+	ctx := sdk.UnwrapSDKContext(c)
 
-	evidences, pageRes, err := query.CollectionPaginate(ctx, k.k.Evidences, req.Pagination, func(_ []byte, value exported.Evidence) (*codectypes.Any, error) {
-		return codectypes.NewAnyWithValue(value)
+	k.GetAllEvidence(ctx)
+
+	var evidence []*codectypes.Any
+	store := ctx.KVStore(k.storeKey)
+	evidenceStore := prefix.NewStore(store, types.KeyPrefixEvidence)
+
+	pageRes, err := query.Paginate(evidenceStore, req.Pagination, func(key []byte, value []byte) error {
+		result, err := k.UnmarshalEvidence(value)
+		if err != nil {
+			return err
+		}
+
+		msg, ok := result.(proto.Message)
+		if !ok {
+			return status.Errorf(codes.Internal, "can't protomarshal %T", msg)
+		}
+
+		evidenceAny, err := codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			return err
+		}
+		evidence = append(evidence, evidenceAny)
+		return nil
 	})
 	if err != nil {
 		return nil, err

@@ -49,7 +49,7 @@ func Test_runListCmd(t *testing.T) {
 		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
 		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
 
-	path := "" //sdk.GetConfig().GetFullBIP44Path()
+	path := "" // sdk.GetConfig().GetFullBIP44Path()
 	_, err = kb.NewAccount("something", testdata.TestMnemonic, "", path, hd.Secp256k1)
 	require.NoError(t, err)
 

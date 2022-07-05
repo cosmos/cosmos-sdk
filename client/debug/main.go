@@ -191,16 +191,8 @@ func PubkeyRawCmd() *cobra.Command {
 			`, version.AppName, version.AppName, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-
-			pubkeyType, err := cmd.Flags().GetString(flagPubkeyType)
-			if err != nil {
-				return err
-			}
-			pubkeyType = strings.ToLower(pubkeyType)
-			if pubkeyType != "secp256k1" && pubkeyType != ed {
-				return errorsmod.Wrapf(errors.ErrInvalidType, "invalid pubkey type, expected oneof ed25519 or secp256k1")
-			}
+			addrString := args[0]
+			var addr []byte
 
 			pk, err := getPubKeyFromRawString(args[0], pubkeyType)
 			if err != nil {
@@ -239,49 +231,8 @@ func PubkeyRawCmd() *cobra.Command {
 				cmd.Println("Bech32 Validator Consensus:", consensusPub)
 			}
 
-			return nil
-		},
-	}
-	cmd.Flags().StringP(flagPubkeyType, "t", ed, "Pubkey type to decode (oneof secp256k1, ed25519)")
-	return cmd
-}
-
-func AddrCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:     "addr <address>",
-		Short:   "Convert an address between hex and bech32",
-		Example: fmt.Sprintf("%s debug addr cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg", version.AppName),
-		Args:    cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-
-			addrString := args[0]
-			// try hex, then bech32
-			var (
-				addr []byte
-				err  error
-			)
-			decodeFns := []func(text string) ([]byte, error){
-				hex.DecodeString,
-				clientCtx.AddressCodec.StringToBytes,
-				clientCtx.ValidatorAddressCodec.StringToBytes,
-				clientCtx.ConsensusAddressCodec.StringToBytes,
-			}
-			errs := make([]any, 0, len(decodeFns))
-			for _, fn := range decodeFns {
-				if addr, err = fn(addrString); err == nil {
-					break
-				}
-				errs = append(errs, err)
-			}
-			if len(errs) == len(decodeFns) {
-				errTags := []string{
-					"hex", "bech32 acc", "bech32 val", "bech32 con",
-				}
-				format := ""
-				for i := range errs {
-					if format != "" {
-						format += ", "
+					if err3 != nil {
+						return fmt.Errorf("expected hex or bech32. Got errors: hex: %v, bech32 acc: %v, bech32 val: %v", err, err2, err3)
 					}
 					format += errTags[i] + ": %w"
 				}

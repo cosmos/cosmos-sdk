@@ -99,14 +99,20 @@ func (k Keeper) Delegation(ctx context.Context, addrDel sdk.AccAddress, addrVal 
 	return k.Delegations.Get(ctx, collections.Join(addrDel, addrVal))
 }
 
-// IterateDelegations iterates through all of the delegations from a delegator
-func (k Keeper) IterateDelegations(ctx context.Context, delAddr sdk.AccAddress,
-	fn func(index int64, del sdk.DelegationI) (stop bool),
-) error {
-	var i int64
-	rng := collections.NewPrefixedPairRange[sdk.AccAddress, sdk.ValAddress](delAddr)
-	return k.Delegations.Walk(ctx, rng, func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], del types.Delegation) (stop bool, err error) {
-		stop = fn(i, del)
+// iterate through all of the delegations from a delegator
+func (k Keeper) IterateDelegations(ctx sdk.Context, delAddr sdk.AccAddress,
+	fn func(index int64, del types.DelegationI) (stop bool),
+) {
+	store := ctx.KVStore(k.storeKey)
+	delegatorPrefixKey := types.GetDelegationsKey(delAddr)
+
+	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
+	defer iterator.Close()
+
+	for i := int64(0); iterator.Valid(); iterator.Next() {
+		del := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
+
+		stop := fn(i, del)
 		if stop {
 			return true, nil
 		}

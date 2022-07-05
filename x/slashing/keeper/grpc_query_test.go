@@ -80,9 +80,9 @@ func (s *KeeperTestSuite) TestGRPCSigningInfos() {
 	require.NoError(err)
 	// verify all values are returned without pagination
 	infoResp, err := queryClient.SigningInfos(gocontext.Background(),
-		&slashingtypes.QuerySigningInfosRequest{Pagination: nil})
-	require.NoError(err)
-	require.Equal(signingInfos, infoResp.Info)
+		&types.QuerySigningInfosRequest{Pagination: nil})
+	suite.NoError(err)
+	suite.Equal(signingInfos, infoResp.Info)
 
 	infoResp, err = queryClient.SigningInfos(gocontext.Background(),
 		&slashingtypes.QuerySigningInfosRequest{Pagination: &query.PageRequest{Limit: 1, CountTotal: true}})

@@ -93,7 +93,7 @@ func DeliverGenTxs(
 	ctx context.Context, genTxs []json.RawMessage,
 	stakingKeeper types.StakingKeeper, deliverTx TxHandler,
 	txEncodingConfig client.TxEncodingConfig,
-) ([]module.ValidatorUpdate, error) {
+) ([]abci.ValidatorUpdate, error) {
 	for _, genTx := range genTxs {
 		tx, err := txEncodingConfig.TxJSONDecoder()(genTx)
 		if err != nil {

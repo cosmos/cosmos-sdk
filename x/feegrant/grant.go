@@ -10,7 +10,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ gogoprotoany.UnpackInterfacesMessage = &Grant{}
+var _ types.UnpackInterfacesMessage = &Grant{}
 
 // NewGrant creates a new FeeAllowanceGrant.
 func NewGrant(granter, grantee string, feeAllowance FeeAllowanceI) (Grant, error) {

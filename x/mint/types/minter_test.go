@@ -28,14 +28,14 @@ func TestNextInflation(t *testing.T) {
 		// 100% bonded, starting at 20% inflation and being reduced
 		// (1 - (1/0.67))*(0.13/8667)
 		{
-			math.LegacyOneDec(), math.LegacyNewDecWithPrec(5, 2),
-			math.LegacyOneDec().Sub(math.LegacyOneDec().Quo(params.GoalBonded)).Mul(params.InflationRateChange).Quo(blocksPerYr),
+			sdk.OneDec(), sdk.NewDecWithPrec(20, 2),
+			sdk.OneDec().Sub(sdk.OneDec().Quo(params.GoalBonded)).Mul(params.InflationRateChange).Quo(blocksPerYr),
 		},
 
 		// 50% bonded, starting at 10% inflation and being increased
 		{
-			math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(2, 2),
-			math.LegacyOneDec().Sub(math.LegacyNewDecWithPrec(5, 1).Quo(params.GoalBonded)).Mul(params.InflationRateChange).Quo(blocksPerYr),
+			sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(10, 2),
+			sdk.OneDec().Sub(sdk.NewDecWithPrec(5, 1).Quo(params.GoalBonded)).Mul(params.InflationRateChange).Quo(blocksPerYr),
 		},
 
 		// test 0% minimum stop (testing with 100% bonded)

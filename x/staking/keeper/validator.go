@@ -124,15 +124,11 @@ func (k Keeper) SetNewValidatorByPowerIndex(ctx context.Context, validator types
 	return store.Set(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx), k.validatorAddressCodec), str)
 }
 
-// AddValidatorTokensAndShares updates the tokens of an existing validator, updates the validators power index key
-func (k Keeper) AddValidatorTokensAndShares(ctx context.Context, validator types.Validator,
-	tokensToAdd math.Int,
-) (valOut types.Validator, addedShares math.LegacyDec, err error) {
-	err = k.DeleteValidatorByPowerIndex(ctx, validator)
-	if err != nil {
-		return valOut, addedShares, err
-	}
-
+// Update the tokens of an existing validator, update the validators power index key
+func (k Keeper) AddValidatorTokensAndShares(ctx sdk.Context, validator types.Validator,
+	tokensToAdd sdk.Int,
+) (valOut types.Validator, addedShares sdk.Dec) {
+	k.DeleteValidatorByPowerIndex(ctx, validator)
 	validator, addedShares = validator.AddTokensFromDel(tokensToAdd)
 	err = k.SetValidator(ctx, validator)
 	if err != nil {
@@ -143,14 +139,11 @@ func (k Keeper) AddValidatorTokensAndShares(ctx context.Context, validator types
 	return validator, addedShares, err
 }
 
-// RemoveValidatorTokensAndShares updates the tokens of an existing validator, updates the validators power index key
-func (k Keeper) RemoveValidatorTokensAndShares(ctx context.Context, validator types.Validator,
-	sharesToRemove math.LegacyDec,
-) (valOut types.Validator, removedTokens math.Int, err error) {
-	err = k.DeleteValidatorByPowerIndex(ctx, validator)
-	if err != nil {
-		return valOut, removedTokens, err
-	}
+// Update the tokens of an existing validator, update the validators power index key
+func (k Keeper) RemoveValidatorTokensAndShares(ctx sdk.Context, validator types.Validator,
+	sharesToRemove sdk.Dec,
+) (valOut types.Validator, removedTokens sdk.Int) {
+	k.DeleteValidatorByPowerIndex(ctx, validator)
 	validator, removedTokens = validator.RemoveDelShares(sharesToRemove)
 	err = k.SetValidator(ctx, validator)
 	if err != nil {
@@ -161,14 +154,11 @@ func (k Keeper) RemoveValidatorTokensAndShares(ctx context.Context, validator ty
 	return validator, removedTokens, err
 }
 
-// RemoveValidatorTokens updates the tokens of an existing validator, updates the validators power index key
-func (k Keeper) RemoveValidatorTokens(ctx context.Context,
-	validator types.Validator, tokensToRemove math.Int,
-) (types.Validator, error) {
-	if err := k.DeleteValidatorByPowerIndex(ctx, validator); err != nil {
-		return validator, err
-	}
-
+// Update the tokens of an existing validator, update the validators power index key
+func (k Keeper) RemoveValidatorTokens(ctx sdk.Context,
+	validator types.Validator, tokensToRemove sdk.Int,
+) types.Validator {
+	k.DeleteValidatorByPowerIndex(ctx, validator)
 	validator = validator.RemoveTokens(tokensToRemove)
 	if err := k.SetValidator(ctx, validator); err != nil {
 		return validator, err
@@ -183,8 +173,8 @@ func (k Keeper) RemoveValidatorTokens(ctx context.Context,
 
 // UpdateValidatorCommission attempts to update a validator's commission rate.
 // An error is returned if the new commission rate is invalid.
-func (k Keeper) UpdateValidatorCommission(ctx context.Context,
-	validator types.Validator, newRate math.LegacyDec,
+func (k Keeper) UpdateValidatorCommission(ctx sdk.Context,
+	validator types.Validator, newRate sdk.Dec,
 ) (types.Commission, error) {
 	commission := validator.Commission
 	blockTime := k.HeaderService.HeaderInfo(ctx).Time

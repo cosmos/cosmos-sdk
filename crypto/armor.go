@@ -161,11 +161,7 @@ func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase, algo string) s
 
 func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) (saltBytes, encBytes []byte) {
 	saltBytes = crypto.CRandBytes(16)
-
-	key := argon2.IDKey([]byte(passphrase), saltBytes, argon2Time, argon2Memory, argon2Threads, chacha20poly1305.KeySize)
-	privKeyBytes := legacy.Cdc.MustMarshal(privKey)
-
-	aead, err := chacha20poly1305.New(key)
+	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
 	if err != nil {
 		panic(errorsmod.Wrap(err, "error generating cypher from key"))
 	}

@@ -24,8 +24,8 @@ const (
 )
 
 var (
-	_ FeeAllowanceI                        = (*AllowedMsgAllowance)(nil)
-	_ gogoprotoany.UnpackInterfacesMessage = (*AllowedMsgAllowance)(nil)
+	_ FeeAllowanceI                 = (*AllowedMsgAllowance)(nil)
+	_ types.UnpackInterfacesMessage = (*AllowedMsgAllowance)(nil)
 )
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces

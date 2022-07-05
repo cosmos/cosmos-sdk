@@ -37,7 +37,8 @@ func TestInitApp(t *testing.T) {
 	appState, err := AppGenState(nil, genutiltypes.AppGenesis{}, nil)
 	require.NoError(t, err)
 
-	req := abci.InitChainRequest{
+	// TODO test validators in the init chain?
+	req := abci.RequestInitChain{
 		AppStateBytes: appState,
 	}
 	res, err := app.InitChain(&req)

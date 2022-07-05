@@ -37,11 +37,14 @@ func ExportGenesisFile(genesis *types.AppGenesis, genFile string) error {
 func ExportGenesisFileWithTime(
 	genFile, chainID string, validators []cmttypes.GenesisValidator, appState json.RawMessage, genTime time.Time,
 ) error {
-	appGenesis := types.NewAppGenesisWithVersion(chainID, appState)
-	appGenesis.GenesisTime = genTime
-	appGenesis.Consensus.Validators = validators
+	genDoc := tmtypes.GenesisDoc{
+		GenesisTime: genTime,
+		ChainID:     chainID,
+		Validators:  validators,
+		AppState:    appState,
+	}
 
-	if err := appGenesis.ValidateAndComplete(); err != nil {
+	if err := genDoc.ValidateAndComplete(); err != nil {
 		return err
 	}
 
@@ -71,13 +74,13 @@ func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic, keyT
 	nodeID = string(nodeKey.ID())
 
 	pvKeyFile := config.PrivValidatorKeyFile()
-	if err := os.MkdirAll(filepath.Dir(pvKeyFile), 0o777); err != nil {
-		return "", nil, fmt.Errorf("could not create directory %q: %w", filepath.Dir(pvKeyFile), err)
+	if err := tmos.EnsureDir(filepath.Dir(pvKeyFile), 0o777); err != nil {
+		return "", nil, err
 	}
 
 	pvStateFile := config.PrivValidatorStateFile()
-	if err := os.MkdirAll(filepath.Dir(pvStateFile), 0o777); err != nil {
-		return "", nil, fmt.Errorf("could not create directory %q: %w", filepath.Dir(pvStateFile), err)
+	if err := tmos.EnsureDir(filepath.Dir(pvStateFile), 0o777); err != nil {
+		return "", nil, err
 	}
 
 	var (

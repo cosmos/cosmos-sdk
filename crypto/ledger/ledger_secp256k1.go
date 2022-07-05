@@ -15,8 +15,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
-// options stores the Ledger Options that can be used to customize Ledger usage
-var options Options
+// discoverLedger defines a function to be invoked at runtime for discovering
+// a connected Ledger device.
+var discoverLedger discoverLedgerFn
 
 type (
 	// discoverLedgerFn defines a Ledger discovery function that returns a
@@ -158,7 +159,9 @@ func (pkl PrivKeyLedgerSecp256k1) SignLedgerAminoJSON(message []byte) ([]byte, e
 }
 
 // ShowAddress triggers a ledger device to show the corresponding address.
-func ShowAddress(path hd.BIP44Params, expectedPubKey types.PubKey, accountAddressPrefix string) error {
+func ShowAddress(path hd.BIP44Params, expectedPubKey types.PubKey,
+	accountAddressPrefix string,
+) error {
 	device, err := getDevice()
 	if err != nil {
 		return err

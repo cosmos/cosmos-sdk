@@ -67,32 +67,25 @@ type Context struct {
 type Request = Context
 
 // Read-only accessors
-func (c Context) Context() context.Context                      { return c.baseCtx }
-func (c Context) MultiStore() storetypes.MultiStore             { return c.ms }
-func (c Context) BlockHeight() int64                            { return c.header.Height }
-func (c Context) BlockTime() time.Time                          { return c.headerInfo.Time } // Deprecated: use HeaderInfo().Time
-func (c Context) ChainID() string                               { return c.chainID }
-func (c Context) TxBytes() []byte                               { return c.txBytes }
-func (c Context) Logger() log.Logger                            { return c.logger }
-func (c Context) VoteInfos() []abci.VoteInfo                    { return c.voteInfo }
-func (c Context) GasMeter() storetypes.GasMeter                 { return c.gasMeter }
-func (c Context) BlockGasMeter() storetypes.GasMeter            { return c.blockGasMeter }
-func (c Context) IsCheckTx() bool                               { return c.checkTx }   // Deprecated: use core/transaction service instead
-func (c Context) IsReCheckTx() bool                             { return c.recheckTx } // Deprecated: use core/transaction service instead
-func (c Context) IsSigverifyTx() bool                           { return c.sigverifyTx }
-func (c Context) ExecMode() ExecMode                            { return c.execMode } // Deprecated: use core/transaction service instead
-func (c Context) MinGasPrices() DecCoins                        { return c.minGasPrice }
-func (c Context) EventManager() EventManagerI                   { return c.eventManager }
-func (c Context) Priority() int64                               { return c.priority }
-func (c Context) KVGasConfig() storetypes.GasConfig             { return c.kvGasConfig }
-func (c Context) TransientKVGasConfig() storetypes.GasConfig    { return c.transientKVGasConfig }
-func (c Context) StreamingManager() storetypes.StreamingManager { return c.streamingManager }
-func (c Context) CometInfo() comet.Info                         { return c.cometInfo }
-func (c Context) HeaderInfo() header.Info                       { return c.headerInfo }
+func (c Context) Context() context.Context    { return c.ctx }
+func (c Context) MultiStore() MultiStore      { return c.ms }
+func (c Context) BlockHeight() int64          { return c.header.Height }
+func (c Context) BlockTime() time.Time        { return c.header.Time }
+func (c Context) ChainID() string             { return c.chainID }
+func (c Context) TxBytes() []byte             { return c.txBytes }
+func (c Context) Logger() log.Logger          { return c.logger }
+func (c Context) VoteInfos() []abci.VoteInfo  { return c.voteInfo }
+func (c Context) GasMeter() GasMeter          { return c.gasMeter }
+func (c Context) BlockGasMeter() GasMeter     { return c.blockGasMeter }
+func (c Context) IsCheckTx() bool             { return c.checkTx }
+func (c Context) IsReCheckTx() bool           { return c.recheckTx }
+func (c Context) MinGasPrices() DecCoins      { return c.minGasPrice }
+func (c Context) EventManager() *EventManager { return c.eventManager }
 
-// BlockHeader returns the header by value.
-func (c Context) BlockHeader() cmtproto.Header {
-	return c.header
+// clone the header before returning
+func (c Context) BlockHeader() tmproto.Header {
+	msg := proto.Clone(&c.header).(*tmproto.Header)
+	return *msg
 }
 
 // HeaderHash returns a copy of the header hash obtained during abci.RequestBeginBlock

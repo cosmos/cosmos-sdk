@@ -86,26 +86,15 @@ func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpend
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	addr, err := k.ak.AddressCodec().StringToBytes(req.Address)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
-	}
-
-	zeroAmt := math.ZeroInt()
-	allLocked := k.LockedCoins(ctx, addr)
-
-	balances, pageRes, err := query.CollectionPaginate(ctx, k.Balances, req.Pagination, func(key collections.Pair[sdk.AccAddress, string], balanceAmt math.Int) (sdk.Coin, error) {
-		denom := key.K2()
-		coin := sdk.NewCoin(denom, zeroAmt)
-		lockedAmt := allLocked.AmountOf(denom)
-		switch {
-		case !lockedAmt.IsPositive():
-			coin.Amount = balanceAmt
-		case lockedAmt.LT(balanceAmt):
-			coin.Amount = balanceAmt.Sub(lockedAmt)
+	pageRes, err := query.Paginate(accountStore, req.Pagination, func(_, value []byte) error {
+		var result sdk.Coin
+		err := k.cdc.Unmarshal(value, &result)
+		if err != nil {
+			return err
 		}
-		return coin, nil
-	}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr))
+		balances = append(balances, result)
+		return nil
+	})
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
 	}

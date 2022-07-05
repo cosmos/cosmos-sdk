@@ -42,12 +42,12 @@ func (h *MockGovHooksReceiver) AfterProposalVote(ctx context.Context, proposalID
 	return nil
 }
 
-func (h *MockGovHooksReceiver) AfterProposalFailedMinDeposit(ctx context.Context, proposalID uint64) error {
+func (h *MockGovHooksReceiver) AfterProposalFailedMinDeposit(ctx sdk.Context, proposalID uint64) {
 	h.AfterProposalFailedMinDepositValid = true
 	return nil
 }
 
-func (h *MockGovHooksReceiver) AfterProposalVotingPeriodEnded(ctx context.Context, proposalID uint64) error {
+func (h *MockGovHooksReceiver) AfterProposalVotingPeriodEnded(ctx sdk.Context, proposalID uint64) {
 	h.AfterProposalVotingPeriodEndedValid = true
 	return nil
 }

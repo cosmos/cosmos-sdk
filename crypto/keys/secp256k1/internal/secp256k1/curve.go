@@ -94,13 +94,13 @@ func (bitCurve *BitCurve) Params() *elliptic.CurveParams {
 func (bitCurve *BitCurve) IsOnCurve(x, y *big.Int) bool {
 	// y² = x³ + b
 	y2 := new(big.Int).Mul(y, y) // y²
-	y2.Mod(y2, bitCurve.P)       // y²%P
+	y2.Mod(y2, BitCurve.P)       // y²%P
 
 	x3 := new(big.Int).Mul(x, x) // x²
 	x3.Mul(x3, x)                // x³
 
-	x3.Add(x3, bitCurve.B) // x³+B
-	x3.Mod(x3, bitCurve.P) // (x³+B)%P
+	x3.Add(x3, BitCurve.B) // x³+B
+	x3.Mod(x3, BitCurve.P) //(x³+B)%P
 
 	return x3.Cmp(y2) == 0
 }
@@ -222,9 +222,9 @@ func (BitCurve *BitCurve) doubleJacobian(x, y, z *big.Int) (*big.Int, *big.Int, 
 	c := new(big.Int).Mul(b, b) // B²
 
 	d := new(big.Int).Add(x, b) // X1+B
-	d.Mul(d, d)                 // (X1+B)²
-	d.Sub(d, a)                 // (X1+B)²-A
-	d.Sub(d, c)                 // (X1+B)²-A-C
+	d.Mul(d, d)                 //(X1+B)²
+	d.Sub(d, a)                 //(X1+B)²-A
+	d.Sub(d, c)                 //(X1+B)²-A-C
 	d.Mul(d, big.NewInt(2))     // 2*((X1+B)²-A-C)
 
 	e := new(big.Int).Mul(big.NewInt(3), a) // 3*A

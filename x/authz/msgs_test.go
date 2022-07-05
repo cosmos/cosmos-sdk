@@ -51,6 +51,7 @@ func TestMsgExecAuthorized(t *testing.T) {
 		}
 	}
 }
+
 func TestMsgRevokeAuthorization(t *testing.T) {
 	tests := []struct {
 		title            string

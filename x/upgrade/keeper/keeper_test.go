@@ -252,33 +252,6 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 	}
 }
 
-func (s *KeeperTestSuite) TestIsSkipHeight() {
-	var skipOne int64 = 9
-	ok := s.upgradeKeeper.IsSkipHeight(11)
-	s.Require().False(ok)
-	skip := map[int64]bool{skipOne: true}
-	storeService := runtime.NewKVStoreService(s.key)
-	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
-	ctrl := gomock.NewController(s.T())
-	upgradeKeeper := keeper.NewKeeper(env, skip, s.encCfg.Codec, s.T().TempDir(), s.baseApp, s.encodedAuthority, upgradetestutil.NewMockConsensusKeeper(ctrl))
-	s.Require().True(upgradeKeeper.IsSkipHeight(9))
-	s.Require().False(upgradeKeeper.IsSkipHeight(10))
-}
-
-func (s *KeeperTestSuite) TestUpgradedConsensusState() {
-	cs := []byte("IBC consensus state")
-	s.Require().NoError(s.upgradeKeeper.SetUpgradedConsensusState(s.ctx, 10, cs))
-	bz, err := s.upgradeKeeper.GetUpgradedConsensusState(s.ctx, 10)
-	s.Require().Equal(cs, bz)
-	s.Require().NoError(err)
-}
-
-func (s *KeeperTestSuite) TestDowngradeVerified() {
-	s.upgradeKeeper.SetDowngradeVerified(true)
-	ok := s.upgradeKeeper.DowngradeVerified()
-	s.Require().True(ok)
-}
-
 // Test that the protocol version successfully increments after an
 // upgrade and is successfully set on BaseApp's appVersion.
 func (s *KeeperTestSuite) TestIncrementProtocolVersion() {

@@ -136,32 +136,17 @@ func (a StakeAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.Acce
 
 	if a.MaxTokens == nil {
 		return authz.AcceptResponse{
-			Accept: true,
-			Delete: false,
-			Updated: &StakeAuthorization{
-				Validators:        a.GetValidators(),
-				AuthorizationType: a.GetAuthorizationType(),
-			},
+			Accept: true, Delete: false,
+			Updated: &StakeAuthorization{Validators: a.GetValidators(), AuthorizationType: a.GetAuthorizationType()},
 		}, nil
-	}
-
-	limitLeft, err := a.MaxTokens.SafeSub(amount)
-	if err != nil {
-		return authz.AcceptResponse{}, err
 	}
 
 	if limitLeft.IsZero() {
 		return authz.AcceptResponse{Accept: true, Delete: true}, nil
 	}
-
 	return authz.AcceptResponse{
-		Accept: true,
-		Delete: false,
-		Updated: &StakeAuthorization{
-			Validators:        a.GetValidators(),
-			AuthorizationType: a.GetAuthorizationType(),
-			MaxTokens:         &limitLeft,
-		},
+		Accept: true, Delete: false,
+		Updated: &StakeAuthorization{Validators: a.GetValidators(), AuthorizationType: a.GetAuthorizationType(), MaxTokens: &limitLeft},
 	}, nil
 }
 

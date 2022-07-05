@@ -4,9 +4,7 @@ import (
 	"cosmossdk.io/core/registry"
 	coretransaction "cosmossdk.io/core/transaction"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	"github.com/cosmos/cosmos-sdk/types/msgservice"
-)
+var amino = codec.NewLegacyAmino()
 
 // RegisterLegacyAminoCodec registers concrete types on the LegacyAmino codec
 func RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {

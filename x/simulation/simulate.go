@@ -37,7 +37,6 @@ func initChain(
 	config simulation.Config,
 	cdc codec.JSONCodec,
 ) (mockValidators, time.Time, []simulation.Account, string) {
-
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
 	consensusParams := randomConsensusParams(r, appState, cdc)
 	req := abci.RequestInitChain{
@@ -286,10 +285,9 @@ type blockSimFn func(
 // parameters being passed every time, to minimize memory overhead.
 func createBlockSimulator(tb testing.TB, printProgress bool, w io.Writer, params Params,
 	event func(route, op, evResult string), ops WeightedOperations,
-	operationQueue OperationQueue, timeOperationQueue *[]simtypes.FutureOperation,
-	logWriter LogWriter, config simtypes.Config,
+	operationQueue OperationQueue, timeOperationQueue []simulation.FutureOperation,
+	logWriter LogWriter, config simulation.Config,
 ) blockSimFn {
-	tb.Helper()
 	lastBlockSizeState := 0 // state for [4 * uniform distribution]
 	blocksize := 0
 	selectOp := ops.getSelectOpFn()
@@ -352,12 +350,12 @@ Comment: %s`,
 	}
 }
 
-func runQueuedOperations(tb testing.TB, queueOps map[int][]simtypes.Operation,
-	blockTime time.Time, height int, r *rand.Rand, app *baseapp.BaseApp,
-	ctx sdk.Context, accounts []simtypes.Account, logWriter LogWriter,
+// nolint: errcheck
+func runQueuedOperations(queueOps map[int][]simulation.Operation,
+	height int, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp,
+	ctx sdk.Context, accounts []simulation.Account, logWriter LogWriter,
 	event func(route, op, evResult string), lean bool, chainID string,
-) (numOpsRan int, allFutureOps []simtypes.FutureOperation) {
-	tb.Helper()
+) (numOpsRan int) {
 	queuedOp, ok := queueOps[height]
 	if !ok {
 		return 0, nil
@@ -394,9 +392,7 @@ func runQueuedTimeOperations(tb testing.TB, queueOps *[]simtypes.FutureOperation
 	app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account,
 	logWriter LogWriter, event func(route, op, evResult string),
 	lean bool, chainID string,
-) (numOpsRan int, allFutureOps []simtypes.FutureOperation) {
-	tb.Helper()
-	// Keep all future operations
+) (numOpsRan int) {
 	numOpsRan = 0
 	for len(*queueOps) > 0 && currentTime.After((*queueOps)[0].BlockTime) {
 		if qOp := (*queueOps)[0]; qOp.Op != nil {

@@ -476,6 +476,21 @@ func (v Validator) ConsPubKey() (cryptotypes.PubKey, error) {
 	return pk, nil
 }
 
+// TmConsPublicKey casts Validator.ConsensusPubkey to tmprotocrypto.PubKey.
+func (v Validator) TmConsPublicKey() (tmprotocrypto.PublicKey, error) {
+	pk, err := v.ConsPubKey()
+	if err != nil {
+		return tmprotocrypto.PublicKey{}, err
+	}
+
+	tmPk, err := cryptocodec.ToTmProtoPublicKey(pk)
+	if err != nil {
+		return tmprotocrypto.PublicKey{}, err
+	}
+
+	return tmPk, nil
+}
+
 // GetConsAddr extracts Consensus key address
 func (v Validator) GetConsAddr() ([]byte, error) {
 	pk, ok := v.ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)

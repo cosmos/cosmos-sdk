@@ -38,13 +38,19 @@ func (k Keeper) JailUntil(ctx context.Context, consAddr sdk.ConsAddress, jailTim
 	return k.ValidatorSigningInfo.Set(ctx, consAddr, signInfo)
 }
 
-// Tombstone attempts to tombstone a validator.
-func (k Keeper) Tombstone(ctx context.Context, consAddr sdk.ConsAddress) error {
-	signInfo, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
-	if err != nil {
-		addr, err := k.sk.ConsensusAddressCodec().BytesToString(consAddr)
-		if err != nil {
-			return types.ErrNoSigningInfoFound.Wrapf("could not convert consensus address to string. Error: %s", err.Error())
+// IterateValidatorSigningInfos iterates over the stored ValidatorSigningInfo
+func (k Keeper) IterateValidatorSigningInfos(ctx sdk.Context,
+	handler func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool),
+) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.ValidatorSigningInfoKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		address := types.ValidatorSigningInfoAddress(iter.Key())
+		var info types.ValidatorSigningInfo
+		k.cdc.MustUnmarshal(iter.Value(), &info)
+		if handler(address, info) {
+			break
 		}
 		return types.ErrNoSigningInfoFound.Wrap(fmt.Sprintf("cannot tombstone validator with consensus address %s that does not have any signing information", addr))
 	}
@@ -67,12 +73,25 @@ func (k Keeper) IsTombstoned(ctx context.Context, consAddr sdk.ConsAddress) bool
 	return signInfo.Tombstoned
 }
 
-// getMissedBlockBitmapChunk gets the bitmap chunk at the given chunk index for
-// a validator's missed block signing window.
-func (k Keeper) getMissedBlockBitmapChunk(ctx context.Context, addr sdk.ConsAddress, chunkIndex int64) ([]byte, error) {
-	chunk, err := k.ValidatorMissedBlockBitmap.Get(ctx, collections.Join(addr.Bytes(), uint64(chunkIndex)))
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
-		return nil, err
+// IterateValidatorMissedBlockBitArray iterates over the signed blocks window
+// and performs a callback function
+func (k Keeper) IterateValidatorMissedBlockBitArray(ctx sdk.Context,
+	address sdk.ConsAddress, handler func(index int64, missed bool) (stop bool),
+) {
+	store := ctx.KVStore(k.storeKey)
+	index := int64(0)
+	// Array may be sparse
+	for ; index < k.SignedBlocksWindow(ctx); index++ {
+		var missed gogotypes.BoolValue
+		bz := store.Get(types.ValidatorMissedBlockBitArrayKey(address, index))
+		if bz == nil {
+			continue
+		}
+
+		k.cdc.MustUnmarshal(bz, &missed)
+		if handler(index, missed.Value) {
+			break
+		}
 	}
 	return chunk, nil
 }

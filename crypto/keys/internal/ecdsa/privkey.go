@@ -29,7 +29,6 @@ func IsSNormalized(sigS *big.Int) bool {
 // NormalizeS will invert the s value if not already in the lower half
 // of curve order value
 func NormalizeS(sigS *big.Int) *big.Int {
-
 	if IsSNormalized(sigS) {
 		return sigS
 	}
@@ -41,7 +40,6 @@ func NormalizeS(sigS *big.Int) *big.Int {
 // R, S are padded to 32 bytes respectively.
 // code roughly copied from secp256k1_nocgo.go
 func signatureRaw(r *big.Int, s *big.Int) []byte {
-
 	rBytes := r.Bytes()
 	sBytes := s.Bytes()
 	sigBytes := make([]byte, 64)
@@ -90,10 +88,8 @@ func (sk *PrivKey) Bytes() []byte {
 // It then raw encodes the signature as two fixed width 32-byte values
 // concatenated, reusing the code copied from secp256k1_nocgo.go
 func (sk *PrivKey) Sign(msg []byte) ([]byte, error) {
-
 	digest := sha256.Sum256(msg)
 	r, s, err := ecdsa.Sign(rand.Reader, &sk.PrivateKey, digest[:])
-
 	if err != nil {
 		return nil, err
 	}

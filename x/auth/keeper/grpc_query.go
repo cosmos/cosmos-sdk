@@ -28,12 +28,9 @@ func (ak accountKeeper) Accounts(c context.Context, req *types.QueryAccountsRequ
 
 	accID := req.AccountId
 
-	address, err := s.k.Accounts.Indexes.Number.MatchExact(ctx, accID)
-	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "account address not found with account number %d", accID)
-	}
-
-	addr, err := s.k.addressCodec.BytesToString(address)
+		accounts = append(accounts, any)
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +65,8 @@ func (ak accountKeeper) Account(c context.Context, req *types.QueryAccountReques
 		return nil, status.Error(codes.InvalidArgument, "Address cannot be empty")
 	}
 
-	addr, err := s.k.addressCodec.StringToBytes(req.Address)
+	ctx := sdk.UnwrapSDKContext(c)
+	addr, err := sdk.AccAddressFromBech32(req.Address)
 	if err != nil {
 		return nil, err
 	}

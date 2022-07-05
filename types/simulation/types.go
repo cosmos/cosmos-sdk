@@ -112,7 +112,10 @@ func NewOperationMsg(msg sdk.Msg, ok bool, comment string) OperationMsg {
 	if moduleName == "" {
 		moduleName = msgType
 	}
-	return NewOperationMsgBasic(moduleName, msgType, comment, ok)
+
+	bz := cdc.MustMarshalJSON(msg)
+
+	return NewOperationMsgBasic(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), comment, ok, bz)
 }
 
 // NoOpMsg - create a no-operation message

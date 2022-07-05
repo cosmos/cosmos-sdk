@@ -34,7 +34,10 @@ type ProtoCodec struct {
 	interfaceRegistry types.InterfaceRegistry
 }
 
-var _ Codec = (*ProtoCodec)(nil)
+var (
+	_ Codec               = &ProtoCodec{}
+	_ ProtoCodecMarshaler = &ProtoCodec{}
+)
 
 // NewProtoCodec returns a reference to a new ProtoCodec
 func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {

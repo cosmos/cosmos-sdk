@@ -126,10 +126,10 @@ func testMarshaling(t *testing.T, cdc interface {
 		m1 := mustMarshaler{cdc.Marshal, cdc.MustMarshal, cdc.Unmarshal, cdc.MustUnmarshal}
 		m2 := mustMarshaler{cdc.MarshalLengthPrefixed, cdc.MustMarshalLengthPrefixed, cdc.UnmarshalLengthPrefixed, cdc.MustUnmarshalLengthPrefixed}
 		m3 := mustMarshaler{
-			func(i proto.Message) ([]byte, error) { return cdc.MarshalJSON(i) },
-			func(i proto.Message) []byte { return cdc.MustMarshalJSON(i) },
-			func(bz []byte, ptr proto.Message) error { return cdc.UnmarshalJSON(bz, ptr) },
-			func(bz []byte, ptr proto.Message) { cdc.MustUnmarshalJSON(bz, ptr) },
+			func(i codec.ProtoMarshaler) ([]byte, error) { return cdc.MarshalJSON(i) },
+			func(i codec.ProtoMarshaler) []byte { return cdc.MustMarshalJSON(i) },
+			func(bz []byte, ptr codec.ProtoMarshaler) error { return cdc.UnmarshalJSON(bz, ptr) },
+			func(bz []byte, ptr codec.ProtoMarshaler) { cdc.MustUnmarshalJSON(bz, ptr) },
 		}
 
 		t.Run(tc.name+"_BinaryBare",

@@ -20,10 +20,9 @@ import (
 )
 
 func TestInMemoryCreateLedger(t *testing.T) {
-	cdc := getCodec()
-	kb := NewInMemory(cdc)
+	kb := NewInMemory()
 
-	k, err := kb.SaveLedgerKey("some_account", hd.Secp256k1, "cosmos", 118, 3, 1)
+	ledger, err := kb.SaveLedgerKey("some_account", hd.Secp256k1, "cosmos", 118, 3, 1)
 	if err != nil {
 		require.Error(t, err)
 		require.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())

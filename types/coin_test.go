@@ -876,7 +876,7 @@ func (s *coinTestSuite) TestCoins_Validate() {
 			false,
 		},
 		{
-			"duplicate denomination (1)",
+			"duplicate denomination",
 			sdk.Coins{
 				{"gas", math.OneInt()},
 				{"gas", math.OneInt()},
@@ -929,8 +929,13 @@ func (s *coinTestSuite) TestMinMax() {
 		{"zero-one", sdk.Coins{}, sdk.Coins{{testDenom1, one}}, sdk.Coins{}, sdk.Coins{{testDenom1, one}}},
 		{"two-zero", sdk.Coins{{testDenom2, two}}, sdk.Coins{}, sdk.Coins{}, sdk.Coins{{testDenom2, two}}},
 		{"disjoint", sdk.Coins{{testDenom1, one}}, sdk.Coins{{testDenom2, two}}, sdk.Coins{}, sdk.Coins{{testDenom1, one}, {testDenom2, two}}},
-		{"overlap", sdk.Coins{{testDenom1, one}, {testDenom2, two}}, sdk.Coins{{testDenom1, two}, {testDenom2, one}},
-			sdk.Coins{{testDenom1, one}, {testDenom2, one}}, sdk.Coins{{testDenom1, two}, {testDenom2, two}}},
+		{
+			"overlap",
+			sdk.Coins{{testDenom1, one}, {testDenom2, two}},
+			sdk.Coins{{testDenom1, two}, {testDenom2, one}},
+			sdk.Coins{{testDenom1, one}, {testDenom2, one}},
+			sdk.Coins{{testDenom1, two}, {testDenom2, two}},
+		},
 	}
 
 	for _, tc := range cases {
@@ -1334,7 +1339,6 @@ func (s *coinTestSuite) TestCoinsIsAnyNil() {
 	s.Require().True(sdk.Coins{twoAtom, nilAtom, fiveAtom, threeEth}.IsAnyNil())
 	s.Require().True(sdk.Coins{nilAtom, twoAtom, fiveAtom, threeEth}.IsAnyNil())
 	s.Require().False(sdk.Coins{twoAtom, fiveAtom, threeEth}.IsAnyNil())
-
 }
 
 func (s *coinTestSuite) TestMarshalJSONCoins() {

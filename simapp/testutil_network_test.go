@@ -1,4 +1,7 @@
-package simapp_test
+//go:build norace
+// +build norace
+
+package network_test
 
 import (
 	"testing"

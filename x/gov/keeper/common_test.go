@@ -32,21 +32,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-var (
-	_, _, addr   = testdata.KeyTestPubAddr()
-	govAcct      = authtypes.NewModuleAddress(types.ModuleName)
-	poolAcct     = authtypes.NewModuleAddress(protocolModuleName)
-	govAcctStr   = "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
-	TestProposal = getTestProposal()
-)
-
-// mintModuleName duplicates the mint module's name to avoid a cyclic dependency with x/mint.
-// It should be synced with the mint module's name if it is ever changed.
-// See: https://github.com/cosmos/cosmos-sdk/blob/0e34478eb7420b69869ed50f129fc274a97a9b06/x/mint/types/keys.go#L13
-const (
-	mintModuleName     = "mint"
-	protocolModuleName = "protocolpool"
-)
+var TestProposal = types.NewTextProposal("Test", "description")
 
 // getTestProposal creates and returns a test proposal message.
 func getTestProposal() []sdk.Msg {

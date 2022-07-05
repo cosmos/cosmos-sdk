@@ -30,8 +30,10 @@ type IntegrationTestSuite struct {
 	grantee sdk.AccAddress
 }
 
-var typeMsgSend = banktypes.SendAuthorization{}.MsgTypeURL()
-var typeMsgVote = sdk.MsgTypeURL(&govtypes.MsgVote{})
+var (
+	typeMsgSend = banktypes.SendAuthorization{}.MsgTypeURL()
+	typeMsgVote = sdk.MsgTypeURL(&govtypes.MsgVote{})
+)
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
@@ -229,7 +231,6 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 				s.Require().NoError(err)
 				tc.postRun(&authorizations)
 			}
-
 		})
 	}
 }
@@ -282,7 +283,6 @@ func (s *IntegrationTestSuite) TestQueryGranterGrantsGRPC() {
 				// FIXME: https://github.com/cosmos/cosmos-sdk/issues/10965
 				require.Len(authorizations.Grants, tc.numItems)
 			}
-
 		})
 	}
 }
@@ -335,7 +335,6 @@ func (s *IntegrationTestSuite) TestQueryGranteeGrantsGRPC() {
 				// FIXME: https://github.com/cosmos/cosmos-sdk/issues/10965
 				require.Len(authorizations.Grants, tc.numItems)
 			}
-
 		})
 	}
 }

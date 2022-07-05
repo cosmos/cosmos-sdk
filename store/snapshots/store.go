@@ -270,14 +270,18 @@ func (s *Store) Save(
 	snapshotHasher := sha256.New()
 	chunkHasher := sha256.New()
 	for chunkBody := range chunks {
-		// Only create the snapshot directory on encountering the first chunk.
-		// If the directory disappears during chunk saving,
-		// the whole operation will fail anyway.
-		if !dirCreated {
-			dir := s.pathSnapshot(height, format)
-			if err := os.MkdirAll(dir, 0o755); err != nil {
-				return nil, errors.Wrapf(err, "failed to create snapshot directory %q", dir)
-			}
+		defer chunkBody.Close() // nolint: staticcheck
+		dir := s.pathSnapshot(height, format)
+		err = os.MkdirAll(dir, 0o755)
+		if err != nil {
+			return nil, sdkerrors.Wrapf(err, "failed to create snapshot directory %q", dir)
+		}
+		path := s.pathChunk(height, format, index)
+		file, err := os.Create(path)
+		if err != nil {
+			return nil, sdkerrors.Wrapf(err, "failed to create snapshot chunk file %q", path)
+		}
+		defer file.Close() // nolint: staticcheck
 
 			dirCreated = true
 		}

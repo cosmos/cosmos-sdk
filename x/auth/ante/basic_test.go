@@ -179,8 +179,8 @@ func TestConsumeGasForTxSize(t *testing.T) {
 			consumedSimGas := suite.ctx.GasMeter().GasConsumed() - beforeSimGas
 
 			// require that antehandler passes and does not underestimate decorator cost
-			require.Nil(t, err, "ConsumeTxSizeGasDecorator returned error: %v", err)
-			require.True(t, consumedSimGas >= expectedGas, "Simulate mode underestimates gas on AnteDecorator. Simulated cost: %d, expected cost: %d", consumedSimGas, expectedGas)
+			suite.Require().Nil(err, "ConsumeTxSizeGasDecorator returned error: %v", err)
+			suite.Require().True(consumedSimGas >= expectedGas, "Simulate mode underestimates gas on AnteDecorator. Simulated cost: %d, expected cost: %d", consumedSimGas, expectedGas)
 		})
 	}
 }

@@ -40,15 +40,11 @@ func NewKeeper(
 	cdc codec.BinaryCodec, env appmodule.Environment, stakingKeeper types.StakingKeeper,
 	slashingKeeper types.SlashingKeeper, ck types.ConsensusKeeper, ac address.Codec,
 ) *Keeper {
-	sb := collections.NewSchemaBuilder(env.KVStoreService)
-	k := &Keeper{
-		Environment:     env,
-		cdc:             cdc,
-		stakingKeeper:   stakingKeeper,
-		slashingKeeper:  slashingKeeper,
-		consensusKeeper: ck,
-		addressCodec:    ac,
-		Evidences:       collections.NewMap(sb, types.KeyPrefixEvidence, "evidences", collections.BytesKey, codec.CollInterfaceValue[exported.Evidence](cdc)),
+	return &Keeper{
+		cdc:            cdc,
+		storeKey:       storeKey,
+		stakingKeeper:  stakingKeeper,
+		slashingKeeper: slashingKeeper,
 	}
 	schema, err := sb.Build()
 	if err != nil {

@@ -176,43 +176,7 @@ Example:
 	return cmd
 }
 
-// testnetStartCmd returns a cmd to start multi validator in-process testnet
-func testnetStartCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "start",
-		Short: "Launch an in-process multi-validator testnet",
-		Long: fmt.Sprintf(`testnet will launch an in-process multi-validator testnet,
-and generate a directory for each validator populated with necessary
-configuration files (private validator, genesis, config, etc.).
-
-Example:
-	%s testnet --validator-count4 --output-dir ./.testnets
-	`, version.AppName),
-		RunE: func(cmd *cobra.Command, _ []string) (err error) {
-			args := startArgs{}
-			args.outputDir, _ = cmd.Flags().GetString(flagOutputDir)
-			args.chainID, _ = cmd.Flags().GetString(flags.FlagChainID)
-			args.minGasPrices, _ = cmd.Flags().GetString(server.FlagMinGasPrices)
-			args.numValidators, _ = cmd.Flags().GetInt(flagNumValidators)
-			args.algo, _ = cmd.Flags().GetString(flags.FlagKeyType)
-			args.enableLogging, _ = cmd.Flags().GetBool(flagEnableLogging)
-			args.rpcAddress, _ = cmd.Flags().GetString(flagRPCAddress)
-			args.apiAddress, _ = cmd.Flags().GetString(flagAPIAddress)
-			args.grpcAddress, _ = cmd.Flags().GetString(flagGRPCAddress)
-			args.printMnemonic, _ = cmd.Flags().GetBool(flagPrintMnemonic)
-
-			return startTestnet(cmd, args)
-		},
-	}
-
-	addTestnetFlagsToCmd(cmd)
-	cmd.Flags().Bool(flagEnableLogging, false, "Enable INFO logging of CometBFT validator nodes")
-	cmd.Flags().String(flagRPCAddress, "tcp://127.0.0.1:26657", "the RPC address to listen on")
-	cmd.Flags().String(flagAPIAddress, "tcp://127.0.0.1:1317", "the address to listen on for REST API")
-	cmd.Flags().String(flagGRPCAddress, "127.0.0.1:9090", "the gRPC server address to listen on")
-	cmd.Flags().Bool(flagPrintMnemonic, true, "print mnemonic of first validator to stdout for manual testing")
-	return cmd
-}
+const nodeDirPerm = 0o755
 
 const nodeDirPerm = 0o755
 
@@ -224,8 +188,8 @@ func initTestnetFiles(
 	mm *module.Manager,
 	args initArgs,
 ) error {
-	if args.chainID == "" {
-		args.chainID = "chain-" + unsafe.Str(6)
+	if chainID == "" {
+		chainID = "chain-" + tmrand.NewRand().Str(6)
 	}
 	nodeIDs := make([]string, args.numValidators)
 	valPubKeys := make([]cryptotypes.PubKey, args.numValidators)
@@ -421,7 +385,7 @@ func initGenFiles(
 	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
 	genFiles []string, numValidators int,
 ) error {
-	appGenState := mm.DefaultGenesis()
+	appGenState := mbm.DefaultGenesis(clientCtx.Codec)
 
 	// set the accounts in the genesis state
 	var authGenState authtypes.GenesisState
@@ -544,50 +508,13 @@ func calculateIP(ip string, i int) (string, error) {
 func writeFile(name, dir string, contents []byte) error {
 	file := filepath.Join(dir, name)
 
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return fmt.Errorf("could not create directory %q: %w", dir, err)
-	}
-
-	return os.WriteFile(file, contents, 0o600)
-}
-
-// startTestnet starts an in-process testnet
-func startTestnet(cmd *cobra.Command, args startArgs) error {
-	networkConfig := network.DefaultConfig(simapp.NewTestNetworkFixture)
-
-	// Default networkConfig.ChainID is random, and we should only override it if chainID provided
-	// is non-empty
-	if args.chainID != "" {
-		networkConfig.ChainID = args.chainID
-	}
-	networkConfig.SigningAlgo = args.algo
-	networkConfig.MinGasPrices = args.minGasPrices
-	networkConfig.NumValidators = args.numValidators
-	networkConfig.EnableLogging = args.enableLogging
-	networkConfig.RPCAddress = args.rpcAddress
-	networkConfig.APIAddress = args.apiAddress
-	networkConfig.GRPCAddress = args.grpcAddress
-	networkConfig.PrintMnemonic = args.printMnemonic
-	networkConfig.TimeoutCommit = args.timeoutCommit
-	networkLogger := network.NewCLILogger(cmd)
-
-	baseDir := fmt.Sprintf("%s/%s", args.outputDir, networkConfig.ChainID)
-	if _, err := os.Stat(baseDir); !os.IsNotExist(err) {
-		return fmt.Errorf(
-			"testnests directory already exists for chain-id '%s': %s, please remove or select a new --chain-id",
-			networkConfig.ChainID, baseDir)
-	}
-
-	testnet, err := network.New(networkLogger, baseDir, networkConfig)
+	err := tmos.EnsureDir(writePath, 0o755)
 	if err != nil {
 		return err
 	}
 
-	if _, err := testnet.WaitForHeight(1); err != nil {
-		return err
-	}
-	cmd.Println("press the Enter Key to terminate")
-	if _, err := fmt.Scanln(); err != nil { // wait for Enter Key
+	err = tmos.WriteFile(file, contents, 0o644)
+	if err != nil {
 		return err
 	}
 	testnet.Cleanup()

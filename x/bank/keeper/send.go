@@ -76,10 +76,6 @@ func NewBaseSendKeeper(
 	blockedAddrs map[string]bool,
 	authority string,
 ) BaseSendKeeper {
-	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
-		panic(fmt.Errorf("invalid bank authority address: %w", err))
-	}
-
 	return BaseSendKeeper{
 		Environment:     env,
 		BaseViewKeeper:  NewBaseViewKeeper(env, cdc, ak),

@@ -784,7 +784,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 				continue
 			}
 
-			if err := os.WriteFile(keyhashFilePath, passwordHash, 0o600); err != nil {
+			if err := ioutil.WriteFile(dir+"/keyhash", passwordHash, 0o555); err != nil {
 				return "", err
 			}
 

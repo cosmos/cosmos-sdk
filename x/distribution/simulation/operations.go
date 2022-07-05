@@ -158,7 +158,6 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-
 		validator, ok := stakingkeeper.RandomValidator(r, sk, ctx)
 		if !ok {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdrawValidatorCommission, "random validator is not ok"), nil, nil
@@ -204,7 +203,6 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-
 		funder, _ := simtypes.RandomAcc(r, accs)
 
 		account := ak.GetAccount(ctx, funder.Address)

@@ -47,16 +47,7 @@ type (
 	StoreLoader func(ms storetypes.CommitMultiStore) error
 )
 
-const (
-	execModeCheck               execMode = iota // Check a transaction
-	execModeReCheck                             // Recheck a (pending) transaction after a commit
-	execModeSimulate                            // Simulate a transaction
-	execModePrepareProposal                     // Prepare a block proposal
-	execModeProcessProposal                     // Process a block proposal
-	execModeVoteExtension                       // Extend or verify a pre-commit vote
-	execModeVerifyVoteExtension                 // Verify a vote extension
-	execModeFinalize                            // Finalize a block proposal
-)
+var _ abci.Application = (*BaseApp)(nil)
 
 var _ servertypes.ABCI = (*BaseApp)(nil)
 

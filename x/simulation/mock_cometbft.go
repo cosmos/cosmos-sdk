@@ -86,7 +86,6 @@ func updateValidators(
 	updates []abci.ValidatorUpdate,
 	event func(route, op, evResult string),
 ) map[string]mockValidator {
-	tb.Helper()
 	for _, update := range updates {
 		str := fmt.Sprintf("%X", update.PubKeyBytes)
 
@@ -121,11 +120,8 @@ func RandomRequestFinalizeBlock(
 	validators mockValidators,
 	pastTimes []time.Time,
 	pastVoteInfos [][]abci.VoteInfo,
-	event func(route, op, evResult string),
-	blockHeight int64,
-	time time.Time,
-	proposer []byte,
-) *abci.FinalizeBlockRequest {
+	event func(route, op, evResult string), header tmproto.Header,
+) abci.RequestBeginBlock {
 	if len(validators) == 0 {
 		return &abci.FinalizeBlockRequest{
 			Height:          blockHeight,

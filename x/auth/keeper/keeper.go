@@ -136,6 +136,11 @@ func NewAccountKeeper(
 	env appmodule.Environment, cdc codec.BinaryCodec, proto func() sdk.AccountI, accountsModKeeper types.AccountsModKeeper,
 	maccPerms map[string][]string, ac address.Codec, bech32Prefix, authority string,
 ) AccountKeeper {
+	// set KeyTable if it has not already been set
+	if !paramstore.HasKeyTable() {
+		paramstore = paramstore.WithKeyTable(types.ParamKeyTable())
+	}
+
 	permAddrs := make(map[string]types.PermissionsForAddress)
 	for name, perms := range maccPerms {
 		permAddrs[name] = types.NewPermissionsForAddress(name, perms)

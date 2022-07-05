@@ -59,22 +59,12 @@ func NewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, ak feegrant.Acc
 }
 
 // GrantAllowance creates a new grant
-func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
-	// Checking for duplicate entry
-	if f, _ := k.GetAllowance(ctx, granter, grantee); f != nil {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "fee allowance already exists")
-	}
-
-	exp, err := feeAllowance.ExpiresAt()
-	if err != nil {
-		return err
-	}
-
-	// expiration shouldn't be in the past.
-
-	now := k.HeaderService.HeaderInfo(ctx).Time
-	if exp != nil && exp.Before(now) {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "expiration is before current block time")
+func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
+	// create the account if it is not in account state
+	granteeAcc := k.authKeeper.GetAccount(ctx, grantee)
+	if granteeAcc == nil {
+		granteeAcc = k.authKeeper.NewAccountWithAddress(ctx, grantee)
+		k.authKeeper.SetAccount(ctx, granteeAcc)
 	}
 
 	// if expiry is not nil, add the new key to pruning queue.

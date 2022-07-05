@@ -184,3 +184,23 @@ func TestBatchScanner_Scan(t *testing.T) {
 		})
 	}
 }
+
+func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder) {
+	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
+	tx := legacytx.NewStdTx(msgs, legacytx.StdFee{}, []legacytx.StdSignature{}, "")
+
+	defaultEncoderBytes, err := expected(tx)
+	require.NoError(t, err)
+	encoderBytes, err := actual(tx)
+	require.NoError(t, err)
+	require.Equal(t, defaultEncoderBytes, encoderBytes)
+}
+
+func makeCodec() *codec.LegacyAmino {
+	cdc := codec.NewLegacyAmino()
+	sdk.RegisterLegacyAminoCodec(cdc)
+	cryptocodec.RegisterCrypto(cdc)
+	authtypes.RegisterLegacyAminoCodec(cdc)
+	cdc.RegisterConcrete(testdata.TestMsg{}, "cosmos-sdk/Test", nil)
+	return cdc
+}

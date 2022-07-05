@@ -88,8 +88,9 @@ func NewBaseKeeper(
 	blockedAddrs map[string]bool,
 	authority string,
 ) BaseKeeper {
-	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
-		panic(fmt.Errorf("invalid bank authority address: %w", err))
+	// set KeyTable if it has not already been set
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
 	return BaseKeeper{

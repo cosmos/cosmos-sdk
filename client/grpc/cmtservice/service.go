@@ -26,14 +26,9 @@ var (
 	_ gogoprotoany.UnpackInterfacesMessage = &GetLatestValidatorSetResponse{}
 )
 
-type (
-	abciQueryFn = func(context.Context, *abci.QueryRequest) (*abci.QueryResponse, error)
-
-	queryServer struct {
-		rpc            CometRPC
-		queryFn        abciQueryFn
-		consensusCodec address.Codec
-	}
+var (
+	_ ServiceServer                      = queryServer{}
+	_ codectypes.UnpackInterfacesMessage = &GetLatestValidatorSetResponse{}
 )
 
 // NewQueryServer creates a new CometBFT query server.

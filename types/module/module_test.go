@@ -183,28 +183,10 @@ func TestManager_InitGenesis(t *testing.T) {
 	genesisData = map[string]json.RawMessage{
 		"module1": json.RawMessage(`{"key": "value"}`),
 		"module2": json.RawMessage(`{"key": "value"}`),
-		"module3": json.RawMessage(`{"key": "value"}`),
 	}
-
-	mockAppModuleABCI1 := mock.NewMockAppModuleWithAllExtensionsABCI(mockCtrl)
-	mockAppModuleABCI2 := mock.NewMockAppModuleWithAllExtensionsABCI(mockCtrl)
-	mockAppModuleABCI1.EXPECT().Name().Times(4).Return("module1")
-	mockAppModuleABCI2.EXPECT().Name().Times(2).Return("module2")
-	mmABCI := module.NewManager(mockAppModuleABCI1, mockAppModuleABCI2)
-	// errors because more than one module returns validator set updates
-	mockAppModuleABCI1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(genesisData["module1"])).Times(1).Return([]module.ValidatorUpdate{{}}, nil)
-	mockAppModuleABCI2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(genesisData["module2"])).Times(1).Return([]module.ValidatorUpdate{{}}, nil)
-	_, err = mmABCI.InitGenesis(ctx, genesisData)
-	require.ErrorContains(t, err, "validator InitGenesis updates already set by a previous module")
-
-	// happy path
-
-	mm2 := module.NewManager(mockAppModuleABCI1, mockAppModule2, module.CoreAppModuleAdaptor("module3", mockAppModule3))
-	mockAppModuleABCI1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(genesisData["module1"])).Times(1).Return([]module.ValidatorUpdate{{}}, nil)
-	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(genesisData["module2"])).Times(1)
-	mockAppModule3.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Any()).Times(1).Return(nil)
-	_, err = mm2.InitGenesis(ctx, genesisData)
-	require.NoError(t, err)
+	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
+	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{{}})
+	require.Panics(t, func() { mm.InitGenesis(ctx, cdc, genesisData) })
 }
 
 func TestManager_ExportGenesis(t *testing.T) {
@@ -227,29 +209,8 @@ func TestManager_ExportGenesis(t *testing.T) {
 	want := map[string]json.RawMessage{
 		"module1": json.RawMessage(`{"key1": "value1"}`),
 		"module2": json.RawMessage(`{"key2": "value2"}`),
-		"mockCoreAppModule": json.RawMessage(`{
-  "someField": "someKey"
-}`),
 	}
-
-	res, err := mm.ExportGenesis(ctx)
-	require.NoError(t, err)
-	require.Equal(t, want, res)
-
-	res, err = mm.ExportGenesisForModules(ctx, []string{})
-	require.NoError(t, err)
-	require.Equal(t, want, res)
-
-	res, err = mm.ExportGenesisForModules(ctx, []string{"module1"})
-	require.NoError(t, err)
-	require.Equal(t, map[string]json.RawMessage{"module1": json.RawMessage(`{"key1": "value1"}`)}, res)
-
-	res, err = mm.ExportGenesisForModules(ctx, []string{"module2"})
-	require.NoError(t, err)
-	require.NotEqual(t, map[string]json.RawMessage{"module1": json.RawMessage(`{"key1": "value1"}`)}, res)
-
-	_, err = mm.ExportGenesisForModules(ctx, []string{"module1", "modulefoo"})
-	require.Error(t, err)
+	require.Equal(t, want, mm.ExportGenesis(ctx, cdc))
 }
 
 func TestManager_EndBlock(t *testing.T) {

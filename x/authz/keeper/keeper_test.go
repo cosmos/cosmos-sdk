@@ -152,28 +152,11 @@ func (s *TestSuite) TestKeeper() {
 	err = s.authzKeeper.DeleteAllGrants(ctx, granterAddr)
 	require.Error(err)
 
-	s.T().Log("verify granting same authorization overwrite existing authorization")
-	err = s.authzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, sendAutz, &expire)
-	require.NoError(err)
-
-	authorizations, err = s.authzKeeper.GetAuthorizations(ctx, granteeAddr, granterAddr)
-	require.NoError(err)
-	require.Len(authorizations, 1)
-
-	sendAutz = &banktypes.SendAuthorization{SpendLimit: coins1000}
-	err = s.authzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, sendAutz, &expire)
-	require.NoError(err)
-	authorizations, err = s.authzKeeper.GetAuthorizations(ctx, granteeAddr, granterAddr)
-	require.NoError(err)
-	require.Len(authorizations, 1)
-	authorization := authorizations[0]
-	sendAuth := authorization.(*banktypes.SendAuthorization)
-	require.Equal(sendAuth.SpendLimit, sendAutz.SpendLimit)
-	require.Equal(sendAuth.MsgTypeURL(), sendAutz.MsgTypeURL())
-
-	s.T().Log("verify removing non existing authorization returns error")
-	err = s.authzKeeper.DeleteGrant(ctx, granterAddr, granteeAddr, "abcd")
-	s.Require().Error(err)
+	s.T().Log("verify revoke executes with correct information")
+	err = app.AuthzKeeper.DeleteGrant(ctx, granteeAddr, granterAddr, bankSendAuthMsgType)
+	s.Require().NoError(err)
+	authorization, _ = app.AuthzKeeper.GetCleanAuthorization(ctx, granteeAddr, granterAddr, bankSendAuthMsgType)
+	s.Require().Nil(authorization)
 }
 
 func (s *TestSuite) TestKeeperIter() {
@@ -188,13 +171,10 @@ func (s *TestSuite) TestKeeperIter() {
 	err := s.authzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, sendAuthz, &e)
 	s.Require().NoError(err)
 
-	err = s.authzKeeper.SaveGrant(ctx, granteeAddr, granter2Addr, sendAuthz, &e)
-	s.Require().NoError(err)
-
-	_ = s.authzKeeper.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) (bool, error) {
-		s.Require().Equal(granteeAddr, grantee)
-		s.Require().Contains([]sdk.AccAddress{granterAddr, granter2Addr}, granter)
-		return true, nil
+	app.AuthzKeeper.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
+		s.Require().Equal(granter, granterAddr)
+		s.Require().Equal(grantee, granteeAddr)
+		return true
 	})
 }
 

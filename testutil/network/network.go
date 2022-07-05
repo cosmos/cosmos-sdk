@@ -397,10 +397,8 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		clientDir := filepath.Join(network.BaseDir, nodeDirName, "simcli")
 		gentxsDir := filepath.Join(network.BaseDir, "gentxs")
 
-		err := os.MkdirAll(filepath.Join(nodeDir, "config"), 0o755)
-		if err != nil {
-			return nil, err
-		}
+		require.NoError(t, os.MkdirAll(filepath.Join(nodeDir, "config"), 0o755))
+		require.NoError(t, os.MkdirAll(clientDir, 0o755))
 
 		err = os.MkdirAll(clientDir, 0o755)
 		if err != nil {

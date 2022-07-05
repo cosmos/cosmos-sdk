@@ -3,10 +3,11 @@ package cmd_test
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"testing"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
@@ -96,7 +97,8 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 			cmd.SetArgs([]string{
 				tc.addr,
 				tc.denom,
-				fmt.Sprintf("--%s=home", flags.FlagHome)})
+				fmt.Sprintf("--%s=home", flags.FlagHome),
+			})
 
 			if tc.expectErr {
 				require.Error(t, cmd.ExecuteContext(ctx))

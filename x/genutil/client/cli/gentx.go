@@ -220,8 +220,8 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 
 func makeOutputFilepath(rootDir, nodeID string) (string, error) {
 	writePath := filepath.Join(rootDir, "config", "gentx")
-	if err := os.MkdirAll(writePath, 0o700); err != nil {
-		return "", fmt.Errorf("could not create directory %q: %w", writePath, err)
+	if err := tmos.EnsureDir(writePath, 0o700); err != nil {
+		return "", err
 	}
 
 	return filepath.Join(writePath, fmt.Sprintf("gentx-%v.json", nodeID)), nil

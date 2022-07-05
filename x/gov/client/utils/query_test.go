@@ -137,9 +137,9 @@ func TestGetPaginatedVotes(t *testing.T) {
 				acc1Msgs[:1],
 				acc2Msgs[:1],
 			},
-			votes: []v1.Vote{
-				v1.NewVote(0, acc1Str, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
-				v1.NewVote(0, acc2Str, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
+			votes: []types.Vote{
+				types.NewVote(0, acc1, types.NewNonSplitVoteOption(types.OptionYes)),
+				types.NewVote(0, acc2, types.NewNonSplitVoteOption(types.OptionYes)),
 			},
 		},
 		{
@@ -194,7 +194,8 @@ func TestGetPaginatedVotes(t *testing.T) {
 		},
 	} {
 		t.Run(tc.description, func(t *testing.T) {
-			marshaled := make([][]byte, len(tc.msgs))
+			marshalled := make([]tmtypes.Tx, len(tc.msgs))
+			cli := TxSearchMock{txs: marshalled, txConfig: encCfg.TxConfig}
 			clientCtx := client.Context{}.
 				WithLegacyAmino(encCfg.Amino).
 				WithTxConfig(encCfg.TxConfig)

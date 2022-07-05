@@ -13,9 +13,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// AllocateTokens performs reward and fee distribution to all validators based
-// on the F1 fee distribution specification.
-func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bondedVotes []comet.VoteInfo) error {
+// AllocateTokens handles distribution of the collected fees
+// bondedVotes is a list of (validator address, validator voted on last block flag) for all
+// validators in the bonded set.
+func (k Keeper) AllocateTokens(
+	ctx sdk.Context, sumPreviousPrecommitPower, totalPreviousPower int64,
+	previousProposer sdk.ConsAddress, bondedVotes []abci.VoteInfo,
+) {
+	logger := k.Logger(ctx)
+
 	// fetch and clear the collected fees for distribution, since this is
 	// called in BeginBlock, collected fees will be from the previous block
 	// (and distributed to the previous proposer)

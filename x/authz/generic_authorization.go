@@ -4,9 +4,7 @@ import (
 	"context"
 	"errors"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/authz"
-)
+var _ Authorization = &GenericAuthorization{}
 
 // NewGenericAuthorization creates a new GenericAuthorization object.
 func NewGenericAuthorization(msgTypeURL string) *GenericAuthorization {

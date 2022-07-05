@@ -41,7 +41,12 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 
 	if options.SignModeHandler == nil {
-		return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "sign mode handler is required for ante builder")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "sign mode handler is required for ante builder")
+	}
+
+	sigGasConsumer := options.SigGasConsumer
+	if sigGasConsumer == nil {
+		sigGasConsumer = DefaultSigVerificationGasConsumer
 	}
 
 	anteDecorators := []sdk.AnteDecorator{

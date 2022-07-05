@@ -165,63 +165,9 @@ func NewSimApp(
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
-	interfaceRegistry, _ := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
-		ProtoFiles: proto.HybridResolver,
-		SigningOptions: signing.Options{
-			AddressCodec:          address.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
-			ValidatorAddressCodec: address.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
-		},
-	})
-	appCodec := codec.NewProtoCodec(interfaceRegistry)
-	legacyAmino := codec.NewLegacyAmino()
-	signingCtx := interfaceRegistry.SigningContext()
-	txConfig := authtx.NewTxConfig(appCodec, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
-
-	govModuleAddr, err := signingCtx.AddressCodec().BytesToString(authtypes.NewModuleAddress(govtypes.ModuleName))
-	if err != nil {
-		panic(err)
-	}
-
-	if err := signingCtx.Validate(); err != nil {
-		panic(err)
-	}
-
-	std.RegisterLegacyAminoCodec(legacyAmino)
-	std.RegisterInterfaces(interfaceRegistry)
-
-	// Below we could construct and set an application specific mempool and
-	// ABCI 1.0 PrepareProposal and ProcessProposal handlers. These defaults are
-	// already set in the SDK's BaseApp, this shows an example of how to override
-	// them.
-	//
-	// Example:
-	//
-	// bApp := baseapp.NewBaseApp(...)
-	// nonceMempool := mempool.NewSenderNonceMempool()
-	// abciPropHandler := NewDefaultProposalHandler(nonceMempool, bApp)
-	//
-	// bApp.SetMempool(nonceMempool)
-	// bApp.SetPrepareProposal(abciPropHandler.PrepareProposalHandler())
-	// bApp.SetProcessProposal(abciPropHandler.ProcessProposalHandler())
-	//
-	// Alternatively, you can construct BaseApp options, append those to
-	// baseAppOptions and pass them to NewBaseApp.
-	//
-	// Example:
-	//
-	// prepareOpt = func(app *baseapp.BaseApp) {
-	// 	abciPropHandler := baseapp.NewDefaultProposalHandler(nonceMempool, app)
-	// 	app.SetPrepareProposal(abciPropHandler.PrepareProposalHandler())
-	// }
-	// baseAppOptions = append(baseAppOptions, prepareOpt)
-
-	// create and set dummy vote extension handler
-	voteExtOp := func(bApp *baseapp.BaseApp) {
-		voteExtHandler := NewVoteExtensionHandler()
-		voteExtHandler.SetHandlers(bApp)
-	}
-	baseAppOptions = append(baseAppOptions, voteExtOp, baseapp.SetOptimisticExecution(),
-		baseapp.SetIncludeNestedMsgsGas([]sdk.Msg{&govv1.MsgSubmitProposal{}}))
+	appCodec := encodingConfig.Marshaler
+	legacyAmino := encodingConfig.Amino
+	interfaceRegistry := encodingConfig.InterfaceRegistry
 
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
@@ -410,7 +356,9 @@ func NewSimApp(
 		),
 	)
 
-	/****  Module Options ****/
+	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
+	// we prefer to be more strict in what arguments the modules expect.
+	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.

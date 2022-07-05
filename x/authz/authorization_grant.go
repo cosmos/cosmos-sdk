@@ -34,7 +34,7 @@ func NewGrant( /*blockTime time.Time, */ a Authorization, expiration time.Time) 
 	}, nil
 }
 
-var _ gogoprotoany.UnpackInterfacesMessage = &Grant{}
+var _ cdctypes.UnpackInterfacesMessage = &Grant{}
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (g Grant) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {

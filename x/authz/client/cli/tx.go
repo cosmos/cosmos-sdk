@@ -261,8 +261,41 @@ func getExpireTime(cmd *cobra.Command) (*time.Time, error) {
 	if err != nil {
 		return nil, err
 	}
-	if exp == 0 {
-		return nil, nil
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+func NewCmdExecAuthorization() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "exec [msg_tx_json_file] --from [grantee]",
+		Short: "execute tx on behalf of granter account",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`execute tx on behalf of granter account:
+Example:
+ $ %s tx %s exec tx.json --from grantee
+ $ %s tx bank send <granter> <recipient> --from <granter> --chain-id <chain-id> --generate-only > tx.json && %s tx %s exec tx.json --from grantee
+			`, version.AppName, authz.ModuleName, version.AppName, version.AppName, authz.ModuleName),
+		),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			grantee := clientCtx.GetFromAddress()
+
+			if offline, _ := cmd.Flags().GetBool(flags.FlagOffline); offline {
+				return errors.New("cannot broadcast tx during offline mode")
+			}
+
+			theTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
+			if err != nil {
+				return err
+			}
+			msg := authz.NewMsgExec(grantee, theTx.GetMsgs())
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
 	}
 	e := time.Unix(exp, 0)
 	return &e, nil

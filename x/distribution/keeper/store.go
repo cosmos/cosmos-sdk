@@ -203,17 +203,21 @@ func (k Keeper) GetValidatorHistoricalReferenceCount(ctx sdk.Context) (count uin
 }
 
 // iterate over slash events between heights, inclusive
-func (k Keeper) IterateValidatorSlashEventsBetween(ctx context.Context, val sdk.ValAddress, startingHeight, endingHeight uint64,
+func (k Keeper) IterateValidatorSlashEventsBetween(ctx sdk.Context, val sdk.ValAddress, startingHeight uint64, endingHeight uint64,
 	handler func(height uint64, event types.ValidatorSlashEvent) (stop bool),
-) error {
-	rng := new(collections.Range[collections.Triple[sdk.ValAddress, uint64, uint64]]).
-		StartInclusive(collections.Join3(val, startingHeight, uint64(0))).
-		EndExclusive(collections.Join3(val, endingHeight+1, uint64(math.MaxUint64)))
-
-	err := k.ValidatorSlashEvents.Walk(ctx, rng, func(k collections.Triple[sdk.ValAddress, uint64, uint64], ev types.ValidatorSlashEvent) (stop bool, err error) {
-		height := k.K2()
-		if handler(height, ev) {
-			return true, nil
+) {
+	store := ctx.KVStore(k.storeKey)
+	iter := store.Iterator(
+		types.GetValidatorSlashEventKeyPrefix(val, startingHeight),
+		types.GetValidatorSlashEventKeyPrefix(val, endingHeight+1),
+	)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var event types.ValidatorSlashEvent
+		k.cdc.MustUnmarshal(iter.Value(), &event)
+		_, height := types.GetValidatorSlashEventAddressHeight(iter.Key())
+		if handler(height, event) {
+			break
 		}
 		return false, nil
 	})

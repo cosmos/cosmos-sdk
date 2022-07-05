@@ -109,9 +109,9 @@ func (dfd *DeductFeeDecorator) checkDeductFee(ctx context.Context, feeTx sdk.Fee
 	// this works only when feegrant is enabled.
 	if feeGranter != nil {
 		if dfd.feegrantKeeper == nil {
-			return sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
-		} else if !bytes.Equal(feeGranter, feePayer) {
-			err := dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, feeTx.GetMsgs())
+			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
+		} else if !feeGranter.Equals(feePayer) {
+			err := dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, tx.GetMsgs())
 			if err != nil {
 				granterAddr, acErr := dfd.accountKeeper.AddressCodec().BytesToString(feeGranter)
 				if acErr != nil {

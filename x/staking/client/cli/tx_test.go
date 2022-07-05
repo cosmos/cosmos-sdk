@@ -107,9 +107,11 @@ func (s *CLITestSuite) TestPrepareConfigForTxCreateValidator() {
 		expectedCfg cli.TxCreateValidatorConfig
 	}{
 		{
-			name:        "all defaults",
-			fsModify:    func(fs *pflag.FlagSet) {},
-			expectedCfg: mkTxValCfg(cli.DefaultTokens.String()+sdk.DefaultBondDenom, "0.1", "0.2", "0.01", "1"),
+			name: "all defaults",
+			fsModify: func(fs *pflag.FlagSet) {
+				return
+			},
+			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.2", "0.01", "1"),
 		},
 		{
 			name: "Custom amount",
@@ -123,14 +125,14 @@ func (s *CLITestSuite) TestPrepareConfigForTxCreateValidator() {
 			fsModify: func(fs *pflag.FlagSet) {
 				require.NoError(fs.Set(cli.FlagCommissionRate, "0.54"))
 			},
-			expectedCfg: mkTxValCfg(cli.DefaultTokens.String()+sdk.DefaultBondDenom, "0.54", "0.2", "0.01", "1"),
+			expectedCfg: mkTxValCfg(defaultAmount, "0.54", "0.2", "0.01", "1"),
 		},
 		{
 			name: "Custom commission max rate",
 			fsModify: func(fs *pflag.FlagSet) {
 				require.NoError(fs.Set(cli.FlagCommissionMaxRate, "0.89"))
 			},
-			expectedCfg: mkTxValCfg(cli.DefaultTokens.String()+sdk.DefaultBondDenom, "0.1", "0.89", "0.01", "1"),
+			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.89", "0.01", "1"),
 		},
 		{
 			name: "Custom commission max change rate",

@@ -300,18 +300,13 @@ type Manager struct {
 	OrderMigrations    []string
 }
 
-// RegisterInterfaces registers all module interface types
-func (m *Manager) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
-	for name, b := range m.Modules {
-		if _, ok := b.(interface {
-			RegisterInterfaces(cdctypes.InterfaceRegistry)
-		}); ok {
-			panic(fmt.Sprintf("%s uses a deprecated interface registration api, implement appmodule.HasRegisterInterfaces instead", name))
-		}
-
-		if mod, ok := b.(appmodule.HasRegisterInterfaces); ok {
-			mod.RegisterInterfaces(registrar)
-		}
+// NewManager creates a new Manager object
+func NewManager(modules ...AppModule) *Manager {
+	moduleMap := make(map[string]AppModule)
+	modulesStr := make([]string, 0, len(modules))
+	for _, module := range modules {
+		moduleMap[module.Name()] = module
+		modulesStr = append(modulesStr, module.Name())
 	}
 }
 
@@ -632,7 +627,7 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM app
 	if modules == nil {
 		modules = DefaultMigrationsOrder(m.ModuleNames())
 	}
-	var modules = m.OrderMigrations
+	modules := m.OrderMigrations
 	if modules == nil {
 		modules = DefaultMigrationsOrder(m.ModuleNames())
 	}

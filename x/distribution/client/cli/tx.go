@@ -40,9 +40,37 @@ func NewTxCmd() *cobra.Command {
 	return distTxCmd
 }
 
-// NewWithdrawAllRewardsCmd returns a CLI command handler for creating a MsgWithdrawDelegatorReward transaction.
-// This command is more powerful than AutoCLI generated command as it allows sending batch of messages.
-func NewWithdrawAllRewardsCmd() *cobra.Command {
+type newGenerateOrBroadcastFunc func(client.Context, *pflag.FlagSet, ...sdk.Msg) error
+
+func newSplitAndApply(
+	genOrBroadcastFn newGenerateOrBroadcastFunc, clientCtx client.Context,
+	fs *pflag.FlagSet, msgs []sdk.Msg, chunkSize int,
+) error {
+	if chunkSize == 0 {
+		return genOrBroadcastFn(clientCtx, fs, msgs...)
+	}
+
+	// split messages into slices of length chunkSize
+	totalMessages := len(msgs)
+	for i := 0; i < len(msgs); i += chunkSize {
+
+		sliceEnd := i + chunkSize
+		if sliceEnd > totalMessages {
+			sliceEnd = totalMessages
+		}
+
+		msgChunk := msgs[i:sliceEnd]
+		if err := genOrBroadcastFn(clientCtx, fs, msgChunk...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func NewWithdrawRewardsCmd() *cobra.Command {
+	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+
 	cmd := &cobra.Command{
 		Use:     "withdraw-all-rewards",
 		Short:   "Withdraw all delegations rewards for a delegator",

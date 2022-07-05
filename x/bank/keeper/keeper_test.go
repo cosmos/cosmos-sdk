@@ -1971,16 +1971,16 @@ func (suite *KeeperTestSuite) TestBalanceTrackingEvents() {
 	})
 }
 
-func (suite *KeeperTestSuite) getTestMetadata() []banktypes.Metadata {
-	return []banktypes.Metadata{
+func (suite *IntegrationTestSuite) getTestMetadata() []types.Metadata {
+	return []types.Metadata{
 		{
 			Name:        "Cosmos Hub Atom",
 			Symbol:      "ATOM",
 			Description: "The native staking token of the Cosmos Hub.",
-			DenomUnits: []*banktypes.DenomUnit{
-				{Denom: "uatom", Exponent: uint32(0), Aliases: []string{"microatom"}},
-				{Denom: "matom", Exponent: uint32(3), Aliases: []string{"milliatom"}},
-				{Denom: "atom", Exponent: uint32(6), Aliases: nil},
+			DenomUnits: []*types.DenomUnit{
+				{"uatom", uint32(0), []string{"microatom"}},
+				{"matom", uint32(3), []string{"milliatom"}},
+				{"atom", uint32(6), nil},
 			},
 			Base:    "uatom",
 			Display: "atom",

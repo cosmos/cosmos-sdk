@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	_ multisigtypes.PubKey                 = &LegacyAminoPubKey{}
-	_ gogoprotoany.UnpackInterfacesMessage = &LegacyAminoPubKey{}
+	_ multisigtypes.PubKey          = &LegacyAminoPubKey{}
+	_ types.UnpackInterfacesMessage = &LegacyAminoPubKey{}
 )
 
 // NewLegacyAminoPubKey returns a new LegacyAminoPubKey.

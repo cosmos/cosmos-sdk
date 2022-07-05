@@ -73,26 +73,21 @@ func (msg *KVStoreTx) Equals(key cryptotypes.PubKey) bool {
 }
 
 // dummy implementation of proto.Message
-
-func (msg *KVStoreTx) Reset()         {}
-func (msg *KVStoreTx) String() string { return "TODO" }
-func (msg *KVStoreTx) ProtoMessage()  {}
+func (msg kvstoreTx) Reset()         {}
+func (msg kvstoreTx) String() string { return "TODO" }
+func (msg kvstoreTx) ProtoMessage()  {}
 
 var (
-	_ sdk.Tx                  = &KVStoreTx{}
-	_ sdk.Msg                 = &KVStoreTx{}
-	_ signing.SigVerifiableTx = &KVStoreTx{}
-	_ cryptotypes.PubKey      = &KVStoreTx{}
-	_ cryptotypes.PubKey      = &testPubKey{}
+	_ sdk.Tx  = kvstoreTx{}
+	_ sdk.Msg = kvstoreTx{}
 )
 
-func NewTx(key, value string, accAddress sdk.AccAddress) *KVStoreTx {
-	bytes := fmt.Sprintf("%s=%s=%s", key, value, accAddress)
-	return &KVStoreTx{
-		key:     []byte(key),
-		value:   []byte(value),
-		bytes:   []byte(bytes),
-		address: accAddress,
+func NewTx(key, value string) kvstoreTx {
+	bytes := fmt.Sprintf("%s=%s", key, value)
+	return kvstoreTx{
+		key:   []byte(key),
+		value: []byte(value),
+		bytes: []byte(bytes),
 	}
 }
 

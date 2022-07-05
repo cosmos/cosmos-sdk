@@ -73,41 +73,36 @@ var (
 	exportWithValidatorSet []string
 )
 
-func TestAppImportExport(t *testing.T) {
-	simsx.Run(t, NewSimApp, setupStateFactory, func(t testing.TB, ti simsx.TestInstance[*SimApp], _ []simtypes.Account) {
-		app := ti.App
-		t.Log("exporting genesis...\n")
-		exported, err := app.ExportAppStateAndValidators(false, exportWithValidatorSet, exportAllModules)
-		require.NoError(t, err)
-
-		t.Log("importing genesis...\n")
-		newTestInstance := simsx.NewSimulationAppInstance(t, ti.Cfg, NewSimApp)
-		newApp := newTestInstance.App
-		var genesisState GenesisState
-		require.NoError(t, json.Unmarshal(exported.AppState, &genesisState))
-		ctxB := newApp.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
-		_, err = newApp.ModuleManager.InitGenesis(ctxB, genesisState)
-		if IsEmptyValidatorSetErr(err) {
-			t.Skip("Skipping simulation as all validators have been unbonded")
-			return
-		}
-		require.NoError(t, err)
-		err = newApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
-		require.NoError(t, err)
-
-		t.Log("comparing stores...")
-		// skip certain prefixes
-		skipPrefixes := map[string][][]byte{
-			stakingtypes.StoreKey: {
+	storeKeysPrefixes := []StoreKeysPrefixes{
+		{app.keys[authtypes.StoreKey], newApp.keys[authtypes.StoreKey], [][]byte{}},
+		{
+			app.keys[stakingtypes.StoreKey], newApp.keys[stakingtypes.StoreKey],
+			[][]byte{
 				stakingtypes.UnbondingQueueKey, stakingtypes.RedelegationQueueKey, stakingtypes.ValidatorQueueKey,
-				stakingtypes.UnbondingIDKey, stakingtypes.UnbondingIndexKey, stakingtypes.UnbondingTypeKey,
+				stakingtypes.HistoricalInfoKey,
 			},
-			authzkeeper.StoreKey:   {authzkeeper.GrantQueuePrefix},
-			feegrant.StoreKey:      {feegrant.FeeAllowanceQueueKeyPrefix},
-			slashingtypes.StoreKey: {slashingtypes.ValidatorMissedBlockBitmapKeyPrefix},
-		}
-		AssertEqualStores(t, app, newApp, app.SimulationManager().StoreDecoders, skipPrefixes)
-	})
+		}, // ordering may change but it doesn't matter
+		{app.keys[slashingtypes.StoreKey], newApp.keys[slashingtypes.StoreKey], [][]byte{}},
+		{app.keys[minttypes.StoreKey], newApp.keys[minttypes.StoreKey], [][]byte{}},
+		{app.keys[distrtypes.StoreKey], newApp.keys[distrtypes.StoreKey], [][]byte{}},
+		{app.keys[banktypes.StoreKey], newApp.keys[banktypes.StoreKey], [][]byte{banktypes.BalancesPrefix}},
+		{app.keys[paramtypes.StoreKey], newApp.keys[paramtypes.StoreKey], [][]byte{}},
+		{app.keys[govtypes.StoreKey], newApp.keys[govtypes.StoreKey], [][]byte{}},
+		{app.keys[evidencetypes.StoreKey], newApp.keys[evidencetypes.StoreKey], [][]byte{}},
+		{app.keys[capabilitytypes.StoreKey], newApp.keys[capabilitytypes.StoreKey], [][]byte{}},
+		{app.keys[authzkeeper.StoreKey], newApp.keys[authzkeeper.StoreKey], [][]byte{}},
+	}
+
+	for _, skp := range storeKeysPrefixes {
+		storeA := ctxA.KVStore(skp.A)
+		storeB := ctxB.KVStore(skp.B)
+
+		failedKVAs, failedKVBs := sdk.DiffKVStores(storeA, storeB, skp.Prefixes)
+		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
+
+		fmt.Printf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), skp.A, skp.B)
+		require.Equal(t, len(failedKVAs), 0, GetSimulationLog(skp.A.Name(), app.SimulationManager().StoreDecoders, failedKVAs, failedKVBs))
+	}
 }
 
 // Scenario:

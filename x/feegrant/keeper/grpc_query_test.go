@@ -6,11 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-const (
-	invalidGrantee = "invalid-grantee"
-	invalidGranter = "invalid-granter"
-)
-
 func (suite *KeeperTestSuite) TestFeeAllowance() {
 	testCases := []struct {
 		name      string

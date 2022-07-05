@@ -1,3 +1,6 @@
+//go:build norace
+// +build norace
+
 package client_test
 
 import (

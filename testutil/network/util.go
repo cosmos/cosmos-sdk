@@ -244,11 +244,13 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 func writeFile(name, dir string, contents []byte) error {
 	file := filepath.Join(dir, name)
 
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return fmt.Errorf("could not create directory %q: %w", dir, err)
+	err := tmos.EnsureDir(writePath, 0o755)
+	if err != nil {
+		return err
 	}
 
-	if err := os.WriteFile(file, contents, 0o600); err != nil {
+	err = tmos.WriteFile(file, contents, 0o644)
+	if err != nil {
 		return err
 	}
 

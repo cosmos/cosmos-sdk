@@ -41,16 +41,14 @@ func (h MultiGovHooks) AfterProposalVote(ctx context.Context, proposalID uint64,
 	return errs
 }
 
-func (h MultiGovHooks) AfterProposalFailedMinDeposit(ctx context.Context, proposalID uint64) error {
-	var errs error
+func (h MultiGovHooks) AfterProposalFailedMinDeposit(ctx sdk.Context, proposalID uint64) {
 	for i := range h {
 		errs = errors.Join(errs, h[i].AfterProposalFailedMinDeposit(ctx, proposalID))
 	}
 	return errs
 }
 
-func (h MultiGovHooks) AfterProposalVotingPeriodEnded(ctx context.Context, proposalID uint64) error {
-	var errs error
+func (h MultiGovHooks) AfterProposalVotingPeriodEnded(ctx sdk.Context, proposalID uint64) {
 	for i := range h {
 		errs = errors.Join(errs, h[i].AfterProposalVotingPeriodEnded(ctx, proposalID))
 	}

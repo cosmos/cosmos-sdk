@@ -149,8 +149,7 @@ func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsReques
 	}, func(_ uint64, value v1.Proposal) (*v1.Proposal, error) {
 		return &value, nil
 	})
-
-	if err != nil && !errors.IsOf(err, collections.ErrInvalidIterator) {
+	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -196,9 +195,22 @@ func (q queryServer) Votes(ctx context.Context, req *v1.QueryVotesRequest) (*v1.
 		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
-	votes, pageRes, err := query.CollectionPaginate(ctx, q.k.Votes, req.Pagination, func(_ collections.Pair[uint64, sdk.AccAddress], value v1.Vote) (vote *v1.Vote, err error) {
-		return &value, nil
-	}, query.WithCollectionPaginationPairPrefix[uint64, sdk.AccAddress](req.ProposalId))
+	var votes types.Votes
+	ctx := sdk.UnwrapSDKContext(c)
+
+	store := ctx.KVStore(q.storeKey)
+	votesStore := prefix.NewStore(store, types.VotesKey(req.ProposalId))
+
+	pageRes, err := query.Paginate(votesStore, req.Pagination, func(key []byte, value []byte) error {
+		var vote types.Vote
+		if err := q.cdc.Unmarshal(value, &vote); err != nil {
+			return err
+		}
+		populateLegacyOption(&vote)
+
+		votes = append(votes, vote)
+		return nil
+	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -284,10 +296,21 @@ func (q queryServer) Deposits(ctx context.Context, req *v1.QueryDepositsRequest)
 		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
-	var deposits []*v1.Deposit
-	deposits, pageRes, err := query.CollectionPaginate(ctx, q.k.Deposits, req.Pagination, func(_ collections.Pair[uint64, sdk.AccAddress], deposit v1.Deposit) (*v1.Deposit, error) {
-		return &deposit, nil
-	}, query.WithCollectionPaginationPairPrefix[uint64, sdk.AccAddress](req.ProposalId))
+	var deposits types.Deposits
+	ctx := sdk.UnwrapSDKContext(c)
+
+	store := ctx.KVStore(q.storeKey)
+	depositStore := prefix.NewStore(store, types.DepositsKey(req.ProposalId))
+
+	pageRes, err := query.Paginate(depositStore, req.Pagination, func(key []byte, value []byte) error {
+		var deposit types.Deposit
+		if err := q.cdc.Unmarshal(value, &deposit); err != nil {
+			return err
+		}
+
+		deposits = append(deposits, deposit)
+		return nil
+	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

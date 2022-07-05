@@ -25,7 +25,11 @@ var kvPairs = []kv.Pair{ //nolint:staticcheck // We are in store v1.
 	{Key: keyFmt(3), Value: valFmt(3)},
 }
 
-var testStoreKey = types.NewKVStoreKey("listen_test")
+var (
+	testStoreKey      = types.NewKVStoreKey("listen_test")
+	interfaceRegistry = codecTypes.NewInterfaceRegistry()
+	testMarshaller    = codec.NewProtoCodec(interfaceRegistry)
+)
 
 func newListenKVStore(listener *types.MemoryListener) *listenkv.Store {
 	store := newEmptyListenKVStore(listener)

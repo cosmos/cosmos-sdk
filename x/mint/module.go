@@ -96,12 +96,14 @@ func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwrunt
 	}
 }
 
-// RegisterServices registers module services.
-func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	types.RegisterMsgServer(registrar, keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(registrar, keeper.NewQueryServerImpl(am.keeper))
+// RegisterRESTRoutes registers the REST routes for the mint module.
+func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
+	rest.RegisterRoutes(clientCtx, rtr)
+}
 
-	return nil
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the mint module.
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
 // RegisterMigrations registers module migrations.

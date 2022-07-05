@@ -166,26 +166,6 @@ func (k Querier) ValidatorDelegations(ctx context.Context, req *types.QueryValid
 	}, nil
 }
 
-func (k Querier) getValidatorDelegationsLegacy(ctx context.Context, req *types.QueryValidatorDelegationsRequest) ([]*types.Delegation, *query.PageResponse, error) {
-	store := runtime.KVStoreAdapter(k.KVStoreService.OpenKVStore(ctx))
-
-	valStore := prefix.NewStore(store, types.DelegationKey)
-	return query.GenericFilteredPaginate(k.cdc, valStore, req.Pagination, func(key []byte, delegation *types.Delegation) (*types.Delegation, error) {
-		_, err := k.validatorAddressCodec.StringToBytes(req.ValidatorAddr)
-		if err != nil {
-			return nil, err
-		}
-
-		if !strings.EqualFold(delegation.GetValidatorAddr(), req.ValidatorAddr) {
-			return nil, nil
-		}
-
-		return delegation, nil
-	}, func() *types.Delegation {
-		return &types.Delegation{}
-	})
-}
-
 // ValidatorUnbondingDelegations queries unbonding delegations of a validator
 func (k Querier) ValidatorUnbondingDelegations(ctx context.Context, req *types.QueryValidatorUnbondingDelegationsRequest) (*types.QueryValidatorUnbondingDelegationsResponse, error) {
 	if req == nil {
@@ -465,21 +445,21 @@ func (k Querier) DelegatorValidators(ctx context.Context, req *types.QueryDelega
 		return nil, err
 	}
 
-	_, pageRes, err := query.CollectionPaginate(ctx, k.Delegations, req.Pagination,
-		func(_ collections.Pair[sdk.AccAddress, sdk.ValAddress], delegation types.Delegation) (types.Delegation, error) {
-			valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
-			if err != nil {
-				return types.Delegation{}, err
-			}
-			validator, err := k.GetValidator(ctx, valAddr)
-			if err != nil {
-				return types.Delegation{}, err
-			}
+	delStore := prefix.NewStore(store, types.GetDelegationsKey(delAddr))
+	pageRes, err := query.Paginate(delStore, req.Pagination, func(key []byte, value []byte) error {
+		delegation, err := types.UnmarshalDelegation(k.cdc, value)
+		if err != nil {
+			return err
+		}
 
-			validators.Validators = append(validators.Validators, validator)
-			return types.Delegation{}, nil
-		}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, sdk.ValAddress](delAddr),
-	)
+		validator, found := k.GetValidator(ctx, delegation.GetValidatorAddr())
+		if !found {
+			return types.ErrNoValidatorFound
+		}
+
+		validators = append(validators, validator)
+		return nil
+	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -513,8 +493,8 @@ func (k Querier) Params(ctx context.Context, _ *types.QueryParamsRequest) (*type
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
-func queryRedelegation(ctx context.Context, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, err error) {
-	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddr)
+func queryRedelegation(ctx sdk.Context, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, err error) {
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
 	if err != nil {
 		return nil, err
 	}

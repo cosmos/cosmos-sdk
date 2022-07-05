@@ -54,7 +54,7 @@ func RandPositiveInt(r *rand.Rand, max math.Int) (math.Int, error) {
 
 // RandomAmount generates a random amount
 // Note: The range of RandomAmount includes max, and is, in fact, biased to return max as well as 0.
-func RandomAmount(r *rand.Rand, max math.Int) math.Int {
+func RandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
 	randInt := big.NewInt(0)
 
 	switch r.Intn(10) {
@@ -71,7 +71,7 @@ func RandomAmount(r *rand.Rand, max math.Int) math.Int {
 
 // RandomDecAmount generates a random decimal amount
 // Note: The range of RandomDecAmount includes max, and is, in fact, biased to return max as well as 0.
-func RandomDecAmount(r *rand.Rand, max math.LegacyDec) math.LegacyDec {
+func RandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
 	randInt := big.NewInt(0)
 
 	switch r.Intn(10) {

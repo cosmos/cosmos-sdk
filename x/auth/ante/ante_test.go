@@ -643,8 +643,7 @@ func TestAnteHandlerFees(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("Case %s", tc.desc), func(t *testing.T) {
-			suite := SetupTestSuite(t, false)
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			args := tc.malleate(suite)
 			args.feeAmount = feeAmount

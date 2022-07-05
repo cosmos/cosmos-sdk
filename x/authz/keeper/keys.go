@@ -37,6 +37,13 @@ func grantStoreKey(grantee, granter sdk.AccAddress, msgType string) []byte {
 	grantee = address.MustLengthPrefix(grantee)
 	key := sdk.AppendLengthPrefixedBytes(GrantKey, granter, grantee, m)
 
+	l := 1 + len(grantee) + len(granter) + len(m)
+	key := make([]byte, l)
+	copy(key, GrantKey)
+	copy(key[1:], granter)
+	copy(key[1+len(granter):], grantee)
+	copy(key[l-len(m):], m)
+	//	fmt.Println(">>>> len", l, key)
 	return key
 }
 

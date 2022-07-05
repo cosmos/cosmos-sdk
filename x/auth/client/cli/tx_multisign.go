@@ -232,7 +232,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 			return
 		}
 
-		closeFunc, err := setOutputFile(cmd)
+		fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 		if err != nil {
 			return err
 		}
@@ -301,10 +301,19 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			txFactory = txFactory.WithSignMode(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 		}
 
-		// reads tx from args[0]
-		scanner, err := authclient.ReadTxsFromInput(txCfg, file)
-		if err != nil {
-			return err
+		infile := os.Stdin
+		if args[0] != "-" {
+			infile, err = os.Open(args[0])
+			defer func() {
+				err2 := infile.Close()
+				if err == nil {
+					err = err2
+				}
+			}()
+
+			if err != nil {
+				return fmt.Errorf("couldn't open %s: %w", args[0], err)
+			}
 		}
 
 		k, err := clientCtx.Keyring.Key(name)

@@ -298,8 +298,7 @@ func TestIAVLReverseIterator(t *testing.T) {
 	iavlStore.Set([]byte{0x00, 0x02}, []byte("0 2"))
 	iavlStore.Set([]byte{0x01}, []byte("1"))
 
-	testReverseIterator := func(t *testing.T, start, end []byte, expected []string) {
-		t.Helper()
+	testReverseIterator := func(t *testing.T, start []byte, end []byte, expected []string) {
 		iter := iavlStore.ReverseIterator(start, end)
 		var i int
 		for i = 0; iter.Valid(); iter.Next() {

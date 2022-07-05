@@ -581,11 +581,6 @@ func ConsumeMultisignatureVerificationGas(
 	meter gas.Meter, sig *signing.MultiSignatureData, pubKey multisig.PubKey,
 	params types.Params, accSeq uint64,
 ) error {
-	// if BitArray is nil, it means tx has been built for simulation.
-	if sig.BitArray == nil {
-		return multisignatureSimulationVerificationGas(meter, sig, pubKey, params, accSeq)
-	}
-
 	size := sig.BitArray.Count()
 	sigIndex := 0
 

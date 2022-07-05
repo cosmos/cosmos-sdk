@@ -253,5 +253,5 @@ func WriteConfigFile(configFilePath string, config interface{}) error {
 		return fmt.Errorf("failed to write file: %w", err)
 	}
 
-	return nil
+	tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0o644)
 }

@@ -82,15 +82,18 @@ func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) ([]mo
 	return InitGenesis(ctx, am.stakingKeeper, am.deliverTx, genesisState, am.txEncodingConfig)
 }
 
-// DecodeGenesisJSON returns the genesis transactions for the genutil module.
-// It is an alternative to InitGenesis and used in server/v2 applications.
-func (am AppModule) DecodeGenesisJSON(data json.RawMessage) ([]json.RawMessage, error) {
-	var genesisState types.GenesisState
-	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
-		return nil, err
-	}
-
-	return genesisState.GenTxs, nil
+// NewAppModule creates a new AppModule object
+func NewAppModule(accountKeeper types.AccountKeeper,
+	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn,
+	txEncodingConfig client.TxEncodingConfig,
+) module.AppModule {
+	return module.NewGenesisOnlyAppModule(AppModule{
+		AppModuleBasic:   AppModuleBasic{},
+		accountKeeper:    accountKeeper,
+		stakingKeeper:    stakingKeeper,
+		deliverTx:        deliverTx,
+		txEncodingConfig: txEncodingConfig,
+	})
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the genutil module.

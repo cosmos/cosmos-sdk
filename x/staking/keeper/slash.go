@@ -240,12 +240,12 @@ func (k Keeper) Unjail(ctx context.Context, consAddr sdk.ConsAddress) error {
 // the unbonding delegation had enough stake to slash
 // (the amount actually slashed may be less if there's
 // insufficient stake remaining)
-func (k Keeper) SlashUnbondingDelegation(ctx context.Context, unbondingDelegation types.UnbondingDelegation,
-	infractionHeight int64, slashFactor math.LegacyDec,
-) (totalSlashAmount math.Int, err error) {
-	now := k.HeaderService.HeaderInfo(ctx).Time
-	totalSlashAmount = math.ZeroInt()
-	burnedAmount := math.ZeroInt()
+func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation types.UnbondingDelegation,
+	infractionHeight int64, slashFactor sdk.Dec,
+) (totalSlashAmount sdk.Int) {
+	now := ctx.BlockHeader().Time
+	totalSlashAmount = sdk.ZeroInt()
+	burnedAmount := sdk.ZeroInt()
 
 	// perform slashing on all entries within the unbonding delegation
 	for i, entry := range unbondingDelegation.Entries {
@@ -296,22 +296,12 @@ func (k Keeper) SlashUnbondingDelegation(ctx context.Context, unbondingDelegatio
 // (the amount actually slashed may be less if there's
 // insufficient stake remaining)
 // NOTE this is only slashing for prior infractions from the source validator
-func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Validator, redelegation types.Redelegation,
-	infractionHeight int64, slashFactor math.LegacyDec,
-) (totalSlashAmount math.Int, err error) {
-	now := k.HeaderService.HeaderInfo(ctx).Time
-	totalSlashAmount = math.ZeroInt()
-	bondedBurnedAmount, notBondedBurnedAmount := math.ZeroInt(), math.ZeroInt()
-
-	valDstAddr, err := k.validatorAddressCodec.StringToBytes(redelegation.ValidatorDstAddress)
-	if err != nil {
-		return math.ZeroInt(), fmt.Errorf("SlashRedelegation: could not parse validator destination address: %w", err)
-	}
-
-	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(redelegation.DelegatorAddress)
-	if err != nil {
-		return math.ZeroInt(), fmt.Errorf("SlashRedelegation: could not parse delegator address: %w", err)
-	}
+func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator, redelegation types.Redelegation,
+	infractionHeight int64, slashFactor sdk.Dec,
+) (totalSlashAmount sdk.Int) {
+	now := ctx.BlockHeader().Time
+	totalSlashAmount = sdk.ZeroInt()
+	bondedBurnedAmount, notBondedBurnedAmount := sdk.ZeroInt(), sdk.ZeroInt()
 
 	// perform slashing on all entries within the redelegation
 	for _, entry := range redelegation.Entries {

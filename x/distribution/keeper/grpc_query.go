@@ -180,16 +180,18 @@ func (k Querier) ValidatorSlashes(ctx context.Context, req *types.QueryValidator
 		return nil, status.Errorf(codes.InvalidArgument, "invalid validator address")
 	}
 
-	events, pageRes, err := query.CollectionFilteredPaginate(ctx, k.ValidatorSlashEvents, req.Pagination, func(key collections.Triple[sdk.ValAddress, uint64, uint64], ev types.ValidatorSlashEvent) (include bool, err error) {
-		if ev.ValidatorPeriod < req.StartingHeight || ev.ValidatorPeriod > req.EndingHeight {
+	pageRes, err := query.FilteredPaginate(slashesStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		var result types.ValidatorSlashEvent
+		err := k.cdc.Unmarshal(value, &result)
+		if err != nil {
+			return false, err
+		}
+
+		if result.ValidatorPeriod < req.StartingHeight || result.ValidatorPeriod > req.EndingHeight {
 			return false, nil
 		}
 		return true, nil
-	}, func(_ collections.Triple[sdk.ValAddress, uint64, uint64], value types.ValidatorSlashEvent) (types.ValidatorSlashEvent, error) {
-		return value, nil
-	},
-		query.WithCollectionPaginationTriplePrefix[sdk.ValAddress, uint64, uint64](valAddr),
-	)
+	})
 	if err != nil {
 		return nil, err
 	}

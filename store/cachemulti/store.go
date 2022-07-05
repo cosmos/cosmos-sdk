@@ -68,7 +68,7 @@ func NewStore(
 	db corestore.KVStoreWithBatch, stores map[types.StoreKey]types.CacheWrapper, keys map[string]types.StoreKey,
 	traceWriter io.Writer, traceContext types.TraceContext,
 ) Store {
-	return NewFromKVStore(dbadapter.Store{DB: db}, stores, keys, traceWriter, traceContext)
+	return NewFromKVStore(dbadapter.Store{DB: db}, stores, keys, traceWriter, traceContext, listeners)
 }
 
 func newCacheMultiStoreFromCMS(cms Store) Store {

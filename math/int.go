@@ -6,9 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"math/bits"
-	"strings"
-	"sync"
 	"testing"
 )
 

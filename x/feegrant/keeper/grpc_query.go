@@ -91,25 +91,9 @@ func (q Keeper) AllowancesByGranter(c context.Context, req *feegrant.QueryAllowa
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	granterAddr, err := q.authKeeper.AddressCodec().StringToBytes(req.Granter)
-	if err != nil {
-		return nil, err
-	}
-
-	var grants []*feegrant.Grant
-	_, pageRes, err := query.CollectionFilteredPaginate(c, q.FeeAllowance, req.Pagination,
-		func(key collections.Pair[sdk.AccAddress, sdk.AccAddress], grant feegrant.Grant) (include bool, err error) {
-			if !sdk.AccAddress(granterAddr).Equals(key.K2()) {
-				return false, nil
-			}
-
-			grants = append(grants, &grant)
-			return true, nil
-		},
-		func(_ collections.Pair[sdk.AccAddress, sdk.AccAddress], grant feegrant.Grant) (*feegrant.Grant, error) {
-			return &grant, nil
-		},
-	)
+		grants = append(grants, &grant)
+		return nil
+	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -151,7 +135,6 @@ func (q Keeper) AllowancesByGranter(c context.Context, req *feegrant.QueryAllowa
 
 		return true, nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

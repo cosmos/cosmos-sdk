@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"cosmossdk.io/math"
 	"github.com/tendermint/tendermint/libs/log"
@@ -29,6 +30,7 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	key storetypes.StoreKey,
+	paramSpace paramtypes.Subspace,
 	sk types.StakingKeeper,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -38,6 +40,11 @@ func NewKeeper(
 	// ensure mint module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("the x/%s module account has not been set", types.ModuleName))
+	}
+
+	// set KeyTable if it has not already been set
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
 	return Keeper{

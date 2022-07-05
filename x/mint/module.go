@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"math/rand"
 
 	modulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
@@ -238,9 +239,10 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 type mintInputs struct {
 	depinject.In
 
-	Config *modulev1.Module
-	Key    *store.KVStoreKey
-	Cdc    codec.Codec
+	Config   *modulev1.Module
+	Key      *store.KVStoreKey
+	Cdc      codec.Codec
+	Subspace paramtypes.Subspace
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace
@@ -266,6 +268,7 @@ func provideModule(in mintInputs) mintOutputs {
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.Key,
+		in.Subspace,
 		in.StakingKeeper,
 		in.AccountKeeper,
 		in.BankKeeper,

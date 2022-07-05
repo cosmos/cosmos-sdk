@@ -26,6 +26,13 @@ func (keeper Keeper) GetTallyParams(ctx sdk.Context) types.TallyParams {
 	return tallyParams
 }
 
+// GetVestingContract returns the vesting contract address from the global param store
+func (keeper Keeper) GetVestingContract(ctx sdk.Context) sdk.AccAddress {
+	var vestingContractAddr sdk.AccAddress
+	keeper.paramSpace.Get(ctx, types.ParamStoreKeyVestingContract, &vestingContractAddr)
+	return vestingContractAddr
+}
+
 // SetDepositParams sets DepositParams to the global param store
 func (keeper Keeper) SetDepositParams(ctx sdk.Context, depositParams types.DepositParams) {
 	keeper.paramSpace.Set(ctx, types.ParamStoreKeyDepositParams, &depositParams)
@@ -39,4 +46,9 @@ func (keeper Keeper) SetVotingParams(ctx sdk.Context, votingParams types.VotingP
 // SetTallyParams sets TallyParams to the global param store
 func (keeper Keeper) SetTallyParams(ctx sdk.Context, tallyParams types.TallyParams) {
 	keeper.paramSpace.Set(ctx, types.ParamStoreKeyTallyParams, &tallyParams)
+}
+
+// SetVestingContract sets VestingContract to the gloval param store
+func (keeper Keeper) SetVestingContract(ctx sdk.Context, vestingContractAddr sdk.AccAddress) {
+	keeper.paramSpace.Set(ctx, types.ParamStoreKeyVestingContract, &vestingContractAddr)
 }

@@ -5281,6 +5281,7 @@ GenesisState defines the gov module's genesis state.
 | `deposit_params` | [DepositParams](#cosmos.gov.v1beta1.DepositParams) |  | params defines all the paramaters of related to deposit. |
 | `voting_params` | [VotingParams](#cosmos.gov.v1beta1.VotingParams) |  | params defines all the paramaters of related to voting. |
 | `tally_params` | [TallyParams](#cosmos.gov.v1beta1.TallyParams) |  | params defines all the paramaters of related to tally. |
+| `vesting_contract` | [string](#string) |  | vesting_contract Address of the vesting contract |
 
 
 
@@ -5392,6 +5393,7 @@ QueryParamsResponse is the response type for the Query/Params RPC method.
 | `voting_params` | [VotingParams](#cosmos.gov.v1beta1.VotingParams) |  | voting_params defines the parameters related to voting. |
 | `deposit_params` | [DepositParams](#cosmos.gov.v1beta1.DepositParams) |  | deposit_params defines the parameters related to deposit. |
 | `tally_params` | [TallyParams](#cosmos.gov.v1beta1.TallyParams) |  | tally_params defines the parameters related to tally. |
+| `vesting_contract` | [string](#string) |  | vesting_contract defines the vesting contract address. |
 
 
 

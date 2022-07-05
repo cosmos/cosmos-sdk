@@ -592,10 +592,19 @@ $ %s query gov params
 				return err
 			}
 
+			vestingRes, err := queryClient.Params(
+				ctx,
+				&types.QueryParamsRequest{ParamsType: "vesting"},
+			)
+			if err != nil {
+				return err
+			}
+
 			params := types.NewParams(
 				votingRes.GetVotingParams(),
 				tallyRes.GetTallyParams(),
 				depositRes.GetDepositParams(),
+				vestingRes.GetVestingContract(),
 			)
 
 			return clientCtx.PrintObjectLegacy(params)

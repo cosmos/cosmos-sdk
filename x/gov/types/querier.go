@@ -20,6 +20,8 @@ const (
 	ParamDeposit  = "deposit"
 	ParamVoting   = "voting"
 	ParamTallying = "tallying"
+
+	VestingContract = "vesting"
 )
 
 // QueryProposalParams Params for queries:

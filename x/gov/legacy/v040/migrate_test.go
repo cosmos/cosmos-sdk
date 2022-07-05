@@ -229,6 +229,7 @@ func TestMigrate(t *testing.T) {
 		"threshold": "0",
 		"veto_threshold": "0"
 	},
+	"vesting_contract": "cosmos14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s4hmalr",
 	"votes": [],
 	"voting_params": {
 		"voting_period": "0s"

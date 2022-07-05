@@ -176,6 +176,10 @@ func (q Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 		tallyParams := q.GetTallyParams(ctx)
 		return &types.QueryParamsResponse{TallyParams: tallyParams}, nil
 
+	case types.VestingContract:
+		vestingContract := q.GetVestingContract(ctx)
+		return &types.QueryParamsResponse{VestingContract: vestingContract.String()}, nil
+
 	default:
 		return nil, status.Errorf(codes.InvalidArgument,
 			"%s is not a valid parameter type", req.ParamsType)

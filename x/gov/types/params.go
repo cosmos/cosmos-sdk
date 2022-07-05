@@ -12,7 +12,8 @@ import (
 
 // Default period for deposits & voting
 const (
-	DefaultPeriod time.Duration = time.Hour * 24 * 2 // 2 days
+	DefaultPeriod          time.Duration = time.Hour * 24 * 2                                                  // 2 days
+	DefaultVestingContract string        = "cosmos14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s4hmalr" // the address derived from code id 1 and instance id 1
 )
 
 // Default governance params
@@ -25,9 +26,10 @@ var (
 
 // Parameter store key
 var (
-	ParamStoreKeyDepositParams = []byte("depositparams")
-	ParamStoreKeyVotingParams  = []byte("votingparams")
-	ParamStoreKeyTallyParams   = []byte("tallyparams")
+	ParamStoreKeyDepositParams   = []byte("depositparams")
+	ParamStoreKeyVotingParams    = []byte("votingparams")
+	ParamStoreKeyTallyParams     = []byte("tallyparams")
+	ParamStoreKeyVestingContract = []byte("vestingcontract")
 )
 
 // ParamKeyTable - Key declaration for parameters
@@ -36,6 +38,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 		paramtypes.NewParamSetPair(ParamStoreKeyDepositParams, DepositParams{}, validateDepositParams),
 		paramtypes.NewParamSetPair(ParamStoreKeyVotingParams, VotingParams{}, validateVotingParams),
 		paramtypes.NewParamSetPair(ParamStoreKeyTallyParams, TallyParams{}, validateTallyParams),
+		paramtypes.NewParamSetPair(ParamStoreKeyVestingContract, sdk.AccAddress{}, validateVestingContract),
 	)
 }
 
@@ -171,28 +174,43 @@ func validateVotingParams(i interface{}) error {
 	return nil
 }
 
+func validateVestingContract(i interface{}) error {
+	v, ok := i.(sdk.AccAddress)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if _, err := sdk.AccAddressFromBech32(v.String()); err != nil {
+		return fmt.Errorf("vesting contract address is invalid: %s", v)
+	}
+
+	return nil
+}
+
 // Params returns all of the governance params
 type Params struct {
-	VotingParams  VotingParams  `json:"voting_params" yaml:"voting_params"`
-	TallyParams   TallyParams   `json:"tally_params" yaml:"tally_params"`
-	DepositParams DepositParams `json:"deposit_params" yaml:"deposit_params"`
+	VotingParams    VotingParams  `json:"voting_params" yaml:"voting_params"`
+	TallyParams     TallyParams   `json:"tally_params" yaml:"tally_params"`
+	DepositParams   DepositParams `json:"deposit_params" yaml:"deposit_params"`
+	VestingContract string        `json:"vesting_contract" yaml:"vesting_contract"`
 }
 
 func (gp Params) String() string {
 	return gp.VotingParams.String() + "\n" +
-		gp.TallyParams.String() + "\n" + gp.DepositParams.String()
+		gp.TallyParams.String() + "\n" + gp.DepositParams.String() + gp.VestingContract
 }
 
 // NewParams creates a new gov Params instance
-func NewParams(vp VotingParams, tp TallyParams, dp DepositParams) Params {
+func NewParams(vp VotingParams, tp TallyParams, dp DepositParams, vc string) Params {
 	return Params{
-		VotingParams:  vp,
-		DepositParams: dp,
-		TallyParams:   tp,
+		VotingParams:    vp,
+		DepositParams:   dp,
+		TallyParams:     tp,
+		VestingContract: vc,
 	}
 }
 
 // DefaultParams default governance params
 func DefaultParams() Params {
-	return NewParams(DefaultVotingParams(), DefaultTallyParams(), DefaultDepositParams())
+	return NewParams(DefaultVotingParams(), DefaultTallyParams(), DefaultDepositParams(), DefaultVestingContract)
 }

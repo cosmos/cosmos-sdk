@@ -60,6 +60,7 @@ func TestMigrateJSON(t *testing.T) {
 		"threshold": "0",
 		"veto_threshold": "0"
 	},
+	"vesting_contract": "",
 	"votes": [
 		{
 			"option": "VOTE_OPTION_UNSPECIFIED",

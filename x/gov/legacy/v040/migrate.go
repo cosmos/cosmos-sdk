@@ -204,5 +204,6 @@ func Migrate(oldGovState v036gov.GenesisState) *v040gov.GenesisState {
 			Threshold:     oldGovState.TallyParams.Threshold,
 			VetoThreshold: oldGovState.TallyParams.Veto,
 		},
+		VestingContract: v040gov.DefaultVestingContract,
 	}
 }

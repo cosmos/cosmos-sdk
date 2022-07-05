@@ -51,6 +51,14 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 	if !balance.IsEqual(totalDeposits) {
 		panic(fmt.Sprintf("expected module account was %s but we got %s", balance.String(), totalDeposits.String()))
 	}
+
+	// validate vesting contract address, and save to param store
+	vestingContractAddr, err := sdk.AccAddressFromBech32(data.VestingContract)
+	if err != nil {
+		panic(fmt.Sprintf("governance vesting contract address (%s) is invalid: %s", data.VestingContract, err))
+	}
+
+	k.SetVestingContract(ctx, vestingContractAddr)
 }
 
 // ExportGenesis - output genesis parameters
@@ -59,6 +67,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	depositParams := k.GetDepositParams(ctx)
 	votingParams := k.GetVotingParams(ctx)
 	tallyParams := k.GetTallyParams(ctx)
+	vestingContract := k.GetVestingContract(ctx)
 	proposals := k.GetProposals(ctx)
 
 	var proposalsDeposits types.Deposits
@@ -79,5 +88,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		DepositParams:      depositParams,
 		VotingParams:       votingParams,
 		TallyParams:        tallyParams,
+		VestingContract:    vestingContract.String(),
 	}
 }

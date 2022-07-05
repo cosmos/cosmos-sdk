@@ -140,6 +140,8 @@ message QueryParamsResponse {
   DepositParams deposit_params = 2 [(gogoproto.nullable) = false];
   // tally_params defines the parameters related to tally.
   TallyParams tally_params = 3 [(gogoproto.nullable) = false];
+  // vesting_contract defines the vesting contract address.
+  string vesting_contract = 4;
 }
 
 // QueryDepositRequest is the request type for the Query/Deposit RPC method.

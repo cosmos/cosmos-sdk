@@ -8,12 +8,13 @@ import (
 )
 
 // NewGenesisState creates a new genesis state for the governance module
-func NewGenesisState(startingProposalID uint64, dp DepositParams, vp VotingParams, tp TallyParams) *GenesisState {
+func NewGenesisState(startingProposalID uint64, dp DepositParams, vp VotingParams, tp TallyParams, vc string) *GenesisState {
 	return &GenesisState{
 		StartingProposalId: startingProposalID,
 		DepositParams:      dp,
 		VotingParams:       vp,
 		TallyParams:        tp,
+		VestingContract:    vc,
 	}
 }
 
@@ -24,6 +25,7 @@ func DefaultGenesisState() *GenesisState {
 		DefaultDepositParams(),
 		DefaultVotingParams(),
 		DefaultTallyParams(),
+		DefaultVestingContract,
 	)
 }
 
@@ -34,7 +36,8 @@ func (data GenesisState) Equal(other GenesisState) bool {
 		data.Proposals.Equal(other.Proposals) &&
 		data.DepositParams.Equal(other.DepositParams) &&
 		data.TallyParams.Equal(other.TallyParams) &&
-		data.VotingParams.Equal(other.VotingParams)
+		data.VotingParams.Equal(other.VotingParams) &&
+		data.VestingContract == other.VestingContract
 }
 
 // Empty returns true if a GenesisState is empty
@@ -59,6 +62,10 @@ func ValidateGenesis(data *GenesisState) error {
 	if !data.DepositParams.MinDeposit.IsValid() {
 		return fmt.Errorf("governance deposit amount must be a valid sdk.Coins amount, is %s",
 			data.DepositParams.MinDeposit.String())
+	}
+
+	if _, err := sdk.AccAddressFromBech32(data.VestingContract); err != nil {
+		return fmt.Errorf("governance vesting contract address is invalid: %s", err)
 	}
 
 	return nil

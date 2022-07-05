@@ -5,71 +5,103 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
-
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletypes "github.com/cosmos/cosmos-sdk/types/module"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/nft"
+	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
 	nftkeeper "github.com/cosmos/cosmos-sdk/x/nft/keeper"
+	"github.com/cosmos/cosmos-sdk/x/nft/module"
 	"github.com/cosmos/cosmos-sdk/x/nft/simulation"
-	"github.com/cosmos/cosmos-sdk/x/nft/testutil"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	nfttestutil "github.com/cosmos/cosmos-sdk/x/nft/testutil"
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/suite"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmtime "github.com/tendermint/tendermint/libs/time"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type SimTestSuite struct {
 	suite.Suite
 
-	ctx sdk.Context
-
-	app               *runtime.App
-	codec             codec.Codec
-	interfaceRegistry codectypes.InterfaceRegistry
-	accountKeeper     authkeeper.AccountKeeper
-	bankKeeper        bankkeeper.Keeper
-	stakingKeeper     *stakingkeeper.Keeper
-	nftKeeper         nftkeeper.Keeper
+	ctx           sdk.Context
+	baseApp       *baseapp.BaseApp
+	accountKeeper *nfttestutil.MockAccountKeeper
+	bankKeeper    *nfttestutil.MockBankKeeper
+	nftKeeper     nftkeeper.Keeper
+	encCfg        moduletestutil.TestEncodingConfig
 }
 
 func (suite *SimTestSuite) SetupTest() {
-	app, err := simtestutil.Setup(
-		testutil.AppConfig,
-		&suite.codec,
-		&suite.interfaceRegistry,
-		&suite.accountKeeper,
-		&suite.bankKeeper,
-		&suite.stakingKeeper,
-		&suite.nftKeeper,
-	)
-	suite.Require().NoError(err)
+	key := sdk.NewKVStoreKey(nft.StoreKey)
+	// suite setup
+	addrs := simtestutil.CreateIncrementalAccounts(3)
+	suite.encCfg = moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
-	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	// gomock initializations
+	ctrl := gomock.NewController(suite.T())
+	suite.accountKeeper = nfttestutil.NewMockAccountKeeper(ctrl)
+	suite.bankKeeper = nfttestutil.NewMockBankKeeper(ctrl)
+
+	suite.accountKeeper.EXPECT().GetModuleAddress(nft.ModuleName).Return(addrs[0]).AnyTimes()
+
+	testCtx := testutil.DefaultContextWithDB(suite.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	suite.baseApp = baseapp.NewBaseApp(
+		"nft",
+		log.NewNopLogger(),
+		testCtx.DB,
+		suite.encCfg.TxConfig.TxDecoder(),
+	)
+
+	suite.baseApp.SetCMS(testCtx.CMS)
+
+	suite.baseApp.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
+	suite.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
+
+	suite.nftKeeper = keeper.NewKeeper(key, suite.encCfg.Codec, suite.accountKeeper, suite.bankKeeper)
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
+	nft.RegisterQueryServer(queryHelper, suite.nftKeeper)
+
+	cfg := moduletypes.NewConfigurator(suite.encCfg.Codec, suite.baseApp.MsgServiceRouter(), suite.baseApp.GRPCQueryRouter())
+
+	appModule := module.NewAppModule(suite.encCfg.Codec, suite.nftKeeper, suite.accountKeeper, suite.bankKeeper, suite.encCfg.InterfaceRegistry)
+	appModule.RegisterServices(cfg)
+	appModule.RegisterInterfaces(suite.encCfg.InterfaceRegistry)
+
 }
 
 func (suite *SimTestSuite) TestWeightedOperations() {
 	weightedOps := simulation.WeightedOperations(
-		suite.interfaceRegistry,
+		suite.encCfg.InterfaceRegistry,
 		make(simtypes.AppParams),
-		suite.codec,
+		suite.encCfg.Codec,
 		suite.accountKeeper,
 		suite.bankKeeper,
 		suite.nftKeeper,
 	)
 
+	// begin new block
+	suite.baseApp.BeginBlock(abci.RequestBeginBlock{
+		Header: tmproto.Header{
+			Height:  suite.baseApp.LastBlockHeight() + 1,
+			AppHash: suite.baseApp.LastCommitID().Hash,
+		},
+	})
+
 	// setup 3 accounts
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accs := suite.getTestingAccounts(r, 3)
+
+	suite.accountKeeper.EXPECT().GetAccount(suite.ctx, accs[2].Address).Return(authtypes.NewBaseAccount(accs[2].Address, accs[2].PubKey, 0, 0)).Times(1)
+	suite.bankKeeper.EXPECT().SpendableCoins(suite.ctx, accs[2].Address).Return(sdk.Coins{sdk.NewInt64Coin("stake", 10)}).Times(1)
 
 	expected := []struct {
 		weight     int
@@ -80,7 +112,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}
 
 	for i, w := range weightedOps {
-		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
+		operationMsg, _, err := w.Op()(r, suite.baseApp, suite.ctx, accs, "")
 		suite.Require().NoError(err)
 
 		// the following checks are very much dependent from the ordering of the output given
@@ -94,17 +126,6 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
-
-	initAmt := suite.stakingKeeper.TokensFromConsensusPower(suite.ctx, 200000)
-	initCoins := sdk.NewCoins(sdk.NewCoin("stake", initAmt))
-
-	// add coins to the accounts
-	for _, account := range accounts {
-		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
-		suite.accountKeeper.SetAccount(suite.ctx, acc)
-		suite.Require().NoError(banktestutil.FundAccount(suite.bankKeeper, suite.ctx, account.Address, initCoins))
-	}
-
 	return accounts
 }
 
@@ -115,22 +136,26 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	blockTime := time.Now().UTC()
 	ctx := suite.ctx.WithBlockTime(blockTime)
 
+	acc := authtypes.NewBaseAccount(accounts[0].Address, accounts[0].PubKey, 0, 0)
+	suite.accountKeeper.EXPECT().GetAccount(ctx, accounts[0].Address).Return(acc).Times(1)
+	suite.bankKeeper.EXPECT().SpendableCoins(ctx, accounts[0].Address).Return(sdk.Coins{sdk.NewInt64Coin("stake", 10)}).Times(1)
+
 	// begin new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{
+	suite.baseApp.BeginBlock(abci.RequestBeginBlock{
 		Header: tmproto.Header{
-			Height:  suite.app.LastBlockHeight() + 1,
-			AppHash: suite.app.LastCommitID().Hash,
+			Height:  suite.baseApp.LastBlockHeight() + 1,
+			AppHash: suite.baseApp.LastCommitID().Hash,
 		},
 	})
 
 	// execute operation
-	registry := suite.interfaceRegistry
+	registry := suite.encCfg.InterfaceRegistry
 	op := simulation.SimulateMsgSend(codec.NewProtoCodec(registry), suite.accountKeeper, suite.bankKeeper, suite.nftKeeper)
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, ctx, accounts, "")
+	operationMsg, futureOperations, err := op(r, suite.baseApp, ctx, accounts, "")
 	suite.Require().NoError(err)
 
 	var msg nft.MsgSend
-	suite.codec.UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.encCfg.Codec.UnmarshalJSON(operationMsg.Msg, &msg)
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Len(futureOperations, 0)
 }

@@ -28,11 +28,11 @@ There are two types of fee allowances present at the moment:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/feegrant/v1beta1/feegrant.proto#L13-L26
 
-* `spend_limit` is the limit of coins that are allowed to be used from the `granter` account. If it is empty, it assumes there's no spend limit, `grantee` can use any number of available tokens from `granter` account address before the expiration.
+* `spend_limit` is the limit of coins that are allowed to be used from the `granter` account. If it is empty, it assumes there's no spend limit, `grantee` can use any number of available coins from `granter` account address before the expiration.
 
 * `expiration` specifies an optional time when this allowance expires. If the value is left empty, there is no expiry for the grant.
 
-* When a grant is created with empty values for `spend_limit` and `expiration`, it is still a valid grant. It won't restrict the `grantee` to use any number of tokens from `granter` and it won't have any expiration. The only way to restrict the `grantee` is by revoking the grant.
+* When a grant is created with empty values for `spend_limit` and `expiration`, it is still a valid grant. It won't restrict the `grantee` to use any number of coins from `granter` and it won't have any expiration. The only way to restrict the `grantee` is by revoking the grant.
 
 ## PeriodicAllowance
 

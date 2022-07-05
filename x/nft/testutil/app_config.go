@@ -28,11 +28,6 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 			Name: "runtime",
 			Config: appconfig.WrapAny(&runtimev1alpha1.Module{
 				AppName: "NFTApp",
-				// During begin block slashing happens after distr.BeginBlocker so that
-				// there is nothing left over in the validator fee pool, so as to keep the
-				// CanWithdrawInvariant invariant.
-				// NOTE: staking module is required if HistoricalEntries param > 0
-				// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
 				BeginBlockers: []string{
 					minttypes.ModuleName,
 					stakingtypes.ModuleName,

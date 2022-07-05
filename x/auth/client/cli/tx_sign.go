@@ -3,12 +3,16 @@ package cli
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	clikeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
@@ -224,7 +228,6 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 		txCfg := clientCtx.TxConfig
 		txBuilder, err := txCfg.WrapTxBuilder(newTx)
 		if err != nil {
@@ -244,13 +247,28 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 
 		overwrite, _ := f.GetBool(flagOverwrite)
 		if multisig != "" {
-			multisigAddr, err := sdk.AccAddressFromBech32(multisig)
+			var (
+				multisigName string
+				multisigAddr sdk.AccAddress
+			)
+			// Bech32 decode error, maybe it's a name, we try to fetch from keyring
+			multisigAddr, multisigName, _, err = client.GetFromFields(clientCtx, txF.Keybase(), multisig)
 			if err != nil {
-				// Bech32 decode error, maybe it's a name, we try to fetch from keyring
-				multisigAddr, _, _, err = client.GetFromFields(clientCtx, txFactory.Keybase(), multisig)
-				if err != nil {
-					return fmt.Errorf("error getting account from keybase: %w", err)
-				}
+				return fmt.Errorf("error getting account from keybase: %w", err)
+			}
+
+			multisigPubKey, err := txShowPubKeyExec(clientCtx, multisigName)
+			if err != nil {
+				return err
+			}
+			fromKeyPubKey, err := txShowPubKeyExec(clientCtx, fromName)
+			if err != nil {
+				return err
+			}
+			fromKeyStartIndex := strings.Index(fromKeyPubKey.String(), "\"key\":")
+			fromPubkey := fromKeyPubKey.String()[fromKeyStartIndex : len(fromKeyPubKey.String())-2]
+			if !strings.Contains(multisigPubKey.String(), fromPubkey) {
+				return fmt.Errorf("signing key %v is not a part of multisig key %v", fromName, multisigName)
 			}
 			err = authclient.SignTxWithSignerAddress(
 				txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline, overwrite)
@@ -329,4 +347,13 @@ func marshalSignatureJSON(txConfig client.TxConfig, txBldr client.TxBuilder, sig
 	}
 
 	return txConfig.TxJSONEncoder()(parsedTx)
+}
+
+func txShowPubKeyExec(clientCtx client.Context, name string, extraArgs ...string) (testutil.BufferWriter, error) {
+	flagPubKey := "--pubkey"
+	args := []string{
+		flagPubKey,
+		name,
+	}
+	return clitestutil.ExecTestCLICmd(clientCtx, clikeys.ShowKeysCmd(), append(args, extraArgs...))
 }

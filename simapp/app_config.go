@@ -31,10 +31,12 @@ import (
 	authzmodulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
 	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	capabilitymodulev1 "cosmossdk.io/api/cosmos/capability/module/v1"
+	crisismodulev1 "cosmossdk.io/api/cosmos/crisis/module/v1"
 	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
 	evidencemodulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
 	feegrantmodulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
+	govmodulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	groupmodulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	nftmodulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
@@ -189,6 +191,14 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 		{
 			Name:   feegrant.ModuleName,
 			Config: appconfig.WrapAny(&feegrantmodulev1.Module{}),
+		},
+		{
+			Name:   govtypes.ModuleName,
+			Config: appconfig.WrapAny(&govmodulev1.Module{}),
+		},
+		{
+			Name:   crisistypes.ModuleName,
+			Config: appconfig.WrapAny(&crisismodulev1.Module{}),
 		},
 	},
 })

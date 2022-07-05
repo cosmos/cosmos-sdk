@@ -64,6 +64,7 @@ func (d Delegation) GetDelegatorAddr() sdk.AccAddress {
 
 	return delAddr
 }
+
 func (d Delegation) GetValidatorAddr() sdk.ValAddress {
 	addr, err := sdk.ValAddressFromBech32(d.ValidatorAddress)
 	if err != nil {
@@ -348,7 +349,8 @@ func NewRedelegationResponse(
 
 // NewRedelegationEntryResponse creates a new RedelegationEntryResponse instance.
 func NewRedelegationEntryResponse(
-	creationHeight int64, completionTime time.Time, sharesDst sdk.Dec, initialBalance, balance sdk.Int) RedelegationEntryResponse {
+	creationHeight int64, completionTime time.Time, sharesDst sdk.Dec, initialBalance, balance sdk.Int,
+) RedelegationEntryResponse {
 	return RedelegationEntryResponse{
 		RedelegationEntry: NewRedelegationEntry(creationHeight, completionTime, initialBalance, sharesDst),
 		Balance:           balance,

@@ -38,7 +38,6 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // GrantAllowance creates a new grant
 func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
-
 	// create the account if it is not in account state
 	granteeAcc := k.authKeeper.GetAccount(ctx, grantee)
 	if granteeAcc == nil {

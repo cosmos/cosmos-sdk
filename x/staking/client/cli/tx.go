@@ -497,7 +497,6 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorConfig, txBldr tx.Factory, generateOnly bool) (tx.Factory, sdk.Msg, error) {
 	amounstStr := config.Amount
 	amount, err := sdk.ParseCoinNormalized(amounstStr)
-
 	if err != nil {
 		return txBldr, nil, err
 	}
@@ -516,7 +515,6 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 	maxRateStr := config.CommissionMaxRate
 	maxChangeRateStr := config.CommissionMaxChangeRate
 	commissionRates, err := buildCommissionRates(rateStr, maxRateStr, maxChangeRateStr)
-
 	if err != nil {
 		return txBldr, nil, err
 	}

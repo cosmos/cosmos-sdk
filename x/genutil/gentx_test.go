@@ -199,7 +199,6 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 			} else {
 				suite.Require().Error(err)
 			}
-
 		})
 	}
 }

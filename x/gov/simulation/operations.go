@@ -30,7 +30,6 @@ func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper,
 	bk types.BankKeeper, k keeper.Keeper, wContents []simtypes.WeightedProposalContent,
 ) simulation.WeightedOperations {
-
 	var (
 		weightMsgDeposit      int
 		weightMsgVote         int
@@ -265,7 +264,8 @@ func SimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keepe
 }
 
 func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper,
-	simAccount simtypes.Account, proposalIDInt int64) simtypes.Operation {
+	simAccount simtypes.Account, proposalIDInt int64,
+) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -318,7 +318,8 @@ func SimulateMsgVoteWeighted(ak types.AccountKeeper, bk types.BankKeeper, k keep
 }
 
 func operationSimulateMsgVoteWeighted(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper,
-	simAccount simtypes.Account, proposalIDInt int64) simtypes.Operation {
+	simAccount simtypes.Account, proposalIDInt int64,
+) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -406,7 +407,8 @@ func randomDeposit(r *rand.Rand, ctx sdk.Context,
 // that matches a given Status.
 // It does not provide a default ID.
 func randomProposalID(r *rand.Rand, k keeper.Keeper,
-	ctx sdk.Context, status types.ProposalStatus) (proposalID uint64, found bool) {
+	ctx sdk.Context, status types.ProposalStatus,
+) (proposalID uint64, found bool) {
 	proposalID, _ = k.GetProposalID(ctx)
 
 	switch {

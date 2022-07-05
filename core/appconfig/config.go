@@ -110,6 +110,14 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 		for _, invoker := range init.Invokers {
 			opts = append(opts, depinject.InvokeInModule(module.Name, invoker))
 		}
+
+		for _, binding := range module.GolangBindings {
+			opts = append(opts, depinject.BindInterfaceInModule(module.Name, binding.InterfaceType, binding.Implementation))
+		}
+	}
+
+	for _, binding := range appConfig.GolangBindings {
+		opts = append(opts, depinject.BindInterface(binding.InterfaceType, binding.Implementation))
 	}
 
 	return depinject.Configs(opts...)

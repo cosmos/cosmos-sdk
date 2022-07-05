@@ -207,6 +207,10 @@ func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.We
 }
 
 // RandomizedParams creates randomized mint param changes for the simulator.
+//
+// TODO: Returns an empty slice which will make parameter changes a no-op during
+// simulations. Once all modules are migrated, remove RandomizedParams from
+// the simulation interface.
 func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{}
 }

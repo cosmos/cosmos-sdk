@@ -55,34 +55,27 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace types.ParamSubspace,
 	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper,
-	legacyRouter v1beta1.Router, router *baseapp.MsgServiceRouter,
-	config types.Config,
-) Keeper {
+	router *baseapp.MsgServiceRouter, config types.Config,
+) *Keeper {
 	// ensure governance module account is set
 	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
-
-	// It is vital to seal the governance proposal router here as to not allow
-	// further handlers to be registered after the keeper is created since this
-	// could create invalid or non-deterministic behavior.
-	legacyRouter.Seal()
 
 	// If MaxMetadataLen not set by app developer, set to default value.
 	if config.MaxMetadataLen == 0 {
 		config.MaxMetadataLen = types.DefaultConfig().MaxMetadataLen
 	}
 
-	return Keeper{
-		storeKey:     key,
-		paramSpace:   paramSpace,
-		authKeeper:   authKeeper,
-		bankKeeper:   bankKeeper,
-		sk:           sk,
-		cdc:          cdc,
-		legacyRouter: legacyRouter,
-		router:       router,
-		config:       config,
+	return &Keeper{
+		storeKey:   key,
+		paramSpace: paramSpace,
+		authKeeper: authKeeper,
+		bankKeeper: bankKeeper,
+		sk:         sk,
+		cdc:        cdc,
+		router:     router,
+		config:     config,
 	}
 }
 
@@ -95,6 +88,14 @@ func (keeper *Keeper) SetHooks(gh types.GovHooks) *Keeper {
 	keeper.hooks = gh
 
 	return keeper
+}
+
+func (keeper *Keeper) SetLegacyRouter(router v1beta1.Router) {
+	// It is vital to seal the governance proposal router here as to not allow
+	// further handlers to be registered after the keeper is created since this
+	// could create invalid or non-deterministic behavior.
+	router.Seal()
+	keeper.legacyRouter = router
 }
 
 // Logger returns a module-specific logger.

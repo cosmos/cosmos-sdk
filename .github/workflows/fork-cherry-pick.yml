@@ -5,7 +5,7 @@ on:
     types: ["closed"]
 
 jobs:
-  cherry_pick_release_v1_0:
+  cherry_pick_patch:
     runs-on: ubuntu-latest
     name: Cherry pick into main
     if: contains(github.event.pull_request.labels.*.name, 'main')

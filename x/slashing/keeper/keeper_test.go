@@ -37,6 +37,7 @@ type KeeperTestSuite struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	addrDels          []sdk.AccAddress
 	queryClient       slashingtypes.QueryClient
+	msgServer         types.MsgServer
 }
 
 func (s *KeeperTestSuite) SetupTest() {
@@ -49,6 +50,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		&s.interfaceRegistry,
 	)
 	s.Require().NoError(err)
+
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	s.accountKeeper.SetParams(ctx, authtypes.DefaultParams())
@@ -72,6 +74,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	s.addrDels = addrDels
 	s.ctx = ctx
+	s.msgServer = slashingkeeper.NewMsgServerImpl(s.slashingKeeper)
 }
 
 func (s *KeeperTestSuite) TestUnJailNotBonded() {

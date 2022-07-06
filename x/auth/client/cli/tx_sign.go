@@ -3,16 +3,12 @@ package cli
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	clikeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
@@ -256,20 +252,11 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return fmt.Errorf("error getting account from keybase: %w", err)
 			}
-
-			multisigPubKey, err := txShowPubKeyExec(clientCtx, multisigName)
+			multisigRecord, err := clientCtx.Keyring.Key(multisigName)
 			if err != nil {
 				return err
 			}
-			fromKeyPubKey, err := txShowPubKeyExec(clientCtx, fromName)
-			if err != nil {
-				return err
-			}
-			fromKeyStartIndex := strings.Index(fromKeyPubKey.String(), "\"key\":")
-			fromPubkey := fromKeyPubKey.String()[fromKeyStartIndex : len(fromKeyPubKey.String())-2]
-			if !strings.Contains(multisigPubKey.String(), fromPubkey) {
-				return fmt.Errorf("signing key %v is not a part of multisig key %v", fromName, multisigName)
-			}
+			fmt.Println(multisigRecord.GetPubKey())
 			err = authclient.SignTxWithSignerAddress(
 				txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline, overwrite)
 			if err != nil {
@@ -347,13 +334,4 @@ func marshalSignatureJSON(txConfig client.TxConfig, txBldr client.TxBuilder, sig
 	}
 
 	return txConfig.TxJSONEncoder()(parsedTx)
-}
-
-func txShowPubKeyExec(clientCtx client.Context, name string, extraArgs ...string) (testutil.BufferWriter, error) {
-	flagPubKey := "--pubkey"
-	args := []string{
-		flagPubKey,
-		name,
-	}
-	return clitestutil.ExecTestCLICmd(clientCtx, clikeys.ShowKeysCmd(), append(args, extraArgs...))
 }

@@ -1,22 +1,20 @@
 package keeper_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/testutil"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	"reflect"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params/keeper"
-	"github.com/cosmos/cosmos-sdk/x/params/testutil"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
 type KeeperTestSuite struct {
@@ -28,17 +26,18 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	var interfaceRegistry codectypes.InterfaceRegistry
+	encodingCfg := moduletestutil.MakeTestEncodingConfig(params.AppModuleBasic{})
+	key := sdk.NewKVStoreKey(types.StoreKey)
+	tkey := sdk.NewTransientStoreKey("params_transient_test")
 
-	app, err := simtestutil.Setup(
-		testutil.AppConfig,
-		&suite.paramsKeeper,
-	)
-	suite.Require().NoError(err)
+	suite.ctx = testutil.DefaultContext(key, tkey)
+	suite.paramsKeeper = keeper.NewKeeper(encodingCfg.Codec, encodingCfg.Amino, key, tkey)
+	suite.paramsKeeper.Subspace("bank")
+	suite.paramsKeeper.Subspace("staking")
 
-	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, interfaceRegistry)
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, encodingCfg.InterfaceRegistry)
 	proposal.RegisterQueryServer(queryHelper, suite.paramsKeeper)
+
 	suite.queryClient = proposal.NewQueryClient(queryHelper)
 }
 

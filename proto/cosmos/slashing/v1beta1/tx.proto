@@ -56,5 +56,3 @@ message MsgUpdateParams {
 //
 // Since: cosmos-sdk 0.47
 message MsgUpdateParamsResponse {}
-
-

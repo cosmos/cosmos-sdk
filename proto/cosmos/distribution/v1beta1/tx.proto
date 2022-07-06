@@ -29,7 +29,7 @@ service Msg {
   rpc FundCommunityPool(MsgFundCommunityPool) returns (MsgFundCommunityPoolResponse);
 
   // UpdateParams defines a governance operation for updating the x/distribution module
-  // parameters. The authority is hard-coded to the x/gov module account.
+  // parameters. The authority is defined in the keeper.
   //
   // Since: cosmos-sdk 0.47
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);

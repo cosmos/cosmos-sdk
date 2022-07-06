@@ -5686,12 +5686,6 @@ type GenesisState struct {
 	unknownFields protoimpl.UnknownFields
 
 	// params defines all the parameters of the module.
-	//
-	// Deprecated: Use governance to submit a MsgUpdateParams message to instruct
-	// the x/distribution module to update the relevant parameters.
-	//
-	// Since the cosmos-sdk 0.47 version, this only exists for backwards
-	// compatibility of genesis state.
 	Params *Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
 	// fee_pool defines the fee pool at genesis.
 	FeePool *FeePool `protobuf:"bytes,2,opt,name=fee_pool,json=feePool,proto3" json:"fee_pool,omitempty"`

@@ -1850,7 +1850,7 @@ type ModuleConfig struct {
 	// that the v1 module had. Note: modules should provide info on which versions
 	// they can migrate from in the ModuleDescriptor.can_migration_from field.
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// config is the config object for the module. Module config messages shouldA
+	// config is the config object for the module. Module config messages should
 	// define a ModuleDescriptor using the cosmos.app.v1alpha1.is_module extension.
 	Config *anypb.Any `protobuf:"bytes,2,opt,name=config,proto3" json:"config,omitempty"`
 	// golang_bindings specifies explicit interface to implementation type bindings which

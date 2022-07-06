@@ -696,7 +696,7 @@ type MsgClient interface {
 	// fund the community pool.
 	FundCommunityPool(ctx context.Context, in *MsgFundCommunityPool, opts ...grpc.CallOption) (*MsgFundCommunityPoolResponse, error)
 	// UpdateParams defines a governance operation for updating the x/distribution module
-	// parameters. The authority is hard-coded to the x/gov module account.
+	// parameters. The authority is defined in the keeper.
 	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
@@ -770,7 +770,7 @@ type MsgServer interface {
 	// fund the community pool.
 	FundCommunityPool(context.Context, *MsgFundCommunityPool) (*MsgFundCommunityPoolResponse, error)
 	// UpdateParams defines a governance operation for updating the x/distribution module
-	// parameters. The authority is hard-coded to the x/gov module account.
+	// parameters. The authority is defined in the keeper.
 	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)

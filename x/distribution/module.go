@@ -6,11 +6,14 @@ import (
 	"fmt"
 	"math/rand"
 
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"cosmossdk.io/core/appmodule"
+
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -25,6 +28,7 @@ import (
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	modulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
+
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/simulation"
@@ -225,6 +229,7 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 type distrInputs struct {
 	depinject.In
 
+	Config   *modulev1.Module
 	Key      *store.KVStoreKey
 	Cdc      codec.Codec
 	Subspace paramstypes.Subspace
@@ -240,15 +245,22 @@ type distrOutputs struct {
 	DistrKeeper keeper.Keeper
 	Module      runtime.AppModuleWrapper
 	Hooks       staking.StakingHooksWrapper
+	GovHandler  govv1beta1.HandlerRoute
 }
 
 func provideModule(in distrInputs) distrOutputs {
-	k := keeper.NewKeeper(in.Cdc, in.Key, in.Subspace, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, authtypes.FeeCollectorName)
+	feeCollectorName := in.Config.FeeCollectorName
+	if feeCollectorName == "" {
+		feeCollectorName = authtypes.FeeCollectorName
+	}
+
+	k := keeper.NewKeeper(in.Cdc, in.Key, in.Subspace, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, feeCollectorName)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper)
 
 	return distrOutputs{
 		DistrKeeper: k,
 		Module:      runtime.WrapAppModule(m),
 		Hooks:       staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
+		GovHandler:  govv1beta1.HandlerRoute{Handler: NewCommunityPoolSpendProposalHandler(k), RouteKey: types.RouterKey},
 	}
 }

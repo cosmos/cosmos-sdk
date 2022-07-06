@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/core/internal"
 	"cosmossdk.io/core/internal/testpb"
 	_ "cosmossdk.io/core/internal/testpb"
+
 	"github.com/cosmos/cosmos-sdk/depinject"
 )
 
@@ -81,6 +82,24 @@ result: goodbye
 `
 	assert.Equal(t, expected, buf.String())
 
+	opt = appconfig.LoadYAML([]byte(`
+golang_bindings:
+  - interfaceType: interfaceType/package.name 
+    implementation: implementationType/package.name
+  - interfaceType: interfaceType/package.nameTwo 
+    implementation: implementationType/package.nameTwo
+modules:
+  - name: a
+    config:
+      "@type": testpb.TestModuleA
+    golang_bindings:
+      - interfaceType: interfaceType/package.name 
+        implementation: implementationType/package.name
+      - interfaceType: interfaceType/package.nameTwo 
+        implementation: implementationType/package.nameTwo
+`))
+	assert.NilError(t, depinject.Inject(opt))
+
 	// module registration failures:
 	appmodule.Register(&testpb.TestNoModuleOptionModule{})
 	opt = appconfig.LoadYAML([]byte(`
@@ -100,4 +119,5 @@ modules:
    "@type": testpb.TestNoGoImportModule
 `))
 	expectContainerErrorContains(t, opt, "module should have ModuleDescriptor.go_import specified")
+
 }

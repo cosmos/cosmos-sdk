@@ -2,30 +2,27 @@
 package modulev1
 
 import (
-	_ "cosmossdk.io/api/cosmos/app/v1alpha1"
 	fmt "fmt"
-	runtime "github.com/cosmos/cosmos-proto/runtime"
-	_ "github.com/gogo/protobuf/gogoproto"
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoiface "google.golang.org/protobuf/runtime/protoiface"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	io "io"
 	reflect "reflect"
 	sync "sync"
+
+	_ "cosmossdk.io/api/cosmos/app/v1alpha1"
+	runtime "github.com/cosmos/cosmos-proto/runtime"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoiface "google.golang.org/protobuf/runtime/protoiface"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 var (
-	md_Module                      protoreflect.MessageDescriptor
-	fd_Module_max_execution_period protoreflect.FieldDescriptor
-	fd_Module_max_metadata_len     protoreflect.FieldDescriptor
+	md_Module                    protoreflect.MessageDescriptor
+	fd_Module_fee_collector_name protoreflect.FieldDescriptor
 )
 
 func init() {
-	file_cosmos_group_v1_module_v1_module_proto_init()
-	md_Module = File_cosmos_group_v1_module_v1_module_proto.Messages().ByName("Module")
-	fd_Module_max_execution_period = md_Module.Fields().ByName("max_execution_period")
-	fd_Module_max_metadata_len = md_Module.Fields().ByName("max_metadata_len")
+	file_cosmos_crisis_module_v1_module_proto_init()
+	md_Module = File_cosmos_crisis_module_v1_module_proto.Messages().ByName("Module")
+	fd_Module_fee_collector_name = md_Module.Fields().ByName("fee_collector_name")
 }
 
 var _ protoreflect.Message = (*fastReflection_Module)(nil)
@@ -37,7 +34,7 @@ func (x *Module) ProtoReflect() protoreflect.Message {
 }
 
 func (x *Module) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_group_v1_module_v1_module_proto_msgTypes[0]
+	mi := &file_cosmos_crisis_module_v1_module_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -93,15 +90,9 @@ func (x *fastReflection_Module) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_Module) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.MaxExecutionPeriod != nil {
-		value := protoreflect.ValueOfMessage(x.MaxExecutionPeriod.ProtoReflect())
-		if !f(fd_Module_max_execution_period, value) {
-			return
-		}
-	}
-	if x.MaxMetadataLen != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.MaxMetadataLen)
-		if !f(fd_Module_max_metadata_len, value) {
+	if x.FeeCollectorName != "" {
+		value := protoreflect.ValueOfString(x.FeeCollectorName)
+		if !f(fd_Module_fee_collector_name, value) {
 			return
 		}
 	}
@@ -120,15 +111,13 @@ func (x *fastReflection_Module) Range(f func(protoreflect.FieldDescriptor, proto
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_Module) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.group.v1.module.v1.Module.max_execution_period":
-		return x.MaxExecutionPeriod != nil
-	case "cosmos.group.v1.module.v1.Module.max_metadata_len":
-		return x.MaxMetadataLen != uint64(0)
+	case "cosmos.crisis.module.v1.Module.fee_collector_name":
+		return x.FeeCollectorName != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.module.v1.Module"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.crisis.module.v1.Module"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1.module.v1.Module does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.crisis.module.v1.Module does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -140,15 +129,13 @@ func (x *fastReflection_Module) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Module) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.group.v1.module.v1.Module.max_execution_period":
-		x.MaxExecutionPeriod = nil
-	case "cosmos.group.v1.module.v1.Module.max_metadata_len":
-		x.MaxMetadataLen = uint64(0)
+	case "cosmos.crisis.module.v1.Module.fee_collector_name":
+		x.FeeCollectorName = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.module.v1.Module"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.crisis.module.v1.Module"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1.module.v1.Module does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.crisis.module.v1.Module does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -160,17 +147,14 @@ func (x *fastReflection_Module) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_Module) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.group.v1.module.v1.Module.max_execution_period":
-		value := x.MaxExecutionPeriod
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.group.v1.module.v1.Module.max_metadata_len":
-		value := x.MaxMetadataLen
-		return protoreflect.ValueOfUint64(value)
+	case "cosmos.crisis.module.v1.Module.fee_collector_name":
+		value := x.FeeCollectorName
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.module.v1.Module"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.crisis.module.v1.Module"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1.module.v1.Module does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.crisis.module.v1.Module does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -186,15 +170,13 @@ func (x *fastReflection_Module) Get(descriptor protoreflect.FieldDescriptor) pro
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Module) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.group.v1.module.v1.Module.max_execution_period":
-		x.MaxExecutionPeriod = value.Message().Interface().(*durationpb.Duration)
-	case "cosmos.group.v1.module.v1.Module.max_metadata_len":
-		x.MaxMetadataLen = value.Uint()
+	case "cosmos.crisis.module.v1.Module.fee_collector_name":
+		x.FeeCollectorName = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.module.v1.Module"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.crisis.module.v1.Module"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1.module.v1.Module does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.crisis.module.v1.Module does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -210,18 +192,13 @@ func (x *fastReflection_Module) Set(fd protoreflect.FieldDescriptor, value proto
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Module) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1.module.v1.Module.max_execution_period":
-		if x.MaxExecutionPeriod == nil {
-			x.MaxExecutionPeriod = new(durationpb.Duration)
-		}
-		return protoreflect.ValueOfMessage(x.MaxExecutionPeriod.ProtoReflect())
-	case "cosmos.group.v1.module.v1.Module.max_metadata_len":
-		panic(fmt.Errorf("field max_metadata_len of message cosmos.group.v1.module.v1.Module is not mutable"))
+	case "cosmos.crisis.module.v1.Module.fee_collector_name":
+		panic(fmt.Errorf("field fee_collector_name of message cosmos.crisis.module.v1.Module is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.module.v1.Module"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.crisis.module.v1.Module"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1.module.v1.Module does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.crisis.module.v1.Module does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -230,16 +207,13 @@ func (x *fastReflection_Module) Mutable(fd protoreflect.FieldDescriptor) protore
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_Module) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.group.v1.module.v1.Module.max_execution_period":
-		m := new(durationpb.Duration)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.group.v1.module.v1.Module.max_metadata_len":
-		return protoreflect.ValueOfUint64(uint64(0))
+	case "cosmos.crisis.module.v1.Module.fee_collector_name":
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.module.v1.Module"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.crisis.module.v1.Module"))
 		}
-		panic(fmt.Errorf("message cosmos.group.v1.module.v1.Module does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.crisis.module.v1.Module does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -249,7 +223,7 @@ func (x *fastReflection_Module) NewField(fd protoreflect.FieldDescriptor) protor
 func (x *fastReflection_Module) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.group.v1.module.v1.Module", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.crisis.module.v1.Module", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -304,12 +278,9 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		if x.MaxExecutionPeriod != nil {
-			l = options.Size(x.MaxExecutionPeriod)
+		l = len(x.FeeCollectorName)
+		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.MaxMetadataLen != 0 {
-			n += 1 + runtime.Sov(uint64(x.MaxMetadataLen))
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -340,22 +311,10 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.MaxMetadataLen != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.MaxMetadataLen))
-			i--
-			dAtA[i] = 0x10
-		}
-		if x.MaxExecutionPeriod != nil {
-			encoded, err := options.Marshal(x.MaxExecutionPeriod)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+		if len(x.FeeCollectorName) > 0 {
+			i -= len(x.FeeCollectorName)
+			copy(dAtA[i:], x.FeeCollectorName)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.FeeCollectorName)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -410,9 +369,9 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MaxExecutionPeriod", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field FeeCollectorName", wireType)
 				}
-				var msglen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -422,47 +381,24 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					msglen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if msglen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + msglen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.MaxExecutionPeriod == nil {
-					x.MaxExecutionPeriod = &durationpb.Duration{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.MaxExecutionPeriod); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
+				x.FeeCollectorName = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
-			case 2:
-				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MaxMetadataLen", wireType)
-				}
-				x.MaxMetadataLen = 0
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					x.MaxMetadataLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -502,7 +438,7 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 // versions:
 // 	protoc-gen-go v1.27.0
 // 	protoc        (unknown)
-// source: cosmos/group/v1/module/v1/module.proto
+// source: cosmos/crisis/module/v1/module.proto
 
 const (
 	// Verify that this generated code is sufficiently up-to-date.
@@ -511,22 +447,19 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Module is the config object of the group module.
+// Module is the config object of the crisis module.
 type Module struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// max_execution_period defines the max duration after a proposal's voting period ends that members can send a MsgExec to execute the proposal.
-	MaxExecutionPeriod *durationpb.Duration `protobuf:"bytes,1,opt,name=max_execution_period,json=maxExecutionPeriod,proto3" json:"max_execution_period,omitempty"`
-	// max_metadata_len defines the max length of the metadata bytes field for various entities within the group module. Defaults to 255 if not explicitly set.
-	MaxMetadataLen uint64 `protobuf:"varint,2,opt,name=max_metadata_len,json=maxMetadataLen,proto3" json:"max_metadata_len,omitempty"`
+	FeeCollectorName string `protobuf:"bytes,1,opt,name=fee_collector_name,json=feeCollectorName,proto3" json:"fee_collector_name,omitempty"`
 }
 
 func (x *Module) Reset() {
 	*x = Module{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_group_v1_module_v1_module_proto_msgTypes[0]
+		mi := &file_cosmos_crisis_module_v1_module_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -540,98 +473,79 @@ func (*Module) ProtoMessage() {}
 
 // Deprecated: Use Module.ProtoReflect.Descriptor instead.
 func (*Module) Descriptor() ([]byte, []int) {
-	return file_cosmos_group_v1_module_v1_module_proto_rawDescGZIP(), []int{0}
+	return file_cosmos_crisis_module_v1_module_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Module) GetMaxExecutionPeriod() *durationpb.Duration {
+func (x *Module) GetFeeCollectorName() string {
 	if x != nil {
-		return x.MaxExecutionPeriod
+		return x.FeeCollectorName
 	}
-	return nil
+	return ""
 }
 
-func (x *Module) GetMaxMetadataLen() uint64 {
-	if x != nil {
-		return x.MaxMetadataLen
-	}
-	return 0
-}
+var File_cosmos_crisis_module_v1_module_proto protoreflect.FileDescriptor
 
-var File_cosmos_group_v1_module_v1_module_proto protoreflect.FileDescriptor
-
-var file_cosmos_group_v1_module_v1_module_proto_rawDesc = []byte{
-	0x0a, 0x26, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2f, 0x76,
-	0x31, 0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2f, 0x76, 0x31, 0x2f, 0x6d, 0x6f, 0x64, 0x75,
-	0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x2e, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65,
-	0x2e, 0x76, 0x31, 0x1a, 0x20, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x70, 0x70, 0x2f,
-	0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e, 0x67, 0x6f, 0x6f,
-	0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x64, 0x75, 0x72,
-	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xb7, 0x01, 0x0a, 0x06,
-	0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x12, 0x55, 0x0a, 0x14, 0x6d, 0x61, 0x78, 0x5f, 0x65, 0x78,
-	0x65, 0x63, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42,
-	0x08, 0xc8, 0xde, 0x1f, 0x00, 0x98, 0xdf, 0x1f, 0x01, 0x52, 0x12, 0x6d, 0x61, 0x78, 0x45, 0x78,
-	0x65, 0x63, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x12, 0x28, 0x0a,
-	0x10, 0x6d, 0x61, 0x78, 0x5f, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5f, 0x6c, 0x65,
-	0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0e, 0x6d, 0x61, 0x78, 0x4d, 0x65, 0x74, 0x61,
-	0x64, 0x61, 0x74, 0x61, 0x4c, 0x65, 0x6e, 0x3a, 0x2c, 0xba, 0xc0, 0x96, 0xda, 0x01, 0x26, 0x0a,
-	0x24, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x78, 0x2f,
-	0x67, 0x72, 0x6f, 0x75, 0x70, 0x42, 0xea, 0x01, 0x0a, 0x1d, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x2e, 0x76, 0x31, 0x2e, 0x6d, 0x6f,
-	0x64, 0x75, 0x6c, 0x65, 0x2e, 0x76, 0x31, 0x42, 0x0b, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x50,
-	0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x33, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64,
-	0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f,
-	0x67, 0x72, 0x6f, 0x75, 0x70, 0x2f, 0x76, 0x31, 0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2f,
-	0x76, 0x31, 0x3b, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x76, 0x31, 0xa2, 0x02, 0x04, 0x43, 0x47,
-	0x56, 0x4d, 0xaa, 0x02, 0x19, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x47, 0x72, 0x6f, 0x75,
-	0x70, 0x2e, 0x56, 0x31, 0x2e, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x56, 0x31, 0xca, 0x02,
-	0x19, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x5c, 0x56, 0x31,
-	0x5c, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x25, 0x43, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x5c, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x5c, 0x56, 0x31, 0x5c, 0x4d, 0x6f, 0x64,
-	0x75, 0x6c, 0x65, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
-	0x74, 0x61, 0xea, 0x02, 0x1d, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x47, 0x72, 0x6f,
-	0x75, 0x70, 0x3a, 0x3a, 0x56, 0x31, 0x3a, 0x3a, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x3a, 0x3a,
-	0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+var file_cosmos_crisis_module_v1_module_proto_rawDesc = []byte{
+	0x0a, 0x24, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x72, 0x69, 0x73, 0x69, 0x73, 0x2f,
+	0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2f, 0x76, 0x31, 0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x17, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63,
+	0x72, 0x69, 0x73, 0x69, 0x73, 0x2e, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x76, 0x31, 0x1a,
+	0x20, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x70, 0x70, 0x2f, 0x76, 0x31, 0x61, 0x6c,
+	0x70, 0x68, 0x61, 0x31, 0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x22, 0x65, 0x0a, 0x06, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x12, 0x2c, 0x0a, 0x12, 0x66,
+	0x65, 0x65, 0x5f, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x5f, 0x6e, 0x61, 0x6d,
+	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x10, 0x66, 0x65, 0x65, 0x43, 0x6f, 0x6c, 0x6c,
+	0x65, 0x63, 0x74, 0x6f, 0x72, 0x4e, 0x61, 0x6d, 0x65, 0x3a, 0x2d, 0xba, 0xc0, 0x96, 0xda, 0x01,
+	0x27, 0x0a, 0x25, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f,
+	0x78, 0x2f, 0x63, 0x72, 0x69, 0x73, 0x69, 0x73, 0x42, 0xdc, 0x01, 0x0a, 0x1b, 0x63, 0x6f, 0x6d,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x72, 0x69, 0x73, 0x69, 0x73, 0x2e, 0x6d,
+	0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x76, 0x31, 0x42, 0x0b, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65,
+	0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x31, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73,
+	0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2f, 0x63, 0x72, 0x69, 0x73, 0x69, 0x73, 0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2f, 0x76,
+	0x31, 0x3b, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x43, 0x4d,
+	0xaa, 0x02, 0x17, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x43, 0x72, 0x69, 0x73, 0x69, 0x73,
+	0x2e, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x17, 0x43, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x5c, 0x43, 0x72, 0x69, 0x73, 0x69, 0x73, 0x5c, 0x4d, 0x6f, 0x64, 0x75, 0x6c,
+	0x65, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x23, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x43, 0x72,
+	0x69, 0x73, 0x69, 0x73, 0x5c, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x5c, 0x56, 0x31, 0x5c, 0x47,
+	0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x1a, 0x43, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x43, 0x72, 0x69, 0x73, 0x69, 0x73, 0x3a, 0x3a, 0x4d, 0x6f, 0x64,
+	0x75, 0x6c, 0x65, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
-	file_cosmos_group_v1_module_v1_module_proto_rawDescOnce sync.Once
-	file_cosmos_group_v1_module_v1_module_proto_rawDescData = file_cosmos_group_v1_module_v1_module_proto_rawDesc
+	file_cosmos_crisis_module_v1_module_proto_rawDescOnce sync.Once
+	file_cosmos_crisis_module_v1_module_proto_rawDescData = file_cosmos_crisis_module_v1_module_proto_rawDesc
 )
 
-func file_cosmos_group_v1_module_v1_module_proto_rawDescGZIP() []byte {
-	file_cosmos_group_v1_module_v1_module_proto_rawDescOnce.Do(func() {
-		file_cosmos_group_v1_module_v1_module_proto_rawDescData = protoimpl.X.CompressGZIP(file_cosmos_group_v1_module_v1_module_proto_rawDescData)
+func file_cosmos_crisis_module_v1_module_proto_rawDescGZIP() []byte {
+	file_cosmos_crisis_module_v1_module_proto_rawDescOnce.Do(func() {
+		file_cosmos_crisis_module_v1_module_proto_rawDescData = protoimpl.X.CompressGZIP(file_cosmos_crisis_module_v1_module_proto_rawDescData)
 	})
-	return file_cosmos_group_v1_module_v1_module_proto_rawDescData
+	return file_cosmos_crisis_module_v1_module_proto_rawDescData
 }
 
-var file_cosmos_group_v1_module_v1_module_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
-var file_cosmos_group_v1_module_v1_module_proto_goTypes = []interface{}{
-	(*Module)(nil),              // 0: cosmos.group.v1.module.v1.Module
-	(*durationpb.Duration)(nil), // 1: google.protobuf.Duration
+var file_cosmos_crisis_module_v1_module_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_cosmos_crisis_module_v1_module_proto_goTypes = []interface{}{
+	(*Module)(nil), // 0: cosmos.crisis.module.v1.Module
 }
-var file_cosmos_group_v1_module_v1_module_proto_depIdxs = []int32{
-	1, // 0: cosmos.group.v1.module.v1.Module.max_execution_period:type_name -> google.protobuf.Duration
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+var file_cosmos_crisis_module_v1_module_proto_depIdxs = []int32{
+	0, // [0:0] is the sub-list for method output_type
+	0, // [0:0] is the sub-list for method input_type
+	0, // [0:0] is the sub-list for extension type_name
+	0, // [0:0] is the sub-list for extension extendee
+	0, // [0:0] is the sub-list for field type_name
 }
 
-func init() { file_cosmos_group_v1_module_v1_module_proto_init() }
-func file_cosmos_group_v1_module_v1_module_proto_init() {
-	if File_cosmos_group_v1_module_v1_module_proto != nil {
+func init() { file_cosmos_crisis_module_v1_module_proto_init() }
+func file_cosmos_crisis_module_v1_module_proto_init() {
+	if File_cosmos_crisis_module_v1_module_proto != nil {
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file_cosmos_group_v1_module_v1_module_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_cosmos_crisis_module_v1_module_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Module); i {
 			case 0:
 				return &v.state
@@ -648,18 +562,18 @@ func file_cosmos_group_v1_module_v1_module_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_cosmos_group_v1_module_v1_module_proto_rawDesc,
+			RawDescriptor: file_cosmos_crisis_module_v1_module_proto_rawDesc,
 			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_cosmos_group_v1_module_v1_module_proto_goTypes,
-		DependencyIndexes: file_cosmos_group_v1_module_v1_module_proto_depIdxs,
-		MessageInfos:      file_cosmos_group_v1_module_v1_module_proto_msgTypes,
+		GoTypes:           file_cosmos_crisis_module_v1_module_proto_goTypes,
+		DependencyIndexes: file_cosmos_crisis_module_v1_module_proto_depIdxs,
+		MessageInfos:      file_cosmos_crisis_module_v1_module_proto_msgTypes,
 	}.Build()
-	File_cosmos_group_v1_module_v1_module_proto = out.File
-	file_cosmos_group_v1_module_v1_module_proto_rawDesc = nil
-	file_cosmos_group_v1_module_v1_module_proto_goTypes = nil
-	file_cosmos_group_v1_module_v1_module_proto_depIdxs = nil
+	File_cosmos_crisis_module_v1_module_proto = out.File
+	file_cosmos_crisis_module_v1_module_proto_rawDesc = nil
+	file_cosmos_crisis_module_v1_module_proto_goTypes = nil
+	file_cosmos_crisis_module_v1_module_proto_depIdxs = nil
 }

@@ -8,6 +8,7 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	"cosmossdk.io/core/appmodule"
+
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -195,9 +196,9 @@ type slashingInputs struct {
 
 	Key           *store.KVStoreKey
 	Cdc           codec.Codec
-	AccountKeeper types.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
-	BankKeeper    types.BankKeeper    `key:"cosmos.bank.v1.Keeper"`
-	StakingKeeper types.StakingKeeper `key:"cosmos.staking.v1.Keeper"`
+	AccountKeeper types.AccountKeeper
+	BankKeeper    types.BankKeeper
+	StakingKeeper types.StakingKeeper
 	Subspace      paramstypes.Subspace
 }
 

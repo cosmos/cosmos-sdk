@@ -4,12 +4,15 @@ import (
 	"context"
 	"encoding/json"
 
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"cosmossdk.io/core/appmodule"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -25,6 +28,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	modulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
+
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -183,6 +187,7 @@ type upgradeOutputs struct {
 
 	UpgradeKeeper keeper.Keeper
 	Module        runtime.AppModuleWrapper
+	GovHandler    govv1beta1.HandlerRoute
 }
 
 func provideModule(in upgradeInputs) upgradeOutputs {
@@ -202,6 +207,7 @@ func provideModule(in upgradeInputs) upgradeOutputs {
 	// set the governance module account as the authority for conducting upgrades
 	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, homePath, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	m := NewAppModule(k)
+	gh := govv1beta1.HandlerRoute{RouteKey: types.RouterKey, Handler: NewSoftwareUpgradeProposalHandler(k)}
 
-	return upgradeOutputs{UpgradeKeeper: k, Module: runtime.WrapAppModule(m)}
+	return upgradeOutputs{UpgradeKeeper: k, Module: runtime.WrapAppModule(m), GovHandler: gh}
 }

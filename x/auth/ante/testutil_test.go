@@ -50,6 +50,10 @@ type AnteTestSuite struct {
 	feeGrantKeeper    feegrantkeeper.Keeper
 }
 
+func TestAnteTestSuite(t *testing.T) {
+	suite.Run(t, new(AnteTestSuite))
+}
+
 // SetupTest setups a new test, with new app, context, and anteHandler.
 func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	var (
@@ -208,8 +212,4 @@ func (suite *AnteTestSuite) RunTestCase(privs []cryptotypes.PrivKey, msgs []sdk.
 			}
 		}
 	})
-}
-
-func TestAnteTestSuite(t *testing.T) {
-	suite.Run(t, new(AnteTestSuite))
 }

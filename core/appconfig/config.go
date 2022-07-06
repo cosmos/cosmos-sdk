@@ -40,6 +40,16 @@ func LoadYAML(bz []byte) depinject.Config {
 	return LoadJSON(j)
 }
 
+// WrapAny marshals a proto message into a proto Any instance
+func WrapAny(config protoreflect.ProtoMessage) *anypb.Any {
+	cfg, err := anypb.New(config)
+	if err != nil {
+		panic(err)
+	}
+
+	return cfg
+}
+
 // Compose composes a v1alpha1 app config into a container option by resolving
 // the required modules and composing their options.
 func Compose(appConfig *appv1alpha1.Config) depinject.Config {
@@ -100,6 +110,14 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 		for _, invoker := range init.Invokers {
 			opts = append(opts, depinject.InvokeInModule(module.Name, invoker))
 		}
+
+		for _, binding := range module.GolangBindings {
+			opts = append(opts, depinject.BindInterfaceInModule(module.Name, binding.InterfaceType, binding.Implementation))
+		}
+	}
+
+	for _, binding := range appConfig.GolangBindings {
+		opts = append(opts, depinject.BindInterface(binding.InterfaceType, binding.Implementation))
 	}
 
 	return depinject.Configs(opts...)

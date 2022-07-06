@@ -245,7 +245,12 @@ func (ao EmptyAppOptions) Get(o string) interface{} {
 type AppOptionsMap map[string]interface{}
 
 func (m AppOptionsMap) Get(key string) interface{} {
-	return m[key]
+	v, ok := m[key]
+	if !ok {
+		return interface{}(nil)
+	}
+
+	return v
 }
 
 func NewAppOptionsWithFlagHome(homePath string) servertypes.AppOptions {

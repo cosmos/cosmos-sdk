@@ -383,11 +383,11 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 		defer os.Chmod(genBinDir, 0o755)
 		expErr := fmt.Sprintf("open %s: permission denied", genBinExe)
 		expInLog := []string{
-			"Checking on the genesis/bin executable.",
-			fmt.Sprintf("Copying executable into place: %q", genBinExe),
+			"checking on the genesis/bin executable",
+			fmt.Sprintf("copying executable into place: %q", genBinExe),
 		}
 		expNotInLog := []string{
-			fmt.Sprintf("Making sure %q is executable.", genBinExe),
+			fmt.Sprintf("making sure %q is executable", genBinExe),
 		}
 
 		s.setEnv(t, env)
@@ -413,11 +413,11 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 		genBinExe := filepath.Join(env.Home, "cosmovisor", "genesis", "bin", env.Name)
 		expErr := fmt.Sprintf("open %s: permission denied", noReadHwExe)
 		expInLog := []string{
-			"Checking on the genesis/bin executable.",
-			fmt.Sprintf("Copying executable into place: %q", genBinExe),
+			"checking on the genesis/bin executable",
+			fmt.Sprintf("copying executable into place: %q", genBinExe),
 		}
 		expNotInLog := []string{
-			fmt.Sprintf("Making sure %q is executable.", genBinExe),
+			fmt.Sprintf("making sure %q is executable", genBinExe),
 		}
 
 		s.setEnv(t, env)
@@ -447,14 +447,14 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 		expErr := fmt.Sprintf("%s is not a regular file", env.Name)
 		// Check the log messages just to make sure it's erroring where expecting.
 		expInLog := []string{
-			"Checking on the genesis/bin directory.",
-			"Checking on the genesis/bin executable.",
-			fmt.Sprintf("The %q file already exists.", genBinExe),
-			fmt.Sprintf("Making sure %q is executable.", genBinExe),
+			"checking on the genesis/bin directory",
+			"checking on the genesis/bin executable",
+			fmt.Sprintf("the %q file already exists", genBinExe),
+			fmt.Sprintf("making sure %q is executable", genBinExe),
 		}
 		expNotInLog := []string{
-			"Checking on the current symlink and creating it if needed.",
-			"The current symlink points to",
+			"checking on the current symlink and creating it if needed",
+			"the current symlink points to",
 		}
 
 		s.setEnv(t, env)
@@ -490,7 +490,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 		require.EqualError(t, err, expErr, "calling InitializeCosmovisor")
 		bufferBz := buffer.Collect()
 		bufferStr := string(bufferBz)
-		assert.Contains(t, bufferStr, "Checking on the current symlink and creating it if needed.")
+		assert.Contains(t, bufferStr, "checking on the current symlink and creating it if needed")
 	})
 
 	// Failure cases not tested:
@@ -519,13 +519,13 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 		genBinDir := filepath.Join(env.Home, "cosmovisor", "genesis", "bin")
 		genBinExe := filepath.Join(genBinDir, env.Name)
 		expInLog := []string{
-			"Checking on the genesis/bin directory.",
-			fmt.Sprintf("Creating directory (and any parents): %q", genBinDir),
-			"Checking on the genesis/bin executable.",
-			fmt.Sprintf("Copying executable into place: %q", genBinExe),
-			fmt.Sprintf("Making sure %q is executable.", genBinExe),
-			"Checking on the current symlink and creating it if needed.",
-			fmt.Sprintf("The current symlink points to: %q", genBinExe),
+			"checking on the genesis/bin directory",
+			fmt.Sprintf("creating directory (and any parents): %q", genBinDir),
+			"checking on the genesis/bin executable",
+			fmt.Sprintf("copying executable into place: %q", genBinExe),
+			fmt.Sprintf("making sure %q is executable", genBinExe),
+			"checking on the current symlink and creating it if needed",
+			fmt.Sprintf("the current symlink points to: %q", genBinExe),
 		}
 
 		s.setEnv(s.T(), env)
@@ -571,12 +571,12 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 		}
 
 		expInLog := []string{
-			"Checking on the genesis/bin directory.",
-			fmt.Sprintf("The %q directory already exists.", genBinDir),
-			"Checking on the genesis/bin executable.",
-			fmt.Sprintf("The %q file already exists.", genBinDirExe),
-			fmt.Sprintf("Making sure %q is executable.", genBinDirExe),
-			fmt.Sprintf("The current symlink points to: %q", genBinDirExe),
+			"checking on the genesis/bin directory",
+			fmt.Sprintf("the %q directory already exists", genBinDir),
+			"checking on the genesis/bin executable",
+			fmt.Sprintf("the %q file already exists", genBinDirExe),
+			fmt.Sprintf("making sure %q is executable", genBinDirExe),
+			fmt.Sprintf("the current symlink points to: %q", genBinDirExe),
 		}
 
 		s.setEnv(t, env)
@@ -602,12 +602,12 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 		require.NoError(t, os.MkdirAll(genBinDir, 0o755), "making genesis bin dir")
 
 		expInLog := []string{
-			"Checking on the genesis/bin directory.",
-			fmt.Sprintf("The %q directory already exists.", genBinDir),
-			"Checking on the genesis/bin executable.",
-			fmt.Sprintf("Copying executable into place: %q", genBinExe),
-			fmt.Sprintf("Making sure %q is executable.", genBinExe),
-			fmt.Sprintf("The current symlink points to: %q", genBinExe),
+			"checking on the genesis/bin directory",
+			fmt.Sprintf("the %q directory already exists", genBinDir),
+			"checking on the genesis/bin executable",
+			fmt.Sprintf("copying executable into place: %q", genBinExe),
+			fmt.Sprintf("making sure %q is executable", genBinExe),
+			fmt.Sprintf("the current symlink points to: %q", genBinExe),
 		}
 
 		s.setEnv(t, env)

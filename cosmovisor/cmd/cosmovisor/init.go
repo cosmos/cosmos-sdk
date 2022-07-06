@@ -48,13 +48,13 @@ func InitializeCosmovisor(logger *zerolog.Logger, args []string) error {
 		return err
 	}
 
-	logger.Info().Msg("Checking on the genesis/bin directory.")
+	logger.Info().Msg("checking on the genesis/bin directory")
 	genBinExe := cfg.GenesisBin()
 	genBinDir, _ := filepath.Split(genBinExe)
 	genBinDir = filepath.Clean(genBinDir)
 	switch genBinDirInfo, genBinDirErr := os.Stat(genBinDir); {
 	case os.IsNotExist(genBinDirErr):
-		logger.Info().Msgf("Creating directory (and any parents): %q", genBinDir)
+		logger.Info().Msgf("creating directory (and any parents): %q", genBinDir)
 		mkdirErr := os.MkdirAll(genBinDir, 0o755)
 		if mkdirErr != nil {
 			return mkdirErr
@@ -64,19 +64,19 @@ func InitializeCosmovisor(logger *zerolog.Logger, args []string) error {
 	case !genBinDirInfo.IsDir():
 		return fmt.Errorf("the path %q already exists but is not a directory", genBinDir)
 	default:
-		logger.Info().Msgf("The %q directory already exists.", genBinDir)
+		logger.Info().Msgf("the %q directory already exists", genBinDir)
 	}
 
-	logger.Info().Msg("Checking on the genesis/bin executable.")
+	logger.Info().Msg("checking on the genesis/bin executable")
 	if _, err = os.Stat(genBinExe); os.IsNotExist(err) {
-		logger.Info().Msgf("Copying executable into place: %q", genBinExe)
+		logger.Info().Msgf("copying executable into place: %q", genBinExe)
 		if cpErr := copyFile(pathToExe, genBinExe); cpErr != nil {
 			return cpErr
 		}
 	} else {
-		logger.Info().Msgf("The %q file already exists.", genBinExe)
+		logger.Info().Msgf("the %q file already exists", genBinExe)
 	}
-	logger.Info().Msgf("Making sure %q is executable.", genBinExe)
+	logger.Info().Msgf("making sure %q is executable", genBinExe)
 	if err = cosmovisor.MarkExecutable(genBinExe); err != nil {
 		return err
 	}
@@ -84,12 +84,12 @@ func InitializeCosmovisor(logger *zerolog.Logger, args []string) error {
 		return err
 	}
 
-	logger.Info().Msg("Checking on the current symlink and creating it if needed.")
+	logger.Info().Msg("checking on the current symlink and creating it if needed")
 	cur, curErr := cfg.CurrentBin()
 	if curErr != nil {
 		return curErr
 	}
-	logger.Info().Msgf("The current symlink points to: %q", cur)
+	logger.Info().Msgf("the current symlink points to: %q", cur)
 
 	return nil
 }

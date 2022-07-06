@@ -40,6 +40,10 @@ type MsgClient interface {
 	//
 	// Since: cosmos-sdk 0.46
 	CancelUnbondingDelegation(ctx context.Context, in *MsgCancelUnbondingDelegation, opts ...grpc.CallOption) (*MsgCancelUnbondingDelegationResponse, error)
+	// UpdateParams defines a operation for updating the x/staking module
+	// parameters.
+	// Since: cosmos-sdk 0.47
+	UpdateParameters(ctx context.Context, in *MsgUpdateParameters, opts ...grpc.CallOption) (*MsgUpdateParametersResponse, error)
 }
 
 type msgClient struct {
@@ -104,6 +108,15 @@ func (c *msgClient) CancelUnbondingDelegation(ctx context.Context, in *MsgCancel
 	return out, nil
 }
 
+func (c *msgClient) UpdateParameters(ctx context.Context, in *MsgUpdateParameters, opts ...grpc.CallOption) (*MsgUpdateParametersResponse, error) {
+	out := new(MsgUpdateParametersResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Msg/UpdateParameters", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -126,6 +139,10 @@ type MsgServer interface {
 	//
 	// Since: cosmos-sdk 0.46
 	CancelUnbondingDelegation(context.Context, *MsgCancelUnbondingDelegation) (*MsgCancelUnbondingDelegationResponse, error)
+	// UpdateParams defines a operation for updating the x/staking module
+	// parameters.
+	// Since: cosmos-sdk 0.47
+	UpdateParameters(context.Context, *MsgUpdateParameters) (*MsgUpdateParametersResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -150,6 +167,9 @@ func (UnimplementedMsgServer) Undelegate(context.Context, *MsgUndelegate) (*MsgU
 }
 func (UnimplementedMsgServer) CancelUnbondingDelegation(context.Context, *MsgCancelUnbondingDelegation) (*MsgCancelUnbondingDelegationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CancelUnbondingDelegation not implemented")
+}
+func (UnimplementedMsgServer) UpdateParameters(context.Context, *MsgUpdateParameters) (*MsgUpdateParametersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateParameters not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -272,6 +292,24 @@ func _Msg_CancelUnbondingDelegation_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UpdateParameters_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateParameters)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateParameters(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.staking.v1beta1.Msg/UpdateParameters",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateParameters(ctx, req.(*MsgUpdateParameters))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -302,6 +340,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CancelUnbondingDelegation",
 			Handler:    _Msg_CancelUnbondingDelegation_Handler,
+		},
+		{
+			MethodName: "UpdateParameters",
+			Handler:    _Msg_UpdateParameters_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

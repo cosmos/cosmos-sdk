@@ -15,8 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -201,7 +199,6 @@ type stakingInputs struct {
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
 	Cdc           codec.Codec
-	Subspace      paramstypes.Subspace
 	Key           *store.KVStoreKey
 }
 
@@ -214,7 +211,7 @@ type stakingOutputs struct {
 }
 
 func provideModule(in stakingInputs) stakingOutputs {
-	k := keeper.NewKeeper(in.Cdc, in.Key, in.AccountKeeper, in.BankKeeper, in.Subspace)
+	k := keeper.NewKeeper(in.Cdc, in.Key, in.AccountKeeper, in.BankKeeper)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper)
 	return stakingOutputs{StakingKeeper: k, Module: runtime.WrapAppModule(m)}
 }

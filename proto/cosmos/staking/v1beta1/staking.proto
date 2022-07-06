@@ -282,7 +282,7 @@ message Redelegation {
   repeated RedelegationEntry entries = 4 [(gogoproto.nullable) = false]; // redelegation entries
 }
 
-// Params defines the parameters for the staking module.
+// Params defines the parameters for the x/staking module.
 message Params {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;

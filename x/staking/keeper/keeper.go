@@ -10,7 +10,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -27,18 +26,12 @@ type Keeper struct {
 	authKeeper types.AccountKeeper
 	bankKeeper types.BankKeeper
 	hooks      types.StakingHooks
-	paramstore paramtypes.Subspace
 }
 
 // NewKeeper creates a new staking Keeper instance
 func NewKeeper(
 	cdc codec.BinaryCodec, key storetypes.StoreKey, ak types.AccountKeeper, bk types.BankKeeper,
-	ps paramtypes.Subspace,
 ) *Keeper {
-	// set KeyTable if it has not already been set
-	if !ps.HasKeyTable() {
-		ps = ps.WithKeyTable(types.ParamKeyTable())
-	}
 
 	// ensure bonded and not bonded module accounts are set
 	if addr := ak.GetModuleAddress(types.BondedPoolName); addr == nil {
@@ -54,7 +47,6 @@ func NewKeeper(
 		cdc:        cdc,
 		authKeeper: ak,
 		bankKeeper: bk,
-		paramstore: ps,
 		hooks:      nil,
 	}
 }

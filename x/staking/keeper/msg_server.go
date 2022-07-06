@@ -499,3 +499,19 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 
 	return &types.MsgCancelUnbondingDelegationResponse{}, nil
 }
+
+func (ms msgServer) UpdateParameters(goCtx context.Context, msg *types.MsgUpdateParameters) (*types.MsgUpdateParametersResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// verification logic...
+
+	// persist params
+	params := ParamsFromMsg(msg)
+	ms.SetParams(ctx, params)
+
+	return &types.MsgUpdateParametersResponse{}, nil
+}
+
+func ParamsFromMsg(msg *types.MsgUpdateParameters) types.Params {
+	return msg.Params
+}

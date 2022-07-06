@@ -488,6 +488,7 @@ func (d Dec) ApproxRoot(root uint64) (guess Dec, err error) {
 			prev = SmallestDec()
 		}
 
+		// delta = (d / (guess ^ (root - 1)) - guess) / root = (d - guess ^ root) / (root * (guess ^ (root - 1)))
 		delta.Set(d).QuoMut(prev)
 		delta.SubMut(guess)
 		delta.QuoInt64Mut(int64(root))
@@ -513,6 +514,8 @@ func (d Dec) ApproxRoot(root uint64) (guess Dec, err error) {
 			}
 		}
 
+		// new guess = guess + delta = guess - (guess ^ root - d) / (root * (guess ^ (root - 1)))
+		// described in here https://en.wikipedia.org/wiki/Nth_root#Using_Newton's_method
 		guess.AddMut(delta)
 	}
 

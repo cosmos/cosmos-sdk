@@ -29,7 +29,11 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace 
 		return err
 	}
 
-	bz := cdc.MustMarshal(&currParams)
+	bz, err := cdc.Marshal(&currParams)
+	if err != nil {
+		return err
+	}
+
 	store.Set(ParamsKey, bz)
 
 	return nil

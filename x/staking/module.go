@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/mint/exported"
 	"math/rand"
 	"sort"
 
@@ -99,18 +100,20 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper        *keeper.Keeper
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
+	keeper         *keeper.Keeper
+	accountKeeper  types.AccountKeeper
+	bankKeeper     types.BankKeeper
+	legacySubspace exported.Subspace
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper *keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper *keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, ls exported.Subspace) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,
+		legacySubspace: ls,
 	}
 }
 
@@ -145,7 +148,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	querier := keeper.Querier{Keeper: am.keeper}
 	types.RegisterQueryServer(cfg.QueryServer(), querier)
 
-	m := keeper.NewMigrator(am.keeper)
+	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
 	cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
 	cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3)
 }
@@ -200,6 +203,9 @@ type stakingInputs struct {
 	BankKeeper    types.BankKeeper
 	Cdc           codec.Codec
 	Key           *store.KVStoreKey
+
+	// LegacySubspace is used solely for migration of x/params managed parameters
+	LegacySubspace exported.Subspace
 }
 
 // Dependency Injection Outputs
@@ -212,7 +218,7 @@ type stakingOutputs struct {
 
 func provideModule(in stakingInputs) stakingOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.Key, in.AccountKeeper, in.BankKeeper)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
 	return stakingOutputs{StakingKeeper: k, Module: runtime.WrapAppModule(m)}
 }
 

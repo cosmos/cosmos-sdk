@@ -1,0 +1,30 @@
+on:
+  #Set to trigger on every merge to main, not just a closed PR.
+  workflow_dispatch:
+  pull_request_target:
+    branches:
+      - main
+    types: ["closed"]
+
+jobs:
+  cherry_pick:
+    runs-on: ubuntu-latest
+    name: Cherry pick into main
+    if: github.event.pull_request.merged == true
+    # In testing
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - name: Auto PR from fork main
+        run: |
+            git config --global user.name "${GITHUB_ACTOR}"
+            git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+            git remote add upstream https://github.com/xBalbinus/cosmos-sdk.git
+            git fetch --all                                   # Get the latest code
+            git checkout -b pr-patch upstream/main    # Create new branch based on main branch
+            git cherry-pick ${{github.event.pull_request.head.sha}}  # Cherry pick the latest commit of PR
+            git push -u origin pr-patch               # Push your changes to the remote branch
+            git checkout pr-patch
+            hub pull-request --base xBalbinus:main --head pr-patch #Create PR for cherry-picked, latest branch on main

@@ -3,16 +3,18 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/cosmovisor"
-	"github.com/rs/zerolog"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 	"io"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/cosmos/cosmos-sdk/cosmovisor"
 )
 
 type InitTestSuite struct {

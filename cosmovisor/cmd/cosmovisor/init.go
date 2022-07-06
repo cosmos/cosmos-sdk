@@ -3,13 +3,15 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/cosmovisor"
-	cverrors "github.com/cosmos/cosmos-sdk/cosmovisor/errors"
-	"github.com/rs/zerolog"
-	"github.com/spf13/cobra"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/rs/zerolog"
+	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/cosmovisor"
+	cverrors "github.com/cosmos/cosmos-sdk/cosmovisor/errors"
 )
 
 func init() {

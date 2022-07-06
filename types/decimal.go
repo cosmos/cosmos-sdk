@@ -420,6 +420,19 @@ func (d Dec) QuoInt64Mut(i int64) Dec {
 	return d
 }
 
+func RootInitialGuess(d Dec, root uint64) Dec {
+	// first we do a rough estimation of the bit length the root value should have
+	rootInt64 := int64(root)
+	dBitLen := NewDecWithPrec(int64(d.i.BitLen()), 0)
+
+	// guessBitLen = ceil(dBitLen/root + 18 * (root-1)/root * log2(10))
+	guessBitLen := (dBitLen.QuoInt64(rootInt64)).Add((eightTeenDec.MulInt64(rootInt64 - 1).QuoInt64(rootInt64)).Mul(log2of10)).Ceil()
+	guess := Dec{
+		i: new(big.Int).SetBit(zeroInt, int(guessBitLen.RoundInt64()), 1),
+	}
+	return guess
+}
+
 // ApproxRoot returns an approximate estimation of a Dec's positive real nth root
 // using Newton's method (where n is positive). The algorithm starts with some guess and
 // computes the sequence of improved guesses until an answer converges to an
@@ -451,16 +464,7 @@ func (d Dec) ApproxRoot(root uint64) (guess Dec, err error) {
 	}
 
 	delta := OneDec()
-
-	// first we do a rough estimation of the bit length the root value should have
-	rootInt64 := int64(root)
-	dBitLen := NewDecWithPrec(int64(d.i.BitLen()), 0)
-
-	// guessBitLen = ceil(dBitLen/root + 18 * (root-1)/root * log2(10))
-	guessBitLen := (dBitLen.QuoInt64(rootInt64)).Add((eightTeenDec.MulInt64(rootInt64 - 1).QuoInt64(rootInt64)).Mul(log2of10)).Ceil()
-	guess = Dec{
-		i: new(big.Int).SetBit(zeroInt, int(guessBitLen.RoundInt64()), 1),
-	}
+	guess = RootInitialGuess(d, root)
 
 	// this is used to keep track of the best value we can hit, in case of non-convergence.
 	iterationSinceBestGuess := 0
@@ -493,6 +497,7 @@ func (d Dec) ApproxRoot(root uint64) (guess Dec, err error) {
 		// so we need to keep record of the best guess
 		// and set condition to stop the oscillation.
 		if iter > 150 {
+			// prev = guess ^ (root - 1) so prev * guess = guess ^ root
 			prev.MulMut(guess)
 			diff := d.Sub(prev).Abs()
 			if diff.LT(smallestDiff) || smallestDiff.IsNegative() {

@@ -14,24 +14,12 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Cherry pick into patch branch
+      - name: Cherry pick into main
         uses: carloscastrojumo/github-cherry-pick-action@v1.0.2
         with:
-          branch: cherry-pick/patch
+          branch: main
           labels: |
             cherry-pick
-      - name: Create A PR from Patch
-        uses: devops-infra/action-pull-request@v0.4.2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          source_branch: cherry-pick/patch
-          target_branch: main
-          title: Cherry-pick automatic PR
-          body: "**Automated pull request**"
-          old_string: "**THIS IS AN AUTOMATED PR AS A PART OF CHERRY PICKING**"
-          new_string: "** Automatic pull request**"
-          get_diff: true
-          ignore_users: "dependabot"
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

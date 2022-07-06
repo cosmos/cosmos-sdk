@@ -361,14 +361,14 @@ Example:
 simd tx gov submit-proposal /path/to/proposal.json --from cosmos1..
 ```
 
-where proposal.json contains:
+where `proposal.json` contains:
 
-```bash
+```json
 {
   "messages": [
     {
       "@type": "/cosmos.bank.v1beta1.MsgSend",
-      "from_address": "cosmos1...",
+      "from_address": "cosmos1...", // The gov module module address
       "to_address": "cosmos1...",
       "amount":[{"denom": "stake","amount": "10"}]
     }

@@ -276,10 +276,10 @@ func (q Keeper) TallyResult(c context.Context, req *v1.QueryTallyResultRequest) 
 var _ v1beta1.QueryServer = legacyQueryServer{}
 
 type legacyQueryServer struct {
-	keeper Keeper
+	keeper *Keeper
 }
 
-func NewLegacyQueryServer(k Keeper) v1beta1.QueryServer {
+func NewLegacyQueryServer(k *Keeper) v1beta1.QueryServer {
 	return &legacyQueryServer{keeper: k}
 }
 

@@ -331,24 +331,6 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 	defer s.setEnv(nil, initEnv)
 
 	hwExe := s.CreateHelloWorld(0o755)
-	noReadHwExe := s.CreateHelloWorld(0o311)
-
-	s.T().Run("cannot create genesis bin directory", func(t *testing.T) {
-		// This assumes that the user running the tests doesn't have permissions to
-		// create a new directory at the root of the filesystem.
-		env := &cosmovisorInitEnv{
-			Home: "/cosmovisor-test-delete-me/home",
-			Name: "nuller",
-		}
-
-		s.setEnv(t, env)
-		logger := zerolog.Nop()
-		err := InitializeCosmovisor(&logger, []string{hwExe})
-		// This error is really system dependent, so just make sure the root directory is in the output.
-		// Example error on an M1 mac with Monterey (12.4):
-		//   "mkdir /cosmovisor-test-delete-me: read-only file system"
-		require.ErrorContains(t, err, "/cosmovisor-test-delete-me", "calling InitializeCosmovisor")
-	})
 
 	s.T().Run("genesis bin is not a directory", func(t *testing.T) {
 		testDir := t.TempDir()
@@ -366,74 +348,6 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 		expErr := fmt.Sprintf("the path %q already exists but is not a directory", genBin)
 		err := InitializeCosmovisor(&logger, []string{hwExe})
 		require.EqualError(t, err, expErr, "invalid path to executable: must not be a directory", "calling InitializeCosmovisor")
-	})
-
-	s.T().Run("cannot write to genesis bin dir", func(t *testing.T) {
-		testDir := t.TempDir()
-		env := &cosmovisorInitEnv{
-			Home: filepath.Join(testDir, "home"),
-			Name: "papaya",
-		}
-		rootDir := filepath.Join(env.Home, "cosmovisor")
-		genDir := filepath.Join(rootDir, "genesis")
-		require.NoError(t, os.MkdirAll(genDir, 0o755))
-		genBinDir := filepath.Join(genDir, "bin")
-		genBinExe := filepath.Join(genBinDir, env.Name)
-		require.NoError(t, os.MkdirAll(genBinDir, 0o555))
-		defer os.Chmod(genBinDir, 0o755)
-		expErr := fmt.Sprintf("open %s: permission denied", genBinExe)
-		expInLog := []string{
-			"checking on the genesis/bin executable",
-			fmt.Sprintf("copying executable into place: %q", genBinExe),
-		}
-		expNotInLog := []string{
-			fmt.Sprintf("making sure %q is executable", genBinExe),
-		}
-
-		s.setEnv(t, env)
-		buffer, logger := s.NewCapturingLogger()
-		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
-		err := InitializeCosmovisor(logger, []string{hwExe})
-		require.EqualError(t, err, expErr, "calling InitializeCosmovisor")
-		bufferBz := buffer.Collect()
-		bufferStr := string(bufferBz)
-		for _, exp := range expInLog {
-			assert.Contains(t, bufferStr, exp, "expected log statement")
-		}
-		for _, notExp := range expNotInLog {
-			assert.NotContains(t, bufferStr, notExp, "unexpected log statement")
-		}
-	})
-
-	s.T().Run("given executable is not readable", func(t *testing.T) {
-		testDir := t.TempDir()
-		env := &cosmovisorInitEnv{
-			Home: filepath.Join(testDir, "home"),
-			Name: "celeryman",
-		}
-		genBinExe := filepath.Join(env.Home, "cosmovisor", "genesis", "bin", env.Name)
-		expErr := fmt.Sprintf("open %s: permission denied", noReadHwExe)
-		expInLog := []string{
-			"checking on the genesis/bin executable",
-			fmt.Sprintf("copying executable into place: %q", genBinExe),
-		}
-		expNotInLog := []string{
-			fmt.Sprintf("making sure %q is executable", genBinExe),
-		}
-
-		s.setEnv(t, env)
-		buffer, logger := s.NewCapturingLogger()
-		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
-		err := InitializeCosmovisor(logger, []string{noReadHwExe})
-		require.EqualError(t, err, expErr, "calling InitializeCosmovisor")
-		bufferBz := buffer.Collect()
-		bufferStr := string(bufferBz)
-		for _, exp := range expInLog {
-			assert.Contains(t, bufferStr, exp, "expected log statement")
-		}
-		for _, notExp := range expNotInLog {
-			assert.NotContains(t, bufferStr, notExp, "unexpected log statement")
-		}
 	})
 
 	s.T().Run("the EnsureBinary test fails", func(t *testing.T) {
@@ -498,10 +412,20 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 	})
 
 	// Failure cases not tested:
-	//   Cannot get info on the genesis bin directory.
+	//	Cannot create genesis bin directory
+	//		I had a test for this that created the `genesis` directory with permissions 0o555.
+	//		I also tried it where it would create the directory at the root of the file system.
+	//		In both cases, the test worked as expected locally, but not on the github runners. So it was removed.
+	//	Given executable is not readable
+	//		I had a test for this that created the executable with permissions 0o311.
+	//		The test worked as expected locally, but not on the github runners. So it was removed.
+	//	Cannot get info on the genesis bin directory.
 	//		Not sure how to create a thing that will return
 	//		an error other than a NotExists error when stat is called on it.
-	//   Cannot make the copied file executable.
+	//	Cannot write to genesis bin dir
+	//		I had a test for this that created the bin dir with permissions 0o555.
+	//		The test worked as expected locally, but not on the github runners. So it was removed.
+	//	Cannot make the copied file executable.
 	//		Probably need another user for this.
 	//		Create the genesis bin file first, using the other user, and set permissions to 600.
 }

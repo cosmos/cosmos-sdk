@@ -15,7 +15,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Cherry pick into patch branch
-        uses: carloscastrojumo/github-cherry-pick-action@v1.0.1
+        uses: carloscastrojumo/github-cherry-pick-action@v1.0.2
         with:
           branch: cherry-pick/patch
           labels: |

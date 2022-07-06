@@ -392,6 +392,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 
 		s.setEnv(t, env)
 		buffer, logger := s.NewCapturingLogger()
+		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
 		err := InitializeCosmovisor(logger, []string{hwExe})
 		require.EqualError(t, err, expErr, "calling InitializeCosmovisor")
 		bufferBz := buffer.Collect()
@@ -422,6 +423,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 
 		s.setEnv(t, env)
 		buffer, logger := s.NewCapturingLogger()
+		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
 		err := InitializeCosmovisor(logger, []string{noReadHwExe})
 		require.EqualError(t, err, expErr, "calling InitializeCosmovisor")
 		bufferBz := buffer.Collect()
@@ -459,6 +461,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 
 		s.setEnv(t, env)
 		buffer, logger := s.NewCapturingLogger()
+		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
 		err := InitializeCosmovisor(logger, []string{hwExe})
 		require.EqualError(t, err, expErr, "calling InitializeCosmovisor")
 		bufferBz := buffer.Collect()
@@ -486,6 +489,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 
 		s.setEnv(t, env)
 		buffer, logger := s.NewCapturingLogger()
+		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
 		err := InitializeCosmovisor(logger, []string{hwExe})
 		require.EqualError(t, err, expErr, "calling InitializeCosmovisor")
 		bufferBz := buffer.Collect()
@@ -530,6 +534,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 
 		s.setEnv(s.T(), env)
 		buffer, logger := s.NewCapturingLogger()
+		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
 		err := InitializeCosmovisor(logger, []string{hwNonExe})
 		require.NoError(t, err, "calling InitializeCosmovisor")
 
@@ -581,6 +586,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 
 		s.setEnv(t, env)
 		buffer, logger := s.NewCapturingLogger()
+		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
 		err := InitializeCosmovisor(logger, []string{hwExe})
 		require.NoError(t, err, "calling InitializeCosmovisor")
 		bufferBz := buffer.Collect()
@@ -612,6 +618,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 
 		s.setEnv(t, env)
 		buffer, logger := s.NewCapturingLogger()
+		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
 		err := InitializeCosmovisor(logger, []string{hwExe})
 		require.NoError(t, err, "calling InitializeCosmovisor")
 		bufferBz := buffer.Collect()

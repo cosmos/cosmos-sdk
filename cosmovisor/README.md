@@ -115,14 +115,31 @@ The system administrator is responsible for:
 * installing the `cosmovisor` binary
 * configuring the host's init system (e.g. `systemd`, `launchd`, etc.)
 * appropriately setting the environmental variables
-* manually installing the `genesis` folder
-* manually installing the `upgrades/<name>` folders
+* creating the `<DAEMON_HOME>/cosmovisor` directory
+* creating the `<DAEMON_HOME>/cosmovisor/genesis/bin` folder
+* creating the `<DAEMON_HOME>/cosmovisor/upgrades/<name>/bin` folders
+* placing the different versions of the `<DAEMON_NAME>` executable in the appropriate `bin` folders.
 
 `cosmovisor` will set the `current` link to point to `genesis` at first start (i.e. when no `current` link exists) and then handle switching binaries at the correct points in time so that the system administrator can prepare days in advance and relax at upgrade time.
 
 In order to support downloadable binaries, a tarball for each upgrade binary will need to be packaged up and made available through a canonical URL. Additionally, a tarball that includes the genesis binary and all available upgrade binaries can be packaged up and made available so that all the necessary binaries required to sync a fullnode from start can be easily downloaded.
 
 The `DAEMON` specific code and operations (e.g. tendermint config, the application db, syncing blocks, etc.) all work as expected. The application binaries' directives such as command-line flags and environment variables also work as expected.
+
+### Initialization
+
+The `cosmovisor init <path to executable>` command creates the folder structure required for using cosmovisor.
+
+It does the following:
+
+* creates the `<DAEMON_HOME>/cosmovisor` folder if it doesn't yet exist
+* creates the `<DAEMON_HOME>/cosmovisor/genesis/bin` folder if it doesn't yet exist
+* copies the provided executable file to `<DAEMON_HOME>/cosmovisor/genesis/bin/<DAEMON_NAME>`
+* creates the `current` link, pointing to the `genesis` folder
+
+It uses the `DAEMON_HOME` and `DAEMON_NAME` environment variables for folder location and executable name.
+
+The `cosmovisor init` command is specifically for initializing cosmovisor, and should not be confused with a chain's `init` command (e.g. `cosmovisor run init`).
 
 ### Detecting Upgrades
 

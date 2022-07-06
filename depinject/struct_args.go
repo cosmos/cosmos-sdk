@@ -121,10 +121,18 @@ func structArgsInTypes(typ reflect.Type) ([]ProviderInput, error) {
 		}
 
 		res = append(res, ProviderInput{
-			Type:     f.Type,
-			Optional: optional,
+			Type:            f.Type,
+			Optional:        optional,
+			structFieldName: f.Name,
 		})
 	}
+
+	if len(res) > 0 {
+		// we set the struct type on the first struct field to indicate to codegen that here is where we
+		// start initializing the struct
+		res[0].startStructType = typ
+	}
+
 	return res, nil
 }
 
@@ -152,9 +160,17 @@ func structArgsOutTypes(typ reflect.Type) []ProviderOutput {
 		}
 
 		res = append(res, ProviderOutput{
-			Type: f.Type,
+			Type:            f.Type,
+			structFieldName: f.Name,
 		})
 	}
+
+	if len(res) > 0 {
+		// we set the struct type on the first struct field to indicate to codegen that here is where we
+		// start initializing the struct
+		res[0].startStructType = typ
+	}
+
 	return res
 }
 

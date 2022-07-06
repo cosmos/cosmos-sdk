@@ -28,19 +28,19 @@ func (s moduleDepResolver) describeLocation() string {
 	return s.node.provider.Location.String()
 }
 
-func (s moduleDepResolver) resolve(ctr *container, moduleKey *moduleKey, caller Location) (reflect.Value, error) {
+func (s moduleDepResolver) resolve(ctr *container, moduleKey *moduleKey, caller Location) (reflect.Value, expr, error) {
 	// Log
 	ctr.logf("Providing %v from %s to %s", s.typ, s.node.provider.Location, caller.Name())
 
 	// Resolve
 	if val, ok := s.valueMap[moduleKey]; ok {
-		return val, nil
+		return val, nil, nil
 	}
 
 	if !s.node.calledForModule[moduleKey] {
 		values, err := ctr.call(s.node.provider, moduleKey)
 		if err != nil {
-			return reflect.Value{}, err
+			return reflect.Value{}, nil, err
 		}
 
 		s.node.valueMap[moduleKey] = values
@@ -49,7 +49,7 @@ func (s moduleDepResolver) resolve(ctr *container, moduleKey *moduleKey, caller 
 
 	value := s.node.valueMap[moduleKey][s.idxInValues]
 	s.valueMap[moduleKey] = value
-	return value, nil
+	return value, nil, nil
 }
 
 func (s moduleDepResolver) addNode(p *simpleProvider, _ int) error {

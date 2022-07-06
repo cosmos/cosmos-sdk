@@ -50,7 +50,7 @@ func (g *groupResolver) describeLocation() string {
 	return fmt.Sprintf("many-per-container type %v", g.typ)
 }
 
-func (g *sliceGroupResolver) resolve(c *container, _ *moduleKey, caller Location) (reflect.Value, error) {
+func (g *sliceGroupResolver) resolve(c *container, _ *moduleKey, caller Location) (reflect.Value, expr, error) {
 	// Log
 	c.logf("Providing many-per-container type slice %v to %s from:", g.sliceType, caller.Name())
 	c.indentLogger()
@@ -65,7 +65,7 @@ func (g *sliceGroupResolver) resolve(c *container, _ *moduleKey, caller Location
 		for i, node := range g.providers {
 			values, err := node.resolveValues(c)
 			if err != nil {
-				return reflect.Value{}, err
+				return reflect.Value{}, nil, err
 			}
 			value := values[g.idxsInValues[i]]
 			if value.Kind() == reflect.Slice {
@@ -81,11 +81,11 @@ func (g *sliceGroupResolver) resolve(c *container, _ *moduleKey, caller Location
 		g.resolved = true
 	}
 
-	return g.values, nil
+	return g.values, nil, nil
 }
 
-func (g *groupResolver) resolve(_ *container, _ *moduleKey, _ Location) (reflect.Value, error) {
-	return reflect.Value{}, errors.Errorf("%v is an many-per-container type and cannot be used as an input value, instead use %v", g.typ, g.sliceType)
+func (g *groupResolver) resolve(_ *container, _ *moduleKey, _ Location) (reflect.Value, expr, error) {
+	return reflect.Value{}, nil, errors.Errorf("%v is an many-per-container type and cannot be used as an input value, instead use %v", g.typ, g.sliceType)
 }
 
 func (g *groupResolver) addNode(n *simpleProvider, i int) error {

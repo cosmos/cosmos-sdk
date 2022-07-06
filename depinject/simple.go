@@ -10,6 +10,7 @@ type simpleProvider struct {
 	provider  *ProviderDescriptor
 	called    bool
 	values    []reflect.Value
+	valueVars []varRef
 	moduleKey *moduleKey
 }
 
@@ -32,18 +33,35 @@ func (s *simpleResolver) describeLocation() string {
 
 func (s *simpleProvider) resolveValues(ctr *container) ([]reflect.Value, error) {
 	if !s.called {
+		var valueVars []varRef
+		for _, output := range s.provider.Outputs {
+			v := ctr.createVar(output.Type.Name())
+			valueVars = append(valueVars, v)
+		}
+
 		values, err := ctr.call(s.provider, s.moduleKey)
 		if err != nil {
 			return nil, err
 		}
+
+		s.valueVars = valueVars
 		s.values = values
 		s.called = true
+		first := true
+		for _, valueVar := range valueVars {
+			if !first {
+				ctr.codegenWrite(", ")
+			}
+			ctr.codegenWrite(valueVar)
+			first = false
+		}
+		ctr.codegenWrite(" := ")
 	}
 
 	return s.values, nil
 }
 
-func (s *simpleResolver) resolve(c *container, _ *moduleKey, caller Location) (reflect.Value, error) {
+func (s *simpleResolver) resolve(c *container, _ *moduleKey, caller Location) (reflect.Value, expr, error) {
 	// Log
 	c.logf("Providing %v from %s to %s", s.typ, s.node.provider.Location, caller.Name())
 
@@ -51,7 +69,7 @@ func (s *simpleResolver) resolve(c *container, _ *moduleKey, caller Location) (r
 	if !s.resolved {
 		values, err := s.node.resolveValues(c)
 		if err != nil {
-			return reflect.Value{}, err
+			return reflect.Value{}, nil, err
 		}
 
 		value := values[s.idxInValues]
@@ -59,7 +77,7 @@ func (s *simpleResolver) resolve(c *container, _ *moduleKey, caller Location) (r
 		s.resolved = true
 	}
 
-	return s.value, nil
+	return s.value, nil, nil
 }
 
 func (s simpleResolver) addNode(p *simpleProvider, _ int) error {

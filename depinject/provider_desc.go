@@ -28,10 +28,22 @@ type ProviderDescriptor struct {
 type ProviderInput struct {
 	Type     reflect.Type
 	Optional bool
+
+	// startStructType is set to the type of an In struct on the first field of that struct only
+	startStructType reflect.Type
+
+	// structFieldName is set if this sets an In struct field
+	structFieldName string
 }
 
 type ProviderOutput struct {
 	Type reflect.Type
+
+	// startStructType is set to the type of an Out struct on the first field of that struct only
+	startStructType reflect.Type
+
+	// structFieldName is set if this sets an Out struct field
+	structFieldName string
 }
 
 func ExtractProviderDescriptor(provider interface{}) (ProviderDescriptor, error) {

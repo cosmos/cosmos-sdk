@@ -29,6 +29,10 @@ func (k ModuleKey) Name() string {
 	return k.name
 }
 
+func (k ModuleKey) Equals(other ModuleKey) bool {
+	return k.moduleKey == other.moduleKey
+}
+
 var moduleKeyType = reflect.TypeOf(ModuleKey{})
 
 // OwnModuleKey is a type which can be used in a module to retrieve its own
@@ -36,3 +40,25 @@ var moduleKeyType = reflect.TypeOf(ModuleKey{})
 type OwnModuleKey ModuleKey
 
 var ownModuleKeyType = reflect.TypeOf((*OwnModuleKey)(nil)).Elem()
+
+type ModuleKeyContext struct {
+	moduleKeys map[string]*moduleKey
+}
+
+func (c *ModuleKeyContext) ModuleKey(moduleName string) ModuleKey {
+	return ModuleKey{c.createOrGetModuleKey(moduleName)}
+}
+
+func (c *ModuleKeyContext) createOrGetModuleKey(moduleName string) *moduleKey {
+	if c.moduleKeys == nil {
+		c.moduleKeys = map[string]*moduleKey{}
+	}
+
+	if k, ok := c.moduleKeys[moduleName]; ok {
+		return k
+	}
+
+	k := &moduleKey{moduleName}
+	c.moduleKeys[moduleName] = k
+	return k
+}

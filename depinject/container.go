@@ -17,11 +17,15 @@ type container struct {
 	interfaceBindings map[string]interfaceBinding
 	invokers          []invoker
 
-	moduleKeys map[string]*moduleKey
+	moduleKeyContext *ModuleKeyContext
 
 	resolveStack []resolveFrame
 	callerStack  []Location
 	callerMap    map[Location]bool
+
+	vars        map[varRef]interface{}
+	reverseVars map[interface{}]varRef
+	codegenOut  *bytes.Buffer
 }
 
 type invoker struct {
@@ -48,10 +52,13 @@ func newContainer(cfg *debugConfig) *container {
 	return &container{
 		debugConfig:       cfg,
 		resolvers:         map[string]resolver{},
-		moduleKeys:        map[string]*moduleKey{},
+		moduleKeyContext:  &ModuleKeyContext{},
 		interfaceBindings: map[string]interfaceBinding{},
 		callerStack:       nil,
 		callerMap:         map[Location]bool{},
+		codegenOut:        &bytes.Buffer{},
+		vars:              map[varRef]interface{}{},
+		reverseVars:       map[interface{}]varRef{},
 	}
 }
 
@@ -70,14 +77,20 @@ func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]
 
 	c.logf("Resolving dependencies for %s", loc)
 	c.indentLogger()
+	var argExprs []expr
 	inVals := make([]reflect.Value, len(provider.Inputs))
 	for i, in := range provider.Inputs {
-		val, err := c.resolve(in, moduleKey, loc)
+		val, e, err := c.resolve(in, moduleKey, loc)
+		argExprs = append(argExprs, e)
 		if err != nil {
 			return nil, err
 		}
 		inVals[i] = val
 	}
+	c.codegenWriteln(funCall{
+		loc:  loc,
+		args: argExprs,
+	})
 	c.dedentLogger()
 	c.logf("Calling %s", loc)
 
@@ -381,59 +394,73 @@ func (c *container) addInvoker(provider *ProviderDescriptor, key *moduleKey) err
 	return nil
 }
 
-func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Location) (reflect.Value, error) {
+func (c *container) getModuleKeyVarName(key *moduleKey) expr {
+	v, created := c.getOrCreateVar(fmt.Sprintf("%sModuleKey", key.name), key)
+	if created {
+		c.codegenWriteln(v, ":=", c.reverseVars[c.moduleKeyContext], ".ModuleKey(", key.name, ")")
+	}
+	return v
+}
+
+func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Location) (reflect.Value, expr, error) {
 	c.resolveStack = append(c.resolveStack, resolveFrame{loc: caller, typ: in.Type})
 
 	typeGraphNode := c.typeGraphNode(in.Type)
 
 	if in.Type == moduleKeyType {
 		if moduleKey == nil {
-			return reflect.Value{}, errors.Errorf("trying to resolve %T for %s but not inside of any module's scope", moduleKey, caller)
+			return reflect.Value{}, nil, errors.Errorf("trying to resolve %T for %s but not inside of any module's scope", moduleKey, caller)
 		}
 		c.logf("Providing ModuleKey %s", moduleKey.name)
 		markGraphNodeAsUsed(typeGraphNode)
-		return reflect.ValueOf(ModuleKey{moduleKey}), nil
+		return reflect.ValueOf(ModuleKey{moduleKey}), c.getModuleKeyVarName(moduleKey), nil
 	}
 
 	if in.Type == ownModuleKeyType {
 		if moduleKey == nil {
-			return reflect.Value{}, errors.Errorf("trying to resolve %T for %s but not inside of any module's scope", moduleKey, caller)
+			return reflect.Value{}, nil, errors.Errorf("trying to resolve %T for %s but not inside of any module's scope", moduleKey, caller)
 		}
 		c.logf("Providing OwnModuleKey %s", moduleKey.name)
 		markGraphNodeAsUsed(typeGraphNode)
-		return reflect.ValueOf(OwnModuleKey{moduleKey}), nil
+		return reflect.ValueOf(OwnModuleKey{moduleKey}), castType{
+			typ: reflect.TypeOf(OwnModuleKey{}),
+			e:   c.getModuleKeyVarName(moduleKey),
+		}, nil
 	}
 
 	vr, err := c.getResolver(in.Type, moduleKey)
 	if err != nil {
-		return reflect.Value{}, err
+		return reflect.Value{}, nil, err
 	}
 
 	if vr == nil {
 		if in.Optional {
 			c.logf("Providing zero value for optional dependency %v", in.Type)
-			return reflect.Zero(in.Type), nil
+			return reflect.Zero(in.Type), zeroValue{in.Type}, nil
 		}
 
 		markGraphNodeAsFailed(typeGraphNode)
-		return reflect.Value{}, errors.Errorf("can't resolve type %v for %s:\n%s",
+		return reflect.Value{}, nil, errors.Errorf("can't resolve type %v for %s:\n%s",
 			in.Type, caller, c.formatResolveStack())
 	}
 
-	res, err := vr.resolve(c, moduleKey, caller)
+	res, e, err := vr.resolve(c, moduleKey, caller)
 	if err != nil {
 		markGraphNodeAsFailed(typeGraphNode)
-		return reflect.Value{}, err
+		return reflect.Value{}, nil, err
 	}
 
 	markGraphNodeAsUsed(typeGraphNode)
 
 	c.resolveStack = c.resolveStack[:len(c.resolveStack)-1]
 
-	return res, nil
+	return res, e, nil
 }
 
 func (c *container) build(loc Location, outputs ...interface{}) error {
+	moduleKeyContextVar, _ := c.getOrCreateVar("moduleKeyContext", c.moduleKeyContext)
+	c.codegenWriteln(moduleKeyContextVar, " := ", "&depinject.ModuleKeyContext{}")
+
 	var providerIn []ProviderInput
 	for _, output := range outputs {
 		typ := reflect.TypeOf(output)
@@ -499,16 +526,10 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 	}
 	c.logf("Done calling invokers")
 
-	return nil
-}
+	c.logf("Codegen:")
+	c.logf(c.codegenOut.String())
 
-func (c container) createOrGetModuleKey(name string) *moduleKey {
-	if s, ok := c.moduleKeys[name]; ok {
-		return s
-	}
-	s := &moduleKey{name}
-	c.moduleKeys[name] = s
-	return s
+	return nil
 }
 
 func (c container) formatResolveStack() string {

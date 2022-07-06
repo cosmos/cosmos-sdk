@@ -8,7 +8,7 @@ jobs:
   cherry_pick_patch:
     runs-on: ubuntu-latest
     name: Cherry pick into main
-    if: contains(github.event.pull_request.labels.*.name, 'main')
+    # if: contains(github.event.pull_request.labels.*.name, 'main')
     steps:
       - name: Checkout
         uses: actions/checkout@v2

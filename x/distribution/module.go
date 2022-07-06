@@ -212,7 +212,7 @@ func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes
 // TODO: Returns an empty slice which will make parameter changes a no-op during
 // simulations. Once all modules are migrated, remove RandomizedParams from
 // the simulation interface.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
+func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{}
 }
 

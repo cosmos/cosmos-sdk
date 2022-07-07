@@ -60,7 +60,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.addrs = simtestutil.AddTestAddrs(suite.bankKeeper, suite.stakingKeeper, ctx, 2, sdk.NewInt(1000000000))
 	suite.valAddrs = simtestutil.ConvertAddrsToValAddrs(suite.addrs)
 
-	suite.distrKeeper.SetParams(suite.ctx, types.DefaultParams())
+	suite.NoError(suite.distrKeeper.SetParams(suite.ctx, types.DefaultParams()))
 	suite.msgServer = keeper.NewMsgServerImpl(suite.distrKeeper)
 }
 
@@ -96,7 +96,7 @@ func (suite *KeeperTestSuite) TestGRPCParams() {
 					WithdrawAddrEnabled: true,
 				}
 
-				suite.distrKeeper.SetParams(ctx, params)
+				suite.NoError(suite.distrKeeper.SetParams(ctx, params))
 				req = &types.QueryParamsRequest{}
 				expParams = params
 			},

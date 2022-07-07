@@ -2,6 +2,7 @@ package depinject
 
 import (
 	"fmt"
+	"go/ast"
 	"reflect"
 
 	"github.com/pkg/errors"
@@ -50,7 +51,7 @@ func (g *groupResolver) describeLocation() string {
 	return fmt.Sprintf("many-per-container type %v", g.typ)
 }
 
-func (g *sliceGroupResolver) resolve(c *container, _ *moduleKey, caller Location) (reflect.Value, expr, error) {
+func (g *sliceGroupResolver) resolve(c *container, _ *moduleKey, caller Location) (reflect.Value, ast.Expr, error) {
 	// Log
 	c.logf("Providing many-per-container type slice %v to %s from:", g.sliceType, caller.Name())
 	c.indentLogger()
@@ -84,7 +85,7 @@ func (g *sliceGroupResolver) resolve(c *container, _ *moduleKey, caller Location
 	return g.values, nil, nil
 }
 
-func (g *groupResolver) resolve(_ *container, _ *moduleKey, _ Location) (reflect.Value, expr, error) {
+func (g *groupResolver) resolve(_ *container, _ *moduleKey, _ Location) (reflect.Value, ast.Expr, error) {
 	return reflect.Value{}, nil, errors.Errorf("%v is an many-per-container type and cannot be used as an input value, instead use %v", g.typ, g.sliceType)
 }
 

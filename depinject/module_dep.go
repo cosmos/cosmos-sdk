@@ -2,6 +2,8 @@ package depinject
 
 import (
 	"fmt"
+	"go/ast"
+	"go/token"
 	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
@@ -12,7 +14,7 @@ type moduleDepProvider struct {
 	provider        *ProviderDescriptor
 	calledForModule map[*moduleKey]bool
 	valueMap        map[*moduleKey][]reflect.Value
-	valueExprs      map[*moduleKey][]expr
+	valueExprs      map[*moduleKey][]ast.Expr
 }
 
 type moduleDepResolver struct {
@@ -31,7 +33,7 @@ func (s moduleDepResolver) describeLocation() string {
 	return s.node.provider.Location.String()
 }
 
-func (s moduleDepResolver) resolve(ctr *container, moduleKey *moduleKey, caller Location) (reflect.Value, expr, error) {
+func (s moduleDepResolver) resolve(ctr *container, moduleKey *moduleKey, caller Location) (reflect.Value, ast.Expr, error) {
 	// Log
 	ctr.logf("Providing %v from %s to %s", s.typ, s.node.provider.Location, caller.Name())
 
@@ -50,12 +52,18 @@ func (s moduleDepResolver) resolve(ctr *container, moduleKey *moduleKey, caller 
 		s.node.calledForModule[moduleKey] = true
 
 		// codegen
-		varsDef, valueExprs := s.node.provider.codegenOutputs(ctr, fmt.Sprintf(
+		varRefs, valueExprs := s.node.provider.codegenOutputs(ctr, fmt.Sprintf(
 			"For%s",
 			util.StringFirstUpper(moduleKey.name),
 		))
 		s.node.valueExprs[moduleKey] = valueExprs
-		ctr.codegenWriteln(varsDef, eCall)
+		ctr.codegenStmt(
+			&ast.AssignStmt{
+				Lhs: varRefs,
+				Tok: token.DEFINE,
+				Rhs: []ast.Expr{eCall},
+			},
+		)
 		s.node.provider.codegenErrCheck(ctr)
 	}
 

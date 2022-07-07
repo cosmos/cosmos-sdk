@@ -3,6 +3,10 @@ package depinject
 import (
 	"bytes"
 	"fmt"
+	"go/ast"
+	"go/printer"
+	"go/token"
+	"os"
 	"reflect"
 
 	"github.com/pkg/errors"
@@ -23,9 +27,9 @@ type container struct {
 	callerStack  []Location
 	callerMap    map[Location]bool
 
-	vars        map[varRef]interface{}
-	reverseVars map[interface{}]varRef
-	codegenOut  *bytes.Buffer
+	idents        map[*ast.Ident]interface{}
+	reverseIdents map[interface{}]*ast.Ident
+	codegenBody   *ast.BlockStmt
 }
 
 type invoker struct {
@@ -56,13 +60,13 @@ func newContainer(cfg *debugConfig) *container {
 		interfaceBindings: map[string]interfaceBinding{},
 		callerStack:       nil,
 		callerMap:         map[Location]bool{},
-		codegenOut:        &bytes.Buffer{},
-		vars:              map[varRef]interface{}{},
-		reverseVars:       map[interface{}]varRef{},
+		codegenBody:       &ast.BlockStmt{},
+		idents:            map[*ast.Ident]interface{}{},
+		reverseIdents:     map[interface{}]*ast.Ident{},
 	}
 }
 
-func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]reflect.Value, expr, error) {
+func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]reflect.Value, ast.Expr, error) {
 	loc := provider.Location
 	graphNode := c.locationGraphNode(loc, moduleKey)
 
@@ -77,7 +81,7 @@ func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]
 
 	c.logf("Resolving dependencies for %s", loc)
 	c.indentLogger()
-	var argExprs []expr
+	var argExprs []ast.Expr
 	inVals := make([]reflect.Value, len(provider.Inputs))
 	for i, in := range provider.Inputs {
 		val, e, err := c.resolve(in, moduleKey, loc)
@@ -100,9 +104,9 @@ func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]
 
 	markGraphNodeAsUsed(graphNode)
 
-	e := funCall{
-		loc:  loc,
-		args: argExprs,
+	e := &ast.CallExpr{
+		Fun:  ast.NewIdent(loc.Name()),
+		Args: argExprs,
 	}
 
 	return out, e, nil
@@ -323,7 +327,7 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 			provider:        provider,
 			calledForModule: map[*moduleKey]bool{},
 			valueMap:        map[*moduleKey][]reflect.Value{},
-			valueExprs:      map[*moduleKey][]expr{},
+			valueExprs:      map[*moduleKey][]ast.Expr{},
 		}
 
 		for i, out := range provider.Outputs {
@@ -394,15 +398,20 @@ func (c *container) addInvoker(provider *ProviderDescriptor, key *moduleKey) err
 	return nil
 }
 
-func (c *container) getModuleKeyExpr(key *moduleKey) expr {
-	return methodCall{
-		receiver: c.reverseVars[c.moduleKeyContext],
-		method:   "For",
-		args:     []expr{stringLit(key.name)},
+func (c *container) getModuleKeyExpr(key *moduleKey) ast.Expr {
+	return &ast.CallExpr{
+		Fun: &ast.SelectorExpr{
+			X:   c.reverseIdents[c.moduleKeyContext],
+			Sel: ast.NewIdent("For"),
+		},
+		Args: []ast.Expr{&ast.BasicLit{
+			Kind:  token.STRING,
+			Value: fmt.Sprintf("%q", key.name),
+		}},
 	}
 }
 
-func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Location) (reflect.Value, expr, error) {
+func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Location) (reflect.Value, ast.Expr, error) {
 	c.resolveStack = append(c.resolveStack, resolveFrame{loc: caller, typ: in.Type})
 
 	typeGraphNode := c.typeGraphNode(in.Type)
@@ -422,9 +431,11 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 		}
 		c.logf("Providing OwnModuleKey %s", moduleKey.name)
 		markGraphNodeAsUsed(typeGraphNode)
-		return reflect.ValueOf(OwnModuleKey{moduleKey}), castType{
-			typ: reflect.TypeOf(OwnModuleKey{}),
-			e:   c.getModuleKeyExpr(moduleKey),
+		return reflect.ValueOf(OwnModuleKey{moduleKey}), &ast.CallExpr{
+			Fun: ast.NewIdent("OwnModuleKey"), // TODO import depinject
+			Args: []ast.Expr{
+				c.getModuleKeyExpr(moduleKey),
+			},
 		}, nil
 	}
 
@@ -436,7 +447,7 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 	if vr == nil {
 		if in.Optional {
 			c.logf("Providing zero value for optional dependency %v", in.Type)
-			return reflect.Zero(in.Type), zeroValue{in.Type}, nil
+			return reflect.Zero(in.Type), ast.NewIdent("nil"), nil // TODO: ast zero value
 		}
 
 		markGraphNodeAsFailed(typeGraphNode)
@@ -458,8 +469,19 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 }
 
 func (c *container) build(loc Location, outputs ...interface{}) error {
-	moduleKeyContextVar, _ := c.getOrCreateVar("moduleKeyContext", c.moduleKeyContext)
-	c.codegenWriteln(moduleKeyContextVar, " := ", "&depinject.ModuleKeyContext{}")
+	moduleKeyContextIdent, _ := c.getOrCreateIdent("moduleKeyContext", c.moduleKeyContext)
+	c.codegenStmt(&ast.AssignStmt{
+		Lhs: []ast.Expr{moduleKeyContextIdent},
+		Tok: token.DEFINE,
+		Rhs: []ast.Expr{
+			&ast.UnaryExpr{
+				Op: token.AND,
+				X: &ast.CompositeLit{
+					Type: ast.NewIdent("depinject.ModuleKeyContext"),
+				},
+			},
+		},
+	})
 
 	var providerIn []ProviderInput
 	for _, output := range outputs {
@@ -526,13 +548,15 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 
 		// codegen
 		_, _ = inv.fn.codegenOutputs(c, "")
-		c.codegenWriteln(eCall)
+		c.codegenStmt(&ast.ExprStmt{X: eCall})
 		inv.fn.codegenErrCheck(c)
 	}
 	c.logf("Done calling invokers")
 
+	fset := token.NewFileSet()
 	fmt.Println("Codegen:")
-	fmt.Println(c.codegenOut.String())
+	printer.Fprint(os.Stdout, fset, c.codegenBody)
+	fmt.Println()
 
 	return nil
 }

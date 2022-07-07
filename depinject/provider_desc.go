@@ -2,6 +2,8 @@ package depinject
 
 import (
 	"fmt"
+	"go/ast"
+	"go/token"
 	"reflect"
 
 	"github.com/pkg/errors"
@@ -122,16 +124,15 @@ func doExtractProviderDescriptor(ctr interface{}) (ProviderDescriptor, error) {
 
 var errType = reflect.TypeOf((*error)(nil)).Elem()
 
-func (p ProviderDescriptor) codegenOutputs(ctr *container, suffix string) (varsDef string, valueExprs []expr) {
-	var varRefs []varRef
-	var curStructVar expr
+func (p ProviderDescriptor) codegenOutputs(ctr *container, suffix string) (varRefs []ast.Expr, valueExprs []ast.Expr) {
+	var curStructVar ast.Expr
 	for _, output := range p.Outputs {
 		var name string
 		if output.structFieldName != "" {
 			if output.startStructType == nil {
-				valueExprs = append(valueExprs, fieldRef{
-					e:         curStructVar,
-					fieldName: output.structFieldName,
+				valueExprs = append(valueExprs, &ast.SelectorExpr{
+					X:   curStructVar,
+					Sel: ast.NewIdent(output.structFieldName),
 				})
 				continue
 			}
@@ -142,38 +143,34 @@ func (p ProviderDescriptor) codegenOutputs(ctr *container, suffix string) (varsD
 			name = output.Type.Name()
 		}
 
-		v := ctr.createVar(fmt.Sprintf("%s%s", util.StringFirstLower(name), suffix))
+		v := ctr.createIdent(fmt.Sprintf("%s%s", util.StringFirstLower(name), suffix))
 		varRefs = append(varRefs, v)
 		if output.structFieldName != "" {
 			curStructVar = v
-			valueExprs = append(valueExprs, fieldRef{
-				e:         curStructVar,
-				fieldName: output.structFieldName,
+			valueExprs = append(valueExprs, &ast.SelectorExpr{
+				X:   curStructVar,
+				Sel: ast.NewIdent(output.structFieldName),
 			})
 		} else {
 			valueExprs = append(valueExprs, v)
 		}
 	}
 
-	first := true
-	for _, valueVar := range varRefs {
-		if !first {
-			varsDef += ", "
-		}
-		varsDef += valueVar.emit()
-		first = false
-	}
-	if p.hasError {
-		varsDef += ", err"
-	}
-	varsDef += " := "
-	return varsDef, valueExprs
+	return varRefs, valueExprs
 }
 
 func (p ProviderDescriptor) codegenErrCheck(ctr *container) {
 	if p.hasError {
-		ctr.codegenWriteln("if err != nil {")
-		ctr.codegenWriteln("    return err")
-		ctr.codegenWriteln("}")
+		errIdent := ast.NewIdent("err")
+		ctr.codegenStmt(&ast.IfStmt{
+			Cond: &ast.BinaryExpr{
+				X:  errIdent,
+				Op: token.NEQ,
+				Y:  ast.NewIdent("nil"),
+			},
+			Body: &ast.BlockStmt{List: []ast.Stmt{
+				&ast.ReturnStmt{Results: []ast.Expr{errIdent}},
+			}},
+		})
 	}
 }

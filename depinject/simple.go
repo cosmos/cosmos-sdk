@@ -1,6 +1,8 @@
 package depinject
 
 import (
+	"go/ast"
+	"go/token"
 	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
@@ -10,7 +12,7 @@ type simpleProvider struct {
 	provider   *ProviderDescriptor
 	called     bool
 	values     []reflect.Value
-	valueExprs []expr
+	valueExprs []ast.Expr
 	moduleKey  *moduleKey
 }
 
@@ -20,7 +22,7 @@ type simpleResolver struct {
 	resolved    bool
 	typ         reflect.Type
 	value       reflect.Value
-	valueExpr   expr
+	valueExpr   ast.Expr
 	graphNode   *graphviz.Node
 }
 
@@ -42,10 +44,16 @@ func (s *simpleProvider) resolveValues(ctr *container, skipCodegen bool) ([]refl
 		s.called = true
 
 		// codegen
-		varsDef, valueExprs := s.provider.codegenOutputs(ctr, "")
+		varRefs, valueExprs := s.provider.codegenOutputs(ctr, "")
 		s.valueExprs = valueExprs
 		if !skipCodegen {
-			ctr.codegenWriteln(varsDef, eCall)
+			ctr.codegenStmt(
+				&ast.AssignStmt{
+					Lhs: varRefs,
+					Tok: token.DEFINE,
+					Rhs: []ast.Expr{eCall},
+				},
+			)
 			s.provider.codegenErrCheck(ctr)
 		}
 	}
@@ -53,7 +61,7 @@ func (s *simpleProvider) resolveValues(ctr *container, skipCodegen bool) ([]refl
 	return s.values, nil
 }
 
-func (s *simpleResolver) resolve(c *container, _ *moduleKey, caller Location) (reflect.Value, expr, error) {
+func (s *simpleResolver) resolve(c *container, _ *moduleKey, caller Location) (reflect.Value, ast.Expr, error) {
 	// Log
 	c.logf("Providing %v from %s to %s", s.typ, s.node.provider.Location, caller.Name())
 

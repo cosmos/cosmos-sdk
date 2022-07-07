@@ -1,6 +1,7 @@
 package depinject
 
 import (
+	"go/ast"
 	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
@@ -25,7 +26,7 @@ func (s supplyResolver) addNode(provider *simpleProvider, _ int) error {
 	return duplicateDefinitionError(s.typ, provider.provider.Location, s.loc.String())
 }
 
-func (s supplyResolver) resolve(c *container, _ *moduleKey, caller Location) (reflect.Value, expr, error) {
+func (s supplyResolver) resolve(c *container, _ *moduleKey, caller Location) (reflect.Value, ast.Expr, error) {
 	c.logf("Supplying %v from %s to %s", s.typ, s.loc, caller.Name())
 	return s.value, nil, nil
 }

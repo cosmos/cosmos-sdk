@@ -2,6 +2,7 @@ package depinject
 
 import (
 	"fmt"
+	"go/ast"
 	"reflect"
 
 	"github.com/pkg/errors"
@@ -45,7 +46,7 @@ type mapOfOnePerModuleResolver struct {
 	*onePerModuleResolver
 }
 
-func (o *onePerModuleResolver) resolve(_ *container, _ *moduleKey, _ Location) (reflect.Value, expr, error) {
+func (o *onePerModuleResolver) resolve(_ *container, _ *moduleKey, _ Location) (reflect.Value, ast.Expr, error) {
 	return reflect.Value{}, nil, errors.Errorf("%v is a one-per-module type and thus can't be used as an input parameter, instead use %v", o.typ, o.mapType)
 }
 
@@ -53,7 +54,7 @@ func (o *onePerModuleResolver) describeLocation() string {
 	return fmt.Sprintf("one-per-module type %v", o.typ)
 }
 
-func (o *mapOfOnePerModuleResolver) resolve(c *container, _ *moduleKey, caller Location) (reflect.Value, expr, error) {
+func (o *mapOfOnePerModuleResolver) resolve(c *container, _ *moduleKey, caller Location) (reflect.Value, ast.Expr, error) {
 	// Log
 	c.logf("Providing one-per-module type map %v to %s from:", o.mapType, caller.Name())
 	c.indentLogger()

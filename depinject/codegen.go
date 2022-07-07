@@ -2,128 +2,40 @@ package depinject
 
 import (
 	"fmt"
-	"reflect"
-	"strings"
+	"go/ast"
 )
 
-type varRef string
-
-func (v varRef) emit() string {
-	return string(v)
+func (c *container) createIdent(namePrefix string) *ast.Ident {
+	return c.doCreateIdent(namePrefix, nil)
 }
 
-type funCall struct {
-	loc  Location
-	args []expr
-}
-
-func (f funCall) emit() string {
-	var args []string
-	for _, arg := range f.args {
-		if arg == nil {
-			args = append(args, "nil")
-		} else {
-			args = append(args, arg.emit())
-		}
-	}
-	return fmt.Sprintf("%s(%s)", f.loc.Name(), strings.Join(args, ", "))
-}
-
-type zeroValue struct {
-	reflect.Type
-}
-
-func (z zeroValue) emit() string {
-	return reflect.Zero(z.Type).String()
-}
-
-type castType struct {
-	typ reflect.Type
-	e   expr
-}
-
-func (c castType) emit() string {
-	// TODO import type
-	return fmt.Sprintf("%s(%s)", c.typ.String(), c.e.emit())
-}
-
-type methodCall struct {
-	receiver expr
-	method   string
-	args     []expr
-}
-
-func (m methodCall) emit() string {
-	var args []string
-	for _, arg := range m.args {
-		args = append(args, arg.emit())
-	}
-	return fmt.Sprintf("%s.%s(%s)", m.receiver.emit(), m.method, strings.Join(args, ", "))
-}
-
-type fieldRef struct {
-	e         expr
-	fieldName string
-}
-
-func (f fieldRef) emit() string {
-	return fmt.Sprintf("%s.%s", f.e.emit(), f.fieldName)
-}
-
-type stringLit string
-
-func (s stringLit) emit() string {
-	return fmt.Sprintf("%q", s)
-}
-
-type expr interface {
-	emit() string
-}
-
-var _, _, _, _, _, _, _ expr = varRef(""), funCall{}, zeroValue{}, castType{}, methodCall{}, fieldRef{}, stringLit("")
-
-func (c *container) createVar(namePrefix string) varRef {
-	return c.doCreateVar(namePrefix, nil)
-}
-
-func (c *container) doCreateVar(namePrefix string, handle interface{}) varRef {
-	v := varRef(namePrefix)
+func (c *container) doCreateIdent(namePrefix string, handle interface{}) *ast.Ident {
+	// TODO reserved names: keywords, builtin types, imports
+	v := ast.NewIdent(namePrefix)
 	i := 2
 	for {
-		_, ok := c.vars[v]
+		_, ok := c.idents[v]
 		if !ok {
-			c.vars[v] = handle
+			c.idents[v] = handle
 			if handle != nil {
-				c.reverseVars[handle] = v
+				c.reverseIdents[handle] = v
 			}
 			return v
 		}
 
-		v = varRef(fmt.Sprintf("%s%d", namePrefix, i))
+		v = ast.NewIdent(fmt.Sprintf("%s%d", namePrefix, i))
 		i++
 	}
 }
 
-func (c *container) getOrCreateVar(namePrefix string, handle interface{}) (v varRef, created bool) {
-	if v, ok := c.reverseVars[handle]; ok {
+func (c *container) getOrCreateIdent(namePrefix string, handle interface{}) (v *ast.Ident, created bool) {
+	if v, ok := c.reverseIdents[handle]; ok {
 		return v, false
 	}
 
-	return c.doCreateVar(namePrefix, handle), true
+	return c.doCreateIdent(namePrefix, handle), true
 }
 
-func (c *container) codegenWrite(v ...interface{}) {
-	for _, x := range v {
-		switch x := x.(type) {
-		case expr:
-			_, _ = fmt.Fprint(c.codegenOut, x.emit())
-		default:
-			_, _ = fmt.Fprint(c.codegenOut, x)
-		}
-	}
-}
-
-func (c *container) codegenWriteln(v ...interface{}) {
-	c.codegenWrite(v...)
-	_, _ = fmt.Fprintln(c.codegenOut)
+func (c *container) codegenStmt(stmt ast.Stmt) {
+	c.codegenBody.List = append(c.codegenBody.List, stmt)
 }

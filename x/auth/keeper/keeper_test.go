@@ -38,6 +38,7 @@ type KeeperTestSuite struct {
 	legacyAmino       *codec.LegacyAmino
 	interfaceRegistry codectypes.InterfaceRegistry
 	accountKeeper     keeper.AccountKeeper
+	msgServer         types.MsgServer
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -52,6 +53,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	suite.app = app
 	suite.ctx = app.BaseApp.NewContext(true, tmproto.Header{})
+	suite.msgServer = keeper.NewMsgServerImpl(suite.accountKeeper)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.interfaceRegistry)
 	types.RegisterQueryServer(queryHelper, suite.accountKeeper)

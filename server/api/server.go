@@ -90,7 +90,6 @@ func New(clientCtx client.Context, logger log.Logger) *Server {
 // non-blocking, so an external signal handler must be used.
 func (s *Server) Start(cfg config.Config) error {
 	s.mtx.Lock()
-	defer s.mtx.Unlock()
 
 	tmCfg := tmrpcserver.DefaultConfig()
 	tmCfg.MaxOpenConnections = int(cfg.API.MaxOpenConnections)
@@ -100,13 +99,15 @@ func (s *Server) Start(cfg config.Config) error {
 
 	listener, err := tmrpcserver.Listen(cfg.API.Address, tmCfg.MaxOpenConnections)
 	if err != nil {
+		s.mtx.Unlock()
 		return err
 	}
 
 	s.registerGRPCGatewayRoutes()
-
 	s.listener = listener
 	var h http.Handler = s.Router
+
+	s.mtx.Unlock()
 
 	if cfg.API.EnableUnsafeCORS {
 		allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))

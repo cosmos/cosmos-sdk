@@ -5,7 +5,7 @@ import (
 	tmprototypes "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
-// ToProto converts Header to protobuf
+// convertHeader converts tendermint header to sdk header
 func convertHeader(h tmprototypes.Header) Header {
 
 	return Header{
@@ -26,6 +26,7 @@ func convertHeader(h tmprototypes.Header) Header {
 	}
 }
 
+// convertHeader converts tendermint block to sdk block
 func convertBlock(tmblock *tmprototypes.Block) *Block {
 	b := new(Block)
 

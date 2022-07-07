@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Cherry pick into main
     if: github.event.pull_request.merged == true
+    #TEST DIFF - TEST DIFF
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -20,10 +21,11 @@ jobs:
         run: |
             git config --global user.name "${GITHUB_ACTOR}"
             git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+            git config --global user.password "${GITHUB_TOKEN}"
             git remote add upstream https://github.com/xBalbinus/cosmos-sdk.git
             git fetch --all                                   # Get the latest code
             git checkout -b pr-patch upstream/main    # Create new branch based on main branch
             git cherry-pick ${{github.event.pull_request.head.sha}}  # Cherry pick the latest commit of PR
             git push -u origin pr-patch               # Push your changes to the remote branch
             git checkout pr-patch
-            hub pull-request --base xBalbinus:main --head pr-patch #Create PR for cherry-picked, latest branch on main
+            hub pull-request --base xBalbinus:main --head #Create PR for cherry-picked, latest branch on main

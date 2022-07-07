@@ -26,7 +26,7 @@ func convertHeader(h tmprototypes.Header) Header {
 	}
 }
 
-// convertHeader converts tendermint block to sdk block
+// convertBlock converts tendermint block to sdk block
 func convertBlock(tmblock *tmprototypes.Block) *Block {
 	b := new(Block)
 

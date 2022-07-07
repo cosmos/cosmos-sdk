@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -26,6 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -187,6 +189,8 @@ type crisisInputs struct {
 	depinject.In
 
 	Config     *modulev1.Module
+	Key        *store.KVStoreKey
+	Cdc        codec.Codec
 	AppOpts    servertypes.AppOptions `optional:"true"`
 	Subspace   paramstypes.Subspace
 	BankKeeper types.SupplyKeeper
@@ -212,10 +216,13 @@ func provideModule(in crisisInputs) crisisOutputs {
 	}
 
 	k := keeper.NewKeeper(
+		in.Cdc,
+		in.Key,
 		in.Subspace,
 		invalidCheckPeriod,
 		in.BankKeeper,
 		feeCollectorName,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	skipGenesisInvariants := cast.ToBool(in.AppOpts.Get(FlagSkipGenesisInvariants))

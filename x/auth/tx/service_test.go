@@ -142,6 +142,10 @@ func (s *IntegrationTestSuite) TestQueryBySig() {
 	s.Require().Len(res.Txs, 1)
 	s.Require().Len(res.Txs[0].Signatures, 1)
 	s.Require().Equal(res.Txs[0].Signatures[0], sig.Signature)
+
+	// bad format should error
+	_, err = s.queryClient.GetTxsEvent(context.Background(), &tx.GetTxsEventRequest{Events: []string{"tx.foo.bar='baz'"}})
+	s.Require().ErrorContains(err, "invalid event;")
 }
 
 func TestEventRegex(t *testing.T) {

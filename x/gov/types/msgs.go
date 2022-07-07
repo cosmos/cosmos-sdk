@@ -25,9 +25,24 @@ var (
 	_          types.UnpackInterfacesMessage = &MsgSubmitProposal{}
 )
 
-// NewMsgSubmitProposal creates a new MsgSubmitProposal.
+// NewMsgSubmitProposal creates a new MsgSubmitProposal that is not expedited
 //nolint:interfacer
-func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress, IsExpedited bool) (*MsgSubmitProposal, error) {
+func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) (*MsgSubmitProposal, error) {
+	m := &MsgSubmitProposal{
+		InitialDeposit: initialDeposit,
+		Proposer:       proposer.String(),
+		IsExpedited:    false,
+	}
+	err := m.SetContent(content)
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// NewMsgSubmitProposalWithExpedited creates a new MsgSubmitProposal. It can optionally be used to create an expedited proposal
+//nolint:interfacer
+func NewMsgSubmitProposalWithExpedited(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress, IsExpedited bool) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
 		InitialDeposit: initialDeposit,
 		Proposer:       proposer.String(),

@@ -328,7 +328,7 @@ Where proposal.json contains:
 
 			content := types.NewCommunityPoolSpendProposal(proposal.Title, proposal.Description, recpAddr, amount)
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from, isExpedited)
+			msg, err := govtypes.NewMsgSubmitProposalWithExpedited(content, deposit, from, isExpedited)
 			if err != nil {
 				return err
 			}

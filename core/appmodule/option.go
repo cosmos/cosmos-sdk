@@ -2,7 +2,6 @@ package appmodule
 
 import (
 	"cosmossdk.io/core/internal"
-
 	"github.com/cosmos/cosmos-sdk/depinject"
 )
 

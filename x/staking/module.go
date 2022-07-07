@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mint/exported"
 	"math/rand"
 	"sort"
@@ -100,14 +102,22 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper         *keeper.Keeper
-	accountKeeper  types.AccountKeeper
-	bankKeeper     types.BankKeeper
+	keeper        *keeper.Keeper
+	accountKeeper types.AccountKeeper
+	bankKeeper    types.BankKeeper
+
+	// legacySubspace is used solely for migration of x/params managed parameters
 	legacySubspace exported.Subspace
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper *keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, ls exported.Subspace) AppModule {
+func NewAppModule(
+	cdc codec.Codec,
+	keeper *keeper.Keeper,
+	ak types.AccountKeeper,
+	bk types.BankKeeper,
+	ls exported.Subspace,
+) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
@@ -149,8 +159,14 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), querier)
 
 	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
-	cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
-	cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3)
+	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
+
+	}
+	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 2 to 3: %v", types.ModuleName, err))
+
+	}
 }
 
 // InitGenesis performs genesis initialization for the staking module. It returns
@@ -217,7 +233,13 @@ type stakingOutputs struct {
 }
 
 func provideModule(in stakingInputs) stakingOutputs {
-	k := keeper.NewKeeper(in.Cdc, in.Key, in.AccountKeeper, in.BankKeeper)
+	k := keeper.NewKeeper(
+		in.Cdc,
+		in.Key,
+		in.AccountKeeper,
+		in.BankKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
 	return stakingOutputs{StakingKeeper: k, Module: runtime.WrapAppModule(m)}
 }

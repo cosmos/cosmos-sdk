@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"strconv"
 	"time"
 
@@ -500,18 +501,22 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 	return &types.MsgCancelUnbondingDelegationResponse{}, nil
 }
 
-func (ms msgServer) UpdateParameters(goCtx context.Context, msg *types.MsgUpdateParameters) (*types.MsgUpdateParametersResponse, error) {
+func (ms msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// verification logic...
+	if ms.authority != msg.Authority {
+		return nil, sdkerrors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", ms.authority, msg.Authority)
+	}
 
-	// persist params
+	// store params
 	params := ParamsFromMsg(msg)
-	ms.SetParams(ctx, params)
+	if err := ms.SetParams(ctx, params); err != nil {
+		return nil, err
+	}
 
-	return &types.MsgUpdateParametersResponse{}, nil
+	return &types.MsgUpdateParamsResponse{}, nil
 }
 
-func ParamsFromMsg(msg *types.MsgUpdateParameters) types.Params {
+func ParamsFromMsg(msg *types.MsgUpdateParams) types.Params {
 	return msg.Params
 }

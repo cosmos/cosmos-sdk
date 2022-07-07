@@ -42,7 +42,7 @@ service Msg {
   // UpdateParams defines a operation for updating the x/staking module
   // parameters.
   // Since: cosmos-sdk 0.47
-  rpc UpdateParameters(MsgUpdateParameters) returns (MsgUpdateParametersResponse);
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 }
 
 // MsgCreateValidator defines a SDK message for creating a new validator.
@@ -172,7 +172,7 @@ message MsgCancelUnbondingDelegationResponse {}
 // MsgUpdateParams is the Msg/UpdateParams request type.
 //
 // Since: cosmos-sdk 0.47
-message MsgUpdateParameters {
+message MsgUpdateParams {
   option (cosmos.msg.v1.signer) = "authority";
 
   // authority is the address of the governance account.
@@ -187,4 +187,4 @@ message MsgUpdateParameters {
 // MsgUpdateParams message.
 //
 // Since: cosmos-sdk 0.47
-message MsgUpdateParametersResponse {};
+message MsgUpdateParamsResponse {};

@@ -51,7 +51,7 @@ var (
 
 	HistoricalInfoKey = []byte{0x50} // prefix for the historical info
 
-	ParametersKey = []byte{0x51} // prefix for parameters for module x/staking
+	ParamsKey = []byte{0x51} // prefix for parameters for module x/staking
 )
 
 // GetValidatorKey creates the key for the validator with address

@@ -6168,27 +6168,27 @@ func (x *fastReflection_MsgCancelUnbondingDelegationResponse) ProtoMethods() *pr
 }
 
 var (
-	md_MsgUpdateParameters           protoreflect.MessageDescriptor
-	fd_MsgUpdateParameters_authority protoreflect.FieldDescriptor
-	fd_MsgUpdateParameters_params    protoreflect.FieldDescriptor
+	md_MsgUpdateParams           protoreflect.MessageDescriptor
+	fd_MsgUpdateParams_authority protoreflect.FieldDescriptor
+	fd_MsgUpdateParams_params    protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_staking_v1beta1_tx_proto_init()
-	md_MsgUpdateParameters = File_cosmos_staking_v1beta1_tx_proto.Messages().ByName("MsgUpdateParameters")
-	fd_MsgUpdateParameters_authority = md_MsgUpdateParameters.Fields().ByName("authority")
-	fd_MsgUpdateParameters_params = md_MsgUpdateParameters.Fields().ByName("params")
+	md_MsgUpdateParams = File_cosmos_staking_v1beta1_tx_proto.Messages().ByName("MsgUpdateParams")
+	fd_MsgUpdateParams_authority = md_MsgUpdateParams.Fields().ByName("authority")
+	fd_MsgUpdateParams_params = md_MsgUpdateParams.Fields().ByName("params")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgUpdateParameters)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgUpdateParams)(nil)
 
-type fastReflection_MsgUpdateParameters MsgUpdateParameters
+type fastReflection_MsgUpdateParams MsgUpdateParams
 
-func (x *MsgUpdateParameters) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgUpdateParameters)(x)
+func (x *MsgUpdateParams) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgUpdateParams)(x)
 }
 
-func (x *MsgUpdateParameters) slowProtoReflect() protoreflect.Message {
+func (x *MsgUpdateParams) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_staking_v1beta1_tx_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -6200,43 +6200,43 @@ func (x *MsgUpdateParameters) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgUpdateParameters_messageType fastReflection_MsgUpdateParameters_messageType
-var _ protoreflect.MessageType = fastReflection_MsgUpdateParameters_messageType{}
+var _fastReflection_MsgUpdateParams_messageType fastReflection_MsgUpdateParams_messageType
+var _ protoreflect.MessageType = fastReflection_MsgUpdateParams_messageType{}
 
-type fastReflection_MsgUpdateParameters_messageType struct{}
+type fastReflection_MsgUpdateParams_messageType struct{}
 
-func (x fastReflection_MsgUpdateParameters_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgUpdateParameters)(nil)
+func (x fastReflection_MsgUpdateParams_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgUpdateParams)(nil)
 }
-func (x fastReflection_MsgUpdateParameters_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgUpdateParameters)
+func (x fastReflection_MsgUpdateParams_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateParams)
 }
-func (x fastReflection_MsgUpdateParameters_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgUpdateParameters
+func (x fastReflection_MsgUpdateParams_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateParams
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgUpdateParameters) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgUpdateParameters
+func (x *fastReflection_MsgUpdateParams) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateParams
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgUpdateParameters) Type() protoreflect.MessageType {
-	return _fastReflection_MsgUpdateParameters_messageType
+func (x *fastReflection_MsgUpdateParams) Type() protoreflect.MessageType {
+	return _fastReflection_MsgUpdateParams_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgUpdateParameters) New() protoreflect.Message {
-	return new(fastReflection_MsgUpdateParameters)
+func (x *fastReflection_MsgUpdateParams) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateParams)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgUpdateParameters) Interface() protoreflect.ProtoMessage {
-	return (*MsgUpdateParameters)(x)
+func (x *fastReflection_MsgUpdateParams) Interface() protoreflect.ProtoMessage {
+	return (*MsgUpdateParams)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -6244,16 +6244,16 @@ func (x *fastReflection_MsgUpdateParameters) Interface() protoreflect.ProtoMessa
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgUpdateParameters) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgUpdateParams) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Authority != "" {
 		value := protoreflect.ValueOfString(x.Authority)
-		if !f(fd_MsgUpdateParameters_authority, value) {
+		if !f(fd_MsgUpdateParams_authority, value) {
 			return
 		}
 	}
 	if x.Params != nil {
 		value := protoreflect.ValueOfMessage(x.Params.ProtoReflect())
-		if !f(fd_MsgUpdateParameters_params, value) {
+		if !f(fd_MsgUpdateParams_params, value) {
 			return
 		}
 	}
@@ -6270,17 +6270,17 @@ func (x *fastReflection_MsgUpdateParameters) Range(f func(protoreflect.FieldDesc
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgUpdateParameters) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgUpdateParams) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.staking.v1beta1.MsgUpdateParameters.authority":
+	case "cosmos.staking.v1beta1.MsgUpdateParams.authority":
 		return x.Authority != ""
-	case "cosmos.staking.v1beta1.MsgUpdateParameters.params":
+	case "cosmos.staking.v1beta1.MsgUpdateParams.params":
 		return x.Params != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParameters"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParams"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParameters does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParams does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6290,17 +6290,17 @@ func (x *fastReflection_MsgUpdateParameters) Has(fd protoreflect.FieldDescriptor
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateParameters) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgUpdateParams) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.staking.v1beta1.MsgUpdateParameters.authority":
+	case "cosmos.staking.v1beta1.MsgUpdateParams.authority":
 		x.Authority = ""
-	case "cosmos.staking.v1beta1.MsgUpdateParameters.params":
+	case "cosmos.staking.v1beta1.MsgUpdateParams.params":
 		x.Params = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParameters"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParams"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParameters does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParams does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6310,19 +6310,19 @@ func (x *fastReflection_MsgUpdateParameters) Clear(fd protoreflect.FieldDescript
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgUpdateParameters) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateParams) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.staking.v1beta1.MsgUpdateParameters.authority":
+	case "cosmos.staking.v1beta1.MsgUpdateParams.authority":
 		value := x.Authority
 		return protoreflect.ValueOfString(value)
-	case "cosmos.staking.v1beta1.MsgUpdateParameters.params":
+	case "cosmos.staking.v1beta1.MsgUpdateParams.params":
 		value := x.Params
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParameters"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParams"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParameters does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParams does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -6336,17 +6336,17 @@ func (x *fastReflection_MsgUpdateParameters) Get(descriptor protoreflect.FieldDe
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateParameters) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgUpdateParams) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.staking.v1beta1.MsgUpdateParameters.authority":
+	case "cosmos.staking.v1beta1.MsgUpdateParams.authority":
 		x.Authority = value.Interface().(string)
-	case "cosmos.staking.v1beta1.MsgUpdateParameters.params":
+	case "cosmos.staking.v1beta1.MsgUpdateParams.params":
 		x.Params = value.Message().Interface().(*Params)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParameters"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParams"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParameters does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParams does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6360,48 +6360,48 @@ func (x *fastReflection_MsgUpdateParameters) Set(fd protoreflect.FieldDescriptor
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateParameters) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateParams) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.staking.v1beta1.MsgUpdateParameters.params":
+	case "cosmos.staking.v1beta1.MsgUpdateParams.params":
 		if x.Params == nil {
 			x.Params = new(Params)
 		}
 		return protoreflect.ValueOfMessage(x.Params.ProtoReflect())
-	case "cosmos.staking.v1beta1.MsgUpdateParameters.authority":
-		panic(fmt.Errorf("field authority of message cosmos.staking.v1beta1.MsgUpdateParameters is not mutable"))
+	case "cosmos.staking.v1beta1.MsgUpdateParams.authority":
+		panic(fmt.Errorf("field authority of message cosmos.staking.v1beta1.MsgUpdateParams is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParameters"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParams"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParameters does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParams does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgUpdateParameters) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateParams) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.staking.v1beta1.MsgUpdateParameters.authority":
+	case "cosmos.staking.v1beta1.MsgUpdateParams.authority":
 		return protoreflect.ValueOfString("")
-	case "cosmos.staking.v1beta1.MsgUpdateParameters.params":
+	case "cosmos.staking.v1beta1.MsgUpdateParams.params":
 		m := new(Params)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParameters"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParams"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParameters does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParams does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgUpdateParameters) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgUpdateParams) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.staking.v1beta1.MsgUpdateParameters", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.staking.v1beta1.MsgUpdateParams", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -6409,7 +6409,7 @@ func (x *fastReflection_MsgUpdateParameters) WhichOneof(d protoreflect.OneofDesc
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgUpdateParameters) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgUpdateParams) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -6420,7 +6420,7 @@ func (x *fastReflection_MsgUpdateParameters) GetUnknown() protoreflect.RawFields
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateParameters) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgUpdateParams) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -6432,7 +6432,7 @@ func (x *fastReflection_MsgUpdateParameters) SetUnknown(fields protoreflect.RawF
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgUpdateParameters) IsValid() bool {
+func (x *fastReflection_MsgUpdateParams) IsValid() bool {
 	return x != nil
 }
 
@@ -6442,9 +6442,9 @@ func (x *fastReflection_MsgUpdateParameters) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgUpdateParameters) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgUpdateParams) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgUpdateParameters)
+		x := input.Message.Interface().(*MsgUpdateParams)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6474,7 +6474,7 @@ func (x *fastReflection_MsgUpdateParameters) ProtoMethods() *protoiface.Methods 
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgUpdateParameters)
+		x := input.Message.Interface().(*MsgUpdateParams)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6525,7 +6525,7 @@ func (x *fastReflection_MsgUpdateParameters) ProtoMethods() *protoiface.Methods 
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgUpdateParameters)
+		x := input.Message.Interface().(*MsgUpdateParams)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6557,10 +6557,10 @@ func (x *fastReflection_MsgUpdateParameters) ProtoMethods() *protoiface.Methods 
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateParameters: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateParams: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateParameters: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateParams: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -6667,23 +6667,23 @@ func (x *fastReflection_MsgUpdateParameters) ProtoMethods() *protoiface.Methods 
 }
 
 var (
-	md_MsgUpdateParametersResponse protoreflect.MessageDescriptor
+	md_MsgUpdateParamsResponse protoreflect.MessageDescriptor
 )
 
 func init() {
 	file_cosmos_staking_v1beta1_tx_proto_init()
-	md_MsgUpdateParametersResponse = File_cosmos_staking_v1beta1_tx_proto.Messages().ByName("MsgUpdateParametersResponse")
+	md_MsgUpdateParamsResponse = File_cosmos_staking_v1beta1_tx_proto.Messages().ByName("MsgUpdateParamsResponse")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgUpdateParametersResponse)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgUpdateParamsResponse)(nil)
 
-type fastReflection_MsgUpdateParametersResponse MsgUpdateParametersResponse
+type fastReflection_MsgUpdateParamsResponse MsgUpdateParamsResponse
 
-func (x *MsgUpdateParametersResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgUpdateParametersResponse)(x)
+func (x *MsgUpdateParamsResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgUpdateParamsResponse)(x)
 }
 
-func (x *MsgUpdateParametersResponse) slowProtoReflect() protoreflect.Message {
+func (x *MsgUpdateParamsResponse) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_staking_v1beta1_tx_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -6695,43 +6695,43 @@ func (x *MsgUpdateParametersResponse) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgUpdateParametersResponse_messageType fastReflection_MsgUpdateParametersResponse_messageType
-var _ protoreflect.MessageType = fastReflection_MsgUpdateParametersResponse_messageType{}
+var _fastReflection_MsgUpdateParamsResponse_messageType fastReflection_MsgUpdateParamsResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgUpdateParamsResponse_messageType{}
 
-type fastReflection_MsgUpdateParametersResponse_messageType struct{}
+type fastReflection_MsgUpdateParamsResponse_messageType struct{}
 
-func (x fastReflection_MsgUpdateParametersResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgUpdateParametersResponse)(nil)
+func (x fastReflection_MsgUpdateParamsResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgUpdateParamsResponse)(nil)
 }
-func (x fastReflection_MsgUpdateParametersResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgUpdateParametersResponse)
+func (x fastReflection_MsgUpdateParamsResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateParamsResponse)
 }
-func (x fastReflection_MsgUpdateParametersResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgUpdateParametersResponse
+func (x fastReflection_MsgUpdateParamsResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateParamsResponse
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgUpdateParametersResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgUpdateParametersResponse
+func (x *fastReflection_MsgUpdateParamsResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateParamsResponse
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgUpdateParametersResponse) Type() protoreflect.MessageType {
-	return _fastReflection_MsgUpdateParametersResponse_messageType
+func (x *fastReflection_MsgUpdateParamsResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgUpdateParamsResponse_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgUpdateParametersResponse) New() protoreflect.Message {
-	return new(fastReflection_MsgUpdateParametersResponse)
+func (x *fastReflection_MsgUpdateParamsResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateParamsResponse)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgUpdateParametersResponse) Interface() protoreflect.ProtoMessage {
-	return (*MsgUpdateParametersResponse)(x)
+func (x *fastReflection_MsgUpdateParamsResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgUpdateParamsResponse)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -6739,7 +6739,7 @@ func (x *fastReflection_MsgUpdateParametersResponse) Interface() protoreflect.Pr
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgUpdateParametersResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgUpdateParamsResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 }
 
 // Has reports whether a field is populated.
@@ -6753,13 +6753,13 @@ func (x *fastReflection_MsgUpdateParametersResponse) Range(f func(protoreflect.F
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgUpdateParametersResponse) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgUpdateParamsResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParametersResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParamsResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParametersResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParamsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6769,13 +6769,13 @@ func (x *fastReflection_MsgUpdateParametersResponse) Has(fd protoreflect.FieldDe
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateParametersResponse) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgUpdateParamsResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParametersResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParamsResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParametersResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParamsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6785,13 +6785,13 @@ func (x *fastReflection_MsgUpdateParametersResponse) Clear(fd protoreflect.Field
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgUpdateParametersResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateParamsResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParametersResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParamsResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParametersResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParamsResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -6805,13 +6805,13 @@ func (x *fastReflection_MsgUpdateParametersResponse) Get(descriptor protoreflect
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateParametersResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgUpdateParamsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParametersResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParamsResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParametersResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParamsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6825,36 +6825,36 @@ func (x *fastReflection_MsgUpdateParametersResponse) Set(fd protoreflect.FieldDe
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateParametersResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateParamsResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParametersResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParamsResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParametersResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParamsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgUpdateParametersResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgUpdateParamsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParametersResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgUpdateParamsResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParametersResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgUpdateParamsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgUpdateParametersResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgUpdateParamsResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.staking.v1beta1.MsgUpdateParametersResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.staking.v1beta1.MsgUpdateParamsResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -6862,7 +6862,7 @@ func (x *fastReflection_MsgUpdateParametersResponse) WhichOneof(d protoreflect.O
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgUpdateParametersResponse) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgUpdateParamsResponse) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -6873,7 +6873,7 @@ func (x *fastReflection_MsgUpdateParametersResponse) GetUnknown() protoreflect.R
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgUpdateParametersResponse) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgUpdateParamsResponse) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -6885,7 +6885,7 @@ func (x *fastReflection_MsgUpdateParametersResponse) SetUnknown(fields protorefl
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgUpdateParametersResponse) IsValid() bool {
+func (x *fastReflection_MsgUpdateParamsResponse) IsValid() bool {
 	return x != nil
 }
 
@@ -6895,9 +6895,9 @@ func (x *fastReflection_MsgUpdateParametersResponse) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgUpdateParametersResponse) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgUpdateParamsResponse) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgUpdateParametersResponse)
+		x := input.Message.Interface().(*MsgUpdateParamsResponse)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6919,7 +6919,7 @@ func (x *fastReflection_MsgUpdateParametersResponse) ProtoMethods() *protoiface.
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgUpdateParametersResponse)
+		x := input.Message.Interface().(*MsgUpdateParamsResponse)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6949,7 +6949,7 @@ func (x *fastReflection_MsgUpdateParametersResponse) ProtoMethods() *protoiface.
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgUpdateParametersResponse)
+		x := input.Message.Interface().(*MsgUpdateParamsResponse)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -6981,10 +6981,10 @@ func (x *fastReflection_MsgUpdateParametersResponse) ProtoMethods() *protoiface.
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateParametersResponse: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateParamsResponse: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateParametersResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			default:
@@ -7599,7 +7599,7 @@ func (*MsgCancelUnbondingDelegationResponse) Descriptor() ([]byte, []int) {
 // MsgUpdateParams is the Msg/UpdateParams request type.
 //
 // Since: cosmos-sdk 0.47
-type MsgUpdateParameters struct {
+type MsgUpdateParams struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -7612,8 +7612,8 @@ type MsgUpdateParameters struct {
 	Params *Params `protobuf:"bytes,2,opt,name=params,proto3" json:"params,omitempty"`
 }
 
-func (x *MsgUpdateParameters) Reset() {
-	*x = MsgUpdateParameters{}
+func (x *MsgUpdateParams) Reset() {
+	*x = MsgUpdateParams{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_staking_v1beta1_tx_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -7621,25 +7621,25 @@ func (x *MsgUpdateParameters) Reset() {
 	}
 }
 
-func (x *MsgUpdateParameters) String() string {
+func (x *MsgUpdateParams) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgUpdateParameters) ProtoMessage() {}
+func (*MsgUpdateParams) ProtoMessage() {}
 
-// Deprecated: Use MsgUpdateParameters.ProtoReflect.Descriptor instead.
-func (*MsgUpdateParameters) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgUpdateParams.ProtoReflect.Descriptor instead.
+func (*MsgUpdateParams) Descriptor() ([]byte, []int) {
 	return file_cosmos_staking_v1beta1_tx_proto_rawDescGZIP(), []int{12}
 }
 
-func (x *MsgUpdateParameters) GetAuthority() string {
+func (x *MsgUpdateParams) GetAuthority() string {
 	if x != nil {
 		return x.Authority
 	}
 	return ""
 }
 
-func (x *MsgUpdateParameters) GetParams() *Params {
+func (x *MsgUpdateParams) GetParams() *Params {
 	if x != nil {
 		return x.Params
 	}
@@ -7650,14 +7650,14 @@ func (x *MsgUpdateParameters) GetParams() *Params {
 // MsgUpdateParams message.
 //
 // Since: cosmos-sdk 0.47
-type MsgUpdateParametersResponse struct {
+type MsgUpdateParamsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 }
 
-func (x *MsgUpdateParametersResponse) Reset() {
-	*x = MsgUpdateParametersResponse{}
+func (x *MsgUpdateParamsResponse) Reset() {
+	*x = MsgUpdateParamsResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_staking_v1beta1_tx_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -7665,14 +7665,14 @@ func (x *MsgUpdateParametersResponse) Reset() {
 	}
 }
 
-func (x *MsgUpdateParametersResponse) String() string {
+func (x *MsgUpdateParamsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgUpdateParametersResponse) ProtoMessage() {}
+func (*MsgUpdateParamsResponse) ProtoMessage() {}
 
-// Deprecated: Use MsgUpdateParametersResponse.ProtoReflect.Descriptor instead.
-func (*MsgUpdateParametersResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgUpdateParamsResponse.ProtoReflect.Descriptor instead.
+func (*MsgUpdateParamsResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_staking_v1beta1_tx_proto_rawDescGZIP(), []int{13}
 }
 
@@ -7851,83 +7851,82 @@ var file_cosmos_staking_v1beta1_tx_proto_rawDesc = []byte{
 	0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x26, 0x0a, 0x24, 0x4d, 0x73, 0x67,
 	0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x44,
 	0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x22, 0x9b, 0x01, 0x0a, 0x13, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50,
-	0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x12, 0x36, 0x0a, 0x09, 0x61, 0x75, 0x74,
-	0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
-	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74,
-	0x79, 0x12, 0x3c, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x1e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69,
-	0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d,
-	0x73, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x3a,
-	0x0e, 0x82, 0xe7, 0xb0, 0x2a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x22,
-	0x1d, 0x0a, 0x1b, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61,
-	0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0xa2,
-	0x06, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x71, 0x0a, 0x0f, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
-	0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x2a, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x56, 0x61, 0x6c, 0x69,
-	0x64, 0x61, 0x74, 0x6f, 0x72, 0x1a, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73,
-	0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d,
-	0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
-	0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6b, 0x0a, 0x0d, 0x45, 0x64, 0x69,
-	0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x28, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x64, 0x69, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64,
-	0x61, 0x74, 0x6f, 0x72, 0x1a, 0x30, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74,
-	0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73,
-	0x67, 0x45, 0x64, 0x69, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5c, 0x0a, 0x08, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61,
-	0x74, 0x65, 0x12, 0x23, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b,
-	0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x44,
-	0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x1a, 0x2b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x4d, 0x73, 0x67, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x71, 0x0a, 0x0f, 0x42, 0x65, 0x67, 0x69, 0x6e, 0x52, 0x65, 0x64,
-	0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x12, 0x2a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x4d, 0x73, 0x67, 0x42, 0x65, 0x67, 0x69, 0x6e, 0x52, 0x65, 0x64, 0x65, 0x6c, 0x65, 0x67,
-	0x61, 0x74, 0x65, 0x1a, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61,
-	0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67,
-	0x42, 0x65, 0x67, 0x69, 0x6e, 0x52, 0x65, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x62, 0x0a, 0x0a, 0x55, 0x6e, 0x64, 0x65, 0x6c,
-	0x65, 0x67, 0x61, 0x74, 0x65, 0x12, 0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73,
-	0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d,
-	0x73, 0x67, 0x55, 0x6e, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x1a, 0x2d, 0x2e, 0x63,
+	0x65, 0x22, 0x97, 0x01, 0x0a, 0x0f, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50,
+	0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x36, 0x0a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69,
+	0x74, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69,
+	0x6e, 0x67, 0x52, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x12, 0x3c, 0x0a,
+	0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1e, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0x04, 0xc8,
+	0xde, 0x1f, 0x00, 0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x3a, 0x0e, 0x82, 0xe7, 0xb0,
+	0x2a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x22, 0x19, 0x0a, 0x17, 0x4d,
+	0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0x96, 0x06, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x71,
+	0x0a, 0x0f, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
+	0x72, 0x12, 0x2a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69,
+	0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72,
+	0x65, 0x61, 0x74, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x1a, 0x32, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
+	0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x6b, 0x0a, 0x0d, 0x45, 0x64, 0x69, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
+	0x6f, 0x72, 0x12, 0x28, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b,
+	0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45,
+	0x64, 0x69, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x1a, 0x30, 0x2e, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x6e, 0x64, 0x65, 0x6c, 0x65, 0x67,
-	0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x8f, 0x01, 0x0a, 0x19,
-	0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x44,
-	0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x34, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x55, 0x6e, 0x62, 0x6f,
-	0x6e, 0x64, 0x69, 0x6e, 0x67, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x1a,
-	0x3c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
-	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x61, 0x6e, 0x63,
-	0x65, 0x6c, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x44, 0x65, 0x6c, 0x65, 0x67,
-	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x74, 0x0a,
-	0x10, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72,
-	0x73, 0x12, 0x2b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69,
-	0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70,
-	0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x1a, 0x33,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x64, 0x69, 0x74, 0x56, 0x61, 0x6c,
+	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5c,
+	0x0a, 0x08, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x12, 0x23, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x1a,
+	0x2b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x44, 0x65, 0x6c, 0x65,
+	0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x71, 0x0a, 0x0f,
+	0x42, 0x65, 0x67, 0x69, 0x6e, 0x52, 0x65, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x12,
+	0x2a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x42, 0x65, 0x67, 0x69,
+	0x6e, 0x52, 0x65, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x1a, 0x32, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x42, 0x65, 0x67, 0x69, 0x6e, 0x52, 0x65, 0x64,
+	0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x62, 0x0a, 0x0a, 0x55, 0x6e, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x12, 0x25, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x6e, 0x64, 0x65, 0x6c, 0x65,
+	0x67, 0x61, 0x74, 0x65, 0x1a, 0x2d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74,
+	0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73,
+	0x67, 0x55, 0x6e, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x8f, 0x01, 0x0a, 0x19, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x55, 0x6e,
+	0x62, 0x6f, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x12, 0x34, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69,
+	0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x61,
+	0x6e, 0x63, 0x65, 0x6c, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x44, 0x65, 0x6c,
+	0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x1a, 0x3c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2e, 0x4d, 0x73, 0x67, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64,
+	0x69, 0x6e, 0x67, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x68, 0x0a, 0x0c, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50,
+	0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73,
+	0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d,
+	0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x1a, 0x2f,
 	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e,
 	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74,
-	0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x42, 0xd7, 0x01, 0x0a, 0x1a, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x36, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x53, 0x58, 0xaa, 0x02, 0x16, 0x43, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x56, 0x31, 0x62,
-	0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x53, 0x74,
-	0x61, 0x6b, 0x69, 0x6e, 0x67, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x22,
-	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x5c, 0x56,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
-	0x74, 0x61, 0xea, 0x02, 0x18, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x53, 0x74, 0x61,
-	0x6b, 0x69, 0x6e, 0x67, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42,
+	0xd7, 0x01, 0x0a, 0x1a, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73,
+	0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x07,
+	0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x36, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x3b, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0xa2, 0x02, 0x03, 0x43, 0x53, 0x58, 0xaa, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0xca, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e,
+	0x67, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x22, 0x43, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x5c, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02,
+	0x18, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
+	0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x33,
 }
 
 var (
@@ -7956,8 +7955,8 @@ var file_cosmos_staking_v1beta1_tx_proto_goTypes = []interface{}{
 	(*MsgUndelegateResponse)(nil),                // 9: cosmos.staking.v1beta1.MsgUndelegateResponse
 	(*MsgCancelUnbondingDelegation)(nil),         // 10: cosmos.staking.v1beta1.MsgCancelUnbondingDelegation
 	(*MsgCancelUnbondingDelegationResponse)(nil), // 11: cosmos.staking.v1beta1.MsgCancelUnbondingDelegationResponse
-	(*MsgUpdateParameters)(nil),                  // 12: cosmos.staking.v1beta1.MsgUpdateParameters
-	(*MsgUpdateParametersResponse)(nil),          // 13: cosmos.staking.v1beta1.MsgUpdateParametersResponse
+	(*MsgUpdateParams)(nil),                      // 12: cosmos.staking.v1beta1.MsgUpdateParams
+	(*MsgUpdateParamsResponse)(nil),              // 13: cosmos.staking.v1beta1.MsgUpdateParamsResponse
 	(*Description)(nil),                          // 14: cosmos.staking.v1beta1.Description
 	(*CommissionRates)(nil),                      // 15: cosmos.staking.v1beta1.CommissionRates
 	(*anypb.Any)(nil),                            // 16: google.protobuf.Any
@@ -7977,21 +7976,21 @@ var file_cosmos_staking_v1beta1_tx_proto_depIdxs = []int32{
 	17, // 8: cosmos.staking.v1beta1.MsgUndelegate.amount:type_name -> cosmos.base.v1beta1.Coin
 	18, // 9: cosmos.staking.v1beta1.MsgUndelegateResponse.completion_time:type_name -> google.protobuf.Timestamp
 	17, // 10: cosmos.staking.v1beta1.MsgCancelUnbondingDelegation.amount:type_name -> cosmos.base.v1beta1.Coin
-	19, // 11: cosmos.staking.v1beta1.MsgUpdateParameters.params:type_name -> cosmos.staking.v1beta1.Params
+	19, // 11: cosmos.staking.v1beta1.MsgUpdateParams.params:type_name -> cosmos.staking.v1beta1.Params
 	0,  // 12: cosmos.staking.v1beta1.Msg.CreateValidator:input_type -> cosmos.staking.v1beta1.MsgCreateValidator
 	2,  // 13: cosmos.staking.v1beta1.Msg.EditValidator:input_type -> cosmos.staking.v1beta1.MsgEditValidator
 	4,  // 14: cosmos.staking.v1beta1.Msg.Delegate:input_type -> cosmos.staking.v1beta1.MsgDelegate
 	6,  // 15: cosmos.staking.v1beta1.Msg.BeginRedelegate:input_type -> cosmos.staking.v1beta1.MsgBeginRedelegate
 	8,  // 16: cosmos.staking.v1beta1.Msg.Undelegate:input_type -> cosmos.staking.v1beta1.MsgUndelegate
 	10, // 17: cosmos.staking.v1beta1.Msg.CancelUnbondingDelegation:input_type -> cosmos.staking.v1beta1.MsgCancelUnbondingDelegation
-	12, // 18: cosmos.staking.v1beta1.Msg.UpdateParameters:input_type -> cosmos.staking.v1beta1.MsgUpdateParameters
+	12, // 18: cosmos.staking.v1beta1.Msg.UpdateParams:input_type -> cosmos.staking.v1beta1.MsgUpdateParams
 	1,  // 19: cosmos.staking.v1beta1.Msg.CreateValidator:output_type -> cosmos.staking.v1beta1.MsgCreateValidatorResponse
 	3,  // 20: cosmos.staking.v1beta1.Msg.EditValidator:output_type -> cosmos.staking.v1beta1.MsgEditValidatorResponse
 	5,  // 21: cosmos.staking.v1beta1.Msg.Delegate:output_type -> cosmos.staking.v1beta1.MsgDelegateResponse
 	7,  // 22: cosmos.staking.v1beta1.Msg.BeginRedelegate:output_type -> cosmos.staking.v1beta1.MsgBeginRedelegateResponse
 	9,  // 23: cosmos.staking.v1beta1.Msg.Undelegate:output_type -> cosmos.staking.v1beta1.MsgUndelegateResponse
 	11, // 24: cosmos.staking.v1beta1.Msg.CancelUnbondingDelegation:output_type -> cosmos.staking.v1beta1.MsgCancelUnbondingDelegationResponse
-	13, // 25: cosmos.staking.v1beta1.Msg.UpdateParameters:output_type -> cosmos.staking.v1beta1.MsgUpdateParametersResponse
+	13, // 25: cosmos.staking.v1beta1.Msg.UpdateParams:output_type -> cosmos.staking.v1beta1.MsgUpdateParamsResponse
 	19, // [19:26] is the sub-list for method output_type
 	12, // [12:19] is the sub-list for method input_type
 	12, // [12:12] is the sub-list for extension type_name
@@ -8151,7 +8150,7 @@ func file_cosmos_staking_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_staking_v1beta1_tx_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateParameters); i {
+			switch v := v.(*MsgUpdateParams); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8163,7 +8162,7 @@ func file_cosmos_staking_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_staking_v1beta1_tx_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateParametersResponse); i {
+			switch v := v.(*MsgUpdateParamsResponse); i {
 			case 0:
 				return &v.state
 			case 1:

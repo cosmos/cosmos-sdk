@@ -19,7 +19,7 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 	}
 
 	bz := cdc.MustMarshal(&legacyParams)
-	store.Set(types.ParametersKey, bz)
+	store.Set(types.ParamsKey, bz)
 
 	return nil
 }

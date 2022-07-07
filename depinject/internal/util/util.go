@@ -1,6 +1,8 @@
 package util
 
 import (
+	"unicode"
+
 	"golang.org/x/exp/constraints"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
@@ -23,4 +25,24 @@ func OrderedMapKeys[K constraints.Ordered, V any](m map[K]V) []K {
 	keys := maps.Keys(m)
 	slices.Sort(keys)
 	return keys
+}
+
+func StringFirstLower(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+
+	runes := []rune(s)
+	runes[0] = unicode.ToLower(runes[0])
+	return string(runes)
+}
+
+func StringFirstUpper(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+
+	runes := []rune(s)
+	runes[0] = unicode.ToUpper(runes[0])
+	return string(runes)
 }

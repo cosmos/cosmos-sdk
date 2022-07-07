@@ -1,15 +1,18 @@
 package depinject
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
+	"github.com/cosmos/cosmos-sdk/depinject/internal/util"
 )
 
 type moduleDepProvider struct {
 	provider        *ProviderDescriptor
 	calledForModule map[*moduleKey]bool
 	valueMap        map[*moduleKey][]reflect.Value
+	valueExprs      map[*moduleKey][]expr
 }
 
 type moduleDepResolver struct {
@@ -38,18 +41,27 @@ func (s moduleDepResolver) resolve(ctr *container, moduleKey *moduleKey, caller 
 	}
 
 	if !s.node.calledForModule[moduleKey] {
-		values, err := ctr.call(s.node.provider, moduleKey)
+		values, eCall, err := ctr.call(s.node.provider, moduleKey)
 		if err != nil {
 			return reflect.Value{}, nil, err
 		}
 
 		s.node.valueMap[moduleKey] = values
 		s.node.calledForModule[moduleKey] = true
+
+		// codegen
+		varsDef, valueExprs := s.node.provider.codegenOutputs(ctr, fmt.Sprintf(
+			"For%s",
+			util.StringFirstUpper(moduleKey.name),
+		))
+		s.node.valueExprs[moduleKey] = valueExprs
+		ctr.codegenWriteln(varsDef, eCall)
+		s.node.provider.codegenErrCheck(ctr)
 	}
 
 	value := s.node.valueMap[moduleKey][s.idxInValues]
 	s.valueMap[moduleKey] = value
-	return value, nil, nil
+	return value, s.node.valueExprs[moduleKey][s.idxInValues], nil
 }
 
 func (s moduleDepResolver) addNode(p *simpleProvider, _ int) error {

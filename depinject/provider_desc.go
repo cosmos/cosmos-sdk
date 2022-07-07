@@ -1,9 +1,12 @@
 package depinject
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/pkg/errors"
+
+	"github.com/cosmos/cosmos-sdk/depinject/internal/util"
 )
 
 // ProviderDescriptor defines a special provider type that is defined by
@@ -23,6 +26,8 @@ type ProviderDescriptor struct {
 	// Location defines the source code location to be used for this provider
 	// in error messages.
 	Location Location
+
+	hasError bool
 }
 
 type ProviderInput struct {
@@ -95,12 +100,13 @@ func doExtractProviderDescriptor(ctr interface{}) (ProviderDescriptor, error) {
 		}
 	}
 
+	hasError := errIdx >= 0
 	return ProviderDescriptor{
 		Inputs:  in,
 		Outputs: out,
 		Fn: func(values []reflect.Value) ([]reflect.Value, error) {
 			res := val.Call(values)
-			if errIdx >= 0 {
+			if hasError {
 				err := res[errIdx]
 				if !err.IsZero() {
 					return nil, err.Interface().(error)
@@ -110,7 +116,64 @@ func doExtractProviderDescriptor(ctr interface{}) (ProviderDescriptor, error) {
 			return res, nil
 		},
 		Location: loc,
+		hasError: hasError,
 	}, nil
 }
 
 var errType = reflect.TypeOf((*error)(nil)).Elem()
+
+func (p ProviderDescriptor) codegenOutputs(ctr *container, suffix string) (varsDef string, valueExprs []expr) {
+	var varRefs []varRef
+	var curStructVar expr
+	for _, output := range p.Outputs {
+		var name string
+		if output.structFieldName != "" {
+			if output.startStructType == nil {
+				valueExprs = append(valueExprs, fieldRef{
+					e:         curStructVar,
+					fieldName: output.structFieldName,
+				})
+				continue
+			}
+
+			name = output.startStructType.Name()
+		} else {
+			curStructVar = nil
+			name = output.Type.Name()
+		}
+
+		v := ctr.createVar(fmt.Sprintf("%s%s", util.StringFirstLower(name), suffix))
+		varRefs = append(varRefs, v)
+		if output.structFieldName != "" {
+			curStructVar = v
+			valueExprs = append(valueExprs, fieldRef{
+				e:         curStructVar,
+				fieldName: output.structFieldName,
+			})
+		} else {
+			valueExprs = append(valueExprs, v)
+		}
+	}
+
+	first := true
+	for _, valueVar := range varRefs {
+		if !first {
+			varsDef += ", "
+		}
+		varsDef += valueVar.emit()
+		first = false
+	}
+	if p.hasError {
+		varsDef += ", err"
+	}
+	varsDef += " := "
+	return varsDef, valueExprs
+}
+
+func (p ProviderDescriptor) codegenErrCheck(ctr *container) {
+	if p.hasError {
+		ctr.codegenWriteln("if err != nil {")
+		ctr.codegenWriteln("    return err")
+		ctr.codegenWriteln("}")
+	}
+}

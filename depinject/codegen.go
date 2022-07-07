@@ -61,6 +61,15 @@ func (m methodCall) emit() string {
 	return fmt.Sprintf("%s.%s(%s)", m.receiver.emit(), m.method, strings.Join(args, ", "))
 }
 
+type fieldRef struct {
+	e         expr
+	fieldName string
+}
+
+func (f fieldRef) emit() string {
+	return fmt.Sprintf("%s.%s", f.e.emit(), f.fieldName)
+}
+
 type stringLit string
 
 func (s stringLit) emit() string {
@@ -71,7 +80,7 @@ type expr interface {
 	emit() string
 }
 
-var _, _, _, _, _, _ expr = varRef(""), funCall{}, zeroValue{}, castType{}, methodCall{}, stringLit("")
+var _, _, _, _, _, _, _ expr = varRef(""), funCall{}, zeroValue{}, castType{}, methodCall{}, fieldRef{}, stringLit("")
 
 func (c *container) createVar(namePrefix string) varRef {
 	return c.doCreateVar(namePrefix, nil)

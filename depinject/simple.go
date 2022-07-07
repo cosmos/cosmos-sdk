@@ -7,11 +7,11 @@ import (
 )
 
 type simpleProvider struct {
-	provider  *ProviderDescriptor
-	called    bool
-	values    []reflect.Value
-	valueVars []varRef
-	moduleKey *moduleKey
+	provider   *ProviderDescriptor
+	called     bool
+	values     []reflect.Value
+	valueExprs []expr
+	moduleKey  *moduleKey
 }
 
 type simpleResolver struct {
@@ -34,29 +34,18 @@ func (s *simpleResolver) describeLocation() string {
 
 func (s *simpleProvider) resolveValues(ctr *container) ([]reflect.Value, error) {
 	if !s.called {
-		var valueVars []varRef
-		for _, output := range s.provider.Outputs {
-			v := ctr.createVar(output.Type.Name())
-			valueVars = append(valueVars, v)
-		}
-
-		values, err := ctr.call(s.provider, s.moduleKey)
+		values, eCall, err := ctr.call(s.provider, s.moduleKey)
 		if err != nil {
 			return nil, err
 		}
-
-		s.valueVars = valueVars
 		s.values = values
 		s.called = true
-		first := true
-		for _, valueVar := range valueVars {
-			if !first {
-				ctr.codegenWrite(", ")
-			}
-			ctr.codegenWrite(valueVar)
-			first = false
-		}
-		ctr.codegenWrite(" := ")
+
+		// codegen
+		varsDef, valueExprs := s.provider.codegenOutputs(ctr, "")
+		s.valueExprs = valueExprs
+		ctr.codegenWriteln(varsDef, eCall)
+		s.provider.codegenErrCheck(ctr)
 	}
 
 	return s.values, nil
@@ -75,7 +64,7 @@ func (s *simpleResolver) resolve(c *container, _ *moduleKey, caller Location) (r
 
 		value := values[s.idxInValues]
 		s.value = value
-		s.valueExpr = s.node.valueVars[s.idxInValues]
+		s.valueExpr = s.node.valueExprs[s.idxInValues]
 		s.resolved = true
 	}
 

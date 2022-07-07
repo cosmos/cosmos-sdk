@@ -59,6 +59,7 @@ func expandStructArgsProvider(provider ProviderDescriptor) (ProviderDescriptor, 
 			Outputs:  newOut,
 			Fn:       expandStructArgsFn(provider),
 			Location: provider.Location,
+			hasError: provider.hasError,
 		}, nil
 	}
 

@@ -62,14 +62,14 @@ func newContainer(cfg *debugConfig) *container {
 	}
 }
 
-func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]reflect.Value, error) {
+func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]reflect.Value, expr, error) {
 	loc := provider.Location
 	graphNode := c.locationGraphNode(loc, moduleKey)
 
 	markGraphNodeAsFailed(graphNode)
 
 	if c.callerMap[loc] {
-		return nil, errors.Errorf("cyclic dependency: %s -> %s", loc.Name(), loc.Name())
+		return nil, nil, errors.Errorf("cyclic dependency: %s -> %s", loc.Name(), loc.Name())
 	}
 
 	c.callerMap[loc] = true
@@ -83,14 +83,10 @@ func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]
 		val, e, err := c.resolve(in, moduleKey, loc)
 		argExprs = append(argExprs, e)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		inVals[i] = val
 	}
-	c.codegenWriteln(funCall{
-		loc:  loc,
-		args: argExprs,
-	})
 	c.dedentLogger()
 	c.logf("Calling %s", loc)
 
@@ -99,12 +95,17 @@ func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]
 
 	out, err := provider.Fn(inVals)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error calling provider %s", loc)
+		return nil, nil, errors.Wrapf(err, "error calling provider %s", loc)
 	}
 
 	markGraphNodeAsUsed(graphNode)
 
-	return out, nil
+	e := funCall{
+		loc:  loc,
+		args: argExprs,
+	}
+
+	return out, e, nil
 }
 
 func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, error) {
@@ -322,6 +323,7 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 			provider:        provider,
 			calledForModule: map[*moduleKey]bool{},
 			valueMap:        map[*moduleKey][]reflect.Value{},
+			valueExprs:      map[*moduleKey][]expr{},
 		}
 
 		for i, out := range provider.Outputs {
@@ -517,10 +519,15 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 	c.logf("Done building container")
 	c.logf("Calling invokers")
 	for _, inv := range c.invokers {
-		_, err := c.call(inv.fn, inv.modKey)
+		_, eCall, err := c.call(inv.fn, inv.modKey)
 		if err != nil {
 			return err
 		}
+
+		// codegen
+		_, _ = inv.fn.codegenOutputs(c, "")
+		c.codegenWriteln(eCall)
+		inv.fn.codegenErrCheck(c)
 	}
 	c.logf("Done calling invokers")
 

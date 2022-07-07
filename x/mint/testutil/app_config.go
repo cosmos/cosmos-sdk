@@ -2,6 +2,13 @@ package testutil
 
 import (
 	"cosmossdk.io/core/appconfig"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/module" // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/bank"           // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/params"         // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/staking"        // import for side-effects
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"

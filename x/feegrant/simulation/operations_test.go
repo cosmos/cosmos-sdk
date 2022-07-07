@@ -3,67 +3,76 @@ package simulation_test
 import (
 	"math/rand"
 	"testing"
-	"time"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletypes "github.com/cosmos/cosmos-sdk/types/module"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/simulation"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/testutil"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	feegranttestutil "github.com/cosmos/cosmos-sdk/x/feegrant/testutil"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmtime "github.com/tendermint/tendermint/libs/time"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type SimTestSuite struct {
 	suite.Suite
 
-	app               *runtime.App
-	ctx               sdk.Context
-	feegrantKeeper    keeper.Keeper
-	interfaceRegistry codectypes.InterfaceRegistry
-	accountKeeper     authkeeper.AccountKeeper
-	bankKeeper        bankkeeper.Keeper
-	stakingKeeper     *stakingkeeper.Keeper
-	cdc               codec.Codec
-	legacyAmino       *codec.LegacyAmino
+	baseApp        *baseapp.BaseApp
+	ctx            sdk.Context
+	feegrantKeeper keeper.Keeper
+	accountKeeper  *feegranttestutil.MockAccountKeeper
+	bankKeeper     *feegranttestutil.MockBankKeeper
+	encCfg         moduletestutil.TestEncodingConfig
 }
 
 func (suite *SimTestSuite) SetupTest() {
-	var err error
-	suite.app, err = simtestutil.Setup(testutil.AppConfig,
-		&suite.feegrantKeeper,
-		&suite.bankKeeper,
-		&suite.stakingKeeper,
-		&suite.accountKeeper,
-		&suite.interfaceRegistry,
-		&suite.cdc,
-		&suite.legacyAmino,
-	)
-	suite.Require().NoError(err)
+	key := sdk.NewKVStoreKey(feegrant.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(suite.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	suite.encCfg = moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
-	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
+	suite.baseApp = baseapp.NewBaseApp(
+		"feegrant",
+		log.NewNopLogger(),
+		testCtx.DB,
+		suite.encCfg.TxConfig.TxDecoder(),
+	)
+
+	suite.baseApp.SetCMS(testCtx.CMS)
+	suite.baseApp.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
+
+	ctrl := gomock.NewController(suite.T())
+	suite.accountKeeper = feegranttestutil.NewMockAccountKeeper(ctrl)
+	suite.bankKeeper = feegranttestutil.NewMockBankKeeper(ctrl)
+
+	suite.feegrantKeeper = keeper.NewKeeper(suite.encCfg.Codec, key, suite.accountKeeper)
+	suite.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
+
+	cfg := moduletypes.NewConfigurator(suite.encCfg.Codec, suite.baseApp.MsgServiceRouter(), suite.baseApp.GRPCQueryRouter())
+
+	appModule := module.NewAppModule(suite.encCfg.Codec, suite.accountKeeper, suite.bankKeeper, suite.feegrantKeeper, suite.encCfg.InterfaceRegistry)
+	appModule.RegisterServices(cfg)
+	appModule.RegisterInterfaces(suite.encCfg.InterfaceRegistry)
 }
 
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
-
 	initAmt := sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
-	// add coins to the accounts
-	for _, account := range accounts {
-		err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, account.Address, initCoins)
-		suite.Require().NoError(err)
+	for _, acc := range accounts {
+		suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), acc.Address).Return(authtypes.NewBaseAccountWithAddress(acc.Address)).AnyTimes()
+		suite.bankKeeper.EXPECT().SpendableCoins(gomock.Any(), acc.Address).Return(initCoins).AnyTimes()
 	}
 
 	return accounts
@@ -77,8 +86,8 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	appParams := make(simtypes.AppParams)
 
 	weightedOps := simulation.WeightedOperations(
-		suite.interfaceRegistry,
-		appParams, suite.cdc, suite.accountKeeper,
+		suite.encCfg.InterfaceRegistry,
+		appParams, suite.encCfg.Codec, suite.accountKeeper,
 		suite.bankKeeper, suite.feegrantKeeper,
 	)
 
@@ -104,7 +113,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}
 
 	for i, w := range weightedOps {
-		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, suite.ctx.ChainID())
+		operationMsg, _, err := w.Op()(r, suite.baseApp, suite.ctx, accs, suite.ctx.ChainID())
 		require.NoError(err)
 
 		// the following checks are very much dependent from the ordering of the output given
@@ -117,7 +126,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 }
 
 func (suite *SimTestSuite) TestSimulateMsgGrantAllowance() {
-	app, ctx := suite.app, suite.ctx
+	app, ctx := suite.baseApp, suite.ctx
 	require := suite.Require()
 
 	s := rand.NewSource(1)
@@ -128,12 +137,12 @@ func (suite *SimTestSuite) TestSimulateMsgGrantAllowance() {
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgGrantAllowance(codec.NewProtoCodec(suite.interfaceRegistry), suite.accountKeeper, suite.bankKeeper, suite.feegrantKeeper)
-	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
+	op := simulation.SimulateMsgGrantAllowance(codec.NewProtoCodec(suite.encCfg.InterfaceRegistry), suite.accountKeeper, suite.bankKeeper, suite.feegrantKeeper)
+	operationMsg, futureOperations, err := op(r, app, ctx, accounts, "")
 	require.NoError(err)
 
 	var msg feegrant.MsgGrantAllowance
-	suite.legacyAmino.UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.encCfg.Amino.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(operationMsg.OK)
 	require.Equal(accounts[2].Address.String(), msg.Granter)
@@ -142,7 +151,7 @@ func (suite *SimTestSuite) TestSimulateMsgGrantAllowance() {
 }
 
 func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
-	app, ctx := suite.app, suite.ctx
+	app, ctx := suite.baseApp, suite.ctx
 	require := suite.Require()
 
 	s := rand.NewSource(1)
@@ -150,9 +159,9 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 	accounts := suite.getTestingAccounts(r, 3)
 
 	// begin a new block
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.baseApp.LastBlockHeight() + 1, AppHash: suite.baseApp.LastCommitID().Hash}})
 
-	feeAmt := suite.stakingKeeper.TokensFromConsensusPower(ctx, 200000)
+	feeAmt := sdk.TokensFromConsensusPower(200000, sdk.DefaultPowerReduction)
 	feeCoins := sdk.NewCoins(sdk.NewCoin("foo", feeAmt))
 
 	granter, grantee := accounts[0], accounts[1]
@@ -170,12 +179,12 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 	require.NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgRevokeAllowance(codec.NewProtoCodec(suite.interfaceRegistry), suite.accountKeeper, suite.bankKeeper, suite.feegrantKeeper)
-	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
+	op := simulation.SimulateMsgRevokeAllowance(codec.NewProtoCodec(suite.encCfg.InterfaceRegistry), suite.accountKeeper, suite.bankKeeper, suite.feegrantKeeper)
+	operationMsg, futureOperations, err := op(r, app, ctx, accounts, "")
 	require.NoError(err)
 
 	var msg feegrant.MsgRevokeAllowance
-	suite.legacyAmino.UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.encCfg.Amino.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(operationMsg.OK)
 	require.Equal(granter.Address.String(), msg.Granter)

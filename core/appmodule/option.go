@@ -2,6 +2,7 @@ package appmodule
 
 import (
 	"cosmossdk.io/core/internal"
+
 	"github.com/cosmos/cosmos-sdk/depinject"
 )
 
@@ -43,6 +44,12 @@ func Invoke(invokers ...interface{}) Option {
 			desc, err := depinject.ExtractProviderDescriptor(invoker)
 			if err != nil {
 				return err
+			}
+
+			// mark all inputs as optional
+			for i, input := range desc.Inputs {
+				input.Optional = true
+				desc.Inputs[i] = input
 			}
 
 			initializer.Invokers = append(initializer.Invokers, desc)

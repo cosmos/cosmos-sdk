@@ -120,3 +120,12 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 	k.SetDelegatorStartingInfo(ctx, val, del, types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(ctx.BlockHeight())))
 }
 ```
+
+## MsgUpdateParams
+Distribution module params can be updated through `MsgUpdateParams`, which can be done using governance proposal and the signer will always be gov module account address. 
+
++++ https://github.com/cosmos/cosmos-sdk/blob/8822ef2695a1eb8cb30b7432f58f631c73951f1d/proto/cosmos/distribution/v1beta1/tx.proto#L106-L119
+
+The message handling can fail if:
+
+* signer is not the gov module account address.

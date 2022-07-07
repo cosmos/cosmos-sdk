@@ -63,7 +63,7 @@ func (g *sliceGroupResolver) resolve(c *container, _ *moduleKey, caller Location
 	if !g.resolved {
 		res := reflect.MakeSlice(g.sliceType, 0, 0)
 		for i, node := range g.providers {
-			values, err := node.resolveValues(c)
+			values, err := node.resolveValues(c, false)
 			if err != nil {
 				return reflect.Value{}, nil, err
 			}

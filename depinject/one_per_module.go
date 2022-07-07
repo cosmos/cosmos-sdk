@@ -66,7 +66,7 @@ func (o *mapOfOnePerModuleResolver) resolve(c *container, _ *moduleKey, caller L
 	if !o.resolved {
 		res := reflect.MakeMap(o.mapType)
 		for key, node := range o.providers {
-			values, err := node.resolveValues(c)
+			values, err := node.resolveValues(c, false)
 			if err != nil {
 				return reflect.Value{}, nil, err
 			}

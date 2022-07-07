@@ -97,8 +97,7 @@ func TestScenario(t *testing.T) {
 		b        KeeperB
 	)
 	require.NoError(t,
-		depinject.InjectDebug(
-			depinject.Debug(),
+		depinject.Inject(
 			scenarioConfig,
 			&handlers,
 			&commands,

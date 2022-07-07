@@ -512,7 +512,7 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 	}
 
 	c.logf("Building container")
-	_, err = sn.resolveValues(c)
+	_, err = sn.resolveValues(c, true)
 	if err != nil {
 		return err
 	}
@@ -531,8 +531,8 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 	}
 	c.logf("Done calling invokers")
 
-	c.logf("Codegen:")
-	c.logf(c.codegenOut.String())
+	fmt.Println("Codegen:")
+	fmt.Println(c.codegenOut.String())
 
 	return nil
 }

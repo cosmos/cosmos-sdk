@@ -34,7 +34,7 @@ type zeroValue struct {
 }
 
 func (z zeroValue) emit() string {
-	return reflect.Zero(z).String()
+	return reflect.Zero(z.Type).String()
 }
 
 type castType struct {

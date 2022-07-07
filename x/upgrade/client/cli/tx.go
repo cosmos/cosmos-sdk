@@ -62,7 +62,7 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 				return err
 			}
 
-			msg, err := gov.NewMsgSubmitProposal(content, deposit, from, isExpedited)
+			msg, err := gov.NewMsgSubmitProposalWithExpedited(content, deposit, from, isExpedited)
 			if err != nil {
 				return err
 			}
@@ -122,7 +122,7 @@ func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 
 			content := types.NewCancelSoftwareUpgradeProposal(title, description)
 
-			msg, err := gov.NewMsgSubmitProposal(content, deposit, from, isExpedited)
+			msg, err := gov.NewMsgSubmitProposalWithExpedited(content, deposit, from, isExpedited)
 			if err != nil {
 				return err
 			}

@@ -128,7 +128,7 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 
 			content := types.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
 
-			msg, err := types.NewMsgSubmitProposal(content, amount, clientCtx.GetFromAddress(), isExpedited)
+			msg, err := types.NewMsgSubmitProposalWithExpedited(content, amount, clientCtx.GetFromAddress(), isExpedited)
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}

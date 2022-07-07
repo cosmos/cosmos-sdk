@@ -34,7 +34,6 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 		types.ContentFromProposalType("test", "test", types.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
-		false,
 	)
 	require.NoError(t, err)
 
@@ -87,7 +86,6 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 		types.ContentFromProposalType("test", "test", types.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
-		false,
 	)
 	require.NoError(t, err)
 
@@ -111,7 +109,6 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 		types.ContentFromProposalType("test2", "test2", types.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
-		false,
 	)
 	require.NoError(t, err)
 
@@ -169,7 +166,6 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 		types.ContentFromProposalType("test2", "test2", types.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
-		false,
 	)
 	require.NoError(t, err)
 
@@ -245,7 +241,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			activeQueue.Close()
 
 			proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 5*depositMultiplier))}
-			newProposalMsg, err := types.NewMsgSubmitProposal(testProposal, proposalCoins, addrs[0], tc.isExpedited)
+			newProposalMsg, err := types.NewMsgSubmitProposalWithExpedited(testProposal, proposalCoins, addrs[0], tc.isExpedited)
 			require.NoError(t, err)
 
 			res, err := govHandler(ctx, newProposalMsg)
@@ -454,7 +450,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			depositorInitialBalance := app.BankKeeper.GetAllBalances(ctx, addrs[1])
 
 			proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 5*depositMultiplier))}
-			newProposalMsg, err := types.NewMsgSubmitProposal(testProposal, proposalCoins, addrs[0], true)
+			newProposalMsg, err := types.NewMsgSubmitProposalWithExpedited(testProposal, proposalCoins, addrs[0], true)
 			require.NoError(t, err)
 
 			res, err := govHandler(ctx, newProposalMsg)

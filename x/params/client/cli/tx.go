@@ -83,7 +83,7 @@ Where proposal.json contains:
 				return err
 			}
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from, isExpedited)
+			msg, err := govtypes.NewMsgSubmitProposalWithExpedited(content, deposit, from, isExpedited)
 			if err != nil {
 				return err
 			}

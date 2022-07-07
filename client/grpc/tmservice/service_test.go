@@ -1,3 +1,6 @@
+//go:build norace
+// +build norace
+
 package tmservice_test
 
 import (
@@ -31,10 +34,8 @@ func TestIntegrationTestSuite(t *testing.T) {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	cfg := network.DefaultConfig()
-	cfg.NumValidators = 1
-
-	s.cfg = cfg
+	s.cfg = network.DefaultConfig()
+	s.cfg.NumValidators = 1
 
 	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
@@ -44,6 +45,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	s.queryClient = tmservice.NewServiceClient(s.network.Validators[0].ClientCtx)
+
+	panic(nil)
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {

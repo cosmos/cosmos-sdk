@@ -8,9 +8,10 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	"github.com/cosmos/cosmos-sdk/x/authz/testutil"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -22,11 +23,13 @@ type GenesisTestSuite struct {
 }
 
 func (suite *GenesisTestSuite) SetupTest() {
-	checkTx := false
-	app := simapp.Setup(suite.T(), checkTx)
+	app, err := simtestutil.Setup(
+		testutil.AppConfig,
+		&suite.keeper,
+	)
+	suite.Require().NoError(err)
 
-	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1})
-	suite.keeper = app.AuthzKeeper
+	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
 }
 
 var (
@@ -39,12 +42,14 @@ var (
 func (suite *GenesisTestSuite) TestImportExportGenesis() {
 	coins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1_000)))
 
-	now := suite.ctx.BlockHeader().Time
+	now := suite.ctx.BlockTime()
+	expires := now.Add(time.Hour)
 	grant := &bank.SendAuthorization{SpendLimit: coins}
-	err := suite.keeper.SaveGrant(suite.ctx, granteeAddr, granterAddr, grant, now.Add(time.Hour))
+	err := suite.keeper.SaveGrant(suite.ctx, granteeAddr, granterAddr, grant, &expires)
 	suite.Require().NoError(err)
 	genesis := suite.keeper.ExportGenesis(suite.ctx)
 
+	// TODO, recheck!
 	// Clear keeper
 	suite.keeper.DeleteGrant(suite.ctx, granteeAddr, granterAddr, grant.MsgTypeURL())
 

@@ -63,6 +63,18 @@ The staking module emits the following events:
 
 * [0] Time is formatted in the RFC3339 standard
 
+### MsgCancelUnbondingDelegation
+
+| Type                          | Attribute Key       | Attribute Value                     |
+| ----------------------------- | ------------------  | ------------------------------------|
+| cancel_unbonding_delegation   | validator           | {validatorAddress}                  |
+| cancel_unbonding_delegation   | delegator           | {delegatorAddress}                  |
+| cancel_unbonding_delegation   | amount              | {cancelUnbondingDelegationAmount}   |
+| cancel_unbonding_delegation   | creation_height     | {unbondingCreationHeight}           |
+| message                       | module              | staking                             |
+| message                       | action              | cancel_unbond                       |
+| message                       | sender              | {senderAddress}                     |
+
 ### MsgBeginRedelegate
 
 | Type       | Attribute Key         | Attribute Value       |

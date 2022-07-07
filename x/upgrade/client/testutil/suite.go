@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -21,25 +22,25 @@ func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	app     *simapp.SimApp
-	cfg     network.Config
-	network *network.Network
-	ctx     sdk.Context
+	upgradeKeeper keeper.Keeper
+	cfg           network.Config
+	network       *network.Network
+	ctx           sdk.Context
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
+
 	app := simapp.Setup(s.T(), false)
-	s.app = app
+	s.upgradeKeeper = app.UpgradeKeeper
+
 	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 
-	cfg := network.DefaultConfig()
-	cfg.NumValidators = 1
-
-	s.cfg = cfg
+	s.upgradeKeeper.SetVersionSetter(app.BaseApp)
+	s.upgradeKeeper.SetModuleVersionMap(s.ctx, app.ModuleManager.GetVersionMap())
 
 	var err error
-	s.network, err = network.New(s.T(), s.T().TempDir(), cfg)
+	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 }
 
@@ -80,13 +81,12 @@ func (s *IntegrationTestSuite) TestModuleVersionsCLI() {
 	// avoid printing as yaml from CLI command
 	clientCtx.OutputFormat = "JSON"
 
-	vm := s.app.UpgradeKeeper.GetModuleVersionMap(s.ctx)
-	mv := s.app.UpgradeKeeper.GetModuleVersions(s.ctx)
+	vm := s.upgradeKeeper.GetModuleVersionMap(s.ctx)
+	mv := s.upgradeKeeper.GetModuleVersions(s.ctx)
 	s.Require().NotEmpty(vm)
 
 	for _, tc := range testCases {
 		s.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-
 			expect := mv
 			if tc.expPass {
 				if tc.single {

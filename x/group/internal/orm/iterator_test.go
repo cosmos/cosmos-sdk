@@ -317,7 +317,6 @@ func TestPaginate(t *testing.T) {
 				assert.EqualValues(t, spec.expPageRes.Total, res.Total)
 				assert.EqualValues(t, spec.expPageRes.NextKey, res.NextKey)
 			}
-
 		})
 	}
 

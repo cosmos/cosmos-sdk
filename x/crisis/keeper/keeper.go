@@ -26,14 +26,13 @@ type Keeper struct {
 func NewKeeper(
 	paramSpace paramtypes.Subspace, invCheckPeriod uint, supplyKeeper types.SupplyKeeper,
 	feeCollectorName string,
-) Keeper {
-
+) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
-	return Keeper{
+	return &Keeper{
 		routes:           make([]types.InvarRoute, 0),
 		paramSpace:       paramSpace,
 		invCheckPeriod:   invCheckPeriod,
@@ -43,7 +42,7 @@ func NewKeeper(
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+func (k *Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
@@ -54,12 +53,12 @@ func (k *Keeper) RegisterRoute(moduleName, route string, invar sdk.Invariant) {
 }
 
 // Routes - return the keeper's invariant routes
-func (k Keeper) Routes() []types.InvarRoute {
+func (k *Keeper) Routes() []types.InvarRoute {
 	return k.routes
 }
 
 // Invariants returns a copy of all registered Crisis keeper invariants.
-func (k Keeper) Invariants() []sdk.Invariant {
+func (k *Keeper) Invariants() []sdk.Invariant {
 	invars := make([]sdk.Invariant, len(k.routes))
 	for i, route := range k.routes {
 		invars[i] = route.Invar
@@ -69,14 +68,14 @@ func (k Keeper) Invariants() []sdk.Invariant {
 
 // AssertInvariants asserts all registered invariants. If any invariant fails,
 // the method panics.
-func (k Keeper) AssertInvariants(ctx sdk.Context) {
+func (k *Keeper) AssertInvariants(ctx sdk.Context) {
 	logger := k.Logger(ctx)
 
 	start := time.Now()
 	invarRoutes := k.Routes()
 	n := len(invarRoutes)
 	for i, ir := range invarRoutes {
-		logger.Info("asserting crisis invariants", "inv", fmt.Sprint(i, "/", n), "name", ir.FullRoute())
+		logger.Info("asserting crisis invariants", "inv", fmt.Sprint(i+1, "/", n), "name", ir.FullRoute())
 		if res, stop := ir.Invar(ctx); stop {
 			// TODO: Include app name as part of context to allow for this to be
 			// variable.
@@ -91,9 +90,9 @@ func (k Keeper) AssertInvariants(ctx sdk.Context) {
 }
 
 // InvCheckPeriod returns the invariant checks period.
-func (k Keeper) InvCheckPeriod() uint { return k.invCheckPeriod }
+func (k *Keeper) InvCheckPeriod() uint { return k.invCheckPeriod }
 
 // SendCoinsFromAccountToFeeCollector transfers amt to the fee collector account.
-func (k Keeper) SendCoinsFromAccountToFeeCollector(ctx sdk.Context, senderAddr sdk.AccAddress, amt sdk.Coins) error {
+func (k *Keeper) SendCoinsFromAccountToFeeCollector(ctx sdk.Context, senderAddr sdk.AccAddress, amt sdk.Coins) error {
 	return k.supplyKeeper.SendCoinsFromAccountToModule(ctx, senderAddr, k.feeCollectorName, amt)
 }

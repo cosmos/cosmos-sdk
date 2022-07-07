@@ -47,7 +47,7 @@ func NewMsgCreateVestingAccountCmd() *cobra.Command {
 		Short: "Create a new vesting account funded with an allocation of tokens.",
 		Long: `Create a new vesting account funded with an allocation of tokens. The
 account can either be a delayed or continuous vesting account, which is determined
-by the '--delayed' flag. All vesting accouts created will have their start time
+by the '--delayed' flag. All vesting accounts created will have their start time
 set by the committed block's time. The end_time must be provided as a UNIX epoch
 timestamp.`,
 		Args: cobra.ExactArgs(3),

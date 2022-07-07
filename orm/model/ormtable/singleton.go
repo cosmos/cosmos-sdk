@@ -5,9 +5,8 @@ import (
 	"encoding/json"
 	"io"
 
-	"google.golang.org/protobuf/proto"
-
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 // singleton implements a Table instance for singletons.

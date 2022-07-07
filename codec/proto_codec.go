@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	legacyproto "github.com/golang/protobuf/proto"
+	legacyproto "github.com/golang/protobuf/proto" //nolint:staticcheck // we're aware this is deprecated and using it anyhow.
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/proto"
 
@@ -29,8 +29,10 @@ type ProtoCodec struct {
 	interfaceRegistry types.InterfaceRegistry
 }
 
-var _ Codec = &ProtoCodec{}
-var _ ProtoCodecMarshaler = &ProtoCodec{}
+var (
+	_ Codec               = &ProtoCodec{}
+	_ ProtoCodecMarshaler = &ProtoCodec{}
+)
 
 // NewProtoCodec returns a reference to a new ProtoCodec
 func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {

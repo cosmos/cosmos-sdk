@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -121,7 +122,7 @@ func (k BaseViewKeeper) IterateAccountBalances(ctx sdk.Context, addr sdk.AccAddr
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		var amount sdk.Int
+		var amount math.Int
 		if err := amount.Unmarshal(iterator.Value()); err != nil {
 			panic(err)
 		}
@@ -151,7 +152,7 @@ func (k BaseViewKeeper) IterateAllBalances(ctx sdk.Context, cb func(sdk.AccAddre
 			panic(err)
 		}
 
-		var amount sdk.Int
+		var amount math.Int
 		if err := amount.Unmarshal(iterator.Value()); err != nil {
 			panic(err)
 		}
@@ -192,7 +193,7 @@ func (k BaseViewKeeper) spendableCoins(ctx sdk.Context, addr sdk.AccAddress) (sp
 	total = k.GetAllBalances(ctx, addr)
 	locked := k.LockedCoins(ctx, addr)
 
-	spendable, hasNeg := total.SafeSub(locked)
+	spendable, hasNeg := total.SafeSub(locked...)
 	if hasNeg {
 		spendable = sdk.NewCoins()
 		return

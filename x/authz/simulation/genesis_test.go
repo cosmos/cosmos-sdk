@@ -7,26 +7,30 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	sdkmath "cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/simulation"
+	"github.com/cosmos/cosmos-sdk/x/authz/testutil"
 )
 
 func TestRandomizedGenState(t *testing.T) {
-	app := simapp.Setup(t, false)
+	var cdc codec.Codec
+	depinject.Inject(testutil.AppConfig, &cdc)
 
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
 	simState := module.SimulationState{
 		AppParams:    make(simtypes.AppParams),
-		Cdc:          app.AppCodec(),
+		Cdc:          cdc,
 		Rand:         r,
 		NumBonded:    3,
 		Accounts:     simtypes.RandomAccounts(r, 3),
-		InitialStake: 1000,
+		InitialStake: sdkmath.NewInt(1000),
 		GenState:     make(map[string]json.RawMessage),
 	}
 

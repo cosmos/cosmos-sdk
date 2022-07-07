@@ -15,7 +15,7 @@ import (
 
 // Querier is used as Keeper will have duplicate methods if used directly, and gRPC names take precedence over keeper
 type Querier struct {
-	Keeper
+	*Keeper
 }
 
 var _ types.QueryServer = Querier{}
@@ -31,34 +31,30 @@ func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest
 		return nil, status.Errorf(codes.InvalidArgument, "invalid validator status %s", req.Status)
 	}
 
-	var validators types.Validators
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
 	valStore := prefix.NewStore(store, types.ValidatorsKey)
 
-	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		val, err := types.UnmarshalValidator(k.cdc, value)
-		if err != nil {
-			return false, err
-		}
-
+	validators, pageRes, err := query.GenericFilteredPaginate(k.cdc, valStore, req.Pagination, func(key []byte, val *types.Validator) (*types.Validator, error) {
 		if req.Status != "" && !strings.EqualFold(val.GetStatus().String(), req.Status) {
-			return false, nil
+			return nil, nil
 		}
 
-		if accumulate {
-			validators = append(validators, val)
-		}
-
-		return true, nil
+		return val, nil
+	}, func() *types.Validator {
+		return &types.Validator{}
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryValidatorsResponse{Validators: validators, Pagination: pageRes}, nil
+	vals := types.Validators{}
+	for _, val := range validators {
+		vals = append(vals, *val)
+	}
+
+	return &types.QueryValidatorsResponse{Validators: vals, Pagination: pageRes}, nil
 }
 
 // Validator queries validator info for given validator address
@@ -94,42 +90,41 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 	if req.ValidatorAddr == "" {
 		return nil, status.Error(codes.InvalidArgument, "validator address cannot be empty")
 	}
-	var delegations []types.Delegation
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
 	valStore := prefix.NewStore(store, types.DelegationKey)
-	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		delegation, err := types.UnmarshalDelegation(k.cdc, value)
-		if err != nil {
-			return false, err
-		}
-
+	delegations, pageRes, err := query.GenericFilteredPaginate(k.cdc, valStore, req.Pagination, func(key []byte, delegation *types.Delegation) (*types.Delegation, error) {
 		valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
 		if err != nil {
-			return false, err
+			return nil, err
 		}
 
 		if !delegation.GetValidatorAddr().Equals(valAddr) {
-			return false, nil
+			return nil, nil
 		}
 
-		if accumulate {
-			delegations = append(delegations, delegation)
-		}
-		return true, nil
+		return delegation, nil
+	}, func() *types.Delegation {
+		return &types.Delegation{}
 	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	delResponses, err := DelegationsToDelegationResponses(ctx, k.Keeper, delegations)
+	dels := types.Delegations{}
+	for _, d := range delegations {
+		dels = append(dels, *d)
+	}
+
+	delResponses, err := DelegationsToDelegationResponses(ctx, k.Keeper, dels)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryValidatorDelegationsResponse{
-		DelegationResponses: delResponses, Pagination: pageRes}, nil
+		DelegationResponses: delResponses, Pagination: pageRes,
+	}, nil
 }
 
 // ValidatorUnbondingDelegations queries unbonding delegations of a validator
@@ -287,7 +282,6 @@ func (k Querier) DelegatorDelegations(c context.Context, req *types.QueryDelegat
 	}
 
 	return &types.QueryDelegatorDelegationsResponse{DelegationResponses: delegationResps, Pagination: pageRes}, nil
-
 }
 
 // DelegatorValidator queries validator info for given delegator validator pair
@@ -354,7 +348,8 @@ func (k Querier) DelegatorUnbondingDelegations(c context.Context, req *types.Que
 	}
 
 	return &types.QueryDelegatorUnbondingDelegationsResponse{
-		UnbondingResponses: unbondingDelegations, Pagination: pageRes}, nil
+		UnbondingResponses: unbondingDelegations, Pagination: pageRes,
+	}, nil
 }
 
 // HistoricalInfo queries the historical info for given height
@@ -439,7 +434,6 @@ func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegato
 		validators = append(validators, validator)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -471,7 +465,6 @@ func (k Querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.
 }
 
 func queryRedelegation(ctx sdk.Context, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, err error) {
-
 	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
 	if err != nil {
 		return nil, err

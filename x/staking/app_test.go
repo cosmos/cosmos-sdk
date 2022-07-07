@@ -26,7 +26,6 @@ func checkDelegation(
 	t *testing.T, app *simapp.SimApp, delegatorAddr sdk.AccAddress,
 	validatorAddr sdk.ValAddress, expFound bool, expShares sdk.Dec,
 ) {
-
 	ctxCheck := app.BaseApp.NewContext(true, tmproto.Header{})
 	delegation, found := app.StakingKeeper.GetDelegation(ctxCheck, delegatorAddr, validatorAddr)
 	if expFound {
@@ -107,7 +106,7 @@ func TestStakingMsgs(t *testing.T) {
 	require.NoError(t, err)
 
 	simapp.CheckBalance(t, app, addr2, sdk.Coins{genCoin.Sub(bondCoin)})
-	checkDelegation(t, app, addr2, sdk.ValAddress(addr1), true, bondTokens.ToDec())
+	checkDelegation(t, app, addr2, sdk.ValAddress(addr1), true, sdk.NewDecFromInt(bondTokens))
 
 	// begin unbonding
 	beginUnbondingMsg := types.NewMsgUndelegate(addr2, sdk.ValAddress(addr1), bondCoin)

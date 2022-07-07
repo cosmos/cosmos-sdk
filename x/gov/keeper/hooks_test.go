@@ -37,9 +37,11 @@ func (h *MockGovHooksReceiver) AfterProposalDeposit(ctx sdk.Context, proposalID 
 func (h *MockGovHooksReceiver) AfterProposalVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
 	h.AfterProposalVoteValid = true
 }
+
 func (h *MockGovHooksReceiver) AfterProposalFailedMinDeposit(ctx sdk.Context, proposalID uint64) {
 	h.AfterProposalFailedMinDepositValid = true
 }
+
 func (h *MockGovHooksReceiver) AfterProposalVotingPeriodEnded(ctx sdk.Context, proposalID uint64) {
 	h.AfterProposalVotingPeriodEndedValid = true
 }
@@ -54,7 +56,7 @@ func TestHooks(t *testing.T) {
 	govHooksReceiver := MockGovHooksReceiver{}
 
 	keeper.UnsafeSetHooks(
-		&app.GovKeeper, types.NewMultiGovHooks(&govHooksReceiver),
+		app.GovKeeper, types.NewMultiGovHooks(&govHooksReceiver),
 	)
 
 	require.False(t, govHooksReceiver.AfterProposalSubmissionValid)

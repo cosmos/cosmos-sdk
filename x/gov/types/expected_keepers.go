@@ -1,6 +1,7 @@
 package types
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -19,7 +20,7 @@ type StakingKeeper interface {
 		sdk.Context, func(index int64, validator stakingtypes.ValidatorI) (stop bool),
 	)
 
-	TotalBondedTokens(sdk.Context) sdk.Int // total bonded tokens within the validator set
+	TotalBondedTokens(sdk.Context) math.Int // total bonded tokens within the validator set
 	IterateDelegations(
 		ctx sdk.Context, delegator sdk.AccAddress,
 		fn func(index int64, delegation stakingtypes.DelegationI) (stop bool),
@@ -61,3 +62,8 @@ type GovHooks interface {
 	AfterProposalFailedMinDeposit(ctx sdk.Context, proposalID uint64)                      // Must be called when proposal fails to reach min deposit
 	AfterProposalVotingPeriodEnded(ctx sdk.Context, proposalID uint64)                     // Must be called when proposal's finishes it's voting period
 }
+
+type GovHooksWrapper struct{ GovHooks }
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (GovHooksWrapper) IsOnePerModuleType() {}

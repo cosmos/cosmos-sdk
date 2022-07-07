@@ -4,20 +4,24 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func TestVerifySignature(t *testing.T) {
@@ -29,22 +33,29 @@ func TestVerifySignature(t *testing.T) {
 		chainId = "test-chain"
 	)
 
-	app, ctx := createTestApp(t, false)
-	ctx = ctx.WithBlockHeight(1)
+	var (
+		accountKeeper keeper.AccountKeeper
+		bankKeeper    bankkeeper.Keeper
+	)
+
+	app, err := simtestutil.Setup(authtestutil.AppConfig, &accountKeeper, &bankKeeper)
+	require.NoError(t, err)
+
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{}).WithBlockHeight(1)
 
 	cdc := codec.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(cdc)
 	types.RegisterLegacyAminoCodec(cdc)
 	cdc.RegisterConcrete(testdata.TestMsg{}, "cosmos-sdk/Test", nil)
 
-	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
-	_ = app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	app.AccountKeeper.SetAccount(ctx, acc1)
+	acc1 := accountKeeper.NewAccountWithAddress(ctx, addr)
+	_ = accountKeeper.NewAccountWithAddress(ctx, addr1)
+	accountKeeper.SetAccount(ctx, acc1)
 	balances := sdk.NewCoins(sdk.NewInt64Coin("atom", 200))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr, balances))
-	acc, err := middleware.GetSignerAcc(ctx, app.AccountKeeper, addr)
+	require.NoError(t, testutil.FundAccount(bankKeeper, ctx, addr, balances))
+	acc, err := ante.GetSignerAcc(ctx, accountKeeper, addr)
 	require.NoError(t, err)
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr, balances))
+	require.NoError(t, testutil.FundAccount(bankKeeper, ctx, addr, balances))
 
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	fee := legacytx.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
@@ -97,13 +108,4 @@ func TestVerifySignature(t *testing.T) {
 
 	err = signing.VerifySignature(multisigKey, signerData, multisignature, handler, stdTx)
 	require.NoError(t, err)
-}
-
-// returns context and app with params set on account keeper
-func createTestApp(t *testing.T, isCheckTx bool) (*simapp.SimApp, sdk.Context) {
-	app := simapp.Setup(t, isCheckTx)
-	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
-	app.AccountKeeper.SetParams(ctx, types.DefaultParams())
-
-	return app, ctx
 }

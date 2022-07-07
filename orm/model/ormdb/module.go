@@ -51,7 +51,6 @@ type moduleDB struct {
 
 // ModuleDBOptions are options for constructing a ModuleDB.
 type ModuleDBOptions struct {
-
 	// TypeResolver is an optional type resolver to be used when unmarshaling
 	// protobuf messages. If it is nil, protoregistry.GlobalTypes will be used.
 	TypeResolver ormtable.TypeResolver

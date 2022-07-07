@@ -42,7 +42,7 @@ type SignerData struct {
 	// since in SIGN_MODE_DIRECT the account sequence is already in the signer
 	// info.
 	//
-	// In case of multisigs, this should be the multisig account number.
+	// In case of multisigs, this should be the multisig sequence.
 	Sequence uint64
 
 	// PubKey is the public key of the signer.

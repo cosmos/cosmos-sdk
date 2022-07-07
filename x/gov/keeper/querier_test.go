@@ -64,7 +64,6 @@ func getQueriedProposals(
 	t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier,
 	depositor, voter sdk.AccAddress, status v1.ProposalStatus, page, limit int,
 ) []*v1.Proposal {
-
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, v1.QueryProposals}, "/"),
 		Data: cdc.MustMarshalJSON(v1.NewQueryProposalsParams(page, limit, status, voter, depositor)),
@@ -128,8 +127,7 @@ func getQueriedVote(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, queri
 	return vote
 }
 
-func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier,
-	proposalID uint64, page, limit int) []v1.Vote {
+func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier, proposalID uint64, page, limit int) []v1.Vote {
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, v1.QueryVote}, "/"),
 		Data: cdc.MustMarshalJSON(v1.NewQueryProposalVotesParams(proposalID, page, limit)),

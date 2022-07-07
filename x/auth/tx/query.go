@@ -27,11 +27,11 @@ func QueryTxsByEvents(clientCtx client.Context, events []string, page, limit int
 	}
 
 	if page <= 0 {
-		return nil, errors.New("page must greater than 0")
+		return nil, errors.New("page must be greater than 0")
 	}
 
 	if limit <= 0 {
-		return nil, errors.New("limit must greater than 0")
+		return nil, errors.New("limit must be greater than 0")
 	}
 
 	// XXX: implement ANY
@@ -77,7 +77,7 @@ func QueryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, erro
 		return nil, err
 	}
 
-	//TODO: this may not always need to be proven
+	// TODO: this may not always need to be proven
 	// https://github.com/cosmos/cosmos-sdk/issues/6807
 	resTx, err := node.Tx(context.Background(), hash, true)
 	if err != nil {

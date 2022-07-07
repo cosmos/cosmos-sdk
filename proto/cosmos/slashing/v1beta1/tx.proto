@@ -5,6 +5,7 @@ option go_package            = "github.com/cosmos/cosmos-sdk/x/slashing/types";
 option (gogoproto.equal_all) = true;
 
 import "gogoproto/gogo.proto";
+import "cosmos/slashing/v1beta1/slashing.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 
@@ -14,6 +15,12 @@ service Msg {
   // them into the bonded validator set, so they can begin receiving provisions
   // and rewards again.
   rpc Unjail(MsgUnjail) returns (MsgUnjailResponse);
+
+  // UpdateParams defines a governance operation for updating the x/slashing module
+  // parameters. The authority is hard-coded to the x/gov module account.
+  //
+  // Since: cosmos-sdk 0.47
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 }
 
 // MsgUnjail defines the Msg/Unjail request type
@@ -28,3 +35,24 @@ message MsgUnjail {
 
 // MsgUnjailResponse defines the Msg/Unjail response type
 message MsgUnjailResponse {}
+
+// MsgUpdateParams is the Msg/UpdateParams request type.
+//
+// Since: cosmos-sdk 0.47
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the address of the governance account.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // params defines the x/slashing parameters to update.
+  //
+  // NOTE: All parameters must be supplied.
+  Params params = 2 [(gogoproto.nullable) = false];
+}
+
+// MsgUpdateParamsResponse defines the response structure for executing a
+// MsgUpdateParams message.
+//
+// Since: cosmos-sdk 0.47
+message MsgUpdateParamsResponse {}

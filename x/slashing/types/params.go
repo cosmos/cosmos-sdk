@@ -5,7 +5,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Default parameter namespace
@@ -20,26 +19,11 @@ var (
 	DefaultSlashFractionDowntime   = sdk.NewDec(1).Quo(sdk.NewDec(100))
 )
 
-// Parameter store keys
-var (
-	KeySignedBlocksWindow      = []byte("SignedBlocksWindow")
-	KeyMinSignedPerWindow      = []byte("MinSignedPerWindow")
-	KeyDowntimeJailDuration    = []byte("DowntimeJailDuration")
-	KeySlashFractionDoubleSign = []byte("SlashFractionDoubleSign")
-	KeySlashFractionDowntime   = []byte("SlashFractionDowntime")
-)
-
-// ParamKeyTable for slashing module
-func ParamKeyTable() paramtypes.KeyTable {
-	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
-}
-
 // NewParams creates a new Params object
 func NewParams(
 	signedBlocksWindow int64, minSignedPerWindow sdk.Dec, downtimeJailDuration time.Duration,
 	slashFractionDoubleSign, slashFractionDowntime sdk.Dec,
 ) Params {
-
 	return Params{
 		SignedBlocksWindow:      signedBlocksWindow,
 		MinSignedPerWindow:      minSignedPerWindow,
@@ -49,23 +33,35 @@ func NewParams(
 	}
 }
 
-// ParamSetPairs - Implements params.ParamSet
-func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
-	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeySignedBlocksWindow, &p.SignedBlocksWindow, validateSignedBlocksWindow),
-		paramtypes.NewParamSetPair(KeyMinSignedPerWindow, &p.MinSignedPerWindow, validateMinSignedPerWindow),
-		paramtypes.NewParamSetPair(KeyDowntimeJailDuration, &p.DowntimeJailDuration, validateDowntimeJailDuration),
-		paramtypes.NewParamSetPair(KeySlashFractionDoubleSign, &p.SlashFractionDoubleSign, validateSlashFractionDoubleSign),
-		paramtypes.NewParamSetPair(KeySlashFractionDowntime, &p.SlashFractionDowntime, validateSlashFractionDowntime),
-	}
-}
-
 // DefaultParams defines the parameters for this module
 func DefaultParams() Params {
 	return NewParams(
-		DefaultSignedBlocksWindow, DefaultMinSignedPerWindow, DefaultDowntimeJailDuration,
-		DefaultSlashFractionDoubleSign, DefaultSlashFractionDowntime,
+		DefaultSignedBlocksWindow,
+		DefaultMinSignedPerWindow,
+		DefaultDowntimeJailDuration,
+		DefaultSlashFractionDoubleSign,
+		DefaultSlashFractionDowntime,
 	)
+}
+
+// validate params
+func (p Params) Validate() error {
+	if err := validateSignedBlocksWindow(p.SignedBlocksWindow); err != nil {
+		return err
+	}
+	if err := validateMinSignedPerWindow(p.MinSignedPerWindow); err != nil {
+		return err
+	}
+	if err := validateDowntimeJailDuration(p.DowntimeJailDuration); err != nil {
+		return err
+	}
+	if err := validateSlashFractionDoubleSign(p.SlashFractionDoubleSign); err != nil {
+		return err
+	}
+	if err := validateSlashFractionDowntime(p.SlashFractionDowntime); err != nil {
+		return err
+	}
+	return nil
 }
 
 func validateSignedBlocksWindow(i interface{}) error {

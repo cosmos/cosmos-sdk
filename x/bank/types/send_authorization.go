@@ -6,9 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
-var (
-	_ authz.Authorization = &SendAuthorization{}
-)
+var _ authz.Authorization = &SendAuthorization{}
 
 // NewSendAuthorization creates a new SendAuthorization object.
 func NewSendAuthorization(spendLimit sdk.Coins) *SendAuthorization {
@@ -28,7 +26,7 @@ func (a SendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRes
 	if !ok {
 		return authz.AcceptResponse{}, sdkerrors.ErrInvalidType.Wrap("type mismatch")
 	}
-	limitLeft, isNegative := a.SpendLimit.SafeSub(mSend.Amount)
+	limitLeft, isNegative := a.SpendLimit.SafeSub(mSend.Amount...)
 	if isNegative {
 		return authz.AcceptResponse{}, sdkerrors.ErrInsufficientFunds.Wrapf("requested amount is more than spend limit")
 	}
@@ -45,7 +43,7 @@ func (a SendAuthorization) ValidateBasic() error {
 		return sdkerrors.ErrInvalidCoins.Wrap("spend limit cannot be nil")
 	}
 	if !a.SpendLimit.IsAllPositive() {
-		return sdkerrors.ErrInvalidCoins.Wrapf("spend limit cannot be negitive")
+		return sdkerrors.ErrInvalidCoins.Wrapf("spend limit must be positive")
 	}
 	return nil
 }

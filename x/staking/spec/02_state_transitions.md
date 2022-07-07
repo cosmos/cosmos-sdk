@@ -83,15 +83,19 @@ As a part of the Undelegate and Complete Unbonding state transitions Unbond
 Delegation may be called.
 
 * subtract the unbonded shares from delegator
-* if the validator is `Unbonding` or `Bonded` add the tokens to an `UnbondingDelegation` Entry
-* if the validator is `Unbonded` send the tokens directly to the withdraw
-  account
+* add the unbonded tokens to an `UnbondingDelegation` Entry
 * update the delegation or remove the delegation if there are no more shares
 * if the delegation is the operator of the validator and no more shares exist then trigger a jail validator
 * update the validator with removed the delegator shares and associated coins
 * if the validator state is `Bonded`, transfer the `Coins` worth of the unbonded
   shares from the `BondedPool` to the `NotBondedPool` `ModuleAccount`
 * remove the validator if it is unbonded and there are no more delegation shares.
+
+### Cancel an `UnbondingDelegation` Entry 
+When a `cancel unbond delegation` occurs both the `validator`, the `delegation` and an `UnbondingDelegationQueue` state will be updated.
+* if cancel unbonding delegation amount equals to the `UnbondingDelegation` entry `balance`, then the `UnbondingDelegation` entry deleted from `UnbondingDelegationQueue`.
+* if the `cancel unbonding delegation amount is less than the `UnbondingDelegation` entry balance, then the `UnbondingDelegation` entry will be updated with new balance in the `UnbondingDelegationQueue`. 
+* cancel `amount` is [Delegated](02_state_transitions.md#delegations) back to  the original `validator`.
 
 ### Complete Unbonding
 

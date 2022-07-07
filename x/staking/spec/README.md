@@ -42,6 +42,7 @@ network.
     * [MsgEditValidator](03_messages.md#msgeditvalidator)
     * [MsgDelegate](03_messages.md#msgdelegate)
     * [MsgUndelegate](03_messages.md#msgundelegate)
+    * [MsgCancelUnbondingDelegation](03_messages.md#msgcancelunbondingdelegation)
     * [MsgBeginRedelegate](03_messages.md#msgbeginredelegate)
 4. **[Begin-Block](04_begin_block.md)**
     * [Historical Info Tracking](04_begin_block.md#historical-info-tracking)

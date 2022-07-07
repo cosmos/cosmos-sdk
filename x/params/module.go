@@ -3,16 +3,23 @@ package params
 import (
 	"context"
 	"encoding/json"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"math/rand"
 
-	"github.com/gorilla/mux"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	modulev1 "cosmossdk.io/api/cosmos/params/module/v1"
+	"cosmossdk.io/core/appmodule"
+	"github.com/cosmos/cosmos-sdk/depinject"
+	"github.com/cosmos/cosmos-sdk/runtime"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -51,12 +58,8 @@ func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, config client.TxEncodin
 	return nil
 }
 
-// RegisterRESTRoutes registers the REST routes for the params module.
-// Deprecated: RegisterRESTRoutes is deprecated.
-func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {}
-
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the params module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := proposal.RegisterQueryHandlerClient(context.Background(), mux, proposal.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
@@ -116,7 +119,6 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	proposal.RegisterQueryServer(cfg.QueryServer(), am.keeper)
-
 }
 
 // ProposalContents returns all the params content functions used to
@@ -152,4 +154,68 @@ func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 // EndBlock performs a no-op.
 func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
+}
+
+//
+// New App Wiring Setup
+//
+
+func init() {
+	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(
+			provideModuleBasic,
+			provideModule,
+			provideSubspace,
+		))
+}
+
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+type paramsInputs struct {
+	depinject.In
+
+	KvStoreKey        *store.KVStoreKey
+	TransientStoreKey *store.TransientStoreKey
+	Cdc               codec.Codec
+	LegacyAmino       *codec.LegacyAmino
+}
+
+type paramsOutputs struct {
+	depinject.Out
+
+	ParamsKeeper  keeper.Keeper
+	BaseAppOption runtime.BaseAppOption
+	Module        runtime.AppModuleWrapper
+	GovHandler    govv1beta1.HandlerRoute
+}
+
+func provideModule(in paramsInputs) paramsOutputs {
+	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.KvStoreKey, in.TransientStoreKey)
+	baseappOpt := func(app *baseapp.BaseApp) {
+		app.SetParamStore(k.Subspace(baseapp.Paramspace).WithKeyTable(types.ConsensusParamsKeyTable()))
+	}
+	m := runtime.WrapAppModule(NewAppModule(k))
+	govHandler := govv1beta1.HandlerRoute{RouteKey: proposal.RouterKey, Handler: NewParamChangeProposalHandler(k)}
+
+	return paramsOutputs{ParamsKeeper: k, BaseAppOption: baseappOpt, Module: m, GovHandler: govHandler}
+}
+
+type subspaceInputs struct {
+	depinject.In
+
+	Key       depinject.ModuleKey
+	Keeper    keeper.Keeper
+	KeyTables map[string]types.KeyTable
+}
+
+func provideSubspace(in subspaceInputs) types.Subspace {
+	moduleName := in.Key.Name()
+	var kt, exists = in.KeyTables[moduleName]
+	if !exists {
+		return in.Keeper.Subspace(moduleName)
+	} else {
+		return in.Keeper.Subspace(moduleName).WithKeyTable(kt)
+	}
 }

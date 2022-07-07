@@ -18,7 +18,6 @@ var (
 )
 
 func TestGenesisStateValidate(t *testing.T) {
-
 	submittedAt := time.Now().UTC()
 	timeout := submittedAt.Add(time.Second * 1).UTC()
 
@@ -55,7 +54,7 @@ func TestGenesisStateValidate(t *testing.T) {
 
 	proposal := &Proposal{
 		Id:                 1,
-		Address:            accAddr.String(),
+		GroupPolicyAddress: accAddr.String(),
 		Metadata:           "proposal metadata",
 		GroupVersion:       1,
 		GroupPolicyVersion: 1,
@@ -63,8 +62,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			memberAddr.String(),
 		},
 		SubmitTime: submittedAt,
-		Status:     PROPOSAL_STATUS_CLOSED,
-		Result:     PROPOSAL_RESULT_ACCEPTED,
+		Status:     PROPOSAL_STATUS_ACCEPTED,
 		FinalTallyResult: TallyResult{
 			YesCount:        "1",
 			NoCount:         "0",
@@ -376,7 +374,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Proposals: []*Proposal{
 					{
 						Id:                 0,
-						Address:            accAddr.String(),
+						GroupPolicyAddress: accAddr.String(),
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 1,
@@ -403,7 +401,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Proposals: []*Proposal{
 					{
 						Id:                 1,
-						Address:            "invalid address",
+						GroupPolicyAddress: "invalid address",
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 1,
@@ -430,7 +428,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Proposals: []*Proposal{
 					{
 						Id:                 1,
-						Address:            accAddr.String(),
+						GroupPolicyAddress: accAddr.String(),
 						Metadata:           "proposal metadata",
 						GroupVersion:       0,
 						GroupPolicyVersion: 1,
@@ -457,7 +455,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Proposals: []*Proposal{
 					{
 						Id:                 1,
-						Address:            accAddr.String(),
+						GroupPolicyAddress: accAddr.String(),
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 0,
@@ -484,7 +482,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Proposals: []*Proposal{
 					{
 						Id:                 1,
-						Address:            accAddr.String(),
+						GroupPolicyAddress: accAddr.String(),
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 1,
@@ -492,8 +490,7 @@ func TestGenesisStateValidate(t *testing.T) {
 							memberAddr.String(),
 						},
 						SubmitTime: submittedAt,
-						Status:     PROPOSAL_STATUS_CLOSED,
-						Result:     PROPOSAL_RESULT_ACCEPTED,
+						Status:     PROPOSAL_STATUS_ACCEPTED,
 						FinalTallyResult: TallyResult{
 							YesCount:        "-1",
 							NoCount:         "0",
@@ -523,7 +520,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Proposals: []*Proposal{
 					{
 						Id:                 1,
-						Address:            accAddr.String(),
+						GroupPolicyAddress: accAddr.String(),
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 1,
@@ -531,8 +528,7 @@ func TestGenesisStateValidate(t *testing.T) {
 							memberAddr.String(),
 						},
 						SubmitTime: submittedAt,
-						Status:     PROPOSAL_STATUS_CLOSED,
-						Result:     PROPOSAL_RESULT_ACCEPTED,
+						Status:     PROPOSAL_STATUS_ACCEPTED,
 						FinalTallyResult: TallyResult{
 							YesCount:        "0",
 							NoCount:         "-1",
@@ -562,7 +558,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Proposals: []*Proposal{
 					{
 						Id:                 1,
-						Address:            accAddr.String(),
+						GroupPolicyAddress: accAddr.String(),
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 1,
@@ -570,8 +566,7 @@ func TestGenesisStateValidate(t *testing.T) {
 							memberAddr.String(),
 						},
 						SubmitTime: submittedAt,
-						Status:     PROPOSAL_STATUS_CLOSED,
-						Result:     PROPOSAL_RESULT_ACCEPTED,
+						Status:     PROPOSAL_STATUS_ACCEPTED,
 						FinalTallyResult: TallyResult{
 							YesCount:        "0",
 							NoCount:         "0",
@@ -601,7 +596,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Proposals: []*Proposal{
 					{
 						Id:                 1,
-						Address:            accAddr.String(),
+						GroupPolicyAddress: accAddr.String(),
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 1,
@@ -609,8 +604,7 @@ func TestGenesisStateValidate(t *testing.T) {
 							memberAddr.String(),
 						},
 						SubmitTime: submittedAt,
-						Status:     PROPOSAL_STATUS_CLOSED,
-						Result:     PROPOSAL_RESULT_ACCEPTED,
+						Status:     PROPOSAL_STATUS_ACCEPTED,
 						FinalTallyResult: TallyResult{
 							YesCount:        "0",
 							NoCount:         "0",
@@ -742,7 +736,6 @@ func TestGenesisStateValidate(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-
 			err := tc.genesisState.Validate()
 			if tc.expErr {
 				require.Error(t, err)

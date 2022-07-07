@@ -26,6 +26,11 @@ type QueryClient interface {
 	Balance(ctx context.Context, in *QueryBalanceRequest, opts ...grpc.CallOption) (*QueryBalanceResponse, error)
 	// AllBalances queries the balance of all coins for a single account.
 	AllBalances(ctx context.Context, in *QueryAllBalancesRequest, opts ...grpc.CallOption) (*QueryAllBalancesResponse, error)
+	// SpendableBalances queries the spenable balance of all coins for a single
+	// account.
+	//
+	// Since: cosmos-sdk 0.46
+	SpendableBalances(ctx context.Context, in *QuerySpendableBalancesRequest, opts ...grpc.CallOption) (*QuerySpendableBalancesResponse, error)
 	// TotalSupply queries the total supply of all coins.
 	TotalSupply(ctx context.Context, in *QueryTotalSupplyRequest, opts ...grpc.CallOption) (*QueryTotalSupplyResponse, error)
 	// SupplyOf queries the supply of a single coin.
@@ -39,7 +44,17 @@ type QueryClient interface {
 	DenomsMetadata(ctx context.Context, in *QueryDenomsMetadataRequest, opts ...grpc.CallOption) (*QueryDenomsMetadataResponse, error)
 	// DenomOwners queries for all account addresses that own a particular token
 	// denomination.
+	//
+	// Since: cosmos-sdk 0.46
 	DenomOwners(ctx context.Context, in *QueryDenomOwnersRequest, opts ...grpc.CallOption) (*QueryDenomOwnersResponse, error)
+	// SendEnabled queries for SendEnabled entries.
+	//
+	// This query only returns denominations that have specific SendEnabled settings.
+	// Any denomination that does not have a specific setting will use the default
+	// params.default_send_enabled, and will not be returned by this query.
+	//
+	// Since: cosmos-sdk 0.47
+	SendEnabled(ctx context.Context, in *QuerySendEnabledRequest, opts ...grpc.CallOption) (*QuerySendEnabledResponse, error)
 }
 
 type queryClient struct {
@@ -62,6 +77,15 @@ func (c *queryClient) Balance(ctx context.Context, in *QueryBalanceRequest, opts
 func (c *queryClient) AllBalances(ctx context.Context, in *QueryAllBalancesRequest, opts ...grpc.CallOption) (*QueryAllBalancesResponse, error) {
 	out := new(QueryAllBalancesResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.Query/AllBalances", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) SpendableBalances(ctx context.Context, in *QuerySpendableBalancesRequest, opts ...grpc.CallOption) (*QuerySpendableBalancesResponse, error) {
+	out := new(QuerySpendableBalancesResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.Query/SpendableBalances", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -122,6 +146,15 @@ func (c *queryClient) DenomOwners(ctx context.Context, in *QueryDenomOwnersReque
 	return out, nil
 }
 
+func (c *queryClient) SendEnabled(ctx context.Context, in *QuerySendEnabledRequest, opts ...grpc.CallOption) (*QuerySendEnabledResponse, error) {
+	out := new(QuerySendEnabledResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.Query/SendEnabled", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -130,6 +163,11 @@ type QueryServer interface {
 	Balance(context.Context, *QueryBalanceRequest) (*QueryBalanceResponse, error)
 	// AllBalances queries the balance of all coins for a single account.
 	AllBalances(context.Context, *QueryAllBalancesRequest) (*QueryAllBalancesResponse, error)
+	// SpendableBalances queries the spenable balance of all coins for a single
+	// account.
+	//
+	// Since: cosmos-sdk 0.46
+	SpendableBalances(context.Context, *QuerySpendableBalancesRequest) (*QuerySpendableBalancesResponse, error)
 	// TotalSupply queries the total supply of all coins.
 	TotalSupply(context.Context, *QueryTotalSupplyRequest) (*QueryTotalSupplyResponse, error)
 	// SupplyOf queries the supply of a single coin.
@@ -143,7 +181,17 @@ type QueryServer interface {
 	DenomsMetadata(context.Context, *QueryDenomsMetadataRequest) (*QueryDenomsMetadataResponse, error)
 	// DenomOwners queries for all account addresses that own a particular token
 	// denomination.
+	//
+	// Since: cosmos-sdk 0.46
 	DenomOwners(context.Context, *QueryDenomOwnersRequest) (*QueryDenomOwnersResponse, error)
+	// SendEnabled queries for SendEnabled entries.
+	//
+	// This query only returns denominations that have specific SendEnabled settings.
+	// Any denomination that does not have a specific setting will use the default
+	// params.default_send_enabled, and will not be returned by this query.
+	//
+	// Since: cosmos-sdk 0.47
+	SendEnabled(context.Context, *QuerySendEnabledRequest) (*QuerySendEnabledResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -156,6 +204,9 @@ func (UnimplementedQueryServer) Balance(context.Context, *QueryBalanceRequest) (
 }
 func (UnimplementedQueryServer) AllBalances(context.Context, *QueryAllBalancesRequest) (*QueryAllBalancesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AllBalances not implemented")
+}
+func (UnimplementedQueryServer) SpendableBalances(context.Context, *QuerySpendableBalancesRequest) (*QuerySpendableBalancesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SpendableBalances not implemented")
 }
 func (UnimplementedQueryServer) TotalSupply(context.Context, *QueryTotalSupplyRequest) (*QueryTotalSupplyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TotalSupply not implemented")
@@ -174,6 +225,9 @@ func (UnimplementedQueryServer) DenomsMetadata(context.Context, *QueryDenomsMeta
 }
 func (UnimplementedQueryServer) DenomOwners(context.Context, *QueryDenomOwnersRequest) (*QueryDenomOwnersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DenomOwners not implemented")
+}
+func (UnimplementedQueryServer) SendEnabled(context.Context, *QuerySendEnabledRequest) (*QuerySendEnabledResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendEnabled not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -220,6 +274,24 @@ func _Query_AllBalances_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).AllBalances(ctx, req.(*QueryAllBalancesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_SpendableBalances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuerySpendableBalancesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).SpendableBalances(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.bank.v1beta1.Query/SpendableBalances",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).SpendableBalances(ctx, req.(*QuerySpendableBalancesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -332,6 +404,24 @@ func _Query_DenomOwners_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_SendEnabled_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuerySendEnabledRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).SendEnabled(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.bank.v1beta1.Query/SendEnabled",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).SendEnabled(ctx, req.(*QuerySendEnabledRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -346,6 +436,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AllBalances",
 			Handler:    _Query_AllBalances_Handler,
+		},
+		{
+			MethodName: "SpendableBalances",
+			Handler:    _Query_SpendableBalances_Handler,
 		},
 		{
 			MethodName: "TotalSupply",
@@ -370,6 +464,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DenomOwners",
 			Handler:    _Query_DenomOwners_Handler,
+		},
+		{
+			MethodName: "SendEnabled",
+			Handler:    _Query_SendEnabled_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

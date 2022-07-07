@@ -312,6 +312,49 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposals() {
+	app, ctx, queryClient := suite.app, suite.ctx, suite.legacyQueryClient
+
+	var req *v1beta1.QueryProposalsRequest
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"valid request",
+			func() {
+				req = &v1beta1.QueryProposalsRequest{}
+				testProposal := v1beta1.NewTextProposal("Proposal", "testing proposal")
+				msgContent, err := v1.NewLegacyContent(testProposal, govAcct.String())
+				suite.Require().NoError(err)
+				submittedProposal, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, "")
+				suite.Require().NoError(err)
+				suite.Require().NotEmpty(submittedProposal)
+			},
+			true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+			testCase.malleate()
+
+			proposalRes, err := queryClient.Proposals(gocontext.Background(), req)
+
+			if testCase.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(proposalRes.Proposals)
+				suite.Require().Equal(len(proposalRes.Proposals), 1)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(proposalRes)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 
@@ -404,6 +447,120 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 				}
 
 				expRes = &v1.QueryVoteResponse{}
+			},
+			false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+			testCase.malleate()
+
+			vote, err := queryClient.Vote(gocontext.Background(), req)
+
+			if testCase.expPass {
+				suite.Require().NoError(err)
+				suite.Require().Equal(expRes, vote)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(vote)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestLegacyGRPCQueryVote() {
+	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.legacyQueryClient, suite.addrs
+
+	var (
+		req      *v1beta1.QueryVoteRequest
+		expRes   *v1beta1.QueryVoteResponse
+		proposal v1.Proposal
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = &v1beta1.QueryVoteRequest{}
+			},
+			false,
+		},
+		{
+			"zero proposal id request",
+			func() {
+				req = &v1beta1.QueryVoteRequest{
+					ProposalId: 0,
+					Voter:      addrs[0].String(),
+				}
+			},
+			false,
+		},
+		{
+			"empty voter request",
+			func() {
+				req = &v1beta1.QueryVoteRequest{
+					ProposalId: 1,
+					Voter:      "",
+				}
+			},
+			false,
+		},
+		{
+			"non existed proposal",
+			func() {
+				req = &v1beta1.QueryVoteRequest{
+					ProposalId: 3,
+					Voter:      addrs[0].String(),
+				}
+			},
+			false,
+		},
+		{
+			"no votes present",
+			func() {
+				var err error
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, "")
+				suite.Require().NoError(err)
+
+				req = &v1beta1.QueryVoteRequest{
+					ProposalId: proposal.Id,
+					Voter:      addrs[0].String(),
+				}
+
+				expRes = &v1beta1.QueryVoteResponse{}
+			},
+			false,
+		},
+		{
+			"valid request",
+			func() {
+				proposal.Status = v1.StatusVotingPeriod
+				app.GovKeeper.SetProposal(ctx, proposal)
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionAbstain), ""))
+
+				req = &v1beta1.QueryVoteRequest{
+					ProposalId: proposal.Id,
+					Voter:      addrs[0].String(),
+				}
+
+				expRes = &v1beta1.QueryVoteResponse{Vote: v1beta1.Vote{ProposalId: proposal.Id, Voter: addrs[0].String(), Options: []v1beta1.WeightedVoteOption{{Option: v1beta1.OptionAbstain, Weight: sdk.MustNewDecFromStr("1.0")}}}}
+			},
+			true,
+		},
+		{
+			"wrong voter id request",
+			func() {
+				req = &v1beta1.QueryVoteRequest{
+					ProposalId: proposal.Id,
+					Voter:      addrs[1].String(),
+				}
+
+				expRes = &v1beta1.QueryVoteResponse{}
 			},
 			false,
 		},
@@ -901,6 +1058,108 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposit() {
+	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.legacyQueryClient, suite.addrs
+
+	var (
+		req      *v1beta1.QueryDepositRequest
+		expRes   *v1beta1.QueryDepositResponse
+		proposal v1.Proposal
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = &v1beta1.QueryDepositRequest{}
+			},
+			false,
+		},
+		{
+			"zero proposal id request",
+			func() {
+				req = &v1beta1.QueryDepositRequest{
+					ProposalId: 0,
+					Depositor:  addrs[0].String(),
+				}
+			},
+			false,
+		},
+		{
+			"empty deposit address request",
+			func() {
+				req = &v1beta1.QueryDepositRequest{
+					ProposalId: 1,
+					Depositor:  "",
+				}
+			},
+			false,
+		},
+		{
+			"non existed proposal",
+			func() {
+				req = &v1beta1.QueryDepositRequest{
+					ProposalId: 2,
+					Depositor:  addrs[0].String(),
+				}
+			},
+			false,
+		},
+		{
+			"no deposits proposal",
+			func() {
+				var err error
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, "")
+				suite.Require().NoError(err)
+				suite.Require().NotNil(proposal)
+
+				req = &v1beta1.QueryDepositRequest{
+					ProposalId: proposal.Id,
+					Depositor:  addrs[0].String(),
+				}
+			},
+			false,
+		},
+		{
+			"valid request",
+			func() {
+				depositCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 20)))
+				deposit := v1beta1.NewDeposit(proposal.Id, addrs[0], depositCoins)
+				v1deposit := v1.NewDeposit(proposal.Id, addrs[0], depositCoins)
+				app.GovKeeper.SetDeposit(ctx, v1deposit)
+
+				req = &v1beta1.QueryDepositRequest{
+					ProposalId: proposal.Id,
+					Depositor:  addrs[0].String(),
+				}
+
+				expRes = &v1beta1.QueryDepositResponse{Deposit: deposit}
+			},
+			true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+			testCase.malleate()
+
+			deposit, err := queryClient.Deposit(gocontext.Background(), req)
+
+			if testCase.expPass {
+				suite.Require().NoError(err)
+				suite.Require().Equal(deposit.GetDeposit(), expRes.GetDeposit())
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(expRes)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestGRPCQueryDeposits() {
 	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 
@@ -971,6 +1230,102 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposits() {
 				}
 
 				expRes = &v1.QueryDepositsResponse{
+					Deposits: deposits,
+				}
+			},
+			true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+			testCase.malleate()
+
+			deposits, err := queryClient.Deposits(gocontext.Background(), req)
+
+			if testCase.expPass {
+				suite.Require().NoError(err)
+				suite.Require().Equal(expRes.GetDeposits(), deposits.GetDeposits())
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(deposits)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposits() {
+	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.legacyQueryClient, suite.addrs
+
+	var (
+		req      *v1beta1.QueryDepositsRequest
+		expRes   *v1beta1.QueryDepositsResponse
+		proposal v1.Proposal
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = &v1beta1.QueryDepositsRequest{}
+			},
+			false,
+		},
+		{
+			"zero proposal id request",
+			func() {
+				req = &v1beta1.QueryDepositsRequest{
+					ProposalId: 0,
+				}
+			},
+			false,
+		},
+		{
+			"non existed proposal",
+			func() {
+				req = &v1beta1.QueryDepositsRequest{
+					ProposalId: 2,
+				}
+			},
+			true,
+		},
+		{
+			"create a proposal and get deposits",
+			func() {
+				var err error
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, "")
+				suite.Require().NoError(err)
+
+				req = &v1beta1.QueryDepositsRequest{
+					ProposalId: proposal.Id,
+				}
+			},
+			true,
+		},
+		{
+			"get deposits with default limit",
+			func() {
+				depositAmount1 := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 20)))
+				deposit1 := v1beta1.NewDeposit(proposal.Id, addrs[0], depositAmount1)
+				v1deposit1 := v1.NewDeposit(proposal.Id, addrs[0], depositAmount1)
+				app.GovKeeper.SetDeposit(ctx, v1deposit1)
+
+				depositAmount2 := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 30)))
+				deposit2 := v1beta1.NewDeposit(proposal.Id, addrs[1], depositAmount2)
+				v1deposit2 := v1.NewDeposit(proposal.Id, addrs[1], depositAmount2)
+				app.GovKeeper.SetDeposit(ctx, v1deposit2)
+
+				deposits := v1beta1.Deposits{deposit1, deposit2}
+
+				req = &v1beta1.QueryDepositsRequest{
+					ProposalId: proposal.Id,
+				}
+
+				expRes = &v1beta1.QueryDepositsResponse{
 					Deposits: deposits,
 				}
 			},
@@ -1103,5 +1458,129 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 				suite.Require().Nil(tally)
 			}
 		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestLegacyGRPCQueryTally() {
+	app, ctx, queryClient := suite.app, suite.ctx, suite.legacyQueryClient
+
+	addrs, _ := createValidators(suite.T(), ctx, app, []int64{5, 5, 5})
+
+	var (
+		req      *v1beta1.QueryTallyResultRequest
+		expRes   *v1beta1.QueryTallyResultResponse
+		proposal v1.Proposal
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = &v1beta1.QueryTallyResultRequest{}
+			},
+			false,
+		},
+		{
+			"zero proposal id request",
+			func() {
+				req = &v1beta1.QueryTallyResultRequest{ProposalId: 0}
+			},
+			false,
+		},
+		{
+			"query non existed proposal",
+			func() {
+				req = &v1beta1.QueryTallyResultRequest{ProposalId: 1}
+			},
+			false,
+		},
+		{
+			"create a proposal and get tally",
+			func() {
+				var err error
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, "")
+				suite.Require().NoError(err)
+				suite.Require().NotNil(proposal)
+
+				req = &v1beta1.QueryTallyResultRequest{ProposalId: proposal.Id}
+
+				tallyResult := v1beta1.EmptyTallyResult()
+				expRes = &v1beta1.QueryTallyResultResponse{
+					Tally: tallyResult,
+				}
+			},
+			true,
+		},
+		{
+			"request tally after few votes",
+			func() {
+				proposal.Status = v1.StatusVotingPeriod
+				app.GovKeeper.SetProposal(ctx, proposal)
+
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, addrs[1], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, addrs[2], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
+
+				req = &v1beta1.QueryTallyResultRequest{ProposalId: proposal.Id}
+
+				expRes = &v1beta1.QueryTallyResultResponse{
+					Tally: v1beta1.TallyResult{
+						Yes:        sdk.NewInt(3 * 5 * 1000000),
+						No:         sdk.NewInt(0),
+						Abstain:    sdk.NewInt(0),
+						NoWithVeto: sdk.NewInt(0),
+					},
+				}
+			},
+			true,
+		},
+		{
+			"request final tally after status changed",
+			func() {
+				proposal.Status = v1.StatusPassed
+				app.GovKeeper.SetProposal(ctx, proposal)
+				proposal, _ = app.GovKeeper.GetProposal(ctx, proposal.Id)
+
+				req = &v1beta1.QueryTallyResultRequest{ProposalId: proposal.Id}
+
+				expRes = &v1beta1.QueryTallyResultResponse{
+					Tally: v1TallyToV1Beta1Tally(*proposal.FinalTallyResult),
+				}
+			},
+			true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+			testCase.malleate()
+
+			tally, err := queryClient.TallyResult(gocontext.Background(), req)
+
+			if testCase.expPass {
+				suite.Require().NoError(err)
+				suite.Require().Equal(expRes.String(), tally.String())
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(tally)
+			}
+		})
+	}
+}
+
+func v1TallyToV1Beta1Tally(t v1.TallyResult) v1beta1.TallyResult {
+	yes, _ := sdk.NewIntFromString(t.YesCount)
+	no, _ := sdk.NewIntFromString(t.NoCount)
+	noWithVeto, _ := sdk.NewIntFromString(t.NoWithVetoCount)
+	abstain, _ := sdk.NewIntFromString(t.AbstainCount)
+	return v1beta1.TallyResult{
+		Yes:        yes,
+		No:         no,
+		NoWithVeto: noWithVeto,
+		Abstain:    abstain,
 	}
 }

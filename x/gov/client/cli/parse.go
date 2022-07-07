@@ -40,12 +40,6 @@ func parseSubmitLegacyProposalFlags(fs *pflag.FlagSet) (*legacyProposal, error) 
 
 	if proposalFile == "" {
 		proposalType, _ := fs.GetString(FlagProposalType)
-		title, _ := fs.GetString(FlagTitle)
-		description, _ := fs.GetString(FlagDescription)
-		if proposalType == "" && title == "" && description == "" {
-			return nil, fmt.Errorf("one of the --proposal or (--title, --description and --type) flags are required")
-		}
-
 		proposal.Title, _ = fs.GetString(FlagTitle)
 		proposal.Description, _ = fs.GetString(FlagDescription)
 		proposal.Type = govutils.NormalizeProposalType(proposalType)

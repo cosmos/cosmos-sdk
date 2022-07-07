@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v040bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v040"
+	v042bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v042"
 	v043bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v043"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -26,11 +26,11 @@ func TestSupplyMigration(t *testing.T) {
 	oldFooBarCoin := sdk.NewCoin("foobar", sdk.NewInt(0)) // to ensure the zero denom coins pruned.
 
 	// Old supply was stored as a single blob under the `SupplyKey`.
-	var oldSupply v040bank.SupplyI
+	var oldSupply v042bank.SupplyI
 	oldSupply = &types.Supply{Total: sdk.Coins{oldFooCoin, oldBarCoin, oldFooBarCoin}}
 	oldSupplyBz, err := encCfg.Codec.MarshalInterface(oldSupply)
 	require.NoError(t, err)
-	store.Set(v040bank.SupplyKey, oldSupplyBz)
+	store.Set(v042bank.SupplyKey, oldSupplyBz)
 
 	// Run migration.
 	err = v043bank.MigrateStore(ctx, bankKey, encCfg.Codec)
@@ -74,14 +74,14 @@ func TestBalanceKeysMigration(t *testing.T) {
 
 	// set 10 foo coin
 	fooCoin := sdk.NewCoin("foo", sdk.NewInt(10))
-	oldFooKey := append(append(v040bank.BalancesPrefix, addr...), []byte(fooCoin.Denom)...)
+	oldFooKey := append(append(v042bank.BalancesPrefix, addr...), []byte(fooCoin.Denom)...)
 	fooBz, err := encCfg.Codec.Marshal(&fooCoin)
 	require.NoError(t, err)
 	store.Set(oldFooKey, fooBz)
 
 	// set 0 foobar coin
 	fooBarCoin := sdk.NewCoin("foobar", sdk.NewInt(0))
-	oldKeyFooBar := append(append(v040bank.BalancesPrefix, addr...), []byte(fooBarCoin.Denom)...)
+	oldKeyFooBar := append(append(v042bank.BalancesPrefix, addr...), []byte(fooBarCoin.Denom)...)
 	fooBarBz, err := encCfg.Codec.Marshal(&fooBarCoin)
 	require.NoError(t, err)
 	store.Set(oldKeyFooBar, fooBarBz)

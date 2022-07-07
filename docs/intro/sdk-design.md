@@ -15,9 +15,11 @@ Here is a simplified view of how transactions are handled by an application buil
 
 ## `baseapp`
 
-`baseapp` is the boilerplate implementation of a Cosmos SDK application. It comes with an implementation of the ABCI to handle the connection with the underlying consensus engine. Typically, a Cosmos SDK application extends `baseapp` by embedding it in [`app.go`](../basics/app-anatomy.md#core-application-file). See an example of this from the Cosmos SDK application tutorial:
+`baseapp` is the boilerplate implementation of a Cosmos SDK application. It comes with an implementation of the ABCI to handle the connection with the underlying consensus engine. Typically, a Cosmos SDK application extends `baseapp` by embedding it in [`app.go`](../basics/app-anatomy.md#core-application-file).
 
-+++ https://github.com/cosmos/sdk-tutorials/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/app.go#L72-L92
+Here is an example of this from `simapp`, the Cosmos SDK demonstration app:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/simapp/app.go#L154-L193
 
 The goal of `baseapp` is to provide a secure interface between the store and the extensible state machine while defining as little about the state machine as possible (staying true to the ABCI).
 

@@ -1117,31 +1117,31 @@
 </g>
 <!-- github.com/cosmos/cosmos&#45;sdk/depinject.ModuleKey -->
 <g id="node58" class="node">
-<title>github.com/cosmos/cosmos-sdk/depinject.ModuleKey</title>
+<title>cosmossdk.io/depinject.ModuleKey</title>
 <ellipse fill="none" stroke="#000000" stroke-width="1.5" cx="1586.5142" cy="-382.8" rx="221.1177" ry="18"/>
-<text text-anchor="middle" x="1586.5142" y="-378.6" font-family="Times,serif" font-size="14.00" fill="#000000">github.com/cosmos/cosmos-sdk/depinject.ModuleKey</text>
+<text text-anchor="middle" x="1586.5142" y="-378.6" font-family="Times,serif" font-size="14.00" fill="#000000">cosmossdk.io/depinject.ModuleKey</text>
 </g>
 <!-- github.com/cosmos/cosmos&#45;sdk/depinject.ModuleKey&#45;&gt;github.com/cosmos/cosmos&#45;sdk/x/params.provideSubSpace -->
 <g id="edge44" class="edge">
-<title>github.com/cosmos/cosmos-sdk/depinject.ModuleKey-&gt;github.com/cosmos/cosmos-sdk/x/params.provideSubSpace</title>
+<title>cosmossdk.io/depinject.ModuleKey-&gt;github.com/cosmos/cosmos-sdk/x/params.provideSubSpace</title>
 <path fill="none" stroke="#000000" d="M1430.3575,-370.0037C1405.6589,-368.1458 1380.3959,-366.3427 1356.5142,-364.8 1347.7988,-364.237 1205.5306,-363.1307 1199.5142,-356.8 1157.1405,-312.2121 1179.8325,-276.6773 1199.5142,-218.4 1203.1942,-207.5036 1209.9133,-197.0503 1216.9639,-188.1673"/>
 <polygon fill="#000000" stroke="#000000" points="1219.6753,-190.3812 1223.4544,-180.4832 1214.3277,-185.8642 1219.6753,-190.3812"/>
 </g>
 <!-- github.com/cosmos/cosmos&#45;sdk/depinject.ModuleKey&#45;&gt;github.com/cosmos/cosmos&#45;sdk/runtime.provideKVStoreKey -->
 <g id="edge16" class="edge">
-<title>github.com/cosmos/cosmos-sdk/depinject.ModuleKey-&gt;github.com/cosmos/cosmos-sdk/runtime.provideKVStoreKey</title>
+<title>cosmossdk.io/depinject.ModuleKey-&gt;github.com/cosmos/cosmos-sdk/runtime.provideKVStoreKey</title>
 <path fill="none" stroke="#000000" d="M1735.8114,-369.4743C1762.6578,-367.5461 1790.4013,-365.858 1816.5142,-364.8 1893.3959,-361.685 4510.181,-366.4816 4586.5142,-356.8 4628.4933,-351.4756 4674.5053,-339.9094 4710.7346,-329.4188"/>
 <polygon fill="#000000" stroke="#000000" points="4712.0753,-332.6728 4720.6822,-326.4945 4710.1011,-325.957 4712.0753,-332.6728"/>
 </g>
 <!-- github.com/cosmos/cosmos&#45;sdk/depinject.ModuleKey&#45;&gt;github.com/cosmos/cosmos&#45;sdk/runtime.provideMemoryStoreKey -->
 <g id="edge22" class="edge">
-<title>github.com/cosmos/cosmos-sdk/depinject.ModuleKey-&gt;github.com/cosmos/cosmos-sdk/runtime.provideMemoryStoreKey</title>
+<title>cosmossdk.io/depinject.ModuleKey-&gt;github.com/cosmos/cosmos-sdk/runtime.provideMemoryStoreKey</title>
 <path fill="none" stroke="#000000" d="M1739.2335,-369.7309C1765.0139,-367.8451 1791.5153,-366.1046 1816.5142,-364.8 2531.8773,-327.4673 3382.2398,-314.4282 3765.3859,-310.2274"/>
 <polygon fill="#000000" stroke="#000000" points="3765.506,-313.7264 3775.4673,-310.1177 3765.4298,-306.7268 3765.506,-313.7264"/>
 </g>
 <!-- github.com/cosmos/cosmos&#45;sdk/depinject.ModuleKey&#45;&gt;github.com/cosmos/cosmos&#45;sdk/runtime.provideTransientStoreKey -->
 <g id="edge19" class="edge">
-<title>github.com/cosmos/cosmos-sdk/depinject.ModuleKey-&gt;github.com/cosmos/cosmos-sdk/runtime.provideTransientStoreKey</title>
+<title>cosmossdk.io/depinject.ModuleKey-&gt;github.com/cosmos/cosmos-sdk/runtime.provideTransientStoreKey</title>
 <path fill="none" stroke="#000000" d="M1735.8119,-369.4852C1762.6582,-367.5559 1790.4015,-365.8646 1816.5142,-364.8 1947.4062,-359.4636 4044.4103,-372.1025 4174.5142,-356.8 4220.2588,-351.4196 4270.6063,-339.7005 4310.0763,-329.1419"/>
 <polygon fill="#000000" stroke="#000000" points="4311.1317,-332.4821 4319.8672,-326.487 4309.2998,-325.7261 4311.1317,-332.4821"/>
 </g>

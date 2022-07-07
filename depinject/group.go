@@ -3,11 +3,13 @@ package depinject
 import (
 	"fmt"
 	"go/ast"
+	"go/token"
 	"reflect"
 
 	"github.com/pkg/errors"
 
 	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
+	"github.com/cosmos/cosmos-sdk/depinject/internal/util"
 )
 
 // ManyPerContainerType marks a type which automatically gets grouped together. For an ManyPerContainerType T,
@@ -45,6 +47,7 @@ func (g *groupResolver) getType() reflect.Type {
 
 type sliceGroupResolver struct {
 	*groupResolver
+	valueIdent *ast.Ident
 }
 
 func (g *groupResolver) describeLocation() string {
@@ -63,26 +66,58 @@ func (g *sliceGroupResolver) resolve(c *container, _ *moduleKey, caller Location
 	// Resolve
 	if !g.resolved {
 		res := reflect.MakeSlice(g.sliceType, 0, 0)
+		var simpleExprs []ast.Expr
+		var sliceExprs []ast.Expr
 		for i, node := range g.providers {
 			values, err := node.resolveValues(c, false)
 			if err != nil {
 				return reflect.Value{}, nil, err
 			}
-			value := values[g.idxsInValues[i]]
+			idx := g.idxsInValues[i]
+			value := values[idx]
+			valueExpr := node.valueExprs[idx]
 			if value.Kind() == reflect.Slice {
 				n := value.Len()
 				for j := 0; j < n; j++ {
 					res = reflect.Append(res, value.Index(j))
 				}
+				sliceExprs = append(sliceExprs, valueExpr)
 			} else {
 				res = reflect.Append(res, value)
+				simpleExprs = append(simpleExprs, valueExpr)
 			}
 		}
 		g.values = res
 		g.resolved = true
+
+		// codegen
+		g.valueIdent = c.createIdent(util.StringFirstLower(fmt.Sprintf("%sSlice", g.typ.Name())))
+		c.codegenStmt(&ast.AssignStmt{
+			Lhs: []ast.Expr{g.valueIdent},
+			Tok: token.DEFINE,
+			Rhs: []ast.Expr{
+				&ast.CompositeLit{Type: &ast.ArrayType{
+					Elt: ast.NewIdent(g.typ.Name()),
+				},
+					Elts: simpleExprs,
+				},
+			},
+		})
+
+		for _, expr := range sliceExprs {
+			c.codegenStmt(&ast.AssignStmt{
+				Lhs: []ast.Expr{g.valueIdent},
+				Tok: token.ASSIGN,
+				Rhs: []ast.Expr{&ast.CallExpr{
+					Fun:      ast.NewIdent("append"),
+					Args:     []ast.Expr{g.valueIdent, expr},
+					Ellipsis: token.Pos(1),
+				}},
+			})
+		}
 	}
 
-	return g.values, nil, nil
+	return g.values, g.valueIdent, nil
 }
 
 func (g *groupResolver) resolve(_ *container, _ *moduleKey, _ Location) (reflect.Value, ast.Expr, error) {

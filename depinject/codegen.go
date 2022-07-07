@@ -11,7 +11,7 @@ func (c *container) createIdent(namePrefix string) *ast.Ident {
 
 func (c *container) doCreateIdent(namePrefix string, handle interface{}) *ast.Ident {
 	// TODO reserved names: keywords, builtin types, imports
-	v := ast.NewIdent(namePrefix)
+	v := namePrefix
 	i := 2
 	for {
 		_, ok := c.idents[v]
@@ -20,17 +20,17 @@ func (c *container) doCreateIdent(namePrefix string, handle interface{}) *ast.Id
 			if handle != nil {
 				c.reverseIdents[handle] = v
 			}
-			return v
+			return ast.NewIdent(v)
 		}
 
-		v = ast.NewIdent(fmt.Sprintf("%s%d", namePrefix, i))
+		v = fmt.Sprintf("%s%d", namePrefix, i)
 		i++
 	}
 }
 
 func (c *container) getOrCreateIdent(namePrefix string, handle interface{}) (v *ast.Ident, created bool) {
 	if v, ok := c.reverseIdents[handle]; ok {
-		return v, false
+		return ast.NewIdent(v), false
 	}
 
 	return c.doCreateIdent(namePrefix, handle), true

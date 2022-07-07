@@ -27,8 +27,8 @@ type container struct {
 	callerStack  []Location
 	callerMap    map[Location]bool
 
-	idents        map[*ast.Ident]interface{}
-	reverseIdents map[interface{}]*ast.Ident
+	idents        map[string]interface{}
+	reverseIdents map[interface{}]string
 	codegenBody   *ast.BlockStmt
 }
 
@@ -61,8 +61,8 @@ func newContainer(cfg *debugConfig) *container {
 		callerStack:       nil,
 		callerMap:         map[Location]bool{},
 		codegenBody:       &ast.BlockStmt{},
-		idents:            map[*ast.Ident]interface{}{},
-		reverseIdents:     map[interface{}]*ast.Ident{},
+		idents:            map[string]interface{}{},
+		reverseIdents:     map[interface{}]string{},
 	}
 }
 
@@ -146,7 +146,7 @@ func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, err
 		}
 
 		c.addResolver(elemType, r)
-		c.addResolver(sliceType, &sliceGroupResolver{r})
+		c.addResolver(sliceType, &sliceGroupResolver{groupResolver: r})
 	} else if isOnePerModuleType(elemType) {
 		c.logf("Registering resolver for one-per-module type %v", elemType)
 		mapType := reflect.MapOf(stringType, elemType)
@@ -401,7 +401,7 @@ func (c *container) addInvoker(provider *ProviderDescriptor, key *moduleKey) err
 func (c *container) getModuleKeyExpr(key *moduleKey) ast.Expr {
 	return &ast.CallExpr{
 		Fun: &ast.SelectorExpr{
-			X:   c.reverseIdents[c.moduleKeyContext],
+			X:   ast.NewIdent(c.reverseIdents[c.moduleKeyContext]),
 			Sel: ast.NewIdent("For"),
 		},
 		Args: []ast.Expr{&ast.BasicLit{

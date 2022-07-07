@@ -11,13 +11,13 @@ import "google/protobuf/duration.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/feegrant";
 
-// BasicAllowance implements Allowance with a one-time grant of tokens
+// BasicAllowance implements Allowance with a one-time grant of coins
 // that optionally expires. The grantee can use up to SpendLimit to cover fees.
 message BasicAllowance {
   option (cosmos_proto.implements_interface) = "FeeAllowanceI";
 
-  // spend_limit specifies the maximum amount of tokens that can be spent
-  // by this allowance and will be updated as tokens are spent. If it is
+  // spend_limit specifies the maximum amount of coins that can be spent
+  // by this allowance and will be updated as coins are spent. If it is
   // empty, there is no spend limit and any amount of coins can be spent.
   repeated cosmos.base.v1beta1.Coin spend_limit = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];

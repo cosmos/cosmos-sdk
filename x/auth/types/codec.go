@@ -41,6 +41,10 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&BaseAccount{},
 		&ModuleAccount{},
 	)
+
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgUpdateParams{},
+	)
 }
 
 var (

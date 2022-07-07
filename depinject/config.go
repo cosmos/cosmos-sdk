@@ -75,7 +75,7 @@ func InvokeInModule(moduleName string, invokers ...interface{}) Config {
 
 func invoke(ctr *container, key *moduleKey, invokers []interface{}) error {
 	for _, c := range invokers {
-		rc, err := ExtractProviderDescriptor(c)
+		rc, err := ExtractInvokerDescriptor(c)
 		if err != nil {
 			return errors.WithStack(err)
 		}

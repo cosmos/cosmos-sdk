@@ -1,6 +1,3 @@
-//go:build norace
-// +build norace
-
 package tmservice_test
 
 import (
@@ -45,13 +42,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	s.queryClient = tmservice.NewServiceClient(s.network.Validators[0].ClientCtx)
-
-	panic(nil)
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
+
+	panic(nil)
 }
 
 func (s IntegrationTestSuite) TestQueryNodeInfo() {

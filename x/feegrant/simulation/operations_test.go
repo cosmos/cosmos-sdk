@@ -4,6 +4,13 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/suite"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmtime "github.com/tendermint/tendermint/libs/time"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -17,12 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/simulation"
 	feegranttestutil "github.com/cosmos/cosmos-sdk/x/feegrant/testutil"
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmtime "github.com/tendermint/tendermint/libs/time"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type SimTestSuite struct {

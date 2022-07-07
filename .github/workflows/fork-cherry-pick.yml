@@ -28,4 +28,4 @@ jobs:
             git cherry-pick ${{github.event.pull_request.head.sha}}  # Cherry pick the latest commit of PR
             git push -u origin pr-patch               # Push your changes to the remote branch
             git checkout pr-patch
-            hub pull-request --base xBalbinus:main --head #Create PR for cherry-picked, latest branch on main
+            hub pull-request --base xBalbinus:main --head "${GITHUB_ACTOR}":pr-patch #Create PR for cherry-picked, latest branch on main

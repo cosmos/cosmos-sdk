@@ -392,12 +392,12 @@ func (c *container) addInvoker(provider *ProviderDescriptor, key *moduleKey) err
 	return nil
 }
 
-func (c *container) getModuleKeyVarName(key *moduleKey) expr {
-	v, created := c.getOrCreateVar(fmt.Sprintf("%sModuleKey", key.name), key)
-	if created {
-		c.codegenWriteln(v, ":=", c.reverseVars[c.moduleKeyContext], ".ModuleKey(", key.name, ")")
+func (c *container) getModuleKeyExpr(key *moduleKey) expr {
+	return methodCall{
+		receiver: c.reverseVars[c.moduleKeyContext],
+		method:   "For",
+		args:     []expr{stringLit(key.name)},
 	}
-	return v
 }
 
 func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Location) (reflect.Value, expr, error) {
@@ -411,7 +411,7 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 		}
 		c.logf("Providing ModuleKey %s", moduleKey.name)
 		markGraphNodeAsUsed(typeGraphNode)
-		return reflect.ValueOf(ModuleKey{moduleKey}), c.getModuleKeyVarName(moduleKey), nil
+		return reflect.ValueOf(ModuleKey{moduleKey}), c.getModuleKeyExpr(moduleKey), nil
 	}
 
 	if in.Type == ownModuleKeyType {
@@ -422,7 +422,7 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 		markGraphNodeAsUsed(typeGraphNode)
 		return reflect.ValueOf(OwnModuleKey{moduleKey}), castType{
 			typ: reflect.TypeOf(OwnModuleKey{}),
-			e:   c.getModuleKeyVarName(moduleKey),
+			e:   c.getModuleKeyExpr(moduleKey),
 		}, nil
 	}
 

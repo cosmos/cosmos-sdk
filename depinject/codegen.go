@@ -47,11 +47,31 @@ func (c castType) emit() string {
 	return fmt.Sprintf("%s(%s)", c.typ.String(), c.e.emit())
 }
 
+type methodCall struct {
+	receiver expr
+	method   string
+	args     []expr
+}
+
+func (m methodCall) emit() string {
+	var args []string
+	for _, arg := range m.args {
+		args = append(args, arg.emit())
+	}
+	return fmt.Sprintf("%s.%s(%s)", m.receiver.emit(), m.method, strings.Join(args, ", "))
+}
+
+type stringLit string
+
+func (s stringLit) emit() string {
+	return fmt.Sprintf("%q", s)
+}
+
 type expr interface {
 	emit() string
 }
 
-var _, _, _, _ expr = varRef(""), funCall{}, zeroValue{}, castType{}
+var _, _, _, _, _, _ expr = varRef(""), funCall{}, zeroValue{}, castType{}, methodCall{}, stringLit("")
 
 func (c *container) createVar(namePrefix string) varRef {
 	return c.doCreateVar(namePrefix, nil)

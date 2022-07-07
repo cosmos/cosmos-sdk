@@ -20,6 +20,7 @@ type simpleResolver struct {
 	resolved    bool
 	typ         reflect.Type
 	value       reflect.Value
+	valueExpr   expr
 	graphNode   *graphviz.Node
 }
 
@@ -74,10 +75,11 @@ func (s *simpleResolver) resolve(c *container, _ *moduleKey, caller Location) (r
 
 		value := values[s.idxInValues]
 		s.value = value
+		s.valueExpr = s.node.valueVars[s.idxInValues]
 		s.resolved = true
 	}
 
-	return s.value, nil, nil
+	return s.value, s.valueExpr, nil
 }
 
 func (s simpleResolver) addNode(p *simpleProvider, _ int) error {

@@ -45,7 +45,7 @@ type ModuleKeyContext struct {
 	moduleKeys map[string]*moduleKey
 }
 
-func (c *ModuleKeyContext) ModuleKey(moduleName string) ModuleKey {
+func (c *ModuleKeyContext) For(moduleName string) ModuleKey {
 	return ModuleKey{c.createOrGetModuleKey(moduleName)}
 }
 

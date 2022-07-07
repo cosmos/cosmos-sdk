@@ -365,12 +365,6 @@ func (c *container) addInvoker(provider *ProviderDescriptor, key *moduleKey) err
 		return fmt.Errorf("invoker function %s should not return any outputs", provider.Location)
 	}
 
-	// make all inputs optional
-	for i, input := range provider.Inputs {
-		input.Optional = true
-		provider.Inputs[i] = input
-	}
-
 	c.invokers = append(c.invokers, invoker{
 		fn:     provider,
 		modKey: key,

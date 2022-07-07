@@ -198,7 +198,7 @@ func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.We
 
 // RandomizedParams creates randomized auth param changes for the simulator.
 func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return simulation.ParamChanges(r)
+	return []simtypes.ParamChange{}
 }
 
 // RegisterStoreDecoder registers a decoder for auth module's types

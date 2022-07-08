@@ -215,6 +215,7 @@ func provideModule(in crisisInputs) crisisOutputs {
 		feeCollectorName = authtypes.FeeCollectorName
 	}
 
+	fmt.Printf("in.Key: %v\n", in.Key)
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.Key,

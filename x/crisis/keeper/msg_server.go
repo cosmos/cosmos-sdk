@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
@@ -77,7 +78,10 @@ func (k *Keeper) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams)
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	k.SetConstantFee(ctx, req.ConstantFee)
+	if err := k.SetConstantFee(ctx, req.ConstantFee); err != nil {
+		fmt.Printf("err::::::::::::::::::::::::::::::::::: %v\n", err)
+		return nil, err
+	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
 }

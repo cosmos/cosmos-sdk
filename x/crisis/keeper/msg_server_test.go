@@ -3,29 +3,37 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
+	"github.com/cosmos/cosmos-sdk/x/crisis/testutil"
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 	"github.com/stretchr/testify/suite"
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app    *simapp.SimApp
+	// app    *simapp.SimApp
 	ctx    sdk.Context
 	keeper keeper.Keeper
 }
 
 func (s *KeeperTestSuite) SetupSuite(t *testing.T) {
-	app := simapp.Setup(t, false)
+	app, err := simtestutil.Setup(testutil.AppConfig,
+		&s.keeper,
+	)
+	s.Require().NoError(err)
+
+	// app := simapp.Setup(t, false)
+	app.Commit()
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1}})
 	ctx := app.NewContext(true, tmproto.Header{})
 
-	s.app = app
+	// s.app = app
 	s.ctx = ctx
-	s.keeper = *app.CrisisKeeper
 }
 
 func (s *KeeperTestSuite) TestMsgUpdateParams() {

@@ -40,7 +40,7 @@ func Provide(providers ...interface{}) Option {
 func Invoke(invokers ...interface{}) Option {
 	return funcOption(func(initializer *internal.ModuleInitializer) error {
 		for _, invoker := range invokers {
-			desc, err := depinject.ExtractProviderDescriptor(invoker)
+			desc, err := depinject.ExtractInvokerDescriptor(invoker)
 			if err != nil {
 				return err
 			}

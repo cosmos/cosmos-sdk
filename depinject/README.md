@@ -52,18 +52,13 @@ func NewSimApp(
 	db dbm.DB,
 	traceStore io.Writer,
 	loadLatest bool,
-	invCheckPeriod uint,
 	encodingConfig simappparams.EncodingConfig,
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
-	app := &SimApp{
-		invCheckPeriod: invCheckPeriod,
-	}
-
 	var (
+		app        = &SimApp{}
 		appBuilder *runtime.AppBuilder
-		msgServiceRouter *baseapp.MsgServiceRouter
 	)
 
 	err := depinject.Inject(AppConfig,
@@ -77,7 +72,6 @@ func NewSimApp(
 		&app.BankKeeper,
 		&app.FeeGrantKeeper,
 		&app.StakingKeeper,
-		&msgServiceRouter,
 	)
 	if err != nil {
 		panic(err)

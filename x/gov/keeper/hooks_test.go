@@ -56,7 +56,7 @@ func TestHooks(t *testing.T) {
 	govHooksReceiver := MockGovHooksReceiver{}
 
 	keeper.UnsafeSetHooks(
-		&app.GovKeeper, types.NewMultiGovHooks(&govHooksReceiver),
+		app.GovKeeper, types.NewMultiGovHooks(&govHooksReceiver),
 	)
 
 	require.False(t, govHooksReceiver.AfterProposalSubmissionValid)

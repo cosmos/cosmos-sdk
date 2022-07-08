@@ -93,16 +93,6 @@ func New(clientCtx client.Context, logger log.Logger, grpcSrv *grpc.Server) *Ser
 // non-blocking, so an external signal handler must be used.
 func (s *Server) Start(cfg config.Config) error {
 	s.mtx.Lock()
-	if cfg.Telemetry.Enabled {
-		m, err := telemetry.New(cfg.Telemetry)
-		if err != nil {
-			s.mtx.Unlock()
-			return err
-		}
-
-		s.metrics = m
-		s.registerMetrics()
-	}
 
 	tmCfg := tmrpcserver.DefaultConfig()
 	tmCfg.MaxOpenConnections = int(cfg.API.MaxOpenConnections)
@@ -116,17 +106,18 @@ func (s *Server) Start(cfg config.Config) error {
 		return err
 	}
 
+	s.registerGRPCGatewayRoutes()
 	s.listener = listener
+	s.mtx.Unlock()
+
 	s.mtx.Unlock()
 
 	if cfg.API.EnableUnsafeCORS {
 		allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
-		s.mtx.Unlock()
 		return tmrpcserver.Serve(s.listener, allowAllCORS(h), s.logger, tmCfg)
 	}
 
 	s.logger.Info("starting API server...")
-	s.mtx.Unlock()
 	return tmrpcserver.Serve(s.listener, s.Router, s.logger, tmCfg)
 }
 
@@ -135,6 +126,13 @@ func (s *Server) Close() error {
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
 	return s.listener.Close()
+}
+
+func (s *Server) SetTelemetry(m *telemetry.Metrics) {
+	s.mtx.Lock()
+	s.metrics = m
+	s.registerMetrics()
+	s.mtx.Unlock()
 }
 
 func (s *Server) SetTelemetry(m *telemetry.Metrics) {

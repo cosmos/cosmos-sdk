@@ -141,8 +141,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.accountKeeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.accountKeeper)
-	m := keeper.NewMigrator(am.accountKeeper, cfg.QueryServer())
-	pm := keeper.NewParamsMigrator(am.accountKeeper, am.legacySubspace)
+	m := keeper.NewMigrator(am.accountKeeper, cfg.QueryServer(), am.legacySubspace)
 	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
 		panic(err)
 	}
@@ -151,7 +150,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 		panic(err)
 	}
 
-	if err := cfg.RegisterMigration(types.ModuleName, 3, pm.Migrate3to4); err != nil {
+	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 3 to 4: %v", types.ModuleName, err))
 	}
 }

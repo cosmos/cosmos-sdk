@@ -10,10 +10,15 @@ import (
 
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
+	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	v2 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v2"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -22,21 +27,44 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+type mockSubspace struct {
+	ps authtypes.Params
+}
+
+func newMockSubspace(ps authtypes.Params) mockSubspace {
+	return mockSubspace{ps: ps}
+}
+
+func (ms mockSubspace) GetParamSet(ctx sdk.Context, ps authexported.ParamSet) {
+	*ps.(*authtypes.Params) = ms.ps
+}
+
 func TestMigrateVestingAccounts(t *testing.T) {
+	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
+	cdc := encCfg.Codec
+
+	storeKey := sdk.NewKVStoreKey(v2.ModuleName)
+	tKey := sdk.NewTransientStoreKey("transient_test")
+	ctx := testutil.DefaultContext(storeKey, tKey)
+	store := ctx.KVStore(storeKey)
+
 	var (
 		accountKeeper keeper.AccountKeeper
 		bankKeeper    bankkeeper.Keeper
 		stakingKeeper *stakingkeeper.Keeper
 	)
 	app, err := simtestutil.Setup(
-		testutil.AppConfig,
+		authtestutil.AppConfig,
 		&accountKeeper,
 		&bankKeeper,
 		&stakingKeeper,
 	)
 	require.NoError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
+	legacySubspace := newMockSubspace(authtypes.DefaultParams())
+	require.NoError(t, v2.Migrate(ctx, store, legacySubspace, cdc))
+
+	ctx = app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
 	stakingKeeper.SetParams(ctx, stakingtypes.DefaultParams())
 
 	testCases := []struct {
@@ -582,7 +610,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 			require.True(t, ok)
 			require.NoError(t, tc.garbageFunc(ctx, vestingAccount, accountKeeper))
 
-			m := keeper.NewMigrator(accountKeeper, app.GRPCQueryRouter())
+			m := keeper.NewMigrator(accountKeeper, app.GRPCQueryRouter(), legacySubspace)
 			require.NoError(t, m.Migrate1to2(ctx))
 
 			var expVested sdk.Coins

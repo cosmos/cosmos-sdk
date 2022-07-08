@@ -15,27 +15,14 @@ import (
 
 // Migrator is a struct for handling in-place store migrations.
 type Migrator struct {
-	keeper      AccountKeeper
-	queryServer grpc.Server
-}
-
-// ParamsMigrator is a struct for handling in-place state migrations.
-type ParamsMigrator struct {
 	keeper         AccountKeeper
+	queryServer    grpc.Server
 	legacySubspace exported.Subspace
 }
 
 // NewMigrator returns a new Migrator.
-func NewMigrator(keeper AccountKeeper, queryServer grpc.Server) Migrator {
-	return Migrator{keeper: keeper, queryServer: queryServer}
-}
-
-// NewParamsMigrator returns a new Params Migrator.
-func NewParamsMigrator(keeper AccountKeeper, ss exported.Subspace) ParamsMigrator {
-	return ParamsMigrator{
-		keeper:         keeper,
-		legacySubspace: ss,
-	}
+func NewMigrator(keeper AccountKeeper, queryServer grpc.Server, ss exported.Subspace) Migrator {
+	return Migrator{keeper: keeper, queryServer: queryServer, legacySubspace: ss}
 }
 
 // Migrate1to2 migrates from version 1 to 2.
@@ -70,8 +57,8 @@ func (m Migrator) Migrate2to3(ctx sdk.Context) error {
 // version 4. Specifically, it takes the parameters that are currently stored
 // and managed by the x/params modules and stores them directly into the x/auth
 // module state.
-func (pm ParamsMigrator) Migrate3to4(ctx sdk.Context) error {
-	return v2.Migrate(ctx, ctx.KVStore(pm.keeper.storeKey), pm.legacySubspace, pm.keeper.cdc)
+func (m Migrator) Migrate3to4(ctx sdk.Context) error {
+	return v2.Migrate(ctx, ctx.KVStore(m.keeper.storeKey), m.legacySubspace, m.keeper.cdc)
 }
 
 // V45_SetAccount implements V45_SetAccount

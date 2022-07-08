@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -453,6 +454,49 @@ func TestInMemoryLanguage(t *testing.T) {
 	_, _, err := kb.NewMnemonic("something", Japanese, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
 	require.Error(t, err)
 	require.Equal(t, "unsupported language: only english is supported", err.Error())
+}
+
+func TestInMemoryWithKeyring(t *testing.T) {
+	priv := cryptotypes.PrivKey(secp256k1.GenPrivKey())
+	pub := priv.PubKey()
+
+	cdc := getCodec()
+	_, err := NewLocalRecord("test record", priv, pub)
+
+	multi := multisig.NewLegacyAminoPubKey(
+		1, []cryptotypes.PubKey{
+			pub,
+		},
+	)
+
+	appName := "test-app"
+
+	legacyMultiInfo, err := NewLegacyMultiInfo(appName, multi)
+	require.NoError(t, err)
+	serializedLegacyMultiInfo := MarshalInfo(legacyMultiInfo)
+
+	kb := NewInMemoryWithKeyring(keyring.NewArrayKeyring([]keyring.Item{
+		{
+			Key:         appName + ".info",
+			Data:        serializedLegacyMultiInfo,
+			Description: "test description",
+		},
+	}), cdc)
+
+	t.Run("key exists", func(t *testing.T) {
+		_, err := kb.Key(appName)
+		require.NoError(t, err)
+	})
+
+	t.Run("key deleted", func(t *testing.T) {
+		err := kb.Delete(appName)
+		require.NoError(t, err)
+
+		t.Run("key is gone", func(t *testing.T) {
+			_, err := kb.Key(appName)
+			require.Error(t, err)
+		})
+	})
 }
 
 func TestInMemoryCreateMultisig(t *testing.T) {

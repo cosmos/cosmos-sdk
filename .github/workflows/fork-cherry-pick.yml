@@ -31,7 +31,7 @@ jobs:
       - name: Create PR from fork pr-patch to cosmos/main
         uses: tgymnich/fork-sync@v1.4
         with:
-          token: ${{ secrets.PERSONAL_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           owner: cosmos
           base: master
           head: pr-patch

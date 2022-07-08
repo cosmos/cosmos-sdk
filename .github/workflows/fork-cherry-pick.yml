@@ -28,5 +28,10 @@ jobs:
             git checkout -b pr-patch upstream/main    # Create new branch based on main branch
             git cherry-pick ${{github.event.pull_request.head.sha}}  # Cherry pick the latest commit of PR
             git push -u origin pr-patch               # Push your changes to the remote branch
-            git checkout pr-patch                     # Now, we have upstream = cosmos/main, head = patch branch.
-            hub pull-request -b -h #Create PR for cherry-picked, latest branch on main
+      - name: Create PR from fork pr-patch to cosmos/main
+        uses: tgymnich/fork-sync@v1.4
+        with:
+          token: ${{ secrets.PERSONAL_TOKEN }}
+          owner: cosmos
+          base: master
+          head: pr-patch

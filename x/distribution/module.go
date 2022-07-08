@@ -6,13 +6,12 @@ import (
 	"fmt"
 	"math/rand"
 
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-
+	modulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
+	"cosmossdk.io/core/appmodule"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"cosmossdk.io/core/appmodule"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -23,15 +22,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	modulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // ConsensusVersion defines the current x/distribution module consensus version.

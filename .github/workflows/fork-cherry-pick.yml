@@ -29,7 +29,7 @@ jobs:
             git cherry-pick ${{github.event.pull_request.head.sha}}  # Cherry pick the latest commit of PR
             git push -u origin pr-patch               # Push your changes to the remote branch
       - name: Create PR from fork pr-patch to cosmos/main
-        uses: tgymnich/fork-sync@v1.4
+        uses: tgymnich/fork-sync@v1.2.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           owner: cosmos

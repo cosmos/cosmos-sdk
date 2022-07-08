@@ -27,6 +27,10 @@ type Keeper struct {
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
 
+func (k *Keeper) GetAuthority() string {
+	return k.authority
+}
+
 // NewKeeper creates a new Keeper object
 func NewKeeper(
 	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace,

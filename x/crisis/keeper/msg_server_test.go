@@ -1,13 +1,36 @@
 package keeper_test
 
-import "github.com/cosmos/cosmos-sdk/x/mint/types"
+import (
+	"testing"
+
+	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
+	"github.com/cosmos/cosmos-sdk/x/crisis/types"
+	"github.com/stretchr/testify/suite"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+)
+
+type KeeperTestSuite struct {
+	suite.Suite
+
+	app    *simapp.SimApp
+	ctx    sdk.Context
+	keeper keeper.Keeper
+}
+
+func (s *KeeperTestSuite) SetupSuite(t *testing.T) {
+	app := simapp.Setup(t, false)
+	ctx := app.NewContext(true, tmproto.Header{})
+
+	s.app = app
+	s.ctx = ctx
+	s.keeper = *app.CrisisKeeper
+}
 
 func (s *KeeperTestSuite) TestMsgUpdateParams() {
 	// default params
-	communityTax := sdk.NewDecWithPrec(2, 2)        // 2%
-	baseProposerReward := sdk.NewDecWithPrec(1, 2)  // 1%
-	bonusProposerReward := sdk.NewDecWithPrec(4, 2) // 4%
-	withdrawAddrEnabled := true
+	constantFee := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)) // 4%
 
 	testCases := []struct {
 		name      string
@@ -18,111 +41,25 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 		{
 			name: "invalid authority",
 			input: &types.MsgUpdateParams{
-				Authority: "invalid",
-				Params: types.Params{
-					CommunityTax:        sdk.NewDecWithPrec(2, 0),
-					BaseProposerReward:  baseProposerReward,
-					BonusProposerReward: bonusProposerReward,
-					WithdrawAddrEnabled: withdrawAddrEnabled,
-				},
+				Authority:   "invalid",
+				ConstantFee: constantFee,
 			},
 			expErr:    true,
 			expErrMsg: "invalid authority",
 		},
 		{
-			name: "community tax > 1",
+			name: "invalid constant fee",
 			input: &types.MsgUpdateParams{
-				Authority: s.distrKeeper.GetAuthority(),
-				Params: types.Params{
-					CommunityTax:        sdk.NewDecWithPrec(2, 0),
-					BaseProposerReward:  baseProposerReward,
-					BonusProposerReward: bonusProposerReward,
-					WithdrawAddrEnabled: withdrawAddrEnabled,
-				},
+				Authority:   s.keeper.GetAuthority(),
+				ConstantFee: sdk.Coin{},
 			},
-			expErr:    true,
-			expErrMsg: "community tax should be non-negative and less than one",
-		},
-		{
-			name: "negative community tax",
-			input: &types.MsgUpdateParams{
-				Authority: s.distrKeeper.GetAuthority(),
-				Params: types.Params{
-					CommunityTax:        sdk.NewDecWithPrec(-2, 1),
-					BaseProposerReward:  baseProposerReward,
-					BonusProposerReward: bonusProposerReward,
-					WithdrawAddrEnabled: withdrawAddrEnabled,
-				},
-			},
-			expErr:    true,
-			expErrMsg: "community tax should be non-negative and less than one",
-		},
-		{
-			name: "base proposer reward > 1",
-			input: &types.MsgUpdateParams{
-				Authority: s.distrKeeper.GetAuthority(),
-				Params: types.Params{
-					CommunityTax:        communityTax,
-					BaseProposerReward:  sdk.NewDecWithPrec(2, 0),
-					BonusProposerReward: bonusProposerReward,
-					WithdrawAddrEnabled: withdrawAddrEnabled,
-				},
-			},
-			expErr:    true,
-			expErrMsg: "sum of base, bonus proposer rewards, and community tax cannot be greater than one",
-		},
-		{
-			name: "negative base proposer reward",
-			input: &types.MsgUpdateParams{
-				Authority: s.distrKeeper.GetAuthority(),
-				Params: types.Params{
-					CommunityTax:        communityTax,
-					BaseProposerReward:  sdk.NewDecWithPrec(-2, 0),
-					BonusProposerReward: bonusProposerReward,
-					WithdrawAddrEnabled: withdrawAddrEnabled,
-				},
-			},
-			expErr:    true,
-			expErrMsg: "base proposer reward should be positive",
-		},
-		{
-			name: "bonus proposer reward > 1",
-			input: &types.MsgUpdateParams{
-				Authority: s.distrKeeper.GetAuthority(),
-				Params: types.Params{
-					CommunityTax:        communityTax,
-					BaseProposerReward:  baseProposerReward,
-					BonusProposerReward: sdk.NewDecWithPrec(2, 0),
-					WithdrawAddrEnabled: withdrawAddrEnabled,
-				},
-			},
-			expErr:    true,
-			expErrMsg: "sum of base, bonus proposer rewards, and community tax cannot be greater than one",
-		},
-		{
-			name: "negative bonus proposer reward",
-			input: &types.MsgUpdateParams{
-				Authority: s.distrKeeper.GetAuthority(),
-				Params: types.Params{
-					CommunityTax:        communityTax,
-					BaseProposerReward:  baseProposerReward,
-					BonusProposerReward: sdk.NewDecWithPrec(-2, 0),
-					WithdrawAddrEnabled: withdrawAddrEnabled,
-				},
-			},
-			expErr:    true,
-			expErrMsg: "bonus proposer reward should be positive",
+			expErr: true,
 		},
 		{
 			name: "all good",
 			input: &types.MsgUpdateParams{
-				Authority: s.distrKeeper.GetAuthority(),
-				Params: types.Params{
-					CommunityTax:        communityTax,
-					BaseProposerReward:  baseProposerReward,
-					BonusProposerReward: bonusProposerReward,
-					WithdrawAddrEnabled: withdrawAddrEnabled,
-				},
+				Authority:   s.keeper.GetAuthority(),
+				ConstantFee: constantFee,
 			},
 			expErr: false,
 		},
@@ -131,7 +68,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			_, err := s.msgServer.UpdateParams(s.ctx, tc.input)
+			_, err := s.keeper.UpdateParams(s.ctx, tc.input)
 
 			if tc.expErr {
 				s.Require().Error(err)
@@ -141,4 +78,8 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 			}
 		})
 	}
+}
+
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
 }

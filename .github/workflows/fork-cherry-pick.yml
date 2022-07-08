@@ -17,6 +17,7 @@ jobs:
         with:
           fetch-depth: 1
       - name: Auto PR from fork main
+        shell: bash
         env: 
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

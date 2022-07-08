@@ -6,6 +6,7 @@ requiring the app developer to understand the details of inter-module dependenci
 ## 1. Create a module config protobuf message
 
 The first step in creating a module that works with `appconfig`, is to create a protobuf message for the module configuration. The best practices for defining the module configuration message are:
+
 * Use a dedicated protobuf package for the module configuration message  instead of placing it in the API protobuf package. For example, the module configuration for bank would go in `cosmos.bank.module.v1` instead of just `cosmos.bank.v1`. This decouples the state machine version from the API version.
 * The module configuration message is usually called simply `Module`, ex. `cosmos.bank.module.v1.Module`.
 * Create a new protobuf package and configuration message for each state machine breaking version of the module, ex. `cosmos.bank.module.v2.Module`, etc.
@@ -33,6 +34,7 @@ message Module {
 ```
 
 ## 2. Register module depinject providers and invokers
+
 Once we have a module config object, we need to register depinject providers and invokers for the module using the `cosmossdk.io/core/appmodule` package.
 
 At the most basic level, we must define an `init` function in the package listed as the `go_import` in the module descriptor. This `init` function must call `appmodule.Register` with an empty instance of the config object and some options for initializing the module, ex:
@@ -66,6 +68,7 @@ func init() {
 ### `depinject` Types
 
 `depinject` constructor functions support these classes of input and output parameter types:
+
 * regular golang types (with special treatment of interface types as input parameters)
 * structs with `depinject.In` and `depinject.Out` embedded
 * `depinject.OnePerModuleType`s
@@ -188,6 +191,7 @@ we'll call `StakingHooksWrapper`. Now, if the staking module directly depended o
 the staking module can define an invoker which depends on `map[string]StakingHooksWrapper` and the staking keeper
 (which was provided by the staking module already in a separate provided). In this way `depinject` will be able to
 satisfy this dependency graph which allows staking and slashing to depend on each other in this order:
+
 * provide staking keeper -> slashing keeper
 * provide slashing keeper wrapped as `StakingHooksWrapper` 
 * get `map[string]StakingHooksWrapper` and the staking keeper and wire them together
@@ -195,8 +199,11 @@ satisfy this dependency graph which allows staking and slashing to depend on eac
 ## 3. Testing and Debugging The Module
 
 In order to test and debug the module configuration, we need to build an app config, generally defined in a YAML file.
-This configuration should be passed first to `appconfig.LoadYAML` to get an `depinject.Config` instance. Then the
-`depinject.Config` can be passed to `depinject.Inject` and we can try to resolve dependencies in the app config. Ex:
+This configuration should be passed first to `appconfig.LoadYAML` to get an `depinject.Config` instance.Then the
+`depinject.Config` can be passed to `depinject.Inject` and we can try to resolve dependencies in the app config.
+Alternatively, the `depinject.Config` can be created via [pure Go code](https://github.com/cosmos/cosmos-sdk/blob/61dc023/simapp/app_config.go).
+
+Ex:
 
 ```go
 //go:embed app.yaml

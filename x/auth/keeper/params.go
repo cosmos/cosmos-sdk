@@ -7,7 +7,6 @@ import (
 
 // SetParams sets the auth module's parameters.
 func (ak AccountKeeper) SetParams(ctx sdk.Context, params types.Params) error {
-	// ak.paramSubspace.SetParamSet(ctx, &params)
 	if err := params.Validate(); err != nil {
 		return err
 	}

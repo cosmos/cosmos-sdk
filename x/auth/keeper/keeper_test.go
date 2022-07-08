@@ -131,7 +131,8 @@ func (suite *KeeperTestSuite) TestGetSetParams() {
 	ctx := suite.ctx
 	params := types.DefaultParams()
 
-	suite.accountKeeper.SetParams(ctx, params)
+	err := suite.accountKeeper.SetParams(ctx, params)
+	suite.Require().NoError(err)
 
 	actualParams := suite.accountKeeper.GetParams(ctx)
 	suite.Require().Equal(params, actualParams)

@@ -86,7 +86,9 @@ func TestMigrateVestingAccounts(t *testing.T) {
 
 				ctx = ctx.WithBlockTime(ctx.BlockTime().AddDate(1, 0, 0))
 
-				accountKeeper.SetParams(ctx, authtypes.DefaultParams())
+				err := accountKeeper.SetParams(ctx, authtypes.DefaultParams())
+				require.NoError(t, err)
+
 				accountKeeper.SetAccount(ctx, delayedAccount)
 
 				_, err = stakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(100), stakingtypes.Unbonded, validator, true)
@@ -590,7 +592,9 @@ func TestMigrateVestingAccounts(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 
-			accountKeeper.SetParams(ctx, authtypes.DefaultParams())
+			err := accountKeeper.SetParams(ctx, authtypes.DefaultParams())
+			require.NoError(t, err)
+
 			addrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 1, sdk.NewInt(tc.tokenAmount))
 			delegatorAddr := addrs[0]
 

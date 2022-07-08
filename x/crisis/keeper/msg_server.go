@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -74,7 +73,7 @@ func (k *Keeper) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams)
 	}
 
 	if !req.ConstantFee.IsValid() {
-		return nil, errors.Wrapf(sdkerrors.ErrInvalidCoins, "invalid costant fee")
+		return nil, errors.ErrInvalidCoins.Wrap("invalid costant fee")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)

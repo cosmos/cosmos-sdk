@@ -93,6 +93,9 @@ type CommitMultiStore interface {
 	CacheMultiStore() CacheMultiStore
 	// Defines the minimum version number that can be saved by this store.
 	SetInitialVersion(uint64) error
+	// Set an inter-block (persistent) cache that maintains a mapping from
+	// StoreKeys to CommitKVStores.
+	SetInterBlockCache(MultiStorePersistentCache)
 }
 
 // CacheMultiStore defines a branch of the root state which can be written back to the source store.

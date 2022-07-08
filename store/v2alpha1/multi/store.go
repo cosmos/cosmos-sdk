@@ -680,6 +680,14 @@ func (s *Store) GetVersion(version int64) (types.BasicMultiStore, error) {
 	return s.getView(version)
 }
 
+// SetInterBlockCache implements CommitMultiStore.
+// SetInterBlockCache sets the Store's internal inter-block (persistent) cache.
+// When this is defined, all CommitKVStores will be wrapped with their respective
+// inter-block cache.
+func (rs *Store) SetInterBlockCache(c types.MultiStorePersistentCache) {
+	rs.PersistentCache = c
+}
+
 // CacheMultiStore implements BasicMultiStore.
 func (s *Store) CacheMultiStore() types.CacheMultiStore {
 	return &cacheStore{

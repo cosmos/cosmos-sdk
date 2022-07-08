@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -50,6 +51,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	_ "net/http/pprof"
 )
 
 // package-wide network lock to only allow one test network at a time
@@ -260,6 +263,10 @@ func NewCLILogger(cmd *cobra.Command) CLILogger {
 
 // New creates a new Network for integration tests or in-process testnets run via the CLI
 func New(l Logger, baseDir string, cfg Config) (*Network, error) {
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
+
 	// only one caller/test can create and use a network at a time
 	l.Log("acquiring test network lock")
 	lock.Lock()

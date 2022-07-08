@@ -100,7 +100,7 @@ jobs:
         if: env.GIT_DIFF
       - name: test & coverage report creation
         run: |
-          cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='legacy_simapp norace ledger test_ledger_mock'
+          cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 15m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='legacy_simapp norace ledger test_ledger_mock'
         if: env.GIT_DIFF
       - uses: actions/upload-artifact@v3
         with:
@@ -108,8 +108,7 @@ jobs:
           path: ./${{ matrix.part }}profile.out
 
   sims-notify-success:
-    needs:
-      [tests]
+    needs: [tests]
     runs-on: ubuntu-latest
     if: ${{ success() }}
     steps:
@@ -135,8 +134,7 @@ jobs:
           SLACK_FOOTER: ""
 
   sims-notify-failure:
-    needs:
-      [tests]
+    needs: [tests]
     runs-on: ubuntu-latest
     if: ${{ failure() }}
     steps:

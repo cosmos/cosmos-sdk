@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/depinject"
+	"cosmossdk.io/depinject"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 

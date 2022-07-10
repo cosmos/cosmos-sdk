@@ -8,7 +8,7 @@ import (
 	"github.com/rakyll/statik/fs"
 )
 
-// RegisterSwaggerAPI - a common function which registers swagger route with API Server
+// RegisterSwaggerAPI provides a common function which registers swagger route with API Server
 func RegisterSwaggerAPI(_ client.Context, rtr *mux.Router, swaggerEnabled bool) {
 	if swaggerEnabled {
 		statikFS, err := fs.New()

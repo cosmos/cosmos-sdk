@@ -13,12 +13,12 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
@@ -53,29 +53,46 @@ var DefaultConsensusParams = &tmproto.ConsensusParams{
 	},
 }
 
-// Setup initializes a new runtime.App. A Nop logger is set in runtime.App.
-// appConfig usually load from a `app.yaml` with `appconfig.LoadYAML`, defines the application configuration.
-// extraOutputs defines the extra outputs to be assigned by the dependency injector (depinject).
+// createDefaultRandomValidatorSet creates a validator set with one random validator
+func createDefaultRandomValidatorSet() (*tmtypes.ValidatorSet, error) {
+	privVal := mock.NewPV()
+	pubKey, err := privVal.GetPubKey(context.TODO())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get pub key: %w", err)
+	}
+
+	// create validator set with single validator
+	validator := tmtypes.NewValidator(pubKey, 1)
+
+	return tmtypes.NewValidatorSet([]*tmtypes.Validator{validator}), nil
+}
+
+// Setup initializes a new runtime.App and can inject values into extraOutputs.
+// It uses SetupWithConfiguration under the hood.
 func Setup(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.App, error) {
-	return SetupWithBaseAppOption(appConfig, nil, false, extraOutputs...)
+	return SetupWithConfiguration(appConfig, createDefaultRandomValidatorSet, nil, false, extraOutputs...)
 }
 
-// SetupAtGenesis initializes a new runtime.App at genesis. A Nop logger is set in runtime.App.
-// appConfig usually load from a `app.yaml` with `appconfig.LoadYAML`, defines the application configuration.
-// extraOutputs defines the extra outputs to be assigned by the dependency injector (depinject).
+// SetupAtGenesis initializes a new runtime.App at genesis and can inject values into extraOutputs.
+// It uses SetupWithConfiguration under the hood.
 func SetupAtGenesis(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.App, error) {
-	return SetupWithBaseAppOption(appConfig, nil, true, extraOutputs...)
+	return SetupWithConfiguration(appConfig, createDefaultRandomValidatorSet, nil, true, extraOutputs...)
 }
 
-// SetupWithBaseAppOption initializes a new runtime.App. A Nop logger is set in runtime.App.
+// SetupWithBaseAppOption initializes a new runtime.App and can inject values into extraOutputs.
+// With specific baseApp options. It uses SetupWithConfiguration under the hood.
+func SetupWithBaseAppOption(appConfig depinject.Config, baseAppOption runtime.BaseAppOption, extraOutputs ...interface{}) (*runtime.App, error) {
+	return SetupWithConfiguration(appConfig, createDefaultRandomValidatorSet, baseAppOption, false, extraOutputs...)
+}
+
+// SetupWithConfiguration initializes a new runtime.App. A Nop logger is set in runtime.App.
 // appConfig usually load from a `app.yaml` with `appconfig.LoadYAML`, defines the application configuration.
+// validatorSet defines a custom validator set to be validating the app.
 // baseAppOption defines the additional operations that must be run on baseapp before app start.
-// extraOutputs defines the extra outputs to be assigned by the dependency injector (depinject).
 // genesis defines if the app started should already have produced block or not.
-func SetupWithBaseAppOption(appConfig depinject.Config, baseAppOption runtime.BaseAppOption, genesis bool, extraOutputs ...interface{}) (*runtime.App, error) {
-	//
-	// create app
-	//
+// extraOutputs defines the extra outputs to be assigned by the dependency injector (depinject).
+func SetupWithConfiguration(appConfig depinject.Config, validatorSet func() (*tmtypes.ValidatorSet, error), baseAppOption runtime.BaseAppOption, genesis bool, extraOutputs ...interface{}) (*runtime.App, error) {
+	// create the app with depinject
 	var (
 		app        *runtime.App
 		appBuilder *runtime.AppBuilder
@@ -98,18 +115,11 @@ func SetupWithBaseAppOption(appConfig depinject.Config, baseAppOption runtime.Ba
 		return nil, fmt.Errorf("failed to load app: %w", err)
 	}
 
-	//
-	// create genesis and validator
-	//
-	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey(context.TODO())
+	// create validator set
+	valSet, err := validatorSet()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get pub key: %w", err)
+		return nil, fmt.Errorf("failed to create validator set")
 	}
-
-	// create validator set with single validator
-	validator := tmtypes.NewValidator(pubKey, 1)
-	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
@@ -235,7 +245,12 @@ func (ao EmptyAppOptions) Get(o string) interface{} {
 type AppOptionsMap map[string]interface{}
 
 func (m AppOptionsMap) Get(key string) interface{} {
-	return m[key]
+	v, ok := m[key]
+	if !ok {
+		return interface{}(nil)
+	}
+
+	return v
 }
 
 func NewAppOptionsWithFlagHome(homePath string) servertypes.AppOptions {

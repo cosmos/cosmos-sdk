@@ -8,25 +8,23 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/nft"
+	nftmodule "github.com/cosmos/cosmos-sdk/x/nft/module"
 	"github.com/cosmos/cosmos-sdk/x/nft/simulation"
-	"github.com/cosmos/cosmos-sdk/x/nft/testutil"
 )
 
 func TestRandomizedGenState(t *testing.T) {
-	var cdc codec.Codec
-	depinject.Inject(testutil.AppConfig, &cdc)
+	encCfg := moduletestutil.MakeTestEncodingConfig(nftmodule.AppModuleBasic{})
 
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
 	simState := module.SimulationState{
 		AppParams:    make(simtypes.AppParams),
-		Cdc:          cdc,
+		Cdc:          encCfg.Codec,
 		Rand:         r,
 		NumBonded:    3,
 		Accounts:     simtypes.RandomAccounts(r, 3),

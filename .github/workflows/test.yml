@@ -291,7 +291,6 @@ jobs:
             **/**.go
             go.mod
             go.sum
-        if: env.GIT_DIFF
       - name: test-sim-nondeterminism
         run: |
           make test-sim-nondeterminism

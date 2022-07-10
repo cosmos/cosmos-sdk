@@ -129,7 +129,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 	logger, _ := log.NewDefaultLogger("plain", "info", false)
 	db := dbm.NewMemDB()
 	encCfg := simapp.MakeTestEncodingConfig()
-	app := simapp.NewSimApp(logger, db, nil, true, 0, encCfg, simtestutil.NewAppOptionsWithFlagHome(tempDir))
+	app := simapp.NewSimApp(logger, db, nil, true, encCfg, simtestutil.NewAppOptionsWithFlagHome(tempDir))
 
 	genesisState := simapp.GenesisStateWithSingleValidator(t, app)
 	stateBytes, err := tmjson.MarshalIndent(genesisState, "", " ")
@@ -160,13 +160,13 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 
 			var simApp *simapp.SimApp
 			if height != -1 {
-				simApp = simapp.NewSimApp(logger, db, nil, false, 0, encCfg, appOptions)
+				simApp = simapp.NewSimApp(logger, db, nil, false, encCfg, appOptions)
 
 				if err := simApp.LoadHeight(height); err != nil {
 					return types.ExportedApp{}, err
 				}
 			} else {
-				simApp = simapp.NewSimApp(logger, db, nil, true, 0, encCfg, appOptions)
+				simApp = simapp.NewSimApp(logger, db, nil, true, encCfg, appOptions)
 			}
 
 			return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)

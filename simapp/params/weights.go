@@ -7,15 +7,10 @@ const (
 	DefaultWeightMsgDeposit                   int = 100
 	DefaultWeightMsgVote                      int = 67
 	DefaultWeightMsgVoteWeighted              int = 33
-	DefaultWeightMsgUnjail                    int = 100
 	DefaultWeightMsgCreateValidator           int = 100
 	DefaultWeightMsgEditValidator             int = 5
 	DefaultWeightMsgDelegate                  int = 100
 	DefaultWeightMsgUndelegate                int = 100
 	DefaultWeightMsgBeginRedelegate           int = 100
 	DefaultWeightMsgCancelUnbondingDelegation int = 100
-
-	// feegrant
-	DefaultWeightGrantAllowance  int = 100
-	DefaultWeightRevokeAllowance int = 100
 )

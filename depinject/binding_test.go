@@ -10,7 +10,7 @@ import (
 	"github.com/regen-network/gocuke"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/cosmos/cosmos-sdk/depinject"
+	"cosmossdk.io/depinject"
 )
 
 func TestBindInterface(t *testing.T) {
@@ -25,9 +25,11 @@ type Duck interface {
 	quack()
 }
 
-type Mallard struct{}
-type Canvasback struct{}
-type Marbled struct{}
+type (
+	Mallard    struct{}
+	Canvasback struct{}
+	Marbled    struct{}
+)
 
 func (duck Mallard) quack()    {}
 func (duck Canvasback) quack() {}
@@ -118,7 +120,7 @@ func (s *bindingSuite) ThereIsNoError() {
 }
 
 func fullTypeName(typeName string) string {
-	return fmt.Sprintf("github.com/cosmos/cosmos-sdk/depinject_test/depinject_test.%s", typeName)
+	return fmt.Sprintf("cosmossdk.io/depinject_test/depinject_test.%s", typeName)
 }
 
 func (s *bindingSuite) ThereIsAGlobalBindingForA(preferredType string, interfaceType string) {

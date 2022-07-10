@@ -12,9 +12,9 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"golang.org/x/exp/maps"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"

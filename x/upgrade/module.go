@@ -3,6 +3,7 @@ package upgrade
 import (
 	"context"
 	"encoding/json"
+
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -11,11 +12,11 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"

@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
 func init() {
@@ -20,7 +19,7 @@ var (
 	// Version represents Cosmovisor version value. Overwritten during build
 	Version = "1.1.0"
 	// OutputFlag defines the output format flag
-	OutputFlag = tmcli.OutputFlag
+	OutputFlag = "output"
 )
 
 var versionCmd = &cobra.Command{

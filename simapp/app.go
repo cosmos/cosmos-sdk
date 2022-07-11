@@ -322,7 +322,7 @@ func NewSimApp(
 	// Register the proposal types
 	// Deprecated: Avoid adding new handlers, instead use the new proposal flow
 	// by granting the governance module the right to execute the message.
-	// See: https://docs.cosmos.network/main/modules/gov#proposal-messages
+	// See: https://github.com/cosmos/cosmos-sdk/blob/release/v0.46.x/x/gov/spec/01_concepts.md#proposal-messages
 	govRouter := govv1beta1.NewRouter()
 	govConfig := govkeeper.DefaultConfig()
 	/*

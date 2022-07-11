@@ -19,6 +19,9 @@ const (
 )
 
 var (
+	// ParamsKey is the prefix for params key
+	ParamsKey = []byte{0x00}
+
 	// AddressStoreKeyPrefix prefix for account-by-address store
 	AddressStoreKeyPrefix = []byte{0x01}
 

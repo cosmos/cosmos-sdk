@@ -7,9 +7,9 @@ import (
 	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/auth/simulation"

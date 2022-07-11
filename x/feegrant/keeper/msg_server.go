@@ -69,6 +69,7 @@ func (k msgServer) RevokeAllowance(goCtx context.Context, msg *feegrant.MsgRevok
 		return nil, err
 	}
 
+	println("revokeFeeAllowance22222", granter.String(), grantee.String())
 	err = k.Keeper.revokeAllowance(ctx, granter, grantee)
 	if err != nil {
 		return nil, err

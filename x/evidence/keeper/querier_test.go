@@ -3,8 +3,8 @@ package keeper_test
 import (
 	"strings"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"

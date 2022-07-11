@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -70,6 +71,8 @@ func SimulateMsgGrantAllowance(cdc *codec.ProtoCodec, ak feegrant.AccountKeeper,
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		println(fmt.Sprintf("%p", k))
+
 		granter, _ := simtypes.RandomAcc(r, accs)
 		grantee, _ := simtypes.RandomAcc(r, accs)
 		if grantee.Address.String() == granter.Address.String() {
@@ -100,7 +103,7 @@ func SimulateMsgGrantAllowance(cdc *codec.ProtoCodec, ak feegrant.AccountKeeper,
 			R:               r,
 			App:             app,
 			TxGen:           tx.NewTxConfig(cdc, tx.DefaultSignModes),
-			Cdc:             nil,
+			Cdc:             cdc,
 			Msg:             msg,
 			MsgType:         TypeMsgGrantAllowance,
 			Context:         ctx,
@@ -111,7 +114,17 @@ func SimulateMsgGrantAllowance(cdc *codec.ProtoCodec, ak feegrant.AccountKeeper,
 			CoinsSpentInMsg: spendableCoins,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		asd, efg, hij := simulation.GenAndDeliverTxWithRandFees(txCtx)
+
+		k.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool {
+			granter := sdk.MustAccAddressFromBech32(grant.Granter)
+			grantee := sdk.MustAccAddressFromBech32(grant.Grantee)
+			println("ACAAA grantee: ", grantee.String(), " granter: ", granter.String())
+			return true
+		})
+
+		return asd, efg, hij
+
 	}
 }
 
@@ -120,6 +133,7 @@ func SimulateMsgRevokeAllowance(cdc *codec.ProtoCodec, ak feegrant.AccountKeeper
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		println(fmt.Sprintf("%p", k))
 		hasGrant := false
 		var granterAddr sdk.AccAddress
 		var granteeAddr sdk.AccAddress
@@ -128,6 +142,7 @@ func SimulateMsgRevokeAllowance(cdc *codec.ProtoCodec, ak feegrant.AccountKeeper
 			grantee := sdk.MustAccAddressFromBech32(grant.Grantee)
 			granterAddr = granter
 			granteeAddr = grantee
+			println("grantee: ", grantee.String(), " granter: ", granter.String())
 			hasGrant = true
 			return true
 		})
@@ -150,7 +165,7 @@ func SimulateMsgRevokeAllowance(cdc *codec.ProtoCodec, ak feegrant.AccountKeeper
 			R:               r,
 			App:             app,
 			TxGen:           tx.NewTxConfig(cdc, tx.DefaultSignModes),
-			Cdc:             nil,
+			Cdc:             cdc,
 			Msg:             &msg,
 			MsgType:         TypeMsgRevokeAllowance,
 			Context:         ctx,

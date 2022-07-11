@@ -39,9 +39,13 @@ type SimTestSuite struct {
 
 func (suite *SimTestSuite) SetupTest() {
 	key := sdk.NewKVStoreKey(feegrant.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(suite.T(), key, sdk.NewTransientStoreKey("transient_test"))
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
+	ctrl := gomock.NewController(suite.T())
+	suite.accountKeeper = feegranttestutil.NewMockAccountKeeper(ctrl)
+	suite.bankKeeper = feegranttestutil.NewMockBankKeeper(ctrl)
+
+	testCtx := testutil.DefaultContextWithDB(suite.T(), key, sdk.NewTransientStoreKey("transient_test"))
 	suite.baseApp = baseapp.NewBaseApp(
 		"feegrant",
 		log.NewNopLogger(),
@@ -52,12 +56,11 @@ func (suite *SimTestSuite) SetupTest() {
 	suite.baseApp.SetCMS(testCtx.CMS)
 	suite.baseApp.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
 
-	ctrl := gomock.NewController(suite.T())
-	suite.accountKeeper = feegranttestutil.NewMockAccountKeeper(ctrl)
-	suite.bankKeeper = feegranttestutil.NewMockBankKeeper(ctrl)
-
-	suite.feegrantKeeper = keeper.NewKeeper(suite.encCfg.Codec, key, suite.accountKeeper)
 	suite.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
+	suite.feegrantKeeper = keeper.NewKeeper(suite.encCfg.Codec, key, suite.accountKeeper)
+
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
+	feegrant.RegisterQueryServer(queryHelper, suite.feegrantKeeper)
 
 	cfg := moduletypes.NewConfigurator(suite.encCfg.Codec, suite.baseApp.MsgServiceRouter(), suite.baseApp.GRPCQueryRouter())
 
@@ -92,6 +95,14 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		suite.bankKeeper, suite.feegrantKeeper,
 	)
 
+	// begin new block
+	suite.baseApp.BeginBlock(abci.RequestBeginBlock{
+		Header: tmproto.Header{
+			Height:  suite.baseApp.LastBlockHeight() + 1,
+			AppHash: suite.baseApp.LastCommitID().Hash,
+		},
+	})
+
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accs := suite.getTestingAccounts(r, 3)
@@ -116,6 +127,8 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	for i, w := range weightedOps {
 		operationMsg, _, err := w.Op()(r, suite.baseApp, suite.ctx, accs, suite.ctx.ChainID())
 		require.NoError(err)
+
+		println("operationMsg: ", operationMsg.Comment)
 
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests

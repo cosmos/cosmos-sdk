@@ -5,10 +5,10 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/tx/module/v1"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"

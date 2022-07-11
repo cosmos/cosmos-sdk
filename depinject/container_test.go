@@ -3,102 +3,28 @@ package depinject_test
 import (
 	"fmt"
 	"os"
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/golden"
 
 	"github.com/cosmos/cosmos-sdk/depinject"
-)
-
-type KVStoreKey struct {
-	name string
-}
-
-type MsgClientA struct {
-	key string
-}
-
-type KeeperA struct {
-	key  KVStoreKey
-	name string
-}
-
-type KeeperB struct {
-	key        KVStoreKey
-	msgClientA MsgClientA
-}
-
-type Handler struct {
-	Handle func()
-}
-
-func (Handler) IsOnePerModuleType() {}
-
-type Command struct {
-	Run func()
-}
-
-func (Command) IsManyPerContainerType() {}
-
-func ProvideKVStoreKey(moduleKey depinject.ModuleKey) KVStoreKey {
-	return KVStoreKey{name: moduleKey.Name()}
-}
-
-func ProvideMsgClientA(key depinject.ModuleKey) MsgClientA {
-	return MsgClientA{key.Name()}
-}
-
-type ModuleA struct{}
-
-func (ModuleA) Provide(key KVStoreKey, moduleKey depinject.OwnModuleKey) (KeeperA, Handler, Command) {
-	return KeeperA{key: key, name: depinject.ModuleKey(moduleKey).Name()}, Handler{}, Command{}
-}
-
-type ModuleB struct{}
-
-type BDependencies struct {
-	depinject.In
-
-	Key KVStoreKey
-	A   MsgClientA
-}
-
-type BProvides struct {
-	depinject.Out
-
-	KeeperB  KeeperB
-	Commands []Command
-}
-
-func (ModuleB) Provide(dependencies BDependencies) (BProvides, Handler, error) {
-	return BProvides{
-		KeeperB: KeeperB{
-			key:        dependencies.Key,
-			msgClientA: dependencies.A,
-		},
-		Commands: []Command{{}, {}},
-	}, Handler{}, nil
-}
-
-var scenarioConfig = depinject.Configs(
-	depinject.Provide(ProvideMsgClientA),
-	depinject.ProvideInModule("runtime", ProvideKVStoreKey),
-	depinject.ProvideInModule("a", wrapMethod0(ModuleA{})),
-	depinject.ProvideInModule("b", wrapMethod0(ModuleB{})),
+	"github.com/cosmos/cosmos-sdk/depinject/internal/testgen"
 )
 
 func TestScenario(t *testing.T) {
 	var (
-		handlers map[string]Handler
-		commands []Command
-		a        KeeperA
-		b        KeeperB
+		handlers map[string]testgen.Handler
+		commands []testgen.Command
+		a        testgen.KeeperA
+		b        testgen.KeeperB
 	)
 	require.NoError(t,
 		depinject.Inject(
-			scenarioConfig,
+			depinject.Configs(
+				testgen.ScenarioConfig,
+				depinject.Supply(testgen.ModuleA{}, testgen.ModuleB{}),
+			),
 			&handlers,
 			&commands,
 			&a,
@@ -106,34 +32,19 @@ func TestScenario(t *testing.T) {
 		))
 
 	require.Len(t, handlers, 2)
-	require.Equal(t, Handler{}, handlers["a"])
-	require.Equal(t, Handler{}, handlers["b"])
+	require.Equal(t, testgen.Handler{}, handlers["a"])
+	require.Equal(t, testgen.Handler{}, handlers["b"])
 	require.Len(t, commands, 3)
-	require.Equal(t, KeeperA{
-		key:  KVStoreKey{name: "a"},
-		name: "a",
+	require.Equal(t, testgen.KeeperA{
+		Key:  testgen.KVStoreKey{Name: "a"},
+		Name: "a",
 	}, a)
-	require.Equal(t, KeeperB{
-		key: KVStoreKey{name: "b"},
-		msgClientA: MsgClientA{
-			key: "b",
+	require.Equal(t, testgen.KeeperB{
+		Key: testgen.KVStoreKey{Name: "b"},
+		MsgClientA: testgen.MsgClientA{
+			Key: "b",
 		},
 	}, b)
-}
-
-func wrapMethod0(module interface{}) interface{} {
-	methodFn := reflect.TypeOf(module).Method(0).Func.Interface()
-	ctrInfo, err := depinject.ExtractProviderDescriptor(methodFn)
-	if err != nil {
-		panic(err)
-	}
-
-	ctrInfo.Inputs = ctrInfo.Inputs[1:]
-	fn := ctrInfo.Fn
-	ctrInfo.Fn = func(values []reflect.Value) ([]reflect.Value, error) {
-		return fn(append([]reflect.Value{reflect.ValueOf(module)}, values...))
-	}
-	return ctrInfo
 }
 
 func TestResolveError(t *testing.T) {
@@ -165,7 +76,7 @@ func TestErrorOption(t *testing.T) {
 }
 
 func TestBadCtr(t *testing.T) {
-	_, err := depinject.ExtractProviderDescriptor(KeeperA{})
+	_, err := depinject.ExtractProviderDescriptor(testgen.KeeperA{})
 	require.Error(t, err)
 }
 
@@ -586,19 +497,15 @@ func TestDebugOptions(t *testing.T) {
 
 func TestGraphAndLogOutput(t *testing.T) {
 	var graphOut string
-	var b KeeperB
+	var b testgen.KeeperB
 	debugOpts := depinject.DebugOptions(
 		depinject.Visualizer(func(dotGraph string) {
 			graphOut = dotGraph
 		}))
-	require.NoError(t, depinject.InjectDebug(debugOpts, scenarioConfig, &b))
+	require.NoError(t, depinject.InjectDebug(debugOpts, testgen.ScenarioConfig, &b))
 	golden.Assert(t, graphOut, "example.dot")
 
-	badConfig := depinject.Configs(
-		depinject.ProvideInModule("runtime", ProvideKVStoreKey),
-		depinject.ProvideInModule("a", wrapMethod0(ModuleA{})),
-		depinject.ProvideInModule("b", wrapMethod0(ModuleB{})),
-	)
+	badConfig := depinject.Configs(testgen.ScenarioConfig)
 	require.Error(t, depinject.InjectDebug(debugOpts, badConfig, &b))
 	golden.Assert(t, graphOut, "example_error.dot")
 }

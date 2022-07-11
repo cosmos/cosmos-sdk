@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"go/ast"
-	"go/printer"
 	"go/token"
-	"os"
 	"reflect"
 
 	"github.com/pkg/errors"
@@ -553,10 +551,10 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 	}
 	c.logf("Done calling invokers")
 
-	fset := token.NewFileSet()
-	fmt.Println("Codegen:")
-	printer.Fprint(os.Stdout, fset, c.codegenBody)
-	fmt.Println()
+	//fset := token.NewFileSet()
+	//fmt.Println("Codegen:")
+	//printer.Fprint(os.Stdout, fset, c.codegenBody)
+	//fmt.Println()
 
 	return nil
 }

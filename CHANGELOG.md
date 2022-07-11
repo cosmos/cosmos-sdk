@@ -51,6 +51,7 @@ It is strongly recommended to upgrade to these releases as well.
 ### Bug Fixes
 
 * [#12448](https://github.com/cosmos/cosmos-sdk/pull/12448) Start telemetry independently from the API server.
+* [#12509](https://github.com/cosmos/cosmos-sdk/pull/12509) Fix `Register{Tx,Tendermint}Service` not being called, resulting in some endpoints like the Simulate endpoint not working.
 
 ## [v0.46.0-rc2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0-rc2) - 2022-07-05
 

@@ -128,8 +128,6 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		operationMsg, _, err := w.Op()(r, suite.baseApp, suite.ctx, accs, suite.ctx.ChainID())
 		require.NoError(err)
 
-		println("operationMsg: ", operationMsg.Comment)
-
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
 		// will fail

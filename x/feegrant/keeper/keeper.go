@@ -41,7 +41,6 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // GrantAllowance creates a new grant
 func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
-	println("GRANTALLOWANCE!!!")
 	// create the account if it is not in account state
 	granteeAcc := k.authKeeper.GetAccount(ctx, grantee)
 	if granteeAcc == nil {
@@ -113,7 +112,6 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	}
 
 	store.Set(key, bz)
-	println("OKSSS")
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			feegrant.EventTypeSetFeeGrant,
@@ -161,7 +159,6 @@ func (k Keeper) UpdateAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress
 
 // revokeAllowance removes an existing grant
 func (k Keeper) revokeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) error {
-	println("revokeFeeAllowance", grantee.String(), granter.String())
 	_, err := k.getGrant(ctx, granter, grantee)
 	if err != nil {
 		return err
@@ -214,7 +211,6 @@ func (k Keeper) getGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.Ac
 // Callback to get all data, returns true to stop, false to keep reading
 // Calling this without pagination is very expensive and only designed for export genesis
 func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(grant feegrant.Grant) bool) error {
-	println("ITERATE ALL FEES!")
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, feegrant.FeeAllowanceKeyPrefix)
 	defer iter.Close()
@@ -226,7 +222,6 @@ func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(grant feegrant.
 		if err := k.cdc.Unmarshal(bz, &feeGrant); err != nil {
 			return err
 		}
-		println("feegranttttt", feeGrant.Grantee, feeGrant.Granter)
 		stop = cb(feeGrant)
 	}
 
@@ -249,7 +244,6 @@ func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress,
 
 	if remove {
 		// Ignoring the `revokeFeeAllowance` error, because the user has enough grants to perform this transaction.
-		println("revokeFeeAllowance111", granter.String(), grantee.String())
 		k.revokeAllowance(ctx, granter, grantee)
 		if err != nil {
 			return err
@@ -326,7 +320,6 @@ func (k Keeper) removeFromGrantQueue(ctx sdk.Context, exp *time.Time, allowanceK
 }
 
 func (k Keeper) addToFeeAllowanceQueue(ctx sdk.Context, grantKey []byte, exp *time.Time) {
-	println("addToFeeAllowanceQueue")
 	store := ctx.KVStore(k.storeKey)
 	store.Set(feegrant.FeeAllowancePrefixQueue(exp, grantKey), []byte{})
 }

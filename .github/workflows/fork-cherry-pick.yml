@@ -33,10 +33,14 @@ jobs:
         env: 
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          curl \
-            -X POST \
-            -H "Accept: application/vnd.github+json" \ 
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            https://api.github.com/repos/cosmos/cosmos-sdk/pulls \
-            -d '{"title":"AUTO FORK PR","body":"Please merge these awesome changes in!","head":"${GITHUB_ACTOR}:pr-patch","base":"main"}'
-            
+          curl --request POST \
+            --url https://api.github.com/repos/cosmos/cosmos-sdk/pulls \
+            --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+            --header 'content-type: application/json' \
+            --data '{
+              "title": "Automated PR for commit: ${{github.event.pull_request.head.sha}}",
+              "body":"Please merge these awesome changes in!",
+              "head":"${GITHUB_ACTOR}:pr-patch",
+              "base":"main"
+              }' \
+            --fail

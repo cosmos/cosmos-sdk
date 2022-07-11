@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
@@ -74,12 +73,11 @@ func (k *Keeper) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams)
 	}
 
 	if !req.ConstantFee.IsValid() {
-		return nil, errors.ErrInvalidCoins.Wrap("invalid costant fee")
+		return nil, errors.ErrInvalidCoins.Wrap("invalid constant fee")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if err := k.SetConstantFee(ctx, req.ConstantFee); err != nil {
-		fmt.Printf("err::::::::::::::::::::::::::::::::::: %v\n", err)
 		return nil, err
 	}
 

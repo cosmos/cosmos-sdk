@@ -51,6 +51,10 @@ ifeq (secp,$(findstring secp,$(COSMOS_BUILD_OPTIONS)))
   build_tags += libsecp256k1_sdk
 endif
 
+ifeq (legacy,$(findstring legacy,$(COSMOS_BUILD_OPTIONS)))
+  build_tags += legacy_simapp
+endif
+
 whitespace :=
 whitespace += $(whitespace)
 comma := ,

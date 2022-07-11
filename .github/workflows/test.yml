@@ -47,6 +47,8 @@ jobs:
           key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
       - name: Build
         run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make build
+      - name: Build Legacy
+        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make build  -tags='legacy_simapp'
 
       - name: Build cosmovisor
         run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make cosmovisor

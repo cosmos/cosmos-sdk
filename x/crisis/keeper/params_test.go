@@ -24,8 +24,8 @@ func (s *KeeperTestSuite) TestParams() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			expected := s.app.CrisisKeeper.GetConstantFee(s.ctx)
-			err := s.app.CrisisKeeper.SetConstantFee(s.ctx, tc.constantFee)
+			expected := s.keeper.GetConstantFee(s.ctx)
+			err := s.keeper.SetConstantFee(s.ctx, tc.constantFee)
 
 			if tc.expErr {
 				s.Require().Error(err)
@@ -35,7 +35,7 @@ func (s *KeeperTestSuite) TestParams() {
 				s.Require().NoError(err)
 			}
 
-			params := s.app.CrisisKeeper.GetConstantFee(s.ctx)
+			params := s.keeper.GetConstantFee(s.ctx)
 			s.Require().Equal(expected, params)
 		})
 	}

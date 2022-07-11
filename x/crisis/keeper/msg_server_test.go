@@ -15,7 +15,6 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app    *simapp.SimApp
 	ctx    sdk.Context
 	keeper *keeper.Keeper
 }
@@ -26,7 +25,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1}})
 	ctx := app.NewContext(true, tmproto.Header{})
 
-	s.app = app
 	s.ctx = ctx
 	s.keeper = app.CrisisKeeper
 }

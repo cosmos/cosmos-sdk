@@ -3,7 +3,7 @@ modules:
     config:
       "@type": cosmos.app.runtime.v1alpha1.Module
 
-      app_name: MintApp
+      app_name: CrisisApp
 
       begin_blockers: [crisis, staking, auth, bank, genutil, params]
       end_blockers: [staking, auth, bank, crisis, genutil, params]

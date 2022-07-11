@@ -297,7 +297,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	} else {
 		ctx.Logger.Info("starting node with ABCI Tendermint in-process")
 
-		tmNode, err := node.NewNode(
+		tmNode, err = node.NewNode(
 			cfg,
 			pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
 			nodeKey,

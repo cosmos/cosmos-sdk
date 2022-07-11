@@ -101,6 +101,11 @@ func (store *Store) Write() {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
 
+	if len(store.cache) == 0 && len(store.deleted) == 0 && len(store.unsortedCache) == 0 {
+		store.sortedCache = dbm.NewMemDB()
+		return
+	}
+
 	// We need a copy of all of the keys.
 	// Not the best, but probably not a bottleneck depending.
 	keys := make([]string, 0, len(store.cache))

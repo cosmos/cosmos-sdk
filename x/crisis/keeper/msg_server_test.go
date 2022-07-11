@@ -3,10 +3,9 @@ package keeper_test
 import (
 	"testing"
 
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
-	"github.com/cosmos/cosmos-sdk/x/crisis/testutil"
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -16,29 +15,25 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	// app    *simapp.SimApp
+	app    *simapp.SimApp
 	ctx    sdk.Context
-	keeper keeper.Keeper
+	keeper *keeper.Keeper
 }
 
-func (s *KeeperTestSuite) SetupSuite(t *testing.T) {
-	app, err := simtestutil.Setup(testutil.AppConfig,
-		&s.keeper,
-	)
-	s.Require().NoError(err)
-
-	// app := simapp.Setup(t, false)
+func (s *KeeperTestSuite) SetupTest() {
+	app := simapp.Setup(s.T(), false)
 	app.Commit()
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1}})
 	ctx := app.NewContext(true, tmproto.Header{})
 
-	// s.app = app
+	s.app = app
 	s.ctx = ctx
+	s.keeper = app.CrisisKeeper
 }
 
 func (s *KeeperTestSuite) TestMsgUpdateParams() {
 	// default params
-	constantFee := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)) // 4%
+	constantFee := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000))
 
 	testCases := []struct {
 		name      string

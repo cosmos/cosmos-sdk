@@ -10,17 +10,18 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Keeper - crisis keeper
 type Keeper struct {
 	routes         []types.InvarRoute
-	paramSpace     paramtypes.Subspace
 	invCheckPeriod uint
 	storeKey       storetypes.StoreKey
 	cdc            codec.BinaryCodec
-	authority      string
+
+	// the address capable of executing a MsgUpdateParams message. Typically, this
+	// should be the x/gov module account.
+	authority string
 
 	supplyKeeper types.SupplyKeeper
 
@@ -33,20 +34,14 @@ func (k *Keeper) GetAuthority() string {
 
 // NewKeeper creates a new Keeper object
 func NewKeeper(
-	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace,
-	invCheckPeriod uint, supplyKeeper types.SupplyKeeper, feeCollectorName string,
-	authority string,
+	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, invCheckPeriod uint,
+	supplyKeeper types.SupplyKeeper, feeCollectorName string, authority string,
 ) *Keeper {
-	// set KeyTable if it has not already been set
-	if !paramSpace.HasKeyTable() {
-		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
-	}
 
 	return &Keeper{
 		storeKey:         storeKey,
 		cdc:              cdc,
 		routes:           make([]types.InvarRoute, 0),
-		paramSpace:       paramSpace,
 		invCheckPeriod:   invCheckPeriod,
 		supplyKeeper:     supplyKeeper,
 		feeCollectorName: feeCollectorName,

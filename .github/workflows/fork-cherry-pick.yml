@@ -34,7 +34,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           curl --request POST \
-            --url https://api.github.com/repos/cosmos/cosmos-sdk/pulls \
+            --url https://api.github.com/repos/xBalbinus/cosmos-sdk/pulls \
             --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
             --header 'content-type: application/json' \
             --data '{

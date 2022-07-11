@@ -10,7 +10,6 @@ func (k *Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	if err := k.SetConstantFee(ctx, data.ConstantFee); err != nil {
 		panic(err)
 	}
-
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.

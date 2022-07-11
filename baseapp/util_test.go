@@ -1,6 +1,13 @@
 package baseapp
 
 import (
+	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
+	"cosmossdk.io/core/appconfig"
+	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -65,4 +72,48 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (types.Context,
 // This method is only accessible in baseapp tests.
 func (app *BaseApp) MinGasPrices() types.DecCoins {
 	return app.minGasPrices
+}
+
+func MakeTestConfig() depinject.Config {
+	return appconfig.Compose(&appv1alpha1.Config{
+		Modules: []*appv1alpha1.ModuleConfig{
+			{
+				Name: "runtime",
+				Config: appconfig.WrapAny(&runtimev1alpha1.Module{
+					AppName: "BaseAppApp",
+					BeginBlockers: []string{
+						"auth",
+						"bank",
+					},
+					EndBlockers: []string{
+						"auth",
+						"bank",
+					},
+					OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
+						{
+							ModuleName: "auth",
+							KvStoreKey: "acc",
+						},
+					},
+					InitGenesis: []string{
+						"auth",
+						"bank",
+					},
+				}),
+			},
+			{
+				Name: "auth",
+				Config: appconfig.WrapAny(&authmodulev1.Module{
+					Bech32Prefix: "cosmos",
+					ModuleAccountPermissions: []*authmodulev1.ModuleAccountPermission{
+						{Account: "fee_collector"},
+					},
+				}),
+			},
+			{
+				Name:   "bank",
+				Config: appconfig.WrapAny(&bankmodulev1.Module{}),
+			},
+		},
+	})
 }

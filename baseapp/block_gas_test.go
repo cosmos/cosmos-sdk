@@ -42,7 +42,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 		{"more than block gas meter", uint64(float64(blockMaxGas) * 1.2), false, true},
 		{"consume MaxUint64", math.MaxUint64, false, true},
 		{"consume MaxGasWanted", txtypes.MaxGasWanted, false, true},
-		{"consume block gas when paniced", 10, true, true},
+		{"consume block gas when panicked", 10, true, true},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {

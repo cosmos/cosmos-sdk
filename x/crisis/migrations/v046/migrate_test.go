@@ -37,7 +37,7 @@ func TestMigrate(t *testing.T) {
 	require.NoError(t, v046.MigrateStore(ctx, storeKey, legacySubspace, cdc))
 
 	var res sdk.Coin
-	bz := store.Get(v046.ConstantFee)
+	bz := store.Get(v046.ConstantFeeKey)
 	require.NoError(t, cdc.Unmarshal(bz, &res))
 	require.NotNil(t, res)
 	require.Equal(t, legacySubspace.constantFee, res)

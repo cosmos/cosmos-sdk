@@ -32,7 +32,7 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-// ConsensusVersion defines the current x/distribution module consensus version.
+// ConsensusVersion defines the current x/params module consensus version.
 const ConsensusVersion = 2
 
 var (

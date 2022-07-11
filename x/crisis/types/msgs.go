@@ -78,5 +78,9 @@ func (msg MsgUpdateParams) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "invalid costant fee")
 	}
 
+	if msg.ConstantFee.IsNegative() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "negative costant fee")
+	}
+
 	return nil
 }

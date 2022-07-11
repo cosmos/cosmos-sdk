@@ -72,10 +72,6 @@ func (k *Keeper) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams)
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, req.Authority)
 	}
 
-	if !req.ConstantFee.IsValid() {
-		return nil, errors.ErrInvalidCoins.Wrap("invalid constant fee")
-	}
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if err := k.SetConstantFee(ctx, req.ConstantFee); err != nil {
 		return nil, err

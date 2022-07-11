@@ -57,6 +57,14 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 			expErr: true,
 		},
 		{
+			name: "negative constant fee",
+			input: &types.MsgUpdateParams{
+				Authority:   s.keeper.GetAuthority(),
+				ConstantFee: sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(-1000)},
+			},
+			expErr: true,
+		},
+		{
 			name: "all good",
 			input: &types.MsgUpdateParams{
 				Authority:   s.keeper.GetAuthority(),

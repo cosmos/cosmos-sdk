@@ -13,7 +13,8 @@ const (
 )
 
 var (
-	ConstantFee = []byte("ConstantFee")
+	ConstantFee    = []byte("ConstantFee")
+	ConstantFeeKey = []byte{0x01}
 )
 
 // MigrateStore migrates the x/crisis module state from the consensus version 1 to
@@ -34,7 +35,7 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace 
 		return err
 	}
 
-	store.Set(ConstantFee, bz)
+	store.Set(ConstantFeeKey, bz)
 
 	return nil
 }

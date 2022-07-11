@@ -8,5 +8,5 @@ const (
 )
 
 var (
-	ConstantFee = []byte("ConstantFee")
+	ConstantFeeKey = []byte{0x01}
 )

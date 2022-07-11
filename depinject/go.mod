@@ -7,7 +7,7 @@ require (
 	github.com/regen-network/gocuke v0.6.2
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/exp v0.0.0-20220428152302-39d4317da171
-	gotest.tools/v3 v3.2.0
+	gotest.tools/v3 v3.3.0
 )
 
 require (

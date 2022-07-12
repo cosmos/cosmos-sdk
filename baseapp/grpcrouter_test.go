@@ -54,9 +54,7 @@ func TestGRPCQueryRouter(t *testing.T) {
 
 func TestRegisterQueryServiceTwice(t *testing.T) {
 	// Setup baseapp.
-	var (
-		appBuilder *runtime.AppBuilder
-	)
+	var appBuilder *runtime.AppBuilder
 	err := depinject.Inject(makeMinimalConfig(), &appBuilder)
 	require.NoError(t, err)
 	db := dbm.NewMemDB()

@@ -69,7 +69,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 		)
 
 		appConfig := depinject.Configs(makeTestConfig(),
-			depinject.ProvideInModule("bank",
+			depinject.ProvideInModule(banktypes.ModuleName,
 				func(_ *bankmodulev1.Module, key *store.KVStoreKey) runtime.BaseAppOption {
 					return func(app *baseapp.BaseApp) {
 						route := (&testdata.TestMsg{}).Route()

@@ -169,7 +169,7 @@ func (p ProviderDescriptor) codegenErrCheck(ctr *container) {
 				Y:  ast.NewIdent("nil"),
 			},
 			Body: &ast.BlockStmt{List: []ast.Stmt{
-				&ast.ReturnStmt{Results: []ast.Expr{errIdent}},
+				ctr.codegenErrReturn,
 			}},
 		})
 	}

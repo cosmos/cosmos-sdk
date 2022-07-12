@@ -14,7 +14,7 @@ func (c *container) createIdent(namePrefix string) *ast.Ident {
 }
 
 func (c *container) doCreateIdent(namePrefix string, handle interface{}) *ast.Ident {
-	// TODO reserved names: keywords, builtin types, imports
+	// TODO reserved names: keywords, builtin types, imports, err
 	v := namePrefix
 	i := 2
 	for {
@@ -41,7 +41,7 @@ func (c *container) getOrCreateIdent(namePrefix string, handle interface{}) (v *
 }
 
 func (c *container) codegenStmt(stmt ast.Stmt) {
-	c.codegenBody.List = append(c.codegenBody.List, stmt)
+	c.codegenFunc.Body.List = append(c.codegenFunc.Body.List, stmt)
 }
 
 func (c *container) valueExpr(value reflect.Value) (ast.Expr, error) {
@@ -67,6 +67,10 @@ func (c *container) valueExpr(value reflect.Value) (ast.Expr, error) {
 		return c.arraySliceExpr(value)
 
 	case reflect.Map:
+		if value.IsNil() {
+			return ast.NewIdent("nil"), nil
+		}
+
 		t, err := c.typeExpr(typ)
 		if err != nil {
 			return nil, err
@@ -95,6 +99,10 @@ func (c *container) valueExpr(value reflect.Value) (ast.Expr, error) {
 		return lit, nil
 
 	case reflect.Slice:
+		if value.IsNil() {
+			return ast.NewIdent("nil"), nil
+		}
+
 		return c.arraySliceExpr(value)
 
 	case reflect.String:
@@ -109,24 +117,32 @@ func (c *container) valueExpr(value reflect.Value) (ast.Expr, error) {
 		n := typ.NumField()
 		lit := &ast.CompositeLit{
 			Type: t,
-			Elts: make([]ast.Expr, n),
 		}
 
 		for i := 0; i < n; i++ {
 			f := typ.Field(i)
-			v, err := c.valueExpr(value.FieldByName(f.Name))
+			v := value.FieldByName(f.Name)
+			if v.IsZero() {
+				continue
+			}
+
+			vExpr, err := c.valueExpr(v)
 			if err != nil {
 				return nil, err
 			}
 
-			lit.Elts[i] = &ast.KeyValueExpr{
+			lit.Elts = append(lit.Elts, &ast.KeyValueExpr{
 				Key:   ast.NewIdent(f.Name),
-				Value: v,
-			}
+				Value: vExpr,
+			})
 		}
 
 		return lit, nil
 	case reflect.Pointer:
+		if value.IsNil() {
+			return ast.NewIdent("nil"), nil
+		}
+
 		if typ.Elem().Kind() == reflect.Struct {
 			v, err := c.valueExpr(value.Elem())
 			if err != nil {

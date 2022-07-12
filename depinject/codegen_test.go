@@ -51,9 +51,12 @@ func TestValueExpr(t *testing.T) {
 
 	// struct
 	expectValueExpr(t, AStruct{Foo: 2}, `depinject.AStruct{Foo: 2}`)
+	expectValueExpr(t, AStruct{}, `depinject.AStruct{}`) // empty default fields
 
 	// struct pointer
 	expectValueExpr(t, &AStruct{Foo: 2}, `&depinject.AStruct{Foo: 2}`)
+	var nilStruct *AStruct
+	expectValueExpr(t, nilStruct, `nil`)
 
 	// string
 	expectValueExpr(t, "abc", `"abc"`)

@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"go/ast"
-	"go/printer"
 	"go/token"
-	"os"
 	"reflect"
 
 	"github.com/pkg/errors"
@@ -35,7 +33,8 @@ type container struct {
 	imports            []*ast.ImportSpec
 	pkgImportMap       map[string]*ast.ImportSpec
 	shortNameImportMap map[string]*ast.ImportSpec
-	codegenBody        *ast.BlockStmt
+	codegenFunc        *ast.FuncDecl
+	codegenErrReturn   *ast.ReturnStmt
 }
 
 type invoker struct {
@@ -66,168 +65,19 @@ func newContainer(cfg *debugConfig) *container {
 		interfaceBindings: map[string]interfaceBinding{},
 		callerStack:       nil,
 		callerMap:         map[Location]bool{},
-		codegenBody:       &ast.BlockStmt{},
-		idents:            map[string]interface{}{},
-		reverseIdents:     map[interface{}]string{},
+		codegenFunc: &ast.FuncDecl{
+			Name: ast.NewIdent(""),
+			Type: &ast.FuncType{
+				Results: &ast.FieldList{},
+				Params:  &ast.FieldList{},
+			},
+			Body: &ast.BlockStmt{},
+		},
+		codegenErrReturn: &ast.ReturnStmt{},
+		idents:           map[string]interface{}{},
+		reverseIdents:    map[interface{}]string{},
 	}
 }
-
-func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]reflect.Value, ast.Expr, error) {
-	loc := provider.Location
-	graphNode := c.locationGraphNode(loc, moduleKey)
-
-	markGraphNodeAsFailed(graphNode)
-
-	if c.callerMap[loc] {
-		return nil, nil, errors.Errorf("cyclic dependency: %s -> %s", loc.Name(), loc.Name())
-	}
-
-	c.callerMap[loc] = true
-	c.callerStack = append(c.callerStack, loc)
-
-	c.logf("Resolving dependencies for %s", loc)
-	c.indentLogger()
-	var argExprs []ast.Expr
-	inVals := make([]reflect.Value, len(provider.Inputs))
-	for i, in := range provider.Inputs {
-		val, e, err := c.resolve(in, moduleKey, loc)
-		argExprs = append(argExprs, e)
-		if err != nil {
-			return nil, nil, err
-		}
-		inVals[i] = val
-	}
-	c.dedentLogger()
-	c.logf("Calling %s", loc)
-
-	delete(c.callerMap, loc)
-	c.callerStack = c.callerStack[0 : len(c.callerStack)-1]
-
-	out, err := provider.Fn(inVals)
-	if err != nil {
-		return nil, nil, errors.Wrapf(err, "error calling provider %s", loc)
-	}
-
-	markGraphNodeAsUsed(graphNode)
-
-	e := &ast.CallExpr{
-		Fun:  ast.NewIdent(loc.Name()),
-		Args: argExprs,
-	}
-
-	return out, e, nil
-}
-
-func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, error) {
-	pr, err := c.getExplicitResolver(typ, key)
-	if err != nil {
-		return nil, err
-	}
-	if pr != nil {
-		return pr, nil
-	}
-
-	if vr, ok := c.resolverByType(typ); ok {
-		return vr, nil
-	}
-
-	elemType := typ
-	if isManyPerContainerSliceType(elemType) || isOnePerModuleMapType(elemType) {
-		elemType = elemType.Elem()
-	}
-
-	var typeGraphNode *graphviz.Node
-
-	if isManyPerContainerType(elemType) {
-		c.logf("Registering resolver for many-per-container type %v", elemType)
-		sliceType := reflect.SliceOf(elemType)
-
-		typeGraphNode = c.typeGraphNode(sliceType)
-		typeGraphNode.SetComment("many-per-container")
-
-		r := &groupResolver{
-			typ:       elemType,
-			sliceType: sliceType,
-			graphNode: typeGraphNode,
-		}
-
-		c.addResolver(elemType, r)
-		c.addResolver(sliceType, &sliceGroupResolver{groupResolver: r})
-	} else if isOnePerModuleType(elemType) {
-		c.logf("Registering resolver for one-per-module type %v", elemType)
-		mapType := reflect.MapOf(stringType, elemType)
-
-		typeGraphNode = c.typeGraphNode(mapType)
-		typeGraphNode.SetComment("one-per-module")
-
-		r := &onePerModuleResolver{
-			typ:       elemType,
-			mapType:   mapType,
-			providers: map[*moduleKey]*simpleProvider{},
-			idxMap:    map[*moduleKey]int{},
-			graphNode: typeGraphNode,
-		}
-
-		c.addResolver(elemType, r)
-		c.addResolver(mapType, &mapOfOnePerModuleResolver{r})
-	}
-
-	res, found := c.resolverByType(typ)
-
-	if !found && typ.Kind() == reflect.Interface {
-		matches := map[reflect.Type]reflect.Type{}
-		var resolverType reflect.Type
-		for _, r := range c.resolvers {
-			if r.getType().Kind() != reflect.Interface && r.getType().Implements(typ) {
-				resolverType = r.getType()
-				matches[resolverType] = resolverType
-			}
-		}
-
-		if len(matches) == 1 {
-			res, _ = c.resolverByType(resolverType)
-			c.logf("Implicitly registering resolver %v for interface type %v", resolverType, typ)
-			c.addResolver(typ, res)
-		} else if len(matches) > 1 {
-			return nil, newErrMultipleImplicitInterfaceBindings(typ, matches)
-		}
-	}
-
-	return res, nil
-}
-
-func (c *container) getExplicitResolver(typ reflect.Type, key *moduleKey) (resolver, error) {
-	var pref interfaceBinding
-	var found bool
-
-	// module scoped binding takes precedence
-	pref, found = c.interfaceBindings[bindingKeyFromType(typ, key)]
-
-	// fallback to global scope binding
-	if !found {
-		pref, found = c.interfaceBindings[bindingKeyFromType(typ, nil)]
-	}
-
-	if !found {
-		return nil, nil
-	}
-
-	if pref.resolver != nil {
-		return pref.resolver, nil
-	}
-
-	res, ok := c.resolverByTypeName(pref.implTypeName)
-	if ok {
-		c.logf("Registering resolver %v for interface type %v by explicit binding", res.getType(), typ)
-		pref.resolver = res
-		return res, nil
-
-	}
-
-	return nil, newErrNoTypeForExplicitBindingFound(pref)
-}
-
-var stringType = reflect.TypeOf("")
 
 func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (interface{}, error) {
 	providerGraphNode := c.locationGraphNode(provider.Location, key)
@@ -454,7 +304,9 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 	if vr == nil {
 		if in.Optional {
 			c.logf("Providing zero value for optional dependency %v", in.Type)
-			return reflect.Zero(in.Type), ast.NewIdent("nil"), nil // TODO: ast zero value
+			zero := reflect.Zero(in.Type)
+			zeroExpr, err := c.valueExpr(zero)
+			return zero, zeroExpr, err
 		}
 
 		markGraphNodeAsFailed(typeGraphNode)
@@ -473,100 +325,6 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 	c.resolveStack = c.resolveStack[:len(c.resolveStack)-1]
 
 	return res, e, nil
-}
-
-func (c *container) build(loc Location, outputs ...interface{}) error {
-	moduleKeyContextIdent, _ := c.getOrCreateIdent("moduleKeyContext", c.moduleKeyContext)
-	c.codegenStmt(&ast.AssignStmt{
-		Lhs: []ast.Expr{moduleKeyContextIdent},
-		Tok: token.DEFINE,
-		Rhs: []ast.Expr{
-			&ast.UnaryExpr{
-				Op: token.AND,
-				X: &ast.CompositeLit{
-					Type: ast.NewIdent("depinject.ModuleKeyContext"),
-				},
-			},
-		},
-	})
-
-	var providerIn []ProviderInput
-	for _, output := range outputs {
-		typ := reflect.TypeOf(output)
-		if typ.Kind() != reflect.Pointer {
-			return fmt.Errorf("output type must be a pointer, %s is invalid", typ)
-		}
-
-		providerIn = append(providerIn, ProviderInput{Type: typ.Elem()})
-	}
-
-	desc := ProviderDescriptor{
-		Inputs:  providerIn,
-		Outputs: nil,
-		Fn: func(values []reflect.Value) ([]reflect.Value, error) {
-			if len(values) != len(outputs) {
-				return nil, fmt.Errorf("internal error, unexpected number of values")
-			}
-
-			for i, output := range outputs {
-				val := reflect.ValueOf(output)
-				val.Elem().Set(values[i])
-			}
-
-			return nil, nil
-		},
-		Location: loc,
-	}
-	callerGraphNode := c.locationGraphNode(loc, nil)
-	callerGraphNode.SetShape("hexagon")
-
-	desc, err := expandStructArgsProvider(desc)
-	if err != nil {
-		return err
-	}
-
-	c.logf("Registering outputs")
-	c.indentLogger()
-
-	node, err := c.addNode(&desc, nil)
-	if err != nil {
-		return err
-	}
-
-	c.dedentLogger()
-
-	sn, ok := node.(*simpleProvider)
-	if !ok {
-		return errors.Errorf("cannot run module-scoped provider as an invoker")
-	}
-
-	c.logf("Building container")
-	_, err = sn.resolveValues(c, true)
-	if err != nil {
-		return err
-	}
-	c.logf("Done building container")
-	c.logf("Calling invokers")
-	for _, inv := range c.invokers {
-		_, eCall, err := c.call(inv.fn, inv.modKey)
-		if err != nil {
-			return err
-		}
-
-		// codegen
-		_, _ = inv.fn.codegenOutputs(c, "")
-		c.codegenStmt(&ast.ExprStmt{X: eCall})
-		inv.fn.codegenErrCheck(c)
-	}
-	c.logf("Done calling invokers")
-
-	fset := token.NewFileSet()
-	ast.Print(fset, c.codegenBody)
-	fmt.Println("Codegen:")
-	printer.Fprint(os.Stdout, fset, c.codegenBody)
-	fmt.Println()
-
-	return nil
 }
 
 func (c container) formatResolveStack() string {

@@ -30,6 +30,8 @@ import (
 type Location interface {
 	isLocation()
 	Name() string
+	ShortName() string
+	PkgPath() string
 	fmt.Stringer
 	fmt.Formatter
 }
@@ -70,6 +72,14 @@ func (f *location) String() string {
 // Name is the fully qualified function name.
 func (f *location) Name() string {
 	return fmt.Sprintf("%v.%v", f.pkg, f.name)
+}
+
+func (f *location) ShortName() string {
+	return f.name
+}
+
+func (f *location) PkgPath() string {
+	return f.pkg
 }
 
 // Format implements fmt.Formatter for Func, printing a single-line

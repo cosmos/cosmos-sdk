@@ -34,7 +34,7 @@ func (s *simpleResolver) describeLocation() string {
 	return s.node.provider.Location.String()
 }
 
-func (s *simpleProvider) resolveValues(ctr *container, skipCodegen bool) ([]reflect.Value, error) {
+func (s *simpleProvider) resolveValues(ctr *container, returnCodegen bool) ([]reflect.Value, error) {
 	if !s.called {
 		values, eCall, err := ctr.call(s.provider, s.moduleKey)
 		if err != nil {
@@ -46,7 +46,11 @@ func (s *simpleProvider) resolveValues(ctr *container, skipCodegen bool) ([]refl
 		// codegen
 		varRefs, valueExprs := s.provider.codegenOutputs(ctr, "")
 		s.valueExprs = valueExprs
-		if !skipCodegen {
+		if returnCodegen {
+			results := eCall.Args
+			results = append(results, ast.NewIdent("nil"))
+			ctr.codegenStmt(&ast.ReturnStmt{Results: results})
+		} else {
 			ctr.codegenStmt(
 				&ast.AssignStmt{
 					Lhs: varRefs,

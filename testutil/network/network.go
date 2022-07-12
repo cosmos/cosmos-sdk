@@ -18,6 +18,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
@@ -172,7 +173,7 @@ type (
 		grpcWeb *http.Server
 
 		EthPrivateKey *ecdsa.PrivateKey
-		EthereumAddr  *stakingtypes.EthAddress
+		EthereumAddr  common.Address
 
 		OrchestratorAddr sdk.AccAddress
 	}
@@ -410,8 +411,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		ethPrivateKey, err := crypto.GenerateKey()
 		require.NoError(t, err)
 		orchEthPublicKey := ethPrivateKey.Public().(*ecdsa.PublicKey)
-		ethAddr, err := stakingtypes.NewEthAddress(crypto.PubkeyToAddress(*orchEthPublicKey).Hex())
-		require.NoError(t, err)
+		ethAddr := crypto.PubkeyToAddress(*orchEthPublicKey)
 
 		createValMsg, err := stakingtypes.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
@@ -421,7 +421,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			stakingtypes.NewCommissionRates(commission, sdk.OneDec(), sdk.OneDec()),
 			sdk.OneInt(),
 			addr,
-			*ethAddr,
+			ethAddr,
 		)
 		if err != nil {
 			return nil, err

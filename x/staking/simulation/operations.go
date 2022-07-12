@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // Simulation operation weights constants
@@ -161,9 +162,9 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 		orchAddr := simAccount.Address
 		// create an Ethereum address from the orchestrator address
 		// this is mainly to have a deterministic way of generating an Ethereum address on every run // to have a long enough bytes array
-		ethAddr, _ := types.NewEthAddress("0x" + fmt.Sprintf("%X", simAccount.Address.Bytes()))
+		ethAddr := common.HexToAddress("0x" + fmt.Sprintf("%X", simAccount.Address.Bytes()))
 
-		msg, err := types.NewMsgCreateValidator(address, simAccount.ConsKey.PubKey(), selfDelegation, description, commission, sdk.OneInt(), orchAddr, *ethAddr)
+		msg, err := types.NewMsgCreateValidator(address, simAccount.ConsKey.PubKey(), selfDelegation, description, commission, sdk.OneInt(), orchAddr, ethAddr)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to create CreateValidator message"), nil, err
 		}

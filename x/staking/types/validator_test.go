@@ -5,6 +5,7 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -372,7 +373,7 @@ func mkValidator(tokens int64, shares sdk.Dec) types.Validator {
 }
 
 // Creates a new validators and asserts the error check.
-func newValidator(t *testing.T, operator sdk.ValAddress, pubKey cryptotypes.PubKey, orchAddr sdk.AccAddress, ethAddr types.EthAddress) types.Validator {
+func newValidator(t *testing.T, operator sdk.ValAddress, pubKey cryptotypes.PubKey, orchAddr sdk.AccAddress, ethAddr common.Address) types.Validator {
 	v, err := types.NewValidator(operator, pubKey, types.Description{}, orchAddr, ethAddr)
 	require.NoError(t, err)
 	return v

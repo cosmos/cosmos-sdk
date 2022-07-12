@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -20,7 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func newMonikerValidator(t testing.TB, operator sdk.ValAddress, pubKey cryptotypes.PubKey, moniker string, orchAddr sdk.AccAddress, ethAddr types.EthAddress) types.Validator {
+func newMonikerValidator(t testing.TB, operator sdk.ValAddress, pubKey cryptotypes.PubKey, moniker string, orchAddr sdk.AccAddress, ethAddr common.Address) types.Validator {
 	v, err := types.NewValidator(operator, pubKey, types.Description{Moniker: moniker}, orchAddr, ethAddr)
 	require.NoError(t, err)
 	return v

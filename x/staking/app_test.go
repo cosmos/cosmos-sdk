@@ -67,13 +67,12 @@ func TestStakingMsgs(t *testing.T) {
 	ethPrivateKey, err := crypto.GenerateKey()
 	require.NoError(t, err)
 	orchEthPublicKey := ethPrivateKey.Public().(*ecdsa.PublicKey)
-	evmAddr, err := types.NewEthAddress(crypto.PubkeyToAddress(*orchEthPublicKey).Hex())
-	require.NoError(t, err)
+	evmAddr := crypto.PubkeyToAddress(*orchEthPublicKey)
 
 	// create validator
 	description := types.NewDescription("foo_moniker", "", "", "", "")
 	createValidatorMsg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(addr1), valKey.PubKey(), bondCoin, description, commissionRates, sdk.OneInt(), sdk.AccAddress(valKey.PubKey().Address()), *evmAddr,
+		sdk.ValAddress(addr1), valKey.PubKey(), bondCoin, description, commissionRates, sdk.OneInt(), sdk.AccAddress(valKey.PubKey().Address()), evmAddr,
 	)
 	require.NoError(t, err)
 

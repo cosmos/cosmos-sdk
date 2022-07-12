@@ -208,7 +208,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-				fmt.Sprintf("--%s=%s", flags.FlagEthereumAddress, randomEthAddress.GetAddress()),
+				fmt.Sprintf("--%s=%s", flags.FlagEthereumAddress, randomEthAddress.Hex()),
 				fmt.Sprintf("--%s=%s", flags.FlagOrchestratorAddress, newAddr.String()),
 			},
 			false, 0, &sdk.TxResponse{},

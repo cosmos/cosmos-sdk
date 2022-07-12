@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmprotocrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 	"sigs.k8s.io/yaml"
@@ -39,7 +40,7 @@ var _ ValidatorI = Validator{}
 
 // NewValidator constructs a new Validator
 //nolint:interfacer
-func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, description Description, orchAddr sdk.AccAddress, ethAddress EthAddress) (Validator, error) {
+func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, description Description, orchAddr sdk.AccAddress, ethAddress common.Address) (Validator, error) {
 	pkAny, err := codectypes.NewAnyWithValue(pubKey)
 	if err != nil {
 		return Validator{}, err
@@ -58,7 +59,7 @@ func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, descriptio
 		Commission:        NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 		MinSelfDelegation: sdk.OneInt(),
 		Orchestrator:      orchAddr.String(),
-		EthAddress:        ethAddress.address,
+		EthAddress:        ethAddress.Hex(),
 	}, nil
 }
 

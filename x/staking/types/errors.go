@@ -53,4 +53,5 @@ var (
 	ErrValidatorOrchestratorAddressExists = sdkerrors.Register(ModuleName, 40, "validator already exist for this orchestrator address; must use new validator orchestrator address")
 	ErrValidatorEthereumAddressExists     = sdkerrors.Register(ModuleName, 41, "validator already exist for this ethereum address; must use new validator ethereum address")
 	ErrValidatorEthereumZeroAddress       = sdkerrors.Register(ModuleName, 42, "cannot use zero address for ethereum address; must use a non zero validator ethereum address")
+	ErrEthAddressNotHex                   = sdkerrors.Register(ModuleName, 43, "the provided eth address is not a valid hex address")
 )

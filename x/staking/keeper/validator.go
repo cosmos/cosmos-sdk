@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // get a single validator
@@ -30,19 +31,6 @@ func (k Keeper) GetValidatorByOrchestrator(ctx sdk.Context, addr sdk.AccAddress)
 	validators := k.GetAllValidators(ctx)
 	for _, validator := range validators {
 		if validator.Orchestrator == addr.String() {
-			return validator, true
-		}
-	}
-	return types.Validator{}, false
-}
-
-// get a single validator by Ethereum address
-func (k Keeper) GetValidatorByEthereum(ctx sdk.Context, addr types.EthAddress) (validator types.Validator, found bool) {
-	// TODO find a better way to iterate
-	// https://github.com/celestiaorg/cosmos-sdk/issues/129
-	validators := k.GetAllValidators(ctx)
-	for _, validator := range validators {
-		if validator.Orchestrator == addr.GetAddress() {
 			return validator, true
 		}
 	}
@@ -92,12 +80,12 @@ func (k Keeper) GetValidatorByOrchestratorAddress(ctx sdk.Context, orch sdk.AccA
 	return types.Validator{}, false
 }
 
-func (k Keeper) GetValidatorByEthereumAddress(ctx sdk.Context, eth types.EthAddress) (types.Validator, bool) {
+func (k Keeper) GetValidatorByEthereumAddress(ctx sdk.Context, eth common.Address) (types.Validator, bool) {
 	// TODO optimise these queries and even add grpc queries for them.
 	// Issue: https://github.com/celestiaorg/cosmos-sdk/issues/129
 	validators := k.GetAllValidators(ctx)
 	for _, val := range validators {
-		if val.EthAddress == eth.GetAddress() {
+		if val.EthAddress == eth.Hex() {
 			return val, true
 		}
 	}

@@ -256,7 +256,15 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
+			fromRecord, err := clientCtx.Keyring.Key(fromName)
+			if err != nil {
+				return err
+			}
+			fmt.Println("==============MULTISIG PUBKEY=================")
 			fmt.Println(multisigRecord.GetPubKey())
+			fmt.Println("================FROM PUBKEY===================")
+			fmt.Println(fromRecord.GetPubKey())
+			fmt.Println("==============================================")
 			err = authclient.SignTxWithSignerAddress(
 				txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline, overwrite)
 			if err != nil {

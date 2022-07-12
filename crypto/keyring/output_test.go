@@ -20,7 +20,7 @@ func TestBech32KeysOutput(t *testing.T) {
 	k, err := NewMultiRecord("multisig", multisigPk)
 	require.NotNil(t, k)
 	require.NoError(t, err)
-	pubKey, err := k.GetPubKey()
+	pubKey, err := k.GetMultisigPubKey()
 	require.NoError(t, err)
 	accAddr := sdk.AccAddress(pubKey.Address())
 	expectedOutput, err := NewKeyOutput(k.Name, k.GetType(), accAddr, multisigPk)

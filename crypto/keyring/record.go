@@ -62,15 +62,12 @@ func NewMultiRecord(name string, pk cryptotypes.PubKey) (*Record, error) {
 
 // GetMultisigPubKey fetches a public key of the multi type record
 func (k *Record) GetMultisigPubKey() (*multisig.LegacyAminoPubKey, error) {
-	if k.GetType() == TypeMulti {
-		pk, ok := k.PubKey.GetCachedValue().(*multisig.LegacyAminoPubKey)
-		if !ok {
-			return nil, errors.New("unable to cast any to multisig.LegacyAminoPubKey")
-		}
-
-		return pk, nil
+	pk, ok := k.PubKey.GetCachedValue().(*multisig.LegacyAminoPubKey)
+	if !ok {
+		return nil, errors.New("unable to cast any to multisig.LegacyAminoPubKey")
 	}
-	return nil, nil
+
+	return pk, nil
 }
 
 // GetPubKey fetches a public key of the record

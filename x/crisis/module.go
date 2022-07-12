@@ -19,15 +19,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/crisis/exported"
 	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
+
+// ConsensusVersion defines the current x/params module consensus version.
+const ConsensusVersion = 2
 
 var (
 	_ module.AppModule      = AppModule{}
@@ -94,6 +100,9 @@ type AppModule struct {
 	// executed.
 	keeper *keeper.Keeper
 
+	// legacySubspace is used solely for migration of x/params managed parameters
+	legacySubspace exported.Subspace
+
 	skipGenesisInvariants bool
 }
 
@@ -101,10 +110,11 @@ type AppModule struct {
 // we will call keeper.AssertInvariants during InitGenesis (it may take a significant time)
 // - which doesn't impact the chain security unless 66+% of validators have a wrongly
 // modified genesis file.
-func NewAppModule(keeper *keeper.Keeper, skipGenesisInvariants bool) AppModule {
+func NewAppModule(keeper *keeper.Keeper, skipGenesisInvariants bool, ss exported.Subspace) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
+		legacySubspace: ss,
 
 		skipGenesisInvariants: skipGenesisInvariants,
 	}
@@ -137,6 +147,11 @@ func (AppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier { return n
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), am.keeper)
+
+	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
+	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
+	}
 }
 
 // InitGenesis performs genesis initialization for the crisis module. It returns
@@ -162,7 +177,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 1 }
+func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock performs a no-op.
 func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
@@ -187,6 +202,8 @@ type crisisInputs struct {
 	depinject.In
 
 	Config     *modulev1.Module
+	Key        *store.KVStoreKey
+	Cdc        codec.Codec
 	AppOpts    servertypes.AppOptions `optional:"true"`
 	Subspace   paramstypes.Subspace
 	BankKeeper types.SupplyKeeper
@@ -212,15 +229,17 @@ func provideModule(in crisisInputs) crisisOutputs {
 	}
 
 	k := keeper.NewKeeper(
-		in.Subspace,
+		in.Cdc,
+		in.Key,
 		invalidCheckPeriod,
 		in.BankKeeper,
 		feeCollectorName,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	skipGenesisInvariants := cast.ToBool(in.AppOpts.Get(FlagSkipGenesisInvariants))
 
-	m := NewAppModule(k, skipGenesisInvariants)
+	m := NewAppModule(k, skipGenesisInvariants, in.Subspace)
 
 	return crisisOutputs{CrisisKeeper: k, Module: runtime.WrapAppModule(m)}
 }

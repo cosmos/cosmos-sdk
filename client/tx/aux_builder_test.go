@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	typestx "github.com/cosmos/cosmos-sdk/types/tx"
@@ -17,7 +16,7 @@ import (
 )
 
 func TestAuxTxBuilder(t *testing.T) {
-	encCfg := simapp.MakeTestEncodingConfig()
+	encCfg := makeTestCodec(t)
 	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
 
 	var b tx.AuxTxBuilder

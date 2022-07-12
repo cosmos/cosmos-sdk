@@ -1,4 +1,4 @@
-package keys
+package tx_test
 
 import (
 	"testing"

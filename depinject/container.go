@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"fmt"
 	"go/ast"
+	"go/printer"
 	"go/token"
+	"os"
 	"reflect"
 
 	"github.com/pkg/errors"
 
 	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
+	"github.com/cosmos/cosmos-sdk/depinject/internal/util"
 )
 
 type container struct {
@@ -25,9 +28,14 @@ type container struct {
 	callerStack  []Location
 	callerMap    map[Location]bool
 
-	idents        map[string]interface{}
-	reverseIdents map[interface{}]string
-	codegenBody   *ast.BlockStmt
+	// codegen related
+	idents             map[string]interface{}
+	reverseIdents      map[interface{}]string
+	codegenPkgPath     string
+	imports            []*ast.ImportSpec
+	pkgImportMap       map[string]*ast.ImportSpec
+	shortNameImportMap map[string]*ast.ImportSpec
+	codegenBody        *ast.BlockStmt
 }
 
 type invoker struct {
@@ -371,6 +379,7 @@ func (c *container) supply(value reflect.Value, location Location) error {
 		value:     value,
 		loc:       location,
 		graphNode: typeGraphNode,
+		varIdent:  c.createIdent(util.StringFirstLower(typ.Name())),
 	})
 
 	return nil
@@ -551,10 +560,11 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 	}
 	c.logf("Done calling invokers")
 
-	//fset := token.NewFileSet()
-	//fmt.Println("Codegen:")
-	//printer.Fprint(os.Stdout, fset, c.codegenBody)
-	//fmt.Println()
+	fset := token.NewFileSet()
+	ast.Print(fset, c.codegenBody)
+	fmt.Println("Codegen:")
+	printer.Fprint(os.Stdout, fset, c.codegenBody)
+	fmt.Println()
 
 	return nil
 }

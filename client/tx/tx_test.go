@@ -8,8 +8,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/client"
+	clienttestutil "github.com/cosmos/cosmos-sdk/client/testutil"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -18,12 +21,18 @@ import (
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-func NewTestTxConfig() client.TxConfig {
-	cfg := simapp.MakeTestEncodingConfig()
-	return cfg.TxConfig
+func newTestTxConfig(t *testing.T) (client.TxConfig, codec.Codec) {
+	var (
+		pcdc codec.ProtoCodecMarshaler
+		cdc  codec.Codec
+	)
+	err := depinject.Inject(clienttestutil.TestConfig, &pcdc, &cdc)
+	require.NoError(t, err)
+	return authtx.NewTxConfig(pcdc, authtx.DefaultSignModes), cdc
 }
 
 // mockContext is a mock client.Context to return abitrary simulation response, used to
@@ -70,7 +79,7 @@ func TestCalculateGas(t *testing.T) {
 
 	for _, tc := range testCases {
 		stc := tc
-		txCfg := NewTestTxConfig()
+		txCfg, _ := newTestTxConfig(t)
 
 		txf := tx.Factory{}.
 			WithChainID("test-chain").
@@ -96,10 +105,9 @@ func TestCalculateGas(t *testing.T) {
 }
 
 func TestBuildSimTx(t *testing.T) {
-	txCfg := NewTestTxConfig()
-	encCfg := simapp.MakeTestEncodingConfig()
+	txCfg, cdc := newTestTxConfig(t)
 
-	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encCfg.Codec)
+	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, cdc)
 	require.NoError(t, err)
 
 	path := hd.CreateHDPath(118, 0, 0).String()
@@ -123,8 +131,8 @@ func TestBuildSimTx(t *testing.T) {
 }
 
 func TestBuildUnsignedTx(t *testing.T) {
-	encCfg := simapp.MakeTestEncodingConfig()
-	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encCfg.Codec)
+	txConfig, cdc := newTestTxConfig(t)
+	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, cdc)
 	require.NoError(t, err)
 
 	path := hd.CreateHDPath(118, 0, 0).String()
@@ -133,7 +141,7 @@ func TestBuildUnsignedTx(t *testing.T) {
 	require.NoError(t, err)
 
 	txf := tx.Factory{}.
-		WithTxConfig(NewTestTxConfig()).
+		WithTxConfig(txConfig).
 		WithAccountNumber(50).
 		WithSequence(23).
 		WithFees("50stake").
@@ -152,6 +160,7 @@ func TestBuildUnsignedTx(t *testing.T) {
 }
 
 func TestSign(t *testing.T) {
+	txConfig, _ := newTestTxConfig(t)
 	requireT := require.New(t)
 	path := hd.CreateHDPath(118, 0, 0).String()
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -179,7 +188,7 @@ func TestSign(t *testing.T) {
 	t.Log("Pub keys:", pubKey1, pubKey2)
 
 	txfNoKeybase := tx.Factory{}.
-		WithTxConfig(NewTestTxConfig()).
+		WithTxConfig(txConfig).
 		WithAccountNumber(50).
 		WithSequence(23).
 		WithFees("50stake").

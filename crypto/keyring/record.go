@@ -5,6 +5,7 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -57,6 +58,16 @@ func NewMultiRecord(name string, pk cryptotypes.PubKey) (*Record, error) {
 	recordMulti := &Record_Multi{}
 	recordMultiItem := &Record_Multi_{recordMulti}
 	return newRecord(name, pk, recordMultiItem)
+}
+
+// GetMultisigPubKey fetches a public key of the multi type record
+func (k *Record) GetMultisigPubKey() (*multisig.LegacyAminoPubKey, error) {
+	pk, ok := k.PubKey.GetCachedValue().(*multisig.LegacyAminoPubKey)
+	if !ok {
+		return nil, errors.New("unable to cast any to multisig.LegacyAminoPubKey")
+	}
+
+	return pk, nil
 }
 
 // GetPubKey fetches a public key of the record

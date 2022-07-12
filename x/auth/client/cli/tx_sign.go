@@ -224,7 +224,6 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 		txCfg := clientCtx.TxConfig
 		txBuilder, err := txCfg.WrapTxBuilder(newTx)
 		if err != nil {
@@ -232,7 +231,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		}
 
 		printSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
-		multisig, _ := cmd.Flags().GetString(flagMultisig)
+		multisigkey, _ := cmd.Flags().GetString(flagMultisig)
 		if err != nil {
 			return err
 		}
@@ -243,15 +242,44 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		}
 
 		overwrite, _ := f.GetBool(flagOverwrite)
-		if multisig != "" {
-			multisigAddr, err := sdk.AccAddressFromBech32(multisig)
+		if multisigkey != "" {
+			var (
+				multisigName string
+				multisigAddr sdk.AccAddress
+			)
+			// Bech32 decode error, maybe it's a name, we try to fetch from keyring
+			multisigAddr, multisigName, _, err = client.GetFromFields(clientCtx, txF.Keybase(), multisigkey)
 			if err != nil {
-				// Bech32 decode error, maybe it's a name, we try to fetch from keyring
-				multisigAddr, _, _, err = client.GetFromFields(clientCtx, txFactory.Keybase(), multisig)
-				if err != nil {
-					return fmt.Errorf("error getting account from keybase: %w", err)
+				return fmt.Errorf("error getting account from keybase: %w", err)
+			}
+			multisigRecord, err := clientCtx.Keyring.Key(multisigName)
+			if err != nil {
+				return err
+			}
+			multisigPub, err := multisigRecord.GetMultisigPubKey()
+			if err != nil {
+				return err
+			}
+
+			fromRecord, err := clientCtx.Keyring.Key(fromName)
+			if err != nil {
+				return err
+			}
+			fromPubKey, err := fromRecord.GetPubKey()
+			if err != nil {
+				return err
+			}
+
+			var found bool
+			for _, pubkey := range multisigPub.GetPubKeys() {
+				if pubkey.Equals(fromPubKey) {
+					found = true
 				}
 			}
+			if !found {
+				return fmt.Errorf("from key is not a part of multisig key")
+			}
+
 			err = authclient.SignTxWithSignerAddress(
 				txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline, overwrite)
 			if err != nil {

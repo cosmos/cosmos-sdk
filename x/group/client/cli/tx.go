@@ -277,7 +277,7 @@ func MsgUpdateGroupMetadataCmd() *cobra.Command {
 // MsgCreateGroupWithPolicyCmd creates a CLI command for Msg/CreateGroupWithPolicy.
 func MsgCreateGroupWithPolicyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "create-group-with-policy [admin] [group-metadata] [group-policy-metadata] [members-json-file] [decision-policy]",
+		Use: "create-group-with-policy [admin] [group-metadata] [group-policy-metadata] [members-json-file] [decision-policy-json-file]",
 		Short: "Create a group with policy which is an aggregation " +
 			"of member accounts with associated weights, " +
 			"an administrator account and a decision policy. Note, the '--from' flag is " +
@@ -289,9 +289,7 @@ Members accounts can be given through a members JSON file that contains an array
 If group-policy-as-admin flag is set to true, the admin of the newly created group and group policy is set with the group policy address itself.
 
 Example:
-$ %s tx group create-group-with-policy [admin] [group-metadata] [group-policy-metadata] [members-json-file] \
-'{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"1", \
-"windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
+$ %s tx group create-group-with-policy [admin] [group-metadata] [group-policy-metadata] members.json policy.json
 
 where members.json contains:
 
@@ -308,6 +306,17 @@ where members.json contains:
 			"metadata": "some metadata"
 		}
 	]
+}
+
+and policy.json contains:
+
+{
+    "@type": "/cosmos.group.v1.ThresholdDecisionPolicy",
+    "threshold": "1",
+    "windows": {
+        "voting_period": "120h",
+        "min_execution_period": "0s"
+    }
 }
 `,
 				version.AppName,
@@ -335,8 +344,8 @@ where members.json contains:
 				return err
 			}
 
-			var policy group.DecisionPolicy
-			if err := clientCtx.Codec.UnmarshalInterfaceJSON([]byte(args[4]), &policy); err != nil {
+			policy, err := parseDecisionPolicy(clientCtx.Codec, args[4])
+			if err != nil {
 				return err
 			}
 
@@ -368,7 +377,7 @@ where members.json contains:
 // MsgCreateGroupPolicyCmd creates a CLI command for Msg/CreateGroupPolicy.
 func MsgCreateGroupPolicyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "create-group-policy [admin] [group-id] [metadata] [decision-policy]",
+		Use: "create-group-policy [admin] [group-id] [metadata] [decision-policy-json-file]",
 		Short: "Create a group policy which is an account " +
 			"associated with a group and a decision policy. " +
 			"Note, the '--from' flag is " +
@@ -378,12 +387,29 @@ func MsgCreateGroupPolicyCmd() *cobra.Command {
 Note, the '--from' flag is ignored as it is implied from [admin].
 
 Example:
-$ %s tx group create-group-policy [admin] [group-id] [metadata] \
-'{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"1", \
-"windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
+$ %s tx group create-group-policy [admin] [group-id] [metadata] policy.json
 
-Here, we can use percentage decision policy when needed, where 0 < percentage <= 1.
-Ex: '{"@type":"/cosmos.group.v1.PercentageDecisionPolicy", "percentage":"0.5", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}
+where policy.json contains:
+
+{
+    "@type": "/cosmos.group.v1.ThresholdDecisionPolicy",
+    "threshold": "1",
+    "windows": {
+        "voting_period": "120h",
+        "min_execution_period": "0s"
+    }
+}
+
+Here, we can use percentage decision policy when needed, where 0 < percentage <= 1:
+
+{
+    "@type": "/cosmos.group.v1.PercentageDecisionPolicy",
+    "percentage": "0.5",
+    "windows": {
+        "voting_period": "120h",
+        "min_execution_period": "0s"
+    }
+}
 `,
 				version.AppName,
 			),
@@ -405,8 +431,8 @@ Ex: '{"@type":"/cosmos.group.v1.PercentageDecisionPolicy", "percentage":"0.5", "
 				return err
 			}
 
-			var policy group.DecisionPolicy
-			if err := clientCtx.Codec.UnmarshalInterfaceJSON([]byte(args[3]), &policy); err != nil {
+			policy, err := parseDecisionPolicy(clientCtx.Codec, args[3])
+			if err != nil {
 				return err
 			}
 
@@ -470,7 +496,7 @@ func MsgUpdateGroupPolicyAdminCmd() *cobra.Command {
 // MsgUpdateGroupPolicyDecisionPolicyCmd creates a CLI command for Msg/UpdateGroupPolicyDecisionPolicy.
 func MsgUpdateGroupPolicyDecisionPolicyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-group-policy-decision-policy [admin] [group-policy-account] [decision-policy]",
+		Use:   "update-group-policy-decision-policy [admin] [group-policy-account] [decision-policy-json-file]",
 		Short: "Update a group policy's decision policy",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -484,8 +510,8 @@ func MsgUpdateGroupPolicyDecisionPolicyCmd() *cobra.Command {
 				return err
 			}
 
-			var policy group.DecisionPolicy
-			if err := clientCtx.Codec.UnmarshalInterfaceJSON([]byte(args[2]), &policy); err != nil {
+			policy, err := parseDecisionPolicy(clientCtx.Codec, args[2])
+			if err != nil {
 				return err
 			}
 

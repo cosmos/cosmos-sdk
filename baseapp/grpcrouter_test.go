@@ -57,7 +57,7 @@ func TestRegisterQueryServiceTwice(t *testing.T) {
 	var (
 		appBuilder *runtime.AppBuilder
 	)
-	err := depinject.Inject(MakeTestConfig(), &appBuilder)
+	err := depinject.Inject(MakeMinimalConfig(), &appBuilder)
 	require.NoError(t, err)
 	db := dbm.NewMemDB()
 	app := appBuilder.Build(log.MustNewDefaultLogger("plain", "info", false), db, nil)

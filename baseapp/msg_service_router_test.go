@@ -48,11 +48,15 @@ func TestRegisterMsgService(t *testing.T) {
 
 func TestRegisterMsgServiceTwice(t *testing.T) {
 	// Setup baseapp.
+	var (
+		appBuilder *runtime.AppBuilder
+		registry   codectypes.InterfaceRegistry
+	)
+	err := depinject.Inject(MakeMinimalConfig(), &appBuilder, &registry)
+	require.NoError(t, err)
 	db := dbm.NewMemDB()
-	encCfg := simapp.MakeTestEncodingConfig()
-	app := baseapp.NewBaseApp("test", log.MustNewDefaultLogger("plain", "info", false), db, encCfg.TxConfig.TxDecoder())
-	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
-	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
+	app := appBuilder.Build(log.MustNewDefaultLogger("plain", "info", false), db, nil)
+	testdata.RegisterInterfaces(registry)
 
 	// First time registering service shouldn't panic.
 	require.NotPanics(t, func() {

@@ -132,3 +132,16 @@ func MakeTestConfig() depinject.Config {
 		},
 	})
 }
+
+func MakeMinimalConfig() depinject.Config {
+	return appconfig.Compose(&appv1alpha1.Config{
+		Modules: []*appv1alpha1.ModuleConfig{
+			{
+				Name: "runtime",
+				Config: appconfig.WrapAny(&runtimev1alpha1.Module{
+					AppName: "BaseAppApp",
+				}),
+			},
+		},
+	})
+}

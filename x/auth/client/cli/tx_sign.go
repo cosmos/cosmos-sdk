@@ -265,19 +265,19 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
-			fromPub, err := fromRecord.GetPubKey()
+			fromPubKey, err := fromRecord.GetPubKey()
 			if err != nil {
 				return err
 			}
 
 			var found bool
 			for _, pubkey := range multisigPub.GetPubKeys() {
-				if pubkey.Equals(fromPub) {
+				if pubkey.Equals(fromPubKey) {
 					found = true
 				}
 			}
 			if !found {
-				return fmt.Errorf("%v key is not a part of %v multisig key", fromName, multisigName)
+				return fmt.Errorf("from key is not a part of multisig key")
 			}
 
 			err = authclient.SignTxWithSignerAddress(

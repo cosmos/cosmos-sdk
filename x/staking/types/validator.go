@@ -179,7 +179,7 @@ func (v Validator) IsUnbonding() bool {
 
 // IsMature - is the current validator ready to unbond their coins
 func (v Validator) IsMature(currentTime time.Time, currentHeight int64) bool {
-	return v.UnbondingHeight < currentHeight && v.UnbondingTime.Before(currentTime)
+	return v.UnbondingHeight <= currentHeight && (v.UnbondingTime.Before(currentTime) || v.UnbondingTime.Equal(currentTime))
 }
 
 // constant used in flags to indicate that description field should not be updated

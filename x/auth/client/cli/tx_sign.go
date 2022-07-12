@@ -231,7 +231,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		}
 
 		printSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
-		multisig, _ := cmd.Flags().GetString(flagMultisig)
+		multisigkey, _ := cmd.Flags().GetString(flagMultisig)
 		if err != nil {
 			return err
 		}
@@ -242,13 +242,13 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		}
 
 		overwrite, _ := f.GetBool(flagOverwrite)
-		if multisig != "" {
+		if multisigkey != "" {
 			var (
 				multisigName string
 				multisigAddr sdk.AccAddress
 			)
 			// Bech32 decode error, maybe it's a name, we try to fetch from keyring
-			multisigAddr, multisigName, _, err = client.GetFromFields(clientCtx, txF.Keybase(), multisig)
+			multisigAddr, multisigName, _, err = client.GetFromFields(clientCtx, txF.Keybase(), multisigkey)
 			if err != nil {
 				return fmt.Errorf("error getting account from keybase: %w", err)
 			}
@@ -256,15 +256,30 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
+			multisigPub, err := multisigRecord.GetMultisigPubKey()
+			if err != nil {
+				return err
+			}
+
 			fromRecord, err := clientCtx.Keyring.Key(fromName)
 			if err != nil {
 				return err
 			}
-			fmt.Println("==============MULTISIG PUBKEY=================")
-			fmt.Println(multisigRecord.GetPubKey())
-			fmt.Println("================FROM PUBKEY===================")
-			fmt.Println(fromRecord.GetPubKey())
-			fmt.Println("==============================================")
+			fromPub, err := fromRecord.GetPubKey()
+			if err != nil {
+				return err
+			}
+
+			var found bool
+			for _, pubkey := range multisigPub.GetPubKeys() {
+				if pubkey.Equals(fromPub) {
+					found = true
+				}
+			}
+			if !found {
+				return fmt.Errorf("%v key is not a part of %v multisig key", fromName, multisigName)
+			}
+
 			err = authclient.SignTxWithSignerAddress(
 				txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline, overwrite)
 			if err != nil {

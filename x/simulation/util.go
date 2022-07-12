@@ -116,7 +116,6 @@ func GenAndDeliverTx(txCtx OperationInput, fees sdk.Coins) (simtypes.OperationMs
 	}
 
 	_, _, err = txCtx.App.SimDeliver(txCtx.TxGen.TxEncoder(), tx)
-
 	if err != nil {
 		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to deliver tx"), nil, err
 	}

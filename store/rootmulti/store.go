@@ -907,8 +907,17 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 }
 
 func (rs *Store) buildCommitInfo(version int64) *types.CommitInfo {
+	keys := make([]types.StoreKey, 0, len(rs.stores))
+	for key := range rs.stores {
+		keys = append(keys, key)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i].Name() < keys[j].Name()
+	})
+
 	storeInfos := []types.StoreInfo{}
-	for key, store := range rs.stores {
+	for _, key := range keys {
+		store := rs.stores[key]
 		if store.GetStoreType() == types.StoreTypeTransient {
 			continue
 		}

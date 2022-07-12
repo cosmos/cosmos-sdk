@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/depinject/internal/util"
+	"cosmossdk.io/depinject/internal/util"
 )
 
 // Attributes represents a graphviz attributes map.

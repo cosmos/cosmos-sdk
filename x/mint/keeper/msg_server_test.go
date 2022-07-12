@@ -21,7 +21,7 @@ func (s *IntegrationTestSuite) TestUpdateParams() {
 		{
 			name: "set invalid params",
 			request: &types.MsgUpdateParams{
-				Authority: s.app.MintKeeper.GetAuthority(),
+				Authority: s.mintKeeper.GetAuthority(),
 				Params: types.Params{
 					MintDenom:           sdk.DefaultBondDenom,
 					InflationRateChange: sdk.NewDecWithPrec(-13, 2),
@@ -36,7 +36,7 @@ func (s *IntegrationTestSuite) TestUpdateParams() {
 		{
 			name: "set full valid params",
 			request: &types.MsgUpdateParams{
-				Authority: s.app.MintKeeper.GetAuthority(),
+				Authority: s.mintKeeper.GetAuthority(),
 				Params: types.Params{
 					MintDenom:           sdk.DefaultBondDenom,
 					InflationRateChange: sdk.NewDecWithPrec(8, 2),

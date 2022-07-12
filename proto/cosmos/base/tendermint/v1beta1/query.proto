@@ -100,7 +100,9 @@ message GetBlockByHeightRequest {
 // GetBlockByHeightResponse is the response type for the Query/GetBlockByHeight RPC method.
 message GetBlockByHeightResponse {
   .tendermint.types.BlockID block_id = 1;
-  .tendermint.types.Block   block    = 2;
+  .tendermint.types.Block   block    = 2 [deprecated = true];
+
+  // since: v0.47
   Block                     sdk_block    = 3;
 }
 
@@ -110,7 +112,9 @@ message GetLatestBlockRequest {}
 // GetLatestBlockResponse is the response type for the Query/GetLatestBlock RPC method.
 message GetLatestBlockResponse {
   .tendermint.types.BlockID block_id = 1;
-  .tendermint.types.Block   block    = 2;
+  .tendermint.types.Block   block    = 2 [deprecated = true];
+  
+  // since: v0.47
   Block                     sdk_block    = 3;
 }
 

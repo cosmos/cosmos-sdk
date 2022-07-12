@@ -15,12 +15,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_runExportCmd(t *testing.T) {
-	cdc := simapp.MakeTestEncodingConfig().Codec
+	cdc := makeTestCodec(t)
 	testCases := []struct {
 		name           string
 		keyringBackend string

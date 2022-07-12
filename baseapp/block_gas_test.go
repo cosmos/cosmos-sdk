@@ -17,7 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	codec "github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -68,7 +68,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			err               error
 		)
 
-		appConfig := depinject.Configs(MakeTestConfig(),
+		appConfig := depinject.Configs(makeTestConfig(),
 			depinject.ProvideInModule("bank",
 				func(_ *bankmodulev1.Module, key *store.KVStoreKey) runtime.BaseAppOption {
 					return func(app *baseapp.BaseApp) {

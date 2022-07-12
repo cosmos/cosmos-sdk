@@ -10,12 +10,10 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/depinject"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -23,12 +21,15 @@ import (
 )
 
 func TestRegisterMsgService(t *testing.T) {
-	db := dbm.NewMemDB()
+	// Setup baseapp.
+	var (
+		appBuilder *runtime.AppBuilder
+		registry   codectypes.InterfaceRegistry
+	)
+	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &registry)
+	require.NoError(t, err)
+	app := appBuilder.Build(log.MustNewDefaultLogger("plain", "info", false), dbm.NewMemDB(), nil)
 
-	// Create an encoding config that doesn't register testdata Msg services.
-	encCfg := simapp.MakeTestEncodingConfig()
-	app := baseapp.NewBaseApp("test", log.MustNewDefaultLogger("plain", "info", false), db, encCfg.TxConfig.TxDecoder())
-	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	require.Panics(t, func() {
 		testdata.RegisterMsgServer(
 			app.MsgServiceRouter(),
@@ -36,8 +37,9 @@ func TestRegisterMsgService(t *testing.T) {
 		)
 	})
 
-	// Register testdata Msg services, and rerun `RegisterService`.
-	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
+	// Register testdata Msg services, and rerun `RegisterMsgService`.
+	testdata.RegisterInterfaces(registry)
+
 	require.NotPanics(t, func() {
 		testdata.RegisterMsgServer(
 			app.MsgServiceRouter(),
@@ -52,7 +54,7 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 		appBuilder *runtime.AppBuilder
 		registry   codectypes.InterfaceRegistry
 	)
-	err := depinject.Inject(MakeMinimalConfig(), &appBuilder, &registry)
+	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &registry)
 	require.NoError(t, err)
 	db := dbm.NewMemDB()
 	app := appBuilder.Build(log.MustNewDefaultLogger("plain", "info", false), db, nil)
@@ -83,7 +85,7 @@ func TestMsgService(t *testing.T) {
 		cdc               codec.ProtoCodecMarshaler
 		interfaceRegistry codectypes.InterfaceRegistry
 	)
-	err := depinject.Inject(MakeMinimalConfig(), &appBuilder, &cdc, &interfaceRegistry)
+	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &cdc, &interfaceRegistry)
 	require.NoError(t, err)
 	app := appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil)
 

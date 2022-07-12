@@ -28,8 +28,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -57,10 +57,11 @@ func TestBaseApp_BlockGas(t *testing.T) {
 	for _, tc := range testcases {
 		var (
 			bankKeeper        bankkeeper.Keeper
-			accountKeeper     banktypes.AccountKeeper
+			accountKeeper     authkeeper.AccountKeeper
 			paramsKeeper      paramskeeper.Keeper
 			stakingKeeper     *stakingkeeper.Keeper
 			appBuilder        *runtime.AppBuilder
+			txConfig          client.TxConfig
 			cdc               codec.Codec
 			pcdc              codec.ProtoCodecMarshaler
 			interfaceRegistry codectypes.InterfaceRegistry
@@ -93,6 +94,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			&paramsKeeper,
 			&stakingKeeper,
 			&interfaceRegistry,
+			&txConfig,
 			&cdc,
 			&pcdc,
 			&appBuilder)
@@ -134,15 +136,17 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			// msg and signatures
 			msg := testdata.NewTestMsg(addr1)
 
-			txConfig := authtx.NewTxConfig(pcdc, authtx.DefaultSignModes)
 			txBuilder := txConfig.NewTxBuilder()
-			bapp.SetTxDecoder(txConfig.TxDecoder())
+			//bapp.SetTxDecoder(txConfig.TxDecoder())
 
 			require.NoError(t, txBuilder.SetMsgs(msg))
 			txBuilder.SetFeeAmount(feeAmount)
 			txBuilder.SetGasLimit(txtypes.MaxGasWanted) // tx validation checks that gasLimit can't be bigger than this
 
-			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{7}, []uint64{0}
+			// warning! perscriptive account number in tests. changing the wiring of this test
+			// could cause the account number to change and signing to fail
+			senderAccountNumber := uint64(5)
+			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{senderAccountNumber}, []uint64{0}
 			_, txBytes, err := createTestTx(txConfig, txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 			require.NoError(t, err)
 
@@ -165,7 +169,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				require.Equal(t, []byte("ok"), okValue)
 			}
 			// check block gas is always consumed
-			baseGas := uint64(195904) // baseGas is the gas consumed before tx msg
+			baseGas := uint64(52744) // baseGas is the gas consumed before tx msg
 			expGasConsumed := addUint64Saturating(tc.gasToConsume, baseGas)
 			if expGasConsumed > txtypes.MaxGasWanted {
 				// capped by gasLimit

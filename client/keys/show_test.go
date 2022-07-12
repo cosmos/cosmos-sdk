@@ -31,7 +31,7 @@ func Test_multiSigKey_Properties(t *testing.T) {
 	require.Equal(t, "myMultisig", k.Name)
 	require.Equal(t, keyring.TypeMulti, k.GetType())
 
-	pub, err := k.GetMultisigPubKey()
+	pub, err := k.GetPubKey()
 	require.NoError(t, err)
 	require.Equal(t, "D3923267FA8A3DD367BB768FA8BDC8FF7F89DA3F", pub.Address().String())
 

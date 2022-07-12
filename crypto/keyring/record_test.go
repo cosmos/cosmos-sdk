@@ -10,8 +10,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
@@ -19,11 +17,10 @@ import (
 type RecordTestSuite struct {
 	suite.Suite
 
-	appName  string
-	cdc      codec.Codec
-	priv     cryptotypes.PrivKey
-	pub      cryptotypes.PubKey
-	multiPub *multisig.LegacyAminoPubKey
+	appName string
+	cdc     codec.Codec
+	priv    cryptotypes.PrivKey
+	pub     cryptotypes.PubKey
 }
 
 func (s *RecordTestSuite) SetupSuite() {
@@ -31,14 +28,6 @@ func (s *RecordTestSuite) SetupSuite() {
 	s.cdc = getCodec()
 	s.priv = cryptotypes.PrivKey(ed25519.GenPrivKey())
 	s.pub = s.priv.PubKey()
-
-	multiKey := secp256k1.GenPrivKeyFromSecret([]byte("myMultiKey"))
-	pk := multisig.NewLegacyAminoPubKey(
-		1,
-		[]cryptotypes.PubKey{multiKey.PubKey()},
-	)
-	s.multiPub = pk
-
 }
 
 func (s *RecordTestSuite) TestOfflineRecordMarshaling() {
@@ -56,32 +45,6 @@ func (s *RecordTestSuite) TestOfflineRecordMarshaling() {
 	pk2, err := k2.GetPubKey()
 	s.Require().NoError(err)
 	s.Require().True(s.pub.Equals(pk2))
-}
-
-func (s *RecordTestSuite) TestMultiRecordMarshaling() {
-	dir := s.T().TempDir()
-	mockIn := strings.NewReader("")
-
-	kb, err := New(s.appName, BackendTest, dir, mockIn, s.cdc)
-	s.Require().NoError(err)
-
-	k, err := NewMultiRecord("testrecord", s.multiPub)
-	s.Require().NoError(err)
-
-	ks, ok := kb.(keystore)
-	s.Require().True(ok)
-
-	bz, err := ks.cdc.Marshal(k)
-	s.Require().NoError(err)
-
-	k2, err := ks.protoUnmarshalRecord(bz)
-	s.Require().NoError(err)
-	s.Require().Equal(k.Name, k2.Name)
-	s.Require().True(k.PubKey.Equal(k2.PubKey))
-
-	pub2, err := k2.GetMultisigPubKey()
-	s.Require().NoError(err)
-	s.Require().True(s.multiPub.Equals(pub2))
 }
 
 func (s *RecordTestSuite) TestLocalRecordMarshaling() {

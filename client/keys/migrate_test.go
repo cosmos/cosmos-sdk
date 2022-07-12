@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	clienttestutil "github.com/cosmos/cosmos-sdk/client/testutil"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -35,7 +36,7 @@ type MigrateTestSuite struct {
 
 func (s *MigrateTestSuite) SetupSuite() {
 	s.dir = s.T().TempDir()
-	s.cdc = makeTestCodec(s.T())
+	s.cdc = clienttestutil.MakeTestCodec(s.T())
 	s.appName = "cosmos"
 	s.priv = cryptotypes.PrivKey(secp256k1.GenPrivKey())
 	s.pub = s.priv.PubKey()

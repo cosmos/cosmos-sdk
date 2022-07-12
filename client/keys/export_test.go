@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	clienttestutil "github.com/cosmos/cosmos-sdk/client/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -19,7 +20,7 @@ import (
 )
 
 func Test_runExportCmd(t *testing.T) {
-	cdc := makeTestCodec(t)
+	cdc := clienttestutil.MakeTestCodec(t)
 	testCases := []struct {
 		name           string
 		keyringBackend string

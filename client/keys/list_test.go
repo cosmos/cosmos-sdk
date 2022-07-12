@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	clienttestutil "github.com/cosmos/cosmos-sdk/client/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -34,7 +35,7 @@ func Test_runListCmd(t *testing.T) {
 	kbHome2 := t.TempDir()
 
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
-	cdc := makeTestCodec(t)
+	cdc := clienttestutil.MakeTestCodec(t)
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome2, mockIn, cdc)
 	require.NoError(t, err)
 

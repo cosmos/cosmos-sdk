@@ -103,7 +103,7 @@ message GetBlockByHeightResponse {
   .tendermint.types.Block   block    = 2 [deprecated = true];
 
   // since: v0.47
-  Block                     sdk_block    = 3;
+  Block sdk_block = 3;
 }
 
 // GetLatestBlockRequest is the request type for the Query/GetLatestBlock RPC method.
@@ -113,9 +113,9 @@ message GetLatestBlockRequest {}
 message GetLatestBlockResponse {
   .tendermint.types.BlockID block_id = 1;
   .tendermint.types.Block   block    = 2 [deprecated = true];
-  
+
   // since: v0.47
-  Block                     sdk_block    = 3;
+  Block sdk_block = 3;
 }
 
 // GetSyncingRequest is the request type for the Query/GetSyncing RPC method.
@@ -174,8 +174,8 @@ message ABCIQueryResponse {
   uint32 code = 1;
   // DEPRECATED: use "value" instead
   reserved 2;
-  string   log       = 3;  // nondeterministic
-  string   info      = 4;  // nondeterministic
+  string   log       = 3; // nondeterministic
+  string   info      = 4; // nondeterministic
   int64    index     = 5;
   bytes    key       = 6;
   bytes    value     = 7;

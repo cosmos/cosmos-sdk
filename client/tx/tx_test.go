@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -160,11 +159,10 @@ func TestBuildUnsignedTx(t *testing.T) {
 }
 
 func TestSign(t *testing.T) {
-	txConfig, _ := newTestTxConfig(t)
+	txConfig, cdc := newTestTxConfig(t)
 	requireT := require.New(t)
 	path := hd.CreateHDPath(118, 0, 0).String()
-	encCfg := simapp.MakeTestEncodingConfig()
-	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encCfg.Codec)
+	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, cdc)
 	requireT.NoError(err)
 
 	from1 := "test_key1"

@@ -137,15 +137,12 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			msg := testdata.NewTestMsg(addr1)
 
 			txBuilder := txConfig.NewTxBuilder()
-			//bapp.SetTxDecoder(txConfig.TxDecoder())
 
 			require.NoError(t, txBuilder.SetMsgs(msg))
 			txBuilder.SetFeeAmount(feeAmount)
 			txBuilder.SetGasLimit(txtypes.MaxGasWanted) // tx validation checks that gasLimit can't be bigger than this
 
-			// warning! perscriptive account number in tests. changing the wiring of this test
-			// could cause the account number to change and signing to fail
-			senderAccountNumber := uint64(5)
+			senderAccountNumber := accountKeeper.GetAccount(ctx, addr1).GetAccountNumber()
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{senderAccountNumber}, []uint64{0}
 			_, txBytes, err := createTestTx(txConfig, txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 			require.NoError(t, err)

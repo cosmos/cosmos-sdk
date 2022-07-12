@@ -1116,14 +1116,16 @@ func (suite *AnteTestSuite) TestAnteHandlerReCheck() {
 	}
 	for _, tc := range testCases {
 		// set testcase parameters
-		suite.accountKeeper.SetParams(suite.ctx, tc.params)
+		err := suite.accountKeeper.SetParams(suite.ctx, tc.params)
+		suite.Require().NoError(err)
 
-		_, err := suite.anteHandler(suite.ctx, tx, false)
+		_, err = suite.anteHandler(suite.ctx, tx, false)
 
 		suite.Require().NotNil(err, "tx does not fail on recheck with updated params in test case: %s", tc.name)
 
 		// reset parameters to default values
-		suite.accountKeeper.SetParams(suite.ctx, types.DefaultParams())
+		err = suite.accountKeeper.SetParams(suite.ctx, types.DefaultParams())
+		suite.Require().NoError(err)
 	}
 
 	// require that local mempool fee check is still run on recheck since validator may change minFee between check and recheck

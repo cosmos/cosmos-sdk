@@ -37,13 +37,13 @@ func TestSetWithdrawAddr(t *testing.T) {
 
 	params := distrKeeper.GetParams(ctx)
 	params.WithdrawAddrEnabled = false
-	distrKeeper.SetParams(ctx, params)
+	require.NoError(t, distrKeeper.SetParams(ctx, params))
 
 	err = distrKeeper.SetWithdrawAddr(ctx, addr[0], addr[1])
 	require.NotNil(t, err)
 
 	params.WithdrawAddrEnabled = true
-	distrKeeper.SetParams(ctx, params)
+	require.NoError(t, distrKeeper.SetParams(ctx, params))
 
 	err = distrKeeper.SetWithdrawAddr(ctx, addr[0], addr[1])
 	require.Nil(t, err)

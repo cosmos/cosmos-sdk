@@ -14,8 +14,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
+	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
 
 	"github.com/cosmos/cosmos-sdk/client"

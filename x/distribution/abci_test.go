@@ -5,8 +5,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	"github.com/cosmos/cosmos-sdk/x/distribution/testutil"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
@@ -33,10 +37,22 @@ type validator struct {
 
 // Context in https://github.com/cosmos/cosmos-sdk/issues/9161
 func TestVerifyProposerRewardAssignement(t *testing.T) {
-	app := simapp.Setup(t, false)
+	var (
+		bankKeeper    bankkeeper.Keeper
+		stakingKeeper *stakingkeeper.Keeper
+		distrKeeper   keeper.Keeper
+	)
+
+	app, err := simtestutil.Setup(testutil.AppConfig,
+		&bankKeeper,
+		&stakingKeeper,
+		&distrKeeper,
+	)
+	require.NoError(t, err)
+
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	addrs := simapp.AddTestAddrsIncremental(app, ctx, totalValidators, valTokens)
-	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
+	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, totalValidators, valTokens)
+	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
 	tstaking.Commission = validatorCommissionRates
 
 	// create validators
@@ -51,10 +67,10 @@ func TestVerifyProposerRewardAssignement(t *testing.T) {
 	require.NotEmpty(t, app.Commit())
 
 	// verify validators lists
-	require.Len(t, app.StakingKeeper.GetAllValidators(ctx), totalValidators)
+	require.Len(t, stakingKeeper.GetAllValidators(ctx), totalValidators)
 	for i, val := range validators {
 		// verify all validator exists
-		require.NotNil(t, app.StakingKeeper.ValidatorByConsAddr(ctx, sdk.GetConsAddress(val.pubkey)))
+		require.NotNil(t, stakingKeeper.ValidatorByConsAddr(ctx, sdk.GetConsAddress(val.pubkey)))
 
 		// populate last commit info
 		voteInfos := []abci.VoteInfo{}
@@ -99,9 +115,9 @@ func TestVerifyProposerRewardAssignement(t *testing.T) {
 	})
 	require.NotEmpty(t, app.Commit())
 
-	rewardsValidatorBeforeLazyValidator := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, validators[lazyValidatorIdx+1].addr)
-	rewardsLazyValidator := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, validators[lazyValidatorIdx].addr)
-	rewardsValidatorAfterLazyValidator := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, validators[lazyValidatorIdx+1].addr)
+	rewardsValidatorBeforeLazyValidator := distrKeeper.GetValidatorOutstandingRewardsCoins(ctx, validators[lazyValidatorIdx+1].addr)
+	rewardsLazyValidator := distrKeeper.GetValidatorOutstandingRewardsCoins(ctx, validators[lazyValidatorIdx].addr)
+	rewardsValidatorAfterLazyValidator := distrKeeper.GetValidatorOutstandingRewardsCoins(ctx, validators[lazyValidatorIdx+1].addr)
 	require.True(t, rewardsLazyValidator[0].Amount.LT(rewardsValidatorAfterLazyValidator[0].Amount))
 	require.Equal(t, rewardsValidatorBeforeLazyValidator, rewardsValidatorAfterLazyValidator)
 }

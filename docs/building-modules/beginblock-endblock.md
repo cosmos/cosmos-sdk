@@ -26,13 +26,13 @@ A specificity of the `EndBlocker` is that it can return validator updates to the
 
 It is possible for developers to define the order of execution between the `BeginBlocker`/`EndBlocker` functions of each of their application's modules via the module's manager `SetOrderBeginBlocker`/`SetOrderEndBlocker` methods. For more on the module manager, click [here](./module-manager.md#manager).
 
-See an example implementation of `BeginBlocker` from the `distr` module:
+See an example implementation of `BeginBlocker` from the `distribution` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/f33749263f4ecc796115ad6e789cb0f7cddf9148/x/distribution/abci.go#L14-L38
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/x/distribution/abci.go#L14-L38
 
 and an example implementation of `EndBlocker` from the `staking` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/f33749263f4ecc796115ad6e789cb0f7cddf9148/x/staking/abci.go#L22-L27
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/x/staking/abci.go#L22-L27
 
 ## Next {hide}
 

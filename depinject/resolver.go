@@ -3,7 +3,7 @@ package depinject
 import (
 	"reflect"
 
-	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
+	"cosmossdk.io/depinject/internal/graphviz"
 )
 
 type resolver interface {
@@ -11,4 +11,5 @@ type resolver interface {
 	resolve(*container, *moduleKey, Location) (reflect.Value, error)
 	describeLocation() string
 	typeGraphNode() *graphviz.Node
+	getType() reflect.Type
 }

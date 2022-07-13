@@ -37,6 +37,15 @@ func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKee
 }
 
 func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+	feeTx, ok := tx.(sdk.FeeTx)
+	if !ok {
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+	}
+
+	if ctx.BlockHeight() > 0 && feeTx.GetGas() == 0 {
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidGasLimit, "must provide positive gas")
+	}
+
 	fee, priority, err := dfd.txFeeChecker(ctx, tx)
 	if err != nil {
 		return ctx, err
@@ -57,7 +66,7 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 	}
 
 	if addr := dfd.accountKeeper.GetModuleAddress(types.FeeCollectorName); addr == nil {
-		return fmt.Errorf("Fee collector module account (%s) has not been set", types.FeeCollectorName)
+		return fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
 	}
 
 	feePayer := feeTx.FeePayer()

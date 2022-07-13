@@ -3,12 +3,14 @@ package runtime
 import (
 	"fmt"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/std"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -34,6 +36,7 @@ func init() {
 			provideKVStoreKey,
 			provideTransientStoreKey,
 			provideMemoryStoreKey,
+			provideDeliverTx,
 		),
 	)
 }
@@ -43,7 +46,9 @@ func provideCodecs(moduleBasics map[string]AppModuleBasicWrapper) (
 	codec.Codec,
 	*codec.LegacyAmino,
 	appWrapper,
-	codec.ProtoCodecMarshaler) {
+	codec.ProtoCodecMarshaler,
+	*baseapp.MsgServiceRouter,
+) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	amino := codec.NewLegacyAmino()
 
@@ -58,15 +63,17 @@ func provideCodecs(moduleBasics map[string]AppModuleBasicWrapper) (
 	std.RegisterLegacyAminoCodec(amino)
 
 	cdc := codec.NewProtoCodec(interfaceRegistry)
+	msgServiceRouter := baseapp.NewMsgServiceRouter()
 	app := &App{
 		storeKeys:         nil,
 		interfaceRegistry: interfaceRegistry,
 		cdc:               cdc,
 		amino:             amino,
 		basicManager:      basicManager,
+		msgServiceRouter:  msgServiceRouter,
 	}
 
-	return interfaceRegistry, cdc, amino, app, cdc
+	return interfaceRegistry, cdc, amino, app, cdc, msgServiceRouter
 }
 
 type appInputs struct {
@@ -128,4 +135,10 @@ func provideMemoryStoreKey(key depinject.ModuleKey, app appWrapper) *storetypes.
 	storeKey := storetypes.NewMemoryStoreKey(fmt.Sprintf("memory:%s", key.Name()))
 	registerStoreKey(app, storeKey)
 	return storeKey
+}
+
+func provideDeliverTx(app appWrapper) func(abci.RequestDeliverTx) abci.ResponseDeliverTx {
+	return func(tx abci.RequestDeliverTx) abci.ResponseDeliverTx {
+		return app.BaseApp.DeliverTx(tx)
+	}
 }

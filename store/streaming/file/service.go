@@ -88,12 +88,19 @@ func (fss *StreamingService) Listeners() map[types.StoreKey][]types.WriteListene
 // ListenBeginBlock satisfies the baseapp.ABCIListener interface
 // It writes the received BeginBlock request and response and the resulting state changes
 // out to a file as described in the above the naming schema
-func (fss *StreamingService) ListenBeginBlock(ctx sdk.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
+func (fss *StreamingService) ListenBeginBlock(ctx sdk.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) (rerr error) {
 	// generate the new file
 	dstFile, err := fss.openBeginBlockFile(req)
 	if err != nil {
 		return err
 	}
+	defer func() {
+		cerr := dstFile.Close()
+		if rerr == nil {
+			rerr = cerr
+		}
+	}()
+
 	// write req to file
 	lengthPrefixedReqBytes, err := fss.codec.MarshalLengthPrefixed(&req)
 	if err != nil {
@@ -119,11 +126,8 @@ func (fss *StreamingService) ListenBeginBlock(ctx sdk.Context, req abci.RequestB
 	if err != nil {
 		return err
 	}
-	if _, err = dstFile.Write(lengthPrefixedResBytes); err != nil {
-		return err
-	}
-	// close file
-	return dstFile.Close()
+	_, err = dstFile.Write(lengthPrefixedResBytes)
+	return err
 }
 
 func (fss *StreamingService) openBeginBlockFile(req abci.RequestBeginBlock) (*os.File, error) {
@@ -139,12 +143,19 @@ func (fss *StreamingService) openBeginBlockFile(req abci.RequestBeginBlock) (*os
 // ListenDeliverTx satisfies the baseapp.ABCIListener interface
 // It writes the received DeliverTx request and response and the resulting state changes
 // out to a file as described in the above the naming schema
-func (fss *StreamingService) ListenDeliverTx(ctx sdk.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
+func (fss *StreamingService) ListenDeliverTx(ctx sdk.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) (rerr error) {
 	// generate the new file
 	dstFile, err := fss.openDeliverTxFile()
 	if err != nil {
 		return err
 	}
+	defer func() {
+		cerr := dstFile.Close()
+		if rerr == nil {
+			rerr = cerr
+		}
+	}()
+
 	// write req to file
 	lengthPrefixedReqBytes, err := fss.codec.MarshalLengthPrefixed(&req)
 	if err != nil {
@@ -170,11 +181,8 @@ func (fss *StreamingService) ListenDeliverTx(ctx sdk.Context, req abci.RequestDe
 	if err != nil {
 		return err
 	}
-	if _, err = dstFile.Write(lengthPrefixedResBytes); err != nil {
-		return err
-	}
-	// close file
-	return dstFile.Close()
+	_, err = dstFile.Write(lengthPrefixedResBytes)
+	return err
 }
 
 func (fss *StreamingService) openDeliverTxFile() (*os.File, error) {
@@ -189,12 +197,19 @@ func (fss *StreamingService) openDeliverTxFile() (*os.File, error) {
 // ListenEndBlock satisfies the baseapp.ABCIListener interface
 // It writes the received EndBlock request and response and the resulting state changes
 // out to a file as described in the above the naming schema
-func (fss *StreamingService) ListenEndBlock(ctx sdk.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
+func (fss *StreamingService) ListenEndBlock(ctx sdk.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) (rerr error) {
 	// generate the new file
 	dstFile, err := fss.openEndBlockFile()
 	if err != nil {
 		return err
 	}
+	defer func() {
+		cerr := dstFile.Close()
+		if rerr == nil {
+			rerr = cerr
+		}
+	}()
+
 	// write req to file
 	lengthPrefixedReqBytes, err := fss.codec.MarshalLengthPrefixed(&req)
 	if err != nil {
@@ -220,11 +235,8 @@ func (fss *StreamingService) ListenEndBlock(ctx sdk.Context, req abci.RequestEnd
 	if err != nil {
 		return err
 	}
-	if _, err = dstFile.Write(lengthPrefixedResBytes); err != nil {
-		return err
-	}
-	// close file
-	return dstFile.Close()
+	_, err = dstFile.Write(lengthPrefixedResBytes)
+	return err
 }
 
 func (fss *StreamingService) openEndBlockFile() (*os.File, error) {

@@ -150,7 +150,13 @@ type Options struct {
 // purposes and on-the-fly key generation.
 // Keybase options can be applied when generating this new Keybase.
 func NewInMemory(cdc codec.Codec, opts ...Option) Keyring {
-	return newKeystore(keyring.NewArrayKeyring(nil), cdc, BackendMemory, opts...)
+	return NewInMemoryWithKeyring(keyring.NewArrayKeyring(nil), cdc, opts...)
+}
+
+// NewInMemoryWithKeyring returns an in memory keyring using the specified keyring.Keyring
+// as the backing keyring.
+func NewInMemoryWithKeyring(kr keyring.Keyring, cdc codec.Codec, opts ...Option) Keyring {
+	return newKeystore(kr, cdc, BackendMemory, opts...)
 }
 
 // New creates a new instance of a keyring.
@@ -498,7 +504,10 @@ func (ks keystore) List() ([]*Record, error) {
 	var res []*Record //nolint:prealloc
 	sort.Strings(keys)
 	for _, key := range keys {
-		if strings.HasSuffix(key, addressSuffix) {
+		// Recall that each key is twice in the keyring:
+		// - once with the `.info` suffix, which holds the key info
+		// - another time with the `.address` suffix, which only holds a reference to its associated `.info` key
+		if !strings.HasSuffix(key, infoSuffix) {
 			continue
 		}
 
@@ -872,9 +881,8 @@ func (ks keystore) MigrateAll() error {
 	}
 
 	for _, key := range keys {
-		// The keyring items with `.address` suffix only holds as Data the
-		// key name uid, so there's nothing to migrate.
-		if strings.HasSuffix(key, addressSuffix) {
+		// The keyring items only with `.info` consists the key info.
+		if !strings.HasSuffix(key, infoSuffix) {
 			continue
 		}
 

@@ -6,7 +6,7 @@ import (
 	"sort"
 
 	"cosmossdk.io/core/appmodule"
-	"github.com/cosmos/cosmos-sdk/depinject"
+	"cosmossdk.io/depinject"
 )
 
 func init() {
@@ -95,4 +95,8 @@ type keeperB struct {
 	a   KeeperA
 }
 
-type KeeperB interface{}
+type KeeperB interface {
+	isKeeperB()
+}
+
+func (k keeperB) isKeeperB() {}

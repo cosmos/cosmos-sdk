@@ -12,6 +12,7 @@ import (
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -56,7 +57,7 @@ func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*simapp.Si
 
 func initValidators(t testing.TB, power int64, numAddrs int, powers []int64) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress, []types.Validator) {
 	app, ctx, addrs, valAddrs := bootstrapValidatorTest(t, power, numAddrs)
-	pks := simapp.CreateTestPubKeys(numAddrs)
+	pks := simtestutil.CreateTestPubKeys(numAddrs)
 
 	vs := make([]types.Validator, len(powers))
 	for i, power := range powers {
@@ -1113,7 +1114,7 @@ func TestUpdateValidatorCommission(t *testing.T) {
 	}
 }
 
-func applyValidatorSetUpdates(t *testing.T, ctx sdk.Context, k keeper.Keeper, expectedUpdatesLen int) []abci.ValidatorUpdate {
+func applyValidatorSetUpdates(t *testing.T, ctx sdk.Context, k *keeper.Keeper, expectedUpdatesLen int) []abci.ValidatorUpdate {
 	updates, err := k.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.NoError(t, err)
 	if expectedUpdatesLen >= 0 {

@@ -5,6 +5,8 @@ import (
 	"go/ast"
 )
 
+// CreateIdent creates a new ident at the file level that doesn't conflict with
+// reserved symbols, other top-level declarations.
 func (g *FileGen) CreateIdent(namePrefix string) *ast.Ident {
 	return ast.NewIdent(g.doCreateIdent(namePrefix))
 }
@@ -24,6 +26,8 @@ func (g *FileGen) doCreateIdent(namePrefix string) string {
 	}
 }
 
+// CreateIdent creates a new ident at the function level that doesn't conflict with
+// reserved symbols, other top-level declarations, and function level params and variables.
 func (f *FuncGen) CreateIdent(namePrefix string) *ast.Ident {
 	v := namePrefix
 	i := 2

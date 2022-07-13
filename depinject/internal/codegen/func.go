@@ -4,6 +4,7 @@ import (
 	"go/ast"
 )
 
+// FuncGen is a utility for generating/patching golang function declaration ASTs.
 type FuncGen struct {
 	*FileGen
 	Func   *ast.FuncDecl

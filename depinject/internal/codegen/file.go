@@ -7,6 +7,7 @@ import (
 	"strconv"
 )
 
+// FileGen is a utility for generating/patching golang file ASTs.
 type FileGen struct {
 	File           *ast.File
 	idents         map[string]bool
@@ -14,6 +15,7 @@ type FileGen struct {
 	pkgImportMap   map[string]*importInfo
 }
 
+// NewFileGen creates a new FileGen instance from a file AST with the provided package path.
 func NewFileGen(file *ast.File, codegenPkgPath string) (*FileGen, error) {
 	g := &FileGen{
 		File:           file,
@@ -27,6 +29,25 @@ func NewFileGen(file *ast.File, codegenPkgPath string) (*FileGen, error) {
 		name := i.String()
 		if token.IsKeyword(name) {
 			g.idents[name] = true
+		}
+	}
+
+	// add all top-level decl idents
+	for _, decl := range file.Decls {
+		switch decl := decl.(type) {
+		case *ast.FuncDecl:
+			g.idents[decl.Name.Name] = true
+		case *ast.GenDecl:
+			for _, spec := range decl.Specs {
+				switch spec := spec.(type) {
+				case *ast.TypeSpec:
+					g.idents[spec.Name.Name] = true
+				case *ast.ValueSpec:
+					for _, name := range spec.Names {
+						g.idents[name.Name] = true
+					}
+				}
+			}
 		}
 	}
 
@@ -55,6 +76,7 @@ func NewFileGen(file *ast.File, codegenPkgPath string) (*FileGen, error) {
 	return g, nil
 }
 
+// PatchFuncDecl returns a FuncGen instance for the function declaration with the given name or returns nil.
 func (g *FileGen) PatchFuncDecl(name string) *FuncGen {
 	for _, decl := range g.File.Decls {
 		funcDecl, ok := decl.(*ast.FuncDecl)

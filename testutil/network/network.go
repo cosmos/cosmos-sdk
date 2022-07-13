@@ -91,9 +91,18 @@ type Config struct {
 	PrintMnemonic    bool             // print the mnemonic of first validator as log output for testing
 }
 
+func SkippableDefaultConfig(t *testing.T) Config {
+	cfg, err := DefaultConfig()
+	if err != nil {
+		t.Log("Skipping integration test dependent on testutil/network because DI failed")
+		t.Skip()
+	}
+	return cfg
+}
+
 // DefaultConfig returns a sane default configuration suitable for nearly all
 // testing requirements.
-func DefaultConfig() Config {
+func DefaultConfig() (Config, error) {
 	var (
 		appConstructor AppConstructor
 		cdc            codec.Codec
@@ -114,7 +123,7 @@ func DefaultConfig() Config {
 		}), &appConstructor, &cdc, &txConfig, &amino, &reg, &genState)
 
 	if err != nil {
-		panic("unable to provide simapp")
+		return Config{}, errors.New("unable to provide simapp")
 	}
 
 	return Config{
@@ -138,11 +147,11 @@ func DefaultConfig() Config {
 		SigningAlgo:       string(hd.Secp256k1Type),
 		KeyringOptions:    []keyring.Option{},
 		PrintMnemonic:     false,
-	}
+	}, nil
 }
 
 func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
-	cfg := DefaultConfig()
+	cfg, _ := DefaultConfig()
 
 	var (
 		appBuilder        *runtime.AppBuilder

@@ -145,7 +145,7 @@ x: "10"
 }
 
 func TestCLIQueryConn(t *testing.T) {
-	cfg := network.DefaultConfig()
+	cfg, _ := network.DefaultConfig()
 	cfg.NumValidators = 1
 
 	n, err := network.New(t, t.TempDir(), cfg)
@@ -159,7 +159,7 @@ func TestCLIQueryConn(t *testing.T) {
 }
 
 func TestGetFromFields(t *testing.T) {
-	cfg := network.DefaultConfig()
+	cfg, _ := network.DefaultConfig()
 	path := hd.CreateHDPath(118, 0, 0).String()
 
 	testCases := []struct {

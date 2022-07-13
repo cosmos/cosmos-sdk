@@ -14,7 +14,6 @@ import (
 
 	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"cosmossdk.io/depinject"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"

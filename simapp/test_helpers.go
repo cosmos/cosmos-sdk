@@ -17,7 +17,6 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
-
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

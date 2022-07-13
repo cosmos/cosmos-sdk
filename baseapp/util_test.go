@@ -18,7 +18,6 @@ import (
 	txmodulev1 "cosmossdk.io/api/cosmos/tx/module/v1"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"

@@ -4,7 +4,6 @@ import (
 	_ "embed"
 
 	"cosmossdk.io/core/appconfig"
-
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/module"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting"

@@ -8,7 +8,6 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	"cosmossdk.io/core/appmodule"
-
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"

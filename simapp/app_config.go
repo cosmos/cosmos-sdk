@@ -6,7 +6,6 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	"cosmossdk.io/core/appconfig"
-
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"

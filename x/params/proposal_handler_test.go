@@ -1,6 +1,9 @@
 package params_test
 
 import (
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -40,7 +43,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 	paramsKeeper.Subspace("staking").WithKeyTable(stakingtypes.ParamKeyTable())
 	ctrl := gomock.NewController(suite.T())
 	stakingKeeper := paramstestutil.NewMockStakingKeeper(ctrl)
-	stakingKeeper.EXPECT().MaxValidators(ctx).Return(uint32(1))
+	//stakingKeeper.EXPECT().MaxValidators(ctx).Return(uint32(1))
 
 	suite.govHandler = params.NewParamChangeProposalHandler(paramsKeeper)
 	suite.stakingKeeper = stakingKeeper
@@ -62,38 +65,38 @@ func (suite *HandlerTestSuite) TestProposalHandler() {
 		onHandle func()
 		expErr   bool
 	}{
-		//{
-		//	"all fields",
-		//	testProposal(proposal.NewParamChange(stakingtypes.ModuleName, string(stakingtypes.KeyMaxValidators), "1")),
-		//	func() {
-		//		maxVals := suite.stakingKeeper.MaxValidators(suite.ctx)
-		//		suite.Require().Equal(uint32(1), maxVals)
-		//	},
-		//	false,
-		//},
-		//{
-		//	"invalid type",
-		//	testProposal(proposal.NewParamChange(stakingtypes.ModuleName, string(stakingtypes.KeyMaxValidators), "-")),
-		//	func() {},
-		//	true,
-		//},
-		// {
-		// 	"omit empty fields",
-		// 	testProposal(proposal.ParamChange{
-		// 		Subspace: govtypes.ModuleName,
-		// 		Key:      string(govv1.ParamStoreKeyDepositParams),
-		// 		Value:    `{"min_deposit": [{"denom": "uatom","amount": "64000000"}], "max_deposit_period": "172800000000000"}`,
-		// 	}),
-		// 	func() {
-		// 		depositParams := suite.app.GovKeeper.GetDepositParams(suite.ctx)
-		// 		defaultPeriod := govv1.DefaultPeriod
-		// 		suite.Require().Equal(govv1.DepositParams{
-		// 			MinDeposit:       sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(64000000))),
-		// 			MaxDepositPeriod: &defaultPeriod,
-		// 		}, depositParams)
-		// 	},
-		// 	false,
-		// },
+		{
+			"all fields",
+			testProposal(proposal.NewParamChange(stakingtypes.ModuleName, string(stakingtypes.KeyMaxValidators), "1")),
+			func() {
+				maxVals := suite.stakingKeeper.MaxValidators(suite.ctx)
+				suite.Require().Equal(uint32(1), maxVals)
+			},
+			false,
+		},
+		{
+			"invalid type",
+			testProposal(proposal.NewParamChange(stakingtypes.ModuleName, string(stakingtypes.KeyMaxValidators), "-")),
+			func() {},
+			true,
+		},
+		{
+			"omit empty fields",
+			testProposal(proposal.ParamChange{
+				Subspace: govtypes.ModuleName,
+				Key:      string(govv1.ParamStoreKeyDepositParams),
+				Value:    `{"min_deposit": [{"denom": "uatom","amount": "64000000"}], "max_deposit_period": "172800000000000"}`,
+			}),
+			func() {
+				depositParams := suite.app.GovKeeper.GetDepositParams(suite.ctx)
+				defaultPeriod := govv1.DefaultPeriod
+				suite.Require().Equal(govv1.DepositParams{
+					MinDeposit:       sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(64000000))),
+					MaxDepositPeriod: &defaultPeriod,
+				}, depositParams)
+			},
+			false,
+		},
 	}
 
 	for _, tc := range testCases {

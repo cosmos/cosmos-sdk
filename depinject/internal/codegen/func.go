@@ -1,7 +1,6 @@
 package codegen
 
 import (
-	"fmt"
 	"go/ast"
 )
 
@@ -11,28 +10,22 @@ type FuncGen struct {
 	idents map[string]bool
 }
 
-func (f *FuncGen) init() {
-	if f.idents == nil {
-		f.idents = map[string]bool{}
-	}
-}
+func newFuncGen(fileGen *FileGen, f *ast.FuncDecl) *FuncGen {
+	g := &FuncGen{FileGen: fileGen, Func: f, idents: map[string]bool{}}
 
-func (f *FuncGen) CreateIdent(namePrefix string) *ast.Ident {
-	f.init()
-
-	v := namePrefix
-	i := 2
-	for {
-		_, definedFileScope := f.FileGen.idents[v]
-
-		_, definedFuncScope := f.idents[v]
-		if !definedFileScope && !definedFuncScope {
-			f.FileGen.idents[v] = true
-			f.idents[v] = true
-			return ast.NewIdent(v)
+	// reserve param idents
+	for _, field := range f.Type.Params.List {
+		for _, name := range field.Names {
+			g.idents[name.Name] = true
 		}
-
-		v = fmt.Sprintf("%s%d", namePrefix, i)
-		i++
 	}
+
+	// reserve result
+	for _, field := range f.Type.Results.List {
+		for _, name := range field.Names {
+			g.idents[name.Name] = true
+		}
+	}
+
+	return g
 }

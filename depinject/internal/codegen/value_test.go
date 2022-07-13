@@ -53,6 +53,9 @@ func TestValueExpr(t *testing.T) {
 	var nilStruct *AStruct
 	expectValueExpr(t, nilStruct, `nil`)
 
+	// struct wrapper
+	expectValueExpr(t, &AStructWrapper{Foo: 2}, `&codegen.AStructWrapper{Foo: 2}`)
+
 	// string
 	expectValueExpr(t, "abc", `"abc"`)
 }

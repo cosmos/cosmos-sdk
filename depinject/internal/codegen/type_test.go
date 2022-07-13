@@ -19,6 +19,8 @@ type AStruct struct {
 	Foo int
 }
 
+type AStructWrapper AStruct
+
 func TestTypeExpr(t *testing.T) {
 	expectTypeExpr(t, false, "bool")
 	expectTypeExpr(t, uint(0), "uint")
@@ -50,6 +52,7 @@ func TestTypeExpr(t *testing.T) {
 	expectTypeExpr(t, AStruct{}, "codegen.AStruct")
 	expectTypeExpr(t, map[string]graphviz.Attributes{}, "map[string]graphviz.Attributes")
 	expectTypeExpr(t, &AStruct{}, "*codegen.AStruct")
+	expectTypeExpr(t, AStructWrapper{}, "codegen.AStructWrapper")
 	expectTypeExpr(t, "abc", "string")
 	expectTypeExpr(t, uintptr(0), "uintptr")
 	// TODO: interface

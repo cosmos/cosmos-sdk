@@ -12,6 +12,8 @@ type importInfo struct {
 	importPrefix string
 }
 
+// AddOrGetImport adds a new import for the provided pkgPath (if needed) and
+// returns the unique import prefix for that path.
 func (g *FileGen) AddOrGetImport(pkgPath string) (importPrefix string) {
 	if pkgPath == "" || pkgPath == g.codegenPkgPath {
 		return ""

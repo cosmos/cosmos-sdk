@@ -1,4 +1,4 @@
-package simapp
+package module
 
 import (
 	dbm "github.com/tendermint/tm-db"
@@ -11,8 +11,9 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	networktypes "github.com/cosmos/cosmos-sdk/types/module/testutil/network"
 )
 
 func init() {
@@ -20,23 +21,23 @@ func init() {
 		appmodule.Provide(provideModule))
 }
 
-func provideModule() (network.AppConstructor,
-	network.GenesisState,
+func provideModule() (networktypes.AppConstructor,
+	networktypes.GenesisState,
 	codectypes.InterfaceRegistry,
 	codec.Codec,
 	*codec.LegacyAmino,
 	client.TxConfig) {
-	appCtr := func(val network.Validator) servertypes.Application {
-		return NewSimApp(
-			val.Ctx.Logger, dbm.NewMemDB(), nil, true,
-			MakeTestEncodingConfig(),
-			simtestutil.NewAppOptionsWithFlagHome(val.Ctx.Config.RootDir),
-			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
-			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+	appCtr := func(val networktypes.Validator) servertypes.Application {
+		return simapp.NewSimApp(
+			val.GetCtx().Logger, dbm.NewMemDB(), nil, true,
+			simapp.MakeTestEncodingConfig(),
+			simtestutil.NewAppOptionsWithFlagHome(val.GetCtx().Config.RootDir),
+			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
+			baseapp.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
 		)
 	}
-	e := MakeTestEncodingConfig()
-	gs := ModuleBasics.DefaultGenesis(e.Codec)
+	e := simapp.MakeTestEncodingConfig()
+	gs := simapp.ModuleBasics.DefaultGenesis(e.Codec)
 
 	return appCtr, gs, e.InterfaceRegistry, e.Codec, e.Amino, e.TxConfig
 }

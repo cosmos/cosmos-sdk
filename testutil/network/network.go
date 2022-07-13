@@ -46,6 +46,7 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	networktypes "github.com/cosmos/cosmos-sdk/types/module/testutil/network"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -54,11 +55,6 @@ import (
 
 // package-wide network lock to only allow one test network at a time
 var lock = new(sync.Mutex)
-
-// AppConstructor defines a function which accepts a network configuration and
-// creates an ABCI Application to provide to Tendermint.
-type AppConstructor = func(val Validator) servertypes.Application
-type GenesisState map[string]json.RawMessage
 
 // Config defines the necessary configuration used to bootstrap and start an
 // in-process local testing network.
@@ -69,26 +65,26 @@ type Config struct {
 
 	TxConfig         client.TxConfig
 	AccountRetriever client.AccountRetriever
-	AppConstructor   AppConstructor   // the ABCI application constructor
-	GenesisState     GenesisState     // custom genesis state to provide
-	TimeoutCommit    time.Duration    // the consensus commitment timeout
-	ChainID          string           // the network chain-id
-	NumValidators    int              // the total number of validators to create and bond
-	Mnemonics        []string         // custom user-provided validator operator mnemonics
-	BondDenom        string           // the staking bond denomination
-	MinGasPrices     string           // the minimum gas prices each validator will accept
-	AccountTokens    math.Int         // the amount of unique validator tokens (e.g. 1000node0)
-	StakingTokens    math.Int         // the amount of tokens each validator has available to stake
-	BondedTokens     math.Int         // the amount of tokens each validator stakes
-	PruningStrategy  string           // the pruning strategy each validator will have
-	EnableTMLogging  bool             // enable Tendermint logging to STDOUT
-	CleanupDir       bool             // remove base temporary directory during cleanup
-	SigningAlgo      string           // signing algorithm for keys
-	KeyringOptions   []keyring.Option // keyring configuration options
-	RPCAddress       string           // RPC listen address (including port)
-	APIAddress       string           // REST API listen address (including port)
-	GRPCAddress      string           // GRPC server listen address (including port)
-	PrintMnemonic    bool             // print the mnemonic of first validator as log output for testing
+	AppConstructor   networktypes.AppConstructor // the ABCI application constructor
+	GenesisState     networktypes.GenesisState   // custom genesis state to provide
+	TimeoutCommit    time.Duration               // the consensus commitment timeout
+	ChainID          string                      // the network chain-id
+	NumValidators    int                         // the total number of validators to create and bond
+	Mnemonics        []string                    // custom user-provided validator operator mnemonics
+	BondDenom        string                      // the staking bond denomination
+	MinGasPrices     string                      // the minimum gas prices each validator will accept
+	AccountTokens    math.Int                    // the amount of unique validator tokens (e.g. 1000node0)
+	StakingTokens    math.Int                    // the amount of tokens each validator has available to stake
+	BondedTokens     math.Int                    // the amount of tokens each validator stakes
+	PruningStrategy  string                      // the pruning strategy each validator will have
+	EnableTMLogging  bool                        // enable Tendermint logging to STDOUT
+	CleanupDir       bool                        // remove base temporary directory during cleanup
+	SigningAlgo      string                      // signing algorithm for keys
+	KeyringOptions   []keyring.Option            // keyring configuration options
+	RPCAddress       string                      // RPC listen address (including port)
+	APIAddress       string                      // REST API listen address (including port)
+	GRPCAddress      string                      // GRPC server listen address (including port)
+	PrintMnemonic    bool                        // print the mnemonic of first validator as log output for testing
 }
 
 func SkippableDefaultConfig(t *testing.T) Config {
@@ -104,12 +100,12 @@ func SkippableDefaultConfig(t *testing.T) Config {
 // testing requirements.
 func DefaultConfig() (Config, error) {
 	var (
-		appConstructor AppConstructor
+		appConstructor networktypes.AppConstructor
 		cdc            codec.Codec
 		txConfig       client.TxConfig
 		amino          *codec.LegacyAmino
 		reg            codectypes.InterfaceRegistry
-		genState       GenesisState
+		genState       networktypes.GenesisState
 	)
 
 	err := depinject.Inject(
@@ -176,18 +172,18 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	cfg.LegacyAmino = legacyAmino
 	cfg.InterfaceRegistry = interfaceRegistry
 	cfg.GenesisState = appBuilder.DefaultGenesis()
-	cfg.AppConstructor = func(val Validator) servertypes.Application {
+	cfg.AppConstructor = func(val networktypes.Validator) servertypes.Application {
 		// we build a unique app instance for every validator here
 		var appBuilder *runtime.AppBuilder
 		if err := depinject.Inject(appConfig, &appBuilder); err != nil {
 			panic(err)
 		}
 		app := appBuilder.Build(
-			val.Ctx.Logger,
+			val.GetCtx().Logger,
 			dbm.NewMemDB(),
 			nil,
-			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
-			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
+			baseapp.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
 		)
 
 		if err := app.Load(true); err != nil {
@@ -243,6 +239,14 @@ type (
 		grpcWeb *http.Server
 	}
 )
+
+func (v Validator) GetCtx() *server.Context {
+	return v.Ctx
+}
+
+func (v Validator) GetAppConfig() *srvconfig.Config {
+	return v.AppConfig
+}
 
 // Logger is a network logger interface that exposes testnet-level Log() methods for an in-process testing network
 // This is not to be confused with logging that may happen at an individual node or validator level

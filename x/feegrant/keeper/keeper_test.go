@@ -3,30 +3,29 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/testutil"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/module"
+	feegranttestutil "github.com/cosmos/cosmos-sdk/x/feegrant/testutil"
 )
 
 type KeeperTestSuite struct {
 	suite.Suite
 
-	ctx               sdk.Context
-	addrs             []sdk.AccAddress
-	msgSrvr           feegrant.MsgServer
-	atom              sdk.Coins
-	feegrantKeeper    keeper.Keeper
-	interfaceRegistry codectypes.InterfaceRegistry
-	bankKeeper        bankkeeper.Keeper
-	stakingKeeper     *stakingkeeper.Keeper
+	ctx            sdk.Context
+	addrs          []sdk.AccAddress
+	msgSrvr        feegrant.MsgServer
+	atom           sdk.Coins
+	feegrantKeeper keeper.Keeper
+	accountKeeper  *feegranttestutil.MockAccountKeeper
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -34,16 +33,21 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	app, err := simtestutil.Setup(testutil.AppConfig,
-		&suite.feegrantKeeper,
-		&suite.bankKeeper,
-		&suite.stakingKeeper,
-		&suite.interfaceRegistry,
-	)
-	suite.Require().NoError(err)
+	suite.addrs = simtestutil.CreateIncrementalAccounts(4)
+	key := sdk.NewKVStoreKey(feegrant.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(suite.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
-	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
-	suite.addrs = simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, suite.ctx, 4, sdk.NewInt(30000000))
+	// setup gomock and initialize some globally expected executions
+	ctrl := gomock.NewController(suite.T())
+	suite.accountKeeper = feegranttestutil.NewMockAccountKeeper(ctrl)
+	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[0]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[0])).AnyTimes()
+	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[1]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[1])).AnyTimes()
+	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[2]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[2])).AnyTimes()
+	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[3]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[3])).AnyTimes()
+
+	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, key, suite.accountKeeper)
+	suite.ctx = testCtx.Ctx
 	suite.msgSrvr = keeper.NewMsgServerImpl(suite.feegrantKeeper)
 	suite.atom = sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(555)))
 }
@@ -146,6 +150,7 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	}
 	accAddr, err := sdk.AccAddressFromBech32("cosmos1rxr4mq58w3gtnx5tsc438mwjjafv3mja7k5pnu")
 	suite.Require().NoError(err)
+	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), accAddr).Return(authtypes.NewBaseAccountWithAddress(accAddr)).AnyTimes()
 
 	// let's grant and revoke authorization to non existing account
 	err = suite.feegrantKeeper.GrantAllowance(suite.ctx, suite.addrs[3], accAddr, basic2)

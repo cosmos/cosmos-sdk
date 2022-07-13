@@ -7,36 +7,19 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/testutil"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/module"
 )
 
 func TestGrant(t *testing.T) {
-	var (
-		interfaceRegistry codectypes.InterfaceRegistry
-		bankKeeper        bankkeeper.Keeper
-		stakingKeeper     *stakingkeeper.Keeper
-		feegrantKeeper    keeper.Keeper
-		cdc               codec.Codec
-	)
+	key := sdk.NewKVStoreKey(feegrant.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
-	app, err := simtestutil.Setup(testutil.AppConfig,
-		&feegrantKeeper,
-		&bankKeeper,
-		&stakingKeeper,
-		&interfaceRegistry,
-		&cdc,
-	)
-	require.NoError(t, err)
-
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
+	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: time.Now()})
 
 	addr, err := sdk.AccAddressFromBech32("cosmos1qk93t4j0yyzgqgt6k5qf8deh8fq6smpn3ntu3x")
 	require.NoError(t, err)
@@ -109,10 +92,10 @@ func TestGrant(t *testing.T) {
 			require.NoError(t, err)
 
 			// if it is valid, let's try to serialize, deserialize, and make sure it matches
-			bz, err := cdc.Marshal(&grant)
+			bz, err := encCfg.Codec.Marshal(&grant)
 			require.NoError(t, err)
 			var loaded feegrant.Grant
-			err = cdc.Unmarshal(bz, &loaded)
+			err = encCfg.Codec.Unmarshal(bz, &loaded)
 			require.NoError(t, err)
 
 			err = loaded.ValidateBasic()

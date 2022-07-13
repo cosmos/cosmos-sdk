@@ -603,7 +603,7 @@ Example:
 		"amount":[{"denom": "stake","amount": "10"}]
 	}
 	],
-	"metadata: "4pIMOgIGx1vZGU=", // base64-encoded metadata
+	"metadata": "4pIMOgIGx1vZGU=", // base64-encoded metadata
 	"proposers": ["cosmos1...", "cosmos1..."],
 }`, version.AppName),
 		Args: cobra.ExactArgs(1),

@@ -60,7 +60,7 @@ Example Output:
 address: cosmos1..
 admin: cosmos1..
 decision_policy:
-  '@type': /cosmos.group.v1beta1.ThresholdDecisionPolicy
+  '@type': /cosmos.group.v1.ThresholdDecisionPolicy
   threshold: "1"
   windows:
       min_execution_period: 0s
@@ -157,7 +157,7 @@ group_policies:
 - address: cosmos1..
   admin: cosmos1..
   decision_policy:
-    '@type': /cosmos.group.v1beta1.ThresholdDecisionPolicy
+    '@type': /cosmos.group.v1.ThresholdDecisionPolicy
     threshold: "1"
     windows:
       min_execution_period: 0s
@@ -168,7 +168,7 @@ group_policies:
 - address: cosmos1..
   admin: cosmos1..
   decision_policy:
-    '@type': /cosmos.group.v1beta1.ThresholdDecisionPolicy
+    '@type': /cosmos.group.v1.ThresholdDecisionPolicy
     threshold: "1"
     windows:
       min_execution_period: 0s
@@ -202,7 +202,7 @@ group_policies:
 - address: cosmos1..
   admin: cosmos1..
   decision_policy:
-    '@type': /cosmos.group.v1beta1.ThresholdDecisionPolicy
+    '@type': /cosmos.group.v1.ThresholdDecisionPolicy
     threshold: "1"
     windows:
       min_execution_period: 0s
@@ -213,7 +213,7 @@ group_policies:
 - address: cosmos1..
   admin: cosmos1..
   decision_policy:
-    '@type': /cosmos.group.v1beta1.ThresholdDecisionPolicy
+    '@type': /cosmos.group.v1.ThresholdDecisionPolicy
     threshold: "1"
     windows:
       min_execution_period: 0s
@@ -478,7 +478,7 @@ simd tx group create-group-policy [admin] [group-id] [metadata] [decision-policy
 Example:
 
 ```bash
-simd tx group create-group-policy cosmos1.. 1 "AQ==" '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
+simd tx group create-group-policy cosmos1.. 1 "AQ==" '{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"1", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
 ```
 
 #### create-group-with-policy
@@ -492,7 +492,7 @@ simd tx group create-group-with-policy [admin] [group-metadata] [group-policy-me
 Example:
 
 ```bash
-simd tx group create-group-with-policy cosmos1.. "AQ==" "AQ==" members.json '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"1", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
+simd tx group create-group-with-policy cosmos1.. "AQ==" "AQ==" members.json '{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"1", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
 ```
 
 #### update-group-policy-admin
@@ -534,7 +534,7 @@ simd  tx group update-group-policy-decision-policy [admin] [group-policy-account
 Example:
 
 ```bash
-simd tx group update-group-policy-decision-policy cosmos1.. cosmos1.. '{"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy", "threshold":"2", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
+simd tx group update-group-policy-decision-policy cosmos1.. cosmos1.. '{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"2", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
 ```
 
 #### create-proposal
@@ -616,14 +616,14 @@ A user can query the `group` module using gRPC endpoints.
 The `GroupInfo` endpoint allows users to query for group info by given group id.
 
 ```bash
-cosmos.group.v1beta1.Query/GroupInfo
+cosmos.group.v1.Query/GroupInfo
 ```
 
 Example:
 
 ```bash
 grpcurl -plaintext \
-    -d '{"group_id":1}' localhost:9090 cosmos.group.v1beta1.Query/GroupInfo
+    -d '{"group_id":1}' localhost:9090 cosmos.group.v1.Query/GroupInfo
 ```
 
 Example Output:
@@ -645,14 +645,14 @@ Example Output:
 The `GroupPolicyInfo` endpoint allows users to query for group policy info by account address of group policy.
 
 ```bash
-cosmos.group.v1beta1.Query/GroupPolicyInfo
+cosmos.group.v1.Query/GroupPolicyInfo
 ```
 
 Example:
 
 ```bash
 grpcurl -plaintext \
-    -d '{"address":"cosmos1.."}'  localhost:9090 cosmos.group.v1beta1.Query/GroupPolicyInfo
+    -d '{"address":"cosmos1.."}'  localhost:9090 cosmos.group.v1.Query/GroupPolicyInfo
 ```
 
 Example Output:
@@ -664,7 +664,7 @@ Example Output:
     "groupId": "1",
     "admin": "cosmos1..",
     "version": "1",
-    "decisionPolicy": {"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy","threshold":"1","windows": {"voting_period": "120h", "min_execution_period": "0s"}},
+    "decisionPolicy": {"@type":"/cosmos.group.v1.ThresholdDecisionPolicy","threshold":"1","windows": {"voting_period": "120h", "min_execution_period": "0s"}},
   }
 }
 ```
@@ -674,14 +674,14 @@ Example Output:
 The `GroupMembers` endpoint allows users to query for group members by group id with pagination flags.
 
 ```bash
-cosmos.group.v1beta1.Query/GroupMembers
+cosmos.group.v1.Query/GroupMembers
 ```
 
 Example:
 
 ```bash
 grpcurl -plaintext \
-    -d '{"group_id":"1"}'  localhost:9090 cosmos.group.v1beta1.Query/GroupMembers
+    -d '{"group_id":"1"}'  localhost:9090 cosmos.group.v1.Query/GroupMembers
 ```
 
 Example Output:
@@ -715,14 +715,14 @@ Example Output:
 The `GroupsByAdmin` endpoint allows users to query for groups by admin account address with pagination flags.
 
 ```bash
-cosmos.group.v1beta1.Query/GroupsByAdmin
+cosmos.group.v1.Query/GroupsByAdmin
 ```
 
 Example:
 
 ```bash
 grpcurl -plaintext \
-    -d '{"admin":"cosmos1.."}'  localhost:9090 cosmos.group.v1beta1.Query/GroupsByAdmin
+    -d '{"admin":"cosmos1.."}'  localhost:9090 cosmos.group.v1.Query/GroupsByAdmin
 ```
 
 Example Output:
@@ -756,14 +756,14 @@ Example Output:
 The `GroupPoliciesByGroup` endpoint allows users to query for group policies by group id with pagination flags.
 
 ```bash
-cosmos.group.v1beta1.Query/GroupPoliciesByGroup
+cosmos.group.v1.Query/GroupPoliciesByGroup
 ```
 
 Example:
 
 ```bash
 grpcurl -plaintext \
-    -d '{"group_id":"1"}'  localhost:9090 cosmos.group.v1beta1.Query/GroupPoliciesByGroup
+    -d '{"group_id":"1"}'  localhost:9090 cosmos.group.v1.Query/GroupPoliciesByGroup
 ```
 
 Example Output:
@@ -776,14 +776,14 @@ Example Output:
       "groupId": "1",
       "admin": "cosmos1..",
       "version": "1",
-      "decisionPolicy": {"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy","threshold":"1","windows":{"voting_period": "120h", "min_execution_period": "0s"}},
+      "decisionPolicy": {"@type":"/cosmos.group.v1.ThresholdDecisionPolicy","threshold":"1","windows":{"voting_period": "120h", "min_execution_period": "0s"}},
     },
     {
       "address": "cosmos1..",
       "groupId": "1",
       "admin": "cosmos1..",
       "version": "1",
-      "decisionPolicy": {"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy","threshold":"1","windows":{"voting_period": "120h", "min_execution_period": "0s"}},
+      "decisionPolicy": {"@type":"/cosmos.group.v1.ThresholdDecisionPolicy","threshold":"1","windows":{"voting_period": "120h", "min_execution_period": "0s"}},
     }
   ],
   "pagination": {
@@ -797,14 +797,14 @@ Example Output:
 The `GroupPoliciesByAdmin` endpoint allows users to query for group policies by admin account address with pagination flags.
 
 ```bash
-cosmos.group.v1beta1.Query/GroupPoliciesByAdmin
+cosmos.group.v1.Query/GroupPoliciesByAdmin
 ```
 
 Example:
 
 ```bash
 grpcurl -plaintext \
-    -d '{"admin":"cosmos1.."}'  localhost:9090 cosmos.group.v1beta1.Query/GroupPoliciesByAdmin
+    -d '{"admin":"cosmos1.."}'  localhost:9090 cosmos.group.v1.Query/GroupPoliciesByAdmin
 ```
 
 Example Output:
@@ -817,14 +817,14 @@ Example Output:
       "groupId": "1",
       "admin": "cosmos1..",
       "version": "1",
-      "decisionPolicy": {"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy","threshold":"1","windows":{"voting_period": "120h", "min_execution_period": "0s"}},
+      "decisionPolicy": {"@type":"/cosmos.group.v1.ThresholdDecisionPolicy","threshold":"1","windows":{"voting_period": "120h", "min_execution_period": "0s"}},
     },
     {
       "address": "cosmos1..",
       "groupId": "1",
       "admin": "cosmos1..",
       "version": "1",
-      "decisionPolicy": {"@type":"/cosmos.group.v1beta1.ThresholdDecisionPolicy","threshold":"1","windows":{"voting_period": "120h", "min_execution_period": "0s"}},
+      "decisionPolicy": {"@type":"/cosmos.group.v1.ThresholdDecisionPolicy","threshold":"1","windows":{"voting_period": "120h", "min_execution_period": "0s"}},
     }
   ],
   "pagination": {
@@ -838,14 +838,14 @@ Example Output:
 The `Proposal` endpoint allows users to query for proposal by id.
 
 ```bash
-cosmos.group.v1beta1.Query/Proposal
+cosmos.group.v1.Query/Proposal
 ```
 
 Example:
 
 ```bash
 grpcurl -plaintext \
-    -d '{"proposal_id":"1"}'  localhost:9090 cosmos.group.v1beta1.Query/Proposal
+    -d '{"proposal_id":"1"}'  localhost:9090 cosmos.group.v1.Query/Proposal
 ```
 
 Example Output:
@@ -886,14 +886,14 @@ Example Output:
 The `ProposalsByGroupPolicy` endpoint allows users to query for proposals by account address of group policy with pagination flags.
 
 ```bash
-cosmos.group.v1beta1.Query/ProposalsByGroupPolicy
+cosmos.group.v1.Query/ProposalsByGroupPolicy
 ```
 
 Example:
 
 ```bash
 grpcurl -plaintext \
-    -d '{"address":"cosmos1.."}'  localhost:9090 cosmos.group.v1beta1.Query/ProposalsByGroupPolicy
+    -d '{"address":"cosmos1.."}'  localhost:9090 cosmos.group.v1.Query/ProposalsByGroupPolicy
 ```
 
 Example Output:
@@ -939,14 +939,14 @@ Example Output:
 The `VoteByProposalVoter` endpoint allows users to query for vote by proposal id and voter account address.
 
 ```bash
-cosmos.group.v1beta1.Query/VoteByProposalVoter
+cosmos.group.v1.Query/VoteByProposalVoter
 ```
 
 Example:
 
 ```bash
 grpcurl -plaintext \
-    -d '{"proposal_id":"1","voter":"cosmos1.."}'  localhost:9090 cosmos.group.v1beta1.Query/VoteByProposalVoter
+    -d '{"proposal_id":"1","voter":"cosmos1.."}'  localhost:9090 cosmos.group.v1.Query/VoteByProposalVoter
 ```
 
 Example Output:
@@ -967,14 +967,14 @@ Example Output:
 The `VotesByProposal` endpoint allows users to query for votes by proposal id with pagination flags.
 
 ```bash
-cosmos.group.v1beta1.Query/VotesByProposal
+cosmos.group.v1.Query/VotesByProposal
 ```
 
 Example:
 
 ```bash
 grpcurl -plaintext \
-    -d '{"proposal_id":"1"}'  localhost:9090 cosmos.group.v1beta1.Query/VotesByProposal
+    -d '{"proposal_id":"1"}'  localhost:9090 cosmos.group.v1.Query/VotesByProposal
 ```
 
 Example Output:
@@ -1000,14 +1000,14 @@ Example Output:
 The `VotesByVoter` endpoint allows users to query for votes by voter account address with pagination flags.
 
 ```bash
-cosmos.group.v1beta1.Query/VotesByVoter
+cosmos.group.v1.Query/VotesByVoter
 ```
 
 Example:
 
 ```bash
 grpcurl -plaintext \
-    -d '{"voter":"cosmos1.."}'  localhost:9090 cosmos.group.v1beta1.Query/VotesByVoter
+    -d '{"voter":"cosmos1.."}'  localhost:9090 cosmos.group.v1.Query/VotesByVoter
 ```
 
 Example Output:
@@ -1085,7 +1085,7 @@ Example Output:
     "metadata": "AQ==",
     "version": "1",
     "decision_policy": {
-      "@type": "/cosmos.group.v1beta1.ThresholdDecisionPolicy",
+      "@type": "/cosmos.group.v1.ThresholdDecisionPolicy",
       "threshold": "1",
       "windows": {
         "voting_period": "120h",
@@ -1205,7 +1205,7 @@ Example Output:
       "metadata": "AQ==",
       "version": "1",
       "decision_policy": {
-        "@type": "/cosmos.group.v1beta1.ThresholdDecisionPolicy",
+        "@type": "/cosmos.group.v1.ThresholdDecisionPolicy",
         "threshold": "1",
         "windows": {
           "voting_period": "120h",
@@ -1220,7 +1220,7 @@ Example Output:
       "metadata": "AQ==",
       "version": "1",
       "decision_policy": {
-        "@type": "/cosmos.group.v1beta1.ThresholdDecisionPolicy",
+        "@type": "/cosmos.group.v1.ThresholdDecisionPolicy",
         "threshold": "1",
         "windows": {
           "voting_period": "120h",
@@ -1262,7 +1262,7 @@ Example Output:
       "metadata": "AQ==",
       "version": "1",
       "decision_policy": {
-        "@type": "/cosmos.group.v1beta1.ThresholdDecisionPolicy",
+        "@type": "/cosmos.group.v1.ThresholdDecisionPolicy",
         "threshold": "1",
         "windows": {
           "voting_period": "120h",
@@ -1277,7 +1277,7 @@ Example Output:
       "metadata": "AQ==",
       "version": "1",
       "decision_policy": {
-        "@type": "/cosmos.group.v1beta1.ThresholdDecisionPolicy",
+        "@type": "/cosmos.group.v1.ThresholdDecisionPolicy",
         "threshold": "1",
         "windows": {
           "voting_period": "120h",

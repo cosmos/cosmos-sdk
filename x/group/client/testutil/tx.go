@@ -2123,7 +2123,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 				val.Address.String(),
 				groupID,
 				"AQ==",
-				"{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"3\", \"windows\":{\"voting_period\":\"1s\"}}",
+				testutil.WriteToNewTempFile(s.T(), "{\"@type\":\"/cosmos.group.v1.ThresholdDecisionPolicy\", \"threshold\":\"3\", \"windows\":{\"voting_period\":\"1s\"}}").Name(),
 			},
 			s.commonFlags...,
 		),

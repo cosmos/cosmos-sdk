@@ -2,23 +2,27 @@ package keeper_test
 
 import (
 	"testing"
-	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
+	minttestutil "github.com/cosmos/cosmos-sdk/x/mint/testutil"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	app       *simapp.SimApp
-	ctx       sdk.Context
-	msgServer types.MsgServer
+	mintKeeper keeper.Keeper
+	ctx        sdk.Context
+	msgServer  types.MsgServer
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -26,12 +30,34 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *IntegrationTestSuite) SetupTest() {
-	app := simapp.Setup(s.T(), false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
+	encCfg := moduletestutil.MakeTestEncodingConfig(mint.AppModuleBasic{})
+	key := sdk.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	s.ctx = testCtx.Ctx
 
-	s.app = app
-	s.ctx = ctx
-	s.msgServer = keeper.NewMsgServerImpl(s.app.MintKeeper)
+	// gomock initializations
+	ctrl := gomock.NewController(s.T())
+	accountKeeper := minttestutil.NewMockAccountKeeper(ctrl)
+	bankKeeper := minttestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := minttestutil.NewMockStakingKeeper(ctrl)
+
+	accountKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(sdk.AccAddress{})
+
+	s.mintKeeper = keeper.NewKeeper(
+		encCfg.Codec,
+		key,
+		stakingKeeper,
+		accountKeeper,
+		bankKeeper,
+		authtypes.FeeCollectorName,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+
+	err := s.mintKeeper.SetParams(s.ctx, types.DefaultParams())
+	s.Require().NoError(err)
+	s.mintKeeper.SetMinter(s.ctx, types.DefaultInitialMinter())
+
+	s.msgServer = keeper.NewMsgServerImpl(s.mintKeeper)
 }
 
 func (s *IntegrationTestSuite) TestParams() {
@@ -70,8 +96,8 @@ func (s *IntegrationTestSuite) TestParams() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			expected := s.app.MintKeeper.GetParams(s.ctx)
-			err := s.app.MintKeeper.SetParams(s.ctx, tc.input)
+			expected := s.mintKeeper.GetParams(s.ctx)
+			err := s.mintKeeper.SetParams(s.ctx, tc.input)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -79,7 +105,7 @@ func (s *IntegrationTestSuite) TestParams() {
 				s.Require().NoError(err)
 			}
 
-			p := s.app.MintKeeper.GetParams(s.ctx)
+			p := s.mintKeeper.GetParams(s.ctx)
 			s.Require().Equal(expected, p)
 		})
 	}

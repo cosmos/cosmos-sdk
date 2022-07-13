@@ -16,11 +16,11 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
@@ -269,7 +269,7 @@ func NewSimApp(
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
 	overrideModules := map[string]module.AppModuleSimulation{
-		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
+		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
 	}
 	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
 

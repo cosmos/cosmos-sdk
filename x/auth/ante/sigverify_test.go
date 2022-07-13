@@ -319,7 +319,8 @@ func (suite *AnteTestSuite) runSigDecorators(params types.Params, _ bool, privs 
 
 	// Make block-height non-zero to include accNum in SignBytes
 	suite.ctx = suite.ctx.WithBlockHeight(1)
-	suite.accountKeeper.SetParams(suite.ctx, params)
+	err := suite.accountKeeper.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
 
 	msgs := make([]sdk.Msg, len(privs))
 	accNums := make([]uint64, len(privs))

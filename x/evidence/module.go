@@ -11,10 +11,10 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

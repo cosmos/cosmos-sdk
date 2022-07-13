@@ -5,11 +5,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"

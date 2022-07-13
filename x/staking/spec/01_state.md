@@ -17,8 +17,10 @@ Store entries prefixed with "Last" must remain unchanged until EndBlock.
 
 ## Params
 
-Params is a module-wide configuration structure that stores system parameters
-and defines overall functioning of the staking module.
+staking module stores it's params in state with the prefix of `0x51`,
+it can only updated with governance.
+
+* Params: `0x51 | ProtocolBuffer(Params)`
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L285-L306
 

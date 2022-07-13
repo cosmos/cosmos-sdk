@@ -173,3 +173,15 @@ When this message is processed the following actions occur:
     * under this situation if the delegation is the validator's self-delegation then also jail the validator.
 
 ![Begin redelegation sequence](../../../docs/uml/svg/begin_redelegation_sequence.svg)
+
+
+## MsgUpdateParams
+
+The `MsgUpdateParams` update the staking module parameters.
+The params are updated through a governance proposal where the signer is the gov module account address.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/e412ce990251768579d49947991be76a87564f7d/proto/cosmos/staking/v1beta1/tx.proto#L172-L190
+
+The message handling can fail if:
+
+* signer is not the gov module account address.

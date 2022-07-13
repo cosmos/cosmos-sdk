@@ -8,35 +8,24 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	"github.com/cosmos/cosmos-sdk/types/module"
+	moduletypes "github.com/cosmos/cosmos-sdk/types/module"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/simulation"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/testutil"
 )
 
 func TestRandomizedGenState(t *testing.T) {
-	var feegrantKeeper keeper.Keeper
-	var cdc codec.Codec
-
-	_, err := simtestutil.Setup(testutil.AppConfig,
-		&feegrantKeeper,
-		&cdc,
-	)
-	require.NoError(t, err)
-
+	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
 	accounts := simtypes.RandomAccounts(r, 3)
 
-	simState := module.SimulationState{
+	simState := moduletypes.SimulationState{
 		AppParams:    make(simtypes.AppParams),
-		Cdc:          cdc,
+		Cdc:          encCfg.Codec,
 		Rand:         r,
 		NumBonded:    3,
 		Accounts:     accounts,

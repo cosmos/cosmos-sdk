@@ -73,7 +73,8 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	suite.Require().NoError(err)
 
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, tmproto.Header{}).WithBlockHeight(1)
-	suite.accountKeeper.SetParams(suite.ctx, authtypes.DefaultParams())
+	err = suite.accountKeeper.SetParams(suite.ctx, authtypes.DefaultParams())
+	suite.Require().NoError(err)
 
 	// We're using TestMsg encoding in some tests, so register it here.
 	legacyAmino.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)

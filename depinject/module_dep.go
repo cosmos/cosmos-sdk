@@ -1,20 +1,15 @@
 package depinject
 
 import (
-	"fmt"
-	"go/ast"
-	"go/token"
 	"reflect"
 
-	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
-	"github.com/cosmos/cosmos-sdk/depinject/internal/util"
+	"cosmossdk.io/depinject/internal/graphviz"
 )
 
 type moduleDepProvider struct {
 	provider        *ProviderDescriptor
 	calledForModule map[*moduleKey]bool
 	valueMap        map[*moduleKey][]reflect.Value
-	valueExprs      map[*moduleKey][]ast.Expr
 }
 
 type moduleDepResolver struct {
@@ -33,43 +28,28 @@ func (s moduleDepResolver) describeLocation() string {
 	return s.node.provider.Location.String()
 }
 
-func (s moduleDepResolver) resolve(ctr *container, moduleKey *moduleKey, caller Location) (reflect.Value, ast.Expr, error) {
+func (s moduleDepResolver) resolve(ctr *container, moduleKey *moduleKey, caller Location) (reflect.Value, error) {
 	// Log
 	ctr.logf("Providing %v from %s to %s", s.typ, s.node.provider.Location, caller.Name())
 
 	// Resolve
 	if val, ok := s.valueMap[moduleKey]; ok {
-		return val, nil, nil
+		return val, nil
 	}
 
 	if !s.node.calledForModule[moduleKey] {
-		values, eCall, err := ctr.call(s.node.provider, moduleKey)
+		values, err := ctr.call(s.node.provider, moduleKey)
 		if err != nil {
-			return reflect.Value{}, nil, err
+			return reflect.Value{}, err
 		}
 
 		s.node.valueMap[moduleKey] = values
 		s.node.calledForModule[moduleKey] = true
-
-		// codegen
-		varRefs, valueExprs := s.node.provider.codegenOutputs(ctr, fmt.Sprintf(
-			"For%s",
-			util.StringFirstUpper(moduleKey.name),
-		))
-		s.node.valueExprs[moduleKey] = valueExprs
-		ctr.codegenStmt(
-			&ast.AssignStmt{
-				Lhs: varRefs,
-				Tok: token.DEFINE,
-				Rhs: []ast.Expr{eCall},
-			},
-		)
-		s.node.provider.codegenErrCheck(ctr)
 	}
 
 	value := s.node.valueMap[moduleKey][s.idxInValues]
 	s.valueMap[moduleKey] = value
-	return value, s.node.valueExprs[moduleKey][s.idxInValues], nil
+	return value, nil
 }
 
 func (s moduleDepResolver) addNode(p *simpleProvider, _ int) error {

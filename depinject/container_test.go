@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/golden"
 
-	"github.com/cosmos/cosmos-sdk/depinject"
-	"github.com/cosmos/cosmos-sdk/depinject/internal/testgen"
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/internal/testgen"
 )
 
 func TestScenario(t *testing.T) {

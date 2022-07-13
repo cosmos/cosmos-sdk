@@ -9,9 +9,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/cosmos/cosmos-sdk/depinject/internal/codegen"
-	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
-	"github.com/cosmos/cosmos-sdk/depinject/internal/util"
+	"cosmossdk.io/depinject/internal/graphviz"
+	"cosmossdk.io/depinject/internal/graphviz"
+	"cosmossdk.io/depinject/internal/util"
 )
 
 type container struct {
@@ -242,12 +242,6 @@ func (c *container) addInvoker(provider *ProviderDescriptor, key *moduleKey) err
 	// make sure there are no outputs
 	if len(provider.Outputs) > 0 {
 		return fmt.Errorf("invoker function %s should not return any outputs", provider.Location)
-	}
-
-	// make all inputs optional
-	for i, input := range provider.Inputs {
-		input.Optional = true
-		provider.Inputs[i] = input
 	}
 
 	c.invokers = append(c.invokers, invoker{

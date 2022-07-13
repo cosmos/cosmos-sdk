@@ -1,23 +1,25 @@
-package depinject
+package depinject_test
 
 import (
 	"reflect"
 	"testing"
+
+	"cosmossdk.io/depinject"
 )
 
 type StructIn struct {
-	In
+	depinject.In
 	X int
 	Y float64 `optional:"true"`
 }
 
 type BadOptional struct {
-	In
+	depinject.In
 	X int `optional:"foo"`
 }
 
 type StructOut struct {
-	Out
+	depinject.Out
 	X string
 	Y []byte
 }
@@ -37,22 +39,22 @@ func TestExtractProviderDescriptor(t *testing.T) {
 	tests := []struct {
 		name    string
 		ctr     interface{}
-		wantIn  []ProviderInput
-		wantOut []ProviderOutput
+		wantIn  []depinject.ProviderInput
+		wantOut []depinject.ProviderOutput
 		wantErr bool
 	}{
 		{
 			"simple args",
 			func(x int, y float64) (string, []byte) { return "", nil },
-			[]ProviderInput{{Type: intType}, {Type: float64Type}},
-			[]ProviderOutput{{Type: stringType}, {Type: bytesTyp}},
+			[]depinject.ProviderInput{{Type: intType}, {Type: float64Type}},
+			[]depinject.ProviderOutput{{Type: stringType}, {Type: bytesTyp}},
 			false,
 		},
 		{
 			"simple args with error",
 			func(x int, y float64) (string, []byte, error) { return "", nil, nil },
-			[]ProviderInput{{Type: intType}, {Type: float64Type}},
-			[]ProviderOutput{{Type: stringType}, {Type: bytesTyp}},
+			[]depinject.ProviderInput{{Type: intType}, {Type: float64Type}},
+			[]depinject.ProviderOutput{{Type: stringType}, {Type: bytesTyp}},
 			false,
 		},
 		{
@@ -60,18 +62,8 @@ func TestExtractProviderDescriptor(t *testing.T) {
 			func(_ float32, _ StructIn, _ byte) (int16, StructOut, int32, error) {
 				return int16(0), StructOut{}, int32(0), nil
 			},
-			[]ProviderInput{
-				{Type: float32Type},
-				{Type: intType, startStructType: reflect.TypeOf(StructIn{}), structFieldName: "X"},
-				{Type: float64Type, Optional: true, structFieldName: "Y"},
-				{Type: byteTyp},
-			},
-			[]ProviderOutput{
-				{Type: int16Type},
-				{Type: stringType, startStructType: reflect.TypeOf(StructOut{}), structFieldName: "X"},
-				{Type: bytesTyp, structFieldName: "Y"},
-				{Type: int32Type},
-			},
+			[]depinject.ProviderInput{{Type: float32Type}, {Type: intType}, {Type: float64Type, Optional: true}, {Type: byteTyp}},
+			[]depinject.ProviderOutput{{Type: int16Type}, {Type: stringType}, {Type: bytesTyp}, {Type: int32Type}},
 			false,
 		},
 		{
@@ -98,7 +90,7 @@ func TestExtractProviderDescriptor(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ExtractProviderDescriptor(tt.ctr)
+			got, err := depinject.ExtractProviderDescriptor(tt.ctr)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ExtractProviderDescriptor() error = %v, wantErr %v", err, tt.wantErr)
 				return

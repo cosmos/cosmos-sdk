@@ -12,15 +12,8 @@ import (
 
 var (
 	// This is set at compile time. Could be cleveldb, defaults is goleveldb.
-	DBBackend = "" // Deprecated: Use tendermint config's DBBackend value instead.
-	backend   = dbm.GoLevelDBBackend
+	backend = dbm.GoLevelDBBackend
 )
-
-func init() {
-	if len(DBBackend) != 0 {
-		backend = dbm.BackendType(DBBackend)
-	}
-}
 
 // SortedJSON takes any JSON and returns it sorted by keys. Also, all white-spaces
 // are removed.

@@ -4,14 +4,12 @@ package cosmos.base.tendermint.v1beta1;
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
-import "cometbft/p2p/v1/types.proto";
-import "cometbft/types/v1/types.proto";
+import "tendermint/p2p/types.proto";
+import "tendermint/types/types.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/tendermint/v1beta1/types.proto";
 import "cosmos_proto/cosmos.proto";
-import "cometbft/types/v1/block.proto";
-import "cometbft/crypto/v1/proof.proto";
-import "amino/amino.proto";
+import "tendermint/types/block.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice";
 
@@ -115,12 +113,13 @@ message GetBlockByHeightRequest {
 // GetBlockByHeightResponse is the response type for the Query/GetBlockByHeight
 // RPC method.
 message GetBlockByHeightResponse {
-  .cometbft.types.v1.BlockID block_id = 1;
+  .tendermint.types.BlockID block_id = 1;
 
   // Deprecated: please use `sdk_block` instead
-  .cometbft.types.v1.Block block = 2;
+  .tendermint.types.Block   block    = 2;
 
-  Block sdk_block = 3 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.47"];
+  // Since: cosmos-sdk 0.47
+  Block sdk_block = 3;
 }
 
 // GetLatestBlockRequest is the request type for the Query/GetLatestBlock RPC
@@ -130,12 +129,13 @@ message GetLatestBlockRequest {}
 // GetLatestBlockResponse is the response type for the Query/GetLatestBlock RPC
 // method.
 message GetLatestBlockResponse {
-  .cometbft.types.v1.BlockID block_id = 1;
+  .tendermint.types.BlockID block_id = 1;
 
   // Deprecated: please use `sdk_block` instead
-  .cometbft.types.v1.Block block = 2;
+  .tendermint.types.Block   block    = 2;
 
-  Block sdk_block = 3 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.47"];
+  // Since: cosmos-sdk 0.47
+  Block sdk_block = 3;
 }
 
 // GetSyncingRequest is the request type for the Query/GetSyncing RPC method.
@@ -196,16 +196,14 @@ message ABCIQueryResponse {
   uint32 code = 1;
   // Deprecated: use "value" instead
   reserved 2;
-  string log   = 3; // nondeterministic
-  string info  = 4; // nondeterministic
-  int64  index = 5;
-  bytes  key   = 6;
-  bytes  value = 7;
-  // deprecated in favor of comet proof type
-  reserved 8;
-  int64                        height    = 9;
-  string                       codespace = 10;
-  .cometbft.crypto.v1.ProofOps proof_ops = 11;
+  string   log       = 3; // nondeterministic
+  string   info      = 4; // nondeterministic
+  int64    index     = 5;
+  bytes    key       = 6;
+  bytes    value     = 7;
+  ProofOps proof_ops = 8;
+  int64    height    = 9;
+  string   codespace = 10;
 }
 
 // ProofOp defines an operation used for calculating Merkle root. The data could

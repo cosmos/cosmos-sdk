@@ -55,29 +55,6 @@ func (k Keeper) MinCommissionRate(ctx sdk.Context) sdk.Dec {
 	return params.MinCommissionRate
 }
 
-//remove-comment
-//// Get all parameters as types.Params
-//func (k Keeper) GetParams(ctx sdk.Context) types.Params {
-//	return types.NewParams(
-//		k.UnbondingTime(ctx),
-//		k.MaxValidators(ctx),
-//		k.MaxEntries(ctx),
-//		k.HistoricalEntries(ctx),
-//		k.BondDenom(ctx),
-//		k.MinCommissionRate(ctx),
-//	)
-//}
-
-//remove-comment
-// set the params
-//func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-//	if err := params.Validate(); err != nil {
-//		return err
-//	}
-//
-//	k.paramstore.SetParamSet(ctx, &params)
-//}
-
 // SetParams sets the x/staking module parameters.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 	if err := params.Validate(); err != nil {

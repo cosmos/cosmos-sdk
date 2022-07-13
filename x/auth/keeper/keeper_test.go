@@ -6,13 +6,11 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
@@ -33,29 +31,39 @@ type KeeperTestSuite struct {
 
 	ctx sdk.Context
 
-	app               *runtime.App
-	queryClient       types.QueryClient
-	legacyAmino       *codec.LegacyAmino
-	interfaceRegistry codectypes.InterfaceRegistry
-	accountKeeper     keeper.AccountKeeper
-	msgServer         types.MsgServer
+	queryClient   types.QueryClient
+	accountKeeper keeper.AccountKeeper
+	msgServer     types.MsgServer
+	encCfg        moduletestutil.TestEncodingConfig
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	app, err := simtestutil.Setup(
-		testutil.AppConfig,
-		&suite.legacyAmino,
-		&suite.interfaceRegistry,
-		&suite.accountKeeper,
-		&suite.interfaceRegistry,
+	suite.encCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
+
+	key := sdk.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(suite.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	suite.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{})
+
+	maccPerms := map[string][]string{
+		"fee_collector":          nil,
+		"mint":                   {"minter"},
+		"bonded_tokens_pool":     {"burner", "staking"},
+		"not_bonded_tokens_pool": {"burner", "staking"},
+		multiPerm:                {"burner", "minter", "staking"},
+		randomPerm:               {"random"},
+	}
+
+	suite.accountKeeper = keeper.NewAccountKeeper(
+		suite.encCfg.Codec,
+		key,
+		types.ProtoBaseAccount,
+		maccPerms,
+		"cosmos",
+		types.NewModuleAddress("gov").String(),
 	)
-	suite.Require().NoError(err)
 
-	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(true, tmproto.Header{})
 	suite.msgServer = keeper.NewMsgServerImpl(suite.accountKeeper)
-
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.interfaceRegistry)
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
 	types.RegisterQueryServer(queryHelper, suite.accountKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }

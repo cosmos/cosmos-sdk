@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -53,18 +52,12 @@ func TxCmd(name string) *cobra.Command {
 // MsgCreateGroupCmd creates a CLI command for Msg/CreateGroup.
 func MsgCreateGroupCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "create-group [admin] [metadata] [members-json-file]",
-		Short: "Create a group which is an aggregation " +
-			"of member accounts with associated weights and " +
-			"an administrator account. Note, the '--from' flag is " +
-			"ignored as it is implied from [admin].",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Create a group which is an aggregation of member accounts with associated weights and
-an administrator account. Note, the '--from' flag is ignored as it is implied from [admin].
-Members accounts can be given through a members JSON file that contains an array of members.
-
-Example:
-$ %s tx group create-group [admin] [metadata] [members-json-file]
+		Use:   "create-group [admin] [metadata] [members-json-file]",
+		Short: "Create a group which is an aggregation of member accounts with associated weights and an administrator account.",
+		Long: `Create a group which is an aggregation of member accounts with associated weights and an administrator account.
+Note, the '--from' flag is ignored as it is implied from [admin]. Members accounts can be given through a members JSON file that contains an array of members.`,
+		Example: fmt.Sprintf(`
+%s tx group create-group [admin] [metadata] [members-json-file]
 
 Where members.json contains:
 
@@ -81,11 +74,7 @@ Where members.json contains:
 			"metadata": "some metadata"
 		}
 	]
-}
-`,
-				version.AppName,
-			),
-		),
+}`, version.AppName),
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := cmd.Flags().Set(flags.FlagFrom, args[0])
@@ -126,11 +115,8 @@ func MsgUpdateGroupMembersCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-group-members [admin] [group-id] [members-json-file]",
 		Short: "Update a group's members. Set a member's weight to \"0\" to delete it.",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Update a group's members
-
-Example:
-$ %s tx group update-group-members [admin] [group-id] [members-json-file]
+		Example: fmt.Sprintf(`
+%s tx group update-group-members [admin] [group-id] [members-json-file]
 
 Where members.json contains:
 
@@ -150,10 +136,7 @@ Where members.json contains:
 }
 
 Set a member's weight to "0" to delete it.
-`,
-				version.AppName,
-			),
-		),
+`, version.AppName),
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := cmd.Flags().Set(flags.FlagFrom, args[0])
@@ -277,19 +260,14 @@ func MsgUpdateGroupMetadataCmd() *cobra.Command {
 // MsgCreateGroupWithPolicyCmd creates a CLI command for Msg/CreateGroupWithPolicy.
 func MsgCreateGroupWithPolicyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "create-group-with-policy [admin] [group-metadata] [group-policy-metadata] [members-json-file] [decision-policy-json-file]",
-		Short: "Create a group with policy which is an aggregation " +
-			"of member accounts with associated weights, " +
-			"an administrator account and a decision policy. Note, the '--from' flag is " +
-			"ignored as it is implied from [admin].",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Create a group with policy which is an aggregation of member accounts with associated weights,
+		Use:   "create-group-with-policy [admin] [group-metadata] [group-policy-metadata] [members-json-file] [decision-policy-json-file]",
+		Short: "Create a group with policy which is an aggregation of member accounts with associated weights, an administrator account and decision policy.",
+		Long: `Create a group with policy which is an aggregation of member accounts with associated weights,
 an administrator account and decision policy. Note, the '--from' flag is ignored as it is implied from [admin].
 Members accounts can be given through a members JSON file that contains an array of members.
-If group-policy-as-admin flag is set to true, the admin of the newly created group and group policy is set with the group policy address itself.
-
-Example:
-$ %s tx group create-group-with-policy [admin] [group-metadata] [group-policy-metadata] members.json policy.json
+If group-policy-as-admin flag is set to true, the admin of the newly created group and group policy is set with the group policy address itself.`,
+		Example: fmt.Sprintf(`
+%s tx group create-group-with-policy [admin] [group-metadata] [group-policy-metadata] members.json policy.json
 
 where members.json contains:
 
@@ -318,10 +296,7 @@ and policy.json contains:
         "min_execution_period": "0s"
     }
 }
-`,
-				version.AppName,
-			),
-		),
+`, version.AppName),
 		Args: cobra.MinimumNArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := cmd.Flags().Set(flags.FlagFrom, args[0])
@@ -377,17 +352,10 @@ and policy.json contains:
 // MsgCreateGroupPolicyCmd creates a CLI command for Msg/CreateGroupPolicy.
 func MsgCreateGroupPolicyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "create-group-policy [admin] [group-id] [metadata] [decision-policy-json-file]",
-		Short: "Create a group policy which is an account " +
-			"associated with a group and a decision policy. " +
-			"Note, the '--from' flag is " +
-			"ignored as it is implied from [admin].",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Create a group policy which is an account associated with a group and a decision policy.
-Note, the '--from' flag is ignored as it is implied from [admin].
-
-Example:
-$ %s tx group create-group-policy [admin] [group-id] [metadata] policy.json
+		Use:   "create-group-policy [admin] [group-id] [metadata] [decision-policy-json-file]",
+		Short: `Create a group policy which is an account associated with a group and a decision policy. Note, the '--from' flag is ignored as it is implied from [admin].`,
+		Example: fmt.Sprintf(`
+%s tx group create-group-policy [admin] [group-id] [metadata] policy.json
 
 where policy.json contains:
 
@@ -409,11 +377,7 @@ Here, we can use percentage decision policy when needed, where 0 < percentage <=
         "voting_period": "120h",
         "min_execution_period": "0s"
     }
-}
-`,
-				version.AppName,
-			),
-		),
+}`, version.AppName),
 		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := cmd.Flags().Set(flags.FlagFrom, args[0])
@@ -582,13 +546,11 @@ func MsgSubmitProposalCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "submit-proposal [proposal_json_file]",
 		Short: "Submit a new proposal",
-		Long: fmt.Sprintf(`Submit a new proposal.
-
+		Long: `Submit a new proposal.
 Parameters:
-			msg_tx_json_file: path to json file with messages that will be executed if the proposal is accepted.
-
-Example:
-	$ %s tx group submit-proposal path/to/proposal.json
+			msg_tx_json_file: path to json file with messages that will be executed if the proposal is accepted.`,
+		Example: fmt.Sprintf(`
+%s tx group submit-proposal path/to/proposal.json
 	
 	Where proposal.json contains:
 
@@ -664,7 +626,7 @@ func MsgWithdrawProposalCmd() *cobra.Command {
 Parameters:
 			proposal-id: unique ID of the proposal.
 			group-policy-admin-or-proposer: either admin of the group policy or one the proposer of the proposal.
-			(note: --from flag will be ignored here)
+			Note: --from flag will be ignored here.
 `,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -814,14 +776,13 @@ func MsgExecCmd() *cobra.Command {
 func MsgLeaveGroupCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "leave-group [member-address] [group-id]",
-		Short: "remove member from the group",
-		Long: ` remove member from the group
+		Short: "Remove member from the group",
+		Long: `Remove member from the group
 
 Parameters:
 		   group-id: unique id of the group
 		   member-address: account address of the group member
-		   Note, the '--from' flag is
-				ignored as it is implied from [member-address]
+		   Note, the '--from' flag is ignored as it is implied from [member-address]
 		`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {

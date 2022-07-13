@@ -725,3 +725,7 @@ func centerText(text string, width int) string {
 
 	return fmt.Sprintf("%s%s%s", leftBuffer, text, rightBuffer)
 }
+
+func SkipTestIfInjectionFailed(t *testing.T) {
+
+}

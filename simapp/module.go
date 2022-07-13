@@ -5,11 +5,12 @@ import (
 
 	simappv1alpha1 "cosmossdk.io/api/cosmos/simapp/module/v1alpha1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 )
@@ -19,13 +20,12 @@ func init() {
 		appmodule.Provide(provideModule))
 }
 
-type simappOut struct {
-	depinject.Out
-	params.EncodingConfig
-	AppConstructor network.AppConstructor
-}
-
-func provideModule() simappOut {
+func provideModule() (network.AppConstructor,
+	network.GenesisState,
+	codectypes.InterfaceRegistry,
+	codec.Codec,
+	*codec.LegacyAmino,
+	client.TxConfig) {
 	appCtr := func(val network.Validator) servertypes.Application {
 		return NewSimApp(
 			val.Ctx.Logger, dbm.NewMemDB(), nil, true,
@@ -35,13 +35,8 @@ func provideModule() simappOut {
 			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)
 	}
-	encCfg := MakeTestEncodingConfig()
+	e := MakeTestEncodingConfig()
+	gs := ModuleBasics.DefaultGenesis(e.Codec)
 
-	s := simappOut{AppConstructor: appCtr}
-	s.InterfaceRegistry = encCfg.InterfaceRegistry
-	s.Codec = encCfg.Codec
-	s.Amino = encCfg.Amino
-	s.TxConfig = encCfg.TxConfig
-
-	return s
+	return appCtr, gs, e.InterfaceRegistry, e.Codec, e.Amino, e.TxConfig
 }

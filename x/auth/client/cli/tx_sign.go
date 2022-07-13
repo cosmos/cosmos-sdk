@@ -241,14 +241,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("error getting account from keybase: %w", err)
 		}
-		fromRecord, err := clientCtx.Keyring.Key(fromName)
-		if err != nil {
-			return fmt.Errorf("error getting account from keybase: %w", err)
-		}
-		fromPubKey, err := fromRecord.GetPubKey()
-		if err != nil {
-			return err
-		}
+
 		overwrite, _ := f.GetBool(flagOverwrite)
 		if multisig != "" {
 			// Bech32 decode error, maybe it's a name, we try to fetch from keyring
@@ -265,6 +258,15 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 				return err
 			}
 			multisigLegacyPub := multisigPubKey.(*kmultisig.LegacyAminoPubKey)
+
+			fromRecord, err := clientCtx.Keyring.Key(fromName)
+			if err != nil {
+				return fmt.Errorf("error getting account from keybase: %w", err)
+			}
+			fromPubKey, err := fromRecord.GetPubKey()
+			if err != nil {
+				return err
+			}
 
 			var found bool
 			for _, pubkey := range multisigLegacyPub.GetPubKeys() {

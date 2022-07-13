@@ -74,6 +74,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	pub2, err := account2.GetPubKey()
 	s.Require().NoError(err)
 
+	// Create a dummy account for testing purpose
+	_, _, err = kb.NewMnemonic("dummyAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	s.Require().NoError(err)
+
 	multi := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pub1, pub2})
 	_, err = kb.SaveMultisig("multi", multi)
 	s.Require().NoError(err)
@@ -938,6 +942,10 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	multisigRecord, err := val1.ClientCtx.Keyring.Key("multi")
 	s.Require().NoError(err)
 
+	// Generate dummy account which is not a part of multisig.
+	dummyAcc, err := val1.ClientCtx.Keyring.Key("dummyAccount")
+	s.Require().NoError(err)
+
 	addr, err := multisigRecord.GetAddress()
 	s.Require().NoError(err)
 	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, addr)
@@ -1002,6 +1010,13 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	s.Require().NoError(err)
 
 	sign2File := testutil.WriteToNewTempFile(s.T(), account2Signature.String())
+
+	// Sign with dummy account
+	dummyAddr, err := dummyAcc.GetAddress()
+	s.Require().NoError(err)
+	_, err = TxSignExec(val1.ClientCtx, dummyAddr, multiGeneratedTxFile.Name(), "--multisig", addr.String())
+	s.Require().Error(err)
+	s.Require().Contains(err.Error(), "signing key is not a part of multisig key")
 
 	multiSigWith2Signatures, err := TxMultiSignExec(val1.ClientCtx, multisigRecord.Name, multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
 	s.Require().NoError(err)

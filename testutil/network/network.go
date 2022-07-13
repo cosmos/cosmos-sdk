@@ -24,6 +24,9 @@ import (
 	dbm "github.com/tendermint/tm-db"
 	"google.golang.org/grpc"
 
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	simappv1alpha1 "cosmossdk.io/api/cosmos/simapp/module/v1alpha1"
+	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/math"
 
 	"cosmossdk.io/depinject"
@@ -41,10 +44,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -58,19 +58,7 @@ var lock = new(sync.Mutex)
 // AppConstructor defines a function which accepts a network configuration and
 // creates an ABCI Application to provide to Tendermint.
 type AppConstructor = func(val Validator) servertypes.Application
-
-// NewAppConstructor returns a new simapp AppConstructor
-func NewAppConstructor(encodingCfg params.EncodingConfig) AppConstructor {
-	return func(val Validator) servertypes.Application {
-		return simapp.NewSimApp(
-			val.Ctx.Logger, dbm.NewMemDB(), nil, true,
-			encodingCfg,
-			simtestutil.NewAppOptionsWithFlagHome(val.Ctx.Config.RootDir),
-			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
-			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
-		)
-	}
-}
+type GenesisState map[string]json.RawMessage
 
 // Config defines the necessary configuration used to bootstrap and start an
 // in-process local testing network.
@@ -81,41 +69,62 @@ type Config struct {
 
 	TxConfig         client.TxConfig
 	AccountRetriever client.AccountRetriever
-	AppConstructor   AppConstructor             // the ABCI application constructor
-	GenesisState     map[string]json.RawMessage // custom genesis state to provide
-	TimeoutCommit    time.Duration              // the consensus commitment timeout
-	ChainID          string                     // the network chain-id
-	NumValidators    int                        // the total number of validators to create and bond
-	Mnemonics        []string                   // custom user-provided validator operator mnemonics
-	BondDenom        string                     // the staking bond denomination
-	MinGasPrices     string                     // the minimum gas prices each validator will accept
-	AccountTokens    math.Int                   // the amount of unique validator tokens (e.g. 1000node0)
-	StakingTokens    math.Int                   // the amount of tokens each validator has available to stake
-	BondedTokens     math.Int                   // the amount of tokens each validator stakes
-	PruningStrategy  string                     // the pruning strategy each validator will have
-	EnableTMLogging  bool                       // enable Tendermint logging to STDOUT
-	CleanupDir       bool                       // remove base temporary directory during cleanup
-	SigningAlgo      string                     // signing algorithm for keys
-	KeyringOptions   []keyring.Option           // keyring configuration options
-	RPCAddress       string                     // RPC listen address (including port)
-	APIAddress       string                     // REST API listen address (including port)
-	GRPCAddress      string                     // GRPC server listen address (including port)
-	PrintMnemonic    bool                       // print the mnemonic of first validator as log output for testing
+	AppConstructor   AppConstructor   // the ABCI application constructor
+	GenesisState     GenesisState     // custom genesis state to provide
+	TimeoutCommit    time.Duration    // the consensus commitment timeout
+	ChainID          string           // the network chain-id
+	NumValidators    int              // the total number of validators to create and bond
+	Mnemonics        []string         // custom user-provided validator operator mnemonics
+	BondDenom        string           // the staking bond denomination
+	MinGasPrices     string           // the minimum gas prices each validator will accept
+	AccountTokens    math.Int         // the amount of unique validator tokens (e.g. 1000node0)
+	StakingTokens    math.Int         // the amount of tokens each validator has available to stake
+	BondedTokens     math.Int         // the amount of tokens each validator stakes
+	PruningStrategy  string           // the pruning strategy each validator will have
+	EnableTMLogging  bool             // enable Tendermint logging to STDOUT
+	CleanupDir       bool             // remove base temporary directory during cleanup
+	SigningAlgo      string           // signing algorithm for keys
+	KeyringOptions   []keyring.Option // keyring configuration options
+	RPCAddress       string           // RPC listen address (including port)
+	APIAddress       string           // REST API listen address (including port)
+	GRPCAddress      string           // GRPC server listen address (including port)
+	PrintMnemonic    bool             // print the mnemonic of first validator as log output for testing
 }
 
 // DefaultConfig returns a sane default configuration suitable for nearly all
 // testing requirements.
 func DefaultConfig() Config {
-	encCfg := simapp.MakeTestEncodingConfig()
+	var (
+		appConstructor AppConstructor
+		cdc            codec.Codec
+		txConfig       client.TxConfig
+		amino          *codec.LegacyAmino
+		reg            codectypes.InterfaceRegistry
+		genState       GenesisState
+	)
+
+	err := depinject.Inject(
+		appconfig.Compose(&appv1alpha1.Config{
+			Modules: []*appv1alpha1.ModuleConfig{
+				{
+					Name:   "simapp",
+					Config: appconfig.WrapAny(&simappv1alpha1.Module{}),
+				},
+			},
+		}), &appConstructor, &cdc, &txConfig, &amino, &reg, &genState)
+
+	if err != nil {
+		panic("unable to provide simapp")
+	}
 
 	return Config{
-		Codec:             encCfg.Codec,
-		TxConfig:          encCfg.TxConfig,
-		LegacyAmino:       encCfg.Amino,
-		InterfaceRegistry: encCfg.InterfaceRegistry,
+		Codec:             cdc,
+		TxConfig:          txConfig,
+		LegacyAmino:       amino,
+		InterfaceRegistry: reg,
 		AccountRetriever:  authtypes.AccountRetriever{},
-		AppConstructor:    NewAppConstructor(encCfg),
-		GenesisState:      simapp.ModuleBasics.DefaultGenesis(encCfg.Codec),
+		AppConstructor:    appConstructor,
+		GenesisState:      genState,
 		TimeoutCommit:     2 * time.Second,
 		ChainID:           "chain-" + tmrand.Str(6),
 		NumValidators:     4,

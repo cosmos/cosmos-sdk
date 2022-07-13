@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package cosmos.simapp.module.v1alpha1;
+
+import "cosmos/app/v1alpha1/module.proto";
+
+// Defines simapp as a module
+message Module {
+  option (cosmos.app.v1alpha1.module) = {
+    go_import: "github.com/cosmos/cosmos-sdk/simapp"
+  };
+}

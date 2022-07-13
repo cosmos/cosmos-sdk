@@ -6,6 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -107,10 +109,17 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 					return err
 				}
 			} else {
-				multisigAddr, _, _, err := client.GetFromFields(txFactory.Keybase(), ms, clientCtx.GenerateOnly)
+
+				multisigAddr, err := sdk.AccAddressFromBech32(ms)
+
+				// if passed in string for multisig flag is not an address, check to see if it is a name in the keybase
 				if err != nil {
-					return fmt.Errorf("error getting account from keybase: %w", err)
+					multisigAddr, _, _, err = client.GetFromFields(txFactory.Keybase(), ms, clientCtx.GenerateOnly)
+					if err != nil {
+						return fmt.Errorf("error getting account from keybase: %w", err)
+					}
 				}
+
 				err = authclient.SignTxWithSignerAddress(
 					txFactory, clientCtx, multisigAddr, clientCtx.GetFromName(), txBuilder, clientCtx.Offline, true)
 				if err != nil {

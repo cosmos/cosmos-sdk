@@ -57,6 +57,7 @@ func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, descriptio
 		UnbondingTime:     time.Unix(0, 0).UTC(),
 		Commission:        NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 		MinSelfDelegation: sdk.OneInt(),
+		UnbondingOnHold:   false,
 	}, nil
 }
 

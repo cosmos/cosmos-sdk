@@ -265,7 +265,7 @@ func testListenDeliverTx2(t *testing.T) {
 	expectedDeliverTxRes2Bytes, err := testMarshaller.Marshal(&testDeliverTxRes2)
 	require.Nil(t, err)
 
-	// write state changesq
+	// write state changes
 	testListener1.OnWrite(mockStoreKey2, mockKey1, mockValue1, false)
 	testListener2.OnWrite(mockStoreKey1, mockKey2, mockValue2, false)
 	testListener1.OnWrite(mockStoreKey2, mockKey3, mockValue3, false)

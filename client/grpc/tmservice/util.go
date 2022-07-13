@@ -7,7 +7,6 @@ import (
 
 // convertHeader converts tendermint header to sdk header
 func convertHeader(h tmprototypes.Header) Header {
-
 	return Header{
 		Version:            h.Version,
 		ChainID:            h.ChainID,

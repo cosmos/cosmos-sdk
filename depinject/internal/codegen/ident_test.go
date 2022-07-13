@@ -12,6 +12,8 @@ func TestReservedIdents(t *testing.T) {
 	const src = `
 package mypkg
 
+import "example.com/bar"
+
 func Build(a, a2 int, b string) (c int, err error) {}
 `
 	file, err := parser.ParseFile(token.NewFileSet(), "", src, 0)
@@ -32,4 +34,7 @@ func Build(a, a2 int, b string) (c int, err error) {}
 	assert.Equal(t, "b2", gen.CreateIdent("b").Name)
 	assert.Equal(t, "c2", gen.CreateIdent("c").Name)
 	assert.Equal(t, "err2", gen.CreateIdent("err").Name)
+
+	// import name clases get suffixes
+	assert.Equal(t, "bar2", gen.CreateIdent("bar").Name)
 }

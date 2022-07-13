@@ -48,9 +48,9 @@ func NewKeeper(
 	}
 
 	// ensure that authority is a valid AccAddress
-	//if _, err := sdk.AccAddressFromBech32(authority); err != nil {
-	//	panic(fmt.Sprintf("authority is not a valid acc address"))
-	//}
+	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+		panic(fmt.Sprintf("authority is not a valid acc address"))
+	}
 
 	return &Keeper{
 		storeKey:   key,

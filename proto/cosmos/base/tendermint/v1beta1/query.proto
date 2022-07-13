@@ -5,10 +5,11 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
 import "tendermint/p2p/types.proto";
-import "tendermint/types/block.proto";
 import "tendermint/types/types.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/base/tendermint/v1beta1/types.proto";
 import "cosmos_proto/cosmos.proto";
+import "tendermint/types/block.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/tmservice";
 
@@ -112,7 +113,12 @@ message GetBlockByHeightRequest {
 // RPC method.
 message GetBlockByHeightResponse {
   .tendermint.types.BlockID block_id = 1;
+
+  // Deprecated: please use `sdk_block` instead
   .tendermint.types.Block   block    = 2;
+
+  // Since: cosmos-sdk 0.47
+  Block sdk_block = 3;
 }
 
 // GetLatestBlockRequest is the request type for the Query/GetLatestBlock RPC
@@ -123,7 +129,12 @@ message GetLatestBlockRequest {}
 // method.
 message GetLatestBlockResponse {
   .tendermint.types.BlockID block_id = 1;
+
+  // Deprecated: please use `sdk_block` instead
   .tendermint.types.Block   block    = 2;
+
+  // Since: cosmos-sdk 0.47
+  Block sdk_block = 3;
 }
 
 // GetSyncingRequest is the request type for the Query/GetSyncing RPC method.
@@ -184,8 +195,8 @@ message ABCIQueryResponse {
   uint32 code = 1;
   // DEPRECATED: use "value" instead
   reserved 2;
-  string   log       = 3;  // nondeterministic
-  string   info      = 4;  // nondeterministic
+  string   log       = 3; // nondeterministic
+  string   info      = 4; // nondeterministic
   int64    index     = 5;
   bytes    key       = 6;
   bytes    value     = 7;

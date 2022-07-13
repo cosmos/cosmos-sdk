@@ -143,7 +143,7 @@ func (p ProviderDescriptor) codegenOutputs(ctr *container, suffix string) (varRe
 			name = output.Type.Name()
 		}
 
-		v := ctr.createIdent(fmt.Sprintf("%s%s", util.StringFirstLower(name), suffix))
+		v := ctr.funcGen.CreateIdent(fmt.Sprintf("%s%s", util.StringFirstLower(name), suffix))
 		varRefs = append(varRefs, v)
 		if output.structFieldName != "" {
 			curStructVar = v

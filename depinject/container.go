@@ -9,6 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/cosmos/cosmos-sdk/depinject/internal/codegen"
 	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
 	"github.com/cosmos/cosmos-sdk/depinject/internal/util"
 )
@@ -27,14 +28,9 @@ type container struct {
 	callerMap    map[Location]bool
 
 	// codegen related
-	idents             map[string]interface{}
-	reverseIdents      map[interface{}]string
-	codegenPkgPath     string
-	imports            []*ast.ImportSpec
-	pkgImportMap       map[string]*ast.ImportSpec
-	shortNameImportMap map[string]*ast.ImportSpec
-	codegenFunc        *ast.FuncDecl
-	codegenErrReturn   *ast.ReturnStmt
+	funcGen               *codegen.FuncGen
+	codegenErrReturn      *ast.ReturnStmt
+	moduleKeyContextIdent *ast.Ident
 }
 
 type invoker struct {
@@ -58,6 +54,22 @@ type interfaceBinding struct {
 }
 
 func newContainer(cfg *debugConfig) *container {
+	fileGen, err := codegen.NewFileGen(&ast.File{
+		Decls: []ast.Decl{
+			&ast.FuncDecl{
+				Name: ast.NewIdent("Build"),
+				Type: &ast.FuncType{
+					Results: &ast.FieldList{},
+					Params:  &ast.FieldList{},
+				},
+				Body: &ast.BlockStmt{},
+			},
+		},
+	}, "")
+	if err != nil {
+		panic(err)
+	}
+
 	return &container{
 		debugConfig:       cfg,
 		resolvers:         map[string]resolver{},
@@ -65,17 +77,8 @@ func newContainer(cfg *debugConfig) *container {
 		interfaceBindings: map[string]interfaceBinding{},
 		callerStack:       nil,
 		callerMap:         map[Location]bool{},
-		codegenFunc: &ast.FuncDecl{
-			Name: ast.NewIdent(""),
-			Type: &ast.FuncType{
-				Results: &ast.FieldList{},
-				Params:  &ast.FieldList{},
-			},
-			Body: &ast.BlockStmt{},
-		},
-		codegenErrReturn: &ast.ReturnStmt{},
-		idents:           map[string]interface{}{},
-		reverseIdents:    map[interface{}]string{},
+		codegenErrReturn:  &ast.ReturnStmt{},
+		funcGen:           fileGen.PatchFuncDecl("Build"),
 	}
 }
 
@@ -229,7 +232,7 @@ func (c *container) supply(value reflect.Value, location Location) error {
 		value:     value,
 		loc:       location,
 		graphNode: typeGraphNode,
-		varIdent:  c.createIdent(util.StringFirstLower(typ.Name())),
+		varIdent:  c.funcGen.CreateIdent(util.StringFirstLower(typ.Name())),
 	})
 
 	return nil
@@ -258,7 +261,7 @@ func (c *container) addInvoker(provider *ProviderDescriptor, key *moduleKey) err
 func (c *container) getModuleKeyExpr(key *moduleKey) ast.Expr {
 	return &ast.CallExpr{
 		Fun: &ast.SelectorExpr{
-			X:   ast.NewIdent(c.reverseIdents[c.moduleKeyContext]),
+			X:   c.moduleKeyContextIdent,
 			Sel: ast.NewIdent("For"),
 		},
 		Args: []ast.Expr{&ast.BasicLit{
@@ -305,7 +308,7 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 		if in.Optional {
 			c.logf("Providing zero value for optional dependency %v", in.Type)
 			zero := reflect.Zero(in.Type)
-			zeroExpr, err := c.valueExpr(zero)
+			zeroExpr, err := c.funcGen.ValueExpr(zero)
 			return zero, zeroExpr, err
 		}
 

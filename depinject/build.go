@@ -12,9 +12,9 @@ import (
 )
 
 func (c *container) build(loc Location, outputs ...interface{}) error {
-	moduleKeyContextIdent, _ := c.getOrCreateIdent("moduleKeyContext", c.moduleKeyContext)
+	c.moduleKeyContextIdent = c.funcGen.CreateIdent("moduleKeyContext")
 	c.codegenStmt(&ast.AssignStmt{
-		Lhs: []ast.Expr{moduleKeyContextIdent},
+		Lhs: []ast.Expr{c.moduleKeyContextIdent},
 		Tok: token.DEFINE,
 		Rhs: []ast.Expr{
 			&ast.UnaryExpr{
@@ -26,6 +26,7 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 		},
 	})
 
+	funcResults := c.funcGen.Func.Type.Results
 	var providerIn []ProviderInput
 	for _, output := range outputs {
 		typ := reflect.TypeOf(output)
@@ -36,20 +37,20 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 		providerIn = append(providerIn, ProviderInput{Type: typ.Elem()})
 
 		// codegen
-		astTyp, err := c.typeExpr(typ.Elem())
+		astTyp, err := c.funcGen.TypeExpr(typ.Elem())
 		if err != nil {
 			return err
 		}
-		c.codegenFunc.Type.Results.List = append(c.codegenFunc.Type.Results.List, &ast.Field{Type: astTyp})
+		funcResults.List = append(funcResults.List, &ast.Field{Type: astTyp})
 
-		defaultValue, err := c.valueExpr(reflect.Zero(typ.Elem()))
+		defaultValue, err := c.funcGen.ValueExpr(reflect.Zero(typ.Elem()))
 		if err != nil {
 			return err
 		}
 
 		c.codegenErrReturn.Results = append(c.codegenErrReturn.Results, defaultValue)
 	}
-	c.codegenFunc.Type.Results.List = append(c.codegenFunc.Type.Results.List, &ast.Field{Type: ast.NewIdent("error")})
+	funcResults.List = append(funcResults.List, &ast.Field{Type: ast.NewIdent("error")})
 	c.codegenErrReturn.Results = append(c.codegenErrReturn.Results, ast.NewIdent("err"))
 
 	desc := ProviderDescriptor{
@@ -115,7 +116,7 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 	fset := token.NewFileSet()
 	//ast.Print(fset, c.codegenBody)
 	fmt.Println("Codegen:")
-	printer.Fprint(os.Stdout, fset, c.codegenFunc)
+	printer.Fprint(os.Stdout, fset, c.funcGen.Func)
 	fmt.Println()
 
 	return nil

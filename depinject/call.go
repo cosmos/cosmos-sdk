@@ -37,7 +37,7 @@ func (c *container) call(provider *ProviderDescriptor, key *moduleKey) ([]reflec
 
 	markGraphNodeAsUsed(graphNode)
 
-	importPrefix := c.getOrAddImport(loc.PkgPath())
+	importPrefix := c.funcGen.AddOrGetImport(loc.PkgPath())
 	name := loc.ShortName()
 	if importPrefix != "" {
 		name = fmt.Sprintf("%s.%s", importPrefix, name)
@@ -63,7 +63,7 @@ func (c *container) resolveCallInputs(provider *ProviderDescriptor, key *moduleK
 
 		if in.structFieldName != "" {
 			if in.startStructType != nil {
-				typExpr, err := c.typeExpr(in.startStructType)
+				typExpr, err := c.funcGen.TypeExpr(in.startStructType)
 				if err != nil {
 					return nil, nil, err
 				}

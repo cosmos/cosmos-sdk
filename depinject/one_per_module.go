@@ -94,7 +94,7 @@ func (o *mapOfOnePerModuleResolver) resolve(c *container, _ *moduleKey, caller L
 		o.resolved = true
 
 		// codegen
-		o.valueIdent = c.createIdent(util.StringFirstLower(fmt.Sprintf("%sMap", o.typ.Name())))
+		o.valueIdent = c.funcGen.CreateIdent(util.StringFirstLower(fmt.Sprintf("%sMap", o.typ.Name())))
 		c.codegenStmt(&ast.AssignStmt{
 			Lhs: []ast.Expr{o.valueIdent},
 			Tok: token.DEFINE,

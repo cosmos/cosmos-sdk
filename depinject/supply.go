@@ -32,7 +32,7 @@ func (s supplyResolver) addNode(provider *simpleProvider, _ int) error {
 func (s supplyResolver) resolve(c *container, _ *moduleKey, caller Location) (reflect.Value, ast.Expr, error) {
 	c.logf("Supplying %v from %s to %s", s.typ, s.loc, caller.Name())
 	if !s.codegenDef {
-		e, err := c.valueExpr(s.value)
+		e, err := c.funcGen.ValueExpr(s.value)
 		if err != nil {
 			return reflect.Value{}, nil, err
 		}

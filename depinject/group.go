@@ -91,7 +91,7 @@ func (g *sliceGroupResolver) resolve(c *container, _ *moduleKey, caller Location
 		g.resolved = true
 
 		// codegen
-		g.valueIdent = c.createIdent(util.StringFirstLower(fmt.Sprintf("%sSlice", g.typ.Name())))
+		g.valueIdent = c.funcGen.CreateIdent(util.StringFirstLower(fmt.Sprintf("%sSlice", g.typ.Name())))
 		c.codegenStmt(&ast.AssignStmt{
 			Lhs: []ast.Expr{g.valueIdent},
 			Tok: token.DEFINE,

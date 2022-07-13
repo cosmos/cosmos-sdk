@@ -9,15 +9,8 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/tmservice";
 
-// BlockMeta is tendermint type BlockMeta
-message BlockMeta {
-  .tendermint.types.BlockID block_id   = 1 [(gogoproto.customname) = "BlockID", (gogoproto.nullable) = false];
-  int64                     block_size = 2;
-  Header                    header     = 3 [(gogoproto.nullable) = false];
-  int64                     num_txs    = 4;
-}
-
-// Block is tendermint type Block
+// Block is tendermint type Block, with the Header proposer address
+// field converted to bech32 string.
 message Block {
   Header                         header      = 1 [(gogoproto.nullable) = false];
   .tendermint.types.Data         data        = 2 [(gogoproto.nullable) = false];
@@ -49,5 +42,9 @@ message Header {
 
   // consensus info
   bytes  evidence_hash    = 13; // evidence included in the block
+
+  // proposer_address is the original block proposer address, formatted as a Bech32 string.
+  // In Tendermint, this type is `bytes`, but in the SDK, we convert it to a Bech32 string
+  // for better UX.
   string proposer_address = 14; // original proposer of the block
 }

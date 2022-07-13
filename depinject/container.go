@@ -9,7 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"cosmossdk.io/depinject/internal/graphviz"
+	"cosmossdk.io/depinject/internal/codegen"
 	"cosmossdk.io/depinject/internal/graphviz"
 	"cosmossdk.io/depinject/internal/util"
 )

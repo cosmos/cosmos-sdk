@@ -4,6 +4,8 @@ github.com/alecthomas/repr v0.0.0-20181024024818-d37bc2a10ba1 h1:GDQdwm/gAcJcLAK
 github.com/alecthomas/repr v0.0.0-20181024024818-d37bc2a10ba1/go.mod h1:xTS7Pm1pD1mvyM075QCDSRqH6qRLXylzS24ZTpRiSzQ=
 github.com/cockroachdb/apd/v3 v3.1.0 h1:MK3Ow7LH0W8zkd5GMKA1PvS9qG3bWFI95WaVNfyZJ/w=
 github.com/cockroachdb/apd/v3 v3.1.0/go.mod h1:6qgPBMXjATAdD/VefbRP9NoSLKjbB4LCoA7gN4LpHs4=
+github.com/cosmos/cosmos-sdk/depinject v1.0.0-alpha.1 h1:BCLbvXJSQ5/OWzhj8k0RqEHpmoURpTn32HkBaxT2AwU=
+github.com/cosmos/cosmos-sdk/depinject v1.0.0-alpha.1/go.mod h1:Lm+Bw6hQbO5yrvIRZfUSoyYdlN5WgaPb0pUB0TRSMBY=
 github.com/cucumber/common/gherkin/go/v22 v22.0.0 h1:4K8NqptbvdOrjL9DEea6HFjSpbdT9+Q5kgLpmmsHYl0=
 github.com/cucumber/common/gherkin/go/v22 v22.0.0/go.mod h1:3mJT10B2GGn3MvVPd3FwR7m2u4tLhSRhWUqJU4KN4Fg=
 github.com/cucumber/common/messages/go/v17 v17.1.1 h1:RNqopvIFyLWnKv0LfATh34SWBhXeoFTJnSrgm9cT/Ts=

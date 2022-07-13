@@ -1,6 +1,6 @@
 package testgen
 
-import "github.com/cosmos/cosmos-sdk/depinject"
+import "cosmossdk.io/depinject"
 
 type KVStoreKey struct {
 	Name string

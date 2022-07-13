@@ -3,7 +3,7 @@ package depinject
 import (
 	"reflect"
 
-	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
+	"cosmossdk.io/depinject/internal/graphviz"
 )
 
 func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, error) {

@@ -8,7 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/cosmos/cosmos-sdk/depinject/internal/util"
+	"cosmossdk.io/depinject/internal/util"
 )
 
 // ProviderDescriptor defines a special provider type that is defined by

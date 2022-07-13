@@ -13,3 +13,4 @@ $mockgen_cmd -source=orm/model/ormtable/hooks.go -package ormmocks -destination 
 $mockgen_cmd -source=x/nft/expected_keepers.go -package testutil -destination x/nft/testutil/expected_keepers_mocks.go
 $mockgen_cmd -source=x/mint/types/expected_keepers.go -package testutil -destination x/mint/testutil/expected_keepers_mocks.go
 $mockgen_cmd -source=x/params/proposal_handler_test.go -package testutil -destination x/params/testutil/staking_keeper_mock.go
+$mockgen_cmd -source=x/crisis/types/expected_keepers.go -package testutil -destination x/crisis/testutil/expected_keepers_mocks.go

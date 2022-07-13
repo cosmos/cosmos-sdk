@@ -3,13 +3,15 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
+	crisistestutil "github.com/cosmos/cosmos-sdk/x/crisis/testutil"
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type KeeperTestSuite struct {
@@ -20,13 +22,16 @@ type KeeperTestSuite struct {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	app := simapp.Setup(s.T(), false)
-	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1}})
-	ctx := app.NewContext(true, tmproto.Header{})
+	ctrl := gomock.NewController(s.T())
+	supplyKeeper := crisistestutil.NewMockSupplyKeeper(ctrl)
 
-	s.ctx = ctx
-	s.keeper = app.CrisisKeeper
+	key := sdk.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
+	keeper := keeper.NewKeeper(encCfg.Codec, key, 5, supplyKeeper, "", "")
+
+	s.ctx = testCtx.Ctx
+	s.keeper = keeper
 }
 
 func (s *KeeperTestSuite) TestMsgUpdateParams() {

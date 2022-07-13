@@ -1,10 +1,8 @@
 package keeper
 
 import (
-	"fmt"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	"cosmossdk.io/math"
+	"fmt"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -101,9 +99,4 @@ func (k Keeper) SetLastTotalPower(ctx sdk.Context, power math.Int) {
 // GetAuthority returns the x/staking module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
-}
-
-// GetModuleAccount returns the module account for x/staking
-func (k Keeper) GetModuleAccount(ctx sdk.Context) authtypes.ModuleAccountI {
-	return k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 }

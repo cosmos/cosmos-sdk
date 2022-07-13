@@ -151,7 +151,7 @@ func TestQueries(t *testing.T) {
 		WithdrawAddrEnabled: true,
 	}
 
-	distrKeeper.SetParams(ctx, params)
+	require.NoError(t, distrKeeper.SetParams(ctx, params))
 
 	paramsRes := getQueriedParams(t, ctx, cdc, querier)
 	require.Equal(t, params.CommunityTax, paramsRes.CommunityTax)

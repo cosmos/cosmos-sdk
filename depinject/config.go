@@ -130,7 +130,7 @@ func bindInterface(ctr *container, inTypeName string, outTypeName string, module
 }
 
 func Supply(values ...interface{}) Config {
-	loc := LocationFromCaller(1)
+	loc := locationFromCaller(1)
 	return containerConfig(func(ctr *container) error {
 		for _, v := range values {
 			err := ctr.supply(reflect.ValueOf(v), loc)

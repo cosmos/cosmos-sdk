@@ -30,9 +30,6 @@ import (
 type Location interface {
 	isLocation()
 	Name() string
-	ShortName() string
-	PkgPath() string
-	File() string
 	fmt.Stringer
 	fmt.Formatter
 }
@@ -42,13 +39,19 @@ type location struct {
 	pkg  string
 	file string
 	line int
+	pc   uintptr
 }
 
 func LocationFromPC(pc uintptr) Location {
+	return locationFromPC(pc)
+}
+
+func locationFromPC(pc uintptr) *location {
 	f := runtime.FuncForPC(pc)
 	pkgName, funcName := splitFuncName(f.Name())
 	fileName, lineNum := f.FileLine(pc)
 	return &location{
+		pc:   pc,
 		name: funcName,
 		pkg:  pkgName,
 		file: fileName,
@@ -59,6 +62,11 @@ func LocationFromPC(pc uintptr) Location {
 func LocationFromCaller(skip int) Location {
 	pc, _, _, _ := runtime.Caller(skip + 1)
 	return LocationFromPC(pc)
+}
+
+func locationFromCaller(skip int) *location {
+	pc, _, _, _ := runtime.Caller(skip + 1)
+	return locationFromPC(pc)
 }
 
 func (f *location) isLocation() {
@@ -73,18 +81,6 @@ func (f *location) String() string {
 // Name is the fully qualified function name.
 func (f *location) Name() string {
 	return fmt.Sprintf("%v.%v", f.pkg, f.name)
-}
-
-func (f *location) ShortName() string {
-	return f.name
-}
-
-func (f *location) PkgPath() string {
-	return f.pkg
-}
-
-func (f *location) File() string {
-	return f.file
 }
 
 // Format implements fmt.Formatter for Func, printing a single-line

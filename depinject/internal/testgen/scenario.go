@@ -71,10 +71,3 @@ func (ModuleB) Provide(dependencies BDependencies) (BProvides, Handler, error) {
 		Commands: []Command{{}, {}},
 	}, Handler{}, nil
 }
-
-var ScenarioConfig = depinject.Configs(
-	depinject.Provide(ProvideMsgClientA),
-	depinject.ProvideInModule("runtime", ProvideKVStoreKey),
-	depinject.ProvideInModule("a", ModuleA.Provide),
-	depinject.ProvideInModule("b", ModuleB.Provide),
-)

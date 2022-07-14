@@ -176,6 +176,10 @@ func (p ProviderDescriptor) codegenOutputs(ctr *container, suffix string) (varRe
 		}
 	}
 
+	if p.hasError {
+		varRefs = append(varRefs, ast.NewIdent("err"))
+	}
+
 	return varRefs, valueExprs
 }
 

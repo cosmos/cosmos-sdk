@@ -192,23 +192,29 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 	}
 }
 
-func (c *container) supply(value reflect.Value, location Location) error {
+func (c *container) supply(value reflect.Value, loc *location) error {
 	typ := value.Type()
-	locGrapNode := c.locationGraphNode(location, nil)
+	locGrapNode := c.locationGraphNode(loc, nil)
 	markGraphNodeAsUsed(locGrapNode)
 	typeGraphNode := c.typeGraphNode(typ)
 	c.addGraphEdge(locGrapNode, typeGraphNode)
 
 	if existing, ok := c.resolverByType(typ); ok {
-		return duplicateDefinitionError(typ, location, existing.describeLocation())
+		return duplicateDefinitionError(typ, loc, existing.describeLocation())
+	}
+
+	codegenDef := false
+	if loc.pc == c.codegenLoc.pc {
+		codegenDef = true
 	}
 
 	c.addResolver(typ, &supplyResolver{
-		typ:       typ,
-		value:     value,
-		loc:       location,
-		graphNode: typeGraphNode,
-		varIdent:  c.funcGen.CreateIdent(util.StringFirstLower(typ.Name())),
+		typ:        typ,
+		value:      value,
+		loc:        loc,
+		graphNode:  typeGraphNode,
+		varIdent:   c.funcGen.CreateIdent(util.StringFirstLower(typ.Name())),
+		codegenDef: codegenDef,
 	})
 
 	return nil
@@ -261,8 +267,12 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 		}
 		c.logf("Providing OwnModuleKey %s", moduleKey.name)
 		markGraphNodeAsUsed(typeGraphNode)
+		e, err := c.funcGen.TypeExpr(reflect.TypeOf(OwnModuleKey{}))
+		if err != nil {
+			return reflect.Value{}, nil, err
+		}
 		return reflect.ValueOf(OwnModuleKey{moduleKey}), &ast.CallExpr{
-			Fun: ast.NewIdent("OwnModuleKey"), // TODO import depinject
+			Fun: e,
 			Args: []ast.Expr{
 				c.getModuleKeyExpr(moduleKey),
 			},

@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/printer"
 	"go/token"
+	"io"
 	"reflect"
 
 	"github.com/pkg/errors"
@@ -112,10 +113,15 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 	c.logf("Done calling invokers")
 
 	if c.codegenOut != nil {
-		fset := token.NewFileSet()
-		err = printer.Fprint(c.codegenOut, fset, c.funcGen.Func)
+		err = printer.Fprint(c.codegenOut, c.fset, c.funcGen.File)
 		if err != nil {
 			return err
+		}
+		if closer, ok := c.codegenOut.(io.Closer); ok {
+			err := closer.Close()
+			if err != nil {
+				return err
+			}
 		}
 	}
 

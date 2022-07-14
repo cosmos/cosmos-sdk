@@ -187,6 +187,7 @@ type debugConfig struct {
 	moduleKeyContextIdent *ast.Ident
 	codegenOut            io.Writer
 	fset                  *token.FileSet
+	codegenLoc            *location
 }
 
 type debugOption func(*debugConfig) error

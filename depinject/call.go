@@ -9,7 +9,7 @@ import (
 )
 
 func (c *container) call(provider *ProviderDescriptor, key *moduleKey) ([]reflect.Value, *ast.CallExpr, error) {
-	loc := provider.Location
+	loc := provider.Location.(*location)
 	graphNode := c.locationGraphNode(loc, key)
 
 	markGraphNodeAsFailed(graphNode)
@@ -37,8 +37,8 @@ func (c *container) call(provider *ProviderDescriptor, key *moduleKey) ([]reflec
 
 	markGraphNodeAsUsed(graphNode)
 
-	importPrefix := c.funcGen.AddOrGetImport(loc.PkgPath())
-	name := loc.ShortName()
+	importPrefix := c.funcGen.AddOrGetImport(loc.pkg)
+	name := loc.name
 	if importPrefix != "" {
 		name = fmt.Sprintf("%s.%s", importPrefix, name)
 	}

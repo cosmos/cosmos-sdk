@@ -4,7 +4,7 @@ package testgen
 
 import "cosmossdk.io/depinject"
 
-var ScenarioConfig = depinject.Configs(
+var appConfig = depinject.Configs(
 	depinject.Provide(ProvideMsgClientA),
 	depinject.ProvideInModule("runtime", ProvideKVStoreKey),
 	depinject.ProvideInModule("a", ModuleA.Provide),
@@ -21,7 +21,7 @@ func Build(modA ModuleA, modB ModuleB) (
 	err = depinject.InjectDebug(
 		depinject.Codegen(),
 		depinject.Configs(
-			ScenarioConfig,
+			appConfig,
 			depinject.Supply(modA, modB),
 		),
 		&handlers,

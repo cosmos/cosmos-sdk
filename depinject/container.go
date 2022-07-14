@@ -192,7 +192,7 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 	}
 }
 
-func (c *container) supply(value reflect.Value, loc *location) error {
+func (c *container) supply(value reflect.Value, loc Location, codegenVar *ast.Ident) error {
 	typ := value.Type()
 	locGrapNode := c.locationGraphNode(loc, nil)
 	markGraphNodeAsUsed(locGrapNode)
@@ -203,19 +203,21 @@ func (c *container) supply(value reflect.Value, loc *location) error {
 		return duplicateDefinitionError(typ, loc, existing.describeLocation())
 	}
 
-	codegenDef := false
-	if loc.pc == c.codegenLoc.pc {
-		codegenDef = true
+	r := &supplyResolver{
+		typ:       typ,
+		value:     value,
+		loc:       loc,
+		graphNode: typeGraphNode,
 	}
 
-	c.addResolver(typ, &supplyResolver{
-		typ:        typ,
-		value:      value,
-		loc:        loc,
-		graphNode:  typeGraphNode,
-		varIdent:   c.funcGen.CreateIdent(util.StringFirstLower(typ.Name())),
-		codegenDef: codegenDef,
-	})
+	if codegenVar != nil {
+		r.codegenDef = true
+		r.varIdent = codegenVar
+	} else {
+		r.varIdent = c.funcGen.CreateIdent(util.StringFirstLower(typ.Name()))
+	}
+
+	c.addResolver(typ, r)
 
 	return nil
 }

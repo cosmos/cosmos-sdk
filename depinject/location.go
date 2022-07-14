@@ -39,19 +39,13 @@ type location struct {
 	pkg  string
 	file string
 	line int
-	pc   uintptr
 }
 
 func LocationFromPC(pc uintptr) Location {
-	return locationFromPC(pc)
-}
-
-func locationFromPC(pc uintptr) *location {
 	f := runtime.FuncForPC(pc)
 	pkgName, funcName := splitFuncName(f.Name())
 	fileName, lineNum := f.FileLine(pc)
 	return &location{
-		pc:   pc,
 		name: funcName,
 		pkg:  pkgName,
 		file: fileName,
@@ -62,11 +56,6 @@ func locationFromPC(pc uintptr) *location {
 func LocationFromCaller(skip int) Location {
 	pc, _, _, _ := runtime.Caller(skip + 1)
 	return LocationFromPC(pc)
-}
-
-func locationFromCaller(skip int) *location {
-	pc, _, _, _ := runtime.Caller(skip + 1)
-	return locationFromPC(pc)
 }
 
 func (f *location) isLocation() {

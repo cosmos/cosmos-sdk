@@ -6,6 +6,7 @@ import (
 	"go/parser"
 	"os"
 	"path"
+	"strings"
 
 	"cosmossdk.io/depinject/internal/codegen"
 )
@@ -36,7 +37,7 @@ import (
 //    return
 //  }
 func Codegen() DebugOption {
-	loc := locationFromCaller(1)
+	loc := LocationFromCaller(1).(*location)
 	return debugOption(func(config *debugConfig) error {
 		f, err := parser.ParseFile(config.fset, loc.file, nil, parser.ParseComments|parser.AllErrors)
 		if err != nil {
@@ -53,21 +54,26 @@ func Codegen() DebugOption {
 			return fmt.Errorf("couldn't resolve function %s in %s", loc.name, loc.file)
 		}
 
-		err = config.checkFuncDecl(funcGen.Func)
+		funcParamNames, err := config.checkAndPatchFuncDecl(funcGen)
 		if err != nil {
 			return err
 		}
 
-		// TODO check existing build comments
+		config.funcParamNames = funcParamNames
+
+		if len(fileGen.File.Comments) == 0 ||
+			len(fileGen.File.Comments[0].List) == 0 ||
+			strings.TrimSpace(fileGen.File.Comments[0].List[0].Text) != "//go:build depinject" {
+			return config.astError(fileGen.File, `expected comment: //go:build depinject`)
+		}
+
 		fileGen.File.Comments[0] = &ast.CommentGroup{
-			[]*ast.Comment{
+			List: []*ast.Comment{
 				{
 					Text: "//go:build !depinject\n",
 				},
 			},
 		}
-		funcGen.Func.Type.Results.List = nil
-		funcGen.Func.Body.List = nil
 
 		config.funcGen = funcGen
 		outFilename := loc.file
@@ -85,31 +91,63 @@ func Codegen() DebugOption {
 	})
 }
 
-func (c *debugConfig) checkFuncDecl(decl *ast.FuncDecl) error {
+func (c *debugConfig) checkAndPatchFuncDecl(funcGen *codegen.FuncGen) ([]*ast.Ident, error) {
+	decl := funcGen.Func
 	if decl.Type == nil {
-		return fmt.Errorf("expected function type")
+		return nil, fmt.Errorf("expected function type")
 	}
 
 	if decl.Type.Results == nil || len(decl.Type.Results.List) == 0 {
-		return c.astError(decl.Type, "expected non-empty output parameters")
+		return nil, c.astError(decl.Type, "expected non-empty output parameters")
 	}
 
 	numOut := len(decl.Type.Results.List)
 	if decl.Type.Results.List[numOut-1].Type.(*ast.Ident).Name != "error" {
-		return fmt.Errorf("last output parameter must be error")
+		return nil, c.astError(decl.Type.Results.List[numOut-1].Type, "last output parameter must be error")
 	}
 
 	if decl.Body == nil || len(decl.Body.List) != 2 {
-		return fmt.Errorf("expected exactly 2 statements in function body")
+		return nil, c.astError(decl.Body, "expected exactly 2 statements in function body")
 	}
 
-	decl.Pos()
+	stmt, ok := decl.Body.List[0].(*ast.AssignStmt)
+	if !ok {
+		return nil, c.astError(decl.Body.List[0], "expected err = depinject.InjectDebug(...)")
+	}
+
+	for _, arg := range stmt.Rhs[0].(*ast.CallExpr).Args[0].(*ast.CallExpr).Args {
+		ident := arg.(*ast.Ident)
+		for _, d := range funcGen.File.Decls {
+			if g, ok := d.(*ast.GenDecl); ok {
+				for i, spec := range g.Specs {
+					if v, ok := spec.(*ast.ValueSpec); ok {
+						for _, name := range v.Names {
+							if name.Name == ident.Name {
+								g.Specs[i] = nil
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	var funcParamNames []*ast.Ident
+	for _, field := range decl.Type.Params.List {
+		for _, name := range field.Names {
+			funcParamNames = append(funcParamNames, name)
+		}
+	}
+
 	ret, ok := decl.Body.List[1].(*ast.ReturnStmt)
 	if !ok || len(ret.Results) > 0 {
-		return fmt.Errorf("expected return (without any arguments) to be the last statement in the function")
+		return nil, fmt.Errorf("expected return (without any arguments) to be the last statement in the function")
 	}
 
-	return nil
+	decl.Type.Results.List = nil
+	decl.Body.List = nil
+
+	return funcParamNames, nil
 }
 
 func (c *debugConfig) astError(node ast.Node, format string, args ...any) error {

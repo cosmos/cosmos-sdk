@@ -1,8 +1,10 @@
 package depinject
 
 import (
+	"bytes"
 	"fmt"
 	"go/ast"
+	"go/format"
 	"go/printer"
 	"go/token"
 	"io"
@@ -113,10 +115,21 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 	c.logf("Done calling invokers")
 
 	if c.codegenOut != nil {
-		err = printer.Fprint(c.codegenOut, c.fset, c.funcGen.File)
+		buf := &bytes.Buffer{}
+		err = printer.Fprint(buf, token.NewFileSet(), c.funcGen.File)
 		if err != nil {
 			return err
 		}
+		src, err := format.Source(buf.Bytes())
+		if err != nil {
+			return err
+		}
+
+		_, err = c.codegenOut.Write(src)
+		if err != nil {
+			return err
+		}
+
 		if closer, ok := c.codegenOut.(io.Closer); ok {
 			err := closer.Close()
 			if err != nil {

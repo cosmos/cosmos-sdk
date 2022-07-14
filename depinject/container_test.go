@@ -12,6 +12,13 @@ import (
 	"cosmossdk.io/depinject/internal/testgen"
 )
 
+var scenarioConfig = depinject.Configs(
+	depinject.Provide(testgen.ProvideMsgClientA),
+	depinject.ProvideInModule("runtime", testgen.ProvideKVStoreKey),
+	depinject.ProvideInModule("a", testgen.ModuleA.Provide),
+	depinject.ProvideInModule("b", testgen.ModuleB.Provide),
+)
+
 func Build(modA testgen.ModuleA, modB testgen.ModuleB) (
 	handlers map[string]testgen.Handler,
 	commands []testgen.Command,
@@ -19,10 +26,9 @@ func Build(modA testgen.ModuleA, modB testgen.ModuleB) (
 	b testgen.KeeperB,
 	err error,
 ) {
-	err = depinject.InjectDebug(
-		depinject.Codegen(),
+	err = depinject.Inject(
 		depinject.Configs(
-			testgen.ScenarioConfig,
+			scenarioConfig,
 			depinject.Supply(modA, modB),
 		),
 		&handlers,
@@ -508,10 +514,10 @@ func TestGraphAndLogOutput(t *testing.T) {
 		depinject.Visualizer(func(dotGraph string) {
 			graphOut = dotGraph
 		}))
-	require.NoError(t, depinject.InjectDebug(debugOpts, testgen.ScenarioConfig, &b))
+	require.NoError(t, depinject.InjectDebug(debugOpts, scenarioConfig, &b))
 	golden.Assert(t, graphOut, "example.dot")
 
-	badConfig := depinject.Configs(testgen.ScenarioConfig)
+	badConfig := depinject.Configs(scenarioConfig)
 	require.Error(t, depinject.InjectDebug(debugOpts, badConfig, &b))
 	golden.Assert(t, graphOut, "example_error.dot")
 }

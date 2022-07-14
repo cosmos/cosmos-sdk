@@ -1,6 +1,8 @@
 package depinject
 
 import (
+	"fmt"
+	"go/ast"
 	"reflect"
 
 	"github.com/pkg/errors"
@@ -130,10 +132,21 @@ func bindInterface(ctr *container, inTypeName string, outTypeName string, module
 }
 
 func Supply(values ...interface{}) Config {
-	loc := locationFromCaller(1)
+	loc := LocationFromCaller(1)
 	return containerConfig(func(ctr *container) error {
-		for _, v := range values {
-			err := ctr.supply(reflect.ValueOf(v), loc)
+		codegenSupplyParam := loc.Name() == ctr.codegenLoc.Name()
+		if codegenSupplyParam {
+			if len(values) != len(ctr.funcParamNames) {
+				return fmt.Errorf("unexpected number of values in supply codegen call")
+			}
+		}
+
+		var codegenVar *ast.Ident
+		for i, v := range values {
+			if codegenSupplyParam {
+				codegenVar = ctr.funcParamNames[i]
+			}
+			err := ctr.supply(reflect.ValueOf(v), loc, codegenVar)
 			if err != nil {
 				return errors.WithStack(err)
 			}

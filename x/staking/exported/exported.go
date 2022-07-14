@@ -6,16 +6,14 @@ import (
 )
 
 type (
-	ParamSet = paramtypes.ParamSet
-
 	// Subspace defines an interface that implements the legacy x/params Subspace
 	// type.
 	//
 	// NOTE: This is used solely for migration of x/params managed parameters.
 	Subspace interface {
-		GetParamSet(ctx sdk.Context, ps ParamSet)
+		GetParamSet(ctx sdk.Context, ps paramtypes.ParamSet)
 		HasKeyTable() bool
-		WithKeyTable(paramtypes.KeyTable) Subspace
+		WithKeyTable(paramtypes.KeyTable) paramtypes.Subspace
 		Set(ctx sdk.Context, key []byte, value interface{})
 	}
 )

@@ -6613,7 +6613,8 @@ multiplied by exchange rate.
 | `unbonding_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | unbonding_time defines, if unbonding, the min time for the validator to complete unbonding. |
 | `commission` | [Commission](#cosmos.staking.v1beta1.Commission) |  | commission defines the commission parameters. |
 | `min_self_delegation` | [string](#string) |  | min_self_delegation is the validator's self declared minimum self delegation. |
-| `unbonding_on_hold` | [bool](#bool) |  | True if this validator's unbonding has been stopped by an external module |
+| `unbonding_on_hold` | [bool](#bool) |  | false iff unbonding is allowed to complete in staking EndBlock |
+| `unbonding_id` | [uint64](#uint64) |  | unique id, used to distinguish unbond->rebond->unbond executions |
 
 
 

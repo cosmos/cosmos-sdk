@@ -4,14 +4,14 @@ import (
 	"go/ast"
 )
 
+// FuncGen is a utility for generating/patching golang function declaration ASTs.
 type FuncGen struct {
 	*FileGen
-	Func   *ast.FuncDecl
-	idents map[string]bool
+	Func *ast.FuncDecl
 }
 
 func newFuncGen(fileGen *FileGen, f *ast.FuncDecl) *FuncGen {
-	g := &FuncGen{FileGen: fileGen, Func: f, idents: map[string]bool{}}
+	g := &FuncGen{FileGen: fileGen, Func: f}
 
 	// reserve param idents
 	for _, field := range f.Type.Params.List {

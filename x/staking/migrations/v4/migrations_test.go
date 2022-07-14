@@ -1,4 +1,4 @@
-package v3_test
+package v4_test
 
 import (
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -6,7 +6,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
-	"github.com/cosmos/cosmos-sdk/x/staking/migrations/v3"
+	"github.com/cosmos/cosmos-sdk/x/staking/migrations/v4"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -28,16 +28,16 @@ func TestMigrate(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
 	cdc := encCfg.Codec
 
-	storeKey := sdk.NewKVStoreKey(v3.ModuleName)
+	storeKey := sdk.NewKVStoreKey(v4.ModuleName)
 	tKey := sdk.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	store := ctx.KVStore(storeKey)
 
 	legacySubspace := newMockSubspace(types.DefaultParams())
-	require.NoError(t, v3.MigrateStore(ctx, storeKey, cdc, legacySubspace))
+	require.NoError(t, v4.MigrateStore(ctx, storeKey, cdc, legacySubspace))
 
 	var res types.Params
-	bz := store.Get(v3.ParamsKey)
+	bz := store.Get(v4.ParamsKey)
 	require.NoError(t, cdc.Unmarshal(bz, &res))
 	require.Equal(t, legacySubspace.ps, res)
 }

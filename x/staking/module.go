@@ -6,7 +6,7 @@ import (
 	"fmt"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/mint/exported"
+	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 	"math/rand"
 	"sort"
 

@@ -237,7 +237,6 @@ func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) 
 // QueryDepositByTxQuery will query for a single deposit via a direct txs tags
 // query.
 func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositParams) ([]byte, error) {
-
 	// initial deposit was submitted with proposal, so must be queried separately
 	initialDeposit, err := queryInitialDepositByTxQuery(clientCtx, params.ProposalID)
 	if err != nil {
@@ -382,7 +381,6 @@ func queryInitialDepositByTxQuery(clientCtx client.Context, proposalID uint64) (
 			fmt.Sprintf("%s.%s='%s'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", proposalID))),
 		},
 	)
-
 	if err != nil {
 		return types.Deposit{}, err
 	}

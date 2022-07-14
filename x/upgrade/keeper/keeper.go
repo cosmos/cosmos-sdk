@@ -26,6 +26,12 @@ import (
 // UpgradeInfoFileName file to store upgrade information
 const UpgradeInfoFileName string = "upgrade-info.json"
 
+// upgrade defines a comparable structure for sorting upgrades.
+type upgrade struct {
+	Name        string
+	BlockHeight int64
+}
+
 type Keeper struct {
 	homePath           string                          // root directory of app config
 	skipUpgradeHeights map[int64]bool                  // map of heights to skip for an upgrade
@@ -236,11 +242,21 @@ func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, lastHeight int64) ([]
 func (k Keeper) GetLastCompletedUpgrade(ctx sdk.Context) (string, int64) {
 	iter := sdk.KVStoreReversePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
 	defer iter.Close()
-	if iter.Valid() {
-		return parseDoneKey(iter.Key()), int64(binary.BigEndian.Uint64(iter.Value()))
+
+	var (
+		latest upgrade
+		found  bool
+	)
+	for ; iter.Valid(); iter.Next() {
+		upgradeHeight := int64(sdk.BigEndianToUint64(iter.Value()))
+		if !found || upgradeHeight >= latest.BlockHeight {
+			found = true
+			name := parseDoneKey(iter.Key())
+			latest = upgrade{Name: name, BlockHeight: upgradeHeight}
+		}
 	}
 
-	return "", 0
+	return latest.Name, latest.BlockHeight
 }
 
 // parseDoneKey - split upgrade name from the done key

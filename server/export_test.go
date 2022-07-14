@@ -119,7 +119,6 @@ func TestExportCmd_Height(t *testing.T) {
 			require.Equal(t, tc.expHeight, exportedGenDoc.InitialHeight)
 		})
 	}
-
 }
 
 func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *tmtypes.GenesisDoc, *cobra.Command) {
@@ -174,7 +173,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 }
 
 func createConfigFolder(dir string) error {
-	return os.Mkdir(path.Join(dir, "config"), 0700)
+	return os.Mkdir(path.Join(dir, "config"), 0o700)
 }
 
 func newDefaultGenesisDoc(cdc codec.Codec) *tmtypes.GenesisDoc {

@@ -169,7 +169,8 @@ func SigGasNoConsumer(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, para
 }
 
 func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums,
-	accSeqs []uint64, feeGranter sdk.AccAddress, priv ...cryptotypes.PrivKey) (sdk.Tx, error) {
+	accSeqs []uint64, feeGranter sdk.AccAddress, priv ...cryptotypes.PrivKey,
+) (sdk.Tx, error) {
 	sigs := make([]signing.SignatureV2, len(priv))
 
 	// create a random length memo

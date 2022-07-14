@@ -57,7 +57,6 @@ func (s *paginationTestSuite) SetupTest() {
 	var (
 		bankKeeper    bankkeeper.Keeper
 		accountKeeper authkeeper.AccountKeeper
-		appBuilder    *runtime.AppBuilder
 		reg           codectypes.InterfaceRegistry
 		cdc           codec.Codec
 	)
@@ -67,7 +66,7 @@ func (s *paginationTestSuite) SetupTest() {
 			configurator.AuthModule(),
 			configurator.BankModule(),
 			configurator.ParamsModule()),
-		&bankKeeper, &accountKeeper, &appBuilder, &reg, &cdc)
+		&bankKeeper, &accountKeeper, &reg, &cdc)
 
 	s.NoError(err)
 

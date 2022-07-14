@@ -1,26 +1,43 @@
 package v4_test
 
 import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/staking/exported"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/migrations/v4"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 type mockSubspace struct {
 	ps types.Params
 }
 
+func (ms mockSubspace) HasKeyTable() bool {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (ms mockSubspace) WithKeyTable(table paramtypes.KeyTable) paramtypes.Subspace {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (ms mockSubspace) Set(ctx sdk.Context, key []byte, value interface{}) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func newMockSubspace(ps types.Params) mockSubspace {
 	return mockSubspace{ps: ps}
 }
 
-func (ms mockSubspace) GetParamSet(ctx sdk.Context, ps exported.ParamSet) {
+func (ms mockSubspace) GetParamSet(ctx sdk.Context, ps paramtypes.ParamSet) {
 	*ps.(*types.Params) = ms.ps
 }
 

@@ -11,34 +11,29 @@ import (
 
 // UnbondingTime
 func (k Keeper) UnbondingTime(ctx sdk.Context) time.Duration {
-	params := k.GetParams(ctx)
-	return params.UnbondingTime
+	return k.GetParams(ctx).UnbondingTime
 }
 
 // MaxValidators - Maximum number of validators
 func (k Keeper) MaxValidators(ctx sdk.Context) uint32 {
-	params := k.GetParams(ctx)
-	return params.MaxValidators
+	return k.GetParams(ctx).MaxValidators
 }
 
 // MaxEntries - Maximum number of simultaneous unbonding
 // delegations or redelegations (per pair/trio)
 func (k Keeper) MaxEntries(ctx sdk.Context) uint32 {
-	params := k.GetParams(ctx)
-	return params.MaxEntries
+	return k.GetParams(ctx).MaxEntries
 }
 
 // HistoricalEntries = number of historical info entries
 // to persist in store
 func (k Keeper) HistoricalEntries(ctx sdk.Context) (res uint32) {
-	params := k.GetParams(ctx)
-	return params.HistoricalEntries
+	return k.GetParams(ctx).HistoricalEntries
 }
 
 // BondDenom - Bondable coin denomination
 func (k Keeper) BondDenom(ctx sdk.Context) (res string) {
-	params := k.GetParams(ctx)
-	return params.BondDenom
+	return k.GetParams(ctx).BondDenom
 }
 
 // PowerReduction - is the amount of staking tokens required for 1 unit of consensus-engine power.

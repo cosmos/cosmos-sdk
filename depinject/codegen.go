@@ -52,10 +52,49 @@ func Codegen() DebugOption {
 			return fmt.Errorf("couldn't resolve function %s in %s", loc.ShortName(), loc.File())
 		}
 
+		err = config.checkFuncDecl(funcGen.Func)
+		if err != nil {
+			return err
+		}
+
 		config.funcGen = funcGen
 		config.codegenOut = os.Stdout
 		return nil
 	})
+}
+
+func (c *debugConfig) checkFuncDecl(decl *ast.FuncDecl) error {
+	if decl.Type == nil {
+		return fmt.Errorf("expected function type")
+	}
+
+	if decl.Type.Results == nil || len(decl.Type.Results.List) == 0 {
+		return c.astError(decl.Type, "expected non-empty output parameters")
+	}
+
+	numOut := len(decl.Type.Results.List)
+	if decl.Type.Results.List[numOut-1].Type.(*ast.Ident).Name != "error" {
+		return fmt.Errorf("last output parameter must be error")
+	}
+
+	if decl.Body == nil || len(decl.Body.List) != 2 {
+		return fmt.Errorf("expected exactly 2 statements in function body")
+	}
+
+	decl.Pos()
+	ret, ok := decl.Body.List[1].(*ast.ReturnStmt)
+	if !ok || len(ret.Results) > 0 {
+		return fmt.Errorf("expected return (without any arguments) to be the last statement in the function")
+	}
+
+	return nil
+}
+
+func (c *debugConfig) astError(node ast.Node, format string, args ...any) error {
+	tokenFile := c.fset.File(node.Pos())
+	position := tokenFile.Position(node.Pos())
+	str := fmt.Sprintf("at %s\n  ", position)
+	return fmt.Errorf(str+format, args...)
 }
 
 func (c *container) codegenStmt(stmt ast.Stmt) {

@@ -12,25 +12,30 @@ import (
 	"cosmossdk.io/depinject/internal/testgen"
 )
 
-func TestScenario(t *testing.T) {
-	var (
-		handlers map[string]testgen.Handler
-		commands []testgen.Command
-		a        testgen.KeeperA
-		b        testgen.KeeperB
+func Build(modA testgen.ModuleA, modB testgen.ModuleB) (
+	handlers map[string]testgen.Handler,
+	commands []testgen.Command,
+	a testgen.KeeperA,
+	b testgen.KeeperB,
+	err error,
+) {
+	err = depinject.InjectDebug(
+		depinject.Codegen(),
+		depinject.Configs(
+			testgen.ScenarioConfig,
+			depinject.Supply(modA, modB),
+		),
+		&handlers,
+		&commands,
+		&a,
+		&b,
 	)
-	require.NoError(t,
-		depinject.InjectDebug(
-			depinject.Codegen(),
-			depinject.Configs(
-				testgen.ScenarioConfig,
-				depinject.Supply(testgen.ModuleA{}, testgen.ModuleB{}),
-			),
-			&handlers,
-			&commands,
-			&a,
-			&b,
-		))
+	return
+}
+
+func TestScenario(t *testing.T) {
+	handlers, commands, a, b, err := Build(testgen.ModuleA{}, testgen.ModuleB{})
+	require.NoError(t, err)
 
 	require.Len(t, handlers, 2)
 	require.Equal(t, testgen.Handler{}, handlers["a"])

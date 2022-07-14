@@ -86,9 +86,10 @@ func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Kee
 
 		msg := types.NewMsgUnjail(validator.GetOperator())
 
-		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenSignedMockTx(
-			txGen,
+			r,
+			txCfg,
 			[]sdk.Msg{msg},
 			fees,
 			helpers.DefaultGenTxGas,
@@ -101,7 +102,7 @@ func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Kee
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
-		_, res, err := app.SimDeliver(txGen.TxEncoder(), tx)
+		_, res, err := app.SimDeliver(txCfg.TxEncoder(), tx)
 
 		// result should fail if:
 		// - validator cannot be unjailed due to tombstone

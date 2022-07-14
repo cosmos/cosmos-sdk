@@ -97,6 +97,7 @@ func SimulateMsgSend(
 
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenSignedMockTx(
+			r,
 			txCfg,
 			[]sdk.Msg{msg},
 			fees,

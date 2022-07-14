@@ -6,8 +6,8 @@ import (
 	v043gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v043"
 	v046gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	v043staking "github.com/cosmos/cosmos-sdk/x/staking/migrations/v043"
-	v046staking "github.com/cosmos/cosmos-sdk/x/staking/migrations/v046"
+	v043staking "github.com/cosmos/cosmos-sdk/x/staking/migrations/v2"
+	v046staking "github.com/cosmos/cosmos-sdk/x/staking/migrations/v3"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 

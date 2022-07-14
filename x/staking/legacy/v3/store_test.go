@@ -1,4 +1,4 @@
-package v046_test
+package v3_test
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	v046staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v046"
+	v3 "github.com/cosmos/cosmos-sdk/x/staking/legacy/v3"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -23,8 +23,10 @@ func TestStoreMigration(t *testing.T) {
 	// Check no params
 	require.False(t, paramstore.Has(ctx, types.KeyMinSelfDelegation))
 
+	paramstore = paramstore.WithKeyTable(types.ParamKeyTable())
+
 	// Run migrations.
-	err := v046staking.MigrateStore(ctx, paramstore)
+	err := v3.MigrateStore(ctx, paramstore)
 	require.NoError(t, err)
 
 	// Make sure the new params are set.

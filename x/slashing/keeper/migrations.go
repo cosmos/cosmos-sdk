@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/exported"
 	v043 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v043"
-	v2 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v2"
+	v3 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v3"
 )
 
 // Migrator is a struct for handling in-place store migrations.
@@ -28,5 +28,5 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 // and managed by the x/params modules and stores them directly into the x/slashing
 // module state.
 func (m Migrator) Migrate2to3(ctx sdk.Context) error {
-	return v2.Migrate(ctx, ctx.KVStore(m.keeper.storeKey), m.legacySubspace, m.keeper.cdc)
+	return v3.Migrate(ctx, ctx.KVStore(m.keeper.storeKey), m.legacySubspace, m.keeper.cdc)
 }

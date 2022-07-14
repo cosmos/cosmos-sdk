@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	abciclient "github.com/tendermint/tendermint/abci/client"
 	"github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
@@ -132,7 +133,11 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 				return err
 			}
 
-			if withTM := clientCtx.Viper.GetBool(flagWithTendermint); !withTM {
+			cmd.Flags().Visit(func(f *pflag.Flag) {
+				fmt.Println(f.Name, f.Value)
+			})
+
+			if withTM, _ := cmd.Flags().GetBool(flagWithTendermint); !withTM {
 				serverCtx.Logger.Info("starting ABCI without Tendermint")
 				return startStandAlone(serverCtx, appCreator)
 			}

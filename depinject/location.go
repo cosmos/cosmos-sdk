@@ -32,6 +32,7 @@ type Location interface {
 	Name() string
 	ShortName() string
 	PkgPath() string
+	File() string
 	fmt.Stringer
 	fmt.Formatter
 }
@@ -80,6 +81,10 @@ func (f *location) ShortName() string {
 
 func (f *location) PkgPath() string {
 	return f.pkg
+}
+
+func (f *location) File() string {
+	return f.file
 }
 
 // Format implements fmt.Formatter for Func, printing a single-line

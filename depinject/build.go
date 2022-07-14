@@ -5,7 +5,6 @@ import (
 	"go/ast"
 	"go/printer"
 	"go/token"
-	"os"
 	"reflect"
 
 	"github.com/pkg/errors"
@@ -36,7 +35,6 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 
 		providerIn = append(providerIn, ProviderInput{Type: typ.Elem()})
 
-		// codegen
 		astTyp, err := c.funcGen.TypeExpr(typ.Elem())
 		if err != nil {
 			return err
@@ -50,6 +48,7 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 
 		c.codegenErrReturn.Results = append(c.codegenErrReturn.Results, defaultValue)
 	}
+
 	funcResults.List = append(funcResults.List, &ast.Field{Type: ast.NewIdent("error")})
 	c.codegenErrReturn.Results = append(c.codegenErrReturn.Results, ast.NewIdent("err"))
 
@@ -106,18 +105,19 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 			return err
 		}
 
-		// codegen
 		_, _ = inv.fn.codegenOutputs(c, "")
 		c.codegenStmt(&ast.ExprStmt{X: eCall})
 		inv.fn.codegenErrCheck(c) // TODO: deal with err already being defined and use token.ASSIGN
 	}
 	c.logf("Done calling invokers")
 
-	fset := token.NewFileSet()
-	//ast.Print(fset, c.codegenBody)
-	fmt.Println("Codegen:")
-	printer.Fprint(os.Stdout, fset, c.funcGen.Func)
-	fmt.Println()
+	if c.codegenOut != nil {
+		fset := token.NewFileSet()
+		err = printer.Fprint(c.codegenOut, fset, c.funcGen.Func)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

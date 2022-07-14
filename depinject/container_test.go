@@ -20,7 +20,8 @@ func TestScenario(t *testing.T) {
 		b        testgen.KeeperB
 	)
 	require.NoError(t,
-		depinject.Inject(
+		depinject.InjectDebug(
+			depinject.Codegen(),
 			depinject.Configs(
 				testgen.ScenarioConfig,
 				depinject.Supply(testgen.ModuleA{}, testgen.ModuleB{}),

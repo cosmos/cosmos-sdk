@@ -9,7 +9,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"cosmossdk.io/depinject/internal/codegen"
 	"cosmossdk.io/depinject/internal/graphviz"
 	"cosmossdk.io/depinject/internal/util"
 )
@@ -26,11 +25,6 @@ type container struct {
 	resolveStack []resolveFrame
 	callerStack  []Location
 	callerMap    map[Location]bool
-
-	// codegen related
-	funcGen               *codegen.FuncGen
-	codegenErrReturn      *ast.ReturnStmt
-	moduleKeyContextIdent *ast.Ident
 }
 
 type invoker struct {
@@ -54,22 +48,6 @@ type interfaceBinding struct {
 }
 
 func newContainer(cfg *debugConfig) *container {
-	fileGen, err := codegen.NewFileGen(&ast.File{
-		Decls: []ast.Decl{
-			&ast.FuncDecl{
-				Name: ast.NewIdent("Build"),
-				Type: &ast.FuncType{
-					Results: &ast.FieldList{},
-					Params:  &ast.FieldList{},
-				},
-				Body: &ast.BlockStmt{},
-			},
-		},
-	}, "")
-	if err != nil {
-		panic(err)
-	}
-
 	return &container{
 		debugConfig:       cfg,
 		resolvers:         map[string]resolver{},
@@ -77,8 +55,6 @@ func newContainer(cfg *debugConfig) *container {
 		interfaceBindings: map[string]interfaceBinding{},
 		callerStack:       nil,
 		callerMap:         map[Location]bool{},
-		codegenErrReturn:  &ast.ReturnStmt{},
-		funcGen:           fileGen.PatchFuncDecl("Build"),
 	}
 }
 

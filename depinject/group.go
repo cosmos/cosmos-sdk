@@ -90,7 +90,6 @@ func (g *sliceGroupResolver) resolve(c *container, _ *moduleKey, caller Location
 		g.values = res
 		g.resolved = true
 
-		// codegen
 		g.valueIdent = c.funcGen.CreateIdent(util.StringFirstLower(fmt.Sprintf("%sSlice", g.typ.Name())))
 		c.codegenStmt(&ast.AssignStmt{
 			Lhs: []ast.Expr{g.valueIdent},

@@ -29,7 +29,6 @@ func ParamKeyTable() paramtypes.KeyTable {
 func NewParams(
 	mintDenom string, inflationRateChange, inflationMax, inflationMin, goalBonded sdk.Dec, blocksPerYear uint64,
 ) Params {
-
 	return Params{
 		MintDenom:           mintDenom,
 		InflationRateChange: inflationRateChange,
@@ -80,7 +79,6 @@ func (p Params) Validate() error {
 	}
 
 	return nil
-
 }
 
 // String implements the Stringer interface.
@@ -171,8 +169,8 @@ func validateGoalBonded(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.IsNegative() {
-		return fmt.Errorf("goal bonded cannot be negative: %s", v)
+	if v.IsNegative() || v.IsZero() {
+		return fmt.Errorf("goal bonded must be positive: %s", v)
 	}
 	if v.GT(sdk.OneDec()) {
 		return fmt.Errorf("goal bonded too large: %s", v)

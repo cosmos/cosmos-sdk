@@ -92,7 +92,6 @@ func (on OnlineNetwork) ConstructionParse(ctx context.Context, request *types.Co
 		AccountIdentifierSigners: signers,
 		Metadata:                 nil,
 	}, nil
-
 }
 
 // ConstructionPayloads Payloads is called with an array of operations and the response from

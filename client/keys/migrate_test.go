@@ -26,12 +26,12 @@ func Test_runMigrateCmd(t *testing.T) {
 
 	cmd := MigrateCommand()
 	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
-	//mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
+	// mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	mockIn, mockOut := testutil.ApplyMockIO(cmd)
 
 	cmd.SetArgs([]string{
 		kbHome,
-		//fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		// fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=true", flags.FlagDryRun),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})

@@ -48,7 +48,7 @@ func convertBaseVestingAccount(old *v039auth.BaseVestingAccount) *v040vesting.Ba
 // - Re-encode in v0.40 GenesisState.
 func Migrate(authGenState v039auth.GenesisState) *v040auth.GenesisState {
 	// Convert v0.39 accounts to v0.40 ones.
-	var v040Accounts = make([]v040auth.GenesisAccount, len(authGenState.Accounts))
+	v040Accounts := make([]v040auth.GenesisAccount, len(authGenState.Accounts))
 	for i, v039Account := range authGenState.Accounts {
 		switch v039Account := v039Account.(type) {
 		case *v039auth.BaseAccount:
@@ -98,7 +98,6 @@ func Migrate(authGenState v039auth.GenesisState) *v040auth.GenesisState {
 		default:
 			panic(sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "got invalid type %T", v039Account))
 		}
-
 	}
 
 	// Convert v0.40 accounts into Anys.

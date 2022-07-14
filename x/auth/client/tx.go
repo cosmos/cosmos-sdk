@@ -71,7 +71,8 @@ func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, txBuild
 // This function should only be used when signing with a multisig. For
 // normal keys, please use SignTx directly.
 func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, addr sdk.AccAddress,
-	name string, txBuilder client.TxBuilder, offline, overwrite bool) (err error) {
+	name string, txBuilder client.TxBuilder, offline, overwrite bool,
+) (err error) {
 	// Multisigs only support LEGACY_AMINO_JSON signing.
 	if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
 		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
@@ -148,7 +149,6 @@ func (bs *BatchScanner) Scan() bool {
 func populateAccountFromState(
 	txBldr tx.Factory, clientCtx client.Context, addr sdk.AccAddress,
 ) (tx.Factory, error) {
-
 	num, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, addr)
 	if err != nil {
 		return txBldr, err

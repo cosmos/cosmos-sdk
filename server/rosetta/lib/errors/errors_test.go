@@ -1,8 +1,9 @@
 package errors
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRegisterError(t *testing.T) {
@@ -29,7 +30,6 @@ func TestRegisterError(t *testing.T) {
 	// add a new error on a sealed registry
 	error = RegisterError(1024, "bytes", false, "bytes")
 	assert.NotNil(t, error)
-
 }
 
 func TestError_Error(t *testing.T) {
@@ -57,12 +57,12 @@ func TestToRosetta(t *testing.T) {
 	assert.NotNil(t, ToRosetta(&MyError{}))
 }
 
-type MyError struct {
-}
+type MyError struct{}
 
 func (e *MyError) Error() string {
 	return ""
 }
+
 func (e *MyError) Is(err error) bool {
 	return true
 }

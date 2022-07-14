@@ -77,7 +77,7 @@ func QueryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, erro
 		return nil, err
 	}
 
-	//TODO: this may not always need to be proven
+	// TODO: this may not always need to be proven
 	// https://github.com/cosmos/cosmos-sdk/issues/6807
 	resTx, err := node.Tx(context.Background(), hash, true)
 	if err != nil {

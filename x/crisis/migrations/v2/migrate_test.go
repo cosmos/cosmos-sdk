@@ -1,15 +1,16 @@
-package v046_test
+package v2_test
 
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	v046 "github.com/cosmos/cosmos-sdk/x/crisis/migrations/v046"
+	v2 "github.com/cosmos/cosmos-sdk/x/crisis/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/stretchr/testify/require"
 )
 
 type mockSubspace struct {
@@ -28,16 +29,16 @@ func TestMigrate(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
 	cdc := encCfg.Codec
 
-	storeKey := sdk.NewKVStoreKey(v046.ModuleName)
+	storeKey := sdk.NewKVStoreKey(v2.ModuleName)
 	tKey := sdk.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	store := ctx.KVStore(storeKey)
 
 	legacySubspace := newMockSubspace(types.DefaultGenesisState().ConstantFee)
-	require.NoError(t, v046.MigrateStore(ctx, storeKey, legacySubspace, cdc))
+	require.NoError(t, v2.MigrateStore(ctx, storeKey, legacySubspace, cdc))
 
 	var res sdk.Coin
-	bz := store.Get(v046.ConstantFeeKey)
+	bz := store.Get(v2.ConstantFeeKey)
 	require.NoError(t, cdc.Unmarshal(bz, &res))
 	require.NotNil(t, res)
 	require.Equal(t, legacySubspace.constantFee, res)

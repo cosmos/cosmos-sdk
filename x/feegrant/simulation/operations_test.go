@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/simulation"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/testutil"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -33,7 +32,6 @@ type SimTestSuite struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	accountKeeper     authkeeper.AccountKeeper
 	bankKeeper        bankkeeper.Keeper
-	stakingKeeper     *stakingkeeper.Keeper
 	cdc               codec.Codec
 	legacyAmino       *codec.LegacyAmino
 }
@@ -43,7 +41,6 @@ func (suite *SimTestSuite) SetupTest() {
 	suite.app, err = simtestutil.Setup(testutil.AppConfig,
 		&suite.feegrantKeeper,
 		&suite.bankKeeper,
-		&suite.stakingKeeper,
 		&suite.accountKeeper,
 		&suite.interfaceRegistry,
 		&suite.cdc,
@@ -56,7 +53,6 @@ func (suite *SimTestSuite) SetupTest() {
 
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
-
 	initAmt := sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
@@ -152,7 +148,7 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 	// begin a new block
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
-	feeAmt := suite.stakingKeeper.TokensFromConsensusPower(ctx, 200000)
+	feeAmt := sdk.TokensFromConsensusPower(200000, sdk.DefaultPowerReduction)
 	feeCoins := sdk.NewCoins(sdk.NewCoin("foo", feeAmt))
 
 	granter, grantee := accounts[0], accounts[1]

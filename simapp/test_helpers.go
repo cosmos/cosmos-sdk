@@ -4,12 +4,9 @@ import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
-<<<<<<< HEAD
 	"fmt"
-	"strconv"
-=======
 	"math/rand"
->>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
+	"strconv"
 	"testing"
 	"time"
 
@@ -415,12 +412,8 @@ func SignCheckDeliver(
 	t *testing.T, txCfg client.TxConfig, app *bam.BaseApp, header tmproto.Header, msgs []sdk.Msg,
 	chainID string, accNums, accSeqs []uint64, expSimPass, expPass bool, priv ...cryptotypes.PrivKey,
 ) (sdk.GasInfo, *sdk.Result, error) {
-<<<<<<< HEAD
 	tx, err := helpers.GenSignedMockTx(
-=======
-	tx, err := simtestutil.GenSignedMockTx(
 		rand.New(rand.NewSource(time.Now().UnixNano())),
->>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 		txCfg,
 		msgs,
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
@@ -470,12 +463,8 @@ func GenSequenceOfTxs(txGen client.TxConfig, msgs []sdk.Msg, accNums []uint64, i
 	txs := make([]sdk.Tx, numToGenerate)
 	var err error
 	for i := 0; i < numToGenerate; i++ {
-<<<<<<< HEAD
 		txs[i], err = helpers.GenSignedMockTx(
-=======
-		txs[i], err = simtestutil.GenSignedMockTx(
 			rand.New(rand.NewSource(time.Now().UnixNano())),
->>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 			txGen,
 			msgs,
 			sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},

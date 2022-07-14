@@ -145,12 +145,8 @@ func sendMsgSend(
 		}
 	}
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
-<<<<<<< HEAD
 	tx, err := helpers.GenSignedMockTx(
-=======
-	tx, err := simtestutil.GenSignedMockTx(
 		r,
->>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
@@ -363,12 +359,8 @@ func sendMsgMultiSend(
 	}
 
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
-<<<<<<< HEAD
 	tx, err := helpers.GenSignedMockTx(
-=======
-	tx, err := simtestutil.GenSignedMockTx(
 		r,
->>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 		txGen,
 		[]sdk.Msg{msg},
 		fees,

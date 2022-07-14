@@ -235,12 +235,8 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				msg := banktypes.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)})
-<<<<<<< HEAD
 				tx, err := helpers.GenSignedMockTx(
-=======
-				tx, err := simtestutil.GenSignedMockTx(
 					r,
->>>>>>> 17dc43166 (fix: Simulation is not deterministic due to GenSignedMockTx (#12374))
 					suite.encodingConfig.TxConfig,
 					[]sdk.Msg{msg},
 					sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)},

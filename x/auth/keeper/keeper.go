@@ -79,7 +79,6 @@ func NewAccountKeeper(
 	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, proto func() types.AccountI,
 	maccPerms map[string][]string, bech32Prefix string, authority string,
 ) AccountKeeper {
-
 	permAddrs := make(map[string]types.PermissionsForAddress)
 	for name, perms := range maccPerms {
 		permAddrs[name] = types.NewPermissionsForAddress(name, perms)

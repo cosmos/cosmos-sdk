@@ -11,9 +11,7 @@ const (
 	ModuleName = "auth"
 )
 
-var (
-	ParamsKey = []byte{0x01}
-)
+var ParamsKey = []byte{0x01}
 
 // Migrate migrates the x/auth module state from the consensus version 3 to
 // version 4. Specifically, it takes the parameters that are currently stored
@@ -31,5 +29,4 @@ func Migrate(ctx sdk.Context, store sdk.KVStore, legacySubspace exported.Subspac
 	store.Set(ParamsKey, bz)
 
 	return nil
-
 }

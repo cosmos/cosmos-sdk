@@ -43,9 +43,7 @@ func TestMigrateMapAccAddressToAccNumberKey(t *testing.T) {
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	store := ctx.KVStore(storeKey)
 
-	var (
-		accountKeeper keeper.AccountKeeper
-	)
+	var accountKeeper keeper.AccountKeeper
 
 	app, err := simtestutil.Setup(
 		authtestutil.AppConfig,

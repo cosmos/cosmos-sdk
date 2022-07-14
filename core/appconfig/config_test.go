@@ -118,5 +118,4 @@ modules:
    "@type": testpb.TestNoGoImportModule
 `))
 	expectContainerErrorContains(t, opt, "module should have ModuleDescriptor.go_import specified")
-
 }

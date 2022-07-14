@@ -11,9 +11,7 @@ const (
 	ModuleName = "slashing"
 )
 
-var (
-	ParamsKey = []byte{0x00}
-)
+var ParamsKey = []byte{0x00}
 
 // Migrate migrates the x/slashing module state from the consensus version 2 to
 // version 3. Specifically, it takes the parameters that are currently stored

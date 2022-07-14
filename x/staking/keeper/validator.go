@@ -367,8 +367,9 @@ func (k Keeper) DeleteValidatorQueueTimeSlice(ctx sdk.Context, endTime time.Time
 
 // DeleteValidatorQueue removes a validator by address from the unbonding queue
 // indexed by a given height and time.
-func (k Keeper) DeleteValidatorQueue(ctx sdk.Context, val types.Validator) {
-	addrs := k.GetUnbondingValidators(ctx, val.UnbondingTime, val.UnbondingHeight)
+func (k Keeper) DeleteValidatorQueue(ctx sdk.Context, val types.Validator,
+	unbondingTime time.Time, unbondingHeight int64) {
+	addrs := k.GetUnbondingValidators(ctx, unbondingTime, unbondingHeight)
 	newAddrs := []string{}
 
 	for _, addr := range addrs {
@@ -378,9 +379,9 @@ func (k Keeper) DeleteValidatorQueue(ctx sdk.Context, val types.Validator) {
 	}
 
 	if len(newAddrs) == 0 {
-		k.DeleteValidatorQueueTimeSlice(ctx, val.UnbondingTime, val.UnbondingHeight)
+		k.DeleteValidatorQueueTimeSlice(ctx, unbondingTime, unbondingHeight)
 	} else {
-		k.SetUnbondingValidatorsQueue(ctx, val.UnbondingTime, val.UnbondingHeight, newAddrs)
+		k.SetUnbondingValidatorsQueue(ctx, unbondingTime, unbondingHeight, newAddrs)
 	}
 }
 
@@ -432,6 +433,8 @@ func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 				}
 
 				if !val.IsUnbonding() {
+					fmt.Println("status is ", val.Status)
+
 					panic("unexpected validator in unbonding queue; status was not unbonding")
 				}
 				if !val.UnbondingOnHold {

@@ -307,6 +307,9 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) (types
 	// delete the validator by power index, as the key will change
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 
+	// delete from queue if present
+	k.DeleteValidatorQueue(ctx, validator, validator.UnbondingTime, validator.UnbondingHeight)
+
 	validator = validator.UpdateStatus(types.Bonded)
 	validator.UnbondingHeight = 0
 	validator.UnbondingTime = time.Time{}
@@ -316,9 +319,6 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) (types
 	// save the now bonded validator record to the two referenced stores
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByPowerIndex(ctx, validator)
-
-	// delete from queue if present
-	k.DeleteValidatorQueue(ctx, validator)
 
 	// trigger hook
 	consAddr, err := validator.GetConsAddr()

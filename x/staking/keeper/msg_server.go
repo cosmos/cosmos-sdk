@@ -509,14 +509,9 @@ func (ms msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdatePara
 	}
 
 	// store params
-	params := ParamsFromMsg(msg)
-	if err := ms.SetParams(ctx, params); err != nil {
+	if err := ms.SetParams(ctx, msg.Params); err != nil {
 		return nil, err
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
-}
-
-func ParamsFromMsg(msg *types.MsgUpdateParams) types.Params {
-	return msg.Params
 }

@@ -132,8 +132,7 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 				return err
 			}
 
-			withTM, _ := cmd.Flags().GetBool(flagWithTendermint)
-			if !withTM {
+			if withTM := clientCtx.Viper.GetBool(flagWithTendermint); !withTM {
 				serverCtx.Logger.Info("starting ABCI without Tendermint")
 				return startStandAlone(serverCtx, appCreator)
 			}

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 
@@ -9,6 +10,24 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 )
+
+func parseDecisionPolicy(cdc codec.Codec, decisionPolicyFile string) (group.DecisionPolicy, error) {
+	if decisionPolicyFile == "" {
+		return nil, fmt.Errorf("decision policy is required")
+	}
+
+	contents, err := ioutil.ReadFile(decisionPolicyFile)
+	if err != nil {
+		return nil, err
+	}
+
+	var policy group.DecisionPolicy
+	if err := cdc.UnmarshalInterfaceJSON(contents, &policy); err != nil {
+		return nil, fmt.Errorf("failed to parse decision policy: %w", err)
+	}
+
+	return policy, nil
+}
 
 func parseMembers(membersFile string) ([]group.MemberRequest, error) {
 	members := group.MemberRequests{}

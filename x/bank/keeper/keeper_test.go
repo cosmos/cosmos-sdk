@@ -24,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
@@ -86,8 +87,8 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
 	maccPerms[randomPerm] = []string{"random"}
 	authKeeper := authkeeper.NewAccountKeeper(
-		appCodec, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
-		authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
+		appCodec, app.GetKey(types.StoreKey), authtypes.ProtoBaseAccount,
+		maccPerms, sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	keeper := keeper.NewBaseKeeper(
 		appCodec, app.GetKey(types.StoreKey), authKeeper,
@@ -279,7 +280,7 @@ func (suite *IntegrationTestSuite) TestSupply_BurnCoins() {
 		Require().
 		NoError(keeper.MintCoins(ctx, authtypes.Minter, initCoins))
 	supplyAfterInflation, _, err := keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
-
+	suite.Require().NoError(err)
 	suite.Require().Panics(func() { keeper.BurnCoins(ctx, "", initCoins) }, "no module account")                    // nolint:errcheck
 	suite.Require().Panics(func() { keeper.BurnCoins(ctx, authtypes.Minter, initCoins) }, "invalid permission")     // nolint:errcheck
 	suite.Require().Panics(func() { keeper.BurnCoins(ctx, randomPerm, supplyAfterInflation) }, "random permission") // nolint:errcheck
@@ -304,8 +305,8 @@ func (suite *IntegrationTestSuite) TestSupply_BurnCoins() {
 	authKeeper.SetModuleAccount(ctx, multiPermAcc)
 
 	err = keeper.BurnCoins(ctx, multiPermAcc.GetName(), initCoins)
-	supplyAfterBurn, _, err = keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
 	suite.Require().NoError(err)
+	supplyAfterBurn, _, err = keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.NewCoins().String(), getCoinsByName(ctx, keeper, authKeeper, multiPermAcc.GetName()).String())
 	suite.Require().Equal(supplyAfterInflation.Sub(initCoins...), supplyAfterBurn)
@@ -1053,8 +1054,9 @@ func (suite *IntegrationTestSuite) TestBalanceTrackingEvents() {
 	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
 
 	suite.app.AccountKeeper = authkeeper.NewAccountKeeper(
-		suite.app.AppCodec(), suite.app.GetKey(authtypes.StoreKey), suite.app.GetSubspace(authtypes.ModuleName),
+		suite.app.AppCodec(), suite.app.GetKey(authtypes.StoreKey),
 		authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	suite.app.BankKeeper = keeper.NewBaseKeeper(suite.app.AppCodec(), suite.app.GetKey(types.StoreKey),
@@ -1180,8 +1182,9 @@ func (suite *IntegrationTestSuite) TestMintCoinRestrictions() {
 	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
 
 	suite.app.AccountKeeper = authkeeper.NewAccountKeeper(
-		suite.app.AppCodec(), suite.app.GetKey(authtypes.StoreKey), suite.app.GetSubspace(authtypes.ModuleName),
+		suite.app.AppCodec(), suite.app.GetKey(authtypes.StoreKey),
 		authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	suite.app.AccountKeeper.SetModuleAccount(suite.ctx, multiPermAcc)
 

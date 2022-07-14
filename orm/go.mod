@@ -12,7 +12,7 @@ require (
 	github.com/regen-network/gocuke v0.6.2
 	github.com/stretchr/testify v1.8.0
 	github.com/tendermint/tm-db v0.6.7
-	google.golang.org/grpc v1.47.0
+	google.golang.org/grpc v1.48.0
 	google.golang.org/protobuf v1.28.0
 	gotest.tools/v3 v3.3.0
 	pgregory.net/rapid v0.4.7
@@ -39,7 +39,7 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.0.1 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
-	github.com/klauspost/compress v1.13.6 // indirect
+	github.com/klauspost/compress v1.15.1 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/lib/pq v1.10.6 // indirect
 	github.com/onsi/ginkgo v1.16.4 // indirect

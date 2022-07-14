@@ -5,6 +5,7 @@ module github.com/cosmos/cosmos-sdk
 require (
 	cosmossdk.io/api v0.1.0-alpha8
 	cosmossdk.io/core v0.0.0
+	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.0-beta.2
 	github.com/99designs/keyring v1.1.6
@@ -17,7 +18,7 @@ require (
 	github.com/cosmos/btcutil v1.0.4
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
 	github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1
-	github.com/cosmos/cosmos-sdk/depinject v1.0.0-alpha.4
+	github.com/cosmos/cosmos-sdk/store/tools/ics23 v0.0.0-20220608170201-b0e82f964070
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.18.0
 	github.com/cosmos/ledger-cosmos-go v0.11.1
@@ -36,13 +37,13 @@ require (
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
 	github.com/hdevalence/ed25519consensus v0.0.0-20220222234857-c00d1f31bab3
 	github.com/improbable-eng/grpc-web v0.15.0
-	github.com/jhump/protoreflect v1.12.0
+	github.com/jhump/protoreflect v1.12.1-0.20220417024638-438db461d753
 	github.com/lazyledger/smt v0.2.1-0.20210709230900-03ea40719554
 	github.com/magiconair/properties v1.8.6
 	github.com/mattn/go-isatty v0.0.14
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.12.2
-	github.com/prometheus/common v0.35.0
+	github.com/prometheus/common v0.36.0
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
 	github.com/rs/zerolog v1.27.0
@@ -54,18 +55,16 @@ require (
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.16.0
-	github.com/tendermint/tendermint v0.35.7
+	github.com/tendermint/tendermint v0.35.6
 	github.com/tendermint/tm-db v0.6.7
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
 	golang.org/x/exp v0.0.0-20220428152302-39d4317da171
 	google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd
-	google.golang.org/grpc v1.47.0
+	google.golang.org/grpc v1.48.0
 	google.golang.org/protobuf v1.28.0
 	pgregory.net/rapid v0.4.7
 	sigs.k8s.io/yaml v1.3.0
 )
-
-require github.com/cosmos/cosmos-sdk/store/tools/ics23 v0.0.0-00010101000000-000000000000
 
 require (
 	4d63.com/gochecknoglobals v0.1.0 // indirect
@@ -82,6 +81,7 @@ require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/OpenPeeDeeP/depguard v1.1.0 // indirect
 	github.com/Workiva/go-datastructures v1.0.53 // indirect
+	github.com/adlio/schema v1.3.3 // indirect
 	github.com/alexkohler/prealloc v1.0.0 // indirect
 	github.com/ashanbrown/forbidigo v1.3.0 // indirect
 	github.com/ashanbrown/makezero v1.1.1 // indirect
@@ -175,7 +175,7 @@ require (
 	github.com/keybase/go-keychain v0.0.0-20190712205309-48d3d31d256d // indirect
 	github.com/kisielk/errcheck v1.6.0 // indirect
 	github.com/kisielk/gotool v1.0.0 // indirect
-	github.com/klauspost/compress v1.13.6 // indirect
+	github.com/klauspost/compress v1.15.1 // indirect
 	github.com/kulti/thelper v0.6.2 // indirect
 	github.com/kunwardeep/paralleltest v1.0.3 // indirect
 	github.com/kyoh86/exportloopref v0.1.8 // indirect
@@ -279,6 +279,7 @@ require (
 replace (
 	cosmossdk.io/api => ./api
 	cosmossdk.io/core => ./core
+	cosmossdk.io/depinject => ./depinject
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
 	github.com/cosmos/cosmos-sdk/db => ./db
 	github.com/cosmos/cosmos-sdk/depinject => ./depinject

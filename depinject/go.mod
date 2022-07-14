@@ -1,4 +1,4 @@
-module github.com/cosmos/cosmos-sdk/depinject
+module cosmossdk.io/depinject
 
 go 1.18
 

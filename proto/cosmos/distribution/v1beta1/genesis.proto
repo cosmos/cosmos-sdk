@@ -112,7 +112,7 @@ message GenesisState {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  // params defines all the paramaters of the module.
+  // params defines all the parameters of the module.
   Params params = 1 [(gogoproto.nullable) = false];
 
   // fee_pool defines the fee pool at genesis.

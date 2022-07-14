@@ -45,9 +45,7 @@ jobs:
         with:
           go-version: 1.18
       - name: Run submodule tests and create test coverage profile.
-        # GIT_DIFF is passed to the scripts
         run: bash scripts/module-tests.sh
-        if: env.GIT_DIFF
       - uses: actions/upload-artifact@v3
         with:
           name: "${{ github.sha }}-go-submodules-coverage"
@@ -97,11 +95,9 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: "${{ github.sha }}-${{ matrix.part }}"
-        if: env.GIT_DIFF
       - name: test & coverage report creation
         run: |
           cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='legacy_simapp norace ledger test_ledger_mock'
-        if: env.GIT_DIFF
       - uses: actions/upload-artifact@v3
         with:
           name: "${{ github.sha }}-${{ matrix.part }}-coverage"

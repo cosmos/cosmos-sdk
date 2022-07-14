@@ -40,6 +40,8 @@ jobs:
           key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
       - name: Build
         run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make build
+      - name: Build Legacy
+        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false COSMOS_BUILD_OPTIONS=legacy make build
 
       - name: Build cosmovisor
         run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make cosmovisor
@@ -239,6 +241,15 @@ jobs:
           go-version: 1.18
       - name: Display go version
         run: go version
+<<<<<<< HEAD
+=======
+      - uses: technote-space/get-diff-action@v6.1.0
+        with:
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
+>>>>>>> upstream/main
       - name: test-sim-nondeterminism
         run: |
           make test-sim-nondeterminism

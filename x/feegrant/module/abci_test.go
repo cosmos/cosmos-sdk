@@ -4,51 +4,44 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/module"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/testutil"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	feegranttestutil "github.com/cosmos/cosmos-sdk/x/feegrant/testutil"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func TestFeegrantPruning(t *testing.T) {
-	var (
-		interfaceRegistry codectypes.InterfaceRegistry
-		bankKeeper        bankkeeper.Keeper
-		stakingKeeper     *stakingkeeper.Keeper
-		feegrantKeeper    keeper.Keeper
-	)
+	key := sdk.NewKVStoreKey(feegrant.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
-	app, err := simtestutil.Setup(testutil.AppConfig,
-		&feegrantKeeper,
-		&bankKeeper,
-		&stakingKeeper,
-		&interfaceRegistry,
-	)
-	require.NoError(t, err)
-
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 4, sdk.NewInt(1000))
+	addrs := simtestutil.CreateIncrementalAccounts(4)
 	granter1 := addrs[0]
 	granter2 := addrs[1]
 	granter3 := addrs[2]
 	grantee := addrs[3]
 	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))
-	now := ctx.BlockTime()
+	now := testCtx.Ctx.BlockTime()
 	oneDay := now.AddDate(0, 0, 1)
 
-	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	ctrl := gomock.NewController(t)
+	accountKeeper := feegranttestutil.NewMockAccountKeeper(ctrl)
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), grantee).Return(authtypes.NewBaseAccountWithAddress(grantee)).AnyTimes()
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), granter1).Return(authtypes.NewBaseAccountWithAddress(granter1)).AnyTimes()
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), granter2).Return(authtypes.NewBaseAccountWithAddress(granter2)).AnyTimes()
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), granter3).Return(authtypes.NewBaseAccountWithAddress(granter3)).AnyTimes()
+
+	feegrantKeeper := keeper.NewKeeper(encCfg.Codec, key, accountKeeper)
 
 	feegrantKeeper.GrantAllowance(
-		ctx,
+		testCtx.Ctx,
 		granter1,
 		grantee,
 		&feegrant.BasicAllowance{
@@ -56,7 +49,7 @@ func TestFeegrantPruning(t *testing.T) {
 		},
 	)
 	feegrantKeeper.GrantAllowance(
-		ctx,
+		testCtx.Ctx,
 		granter2,
 		grantee,
 		&feegrant.BasicAllowance{
@@ -64,7 +57,7 @@ func TestFeegrantPruning(t *testing.T) {
 		},
 	)
 	feegrantKeeper.GrantAllowance(
-		ctx,
+		testCtx.Ctx,
 		granter3,
 		grantee,
 		&feegrant.BasicAllowance{
@@ -72,23 +65,23 @@ func TestFeegrantPruning(t *testing.T) {
 		},
 	)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
+	queryHelper := baseapp.NewQueryServerTestHelper(testCtx.Ctx, encCfg.InterfaceRegistry)
 	feegrant.RegisterQueryServer(queryHelper, feegrantKeeper)
 	queryClient := feegrant.NewQueryClient(queryHelper)
 
-	module.EndBlocker(ctx, feegrantKeeper)
+	module.EndBlocker(testCtx.Ctx, feegrantKeeper)
 
-	res, err := queryClient.Allowances(ctx.Context(), &feegrant.QueryAllowancesRequest{
+	res, err := queryClient.Allowances(testCtx.Ctx.Context(), &feegrant.QueryAllowancesRequest{
 		Grantee: grantee.String(),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Len(t, res.Allowances, 3)
 
-	ctx = ctx.WithBlockTime(now.AddDate(0, 0, 2))
-	module.EndBlocker(ctx, feegrantKeeper)
+	testCtx.Ctx = testCtx.Ctx.WithBlockTime(now.AddDate(0, 0, 2))
+	module.EndBlocker(testCtx.Ctx, feegrantKeeper)
 
-	res, err = queryClient.Allowances(ctx.Context(), &feegrant.QueryAllowancesRequest{
+	res, err = queryClient.Allowances(testCtx.Ctx.Context(), &feegrant.QueryAllowancesRequest{
 		Grantee: grantee.String(),
 	})
 	require.NoError(t, err)

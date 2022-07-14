@@ -12,10 +12,10 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -207,8 +207,12 @@ func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.We
 }
 
 // RandomizedParams creates randomized mint param changes for the simulator.
+//
+// TODO: Returns an empty slice which will make parameter changes a no-op during
+// simulations. Once all modules are migrated, remove RandomizedParams from
+// the simulation interface.
 func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return simulation.ParamChanges(r)
+	return []simtypes.ParamChange{}
 }
 
 // RegisterStoreDecoder registers a decoder for mint module's types.

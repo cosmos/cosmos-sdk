@@ -4,8 +4,8 @@ go 1.18
 
 require (
 	cosmossdk.io/api v0.1.0-alpha8
+	cosmossdk.io/depinject v1.0.0-alpha.4
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
-	github.com/cosmos/cosmos-sdk/depinject v1.0.0-alpha.4
 	google.golang.org/protobuf v1.28.0
 	gotest.tools/v3 v3.3.0
 	sigs.k8s.io/yaml v1.3.0
@@ -21,11 +21,11 @@ require (
 	golang.org/x/sys v0.0.0-20220615213510-4f61da869c0c // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd // indirect
-	google.golang.org/grpc v1.47.0 // indirect
+	google.golang.org/grpc v1.48.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
 replace (
 	cosmossdk.io/api => ../api
-	github.com/cosmos/cosmos-sdk/depinject => ../depinject
+	cosmossdk.io/depinject => ../depinject
 )

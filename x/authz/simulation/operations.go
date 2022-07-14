@@ -115,6 +115,7 @@ func SimulateMsgGrant(ak authz.AccountKeeper, bk authz.BankKeeper, _ keeper.Keep
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, err.Error()), nil, err
 		}
+
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenSignedMockTx(
 			r,
@@ -247,6 +248,7 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 		if len(coins) == 0 {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "empty coins slice"), nil, nil
 		}
+
 		// Check send_enabled status of each sent coin denom
 		if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, nil

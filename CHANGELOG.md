@@ -51,6 +51,7 @@ It is strongly recommended to upgrade to these releases as well.
 
 ### Bug Fixes
 
+* (testutil/sims) [#12374](https://github.com/cosmos/cosmos-sdk/pull/12374) fix the non-determinstic behavior in simulations caused by `GenSignedMockTx` and check empty coins slice before it is used to create `banktype.MsgSend`.
 * [#12448](https://github.com/cosmos/cosmos-sdk/pull/12448) Start telemetry independently from the API server.
 * [#12509](https://github.com/cosmos/cosmos-sdk/pull/12509) Fix `Register{Tx,Tendermint}Service` not being called, resulting in some endpoints like the Simulate endpoint not working.
 

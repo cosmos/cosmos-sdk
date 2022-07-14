@@ -64,6 +64,11 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operatio
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, "empty coins slice"), nil, nil
 		}
 
+		// if coins slice is empty, we can not create valid types.MsgSend
+		if len(coins) == 0 {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, "empty coins slice"), nil, nil
+		}
+
 		// Check send_enabled status of each coin denom
 		if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, err.Error()), nil, nil

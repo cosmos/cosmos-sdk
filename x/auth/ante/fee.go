@@ -46,9 +46,14 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidGasLimit, "must provide positive gas")
 	}
 
-	fee, priority, err := dfd.txFeeChecker(ctx, tx)
-	if err != nil {
-		return ctx, err
+	var err error
+	var priority int64
+	fee := feeTx.GetFee()
+	if !simulate {
+		fee, priority, err = dfd.txFeeChecker(ctx, tx)
+		if err != nil {
+			return ctx, err
+		}
 	}
 	if err := dfd.checkDeductFee(ctx, tx, fee); err != nil {
 		return ctx, err

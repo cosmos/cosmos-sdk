@@ -715,10 +715,12 @@ func (suite *IntegrationTestSuite) TestSpendableCoins() {
 	suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, addr2, origCoins))
 
 	suite.Require().Equal(origCoins, app.BankKeeper.SpendableCoins(ctx, addr2))
+	suite.Require().Equal(origCoins[0], app.BankKeeper.SpendableCoin(ctx, addr2, "stake"))
 
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 	suite.Require().NoError(app.BankKeeper.DelegateCoins(ctx, addr2, addrModule, delCoins))
 	suite.Require().Equal(origCoins.Sub(delCoins...), app.BankKeeper.SpendableCoins(ctx, addr1))
+	suite.Require().Equal(origCoins.Sub(delCoins...)[0], app.BankKeeper.SpendableCoin(ctx, addr1, "stake"))
 }
 
 func (suite *IntegrationTestSuite) TestVestingAccountSend() {

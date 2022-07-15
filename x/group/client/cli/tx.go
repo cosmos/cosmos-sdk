@@ -52,7 +52,7 @@ func TxCmd(name string) *cobra.Command {
 // This command is being handled better here, not converting to autocli
 func MsgCreateGroupCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-group <admin> <metadata> <members-json-file>",
+		Use:   "create-group [admin] [metadata] [members-json-file]",
 		Short: "Create a group which is an aggregation of member accounts with associated weights and an administrator account.",
 		Long: `Create a group which is an aggregation of member accounts with associated weights and an administrator account.
 Note, the '--from' flag is ignored as it is implied from [admin]. Members accounts can be given through a members JSON file that contains an array of members.`,
@@ -204,7 +204,7 @@ Set a member's weight to "0" to delete it.
 // This command is being handled better here, not converting to autocli
 func MsgCreateGroupWithPolicyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-group-with-policy <admin> <group-metadata> <group-policy-metadata> <members-json-file> <decision-policy-json-file>",
+		Use:   "create-group-with-policy [admin] [group-metadata] [group-policy-metadata] [members-json-file] [decision-policy-json-file]",
 		Short: "Create a group with policy which is an aggregation of member accounts with associated weights, an administrator account and decision policy.",
 		Long: `Create a group with policy which is an aggregation of member accounts with associated weights,
 an administrator account and decision policy. Note, the '--from' flag is ignored as it is implied from [admin].
@@ -263,22 +263,7 @@ and policy.json contains:
 				return err
 			}
 
-			for _, member := range members {
-				if _, err := math.NewPositiveDecFromString(member.Weight); err != nil {
-					return fmt.Errorf("invalid weight %s for %s: weight must be positive", member.Weight, member.Address)
-				}
-			}
-
 			policy, err := parseDecisionPolicy(clientCtx.Codec, args[4])
-			if err != nil {
-				return err
-			}
-
-			if err := policy.ValidateBasic(); err != nil {
-				return err
-			}
-
-			admin, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
 			if err != nil {
 				return err
 			}
@@ -309,7 +294,7 @@ and policy.json contains:
 // This command is being handled better here, not converting to autocli
 func MsgCreateGroupPolicyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-group-policy <admin> <group-id> <metadata> <decision-policy-json-file>",
+		Use:   "create-group-policy [admin] [group-id] [metadata] [decision-policy-json-file]",
 		Short: `Create a group policy which is an account associated with a group and a decision policy. Note, the '--from' flag is ignored as it is implied from [admin].`,
 		Example: fmt.Sprintf(`
 %s tx group create-group-policy [admin] [group-id] [metadata] policy.json
@@ -352,8 +337,9 @@ Here, we can use percentage decision policy when needed, where 0 < percentage <=
 				return err
 			}
 
-			if groupID == 0 {
-				return errZeroGroupID
+			policy, err := parseDecisionPolicy(clientCtx.Codec, args[3])
+			if err != nil {
+				return err
 			}
 
 			policy, err := parseDecisionPolicy(clientCtx.Codec, args[3])
@@ -394,7 +380,7 @@ Here, we can use percentage decision policy when needed, where 0 < percentage <=
 // This command is being handled better here, not converting to autocli
 func MsgUpdateGroupPolicyDecisionPolicyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-group-policy-decision-policy <admin> <group-policy-account> <decision-policy-json-file>",
+		Use:   "update-group-policy-decision-policy [admin] [group-policy-account] [decision-policy-json-file]",
 		Short: "Update a group policy's decision policy",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -535,6 +521,204 @@ metadata example:
 	}
 
 	cmd.Flags().String(FlagExec, "", "Set to 1 to try to execute proposal immediately after creation (proposers signatures are considered as Yes votes)")
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// MsgWithdrawProposalCmd creates a CLI command for Msg/WithdrawProposal.
+func MsgWithdrawProposalCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "withdraw-proposal [proposal-id] [group-policy-admin-or-proposer]",
+		Short: "Withdraw a submitted proposal",
+		Long: `Withdraw a submitted proposal.
+
+Parameters:
+			proposal-id: unique ID of the proposal.
+			group-policy-admin-or-proposer: either admin of the group policy or one the proposer of the proposal.
+			Note: --from flag will be ignored here.
+`,
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := cmd.Flags().Set(flags.FlagFrom, args[1])
+			if err != nil {
+				return err
+			}
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			proposalID, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			msg := &group.MsgWithdrawProposal{
+				ProposalId: proposalID,
+				Address:    clientCtx.GetFromAddress().String(),
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return fmt.Errorf("message validation failed: %w", err)
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// MsgVoteCmd creates a CLI command for Msg/Vote.
+func MsgVoteCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "vote [proposal-id] [voter] [vote-option] [metadata]",
+		Short: "Vote on a proposal",
+		Long: `Vote on a proposal.
+
+Parameters:
+			proposal-id: unique ID of the proposal
+			voter: voter account addresses.
+			vote-option: choice of the voter(s)
+				VOTE_OPTION_UNSPECIFIED: no-op
+				VOTE_OPTION_NO: no
+				VOTE_OPTION_YES: yes
+				VOTE_OPTION_ABSTAIN: abstain
+				VOTE_OPTION_NO_WITH_VETO: no-with-veto
+			Metadata: metadata for the vote
+`,
+		Args: cobra.ExactArgs(4),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := cmd.Flags().Set(flags.FlagFrom, args[1])
+			if err != nil {
+				return err
+			}
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			proposalID, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			voteOption, err := group.VoteOptionFromString(args[2])
+			if err != nil {
+				return err
+			}
+
+			execStr, _ := cmd.Flags().GetString(FlagExec)
+
+			msg := &group.MsgVote{
+				ProposalId: proposalID,
+				Voter:      args[1],
+				Option:     voteOption,
+				Metadata:   args[3],
+				Exec:       execFromString(execStr),
+			}
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return fmt.Errorf("message validation failed: %w", err)
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().String(FlagExec, "", "Set to 1 to try to execute proposal immediately after voting")
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// MsgExecCmd creates a CLI command for Msg/MsgExec.
+func MsgExecCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "exec [proposal-id]",
+		Short: "Execute a proposal",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			proposalID, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			msg := &group.MsgExec{
+				ProposalId: proposalID,
+				Executor:   clientCtx.GetFromAddress().String(),
+			}
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return fmt.Errorf("message validation failed: %w", err)
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// MsgLeaveGroupCmd creates a CLI command for Msg/LeaveGroup.
+func MsgLeaveGroupCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "leave-group [member-address] [group-id]",
+		Short: "Remove member from the group",
+		Long: `Remove member from the group
+
+Parameters:
+		   group-id: unique id of the group
+		   member-address: account address of the group member
+		   Note, the '--from' flag is ignored as it is implied from [member-address]
+		`,
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Flags().Set(flags.FlagFrom, args[0])
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			groupID, err := strconv.ParseUint(args[1], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			msg := &group.MsgLeaveGroup{
+				Address: clientCtx.GetFromAddress().String(),
+				GroupId: groupID,
+			}
+			if err = msg.ValidateBasic(); err != nil {
+				return fmt.Errorf("message validation failed: %w", err)
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

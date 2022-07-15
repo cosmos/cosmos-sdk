@@ -306,5 +306,6 @@ gotest.tools/v3 v3.3.0 h1:MfDY1b1/0xN1CyMlQDac0ziEy9zJQd9CXBRRDHw2jJo=
 gotest.tools/v3 v3.3.0/go.mod h1:Mcr9QNxkg0uMvy/YElmo4SpXgJKWgQvYrT7Kw5RzJ1A=
 honnef.co/go/tools v0.0.0-20190102054323-c2f93a96b099/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
-pgregory.net/rapid v0.4.7 h1:MTNRktPuv5FNqOO151TM9mDTa+XHcX6ypYeISDVD14g=
 pgregory.net/rapid v0.4.7/go.mod h1:UYpPVyjFHzYBGHIxLFoupi8vwk6rXNzRY9OMvVxFIOU=
+pgregory.net/rapid v0.4.8 h1:d+5SGZWUbJPbl3ss6tmPFqnNeQR6VDOFly+eTjwPiEw=
+pgregory.net/rapid v0.4.8/go.mod h1:Z5PbWqjvWR1I3UGjvboUuan4fe4ZYEYNLNQLExzCoUs=

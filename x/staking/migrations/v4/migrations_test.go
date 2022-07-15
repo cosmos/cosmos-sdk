@@ -19,17 +19,17 @@ type mockSubspace struct {
 }
 
 func (ms mockSubspace) HasKeyTable() bool {
-	//TODO implement me
+	//Method just to implement the interface
 	panic("implement me")
 }
 
 func (ms mockSubspace) WithKeyTable(table paramtypes.KeyTable) paramtypes.Subspace {
-	//TODO implement me
+	//Method just to implement the interface
 	panic("implement me")
 }
 
 func (ms mockSubspace) Set(ctx sdk.Context, key []byte, value interface{}) {
-	//TODO implement me
+	//Method just to implement the interface
 	panic("implement me")
 }
 

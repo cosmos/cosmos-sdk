@@ -1,21 +1,21 @@
-package v2
+package v3
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/exported"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 const (
-	ModuleName = "auth"
+	ModuleName = "slashing"
 )
 
-var ParamsKey = []byte{0x01}
+var ParamsKey = []byte{0x00}
 
-// Migrate migrates the x/auth module state from the consensus version 3 to
-// version 4. Specifically, it takes the parameters that are currently stored
-// and managed by the x/params modules and stores them directly into the x/auth
+// Migrate migrates the x/slashing module state from the consensus version 2 to
+// version 3. Specifically, it takes the parameters that are currently stored
+// and managed by the x/params modules and stores them directly into the x/slashing
 // module state.
 func Migrate(ctx sdk.Context, store sdk.KVStore, legacySubspace exported.Subspace, cdc codec.BinaryCodec) error {
 	var currParams types.Params

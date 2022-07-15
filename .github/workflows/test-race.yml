@@ -41,9 +41,16 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.18
+      - uses: technote-space/get-diff-action@v6.1.0
+        id: git_diff
+        with:
+          PATTERNS: |
+            **/**.go
+            **/go.mod
+            **/go.sum
       - name: Get data from Go build cache
         uses: actions/cache@v3
-        # 
+        # if: env.GIT_DIFF
         if: ${{ false }}
         with:
           path: |
@@ -52,11 +59,11 @@ jobs:
             ~/.cache/go-build
           key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
       - name: Build
-        
+        if: env.GIT_DIFF
         run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make build
 
       - name: Build cosmovisor
-        
+        if: env.GIT_DIFF
         run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make cosmovisor
 
   split-test-files:
@@ -100,9 +107,15 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.18
+      - uses: technote-space/get-diff-action@v6.1.0
+        with:
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
       - name: Get data from Go build cache
         uses: actions/cache@v3
-        # 
+        # if: env.GIT_DIFF
         if: ${{ false }}
         with:
           path: |
@@ -111,15 +124,15 @@ jobs:
             ~/.cache/go-build
           key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
       - uses: actions/download-artifact@v3
-        
+        if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-${{ matrix.part }}"
       - name: test & coverage report creation
-        
+        if: env.GIT_DIFF
         run: |
           xargs --arg-file=pkgs.txt.part.${{ matrix.part }} go test -mod=readonly -timeout 30m -race -tags='cgo ledger test_ledger_mock'
       - uses: actions/upload-artifact@v3
-        
+        if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-${{ matrix.part }}-race-output"
           path: ./${{ matrix.part }}-race-output.txt

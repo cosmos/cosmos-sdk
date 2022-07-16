@@ -3,6 +3,7 @@ module github.com/cosmos/cosmos-sdk/orm
 go 1.18
 
 require (
+	cosmossdk.io/api v0.1.1-0.20220715181620-dbcff8384fdc
 	cosmossdk.io/errors v1.0.0-beta.7
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
 	github.com/cosmos/cosmos-sdk/api v0.1.0
@@ -15,7 +16,7 @@ require (
 	google.golang.org/grpc v1.48.0
 	google.golang.org/protobuf v1.28.0
 	gotest.tools/v3 v3.3.0
-	pgregory.net/rapid v0.4.7
+	pgregory.net/rapid v0.4.8
 )
 
 require (

@@ -7,6 +7,4 @@ const (
 	StoreKey = ModuleName
 )
 
-var (
-	ConstantFeeKey = []byte{0x01}
-)
+var ConstantFeeKey = []byte{0x01}

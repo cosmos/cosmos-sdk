@@ -213,7 +213,7 @@ type subspaceInputs struct {
 
 func provideSubspace(in subspaceInputs) types.Subspace {
 	moduleName := in.Key.Name()
-	var kt, exists = in.KeyTables[moduleName]
+	kt, exists := in.KeyTables[moduleName]
 	if !exists {
 		return in.Keeper.Subspace(moduleName)
 	} else {

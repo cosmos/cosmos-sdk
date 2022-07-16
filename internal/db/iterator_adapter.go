@@ -12,7 +12,7 @@ type AsStoreIter struct {
 	valid bool
 }
 
-// DBToStoreIterator returns an iterator wrapping the given iterator so that it satisfies the
+// ToStoreIterator returns an iterator wrapping the given iterator so that it satisfies the
 // (store/types).Iterator interface.
 func ToStoreIterator(source dbm.Iterator) *AsStoreIter {
 	ret := &AsStoreIter{Iterator: source}

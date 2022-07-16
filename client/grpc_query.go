@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -48,6 +49,25 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 		*res = *broadcastRes
 
 		return err
+	}
+
+	// Certain queries must not be be concurrent with ABCI to function correctly.
+	// As a result, we direct them to the ABCI flow where they get syncronized.
+	_, isSimulationRequest := req.(*tx.SimulateRequest)
+	isTendermintQuery := strings.Contains(method, "tendermint")
+	grpcConcurrentEnabled := ctx.GRPCConcurrency
+	isGRPCAllowed := !isTendermintQuery && !isSimulationRequest && grpcConcurrentEnabled
+
+	requestedHeight, err := selectHeight(ctx, grpcCtx)
+	if err != nil {
+		return err
+	}
+
+	if ctx.GRPCClient != nil && isGRPCAllowed {
+		md := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(requestedHeight, 10))
+		context := metadata.NewOutgoingContext(grpcCtx, md)
+		// Case 2-1. Invoke grpc.
+		return ctx.GRPCClient.Invoke(context, method, req, reply, opts...)
 	}
 
 	// Case 2. Querying state.
@@ -113,4 +133,23 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 // NewStream implements the grpc ClientConn.NewStream method
 func (Context) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
 	return nil, fmt.Errorf("streaming rpc not supported")
+}
+
+// selectHeight returns the height chosen from client context and grpc context.
+// If exists, height extracted from grpcCtx takes precedence.
+func selectHeight(clientContext Context, grpcCtx gocontext.Context) (int64, error) {
+	var height int64
+	if clientContext.Height > 0 {
+		height = clientContext.Height
+	}
+
+	md, _ := metadata.FromOutgoingContext(grpcCtx)
+	if heights := md.Get(grpctypes.GRPCBlockHeightHeader); len(heights) > 0 {
+		var err error
+		height, err = strconv.ParseInt(heights[0], 10, 64)
+		if err != nil {
+			return 0, err
+		}
+	}
+	return height, nil
 }

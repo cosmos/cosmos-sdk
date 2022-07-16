@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -20,6 +21,14 @@ const (
 
 	// DefaultGRPCWebAddress defines the default address to bind the gRPC-web server to.
 	DefaultGRPCWebAddress = "0.0.0.0:9091"
+
+	// DefaultGRPCMaxRecvMsgSize defines the default gRPC max message size in
+	// bytes the server can receive.
+	DefaultGRPCMaxRecvMsgSize = 1024 * 1024 * 10
+
+	// DefaultGRPCMaxSendMsgSize defines the default gRPC max message size in
+	// bytes the server can send.
+	DefaultGRPCMaxSendMsgSize = math.MaxInt32
 )
 
 // BaseConfig defines the server's basic configuration
@@ -134,6 +143,14 @@ type GRPCConfig struct {
 
 	// Address defines the API server to listen on
 	Address string `mapstructure:"address"`
+
+	// MaxRecvMsgSize defines the max message size in bytes the server can receive.
+	// The default value is 10MB.
+	MaxRecvMsgSize int `mapstructure:"max-recv-msg-size"`
+
+	// MaxSendMsgSize defines the max message size in bytes the server can send.
+	// The default value is math.MaxInt32.
+	MaxSendMsgSize int `mapstructure:"max-send-msg-size"`
 }
 
 // GRPCWebConfig defines configuration for the gRPC-web server.
@@ -226,8 +243,10 @@ func DefaultConfig() *Config {
 			RPCMaxBodyBytes:    1000000,
 		},
 		GRPC: GRPCConfig{
-			Enable:  true,
-			Address: DefaultGRPCAddress,
+			Enable:         true,
+			Address:        DefaultGRPCAddress,
+			MaxRecvMsgSize: DefaultGRPCMaxRecvMsgSize,
+			MaxSendMsgSize: DefaultGRPCMaxSendMsgSize,
 		},
 		Rosetta: RosettaConfig{
 			Enable:     false,

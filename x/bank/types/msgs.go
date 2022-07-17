@@ -112,10 +112,6 @@ func (in Input) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, in.Coins.String())
 	}
 
-	if !in.Coins.IsAllPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, in.Coins.String())
-	}
-
 	return nil
 }
 

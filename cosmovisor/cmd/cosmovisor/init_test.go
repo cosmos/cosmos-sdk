@@ -93,8 +93,10 @@ func (s *InitTestSuite) setEnv(t *testing.T, env *cosmovisorInitEnv) {
 	}
 }
 
-var _ io.Reader = BufferedPipe{}
-var _ io.Writer = BufferedPipe{}
+var (
+	_ io.Reader = BufferedPipe{}
+	_ io.Writer = BufferedPipe{}
+)
 
 // BufferedPipe contains a connected read/write pair of files (a pipe),
 // and a buffer of what goes through it that is populated in the background.

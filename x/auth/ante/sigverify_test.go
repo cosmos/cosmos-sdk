@@ -206,7 +206,6 @@ func (suite *AnteTestSuite) TestSigVerification() {
 // In the meantime, we want to make double-sure amino compatibility works.
 // ref: https://github.com/cosmos/cosmos-sdk/issues/7229
 func (suite *AnteTestSuite) TestSigVerification_ExplicitAmino() {
-
 	// Set up TxConfig.
 	aminoCdc := codec.NewLegacyAmino()
 	// We're using TestMsg amino encoding in some tests, so register it here.

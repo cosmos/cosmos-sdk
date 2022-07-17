@@ -45,6 +45,10 @@ func (s *AnteTestSuite) TestDeductFeeDecorator_ZeroGas() {
 
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().Error(err)
+
+	// zero gas is accepted in simulation mode
+	_, err = antehandler(s.ctx, tx, true)
+	s.Require().NoError(err)
 }
 
 func (s *AnteTestSuite) TestEnsureMempoolFees() {
@@ -82,6 +86,11 @@ func (s *AnteTestSuite) TestEnsureMempoolFees() {
 	// antehandler errors with insufficient fees
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().NotNil(err, "Decorator should have errored on too low fee for local gasPrice")
+
+	// antehandler should not error since we do not check minGasPrice in simulation mode
+	cacheCtx, _ := s.ctx.CacheContext()
+	_, err = antehandler(cacheCtx, tx, true)
+	s.Require().Nil(err, "Decorator should not have errored in simulation mode")
 
 	// Set IsCheckTx to false
 	s.ctx = s.ctx.WithIsCheckTx(false)

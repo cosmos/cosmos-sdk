@@ -52,13 +52,21 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
-	if ctx.BlockHeight() > 0 && feeTx.GetGas() == 0 {
+	if !simulate && ctx.BlockHeight() > 0 && feeTx.GetGas() == 0 {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidGasLimit, "must provide positive gas")
 	}
 
-	fee, priority, err := dfd.txFeeChecker(ctx, tx)
-	if err != nil {
-		return ctx, err
+	var (
+	  priority int64
+	  err error
+	)
+	
+	fee := feeTx.GetFee()
+	if !simulate {
+		fee, priority, err = dfd.txFeeChecker(ctx, tx)
+		if err != nil {
+			return ctx, err
+		}
 	}
 
 	newCtx := ctx.WithPriority(txPriority)

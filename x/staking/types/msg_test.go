@@ -207,8 +207,6 @@ func TestMsgUpdateParams(t *testing.T) {
 		Params:    types.DefaultParams(),
 	}
 
-	require.Contains(t, "staking", msg.Route())
-	require.Contains(t, types.TypeMsgUpdateParams, msg.Type())
 	require.Equal(t, []sdk.AccAddress{authtypes.NewModuleAddress(govtypes.ModuleName)}, msg.GetSigners())
 }
 

@@ -396,12 +396,6 @@ func (msg MsgCancelUnbondingDelegation) ValidateBasic() error {
 	return nil
 }
 
-// Route returns the MsgUpdateParams message route.
-func (m *MsgUpdateParams) Route() string { return ModuleName }
-
-// Type returns the MsgUpdateParams message type.
-func (m *MsgUpdateParams) Type() string { return TypeMsgUpdateParams }
-
 // GetSignBytes returns the raw bytes for a MsgUpdateParams message that
 // the expected signer needs to sign.
 func (m MsgUpdateParams) GetSignBytes() []byte {

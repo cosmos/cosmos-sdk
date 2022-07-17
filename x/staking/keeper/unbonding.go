@@ -323,22 +323,33 @@ func (k Keeper) redelegationEntryCanComplete(ctx sdk.Context, id uint64) (found 
 	return true, nil
 }
 
+// WARNING: precondition:
+// Safety only guaranteed if this method is called AFTER staking.EndBlock
 func (k Keeper) validatorUnbondingCanComplete(ctx sdk.Context, id uint64) (found bool, err error) {
 	val, found := k.GetValidatorByUnbondingId(ctx, id)
+
 	if !found {
+		// validator can never be deleted before unbonding
+		// even if it is slashed to 0, so we always expect
+		// to find it.
 		return false, nil
 	}
 
-	if !val.IsMature(ctx.BlockTime(), ctx.BlockHeight()) {
+	if val.UnbondingId != id {
+		// validator already rebonded
+		return true, nil
+	}
+
+	if val.UnbondingTime.After(ctx.BlockTime()) {
+		// validator cannot have already been dequeued by EndBlock
 		val.UnbondingOnHold = false
 		k.SetValidator(ctx, val)
 	} else {
-		// If unbonding is mature complete it
-		val = k.UnbondingToUnbonded(ctx, val)
+		// Validator is mature. Unbond it.
 		if val.GetDelegatorShares().IsZero() {
 			k.RemoveValidator(ctx, val.GetOperator())
 		}
-
+		val = k.UnbondingToUnbonded(ctx, val)
 		k.DeleteUnbondingIndex(ctx, id)
 	}
 

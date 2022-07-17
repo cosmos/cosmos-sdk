@@ -703,9 +703,9 @@ func (k Keeper) Unbond(
 	return amount, nil
 }
 
-// getBeginInfo returns the completion time and height of a redelegation, along
-// with a boolean signaling if the redelegation is complete based on the source
-// validator.
+// getBeginInfo returns the completion time and creation height of a
+// redelegation, along with a boolean signaling if the redelegation is
+// complete based on the source validator.
 func (k Keeper) getBeginInfo(
 	ctx sdk.Context, valSrcAddr sdk.ValAddress,
 ) (completionTime time.Time, height int64, completeNow bool) {

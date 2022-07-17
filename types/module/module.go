@@ -169,9 +169,17 @@ type AppModule interface {
 	// introduced by the module. To avoid wrong/empty versions, the initial version
 	// should be set to 1.
 	ConsensusVersion() uint64
+}
 
-	// ABCI
+// BeginBlockAppModule is an extension interface that contains information about the AppModule and BeginBlock
+type BeginBlockAppModule interface {
+	AppModule
 	BeginBlock(sdk.Context, abci.RequestBeginBlock)
+}
+
+// EndBlockAppModule is an extension interface that contains information about the AppModule and EndBlock
+type EndBlockAppModule interface {
+	AppModule
 	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 }
 
@@ -468,7 +476,7 @@ func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) abci.R
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 	for _, moduleName := range m.OrderBeginBlockers {
-		m.Modules[moduleName].BeginBlock(ctx, req)
+		m.Modules[moduleName].(BeginBlockAppModule).BeginBlock(ctx, req)
 	}
 
 	return abci.ResponseBeginBlock{
@@ -484,7 +492,7 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 	validatorUpdates := []abci.ValidatorUpdate{}
 
 	for _, moduleName := range m.OrderEndBlockers {
-		moduleValUpdates := m.Modules[moduleName].EndBlock(ctx, req)
+		moduleValUpdates := m.Modules[moduleName].(EndBlockAppModule).EndBlock(ctx, req)
 
 		// use these validator updates if provided, the module manager assumes
 		// only one module will update the validator set

@@ -1,7 +1,6 @@
-package textual
+package valuerenderer
 
 import (
-	"context"
 	"fmt"
 	"sort"
 	"strings"
@@ -18,19 +17,10 @@ import (
 
 const thousandSeparator string = "'"
 
-// NewADR050ValueRenderer returns a new ValueRenderer based on the ADR-050
-// spec.
-func NewADR050ValueRenderer() ValueRenderer {
-	return adr050ValueRenderer{}
-}
-
 // adr050ValueRenderer is a value renderer based on the ADR-050 spec.
 type adr050ValueRenderer struct{}
 
-var _ ValueRenderer = adr050ValueRenderer{}
-
-func (r adr050ValueRenderer) Format(ctx context.Context, fd protoreflect.FieldDescriptor, v protoreflect.Value) ([]string, error) {
-	result := []string{}
+func GetADR050ValueRenderer(fd protoreflect.FieldDescriptor) (ValueRenderer, error) {
 	switch {
 	// Integers
 	case fd.Kind() == protoreflect.Uint32Kind ||
@@ -39,22 +29,12 @@ func (r adr050ValueRenderer) Format(ctx context.Context, fd protoreflect.FieldDe
 		fd.Kind() == protoreflect.Int64Kind ||
 		(fd.Kind() == protoreflect.StringKind && isCosmosScalar(fd, "cosmos.Int")):
 		{
-			formatted, err := formatInteger(v.String())
-			if err != nil {
-				return nil, err
-			}
-
-			result = append(result, formatted)
+			return numberValueRenderer{}
 		}
 	// Decimals
 	case fd.Kind() == protoreflect.StringKind && isCosmosScalar(fd, "cosmos.Dec"):
 		{
-			formatted, err := formatDecimal(v.String())
-			if err != nil {
-				return nil, err
-			}
-
-			result = append(result, formatted)
+			return decValueRenderer{}
 		}
 	// Coins
 	case fd.Kind() == protoreflect.MessageKind && (&basev1beta1.Coin{}).ProtoReflect().Descriptor() == fd.Message():
@@ -92,12 +72,6 @@ func (r adr050ValueRenderer) Format(ctx context.Context, fd protoreflect.FieldDe
 	default:
 		return nil, fmt.Errorf("value renderers cannot format value %s of type %s", v, fd.Kind())
 	}
-
-	return result, nil
-}
-
-func (r adr050ValueRenderer) Parse(context.Context, protoreflect.FieldDescriptor, []string) (proto.Message, error) {
-	panic("implement me")
 }
 
 // isCosmosScalar returns true if a field has the `cosmos_proto.scalar` field
@@ -109,52 +83,6 @@ func isCosmosScalar(fd protoreflect.FieldDescriptor, scalar string) bool {
 	}
 
 	return false
-}
-
-// formatInteger formats an integer into a value-rendered string. This function
-// operates with string manipulation (instead of manipulating the int or sdk.Int
-// object).
-func formatInteger(v string) (string, error) {
-	if v[0] == '-' {
-		v = v[1:]
-	}
-	if len(v) > 1 {
-		v = strings.TrimLeft(v, "0")
-
-	}
-
-	startOffset := 3
-	for outputIndex := len(v); outputIndex > startOffset; {
-		outputIndex -= 3
-		v = v[:outputIndex] + thousandSeparator + v[outputIndex:]
-	}
-	return v, nil
-}
-
-// formatDecimal formats a decimal into a value-rendered string. This function
-// operates with string manipulation (instead of manipulating the sdk.Dec
-// object).
-func formatDecimal(v string) (string, error) {
-	parts := strings.Split(v, ".")
-	intPart, err := formatInteger(parts[0])
-	if err != nil {
-		return "", err
-	}
-
-	if len(parts) > 2 {
-		return "", fmt.Errorf("invalid decimal %s", v)
-	}
-
-	if len(parts) == 1 {
-		return intPart, nil
-	}
-
-	decPart := strings.TrimRight(parts[1], "0")
-	if len(decPart) == 0 {
-		return intPart, nil
-	}
-
-	return intPart + "." + decPart, nil
 }
 
 // formatDecimal formats a sdk.Coin into a value-rendered string, using the

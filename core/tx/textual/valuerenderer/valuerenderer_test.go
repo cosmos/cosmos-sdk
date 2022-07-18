@@ -1,4 +1,4 @@
-package textual
+package valuerenderer
 
 import (
 	"context"

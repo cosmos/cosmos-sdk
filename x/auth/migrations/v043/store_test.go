@@ -8,8 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,11 +15,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	v2 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v2"
+	v4 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v4"
 	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -43,7 +42,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 	cdc := encCfg.Codec
 
-	storeKey := sdk.NewKVStoreKey(v2.ModuleName)
+	storeKey := sdk.NewKVStoreKey(v4.ModuleName)
 	tKey := sdk.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	store := ctx.KVStore(storeKey)
@@ -62,7 +61,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 	require.NoError(t, err)
 
 	legacySubspace := newMockSubspace(authtypes.DefaultParams())
-	require.NoError(t, v2.Migrate(ctx, store, legacySubspace, cdc))
+	require.NoError(t, v4.Migrate(ctx, store, legacySubspace, cdc))
 
 	ctx = app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
 	stakingKeeper.SetParams(ctx, stakingtypes.DefaultParams())
@@ -79,7 +78,6 @@ func TestMigrateVestingAccounts(t *testing.T) {
 		{
 			"delayed vesting has vested, multiple delegations less than the total account balance",
 			func(ctx sdk.Context, validator stakingtypes.Validator, delegatorAddr sdk.AccAddress) {
-
 				baseAccount := authtypes.NewBaseAccountWithAddress(delegatorAddr)
 				vestedCoins := sdk.NewCoins(sdk.NewCoin(stakingKeeper.BondDenom(ctx), sdk.NewInt(200)))
 				delayedAccount := types.NewDelayedVestingAccount(baseAccount, vestedCoins, ctx.BlockTime().Unix())
@@ -591,7 +589,6 @@ func TestMigrateVestingAccounts(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-
 			err := accountKeeper.SetParams(ctx, authtypes.DefaultParams())
 			require.NoError(t, err)
 
@@ -653,7 +650,6 @@ func trackingCorrected(ctx sdk.Context, t *testing.T, ak keeper.AccountKeeper, a
 }
 
 func cleartTrackingFields(ctx sdk.Context, vesting exported.VestingAccount, accountKeeper keeper.AccountKeeper) error {
-
 	switch t := vesting.(type) {
 	case *types.DelayedVestingAccount:
 		t.DelegatedFree = nil
@@ -675,7 +671,6 @@ func cleartTrackingFields(ctx sdk.Context, vesting exported.VestingAccount, acco
 }
 
 func dirtyTrackingFields(ctx sdk.Context, vesting exported.VestingAccount, accountKeeper keeper.AccountKeeper) error {
-
 	dirt := sdk.NewCoins(sdk.NewInt64Coin("stake", 42))
 
 	switch t := vesting.(type) {
@@ -699,7 +694,6 @@ func dirtyTrackingFields(ctx sdk.Context, vesting exported.VestingAccount, accou
 }
 
 func createValidator(t *testing.T, ctx sdk.Context, bankKeeper bankkeeper.Keeper, stakingKeeper *stakingkeeper.Keeper, powers int64) (sdk.AccAddress, sdk.ValAddress) {
-
 	valTokens := sdk.TokensFromConsensusPower(powers, sdk.DefaultPowerReduction)
 	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 1, valTokens)
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)

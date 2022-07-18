@@ -113,26 +113,27 @@ func TestGetADR050ValueRenderer(t *testing.T) {
 func getVRFromGoType(v interface{}) (valuerenderer.ValueRenderer, error) {
 	a, b := (&testpb.A{}).ProtoReflect().Descriptor().Fields(), (&testpb.B{}).ProtoReflect().Descriptor().Fields()
 
+	adr050 := valuerenderer.NewAdr050()
 	switch v := v.(type) {
 	// Valid types for SIGN_MODE_TEXTUAL
 	case uint32:
-		return valuerenderer.GetADR050ValueRenderer(a.ByName(protoreflect.Name("UINT32")))
+		return adr050.GetValueRenderer(a.ByName(protoreflect.Name("UINT32")))
 	case uint64:
-		return valuerenderer.GetADR050ValueRenderer(a.ByName(protoreflect.Name("UINT64")))
+		return adr050.GetValueRenderer(a.ByName(protoreflect.Name("UINT64")))
 	case int32:
-		return valuerenderer.GetADR050ValueRenderer(a.ByName(protoreflect.Name("INT32")))
+		return adr050.GetValueRenderer(a.ByName(protoreflect.Name("INT32")))
 	case int64:
-		return valuerenderer.GetADR050ValueRenderer(a.ByName(protoreflect.Name("INT64")))
+		return adr050.GetValueRenderer(a.ByName(protoreflect.Name("INT64")))
 	case math.Int:
-		return valuerenderer.GetADR050ValueRenderer(a.ByName(protoreflect.Name("SDKINT")))
+		return adr050.GetValueRenderer(a.ByName(protoreflect.Name("SDKINT")))
 	case sdk.Dec:
-		return valuerenderer.GetADR050ValueRenderer(a.ByName(protoreflect.Name("SDKDEC")))
+		return adr050.GetValueRenderer(a.ByName(protoreflect.Name("SDKDEC")))
 
 	// Invalid types for SIGN_MODE_TEXTUAL
 	case float32:
-		return valuerenderer.GetADR050ValueRenderer(b.ByName(protoreflect.Name("FLOAT")))
+		return adr050.GetValueRenderer(b.ByName(protoreflect.Name("FLOAT")))
 	case float64:
-		return valuerenderer.GetADR050ValueRenderer(b.ByName(protoreflect.Name("FLOAT")))
+		return adr050.GetValueRenderer(b.ByName(protoreflect.Name("FLOAT")))
 
 	default:
 		return nil, fmt.Errorf("value %s of type %T not recognized", v, v)

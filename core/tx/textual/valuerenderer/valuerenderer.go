@@ -5,26 +5,48 @@ import (
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/descriptorpb"
 
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 )
 
-func GetADR050ValueRenderer(fd protoreflect.FieldDescriptor) (ValueRenderer, error) {
+type Adr050 struct {
+	scalars map[string]ValueRenderer
+}
+
+func NewAdr050() Adr050 {
+	return Adr050{}
+}
+
+// GetValueRenderer returns the value renderer for the given FieldDescriptor.
+func (r Adr050) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRenderer, error) {
 	switch {
+	// Scalars, such as sdk.Int and sdk.Dec.
+	case proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar) != nil:
+		{
+			scalar, ok := proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar).(string)
+			if !ok {
+				return nil, fmt.Errorf("got extension option %s of type %T", scalar, scalar)
+			}
+
+			if r.scalars == nil {
+				r.init()
+			}
+
+			vr := r.scalars[scalar]
+			if vr == nil {
+				return nil, fmt.Errorf("got empty value renderer for scalar %s", scalar)
+			}
+
+			return vr, nil
+		}
+
 	// Integers
 	case fd.Kind() == protoreflect.Uint32Kind ||
 		fd.Kind() == protoreflect.Uint64Kind ||
 		fd.Kind() == protoreflect.Int32Kind ||
-		fd.Kind() == protoreflect.Int64Kind ||
-		(fd.Kind() == protoreflect.StringKind && isCosmosScalar(fd, "cosmos.Int")):
+		fd.Kind() == protoreflect.Int64Kind:
 		{
 			return intValueRenderer{}, nil
-		}
-	// Decimals
-	case fd.Kind() == protoreflect.StringKind && isCosmosScalar(fd, "cosmos.Dec"):
-		{
-			return decValueRenderer{}, nil
 		}
 
 	default:
@@ -32,13 +54,15 @@ func GetADR050ValueRenderer(fd protoreflect.FieldDescriptor) (ValueRenderer, err
 	}
 }
 
-// isCosmosScalar returns true if a field has the `cosmos_proto.scalar` field
-// option.
-func isCosmosScalar(fd protoreflect.FieldDescriptor, scalar string) bool {
-	opts := fd.Options().(*descriptorpb.FieldOptions)
-	if proto.GetExtension(opts, cosmos_proto.E_Scalar).(string) == scalar {
-		return true
+func (r Adr050) init() {
+	if r.scalars == nil {
+		r.scalars = map[string]ValueRenderer{}
+		r.scalars["cosmos.Int"] = intValueRenderer{}
+		r.scalars["cosmos.Dec"] = decValueRenderer{}
 	}
+}
 
-	return false
+func (r Adr050) DefineScalar(scalar string, vr ValueRenderer) {
+	r.init()
+
 }

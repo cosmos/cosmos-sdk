@@ -26,7 +26,6 @@ type Keeper struct {
 
 // NewKeeper creates a slashing keeper
 func NewKeeper(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key storetypes.StoreKey, sk types.StakingKeeper, authority string) Keeper {
-
 	return Keeper{
 		storeKey:    key,
 		cdc:         cdc,

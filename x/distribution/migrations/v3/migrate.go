@@ -12,9 +12,7 @@ const (
 	ModuleName = "distribution"
 )
 
-var (
-	ParamsKey = []byte{0x09}
-)
+var ParamsKey = []byte{0x09}
 
 // MigrateStore migrates the x/distribution module state from the consensus version 2 to
 // version 3. Specifically, it takes the parameters that are currently stored

@@ -139,7 +139,6 @@ func (suite *KeeperTestSuite) TestGetSetParams() {
 }
 
 func (suite *KeeperTestSuite) TestSupply_ValidatePermissions() {
-
 	err := suite.accountKeeper.ValidatePermissions(multiPermAcc)
 	suite.Require().NoError(err)
 

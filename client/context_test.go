@@ -146,7 +146,7 @@ x: "10"
 }
 
 func TestCLIQueryConn(t *testing.T) {
-	cfg := network.DefaultConfig(simapp.NewTestAppConstructor)
+	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 1
 
 	n, err := network.New(t, t.TempDir(), cfg)
@@ -160,7 +160,7 @@ func TestCLIQueryConn(t *testing.T) {
 }
 
 func TestGetFromFields(t *testing.T) {
-	cfg := network.DefaultConfig(simapp.NewTestAppConstructor)
+	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	path := hd.CreateHDPath(118, 0, 0).String()
 
 	testCases := []struct {

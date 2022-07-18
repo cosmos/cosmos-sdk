@@ -30,7 +30,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	var err error
-	s.network, err = network.New(s.T(), s.T().TempDir(), network.DefaultConfig(simapp.NewTestAppConstructor))
+	s.network, err = network.New(s.T(), s.T().TempDir(), network.DefaultConfig(simapp.NewTestNetworkFixture))
 	s.Require().NoError(err)
 
 	_, err = s.network.WaitForHeight(2)

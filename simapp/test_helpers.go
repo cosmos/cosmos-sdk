@@ -357,8 +357,8 @@ func ModuleAccountAddrs() map[string]bool {
 	return bk.GetBlockedAddresses()
 }
 
-// NewTestAppConstructor returns a new simapp AppConstructor for network simulation tests
-func NewTestAppConstructor() network.TestFixture {
+// NewTestNetworkFixture returns a new simapp AppConstructor for network simulation tests
+func NewTestNetworkFixture() network.TestFixture {
 	encodingCfg := MakeTestEncodingConfig()
 	cfg := testutil.TestEncodingConfig{
 		TxConfig:          encodingCfg.TxConfig,

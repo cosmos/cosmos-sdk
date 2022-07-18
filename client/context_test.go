@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
@@ -145,7 +146,7 @@ x: "10"
 }
 
 func TestCLIQueryConn(t *testing.T) {
-	cfg := network.DefaultConfig()
+	cfg := network.DefaultConfig(simapp.NewTestAppConstructor)
 	cfg.NumValidators = 1
 
 	n, err := network.New(t, t.TempDir(), cfg)
@@ -159,7 +160,7 @@ func TestCLIQueryConn(t *testing.T) {
 }
 
 func TestGetFromFields(t *testing.T) {
-	cfg := network.DefaultConfig()
+	cfg := network.DefaultConfig(simapp.NewTestAppConstructor)
 	path := hd.CreateHDPath(118, 0, 0).String()
 
 	testCases := []struct {

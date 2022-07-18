@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,7 +30,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	var err error
-	s.network, err = network.New(s.T(), s.T().TempDir(), network.DefaultConfig())
+	s.network, err = network.New(s.T(), s.T().TempDir(), network.DefaultConfig(simapp.NewTestAppConstructor))
 	s.Require().NoError(err)
 
 	_, err = s.network.WaitForHeight(2)

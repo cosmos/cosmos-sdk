@@ -56,11 +56,12 @@ var lock = new(sync.Mutex)
 // AppConstructor defines a function which accepts a network configuration and
 // creates an ABCI Application to provide to Tendermint.
 type AppConstructor = func(val moduletestutil.Validator) servertypes.Application
-type TestFixtureFactory = func(cfg moduletestutil.TestEncodingConfig) TestFixture
+type TestFixtureFactory = func() TestFixture
 
 type TestFixture struct {
 	AppConstructor AppConstructor
 	GenesisState   map[string]json.RawMessage
+	EncodingConfig moduletestutil.TestEncodingConfig
 }
 
 // Config defines the necessary configuration used to bootstrap and start an
@@ -97,14 +98,13 @@ type Config struct {
 // DefaultConfig returns a sane default configuration suitable for nearly all
 // testing requirements.
 func DefaultConfig(factory TestFixtureFactory) Config {
-	encCfg := moduletestutil.MakeTestEncodingConfig()
-	fixture := factory(encCfg)
+	fixture := factory()
 
 	return Config{
-		Codec:             encCfg.Codec,
-		TxConfig:          encCfg.TxConfig,
-		LegacyAmino:       encCfg.Amino,
-		InterfaceRegistry: encCfg.InterfaceRegistry,
+		Codec:             fixture.EncodingConfig.Codec,
+		TxConfig:          fixture.EncodingConfig.TxConfig,
+		LegacyAmino:       fixture.EncodingConfig.Amino,
+		InterfaceRegistry: fixture.EncodingConfig.InterfaceRegistry,
 		AccountRetriever:  authtypes.AccountRetriever{},
 		AppConstructor:    fixture.AppConstructor,
 		GenesisState:      fixture.GenesisState,
@@ -143,7 +143,7 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 		return Config{}, err
 	}
 
-	cfg := DefaultConfig(func(cfg moduletestutil.TestEncodingConfig) TestFixture {
+	cfg := DefaultConfig(func() TestFixture {
 		return TestFixture{}
 	})
 	cfg.Codec = cdc

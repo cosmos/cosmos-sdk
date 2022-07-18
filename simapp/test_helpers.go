@@ -358,8 +358,9 @@ func ModuleAccountAddrs() map[string]bool {
 }
 
 // NewTestAppConstructor returns a new simapp AppConstructor for network simulation tests
-func NewTestAppConstructor(encodingCfg testutil.TestEncodingConfig) network.TestFixture {
-	cfg := simappparams.EncodingConfig{
+func NewTestAppConstructor() network.TestFixture {
+	encodingCfg := MakeTestEncodingConfig()
+	cfg := testutil.TestEncodingConfig{
 		TxConfig:          encodingCfg.TxConfig,
 		Codec:             encodingCfg.Codec,
 		Amino:             encodingCfg.Amino,
@@ -368,12 +369,16 @@ func NewTestAppConstructor(encodingCfg testutil.TestEncodingConfig) network.Test
 	appCtr := func(val testutil.Validator) servertypes.Application {
 		return NewSimApp(
 			val.GetCtx().Logger, dbm.NewMemDB(), nil, true,
-			cfg,
+			encodingCfg,
 			simtestutil.NewAppOptionsWithFlagHome(val.GetCtx().Config.RootDir),
 			bam.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			bam.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
 		)
 	}
 
-	return network.TestFixture{AppConstructor: appCtr, GenesisState: ModuleBasics.DefaultGenesis(cfg.Codec)}
+	return network.TestFixture{
+		AppConstructor: appCtr,
+		GenesisState:   ModuleBasics.DefaultGenesis(cfg.Codec),
+		EncodingConfig: cfg,
+	}
 }

@@ -37,6 +37,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.46.0-rc3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0-rc3) - 2022-07-18
+
 ### Features
 
 * (telemetry) [#12405](https://github.com/cosmos/cosmos-sdk/pull/12405) Add _query_ calls metric to telemetry.

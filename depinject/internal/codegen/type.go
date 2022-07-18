@@ -7,6 +7,8 @@ import (
 	"reflect"
 )
 
+// TypeExpr generates an ast.Expr to be used in the context of the file for the
+// provided reflect.Type, adding any needed imports.
 func (g *FileGen) TypeExpr(typ reflect.Type) (ast.Expr, error) {
 	if name := typ.Name(); name != "" {
 		importPrefix := g.AddOrGetImport(typ.PkgPath())

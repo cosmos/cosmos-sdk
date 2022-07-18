@@ -8,11 +8,13 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+const thousandSeparator string = "'"
+
 type decValueRenderer struct{}
 
 var _ ValueRenderer = decValueRenderer{}
 
-func (r decValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]string, error) {
+func (r decValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]string, error) {
 	formatted, err := formatDecimal(v.String())
 	if err != nil {
 		return nil, err
@@ -21,7 +23,7 @@ func (r decValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]s
 	return []string{formatted}, nil
 }
 
-func (r decValueRenderer) Parse(ctx context.Context, s []string) (protoreflect.Value, error) {
+func (r decValueRenderer) Parse(_ context.Context, s []string) (protoreflect.Value, error) {
 	panic("implement me")
 }
 

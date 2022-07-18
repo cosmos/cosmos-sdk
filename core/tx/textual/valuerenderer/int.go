@@ -11,7 +11,7 @@ type intValueRenderer struct{}
 
 var _ ValueRenderer = intValueRenderer{}
 
-func (r intValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]string, error) {
+func (r intValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]string, error) {
 	formatted, err := formatInteger(v.String())
 	if err != nil {
 		return nil, err
@@ -20,7 +20,7 @@ func (r intValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]s
 	return []string{formatted}, nil
 }
 
-func (r intValueRenderer) Parse(ctx context.Context, s []string) (protoreflect.Value, error) {
+func (r intValueRenderer) Parse(_ context.Context, s []string) (protoreflect.Value, error) {
 	panic("implement me")
 }
 
@@ -41,5 +41,6 @@ func formatInteger(v string) (string, error) {
 		outputIndex -= 3
 		v = v[:outputIndex] + thousandSeparator + v[outputIndex:]
 	}
+
 	return v, nil
 }

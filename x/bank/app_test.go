@@ -39,8 +39,6 @@ var (
 	priv2 = secp256k1.GenPrivKey()
 	addr2 = sdk.AccAddress(priv2.PubKey().Address())
 	addr3 = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
-	priv4 = secp256k1.GenPrivKey()
-	addr4 = sdk.AccAddress(priv4.PubKey().Address())
 
 	coins     = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
 	halfCoins = sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}
@@ -56,16 +54,6 @@ var (
 		Outputs: []types.Output{
 			types.NewOutput(addr2, halfCoins),
 			types.NewOutput(addr3, halfCoins),
-		},
-	}
-	multiSendMsg3 = &types.MsgMultiSend{
-		Inputs: []types.Input{
-			types.NewInput(addr1, coins),
-			types.NewInput(addr4, coins),
-		},
-		Outputs: []types.Output{
-			types.NewOutput(addr2, coins),
-			types.NewOutput(addr3, coins),
 		},
 	}
 	multiSendMsg4 = &types.MsgMultiSend{
@@ -218,58 +206,6 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
 				{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 47)}},
 				{addr3, sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}},
-			},
-		},
-	}
-
-	for _, tc := range testCases {
-		header := tmproto.Header{Height: app.LastBlockHeight() + 1}
-		txGen := simapp.MakeTestEncodingConfig().TxConfig
-		_, _, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
-		require.NoError(t, err)
-
-		for _, eb := range tc.expectedBalances {
-			simapp.CheckBalance(t, app, eb.addr, eb.coins)
-		}
-	}
-}
-
-func TestMsgMultiSendMultipleInOut(t *testing.T) {
-	acc1 := &authtypes.BaseAccount{
-		Address: addr1.String(),
-	}
-	acc2 := &authtypes.BaseAccount{
-		Address: addr2.String(),
-	}
-	acc4 := &authtypes.BaseAccount{
-		Address: addr4.String(),
-	}
-
-	genAccs := []authtypes.GenesisAccount{acc1, acc2, acc4}
-	app := simapp.SetupWithGenesisAccounts(t, genAccs)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
-
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
-
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr4, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
-
-	app.Commit()
-
-	testCases := []appTestCase{
-		{
-			msgs:       []sdk.Msg{multiSendMsg3},
-			accNums:    []uint64{0, 2},
-			accSeqs:    []uint64{0, 0},
-			expSimPass: true,
-			expPass:    true,
-			privKeys:   []cryptotypes.PrivKey{priv1, priv4},
-			expectedBalances: []expectedBalance{
-				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
-				{addr4, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
-				{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 52)}},
-				{addr3, sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}},
 			},
 		},
 	}

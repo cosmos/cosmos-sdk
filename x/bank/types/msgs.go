@@ -79,6 +79,10 @@ func (msg MsgMultiSend) ValidateBasic() error {
 		return ErrNoInputs
 	}
 
+	if len(msg.Inputs) != 1 {
+		return ErrMultipleSenders
+	}
+
 	if len(msg.Outputs) == 0 {
 		return ErrNoOutputs
 	}

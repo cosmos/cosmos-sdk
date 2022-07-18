@@ -39,7 +39,7 @@ service Msg {
   // Since: cosmos-sdk 0.46
   rpc CancelUnbondingDelegation(MsgCancelUnbondingDelegation) returns (MsgCancelUnbondingDelegationResponse);
 
-  // UpdateParams defines a operation for updating the x/staking module
+  // UpdateParams defines an operation for updating the x/staking module
   // parameters.
   // Since: cosmos-sdk 0.47
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);

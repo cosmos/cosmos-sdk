@@ -21,6 +21,8 @@ type AStruct struct {
 
 type AStructWrapper AStruct
 
+type AnInterface interface{}
+
 func TestTypeExpr(t *testing.T) {
 	expectTypeExpr(t, false, "bool")
 	expectTypeExpr(t, uint(0), "uint")
@@ -55,8 +57,7 @@ func TestTypeExpr(t *testing.T) {
 	expectTypeExpr(t, AStructWrapper{}, "codegen.AStructWrapper")
 	expectTypeExpr(t, "abc", "string")
 	expectTypeExpr(t, uintptr(0), "uintptr")
-	// TODO: interface
-	// TODO: UnsafePointer
+	expectTypeExpr(t, (*AnInterface)(nil), "*codegen.AnInterface")
 }
 
 func expectTypeExpr(t *testing.T, value interface{}, expected string) {
